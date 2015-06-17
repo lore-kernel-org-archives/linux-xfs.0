@@ -1,15 +1,15 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6DFCD7F62
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 05:00:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6268E8F8071
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 03:00:45 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F41D17F92
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 04:09:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8ED51AC009
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 02:09:32 -0700 (PDT)
 Received: from songxia.0main.com (songxia.0main.com [46.22.210.50]) by
-	cuda.sgi.com with ESMTP id FVK3I9FiDCESBu2c for
-	<xfs@oss.sgi.com>; Wed, 17 Jun 2015 03:00:43 -0700 (PDT)
+	cuda.sgi.com with ESMTP id vG2S1swWhqqXvPZi for
+	<xfs@oss.sgi.com>; Wed, 17 Jun 2015 02:09:29 -0700 (PDT)
 Subject: business solutions
-Message-ID: <1c5532b7e1a66c2e7cde8551d535d782@theyachtweek.com>
-Date: Wed, 17 Jun 2015 12:00:38 +0200
+Message-ID: <d1a8cf7a4ab68b1745a3221b9226730f@theyachtweek.com>
+Date: Wed, 17 Jun 2015 10:24:36 +0200
 From: "Alex" <jasontonger@yahoo.com>
 MIME-Version: 1.0
 Reply-To: wlhongg@sina.com
