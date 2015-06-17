@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AE0417F8E
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 06:37:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A26028F8066
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 04:37:11 -0700 (PDT)
-Received: from smtp.welcomes-you.com (welcomes-you.com [144.76.218.113]) by
-	cuda.sgi.com with ESMTP id fLh19MlmFf5wz6ZU (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5D7A27F90
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 06:42:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0319BAC002
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 04:42:01 -0700 (PDT)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id ERZTnHz2w9TpcV0r (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jun 2015 04:37:09 -0700 (PDT)
-Message-ID: <55815BE2.4060201@aei.mpg.de>
-Date: Wed, 17 Jun 2015 13:37:06 +0200
-From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
-MIME-Version: 1.0
+	Wed, 17 Jun 2015 04:41:59 -0700 (PDT)
+Date: Wed, 17 Jun 2015 13:42:00 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: xfs_repair use all memory
-References: <CAG_XuNWrbyb97h3moqgYJLdvMr3J1OPGb2VknDTpcO0-8upMnw@mail.gmail.com>	<20150612122750.21c2a8e4@harpe.intellique.com>	<CAG_XuNUxBCYZtPJixcA8sJqN7nzb85Eg+vJyvAoNB73wryPcTw@mail.gmail.com>	<20150612154353.1c0df8b6@harpe.intellique.com>
-	<CAG_XuNWJhCGrSB7jOi54wzdjxXVec+i=s6szkWea=8sx7SD50g@mail.gmail.com>
+Message-ID: <20150617134200.6d5b08f3@harpe.intellique.com>
 In-Reply-To: <CAG_XuNWJhCGrSB7jOi54wzdjxXVec+i=s6szkWea=8sx7SD50g@mail.gmail.com>
+References: <CAG_XuNWrbyb97h3moqgYJLdvMr3J1OPGb2VknDTpcO0-8upMnw@mail.gmail.com>
+	<20150612122750.21c2a8e4@harpe.intellique.com>
+	<CAG_XuNUxBCYZtPJixcA8sJqN7nzb85Eg+vJyvAoNB73wryPcTw@mail.gmail.com>
+	<20150612154353.1c0df8b6@harpe.intellique.com>
+	<CAG_XuNWJhCGrSB7jOi54wzdjxXVec+i=s6szkWea=8sx7SD50g@mail.gmail.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,20 +32,26 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lampa <lampacz@gmail.com>, Emmanuel Florac <eflorac@intellique.com>
+To: Lampa <lampacz@gmail.com>
 Cc: xfs@oss.sgi.com
 
-SGkKCk9uIDA2LzE3LzIwMTUgMDE6MzMgUE0sIExhbXBhIHdyb3RlOgo+IHVuYWJsZSB0byByZXBh
-aXIgLSBydW5uaW5nIHdpdGhvdXQgLW4gcGFyYW1ldGVyIHJlcXVpcmVzIG1vcmUgbWVtb3J5Lgo+
-IEFsd2F5cyBraWxsZWQgYnkga2VybmVsCj4gCgpXaGF0IHdlIGRpZCAobm90IHJlYWxseSBiZWF1
-dGlmdWwpIGJ1dCBpdCB3b3JrZWQgZm9yIGEgbGFyZ2UgZmlsZSBzeXN0ZW06CgpIb29raW5nIHVw
-IGEgU1NEIHRvIHRoZSBzeXN0ZW0gKGludGVybmFsbC9VU0IpIGFuZCBtYWtlIGl0IHN3YXAgc3Bh
-Y2UKZm9yIHRoZSBib3guCgpJdCB3aWxsIG5vdCBoZWxwIHRoZSBzcGVlZCwgYnV0IGl0IG1heSBi
-ZSBlbm91Z2ggdG8gZ2V0IGVub3VnaCAibWVtb3J5Igp0byB4ZnNfcmVwYWlyIHRvIGZpbmlzaC4K
-CkNoZWVycwoKQ2Fyc3RlbgoKLS0gCkRyLiBDYXJzdGVuIEF1bGJlcnQsIEF0bGFzIGNsdXN0ZXIg
-YWRtaW5pc3RyYXRpb24KTWF4IFBsYW5jayBJbnN0aXR1dGUgZm9yIEdyYXZpdGF0aW9uYWwgUGh5
-c2ljcyAoQWxiZXJ0IEVpbnN0ZWluIEluc3RpdHV0ZSkKQ2FsbGluc3RyYcOfZSAzOCwgMzAxNjcg
-SGFubm92ZXIsIEdlcm1hbnkKVGVsOiArNDkgNTExIDc2MiAxNzE4NSwgRmF4OiArNDkgNTExIDc2
-MiAxNzE5MwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
-YW4vbGlzdGluZm8veGZzCg==
+TGUgV2VkLCAxNyBKdW4gMjAxNSAxMzozMzo0OCArMDIwMApMYW1wYSA8bGFtcGFjekBnbWFpbC5j
+b20+IMOpY3JpdmFpdDoKCj4gdW5hYmxlIHRvIHJlcGFpciAtIHJ1bm5pbmcgd2l0aG91dCAtbiBw
+YXJhbWV0ZXIgcmVxdWlyZXMgbW9yZSBtZW1vcnkuCj4gQWx3YXlzIGtpbGxlZCBieSBrZXJuZWwK
+PiAKCklmIHlvdSBoYXZlIHNvbWUgc3RvcmFnZSByb29tIGF2YWlsYWJsZSBvbiBhbm90aGVyIGZp
+bGVzeXN0ZW0sIGNyZWF0ZQpzb21lIHN3YXAgc3BhY2UuIEkndmUgZG9uZSBpdCBvbmNlIG9uIGEg
+MSBHQiBSQU0gbWFjaGluZSAoYWRkaW5nIHVwIDgKR0Igb2Ygc3dhcCkuIFRoZSByZXBhaXIgd2ls
+bCBiZSBtdWNoLCBtdWNoIGxvbmdlciBidXQgaXQgd29ya3MuCgpUbyBjcmVhdGUgNjRHQiBvZiBz
+d2FwIHNwYWNlIGluIGEgZmlsZSwgZG8gc29tZXRoaW5nIGxpa2UgdGhpczoKCmRkIGlmPS9kZXYv
+emVybyBicz0xTSBjb3VudD02NTUzNiBvZj0vc29tZS9maWxlLnN3cApta3N3YXAgL3NvbWUvZmls
+ZS5zd3AKc3dhcG9uIC9zb21lL2ZpbGUuc3dwCgpIb3dldmVyIHByZWZlcmFibHkgZG9uJ3QgdXNl
+IGEgc2luZ2xlIHNwaW5uaW5nIGRyaXZlLCBpdCdzIG11Y2ggdG9vCnNsb3cuIEZsYXNoIGRldmlj
+ZXMgYXJlIHRvIGJlIHByZWZlcnJlZCwgZXZlbiBhIGdvb2QgcXVhbGl0eSBVU0IgdGh1bWIKZHJp
+dmUgd2lsbCBkby4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAg
+RGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAg
+ICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAg
+ICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
