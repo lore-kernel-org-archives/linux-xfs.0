@@ -1,17 +1,18 @@
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF33D7F5E
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2015 09:47:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6DFCD7F62
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 05:00:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BF0F58F8033
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2015 07:47:42 -0700 (PDT)
-Received: from trafficopertutti.com ([198.49.73.49]) by cuda.sgi.com with
-	ESMTP id CsthOkWcVhVUaIFJ for <xfs@oss.sgi.com>;
-	Sat, 20 Jun 2015 07:47:41 -0700 (PDT)
-Date: Sat, 20 Jun 2015 14:44:24 +0000
-From: Elvita Perez <Elvita.Perez@espanol-seo.com>
-Subject: Gratis Link Ruilaanbod
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6268E8F8071
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 03:00:45 -0700 (PDT)
+Received: from songxia.0main.com (songxia.0main.com [46.22.210.50]) by
+	cuda.sgi.com with ESMTP id FVK3I9FiDCESBu2c for
+	<xfs@oss.sgi.com>; Wed, 17 Jun 2015 03:00:43 -0700 (PDT)
+Subject: business solutions
+Message-ID: <1c5532b7e1a66c2e7cde8551d535d782@theyachtweek.com>
+Date: Wed, 17 Jun 2015 12:00:38 +0200
+From: "Alex" <jasontonger@yahoo.com>
 MIME-Version: 1.0
-Message-Id: <20150620144742.68A59106C572@cuda.sgi.com>
+Reply-To: wlhongg@sina.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,101 +21,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2600909255634879599=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Hi
 
---===============2600909255634879599==
-Content-Type: multipart/alternative;
-	boundary="b1_5087652e17c6db257df8ebbc19b86eba"
+This is Alex, I would like to be your business parnter today.
+Pls check what we offer below:
 
+YOUR BUSINESS LEASE AND FINANCE PARTNER
+Tailoring Business Solutions to Match Your Business
+*  Fast Approvals
+*  Efficient Service with a 'Can Do' attitude
+*  Leading Industry experience
+*  Widest available range of funds from banks,
+financial institutions through to our own private investor/lenders and
+specialized funders
 
---b1_5087652e17c6db257df8ebbc19b86eba
-Content-Type: text/plain; charset = "UTF-8"
-Content-Transfer-Encoding: 8bit
+ALL TYPES OF ACCEPTABLE BUSINESS EQUIPMENT LEASING
+ * Sale Lease-Back options available!!
+ * Collateral Asset Based NOT based Credit History (Equipment and Real
+Estate)
+ * Business UNSECURED Capital Loans for Good Credit
+ * Tailor made lease programs
 
+SOME TYPES OF EQUIPMENT WE LEASE AND FINANCE
+  * All types of Commercial Motor Vehicles
+  * Medical Profession Loans and Equipment
+  * Office Equipment
+  * Solar Equipment for Business and Municipalities
+  * LED Lighting & Signage for Business and Municipalities
+  * Point of Sale Equipment
+  * Vending Machines
+  * Computers and Software
+  * Restaurant/Catering Equipment
+  * Refrigeration Equipment
+  * Manufacturing Equipment
 
-Compa&ntilde;ero webmaster, 
+VEHICLES WE DO FOR BUSINESS AND PERSONAL USE
+ * Exotic Cars - Luxury Sports Cars - Classic Cars put in your Company
+ * Heavy Construction Equipment - New and Used
+ * Heavy Duty Trucks and Trailers
+ * Medium Duty Trucks and Trailers
+ * Motor Coaches and Shuttle Buses
+ * Sprinter Limo and Shuttle
+ * Emergency and Para-Transit Vehicles
+ * Catering and Vending Trucks
 
+Pls reply if you are interested then - WE WILL CONTACT YOU
+NAME:______________________________________________
+PHONE:_____________________________________________
+EMAIL:______________________________________________
 
-&nbsp;
-
-
-He visitado tu sitio oss.sgi.com mientras navegaba por
-internet y me gustar&iacute;a intercambiar enlaces contigo. 
-
-
-Lo que estoy ofreciendo es un intercambio de backlinks
-gratis, justo y beneficioso para ambos. 
-
-
-Todo esto es totalmente libre de cargos. 
-
-Hazme saber qu&eacute; piensas al respecto, estoy anhelando poder
-realizar este intercambio contigo. 
-
-
-&nbsp;
-
-
-Saludos,
-
-
-Elvita Perez
-
-
-
---b1_5087652e17c6db257df8ebbc19b86eba
-Content-Type: text/html; charset = "UTF-8"
-Content-Transfer-Encoding: 8bit
-
-<p class="MsoNormal">
-Compa&ntilde;ero webmaster, 
-</p>
-<p class="MsoNormal">
-&nbsp;
-</p>
-<p class="MsoNormal">
-He visitado tu sitio oss.sgi.com mientras navegaba por
-internet y me gustar&iacute;a intercambiar enlaces contigo. 
-</p>
-<p class="MsoNormal">
-Lo que estoy ofreciendo es un intercambio de backlinks
-gratis, justo y beneficioso para ambos. 
-</p>
-<br />
-Todo esto es totalmente libre de cargos. 
-<p class="MsoNormal">
-Hazme saber qu&eacute; piensas al respecto, estoy anhelando poder
-realizar este intercambio contigo. 
-</p>
-<p class="MsoNormal">
-&nbsp;
-</p>
-<p class="MsoNormal">
-Saludos,
-</p>
-<p class="MsoNormal">
-Elvita Perez
-</p>
-
-
-
---b1_5087652e17c6db257df8ebbc19b86eba--
-
-
-
---===============2600909255634879599==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks.
+Alex
+Email: luisami@sina.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2600909255634879599==--
