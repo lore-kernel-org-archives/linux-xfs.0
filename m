@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 09BF07F5D
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 12:01:31 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6D8AD7F6C
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 16:29:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A378AC001
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 10:01:27 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 07804AC005
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 14:29:35 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Gdk1vmrpWUAl3zXH (version=TLSv1
+	cuda.sgi.com with ESMTP id xZwkS8zx8MxR6MXl (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Jun 2015 10:01:26 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5B88FBACCC
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 17:01:26 +0000 (UTC)
-Message-ID: <5582F962.2090400@redhat.com>
-Date: Thu, 18 Jun 2015 12:01:22 -0500
+	Thu, 18 Jun 2015 14:29:35 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 04F152DD2E8
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 21:29:35 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t5ILTXsQ031272
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 17:29:34 -0400
+Message-ID: <5583383D.4070906@redhat.com>
+Date: Thu, 18 Jun 2015 16:29:33 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: refuse to unset lazycount on V5 filesystems
+Subject: [PATCH] xfs_repair: automatically enable -f (file) mode when needed
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,69 +37,47 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
-Cc: "Richard W.M. Jones" <rjones@redhat.com>
 
-Running "xfs_admin -c 0" on a V5 fs has unfortunate results.
+If we specify "-f" to xfs_repair, it recognizes that it's working
+on a file, and if the underlying filesystem sector size differs
+such that direct IO won't work, it disables direct IO.
 
-Before:
-versionnum [0xbca5+0x18a] = ... LAZYSBCOUNT,PROJID32BIT,CRC, ...
-After:
-versionnum [0xbca5+0x188] = ... LAZYSBCOUNT,PROJID32BIT,CRC, ...
+It's odd, though, that we'd need to specify this, and the failure
+is non-obvious:
 
-The on-disk feature bit is in fact changed, but xfs_db reports that the
-feature is still present.  This is because xfs_sb_version_haslazysbcount()
-ignores the feature bit, and always reports that the lazy-count feature is
-present on a V5 fs.
+# xfs_repair /mnt/test/foo.img
+Phase 1 - find and verify superblock...
+xfs_repair: read failed: Invalid argument
 
-i.e. the intent is that this feature is not optional on a V5 fs, yet we
-still flip the bit on disk when asked.  Not good.
+I see no advantage to requirin the administrator to jump through
+this hoop; why not just detect that it's a file, and move on?
 
-So, document this, and error out if the user tries to disable lazy-count
-on a version 5 filesystem.
-
-Reported-by: Richard W.M. Jones <rjones@redhat.com>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-(hm, xfs_repair should probably also turn the bit back on, if it's off on
-V5?  I'll save that for another patch.)
-
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index b393d74..0968196 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -62,6 +62,10 @@ Print the current filesystem UUID (Universally Unique IDentifier).
- .TP
- .BR "\-c 0" | 1
- Enable (1) or disable (0) lazy-counters in the filesystem.
-+.IP
-+Lazy-counters may not be disabled on Version 5 superblock filesystems
-+(i.e. those with metadata CRCs enabled).
-+.IP
- This operation may take quite a bit of time on large filesystems as the
- entire filesystem needs to be scanned when this option is changed.
- .IP
-
-diff --git a/repair/phase1.c b/repair/phase1.c
-index ec75ada..9e7011d 100644
---- a/repair/phase1.c
-+++ b/repair/phase1.c
-@@ -121,8 +121,12 @@ phase1(xfs_mount_t *mp)
- 			sb->sb_bad_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
- 			primary_sb_modified = 1;
- 			printf(_("Enabling lazy-counters\n"));
--		} else
--		if (!lazy_count && xfs_sb_version_haslazysbcount(sb)) {
-+		} else if (!lazy_count && xfs_sb_version_haslazysbcount(sb)) {
-+			if (XFS_SB_VERSION_NUM(sb) == XFS_SB_VERSION_5) {
-+				printf(
-+_("Cannot disable lazy-counters on V5 fs\n"));
-+				exit(1);
-+			}
- 			sb->sb_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
- 			sb->sb_bad_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
- 			printf(_("Disabling lazy-counters\n"));
-
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 834697a..2d376be 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -573,6 +573,18 @@ main(int argc, char **argv)
+ 		exit(1);
+ 	}
+ 
++	/* -f forces this, but let's be nice and autodetect it, as well. */
++	if (!isa_file) {
++		int		fd = libxfs_device_to_fd(x.ddev);
++		struct stat64	statbuf;
++
++		if (fstat64(fd, &statbuf) < 0)
++			do_warn(_("%s:  couldn't stat \"%s\"\n"),
++				progname, fs_name);
++		if (S_ISREG(statbuf.st_mode))
++			isa_file = 1;
++	}
++
+ 	/*
+ 	 * if the sector size of the filesystem we are trying to repair is
+ 	 * smaller than that of the underlying filesystem (i.e. we are repairing
 
 _______________________________________________
 xfs mailing list
