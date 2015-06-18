@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F2A417F6B
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 09:55:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DE5048F8049
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 07:55:24 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 57FB17F6B
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 09:57:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 479E8304051
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 07:57:12 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id jLPd4j42DCCTpgNd for <xfs@oss.sgi.com>;
-	Thu, 18 Jun 2015 07:55:22 -0700 (PDT)
-Message-ID: <5582DBD9.7040608@sandeen.net>
-Date: Thu, 18 Jun 2015 09:55:21 -0500
+	ESMTP id v5iRarfslmyg7g5f for <xfs@oss.sgi.com>;
+	Thu, 18 Jun 2015 07:57:11 -0700 (PDT)
+Message-ID: <5582DC45.9050101@sandeen.net>
+Date: Thu, 18 Jun 2015 09:57:09 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: mkfs: a possible bad
-References: <551099978.15978267.1434551318983.JavaMail.zimbra@redhat.com>	<5581CDF3.5030408@sandeen.net>
-	<60223436.16408979.1434617589713.JavaMail.zimbra@redhat.com>
-In-Reply-To: <60223436.16408979.1434617589713.JavaMail.zimbra@redhat.com>
+Subject: Re: [PATCH] mkfs.xfs: always use underlying fs sector size when
+	mkfs'ing a file
+References: <55820229.1010701@redhat.com>
+	<14667996.16447259.1434625419793.JavaMail.zimbra@redhat.com>
+In-Reply-To: <14667996.16447259.1434625419793.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,77 +29,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 6/18/15 3:53 AM, Jan Tulak wrote:
+On 6/18/15 6:03 AM, Jan Tulak wrote:
 > 
 > 
 > ----- Original Message -----
->> From: "Eric Sandeen" <sandeen@sandeen.net>
->> To: "Jan Tulak" <jtulak@redhat.com>, xfs@oss.sgi.com
->> Sent: Wednesday, June 17, 2015 9:43:47 PM
->> Subject: Re: mkfs: a possible bad
+>> From: "Eric Sandeen" <sandeen@redhat.com>
+>> To: "xfs-oss" <xfs@oss.sgi.com>
+>> Sent: Thursday, June 18, 2015 1:26:33 AM
+>> Subject: [PATCH] mkfs.xfs: always use underlying fs sector size when mkfs'ing	a file
 >>
->> On 6/17/15 9:28 AM, Jan Tulak wrote:
->>> Hi, I'm looking into mkfs/xfs_mkfs.c and I wonder, is "if (xi.dbsize
->>>> sectorsize)" correct? It is a check for: Warning: the data
->>> subvolume sector size %u is less than the sector size reported by the
->>> device (%u).
->>>
->>> But psectorsize is assigned to sectorsize, not to xi.dbsize, so the
->>> two values seems to be swapped in the condition (and as arguments of
->>> the printf too). I think this gone without noticing because usually,
->>> when creating a partition, the two values are the same. So even if
->>> the condition is wrong, nothing happens. And when -bsize=X is passed,
->>> then it is catched earlier and nothing happens again.
->>>
->>> Only when I apply a patch that changes how mkfs acts when it gets a
->>> file instead of a block device, I start to see the warning, although
->>> physical sector size is 512 and block size is set to 4096. The
->>> numbers are swapped in the warning too...
->>>
->>> I tried to run ./check -g quick and it seems that the change breaks
->>> nothing. 
->>>
->>> Cheers, Jan
+>> If we are mkfs'ing a file, and that file is on a 4k sector filesystem,
+>> we should make the fs image file with the same sector size, or things
+>> may fail when they try to do direct IO in 512 byte chunks (depending
+>> on whether it is a 512e or "hard" 4k device).
 >>
->> Hohum, xfs_mkfs.c is such spaghetti-code.  :)  Let me think through
->> this as well:
+>> Earlier commits attempted this to some degree:
 >>
->> Ok, we init sectorsize to XFS_MIN_SECTORSIZE at the top of main().
+>> 5a7d59 xfsprogs: try to handle mkfs of a file on 4k sector device
+>> 3800a2 mkfs.xfs: don't call blkid_get_topology on existing regular files
 >>
->> If we have cmdline args to specify sector size, we reset it there.
+>> but inexplicably missed the case where mkfs.xfs with "-d file" was
+>> specified.
 >>
->> If not specified, we set it to the physical sector size advertised
->> by the device.
+>> One more try; in get_topology(), try to get the underlying fs sector
+>> size in *all* cases where we are mkfs'ing a file, and set the sector size
+>> accordingly.
 >>
->> And xi.dbsize is set in platform_findsizes, for a device it comes
->> from BLKSSZGET, which gives us the logical sector size of the device.
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
 >>
->> So this test:
+>> (This does it for 512e as well as hard 4k drives, but I think that's
+>> probably ok?  If not, perhaps we should go further and attempt to
+>> discern logical and physical sectors for the device under the
+>> filesystem.  Is it worth it?  Not sure it is.)
 >>
->>         if (xi.dbsize > sectorsize) {
->>                 fprintf(stderr, _(
->> "Warning: the data subvolume sector size %u is less than the sector size \n\
->> reported by the device (%u).\n"),
->>                         sectorsize, xi.dbsize);
->>         }
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index e2a052d..e44c390 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -462,31 +462,34 @@ static void get_topology(
+>>  	struct fs_topology	*ft,
+>>  	int			force_overwrite)
+>>  {
+>> -	if (!xi->disfile) {
+>> -		char *dfile = xi->volname ? xi->volname : xi->dname;
+>> -		struct stat statbuf;
+>> +	struct stat statbuf;
+>> +	char *dfile = xi->volname ? xi->volname : xi->dname;
+>>  
+>> -		/*
+>> -		 * If our target is a regular file, and xi->disfile isn't
+>> -		 * set (i.e. no "-d file" invocation), use platform_findsizes
+>> -		 * to try to obtain the underlying filesystem's requirements
+>> -		 * for direct IO; we'll set our sector size to that if possible.
+>> -		 */
+>> -		if (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode)) {
+>> -			int fd;
+>> -			long long dummy;
+>> -
+>> -			fd = open(dfile, O_RDONLY);
+>> -			if (fd >= 0) {
+>> -				platform_findsizes(dfile, fd, &dummy,
+>> -						   &ft->lsectorsize);
+>> -				close(fd);
+>> -			}
+>> -		} else {
+>> -			blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+>> -					   &ft->lsectorsize, &ft->psectorsize,
+>> -					   force_overwrite);
+>> +	/*
+>> +	 * If our target is a regular file, use platform_findsizes
+>> +	 * to try to obtain the underlying filesystem's requirements
+>> +	 * for direct IO; we'll set our sector size to that if possible.
+>> +	 */
+>> +	if (xi->disfile ||
+>> +	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
+>> +		int fd;
+>> +		int flags = O_RDONLY;
+>> +		long long dummy;
+>> +
+>> +		/* with xi->disfile we may not have the file yet! */
+>> +		if (xi->disfile)
+>> +			flags |= O_CREAT;
+>> +
+>> +		fd = open(dfile, flags, 0666);
+>> +		if (fd >= 0) {
+>> +			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
+>> +			close (fd);
+>>  		}
+>> +
+>> +	} else {
+>> +		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+>> +				   &ft->lsectorsize, &ft->psectorsize,
+>> +				   force_overwrite);
+>>  	}
+>>  
+>>  	if (xi->rtname && !xi->risfile) {
 >>
->> is testing whether the logical sector size is greater than the physical
->> sector size - which would indeed be a problem (logical is <= physical)
 > 
-> You write "logical is <= physical", but the text of the warning seems to be telling "it should be logical >= physical, but isn't." 
-> I initially thought it should be reversed, but now I'm not sure. Maybe the warning could use better words to avoid this confusing?
-> In which case, I have to go back to bug hunting and see what is causing the warning to me...
+> This changes get_topology only for ENABLE_BLKID branch of #ifdef. Is
+> that intentional, i.e. we don't expect anyone not using ENABLE_BLKID?
+> Because otherwise, if mkfs is compiled without ENABLE_BLKID, then all
+> we get is:
 
-Sorry, I wasn't very clear.  The test itself is checking if the device's
-logical sector size (the smallest possible IO for the device) is 
-larger than the filesystem's sector size, which is indeed a problem.
+Hm, yeah, good point.  I always forget about this.  :(  I can send V2.
 
-The error message printed does match that, although it states it in
-the opposite order.
+And sorry if this overlaps w/ your changes- I got a bug report about
+xfstests failing when testing hard 4k devices, and it was due to image
+files created on a filesystem on that hard 4k device, and xfsprogs tools
+fail when they try to do 512-byte direct IO to the image.
 
+Thanks,
 -Eric
 
 _______________________________________________
