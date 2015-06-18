@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 57FB17F6B
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 09:57:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 479E8304051
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 07:57:12 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 041587F6B
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 09:59:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C57F18F8052
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 07:59:40 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id v5iRarfslmyg7g5f for <xfs@oss.sgi.com>;
-	Thu, 18 Jun 2015 07:57:11 -0700 (PDT)
-Message-ID: <5582DC45.9050101@sandeen.net>
-Date: Thu, 18 Jun 2015 09:57:09 -0500
+	ESMTP id 4y0QgdZXK0lxXcFa for <xfs@oss.sgi.com>;
+	Thu, 18 Jun 2015 07:59:39 -0700 (PDT)
+Message-ID: <5582DCDA.9070200@sandeen.net>
+Date: Thu, 18 Jun 2015 09:59:38 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs.xfs: always use underlying fs sector size when
-	mkfs'ing a file
-References: <55820229.1010701@redhat.com>
-	<14667996.16447259.1434625419793.JavaMail.zimbra@redhat.com>
-In-Reply-To: <14667996.16447259.1434625419793.JavaMail.zimbra@redhat.com>
+Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
+	xfs_dir2_sf_get_parent_ino+0xa/0x20
+References: <CA++_uht_4ON49eBqM6eA7oL7iBcxYMwR5ZAQxXmTuNji2XiyBA@mail.gmail.com>	<20150618133122.GC43254@bfoster.bfoster>
+	<CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
+In-Reply-To: <CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,118 +29,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Kuo Hugo <tonytkdk@gmail.com>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Cc: Hugo Kuo <hugo@swiftstack.com>, darrell@swiftstack.com
 
-On 6/18/15 6:03 AM, Jan Tulak wrote:
+On 6/18/15 9:29 AM, Kuo Hugo wrote:
+>>- Have you tried an 'xfs_repair -n' of the affected filesystem? Note that -n will report problems only and prevent any modification by repair.
 > 
-> 
-> ----- Original Message -----
->> From: "Eric Sandeen" <sandeen@redhat.com>
->> To: "xfs-oss" <xfs@oss.sgi.com>
->> Sent: Thursday, June 18, 2015 1:26:33 AM
->> Subject: [PATCH] mkfs.xfs: always use underlying fs sector size when mkfs'ing	a file
->>
->> If we are mkfs'ing a file, and that file is on a 4k sector filesystem,
->> we should make the fs image file with the same sector size, or things
->> may fail when they try to do direct IO in 512 byte chunks (depending
->> on whether it is a 512e or "hard" 4k device).
->>
->> Earlier commits attempted this to some degree:
->>
->> 5a7d59 xfsprogs: try to handle mkfs of a file on 4k sector device
->> 3800a2 mkfs.xfs: don't call blkid_get_topology on existing regular files
->>
->> but inexplicably missed the case where mkfs.xfs with "-d file" was
->> specified.
->>
->> One more try; in get_topology(), try to get the underlying fs sector
->> size in *all* cases where we are mkfs'ing a file, and set the sector size
->> accordingly.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> (This does it for 512e as well as hard 4k drives, but I think that's
->> probably ok?  If not, perhaps we should go further and attempt to
->> discern logical and physical sectors for the device under the
->> filesystem.  Is it worth it?  Not sure it is.)
->>
->> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->> index e2a052d..e44c390 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -462,31 +462,34 @@ static void get_topology(
->>  	struct fs_topology	*ft,
->>  	int			force_overwrite)
->>  {
->> -	if (!xi->disfile) {
->> -		char *dfile = xi->volname ? xi->volname : xi->dname;
->> -		struct stat statbuf;
->> +	struct stat statbuf;
->> +	char *dfile = xi->volname ? xi->volname : xi->dname;
->>  
->> -		/*
->> -		 * If our target is a regular file, and xi->disfile isn't
->> -		 * set (i.e. no "-d file" invocation), use platform_findsizes
->> -		 * to try to obtain the underlying filesystem's requirements
->> -		 * for direct IO; we'll set our sector size to that if possible.
->> -		 */
->> -		if (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode)) {
->> -			int fd;
->> -			long long dummy;
->> -
->> -			fd = open(dfile, O_RDONLY);
->> -			if (fd >= 0) {
->> -				platform_findsizes(dfile, fd, &dummy,
->> -						   &ft->lsectorsize);
->> -				close(fd);
->> -			}
->> -		} else {
->> -			blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
->> -					   &ft->lsectorsize, &ft->psectorsize,
->> -					   force_overwrite);
->> +	/*
->> +	 * If our target is a regular file, use platform_findsizes
->> +	 * to try to obtain the underlying filesystem's requirements
->> +	 * for direct IO; we'll set our sector size to that if possible.
->> +	 */
->> +	if (xi->disfile ||
->> +	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
->> +		int fd;
->> +		int flags = O_RDONLY;
->> +		long long dummy;
->> +
->> +		/* with xi->disfile we may not have the file yet! */
->> +		if (xi->disfile)
->> +			flags |= O_CREAT;
->> +
->> +		fd = open(dfile, flags, 0666);
->> +		if (fd >= 0) {
->> +			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
->> +			close (fd);
->>  		}
->> +
->> +	} else {
->> +		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
->> +				   &ft->lsectorsize, &ft->psectorsize,
->> +				   force_overwrite);
->>  	}
->>  
->>  	if (xi->rtname && !xi->risfile) {
->>
-> 
-> This changes get_topology only for ENABLE_BLKID branch of #ifdef. Is
-> that intentional, i.e. we don't expect anyone not using ENABLE_BLKID?
-> Because otherwise, if mkfs is compiled without ENABLE_BLKID, then all
-> we get is:
+> *We might to to xfs_repair if we can address which disk causes the issue. *
 
-Hm, yeah, good point.  I always forget about this.  :(  I can send V2.
-
-And sorry if this overlaps w/ your changes- I got a bug report about
-xfstests failing when testing hard 4k devices, and it was due to image
-files created on a filesystem on that hard 4k device, and xfsprogs tools
-fail when they try to do 512-byte direct IO to the image.
+If you do, please save the output, and if it finds anything, please provide the output in this thread.
 
 Thanks,
 -Eric
