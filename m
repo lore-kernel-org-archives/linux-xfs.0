@@ -1,33 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 636D87F67
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:21:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3667A8F8050
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 02:21:49 -0700 (PDT)
-Received: from smtp-out6.electric.net ([192.162.217.190]) by cuda.sgi.com with
-	ESMTP id YBoQk7n0t8Oa6S3o (version=TLSv1 cipher=AES256-SHA
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 076AF7F78
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:21:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 88BD1AC009
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 02:21:55 -0700 (PDT)
+Received: from smtp-out4.electric.net ([192.162.216.184]) by cuda.sgi.com with
+	ESMTP id C2g0E7hXpQns1YXA (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2015 02:21:46 -0700 (PDT)
-Received: from 1Z5sUb-0005mE-UF by out6d.electric.net with emc1-ok (Exim 4.84)
-	(envelope-from <mggr@pml.ac.uk>) id 1Z5sUb-0005n5-Um
-	for xfs@oss.sgi.com; Fri, 19 Jun 2015 02:21:45 -0700
+	Fri, 19 Jun 2015 02:21:53 -0700 (PDT)
+Received: from 1Z5sUh-0002MY-VO by out4d.electric.net with emc1-ok (Exim 4.84)
+	(envelope-from <mggr@pml.ac.uk>) id 1Z5sUi-0002Ot-T5
+	for xfs@oss.sgi.com; Fri, 19 Jun 2015 02:21:52 -0700
 Received: from [192.171.162.48] (helo=lismore.npm.ac.uk)
-	by out6d.electric.net with esmtp (Exim 4.84)
-	(envelope-from <mggr@pml.ac.uk>) id 1Z5sUb-0005mE-UF
-	for xfs@oss.sgi.com; Fri, 19 Jun 2015 02:21:45 -0700
+	by out4d.electric.net with esmtp (Exim 4.84)
+	(envelope-from <mggr@pml.ac.uk>) id 1Z5sUh-0002MY-VO
+	for xfs@oss.sgi.com; Fri, 19 Jun 2015 02:21:51 -0700
 Received: from lismore.npm.ac.uk (localhost.localdomain [127.0.0.1])
 	by localhost (Email Security Appliance) with SMTP id
-	2EFCE8D6D12_583DF29B
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:21:45 +0000 (GMT)
+	72B818D6C73_583DF2FB
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:21:51 +0000 (GMT)
 Received: from Harris.npm.ac.uk (harris.npm.ac.uk [192.171.162.107])
 	by lismore.npm.ac.uk (Sophos Email Appliance) with ESMTP id
-	F29768D6CCD_583DF28F
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:21:44 +0000 (GMT)
+	260278D689E_583DF2FF
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:21:51 +0000 (GMT)
 From: Mike Grant <mggr@pml.ac.uk>
-Subject: [PATCH 0/2] xfs_repair: clear new memory after realloc
-Date: Fri, 19 Jun 2015 10:21:34 +0100
-Message-ID: <1434705696-21705-1-git-send-email-mggr@pml.ac.uk>
+Subject: [PATCH 2/2] xfs_repair: clear new memory after realloc
+Date: Fri, 19 Jun 2015 10:21:36 +0100
+Message-ID: <1434705696-21705-3-git-send-email-mggr@pml.ac.uk>
+In-Reply-To: <1434705696-21705-1-git-send-email-mggr@pml.ac.uk>
+References: <1434705696-21705-1-git-send-email-mggr@pml.ac.uk>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -44,21 +46,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Mike Grant <mggr@pml.ac.uk>
 
-This patchset fixes the seg-fault bug that was crashing an xfs_repair attempt
-on a 150TB filesystem.  The problem, including traces and metadump link, is
-in the mail thread "xfs_repair segfault + debug info" 29/May/2015.  After the
-patch was applied, the xfs_repair ran through to completion.
+longform_dir2_entry_check in phase6.c has a calloc'ed array of xfs_buf
+pointers (bplist).  It reallocs this array if there turns out to be more
+blocks than expected.  However, realloc doesn't zero the new memory like
+calloc.  In unusual circumstances*, things may then blow up later due to
+random data populating the new part of the array.
 
-There's also a cosmetic reformatting of nearby lines included, but this can be
-dropped if preferred.
+This patch zeros the new part of the array.
 
-Mike Grant (2):
-  xfs_repair: reformat lines to fit within 80 characters
-  xfs_repair: clear new memory after realloc
+* (bit speculative) as dir_read_buf zeros the element it's looking at, I
+think this can only happen if the realloc adds several members and one
+of the first is corrupt.  In my case, the realloc went from 35 to 37
+members, meaning db must have been 36 without being 35.  A read error
+then caused it to goto out_fix. The crash then occurred in the
+libxfs_putbuf when looping through the bplist structure, checking it for
+NULL pointers (and presumably tripping over the non-zeroed data at
+position 35?)
 
- repair/phase6.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Signed-off-by: Mike Grant <mggr@pml.ac.uk>
+---
+ repair/phase6.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 0d66f9c..4dd7551 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -2326,6 +2326,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+ 		db = xfs_dir2_da_to_db(mp, da_bno);
+ 		if (db >= num_bps) {
+ 			/* more data blocks than expected */
++			int num_bps_prev = num_bps;
+ 			num_bps = db + 1;
+ 			bplist = realloc(bplist, num_bps *
+ 				sizeof(struct xfs_buf*));
+@@ -2334,6 +2335,10 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+ 					_("realloc failed in %s (%zu bytes)\n"),
+ 					__func__,
+ 					num_bps * sizeof(struct xfs_buf*));
++			/* clear new memory as previous bplist was calloc'ed */
++			memset((void *) bplist + num_bps_prev
++				* sizeof(struct xfs_buf*), 0, (num_bps -
++				num_bps_prev) * sizeof(struct xfs_buf*));
+ 		}
+ 
+ 		if (isblock)
 -- 
 2.1.0
 
