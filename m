@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9C13A7F5D
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 10:45:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 094397F4E
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 11:41:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 88EE0304032
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 08:45:26 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pXCvtZGIsBUxcQ7E (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2015 08:45:25 -0700 (PDT)
-Date: Fri, 19 Jun 2015 11:45:23 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: don't truncate attribute extents if no extents
-	exist
-Message-ID: <20150619154522.GH12833@bfoster.bfoster>
-References: <1434631741-50856-1-git-send-email-bfoster@redhat.com>
-	<1434631741-50856-2-git-send-email-bfoster@redhat.com>
-	<20150619151421.GC22842@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EBBD4304032
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:41:03 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id P0GtXttyUSuvqa4k for <xfs@oss.sgi.com>;
+	Fri, 19 Jun 2015 09:41:02 -0700 (PDT)
+Message-ID: <5584461D.3000008@sandeen.net>
+Date: Fri, 19 Jun 2015 11:41:01 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150619151421.GC22842@infradead.org>
+Subject: [PATCH V2] xfs_repair: automatically enable -f (file) mode when needed
+References: <5583383D.4070906@redhat.com>
+In-Reply-To: <5583383D.4070906@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +27,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jun 19, 2015 at 08:14:21AM -0700, Christoph Hellwig wrote:
-> > A '-p 2' fsstress run to ENOSPC on a relatively small fs (1GB)
-> > reproduces these problems.
-> 
-> Any chance to add this test case to xfstests?
-> 
+If we specify "-f" to xfs_repair, it recognizes that it's working
+on a file, and if the underlying filesystem sector size differs
+such that direct IO won't work, it disables direct IO.
 
-I think so. I'll look into it.
+It's odd, though, that we'd need to specify this, and the failure
+is non-obvious:
 
-> >  	/* invalidate and truncate the attribute fork extents */
-> > -	if (dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
-> > +	if (xfs_inode_hasattr(dp) &&
-> > +	    dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
-> 
-> And please add a comment describing the condition here, especially
-> as xfs_inode_hasattr doesn't have a very descriptive name.
-> 
+# xfs_repair /mnt/test/foo.img
+Phase 1 - find and verify superblock...
+xfs_repair: read failed: Invalid argument
 
-How about this?
+I see no advantage to requiring the administrator to jump through
+this hoop; why not just detect that it's a file, and move on?
 
-        /*
-         * Invalidate and truncate the attribute fork extents. Make sure the
-         * fork actually has attributes as otherwise the invalidation has no
-         * blocks to read and returns an error. In this case, just do the fork
-         * removal below.
-         */
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Brian
+V2: don't check statbuf if stat fails, thanks Brian :)
+
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 834697a..2d376be 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -573,6 +573,18 @@ main(int argc, char **argv)
+ 		exit(1);
+ 	}
+ 
++	/* -f forces this, but let's be nice and autodetect it, as well. */
++	if (!isa_file) {
++		int		fd = libxfs_device_to_fd(x.ddev);
++		struct stat64	statbuf;
++
++		if (fstat64(fd, &statbuf) < 0)
++			do_warn(_("%s: couldn't stat \"%s\"\n"),
++				progname, fs_name);
++		else if (S_ISREG(statbuf.st_mode))
++			isa_file = 1;
++	}
++
+ 	/*
+ 	 * if the sector size of the filesystem we are trying to repair is
+ 	 * smaller than that of the underlying filesystem (i.e. we are repairing
+
 
 _______________________________________________
 xfs mailing list
