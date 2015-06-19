@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6D8AD7F6C
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 16:29:39 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 313567F60
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 02:02:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 07804AC005
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 14:29:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xZwkS8zx8MxR6MXl (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 04D6B304039
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 00:02:01 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id U6sVs8prx603CR28 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Jun 2015 14:29:35 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 04F152DD2E8
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 21:29:35 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t5ILTXsQ031272
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2015 17:29:34 -0400
-Message-ID: <5583383D.4070906@redhat.com>
-Date: Thu, 18 Jun 2015 16:29:33 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	Fri, 19 Jun 2015 00:02:00 -0700 (PDT)
+Date: Fri, 19 Jun 2015 03:01:58 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <1047428563.16839742.1434697318546.JavaMail.zimbra@redhat.com>
+In-Reply-To: <5582DC45.9050101@sandeen.net>
+References: <55820229.1010701@redhat.com>
+	<14667996.16447259.1434625419793.JavaMail.zimbra@redhat.com>
+	<5582DC45.9050101@sandeen.net>
+Subject: Re: [PATCH] mkfs.xfs: always use underlying fs sector size when
+	mkfs'ing a file
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: automatically enable -f (file) mode when needed
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,48 +31,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-If we specify "-f" to xfs_repair, it recognizes that it's working
-on a file, and if the underlying filesystem sector size differs
-such that direct IO won't work, it disables direct IO.
 
-It's odd, though, that we'd need to specify this, and the failure
-is non-obvious:
 
-# xfs_repair /mnt/test/foo.img
-Phase 1 - find and verify superblock...
-xfs_repair: read failed: Invalid argument
+----- Original Message -----
+> From: "Eric Sandeen" <sandeen@sandeen.net>
+> To: "Jan Tulak" <jtulak@redhat.com>, "Eric Sandeen" <sandeen@redhat.com>
+> Cc: "xfs-oss" <xfs@oss.sgi.com>
+> Sent: Thursday, June 18, 2015 4:57:09 PM
+> Subject: Re: [PATCH] mkfs.xfs: always use underlying fs sector size when	mkfs'ing a file
+> 
+> On 6/18/15 6:03 AM, Jan Tulak wrote:
+> > 
+> > 
+> > ----- Original Message -----
+> >> From: "Eric Sandeen" <sandeen@redhat.com>
+> >> To: "xfs-oss" <xfs@oss.sgi.com>
+> >> Sent: Thursday, June 18, 2015 1:26:33 AM
+> >> Subject: [PATCH] mkfs.xfs: always use underlying fs sector size when
+> >> mkfs'ing	a file
+> >>
+> >> If we are mkfs'ing a file, and that file is on a 4k sector filesystem,
+> >> we should make the fs image file with the same sector size, or things
+> >> may fail when they try to do direct IO in 512 byte chunks (depending
+> >> on whether it is a 512e or "hard" 4k device).
+> >>
+> >> Earlier commits attempted this to some degree:
+> >>
+> >> 5a7d59 xfsprogs: try to handle mkfs of a file on 4k sector device
+> >> 3800a2 mkfs.xfs: don't call blkid_get_topology on existing regular files
+> >>
+> >> but inexplicably missed the case where mkfs.xfs with "-d file" was
+> >> specified.
+> >>
+> >> One more try; in get_topology(), try to get the underlying fs sector
+> >> size in *all* cases where we are mkfs'ing a file, and set the sector size
+> >> accordingly.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> (This does it for 512e as well as hard 4k drives, but I think that's
+> >> probably ok?  If not, perhaps we should go further and attempt to
+> >> discern logical and physical sectors for the device under the
+> >> filesystem.  Is it worth it?  Not sure it is.)
+> >>
+> >> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> >> index e2a052d..e44c390 100644
+> >> --- a/mkfs/xfs_mkfs.c
+> >> +++ b/mkfs/xfs_mkfs.c
+> >> @@ -462,31 +462,34 @@ static void get_topology(
+> >>  	struct fs_topology	*ft,
+> >>  	int			force_overwrite)
+> >>  {
+> >> -	if (!xi->disfile) {
+> >> -		char *dfile = xi->volname ? xi->volname : xi->dname;
+> >> -		struct stat statbuf;
+> >> +	struct stat statbuf;
+> >> +	char *dfile = xi->volname ? xi->volname : xi->dname;
+> >>  
+> >> -		/*
+> >> -		 * If our target is a regular file, and xi->disfile isn't
+> >> -		 * set (i.e. no "-d file" invocation), use platform_findsizes
+> >> -		 * to try to obtain the underlying filesystem's requirements
+> >> -		 * for direct IO; we'll set our sector size to that if possible.
+> >> -		 */
+> >> -		if (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode)) {
+> >> -			int fd;
+> >> -			long long dummy;
+> >> -
+> >> -			fd = open(dfile, O_RDONLY);
+> >> -			if (fd >= 0) {
+> >> -				platform_findsizes(dfile, fd, &dummy,
+> >> -						   &ft->lsectorsize);
+> >> -				close(fd);
+> >> -			}
+> >> -		} else {
+> >> -			blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+> >> -					   &ft->lsectorsize, &ft->psectorsize,
+> >> -					   force_overwrite);
+> >> +	/*
+> >> +	 * If our target is a regular file, use platform_findsizes
+> >> +	 * to try to obtain the underlying filesystem's requirements
+> >> +	 * for direct IO; we'll set our sector size to that if possible.
+> >> +	 */
+> >> +	if (xi->disfile ||
+> >> +	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
+> >> +		int fd;
+> >> +		int flags = O_RDONLY;
+> >> +		long long dummy;
+> >> +
+> >> +		/* with xi->disfile we may not have the file yet! */
+> >> +		if (xi->disfile)
+> >> +			flags |= O_CREAT;
+> >> +
+> >> +		fd = open(dfile, flags, 0666);
+> >> +		if (fd >= 0) {
+> >> +			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
+> >> +			close (fd);
+> >>  		}
+> >> +
+> >> +	} else {
+> >> +		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+> >> +				   &ft->lsectorsize, &ft->psectorsize,
+> >> +				   force_overwrite);
+> >>  	}
+> >>  
+> >>  	if (xi->rtname && !xi->risfile) {
+> >>
+> > 
+> > This changes get_topology only for ENABLE_BLKID branch of #ifdef. Is
+> > that intentional, i.e. we don't expect anyone not using ENABLE_BLKID?
+> > Because otherwise, if mkfs is compiled without ENABLE_BLKID, then all
+> > we get is:
+> 
+> Hm, yeah, good point.  I always forget about this.  :(  I can send V2.
+> 
+> And sorry if this overlaps w/ your changes- 
 
-I see no advantage to requirin the administrator to jump through
-this hoop; why not just detect that it's a file, and move on?
+No problem. :-)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Cheers,
+Jan
 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 834697a..2d376be 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -573,6 +573,18 @@ main(int argc, char **argv)
- 		exit(1);
- 	}
- 
-+	/* -f forces this, but let's be nice and autodetect it, as well. */
-+	if (!isa_file) {
-+		int		fd = libxfs_device_to_fd(x.ddev);
-+		struct stat64	statbuf;
-+
-+		if (fstat64(fd, &statbuf) < 0)
-+			do_warn(_("%s:  couldn't stat \"%s\"\n"),
-+				progname, fs_name);
-+		if (S_ISREG(statbuf.st_mode))
-+			isa_file = 1;
-+	}
-+
- 	/*
- 	 * if the sector size of the filesystem we are trying to repair is
- 	 * smaller than that of the underlying filesystem (i.e. we are repairing
+-- 
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
