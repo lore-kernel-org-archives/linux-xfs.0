@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D1D9B7F5D
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 08:19:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C0493304032
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:19:42 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5F93B7F61
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 08:19:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F50A304032
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:19:49 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jth2iX26wGHUNIcf (version=TLSv1
+	cuda.sgi.com with ESMTP id jt0xLLUhouJK8WVC (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2015 06:19:41 -0700 (PDT)
+	Fri, 19 Jun 2015 06:19:48 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id EBBB933B358
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 13:19:40 +0000 (UTC)
-Date: Fri, 19 Jun 2015 09:19:39 -0400
+	by mx1.redhat.com (Postfix) with ESMTPS id 9DB492D9246
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 13:19:47 +0000 (UTC)
+Date: Fri, 19 Jun 2015 09:19:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_metadump: obfuscate attrs on CRC fs
-Message-ID: <20150619131938.GA12833@bfoster.bfoster>
-References: <557B6222.4030903@redhat.com>
+Subject: Re: [PATCH] xfs_copy: fix copy of hard 4k devices
+Message-ID: <20150619131945.GB12833@bfoster.bfoster>
+References: <5581C962.7020200@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <557B6222.4030903@redhat.com>
+In-Reply-To: <5581C962.7020200@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,133 +36,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jun 12, 2015 at 05:50:10PM -0500, Eric Sandeen wrote:
-> Lots of issues in xfs_metadump obfuscation of extended
-> attributes with CRC filesystems; this fixes it up.
+On Wed, Jun 17, 2015 at 02:24:18PM -0500, Eric Sandeen wrote:
+> If we have a pure 4k device with no 512 emulation, xfs_copy
+> fails straightaway because it tries to do a 512-byte direct
+> IO read of the superblock.
 > 
-> The main issues are that the headers differ, and the
-> space in the remote blocks differ.
+> Do like we do in xfs_db, and read in the max possible sector size,
+> because we don't yet know what the filesystem's sector size is.
 > 
-> Tested with a script I'm using to do other metadump
-> work; I still owe an xfstest for this and other bits.
+> This fixes a failure in xfs/032 on a hard 4k device.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-> 
-> Brief/hacky testcase; populate w/ many attr types with:
-> 
-> 	MNTPT=/mount/test
-> 
->         # FMT_LOCAL
->         touch $MNTPT/S_IFREG.ATTR.FMT_LOCAL
->         setfattr -n user.localattrname -v localattrvalue $MNTPT/S_IFREG.ATTR.FMT_LOCAL
-> 
->         # FMT_EXTENTS
->         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
->         for I in `seq 1 50`; do
->                 setfattr -n user.extentattrname$I -v extentattrvalue $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
->         done
-> 
->         # FMT_EXTENTS with a single remote 3k value, fill with "C"
->         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K
->         xfs_io -f -c "pwrite -S 0x43 0 3k" attrvalfile &>/dev/null
->         attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K < attrvalfile
-> 
->         # FMT_EXTENTS with a single remote 4k value, fill with "D"
->         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K
->         xfs_io -f -c "pwrite -S 0x44 0 4k" attrvalfile &>/dev/null
->         attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K < attrvalfile
-> 
->         # FMT_BTREE
->         touch $MNTPT/S_IFREG.ATTR.FMT_BTREE
->         for I in `seq 1 1000`; do
->                 setfattr -n user.btreeattrname$I -v btreelongerattrvalue $MNTPT/S_IFREG.ATTR.FMT_BTREE
->         done
-> 
-> on a crc filesystem, an obfuscated metadump will show all these attrs in the clear
-> with getfattr -dR $MNTPT
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 94f92bc..793f39e 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -1268,39 +1268,54 @@ add_remote_vals(
->  	}
->  }
->  
-> +/* Handle remote and leaf attributes */
->  static void
->  obfuscate_attr_block(
-> -	char			*block,
-> -	xfs_fileoff_t		offset)
-> +	char				*block,
-> +	xfs_fileoff_t			offset)
->  {
-> -	xfs_attr_leafblock_t	*leaf;
-> -	int			i;
-> -	int			nentries;
-> -	xfs_attr_leaf_entry_t 	*entry;
-> -	xfs_attr_leaf_name_local_t *local;
-> -	xfs_attr_leaf_name_remote_t *remote;
-> +	struct xfs_attr_leafblock	*leaf;
-> +	struct xfs_attr3_icleaf_hdr	hdr;
-> +	int				i;
-> +	int				nentries;
-> +	xfs_attr_leaf_entry_t 		*entry;
-> +	xfs_attr_leaf_name_local_t 	*local;
-> +	xfs_attr_leaf_name_remote_t 	*remote;
-> +	__uint32_t			bs = mp->m_sb.sb_blocksize;
-> +
->  
->  	leaf = (xfs_attr_leafblock_t *)block;
->  
-> -	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
-> +	/* Get header; accounts for crc & non-crc */
-> +	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
-> +
 
-The above conversion helper assert fails on a non-leaf magic. It seems
-like effectively the same check below with this change, but it might be
-more appropriate to defer the leaf header conversion to after the hunk
-below..?
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Brian
-
-> +	/* Remote attributes */
-> +	if ((hdr.magic != XFS_ATTR_LEAF_MAGIC) &&
-> +	    (hdr.magic != XFS_ATTR3_LEAF_MAGIC)) {
->  		for (i = 0; i < attr_data.remote_val_count; i++) {
-> -			/* XXX: need to handle CRC headers */
->  			if (attr_data.remote_vals[i] == offset)
-> -				memset(block, 0, mp->m_sb.sb_blocksize);
-> +				/* magic to handle attr and attr3 */
-> +				memset(block +
-> +					(bs - XFS_ATTR3_RMT_BUF_SPACE(mp, bs)),
-> +				      0, XFS_ATTR3_RMT_BUF_SPACE(mp, bs));
->  		}
->  		return;
->  	}
+> 
+> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+> index 279527c..b39c84d 100644
+> --- a/copy/xfs_copy.c
+> +++ b/copy/xfs_copy.c
+> @@ -654,8 +654,9 @@ main(int argc, char **argv)
 >  
-> -	nentries = be16_to_cpu(leaf->hdr.count);
-> +	nentries = hdr.count;
-> +
->  	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
-> -			sizeof(xfs_attr_leaf_hdr_t) > mp->m_sb.sb_blocksize) {
-> +			xfs_attr3_leaf_hdr_size(leaf) >
-> +				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
->  		if (show_warnings)
->  			print_warning("invalid attr count in inode %llu",
->  					(long long)cur_ino);
->  		return;
->  	}
+>  	memset(&mbuf, 0, sizeof(xfs_mount_t));
+>  	libxfs_buftarg_init(&mbuf, xargs.ddev, xargs.logdev, xargs.rtdev);
+> -	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR, 1, 0,
+> -							&xfs_sb_buf_ops);
+> +	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
+> +			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT),
+> +			     0, &xfs_sb_buf_ops);
+>  	sb = &mbuf.m_sb;
+>  	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
 >  
-> -	for (i = 0, entry = &leaf->entries[0]; i < nentries; i++, entry++) {
-> +	entry = xfs_attr3_leaf_entryp(leaf);
-> +
-> +	for (i = 0; i < nentries; i++, entry++) {
->  		if (be16_to_cpu(entry->nameidx) > mp->m_sb.sb_blocksize) {
->  			if (show_warnings)
->  				print_warning(
 > 
 > _______________________________________________
 > xfs mailing list
