@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5F93B7F61
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 08:19:49 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C9B8B7F5D
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 08:19:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F50A304032
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:19:49 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 48E05AC001
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:19:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jt0xLLUhouJK8WVC (version=TLSv1
+	cuda.sgi.com with ESMTP id n8FyYybMKdVUN1Ui (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2015 06:19:48 -0700 (PDT)
+	Fri, 19 Jun 2015 06:19:55 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 9DB492D9246
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 13:19:47 +0000 (UTC)
-Date: Fri, 19 Jun 2015 09:19:46 -0400
+	by mx1.redhat.com (Postfix) with ESMTPS id 766AB388B67
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 13:19:54 +0000 (UTC)
+Date: Fri, 19 Jun 2015 09:19:53 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_copy: fix copy of hard 4k devices
-Message-ID: <20150619131945.GB12833@bfoster.bfoster>
-References: <5581C962.7020200@redhat.com>
+Subject: Re: [PATCH] xfs_repair: refuse to unset lazycount on V5 filesystems
+Message-ID: <20150619131952.GC12833@bfoster.bfoster>
+References: <5582F962.2090400@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5581C962.7020200@redhat.com>
+In-Reply-To: <5582F962.2090400@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,40 +34,78 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: "Richard W.M. Jones" <rjones@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Jun 17, 2015 at 02:24:18PM -0500, Eric Sandeen wrote:
-> If we have a pure 4k device with no 512 emulation, xfs_copy
-> fails straightaway because it tries to do a 512-byte direct
-> IO read of the superblock.
+On Thu, Jun 18, 2015 at 12:01:22PM -0500, Eric Sandeen wrote:
+> Running "xfs_admin -c 0" on a V5 fs has unfortunate results.
 > 
-> Do like we do in xfs_db, and read in the max possible sector size,
-> because we don't yet know what the filesystem's sector size is.
+> Before:
+> versionnum [0xbca5+0x18a] = ... LAZYSBCOUNT,PROJID32BIT,CRC, ...
+> After:
+> versionnum [0xbca5+0x188] = ... LAZYSBCOUNT,PROJID32BIT,CRC, ...
 > 
-> This fixes a failure in xfs/032 on a hard 4k device.
+> The on-disk feature bit is in fact changed, but xfs_db reports that the
+> feature is still present.  This is because xfs_sb_version_haslazysbcount()
+> ignores the feature bit, and always reports that the lazy-count feature is
+> present on a V5 fs.
 > 
+> i.e. the intent is that this feature is not optional on a V5 fs, yet we
+> still flip the bit on disk when asked.  Not good.
+> 
+> So, document this, and error out if the user tries to disable lazy-count
+> on a version 5 filesystem.
+> 
+> Reported-by: Richard W.M. Jones <rjones@redhat.com>
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
 > 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 279527c..b39c84d 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -654,8 +654,9 @@ main(int argc, char **argv)
->  
->  	memset(&mbuf, 0, sizeof(xfs_mount_t));
->  	libxfs_buftarg_init(&mbuf, xargs.ddev, xargs.logdev, xargs.rtdev);
-> -	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR, 1, 0,
-> -							&xfs_sb_buf_ops);
-> +	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
-> +			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT),
-> +			     0, &xfs_sb_buf_ops);
->  	sb = &mbuf.m_sb;
->  	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
->  
+> (hm, xfs_repair should probably also turn the bit back on, if it's off on
+> V5?  I'll save that for another patch.)
+> 
+
+Seems reasonable.
+
+Brian
+
+> diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> index b393d74..0968196 100644
+> --- a/man/man8/xfs_admin.8
+> +++ b/man/man8/xfs_admin.8
+> @@ -62,6 +62,10 @@ Print the current filesystem UUID (Universally Unique IDentifier).
+>  .TP
+>  .BR "\-c 0" | 1
+>  Enable (1) or disable (0) lazy-counters in the filesystem.
+> +.IP
+> +Lazy-counters may not be disabled on Version 5 superblock filesystems
+> +(i.e. those with metadata CRCs enabled).
+> +.IP
+>  This operation may take quite a bit of time on large filesystems as the
+>  entire filesystem needs to be scanned when this option is changed.
+>  .IP
+> 
+> diff --git a/repair/phase1.c b/repair/phase1.c
+> index ec75ada..9e7011d 100644
+> --- a/repair/phase1.c
+> +++ b/repair/phase1.c
+> @@ -121,8 +121,12 @@ phase1(xfs_mount_t *mp)
+>  			sb->sb_bad_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+>  			primary_sb_modified = 1;
+>  			printf(_("Enabling lazy-counters\n"));
+> -		} else
+> -		if (!lazy_count && xfs_sb_version_haslazysbcount(sb)) {
+> +		} else if (!lazy_count && xfs_sb_version_haslazysbcount(sb)) {
+> +			if (XFS_SB_VERSION_NUM(sb) == XFS_SB_VERSION_5) {
+> +				printf(
+> +_("Cannot disable lazy-counters on V5 fs\n"));
+> +				exit(1);
+> +			}
+>  			sb->sb_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+>  			sb->sb_bad_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+>  			printf(_("Disabling lazy-counters\n"));
+> 
 > 
 > _______________________________________________
 > xfs mailing list
