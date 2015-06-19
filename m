@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EFEF47F58
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:52:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6ACD9AC008
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:52:15 -0700 (PDT)
-Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
-	cuda.sgi.com with ESMTP id UZWRL0NeAbFioDcM (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 797C17F5F
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:02:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 69F2D304066
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:02:12 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id u8Bufw685WKSclrG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2015 04:52:13 -0700 (PDT)
-Date: Fri, 19 Jun 2015 07:51:50 -0400 (EDT)
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <322058154.17077903.1434714710791.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20150619111022.GA5212@infradead.org>
+	Fri, 19 Jun 2015 04:02:11 -0700 (PDT)
+From: =?UTF-8?q?Jan=20=C5=A4ul=C3=A1k?= <jtulak@redhat.com>
+Subject: [PATCH 02/17] mkfs: sanitise ftype parameter values.
+Date: Fri, 19 Jun 2015 13:01:51 +0200
+Message-Id: <1434711726-13092-3-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
 References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
-	<1434711726-13092-2-git-send-email-jtulak@redhat.com>
-	<20150619111022.GA5212@infradead.org>
-Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,59 +24,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-
-
------ Original Message -----
-> From: "Christoph Hellwig" <hch@infradead.org>
-> To: "Jan ??ul??k" <jtulak@redhat.com>
-> Cc: "Dave Chinner" <dchinner@redhat.com>, xfs@oss.sgi.com
-> Sent: Friday, June 19, 2015 1:10:22 PM
-> Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
-> 
-> > index 70e43a0..3269ec3 100644
-> > --- a/include/Makefile
-> > +++ b/include/Makefile
-> > @@ -26,9 +26,15 @@ QAHFILES = libxfs.h libxlog.h \
-> >  	xfs_inode.h \
-> >  	xfs_log_recover.h \
-> >  	xfs_metadump.h \
-> > +	xfs_mkfs.h \
-> >  	xfs_mount.h \
-> > +	xfs_quota_defs.h \
-> > +	xfs_sb.h \
-> > +	xfs_shared.h \
-> >  	xfs_trace.h \
-> > -	xfs_trans.h
-> > +	xfs_trans.h \
-> > +	xfs_trans_resv.h \
-> > +	xfs_trans_space.h
-> 
-> These shouldn't be added to the headers installed by make install-qa.
-> 
-> (which I'm going to send a patch to remove once Dave applied the
-> build fix, btw)
-> 
-OK, noted.
-
-> Also I'm not sure xfs_mkfs.h really is a good name for a global header.
-
-I don't see any issue with it, but if there is a reason for a different name, I can change it. :-)
-
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQmVjYXVzZSBwYXNzaW5n
+ICItbiBmdHlwZT0yIiBzaG91bGQgZmFpbC4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGNoaW5uZXJAcmVkaGF0LmNvbT4KU2lnbmVkLW9mZi1ieTogSmFuIMWkdWzDoWsgPGp0dWxha0By
+ZWRoYXQuY29tPgotLS0KIG1rZnMveGZzX21rZnMuYyB8IDUgKysrKy0KIDEgZmlsZSBjaGFuZ2Vk
+LCA0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9ta2ZzL3hmc19t
+a2ZzLmMgYi9ta2ZzL3hmc19ta2ZzLmMKaW5kZXggZDBkZTkwZC4uMTY1MjkwMyAxMDA2NDQKLS0t
+IGEvbWtmcy94ZnNfbWtmcy5jCisrKyBiL21rZnMveGZzX21rZnMuYwpAQCAtMTYxNywxMiArMTYx
+NywxNSBAQCBfKCJjYW5ub3Qgc3BlY2lmeSBib3RoIGNyYyBhbmQgZnR5cGVcbiIpKTsKIAkJCQkJ
+CXJlcXZhbCgnbicsIG5vcHRzLCBOX0ZUWVBFKTsKIAkJCQkJaWYgKG5mdHlwZSkKIAkJCQkJCXJl
+c3BlYygnbicsIG5vcHRzLCBOX0ZUWVBFKTsKLQkJCQkJZGlyZnR5cGUgPSBhdG9pKHZhbHVlKTsK
+KwkJCQkJYyA9IGF0b2kodmFsdWUpOworCQkJCQlpZiAoYyA8IDAgfHwgYyA+IDEpCisJCQkJCQlp
+bGxlZ2FsKHZhbHVlLCAibiBmdHlwZSIpOwogCQkJCQlpZiAoY3Jjc19lbmFibGVkKSB7CiAJCQkJ
+CQlmcHJpbnRmKHN0ZGVyciwKIF8oImNhbm5vdCBzcGVjaWZ5IGJvdGggY3JjIGFuZCBmdHlwZVxu
+IikpOwogCQkJCQkJdXNhZ2UoKTsKIAkJCQkJfQorCQkJCQlkaXJmdHlwZSA9IGM7CiAJCQkJCW5m
+dHlwZSA9IDE7CiAJCQkJCWJyZWFrOwogCQkJCWRlZmF1bHQ6Ci0tIAoyLjEuMAoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
+ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
