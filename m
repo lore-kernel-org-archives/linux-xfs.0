@@ -1,35 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 379547F7B
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:21:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B3CFBAC00B
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 02:21:55 -0700 (PDT)
-Received: from smtp-out6.electric.net ([192.162.217.193]) by cuda.sgi.com with
-	ESMTP id c6kOfQaK8nKRiZDw (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2015 02:21:49 -0700 (PDT)
-Received: from 1Z5sUe-0008F8-Uh by out6a.electric.net with emc1-ok (Exim 4.84)
-	(envelope-from <mggr@pml.ac.uk>) id 1Z5sUe-0008Gv-VU
-	for xfs@oss.sgi.com; Fri, 19 Jun 2015 02:21:48 -0700
-Received: from [192.171.162.48] (helo=lismore.npm.ac.uk)
-	by out6a.electric.net with esmtp (Exim 4.84)
-	(envelope-from <mggr@pml.ac.uk>) id 1Z5sUe-0008F8-Uh
-	for xfs@oss.sgi.com; Fri, 19 Jun 2015 02:21:48 -0700
-Received: from lismore.npm.ac.uk (localhost.localdomain [127.0.0.1])
-	by localhost (Email Security Appliance) with SMTP id
-	4A9A48D6D66_583DF2CB
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:21:48 +0000 (GMT)
-Received: from Harris.npm.ac.uk (harris.npm.ac.uk [192.171.162.107])
-	by lismore.npm.ac.uk (Sophos Email Appliance) with ESMTP id
-	106438D6D56_583DF2CF
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 09:21:48 +0000 (GMT)
-From: Mike Grant <mggr@pml.ac.uk>
-Subject: [PATCH 1/2] xfs_repair: reformat lines to fit within 80 characters
-Date: Fri, 19 Jun 2015 10:21:35 +0100
-Message-ID: <1434705696-21705-2-git-send-email-mggr@pml.ac.uk>
-In-Reply-To: <1434705696-21705-1-git-send-email-mggr@pml.ac.uk>
-References: <1434705696-21705-1-git-send-email-mggr@pml.ac.uk>
+	by oss.sgi.com (Postfix) with ESMTP id EFEF47F58
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:52:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6ACD9AC008
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:52:15 -0700 (PDT)
+Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
+	cuda.sgi.com with ESMTP id UZWRL0NeAbFioDcM (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 19 Jun 2015 04:52:13 -0700 (PDT)
+Date: Fri, 19 Jun 2015 07:51:50 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <322058154.17077903.1434714710791.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150619111022.GA5212@infradead.org>
+References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
+	<1434711726-13092-2-git-send-email-jtulak@redhat.com>
+	<20150619111022.GA5212@infradead.org>
+Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -43,45 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Mike Grant <mggr@pml.ac.uk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Mike Grant <mggr@pml.ac.uk>
----
- repair/phase6.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 105bce4..0d66f9c 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -2327,9 +2327,11 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 		if (db >= num_bps) {
- 			/* more data blocks than expected */
- 			num_bps = db + 1;
--			bplist = realloc(bplist, num_bps * sizeof(struct xfs_buf*));
-+			bplist = realloc(bplist, num_bps *
-+				sizeof(struct xfs_buf*));
- 			if (!bplist)
--				do_error(_("realloc failed in %s (%zu bytes)\n"),
-+				do_error(
-+					_("realloc failed in %s (%zu bytes)\n"),
- 					__func__,
- 					num_bps * sizeof(struct xfs_buf*));
- 		}
+
+----- Original Message -----
+> From: "Christoph Hellwig" <hch@infradead.org>
+> To: "Jan ??ul??k" <jtulak@redhat.com>
+> Cc: "Dave Chinner" <dchinner@redhat.com>, xfs@oss.sgi.com
+> Sent: Friday, June 19, 2015 1:10:22 PM
+> Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
+> 
+> > index 70e43a0..3269ec3 100644
+> > --- a/include/Makefile
+> > +++ b/include/Makefile
+> > @@ -26,9 +26,15 @@ QAHFILES = libxfs.h libxlog.h \
+> >  	xfs_inode.h \
+> >  	xfs_log_recover.h \
+> >  	xfs_metadump.h \
+> > +	xfs_mkfs.h \
+> >  	xfs_mount.h \
+> > +	xfs_quota_defs.h \
+> > +	xfs_sb.h \
+> > +	xfs_shared.h \
+> >  	xfs_trace.h \
+> > -	xfs_trans.h
+> > +	xfs_trans.h \
+> > +	xfs_trans_resv.h \
+> > +	xfs_trans_space.h
+> 
+> These shouldn't be added to the headers installed by make install-qa.
+> 
+> (which I'm going to send a patch to remove once Dave applied the
+> build fix, btw)
+> 
+OK, noted.
+
+> Also I'm not sure xfs_mkfs.h really is a good name for a global header.
+
+I don't see any issue with it, but if there is a reason for a different name, I can change it. :-)
+
+Cheers,
+Jan
+
 -- 
-2.1.0
-
-(apologies for the following junk forcibly appended by my company)
-
-
-Please visit our new website at www.pml.ac.uk and follow us on Twitter  @PlymouthMarine
-
-Winner of the Environment & Conservation category, the Charity Awards 2014.
-
-Plymouth Marine Laboratory (PML) is a company limited by guarantee registered in England & Wales, company number 4178503. Registered Charity No. 1091222. Registered Office: Prospect Place, The Hoe, Plymouth  PL1 3DH, UK. 
-
-This message is private and confidential. If you have received this message in error, please notify the sender and remove it from your system. You are reminded that e-mail communications are not secure and may contain viruses; PML accepts no liability for any loss or damage which may be caused by viruses.
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
