@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D8EA57F86
-	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 20:59:24 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3D78D7FA4
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 06:02:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BC0138F8033
-	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 18:59:21 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	tkpnYR4AVedEJZ7E for <xfs@oss.sgi.com>;
-	Tue, 30 Jun 2015 18:59:19 -0700 (PDT)
-Date: Wed, 1 Jul 2015 11:58:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/14] xfs: minimize impact to non-reflink files via
-	reflink per-inode flag
-Message-ID: <20150701015843.GS22807@dastard>
-References: <20150625233909.4992.68314.stgit@birch.djwong.org>
-	<20150625234016.4992.52406.stgit@birch.djwong.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C5AE304043
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2015 04:02:31 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id AWJWEVmvPRJ7Aitb (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 19 Jun 2015 04:02:30 -0700 (PDT)
+From: =?UTF-8?q?Jan=20=C5=A4ul=C3=A1k?= <jtulak@redhat.com>
+Subject: [PATCH 14/17] mkfs: add string options to generic parsing
+Date: Fri, 19 Jun 2015 13:02:03 +0200
+Message-Id: <1434711726-13092-15-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
+References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150625234016.4992.52406.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,61 +24,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-On Thu, Jun 25, 2015 at 04:40:16PM -0700, Darrick J. Wong wrote:
-> Gate all the reflink functions (which generally involve an expensive
-> trip to the reflink btree) on an inode flag which is applied to both
-> inodes at reflink time.  This minimizes reflink's impact on non-CoW
-> files.
-
-Ah, I see you do this reflink inode flag here. This should be one of
-the first patches, not the last.  i.e. the patch series should
-build up all the supporting infrastructure in individual patches
-before adding any of the actual reflink implementation....
-
-Also, the flag needs to go into the di_flags2 field, as the last
-flag in the di_flags field is reserved for a "more flags" flag if we
-ever need to add more flags to a v2 inode in a v4 filesystem...
-
-> +/*
-> + * xfs_is_reflink_inode() -- Decide if an inode needs to be checked for CoW.
-> + *
-> + * @ip: XFS inode
-> + */
-> +bool
-> +xfs_is_reflink_inode(
-> +	struct xfs_inode	*ip)		/* XFS inode */
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> +		return false;
-> +	if (!(ip->i_d.di_flags & XFS_DIFLAG_REFLINK))
-> +		return false;
-> +
-> +	ASSERT(!XFS_IS_REALTIME_INODE(ip));
-> +	return true;
-
-I would have thought you only need to check the inode flag here
-because the only time it will be set is on a reflink enabled
-filesystem. i.e. that flag being set implies we've already done
-all the "reflink is supported in this filesystem and it's not a
-realtime file" checks when setting the flag.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKU28gdGhhdCBzdHJpbmcg
+b3B0aW9ucyBhcmUgY29ycmVjdGx5IGRldGVjdGVkIGZvciBjb25mbGljdHMgYW5kCnJlc3BlY2lm
+aWNhdGlvbiwgYWRkIGEgZ2V0c3RyKCkgZnVuY3Rpb24gdGhhdCBtb2RpZmllcyB0aGUgb3B0aW9u
+CnRhYmxlcyBhcHByb3ByaWF0ZWx5LgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hp
+bm5lckByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBKYW4gxaR1bMOhayA8anR1bGFrQHJlZGhh
+dC5jb20+Ci0tLQogbWtmcy94ZnNfbWtmcy5jIHwgMTI3ICsrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNzAgaW5z
+ZXJ0aW9ucygrKSwgNTcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbWtmcy94ZnNfbWtmcy5j
+IGIvbWtmcy94ZnNfbWtmcy5jCmluZGV4IDFkODAxODguLjZiZmE3M2MgMTAwNjQ0Ci0tLSBhL21r
+ZnMveGZzX21rZnMuYworKysgYi9ta2ZzL3hmc19ta2ZzLmMKQEAgLTY4LDYgKzY4LDcgQEAgc3Ry
+dWN0IG9wdF9wYXJhbXMgewogCXN0cnVjdCBzdWJvcHRfcGFyYW0gewogCQlpbnQJCWluZGV4Owog
+CQlib29sCQlzZWVuOworCQlib29sCQlzdHJfc2VlbjsKIAkJYm9vbAkJY29udmVydDsKIAkJYm9v
+bAkJaXNfcG93ZXJfMjsKIAkJaW50CQljb25mbGljdHNbTUFYX0NPTkZMSUNUU107CkBAIC0xNDEy
+LDE0ICsxNDEzLDE1IEBAIGlsbGVnYWxfb3B0aW9uKAogCXVzYWdlKCk7CiB9CiAKLXN0YXRpYyBs
+b25nIGxvbmcKLWdldG51bSgKK3N0YXRpYyB2b2lkCitjaGVja19vcHQoCiAJY29uc3QgY2hhcgkJ
+KnN0ciwKIAlzdHJ1Y3Qgb3B0X3BhcmFtcwkqb3B0cywKLQlpbnQJCQlpbmRleCkKKwlpbnQJCQlp
+bmRleCwKKwlib29sCQkJc3RyX3NlZW4pCiB7Ci0Jc3RydWN0IHN1Ym9wdF9wYXJhbSAqc3AgPSAm
+b3B0cy0+c3Vib3B0X3BhcmFtc1tpbmRleF07Ci0JbG9uZyBsb25nCQljOworCXN0cnVjdCBzdWJv
+cHRfcGFyYW0JKnNwID0gJm9wdHMtPnN1Ym9wdF9wYXJhbXNbaW5kZXhdOworCWludAkJCWk7CiAK
+IAlpZiAoc3AtPmluZGV4ICE9IGluZGV4KSB7CiAJCWZwcmludGYoc3RkZXJyLApAQCAtMTQyOCwy
+MSArMTQzMCw0NiBAQCBnZXRudW0oCiAJCXJlcXZhbChvcHRzLT5uYW1lLCAoY2hhciAqKilvcHRz
+LT5zdWJvcHRzLCBpbmRleCk7CiAJfQogCi0JLyogY2hlY2sgZm9yIHJlc3BlY2lmaWNhdGlvbiBv
+ZiB0aGUgb3B0aW9uICovCi0JaWYgKHNwLT5zZWVuKQotCQlyZXNwZWMob3B0cy0+bmFtZSwgKGNo
+YXIgKiopb3B0cy0+c3Vib3B0cywgaW5kZXgpOwotCXNwLT5zZWVuID0gdHJ1ZTsKKwkvKgorCSAq
+IENoZWNrIGZvciByZXNwZWNpZmljYXRpb24gb2YgdGhlIG9wdGlvbi4gVGhpcyBpcyBtb3JlIGNv
+bXBsZXggdGhhbiBpdAorCSAqIHNlZW1zIGJlY2F1c2Ugc29tZSBvcHRpb25zIGFyZSBwYXJzZWQg
+dHdpY2UgLSBvbmNlIGFzIGEgc3RyaW5nIGR1cmluZworCSAqIGlucHV0IHBhcnNpbmcsIHRoZW4g
+bGF0ZXIgdGhlIHN0cmluZyBpcyBwYXNzZWQgdG8gZ2V0bnVtIGZvcgorCSAqIGNvbnZlcnNpb24g
+aW50byBhIG51bWJlciBhbmQgYm91bmRzIGNoZWNraW5nLiBIZW5jZSB0aGUgdHdvIHZhcmlhYmxl
+cworCSAqIHVzZWQgdG8gdHJhY2sgdGhlIGRpZmZlcmVudCB1c2VzIGJhc2VkIG9uIHRoZSBAc3Ry
+IHBhcmFtZXRlciBwYXNzZWQKKwkgKiB0byB1cy4KKwkgKi8KKwlpZiAoIXN0cl9zZWVuKSB7CisJ
+CWlmIChzcC0+c2VlbikKKwkJCXJlc3BlYyhvcHRzLT5uYW1lLCAoY2hhciAqKilvcHRzLT5zdWJv
+cHRzLCBpbmRleCk7CisJCXNwLT5zZWVuID0gdHJ1ZTsKKwl9IGVsc2UgeworCQlpZiAoc3AtPnN0
+cl9zZWVuKQorCQkJcmVzcGVjKG9wdHMtPm5hbWUsIChjaGFyICoqKW9wdHMtPnN1Ym9wdHMsIGlu
+ZGV4KTsKKwkJc3AtPnN0cl9zZWVuID0gdHJ1ZTsKKwl9CiAKIAkvKiBjaGVjayBmb3IgY29uZmxp
+Y3RzIHdpdGggdGhlIG9wdGlvbiAqLwotCWZvciAoYyA9IDA7IGMgPCBNQVhfQ09ORkxJQ1RTOyBj
+KyspIHsKLQkJaW50IGNvbmZsaWN0X29wdCA9IHNwLT5jb25mbGljdHNbY107CisJZm9yIChpID0g
+MDsgaSA8IE1BWF9DT05GTElDVFM7IGkrKykgeworCQlpbnQgY29uZmxpY3Rfb3B0ID0gc3AtPmNv
+bmZsaWN0c1tpXTsKIAogCQlpZiAoY29uZmxpY3Rfb3B0ID09IExBU1RfQ09ORkxJQ1QpCiAJCQli
+cmVhazsKLQkJaWYgKG9wdHMtPnN1Ym9wdF9wYXJhbXNbY29uZmxpY3Rfb3B0XS5zZWVuKQorCQlp
+ZiAob3B0cy0+c3Vib3B0X3BhcmFtc1tjb25mbGljdF9vcHRdLnNlZW4gfHwKKwkJCW9wdHMtPnN1
+Ym9wdF9wYXJhbXNbY29uZmxpY3Rfb3B0XS5zdHJfc2VlbikKIAkJCWNvbmZsaWN0KG9wdHMtPm5h
+bWUsIChjaGFyICoqKW9wdHMtPnN1Ym9wdHMsIGNvbmZsaWN0X29wdCwgaW5kZXgpOwogCX0KK30K
+Kworc3RhdGljIGxvbmcgbG9uZworZ2V0bnVtKAorCWNvbnN0IGNoYXIJCSpzdHIsCisJc3RydWN0
+IG9wdF9wYXJhbXMJKm9wdHMsCisJaW50CQkJaW5kZXgpCit7CisJc3RydWN0IHN1Ym9wdF9wYXJh
+bQkqc3AgPSAmb3B0cy0+c3Vib3B0X3BhcmFtc1tpbmRleF07CisJbG9uZyBsb25nCQljOwogCisJ
+Y2hlY2tfb3B0KHN0ciwgb3B0cywgaW5kZXgsIGZhbHNlKTsKIAkvKiBlbXB0eSBzdHJpbmdzIG1p
+Z2h0IGp1c3QgcmV0dXJuIGEgZGVmYXVsdCB2YWx1ZSAqLwogCWlmICghc3RyIHx8ICpzdHIgPT0g
+J1wwJykgewogCQlpZiAoc3AtPmRlZmF1bHR2YWwgPT0gU1VCT1BUX05FRURTX1ZBTCkKQEAgLTE0
+NzYsNiArMTUwMywyNiBAQCBnZXRudW0oCiAJcmV0dXJuIGM7CiB9CiAKKy8qCisgKiBPcHRpb24g
+aXMgYSBzdHJpbmcgLSBkbyBhbGwgdGhlIG9wdGlvbiB0YWJsZSB3b3JrLCBhbmQgY2hlY2sgdGhl
+cmUKKyAqIGlzIGFjdHVhbGx5IGFuIG9wdGlvbiBzdHJpbmcuIE90aGVyd2lzZSB3ZSBkb24ndCBk
+byBhbnl0aGluZyB3aXRoIHRoZSBzdHJpbmcKKyAqIGhlcmUgLSB2YWxpZGF0aW9uIHdpbGwgYmUg
+ZG9uZSBsYXRlciB3aGVuIHRoZSBzdHJpbmcgaXMgY29udmVydGVkIHRvIGEgdmFsdWUKKyAqIG9y
+IHVzZWQgYXMgYSBmaWxlL2RldmljZSBwYXRoLgorICovCitzdGF0aWMgY2hhciAqCitnZXRzdHIo
+CisJY2hhcgkJCSpzdHIsCisJc3RydWN0IG9wdF9wYXJhbXMJKm9wdHMsCisJaW50CQkJaW5kZXgp
+Cit7CisJY2hlY2tfb3B0KHN0ciwgb3B0cywgaW5kZXgsIHRydWUpOworCisJLyogZW1wdHkgc3Ry
+aW5ncyBmb3Igc3RyaW5nIG9wdGlvbnMgYXJlIG5vdCB2YWxpZCAqLworCWlmICghc3RyIHx8ICpz
+dHIgPT0gJ1wwJykKKwkJcmVxdmFsKG9wdHMtPm5hbWUsIChjaGFyICoqKW9wdHMtPnN1Ym9wdHMs
+IGluZGV4KTsKKwlyZXR1cm4gc3RyOworfQorCiBpbnQKIG1haW4oCiAJaW50CQkJYXJnYywKQEAg
+LTE2NzAsMTggKzE3MTcsMTAgQEAgbWFpbigKIAkJCQkJCXhpLmRjcmVhdCA9IDE7CiAJCQkJCWJy
+ZWFrOwogCQkJCWNhc2UgRF9OQU1FOgotCQkJCQlpZiAoIXZhbHVlIHx8ICp2YWx1ZSA9PSAnXDAn
+KQotCQkJCQkJcmVxdmFsKCdkJywgc3Vib3B0cywgRF9OQU1FKTsKLQkJCQkJaWYgKHhpLmRuYW1l
+KQotCQkJCQkJcmVzcGVjKCdkJywgc3Vib3B0cywgRF9OQU1FKTsKLQkJCQkJeGkuZG5hbWUgPSB2
+YWx1ZTsKKwkJCQkJeGkuZG5hbWUgPSBnZXRzdHIodmFsdWUsICZkb3B0cywgRF9OQU1FKTsKIAkJ
+CQkJYnJlYWs7CiAJCQkJY2FzZSBEX1NJWkU6Ci0JCQkJCWlmICghdmFsdWUgfHwgKnZhbHVlID09
+ICdcMCcpCi0JCQkJCQlyZXF2YWwoJ2QnLCBzdWJvcHRzLCBEX1NJWkUpOwotCQkJCQlpZiAoZHNp
+emUpCi0JCQkJCQlyZXNwZWMoJ2QnLCBzdWJvcHRzLCBEX1NJWkUpOwotCQkJCQlkc2l6ZSA9IHZh
+bHVlOworCQkJCQlkc2l6ZSA9IGdldHN0cih2YWx1ZSwgJmRvcHRzLCBEX1NJWkUpOwogCQkJCQli
+cmVhazsKIAkJCQljYXNlIERfU1VOSVQ6CiAJCQkJCWRzdW5pdCA9IGdldG51bSh2YWx1ZSwgJmRv
+cHRzLCBEX1NVTklUKTsKQEAgLTE4MjIsMTggKzE4NjEsMTAgQEAgbWFpbigKIAkJCQkJYnJlYWs7
+CiAJCQkJY2FzZSBMX05BTUU6CiAJCQkJY2FzZSBMX0RFVjoKLQkJCQkJaWYgKGxhZmxhZykKLQkJ
+CQkJCWNvbmZsaWN0KCdsJywgc3Vib3B0cywgTF9BR05VTSwgTF9ERVYpOwotCQkJCQlpZiAobGlm
+bGFnKQotCQkJCQkJY29uZmxpY3QoJ2wnLCBzdWJvcHRzLCBMX0lOVEVSTkFMLCBMX0RFVik7Ci0J
+CQkJCWlmICghdmFsdWUgfHwgKnZhbHVlID09ICdcMCcpCi0JCQkJCQlyZXF2YWwoJ2wnLCBzdWJv
+cHRzLCBMX05BTUUpOwotCQkJCQlpZiAoeGkubG9nbmFtZSkKLQkJCQkJCXJlc3BlYygnbCcsIHN1
+Ym9wdHMsIExfTkFNRSk7CisJCQkJCWxvZ2ZpbGUgPSBnZXRzdHIodmFsdWUsICZsb3B0cywgTF9O
+QU1FKTsKKwkJCQkJeGkubG9nbmFtZSA9IGxvZ2ZpbGU7CiAJCQkJCWxkZmxhZyA9IDE7CiAJCQkJ
+CWxvZ2ludGVybmFsID0gMDsKLQkJCQkJbG9nZmlsZSA9IHZhbHVlOwotCQkJCQl4aS5sb2duYW1l
+ID0gdmFsdWU7CiAJCQkJCWJyZWFrOwogCQkJCWNhc2UgTF9WRVJTSU9OOgogCQkJCQlzYl9mZWF0
+LmxvZ192ZXJzaW9uID0KQEAgLTE4NDEsMTIgKzE4NzIsNyBAQCBtYWluKAogCQkJCQlsdmZsYWcg
+PSAxOwogCQkJCQlicmVhazsKIAkJCQljYXNlIExfU0laRToKLQkJCQkJaWYgKCF2YWx1ZSB8fCAq
+dmFsdWUgPT0gJ1wwJykKLQkJCQkJCXJlcXZhbCgnbCcsIHN1Ym9wdHMsIExfU0laRSk7Ci0JCQkJ
+CWlmIChsb2dzaXplKQotCQkJCQkJcmVzcGVjKCdsJywgc3Vib3B0cywgTF9TSVpFKTsKLQkJCQkJ
+bG9nc2l6ZSA9IHZhbHVlOwotCQkJCQlsc2ZsYWcgPSAxOworCQkJCQlsb2dzaXplID0gZ2V0c3Ry
+KHZhbHVlLCAmbG9wdHMsIExfU0laRSk7CiAJCQkJCWJyZWFrOwogCQkJCWNhc2UgTF9TRUNUTE9H
+OgogCQkJCQlsc2VjdG9ybG9nID0gZ2V0bnVtKHZhbHVlLCAmbG9wdHMsCkBAIC0xOTMwLDEwICsx
+OTU2LDcgQEAgXygiY2Fubm90IHNwZWNpZnkgYm90aCAtbSBjcmM9MSBhbmQgLW4gZnR5cGVcbiIp
+KTsKIAkJCQkJbnNmbGFnID0gMTsKIAkJCQkJYnJlYWs7CiAJCQkJY2FzZSBOX1ZFUlNJT046Ci0J
+CQkJCWlmICghdmFsdWUgfHwgKnZhbHVlID09ICdcMCcpCi0JCQkJCQlyZXF2YWwoJ24nLCBzdWJv
+cHRzLCBOX1ZFUlNJT04pOwotCQkJCQlpZiAobnZmbGFnKQotCQkJCQkJcmVzcGVjKCduJywgc3Vi
+b3B0cywgTl9WRVJTSU9OKTsKKwkJCQkJdmFsdWUgPSBnZXRzdHIodmFsdWUsICZub3B0cywgTl9W
+RVJTSU9OKTsKIAkJCQkJaWYgKCFzdHJjYXNlY21wKHZhbHVlLCAiY2kiKSkgewogCQkJCQkJLyog
+QVNDSUkgQ0kgbW9kZSAqLwogCQkJCQkJc2JfZmVhdC5uY2kgPSB0cnVlOwpAQCAtMTk4MiwxMSAr
+MjAwNSw4IEBAIF8oImNhbm5vdCBzcGVjaWZ5IGJvdGggLW0gY3JjPTEgYW5kIC1uIGZ0eXBlXG4i
+KSk7CiAJCQkJc3dpdGNoIChnZXRzdWJvcHQoJnAsIChjb25zdHBwKXN1Ym9wdHMsCiAJCQkJCQkg
+ICZ2YWx1ZSkpIHsKIAkJCQljYXNlIFJfRVhUU0laRToKLQkJCQkJaWYgKCF2YWx1ZSB8fCAqdmFs
+dWUgPT0gJ1wwJykKLQkJCQkJCXJlcXZhbCgncicsIHN1Ym9wdHMsIFJfRVhUU0laRSk7Ci0JCQkJ
+CWlmIChydGV4dHNpemUpCi0JCQkJCQlyZXNwZWMoJ3InLCBzdWJvcHRzLCBSX0VYVFNJWkUpOwot
+CQkJCQlydGV4dHNpemUgPSB2YWx1ZTsKKwkJCQkJcnRleHRzaXplID0gZ2V0c3RyKHZhbHVlLCAm
+cm9wdHMsCisJCQkJCQkJICAgUl9FWFRTSVpFKTsKIAkJCQkJYnJlYWs7CiAJCQkJY2FzZSBSX0ZJ
+TEU6CiAJCQkJCXhpLnJpc2ZpbGUgPSBnZXRudW0odmFsdWUsICZyb3B0cywKQEAgLTE5OTYsMTgg
+KzIwMTYsMTEgQEAgXygiY2Fubm90IHNwZWNpZnkgYm90aCAtbSBjcmM9MSBhbmQgLW4gZnR5cGVc
+biIpKTsKIAkJCQkJYnJlYWs7CiAJCQkJY2FzZSBSX05BTUU6CiAJCQkJY2FzZSBSX0RFVjoKLQkJ
+CQkJaWYgKCF2YWx1ZSB8fCAqdmFsdWUgPT0gJ1wwJykKLQkJCQkJCXJlcXZhbCgncicsIHN1Ym9w
+dHMsIFJfTkFNRSk7Ci0JCQkJCWlmICh4aS5ydG5hbWUpCi0JCQkJCQlyZXNwZWMoJ3InLCBzdWJv
+cHRzLCBSX05BTUUpOwotCQkJCQl4aS5ydG5hbWUgPSB2YWx1ZTsKKwkJCQkJeGkucnRuYW1lID0g
+Z2V0c3RyKHZhbHVlLCAmcm9wdHMsCisJCQkJCQkJICAgUl9OQU1FKTsKIAkJCQkJYnJlYWs7CiAJ
+CQkJY2FzZSBSX1NJWkU6Ci0JCQkJCWlmICghdmFsdWUgfHwgKnZhbHVlID09ICdcMCcpCi0JCQkJ
+CQlyZXF2YWwoJ3InLCBzdWJvcHRzLCBSX1NJWkUpOwotCQkJCQlpZiAocnRzaXplKQotCQkJCQkJ
+cmVzcGVjKCdyJywgc3Vib3B0cywgUl9TSVpFKTsKLQkJCQkJcnRzaXplID0gdmFsdWU7CisJCQkJ
+CXJ0c2l6ZSA9IGdldHN0cih2YWx1ZSwgJnJvcHRzLCBSX1NJWkUpOwogCQkJCQlicmVhazsKIAkJ
+CQljYXNlIFJfTk9BTElHTjoKIAkJCQkJbm9yc2ZsYWcgPSAxOwotLSAKMi4xLjAKCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
