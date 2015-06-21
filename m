@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6488C29E00
-	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 04:24:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 577B8304051
-	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 02:24:10 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E5C3029E04
+	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 04:24:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 827C4AC006
+	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 02:24:14 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id JMhuj4qyM7oMSH8z (version=TLSv1 cipher=AES256-SHA
+	ESMTP id dP3ZFJHSv1ZOWwxw (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 21 Jun 2015 02:24:07 -0700 (PDT)
+	Sun, 21 Jun 2015 02:24:11 -0700 (PDT)
 Received: from smtpout2.drei.com ([109.126.64.2] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1Z6bTx-0001zA-Pm
-	for xfs@oss.sgi.com; Sun, 21 Jun 2015 09:24:07 +0000
+	id 1Z6bU2-0001zW-NM
+	for xfs@oss.sgi.com; Sun, 21 Jun 2015 09:24:11 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/8] xfsprogs: remove register keywords
-Date: Sun, 21 Jun 2015 11:21:57 +0200
-Message-Id: <1434878524-18176-2-git-send-email-hch@lst.de>
+Subject: [PATCH 2/8] xfsprogs: remove __psint_t and __psunsigned_t
+Date: Sun, 21 Jun 2015 11:21:58 +0200
+Message-Id: <1434878524-18176-3-git-send-email-hch@lst.de>
 In-Reply-To: <1434878524-18176-1-git-send-email-hch@lst.de>
 References: <1434878524-18176-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,666 +34,707 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Replace them with the standards conform intptr_t and uintptr_t.  Note
+that many uses look rather questionable cargo-cult avoidance of pointer
+arithmetics, but let's leave that for now and look at it separately.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libhandle/jdm.c |   8 ++--
- repair/avl.c    | 130 ++++++++++++++++++++++++++---------------------------
- repair/avl.h    |   8 ++--
- repair/avl64.c  | 136 ++++++++++++++++++++++++++++----------------------------
- repair/avl64.h  |   6 +--
- rtcp/xfs_rtcp.c |   2 +-
- 6 files changed, 145 insertions(+), 145 deletions(-)
+ db/bit.c                   |  8 ++++----
+ db/check.c                 |  6 +++---
+ db/field.c                 |  8 ++++----
+ db/field.h                 |  6 +++---
+ include/platform_defs.h.in | 36 ------------------------------------
+ logprint/log_misc.c        |  2 +-
+ m4/package_types.m4        | 28 ----------------------------
+ repair/agheader.c          |  2 +-
+ repair/attr_repair.c       |  6 +++---
+ repair/avl.c               | 36 ++++++++++++++++++------------------
+ repair/avl.h               | 18 +++++++++---------
+ repair/dir2.c              | 16 ++++++++--------
+ repair/incore_ext.c        | 20 ++++++++++----------
+ repair/incore_ino.c        |  8 ++++----
+ repair/phase6.c            | 30 +++++++++++++++---------------
+ 15 files changed, 83 insertions(+), 147 deletions(-)
 
-diff --git a/libhandle/jdm.c b/libhandle/jdm.c
-index 070407b..e177b2a 100644
---- a/libhandle/jdm.c
-+++ b/libhandle/jdm.c
-@@ -111,7 +111,7 @@ jdm_delete_filehandle( jdm_filehandle_t *handlep, size_t hlen )
- intgen_t
- jdm_open( jdm_fshandle_t *fshp, xfs_bstat_t *statp, intgen_t oflags )
+diff --git a/db/bit.c b/db/bit.c
+index e8adab3..87ee63a 100644
+--- a/db/bit.c
++++ b/db/bit.c
+@@ -79,24 +79,24 @@ getbitval(
+ 	p = (char *)obj + byteize(bitoff);
+ 	bit = bitoffs(bitoff);
+ 	signext = (flags & BVSIGNED) != 0;
+-	z4 = ((__psint_t)p & 0xf) == 0 && bit == 0;
++	z4 = ((intptr_t)p & 0xf) == 0 && bit == 0;
+ 	if (nbits == 64 && z4)
+ 		return be64_to_cpu(*(__be64 *)p);
+-	z3 = ((__psint_t)p & 0x7) == 0 && bit == 0;
++	z3 = ((intptr_t)p & 0x7) == 0 && bit == 0;
+ 	if (nbits == 32 && z3) {
+ 		if (signext)
+ 			return (__s32)be32_to_cpu(*(__be32 *)p);
+ 		else
+ 			return (__u32)be32_to_cpu(*(__be32 *)p);
+ 	}
+-	z2 = ((__psint_t)p & 0x3) == 0 && bit == 0;
++	z2 = ((intptr_t)p & 0x3) == 0 && bit == 0;
+ 	if (nbits == 16 && z2) {
+ 		if (signext)
+ 			return (__s16)be16_to_cpu(*(__be16 *)p);
+ 		else
+ 			return (__u16)be16_to_cpu(*(__be16 *)p);
+ 	}
+-	z1 = ((__psint_t)p & 0x1) == 0 && bit == 0;
++	z1 = ((intptr_t)p & 0x1) == 0 && bit == 0;
+ 	if (nbits == 8 && z1) {
+ 		if (signext)
+ 			return *(__s8 *)p;
+diff --git a/db/check.c b/db/check.c
+index 1822905..50c785a 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3436,8 +3436,8 @@ process_sf_dir_v2(
+ 	sfe = xfs_dir2_sf_firstentry(sf);
+ 	offset = M_DIROPS(mp)->data_first_offset;
+ 	for (i = sf->count - 1, i8 = 0; i >= 0; i--) {
+-		if ((__psint_t)sfe + M_DIROPS(mp)->sf_entsize(sf, sfe->namelen) -
+-		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
++		if ((intptr_t)sfe + M_DIROPS(mp)->sf_entsize(sf, sfe->namelen) -
++		    (intptr_t)sf > be64_to_cpu(dip->di_size)) {
+ 			if (!sflag)
+ 				dbprintf(_("dir %llu bad size in entry at %d\n"),
+ 					id->ino,
+@@ -3478,7 +3478,7 @@ process_sf_dir_v2(
+ 			M_DIROPS(mp)->sf_entsize(sf, sfe->namelen);
+ 		sfe = M_DIROPS(mp)->sf_nextentry(sf, sfe);
+ 	}
+-	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
++	if (i < 0 && (intptr_t)sfe - (intptr_t)sf != 
+ 					be64_to_cpu(dip->di_size)) {
+ 		if (!sflag)
+ 			dbprintf(_("dir %llu size is %lld, should be %u\n"),
+diff --git a/db/field.c b/db/field.c
+index 52d9d9b..07067b5 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -373,10 +373,10 @@ bitoffset(
+ 			abase = (f->flags & FLD_ABASE1) != 0;
+ 			ASSERT(fa->ftyp == f->ftyp);
+ 			ASSERT((fa->arg & FTARG_SIZE) == 0);
+-			return (int)(__psint_t)f->offset +
++			return (int)(intptr_t)f->offset +
+ 				(idx - abase) * fsize(f, obj, startoff, idx);
+ 		} else
+-			return (int)(__psint_t)f->offset;
++			return (int)(intptr_t)f->offset;
+ 	} else
+ 		return (*f->offset)(obj, startoff, idx);
+ }
+@@ -388,7 +388,7 @@ fcount(
+ 	int		startoff)
  {
--	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-+	fshandle_t *fshandlep = ( fshandle_t * )fshp;
- 	filehandle_t filehandle;
- 	intgen_t fd;
+ 	if (!(f->flags & FLD_COUNT))
+-		return (int)(__psint_t)f->count;
++		return (int)(intptr_t)f->count;
+ 	else
+ 		return (*f->count)(obj, startoff);
+ }
+@@ -421,7 +421,7 @@ fsize(
+ 	fa = &ftattrtab[f->ftyp];
+ 	ASSERT(fa->ftyp == f->ftyp);
+ 	if (!(fa->arg & FTARG_SIZE))
+-		return (int)(__psint_t)fa->size;
++		return (int)(intptr_t)fa->size;
+ 	else
+ 		return (*fa->size)(obj, startoff, idx);
+ }
+diff --git a/db/field.h b/db/field.h
+index 2546240..11aebc3 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -183,10 +183,10 @@ typedef enum fldt	{
+ } fldt_t;
  
-@@ -127,7 +127,7 @@ jdm_readlink( jdm_fshandle_t *fshp,
- 	      xfs_bstat_t *statp,
- 	      char *bufp, size_t bufsz )
+ typedef int (*offset_fnc_t)(void *obj, int startoff, int idx);
+-#define	OI(o)	((offset_fnc_t)(__psint_t)(o))
++#define	OI(o)	((offset_fnc_t)(intptr_t)(o))
+ 
+ typedef int (*count_fnc_t)(void *obj, int startoff);
+-#define	CI(c)	((count_fnc_t)(__psint_t)(c))
++#define	CI(c)	((count_fnc_t)(intptr_t)(c))
+ #define	C1	CI(1)
+ 
+ typedef struct field
+@@ -209,7 +209,7 @@ typedef struct field
+ #define	FLD_COUNT	16	/* count value is a function pointer */
+ 
+ typedef int (*size_fnc_t)(void *obj, int startoff, int idx);
+-#define	SI(s)	((size_fnc_t)(__psint_t)(s))
++#define	SI(s)	((size_fnc_t)(intptr_t)(s))
+ 
+ typedef struct ftattr
  {
--	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-+	fshandle_t *fshandlep = ( fshandle_t * )fshp;
- 	filehandle_t filehandle;
- 	intgen_t rval;
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index ac260bc..529c0a6 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -87,42 +87,6 @@ typedef struct filldir		filldir_t;
+ #undef SIZEOF_CHAR_P
+ #define BITS_PER_LONG (SIZEOF_LONG * CHAR_BIT)
  
-@@ -144,7 +144,7 @@ jdm_attr_multi(	jdm_fshandle_t *fshp,
- 		xfs_bstat_t *statp,
- 		char *bufp, int rtrvcnt, int flags)
- {
--	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-+	fshandle_t *fshandlep = ( fshandle_t * )fshp;
- 	filehandle_t filehandle;
- 	int rval;
+-/* Check if __psint_t is set to something meaningful */
+-#undef HAVE___PSINT_T
+-#ifndef HAVE___PSINT_T
+-# if (SIZEOF_CHAR_P * CHAR_BIT) == 32
+-typedef int __psint_t;
+-# elif (SIZEOF_CHAR_P * CHAR_BIT) == 64
+-#  if BITS_PER_LONG == 64
+-typedef long __psint_t;
+-#  else
+-/* This is a very strange architecture, which has 64 bit pointers but */
+-/* not 64 bit longs.  So, just punt here and assume long long is OK.  */
+-typedef long long __psint_t;
+-#  endif
+-# else
+-#  error Unknown pointer size
+-# endif
+-#endif
+-
+-/* Check if __psunsigned_t is set to something meaningful */
+-#undef HAVE___PSUNSIGNED_T
+-#ifndef HAVE___PSUNSIGNED_T
+-# if (SIZEOF_CHAR_P * CHAR_BIT) == 32
+-typedef unsigned int __psunsigned_t;
+-# elif (SIZEOF_CHAR_P * CHAR_BIT) == 64
+-#  if BITS_PER_LONG == 64
+-typedef long __psunsigned_t;
+-#  else
+-/* This is a very strange architecture, which has 64 bit pointers but */
+-/* not 64 bit longs.  So, just punt here and assume long long is OK.  */
+-typedef unsigned long long __psunsigned_t;
+-#  endif
+-# else
+-#  error Unknown pointer size
+-# endif
+-#endif
+-
+ /* Check whether to define umode_t ourselves. */
+ #ifndef HAVE_UMODE_T
+ typedef unsigned short umode_t;
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 521ab66..6f41c91 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -929,7 +929,7 @@ xlog_print_record(
+ 	}
+     } else {
+ 	read_len -= *read_type;
+-	buf = (xfs_caddr_t)((__psint_t)(*partial_buf) + (__psint_t)(*read_type));
++	buf = (xfs_caddr_t)((intptr_t)(*partial_buf) + (intptr_t)(*read_type));
+ 	ptr = *partial_buf;
+     }
+     if ((ret = (int) read(fd, buf, read_len)) == -1) {
+diff --git a/m4/package_types.m4 b/m4/package_types.m4
+index 454c84a..c3645bc 100644
+--- a/m4/package_types.m4
++++ b/m4/package_types.m4
+@@ -1,32 +1,4 @@
+ # 
+-# Check if we have a type for the pointer's size integer (__psint_t)
+-# 
+-AC_DEFUN([AC_TYPE_PSINT],
+-  [ AC_MSG_CHECKING([for __psint_t ])
+-    AC_TRY_COMPILE([
+-#include <sys/types.h>
+-#include <stdlib.h>
+-#include <stddef.h>
+-    ], [
+-         __psint_t  psint;
+-    ], AC_DEFINE(HAVE___PSINT_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
+-  ])
+-
+-# 
+-# Check if we have a type for the pointer's size unsigned (__psunsigned_t)
+-# 
+-AC_DEFUN([AC_TYPE_PSUNSIGNED],
+-  [ AC_MSG_CHECKING([for __psunsigned_t ])
+-    AC_TRY_COMPILE([
+-#include <sys/types.h>
+-#include <stdlib.h>
+-#include <stddef.h>
+-    ], [
+-        __psunsigned_t  psuint;
+-    ], AC_DEFINE(HAVE___PSUNSIGNED_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
+-  ])
+-
+-# 
+ # Check if we have a type for __u32
+ # 
+ AC_DEFUN([AC_TYPE_U32],
+diff --git a/repair/agheader.c b/repair/agheader.c
+index 9ae2deb..c93b62e 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -305,7 +305,7 @@ secondary_sb_wack(
+ 			 * be set, and the latter is never updated past
+ 			 * the last field - just zap them both.
+ 			 */
+-			memset((void *)((__psint_t)sb + size), 0,
++			memset((void *)((intptr_t)sb + size), 0,
+ 				mp->m_sb.sb_sectsize - size);
+ 			memset(XFS_BUF_PTR(sbuf) + size, 0,
+ 				mp->m_sb.sb_sectsize - size);
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index f3332b3..8901640 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -931,7 +931,7 @@ process_shortform_attr(
+ 	_("removing attribute entry %d for inode %" PRIu64 "\n"),
+ 					i, ino);
+ 				tempentry = (xfs_attr_sf_entry_t *)
+-					((__psint_t) currententry +
++					((intptr_t) currententry +
+ 					 XFS_ATTR_SF_ENTSIZE(currententry));
+ 				memmove(currententry,tempentry,remainingspace);
+ 				asf->hdr.count -= 1;
+@@ -946,7 +946,7 @@ process_shortform_attr(
+ 		}
  
-@@ -162,7 +162,7 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
- 		char *bufp, size_t bufsz, int flags,
- 		struct attrlist_cursor *cursor)
- {
--	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-+	fshandle_t *fshandlep = ( fshandle_t * )fshp;
- 	filehandle_t filehandle;
- 	int rval;
+ 		/* Let's get ready for the next entry... */
+-		nextentry = (xfs_attr_sf_entry_t *)((__psint_t) nextentry +
++		nextentry = (xfs_attr_sf_entry_t *)((intptr_t) nextentry +
+ 			 		XFS_ATTR_SF_ENTSIZE(currententry));
+ 		currentsize = currentsize + XFS_ATTR_SF_ENTSIZE(currententry);
  
+@@ -1220,7 +1220,7 @@ process_leaf_attr_block(
+ 		}
+ 
+ 		/* mark the entry used */
+-		start = (__psint_t)entry - (__psint_t)leaf;
++		start = (intptr_t)entry - (intptr_t)leaf;
+ 		stop = start + sizeof(xfs_attr_leaf_entry_t);
+ 		if (set_da_freemap(mp, attr_freemap, start, stop))  {
+ 			do_warn(
 diff --git a/repair/avl.c b/repair/avl.c
-index eabecc3..c5ff919 100644
+index c5ff919..db3d095 100644
 --- a/repair/avl.c
 +++ b/repair/avl.c
-@@ -25,13 +25,13 @@
- 
- static void
- avl_checknode(
--	register avltree_desc_t *tree,
--	register avlnode_t *np)
-+	avltree_desc_t *tree,
-+	avlnode_t *np)
+@@ -69,8 +69,8 @@ avl_checktree(
+ 	avlnode_t *root)
  {
--	register avlnode_t *back = np->avl_back;
--	register avlnode_t *forw = np->avl_forw;
--	register avlnode_t *nextino = np->avl_nextino;
--	register int bal = np->avl_balance;
-+	avlnode_t *back = np->avl_back;
-+	avlnode_t *forw = np->avl_forw;
-+	avlnode_t *nextino = np->avl_nextino;
-+	int bal = np->avl_balance;
+ 	avlnode_t *nlast, *nnext, *np;
+-	__psunsigned_t offset = 0;
+-	__psunsigned_t end;
++	uintptr_t offset = 0;
++	uintptr_t end;
  
- 	ASSERT(bal != AVL_BALANCE || (!back && !forw) || (back && forw));
- 	ASSERT(bal != AVL_FORW || forw);
-@@ -65,10 +65,10 @@ avl_checknode(
+ 	nlast = nnext = root;
  
- static void
- avl_checktree(
--	register avltree_desc_t *tree,
--	register avlnode_t *root)
-+	avltree_desc_t *tree,
-+	avlnode_t *root)
- {
--	register avlnode_t *nlast, *nnext, *np;
-+	avlnode_t *nlast, *nnext, *np;
- 	__psunsigned_t offset = 0;
- 	__psunsigned_t end;
- 
-@@ -123,14 +123,14 @@ avl_checktree(
- static void
- retreat(
- 	avltree_desc_t *tree,
--	register avlnode_t *np,
--	register int direction)
-+	avlnode_t *np,
-+	int direction)
- {
--	register avlnode_t **rootp = &tree->avl_root;
--	register avlnode_t *parent;
--	register avlnode_t *child;
--	register avlnode_t *tmp;
--	register int	bal;
-+	avlnode_t **rootp = &tree->avl_root;
-+	avlnode_t *parent;
-+	avlnode_t *child;
-+	avlnode_t *tmp;
-+	int	bal;
- 
- 	do {
- 		ASSERT(direction == AVL_BACK || direction == AVL_FORW);
-@@ -384,13 +384,13 @@ next:
-  */
- void
- avl_delete(
--	register avltree_desc_t *tree,
--	register avlnode_t *np)
-+	avltree_desc_t *tree,
-+	avlnode_t *np)
- {
--	register avlnode_t *forw = np->avl_forw;
--	register avlnode_t *back = np->avl_back;
--	register avlnode_t *parent = np->avl_parent;
--	register avlnode_t *nnext;
-+	avlnode_t *forw = np->avl_forw;
-+	avlnode_t *back = np->avl_back;
-+	avlnode_t *parent = np->avl_parent;
-+	avlnode_t *nnext;
- 
- 
- 	if (np->avl_back) {
-@@ -588,12 +588,12 @@ attach:
-  */
+@@ -589,8 +589,8 @@ attach:
  avlnode_t *
  avl_findanyrange(
--	register avltree_desc_t *tree,
--	register __psunsigned_t start,
--	register __psunsigned_t end,
-+	avltree_desc_t *tree,
-+	__psunsigned_t start,
-+	__psunsigned_t end,
+ 	avltree_desc_t *tree,
+-	__psunsigned_t start,
+-	__psunsigned_t end,
++	uintptr_t start,
++	uintptr_t end,
  	int	checklen)
  {
--	register avlnode_t *np = tree->avl_root;
-+	avlnode_t *np = tree->avl_root;
- 
- 	/* np = avl_findadjacent(tree, start, AVL_SUCCEED); */
- 	while (np) {
-@@ -659,11 +659,11 @@ avl_findanyrange(
-  */
+ 	avlnode_t *np = tree->avl_root;
+@@ -660,10 +660,10 @@ avl_findanyrange(
  avlnode_t *
  avl_find(
--	register avltree_desc_t *tree,
--	register __psunsigned_t value)
-+	avltree_desc_t *tree,
-+	__psunsigned_t value)
+ 	avltree_desc_t *tree,
+-	__psunsigned_t value)
++	uintptr_t value)
  {
--	register avlnode_t *np = tree->avl_root;
--	register __psunsigned_t nvalue;
-+	avlnode_t *np = tree->avl_root;
-+	__psunsigned_t nvalue;
+ 	avlnode_t *np = tree->avl_root;
+-	__psunsigned_t nvalue;
++	uintptr_t nvalue;
  
  	while (np) {
  		nvalue = AVL_START(tree, np);
-@@ -686,9 +686,9 @@ avl_find(
-  */
- static void
- avl_balance(
--	register avlnode_t **rootp,
--	register avlnode_t *np,
--	register int growth)
-+	avlnode_t **rootp,
-+	avlnode_t *np,
-+	int growth)
- {
- 	/*
- 	 * At this point, np points to the node to which
-@@ -696,8 +696,8 @@ avl_balance(
- 	 * propagate avl_balance up the tree.
- 	 */
- 	for ( ; ; ) {
--		register avlnode_t *parent = np->avl_parent;
--		register avlnode_t *child;
-+		avlnode_t *parent = np->avl_parent;
-+		avlnode_t *child;
- 
- 		CERT(growth == AVL_BACK || growth == AVL_FORW);
- 
-@@ -777,7 +777,7 @@ avl_balance(
- 						D
- 
- 				 */
--				register avlnode_t *tmp = child->avl_forw;
-+				avlnode_t *tmp = child->avl_forw;
- 
- 				CERT(child->avl_balance == AVL_FORW && tmp);
- 
-@@ -834,7 +834,7 @@ avl_balance(
- 				/*
- 				 * double RL
- 				 */
--				register avlnode_t *tmp = child->avl_back;
-+				avlnode_t *tmp = child->avl_back;
- 
- 				ASSERT(child->avl_balance == AVL_BACK && tmp);
- 
-@@ -886,13 +886,13 @@ avl_balance(
- static
+@@ -887,8 +887,8 @@ static
  avlnode_t *
  avl_insert_find_growth(
--		register avltree_desc_t *tree,
--		register __psunsigned_t start,	/* range start at start, */
--		register __psunsigned_t end,	/* exclusive */
--		register int   *growthp)	/* OUT */
-+		avltree_desc_t *tree,
-+		__psunsigned_t start,	/* range start at start, */
-+		__psunsigned_t end,	/* exclusive */
-+		int   *growthp)	/* OUT */
+ 		avltree_desc_t *tree,
+-		__psunsigned_t start,	/* range start at start, */
+-		__psunsigned_t end,	/* exclusive */
++		uintptr_t start,	/* range start at start, */
++		uintptr_t end,	/* exclusive */
+ 		int   *growthp)	/* OUT */
  {
  	avlnode_t *root = tree->avl_root;
--	register avlnode_t *np;
-+	avlnode_t *np;
- 
- 	np = root;
- 	ASSERT(np); /* caller ensures that there is atleast one node in tree */
-@@ -935,13 +935,13 @@ avl_insert_find_growth(
- 
- static void
- avl_insert_grow(
--	register avltree_desc_t *tree,
--	register avlnode_t *parent,
--	register avlnode_t *newnode,
--	register int growth)
-+	avltree_desc_t *tree,
-+	avlnode_t *parent,
-+	avlnode_t *newnode,
-+	int growth)
+@@ -941,7 +941,7 @@ avl_insert_grow(
+ 	int growth)
  {
--	register avlnode_t *nnext;
--	register __psunsigned_t start = AVL_START(tree, newnode);
-+	avlnode_t *nnext;
-+	__psunsigned_t start = AVL_START(tree, newnode);
+ 	avlnode_t *nnext;
+-	__psunsigned_t start = AVL_START(tree, newnode);
++	uintptr_t start = AVL_START(tree, newnode);
  
  	if (growth == AVL_BACK) {
  
-@@ -979,12 +979,12 @@ avl_insert_grow(
- 
- avlnode_t *
- avl_insert(
--	register avltree_desc_t *tree,
--	register avlnode_t *newnode)
-+	avltree_desc_t *tree,
-+	avlnode_t *newnode)
+@@ -983,8 +983,8 @@ avl_insert(
+ 	avlnode_t *newnode)
  {
--	register avlnode_t *np;
--	register __psunsigned_t start = AVL_START(tree, newnode);
--	register __psunsigned_t end = AVL_END(tree, newnode);
-+	avlnode_t *np;
-+	__psunsigned_t start = AVL_START(tree, newnode);
-+	__psunsigned_t end = AVL_END(tree, newnode);
+ 	avlnode_t *np;
+-	__psunsigned_t start = AVL_START(tree, newnode);
+-	__psunsigned_t end = AVL_END(tree, newnode);
++	uintptr_t start = AVL_START(tree, newnode);
++	uintptr_t end = AVL_END(tree, newnode);
  	int growth;
  
  	ASSERT(newnode);
-@@ -1081,9 +1081,9 @@ avl_insert_immediate(
-  *	Returns first in order node
-  */
- avlnode_t *
--avl_firstino(register avlnode_t *root)
-+avl_firstino(avlnode_t *root)
- {
--	register avlnode_t *np;
-+	avlnode_t *np;
+@@ -1138,16 +1138,16 @@ avlops_t avl_debug_ops = {
+ 	avl_debug_end,
+ }
  
- 	if ((np = root) == NULL)
- 		return NULL;
-@@ -1097,9 +1097,9 @@ avl_firstino(register avlnode_t *root)
-  *	Returns last in order node
-  */
- avlnode_t *
--avl_lastino(register avlnode_t *root)
-+avl_lastino(avlnode_t *root)
+-static __psunsigned_t
++static uintptr_t
+ avl_debug_start(avlnode_t *node)
  {
--	register avlnode_t *np;
-+	avlnode_t *np;
+-	return (__psunsigned_t)(struct avl_debug_node *)node->avl_start;
++	return (uintptr_t)(struct avl_debug_node *)node->avl_start;
+ }
  
- 	if ((np = root) == NULL)
- 		return NULL;
-@@ -1282,11 +1282,11 @@ main()
-  */
+-static __psunsigned_t
++static uintptr_t
+ avl_debug_end(avlnode_t *node)
+ {
+-	return (__psunsigned_t)
++	return (uintptr_t)
+ 		((struct avl_debug_node *)node->avl_start +
+ 		 (struct avl_debug_node *)node->avl_size);
+ }
+@@ -1283,7 +1283,7 @@ main()
  avlnode_t *
  avl_findadjacent(
--	register avltree_desc_t *tree,
--	register __psunsigned_t value,
--	register int		dir)
-+	avltree_desc_t *tree,
-+	__psunsigned_t value,
-+	int		dir)
+ 	avltree_desc_t *tree,
+-	__psunsigned_t value,
++	uintptr_t value,
+ 	int		dir)
  {
--	register avlnode_t *np = tree->avl_root;
-+	avlnode_t *np = tree->avl_root;
- 
- 	while (np) {
- 		if (value < AVL_START(tree, np)) {
-@@ -1356,13 +1356,13 @@ avl_findadjacent(
- 
+ 	avlnode_t *np = tree->avl_root;
+@@ -1357,8 +1357,8 @@ avl_findadjacent(
  void
  avl_findranges(
--	register avltree_desc_t *tree,
--	register __psunsigned_t start,
--	register __psunsigned_t end,
-+	avltree_desc_t *tree,
-+	__psunsigned_t start,
-+	__psunsigned_t end,
+ 	avltree_desc_t *tree,
+-	__psunsigned_t start,
+-	__psunsigned_t end,
++	uintptr_t start,
++	uintptr_t end,
  	avlnode_t	        **startp,
  	avlnode_t		**endp)
  {
--	register avlnode_t *np;
-+	avlnode_t *np;
- 
- 	np = avl_findadjacent(tree, start, AVL_SUCCEED);
- 	if (np == NULL				/* nothing succeding start */
 diff --git a/repair/avl.h b/repair/avl.h
-index 2fad1ec..0078a95 100644
+index 0078a95..7e59b23 100644
 --- a/repair/avl.h
 +++ b/repair/avl.h
-@@ -89,7 +89,7 @@ avl_findrange(
- 	avltree_desc_t *tree,
- 	__psunsigned_t value)
- {
--	register avlnode_t *np = tree->avl_root;
-+	avlnode_t *np = tree->avl_root;
+@@ -31,8 +31,8 @@ typedef struct	avlnode {
+  * avl-tree operations
+  */
+ typedef struct avlops {
+-	__psunsigned_t	(*avl_start)(avlnode_t *);
+-	__psunsigned_t	(*avl_end)(avlnode_t *);
++	uintptr_t	(*avl_start)(avlnode_t *);
++	uintptr_t	(*avl_end)(avlnode_t *);
+ } avlops_t;
  
- 	while (np) {
- 		if (value < AVL_START(tree, np)) {
-@@ -128,9 +128,9 @@ avl_findadjacent(
+ #define	AVL_START(tree, n)	(*(tree)->avl_ops->avl_start)(n)
+@@ -87,7 +87,7 @@ avl_init_tree(
+ static inline avlnode_t *
+ avl_findrange(
+ 	avltree_desc_t *tree,
+-	__psunsigned_t value)
++	uintptr_t value)
+ {
+ 	avlnode_t *np = tree->avl_root;
+ 
+@@ -110,27 +110,27 @@ avl_findrange(
+ avlnode_t *
+ avl_find(
+ 	avltree_desc_t *tree,
+-	__psunsigned_t value);
++	uintptr_t value);
+ 
+ avlnode_t *
+ avl_findanyrange(
+ 	avltree_desc_t *tree,
+-	__psunsigned_t start,
+-	__psunsigned_t end,
++	uintptr_t start,
++	uintptr_t end,
+ 	int     checklen);
+ 
+ 
+ avlnode_t *
+ avl_findadjacent(
+ 	avltree_desc_t *tree,
+-	__psunsigned_t value,
++	uintptr_t value,
+ 	int		dir);
  
  void
  avl_findranges(
--	register avltree_desc_t *tree,
--	register __psunsigned_t start,
--	register __psunsigned_t end,
-+	avltree_desc_t *tree,
-+	__psunsigned_t start,
-+	__psunsigned_t end,
+ 	avltree_desc_t *tree,
+-	__psunsigned_t start,
+-	__psunsigned_t end,
++	uintptr_t start,
++	uintptr_t end,
  	avlnode_t	        **startp,
  	avlnode_t		**endp);
  
-diff --git a/repair/avl64.c b/repair/avl64.c
-index c135da3..32217fe 100644
---- a/repair/avl64.c
-+++ b/repair/avl64.c
-@@ -26,13 +26,13 @@
+diff --git a/repair/dir2.c b/repair/dir2.c
+index ceb8825..9315ff7 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -669,7 +669,7 @@ process_sf_dir2_fixi8(
+ 	int			oldsize;
  
- static void
- avl64_checknode(
--	register avl64tree_desc_t *tree,
--	register avl64node_t *np)
-+	avl64tree_desc_t *tree,
-+	avl64node_t *np)
- {
--	register avl64node_t *back = np->avl_back;
--	register avl64node_t *forw = np->avl_forw;
--	register avl64node_t *nextino = np->avl_nextino;
--	register int bal = np->avl_balance;
-+	avl64node_t *back = np->avl_back;
-+	avl64node_t *forw = np->avl_forw;
-+	avl64node_t *nextino = np->avl_nextino;
-+	int bal = np->avl_balance;
+ 	newsfp = sfp;
+-	oldsize = (__psint_t)*next_sfep - (__psint_t)sfp;
++	oldsize = (intptr_t)*next_sfep - (intptr_t)sfp;
+ 	oldsfp = malloc(oldsize);
+ 	if (oldsfp == NULL) {
+ 		do_error(_("couldn't malloc dir2 shortform copy\n"));
+@@ -874,7 +874,7 @@ _("entry \"%*.*s\" in shortform directory %" PRIu64 " references %s inode %" PRI
+ 		if (namelen == 0) {
+ 			junkreason = _("is zero length");
+ 			bad_sfnamelen = 1;
+-		} else if ((__psint_t) sfep - (__psint_t) sfp +
++		} else if ((intptr_t) sfep - (intptr_t) sfp +
+ 				M_DIROPS(mp)->sf_entsize(sfp, sfep->namelen)
+ 							> ino_dir_size)  {
+ 			junkreason = _("extends past end of dir");
+@@ -944,15 +944,15 @@ _("entry contains offset out of order in shortform dir %" PRIu64 "\n"),
+ 				ino_dir_size -= tmp_elen;
  
- 	ASSERT(bal != AVL_BALANCE || (!back && !forw) || (back && forw));
- 	ASSERT(bal != AVL_FORW || forw);
-@@ -66,10 +66,10 @@ avl64_checknode(
+ 				tmp_sfep = (xfs_dir2_sf_entry_t *)
+-					((__psint_t) sfep + tmp_elen);
+-				tmp_len = max_size - ((__psint_t) tmp_sfep
+-							- (__psint_t) sfp);
++					((intptr_t) sfep + tmp_elen);
++				tmp_len = max_size - ((intptr_t) tmp_sfep
++							- (intptr_t) sfp);
  
- static void
- avl64_checktree(
--	register avl64tree_desc_t *tree,
--	register avl64node_t *root)
-+	avl64tree_desc_t *tree,
-+	avl64node_t *root)
- {
--	register avl64node_t *nlast, *nnext, *np;
-+	avl64node_t *nlast, *nnext, *np;
- 	__uint64_t offset = 0;
- 	__uint64_t end;
+ 				memmove(sfep, tmp_sfep, tmp_len);
  
-@@ -124,14 +124,14 @@ avl64_checktree(
- static void
- retreat(
- 	avl64tree_desc_t *tree,
--	register avl64node_t *np,
--	register int direction)
-+	avl64node_t *np,
-+	int direction)
- {
--	register avl64node_t **rootp = &tree->avl_root;
--	register avl64node_t *parent;
--	register avl64node_t *child;
--	register avl64node_t *tmp;
--	register int	bal;
-+	avl64node_t **rootp = &tree->avl_root;
-+	avl64node_t *parent;
-+	avl64node_t *child;
-+	avl64node_t *tmp;
-+	int	bal;
+ 				sfp->count -= 1;
+ 				num_entries--;
+-				memset((void *) ((__psint_t) sfep + tmp_len), 0,
++				memset((void *) ((intptr_t) sfep + tmp_len), 0,
+ 					tmp_elen);
  
- 	do {
- 		ASSERT(direction == AVL_BACK || direction == AVL_FORW);
-@@ -378,13 +378,13 @@ next:
-  */
- void
- avl64_delete(
--	register avl64tree_desc_t *tree,
--	register avl64node_t *np)
-+	avl64tree_desc_t *tree,
-+	avl64node_t *np)
- {
--	register avl64node_t *forw = np->avl_forw;
--	register avl64node_t *back = np->avl_back;
--	register avl64node_t *parent = np->avl_parent;
--	register avl64node_t *nnext;
-+	avl64node_t *forw = np->avl_forw;
-+	avl64node_t *back = np->avl_back;
-+	avl64node_t *parent = np->avl_parent;
-+	avl64node_t *nnext;
- 
- 
- 	if (np->avl_back) {
-@@ -582,12 +582,12 @@ attach:
-  */
- avl64node_t *
- avl64_findanyrange(
--	register avl64tree_desc_t *tree,
--	register __uint64_t start,
--	register __uint64_t end,
-+	avl64tree_desc_t *tree,
-+	__uint64_t start,
-+	__uint64_t end,
- 	int	checklen)
- {
--	register avl64node_t *np = tree->avl_root;
-+	avl64node_t *np = tree->avl_root;
- 
- 	/* np = avl64_findadjacent(tree, start, AVL_SUCCEED); */
- 	while (np) {
-@@ -654,10 +654,10 @@ avl64_findanyrange(
-  */
- avl64node_t *
- avl64_findrange(
--	register avl64tree_desc_t *tree,
--	register __uint64_t value)
-+	avl64tree_desc_t *tree,
-+	__uint64_t value)
- {
--	register avl64node_t *np = tree->avl_root;
-+	avl64node_t *np = tree->avl_root;
- 
- 	while (np) {
- 		if (value < AVL_START(tree, np)) {
-@@ -681,11 +681,11 @@ avl64_findrange(
-  */
- avl64node_t *
- avl64_find(
--	register avl64tree_desc_t *tree,
--	register __uint64_t value)
-+	avl64tree_desc_t *tree,
-+	__uint64_t value)
- {
--	register avl64node_t *np = tree->avl_root;
--	register __uint64_t nvalue;
-+	avl64node_t *np = tree->avl_root;
-+	__uint64_t nvalue;
- 
- 	while (np) {
- 		nvalue = AVL_START(tree, np);
-@@ -708,9 +708,9 @@ avl64_find(
-  */
- static void
- avl64_balance(
--	register avl64node_t **rootp,
--	register avl64node_t *np,
--	register int growth)
-+	avl64node_t **rootp,
-+	avl64node_t *np,
-+	int growth)
- {
- 	/*
- 	 * At this point, np points to the node to which
-@@ -718,8 +718,8 @@ avl64_balance(
- 	 * propagate avl_balance up the tree.
- 	 */
- 	for ( ; ; ) {
--		register avl64node_t *parent = np->avl_parent;
--		register avl64node_t *child;
-+		avl64node_t *parent = np->avl_parent;
-+		avl64node_t *child;
- 
- 		CERT(growth == AVL_BACK || growth == AVL_FORW);
- 
-@@ -799,7 +799,7 @@ avl64_balance(
- 						D
- 
- 				 */
--				register avl64node_t *tmp = child->avl_forw;
-+				avl64node_t *tmp = child->avl_forw;
- 
- 				CERT(child->avl_balance == AVL_FORW && tmp);
- 
-@@ -856,7 +856,7 @@ avl64_balance(
  				/*
- 				 * double RL
+@@ -990,7 +990,7 @@ _("would have junked entry \"%s\" in directory inode %" PRIu64 "\n"),
+ 		 * calculate size based on next_sfep.
+ 		 */
+ 		next_sfep = (tmp_sfep == NULL)
+-			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
++			? (xfs_dir2_sf_entry_t *) ((intptr_t) sfep
+ 							+ ((!bad_sfnamelen)
+ 				? M_DIROPS(mp)->sf_entsize(sfp, sfep->namelen)
+ 				: M_DIROPS(mp)->sf_entsize(sfp, namelen)))
+@@ -1045,7 +1045,7 @@ _("corrected directory %" PRIu64 " size, was %" PRId64 ", now %" PRIdPTR "\n"),
+ 				(intptr_t)next_sfep - (intptr_t)sfp);
+ 
+ 			dip->di_size = cpu_to_be64(
+-					(__psint_t)next_sfep - (__psint_t)sfp);
++					(intptr_t)next_sfep - (intptr_t)sfp);
+ 			*dino_dirty = 1;
+ 			*repair = 1;
+ 		}
+diff --git a/repair/incore_ext.c b/repair/incore_ext.c
+index 826bf44..849a949 100644
+--- a/repair/incore_ext.c
++++ b/repair/incore_ext.c
+@@ -498,17 +498,17 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
+ 	return(ext);
+ }
+ 
+-static __psunsigned_t
++static uintptr_t
+ avl_ext_start(avlnode_t *node)
+ {
+-	return((__psunsigned_t)
++	return((uintptr_t)
+ 		((extent_tree_node_t *) node)->ex_startblock);
+ }
+ 
+-static __psunsigned_t
++static uintptr_t
+ avl_ext_end(avlnode_t *node)
+ {
+-	return((__psunsigned_t) (
++	return((uintptr_t) (
+ 		((extent_tree_node_t *) node)->ex_startblock +
+ 		((extent_tree_node_t *) node)->ex_blockcount));
+ }
+@@ -517,24 +517,24 @@ avl_ext_end(avlnode_t *node)
+  * convert size to an address for the AVL tree code -- the bigger the size,
+  * the lower the address so the biggest extent will be first in the tree
+  */
+-static __psunsigned_t
++static uintptr_t
+ avl_ext_bcnt_start(avlnode_t *node)
+ {
+ /*
+-	return((__psunsigned_t) (BCNT_ADDR(((extent_tree_node_t *)
++	return((uintptr_t) (BCNT_ADDR(((extent_tree_node_t *)
+ 						node)->ex_blockcount)));
+ */
+-	return((__psunsigned_t) ((extent_tree_node_t *)node)->ex_blockcount);
++	return((uintptr_t) ((extent_tree_node_t *)node)->ex_blockcount);
+ }
+ 
+-static __psunsigned_t
++static uintptr_t
+ avl_ext_bcnt_end(avlnode_t *node)
+ {
+ /*
+-	return((__psunsigned_t) (BCNT_ADDR(((extent_tree_node_t *)
++	return((uintptr_t) (BCNT_ADDR(((extent_tree_node_t *)
+ 						node)->ex_blockcount)));
+ */
+-	return((__psunsigned_t) ((extent_tree_node_t *)node)->ex_blockcount);
++	return((uintptr_t) ((extent_tree_node_t *)node)->ex_blockcount);
+ }
+ 
+ avlops_t avl_extent_bcnt_tree_ops = {
+diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+index cda6c2b..0c97439 100644
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -772,16 +772,16 @@ add_ino_ex_data(xfs_mount_t *mp)
+ 	full_ino_ex_data = 1;
+ }
+ 
+-static __psunsigned_t
++static uintptr_t
+ avl_ino_start(avlnode_t *node)
+ {
+-	return((__psunsigned_t) ((ino_tree_node_t *) node)->ino_startnum);
++	return((uintptr_t) ((ino_tree_node_t *) node)->ino_startnum);
+ }
+ 
+-static __psunsigned_t
++static uintptr_t
+ avl_ino_end(avlnode_t *node)
+ {
+-	return((__psunsigned_t) (
++	return((uintptr_t) (
+ 		((ino_tree_node_t *) node)->ino_startnum +
+ 		XFS_INODES_PER_CHUNK));
+ }
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 130ed4f..bdf32bf 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -649,7 +649,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
+ 
+ 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+ 
+-		bmp = (xfs_rtword_t *)((__psint_t) bmp + mp->m_sb.sb_blocksize);
++		bmp = (xfs_rtword_t *)((intptr_t) bmp + mp->m_sb.sb_blocksize);
+ 		bno++;
+ 	}
+ 
+@@ -721,7 +721,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
+ 
+ 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+ 
+-		smp = (xfs_suminfo_t *)((__psint_t)smp + mp->m_sb.sb_blocksize);
++		smp = (xfs_suminfo_t *)((intptr_t)smp + mp->m_sb.sb_blocksize);
+ 		bno++;
+ 	}
+ 
+@@ -2464,12 +2464,12 @@ shortform_dir2_junk(
+ 	 * now move all the remaining entries down over the junked entry and
+ 	 * clear the newly unused bytes at the tail of the directory region.
+ 	 */
+-	next_len = *max_size - ((__psint_t)next_sfep - (__psint_t)sfp);
++	next_len = *max_size - ((intptr_t)next_sfep - (intptr_t)sfp);
+ 	*max_size -= next_elen;
+ 	*bytes_deleted += next_elen;
+ 
+ 	memmove(sfep, next_sfep, next_len);
+-	memset((void *)((__psint_t)sfep + next_len), 0, next_elen);
++	memset((void *)((intptr_t)sfep + next_len), 0, next_elen);
+ 	sfp->count -= 1;
+ 	*ino_dirty = 1;
+ 
+@@ -2559,7 +2559,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
+ 	sfep = next_sfep = xfs_dir2_sf_firstentry(sfp);
+ 
+ 	for (i = 0; i < sfp->count && max_size >
+-					(__psint_t)next_sfep - (__psint_t)sfp;
++					(intptr_t)next_sfep - (intptr_t)sfp;
+ 			sfep = next_sfep, i++)  {
+ 		bad_sfnamelen = 0;
+ 
+@@ -2582,8 +2582,8 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
+ 
+ 			if (i == sfp->count - 1)  {
+ 				namelen = ip->i_d.di_size -
+-					((__psint_t) &sfep->name[0] -
+-					 (__psint_t) sfp);
++					((intptr_t) &sfep->name[0] -
++					 (intptr_t) sfp);
+ 			} else  {
+ 				/*
+ 				 * don't process the rest of the directory,
+@@ -2591,15 +2591,15 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
  				 */
--				register avl64node_t *tmp = child->avl_back;
-+				avl64node_t *tmp = child->avl_back;
+ 				break;
+ 			}
+-		} else if (no_modify && (__psint_t) sfep - (__psint_t) sfp +
++		} else if (no_modify && (intptr_t) sfep - (intptr_t) sfp +
+ 				+ M_DIROPS(mp)->sf_entsize(sfp, sfep->namelen)
+ 				> ip->i_d.di_size)  {
+ 			bad_sfnamelen = 1;
  
- 				ASSERT(child->avl_balance == AVL_BACK && tmp);
+ 			if (i == sfp->count - 1)  {
+ 				namelen = ip->i_d.di_size -
+-					((__psint_t) &sfep->name[0] -
+-					 (__psint_t) sfp);
++					((intptr_t) &sfep->name[0] -
++					 (intptr_t) sfp);
+ 			} else  {
+ 				/*
+ 				 * don't process the rest of the directory,
+@@ -2781,7 +2781,7 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+ 		 * on next_sfep.
+ 		 */
+ 		ASSERT(no_modify || bad_sfnamelen == 0);
+-		next_sfep = (struct xfs_dir2_sf_entry *)((__psint_t)sfep +
++		next_sfep = (struct xfs_dir2_sf_entry *)((intptr_t)sfep +
+ 			      (bad_sfnamelen
+ 				? M_DIROPS(mp)->sf_entsize(sfp, namelen)
+ 				: M_DIROPS(mp)->sf_entsize(sfp, sfep->namelen)));
+@@ -2798,8 +2798,8 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+ 				tmp_sfep = next_sfep;
+ 				process_sf_dir2_fixi8(mp, sfp, &tmp_sfep);
+ 				bytes_deleted +=
+-					(__psint_t)next_sfep -
+-					(__psint_t)tmp_sfep;
++					(intptr_t)next_sfep -
++					(intptr_t)tmp_sfep;
+ 				next_sfep = tmp_sfep;
+ 			} else
+ 				sfp->i8count = i8;
+@@ -2820,9 +2820,9 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
  
-@@ -908,13 +908,13 @@ avl64_balance(
- static
- avl64node_t *
- avl64_insert_find_growth(
--		register avl64tree_desc_t *tree,
--		register __uint64_t start,	/* range start at start, */
--		register __uint64_t end,	/* exclusive */
--		register int   *growthp)	/* OUT */
-+		avl64tree_desc_t *tree,
-+		__uint64_t start,	/* range start at start, */
-+		__uint64_t end,	/* exclusive */
-+		int   *growthp)	/* OUT */
- {
- 	avl64node_t *root = tree->avl_root;
--	register avl64node_t *np;
-+	avl64node_t *np;
- 
- 	np = root;
- 	ASSERT(np); /* caller ensures that there is atleast one node in tree */
-@@ -957,13 +957,13 @@ avl64_insert_find_growth(
- 
- static void
- avl64_insert_grow(
--	register avl64tree_desc_t *tree,
--	register avl64node_t *parent,
--	register avl64node_t *newnode,
--	register int growth)
-+	avl64tree_desc_t *tree,
-+	avl64node_t *parent,
-+	avl64node_t *newnode,
-+	int growth)
- {
--	register avl64node_t *nnext;
--	register __uint64_t start = AVL_START(tree, newnode);
-+	avl64node_t *nnext;
-+	__uint64_t start = AVL_START(tree, newnode);
- 
- 	if (growth == AVL_BACK) {
- 
-@@ -1001,12 +1001,12 @@ avl64_insert_grow(
- 
- avl64node_t *
- avl64_insert(
--	register avl64tree_desc_t *tree,
--	register avl64node_t *newnode)
-+	avl64tree_desc_t *tree,
-+	avl64node_t *newnode)
- {
--	register avl64node_t *np;
--	register __uint64_t start = AVL_START(tree, newnode);
--	register __uint64_t end = AVL_END(tree, newnode);
-+	avl64node_t *np;
-+	__uint64_t start = AVL_START(tree, newnode);
-+	__uint64_t end = AVL_END(tree, newnode);
- 	int growth;
- 
- 	ASSERT(newnode);
-@@ -1102,9 +1102,9 @@ avl64_insert_immediate(
-  *	Returns first in order node
-  */
- avl64node_t *
--avl64_firstino(register avl64node_t *root)
-+avl64_firstino(avl64node_t *root)
- {
--	register avl64node_t *np;
-+	avl64node_t *np;
- 
- 	if ((np = root) == NULL)
- 		return NULL;
-@@ -1118,9 +1118,9 @@ avl64_firstino(register avl64node_t *root)
-  *	Returns last in order node
-  */
- avl64node_t *
--avl64_lastino(register avl64node_t *root)
-+avl64_lastino(avl64node_t *root)
- {
--	register avl64node_t *np;
-+	avl64node_t *np;
- 
- 	if ((np = root) == NULL)
- 		return NULL;
-@@ -1303,11 +1303,11 @@ main()
-  */
- avl64node_t *
- avl64_findadjacent(
--	register avl64tree_desc_t *tree,
--	register __uint64_t value,
--	register int		dir)
-+	avl64tree_desc_t *tree,
-+	__uint64_t value,
-+	int		dir)
- {
--	register avl64node_t *np = tree->avl_root;
-+	avl64node_t *np = tree->avl_root;
- 
- 	while (np) {
- 		if (value < AVL_START(tree, np)) {
-@@ -1377,13 +1377,13 @@ avl64_findadjacent(
- 
- void
- avl64_findranges(
--	register avl64tree_desc_t *tree,
--	register __uint64_t start,
--	register __uint64_t end,
-+	avl64tree_desc_t *tree,
-+	__uint64_t start,
-+	__uint64_t end,
- 	avl64node_t	        **startp,
- 	avl64node_t		**endp)
- {
--	register avl64node_t *np;
-+	avl64node_t *np;
- 
- 	np = avl64_findadjacent(tree, start, AVL_SUCCEED);
- 	if (np == NULL				/* nothing succeding start */
-diff --git a/repair/avl64.h b/repair/avl64.h
-index 922e284..fd19321 100644
---- a/repair/avl64.h
-+++ b/repair/avl64.h
-@@ -112,9 +112,9 @@ avl64_findadjacent(
- 
- void
- avl64_findranges(
--	register avl64tree_desc_t *tree,
--	register __uint64_t	start,
--	register __uint64_t	end,
-+	avl64tree_desc_t *tree,
-+	__uint64_t	start,
-+	__uint64_t	end,
- 	avl64node_t	        **startp,
- 	avl64node_t		**endp);
- 
-diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
-index 5f26a62..11b5d38 100644
---- a/rtcp/xfs_rtcp.c
-+++ b/rtcp/xfs_rtcp.c
-@@ -34,7 +34,7 @@ usage(void)
- int
- main(int argc, char **argv)
- {
--	register int	c, i, r, errflg = 0;
-+	int	c, i, r, errflg = 0;
- 	struct stat64	s2;
- 	int		extsize = - 1;
- 
+ 	if (ip->i_d.di_size != ip->i_df.if_bytes)  {
+ 		ASSERT(ip->i_df.if_bytes == (xfs_fsize_t)
+-				((__psint_t) next_sfep - (__psint_t) sfp));
++				((intptr_t) next_sfep - (intptr_t) sfp));
+ 		ip->i_d.di_size = (xfs_fsize_t)
+-				((__psint_t) next_sfep - (__psint_t) sfp);
++				((intptr_t) next_sfep - (intptr_t) sfp);
+ 		do_warn(
+ 	_("setting size to %" PRId64 " bytes to reflect junked entries\n"),
+ 			ip->i_d.di_size);
 -- 
 1.9.1
 
