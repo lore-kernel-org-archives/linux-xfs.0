@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1B8FB7F58
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 06:33:42 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4F1C37F58
+	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 07:38:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF8FC304051
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 04:33:38 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id hdBR7v2CIY5d8eLs (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 22 Jun 2015 04:33:37 -0700 (PDT)
-Date: Mon, 22 Jun 2015 13:33:38 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs_repair and xfs filesystem strange behaviour
-Message-ID: <20150622133338.6b78ed75@harpe.intellique.com>
-In-Reply-To: <alpine.LRH.2.11.1506201447380.21027@mail.vlasiu.net>
-References: <alpine.LRH.2.11.1506201447380.21027@mail.vlasiu.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C9F28F8049
+	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 05:38:13 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id zcgMEWo1NofsqE01 for <xfs@oss.sgi.com>;
+	Mon, 22 Jun 2015 05:38:10 -0700 (PDT)
+Message-ID: <558801B2.7010804@sandeen.net>
+Date: Mon, 22 Jun 2015 07:38:10 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: xfs_repair and xfs filesystem strange behaviour
+References: <alpine.LRH.2.11.1506201447380.21027@mail.vlasiu.net>
+	<20150622133338.6b78ed75@harpe.intellique.com>
+In-Reply-To: <20150622133338.6b78ed75@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +28,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gabriel VLASIU <gabriel@vlasiu.net>
+To: Emmanuel Florac <eflorac@intellique.com>, Gabriel VLASIU <gabriel@vlasiu.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-TGUgU2F0LCAyMCBKdW4gMjAxNSAxNToxNjoyNiArMDMwMCAoRUVTVCkKR2FicmllbCBWTEFTSVUg
-PGdhYnJpZWxAdmxhc2l1Lm5ldD4gw6ljcml2YWl0OgoKPiBFdmVyeSB0aW1lIEkgZXJhc2UgdGhl
-IGZpbGVzIGluIGxvc3QrZm91bmQgZGlyZWN0b3J5IGFuZCB0aGVuIHJ1biAKPiB4ZnNfcmVwYWly
-IEkgZ290IHRoZSBzYW1lIGVycm9ycyBhbmQgdGhlIHNhbWUgZmlsZXMgYXJlIHNhdmVkIGJhY2sg
-dG8gCj4gbG9zdCtmb3VuZC4gSWYgSSBkbyBub3QgcmVtb3ZlIGFueXRoaW5nIGZyb20gbG9zdCtm
-b3VuZCBkaXJlY3Rvcnkgbm8gCj4gZXJyb3JzIGFyZSByZXBvcnRlZCBieSB4ZnNfcmVwYWlyLgo+
-IAo+IHhmc3Byb2dzIDMuMi4xCj4ga2VybmVsICA0LjAuNSB4ODZfNjQKPiAKPiBIb3cgY2FuIEkg
-Z2V0IHJpZCBvZiB0aGUgMCBieXRlcyBmaWxlcyBpbiBsb3N0K2ZvdW5kIGRpcmVjdG9yeT8KCkZp
-cnN0IG9mIGFsbCB0cnkgdGhlIGxhdGVzdCB4ZnNfcmVwYWlyLCB2ZXJzaW9uIDMuMi4zIC4gSXQn
-cyBjb21tb24KZm9yIGEgbmV3IHZlcnNpb24gdG8gYmUgYWJsZSB0byB0YW1lIHByZXZpb3VzbHkg
-dW5jb3JyZWN0YWJsZQpjb3JydXB0aW9ucy4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwg
-RmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwg
-ICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNv
-bT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+T24gNi8yMi8xNSA2OjMzIEFNLCBFbW1hbnVlbCBGbG9yYWMgd3JvdGU6Cj4gTGUgU2F0LCAyMCBK
+dW4gMjAxNSAxNToxNjoyNiArMDMwMCAoRUVTVCkKPiBHYWJyaWVsIFZMQVNJVSA8Z2FicmllbEB2
+bGFzaXUubmV0PiDDqWNyaXZhaXQ6Cj4gCj4+IEV2ZXJ5IHRpbWUgSSBlcmFzZSB0aGUgZmlsZXMg
+aW4gbG9zdCtmb3VuZCBkaXJlY3RvcnkgYW5kIHRoZW4gcnVuIAo+PiB4ZnNfcmVwYWlyIEkgZ290
+IHRoZSBzYW1lIGVycm9ycyBhbmQgdGhlIHNhbWUgZmlsZXMgYXJlIHNhdmVkIGJhY2sgdG8gCj4+
+IGxvc3QrZm91bmQuIElmIEkgZG8gbm90IHJlbW92ZSBhbnl0aGluZyBmcm9tIGxvc3QrZm91bmQg
+ZGlyZWN0b3J5IG5vIAo+PiBlcnJvcnMgYXJlIHJlcG9ydGVkIGJ5IHhmc19yZXBhaXIuCj4+Cj4+
+IHhmc3Byb2dzIDMuMi4xCj4+IGtlcm5lbCAgNC4wLjUgeDg2XzY0Cj4+Cj4+IEhvdyBjYW4gSSBn
+ZXQgcmlkIG9mIHRoZSAwIGJ5dGVzIGZpbGVzIGluIGxvc3QrZm91bmQgZGlyZWN0b3J5Pwo+IAo+
+IEZpcnN0IG9mIGFsbCB0cnkgdGhlIGxhdGVzdCB4ZnNfcmVwYWlyLCB2ZXJzaW9uIDMuMi4zIC4g
+SXQncyBjb21tb24KPiBmb3IgYSBuZXcgdmVyc2lvbiB0byBiZSBhYmxlIHRvIHRhbWUgcHJldmlv
+dXNseSB1bmNvcnJlY3RhYmxlCj4gY29ycnVwdGlvbnMuCgpXb3J0aCB0cnlpbmcsIHllcy4KCkkn
+dmUgYWxzbyBjb25uZWN0ZWQgdy8gR2FicmllbCB0byBvYnRhaW4gYSBtZXRhZHVtcCB0byBsb29r
+IGF0LCBpZgp0aGF0IGRvZXNuJ3Qgd29yay4KClRoYW5rcywKLUVyaWMKCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
