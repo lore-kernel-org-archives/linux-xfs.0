@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B1217F51
-	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 18:05:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F2DFF8F8033
-	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 16:05:49 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D56DA7F51
+	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 19:10:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3981304051
+	for <xfs@oss.sgi.com>; Sun, 21 Jun 2015 17:10:48 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	WiEEeAs3DgIPE69x for <xfs@oss.sgi.com>;
-	Sun, 21 Jun 2015 16:05:47 -0700 (PDT)
-Date: Mon, 22 Jun 2015 09:05:32 +1000
+	Hq5qTrrrvA6QNmSD for <xfs@oss.sgi.com>;
+	Sun, 21 Jun 2015 17:10:45 -0700 (PDT)
+Date: Mon, 22 Jun 2015 10:10:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: validate transaction header length on log
-	recovery
-Message-ID: <20150621230532.GB22807@dastard>
-References: <1434631741-50856-1-git-send-email-bfoster@redhat.com>
-	<1434631741-50856-3-git-send-email-bfoster@redhat.com>
-	<20150621092722.GA7914@infradead.org>
-	<20150621202526.GA3955@bfoster.bfoster>
+Subject: Re: [PATCH 03/20] xfs: sanitise error handling in
+	xfs_alloc_fix_freelist
+Message-ID: <20150622001031.GC22807@dastard>
+References: <1433311497-10245-1-git-send-email-david@fromorbit.com>
+	<1433311497-10245-4-git-send-email-david@fromorbit.com>
+	<20150615145814.GC36091@bfoster.bfoster>
+	<20150615215119.GC10224@dastard>
+	<20150616112706.GB24853@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150621202526.GA3955@bfoster.bfoster>
+In-Reply-To: <20150616112706.GB24853@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,64 +35,197 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Sun, Jun 21, 2015 at 04:25:29PM -0400, Brian Foster wrote:
-> On Sun, Jun 21, 2015 at 02:27:22AM -0700, Christoph Hellwig wrote:
-> > This looks sensible to me, but I still can't make sense of the old
-> > code which just conditionally copied it even after taking a brief
-> > look at the pre-git history of this code.  Does anyone understand why
-> > the code was like this?   Fixing code that seems to have had an
-> > intention I can't make sense of always feel dangerous.
+On Tue, Jun 16, 2015 at 07:27:06AM -0400, Brian Foster wrote:
+> On Tue, Jun 16, 2015 at 07:51:19AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 15, 2015 at 10:58:14AM -0400, Brian Foster wrote:
+> > > On Wed, Jun 03, 2015 at 04:04:40PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > The error handling is currently an inconsistent mess as every error
+> > > > condition handles return values and releasing buffers individually.
+> > > > Clean this up by using gotos and a sane error label stack.
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_alloc.c | 103 +++++++++++++++++++++-------------------------
+> > > >  1 file changed, 47 insertions(+), 56 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > > index 2471cb5..352db46 100644
+> > > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > > @@ -1909,80 +1909,65 @@ xfs_alloc_space_available(
+> > > >   */
+> > > >  STATIC int			/* error */
+> > > >  xfs_alloc_fix_freelist(
+> > > > -	xfs_alloc_arg_t	*args,	/* allocation argument structure */
+> > > > -	int		flags)	/* XFS_ALLOC_FLAG_... */
+> > > > +	struct xfs_alloc_arg	*args,	/* allocation argument structure */
+> > > > +	int			flags)	/* XFS_ALLOC_FLAG_... */
+> > > >  {
+> > > > -	xfs_buf_t	*agbp;	/* agf buffer pointer */
+> > > > -	xfs_buf_t	*agflbp;/* agfl buffer pointer */
+> > > > -	xfs_agblock_t	bno;	/* freelist block */
+> > > > -	int		error;	/* error result code */
+> > > > -	xfs_mount_t	*mp;	/* file system mount point structure */
+> > > > -	xfs_extlen_t	need;	/* total blocks needed in freelist */
+> > > > -	xfs_perag_t	*pag;	/* per-ag information structure */
+> > > > -	xfs_alloc_arg_t	targs;	/* local allocation arguments */
+> > > > -	xfs_trans_t	*tp;	/* transaction pointer */
+> > > > -
+> > > > -	mp = args->mp;
+> > > > +	struct xfs_mount	*mp = args->mp;
+> > > > +	struct xfs_perag	*pag = args->pag;
+> > > > +	struct xfs_trans	*tp = args->tp;
+> > > > +	struct xfs_buf		*agbp = NULL;
+> > > > +	struct xfs_buf		*agflbp = NULL;
+> > > > +	struct xfs_alloc_arg	targs;	/* local allocation arguments */
+> > > > +	xfs_agblock_t		bno;	/* freelist block */
+> > > > +	xfs_extlen_t		need;	/* total blocks needed in freelist */
+> > > > +	int			error;
+> > > >  
+> > > > -	pag = args->pag;
+> > > > -	tp = args->tp;
+> > > >  	if (!pag->pagf_init) {
+> > > > -		if ((error = xfs_alloc_read_agf(mp, tp, args->agno, flags,
+> > > > -				&agbp)))
+> > > > -			return error;
+> > > > +		error = xfs_alloc_read_agf(mp, tp, args->agno, flags, &agbp);
+> > > > +		if (error)
+> > > > +			goto out_no_agbp;
+> > > >  		if (!pag->pagf_init) {
+> > > >  			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
+> > > >  			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+> > > > -			args->agbp = NULL;
+> > > > -			return 0;
+> > > > +			goto out_agbp_relse;
+> > > >  		}
+> > > > -	} else
+> > > > -		agbp = NULL;
+> > > > +	}
+> > > >  
+> > > >  	/*
+> > > > -	 * If this is a metadata preferred pag and we are user data
+> > > > -	 * then try somewhere else if we are not being asked to
+> > > > -	 * try harder at this point
+> > > > +	 * If this is a metadata preferred pag and we are user data then try
+> > > > +	 * somewhere else if we are not being asked to try harder at this
+> > > > +	 * point
+> > > >  	 */
+> > > >  	if (pag->pagf_metadata && args->userdata &&
+> > > >  	    (flags & XFS_ALLOC_FLAG_TRYLOCK)) {
+> > > >  		ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+> > > > -		args->agbp = NULL;
+> > > > -		return 0;
+> > > > +		goto out_agbp_relse;
+> > > >  	}
+> > > >  
+> > > >  	need = XFS_MIN_FREELIST_PAG(pag, mp);
+> > > > -	if (!xfs_alloc_space_available(args, need, flags)) {
+> > > > -		if (agbp)
+> > > > -			xfs_trans_brelse(tp, agbp);
+> > > > -		args->agbp = NULL;
+> > > > -		return 0;
+> > > > -	}
+> > > > +	if (!xfs_alloc_space_available(args, need, flags))
+> > > > +		goto out_agbp_relse;
+> > > >  
+> > > >  	/*
+> > > >  	 * Get the a.g. freespace buffer.
+> > > >  	 * Can fail if we're not blocking on locks, and it's held.
+> > > >  	 */
+> > > > -	if (agbp == NULL) {
+> > > > -		if ((error = xfs_alloc_read_agf(mp, tp, args->agno, flags,
+> > > > -				&agbp)))
+> > > > -			return error;
+> > > > -		if (agbp == NULL) {
+> > > > +	if (!agbp) {
+> > > > +		error = xfs_alloc_read_agf(mp, tp, args->agno, flags, &agbp);
+> > > > +		if (error)
+> > > > +			goto out_no_agbp;
+> > > > +		if (!agbp) {
+> > > >  			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
+> > > >  			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+> > > > -			args->agbp = NULL;
+> > > > -			return 0;
+> > > > +			goto out_no_agbp;
+> > > >  		}
+> > > >  	}
+> > > >  
+> > > >  
+> > > >  	/* If there isn't enough total space or single-extent, reject it. */
+> > > >  	need = XFS_MIN_FREELIST_PAG(pag, mp);
+> > > > -	if (!xfs_alloc_space_available(args, need, flags)) {
+> > > > -		xfs_trans_brelse(tp, agbp);
+> > > > -		args->agbp = NULL;
+> > > > -		return 0;
+> > > > -	}
+> > > > +	if (!xfs_alloc_space_available(args, need, flags))
+> > > > +		goto out_agbp_relse;
+> > > >  
+> > > >  	/*
+> > > >  	 * Make the freelist shorter if it's too long.
+> > > > @@ -1997,10 +1982,10 @@ xfs_alloc_fix_freelist(
+> > > >  
+> > > >  		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+> > > >  		if (error)
+> > > > -			return error;
+> > > > +			goto out_agbp_relse;
+> > > 
+> > > So at this point it looks like the buffer could be logged (i.e., dirty
+> > > in the transaction). Perhaps this is the reason for the lack of agbp
+> > > releases from this point forward in the current error handling. That
+> > > said, we do the agflbp release unconditionally at the end of the
+> > > function even when it might be logged. xfs_trans_brelse() appears to
+> > > handle this case as it just skips removing the item from the tp.
+> > > 
+> > > This is a bit confusing and at the very least seems like an unexpected
+> > > use of xfs_trans_brelse(). Is this intentional?
+> > 
+> > Yes, very much so. If the agf is clean, then releasing it
+> > immediately on error in the function that grabbed the buffer is the
+> > right thing to do. This can happen if the first call to
+> > xfs_alloc_get_freelist() fails (which only occurs if we fail to read
+> > the AGFL buffer).
 > > 
 > 
-> Yeah, I couldn't really make much sense of the original code either. My
-> reasoning at the time was that the memcpy() seemed superfluous in this
-> case, as we wouldn't add anything to trans->r_itemq and end up doing the
-> memcpy() again the next time around.
+> Ok.
 > 
-> Taking another look at other xlog_recover_add_item() callsites, there is
-> this in the xlog_recover_add_to_cont_trans() case:
+> > And, as you noticed, if it is dirty it will remain held by the
+> > transaction until it is cancelled, as happens everywhere else in the
+> > code. So this is effectively making the current code consistent with
+> > the usual error handling patterns...
+> > 
 > 
->         if (list_empty(&trans->r_itemq)) {
->                 /* finish copying rest of trans header */
->                 xlog_recover_add_item(&trans->r_itemq);
->                 ptr = (xfs_caddr_t) &trans->r_theader +
->                                 sizeof(xfs_trans_header_t) - len;
->                 memcpy(ptr, dp, len);
->                 return 0;
->         }
+> Effectively, yeah. My point was more that it doesn't seem to be the
+> prevalent pattern. Case in point, this code prior to these changes, attr
+> code doesn't seem to use brelse() after potential modification
+> (xfs_attr_leaf_[add|remove]name()), inode allocation, etc. Anyways, it
+> seems valid and is probably the more simple method for handling errors
+> in this situation:
 > 
-> ... which according to the code/comment, seems to imply that the
-> transaction header could be split across op records..? I'm not terribly
-> familiar with the log on-disk format. Does this sound sane?
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> ... though I think a comment around it couldn't hurt.
 
-Yes. Look at xfs_cil_push, where it formats the transaction header.
-It is just another 16 byte vector that is passed to xlog_write so it
-gets encapsulated in log opheaders. That means it can be split
-across multiple iclogs and log opheaders (i.e. can trigger the
-last_was_partial_copy case in xlog_write_setup_copy()).
+No worries, I added this hunk:
 
-> If so, perhaps the patch is wrong and we should only bail if the length
-> in either of these two cases is obviously invalid (e.g., it exceeds the
-> size of the full in-core structure).
-
-The code currently assumes that if the magic number matches, then
-the length of the opheader will be in range. It's probably a fair
-assumption, as only a software bug in setting the opheader size in
-the log write code will cause problems. Other on-disk corruption
-(e.g.  bit flips) will be caught by the log buffer CRCs....
-
-However, we should really trigger a corruption if it does exceed
-the size of the transaction header. Similarly, we should do the same
-check on the other side of the partial trans header copy...
-
-> Perhaps there's also more
-> validation that can occur here: can we assert that this should mean
-> we're at the end of the operation record in the first short copy
-> instance?
-
-Not sure what you mean here.
+        /*
+         * Make the freelist shorter if it's too long.
+         *
++        * Note that from this point onwards, we will always release the agf and
++        * agfl buffers on error. This means that if we error out and the
++        * buffers are clean, they are correctly handled as they may not have
++        * been joined to the transaction and hence need to be released
++        * manually. If they have been joined to the transaction, then
++        * xfs_trans_brelse() will handle them according to the recursion count
++        * and dirty state of the buffer.
++        *
+         * XXX (dgc): When we have lots of free space, does this buy us
+         * anything other than extra overhead when we need to put more blocks
+         * back on the free list? Maybe we should only do this when space is
 
 Cheers,
 
