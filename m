@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8BE567F37
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 08:38:57 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DBE557F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 08:59:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1AB4BAC006
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 06:38:53 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CAAEA304062
+	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 06:59:38 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DR9loOhHxu7MUEcu (version=TLSv1
+	cuda.sgi.com with ESMTP id XWyM8BxwuZqmhZ2K (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 22 Jun 2015 06:38:52 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 054848F27D
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 13:38:52 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t5MDcpUn015403
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 09:38:51 -0400
+	Mon, 22 Jun 2015 06:59:38 -0700 (PDT)
+Date: Mon, 22 Jun 2015 09:59:35 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: don't truncate attribute extents if no extents exist
-Date: Mon, 22 Jun 2015 09:38:50 -0400
-Message-Id: <1434980330-45272-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1434631741-50856-2-git-send-email-bfoster@redhat.com>
-References: <1434631741-50856-2-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: validate transaction header length on log
+	recovery
+Message-ID: <20150622135935.GA43902@bfoster.bfoster>
+References: <1434631741-50856-1-git-send-email-bfoster@redhat.com>
+	<1434631741-50856-3-git-send-email-bfoster@redhat.com>
+	<20150621092722.GA7914@infradead.org>
+	<20150621202526.GA3955@bfoster.bfoster>
+	<20150621230532.GB22807@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150621230532.GB22807@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,82 +30,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-The xfs_attr3_root_inactive() call from xfs_attr_inactive() assumes that
-attribute blocks exist to invalidate. It is possible to have an
-attribute fork without extents, however. Consider the case where the
-attribute fork is created towards the beginning of xfs_attr_set() but
-some part of the subsequent attribute set fails.
+On Mon, Jun 22, 2015 at 09:05:32AM +1000, Dave Chinner wrote:
+> On Sun, Jun 21, 2015 at 04:25:29PM -0400, Brian Foster wrote:
+> > On Sun, Jun 21, 2015 at 02:27:22AM -0700, Christoph Hellwig wrote:
+> > > This looks sensible to me, but I still can't make sense of the old
+> > > code which just conditionally copied it even after taking a brief
+> > > look at the pre-git history of this code.  Does anyone understand why
+> > > the code was like this?   Fixing code that seems to have had an
+> > > intention I can't make sense of always feel dangerous.
+> > > 
+> > 
+> > Yeah, I couldn't really make much sense of the original code either. My
+> > reasoning at the time was that the memcpy() seemed superfluous in this
+> > case, as we wouldn't add anything to trans->r_itemq and end up doing the
+> > memcpy() again the next time around.
+> > 
+> > Taking another look at other xlog_recover_add_item() callsites, there is
+> > this in the xlog_recover_add_to_cont_trans() case:
+> > 
+> >         if (list_empty(&trans->r_itemq)) {
+> >                 /* finish copying rest of trans header */
+> >                 xlog_recover_add_item(&trans->r_itemq);
+> >                 ptr = (xfs_caddr_t) &trans->r_theader +
+> >                                 sizeof(xfs_trans_header_t) - len;
+> >                 memcpy(ptr, dp, len);
+> >                 return 0;
+> >         }
+> > 
+> > ... which according to the code/comment, seems to imply that the
+> > transaction header could be split across op records..? I'm not terribly
+> > familiar with the log on-disk format. Does this sound sane?
+> 
+> Yes. Look at xfs_cil_push, where it formats the transaction header.
+> It is just another 16 byte vector that is passed to xlog_write so it
+> gets encapsulated in log opheaders. That means it can be split
+> across multiple iclogs and log opheaders (i.e. can trigger the
+> last_was_partial_copy case in xlog_write_setup_copy()).
+> 
 
-If an inode in such a state hits xfs_attr_inactive(), it eventually
-calls xfs_dabuf_map() and possibly xfs_bmapi_read(). The former emits a
-filesystem corruption warning, returns an error that bubbles back up to
-xfs_attr_inactive(), and leads to destruction of the in-core attribute
-fork without an on-disk reset. If the inode happens to make it back
-through xfs_inactive() in this state (e.g., via a concurrent bulkstat
-that cycles the inode from the reclaim state and releases it), i_afp
-might not exist when xfs_bmapi_read() is called and causes a NULL
-dereference panic.
+Ok..
 
-A '-p 2' fsstress run to ENOSPC on a relatively small fs (1GB)
-reproduces these problems. The behavior is a regression caused by:
+> > If so, perhaps the patch is wrong and we should only bail if the length
+> > in either of these two cases is obviously invalid (e.g., it exceeds the
+> > size of the full in-core structure).
+> 
+> The code currently assumes that if the magic number matches, then
+> the length of the opheader will be in range. It's probably a fair
+> assumption, as only a software bug in setting the opheader size in
+> the log write code will cause problems. Other on-disk corruption
+> (e.g.  bit flips) will be caught by the log buffer CRCs....
+> 
+> However, we should really trigger a corruption if it does exceed
+> the size of the transaction header. Similarly, we should do the same
+> check on the other side of the partial trans header copy...
+> 
 
-6dfe5a0 xfs: xfs_attr_inactive leaves inconsistent attr fork state behind
+Indeed, thanks for the breakdown. So we can drop this one and I'll send
+a new patch independently since the two patches in this series are not
+related (and afaics the first is Ok).
 
-... which removed logic that avoided the attribute extent truncate when
-no extents exist. Restore this logic to ensure the attribute fork is
-destroyed and reset correctly if it exists without any allocated
-extents.
+> > Perhaps there's also more
+> > validation that can occur here: can we assert that this should mean
+> > we're at the end of the operation record in the first short copy
+> > instance?
+> 
+> Not sure what you mean here.
+> 
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+I was just thinking out loud and wondering whether that if this
+transaction header split does occur, we can infer that it's due to
+hitting the end of the op record. In other words, a short transaction
+header here where the op record actually has more in it could also be
+considered a corruption.
 
-Here's v2 of the attr inactive fix with the additional comment requested
-by Christoph. After beating my head against reproducing this with
-xfstests a bit last week, I determined that selinux was a contributing
-factor in my original fsstress reproducer. I found a
-non-selinux/fsstress reproducer sequence, so I'll cook up an xfstest
-based on that soon...
+Taking a look at the code, it looks like the length we're working with
+down in this context is actually the op record length, so this is kind
+of irrelevant and likely just an artifact of my lack of understanding
+the on-disk log format.
 
 Brian
 
-v2:
-- Added comment to explain logic behind skipping the inval/truncate in
-  the no attribute case.
-v1: http://oss.sgi.com/archives/xfs/2015-06/msg00276.html
-
- fs/xfs/xfs_attr_inactive.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 69a154c..2bb959a 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -433,8 +433,14 @@ xfs_attr_inactive(
- 	 */
- 	xfs_trans_ijoin(trans, dp, 0);
- 
--	/* invalidate and truncate the attribute fork extents */
--	if (dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
-+	/*
-+	 * Invalidate and truncate the attribute fork extents. Make sure the
-+	 * fork actually has attributes as otherwise the invalidation has no
-+	 * blocks to read and returns an error. In this case, just do the fork
-+	 * removal below.
-+	 */
-+	if (xfs_inode_hasattr(dp) &&
-+	    dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
- 		error = xfs_attr3_root_inactive(&trans, dp);
- 		if (error)
- 			goto out_cancel;
--- 
-1.9.3
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
