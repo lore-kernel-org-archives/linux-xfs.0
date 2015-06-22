@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DBE557F4E
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 08:59:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CAAEA304062
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 06:59:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XWyM8BxwuZqmhZ2K (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id E6D147F50
+	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 11:30:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B915530406A
+	for <xfs@oss.sgi.com>; Mon, 22 Jun 2015 09:30:25 -0700 (PDT)
+Received: from mail.vlasiu.net (mail.vlasiu.net [91.223.50.125]) by
+	cuda.sgi.com with ESMTP id DNrxkBGBpUF1FWVA (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 22 Jun 2015 06:59:38 -0700 (PDT)
-Date: Mon, 22 Jun 2015 09:59:35 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: validate transaction header length on log
-	recovery
-Message-ID: <20150622135935.GA43902@bfoster.bfoster>
-References: <1434631741-50856-1-git-send-email-bfoster@redhat.com>
-	<1434631741-50856-3-git-send-email-bfoster@redhat.com>
-	<20150621092722.GA7914@infradead.org>
-	<20150621202526.GA3955@bfoster.bfoster>
-	<20150621230532.GB22807@dastard>
+	Mon, 22 Jun 2015 09:30:20 -0700 (PDT)
+Date: Mon, 22 Jun 2015 19:30:05 +0300 (EEST)
+From: Gabriel VLASIU <gabriel@vlasiu.net>
+Subject: Re: xfs_repair and xfs filesystem strange behaviour
+In-Reply-To: <20150622133338.6b78ed75@harpe.intellique.com>
+Message-ID: <alpine.LRH.2.11.1506221929160.17008@mail.vlasiu.net>
+References: <alpine.LRH.2.11.1506201447380.21027@mail.vlasiu.net>
+	<20150622133338.6b78ed75@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150621230532.GB22807@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,95 +29,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jun 22, 2015 at 09:05:32AM +1000, Dave Chinner wrote:
-> On Sun, Jun 21, 2015 at 04:25:29PM -0400, Brian Foster wrote:
-> > On Sun, Jun 21, 2015 at 02:27:22AM -0700, Christoph Hellwig wrote:
-> > > This looks sensible to me, but I still can't make sense of the old
-> > > code which just conditionally copied it even after taking a brief
-> > > look at the pre-git history of this code.  Does anyone understand why
-> > > the code was like this?   Fixing code that seems to have had an
-> > > intention I can't make sense of always feel dangerous.
-> > > 
-> > 
-> > Yeah, I couldn't really make much sense of the original code either. My
-> > reasoning at the time was that the memcpy() seemed superfluous in this
-> > case, as we wouldn't add anything to trans->r_itemq and end up doing the
-> > memcpy() again the next time around.
-> > 
-> > Taking another look at other xlog_recover_add_item() callsites, there is
-> > this in the xlog_recover_add_to_cont_trans() case:
-> > 
-> >         if (list_empty(&trans->r_itemq)) {
-> >                 /* finish copying rest of trans header */
-> >                 xlog_recover_add_item(&trans->r_itemq);
-> >                 ptr = (xfs_caddr_t) &trans->r_theader +
-> >                                 sizeof(xfs_trans_header_t) - len;
-> >                 memcpy(ptr, dp, len);
-> >                 return 0;
-> >         }
-> > 
-> > ... which according to the code/comment, seems to imply that the
-> > transaction header could be split across op records..? I'm not terribly
-> > familiar with the log on-disk format. Does this sound sane?
-> 
-> Yes. Look at xfs_cil_push, where it formats the transaction header.
-> It is just another 16 byte vector that is passed to xlog_write so it
-> gets encapsulated in log opheaders. That means it can be split
-> across multiple iclogs and log opheaders (i.e. can trigger the
-> last_was_partial_copy case in xlog_write_setup_copy()).
-> 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Ok..
+On Mon, 22 Jun 2015, Emmanuel Florac wrote:
 
-> > If so, perhaps the patch is wrong and we should only bail if the length
-> > in either of these two cases is obviously invalid (e.g., it exceeds the
-> > size of the full in-core structure).
-> 
-> The code currently assumes that if the magic number matches, then
-> the length of the opheader will be in range. It's probably a fair
-> assumption, as only a software bug in setting the opheader size in
-> the log write code will cause problems. Other on-disk corruption
-> (e.g.  bit flips) will be caught by the log buffer CRCs....
-> 
-> However, we should really trigger a corruption if it does exceed
-> the size of the transaction header. Similarly, we should do the same
-> check on the other side of the partial trans header copy...
-> 
+> First of all try the latest xfs_repair, version 3.2.3 . It's common
+> for a new version to be able to tame previously uncorrectable
+> corruptions.
+Same thing with 3.2.3. As expected...
 
-Indeed, thanks for the breakdown. So we can drop this one and I'll send
-a new patch independently since the two patches in this series are not
-related (and afaics the first is Ok).
 
-> > Perhaps there's also more
-> > validation that can occur here: can we assert that this should mean
-> > we're at the end of the operation record in the first short copy
-> > instance?
-> 
-> Not sure what you mean here.
-> 
+Sincerely,
+Gabriel
 
-I was just thinking out loud and wondering whether that if this
-transaction header split does occur, we can infer that it's due to
-hitting the end of the op record. In other words, a short transaction
-header here where the op record actually has more in it could also be
-considered a corruption.
+- -- 
 
-Taking a look at the code, it looks like the length we're working with
-down in this context is actually the op record length, so this is kind
-of irrelevant and likely just an artifact of my lack of understanding
-the on-disk log format.
+// Gabriel VLASIU
+//
+// OpenGPG-KeyID      : 44952F15
+// OpenGPG-Fingerprint: 4AC5 7C26 2FE9 02DA 4906  24B2 D32B 7ED7 4495 2F15
+// OpenGPG-URL        : http://www.vlasiu.net/public.key
 
-Brian
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCgAGBQJViDgNAAoJENMrftdElS8VPbQQALlUvto+b8wkUrxuv6TsVOt7
+7jgScG1uYEnY8NVGHzPh/BOrIblA6TkDFEJ7/WM/batna3S0c95Who3Vds7MU+0Z
+HIDnR8yxLVhfI6Pv3nFGvaaotwDSi9jIdriNAKBA6uE/mUv6g67KejLxgoiyQJIh
+CJb6OWQ2pbKfB8RcAXAcA5OEeJHXNQTpQYHxReJmMKvXea+nax7wBtWaINiLr+Vk
+mG+3DDGRnrHsEYvkRNmhbDKPT9LcKUjEBHzr1i65HKmpUFh377Hc9T/p9jpPj+zZ
+e9+AQ5IlT+uefjpDx/TZEgPYb/Z72yXiLkvxhJjm9e8UVR1WxS8IpXQpyLCleYZO
+6oGoBSPAc/faFHbCmWRbRWi2kgM5MCKDlJApm5Bk4I6rYZ7mn1e1HlTwPfq/9mZH
+8Nvh5n27Hq1bsPlqlvkgHIlxqbQws2ywS6WZtFiPQZOFBghDd1ZZx5N1OjUlAsA1
+5Uyj54lJr9O7ajNapJporIMtj/ahRupQTP7W5CLddrerFSCLbVJLebnbHoHhIBXj
+hRGAXYn4N09DxZmphW0wbO6jvnh9gTRbH2viVnSm82m+RVHFkmOFffbAH85mPKul
+8b2b3eWiBAa5eC1FuWkX2kYMMGM/Botjy2HYojlO8O5+4Yw9rogEjbL+Z/3z0Qy2
+w6CmJcYjXQgEfm6QW05r
+=YZof
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
