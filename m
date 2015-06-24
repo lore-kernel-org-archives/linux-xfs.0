@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 969317F60
-	for <xfs@oss.sgi.com>; Wed, 24 Jun 2015 08:12:34 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8524D7F60
+	for <xfs@oss.sgi.com>; Wed, 24 Jun 2015 09:04:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 86FC48F8035
-	for <xfs@oss.sgi.com>; Wed, 24 Jun 2015 06:12:31 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0440DAC001
+	for <xfs@oss.sgi.com>; Wed, 24 Jun 2015 07:04:04 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id g72FVLhriQt0WkmM (version=TLSv1
+	cuda.sgi.com with ESMTP id OZI66j50zeq8YfXM (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Jun 2015 06:12:30 -0700 (PDT)
-Date: Wed, 24 Jun 2015 09:12:28 -0400
+	Wed, 24 Jun 2015 07:04:03 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id 45BF1AED7A
+	for <xfs@oss.sgi.com>; Wed, 24 Jun 2015 14:04:03 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t5OE42dG019873
+	for <xfs@oss.sgi.com>; Wed, 24 Jun 2015 10:04:03 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: remote attribute headers contain an invalid LSN
-Message-ID: <20150624131228.GC1888@bfoster.bfoster>
-References: <1434948369-13931-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1434948369-13931-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: close xc_cil list_empty() races with cil commit sequence
+Date: Wed, 24 Jun 2015 10:04:01 -0400
+Message-Id: <1435154641-7790-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,190 +29,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jun 22, 2015 at 02:46:09PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> In recent testing, a system that crashed failed log recovery on
-> restart with a bad symlink buffer magic number:
-> 
-> XFS (vda): Starting recovery (logdev: internal)
-> XFS (vda): Bad symlink block magic!
-> XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 2060
-> 
-> On examination of the log via xfs_logprint, none of the symlink
-> buffers in the log had a bad magic number, nor were any other types
-> of buffer log format headers mis-identified as symlink buffers.
-> Tracing was used to find the buffer the kernel was tripping over,
-> and xfs_db identified it's contents as:
-> 
-> 000: 5841524d 00000000 00000346 64d82b48 8983e692 d71e4680 a5f49e2c b317576e
-> 020: 00000000 00602038 00000000 006034ce d0020000 00000000 4d4d4d4d 4d4d4d4d
-> 040: 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d
-> 060: 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d
-> .....
-> 
-> This is a remote attribute buffer, which are notable in that they
-> are not logged but are instead written synchronously by the remote
-> attribute code so that they exist on disk before the attribute
-> transactions are committed to the journal.
-> 
-> The above remote attribute block has an invalid LSN in it - cycle
-> 0xd002000, block 0 - which means when log recovery comes along to
-> determine if the transaction that writes to the underlying block
-> should be replayed, it sees a block that has a future LSN and so
-> does not replay the buffer data in the transaction. Instead, it
-> validates the buffer magic number and attaches the buffer verifier
-> to it.  It is this buffer magic number check that is failing in the
-> above assert, indicating that we skipped replay due to the LSN of
-> the underlying buffer.
-> 
-> The problem here is that the remote attribute buffers cannot have a
-> valid LSN placed into them, because the transaction that contains
-> the attribute tree pointer changes and the block allocation that the
-> attribute data is being written to hasn't yet been committed. Hence
-> the LSN field int eh attribute block is completely unwritten,
-> thereby leaving the underlying contents of the block in the LSN
-> field. It could have any value, and hence a future overwrite of the
-> block by log recovery may or may not work correctly.
-> 
-> Fix this by always writing an invalid LSN to the remote attribute
-> block, as any buffer in log recovery that needs to write over the
-> remote attribute should occur. We are protected from having old data
-> written over the attribute by the fact that freeing the block before
-> the remote attribute is written will result in the buffer being
-> marked stale in the log and so all changes prior to the buffer stale
-> transaction will be cancelled by log recovery.
-> 
-> Hence it is safe to ignore the LSN in the case or synchronously
-> written, unlogged metadata such as remote attribute blocks, and to
-> ensure we do that correctly, we need to write an invalid LSN to all
-> remote attribute blocks to trigger immediate recovery of metadata
-> that is written over the top.
-> 
-> As a further protection for filesystems that may already have remote
-> attribute blocks with bad LSNs on disk, change the log recovery code
-> to always trigger immediate recovery of metadata over remote
-> attribute blocks.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_remote.c | 30 ++++++++++++++++++++++++------
->  fs/xfs/xfs_log_recover.c        | 11 ++++++++---
->  2 files changed, 32 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 20de88d..3854439 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -159,11 +159,10 @@ xfs_attr3_rmt_write_verify(
->  	struct xfs_buf	*bp)
->  {
->  	struct xfs_mount *mp = bp->b_target->bt_mount;
-> -	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-> +	int		blksize = mp->m_attr_geo->blksize;
->  	char		*ptr;
->  	int		len;
->  	xfs_daddr_t	bno;
-> -	int		blksize = mp->m_attr_geo->blksize;
->  
->  	/* no verification of non-crc buffers */
->  	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> @@ -175,16 +174,22 @@ xfs_attr3_rmt_write_verify(
->  	ASSERT(len >= blksize);
->  
->  	while (len > 0) {
-> +		struct xfs_attr3_rmt_hdr *rmt = (struct xfs_attr3_rmt_hdr *)ptr;
-> +
->  		if (!xfs_attr3_rmt_verify(mp, ptr, blksize, bno)) {
->  			xfs_buf_ioerror(bp, -EFSCORRUPTED);
->  			xfs_verifier_error(bp);
->  			return;
->  		}
-> -		if (bip) {
-> -			struct xfs_attr3_rmt_hdr *rmt;
->  
-> -			rmt = (struct xfs_attr3_rmt_hdr *)ptr;
-> -			rmt->rm_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-> +		/*
-> +		 * Ensure we aren't writing bogus LSNs to disk. See
-> +		 * xfs_attr3_rmt_hdr_set() for the explanation.
-> +		 */
-> +		if (rmt->rm_lsn != cpu_to_be64(NULLCOMMITLSN)) {
-> +			xfs_buf_ioerror(bp, -EFSCORRUPTED);
-> +			xfs_verifier_error(bp);
-> +			return;
->  		}
->  		xfs_update_cksum(ptr, blksize, XFS_ATTR3_RMT_CRC_OFF);
->  
-> @@ -221,6 +226,19 @@ xfs_attr3_rmt_hdr_set(
->  	rmt->rm_owner = cpu_to_be64(ino);
->  	rmt->rm_blkno = cpu_to_be64(bno);
->  
-> +	/*
-> +	 * Remote attribute blocks are written synchronously, so we don't
-> +	 * have an LSN that we can stamp in them that makes any sense to log
-> +	 * recovery. To ensure that log recovery handles overwrites of these
-> +	 * blocks sanely (i.e. once they've been freed and reallocated as some
-> +	 * other type of metadata) we need to ensure that the LSN has a value
-> +	 * that tells log recovery to ignore the LSN and overwrite the buffer
-> +	 * with whatever is in it's log. To do this, we use the magic
-> +	 * NULLCOMMITLSN to indicate that the LSN is invalid.
-> +	 * of -1.
+We have seen somewhat rare reports of the following assert from
+xlog_cil_push_background() failing during ltp tests or somewhat
+innocuous desktop root fs workloads (e.g., virt operations, initramfs
+construction):
 
-Looks like a stale last line in the comment above. The rest of the code
-all looks fine to me, but a question to help me grok the bigger picture:
+	ASSERT(!list_empty(&cil->xc_cil));
 
-We allocate these attr blocks in xfs_attr_rmtval_set(). If the writes
-are synchronous, shouldn't those allocation transactions be synchronous
-as well? IOW, what prevents our synchronous writes going to freed blocks
-or blocks allocated to something else (if a block were freed,
-reallocated as an attr block and sync. written without making it to the
-ail) due to a crash immediately following the sync. write?
+The reasoning behind the assert is that the transaction has inserted
+items to the CIL and hit background push codepath all with
+cil->xc_ctx_lock held for reading. This locks out background commit from
+emptying the CIL, which acquires the lock for writing. Therefore, the
+reasoning is that the items previously inserted in the CIL should still
+be present.
 
-Brian
+The cil->xc_ctx_lock read lock is not sufficient to protect the xc_cil
+list, however, due to how CIL insertion is handled.
+xlog_cil_insert_items() inserts and reorders the dirty transaction items
+to the tail of the CIL under xc_cil_lock. It uses list_move_tail() to
+achieve insertion and reordering in the same block of code. This
+function removes and reinserts an item to the tail of the list. If a
+transaction commits an item that was already logged and thus already
+resides in the CIL, and said item is the sole item on the list, the
+removal and reinsertion creates a temporary state where the list is
+actually empty.
 
-> +	 */
-> +	rmt->rm_lsn = cpu_to_be64(NULLCOMMITLSN);
-> +
->  	return sizeof(struct xfs_attr3_rmt_hdr);
->  }
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 01dd228..480ebba 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1886,9 +1886,14 @@ xlog_recover_get_buf_lsn(
->  		uuid = &((struct xfs_dir3_blk_hdr *)blk)->uuid;
->  		break;
->  	case XFS_ATTR3_RMT_MAGIC:
-> -		lsn = be64_to_cpu(((struct xfs_attr3_rmt_hdr *)blk)->rm_lsn);
-> -		uuid = &((struct xfs_attr3_rmt_hdr *)blk)->rm_uuid;
-> -		break;
-> +		/*
-> +		 * Remote attr blocks are written synchronously, rather than
-> +		 * being logged. That means they do not contain a valid LSN
-> +		 * (i.e. transactionally ordered) in them, and hence any time we
-> +		 * see a buffer to replay over the top of a remote attribute
-> +		 * block we should simply do so.
-> +		 */
-> +		goto recover_immediately;
->  	case XFS_SB_MAGIC:
->  		lsn = be64_to_cpu(((struct xfs_dsb *)blk)->sb_lsn);
->  		uuid = &((struct xfs_dsb *)blk)->sb_uuid;
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+This state is not valid and thus should never be observed by concurrent
+transaction commit-side checks in the circumstances outlined above.
+Update all of the xc_cil checks to acquire xc_cil_lock before assessing
+the state of xc_cil.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index abc2ccb..324d449 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -687,7 +687,7 @@ xlog_cil_push_background(
+ 	 * The cil won't be empty because we are called while holding the
+ 	 * context lock so whatever we added to the CIL will still be there
+ 	 */
+-	ASSERT(!list_empty(&cil->xc_cil));
++	ASSERT(!xlog_cil_empty(log));
+ 
+ 	/*
+ 	 * don't do a background push if we haven't used up all the
+@@ -731,13 +731,17 @@ xlog_cil_push_now(
+ 	 * there's no work we need to do.
+ 	 */
+ 	spin_lock(&cil->xc_push_lock);
++	spin_lock(&cil->xc_cil_lock);
+ 	if (list_empty(&cil->xc_cil) || push_seq <= cil->xc_push_seq) {
++		spin_unlock(&cil->xc_cil_lock);
+ 		spin_unlock(&cil->xc_push_lock);
+ 		return;
+ 	}
++	spin_unlock(&cil->xc_cil_lock);
+ 
+ 	cil->xc_push_seq = push_seq;
+ 	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
++
+ 	spin_unlock(&cil->xc_push_lock);
+ }
+ 
+@@ -749,8 +753,10 @@ xlog_cil_empty(
+ 	bool		empty = false;
+ 
+ 	spin_lock(&cil->xc_push_lock);
++	spin_lock(&cil->xc_cil_lock);
+ 	if (list_empty(&cil->xc_cil))
+ 		empty = true;
++	spin_unlock(&cil->xc_cil_lock);
+ 	spin_unlock(&cil->xc_push_lock);
+ 	return empty;
+ }
+@@ -887,12 +893,15 @@ restart:
+ 	 * it means we haven't yet started the push, because if it had started
+ 	 * we would have found the context on the committing list.
+ 	 */
++	spin_lock(&cil->xc_cil_lock);
+ 	if (sequence == cil->xc_current_sequence &&
+ 	    !list_empty(&cil->xc_cil)) {
++		spin_unlock(&cil->xc_cil_lock);
+ 		spin_unlock(&cil->xc_push_lock);
+ 		goto restart;
+ 	}
+ 
++	spin_unlock(&cil->xc_cil_lock);
+ 	spin_unlock(&cil->xc_push_lock);
+ 	return commit_lsn;
+ 
+-- 
+1.9.3
 
 _______________________________________________
 xfs mailing list
