@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 55CF67F59
-	for <xfs@oss.sgi.com>; Tue, 23 Jun 2015 15:19:01 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 637457F61
+	for <xfs@oss.sgi.com>; Tue, 23 Jun 2015 22:59:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D99A2AC002
-	for <xfs@oss.sgi.com>; Tue, 23 Jun 2015 13:18:57 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0fCHfiSR65aDD1sB for <xfs@oss.sgi.com>;
-	Tue, 23 Jun 2015 13:18:55 -0700 (PDT)
-Date: Wed, 24 Jun 2015 06:18:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_iext_realloc_indirect and "XFS: possible memory allocation
-	deadlock"
-Message-ID: <20150623201830.GF22807@dastard>
-References: <358C712AD1904865BE275A629A9AAECE@alyakaslap>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F11DEAC002
+	for <xfs@oss.sgi.com>; Tue, 23 Jun 2015 20:59:22 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id coog902ZdV2Cf0qd (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 23 Jun 2015 20:59:22 -0700 (PDT)
+Date: Wed, 24 Jun 2015 11:59:19 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfstests: generic xattr enospc cleanup test
+Message-ID: <20150624035918.GD1210@dhcp-13-216.nay.redhat.com>
+References: <1435078044-21679-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <358C712AD1904865BE275A629A9AAECE@alyakaslap>
+In-Reply-To: <1435078044-21679-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +25,163 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: hch@lst.de, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVHVlLCBKdW4gMjMsIDIwMTUgYXQgMTA6MTg6MjFBTSArMDIwMCwgQWxleCBMeWFrYXMgd3Jv
-dGU6Cj4gR3JlZXRpbmdzLAo+IAo+IFdlIGFyZSBoaXR0aW5nIGFuIGlzc3VlIHdpdGggWEZTIHBy
-aW50aW5nIG1lc3NhZ2VzIGxpa2Ug4oCcWEZTOgo+IHBvc3NpYmxlIG1lbW9yeSBhbGxvY2F0aW9u
-IGRlYWRsb2NrIGluIGttZW1fYWxsb2MKPiAobW9kZToweDI1MCnigJ0gYW5kIHN0YWNrIHRyYWNl
-IGxpa2UgaW4gWzFdLiBFdmVudHVhbGx5LAo+IGh1bmctdGFzayBwYW5pYyBraWNrcyBpbiB3aXRo
-IHN0YWNrIHRyYWNlcyBsaWtlIFsyXS4KPiAKPiBXZSBhcmUgcnVubmluZyBrZXJuZWwgMy44LjEz
-LiBJIHNlZSB0aGF0IGluCj4gaHR0cDovL29zcy5zZ2kuY29tL2FyY2hpdmVzL3hmcy8yMDEyLTAx
-L21zZzAwMzQxLmh0bWwgYSBzaW1pbGFyCj4gaXNzdWUgaGFzIGJlZW4gZGlzY3Vzc2VkLCBidXQg
-bm8gY29kZSBjaGFuZ2VzIGZvbGxvd2VkIGNvbXBhcmluZwo+IHRvIHdoYXQgd2UgaGF2ZSBpbiAz
-LjguMTMuCj4gCj4gQW55IHN1Z2dlc3Rpb24gb24gaG93IHRvIG1vdmUgZm9yd2FyZCB3aXRoIHRo
-aXMgcHJvYmxlbT8gRm9yCj4gZXhhbXBsZSwgZG9lcyB0aGlzIG1lbW9yeSBoYXMgdG8gYmUgcmVh
-bGx5IGFsbG9jYXRlZCB3aXRoIGttYWxsb2MKPiAoaS5lLiwgcGh5c2ljYWxseSBjb250aW51b3Vz
-KSBvciB2bWFsbG9jIGNhbiBiZSB1c2VkPwoKV2UgbGVmdCBpdCBhbG9uZSBiZWNhdXNlIGl0IGlz
-IHJlbGF0aXZlbHkgcmFyZSBmb3IgcGVvcGxlIHRvIGhpdCBpdCwKYW5kIGdlbmVyYWxseSBpdCBp
-bmRpY2F0ZXMgYSBzZXZlcmUgZnJhZ21lbnRhdGlvbiBwcm9ibGVtIHdoZW4gdGhleQpkbyBoaXQg
-aXQgKGkuZS4gYSBmaWxlIHdpdGggbWlsbGlvbnMgb2YgZXh0ZW50cyBpbiBpdCkuIENhbiB5b3UK
-dHJhY2sgZG93biB0aGUgZmlsZSB0aGF0IHRoaXMgaXMgb2NjdXJyaW5nIGFnYWluc3QgYW5kIHNl
-ZSBob3cgbWFueQpleHRlbnRzIGl0IGhhcz8KCmkuZS4geW91IG1heSBiZSBtdWNoIGJldHRlciBv
-ZmYgYnkgdGFraW5nIG1lYXN1cmVzIHRvIGF2b2lkIGV4Y2Vzc2l2ZQpmcmFnbWVudGF0aW9uIHRo
-YW4gcmVtb3ZpbmcgdGhlIGNhbmFyeSBmcm9tIHRoZSBtaW5lLi4uCgo+IFsxMDk2MjYuMDc1NDgz
-XSBuZnNkICAgICAgICAgICAgRCAwMDAwMDAwMDAwMDAwMDAyICAgICAwIDIwMDQyICAgICAgMiAw
-eDAwMDAwMDAwCgpIbW1tIC0gaXQncyBhbHNvIGEgZmlsZSB3cml0dGVuIGJ5IHRoZSBORlMgc2Vy
-dmVyIC0gdGhpcyBpcyBpcyBvbiBhbgphIGRlZGljYXRlZCBORlMgc2VydmVyPwoKPiBbMTA5NjI2
-LjA3NTQ4M10gIFs8ZmZmZmZmZmZhMDFiZTZiMD5dID8gbmZzZF9zZXR1c2VyKzB4MTIwLzB4MmIw
-IFtuZnNkXQo+IFsxMDk2MjYuMDc1NDgzXSAgWzxmZmZmZmZmZjgxMTliY2NjPl0gPyB2ZnNfd3Jp
-dGV2KzB4M2MvMHg1MAo+IFsxMDk2MjYuMDc1NDgzXSAgWzxmZmZmZmZmZmEwMWI3ZGQyPl0gPyBu
-ZnNkX3Zmc193cml0ZS5pc3JhLjEyKzB4OTIvMHgzNTAgW25mc2RdCj4gWzEwOTYyNi4wNzU0ODNd
-ICBbPGZmZmZmZmZmODExOWE2Y2I+XSA/IGRlbnRyeV9vcGVuKzB4NmIvMHhkMAo+IFsxMDk2MjYu
-MDc1NDgzXSAgWzxmZmZmZmZmZmEwMWJhNjc5Pl0gPyBuZnNkX3dyaXRlKzB4ZjkvMHgxMTAgW25m
-c2RdCj4gWzEwOTYyNi4wNzU0ODNdICBbPGZmZmZmZmZmYTAxYzRkZDE+XSA/IG5mc2QzX3Byb2Nf
-d3JpdGUrMHhiMS8weDE0MCBbbmZzZF0KCkludGVyZXN0aW5nIHRoYXQgdGhpcyBpcyBhbiBORlN2
-MyB3cml0ZS4uLgoKPiBbODczMDMuOTc2MTE5XSBJTkZPOiB0YXNrIG5mc2Q6NTY4NCBibG9ja2Vk
-IGZvciBtb3JlIHRoYW4gMTgwIHNlY29uZHMuCj4gWzg3MzAzLjk3Njk3Nl0gImVjaG8gMCA+IC9w
-cm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNz
-YWdlLgo+IFs4NzMwMy45NzgwMTJdIG5mc2QgICAgICAgICAgICBEIDAwMDAwMDAwMDAwMDAwMDMg
-ICAgIDAgIDU2ODQgICAgICAyIDB4MDAwMDAwMDAKLi4uLgo+IFs4NzMwMy45NzgxNzRdICBbPGZm
-ZmZmZmZmYTAyNjk2MjM+XSBuZnNkX3dyaXRlKzB4YTMvMHgxMTAgW25mc2RdCj4gWzg3MzAzLjk3
-ODE4Ml0gIFs8ZmZmZmZmZmZhMDI3Nzk0Yz5dIG5mc2Q0X3dyaXRlKzB4MWNjLzB4MjUwIFtuZnNk
-XQo+IFs4NzMwMy45NzgxODldICBbPGZmZmZmZmZmYTAyNzc0NmM+XSBuZnNkNF9wcm9jX2NvbXBv
-dW5kKzB4NWFjLzB4N2EwIFtuZnNkXQoKQW5kIHRoYXQgaXMgYSBORnN2NCB3cml0ZS4gWW91IGhh
-dmUgbXVsdGlwbGUgY2xpZW50cyB3cml0aW5nIHRvIHRoZQpzYW1lIGZpbGUgdXNpbmcgZGlmZmVy
-ZW50IHZlcnNpb25zIG9mIHRoZSBORlMgcHJvdG9jb2w/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2
-ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Tue, Jun 23, 2015 at 12:47:24PM -0400, Brian Foster wrote:
+> XFS had a regression where inode reclaim in the unlink codepath would
+> not correctly tear down extended attribute forks where no xattr extents
+> are present. Add a generic test to create this condition.
+> 
+> The test sets extended attributes on a series of files under ENOSPC
+> conditions and then verifies that the files can be removed without
+> syslog warnings or errors.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  tests/generic/103     | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/103.out |  2 ++
+>  tests/generic/group   |  1 +
+>  3 files changed, 94 insertions(+)
+>  create mode 100755 tests/generic/103
+>  create mode 100644 tests/generic/103.out
+> 
+> diff --git a/tests/generic/103 b/tests/generic/103
+> new file mode 100755
+> index 0000000..373cd9d
+> --- /dev/null
+> +++ b/tests/generic/103
+> @@ -0,0 +1,91 @@
+> +#! /bin/bash
+> +# FSQA Test No. 103
+> +#
+> +# Test attribute fork teardown. This test is inspired by a regression in XFS
+> +# that resulted in problematic removal of inodes with remote attribute forks
+> +# without attribute extents. The attribute fork condition is created by
+> +# attempting to set larger attribute values on a filesystem that is at or near
+> +# ENOSPC.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2015 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +_cleanup()
+> +{
+> +        cd /
+> +        rm -f $tmp.*
+> +}
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15 25
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/attr
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_require_attrs
+> +
+> +rm -f $seqres.full
+> +
+> +_consume_freesp()
+> +{
+> +	file=$1
+> +
+> +	# consume nearly all available space (leave ~512kB)
+> +	avail=`_get_available_space $SCRATCH_MNT`
+
+Seems you missed "_get_available_space" function definition in
+common/rc? I got "command not found" error.
+
+Thanks,
+Eryu
+> +	filesizekb=$((avail / 1024 - 512))
+> +	$XFS_IO_PROG -fc "falloc 0 ${filesizekb}k" $file
+> +}
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +_scratch_mount
+> +
+> +for i in $(seq 0 63); do
+> +	touch $SCRATCH_MNT/$seq.$i
+> +done
+> +
+> +# Generate a large attribute value and consume the rest of the space in the
+> +# filesystem.
+> +$XFS_IO_PROG -fc "pwrite 0 64k" $SCRATCH_MNT/attrval > /dev/null 2>&1
+> +_consume_freesp $SCRATCH_MNT/spc
+> +
+> +# Set attributes on the test files. These should start to hit ENOSPC.
+> +for i in $(seq 0 63); do
+> +	$SETFATTR_PROG -n user.test -v "`cat $SCRATCH_MNT/attrval`" \
+> +		$SCRATCH_MNT/$seq.$i >> $seqres.full 2>&1
+> +done
+> +
+> +# Remove the files with attributes to test attribute fork teardown. Problems
+> +# result in dmesg output.
+> +rm -f $SCRATCH_MNT/$seq.*
+> +
+> +echo Silence is golden.
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/103.out b/tests/generic/103.out
+> new file mode 100644
+> index 0000000..ce229bf
+> --- /dev/null
+> +++ b/tests/generic/103.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 103
+> +Silence is golden.
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 0c8964c..41f3039 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -98,6 +98,7 @@
+>  097 udf auto
+>  099 udf auto
+>  100 udf auto
+> +103 auto enospc quick
+>  105 acl auto quick
+>  112 rw aio auto quick
+>  113 rw aio auto quick
+> -- 
+> 1.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
