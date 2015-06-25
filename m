@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AFFE17F6C
-	for <xfs@oss.sgi.com>; Fri, 26 Jun 2015 12:16:59 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DC90E7F78
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 15:57:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F254304051
-	for <xfs@oss.sgi.com>; Fri, 26 Jun 2015 10:16:56 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1rRk5gQktPUrARHN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 26 Jun 2015 10:16:55 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id A559B3070A9
-	for <xfs@oss.sgi.com>; Fri, 26 Jun 2015 17:16:52 +0000 (UTC)
-Date: Fri, 26 Jun 2015 13:16:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/17] mkfs: validate logarithmic parameters sanely
-Message-ID: <20150626171650.GB40750@bfoster.bfoster>
-References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
-	<1434711726-13092-7-git-send-email-jtulak@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D5ADAC003
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 13:57:33 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id XwI7tZyB1TMuBHqc for <xfs@oss.sgi.com>;
+	Thu, 25 Jun 2015 13:57:31 -0700 (PDT)
+Message-ID: <558C6B38.2070004@sandeen.net>
+Date: Thu, 25 Jun 2015 15:57:28 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1434711726-13092-7-git-send-email-jtulak@redhat.com>
+Subject: Re: [PATCH] xfs_metadump: obfuscate attrs on CRC fs
+References: <557B6222.4030903@redhat.com>
+In-Reply-To: <557B6222.4030903@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,117 +23,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan =?utf-8?B?xaR1bMOhaw==?= <jtulak@redhat.com>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-T24gRnJpLCBKdW4gMTksIDIwMTUgYXQgMDE6MDE6NTVQTSArMDIwMCwgSmFuIMWkdWzDoWsgd3Jv
-dGU6Cj4gRnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IFRlc3Rp
-bmcgbG9nYXJpdGhtaWMgcGFyYW10ZXJzIGxpa2UgIi1uIGxvZz08bnVtPiIgc2hvd3MgdGhhdCB3
-ZSBkbyBhCj4gdGVycmlibGUgam9iIG9mIHZhbGlkYXRpbmcgc3VjaCBpbnB1dC4gZS5nLjoKPiAK
-PiAjIG1rZnMueGZzIC1mIC1uIGxvZz00NTY4NTg0ODAgL2Rldi92ZGEKPiAuLi4uLgo+IG5hbWlu
-ZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTY1NTM2ICBhc2NpaS1jaT0wIGZ0eXBl
-PTAKPiAuLi4uCj4gCj4gWWVhaCwgSSBqdXN0IGFza2VkIGZvciBhIGJsb2NrIHNpemUgb2YgMl40
-NTY4NTg0ODAsIGFuZCBpdCBkaWRuJ3QKPiBnZXQgcmVqZWN0ZWQuIEdyZWF0LCBpc24ndCBpdD8K
-PiAKPiBTbywgZmFjdG9yIG91dCB0aGUgcGFyc2luZyBvZiBsb2dhcml0aG1pYyBwYXJhbWV0ZXJz
-LCBhbmQgcGFzcyBpbgo+IHRoZSBtYXhpbXVtIHZhbGlkIHZhbHVlIHRoYXQgdGhleSBjYW4gdGFr
-ZS4gVGhlc2UgbWF4aW11bSB2YWx1ZXMKPiBtaWdodCBub3QgYmUgY29tcGxldGVseSBhY2N1cmF0
-ZSAoZS5nLiBibG9jay9zZWN0b3Igc2l6ZXMgd2lsbAo+IGFmZmVjdCB0aGUgZXZlbnR1YWwgdmFs
-aWQgbWF4aW11bSkgYnV0IHdlIGNhbiBnZXQgcmlkIG9mIGFsbCB0aGUKPiBvdmVyZmxvd3MgYW5k
-IHN0dXBpZGl0aWVzIGJlZm9yZSB3ZSBnZXQgdG8gZmluZS1ncmFpbmVkIHZhbGlkaXR5Cj4gY2hl
-Y2tpbmcgbGF0ZXIgaW4gbWtmcyBvbmNlIHRoaW5ncyBsaWtlIGJsb2NrIGFuZCBzZWN0b3Igc2l6
-ZXMgaGF2ZQo+IGJlZW4gZmluYWxpc2VkLgo+IAo+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5l
-ciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBKYW4gxaR1bMOhayA8anR1
-bGFrQHJlZGhhdC5jb20+Cj4gLS0tCgpSZXZpZXdlZC1ieTogQnJpYW4gRm9zdGVyIDxiZm9zdGVy
-QHJlZGhhdC5jb20+Cgo+ICBta2ZzL3hmc19ta2ZzLmMgfCA3OSArKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAgMSBmaWxlIGNoYW5nZWQs
-IDUxIGluc2VydGlvbnMoKyksIDI4IGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9ta2Zz
-L3hmc19ta2ZzLmMgYi9ta2ZzL3hmc19ta2ZzLmMKPiBpbmRleCA2YjllOTkxLi42ZjBhYTU1IDEw
-MDY0NAo+IC0tLSBhL21rZnMveGZzX21rZnMuYwo+ICsrKyBiL21rZnMveGZzX21rZnMuYwo+IEBA
-IC0xMDQ0LDYgKzEwNDQsMjcgQEAgZ2V0Ym9vbCgKPiAgCXJldHVybiBjID8gdHJ1ZSA6IGZhbHNl
-Owo+ICB9Cj4gIAo+ICtzdGF0aWMgaW50Cj4gK2dldG51bV9jaGVja2VkKAo+ICsJY29uc3QgY2hh
-cgkqc3RyLAo+ICsJbG9uZyBsb25nCW1pbl92YWwsCj4gKwlsb25nIGxvbmcJbWF4X3ZhbCwKPiAr
-CWNvbnN0IGNoYXIJKmlsbGVnYWxfc3RyLAo+ICsJY2hhcgkJcmVxdmFsX2NoYXIsCj4gKwljaGFy
-CQkqcmVxdmFsX29wdHNbXSwKPiArCWludAkJcmVxdmFsX29wdGluZCkKPiArewo+ICsJbG9uZyBs
-b25nCWM7Cj4gKwo+ICsJaWYgKCFzdHIgfHwgKnN0ciA9PSAnXDAnKQo+ICsJCXJlcXZhbChyZXF2
-YWxfY2hhciwgcmVxdmFsX29wdHMsIHJlcXZhbF9vcHRpbmQpOwo+ICsKPiArCWMgPSBnZXRudW0o
-c3RyLCAwLCAwLCBmYWxzZSk7Cj4gKwlpZiAoYyA8IG1pbl92YWwgfHwgYyA+IG1heF92YWwpCj4g
-KwkJaWxsZWdhbChzdHIsIGlsbGVnYWxfc3RyKTsKPiArCXJldHVybiBjOwo+ICt9Cj4gKwo+ICBp
-bnQKPiAgbWFpbigKPiAgCWludAkJCWFyZ2MsCj4gQEAgLTEyMDAsMTYgKzEyMjEsMTYgQEAgbWFp
-bigKPiAgCj4gIAkJCQlzd2l0Y2ggKGdldHN1Ym9wdCgmcCwgKGNvbnN0cHApYm9wdHMsICZ2YWx1
-ZSkpIHsKPiAgCQkJCWNhc2UgQl9MT0c6Cj4gLQkJCQkJaWYgKCF2YWx1ZSB8fCAqdmFsdWUgPT0g
-J1wwJykKPiAtCQkJCQkJcmVxdmFsKCdiJywgYm9wdHMsIEJfTE9HKTsKPiAgCQkJCQlpZiAoYmxm
-bGFnKQo+ICAJCQkJCQlyZXNwZWMoJ2InLCBib3B0cywgQl9MT0cpOwo+ICAJCQkJCWlmIChic2Zs
-YWcpCj4gIAkJCQkJCWNvbmZsaWN0KCdiJywgYm9wdHMsIEJfU0laRSwKPiAgCQkJCQkJCSBCX0xP
-Ryk7Cj4gLQkJCQkJYmxvY2tsb2cgPSBnZXRudW0odmFsdWUsIDAsIDAsIGZhbHNlKTsKPiAtCQkJ
-CQlpZiAoYmxvY2tsb2cgPD0gMCkKPiAtCQkJCQkJaWxsZWdhbCh2YWx1ZSwgImIgbG9nIik7Cj4g
-KwkJCQkJYmxvY2tsb2cgPSBnZXRudW1fY2hlY2tlZCh2YWx1ZSwKPiArCQkJCQkJCVhGU19NSU5f
-QkxPQ0tTSVpFX0xPRywKPiArCQkJCQkJCVhGU19NQVhfQkxPQ0tTSVpFX0xPRywKPiArCQkJCQkJ
-CSJiIGxvZyIsICdiJywgYm9wdHMsCj4gKwkJCQkJCQlCX0xPRyk7Cj4gIAkJCQkJYmxvY2tzaXpl
-ID0gMSA8PCBibG9ja2xvZzsKPiAgCQkJCQlibGZsYWcgPSAxOwo+ICAJCQkJCWJyZWFrOwo+IEBA
-IC0xMzQ2LDE2ICsxMzY3LDE2IEBAIG1haW4oCj4gIAkJCQkJbm9kc2ZsYWcgPSAxOwo+ICAJCQkJ
-CWJyZWFrOwo+ICAJCQkJY2FzZSBEX1NFQ1RMT0c6Cj4gLQkJCQkJaWYgKCF2YWx1ZSB8fCAqdmFs
-dWUgPT0gJ1wwJykKPiAtCQkJCQkJcmVxdmFsKCdkJywgZG9wdHMsIERfU0VDVExPRyk7Cj4gIAkJ
-CQkJaWYgKHNsZmxhZykKPiAgCQkJCQkJcmVzcGVjKCdkJywgZG9wdHMsIERfU0VDVExPRyk7Cj4g
-IAkJCQkJaWYgKHNzZmxhZykKPiAgCQkJCQkJY29uZmxpY3QoJ2QnLCBkb3B0cywgRF9TRUNUU0la
-RSwKPiAgCQkJCQkJCSBEX1NFQ1RMT0cpOwo+IC0JCQkJCXNlY3RvcmxvZyA9IGdldG51bSh2YWx1
-ZSwgMCwgMCwgZmFsc2UpOwo+IC0JCQkJCWlmIChzZWN0b3Jsb2cgPD0gMCkKPiAtCQkJCQkJaWxs
-ZWdhbCh2YWx1ZSwgImQgc2VjdGxvZyIpOwo+ICsJCQkJCXNlY3RvcmxvZyA9IGdldG51bV9jaGVj
-a2VkKHZhbHVlLAo+ICsJCQkJCQkJWEZTX01JTl9TRUNUT1JTSVpFX0xPRywKPiArCQkJCQkJCVhG
-U19NQVhfU0VDVE9SU0laRV9MT0csCj4gKwkJCQkJCQkiZCBzZWN0bG9nIiwgJ2QnLCBkb3B0cywK
-PiArCQkJCQkJCURfU0VDVExPRyk7Cj4gIAkJCQkJc2VjdG9yc2l6ZSA9IDEgPDwgc2VjdG9ybG9n
-Owo+ICAJCQkJCXNsZmxhZyA9IDE7Cj4gIAkJCQkJYnJlYWs7Cj4gQEAgLTE0MjAsOSArMTQ0MSwx
-MSBAQCBtYWluKAo+ICAJCQkJCWlmIChpc2ZsYWcpCj4gIAkJCQkJCWNvbmZsaWN0KCdpJywgaW9w
-dHMsIElfU0laRSwKPiAgCQkJCQkJCSBJX0xPRyk7Cj4gLQkJCQkJaW5vZGVsb2cgPSBnZXRudW0o
-dmFsdWUsIDAsIDAsIGZhbHNlKTsKPiAtCQkJCQlpZiAoaW5vZGVsb2cgPD0gMCkKPiAtCQkJCQkJ
-aWxsZWdhbCh2YWx1ZSwgImkgbG9nIik7Cj4gKwkJCQkJaW5vZGVsb2cgPSBnZXRudW1fY2hlY2tl
-ZCh2YWx1ZSwKPiArCQkJCQkJCVhGU19ESU5PREVfTUlOX0xPRywKPiArCQkJCQkJCVhGU19ESU5P
-REVfTUFYX0xPRywKPiArCQkJCQkJCSJpIGxvZyIsICdpJywgaW9wdHMsCj4gKwkJCQkJCQlJX0xP
-Ryk7Cj4gIAkJCQkJaXNpemUgPSAxIDw8IGlub2RlbG9nOwo+ICAJCQkJCWlsZmxhZyA9IDE7Cj4g
-IAkJCQkJYnJlYWs7Cj4gQEAgLTE1OTEsMTYgKzE2MTQsMTYgQEAgbWFpbigKPiAgCQkJCQlsc2Zs
-YWcgPSAxOwo+ICAJCQkJCWJyZWFrOwo+ICAJCQkJY2FzZSBMX1NFQ1RMT0c6Cj4gLQkJCQkJaWYg
-KCF2YWx1ZSB8fCAqdmFsdWUgPT0gJ1wwJykKPiAtCQkJCQkJcmVxdmFsKCdsJywgbG9wdHMsIExf
-U0VDVExPRyk7Cj4gIAkJCQkJaWYgKGxzbGZsYWcpCj4gIAkJCQkJCXJlc3BlYygnbCcsIGxvcHRz
-LCBMX1NFQ1RMT0cpOwo+ICAJCQkJCWlmIChsc3NmbGFnKQo+ICAJCQkJCQljb25mbGljdCgnbCcs
-IGxvcHRzLCBMX1NFQ1RTSVpFLAo+ICAJCQkJCQkJIExfU0VDVExPRyk7Cj4gLQkJCQkJbHNlY3Rv
-cmxvZyA9IGdldG51bSh2YWx1ZSwgMCwgMCwgZmFsc2UpOwo+IC0JCQkJCWlmIChsc2VjdG9ybG9n
-IDw9IDApCj4gLQkJCQkJCWlsbGVnYWwodmFsdWUsICJsIHNlY3Rsb2ciKTsKPiArCQkJCQlsc2Vj
-dG9ybG9nID0gZ2V0bnVtX2NoZWNrZWQodmFsdWUsCj4gKwkJCQkJCQlYRlNfTUlOX1NFQ1RPUlNJ
-WkVfTE9HLAo+ICsJCQkJCQkJWEZTX01BWF9TRUNUT1JTSVpFX0xPRywKPiArCQkJCQkJCSJsIHNl
-Y3Rsb2ciLCAnbCcsIGxvcHRzLAo+ICsJCQkJCQkJTF9TRUNUTE9HKTsKPiAgCQkJCQlsc2VjdG9y
-c2l6ZSA9IDEgPDwgbHNlY3RvcmxvZzsKPiAgCQkJCQlsc2xmbGFnID0gMTsKPiAgCQkJCQlicmVh
-azsKPiBAQCAtMTY3MywxNiArMTY5NiwxNiBAQCBfKCJjYW5ub3Qgc3BlY2lmeSBib3RoIC1tIGNy
-Yz0xIGFuZCAtbiBmdHlwZVxuIikpOwo+ICAKPiAgCQkJCXN3aXRjaCAoZ2V0c3Vib3B0KCZwLCAo
-Y29uc3RwcClub3B0cywgJnZhbHVlKSkgewo+ICAJCQkJY2FzZSBOX0xPRzoKPiAtCQkJCQlpZiAo
-IXZhbHVlIHx8ICp2YWx1ZSA9PSAnXDAnKQo+IC0JCQkJCQlyZXF2YWwoJ24nLCBub3B0cywgTl9M
-T0cpOwo+ICAJCQkJCWlmIChubGZsYWcpCj4gIAkJCQkJCXJlc3BlYygnbicsIG5vcHRzLCBOX0xP
-Ryk7Cj4gIAkJCQkJaWYgKG5zZmxhZykKPiAgCQkJCQkJY29uZmxpY3QoJ24nLCBub3B0cywgTl9T
-SVpFLAo+ICAJCQkJCQkJIE5fTE9HKTsKPiAtCQkJCQlkaXJibG9ja2xvZyA9IGdldG51bSh2YWx1
-ZSwgMCwgMCwgZmFsc2UpOwo+IC0JCQkJCWlmIChkaXJibG9ja2xvZyA8PSAwKQo+IC0JCQkJCQlp
-bGxlZ2FsKHZhbHVlLCAibiBsb2ciKTsKPiArCQkJCQlkaXJibG9ja2xvZyA9IGdldG51bV9jaGVj
-a2VkKHZhbHVlLAo+ICsJCQkJCQkJWEZTX01JTl9SRUNfRElSU0laRSwKPiArCQkJCQkJCVhGU19N
-QVhfQkxPQ0tTSVpFX0xPRywKPiArCQkJCQkJCSJuIGxvZyIsICduJywgbm9wdHMsCj4gKwkJCQkJ
-CQlOX0xPRyk7Cj4gIAkJCQkJZGlyYmxvY2tzaXplID0gMSA8PCBkaXJibG9ja2xvZzsKPiAgCQkJ
-CQlubGZsYWcgPSAxOwo+ICAJCQkJCWJyZWFrOwo+IEBAIC0xODAxLDE2ICsxODI0LDE2IEBAIF8o
-ImNhbm5vdCBzcGVjaWZ5IGJvdGggLW0gY3JjPTEgYW5kIC1uIGZ0eXBlXG4iKSk7Cj4gIAkJCQlz
-d2l0Y2ggKGdldHN1Ym9wdCgmcCwgKGNvbnN0cHApc29wdHMsICZ2YWx1ZSkpIHsKPiAgCQkJCWNh
-c2UgU19MT0c6Cj4gIAkJCQljYXNlIFNfU0VDVExPRzoKPiAtCQkJCQlpZiAoIXZhbHVlIHx8ICp2
-YWx1ZSA9PSAnXDAnKQo+IC0JCQkJCQlyZXF2YWwoJ3MnLCBzb3B0cywgU19TRUNUTE9HKTsKPiAg
-CQkJCQlpZiAoc2xmbGFnIHx8IGxzbGZsYWcpCj4gIAkJCQkJCXJlc3BlYygncycsIHNvcHRzLCBT
-X1NFQ1RMT0cpOwo+ICAJCQkJCWlmIChzc2ZsYWcgfHwgbHNzZmxhZykKPiAgCQkJCQkJY29uZmxp
-Y3QoJ3MnLCBzb3B0cywgU19TRUNUU0laRSwKPiAgCQkJCQkJCSBTX1NFQ1RMT0cpOwo+IC0JCQkJ
-CXNlY3RvcmxvZyA9IGdldG51bSh2YWx1ZSwgMCwgMCwgZmFsc2UpOwo+IC0JCQkJCWlmIChzZWN0
-b3Jsb2cgPD0gMCkKPiAtCQkJCQkJaWxsZWdhbCh2YWx1ZSwgInMgc2VjdGxvZyIpOwo+ICsJCQkJ
-CXNlY3RvcmxvZyA9IGdldG51bV9jaGVja2VkKHZhbHVlLAo+ICsJCQkJCQkJWEZTX01JTl9TRUNU
-T1JTSVpFX0xPRywKPiArCQkJCQkJCVhGU19NQVhfU0VDVE9SU0laRV9MT0csCj4gKwkJCQkJCQki
-cyBzZWN0bG9nIiwgJ3MnLCBzb3B0cywKPiArCQkJCQkJCVNfU0VDVExPRyk7Cj4gIAkJCQkJbHNl
-Y3RvcmxvZyA9IHNlY3RvcmxvZzsKPiAgCQkJCQlzZWN0b3JzaXplID0gMSA8PCBzZWN0b3Jsb2c7
-Cj4gIAkJCQkJbHNlY3RvcnNpemUgPSBzZWN0b3JzaXplOwo+IC0tIAo+IDIuMS4wCj4gCj4gX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGlu
-ZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+On 6/12/15 5:50 PM, Eric Sandeen wrote:
+> Lots of issues in xfs_metadump obfuscation of extended
+> attributes with CRC filesystems; this fixes it up.
+> 
+> The main issues are that the headers differ, and the
+> space in the remote blocks differ.
+> 
+> Tested with a script I'm using to do other metadump
+> work; I still owe an xfstest for this and other bits.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Self-NAK on this for now, getting some unexpected weirdness
+when I enable warnings in metadump.
+
+-Eric
+
+> ---
+> 
+> Brief/hacky testcase; populate w/ many attr types with:
+> 
+> 	MNTPT=/mount/test
+> 
+>         # FMT_LOCAL
+>         touch $MNTPT/S_IFREG.ATTR.FMT_LOCAL
+>         setfattr -n user.localattrname -v localattrvalue $MNTPT/S_IFREG.ATTR.FMT_LOCAL
+> 
+>         # FMT_EXTENTS
+>         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
+>         for I in `seq 1 50`; do
+>                 setfattr -n user.extentattrname$I -v extentattrvalue $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
+>         done
+> 
+>         # FMT_EXTENTS with a single remote 3k value, fill with "C"
+>         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K
+>         xfs_io -f -c "pwrite -S 0x43 0 3k" attrvalfile &>/dev/null
+>         attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K < attrvalfile
+> 
+>         # FMT_EXTENTS with a single remote 4k value, fill with "D"
+>         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K
+>         xfs_io -f -c "pwrite -S 0x44 0 4k" attrvalfile &>/dev/null
+>         attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K < attrvalfile
+> 
+>         # FMT_BTREE
+>         touch $MNTPT/S_IFREG.ATTR.FMT_BTREE
+>         for I in `seq 1 1000`; do
+>                 setfattr -n user.btreeattrname$I -v btreelongerattrvalue $MNTPT/S_IFREG.ATTR.FMT_BTREE
+>         done
+> 
+> on a crc filesystem, an obfuscated metadump will show all these attrs in the clear
+> with getfattr -dR $MNTPT
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 94f92bc..793f39e 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1268,39 +1268,54 @@ add_remote_vals(
+>  	}
+>  }
+>  
+> +/* Handle remote and leaf attributes */
+>  static void
+>  obfuscate_attr_block(
+> -	char			*block,
+> -	xfs_fileoff_t		offset)
+> +	char				*block,
+> +	xfs_fileoff_t			offset)
+>  {
+> -	xfs_attr_leafblock_t	*leaf;
+> -	int			i;
+> -	int			nentries;
+> -	xfs_attr_leaf_entry_t 	*entry;
+> -	xfs_attr_leaf_name_local_t *local;
+> -	xfs_attr_leaf_name_remote_t *remote;
+> +	struct xfs_attr_leafblock	*leaf;
+> +	struct xfs_attr3_icleaf_hdr	hdr;
+> +	int				i;
+> +	int				nentries;
+> +	xfs_attr_leaf_entry_t 		*entry;
+> +	xfs_attr_leaf_name_local_t 	*local;
+> +	xfs_attr_leaf_name_remote_t 	*remote;
+> +	__uint32_t			bs = mp->m_sb.sb_blocksize;
+> +
+>  
+>  	leaf = (xfs_attr_leafblock_t *)block;
+>  
+> -	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
+> +	/* Get header; accounts for crc & non-crc */
+> +	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
+> +
+> +	/* Remote attributes */
+> +	if ((hdr.magic != XFS_ATTR_LEAF_MAGIC) &&
+> +	    (hdr.magic != XFS_ATTR3_LEAF_MAGIC)) {
+>  		for (i = 0; i < attr_data.remote_val_count; i++) {
+> -			/* XXX: need to handle CRC headers */
+>  			if (attr_data.remote_vals[i] == offset)
+> -				memset(block, 0, mp->m_sb.sb_blocksize);
+> +				/* magic to handle attr and attr3 */
+> +				memset(block +
+> +					(bs - XFS_ATTR3_RMT_BUF_SPACE(mp, bs)),
+> +				      0, XFS_ATTR3_RMT_BUF_SPACE(mp, bs));
+>  		}
+>  		return;
+>  	}
+>  
+> -	nentries = be16_to_cpu(leaf->hdr.count);
+> +	nentries = hdr.count;
+> +
+>  	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
+> -			sizeof(xfs_attr_leaf_hdr_t) > mp->m_sb.sb_blocksize) {
+> +			xfs_attr3_leaf_hdr_size(leaf) >
+> +				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
+>  		if (show_warnings)
+>  			print_warning("invalid attr count in inode %llu",
+>  					(long long)cur_ino);
+>  		return;
+>  	}
+>  
+> -	for (i = 0, entry = &leaf->entries[0]; i < nentries; i++, entry++) {
+> +	entry = xfs_attr3_leaf_entryp(leaf);
+> +
+> +	for (i = 0; i < nentries; i++, entry++) {
+>  		if (be16_to_cpu(entry->nameidx) > mp->m_sb.sb_blocksize) {
+>  			if (show_warnings)
+>  				print_warning(
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
