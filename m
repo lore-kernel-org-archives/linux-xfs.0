@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 107A67F99
-	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 18:40:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 806AFAC001
-	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 16:40:05 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 67F897F9B
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 18:40:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D2874AC003
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 16:40:12 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 2dghFNCAjY8hD8Ua (version=TLSv1
+	cuda.sgi.com with ESMTP id gUi4RQd2l5JBhJs0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Jun 2015 16:40:04 -0700 (PDT)
-Subject: [PATCH 07/14] xfs: handle directio copy-on-write for reflinked blocks
+	Thu, 25 Jun 2015 16:40:10 -0700 (PDT)
+Subject: [PATCH 08/14] xfs: teach fiemap about reflink'd extents
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Jun 2015 16:39:57 -0700
-Message-ID: <20150625233956.4992.14605.stgit@birch.djwong.org>
+Date: Thu, 25 Jun 2015 16:40:03 -0700
+Message-ID: <20150625234003.4992.43384.stgit@birch.djwong.org>
 In-Reply-To: <20150625233909.4992.68314.stgit@birch.djwong.org>
 References: <20150625233909.4992.68314.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,137 +31,167 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-We hope that CoW writes will be rare and that directio CoW writes will
-be even more rare.  Therefore, fall-back any such write to the
-buffered path.
+Teach FIEMAP to report shared (i.e. reflinked) extents.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c    |   17 +++++++++++++++++
- fs/xfs/xfs_file.c    |   12 ++++++++++--
- fs/xfs/xfs_reflink.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_reflink.h |    3 +++
- 4 files changed, 75 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bmap_util.c |    2 +-
+ fs/xfs/xfs_bmap_util.h |    3 ++
+ fs/xfs/xfs_ioctl.c     |    4 ++-
+ fs/xfs/xfs_iops.c      |   62 +++++++++++++++++++++++++++++++++++++++---------
+ 4 files changed, 55 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index be57e5d..73986ca 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1487,6 +1487,23 @@ __xfs_get_blocks(
- 	if (imap.br_startblock != HOLESTARTBLOCK &&
- 	    imap.br_startblock != DELAYSTARTBLOCK &&
- 	    (create || !ISUNWRITTEN(&imap))) {
-+		/*
-+		 * Are we doing a DIO write to a reflinked block?  In the
-+		 * ideal world we at least would fork full blocks, but for now
-+		 * just fall back to buffered mode.  Yuck.  Use -EREMCHG
-+		 * ("remote address changed") to signal this, since in general
-+		 * XFS doesn't do this sort of fallback.
-+		 */
-+		if (create && direct && !ISUNWRITTEN(&imap)) {
-+			bool type = false;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 17975fe..090cf75 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -689,7 +689,7 @@ xfs_getbmap(
+ 		int full = 0;	/* user array is full */
+ 
+ 		/* format results & advance arg */
+-		error = formatter(&arg, &out[i], &full);
++		error = formatter(ip, &arg, &out[i], &full);
+ 		if (error || full)
+ 			break;
+ 	}
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index af97d9a..9919b9a 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -37,7 +37,8 @@ int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+ 		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
+ 
+ /* bmap to userspace formatter - copy to user & advance pointer */
+-typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
++typedef int (*xfs_bmap_format_t)(xfs_inode_t *ip, void **, struct getbmapx *,
++		int *);
+ int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
+ 		xfs_bmap_format_t formatter, void *arg);
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index efc6e8d..c590786 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1352,7 +1352,7 @@ out_drop_write:
+ }
+ 
+ STATIC int
+-xfs_getbmap_format(void **ap, struct getbmapx *bmv, int *full)
++xfs_getbmap_format(xfs_inode_t *ip, void **ap, struct getbmapx *bmv, int *full)
+ {
+ 	struct getbmap __user	*base = (struct getbmap __user *)*ap;
+ 
+@@ -1396,7 +1396,7 @@ xfs_ioc_getbmap(
+ }
+ 
+ STATIC int
+-xfs_getbmapx_format(void **ap, struct getbmapx *bmv, int *full)
++xfs_getbmapx_format(xfs_inode_t *ip, void **ap, struct getbmapx *bmv, int *full)
+ {
+ 	struct getbmapx __user	*base = (struct getbmapx __user *)*ap;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 2923419..0336fed 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -38,6 +38,8 @@
+ #include "xfs_dir2.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_pnfs.h"
++#include "xfs_bit.h"
++#include "xfs_reflink.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/xattr.h>
+@@ -1017,14 +1019,21 @@ xfs_vn_update_time(
+  */
+ STATIC int
+ xfs_fiemap_format(
++	xfs_inode_t		*ip,
+ 	void			**arg,
+ 	struct getbmapx		*bmv,
+ 	int			*full)
+ {
+-	int			error;
++	int			error = 0;
+ 	struct fiemap_extent_info *fieinfo = *arg;
+ 	u32			fiemap_flags = 0;
+-	u64			logical, physical, length;
++	u64			logical, physical, length, loop_len, len;
++	xfs_extlen_t		elen;
++	xfs_nlink_t		nr;
++	xfs_fsblock_t		fsbno;
++	xfs_agnumber_t		agno;
++	xfs_agblock_t		agbno;
++	xfs_mount_t		*mp = ip->i_mount;
+ 
+ 	/* Do nothing for a hole */
+ 	if (bmv->bmv_block == -1LL)
+@@ -1032,7 +1041,7 @@ xfs_fiemap_format(
+ 
+ 	logical = BBTOB(bmv->bmv_offset);
+ 	physical = BBTOB(bmv->bmv_block);
+-	length = BBTOB(bmv->bmv_length);
++	length = loop_len = BBTOB(bmv->bmv_length);
+ 
+ 	if (bmv->bmv_oflags & BMV_OF_PREALLOC)
+ 		fiemap_flags |= FIEMAP_EXTENT_UNWRITTEN;
+@@ -1041,16 +1050,45 @@ xfs_fiemap_format(
+ 				 FIEMAP_EXTENT_UNKNOWN);
+ 		physical = 0;   /* no block yet */
+ 	}
+-	if (bmv->bmv_oflags & BMV_OF_LAST)
+-		fiemap_flags |= FIEMAP_EXTENT_LAST;
+-
+-	error = fiemap_fill_next_extent(fieinfo, logical, physical,
+-					length, fiemap_flags);
+-	if (error > 0) {
+-		error = 0;
+-		*full = 1;	/* user array now full */
+-	}
+ 
++	while (loop_len > 0) {
++		u32 ext_flags = 0;
 +
-+			error = xfs_reflink_should_fork_block(ip, &imap,
-+							      offset, &type);
++		if (bmv->bmv_oflags & BMV_OF_DELALLOC) {
++			physical = 0;
++			len = loop_len;
++			nr = 1;
++		} else if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++			fsbno = XFS_DADDR_TO_FSB(mp, BTOBB(physical));
++			agno = XFS_FSB_TO_AGNO(mp, fsbno);
++			agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
++			error = xfs_reflink_get_refcount(mp, agno, agbno,
++					&elen, &nr);
 +			if (error)
-+				return error;
-+			if (type)
-+				return -EREMCHG;
++				goto out;
++			len = XFS_FSB_TO_B(mp, elen);
++			if (len == 0 || len > loop_len)
++				len = loop_len;
++			if (nr >= 2)
++				ext_flags |= FIEMAP_EXTENT_SHARED;
++		} else
++			len = loop_len;
++		if ((bmv->bmv_oflags & BMV_OF_LAST) &&
++		    len == loop_len)
++			ext_flags |= FIEMAP_EXTENT_LAST;
++
++		error = fiemap_fill_next_extent(fieinfo, logical, physical,
++						len, fiemap_flags | ext_flags);
++		if (error > 0) {
++			error = 0;
++			*full = 1;	/* user array now full */
++			goto out;
 +		}
- 		xfs_map_buffer(inode, bh_result, &imap, offset);
- 		if (ISUNWRITTEN(&imap))
- 			set_buffer_unwritten(bh_result);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 97d92c1..898c492 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -858,10 +858,18 @@ xfs_file_write_iter(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		return -EIO;
- 
--	if ((iocb->ki_flags & IOCB_DIRECT) || IS_DAX(inode))
-+	/*
-+	 * Allow DIO to fall back to buffered *only* in the case that we're
-+	 * doing a reflink CoW.
-+	 */
-+	if ((iocb->ki_flags & IOCB_DIRECT) || IS_DAX(inode)) {
- 		ret = xfs_file_dio_aio_write(iocb, from);
--	else
-+		if (ret == -EREMCHG)
-+			goto buffered;
-+	} else {
-+buffered:
- 		ret = xfs_file_buffered_aio_write(iocb, from);
++		logical += len;
++		physical += len;
++		loop_len -= len;
 +	}
- 
- 	if (ret > 0) {
- 		ssize_t err;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 39b29a4..3f4d9a3 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -634,3 +634,48 @@ xfs_reflink_end_io(
- 
++out:
  	return error;
  }
-+
-+/**
-+ * xfs_reflink_should_fork_block() - determine if a block should be forked
-+ *
-+ * @ip: XFS inode object
-+ * @imap: the fileoff:fsblock mapping that we might fork
-+ * @offset: the file offset of the block we're examining
-+ * @type: set to 1 if reflinked, 0 otherwise.
-+ */
-+int
-+xfs_reflink_should_fork_block(
-+	struct xfs_inode	*ip,		/* xfs inode object */
-+	xfs_bmbt_irec_t		*imap,		/* block mapping */
-+	xfs_off_t		offset,		/* file offset */
-+	bool			*type)		/* out: is this reflinked? */
-+{
-+	xfs_fsblock_t		fsbno;
-+	xfs_off_t		iomap_offset;
-+	xfs_agnumber_t		agno;		/* allocation group number */
-+	xfs_agblock_t		agbno;		/* ag start of range to free */
-+	xfs_extlen_t		len;
-+	xfs_nlink_t		nr;
-+	int			error;
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		*type = false;
-+		return 0;
-+	}
-+
-+	iomap_offset = XFS_FSB_TO_B(mp, imap->br_startoff);
-+	fsbno = imap->br_startblock + XFS_B_TO_FSB(mp, offset - iomap_offset);
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	CHECK_AG_NUMBER(mp, agno);
-+	CHECK_AG_EXTENT(mp, agbno, 1);
-+	ASSERT(imap->br_state == XFS_EXT_NORM);
-+
-+	error = xfs_reflink_get_refcount(mp, agno, agbno, &len, &nr);
-+	if (error)
-+		return error;
-+	ASSERT(len != 0);
-+	*type = (nr > 1);
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 40a6576..295a9c7 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -36,4 +36,7 @@ extern int xfs_reflink_fork_block(struct xfs_inode *ip, xfs_bmbt_irec_t *imap,
- extern int xfs_reflink_end_io(struct xfs_mount *mp, struct xfs_inode *ip,
- 	xfs_ioend_t *ioend);
  
-+extern int xfs_reflink_should_fork_block(struct xfs_inode *ip,
-+	xfs_bmbt_irec_t *imap, xfs_off_t offset, bool *type);
-+
- #endif /* __XFS_REFLINK_H */
 
 _______________________________________________
 xfs mailing list
