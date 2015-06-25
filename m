@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DC90E7F78
-	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 15:57:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 321D17F78
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 17:58:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D5ADAC003
-	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 13:57:33 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id XwI7tZyB1TMuBHqc for <xfs@oss.sgi.com>;
-	Thu, 25 Jun 2015 13:57:31 -0700 (PDT)
-Message-ID: <558C6B38.2070004@sandeen.net>
-Date: Thu, 25 Jun 2015 15:57:28 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C08E2AC005
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 15:58:19 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id SgvRQqGmxBfE16cz (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 25 Jun 2015 15:58:09 -0700 (PDT)
+Date: Fri, 26 Jun 2015 00:58:07 +0200 (CEST)
+From: Ales Novak <alnovak@suse.cz>
+Subject: Re: [PATCH] xfs: fix in the setting of logbsize
+In-Reply-To: <557592E7.2010805@sgi.com>
+Message-ID: <alpine.LSU.2.03.1506260054350.24061@suse.cz>
+References: <1433510925-11438-1-git-send-email-alnovak@suse.cz>
+	<20150605222257.GY24666@dastard>
+	<alpine.LSU.2.03.1506071054580.20732@suse.cz>
+	<557592E7.2010805@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_metadump: obfuscate attrs on CRC fs
-References: <557B6222.4030903@redhat.com>
-In-Reply-To: <557B6222.4030903@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,143 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 6/12/15 5:50 PM, Eric Sandeen wrote:
-> Lots of issues in xfs_metadump obfuscation of extended
-> attributes with CRC filesystems; this fixes it up.
-> 
-> The main issues are that the headers differ, and the
-> space in the remote blocks differ.
-> 
-> Tested with a script I'm using to do other metadump
-> work; I still owe an xfstest for this and other bits.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On 2015-6-8 15:04, Mark Tinguely wrote:
 
-Self-NAK on this for now, getting some unexpected weirdness
-when I enable warnings in metadump.
+> On 06/07/15 04:16, Ales Novak wrote:
+>> 
+>> On 2015-6-6 00:22, Dave Chinner wrote:
+>> 
+>>> Can you give more information about the crashes? From this
+>>> description, I do not know whether this is a work around or a fix
+>>> because I don't know what code is actually causing the problem or
+>>> the circumstances in which the crash occurs. Hence I cannot
+>>> determine if your change is the right change to make or whether the
+>>> documetnation is simply wrong and we have a real bug we shoul dbe
+>>> fixing.
+>> 
+>> The crashes occurred with logsunit=192k and logbsize=256k. xlog_sync()
+>> is calculating in logsunit units:
+>> 
+>> count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
+>> 
+>> With count_init=256k, the calculated roundoff will try to cover that in
+>> two 192k units. This roundoff is passed to the xlog_pack_data() which
+>> walks the buffer and (hopefully) fails when it hits its 256k border.
+>> 
+>
+> Talked about this once before:
+>
+> http://oss.sgi.com/archives/xfs/2013-03/msg00039.html
+>
+> Mark.
+>
 
--Eric
+Thank you! I missed that.
 
-> ---
-> 
-> Brief/hacky testcase; populate w/ many attr types with:
-> 
-> 	MNTPT=/mount/test
-> 
->         # FMT_LOCAL
->         touch $MNTPT/S_IFREG.ATTR.FMT_LOCAL
->         setfattr -n user.localattrname -v localattrvalue $MNTPT/S_IFREG.ATTR.FMT_LOCAL
-> 
->         # FMT_EXTENTS
->         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
->         for I in `seq 1 50`; do
->                 setfattr -n user.extentattrname$I -v extentattrvalue $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
->         done
-> 
->         # FMT_EXTENTS with a single remote 3k value, fill with "C"
->         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K
->         xfs_io -f -c "pwrite -S 0x43 0 3k" attrvalfile &>/dev/null
->         attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K < attrvalfile
-> 
->         # FMT_EXTENTS with a single remote 4k value, fill with "D"
->         touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K
->         xfs_io -f -c "pwrite -S 0x44 0 4k" attrvalfile &>/dev/null
->         attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K < attrvalfile
-> 
->         # FMT_BTREE
->         touch $MNTPT/S_IFREG.ATTR.FMT_BTREE
->         for I in `seq 1 1000`; do
->                 setfattr -n user.btreeattrname$I -v btreelongerattrvalue $MNTPT/S_IFREG.ATTR.FMT_BTREE
->         done
-> 
-> on a crc filesystem, an obfuscated metadump will show all these attrs in the clear
-> with getfattr -dR $MNTPT
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 94f92bc..793f39e 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -1268,39 +1268,54 @@ add_remote_vals(
->  	}
->  }
->  
-> +/* Handle remote and leaf attributes */
->  static void
->  obfuscate_attr_block(
-> -	char			*block,
-> -	xfs_fileoff_t		offset)
-> +	char				*block,
-> +	xfs_fileoff_t			offset)
->  {
-> -	xfs_attr_leafblock_t	*leaf;
-> -	int			i;
-> -	int			nentries;
-> -	xfs_attr_leaf_entry_t 	*entry;
-> -	xfs_attr_leaf_name_local_t *local;
-> -	xfs_attr_leaf_name_remote_t *remote;
-> +	struct xfs_attr_leafblock	*leaf;
-> +	struct xfs_attr3_icleaf_hdr	hdr;
-> +	int				i;
-> +	int				nentries;
-> +	xfs_attr_leaf_entry_t 		*entry;
-> +	xfs_attr_leaf_name_local_t 	*local;
-> +	xfs_attr_leaf_name_remote_t 	*remote;
-> +	__uint32_t			bs = mp->m_sb.sb_blocksize;
-> +
->  
->  	leaf = (xfs_attr_leafblock_t *)block;
->  
-> -	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
-> +	/* Get header; accounts for crc & non-crc */
-> +	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
-> +
-> +	/* Remote attributes */
-> +	if ((hdr.magic != XFS_ATTR_LEAF_MAGIC) &&
-> +	    (hdr.magic != XFS_ATTR3_LEAF_MAGIC)) {
->  		for (i = 0; i < attr_data.remote_val_count; i++) {
-> -			/* XXX: need to handle CRC headers */
->  			if (attr_data.remote_vals[i] == offset)
-> -				memset(block, 0, mp->m_sb.sb_blocksize);
-> +				/* magic to handle attr and attr3 */
-> +				memset(block +
-> +					(bs - XFS_ATTR3_RMT_BUF_SPACE(mp, bs)),
-> +				      0, XFS_ATTR3_RMT_BUF_SPACE(mp, bs));
->  		}
->  		return;
->  	}
->  
-> -	nentries = be16_to_cpu(leaf->hdr.count);
-> +	nentries = hdr.count;
-> +
->  	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
-> -			sizeof(xfs_attr_leaf_hdr_t) > mp->m_sb.sb_blocksize) {
-> +			xfs_attr3_leaf_hdr_size(leaf) >
-> +				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
->  		if (show_warnings)
->  			print_warning("invalid attr count in inode %llu",
->  					(long long)cur_ino);
->  		return;
->  	}
->  
-> -	for (i = 0, entry = &leaf->entries[0]; i < nentries; i++, entry++) {
-> +	entry = xfs_attr3_leaf_entryp(leaf);
-> +
-> +	for (i = 0; i < nentries; i++, entry++) {
->  		if (be16_to_cpu(entry->nameidx) > mp->m_sb.sb_blocksize) {
->  			if (show_warnings)
->  				print_warning(
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Still I'd advocate for at least simple solution. Sure it's a root's fault 
+if he tries to set logbsize not being integer multiple of logsunit, but 
+crashing a kernel, that's bad...
+
+-- 
+Ales Novak
 
 _______________________________________________
 xfs mailing list
