@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C72027FA5
-	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 18:40:28 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5AACB7F78
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 18:40:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A7F26304039
-	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 16:40:28 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 7i5Ou0lvRBVwoVGO (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A6848F8037
+	for <xfs@oss.sgi.com>; Thu, 25 Jun 2015 16:40:40 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id dD6RkmpMeOutwCLb (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Jun 2015 16:40:26 -0700 (PDT)
-Subject: [PATCH 11/14] xfs: emulate the btrfs dedupe extent same ioctl
+	Thu, 25 Jun 2015 16:40:38 -0700 (PDT)
+Subject: [PATCH 12/14] xfs: support XFS_XFLAG_REFLINK (and FS_NOCOW_FL) on
+	reflink filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Jun 2015 16:40:23 -0700
-Message-ID: <20150625234023.4992.3483.stgit@birch.djwong.org>
+Date: Thu, 25 Jun 2015 16:40:30 -0700
+Message-ID: <20150625234030.4992.96116.stgit@birch.djwong.org>
 In-Reply-To: <20150625233909.4992.68314.stgit@birch.djwong.org>
 References: <20150625233909.4992.68314.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,420 +32,559 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Emulate the BTRFS_IOC_EXTENT_SAME ioctl.  This operation is similar
-to clone_range, but the kernel must confirm that the contents of the
-two extents are identical before performing the reflink.
+Report the reflink/nocow flags as appropriate in the XFS-specific and
+"standard" getattr ioctls.  For now we'll implicilty report all reflink
+files as also being nodefrag, to prevent the defragger from corrupting
+the extent maps.
+
+Allow the user to clear the reflink flag (or set the nocow flag), which
+will try to remap all shared blocks to private blocks on disk.  If this
+succeeds, the file will become a non-reflinked file.
+
+Transfer the reflink flag between inodes when swapping extents, and
+quietly ignore attempts to set the reflink flag, so that xfs_fsr can
+defragment reflinked file (albeit by breaking the reflink...) unless
+of course nodefrag is set.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   28 +++++++++++
- fs/xfs/xfs_ioctl.c     |  121 ++++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_ioctl32.c   |    1 
- fs/xfs/xfs_reflink.c   |  109 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_reflink.h   |    6 ++
- 5 files changed, 258 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h |    1 
+ fs/xfs/xfs_bmap_util.c |    5 +
+ fs/xfs/xfs_inode.c     |    2 
+ fs/xfs/xfs_ioctl.c     |   42 +++++-
+ fs/xfs/xfs_reflink.c   |  321 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_reflink.h   |   10 +
+ 6 files changed, 374 insertions(+), 7 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 92f21e1..7f4d886 100644
+index 7f4d886..6b1b71c 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -560,7 +560,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+@@ -67,6 +67,7 @@ struct fsxattr {
+ #define XFS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+ #define XFS_XFLAG_NODEFRAG	0x00002000  	/* do not defragment */
+ #define XFS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
++#define XFS_XFLAG_REFLINK	0x00008000	/* file is reflinked */
+ #define XFS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
  
--/* reflink ioctls; these should match btrfs */
-+/* reflink ioctls; these MUST match the btrfs ioctl definitions */
- struct xfs_ioctl_clone_range_args {
- 	__s64 src_fd;
- 	__u64 src_offset;
-@@ -568,8 +568,34 @@ struct xfs_ioctl_clone_range_args {
- 	__u64 dest_offset;
- };
- 
-+#define XFS_SAME_DATA_DIFFERS	1
-+/* For extent-same ioctl */
-+struct xfs_ioctl_file_extent_same_info {
-+	__s64 fd;		/* in - destination file */
-+	__u64 logical_offset;	/* in - start of extent in destination */
-+	__u64 bytes_deduped;	/* out - total # of bytes we were able
-+				 * to dedupe from this file */
-+	/* status of this dedupe operation:
-+	 * 0 if dedup succeeds
-+	 * < 0 for error
-+	 * == XFS_SAME_DATA_DIFFERS if data differs
-+	 */
-+	__s32 status;		/* out - see above description */
-+	__u32 reserved;
-+};
-+
-+struct xfs_ioctl_file_extent_same_args {
-+	__u64 logical_offset;	/* in - start of extent in source */
-+	__u64 length;		/* in - length of extent */
-+	__u16 dest_count;	/* in - total elements in info array */
-+	__u16 reserved1;
-+	__u32 reserved2;
-+	struct xfs_ioctl_file_extent_same_info info[0];
-+};
-+
- #define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
- #define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_ioctl_clone_range_args)
-+#define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_ioctl_file_extent_same_args)
- 
- #ifndef HAVE_BBMACROS
  /*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index be010c9..e5b4752 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1920,6 +1920,11 @@ xfs_swap_extents(
+ 		break;
+ 	}
+ 
++	if (ip->i_d.di_flags & XFS_DIFLAG_REFLINK) {
++		tip->i_d.di_flags |= XFS_DIFLAG_REFLINK;
++		ip->i_d.di_flags &= ~XFS_DIFLAG_REFLINK;
++	}
++
+ 	xfs_trans_log_inode(tp, ip,  src_log_flags);
+ 	xfs_trans_log_inode(tp, tip, target_log_flags);
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e688732..4aa51f4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -592,6 +592,8 @@ _xfs_dic2xflags(
+ 			flags |= XFS_XFLAG_NODEFRAG;
+ 		if (di_flags & XFS_DIFLAG_FILESTREAM)
+ 			flags |= XFS_XFLAG_FILESTREAM;
++		if (di_flags & XFS_DIFLAG_REFLINK)
++			flags |= XFS_XFLAG_REFLINK;
+ 	}
+ 
+ 	return flags;
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index c590786..da4d7b7 100644
+index da4d7b7..5a9c161 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1534,7 +1534,8 @@ xfs_ioctl_reflink(
- 	loff_t		pos_in,
- 	struct file	*file_out,
- 	loff_t		pos_out,
--	size_t		len)
-+	size_t		len,
-+	bool		is_dedupe)
- {
- 	struct inode	*inode_in;
- 	struct inode	*inode_out;
-@@ -1543,6 +1544,7 @@ xfs_ioctl_reflink(
- 	loff_t		isize;
- 	int		same_inode;
- 	loff_t		blen;
-+	unsigned int	flags;
+@@ -870,6 +870,10 @@ xfs_merge_ioc_xflags(
+ 		xflags |= XFS_XFLAG_NODUMP;
+ 	else
+ 		xflags &= ~XFS_XFLAG_NODUMP;
++	if (flags & FS_NOCOW_FL)
++		xflags &= ~XFS_XFLAG_REFLINK;
++	else
++		xflags |= XFS_XFLAG_REFLINK;
  
- 	if (len == 0)
- 		return 0;
-@@ -1622,7 +1624,12 @@ xfs_ioctl_reflink(
- 	if (ret)
- 		goto out_unlock;
- 
--	ret = xfs_reflink(XFS_I(inode_in), pos_in, XFS_I(inode_out), pos_out, len);
-+	flags = 0;
-+	if (is_dedupe)
-+		flags |= XFS_REFLINK_DEDUPE;
-+
-+	ret = xfs_reflink(XFS_I(inode_in), pos_in, XFS_I(inode_out), pos_out,
-+			len, flags);
- 	if (ret < 0)
- 		goto out_unlock;
- 
-@@ -1644,6 +1651,108 @@ out_unlock:
- 	return ret;
+ 	return xflags;
  }
+@@ -939,7 +943,8 @@ xfs_set_diflags(
+ 	unsigned int		di_flags;
  
-+#define XFS_MAX_DEDUPE_LEN	(16 * 1024 * 1024)
-+
-+static long
-+xfs_ioctl_file_extent_same(
-+	struct file					*file,
-+	struct xfs_ioctl_file_extent_same_args __user	*argp)
-+{
-+	struct xfs_ioctl_file_extent_same_args	*same;
-+	struct xfs_ioctl_file_extent_same_info	*info;
-+	struct inode 				*src;
-+	u64					off;
-+	u64					len;
-+	int					i;
-+	int					ret;
-+	unsigned long				size;
-+	bool					is_admin;
-+	u16					count;
-+
-+	is_admin = capable(CAP_SYS_ADMIN);
-+	src = file_inode(file);
-+	if (!(file->f_mode & FMODE_READ))
-+		return -EINVAL;
-+
-+	if (get_user(count, &argp->dest_count)) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+
-+	size = offsetof(struct xfs_ioctl_file_extent_same_args __user,
-+			info[count]);
-+
-+	same = memdup_user(argp, size);
-+
-+	if (IS_ERR(same)) {
-+		ret = PTR_ERR(same);
-+		goto out;
-+	}
-+
-+	off = same->logical_offset;
-+	len = same->length;
-+
-+	/*
-+	 * Limit the total length we will dedupe for each operation.
-+	 * This is intended to bound the total time spent in this
-+	 * ioctl to something sane.
-+	 */
-+	if (len > XFS_MAX_DEDUPE_LEN)
-+		len = XFS_MAX_DEDUPE_LEN;
-+
-+	ret = -EISDIR;
-+	if (S_ISDIR(src->i_mode))
-+		goto out;
-+
-+	ret = -EACCES;
-+	if (!S_ISREG(src->i_mode))
-+		goto out;
-+
-+	/* pre-format output fields to sane values */
-+	for (i = 0; i < count; i++) {
-+		same->info[i].bytes_deduped = 0ULL;
-+		same->info[i].status = 0;
-+	}
-+
-+	for (i = 0, info = same->info; i < count; i++, info++) {
-+		struct inode *dst;
-+		struct fd dst_file = fdget(info->fd);
-+		if (!dst_file.file) {
-+			info->status = -EBADF;
-+			continue;
-+		}
-+		dst = file_inode(dst_file.file);
-+
-+		info->bytes_deduped = 0;
-+		if (!(is_admin || (dst_file.file->f_mode & FMODE_WRITE))) {
-+			info->status = -EINVAL;
-+		} else if (file->f_path.mnt != dst_file.file->f_path.mnt) {
-+			info->status = -EXDEV;
-+		} else if (S_ISDIR(dst->i_mode)) {
-+			info->status = -EISDIR;
-+		} else if (!S_ISREG(dst->i_mode)) {
-+			info->status = -EACCES;
-+		} else {
-+			info->status = xfs_ioctl_reflink(file, off,
-+							 dst_file.file,
-+							 info->logical_offset,
-+							 len, true);
-+			if (info->status == -EBADE)
-+				info->status = XFS_SAME_DATA_DIFFERS;
-+			else if (info->status == 0)
-+				info->bytes_deduped = len;
-+		}
-+		fdput(dst_file);
-+	}
-+
-+	ret = copy_to_user(argp, same, size);
-+	if (ret)
-+		ret = -EFAULT;
-+
-+out:
-+	return ret;
-+}
-+
- /*
-  * Note: some of the ioctl's return positive numbers as a
-  * byte count indicating success, such as readlink_by_handle.
-@@ -1949,7 +2058,7 @@ xfs_file_ioctl(
- 		if (!src.file)
- 			return -EBADF;
+ 	/* can't set PREALLOC this way, just preserve it */
+-	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
++	di_flags = (ip->i_d.di_flags &
++			(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_REFLINK));
+ 	if (xflags & XFS_XFLAG_IMMUTABLE)
+ 		di_flags |= XFS_DIFLAG_IMMUTABLE;
+ 	if (xflags & XFS_XFLAG_APPEND)
+@@ -1002,9 +1007,11 @@ static int
+ xfs_ioctl_setattr_xflags(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+-	struct fsxattr		*fa)
++	struct fsxattr		*fa,
++	struct file		*filp)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
  
--		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL);
-+		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL, false);
- 		fdput(src);
- 		if (error > 0)
- 			error = 0;
-@@ -1970,7 +2079,8 @@ xfs_file_ioctl(
- 			args.src_length = ~0ULL;
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+@@ -1028,6 +1035,9 @@ xfs_ioctl_setattr_xflags(
+ 		return -EPERM;
  
- 		error = xfs_ioctl_reflink(src.file, args.src_offset, filp,
--					  args.dest_offset, args.src_length);
-+					  args.dest_offset, args.src_length,
-+					  false);
- 		fdput(src);
- 		if (error > 0)
- 			error = 0;
-@@ -1978,6 +2088,9 @@ xfs_file_ioctl(
+ 	xfs_set_diflags(ip, fa->fsx_xflags);
++	error = xfs_reflink_end_unshare(ip, fa->fsx_xflags);
++	if (error)
++		return error;
+ 	xfs_diflags_to_linux(ip);
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+@@ -1170,7 +1180,8 @@ xfs_ioctl_setattr_check_projid(
+ STATIC int
+ xfs_ioctl_setattr(
+ 	xfs_inode_t		*ip,
+-	struct fsxattr		*fa)
++	struct fsxattr		*fa,
++	struct file		*filp)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+@@ -1181,6 +1192,10 @@ xfs_ioctl_setattr(
+ 
+ 	trace_xfs_ioctl_setattr(ip);
+ 
++	code = xfs_reflink_check_flag_adjust(ip, &fa->fsx_xflags);
++	if (code)
++		return code;
++
+ 	code = xfs_ioctl_setattr_check_projid(ip, fa);
+ 	if (code)
+ 		return code;
+@@ -1201,6 +1216,10 @@ xfs_ioctl_setattr(
+ 			return code;
+ 	}
+ 
++	code = xfs_reflink_start_unshare(ip, fa->fsx_xflags, filp);
++	if (code)
++		return code;
++
+ 	tp = xfs_ioctl_setattr_get_trans(ip);
+ 	if (IS_ERR(tp)) {
+ 		code = PTR_ERR(tp);
+@@ -1220,7 +1239,7 @@ xfs_ioctl_setattr(
+ 	if (code)
+ 		goto error_trans_cancel;
+ 
+-	code = xfs_ioctl_setattr_xflags(tp, ip, fa);
++	code = xfs_ioctl_setattr_xflags(tp, ip, fa, filp);
+ 	if (code)
+ 		goto error_trans_cancel;
+ 
+@@ -1290,7 +1309,7 @@ xfs_ioc_fssetxattr(
+ 	error = mnt_want_write_file(filp);
+ 	if (error)
  		return error;
+-	error = xfs_ioctl_setattr(ip, &fa);
++	error = xfs_ioctl_setattr(ip, &fa, filp);
+ 	mnt_drop_write_file(filp);
+ 	return error;
+ }
+@@ -1303,6 +1322,7 @@ xfs_ioc_getxflags(
+ 	unsigned int		flags;
+ 
+ 	flags = xfs_di2lxflags(ip->i_d.di_flags);
++	xfs_reflink_get_lxflags(ip, &flags);
+ 	if (copy_to_user(arg, &flags, sizeof(flags)))
+ 		return -EFAULT;
+ 	return 0;
+@@ -1324,22 +1344,30 @@ xfs_ioc_setxflags(
+ 
+ 	if (flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL | \
+ 		      FS_NOATIME_FL | FS_NODUMP_FL | \
+-		      FS_SYNC_FL))
++		      FS_SYNC_FL | FS_NOCOW_FL))
+ 		return -EOPNOTSUPP;
+ 
+ 	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
+ 
++	error = xfs_reflink_check_flag_adjust(ip, &fa.fsx_xflags);
++	if (error)
++		return error;
++
+ 	error = mnt_want_write_file(filp);
+ 	if (error)
+ 		return error;
+ 
++	error = xfs_reflink_start_unshare(ip, fa.fsx_xflags, filp);
++	if (error)
++		return error;
++
+ 	tp = xfs_ioctl_setattr_get_trans(ip);
+ 	if (IS_ERR(tp)) {
+ 		error = PTR_ERR(tp);
+ 		goto out_drop_write;
  	}
  
-+	case XFS_IOC_FILE_EXTENT_SAME:
-+		return xfs_ioctl_file_extent_same(filp, arg);
-+
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 76d8729..575c292 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -560,6 +560,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_ERROR_CLEARALL:
- 	case XFS_IOC_CLONE:
- 	case XFS_IOC_CLONE_RANGE:
-+	case XFS_IOC_FILE_EXTENT_SAME:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
+-	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
++	error = xfs_ioctl_setattr_xflags(tp, ip, &fa, filp);
+ 	if (error) {
+ 		xfs_trans_cancel(tp);
+ 		goto out_drop_write;
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 4f027d3..325dd14 100644
+index 325dd14..23ce9fc 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -71,6 +71,94 @@
- 				(len) <= (mp)->m_sb.sb_agblocks, label); \
- 	} while(0);
- 
-+/*
-+ * Read a page's worth of file data into the page cache.
-+ */
-+static struct page *
-+xfs_get_page(
-+	struct inode	*inode,		/* inode */
-+	xfs_off_t 	offset)		/* where in the inode to read */
-+{
-+	struct address_space	*mapping;
-+	struct page		*page;
-+	pgoff_t			n;
+@@ -1008,3 +1008,324 @@ out:
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
 +
-+	n = offset >> PAGE_CACHE_SHIFT;
-+	mapping = inode->i_mapping;
-+	page = read_mapping_page(mapping, n, NULL);
-+	if (IS_ERR(page))
-+		return page;
-+	if (!PageUptodate(page)) {
-+		page_cache_release(page);
-+		return NULL;
-+	}
-+	return page;
++/**
++ * xfs_reflink_get_lxflags() - set reflink-related linux inode flags
++ *
++ * @ip: XFS inode
++ * @flags: Pointer to the user-visible inode flags
++ */
++void
++xfs_reflink_get_lxflags(
++	struct xfs_inode	*ip,		/* XFS inode */
++	unsigned int		*flags)		/* user flags */
++{
++	/*
++	 * If this is a reflink-capable filesystem and there are no shared
++	 * blocks, then this is a "nocow" file.
++	 */
++	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb) ||
++	    (ip->i_d.di_flags & XFS_DIFLAG_REFLINK))
++		return;
++	*flags |= FS_NOCOW_FL;
 +}
 +
-+/*
-+ * Compare extents of two files to see if they are the same.
++
++/**
++ * xfs_reflink_dirty_range() -- Dirty all the shared blocks in the file so that
++ * they're rewritten elsewhere.  Similar to generic_perform_write().
++ *
++ * @filp: VFS file pointer
++ * @pos: offset to start dirtying
++ * @len: number of bytes to dirty
 + */
-+static int
-+xfs_compare_extents(
-+	struct inode	*src,		/* first inode */
-+	xfs_off_t	srcoff,		/* offset of first inode */
-+	struct inode	*dest,		/* second inode */
-+	xfs_off_t	destoff,	/* offset of second inode */
-+	xfs_off_t	len,		/* length of data to compare */
-+	bool		*is_same)	/* out: true if the contents match */
++STATIC int
++xfs_reflink_dirty_range(
++	struct file		*filp,
++	xfs_off_t		pos,
++	xfs_off_t		len)
 +{
-+	xfs_off_t	src_poff;
-+	xfs_off_t	dest_poff;
-+	void		*src_addr;
-+	void		*dest_addr;
-+	struct page	*src_page;
-+	struct page	*dest_page;
-+	xfs_off_t	cmp_len;
-+	bool		same;
++	struct address_space	*mapping;
++	const struct address_space_operations *a_ops;
++	int			error;
++	unsigned int		flags;
++	struct page		*page;
++	struct page		*rpage;
++	unsigned long		offset;	/* Offset into pagecache page */
++	unsigned long		bytes;	/* Bytes to write to page */
++	void			*fsdata;
 +
-+	same = true;
-+	while (len) {
-+		src_poff = srcoff & (PAGE_CACHE_SIZE - 1);
-+		dest_poff = destoff & (PAGE_CACHE_SIZE - 1);
-+		cmp_len = min(PAGE_CACHE_SIZE - src_poff,
-+			      PAGE_CACHE_SIZE - dest_poff);
-+		cmp_len = min(cmp_len, len);
-+		ASSERT(cmp_len > 0);
++	mapping = filp->f_mapping;
++	a_ops = mapping->a_ops;
++	flags = AOP_FLAG_UNINTERRUPTIBLE;
++	do {
 +
-+		src_page = xfs_get_page(src, srcoff);
-+		if (!src_page)
-+			return -EINVAL;
-+		dest_page = xfs_get_page(dest, destoff);
-+		if (!dest_page) {
-+			page_cache_release(src_page);
-+			return -EINVAL;
++		offset = (pos & (PAGE_CACHE_SIZE - 1));
++		bytes = min_t(unsigned long, len, PAGE_CACHE_SIZE) - offset;
++		rpage = xfs_get_page(filp->f_inode, pos);
++		if (IS_ERR(rpage)) {
++			error = PTR_ERR(rpage);
++			break;
++		} else if (!rpage) {
++			error = -ENOMEM;
++			break;
 +		}
-+		src_addr = kmap_atomic(src_page);
-+		dest_addr = kmap_atomic(dest_page);
 +
-+		flush_dcache_page(src_page);
-+		flush_dcache_page(dest_page);
-+
-+		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
-+			same = false;
-+
-+		kunmap_atomic(src_addr);
-+		kunmap_atomic(dest_addr);
-+		page_cache_release(src_page);
-+		page_cache_release(dest_page);
-+
-+		if (!same)
++		error = a_ops->write_begin(filp, mapping, pos, bytes, flags,
++					   &page, &fsdata);
++		page_cache_release(rpage);
++		if (error < 0)
 +			break;
 +
-+		srcoff += cmp_len;
-+		destoff += cmp_len;
-+		len -= cmp_len;
-+	}
++		if (!PageUptodate(page))
++			printk(KERN_ERR "%s: STALE? ino=%lu pos=%llu\n", __func__, filp->f_inode->i_ino, pos);
++		if (mapping_writably_mapped(mapping))
++			flush_dcache_page(page);
 +
-+	*is_same = same;
++		error = a_ops->write_end(filp, mapping, pos, bytes, bytes,
++					 page, fsdata);
++		if (error < 0)
++			break;
++		else if (error == 0) {
++			error = -EIO;
++			break;
++		} else {
++			bytes = error;
++			error = 0;
++		}
++
++		cond_resched();
++
++		pos += bytes;
++		len -= bytes;
++
++		balance_dirty_pages_ratelimited(mapping);
++		if (fatal_signal_pending(current)) {
++			error = -EINTR;
++			break;
++		}
++	} while (len > 0);
++
++	return error;
++}
++
++/**
++ * xfs_reflink_check_flag_adjust() - the only change we allow to the inode
++ * reflink flag is to clear it when the fs supports reflink.
++ *
++ * @ip: XFS inode
++ * @xflags: XFS in-core inode flags
++ */
++int						/* error */
++xfs_reflink_check_flag_adjust(
++	struct xfs_inode	*ip,		/* XFS inode */
++	unsigned int		*xflags)		/* in-core flags */
++{
++	unsigned int		chg;
++
++	compiletime_assert(XFS_XFLAG_REFLINK == XFS_DIFLAG_REFLINK,
++			"in-core and on-disk inode reflink flags must match");
++	chg = (*xflags & XFS_XFLAG_REFLINK) ^
++	      (ip->i_d.di_flags & XFS_DIFLAG_REFLINK);
++
++	if (!chg)
++		return 0;
++	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
++		return -EOPNOTSUPP;
++	if (*xflags & XFS_XFLAG_REFLINK) {
++		*xflags &= ~XFS_XFLAG_REFLINK;
++		return 0;
++	}
 +	return 0;
 +}
 +
- /**
-  * xfs_reflink() - link a range of blocks from one inode to another
-  *
-@@ -86,7 +174,8 @@ xfs_reflink(
- 	xfs_off_t		srcoff, /* offset in source file */
- 	struct xfs_inode	*dest,	/* XFS inode to copy extents to */
- 	xfs_off_t		destoff,/* offset in destination file */
--	xfs_off_t		len)	/* number of bytes to copy */
-+	xfs_off_t		len,	/* number of bytes to copy */
-+	unsigned int		flags)	/* reflink flags */
- {
- 	struct xfs_mount	*mp = src->i_mount;
- 	loff_t			uninitialized_var(offset);
-@@ -105,6 +194,7 @@ xfs_reflink(
- 	xfs_agnumber_t		agno;		/* allocation group number */
- 	xfs_agblock_t		agbno;
- 	int			done;
-+	bool			is_same;
- 	xfs_off_t		blen = ALIGN(len, mp->m_sb.sb_blocksize);
- 
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-@@ -117,6 +207,9 @@ xfs_reflink(
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
- 		return -EINVAL;
- 
-+	if (flags & ~XFS_REFLINK_ALL)
-+		return -EINVAL;
++/**
++ * xfs_reflink_start_unshare() - dirty all the shared blocks so that they
++ * can be reallocated elsewhere, in preparation for clearing the reflink
++ * hint.
++ *
++ * @ip: XFS inode
++ * @xflags: XFS in-core inode flags
++ * @filp: VFS file structure
++ */
++int						/* error */
++xfs_reflink_start_unshare(
++	struct xfs_inode	*ip,		/* XFS inode */
++	unsigned int		xflags,		/* in-core flags */
++	struct file		*filp)		/* VFS file structure */
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	int			error = 0;
++	xfs_fileoff_t		fbno;
++	xfs_filblks_t		end;
++	xfs_agnumber_t		agno;
++	xfs_agblock_t		agbno;
++	xfs_extlen_t		len;
++	xfs_nlink_t		nr;
++	xfs_off_t		isize;
++	xfs_off_t		fpos;
++	xfs_off_t		flen;
++	struct xfs_bmbt_irec	map[2];
++	int			nmaps;
 +
- 	/* Lock both files against IO */
- 	if (src->i_ino == dest->i_ino) {
- 		xfs_ilock(src, XFS_IOLOCK_EXCL);
-@@ -127,6 +220,20 @@ xfs_reflink(
- 	}
- 
- 	/*
-+	 * Check that the extents are the same.
-+	 */
-+	if (flags & XFS_REFLINK_DEDUPE) {
-+		error = xfs_compare_extents(VFS_I(src), srcoff, VFS_I(dest),
-+				destoff, len, &is_same);
-+		if (error)
-+			goto out_unlock_io;
-+		if (!is_same) {
-+			error = -EBADE;
-+			goto out_unlock_io;
-+		}
-+	}
++	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb) ||
++	    (xflags & XFS_XFLAG_REFLINK) ||
++	    !(ip->i_d.di_flags & XFS_DIFLAG_REFLINK))
++		return 0;
++
++	inode_dio_wait(VFS_I(ip));
 +
 +	/*
- 	 * Ensure the reflink bit is set in both inodes.
- 	 */
- 	if (!(src->i_d.di_flags & XFS_DIFLAG_REFLINK) ||
++	 * The user wants to preemptively CoW all shared blocks in this file,
++	 * which enables us to turn off the reflink flag.  Iterate all
++	 * extents which are not prealloc/delalloc to see which ranges are
++	 * mentioned in the refcount tree, then read those blocks into the
++	 * pagecache, dirty them, fsync them back out, and then we can update
++	 * the inode flag.  What happens if we run out of memory? :)
++	 */
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	fbno = 0;
++	isize = i_size_read(VFS_I(ip));
++	if (isize == 0) {
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		return 0;
++	}
++	end = XFS_B_TO_FSB(mp, isize);
++	while (end - fbno > 0) {
++		nmaps = 1;
++		/*
++		 * Look for extents in the file.  Skip holes, delalloc, or
++		 * unwritten extents; they can't be reflinked.
++		 */
++		error = xfs_bmapi_read(ip, fbno, end - fbno, map, &nmaps, 0);
++		if (error)
++			goto out_unlock;
++		if (nmaps == 0)
++			break;
++		if (map[0].br_startblock == HOLESTARTBLOCK ||
++		    map[0].br_startblock == DELAYSTARTBLOCK ||
++		    map[0].br_state == XFS_EXT_UNWRITTEN)
++			goto next;
++
++		map[1] = map[0];
++		while (map[1].br_blockcount) {
++			agno = XFS_FSB_TO_AGNO(mp, map[1].br_startblock);
++			agbno = XFS_FSB_TO_AGBNO(mp, map[1].br_startblock);
++			CHECK_AG_NUMBER(mp, agno);
++			CHECK_AG_EXTENT(mp, agbno, 1);
++
++			error = xfs_reflink_get_refcount(mp, agno, agbno,
++							 &len, &nr);
++			if (error)
++				goto out_unlock;
++			XFS_WANT_CORRUPTED_GOTO(mp, len != 0, out_unlock);
++			if (len > map[1].br_blockcount)
++				len = map[1].br_blockcount;
++			if (nr < 2)
++				goto skip_copy;
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			fpos = XFS_FSB_TO_B(mp, map[1].br_startoff);
++			flen = XFS_FSB_TO_B(mp, len);
++			if (fpos + flen > isize)
++				flen = isize - fpos;
++			error = xfs_reflink_dirty_range(filp, fpos, flen);
++			xfs_ilock(ip, XFS_ILOCK_EXCL);
++			if (error)
++				goto out_unlock;
++skip_copy:
++			map[1].br_blockcount -= len;
++			map[1].br_startoff += len;
++			map[1].br_startblock += len;
++		}
++
++next:
++		fbno = map[0].br_startoff + map[0].br_blockcount;
++	}
++
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	if (error == 0)
++		error = filemap_write_and_wait(filp->f_mapping);
++	return error;
++}
++
++/**
++ * xfs_reflink_end_unshare() - finish removing reflink flag from inode
++ *
++ * @ip: XFS inode
++ * @xflags: XFS in-core inode flags
++ */
++int						/* error */
++xfs_reflink_end_unshare(
++	struct xfs_inode	*ip,		/* XFS inode */
++	unsigned int		xflags)		/* VFS file structure */
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
++	xfs_fileoff_t		fbno;
++	xfs_filblks_t		end;
++	xfs_agnumber_t		agno;
++	xfs_agblock_t		agbno;
++	xfs_extlen_t		len;
++	xfs_nlink_t		nr;
++	struct xfs_bmbt_irec	map[2];
++	int			nmaps;
++
++	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb) ||
++	    (xflags & XFS_XFLAG_REFLINK) ||
++	    !(ip->i_d.di_flags & XFS_DIFLAG_REFLINK))
++		return 0;
++
++	/*
++	 * Earlier we copied all the shared blocks in this file to new blocks.
++	 * However, we dropped the ilock before getting the transaction, so
++	 * check that nobody wandered in and added more reflinks.
++	 */
++	fbno = 0;
++	end = XFS_B_TO_FSB(mp, i_size_read(VFS_I(ip)));
++	while (end - fbno > 0) {
++		nmaps = 1;
++		/*
++		 * Look for extents in the file.  Skip holes, delalloc, or
++		 * unwritten extents; they can't be reflinked.
++		 */
++		error = xfs_bmapi_read(ip, fbno, end - fbno, map, &nmaps, 0);
++		if (error)
++			goto out_unlock;
++		if (nmaps == 0)
++			break;
++		if (map[0].br_startblock == HOLESTARTBLOCK ||
++		    map[0].br_startblock == DELAYSTARTBLOCK ||
++		    map[0].br_state == XFS_EXT_UNWRITTEN)
++			goto next;
++
++		map[1] = map[0];
++		while (map[1].br_blockcount) {
++			agno = XFS_FSB_TO_AGNO(mp, map[1].br_startblock);
++			agbno = XFS_FSB_TO_AGBNO(mp, map[1].br_startblock);
++			CHECK_AG_NUMBER(mp, agno);
++			CHECK_AG_EXTENT(mp, agbno, 1);
++
++			error = xfs_reflink_get_refcount(mp, agno, agbno,
++							 &len, &nr);
++			if (error)
++				goto out_unlock;
++			XFS_WANT_CORRUPTED_GOTO(mp, len != 0, out_unlock);
++			if (len > map[1].br_blockcount)
++				len = map[1].br_blockcount;
++			if (nr > 1) {
++				error = -EINTR;
++				goto out_unlock;
++			}
++			map[1].br_blockcount -= len;
++			map[1].br_startblock += len;
++		}
++
++next:
++		fbno = map[0].br_startoff + map[0].br_blockcount;
++	}
++
++	ip->i_d.di_flags &= ~XFS_DIFLAG_REFLINK;
++out_unlock:
++	return error;
++}
 diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index adfd99c..7f9660d 100644
+index 7f9660d..6f1ecf8 100644
 --- a/fs/xfs/xfs_reflink.h
 +++ b/fs/xfs/xfs_reflink.h
-@@ -24,8 +24,12 @@ typedef struct xfs_reflink_end_io {
- 	struct xfs_efi_log_item	*rlei_efi;
- } xfs_reflink_end_io_t;
+@@ -50,4 +50,14 @@ extern int xfs_reflink_finish_fork_buf(xfs_mount_t  *mp, xfs_inode_t *ip,
+ 	xfs_buf_t *bp, xfs_fileoff_t fileoff, xfs_trans_t *tp,
+ 	int write_error);
  
-+#define XFS_REFLINK_DEDUPE	1	/* only reflink if contents match */
-+#define XFS_REFLINK_ALL		(XFS_REFLINK_DEDUPE)
++extern void xfs_reflink_get_lxflags(struct xfs_inode *ip, unsigned int *flags);
 +
- extern int xfs_reflink(struct xfs_inode *src, xfs_off_t srcoff,
--	struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len);
-+	struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
-+	unsigned int flags);
- 
- extern int xfs_reflink_get_refcount(struct xfs_mount *mp, xfs_agnumber_t agno,
- 	xfs_agblock_t agbno, xfs_extlen_t *len, xfs_nlink_t *nr);
++extern int xfs_reflink_check_flag_adjust(struct xfs_inode *ip,
++	unsigned int *xflags);
++
++extern int xfs_reflink_start_unshare(struct xfs_inode *ip, unsigned int xflags,
++	struct file *filp);
++
++extern int xfs_reflink_end_unshare(struct xfs_inode *ip, unsigned int xflags);
++
+ #endif /* __XFS_REFLINK_H */
 
 _______________________________________________
 xfs mailing list
