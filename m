@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EB2F37F51
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 23:15:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D985E304043
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 21:15:32 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6C1A07F85
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 23:15:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 426BA304048
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 21:15:50 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id nJ90wS854AbEcVTg (version=TLSv1
+	cuda.sgi.com with ESMTP id jgrtomexcu1WiimZ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jun 2015 21:15:30 -0700 (PDT)
-Subject: [RFC 00/11] xfstests: test the btrfs/xfs reflink/dedupe ioctls
+	Mon, 29 Jun 2015 21:15:48 -0700 (PDT)
+Subject: [PATCH 03/11] generic/32[6-8]: support xfs in addition to btrfs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jun 2015 21:15:20 -0700
-Message-ID: <20150630041519.2476.23059.stgit@birch.djwong.org>
+Date: Mon, 29 Jun 2015 21:15:41 -0700
+Message-ID: <20150630041541.2476.49356.stgit@birch.djwong.org>
+In-Reply-To: <20150630041519.2476.23059.stgit@birch.djwong.org>
+References: <20150630041519.2476.23059.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,48 +31,104 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hi all,
+Modify the reflink tests to support xfs.
 
-This is a RFC-quality pass at making xfstests perform more rigorous
-testing of the btrfs/xfs file clone, reflink, and dedupe ioctls.
-There are now tests of the basic functionality of the three ioctls;
-tests to ensure that the filesystem exhibits the expected copy on
-write semantics; tests to try to suss out race conditions in the new
-write paths; tests to ensure that the ioctls peform basic disk
-accounting correctly; tests of the interaction between reflink and the
-various fallocate verbs (allocate, punch, collapse, insert zeroes);
-and some attempts to test the upper limits of reflinking.  The first
-patch in the series adds fuzz testing to ext4 and XFS; aside from
-being first in line, it isn't tied to any of the reflink
-functionality.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/rc         |   37 +++++++++++++++++++++++++++++++++++++
+ tests/generic/800 |    2 +-
+ tests/generic/801 |    2 +-
+ tests/generic/802 |    2 +-
+ 4 files changed, 40 insertions(+), 3 deletions(-)
 
-To run these tests, you'll have to patch xfsprogs to have reflink and
-dedupe support[1]; the patch ought to apply fairly cleanly against the
-upstream git.  They should more or less work with the btrfs that
-appears in 4.1, though if you want to test the XFS implementation,
-you're going to have to apply a lot of patches to the kernel and
-xfsprogs.  See the cover letters[2][3] for those patchsets for more
-information.
 
-Known issues: 
- * I think the race checks for dedupe could be a little sharper at
-   finding mistakes.
- * I started the numbering really high to prevent the tests from
-   colliding with whatever new tests might arrive; this will require
-   some intervention to fix.
- * When ext4 gains reflink support, it shouldn't be difficult to make
-   these tests run on it.  The patch set is based on the current
-   xfstest master on kernel.org.
- * If the copy_file_range syscall ever comes around, we'll have to
-   adapt xfs_io to use that in addition to the btrfs ioctls.
-
-Comments and questions are, as always, welcome.
-
---D
-
-[1] http://djwong.org/docs/03-xfs_io-reflink-and-dedupe.patch
-[2] See thread "[RFC 00/15] xfsprogs: support the reflink btree" dated today.
-[3] http://oss.sgi.com/archives/xfs/2015-06/msg00407.html
+diff --git a/common/rc b/common/rc
+index 51d2fcb..8f20dc8 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1397,6 +1397,43 @@ _require_xfs_crc()
+ 	umount $SCRATCH_MNT
+ }
+ 
++# this test requires the test fs support reflink...
++#
++_require_test_reflink()
++{
++    case $FSTYP in
++    xfs)
++	xfs_info "${TEST_DIR}" | grep reflink=1 -c -q || _notrun "Reflink not supported by this filesystem type: $FSTYP"
++	;;
++    btrfs)
++        true
++        ;;
++    *)
++        _notrun "Reflink not supported by this filesystem type: $FSTYP"
++        ;;
++    esac
++}
++
++# this test requires the scratch fs support reflink...
++#
++_require_scratch_reflink()
++{
++    case $FSTYP in
++    xfs)
++	_scratch_mkfs > /dev/null 2>&1
++	_scratch_mount
++	xfs_info "${TEST_DIR}" | grep reflink=1 -c -q || _notrun "$FSTYP does not support reflink"
++	_scratch_unmount
++	;;
++    btrfs)
++        true
++        ;;
++    *)
++        _notrun "Reflink not supported by this filesystem type: $FSTYP"
++        ;;
++    esac
++}
++
+ # this test requires the bigalloc feature to be available in mkfs.ext4
+ #
+ _require_ext4_mkfs_bigalloc()
+diff --git a/tests/generic/800 b/tests/generic/800
+index a71f11a..954f39d 100755
+--- a/tests/generic/800
++++ b/tests/generic/800
+@@ -45,7 +45,7 @@ _cleanup()
+ . common/filter
+ 
+ # real QA test starts here
+-_supported_fs btrfs
++_require_test_reflink
+ _supported_os Linux
+ 
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/801 b/tests/generic/801
+index b21c44b..aedb6e9 100755
+--- a/tests/generic/801
++++ b/tests/generic/801
+@@ -45,7 +45,7 @@ _cleanup()
+ . common/filter
+ 
+ # real QA test starts here
+-_supported_fs btrfs
++_require_test_reflink
+ _supported_os Linux
+ 
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/802 b/tests/generic/802
+index afd8513..51d3414 100755
+--- a/tests/generic/802
++++ b/tests/generic/802
+@@ -43,7 +43,7 @@ _cleanup()
+ . ./common/filter
+ 
+ # real QA test starts here
+-_supported_fs btrfs
++_require_test_reflink
+ _supported_os Linux
+ 
+ _require_xfs_io_command "fiemap"
 
 _______________________________________________
 xfs mailing list
