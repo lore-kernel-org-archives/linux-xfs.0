@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 82D757F7C
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 18:12:09 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4E87A7F7C
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 22:25:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C898AC002
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 16:12:09 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	K9EmeYEo3t7AC1PD for <xfs@oss.sgi.com>;
-	Mon, 29 Jun 2015 16:12:06 -0700 (PDT)
-Date: Tue, 30 Jun 2015 09:11:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: remote attribute headers contain an invalid LSN
-Message-ID: <20150629231140.GH7943@dastard>
-References: <1434948369-13931-1-git-send-email-david@fromorbit.com>
-	<20150624131228.GC1888@bfoster.bfoster>
-	<20150624212643.GJ22807@dastard>
-	<20150625124643.GA36162@bfoster.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ECB6AAC005
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 20:25:44 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id Fehrp0FYk8aYxmjB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 29 Jun 2015 20:25:42 -0700 (PDT)
+Subject: [RFC 00/15] xfsprogs: support the reflink btree
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 29 Jun 2015 20:25:38 -0700
+Message-ID: <20150630032538.572.20293.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150625124643.GA36162@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +26,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 25, 2015 at 08:46:44AM -0400, Brian Foster wrote:
-> So as noted above, were this treated as a typical metadata block, the
-> corresponding buffer would be logged and thus everything would be
-> ordered appropriately with respect to the log. It is not a logged buffer
-> in this case, so we drop XFS_BMAPI_METADATA flag from the allocation
-> which would cause any previous frees of this block to be flushed to the
-> ail.
+Hi all,
 
-Yes.
+This is a RFC-quality pass at xfsprogs support for the reflink btree.
+As discussed in the kernel-side patches, reflink enables XFS to map
+multiple logical blocks to the same physical block.  There is a single
+[block, refcount] btree to track the reference counts of extents of
+physical blocks.  The xfs_db and xfs_metadump tools have been extended
+to deal with the reflink btree; xfs_repair now records all reverse
+mapping data for the purpose of checking and rebuilding the reflink
+btree (and some day will do likewise for the rmap btree).
 
-> I don't see anything explicit that "handles" the case of being written
-> before the allocation transaction is committed. By "handles," do you
-> simply mean the aforementioned log force? In other words, we're
-> implicitly saying it's fine that the block is written out of order from
-> the allocation, so long as the block is marked free on-disk.
+The patch set is based on the current (3.2.3+) for-next branch plus
+Dave's rmap RFC patches for rmap (i.e. the rmap-btree branch).  The
+first patch wires up xfs_io to talk to the "XFS" reflink ioctls, which
+are of course the same ioctls that BTRFS uses.  These commands will be
+used by the xfstests I've written to test reflink/CoW support.  There
+are a couple of patches to fix up xfs_db's check functionality well
+enough to support blocktrash-type fuzzing.  After that comes the
+libxfs port of the kernel rlbt declarations and modifications to the
+individual programs to support reflink.
 
-Yes and yes.
+I've not had time to get reflink and rmap to work together; don't
+enable rmap and reflink at the same time!
 
-Cheers,
+This is an extraordinary way to eat your data.  Enjoy!
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Comments and questions are, as always, welcome.
+
+--D
 
 _______________________________________________
 xfs mailing list
