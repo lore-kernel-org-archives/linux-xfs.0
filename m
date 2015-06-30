@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B4CD07F8C
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 22:26:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8AD85304039
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 20:26:17 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8ECC17F88
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 22:26:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3846BAC004
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 20:26:25 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ETXQdFsbuEzYOFjj (version=TLSv1
+	cuda.sgi.com with ESMTP id At4UoY8VRJlSlpqU (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jun 2015 20:26:15 -0700 (PDT)
-Subject: [PATCH 05/15] xfs_db: dump reflink btree data
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jun 2015 20:26:11 -0700
-Message-ID: <20150630032611.572.81790.stgit@birch.djwong.org>
+	Mon, 29 Jun 2015 20:26:23 -0700 (PDT)
+Subject: [PATCH 06/15] xfs_db: add support for reflinks to the check
+	command... sort of
+From: "Darrick J. Wong" <djwong@birch.djwong.org>
+Date: Mon, 29 Jun 2015 20:26:18 -0700
+Message-ID: <20150630032617.572.47615.stgit@birch.djwong.org>
 In-Reply-To: <20150630032538.572.20293.stgit@birch.djwong.org>
 References: <20150630032538.572.20293.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,281 +32,257 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Add the ability to walk and dump the reflink btree in xfs_db.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/agf.c          |   10 ++++++++--
- db/btblock.c      |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- db/btblock.h      |    5 +++++
- db/field.c        |    9 +++++++++
- db/field.h        |    4 ++++
- db/sb.c           |    2 ++
- db/type.c         |    3 +++
- db/type.h         |    2 +-
- man/man8/xfs_db.8 |   45 ++++++++++++++++++++++++++++++++++++++++++++-
- 9 files changed, 126 insertions(+), 4 deletions(-)
+ db/check.c |  138 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 130 insertions(+), 8 deletions(-)
 
 
-diff --git a/db/agf.c b/db/agf.c
-index f0121ab..0eddcac 100644
---- a/db/agf.c
-+++ b/db/agf.c
-@@ -47,7 +47,7 @@ const field_t	agf_flds[] = {
- 	{ "versionnum", FLDT_UINT32D, OI(OFF(versionnum)), C1, 0, TYP_NONE },
- 	{ "seqno", FLDT_AGNUMBER, OI(OFF(seqno)), C1, 0, TYP_NONE },
- 	{ "length", FLDT_AGBLOCK, OI(OFF(length)), C1, 0, TYP_NONE },
--	{ "roots", FLDT_AGBLOCK, OI(OFF(roots)), CI(XFS_BTNUM_AGF),
-+	{ "roots", FLDT_AGBLOCK, OI(OFF(roots)), CI(XFS_BTNUM_AGF) + 1,
- 	  FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
- 	{ "bnoroot", FLDT_AGBLOCK,
- 	  OI(OFF(roots) + XFS_BTNUM_BNO * SZ(roots[XFS_BTNUM_BNO])), C1, 0,
-@@ -58,7 +58,10 @@ const field_t	agf_flds[] = {
- 	{ "rmaproot", FLDT_AGBLOCK,
- 	  OI(OFF(roots) + XFS_BTNUM_RMAP * SZ(roots[XFS_BTNUM_RMAP])), C1, 0,
- 	  TYP_RMAPBT },
--	{ "levels", FLDT_UINT32D, OI(OFF(levels)), CI(XFS_BTNUM_AGF),
-+	{ "rlroot", FLDT_AGBLOCK,
-+	  OI(OFF(reflink_root)), C1, 0,
-+	  TYP_RLBT },
-+	{ "levels", FLDT_UINT32D, OI(OFF(levels)), CI(XFS_BTNUM_AGF) + 1,
- 	  FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
- 	{ "bnolevel", FLDT_UINT32D,
- 	  OI(OFF(levels) + XFS_BTNUM_BNO * SZ(levels[XFS_BTNUM_BNO])), C1, 0,
-@@ -69,6 +72,9 @@ const field_t	agf_flds[] = {
- 	{ "rmaplevel", FLDT_UINT32D,
- 	  OI(OFF(levels) + XFS_BTNUM_RMAP * SZ(levels[XFS_BTNUM_RMAP])), C1, 0,
- 	  TYP_NONE },
-+	{ "rllevel", FLDT_UINT32D,
-+	  OI(OFF(reflink_level)), C1, 0,
-+	  TYP_NONE },
- 	{ "flfirst", FLDT_UINT32D, OI(OFF(flfirst)), C1, 0, TYP_NONE },
- 	{ "fllast", FLDT_UINT32D, OI(OFF(fllast)), C1, 0, TYP_NONE },
- 	{ "flcount", FLDT_UINT32D, OI(OFF(flcount)), C1, 0, TYP_NONE },
-diff --git a/db/btblock.c b/db/btblock.c
-index 556dfaf..cfa2fd3 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -102,6 +102,12 @@ struct xfs_db_btree {
- 		sizeof(struct xfs_rmap_rec),
- 		sizeof(__be32),
- 	},
-+	{	XFS_RLBT_CRC_MAGIC,
-+		XFS_BTREE_SBLOCK_CRC_LEN,
-+		sizeof(xfs_reflink_key_t),
-+		sizeof(xfs_reflink_rec_t),
-+		sizeof(__be32),
-+	},
- 	{	0,
- 	},
+diff --git a/db/check.c b/db/check.c
+index 9b40725..143a7c3 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -44,7 +44,7 @@ typedef enum {
+ 	DBM_FREE1,	DBM_FREE2,	DBM_FREELIST,	DBM_INODE,
+ 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
+ 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
+-	DBM_SYMLINK,	DBM_BTFINO,
++	DBM_SYMLINK,	DBM_BTFINO,	DBM_BTRL,	DBM_RLDATA,
+ 	DBM_NDBM
+ } dbm_t;
+ 
+@@ -52,7 +52,8 @@ typedef struct inodata {
+ 	struct inodata	*next;
+ 	nlink_t		link_set;
+ 	nlink_t		link_add;
+-	char		isdir;
++	char		isdir:1;
++	char		isreflink:1;
+ 	char		security;
+ 	char		ilist;
+ 	xfs_ino_t	ino;
+@@ -171,6 +172,8 @@ static const char	*typename[] = {
+ 	"sb",
+ 	"symlink",
+ 	"btfino",
++	"btrl",
++	"rldata",
+ 	NULL
  };
-@@ -658,3 +664,47 @@ const field_t	rmapbt_rec_flds[] = {
- 	{ NULL }
- };
- #undef ROFF
-+
-+/* reflink btree blocks */
-+const field_t	rlbt_crc_hfld[] = {
-+	{ "", FLDT_RLBT_CRC, OI(0), C1, 0, TYP_NONE },
-+	{ NULL }
-+};
-+
-+#define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
-+const field_t	rlbt_crc_flds[] = {
-+	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
-+	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
-+	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
-+	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_RLBT },
-+	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_RLBT },
-+	{ "bno", FLDT_DFSBNO, OI(OFF(u.s.bb_blkno)), C1, 0, TYP_RLBT },
-+	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
-+	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-+	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
-+	{ "recs", FLDT_RLBTREC, btblock_rec_offset, btblock_rec_count,
-+	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
-+	{ "keys", FLDT_RLBTKEY, btblock_key_offset, btblock_key_count,
-+	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
-+	{ "ptrs", FLDT_RLBTPTR, btblock_ptr_offset, btblock_key_count,
-+	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_RLBT },
-+	{ NULL }
-+};
-+#undef OFF
-+
-+#define	KOFF(f)	bitize(offsetof(xfs_reflink_key_t, rr_ ## f))
-+const field_t	rlbt_key_flds[] = {
-+	{ "startblock", FLDT_AGBLOCK, OI(KOFF(startblock)), C1, 0, TYP_DATA },
-+	{ NULL }
-+};
-+#undef KOFF
-+
-+#define	ROFF(f)	bitize(offsetof(xfs_reflink_rec_t, rr_ ## f))
-+const field_t	rlbt_rec_flds[] = {
-+	{ "startblock", FLDT_AGBLOCK, OI(ROFF(startblock)), C1, 0, TYP_DATA },
-+	{ "blockcount", FLDT_EXTLEN, OI(ROFF(blockcount)), C1, 0, TYP_NONE },
-+	{ "refcount", FLDT_UINT32D, OI(ROFF(nlinks)), C1, 0, TYP_DATA },
-+	{ NULL }
-+};
-+#undef ROFF
-diff --git a/db/btblock.h b/db/btblock.h
-index 35299b4..9ada5e1 100644
---- a/db/btblock.h
-+++ b/db/btblock.h
-@@ -59,4 +59,9 @@ extern const struct field	rmapbt_crc_hfld[];
- extern const struct field	rmapbt_key_flds[];
- extern const struct field	rmapbt_rec_flds[];
+ static int		verbose;
+@@ -228,7 +231,8 @@ static int		blocktrash_f(int argc, char **argv);
+ static int		blockuse_f(int argc, char **argv);
+ static int		check_blist(xfs_fsblock_t bno);
+ static void		check_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+-				    xfs_extlen_t len, dbm_t type);
++				    xfs_extlen_t len, dbm_t type,
++				    int ignore_reflink);
+ static int		check_inomap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 				     xfs_extlen_t len, xfs_ino_t c_ino);
+ static void		check_linkcounts(xfs_agnumber_t agno);
+@@ -349,6 +353,9 @@ static void		scanfunc_ino(struct xfs_btree_block *block, int level,
+ static void		scanfunc_fino(struct xfs_btree_block *block, int level,
+ 				     xfs_agf_t *agf, xfs_agblock_t bno,
+ 				     int isroot);
++static void		scanfunc_rl(struct xfs_btree_block *block, int level,
++				     xfs_agf_t *agf, xfs_agblock_t bno,
++				     int isroot);
+ static void		set_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 				  xfs_extlen_t len, dbm_t type,
+ 				  xfs_agnumber_t c_agno, xfs_agblock_t c_agbno);
+@@ -1041,6 +1048,7 @@ blocktrash_f(
+ 		   (1 << DBM_RTSUM) |
+ 		   (1 << DBM_SYMLINK) |
+ 		   (1 << DBM_BTFINO) |
++		   (1 << DBM_BTRL) |
+ 		   (1 << DBM_SB);
+ 	while ((c = getopt(argc, argv, "0123n:s:t:x:y:")) != EOF) {
+ 		switch (c) {
+@@ -1241,18 +1249,25 @@ check_dbmap(
+ 	xfs_agnumber_t	agno,
+ 	xfs_agblock_t	agbno,
+ 	xfs_extlen_t	len,
+-	dbm_t		type)
++	dbm_t		type,
++	int		ignore_reflink)
+ {
+ 	xfs_extlen_t	i;
+ 	char		*p;
++	dbm_t		d;
  
-+extern const struct field	rlbt_crc_flds[];
-+extern const struct field	rlbt_crc_hfld[];
-+extern const struct field	rlbt_key_flds[];
-+extern const struct field	rlbt_rec_flds[];
-+
- extern int	btblock_size(void *obj, int startoff, int idx);
-diff --git a/db/field.c b/db/field.c
-index d7ccf67..b2ed9de 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -173,6 +173,15 @@ const ftattr_t	ftattrtab[] = {
- 	{ FLDT_RMAPBTREC, "rmapbtrec", fp_sarray, (char *)rmapbt_rec_flds,
- 	  SI(bitsz(struct xfs_rmap_rec)), 0, NULL, rmapbt_rec_flds },
- 
-+	{ FLDT_RLBT_CRC, "rlbt", NULL, (char *)rlbt_crc_flds, btblock_size,
-+	  FTARG_SIZE, NULL, rlbt_crc_flds },
-+	{ FLDT_RLBTKEY, "rlbtkey", fp_sarray, (char *)rlbt_key_flds,
-+	  SI(bitsz(xfs_reflink_key_t)), 0, NULL, rlbt_key_flds },
-+	{ FLDT_RLBTPTR, "rlbtptr", fp_num, "%u", SI(bitsz(xfs_reflink_ptr_t)),
-+	  0, fa_agblock, NULL },
-+	{ FLDT_RLBTREC, "rlbtrec", fp_sarray, (char *)rlbt_rec_flds,
-+	  SI(bitsz(xfs_reflink_rec_t)), 0, NULL, rlbt_rec_flds },
-+
- /* CRC field */
- 	{ FLDT_CRC, "crc", fp_crc, "%#x (%s)", SI(bitsz(__uint32_t)),
- 	  0, NULL, NULL },
-diff --git a/db/field.h b/db/field.h
-index aa8cbc8..ac104c9 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -84,6 +84,10 @@ typedef enum fldt	{
- 	FLDT_RMAPBTKEY,
- 	FLDT_RMAPBTPTR,
- 	FLDT_RMAPBTREC,
-+	FLDT_RLBT_CRC,
-+	FLDT_RLBTKEY,
-+	FLDT_RLBTPTR,
-+	FLDT_RLBTREC,
- 
- 	/* CRC field type */
- 	FLDT_CRC,
-diff --git a/db/sb.c b/db/sb.c
-index b6c0c4e..67c9d08 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -653,6 +653,8 @@ version_string(
- 		strcat(s, ",FINOBT");
- 	if (xfs_sb_version_hassparseinodes(sbp))
- 		strcat(s, ",SPARSE_INODES");
-+	if (xfs_sb_version_hasreflink(sbp))
-+		strcat(s, ",REFLINK");
- 	return s;
+ 	for (i = 0, p = &dbmap[agno][agbno]; i < len; i++, p++) {
++		d = (dbm_t)*p;
++		if (ignore_reflink && (d == DBM_UNKNOWN || d == DBM_DATA ||
++				       d == DBM_RLDATA))
++			continue;
+ 		if ((dbm_t)*p != type) {
+-			if (!sflag || CHECK_BLISTA(agno, agbno + i))
++			if (!sflag || CHECK_BLISTA(agno, agbno + i)) {
+ 				dbprintf(_("block %u/%u expected type %s got "
+ 					 "%s\n"),
+ 					agno, agbno + i, typename[type],
+ 					typename[(dbm_t)*p]);
++			}
+ 			error++;
+ 		}
+ 	}
+@@ -1286,7 +1301,7 @@ check_inomap(
+ 		return 0;
+ 	}
+ 	for (i = 0, rval = 1, idp = &inomap[agno][agbno]; i < len; i++, idp++) {
+-		if (*idp) {
++		if (*idp && !(*idp)->isreflink) {
+ 			if (!sflag || (*idp)->ilist ||
+ 			    CHECK_BLISTA(agno, agbno + i))
+ 				dbprintf(_("block %u/%u claimed by inode %lld, "
+@@ -1492,6 +1507,26 @@ check_rrange(
+ 	return 1;
  }
  
-diff --git a/db/type.c b/db/type.c
-index 99a83e2..73789ef 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -59,6 +59,7 @@ static const typ_t	__typtab[] = {
- 	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld, NULL },
- 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld, NULL },
- 	{ TYP_RMAPBT, NULL },
-+	{ TYP_RLBT, NULL },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL },
- 	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld, NULL },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld, NULL },
-@@ -91,6 +92,8 @@ static const typ_t	__typtab_crc[] = {
- 		&xfs_allocbt_buf_ops },
- 	{ TYP_RMAPBT, "rmapbt", handle_struct, rmapbt_crc_hfld, 
- 		&xfs_rmapbt_buf_ops },
-+	{ TYP_RLBT, "rlbt", handle_struct, rlbt_crc_hfld,
-+		&xfs_reflinkbt_buf_ops },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL },
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
- 		&xfs_dir3_db_buf_ops },
-diff --git a/db/type.h b/db/type.h
-index 1bef8e6..0b239cb 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -24,7 +24,7 @@ struct field;
- typedef enum typnm
- {
- 	TYP_AGF, TYP_AGFL, TYP_AGI, TYP_ATTR, TYP_BMAPBTA,
--	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_RMAPBT, TYP_DATA,
-+	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_RMAPBT, TYP_RLBT, TYP_DATA,
- 	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
- 	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
- 	TYP_TEXT, TYP_FINOBT, TYP_NONE
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index d527230..9a91ad4 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -660,7 +660,7 @@ If no argument is given, show the current data type.
- The possible data types are:
- .BR agf ", " agfl ", " agi ", " attr ", " bmapbta ", " bmapbtd ,
- .BR bnobt ", " cntbt ", " data ", " dir ", " dir2 ", " dqblk ,
--.BR inobt ", " inode ", " log ", " rtbitmap ", " rtsummary ,
-+.BR inobt ", " inode ", " log ", " rlbt ", " rtbitmap ", " rtsummary ,
- .BR sb ", " symlink " and " text .
- See the TYPES section below for more information on these data types.
- .TP
-@@ -1640,6 +1640,49 @@ use
- .BR xfs_logprint (8)
- instead.
- .TP
-+.B rlbt
-+There is one set of filesystem blocks forming the reference count Btree for
-+each allocation group. The root block of this Btree is designated by the
-+.B rlroot
-+field in the corresponding AGF block.  The blocks are linked to sibling left
-+and right blocks at each level, as well as by pointers from parent to child
-+blocks.  Each block has the following fields:
-+.RS 1.4i
-+.PD 0
-+.TP 1.2i
-+.B magic
-+RLBT block magic number, 0x524C4233 ('RLB3').
-+.TP
-+.B level
-+level number of this block, 0 is a leaf.
-+.TP
-+.B numrecs
-+number of data entries in the block.
-+.TP
-+.B leftsib
-+left (logically lower) sibling block, 0 if none.
-+.TP
-+.B rightsib
-+right (logically higher) sibling block, 0 if none.
-+.TP
-+.B recs
-+[leaf blocks only] array of reference count records. Each record contains
-+.B startblock ,
-+.B blockcount ,
-+and
-+.BR nlinks .
-+.TP
-+.B keys
-+[non-leaf blocks only] array of key records. These are the first value
-+of each block in the level below this one. Each record contains
-+.B startblock .
-+.TP
-+.B ptrs
-+[non-leaf blocks only] array of child block pointers. Each pointer is a
-+block number within the allocation group to the next level in the Btree.
-+.PD
-+.RE
-+.TP
- .B rtbitmap
- If the filesystem has a realtime subvolume, then the
- .B rbmino
++/*
++ * We don't check the accuracy of reference counts -- all we do is ensure
++ * that a data block never crosses with non-data blocks.  repair can check
++ * those kinds of things.
++ *
++ * So with that in mind, if we're setting a block to be data or rldata,
++ * don't complain so long as the block is currently unknown, data, or rldata.
++ * Don't let blocks downgrade from rldata -> data.
++ */
++static bool
++is_reflink(
++	dbm_t		type2)
++{
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return false;
++	if (type2 == DBM_DATA || type2 == DBM_RLDATA)
++		return true;
++	return false;
++}
++
+ static void
+ check_set_dbmap(
+ 	xfs_agnumber_t	agno,
+@@ -1511,10 +1546,15 @@ check_set_dbmap(
+ 			agbno, agbno + len - 1, c_agno, c_agbno);
+ 		return;
+ 	}
+-	check_dbmap(agno, agbno, len, type1);
++	check_dbmap(agno, agbno, len, type1, is_reflink(type2));
+ 	mayprint = verbose | blist_size;
+ 	for (i = 0, p = &dbmap[agno][agbno]; i < len; i++, p++) {
+-		*p = (char)type2;
++		if (*p == DBM_RLDATA && type2 == DBM_DATA)
++			;	/* do nothing */
++		if (*p == DBM_DATA && type2 == DBM_DATA)
++			*p = (char)DBM_RLDATA;
++		else
++			*p = (char)type2;
+ 		if (mayprint && (verbose || CHECK_BLISTA(agno, agbno + i)))
+ 			dbprintf(_("setting block %u/%u to %s\n"), agno, agbno + i,
+ 				typename[type2]);
+@@ -2756,6 +2796,7 @@ process_inode(
+ 		type = DBM_UNKNOWN;
+ 		break;
+ 	}
++	id->isreflink = !!(idic.di_flags & XFS_DIFLAG_REFLINK);
+ 	if (idic.di_version == 1)
+ 		setlink_inode(id, idic.di_onlink, type == DBM_DIR, security);
+ 	else {
+@@ -3862,6 +3903,12 @@ scan_ag(
+ 		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]),
+ 		be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]),
+ 		1, scanfunc_cnt, TYP_CNTBT);
++	if (agf->agf_reflink_root) {
++		scan_sbtree(agf,
++			be32_to_cpu(agf->agf_reflink_root),
++			be32_to_cpu(agf->agf_reflink_level),
++			1, scanfunc_rl, TYP_RLBT);
++	}
+ 	scan_sbtree(agf,
+ 		be32_to_cpu(agi->agi_root),
+ 		be32_to_cpu(agi->agi_level),
+@@ -4462,6 +4509,81 @@ scanfunc_fino(
+ }
+ 
+ static void
++scanfunc_rl(
++	struct xfs_btree_block	*block,
++	int			level,
++	xfs_agf_t		*agf,
++	xfs_agblock_t		bno,
++	int			isroot)
++{
++	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
++	int			i;
++	xfs_reflink_ptr_t	*pp;
++	xfs_reflink_rec_t	*rp;
++	xfs_agblock_t		lastblock;
++
++	if (be32_to_cpu(block->bb_magic) != XFS_RLBT_CRC_MAGIC) {
++		dbprintf(_("bad magic # %#x in rlbt block %u/%u\n"),
++			be32_to_cpu(block->bb_magic), seqno, bno);
++		serious_error++;
++		return;
++	}
++	if (!isroot) {
++		fdblocks++;
++		agfbtreeblks++;
++	}
++	if (be16_to_cpu(block->bb_level) != level) {
++		if (!sflag)
++			dbprintf(_("expected level %d got %d in rlbt block "
++				 "%u/%u\n"),
++				level, be16_to_cpu(block->bb_level), seqno, bno);
++		error++;
++	}
++	set_dbmap(seqno, bno, 1, DBM_BTRL, seqno, bno);
++	if (level == 0) {
++		if (be16_to_cpu(block->bb_numrecs) > mp->m_rlbt_mxr[0] ||
++		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_rlbt_mnr[0])) {
++			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
++				 "rlbt block %u/%u\n"),
++				be16_to_cpu(block->bb_numrecs), mp->m_rlbt_mnr[0],
++				mp->m_rlbt_mxr[0], seqno, bno);
++			serious_error++;
++			return;
++		}
++		rp = XFS_REFLINK_REC_ADDR(block, 1);
++		lastblock = 0;
++		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
++			set_dbmap(seqno, be32_to_cpu(rp[i].rr_startblock),
++				be32_to_cpu(rp[i].rr_blockcount), DBM_RLDATA,
++				seqno, bno);
++			if (be32_to_cpu(rp[i].rr_startblock) < lastblock) {
++				dbprintf(_(
++		"out-of-order rl btree record %d (%u %u) block %u/%u\n"),
++					 i, be32_to_cpu(rp[i].rr_startblock),
++					 be32_to_cpu(rp[i].rr_startblock),
++					 be32_to_cpu(agf->agf_seqno), bno);
++			} else {
++				lastblock = be32_to_cpu(rp[i].rr_startblock) +
++					    be32_to_cpu(rp[i].rr_blockcount);
++			}
++		}
++		return;
++	}
++	if (be16_to_cpu(block->bb_numrecs) > mp->m_rlbt_mxr[1] ||
++	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_rlbt_mnr[1])) {
++		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in rlbt block "
++			 "%u/%u\n"),
++			be16_to_cpu(block->bb_numrecs), mp->m_rlbt_mnr[1],
++			mp->m_rlbt_mxr[1], seqno, bno);
++		serious_error++;
++		return;
++	}
++	pp = XFS_REFLINK_PTR_ADDR(block, 1, mp->m_rlbt_mxr[1]);
++	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
++		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_rl, TYP_RLBT);
++}
++
++static void
+ set_dbmap(
+ 	xfs_agnumber_t	agno,
+ 	xfs_agblock_t	agbno,
 
 _______________________________________________
 xfs mailing list
