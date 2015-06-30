@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 172347F81
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 22:25:58 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 657097F84
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 22:26:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8797CAC006
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 20:25:57 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id qbU4TszNVoEvxVR4 (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 522FB304043
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 20:25:59 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 2s44gmTcWeSIjugy (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 29 Jun 2015 20:25:55 -0700 (PDT)
-Subject: [PATCH 02/15] xfs_db: enable blockget for v5 filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jun 2015 20:25:51 -0700
-Message-ID: <20150630032551.572.83770.stgit@birch.djwong.org>
+Subject: [PATCH 01/15] xfs_io: support reflinking and deduping file ranges
+From: "Darrick J. Wong" <djwong@alder.djwong.org>
+Date: Mon, 29 Jun 2015 20:25:45 -0700
+Message-ID: <20150630032545.572.17097.stgit@birch.djwong.org>
 In-Reply-To: <20150630032538.572.20293.stgit@birch.djwong.org>
 References: <20150630032538.572.20293.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,465 +31,567 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Plumb in the necessary magic number checks and other fixups required
-to handle v5 filesystems.
+Wire up xfs_io to use the XFS range clone and dedupe ioctls to make
+files share data blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/check.c |  237 +++++++++++++++++++++++++++++++++++++++++++++++++++++-------
- db/type.c  |    3 +
- db/type.h  |    2 -
- 3 files changed, 215 insertions(+), 27 deletions(-)
+ io/Makefile       |    2 -
+ io/dedupe.c       |  190 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ io/init.c         |    2 +
+ io/io.h           |    3 +
+ io/reflink.c      |  180 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_fs.h   |   36 ++++++++++
+ man/man8/xfs_io.8 |   67 +++++++++++++++++++
+ 7 files changed, 479 insertions(+), 1 deletion(-)
+ create mode 100644 io/dedupe.c
+ create mode 100644 io/reflink.c
 
 
-diff --git a/db/check.c b/db/check.c
-index 1822905..288b2ab 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -44,7 +44,7 @@ typedef enum {
- 	DBM_FREE1,	DBM_FREE2,	DBM_FREELIST,	DBM_INODE,
- 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
- 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
--	DBM_SYMLINK,
-+	DBM_SYMLINK,	DBM_BTFINO,
- 	DBM_NDBM
- } dbm_t;
+diff --git a/io/Makefile b/io/Makefile
+index a08a782..6c4810e 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -11,7 +11,7 @@ HFILES = init.h io.h
+ CFILES = init.c \
+ 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+-	sync.c truncate.c
++	sync.c truncate.c reflink.c dedupe.c
  
-@@ -170,6 +170,7 @@ static const char	*typename[] = {
- 	"rtsum",
- 	"sb",
- 	"symlink",
-+	"btfino",
- 	NULL
- };
- static int		verbose;
-@@ -345,6 +346,9 @@ static void		scanfunc_cnt(struct xfs_btree_block *block, int level,
- static void		scanfunc_ino(struct xfs_btree_block *block, int level,
- 				     xfs_agf_t *agf, xfs_agblock_t bno,
- 				     int isroot);
-+static void		scanfunc_fino(struct xfs_btree_block *block, int level,
-+				     xfs_agf_t *agf, xfs_agblock_t bno,
-+				     int isroot);
- static void		set_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
- 				  xfs_extlen_t len, dbm_t type,
- 				  xfs_agnumber_t c_agno, xfs_agblock_t c_agbno);
-@@ -789,19 +793,6 @@ blockget_f(
- 		return 0;
- 	}
- 
--	/*
--	 * XXX: check does not support CRC enabled filesystems. Return
--	 * immediately, silently, with success but  without doing anything here
--	 * initially so that xfstests can run without modification on metadata
--	 * enabled filesystems.
--	 *
--	 * XXX: ultimately we need to dump an error message here that xfstests
--	 * filters out, or we need to actually do the work to make check support
--	 * crc enabled filesystems.
--	 */
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		return 0;
--
- 	if (!init(argc, argv)) {
- 		if (serious_error)
- 			exitcode = 3;
-@@ -2216,7 +2207,9 @@ process_data_dir_v2(
- 	data = iocur_top->data;
- 	block = iocur_top->data;
- 	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
--			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC) {
-+			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC &&
-+			be32_to_cpu(block->magic) != XFS_DIR3_BLOCK_MAGIC &&
-+			be32_to_cpu(data->magic) != XFS_DIR3_DATA_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad directory data magic # %#x for dir ino "
- 				 "%lld block %d\n"),
-@@ -2227,7 +2220,8 @@ process_data_dir_v2(
- 	db = xfs_dir2_da_to_db(mp->m_dir_geo, dabno);
- 	bf = M_DIROPS(mp)->data_bestfree_p(data);
- 	ptr = (char *)M_DIROPS(mp)->data_unused_p(data);
--	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	    be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC) {
- 		btp = xfs_dir2_block_tail_p(mp->m_dir_geo, block);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endptr = (char *)lep;
-@@ -2373,7 +2367,8 @@ process_data_dir_v2(
- 			(*dot)++;
- 		}
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	    be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) {
- 		endptr = (char *)data + mp->m_dir_geo->blksize;
- 		for (i = stale = 0; lep && i < be32_to_cpu(btp->count); i++) {
- 			if ((char *)&lep[i] >= endptr) {
-@@ -2405,7 +2400,8 @@ process_data_dir_v2(
- 				id->ino, dabno);
- 		error++;
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC &&
-+	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	     be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) &&
- 	    count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad block tail count %d "
-@@ -2414,7 +2410,8 @@ process_data_dir_v2(
- 				be32_to_cpu(btp->stale));
- 		error++;
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC && 
-+	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	     be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) &&
- 					stale != be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad stale tail count %d\n"),
-@@ -3000,6 +2997,73 @@ process_leaf_node_dir_v2(
- }
- 
- static void
-+process_leaf_node_dir_v3_free(
-+	inodata_t		*id,
-+	int			v,
-+	xfs_dablk_t		dabno,
-+	freetab_t		*freetab)
-+{
-+	xfs_dir2_data_off_t	ent;
-+	struct xfs_dir3_free	*free;
-+	int			i;
-+	int			maxent;
-+	int			used;
-+
-+	free = iocur_top->data;
-+	maxent = M_DIROPS(mp)->free_max_bests(mp->m_dir_geo);
-+	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp->m_dir_geo, 
-+					dabno - mp->m_dir_geo->freeblk) * maxent) {
-+		if (!sflag || v)
-+			dbprintf(_("bad free block firstdb %d for dir ino %lld "
-+				 "block %d\n"),
-+				be32_to_cpu(free->hdr.firstdb), id->ino, dabno);
-+		error++;
-+		return;
-+	}
-+	if (be32_to_cpu(free->hdr.nvalid) > maxent || 
-+				be32_to_cpu(free->hdr.nvalid) < 0 ||
-+				be32_to_cpu(free->hdr.nused) > maxent || 
-+				be32_to_cpu(free->hdr.nused) < 0 ||
-+				be32_to_cpu(free->hdr.nused) > 
-+					be32_to_cpu(free->hdr.nvalid)) {
-+		if (!sflag || v)
-+			dbprintf(_("bad free block nvalid/nused %d/%d for dir "
-+				 "ino %lld block %d\n"),
-+				be32_to_cpu(free->hdr.nvalid), 
-+				be32_to_cpu(free->hdr.nused), id->ino, dabno);
-+		error++;
-+		return;
-+	}
-+	for (used = i = 0; i < be32_to_cpu(free->hdr.nvalid); i++) {
-+		if (freetab->nents <= be32_to_cpu(free->hdr.firstdb) + i)
-+			ent = NULLDATAOFF;
-+		else
-+			ent = freetab->ents[be32_to_cpu(free->hdr.firstdb) + i];
-+		if (ent != be16_to_cpu(free->bests[i])) {
-+			if (!sflag || v)
-+				dbprintf(_("bad free block ent %d is %d should "
-+					 "be %d for dir ino %lld block %d\n"),
-+					i, be16_to_cpu(free->bests[i]), ent, 
-+					id->ino, dabno);
-+			error++;
-+		}
-+		if (be16_to_cpu(free->bests[i]) != NULLDATAOFF)
-+			used++;
-+		if (ent != NULLDATAOFF)
-+			freetab->ents[be32_to_cpu(free->hdr.firstdb) + i] = 
-+								NULLDATAOFF;
-+	}
-+	if (used != be32_to_cpu(free->hdr.nused)) {
-+		if (!sflag || v)
-+			dbprintf(_("bad free block nused %d should be %d for dir "
-+				 "ino %lld block %d\n"),
-+				be32_to_cpu(free->hdr.nused), used, id->ino, 
-+				dabno);
-+		error++;
-+	}
-+}
-+
-+static void
- process_leaf_node_dir_v2_free(
- 	inodata_t		*id,
- 	int			v,
-@@ -3013,7 +3077,8 @@ process_leaf_node_dir_v2_free(
- 	int			used;
- 
- 	free = iocur_top->data;
--	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC) {
-+	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC &&
-+	    be32_to_cpu(free->hdr.magic) != XFS_DIR3_FREE_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad free block magic # %#x for dir ino %lld "
- 				 "block %d\n"),
-@@ -3021,6 +3086,10 @@ process_leaf_node_dir_v2_free(
- 		error++;
- 		return;
- 	}
-+	if (be32_to_cpu(free->hdr.magic) == XFS_DIR3_FREE_MAGIC) {
-+		process_leaf_node_dir_v3_free(id, v, dabno, freetab);
-+		return;
-+	}
- 	maxent = M_DIROPS(mp)->free_max_bests(mp->m_dir_geo);
- 	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp->m_dir_geo, 
- 					dabno - mp->m_dir_geo->freeblk) * maxent) {
-@@ -3074,6 +3143,21 @@ process_leaf_node_dir_v2_free(
- 	}
- }
- 
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+diff --git a/io/dedupe.c b/io/dedupe.c
+new file mode 100644
+index 0000000..8e69545
+--- /dev/null
++++ b/io/dedupe.c
+@@ -0,0 +1,190 @@
 +/*
-+ * Get address of the bestcount field in the single-leaf block.
++ * Copyright (c) 2015 Oracle, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+static inline int
-+xfs_dir3_leaf_ents_count(struct xfs_dir2_leaf *lp)
-+{
-+	if (lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
-+	    lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
-+		struct xfs_dir3_leaf *lp3 = (struct xfs_dir3_leaf *)lp;
 +
-+		return be16_to_cpu(lp3->hdr.count);
-+	}
-+	return be16_to_cpu(lp->hdr.count);
-+}
++#include <sys/uio.h>
++#include <xfs/xfs.h>
++#include <xfs/command.h>
++#include <xfs/input.h>
++#include "init.h"
++#include "io.h"
 +
- static void
- process_leaf_node_dir_v2_int(
- 	inodata_t		*id,
-@@ -3084,6 +3168,7 @@ process_leaf_node_dir_v2_int(
- 	int			i;
- 	__be16			*lbp;
- 	xfs_dir2_leaf_t		*leaf;
-+	struct xfs_dir3_leaf	*leaf3 = NULL;
- 	xfs_dir2_leaf_entry_t	*lep;
- 	xfs_dir2_leaf_tail_t	*ltp;
- 	xfs_da_intnode_t	*node;
-@@ -3092,7 +3177,15 @@ process_leaf_node_dir_v2_int(
- 
- 	leaf = iocur_top->data;
- 	switch (be16_to_cpu(leaf->hdr.info.magic)) {
-+	case XFS_DIR3_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
-+		leaf3 = iocur_top->data;
-+		break;
-+	}
-+	switch (be16_to_cpu(leaf->hdr.info.magic)) {
- 	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
- 		if (be32_to_cpu(leaf->hdr.info.forw) || 
- 					be32_to_cpu(leaf->hdr.info.back)) {
- 			if (!sflag || v)
-@@ -3132,10 +3225,12 @@ process_leaf_node_dir_v2_int(
- 		}
- 		break;
- 	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
- 		/* if it's at the root location then we can check the
- 		 * pointers are null XXX */
- 		break;
- 	case XFS_DA_NODE_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
- 		node = iocur_top->data;
- 		M_DIROPS(mp)->node_hdr_from_disk(&nodehdr, node);
- 		if (nodehdr.level < 1 || nodehdr.level > XFS_DA_NODE_MAXDEPTH) {
-@@ -3157,7 +3252,7 @@ process_leaf_node_dir_v2_int(
- 		return;
- 	}
- 	lep = M_DIROPS(mp)->leaf_ents_p(leaf);
--	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
-+	for (i = stale = 0; i < xfs_dir3_leaf_ents_count(leaf); i++) {
- 		if (be32_to_cpu(lep[i].address) == XFS_DIR2_NULL_DATAPTR)
- 			stale++;
- 		else if (dir_hash_see(be32_to_cpu(lep[i].hashval), 
-@@ -3170,7 +3265,14 @@ process_leaf_node_dir_v2_int(
- 			error++;
- 		}
- 	}
--	if (stale != be16_to_cpu(leaf->hdr.stale)) {
-+	if (leaf3 && stale != be16_to_cpu(leaf3->hdr.stale)) {
-+		if (!sflag || v)
-+			dbprintf(_("dir3 %lld block %d stale mismatch "
-+				 "%d/%d\n"),
-+				 id->ino, dabno, stale,
-+				 be16_to_cpu(leaf3->hdr.stale));
-+		error++;
-+	} else if (!leaf && stale != be16_to_cpu(leaf->hdr.stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d stale mismatch "
- 				 "%d/%d\n"),
-@@ -3757,6 +3859,12 @@ scan_ag(
- 		be32_to_cpu(agi->agi_root),
- 		be32_to_cpu(agi->agi_level),
- 		1, scanfunc_ino, TYP_INOBT);
-+	if (agi->agi_free_root) {
-+		scan_sbtree(agf,
-+			be32_to_cpu(agi->agi_free_root),
-+			be32_to_cpu(agi->agi_free_level),
-+			1, scanfunc_fino, TYP_FINOBT);
-+	}
- 	if (be32_to_cpu(agf->agf_freeblks) != agffreeblks) {
- 		if (!sflag)
- 			dbprintf(_("agf_freeblks %u, counted %u in ag %u\n"),
-@@ -3956,7 +4064,8 @@ scanfunc_bmap(
- 
- 	agno = XFS_FSB_TO_AGNO(mp, bno);
- 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
--	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_BMAP_CRC_MAGIC) {
- 		if (!sflag || id->ilist || CHECK_BLIST(bno))
- 			dbprintf(_("bad magic # %#x in inode %lld bmbt block "
- 				 "%u/%u\n"),
-@@ -4021,7 +4130,8 @@ scanfunc_bno(
- 	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
- 	xfs_agblock_t		lastblock;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_ABTB_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in btbno block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4094,7 +4204,8 @@ scanfunc_cnt(
- 	xfs_alloc_rec_t		*rp;
- 	xfs_extlen_t		lastcount;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_ABTC_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in btcnt block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4174,7 +4285,8 @@ scanfunc_ino(
- 	xfs_inobt_ptr_t		*pp;
- 	xfs_inobt_rec_t		*rp;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in inobt block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4270,6 +4382,79 @@ scanfunc_ino(
- }
- 
- static void
-+scanfunc_fino(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	xfs_agf_t		*agf,
-+	xfs_agblock_t		bno,
-+	int			isroot)
-+{
-+	xfs_agino_t		agino;
-+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-+	int			i;
-+	int			off;
-+	xfs_inobt_ptr_t		*pp;
-+	xfs_inobt_rec_t		*rp;
-+
-+	if (be32_to_cpu(block->bb_magic) != XFS_FIBT_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_FIBT_CRC_MAGIC) {
-+		dbprintf(_("bad magic # %#x in finobt block %u/%u\n"),
-+			be32_to_cpu(block->bb_magic), seqno, bno);
-+		serious_error++;
-+		return;
-+	}
-+	if (be16_to_cpu(block->bb_level) != level) {
-+		if (!sflag)
-+			dbprintf(_("expected level %d got %d in finobt block "
-+				 "%u/%u\n"),
-+				level, be16_to_cpu(block->bb_level), seqno, bno);
-+		error++;
-+	}
-+	set_dbmap(seqno, bno, 1, DBM_BTFINO, seqno, bno);
-+	if (level == 0) {
-+		if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[0] ||
-+		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_inobt_mnr[0])) {
-+			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
-+				 "finobt block %u/%u\n"),
-+				be16_to_cpu(block->bb_numrecs), mp->m_inobt_mnr[0],
-+				mp->m_inobt_mxr[0], seqno, bno);
-+			serious_error++;
-+			return;
-+		}
-+		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
-+		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
-+			agino = be32_to_cpu(rp[i].ir_startino);
-+			off = XFS_INO_TO_OFFSET(mp, agino);
-+			if (off == 0) {
-+				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
-+				    mp->m_sb.sb_inoalignmt &&
-+				    (XFS_INO_TO_AGBNO(mp, agino) %
-+				     mp->m_sb.sb_inoalignmt))
-+					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
-+				check_set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
-+					(xfs_extlen_t)MAX(1,
-+						XFS_INODES_PER_CHUNK >>
-+						mp->m_sb.sb_inopblog),
-+					DBM_INODE, DBM_INODE, seqno, bno);
-+			}
-+		}
-+		return;
-+	}
-+	if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[1] ||
-+	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_inobt_mnr[1])) {
-+		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in finobt block "
-+			 "%u/%u\n"),
-+			be16_to_cpu(block->bb_numrecs), mp->m_inobt_mnr[1],
-+			mp->m_inobt_mxr[1], seqno, bno);
-+		serious_error++;
-+		return;
-+	}
-+	pp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
-+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
-+		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_ino, TYP_FINOBT);
-+}
++static cmdinfo_t dedupe_cmd;
 +
 +static void
- set_dbmap(
- 	xfs_agnumber_t	agno,
- 	xfs_agblock_t	agbno,
-diff --git a/db/type.c b/db/type.c
-index 9db1ba3..99a83e2 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -71,6 +71,7 @@ static const typ_t	__typtab[] = {
- 	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL },
- 	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL },
- 	{ TYP_TEXT, "text", handle_text, NULL, NULL },
-+	{ TYP_FINOBT, "finobt", handle_struct, inobt_hfld, NULL },
- 	{ TYP_NONE, NULL }
- };
++dedupe_help(void)
++{
++	printf(_(
++"\n"
++" Links a range of bytes (in block size increments) from a file into a range \n"
++" of bytes in the open file.  The contents of both file ranges must match.\n"
++"\n"
++" Example:\n"
++" 'dedupe some_file 0 4096 32768' - links 32768 bytes from some_file at \n"
++"                                    offset 0 to into the open file at \n"
++"                                    position 4096\n"
++"\n"
++" Reflink a range of blocks from a given input file to the open file.  Both\n"
++" files share the same range of physical disk blocks; a write to the shared\n"
++" range of either file should result in the write landing in a new block and\n"
++" that range of the file being remapped (i.e. copy-on-write).  Both files\n"
++" must reside on the same filesystem, and the contents of both ranges must\n"
++" match.\n"
++" -w   -- call fdatasync(2) at the end (included in timing results)\n"
++" -W   -- call fsync(2) at the end (included in timing results)\n"
++"\n"));
++}
++
++static int
++dedupe_f(
++	int		argc,
++	char		**argv)
++{
++	off64_t		soffset, doffset;
++	long long	count, total;
++	char		s1[64], s2[64], ts[64];
++	char		*infile;
++	int		Cflag, qflag, wflag, Wflag;
++	struct xfs_ioctl_file_extent_same_args	*args = NULL;
++	struct xfs_ioctl_file_extent_same_info	*info;
++	size_t		fsblocksize, fssectsize;
++	struct timeval	t1, t2;
++	int		c, fd = -1;
++
++	Cflag = qflag = wflag = Wflag = 0;
++	init_cvtnum(&fsblocksize, &fssectsize);
++
++	while ((c = getopt(argc, argv, "CqwW")) != EOF) {
++		switch (c) {
++		case 'C':
++			Cflag = 1;
++			break;
++		case 'q':
++			qflag = 1;
++			break;
++		case 'w':
++			wflag = 1;
++			break;
++		case 'W':
++			Wflag = 1;
++			break;
++		default:
++			return command_usage(&dedupe_cmd);
++		}
++	}
++	if (optind != argc - 4)
++		return command_usage(&dedupe_cmd);
++	infile = argv[optind];
++	optind++;
++	soffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	if (soffset < 0) {
++		printf(_("non-numeric src offset argument -- %s\n"), argv[optind]);
++		return 0;
++	}
++	optind++;
++	doffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	if (doffset < 0) {
++		printf(_("non-numeric dest offset argument -- %s\n"), argv[optind]);
++		return 0;
++	}
++	optind++;
++	count = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	if (count < 1) {
++		printf(_("non-positive length argument -- %s\n"), argv[optind]);
++		return 0;
++	}
++
++	c = IO_READONLY;
++	fd = openfile(infile, NULL, c, 0);
++	if (fd < 0)
++		return 0;
++
++	gettimeofday(&t1, NULL);
++	args = calloc(1, sizeof(struct xfs_ioctl_file_extent_same_args) +
++			 sizeof(struct xfs_ioctl_file_extent_same_info));
++	if (!args)
++		goto done;
++	info = (struct xfs_ioctl_file_extent_same_info *)(args + 1);
++	args->logical_offset = soffset;
++	args->length = count;
++	args->dest_count = 1;
++	info->fd = file->fd;
++	info->logical_offset = doffset;
++	do {
++		c = ioctl(fd, XFS_IOC_FILE_EXTENT_SAME, args);
++		if (c)
++			break;
++		args->logical_offset += info->bytes_deduped;
++		info->logical_offset += info->bytes_deduped;
++		args->length -= info->bytes_deduped;
++	} while (c == 0 && info->status == 0 && info->bytes_deduped > 0);
++	if (c)
++		perror(_("dedupe ioctl"));
++	if (info->status < 0)
++		printf("dedupe: %s\n", _(strerror(-info->status)));
++	if (info->status == XFS_SAME_DATA_DIFFERS)
++		printf(_("Extents did not match.\n"));
++	if (c != 0 || info->status != 0)
++		goto done;
++	total = info->bytes_deduped;
++	c = 1;
++	if (Wflag)
++		fsync(file->fd);
++	if (wflag)
++		fdatasync(file->fd);
++	if (qflag)
++		goto done;
++	gettimeofday(&t2, NULL);
++	t2 = tsub(t2, t1);
++
++	/* Finally, report back -- -C gives a parsable format */
++	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
++	if (!Cflag) {
++		cvtstr((double)total, s1, sizeof(s1));
++		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
++		printf(_("linked %lld/%lld bytes at offset %lld\n"),
++			total, count, (long long)doffset);
++		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
++			s1, c, ts, s2, tdiv((double)c, t2));
++	} else {/* bytes,ops,time,bytes/sec,ops/sec */
++		printf("%lld,%d,%s,%.3f,%.3f\n",
++			total, c, ts,
++			tdiv((double)total, t2), tdiv((double)c, t2));
++	}
++done:
++	free(args);
++	close(fd);
++	return 0;
++}
++
++void
++dedupe_init(void)
++{
++	dedupe_cmd.name = "dedupe";
++	dedupe_cmd.altname = "dd";
++	dedupe_cmd.cfunc = dedupe_f;
++	dedupe_cmd.argmin = 4;
++	dedupe_cmd.argmax = -1;
++	dedupe_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	dedupe_cmd.args =
++_("infile src_off dst_off len");
++	dedupe_cmd.oneline =
++		_("dedupes a number of bytes at a specified offset");
++	dedupe_cmd.help = dedupe_help;
++
++	add_command(&dedupe_cmd);
++}
+diff --git a/io/init.c b/io/init.c
+index 1b07518..b6e0bc5 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -83,6 +83,8 @@ init_commands(void)
+ 	sync_init();
+ 	sync_range_init();
+ 	truncate_init();
++	reflink_init();
++	dedupe_init();
+ }
  
-@@ -107,6 +108,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
- 		&xfs_symlink_buf_ops },
- 	{ TYP_TEXT, "text", handle_text, NULL, NULL },
-+	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
-+		&xfs_inobt_buf_ops },
- 	{ TYP_NONE, NULL }
- };
+ static int
+diff --git a/io/io.h b/io/io.h
+index db8b513..3bb7abf 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -159,3 +159,6 @@ extern void		readdir_init(void);
+ #else
+ #define readdir_init()		do { } while (0)
+ #endif
++
++extern void		reflink_init(void);
++extern void		dedupe_init(void);
+diff --git a/io/reflink.c b/io/reflink.c
+new file mode 100644
+index 0000000..cd1e310
+--- /dev/null
++++ b/io/reflink.c
+@@ -0,0 +1,180 @@
++/*
++ * Copyright (c) 2015 Oracle, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <sys/uio.h>
++#include <xfs/xfs.h>
++#include <xfs/command.h>
++#include <xfs/input.h>
++#include "init.h"
++#include "io.h"
++
++static cmdinfo_t reflink_cmd;
++
++static void
++reflink_help(void)
++{
++	printf(_(
++"\n"
++" Links a range of bytes (in block size increments) from a file into a range \n"
++" of bytes in the open file.  The two extent ranges need not contain identical\n"
++" data. \n"
++"\n"
++" Example:\n"
++" 'reflink some_file 0 4096 32768' - links 32768 bytes from some_file at \n"
++"                                    offset 0 to into the open file at \n"
++"                                    position 4096\n"
++" 'reflink some_file' - links all bytes from some_file into the open file\n"
++"                       at position 0\n"
++"\n"
++" Reflink a range of blocks from a given input file to the open file.  Both\n"
++" files share the same range of physical disk blocks; a write to the shared\n"
++" range of either file should result in the write landing in a new block and\n"
++" that range of the file being remapped (i.e. copy-on-write).  Both files\n"
++" must reside on the same filesystem.\n"
++" -w   -- call fdatasync(2) at the end (included in timing results)\n"
++" -W   -- call fsync(2) at the end (included in timing results)\n"
++"\n"));
++}
++
++static int
++reflink_f(
++	int		argc,
++	char		**argv)
++{
++	off64_t		soffset, doffset;
++	long long	count = 0, total;
++	char		s1[64], s2[64], ts[64];
++	char		*infile = NULL;
++	int		Cflag, qflag, wflag, Wflag;
++	struct xfs_ioctl_clone_range_args	args;
++	size_t		fsblocksize, fssectsize;
++	struct timeval	t1, t2;
++	int		c, fd = -1;
++
++	Cflag = qflag = wflag = Wflag = 0;
++	init_cvtnum(&fsblocksize, &fssectsize);
++
++	while ((c = getopt(argc, argv, "CqwW")) != EOF) {
++		switch (c) {
++		case 'C':
++			Cflag = 1;
++			break;
++		case 'q':
++			qflag = 1;
++			break;
++		case 'w':
++			wflag = 1;
++			break;
++		case 'W':
++			Wflag = 1;
++			break;
++		default:
++			return command_usage(&reflink_cmd);
++		}
++	}
++	if (optind != argc - 4 && optind != argc - 1)
++		return command_usage(&reflink_cmd);
++	infile = argv[optind];
++	optind++;
++	if (optind == argc)
++		goto clone_all;
++	soffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	if (soffset < 0) {
++		printf(_("non-numeric src offset argument -- %s\n"), argv[optind]);
++		return 0;
++	}
++	optind++;
++	doffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	if (doffset < 0) {
++		printf(_("non-numeric dest offset argument -- %s\n"), argv[optind]);
++		return 0;
++	}
++	optind++;
++	count = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	if (count < 1) {
++		printf(_("non-positive length argument -- %s\n"), argv[optind]);
++		return 0;
++	}
++
++clone_all:
++	c = IO_READONLY;
++	fd = openfile(infile, NULL, c, 0);
++	if (fd < 0)
++		return 0;
++
++	gettimeofday(&t1, NULL);
++	if (count) {
++		args.src_fd = fd;
++		args.src_offset = soffset;
++		args.src_length = count;
++		args.dest_offset = doffset;
++		c = ioctl(file->fd, XFS_IOC_CLONE_RANGE, &args);
++	} else {
++		c = ioctl(file->fd, XFS_IOC_CLONE, fd);
++	}
++	if (c < 0) {
++		perror(_("reflink"));
++		goto done;
++	}
++	total = count;
++	c = 1;
++	if (Wflag)
++		fsync(file->fd);
++	if (wflag)
++		fdatasync(file->fd);
++	if (qflag)
++		goto done;
++	gettimeofday(&t2, NULL);
++	t2 = tsub(t2, t1);
++
++	/* Finally, report back -- -C gives a parsable format */
++	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
++	if (!Cflag) {
++		cvtstr((double)total, s1, sizeof(s1));
++		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
++		printf(_("linked %lld/%lld bytes at offset %lld\n"),
++			total, count, (long long)doffset);
++		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
++			s1, c, ts, s2, tdiv((double)c, t2));
++	} else {/* bytes,ops,time,bytes/sec,ops/sec */
++		printf("%lld,%d,%s,%.3f,%.3f\n",
++			total, c, ts,
++			tdiv((double)total, t2), tdiv((double)c, t2));
++	}
++done:
++	close(fd);
++	return 0;
++}
++
++void
++reflink_init(void)
++{
++	reflink_cmd.name = "reflink";
++	reflink_cmd.altname = "rl";
++	reflink_cmd.cfunc = reflink_f;
++	reflink_cmd.argmin = 4;
++	reflink_cmd.argmax = -1;
++	reflink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	reflink_cmd.args =
++_("infile src_off dst_off len");
++	reflink_cmd.oneline =
++		_("reflinks a number of bytes at a specified offset");
++	reflink_cmd.help = reflink_help;
++
++	add_command(&reflink_cmd);
++}
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 89689c6..0c922ad 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -559,6 +559,42 @@ typedef struct xfs_swapext
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
-diff --git a/db/type.h b/db/type.h
-index 9e3635e..1bef8e6 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -27,7 +27,7 @@ typedef enum typnm
- 	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_RMAPBT, TYP_DATA,
- 	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
- 	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
--	TYP_TEXT, TYP_NONE
-+	TYP_TEXT, TYP_FINOBT, TYP_NONE
- } typnm_t;
++/* reflink ioctls; these MUST match the btrfs ioctl definitions */
++struct xfs_ioctl_clone_range_args {
++	__s64 src_fd;
++	__u64 src_offset;
++	__u64 src_length;
++	__u64 dest_offset;
++};
++
++#define XFS_SAME_DATA_DIFFERS	1
++/* For extent-same ioctl */
++struct xfs_ioctl_file_extent_same_info {
++	__s64 fd;		/* in - destination file */
++	__u64 logical_offset;	/* in - start of extent in destination */
++	__u64 bytes_deduped;	/* out - total # of bytes we were able
++				 * to dedupe from this file */
++	/* status of this dedupe operation:
++	 * 0 if dedup succeeds
++	 * < 0 for error
++	 * == XFS_SAME_DATA_DIFFERS if data differs
++	 */
++	__s32 status;		/* out - see above description */
++	__u32 reserved;
++};
++
++struct xfs_ioctl_file_extent_same_args {
++	__u64 logical_offset;	/* in - start of extent in source */
++	__u64 length;		/* in - length of extent */
++	__u16 dest_count;	/* in - total elements in info array */
++	__u16 reserved1;
++	__u32 reserved2;
++	struct xfs_ioctl_file_extent_same_info info[0];
++};
++
++#define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
++#define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_ioctl_clone_range_args)
++#define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_ioctl_file_extent_same_args)
  
- #define DB_WRITE 1
+ #ifndef HAVE_BBMACROS
+ /*
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 416206f..305335c 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -490,6 +490,73 @@ Recursively display all the specified segments starting at the specified
+ .B \-s
+ Display the starting lseek(2) offset. This offset will be a calculated value when
+ both data and holes are displayed together or performing a recusively display.
++.RE
++.PD
++.TP
++.TP
++.BI "reflink  [ \-w ] [ \-W ] src_file [src_offset dst_offset length]"
++On filesystems that support the
++.B XFS_IOC_CLONE_RANGE
++or
++.B BTRFS_IOC_CLONE_RANGE
++ioctls, map
++.I length
++bytes at offset
++.I dst_offset
++in the open file to the same physical blocks that are mapped at offset
++.I src_offset
++in the file
++.I src_file
++, replacing any contents that may already have been there.  If a program
++writes into a reflinked block range of either file, the dirty blocks will be
++cloned, written to, and remapped ("copy on write") in the affected file,
++leaving the other file(s) unchanged.  If src_offset, dst_offset, and length
++are omitted, all contents of src_file will be reflinked into the open file.
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-w
++Call
++.BR fdatasync (2)
++after executing the ioctl.
++.TP
++.B \-W
++Call
++.BR fsync (2)
++after executing the command.
++.RE
++.PD
++.TP
++.TP
++.BI "dedupe  [ \-w ] [ \-W ] src_file src_offset dst_offset length"
++On filesystems that support the
++.B XFS_IOC_FILE_EXTENT_SAME
++or
++.B BTRFS_IOC_FILE_EXTENT_SAME
++ioctls, map
++.I length
++bytes at offset
++.I dst_offset
++in the open file to the same physical blocks that are mapped at offset
++.I src_offset
++in the file
++.I src_file
++, but only if the contents of both ranges are identical.  This is known as
++block-based deduplication.  If a program writes into a reflinked block range of
++either file, the dirty blocks will be cloned, written to, and remapped ("copy
++on write") in the affected file, leaving the other file(s) unchanged.
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-w
++Call
++.BR fdatasync (2)
++after executing the ioctl.
++.TP
++.B \-W
++Call
++.BR fsync (2)
++after executing the command.
+ .TP
+ 
+ .SH MEMORY MAPPED I/O COMMANDS
 
 _______________________________________________
 xfs mailing list
