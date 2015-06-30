@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F26D57F51
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 23:15:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D1FF58F8040
-	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 21:15:59 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id qyUWJrqI2aWj9oSD (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E54567F8A
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 23:16:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C43DA304039
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2015 21:16:05 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id zCHqiPFRAzyProbH (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jun 2015 21:15:56 -0700 (PDT)
-Subject: [PATCH 04/11] basic tests of the reflink and dedupe ioctls
+	Mon, 29 Jun 2015 21:16:03 -0700 (PDT)
+Subject: [PATCH 05/11] test CoW behaviors of reflinked files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jun 2015 21:15:47 -0700
-Message-ID: <20150630041547.2476.32693.stgit@birch.djwong.org>
+Date: Mon, 29 Jun 2015 21:15:55 -0700
+Message-ID: <20150630041555.2476.50997.stgit@birch.djwong.org>
 In-Reply-To: <20150630041519.2476.23059.stgit@birch.djwong.org>
 References: <20150630041519.2476.23059.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,120 +31,47 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Test the operation of the btrfs (and now xfs) reflink and dedupe
-ioctls at various file offsets and with matching and nonmatching
-files.
+Ensure that CoW happens correctly with buffered, directio, and mmap writes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/rc             |   44 +++++++++++++++++
- tests/generic/803     |   81 +++++++++++++++++++++++++++++++
- tests/generic/803.out |   11 ++++
- tests/generic/804     |   86 ++++++++++++++++++++++++++++++++
- tests/generic/804.out |   13 +++++
- tests/generic/805     |  113 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/805.out |   26 ++++++++++
- tests/generic/806     |   81 +++++++++++++++++++++++++++++++
- tests/generic/806.out |   11 ++++
- tests/generic/807     |   87 +++++++++++++++++++++++++++++++++
- tests/generic/807.out |   15 ++++++
- tests/generic/817     |   89 ++++++++++++++++++++++++++++++++++
- tests/generic/817.out |   10 ++++
- tests/generic/818     |   94 +++++++++++++++++++++++++++++++++++
- tests/generic/818.out |   12 +++++
- tests/generic/819     |  130 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/819.out |    7 +++
- tests/generic/820     |  118 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/820.out |    7 +++
- tests/generic/group   |    9 +++
- 20 files changed, 1044 insertions(+)
- create mode 100755 tests/generic/803
- create mode 100644 tests/generic/803.out
- create mode 100755 tests/generic/804
- create mode 100644 tests/generic/804.out
- create mode 100755 tests/generic/805
- create mode 100644 tests/generic/805.out
- create mode 100755 tests/generic/806
- create mode 100644 tests/generic/806.out
- create mode 100755 tests/generic/807
- create mode 100644 tests/generic/807.out
- create mode 100755 tests/generic/817
- create mode 100644 tests/generic/817.out
- create mode 100755 tests/generic/818
- create mode 100644 tests/generic/818.out
- create mode 100755 tests/generic/819
- create mode 100644 tests/generic/819.out
- create mode 100755 tests/generic/820
- create mode 100644 tests/generic/820.out
+ tests/generic/808     |  138 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/808.out |   16 ++++++
+ tests/generic/809     |  138 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/809.out |   16 ++++++
+ tests/generic/810     |  138 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/810.out |   16 ++++++
+ tests/generic/837     |   88 +++++++++++++++++++++++++++++++
+ tests/generic/837.out |    7 ++
+ tests/generic/838     |   88 +++++++++++++++++++++++++++++++
+ tests/generic/838.out |    7 ++
+ tests/generic/group   |    5 ++
+ 11 files changed, 657 insertions(+)
+ create mode 100755 tests/generic/808
+ create mode 100644 tests/generic/808.out
+ create mode 100755 tests/generic/809
+ create mode 100644 tests/generic/809.out
+ create mode 100755 tests/generic/810
+ create mode 100644 tests/generic/810.out
+ create mode 100755 tests/generic/837
+ create mode 100644 tests/generic/837.out
+ create mode 100755 tests/generic/838
+ create mode 100644 tests/generic/838.out
 
 
-diff --git a/common/rc b/common/rc
-index 8f20dc8..7521033 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2604,6 +2604,50 @@ _verify_reflink()
-                || echo "$1 and $2 are not reflinks: different extents"
- }
- 
-+# Check that a particular range is shared
-+# args: filename, start, end
-+_check_shared_extent()
-+{
-+	$XFS_IO_PROG -f -c 'fiemap -v' $1 | tr '[].:' '    ' | \
-+	awk "BEGIN {x = 0;} {start = \$2 * 512; end = (\$3 + 1) * 512; if (and(strtonum(\$7), 0x2000) && start < ($3 + $2) && end > $2) {x++;}} END {print x;}"
-+}
-+
-+# Retrieve the pblk(s) associated with a file's lblk range
-+# args: filename, start, len, cache_file
-+_extent_physical()
-+{
-+	if [ -z "$3" ]; then
-+		len="512"
-+	else
-+		len="$3"
-+	fi
-+	fiemap_cache_file="$4"
-+	rm_cache_file=0
-+	if [ -z "$fiemap_cache_file" ]; then
-+		fiemap_cache_file="/tmp/fiemap.$$"
-+		rm_cache_file=1
-+	fi
-+	if [ ! -e "$fiemap_cache_file" ]; then
-+		$XFS_IO_PROG -f -c 'fiemap -v' "$1" | tr '[].:' '    ' | tail -n +3 > "$fiemap_cache_file"
-+	fi
-+	cat "$fiemap_cache_file" | \
-+	awk "BEGIN {x = 0;} {start = \$2 * 512; end = (\$3 + 1) * 512; phys = \$4 * 512; if (start < ($len + $2) && end > $2) {if (\$4 == \"hole\") {printf(\"-1\n\");} else {printf(\"%d\n\", phys + $2 - start);}}}"
-+	if [ "$rm_cache_file" -eq 1 ]; then
-+		rm "$fiemap_cache_file"
-+	fi
-+}
-+
-+_numbers_equal()
-+{
-+	n="$1"
-+	shift
-+	i=1
-+	for num in "$@"; do
-+		test "$num" -eq "$n" || echo "num #$i does not match #0"
-+		i=$((i + 1))
-+	done
-+}
-+
- _require_atime()
- {
- 	if [ "$FSTYP" == "nfs" ]; then
-diff --git a/tests/generic/803 b/tests/generic/803
+diff --git a/tests/generic/808 b/tests/generic/808
 new file mode 100755
-index 0000000..47d89a7
+index 0000000..10a79b5
 --- /dev/null
-+++ b/tests/generic/803
-@@ -0,0 +1,81 @@
++++ b/tests/generic/808
+@@ -0,0 +1,138 @@
 +#! /bin/bash
-+# FS QA Test No. 803
++# FS QA Test No. 808
 +#
-+# Ensure that we can reflink parts of two files:
-+#   - Reflink identical parts of two identical files
-+#   - Check that we end up with identical contents
++# Ensuring that copy on write through the page cache works:
++#   - Reflink two files together
++#   - Write to the beginning, middle, and end
++#   - Check that the files are now different where we say they're different.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -187,7 +114,7 @@ index 0000000..47d89a7
 +_supported_os Linux
 +
 +_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "reflink"
++_require_cp_reflink
 +_require_test
 +
 +rm -f $seqres.full
@@ -197,539 +124,120 @@ index 0000000..47d89a7
 +mkdir $TESTDIR
 +
 +echo "Create the original files"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196605' $TESTDIR/file1 >> $seqres.full
++cp --reflink $TESTDIR/file1 $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196605' $TESTDIR/file3 >> $seqres.full
 +
 +md5sum $TESTDIR/file1 | _filter_test_dir
 +md5sum $TESTDIR/file2 | _filter_test_dir
++md5sum $TESTDIR/file3 | _filter_test_dir
 +
-+echo "Reflink the middle blocks together"
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 65536 65536 65536" $TESTDIR/file2 >> $seqres.full
++echo "CoW the second file"
++$XFS_IO_PROG -f -c "pwrite 0 17" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 0 17" $TESTDIR/file3 >> $seqres.full
 +
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
++$XFS_IO_PROG -f -c "pwrite 60000 17" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 60000 17" $TESTDIR/file3 >> $seqres.full
 +
-+echo "Check shared extents"
-+_check_shared_extent $TESTDIR/file1 65536 65536
-+_check_shared_extent $TESTDIR/file2 65536 65536
-+
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 65536 65536)" \
-+	"$(_extent_physical $TESTDIR/file2 65536 65536)"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/803.out b/tests/generic/803.out
-new file mode 100644
-index 0000000..894d180
---- /dev/null
-+++ b/tests/generic/803.out
-@@ -0,0 +1,11 @@
-+QA output created by 803
-+Create the original files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-803/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-803/file2
-+Reflink the middle blocks together
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-803/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-803/file2
-+Check shared extents
-+1
-+1
-+Check shared extent physical mapping matches
-diff --git a/tests/generic/804 b/tests/generic/804
-new file mode 100755
-index 0000000..56a32f9
---- /dev/null
-+++ b/tests/generic/804
-@@ -0,0 +1,86 @@
-+#! /bin/bash
-+# FS QA Test No. 804
-+#
-+# Ensuring that we can reflink non-matching parts of files:
-+#   - Reflink identical parts of two different files
-+#   - Check that we end up with identical contents in the reflink section
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $TESTDIR
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_require_test_reflink
-+_supported_os Linux
-+
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "reflink"
-+_require_test
-+
-+rm -f $seqres.full
-+
-+TESTDIR=$TEST_DIR/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+echo "Create the original files"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 196608' $TESTDIR/file2 >> $seqres.full
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+
-+echo "Reflink the middle blocks together"
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 65536 65536 65536" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 196600 17" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 196600 17" $TESTDIR/file3 >> $seqres.full
++sync
++echo 3 > /proc/sys/vm/drop_caches
 +
 +echo "Checksum both files"
 +md5sum $TESTDIR/file1 | _filter_test_dir
 +md5sum $TESTDIR/file2 | _filter_test_dir
-+
-+echo "Compare the reflinked sections"
-+diff -u <($XFS_IO_PROG -f -c 'pread -q -v 65536 65536' $TESTDIR/file1) \
-+        <($XFS_IO_PROG -f -c 'pread -q -v 65536 65536' $TESTDIR/file2)
-+
-+echo "Check shared extents"
-+_check_shared_extent $TESTDIR/file1 65536 65536
-+_check_shared_extent $TESTDIR/file2 65536 65536
-+
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 65536 65536)" \
-+	"$(_extent_physical $TESTDIR/file2 65536 65536)"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/804.out b/tests/generic/804.out
-new file mode 100644
-index 0000000..d60fe8e
---- /dev/null
-+++ b/tests/generic/804.out
-@@ -0,0 +1,13 @@
-+QA output created by 804
-+Create the original files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-804/file1
-+f419d4baba769b4f017ac91ee1acdcb1  TEST_DIR/test-804/file2
-+Reflink the middle blocks together
-+Checksum both files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-804/file1
-+86f2e64aa5e9daa4f21a0cdd54a3bd99  TEST_DIR/test-804/file2
-+Compare the reflinked sections
-+Check shared extents
-+1
-+1
-+Check shared extent physical mapping matches
-diff --git a/tests/generic/805 b/tests/generic/805
-new file mode 100755
-index 0000000..7658fb3
---- /dev/null
-+++ b/tests/generic/805
-@@ -0,0 +1,113 @@
-+#! /bin/bash
-+# FS QA Test No. 805
-+#
-+# Reflinking two sets of files together:
-+#   - Reflink identical parts of two identical files
-+#   - Reflink identical parts of two other identical files
-+#   - Reflink identical parts of all four files
-+#   - Check that we end up with identical contents
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $TESTDIR
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_require_test_reflink
-+_supported_os Linux
-+
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "reflink"
-+_require_test
-+
-+rm -f $seqres.full
-+
-+TESTDIR=$TEST_DIR/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+echo "Create the original files"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file3 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file4 >> $seqres.full
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
 +md5sum $TESTDIR/file3 | _filter_test_dir
-+md5sum $TESTDIR/file4 | _filter_test_dir
 +
-+echo "Reflink the first blocks together"
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 0 131072" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file3 0 0 131072" $TESTDIR/file4 >> $seqres.full
-+sync
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+md5sum $TESTDIR/file3 | _filter_test_dir
-+md5sum $TESTDIR/file4 | _filter_test_dir
-+
-+echo "Reflink the middle blocks together"
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 0 65536" $TESTDIR/file3 >> $seqres.full
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 0 65536" $TESTDIR/file4 >> $seqres.full
-+sync
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+md5sum $TESTDIR/file3 | _filter_test_dir
-+md5sum $TESTDIR/file4 | _filter_test_dir
-+
-+echo "Check shared extents"
-+_check_shared_extent $TESTDIR/file1 0 65536
-+_check_shared_extent $TESTDIR/file2 0 65536
-+_check_shared_extent $TESTDIR/file3 0 65536
-+_check_shared_extent $TESTDIR/file4 0 65536
-+_check_shared_extent $TESTDIR/file1 65536 65536
-+_check_shared_extent $TESTDIR/file2 65536 65536
-+_check_shared_extent $TESTDIR/file3 65536 65536
-+_check_shared_extent $TESTDIR/file4 65536 65536
-+
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 0 65536)" \
-+	"$(_extent_physical $TESTDIR/file2 0 65536)" \
-+	"$(_extent_physical $TESTDIR/file3 0 65536)" \
-+	"$(_extent_physical $TESTDIR/file4 0 65536)"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 65536 65536)" \
-+	"$(_extent_physical $TESTDIR/file2 65536 65536)"
-+_numbers_equal "$(_extent_physical $TESTDIR/file3 65536 65536)" \
-+	"$(_extent_physical $TESTDIR/file4 65536 65536)"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/805.out b/tests/generic/805.out
-new file mode 100644
-index 0000000..ac6176f
---- /dev/null
-+++ b/tests/generic/805.out
-@@ -0,0 +1,26 @@
-+QA output created by 805
-+Create the original files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file2
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file3
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file4
-+Reflink the first blocks together
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file2
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file3
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file4
-+Reflink the middle blocks together
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file2
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file3
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-805/file4
-+Check shared extents
-+1
-+1
-+1
-+1
-+1
-+1
-+1
-+1
-+Check shared extent physical mapping matches
-diff --git a/tests/generic/806 b/tests/generic/806
-new file mode 100755
-index 0000000..f11cceb
---- /dev/null
-+++ b/tests/generic/806
-@@ -0,0 +1,81 @@
-+#! /bin/bash
-+# FS QA Test No. 806
-+#
-+# Ensure that we can dedupe parts of two files:
-+#   - Dedupe identical parts of two identical files
-+#   - Check that we end up with identical contents
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $TESTDIR
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_require_test_reflink
-+_supported_os Linux
-+
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "dedupe"
-+_require_test
-+
-+rm -f $seqres.full
-+
-+TESTDIR=$TEST_DIR/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+echo "Create the original files"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file2 >> $seqres.full
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+
-+echo "Dedupe the middle blocks together"
-+$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 65536 65536 65536" $TESTDIR/file2 >> $seqres.full
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+
-+echo "Check shared extents"
-+_check_shared_extent $TESTDIR/file1 65536 65536
-+_check_shared_extent $TESTDIR/file2 65536 65536
-+
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 65536 65536)" \
-+	"$(_extent_physical $TESTDIR/file2 65536 65536)"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/806.out b/tests/generic/806.out
-new file mode 100644
-index 0000000..c71bec4
---- /dev/null
-+++ b/tests/generic/806.out
-@@ -0,0 +1,11 @@
-+QA output created by 806
-+Create the original files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-806/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-806/file2
-+Dedupe the middle blocks together
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-806/file1
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-806/file2
-+Check shared extents
-+1
-+1
-+Check shared extent physical mapping matches
-diff --git a/tests/generic/807 b/tests/generic/807
-new file mode 100755
-index 0000000..3f6e1d3
---- /dev/null
-+++ b/tests/generic/807
-@@ -0,0 +1,87 @@
-+#! /bin/bash
-+# FS QA Test No. 807
-+#
-+# Ensuring that we cannot dedupe non-matching parts of files:
-+#   - Fail to dedupe non-identical parts of two different files
-+#   - Check that nothing changes in either file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $TESTDIR
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_require_test_reflink
-+_supported_os Linux
-+
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "dedupe"
-+_require_test
-+
-+rm -f $seqres.full
-+
-+TESTDIR=$TEST_DIR/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+echo "Create the original files"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196608' $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 196608' $TESTDIR/file2 >> $seqres.full
-+
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+
-+echo "Dedupe the middle blocks together"
-+$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 65536 65536 65536" $TESTDIR/file2 >> $seqres.full
-+
-+echo "Checksum both files"
-+md5sum $TESTDIR/file1 | _filter_test_dir
-+md5sum $TESTDIR/file2 | _filter_test_dir
-+
-+echo "Compare the deduped sections"
-+cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 65536 65536' $TESTDIR/file1) \
-+       <($XFS_IO_PROG -f -c 'pread -q -v 65536 65536' $TESTDIR/file2) \
++echo "Compare the CoW'd section to the before file"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196600 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196600 17' $TESTDIR/file2) \
 +       || echo "Sections do not match (intentional)"
 +
-+echo "Check shared extents"
-+_check_shared_extent $TESTDIR/file1 65536 65536
-+_check_shared_extent $TESTDIR/file2 65536 65536
++echo "Compare the CoW'd section to the after file"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196600 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196600 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
 +
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 65536 65536)" \
-+	"$(_extent_physical $TESTDIR/file2 65536 65536)"
++echo "Compare the not CoW'd sections"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196500 100' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196500 100' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196500 100' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196500 100' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file3) \
++       || echo "Sections do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/807.out b/tests/generic/807.out
+diff --git a/tests/generic/808.out b/tests/generic/808.out
 new file mode 100644
-index 0000000..61727be
+index 0000000..b2ca56c
 --- /dev/null
-+++ b/tests/generic/807.out
-@@ -0,0 +1,15 @@
-+QA output created by 807
++++ b/tests/generic/808.out
+@@ -0,0 +1,16 @@
++QA output created by 808
 +Create the original files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-807/file1
-+f419d4baba769b4f017ac91ee1acdcb1  TEST_DIR/test-807/file2
-+Dedupe the middle blocks together
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-808/file1
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-808/file2
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-808/file3
++CoW the second file
 +Checksum both files
-+998b4ba52f2940dc515001e75926b19f  TEST_DIR/test-807/file1
-+f419d4baba769b4f017ac91ee1acdcb1  TEST_DIR/test-807/file2
-+Compare the deduped sections
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-808/file1
++90ca72fc3bacfe136ab1b1be1a4d2bd3  TEST_DIR/test-808/file2
++90ca72fc3bacfe136ab1b1be1a4d2bd3  TEST_DIR/test-808/file3
++Compare the CoW'd section to the before file
 +Sections do not match (intentional)
-+Check shared extents
-+0
-+0
-+Check shared extent physical mapping matches
-+num #1 does not match #0
-diff --git a/tests/generic/817 b/tests/generic/817
++Sections do not match (intentional)
++Sections do not match (intentional)
++Compare the CoW'd section to the after file
++Compare the not CoW'd sections
+diff --git a/tests/generic/809 b/tests/generic/809
 new file mode 100755
-index 0000000..64ed4bb
+index 0000000..9dce44d
 --- /dev/null
-+++ b/tests/generic/817
-@@ -0,0 +1,89 @@
++++ b/tests/generic/809
+@@ -0,0 +1,138 @@
 +#! /bin/bash
-+# FS QA Test No. 817
++# FS QA Test No. 809
 +#
-+# Ensure that we can reflink the last block of a file whose size isn't block-aligned.
-+#   - Create a file whose size isn't block-aligned
-+#   - Reflink the last block
-+#   - Check that we end up with identical contents
++# Ensuring that copy on write in direct-io mode works:
++#   - Reflink two files together
++#   - Write to the beginning, middle, and end in direct-io mode
++#   - Check that the files are now different where we say they're different.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -772,7 +280,7 @@ index 0000000..64ed4bb
 +_supported_os Linux
 +
 +_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "reflink"
++_require_cp_reflink
 +_require_test
 +
 +rm -f $seqres.full
@@ -782,69 +290,120 @@ index 0000000..64ed4bb
 +mkdir $TESTDIR
 +
 +echo "Create the original files"
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((BLKSZ + 37))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((BLKSZ + 37))" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((BLKSZ + 37))" $TESTDIR/file3 >> $seqres.full
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196605' $TESTDIR/file1 >> $seqres.full
++cp --reflink $TESTDIR/file1 $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196605' $TESTDIR/file3 >> $seqres.full
 +
 +md5sum $TESTDIR/file1 | _filter_test_dir
 +md5sum $TESTDIR/file2 | _filter_test_dir
 +md5sum $TESTDIR/file3 | _filter_test_dir
 +
-+echo "Reflink the last blocks together"
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 0 $BLKSZ" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 0 $BLKSZ" $TESTDIR/file3 >> $seqres.full
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $BLKSZ $BLKSZ 37" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $BLKSZ $BLKSZ 37" $TESTDIR/file3 >> $seqres.full
++echo "directio CoW the second file"
++$XFS_IO_PROG -f -c "pwrite 0 4096" -d $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 0 4096" -d $TESTDIR/file3 >> $seqres.full
++
++$XFS_IO_PROG -f -c "pwrite 65024 512" -d $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 65024 512" -d $TESTDIR/file3 >> $seqres.full
++
++$XFS_IO_PROG -f -c "pwrite 196096 4096" -d $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite 196096 4096" -d $TESTDIR/file3 >> $seqres.full
 +sync
 +echo 3 > /proc/sys/vm/drop_caches
 +
++echo "Checksum both files"
 +md5sum $TESTDIR/file1 | _filter_test_dir
 +md5sum $TESTDIR/file2 | _filter_test_dir
 +md5sum $TESTDIR/file3 | _filter_test_dir
 +
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 $BLKSZ)" \
-+	"$(_extent_physical $TESTDIR/file2 $BLKSZ)"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 $BLKSZ)" \
-+	"$(_extent_physical $TESTDIR/file3 $BLKSZ)"
++echo "Compare the CoW'd section to the before file"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 0 4096' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 0 4096' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 65024 512' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 65024 512' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196096 4096' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196096 4096' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++
++echo "Compare the CoW'd section to the after file"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 0 4096' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 0 4096' $TESTDIR/file3) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 65024 512' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 65024 512' $TESTDIR/file3) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196096 4096' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196096 4096' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++echo "Compare the not CoW'd sections"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 4096 512' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 4096 512' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 4096 512' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 4096 512' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 64512 512' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 64512 512' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 64512 512' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 64512 512' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 195584 512' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 195584 512' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 195584 512' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 195584 512' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 65536 512' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 65536 512' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 65536 512' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 65536 512' $TESTDIR/file3) \
++       || echo "Sections do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/817.out b/tests/generic/817.out
+diff --git a/tests/generic/809.out b/tests/generic/809.out
 new file mode 100644
-index 0000000..97ca8e2
+index 0000000..d23f30c
 --- /dev/null
-+++ b/tests/generic/817.out
-@@ -0,0 +1,10 @@
-+QA output created by 817
++++ b/tests/generic/809.out
+@@ -0,0 +1,16 @@
++QA output created by 809
 +Create the original files
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-817/file1
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-817/file2
-+2eb81ff80b06cee4f341410c6e82cda9  TEST_DIR/test-817/file3
-+Reflink the last blocks together
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-817/file1
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-817/file2
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-817/file3
-+Check shared extent physical mapping matches
-diff --git a/tests/generic/818 b/tests/generic/818
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-809/file1
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-809/file2
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-809/file3
++directio CoW the second file
++Checksum both files
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-809/file1
++5f9e2359b2e8e18eabd8f6cd46d0e823  TEST_DIR/test-809/file2
++5f9e2359b2e8e18eabd8f6cd46d0e823  TEST_DIR/test-809/file3
++Compare the CoW'd section to the before file
++Sections do not match (intentional)
++Sections do not match (intentional)
++Sections do not match (intentional)
++Compare the CoW'd section to the after file
++Compare the not CoW'd sections
+diff --git a/tests/generic/810 b/tests/generic/810
 new file mode 100755
-index 0000000..1904b76
+index 0000000..a0090fc
 --- /dev/null
-+++ b/tests/generic/818
-@@ -0,0 +1,94 @@
++++ b/tests/generic/810
+@@ -0,0 +1,138 @@
 +#! /bin/bash
-+# FS QA Test No. 818
++# FS QA Test No. 810
 +#
-+# Ensure that we can dedupe the last block of a file whose size isn't block-aligned.
-+#   - Create a file whose size isn't block-aligned
-+#   - Create a second file identical to the first
-+#   - Create a different file of the same size
-+#   - Dedupe the last block of the first and second files
-+#   - Try to dedupe the last block of the first and third files
-+#   - Check that we end up with identical contents in files 1-2, and not
-+#     the same in 2-3.
++# Ensuring that mmap copy on write through the page cache works:
++#   - Reflink two files together
++#   - Write to the beginning, middle, and end
++#   - Check that the files are now different where we say they're different.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -887,7 +446,7 @@ index 0000000..1904b76
 +_supported_os Linux
 +
 +_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "dedupe"
++_require_cp_reflink
 +_require_test
 +
 +rm -f $seqres.full
@@ -897,219 +456,122 @@ index 0000000..1904b76
 +mkdir $TESTDIR
 +
 +echo "Create the original files"
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((BLKSZ + 37))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((BLKSZ + 37))" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((BLKSZ + 37))" $TESTDIR/file3 >> $seqres.full
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196605' $TESTDIR/file1 >> $seqres.full
++cp --reflink $TESTDIR/file1 $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 196605' $TESTDIR/file3 >> $seqres.full
 +
 +md5sum $TESTDIR/file1 | _filter_test_dir
 +md5sum $TESTDIR/file2 | _filter_test_dir
 +md5sum $TESTDIR/file3 | _filter_test_dir
 +
-+echo "Dedupe the last blocks together"
-+$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 0 0 $BLKSZ" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 0 0 $BLKSZ" $TESTDIR/file3 >> $seqres.full
-+$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 $BLKSZ $BLKSZ 37" $TESTDIR/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 $BLKSZ $BLKSZ 37" $TESTDIR/file3 >> $seqres.full
++echo "mmap CoW the second file"
++$XFS_IO_PROG -f -c "mmap -rw 0 196605" -c "mwrite 0 17" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "mmap -rw 0 196605" -c "mwrite 0 17" $TESTDIR/file3 >> $seqres.full
++
++$XFS_IO_PROG -f -c "mmap -rw 0 196605" -c "mwrite 60000 17" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "mmap -rw 0 196605" -c "mwrite 60000 17" $TESTDIR/file3 >> $seqres.full
++
++$XFS_IO_PROG -f -c "mmap -rw 0 196605" -c "mwrite 196588 17" $TESTDIR/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "mmap -rw 0 196605" -c "mwrite 196588 17" $TESTDIR/file3 >> $seqres.full
 +sync
 +echo 3 > /proc/sys/vm/drop_caches
 +
++echo "Checksum both files"
 +md5sum $TESTDIR/file1 | _filter_test_dir
 +md5sum $TESTDIR/file2 | _filter_test_dir
 +md5sum $TESTDIR/file3 | _filter_test_dir
 +
-+echo "Check shared extent physical mapping matches"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 0)" \
-+	"$(_extent_physical $TESTDIR/file2 0)"
-+echo "Check unshared extent physical mapping doesn't match"
-+_numbers_equal "$(_extent_physical $TESTDIR/file1 $BLKSZ)" \
-+	"$(_extent_physical $TESTDIR/file3 $BLKSZ)"
++echo "Compare the CoW'd section to the before file"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196588 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196588 17' $TESTDIR/file2) \
++       || echo "Sections do not match (intentional)"
++
++echo "Compare the CoW'd section to the after file"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 0 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60000 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196588 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196588 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++echo "Compare the not CoW'd sections"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 18 17' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 60018 82' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196500 88' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196500 88' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 196500 88' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 196500 88' $TESTDIR/file3) \
++       || echo "Sections do not match"
++
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file1) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file2) \
++       || echo "Sections do not match"
++cmp -s <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file2) \
++       <($XFS_IO_PROG -f -c 'pread -q -v 50000 10000' $TESTDIR/file3) \
++       || echo "Sections do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/818.out b/tests/generic/818.out
+diff --git a/tests/generic/810.out b/tests/generic/810.out
 new file mode 100644
-index 0000000..d3d2de5
+index 0000000..f2e9bb1
 --- /dev/null
-+++ b/tests/generic/818.out
-@@ -0,0 +1,12 @@
-+QA output created by 818
++++ b/tests/generic/810.out
+@@ -0,0 +1,16 @@
++QA output created by 810
 +Create the original files
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-818/file1
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-818/file2
-+2eb81ff80b06cee4f341410c6e82cda9  TEST_DIR/test-818/file3
-+Dedupe the last blocks together
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-818/file1
-+ce51fe7e361c6f39e48d003f0c9626d7  TEST_DIR/test-818/file2
-+2eb81ff80b06cee4f341410c6e82cda9  TEST_DIR/test-818/file3
-+Check shared extent physical mapping matches
-+Check unshared extent physical mapping doesn't match
-+num #1 does not match #0
-diff --git a/tests/generic/819 b/tests/generic/819
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-810/file1
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-810/file2
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-810/file3
++mmap CoW the second file
++Checksum both files
++a1e4db1af2c4414774d4096bc86e04f7  TEST_DIR/test-810/file1
++9ce45bcb3bcfb0194ffee83f34e26beb  TEST_DIR/test-810/file2
++9ce45bcb3bcfb0194ffee83f34e26beb  TEST_DIR/test-810/file3
++Compare the CoW'd section to the before file
++Sections do not match (intentional)
++Sections do not match (intentional)
++Sections do not match (intentional)
++Compare the CoW'd section to the after file
++Compare the not CoW'd sections
+diff --git a/tests/generic/837 b/tests/generic/837
 new file mode 100755
-index 0000000..5f63542
+index 0000000..2153b72
 --- /dev/null
-+++ b/tests/generic/819
-@@ -0,0 +1,130 @@
++++ b/tests/generic/837
+@@ -0,0 +1,88 @@
 +#! /bin/bash
-+# FS QA Test No. 819
++# FS QA Test No. 837
 +#
-+# Ensure that we can reflink and dedupe blocks within the same file...
-+#   - Create a file with three distinct blocks ABB
-+#   - Reflink block zero to the multiple-of-three blocks
-+#   - Reflink block one to the multiple-of-five blocks
-+#   - Dedupe block two to the multiple-of-seven blocks
-+#   - Check that we successfully avoid deduping with holes, unwritten
-+#     extents, and non-matches; but actually dedupe real matches.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $TESTDIR
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+if [ $FSTYP = "btrfs" ]; then
-+	_notrun "btrfs doesn't support dedupe within the same file"
-+fi
-+
-+# real QA test starts here
-+_require_test_reflink
-+_supported_os Linux
-+
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "reflink"
-+_require_xfs_io_command "dedupe"
-+_require_xfs_io_command "falloc"
-+_require_test
-+
-+rm -f $seqres.full
-+
-+TESTDIR=$TEST_DIR/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+echo "Create the original file blocks"
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 $BLKSZ $((BLKSZ * 2))" $TESTDIR/file1 >> $seqres.full
-+
-+NR_BLKS=1024
-+
-+echo "fallocate half the file"
-+$XFS_IO_PROG -f -c "falloc $((NR_BLKS * BLKSZ / 2)) $((NR_BLKS * BLKSZ / 2))" $TESTDIR/file1 >> $seqres.full
-+
-+echo "Reflink block zero to the threes"
-+seq 1 $((NR_BLKS / 3)) | while read nr; do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 $((nr * 3 * BLKSZ)) $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+done
-+
-+echo "Reflink block one to the fives"
-+seq 1 $((NR_BLKS / 5)) | while read nr; do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $BLKSZ $((nr * 5 * BLKSZ)) $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+done
-+
-+echo "Dedupe block two to the sevens"
-+seq 1 $((NR_BLKS / 7)) | while read nr; do
-+	$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 $((BLKSZ * 2)) $((nr * 7 * BLKSZ)) $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+done
-+
-+sync
-+echo 3 > /proc/sys/vm/drop_caches
-+
-+echo "Check block mappings"
-+pblk0=$(_extent_physical $TESTDIR/file1 0 "" $TESTDIR/file1.fiemap)
-+pblk1=$(_extent_physical $TESTDIR/file1 $BLKSZ "" $TESTDIR/file1.fiemap)
-+pblk2=$(_extent_physical $TESTDIR/file1 $((BLKSZ * 2)) "" $TESTDIR/file1.fiemap)
-+check_block() {
-+	lblk="$1"
-+	rem7=$((lblk % 7))
-+	rem5=$((lblk % 5))
-+	rem3=$((lblk % 3))
-+
-+	pblk=$(_extent_physical $TESTDIR/file1 "$((lblk * BLKSZ))" "" $TESTDIR/file1.fiemap)
-+	if [ $rem7 -eq 0 ]; then
-+		if [ $rem5 -eq 0 ]; then
-+			_numbers_equal $pblk2 $pblk
-+		elif [ $rem3 -eq 0 ]; then
-+			_numbers_equal $pblk0 $pblk
-+		elif [ $lblk -lt $((NR_BLKS / 2)) ]; then
-+			_numbers_equal $pblk -1
-+		fi
-+	elif [ $rem5 -eq 0 ]; then
-+		_numbers_equal $pblk1 $pblk
-+	elif [ $rem3 -eq 0 ]; then
-+		_numbers_equal $pblk0 $pblk
-+	elif [ $lblk -lt $((NR_BLKS / 2)) ]; then
-+		_numbers_equal -1 $pblk
-+	fi
-+}
-+seq 3 $((NR_BLKS - 1)) | while read lblk; do
-+	err="$(check_block $lblk)"
-+	test -n "$err" && echo "$lblk: $err"
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/819.out b/tests/generic/819.out
-new file mode 100644
-index 0000000..0ee5b14
---- /dev/null
-+++ b/tests/generic/819.out
-@@ -0,0 +1,7 @@
-+QA output created by 819
-+Create the original file blocks
-+fallocate half the file
-+Reflink block zero to the threes
-+Reflink block one to the fives
-+Dedupe block two to the sevens
-+Check block mappings
-diff --git a/tests/generic/820 b/tests/generic/820
-new file mode 100755
-index 0000000..9bcb513
---- /dev/null
-+++ b/tests/generic/820
-@@ -0,0 +1,118 @@
-+#! /bin/bash
-+# FS QA Test No. 820
-+#
-+# Ensure that we can reflink blocks within the same file...
-+#   - Create a file with three distinct blocks ABB
-+#   - Reflink block zero to the multiple-of-three blocks
-+#   - Reflink block one to the multiple-of-five blocks
-+#   - Reflink block two to the multiple-of-seven blocks
-+#   - Check that we successfully reflinked all the blocks.
++# Ensure that reflinking a file N times and CoWing the copies leaves the
++# original intact.
++#   - Create a file and record its hash and fiemap
++#   - Create some reflink copies
++#   - Rewrite all the reflink copies
++#   - Compare the contents and fiemap of the original file
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -1152,8 +614,7 @@ index 0000000..9bcb513
 +_supported_os Linux
 +
 +_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "reflink"
-+_require_xfs_io_command "falloc"
++_require_cp_reflink
 +_require_test
 +
 +rm -f $seqres.full
@@ -1163,92 +624,170 @@ index 0000000..9bcb513
 +mkdir $TESTDIR
 +
 +echo "Create the original file blocks"
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 $BLKSZ $((BLKSZ * 2))" $TESTDIR/file1 >> $seqres.full
-+
-+NR_BLKS=1024
-+
-+echo "fallocate half the file"
-+$XFS_IO_PROG -f -c "falloc $((NR_BLKS * BLKSZ / 2)) $((NR_BLKS * BLKSZ / 2))" $TESTDIR/file1 >> $seqres.full
-+
-+echo "Reflink block zero to the threes"
-+seq 1 $((NR_BLKS / 3)) | while read nr; do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 0 $((nr * 3 * BLKSZ)) $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+done
-+
-+echo "Reflink block one to the fives"
-+seq 1 $((NR_BLKS / 5)) | while read nr; do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $BLKSZ $((nr * 5 * BLKSZ)) $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+done
-+
-+echo "Dedupe block two to the sevens"
-+seq 1 $((NR_BLKS / 7)) | while read nr; do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $((BLKSZ * 2)) $((nr * 7 * BLKSZ)) $BLKSZ" $TESTDIR/file1 >> $seqres.full
-+done
-+
++SZ=$((1 * 1048576))
++NR=9
++$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $SZ" $TESTDIR/file1 >> $seqres.full
 +sync
-+echo 3 > /proc/sys/vm/drop_caches
++md5sum $TESTDIR/file1 | _filter_test_dir
++$XFS_IO_PROG -f -c "fiemap -v" $TESTDIR/file1 > $TESTDIR/fiemap
 +
-+echo "Check block mappings"
-+pblk0=$(_extent_physical $TESTDIR/file1 0 "" $TESTDIR/file1.fiemap)
-+pblk1=$(_extent_physical $TESTDIR/file1 $BLKSZ "" $TESTDIR/file1.fiemap)
-+pblk2=$(_extent_physical $TESTDIR/file1 $((BLKSZ * 2)) "" $TESTDIR/file1.fiemap)
-+check_block() {
-+	lblk="$1"
-+	rem7=$((lblk % 7))
-+	rem5=$((lblk % 5))
-+	rem3=$((lblk % 3))
-+
-+	pblk=$(_extent_physical $TESTDIR/file1 "$((lblk * BLKSZ))" "" $TESTDIR/file1.fiemap)
-+	if [ $rem7 -eq 0 ]; then
-+		_numbers_equal $pblk2 $pblk
-+	elif [ $rem5 -eq 0 ]; then
-+		_numbers_equal $pblk1 $pblk
-+	elif [ $rem3 -eq 0 ]; then
-+		_numbers_equal $pblk0 $pblk
-+	elif [ $lblk -lt $((NR_BLKS / 2)) ]; then
-+		_numbers_equal -1 $pblk
-+	fi
-+}
-+seq 3 $((NR_BLKS - 1)) | while read lblk; do
-+	err="$(check_block $lblk)"
-+	test -n "$err" && echo "$lblk: $err"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	cp --reflink=always $TESTDIR/file1 $TESTDIR/file.$i
 +done
++sync
++
++echo "Rewrite the copies"
++for i in `seq 2 $NR`; do
++	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $SZ" $TESTDIR/file.$i >> $seqres.full
++	sync
++done
++
++echo "Examine original file"
++md5sum $TESTDIR/file1 | _filter_test_dir
++$XFS_IO_PROG -f -c "fiemap -v" $TESTDIR/file1 > $TESTDIR/fiemap.new
++cmp -s $TESTDIR/fiemap $TESTDIR/fiemap.new
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/820.out b/tests/generic/820.out
+diff --git a/tests/generic/837.out b/tests/generic/837.out
 new file mode 100644
-index 0000000..1f2784d
+index 0000000..86d04c6
 --- /dev/null
-+++ b/tests/generic/820.out
++++ b/tests/generic/837.out
 @@ -0,0 +1,7 @@
-+QA output created by 820
++QA output created by 837
 +Create the original file blocks
-+fallocate half the file
-+Reflink block zero to the threes
-+Reflink block one to the fives
-+Dedupe block two to the sevens
-+Check block mappings
++7202826a7791073fe2787f0c94603278  TEST_DIR/test-837/file1
++Create the reflink copies
++Rewrite the copies
++Examine original file
++7202826a7791073fe2787f0c94603278  TEST_DIR/test-837/file1
+diff --git a/tests/generic/838 b/tests/generic/838
+new file mode 100755
+index 0000000..33498c3
+--- /dev/null
++++ b/tests/generic/838
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# FS QA Test No. 837
++#
++# Ensure that reflinking a file N times and DIO CoWing the copies leaves the
++# original intact.
++#   - Create a file and record its hash and fiemap
++#   - Create some reflink copies
++#   - Rewrite all the reflink copies with directio
++#   - Compare the contents and fiemap of the original file
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.* $TESTDIR
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_require_test_reflink
++_supported_os Linux
++
++_require_xfs_io_command "fiemap"
++_require_cp_reflink
++_require_test
++
++rm -f $seqres.full
++
++TESTDIR=$TEST_DIR/test-$seq
++rm -rf $TESTDIR
++mkdir $TESTDIR
++
++echo "Create the original file blocks"
++SZ=$((1 * 1048576))
++NR=9
++$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $SZ" $TESTDIR/file1 >> $seqres.full
++sync
++md5sum $TESTDIR/file1 | _filter_test_dir
++$XFS_IO_PROG -f -c "fiemap -v" $TESTDIR/file1 > $TESTDIR/fiemap
++
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	cp --reflink=always $TESTDIR/file1 $TESTDIR/file.$i
++done
++sync
++
++echo "Rewrite the copies"
++for i in `seq 2 $NR`; do
++	$XFS_IO_PROG -d -f -c "pwrite -S 0x62 0 $SZ" $TESTDIR/file.$i >> $seqres.full
++	sync
++done
++
++echo "Examine original file"
++md5sum $TESTDIR/file1 | _filter_test_dir
++$XFS_IO_PROG -f -c "fiemap -v" $TESTDIR/file1 > $TESTDIR/fiemap.new
++cmp -s $TESTDIR/fiemap $TESTDIR/fiemap.new
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/838.out b/tests/generic/838.out
+new file mode 100644
+index 0000000..6c07b9f
+--- /dev/null
++++ b/tests/generic/838.out
+@@ -0,0 +1,7 @@
++QA output created by 838
++Create the original file blocks
++7202826a7791073fe2787f0c94603278  TEST_DIR/test-838/file1
++Create the reflink copies
++Rewrite the copies
++Examine original file
++7202826a7791073fe2787f0c94603278  TEST_DIR/test-838/file1
 diff --git a/tests/generic/group b/tests/generic/group
-index 433ac30..98d875a 100644
+index 98d875a..9af1ef8 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -197,3 +197,12 @@
- 800 auto quick clone
- 801 auto quick clone
- 802 auto quick clone
-+803 auto quick clone
-+804 auto quick clone
-+805 auto quick clone
-+806 auto quick clone
-+807 auto quick clone
-+817 auto quick clone
-+818 auto quick clone
-+819 auto quick clone
-+820 auto quick clone
+@@ -202,7 +202,12 @@
+ 805 auto quick clone
+ 806 auto quick clone
+ 807 auto quick clone
++808 auto quick clone
++809 auto quick clone
++810 auto quick clone
+ 817 auto quick clone
+ 818 auto quick clone
+ 819 auto quick clone
+ 820 auto quick clone
++837 auto quick clone
++838 auto quick clone
 
 _______________________________________________
 xfs mailing list
