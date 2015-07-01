@@ -1,25 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 696CB7F96
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 03:30:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BD2A304051
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 01:30:44 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id Z7xRTdeIl8gpPyx8 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Jul 2015 01:30:25 -0700 (PDT)
-Date: Wed, 1 Jul 2015 04:30:23 -0400 (EDT)
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <489067631.22126950.1435739423385.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20150630112739.GB60188@bfoster.bfoster>
-References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
-	<1434711726-13092-14-git-send-email-jtulak@redhat.com>
-	<20150626171730.GI40750@bfoster.bfoster>
-	<20150630035736.GJ7943@dastard>
-	<20150630112739.GB60188@bfoster.bfoster>
-Subject: Re: [PATCH 13/17] mkfs: encode conflicts into parsing table
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 80C097F86
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 02:50:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 663BB8F8035
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 00:50:14 -0700 (PDT)
+Received: from mout.web.de (mout.web.de [212.227.15.3]) by cuda.sgi.com with
+	ESMTP id bkcU1QrTGe4bPByt (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 Jul 2015 00:50:12 -0700 (PDT)
+Message-ID: <55939BA8.1090400@users.sourceforge.net>
+Date: Wed, 01 Jul 2015 09:50:00 +0200
+From: SF Markus Elfring <elfring@users.sourceforge.net>
 MIME-Version: 1.0
+Subject: Re: XFS: Fine-tuning for checks before the function call
+	"xfs_qm_dqrele"?
+References: <530CD2C4.4050903@users.sourceforge.net>
+	<alpine.DEB.2.10.1402251840450.7035@hadrien>
+	<530CF8FF.8080600@users.sourceforge.net>
+	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	<530DD06F.4090703@users.sourceforge.net>
+	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	<5317A59D.4@users.sourceforge.net>
+	<5479F823.60900@users.sourceforge.net>
+	<20141130230904.GF16151@dastard>
+	<558D1833.3080009@users.sourceforge.net>
+	<20150629214355.GE7943@dastard>
+In-Reply-To: <20150629214355.GE7943@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,71 +35,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Julia Lawall <julia.lawall@lip6.fr>, kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-CgotLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tCj4gRnJvbTogIkJyaWFuIEZvc3RlciIgPGJm
-b3N0ZXJAcmVkaGF0LmNvbT4KPiBUbzogIkRhdmUgQ2hpbm5lciIgPGRhdmlkQGZyb21vcmJpdC5j
-b20+Cj4gQ2M6ICJKYW4gxaR1bMOhayIgPGp0dWxha0ByZWRoYXQuY29tPiwgIkRhdmUgQ2hpbm5l
-ciIgPGRjaGlubmVyQHJlZGhhdC5jb20+LCB4ZnNAb3NzLnNnaS5jb20KPiBTZW50OiBUdWVzZGF5
-LCBKdW5lIDMwLCAyMDE1IDE6Mjc6NDAgUE0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEzLzE3XSBt
-a2ZzOiBlbmNvZGUgY29uZmxpY3RzIGludG8gcGFyc2luZyB0YWJsZQo+IAo+IE9uIFR1ZSwgSnVu
-IDMwLCAyMDE1IGF0IDAxOjU3OjM2UE0gKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+IE9u
-IEZyaSwgSnVuIDI2LCAyMDE1IGF0IDAxOjE3OjMxUE0gLTA0MDAsIEJyaWFuIEZvc3RlciB3cm90
-ZToKPiA+ID4gT24gRnJpLCBKdW4gMTksIDIwMTUgYXQgMDE6MDI6MDJQTSArMDIwMCwgSmFuIMWk
-dWzDoWsgd3JvdGU6Cj4gPiA+ID4gRnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQu
-Y29tPgo+ID4gPiA+IAo+ID4gPiA+IE1hbnkgb3B0aW9ucyBjb25mbGljdCwgc28gd2UgbmVlZCB0
-byBzcGVjaWZ5IHdoaWNoIG9wdGlvbnMgY29uZmxpY3QKPiA+ID4gPiB3aXRoIGVhY2ggb3RoZXIg
-aW4gYSBnZW5lcmljIG1hbm5lci4gV2UgYWxyZWFkeSBoYXZlIGEgInNlZW4iCj4gPiA+ID4gdmFy
-aWFibGUgdXNlZCBmb3IgcmVzcGVjaWZpY2F0aW9uIGRldGVjdGlvbiwgc28gd2UgY2FuIGFsc28g
-dXNlIHRoaXMKPiA+ID4gPiBjb2RlIGNvbmZsaWN0IGRldGVjdGlvbi4gSGVuY2UgYWRkIGEgImNv
-bmZsaWN0cyIgYXJyYXkgdG8gdGhlIHN1Ygo+ID4gPiA+IG9wdGlvbnMgcGFyYW1ldGVyIGRlZmlu
-aXRpb24uCj4gPiAuLi4uLgo+ID4gPiA+IEBAIC0yMDIwLDcgKzIwMjcsNyBAQCBfKCJjYW5ub3Qg
-c3BlY2lmeSBib3RoIC1tIGNyYz0xIGFuZCAtbgo+ID4gPiA+IGZ0eXBlXG4iKSk7Cj4gPiA+ID4g
-IAkJCQkJCSAgJnZhbHVlKSkgewo+ID4gPiA+ICAJCQkJY2FzZSBTX0xPRzoKPiA+ID4gPiAgCQkJ
-CWNhc2UgU19TRUNUTE9HOgo+ID4gPiA+IC0JCQkJCWlmIChzc2ZsYWcgfHwgbHNzZmxhZykKPiA+
-ID4gPiArCQkJCQlpZiAobHNzZmxhZykKPiA+ID4gPiAgCQkJCQkJY29uZmxpY3QoJ3MnLCBzdWJv
-cHRzLAo+ID4gPiA+ICAJCQkJCQkJIFNfU0VDVFNJWkUsIFNfU0VDVExPRyk7Cj4gPiA+ID4gIAkJ
-CQkJc2VjdG9ybG9nID0gZ2V0bnVtKHZhbHVlLCAmc29wdHMsCj4gPiA+ID4gQEAgLTIwMzIsNyAr
-MjAzOSw3IEBAIF8oImNhbm5vdCBzcGVjaWZ5IGJvdGggLW0gY3JjPTEgYW5kIC1uCj4gPiA+ID4g
-ZnR5cGVcbiIpKTsKPiA+ID4gPiAgCQkJCQlicmVhazsKPiA+ID4gPiAgCQkJCWNhc2UgU19TSVpF
-Ogo+ID4gPiA+ICAJCQkJY2FzZSBTX1NFQ1RTSVpFOgo+ID4gPiA+IC0JCQkJCWlmIChzbGZsYWcg
-fHwgbHNsZmxhZykKPiA+ID4gPiArCQkJCQlpZiAobHNsZmxhZykKPiA+ID4gPiAgCQkJCQkJY29u
-ZmxpY3QoJ3MnLCBzdWJvcHRzLCBTX1NFQ1RMT0csCj4gPiA+ID4gIAkJCQkJCQkgU19TRUNUU0la
-RSk7Cj4gPiA+IAo+ID4gPiBIbW0uLiBzbyBpcyB0aGUgbGltaXRhdGlvbiBoZXJlIHRoYXQgd2Ug
-Y2FuJ3QgZG8gZ2VuZXJpYyBjb25mbGljdAo+ID4gPiBkZXRlY3Rpb24gYWNyb3NzIGRpZmZlcmVu
-dCBvcHRpb24gc3RydWN0cz8gSWYgc28sIEkgc3VwcG9zZSB0aGF0J3Mgbm90Cj4gPiA+IHRoZSBl
-bmQgb2YgdGhlIHdvcmxkLiBUaGUgY2xlYW51cCBpcyBzdGlsbCB3ZWxsIHdvcnRoIGl0Lgo+ID4g
-Cj4gPiBJIGp1c3QgbmV2ZXIgZ290IGFyb3VuZCB0byBjb2RpbmcgaXQgaW4gYSBnZW5lcmljIGZh
-c2hpb24gLSBJIGRpZG4ndAo+ID4gZmluaXNoIHRoZSBlbnRpcmUgcGF0Y2hzZXQgYmFjayB3aGVu
-IEkgb3JpZ2luYWxseSB3cm90ZSBpdC4uLi4KPiA+IAo+IAo+IE9rLiBXZWxsIEkgZG9uJ3Qga25v
-dyBpZiBKYW4gaXMgdXAgZm9yIGFkZGluZyB0aGF0IG9yIHdoYXQuIDopIEkKPiB3b3VsZG4ndCBi
-ZSBhZ2FpbnN0IGdldHRpbmcgdGhpcyBpbiBhcyBpcyBzbyBpdCBpc24ndCBoZWxkIG9mZiBsb25n
-ZXIuCj4gSXQgc3RpbGwgbmVlZHMgYSBjb21tZW50IHRob3VnaC4gOykKPiAKPiA+ID4gSSB3b25k
-ZXIgaWYgd2UKPiA+ID4gc3RpbGwgbmVlZCB0byBzZXQgbHNsZmxhZy9sc3NmbGFnIGluIGVpdGhl
-ciBvZiB0aGUgYWJvdmUgY2FzZXMsIHRob3VnaC4KPiA+ID4gSXQgc2VlbXMgbGlrZSB0aGUgZ2Vu
-ZXJpYyBkZXRlY3Rpb24gc2hvdWxkIGhhbmRsZSBpdC4uPwo+ID4gCj4gPiBJbiB0aGUgZW5kIGl0
-IHdvdWxkIGxvb2sgYXQgdGhlIHJlbGV2YW50IC0+c2VlbiBmbGFnIHRvIGRldGVybWluZQo+ID4g
-aWYgdGhlcmUgd2FzIGEgY3Jvc3Mtb3B0aW9uLXN0cnVjdCBjb25mbGljdC4gRXNzZW50aWFsbHks
-IHRoZQo+ID4gY29uZmxpY3QgZGVmaW5pdGlvbiBuZWVkcyB0byBkZWZpbmUgY29uZmxpY3RzIHZp
-YSBhIHtncm91cCwgb3B0aW9ufQo+ID4gdHVwbGUgcmF0aGVyIHRoYW4ganVzdCB0aGUge29wdGlv
-bn0gaXQgdXNlcyBub3cuLi4KPiA+IAo+IAo+IFN1cmUuIE5vdCBhIGh1Z2UgZGVhbCwgYnV0IHRv
-IGJlIGNsZWFyIG15IGNvbW1lbnQgaGVyZSB3YXMgd2l0aCByZXNwZWN0Cj4gdG8gdGhlIGZhY3Qg
-dGhhdCB3ZSBzZXQgbHNsZmxhZyBhbmQgbHNzZmxhZyBpbiB0aG9zZSB0d28KPiBTX1NFQ1RMT0cv
-U19TRUNUU0laRSBibG9ja3MuIEkgc3VzcGVjdCB3ZSBzdGlsbCBuZWVkIHRoZSBmbGFnIGZvciB0
-aGUKPiBMX1NFQ1QqIGNvbmZsaWN0LCBidXQgaXQgbG9va3MgbGlrZSB0aGUgZ2VuZXJpYyBjb2Rl
-IG5vdyBoYW5kbGVzIHRoZQo+IGNvbmZsaWN0IHdpdGhpbiB0aGUgJ3MnIGdyb3VwIG9mIG9wdGlv
-bnMuIEluIG90aGVyIHdvcmRzLCB3ZSBoYXZlCj4gZHVwbGljYXRlIGhhbmRsaW5nIG9mIHRoZSBT
-X1NFQ1RMT0cvU19TRUNUU0laRSBjb25mbGljdCBhZnRlciB0aGlzCj4gcGF0Y2guCj4gCj4gQnJp
-YW4KPiAKCkknbSBmb3IgbWFraW5nIGl0IGFsbCBpbiB0aGUgZ2VuZXJpYyBjb2RlLCBpZiB5b3Ug
-YXJlIGFza2luZyB0aGF0LiA6LSkgClRoYW5rcyBmb3IgcG9pbnRpbmcgb3V0IHRoZSBwb3NzaWJs
-ZSBkdXBsaWNhdGUgaGFuZGxpbmcsIEkgd2lsbCBjaGVjayBpdC4gKEFuZCB0aGFua3MgZm9yIGFs
-bCB0aGUgb3RoZXJzIG5vdGljZXMsIHRvby4gOi0pKQoKPiA+IC1EYXZlLgo+ID4gLS0KPiA+IERh
-dmUgQ2hpbm5lcgo+ID4gZGF2aWRAZnJvbW9yYml0LmNvbQo+ID4gCi0tIApKYW4gVHVsYWsKanR1
-bGFrQHJlZGhhdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+> xfs_dqrele_inode() gets called on every inode in the inode cache,
+> and this change results in a cacheline in every inode being dirtied
+> even if they don't have dquots attached. Given the inode cache can
+> hold tens to hundreds of millions of inodes on large machines, we
+> don't want to dirty any cachelines we don't need to while walking
+> the inode cache and releasing dquots...
+
+Would it make sense to annotate checks before such function calls
+as "LIKELY"?
+
+Regards,
+Markus
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
