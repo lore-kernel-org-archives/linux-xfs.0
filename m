@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C4197F83
-	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 20:26:41 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D8EA57F86
+	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 20:59:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0929BAC001
-	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 18:26:37 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BC0138F8033
+	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 18:59:21 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	4ckPuJUk1ImGsxEn for <xfs@oss.sgi.com>;
-	Tue, 30 Jun 2015 18:26:35 -0700 (PDT)
-Date: Wed, 1 Jul 2015 11:26:32 +1000
+	tkpnYR4AVedEJZ7E for <xfs@oss.sgi.com>;
+	Tue, 30 Jun 2015 18:59:19 -0700 (PDT)
+Date: Wed, 1 Jul 2015 11:58:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/14] libxfs: support unmapping reflink blocks
-Message-ID: <20150701012632.GR22807@dastard>
+Subject: Re: [PATCH 10/14] xfs: minimize impact to non-reflink files via
+	reflink per-inode flag
+Message-ID: <20150701015843.GS22807@dastard>
 References: <20150625233909.4992.68314.stgit@birch.djwong.org>
-	<20150625233930.4992.88802.stgit@birch.djwong.org>
+	<20150625234016.4992.52406.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150625233930.4992.88802.stgit@birch.djwong.org>
+In-Reply-To: <20150625234016.4992.52406.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,223 +34,45 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 25, 2015 at 04:39:30PM -0700, Darrick J. Wong wrote:
-> When we're unmapping blocks from a file, we need to decrease refcounts
-> in the btree and only free blocks if they refcount is 1.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c          |    5 +
->  fs/xfs/libxfs/xfs_reflink_btree.c |  140 +++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_reflink_btree.h |    4 +
->  3 files changed, 147 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 057fa9a..3f5e8da 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -45,6 +45,7 @@
->  #include "xfs_symlink.h"
->  #include "xfs_attr_leaf.h"
->  #include "xfs_filestream.h"
-> +#include "xfs_reflink_btree.h"
->  
->  
->  kmem_zone_t		*xfs_bmap_free_item_zone;
-> @@ -4984,8 +4985,8 @@ xfs_bmap_del_extent(
->  	 * If we need to, add to list of extents to delete.
->  	 */
->  	if (do_fx)
-> -		xfs_bmap_add_free(mp, flist, del->br_startblock,
-> -				  del->br_blockcount, ip->i_ino);
-> +		xfs_reflink_bmap_add_free(mp, flist, del->br_startblock,
-> +					  del->br_blockcount, ip->i_ino, tp);
+On Thu, Jun 25, 2015 at 04:40:16PM -0700, Darrick J. Wong wrote:
+> Gate all the reflink functions (which generally involve an expensive
+> trip to the reflink btree) on an inode flag which is applied to both
+> inodes at reflink time.  This minimizes reflink's impact on non-CoW
+> files.
 
-I think this is the wrong abstraction. I think the code should look
-like this:
+Ah, I see you do this reflink inode flag here. This should be one of
+the first patches, not the last.  i.e. the patch series should
+build up all the supporting infrastructure in individual patches
+before adding any of the actual reflink implementation....
 
-	if (do_fx) {
-		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-			error = xfs_reflink_del_extent(mp, tp, flist,
-						del->br_startblock,
-						del->br_blockcount, ip->i_ino);
-			if (error)
-				goto done;
-		} else
-			xfs_bmap_add_free()
-	}
+Also, the flag needs to go into the di_flags2 field, as the last
+flag in the di_flags field is reserved for a "more flags" flag if we
+ever need to add more flags to a v2 inode in a v4 filesystem...
 
-Because what we are doing is deleting an extent from the reflink
-btree, not adding a freed extent to the "to-be-freed" list.
-
-
-> diff --git a/fs/xfs/libxfs/xfs_reflink_btree.c b/fs/xfs/libxfs/xfs_reflink_btree.c
-> index 380ed72..f40ba1f 100644
-> --- a/fs/xfs/libxfs/xfs_reflink_btree.c
-> +++ b/fs/xfs/libxfs/xfs_reflink_btree.c
-
-Again, xfs_reflink.c
-
-> @@ -935,3 +935,143 @@ error0:
->  	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
->  	return error;
->  }
-> +
-> +/**
-> + * xfs_reflink_bmap_add_free() - release a range of blocks
+> +/*
+> + * xfs_is_reflink_inode() -- Decide if an inode needs to be checked for CoW.
 > + *
-> + * @mp: XFS mount object
-> + * @flist: List of blocks to be freed at the end of the transaction
-> + * @fsbno: First fs block of the range to release
-> + * @len: Length of range
-> + * @owner: owner of the extent
-> + * @tp: transaction that goes with the free operation
+> + * @ip: XFS inode
 > + */
-> +int
-> +xfs_reflink_bmap_add_free(
-> +	struct xfs_mount	*mp,		/* mount point structure */
-> +	xfs_bmap_free_t		*flist,		/* list of extents */
-> +	xfs_fsblock_t		fsbno,		/* fs block number of extent */
-> +	xfs_filblks_t		fslen,		/* length of extent */
-> +	uint64_t		owner,		/* extent owner */
-> +	struct xfs_trans	*tp)		/* transaction */
+> +bool
+> +xfs_is_reflink_inode(
+> +	struct xfs_inode	*ip)		/* XFS inode */
 > +{
-> +	struct xfs_btree_cur	*cur;
-> +	int			error;
-> +	struct xfs_buf		*agbp;
-> +	xfs_agnumber_t		agno;		/* allocation group number */
-> +	xfs_agblock_t		agbno;		/* ag start of range to free */
-> +	xfs_agblock_t		agbend;		/* ag end of range to free */
-> +	xfs_extlen_t		aglen;		/* ag length of range to free */
-> +	int			i, have;
-> +	xfs_agblock_t		lbno;		/* rlextent start */
-> +	xfs_extlen_t		llen;		/* rlextent length */
-> +	xfs_nlink_t		lnr;		/* rlextent refcount */
-> +	xfs_agblock_t		bno;		/* rlext block # in loop */
-> +	xfs_extlen_t		len;		/* rlext length in loop */
-> +	unsigned long long	blocks_freed;
-> +	xfs_fsblock_t		range_fsb;
+> +	struct xfs_mount	*mp = ip->i_mount;
 > +
-> +	if (!xfs_sb_version_hasreflink(&mp->m_sb)) {
-> +		xfs_bmap_add_free(mp, flist, fsbno, fslen, owner);
-> +		return 0;
-> +	}
+> +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> +		return false;
+> +	if (!(ip->i_d.di_flags & XFS_DIFLAG_REFLINK))
+> +		return false;
+> +
+> +	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+> +	return true;
 
-That canbe dropped.
-> +
-> +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-> +	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-> +	CHECK_AG_NUMBER(mp, agno);
-> +	ASSERT(fslen < mp->m_sb.sb_agblocks);
-> +	CHECK_AG_EXTENT(mp, agbno, fslen);
-
-These extent lengths have already been checked. If they are invalid,
-then the extent deletion would have errored out with corruption
-long before we get here.
-
-> +	aglen = fslen;
-> +
-> +	/*
-> +	 * Drop reference counts in the reflink tree.
-> +	 */
-> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Grab a rl btree cursor.
-> +	 */
-> +	cur = xfs_reflinkbt_init_cursor(mp, tp, agbp, agno);
-> +	bno = agbno;
-> +	len = aglen;
-> +	agbend = agbno + aglen - 1;
-> +	blocks_freed = 0;
-> +
-> +	/*
-> +	 * Account for a left extent that partially covers our range.
-> +	 */
-> +	error = xfs_reflink_lookup_le(cur, bno, &have);
-> +	if (error)
-> +		goto error0;
-> +	if (have) {
-> +		error = xfs_reflink_get_rec(cur, &lbno, &llen, &lnr, &i);
-> +		if (error)
-> +			goto error0;
-> +		XFS_WANT_CORRUPTED_RLEXT_GOTO(mp, i, lbno, llen, lnr, error0);
-> +		if (lbno + llen > bno) {
-> +			blocks_freed += min(len, lbno + llen - bno);
-> +			bno += blocks_freed;
-> +			len -= blocks_freed;
-> +		}
-> +	}
-
-So we unconditionally look up the reflink btree on extent free to
-see if we need to free it, even if the inode has not been reflinked?
-Doesn't this add a lot of overhead to the extent freeing?
-
-Indeed, why not just mark inodes that have been reflinked (i.e. have
-shared extents) with an on-disk flag so that we know if we need to
-do reflink btree work or not? That way the code fragment above could
-just check an inode flag rather than always calling into this
-function for reflink enabled filesystems....
-
-> +	while (len > 0) {
-> +		/*
-> +		 * Go find the next rlext.
-> +		 */
-> +		range_fsb = XFS_AGB_TO_FSB(mp, agno, bno);
-> +		error = xfs_btree_increment(cur, 0, &have);
-> +		if (error)
-> +			goto error0;
-> +		if (!have) {
-> +			/*
-> +			 * There's no right rlextent, so free bno to the end.
-> +			 */
-> +			lbno = bno + len;
-> +			llen = 0;
-> +		} else {
-> +			/*
-> +			 * Find the next rlextent.
-> +			 */
-> +			error = xfs_reflink_get_rec(cur, &lbno, &llen,
-> +					&lnr, &i);
-> +			if (error)
-> +				goto error0;
-> +			XFS_WANT_CORRUPTED_RLEXT_GOTO(mp, i, lbno, llen, lnr,
-> +						      error0);
-> +			if (lbno >= bno + len) {
-> +				lbno = bno + len;
-> +				llen = 0;
-> +			}
-> +		}
-> +
-> +		/*
-> +		 * Free everything up to the start of the rlextent and
-> +		 * account for still-mapped blocks.
-> +		 */
-> +		if (lbno - bno > 0) {
-> +			xfs_bmap_add_free(mp, flist, range_fsb, lbno - bno,
-> +					  owner);
-> +			len -= lbno - bno;
-> +			bno += lbno - bno;
-> +		}
-> +		llen = min(llen, agbend + 1 - lbno);
-> +		blocks_freed += llen;
-> +		len -= llen;
-> +		bno += llen;
-> +	}
-> +
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> +
-> +	error = xfs_reflinkbt_adjust_refcount(mp, tp, agbp, agno, agbno, aglen,
-> +					      -1);
-
-Hmmm - we just walked the btree to determine what extents to
-free, and now we are going to walk the btree again to drop the
-reference counts on shared extents? So every extent that gets freed
-does two walks of the reflink btree regardless of the whether it has
-shared blocks or not?
+I would have thought you only need to check the inode flag here
+because the only time it will be set is on a reflink enabled
+filesystem. i.e. that flag being set implies we've already done
+all the "reflink is supported in this filesystem and it's not a
+realtime file" checks when setting the flag.
 
 Cheers,
 
