@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C6CFE7F51
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 11:01:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A64BA8F8035
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 09:01:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8XeGeJxXD0qWuA8l (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 266517FA1
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 17:52:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C91D88F8037
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 15:52:22 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id UynSgGeMNvXhFwMg (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Jul 2015 09:01:04 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH] xfsprogs: blkid is now mandatory
-Date: Wed,  1 Jul 2015 18:01:01 +0200
-Message-Id: <1435766461-30961-1-git-send-email-jtulak@redhat.com>
+	Wed, 01 Jul 2015 15:52:17 -0700 (PDT)
+Date: Wed, 1 Jul 2015 15:52:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/14] xfs: create a per-AG btree to track reference counts
+Message-ID: <20150701225213.GA10043@birch.djwong.org>
+References: <20150625233909.4992.68314.stgit@birch.djwong.org>
+	<20150625233916.4992.12808.stgit@birch.djwong.org>
+	<20150701001306.GP22807@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150701001306.GP22807@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,308 +27,379 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, sandeen@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Because blkid is here for a long time, I hereby propose a patch for removing support
-for NOT having blkid. The current support through set of #ifdef is prone to errors like
-making a patch just in one of the branches, and according to a recent talk between
-Christoph and Eric, it is not necessary to keep it supported.
+On Wed, Jul 01, 2015 at 10:13:06AM +1000, Dave Chinner wrote:
+> On Thu, Jun 25, 2015 at 04:39:16PM -0700, Darrick J. Wong wrote:
+> > Create a per-AG btree to track the reference counts of physical blocks
+> > to support reflink.
+> 
+> Few things from a quick glance...
+> 
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -54,6 +54,8 @@ xfs_extlen_t
+> >  xfs_prealloc_blocks(
+> >  	struct xfs_mount	*mp)
+> >  {
+> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> > +		return XFS_RL_BLOCK(mp) + 1;
+> 
+> Should introduce the sb version stuff as a separate patch perhaps
+> with the basic infrastructure defines (see how I did the first rmap
+> btree patch).
 
-Remove code for checking ENABLE_BLKID, and the code when ENABLE_BLKID is not defined.
-It makes blkid required for compilation.
+Ok.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- Makefile             |  5 ----
- configure.ac         |  6 +----
- doc/INSTALL          | 44 ------------------------------------
- include/builddefs.in |  1 -
- libdisk/Makefile     |  4 ----
- m4/package_blkid.m4  |  7 +++---
- mkfs/Makefile        | 21 ++++-------------
- mkfs/xfs_mkfs.c      | 64 ----------------------------------------------------
- 8 files changed, 10 insertions(+), 142 deletions(-)
+> > @@ -1117,6 +1118,9 @@ xfs_btree_set_refs(
+> >  	case XFS_BTNUM_RMAP:
+> >  		xfs_buf_set_ref(bp, XFS_RMAP_BTREE_REF);
+> >  		break;
+> > +	case XFS_BTNUM_RL:
+> 
+> Probably better to call it XFS_BTNUM_REFLINK
 
-diff --git a/Makefile b/Makefile
-index d04f853..973bd42 100644
---- a/Makefile
-+++ b/Makefile
-@@ -66,11 +66,6 @@ io: libxcmd libhandle
- quota: libxcmd
- repair: libxlog
- 
--
--ifneq ($(ENABLE_BLKID), yes)
--mkfs: libdisk
--endif
--
- ifeq ($(HAVE_BUILDDEFS), yes)
- include $(BUILDRULES)
- else
-diff --git a/configure.ac b/configure.ac
-index ae17c68..108556b 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -37,10 +37,6 @@ AC_ARG_ENABLE(termcap,
- 	test $enable_termcap = yes && libtermcap="-ltermcap",)
- AC_SUBST(libtermcap)
- 
--# AC_HAVE_BLKID_TOPO below wil find the library & check for topo support
--AC_ARG_ENABLE(blkid,
--[ --enable-blkid=[yes/no] Enable block device id library [default=yes]],,
--	enable_blkid=yes)
- 
- AC_ARG_ENABLE(lib64,
- [ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
-@@ -111,7 +107,7 @@ AC_HAVE_FALLOCATE
- AC_HAVE_FIEMAP
- AC_HAVE_PREADV
- AC_HAVE_SYNC_FILE_RANGE
--AC_HAVE_BLKID_TOPO($enable_blkid)
-+AC_HAVE_BLKID_TOPO(yes)
- AC_HAVE_READDIR
- 
- AC_CHECK_SIZEOF([long])
-diff --git a/doc/INSTALL b/doc/INSTALL
-index ba3472b..ae8b64e 100644
---- a/doc/INSTALL
-+++ b/doc/INSTALL
-@@ -48,50 +48,6 @@ Linux Instructions
-    before running make or Makepkgs.
- 
- 
--Mac OS X Instructions
--=====================
--
--0. Note:  since there is no XFS implementation on Mac OS X, you are
--   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and 
--   xfs_repair(8) are the only functional tools on this platform, as
--   they do not interact with the XFS kernel code at all.  Still, it
--   can be useful to have access to these utilities from Mac OS X in
--   a dual boot configuration, for example.
--
--1. Configure, build and install the package
--
--   The xfsprogs package uses autoconf/configure and expects a GNU build
--   environment (your platform must at least have both autoconf, make,
--   and glibtool). 
--
--   You will also need to have built and installed the UUID library which
--   is provided by the e2fsprogs source package.
--
--   Building libuuid:
--
--	[download; unzip/untar e2fsprogs; cd e2fsprogs]
--	$ ./configure --prefix=/usr --mandir=/usr/share/man
--	$ make lib/ext2fs/ext2_types.h
--	$ cd lib/uuid
--	$ make
--	$ su root
--	# make install
--	[verify that you now have a /usr/lib/libuuid.a]
--
--   Building xfsprogs:
--
--	[firstly set these environment variables to these values]
--	TAR=/usr/bin/gnutar
--	LIBTOOL=/usr/bin/glibtool
--	INSTALL_GROUP=wheel
--	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"
--
--	$ make
--	$ su root
--	# make install
--	[and optionally, for the development libraries and headers]
--	# make install-dev
--
- 
- IRIX Instructions
- =================
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7e9f53d..e3a546f 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -89,7 +89,6 @@ ENABLE_SHARED	= @enable_shared@
- ENABLE_GETTEXT	= @enable_gettext@
- ENABLE_EDITLINE	= @enable_editline@
- ENABLE_READLINE	= @enable_readline@
--ENABLE_BLKID	= @enable_blkid@
- 
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- 
-diff --git a/libdisk/Makefile b/libdisk/Makefile
-index b058a9f..bbb3c8c 100644
---- a/libdisk/Makefile
-+++ b/libdisk/Makefile
-@@ -20,11 +20,7 @@ else
- LSRCFILES = $(LINUX_DRIVERS)
- endif
- 
--ifneq ($(ENABLE_BLKID), yes)
--default: ltdepend $(LTLIBRARY)
--else
- default:
--endif
- 
- include $(BUILDRULES)
- 
-diff --git a/m4/package_blkid.m4 b/m4/package_blkid.m4
-index 44ca2cc..363142c 100644
---- a/m4/package_blkid.m4
-+++ b/m4/package_blkid.m4
-@@ -11,9 +11,10 @@ AC_DEFUN([AC_HAVE_BLKID_TOPO],
-     if test $ac_cv_func_blkid_probe_get_topology = yes; then
-       libblkid="-lblkid"
-     else
--      libblkd=""
--      enable_blkid="no"
--      AC_SUBST(enable_blkid)
-+      echo
-+      echo 'FATAL ERROR: could not find a valid BLKID header.'
-+      echo 'Install the Block device ID development package.'
-+      exit 1
-     fi
-   fi
-   AC_SUBST(libblkid)
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index fd1f615..6de2da4 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -11,15 +11,7 @@ FSTYP = fstyp
- HFILES = xfs_mkfs.h
- CFILES = maxtrres.c proto.c xfs_mkfs.c
- 
--ifeq ($(ENABLE_BLKID),yes)
--LLDLIBS += $(LIBBLKID)
--CFLAGS += -DENABLE_BLKID
--else
--LLDLIBS += $(LIBDISK)
--LTDEPENDENCIES += $(LIBDISK)
--endif
--
--LLDLIBS += $(LIBXFS) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-+LLDLIBS += $(LIBBLKID) $(LIBXFS) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
- LTDEPENDENCIES += $(LIBXFS)
- LLDFLAGS = -static-libtool-libs
- 
-@@ -28,15 +20,12 @@ LDIRT = $(FSTYP)
- 
- default: depend $(LTCOMMAND)
- 
--ifneq ($(ENABLE_BLKID),yes)
--default: $(FSTYP)
--endif
--
- include $(BUILDRULES)
- 
--$(FSTYP):
--	@echo "    [CC]     $@"
--	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
-+# remove too with !enable_blkid?
-+#$(FSTYP):
-+#	@echo "    [CC]     $@"
-+#	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
- 
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 83f7749..ddbb509 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -18,12 +18,7 @@
- 
- #include <xfs/libxfs.h>
- #include <ctype.h>
--#ifdef ENABLE_BLKID
- #include <blkid/blkid.h>
--#else
--#include <disk/fstyp.h>
--#include <disk/volume.h>
--#endif
- #include "xfs_mkfs.h"
- 
- /*
-@@ -297,7 +292,6 @@ calc_stripe_factors(
- 	}
- }
- 
--#ifdef ENABLE_BLKID
- /*
-  * Check for existing filesystem or partition table on device.
-  * Returns:
-@@ -498,64 +492,6 @@ static void get_topology(
- 				   &lsectorsize, &psectorsize, force_overwrite);
- 	}
- }
--#else /* ENABLE_BLKID */
--static int
--check_overwrite(
--	char		*device)
--{
--	char		*type;
--
--	if (device && *device) {
--		if ((type = fstype(device)) != NULL) {
--			fprintf(stderr,
--				_("%s: %s appears to contain an existing "
--				"filesystem (%s).\n"), progname, device, type);
--			return 1;
--		}
--		if ((type = pttype(device)) != NULL) {
--			fprintf(stderr,
--				_("%s: %s appears to contain a partition "
--				"table (%s).\n"), progname, device, type);
--			return 1;
--		}
--	}
--	return 0;
--}
--
--static void get_topology(
--	libxfs_init_t		*xi,
--	struct fs_topology	*ft,
--	int			force_overwrite)
--{
--
--	char *dfile = xi->volname ? xi->volname : xi->dname;
--	int bsz = BBSIZE;
--
--	if (!xi->disfile) {
--		int fd;
--		long long dummy;
--
--		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
--				&ft->dsunit, &ft->dswidth, &ft->sectoralign);
--		fd = open(dfile, O_RDONLY);
--		/* If this fails we just fall back to BBSIZE */
--		if (fd >= 0) {
--			platform_findsizes(dfile, fd, &dummy, &bsz);
--			close(fd);
--		}
--	}
--
--	ft->lsectorsize = bsz;
--	ft->psectorsize = bsz;
--
--	if (xi->rtname && !xi->risfile) {
--		int dummy1;
--
--		get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1,
--					  &ft->rtswidth, &dummy1);
--	}
--}
--#endif /* ENABLE_BLKID */
- 
- static void
- fixup_log_stripe_unit(
--- 
-2.4.3
+I was thinking about renaming the whole thing to 'refcount', i.e.
+XFS_BTNUM_REFCOUNT since it /is/ a btree of reference counts.
+
+> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > index 48ab2b1..a3f8661 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > @@ -43,6 +43,7 @@ union xfs_btree_key {
+> >  	xfs_alloc_key_t			alloc;
+> >  	struct xfs_inobt_key		inobt;
+> >  	struct xfs_rmap_key		rmap;
+> > +	xfs_reflink_key_t		reflink;
+> 
+> No new typedefs. struct xfs_reflink_key...
+> 
+> (only say this once, but applies many times ;)
+
+Yeah, sorry about that.
+
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index 9cff517..e4954ab 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -446,9 +446,11 @@ xfs_sb_has_compat_feature(
+> >  
+> >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+> >  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+> > +#define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflink btree */
+> >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+> >  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+> > -		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+> > +		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> > +		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+> 
+> The XFS_SB_FEAT_RO_COMPAT_REFLINK flag shoul dbe added as a separate
+> patch and put last in the series so it is only enabled once
+> everything is complete.
+
+What if I define XFS_SB_FEAT_RO_COMPAT_REFLINK at the beginning but omit it
+from the XFS_SB_FEAT_RO_COMPAT_ALL definition until the final patch?  That
+should prohibit anyone from using the half-baked feature during a bisect.
+
+> >  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+> >  static inline bool
+> >  xfs_sb_has_ro_compat_feature(
+> > @@ -522,6 +524,12 @@ static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
+> >  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
+> >  }
+> >  
+> > +static inline int xfs_sb_version_hasreflink(xfs_sb_t *sbp)
+> 
+> bool.
+> 
+> > @@ -1338,6 +1349,50 @@ typedef __be32 xfs_rmap_ptr_t;
+> >  	 XFS_IBT_BLOCK(mp) + 1)
+> >  
+> >  /*
+> > + * reflink Btree format definitions
+> > + *
+> > + */
+> > +#define	XFS_RLBT_CRC_MAGIC	0x524C4233	/* 'RLB3' */
+> 
+> #define        XFS_RMAP_CRC_MAGIC      0x524d4233      /* 'RMB3' */
+> 
+> Only one bit difference in the magic numbers, which means they are
+> too similar. "RFL3" might be better or maybe "R3FL"...
+
+"RFC3" ?
+
+> > +/*
+> > + * Data record/key structure
+> > + */
+> > +typedef struct xfs_reflink_rec {
+> > +	__be32		rr_startblock;	/* starting block number */
+> > +	__be32		rr_blockcount;	/* count of blocks */
+> > +	__be32		rr_nlinks;	/* number of inodes linked here */
+> > +} xfs_reflink_rec_t;
+> > +
+> > +typedef struct xfs_reflink_key {
+> > +	__be32		rr_startblock;	/* starting block number */
+> > +} xfs_reflink_key_t;
+> > +
+> > +typedef struct xfs_reflink_rec_incore {
+> > +	xfs_agblock_t	rr_startblock;	/* starting block number */
+> > +	xfs_extlen_t	rr_blockcount;	/* count of free blocks */
+> > +	xfs_nlink_t	rr_nlinks;	/* number of inodes linked here */
+> > +} xfs_reflink_rec_incore_t;
+> 
+> We have being using "irec" as shorthand for "in-core record". i.e:
+> struct xfs_reflink_irec.
+
+Noted.
+
+> (kill typedefs)
+> 
+> > +
+> > +/*
+> > + * When a block hits MAXRLCOUNT references, it becomes permanently
+> > + * stuck in CoW mode, because who knows how many times it's really
+> > + * referenced.
+> > + */
+> > +#define MAXRLCOUNT	((xfs_nlink_t)~0U)
+> > +#define MAXRLEXTLEN	((xfs_extlen_t)~0U)
+> 
+> I'd suggest that if we hit the maximum count, we just abort the
+> reflink operation.
+
+<nod>
+
+> > +/* btree pointer type */
+> > +typedef __be32 xfs_reflink_ptr_t;
+> > +
+> > +#define	XFS_RL_BLOCK(mp) \
+> > +	(xfs_sb_version_hasrmapbt(&((mp)->m_sb)) ? \
+> > +	 XFS_RMAP_BLOCK(mp) + 1 : \
+> > +	 (xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
+> > +	  XFS_FIBT_BLOCK(mp) + 1 : \
+> > +	  XFS_IBT_BLOCK(mp) + 1))
+> 
+> That's getting unwieldy. It's large enough for a function....
+
+Ok.
+
+> > +#ifdef REFLINK_DEBUG
+> > +# define dbg_printk(f, a...)  do {printk(KERN_ERR f, ## a); } while (0)
+> > +#else
+> > +# define dbg_printk(f, a...)
+> > +#endif
+> 
+> xfs_debug() is your friend.
+> 
+> > +#define CHECK_AG_NUMBER(mp, agno) \
+> > +	do { \
+> > +		ASSERT((agno) != NULLAGNUMBER); \
+> > +		ASSERT((agno) < (mp)->m_sb.sb_agcount); \
+> > +	} while(0);
+> 
+> Ugh. Used once, just open code.
+> 
+> > +#define CHECK_AG_EXTENT(mp, agbno, len) \
+> > +	do { \
+> > +		ASSERT((agbno) != NULLAGBLOCK); \
+> > +		ASSERT((len) > 0); \
+> > +		ASSERT((unsigned long long)(agbno) + (len) <= \
+> > +				(mp)->m_sb.sb_agblocks); \
+> > +	} while(0);
+> 
+> These are really used in places where corruption checks are
+> warranted, or the extent has already been checked....
+> 
+> > +#define XFS_WANT_CORRUPTED_RLEXT_GOTO(mp, have, agbno, len, nr, label) \
+> > +	do { \
+> > +		XFS_WANT_CORRUPTED_GOTO((mp), (have) == 1, label); \
+> > +		XFS_WANT_CORRUPTED_GOTO((mp), (len) > 0, label); \
+> > +		XFS_WANT_CORRUPTED_GOTO((mp), (nr) >= 2, label); \
+> > +		XFS_WANT_CORRUPTED_GOTO((mp), (unsigned long long)(agbno) + \
+> > +				(len) <= (mp)->m_sb.sb_agblocks, label); \
+> > +	} while(0);
+> 
+> Unused.
+> 
+> > +
+> > +STATIC int
+> > +xfs_reflinkbt_alloc_block(
+> > +	struct xfs_btree_cur	*cur,
+> > +	union xfs_btree_ptr	*start,
+> > +	union xfs_btree_ptr	*new,
+> > +	int			*stat)
+> > +{
+> > +	int			error;
+> > +	xfs_agblock_t		bno;
+> > +
+> > +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> > +
+> > +	/* Allocate the new block from the freelist. If we can't, give up.  */
+> > +	error = xfs_alloc_get_freelist(cur->bc_tp, cur->bc_private.a.agbp,
+> > +				       &bno, 1);
+> > +	if (error) {
+> > +		XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+> > +		return error;
+> > +	}
+> 
+> Why does the reflink btree use the free list? Why can't it use
+> block allocation like the BMBT tree?
+
+I'm confused about the intended usage of the AGFL -- the XFS FS structure doc
+says that it's for growing the free space btrees and can't be used for anything
+else, but the rmap btree uses it.
+
+Originally it /did/ use xfs_alloc_vextent(), though it won't be difficult to
+revert.
+
+> 
+> > +/*
+> > + * Allocate a new reflink btree cursor.
+> > + */
+> > +struct xfs_btree_cur *			/* new reflink btree cursor */
+> > +xfs_reflinkbt_init_cursor(
+> > +	struct xfs_mount	*mp,		/* file system mount point */
+> > +	struct xfs_trans	*tp,		/* transaction pointer */
+> > +	struct xfs_buf		*agbp,		/* buffer for agf structure */
+> > +	xfs_agnumber_t		agno)		/* allocation group number */
+> 
+> No real need for these comments on the variables. They are redundant
+> as the code documents what they are just fine.
+
+I was playing monkey-see monkey-do.  Some of the other functions had
+commented args. :)
+
+> 
+> > +{
+> > +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+> > +	struct xfs_btree_cur	*cur;
+> > +
+> > +	CHECK_AG_NUMBER(mp, agno);
+> > +	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_SLEEP);
+> > +
+> > +	cur->bc_tp = tp;
+> > +	cur->bc_mp = mp;
+> > +	cur->bc_btnum = XFS_BTNUM_RL;
+> > +	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+> > +	cur->bc_ops = &xfs_reflinkbt_ops;
+> > +
+> > +	cur->bc_nlevels = be32_to_cpu(agf->agf_reflink_level);
+> > +
+> > +	cur->bc_private.a.agbp = agbp;
+> > +	cur->bc_private.a.agno = agno;
+> > +
+> > +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> > +		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+> 
+> Can be set unconditionally.
+> 
+> The next set of functions normally go into a different file. i.e the
+> "xfs_foo_btree.c" file contains the functions required by the
+> generic btree abstraction to implement the "foo" btree format.  The
+> file "xfs_foo.c" then contains the code/logic that provides the
+> external foo API, manages the information inthe foo btree, and calls
+> the generic btree functions to manage the btree. This logic isn't
+> present in the patch, so really it shoul dbe added by the patch that
+> starts implementing the reflink API....
+
+Ok, I'll split this stuff out into smaller files.
+
+> > +/*
+> > + * Get the data from the pointed-to record.
+> > + */
+> > +int					/* error */
+> > +xfs_reflink_get_rec(
+> > +	struct xfs_btree_cur	*cur,	/* btree cursor */
+> > +	xfs_agblock_t		*bno,	/* output: starting block of extent */
+> > +	xfs_extlen_t		*len,	/* output: length of extent */
+> > +	xfs_nlink_t		*nlink,	/* output: number of links */
+> > +	int			*stat)	/* output: success/failure */
+> > +{
+> > +	union xfs_btree_rec	*rec;
+> > +	int			error;
+> > +
+> > +	error = xfs_btree_get_rec(cur, &rec, stat);
+> > +	if (!error && *stat == 1) {
+> > +		CHECK_AG_EXTENT(cur->bc_mp,
+> > +			be32_to_cpu(rec->reflink.rr_startblock),
+> > +			be32_to_cpu(rec->reflink.rr_blockcount));
+> > +		*bno = be32_to_cpu(rec->reflink.rr_startblock);
+> > +		*len = be32_to_cpu(rec->reflink.rr_blockcount);
+> > +		*nlink = be32_to_cpu(rec->reflink.rr_nlinks);
+> > +	}
+> > +	return error;
+> 
+> 	if (error || !*stat)
+> 		return error;
+> 	.....
+> 	return 0;
+> 
+> > +	error = xfs_reflink_get_rec(cur, &bno, &len, &nr, &x);
+> > +	if (error)
+> > +		return error;
+> > +	XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, x == 1, error0);
+> > +	error = xfs_btree_delete(cur, i);
+> > +	if (error)
+> > +		return error;
+> > +	error = xfs_reflink_lookup_ge(cur, bno, &x);
+> > +error0:
+> 
+> New code should use sane jump labels. e.g. "out_error" is a pretty
+> standard jump label name for this...
+> 
+> > diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> > index 88efbb4..d1de74e 100644
+> > --- a/fs/xfs/libxfs/xfs_shared.h
+> > +++ b/fs/xfs/libxfs/xfs_shared.h
+> > @@ -216,6 +216,7 @@ int	xfs_log_calc_minimum_size(struct xfs_mount *);
+> >  #define	XFS_INO_REF		2
+> >  #define	XFS_ATTR_BTREE_REF	1
+> >  #define	XFS_DQUOT_REF		1
+> > +#define XFS_REFLINK_BTREE_REF	1
+> 
+> whitespace.
+> 
+> > @@ -315,6 +317,9 @@ typedef struct xfs_perag {
+> >  	/* for rcu-safe freeing */
+> >  	struct rcu_head	rcu_head;
+> >  	int		pagb_count;	/* pagb slots in use */
+> > +
+> > +	/* reflink */
+> > +	__uint8_t	pagf_reflink_level;
+> 
+> May as well just make it the same as what is on disk (i.e.
+> uint32_t).
+> 
+> > +++ b/fs/xfs/xfs_stats.c
+> > @@ -61,6 +61,7 @@ static int xfs_stat_proc_show(struct seq_file *m, void *v)
+> >  		{ "ibt2",		XFSSTAT_END_IBT_V2		},
+> >  		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
+> >  		{ "rmapbt",		XFSSTAT_END_RMAP_V2		},
+> > +		{ "rlbt2",		XFSSTAT_END_RLBT_V2		},
+> 
+> "reflinkbt". No need for the "2", as there is only one set of
+> reflink btree stats.
+
+Ok, thanks for the review!
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
