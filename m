@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E4DB67F7D
-	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 20:07:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BAA24304048
-	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 18:07:09 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8C4197F83
+	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 20:26:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0929BAC001
+	for <xfs@oss.sgi.com>; Tue, 30 Jun 2015 18:26:37 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	yNiH9OD3jCOYuZgD for <xfs@oss.sgi.com>;
-	Tue, 30 Jun 2015 18:07:02 -0700 (PDT)
-Date: Wed, 1 Jul 2015 11:06:54 +1000
+	4ckPuJUk1ImGsxEn for <xfs@oss.sgi.com>;
+	Tue, 30 Jun 2015 18:26:35 -0700 (PDT)
+Date: Wed, 1 Jul 2015 11:26:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/14] libxfs: adjust refcounts in reflink btree
-Message-ID: <20150701010654.GQ22807@dastard>
+Subject: Re: [PATCH 03/14] libxfs: support unmapping reflink blocks
+Message-ID: <20150701012632.GR22807@dastard>
 References: <20150625233909.4992.68314.stgit@birch.djwong.org>
-	<20150625233923.4992.89446.stgit@birch.djwong.org>
+	<20150625233930.4992.88802.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150625233923.4992.89446.stgit@birch.djwong.org>
+In-Reply-To: <20150625233930.4992.88802.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,152 +33,223 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 25, 2015 at 04:39:23PM -0700, Darrick J. Wong wrote:
-> Provide a function to adjust the reference counts for a range of
-> blocks in the reflink btree.
+On Thu, Jun 25, 2015 at 04:39:30PM -0700, Darrick J. Wong wrote:
+> When we're unmapping blocks from a file, we need to decrease refcounts
+> in the btree and only free blocks if they refcount is 1.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_reflink_btree.c |  406 +++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_reflink_btree.h |    4 
->  2 files changed, 410 insertions(+)
-
-As per previous comments, this all belongs in
-fs/xfs/libxfs/xfs_reflink.c...
-
+>  fs/xfs/libxfs/xfs_bmap.c          |    5 +
+>  fs/xfs/libxfs/xfs_reflink_btree.c |  140 +++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_reflink_btree.h |    4 +
+>  3 files changed, 147 insertions(+), 2 deletions(-)
 > 
 > 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 057fa9a..3f5e8da 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -45,6 +45,7 @@
+>  #include "xfs_symlink.h"
+>  #include "xfs_attr_leaf.h"
+>  #include "xfs_filestream.h"
+> +#include "xfs_reflink_btree.h"
+>  
+>  
+>  kmem_zone_t		*xfs_bmap_free_item_zone;
+> @@ -4984,8 +4985,8 @@ xfs_bmap_del_extent(
+>  	 * If we need to, add to list of extents to delete.
+>  	 */
+>  	if (do_fx)
+> -		xfs_bmap_add_free(mp, flist, del->br_startblock,
+> -				  del->br_blockcount, ip->i_ino);
+> +		xfs_reflink_bmap_add_free(mp, flist, del->br_startblock,
+> +					  del->br_blockcount, ip->i_ino, tp);
+
+I think this is the wrong abstraction. I think the code should look
+like this:
+
+	if (do_fx) {
+		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+			error = xfs_reflink_del_extent(mp, tp, flist,
+						del->br_startblock,
+						del->br_blockcount, ip->i_ino);
+			if (error)
+				goto done;
+		} else
+			xfs_bmap_add_free()
+	}
+
+Because what we are doing is deleting an extent from the reflink
+btree, not adding a freed extent to the "to-be-freed" list.
+
+
 > diff --git a/fs/xfs/libxfs/xfs_reflink_btree.c b/fs/xfs/libxfs/xfs_reflink_btree.c
-> index 8a0fa5d..380ed72 100644
+> index 380ed72..f40ba1f 100644
 > --- a/fs/xfs/libxfs/xfs_reflink_btree.c
 > +++ b/fs/xfs/libxfs/xfs_reflink_btree.c
-> @@ -529,3 +529,409 @@ xfs_reflinkbt_delete(
->  error0:
+
+Again, xfs_reflink.c
+
+> @@ -935,3 +935,143 @@ error0:
+>  	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
 >  	return error;
 >  }
 > +
-> +#ifdef REFLINK_DEBUG
-> +static void
-> +dump_cur_loc(
-> +	struct xfs_btree_cur	*cur,
-> +	const char		*str,
-> +	int			line)
-> +{
-> +	xfs_agblock_t		gbno;
-> +	xfs_extlen_t		glen;
-> +	xfs_nlink_t		gnr;
-> +	int			i;
-> +
-> +	xfs_reflink_get_rec(cur, &gbno, &glen, &gnr, &i);
-> +	printk(KERN_INFO "%s(%d) cur[%d]:[%u,%u,%u,%d] ", str, line,
-> +	       cur->bc_ptrs[0], gbno, glen, gnr, i);
-> +	if (i && cur->bc_ptrs[0]) {
-> +		cur->bc_ptrs[0]--;
-> +		xfs_reflink_get_rec(cur, &gbno, &glen, &gnr, &i);
-> +		printk("left[%d]:[%u,%u,%u,%d] ", cur->bc_ptrs[0],
-> +		       gbno, glen, gnr, i);
-> +		cur->bc_ptrs[0]++;
-> +	}
-> +
-> +	if (i && cur->bc_ptrs[0] < xfs_reflinkbt_get_maxrecs(cur, 0)) {
-> +		cur->bc_ptrs[0]++;
-> +		xfs_reflink_get_rec(cur, &gbno, &glen, &gnr, &i);
-> +		printk("right[%d]:[%u,%u,%u,%d] ", cur->bc_ptrs[0],
-> +		       gbno, glen, gnr, i);
-> +		cur->bc_ptrs[0]--;
-> +	}
-> +	printk("\n");
-> +}
-> +#else
-> +# define dump_cur_loc(c, s, l)
-> +#endif
-
-Use trace points on lookup/update/insert/delete so debug like this
-is unnecessary.
-
-
-> +/*
-> + * Adjust the ref count of a range of AG blocks.
+> +/**
+> + * xfs_reflink_bmap_add_free() - release a range of blocks
+> + *
+> + * @mp: XFS mount object
+> + * @flist: List of blocks to be freed at the end of the transaction
+> + * @fsbno: First fs block of the range to release
+> + * @len: Length of range
+> + * @owner: owner of the extent
+> + * @tp: transaction that goes with the free operation
 > + */
-> +int						/* error */
-> +xfs_reflinkbt_adjust_refcount(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,		/* transaction pointer */
-> +	struct xfs_buf		*agbp,		/* buffer for agf structure */
-> +	xfs_agnumber_t		agno,		/* allocation group number */
-> +	xfs_agblock_t		agbno,		/* start of range */
-> +	xfs_extlen_t		aglen,		/* length of range */
-> +	int			adj)		/* how much to change refcnt */
-
-350 line function. Needs factoring. Also needs a comment explaining
-the algorithm. 
-
+> +int
+> +xfs_reflink_bmap_add_free(
+> +	struct xfs_mount	*mp,		/* mount point structure */
+> +	xfs_bmap_free_t		*flist,		/* list of extents */
+> +	xfs_fsblock_t		fsbno,		/* fs block number of extent */
+> +	xfs_filblks_t		fslen,		/* length of extent */
+> +	uint64_t		owner,		/* extent owner */
+> +	struct xfs_trans	*tp)		/* transaction */
 > +{
 > +	struct xfs_btree_cur	*cur;
 > +	int			error;
+> +	struct xfs_buf		*agbp;
+> +	xfs_agnumber_t		agno;		/* allocation group number */
+> +	xfs_agblock_t		agbno;		/* ag start of range to free */
+> +	xfs_agblock_t		agbend;		/* ag end of range to free */
+> +	xfs_extlen_t		aglen;		/* ag length of range to free */
 > +	int			i, have;
-> +	bool			real_crl;	/* cbno/clen is on disk? */
-> +	xfs_agblock_t		lbno, cbno, rbno;	/* rlextent start */
-> +	xfs_extlen_t		llen, clen, rlen;	/* rlextent length */
-> +	xfs_nlink_t		lnr, cnr, rnr;		/* rlextent refcount */
-
-"num" is the usual shorthand for "number". And in this case, nr is
-extremely ambiguous: Number of records, number of reflinks, some
-other number? I can't easily tell when I read the code, so the
-variable names need to be better. factoring will certainly help
-here.
-
-> +	xfs_agblock_t		bno;		/* ag bno in the loop */
-> +	xfs_agblock_t		agbend;		/* end agbno of the loop */
-> +	xfs_extlen_t		len;		/* remaining len to add */
-> +	xfs_nlink_t		new_cnr;	/* new refcount */
+> +	xfs_agblock_t		lbno;		/* rlextent start */
+> +	xfs_extlen_t		llen;		/* rlextent length */
+> +	xfs_nlink_t		lnr;		/* rlextent refcount */
+> +	xfs_agblock_t		bno;		/* rlext block # in loop */
+> +	xfs_extlen_t		len;		/* rlext length in loop */
+> +	unsigned long long	blocks_freed;
+> +	xfs_fsblock_t		range_fsb;
 > +
+> +	if (!xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		xfs_bmap_add_free(mp, flist, fsbno, fslen, owner);
+> +		return 0;
+> +	}
+
+That canbe dropped.
+> +
+> +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
 > +	CHECK_AG_NUMBER(mp, agno);
-> +	CHECK_AG_EXTENT(mp, agbno, aglen);
+> +	ASSERT(fslen < mp->m_sb.sb_agblocks);
+> +	CHECK_AG_EXTENT(mp, agbno, fslen);
 
-No real need for these checks - bad agno or extent sizes shoul dhave
-been validated long before this.
+These extent lengths have already been checked. If they are invalid,
+then the extent deletion would have errored out with corruption
+long before we get here.
 
+> +	aglen = fslen;
 > +
 > +	/*
-> +	 * Allocate/initialize a cursor for the by-number freespace btree.
+> +	 * Drop reference counts in the reflink tree.
+> +	 */
+> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * Grab a rl btree cursor.
 > +	 */
 > +	cur = xfs_reflinkbt_init_cursor(mp, tp, agbp, agno);
-
-You can kill that incorrect comment.
-
+> +	bno = agbno;
+> +	len = aglen;
+> +	agbend = agbno + aglen - 1;
+> +	blocks_freed = 0;
 > +
 > +	/*
-> +	 * Split a left rlextent that crosses agbno.
+> +	 * Account for a left extent that partially covers our range.
 > +	 */
-
-These comments need some ascii art displaying the before, current
-extent and after states so it's clear what the intent is. As it is,
-I'd probably split these into "left/right/middle" helper functions,
-as there is no state created by these initial overlap splits
-used later in the function. That would get rid of excessive
-indentation, make the error handling more obvious, etc.
-
-> +	error = xfs_reflink_lookup_le(cur, agbno, &have);
+> +	error = xfs_reflink_lookup_le(cur, bno, &have);
 > +	if (error)
 > +		goto error0;
-
-		goto out_error;
-
 > +	if (have) {
+> +		error = xfs_reflink_get_rec(cur, &lbno, &llen, &lnr, &i);
+> +		if (error)
+> +			goto error0;
+> +		XFS_WANT_CORRUPTED_RLEXT_GOTO(mp, i, lbno, llen, lnr, error0);
+> +		if (lbno + llen > bno) {
+> +			blocks_freed += min(len, lbno + llen - bno);
+> +			bno += blocks_freed;
+> +			len -= blocks_freed;
+> +		}
+> +	}
 
-if I "have" what?  "found_rec" would be a better name, because then
-the code reads clearly...
+So we unconditionally look up the reflink btree on extent free to
+see if we need to free it, even if the inode has not been reflinked?
+Doesn't this add a lot of overhead to the extent freeing?
 
-> +	/*
-> +	 * Start iterating the range we're adjusting.  rlextent boundaries
-> +	 * should be at agbno and agbend.
-> +	 */
+Indeed, why not just mark inodes that have been reflinked (i.e. have
+shared extents) with an on-disk flag so that we know if we need to
+do reflink btree work or not? That way the code fragment above could
+just check an inode flag rather than always calling into this
+function for reflink enabled filesystems....
 
-Trying to work my way through this loop, but the logic is hard to
-follow. It's hurting my head trying to work out what it is supposed
-to be doing, so I'm going to wait for more comments, ascii art, and
-factoring before really looking at it.
+> +	while (len > 0) {
+> +		/*
+> +		 * Go find the next rlext.
+> +		 */
+> +		range_fsb = XFS_AGB_TO_FSB(mp, agno, bno);
+> +		error = xfs_btree_increment(cur, 0, &have);
+> +		if (error)
+> +			goto error0;
+> +		if (!have) {
+> +			/*
+> +			 * There's no right rlextent, so free bno to the end.
+> +			 */
+> +			lbno = bno + len;
+> +			llen = 0;
+> +		} else {
+> +			/*
+> +			 * Find the next rlextent.
+> +			 */
+> +			error = xfs_reflink_get_rec(cur, &lbno, &llen,
+> +					&lnr, &i);
+> +			if (error)
+> +				goto error0;
+> +			XFS_WANT_CORRUPTED_RLEXT_GOTO(mp, i, lbno, llen, lnr,
+> +						      error0);
+> +			if (lbno >= bno + len) {
+> +				lbno = bno + len;
+> +				llen = 0;
+> +			}
+> +		}
+> +
+> +		/*
+> +		 * Free everything up to the start of the rlextent and
+> +		 * account for still-mapped blocks.
+> +		 */
+> +		if (lbno - bno > 0) {
+> +			xfs_bmap_add_free(mp, flist, range_fsb, lbno - bno,
+> +					  owner);
+> +			len -= lbno - bno;
+> +			bno += lbno - bno;
+> +		}
+> +		llen = min(llen, agbend + 1 - lbno);
+> +		blocks_freed += llen;
+> +		len -= llen;
+> +		bno += llen;
+> +	}
+> +
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> +
+> +	error = xfs_reflinkbt_adjust_refcount(mp, tp, agbp, agno, agbno, aglen,
+> +					      -1);
+
+Hmmm - we just walked the btree to determine what extents to
+free, and now we are going to walk the btree again to drop the
+reference counts on shared extents? So every extent that gets freed
+does two walks of the reflink btree regardless of the whether it has
+shared blocks or not?
 
 Cheers,
 
