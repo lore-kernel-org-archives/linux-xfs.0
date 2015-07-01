@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 683917F50
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 18:10:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D9531AC005
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 16:10:31 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id V75yWY4V66puymam (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Jul 2015 16:10:29 -0700 (PDT)
-Date: Wed, 1 Jul 2015 16:10:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/14] libxfs: adjust refcounts in reflink btree
-Message-ID: <20150701231022.GC10043@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 512217F69
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 18:31:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22A45304043
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 16:30:59 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	YARQlFKsqgXiTTNg for <xfs@oss.sgi.com>;
+	Wed, 01 Jul 2015 16:30:56 -0700 (PDT)
+Date: Thu, 2 Jul 2015 09:30:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/14] xfs: create a per-AG btree to track reference counts
+Message-ID: <20150701233042.GU22807@dastard>
 References: <20150625233909.4992.68314.stgit@birch.djwong.org>
-	<20150625233923.4992.89446.stgit@birch.djwong.org>
-	<20150701010654.GQ22807@dastard>
+	<20150625233916.4992.12808.stgit@birch.djwong.org>
+	<20150701001306.GP22807@dastard>
+	<20150701225213.GA10043@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150701010654.GQ22807@dastard>
+In-Reply-To: <20150701225213.GA10043@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,177 +32,116 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 01, 2015 at 11:06:54AM +1000, Dave Chinner wrote:
-> On Thu, Jun 25, 2015 at 04:39:23PM -0700, Darrick J. Wong wrote:
-> > Provide a function to adjust the reference counts for a range of
-> > blocks in the reflink btree.
+On Wed, Jul 01, 2015 at 03:52:13PM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 01, 2015 at 10:13:06AM +1000, Dave Chinner wrote:
+> > On Thu, Jun 25, 2015 at 04:39:16PM -0700, Darrick J. Wong wrote:
+> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > > index 9cff517..e4954ab 100644
+> > > --- a/fs/xfs/libxfs/xfs_format.h
+> > > +++ b/fs/xfs/libxfs/xfs_format.h
+> > > @@ -446,9 +446,11 @@ xfs_sb_has_compat_feature(
+> > >  
+> > >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+> > >  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+> > > +#define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflink btree */
+> > >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+> > >  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+> > > -		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+> > > +		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> > > +		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_reflink_btree.c |  406 +++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_reflink_btree.h |    4 
-> >  2 files changed, 410 insertions(+)
+> > The XFS_SB_FEAT_RO_COMPAT_REFLINK flag shoul dbe added as a separate
+> > patch and put last in the series so it is only enabled once
+> > everything is complete.
 > 
-> As per previous comments, this all belongs in
-> fs/xfs/libxfs/xfs_reflink.c...
-> 
+> What if I define XFS_SB_FEAT_RO_COMPAT_REFLINK at the beginning but omit it
+> from the XFS_SB_FEAT_RO_COMPAT_ALL definition until the final patch?  That
+> should prohibit anyone from using the half-baked feature during a bisect.
+
+Yup, thats what I meant ;)
+
+> > > +	int			*stat)
+> > > +{
+> > > +	int			error;
+> > > +	xfs_agblock_t		bno;
+> > > +
+> > > +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> > > +
+> > > +	/* Allocate the new block from the freelist. If we can't, give up.  */
+> > > +	error = xfs_alloc_get_freelist(cur->bc_tp, cur->bc_private.a.agbp,
+> > > +				       &bno, 1);
+> > > +	if (error) {
+> > > +		XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+> > > +		return error;
+> > > +	}
 > > 
+> > Why does the reflink btree use the free list? Why can't it use
+> > block allocation like the BMBT tree?
+> 
+> I'm confused about the intended usage of the AGFL -- the XFS FS structure doc
+> says that it's for growing the free space btrees and can't be used for anything
+> else, but the rmap btree uses it.
+
+The rmap btree is a "freespace" btree in that it is modified at the
+same time the two freespace btrees are modified. It's tracking used
+space rather than free space, but from an architectural POV the rmap
+btree sits at the same lowest layer as the freespace btree.
+
+Think of it like this: when an extent is allocated, the freespace
+btree removal needs ot be atomic with the rmap btree insertion so
+they remain coherent at all times. Similarly we have the same
+situation with extent freeing - removal from the rmap must be atomic
+with addition to the freespace btree.
+
+The reflink btree sits a layer above the freespace btrees,
+equivalent to the BMBT. That is, when we remove an extent from the
+BMBT, we also need to remove the reflink btree reference. Only if
+the reference drops to zero does the extent then become free, and we
+pass it off to xfs_free_extent()....
+
+> Originally it /did/ use xfs_alloc_vextent(), though it won't be
+> difficult to revert.
+
+The way you use EFIs means that it can't be put inside
+xfs_alloc_vextent()/xfs_free_extent() - EFIs track movement of
+extents from the BMBT to the freespace tree, and so if we now have a
+reflink btree in the way, the EFI tracks movement from the reflink
+btree to the freespace trees.  i.e. the reflink btree is modified
+atomically with the BMBT, not the freespace trees.
+
+Which, really, is a long way of saying that the allocation/freeing
+model of reflink btree blocks shoul dbe the same as the BMBT, and
+the transactional model integrates with the BMBT modifications, not
+the freespace btree modifications...
+
+> > > +/*
+> > > + * Allocate a new reflink btree cursor.
+> > > + */
+> > > +struct xfs_btree_cur *			/* new reflink btree cursor */
+> > > +xfs_reflinkbt_init_cursor(
+> > > +	struct xfs_mount	*mp,		/* file system mount point */
+> > > +	struct xfs_trans	*tp,		/* transaction pointer */
+> > > +	struct xfs_buf		*agbp,		/* buffer for agf structure */
+> > > +	xfs_agnumber_t		agno)		/* allocation group number */
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_reflink_btree.c b/fs/xfs/libxfs/xfs_reflink_btree.c
-> > index 8a0fa5d..380ed72 100644
-> > --- a/fs/xfs/libxfs/xfs_reflink_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_reflink_btree.c
-> > @@ -529,3 +529,409 @@ xfs_reflinkbt_delete(
-> >  error0:
-> >  	return error;
-> >  }
-> > +
-> > +#ifdef REFLINK_DEBUG
-> > +static void
-> > +dump_cur_loc(
-> > +	struct xfs_btree_cur	*cur,
-> > +	const char		*str,
-> > +	int			line)
-> > +{
-> > +	xfs_agblock_t		gbno;
-> > +	xfs_extlen_t		glen;
-> > +	xfs_nlink_t		gnr;
-> > +	int			i;
-> > +
-> > +	xfs_reflink_get_rec(cur, &gbno, &glen, &gnr, &i);
-> > +	printk(KERN_INFO "%s(%d) cur[%d]:[%u,%u,%u,%d] ", str, line,
-> > +	       cur->bc_ptrs[0], gbno, glen, gnr, i);
-> > +	if (i && cur->bc_ptrs[0]) {
-> > +		cur->bc_ptrs[0]--;
-> > +		xfs_reflink_get_rec(cur, &gbno, &glen, &gnr, &i);
-> > +		printk("left[%d]:[%u,%u,%u,%d] ", cur->bc_ptrs[0],
-> > +		       gbno, glen, gnr, i);
-> > +		cur->bc_ptrs[0]++;
-> > +	}
-> > +
-> > +	if (i && cur->bc_ptrs[0] < xfs_reflinkbt_get_maxrecs(cur, 0)) {
-> > +		cur->bc_ptrs[0]++;
-> > +		xfs_reflink_get_rec(cur, &gbno, &glen, &gnr, &i);
-> > +		printk("right[%d]:[%u,%u,%u,%d] ", cur->bc_ptrs[0],
-> > +		       gbno, glen, gnr, i);
-> > +		cur->bc_ptrs[0]--;
-> > +	}
-> > +	printk("\n");
-> > +}
-> > +#else
-> > +# define dump_cur_loc(c, s, l)
-> > +#endif
+> > No real need for these comments on the variables. They are redundant
+> > as the code documents what they are just fine.
 > 
-> Use trace points on lookup/update/insert/delete so debug like this
-> is unnecessary.
-> 
-> 
-> > +/*
-> > + * Adjust the ref count of a range of AG blocks.
-> > + */
-> > +int						/* error */
-> > +xfs_reflinkbt_adjust_refcount(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_trans	*tp,		/* transaction pointer */
-> > +	struct xfs_buf		*agbp,		/* buffer for agf structure */
-> > +	xfs_agnumber_t		agno,		/* allocation group number */
-> > +	xfs_agblock_t		agbno,		/* start of range */
-> > +	xfs_extlen_t		aglen,		/* length of range */
-> > +	int			adj)		/* how much to change refcnt */
-> 
-> 350 line function. Needs factoring. Also needs a comment explaining
-> the algorithm. 
-> 
-> > +{
-> > +	struct xfs_btree_cur	*cur;
-> > +	int			error;
-> > +	int			i, have;
-> > +	bool			real_crl;	/* cbno/clen is on disk? */
-> > +	xfs_agblock_t		lbno, cbno, rbno;	/* rlextent start */
-> > +	xfs_extlen_t		llen, clen, rlen;	/* rlextent length */
-> > +	xfs_nlink_t		lnr, cnr, rnr;		/* rlextent refcount */
-> 
-> "num" is the usual shorthand for "number". And in this case, nr is
-> extremely ambiguous: Number of records, number of reflinks, some
-> other number? I can't easily tell when I read the code, so the
-> variable names need to be better. factoring will certainly help
-> here.
+> I was playing monkey-see monkey-do.  Some of the other functions had
+> commented args. :)
 
-"refc" as shorthand for reference count, perhaps?
+Yup, that's the old code. For new code we write it in a way that
+doesn't require comments like that ;)
 
-> > +	xfs_agblock_t		bno;		/* ag bno in the loop */
-> > +	xfs_agblock_t		agbend;		/* end agbno of the loop */
-> > +	xfs_extlen_t		len;		/* remaining len to add */
-> > +	xfs_nlink_t		new_cnr;	/* new refcount */
-> > +
-> > +	CHECK_AG_NUMBER(mp, agno);
-> > +	CHECK_AG_EXTENT(mp, agbno, aglen);
-> 
-> No real need for these checks - bad agno or extent sizes shoul dhave
-> been validated long before this.
-> 
-> > +
-> > +	/*
-> > +	 * Allocate/initialize a cursor for the by-number freespace btree.
-> > +	 */
-> > +	cur = xfs_reflinkbt_init_cursor(mp, tp, agbp, agno);
-> 
-> You can kill that incorrect comment.
-> 
-> > +
-> > +	/*
-> > +	 * Split a left rlextent that crosses agbno.
-> > +	 */
-> 
-> These comments need some ascii art displaying the before, current
-> extent and after states so it's clear what the intent is. As it is,
-> I'd probably split these into "left/right/middle" helper functions,
-> as there is no state created by these initial overlap splits
-> used later in the function. That would get rid of excessive
-> indentation, make the error handling more obvious, etc.
+Cheers,
 
-Ok, I'll draw some pictures. :)
-
-> > +	error = xfs_reflink_lookup_le(cur, agbno, &have);
-> > +	if (error)
-> > +		goto error0;
-> 
-> 		goto out_error;
-> 
-> > +	if (have) {
-> 
-> if I "have" what?  "found_rec" would be a better name, because then
-> the code reads clearly...
-> 
-> > +	/*
-> > +	 * Start iterating the range we're adjusting.  rlextent boundaries
-> > +	 * should be at agbno and agbend.
-> > +	 */
-> 
-> Trying to work my way through this loop, but the logic is hard to
-> follow. It's hurting my head trying to work out what it is supposed
-> to be doing, so I'm going to wait for more comments, ascii art, and
-> factoring before really looking at it.
-
-:)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
