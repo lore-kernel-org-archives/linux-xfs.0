@@ -1,26 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 313837FBF
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 18:50:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BE2C1AC004
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 16:49:59 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DA9737FA3
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 19:20:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C93C08F8049
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2015 17:20:20 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	eXn5tl90B38gcF2g for <xfs@oss.sgi.com>;
-	Wed, 01 Jul 2015 16:49:57 -0700 (PDT)
-Date: Thu, 2 Jul 2015 09:49:44 +1000
+	tI6DXb9XjuQw7qDh for <xfs@oss.sgi.com>;
+	Wed, 01 Jul 2015 17:20:18 -0700 (PDT)
+Date: Thu, 2 Jul 2015 10:19:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/14] xfs: minimize impact to non-reflink files via
-	reflink per-inode flag
-Message-ID: <20150701234944.GW22807@dastard>
-References: <20150625233909.4992.68314.stgit@birch.djwong.org>
-	<20150625234016.4992.52406.stgit@birch.djwong.org>
-	<20150701015843.GS22807@dastard>
-	<20150701225944.GB10043@birch.djwong.org>
+Subject: Re: XFS: Fine-tuning for checks before the function call
+	"xfs_qm_dqrele"?
+Message-ID: <20150702001951.GX22807@dastard>
+References: <530CF8FF.8080600@users.sourceforge.net>
+	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	<530DD06F.4090703@users.sourceforge.net>
+	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	<5317A59D.4@users.sourceforge.net>
+	<5479F823.60900@users.sourceforge.net>
+	<20141130230904.GF16151@dastard>
+	<558D1833.3080009@users.sourceforge.net>
+	<20150629214355.GE7943@dastard>
+	<55939BA8.1090400@users.sourceforge.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150701225944.GB10043@birch.djwong.org>
+In-Reply-To: <55939BA8.1090400@users.sourceforge.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,43 +39,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Julia Lawall <julia.lawall@lip6.fr>, kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Wed, Jul 01, 2015 at 03:59:44PM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 01, 2015 at 11:58:43AM +1000, Dave Chinner wrote:
-> > I would have thought you only need to check the inode flag here
-> > because the only time it will be set is on a reflink enabled
-> > filesystem. i.e. that flag being set implies we've already done
-> > all the "reflink is supported in this filesystem and it's not a
-> > realtime file" checks when setting the flag.
+On Wed, Jul 01, 2015 at 09:50:00AM +0200, SF Markus Elfring wrote:
+> > xfs_dqrele_inode() gets called on every inode in the inode cache,
+> > and this change results in a cacheline in every inode being dirtied
+> > even if they don't have dquots attached. Given the inode cache can
+> > hold tens to hundreds of millions of inodes on large machines, we
+> > don't want to dirty any cachelines we don't need to while walking
+> > the inode cache and releasing dquots...
 > 
-> Sure.  The reason for so many ASSERTs everywhere is to help me check my
-> own sanity while cobbling together the first version.  I imagine I could
-> eliminate a lot of them, but since they all compile out on !XFS_DEBUG &&
-> !XFS_WARN, I didn't think it was a serious problem. :)
+> Would it make sense to annotate checks before such function calls
+> as "LIKELY"?
 
-Generally it's not, but we try to keep performance of the debug
-kernel within a few percent of a non-debug build, just so that it
-behaves roughly the same w.r.t. CPU and memory overhead, scalability
-and race conditions.
-
-Hence I'd much prefer to see strong validation of the parameters at
-the highest layer possible so that they don't need to be constantly
-checked in lower layers that have a single context.  e.g.
-AG-specific modification functions shouldn't need to check the agno
-is valid, as they wouldn't have been called if someone tried to
-perform the operation on an invalid agno.  Same goes for block
-numbers, etc.
-
-And for printk debugging to tell you whow functions a being called
-and what oeprations they are doing, you should replace all that with
-tracepoints.  Addition of trace points at the entry and exit of
-functions gives sufficient information for verifying this during
-debugging, but has almost no overhead in the code or at runtime.
-They can also be switched on dynamically in production machines,
-which you can't do with compile option debug code like xfs_debug and
-ASSERT statements. i.e. tracepoints = good, debug printk = bad ;)
+No - it will be random as to whether the inodes have dquots attached
+or not and so a static hint is always going to be wrong for
+someone....
 
 Cheers,
 
