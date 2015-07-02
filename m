@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F6487FC7
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 09:14:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C663BAC00A
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 07:14:07 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OTEeDZJMP8RoGE47 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 Jul 2015 07:14:06 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 04B8ABE273
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 14:14:05 +0000 (UTC)
-Date: Thu, 2 Jul 2015 10:14:04 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CAA537FB5
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 18:06:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 96224304039
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 16:06:44 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	79PnAZJPfX51oN9w for <xfs@oss.sgi.com>;
+	Thu, 02 Jul 2015 16:06:41 -0700 (PDT)
+Date: Fri, 3 Jul 2015 09:05:20 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
-Message-ID: <20150702141403.GA61817@bfoster.bfoster>
+Message-ID: <20150702230520.GA22807@dastard>
 References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
 	<1434711726-13092-2-git-send-email-jtulak@redhat.com>
 	<20150625193748.GE36162@bfoster.bfoster>
 	<413545489.22844725.1435841273912.JavaMail.zimbra@redhat.com>
+	<20150702141403.GA61817@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <413545489.22844725.1435841273912.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150702141403.GA61817@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,218 +29,283 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, Jan Tulak <jtulak@redhat.com>
 
-T24gVGh1LCBKdWwgMDIsIDIwMTUgYXQgMDg6NDc6NTNBTSAtMDQwMCwgSmFuIFR1bGFrIHdyb3Rl
-Ogo+IAo+IAo+IC0tLS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0KPiA+IEZyb206ICJCcmlhbiBG
-b3N0ZXIiIDxiZm9zdGVyQHJlZGhhdC5jb20+Cj4gPiBUbzogIkphbiDFpHVsw6FrIiA8anR1bGFr
-QHJlZGhhdC5jb20+Cj4gPiBDYzogIkRhdmUgQ2hpbm5lciIgPGRjaGlubmVyQHJlZGhhdC5jb20+
-LCB4ZnNAb3NzLnNnaS5jb20KPiA+IFNlbnQ6IFRodXJzZGF5LCBKdW5lIDI1LCAyMDE1IDk6Mzc6
-NDggUE0KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDEvMTddIHhmc3Byb2dzOiB1c2UgY29tbW9u
-IGNvZGUgZm9yIG11bHRpLWRpc2sgZGV0ZWN0aW9uCj4gPiAKPiA+IE9uIEZyaSwgSnVuIDE5LCAy
-MDE1IGF0IDAxOjAxOjUwUE0gKzAyMDAsIEphbiDFpHVsw6FrIHdyb3RlOgo+ID4gPiBGcm9tOiBE
-YXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gPiA+IAo+ID4gPiBCb3RoIHhmc19y
-ZXBhaXIgYW5kIG1rZnMueGZzIG5lZWQgdG8gYWdyZWUgb24gd2hhdCBpcyBhICJtdWx0aWRpc2s6
-Cj4gPiA+IGNvbmZpZ3VyYXRpb24gLSBta2ZzIGZvciBkZXRlcm1pbmluZyB0aGUgQUcgY291bnQg
-b2YgdGhlIGZpbGVzeXN0ZW0sCj4gPiA+IHJlcGFpciBmb3IgZGV0ZXJtaW5pbmcgaG93IHRvIGF1
-dG9tYXRpY2FsbHkgcGFyYWxsZWxpc2UgaXQncwo+ID4gPiBleGVjdXRpb24uIFRoaXMgcmVxdWly
-ZXMgYSBidW5jaCBvZiBjb21tb24gZGVmaW5lcyB0aGF0IGJvdGggbWtmcwo+ID4gPiBhbmQgcmVh
-cGlyIG5lZWQgdG8gc2hhcmUuCj4gPiA+IAo+ID4gPiBJbiBmYWN0LCBtb3N0IG9mIHRoZSBkZWZp
-bmVzIGluIHhmc19ta2ZzLmggY291bGQgYmUgc2hhcmVkIHdpdGgKPiA+ID4gb3RoZXIgcHJvZ3Jh
-bXMgKGkuZS4gYWxsIHRoZSBkZWZhdWx0cyBta2ZzIHVzZXMpIGFuZCBzbyBpdCBpcwo+ID4gPiBz
-aW1wbGVzdCB0byBtb3ZlIHhmc19ta2ZzLmggdG8gdGhlIHNoYXJlZCBpbmNsdWRlIGRpcmVjdG9y
-eSBhbmQgYWRkCj4gPiA+IHRoZSBuZXcgZGVmaW5lcyB0byBpdCBkaXJlY3RseS4KPiA+ID4gCj4g
-PiA+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+
-ID4gU2lnbmVkLW9mZi1ieTogSmFuIMWkdWzDoWsgPGp0dWxha0ByZWRoYXQuY29tPgo+ID4gPiAt
-LS0KPiA+ID4gIGluY2x1ZGUvTWFrZWZpbGUgICAgfCAgOCArKysrLQo+ID4gPiAgaW5jbHVkZS94
-ZnNfbWtmcy5oICB8IDk4Cj4gPiA+ICArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKwo+ID4gPiAgbWtmcy9NYWtlZmlsZSAgICAgICB8ICAyICstCj4g
-PiA+ICBta2ZzL3hmc19ta2ZzLmMgICAgIHwgNTYgKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
-LS0tCj4gPiA+ICBta2ZzL3hmc19ta2ZzLmggICAgIHwgODkgLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gPiA+ICByZXBhaXIveGZzX3JlcGFpci5jIHwg
-NDUgKysrKysrKysrKysrKysrKysrKysrKy0tCj4gPiA+ICA2IGZpbGVzIGNoYW5nZWQsIDE3OCBp
-bnNlcnRpb25zKCspLCAxMjAgZGVsZXRpb25zKC0pCj4gPiA+ICBjcmVhdGUgbW9kZSAxMDA2NDQg
-aW5jbHVkZS94ZnNfbWtmcy5oCj4gPiA+ICBkZWxldGUgbW9kZSAxMDA2NDQgbWtmcy94ZnNfbWtm
-cy5oCj4gPiA+IAo+ID4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9NYWtlZmlsZSBiL2luY2x1ZGUv
-TWFrZWZpbGUKPiA+ID4gaW5kZXggNzBlNDNhMC4uMzI2OWVjMyAxMDA2NDQKPiA+ID4gLS0tIGEv
-aW5jbHVkZS9NYWtlZmlsZQo+ID4gPiArKysgYi9pbmNsdWRlL01ha2VmaWxlCj4gPiA+IEBAIC0y
-Niw5ICsyNiwxNSBAQCBRQUhGSUxFUyA9IGxpYnhmcy5oIGxpYnhsb2cuaCBcCj4gPiA+ICAJeGZz
-X2lub2RlLmggXAo+ID4gPiAgCXhmc19sb2dfcmVjb3Zlci5oIFwKPiA+ID4gIAl4ZnNfbWV0YWR1
-bXAuaCBcCj4gPiA+ICsJeGZzX21rZnMuaCBcCj4gPiA+ICAJeGZzX21vdW50LmggXAo+ID4gPiAr
-CXhmc19xdW90YV9kZWZzLmggXAo+ID4gPiArCXhmc19zYi5oIFwKPiA+ID4gKwl4ZnNfc2hhcmVk
-LmggXAo+ID4gPiAgCXhmc190cmFjZS5oIFwKPiA+ID4gLQl4ZnNfdHJhbnMuaAo+ID4gPiArCXhm
-c190cmFucy5oIFwKPiA+ID4gKwl4ZnNfdHJhbnNfcmVzdi5oIFwKPiA+ID4gKwl4ZnNfdHJhbnNf
-c3BhY2UuaAo+ID4gPiAgCj4gPiA+ICBIRklMRVMgPSBoYW5kbGUuaCBqZG0uaCB4cW0uaCB4ZnMu
-aAo+ID4gPiAgSEZJTEVTICs9ICQoUEtHX1BMQVRGT1JNKS5oCj4gPiA+IGRpZmYgLS1naXQgYS9p
-bmNsdWRlL3hmc19ta2ZzLmggYi9pbmNsdWRlL3hmc19ta2ZzLmgKPiA+ID4gbmV3IGZpbGUgbW9k
-ZSAxMDA2NDQKPiA+ID4gaW5kZXggMDAwMDAwMC4uMzM4OGY2ZAo+ID4gPiAtLS0gL2Rldi9udWxs
-Cj4gPiA+ICsrKyBiL2luY2x1ZGUveGZzX21rZnMuaAo+ID4gPiBAQCAtMCwwICsxLDk4IEBACj4g
-PiA+ICsvKgo+ID4gPiArICogQ29weXJpZ2h0IChjKSAyMDAwLTIwMDEsMjAwNC0yMDA1IFNpbGlj
-b24gR3JhcGhpY3MsIEluYy4KPiA+ID4gKyAqIEFsbCBSaWdodHMgUmVzZXJ2ZWQuCj4gPiA+ICsg
-Kgo+ID4gPiArICogVGhpcyBwcm9ncmFtIGlzIGZyZWUgc29mdHdhcmU7IHlvdSBjYW4gcmVkaXN0
-cmlidXRlIGl0IGFuZC9vcgo+ID4gPiArICogbW9kaWZ5IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0
-aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMKPiA+ID4gKyAqIHB1Ymxpc2hlZCBieSB0
-aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLgo+ID4gPiArICoKPiA+ID4gKyAqIFRoaXMgcHJv
-Z3JhbSBpcyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdvdWxkIGJlIHVzZWZ1bCwK
-PiA+ID4gKyAqIGJ1dCBXSVRIT1VUIEFOWSBXQVJSQU5UWTsgd2l0aG91dCBldmVuIHRoZSBpbXBs
-aWVkIHdhcnJhbnR5IG9mCj4gPiA+ICsgKiBNRVJDSEFOVEFCSUxJVFkgb3IgRklUTkVTUyBGT1Ig
-QSBQQVJUSUNVTEFSIFBVUlBPU0UuICBTZWUgdGhlCj4gPiA+ICsgKiBHTlUgR2VuZXJhbCBQdWJs
-aWMgTGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgo+ID4gPiArICoKPiA+ID4gKyAqIFlvdSBzaG91
-bGQgaGF2ZSByZWNlaXZlZCBhIGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNl
-Cj4gPiA+ICsgKiBhbG9uZyB3aXRoIHRoaXMgcHJvZ3JhbTsgaWYgbm90LCB3cml0ZSB0aGUgRnJl
-ZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLAo+ID4gPiArICogSW5jLiwgIDUxIEZyYW5rbGluIFN0LCBG
-aWZ0aCBGbG9vciwgQm9zdG9uLCBNQSAgMDIxMTAtMTMwMSAgVVNBCj4gPiA+ICsgKi8KPiA+ID4g
-KyNpZm5kZWYgX19YRlNfTUtGU19IX18KPiA+ID4gKyNkZWZpbmUJX19YRlNfTUtGU19IX18KPiA+
-ID4gKwo+ID4gPiArI2RlZmluZSBYRlNfREZMX1NCX1ZFUlNJT05fQklUUyBcCj4gPiA+ICsgICAg
-ICAgICAgICAgICAgKFhGU19TQl9WRVJTSU9OX05MSU5LQklUIHwgXAo+ID4gPiArICAgICAgICAg
-ICAgICAgICBYRlNfU0JfVkVSU0lPTl9FWFRGTEdCSVQgfCBcCj4gPiA+ICsgICAgICAgICAgICAg
-ICAgIFhGU19TQl9WRVJTSU9OX0RJUlYyQklUKQo+ID4gPiArCj4gPiA+ICsjZGVmaW5lIFhGU19T
-Ql9WRVJTSU9OX01LRlMoY3JjLGlhLGRpYSxsb2cyLGF0dHIxLHNmbGFnLGNpLG1vcmUpIChcCj4g
-PiA+ICsJKChjcmMpfHwoaWEpfHwoZGlhKXx8KGxvZzIpfHwoYXR0cjEpfHwoc2ZsYWcpfHwoY2kp
-fHwobW9yZSkpID8gXAo+ID4gPiArCSgoKGNyYykgPyBYRlNfU0JfVkVSU0lPTl81IDogWEZTX1NC
-X1ZFUlNJT05fNCkgfAkJXAo+ID4gPiArCQkoKGlhKSA/IFhGU19TQl9WRVJTSU9OX0FMSUdOQklU
-IDogMCkgfAkJCVwKPiA+ID4gKwkJKChkaWEpID8gWEZTX1NCX1ZFUlNJT05fREFMSUdOQklUIDog
-MCkgfAkJXAo+ID4gPiArCQkoKGxvZzIpID8gWEZTX1NCX1ZFUlNJT05fTE9HVjJCSVQgOiAwKSB8
-CQlcCj4gPiA+ICsJCSgoYXR0cjEpID8gWEZTX1NCX1ZFUlNJT05fQVRUUkJJVCA6IDApIHwJCVwK
-PiA+ID4gKwkJKChzZmxhZykgPyBYRlNfU0JfVkVSU0lPTl9TRUNUT1JCSVQgOiAwKSB8CQlcCj4g
-PiA+ICsJCSgoY2kpID8gWEZTX1NCX1ZFUlNJT05fQk9SR0JJVCA6IDApIHwJCQlcCj4gPiA+ICsJ
-CSgobW9yZSkgPyBYRlNfU0JfVkVSU0lPTl9NT1JFQklUU0JJVCA6IDApIHwJCVwKPiA+ID4gKwkg
-ICAgICAgIFhGU19ERkxfU0JfVkVSU0lPTl9CSVRTIHwgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgXAo+ID4gPiArCTAgKSA6IFhGU19TQl9WRVJTSU9OXzEgKQo+ID4gPiArCj4gPiA+ICsj
-ZGVmaW5lIFhGU19TQl9WRVJTSU9OMl9NS0ZTKGNyYywgbGF6eWNvdW50LCBhdHRyMiwgcHJvamlk
-MzJiaXQsIHBhcmVudCwgXAo+ID4gPiArCQkJICAgICBmdHlwZSkgKFwKPiA+ID4gKwkoKGxhenlj
-b3VudCkgPyBYRlNfU0JfVkVSU0lPTjJfTEFaWVNCQ09VTlRCSVQgOiAwKSB8CQlcCj4gPiA+ICsJ
-KChhdHRyMikgPyBYRlNfU0JfVkVSU0lPTjJfQVRUUjJCSVQgOiAwKSB8CQkJXAo+ID4gPiArCSgo
-cHJvamlkMzJiaXQpID8gWEZTX1NCX1ZFUlNJT04yX1BST0pJRDMyQklUIDogMCkgfAkJXAo+ID4g
-PiArCSgocGFyZW50KSA/IFhGU19TQl9WRVJTSU9OMl9QQVJFTlRCSVQgOiAwKSB8CQkJXAo+ID4g
-PiArCSgoY3JjKSA/IFhGU19TQl9WRVJTSU9OMl9DUkNCSVQgOiAwKSB8CQkJCVwKPiA+ID4gKwko
-KGZ0eXBlKSA/IFhGU19TQl9WRVJTSU9OMl9GVFlQRSA6IDApIHwJCQkJXAo+ID4gPiArCTAgKQo+
-ID4gPiArCj4gPiA+ICsjZGVmaW5lCVhGU19ERkxfQkxPQ0tTSVpFX0xPRwkxMgkJLyogNDA5NiBi
-eXRlIGJsb2NrcyAqLwo+ID4gPiArI2RlZmluZQlYRlNfRElOT0RFX0RGTF9MT0cJOAkJLyogMjU2
-IGJ5dGUgaW5vZGVzICovCj4gPiA+ICsjZGVmaW5lCVhGU19ESU5PREVfREZMX0NSQ19MT0cJOQkJ
-LyogNTEyIGJ5dGUgaW5vZGVzIGZvciBDUkNzICovCj4gPiA+ICsjZGVmaW5lCVhGU19NSU5fREFU
-QV9CTE9DS1MJMTAwCj4gPiA+ICsjZGVmaW5lCVhGU19NSU5fSU5PREVfUEVSQkxPQ0sJMgkJLyog
-bWluIGlub2RlcyBwZXIgYmxvY2sgKi8KPiA+ID4gKyNkZWZpbmUJWEZTX0RGTF9JTUFYSU1VTV9Q
-Q1QJMjUJCS8qIG1heCAlIG9mIHNwYWNlIGZvciBpbm9kZXMgKi8KPiA+ID4gKyNkZWZpbmUJWEZT
-X0lGTEFHX0FMSUdOCQkxCQkvKiAtaSBhbGlnbiBkZWZhdWx0cyBvbiAqLwo+ID4gPiArI2RlZmlu
-ZQlYRlNfTUlOX1JFQ19ESVJTSVpFCTEyCQkvKiA0MDk2IGJ5dGUgZGlyYmxvY2tzIChWMikgKi8K
-PiA+ID4gKyNkZWZpbmUJWEZTX0RGTF9ESVJfVkVSU0lPTgkyCQkvKiBkZWZhdWx0IGRpcmVjdG9y
-eSB2ZXJzaW9uICovCj4gPiA+ICsjZGVmaW5lCVhGU19ERkxfTE9HX1NJWkUJMTAwMAkJLyogZGVm
-YXVsdCBsb2cgc2l6ZSwgYmxvY2tzICovCj4gPiA+ICsjZGVmaW5lCVhGU19ERkxfTE9HX0ZBQ1RP
-Ugk1CQkvKiBkZWZhdWx0IGxvZyBzaXplLCBmYWN0b3IgKi8KPiA+ID4gKwkJCQkJCS8qIHdpdGgg
-bWF4IHRyYW5zIHJlc2VydmF0aW9uICovCj4gPiA+ICsjZGVmaW5lIFhGU19NQVhfSU5PREVfU0lH
-X0JJVFMJMzIJCS8qIG1vc3Qgc2lnbmlmaWNhbnQgYml0cyBpbiBhbgo+ID4gPiArCQkJCQkJICog
-aW5vZGUgbnVtYmVyIHRoYXQgd2UnbGwKPiA+ID4gKwkJCQkJCSAqIGFjY2VwdCB3L28gd2Fybmlu
-Z3MKPiA+ID4gKwkJCQkJCSAqLwo+ID4gPiArCj4gPiA+ICsjZGVmaW5lIFhGU19BR19CWVRFUyhi
-YmxvZykJKChsb25nIGxvbmcpQkJTSVpFIDw8IChiYmxvZykpCj4gPiA+ICsjZGVmaW5lCVhGU19B
-R19NSU5fQllURVMJKChYRlNfQUdfQllURVMoMTUpKSkJLyogMTYgTUIgKi8KPiA+ID4gKyNkZWZp
-bmUgWEZTX0FHX01JTl9CTE9DS1MoYmxvZykJKChYRlNfQUdfQllURVMoMTUpKSA+PiAoYmxvZykp
-Cj4gPiA+ICsjZGVmaW5lIFhGU19BR19NQVhfQkxPQ0tTKGJsb2cpCSgoWEZTX0FHX0JZVEVTKDMx
-KSAtIDEpID4+IChibG9nKSkKPiA+ID4gKwo+ID4gPiArI2RlZmluZSBYRlNfTUFYX0FHTlVNQkVS
-CSgoeGZzX2FnbnVtYmVyX3QpKE5VTExBR05VTUJFUiAtIDEpKQo+ID4gPiArCj4gPiA+ICsvKgo+
-ID4gPiArICogVGhlc2UgdmFsdWVzIGRlZmluZSB3aGF0IHdlIGNvbnNpZGVyIGEgIm11bHRpLWRp
-c2siIGZpbGVzeXN0ZW0uIFRoYXQKPiA+ID4gaXMsIGEKPiA+ID4gKyAqIGZpbGVzeXN0ZW0gdGhh
-dCBpcyBsaWtlbHkgdG8gYmUgbWFkZSB1cCBvZiBtdWx0aXBsZSBkZXZpY2VzLCBhbmQgaGVuY2UK
-PiA+ID4gaGF2ZQo+ID4gPiArICogc29tZSBsZXZlbCBvZiBwYXJhbGxlbGlzbSBhdm9pZCB0byBp
-dCBhdCB0aGUgSU8gbGV2ZWwuCj4gPiA+ICsgKi8KPiA+ID4gKyNkZWZpbmUgWEZTX01VTFRJRElT
-S19BR0xPRwkJNQkvKiAzMiBBR3MgKi8KPiA+ID4gKyNkZWZpbmUgWEZTX05PTVVMVElESVNLX0FH
-TE9HCQkyCS8qIDQgQUdzICovCj4gPiA+ICsjZGVmaW5lIFhGU19NVUxUSURJU0tfQUdDT1VOVAkJ
-KDEgPDwgWEZTX01VTFRJRElTS19BR0xPRykKPiA+ID4gKwo+ID4gPiArCj4gPiA+ICsvKiB4ZnNf
-bWtmcy5jICovCj4gPiA+ICtleHRlcm4gaW50IGlzZGlnaXRzIChjaGFyICpzdHIpOwo+ID4gPiAr
-ZXh0ZXJuIGxvbmcgbG9uZyBjdnRudW0gKHVuc2lnbmVkIGludCBibG9ja3NpemUsCj4gPiA+ICsJ
-CQkgdW5zaWduZWQgaW50IHNlY3RvcnNpemUsIGNoYXIgKnMpOwo+ID4gPiArCj4gPiA+ICsvKiBw
-cm90by5jICovCj4gPiA+ICtleHRlcm4gY2hhciAqc2V0dXBfcHJvdG8gKGNoYXIgKmZuYW1lKTsK
-PiA+ID4gK2V4dGVybiB2b2lkIHBhcnNlX3Byb3RvICh4ZnNfbW91bnRfdCAqbXAsIHN0cnVjdCBm
-c3hhdHRyICpmc3gsIGNoYXIgKipwcCk7Cj4gPiA+ICtleHRlcm4gdm9pZCByZXNfZmFpbGVkIChp
-bnQgZXJyKTsKPiA+ID4gKwo+ID4gPiArLyogbWF4dHJyZXMuYyAqLwo+ID4gPiArZXh0ZXJuIGlu
-dCBtYXhfdHJhbnNfcmVzIChpbnQgY3Jjc19lbmFibGVkLCBpbnQgZGlydmVyc2lvbiwKPiA+ID4g
-KwkJaW50IHNlY3RvcmxvZywgaW50IGJsb2NrbG9nLCBpbnQgaW5vZGVsb2csIGludCBkaXJibG9j
-a2xvZywKPiA+ID4gKwkJaW50IGxvZ3ZlcnNpb24sIGludCBsb2dfc3VuaXQpOwo+ID4gPiArCj4g
-PiA+ICsjZW5kaWYJLyogX19YRlNfTUtGU19IX18gKi8KPiA+ID4gZGlmZiAtLWdpdCBhL21rZnMv
-TWFrZWZpbGUgYi9ta2ZzL01ha2VmaWxlCj4gPiA+IGluZGV4IGZkMWY2MTUuLjgyMzI2ZTAgMTAw
-NjQ0Cj4gPiA+IC0tLSBhL21rZnMvTWFrZWZpbGUKPiA+ID4gKysrIGIvbWtmcy9NYWtlZmlsZQo+
-ID4gPiBAQCAtOCw3ICs4LDcgQEAgaW5jbHVkZSAkKFRPUERJUikvaW5jbHVkZS9idWlsZGRlZnMK
-PiA+ID4gIExUQ09NTUFORCA9IG1rZnMueGZzCj4gPiA+ICBGU1RZUCA9IGZzdHlwCj4gPiA+ICAK
-PiA+ID4gLUhGSUxFUyA9IHhmc19ta2ZzLmgKPiA+ID4gK0hGSUxFUyA9Cj4gPiA+ICBDRklMRVMg
-PSBtYXh0cnJlcy5jIHByb3RvLmMgeGZzX21rZnMuYwo+ID4gPiAgCj4gPiA+ICBpZmVxICgkKEVO
-QUJMRV9CTEtJRCkseWVzKQo+ID4gPiBkaWZmIC0tZ2l0IGEvbWtmcy94ZnNfbWtmcy5jIGIvbWtm
-cy94ZnNfbWtmcy5jCj4gPiA+IGluZGV4IDgzZjc3NDkuLmQwZGU5MGQgMTAwNjQ0Cj4gPiA+IC0t
-LSBhL21rZnMveGZzX21rZnMuYwo+ID4gPiArKysgYi9ta2ZzL3hmc19ta2ZzLmMKPiA+ID4gQEAg
-LTI0LDcgKzI0LDcgQEAKPiA+ID4gICNpbmNsdWRlIDxkaXNrL2ZzdHlwLmg+Cj4gPiA+ICAjaW5j
-bHVkZSA8ZGlzay92b2x1bWUuaD4KPiA+ID4gICNlbmRpZgo+ID4gPiAtI2luY2x1ZGUgInhmc19t
-a2ZzLmgiCj4gPiA+ICsjaW5jbHVkZSA8eGZzL3hmc19ta2ZzLmg+Cj4gPiA+ICAKPiA+ID4gIC8q
-Cj4gPiA+ICAgKiBEZXZpY2UgdG9wb2xvZ3kgaW5mb3JtYXRpb24uCj4gPiA+IEBAIC02ODgsNDMg
-KzY4OCw0NSBAQCBjYWxjX2RlZmF1bHRfYWdfZ2VvbWV0cnkoCj4gPiA+ICAJfQo+ID4gPiAgCj4g
-PiA+ICAJLyoKPiA+ID4gLQkgKiBGb3IgdGhlIHJlbWFpbmRlciB3ZSBjaG9vc2UgYW4gQUcgc2l6
-ZSBiYXNlZCBvbiB0aGUKPiA+ID4gLQkgKiBudW1iZXIgb2YgZGF0YSBibG9ja3MgYXZhaWxhYmxl
-LCB0cnlpbmcgdG8ga2VlcCB0aGUKPiA+ID4gLQkgKiBudW1iZXIgb2YgQUdzIHJlbGF0aXZlbHkg
-c21hbGwgKGVzcGVjaWFsbHkgY29tcGFyZWQKPiA+ID4gLQkgKiB0byB0aGUgb3JpZ2luYWwgYWxn
-b3JpdGhtKS4gIEFHIGNvdW50IGlzIGNhbGN1bGF0ZWQKPiA+ID4gLQkgKiBiYXNlZCBvbiB0aGUg
-cHJlZmVycmVkIEFHIHNpemUsIG5vdCB2aWNlLXZlcnNhIC0gdGhlCj4gPiA+IC0JICogY291bnQg
-Y2FuIGJlIGluY3JlYXNlZCBieSBncm93ZnMsIHNvIHByZWZlciB0byB1c2UKPiA+ID4gLQkgKiBz
-bWFsbGVyIGNvdW50cyBhdCBta2ZzIHRpbWUuCj4gPiA+IC0JICoKPiA+ID4gLQkgKiBGb3IgYSBz
-aW5nbGUgdW5kZXJseWluZyBzdG9yYWdlIGRldmljZSBiZXR3ZWVuIDEyOE1CCj4gPiA+IC0JICog
-YW5kIDRUQiBpbiBzaXplLCBqdXN0IHVzZSA0IEFHcywgb3RoZXJ3aXNlIHNjYWxlIHVwCj4gPiA+
-IC0JICogc21vb3RobHkgYmV0d2VlbiBtaW4vbWF4IEFHIHNpemVzLgo+ID4gPiArCSAqIEZvciBh
-IHNpbmdsZSB1bmRlcmx5aW5nIHN0b3JhZ2UgZGV2aWNlIGJldHdlZW4gMTI4TUIgYW5kIDRUQiBp
-biBzaXplCj4gPiA+ICsJICoganVzdCB1c2UgNCBBR3MgYW5kIHNjYWxlIHVwIHNtb290aGx5IGJl
-dHdlZW4gbWluL21heCBBRyBzaXplcy4KPiA+ID4gIAkgKi8KPiA+ID4gLQo+ID4gPiAtCWlmICgh
-bXVsdGlkaXNrICYmIGRibG9ja3MgPj0gTUVHQUJZVEVTKDEyOCwgYmxvY2tsb2cpKSB7Cj4gPiA+
-ICsJaWYgKCFtdWx0aWRpc2spIHsKPiA+ID4gIAkJaWYgKGRibG9ja3MgPj0gVEVSQUJZVEVTKDQs
-IGJsb2NrbG9nKSkgewo+ID4gPiAgCQkJYmxvY2tzID0gWEZTX0FHX01BWF9CTE9DS1MoYmxvY2ts
-b2cpOwo+ID4gPiAgCQkJZ290byBkb25lOwo+ID4gPiArCQl9IGVsc2UgaWYgKGRibG9ja3MgPj0g
-TUVHQUJZVEVTKDEyOCwgYmxvY2tsb2cpKSB7Cj4gPiA+ICsJCQlzaGlmdCA9IFhGU19OT01VTFRJ
-RElTS19BR0xPRzsKPiA+ID4gKwkJCWdvdG8gY2FsY19ibG9ja3M7Cj4gPiA+ICAJCX0KPiA+ID4g
-LQkJc2hpZnQgPSAyOwo+ID4gPiAtCX0gZWxzZSBpZiAoZGJsb2NrcyA+IEdJR0FCWVRFUyg1MTIs
-IGJsb2NrbG9nKSkKPiA+ID4gLQkJc2hpZnQgPSA1Owo+ID4gPiAtCWVsc2UgaWYgKGRibG9ja3Mg
-PiBHSUdBQllURVMoOCwgYmxvY2tsb2cpKQo+ID4gPiAtCQlzaGlmdCA9IDQ7Cj4gPiA+IC0JZWxz
-ZSBpZiAoZGJsb2NrcyA+PSBNRUdBQllURVMoMTI4LCBibG9ja2xvZykpCj4gPiA+IC0JCXNoaWZ0
-ID0gMzsKPiA+ID4gLQllbHNlIGlmIChkYmxvY2tzID49IE1FR0FCWVRFUyg2NCwgYmxvY2tsb2cp
-KQo+ID4gPiAtCQlzaGlmdCA9IDI7Cj4gPiA+IC0JZWxzZSBpZiAoZGJsb2NrcyA+PSBNRUdBQllU
-RVMoMzIsIGJsb2NrbG9nKSkKPiA+ID4gLQkJc2hpZnQgPSAxOwo+ID4gPiAtCWVsc2UKPiA+ID4g
-LQkJc2hpZnQgPSAwOwo+ID4gPiArCX0KPiA+ID4gKwo+ID4gPiArCS8qCj4gPiA+ICsJICogRm9y
-IHRoZSBtdWx0aWRpc2sgY29uZmlncyB3ZSBjaG9vc2UgYW4gQUcgY291bnQgYmFzZWQgb24gdGhl
-IG51bWJlcgo+ID4gPiArCSAqIG9mIGRhdGEgYmxvY2tzIGF2YWlsYWJsZSwgdHJ5aW5nIHRvIGtl
-ZXAgdGhlIG51bWJlciBvZiBBR3MgaGlnaGVyCj4gPiA+ICsJICogdGhhbiB0aGUgc2luZ2xlIGRp
-c2sgY29uZmlndXJhdGlvbnMuIFRoaXMgbWFrZXMgdGhlIGFzc3VtcHRpb24gdGhhdAo+ID4gPiAr
-CSAqIGxhcmdlciBmaWxlc3lzdGVtcyBoYXZlIG1vcmUgcGFyYWxsZWxpc20gYXZhaWxhYmxlIHRv
-IHRoZW0uCj4gPiA+ICsJICovCj4gPiA+ICsJc2hpZnQgPSBYRlNfTVVMVElESVNLX0FHTE9HOwo+
-ID4gPiArCWlmIChkYmxvY2tzIDwgR0lHQUJZVEVTKDUxMiwgYmxvY2tsb2cpKQo+ID4gPiArCQlz
-aGlmdC0tOwo+ID4gPiArCWlmIChkYmxvY2tzIDwgR0lHQUJZVEVTKDgsIGJsb2NrbG9nKSkKPiA+
-ID4gKwkJc2hpZnQtLTsKPiA+ID4gKwlpZiAoZGJsb2NrcyA8IE1FR0FCWVRFUygxMjgsIGJsb2Nr
-bG9nKSkKPiA+ID4gKwkJc2hpZnQtLTsKPiA+ID4gKwlpZiAoZGJsb2NrcyA8IE1FR0FCWVRFUyg2
-NCwgYmxvY2tsb2cpKQo+ID4gPiArCQlzaGlmdC0tOwo+ID4gPiArCWlmIChkYmxvY2tzIDwgTUVH
-QUJZVEVTKDMyLCBibG9ja2xvZykpCj4gPiA+ICsJCXNoaWZ0LS07Cj4gPiA+ICsKPiA+IAo+ID4g
-SW50ZW5kZWQgY2hhbmdlIGluIGJlaGF2aW9yIG9mIHRoZSBkZWZhdWx0cyBmb3IgZnMnIHRoYXQg
-bWF0Y2ggdGhlc2UKPiA+IHNpemUgdGhyZXNob2xkcyAodGhlIDUxMmcgYW5kIDhnIG9uZXMgYW55
-d2F5cyk/IEZvciBleGFtcGxlLCBpbiB0aGUgb2xkCj4gPiBjb2RlIGEgNTEyR0IgZnMgZ2V0cyBh
-IHNoaWZ0IG9mIDQgd2hpbGUgdGhlIHNhbWUgZnMgZ2V0cyBzaGlmdCA9IDUgaW4KPiA+IHRoZSBu
-ZXcgY29kZS4KPiA+IAo+ID4gQnJpYW4KPiAKPiBXaGVuIEkgbG9vayBvbiB0aGUgY29kZSwgd2hl
-cmUgZGlkIHlvdSBnb3QgdGhlIDQgdnMgNT8gSW4gdGhlIG9sZCBjb2RlLCBmb3IgNTEyR0IgYW5k
-IGJpZ2dlciBpcyBhc3NpZ25lZCBzaGlmdD01IGRpcmVjdGx5LiBJbiB0aGUgbmV3IG9uZSwgc2hp
-ZnQgaXMgc2V0IHRvIFhGU19NVUxUSURJU0tfQUdMT0cgd2hpY2ggaXMgNSwgYW5kIHRoZW4sIGlm
-IHRoZSBkaXNrIGlzIHNtYWxsZXIgdGhhbiA1MTJHQiwgaXQgZGVjcmVtZW50cyB0aGUgdmFsdWUu
-IEJ1dCB1bmxlc3MgSSdtIG1pc3Npbmcgc29tZXRoaW5nLCB0aGUgbXVsdGlkaXNrIGNvbmZpZ3Vy
-YXRpb24gaXMgbm90IGNoYW5naW5nIGFueXRoaW5nLCB0aGVyZSBpcyBqdXN0IGEgZGlmZmVyZW50
-IHN5bnRheC4KPiAKCkkgd2FzIHJlZmVycmluZyB0byB0aGUgbXVsdGlkaXNrIGNhc2UuIFRoZSBv
-bGQgY29kZSBsb29rcyBsaWtlIHRoaXM6CgogICAgICAgIGlmICghbXVsdGlkaXNrICYmIGRibG9j
-a3MgPj0gTUVHQUJZVEVTKDEyOCwgYmxvY2tsb2cpKSB7CgkJLi4uCiAgICAgICAgfSBlbHNlIGlm
-IChkYmxvY2tzID4gR0lHQUJZVEVTKDUxMiwgYmxvY2tsb2cpKQogICAgICAgICAgICAgICAgc2hp
-ZnQgPSA1OwogICAgICAgIGVsc2UgaWYgKGRibG9ja3MgPiBHSUdBQllURVMoOCwgYmxvY2tsb2cp
-KQogICAgICAgICAgICAgICAgc2hpZnQgPSA0OwoKLi4uIHdoaWNoIG1lYW5zIGlmIG11bHRpZGlz
-ayAmJiBkYmxvY2tzID09IDUxMkdCLCB0aGVuIHNoaWZ0IGlzIHNldCB0bwo0LiBXaXRoIHRoZSBu
-ZXcgY29kZSwgd2Ugc2V0IFhGU19NVUxUSURJU0tfQUdMT0cgYXMgeW91IG5vdGVkIGFuZCB0aGVu
-CmV4ZWN1dGU6CgoJaWYgKGRibG9ja3MgPCBHSUdBQllURVMoNTEyLCBibG9ja2xvZykpCgkJc2hp
-ZnQtLTsKCS4uLgoKLi4uIHdoaWNoIHdpbGwgbm90IGRlY3JlbWVudCBzaGlmdCBpZiBkYmxvY2tz
-ID09IDUxMkdCIChpLmUuLCBzaGlmdCBpcwo1KS4KCklmIHlvdSdyZSBzdGlsbCBub3QgY29udmlu
-Y2VkLCBjcmVhdGUgYW4gZXhhY3Qgc2l6ZWQgNTEyR0IgZmlsZSwgbWtmcyBpdAood2l0aCB0aGUg
-c3Uvc3cgb3B0aW9ucyBzZXQgZm9yIG11bHRpZGlzaykgd2l0aCBhbmQgd2l0aG91dCB0aGlzIGNo
-YW5nZQphbmQgb2JzZXJ2ZSBhZ2NvdW50LiA6KQoKQnJpYW4KCj4gQ2hlZXJzLAo+IEphbgo+IC0t
-IAo+IEphbiBUdWxhawo+IGp0dWxha0ByZWRoYXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Jul 02, 2015 at 10:14:04AM -0400, Brian Foster wrote:
+> On Thu, Jul 02, 2015 at 08:47:53AM -0400, Jan Tulak wrote:
+
+[snip ~250 lines]
+
+[ add note about mailing list etiquette w.r.t. trimming the quoted
+context to just what is being discussed so that readers don't have to
+scroll through several screens of irrelevant text just to find the
+discussion. ]
+
+> If you're still not convinced, create an exact sized 512GB file, mkfs it
+> (with the su/sw options set for multidisk) with and without this change
+> and observe agcount. :)
+
+At one point during development of this patch set I started writing
+an xfstest to validate that mkfs did all the right input validation
+things and set parameters appropriately so that we didn't
+inadvertently change behaviour. I never really finished it off (like
+the patch set), but I've attached it below to give an idea of where
+I was going with it. It was based on validating the input and CLI
+parameters for the new code, so is guaranteed to fail on an existing
+mkfs binary.
+
+It's probably a good idea to also validate that things like agcount
+scale as we expect them to...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+
+xfs: add new xfs.mkfs input validation test
+
+From: Dave Chinner <dchinner@redhat.com>
+
+mkfs.xfs does not do a very good job of input validation. This test
+is designed to exercise the input validation and test good/bad
+combinations of options being set. It will not pass on a current
+mkfs.xfs binary - it is designed to be the test case for a input
+validation cleanup.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ tests/xfs/401     | 194 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/401.out |   2 +
+ tests/xfs/group   |   1 +
+ 3 files changed, 197 insertions(+)
+
+diff --git a/tests/xfs/401 b/tests/xfs/401
+new file mode 100644
+index 0000000..48de395
+--- /dev/null
++++ b/tests/xfs/401
+@@ -0,0 +1,194 @@
++#! /bin/bash
++# FS QA Test No. xfs/401
++#
++# mkfs.xfs input validation test. Designed to break mkfs.xfs if it doesn't
++# filter garbage input or invalid option combinations correctly.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $res"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit $status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++
++echo silence is golden
++
++# clear out any options to mkfs first. We want to test realtime and external log
++# devices if we can, but we also want to control them ourselves.
++logdev=$SCRATCH_LOGDEV
++rtdev=$SCRATCH_RTDEV
++
++MKFS_OPTIONS=
++SCRATCH_LOGDEV=
++SCRATCH_RTDEV=
++
++# limit the image size of the filesystem being created to something small
++fssize=$((4 * 1024 * 1024 * 1024))
++fsimg=$TEST_DIR/$seq.img
++
++do_mkfs_pass()
++{
++	echo >> $seqres.full
++	echo "pass expected $*" >> $seqres.full
++	$MKFS_XFS_PROG -f -N $* >> $seqres.full 2>&1
++	[ $? -ne 0 ] && echo "fail $*"
++}
++
++do_mkfs_fail()
++{
++	echo >> $seqres.full
++	echo "fail expected $*" >> $seqres.full
++	$MKFS_XFS_PROG -f -N $* >> $seqres.full 2>&1
++	[ $? -eq 0 ] && echo "pass $*"
++}
++
++do_mkfs_pass $SCRATCH_DEV
++
++# basic "should fail" options
++# logarithm based options are no longer valid
++do_mkfs_fail -s log=9 $SCRATCH_DEV
++do_mkfs_fail -b log=9 $SCRATCH_DEV
++do_mkfs_fail -n log=9 $SCRATCH_DEV
++do_mkfs_fail -i log=9 $SCRATCH_DEV
++do_mkfs_fail -d sectlog=9 $SCRATCH_DEV
++do_mkfs_fail -l sectlog=9 $SCRATCH_DEV
++
++# specifying sector sizes in sectors or blocks or garbage
++do_mkfs_fail -s size=2s $SCRATCH_DEV
++do_mkfs_fail -d sectsize=2s $SCRATCH_DEV
++do_mkfs_fail -l sectsize=2s $SCRATCH_DEV
++do_mkfs_fail -s size=2b $SCRATCH_DEV
++do_mkfs_fail -d sectsize=2b $SCRATCH_DEV
++do_mkfs_fail -l sectsize=2b $SCRATCH_DEV
++
++do_mkfs_fail -s size=grot $SCRATCH_DEV
++do_mkfs_fail -s size=2yerk $SCRATCH_DEV
++do_mkfs_fail -d sectsize=blah $SCRATCH_DEV
++do_mkfs_fail -d sectsize=2foo $SCRATCH_DEV
++do_mkfs_fail -l sectsize=nggh $SCRATCH_DEV
++do_mkfs_fail -l sectsize=2nggh $SCRATCH_DEV
++
++# conflicting sector/block sizes
++do_mkfs_fail -s size=512 -d sectsize=1024 $SCRATCH_DEV
++do_mkfs_fail -s size=512 -l sectsize=1024 $SCRATCH_DEV
++do_mkfs_fail -d sectsize=2048 -l sectsize=1024 $SCRATCH_DEV
++
++do_mkfs_fail -b size=512 -s size=1024 $SCRATCH_DEV
++do_mkfs_fail -b size=512 -d sectsize=1024 $SCRATCH_DEV
++do_mkfs_fail -b size=512 -l sectsize=1024 $SCRATCH_DEV
++
++# specifying block sizes in sectors without specifying sector size
++# or in blocks or garbage
++do_mkfs_fail -b size=2s $SCRATCH_DEV
++do_mkfs_fail -b size=2b $SCRATCH_DEV
++do_mkfs_fail -b size=nfi $SCRATCH_DEV
++do_mkfs_fail -b size=4096nfi $SCRATCH_DEV
++do_mkfs_fail -n size=2s $SCRATCH_DEV
++do_mkfs_fail -n size=2b $SCRATCH_DEV
++do_mkfs_fail -n size=nfi $SCRATCH_DEV
++do_mkfs_fail -n size=4096nfi $SCRATCH_DEV
++
++# bad label length
++do_mkfs_fail -L thisiswaytoolong $SCRATCH_DEV
++
++# basic "should pass" data section tests
++do_mkfs_pass $SCRATCH_DEV
++do_mkfs_pass -d name=$SCRATCH_DEV
++do_mkfs_pass -d size=$fssize $SCRATCH_DEV
++do_mkfs_pass -d agcount=32 $SCRATCH_DEV
++do_mkfs_pass -d agsize=32m $SCRATCH_DEV
++do_mkfs_pass -d agsize=32M $SCRATCH_DEV
++do_mkfs_pass -d agsize=1g $SCRATCH_DEV
++do_mkfs_pass -d agsize=$((32 * 1024 * 1024)) $SCRATCH_DEV
++do_mkfs_pass -b size=4096 -d agsize=8192b $SCRATCH_DEV
++do_mkfs_pass -d sectsize=512,agsize=65536s $SCRATCH_DEV
++do_mkfs_pass -s size=512 -d agsize=65536s $SCRATCH_DEV
++do_mkfs_pass -d noalign $SCRATCH_DEV
++do_mkfs_pass -d sunit=0,swidth=0 $SCRATCH_DEV
++do_mkfs_pass -d sunit=8,swidth=8 $SCRATCH_DEV
++do_mkfs_pass -d sunit=8,swidth=64 $SCRATCH_DEV
++do_mkfs_pass -d su=0,sw=0 $SCRATCH_DEV
++do_mkfs_pass -d su=4096,sw=1 $SCRATCH_DEV
++do_mkfs_pass -d su=4k,sw=1 $SCRATCH_DEV
++do_mkfs_pass -d su=4K,sw=8 $SCRATCH_DEV
++do_mkfs_pass -b size=4096 -d su=1b,sw=8 $SCRATCH_DEV
++do_mkfs_pass -d sectsize=512,su=8s,sw=8 $SCRATCH_DEV
++do_mkfs_pass -s size=512 -d su=8s,sw=8 $SCRATCH_DEV
++
++rm -f $fsimg
++$XFS_IO_PROG -f -c "truncate $fssize" $fsimg
++do_mkfs_pass -d file $fsimg
++do_mkfs_pass -d file,name=$fsimg
++rm -f $fsimg
++do_mkfs_pass -d size=$fssize,file $fsimg
++rm -f $fsimg
++do_mkfs_pass -d size=$fssize,file,name=$fsimg
++do_mkfs_pass -d file,name=$fsimg
++
++# invalid data section tests
++do_mkfs_fail -d size=${fssize}b $SCRATCH_DEV
++do_mkfs_fail -d size=${fssize}s $SCRATCH_DEV
++do_mkfs_fail -d size=${fssize}yerk $SCRATCH_DEV
++do_mkfs_fail -d agsize=8192b $SCRATCH_DEV
++do_mkfs_fail -d agsize=65536s $SCRATCH_DEV
++do_mkfs_fail -d agsize=32Mbsdfsdo $SCRATCH_DEV
++do_mkfs_fail -d agsize=1GB $SCRATCH_DEV
++do_mkfs_fail -d agcount=1k $SCRATCH_DEV
++do_mkfs_fail -d agcount=6b $SCRATCH_DEV
++do_mkfs_fail -d agcount=32,agsize=32m $SCRATCH_DEV
++do_mkfs_fail -d sunit=0,swidth=64 $SCRATCH_DEV
++do_mkfs_fail -d sunit=64,swidth=0 $SCRATCH_DEV
++do_mkfs_fail -d sunit=64,swidth=64,noalign $SCRATCH_DEV
++do_mkfs_fail -d sunit=64k,swidth=64 $SCRATCH_DEV
++do_mkfs_fail -d sunit=64,swidth=64m $SCRATCH_DEV
++do_mkfs_fail -d su=0,sw=64 $SCRATCH_DEV
++do_mkfs_fail -d su=4096,sw=0 $SCRATCH_DEV
++do_mkfs_fail -d su=4096,sw=64,noalign $SCRATCH_DEV
++do_mkfs_fail -d su=4096,sw=64s $SCRATCH_DEV
++do_mkfs_fail -d su=4096s,sw=64 $SCRATCH_DEV
++do_mkfs_fail -d su=4096b,sw=64 $SCRATCH_DEV
++do_mkfs_fail -d su=4096garabge,sw=64 $SCRATCH_DEV
++do_mkfs_fail -d su=4096,sw=64,sunit=64,swidth=64 $SCRATCH_DEV
++
++# naming section tests
++do_mkfs_pass -n size=65536 $SCRATCH_DEV
++
++status=0
++exit
+diff --git a/tests/xfs/401.out b/tests/xfs/401.out
+new file mode 100644
+index 0000000..aaf601b
+--- /dev/null
++++ b/tests/xfs/401.out
+@@ -0,0 +1,2 @@
++QA output created by 401
++silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index ba34650..cfee785 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -189,3 +189,4 @@
+ 304 auto quick quota
+ 305 auto quota
+ 306 auto stress log metadata repair
++401 mkfs auto quick
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
