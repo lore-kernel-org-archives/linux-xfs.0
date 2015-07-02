@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A4EC7FA7
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 04:26:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E4ACEAC003
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 02:26:28 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id 81mbSZ5I6DXJjFyd (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 87E767FB9
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 05:27:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 74D77304032
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 03:27:45 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id TbuvT8KO7XarAzkG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 Jul 2015 02:26:22 -0700 (PDT)
-Date: Thu, 2 Jul 2015 11:26:23 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: "Internal error xfs_attr3_leaf_write_verify at line 216",
-	"directory flags set on non-directory inode" and other errors
-Message-ID: <20150702112623.1c83d473@harpe.intellique.com>
-In-Reply-To: <DBDC024E-67E6-4F11-995F-467AD085109F@intomics.com>
-References: <FD7C5F18-48F3-461B-9604-0E3BDBB7AD69@intomics.com>
-	<20150625184132.773a5ecd@harpe.intellique.com>
-	<09CE9E14-9E6B-4587-9049-35B6C67016EF@intomics.com>
-	<DBDC024E-67E6-4F11-995F-467AD085109F@intomics.com>
+	Thu, 02 Jul 2015 03:27:42 -0700 (PDT)
+Date: Thu, 2 Jul 2015 06:27:17 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <1629704668.22787354.1435832837879.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150701225535.GT22807@dastard>
+References: <1435766461-30961-1-git-send-email-jtulak@redhat.com>
+	<20150701225535.GT22807@dastard>
+Subject: Re: [PATCH] xfsprogs: blkid is now mandatory
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,34 +25,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rasmus Borup Hansen <rbh@intomics.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: hch@infradead.org, sandeen@redhat.com, xfs@oss.sgi.com
 
-TGUgVGh1LCAyIEp1bCAyMDE1IDA5OjU4OjE5ICswMjAwClJhc211cyBCb3J1cCBIYW5zZW4gPHJi
-aEBpbnRvbWljcy5jb20+IMOpY3JpdmFpdDoKCj4gVGhlIGZpbGUgdGhlbiB0dXJucyB1cCBpbiBs
-b3N0K2ZvdW5kIGFuZCB3aGVuIEkgImxzIiBpdCBJIGdldCB0aGUKPiBzYW1lIGVycm9ycyBhZ2Fp
-bi4gSSd2ZSB0cmllZCBkZWxldGluZyBpdCBmcm9tIGxvc3QrZm91bmQsIGJ1dCB0aGVuCj4geGZz
-X3JlcGFpciBmaW5kcyBpdCBhZ2FpbiB3aXRoIGV4YWN0bHkgdGhlIHNhbWUgb3V0cHV0IGFzIHNo
-b3cgYWJvdmUKPiBhbmQgcHV0cyBpdCBiYWNrLgo+IAo+IEFwYXJ0IGZyb20gdGhhdCwgZXZlcnl0
-aGluZyBhcHBhcmVudGx5IHdvcmtzIGZpbmUuCj4gCj4gSXMgdGhlcmUgYSB3YXkgdG8gcGVybWFu
-ZW50bHkgZ2V0IHJpZCBvZiB0aGUgZmlsZSBpbiBsb3N0K2ZvdW5kPyBJdHMKPiBzaXplIGlzIGFw
-cGFyZW50bHkgMCBieXRlcy4KCllvdSBzaG91bGQgdHJ5IHRoZSBsYXRlc3QgeGZzX3JlcGFpciAo
-My4yLjMgSUlSQykgaW5zdGVhZCBvZiB0aGUgc3RvY2sKVWJ1bnR1IHZlcnNpb24gKDMuMS54IHBy
-b2JhYmx5KS4KCkluIGNhc2UgeW91IGRvbid0IGtub3cgaG93IHRvIGNvbXBpbGUgaXQsIEkndmUg
-anVzdCB1cGxvYWRlZCBpdCB0aGVyZToKCmh0dHA6Ly91cGRhdGUuaW50ZWxsaXF1ZS5jb20vcHVi
-L3hmc19yZXBhaXItMy4yLjMuZ3oKCm1kNXN1bSA6Cjc1NmEyODIyOGM3ZTY1N2NlODYyNmQyNzg1
-MGY2MjYxICB4ZnNfcmVwYWlyLTMuMi4zLmd6CgpCZXdhcmUgb2YgYmluYXJpZXMgcHJvdmlkZWQg
-Ynkgc3RyYW5nZXJzLCBob3dldmVyIHRoaXMgb25lIHNob3VsZCBiZQpmaW5lIDopIGd1bnppcCBp
-dCBiZWZvcmUgdXNlLi4uCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAg
-fCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1
-ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAg
-ICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+
+
+----- Original Message -----
+> From: "Dave Chinner" <david@fromorbit.com>
+> To: "Jan Tulak" <jtulak@redhat.com>
+> Cc: hch@infradead.org, sandeen@redhat.com, xfs@oss.sgi.com
+> Sent: Thursday, July 2, 2015 12:55:36 AM
+> Subject: Re: [PATCH] xfsprogs: blkid is now mandatory
+> 
+> On Wed, Jul 01, 2015 at 06:01:01PM +0200, Jan Tulak wrote:
+> > Because blkid is here for a long time, I hereby propose a patch for
+> > removing support
+> > for NOT having blkid. The current support through set of #ifdef is prone to
+> > errors like
+> > making a patch just in one of the branches, and according to a recent talk
+> > between
+> > Christoph and Eric, it is not necessary to keep it supported.
+> > 
+> > Remove code for checking ENABLE_BLKID, and the code when ENABLE_BLKID is
+> > not defined.
+> > It makes blkid required for compilation.
+> > 
+> > Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> > ---
+> >  Makefile             |  5 ----
+> >  configure.ac         |  6 +----
+> >  doc/INSTALL          | 44 ------------------------------------
+> >  include/builddefs.in |  1 -
+> >  libdisk/Makefile     |  4 ----
+> >  m4/package_blkid.m4  |  7 +++---
+> >  mkfs/Makefile        | 21 ++++-------------
+> >  mkfs/xfs_mkfs.c      | 64
+> >  ----------------------------------------------------
+> >  8 files changed, 10 insertions(+), 142 deletions(-)
+> 
+> Given that only mkfs.xfs uses libdisk, which is now not linked to
+> any binary, shouldn't libdisk/ be removed completely?
+> 
+> Cheers,
+> 
+> Dave.
+
+True, I prepared a fixed patch with libdisk removed. Also, it looks to me like ft.sectoralign in xfs_mkfs.c is not used anymore:
+
+	if (ft.sectoralign) {
+		/*
+		 * Older Linux software RAID versions want the sector size
+		 * to match the block size to avoid switching I/O sizes.
+		 * For the legacy libdisk case we thus set the sector size to
+		 * match the block size.  For systems using libblkid we assume
+		 * that the kernel is recent enough to not require this and
+		 * ft.sectoralign will never be set.
+		 */
+		sectorsize = blocksize;
+	} 
+
+So I removed it too.
+Jan
+
+-- 
+Jan Tulak
+jtulak@redhat.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
