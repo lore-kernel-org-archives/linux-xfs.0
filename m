@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2B6DA7F9C
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 18:52:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A6E830405F
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 16:52:01 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 991C47F9C
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 18:55:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 27BE6AC002
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 16:55:05 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	e9fZo1c6y9wyfC8C for <xfs@oss.sgi.com>;
-	Fri, 03 Jul 2015 16:51:58 -0700 (PDT)
-Date: Sat, 4 Jul 2015 09:51:41 +1000
+	EfiKiGJtImDxlVCz for <xfs@oss.sgi.com>;
+	Fri, 03 Jul 2015 16:55:02 -0700 (PDT)
+Date: Sat, 4 Jul 2015 09:55:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Failing XFS filesystem underlying Ceph OSDs
-Message-ID: <20150703235141.GQ7943@dastard>
-References: <CADb9451tB71D3XCqcOkDxzpzbdEHqwj7XCZUpL8yg1DzYbpwBw@mail.gmail.com>
+Subject: Re: "Internal error xfs_attr3_leaf_write_verify at line 216",
+	"directory flags set on non-directory inode" and other errors
+Message-ID: <20150703235500.GR7943@dastard>
+References: <FD7C5F18-48F3-461B-9604-0E3BDBB7AD69@intomics.com>
+	<20150625184132.773a5ecd@harpe.intellique.com>
+	<09CE9E14-9E6B-4587-9049-35B6C67016EF@intomics.com>
+	<DBDC024E-67E6-4F11-995F-467AD085109F@intomics.com>
+	<20150702112623.1c83d473@harpe.intellique.com>
+	<E293B208-AA72-4076-97B0-753C8680D1AE@intomics.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CADb9451tB71D3XCqcOkDxzpzbdEHqwj7XCZUpL8yg1DzYbpwBw@mail.gmail.com>
+In-Reply-To: <E293B208-AA72-4076-97B0-753C8680D1AE@intomics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +35,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Gorbachev <ag@iss-integration.com>
+To: Rasmus Borup Hansen <rbh@intomics.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jul 03, 2015 at 05:07:29AM -0400, Alex Gorbachev wrote:
-> Hello, we are seeing this and similar errors on multiple Supermicro nodes
-> running Ceph.  OS is Ubuntu 14.04.2 with kernel 4.1
-> 
-> Thank you for any info and troubleshooting advice.
+On Fri, Jul 03, 2015 at 08:27:28AM +0200, Rasmus Borup Hansen wrote:
+> Thank you for the suggestion. I compiled a new xfs_repair, but I got similar results from running it.
 
-Nothing to suggest that this is an XFS problem. Memory reclaim
-triggered by network stack memory pressure is causing inode
-eviction. While removing the page cache it's falling over in
-the generic truncate code doing a radix tree lookup. That's all
-generic code - XFS never touches the page cache radix tree directly.
-
-I haven't seen this before - is this a new problem since you
-upgraded your kernel to 4.1? Is it repeatable? if yes to both, then
-a bisect may be in order to isolate the problematic commit...
+Please take a metadump of the filesystem before and after repair
+so that we can find out what is actually going wrong. Feel free to
+send me a private pointer to the metadump images...
 
 Cheers,
 
