@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7163F7F6F
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 18:45:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4268B8F8052
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 16:45:22 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2B6DA7F9C
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 18:52:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A6E830405F
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 16:52:01 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ilhZcVadraE6OrKm for <xfs@oss.sgi.com>;
-	Fri, 03 Jul 2015 16:45:20 -0700 (PDT)
-Date: Sat, 4 Jul 2015 09:45:18 +1000
+	e9fZo1c6y9wyfC8C for <xfs@oss.sgi.com>;
+	Fri, 03 Jul 2015 16:51:58 -0700 (PDT)
+Date: Sat, 4 Jul 2015 09:51:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfsprogs: blkid is now mandatory
-Message-ID: <20150703234518.GP7943@dastard>
-References: <1629704668.22787354.1435832837879.JavaMail.zimbra@redhat.com>
-	<1435833796-24004-1-git-send-email-jtulak@redhat.com>
-	<20150703151904.GA13839@infradead.org>
+Subject: Re: Failing XFS filesystem underlying Ceph OSDs
+Message-ID: <20150703235141.GQ7943@dastard>
+References: <CADb9451tB71D3XCqcOkDxzpzbdEHqwj7XCZUpL8yg1DzYbpwBw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150703151904.GA13839@infradead.org>
+In-Reply-To: <CADb9451tB71D3XCqcOkDxzpzbdEHqwj7XCZUpL8yg1DzYbpwBw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,28 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com, Jan Tulak <jtulak@redhat.com>
+To: Alex Gorbachev <ag@iss-integration.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 03, 2015 at 08:19:04AM -0700, Christoph Hellwig wrote:
-> Thanks Jan!
+On Fri, Jul 03, 2015 at 05:07:29AM -0400, Alex Gorbachev wrote:
+> Hello, we are seeing this and similar errors on multiple Supermicro nodes
+> running Ceph.  OS is Ubuntu 14.04.2 with kernel 4.1
 > 
-> On Thu, Jul 02, 2015 at 12:43:16PM +0200, Jan Tulak wrote:
-> > Because blkid is here for a long time, I hereby propose a patch for removing support
-> > for NOT having blkid. The current support through set of #ifdef is prone to errors like
-> > making a patch just in one of the branches, and according to a recent talk between
-> > Christoph and Eric, it is not necessary to keep it supported.
-> > 
-> > Remove code for checking ENABLE_BLKID, and the code when ENABLE_BLKID is not defined.
-> > The only use of libdisk was in the removed code, so remove libdisk too.
-> > It makes blkid required for compilation.
-> 
-> Can you wrap your commit description lines after ~ 75 characters,
-> please?
+> Thank you for any info and troubleshooting advice.
 
-ObBikeShed: I find 68 characters for commit messages is more
-friendly, especially with the way git show pads the commit messages
-and people cut/paste it into email...
+Nothing to suggest that this is an XFS problem. Memory reclaim
+triggered by network stack memory pressure is causing inode
+eviction. While removing the page cache it's falling over in
+the generic truncate code doing a radix tree lookup. That's all
+generic code - XFS never touches the page cache radix tree directly.
+
+I haven't seen this before - is this a new problem since you
+upgraded your kernel to 4.1? Is it repeatable? if yes to both, then
+a bisect may be in order to isolate the problematic commit...
 
 Cheers,
 
