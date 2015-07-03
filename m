@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BE7D47F8E
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 05:14:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9C6158F8049
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 03:14:57 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 105227F81
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 05:15:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 91ECFAC00E
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 03:15:07 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 9JKUpABnKmqXPZnE (version=TLSv1 cipher=AES128-SHA
+	ESMTP id pgSAQhAwavGx8guk (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 03 Jul 2015 03:14:56 -0700 (PDT)
+	Fri, 03 Jul 2015 03:15:05 -0700 (PDT)
 Received: from [88.128.80.19] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1ZAxzj-0002W8-Sx
-	for xfs@oss.sgi.com; Fri, 03 Jul 2015 10:14:56 +0000
+	id 1ZAxzs-0002sN-OO
+	for xfs@oss.sgi.com; Fri, 03 Jul 2015 10:15:05 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/13] xfsprogs: use <>-style includes in installed headers
-Date: Fri,  3 Jul 2015 12:12:14 +0200
-Message-Id: <1435918341-10128-7-git-send-email-hch@lst.de>
+Subject: [PATCH 08/13] xfsprogs: move __be*/__le* types and __arch_pack to
+	xfs_arch.h
+Date: Fri,  3 Jul 2015 12:12:16 +0200
+Message-Id: <1435918341-10128-9-git-send-email-hch@lst.de>
 In-Reply-To: <1435918341-10128-1-git-send-email-hch@lst.de>
 References: <1435918341-10128-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,70 +35,95 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Once installed these are system headers, so we need to use <>-style include
-statements between them.
+These are defines and typedefs only needed for the XFS on disk format,
+so there is no need to have the available for every user of xfs.h.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/platform_defs.h.in | 10 +++++-----
- include/xfs.h              |  6 +++---
- include/xqm.h              |  2 +-
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ include/platform_defs.h.in | 23 -----------------------
+ include/xfs_arch.h         | 23 +++++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 23 deletions(-)
 
 diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
-index 9a1782c..529c0a6 100644
+index 529c0a6..81741c4 100644
 --- a/include/platform_defs.h.in
 +++ b/include/platform_defs.h.in
-@@ -69,15 +69,15 @@ typedef __u64	__bitwise	__be64;
+@@ -50,22 +50,6 @@ typedef unsigned long long int	__u64;
+ typedef signed long long int	__s64;
+ #endif
+ 
+-#ifdef __CHECKER__
+-#define __bitwise		__attribute__((bitwise))
+-#define __force			__attribute__((force))
+-#else
+-#define __bitwise
+-#define __force
+-#endif
+-
+-typedef __u16	__bitwise	__le16;
+-typedef __u32	__bitwise	__le32;
+-typedef __u64	__bitwise	__le64;
+-
+-typedef __u16	__bitwise	__be16;
+-typedef __u32	__bitwise	__be32;
+-typedef __u64	__bitwise	__be64;
+-
  typedef struct filldir		filldir_t;
  
  #if defined(__linux__)
--#include "xfs/linux.h"
-+#include <xfs/linux.h>
- #elif defined(__FreeBSD__)
--#include "xfs/freebsd.h"
-+#include <xfs/freebsd.h>
- #elif defined(__FreeBSD_kernel__)
--#include "xfs/gnukfreebsd.h"
-+#include <xfs/gnukfreebsd.h>
- #elif defined(__APPLE__)
--#include "xfs/darwin.h"
-+#include <xfs/darwin.h>
- #elif defined(__sgi__) || defined(__sgi)
--#include "xfs/irix.h"
-+#include <xfs/irix.h>
- #else
- # error unknown platform... have fun porting!
+@@ -130,13 +114,6 @@ typedef unsigned short umode_t;
+ 					| (minor&IRIX_DEV_MAXMIN)))
+ #define IRIX_DEV_TO_KDEVT(dev)	makedev(IRIX_DEV_MAJOR(dev),IRIX_DEV_MINOR(dev))
+ 
+-/* ARM old ABI has some weird alignment/padding */
+-#if defined(__arm__) && !defined(__ARM_EABI__)
+-#define __arch_pack __attribute__((packed))
+-#else
+-#define __arch_pack
+-#endif
+-
+ #ifndef min
+ #define min(a,b)	(((a)<(b))?(a):(b))
+ #define max(a,b)	(((a)>(b))?(a):(b))
+diff --git a/include/xfs_arch.h b/include/xfs_arch.h
+index 310a17e..87650f1 100644
+--- a/include/xfs_arch.h
++++ b/include/xfs_arch.h
+@@ -24,6 +24,22 @@
+ #undef XFS_NATIVE_HOST
  #endif
-diff --git a/include/xfs.h b/include/xfs.h
-index 0cb4fb8..e32c4a8 100644
---- a/include/xfs.h
-+++ b/include/xfs.h
-@@ -33,8 +33,8 @@
- #ifndef __XFS_H__
- #define __XFS_H__
  
--#include "xfs/platform_defs.h"
--#include "xfs/xfs_types.h"
--#include "xfs/xfs_fs.h"
-+#include <xfs/platform_defs.h>
-+#include <xfs/xfs_types.h>
-+#include <xfs/xfs_fs.h>
- 
- #endif	/* __XFS_H__ */
-diff --git a/include/xqm.h b/include/xqm.h
-index 0b5dfa1..47f58a0 100644
---- a/include/xqm.h
-+++ b/include/xqm.h
-@@ -18,7 +18,7 @@
- #ifndef __XQM_H__
- #define __XQM_H__
- 
--#include "xfs/xfs.h"
-+#include <xfs/xfs.h>
- 
++#ifdef __CHECKER__
++#define __bitwise		__attribute__((bitwise))
++#define __force			__attribute__((force))
++#else
++#define __bitwise
++#define __force
++#endif
++
++typedef __u16	__bitwise	__le16;
++typedef __u32	__bitwise	__le32;
++typedef __u64	__bitwise	__le64;
++
++typedef __u16	__bitwise	__be16;
++typedef __u32	__bitwise	__be32;
++typedef __u64	__bitwise	__be64;
++
  /*
-  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
+  * Casts are necessary for constants, because we never know how for sure
+  * how U/UL/ULL map to __u16, __u32, __u64. At least not in a portable way.
+@@ -262,4 +278,11 @@ static inline void put_unaligned_be64(__uint64_t val, void *p)
+ 	put_unaligned_be32(val, p + 4);
+ }
+ 
++/* ARM old ABI has some weird alignment/padding */
++#if defined(__arm__) && !defined(__ARM_EABI__)
++#define __arch_pack __attribute__((packed))
++#else
++#define __arch_pack
++#endif
++
+ #endif	/* __XFS_ARCH_H__ */
 -- 
 1.9.1
 
