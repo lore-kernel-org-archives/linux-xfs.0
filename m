@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 415727F81
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 05:14:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E7ED8F8066
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 03:14:55 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id BE7D47F8E
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 05:14:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9C6158F8049
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 03:14:57 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id MJ9cgdeoBsf9G65q (version=TLSv1 cipher=AES128-SHA
+	ESMTP id 9JKUpABnKmqXPZnE (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 03 Jul 2015 03:14:53 -0700 (PDT)
+	Fri, 03 Jul 2015 03:14:56 -0700 (PDT)
 Received: from [88.128.80.19] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1ZAxzg-0002V4-Fx
-	for xfs@oss.sgi.com; Fri, 03 Jul 2015 10:14:52 +0000
+	id 1ZAxzj-0002W8-Sx
+	for xfs@oss.sgi.com; Fri, 03 Jul 2015 10:14:56 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/13] xfsprogs: remove install-qa target
-Date: Fri,  3 Jul 2015 12:12:13 +0200
-Message-Id: <1435918341-10128-6-git-send-email-hch@lst.de>
+Subject: [PATCH 06/13] xfsprogs: use <>-style includes in installed headers
+Date: Fri,  3 Jul 2015 12:12:14 +0200
+Message-Id: <1435918341-10128-7-git-send-email-hch@lst.de>
 In-Reply-To: <1435918341-10128-1-git-send-email-hch@lst.de>
 References: <1435918341-10128-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,179 +34,70 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that we don't install all the libxfs internals but just the disk format
-defintions we can install those as part of the normal install-dev target.
+Once installed these are system headers, so we need to use <>-style include
+statements between them.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Makefile           |  6 ------
- include/Makefile   | 11 +++--------
- include/buildrules |  2 +-
- libdisk/Makefile   |  2 --
- libhandle/Makefile |  2 --
- libxcmd/Makefile   |  2 +-
- libxfs/Makefile    | 10 ++--------
- libxlog/Makefile   |  2 +-
- 8 files changed, 8 insertions(+), 29 deletions(-)
+ include/platform_defs.h.in | 10 +++++-----
+ include/xfs.h              |  6 +++---
+ include/xqm.h              |  2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 6d6803b..111bf76 100644
---- a/Makefile
-+++ b/Makefile
-@@ -108,8 +108,6 @@ install: $(addsuffix -install,$(SUBDIRS))
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index 9a1782c..529c0a6 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -69,15 +69,15 @@ typedef __u64	__bitwise	__be64;
+ typedef struct filldir		filldir_t;
  
- install-dev: $(addsuffix -install-dev,$(SUBDIRS))
+ #if defined(__linux__)
+-#include "xfs/linux.h"
++#include <xfs/linux.h>
+ #elif defined(__FreeBSD__)
+-#include "xfs/freebsd.h"
++#include <xfs/freebsd.h>
+ #elif defined(__FreeBSD_kernel__)
+-#include "xfs/gnukfreebsd.h"
++#include <xfs/gnukfreebsd.h>
+ #elif defined(__APPLE__)
+-#include "xfs/darwin.h"
++#include <xfs/darwin.h>
+ #elif defined(__sgi__) || defined(__sgi)
+-#include "xfs/irix.h"
++#include <xfs/irix.h>
+ #else
+ # error unknown platform... have fun porting!
+ #endif
+diff --git a/include/xfs.h b/include/xfs.h
+index 0cb4fb8..e32c4a8 100644
+--- a/include/xfs.h
++++ b/include/xfs.h
+@@ -33,8 +33,8 @@
+ #ifndef __XFS_H__
+ #define __XFS_H__
  
--install-qa: install $(addsuffix -install-qa,$(SUBDIRS))
--
- %-install:
- 	@echo "Installing $@"
- 	$(Q)$(MAKE) $(MAKEOPTS) -C $* install
-@@ -118,10 +116,6 @@ install-qa: install $(addsuffix -install-qa,$(SUBDIRS))
- 	@echo "Installing $@"
- 	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-dev
+-#include "xfs/platform_defs.h"
+-#include "xfs/xfs_types.h"
+-#include "xfs/xfs_fs.h"
++#include <xfs/platform_defs.h>
++#include <xfs/xfs_types.h>
++#include <xfs/xfs_fs.h>
  
--%-install-qa:
--	@echo "Installing $@"
--	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-qa
--
- distclean: clean
- 	$(Q)rm -f $(LDIRT)
+ #endif	/* __XFS_H__ */
+diff --git a/include/xqm.h b/include/xqm.h
+index 0b5dfa1..47f58a0 100644
+--- a/include/xqm.h
++++ b/include/xqm.h
+@@ -18,7 +18,7 @@
+ #ifndef __XQM_H__
+ #define __XQM_H__
  
-diff --git a/include/Makefile b/include/Makefile
-index 0135860..bd8b0ca 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -18,8 +18,6 @@
- TOPDIR = ..
- include $(TOPDIR)/include/builddefs
+-#include "xfs/xfs.h"
++#include <xfs/xfs.h>
  
--QAHFILES = xfs_arch.h
--
- LIBHFILES = libxfs.h \
- 	libxlog.h \
- 	atomic.h \
-@@ -47,7 +45,8 @@ HFILES = handle.h \
- 	$(PKG_PLATFORM).h \
- 	platform_defs.h \
- 	xfs.h \
--	xqm.h
-+	xqm.h \
-+	xfs_arch.h
- 
- PHFILES = darwin.h freebsd.h irix.h linux.h gnukfreebsd.h
- DKHFILES = volume.h fstyp.h dvh.h
-@@ -66,7 +65,7 @@ disk:
- include $(BUILDRULES)
- 
- # set up include/xfs header directory
--install-headers: $(addsuffix -hdrs, $(HFILES) $(QAHFILES) $(PHFILES) $(DKHFILES) $(LIBHFILES))
-+install-headers: $(addsuffix -hdrs, $(HFILES) $(PHFILES) $(DKHFILES) $(LIBHFILES))
- 
- %-hdrs: xfs
- 	$(Q)$(LN_S) -f $(PWD)/include/$* xfs/$*
-@@ -79,7 +78,3 @@ install: default
- 
- install-dev: install
- 	$(INSTALL) -m 644 $(HFILES) $(PKG_INC_DIR)
--
--install-qa: install-dev
--	$(INSTALL) -m 644 $(QAHFILES) $(PKG_INC_DIR)
--
-diff --git a/include/buildrules b/include/buildrules
-index 0e13f9d..72491db 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -94,7 +94,7 @@ $(_FORCE):
- # rebuild on every make invocation isn't a problem we need to care about. Just
- # do it silently so it doesn't make the build unnecessarily noisy.
- 
--.PHONY : depend ltdepend install-qa
-+.PHONY : depend ltdepend
- 
- MAKEDEP := $(MAKEDEPEND) $(CFLAGS)
- 
-diff --git a/libdisk/Makefile b/libdisk/Makefile
-index b058a9f..3b84a3a 100644
---- a/libdisk/Makefile
-+++ b/libdisk/Makefile
-@@ -32,6 +32,4 @@ install: default
- 
- install-dev: default
- 
--install-qa: install-dev
--
- -include .ltdep
-diff --git a/libhandle/Makefile b/libhandle/Makefile
-index 865ca22..cc4ad1d 100644
---- a/libhandle/Makefile
-+++ b/libhandle/Makefile
-@@ -25,6 +25,4 @@ install: default
- install-dev: default
- 	$(INSTALL_LTLIB_DEV)
- 
--install-qa: install-dev
--
- -include .ltdep
-diff --git a/libxcmd/Makefile b/libxcmd/Makefile
-index ce082a5..7701ed9 100644
---- a/libxcmd/Makefile
-+++ b/libxcmd/Makefile
-@@ -34,6 +34,6 @@ default: ltdepend $(LTLIBRARY)
- 
- include $(BUILDRULES)
- 
--install install-dev install-qa: default
-+install install-dev: default
- 
- -include .ltdep
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 3d3b448..ebbe40e 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -12,10 +12,7 @@ LT_AGE = 0
- 
- # headers to install in include/xfs
- PKGHFILES = xfs_fs.h \
--	xfs_types.h
--
--# headers installed in QA targets
--QAHFILES = \
-+	xfs_types.h \
- 	xfs_da_format.h \
- 	xfs_format.h \
- 	xfs_log_format.h
-@@ -138,7 +135,7 @@ include $(BUILDRULES)
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
- 
--install-headers: $(addsuffix -hdrs, $(PKGHFILES) $(LIBHFILES) $(QAHFILES))
-+install-headers: $(addsuffix -hdrs, $(PKGHFILES) $(LIBHFILES))
- 
- %-hdrs:
- 	$(Q)$(LN_S) -f $(PWD)/libxfs/$* $(TOPDIR)/include/xfs/$*
-@@ -146,9 +143,6 @@ install-headers: $(addsuffix -hdrs, $(PKGHFILES) $(LIBHFILES) $(QAHFILES))
- install-dev: install
- 	$(INSTALL) -m 644 $(PKGHFILES) $(PKG_INC_DIR)
- 
--install-qa: install-dev
--	$(INSTALL) -m 644 $(QAHFILES) $(PKG_INC_DIR)
--
- # We need to install the headers before building the dependencies.  If we
- # include the .ltdep file, the makefile decides that it needs to build the
- # dependencies to remake the makefile before running the header install target,
-diff --git a/libxlog/Makefile b/libxlog/Makefile
-index 4673663..3417eed 100644
---- a/libxlog/Makefile
-+++ b/libxlog/Makefile
-@@ -19,6 +19,6 @@ default: ltdepend $(LTLIBRARY)
- 
- include $(BUILDRULES)
- 
--install install-dev install-qa: default
-+install install-dev: default
- 
- -include .ltdep
+ /*
+  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
 -- 
 1.9.1
 
