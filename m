@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E33047F84
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 22:34:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B006A8F8050
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 20:34:32 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uzIsOxwgXI9520O6 for <xfs@oss.sgi.com>;
-	Thu, 02 Jul 2015 20:34:30 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1ZArkB-0007XW-9S
-	for xfs@oss.sgi.com; Fri, 03 Jul 2015 13:34:27 +1000
-Date: Fri, 3 Jul 2015 13:34:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: for-next branch updated to b488748
-Message-ID: <20150703033427.GN7943@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F1AD7F8D
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 22:39:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BA0C304048
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 20:39:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 5oOePk0W1nDKoeGY for <xfs@oss.sgi.com>;
+	Thu, 02 Jul 2015 20:39:45 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 2A62D60D2E83
+	for <xfs@oss.sgi.com>; Thu,  2 Jul 2015 22:39:45 -0500 (CDT)
+Message-ID: <55960400.4060106@sandeen.net>
+Date: Thu, 02 Jul 2015 22:39:44 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: [PATCH] xfsprogs: simplify patch naming in libxfs-commit
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,126 +26,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7281716438357534875=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
+Git already knows how to create a patch name from a commit,
+no need to re-invent it with cats walking on keyboards,
+entering obfuscated sed contests.  ;)
 
---===============7281716438357534875==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
-Content-Disposition: inline
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
+Untested, TBH - at least as part of the script.
 
---wRRV7LY7NUeQGEoC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The git command works on its own, given a commit id.
 
-Hi folks,
-
-The for-next branch of the xfsprogs repository at
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git has just been
-updated.
-
-This update brings the libxfs code up to the same state as what has
-just been merged into the 4.2 kernel tree. This update was done
-using the new libxfs-apply tool to pull the required kernel commits
-across to the xfsprogs repository, hence the commits retain the
-correct author and signoffs from the kernel commits. Some of the
-patches required minor changes outside xfsprogs so I did them as
-necessary.
-
--Dave.
-
-The new head of the master branch is commit:
-
-b488748 Merge branch 'libxfs-4.2-rc1-update' into for-next
-
-New Commits:
-
-Brian Foster (2):
-      [ac2ed13] xfs: always log the inode on unwritten extent conversion
-      [e736ab9] xfs: check min blks for random debug mode sparse allocations
-
-Christoph Hellwig (1):
-      [1817f86] xfs: return a void pointer from xfs_buf_offset
-
-Dave Chinner (7):
-      [70e6227] xfs: extent size hints can round up extents past MAXEXTLEN
-      [7c128bd] xfs: xfs_attr_inactive leaves inconsistent attr fork state =
-behind
-      [fe57a2e] xfs: xfs_alloc_fix_freelist() can use incore perag structur=
-es
-      [d37baa7] xfs: factor out free space extent length check
-      [33f3851] xfs: sanitise error handling in xfs_alloc_fix_freelist
-      [d29c243] xfs: clean up XFS_MIN_FREELIST macros
-      [b488748] Merge branch 'libxfs-4.2-rc1-update' into for-next
-
-George Wang (1):
-      [b0e6012] xfs: use percpu_counter_read_positive for mp->m_icount
-
-
-Code Diffstat:
-
- libxfs/libxfs_io.h       |   2 +-
- libxfs/libxfs_priv.h     |   5 +-
- libxfs/util.c            |   2 +-
- libxfs/xfs_alloc.c       | 239 ++++++++++++++++++++++++++-----------------=
-----
- libxfs/xfs_alloc.h       |   8 +-
- libxfs/xfs_attr_leaf.c   |   8 +-
- libxfs/xfs_attr_leaf.h   |   2 +-
- libxfs/xfs_bmap.c        |  44 ++++++---
- libxfs/xfs_format.h      |  13 ---
- libxfs/xfs_ialloc.c      |  24 +++--
- libxfs/xfs_ialloc.h      |   3 +-
- libxfs/xfs_inode_buf.c   |   8 +-
- libxfs/xfs_trans_resv.h  |   4 +-
- libxfs/xfs_trans_space.h |   2 +-
- mkfs/xfs_mkfs.c          |  12 ++-
- repair/phase5.c          |   3 +-
- repair/xfs_repair.c      |   7 +-
- 17 files changed, 213 insertions(+), 173 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---wRRV7LY7NUeQGEoC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJVlgLCAAoJEK3oKUf0dfod0t4P/15iqZa3+EecW3ddo9TINQvD
-bJ1ik4F7bJfwOHKkB9JRYyWoQg1Zz6r4MgMgI4cYNKA5V6+bN8keIdDF9hohPqR+
-ZbsjfDaEsdSumez2v7kN/yFjC1XimJI2yqZ5g4iuAbkXNj8krso93O7no4p1tyvf
-UCYX/Mafl+6geBu2BUrQ6yn2ZXvyjbsDHYBYk7KOuy6eI9/9nGt/RMUav6YEbh00
-l6z6DTSty5SO+sMFuoT/olPvdkRgV/Hu5vFyXY6ekGdfWmFARJF7YhIaNJSfHfkh
-7OGpAzsGbSBzbWkgQ8EpfelODswUinQmcZ1Do3/0hAcRS57ph9BngMAKlbE3HVQc
-mwOlqgOSI1C+ps5BR+6DbI5qVW30NGgKdzqBLFeoheTsUU3eOoYSew5ZanwFTmak
-Hru6qGM6l+tNKOOzZmPDE5hNgipjRuM0rhy/TALyw7BTMI0fXjDCrPek3FHPEwSL
-FYHVQ7AZbtv81IFh5BCk+g4QowI1DAqfQK/tP02O7uESrk/JIVGihV1odIXoIKGA
-odLvxcCYpZ42CYPn3pqpOZ17veiJr9aqXZeQ9majvtGuBna7clHohjvv+OjfZnlS
-8q+qQpFgZ3/VZviL4POpc+XQK/q+/4YvU5fJaxmjGBDiMeBUY19M9JnverQqf6Gd
-axvMWsooEofzFplYX7he
-=Rk5q
------END PGP SIGNATURE-----
-
---wRRV7LY7NUeQGEoC--
-
-
---===============7281716438357534875==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+index 4a8c8a6..09e8f40 100755
+--- a/tools/libxfs-apply
++++ b/tools/libxfs-apply
+@@ -223,26 +223,6 @@ apply_patch()
+ 	rm -f $_new_patch
+ }
+ 
+-# name a guilt patch. Code is lifted from guilt import-commit.
+-name_patch()
+-{
+-	s=`git log --no-decorate --pretty=oneline -1 $1 | cut -c 42-`
+-
+-	# Try to convert the first line of the commit message to a
+-	# valid patch name.
+-	fname=`printf %s "$s" |  \
+-			sed -e "s/&/and/g" -e "s/[ :]/_/g" -e "s,[/\\],-,g" \
+-			    -e "s/['\\[{}]//g" -e 's/]//g' -e 's/\*/-/g' \
+-			    -e 's/\?/-/g' -e 's/\.\.\.*/./g' -e 's/^\.//' \
+-			    -e 's/\.patch$//' -e 's/\.$//' | tr A-Z a-z`
+-
+-	# Try harder to make it a legal commit name by
+-	# removing all but a few safe characters.
+-	fname=`echo $fname|tr -d -c _a-zA-Z0-9---/\\n`
+-
+-	echo $fname
+-}
+-
+ # single patch is easy.
+ if [ -z "$COMMIT_ID" ]; then
+ 	apply_patch $PATCH
+@@ -274,7 +254,7 @@ for commit in $commit_list; do
+ 	# switch to source repo and pull commit into a patch file
+ 	pushd $REPO > /dev/null
+ 	git show $commit > $PATCH || usage "Bad source commit ID!"
+-	patch_name=`name_patch $commit`
++	patch_name=`git log --format=format:"%f.patch" -1 $commit`
+ 	popd > /dev/null
+ 
+ 	apply_patch $PATCH $patch_name $commit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7281716438357534875==--
