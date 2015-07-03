@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CBDCE7F37
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 01:54:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B38C47F51
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 05:06:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B8C70304032
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 23:54:09 -0700 (PDT)
-Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
-	id 2jrzYXPHAdGsPv3X for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 23:54:08 -0700 (PDT)
-Message-ID: <1436424844.22691.2.camel@hasee>
-Subject: Re: xfs_io bmap confused
-From: Ming Lin <mlin@kernel.org>
-Date: Wed, 08 Jul 2015 23:54:04 -0700
-In-Reply-To: <CAF1ivSYJEraUn_jEOEZg06D36yOYsZNrLz2Vzv=_Umpkao7Otw@mail.gmail.com>
-References: <1436338913.13729.11.camel@hasee>
-	<20150708085341.GA23332@lst.de> <1436363862.15921.0.camel@hasee>
-	<CAF1ivSYJEraUn_jEOEZg06D36yOYsZNrLz2Vzv=_Umpkao7Otw@mail.gmail.com>
-Mime-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A1500304064
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 03:06:09 -0700 (PDT)
+Received: from mx5-phx2.redhat.com (mx5-phx2.redhat.com [209.132.183.37]) by
+	cuda.sgi.com with ESMTP id 8MiUDwGm1QHM1Qmc (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 03 Jul 2015 03:06:07 -0700 (PDT)
+Date: Fri, 3 Jul 2015 06:06:06 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <1516143302.23299575.1435917966372.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150702141403.GA61817@bfoster.bfoster>
+References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
+	<1434711726-13092-2-git-send-email-jtulak@redhat.com>
+	<20150625193748.GE36162@bfoster.bfoster>
+	<413545489.22844725.1435841273912.JavaMail.zimbra@redhat.com>
+	<20150702141403.GA61817@bfoster.bfoster>
+Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,133 +32,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Wed, 2015-07-08 at 16:40 -0700, Ming Lin wrote:
-> On Wed, 2015-07-08 at 06:57 -0700, Ming Lin wrote:
-> > On Wed, 2015-07-08 at 10:53 +0200, Christoph Hellwig wrote:
-> > > On Wed, Jul 08, 2015 at 12:01:53AM -0700, Ming Lin wrote:
-> > > > Hi list,
-> > > >
-> > > > I am testing some direct-io patches.
-> > > > xfs_tests/xfs/080 failed.
-> > > >
-> > > > It's strange.
-> > > > There is no hole in "rwtest.file",
-> > > > but when read it at some offset it returns zero because of hole.
-> > > >
-> > > > root@block:~# xfs_io -c bmap /mnt/test/rwtest.file
-> > > > /mnt/test/rwtest.file:
-> > > >              0: [0..125671]: 160..125831
-> > >
-> > > Sounds like you see an unwritten extent.  What does xfs_bmap -pv show on
-> > > the file?
+
+
+----- Original Message -----
+> From: "Brian Foster" <bfoster@redhat.com>
+> On Thu, Jul 02, 2015 at 08:47:53AM -0400, Jan Tulak wrote:
 > >
-> > root@block:~# xfs_bmap -pv /mnt/test/rwtest.file
-> > /mnt/test/rwtest.file:
-> >  EXT: FILE-OFFSET       BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-> >    0: [0..743]:         160..903          0 (160..903)         744 00000
-> >    1: [744..783]:       904..943          0 (904..943)          40 10000
-> >    2: [784..951]:       944..1111         0 (944..1111)        168 00000
-> >    3: [952..1023]:      1112..1183        0 (1112..1183)        72 10000
-> >    4: [1024..1287]:     1184..1447        0 (1184..1447)       264 00000
-> >    5: [1288..1383]:     1448..1543        0 (1448..1543)        96 10000
+> > When I look on the code, where did you got the 4 vs 5? In the old code, for
+> > 512GB and bigger is assigned shift=5 directly. In the new one, shift is
+> > set to XFS_MULTIDISK_AGLOG which is 5, and then, if the disk is smaller
+> > than 512GB, it decrements the value. But unless I'm missing something, the
+> > multidisk configuration is not changing anything, there is just a
+> > different syntax.
+> > 
 > 
-> file offset 659456 is in EXT 5.
-> I guess FLAGS 1 means it's an unwritten extent, right?
+> I was referring to the multidisk case. The old code looks like this:
 > 
-> xfs_tests/xfs/080 basically does:
-> 1. direct io write
-> 2. then buffered read to check the previous dio write
+>         if (!multidisk && dblocks >= MEGABYTES(128, blocklog)) {
+> 		...
+>         } else if (dblocks > GIGABYTES(512, blocklog))
+>                 shift = 5;
+>         else if (dblocks > GIGABYTES(8, blocklog))
+>                 shift = 4;
 > 
-> Here is an example of error logs.
+> ... which means if multidisk && dblocks == 512GB, then shift is set to
+> 4. With the new code, we set XFS_MULTIDISK_AGLOG as you noted and then
+> execute:
 > 
-> doio ( 3626) 16:13:23
-> ---------------------
-> *** DATA COMPARISON ERROR ***
-> check_file(/mnt/test/rwtest.file, 239616, 81408, H:3626:block:doio*,
-> 18, 0) failed
+> 	if (dblocks < GIGABYTES(512, blocklog))
+> 		shift--;
+> 	...
 > 
-> Comparison fd is 5, with open flags 0
-> Corrupt regions follow - unprintable chars are represented as '.'
-> -----------------------------------------------------------------
-> corrupt bytes starting at file offset 241664
->     1st 32 expected bytes:  oio*H:3626:block:doio*H:3626:blo
->     1st 32 actual bytes:    ................................
+> ... which will not decrement shift if dblocks == 512GB (i.e., shift is
+> 5).
 > 
-> Request number 981
->           fd 4 is file /mnt/test/rwtest.file - open flags are 040001
-> O_WRONLY,O_DIRECT,
->           write done at file offset 239616 - pattern is H (0110)
->           number of requests is 1, strides per request is 1
->           i/o byte count = 81408
->           memory alignment is aligned
->           DIRECT I/O: offset % 512 = 0 length % 81408 = 0
->           mem alignment 0x200 xfer size: small: 512 large: 2147483136
+> If you're still not convinced, create an exact sized 512GB file, mkfs it
+> (with the su/sw options set for multidisk) with and without this change
+> and observe agcount. :)
 > 
-> syscall:  writev(4, (iov on stack), 1)
+> Brian
 > 
-> 
-> The "expected bytes" was actually written to the disk successfully,
-> but for some bug the xfs extent flag was not set correctly.
-> The flag should be "XFS_EXT_NORM", but now it's "XFS_EXT_UNWRITTEN".
-> 
-> Could you share the code path the extent flag was updated?
-> Is it also updated through direct io?
 
-For XFS direct IO, are below the only 2 paths to convert unwritten
-extent to written extent?
+Ah, mea culpa, I didn't thought about what happens when the size is exactly 512 GB when I wrote the reply. :-) You are right, I'll fix it.
 
-[   72.279043] Call Trace:
-[   72.279719]  [<ffffffff8169c2f3>] dump_stack+0x4f/0x7b
-[   72.280898]  [<ffffffff8127140f>] xfs_bmapi_convert_unwritten+0x73/0x176
-[   72.282393]  [<ffffffff8127a233>] xfs_bmapi_write+0x2a0/0x7ee
-[   72.283705]  [<ffffffff812b8ae8>] xfs_iomap_write_direct+0x23e/0x2f0
-[   72.285132]  [<ffffffff8129ef88>] __xfs_get_blocks+0x14c/0xf6c
-[   72.286456]  [<ffffffff8103d74b>] ? get_user_pages_fast+0xee/0x14c
-[   72.287847]  [<ffffffff8129fdcf>] xfs_get_blocks_direct+0x14/0x16
-[   72.289246]  [<ffffffff811879c6>] get_blocks+0x86/0x182
-[   72.297467]  [<ffffffff8103d74b>] ? get_user_pages_fast+0xee/0x14c
-[   72.298845]  [<ffffffff81187fe6>] __blockdev_direct_IO+0x372/0x666
-[   72.300266]  [<ffffffff8129fdbb>] ? xfs_get_blocks+0x13/0x13
-[   72.301555]  [<ffffffff8116f9ac>] ? __mnt_drop_write_file+0x12/0x14
-[   72.302936]  [<ffffffff8116a017>] ? file_update_time+0xb5/0xcb
-[   72.304279]  [<ffffffff8129d890>] xfs_vm_direct_IO+0x89/0x90
-[   72.305555]  [<ffffffff8129d943>] ? xfs_setfilesize_trans_alloc+0xac/0xac
-[   72.307064]  [<ffffffff8169ae5e>] xfs_file_dio_aio_write+0x2e0/0x449
-[   72.308509]  [<ffffffff813e1028>] ? __clear_user+0x36/0x5b
-[   72.309755]  [<ffffffff812af9c6>] xfs_file_write_iter+0x75/0x105
-[   72.311107]  [<ffffffff81151524>] __vfs_write+0x97/0xc0
-[   72.312347]  [<ffffffff81151b1f>] vfs_write+0xb5/0x16f
-[   72.313526]  [<ffffffff811522c3>] SyS_write+0x4a/0x94
-[   72.314683]  [<ffffffff816a4b17>] system_call_fastpath+0x12/0x6f
+Jan
 
-
-[   72.328096] Call Trace:
-[   72.328786]  [<ffffffff8169c2f3>] dump_stack+0x4f/0x7b
-[   72.330002]  [<ffffffff8127140f>] xfs_bmapi_convert_unwritten+0x73/0x176
-[   72.331565]  [<ffffffff8126cd9d>] ? xfs_bmap_search_extents+0x60/0xd6
-[   72.333059]  [<ffffffff812c96f1>] ? kmem_zone_alloc+0x6e/0xba
-[   72.334412]  [<ffffffff8127a233>] xfs_bmapi_write+0x2a0/0x7ee
-[   72.335777]  [<ffffffff812b9455>] xfs_iomap_write_unwritten+0x205/0x413
-[   72.337300]  [<ffffffff8129d7e2>] xfs_end_io+0x50/0x75
-[   72.338495]  [<ffffffff8129dab9>] xfs_end_io_direct_write+0x176/0x26c
-[   72.339952]  [<ffffffff810d20a4>] ? delayacct_end+0x55/0x5e
-[   72.341238]  [<ffffffff8118759d>] dio_complete+0x7c/0x134
-[   72.342488]  [<ffffffff811882a7>] __blockdev_direct_IO+0x633/0x666
-[   72.343908]  [<ffffffff8129fdbb>] ? xfs_get_blocks+0x13/0x13
-[   72.345263]  [<ffffffff8129d890>] xfs_vm_direct_IO+0x89/0x90
-[   72.346598]  [<ffffffff8129d943>] ? xfs_setfilesize_trans_alloc+0xac/0xac
-[   72.348185]  [<ffffffff8169ae5e>] xfs_file_dio_aio_write+0x2e0/0x449
-[   72.349652]  [<ffffffff813e1028>] ? __clear_user+0x36/0x5b
-[   72.350950]  [<ffffffff812af9c6>] xfs_file_write_iter+0x75/0x105
-[   72.352369]  [<ffffffff81151524>] __vfs_write+0x97/0xc0
-[   72.353607]  [<ffffffff81151b1f>] vfs_write+0xb5/0x16f
-[   72.354832]  [<ffffffff811522c3>] SyS_write+0x4a/0x94
-[   72.356060]  [<ffffffff816a4b17>] system_call_fastpath+0x12/0x6f
-
-
+-- 
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
