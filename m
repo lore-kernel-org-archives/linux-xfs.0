@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2166E7F83
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 10:24:11 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7DCC77F6F
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 18:42:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C1598AC006
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 08:24:10 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id pUU3LMbJMMy9cMar (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 03 Jul 2015 08:24:05 -0700 (PDT)
-Date: Fri, 3 Jul 2015 17:24:08 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: "Internal error xfs_attr3_leaf_write_verify at line 216",
-	"directory flags set on non-directory inode" and other errors
-Message-ID: <20150703172408.52212ba6@harpe.intellique.com>
-In-Reply-To: <E293B208-AA72-4076-97B0-753C8680D1AE@intomics.com>
-References: <FD7C5F18-48F3-461B-9604-0E3BDBB7AD69@intomics.com>
-	<20150625184132.773a5ecd@harpe.intellique.com>
-	<09CE9E14-9E6B-4587-9049-35B6C67016EF@intomics.com>
-	<DBDC024E-67E6-4F11-995F-467AD085109F@intomics.com>
-	<20150702112623.1c83d473@harpe.intellique.com>
-	<E293B208-AA72-4076-97B0-753C8680D1AE@intomics.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 50032304051
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2015 16:42:54 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	T5bXgLImFiaR0fEa for <xfs@oss.sgi.com>;
+	Fri, 03 Jul 2015 16:42:52 -0700 (PDT)
+Date: Sat, 4 Jul 2015 09:42:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 10/13] xfsprogs: include libxfs.h in libxfs_priv.h
+Message-ID: <20150703234248.GO7943@dastard>
+References: <1435918341-10128-1-git-send-email-hch@lst.de>
+	<1435918341-10128-11-git-send-email-hch@lst.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1435918341-10128-11-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +26,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rasmus Borup Hansen <rbh@intomics.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-TGUgRnJpLCAzIEp1bCAyMDE1IDA4OjI3OjI4ICswMjAwClJhc211cyBCb3J1cCBIYW5zZW4gPHJi
-aEBpbnRvbWljcy5jb20+IMOpY3JpdmFpdDoKCj4gVGhhbmsgeW91IGZvciB0aGUgc3VnZ2VzdGlv
-bi4gSSBjb21waWxlZCBhIG5ldyB4ZnNfcmVwYWlyLCBidXQgSSBnb3QKPiBzaW1pbGFyIHJlc3Vs
-dHMgZnJvbSBydW5uaW5nIGl0Lgo+IAoKR2V0IHRoZSBpbm9kZSBudW1iZXIgb2YgdGhlIGZhdWx0
-eSBmaWxlLCB1bW91bnQgdGhlIHZvbHVtZSwgb3BlbiBpdAp3aXRoIHhmc19kYiBhbmQgcmVtb3Zl
-IHRoZSBmaWxlIHRocm91Z2ggaXQ6CgpodHRwOi8veGZzLm9yZy9pbmRleC5waHAvWEZTX0ZBUSNR
-Ol9Ib3dfdG9fZ2V0X2Fyb3VuZF9hX2JhZF9pbm9kZV9yZXBhaXJfaXNfdW5hYmxlX3RvX2NsZWFu
-X3VwCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlv
-biB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAg
-ICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAg
-fCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Jul 03, 2015 at 12:12:18PM +0200, Christoph Hellwig wrote:
+> libxfs_priv.h duplicates large parts of libxfs.h.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/libxfs.h     |  4 ----
+>  libxfs/libxfs_priv.h | 37 +------------------------------------
+>  2 files changed, 1 insertion(+), 40 deletions(-)
+
+This is the opposite of what I've been trying to get to, which is to
+make libxfs compilation not be reliant on the external definitions
+used by the rest of xfsprogs. i.e. libxfs_priv.h contains all the
+bits that are need to compile the kernel code, libxfs_api_defs.h
+contain all the swizzling needed to namespace all the externally
+used libxfs code correctly, and libxfs_io.h contains all the buffer
+IO interfaces.
+
+In the end, there should be no duplication between the two files,
+except for infrastructure includes like platform defs, lists, trees,
+etc.  This isnt quite complete yet, which is why there is some
+duplication in the code right now.
+
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index 1fb2d6d..62553f0 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -163,12 +163,8 @@ extern int	libxfs_bmap_finish(xfs_trans_t **, xfs_bmap_free_t *, int *);
+>  extern void 	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
+>  extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
+>  
+> -/* XXX: this is messy and needs fixing */
+> -#ifndef __LIBXFS_INTERNAL_XFS_H__
+>  extern void cmn_err(int, char *, ...);
+>  enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+> -#endif
+> -
+
+cmn_err needs to be removed from all the external utilities.  This is
+only a small amount of work, cmn_err is only used in the repair AVL
+code and a single call in the logprint code. Both libxfs_fs_cmn_err
+and xfs_fs_repair_cmn_err are completely unused, so cmn_err() should
+become a libxfs internal function, and eventually be rewritten to
+have native xfs_alert() style interfaces...
+
+> -
+> -/* CRC stuff, buffer API dependent on it */
+> -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
+> -extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+> -
+> -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
+> -#define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
+
+I was planning to move this to libxfs_api_defs.h, as it's swizlling
+needed to allow xfs_cksum.h be included in external code.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
