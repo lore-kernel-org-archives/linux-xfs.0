@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2157B7F54
-	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 13:49:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F17DB3040DF
-	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 11:49:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Gpp6s0dkdNMr9dB4 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Jul 2015 11:49:41 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5AE6B9158D
-	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 18:49:40 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-63.bos.redhat.com [10.18.41.63])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t66IndY1021550
-	for <xfs@oss.sgi.com>; Mon, 6 Jul 2015 14:49:40 -0400
-Date: Mon, 6 Jul 2015 15:02:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC] xfs: handle torn writes during log head/tail discovery
-Message-ID: <20150706190241.GA19240@bfoster.bfoster>
-References: <1436207194-35671-1-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id A92817F54
+	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 14:20:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 87D2F3040DE
+	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 12:20:22 -0700 (PDT)
+Received: from mail-ig0-f176.google.com (mail-ig0-f176.google.com
+	[209.85.213.176]) by cuda.sgi.com with ESMTP id
+	VBfG9Awcl29ANP5Q (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Jul 2015 12:20:20 -0700 (PDT)
+Received: by igcqs7 with SMTP id qs7so17262037igc.0
+	for <xfs@oss.sgi.com>; Mon, 06 Jul 2015 12:20:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1436207194-35671-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20150705232443.GA3902@dastard>
+References: <CADb9451tB71D3XCqcOkDxzpzbdEHqwj7XCZUpL8yg1DzYbpwBw@mail.gmail.com>
+	<20150703235141.GQ7943@dastard>
+	<CADb9451j0WEeL4m-fEHzrOf3ys+eSHJKNzcN9oHAOs2kDLL_kQ@mail.gmail.com>
+	<20150704233802.GS7943@dastard>
+	<CADb9452UYPqo_i2M=-sSwPKwqUrRSMJ4bhV10S=1k0sNCKCVfg@mail.gmail.com>
+	<20150705232443.GA3902@dastard>
+Date: Mon, 6 Jul 2015 15:20:19 -0400
+Message-ID: <CADb9453iT7+2zgKDqY7gpHGjQ6nayqQFES1AJHn0G2FMFjYX-A@mail.gmail.com>
+Subject: Re: Failing XFS filesystem underlying Ceph OSDs
+From: Alex Gorbachev <ag@iss-integration.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,206 +32,210 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3581923235794988827=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 06, 2015 at 02:26:34PM -0400, Brian Foster wrote:
-> Persistent memory without block translation table (btt) support provides
-> a block device suitable for filesystems, but does not provide the sector
-> write atomicity guarantees typical of block storage. This is a problem
-> for log recovery on XFS. The on-disk log record structure already
-> includes a CRC and thus can detect torn writes. The problem is that such
-> a failure isn't detected until log recovery is already in progress and
-> therefore results in a hard error and mount failure.
-> 
-> Update the log head/tail discovery algorithm to detect and trim off a
-> torn log record from the end (from a recovery perspective) of the log.
-> Once the head is determined from the log cycle information and we have a
-> pointer to the last record to be recovered, read and verify the CRC of
-> said record before we initiate actual recovery. If CRC verification
-> fails, assume the record is torn and reset the head to the start of the
-> torn record. We reverse seek for the previous log record header from
-> that point and attempt recovery up through that record.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Hi all,
-> 
-> As far as I'm aware, the torn log write problem is the only major gap we
-> have to safely run XFS w/ crc=1 on non-btt pmem devices. This is an RFC
-> to attempt to address that problem. I used a custom hack to actually
-> reproduce such torn writes on a ramdisk to primarily help me understand
-> the problem, but I was able to use the same hack to sanity test this
-> approach under the basic corruption case (this is generally untested,
-> otherwise).
-> 
-> This could obviously use some cleanup, but is the approach sane? I'm
-> curious if this should also be tied to DAX enablement so as to not
-> interfere with unrelated corruption handling (IOW, with what logic is it
-> reasonable enough to assume a crc failure of the final record == torn
-> write?). I'm also wondering if this should be tied to a new mount option
-> rather than make this behavior implicit. Any other thoughts?
-> 
+--===============3581923235794988827==
+Content-Type: multipart/alternative; boundary=001a11c2c4cae3fa7e051a39cbba
 
-It occurs to me that this may also need to grow some logic for all the
-log wrapping and whatnot that is handled in xlog_do_recovery_pass().
-I'll need to stare at that some more, but FWIW, I did have another hack
-that added a "dummy" recovery pass that only verified CRCs and walked
-backwards until verification succeeded. It was ugly as is and quite
-honestly just another hack to help me try and understand what was going
-on. That said, perhaps cleaning it up and doing something like a dummy
-crc verify pass from the log head/tail discovery code and _only_ over
-the range of the final record might be a reasonable alternative. That
-would allow reuse of the existing code for any of those wrap around
-cases that might need to be handled. Anyways, thoughts or other ideas
-appreciated.
+--001a11c2c4cae3fa7e051a39cbba
+Content-Type: text/plain; charset=UTF-8
 
-Brian
+Thank you Dave,
 
-> Brian
-> 
->  fs/xfs/xfs_log_recover.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 87 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 01dd228..6015d02 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -62,6 +62,9 @@ xlog_recover_check_summary(
->  #define	xlog_recover_check_summary(log)
->  #endif
->  
-> +STATIC int
-> +xlog_validate_logrec_crc(struct xlog *, xfs_daddr_t);
-> +
->  /*
->   * This structure is used during recovery to record the buf log items which
->   * have been canceled and should not be replayed.
-> @@ -898,6 +901,7 @@ xlog_find_tail(
->  	xfs_daddr_t		after_umount_blk;
->  	xfs_lsn_t		tail_lsn;
->  	int			hblks;
-> +	bool			skipped_last = false;
->  
->  	found = 0;
->  
-> @@ -925,6 +929,7 @@ xlog_find_tail(
->  	/*
->  	 * Search backwards looking for log record header block
->  	 */
-> +retry:
->  	ASSERT(*head_blk < INT_MAX);
->  	for (i = (int)(*head_blk) - 1; i >= 0; i--) {
->  		error = xlog_bread(log, i, 1, bp, &offset);
-> @@ -962,6 +967,31 @@ xlog_find_tail(
->  		return -EIO;
->  	}
->  
-> +	/*
-> +	 * Now that we think we've found the log head, we have to check that the
-> +	 * last log record wasn't torn when written out to the log. This is
-> +	 * possible on devices without sector atomicity guarantees (e.g., pmem).
-> +	 *
-> +	 * Verify the CRC of the last log record that was written. If the CRC is
-> +	 * invalid, point the head at the start of this record and retry the
-> +	 * above backwards log record header search. We'll try the recovery up
-> +	 * through this record. Note that we only walk backwards once since this
-> +	 * is only intended to handle the torn write on power loss case.
-> +	 *
-> +	 * TODO: mount option? tied to DAX?
-> +	 */
-> +	if (xfs_sb_version_hascrc(&log->l_mp->m_sb) && !skipped_last) {
-> +		error = xlog_validate_logrec_crc(log, i);
-> +		if (error == -EFSBADCRC) {
-> +			skipped_last = true;
-> +			*head_blk = i;
-> +			xfs_warn(log->l_mp,
-> +	"WARNING: Torn write? Attempting recovery up to previous record.");
-> +			goto retry;
-> +		} else if (error)
-> +			goto done;
-> +	}
-> +
->  	/* find blk_no of tail of log */
->  	rhead = (xlog_rec_header_t *)offset;
->  	*tail_blk = BLOCK_LSN(be64_to_cpu(rhead->h_tail_lsn));
-> @@ -4607,6 +4637,63 @@ xlog_recover_finish(
->  	return 0;
->  }
->  
-> +/*
-> + * Read and CRC validate a full log record. This is used to detect torn log
-> + * writes during head/tail discovery.
-> + */
-> +STATIC int
-> +xlog_validate_logrec_crc(
-> +	struct xlog		*log,
-> +	xfs_daddr_t		rec_blk)
-> +{
-> +	int			hblks, bblks;
-> +	struct xlog_rec_header	*rhead;
-> +	struct xfs_buf		*hbp = NULL;
-> +	struct xfs_buf		*dbp = NULL;
-> +	int			error;
-> +	char			*offset;
-> +
-> +	hblks = 1;	/* XXX */
-> +
-> +	/* read and validate the log record header */
-> +	hbp = xlog_get_bp(log, 1);
-> +	if (!hbp)
-> +		return -ENOMEM;
-> +	error = xlog_bread(log, rec_blk, hblks, hbp, &offset);
-> +	if (error)
-> +		goto out;
-> +
-> +	rhead = (struct xlog_rec_header *) offset;
-> +
-> +	error = xlog_valid_rec_header(log, rhead, rec_blk);
-> +	if (error)
-> +		goto out;
-> +
-> +	/* read the full record and verify the CRC */
-> +	/* XXX: factor out from do_recovery_pass() ? */
-> +	dbp = xlog_get_bp(log, BTOBB(be32_to_cpu(rhead->h_size)));
-> +	if (!dbp)
-> +		goto out;
-> +
-> +	bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
-> +	error = xlog_bread(log, rec_blk+hblks, bblks, dbp, &offset);
-> +	if (error)
-> +		goto out;
-> +
-> +	/*
-> +	 * If the CRC validation fails, convert the return code so the caller
-> +	 * can distinguish from unrelated errors.
-> +	 */
-> +	error = xlog_unpack_data_crc(rhead, offset, log);
-> +	if (error)
-> +		error = -EFSBADCRC;
-> +out:
-> +	if (dbp)
-> +		xlog_put_bp(dbp);
-> +	if (hbp)
-> +		xlog_put_bp(hbp);
-> +	return error;
-> +}
->  
->  #if defined(DEBUG)
->  /*
-> -- 
-> 2.1.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+On Sun, Jul 5, 2015 at 7:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+> [ Please turn off line wrap when pasting kernel traces ]
+>
+
+Noted, sorry, I thought wrap was off, but Google must have it on by default.
+
+
+>
+> On Sun, Jul 05, 2015 at 12:25:47AM -0400, Alex Gorbachev wrote:
+> > > > sysctl vm.swappiness=20 (can probably be 1 as per article)
+> > > >
+> > > > sysctl vm.min_free_kbytes=262144
+> > >
+> [...]
+> >
+> > We have experienced the problem in various guises with kernels 3.14,
+> 3.19,
+> > 4.1-rc2 and now 4.1, so it's not new to us, just different error stack.
+> > Below are some other stack dumps of what manifested as the same error.
+> >
+> >  [<ffffffff817cf4b9>] schedule+0x29/0x70
+> >  [<ffffffffc07caee7>] _xfs_log_force+0x187/0x280 [xfs]
+> >  [<ffffffff810a4150>] ? try_to_wake_up+0x2a0/0x2a0
+> >  [<ffffffffc07cb019>] xfs_log_force+0x39/0xc0 [xfs]
+> >  [<ffffffffc07d6542>] xfsaild_push+0x552/0x5a0 [xfs]
+> >  [<ffffffff817d2264>] ? schedule_timeout+0x124/0x210
+> >  [<ffffffffc07d662f>] xfsaild+0x9f/0x140 [xfs]
+> >  [<ffffffffc07d6590>] ? xfsaild_push+0x5a0/0x5a0 [xfs]
+> >  [<ffffffff81095e29>] kthread+0xc9/0xe0
+> >  [<ffffffff81095d60>] ? flush_kthread_worker+0x90/0x90
+> >  [<ffffffff817d3718>] ret_from_fork+0x58/0x90
+> >  [<ffffffff81095d60>] ? flush_kthread_worker+0x90/0x90
+> >  INFO: task xfsaild/sdg1:2606 blocked for more than 120 seconds.
+> >        Not tainted 3.19.4-031904-generic #201504131440
+> >  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+> message.
+>
+> That's indicative of IO completion problems, but not a crash.
+>
+> >  BUG: unable to handle kernel NULL pointer dereference at
+>  (null)
+> >  IP: [<ffffffffc04be80f>] xfs_count_page_state+0x3f/0x70 [xfs]
+> ....
+> >   [<ffffffffc04be880>] xfs_vm_releasepage+0x40/0x120 [xfs]
+> >   [<ffffffff8118a7d2>] try_to_release_page+0x32/0x50
+> >   [<ffffffff8119fe6d>] shrink_page_list+0x69d/0x720
+> >   [<ffffffff811a058d>] shrink_inactive_list+0x1dd/0x5d0
+> ....
+>
+> Again, this is indicative of a page cache issue: a page without
+> buffers has been passed to xfs_vm_releasepage(), which implies the
+> page flags are not correct. i.e PAGE_FLAGS_PRIVATE is set but
+> page->private is null...
+>
+> Again, this is unlikely to be an XFS issue.
+>
+
+Sorry for my ignorance, but would this likely come from Ceph code or a
+hardware issue of some kind, such as a disk drive?  I have reached out to
+RedHat and Ceph community on that as well.
+
+Thank you,
+Alex
+
+
+
+>
+> > Do you think we need to look at RAM handling by this Supermicro machine
+> > type?
+>
+> Not sure what you mean by that. Problems like this can be caused by
+> bad hardware, but it's unusual for a machine using ECC memory to
+> have undetected RAM problems...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+--001a11c2c4cae3fa7e051a39cbba
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Thank you Dave,<div class=3D"gmail_extra"><br><div class=
+=3D"gmail_quote">On Sun, Jul 5, 2015 at 7:24 PM, Dave Chinner <span dir=3D"=
+ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fro=
+morbit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">[ Please=
+ turn off line wrap when pasting kernel traces ]<br></blockquote><div><br><=
+/div><div>Noted, sorry, I thought wrap was off, but Google must have it on =
+by default.</div><div>=C2=A0</div><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+<span class=3D""><br>
+On Sun, Jul 05, 2015 at 12:25:47AM -0400, Alex Gorbachev wrote:<br>
+&gt; &gt; &gt; sysctl vm.swappiness=3D20 (can probably be 1 as per article)=
+<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; sysctl vm.min_free_kbytes=3D262144<br>
+&gt; &gt;<br>[...]<br>
+&gt;<br>
+&gt; We have experienced the problem in various guises with kernels 3.14, 3=
+.19,<br>
+&gt; 4.1-rc2 and now 4.1, so it&#39;s not new to us, just different error s=
+tack.<br>
+&gt; Below are some other stack dumps of what manifested as the same error.=
+<br>
+&gt;<br>
+</span>&gt;=C2=A0 [&lt;ffffffff817cf4b9&gt;] schedule+0x29/0x70<br>
+&gt;=C2=A0 [&lt;ffffffffc07caee7&gt;] _xfs_log_force+0x187/0x280 [xfs]<br>
+&gt;=C2=A0 [&lt;ffffffff810a4150&gt;] ? try_to_wake_up+0x2a0/0x2a0<br>
+&gt;=C2=A0 [&lt;ffffffffc07cb019&gt;] xfs_log_force+0x39/0xc0 [xfs]<br>
+&gt;=C2=A0 [&lt;ffffffffc07d6542&gt;] xfsaild_push+0x552/0x5a0 [xfs]<br>
+&gt;=C2=A0 [&lt;ffffffff817d2264&gt;] ? schedule_timeout+0x124/0x210<br>
+&gt;=C2=A0 [&lt;ffffffffc07d662f&gt;] xfsaild+0x9f/0x140 [xfs]<br>
+&gt;=C2=A0 [&lt;ffffffffc07d6590&gt;] ? xfsaild_push+0x5a0/0x5a0 [xfs]<br>
+&gt;=C2=A0 [&lt;ffffffff81095e29&gt;] kthread+0xc9/0xe0<br>
+&gt;=C2=A0 [&lt;ffffffff81095d60&gt;] ? flush_kthread_worker+0x90/0x90<br>
+&gt;=C2=A0 [&lt;ffffffff817d3718&gt;] ret_from_fork+0x58/0x90<br>
+&gt;=C2=A0 [&lt;ffffffff81095d60&gt;] ? flush_kthread_worker+0x90/0x90<br>
+<span class=3D"">&gt;=C2=A0 INFO: task xfsaild/sdg1:2606 blocked for more t=
+han 120 seconds.<br>
+</span>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 Not tainted <a href=3D"tel:3.19.4-03=
+1904" value=3D"+13194031904">3.19.4-031904</a>-generic #201504131440<br>
+<span class=3D"">&gt;=C2=A0 &quot;echo 0 &gt; /proc/sys/kernel/hung_task_ti=
+meout_secs&quot; disables this message.<br>
+<br>
+</span>That&#39;s indicative of IO completion problems, but not a crash.<br=
+>
+<span class=3D""><br>
+&gt;=C2=A0 BUG: unable to handle kernel NULL pointer dereference at=C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(null)<br>
+</span>&gt;=C2=A0 IP: [&lt;ffffffffc04be80f&gt;] xfs_count_page_state+0x3f/=
+0x70 [xfs]<br>
+....<br>
+&gt;=C2=A0 =C2=A0[&lt;ffffffffc04be880&gt;] xfs_vm_releasepage+0x40/0x120 [=
+xfs]<br>
+&gt;=C2=A0 =C2=A0[&lt;ffffffff8118a7d2&gt;] try_to_release_page+0x32/0x50<b=
+r>
+&gt;=C2=A0 =C2=A0[&lt;ffffffff8119fe6d&gt;] shrink_page_list+0x69d/0x720<br=
+>
+&gt;=C2=A0 =C2=A0[&lt;ffffffff811a058d&gt;] shrink_inactive_list+0x1dd/0x5d=
+0<br>
+....<br>
+<br>
+Again, this is indicative of a page cache issue: a page without<br>
+buffers has been passed to xfs_vm_releasepage(), which implies the<br>
+page flags are not correct. i.e PAGE_FLAGS_PRIVATE is set but<br>
+page-&gt;private is null...<br>
+<br>
+Again, this is unlikely to be an XFS issue.<br></blockquote><div><br></div>=
+<div>Sorry for my ignorance, but would this likely come from Ceph code or a=
+ hardware issue of some kind, such as a disk drive?=C2=A0 I have reached ou=
+t to RedHat and Ceph community on that as well.</div><div><br></div><div>Th=
+ank you,</div><div>Alex</div><div><br></div><div>=C2=A0</div><blockquote cl=
+ass=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;p=
+adding-left:1ex">
+<span class=3D""><br>
+&gt; Do you think we need to look at RAM handling by this Supermicro machin=
+e<br>
+&gt; type?<br>
+<br>
+</span>Not sure what you mean by that. Problems like this can be caused by<=
+br>
+bad hardware, but it&#39;s unusual for a machine using ECC memory to<br>
+have undetected RAM problems...<br>
+<div class=3D"HOEnZb"><div class=3D"h5"><br>
+Cheers,<br>
+<br>
+Dave.<br>
+--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</div></div></blockquote></div><br></div></div>
+
+--001a11c2c4cae3fa7e051a39cbba--
+
+
+--===============3581923235794988827==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3581923235794988827==--
