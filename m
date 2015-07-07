@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5CC7C7F50
-	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 19:19:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 459078F8054
-	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 17:19:55 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F19C07F50
+	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 19:29:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D12AE304053
+	for <xfs@oss.sgi.com>; Mon,  6 Jul 2015 17:29:53 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	y6JScHNyEcZ2Jj7b for <xfs@oss.sgi.com>;
-	Mon, 06 Jul 2015 17:19:49 -0700 (PDT)
-Date: Tue, 7 Jul 2015 10:19:00 +1000
+	NjrHlKkdkvUMBpbl for <xfs@oss.sgi.com>;
+	Mon, 06 Jul 2015 17:29:51 -0700 (PDT)
+Date: Tue, 7 Jul 2015 10:24:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: "Internal error xfs_attr3_leaf_write_verify at line 216",
-	"directory flags set on non-directory inode" and other errors
-Message-ID: <20150707001900.GU7943@dastard>
-References: <FD7C5F18-48F3-461B-9604-0E3BDBB7AD69@intomics.com>
-	<20150625184132.773a5ecd@harpe.intellique.com>
-	<09CE9E14-9E6B-4587-9049-35B6C67016EF@intomics.com>
-	<DBDC024E-67E6-4F11-995F-467AD085109F@intomics.com>
-	<20150702112623.1c83d473@harpe.intellique.com>
-	<E293B208-AA72-4076-97B0-753C8680D1AE@intomics.com>
-	<20150703235500.GR7943@dastard>
-	<0F9CF77D-1DA5-41DD-87AA-7F4109F08EFB@intomics.com>
+Subject: Re: regarding journaling mode
+Message-ID: <20150707002430.GV7943@dastard>
+References: <CAMcfJ7vDCNo138qnUJ8O0ZDYxgh9k8rgFUoTN3mKcY-SiMWrzA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <0F9CF77D-1DA5-41DD-87AA-7F4109F08EFB@intomics.com>
+In-Reply-To: <CAMcfJ7vDCNo138qnUJ8O0ZDYxgh9k8rgFUoTN3mKcY-SiMWrzA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,24 +29,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rasmus Borup Hansen <rbh@intomics.com>
+To: Rakesh Patel <patelrakeshcomp@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jul 06, 2015 at 01:08:52PM +0200, Rasmus Borup Hansen wrote:
-> I've made a metadump and I'm running another xfs_repair, but given
-> that the first metadump is 132 GB, will you still be interested in
-> looking at the dumps?
+On Mon, Jul 06, 2015 at 11:38:32AM +0530, Rakesh Patel wrote:
+> Hi,
+> 
+> I come to know XFS is using writeback journaling mode.
 
-That's significantly larger than my monthly download quota.  How big
-is it once you compress it?
+Can you explain how you came to that conclusion?
 
-Also, because of the size of the metadump, I'll need some context
-about the hardware it is running on. Can you you please also provide
-the information in:
+> As per the
+> journaling guide, writeback is unsafe which does not preserve data and
+> metadata write synchronization.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+What journalling guide would that be? Please quote your sources when
+asking questions.
 
-so I have a better idea of environment the problem is showing up in.
+> I really want to know reason behind to choose writeback mode for journaling
+> in XFS.
+
+Metadata updates after data IO completion are used instead of
+ordering data writeback operations through the journal.
 
 Cheers,
 
