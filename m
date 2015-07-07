@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B7D857F37
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2015 04:05:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A49C5304066
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2015 02:05:14 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id ZSlDOAO01n0VwUaJ (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 07 Jul 2015 02:05:13 -0700 (PDT)
-Date: Tue, 7 Jul 2015 02:05:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_iext_realloc_indirect and "XFS: possible memory allocation
-	deadlock"
-Message-ID: <20150707090511.GA21863@infradead.org>
-References: <20150629222651.GG7943@dastard>
-	<F1A27B6A9FB048488A388EC4D9FD71F7@alyakaslap>
-	<20150707000911.GT7943@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id E7A377F37
+	for <xfs@oss.sgi.com>; Tue,  7 Jul 2015 04:29:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3A84304032
+	for <xfs@oss.sgi.com>; Tue,  7 Jul 2015 02:29:46 -0700 (PDT)
+Received: from mail-yk0-f178.google.com (mail-yk0-f178.google.com
+	[209.85.160.178]) by cuda.sgi.com with ESMTP id
+	FL9Ofle7EDokegFu (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 07 Jul 2015 02:29:44 -0700 (PDT)
+Received: by ykeo3 with SMTP id o3so51804075yke.0
+	for <xfs@oss.sgi.com>; Tue, 07 Jul 2015 02:29:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150707000911.GT7943@dastard>
+Date: Tue, 7 Jul 2015 17:29:43 +0800
+Message-ID: <CA+eFSM30A1V7j4CYJOyLSN7V7REHt0hrxteU1dVRw4HQZLmuxw@mail.gmail.com>
+Subject: Possible memory allocation deadlock in kmem_alloc and hung task in
+	xfs_log_commit_cil and xlog_cil_push
+From: Gavin Guo <gavin.guo@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Shyam Kaushik <shyam@zadarastorage.com>, bfoster@redhat.com, Yair Hershko <yair@zadarastorage.com>, xfs@oss.sgi.com, Danny Shavit <danny@zadarastorage.com>, Alex Lyakas <alex@zadarastorage.com>
+To: xfs@oss.sgi.com, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, Jul 07, 2015 at 10:09:11AM +1000, Dave Chinner wrote:
-> server crash. i.e. the client side commit is an "fsync" to the
-> server, and until the server responds with a success to the client
-> commit RPC the client side will continue to retry sending the data
-> to the server.
-> 
-> For the persepctive of metadata (i.e. directory entries) the use of
-> the "dirsync" mount option is sufficient for HA failover servers to
-> work correctly as it ensures that directory structure changes are always
-> committed to disk before the RPC response is sent back to the
-> client.
-> 
-> i.e. the "sync" mount option doesn't actually improve data integrity
-> of an NFS server when you look at the end-to-end NFS protocol
-> handling of async write data....
+Hi all,
 
+Recently, we observed that there is the error message in
+Ubuntu-3.13.0-48.80:
 
-You don't need dirsync either.  NFS does the right sync usin the
-commit_metadata export operation without using that big hammer.
+"XFS: possible memory allocation deadlock in kmem_alloc (mode:0x8250)"
+
+repeatedly shows in the dmesg. Temporarily, our workaround is to tune the
+parameters, such as, vfs_cache_pressure, min_free_kbytes, and dirty_ratio.
+
+And we also found that there are different error messages regarding the
+hung tasks which happened in xfs_log_commit_cil and xlog_cil_push.
+
+The log is available at: http://paste.ubuntu.com/11835007/
+
+The following link seems the same problem we suffered:
+
+XFS hangs with XFS: possible memory allocation deadlock in kmem_alloc
+http://oss.sgi.com/archives/xfs/2015-03/msg00172.html
+
+I read the mail and found that there might be some modification regarding
+to move the memory allocation outside the ctx lock. And I also read the
+latest patch from February of 2015 to see if there is any new change
+about that. Unfortunately, I didn't find anything regarding the change (may
+be I'm not familiar with the XFS, so didn't find the commit). If it's
+possible for someone who is familiar with the code to point out the commits
+related to the bug if already exist or any status about the plan.
+
+Thanks,
+Gavin Guo
 
 _______________________________________________
 xfs mailing list
