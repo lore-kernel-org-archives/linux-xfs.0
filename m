@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 703477F3F
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 02:30:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F3248F8052
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 00:30:02 -0700 (PDT)
-Received: from smtpbg303.qq.com (smtpbg303.qq.com [184.105.206.26]) by
-	cuda.sgi.com with ESMTP id yrBZOZnG5IvqGdLZ (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C9E0F7F54
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 03:53:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B533C304064
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 01:53:45 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id gs5RlFMmGtM0ZzFZ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 00:30:00 -0700 (PDT)
-Received: from [172.16.0.123] (unknown [182.48.117.114])
-	by esmtp4.qq.com (ESMTP) with SMTP id 0
-	for <xfs@oss.sgi.com>; Wed, 08 Jul 2015 15:29:54 +0800 (CST)
-Message-ID: <559CD173.5070800@unitedstack.com>
-Date: Wed, 08 Jul 2015 15:29:55 +0800
-From: juncheng bai <baijuncheng@unitedstack.com>
+	Wed, 08 Jul 2015 01:53:43 -0700 (PDT)
+Date: Wed, 8 Jul 2015 10:53:41 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: xfs_io bmap confused
+Message-ID: <20150708085341.GA23332@lst.de>
+References: <1436338913.13729.11.camel@hasee>
 MIME-Version: 1.0
-Subject: kmem_alloc hang in xlog_cil_insert_format_items
+Content-Disposition: inline
+In-Reply-To: <1436338913.13729.11.camel@hasee>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,98 +25,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ming Lin <mlin@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Hi, ALL
+On Wed, Jul 08, 2015 at 12:01:53AM -0700, Ming Lin wrote:
+> Hi list,
+> 
+> I am testing some direct-io patches.
+> xfs_tests/xfs/080 failed.
+> 
+> It's strange.
+> There is no hole in "rwtest.file",
+> but when read it at some offset it returns zero because of hole.
+> 
+> root@block:~# xfs_io -c bmap /mnt/test/rwtest.file
+> /mnt/test/rwtest.file:
+>              0: [0..125671]: 160..125831
 
-Today, I test xfs to verify kmem_alloc hang in xfs_dir2_block_to_sf
-in kernel-3.14.
-
-My test case:
-I use three ssd disks to build three xfs filesystems.
-My mount options:
-rw,noexec,nodev,noatime,nodiratime,barrier=0,discard,inode64,logbsize=256k,delaylog
-
-Each xfs filesystem run a postmark and two fio.
-
-postmark parameter:
-set size 100000 100000000
-set location /var/xfs-0/
-set seed 900
-set number 100000
-set subdirectories 5000
-set read 40960 65536000
-set write 40960 65536000
-set transactions 10000
-set bias create 40
-set bias read 60
-run xfs-0-result.txt
-show
-
-fio parameter:
-fio -directory /var/${1} -rw=randrw -ioengine=libaio -iodepth=128 
--size=128M -name=stress_test -numjobs=256
-
-After five hours, the output of warning from xfs:
-2015-07-07T23:32:18.230120+00:00 server-69 kernel: XFS: possible memory 
-allocation deadlock in kmem_alloc (mode:0x8250 size:32832)
-2015-07-07T23:32:18.230131+00:00 server-69 kernel: CPU: 1 PID: 15954 
-Comm: postmark Tainted: G O 3.12.21-1.el6.x86_64 #1
-2015-07-07T23:32:18.230134+00:00 server-69 kernel: Hardware name: Dell 
-Inc. PowerEdge R630/0CNCJW, BIOS 1.2.10 03/09/2015
-2015-07-07T23:32:18.230147+00:00 server-69 kernel: 0000000000000000 
-ffff880481c99bb8 ffffffff8162562a 0000000000008040
-2015-07-07T23:32:18.230148+00:00 server-69 kernel: 000000000000044c 
-ffff880481c99bf8 ffffffffa06c457c ffff880481c99bf8
-2015-07-07T23:32:18.230149+00:00 server-69 kernel: ffff88086936bcf0 
-ffff8804a17ecd00 ffff880066a48000 ffff880044158000
-2015-07-07T23:32:18.230150+00:00 server-69 kernel: Call Trace:
-2015-07-07T23:32:18.230152+00:00 server-69 kernel: [<ffffffff8162562a>] 
-dump_stack+0x49/0x5f
-2015-07-07T23:32:18.230153+00:00 server-69 kernel: [<ffffffffa06c457c>] 
-kmem_alloc+0xec/0x100 [xfs]
-2015-07-07T23:32:18.230186+00:00 server-69 kernel: [<ffffffffa0709b6f>] 
-xlog_cil_insert_format_items+0x11f/0x1f0 [xfs]
-2015-07-07T23:32:18.230205+00:00 server-69 kernel: [<ffffffffa06d0d00>] 
-? xfs_bmap_last_offset+0x30/0xc0 [xfs]
-2015-07-07T23:32:18.230211+00:00 server-69 kernel: [<ffffffffa0709d8d>] 
-xlog_cil_insert_items+0x3d/0x1b0 [xfs]
-2015-07-07T23:32:18.230212+00:00 server-69 kernel: [<ffffffffa070a484>] 
-xfs_log_commit_cil+0x54/0x150 [xfs]
-2015-07-07T23:32:18.230228+00:00 server-69 kernel: [<ffffffffa06c3cb9>] 
-xfs_trans_commit+0x79/0x270 [xfs]
-2015-07-07T23:32:18.230230+00:00 server-69 kernel: [<ffffffffa06f78c2>] 
-xfs_remove+0x2d2/0x350 [xfs]
-2015-07-07T23:32:18.230235+00:00 server-69 kernel: [<ffffffff811c882f>] 
-? d_walk+0x5f/0x260
-2015-07-07T23:32:18.230236+00:00 server-69 kernel: [<ffffffffa06b9782>] 
-xfs_vn_unlink+0x52/0xa0 [xfs]
-2015-07-07T23:32:18.230237+00:00 server-69 kernel: [<ffffffff811be22b>] 
-vfs_rmdir+0xbb/0x110
-2015-07-07T23:32:18.230238+00:00 server-69 kernel: [<ffffffff811c14a3>] 
-do_rmdir+0x203/0x220
-2015-07-07T23:32:18.230239+00:00 server-69 kernel: [<ffffffff811c1516>] 
-SyS_rmdir+0x16/0x20
-2015-07-07T23:32:18.230240+00:00 server-69 kernel: [<ffffffff81632729>] 
-system_call_fastpath+0x16/0x1b
-
-In function, I add code to get more info:
-57c57
-< 		if (!(++retries % 100))
----
- > 		if (!(++retries % 100)) {
-59,60c59,62
-< 		"possible memory allocation deadlock in %s (mode:0x%x)",
-< 					__func__, lflags);
----
- > 		"possible memory allocation deadlock in %s (mode:0x%x, size:%zu)",
- > 					__func__, lflags, size);
- > 			dump_stack();
- > 		}
+Sounds like you see an unwritten extent.  What does xfs_bmap -pv show on
+the file?
 
 _______________________________________________
 xfs mailing list
