@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E83F7F51
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 06:24:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 16F528F8037
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 04:24:31 -0700 (PDT)
-Received: from smtpproxy21.qq.com (smtpbg297.qq.com [184.105.67.100]) by
-	cuda.sgi.com with ESMTP id niqYThjPX4XFDkHV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 04:24:27 -0700 (PDT)
-Message-ID: <559D084A.2090505@unitedstack.com>
-Date: Wed, 08 Jul 2015 19:23:54 +0800
-From: juncheng bai <baijuncheng@unitedstack.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A3D7929DF5
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 07:34:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A98E304066
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 05:34:46 -0700 (PDT)
+Received: from mail-yk0-f178.google.com (mail-yk0-f178.google.com
+	[209.85.160.178]) by cuda.sgi.com with ESMTP id
+	taLC3JjlHDsPsoXj (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 08 Jul 2015 05:34:44 -0700 (PDT)
+Received: by ykcp133 with SMTP id p133so18799505ykc.1
+	for <xfs@oss.sgi.com>; Wed, 08 Jul 2015 05:34:43 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [xfs bug] kmem_alloc hang in xlog_cil_insert_format_items
+In-Reply-To: <20150707233743.GZ7943@dastard>
+References: <CA+eFSM30A1V7j4CYJOyLSN7V7REHt0hrxteU1dVRw4HQZLmuxw@mail.gmail.com>
+	<20150707233743.GZ7943@dastard>
+Date: Wed, 8 Jul 2015 20:34:43 +0800
+Message-ID: <CA+eFSM2mSSW-BtP5-ArHREPu9sRRO3=J8acWJ-h_iZHfLPnhiw@mail.gmail.com>
+Subject: Re: Possible memory allocation deadlock in kmem_alloc and hung task
+	in xfs_log_commit_cil and xlog_cil_push
+From: Gavin Guo <gavin.guo@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,113 +29,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, dchinner@redhat.com, gregkh@linuxfoundation.org, jack@suse.cz, bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi, ALL
+Hi Dave,
 
-Today, I test xfs to verify kmem_alloc hang in xfs_dir2_block_to_sf in 
-kernel-3.14, for patch b3f03bac8132207a20286d5602eda64500c19724.
+On Wed, Jul 8, 2015 at 7:37 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Jul 07, 2015 at 05:29:43PM +0800, Gavin Guo wrote:
+>> Hi all,
+>>
+>> Recently, we observed that there is the error message in
+>> Ubuntu-3.13.0-48.80:
+>>
+>> "XFS: possible memory allocation deadlock in kmem_alloc (mode:0x8250)"
+>>
+>> repeatedly shows in the dmesg. Temporarily, our workaround is to tune the
+>> parameters, such as, vfs_cache_pressure, min_free_kbytes, and dirty_ratio.
+>>
+>> And we also found that there are different error messages regarding the
+>> hung tasks which happened in xfs_log_commit_cil and xlog_cil_push.
+>>
+>> The log is available at: http://paste.ubuntu.com/11835007/
+>>
+>> The following link seems the same problem we suffered:
+>>
+>> XFS hangs with XFS: possible memory allocation deadlock in kmem_alloc
+>> http://oss.sgi.com/archives/xfs/2015-03/msg00172.html
+>>
+>> I read the mail and found that there might be some modification regarding
+>> to move the memory allocation outside the ctx lock. And I also read the
+>> latest patch from February of 2015 to see if there is any new change
+>> about that. Unfortunately, I didn't find anything regarding the change (may
+>> be I'm not familiar with the XFS, so didn't find the commit). If it's
+>> possible for someone who is familiar with the code to point out the commits
+>> related to the bug if already exist or any status about the plan.
+>
+> No commits - the approach I thought we might be able to take to
+> avoid the problem didn't work out. I have another idea of how we
+> might solve the problem, but I haven't ad a chance to prototype it
+> yet.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
-My test case:
-I use three ssd disks to build three xfs filesystems.
+Really thanks for your information, I'll keep watching out the status.
 
-My mount options:
-rw,noexec,nodev,noatime,nodiratime,barrier=0,discard,inode64,logbsize=256k,delaylog
-
-Each xfs filesystem run a postmark and two fio.
-
-postmark parameter:
-set size 100000 100000000
-set location /var/xfs-0/
-set seed 900
-set number 100000
-set subdirectories 5000
-set read 40960 65536000
-set write 40960 65536000
-set transactions 10000
-set bias create 40
-set bias read 60
-run xfs-0-result.txt
-show
-
-fio parameter:
-fio -directory /var/${1} -rw=randrw -ioengine=libaio -iodepth=128 
--size=128M -name=stress_test -numjobs=256
-
-After running for five hours , the output of warning from xfs:
-2015-07-07T23:32:18.230120+00:00 server-69 kernel: XFS: possible memory 
-allocation deadlock in kmem_alloc (mode:0x8250 size:32832)
-2015-07-07T23:32:18.230131+00:00 server-69 kernel: CPU: 1 PID: 15954 
-Comm: postmark Tainted: G O 3.12.21-1.el6.x86_64 #1
-2015-07-07T23:32:18.230134+00:00 server-69 kernel: Hardware name: Dell 
-Inc. PowerEdge R630/0CNCJW, BIOS 1.2.10 03/09/2015
-2015-07-07T23:32:18.230147+00:00 server-69 kernel: 0000000000000000 
-ffff880481c99bb8 ffffffff8162562a 0000000000008040
-2015-07-07T23:32:18.230148+00:00 server-69 kernel: 000000000000044c 
-ffff880481c99bf8 ffffffffa06c457c ffff880481c99bf8
-2015-07-07T23:32:18.230149+00:00 server-69 kernel: ffff88086936bcf0 
-ffff8804a17ecd00 ffff880066a48000 ffff880044158000
-2015-07-07T23:32:18.230150+00:00 server-69 kernel: Call Trace:
-2015-07-07T23:32:18.230152+00:00 server-69 kernel: [<ffffffff8162562a>] 
-dump_stack+0x49/0x5f
-2015-07-07T23:32:18.230153+00:00 server-69 kernel: [<ffffffffa06c457c>] 
-kmem_alloc+0xec/0x100 [xfs]
-2015-07-07T23:32:18.230186+00:00 server-69 kernel: [<ffffffffa0709b6f>] 
-xlog_cil_insert_format_items+0x11f/0x1f0 [xfs]
-2015-07-07T23:32:18.230205+00:00 server-69 kernel: [<ffffffffa06d0d00>] 
-? xfs_bmap_last_offset+0x30/0xc0 [xfs]
-2015-07-07T23:32:18.230211+00:00 server-69 kernel: [<ffffffffa0709d8d>] 
-xlog_cil_insert_items+0x3d/0x1b0 [xfs]
-2015-07-07T23:32:18.230212+00:00 server-69 kernel: [<ffffffffa070a484>] 
-xfs_log_commit_cil+0x54/0x150 [xfs]
-2015-07-07T23:32:18.230228+00:00 server-69 kernel: [<ffffffffa06c3cb9>] 
-xfs_trans_commit+0x79/0x270 [xfs]
-2015-07-07T23:32:18.230230+00:00 server-69 kernel: [<ffffffffa06f78c2>] 
-xfs_remove+0x2d2/0x350 [xfs]
-2015-07-07T23:32:18.230235+00:00 server-69 kernel: [<ffffffff811c882f>] 
-? d_walk+0x5f/0x260
-2015-07-07T23:32:18.230236+00:00 server-69 kernel: [<ffffffffa06b9782>] 
-xfs_vn_unlink+0x52/0xa0 [xfs]
-2015-07-07T23:32:18.230237+00:00 server-69 kernel: [<ffffffff811be22b>] 
-vfs_rmdir+0xbb/0x110
-2015-07-07T23:32:18.230238+00:00 server-69 kernel: [<ffffffff811c14a3>] 
-do_rmdir+0x203/0x220
-2015-07-07T23:32:18.230239+00:00 server-69 kernel: [<ffffffff811c1516>] 
-SyS_rmdir+0x16/0x20
-2015-07-07T23:32:18.230240+00:00 server-69 kernel: [<ffffffff81632729>] 
-system_call_fastpath+0x16/0x1b
-
-In function kmem_alloc, I modify code to get more info:
-57c57
-<         if (!(++retries % 100))
----
- >         if (!(++retries % 100)) {
-59,60c59,62
-<         "possible memory allocation deadlock in %s (mode:0x%x)",
-<                     __func__, lflags);
----
- >         "possible memory allocation deadlock in %s (mode:0x%x, 
-size:%zu)",
- >                     __func__, lflags, size);
- >             dump_stack();
- >         }
-
-The patch b3f03bac8132207a20286d5602eda64500c19724 solves the problem of 
-the big directroy size, more than 64k.
-Now, the 'struct txfs_log_vec' need 32k, but fail when the physical 
-memory fragmentation is very serious; In the later, kmalloc may fail 
-when process 16k.
-
-So, I think can we provide a unified solution?
-
-Thanks
-----------------
-juncheng bai
-
+Thanks,
+Gavin Guo
 
 _______________________________________________
 xfs mailing list
