@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E3CF17F51
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 13:15:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C38EC7F5D
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 13:31:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D1338304048
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 11:15:18 -0700 (PDT)
-Received: from smtprelay.hostedemail.com (smtprelay0089.hostedemail.com
-	[216.40.44.89]) by cuda.sgi.com with ESMTP id 6E8nBYgFY6Gnvp5V
-	for <xfs@oss.sgi.com>; Wed, 08 Jul 2015 11:15:15 -0700 (PDT)
-Message-ID: <1436379312.2682.90.camel@perches.com>
-Subject: [PATCH] xfs: Use consistent logging message prefixes
-From: Joe Perches <joe@perches.com>
-Date: Wed, 08 Jul 2015 11:15:12 -0700
-Mime-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E66F304043
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 11:31:57 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1GVobhyLRdcpBl3P (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 08 Jul 2015 11:31:56 -0700 (PDT)
+Date: Wed, 8 Jul 2015 14:31:53 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: close xc_cil list_empty() races with cil commit
+	sequence
+Message-ID: <20150708183152.GB60462@bfoster.bfoster>
+References: <1435154641-7790-1-git-send-email-bfoster@redhat.com>
+	<20150708000909.GA7943@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150708000909.GA7943@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,197 +32,165 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-The second and subsequent lines of multi-line logging messages
-are not prefixed with the same information as the first line.
+On Wed, Jul 08, 2015 at 10:09:09AM +1000, Dave Chinner wrote:
+> On Wed, Jun 24, 2015 at 10:04:01AM -0400, Brian Foster wrote:
+> > We have seen somewhat rare reports of the following assert from
+> > xlog_cil_push_background() failing during ltp tests or somewhat
+> > innocuous desktop root fs workloads (e.g., virt operations, initramfs
+> > construction):
+> > 
+> > 	ASSERT(!list_empty(&cil->xc_cil));
+> > 
+> > The reasoning behind the assert is that the transaction has inserted
+> > items to the CIL and hit background push codepath all with
+> > cil->xc_ctx_lock held for reading. This locks out background commit from
+> > emptying the CIL, which acquires the lock for writing. Therefore, the
+> > reasoning is that the items previously inserted in the CIL should still
+> > be present.
+> > 
+> > The cil->xc_ctx_lock read lock is not sufficient to protect the xc_cil
+> > list, however, due to how CIL insertion is handled.
+> > xlog_cil_insert_items() inserts and reorders the dirty transaction items
+> > to the tail of the CIL under xc_cil_lock. It uses list_move_tail() to
+> > achieve insertion and reordering in the same block of code. This
+> > function removes and reinserts an item to the tail of the list. If a
+> > transaction commits an item that was already logged and thus already
+> > resides in the CIL, and said item is the sole item on the list, the
+> > removal and reinsertion creates a temporary state where the list is
+> > actually empty.
+> 
+> The only way I can see this occurring is that we have to be committing a transaction that
+> modifies the same object as the previous transaction commit that
+> is still running through xfs_log_commit_cil(). e.g. racing
+> timestamp modifications on an inode, and the CIL is empty:
+> 
+> thread A			thread B
+> 
+> lock(inode)			lock(inode)
+> xfs_trans_join(inode)		<schedule>
+> xfs_trans_log(inode)
+> xfs_trans_commit(tp)
+>   xfs_log_commit_cil()
+>     lock(xc_ctx_lock)
+>     <add inode to cil>
+>     xfs_trans_free_items()
+>       unlock(inode)
+>       <schedule>
+> 				<runs with inode lock>
+> 				xfs_trans_join(inode)
+> 				xfs_trans_log(inode)
+> 				xfs_trans_commit(tp)
+> 				  xfs_log_commit_cil()
+> 				    lock(xc_ctx_lock)
+> 				    xlog_cil_insert_items()
+> 				      xlog_cil_insert_format_items()
+>       <runs again>
+>       xlog_cil_push_background
+> 	ASSERT(!list_empty(cil))      list_move_tail(item, cil)
+> 
 
-Separate messages with newlines into multiple calls to ensure
-consistent prefixing and allow easier grep use.
+Yes. I don't have the exact details of the original reproducer but it
+basically required transactions to recommit an already CIL-resident item
+with that item as the only entry in the CIL. The first transaction
+inserts or reinserts and heads to the background push while the second
+reinserts and creates the transient empty list state. I don't think the
+CIL necessarily has to be empty to start, but either way the above looks
+about right to me.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- fs/xfs/libxfs/xfs_dir2_node.c |  3 +--
- fs/xfs/libxfs/xfs_sb.c        | 14 +++++++-----
- fs/xfs/xfs_buf.c              |  5 +++--
- fs/xfs/xfs_log.c              | 50 +++++++++++++++++++++----------------------
- fs/xfs/xfs_log_recover.c      |  8 ++++---
- 5 files changed, 43 insertions(+), 37 deletions(-)
+> 
+> If that is the race, then the fix appears simple to me: call
+> xlog_cil_push_background() before xfs_trans_free_items() so that we
+> push the CIL before we unlock the items we just added to the CIL.
+> i.e.:
+> 
+> thread A			thread B
+> 
+> lock(inode)			lock(inode)
+> xfs_trans_join(inode)		<schedule>
+> xfs_trans_log(inode)
+> xfs_trans_commit(tp)
+>   xfs_log_commit_cil()
+>     lock(xc_ctx_lock)
+>     <add inode to cil>
+>     log_cil_push_background
+> 	ASSERT(!list_empty(cil))
+>     xfs_trans_free_items()
+>       unlock(inode)
+>       <schedule>
+> 				<runs with inode lock>
+> 				xfs_trans_join(inode)
+> 				xfs_trans_log(inode)
+> 				xfs_trans_commit(tp)
+> 				  xfs_log_commit_cil()
+> 				    lock(xc_ctx_lock)
+> 				    xlog_cil_insert_items()
+> 				      xlog_cil_insert_format_items()
+> 				      list_move_tail(item, cil)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 41b80d3..d68326a 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -1845,8 +1845,7 @@ xfs_dir2_node_addname_int(
- 
- 			if (dp->d_ops->db_to_fdb(args->geo, dbno) != fbno) {
- 				xfs_alert(mp,
--			"%s: dir ino %llu needed freesp block %lld for\n"
--			"  data block %lld, got %lld ifbno %llu lastfbno %d",
-+"%s: dir ino %llu needed freesp block %lld for data block %lld, got %lld ifbno %llu lastfbno %d",
- 					__func__, (unsigned long long)dp->i_ino,
- 					(long long)dp->d_ops->db_to_fdb(
- 								args->geo, dbno),
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index df9851c..a3f4504 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -131,10 +131,11 @@ xfs_mount_validate_sb(
- 		if (xfs_sb_has_compat_feature(sbp,
- 					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
- 			xfs_warn(mp,
--"Superblock has unknown compatible features (0x%x) enabled.\n"
--"Using a more recent kernel is recommended.",
-+"Superblock has unknown compatible features (0x%x) enabled.",
- 				(sbp->sb_features_compat &
- 						XFS_SB_FEAT_COMPAT_UNKNOWN));
-+			xfs_warn(mp,
-+"Using a more recent kernel is recommended.");
- 		}
- 
- 		if (xfs_sb_has_ro_compat_feature(sbp,
-@@ -145,18 +146,21 @@ xfs_mount_validate_sb(
- 						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
- 			if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 				xfs_warn(mp,
--"Attempted to mount read-only compatible filesystem read-write.\n"
-+"Attempted to mount read-only compatible filesystem read-write.");
-+				xfs_warn(mp,
- "Filesystem can only be safely mounted read only.");
-+
- 				return -EINVAL;
- 			}
- 		}
- 		if (xfs_sb_has_incompat_feature(sbp,
- 					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
- 			xfs_warn(mp,
--"Superblock has unknown incompatible features (0x%x) enabled.\n"
--"Filesystem can not be safely mounted by this kernel.",
-+"Superblock has unknown incompatible features (0x%x) enabled.",
- 				(sbp->sb_features_incompat &
- 						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
-+			xfs_warn(mp,
-+"Filesystem can not be safely mounted by this kernel.");
- 			return -EINVAL;
- 		}
- 	}
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a4b7d92..d7dbd81 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1533,9 +1533,10 @@ xfs_wait_buftarg(
- 			list_del_init(&bp->b_lru);
- 			if (bp->b_flags & XBF_WRITE_FAIL) {
- 				xfs_alert(btp->bt_mount,
--"Corruption Alert: Buffer at block 0x%llx had permanent write failures!\n"
--"Please run xfs_repair to determine the extent of the problem.",
-+"Corruption Alert: Buffer at block 0x%llx had permanent write failures!",
- 					(long long)bp->b_bn);
-+				xfs_alert(btp->bt_mount,
-+"Please run xfs_repair to determine the extent of the problem.");
- 			}
- 			xfs_buf_rele(bp);
- 		}
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 08d4fe4..6b5a84a 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -668,9 +668,9 @@ xfs_log_mount(
- 			ASSERT(0);
- 			goto out_free_log;
- 		}
-+		xfs_crit(mp, "Log size out of supported range.");
- 		xfs_crit(mp,
--"Log size out of supported range. Continuing onwards, but if log hangs are\n"
--"experienced then please report this message in the bug report.");
-+"Continuing onwards, but if log hangs are experienced then please report this message in the bug report.");
- 	}
- 
- 	/*
-@@ -1142,11 +1142,13 @@ xlog_space_left(
- 		 * In this case we just want to return the size of the
- 		 * log as the amount of space left.
- 		 */
-+		xfs_alert(log->l_mp, "xlog_space_left: head behind tail");
- 		xfs_alert(log->l_mp,
--			"xlog_space_left: head behind tail\n"
--			"  tail_cycle = %d, tail_bytes = %d\n"
--			"  GH   cycle = %d, GH   bytes = %d",
--			tail_cycle, tail_bytes, head_cycle, head_bytes);
-+			  "  tail_cycle = %d, tail_bytes = %d",
-+			  tail_cycle, tail_bytes);
-+		xfs_alert(log->l_mp,
-+			  "  GH   cycle = %d, GH   bytes = %d",
-+			  head_cycle, head_bytes);
- 		ASSERT(0);
- 		free_bytes = log->l_logsize;
- 	}
-@@ -2028,26 +2030,24 @@ xlog_print_tic_res(
- 	    "SWAPEXT"
- 	};
- 
--	xfs_warn(mp,
--		"xlog_write: reservation summary:\n"
--		"  trans type  = %s (%u)\n"
--		"  unit res    = %d bytes\n"
--		"  current res = %d bytes\n"
--		"  total reg   = %u bytes (o/flow = %u bytes)\n"
--		"  ophdrs      = %u (ophdr space = %u bytes)\n"
--		"  ophdr + reg = %u bytes\n"
--		"  num regions = %u",
--		((ticket->t_trans_type <= 0 ||
--		  ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
-+	xfs_warn(mp, "xlog_write: reservation summary:");
-+	xfs_warn(mp, "  trans type  = %s (%u)",
-+		 ((ticket->t_trans_type <= 0 ||
-+		   ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
- 		  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
--		ticket->t_trans_type,
--		ticket->t_unit_res,
--		ticket->t_curr_res,
--		ticket->t_res_arr_sum, ticket->t_res_o_flow,
--		ticket->t_res_num_ophdrs, ophdr_spc,
--		ticket->t_res_arr_sum +
--		ticket->t_res_o_flow + ophdr_spc,
--		ticket->t_res_num);
-+		 ticket->t_trans_type);
-+	xfs_warn(mp, "  unit res    = %d bytes",
-+		 ticket->t_unit_res);
-+	xfs_warn(mp, "  current res = %d bytes",
-+		 ticket->t_curr_res);
-+	xfs_warn(mp, "  total reg   = %u bytes (o/flow = %u bytes)",
-+		 ticket->t_res_arr_sum, ticket->t_res_o_flow);
-+	xfs_warn(mp, "  ophdrs      = %u (ophdr space = %u bytes)",
-+		 ticket->t_res_num_ophdrs, ophdr_spc);
-+	xfs_warn(mp, "  ophdr + reg = %u bytes",
-+		 ticket->t_res_arr_sum + ticket->t_res_o_flow + ophdr_spc);
-+	xfs_warn(mp, "  num regions = %u",
-+		 ticket->t_res_num);
- 
- 	for (i = 0; i < ticket->t_res_num; i++) {
- 		uint r_type = ticket->t_res_arr[i].r_type;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 01dd228..c2c9b4e 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4527,11 +4527,13 @@ xlog_recover(
- 		    xfs_sb_has_incompat_log_feature(&log->l_mp->m_sb,
- 					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
- 			xfs_warn(log->l_mp,
--"Superblock has unknown incompatible log features (0x%x) enabled.\n"
--"The log can not be fully and/or safely recovered by this kernel.\n"
--"Please recover the log on a kernel that supports the unknown features.",
-+"Superblock has unknown incompatible log features (0x%x) enabled.",
- 				(log->l_mp->m_sb.sb_features_log_incompat &
- 					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
-+			xfs_warn(log->l_mp,
-+"The log can not be fully and/or safely recovered by this kernel.");
-+			xfs_warn(log->l_mp,
-+"Please recover the log on a kernel that supports the unknown features.");
- 			return -EINVAL;
- 		}
- 
+That seems like it should work for this particular case. I suppose it
+depends on the nature of the transactions as opposed to closing the race
+directly. It would require independent transactions to relog the same
+item without locking to expose this instance of the race again, which
+probably should never happen.
 
+That doesn't help us for the other push side users of list_empty(),
+however. For example, what about xlog_cil_push_now(), etc.? AFAICS, that
+code still seems racy.
+
+> > This state is not valid and thus should never be observed by concurrent
+> > transaction commit-side checks in the circumstances outlined above.
+> > Update all of the xc_cil checks to acquire xc_cil_lock before assessing
+> > the state of xc_cil.
+> 
+> That will reintroduce the problem of lock contention between the
+> commit and the push sides of the CIL, which the cil/push lock
+> separation was added to solve:
+> 
+
+If the lock is a problem, how about trying to close the race on the
+insert side? E.g., something like the following in
+xlog_cil_insert_items():
+
+	if (!list_is_last(&lip->li_cil, &cil->xc_cil))
+		list_move_tail(&lip->li_cil, &cil->xc_cil);
+
+... such that the list with a single item is never transiently empty.
+Thoughts?
+
+Brian
+
+> commit 4bb928cdb900d0614f4766d5f1ca5bc3844f7656
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Mon Aug 12 20:50:08 2013 +1000
+> 
+>     xfs: split the CIL lock
+>     
+>     The xc_cil_lock is used for two purposes - to protect the CIL
+>     itself, and to protect the push/commit state and lists. These are
+>     two logically separate structures and operations, so can have their
+>     own locks. This means that pushing on the CIL and the commit wait
+>     ordering won't contend for a lock with other transactions that are
+>     completing concurrently. As the CIL insertion is the hottest path
+>     throught eh CIL, this is a big win.
+>     
+>     Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>     Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+>     Signed-off-by: Ben Myers <bpm@sgi.com>
+> 
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
