@@ -1,19 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6CF3829DF5
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 13:54:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 49461304032
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 11:54:58 -0700 (PDT)
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18]) by cuda.sgi.com
-	with ESMTP id YZfk87b6db2iYNLT (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 11:54:56 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 862D47F6A
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 18:40:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 213A7AC004
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 16:40:51 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
+	id ZGATGyN2BUt8prJW for <xfs@oss.sgi.com>;
+	Wed, 08 Jul 2015 16:40:50 -0700 (PDT)
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 3B15020630
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 23:40:49 +0000 (UTC)
+Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com
+	[209.85.218.49])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail.kernel.org (Postfix) with ESMTPSA id C49682061D
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 23:40:47 +0000 (UTC)
+Received: by oihr66 with SMTP id r66so121875355oih.2
+	for <xfs@oss.sgi.com>; Wed, 08 Jul 2015 16:40:47 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <trinity-35b666d3-ff9b-4764-9962-bf376c678994-1436381694787@3capp-mailcom-bs09>
-From: "Mark Noon" <mnoon@gmx.com>
-Subject: Proper SU/SW values for nested raids RAID50/RAID60
-Date: Wed, 8 Jul 2015 20:54:54 +0200
+In-Reply-To: <1436363862.15921.0.camel@hasee>
+References: <1436338913.13729.11.camel@hasee> <20150708085341.GA23332@lst.de>
+	<1436363862.15921.0.camel@hasee>
+Date: Wed, 8 Jul 2015 16:40:47 -0700
+Message-ID: <CAF1ivSYJEraUn_jEOEZg06D36yOYsZNrLz2Vzv=_Umpkao7Otw@mail.gmail.com>
+Subject: Re: xfs_io bmap confused
+From: Ming Lin <mlin@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,42 +35,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2403697590767774586=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
---===============2403697590767774586==
-Content-Type: text/html; charset=UTF-8
+On Wed, 2015-07-08 at 06:57 -0700, Ming Lin wrote:
+> On Wed, 2015-07-08 at 10:53 +0200, Christoph Hellwig wrote:
+> > On Wed, Jul 08, 2015 at 12:01:53AM -0700, Ming Lin wrote:
+> > > Hi list,
+> > >
+> > > I am testing some direct-io patches.
+> > > xfs_tests/xfs/080 failed.
+> > >
+> > > It's strange.
+> > > There is no hole in "rwtest.file",
+> > > but when read it at some offset it returns zero because of hole.
+> > >
+> > > root@block:~# xfs_io -c bmap /mnt/test/rwtest.file
+> > > /mnt/test/rwtest.file:
+> > >              0: [0..125671]: 160..125831
+> >
+> > Sounds like you see an unwritten extent.  What does xfs_bmap -pv show on
+> > the file?
+>
+> root@block:~# xfs_bmap -pv /mnt/test/rwtest.file
+> /mnt/test/rwtest.file:
+>  EXT: FILE-OFFSET       BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..743]:         160..903          0 (160..903)         744 00000
+>    1: [744..783]:       904..943          0 (904..943)          40 10000
+>    2: [784..951]:       944..1111         0 (944..1111)        168 00000
+>    3: [952..1023]:      1112..1183        0 (1112..1183)        72 10000
+>    4: [1024..1287]:     1184..1447        0 (1184..1447)       264 00000
+>    5: [1288..1383]:     1448..1543        0 (1448..1543)        96 10000
 
-<html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><div>I&#39;m trying to understand the proper values when formatting an xfs filesystem under a hardware raid controller and seem to get conflicting information between whats on the wiki and various mailing listings and forum posts when searching google. I have a system that will be storing images and other static content files accross a RAID50. The plan is to do 3 raid5 arrays each with 5 disks with a stripe size of 128K striped accross a raid0. I will then build a logical volume on top of this.</div>
+file offset 659456 is in EXT 5.
+I guess FLAGS 1 means it's an unwritten extent, right?
 
-<div>&nbsp;</div>
+xfs_tests/xfs/080 basically does:
+1. direct io write
+2. then buffered read to check the previous dio write
 
-<div>When running mkfs.xfs should the correct settings be&nbsp;<span style="line-height: 1.6em;">su=128k sw=12 (-1 parity &#39;disk&#39; for each of the 3 arrays) or su=128k sw=4 (only consider one of the arrays)?&nbsp;</span></div>
+Here is an example of error logs.
 
-<div>&nbsp;</div>
+doio ( 3626) 16:13:23
+---------------------
+*** DATA COMPARISON ERROR ***
+check_file(/mnt/test/rwtest.file, 239616, 81408, H:3626:block:doio*,
+18, 0) failed
 
-<div><span style="line-height: 1.6em;">Also if I ever add a JBOD and extend the storage how does this change things esspecially given that it will be on a completely different raid volume just merged together via LVM?</span></div>
+Comparison fd is 5, with open flags 0
+Corrupt regions follow - unprintable chars are represented as '.'
+-----------------------------------------------------------------
+corrupt bytes starting at file offset 241664
+    1st 32 expected bytes:  oio*H:3626:block:doio*H:3626:blo
+    1st 32 actual bytes:    ................................
 
-<div>&nbsp;</div>
+Request number 981
+          fd 4 is file /mnt/test/rwtest.file - open flags are 040001
+O_WRONLY,O_DIRECT,
+          write done at file offset 239616 - pattern is H (0110)
+          number of requests is 1, strides per request is 1
+          i/o byte count = 81408
+          memory alignment is aligned
+          DIRECT I/O: offset % 512 = 0 length % 81408 = 0
+          mem alignment 0x200 xfer size: small: 512 large: 2147483136
 
-<div><span style="line-height: 1.6em;">Thanks for the assitance!</span></div>
-
-<div>&nbsp;</div>
-
-<div>&nbsp;</div></div></body></html>
+syscall:  writev(4, (iov on stack), 1)
 
 
---===============2403697590767774586==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+The "expected bytes" was actually written to the disk successfully,
+but for some bug the xfs extent flag was not set correctly.
+The flag should be "XFS_EXT_NORM", but now it's "XFS_EXT_UNWRITTEN".
+
+Could you share the code path the extent flag was updated?
+Is it also updated through direct io?
+
+Thanks.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2403697590767774586==--
