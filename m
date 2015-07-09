@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D20B77F37
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 07:51:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B3F178F8033
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 05:51:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id tTFBmDJYZRexGXjD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 09 Jul 2015 05:51:23 -0700 (PDT)
-Date: Thu, 9 Jul 2015 08:51:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-Message-ID: <20150709125119.GC63282@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id 0B9317F37
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 08:20:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EEFFA8F8035
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 06:20:03 -0700 (PDT)
+Received: from mail-wi0-f178.google.com (mail-wi0-f178.google.com
+	[209.85.212.178]) by cuda.sgi.com with ESMTP id
+	TBc1xazwq5GIwDdn (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 09 Jul 2015 06:20:01 -0700 (PDT)
+Received: by wiwl6 with SMTP id l6so18582793wiw.0
+	for <xfs@oss.sgi.com>; Thu, 09 Jul 2015 06:20:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150709125119.GC63282@bfoster.bfoster>
 References: <CA++_uht_4ON49eBqM6eA7oL7iBcxYMwR5ZAQxXmTuNji2XiyBA@mail.gmail.com>
 	<20150618133122.GC43254@bfoster.bfoster>
 	<CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
 	<5582DCDA.9070200@sandeen.net>
 	<CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
+	<20150709125119.GC63282@bfoster.bfoster>
+Date: Thu, 9 Jul 2015 21:20:00 +0800
+Message-ID: <CA++_uhuoQ76uOUikbetw5ocfHDGAFMERcbgX9R4Shha2GUxWmQ@mail.gmail.com>
+Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
+	xfs_dir2_sf_get_parent_ino+0xa/0x20
+From: Kuo Hugo <tonytkdk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,96 +33,360 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============3593431590360515185=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kuo Hugo <tonytkdk@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, darrell@swiftstack.com, xfs@oss.sgi.com
 
-T24gVGh1LCBKdWwgMDksIDIwMTUgYXQgMDY6NTc6NTVQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6
-Cj4gSGkgRm9sa3MsCj4gCj4gQXMgdGhlIHJlc3VsdHMgb2YgMzIgZGlza3Mgd2l0aCB4ZnNfcmVw
-YWlyIC1uIHNlZW1zIG5vIGFueSBlcnJvciBzaG93cyB1cC4KPiBXZSBjdXJyZW50bHkgdHJpZWQg
-dG8gZGVwbG95IENlbnRPUyA2LjYgZm9yIHRlc3RpbmcuIChUaGUgcHJldmlvdXMga2VybmVsCj4g
-cGFuaWMgd2FzIGNhbWUgZnJvbSBVYnVudHUpLgo+IFRoZSBDZW50T1Mgbm9kZXMgZW5jb3VudGVy
-ZWQga2VybmVsIHBhbmljIHdpdGggc2FtZSBkYWVtb24gYnV0IHRoZSBwcm9ibGVtCj4gbWF5IGEg
-Yml0IGRpZmZlci4KPiAKPiAgICAtIEl0IHdhcyBicm9rZW4gb24geGZzX2RpcjJfc2ZfZ2V0X3Bh
-cmVudF9pbm8rMHhhLzB4MjAgaW4gVWJ1bnR1Lgo+ICAgIC0gSGVyZeKAmXMgdGhlIGxvZyBpbiBD
-ZW50T1MuIEl04oCZcyBicm9rZW4gb24KPiAgICB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJhMC8w
-eDNhMAo+IAoKSSdkIHZlbnR1cmUgdG8gZ3Vlc3MgaXQncyB0aGUgc2FtZSBiZWhhdmlvciBoZXJl
-LiBUaGUgcHJldmlvdXMga2VybmVsCmhhZCBhIGNhbGxiYWNrIGZvciB0aGUgcGFyZW50IGlub2Rl
-IG51bWJlciB0aGF0IHdhcyBjYWxsZWQgdmlhCnhmc19kaXIyX3NmX2dldGRlbnRzKCkuIFRha2lu
-ZyBhIGxvb2sgYXQgYSA2LjYga2VybmVsLCBpdCBoYXMgYSBzdGF0aWMKaW5saW5lIGhlcmUgaW5z
-dGVhZC4KCj4gPDE+QlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVy
-ZWZlcmVuY2UgYXQgMDAwMDAwMDAwMDAwMDAwMQo+IDwxPklQOiBbPGZmZmZmZmZmYTAzNjJkNjA+
-XSB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJhMC8weDNhMCBbeGZzXQo+IDw0PlBHRCAxMDcyMzI3
-MDY3IFBVRCAxMDcyMzI4MDY3IFBNRCAwCj4gPDQ+T29wczogMDAwMCBbIzFdIFNNUAo+IDw0Pmxh
-c3Qgc3lzZnMgZmlsZToKPiAvc3lzL2RldmljZXMvcGNpMDAwMDo4MC8wMDAwOjgwOjAzLjIvMDAw
-MDo4MzowMC4wL2hvc3QxMC9wb3J0LTEwOjEvZXhwYW5kZXItMTA6MS9wb3J0LTEwOjE6MTYvZW5k
-X2RldmljZS0xMDoxOjE2L3RhcmdldDEwOjA6MjUvMTA6MDoyNTowL2Jsb2NrL3Nkei9xdWV1ZS9y
-b3RhdGlvbmFsCj4gPDQ+Q1BVIDE3Cj4gPDQ+TW9kdWxlcyBsaW5rZWQgaW46IHh0X2Nvbm50cmFj
-ayB0dW4geGZzIGV4cG9ydGZzIGlwdGFibGVfZmlsdGVyCj4gaXB0X1JFRElSRUNUIGlwdGFibGVf
-bmF0IG5mX25hdCBuZl9jb25udHJhY2tfaXB2NCBuZl9jb25udHJhY2sKPiBuZl9kZWZyYWdfaXB2
-NCBpcF90YWJsZXMgaXBfdnMgaXB2NiBsaWJjcmMzMmMgaVRDT193ZHQKPiBpVENPX3ZlbmRvcl9z
-dXBwb3J0IHNlcyBlbmNsb3N1cmUgaWdiIGkyY19hbGdvX2JpdCBzYl9lZGFjIGVkYWNfY29yZQo+
-IGkyY19pODAxIGkyY19jb3JlIHNnIHNocGNocCBscGNfaWNoIG1mZF9jb3JlIGl4Z2JlIGRjYSBw
-dHAgcHBzX2NvcmUKPiBtZGlvIHBvd2VyX21ldGVyIGFjcGlfaXBtaSBpcG1pX3NpIGlwbWlfbXNn
-aGFuZGxlciBleHQ0IGpiZDIgbWJjYWNoZQo+IHNkX21vZCBjcmNfdDEwZGlmIG1wdDNzYXMgc2Nz
-aV90cmFuc3BvcnRfc2FzIHJhaWRfY2xhc3MgeGhjaV9oY2QgYWhjaQo+IHdtaSBkbV9taXJyb3Ig
-ZG1fcmVnaW9uX2hhc2ggZG1fbG9nIGRtX21vZCBbbGFzdCB1bmxvYWRlZDoKPiBzY3NpX3dhaXRf
-c2Nhbl0KPiA8ND4KPiA8ND5QaWQ6IDQ0NTQsIGNvbW06IHN3aWZ0LW9iamVjdC1zZSBOb3QgdGFp
-bnRlZAo+IDIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0ICMxIFNpbGljb24gTWVjaGFuaWNzIFN0
-b3Jmb3JtCj4gUjUxOC52NVAvWDEwRFJpLVQ0Kwo+IDw0PlJJUDogMDAxMDpbPGZmZmZmZmZmYTAz
-NjJkNjA+XSAgWzxmZmZmZmZmZmEwMzYyZDYwPl0KPiB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJh
-MC8weDNhMCBbeGZzXQo+IDw0PlJTUDogMDAxODpmZmZmODgwODcxZjZkZTE4ICBFRkxBR1M6IDAw
-MDEwMjAyCj4gPDQ+UkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogMDAwMDAwMDAwMDAwMDAwNCBS
-Q1g6IDAwMDAwMDAwMDAwMDAwMDAKPiA8ND5SRFg6IDAwMDAwMDAwMDAwMDAwMDEgUlNJOiAwMDAw
-MDAwMDAwMDAwMDAwIFJESTogMDAwMDdmYWE3NDAwNjIwMwo+IDw0PlJCUDogZmZmZjg4MDg3MWY2
-ZGU2OCBSMDg6IDAwMDAwMDAzMmViMDRiYzkgUjA5OiAwMDAwMDAwMDAwMDAwMDA0Cj4gPDQ+UjEw
-OiAwMDAwMDAwMDAwMDA4MDMwIFIxMTogMDAwMDAwMDAwMDAwMDI0NiBSMTI6IDAwMDAwMDAwMDAw
-MDAwMDAKPiA8ND5SMTM6IDAwMDAwMDAwMDAwMDAwMDIgUjE0OiBmZmZmODgxMDZlZmY3MDAwIFIx
-NTogZmZmZjg4MDg3MTViNDU4MAo+IDw0PkZTOiAgMDAwMDdmYWE4NTQyNTcwMCgwMDAwKSBHUzpm
-ZmZmODgwMDI4MzYwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKPiA8ND5DUzogIDAw
-MTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzCj4gPDQ+Q1IyOiAwMDAw
-MDAwMDAwMDAwMDAxIENSMzogMDAwMDAwMTA3MjMyNTAwMCBDUjQ6IDAwMDAwMDAwMDAxNDA3ZTAK
-PiA8ND5EUjA6IDAwMDAwMDAwMDAwMDAwMDAgRFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAw
-MDAwMDAwMDAwMDAwMAo+IDw0PkRSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZm
-ZjBmZjAgRFI3OiAwMDAwMDAwMDAwMDAwNDAwCj4gPDQ+UHJvY2VzcyBzd2lmdC1vYmplY3Qtc2Ug
-KHBpZDogNDQ1NCwgdGhyZWFkaW5mbyBmZmZmODgwODcxZjZjMDAwLAo+IHRhc2sgZmZmZjg4MDg2
-MGYxOGFiMCkKPiA8ND5TdGFjazoKPiA8ND4gZmZmZjg4MDg3MWY2ZGUyOCBmZmZmZmZmZjgxMWE0
-YmIwIGZmZmY4ODA4NzFmNmRmMzggZmZmZjg4MDg3NDc0OWNjMAo+IDw0PjxkPiAwMDAwMDAwMTAw
-MDAwMTAzIGZmZmY4ODAyMzgxZjhjMDAgZmZmZjg4MDg3MWY2ZGYzOCBmZmZmODgwODcxNWI0NTgw
-Cj4gPDQ+PGQ+IDAwMDAwMDAwMDAwMDAwODIgZmZmZjg4MDIzODFmOGQ4OCBmZmZmODgwODcxZjZk
-ZWM4IGZmZmZmZmZmYTAzNWFiMzEKPiA8ND5DYWxsIFRyYWNlOgo+IDw0PiBbPGZmZmZmZmZmODEx
-YTRiYjA+XSA/IGZpbGxkaXIrMHgwLzB4ZTAKPiA8ND4gWzxmZmZmZmZmZmEwMzVhYjMxPl0geGZz
-X3JlYWRkaXIrMHhlMS8weDEzMCBbeGZzXQo+IDw0PiBbPGZmZmZmZmZmODExYTRiYjA+XSA/IGZp
-bGxkaXIrMHgwLzB4ZTAKPiA8ND4gWzxmZmZmZmZmZmEwMzhmZTI5Pl0geGZzX2ZpbGVfcmVhZGRp
-cisweDM5LzB4NTAgW3hmc10KPiA8ND4gWzxmZmZmZmZmZjgxMWE0ZTMwPl0gdmZzX3JlYWRkaXIr
-MHhjMC8weGUwCj4gPDQ+IFs8ZmZmZmZmZmY4MTE5YmQ4Nj5dID8gZmluYWxfcHV0bmFtZSsweDI2
-LzB4NTAKPiA8ND4gWzxmZmZmZmZmZjgxMWE0ZmI5Pl0gc3lzX2dldGRlbnRzKzB4ODkvMHhmMAo+
-IDw0PiBbPGZmZmZmZmZmODEwMGIwZjI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWIK
-PiA8ND5Db2RlOiAwMSAwMCAwMCAwMCA0OCBjNyBjNiAzOCA2YiAzYSBhMCA0OCA4YiA3ZCBjMCBm
-ZiA1NSBiOCA4NSBjMAo+IDBmIDg1IGFmIDAwIDAwIDAwIDQ5IDhiIDM3IGU5IGVjIGZkIGZmIGZm
-IDY2IDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwCj4gPDQxPiA4MCA3YyAyNCAwMSAwMCAwZiA4NCA5
-YyAwMCAwMCAwMCA0NSAwZiBiNiA0NCAyNCAwMyA0MSAwZiBiNgo+IDwxPlJJUCAgWzxmZmZmZmZm
-ZmEwMzYyZDYwPl0geGZzX2RpcjJfc2ZfZ2V0ZGVudHMrMHgyYTAvMHgzYTAgW3hmc10KPiA8ND4g
-UlNQIDxmZmZmODgwODcxZjZkZTE4Pgo+IDw0PkNSMjogMDAwMDAwMDAwMDAwMDAwMQo+IAouLi4K
-PiAKPiBJ4oCZdmUgZ290IHRoZSB2bWNvcmUgZHVtcCBmcm9tIG9wZXJhdG9yLiBEb2VzIHZtY29y
-ZSBoZWxwIGZvcgo+IHRyb3VibGVzaG9vdGluZyBraW5kIGlzc3VlID8KPiAKCkhtbSwgd2VsbCBp
-dCBjb3VsZG4ndCBodXJ0LiBJcyB0aGUgdm1jb3JlIGJhc2VkIG9uIHRoaXMgNi42IGtlcm5lbD8g
-Q2FuCnlvdSBwcm92aWRlIHRoZSBleGFjdCBrZXJuZWwgdmVyc2lvbiBhbmQgcG9zdCB0aGUgdm1j
-b3JlIHNvbWV3aGVyZT8KCkJyaWFuCgo+IFRoYW5rcyAvLyBIdWdvCj4g4oCLCj4gCj4gMjAxNS0w
-Ni0xOCAyMjo1OSBHTVQrMDg6MDAgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PjoK
-PiAKPiA+IE9uIDYvMTgvMTUgOToyOSBBTSwgS3VvIEh1Z28gd3JvdGU6Cj4gPiA+Pi0gSGF2ZSB5
-b3UgdHJpZWQgYW4gJ3hmc19yZXBhaXIgLW4nIG9mIHRoZSBhZmZlY3RlZCBmaWxlc3lzdGVtPyBO
-b3RlCj4gPiB0aGF0IC1uIHdpbGwgcmVwb3J0IHByb2JsZW1zIG9ubHkgYW5kIHByZXZlbnQgYW55
-IG1vZGlmaWNhdGlvbiBieSByZXBhaXIuCj4gPiA+Cj4gPiA+ICpXZSBtaWdodCB0byB0byB4ZnNf
-cmVwYWlyIGlmIHdlIGNhbiBhZGRyZXNzIHdoaWNoIGRpc2sgY2F1c2VzIHRoZQo+ID4gaXNzdWUu
-ICoKPiA+Cj4gPiBJZiB5b3UgZG8sIHBsZWFzZSBzYXZlIHRoZSBvdXRwdXQsIGFuZCBpZiBpdCBm
-aW5kcyBhbnl0aGluZywgcGxlYXNlCj4gPiBwcm92aWRlIHRoZSBvdXRwdXQgaW4gdGhpcyB0aHJl
-YWQuCj4gPgo+ID4gVGhhbmtzLAo+ID4gLUVyaWMKPiA+Cgo+IF9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Mu
-c2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+--===============3593431590360515185==
+Content-Type: multipart/alternative; boundary=047d7b4724e2cc2a84051a711c61
+
+--047d7b4724e2cc2a84051a711c61
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Hi Brian,
+
+*Operating System Version:*
+Linux-2.6.32-504.23.4.el6.x86_64-x86_64-with-centos-6.6-Final
+
+*NODE 1*
+
+https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore
+https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.txt
+
+
+*NODE 2*
+
+https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore_r2obj02
+https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg_r2obj02.=
+txt
+
+
+Any thoughts would be appreciate
+
+Thanks // Hugo
+
+
+2015-07-09 20:51 GMT+08:00 Brian Foster <bfoster@redhat.com>:
+
+> On Thu, Jul 09, 2015 at 06:57:55PM +0800, Kuo Hugo wrote:
+> > Hi Folks,
+> >
+> > As the results of 32 disks with xfs_repair -n seems no any error shows
+> up.
+> > We currently tried to deploy CentOS 6.6 for testing. (The previous kern=
+el
+> > panic was came from Ubuntu).
+> > The CentOS nodes encountered kernel panic with same daemon but the
+> problem
+> > may a bit differ.
+> >
+> >    - It was broken on xfs_dir2_sf_get_parent_ino+0xa/0x20 in Ubuntu.
+> >    - Here=E2=80=99s the log in CentOS. It=E2=80=99s broken on
+> >    xfs_dir2_sf_getdents+0x2a0/0x3a0
+> >
+>
+> I'd venture to guess it's the same behavior here. The previous kernel
+> had a callback for the parent inode number that was called via
+> xfs_dir2_sf_getdents(). Taking a look at a 6.6 kernel, it has a static
+> inline here instead.
+>
+> > <1>BUG: unable to handle kernel NULL pointer dereference at
+> 0000000000000001
+> > <1>IP: [<ffffffffa0362d60>] xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]
+> > <4>PGD 1072327067 PUD 1072328067 PMD 0
+> > <4>Oops: 0000 [#1] SMP
+> > <4>last sysfs file:
+> >
+> /sys/devices/pci0000:80/0000:80:03.2/0000:83:00.0/host10/port-10:1/expand=
+er-10:1/port-10:1:16/end_device-10:1:16/target10:0:25/10:0:25:0/block/sdz/q=
+ueue/rotational
+> > <4>CPU 17
+> > <4>Modules linked in: xt_conntrack tun xfs exportfs iptable_filter
+> > ipt_REDIRECT iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack
+> > nf_defrag_ipv4 ip_tables ip_vs ipv6 libcrc32c iTCO_wdt
+> > iTCO_vendor_support ses enclosure igb i2c_algo_bit sb_edac edac_core
+> > i2c_i801 i2c_core sg shpchp lpc_ich mfd_core ixgbe dca ptp pps_core
+> > mdio power_meter acpi_ipmi ipmi_si ipmi_msghandler ext4 jbd2 mbcache
+> > sd_mod crc_t10dif mpt3sas scsi_transport_sas raid_class xhci_hcd ahci
+> > wmi dm_mirror dm_region_hash dm_log dm_mod [last unloaded:
+> > scsi_wait_scan]
+> > <4>
+> > <4>Pid: 4454, comm: swift-object-se Not tainted
+> > 2.6.32-504.23.4.el6.x86_64 #1 Silicon Mechanics Storform
+> > R518.v5P/X10DRi-T4+
+> > <4>RIP: 0010:[<ffffffffa0362d60>]  [<ffffffffa0362d60>]
+> > xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]
+> > <4>RSP: 0018:ffff880871f6de18  EFLAGS: 00010202
+> > <4>RAX: 0000000000000000 RBX: 0000000000000004 RCX: 0000000000000000
+> > <4>RDX: 0000000000000001 RSI: 0000000000000000 RDI: 00007faa74006203
+> > <4>RBP: ffff880871f6de68 R08: 000000032eb04bc9 R09: 0000000000000004
+> > <4>R10: 0000000000008030 R11: 0000000000000246 R12: 0000000000000000
+> > <4>R13: 0000000000000002 R14: ffff88106eff7000 R15: ffff8808715b4580
+> > <4>FS:  00007faa85425700(0000) GS:ffff880028360000(0000)
+> knlGS:0000000000000000
+> > <4>CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > <4>CR2: 0000000000000001 CR3: 0000001072325000 CR4: 00000000001407e0
+> > <4>DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> > <4>DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> > <4>Process swift-object-se (pid: 4454, threadinfo ffff880871f6c000,
+> > task ffff880860f18ab0)
+> > <4>Stack:
+> > <4> ffff880871f6de28 ffffffff811a4bb0 ffff880871f6df38 ffff880874749cc0
+> > <4><d> 0000000100000103 ffff8802381f8c00 ffff880871f6df38
+> ffff8808715b4580
+> > <4><d> 0000000000000082 ffff8802381f8d88 ffff880871f6dec8
+> ffffffffa035ab31
+> > <4>Call Trace:
+> > <4> [<ffffffff811a4bb0>] ? filldir+0x0/0xe0
+> > <4> [<ffffffffa035ab31>] xfs_readdir+0xe1/0x130 [xfs]
+> > <4> [<ffffffff811a4bb0>] ? filldir+0x0/0xe0
+> > <4> [<ffffffffa038fe29>] xfs_file_readdir+0x39/0x50 [xfs]
+> > <4> [<ffffffff811a4e30>] vfs_readdir+0xc0/0xe0
+> > <4> [<ffffffff8119bd86>] ? final_putname+0x26/0x50
+> > <4> [<ffffffff811a4fb9>] sys_getdents+0x89/0xf0
+> > <4> [<ffffffff8100b0f2>] system_call_fastpath+0x16/0x1b
+> > <4>Code: 01 00 00 00 48 c7 c6 38 6b 3a a0 48 8b 7d c0 ff 55 b8 85 c0
+> > 0f 85 af 00 00 00 49 8b 37 e9 ec fd ff ff 66 0f 1f 84 00 00 00 00 00
+> > <41> 80 7c 24 01 00 0f 84 9c 00 00 00 45 0f b6 44 24 03 41 0f b6
+> > <1>RIP  [<ffffffffa0362d60>] xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]
+> > <4> RSP <ffff880871f6de18>
+> > <4>CR2: 0000000000000001
+> >
+> ...
+> >
+> > I=E2=80=99ve got the vmcore dump from operator. Does vmcore help for
+> > troubleshooting kind issue ?
+> >
+>
+> Hmm, well it couldn't hurt. Is the vmcore based on this 6.6 kernel? Can
+> you provide the exact kernel version and post the vmcore somewhere?
+>
+> Brian
+>
+> > Thanks // Hugo
+> > =E2=80=8B
+> >
+> > 2015-06-18 22:59 GMT+08:00 Eric Sandeen <sandeen@sandeen.net>:
+> >
+> > > On 6/18/15 9:29 AM, Kuo Hugo wrote:
+> > > >>- Have you tried an 'xfs_repair -n' of the affected filesystem? Not=
+e
+> > > that -n will report problems only and prevent any modification by
+> repair.
+> > > >
+> > > > *We might to to xfs_repair if we can address which disk causes the
+> > > issue. *
+> > >
+> > > If you do, please save the output, and if it finds anything, please
+> > > provide the output in this thread.
+> > >
+> > > Thanks,
+> > > -Eric
+> > >
+>
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+>
+>
+
+--047d7b4724e2cc2a84051a711c61
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi Brian,=C2=A0<div><br></div><div><div><b>Operating Syste=
+m Version:</b>=C2=A0 Linux-2.6.32-504.23.4.el6.x86_64-x86_64-with-centos-6.=
+6-Final</div></div><div><br></div><div><b>NODE 1</b></div><blockquote style=
+=3D"margin:0 0 0 40px;border:none;padding:0px"><div><div><a href=3D"https:/=
+/cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore">https://cloud.swifts=
+tack.com/v1/AUTH_burton/brtnswift/vmcore</a></div></div><div><div><a href=
+=3D"https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.txt"=
+>https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.txt</a>=
+</div></div></blockquote><div><div><br></div><div><b>NODE 2</b>=C2=A0</div>=
+</div><blockquote style=3D"margin:0 0 0 40px;border:none;padding:0px"><div>=
+<div><a href=3D"https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcor=
+e_r2obj02">https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore_r2o=
+bj02</a></div></div><div><div><a href=3D"https://cloud.swiftstack.com/v1/AU=
+TH_burton/brtnswift/vmcore-dmesg_r2obj02.txt">https://cloud.swiftstack.com/=
+v1/AUTH_burton/brtnswift/vmcore-dmesg_r2obj02.txt</a></div></div></blockquo=
+te><div><div><br></div><div>Any thoughts would be appreciate</div><div><br>=
+</div><div>Thanks // Hugo</div><div><br></div></div></div><div class=3D"gma=
+il_extra"><br><div class=3D"gmail_quote">2015-07-09 20:51 GMT+08:00 Brian F=
+oster <span dir=3D"ltr">&lt;<a href=3D"mailto:bfoster@redhat.com" target=3D=
+"_blank">bfoster@redhat.com</a>&gt;</span>:<br><blockquote class=3D"gmail_q=
+uote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1e=
+x"><span class=3D"">On Thu, Jul 09, 2015 at 06:57:55PM +0800, Kuo Hugo wrot=
+e:<br>
+&gt; Hi Folks,<br>
+&gt;<br>
+&gt; As the results of 32 disks with xfs_repair -n seems no any error shows=
+ up.<br>
+&gt; We currently tried to deploy CentOS 6.6 for testing. (The previous ker=
+nel<br>
+&gt; panic was came from Ubuntu).<br>
+&gt; The CentOS nodes encountered kernel panic with same daemon but the pro=
+blem<br>
+&gt; may a bit differ.<br>
+&gt;<br>
+</span>&gt;=C2=A0 =C2=A0 - It was broken on xfs_dir2_sf_get_parent_ino+0xa/=
+0x20 in Ubuntu.<br>
+&gt;=C2=A0 =C2=A0 - Here=E2=80=99s the log in CentOS. It=E2=80=99s broken o=
+n<br>
+&gt;=C2=A0 =C2=A0 xfs_dir2_sf_getdents+0x2a0/0x3a0<br>
+&gt;<br>
+<br>
+I&#39;d venture to guess it&#39;s the same behavior here. The previous kern=
+el<br>
+had a callback for the parent inode number that was called via<br>
+xfs_dir2_sf_getdents(). Taking a look at a 6.6 kernel, it has a static<br>
+inline here instead.<br>
+<div><div class=3D"h5"><br>
+&gt; &lt;1&gt;BUG: unable to handle kernel NULL pointer dereference at 0000=
+000000000001<br>
+&gt; &lt;1&gt;IP: [&lt;ffffffffa0362d60&gt;] xfs_dir2_sf_getdents+0x2a0/0x3=
+a0 [xfs]<br>
+&gt; &lt;4&gt;PGD 1072327067 PUD 1072328067 PMD 0<br>
+&gt; &lt;4&gt;Oops: 0000 [#1] SMP<br>
+&gt; &lt;4&gt;last sysfs file:<br>
+&gt; /sys/devices/pci0000:80/0000:80:03.2/0000:83:00.0/host10/port-10:1/exp=
+ander-10:1/port-10:1:16/end_device-10:1:16/target10:0:25/10:0:25:0/block/sd=
+z/queue/rotational<br>
+&gt; &lt;4&gt;CPU 17<br>
+&gt; &lt;4&gt;Modules linked in: xt_conntrack tun xfs exportfs iptable_filt=
+er<br>
+&gt; ipt_REDIRECT iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack<br>
+&gt; nf_defrag_ipv4 ip_tables ip_vs ipv6 libcrc32c iTCO_wdt<br>
+&gt; iTCO_vendor_support ses enclosure igb i2c_algo_bit sb_edac edac_core<b=
+r>
+&gt; i2c_i801 i2c_core sg shpchp lpc_ich mfd_core ixgbe dca ptp pps_core<br=
+>
+&gt; mdio power_meter acpi_ipmi ipmi_si ipmi_msghandler ext4 jbd2 mbcache<b=
+r>
+&gt; sd_mod crc_t10dif mpt3sas scsi_transport_sas raid_class xhci_hcd ahci<=
+br>
+&gt; wmi dm_mirror dm_region_hash dm_log dm_mod [last unloaded:<br>
+&gt; scsi_wait_scan]<br>
+&gt; &lt;4&gt;<br>
+&gt; &lt;4&gt;Pid: 4454, comm: swift-object-se Not tainted<br>
+&gt; 2.6.32-504.23.4.el6.x86_64 #1 Silicon Mechanics Storform<br>
+&gt; R518.v5P/X10DRi-T4+<br>
+&gt; &lt;4&gt;RIP: 0010:[&lt;ffffffffa0362d60&gt;]=C2=A0 [&lt;ffffffffa0362=
+d60&gt;]<br>
+&gt; xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]<br>
+&gt; &lt;4&gt;RSP: 0018:ffff880871f6de18=C2=A0 EFLAGS: 00010202<br>
+&gt; &lt;4&gt;RAX: 0000000000000000 RBX: 0000000000000004 RCX: 000000000000=
+0000<br>
+&gt; &lt;4&gt;RDX: 0000000000000001 RSI: 0000000000000000 RDI: 00007faa7400=
+6203<br>
+&gt; &lt;4&gt;RBP: ffff880871f6de68 R08: 000000032eb04bc9 R09: 000000000000=
+0004<br>
+&gt; &lt;4&gt;R10: 0000000000008030 R11: 0000000000000246 R12: 000000000000=
+0000<br>
+&gt; &lt;4&gt;R13: 0000000000000002 R14: ffff88106eff7000 R15: ffff8808715b=
+4580<br>
+&gt; &lt;4&gt;FS:=C2=A0 00007faa85425700(0000) GS:ffff880028360000(0000) kn=
+lGS:0000000000000000<br>
+&gt; &lt;4&gt;CS:=C2=A0 0010 DS: 0000 ES: 0000 CR0: 0000000080050033<br>
+&gt; &lt;4&gt;CR2: 0000000000000001 CR3: 0000001072325000 CR4: 000000000014=
+07e0<br>
+&gt; &lt;4&gt;DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000000000000=
+0000<br>
+&gt; &lt;4&gt;DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 000000000000=
+0400<br>
+&gt; &lt;4&gt;Process swift-object-se (pid: 4454, threadinfo ffff880871f6c0=
+00,<br>
+&gt; task ffff880860f18ab0)<br>
+&gt; &lt;4&gt;Stack:<br>
+&gt; &lt;4&gt; ffff880871f6de28 ffffffff811a4bb0 ffff880871f6df38 ffff88087=
+4749cc0<br>
+&gt; &lt;4&gt;&lt;d&gt; 0000000100000103 ffff8802381f8c00 ffff880871f6df38 =
+ffff8808715b4580<br>
+&gt; &lt;4&gt;&lt;d&gt; 0000000000000082 ffff8802381f8d88 ffff880871f6dec8 =
+ffffffffa035ab31<br>
+&gt; &lt;4&gt;Call Trace:<br>
+&gt; &lt;4&gt; [&lt;ffffffff811a4bb0&gt;] ? filldir+0x0/0xe0<br>
+&gt; &lt;4&gt; [&lt;ffffffffa035ab31&gt;] xfs_readdir+0xe1/0x130 [xfs]<br>
+&gt; &lt;4&gt; [&lt;ffffffff811a4bb0&gt;] ? filldir+0x0/0xe0<br>
+&gt; &lt;4&gt; [&lt;ffffffffa038fe29&gt;] xfs_file_readdir+0x39/0x50 [xfs]<=
+br>
+&gt; &lt;4&gt; [&lt;ffffffff811a4e30&gt;] vfs_readdir+0xc0/0xe0<br>
+&gt; &lt;4&gt; [&lt;ffffffff8119bd86&gt;] ? final_putname+0x26/0x50<br>
+&gt; &lt;4&gt; [&lt;ffffffff811a4fb9&gt;] sys_getdents+0x89/0xf0<br>
+&gt; &lt;4&gt; [&lt;ffffffff8100b0f2&gt;] system_call_fastpath+0x16/0x1b<br=
+>
+&gt; &lt;4&gt;Code: 01 00 00 00 48 c7 c6 38 6b 3a a0 48 8b 7d c0 ff 55 b8 8=
+5 c0<br>
+&gt; 0f 85 af 00 00 00 49 8b 37 e9 ec fd ff ff 66 0f 1f 84 00 00 00 00 00<b=
+r>
+&gt; &lt;41&gt; 80 7c 24 01 00 0f 84 9c 00 00 00 45 0f b6 44 24 03 41 0f b6=
+<br>
+&gt; &lt;1&gt;RIP=C2=A0 [&lt;ffffffffa0362d60&gt;] xfs_dir2_sf_getdents+0x2=
+a0/0x3a0 [xfs]<br>
+&gt; &lt;4&gt; RSP &lt;ffff880871f6de18&gt;<br>
+&gt; &lt;4&gt;CR2: 0000000000000001<br>
+&gt;<br>
+</div></div>...<br>
+<span class=3D"">&gt;<br>
+&gt; I=E2=80=99ve got the vmcore dump from operator. Does vmcore help for<b=
+r>
+&gt; troubleshooting kind issue ?<br>
+&gt;<br>
+<br>
+</span>Hmm, well it couldn&#39;t hurt. Is the vmcore based on this 6.6 kern=
+el? Can<br>
+you provide the exact kernel version and post the vmcore somewhere?<br>
+<span class=3D"HOEnZb"><font color=3D"#888888"><br>
+Brian<br>
+</font></span><span class=3D"im HOEnZb"><br>
+&gt; Thanks // Hugo<br>
+&gt; =E2=80=8B<br>
+&gt;<br>
+&gt; 2015-06-18 22:59 GMT+08:00 Eric Sandeen &lt;<a href=3D"mailto:sandeen@=
+sandeen.net">sandeen@sandeen.net</a>&gt;:<br>
+&gt;<br>
+&gt; &gt; On 6/18/15 9:29 AM, Kuo Hugo wrote:<br>
+&gt; &gt; &gt;&gt;- Have you tried an &#39;xfs_repair -n&#39; of the affect=
+ed filesystem? Note<br>
+&gt; &gt; that -n will report problems only and prevent any modification by=
+ repair.<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; *We might to to xfs_repair if we can address which disk caus=
+es the<br>
+&gt; &gt; issue. *<br>
+&gt; &gt;<br>
+&gt; &gt; If you do, please save the output, and if it finds anything, plea=
+se<br>
+&gt; &gt; provide the output in this thread.<br>
+&gt; &gt;<br>
+&gt; &gt; Thanks,<br>
+&gt; &gt; -Eric<br>
+&gt; &gt;<br>
+<br>
+</span><div class=3D"HOEnZb"><div class=3D"h5">&gt; _______________________=
+________________________<br>
+&gt; xfs mailing list<br>
+&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
+&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer"=
+ target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
+<br>
+</div></div></blockquote></div><br></div>
+
+--047d7b4724e2cc2a84051a711c61--
+
+
+--===============3593431590360515185==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3593431590360515185==--
