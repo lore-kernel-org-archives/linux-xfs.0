@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 365247F37
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 06:47:38 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D20B77F37
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 07:51:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 151E7304032
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 04:47:38 -0700 (PDT)
-Received: from mail-qk0-f169.google.com (mail-qk0-f169.google.com
-	[209.85.220.169]) by cuda.sgi.com with ESMTP id
-	sQBEnCapHv7gcGXP (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 09 Jul 2015 04:47:36 -0700 (PDT)
-Received: by qkei195 with SMTP id i195so183749064qke.3
-	for <xfs@oss.sgi.com>; Thu, 09 Jul 2015 04:47:35 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B3F178F8033
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 05:51:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tTFBmDJYZRexGXjD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 09 Jul 2015 05:51:23 -0700 (PDT)
+Date: Thu, 9 Jul 2015 08:51:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
+	xfs_dir2_sf_get_parent_ino+0xa/0x20
+Message-ID: <20150709125119.GC63282@bfoster.bfoster>
+References: <CA++_uht_4ON49eBqM6eA7oL7iBcxYMwR5ZAQxXmTuNji2XiyBA@mail.gmail.com>
+	<20150618133122.GC43254@bfoster.bfoster>
+	<CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
+	<5582DCDA.9070200@sandeen.net>
+	<CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20150709084602.GA2900@quack.suse.cz>
-References: <CAMcfJ7sZaLwO7Gz8f7E9GBrX75Ddc8JvLntPRpjw=KPNOV7TLg@mail.gmail.com>
-	<20150709084602.GA2900@quack.suse.cz>
-Date: Thu, 9 Jul 2015 17:17:35 +0530
-Message-ID: <CAMcfJ7uS52POb+8TrWa_CVTHN7O4dZNAWZi=8HBQ0v+RXLit4Q@mail.gmail.com>
-Subject: Re: regarding journaling mode
-From: Rakesh Patel <patelrakeshcomp@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,88 +30,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2768572570816074539=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs@oss.sgi.com
+To: Kuo Hugo <tonytkdk@gmail.com>
+Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, darrell@swiftstack.com, xfs@oss.sgi.com
 
---===============2768572570816074539==
-Content-Type: multipart/alternative; boundary=001a1135bfe44d5c87051a6fd2cd
-
---001a1135bfe44d5c87051a6fd2cd
-Content-Type: text/plain; charset=UTF-8
-
-Ok. Thanks for your information.
-
-
-On Thu, Jul 9, 2015 at 2:16 PM, Jan Kara <jack@suse.cz> wrote:
-
-> On Thu 09-07-15 10:18:55, Rakesh Patel wrote:
-> > https://www.kernel.org/doc/Documentation/filesystems/ext4.txt
-> >
-> > data=writeback                Data ordering is not preserved, data may
-> be written
-> >                       into the main file system after its metadata has
-> been
-> >                       committed to the journal.
->
-> But this is about ext4, not xfs. XFS works differently and provides
-> necessary data safety guarantees.
->
->                                                                 Honza
-> --
-> Jan Kara <jack@suse.cz>
-> SUSE Labs, CR
->
-
---001a1135bfe44d5c87051a6fd2cd
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Ok. Thanks for your information.<br><br></div><div class=
-=3D"gmail_extra"><br><div class=3D"gmail_quote">On Thu, Jul 9, 2015 at 2:16=
- PM, Jan Kara <span dir=3D"ltr">&lt;<a href=3D"mailto:jack@suse.cz" target=
-=3D"_blank">jack@suse.cz</a>&gt;</span> wrote:<br><blockquote class=3D"gmai=
-l_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left=
-:1ex"><div class=3D"HOEnZb"><div class=3D"h5">On Thu 09-07-15 10:18:55, Rak=
-esh Patel wrote:<br>
-&gt; <a href=3D"https://www.kernel.org/doc/Documentation/filesystems/ext4.t=
-xt" rel=3D"noreferrer" target=3D"_blank">https://www.kernel.org/doc/Documen=
-tation/filesystems/ext4.txt</a><br>
-&gt;<br>
-&gt; data=3Dwriteback=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 Data ordering is not preserved, data may be written<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0into the main file system after its metadata has been<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0committed to the journal.<br>
-<br>
-</div></div>But this is about ext4, not xfs. XFS works differently and prov=
-ides<br>
-necessary data safety guarantees.<br>
-<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 Honza<br>
-<span class=3D"HOEnZb"><font color=3D"#888888">--<br>
-Jan Kara &lt;<a href=3D"mailto:jack@suse.cz">jack@suse.cz</a>&gt;<br>
-SUSE Labs, CR<br>
-</font></span></blockquote></div><br></div>
-
---001a1135bfe44d5c87051a6fd2cd--
-
-
---===============2768572570816074539==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2768572570816074539==--
+T24gVGh1LCBKdWwgMDksIDIwMTUgYXQgMDY6NTc6NTVQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6
+Cj4gSGkgRm9sa3MsCj4gCj4gQXMgdGhlIHJlc3VsdHMgb2YgMzIgZGlza3Mgd2l0aCB4ZnNfcmVw
+YWlyIC1uIHNlZW1zIG5vIGFueSBlcnJvciBzaG93cyB1cC4KPiBXZSBjdXJyZW50bHkgdHJpZWQg
+dG8gZGVwbG95IENlbnRPUyA2LjYgZm9yIHRlc3RpbmcuIChUaGUgcHJldmlvdXMga2VybmVsCj4g
+cGFuaWMgd2FzIGNhbWUgZnJvbSBVYnVudHUpLgo+IFRoZSBDZW50T1Mgbm9kZXMgZW5jb3VudGVy
+ZWQga2VybmVsIHBhbmljIHdpdGggc2FtZSBkYWVtb24gYnV0IHRoZSBwcm9ibGVtCj4gbWF5IGEg
+Yml0IGRpZmZlci4KPiAKPiAgICAtIEl0IHdhcyBicm9rZW4gb24geGZzX2RpcjJfc2ZfZ2V0X3Bh
+cmVudF9pbm8rMHhhLzB4MjAgaW4gVWJ1bnR1Lgo+ICAgIC0gSGVyZeKAmXMgdGhlIGxvZyBpbiBD
+ZW50T1MuIEl04oCZcyBicm9rZW4gb24KPiAgICB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJhMC8w
+eDNhMAo+IAoKSSdkIHZlbnR1cmUgdG8gZ3Vlc3MgaXQncyB0aGUgc2FtZSBiZWhhdmlvciBoZXJl
+LiBUaGUgcHJldmlvdXMga2VybmVsCmhhZCBhIGNhbGxiYWNrIGZvciB0aGUgcGFyZW50IGlub2Rl
+IG51bWJlciB0aGF0IHdhcyBjYWxsZWQgdmlhCnhmc19kaXIyX3NmX2dldGRlbnRzKCkuIFRha2lu
+ZyBhIGxvb2sgYXQgYSA2LjYga2VybmVsLCBpdCBoYXMgYSBzdGF0aWMKaW5saW5lIGhlcmUgaW5z
+dGVhZC4KCj4gPDE+QlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVy
+ZWZlcmVuY2UgYXQgMDAwMDAwMDAwMDAwMDAwMQo+IDwxPklQOiBbPGZmZmZmZmZmYTAzNjJkNjA+
+XSB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJhMC8weDNhMCBbeGZzXQo+IDw0PlBHRCAxMDcyMzI3
+MDY3IFBVRCAxMDcyMzI4MDY3IFBNRCAwCj4gPDQ+T29wczogMDAwMCBbIzFdIFNNUAo+IDw0Pmxh
+c3Qgc3lzZnMgZmlsZToKPiAvc3lzL2RldmljZXMvcGNpMDAwMDo4MC8wMDAwOjgwOjAzLjIvMDAw
+MDo4MzowMC4wL2hvc3QxMC9wb3J0LTEwOjEvZXhwYW5kZXItMTA6MS9wb3J0LTEwOjE6MTYvZW5k
+X2RldmljZS0xMDoxOjE2L3RhcmdldDEwOjA6MjUvMTA6MDoyNTowL2Jsb2NrL3Nkei9xdWV1ZS9y
+b3RhdGlvbmFsCj4gPDQ+Q1BVIDE3Cj4gPDQ+TW9kdWxlcyBsaW5rZWQgaW46IHh0X2Nvbm50cmFj
+ayB0dW4geGZzIGV4cG9ydGZzIGlwdGFibGVfZmlsdGVyCj4gaXB0X1JFRElSRUNUIGlwdGFibGVf
+bmF0IG5mX25hdCBuZl9jb25udHJhY2tfaXB2NCBuZl9jb25udHJhY2sKPiBuZl9kZWZyYWdfaXB2
+NCBpcF90YWJsZXMgaXBfdnMgaXB2NiBsaWJjcmMzMmMgaVRDT193ZHQKPiBpVENPX3ZlbmRvcl9z
+dXBwb3J0IHNlcyBlbmNsb3N1cmUgaWdiIGkyY19hbGdvX2JpdCBzYl9lZGFjIGVkYWNfY29yZQo+
+IGkyY19pODAxIGkyY19jb3JlIHNnIHNocGNocCBscGNfaWNoIG1mZF9jb3JlIGl4Z2JlIGRjYSBw
+dHAgcHBzX2NvcmUKPiBtZGlvIHBvd2VyX21ldGVyIGFjcGlfaXBtaSBpcG1pX3NpIGlwbWlfbXNn
+aGFuZGxlciBleHQ0IGpiZDIgbWJjYWNoZQo+IHNkX21vZCBjcmNfdDEwZGlmIG1wdDNzYXMgc2Nz
+aV90cmFuc3BvcnRfc2FzIHJhaWRfY2xhc3MgeGhjaV9oY2QgYWhjaQo+IHdtaSBkbV9taXJyb3Ig
+ZG1fcmVnaW9uX2hhc2ggZG1fbG9nIGRtX21vZCBbbGFzdCB1bmxvYWRlZDoKPiBzY3NpX3dhaXRf
+c2Nhbl0KPiA8ND4KPiA8ND5QaWQ6IDQ0NTQsIGNvbW06IHN3aWZ0LW9iamVjdC1zZSBOb3QgdGFp
+bnRlZAo+IDIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0ICMxIFNpbGljb24gTWVjaGFuaWNzIFN0
+b3Jmb3JtCj4gUjUxOC52NVAvWDEwRFJpLVQ0Kwo+IDw0PlJJUDogMDAxMDpbPGZmZmZmZmZmYTAz
+NjJkNjA+XSAgWzxmZmZmZmZmZmEwMzYyZDYwPl0KPiB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJh
+MC8weDNhMCBbeGZzXQo+IDw0PlJTUDogMDAxODpmZmZmODgwODcxZjZkZTE4ICBFRkxBR1M6IDAw
+MDEwMjAyCj4gPDQ+UkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogMDAwMDAwMDAwMDAwMDAwNCBS
+Q1g6IDAwMDAwMDAwMDAwMDAwMDAKPiA8ND5SRFg6IDAwMDAwMDAwMDAwMDAwMDEgUlNJOiAwMDAw
+MDAwMDAwMDAwMDAwIFJESTogMDAwMDdmYWE3NDAwNjIwMwo+IDw0PlJCUDogZmZmZjg4MDg3MWY2
+ZGU2OCBSMDg6IDAwMDAwMDAzMmViMDRiYzkgUjA5OiAwMDAwMDAwMDAwMDAwMDA0Cj4gPDQ+UjEw
+OiAwMDAwMDAwMDAwMDA4MDMwIFIxMTogMDAwMDAwMDAwMDAwMDI0NiBSMTI6IDAwMDAwMDAwMDAw
+MDAwMDAKPiA8ND5SMTM6IDAwMDAwMDAwMDAwMDAwMDIgUjE0OiBmZmZmODgxMDZlZmY3MDAwIFIx
+NTogZmZmZjg4MDg3MTViNDU4MAo+IDw0PkZTOiAgMDAwMDdmYWE4NTQyNTcwMCgwMDAwKSBHUzpm
+ZmZmODgwMDI4MzYwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKPiA8ND5DUzogIDAw
+MTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzCj4gPDQ+Q1IyOiAwMDAw
+MDAwMDAwMDAwMDAxIENSMzogMDAwMDAwMTA3MjMyNTAwMCBDUjQ6IDAwMDAwMDAwMDAxNDA3ZTAK
+PiA8ND5EUjA6IDAwMDAwMDAwMDAwMDAwMDAgRFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAw
+MDAwMDAwMDAwMDAwMAo+IDw0PkRSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZm
+ZjBmZjAgRFI3OiAwMDAwMDAwMDAwMDAwNDAwCj4gPDQ+UHJvY2VzcyBzd2lmdC1vYmplY3Qtc2Ug
+KHBpZDogNDQ1NCwgdGhyZWFkaW5mbyBmZmZmODgwODcxZjZjMDAwLAo+IHRhc2sgZmZmZjg4MDg2
+MGYxOGFiMCkKPiA8ND5TdGFjazoKPiA8ND4gZmZmZjg4MDg3MWY2ZGUyOCBmZmZmZmZmZjgxMWE0
+YmIwIGZmZmY4ODA4NzFmNmRmMzggZmZmZjg4MDg3NDc0OWNjMAo+IDw0PjxkPiAwMDAwMDAwMTAw
+MDAwMTAzIGZmZmY4ODAyMzgxZjhjMDAgZmZmZjg4MDg3MWY2ZGYzOCBmZmZmODgwODcxNWI0NTgw
+Cj4gPDQ+PGQ+IDAwMDAwMDAwMDAwMDAwODIgZmZmZjg4MDIzODFmOGQ4OCBmZmZmODgwODcxZjZk
+ZWM4IGZmZmZmZmZmYTAzNWFiMzEKPiA8ND5DYWxsIFRyYWNlOgo+IDw0PiBbPGZmZmZmZmZmODEx
+YTRiYjA+XSA/IGZpbGxkaXIrMHgwLzB4ZTAKPiA8ND4gWzxmZmZmZmZmZmEwMzVhYjMxPl0geGZz
+X3JlYWRkaXIrMHhlMS8weDEzMCBbeGZzXQo+IDw0PiBbPGZmZmZmZmZmODExYTRiYjA+XSA/IGZp
+bGxkaXIrMHgwLzB4ZTAKPiA8ND4gWzxmZmZmZmZmZmEwMzhmZTI5Pl0geGZzX2ZpbGVfcmVhZGRp
+cisweDM5LzB4NTAgW3hmc10KPiA8ND4gWzxmZmZmZmZmZjgxMWE0ZTMwPl0gdmZzX3JlYWRkaXIr
+MHhjMC8weGUwCj4gPDQ+IFs8ZmZmZmZmZmY4MTE5YmQ4Nj5dID8gZmluYWxfcHV0bmFtZSsweDI2
+LzB4NTAKPiA8ND4gWzxmZmZmZmZmZjgxMWE0ZmI5Pl0gc3lzX2dldGRlbnRzKzB4ODkvMHhmMAo+
+IDw0PiBbPGZmZmZmZmZmODEwMGIwZjI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWIK
+PiA8ND5Db2RlOiAwMSAwMCAwMCAwMCA0OCBjNyBjNiAzOCA2YiAzYSBhMCA0OCA4YiA3ZCBjMCBm
+ZiA1NSBiOCA4NSBjMAo+IDBmIDg1IGFmIDAwIDAwIDAwIDQ5IDhiIDM3IGU5IGVjIGZkIGZmIGZm
+IDY2IDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwCj4gPDQxPiA4MCA3YyAyNCAwMSAwMCAwZiA4NCA5
+YyAwMCAwMCAwMCA0NSAwZiBiNiA0NCAyNCAwMyA0MSAwZiBiNgo+IDwxPlJJUCAgWzxmZmZmZmZm
+ZmEwMzYyZDYwPl0geGZzX2RpcjJfc2ZfZ2V0ZGVudHMrMHgyYTAvMHgzYTAgW3hmc10KPiA8ND4g
+UlNQIDxmZmZmODgwODcxZjZkZTE4Pgo+IDw0PkNSMjogMDAwMDAwMDAwMDAwMDAwMQo+IAouLi4K
+PiAKPiBJ4oCZdmUgZ290IHRoZSB2bWNvcmUgZHVtcCBmcm9tIG9wZXJhdG9yLiBEb2VzIHZtY29y
+ZSBoZWxwIGZvcgo+IHRyb3VibGVzaG9vdGluZyBraW5kIGlzc3VlID8KPiAKCkhtbSwgd2VsbCBp
+dCBjb3VsZG4ndCBodXJ0LiBJcyB0aGUgdm1jb3JlIGJhc2VkIG9uIHRoaXMgNi42IGtlcm5lbD8g
+Q2FuCnlvdSBwcm92aWRlIHRoZSBleGFjdCBrZXJuZWwgdmVyc2lvbiBhbmQgcG9zdCB0aGUgdm1j
+b3JlIHNvbWV3aGVyZT8KCkJyaWFuCgo+IFRoYW5rcyAvLyBIdWdvCj4g4oCLCj4gCj4gMjAxNS0w
+Ni0xOCAyMjo1OSBHTVQrMDg6MDAgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PjoK
+PiAKPiA+IE9uIDYvMTgvMTUgOToyOSBBTSwgS3VvIEh1Z28gd3JvdGU6Cj4gPiA+Pi0gSGF2ZSB5
+b3UgdHJpZWQgYW4gJ3hmc19yZXBhaXIgLW4nIG9mIHRoZSBhZmZlY3RlZCBmaWxlc3lzdGVtPyBO
+b3RlCj4gPiB0aGF0IC1uIHdpbGwgcmVwb3J0IHByb2JsZW1zIG9ubHkgYW5kIHByZXZlbnQgYW55
+IG1vZGlmaWNhdGlvbiBieSByZXBhaXIuCj4gPiA+Cj4gPiA+ICpXZSBtaWdodCB0byB0byB4ZnNf
+cmVwYWlyIGlmIHdlIGNhbiBhZGRyZXNzIHdoaWNoIGRpc2sgY2F1c2VzIHRoZQo+ID4gaXNzdWUu
+ICoKPiA+Cj4gPiBJZiB5b3UgZG8sIHBsZWFzZSBzYXZlIHRoZSBvdXRwdXQsIGFuZCBpZiBpdCBm
+aW5kcyBhbnl0aGluZywgcGxlYXNlCj4gPiBwcm92aWRlIHRoZSBvdXRwdXQgaW4gdGhpcyB0aHJl
+YWQuCj4gPgo+ID4gVGhhbmtzLAo+ID4gLUVyaWMKPiA+Cgo+IF9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Mu
+c2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
