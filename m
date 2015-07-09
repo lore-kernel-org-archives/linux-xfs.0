@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 191BD7F5D
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 09:06:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DC69C304053
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 07:06:44 -0700 (PDT)
-Received: from smtpbguseast1.qq.com (smtpbguseast1.qq.com [54.204.34.129]) by
-	cuda.sgi.com with ESMTP id VipyDD2o8DDFcFGA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 07:06:42 -0700 (PDT)
-Message-ID: <559D2E52.2070900@unitedstack.com>
-Date: Wed, 08 Jul 2015 22:06:10 +0800
-From: juncheng bai <baijuncheng@unitedstack.com>
+	by oss.sgi.com (Postfix) with ESMTP id C7C517F37
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 19:45:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B2EA1304032
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 17:45:52 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	PJOoH7AV8TBBHj8T for <xfs@oss.sgi.com>;
+	Wed, 08 Jul 2015 17:45:46 -0700 (PDT)
+Date: Thu, 9 Jul 2015 10:45:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
+Message-ID: <20150709004543.GD3902@dastard>
+References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
+	<1434711726-13092-2-git-send-email-jtulak@redhat.com>
+	<20150625193748.GE36162@bfoster.bfoster>
+	<413545489.22844725.1435841273912.JavaMail.zimbra@redhat.com>
+	<20150702141403.GA61817@bfoster.bfoster>
+	<20150702230520.GA22807@dastard>
+	<2084199601.25014496.1436372096546.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Possible memory allocation deadlock in kmem_alloc and hung task
-	in xfs_log_commit_cil and xlog_cil_push
-References: <CA+eFSM30A1V7j4CYJOyLSN7V7REHt0hrxteU1dVRw4HQZLmuxw@mail.gmail.com>	<20150707233743.GZ7943@dastard>
-	<CA+eFSM2mSSW-BtP5-ArHREPu9sRRO3=J8acWJ-h_iZHfLPnhiw@mail.gmail.com>
-In-Reply-To: <CA+eFSM2mSSW-BtP5-ArHREPu9sRRO3=J8acWJ-h_iZHfLPnhiw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <2084199601.25014496.1436372096546.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,81 +31,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gavin Guo <gavin.guo@canonical.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-Hi, All
+[Please line wrap your responses at 68-72 columns]
 
-As far as I know, the patch b3f03bac8132207a20286d5602eda64500c19724 
-solves one case which big directory size.
+On Wed, Jul 08, 2015 at 12:14:56PM -0400, Jan Tulak wrote:
+> ----- Original Message -----
+> > From: "Dave Chinner" <david@fromorbit.com>
+> 
+> > At one point during development of this patch set I started writing
+> > an xfstest to validate that mkfs did all the right input validation
+> > things and set parameters appropriately so that we didn't
+> > inadvertently change behaviour. I never really finished it off (like
+> > the patch set), but I've attached it below to give an idea of where
+> > I was going with it. It was based on validating the input and CLI
+> > parameters for the new code, so is guaranteed to fail on an existing
+> > mkfs binary.
+> 
+> I'm using and extending it, but I'm not sure about some tests,
+> whether it is a change from current behaviour, or if it is rather
+> an issue in the test.
 
-I am not very familiar with xfs, but I think why can't we use vmalloc
-when kmalloc fails?
+Remember, the point of the patchset was to sanitise and clean up the
+CLI interface, not just the code. i.e. the CLI will change, not just
+the code.
 
-Thanks.
---------------
-juncheng bai
+> > +
+> > +# basic "should fail" options
+> > +# logarithm based options are no longer valid
+> > +do_mkfs_fail -s log=9 $SCRATCH_DEV
+> 
+> There are some changes in logarithm input (mkfs: validate
+> logarithmic parameters sanely), but it is still supported in the
+> patches. Is there some issue, why to remove them?
 
-On 2015/7/8 20:34, Gavin Guo wrote:
-> Hi Dave,
->
-> On Wed, Jul 8, 2015 at 7:37 AM, Dave Chinner <david@fromorbit.com> wrote:
->> On Tue, Jul 07, 2015 at 05:29:43PM +0800, Gavin Guo wrote:
->>> Hi all,
->>>
->>> Recently, we observed that there is the error message in
->>> Ubuntu-3.13.0-48.80:
->>>
->>> "XFS: possible memory allocation deadlock in kmem_alloc (mode:0x8250)"
->>>
->>> repeatedly shows in the dmesg. Temporarily, our workaround is to tune the
->>> parameters, such as, vfs_cache_pressure, min_free_kbytes, and dirty_ratio.
->>>
->>> And we also found that there are different error messages regarding the
->>> hung tasks which happened in xfs_log_commit_cil and xlog_cil_push.
->>>
->>> The log is available at: http://paste.ubuntu.com/11835007/
->>>
->>> The following link seems the same problem we suffered:
->>>
->>> XFS hangs with XFS: possible memory allocation deadlock in kmem_alloc
->>> http://oss.sgi.com/archives/xfs/2015-03/msg00172.html
->>>
->>> I read the mail and found that there might be some modification regarding
->>> to move the memory allocation outside the ctx lock. And I also read the
->>> latest patch from February of 2015 to see if there is any new change
->>> about that. Unfortunately, I didn't find anything regarding the change (may
->>> be I'm not familiar with the XFS, so didn't find the commit). If it's
->>> possible for someone who is familiar with the code to point out the commits
->>> related to the bug if already exist or any status about the plan.
->>
->> No commits - the approach I thought we might be able to take to
->> avoid the problem didn't work out. I have another idea of how we
->> might solve the problem, but I haven't ad a chance to prototype it
->> yet.
->>
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
->
-> Really thanks for your information, I'll keep watching out the status.
->
-> Thanks,
-> Gavin Guo
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+They are redundant and almost nobody uses them. The size options are
+what people use, and even they have so many different units that it
+confuses people...
 
+> Otherwise, it should rather test for (in)valid input for log=xxx, right?
+
+No, it's indicative of the fact I wanted to remove the log scale
+options for variables.  As I've said before - I didn't ever finish
+the patchset off.
+
+Essentially, once all the options are in a table, we only want to
+look in one place for things like ag size, fs size, log size, block
+sizes etc. Right now the table has multiple entries or multiple
+global variables for these things and we have to work out which is
+valid and correct and handle conflicts and incompatibilities, etc.
+We don't *need* that complexity to specify sizes of things, so
+getting rid of the rarely used redundant options makes a lot of
+sense as it simplifies the code and the user interface without
+reducing functionality...
+
+> > +rm -f $fsimg
+> > +$XFS_IO_PROG -f -c "truncate $fssize" $fsimg
+> > +do_mkfs_pass -d file $fsimg
+> > +do_mkfs_pass -d file,name=$fsimg
+> > +rm -f $fsimg
+> > +do_mkfs_pass -d size=$fssize,file $fsimg
+> > +rm -f $fsimg
+> > +do_mkfs_pass -d size=$fssize,file,name=$fsimg
+> > +do_mkfs_pass -d file,name=$fsimg
+> 
+> Should all these inputs really pass?
+
+Yes, they should, because ....
+
+> What is the expected
+> behaviour for example on -d file,name=$fsimg if the file exists,
+> and what if there is no such file? 
+
+....in all cases the file either:
+
+	a) exists and is of non-zero size and hence defines the
+	   size of the filesystem to be created,
+	b) does not exist but the size of the filesystem to be
+	   created is specified on the CLI allowing us to create
+	   the image file correctly.
+
+We should only fail to create the image file if it doesn't exist
+and we haven't been given enough information to calculate the size
+of the filesystem via CLI parameters.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
