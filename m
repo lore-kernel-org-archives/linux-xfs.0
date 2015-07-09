@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A3D627F37
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 14:24:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D6B9304048
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 12:24:42 -0700 (PDT)
-Received: from mrout4.yahoo.com (mrout4.yahoo.com [216.145.54.109]) by
-	cuda.sgi.com with ESMTP id 4Bx2dX2HYLjVjagg (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 09 Jul 2015 12:24:39 -0700 (PDT)
-Received: from omp1069.mail.ne1.yahoo.com (omp1069.mail.ne1.yahoo.com
-	[98.138.226.168])
-	by mrout4.yahoo.com (8.14.9/8.14.9/y.out) with ESMTP id t69JNt1B040198
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 9 Jul 2015 12:23:55 -0700 (PDT)
-Date: Thu, 9 Jul 2015 19:23:54 +0000 (UTC)
-From: Hogan Whittall <whittalh@yahoo-inc.com>
-Message-ID: <50338734.2095398.1436469834143.JavaMail.yahoo@mail.yahoo.com>
-In-Reply-To: <20150709190511.GH63282@bfoster.bfoster>
-References: <110866563.1804043.1436463170539.JavaMail.yahoo@mail.yahoo.com>
-	<20150709190511.GH63282@bfoster.bfoster>
-Subject: Re: Issue with RHEL6 mkfs.xfs (3.1.1+), HP P420 RAID, and MySQL
-	replication
+	by oss.sgi.com (Postfix) with ESMTP id 705157F37
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 17:41:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FC7E304039
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 15:41:26 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	zG3iKyQYYqGfp4jJ for <xfs@oss.sgi.com>;
+	Thu, 09 Jul 2015 15:41:22 -0700 (PDT)
+Date: Fri, 10 Jul 2015 08:41:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_io bmap confused
+Message-ID: <20150709224118.GB7943@dastard>
+References: <1436338913.13729.11.camel@hasee> <20150708085341.GA23332@lst.de>
+	<1436363862.15921.0.camel@hasee>
+	<CAF1ivSYJEraUn_jEOEZg06D36yOYsZNrLz2Vzv=_Umpkao7Otw@mail.gmail.com>
+	<1436424844.22691.2.camel@hasee>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1436424844.22691.2.camel@hasee>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,76 +32,147 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Ming Lin <mlin@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Apologies for top-posting, our mail UI makes inline replies virtually impossible.
-
-I will see if I can start with the good XFS settings and change them one at a time to see exactly which setting triggers the issue.  The other issue, which I forgot to mention, is that mkfs.xfs 3.1.1 (shipped with RHEL6) will not let me set -d sunit=0,swidth=0.  No errors, it simply ignores those values and uses the values calculated based on minimum_io_size and optimal_io_size, so the only way that I have any chance of doing this test is by using the same version of mkfs.xfs that doesn't cause a problem in the first place.  It seems that mkfs.xfs 3.1.1 and 3.2.3 (pulled from git) function the same way, ignore 0 and only allow values that fall within a range that it deems acceptable.  Also, specifying those values at mount time, either in fstab or via the mount command, changes nothing.  No errors, just simply ignores them and uses the values set when mkfs.xfs ran.
-
-Thanks for the suggestions, I'll see what I can make happen.  Honestly, I'd be perfectly happy if we could simply replicate the same values with the RHEL6 version of mkfs.xfs since those values work just fine for our various workloads.  3.x resulting in different parameters and being unable to set the same parameters as 2.x just smells like a bug.  Since "0" is a perfectly valid setting when minimum_io_size is 0 and/or optimal_io_size is 512 there really should be a way to manually set 0 as well.
-
--Hogan
-
-________________________________
-From: Brian Foster <bfoster@redhat.com>
-To: Hogan Whittall <whittalh@yahoo-inc.com> 
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com> 
-Sent: Thursday, July 9, 2015 2:05 PM
-Subject: Re: Issue with RHEL6 mkfs.xfs (3.1.1+), HP P420 RAID, and MySQL replication
-
-
-On Thu, Jul 09, 2015 at 05:32:50PM +0000, Hogan Whittall wrote:
-> Hello,
-> Recently we encountered a previously-reported issue regarding write amplification with MySQL replication and XFS when used with certain RAID controllers (In our case, HP P420).  That issue exactly matches our issue and was documented by someone else here - http://oss.sgi.com/archives/xfs/2013-03/msg00133.html - but I don't see any resolution.  I will say that the problem *does not* exist when mkfs.xfs 2.9.6 is used to format the filesystem on RHEL6 as that sets sunit=0 and swidth=0 instead of setting based on minimum_io_size and optimal_io_size.
-
-I'm not very familiar with MySQL and thus not sure what your workload
-is, but either version of mkfs.xfs should support setting options such
-that the fs is formatted as with the defaults of another version...
-
-> We have systems that are identical in how they are built and configured, we can take a RHEL6 box that has the MySQL partition formatted with mkfs.xfs v3.1.1 and reproduce the write amplification problem with MySQL replication every single time.  If we take the same box and format the MySQL partition with mkfs.xfs 2.9.6, then bring up MySQL with the exact same configuration there is no problem.  I've included the working and broken settings below.  If it's not the sunit/swidth settings then what will cause 7-10MB/s worth of writes to the XFS partition to become over 200MB/s downstream?  The actual data change on the disks is not 200MB/s, but because the write ops are truly being amplified and not just being misreported our MySQL slaves with the bad XFS settings cannot keep up and the lag steadily increases with no hope of ever becoming current.
-
-It would be nice to somehow see what requests are being made at the
-application level. Perhaps via strace or something of that nature if you
-can demonstrate a relatively isolated operation at the app. level
-resulting in the same I/O requests to the kernel but different I/O out
-of the filesystem..?
-
-> I am happy to try some other settings/options with the RHEL6 mkfs.xfs to see if replication performance is able to match that of systems formatted with mkfs.xfs 2.9.6, but the values set by 3.1.1 with the P420 RAID do not work for MySQL replication.  We have ruled out everything else as a possible cause, the absolute only difference on these systems is what values are set by mkfs.xfs.
-> ============================================================ Working RHEL6 XFS partition:
-> meta-data=/dev/mapper/sys-home   isize=256    agcount=4, agsize=71271680 blks         =                       sectsz=512   attr=2, projid32bit=0data     =                       bsize=4096   blocks=285086720, imaxpct=5         =                       sunit=0      swidth=0 blksnaming   =version 2              bsize=4096   ascii-ci=0log      =internal               bsize=4096   blocks=32768, version=2         =                       sectsz=512   sunit=0 blks, lazy-count=0realtime =none                   extsz=4096   blocks=0, rtextents=0
-> ============================================================ 
-> Broken RHEL6 XFS partition:
-> meta-data=/dev/mapper/sys-home   isize=256    agcount=32, agsize=8908992 blks         =                       sectsz=512   attr=2, projid32bit=0data     =                       bsize=4096   blocks=285086720, imaxpct=5         =                       sunit=64     swidth=128 blksnaming   =version 2              bsize=4096   ascii-ci=0log      =internal               bsize=4096   blocks=139264, version=2         =                       sectsz=512   sunit=64 blks, lazy-count=1realtime =none                   extsz=4096   blocks=0, rtextents=0
-> ============================================================ 
+On Wed, Jul 08, 2015 at 11:54:04PM -0700, Ming Lin wrote:
+> On Wed, 2015-07-08 at 16:40 -0700, Ming Lin wrote:
+> > On Wed, 2015-07-08 at 06:57 -0700, Ming Lin wrote:
+> > > On Wed, 2015-07-08 at 10:53 +0200, Christoph Hellwig wrote:
+> > > > On Wed, Jul 08, 2015 at 12:01:53AM -0700, Ming Lin wrote:
+> > > > > Hi list,
+> > > > >
+> > > > > I am testing some direct-io patches.
+> > > > > xfs_tests/xfs/080 failed.
+> > > > >
+> > > > > It's strange.
+> > > > > There is no hole in "rwtest.file",
+> > > > > but when read it at some offset it returns zero because of hole.
+> > > > >
+> > > > > root@block:~# xfs_io -c bmap /mnt/test/rwtest.file
+> > > > > /mnt/test/rwtest.file:
+> > > > >              0: [0..125671]: 160..125831
+> > > >
+> > > > Sounds like you see an unwritten extent.  What does xfs_bmap -pv show on
+> > > > the file?
+> > >
+> > > root@block:~# xfs_bmap -pv /mnt/test/rwtest.file
+> > > /mnt/test/rwtest.file:
+> > >  EXT: FILE-OFFSET       BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+> > >    0: [0..743]:         160..903          0 (160..903)         744 00000
+> > >    1: [744..783]:       904..943          0 (904..943)          40 10000
+> > >    2: [784..951]:       944..1111         0 (944..1111)        168 00000
+> > >    3: [952..1023]:      1112..1183        0 (1112..1183)        72 10000
+> > >    4: [1024..1287]:     1184..1447        0 (1184..1447)       264 00000
+> > >    5: [1288..1383]:     1448..1543        0 (1448..1543)        96 10000
+> > 
+> > file offset 659456 is in EXT 5.
+> > I guess FLAGS 1 means it's an unwritten extent, right?
+> > 
+> > xfs_tests/xfs/080 basically does:
+> > 1. direct io write
+> > 2. then buffered read to check the previous dio write
+> > 
+> > Here is an example of error logs.
+> > 
+> > doio ( 3626) 16:13:23
+> > ---------------------
+> > *** DATA COMPARISON ERROR ***
+> > check_file(/mnt/test/rwtest.file, 239616, 81408, H:3626:block:doio*,
+> > 18, 0) failed
+> > 
+> > Comparison fd is 5, with open flags 0
+> > Corrupt regions follow - unprintable chars are represented as '.'
+> > -----------------------------------------------------------------
+> > corrupt bytes starting at file offset 241664
+> >     1st 32 expected bytes:  oio*H:3626:block:doio*H:3626:blo
+> >     1st 32 actual bytes:    ................................
+> > 
+> > Request number 981
+> >           fd 4 is file /mnt/test/rwtest.file - open flags are 040001
+> > O_WRONLY,O_DIRECT,
+> >           write done at file offset 239616 - pattern is H (0110)
+> >           number of requests is 1, strides per request is 1
+> >           i/o byte count = 81408
+> >           memory alignment is aligned
+> >           DIRECT I/O: offset % 512 = 0 length % 81408 = 0
+> >           mem alignment 0x200 xfer size: small: 512 large: 2147483136
+> > 
+> > syscall:  writev(4, (iov on stack), 1)
+> > 
+> > 
+> > The "expected bytes" was actually written to the disk successfully,
+> > but for some bug the xfs extent flag was not set correctly.
+> > The flag should be "XFS_EXT_NORM", but now it's "XFS_EXT_UNWRITTEN".
+> > 
+> > Could you share the code path the extent flag was updated?
+> > Is it also updated through direct io?
 > 
+> For XFS direct IO, are below the only 2 paths to convert unwritten
+> extent to written extent?
+> 
+> [   72.279043] Call Trace:
+> [   72.279719]  [<ffffffff8169c2f3>] dump_stack+0x4f/0x7b
+> [   72.280898]  [<ffffffff8127140f>] xfs_bmapi_convert_unwritten+0x73/0x176
+> [   72.282393]  [<ffffffff8127a233>] xfs_bmapi_write+0x2a0/0x7ee
+> [   72.283705]  [<ffffffff812b8ae8>] xfs_iomap_write_direct+0x23e/0x2f0
+> [   72.285132]  [<ffffffff8129ef88>] __xfs_get_blocks+0x14c/0xf6c
+> [   72.286456]  [<ffffffff8103d74b>] ? get_user_pages_fast+0xee/0x14c
+> [   72.287847]  [<ffffffff8129fdcf>] xfs_get_blocks_direct+0x14/0x16
+> [   72.289246]  [<ffffffff811879c6>] get_blocks+0x86/0x182
+> [   72.297467]  [<ffffffff8103d74b>] ? get_user_pages_fast+0xee/0x14c
+> [   72.298845]  [<ffffffff81187fe6>] __blockdev_direct_IO+0x372/0x666
+> [   72.300266]  [<ffffffff8129fdbb>] ? xfs_get_blocks+0x13/0x13
+> [   72.301555]  [<ffffffff8116f9ac>] ? __mnt_drop_write_file+0x12/0x14
+> [   72.302936]  [<ffffffff8116a017>] ? file_update_time+0xb5/0xcb
+> [   72.304279]  [<ffffffff8129d890>] xfs_vm_direct_IO+0x89/0x90
+> [   72.305555]  [<ffffffff8129d943>] ? xfs_setfilesize_trans_alloc+0xac/0xac
+> [   72.307064]  [<ffffffff8169ae5e>] xfs_file_dio_aio_write+0x2e0/0x449
+> [   72.308509]  [<ffffffff813e1028>] ? __clear_user+0x36/0x5b
+> [   72.309755]  [<ffffffff812af9c6>] xfs_file_write_iter+0x75/0x105
+> [   72.311107]  [<ffffffff81151524>] __vfs_write+0x97/0xc0
+> [   72.312347]  [<ffffffff81151b1f>] vfs_write+0xb5/0x16f
+> [   72.313526]  [<ffffffff811522c3>] SyS_write+0x4a/0x94
+> [   72.314683]  [<ffffffff816a4b17>] system_call_fastpath+0x12/0x6f
 
-The differences I see for the second mkfs:
+There should not be unwritten extent conversion happening through
+the allocation path here. Indeed, xfs_iomap_write_direct() only uses
+the XFS_BMAPI_PREALLOC flag, which means
+xfs_bmapi_convert_unwritten() returns without doing anything to the
+newly allocated extent...
 
-- agcount of 32 instead of 4
-- sunit/swidth of 64/128 rather than 0/0
-- log size of 139264 blocks rather than 32768
-- lazy-count=1 rather than lazy-count=0
+> [   72.328096] Call Trace:
+> [   72.328786]  [<ffffffff8169c2f3>] dump_stack+0x4f/0x7b
+> [   72.330002]  [<ffffffff8127140f>] xfs_bmapi_convert_unwritten+0x73/0x176
+> [   72.331565]  [<ffffffff8126cd9d>] ? xfs_bmap_search_extents+0x60/0xd6
+> [   72.333059]  [<ffffffff812c96f1>] ? kmem_zone_alloc+0x6e/0xba
+> [   72.334412]  [<ffffffff8127a233>] xfs_bmapi_write+0x2a0/0x7ee
+> [   72.335777]  [<ffffffff812b9455>] xfs_iomap_write_unwritten+0x205/0x413
+> [   72.337300]  [<ffffffff8129d7e2>] xfs_end_io+0x50/0x75
+> [   72.338495]  [<ffffffff8129dab9>] xfs_end_io_direct_write+0x176/0x26c
+> [   72.339952]  [<ffffffff810d20a4>] ? delayacct_end+0x55/0x5e
+> [   72.341238]  [<ffffffff8118759d>] dio_complete+0x7c/0x134
+> [   72.342488]  [<ffffffff811882a7>] __blockdev_direct_IO+0x633/0x666
+> [   72.343908]  [<ffffffff8129fdbb>] ? xfs_get_blocks+0x13/0x13
+> [   72.345263]  [<ffffffff8129d890>] xfs_vm_direct_IO+0x89/0x90
+> [   72.346598]  [<ffffffff8129d943>] ? xfs_setfilesize_trans_alloc+0xac/0xac
+> [   72.348185]  [<ffffffff8169ae5e>] xfs_file_dio_aio_write+0x2e0/0x449
+> [   72.349652]  [<ffffffff813e1028>] ? __clear_user+0x36/0x5b
+> [   72.350950]  [<ffffffff812af9c6>] xfs_file_write_iter+0x75/0x105
+> [   72.352369]  [<ffffffff81151524>] __vfs_write+0x97/0xc0
+> [   72.353607]  [<ffffffff81151b1f>] vfs_write+0xb5/0x16f
+> [   72.354832]  [<ffffffff811522c3>] SyS_write+0x4a/0x94
+> [   72.356060]  [<ffffffff816a4b17>] system_call_fastpath+0x12/0x6f
 
-As mentioned above, I would take the "broken" mkfs.xfs and add options
-one at a time that format the fs as the previous version did and try to
-identify what leads to the behavior. E.g., maybe first use '-d
-su=0,sw=0' to reset the stripe unit, then try adding '-l
-size=<32768*blksize>' to set the log size, '-d agcount=N' to set the
-allocation group count, etc.
+This is the only unwritten conversion path that should occur through
+direct IO - the IO completion path....
 
-Brian
+Cheers,
 
-
-
-
-> Thanks!
-> -Hogan
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
