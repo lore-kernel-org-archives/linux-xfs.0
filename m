@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0F83F7F37
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 13:33:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A9C59AC008
-	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 11:32:59 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9D5127F37
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 14:05:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 87327304048
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 12:05:15 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rXgbaFB9yFfKcCVm (version=TLSv1
+	cuda.sgi.com with ESMTP id AFECuQUdiOh4sT7d (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 09 Jul 2015 11:32:58 -0700 (PDT)
-Date: Thu, 9 Jul 2015 14:32:55 -0400
+	Thu, 09 Jul 2015 12:05:14 -0700 (PDT)
+Date: Thu, 9 Jul 2015 15:05:12 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-Message-ID: <20150709183255.GG63282@bfoster.bfoster>
-References: <CA++_uht_4ON49eBqM6eA7oL7iBcxYMwR5ZAQxXmTuNji2XiyBA@mail.gmail.com>
-	<20150618133122.GC43254@bfoster.bfoster>
-	<CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
-	<5582DCDA.9070200@sandeen.net>
-	<CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
-	<20150709125119.GC63282@bfoster.bfoster>
-	<CA++_uhuoQ76uOUikbetw5ocfHDGAFMERcbgX9R4Shha2GUxWmQ@mail.gmail.com>
-	<20150709151811.GE63282@bfoster.bfoster>
-	<CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
+Subject: Re: Issue with RHEL6 mkfs.xfs (3.1.1+), HP P420 RAID, and MySQL
+	replication
+Message-ID: <20150709190511.GH63282@bfoster.bfoster>
+References: <110866563.1804043.1436463170539.JavaMail.yahoo@mail.yahoo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
+In-Reply-To: <110866563.1804043.1436463170539.JavaMail.yahoo@mail.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,152 +26,113 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kuo Hugo <tonytkdk@gmail.com>
-Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, darrell@swiftstack.com, xfs@oss.sgi.com
+To: Hogan Whittall <whittalh@yahoo-inc.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gRnJpLCBKdWwgMTAsIDIwMTUgYXQgMTI6NDA6MDBBTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6
-Cj4gSGkgQnJhaW4sCj4gCj4gVGhlcmUgeW91IGdvLgo+IAo+IGh0dHBzOi8vY2xvdWQuc3dpZnRz
-dGFjay5jb20vdjEvQVVUSF9odWdvL3B1YmxpYy92bWxpbnV4Cj4gaHR0cHM6Ly9jbG91ZC5zd2lm
-dHN0YWNrLmNvbS92MS9BVVRIX2h1Z28vcHVibGljL1N5c3RlbS5tYXAtMi42LjMyLTUwNC4yMy40
-LmVsNi54ODZfNjQKPiAKPiAkIG1kNXN1bSB2bWxpbnV4Cj4gODJhYWE2OTRhMTc0YzBhMjllNzhj
-MDVlNzNhZGY1ZDggIHZtbGludXgKPiAKPiBZZXMsIEkgY2FuIHJlYWQgaXQgd2l0aCB0aGlzIHZt
-bGludXggaW1hZ2UuIFB1dCBhbGwgZmlsZXMKPiAodm1jb3JlLHZtbGludXgsU3lzdGVtLm1hcCkg
-aW4gYSBmb2xkZXIgYW5kIHJ1biAkY3Jhc2ggdm1saW51eCB2bWNvcmUKPiAKClRoYW5rcywgSSBj
-YW4gYWN0dWFsbHkgbG9hZCB0aGF0IHVwIG5vdy4gTm90ZSB0aGF0IHdlJ2xsIHByb2JhYmx5IG5l
-ZWQKdGhlIG1vZHVsZXMgYW5kIHdoYXRub3QgKHhmcy5rbykgYWxzbyB0byBiZSBhYmxlIHRvIGxv
-b2sgYXQgYW55IFhGUwpiaXRzLiBJdCBtaWdodCBiZSBlYXNpZXN0IHRvIGp1c3QgdGFyIHVwIGFu
-ZCBjb21wcmVzcyB3aGF0ZXZlciBkaXJlY3RvcnkKc3RydWN0dXJlIGhhcyB0aGUgZGVidWctZW5h
-YmxlZCB2bWxpbnV4IGFuZCBhbGwgdGhlIGtlcm5lbCBtb2R1bGVzLgpUaGFua3MuCgpCcmlhbgoK
-PiBIdWdvCj4g4oCLCj4gCj4gMjAxNS0wNy0wOSAyMzoxOCBHTVQrMDg6MDAgQnJpYW4gRm9zdGVy
-IDxiZm9zdGVyQHJlZGhhdC5jb20+Ogo+IAo+ID4gT24gVGh1LCBKdWwgMDksIDIwMTUgYXQgMDk6
-MjA6MDBQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6Cj4gPiA+IEhpIEJyaWFuLAo+ID4gPgo+ID4g
-PiAqT3BlcmF0aW5nIFN5c3RlbSBWZXJzaW9uOioKPiA+ID4gTGludXgtMi42LjMyLTUwNC4yMy40
-LmVsNi54ODZfNjQteDg2XzY0LXdpdGgtY2VudG9zLTYuNi1GaW5hbAo+ID4gPgo+ID4gPiAqTk9E
-RSAxKgo+ID4gPgo+ID4gPiBodHRwczovL2Nsb3VkLnN3aWZ0c3RhY2suY29tL3YxL0FVVEhfYnVy
-dG9uL2JydG5zd2lmdC92bWNvcmUKPiA+ID4gaHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92
-MS9BVVRIX2J1cnRvbi9icnRuc3dpZnQvdm1jb3JlLWRtZXNnLnR4dAo+ID4gPgo+ID4gPgo+ID4g
-PiAqTk9ERSAyKgo+ID4gPgo+ID4gPiBodHRwczovL2Nsb3VkLnN3aWZ0c3RhY2suY29tL3YxL0FV
-VEhfYnVydG9uL2JydG5zd2lmdC92bWNvcmVfcjJvYmowMgo+ID4gPgo+ID4gaHR0cHM6Ly9jbG91
-ZC5zd2lmdHN0YWNrLmNvbS92MS9BVVRIX2J1cnRvbi9icnRuc3dpZnQvdm1jb3JlLWRtZXNnX3Iy
-b2JqMDIudHh0Cj4gPiA+Cj4gPiA+Cj4gPiA+IEFueSB0aG91Z2h0cyB3b3VsZCBiZSBhcHByZWNp
-YXRlCj4gPiA+Cj4gPgo+ID4gSSdtIG5vdCBhYmxlIHRvIGZpcmUgdXAgY3Jhc2ggd2l0aCB0aGVz
-ZSBjb3JlIGZpbGVzIGFuZCB0aGUga2VybmVsIGRlYnVnCj4gPiBpbmZvIGZyb20gdGhlIGZvbGxv
-d2luZyBjZW50b3Mga2VybmVsIGRlYnVnaW5mbyBwYWNrYWdlOgo+ID4KPiA+IGtlcm5lbC1kZWJ1
-Z2luZm8tMi42LjMyLTUwNC4yMy40LmVsNi5jZW50b3MucGx1cy54ODZfNjQucnBtCj4gPgo+ID4g
-SXQgY29tcGxhaW5zIGFib3V0IGEgdmVyc2lvbiBtaXNtYXRjaCBiZXR3ZWVuIHRoZSB2bWxpbnV4
-IGFuZCBjb3JlIGZpbGUuCj4gPiBJJ20gbm8gY3Jhc2ggZXhwZXJ0Li4uIGFyZSB5b3Ugc3VyZSB0
-aGUgY29yZXMgYWJvdmUgY29ycmVzcG9uZCB0byB0aGlzCj4gPiBrZXJuZWw/IERvZXMgY3Jhc2gg
-bG9hZCB1cCBmb3IgeW91IG9uIHNhaWQgYm94IGlmIHlvdSBydW4gc29tZXRoaW5nIGxpa2UKPiA+
-IHRoZSBmb2xsb3dpbmc/Cj4gPgo+ID4gICAgICAgICBjcmFzaCAvdXNyL2xpYi9kZWJ1Zy9saWIv
-bW9kdWxlcy8uLi4vdm1saW51eCB2bWNvcmUKPiA+Cj4gPiBOb3RlIHRoYXQgeW91IG1pZ2h0IG5l
-ZWQgdG8gaW5zdGFsbCB0aGUgYWJvdmUga2VybmVsLWRlYnVnaW5mbyBwYWNrYWdlCj4gPiB0byBn
-ZXQgdGhlIGRlYnVnICh2bWxpbnV4KSBmaWxlLiBJZiBzbywgY291bGQgeW91IGFsc28gdXBsb2Fk
-IHRoYXQKPiA+IGRlYnVnaW5mbyBycG0gc29tZXdoZXJlPwo+ID4KPiA+IEJyaWFuCj4gPgo+ID4g
-PiBUaGFua3MgLy8gSHVnbwo+ID4gPgo+ID4gPgo+ID4gPiAyMDE1LTA3LTA5IDIwOjUxIEdNVCsw
-ODowMCBCcmlhbiBGb3N0ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbT46Cj4gPiA+Cj4gPiA+ID4gT24g
-VGh1LCBKdWwgMDksIDIwMTUgYXQgMDY6NTc6NTVQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6Cj4g
-PiA+ID4gPiBIaSBGb2xrcywKPiA+ID4gPiA+Cj4gPiA+ID4gPiBBcyB0aGUgcmVzdWx0cyBvZiAz
-MiBkaXNrcyB3aXRoIHhmc19yZXBhaXIgLW4gc2VlbXMgbm8gYW55IGVycm9yCj4gPiBzaG93cwo+
-ID4gPiA+IHVwLgo+ID4gPiA+ID4gV2UgY3VycmVudGx5IHRyaWVkIHRvIGRlcGxveSBDZW50T1Mg
-Ni42IGZvciB0ZXN0aW5nLiAoVGhlIHByZXZpb3VzCj4gPiBrZXJuZWwKPiA+ID4gPiA+IHBhbmlj
-IHdhcyBjYW1lIGZyb20gVWJ1bnR1KS4KPiA+ID4gPiA+IFRoZSBDZW50T1Mgbm9kZXMgZW5jb3Vu
-dGVyZWQga2VybmVsIHBhbmljIHdpdGggc2FtZSBkYWVtb24gYnV0IHRoZQo+ID4gPiA+IHByb2Js
-ZW0KPiA+ID4gPiA+IG1heSBhIGJpdCBkaWZmZXIuCj4gPiA+ID4gPgo+ID4gPiA+ID4gICAgLSBJ
-dCB3YXMgYnJva2VuIG9uIHhmc19kaXIyX3NmX2dldF9wYXJlbnRfaW5vKzB4YS8weDIwIGluIFVi
-dW50dS4KPiA+ID4gPiA+ICAgIC0gSGVyZeKAmXMgdGhlIGxvZyBpbiBDZW50T1MuIEl04oCZcyBi
-cm9rZW4gb24KPiA+ID4gPiA+ICAgIHhmc19kaXIyX3NmX2dldGRlbnRzKzB4MmEwLzB4M2EwCj4g
-PiA+ID4gPgo+ID4gPiA+Cj4gPiA+ID4gSSdkIHZlbnR1cmUgdG8gZ3Vlc3MgaXQncyB0aGUgc2Ft
-ZSBiZWhhdmlvciBoZXJlLiBUaGUgcHJldmlvdXMga2VybmVsCj4gPiA+ID4gaGFkIGEgY2FsbGJh
-Y2sgZm9yIHRoZSBwYXJlbnQgaW5vZGUgbnVtYmVyIHRoYXQgd2FzIGNhbGxlZCB2aWEKPiA+ID4g
-PiB4ZnNfZGlyMl9zZl9nZXRkZW50cygpLiBUYWtpbmcgYSBsb29rIGF0IGEgNi42IGtlcm5lbCwg
-aXQgaGFzIGEgc3RhdGljCj4gPiA+ID4gaW5saW5lIGhlcmUgaW5zdGVhZC4KPiA+ID4gPgo+ID4g
-PiA+ID4gPDE+QlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZl
-cmVuY2UgYXQKPiA+ID4gPiAwMDAwMDAwMDAwMDAwMDAxCj4gPiA+ID4gPiA8MT5JUDogWzxmZmZm
-ZmZmZmEwMzYyZDYwPl0geGZzX2RpcjJfc2ZfZ2V0ZGVudHMrMHgyYTAvMHgzYTAgW3hmc10KPiA+
-ID4gPiA+IDw0PlBHRCAxMDcyMzI3MDY3IFBVRCAxMDcyMzI4MDY3IFBNRCAwCj4gPiA+ID4gPiA8
-ND5Pb3BzOiAwMDAwIFsjMV0gU01QCj4gPiA+ID4gPiA8ND5sYXN0IHN5c2ZzIGZpbGU6Cj4gPiA+
-ID4gPgo+ID4gPiA+Cj4gPiAvc3lzL2RldmljZXMvcGNpMDAwMDo4MC8wMDAwOjgwOjAzLjIvMDAw
-MDo4MzowMC4wL2hvc3QxMC9wb3J0LTEwOjEvZXhwYW5kZXItMTA6MS9wb3J0LTEwOjE6MTYvZW5k
-X2RldmljZS0xMDoxOjE2L3RhcmdldDEwOjA6MjUvMTA6MDoyNTowL2Jsb2NrL3Nkei9xdWV1ZS9y
-b3RhdGlvbmFsCj4gPiA+ID4gPiA8ND5DUFUgMTcKPiA+ID4gPiA+IDw0Pk1vZHVsZXMgbGlua2Vk
-IGluOiB4dF9jb25udHJhY2sgdHVuIHhmcyBleHBvcnRmcyBpcHRhYmxlX2ZpbHRlcgo+ID4gPiA+
-ID4gaXB0X1JFRElSRUNUIGlwdGFibGVfbmF0IG5mX25hdCBuZl9jb25udHJhY2tfaXB2NCBuZl9j
-b25udHJhY2sKPiA+ID4gPiA+IG5mX2RlZnJhZ19pcHY0IGlwX3RhYmxlcyBpcF92cyBpcHY2IGxp
-YmNyYzMyYyBpVENPX3dkdAo+ID4gPiA+ID4gaVRDT192ZW5kb3Jfc3VwcG9ydCBzZXMgZW5jbG9z
-dXJlIGlnYiBpMmNfYWxnb19iaXQgc2JfZWRhYyBlZGFjX2NvcmUKPiA+ID4gPiA+IGkyY19pODAx
-IGkyY19jb3JlIHNnIHNocGNocCBscGNfaWNoIG1mZF9jb3JlIGl4Z2JlIGRjYSBwdHAgcHBzX2Nv
-cmUKPiA+ID4gPiA+IG1kaW8gcG93ZXJfbWV0ZXIgYWNwaV9pcG1pIGlwbWlfc2kgaXBtaV9tc2do
-YW5kbGVyIGV4dDQgamJkMiBtYmNhY2hlCj4gPiA+ID4gPiBzZF9tb2QgY3JjX3QxMGRpZiBtcHQz
-c2FzIHNjc2lfdHJhbnNwb3J0X3NhcyByYWlkX2NsYXNzIHhoY2lfaGNkIGFoY2kKPiA+ID4gPiA+
-IHdtaSBkbV9taXJyb3IgZG1fcmVnaW9uX2hhc2ggZG1fbG9nIGRtX21vZCBbbGFzdCB1bmxvYWRl
-ZDoKPiA+ID4gPiA+IHNjc2lfd2FpdF9zY2FuXQo+ID4gPiA+ID4gPDQ+Cj4gPiA+ID4gPiA8ND5Q
-aWQ6IDQ0NTQsIGNvbW06IHN3aWZ0LW9iamVjdC1zZSBOb3QgdGFpbnRlZAo+ID4gPiA+ID4gMi42
-LjMyLTUwNC4yMy40LmVsNi54ODZfNjQgIzEgU2lsaWNvbiBNZWNoYW5pY3MgU3RvcmZvcm0KPiA+
-ID4gPiA+IFI1MTgudjVQL1gxMERSaS1UNCsKPiA+ID4gPiA+IDw0PlJJUDogMDAxMDpbPGZmZmZm
-ZmZmYTAzNjJkNjA+XSAgWzxmZmZmZmZmZmEwMzYyZDYwPl0KPiA+ID4gPiA+IHhmc19kaXIyX3Nm
-X2dldGRlbnRzKzB4MmEwLzB4M2EwIFt4ZnNdCj4gPiA+ID4gPiA8ND5SU1A6IDAwMTg6ZmZmZjg4
-MDg3MWY2ZGUxOCAgRUZMQUdTOiAwMDAxMDIwMgo+ID4gPiA+ID4gPDQ+UkFYOiAwMDAwMDAwMDAw
-MDAwMDAwIFJCWDogMDAwMDAwMDAwMDAwMDAwNCBSQ1g6IDAwMDAwMDAwMDAwMDAwMDAKPiA+ID4g
-PiA+IDw0PlJEWDogMDAwMDAwMDAwMDAwMDAwMSBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJOiAw
-MDAwN2ZhYTc0MDA2MjAzCj4gPiA+ID4gPiA8ND5SQlA6IGZmZmY4ODA4NzFmNmRlNjggUjA4OiAw
-MDAwMDAwMzJlYjA0YmM5IFIwOTogMDAwMDAwMDAwMDAwMDAwNAo+ID4gPiA+ID4gPDQ+UjEwOiAw
-MDAwMDAwMDAwMDA4MDMwIFIxMTogMDAwMDAwMDAwMDAwMDI0NiBSMTI6IDAwMDAwMDAwMDAwMDAw
-MDAKPiA+ID4gPiA+IDw0PlIxMzogMDAwMDAwMDAwMDAwMDAwMiBSMTQ6IGZmZmY4ODEwNmVmZjcw
-MDAgUjE1OiBmZmZmODgwODcxNWI0NTgwCj4gPiA+ID4gPiA8ND5GUzogIDAwMDA3ZmFhODU0MjU3
-MDAoMDAwMCkgR1M6ZmZmZjg4MDAyODM2MDAwMCgwMDAwKQo+ID4gPiA+IGtubEdTOjAwMDAwMDAw
-MDAwMDAwMDAKPiA+ID4gPiA+IDw0PkNTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAw
-MDAwMDAwODAwNTAwMzMKPiA+ID4gPiA+IDw0PkNSMjogMDAwMDAwMDAwMDAwMDAwMSBDUjM6IDAw
-MDAwMDEwNzIzMjUwMDAgQ1I0OiAwMDAwMDAwMDAwMTQwN2UwCj4gPiA+ID4gPiA8ND5EUjA6IDAw
-MDAwMDAwMDAwMDAwMDAgRFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAwMDAw
-MAo+ID4gPiA+ID4gPDQ+RFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZmMGZm
-MCBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKPiA+ID4gPiA+IDw0PlByb2Nlc3Mgc3dpZnQtb2JqZWN0
-LXNlIChwaWQ6IDQ0NTQsIHRocmVhZGluZm8gZmZmZjg4MDg3MWY2YzAwMCwKPiA+ID4gPiA+IHRh
-c2sgZmZmZjg4MDg2MGYxOGFiMCkKPiA+ID4gPiA+IDw0PlN0YWNrOgo+ID4gPiA+ID4gPDQ+IGZm
-ZmY4ODA4NzFmNmRlMjggZmZmZmZmZmY4MTFhNGJiMCBmZmZmODgwODcxZjZkZjM4Cj4gPiBmZmZm
-ODgwODc0NzQ5Y2MwCj4gPiA+ID4gPiA8ND48ZD4gMDAwMDAwMDEwMDAwMDEwMyBmZmZmODgwMjM4
-MWY4YzAwIGZmZmY4ODA4NzFmNmRmMzgKPiA+ID4gPiBmZmZmODgwODcxNWI0NTgwCj4gPiA+ID4g
-PiA8ND48ZD4gMDAwMDAwMDAwMDAwMDA4MiBmZmZmODgwMjM4MWY4ZDg4IGZmZmY4ODA4NzFmNmRl
-YzgKPiA+ID4gPiBmZmZmZmZmZmEwMzVhYjMxCj4gPiA+ID4gPiA8ND5DYWxsIFRyYWNlOgo+ID4g
-PiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTFhNGJiMD5dID8gZmlsbGRpcisweDAvMHhlMAo+ID4gPiA+
-ID4gPDQ+IFs8ZmZmZmZmZmZhMDM1YWIzMT5dIHhmc19yZWFkZGlyKzB4ZTEvMHgxMzAgW3hmc10K
-PiA+ID4gPiA+IDw0PiBbPGZmZmZmZmZmODExYTRiYjA+XSA/IGZpbGxkaXIrMHgwLzB4ZTAKPiA+
-ID4gPiA+IDw0PiBbPGZmZmZmZmZmYTAzOGZlMjk+XSB4ZnNfZmlsZV9yZWFkZGlyKzB4MzkvMHg1
-MCBbeGZzXQo+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTFhNGUzMD5dIHZmc19yZWFkZGlyKzB4
-YzAvMHhlMAo+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTE5YmQ4Nj5dID8gZmluYWxfcHV0bmFt
-ZSsweDI2LzB4NTAKPiA+ID4gPiA+IDw0PiBbPGZmZmZmZmZmODExYTRmYjk+XSBzeXNfZ2V0ZGVu
-dHMrMHg4OS8weGYwCj4gPiA+ID4gPiA8ND4gWzxmZmZmZmZmZjgxMDBiMGYyPl0gc3lzdGVtX2Nh
-bGxfZmFzdHBhdGgrMHgxNi8weDFiCj4gPiA+ID4gPiA8ND5Db2RlOiAwMSAwMCAwMCAwMCA0OCBj
-NyBjNiAzOCA2YiAzYSBhMCA0OCA4YiA3ZCBjMCBmZiA1NSBiOCA4NSBjMAo+ID4gPiA+ID4gMGYg
-ODUgYWYgMDAgMDAgMDAgNDkgOGIgMzcgZTkgZWMgZmQgZmYgZmYgNjYgMGYgMWYgODQgMDAgMDAg
-MDAgMDAgMDAKPiA+ID4gPiA+IDw0MT4gODAgN2MgMjQgMDEgMDAgMGYgODQgOWMgMDAgMDAgMDAg
-NDUgMGYgYjYgNDQgMjQgMDMgNDEgMGYgYjYKPiA+ID4gPiA+IDwxPlJJUCAgWzxmZmZmZmZmZmEw
-MzYyZDYwPl0geGZzX2RpcjJfc2ZfZ2V0ZGVudHMrMHgyYTAvMHgzYTAgW3hmc10KPiA+ID4gPiA+
-IDw0PiBSU1AgPGZmZmY4ODA4NzFmNmRlMTg+Cj4gPiA+ID4gPiA8ND5DUjI6IDAwMDAwMDAwMDAw
-MDAwMDEKPiA+ID4gPiA+Cj4gPiA+ID4gLi4uCj4gPiA+ID4gPgo+ID4gPiA+ID4gSeKAmXZlIGdv
-dCB0aGUgdm1jb3JlIGR1bXAgZnJvbSBvcGVyYXRvci4gRG9lcyB2bWNvcmUgaGVscCBmb3IKPiA+
-ID4gPiA+IHRyb3VibGVzaG9vdGluZyBraW5kIGlzc3VlID8KPiA+ID4gPiA+Cj4gPiA+ID4KPiA+
-ID4gPiBIbW0sIHdlbGwgaXQgY291bGRuJ3QgaHVydC4gSXMgdGhlIHZtY29yZSBiYXNlZCBvbiB0
-aGlzIDYuNiBrZXJuZWw/IENhbgo+ID4gPiA+IHlvdSBwcm92aWRlIHRoZSBleGFjdCBrZXJuZWwg
-dmVyc2lvbiBhbmQgcG9zdCB0aGUgdm1jb3JlIHNvbWV3aGVyZT8KPiA+ID4gPgo+ID4gPiA+IEJy
-aWFuCj4gPiA+ID4KPiA+ID4gPiA+IFRoYW5rcyAvLyBIdWdvCj4gPiA+ID4gPiDigIsKPiA+ID4g
-PiA+Cj4gPiA+ID4gPiAyMDE1LTA2LTE4IDIyOjU5IEdNVCswODowMCBFcmljIFNhbmRlZW4gPHNh
-bmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+ID4gPiA+ID4KPiA+ID4gPiA+ID4gT24gNi8xOC8xNSA5OjI5
-IEFNLCBLdW8gSHVnbyB3cm90ZToKPiA+ID4gPiA+ID4gPj4tIEhhdmUgeW91IHRyaWVkIGFuICd4
-ZnNfcmVwYWlyIC1uJyBvZiB0aGUgYWZmZWN0ZWQgZmlsZXN5c3RlbT8KPiA+IE5vdGUKPiA+ID4g
-PiA+ID4gdGhhdCAtbiB3aWxsIHJlcG9ydCBwcm9ibGVtcyBvbmx5IGFuZCBwcmV2ZW50IGFueSBt
-b2RpZmljYXRpb24gYnkKPiA+ID4gPiByZXBhaXIuCj4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4g
-PiAqV2UgbWlnaHQgdG8gdG8geGZzX3JlcGFpciBpZiB3ZSBjYW4gYWRkcmVzcyB3aGljaCBkaXNr
-IGNhdXNlcwo+ID4gdGhlCj4gPiA+ID4gPiA+IGlzc3VlLiAqCj4gPiA+ID4gPiA+Cj4gPiA+ID4g
-PiA+IElmIHlvdSBkbywgcGxlYXNlIHNhdmUgdGhlIG91dHB1dCwgYW5kIGlmIGl0IGZpbmRzIGFu
-eXRoaW5nLCBwbGVhc2UKPiA+ID4gPiA+ID4gcHJvdmlkZSB0aGUgb3V0cHV0IGluIHRoaXMgdGhy
-ZWFkLgo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiBUaGFua3MsCj4gPiA+ID4gPiA+IC1FcmljCj4g
-PiA+ID4gPiA+Cj4gPiA+ID4KPiA+ID4gPiA+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCj4gPiA+ID4gPiB4ZnMgbWFpbGluZyBsaXN0Cj4gPiA+ID4gPiB4
-ZnNAb3NzLnNnaS5jb20KPiA+ID4gPiA+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo+ID4gPiA+Cj4gPiA+ID4KPiA+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Jul 09, 2015 at 05:32:50PM +0000, Hogan Whittall wrote:
+> Hello,
+> Recently we encountered a previously-reported issue regarding write ampli=
+fication with MySQL replication and XFS when used with certain RAID control=
+lers (In our case, HP P420). =A0That issue exactly matches our issue and wa=
+s documented by someone else here -=A0http://oss.sgi.com/archives/xfs/2013-=
+03/msg00133.html=A0- but I don't see any resolution. =A0I will say that the=
+ problem *does not* exist when mkfs.xfs 2.9.6 is used to format the filesys=
+tem on RHEL6 as that sets sunit=3D0 and swidth=3D0 instead of setting based=
+ on minimum_io_size and optimal_io_size.
+
+I'm not very familiar with MySQL and thus not sure what your workload
+is, but either version of mkfs.xfs should support setting options such
+that the fs is formatted as with the defaults of another version...
+
+> We have systems that are identical in how they are built and configured, =
+we can take a RHEL6 box that has the MySQL partition formatted with mkfs.xf=
+s v3.1.1 and reproduce the write amplification problem with MySQL replicati=
+on every single time. =A0If we take the same box and format the MySQL parti=
+tion with mkfs.xfs 2.9.6, then bring up MySQL with the exact same configura=
+tion there is no problem. =A0I've included the working and broken settings =
+below. =A0If it's not the sunit/swidth settings then what will cause 7-10MB=
+/s worth of writes to the XFS partition to become over 200MB/s downstream? =
+=A0The actual data change on the disks is not 200MB/s, but because the writ=
+e ops are truly being amplified and not just being misreported our MySQL sl=
+aves with the bad XFS settings cannot keep up and the lag steadily increase=
+s with no hope of ever becoming current.
+
+It would be nice to somehow see what requests are being made at the
+application level. Perhaps via strace or something of that nature if you
+can demonstrate a relatively isolated operation at the app. level
+resulting in the same I/O requests to the kernel but different I/O out
+of the filesystem..?
+
+> I am happy to try some other settings/options with the RHEL6 mkfs.xfs to =
+see if replication performance is able to match that of systems formatted w=
+ith mkfs.xfs 2.9.6, but the values set by 3.1.1 with the P420 RAID do not w=
+ork for MySQL replication. =A0We have ruled out everything else as a possib=
+le cause, the absolute only difference on these systems is what values are =
+set by mkfs.xfs.
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=A0Working RHEL6 XFS partition:
+> meta-data=3D/dev/mapper/sys-home =A0 isize=3D256 =A0 =A0agcount=3D4, agsi=
+ze=3D71271680 blks=A0 =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 sectsz=3D512 =A0 attr=3D2, projid32bit=3D0data =A0 =A0 =3D =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D4096 =A0 blocks=3D285086720=
+, imaxpct=3D5=A0 =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 sunit=3D0 =A0 =A0 =A0swidth=3D0 blksnaming =A0 =3Dversion 2 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0bsize=3D4096 =A0 ascii-ci=3D0log =A0 =A0 =A0=3Dinternal =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D4096 =A0 blocks=3D32768, version=3D2=A0=
+ =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sectsz=3D51=
+2 =A0 sunit=3D0 blks, lazy-count=3D0realtime =3Dnone =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 extsz=3D4096 =A0 blocks=3D0, rtextents=3D0
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=A0
+> Broken RHEL6 XFS partition:
+> meta-data=3D/dev/mapper/sys-home =A0 isize=3D256 =A0 =A0agcount=3D32, ags=
+ize=3D8908992 blks=A0 =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 sectsz=3D512 =A0 attr=3D2, projid32bit=3D0data =A0 =A0 =3D =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D4096 =A0 blocks=3D285086720=
+, imaxpct=3D5=A0 =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 sunit=3D64 =A0 =A0 swidth=3D128 blksnaming =A0 =3Dversion 2 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0bsize=3D4096 =A0 ascii-ci=3D0log =A0 =A0 =A0=3Dinternal =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D4096 =A0 blocks=3D139264, version=3D2=
+=A0 =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sectsz=
+=3D512 =A0 sunit=3D64 blks, lazy-count=3D1realtime =3Dnone =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 extsz=3D4096 =A0 blocks=3D0, rtextents=3D0
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=A0
+> =
+
+
+The differences I see for the second mkfs:
+
+- agcount of 32 instead of 4
+- sunit/swidth of 64/128 rather than 0/0
+- log size of 139264 blocks rather than 32768
+- lazy-count=3D1 rather than lazy-count=3D0
+
+As mentioned above, I would take the "broken" mkfs.xfs and add options
+one at a time that format the fs as the previous version did and try to
+identify what leads to the behavior. E.g., maybe first use '-d
+su=3D0,sw=3D0' to reset the stripe unit, then try adding '-l
+size=3D<32768*blksize>' to set the log size, '-d agcount=3DN' to set the
+allocation group count, etc.
+
+Brian
+
+> Thanks!
+> -Hogan
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
