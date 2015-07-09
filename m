@@ -1,32 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 862D47F6A
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 18:40:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8FF2C7F37
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 03:24:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 213A7AC004
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 16:40:51 -0700 (PDT)
-Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
-	id ZGATGyN2BUt8prJW for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 16:40:50 -0700 (PDT)
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 3B15020630
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 23:40:49 +0000 (UTC)
-Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com
-	[209.85.218.49])
-	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail.kernel.org (Postfix) with ESMTPSA id C49682061D
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 23:40:47 +0000 (UTC)
-Received: by oihr66 with SMTP id r66so121875355oih.2
-	for <xfs@oss.sgi.com>; Wed, 08 Jul 2015 16:40:47 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E3348F8037
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2015 01:24:08 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id Xjos82n6RSxvDfF4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 09 Jul 2015 01:24:06 -0700 (PDT)
+Date: Thu, 9 Jul 2015 04:24:04 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <25337161.25415401.1436430244635.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150709004543.GD3902@dastard>
+References: <1434711726-13092-1-git-send-email-jtulak@redhat.com>
+	<1434711726-13092-2-git-send-email-jtulak@redhat.com>
+	<20150625193748.GE36162@bfoster.bfoster>
+	<413545489.22844725.1435841273912.JavaMail.zimbra@redhat.com>
+	<20150702141403.GA61817@bfoster.bfoster>
+	<20150702230520.GA22807@dastard>
+	<2084199601.25014496.1436372096546.JavaMail.zimbra@redhat.com>
+	<20150709004543.GD3902@dastard>
+Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
 MIME-Version: 1.0
-In-Reply-To: <1436363862.15921.0.camel@hasee>
-References: <1436338913.13729.11.camel@hasee> <20150708085341.GA23332@lst.de>
-	<1436363862.15921.0.camel@hasee>
-Date: Wed, 8 Jul 2015 16:40:47 -0700
-Message-ID: <CAF1ivSYJEraUn_jEOEZg06D36yOYsZNrLz2Vzv=_Umpkao7Otw@mail.gmail.com>
-Subject: Re: xfs_io bmap confused
-From: Ming Lin <mlin@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,81 +35,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-On Wed, 2015-07-08 at 06:57 -0700, Ming Lin wrote:
-> On Wed, 2015-07-08 at 10:53 +0200, Christoph Hellwig wrote:
-> > On Wed, Jul 08, 2015 at 12:01:53AM -0700, Ming Lin wrote:
-> > > Hi list,
-> > >
-> > > I am testing some direct-io patches.
-> > > xfs_tests/xfs/080 failed.
-> > >
-> > > It's strange.
-> > > There is no hole in "rwtest.file",
-> > > but when read it at some offset it returns zero because of hole.
-> > >
-> > > root@block:~# xfs_io -c bmap /mnt/test/rwtest.file
-> > > /mnt/test/rwtest.file:
-> > >              0: [0..125671]: 160..125831
-> >
-> > Sounds like you see an unwritten extent.  What does xfs_bmap -pv show on
-> > the file?
->
-> root@block:~# xfs_bmap -pv /mnt/test/rwtest.file
-> /mnt/test/rwtest.file:
->  EXT: FILE-OFFSET       BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->    0: [0..743]:         160..903          0 (160..903)         744 00000
->    1: [744..783]:       904..943          0 (904..943)          40 10000
->    2: [784..951]:       944..1111         0 (944..1111)        168 00000
->    3: [952..1023]:      1112..1183        0 (1112..1183)        72 10000
->    4: [1024..1287]:     1184..1447        0 (1184..1447)       264 00000
->    5: [1288..1383]:     1448..1543        0 (1448..1543)        96 10000
+OK, thanks for clarifying. :-)
 
-file offset 659456 is in EXT 5.
-I guess FLAGS 1 means it's an unwritten extent, right?
+Jan
 
-xfs_tests/xfs/080 basically does:
-1. direct io write
-2. then buffered read to check the previous dio write
+----- Original Message -----
+> From: "Dave Chinner" <david@fromorbit.com>
+> To: "Jan Tulak" <jtulak@redhat.com>
+> Cc: "Brian Foster" <bfoster@redhat.com>, "Dave Chinner" <dchinner@redhat.com>, xfs@oss.sgi.com
+> Sent: Thursday, July 9, 2015 2:45:43 AM
+> Subject: Re: [PATCH 01/17] xfsprogs: use common code for multi-disk detection
+> 
+> [Please line wrap your responses at 68-72 columns]
+> 
+> On Wed, Jul 08, 2015 at 12:14:56PM -0400, Jan Tulak wrote:
+> > ----- Original Message -----
+> > > From: "Dave Chinner" <david@fromorbit.com>
+> > 
+> > > At one point during development of this patch set I started writing
+> > > an xfstest to validate that mkfs did all the right input validation
+> > > things and set parameters appropriately so that we didn't
+> > > inadvertently change behaviour. I never really finished it off (like
+> > > the patch set), but I've attached it below to give an idea of where
+> > > I was going with it. It was based on validating the input and CLI
+> > > parameters for the new code, so is guaranteed to fail on an existing
+> > > mkfs binary.
+> > 
+> > I'm using and extending it, but I'm not sure about some tests,
+> > whether it is a change from current behaviour, or if it is rather
+> > an issue in the test.
+> 
+> Remember, the point of the patchset was to sanitise and clean up the
+> CLI interface, not just the code. i.e. the CLI will change, not just
+> the code.
+> 
+> > > +
+> > > +# basic "should fail" options
+> > > +# logarithm based options are no longer valid
+> > > +do_mkfs_fail -s log=9 $SCRATCH_DEV
+> > 
+> > There are some changes in logarithm input (mkfs: validate
+> > logarithmic parameters sanely), but it is still supported in the
+> > patches. Is there some issue, why to remove them?
+> 
+> They are redundant and almost nobody uses them. The size options are
+> what people use, and even they have so many different units that it
+> confuses people...
+> 
+> > Otherwise, it should rather test for (in)valid input for log=xxx, right?
+> 
+> No, it's indicative of the fact I wanted to remove the log scale
+> options for variables.  As I've said before - I didn't ever finish
+> the patchset off.
+> 
+> Essentially, once all the options are in a table, we only want to
+> look in one place for things like ag size, fs size, log size, block
+> sizes etc. Right now the table has multiple entries or multiple
+> global variables for these things and we have to work out which is
+> valid and correct and handle conflicts and incompatibilities, etc.
+> We don't *need* that complexity to specify sizes of things, so
+> getting rid of the rarely used redundant options makes a lot of
+> sense as it simplifies the code and the user interface without
+> reducing functionality...
+> 
+> > > +rm -f $fsimg
+> > > +$XFS_IO_PROG -f -c "truncate $fssize" $fsimg
+> > > +do_mkfs_pass -d file $fsimg
+> > > +do_mkfs_pass -d file,name=$fsimg
+> > > +rm -f $fsimg
+> > > +do_mkfs_pass -d size=$fssize,file $fsimg
+> > > +rm -f $fsimg
+> > > +do_mkfs_pass -d size=$fssize,file,name=$fsimg
+> > > +do_mkfs_pass -d file,name=$fsimg
+> > 
+> > Should all these inputs really pass?
+> 
+> Yes, they should, because ....
+> 
+> > What is the expected
+> > behaviour for example on -d file,name=$fsimg if the file exists,
+> > and what if there is no such file?
+> 
+> ....in all cases the file either:
+> 
+> 	a) exists and is of non-zero size and hence defines the
+> 	   size of the filesystem to be created,
+> 	b) does not exist but the size of the filesystem to be
+> 	   created is specified on the CLI allowing us to create
+> 	   the image file correctly.
+> 
+> We should only fail to create the image file if it doesn't exist
+> and we haven't been given enough information to calculate the size
+> of the filesystem via CLI parameters.
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-Here is an example of error logs.
-
-doio ( 3626) 16:13:23
----------------------
-*** DATA COMPARISON ERROR ***
-check_file(/mnt/test/rwtest.file, 239616, 81408, H:3626:block:doio*,
-18, 0) failed
-
-Comparison fd is 5, with open flags 0
-Corrupt regions follow - unprintable chars are represented as '.'
------------------------------------------------------------------
-corrupt bytes starting at file offset 241664
-    1st 32 expected bytes:  oio*H:3626:block:doio*H:3626:blo
-    1st 32 actual bytes:    ................................
-
-Request number 981
-          fd 4 is file /mnt/test/rwtest.file - open flags are 040001
-O_WRONLY,O_DIRECT,
-          write done at file offset 239616 - pattern is H (0110)
-          number of requests is 1, strides per request is 1
-          i/o byte count = 81408
-          memory alignment is aligned
-          DIRECT I/O: offset % 512 = 0 length % 81408 = 0
-          mem alignment 0x200 xfer size: small: 512 large: 2147483136
-
-syscall:  writev(4, (iov on stack), 1)
-
-
-The "expected bytes" was actually written to the disk successfully,
-but for some bug the xfs extent flag was not set correctly.
-The flag should be "XFS_EXT_NORM", but now it's "XFS_EXT_UNWRITTEN".
-
-Could you share the code path the extent flag was updated?
-Is it also updated through direct io?
-
-Thanks.
+-- 
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
