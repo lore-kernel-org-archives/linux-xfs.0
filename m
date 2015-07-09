@@ -1,32 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0BF237F37
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 20:15:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBAA38F804B
-	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 18:15:31 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 34C6C7F37
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 20:52:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F342304039
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2015 18:51:56 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	nRBgp0AxOMXycIMA for <xfs@oss.sgi.com>;
-	Wed, 08 Jul 2015 18:15:28 -0700 (PDT)
-Date: Thu, 9 Jul 2015 11:15:26 +1000
+	rnz2umY3LOlfHGQq for <xfs@oss.sgi.com>;
+	Wed, 08 Jul 2015 18:51:53 -0700 (PDT)
+Date: Thu, 9 Jul 2015 11:51:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: "Internal error xfs_attr3_leaf_write_verify at line 216",
-	"directory flags set on non-directory inode" and other errors
-Message-ID: <20150709011526.GE3902@dastard>
-References: <FD7C5F18-48F3-461B-9604-0E3BDBB7AD69@intomics.com>
-	<20150625184132.773a5ecd@harpe.intellique.com>
-	<09CE9E14-9E6B-4587-9049-35B6C67016EF@intomics.com>
-	<DBDC024E-67E6-4F11-995F-467AD085109F@intomics.com>
-	<20150702112623.1c83d473@harpe.intellique.com>
-	<E293B208-AA72-4076-97B0-753C8680D1AE@intomics.com>
-	<20150703235500.GR7943@dastard>
-	<0F9CF77D-1DA5-41DD-87AA-7F4109F08EFB@intomics.com>
-	<20150707001900.GU7943@dastard>
-	<7B558BFF-FC46-4378-84C0-4442C1209F45@intomics.com>
+Subject: Re: [PATCH] xfs: close xc_cil list_empty() races with cil commit
+	sequence
+Message-ID: <20150709015151.GF3902@dastard>
+References: <1435154641-7790-1-git-send-email-bfoster@redhat.com>
+	<20150708000909.GA7943@dastard>
+	<20150708183152.GB60462@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <7B558BFF-FC46-4378-84C0-4442C1209F45@intomics.com>
+In-Reply-To: <20150708183152.GB60462@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,86 +32,175 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rasmus Borup Hansen <rbh@intomics.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 08, 2015 at 12:28:19PM +0200, Rasmus Borup Hansen
-wrote:
-> > On 07 Jul 2015, at 02:19, Dave Chinner <david@fromorbit.com>
-> > wrote:
+On Wed, Jul 08, 2015 at 02:31:53PM -0400, Brian Foster wrote:
+> On Wed, Jul 08, 2015 at 10:09:09AM +1000, Dave Chinner wrote:
+> > On Wed, Jun 24, 2015 at 10:04:01AM -0400, Brian Foster wrote:
+> > > We have seen somewhat rare reports of the following assert from
+> > > xlog_cil_push_background() failing during ltp tests or somewhat
+> > > innocuous desktop root fs workloads (e.g., virt operations, initramfs
+> > > construction):
+> > > 
+> > > 	ASSERT(!list_empty(&cil->xc_cil));
+> > > 
+> > > The reasoning behind the assert is that the transaction has inserted
+> > > items to the CIL and hit background push codepath all with
+> > > cil->xc_ctx_lock held for reading. This locks out background commit from
+> > > emptying the CIL, which acquires the lock for writing. Therefore, the
+> > > reasoning is that the items previously inserted in the CIL should still
+> > > be present.
+> > > 
+> > > The cil->xc_ctx_lock read lock is not sufficient to protect the xc_cil
+> > > list, however, due to how CIL insertion is handled.
+> > > xlog_cil_insert_items() inserts and reorders the dirty transaction items
+> > > to the tail of the CIL under xc_cil_lock. It uses list_move_tail() to
+> > > achieve insertion and reordering in the same block of code. This
+> > > function removes and reinserts an item to the tail of the list. If a
+> > > transaction commits an item that was already logged and thus already
+> > > resides in the CIL, and said item is the sole item on the list, the
+> > > removal and reinsertion creates a temporary state where the list is
+> > > actually empty.
 > > 
-> > On Mon, Jul 06, 2015 at 01:08:52PM +0200, Rasmus Borup Hansen
-> > wrote:
-> >> I've made a metadump and I'm running another xfs_repair, but
-> >> given that the first metadump is 132 GB, will you still be
-> >> interested in looking at the dumps?
+> > The only way I can see this occurring is that we have to be committing a transaction that
+> > modifies the same object as the previous transaction commit that
+> > is still running through xfs_log_commit_cil(). e.g. racing
+> > timestamp modifications on an inode, and the CIL is empty:
 > > 
-> > That's significantly larger than my monthly download quota.  How
-> > big is it once you compress it?
+> > thread A			thread B
+> > 
+> > lock(inode)			lock(inode)
+> > xfs_trans_join(inode)		<schedule>
+> > xfs_trans_log(inode)
+> > xfs_trans_commit(tp)
+> >   xfs_log_commit_cil()
+> >     lock(xc_ctx_lock)
+> >     <add inode to cil>
+> >     xfs_trans_free_items()
+> >       unlock(inode)
+> >       <schedule>
+> > 				<runs with inode lock>
+> > 				xfs_trans_join(inode)
+> > 				xfs_trans_log(inode)
+> > 				xfs_trans_commit(tp)
+> > 				  xfs_log_commit_cil()
+> > 				    lock(xc_ctx_lock)
+> > 				    xlog_cil_insert_items()
+> > 				      xlog_cil_insert_format_items()
+> >       <runs again>
+> >       xlog_cil_push_background
+> > 	ASSERT(!list_empty(cil))      list_move_tail(item, cil)
+> > 
 > 
-> One metadump is 25 GB when compressed with xz -9. The server the
-> files currently reside on is not very fast, so I've only
-> compressed one of them so far.
+> Yes. I don't have the exact details of the original reproducer but it
+> basically required transactions to recommit an already CIL-resident item
+> with that item as the only entry in the CIL. The first transaction
+> inserts or reinserts and heads to the background push while the second
+> reinserts and creates the transient empty list state. I don't think the
+> CIL necessarily has to be empty to start, but either way the above looks
+> about right to me.
 > 
-> I used the strings command on the metadump files and discovered
-> that they contain fragments of files that we really don't want to
-> leave our IT systems. However, if you think it's worth the effort,
-> I could set up a virtual machine with the metadump files and give
-> you access with your SSH public key. But then you'll have to tell
-> me which tools you'll need for investigating the files.
-
-<sigh>
-
-I only want to look at one inode with xfs_db....
-
-I don't think ssh access is going be very useful. To isolate the
-actual cause of the verifier error I usually run an instrumented
-kernel, and to verify that I've fixed the problem I'll need to run
-custom kernels and/or xfsprogs binaries. So I really need a local fs
-image to do this.
-
-I also like to run a kernel I trust (i.e. one I've built myself) on
-a machine I trust not to have storage or hardware issues when doing
-diagnostics on broken filesystem images.
-
-Of course, nobody can learn about how to find problems like this
-when the triage is hidden away in private....
-
-> Output from ls when listing "lost+found":
+> > 
+> > If that is the race, then the fix appears simple to me: call
+> > xlog_cil_push_background() before xfs_trans_free_items() so that we
+> > push the CIL before we unlock the items we just added to the CIL.
+> > i.e.:
+> > 
+> > thread A			thread B
+> > 
+> > lock(inode)			lock(inode)
+> > xfs_trans_join(inode)		<schedule>
+> > xfs_trans_log(inode)
+> > xfs_trans_commit(tp)
+> >   xfs_log_commit_cil()
+> >     lock(xc_ctx_lock)
+> >     <add inode to cil>
+> >     log_cil_push_background
+> > 	ASSERT(!list_empty(cil))
+> >     xfs_trans_free_items()
+> >       unlock(inode)
+> >       <schedule>
+> > 				<runs with inode lock>
+> > 				xfs_trans_join(inode)
+> > 				xfs_trans_log(inode)
+> > 				xfs_trans_commit(tp)
+> > 				  xfs_log_commit_cil()
+> > 				    lock(xc_ctx_lock)
+> > 				    xlog_cil_insert_items()
+> > 				      xlog_cil_insert_format_items()
+> > 				      list_move_tail(item, cil)
 > 
-> $ ls -laF /backup/lost+found/
-> ls: /backup/lost+found/11539619467: Structure needs cleaning
+> That seems like it should work for this particular case. I suppose it
+> depends on the nature of the transactions as opposed to closing the race
+> directly. It would require independent transactions to relog the same
+> item without locking to expose this instance of the race again, which
+> probably should never happen.
+> 
+> That doesn't help us for the other push side users of list_empty(),
+> however. For example, what about xlog_cil_push_now(), etc.? AFAICS, that
+> code still seems racy.
 
-This is the inode I need to look at. Can you grep for this inode in
-the xfs_repair output and post it? (grab a couple of lines of
-context around each match, too...)
+If we get a transient empty list there, we shouldn't have to care as
+the retry condition in xlog_cil_force_lsn() should catch it. I guess
+it is possible that both the original push and the retry
+list-empty() check could *both* see transient empty lists (however
+unlikely that is!).
 
-> total 4
-> drwxr-xr-x 2 root root     32 Jun 30 07:43 ./
-> drwxr-xr-x 5 root root     74 Jul  2 12:55 ../
-> -rw-rw-rw- 1 tsj  intomics  0 Jun 23 16:11 11539619467
+However, a log force is a fairly rare occurrence outside of
+sync/fsync heavy workloads, so adding the xc_cil_lock there
+shouldn't cause any serious performance issues because everything in
+a sync/fsync heavy workload will back waiting on the log forces
+completing rather than formatting changes into the CIL...
 
-It's a zero length file, so I'll be interested to know what
-attributes it has on it. Can you check that the inode number of
-that file is 11539619467 (ls -i will tell you that) and then post
-the output of this command:
+The other places we check for empty xc_cil:
 
-# xfs_db -r -c "inode 11539619467" -c p /dev/mapper/backup01-data
+	- xlog_cil_push() holds xc_ctx_lock in write mode, so cannot
+	  race at all with xfs_log_commit_cil(). No need for
+	  additional locking there.
+	- xlog_cil_empty() is only used by the log covering code,
+	  so we simply don't care if we get a transient empty there
+	  because that implies the log is active and shouldn't be
+	  covered.
+	- xfs_log_item_in_current_chkpt() is only called from
+	  xfs_buf_item_format() and so is done with the buffer
+	  locked and the xc_ctx_lock in read mode.
+	  Hence it can't race with itself being removed or a CIl push
+	  removing all the entries and so a
+	  transient false empty implies that the buffer itself is
+	  not in the CIL. Therefore it functions correctly even if
+	  we get a transient CIL empty occurring...
 
-Then I can give you the commands for walking and dumping the
-full attribute tree.
+So, really, there isn't a fundamental problem with the locking
+during the corner case where a transient empty can be detected as
+everything functions correctly even when a transient is detected.
+The only place I'd be concerned is the unlikely case of a double
+transient in the log force situation, but even then I'd question if
+it is even possible because we only force the log when we know that
+we have something that needs pushing....
 
-> [503166.562498] XFS (dm-0): Corruption detected. Unmount and run xfs_repair
-> [503166.589297] XFS (dm-0): metadata I/O error: block 0x157e84da0 ("xfs_trans_read_buf_map") error 117 numblks 8
+> > > This state is not valid and thus should never be observed by concurrent
+> > > transaction commit-side checks in the circumstances outlined above.
+> > > Update all of the xc_cil checks to acquire xc_cil_lock before assessing
+> > > the state of xc_cil.
+> > 
+> > That will reintroduce the problem of lock contention between the
+> > commit and the push sides of the CIL, which the cil/push lock
+> > separation was added to solve:
+> > 
+> 
+> If the lock is a problem, how about trying to close the race on the
+> insert side? E.g., something like the following in
+> xlog_cil_insert_items():
+> 
+> 	if (!list_is_last(&lip->li_cil, &cil->xc_cil))
+> 		list_move_tail(&lip->li_cil, &cil->xc_cil);
+> 
+> ... such that the list with a single item is never transiently empty.
+> Thoughts?
 
-Also, post the output of:
-
-# xfs_db -r -c "convert daddr 0x157e84da0 fsb"  /dev/mapper/backup01-data
-<fsb>
-# xfs_db -r -c "fsb <fsb>" -c p -c "type attr" -c p /dev/mapper/backup01-data
-
-Which will give me the contents of the bad block, both in raw format
-and as processed by the attribute leaf format parser in xfs_db.
+Yeah, that would work. I like KISS solutions and sometimes I get so
+far into the code I can't see them. Good thinking, Brain!
 
 Cheers,
 
