@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9EDB77F5F
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 09:06:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B78E304062
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 07:06:43 -0700 (PDT)
-Received: from mail-wi0-f170.google.com (mail-wi0-f170.google.com
-	[209.85.212.170]) by cuda.sgi.com with ESMTP id
-	BB2oNz86NKynvCrl (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Jul 2015 07:06:40 -0700 (PDT)
-Received: by wibud3 with SMTP id ud3so30810667wib.1
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 07:06:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150713125214.GA50787@bfoster.bfoster>
-References: <20150618133122.GC43254@bfoster.bfoster>
-	<CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
-	<5582DCDA.9070200@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 63AFB29DF5
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 12:02:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 502F38F8033
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 10:02:06 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QJetS0KH0zqVUHhA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Jul 2015 10:02:02 -0700 (PDT)
+Date: Mon, 13 Jul 2015 13:01:58 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
+	xfs_dir2_sf_get_parent_ino+0xa/0x20
+Message-ID: <20150713170158.GB50787@bfoster.bfoster>
+References: <5582DCDA.9070200@sandeen.net>
 	<CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
 	<20150709125119.GC63282@bfoster.bfoster>
 	<CA++_uhuoQ76uOUikbetw5ocfHDGAFMERcbgX9R4Shha2GUxWmQ@mail.gmail.com>
@@ -25,11 +23,10 @@ References: <20150618133122.GC43254@bfoster.bfoster>
 	<20150709183255.GG63282@bfoster.bfoster>
 	<CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
 	<20150713125214.GA50787@bfoster.bfoster>
-Date: Mon, 13 Jul 2015 22:06:39 +0800
-Message-ID: <CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-From: Kuo Hugo <tonytkdk@gmail.com>
+	<CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,781 +35,239 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6298729062421663666=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Kuo Hugo <tonytkdk@gmail.com>
 Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, darrell@swiftstack.com, xfs@oss.sgi.com
 
---===============6298729062421663666==
-Content-Type: multipart/alternative; boundary=047d7bfcf2f605e065051ac23bc2
-
---047d7bfcf2f605e065051ac23bc2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Hi Brain,
-
-Sorry for the wrong file in previous message. I believe this the right one.
-
-https://cloud.swiftstack.com/v1/AUTH_hugo/public/xfs.ko.debug
-
-/usr/lib/debug/lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xfs.ko.=
-debug
-
-MD5 : 27829c9c55f4f5b095d29a7de7c27254
-
-Thanks // Hugo
-=E2=80=8B
-
-2015-07-13 20:52 GMT+08:00 Brian Foster <bfoster@redhat.com>:
-
-> On Fri, Jul 10, 2015 at 01:36:41PM +0800, Kuo Hugo wrote:
-> > Hi Brain,
-> >
-> > Is this the file which you need ?
-> >
-> > https://cloud.swiftstack.com/v1/AUTH_hugo/public/xfs.ko
-> >
-> > $> modinfo xfs
-> >
-> > filename: /lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xfs.ko
-> > license: GPL
-> > description: SGI XFS with ACLs, security attributes, large block/inode
-> > numbers, no debug enabled
-> > author: Silicon Graphics, Inc.
-> > srcversion: 0C1B17926BDDA4F121479EE
-> > depends: exportfs
-> > vermagic: 2.6.32-504.23.4.el6.x86_64 SMP mod_unload modversion
-> >
->
-> No, this isn't the debug version. We need the one from the debug package
-> that was installed (/usr/lib/debug?).
->
-> Brian
->
-> > Thanks // Hugo
-> > =E2=80=8B
-> >
-> > 2015-07-10 2:32 GMT+08:00 Brian Foster <bfoster@redhat.com>:
-> >
-> > > On Fri, Jul 10, 2015 at 12:40:00AM +0800, Kuo Hugo wrote:
-> > > > Hi Brain,
-> > > >
-> > > > There you go.
-> > > >
-> > > > https://cloud.swiftstack.com/v1/AUTH_hugo/public/vmlinux
-> > > >
-> > >
-> https://cloud.swiftstack.com/v1/AUTH_hugo/public/System.map-2.6.32-504.23=
-.4.el6.x86_64
-> > > >
-> > > > $ md5sum vmlinux
-> > > > 82aaa694a174c0a29e78c05e73adf5d8  vmlinux
-> > > >
-> > > > Yes, I can read it with this vmlinux image. Put all files
-> > > > (vmcore,vmlinux,System.map) in a folder and run $crash vmlinux vmco=
-re
-> > > >
-> > >
-> > > Thanks, I can actually load that up now. Note that we'll probably nee=
-d
-> > > the modules and whatnot (xfs.ko) also to be able to look at any XFS
-> > > bits. It might be easiest to just tar up and compress whatever
-> directory
-> > > structure has the debug-enabled vmlinux and all the kernel modules.
-> > > Thanks.
-> > >
-> > > Brian
-> > >
-> > > > Hugo
-> > > > =E2=80=8B
-> > > >
-> > > > 2015-07-09 23:18 GMT+08:00 Brian Foster <bfoster@redhat.com>:
-> > > >
-> > > > > On Thu, Jul 09, 2015 at 09:20:00PM +0800, Kuo Hugo wrote:
-> > > > > > Hi Brian,
-> > > > > >
-> > > > > > *Operating System Version:*
-> > > > > > Linux-2.6.32-504.23.4.el6.x86_64-x86_64-with-centos-6.6-Final
-> > > > > >
-> > > > > > *NODE 1*
-> > > > > >
-> > > > > > https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore
-> > > > > >
-> > > https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.tx=
-t
-> > > > > >
-> > > > > >
-> > > > > > *NODE 2*
-> > > > > >
-> > > > > >
-> https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore_r2obj02
-> > > > > >
-> > > > >
-> > >
-> https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg_r2obj0=
-2.txt
-> > > > > >
-> > > > > >
-> > > > > > Any thoughts would be appreciate
-> > > > > >
-> > > > >
-> > > > > I'm not able to fire up crash with these core files and the kerne=
-l
-> > > debug
-> > > > > info from the following centos kernel debuginfo package:
-> > > > >
-> > > > > kernel-debuginfo-2.6.32-504.23.4.el6.centos.plus.x86_64.rpm
-> > > > >
-> > > > > It complains about a version mismatch between the vmlinux and cor=
-e
-> > > file.
-> > > > > I'm no crash expert... are you sure the cores above correspond to
-> this
-> > > > > kernel? Does crash load up for you on said box if you run somethi=
-ng
-> > > like
-> > > > > the following?
-> > > > >
-> > > > >         crash /usr/lib/debug/lib/modules/.../vmlinux vmcore
-> > > > >
-> > > > > Note that you might need to install the above kernel-debuginfo
-> package
-> > > > > to get the debug (vmlinux) file. If so, could you also upload tha=
-t
-> > > > > debuginfo rpm somewhere?
-> > > > >
-> > > > > Brian
-> > > > >
-> > > > > > Thanks // Hugo
-> > > > > >
-> > > > > >
-> > > > > > 2015-07-09 20:51 GMT+08:00 Brian Foster <bfoster@redhat.com>:
-> > > > > >
-> > > > > > > On Thu, Jul 09, 2015 at 06:57:55PM +0800, Kuo Hugo wrote:
-> > > > > > > > Hi Folks,
-> > > > > > > >
-> > > > > > > > As the results of 32 disks with xfs_repair -n seems no any
-> error
-> > > > > shows
-> > > > > > > up.
-> > > > > > > > We currently tried to deploy CentOS 6.6 for testing. (The
-> > > previous
-> > > > > kernel
-> > > > > > > > panic was came from Ubuntu).
-> > > > > > > > The CentOS nodes encountered kernel panic with same daemon
-> but
-> > > the
-> > > > > > > problem
-> > > > > > > > may a bit differ.
-> > > > > > > >
-> > > > > > > >    - It was broken on xfs_dir2_sf_get_parent_ino+0xa/0x20 i=
-n
-> > > Ubuntu.
-> > > > > > > >    - Here=E2=80=99s the log in CentOS. It=E2=80=99s broken =
-on
-> > > > > > > >    xfs_dir2_sf_getdents+0x2a0/0x3a0
-> > > > > > > >
-> > > > > > >
-> > > > > > > I'd venture to guess it's the same behavior here. The previou=
-s
-> > > kernel
-> > > > > > > had a callback for the parent inode number that was called vi=
-a
-> > > > > > > xfs_dir2_sf_getdents(). Taking a look at a 6.6 kernel, it has=
- a
-> > > static
-> > > > > > > inline here instead.
-> > > > > > >
-> > > > > > > > <1>BUG: unable to handle kernel NULL pointer dereference at
-> > > > > > > 0000000000000001
-> > > > > > > > <1>IP: [<ffffffffa0362d60>] xfs_dir2_sf_getdents+0x2a0/0x3a=
-0
-> > > [xfs]
-> > > > > > > > <4>PGD 1072327067 PUD 1072328067 PMD 0
-> > > > > > > > <4>Oops: 0000 [#1] SMP
-> > > > > > > > <4>last sysfs file:
-> > > > > > > >
-> > > > > > >
-> > > > >
-> > >
-> /sys/devices/pci0000:80/0000:80:03.2/0000:83:00.0/host10/port-10:1/expand=
-er-10:1/port-10:1:16/end_device-10:1:16/target10:0:25/10:0:25:0/block/sdz/q=
-ueue/rotational
-> > > > > > > > <4>CPU 17
-> > > > > > > > <4>Modules linked in: xt_conntrack tun xfs exportfs
-> > > iptable_filter
-> > > > > > > > ipt_REDIRECT iptable_nat nf_nat nf_conntrack_ipv4
-> nf_conntrack
-> > > > > > > > nf_defrag_ipv4 ip_tables ip_vs ipv6 libcrc32c iTCO_wdt
-> > > > > > > > iTCO_vendor_support ses enclosure igb i2c_algo_bit sb_edac
-> > > edac_core
-> > > > > > > > i2c_i801 i2c_core sg shpchp lpc_ich mfd_core ixgbe dca ptp
-> > > pps_core
-> > > > > > > > mdio power_meter acpi_ipmi ipmi_si ipmi_msghandler ext4 jbd=
-2
-> > > mbcache
-> > > > > > > > sd_mod crc_t10dif mpt3sas scsi_transport_sas raid_class
-> xhci_hcd
-> > > ahci
-> > > > > > > > wmi dm_mirror dm_region_hash dm_log dm_mod [last unloaded:
-> > > > > > > > scsi_wait_scan]
-> > > > > > > > <4>
-> > > > > > > > <4>Pid: 4454, comm: swift-object-se Not tainted
-> > > > > > > > 2.6.32-504.23.4.el6.x86_64 #1 Silicon Mechanics Storform
-> > > > > > > > R518.v5P/X10DRi-T4+
-> > > > > > > > <4>RIP: 0010:[<ffffffffa0362d60>]  [<ffffffffa0362d60>]
-> > > > > > > > xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]
-> > > > > > > > <4>RSP: 0018:ffff880871f6de18  EFLAGS: 00010202
-> > > > > > > > <4>RAX: 0000000000000000 RBX: 0000000000000004 RCX:
-> > > 0000000000000000
-> > > > > > > > <4>RDX: 0000000000000001 RSI: 0000000000000000 RDI:
-> > > 00007faa74006203
-> > > > > > > > <4>RBP: ffff880871f6de68 R08: 000000032eb04bc9 R09:
-> > > 0000000000000004
-> > > > > > > > <4>R10: 0000000000008030 R11: 0000000000000246 R12:
-> > > 0000000000000000
-> > > > > > > > <4>R13: 0000000000000002 R14: ffff88106eff7000 R15:
-> > > ffff8808715b4580
-> > > > > > > > <4>FS:  00007faa85425700(0000) GS:ffff880028360000(0000)
-> > > > > > > knlGS:0000000000000000
-> > > > > > > > <4>CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > > > > > <4>CR2: 0000000000000001 CR3: 0000001072325000 CR4:
-> > > 00000000001407e0
-> > > > > > > > <4>DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> > > 0000000000000000
-> > > > > > > > <4>DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> > > 0000000000000400
-> > > > > > > > <4>Process swift-object-se (pid: 4454, threadinfo
-> > > ffff880871f6c000,
-> > > > > > > > task ffff880860f18ab0)
-> > > > > > > > <4>Stack:
-> > > > > > > > <4> ffff880871f6de28 ffffffff811a4bb0 ffff880871f6df38
-> > > > > ffff880874749cc0
-> > > > > > > > <4><d> 0000000100000103 ffff8802381f8c00 ffff880871f6df38
-> > > > > > > ffff8808715b4580
-> > > > > > > > <4><d> 0000000000000082 ffff8802381f8d88 ffff880871f6dec8
-> > > > > > > ffffffffa035ab31
-> > > > > > > > <4>Call Trace:
-> > > > > > > > <4> [<ffffffff811a4bb0>] ? filldir+0x0/0xe0
-> > > > > > > > <4> [<ffffffffa035ab31>] xfs_readdir+0xe1/0x130 [xfs]
-> > > > > > > > <4> [<ffffffff811a4bb0>] ? filldir+0x0/0xe0
-> > > > > > > > <4> [<ffffffffa038fe29>] xfs_file_readdir+0x39/0x50 [xfs]
-> > > > > > > > <4> [<ffffffff811a4e30>] vfs_readdir+0xc0/0xe0
-> > > > > > > > <4> [<ffffffff8119bd86>] ? final_putname+0x26/0x50
-> > > > > > > > <4> [<ffffffff811a4fb9>] sys_getdents+0x89/0xf0
-> > > > > > > > <4> [<ffffffff8100b0f2>] system_call_fastpath+0x16/0x1b
-> > > > > > > > <4>Code: 01 00 00 00 48 c7 c6 38 6b 3a a0 48 8b 7d c0 ff 55
-> b8
-> > > 85 c0
-> > > > > > > > 0f 85 af 00 00 00 49 8b 37 e9 ec fd ff ff 66 0f 1f 84 00 00
-> 00
-> > > 00 00
-> > > > > > > > <41> 80 7c 24 01 00 0f 84 9c 00 00 00 45 0f b6 44 24 03 41
-> 0f b6
-> > > > > > > > <1>RIP  [<ffffffffa0362d60>] xfs_dir2_sf_getdents+0x2a0/0x3=
-a0
-> > > [xfs]
-> > > > > > > > <4> RSP <ffff880871f6de18>
-> > > > > > > > <4>CR2: 0000000000000001
-> > > > > > > >
-> > > > > > > ...
-> > > > > > > >
-> > > > > > > > I=E2=80=99ve got the vmcore dump from operator. Does vmcore=
- help for
-> > > > > > > > troubleshooting kind issue ?
-> > > > > > > >
-> > > > > > >
-> > > > > > > Hmm, well it couldn't hurt. Is the vmcore based on this 6.6
-> > > kernel? Can
-> > > > > > > you provide the exact kernel version and post the vmcore
-> somewhere?
-> > > > > > >
-> > > > > > > Brian
-> > > > > > >
-> > > > > > > > Thanks // Hugo
-> > > > > > > > =E2=80=8B
-> > > > > > > >
-> > > > > > > > 2015-06-18 22:59 GMT+08:00 Eric Sandeen <sandeen@sandeen.ne=
-t
-> >:
-> > > > > > > >
-> > > > > > > > > On 6/18/15 9:29 AM, Kuo Hugo wrote:
-> > > > > > > > > >>- Have you tried an 'xfs_repair -n' of the affected
-> > > filesystem?
-> > > > > Note
-> > > > > > > > > that -n will report problems only and prevent any
-> modification
-> > > by
-> > > > > > > repair.
-> > > > > > > > > >
-> > > > > > > > > > *We might to to xfs_repair if we can address which disk
-> > > causes
-> > > > > the
-> > > > > > > > > issue. *
-> > > > > > > > >
-> > > > > > > > > If you do, please save the output, and if it finds
-> anything,
-> > > please
-> > > > > > > > > provide the output in this thread.
-> > > > > > > > >
-> > > > > > > > > Thanks,
-> > > > > > > > > -Eric
-> > > > > > > > >
-> > > > > > >
-> > > > > > > > _______________________________________________
-> > > > > > > > xfs mailing list
-> > > > > > > > xfs@oss.sgi.com
-> > > > > > > > http://oss.sgi.com/mailman/listinfo/xfs
-> > > > > > >
-> > > > > > >
-> > > > >
-> > >
->
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
->
->
-
---047d7bfcf2f605e065051ac23bc2
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"markdown-here-wrapper" style=3D""><p style=
-=3D"margin:0px 0px 1.2em!important">Hi Brain, </p>
-<p style=3D"margin:0px 0px 1.2em!important">Sorry for the wrong file in pre=
-vious message. I believe this the right one. </p>
-<p style=3D"margin:0px 0px 1.2em!important"><a href=3D"https://cloud.swifts=
-tack.com/v1/AUTH_hugo/public/xfs.ko.debug">https://cloud.swiftstack.com/v1/=
-AUTH_hugo/public/xfs.ko.debug</a></p>
-<pre style=3D"font-size:0.85em;font-family:Consolas,Inconsolata,Courier,mon=
-ospace;font-size:1em;line-height:1.2em;margin:1.2em 0px"><code style=3D"fon=
-t-size:0.85em;font-family:Consolas,Inconsolata,Courier,monospace;margin:0px=
- 0.15em;padding:0px 0.3em;white-space:pre-wrap;border:1px solid rgb(234,234=
-,234);border-radius:3px;display:inline;background-color:rgb(248,248,248);wh=
-ite-space:pre;overflow:auto;border-radius:3px;border:1px solid rgb(204,204,=
-204);padding:0.5em 0.7em;display:block!important">/usr/lib/debug/lib/module=
-s/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xfs.ko.debug
-</code></pre><p style=3D"margin:0px 0px 1.2em!important">MD5 : 27829c9c55f4=
-f5b095d29a7de7c27254</p>
-<p style=3D"margin:0px 0px 1.2em!important">Thanks // Hugo</p>
-<div title=3D"MDH:SGkgQnJhaW4swqA8ZGl2Pjxicj48L2Rpdj48ZGl2PlNvcnJ5IGZvciB0a=
-GUgd3JvbmcgZmlsZSBp
-biBwcmV2aW91cyBtZXNzYWdlLiBJIGJlbGlldmUgdGhpcyB0aGUgcmlnaHQgb25lLiZuYnNwOzw=
-v
-ZGl2PjxkaXY+PGJyPjwvZGl2PjxkaXY+aHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92MS9=
-B
-VVRIX2h1Z28vcHVibGljL3hmcy5rby5kZWJ1Zzxicj48L2Rpdj48ZGl2Pjxicj48L2Rpdj48ZGl=
-2
-PmBgYDwvZGl2PjxkaXY+L3Vzci9saWIvZGVidWcvbGliL21vZHVsZXMvMi42LjMyLTUwNC4yMy4=
-0
-LmVsNi54ODZfNjQva2VybmVsL2ZzL3hmcy94ZnMua28uZGVidWc8YnI+PC9kaXY+PGRpdj5gYGA=
-8
-L2Rpdj48ZGl2Pjxicj48L2Rpdj48ZGl2Pk1ENSA6Jm5ic3A7Mjc4MjljOWM1NWY0ZjViMDk1ZDI=
-5
-YTdkZTdjMjcyNTQ8L2Rpdj48ZGl2Pjxicj48L2Rpdj48ZGl2PlRoYW5rcyAvLyBIdWdvPC9kaXY=
-+
-PGRpdj48YnI+PC9kaXY+PGRpdj48YnI+PC9kaXY+" style=3D"height:0;width:0;max-hei=
-ght:0;max-width:0;overflow:hidden;font-size:0em;padding:0;margin:0">=E2=80=
-=8B</div></div></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
-te">2015-07-13 20:52 GMT+08:00 Brian Foster <span dir=3D"ltr">&lt;<a href=
-=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.com</a>&gt;=
-</span>:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;bo=
-rder-left:1px #ccc solid;padding-left:1ex"><span class=3D"">On Fri, Jul 10,=
- 2015 at 01:36:41PM +0800, Kuo Hugo wrote:<br>
-&gt; Hi Brain,<br>
-&gt;<br>
-</span><span class=3D"">&gt; Is this the file which you need ?<br>
-&gt;<br>
-&gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hugo/public/xfs.ko" re=
-l=3D"noreferrer" target=3D"_blank">https://cloud.swiftstack.com/v1/AUTH_hug=
-o/public/xfs.ko</a><br>
-&gt;<br>
-&gt; $&gt; modinfo xfs<br>
-&gt;<br>
-&gt; filename: /lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xfs.ko=
-<br>
-&gt; license: GPL<br>
-&gt; description: SGI XFS with ACLs, security attributes, large block/inode=
-<br>
-&gt; numbers, no debug enabled<br>
-&gt; author: Silicon Graphics, Inc.<br>
-&gt; srcversion: 0C1B17926BDDA4F121479EE<br>
-&gt; depends: exportfs<br>
-&gt; vermagic: 2.6.32-504.23.4.el6.x86_64 SMP mod_unload modversion<br>
-&gt;<br>
-<br>
-</span>No, this isn&#39;t the debug version. We need the one from the debug=
- package<br>
-that was installed (/usr/lib/debug?).<br>
-<span class=3D"HOEnZb"><font color=3D"#888888"><br>
-Brian<br>
-</font></span><div class=3D"HOEnZb"><div class=3D"h5"><br>
-&gt; Thanks // Hugo<br>
-&gt; =E2=80=8B<br>
-&gt;<br>
-&gt; 2015-07-10 2:32 GMT+08:00 Brian Foster &lt;<a href=3D"mailto:bfoster@r=
-edhat.com">bfoster@redhat.com</a>&gt;:<br>
-&gt;<br>
-&gt; &gt; On Fri, Jul 10, 2015 at 12:40:00AM +0800, Kuo Hugo wrote:<br>
-&gt; &gt; &gt; Hi Brain,<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; There you go.<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hugo/public/=
-vmlinux" rel=3D"noreferrer" target=3D"_blank">https://cloud.swiftstack.com/=
-v1/AUTH_hugo/public/vmlinux</a><br>
-&gt; &gt; &gt;<br>
-&gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hugo/public/Syste=
-m.map-2.6.32-504.23.4.el6.x86_64" rel=3D"noreferrer" target=3D"_blank">http=
-s://cloud.swiftstack.com/v1/AUTH_hugo/public/System.map-2.6.32-504.23.4.el6=
-.x86_64</a><br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; $ md5sum vmlinux<br>
-&gt; &gt; &gt; 82aaa694a174c0a29e78c05e73adf5d8=C2=A0 vmlinux<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; Yes, I can read it with this vmlinux image. Put all files<br=
->
-&gt; &gt; &gt; (vmcore,vmlinux,System.map) in a folder and run $crash vmlin=
-ux vmcore<br>
-&gt; &gt; &gt;<br>
-&gt; &gt;<br>
-&gt; &gt; Thanks, I can actually load that up now. Note that we&#39;ll prob=
-ably need<br>
-&gt; &gt; the modules and whatnot (xfs.ko) also to be able to look at any X=
-FS<br>
-&gt; &gt; bits. It might be easiest to just tar up and compress whatever di=
-rectory<br>
-&gt; &gt; structure has the debug-enabled vmlinux and all the kernel module=
-s.<br>
-&gt; &gt; Thanks.<br>
-&gt; &gt;<br>
-&gt; &gt; Brian<br>
-&gt; &gt;<br>
-&gt; &gt; &gt; Hugo<br>
-&gt; &gt; &gt; =E2=80=8B<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; 2015-07-09 23:18 GMT+08:00 Brian Foster &lt;<a href=3D"mailt=
-o:bfoster@redhat.com">bfoster@redhat.com</a>&gt;:<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; On Thu, Jul 09, 2015 at 09:20:00PM +0800, Kuo Hugo wrot=
-e:<br>
-&gt; &gt; &gt; &gt; &gt; Hi Brian,<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; *Operating System Version:*<br>
-&gt; &gt; &gt; &gt; &gt; Linux-2.6.32-504.23.4.el6.x86_64-x86_64-with-cento=
-s-6.6-Final<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; *NODE 1*<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_bu=
-rton/brtnswift/vmcore" rel=3D"noreferrer" target=3D"_blank">https://cloud.s=
-wiftstack.com/v1/AUTH_burton/brtnswift/vmcore</a><br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/=
-vmcore-dmesg.txt" rel=3D"noreferrer" target=3D"_blank">https://cloud.swifts=
-tack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.txt</a><br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; *NODE 2*<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_bu=
-rton/brtnswift/vmcore_r2obj02" rel=3D"noreferrer" target=3D"_blank">https:/=
-/cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore_r2obj02</a><br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/=
-vmcore-dmesg_r2obj02.txt" rel=3D"noreferrer" target=3D"_blank">https://clou=
-d.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg_r2obj02.txt</a><br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; Any thoughts would be appreciate<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; I&#39;m not able to fire up crash with these core files=
- and the kernel<br>
-&gt; &gt; debug<br>
-&gt; &gt; &gt; &gt; info from the following centos kernel debuginfo package=
-:<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; kernel-debuginfo-2.6.32-504.23.4.el6.centos.plus.x86_64=
-.rpm<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; It complains about a version mismatch between the vmlin=
-ux and core<br>
-&gt; &gt; file.<br>
-&gt; &gt; &gt; &gt; I&#39;m no crash expert... are you sure the cores above=
- correspond to this<br>
-&gt; &gt; &gt; &gt; kernel? Does crash load up for you on said box if you r=
-un something<br>
-&gt; &gt; like<br>
-&gt; &gt; &gt; &gt; the following?<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0crash /usr/lib/debug/l=
-ib/modules/.../vmlinux vmcore<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; Note that you might need to install the above kernel-de=
-buginfo package<br>
-&gt; &gt; &gt; &gt; to get the debug (vmlinux) file. If so, could you also =
-upload that<br>
-&gt; &gt; &gt; &gt; debuginfo rpm somewhere?<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; Brian<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; Thanks // Hugo<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; 2015-07-09 20:51 GMT+08:00 Brian Foster &lt;<a hre=
-f=3D"mailto:bfoster@redhat.com">bfoster@redhat.com</a>&gt;:<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; On Thu, Jul 09, 2015 at 06:57:55PM +0800, Kuo=
- Hugo wrote:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; Hi Folks,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; As the results of 32 disks with xfs_repa=
-ir -n seems no any error<br>
-&gt; &gt; &gt; &gt; shows<br>
-&gt; &gt; &gt; &gt; &gt; &gt; up.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; We currently tried to deploy CentOS 6.6 =
-for testing. (The<br>
-&gt; &gt; previous<br>
-&gt; &gt; &gt; &gt; kernel<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; panic was came from Ubuntu).<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; The CentOS nodes encountered kernel pani=
-c with same daemon but<br>
-&gt; &gt; the<br>
-&gt; &gt; &gt; &gt; &gt; &gt; problem<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; may a bit differ.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 - It was broken on xfs_dir2=
-_sf_get_parent_ino+0xa/0x20 in<br>
-&gt; &gt; Ubuntu.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 - Here=E2=80=99s the log in=
- CentOS. It=E2=80=99s broken on<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 xfs_dir2_sf_getdents+0x2a0/=
-0x3a0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; I&#39;d venture to guess it&#39;s the same be=
-havior here. The previous<br>
-&gt; &gt; kernel<br>
-&gt; &gt; &gt; &gt; &gt; &gt; had a callback for the parent inode number th=
-at was called via<br>
-&gt; &gt; &gt; &gt; &gt; &gt; xfs_dir2_sf_getdents(). Taking a look at a 6.=
-6 kernel, it has a<br>
-&gt; &gt; static<br>
-&gt; &gt; &gt; &gt; &gt; &gt; inline here instead.<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;1&gt;BUG: unable to handle kernel NU=
-LL pointer dereference at<br>
-&gt; &gt; &gt; &gt; &gt; &gt; 0000000000000001<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;1&gt;IP: [&lt;ffffffffa0362d60&gt;] =
-xfs_dir2_sf_getdents+0x2a0/0x3a0<br>
-&gt; &gt; [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;PGD 1072327067 PUD 1072328067 P=
-MD 0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Oops: 0000 [#1] SMP<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;last sysfs file:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; /sys/devices/pci0000:80/0000:80:03.2/0000:83:00.0/host10/port-10:=
-1/expander-10:1/port-10:1:16/end_device-10:1:16/target10:0:25/10:0:25:0/blo=
-ck/sdz/queue/rotational<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CPU 17<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Modules linked in: xt_conntrack=
- tun xfs exportfs<br>
-&gt; &gt; iptable_filter<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; ipt_REDIRECT iptable_nat nf_nat nf_connt=
-rack_ipv4 nf_conntrack<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; nf_defrag_ipv4 ip_tables ip_vs ipv6 libc=
-rc32c iTCO_wdt<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; iTCO_vendor_support ses enclosure igb i2=
-c_algo_bit sb_edac<br>
-&gt; &gt; edac_core<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; i2c_i801 i2c_core sg shpchp lpc_ich mfd_=
-core ixgbe dca ptp<br>
-&gt; &gt; pps_core<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; mdio power_meter acpi_ipmi ipmi_si ipmi_=
-msghandler ext4 jbd2<br>
-&gt; &gt; mbcache<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; sd_mod crc_t10dif mpt3sas scsi_transport=
-_sas raid_class xhci_hcd<br>
-&gt; &gt; ahci<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; wmi dm_mirror dm_region_hash dm_log dm_m=
-od [last unloaded:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; scsi_wait_scan]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Pid: 4454, comm: swift-object-s=
-e Not tainted<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; 2.6.32-504.23.4.el6.x86_64 #1 Silicon Me=
-chanics Storform<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; R518.v5P/X10DRi-T4+<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RIP: 0010:[&lt;ffffffffa0362d60=
-&gt;]=C2=A0 [&lt;ffffffffa0362d60&gt;]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]<b=
-r>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RSP: 0018:ffff880871f6de18=C2=
-=A0 EFLAGS: 00010202<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RAX: 0000000000000000 RBX: 0000=
-000000000004 RCX:<br>
-&gt; &gt; 0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RDX: 0000000000000001 RSI: 0000=
-000000000000 RDI:<br>
-&gt; &gt; 00007faa74006203<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RBP: ffff880871f6de68 R08: 0000=
-00032eb04bc9 R09:<br>
-&gt; &gt; 0000000000000004<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;R10: 0000000000008030 R11: 0000=
-000000000246 R12:<br>
-&gt; &gt; 0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;R13: 0000000000000002 R14: ffff=
-88106eff7000 R15:<br>
-&gt; &gt; ffff8808715b4580<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;FS:=C2=A0 00007faa85425700(0000=
-) GS:ffff880028360000(0000)<br>
-&gt; &gt; &gt; &gt; &gt; &gt; knlGS:0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CS:=C2=A0 0010 DS: 0000 ES: 000=
-0 CR0: 0000000080050033<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CR2: 0000000000000001 CR3: 0000=
-001072325000 CR4:<br>
-&gt; &gt; 00000000001407e0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;DR0: 0000000000000000 DR1: 0000=
-000000000000 DR2:<br>
-&gt; &gt; 0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;DR3: 0000000000000000 DR6: 0000=
-0000ffff0ff0 DR7:<br>
-&gt; &gt; 0000000000000400<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Process swift-object-se (pid: 4=
-454, threadinfo<br>
-&gt; &gt; ffff880871f6c000,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; task ffff880860f18ab0)<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Stack:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; ffff880871f6de28 ffffffff811a4=
-bb0 ffff880871f6df38<br>
-&gt; &gt; &gt; &gt; ffff880874749cc0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;&lt;d&gt; 0000000100000103 ffff=
-8802381f8c00 ffff880871f6df38<br>
-&gt; &gt; &gt; &gt; &gt; &gt; ffff8808715b4580<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;&lt;d&gt; 0000000000000082 ffff=
-8802381f8d88 ffff880871f6dec8<br>
-&gt; &gt; &gt; &gt; &gt; &gt; ffffffffa035ab31<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Call Trace:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4bb0&gt;] ? f=
-illdir+0x0/0xe0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffffa035ab31&gt;] xfs=
-_readdir+0xe1/0x130 [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4bb0&gt;] ? f=
-illdir+0x0/0xe0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffffa038fe29&gt;] xfs=
-_file_readdir+0x39/0x50 [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4e30&gt;] vfs=
-_readdir+0xc0/0xe0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff8119bd86&gt;] ? f=
-inal_putname+0x26/0x50<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4fb9&gt;] sys=
-_getdents+0x89/0xf0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff8100b0f2&gt;] sys=
-tem_call_fastpath+0x16/0x1b<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Code: 01 00 00 00 48 c7 c6 38 6=
-b 3a a0 48 8b 7d c0 ff 55 b8<br>
-&gt; &gt; 85 c0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; 0f 85 af 00 00 00 49 8b 37 e9 ec fd ff f=
-f 66 0f 1f 84 00 00 00<br>
-&gt; &gt; 00 00<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;41&gt; 80 7c 24 01 00 0f 84 9c 00 00=
- 00 45 0f b6 44 24 03 41 0f b6<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;1&gt;RIP=C2=A0 [&lt;ffffffffa0362d60=
-&gt;] xfs_dir2_sf_getdents+0x2a0/0x3a0<br>
-&gt; &gt; [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; RSP &lt;ffff880871f6de18&gt;<b=
-r>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CR2: 0000000000000001<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; ...<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; I=E2=80=99ve got the vmcore dump from op=
-erator. Does vmcore help for<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; troubleshooting kind issue ?<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; Hmm, well it couldn&#39;t hurt. Is the vmcore=
- based on this 6.6<br>
-&gt; &gt; kernel? Can<br>
-&gt; &gt; &gt; &gt; &gt; &gt; you provide the exact kernel version and post=
- the vmcore somewhere?<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; Brian<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; Thanks // Hugo<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; =E2=80=8B<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; 2015-06-18 22:59 GMT+08:00 Eric Sandeen =
-&lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen.net</a>&gt;:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; On 6/18/15 9:29 AM, Kuo Hugo wrote:=
-<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;&gt;- Have you tried an &#39;xf=
-s_repair -n&#39; of the affected<br>
-&gt; &gt; filesystem?<br>
-&gt; &gt; &gt; &gt; Note<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; that -n will report problems only a=
-nd prevent any modification<br>
-&gt; &gt; by<br>
-&gt; &gt; &gt; &gt; &gt; &gt; repair.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; *We might to to xfs_repair if =
-we can address which disk<br>
-&gt; &gt; causes<br>
-&gt; &gt; &gt; &gt; the<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; issue. *<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; If you do, please save the output, =
-and if it finds anything,<br>
-&gt; &gt; please<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; provide the output in this thread.<=
-br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; Thanks,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; -Eric<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; ________________________________________=
-_______<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; xfs mailing list<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@o=
-ss.sgi.com</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; <a href=3D"http://oss.sgi.com/mailman/li=
-stinfo/xfs" rel=3D"noreferrer" target=3D"_blank">http://oss.sgi.com/mailman=
-/listinfo/xfs</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt;<br>
-<br>
-&gt; _______________________________________________<br>
-&gt; xfs mailing list<br>
-&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
-&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer"=
- target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
-<br>
-</div></div></blockquote></div><br></div>
-
---047d7bfcf2f605e065051ac23bc2--
-
-
---===============6298729062421663666==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6298729062421663666==--
+T24gTW9uLCBKdWwgMTMsIDIwMTUgYXQgMTA6MDY6MzlQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6
+Cj4gSGkgQnJhaW4sCj4gCj4gU29ycnkgZm9yIHRoZSB3cm9uZyBmaWxlIGluIHByZXZpb3VzIG1l
+c3NhZ2UuIEkgYmVsaWV2ZSB0aGlzIHRoZSByaWdodCBvbmUuCj4gCj4gaHR0cHM6Ly9jbG91ZC5z
+d2lmdHN0YWNrLmNvbS92MS9BVVRIX2h1Z28vcHVibGljL3hmcy5rby5kZWJ1Zwo+IAo+IC91c3Iv
+bGliL2RlYnVnL2xpYi9tb2R1bGVzLzIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0L2tlcm5lbC9m
+cy94ZnMveGZzLmtvLmRlYnVnCj4gCj4gTUQ1IDogMjc4MjljOWM1NWY0ZjViMDk1ZDI5YTdkZTdj
+MjcyNTQKPiAKClllcywgdGhhdCB3b3Jrcy4gSSBoYXZlIGEgZmV3IGJpdHMgb2YgaW5mb3JtYXRp
+b24gc28gZmFyLCBidXQgbm90aGluZwpvYnZpb3VzIHRvIG1lIGFzIHRvIHdoYXQgY2F1c2VkIHRo
+ZSBwcm9ibGVtLiBTb21lIGluZm86CgotIFRoZSBjcmFzaCBpcyBpbmRlZWQgYXQgeGZzX2RpcjJf
+c2ZfZ2V0X2ludW1iZXIoKToKCi91c3Ivc3JjL2RlYnVnL2tlcm5lbC0yLjYuMzItNTA0LjIzLjQu
+ZWw2L2xpbnV4LTIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0L2ZzL3hmcy94ZnNfZGlyMl9zZi5o
+OiAxMDEKMHhmZmZmZmZmZmEwMzYyZDYwIDx4ZnNfZGlyMl9zZl9nZXRkZW50cys2NzI+OiAgY21w
+YiAgICQweDAsMHgxKCVyMTIpCi4uLgoKLSAlcjEyIGFib3ZlIGhhcyBhIHZhbHVlIG9mIDAgYW5k
+IGlzIHNldCBhcyBmb2xsb3dzOgoKL3Vzci9zcmMvZGVidWcva2VybmVsLTIuNi4zMi01MDQuMjMu
+NC5lbDYvbGludXgtMi42LjMyLTUwNC4yMy40LmVsNi54ODZfNjQvZnMveGZzL3hmc19kaXIyX3Nm
+LmM6IDcyNwoweGZmZmZmZmZmYTAzNjJiMTEgPHhmc19kaXIyX3NmX2dldGRlbnRzKzgxPjogICBt
+b3YgICAgMHg1MCglcmRpKSwlcjEyCgouLi4gd2hpY2ggaXMgdGhlIHNmcCBwb2ludGVyIGFzc2ln
+bm1lbnQgaW4gdGhlIGdldGRlbnRzIGZ1bmN0aW9uOgoKCXNmcCA9ICh4ZnNfZGlyMl9zZl90ICop
+ZHAtPmlfZGYuaWZfdTEuaWZfZGF0YTsKClRoaXMgaW1wbGllcyBhIE5VTEwgaWZfZGF0YS4KCi0g
+VGhlIGJhY2t0cmFjZSBsaXN0cyBhIGNvdXBsZSBvZiBpbm9kZXMgb24gdGhlIHN0YWNrIGluIHRo
+aXMgZnJhbWUuIEknbQpub3Qgc3VyZSB3aHksIGJ1dCBvbmUgbG9va3MgbGlrZSBhIHZhbGlkIGRp
+cmVjdG9yeSBhbmQgdGhlIG90aGVyIGxvb2tzCmJvZ3VzLiBUaGUgdmFsaWQgaW5vZGUgaGFzIGFu
+IGlub2RlIG51bWJlciBvZiAxMzY2ODIwNzU2MS4KCi0gVGhlIGZzbmFtZSBmb3IgdGhpcyBpbm9k
+ZSBpcyAic2RiLiIKCi0gVGhlIGlub2RlIGRvZXMgYXBwZWFyIHRvIGhhdmUgYSBub24tTlVMTCBp
+Zl9kYXRhOgoKICAgIC4uLgogICAgaWZfdTEgPSB7CiAgICAgIGlmX2V4dGVudHMgPSAweGZmZmY4
+ODA4NGZlYWY1YzAsIAogICAgICBpZl9leHRfaXJlYyA9IDB4ZmZmZjg4MDg0ZmVhZjVjMCwgCiAg
+ICAgIGlmX2RhdGEgPSAweGZmZmY4ODA4NGZlYWY1YzAgIlwwMDQiCiAgICB9LCAKICAgIC4uLgoK
+U28gaXQncyBub3QgdG90YWxseSBjbGVhciB3aGF0J3MgZ29pbmcgb24gdGhlcmUuIEl0IG1pZ2h0
+IGJlIGludGVyZXN0aW5nCnRvIHNlZSB3aGF0IGRpcmVjdG9yeSB0aGlzIHJlZmVycyB0bywgaWYg
+aXQgc3RpbGwgZXhpc3RzIG9uIHRoZSBzZGIgZnMuCkZvciBleGFtcGxlLCBpcyBpdCBhbiBleHRl
+cm5hbCBkaXJlY3Rvcnkgb3Igc29tZSBraW5kIG9mIGludGVybmFsCmRpcmVjdG9yeSBjcmVhdGVk
+IGJ5IHRoZSBhcHBsaWNhdGlvbj8gWW91IGNvdWxkIHVzZSBzb21ldGhpbmcgbGlrZSB0aGUKZm9s
+bG93aW5nIHRvIHRyeSBhbmQgbG9jYXRlIHRoZSBkaXJlY3RvcnkgYmFzZWQgb24gaW5vZGUgbnVt
+YmVyOgoKCWZpbmQgPG1udHBhdGg+IC1pbnVtIDEzNjY4MjA3NTYxCgpCcmlhbgoKPiBUaGFua3Mg
+Ly8gSHVnbwo+IOKAiwo+IAo+IDIwMTUtMDctMTMgMjA6NTIgR01UKzA4OjAwIEJyaWFuIEZvc3Rl
+ciA8YmZvc3RlckByZWRoYXQuY29tPjoKPiAKPiA+IE9uIEZyaSwgSnVsIDEwLCAyMDE1IGF0IDAx
+OjM2OjQxUE0gKzA4MDAsIEt1byBIdWdvIHdyb3RlOgo+ID4gPiBIaSBCcmFpbiwKPiA+ID4KPiA+
+ID4gSXMgdGhpcyB0aGUgZmlsZSB3aGljaCB5b3UgbmVlZCA/Cj4gPiA+Cj4gPiA+IGh0dHBzOi8v
+Y2xvdWQuc3dpZnRzdGFjay5jb20vdjEvQVVUSF9odWdvL3B1YmxpYy94ZnMua28KPiA+ID4KPiA+
+ID4gJD4gbW9kaW5mbyB4ZnMKPiA+ID4KPiA+ID4gZmlsZW5hbWU6IC9saWIvbW9kdWxlcy8yLjYu
+MzItNTA0LjIzLjQuZWw2Lng4Nl82NC9rZXJuZWwvZnMveGZzL3hmcy5rbwo+ID4gPiBsaWNlbnNl
+OiBHUEwKPiA+ID4gZGVzY3JpcHRpb246IFNHSSBYRlMgd2l0aCBBQ0xzLCBzZWN1cml0eSBhdHRy
+aWJ1dGVzLCBsYXJnZSBibG9jay9pbm9kZQo+ID4gPiBudW1iZXJzLCBubyBkZWJ1ZyBlbmFibGVk
+Cj4gPiA+IGF1dGhvcjogU2lsaWNvbiBHcmFwaGljcywgSW5jLgo+ID4gPiBzcmN2ZXJzaW9uOiAw
+QzFCMTc5MjZCRERBNEYxMjE0NzlFRQo+ID4gPiBkZXBlbmRzOiBleHBvcnRmcwo+ID4gPiB2ZXJt
+YWdpYzogMi42LjMyLTUwNC4yMy40LmVsNi54ODZfNjQgU01QIG1vZF91bmxvYWQgbW9kdmVyc2lv
+bgo+ID4gPgo+ID4KPiA+IE5vLCB0aGlzIGlzbid0IHRoZSBkZWJ1ZyB2ZXJzaW9uLiBXZSBuZWVk
+IHRoZSBvbmUgZnJvbSB0aGUgZGVidWcgcGFja2FnZQo+ID4gdGhhdCB3YXMgaW5zdGFsbGVkICgv
+dXNyL2xpYi9kZWJ1Zz8pLgo+ID4KPiA+IEJyaWFuCj4gPgo+ID4gPiBUaGFua3MgLy8gSHVnbwo+
+ID4gPiDigIsKPiA+ID4KPiA+ID4gMjAxNS0wNy0xMCAyOjMyIEdNVCswODowMCBCcmlhbiBGb3N0
+ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbT46Cj4gPiA+Cj4gPiA+ID4gT24gRnJpLCBKdWwgMTAsIDIw
+MTUgYXQgMTI6NDA6MDBBTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6Cj4gPiA+ID4gPiBIaSBCcmFp
+biwKPiA+ID4gPiA+Cj4gPiA+ID4gPiBUaGVyZSB5b3UgZ28uCj4gPiA+ID4gPgo+ID4gPiA+ID4g
+aHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92MS9BVVRIX2h1Z28vcHVibGljL3ZtbGludXgK
+PiA+ID4gPiA+Cj4gPiA+ID4KPiA+IGh0dHBzOi8vY2xvdWQuc3dpZnRzdGFjay5jb20vdjEvQVVU
+SF9odWdvL3B1YmxpYy9TeXN0ZW0ubWFwLTIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0Cj4gPiA+
+ID4gPgo+ID4gPiA+ID4gJCBtZDVzdW0gdm1saW51eAo+ID4gPiA+ID4gODJhYWE2OTRhMTc0YzBh
+MjllNzhjMDVlNzNhZGY1ZDggIHZtbGludXgKPiA+ID4gPiA+Cj4gPiA+ID4gPiBZZXMsIEkgY2Fu
+IHJlYWQgaXQgd2l0aCB0aGlzIHZtbGludXggaW1hZ2UuIFB1dCBhbGwgZmlsZXMKPiA+ID4gPiA+
+ICh2bWNvcmUsdm1saW51eCxTeXN0ZW0ubWFwKSBpbiBhIGZvbGRlciBhbmQgcnVuICRjcmFzaCB2
+bWxpbnV4IHZtY29yZQo+ID4gPiA+ID4KPiA+ID4gPgo+ID4gPiA+IFRoYW5rcywgSSBjYW4gYWN0
+dWFsbHkgbG9hZCB0aGF0IHVwIG5vdy4gTm90ZSB0aGF0IHdlJ2xsIHByb2JhYmx5IG5lZWQKPiA+
+ID4gPiB0aGUgbW9kdWxlcyBhbmQgd2hhdG5vdCAoeGZzLmtvKSBhbHNvIHRvIGJlIGFibGUgdG8g
+bG9vayBhdCBhbnkgWEZTCj4gPiA+ID4gYml0cy4gSXQgbWlnaHQgYmUgZWFzaWVzdCB0byBqdXN0
+IHRhciB1cCBhbmQgY29tcHJlc3Mgd2hhdGV2ZXIKPiA+IGRpcmVjdG9yeQo+ID4gPiA+IHN0cnVj
+dHVyZSBoYXMgdGhlIGRlYnVnLWVuYWJsZWQgdm1saW51eCBhbmQgYWxsIHRoZSBrZXJuZWwgbW9k
+dWxlcy4KPiA+ID4gPiBUaGFua3MuCj4gPiA+ID4KPiA+ID4gPiBCcmlhbgo+ID4gPiA+Cj4gPiA+
+ID4gPiBIdWdvCj4gPiA+ID4gPiDigIsKPiA+ID4gPiA+Cj4gPiA+ID4gPiAyMDE1LTA3LTA5IDIz
+OjE4IEdNVCswODowMCBCcmlhbiBGb3N0ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbT46Cj4gPiA+ID4g
+Pgo+ID4gPiA+ID4gPiBPbiBUaHUsIEp1bCAwOSwgMjAxNSBhdCAwOToyMDowMFBNICswODAwLCBL
+dW8gSHVnbyB3cm90ZToKPiA+ID4gPiA+ID4gPiBIaSBCcmlhbiwKPiA+ID4gPiA+ID4gPgo+ID4g
+PiA+ID4gPiA+ICpPcGVyYXRpbmcgU3lzdGVtIFZlcnNpb246Kgo+ID4gPiA+ID4gPiA+IExpbnV4
+LTIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0LXg4Nl82NC13aXRoLWNlbnRvcy02LjYtRmluYWwK
+PiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ICpOT0RFIDEqCj4gPiA+ID4gPiA+ID4KPiA+ID4g
+PiA+ID4gPiBodHRwczovL2Nsb3VkLnN3aWZ0c3RhY2suY29tL3YxL0FVVEhfYnVydG9uL2JydG5z
+d2lmdC92bWNvcmUKPiA+ID4gPiA+ID4gPgo+ID4gPiA+IGh0dHBzOi8vY2xvdWQuc3dpZnRzdGFj
+ay5jb20vdjEvQVVUSF9idXJ0b24vYnJ0bnN3aWZ0L3ZtY29yZS1kbWVzZy50eHQKPiA+ID4gPiA+
+ID4gPgo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gKk5PREUgMioKPiA+ID4gPiA+ID4gPgo+
+ID4gPiA+ID4gPiA+Cj4gPiBodHRwczovL2Nsb3VkLnN3aWZ0c3RhY2suY29tL3YxL0FVVEhfYnVy
+dG9uL2JydG5zd2lmdC92bWNvcmVfcjJvYmowMgo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+Cj4g
+PiA+ID4KPiA+IGh0dHBzOi8vY2xvdWQuc3dpZnRzdGFjay5jb20vdjEvQVVUSF9idXJ0b24vYnJ0
+bnN3aWZ0L3ZtY29yZS1kbWVzZ19yMm9iajAyLnR4dAo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+
+ID4KPiA+ID4gPiA+ID4gPiBBbnkgdGhvdWdodHMgd291bGQgYmUgYXBwcmVjaWF0ZQo+ID4gPiA+
+ID4gPiA+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IEknbSBub3QgYWJsZSB0byBmaXJlIHVwIGNy
+YXNoIHdpdGggdGhlc2UgY29yZSBmaWxlcyBhbmQgdGhlIGtlcm5lbAo+ID4gPiA+IGRlYnVnCj4g
+PiA+ID4gPiA+IGluZm8gZnJvbSB0aGUgZm9sbG93aW5nIGNlbnRvcyBrZXJuZWwgZGVidWdpbmZv
+IHBhY2thZ2U6Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IGtlcm5lbC1kZWJ1Z2luZm8tMi42LjMy
+LTUwNC4yMy40LmVsNi5jZW50b3MucGx1cy54ODZfNjQucnBtCj4gPiA+ID4gPiA+Cj4gPiA+ID4g
+PiA+IEl0IGNvbXBsYWlucyBhYm91dCBhIHZlcnNpb24gbWlzbWF0Y2ggYmV0d2VlbiB0aGUgdm1s
+aW51eCBhbmQgY29yZQo+ID4gPiA+IGZpbGUuCj4gPiA+ID4gPiA+IEknbSBubyBjcmFzaCBleHBl
+cnQuLi4gYXJlIHlvdSBzdXJlIHRoZSBjb3JlcyBhYm92ZSBjb3JyZXNwb25kIHRvCj4gPiB0aGlz
+Cj4gPiA+ID4gPiA+IGtlcm5lbD8gRG9lcyBjcmFzaCBsb2FkIHVwIGZvciB5b3Ugb24gc2FpZCBi
+b3ggaWYgeW91IHJ1biBzb21ldGhpbmcKPiA+ID4gPiBsaWtlCj4gPiA+ID4gPiA+IHRoZSBmb2xs
+b3dpbmc/Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ICAgICAgICAgY3Jhc2ggL3Vzci9saWIvZGVi
+dWcvbGliL21vZHVsZXMvLi4uL3ZtbGludXggdm1jb3JlCj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+
+IE5vdGUgdGhhdCB5b3UgbWlnaHQgbmVlZCB0byBpbnN0YWxsIHRoZSBhYm92ZSBrZXJuZWwtZGVi
+dWdpbmZvCj4gPiBwYWNrYWdlCj4gPiA+ID4gPiA+IHRvIGdldCB0aGUgZGVidWcgKHZtbGludXgp
+IGZpbGUuIElmIHNvLCBjb3VsZCB5b3UgYWxzbyB1cGxvYWQgdGhhdAo+ID4gPiA+ID4gPiBkZWJ1
+Z2luZm8gcnBtIHNvbWV3aGVyZT8KPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gQnJpYW4KPiA+ID4g
+PiA+ID4KPiA+ID4gPiA+ID4gPiBUaGFua3MgLy8gSHVnbwo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4g
+PiA+ID4KPiA+ID4gPiA+ID4gPiAyMDE1LTA3LTA5IDIwOjUxIEdNVCswODowMCBCcmlhbiBGb3N0
+ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbT46Cj4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+IE9u
+IFRodSwgSnVsIDA5LCAyMDE1IGF0IDA2OjU3OjU1UE0gKzA4MDAsIEt1byBIdWdvIHdyb3RlOgo+
+ID4gPiA+ID4gPiA+ID4gPiBIaSBGb2xrcywKPiA+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4g
+PiA+ID4gQXMgdGhlIHJlc3VsdHMgb2YgMzIgZGlza3Mgd2l0aCB4ZnNfcmVwYWlyIC1uIHNlZW1z
+IG5vIGFueQo+ID4gZXJyb3IKPiA+ID4gPiA+ID4gc2hvd3MKPiA+ID4gPiA+ID4gPiA+IHVwLgo+
+ID4gPiA+ID4gPiA+ID4gPiBXZSBjdXJyZW50bHkgdHJpZWQgdG8gZGVwbG95IENlbnRPUyA2LjYg
+Zm9yIHRlc3RpbmcuIChUaGUKPiA+ID4gPiBwcmV2aW91cwo+ID4gPiA+ID4gPiBrZXJuZWwKPiA+
+ID4gPiA+ID4gPiA+ID4gcGFuaWMgd2FzIGNhbWUgZnJvbSBVYnVudHUpLgo+ID4gPiA+ID4gPiA+
+ID4gPiBUaGUgQ2VudE9TIG5vZGVzIGVuY291bnRlcmVkIGtlcm5lbCBwYW5pYyB3aXRoIHNhbWUg
+ZGFlbW9uCj4gPiBidXQKPiA+ID4gPiB0aGUKPiA+ID4gPiA+ID4gPiA+IHByb2JsZW0KPiA+ID4g
+PiA+ID4gPiA+ID4gbWF5IGEgYml0IGRpZmZlci4KPiA+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+
+ID4gPiA+ID4gICAgLSBJdCB3YXMgYnJva2VuIG9uIHhmc19kaXIyX3NmX2dldF9wYXJlbnRfaW5v
+KzB4YS8weDIwIGluCj4gPiA+ID4gVWJ1bnR1Lgo+ID4gPiA+ID4gPiA+ID4gPiAgICAtIEhlcmXi
+gJlzIHRoZSBsb2cgaW4gQ2VudE9TLiBJdOKAmXMgYnJva2VuIG9uCj4gPiA+ID4gPiA+ID4gPiA+
+ICAgIHhmc19kaXIyX3NmX2dldGRlbnRzKzB4MmEwLzB4M2EwCj4gPiA+ID4gPiA+ID4gPiA+Cj4g
+PiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ID4gSSdkIHZlbnR1cmUgdG8gZ3Vlc3MgaXQncyB0
+aGUgc2FtZSBiZWhhdmlvciBoZXJlLiBUaGUgcHJldmlvdXMKPiA+ID4gPiBrZXJuZWwKPiA+ID4g
+PiA+ID4gPiA+IGhhZCBhIGNhbGxiYWNrIGZvciB0aGUgcGFyZW50IGlub2RlIG51bWJlciB0aGF0
+IHdhcyBjYWxsZWQgdmlhCj4gPiA+ID4gPiA+ID4gPiB4ZnNfZGlyMl9zZl9nZXRkZW50cygpLiBU
+YWtpbmcgYSBsb29rIGF0IGEgNi42IGtlcm5lbCwgaXQgaGFzIGEKPiA+ID4gPiBzdGF0aWMKPiA+
+ID4gPiA+ID4gPiA+IGlubGluZSBoZXJlIGluc3RlYWQuCj4gPiA+ID4gPiA+ID4gPgo+ID4gPiA+
+ID4gPiA+ID4gPiA8MT5CVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBk
+ZXJlZmVyZW5jZSBhdAo+ID4gPiA+ID4gPiA+ID4gMDAwMDAwMDAwMDAwMDAwMQo+ID4gPiA+ID4g
+PiA+ID4gPiA8MT5JUDogWzxmZmZmZmZmZmEwMzYyZDYwPl0geGZzX2RpcjJfc2ZfZ2V0ZGVudHMr
+MHgyYTAvMHgzYTAKPiA+ID4gPiBbeGZzXQo+ID4gPiA+ID4gPiA+ID4gPiA8ND5QR0QgMTA3MjMy
+NzA2NyBQVUQgMTA3MjMyODA2NyBQTUQgMAo+ID4gPiA+ID4gPiA+ID4gPiA8ND5Pb3BzOiAwMDAw
+IFsjMV0gU01QCj4gPiA+ID4gPiA+ID4gPiA+IDw0Pmxhc3Qgc3lzZnMgZmlsZToKPiA+ID4gPiA+
+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4KPiA+IC9zeXMvZGV2
+aWNlcy9wY2kwMDAwOjgwLzAwMDA6ODA6MDMuMi8wMDAwOjgzOjAwLjAvaG9zdDEwL3BvcnQtMTA6
+MS9leHBhbmRlci0xMDoxL3BvcnQtMTA6MToxNi9lbmRfZGV2aWNlLTEwOjE6MTYvdGFyZ2V0MTA6
+MDoyNS8xMDowOjI1OjAvYmxvY2svc2R6L3F1ZXVlL3JvdGF0aW9uYWwKPiA+ID4gPiA+ID4gPiA+
+ID4gPDQ+Q1BVIDE3Cj4gPiA+ID4gPiA+ID4gPiA+IDw0Pk1vZHVsZXMgbGlua2VkIGluOiB4dF9j
+b25udHJhY2sgdHVuIHhmcyBleHBvcnRmcwo+ID4gPiA+IGlwdGFibGVfZmlsdGVyCj4gPiA+ID4g
+PiA+ID4gPiA+IGlwdF9SRURJUkVDVCBpcHRhYmxlX25hdCBuZl9uYXQgbmZfY29ubnRyYWNrX2lw
+djQKPiA+IG5mX2Nvbm50cmFjawo+ID4gPiA+ID4gPiA+ID4gPiBuZl9kZWZyYWdfaXB2NCBpcF90
+YWJsZXMgaXBfdnMgaXB2NiBsaWJjcmMzMmMgaVRDT193ZHQKPiA+ID4gPiA+ID4gPiA+ID4gaVRD
+T192ZW5kb3Jfc3VwcG9ydCBzZXMgZW5jbG9zdXJlIGlnYiBpMmNfYWxnb19iaXQgc2JfZWRhYwo+
+ID4gPiA+IGVkYWNfY29yZQo+ID4gPiA+ID4gPiA+ID4gPiBpMmNfaTgwMSBpMmNfY29yZSBzZyBz
+aHBjaHAgbHBjX2ljaCBtZmRfY29yZSBpeGdiZSBkY2EgcHRwCj4gPiA+ID4gcHBzX2NvcmUKPiA+
+ID4gPiA+ID4gPiA+ID4gbWRpbyBwb3dlcl9tZXRlciBhY3BpX2lwbWkgaXBtaV9zaSBpcG1pX21z
+Z2hhbmRsZXIgZXh0NCBqYmQyCj4gPiA+ID4gbWJjYWNoZQo+ID4gPiA+ID4gPiA+ID4gPiBzZF9t
+b2QgY3JjX3QxMGRpZiBtcHQzc2FzIHNjc2lfdHJhbnNwb3J0X3NhcyByYWlkX2NsYXNzCj4gPiB4
+aGNpX2hjZAo+ID4gPiA+IGFoY2kKPiA+ID4gPiA+ID4gPiA+ID4gd21pIGRtX21pcnJvciBkbV9y
+ZWdpb25faGFzaCBkbV9sb2cgZG1fbW9kIFtsYXN0IHVubG9hZGVkOgo+ID4gPiA+ID4gPiA+ID4g
+PiBzY3NpX3dhaXRfc2Nhbl0KPiA+ID4gPiA+ID4gPiA+ID4gPDQ+Cj4gPiA+ID4gPiA+ID4gPiA+
+IDw0PlBpZDogNDQ1NCwgY29tbTogc3dpZnQtb2JqZWN0LXNlIE5vdCB0YWludGVkCj4gPiA+ID4g
+PiA+ID4gPiA+IDIuNi4zMi01MDQuMjMuNC5lbDYueDg2XzY0ICMxIFNpbGljb24gTWVjaGFuaWNz
+IFN0b3Jmb3JtCj4gPiA+ID4gPiA+ID4gPiA+IFI1MTgudjVQL1gxMERSaS1UNCsKPiA+ID4gPiA+
+ID4gPiA+ID4gPDQ+UklQOiAwMDEwOls8ZmZmZmZmZmZhMDM2MmQ2MD5dICBbPGZmZmZmZmZmYTAz
+NjJkNjA+XQo+ID4gPiA+ID4gPiA+ID4gPiB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJhMC8weDNh
+MCBbeGZzXQo+ID4gPiA+ID4gPiA+ID4gPiA8ND5SU1A6IDAwMTg6ZmZmZjg4MDg3MWY2ZGUxOCAg
+RUZMQUdTOiAwMDAxMDIwMgo+ID4gPiA+ID4gPiA+ID4gPiA8ND5SQVg6IDAwMDAwMDAwMDAwMDAw
+MDAgUkJYOiAwMDAwMDAwMDAwMDAwMDA0IFJDWDoKPiA+ID4gPiAwMDAwMDAwMDAwMDAwMDAwCj4g
+PiA+ID4gPiA+ID4gPiA+IDw0PlJEWDogMDAwMDAwMDAwMDAwMDAwMSBSU0k6IDAwMDAwMDAwMDAw
+MDAwMDAgUkRJOgo+ID4gPiA+IDAwMDA3ZmFhNzQwMDYyMDMKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+
+UkJQOiBmZmZmODgwODcxZjZkZTY4IFIwODogMDAwMDAwMDMyZWIwNGJjOSBSMDk6Cj4gPiA+ID4g
+MDAwMDAwMDAwMDAwMDAwNAo+ID4gPiA+ID4gPiA+ID4gPiA8ND5SMTA6IDAwMDAwMDAwMDAwMDgw
+MzAgUjExOiAwMDAwMDAwMDAwMDAwMjQ2IFIxMjoKPiA+ID4gPiAwMDAwMDAwMDAwMDAwMDAwCj4g
+PiA+ID4gPiA+ID4gPiA+IDw0PlIxMzogMDAwMDAwMDAwMDAwMDAwMiBSMTQ6IGZmZmY4ODEwNmVm
+ZjcwMDAgUjE1Ogo+ID4gPiA+IGZmZmY4ODA4NzE1YjQ1ODAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+
+RlM6ICAwMDAwN2ZhYTg1NDI1NzAwKDAwMDApIEdTOmZmZmY4ODAwMjgzNjAwMDAoMDAwMCkKPiA+
+ID4gPiA+ID4gPiA+IGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+
+Q1M6ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMwo+ID4gPiA+
+ID4gPiA+ID4gPiA8ND5DUjI6IDAwMDAwMDAwMDAwMDAwMDEgQ1IzOiAwMDAwMDAxMDcyMzI1MDAw
+IENSNDoKPiA+ID4gPiAwMDAwMDAwMDAwMTQwN2UwCj4gPiA+ID4gPiA+ID4gPiA+IDw0PkRSMDog
+MDAwMDAwMDAwMDAwMDAwMCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAgRFIyOgo+ID4gPiA+IDAwMDAw
+MDAwMDAwMDAwMDAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+RFIzOiAwMDAwMDAwMDAwMDAwMDAwIERS
+NjogMDAwMDAwMDBmZmZmMGZmMCBEUjc6Cj4gPiA+ID4gMDAwMDAwMDAwMDAwMDQwMAo+ID4gPiA+
+ID4gPiA+ID4gPiA8ND5Qcm9jZXNzIHN3aWZ0LW9iamVjdC1zZSAocGlkOiA0NDU0LCB0aHJlYWRp
+bmZvCj4gPiA+ID4gZmZmZjg4MDg3MWY2YzAwMCwKPiA+ID4gPiA+ID4gPiA+ID4gdGFzayBmZmZm
+ODgwODYwZjE4YWIwKQo+ID4gPiA+ID4gPiA+ID4gPiA8ND5TdGFjazoKPiA+ID4gPiA+ID4gPiA+
+ID4gPDQ+IGZmZmY4ODA4NzFmNmRlMjggZmZmZmZmZmY4MTFhNGJiMCBmZmZmODgwODcxZjZkZjM4
+Cj4gPiA+ID4gPiA+IGZmZmY4ODA4NzQ3NDljYzAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+PGQ+IDAw
+MDAwMDAxMDAwMDAxMDMgZmZmZjg4MDIzODFmOGMwMCBmZmZmODgwODcxZjZkZjM4Cj4gPiA+ID4g
+PiA+ID4gPiBmZmZmODgwODcxNWI0NTgwCj4gPiA+ID4gPiA+ID4gPiA+IDw0PjxkPiAwMDAwMDAw
+MDAwMDAwMDgyIGZmZmY4ODAyMzgxZjhkODggZmZmZjg4MDg3MWY2ZGVjOAo+ID4gPiA+ID4gPiA+
+ID4gZmZmZmZmZmZhMDM1YWIzMQo+ID4gPiA+ID4gPiA+ID4gPiA8ND5DYWxsIFRyYWNlOgo+ID4g
+PiA+ID4gPiA+ID4gPiA8ND4gWzxmZmZmZmZmZjgxMWE0YmIwPl0gPyBmaWxsZGlyKzB4MC8weGUw
+Cj4gPiA+ID4gPiA+ID4gPiA+IDw0PiBbPGZmZmZmZmZmYTAzNWFiMzE+XSB4ZnNfcmVhZGRpcisw
+eGUxLzB4MTMwIFt4ZnNdCj4gPiA+ID4gPiA+ID4gPiA+IDw0PiBbPGZmZmZmZmZmODExYTRiYjA+
+XSA/IGZpbGxkaXIrMHgwLzB4ZTAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmZhMDM4
+ZmUyOT5dIHhmc19maWxlX3JlYWRkaXIrMHgzOS8weDUwIFt4ZnNdCj4gPiA+ID4gPiA+ID4gPiA+
+IDw0PiBbPGZmZmZmZmZmODExYTRlMzA+XSB2ZnNfcmVhZGRpcisweGMwLzB4ZTAKPiA+ID4gPiA+
+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTE5YmQ4Nj5dID8gZmluYWxfcHV0bmFtZSsweDI2LzB4
+NTAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTFhNGZiOT5dIHN5c19nZXRkZW50
+cysweDg5LzB4ZjAKPiA+ID4gPiA+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTAwYjBmMj5dIHN5
+c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgxYgo+ID4gPiA+ID4gPiA+ID4gPiA8ND5Db2RlOiAw
+MSAwMCAwMCAwMCA0OCBjNyBjNiAzOCA2YiAzYSBhMCA0OCA4YiA3ZCBjMCBmZiA1NQo+ID4gYjgK
+PiA+ID4gPiA4NSBjMAo+ID4gPiA+ID4gPiA+ID4gPiAwZiA4NSBhZiAwMCAwMCAwMCA0OSA4YiAz
+NyBlOSBlYyBmZCBmZiBmZiA2NiAwZiAxZiA4NCAwMCAwMAo+ID4gMDAKPiA+ID4gPiAwMCAwMAo+
+ID4gPiA+ID4gPiA+ID4gPiA8NDE+IDgwIDdjIDI0IDAxIDAwIDBmIDg0IDljIDAwIDAwIDAwIDQ1
+IDBmIGI2IDQ0IDI0IDAzIDQxCj4gPiAwZiBiNgo+ID4gPiA+ID4gPiA+ID4gPiA8MT5SSVAgIFs8
+ZmZmZmZmZmZhMDM2MmQ2MD5dIHhmc19kaXIyX3NmX2dldGRlbnRzKzB4MmEwLzB4M2EwCj4gPiA+
+ID4gW3hmc10KPiA+ID4gPiA+ID4gPiA+ID4gPDQ+IFJTUCA8ZmZmZjg4MDg3MWY2ZGUxOD4KPiA+
+ID4gPiA+ID4gPiA+ID4gPDQ+Q1IyOiAwMDAwMDAwMDAwMDAwMDAxCj4gPiA+ID4gPiA+ID4gPiA+
+Cj4gPiA+ID4gPiA+ID4gPiAuLi4KPiA+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+ID4g
+SeKAmXZlIGdvdCB0aGUgdm1jb3JlIGR1bXAgZnJvbSBvcGVyYXRvci4gRG9lcyB2bWNvcmUgaGVs
+cCBmb3IKPiA+ID4gPiA+ID4gPiA+ID4gdHJvdWJsZXNob290aW5nIGtpbmQgaXNzdWUgPwo+ID4g
+PiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+IEhtbSwgd2VsbCBp
+dCBjb3VsZG4ndCBodXJ0LiBJcyB0aGUgdm1jb3JlIGJhc2VkIG9uIHRoaXMgNi42Cj4gPiA+ID4g
+a2VybmVsPyBDYW4KPiA+ID4gPiA+ID4gPiA+IHlvdSBwcm92aWRlIHRoZSBleGFjdCBrZXJuZWwg
+dmVyc2lvbiBhbmQgcG9zdCB0aGUgdm1jb3JlCj4gPiBzb21ld2hlcmU/Cj4gPiA+ID4gPiA+ID4g
+Pgo+ID4gPiA+ID4gPiA+ID4gQnJpYW4KPiA+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gPiA+
+IFRoYW5rcyAvLyBIdWdvCj4gPiA+ID4gPiA+ID4gPiA+IOKAiwo+ID4gPiA+ID4gPiA+ID4gPgo+
+ID4gPiA+ID4gPiA+ID4gPiAyMDE1LTA2LTE4IDIyOjU5IEdNVCswODowMCBFcmljIFNhbmRlZW4g
+PHNhbmRlZW5Ac2FuZGVlbi5uZXQKPiA+ID46Cj4gPiA+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+
+ID4gPiA+ID4gT24gNi8xOC8xNSA5OjI5IEFNLCBLdW8gSHVnbyB3cm90ZToKPiA+ID4gPiA+ID4g
+PiA+ID4gPiA+Pi0gSGF2ZSB5b3UgdHJpZWQgYW4gJ3hmc19yZXBhaXIgLW4nIG9mIHRoZSBhZmZl
+Y3RlZAo+ID4gPiA+IGZpbGVzeXN0ZW0/Cj4gPiA+ID4gPiA+IE5vdGUKPiA+ID4gPiA+ID4gPiA+
+ID4gPiB0aGF0IC1uIHdpbGwgcmVwb3J0IHByb2JsZW1zIG9ubHkgYW5kIHByZXZlbnQgYW55Cj4g
+PiBtb2RpZmljYXRpb24KPiA+ID4gPiBieQo+ID4gPiA+ID4gPiA+ID4gcmVwYWlyLgo+ID4gPiA+
+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+ID4gPiA+ICpXZSBtaWdodCB0byB0byB4ZnNf
+cmVwYWlyIGlmIHdlIGNhbiBhZGRyZXNzIHdoaWNoIGRpc2sKPiA+ID4gPiBjYXVzZXMKPiA+ID4g
+PiA+ID4gdGhlCj4gPiA+ID4gPiA+ID4gPiA+ID4gaXNzdWUuICoKPiA+ID4gPiA+ID4gPiA+ID4g
+Pgo+ID4gPiA+ID4gPiA+ID4gPiA+IElmIHlvdSBkbywgcGxlYXNlIHNhdmUgdGhlIG91dHB1dCwg
+YW5kIGlmIGl0IGZpbmRzCj4gPiBhbnl0aGluZywKPiA+ID4gPiBwbGVhc2UKPiA+ID4gPiA+ID4g
+PiA+ID4gPiBwcm92aWRlIHRoZSBvdXRwdXQgaW4gdGhpcyB0aHJlYWQuCj4gPiA+ID4gPiA+ID4g
+PiA+ID4KPiA+ID4gPiA+ID4gPiA+ID4gPiBUaGFua3MsCj4gPiA+ID4gPiA+ID4gPiA+ID4gLUVy
+aWMKPiA+ID4gPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+ID4g
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiA+ID4gPiA+
+ID4gPiA+ID4geGZzIG1haWxpbmcgbGlzdAo+ID4gPiA+ID4gPiA+ID4gPiB4ZnNAb3NzLnNnaS5j
+b20KPiA+ID4gPiA+ID4gPiA+ID4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
+eGZzCj4gPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4KPiA+ID4gPgo+
+ID4KPiA+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+PiA+ID4geGZzIG1haWxpbmcgbGlzdAo+ID4gPiB4ZnNAb3NzLnNnaS5jb20KPiA+ID4gaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gPgo+ID4KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
