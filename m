@@ -1,32 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 40A267F61
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 07:52:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F23D8F8052
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 05:52:22 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D55797F55
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 08:45:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C38448F804B
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 06:45:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dSbryLsraRu1luXS (version=TLSv1
+	cuda.sgi.com with ESMTP id CjLJQovjKh5wwJ6U (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Jul 2015 05:52:18 -0700 (PDT)
-Date: Mon, 13 Jul 2015 08:52:15 -0400
+	Mon, 13 Jul 2015 06:45:40 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 199CE19CF3E
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 13:45:40 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-63.bos.redhat.com [10.18.41.63])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t6DDjd9M002561
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2015 09:45:39 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-Message-ID: <20150713125214.GA50787@bfoster.bfoster>
-References: <20150618133122.GC43254@bfoster.bfoster>
-	<CA++_uhuLbTT32v4ZeVkP3WOjBEeMU0O1NZDcv66a67hZ=pj9Sw@mail.gmail.com>
-	<5582DCDA.9070200@sandeen.net>
-	<CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
-	<20150709125119.GC63282@bfoster.bfoster>
-	<CA++_uhuoQ76uOUikbetw5ocfHDGAFMERcbgX9R4Shha2GUxWmQ@mail.gmail.com>
-	<20150709151811.GE63282@bfoster.bfoster>
-	<CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
-	<20150709183255.GG63282@bfoster.bfoster>
-	<CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
+Subject: [PATCH v2] xfs: close xc_cil list_empty() races with cil commit
+	sequence
+Date: Mon, 13 Jul 2015 09:45:38 -0400
+Message-Id: <1436795138-53887-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,184 +30,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kuo Hugo <tonytkdk@gmail.com>
-Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, darrell@swiftstack.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBKdWwgMTAsIDIwMTUgYXQgMDE6MzY6NDFQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6
-Cj4gSGkgQnJhaW4sCj4gCj4gSXMgdGhpcyB0aGUgZmlsZSB3aGljaCB5b3UgbmVlZCA/Cj4gCj4g
-aHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92MS9BVVRIX2h1Z28vcHVibGljL3hmcy5rbwo+
-IAo+ICQ+IG1vZGluZm8geGZzCj4gCj4gZmlsZW5hbWU6IC9saWIvbW9kdWxlcy8yLjYuMzItNTA0
-LjIzLjQuZWw2Lng4Nl82NC9rZXJuZWwvZnMveGZzL3hmcy5rbwo+IGxpY2Vuc2U6IEdQTAo+IGRl
-c2NyaXB0aW9uOiBTR0kgWEZTIHdpdGggQUNMcywgc2VjdXJpdHkgYXR0cmlidXRlcywgbGFyZ2Ug
-YmxvY2svaW5vZGUKPiBudW1iZXJzLCBubyBkZWJ1ZyBlbmFibGVkCj4gYXV0aG9yOiBTaWxpY29u
-IEdyYXBoaWNzLCBJbmMuCj4gc3JjdmVyc2lvbjogMEMxQjE3OTI2QkREQTRGMTIxNDc5RUUKPiBk
-ZXBlbmRzOiBleHBvcnRmcwo+IHZlcm1hZ2ljOiAyLjYuMzItNTA0LjIzLjQuZWw2Lng4Nl82NCBT
-TVAgbW9kX3VubG9hZCBtb2R2ZXJzaW9uCj4gCgpObywgdGhpcyBpc24ndCB0aGUgZGVidWcgdmVy
-c2lvbi4gV2UgbmVlZCB0aGUgb25lIGZyb20gdGhlIGRlYnVnIHBhY2thZ2UKdGhhdCB3YXMgaW5z
-dGFsbGVkICgvdXNyL2xpYi9kZWJ1Zz8pLgoKQnJpYW4KCj4gVGhhbmtzIC8vIEh1Z28KPiDigIsK
-PiAKPiAyMDE1LTA3LTEwIDI6MzIgR01UKzA4OjAwIEJyaWFuIEZvc3RlciA8YmZvc3RlckByZWRo
-YXQuY29tPjoKPiAKPiA+IE9uIEZyaSwgSnVsIDEwLCAyMDE1IGF0IDEyOjQwOjAwQU0gKzA4MDAs
-IEt1byBIdWdvIHdyb3RlOgo+ID4gPiBIaSBCcmFpbiwKPiA+ID4KPiA+ID4gVGhlcmUgeW91IGdv
-Lgo+ID4gPgo+ID4gPiBodHRwczovL2Nsb3VkLnN3aWZ0c3RhY2suY29tL3YxL0FVVEhfaHVnby9w
-dWJsaWMvdm1saW51eAo+ID4gPgo+ID4gaHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92MS9B
-VVRIX2h1Z28vcHVibGljL1N5c3RlbS5tYXAtMi42LjMyLTUwNC4yMy40LmVsNi54ODZfNjQKPiA+
-ID4KPiA+ID4gJCBtZDVzdW0gdm1saW51eAo+ID4gPiA4MmFhYTY5NGExNzRjMGEyOWU3OGMwNWU3
-M2FkZjVkOCAgdm1saW51eAo+ID4gPgo+ID4gPiBZZXMsIEkgY2FuIHJlYWQgaXQgd2l0aCB0aGlz
-IHZtbGludXggaW1hZ2UuIFB1dCBhbGwgZmlsZXMKPiA+ID4gKHZtY29yZSx2bWxpbnV4LFN5c3Rl
-bS5tYXApIGluIGEgZm9sZGVyIGFuZCBydW4gJGNyYXNoIHZtbGludXggdm1jb3JlCj4gPiA+Cj4g
-Pgo+ID4gVGhhbmtzLCBJIGNhbiBhY3R1YWxseSBsb2FkIHRoYXQgdXAgbm93LiBOb3RlIHRoYXQg
-d2UnbGwgcHJvYmFibHkgbmVlZAo+ID4gdGhlIG1vZHVsZXMgYW5kIHdoYXRub3QgKHhmcy5rbykg
-YWxzbyB0byBiZSBhYmxlIHRvIGxvb2sgYXQgYW55IFhGUwo+ID4gYml0cy4gSXQgbWlnaHQgYmUg
-ZWFzaWVzdCB0byBqdXN0IHRhciB1cCBhbmQgY29tcHJlc3Mgd2hhdGV2ZXIgZGlyZWN0b3J5Cj4g
-PiBzdHJ1Y3R1cmUgaGFzIHRoZSBkZWJ1Zy1lbmFibGVkIHZtbGludXggYW5kIGFsbCB0aGUga2Vy
-bmVsIG1vZHVsZXMuCj4gPiBUaGFua3MuCj4gPgo+ID4gQnJpYW4KPiA+Cj4gPiA+IEh1Z28KPiA+
-ID4g4oCLCj4gPiA+Cj4gPiA+IDIwMTUtMDctMDkgMjM6MTggR01UKzA4OjAwIEJyaWFuIEZvc3Rl
-ciA8YmZvc3RlckByZWRoYXQuY29tPjoKPiA+ID4KPiA+ID4gPiBPbiBUaHUsIEp1bCAwOSwgMjAx
-NSBhdCAwOToyMDowMFBNICswODAwLCBLdW8gSHVnbyB3cm90ZToKPiA+ID4gPiA+IEhpIEJyaWFu
-LAo+ID4gPiA+ID4KPiA+ID4gPiA+ICpPcGVyYXRpbmcgU3lzdGVtIFZlcnNpb246Kgo+ID4gPiA+
-ID4gTGludXgtMi42LjMyLTUwNC4yMy40LmVsNi54ODZfNjQteDg2XzY0LXdpdGgtY2VudG9zLTYu
-Ni1GaW5hbAo+ID4gPiA+ID4KPiA+ID4gPiA+ICpOT0RFIDEqCj4gPiA+ID4gPgo+ID4gPiA+ID4g
-aHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92MS9BVVRIX2J1cnRvbi9icnRuc3dpZnQvdm1j
-b3JlCj4gPiA+ID4gPgo+ID4gaHR0cHM6Ly9jbG91ZC5zd2lmdHN0YWNrLmNvbS92MS9BVVRIX2J1
-cnRvbi9icnRuc3dpZnQvdm1jb3JlLWRtZXNnLnR4dAo+ID4gPiA+ID4KPiA+ID4gPiA+Cj4gPiA+
-ID4gPiAqTk9ERSAyKgo+ID4gPiA+ID4KPiA+ID4gPiA+IGh0dHBzOi8vY2xvdWQuc3dpZnRzdGFj
-ay5jb20vdjEvQVVUSF9idXJ0b24vYnJ0bnN3aWZ0L3ZtY29yZV9yMm9iajAyCj4gPiA+ID4gPgo+
-ID4gPiA+Cj4gPiBodHRwczovL2Nsb3VkLnN3aWZ0c3RhY2suY29tL3YxL0FVVEhfYnVydG9uL2Jy
-dG5zd2lmdC92bWNvcmUtZG1lc2dfcjJvYmowMi50eHQKPiA+ID4gPiA+Cj4gPiA+ID4gPgo+ID4g
-PiA+ID4gQW55IHRob3VnaHRzIHdvdWxkIGJlIGFwcHJlY2lhdGUKPiA+ID4gPiA+Cj4gPiA+ID4K
-PiA+ID4gPiBJJ20gbm90IGFibGUgdG8gZmlyZSB1cCBjcmFzaCB3aXRoIHRoZXNlIGNvcmUgZmls
-ZXMgYW5kIHRoZSBrZXJuZWwKPiA+IGRlYnVnCj4gPiA+ID4gaW5mbyBmcm9tIHRoZSBmb2xsb3dp
-bmcgY2VudG9zIGtlcm5lbCBkZWJ1Z2luZm8gcGFja2FnZToKPiA+ID4gPgo+ID4gPiA+IGtlcm5l
-bC1kZWJ1Z2luZm8tMi42LjMyLTUwNC4yMy40LmVsNi5jZW50b3MucGx1cy54ODZfNjQucnBtCj4g
-PiA+ID4KPiA+ID4gPiBJdCBjb21wbGFpbnMgYWJvdXQgYSB2ZXJzaW9uIG1pc21hdGNoIGJldHdl
-ZW4gdGhlIHZtbGludXggYW5kIGNvcmUKPiA+IGZpbGUuCj4gPiA+ID4gSSdtIG5vIGNyYXNoIGV4
-cGVydC4uLiBhcmUgeW91IHN1cmUgdGhlIGNvcmVzIGFib3ZlIGNvcnJlc3BvbmQgdG8gdGhpcwo+
-ID4gPiA+IGtlcm5lbD8gRG9lcyBjcmFzaCBsb2FkIHVwIGZvciB5b3Ugb24gc2FpZCBib3ggaWYg
-eW91IHJ1biBzb21ldGhpbmcKPiA+IGxpa2UKPiA+ID4gPiB0aGUgZm9sbG93aW5nPwo+ID4gPiA+
-Cj4gPiA+ID4gICAgICAgICBjcmFzaCAvdXNyL2xpYi9kZWJ1Zy9saWIvbW9kdWxlcy8uLi4vdm1s
-aW51eCB2bWNvcmUKPiA+ID4gPgo+ID4gPiA+IE5vdGUgdGhhdCB5b3UgbWlnaHQgbmVlZCB0byBp
-bnN0YWxsIHRoZSBhYm92ZSBrZXJuZWwtZGVidWdpbmZvIHBhY2thZ2UKPiA+ID4gPiB0byBnZXQg
-dGhlIGRlYnVnICh2bWxpbnV4KSBmaWxlLiBJZiBzbywgY291bGQgeW91IGFsc28gdXBsb2FkIHRo
-YXQKPiA+ID4gPiBkZWJ1Z2luZm8gcnBtIHNvbWV3aGVyZT8KPiA+ID4gPgo+ID4gPiA+IEJyaWFu
-Cj4gPiA+ID4KPiA+ID4gPiA+IFRoYW5rcyAvLyBIdWdvCj4gPiA+ID4gPgo+ID4gPiA+ID4KPiA+
-ID4gPiA+IDIwMTUtMDctMDkgMjA6NTEgR01UKzA4OjAwIEJyaWFuIEZvc3RlciA8YmZvc3RlckBy
-ZWRoYXQuY29tPjoKPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IE9uIFRodSwgSnVsIDA5LCAyMDE1IGF0
-IDA2OjU3OjU1UE0gKzA4MDAsIEt1byBIdWdvIHdyb3RlOgo+ID4gPiA+ID4gPiA+IEhpIEZvbGtz
-LAo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gQXMgdGhlIHJlc3VsdHMgb2YgMzIgZGlza3Mg
-d2l0aCB4ZnNfcmVwYWlyIC1uIHNlZW1zIG5vIGFueSBlcnJvcgo+ID4gPiA+IHNob3dzCj4gPiA+
-ID4gPiA+IHVwLgo+ID4gPiA+ID4gPiA+IFdlIGN1cnJlbnRseSB0cmllZCB0byBkZXBsb3kgQ2Vu
-dE9TIDYuNiBmb3IgdGVzdGluZy4gKFRoZQo+ID4gcHJldmlvdXMKPiA+ID4gPiBrZXJuZWwKPiA+
-ID4gPiA+ID4gPiBwYW5pYyB3YXMgY2FtZSBmcm9tIFVidW50dSkuCj4gPiA+ID4gPiA+ID4gVGhl
-IENlbnRPUyBub2RlcyBlbmNvdW50ZXJlZCBrZXJuZWwgcGFuaWMgd2l0aCBzYW1lIGRhZW1vbiBi
-dXQKPiA+IHRoZQo+ID4gPiA+ID4gPiBwcm9ibGVtCj4gPiA+ID4gPiA+ID4gbWF5IGEgYml0IGRp
-ZmZlci4KPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ICAgIC0gSXQgd2FzIGJyb2tlbiBvbiB4
-ZnNfZGlyMl9zZl9nZXRfcGFyZW50X2lubysweGEvMHgyMCBpbgo+ID4gVWJ1bnR1Lgo+ID4gPiA+
-ID4gPiA+ICAgIC0gSGVyZeKAmXMgdGhlIGxvZyBpbiBDZW50T1MuIEl04oCZcyBicm9rZW4gb24K
-PiA+ID4gPiA+ID4gPiAgICB4ZnNfZGlyMl9zZl9nZXRkZW50cysweDJhMC8weDNhMAo+ID4gPiA+
-ID4gPiA+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IEknZCB2ZW50dXJlIHRvIGd1ZXNzIGl0J3Mg
-dGhlIHNhbWUgYmVoYXZpb3IgaGVyZS4gVGhlIHByZXZpb3VzCj4gPiBrZXJuZWwKPiA+ID4gPiA+
-ID4gaGFkIGEgY2FsbGJhY2sgZm9yIHRoZSBwYXJlbnQgaW5vZGUgbnVtYmVyIHRoYXQgd2FzIGNh
-bGxlZCB2aWEKPiA+ID4gPiA+ID4geGZzX2RpcjJfc2ZfZ2V0ZGVudHMoKS4gVGFraW5nIGEgbG9v
-ayBhdCBhIDYuNiBrZXJuZWwsIGl0IGhhcyBhCj4gPiBzdGF0aWMKPiA+ID4gPiA+ID4gaW5saW5l
-IGhlcmUgaW5zdGVhZC4KPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA8MT5CVUc6IHVuYWJsZSB0
-byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdAo+ID4gPiA+ID4gPiAw
-MDAwMDAwMDAwMDAwMDAxCj4gPiA+ID4gPiA+ID4gPDE+SVA6IFs8ZmZmZmZmZmZhMDM2MmQ2MD5d
-IHhmc19kaXIyX3NmX2dldGRlbnRzKzB4MmEwLzB4M2EwCj4gPiBbeGZzXQo+ID4gPiA+ID4gPiA+
-IDw0PlBHRCAxMDcyMzI3MDY3IFBVRCAxMDcyMzI4MDY3IFBNRCAwCj4gPiA+ID4gPiA+ID4gPDQ+
-T29wczogMDAwMCBbIzFdIFNNUAo+ID4gPiA+ID4gPiA+IDw0Pmxhc3Qgc3lzZnMgZmlsZToKPiA+
-ID4gPiA+ID4gPgo+ID4gPiA+ID4gPgo+ID4gPiA+Cj4gPiAvc3lzL2RldmljZXMvcGNpMDAwMDo4
-MC8wMDAwOjgwOjAzLjIvMDAwMDo4MzowMC4wL2hvc3QxMC9wb3J0LTEwOjEvZXhwYW5kZXItMTA6
-MS9wb3J0LTEwOjE6MTYvZW5kX2RldmljZS0xMDoxOjE2L3RhcmdldDEwOjA6MjUvMTA6MDoyNTow
-L2Jsb2NrL3Nkei9xdWV1ZS9yb3RhdGlvbmFsCj4gPiA+ID4gPiA+ID4gPDQ+Q1BVIDE3Cj4gPiA+
-ID4gPiA+ID4gPDQ+TW9kdWxlcyBsaW5rZWQgaW46IHh0X2Nvbm50cmFjayB0dW4geGZzIGV4cG9y
-dGZzCj4gPiBpcHRhYmxlX2ZpbHRlcgo+ID4gPiA+ID4gPiA+IGlwdF9SRURJUkVDVCBpcHRhYmxl
-X25hdCBuZl9uYXQgbmZfY29ubnRyYWNrX2lwdjQgbmZfY29ubnRyYWNrCj4gPiA+ID4gPiA+ID4g
-bmZfZGVmcmFnX2lwdjQgaXBfdGFibGVzIGlwX3ZzIGlwdjYgbGliY3JjMzJjIGlUQ09fd2R0Cj4g
-PiA+ID4gPiA+ID4gaVRDT192ZW5kb3Jfc3VwcG9ydCBzZXMgZW5jbG9zdXJlIGlnYiBpMmNfYWxn
-b19iaXQgc2JfZWRhYwo+ID4gZWRhY19jb3JlCj4gPiA+ID4gPiA+ID4gaTJjX2k4MDEgaTJjX2Nv
-cmUgc2cgc2hwY2hwIGxwY19pY2ggbWZkX2NvcmUgaXhnYmUgZGNhIHB0cAo+ID4gcHBzX2NvcmUK
-PiA+ID4gPiA+ID4gPiBtZGlvIHBvd2VyX21ldGVyIGFjcGlfaXBtaSBpcG1pX3NpIGlwbWlfbXNn
-aGFuZGxlciBleHQ0IGpiZDIKPiA+IG1iY2FjaGUKPiA+ID4gPiA+ID4gPiBzZF9tb2QgY3JjX3Qx
-MGRpZiBtcHQzc2FzIHNjc2lfdHJhbnNwb3J0X3NhcyByYWlkX2NsYXNzIHhoY2lfaGNkCj4gPiBh
-aGNpCj4gPiA+ID4gPiA+ID4gd21pIGRtX21pcnJvciBkbV9yZWdpb25faGFzaCBkbV9sb2cgZG1f
-bW9kIFtsYXN0IHVubG9hZGVkOgo+ID4gPiA+ID4gPiA+IHNjc2lfd2FpdF9zY2FuXQo+ID4gPiA+
-ID4gPiA+IDw0Pgo+ID4gPiA+ID4gPiA+IDw0PlBpZDogNDQ1NCwgY29tbTogc3dpZnQtb2JqZWN0
-LXNlIE5vdCB0YWludGVkCj4gPiA+ID4gPiA+ID4gMi42LjMyLTUwNC4yMy40LmVsNi54ODZfNjQg
-IzEgU2lsaWNvbiBNZWNoYW5pY3MgU3RvcmZvcm0KPiA+ID4gPiA+ID4gPiBSNTE4LnY1UC9YMTBE
-UmktVDQrCj4gPiA+ID4gPiA+ID4gPDQ+UklQOiAwMDEwOls8ZmZmZmZmZmZhMDM2MmQ2MD5dICBb
-PGZmZmZmZmZmYTAzNjJkNjA+XQo+ID4gPiA+ID4gPiA+IHhmc19kaXIyX3NmX2dldGRlbnRzKzB4
-MmEwLzB4M2EwIFt4ZnNdCj4gPiA+ID4gPiA+ID4gPDQ+UlNQOiAwMDE4OmZmZmY4ODA4NzFmNmRl
-MTggIEVGTEFHUzogMDAwMTAyMDIKPiA+ID4gPiA+ID4gPiA8ND5SQVg6IDAwMDAwMDAwMDAwMDAw
-MDAgUkJYOiAwMDAwMDAwMDAwMDAwMDA0IFJDWDoKPiA+IDAwMDAwMDAwMDAwMDAwMDAKPiA+ID4g
-PiA+ID4gPiA8ND5SRFg6IDAwMDAwMDAwMDAwMDAwMDEgUlNJOiAwMDAwMDAwMDAwMDAwMDAwIFJE
-SToKPiA+IDAwMDA3ZmFhNzQwMDYyMDMKPiA+ID4gPiA+ID4gPiA8ND5SQlA6IGZmZmY4ODA4NzFm
-NmRlNjggUjA4OiAwMDAwMDAwMzJlYjA0YmM5IFIwOToKPiA+IDAwMDAwMDAwMDAwMDAwMDQKPiA+
-ID4gPiA+ID4gPiA8ND5SMTA6IDAwMDAwMDAwMDAwMDgwMzAgUjExOiAwMDAwMDAwMDAwMDAwMjQ2
-IFIxMjoKPiA+IDAwMDAwMDAwMDAwMDAwMDAKPiA+ID4gPiA+ID4gPiA8ND5SMTM6IDAwMDAwMDAw
-MDAwMDAwMDIgUjE0OiBmZmZmODgxMDZlZmY3MDAwIFIxNToKPiA+IGZmZmY4ODA4NzE1YjQ1ODAK
-PiA+ID4gPiA+ID4gPiA8ND5GUzogIDAwMDA3ZmFhODU0MjU3MDAoMDAwMCkgR1M6ZmZmZjg4MDAy
-ODM2MDAwMCgwMDAwKQo+ID4gPiA+ID4gPiBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCj4gPiA+ID4g
-PiA+ID4gPDQ+Q1M6ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAz
-Mwo+ID4gPiA+ID4gPiA+IDw0PkNSMjogMDAwMDAwMDAwMDAwMDAwMSBDUjM6IDAwMDAwMDEwNzIz
-MjUwMDAgQ1I0Ogo+ID4gMDAwMDAwMDAwMDE0MDdlMAo+ID4gPiA+ID4gPiA+IDw0PkRSMDogMDAw
-MDAwMDAwMDAwMDAwMCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAgRFIyOgo+ID4gMDAwMDAwMDAwMDAw
-MDAwMAo+ID4gPiA+ID4gPiA+IDw0PkRSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAw
-ZmZmZjBmZjAgRFI3Ogo+ID4gMDAwMDAwMDAwMDAwMDQwMAo+ID4gPiA+ID4gPiA+IDw0PlByb2Nl
-c3Mgc3dpZnQtb2JqZWN0LXNlIChwaWQ6IDQ0NTQsIHRocmVhZGluZm8KPiA+IGZmZmY4ODA4NzFm
-NmMwMDAsCj4gPiA+ID4gPiA+ID4gdGFzayBmZmZmODgwODYwZjE4YWIwKQo+ID4gPiA+ID4gPiA+
-IDw0PlN0YWNrOgo+ID4gPiA+ID4gPiA+IDw0PiBmZmZmODgwODcxZjZkZTI4IGZmZmZmZmZmODEx
-YTRiYjAgZmZmZjg4MDg3MWY2ZGYzOAo+ID4gPiA+IGZmZmY4ODA4NzQ3NDljYzAKPiA+ID4gPiA+
-ID4gPiA8ND48ZD4gMDAwMDAwMDEwMDAwMDEwMyBmZmZmODgwMjM4MWY4YzAwIGZmZmY4ODA4NzFm
-NmRmMzgKPiA+ID4gPiA+ID4gZmZmZjg4MDg3MTViNDU4MAo+ID4gPiA+ID4gPiA+IDw0PjxkPiAw
-MDAwMDAwMDAwMDAwMDgyIGZmZmY4ODAyMzgxZjhkODggZmZmZjg4MDg3MWY2ZGVjOAo+ID4gPiA+
-ID4gPiBmZmZmZmZmZmEwMzVhYjMxCj4gPiA+ID4gPiA+ID4gPDQ+Q2FsbCBUcmFjZToKPiA+ID4g
-PiA+ID4gPiA8ND4gWzxmZmZmZmZmZjgxMWE0YmIwPl0gPyBmaWxsZGlyKzB4MC8weGUwCj4gPiA+
-ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmZhMDM1YWIzMT5dIHhmc19yZWFkZGlyKzB4ZTEvMHgxMzAg
-W3hmc10KPiA+ID4gPiA+ID4gPiA8ND4gWzxmZmZmZmZmZjgxMWE0YmIwPl0gPyBmaWxsZGlyKzB4
-MC8weGUwCj4gPiA+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmZhMDM4ZmUyOT5dIHhmc19maWxlX3Jl
-YWRkaXIrMHgzOS8weDUwIFt4ZnNdCj4gPiA+ID4gPiA+ID4gPDQ+IFs8ZmZmZmZmZmY4MTFhNGUz
-MD5dIHZmc19yZWFkZGlyKzB4YzAvMHhlMAo+ID4gPiA+ID4gPiA+IDw0PiBbPGZmZmZmZmZmODEx
-OWJkODY+XSA/IGZpbmFsX3B1dG5hbWUrMHgyNi8weDUwCj4gPiA+ID4gPiA+ID4gPDQ+IFs8ZmZm
-ZmZmZmY4MTFhNGZiOT5dIHN5c19nZXRkZW50cysweDg5LzB4ZjAKPiA+ID4gPiA+ID4gPiA8ND4g
-WzxmZmZmZmZmZjgxMDBiMGYyPl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiCj4gPiA+
-ID4gPiA+ID4gPDQ+Q29kZTogMDEgMDAgMDAgMDAgNDggYzcgYzYgMzggNmIgM2EgYTAgNDggOGIg
-N2QgYzAgZmYgNTUgYjgKPiA+IDg1IGMwCj4gPiA+ID4gPiA+ID4gMGYgODUgYWYgMDAgMDAgMDAg
-NDkgOGIgMzcgZTkgZWMgZmQgZmYgZmYgNjYgMGYgMWYgODQgMDAgMDAgMDAKPiA+IDAwIDAwCj4g
-PiA+ID4gPiA+ID4gPDQxPiA4MCA3YyAyNCAwMSAwMCAwZiA4NCA5YyAwMCAwMCAwMCA0NSAwZiBi
-NiA0NCAyNCAwMyA0MSAwZiBiNgo+ID4gPiA+ID4gPiA+IDwxPlJJUCAgWzxmZmZmZmZmZmEwMzYy
-ZDYwPl0geGZzX2RpcjJfc2ZfZ2V0ZGVudHMrMHgyYTAvMHgzYTAKPiA+IFt4ZnNdCj4gPiA+ID4g
-PiA+ID4gPDQ+IFJTUCA8ZmZmZjg4MDg3MWY2ZGUxOD4KPiA+ID4gPiA+ID4gPiA8ND5DUjI6IDAw
-MDAwMDAwMDAwMDAwMDEKPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiAuLi4KPiA+ID4gPiA+ID4g
-Pgo+ID4gPiA+ID4gPiA+IEnigJl2ZSBnb3QgdGhlIHZtY29yZSBkdW1wIGZyb20gb3BlcmF0b3Iu
-IERvZXMgdm1jb3JlIGhlbHAgZm9yCj4gPiA+ID4gPiA+ID4gdHJvdWJsZXNob290aW5nIGtpbmQg
-aXNzdWUgPwo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IEhtbSwgd2VsbCBp
-dCBjb3VsZG4ndCBodXJ0LiBJcyB0aGUgdm1jb3JlIGJhc2VkIG9uIHRoaXMgNi42Cj4gPiBrZXJu
-ZWw/IENhbgo+ID4gPiA+ID4gPiB5b3UgcHJvdmlkZSB0aGUgZXhhY3Qga2VybmVsIHZlcnNpb24g
-YW5kIHBvc3QgdGhlIHZtY29yZSBzb21ld2hlcmU/Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IEJy
-aWFuCj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gVGhhbmtzIC8vIEh1Z28KPiA+ID4gPiA+ID4g
-PiDigIsKPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+IDIwMTUtMDYtMTggMjI6NTkgR01UKzA4
-OjAwIEVyaWMgU2FuZGVlbiA8c2FuZGVlbkBzYW5kZWVuLm5ldD46Cj4gPiA+ID4gPiA+ID4KPiA+
-ID4gPiA+ID4gPiA+IE9uIDYvMTgvMTUgOToyOSBBTSwgS3VvIEh1Z28gd3JvdGU6Cj4gPiA+ID4g
-PiA+ID4gPiA+Pi0gSGF2ZSB5b3UgdHJpZWQgYW4gJ3hmc19yZXBhaXIgLW4nIG9mIHRoZSBhZmZl
-Y3RlZAo+ID4gZmlsZXN5c3RlbT8KPiA+ID4gPiBOb3RlCj4gPiA+ID4gPiA+ID4gPiB0aGF0IC1u
-IHdpbGwgcmVwb3J0IHByb2JsZW1zIG9ubHkgYW5kIHByZXZlbnQgYW55IG1vZGlmaWNhdGlvbgo+
-ID4gYnkKPiA+ID4gPiA+ID4gcmVwYWlyLgo+ID4gPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+
-ID4gPiAqV2UgbWlnaHQgdG8gdG8geGZzX3JlcGFpciBpZiB3ZSBjYW4gYWRkcmVzcyB3aGljaCBk
-aXNrCj4gPiBjYXVzZXMKPiA+ID4gPiB0aGUKPiA+ID4gPiA+ID4gPiA+IGlzc3VlLiAqCj4gPiA+
-ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+ID4gSWYgeW91IGRvLCBwbGVhc2Ugc2F2ZSB0aGUgb3V0
-cHV0LCBhbmQgaWYgaXQgZmluZHMgYW55dGhpbmcsCj4gPiBwbGVhc2UKPiA+ID4gPiA+ID4gPiA+
-IHByb3ZpZGUgdGhlIG91dHB1dCBpbiB0aGlzIHRocmVhZC4KPiA+ID4gPiA+ID4gPiA+Cj4gPiA+
-ID4gPiA+ID4gPiBUaGFua3MsCj4gPiA+ID4gPiA+ID4gPiAtRXJpYwo+ID4gPiA+ID4gPiA+ID4K
-PiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwo+ID4gPiA+ID4gPiA+IHhmcyBtYWlsaW5nIGxpc3QKPiA+ID4gPiA+
-ID4gPiB4ZnNAb3NzLnNnaS5jb20KPiA+ID4gPiA+ID4gPiBodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4KPiA+ID4gPgo+ID4KCj4g
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFp
-bGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+We have seen somewhat rare reports of the following assert from
+xlog_cil_push_background() failing during ltp tests or somewhat
+innocuous desktop root fs workloads (e.g., virt operations, initramfs
+construction):
+
+    ASSERT(!list_empty(&cil->xc_cil));
+
+The reasoning behind the assert is that the transaction has inserted
+items to the CIL and hit background push codepath all with
+cil->xc_ctx_lock held for reading. This locks out background commit from
+emptying the CIL, which acquires the lock for writing. Therefore, the
+reasoning is that the items previously inserted in the CIL should still
+be present.
+
+The cil->xc_ctx_lock read lock is not sufficient to protect the xc_cil
+list, however, due to how CIL insertion is handled.
+xlog_cil_insert_items() inserts and reorders the dirty transaction items
+to the tail of the CIL under xc_cil_lock. It uses list_move_tail() to
+achieve insertion and reordering in the same block of code. This
+function removes and reinserts an item to the tail of the list. If a
+transaction commits an item that was already logged and thus already
+resides in the CIL, and said item is the sole item on the list, the
+removal and reinsertion creates a temporary state where the list is
+actually empty.
+
+This state is not valid and thus should never be observed by concurrent
+transaction commit-side checks in the circumstances outlined above. We
+do not want to acquire the xc_cil_lock in all of these instances as it
+was previously removed and replaced with a separate push lock for
+performance reasons. Therefore, close any races with list_empty() on the
+insertion side by ensuring that the list is never in a transient empty
+state.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+v2:
+- Close the race on the insert side by not removing/reinserting an item
+  if already at the tail.
+v1: http://oss.sgi.com/archives/xfs/2015-06/msg00389.html
+
+ fs/xfs/xfs_log_cil.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index abc2ccb..4e76493 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -307,7 +307,13 @@ xlog_cil_insert_items(
+ 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+ 			continue;
+ 
+-		list_move_tail(&lip->li_cil, &cil->xc_cil);
++		/*
++		 * Only move the item if it isn't already at the tail. This is
++		 * to prevent a transient list_empty() state when reinserting
++		 * an item that is already the only item in the CIL.
++		 */
++		if (!list_is_last(&lip->li_cil, &cil->xc_cil))
++			list_move_tail(&lip->li_cil, &cil->xc_cil);
+ 	}
+ 
+ 	/* account for space used by new iovec headers  */
+-- 
+2.1.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
