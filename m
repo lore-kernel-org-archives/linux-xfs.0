@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6B2FC7F6C
-	for <xfs@oss.sgi.com>; Wed, 15 Jul 2015 04:03:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 44575304032
-	for <xfs@oss.sgi.com>; Wed, 15 Jul 2015 02:03:25 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id a2BpQCORjIA6q2kx (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Jul 2015 02:03:06 -0700 (PDT)
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id 7AD6DAAC1
-	for <xfs@oss.sgi.com>; Wed, 15 Jul 2015 09:03:05 +0000 (UTC)
-From: Jan Kara <jack@suse.com>
-Subject: [PATCH] xfs: Remove duplicate jumps to the same label
-Date: Wed, 15 Jul 2015 11:02:55 +0200
-Message-Id: <1436950975-5004-1-git-send-email-jack@suse.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4ECEE7F6C
+	for <xfs@oss.sgi.com>; Wed, 15 Jul 2015 06:16:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C8B81AC001
+	for <xfs@oss.sgi.com>; Wed, 15 Jul 2015 04:16:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 79lT2TqpVv4SvlF9 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 Jul 2015 04:16:52 -0700 (PDT)
+Date: Wed, 15 Jul 2015 07:16:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: Fix uninitialized return value in
+	xfs_alloc_fix_freelist()
+Message-ID: <20150715111649.GA60463@bfoster.bfoster>
+References: <1436948168-25051-1-git-send-email-jack@suse.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1436948168-25051-1-git-send-email-jack@suse.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,54 +26,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.com>
+To: Jan Kara <jack@suse.com>
+Cc: xfs@oss.sgi.com
 
-xfs_create() and xfs_create_tmpfile() have useless jumps to identical
-labels. Simplify them.
+On Wed, Jul 15, 2015 at 10:16:08AM +0200, Jan Kara wrote:
+> xfs_alloc_fix_freelist() can sometimes jump to out_agbp_relse without
+> ever setting value of 'error' variable which is then returned. This can
+> happen e.g. when pag->pagf_init is set but AG is for metadata and we
+> want to allocate user data.
+> 
+> Fix the problem by initializing 'error' to 0, which is the desired
+> return value when we decide to skip this group.
+> 
+> CC: xfs@oss.sgi.com
+> Coverity-id: 1309714
+> Signed-off-by: Jan Kara <jack@suse.com>
+> ---
 
-Signed-off-by: Jan Kara <jack@suse.com>
----
- fs/xfs/xfs_inode.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3da9f4da4f3d..d22a984d8470 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1175,11 +1175,8 @@ xfs_create(
- 	 */
- 	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev,
- 			       prid, resblks > 0, &ip, &committed);
--	if (error) {
--		if (error == -ENOSPC)
--			goto out_trans_cancel;
-+	if (error)
- 		goto out_trans_cancel;
--	}
- 
- 	/*
- 	 * Now we join the directory inode to the transaction.  We do not do it
-@@ -1318,11 +1315,8 @@ xfs_create_tmpfile(
- 
- 	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0,
- 				prid, resblks > 0, &ip, NULL);
--	if (error) {
--		if (error == -ENOSPC)
--			goto out_trans_cancel;
-+	if (error)
- 		goto out_trans_cancel;
--	}
- 
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(tp);
--- 
-2.1.4
+>  fs/xfs/libxfs/xfs_alloc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index f9e9ffe6fb46..7f8f2a0d4567 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1937,7 +1937,7 @@ xfs_alloc_fix_freelist(
+>  	struct xfs_alloc_arg	targs;	/* local allocation arguments */
+>  	xfs_agblock_t		bno;	/* freelist block */
+>  	xfs_extlen_t		need;	/* total blocks needed in freelist */
+> -	int			error;
+> +	int			error = 0;
+>  
+>  	if (!pag->pagf_init) {
+>  		error = xfs_alloc_read_agf(mp, tp, args->agno, flags, &agbp);
+> -- 
+> 2.1.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
