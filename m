@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2D0CE7F55
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 10:57:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 875FDAC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 08:57:52 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2D0057F8B
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 11:01:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65087AC005
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 09:01:24 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id bZx64bHg0NVo42nb for <xfs@oss.sgi.com>;
-	Thu, 16 Jul 2015 08:57:49 -0700 (PDT)
+	ESMTP id oJDRESGEk0NK3ltX for <xfs@oss.sgi.com>;
+	Thu, 16 Jul 2015 09:01:17 -0700 (PDT)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 2EC1963CBCF9
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 10:57:49 -0500 (CDT)
-Message-ID: <55A7D47B.7030200@sandeen.net>
-Date: Thu, 16 Jul 2015 10:57:47 -0500
+	by sandeen.net (Postfix) with ESMTPSA id 66EC663CBCF9
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 11:01:16 -0500 (CDT)
+Message-ID: <55A7D54A.1040408@sandeen.net>
+Date: Thu, 16 Jul 2015 11:01:14 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/3] xfs: create new metadata UUID field and incompat flag
+Subject: [PATCH 2/3 V6] xfsprogs: Add new sb_meta_uuid field, update userspace
+	tools to manipulate it
 References: <55A7D414.2050606@sandeen.net>
 In-Reply-To: <55A7D414.2050606@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,29 +35,207 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-This adds a new superblock field, sb_meta_uuid.  If set, along with
-a new incompat flag, the code will use that field on a V5 filesystem
-to compare to metadata UUIDs, which allows us to change the user-
-visible UUID at will.  Userspace handles the setting and clearing
-of the incompat flag as appropriate, as the UUID gets changed; i.e.
-setting the user-visible UUID back to the original UUID (as stored in
-the new field) will remove the incompatible feature flag.
+This adds a new superblock field, sb_meta_uuid.  This allows us to
+change the use-visible UUID on crc-enabled filesytems from userspace
+if desired, by copying the existing UUID to the new location for
+metadata comparisons.  If this is done, an incompat flag must be
+set to prevent older filesystems from mounting the filesystem, but
+the original UUID can be restored, and the incompat flag removed,
+with a new xfs_db / xfs_admin UUID command, "restore."
 
-If the incompat flag is not set, this copies the user-visible UUID into
-into the meta_uuid slot in memory when the superblock is read from disk;
-the meta_uuid field is not written back to disk in this case.
+Much of this patch mirrors the kernel patch in simply renaming
+the field used for metadata uuid comparison; other bits:
 
-The remainder of this patch simply switches verifiers, initializers,
-etc to use the new sb_meta_uuid field.
+* Teach xfs_db to print the new meta_uuid field
+* Allow xfs_db to generate a new UUID for CRC-enabled filesystems
+* Allow xfs_db to revert to the original UUID and clear the flag
+* Fix up xfs_copy to work with CRC-enabled filesystems
+* Update the xfs_admin manpage to show the UUID "restore" command
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index f9e9ffe..b7fc17c 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -464,7 +464,7 @@ xfs_agfl_verify(
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index fd96e15..5ea1d82 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -25,6 +25,7 @@
+ #include "xfs_copy.h"
+ 
+ #define	rounddown(x, y)	(((x)/(y))*(y))
++#define uuid_equal(s,d) (platform_uuid_compare((s),(d)) == 0)
+ 
+ extern int	platform_check_ismounted(char *, char *, struct stat64 *, int);
+ 
+@@ -466,6 +467,36 @@ write_wbuf(void)
+ 	sighold(SIGCHLD);
+ }
+ 
++void
++sb_update_uuid(
++	xfs_sb_t	*sb,
++	ag_header_t	*ag_hdr,
++	thread_args	*tcarg)
++{
++	/*
++	 * If this filesystem has CRCs, the original UUID is stamped into
++	 * all metadata.  If we are changing the UUID in the copy, we need
++	 * to copy the original UUID into the meta_uuid slot and set the
++	 * set the incompat flag if that hasn't already been done.
++	 */
++	if (!uuid_equal(&tcarg->uuid, &ag_hdr->xfs_sb->sb_uuid) &&
++	    xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb)) {
++		__be32 feat;
++
++		feat = be32_to_cpu(ag_hdr->xfs_sb->sb_features_incompat);
++		feat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
++		ag_hdr->xfs_sb->sb_features_incompat = cpu_to_be32(feat);
++		platform_uuid_copy(&ag_hdr->xfs_sb->sb_meta_uuid,
++				   &ag_hdr->xfs_sb->sb_uuid);
++	}
++
++	platform_uuid_copy(&ag_hdr->xfs_sb->sb_uuid, &tcarg->uuid);
++
++	/* We may have changed the UUID, so update the superblock CRC */
++	if (xfs_sb_version_hascrc(sb))
++		xfs_update_cksum((char *)ag_hdr->xfs_sb, sb->sb_sectsize,
++							 XFS_SB_CRC_OFF);
++}
+ 
+ int
+ main(int argc, char **argv)
+@@ -666,16 +697,6 @@ main(int argc, char **argv)
+ 			     1 << (sb->sb_sectlog - BBSHIFT),
+ 			     0, &xfs_sb_buf_ops);
+ 
+-	/*
+-	 * For now, V5 superblock filesystems are not supported without -d;
+-	 * we do not have the infrastructure yet to fix CRCs when a new UUID
+-	 * is generated.
+-	 */
+-	if (xfs_sb_version_hascrc(sb) && !duplicate) {
+-		do_log(_("%s: Cannot yet copy V5 fs without '-d'\n"), progname);
+-		exit(1);
+-	}
+-
+ 	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 0);
+ 	if (mp == NULL) {
+ 		do_log(_("%s: %s filesystem failed to initialize\n"
+@@ -1134,8 +1155,7 @@ main(int argc, char **argv)
+ 			/* do each thread in turn, each has its own UUID */
+ 
+ 			for (j = 0, tcarg = targ; j < num_targets; j++)  {
+-				platform_uuid_copy(&ag_hdr.xfs_sb->sb_uuid,
+-							&tcarg->uuid);
++				sb_update_uuid(sb, &ag_hdr, tcarg);
+ 				do_write(tcarg);
+ 				tcarg++;
+ 			}
+diff --git a/db/sb.c b/db/sb.c
+index 2b78136..7338bcd 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -29,6 +29,8 @@
+ #include "output.h"
+ #include "init.h"
+ 
++#define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
++
+ static int	sb_f(int argc, char **argv);
+ static void     sb_help(void);
+ static int	uuid_f(int argc, char **argv);
+@@ -122,6 +124,7 @@ const field_t	sb_flds[] = {
+ 	{ "spino_align", FLDT_EXTLEN, OI(OFF(spino_align)), C1, 0, TYP_NONE },
+ 	{ "pquotino", FLDT_INO, OI(OFF(pquotino)), C1, 0, TYP_INODE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
++	{ "meta_uuid", FLDT_UUID, OI(OFF(meta_uuid)), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
+ 
+@@ -323,6 +326,32 @@ do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
+ 		return &uu;
+ 	}
+ 	/* set uuid */
++	if (!xfs_sb_version_hascrc(&tsb))
++		goto write;
++	/*
++	 * If we have CRCs, and this UUID differs from that stamped in the
++	 * metadata, set the incompat flag and copy the old one to the
++	 * metadata-specific location.
++	 *
++	 * If we are setting the user-visible UUID back to match the metadata
++	 * UUID, clear the metadata-specific location and the incompat flag.
++	 */
++	if (!xfs_sb_version_hasmetauuid(&tsb) &&
++	    !uuid_equal(uuid, &mp->m_sb.sb_meta_uuid)) {
++		mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
++		tsb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
++		memcpy(&tsb.sb_meta_uuid, &tsb.sb_uuid, sizeof(uuid_t));
++	} else if (xfs_sb_version_hasmetauuid(&tsb) &&
++		   uuid_equal(uuid, &mp->m_sb.sb_meta_uuid)) {
++		memset(&tsb.sb_meta_uuid, 0, sizeof(uuid_t));
++		/* Write those zeros now; it's ignored once we clear the flag */
++		libxfs_sb_to_disk(iocur_top->data, &tsb);
++		mp->m_sb.sb_features_incompat &=
++						~XFS_SB_FEAT_INCOMPAT_META_UUID;
++		tsb.sb_features_incompat &= ~XFS_SB_FEAT_INCOMPAT_META_UUID;
++	}
++
++write:
+ 	memcpy(&tsb.sb_uuid, uuid, sizeof(uuid_t));
+ 	libxfs_sb_to_disk(iocur_top->data, &tsb);
+ 	write_cur();
+@@ -352,18 +381,6 @@ uuid_f(
+ 			return 0;
+ 		}
+ 
+-		/*
+-		 * For now, changing the UUID of V5 superblock filesystems is
+-		 * not supported; we do not have the infrastructure to fix all
+-		 * other metadata when a new superblock UUID is generated.
+-		 */
+-		if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-		    strcasecmp(argv[1], "rewrite")) {
+-			dbprintf(_("%s: only 'rewrite' supported on V5 fs\n"),
+-				progname);
+-			return 0;
+-		}
+-
+ 		if (!strcasecmp(argv[1], "generate")) {
+ 			platform_uuid_generate(&uu);
+ 		} else if (!strcasecmp(argv[1], "nil")) {
+@@ -377,6 +394,17 @@ uuid_f(
+ 			memcpy(&uu, uup, sizeof(uuid_t));
+ 			platform_uuid_unparse(&uu, bp);
+ 			dbprintf(_("old UUID = %s\n"), bp);
++		} else if (!strcasecmp(argv[1], "restore")) {
++			xfs_sb_t	tsb;
++
++			if (!get_sb(0, &tsb))
++				return 0;
++
++			/* Not set; nothing to do.  Success! */
++			if (!xfs_sb_version_hasmetauuid(&tsb))
++				return 0;
++		
++			memcpy(&uu, mp->m_sb.sb_meta_uuid, sizeof(uuid_t));
+ 		} else {
+ 			if (platform_uuid_parse(argv[1], &uu)) {
+ 				dbprintf(_("invalid UUID\n"));
+@@ -653,6 +681,8 @@ version_string(
+ 		strcat(s, ",FINOBT");
+ 	if (xfs_sb_version_hassparseinodes(sbp))
+ 		strcat(s, ",SPARSE_INODES");
++	if (xfs_sb_version_hasmetauuid(sbp))
++		strcat(s, ",META_UUID");
+ 	return s;
+ }
+ 
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 0d9b4c3..9d76329 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -460,7 +460,7 @@ xfs_agfl_verify(
  	struct xfs_agfl	*agfl = XFS_BUF_TO_AGFL(bp);
  	int		i;
  
@@ -65,7 +244,7 @@ index f9e9ffe..b7fc17c 100644
  		return false;
  	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
  		return false;
-@@ -2260,7 +2260,7 @@ xfs_agf_verify(
+@@ -2256,7 +2256,7 @@ xfs_agf_verify(
  	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
  
  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
@@ -74,11 +253,11 @@ index f9e9ffe..b7fc17c 100644
  			return false;
  
  	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 59d521c..90de071 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -295,7 +295,7 @@ xfs_allocbt_verify(
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index 7fd72af..e60538a 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -293,7 +293,7 @@ xfs_allocbt_verify(
  	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
  		if (!xfs_sb_version_hascrc(&mp->m_sb))
  			return false;
@@ -87,7 +266,7 @@ index 59d521c..90de071 100644
  			return false;
  		if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
  			return false;
-@@ -313,7 +313,7 @@ xfs_allocbt_verify(
+@@ -311,7 +311,7 @@ xfs_allocbt_verify(
  	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
  		if (!xfs_sb_version_hascrc(&mp->m_sb))
  			return false;
@@ -96,11 +275,11 @@ index 59d521c..90de071 100644
  			return false;
  		if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
  			return false;
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index e9d401c..33df52d 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -262,7 +262,7 @@ xfs_attr3_leaf_verify(
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 8f0772a..cc25068 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -258,7 +258,7 @@ xfs_attr3_leaf_verify(
  		if (ichdr.magic != XFS_ATTR3_LEAF_MAGIC)
  			return false;
  
@@ -109,7 +288,7 @@ index e9d401c..33df52d 100644
  			return false;
  		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
  			return false;
-@@ -1056,7 +1056,7 @@ xfs_attr3_leaf_create(
+@@ -1052,7 +1052,7 @@ xfs_attr3_leaf_create(
  
  		hdr3->blkno = cpu_to_be64(bp->b_bn);
  		hdr3->owner = cpu_to_be64(dp->i_ino);
@@ -118,11 +297,11 @@ index e9d401c..33df52d 100644
  
  		ichdr.freemap[0].base = sizeof(struct xfs_attr3_leaf_hdr);
  	} else {
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 20de88d..eba0d1e 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -100,7 +100,7 @@ xfs_attr3_rmt_verify(
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 4f492c1..5feaf55 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -95,7 +95,7 @@ xfs_attr3_rmt_verify(
  		return false;
  	if (rmt->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
  		return false;
@@ -131,7 +310,7 @@ index 20de88d..eba0d1e 100644
  		return false;
  	if (be64_to_cpu(rmt->rm_blkno) != bno)
  		return false;
-@@ -217,7 +217,7 @@ xfs_attr3_rmt_hdr_set(
+@@ -212,7 +212,7 @@ xfs_attr3_rmt_hdr_set(
  	rmt->rm_magic = cpu_to_be32(XFS_ATTR3_RMT_MAGIC);
  	rmt->rm_offset = cpu_to_be32(offset);
  	rmt->rm_bytes = cpu_to_be32(size);
@@ -140,11 +319,11 @@ index 20de88d..eba0d1e 100644
  	rmt->rm_owner = cpu_to_be64(ino);
  	rmt->rm_blkno = cpu_to_be64(bno);
  
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 2c44c8e..6b0cf65 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -349,7 +349,8 @@ xfs_bmbt_to_bmdr(
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 2fd04e0..f42bc2d 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -346,7 +346,8 @@ xfs_bmbt_to_bmdr(
  
  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
  		ASSERT(rblock->bb_magic == cpu_to_be32(XFS_BMAP_CRC_MAGIC));
@@ -154,7 +333,7 @@ index 2c44c8e..6b0cf65 100644
  		ASSERT(rblock->bb_u.l.bb_blkno ==
  		       cpu_to_be64(XFS_BUF_DADDR_NULL));
  	} else
-@@ -647,7 +648,7 @@ xfs_bmbt_verify(
+@@ -644,7 +645,7 @@ xfs_bmbt_verify(
  	case cpu_to_be32(XFS_BMAP_CRC_MAGIC):
  		if (!xfs_sb_version_hascrc(&mp->m_sb))
  			return false;
@@ -163,11 +342,11 @@ index 2c44c8e..6b0cf65 100644
  			return false;
  		if (be64_to_cpu(block->bb_u.l.bb_blkno) != bp->b_bn)
  			return false;
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index c72283d..f7d7ee7 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -65,7 +65,8 @@ xfs_btree_check_lblock(
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 203e7d2..a16ae7d 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -62,7 +62,8 @@ xfs_btree_check_lblock(
  
  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
  		lblock_ok = lblock_ok &&
@@ -177,7 +356,7 @@ index c72283d..f7d7ee7 100644
  			block->bb_u.l.bb_blkno == cpu_to_be64(
  				bp ? bp->b_bn : XFS_BUF_DADDR_NULL);
  	}
-@@ -115,7 +116,8 @@ xfs_btree_check_sblock(
+@@ -112,7 +113,8 @@ xfs_btree_check_sblock(
  
  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
  		sblock_ok = sblock_ok &&
@@ -187,7 +366,7 @@ index c72283d..f7d7ee7 100644
  			block->bb_u.s.bb_blkno == cpu_to_be64(
  				bp ? bp->b_bn : XFS_BUF_DADDR_NULL);
  	}
-@@ -1000,7 +1002,7 @@ xfs_btree_init_block_int(
+@@ -997,7 +999,7 @@ xfs_btree_init_block_int(
  		if (flags & XFS_BTREE_CRC_BLOCKS) {
  			buf->bb_u.l.bb_blkno = cpu_to_be64(blkno);
  			buf->bb_u.l.bb_owner = cpu_to_be64(owner);
@@ -196,7 +375,7 @@ index c72283d..f7d7ee7 100644
  			buf->bb_u.l.bb_pad = 0;
  			buf->bb_u.l.bb_lsn = 0;
  		}
-@@ -1013,7 +1015,7 @@ xfs_btree_init_block_int(
+@@ -1010,7 +1012,7 @@ xfs_btree_init_block_int(
  		if (flags & XFS_BTREE_CRC_BLOCKS) {
  			buf->bb_u.s.bb_blkno = cpu_to_be64(blkno);
  			buf->bb_u.s.bb_owner = cpu_to_be32(__owner);
@@ -205,11 +384,11 @@ index c72283d..f7d7ee7 100644
  			buf->bb_u.s.bb_lsn = 0;
  		}
  	}
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 2385f8c..e9f6709 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -146,7 +146,7 @@ xfs_da3_node_verify(
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index 441bef4..3de4cd3 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -142,7 +142,7 @@ xfs_da3_node_verify(
  		if (ichdr.magic != XFS_DA3_NODE_MAGIC)
  			return false;
  
@@ -218,7 +397,7 @@ index 2385f8c..e9f6709 100644
  			return false;
  		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
  			return false;
-@@ -324,7 +324,7 @@ xfs_da3_node_create(
+@@ -320,7 +320,7 @@ xfs_da3_node_create(
  		ichdr.magic = XFS_DA3_NODE_MAGIC;
  		hdr3->info.blkno = cpu_to_be64(bp->b_bn);
  		hdr3->info.owner = cpu_to_be64(args->dp->i_ino);
@@ -227,11 +406,11 @@ index 2385f8c..e9f6709 100644
  	} else {
  		ichdr.magic = XFS_DA_NODE_MAGIC;
  	}
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 9354e19..4778d1d 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -67,7 +67,7 @@ xfs_dir3_block_verify(
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index f061a99..489f301 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -64,7 +64,7 @@ xfs_dir3_block_verify(
  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
  		if (hdr3->magic != cpu_to_be32(XFS_DIR3_BLOCK_MAGIC))
  			return false;
@@ -240,7 +419,7 @@ index 9354e19..4778d1d 100644
  			return false;
  		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
  			return false;
-@@ -157,7 +157,7 @@ xfs_dir3_block_init(
+@@ -154,7 +154,7 @@ xfs_dir3_block_init(
  		hdr3->magic = cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
  		hdr3->blkno = cpu_to_be64(bp->b_bn);
  		hdr3->owner = cpu_to_be64(dp->i_ino);
@@ -249,11 +428,11 @@ index 9354e19..4778d1d 100644
  		return;
  
  	}
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index de1ea16..6a57fdb 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -220,7 +220,7 @@ xfs_dir3_data_verify(
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index 609c097..c475ba8 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -218,7 +218,7 @@ xfs_dir3_data_verify(
  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
  		if (hdr3->magic != cpu_to_be32(XFS_DIR3_DATA_MAGIC))
  			return false;
@@ -262,7 +441,7 @@ index de1ea16..6a57fdb 100644
  			return false;
  		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
  			return false;
-@@ -604,7 +604,7 @@ xfs_dir3_data_init(
+@@ -602,7 +602,7 @@ xfs_dir3_data_init(
  		hdr3->magic = cpu_to_be32(XFS_DIR3_DATA_MAGIC);
  		hdr3->blkno = cpu_to_be64(bp->b_bn);
  		hdr3->owner = cpu_to_be64(dp->i_ino);
@@ -271,11 +450,11 @@ index de1ea16..6a57fdb 100644
  
  	} else
  		hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 1061199..f300240 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -160,7 +160,7 @@ xfs_dir3_leaf_verify(
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index c2dba8a..80d03b3 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -158,7 +158,7 @@ xfs_dir3_leaf_verify(
  
  		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
  			return false;
@@ -284,7 +463,7 @@ index 1061199..f300240 100644
  			return false;
  		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
  			return false;
-@@ -310,7 +310,7 @@ xfs_dir3_leaf_init(
+@@ -308,7 +308,7 @@ xfs_dir3_leaf_init(
  					 : cpu_to_be16(XFS_DIR3_LEAFN_MAGIC);
  		leaf3->info.blkno = cpu_to_be64(bp->b_bn);
  		leaf3->info.owner = cpu_to_be64(owner);
@@ -293,11 +472,11 @@ index 1061199..f300240 100644
  	} else {
  		memset(leaf, 0, sizeof(*leaf));
  		leaf->hdr.info.magic = cpu_to_be16(type);
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 41b80d3..527b733 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -93,7 +93,7 @@ xfs_dir3_free_verify(
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 3b71e9e..581d648 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -91,7 +91,7 @@ xfs_dir3_free_verify(
  
  		if (hdr3->magic != cpu_to_be32(XFS_DIR3_FREE_MAGIC))
  			return false;
@@ -306,7 +485,7 @@ index 41b80d3..527b733 100644
  			return false;
  		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
  			return false;
-@@ -226,7 +226,7 @@ xfs_dir3_free_get_buf(
+@@ -224,7 +224,7 @@ xfs_dir3_free_get_buf(
  
  		hdr3->hdr.blkno = cpu_to_be64(bp->b_bn);
  		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
@@ -315,11 +494,11 @@ index 41b80d3..527b733 100644
  	} else
  		hdr.magic = XFS_DIR2_FREE_MAGIC;
  	dp->d_ops->free_hdr_to_disk(bp->b_addr, &hdr);
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 6fbf2d8..5331b7f 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -163,7 +163,7 @@ xfs_dqcheck(
+diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
+index 2e0484a..1a2546b 100644
+--- a/libxfs/xfs_dquot_buf.c
++++ b/libxfs/xfs_dquot_buf.c
+@@ -171,7 +171,7 @@ xfs_dqcheck(
  	d->dd_diskdq.d_id = cpu_to_be32(id);
  
  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
@@ -328,7 +507,7 @@ index 6fbf2d8..5331b7f 100644
  		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
  				 XFS_DQUOT_CRC_OFF);
  	}
-@@ -198,7 +198,7 @@ xfs_dquot_buf_verify_crc(
+@@ -206,7 +206,7 @@ xfs_dquot_buf_verify_crc(
  		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
  				 XFS_DQUOT_CRC_OFF))
  			return false;
@@ -337,10 +516,10 @@ index 6fbf2d8..5331b7f 100644
  			return false;
  	}
  	return true;
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index a0ae572..9590a06 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 68d4175..282926d 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
 @@ -100,7 +100,7 @@ typedef struct xfs_sb {
  	xfs_rfsblock_t	sb_dblocks;	/* number of data blocks */
  	xfs_rfsblock_t	sb_rblocks;	/* number of realtime blocks */
@@ -375,11 +554,12 @@ index a0ae572..9590a06 100644
  
  	/* must be padded to 64 bit alignment */
  } xfs_dsb_t;
-@@ -458,9 +460,11 @@ xfs_sb_has_ro_compat_feature(
+@@ -458,9 +460,12 @@ xfs_sb_has_ro_compat_feature(
  
  #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
  #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
 +#define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
++
  #define XFS_SB_FEAT_INCOMPAT_ALL \
  		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
 -		 XFS_SB_FEAT_INCOMPAT_SPINODES)
@@ -388,7 +568,7 @@ index a0ae572..9590a06 100644
  
  #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
  static inline bool
-@@ -515,6 +519,18 @@ static inline bool xfs_sb_version_hassparseinodes(struct xfs_sb *sbp)
+@@ -515,6 +520,18 @@ static inline bool xfs_sb_version_hassparseinodes(struct xfs_sb *sbp)
  }
  
  /*
@@ -397,7 +577,7 @@ index a0ae572..9590a06 100644
 + * user-visible UUID to be changed on V5 filesystems which have a
 + * filesystem UUID stamped into every piece of metadata.
 + */
-+static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
++static inline int xfs_sb_version_hasmetauuid(xfs_sb_t *sbp)
 +{
 +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
 +		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
@@ -407,11 +587,11 @@ index a0ae572..9590a06 100644
   * end of superblock version macros
   */
  
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 66efc70..ce63e04 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -338,7 +338,8 @@ xfs_ialloc_inode_init(
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 05ecd06..d26027c 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -333,7 +333,8 @@ xfs_ialloc_inode_init(
  			if (version == 3) {
  				free->di_ino = cpu_to_be64(ino);
  				ino++;
@@ -421,7 +601,7 @@ index 66efc70..ce63e04 100644
  				xfs_dinode_calc_crc(mp, free);
  			} else if (tp) {
  				/* just log the inode core */
-@@ -2500,7 +2501,7 @@ xfs_agi_verify(
+@@ -2495,7 +2496,7 @@ xfs_agi_verify(
  	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
  
  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
@@ -430,11 +610,11 @@ index 66efc70..ce63e04 100644
  			return false;
  	/*
  	 * Validate the magic number of the agi block.
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 674ad8f..f39b285 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -239,7 +239,7 @@ xfs_inobt_verify(
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 7055149..09ffdb4 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -238,7 +238,7 @@ xfs_inobt_verify(
  	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
  		if (!xfs_sb_version_hascrc(&mp->m_sb))
  			return false;
@@ -443,20 +623,20 @@ index 674ad8f..f39b285 100644
  			return false;
  		if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
  			return false;
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 6526e76..268c00f 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -304,7 +304,7 @@ xfs_dinode_verify(
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index b8e65a9..be9d166 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -302,7 +302,7 @@ xfs_dinode_verify(
  		return false;
- 	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
+ 	if (be64_to_cpu(dip->di_ino) != ino)
  		return false;
 -	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
 +	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_meta_uuid))
  		return false;
  	return true;
  }
-@@ -366,7 +366,7 @@ xfs_iread(
+@@ -364,7 +364,7 @@ xfs_iread(
  		if (xfs_sb_version_hascrc(&mp->m_sb)) {
  			ip->i_d.di_version = 3;
  			ip->i_d.di_ino = ip->i_ino;
@@ -465,11 +645,11 @@ index 6526e76..268c00f 100644
  		} else
  			ip->i_d.di_version = 2;
  		return 0;
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index df9851c..0f5e08f 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -398,6 +398,14 @@ __xfs_sb_from_disk(
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 8c28db0..7c2b33e 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -381,6 +381,14 @@ __xfs_sb_from_disk(
  	to->sb_spino_align = be32_to_cpu(from->sb_spino_align);
  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
@@ -484,7 +664,7 @@ index df9851c..0f5e08f 100644
  	/* Convert on-disk flags to in-memory flags? */
  	if (convert_xquota)
  		xfs_sb_quota_from_disk(to);
-@@ -539,6 +547,8 @@ xfs_sb_to_disk(
+@@ -522,6 +530,8 @@ xfs_sb_to_disk(
  				cpu_to_be32(from->sb_features_log_incompat);
  		to->sb_spino_align = cpu_to_be32(from->sb_spino_align);
  		to->sb_lsn = cpu_to_be64(from->sb_lsn);
@@ -493,11 +673,11 @@ index df9851c..0f5e08f 100644
  	}
  }
  
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index e7e26bd..8f8af05 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -63,7 +63,7 @@ xfs_symlink_hdr_set(
+diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
+index 6bc5af5..7d46d9e 100644
+--- a/libxfs/xfs_symlink_remote.c
++++ b/libxfs/xfs_symlink_remote.c
+@@ -60,7 +60,7 @@ xfs_symlink_hdr_set(
  	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
  	dsl->sl_offset = cpu_to_be32(offset);
  	dsl->sl_bytes = cpu_to_be32(size);
@@ -506,7 +686,7 @@ index e7e26bd..8f8af05 100644
  	dsl->sl_owner = cpu_to_be64(ino);
  	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
  	bp->b_ops = &xfs_symlink_buf_ops;
-@@ -107,7 +107,7 @@ xfs_symlink_verify(
+@@ -104,7 +104,7 @@ xfs_symlink_verify(
  		return false;
  	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
  		return false;
@@ -515,6 +695,255 @@ index e7e26bd..8f8af05 100644
  		return false;
  	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
  		return false;
+diff --git a/libxlog/util.c b/libxlog/util.c
+index a0e35cc..05fb67f 100644
+--- a/libxlog/util.c
++++ b/libxlog/util.c
+@@ -85,8 +85,10 @@ header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
+ {
+     char uu_log[64], uu_sb[64];
+ 
+-    if (print_skip_uuid) return 0;
+-    if (!platform_uuid_compare(&mp->m_sb.sb_uuid, &head->h_fs_uuid)) return 0;
++    if (print_skip_uuid)
++		return 0;
++    if (!platform_uuid_compare(&mp->m_sb.sb_uuid, &head->h_fs_uuid))
++		return 0;
+ 
+     platform_uuid_unparse(&mp->m_sb.sb_uuid, uu_sb);
+     platform_uuid_unparse(&head->h_fs_uuid, uu_log);
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index 0968196..20a114f 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -102,7 +102,12 @@ The
+ .I uuid
+ may also be
+ .BR generate ,
+-which will generate a new UUID for the filesystem.
++which will generate a new UUID for the filesystem.  Note that on CRC-enabled
++filesystems, this will set an incompatible flag such that older kernels will
++not be able to mount the filesystem.  To remove this incompatible flag, use
++.BR restore ,
++which will restore the original UUID and remove the incompatible
++feature flag as needed.
+ .TP
+ .B \-V
+ Prints the version number and exits.
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index d527230..df54bb7 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -664,7 +664,7 @@ The possible data types are:
+ .BR sb ", " symlink " and " text .
+ See the TYPES section below for more information on these data types.
+ .TP
+-.BI "uuid [" uuid " | " generate " | " rewrite ]
++.BI "uuid [" uuid " | " generate " | " rewrite " | " restore ]
+ Set the filesystem universally unique identifier (UUID).
+ The filesystem UUID can be used by
+ .BR mount (8)
+@@ -675,7 +675,12 @@ can be set directly to the desired UUID, or it can
+ be automatically generated using the
+ .B generate
+ option. These options will both write the UUID into every copy of the
+-superblock in the filesystem.
++superblock in the filesystem.  On a CRC-enabled filesystem, this will
++set an incompatible superblock flag, and the filesystem will not be
++mountable with older kernels.  This can be reverted with the
++.B restore
++option, which will copy the original UUID back into place and clear
++the incompatible flag as needed.
+ .B rewrite
+ copies the current UUID from the primary superblock
+ to all secondary copies of the superblock.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 11e9f4b..cc18858 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2653,6 +2653,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	sbp->sb_rextents = rtextents;
+ 	platform_uuid_generate(&uuid);
+ 	platform_uuid_copy(&sbp->sb_uuid, &uuid);
++	/* Only in memory; libxfs expects this as if read from disk */
++	platform_uuid_copy(&sbp->sb_meta_uuid, &uuid);
+ 	sbp->sb_logstart = logstart;
+ 	sbp->sb_rootino = sbp->sb_rbmino = sbp->sb_rsumino = NULLFSINO;
+ 	sbp->sb_rextsize = rtextblocks;
+diff --git a/repair/agheader.c b/repair/agheader.c
+index a216afa..2b79a11 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -112,7 +112,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return retval;
+ 
+-	if (platform_uuid_compare(&agf->agf_uuid, &mp->m_sb.sb_uuid)) {
++	if (platform_uuid_compare(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid)) {
+ 		char uu[64];
+ 
+ 		retval = XR_AG_AGF;
+@@ -120,7 +120,8 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
+ 		do_warn(_("bad uuid %s for agf %d\n"), uu, i);
+ 
+ 		if (!no_modify)
+-			platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
++			platform_uuid_copy(&agf->agf_uuid,
++					   &mp->m_sb.sb_meta_uuid);
+ 	}
+ 	return retval;
+ }
+@@ -190,7 +191,7 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t agno)
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return retval;
+ 
+-	if (platform_uuid_compare(&agi->agi_uuid, &mp->m_sb.sb_uuid)) {
++	if (platform_uuid_compare(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid)) {
+ 		char uu[64];
+ 
+ 		retval = XR_AG_AGI;
+@@ -198,7 +199,8 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t agno)
+ 		do_warn(_("bad uuid %s for agi %d\n"), uu, agno);
+ 
+ 		if (!no_modify)
+-			platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
++			platform_uuid_copy(&agi->agi_uuid,
++					   &mp->m_sb.sb_meta_uuid);
+ 	}
+ 
+ 	return retval;
+@@ -245,7 +247,7 @@ compare_sb(xfs_mount_t *mp, xfs_sb_t *sb)
+  * superblocks, not just the secondary superblocks.
+  */
+ static int
+-secondary_sb_wack(
++secondary_sb_whack(
+ 	struct xfs_mount *mp,
+ 	struct xfs_buf	*sbuf,
+ 	struct xfs_sb	*sb,
+@@ -267,7 +269,10 @@ secondary_sb_wack(
+ 	 *
+ 	 * size is the size of data which is valid for this sb.
+ 	 */
+-	if (xfs_sb_version_hascrc(sb))
++	if (xfs_sb_version_hasmetauuid(sb))
++		size = offsetof(xfs_sb_t, sb_meta_uuid)
++			+ sizeof(sb->sb_meta_uuid);
++	else if (xfs_sb_version_hascrc(sb))
+ 		size = offsetof(xfs_sb_t, sb_lsn)
+ 			+ sizeof(sb->sb_lsn);
+ 	else if (xfs_sb_version_hasmorebits(sb))
+@@ -511,7 +516,7 @@ verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
+ 		rval |= XR_AG_SB;
+ 	}
+ 
+-	rval |= secondary_sb_wack(mp, sbuf, sb, i);
++	rval |= secondary_sb_whack(mp, sbuf, sb, i);
+ 
+ 	rval |= verify_set_agf(mp, agf, i);
+ 	rval |= verify_set_agi(mp, agi, i);
+diff --git a/repair/agheader.h b/repair/agheader.h
+index 5541fb9..6b2974c 100644
+--- a/repair/agheader.h
++++ b/repair/agheader.h
+@@ -24,7 +24,6 @@ typedef struct fs_geometry  {
+ 	xfs_rfsblock_t	sb_dblocks;	/* # data blocks */
+ 	xfs_rfsblock_t	sb_rblocks;	/* # realtime blocks */
+ 	xfs_rtblock_t	sb_rextents;	/* # realtime extents */
+-	uuid_t		sb_uuid;	/* fs uuid */
+ 	xfs_fsblock_t	sb_logstart;	/* starting log block # */
+ 	xfs_agblock_t	sb_rextsize;	/* realtime extent size (blocks )*/
+ 	xfs_agblock_t	sb_agblocks;	/* # of blocks per ag */
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 09db966..81deb7b 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -207,9 +207,9 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_ino = cpu_to_be64(ino_num);
+ 	}
+ 
+-	if (platform_uuid_compare(&dinoc->di_uuid, &mp->m_sb.sb_uuid)) {
++	if (platform_uuid_compare(&dinoc->di_uuid, &mp->m_sb.sb_meta_uuid)) {
+ 		__dirty_no_modify_ret(dirty);
+-		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_meta_uuid);
+ 	}
+ 
+ 	for (i = 0; i < sizeof(dinoc->di_pad2)/sizeof(dinoc->di_pad2[0]); i++) {
+@@ -2287,7 +2287,8 @@ _("inode identifier %llu mismatch on inode %" PRIu64 "\n"),
+ 				return 1;
+ 			goto clear_bad_out;
+ 		}
+-		if (platform_uuid_compare(&dino->di_uuid, &mp->m_sb.sb_uuid)) {
++		if (platform_uuid_compare(&dino->di_uuid,
++					  &mp->m_sb.sb_meta_uuid)) {
+ 			if (!uncertain)
+ 				do_warn(
+ 			_("UUID mismatch on inode %" PRIu64 "\n"), lino);
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 9b3d73b..2771f65 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -1128,7 +1128,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 		agi->agi_unlinked[i] = cpu_to_be32(NULLAGINO);
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+ 
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+ 		agi->agi_free_root = cpu_to_be32(finobt_curs->root);
+@@ -1406,7 +1406,7 @@ build_agf_agfl(xfs_mount_t	*mp,
+ #endif
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
+ 
+ 	/* initialise the AGFL, then fill it if there are blocks left over. */
+ 	agfl_buf = libxfs_getbuf(mp->m_dev,
+@@ -1420,7 +1420,7 @@ build_agf_agfl(xfs_mount_t	*mp,
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+ 		agfl->agfl_seqno = cpu_to_be32(agno);
+-		platform_uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+ 		for (i = 0; i < XFS_AGFL_SIZE(mp); i++)
+ 			agfl->agfl_bno[i] = cpu_to_be32(NULLAGBLOCK);
+ 	}
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 9a5cba7..de445c6 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -527,7 +527,7 @@ mk_rbmino(xfs_mount_t *mp)
+ 		ip->i_d.di_flags2 = 0;
+ 		ip->i_d.di_ino = mp->m_sb.sb_rbmino;
+ 		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+-		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid);
+ 		times |= XFS_ICHGTIME_CREATE;
+ 	}
+ 	libxfs_trans_ichgtime(tp, ip, times);
+@@ -783,7 +783,7 @@ mk_rsumino(xfs_mount_t *mp)
+ 		ip->i_d.di_flags2 = 0;
+ 		ip->i_d.di_ino = mp->m_sb.sb_rsumino;
+ 		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+-		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid);
+ 		times |= XFS_ICHGTIME_CREATE;
+ 	}
+ 	libxfs_trans_ichgtime(tp, ip, times);
+@@ -897,7 +897,7 @@ mk_root_dir(xfs_mount_t *mp)
+ 		ip->i_d.di_flags2 = 0;
+ 		ip->i_d.di_ino = mp->m_sb.sb_rootino;
+ 		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+-		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
++		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid);
+ 		times |= XFS_ICHGTIME_CREATE;
+ 	}
+ 	libxfs_trans_ichgtime(tp, ip, times);
+
+
 
 
 _______________________________________________
