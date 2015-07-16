@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 38DF27F8B
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 11:13:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A37F7AC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 09:13:41 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mbMoJYweSrnACkFt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Jul 2015 09:13:40 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 22F47358A14
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 16:13:40 +0000 (UTC)
-Received: from jtulak-t430.brq.redhat.com (jtulak.brq.redhat.com [10.34.1.5])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id t6GGDdrB003233
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 12:13:39 -0400
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2] xfsprogs: Search path for utilities unified
-Date: Thu, 16 Jul 2015 18:13:38 +0200
-Message-Id: <1437063218-26143-1-git-send-email-jtulak@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4698A7F8C
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 13:20:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D5F8DAC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 11:20:33 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id MvS9aUnY4EVAVkqs for <xfs@oss.sgi.com>;
+	Thu, 16 Jul 2015 11:20:31 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 103DF63CBCF9
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 13:20:31 -0500 (CDT)
+Message-ID: <55A7F5EE.5000500@sandeen.net>
+Date: Thu, 16 Jul 2015 13:20:30 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] xfs_copy: fix up initial sb buffer read on CRC fs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,101 +26,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-UPDATE: Fixed commit message
--------------
+My prior commit, aaf90a2 xfs_copy: fix copy of hard 4k devices
+causes xfs_copy to emit a CRC error warning when copying a
+CRC filesystem.
 
-Currently, when autoconf is checking for an utility, every utility has
-its own pathes defined independently. Unify it in a single variable
-used for (almost) all utilities.
+This is because we are now reading the maximum sector size,
+and attempting to verify the CRC based on that (likely incorrect)
+length.
 
-Also, add /opt/local/bin to the path.
+In xfs_db, we currently just don't verify this read, so it's
+not a problem.  In xfs_copy, we almost certainly want to verify.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+So, first do the maximal read with no verifier; once it's read,
+drop that buffer, and re-read with the proper sector size and
+verifier.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- m4/package_utilies.m4 | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/m4/package_utilies.m4 b/m4/package_utilies.m4
-index 475ce0b..49f4dfb 100644
---- a/m4/package_utilies.m4
-+++ b/m4/package_utilies.m4
-@@ -1,3 +1,6 @@
-+# Path to search an utility
-+PATH=/bin:/usr/bin:/usr/local/bin:/usr/freeware/bin:/opt/local/bin
-+
- #
- # Check for specified utility (env var) - if unset, fail.
- #
-@@ -40,22 +43,22 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
-     AC_PACKAGE_NEED_UTILITY($1, "$cc", cc, [C compiler])
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 44a32e8..fd96e15 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -654,11 +654,17 @@ main(int argc, char **argv)
  
-     if test -z "$MAKE"; then
--        AC_PATH_PROG(MAKE, gmake,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
-+        AC_PATH_PROG(MAKE, gmake,, $PATH)
-     fi
-     if test -z "$MAKE"; then
--        AC_PATH_PROG(MAKE, make,, /usr/bin)
-+        AC_PATH_PROG(MAKE, make,, $PATH)
-     fi
-     make=$MAKE
-     AC_SUBST(make)
-     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
+ 	memset(&mbuf, 0, sizeof(xfs_mount_t));
+ 	libxfs_buftarg_init(&mbuf, xargs.ddev, xargs.logdev, xargs.rtdev);
++	/* We don't yet know the sector size, so read maximal size */
+ 	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
+-			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT),
+-			     0, &xfs_sb_buf_ops);
++			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+ 	sb = &mbuf.m_sb;
+ 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
++	/* Do it again, now with proper length and verifier */
++	libxfs_putbuf(sbp);
++	libxfs_purgebuf(sbp);
++	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
++			     1 << (sb->sb_sectlog - BBSHIFT),
++			     0, &xfs_sb_buf_ops);
  
-     if test -z "$TAR"; then
--        AC_PATH_PROG(TAR, tar,, /usr/freeware/bin:/bin:/usr/local/bin:/usr/bin)
-+        AC_PATH_PROG(TAR, tar,, $PATH)
-     fi
-     tar=$TAR
-     AC_SUBST(tar)
-     if test -z "$ZIP"; then
--        AC_PATH_PROG(ZIP, gzip,, /bin:/usr/bin:/usr/local/bin:/usr/freeware/bin)
-+        AC_PATH_PROG(ZIP, gzip,, $PATH)
-     fi
- 
-     zip=$ZIP
-@@ -97,21 +100,21 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
- 
-     if test "$enable_gettext" = yes; then
-         if test -z "$MSGFMT"; then
--                AC_PATH_PROG(MSGFMT, msgfmt,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
-+                AC_PATH_PROG(MSGFMT, msgfmt,, $PATH)
-         fi
-         msgfmt=$MSGFMT
-         AC_SUBST(msgfmt)
-         AC_PACKAGE_NEED_UTILITY($1, "$msgfmt", msgfmt, gettext)
- 
-         if test -z "$MSGMERGE"; then
--                AC_PATH_PROG(MSGMERGE, msgmerge,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
-+                AC_PATH_PROG(MSGMERGE, msgmerge,, $PATH)
-         fi
-         msgmerge=$MSGMERGE
-         AC_SUBST(msgmerge)
-         AC_PACKAGE_NEED_UTILITY($1, "$msgmerge", msgmerge, gettext)
- 
-         if test -z "$XGETTEXT"; then
--                AC_PATH_PROG(XGETTEXT, xgettext,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
-+                AC_PATH_PROG(XGETTEXT, xgettext,, $PATH)
-         fi
-         xgettext=$XGETTEXT
-         AC_SUBST(xgettext)
-@@ -119,7 +122,7 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
-     fi
- 
-     if test -z "$RPM"; then
--        AC_PATH_PROG(RPM, rpm,, /bin:/usr/bin:/usr/freeware/bin)
-+        AC_PATH_PROG(RPM, rpm,, $PATH)
-     fi
-     rpm=$RPM
-     AC_SUBST(rpm)
--- 
-2.4.3
+ 	/*
+ 	 * For now, V5 superblock filesystems are not supported without -d;
 
 _______________________________________________
 xfs mailing list
