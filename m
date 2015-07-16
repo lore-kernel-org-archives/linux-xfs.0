@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E63CC7F8B
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 11:10:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A43698F8049
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 09:10:18 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 38DF27F8B
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 11:13:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A37F7AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 09:13:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XEUB9MJrMiuuATMA (version=TLSv1
+	cuda.sgi.com with ESMTP id mbMoJYweSrnACkFt (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Jul 2015 09:10:17 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id F08358EA53
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 16:10:16 +0000 (UTC)
+	Thu, 16 Jul 2015 09:13:40 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 22F47358A14
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 16:13:40 +0000 (UTC)
 Received: from jtulak-t430.brq.redhat.com (jtulak.brq.redhat.com [10.34.1.5])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id t6GGAFCH012010
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 12:10:16 -0400
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id t6GGDdrB003233
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2015 12:13:39 -0400
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH] xfsprogs: Search path for utilities unified
-Date: Thu, 16 Jul 2015 18:10:15 +0200
-Message-Id: <1437063015-25665-1-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
+Subject: [PATCH v2] xfsprogs: Search path for utilities unified
+Date: Thu, 16 Jul 2015 18:13:38 +0200
+Message-Id: <1437063218-26143-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,61 +29,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Q3VycmVudGx5LCB3aGVuIGF1dG9jb25mIGlzIGNoZWNraW5nIGZvciBhbiB1dGlsaXR5LCBldmVy
-eSB1dGlsaXR5IGhhcwppdHMgb3duIHBhdGhlcyBkZWZpbmVkIGluZGVwZW5kZW50bHkuIFVuaWZ5
-IGl0IGluIGEgc2luZ2xlIHZhcmlhYmxl4pCjCnVzZWQgZm9yIChhbG1vc3QpIGFsbCB1dGlsaXRp
-ZXMuCgpBbHNvLCBhZGQgL29wdC9sb2NhbC9iaW4gdG8gdGhlIHBhdGguCgpTaWduZWQtb2ZmLWJ5
-OiBKYW4gVHVsYWsgPGp0dWxha0ByZWRoYXQuY29tPgotLS0KIG00L3BhY2thZ2VfdXRpbGllcy5t
-NCB8IDE5ICsrKysrKysrKysrLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxMSBpbnNlcnRpb25z
-KCspLCA4IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL200L3BhY2thZ2VfdXRpbGllcy5tNCBi
-L200L3BhY2thZ2VfdXRpbGllcy5tNAppbmRleCA0NzVjZTBiLi40OWY0ZGZiIDEwMDY0NAotLS0g
-YS9tNC9wYWNrYWdlX3V0aWxpZXMubTQKKysrIGIvbTQvcGFja2FnZV91dGlsaWVzLm00CkBAIC0x
-LDMgKzEsNiBAQAorIyBQYXRoIHRvIHNlYXJjaCBhbiB1dGlsaXR5CitQQVRIPS9iaW46L3Vzci9i
-aW46L3Vzci9sb2NhbC9iaW46L3Vzci9mcmVld2FyZS9iaW46L29wdC9sb2NhbC9iaW4KKwogIwog
-IyBDaGVjayBmb3Igc3BlY2lmaWVkIHV0aWxpdHkgKGVudiB2YXIpIC0gaWYgdW5zZXQsIGZhaWwu
-CiAjCkBAIC00MCwyMiArNDMsMjIgQEAgQUNfREVGVU4oW0FDX1BBQ0tBR0VfVVRJTElUSUVTXSwK
-ICAgICBBQ19QQUNLQUdFX05FRURfVVRJTElUWSgkMSwgIiRjYyIsIGNjLCBbQyBjb21waWxlcl0p
-CiAKICAgICBpZiB0ZXN0IC16ICIkTUFLRSI7IHRoZW4KLSAgICAgICAgQUNfUEFUSF9QUk9HKE1B
-S0UsIGdtYWtlLCwgL3Vzci9iaW46L3Vzci9sb2NhbC9iaW46L3Vzci9mcmVld2FyZS9iaW4pCisg
-ICAgICAgIEFDX1BBVEhfUFJPRyhNQUtFLCBnbWFrZSwsICRQQVRIKQogICAgIGZpCiAgICAgaWYg
-dGVzdCAteiAiJE1BS0UiOyB0aGVuCi0gICAgICAgIEFDX1BBVEhfUFJPRyhNQUtFLCBtYWtlLCwg
-L3Vzci9iaW4pCisgICAgICAgIEFDX1BBVEhfUFJPRyhNQUtFLCBtYWtlLCwgJFBBVEgpCiAgICAg
-ZmkKICAgICBtYWtlPSRNQUtFCiAgICAgQUNfU1VCU1QobWFrZSkKICAgICBBQ19QQUNLQUdFX05F
-RURfVVRJTElUWSgkMSwgIiRtYWtlIiwgbWFrZSwgW0dOVSBtYWtlXSkKIAogICAgIGlmIHRlc3Qg
-LXogIiRUQVIiOyB0aGVuCi0gICAgICAgIEFDX1BBVEhfUFJPRyhUQVIsIHRhciwsIC91c3IvZnJl
-ZXdhcmUvYmluOi9iaW46L3Vzci9sb2NhbC9iaW46L3Vzci9iaW4pCisgICAgICAgIEFDX1BBVEhf
-UFJPRyhUQVIsIHRhciwsICRQQVRIKQogICAgIGZpCiAgICAgdGFyPSRUQVIKICAgICBBQ19TVUJT
-VCh0YXIpCiAgICAgaWYgdGVzdCAteiAiJFpJUCI7IHRoZW4KLSAgICAgICAgQUNfUEFUSF9QUk9H
-KFpJUCwgZ3ppcCwsIC9iaW46L3Vzci9iaW46L3Vzci9sb2NhbC9iaW46L3Vzci9mcmVld2FyZS9i
-aW4pCisgICAgICAgIEFDX1BBVEhfUFJPRyhaSVAsIGd6aXAsLCAkUEFUSCkKICAgICBmaQogCiAg
-ICAgemlwPSRaSVAKQEAgLTk3LDIxICsxMDAsMjEgQEAgQUNfREVGVU4oW0FDX1BBQ0tBR0VfVVRJ
-TElUSUVTXSwKIAogICAgIGlmIHRlc3QgIiRlbmFibGVfZ2V0dGV4dCIgPSB5ZXM7IHRoZW4KICAg
-ICAgICAgaWYgdGVzdCAteiAiJE1TR0ZNVCI7IHRoZW4KLSAgICAgICAgICAgICAgICBBQ19QQVRI
-X1BST0coTVNHRk1ULCBtc2dmbXQsLCAvdXNyL2JpbjovdXNyL2xvY2FsL2JpbjovdXNyL2ZyZWV3
-YXJlL2JpbikKKyAgICAgICAgICAgICAgICBBQ19QQVRIX1BST0coTVNHRk1ULCBtc2dmbXQsLCAk
-UEFUSCkKICAgICAgICAgZmkKICAgICAgICAgbXNnZm10PSRNU0dGTVQKICAgICAgICAgQUNfU1VC
-U1QobXNnZm10KQogICAgICAgICBBQ19QQUNLQUdFX05FRURfVVRJTElUWSgkMSwgIiRtc2dmbXQi
-LCBtc2dmbXQsIGdldHRleHQpCiAKICAgICAgICAgaWYgdGVzdCAteiAiJE1TR01FUkdFIjsgdGhl
-bgotICAgICAgICAgICAgICAgIEFDX1BBVEhfUFJPRyhNU0dNRVJHRSwgbXNnbWVyZ2UsLCAvdXNy
-L2JpbjovdXNyL2xvY2FsL2JpbjovdXNyL2ZyZWV3YXJlL2JpbikKKyAgICAgICAgICAgICAgICBB
-Q19QQVRIX1BST0coTVNHTUVSR0UsIG1zZ21lcmdlLCwgJFBBVEgpCiAgICAgICAgIGZpCiAgICAg
-ICAgIG1zZ21lcmdlPSRNU0dNRVJHRQogICAgICAgICBBQ19TVUJTVChtc2dtZXJnZSkKICAgICAg
-ICAgQUNfUEFDS0FHRV9ORUVEX1VUSUxJVFkoJDEsICIkbXNnbWVyZ2UiLCBtc2dtZXJnZSwgZ2V0
-dGV4dCkKIAogICAgICAgICBpZiB0ZXN0IC16ICIkWEdFVFRFWFQiOyB0aGVuCi0gICAgICAgICAg
-ICAgICAgQUNfUEFUSF9QUk9HKFhHRVRURVhULCB4Z2V0dGV4dCwsIC91c3IvYmluOi91c3IvbG9j
-YWwvYmluOi91c3IvZnJlZXdhcmUvYmluKQorICAgICAgICAgICAgICAgIEFDX1BBVEhfUFJPRyhY
-R0VUVEVYVCwgeGdldHRleHQsLCAkUEFUSCkKICAgICAgICAgZmkKICAgICAgICAgeGdldHRleHQ9
-JFhHRVRURVhUCiAgICAgICAgIEFDX1NVQlNUKHhnZXR0ZXh0KQpAQCAtMTE5LDcgKzEyMiw3IEBA
-IEFDX0RFRlVOKFtBQ19QQUNLQUdFX1VUSUxJVElFU10sCiAgICAgZmkKIAogICAgIGlmIHRlc3Qg
-LXogIiRSUE0iOyB0aGVuCi0gICAgICAgIEFDX1BBVEhfUFJPRyhSUE0sIHJwbSwsIC9iaW46L3Vz
-ci9iaW46L3Vzci9mcmVld2FyZS9iaW4pCisgICAgICAgIEFDX1BBVEhfUFJPRyhSUE0sIHJwbSws
-ICRQQVRIKQogICAgIGZpCiAgICAgcnBtPSRSUE0KICAgICBBQ19TVUJTVChycG0pCi0tIAoyLjQu
-MwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+UPDATE: Fixed commit message
+-------------
+
+Currently, when autoconf is checking for an utility, every utility has
+its own pathes defined independently. Unify it in a single variable
+used for (almost) all utilities.
+
+Also, add /opt/local/bin to the path.
+
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ m4/package_utilies.m4 | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/m4/package_utilies.m4 b/m4/package_utilies.m4
+index 475ce0b..49f4dfb 100644
+--- a/m4/package_utilies.m4
++++ b/m4/package_utilies.m4
+@@ -1,3 +1,6 @@
++# Path to search an utility
++PATH=/bin:/usr/bin:/usr/local/bin:/usr/freeware/bin:/opt/local/bin
++
+ #
+ # Check for specified utility (env var) - if unset, fail.
+ #
+@@ -40,22 +43,22 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
+     AC_PACKAGE_NEED_UTILITY($1, "$cc", cc, [C compiler])
+ 
+     if test -z "$MAKE"; then
+-        AC_PATH_PROG(MAKE, gmake,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
++        AC_PATH_PROG(MAKE, gmake,, $PATH)
+     fi
+     if test -z "$MAKE"; then
+-        AC_PATH_PROG(MAKE, make,, /usr/bin)
++        AC_PATH_PROG(MAKE, make,, $PATH)
+     fi
+     make=$MAKE
+     AC_SUBST(make)
+     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
+ 
+     if test -z "$TAR"; then
+-        AC_PATH_PROG(TAR, tar,, /usr/freeware/bin:/bin:/usr/local/bin:/usr/bin)
++        AC_PATH_PROG(TAR, tar,, $PATH)
+     fi
+     tar=$TAR
+     AC_SUBST(tar)
+     if test -z "$ZIP"; then
+-        AC_PATH_PROG(ZIP, gzip,, /bin:/usr/bin:/usr/local/bin:/usr/freeware/bin)
++        AC_PATH_PROG(ZIP, gzip,, $PATH)
+     fi
+ 
+     zip=$ZIP
+@@ -97,21 +100,21 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
+ 
+     if test "$enable_gettext" = yes; then
+         if test -z "$MSGFMT"; then
+-                AC_PATH_PROG(MSGFMT, msgfmt,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
++                AC_PATH_PROG(MSGFMT, msgfmt,, $PATH)
+         fi
+         msgfmt=$MSGFMT
+         AC_SUBST(msgfmt)
+         AC_PACKAGE_NEED_UTILITY($1, "$msgfmt", msgfmt, gettext)
+ 
+         if test -z "$MSGMERGE"; then
+-                AC_PATH_PROG(MSGMERGE, msgmerge,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
++                AC_PATH_PROG(MSGMERGE, msgmerge,, $PATH)
+         fi
+         msgmerge=$MSGMERGE
+         AC_SUBST(msgmerge)
+         AC_PACKAGE_NEED_UTILITY($1, "$msgmerge", msgmerge, gettext)
+ 
+         if test -z "$XGETTEXT"; then
+-                AC_PATH_PROG(XGETTEXT, xgettext,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
++                AC_PATH_PROG(XGETTEXT, xgettext,, $PATH)
+         fi
+         xgettext=$XGETTEXT
+         AC_SUBST(xgettext)
+@@ -119,7 +122,7 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
+     fi
+ 
+     if test -z "$RPM"; then
+-        AC_PATH_PROG(RPM, rpm,, /bin:/usr/bin:/usr/freeware/bin)
++        AC_PATH_PROG(RPM, rpm,, $PATH)
+     fi
+     rpm=$RPM
+     AC_SUBST(rpm)
+-- 
+2.4.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
