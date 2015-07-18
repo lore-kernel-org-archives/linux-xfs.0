@@ -1,36 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A43E87F5F
-	for <xfs@oss.sgi.com>; Fri, 17 Jul 2015 14:39:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 05AE6AC001
-	for <xfs@oss.sgi.com>; Fri, 17 Jul 2015 12:39:16 -0700 (PDT)
-Received: from mail-wi0-f178.google.com (mail-wi0-f178.google.com
-	[209.85.212.178]) by cuda.sgi.com with ESMTP id
-	QdjU9ZgYZiFzubSg (version=TLSv1 cipher=RC4-SHA bits=128
+	by oss.sgi.com (Postfix) with ESMTP id AA61B7F63
+	for <xfs@oss.sgi.com>; Fri, 17 Jul 2015 20:47:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 486DCAC001
+	for <xfs@oss.sgi.com>; Fri, 17 Jul 2015 18:47:02 -0700 (PDT)
+Received: from mail1.bemta7.messagelabs.com (mail1.bemta7.messagelabs.com
+	[216.82.254.111]) by cuda.sgi.com with ESMTP id
+	b5lhE3CQIFv9ACaS (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Jul 2015 12:39:12 -0700 (PDT)
-Received: by wibud3 with SMTP id ud3so50685533wib.0
-	for <xfs@oss.sgi.com>; Fri, 17 Jul 2015 12:39:11 -0700 (PDT)
+	Fri, 17 Jul 2015 18:47:00 -0700 (PDT)
+From: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>
+Subject: XFS File system in trouble
+Date: Sat, 18 Jul 2015 01:46:56 +0000
+Message-ID: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
+Content-Language: en-US
 MIME-Version: 1.0
-In-Reply-To: <CA++_uhvDrO2BmQ+q0bN=M_L-vUUaLZO9bHoKh0ntFveM5t-DNQ@mail.gmail.com>
-References: <5582DCDA.9070200@sandeen.net>
-	<CA++_uhuFL0DhwH3ENBHmFmzmBm5SGx45P9tqVTEdj-bCsHBSVA@mail.gmail.com>
-	<20150709125119.GC63282@bfoster.bfoster>
-	<CA++_uhuoQ76uOUikbetw5ocfHDGAFMERcbgX9R4Shha2GUxWmQ@mail.gmail.com>
-	<20150709151811.GE63282@bfoster.bfoster>
-	<CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
-	<20150709183255.GG63282@bfoster.bfoster>
-	<CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
-	<20150713125214.GA50787@bfoster.bfoster>
-	<CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
-	<20150713170158.GB50787@bfoster.bfoster>
-	<CA++_uhvDrO2BmQ+q0bN=M_L-vUUaLZO9bHoKh0ntFveM5t-DNQ@mail.gmail.com>
-Date: Sat, 18 Jul 2015 03:39:10 +0800
-Message-ID: <CA++_uhuJNkO4MDyS_+veFpysGyqzhqLspB3g73DtUCQqK1F80Q@mail.gmail.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-From: Kuo Hugo <tonytkdk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,1057 +24,181 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0814401067983345142=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, Darrell Bishop <darrell@swiftstack.com>, xfs@oss.sgi.com
+To: "'lrhorer@mygrande.net'" <lrhorer@mygrande.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============0814401067983345142==
-Content-Type: multipart/alternative; boundary=bcaec53f398590e7f5051b17574c
+	I have a 24T XFS file system that is very sick, and seemingly getting sicker.  I believe it to be the file system itself.  I have replaced the RAID chassis, the OS, the cables, the drive controller, and most of the drives. Re-syncing the 
+RAID array complete in a reasonable time, given the size of the array, and reports no mismatches.  Xfs_repair completes, usually with no errors found, or sometimes one or two errors.  Some commands, like a df, are now hanging.  Writes are often failing with I/O errors.  I haven't found any amount of obvious file corruption, but performing a CRC check using md5sum, md6sum, sha256sum, etc., come up with different values every time they are run on many large files.  What can I do to try to rectify this?
 
---bcaec53f398590e7f5051b17574c
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Kernel: 3.16.0-4-amd64
+Xfsprogs: 3.2.3
+8 CPUs
+/proc/meminfo:
+MemTotal:        8095952 kB
+MemFree:         7005032 kB
+MemAvailable:    7393072 kB
+Buffers:          201804 kB
+Cached:           310752 kB
+SwapCached:            0 kB
+Active:           637704 kB
+Inactive:         132232 kB
+Active(anon):     258320 kB
+Inactive(anon):     3888 kB
+Active(file):     379384 kB
+Inactive(file):   128344 kB
+Unevictable:           0 kB
+Mlocked:               4 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                40 kB
+Writeback:             0 kB
+AnonPages:        257376 kB
+Mapped:           121392 kB
+Shmem:              4824 kB
+Slab:             141708 kB
+SReclaimable:      98512 kB
+SUnreclaim:        43196 kB
+KernelStack:        5072 kB
+PageTables:        18832 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     4047976 kB
+Committed_AS:    1189596 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      366160 kB
+VmallocChunk:   34359349248 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:       88660 kB
+DirectMap2M:     4003840 kB
+DirectMap1G:     4194304 kB
 
-Hi all,
+/proc/mounts:
+rootfs / rootfs rw 0 0
+sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+udev /dev devtmpfs rw,relatime,size=10240k,nr_inodes=1001559,mode=755 0 0
+devpts /dev/pts devpts rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+tmpfs /run tmpfs rw,nosuid,noexec,relatime,size=809596k,mode=755 0 0
+/dev/sdd2 / ext4 rw,noatime,errors=remount-ro,data=ordered 0 0
+tmpfs /run/lock tmpfs rw,nosuid,nodev,noexec,relatime,size=5120k 0 0
+pstore /sys/fs/pstore pstore rw,relatime 0 0
+tmpfs /run/shm tmpfs rw,nosuid,nodev,noexec,relatime,size=1619180k 0 0
+fusectl /sys/fs/fuse/connections fusectl rw,relatime 0 0
+/dev/sdd1 /boot ext2 rw,noatime 0 0
+tmpfs /var/www/vidmgr/artwork tmpfs rw,relatime,size=16384k 0 0
+/dev/md2 /OldDrive ext4 rw,relatime,data=ordered 0 0
+rpc_pipefs /run/rpc_pipefs rpc_pipefs rw,relatime 0 0
+Backup:/var/www /var/www/backup nfs rw,relatime,vers=3,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.1.51,mountvers=3,mountport=49438,mountproto=tcp,local_lock=none,addr=192.168.1.51 0 0
+cgroup /sys/fs/cgroup tmpfs rw,relatime,size=12k 0 0
+cgmfs /run/cgmanager/fs tmpfs rw,relatime,size=100k,mode=755 0 0
+nfsd /proc/fs/nfsd nfsd rw,relatime 0 0
+systemd /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,release_agent=/usr/lib/x86_64-linux-gnu/systemd-shim-cgroup-release-agent,name=systemd 0 0
+tmpfs /run/user/0 tmpfs rw,nosuid,nodev,relatime,size=809596k,mode=700 0 0
+Backup:/Backup /Backup nfs rw,relatime,vers=3,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.1.51,mountvers=3,mountport=57420,mountproto=tcp,local_lock=none,addr=192.168.1.51 0 0
+/dev/md0 /RAID xfs rw,relatime,attr2,inode64,sunit=2048,swidth=12288,noquota 0 0
 
-We may hit this bug in OpenStack Swift  :
-Race condition quarantines valid objects
-https://bugs.launchpad.net/swift/+bug/1451520
+/proc/partitions:
+major minor  #blocks  name
 
-This race condition may cause the problem which Brain mentioned previously.
-OpenStack community fixed this in Swift's code. Should it be a kernel bug
-of XFS too  ?
+   8        0  125034840 sda
+   8        1      96256 sda1
+   8        2  112305152 sda2
+   8        3   12632064 sda3
+   8       16  125034840 sdb
+   8       17      96256 sdb1
+   8       18  112305152 sdb2
+   8       19   12632064 sdb3
+   8       32 3907018584 sdc
+   9        1      96128 md1
+   9        3   12623872 md3
+   9        2  112239616 md2
+  11        0    1048575 sr0
+   8       48  488386584 sdd
+   8       49      96256 sdd1
+   8       50  112305152 sdd2
+   8       51   12632064 sdd3
+   9        0 23441319936 md0
+   8       64 4883770584 sde
+   8       80 4883770584 sdf
+   8       96 3907018584 sdg
+   8      112 4883770584 sdh
+   8      128 4883770584 sdi
+   8      144 3907018584 sdj
+   8      160 3907018584 sdk
 
-Thanks for all your efforts.
-Hugo
+mdadm -D /dev/md0:
+/dev/md0:
+        Version : 1.2
+  Creation Time : Fri Oct  3 20:06:55 2014
+     Raid Level : raid6
+     Array Size : 23441319936 (22355.39 GiB 24003.91 GB)
+  Used Dev Size : 3906886656 (3725.90 GiB 4000.65 GB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
 
+  Intent Bitmap : Internal
 
-2015-07-14 2:10 GMT+08:00 Kuo Hugo <tonytkdk@gmail.com>:
+    Update Time : Fri Jul 17 19:47:45 2015
+          State : clean 
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
 
-> Hi Brain,
->
-> The sdb is mounted on /srv/node/d224 on this server. That's one of three
-> disks that the process was making I/O on it.
-> Those openfiles on /srv/node/d224 were made by the process to
-> storing/deleting data at that moment while the kernel panic appeared.
->
-> ```
-> 36 ffff8808703ed6c0 ffff88086fd65540 ffff8805eb03ed88 REG
-> /srv/node/d205/quarantined/objects/cd1d68f515006d443a54ff4f658091bc-
-> a114bba1449b45238abf38dc741d7c27/1436254020.89801.ts 37 ffff8810718343c0
-> ffff88105b9d32c0 ffff8808745aa5e8 REG [eventpoll] 38 ffff8808713da780
-> ffff880010c9a900 ffff88096368a188 REG /srv/node/d224/quarantined/objects/
-> b146865bf8034bfc42570b747c341b32/1436266042.57775.ts 39 ffff880871cb03c0
-> ffff880495a8b380 ffff8808a5e6c988 REG /srv/node/d224/tmp/tmpSpnrHg 40
-> ffff8808715b4540 ffff8804819c58c0 ffff8802381f8d88 DIR
-> /srv/node/d224/quarantined/objects/b146865bf8034bfc42570b747c341b32
-> ```
->
-> I'll check the dir location of the inode number.
->
-> Nice information.
->
-> Thanks // Hugo
->
-> 2015-07-14 1:01 GMT+08:00 Brian Foster <bfoster@redhat.com>:
->
->> On Mon, Jul 13, 2015 at 10:06:39PM +0800, Kuo Hugo wrote:
->> > Hi Brain,
->> >
->> > Sorry for the wrong file in previous message. I believe this the right
->> one.
->> >
->> > https://cloud.swiftstack.com/v1/AUTH_hugo/public/xfs.ko.debug
->> >
->> >
->> /usr/lib/debug/lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xfs.=
-ko.debug
->> >
->> > MD5 : 27829c9c55f4f5b095d29a7de7c27254
->> >
->>
->> Yes, that works. I have a few bits of information so far, but nothing
->> obvious to me as to what caused the problem. Some info:
->>
->> - The crash is indeed at xfs_dir2_sf_get_inumber():
->>
->> /usr/src/debug/kernel-2.6.32-504.23.4.el6/linux-2.6.32-504.23.4.el6.x86_=
-64/fs/xfs/xfs_dir2_sf.h:
->> 101
->> 0xffffffffa0362d60 <xfs_dir2_sf_getdents+672>:  cmpb   $0x0,0x1(%r12)
->> ...
->>
->> - %r12 above has a value of 0 and is set as follows:
->>
->> /usr/src/debug/kernel-2.6.32-504.23.4.el6/linux-2.6.32-504.23.4.el6.x86_=
-64/fs/xfs/xfs_dir2_sf.c:
->> 727
->> 0xffffffffa0362b11 <xfs_dir2_sf_getdents+81>:   mov    0x50(%rdi),%r12
->>
->> ... which is the sfp pointer assignment in the getdents function:
->>
->>         sfp =3D (xfs_dir2_sf_t *)dp->i_df.if_u1.if_data;
->>
->> This implies a NULL if_data.
->>
->> - The backtrace lists a couple of inodes on the stack in this frame. I'm
->> not sure why, but one looks like a valid directory and the other looks
->> bogus. The valid inode has an inode number of 13668207561.
->>
->> - The fsname for this inode is "sdb."
->>
->> - The inode does appear to have a non-NULL if_data:
->>
->>     ...
->>     if_u1 =3D {
->>       if_extents =3D 0xffff88084feaf5c0,
->>       if_ext_irec =3D 0xffff88084feaf5c0,
->>       if_data =3D 0xffff88084feaf5c0 "\004"
->>     },
->>     ...
->>
->> So it's not totally clear what's going on there. It might be interesting
->> to see what directory this refers to, if it still exists on the sdb fs.
->> For example, is it an external directory or some kind of internal
->> directory created by the application? You could use something like the
->> following to try and locate the directory based on inode number:
->>
->>         find <mntpath> -inum 13668207561
->>
->> Brian
->>
->> > Thanks // Hugo
->> > =E2=80=8B
->> >
->> > 2015-07-13 20:52 GMT+08:00 Brian Foster <bfoster@redhat.com>:
->> >
->> > > On Fri, Jul 10, 2015 at 01:36:41PM +0800, Kuo Hugo wrote:
->> > > > Hi Brain,
->> > > >
->> > > > Is this the file which you need ?
->> > > >
->> > > > https://cloud.swiftstack.com/v1/AUTH_hugo/public/xfs.ko
->> > > >
->> > > > $> modinfo xfs
->> > > >
->> > > > filename:
->> /lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xfs.ko
->> > > > license: GPL
->> > > > description: SGI XFS with ACLs, security attributes, large
->> block/inode
->> > > > numbers, no debug enabled
->> > > > author: Silicon Graphics, Inc.
->> > > > srcversion: 0C1B17926BDDA4F121479EE
->> > > > depends: exportfs
->> > > > vermagic: 2.6.32-504.23.4.el6.x86_64 SMP mod_unload modversion
->> > > >
->> > >
->> > > No, this isn't the debug version. We need the one from the debug
->> package
->> > > that was installed (/usr/lib/debug?).
->> > >
->> > > Brian
->> > >
->> > > > Thanks // Hugo
->> > > > =E2=80=8B
->> > > >
->> > > > 2015-07-10 2:32 GMT+08:00 Brian Foster <bfoster@redhat.com>:
->> > > >
->> > > > > On Fri, Jul 10, 2015 at 12:40:00AM +0800, Kuo Hugo wrote:
->> > > > > > Hi Brain,
->> > > > > >
->> > > > > > There you go.
->> > > > > >
->> > > > > > https://cloud.swiftstack.com/v1/AUTH_hugo/public/vmlinux
->> > > > > >
->> > > > >
->> > >
->> https://cloud.swiftstack.com/v1/AUTH_hugo/public/System.map-2.6.32-504.2=
-3.4.el6.x86_64
->> > > > > >
->> > > > > > $ md5sum vmlinux
->> > > > > > 82aaa694a174c0a29e78c05e73adf5d8  vmlinux
->> > > > > >
->> > > > > > Yes, I can read it with this vmlinux image. Put all files
->> > > > > > (vmcore,vmlinux,System.map) in a folder and run $crash vmlinux
->> vmcore
->> > > > > >
->> > > > >
->> > > > > Thanks, I can actually load that up now. Note that we'll probabl=
-y
->> need
->> > > > > the modules and whatnot (xfs.ko) also to be able to look at any
->> XFS
->> > > > > bits. It might be easiest to just tar up and compress whatever
->> > > directory
->> > > > > structure has the debug-enabled vmlinux and all the kernel
->> modules.
->> > > > > Thanks.
->> > > > >
->> > > > > Brian
->> > > > >
->> > > > > > Hugo
->> > > > > > =E2=80=8B
->> > > > > >
->> > > > > > 2015-07-09 23:18 GMT+08:00 Brian Foster <bfoster@redhat.com>:
->> > > > > >
->> > > > > > > On Thu, Jul 09, 2015 at 09:20:00PM +0800, Kuo Hugo wrote:
->> > > > > > > > Hi Brian,
->> > > > > > > >
->> > > > > > > > *Operating System Version:*
->> > > > > > > >
->> Linux-2.6.32-504.23.4.el6.x86_64-x86_64-with-centos-6.6-Final
->> > > > > > > >
->> > > > > > > > *NODE 1*
->> > > > > > > >
->> > > > > > > >
->> https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore
->> > > > > > > >
->> > > > >
->> https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.txt
->> > > > > > > >
->> > > > > > > >
->> > > > > > > > *NODE 2*
->> > > > > > > >
->> > > > > > > >
->> > > https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore_r2obj02
->> > > > > > > >
->> > > > > > >
->> > > > >
->> > >
->> https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg_r2obj=
-02.txt
->> > > > > > > >
->> > > > > > > >
->> > > > > > > > Any thoughts would be appreciate
->> > > > > > > >
->> > > > > > >
->> > > > > > > I'm not able to fire up crash with these core files and the
->> kernel
->> > > > > debug
->> > > > > > > info from the following centos kernel debuginfo package:
->> > > > > > >
->> > > > > > > kernel-debuginfo-2.6.32-504.23.4.el6.centos.plus.x86_64.rpm
->> > > > > > >
->> > > > > > > It complains about a version mismatch between the vmlinux an=
-d
->> core
->> > > > > file.
->> > > > > > > I'm no crash expert... are you sure the cores above
->> correspond to
->> > > this
->> > > > > > > kernel? Does crash load up for you on said box if you run
->> something
->> > > > > like
->> > > > > > > the following?
->> > > > > > >
->> > > > > > >         crash /usr/lib/debug/lib/modules/.../vmlinux vmcore
->> > > > > > >
->> > > > > > > Note that you might need to install the above kernel-debugin=
-fo
->> > > package
->> > > > > > > to get the debug (vmlinux) file. If so, could you also uploa=
-d
->> that
->> > > > > > > debuginfo rpm somewhere?
->> > > > > > >
->> > > > > > > Brian
->> > > > > > >
->> > > > > > > > Thanks // Hugo
->> > > > > > > >
->> > > > > > > >
->> > > > > > > > 2015-07-09 20:51 GMT+08:00 Brian Foster <bfoster@redhat.co=
-m
->> >:
->> > > > > > > >
->> > > > > > > > > On Thu, Jul 09, 2015 at 06:57:55PM +0800, Kuo Hugo wrote=
-:
->> > > > > > > > > > Hi Folks,
->> > > > > > > > > >
->> > > > > > > > > > As the results of 32 disks with xfs_repair -n seems no
->> any
->> > > error
->> > > > > > > shows
->> > > > > > > > > up.
->> > > > > > > > > > We currently tried to deploy CentOS 6.6 for testing.
->> (The
->> > > > > previous
->> > > > > > > kernel
->> > > > > > > > > > panic was came from Ubuntu).
->> > > > > > > > > > The CentOS nodes encountered kernel panic with same
->> daemon
->> > > but
->> > > > > the
->> > > > > > > > > problem
->> > > > > > > > > > may a bit differ.
->> > > > > > > > > >
->> > > > > > > > > >    - It was broken on
->> xfs_dir2_sf_get_parent_ino+0xa/0x20 in
->> > > > > Ubuntu.
->> > > > > > > > > >    - Here=E2=80=99s the log in CentOS. It=E2=80=99s br=
-oken on
->> > > > > > > > > >    xfs_dir2_sf_getdents+0x2a0/0x3a0
->> > > > > > > > > >
->> > > > > > > > >
->> > > > > > > > > I'd venture to guess it's the same behavior here. The
->> previous
->> > > > > kernel
->> > > > > > > > > had a callback for the parent inode number that was
->> called via
->> > > > > > > > > xfs_dir2_sf_getdents(). Taking a look at a 6.6 kernel, i=
-t
->> has a
->> > > > > static
->> > > > > > > > > inline here instead.
->> > > > > > > > >
->> > > > > > > > > > <1>BUG: unable to handle kernel NULL pointer
->> dereference at
->> > > > > > > > > 0000000000000001
->> > > > > > > > > > <1>IP: [<ffffffffa0362d60>]
->> xfs_dir2_sf_getdents+0x2a0/0x3a0
->> > > > > [xfs]
->> > > > > > > > > > <4>PGD 1072327067 PUD 1072328067 PMD 0
->> > > > > > > > > > <4>Oops: 0000 [#1] SMP
->> > > > > > > > > > <4>last sysfs file:
->> > > > > > > > > >
->> > > > > > > > >
->> > > > > > >
->> > > > >
->> > >
->> /sys/devices/pci0000:80/0000:80:03.2/0000:83:00.0/host10/port-10:1/expan=
-der-10:1/port-10:1:16/end_device-10:1:16/target10:0:25/10:0:25:0/block/sdz/=
-queue/rotational
->> > > > > > > > > > <4>CPU 17
->> > > > > > > > > > <4>Modules linked in: xt_conntrack tun xfs exportfs
->> > > > > iptable_filter
->> > > > > > > > > > ipt_REDIRECT iptable_nat nf_nat nf_conntrack_ipv4
->> > > nf_conntrack
->> > > > > > > > > > nf_defrag_ipv4 ip_tables ip_vs ipv6 libcrc32c iTCO_wdt
->> > > > > > > > > > iTCO_vendor_support ses enclosure igb i2c_algo_bit
->> sb_edac
->> > > > > edac_core
->> > > > > > > > > > i2c_i801 i2c_core sg shpchp lpc_ich mfd_core ixgbe dca
->> ptp
->> > > > > pps_core
->> > > > > > > > > > mdio power_meter acpi_ipmi ipmi_si ipmi_msghandler ext=
-4
->> jbd2
->> > > > > mbcache
->> > > > > > > > > > sd_mod crc_t10dif mpt3sas scsi_transport_sas raid_clas=
-s
->> > > xhci_hcd
->> > > > > ahci
->> > > > > > > > > > wmi dm_mirror dm_region_hash dm_log dm_mod [last
->> unloaded:
->> > > > > > > > > > scsi_wait_scan]
->> > > > > > > > > > <4>
->> > > > > > > > > > <4>Pid: 4454, comm: swift-object-se Not tainted
->> > > > > > > > > > 2.6.32-504.23.4.el6.x86_64 #1 Silicon Mechanics Storfo=
-rm
->> > > > > > > > > > R518.v5P/X10DRi-T4+
->> > > > > > > > > > <4>RIP: 0010:[<ffffffffa0362d60>]  [<ffffffffa0362d60>=
-]
->> > > > > > > > > > xfs_dir2_sf_getdents+0x2a0/0x3a0 [xfs]
->> > > > > > > > > > <4>RSP: 0018:ffff880871f6de18  EFLAGS: 00010202
->> > > > > > > > > > <4>RAX: 0000000000000000 RBX: 0000000000000004 RCX:
->> > > > > 0000000000000000
->> > > > > > > > > > <4>RDX: 0000000000000001 RSI: 0000000000000000 RDI:
->> > > > > 00007faa74006203
->> > > > > > > > > > <4>RBP: ffff880871f6de68 R08: 000000032eb04bc9 R09:
->> > > > > 0000000000000004
->> > > > > > > > > > <4>R10: 0000000000008030 R11: 0000000000000246 R12:
->> > > > > 0000000000000000
->> > > > > > > > > > <4>R13: 0000000000000002 R14: ffff88106eff7000 R15:
->> > > > > ffff8808715b4580
->> > > > > > > > > > <4>FS:  00007faa85425700(0000) GS:ffff880028360000(000=
-0)
->> > > > > > > > > knlGS:0000000000000000
->> > > > > > > > > > <4>CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> > > > > > > > > > <4>CR2: 0000000000000001 CR3: 0000001072325000 CR4:
->> > > > > 00000000001407e0
->> > > > > > > > > > <4>DR0: 0000000000000000 DR1: 0000000000000000 DR2:
->> > > > > 0000000000000000
->> > > > > > > > > > <4>DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
->> > > > > 0000000000000400
->> > > > > > > > > > <4>Process swift-object-se (pid: 4454, threadinfo
->> > > > > ffff880871f6c000,
->> > > > > > > > > > task ffff880860f18ab0)
->> > > > > > > > > > <4>Stack:
->> > > > > > > > > > <4> ffff880871f6de28 ffffffff811a4bb0 ffff880871f6df38
->> > > > > > > ffff880874749cc0
->> > > > > > > > > > <4><d> 0000000100000103 ffff8802381f8c00
->> ffff880871f6df38
->> > > > > > > > > ffff8808715b4580
->> > > > > > > > > > <4><d> 0000000000000082 ffff8802381f8d88
->> ffff880871f6dec8
->> > > > > > > > > ffffffffa035ab31
->> > > > > > > > > > <4>Call Trace:
->> > > > > > > > > > <4> [<ffffffff811a4bb0>] ? filldir+0x0/0xe0
->> > > > > > > > > > <4> [<ffffffffa035ab31>] xfs_readdir+0xe1/0x130 [xfs]
->> > > > > > > > > > <4> [<ffffffff811a4bb0>] ? filldir+0x0/0xe0
->> > > > > > > > > > <4> [<ffffffffa038fe29>] xfs_file_readdir+0x39/0x50
->> [xfs]
->> > > > > > > > > > <4> [<ffffffff811a4e30>] vfs_readdir+0xc0/0xe0
->> > > > > > > > > > <4> [<ffffffff8119bd86>] ? final_putname+0x26/0x50
->> > > > > > > > > > <4> [<ffffffff811a4fb9>] sys_getdents+0x89/0xf0
->> > > > > > > > > > <4> [<ffffffff8100b0f2>] system_call_fastpath+0x16/0x1=
-b
->> > > > > > > > > > <4>Code: 01 00 00 00 48 c7 c6 38 6b 3a a0 48 8b 7d c0
->> ff 55
->> > > b8
->> > > > > 85 c0
->> > > > > > > > > > 0f 85 af 00 00 00 49 8b 37 e9 ec fd ff ff 66 0f 1f 84
->> 00 00
->> > > 00
->> > > > > 00 00
->> > > > > > > > > > <41> 80 7c 24 01 00 0f 84 9c 00 00 00 45 0f b6 44 24 0=
-3
->> 41
->> > > 0f b6
->> > > > > > > > > > <1>RIP  [<ffffffffa0362d60>]
->> xfs_dir2_sf_getdents+0x2a0/0x3a0
->> > > > > [xfs]
->> > > > > > > > > > <4> RSP <ffff880871f6de18>
->> > > > > > > > > > <4>CR2: 0000000000000001
->> > > > > > > > > >
->> > > > > > > > > ...
->> > > > > > > > > >
->> > > > > > > > > > I=E2=80=99ve got the vmcore dump from operator. Does v=
-mcore
->> help for
->> > > > > > > > > > troubleshooting kind issue ?
->> > > > > > > > > >
->> > > > > > > > >
->> > > > > > > > > Hmm, well it couldn't hurt. Is the vmcore based on this
->> 6.6
->> > > > > kernel? Can
->> > > > > > > > > you provide the exact kernel version and post the vmcore
->> > > somewhere?
->> > > > > > > > >
->> > > > > > > > > Brian
->> > > > > > > > >
->> > > > > > > > > > Thanks // Hugo
->> > > > > > > > > > =E2=80=8B
->> > > > > > > > > >
->> > > > > > > > > > 2015-06-18 22:59 GMT+08:00 Eric Sandeen <
->> sandeen@sandeen.net
->> > > >:
->> > > > > > > > > >
->> > > > > > > > > > > On 6/18/15 9:29 AM, Kuo Hugo wrote:
->> > > > > > > > > > > >>- Have you tried an 'xfs_repair -n' of the affecte=
-d
->> > > > > filesystem?
->> > > > > > > Note
->> > > > > > > > > > > that -n will report problems only and prevent any
->> > > modification
->> > > > > by
->> > > > > > > > > repair.
->> > > > > > > > > > > >
->> > > > > > > > > > > > *We might to to xfs_repair if we can address which
->> disk
->> > > > > causes
->> > > > > > > the
->> > > > > > > > > > > issue. *
->> > > > > > > > > > >
->> > > > > > > > > > > If you do, please save the output, and if it finds
->> > > anything,
->> > > > > please
->> > > > > > > > > > > provide the output in this thread.
->> > > > > > > > > > >
->> > > > > > > > > > > Thanks,
->> > > > > > > > > > > -Eric
->> > > > > > > > > > >
->> > > > > > > > >
->> > > > > > > > > > _______________________________________________
->> > > > > > > > > > xfs mailing list
->> > > > > > > > > > xfs@oss.sgi.com
->> > > > > > > > > > http://oss.sgi.com/mailman/listinfo/xfs
->> > > > > > > > >
->> > > > > > > > >
->> > > > > > >
->> > > > >
->> > >
->> > > > _______________________________________________
->> > > > xfs mailing list
->> > > > xfs@oss.sgi.com
->> > > > http://oss.sgi.com/mailman/listinfo/xfs
->> > >
->> > >
->>
->
->
+         Layout : left-symmetric
+     Chunk Size : 1024K
 
---bcaec53f398590e7f5051b17574c
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+           Name : RAID-Server:0  (local to host RAID-Server)
+           UUID : d26e92db:8bd207bb:db9bec69:4117ed57
+         Events : 698300
 
-<div dir=3D"ltr">Hi all,=C2=A0<div><br></div><div>We may hit this bug in Op=
-enStack Swift =C2=A0:</div>Race condition quarantines valid objects <a href=
-=3D"https://bugs.launchpad.net/swift/+bug/1451520">https://bugs.launchpad.n=
-et/swift/+bug/1451520</a><div><br></div><div>This race condition may cause =
-the problem which Brain mentioned previously. OpenStack community fixed thi=
-s in Swift&#39;s code. Should it be a kernel bug of XFS too =C2=A0?=C2=A0</=
-div><div><br></div><div>Thanks for all your efforts.=C2=A0</div><div>Hugo</=
-div><div><br></div></div><div class=3D"gmail_extra"><br><div class=3D"gmail=
-_quote">2015-07-14 2:10 GMT+08:00 Kuo Hugo <span dir=3D"ltr">&lt;<a href=3D=
-"mailto:tonytkdk@gmail.com" target=3D"_blank">tonytkdk@gmail.com</a>&gt;</s=
-pan>:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;borde=
-r-left:1px #ccc solid;padding-left:1ex"><div dir=3D"ltr">Hi Brain,=C2=A0<di=
-v><br></div><div>The sdb is mounted on /srv/node/d224 on this server. That&=
-#39;s one of three disks that the process was making I/O on it.=C2=A0</div>=
-<div>Those openfiles on /srv/node/d224 were made by the process to storing/=
-deleting data at that moment while the kernel panic appeared.=C2=A0</div><d=
-iv><br></div><div>```</div><span class=3D""><div><span style=3D"font-family=
-:Consolas,Inconsolata,Courier,monospace;font-size:11.8999996185303px;line-h=
-eight:16.8000011444092px;white-space:pre-wrap;background-color:rgb(248,248,=
-248)"> 36 ffff8808703ed6c0 ffff88086fd65540 ffff8805eb03ed88 REG  /srv/node=
-/d205/quarantined/</span><span style=3D"font-family:Consolas,Inconsolata,Co=
-urier,monospace;font-size:11.8999996185303px;line-height:16.8000011444092px=
-;white-space:pre-wrap;background-color:rgb(248,248,248)">objects/</span><sp=
-an style=3D"font-family:Consolas,Inconsolata,Courier,monospace;font-size:11=
-.8999996185303px;line-height:16.8000011444092px;white-space:pre-wrap;backgr=
-ound-color:rgb(248,248,248)">cd1d68f515006d443a54ff4f658091</span><span sty=
-le=3D"font-family:Consolas,Inconsolata,Courier,monospace;font-size:11.89999=
-96185303px;line-height:16.8000011444092px;white-space:pre-wrap;background-c=
-olor:rgb(248,248,248)">bc-</span><span style=3D"font-family:Consolas,Incons=
-olata,Courier,monospace;font-size:11.8999996185303px;line-height:16.8000011=
-444092px;white-space:pre-wrap;background-color:rgb(248,248,248)">a114bba144=
-9b45238abf38dc741d7c</span><span style=3D"font-family:Consolas,Inconsolata,=
-Courier,monospace;font-size:11.8999996185303px;line-height:16.8000011444092=
-px;white-space:pre-wrap;background-color:rgb(248,248,248)">27/1436254020.89=
-801.ts
- 37 ffff8810718343c0 ffff88105b9d32c0 ffff8808745aa5e8 REG  [eventpoll]
- 38 ffff8808713da780 ffff880010c9a900 ffff88096368a188 REG  /srv/node/d224/=
-quarantined/</span><span style=3D"font-family:Consolas,Inconsolata,Courier,=
-monospace;font-size:11.8999996185303px;line-height:16.8000011444092px;white=
--space:pre-wrap;background-color:rgb(248,248,248)">objects/</span><span sty=
-le=3D"font-family:Consolas,Inconsolata,Courier,monospace;font-size:11.89999=
-96185303px;line-height:16.8000011444092px;white-space:pre-wrap;background-c=
-olor:rgb(248,248,248)">b146865bf8034bfc42570b747c341b</span><span style=3D"=
-font-family:Consolas,Inconsolata,Courier,monospace;font-size:11.89999961853=
-03px;line-height:16.8000011444092px;white-space:pre-wrap;background-color:r=
-gb(248,248,248)">32/1436266042.57775.ts
- 39 ffff880871cb03c0 ffff880495a8b380 ffff8808a5e6c988 REG  /srv/node/d224/=
-tmp/tmpSpnrHg
- 40 ffff8808715b4540 ffff8804819c58c0 ffff8802381f8d88 DIR  /srv/node/d224/=
-quarantined/</span><span style=3D"font-family:Consolas,Inconsolata,Courier,=
-monospace;font-size:11.8999996185303px;line-height:16.8000011444092px;white=
--space:pre-wrap;background-color:rgb(248,248,248)">objects/</span><span sty=
-le=3D"font-family:Consolas,Inconsolata,Courier,monospace;font-size:11.89999=
-96185303px;line-height:16.8000011444092px;white-space:pre-wrap;background-c=
-olor:rgb(248,248,248)">b146865bf8034bfc42570b747c341b</span><span style=3D"=
-font-family:Consolas,Inconsolata,Courier,monospace;font-size:11.89999961853=
-03px;line-height:16.8000011444092px;white-space:pre-wrap;background-color:r=
-gb(248,248,248)">32</span><br></div></span><div>```</div><div><br></div><di=
-v>I&#39;ll check the dir location of the inode number.=C2=A0</div><div><br>=
-</div><div>Nice information.=C2=A0</div><div><br></div><div>Thanks // Hugo=
-=C2=A0</div></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote"=
-><span class=3D"">2015-07-14 1:01 GMT+08:00 Brian Foster <span dir=3D"ltr">=
-&lt;<a href=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.=
-com</a>&gt;</span>:<br></span><blockquote class=3D"gmail_quote" style=3D"ma=
-rgin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D=
-""><span>On Mon, Jul 13, 2015 at 10:06:39PM +0800, Kuo Hugo wrote:<br>
-&gt; Hi Brain,<br>
-&gt;<br>
-</span></span><span><span class=3D"">&gt; Sorry for the wrong file in previ=
-ous message. I believe this the right one.<br>
-&gt;<br></span>
-&gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hugo/public/xfs.ko.deb=
-ug" rel=3D"noreferrer" target=3D"_blank">https://cloud.swiftstack.com/v1/AU=
-TH_hugo/public/xfs.ko.debug</a><br>
-&gt;<br>
-&gt; /usr/lib/debug/lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/xfs/xf=
-s.ko.debug<br>
-&gt;<br>
-&gt; MD5 : 27829c9c55f4f5b095d29a7de7c27254<br>
-&gt;<br>
-<br>
-</span><div><div class=3D"h5">Yes, that works. I have a few bits of informa=
-tion so far, but nothing<br>
-obvious to me as to what caused the problem. Some info:<br>
-<br>
-- The crash is indeed at xfs_dir2_sf_get_inumber():<br>
-<br>
-/usr/src/debug/kernel-2.6.32-504.23.4.el6/linux-2.6.32-504.23.4.el6.x86_64/=
-fs/xfs/xfs_dir2_sf.h: 101<br>
-0xffffffffa0362d60 &lt;xfs_dir2_sf_getdents+672&gt;:=C2=A0 cmpb=C2=A0 =C2=
-=A0$0x0,0x1(%r12)<br>
-...<br>
-<br>
-- %r12 above has a value of 0 and is set as follows:<br>
-<br>
-/usr/src/debug/kernel-2.6.32-504.23.4.el6/linux-2.6.32-504.23.4.el6.x86_64/=
-fs/xfs/xfs_dir2_sf.c: 727<br>
-0xffffffffa0362b11 &lt;xfs_dir2_sf_getdents+81&gt;:=C2=A0 =C2=A0mov=C2=A0 =
-=C2=A0 0x50(%rdi),%r12<br>
-<br>
-... which is the sfp pointer assignment in the getdents function:<br>
-<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 sfp =3D (xfs_dir2_sf_t *)dp-&gt;i_df.if_u1.if_d=
-ata;<br>
-<br>
-This implies a NULL if_data.<br>
-<br>
-- The backtrace lists a couple of inodes on the stack in this frame. I&#39;=
-m<br>
-not sure why, but one looks like a valid directory and the other looks<br>
-bogus. The valid inode has an inode number of 13668207561.<br>
-<br>
-- The fsname for this inode is &quot;sdb.&quot;<br>
-<br>
-- The inode does appear to have a non-NULL if_data:<br>
-<br>
-=C2=A0 =C2=A0 ...<br>
-=C2=A0 =C2=A0 if_u1 =3D {<br>
-=C2=A0 =C2=A0 =C2=A0 if_extents =3D 0xffff88084feaf5c0,<br>
-=C2=A0 =C2=A0 =C2=A0 if_ext_irec =3D 0xffff88084feaf5c0,<br>
-=C2=A0 =C2=A0 =C2=A0 if_data =3D 0xffff88084feaf5c0 &quot;\004&quot;<br>
-=C2=A0 =C2=A0 },<br>
-=C2=A0 =C2=A0 ...<br>
-<br>
-So it&#39;s not totally clear what&#39;s going on there. It might be intere=
-sting<br>
-to see what directory this refers to, if it still exists on the sdb fs.<br>
-For example, is it an external directory or some kind of internal<br>
-directory created by the application? You could use something like the<br>
-following to try and locate the directory based on inode number:<br>
-<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 find &lt;mntpath&gt; -inum 13668207561<br>
-<span><font color=3D"#888888"><br>
-Brian<br>
-</font></span></div></div><div><div><br>
-&gt; Thanks // Hugo<span class=3D""><br>
-&gt; =E2=80=8B<br>
-&gt;<br>
-&gt; 2015-07-13 20:52 GMT+08:00 Brian Foster &lt;<a href=3D"mailto:bfoster@=
-redhat.com" target=3D"_blank">bfoster@redhat.com</a>&gt;:<br>
-&gt;<br>
-&gt; &gt; On Fri, Jul 10, 2015 at 01:36:41PM +0800, Kuo Hugo wrote:<br>
-&gt; &gt; &gt; Hi Brain,<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; Is this the file which you need ?<br>
-&gt; &gt; &gt;<br></span>
-&gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hugo/public/=
-xfs.ko" rel=3D"noreferrer" target=3D"_blank">https://cloud.swiftstack.com/v=
-1/AUTH_hugo/public/xfs.ko</a><span class=3D""><br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; $&gt; modinfo xfs<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; filename: /lib/modules/2.6.32-504.23.4.el6.x86_64/kernel/fs/=
-xfs/xfs.ko<br>
-&gt; &gt; &gt; license: GPL<br>
-&gt; &gt; &gt; description: SGI XFS with ACLs, security attributes, large b=
-lock/inode<br>
-&gt; &gt; &gt; numbers, no debug enabled<br>
-&gt; &gt; &gt; author: Silicon Graphics, Inc.<br>
-&gt; &gt; &gt; srcversion: 0C1B17926BDDA4F121479EE<br>
-&gt; &gt; &gt; depends: exportfs<br>
-&gt; &gt; &gt; vermagic: 2.6.32-504.23.4.el6.x86_64 SMP mod_unload modversi=
-on<br>
-&gt; &gt; &gt;<br>
-&gt; &gt;<br>
-&gt; &gt; No, this isn&#39;t the debug version. We need the one from the de=
-bug package<br>
-&gt; &gt; that was installed (/usr/lib/debug?).<br>
-&gt; &gt;<br>
-&gt; &gt; Brian<br>
-&gt; &gt;<br>
-&gt; &gt; &gt; Thanks // Hugo<br>
-&gt; &gt; &gt; =E2=80=8B<br>
-&gt; &gt; &gt;<br></span><span class=3D"">
-&gt; &gt; &gt; 2015-07-10 2:32 GMT+08:00 Brian Foster &lt;<a href=3D"mailto=
-:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.com</a>&gt;:<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; On Fri, Jul 10, 2015 at 12:40:00AM +0800, Kuo Hugo wrot=
-e:<br>
-&gt; &gt; &gt; &gt; &gt; Hi Brain,<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; There you go.<br>
-&gt; &gt; &gt; &gt; &gt;<br></span>
-&gt; &gt; &gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hu=
-go/public/vmlinux" rel=3D"noreferrer" target=3D"_blank">https://cloud.swift=
-stack.com/v1/AUTH_hugo/public/vmlinux</a><br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_hugo/public/Syste=
-m.map-2.6.32-504.23.4.el6.x86_64" rel=3D"noreferrer" target=3D"_blank">http=
-s://cloud.swiftstack.com/v1/AUTH_hugo/public/System.map-2.6.32-504.23.4.el6=
-.x86_64</a><span class=3D""><br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; $ md5sum vmlinux<br>
-&gt; &gt; &gt; &gt; &gt; 82aaa694a174c0a29e78c05e73adf5d8=C2=A0 vmlinux<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; Yes, I can read it with this vmlinux image. Put al=
-l files<br>
-&gt; &gt; &gt; &gt; &gt; (vmcore,vmlinux,System.map) in a folder and run $c=
-rash vmlinux vmcore<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; Thanks, I can actually load that up now. Note that we&#=
-39;ll probably need<br>
-&gt; &gt; &gt; &gt; the modules and whatnot (xfs.ko) also to be able to loo=
-k at any XFS<br>
-&gt; &gt; &gt; &gt; bits. It might be easiest to just tar up and compress w=
-hatever<br>
-&gt; &gt; directory<br>
-&gt; &gt; &gt; &gt; structure has the debug-enabled vmlinux and all the ker=
-nel modules.<br>
-&gt; &gt; &gt; &gt; Thanks.<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; Brian<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; Hugo<br>
-&gt; &gt; &gt; &gt; &gt; =E2=80=8B<br>
-&gt; &gt; &gt; &gt; &gt;<br></span><span class=3D"">
-&gt; &gt; &gt; &gt; &gt; 2015-07-09 23:18 GMT+08:00 Brian Foster &lt;<a hre=
-f=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.com</a>&gt=
-;:<br>
-&gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; On Thu, Jul 09, 2015 at 09:20:00PM +0800, Kuo=
- Hugo wrote:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; Hi Brian,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; *Operating System Version:*<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; Linux-2.6.32-504.23.4.el6.x86_64-x86_64-=
-with-centos-6.6-Final<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; *NODE 1*<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/=
-v1/AUTH_burton/brtnswift/vmcore" rel=3D"noreferrer" target=3D"_blank">https=
-://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br></span>
-&gt; &gt; &gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_burton/=
-brtnswift/vmcore-dmesg.txt" rel=3D"noreferrer" target=3D"_blank">https://cl=
-oud.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg.txt</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; *NODE 2*<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/=
-vmcore_r2obj02" rel=3D"noreferrer" target=3D"_blank">https://cloud.swiftsta=
-ck.com/v1/AUTH_burton/brtnswift/vmcore_r2obj02</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; <a href=3D"https://cloud.swiftstack.com/v1/AUTH_burton/brtnswift/=
-vmcore-dmesg_r2obj02.txt" rel=3D"noreferrer" target=3D"_blank">https://clou=
-d.swiftstack.com/v1/AUTH_burton/brtnswift/vmcore-dmesg_r2obj02.txt</a><span=
- class=3D""><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; Any thoughts would be appreciate<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; I&#39;m not able to fire up crash with these =
-core files and the kernel<br>
-&gt; &gt; &gt; &gt; debug<br>
-&gt; &gt; &gt; &gt; &gt; &gt; info from the following centos kernel debugin=
-fo package:<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; kernel-debuginfo-2.6.32-504.23.4.el6.centos.p=
-lus.x86_64.rpm<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; It complains about a version mismatch between=
- the vmlinux and core<br>
-&gt; &gt; &gt; &gt; file.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; I&#39;m no crash expert... are you sure the c=
-ores above correspond to<br>
-&gt; &gt; this<br>
-&gt; &gt; &gt; &gt; &gt; &gt; kernel? Does crash load up for you on said bo=
-x if you run something<br>
-&gt; &gt; &gt; &gt; like<br>
-&gt; &gt; &gt; &gt; &gt; &gt; the following?<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0crash /usr/l=
-ib/debug/lib/modules/.../vmlinux vmcore<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; Note that you might need to install the above=
- kernel-debuginfo<br>
-&gt; &gt; package<br>
-&gt; &gt; &gt; &gt; &gt; &gt; to get the debug (vmlinux) file. If so, could=
- you also upload that<br>
-&gt; &gt; &gt; &gt; &gt; &gt; debuginfo rpm somewhere?<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; Brian<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; Thanks // Hugo<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br></span><div><div class=3D"h5">
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; 2015-07-09 20:51 GMT+08:00 Brian Foster =
-&lt;<a href=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.=
-com</a>&gt;:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; On Thu, Jul 09, 2015 at 06:57:55PM =
-+0800, Kuo Hugo wrote:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; Hi Folks,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; As the results of 32 disks wit=
-h xfs_repair -n seems no any<br>
-&gt; &gt; error<br>
-&gt; &gt; &gt; &gt; &gt; &gt; shows<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; up.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; We currently tried to deploy C=
-entOS 6.6 for testing. (The<br>
-&gt; &gt; &gt; &gt; previous<br>
-&gt; &gt; &gt; &gt; &gt; &gt; kernel<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; panic was came from Ubuntu).<b=
-r>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; The CentOS nodes encountered k=
-ernel panic with same daemon<br>
-&gt; &gt; but<br>
-&gt; &gt; &gt; &gt; the<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; problem<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; may a bit differ.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 - It was broken o=
-n xfs_dir2_sf_get_parent_ino+0xa/0x20 in<br>
-&gt; &gt; &gt; &gt; Ubuntu.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 - Here=E2=80=99s =
-the log in CentOS. It=E2=80=99s broken on<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;=C2=A0 =C2=A0 xfs_dir2_sf_getde=
-nts+0x2a0/0x3a0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; I&#39;d venture to guess it&#39;s t=
-he same behavior here. The previous<br>
-&gt; &gt; &gt; &gt; kernel<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; had a callback for the parent inode=
- number that was called via<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; xfs_dir2_sf_getdents(). Taking a lo=
-ok at a 6.6 kernel, it has a<br>
-&gt; &gt; &gt; &gt; static<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; inline here instead.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;1&gt;BUG: unable to handle=
- kernel NULL pointer dereference at<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; 0000000000000001<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;1&gt;IP: [&lt;ffffffffa036=
-2d60&gt;] xfs_dir2_sf_getdents+0x2a0/0x3a0<br>
-&gt; &gt; &gt; &gt; [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;PGD 1072327067 PUD 10=
-72328067 PMD 0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Oops: 0000 [#1] SMP<b=
-r>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;last sysfs file:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt; /sys/devices/pci0000:80/0000:80:03.2/0000:83:00.0/host10/port-10:=
-1/expander-10:1/port-10:1:16/end_device-10:1:16/target10:0:25/10:0:25:0/blo=
-ck/sdz/queue/rotational<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CPU 17<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Modules linked in: xt=
-_conntrack tun xfs exportfs<br>
-&gt; &gt; &gt; &gt; iptable_filter<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; ipt_REDIRECT iptable_nat nf_na=
-t nf_conntrack_ipv4<br>
-&gt; &gt; nf_conntrack<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; nf_defrag_ipv4 ip_tables ip_vs=
- ipv6 libcrc32c iTCO_wdt<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; iTCO_vendor_support ses enclos=
-ure igb i2c_algo_bit sb_edac<br>
-&gt; &gt; &gt; &gt; edac_core<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; i2c_i801 i2c_core sg shpchp lp=
-c_ich mfd_core ixgbe dca ptp<br>
-&gt; &gt; &gt; &gt; pps_core<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; mdio power_meter acpi_ipmi ipm=
-i_si ipmi_msghandler ext4 jbd2<br>
-&gt; &gt; &gt; &gt; mbcache<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; sd_mod crc_t10dif mpt3sas scsi=
-_transport_sas raid_class<br>
-&gt; &gt; xhci_hcd<br>
-&gt; &gt; &gt; &gt; ahci<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; wmi dm_mirror dm_region_hash d=
-m_log dm_mod [last unloaded:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; scsi_wait_scan]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Pid: 4454, comm: swif=
-t-object-se Not tainted<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; 2.6.32-504.23.4.el6.x86_64 #1 =
-Silicon Mechanics Storform<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; R518.v5P/X10DRi-T4+<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RIP: 0010:[&lt;ffffff=
-ffa0362d60&gt;]=C2=A0 [&lt;ffffffffa0362d60&gt;]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; xfs_dir2_sf_getdents+0x2a0/0x3=
-a0 [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RSP: 0018:ffff880871f=
-6de18=C2=A0 EFLAGS: 00010202<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RAX: 0000000000000000=
- RBX: 0000000000000004 RCX:<br>
-&gt; &gt; &gt; &gt; 0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RDX: 0000000000000001=
- RSI: 0000000000000000 RDI:<br>
-&gt; &gt; &gt; &gt; 00007faa74006203<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;RBP: ffff880871f6de68=
- R08: 000000032eb04bc9 R09:<br>
-&gt; &gt; &gt; &gt; 0000000000000004<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;R10: 0000000000008030=
- R11: 0000000000000246 R12:<br>
-&gt; &gt; &gt; &gt; 0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;R13: 0000000000000002=
- R14: ffff88106eff7000 R15:<br>
-&gt; &gt; &gt; &gt; ffff8808715b4580<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;FS:=C2=A0 00007faa854=
-25700(0000) GS:ffff880028360000(0000)<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; knlGS:0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CS:=C2=A0 0010 DS: 00=
-00 ES: 0000 CR0: 0000000080050033<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CR2: 0000000000000001=
- CR3: 0000001072325000 CR4:<br>
-&gt; &gt; &gt; &gt; 00000000001407e0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;DR0: 0000000000000000=
- DR1: 0000000000000000 DR2:<br>
-&gt; &gt; &gt; &gt; 0000000000000000<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;DR3: 0000000000000000=
- DR6: 00000000ffff0ff0 DR7:<br>
-&gt; &gt; &gt; &gt; 0000000000000400<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Process swift-object-=
-se (pid: 4454, threadinfo<br>
-&gt; &gt; &gt; &gt; ffff880871f6c000,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; task ffff880860f18ab0)<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Stack:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; ffff880871f6de28 fff=
-fffff811a4bb0 ffff880871f6df38<br>
-&gt; &gt; &gt; &gt; &gt; &gt; ffff880874749cc0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;&lt;d&gt; 00000001000=
-00103 ffff8802381f8c00 ffff880871f6df38<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; ffff8808715b4580<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;&lt;d&gt; 00000000000=
-00082 ffff8802381f8d88 ffff880871f6dec8<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; ffffffffa035ab31<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Call Trace:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4bb=
-0&gt;] ? filldir+0x0/0xe0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffffa035ab3=
-1&gt;] xfs_readdir+0xe1/0x130 [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4bb=
-0&gt;] ? filldir+0x0/0xe0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffffa038fe2=
-9&gt;] xfs_file_readdir+0x39/0x50 [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4e3=
-0&gt;] vfs_readdir+0xc0/0xe0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff8119bd8=
-6&gt;] ? final_putname+0x26/0x50<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff811a4fb=
-9&gt;] sys_getdents+0x89/0xf0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; [&lt;ffffffff8100b0f=
-2&gt;] system_call_fastpath+0x16/0x1b<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;Code: 01 00 00 00 48 =
-c7 c6 38 6b 3a a0 48 8b 7d c0 ff 55<br>
-&gt; &gt; b8<br>
-&gt; &gt; &gt; &gt; 85 c0<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; 0f 85 af 00 00 00 49 8b 37 e9 =
-ec fd ff ff 66 0f 1f 84 00 00<br>
-&gt; &gt; 00<br>
-&gt; &gt; &gt; &gt; 00 00<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;41&gt; 80 7c 24 01 00 0f 8=
-4 9c 00 00 00 45 0f b6 44 24 03 41<br>
-&gt; &gt; 0f b6<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;1&gt;RIP=C2=A0 [&lt;ffffff=
-ffa0362d60&gt;] xfs_dir2_sf_getdents+0x2a0/0x3a0<br>
-&gt; &gt; &gt; &gt; [xfs]<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt; RSP &lt;ffff880871f6=
-de18&gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &lt;4&gt;CR2: 0000000000000001=
-<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; ...<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; I=E2=80=99ve got the vmcore du=
-mp from operator. Does vmcore help for<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; troubleshooting kind issue ?<b=
-r>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; Hmm, well it couldn&#39;t hurt. Is =
-the vmcore based on this 6.6<br>
-&gt; &gt; &gt; &gt; kernel? Can<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; you provide the exact kernel versio=
-n and post the vmcore<br>
-&gt; &gt; somewhere?<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; Brian<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; Thanks // Hugo<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; =E2=80=8B<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br></div></div><span class=3D"=
-">
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; 2015-06-18 22:59 GMT+08:00 Eri=
-c Sandeen &lt;<a href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sand=
-een@sandeen.net</a><br>
-&gt; &gt; &gt;:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; On 6/18/15 9:29 AM, Kuo H=
-ugo wrote:<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;&gt;- Have you tried =
-an &#39;xfs_repair -n&#39; of the affected<br>
-&gt; &gt; &gt; &gt; filesystem?<br>
-&gt; &gt; &gt; &gt; &gt; &gt; Note<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; that -n will report probl=
-ems only and prevent any<br>
-&gt; &gt; modification<br>
-&gt; &gt; &gt; &gt; by<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; repair.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; *We might to to xfs_=
-repair if we can address which disk<br>
-&gt; &gt; &gt; &gt; causes<br>
-&gt; &gt; &gt; &gt; &gt; &gt; the<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; issue. *<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; If you do, please save th=
-e output, and if it finds<br>
-&gt; &gt; anything,<br>
-&gt; &gt; &gt; &gt; please<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; provide the output in thi=
-s thread.<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; Thanks,<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; -Eric<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; ______________________________=
-_________________<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; xfs mailing list<br></span>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; <a href=3D"mailto:xfs@oss.sgi.=
-com" target=3D"_blank">xfs@oss.sgi.com</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt; <a href=3D"http://oss.sgi.com/=
-mailman/listinfo/xfs" rel=3D"noreferrer" target=3D"_blank">http://oss.sgi.c=
-om/mailman/listinfo/xfs</a><br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt; &gt; &gt;<br>
-&gt; &gt; &gt; &gt;<br>
-&gt; &gt;<br>
-&gt; &gt; &gt; _______________________________________________<br>
-&gt; &gt; &gt; xfs mailing list<span class=3D""><br>
-&gt; &gt; &gt; <a href=3D"mailto:xfs@oss.sgi.com" target=3D"_blank">xfs@oss=
-.sgi.com</a><br>
-&gt; &gt; &gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"n=
-oreferrer" target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br=
->
-&gt; &gt;<br>
-&gt; &gt;<br>
-</span></div></div></blockquote></div><br></div>
-</blockquote></div><br></div>
+    Number   Major   Minor   RaidDevice State
+      10       8      128        0      active sync   /dev/sdi
+      12       8      112        1      active sync   /dev/sdh
+       8       8       80        2      active sync   /dev/sdf
+       9       8       64        3      active sync   /dev/sde
+      11       8       96        4      active sync   /dev/sdg
+       5       8       32        5      active sync   /dev/sdc
+       6       8      160        6      active sync   /dev/sdk
+       7       8      144        7      active sync   /dev/sdj
 
---bcaec53f398590e7f5051b17574c--
+No LVM
 
+8 SATA disks, various ,manufacturers, 4 & 5T
 
---===============0814401067983345142==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+dmesg is un markable prior to echo w > /proc/sysrq-trigger:
+[112915.907065] md: md0: requested-resync done.
+[134859.522323] XFS (md0): Mounting V4 Filesystem
+[134860.767122] XFS (md0): Ending clean mount
+[135019.548703] XFS (md0): Mounting V4 Filesystem
+[135019.817854] XFS (md0): Ending clean mount
+
+Xfs_info:
+meta-data=/dev/md0               isize=256    agcount=32, agsize=183135488 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=5860329984, imaxpct=5
+         =                       sunit=256    swidth=1536 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+After echo w > /proc/sysrq-trigger:
+http://fletchergeek.com/images/dmesg.txt
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0814401067983345142==--
