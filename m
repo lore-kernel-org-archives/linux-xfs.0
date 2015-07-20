@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2362F7F6C
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 07:57:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 128B7304048
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 05:57:14 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CpQvk6hZHFngvlhN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 05:57:12 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2 4/4] xfsprogs: OS X partial support
-Date: Mon, 20 Jul 2015 14:56:58 +0200
-Message-Id: <1437397018-12864-5-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
-References: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2DC177F55
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 08:08:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C9DBCAC006
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 06:08:20 -0700 (PDT)
+Received: from nm19-vm2.bullet.mail.sg3.yahoo.com
+	(nm19-vm2.bullet.mail.sg3.yahoo.com [106.10.149.113]) by
+	cuda.sgi.com with ESMTP id SKdNtMCRbvcN9GIa (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 06:08:18 -0700 (PDT)
+Date: Mon, 20 Jul 2015 13:08:15 +0000 (UTC)
+From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Message-ID: <1469853784.545263.1437397695535.JavaMail.yahoo@mail.yahoo.com>
+In-Reply-To: <55ACB2BD.6050601@mygrande.net>
+References: <55ACB2BD.6050601@mygrande.net>
+Subject: Re: XFS File system in trouble
+MIME-Version: 1.0
+Reply-To: Gim Leong Chin <chingimleong@yahoo.com.sg>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,475 +26,277 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4433075778157635864=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Leslie Rhorer <lrhorer@mygrande.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This patch introduces changes to support current OS X (10.10 Yosemite).
-The previous OS X code base is about 4 years old and both OS X and
-XFS changed, so there had to be done some work to make it compilable.
+--===============4433075778157635864==
+Content-Type: multipart/alternative;
+	boundary="----=_Part_545262_260624072.1437397695529"
 
-- xfs_repair currently has only a dummy timer implementation
-- fsr and io, as tools working with a mounted XFS, are
-  really not expected to work - lots of dummy functions
-- Various other edits  - some API translations, some missing
-  defines.
+------=_Part_545262_260624072.1437397695529
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-The code compiles using Apple's clang, although it throws some
-warnings. Some of them are complaints about deprecated calls, some
-are false-positives and there are also some incompatible type
-assignments/comparisons. Fixing these looks like an ugly work,
-but fortunately, incompatible assignments are only in the tools
-not expected to work anyway (fsr and io).
+Hi Leslie,
+My two cents here, it appears you are using AMD FX CPU on ASUS Sabertooth m=
+otherboard?
+I would strongly suggest you use unbuffered ECC DIMMs in your system.=C2=A0=
+ Mcelog will warn of ECC errors in your DIMMs.=C2=A0 ECC will correct singl=
+e bit errors and at least detect multi bit errors.
+I had AMD Opteron servers with registered ECC DIMMs with continuous correct=
+able ECC errors running HPC jobs for up to one month without any crashes un=
+til I could schedule down time for DIMM replacement.=C2=A0 The errors will =
+be flagged either in BMC (service processor) or mcelog.
+All my PC / workstations at work place and at home with consumer AMD Althon=
+ 64 and AMD Phenom II had unbuffered ECC DIMMs on ASUS motherboards.=C2=A0 =
+I never had any memory errors; I know that if there are memory errors I wil=
+l get notified.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- configure.ac          |   1 +
- fsr/xfs_fsr.c         |  20 +++++-
- include/bitops.h      |   2 +
- include/builddefs.in  |   6 +-
- include/darwin.h      | 168 ++++++++++++++++++++++++++++++++++++++++++++------
- io/readdir.c          |   4 ++
- libdisk/fstype.c      |   1 +
- libhandle/Makefile    |   4 ++
- libxcmd/paths.c       |   2 +-
- m4/package_libcdev.m4 |  14 +++++
- 10 files changed, 198 insertions(+), 24 deletions(-)
+Chin Gim Leong
 
-diff --git a/configure.ac b/configure.ac
-index fe991cc..8f966a6 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -113,6 +113,7 @@ AC_HAVE_PREADV
- AC_HAVE_SYNC_FILE_RANGE
- AC_HAVE_BLKID_TOPO($enable_blkid)
- AC_HAVE_READDIR
-+AC_HAVE_FLS
- 
- AC_CHECK_SIZEOF([long])
- AC_CHECK_SIZEOF([char *])
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index efc17a8..a069bd7 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -25,16 +25,22 @@
- 
- #include <fcntl.h>
- #include <errno.h>
--#include <malloc.h>
--#include <mntent.h>
- #include <syslog.h>
- #include <signal.h>
- #include <sys/ioctl.h>
- #include <sys/wait.h>
--#include <sys/vfs.h>
- #include <sys/statvfs.h>
- #include <sys/xattr.h>
- 
-+#ifndef PLATFORM_HAS_NO_MALLOC_H
-+#  include <malloc.h>
-+#endif
-+#ifndef PLATFORM_HAS_NO_MNTENT_H
-+#  include <mntent.h>
-+#endif
-+#ifndef PLATFORM_HAS_NO_VFS_H
-+#  include <sys/vfs.h>
-+#endif
- 
- #ifndef XFS_XFLAG_NODEFRAG
- #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
-@@ -43,6 +49,14 @@
- #define _PATH_FSRLAST		"/var/tmp/.fsrlast_xfs"
- #define _PATH_PROC_MOUNTS	"/proc/mounts"
- 
-+#ifdef USE_DUMMY_XATTR
-+	/* OS X has fsetxattr with different number of arguments.
-+	 * Because it won't work anyway (no fstab/mtab and so on),
-+	 * hijack the call to a dummy function so it can at least
-+	 * compile.
-+	 */
-+#  define fsetxattr(a,b,c,d,e) dummy_fsetxattr(a,b,c,d,e)
-+#endif
- 
- char *progname;
- 
-diff --git a/include/bitops.h b/include/bitops.h
-index 930f64a..44599a7 100644
---- a/include/bitops.h
-+++ b/include/bitops.h
-@@ -5,6 +5,7 @@
-  * fls: find last bit set.
-  */
- 
-+#ifndef HAVE_FLS
- static inline int fls(int x)
- {
- 	int r = 32;
-@@ -32,6 +33,7 @@ static inline int fls(int x)
- 	}
- 	return r;
- }
-+#endif /* HAVE_FLS */
- 
- static inline int fls64(__u64 x)
- {
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7e9f53d..9feb096 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -104,6 +104,7 @@ HAVE_FIEMAP = @have_fiemap@
- HAVE_PREADV = @have_preadv@
- HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
- HAVE_READDIR = @have_readdir@
-+HAVE_FLS = @have_fls@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -119,7 +120,7 @@ ifeq ($(PKG_PLATFORM),gnukfreebsd)
- PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
- endif
- ifeq ($(PKG_PLATFORM),darwin)
--PCFLAGS = -traditional-cpp $(GCCFLAGS)
-+PCFLAGS = $(GCCFLAGS)
- DEPENDFLAGS = -D__APPLE__
- endif
- ifeq ($(PKG_PLATFORM),irix)
-@@ -131,6 +132,9 @@ PLDLIBS = -L/usr/local/lib -lintl
- PCFLAGS = -I/usr/local/include $(GCCFLAGS)
- DEPENDFLAGS = -D__FreeBSD__
- endif
-+ifeq ($(HAVE_FLS),yes)
-+LCFLAGS+= -DHAVE_FLS
-+endif
- 
- GCFLAGS = $(OPTIMIZER) $(DEBUG) \
- 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
-diff --git a/include/darwin.h b/include/darwin.h
-index 30f0052..0d82872 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -18,17 +18,26 @@
- #ifndef __XFS_DARWIN_H__
- #define __XFS_DARWIN_H__
- 
-+#define PLATFORM_HAS_NO_MALLOC_H
-+#define PLATFORM_HAS_NO_MNTENT_H
-+#define PLATFORM_HAS_NO_VFS_H
-+
- #include <uuid/uuid.h>
- #include <libgen.h>
- #include <sys/vm.h>
- #include <sys/stat.h>
- #include <sys/ioctl.h>
- #include <sys/mount.h>
-+#include <sys/types.h>
-+#include <ftw.h>
-+#include <mach/mach_time.h>
-+#include <inttypes.h>
-+#include <stdio.h>
- 
- #include <machine/endian.h>
--#define __BYTE_ORDER	BYTE_ORDER
--#define __BIG_ENDIAN	BIG_ENDIAN
--#define __LITTLE_ENDIAN	LITTLE_ENDIAN
-+#define __BYTE_ORDER   BYTE_ORDER
-+#define __BIG_ENDIAN   BIG_ENDIAN
-+#define __LITTLE_ENDIAN        LITTLE_ENDIAN
- 
- #include <sys/syscall.h>
- # ifndef SYS_fsctl
-@@ -68,45 +77,37 @@ static __inline__ void platform_getoptreset(void)
- 
- static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
- {
--	return uuid_compare(uu1, uu2, NULL);
-+	return uuid_compare((const unsigned char *) uu1, (const unsigned char*) uu2);
- }
- 
- static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
- {
--	uint32_t status;
--	char *s;
--	uuid_to_string(uu, &s, &status);
--	if (status == uuid_s_ok)
--		strcpy(buffer, s);
--	else buffer[0] = '\0';
--	free(s);
-+	uuid_unparse(*uu, buffer);
- }
- 
- static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
- {
--	uint32_t status;
--	uuid_from_string(buffer, uu, &status);
--	return (status == uuid_s_ok);
-+	return uuid_parse(buffer, *uu);
- }
- 
- static __inline__ int platform_uuid_is_null(uuid_t *uu)
- {
--	return uuid_is_nil(uu, NULL);
-+	return uuid_is_null(*uu);
- }
- 
- static __inline__ void platform_uuid_generate(uuid_t *uu)
- {
--	uuid_create(uu, NULL);
-+	uuid_generate(*uu);
- }
- 
- static __inline__ void platform_uuid_clear(uuid_t *uu)
- {
--	uuid_create_nil(uu, NULL);
-+	uuid_clear(*uu);
- }
- 
- static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
- {
--	memcpy(dst, src, sizeof(uuid_t));
-+	uuid_copy(*dst, *src);
- }
- 
- #define __int8_t	int8_t
-@@ -142,11 +143,13 @@ typedef int64_t		xfs_daddr_t;
- #define O_SYNC          0
- #endif
- 
--#define ENOATTR		989     /* Attribute not found */
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
- #define EFSBADCRC	991	/* Bad CRC detected */
- #define constpp		char * const *
- 
-+#define XATTR_SIZE_MAX 65536    /* size of an extended attribute value (64k) */
-+#define XATTR_LIST_MAX 65536    /* size of extended attribute namelist (64k) */
-+
- #define HAVE_FID	1
- 
- static __inline__ int
-@@ -155,4 +158,131 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- 	return 0;
- }
- 
-+
-+/*
-+ * Dummy POSIX timer replacement
-+ */
-+#define CLOCK_REALTIME 1
-+typedef uint64_t timer_t;
-+typedef double   timer_c;
-+typedef clock_id_t clockid_t;
-+struct itimerspec
-+  {
-+    struct timespec it_interval;
-+    struct timespec it_value;
-+  };
-+
-+static inline int timer_create (clockid_t __clock_id,
-+                         struct sigevent *__restrict __evp,
-+                         timer_t *__restrict __timerid)
-+{
-+	return 0;
-+}
-+
-+static inline int timer_settime (timer_t __timerid, int __flags,
-+                          const struct itimerspec *__restrict __value,
-+                          struct itimerspec *__restrict __ovalue)
-+{
-+	return 0;
-+}
-+
-+static inline int timer_delete (timer_t __timerid)
-+{
-+	return 0;
-+}
-+
-+static inline int timer_gettime (timer_t __timerid, struct itimerspec *__value)
-+{
-+	return 0;
-+}
-+
-+static inline int nftw64(const char *path, int (*fn)(const char *, const struct stat *ptr, int flag, struct FTW *), int depth,
-+         int flags)
-+{
-+	return nftw(path, fn, depth, flags);
-+}
-+
-+#define MREMAP_FIXED 1
-+#define MREMAP_MAYMOVE 2
-+static inline void *mremap(void *old_address, size_t old_size,
-+                    size_t new_size, int flags, ... /* void *new_address */)
-+{
-+	return NULL;
-+}
-+
-+/* FSR */
-+
-+#define		_PATH_MOUNTED   "/etc/mtab"
-+#define		USE_DUMMY_XATTR
-+
-+typedef int __fsblkcnt_t;
-+typedef int __fsfilcnt_t;
-+typedef long long int __fsblkcnt64_t;
-+typedef long long int __fsfilcnt64_t;
-+
-+struct statvfs64
-+{
-+	unsigned long int f_bsize;
-+	unsigned long int f_frsize;
-+	__fsblkcnt64_t f_blocks;
-+	__fsblkcnt64_t f_bfree;
-+	__fsblkcnt64_t f_bavail;
-+	__fsfilcnt64_t f_files;
-+	__fsfilcnt64_t f_ffree;
-+	__fsfilcnt64_t f_favail;
-+	unsigned long int f_fsid;
-+	int __f_unused;
-+	unsigned long int f_flag;
-+	unsigned long int f_namemax;
-+	int __f_spare[6];
-+};
-+
-+struct mntent
-+{
-+	char *mnt_fsname;		/* Device or server for filesystem.  */
-+	char *mnt_dir;		/* Directory mounted on.  */
-+	char *mnt_type;		/* Type of filesystem: ufs, nfs, etc.  */
-+	char *mnt_opts;		/* Comma-separated options for fs.  */
-+	int mnt_freq;		/* Dump frequency (in days).  */
-+	int mnt_passno;		/* Pass number for `fsck'.  */
-+};
-+
-+static inline FILE *setmntent(const char *filename, const char *type)
-+{
-+	return NULL;
-+}
-+
-+static inline int endmntent(FILE *fp)
-+{
-+	return 0;
-+}
-+
-+static inline struct mntent *getmntent(FILE *fp)
-+{
-+	return NULL;
-+}
-+
-+static inline int addmntent(FILE *fp, const struct mntent *mnt)
-+{
-+	return 0;
-+}
-+
-+static inline char *hasmntopt(const struct mntent *mnt, const char *opt)
-+{
-+	return NULL;
-+}
-+
-+static inline int statvfs64 (const char *__restrict __file, 
-+							 struct statvfs64 *__restrict __buf)
-+{
-+	return 0;
-+}
-+
-+static inline int dummy_fsetxattr (int filedes, const char *name,
-+                       const void *value, size_t size, int flags)
-+{
-+	return 0;
-+}
-+
-+
- #endif	/* __XFS_DARWIN_H__ */
-diff --git a/io/readdir.c b/io/readdir.c
-index 20b8898..ed8f04d 100644
---- a/io/readdir.c
-+++ b/io/readdir.c
-@@ -104,12 +104,16 @@ read_directory(
- 		if (!dirent)
- 			break;
- 
-+#ifdef _DIRENT_HAVE_D_RECLEN
- 		*total += dirent->d_reclen;
-+#endif
- 		count++;
- 
- 		if (dump) {
- 			dump_dirent(offset, dirent);
-+#ifdef _DIRENT_HAVE_D_OFF
- 			offset = dirent->d_off;
-+#endif
- 		}
- 	}
- 
-diff --git a/libdisk/fstype.c b/libdisk/fstype.c
-index 548f297..c8bde34 100644
---- a/libdisk/fstype.c
-+++ b/libdisk/fstype.c
-@@ -22,6 +22,7 @@
- #include <stdlib.h>
- #include <string.h>
- #include <sys/stat.h>
-+#include <sys/types.h>
- #include "fstype.h"
- 
- /*
-diff --git a/libhandle/Makefile b/libhandle/Makefile
-index 865ca22..0b5e1ad 100644
---- a/libhandle/Makefile
-+++ b/libhandle/Makefile
-@@ -10,7 +10,11 @@ LT_CURRENT = 1
- LT_REVISION = 3
- LT_AGE = 0
- 
-+ifeq ($(PKG_PLATFORM),darwin)
-+LTLDFLAGS += -Wl,libhandle.sym
-+else
- LTLDFLAGS += -Wl,--version-script,libhandle.sym
-+endif
- 
- CFILES = handle.c jdm.c
- LSRCFILES = libhandle.sym
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index c0b1ddb..b360617 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -364,7 +364,7 @@ fs_table_initialise_mounts(
- 			continue;
- 		if (!realpath(stats[i].f_mntfromname, rmntfromname))
- 			continue;
--		if (!realpath(stats[i].f_mntonname, rmnttomname)))
-+		if (!realpath(stats[i].f_mntonname, rmntonname))
- 			continue;
- 
- 		if (path &&
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 919ae0a..d7f37ca 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -202,3 +202,17 @@ AC_DEFUN([AC_HAVE_READDIR],
-     AC_SUBST(have_readdir)
-   ])
- 
-+#
-+# Check if we have a flc call (Mac OS X)
-+#
-+AC_DEFUN([AC_HAVE_FLS],
-+  [ AC_MSG_CHECKING([for fls])
-+    AC_TRY_LINK([
-+#include <string.h>
-+    ], [
-+         fls(0);
-+    ], have_fls=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_fls)
-+  ])
--- 
-2.4.3
+      From: Leslie Rhorer <lrhorer@mygrande.net>
+ To: Martin Papik <mp6058@gmail.com>=20
+Cc: xfs@oss.sgi.com=20
+ Sent: Monday, 20 July 2015, 16:35
+ Subject: Re: XFS File system in trouble
+  =20
+On 7/20/2015 3:05 AM, Martin Papik wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+>
+>
+> Since you've already found one HW related fault, would you consider
+> booting into memtest for a couple of passes just to be on the safe
+> side.
+
+=C2=A0=C2=A0=C2=A0 I did that after confirming the one stick of memory was =
+bad.=C2=A0 Twice.=C2=A0 I=20
+got over 20,000 errors on the bad stick, and 0 on the good one.=C2=A0 I als=
+o=20
+swapped the locations on the motherboard, and the bad stick still failed=20
+while the good one passed 100%.
+
+> And did you by any chance look at SMART if applicable and
+> possibly running a test on the drives.
+
+=C2=A0=C2=A0=C2=A0 Yes. SMART found no errors, but think about it.=C2=A0 Ev=
+ery time tar tries=20
+to create a directory when untarring that file in that location, the=20
+file system croaks when it tries to create a directory. Not when reading=20
+and not when writing other than when it creates a directory.=C2=A0 When I=
+=20
+create the directory manualy, the process quits failing at that point=20
+and fails later on during a different directory create.=C2=A0 The array=20
+remains intact when reading, and dmesg shows no drive errors.=C2=A0 I've=20
+re-synced the array, which reads every byte on all 8 drives without a=20
+single mismatch - several times.=C2=A0 To my knowledge, no read has ever=20
+failed except after the filesystem goes offline.=C2=A0 I thought reads were=
+=20
+failing during the CRC checks, but that was a red herring.
+
+> Another test I sometimes do
+> when I'm unsure about disks is "cat /dev/sda > /dev/null" (i.e. a
+> whole disk read test)
+
+echo repair > /sys/block/md0/md/sync_action reads not one drive, but=20
+every byte on all 8 drives.
+
+> and see (dmesg) if any errors show up, unless
+
+=C2=A0=C2=A0=C2=A0 'Nary one, and no mismatches.
+
+
+
+> you're willing to run badblocks in a read-write nondestructive mode.
+> In my experience the read test or badblocks can be run simultaneously
+> with smartctl -t long. But as a start I'd look at smartctl --all
+> /dev/sd? and see if there are any bad signs. I hope this helps. Good luck
+>
+>
+> On 07/20/2015 10:41 AM, Leslie Rhorer wrote:
+>> On 7/19/2015 6:27 PM, Dave Chinner wrote:
+>>> On Sat, Jul 18, 2015 at 08:02:50PM -0500, Leslie Rhorer wrote:
+>>>>
+>>>> I found the problem with md5sum (and probably nfs, as well).
+>>>> One of the memory modules in the server was bad.=C2=A0 The problem
+>>>> with XFS persists.=C2=A0 Every time tar tried to create the
+>>>> directory:
+>>>
+>>> Now you need to run xfs_repair.
+>>
+>> I do that every time the array implodes.=C2=A0 It makes no difference.
+>> It never mentions cleaning the structure tar says needs cleaning,
+>> and the next time I run tar on that file, the filesystem craters.
+>>
+>> _______________________________________________ xfs mailing list
+>> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1
+>
+> iQIcBAEBCgAGBQJVrKuzAAoJELsEaSRwbVYrdjoP/3n1W9YtcpdiDoylp6tDYcjF
+> vEVz7IWLv2cOky8Lp+0WAZ4Z0WMhcutFzT571H1Vc+jT/UgO25pQHa3yLYTboPuZ
+> +tBidVUycs7ZIr9QCZFs2uPQ/7YstamB+F7paCTMKtOJJr5CZLiYX4iyJ9sFmWVY
+> UFPAIhyoqD5CFgoaAkwCmk50kNiT0aPM7egizIUVEt14cWuxZxMN0NIJ5b0WJfAk
+> qtNQjstVI/xYDgsImm2ZAm19SfOG9ltm2G9zafRr6lR6rRtXjtZX8zEg0l/o9XUw
+> OifghjoSup8OCzvX6+4+Soj/3mCKZv4rkBm3exf4YzfQ9eVG6Ktele2rLIs1sl3O
+> hUrZUNEl8hYGJeb5gBHFV/TLWDMMwNde/6JiBVy0V8EbDF1lvR4jYpUwThOE0jyL
+> ZbzZe4N/B0qvB1OpLDkHrMVm9NPtDkfXdTtM2kRmo5955xtkK09yHF/v64kz7IKc
+> 2rM5pOwTR6HWE8RF2j9UujgPjw6nEUuY01TvIMGYzMfkJTI+sVjeDQfwnPG8tzIa
+> x4uLa4vTrBD5IaICjAmQiY69qqmt5Vg42G4latZVTYQLelvWQ774mXZfgfT/GtbT
+> RKzVwvYowWr/EBhtp7ix/1rWANTFiX0lxOPnRmUFvu8UJnyZhR0/EYbJYy1+jTt7
+> O7hZMfAayQBsnVcSK1JC
+> =3D3Ubd
+> -----END PGP SIGNATURE-----
+>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+
+  
+------=_Part_545262_260624072.1437397695529
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><body><div style=3D"color:#000; background-color:#fff; font-family:He=
+lvetica Neue-Light, Helvetica Neue Light, Helvetica Neue, Helvetica, Arial,=
+ Lucida Grande, Sans-Serif;font-size:13px"><div id=3D"yui_3_16_0_1_14373933=
+57643_40462">Hi Leslie,</div><div id=3D"yui_3_16_0_1_1437393357643_40460"><=
+br></div><div dir=3D"ltr" id=3D"yui_3_16_0_1_1437393357643_40461">My two ce=
+nts here, it appears you are using AMD FX CPU on ASUS Sabertooth motherboar=
+d?</div><div id=3D"yui_3_16_0_1_1437393357643_40621" dir=3D"ltr"><br></div>=
+<div id=3D"yui_3_16_0_1_1437393357643_40678" dir=3D"ltr">I would strongly s=
+uggest you use unbuffered ECC DIMMs in your system.&nbsp; Mcelog will warn =
+of ECC errors in your DIMMs.&nbsp; ECC will correct single bit errors and a=
+t least detect multi bit errors.</div><div id=3D"yui_3_16_0_1_1437393357643=
+_41242" dir=3D"ltr"><br></div><div id=3D"yui_3_16_0_1_1437393357643_41355" =
+dir=3D"ltr">I had AMD Opteron servers with registered ECC DIMMs with contin=
+uous correctable ECC errors running HPC jobs for up to one month without an=
+y crashes until I could schedule down time for DIMM replacement.&nbsp; The =
+errors will be flagged either in BMC (service processor) or mcelog.</div><d=
+iv id=3D"yui_3_16_0_1_1437393357643_41968" dir=3D"ltr"><br></div><div id=3D=
+"yui_3_16_0_1_1437393357643_41967" dir=3D"ltr">All my PC / workstations at =
+work place and at home with consumer AMD Althon 64 and AMD Phenom II had un=
+buffered ECC DIMMs on ASUS motherboards.&nbsp; I never had any memory error=
+s; I know that if there are memory errors I will get notified.</div><div id=
+=3D"yui_3_16_0_1_1437393357643_42818" dir=3D"ltr"><br></div><div id=3D"yui_=
+3_16_0_1_1437393357643_42819" dir=3D"ltr"><br></div><div id=3D"yui_3_16_0_1=
+_1437393357643_42820" dir=3D"ltr">Chin Gim Leong<br></div><div id=3D"yui_3_=
+16_0_1_1437393357643_40452"><span></span></div><br>  <div id=3D"yui_3_16_0_=
+1_1437393357643_40393" style=3D"font-family: Helvetica Neue-Light, Helvetic=
+a Neue Light, Helvetica Neue, Helvetica, Arial, Lucida Grande, Sans-Serif; =
+font-size: 13px;"> <div id=3D"yui_3_16_0_1_1437393357643_40392" style=3D"fo=
+nt-family: HelveticaNeue, Helvetica Neue, Helvetica, Arial, Lucida Grande, =
+Sans-Serif; font-size: 16px;"> <div id=3D"yui_3_16_0_1_1437393357643_40391"=
+ dir=3D"ltr"> <hr id=3D"yui_3_16_0_1_1437393357643_40505" size=3D"1">  <fon=
+t id=3D"yui_3_16_0_1_1437393357643_42082" face=3D"Arial" size=3D"2"> <b><sp=
+an style=3D"font-weight:bold;">From:</span></b> Leslie Rhorer &lt;lrhorer@m=
+ygrande.net&gt;<br> <b><span style=3D"font-weight: bold;">To:</span></b> Ma=
+rtin Papik &lt;mp6058@gmail.com&gt; <br><b><span style=3D"font-weight: bold=
+;">Cc:</span></b> xfs@oss.sgi.com <br> <b><span style=3D"font-weight: bold;=
+">Sent:</span></b> Monday, 20 July 2015, 16:35<br> <b><span style=3D"font-w=
+eight: bold;">Subject:</span></b> Re: XFS File system in trouble<br> </font=
+> </div> <div id=3D"yui_3_16_0_1_1437393357643_40503" class=3D"y_msg_contai=
+ner"><br>On 7/20/2015 3:05 AM, Martin Papik wrote:<br clear=3D"none">&gt; -=
+----BEGIN PGP SIGNED MESSAGE-----<br clear=3D"none">&gt; Hash: SHA512<br cl=
+ear=3D"none">&gt;<br clear=3D"none">&gt;<br clear=3D"none">&gt; Since you'v=
+e already found one HW related fault, would you consider<br clear=3D"none">=
+&gt; booting into memtest for a couple of passes just to be on the safe<br =
+clear=3D"none">&gt; side.<br clear=3D"none"><br clear=3D"none">&nbsp;&nbsp;=
+&nbsp; I did that after confirming the one stick of memory was bad.&nbsp; T=
+wice.&nbsp; I <br clear=3D"none">got over 20,000 errors on the bad stick, a=
+nd 0 on the good one.&nbsp; I also <br clear=3D"none">swapped the locations=
+ on the motherboard, and the bad stick still failed <br clear=3D"none">whil=
+e the good one passed 100%.<br clear=3D"none"><br clear=3D"none">&gt; And d=
+id you by any chance look at SMART if applicable and<br clear=3D"none">&gt;=
+ possibly running a test on the drives.<br clear=3D"none"><br clear=3D"none=
+">&nbsp;&nbsp;&nbsp; Yes. SMART found no errors, but think about it.&nbsp; =
+Every time tar tries <br clear=3D"none">to create a directory when untarrin=
+g that file in that location, the <br clear=3D"none">file system croaks whe=
+n it tries to create a directory. Not when reading <br clear=3D"none">and n=
+ot when writing other than when it creates a directory.&nbsp; When I <br cl=
+ear=3D"none">create the directory manualy, the process quits failing at tha=
+t point <br clear=3D"none">and fails later on during a different directory =
+create.&nbsp; The array <br clear=3D"none">remains intact when reading, and=
+ dmesg shows no drive errors.&nbsp; I've <br clear=3D"none">re-synced the a=
+rray, which reads every byte on all 8 drives without a <br clear=3D"none">s=
+ingle mismatch - several times.&nbsp; To my knowledge, no read has ever <br=
+ clear=3D"none">failed except after the filesystem goes offline.&nbsp; I th=
+ought reads were <br clear=3D"none">failing during the CRC checks, but that=
+ was a red herring.<br clear=3D"none"><br clear=3D"none">&gt; Another test =
+I sometimes do<br clear=3D"none">&gt; when I'm unsure about disks is "cat /=
+dev/sda &gt; /dev/null" (i.e. a<br clear=3D"none">&gt; whole disk read test=
+)<br clear=3D"none"><br clear=3D"none">echo repair &gt; /sys/block/md0/md/s=
+ync_action reads not one drive, but <br clear=3D"none">every byte on all 8 =
+drives.<br clear=3D"none"><br clear=3D"none">&gt; and see (dmesg) if any er=
+rors show up, unless<br clear=3D"none"><br clear=3D"none">&nbsp;&nbsp;&nbsp=
+; 'Nary one, and no mismatches.<div class=3D"qtdSeparateBR"><br><br></div><=
+div class=3D"yqt5741585799" id=3D"yqtfd69759"><br clear=3D"none"><br clear=
+=3D"none">&gt; you're willing to run badblocks in a read-write nondestructi=
+ve mode.<br clear=3D"none">&gt; In my experience the read test or badblocks=
+ can be run simultaneously<br clear=3D"none">&gt; with smartctl -t long. Bu=
+t as a start I'd look at smartctl --all<br clear=3D"none">&gt; /dev/sd? and=
+ see if there are any bad signs. I hope this helps. Good luck<br clear=3D"n=
+one">&gt;<br clear=3D"none">&gt;<br clear=3D"none">&gt; On 07/20/2015 10:41=
+ AM, Leslie Rhorer wrote:<br clear=3D"none">&gt;&gt; On 7/19/2015 6:27 PM, =
+Dave Chinner wrote:<br clear=3D"none">&gt;&gt;&gt; On Sat, Jul 18, 2015 at =
+08:02:50PM -0500, Leslie Rhorer wrote:<br clear=3D"none">&gt;&gt;&gt;&gt;<b=
+r clear=3D"none">&gt;&gt;&gt;&gt; I found the problem with md5sum (and prob=
+ably nfs, as well).<br clear=3D"none">&gt;&gt;&gt;&gt; One of the memory mo=
+dules in the server was bad.&nbsp; The problem<br clear=3D"none">&gt;&gt;&g=
+t;&gt; with XFS persists.&nbsp; Every time tar tried to create the<br clear=
+=3D"none">&gt;&gt;&gt;&gt; directory:<br clear=3D"none">&gt;&gt;&gt;<br cle=
+ar=3D"none">&gt;&gt;&gt; Now you need to run xfs_repair.<br clear=3D"none">=
+&gt;&gt;<br clear=3D"none">&gt;&gt; I do that every time the array implodes=
+.&nbsp; It makes no difference.<br clear=3D"none">&gt;&gt; It never mention=
+s cleaning the structure tar says needs cleaning,<br clear=3D"none">&gt;&gt=
+; and the next time I run tar on that file, the filesystem craters.<br clea=
+r=3D"none">&gt;&gt;<br clear=3D"none">&gt;&gt; ____________________________=
+___________________ xfs mailing list<br clear=3D"none">&gt;&gt; <a shape=3D=
+"rect" ymailto=3D"mailto:xfs@oss.sgi.com" href=3D"mailto:xfs@oss.sgi.com">x=
+fs@oss.sgi.com</a> <a shape=3D"rect" href=3D"http://oss.sgi.com/mailman/lis=
+tinfo/xfs" target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br=
+ clear=3D"none">&gt;<br clear=3D"none">&gt; -----BEGIN PGP SIGNATURE-----<b=
+r clear=3D"none">&gt; Version: GnuPG v1<br clear=3D"none">&gt;<br clear=3D"=
+none">&gt; iQIcBAEBCgAGBQJVrKuzAAoJELsEaSRwbVYrdjoP/3n1W9YtcpdiDoylp6tDYcjF=
+<br clear=3D"none">&gt; vEVz7IWLv2cOky8Lp+0WAZ4Z0WMhcutFzT571H1Vc+jT/UgO25p=
+QHa3yLYTboPuZ<br clear=3D"none">&gt; +tBidVUycs7ZIr9QCZFs2uPQ/7YstamB+F7paC=
+TMKtOJJr5CZLiYX4iyJ9sFmWVY<br clear=3D"none">&gt; UFPAIhyoqD5CFgoaAkwCmk50k=
+NiT0aPM7egizIUVEt14cWuxZxMN0NIJ5b0WJfAk<br clear=3D"none">&gt; qtNQjstVI/xY=
+DgsImm2ZAm19SfOG9ltm2G9zafRr6lR6rRtXjtZX8zEg0l/o9XUw<br clear=3D"none">&gt;=
+ OifghjoSup8OCzvX6+4+Soj/3mCKZv4rkBm3exf4YzfQ9eVG6Ktele2rLIs1sl3O<br clear=
+=3D"none">&gt; hUrZUNEl8hYGJeb5gBHFV/TLWDMMwNde/6JiBVy0V8EbDF1lvR4jYpUwThOE=
+0jyL<br clear=3D"none">&gt; ZbzZe4N/B0qvB1OpLDkHrMVm9NPtDkfXdTtM2kRmo5955xt=
+kK09yHF/v64kz7IKc<br clear=3D"none">&gt; 2rM5pOwTR6HWE8RF2j9UujgPjw6nEUuY01=
+TvIMGYzMfkJTI+sVjeDQfwnPG8tzIa<br clear=3D"none">&gt; x4uLa4vTrBD5IaICjAmQi=
+Y69qqmt5Vg42G4latZVTYQLelvWQ774mXZfgfT/GtbT<br clear=3D"none">&gt; RKzVwvYo=
+wWr/EBhtp7ix/1rWANTFiX0lxOPnRmUFvu8UJnyZhR0/EYbJYy1+jTt7<br clear=3D"none">=
+&gt; O7hZMfAayQBsnVcSK1JC<br clear=3D"none">&gt; =3D3Ubd<br clear=3D"none">=
+&gt; -----END PGP SIGNATURE-----<br clear=3D"none">&gt;<br clear=3D"none"><=
+br clear=3D"none">_______________________________________________<br clear=
+=3D"none">xfs mailing list<br clear=3D"none"><a shape=3D"rect" ymailto=3D"m=
+ailto:xfs@oss.sgi.com" href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><=
+br clear=3D"none"><a shape=3D"rect" href=3D"http://oss.sgi.com/mailman/list=
+info/xfs" target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br =
+clear=3D"none"></div><br><br></div> </div> </div>  </div></body></html>
+------=_Part_545262_260624072.1437397695529--
+
+
+--===============4433075778157635864==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4433075778157635864==--
