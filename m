@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 312347F55
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DDD1F7F55
 	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 07:57:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 204228F8033
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 05:57:12 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8442CAC007
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 05:57:09 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sYP94wjyHmegaAO0 (version=TLSv1
+	cuda.sgi.com with ESMTP id H6Tcc1okttZpSJBV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 05:57:11 -0700 (PDT)
+	Mon, 20 Jul 2015 05:57:08 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2 3/4] xfsprogs: Use glibtoolize on osx
-Date: Mon, 20 Jul 2015 14:56:57 +0200
-Message-Id: <1437397018-12864-4-git-send-email-jtulak@redhat.com>
+Subject: [PATCH v2 1/4] xfsprogs: Prefix LIST_... macros to XFS_LIST_...
+Date: Mon, 20 Jul 2015 14:56:55 +0200
+Message-Id: <1437397018-12864-2-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
 References: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,50 +31,45 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-OS X doesn't have libtoolize binary by default, and the available$
-ports are named "glibtoolize". Autodetect this issue.
+OS X has some conflicting LIST_ macros, so prefix the XFS ones.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- Makefile | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ include/list.h  | 6 +++---
+ repair/phase6.c | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 3da4d5d..4abaaac 100644
---- a/Makefile
-+++ b/Makefile
-@@ -52,6 +52,14 @@ ifneq ("$(XGETTEXT)","")
- TOOL_SUBDIRS += po
- endif
+diff --git a/include/list.h b/include/list.h
+index 3f087a4..7e9f748 100644
+--- a/include/list.h
++++ b/include/list.h
+@@ -27,10 +27,10 @@ struct list_head {
+ 	struct list_head *prev;
+ };
  
-+# If we are on OS X, use glibtoolize from MacPorts, as OS X doesn't have
-+# libtoolize binary itself.
-+LIBTOOLIZE_TEST=$(shell libtoolize --version >/dev/null 2>&1 && echo found)
-+LIBTOOLIZE_BIN=libtoolize
-+ifneq ("$(LIBTOOLIZE_TEST)","found")
-+LIBTOOLIZE_BIN=glibtoolize
-+endif
-+
- # include is listed last so it is processed last in clean rules.
- SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) include
+-#define LIST_HEAD_INIT(name) { &(name), &(name) }
++#define XFS_LIST_HEAD_INIT(name) { &(name), &(name) }
  
-@@ -85,13 +93,14 @@ else
- clean:	# if configure hasn't run, nothing to clean
- endif
+-#define LIST_HEAD(name) \
+-		struct list_head name = LIST_HEAD_INIT(name)
++#define XFS_LIST_HEAD(name) \
++		struct list_head name = XFS_LIST_HEAD_INIT(name)
  
-+
- # Recent versions of libtool require the -i option for copying auxiliary
- # files (config.sub, config.guess, install-sh, ltmain.sh), while older
- # versions will copy those files anyway, and don't understand -i.
--LIBTOOLIZE_INSTALL = `libtoolize -n -i >/dev/null 2>/dev/null && echo -i`
-+LIBTOOLIZE_INSTALL = `$(LIBTOOLIZE_BIN) -n -i >/dev/null 2>/dev/null && echo -i`
+ #define INIT_LIST_HEAD(list) list_head_init(list)
+ static inline void list_head_init(struct list_head *list)
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 9a5cba7..87732e1 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -49,7 +49,7 @@ typedef struct dotdot_update {
+ 	int			ino_offset;
+ } dotdot_update_t;
  
- configure:
--	libtoolize -c $(LIBTOOLIZE_INSTALL) -f
-+	$(LIBTOOLIZE_BIN) -c $(LIBTOOLIZE_INSTALL) -f
- 	cp include/install-sh .
- 	aclocal -I m4
- 	autoconf
+-static LIST_HEAD(dotdot_update_list);
++static XFS_LIST_HEAD(dotdot_update_list);
+ static int			dotdot_update;
+ 
+ static void
 -- 
 2.4.3
 
