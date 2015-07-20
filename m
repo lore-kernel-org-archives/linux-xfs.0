@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B16997F55
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 08:34:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F30530404E
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 06:34:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4qYgBRqWoolWZpeS for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 06:34:10 -0700 (PDT)
-Mime-Version: 1.0 (1.0)
-Subject: Re: XFS File system in trouble
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <55ACA615.10501@mygrande.net>
-Date: Mon, 20 Jul 2015 08:34:07 -0500
-Message-Id: <E46BD724-EB28-43F5-ACFA-09BF50DD3A53@sandeen.net>
-References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
-	<55AA5FCE.4080702@sandeen.net>
-	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
-	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
-	<55AAF73A.4040903@mygrande.net> <20150719232754.GS7943@dastard>
-	<55ACA615.10501@mygrande.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6F5407F5A
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 08:57:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 091F9AC005
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 06:57:48 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id uk7qDhBCnXzlyYdT (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 06:57:47 -0700 (PDT)
+Received: from zmail22.collab.prod.int.phx2.redhat.com
+	(zmail22.collab.prod.int.phx2.redhat.com [10.5.83.26])
+	by mx3-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id t6KDvkYI020661
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 09:57:46 -0400
+Date: Mon, 20 Jul 2015 09:57:46 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <1213913978.543970.1437400666553.JavaMail.zimbra@redhat.com>
+In-Reply-To: <2035333009.511763.1437398166766.JavaMail.zimbra@redhat.com>
+Subject: xfsprogs: useless code blocks
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +31,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Kris Rusocki <kszysiu@braxis.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
+Hi all,
 
+I found these useless bits of code in xfsprogs:
 
-> On Jul 20, 2015, at 2:41 AM, Leslie Rhorer <lrhorer@mygrande.net> wrote:
-> 
->> On 7/19/2015 6:27 PM, Dave Chinner wrote:
->>> On Sat, Jul 18, 2015 at 08:02:50PM -0500, Leslie Rhorer wrote:
->>> 
->>>    I found the problem with md5sum (and probably nfs, as well).  One
->>> of the memory modules in the server was bad.  The problem with XFS
->>> persists.  Every time tar tried to create the directory:
->> 
->> Now you need to run xfs_repair.
-> 
->    I do that every time the array implodes.  It makes no difference.
+repair/incore_ino.c:575-576: 
+if (ino_rec->ino_startnum == 0)
+  ino_rec = ino_rec;
 
-Have you done it since you fixed the bad memory problem?
+This one is pretty clear. It is there since 2001 (commit 2bd0ea187 
+by nathans@sgi.com, who didn't wrote here since 2006, so I find 
+CC-ing him useless). It looks like a forgotten code which doesn't 
+do anything, but I ask in case it is a hidden bug.
 
->  It never mentions cleaning the structure tar says needs cleaning,
+And:
 
-What does it mention?  AFAICT you haven't yet provided output from repair...
+db/check.c:3035, 3037: Always true expression, as be32_to_cpu() 
+translates to __u32 type and unsigned can't be less than zero.
 
-> and the next time I run tar on that file, the filesystem craters.
+be32_to_cpu(free->hdr.nvalid) < 0 ||
 
-Brian's suggestion of isolating with metadump is a good one, too.
+Is there any reason for these tests? I get different type sizes, or
+endians as platform dependent, but signed/unsigned? Or it is
+a big/little endian conversion hack?
 
-Eric
+Cheers,
+Jan
 
-> 
+-- 
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
