@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 35D6C7F69
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 12:28:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 11307304043
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 10:28:11 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Lo2gTanzwy37cjpy (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 10:28:11 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 1B3C4354172
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 17:28:10 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t6KHS9LE021206
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 13:28:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: checksum log record ext headers based on record size
-Date: Mon, 20 Jul 2015 13:28:08 -0400
-Message-Id: <1437413288-29329-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BF0FA7F69
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 17:39:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 55317AC005
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 15:39:01 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	EJsOsl4M7v3avOEZ for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 15:38:59 -0700 (PDT)
+Date: Tue, 21 Jul 2015 08:36:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH] block: xfs: dm thin: train XFS to give up on
+	retrying IO if thinp is out of space
+Message-ID: <20150720223610.GV7943@dastard>
+References: <20150720151849.GA2282@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150720151849.GA2282@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +26,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: axboe@kernel.dk, sandeen@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de
 
-The first 4 bytes of every basic block in the physical log is stamped
-with the current lsn. To support this mechanism, the log record header
-(first block of each new log record) contains space for the original
-first byte of each log record block before it is replaced with the lsn.
-The log record header has space for 32k worth of blocks. The version 2
-log adds new extended record headers for each additional 32k worth of
-blocks beyond what is supported by the record header.
+On Mon, Jul 20, 2015 at 11:18:49AM -0400, Mike Snitzer wrote:
+> If XFS fails to write metadata it will retry the write indefinitely
+> (with the hope that the write will succeed at some point in the future).
+> 
+> Others can possibly speak to historic reason(s) why this is a sane
+> default for XFS.  But when XFS is deployed ontop of DM thin provisioning
+> this infinite retry is very unwelcome -- especially if DM thinp was
+> configured to be automatically extended with free space but the admin
+> hasn't provided (or restored) adequate free space.
+> 
+> To fix this infinite retry a new bdev_has_space () hook is added to XFS
+> to break out of its metadata retry loop if the underlying block device
+> reports it no longer has free space.  DM thin provisioning is now
+> trained to respond accordingly, which enables XFS to not cause a cascade
+> of tasks blocked on IO waiting for XFS's infinite retry.
+> 
+> All other block devices, which don't implement a .has_space method in
+> block_device_operations, will always return true for bdev_has_space().
+> 
+> With this change XFS will fail the metadata IO, force shutdown, and the
+> XFS filesystem may be unmounted.  This enables an admin to recover from
+> their oversight, of not having provided enough free space, without
+> having to force a hard reset of the system to get XFS to unwedge.
+> 
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 
-The log record checksum incorporates the log record header, the extended
-headers and the record payload. xlog_cksum() checksums the extended
-headers based on log->l_iclog_heads, which specifies the number of
-extended headers in a log record based on the log buffer size mount
-option. The log buffer size is variable, however, and thus means the
-checksum can be calculated differently based on how a filesystem is
-mounted. This is problematic if a filesystem crashes and recovery occurs
-on a subsequent mount using a different log buffer size. For example,
-crash an active filesystem that is mounted with the default (32k)
-logbsize, attempt remount/recovery using '-o logbsize=64k' and the mount
-fails on or warns about log checksum failures.
+Shouldn't dm-thinp just return the bio with ENOSPC as it's error?
+The scsi layers already do this for hardware thinp ENOSPC failures,
+so dm-thinp should behave exactly the same (i.e. via
+__scsi_error_from_host_byte()). The behaviour of the filesystem
+should be the same in all cases - making it conditional on whether
+the thinp implementation can be polled for available space is wrong
+as most hardware thinp can't be polled by the kernel forthis info..
 
-To avoid this problem, update xlog_cksum() to calculate the checksum
-based on the size of the log buffer according to the log record. The
-size is already included in the h_size field of the log record header
-and thus is available at log recovery time. Extended log record headers
-are also only written when the log record is large enough to require
-them. This makes checksum calculation of log records consistent with the
-extended record header mechanism as well as how on-disk records are
-checksummed with various log buffer size mount options.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+If dm-thinp just returns ENOSPC from on the BIO like other hardware
+thinp devices, then it is up to the filesystem to handle that
+appropriately.  i.e. whether an ENOSPC IO error is fatal to the
+filesystem is determined by filesystem configuration and context of
+the IO error, not whether the block device has no space (which we
+should already know from the ENOSPC error delivered by IO
+completion).
 
-Hi all,
+Cheers,
 
-This is a bit of a behavior oddity I ran into while messing around with
-the torn log write handling stuff I'm currently working on. I've posted
-an xfstests test that reproduces the problem here:
-
-	http://thread.gmane.org/gmane.comp.file-systems.fstests/933
-
-Brian
-
- fs/xfs/xfs_log.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 08d4fe4..61ce3c0 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1652,8 +1652,13 @@ xlog_cksum(
- 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
- 		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
- 		int		i;
-+		int		xheads;
- 
--		for (i = 1; i < log->l_iclog_heads; i++) {
-+		xheads = size / XLOG_HEADER_CYCLE_SIZE;
-+		if (size % XLOG_HEADER_CYCLE_SIZE)
-+			xheads++;
-+
-+		for (i = 1; i < xheads; i++) {
- 			crc = crc32c(crc, &xhdr[i].hic_xheader,
- 				     sizeof(struct xlog_rec_ext_header));
- 		}
+Dave.
 -- 
-2.1.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
