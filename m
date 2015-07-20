@@ -1,32 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 05C507F60
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 10:13:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4112A7F60
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 10:18:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D4D17304048
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 08:13:00 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 18C90304048
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 08:18:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2PB2ET2VrhF6jKeh (version=TLSv1
+	cuda.sgi.com with ESMTP id 4WaqF2GBWRM97tm8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 08:13:00 -0700 (PDT)
-Date: Mon, 20 Jul 2015 11:12:56 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-Message-ID: <20150720151256.GA17816@bfoster.bfoster>
-References: <CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
-	<20150709183255.GG63282@bfoster.bfoster>
-	<CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
-	<20150713125214.GA50787@bfoster.bfoster>
-	<CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
-	<20150713170158.GB50787@bfoster.bfoster>
-	<CA++_uhvDrO2BmQ+q0bN=M_L-vUUaLZO9bHoKh0ntFveM5t-DNQ@mail.gmail.com>
-	<CA++_uhuJNkO4MDyS_+veFpysGyqzhqLspB3g73DtUCQqK1F80Q@mail.gmail.com>
-	<20150720114648.GB53450@bfoster.bfoster>
-	<CA++_uhvwR1KucdHWnPzS5ysFuYyssFnUB95kS-piC_pRnq=dXw@mail.gmail.com>
+	Mon, 20 Jul 2015 08:18:51 -0700 (PDT)
+Date: Mon, 20 Jul 2015 11:18:49 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [RFC PATCH] block: xfs: dm thin: train XFS to give up on retrying IO
+	if thinp is out of space
+Message-ID: <20150720151849.GA2282@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA++_uhvwR1KucdHWnPzS5ysFuYyssFnUB95kS-piC_pRnq=dXw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,101 +24,237 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kuo Hugo <tonytkdk@gmail.com>
-Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, Darrell Bishop <darrell@swiftstack.com>, xfs@oss.sgi.com
+To: axboe@kernel.dk, david@fromorbit.com, hch@lst.de, sandeen@redhat.com
+Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gTW9uLCBKdWwgMjAsIDIwMTUgYXQgMTA6MzA6MzFQTSArMDgwMCwgS3VvIEh1Z28gd3JvdGU6
-Cj4gSGkgQnJhaW4sCj4gCj4gPkkgZG9u4oCZdCBrbm93IG11Y2ggYWJvdXQgdGhlIFN3aWZ0IGJ1
-Zy4gQSBCVUcoKSBvciBjcmFzaCBpbiB0aGUga2VybmVsIGlzCj4gZ2VuZXJhbGx5IGFsd2F5cyBh
-IGtlcm5lbCBidWcsIHJlZ2FyZGxlc3Mgb2Ygd2hhdCB1c2Vyc3BhY2UgaXMgZG9pbmcuIEl0Cj4g
-PmNlcnRhaW5seSBjb3VsZCBiZSB0aGF0IHdoYXRldmVyIHVzZXJzcGFjZSBpcyBkb2luZyB0byB0
-cmlnZ2VyIHRoZSBrZXJuZWwKPiBidWcgaXMgYSBidWcgaW4gdGhlIHVzZXJzcGFjZSBhcHBsaWNh
-dGlvbiwgYnV0IGVpdGhlciB3YXkgaXQgc2hvdWxkbuKAmXQKPiBjYXVzZSB0aGUgPmtlcm5lbCB0
-byBjcmFzaC4gQnkgdGhlIHNhbWUgdG9rZW4sIGlmIFN3aWZ0IGlzIHVwZGF0ZWQgdG8gZml4Cj4g
-dGhlIGFmb3JlbWVudGlvbmVkIGJ1ZyBhbmQgdGhlIGtlcm5lbCBjcmFzaCBubyBsb25nZXIgcmVw
-cm9kdWNlcywgdGhhdAo+IGRvZXNu4oCZdCA+bmVjZXNzYXJpbHkgbWVhbiB0aGUga2VybmVsIGJ1
-ZyBpcyBmaXhlZCAoanVzdCBwb3RlbnRpYWxseSBoaWRkZW4pLgo+IAo+IFVuZGVyc3RhbmQuCj4g
-Cj4gW1ByZXZpb3VzIE1lc3NhZ2VdCj4gCj4gVGhlIHZhbGlkIGlub2RlIGhhcyBhbiBpbm9kZSBu
-dW1iZXIgb2YgMTM2NjgyMDc1NjEuCj4gLSBUaGUgZnNuYW1lIGZvciB0aGlzIGlub2RlIGlzICJz
-ZGIuIgo+IC0gVGhlIGlub2RlIGRvZXMgYXBwZWFyIHRvIGhhdmUgYSBub24tTlVMTCBpZl9kYXRh
-Ogo+IAo+ICAgICBpZl91MSA9IHsKPiAgICAgICBpZl9leHRlbnRzID0gMHhmZmZmODgwODRmZWFm
-NWMwLAo+ICAgICAgIGlmX2V4dF9pcmVjID0gMHhmZmZmODgwODRmZWFmNWMwLAo+ICAgICAgIGlm
-X2RhdGEgPSAweGZmZmY4ODA4NGZlYWY1YzAgIlwwMDQiCj4gICAgIH0sCj4gCj4gICAgICAgICBm
-aW5kIDxtbnRwYXRoPiAtaW51bSAxMzY2ODIwNzU2MQo+IAo+IFExOiBXZXJlIHlvdSBhYmxlIHRv
-IHRyYWNrIGRvd24gdGhlIGRpcmVjdG9yeSBpbm9kZSBtZW50aW9uZWQgaW4gdGhlCj4gcHJldmlv
-dXMgbWVzc2FnZT8KPiAKPiBBbnM6IFllcywgaXTigJlzIHRoZSBkaXJlY3RvcnkvZmlsZSBhcyBi
-ZWxvdy4gL3Nydi9ub2RlL2QyMjQgaXMgdGhlIG1vdW50Cj4gcG9pbnQgb2YgL2Rldi9zZGIgLiBU
-aGlzIGlzIHRoZSBvcmlnaW5hbCBsb2NhdGlvbiBvZiB0aGUgcGF0aC4gVGhpcyBmb2xkZXIKPiBp
-bmNsdWRlcyB0aGUgZmlsZSAxNDM2MjY2MDUyLjcxODkzLnRzIG5vdy4gVGhlIC50cyBmaWxlIGlz
-IDAgc2l6ZQo+IAo+IAo+IFtyb290QHIyb2JqMDEgfl0jIGZpbmQgL3Nydi9ub2RlL2QyMjQgLWlu
-dW0gMTM2NjgyMDc1NjEKPiAvc3J2L25vZGUvZDIyNC9vYmplY3RzLzQ1MzgyL2IzMi9iMTQ2ODY1
-YmY4MDM0YmZjNDI1NzBiNzQ3YzM0MWIzMgo+IAo+IFtyb290QHIyb2JqMDEgfl0jIGxzIC1scnQK
-PiAvc3J2L25vZGUvZDIyNC9vYmplY3RzLzQ1MzgyL2IzMi9iMTQ2ODY1YmY4MDM0YmZjNDI1NzBi
-NzQ3YzM0MWIzMgo+IC1ydy0tLS0tLS0gMSBzd2lmdCBzd2lmdCAwIEp1bCA3IDIyOjM3IDE0MzYy
-NjYwNTIuNzE4OTMudHMKPiAKPiBRMjogSXMgaXQgc29tZSBraW5kIG9mIGludGVybmFsIGRpcmVj
-dG9yeSB1c2VkIGJ5IHRoZSBhcHBsaWNhdGlvbiAoZS5nLiwKPiBwZXJoYXBzIHJlbGF0ZWQgdG8g
-dGhlIHF1YXJhbnRpbmUgbWVjaGFuaXNtIG1lbnRpb25lZCBpbiB0aGUgYnVnKT8KPiAKPiBBbnM6
-IFllcywgaXTigJlzIGEgZGlyZWN0b3J5IHdoaWNoIGFjY2Vzc2luZyBieSBhcHBsaWNhdGlvbi4K
-PiAKCk9rLCBzbyBJIHRha2UgaXQgdGhhdCB3ZSBoYXZlIGEgZGlyZWN0b3J5IHBlciBvYmplY3Qg
-YmFzZWQgb24gc29tZSBraW5kCm9mIGhhc2guIFRoZSBkaXJlY3RvcnkgcHJlc3VtYWJseSBjb250
-YWlucyB0aGUgb2JqZWN0IGFsb25nIHdpdGgKd2hhdGV2ZXIgbWV0YWRhdGEgaXMgdHJhY2tlZC4K
-Cj4gCj4gIDM3IGZmZmY4ODEwNzE4MzQzYzAgZmZmZjg4MTA1YjlkMzJjMCBmZmZmODgwODc0NWFh
-NWU4IFJFRyAgW2V2ZW50cG9sbF0KPiAgMzggZmZmZjg4MDg3MTNkYTc4MCBmZmZmODgwMDEwYzlh
-OTAwIGZmZmY4ODA5NjM2OGExODggUkVHCj4gL3Nydi9ub2RlL2QyMjQvcXVhcmFudGluZWQvb2Jq
-ZWN0cy9iMTQ2ODY1YmY4MDM0YmZjNDI1NzBiNzQ3YzM0MWIzMi8xNDM2MjY2MDQyLjU3Nzc1LnRz
-Cj4gIDM5IGZmZmY4ODA4NzFjYjAzYzAgZmZmZjg4MDQ5NWE4YjM4MCBmZmZmODgwOGE1ZTZjOTg4
-IFJFRwo+IC9zcnYvbm9kZS9kMjI0L3RtcC90bXBTcG5ySGcKPiAKPiAgNDAgZmZmZjg4MDg3MTVi
-NDU0MCBmZmZmODgwNDgxOWM1OGMwIGZmZmY4ODAyMzgxZjhkODggRElSCj4gL3Nydi9ub2RlL2Qy
-MjQvcXVhcmFudGluZWQvb2JqZWN0cy9iMTQ2ODY1YmY4MDM0YmZjNDI1NzBiNzQ3YzM0MWIzMgo+
-IAo+IFRoZSBhYm92ZSBvcGVyYXRpb24gaW4gdGhlIHN3aWZ0LW9iamVjdC1zZXJ2ZXIgd2FzIGRv
-aW5nIHB5dGhvbiBmdW5jdGlvbgo+IGNhbGwgdG8gcmVuYW1lIHRoZSBmaWxlCj4gKiAvc3J2L25v
-ZGUvZDIyNC9vYmplY3RzLzQ1MzgyL2IzMi9iMTQ2ODY1YmY4MDM0YmZjNDI1NzBiNzQ3YzM0MWIz
-Mi8xNDM2MjY2MDQyLjU3Nzc1LnRzKgo+IGFzCj4gKi9zcnYvbm9kZS9kMjI0L3F1YXJhbnRpbmVk
-L29iamVjdHMvYjE0Njg2NWJmODAzNGJmYzQyNTcwYjc0N2MzNDFiMzIvMTQzNjI2NjA0Mi41Nzc3
-NS50cyoKPiAKPiBvcy5yZW5hbWUob2xkLCBuZXcpCj4gCj4gQW5kIGl0IGNyYXNoZWQgYXQgdGhp
-cyBwb2ludC4gSW4gdGhlIFExLCB3ZSBmb3VuZCB0aGUgaW51bSBpcyBwb2ludGluZyB0bwo+IHRo
-ZSBkaXJlY3RvcnkKPiAvc3J2L25vZGUvZDIyNC9vYmplY3RzLzQ1MzgyL2IzMi9iMTQ2ODY1YmY4
-MDM0YmZjNDI1NzBiNzQ3YzM0MWIzMiAuCj4gCgpUaGUgb3JpZ2luYWwgc3RhY2t0cmFjZSBzaG93
-cyB0aGUgY3Jhc2ggaW4gYSByZWFkZGlyIHJlcXVlc3QuIEknbSBzdXJlCnRoZXJlIGFyZSBtdWx0
-aXBsZSB0aGluZ3MgZ29pbmcgb24gaGVyZSAoYW5kIHRoZXJlIGFyZSBhIGNvdXBsZSByZW5hbWUK
-dHJhY2VzIGluIHRoZSB2bWNvcmUgc2l0dGluZyBvbiBsb2NrcyksIG9mIGNvdXJzZSwgYnV0IHdo
-ZXJlIGRvZXMgdGhlCmluZm9ybWF0aW9uIGFib3V0IHRoZSByZW5hbWUgY29tZSBmcm9tPwoKPiBX
-ZSBmb3VuZCB0aGF0IG11bHRpcGxlKG92ZXIgMTApIERFTEVURSBmcm9tIGFwcGxpY2F0aW9uIGFn
-YWluc3QgdGhlIHRhcmdldAo+IGZpbGUgYXQgYWxtb3N0IHNhbWUgbW9tZW50LiBUaGUgREVMRVRF
-IGlzIHJlbW92aW5nIHRoZSBvcmlnaW5hbCBmaWxlIGluIHRoZQo+IGRpcmVjdG9yeSBhbmQgY3Jl
-YXRlIG5ldyBlbXB0eSAudHMgZmlsZSBpbiB0aGlzIGRpcmVjdG9yeS4gSSBzdXNwZWN0IHRoYXQK
-PiBtdWx0aXBsZSBvcy5yZW5hbWUgb24gdGhlIHNhbWUgZmlsZSBpbiB0aGF0IGRpcmVjdG9yeSB3
-aWxsIGNhdXNlIHRoZSBrZXJuZWwKPiBwYW5pYy4KPiAKPiBBbmQgdGhlIGZpbGUKPiAvc3J2L25v
-ZGUvZDIyNC9xdWFyYW50aW5lZC9vYmplY3RzL2IxNDY4NjViZjgwMzRiZmM0MjU3MGI3NDdjMzQx
-YjMyLzE0MzYyNjYwNDIuNTc3NzUudHMKPiB3YXMgbm90IGNyZWF0ZWQuCj4gCgpJJ20gbm90IHF1
-aXRlIGZvbGxvd2luZyBoZXJlIGJlY2F1c2UgSSBkb24ndCBoYXZlIGVub3VnaCBjb250ZXh0IGFi
-b3V0CndoYXQgdGhlIGFwcGxpY2F0aW9uIHNlcnZlciBpcyBkb2luZy4gU28gZmFyLCBpdCBzb3Vu
-ZHMgbGlrZSB3ZSBzb21laG93CmhhdmUgbXVsdGlwbGUgdGhyZWFkcyBjb21wZXRpbmcgdG8gcmVu
-YW1lIHRoZSBzYW1lIGZpbGUuLj8gSXMgdGhlcmUKYW55dGhpbmcgZWxzZSBpbiB0aGlzIGRpcmVj
-dG9yeSBhdCB0aGUgdGltZSB0aGlzIHNlcXVlbmNlIGV4ZWN1dGVzCihlLmcuLCBhIGZpbGUgd2l0
-aCBvYmplY3QgZGF0YSB0aGF0IGFsc28gZ2V0cyBxdWFyYW50aW5lZCk/CgpJZGVhbGx5LCB3ZSdk
-IHVsdGltYXRlbHkgbGlrZSB0byB0cmFuc2xhdGUgdGhpcyBpbnRvIGEgc2VxdWVuY2Ugb2YKb3Bl
-cmF0aW9ucyBhcyBzZWVuIGJ5IHRoZSBmcyB0aGF0IGhvcGVmdWxseSB0cmlnZ2VyIHRoZSBwcm9i
-bGVtLiBXZQptaWdodCBoYXZlIHRvIHN0YXJ0IGJ5IHJlcHJvZHVjaW5nIHRocm91Z2ggdGhlIGFw
-cGxpY2F0aW9uIHNlcnZlci4KTG9va2luZyBiYWNrIGF0IHRoYXQgYnVnIHJlcG9ydCwgaXQgc291
-bmRzIGxpa2UgYSAnREVMRVRFJyBpcyBhCmhpZ2gtbGV2ZWwgc2VydmVyIG9wZXJhdGlvbiB0aGF0
-IGNhbiBjb25zaXN0IG9mIG11bHRpcGxlIHN1Yi1vcGVyYXRpb25zCmF0IHRoZSBmaWxlc3lzdGVt
-IGxldmVsIChlLmcuLCBsaXN0LCBjb25kaXRpb25hbCByZW5hbWUgaWYgKi50cyBmaWxlCmV4aXN0
-cywgZXRjLikuIERvIHlvdSBoYXZlIGVub3VnaCBpbmZvcm1hdGlvbiB0aHJvdWdoIGFueSBvZiB0
-aGUgYWJvdmUKdG8gdHJ5IGFuZCBydW4gc29tZXRoaW5nIGFnYWluc3QgU3dpZnQgdGhhdCBtaWdo
-dCBleHBsaWNpdGx5IHJlcHJvZHVjZQp0aGUgcHJvYmxlbT8gRm9yIGV4YW1wbGUsIGhhdmUgb25l
-IHRocmVhZCB0aGF0IGNyZWF0ZXMgYW5kIHJlY3JlYXRlcyB0aGUKc2FtZSBvYmplY3QgcmVwZWF0
-ZWRseSBhbmQgbWFueSBtb3JlIGNvbXBldGluZyB0aHJlYWRzIHRoYXQgdHJ5IHRvCnJlbW92ZSAo
-b3Igd2hhdGV2ZXIgcmVzdWx0cyBpbiB0aGUgcXVhcmFudGluZSkgaXQ/IE5vdGUgdGhhdCBJJ20g
-anVzdApncmFzcGluZyBhdCBzdHJhd3MgaGVyZSwgeW91IG1pZ2h0IGJlIGFibGUgdG8gZGVzaWdu
-IGEgbW9yZSBhY2N1cmF0ZQpyZXByb2R1Y2VyIGJhc2VkIG9uIHdoYXQgaXQgbG9va3MgbGlrZSBp
-cyBoYXBwZW5pbmcgd2l0aGluIFN3aWZ0LgoKQnJpYW4KCj4gUmVnYXJkcyAvLyBIdWdvCj4g4oCL
-Cgo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZz
-IG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+If XFS fails to write metadata it will retry the write indefinitely
+(with the hope that the write will succeed at some point in the future).
+
+Others can possibly speak to historic reason(s) why this is a sane
+default for XFS.  But when XFS is deployed ontop of DM thin provisioning
+this infinite retry is very unwelcome -- especially if DM thinp was
+configured to be automatically extended with free space but the admin
+hasn't provided (or restored) adequate free space.
+
+To fix this infinite retry a new bdev_has_space () hook is added to XFS
+to break out of its metadata retry loop if the underlying block device
+reports it no longer has free space.  DM thin provisioning is now
+trained to respond accordingly, which enables XFS to not cause a cascade
+of tasks blocked on IO waiting for XFS's infinite retry.
+
+All other block devices, which don't implement a .has_space method in
+block_device_operations, will always return true for bdev_has_space().
+
+With this change XFS will fail the metadata IO, force shutdown, and the
+XFS filesystem may be unmounted.  This enables an admin to recover from
+their oversight, of not having provided enough free space, without
+having to force a hard reset of the system to get XFS to unwedge.
+
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/md/dm-thin.c          | 27 +++++++++++++++++++++++++--
+ drivers/md/dm.c               | 33 +++++++++++++++++++++++++++++++++
+ fs/block_dev.c                | 10 ++++++++++
+ fs/xfs/xfs_buf_item.c         |  3 +++
+ include/linux/blkdev.h        |  3 +++
+ include/linux/device-mapper.h |  8 ++++++++
+ 6 files changed, 82 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+index 1c50c58..55ee3cf 100644
+--- a/drivers/md/dm-thin.c
++++ b/drivers/md/dm-thin.c
+@@ -3948,7 +3948,7 @@ static struct target_type pool_target = {
+ 	.name = "thin-pool",
+ 	.features = DM_TARGET_SINGLETON | DM_TARGET_ALWAYS_WRITEABLE |
+ 		    DM_TARGET_IMMUTABLE,
+-	.version = {1, 16, 0},
++	.version = {1, 17, 0},
+ 	.module = THIS_MODULE,
+ 	.ctr = pool_ctr,
+ 	.dtr = pool_dtr,
+@@ -4333,9 +4333,31 @@ static void thin_io_hints(struct dm_target *ti, struct queue_limits *limits)
+ 	limits->max_discard_sectors = 2048 * 1024 * 16; /* 16G */
+ }
+ 
++static bool thin_has_space(struct dm_target *ti)
++{
++	struct thin_c *tc = ti->private;
++	struct pool *pool = tc->pool;
++	enum pool_mode m = get_pool_mode(pool);
++
++	/*
++	 * The thin-pool has space if it is either in write mode _or_
++	 * it is still waiting for space to be added.
++	 *
++	 * If 'error_if_no_space' was configured the pool will not queue
++	 * IO at all, even though the pool will stay in OODS mode, so
++	 * there is no point having upper layers (e.g. XFS) retry IO
++	 * given 'error_if_no_space' is meant to _not_ queue IO.
++	 */
++	if (m == PM_WRITE ||
++	    (m == PM_OUT_OF_DATA_SPACE && !pool->pf.error_if_no_space))
++		return true;
++
++	return false;
++}
++
+ static struct target_type thin_target = {
+ 	.name = "thin",
+-	.version = {1, 16, 0},
++	.version = {1, 17, 0},
+ 	.module	= THIS_MODULE,
+ 	.ctr = thin_ctr,
+ 	.dtr = thin_dtr,
+@@ -4348,6 +4370,7 @@ static struct target_type thin_target = {
+ 	.merge = thin_merge,
+ 	.iterate_devices = thin_iterate_devices,
+ 	.io_hints = thin_io_hints,
++	.has_space = thin_has_space,
+ };
+ 
+ /*----------------------------------------------------------------*/
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index ab37ae1..14bf9df 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -597,6 +597,38 @@ out:
+ 	return r;
+ }
+ 
++static bool dm_blk_has_space(struct block_device *bdev)
++{
++	struct mapped_device *md = bdev->bd_disk->private_data;
++	int srcu_idx;
++	struct dm_table *map;
++	struct dm_target *tgt;
++	bool r = true;
++
++	map = dm_get_live_table(md, &srcu_idx);
++
++	if (!map || !dm_table_get_size(map))
++		goto out;
++
++	/* We only support devices that have a single target */
++	if (dm_table_get_num_targets(map) != 1)
++		goto out;
++
++	tgt = dm_table_get_target(map, 0);
++	if (!tgt->type->has_space)
++		goto out;
++
++	if (dm_suspended_md(md))
++		goto out;
++
++	r = tgt->type->has_space(tgt);
++
++out:
++	dm_put_live_table(md, srcu_idx);
++
++	return r;
++}
++
+ static struct dm_io *alloc_io(struct mapped_device *md)
+ {
+ 	return mempool_alloc(md->io_pool, GFP_NOIO);
+@@ -3647,6 +3679,7 @@ static const struct block_device_operations dm_blk_dops = {
+ 	.release = dm_blk_close,
+ 	.ioctl = dm_blk_ioctl,
+ 	.getgeo = dm_blk_getgeo,
++	.has_space = dm_blk_has_space,
+ 	.owner = THIS_MODULE
+ };
+ 
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 1982437..5034361 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -469,6 +469,16 @@ long bdev_direct_access(struct block_device *bdev, sector_t sector,
+ }
+ EXPORT_SYMBOL_GPL(bdev_direct_access);
+ 
++bool bdev_has_space(struct block_device *bdev)
++{
++	const struct block_device_operations *ops = bdev->bd_disk->fops;
++
++	if (!ops->has_space)
++		return true;
++	return ops->has_space(bdev);
++}
++EXPORT_SYMBOL_GPL(bdev_has_space);
++
+ /*
+  * pseudo-fs
+  */
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 092d652..98efbca 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1059,6 +1059,9 @@ xfs_buf_iodone_callbacks(
+ 	if (likely(!bp->b_error))
+ 		goto do_callbacks;
+ 
++	if (!bdev_has_space(bp->b_target->bt_bdev))
++		xfs_force_shutdown(mp, SHUTDOWN_REMOTE_REQ);
++
+ 	/*
+ 	 * If we've already decided to shutdown the filesystem because of
+ 	 * I/O errors, there's no point in giving this a retry.
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d4068c17d..1ba66bc 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1566,6 +1566,7 @@ struct block_device_operations {
+ 	int (*getgeo)(struct block_device *, struct hd_geometry *);
+ 	/* this callback is with swap_lock and sometimes page table lock held */
+ 	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
++	bool (*has_space) (struct block_device *);
+ 	struct module *owner;
+ };
+ 
+@@ -1576,6 +1577,8 @@ extern int bdev_write_page(struct block_device *, sector_t, struct page *,
+ 						struct writeback_control *);
+ extern long bdev_direct_access(struct block_device *, sector_t, void **addr,
+ 						unsigned long *pfn, long size);
++extern bool bdev_has_space(struct block_device *);
++
+ #else /* CONFIG_BLOCK */
+ 
+ struct block_device;
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index 51cc1de..c55053e 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -119,6 +119,13 @@ typedef void (*dm_io_hints_fn) (struct dm_target *ti,
+  */
+ typedef int (*dm_busy_fn) (struct dm_target *ti);
+ 
++/*
++ * Returns:
++ *    false: The target has no space that may be allocated.
++ *    true:  The target has space that may be allocated.
++ */
++typedef bool (*dm_has_space_fn) (struct dm_target *ti);
++
+ void dm_error(const char *message);
+ 
+ struct dm_dev {
+@@ -164,6 +171,7 @@ struct target_type {
+ 	dm_busy_fn busy;
+ 	dm_iterate_devices_fn iterate_devices;
+ 	dm_io_hints_fn io_hints;
++	dm_has_space_fn has_space;
+ 
+ 	/* For internal device-mapper use. */
+ 	struct list_head list;
+-- 
+2.3.2 (Apple Git-55)
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
