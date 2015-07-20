@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1633C7F6D
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:03:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E0930304043
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 16:03:25 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	xqFRLCYBk3Ej5Z1C for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 16:03:12 -0700 (PDT)
-Date: Tue, 21 Jul 2015 09:02:19 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: checksum log record ext headers based on record size
-Message-ID: <20150720230219.GW7943@dastard>
-References: <1437413288-29329-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C17B57F74
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:21:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 470CBAC005
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 16:21:01 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lsNU5uNTDEFxC1Bf (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 16:21:00 -0700 (PDT)
+Date: Mon, 20 Jul 2015 19:20:58 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [RFC PATCH] block: xfs: dm thin: train XFS to give up on
+	retrying IO if thinp is out of space
+Message-ID: <20150720232057.GH28135@redhat.com>
+References: <20150720151849.GA2282@redhat.com> <20150720223610.GV7943@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1437413288-29329-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20150720223610.GV7943@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,76 +30,81 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: axboe@kernel.dk, sandeen@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de
 
-On Mon, Jul 20, 2015 at 01:28:08PM -0400, Brian Foster wrote:
-> The first 4 bytes of every basic block in the physical log is stamped
-> with the current lsn. To support this mechanism, the log record header
-> (first block of each new log record) contains space for the original
-> first byte of each log record block before it is replaced with the lsn.
-> The log record header has space for 32k worth of blocks. The version 2
-> log adds new extended record headers for each additional 32k worth of
-> blocks beyond what is supported by the record header.
+On Mon, Jul 20 2015 at  6:36pm -0400,
+Dave Chinner <david@fromorbit.com> wrote:
+
+> On Mon, Jul 20, 2015 at 11:18:49AM -0400, Mike Snitzer wrote:
+> > If XFS fails to write metadata it will retry the write indefinitely
+> > (with the hope that the write will succeed at some point in the future).
+> > 
+> > Others can possibly speak to historic reason(s) why this is a sane
+> > default for XFS.  But when XFS is deployed ontop of DM thin provisioning
+> > this infinite retry is very unwelcome -- especially if DM thinp was
+> > configured to be automatically extended with free space but the admin
+> > hasn't provided (or restored) adequate free space.
+> > 
+> > To fix this infinite retry a new bdev_has_space () hook is added to XFS
+> > to break out of its metadata retry loop if the underlying block device
+> > reports it no longer has free space.  DM thin provisioning is now
+> > trained to respond accordingly, which enables XFS to not cause a cascade
+> > of tasks blocked on IO waiting for XFS's infinite retry.
+> > 
+> > All other block devices, which don't implement a .has_space method in
+> > block_device_operations, will always return true for bdev_has_space().
+> > 
+> > With this change XFS will fail the metadata IO, force shutdown, and the
+> > XFS filesystem may be unmounted.  This enables an admin to recover from
+> > their oversight, of not having provided enough free space, without
+> > having to force a hard reset of the system to get XFS to unwedge.
+> > 
+> > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 > 
-> The log record checksum incorporates the log record header, the extended
-> headers and the record payload. xlog_cksum() checksums the extended
-> headers based on log->l_iclog_heads, which specifies the number of
-> extended headers in a log record based on the log buffer size mount
-> option. The log buffer size is variable, however, and thus means the
-> checksum can be calculated differently based on how a filesystem is
-> mounted. This is problematic if a filesystem crashes and recovery occurs
-> on a subsequent mount using a different log buffer size. For example,
-> crash an active filesystem that is mounted with the default (32k)
-> logbsize, attempt remount/recovery using '-o logbsize=64k' and the mount
-> fails on or warns about log checksum failures.
-> 
-> To avoid this problem, update xlog_cksum() to calculate the checksum
-> based on the size of the log buffer according to the log record. The
-> size is already included in the h_size field of the log record header
-> and thus is available at log recovery time. Extended log record headers
-> are also only written when the log record is large enough to require
-> them. This makes checksum calculation of log records consistent with the
-> extended record header mechanism as well as how on-disk records are
-> checksummed with various log buffer size mount options.
+> Shouldn't dm-thinp just return the bio with ENOSPC as it's error?
+> The scsi layers already do this for hardware thinp ENOSPC failures,
+> so dm-thinp should behave exactly the same (i.e. via
+> __scsi_error_from_host_byte())
 
-Hmmm - I thought that case was handled, but I guess not...
+DM thinp does return -ENOSPC (uniformly so, as of 4.2-rc3 via commit
+bcc696fac1).  Before it was more nuanced, but it would either return
+-ENOSPC or -EIO (transition from -ENOSPC to -EIO was when thinp's
+no_space_timoeut expired).
 
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1652,8 +1652,13 @@ xlog_cksum(
->  	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
->  		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
->  		int		i;
-> +		int		xheads;
->  
-> -		for (i = 1; i < log->l_iclog_heads; i++) {
-> +		xheads = size / XLOG_HEADER_CYCLE_SIZE;
-> +		if (size % XLOG_HEADER_CYCLE_SIZE)
-> +			xheads++;
-> +
-> +		for (i = 1; i < xheads; i++) {
->  			crc = crc32c(crc, &xhdr[i].hic_xheader,
->  				     sizeof(struct xlog_rec_ext_header));
->  		}
+Anyway, XFS doesn't care what error is returned it'll just keep
+retrying metdata IO indefinitely.
 
-rhead->h_len is an untrusted value during log recovery. i.e. at this
-point we haven't validated that the record size is within the sane
-range. See xlog_valid_rec_header() - it only checks that 0 <
-rhead->h_len < INT_MAX. Realistically, this should be checking that
-it is no more than:
+> The behaviour of the filesystem
+> should be the same in all cases - making it conditional on whether
+> the thinp implementation can be polled for available space is wrong
+> as most hardware thinp can't be polled by the kernel forthis info..
 
-	(XLOG_MAX_RECORD_BSIZE / XLOG_HEADER_CYCLE_SIZE) + 1
+There isn't an immediate corollary for SCSI no.  I've discussed flagging
+the SCSI block device as out of space when the equivalent HW thinp
+ASC/ASQ is returned from the SCSI target but there isn't an existing way
+to know space was added to reset this state (like is possible with DM
+thinp).
 
-as it is now being used as an array index into a dynamically
-allocated buffer....
+But in the past you (or others) have claimed that ENOSPC isn't a rich
+enough return to _know_ that it is a hard error.
 
-Cheers,
+Now you seem to be oscillating away from a richer interface between
+filesystems and the underlying block device to: a simple error code is
+enough.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> If dm-thinp just returns ENOSPC from on the BIO like other hardware
+> thinp devices, then it is up to the filesystem to handle that
+> appropriately.  i.e. whether an ENOSPC IO error is fatal to the
+> filesystem is determined by filesystem configuration and context of
+> the IO error, not whether the block device has no space (which we
+> should already know from the ENOSPC error delivered by IO
+> completion).
+
+OK, _please_ add that configurability to XFS.  As I think you know, this
+is a long-standing XFS on thinp issue (both DM and HW thinp).
+
+Mike
 
 _______________________________________________
 xfs mailing list
