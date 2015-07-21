@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7437C7F3F
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 06:50:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 50C438F804C
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 04:50:44 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E97FE29E06
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 06:50:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 88A3AAC009
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 04:50:48 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 63IYGtmt5WXJi5SC (version=TLSv1
+	cuda.sgi.com with ESMTP id aSVKbaOJQQ5IK47k (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 04:50:43 -0700 (PDT)
-Date: Tue, 21 Jul 2015 07:50:41 -0400
+	Tue, 21 Jul 2015 04:50:47 -0700 (PDT)
+Date: Tue, 21 Jul 2015 07:50:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: remote attributes need to be considered data
-Message-ID: <20150721115040.GC23013@bfoster.bfoster>
+Subject: Re: [PATCH 4/4] xfs: xfs_bunmapi() does not need XFS_BMAPI_METADATA
+	flag
+Message-ID: <20150721115045.GD23013@bfoster.bfoster>
 References: <1437440945-23457-1-git-send-email-david@fromorbit.com>
-	<1437440945-23457-4-git-send-email-david@fromorbit.com>
+	<1437440945-23457-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1437440945-23457-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1437440945-23457-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,74 +34,113 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: willy@linux.intel.com, xfs@oss.sgi.com
 
-On Tue, Jul 21, 2015 at 11:09:04AM +1000, Dave Chinner wrote:
+On Tue, Jul 21, 2015 at 11:09:05AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We don't log remote attribute contents, and instead write them
-> synchronously before we commit the block allocation and attribute
-> tree update transaction. As a result we are writing to the allocated
-> space before the allcoation has been made permanent.
-> 
-> As a result, we cannot consider this allocation to be a metadata
-> allocation. Metadata allocation can take blocks from the free list
-
-							   busy list ?
-
-> and so reuse them before the transaction that freed the block is
-> committed to disk. This behaviour is perfectly fine for journalled
-> metadata changes as log recovery will ensure the free operation is
-> replayed before the overwrite, but for remote attribute writes this
-> is not the case.
-> 
-> Hence we have to consider the remote attribute blocks to contain
-> data and allocate accordingly. We do this by dropping the
-> XFS_BMAPI_METADATA flag from the block allocation. This means the
-> allocation will not use blocks that are on the busy list without
-> first ensuring that the freeing transaction has been committed to
-> disk and the blocks removed from the busy list. This ensures we will
-> never overwrite a freed block without first ensuring that it is
-> really free.
+> xfs_bunmapi() doesn't care what type of extent is being freed and
+> does not look at the XFS_BMAPI_METADATA flag at all. As such we can
+> remove the XFS_BMAPI_METADATA from all callers that use it.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-Looks good:
-
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_attr_remote.c | 15 +++++++++++----
->  1 file changed, 11 insertions(+), 4 deletions(-)
+>  fs/xfs/libxfs/xfs_attr_remote.c |  5 ++---
+>  fs/xfs/libxfs/xfs_da_btree.c    |  4 ++--
+>  fs/xfs/libxfs/xfs_dir2.c        | 33 +++++++++++++++------------------
+>  fs/xfs/xfs_symlink.c            |  2 +-
+>  4 files changed, 20 insertions(+), 24 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 2faec26..dd71403 100644
+> index dd71403..89356aa 100644
 > --- a/fs/xfs/libxfs/xfs_attr_remote.c
 > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -451,14 +451,21 @@ xfs_attr_rmtval_set(
+> @@ -618,9 +618,8 @@ xfs_attr_rmtval_remove(
 >  
->  		/*
->  		 * Allocate a single extent, up to the size of the value.
-> +		 *
-> +		 * Note that we have to consider this a data allocation as we
-> +		 * write the remote attribute without logging the contents.
-> +		 * Hence we must ensure that we aren't using blocks that are on
-> +		 * the busy list so that we don't overwrite blocks which have
-> +		 * recently been freed but their transactions are not yet
-> +		 * committed to disk. If we overwrite the contents of a busy
-> +		 * extent and then crash then the block may not contain the
-> +		 * correct metadata after log recovery occurs.
->  		 */
 >  		xfs_bmap_init(args->flist, args->firstblock);
->  		nmap = 1;
->  		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
-> -				  blkcnt,
-> -				  XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
-> -				  args->firstblock, args->total, &map, &nmap,
-> -				  args->flist);
-> +				  blkcnt, XFS_BMAPI_ATTRFORK, args->firstblock,
-> +				  args->total, &map, &nmap, args->flist);
+>  		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+> -				    XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
+> -				    1, args->firstblock, args->flist,
+> -				    &done);
+> +				    XFS_BMAPI_ATTRFORK, 1, args->firstblock,
+> +				    args->flist, &done);
 >  		if (!error) {
 >  			error = xfs_bmap_finish(&args->trans, args->flist,
 >  						&committed);
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 2385f8c..2ae91e8 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2351,8 +2351,8 @@ xfs_da_shrink_inode(
+>  		 * the last block to the place we want to kill.
+>  		 */
+>  		error = xfs_bunmapi(tp, dp, dead_blkno, count,
+> -				    xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
+> -				    0, args->firstblock, args->flist, &done);
+> +				    xfs_bmapi_aflag(w), 0, args->firstblock,
+> +				    args->flist, &done);
+>  		if (error == -ENOSPC) {
+>  			if (w != XFS_DATA_FORK)
+>  				break;
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index a69fb3a..e0ba976 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -674,25 +674,22 @@ xfs_dir2_shrink_inode(
+>  	mp = dp->i_mount;
+>  	tp = args->trans;
+>  	da = xfs_dir2_db_to_da(args->geo, db);
+> -	/*
+> -	 * Unmap the fsblock(s).
+> -	 */
+> -	if ((error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount,
+> -			XFS_BMAPI_METADATA, 0, args->firstblock, args->flist,
+> -			&done))) {
+> +
+> +	/* Unmap the fsblock(s). */
+> +	error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount, 0, 0,
+> +			    args->firstblock, args->flist, &done);
+> +	if (error) {
+>  		/*
+> -		 * ENOSPC actually can happen if we're in a removename with
+> -		 * no space reservation, and the resulting block removal
+> -		 * would cause a bmap btree split or conversion from extents
+> -		 * to btree.  This can only happen for un-fragmented
+> -		 * directory blocks, since you need to be punching out
+> -		 * the middle of an extent.
+> -		 * In this case we need to leave the block in the file,
+> -		 * and not binval it.
+> -		 * So the block has to be in a consistent empty state
+> -		 * and appropriately logged.
+> -		 * We don't free up the buffer, the caller can tell it
+> -		 * hasn't happened since it got an error back.
+> +		 * ENOSPC actually can happen if we're in a removename with no
+> +		 * space reservation, and the resulting block removal would
+> +		 * cause a bmap btree split or conversion from extents to btree.
+> +		 * This can only happen for un-fragmented directory blocks,
+> +		 * since you need to be punching out the middle of an extent.
+> +		 * In this case we need to leave the block in the file, and not
+> +		 * binval it.  So the block has to be in a consistent empty
+> +		 * state and appropriately logged.  We don't free up the buffer,
+> +		 * the caller can tell it hasn't happened since it got an error
+> +		 * back.
+>  		 */
+>  		return error;
+>  	}
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 4be27b0..05c44bf 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -501,7 +501,7 @@ xfs_inactive_symlink_rmt(
+>  	/*
+>  	 * Unmap the dead block(s) to the free_list.
+>  	 */
+> -	error = xfs_bunmapi(tp, ip, 0, size, XFS_BMAPI_METADATA, nmaps,
+> +	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps,
+>  			    &first_block, &free_list, &done);
+>  	if (error)
+>  		goto error_bmap_cancel;
 > -- 
 > 2.1.4
 > 
