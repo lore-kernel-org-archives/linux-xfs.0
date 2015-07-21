@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 144367F92
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 11:54:26 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 65DE97F93
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 12:45:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9192BAC00D
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 09:54:22 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4AEB38F8049
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 10:45:02 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PXi0uRTMsSx0vQus (version=TLSv1
+	cuda.sgi.com with ESMTP id qDwvuYPbxnQ71R5z (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 09:54:21 -0700 (PDT)
-Date: Tue, 21 Jul 2015 12:13:20 -0400
+	Tue, 21 Jul 2015 10:45:01 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id B1B0B2B5F9F
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 17:45:00 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t6LHixVS020798
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 13:45:00 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: checksum log record ext headers based on record size
-Message-ID: <20150721161319.GH23013@bfoster.bfoster>
-References: <1437413288-29329-1-git-send-email-bfoster@redhat.com>
-	<20150720230219.GW7943@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150720230219.GW7943@dastard>
+Subject: [PATCH] xfs: validate iclog size and log record length in log recovery
+Date: Tue, 21 Jul 2015 13:44:57 -0400
+Message-Id: <1437500697-62180-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,93 +29,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 21, 2015 at 09:02:19AM +1000, Dave Chinner wrote:
-> On Mon, Jul 20, 2015 at 01:28:08PM -0400, Brian Foster wrote:
-> > The first 4 bytes of every basic block in the physical log is stamped
-> > with the current lsn. To support this mechanism, the log record header
-> > (first block of each new log record) contains space for the original
-> > first byte of each log record block before it is replaced with the lsn.
-> > The log record header has space for 32k worth of blocks. The version 2
-> > log adds new extended record headers for each additional 32k worth of
-> > blocks beyond what is supported by the record header.
-> > 
-> > The log record checksum incorporates the log record header, the extended
-> > headers and the record payload. xlog_cksum() checksums the extended
-> > headers based on log->l_iclog_heads, which specifies the number of
-> > extended headers in a log record based on the log buffer size mount
-> > option. The log buffer size is variable, however, and thus means the
-> > checksum can be calculated differently based on how a filesystem is
-> > mounted. This is problematic if a filesystem crashes and recovery occurs
-> > on a subsequent mount using a different log buffer size. For example,
-> > crash an active filesystem that is mounted with the default (32k)
-> > logbsize, attempt remount/recovery using '-o logbsize=64k' and the mount
-> > fails on or warns about log checksum failures.
-> > 
-> > To avoid this problem, update xlog_cksum() to calculate the checksum
-> > based on the size of the log buffer according to the log record. The
-> > size is already included in the h_size field of the log record header
-> > and thus is available at log recovery time. Extended log record headers
-> > are also only written when the log record is large enough to require
-> > them. This makes checksum calculation of log records consistent with the
-> > extended record header mechanism as well as how on-disk records are
-> > checksummed with various log buffer size mount options.
-> 
-> Hmmm - I thought that case was handled, but I guess not...
-> 
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -1652,8 +1652,13 @@ xlog_cksum(
-> >  	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-> >  		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
-> >  		int		i;
-> > +		int		xheads;
-> >  
-> > -		for (i = 1; i < log->l_iclog_heads; i++) {
-> > +		xheads = size / XLOG_HEADER_CYCLE_SIZE;
-> > +		if (size % XLOG_HEADER_CYCLE_SIZE)
-> > +			xheads++;
-> > +
-> > +		for (i = 1; i < xheads; i++) {
-> >  			crc = crc32c(crc, &xhdr[i].hic_xheader,
-> >  				     sizeof(struct xlog_rec_ext_header));
-> >  		}
-> 
-> rhead->h_len is an untrusted value during log recovery. i.e. at this
-> point we haven't validated that the record size is within the sane
-> range. See xlog_valid_rec_header() - it only checks that 0 <
-> rhead->h_len < INT_MAX. Realistically, this should be checking that
-> it is no more than:
-> 
-> 	(XLOG_MAX_RECORD_BSIZE / XLOG_HEADER_CYCLE_SIZE) + 1
-> 
-> as it is now being used as an array index into a dynamically
-> allocated buffer....
-> 
+Each log record header contains an h_size value which represents the
+size of the iclog buffers when the record was logged and an h_len value
+which identifies the length of the particular log record. Log recovery
+uses both fields to determine the size of the log buffers to use for
+recovery and to correctly process each log record.
 
-Indeed, this looks unsafe. Note that h_len is already being used as an
-index into the record data buffer for the payload crc check and data
-unpack, so I don't think this patch necessarily introduces the problem.
+Neither field is completely validated during recovery, however. While
+on-disk corruptions might be detected by CRC verification, we are still
+susceptible to errors such as excessively sized buffer allocations and
+overruns of the log record header and data buffers.
 
-Given that the problem already exists, we probably want to protect
-access to both the record header and data buffers, and we also don't
-seem to validate h_size anywhere, I'll try to address this in a separate
-patch. I think I have a way to handle this in xlog_valid_rec_header()...
+Update the xlog_valid_rec_header() function to validate the record
+h_size and h_len fields against a new max_size parameter. The maximum
+size value is passed as a parameter because the value differs depending
+on whether we are trying to identify the iclog size or actually
+processing a log record. In the former case, validate that neither field
+exceeds the maximum supported iclog size of XFS. Once the iclog size is
+identified and log record buffers allocated, validate all records to be
+processed against the iclog size to ensure that buffer overrun cannot
+occur.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Here's a stab at addressing the log record field validation issues Dave
+calls out here:
+
+	http://oss.sgi.com/pipermail/xfs/2015-July/042557.html
+
+This is still undergoing some testing, but I've not hit any problems so
+far...
 
 Brian
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+ fs/xfs/xfs_log_recover.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 01dd228..98c420a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4078,13 +4078,22 @@ xlog_unpack_data(
+ 	return 0;
+ }
+ 
++/*
++ * Sanity check a log record header. The caller provides the maximum iclog size
++ * and record length since validity depends on the context. For example, the
++ * first record is used to allocate buffers and thus is validated against the
++ * maximum supported iclog size. Subsequent records must be validated against
++ * the identified iclog size to avoid overflow of the record buffers.
++ */
+ STATIC int
+ xlog_valid_rec_header(
+ 	struct xlog		*log,
+ 	struct xlog_rec_header	*rhead,
+-	xfs_daddr_t		blkno)
++	xfs_daddr_t		blkno,
++	int			max_size)
+ {
+ 	int			hlen;
++	int			hsize;
+ 
+ 	if (unlikely(rhead->h_magicno != cpu_to_be32(XLOG_HEADER_MAGIC_NUM))) {
+ 		XFS_ERROR_REPORT("xlog_valid_rec_header(1)",
+@@ -4099,14 +4108,21 @@ xlog_valid_rec_header(
+ 		return -EIO;
+ 	}
+ 
++	hsize = be32_to_cpu(rhead->h_size);
++	if (unlikely(hsize <= 0 || hsize > max_size)) {
++		xfs_warn(log->l_mp, "%s: invalid iclog size (%d).", __func__,
++			 hsize);
++		return -EFSCORRUPTED;
++	}
++
+ 	/* LR body must have data or it wouldn't have been written */
+ 	hlen = be32_to_cpu(rhead->h_len);
+-	if (unlikely( hlen <= 0 || hlen > INT_MAX )) {
++	if (unlikely(hlen <= 0 || hlen > max_size)) {
+ 		XFS_ERROR_REPORT("xlog_valid_rec_header(2)",
+ 				XFS_ERRLEVEL_LOW, log->l_mp);
+ 		return -EFSCORRUPTED;
+ 	}
+-	if (unlikely( blkno > log->l_logBBsize || blkno > INT_MAX )) {
++	if (unlikely(blkno > log->l_logBBsize || blkno > INT_MAX)) {
+ 		XFS_ERROR_REPORT("xlog_valid_rec_header(3)",
+ 				XFS_ERRLEVEL_LOW, log->l_mp);
+ 		return -EFSCORRUPTED;
+@@ -4159,7 +4175,8 @@ xlog_do_recovery_pass(
+ 			goto bread_err1;
+ 
+ 		rhead = (xlog_rec_header_t *)offset;
+-		error = xlog_valid_rec_header(log, rhead, tail_blk);
++		error = xlog_valid_rec_header(log, rhead, tail_blk,
++					      XLOG_MAX_RECORD_BSIZE);
+ 		if (error)
+ 			goto bread_err1;
+ 		h_size = be32_to_cpu(rhead->h_size);
+@@ -4244,7 +4261,8 @@ xlog_do_recovery_pass(
+ 			}
+ 			rhead = (xlog_rec_header_t *)offset;
+ 			error = xlog_valid_rec_header(log, rhead,
+-						split_hblks ? blk_no : 0);
++						      split_hblks ? blk_no : 0,
++						      h_size);
+ 			if (error)
+ 				goto bread_err2;
+ 
+@@ -4318,7 +4336,7 @@ xlog_do_recovery_pass(
+ 			goto bread_err2;
+ 
+ 		rhead = (xlog_rec_header_t *)offset;
+-		error = xlog_valid_rec_header(log, rhead, blk_no);
++		error = xlog_valid_rec_header(log, rhead, blk_no, h_size);
+ 		if (error)
+ 			goto bread_err2;
+ 
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
