@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 57DB67F82
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 20:17:26 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 29C2B7F7D
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 20:59:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B9CA0AC007
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:17:22 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F39AA8F8049
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:59:39 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2KXvkyvHkzNiHKLT for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 18:17:19 -0700 (PDT)
+	tm5RegyXUmhCykY1 for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 18:59:36 -0700 (PDT)
+Date: Tue, 21 Jul 2015 11:59:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/4] xfs: remote attributes need to be considered data
-Date: Tue, 21 Jul 2015 11:09:04 +1000
-Message-Id: <1437440945-23457-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1437440945-23457-1-git-send-email-david@fromorbit.com>
-References: <1437440945-23457-1-git-send-email-david@fromorbit.com>
+Subject: [regression 4.2-rc3] loop: xfstests xfs/073 deadlocked in low memory
+	conditions
+Message-ID: <20150721015934.GY7943@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,75 +24,187 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: willy@linux.intel.com
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Ming,
 
-We don't log remote attribute contents, and instead write them
-synchronously before we commit the block allocation and attribute
-tree update transaction. As a result we are writing to the allocated
-space before the allcoation has been made permanent.
+With the recent merge of the loop device changes, I'm now seeing
+XFS deadlock on my single CPU, 1GB RAM VM running xfs/073.
 
-As a result, we cannot consider this allocation to be a metadata
-allocation. Metadata allocation can take blocks from the free list
-and so reuse them before the transaction that freed the block is
-committed to disk. This behaviour is perfectly fine for journalled
-metadata changes as log recovery will ensure the free operation is
-replayed before the overwrite, but for remote attribute writes this
-is not the case.
+The deadlocked is as follows:
 
-Hence we have to consider the remote attribute blocks to contain
-data and allocate accordingly. We do this by dropping the
-XFS_BMAPI_METADATA flag from the block allocation. This means the
-allocation will not use blocks that are on the busy list without
-first ensuring that the freeing transaction has been committed to
-disk and the blocks removed from the busy list. This ensures we will
-never overwrite a freed block without first ensuring that it is
-really free.
+kloopd1: loop_queue_read_work
+	xfs_file_iter_read
+	lock XFS inode XFS_IOLOCK_SHARED (on image file)
+	page cache read (GFP_KERNEL)
+	radix tree alloc
+	memory reclaim
+	reclaim XFS inodes
+	log force to unpin inodes
+	<wait for log IO completion>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_attr_remote.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+xfs-cil/loop1: <does log force IO work>
+	xlog_cil_push
+	xlog_write
+	<loop issuing log writes>
+		xlog_state_get_iclog_space()
+		<blocks due to all log buffers under write io>
+		<waits for IO completion>
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 2faec26..dd71403 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -451,14 +451,21 @@ xfs_attr_rmtval_set(
- 
- 		/*
- 		 * Allocate a single extent, up to the size of the value.
-+		 *
-+		 * Note that we have to consider this a data allocation as we
-+		 * write the remote attribute without logging the contents.
-+		 * Hence we must ensure that we aren't using blocks that are on
-+		 * the busy list so that we don't overwrite blocks which have
-+		 * recently been freed but their transactions are not yet
-+		 * committed to disk. If we overwrite the contents of a busy
-+		 * extent and then crash then the block may not contain the
-+		 * correct metadata after log recovery occurs.
- 		 */
- 		xfs_bmap_init(args->flist, args->firstblock);
- 		nmap = 1;
- 		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
--				  blkcnt,
--				  XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
--				  args->firstblock, args->total, &map, &nmap,
--				  args->flist);
-+				  blkcnt, XFS_BMAPI_ATTRFORK, args->firstblock,
-+				  args->total, &map, &nmap, args->flist);
- 		if (!error) {
- 			error = xfs_bmap_finish(&args->trans, args->flist,
- 						&committed);
+kloopd1: loop_queue_write_work
+	xfs_file_write_iter
+	lock XFS inode XFS_IOLOCK_EXCL (on image file)
+	<wait for inode to be unlocked>
+
+[The full stack traces are below].
+
+i.e. the kloopd, with it's split read and write work queues, has
+introduced a dependency through memory reclaim. i.e. that writes
+need to be able to progress for reads make progress.
+
+The problem, fundamentally, is that mpage_readpages() does a
+GFP_KERNEL allocation, rather than paying attention to the inode's
+mapping gfp mask, which is set to GFP_NOFS.
+
+The didn't used to happen, because the loop device used to issue
+reads through the splice path and that does:
+
+	error = add_to_page_cache_lru(page, mapping, index,
+			GFP_KERNEL & mapping_gfp_mask(mapping));
+
+i.e. it pays attention to the allocation context placed on the
+inode and so is doing GFP_NOFS allocations here and avoiding the
+recursion problem.
+
+[ CC'd Michal Hocko and the mm list because it's a clear exaple of
+why ignoring the mapping gfp mask on any page cache allocation is
+a landmine waiting to be tripped over. ]
+
+Cheers,
+
+Dave.
+
+[81248.855166] kworker/u3:0    D ffff88003a8fadc8 11304   930      2 0x00000000
+[81248.855166] Workqueue: kloopd1 loop_queue_read_work
+[81248.855166]  ffff88003a8fadc8 ffff880003e48000 ffff8800332fdd00 ffff88003a8fadb8
+[81248.855166]  ffff88003a8fc000 ffff88003a8faf18 ffff8800332fdd00 ffff88003a8faf10
+[81248.855166]  ffffffffffffffff ffff88003a8fade8 ffffffff81db608e ffff88003fc153c0
+[81248.855166] Call Trace:
+[81248.855166]  [<ffffffff81db608e>] schedule+0x3e/0x90
+[81248.855166]  [<ffffffff81dba38f>] schedule_timeout+0x1cf/0x240
+[81248.855166]  [<ffffffff810cce16>] ? try_to_wake_up+0x1f6/0x330
+[81248.855166]  [<ffffffff81db7534>] wait_for_completion+0xb4/0x120
+[81248.855166]  [<ffffffff810cd010>] ? wake_up_q+0x70/0x70
+[81248.855166]  [<ffffffff810bc2d9>] flush_work+0xf9/0x170
+[81248.855166]  [<ffffffff810ba0d0>] ? destroy_worker+0x90/0x90
+[81248.855166]  [<ffffffff81513a2c>] xlog_cil_force_lsn+0xcc/0x250
+[81248.855166]  [<ffffffff815126f2>] _xfs_log_force_lsn+0x82/0x2f0
+[81248.855166]  [<ffffffff8151298e>] xfs_log_force_lsn+0x2e/0xa0
+[81248.855166]  [<ffffffff81501e49>] ? xfs_iunpin_wait+0x19/0x20
+[81248.855166]  [<ffffffff814fe686>] __xfs_iunpin_wait+0xb6/0x170
+[81248.855166]  [<ffffffff810e0f90>] ? autoremove_wake_function+0x40/0x40
+[81248.855166]  [<ffffffff81501e49>] xfs_iunpin_wait+0x19/0x20
+[81248.855166]  [<ffffffff814f6df2>] xfs_reclaim_inode+0x72/0x350
+[81248.855166]  [<ffffffff814f72e2>] xfs_reclaim_inodes_ag+0x212/0x350
+[81248.855166]  [<ffffffff81dbb07e>] ? _raw_spin_unlock+0xe/0x20
+[81248.855166]  [<ffffffff81dbb07e>] ? _raw_spin_unlock+0xe/0x20
+[81248.855166]  [<ffffffff814f74b3>] xfs_reclaim_inodes_nr+0x33/0x40
+[81248.855166]  [<ffffffff81507f19>] xfs_fs_free_cached_objects+0x19/0x20
+[81248.855166]  [<ffffffff811cf791>] super_cache_scan+0x191/0x1a0
+[81248.855166]  [<ffffffff811912d4>] shrink_slab.part.62.constprop.80+0x1b4/0x380
+[81248.855166]  [<ffffffff81194720>] shrink_zone+0x90/0xa0
+[81248.855166]  [<ffffffff811948b0>] do_try_to_free_pages+0x180/0x2c0
+[81248.855166]  [<ffffffff81194aaa>] try_to_free_pages+0xba/0x160
+[81248.855166]  [<ffffffff81189509>] __alloc_pages_nodemask+0x499/0x840
+[81248.855166]  [<ffffffff811c3d2f>] new_slab+0x6f/0x2c0
+[81248.855166]  [<ffffffff811c5baa>] __slab_alloc.constprop.75+0x3fa/0x580
+[81248.855166]  [<ffffffff817be438>] ? __radix_tree_preload+0x48/0xc0
+[81248.855166]  [<ffffffff817be438>] ? __radix_tree_preload+0x48/0xc0
+[81248.855166]  [<ffffffff811c620e>] kmem_cache_alloc+0x12e/0x160
+[81248.855166]  [<ffffffff817be438>] __radix_tree_preload+0x48/0xc0
+[81248.855166]  [<ffffffff817be519>] radix_tree_maybe_preload+0x19/0x20
+[81248.855166]  [<ffffffff81181b69>] __add_to_page_cache_locked+0x39/0x1f0
+[81248.855166]  [<ffffffff81181d68>] add_to_page_cache_lru+0x28/0x80
+[81248.855166]  [<ffffffff81209fc9>] mpage_readpages+0xb9/0x130
+[81248.855166]  [<ffffffff814e68e0>] ? __xfs_get_blocks+0x840/0x840
+[81248.855166]  [<ffffffff814e68e0>] ? __xfs_get_blocks+0x840/0x840
+[81248.855166]  [<ffffffff814e409d>] xfs_vm_readpages+0x1d/0x20
+[81248.855166]  [<ffffffff8118cfc9>] __do_page_cache_readahead+0x1b9/0x250
+[81248.855166]  [<ffffffff8118d13f>] ondemand_readahead+0xdf/0x270
+[81248.855166]  [<ffffffff81180fc6>] ? find_get_entry+0x66/0xb0
+[81248.855166]  [<ffffffff8118d362>] page_cache_async_readahead+0x92/0xc0
+[81248.855166]  [<ffffffff81182c3c>] generic_file_read_iter+0x41c/0x650
+[81248.855166]  [<ffffffff81db9664>] ? down_read+0x24/0x40
+[81248.855166]  [<ffffffff814f1d66>] xfs_file_read_iter+0xe6/0x2d0
+[81248.855166]  [<ffffffff811cba22>] vfs_iter_read+0x62/0xa0
+[81248.855166]  [<ffffffff81a98fcd>] loop_handle_cmd.isra.28+0x6dd/0xaa0
+[81248.855166]  [<ffffffff810cce16>] ? try_to_wake_up+0x1f6/0x330
+[81248.855166]  [<ffffffff81a99472>] loop_queue_read_work+0x12/0x20
+[81248.855166]  [<ffffffff810bd02e>] process_one_work+0x14e/0x410
+[81248.855166]  [<ffffffff810bd63e>] worker_thread+0x4e/0x460
+[81248.855166]  [<ffffffff810bd5f0>] ? rescuer_thread+0x300/0x300
+[81248.855166]  [<ffffffff810c288c>] kthread+0xec/0x110
+[81248.855166]  [<ffffffff810c27a0>] ? kthread_create_on_node+0x1b0/0x1b0
+[81248.855166]  [<ffffffff81dbba5f>] ret_from_fork+0x3f/0x70
+[81248.855166]  [<ffffffff810c27a0>] ? kthread_create_on_node+0x1b0/0x1b0
+
+[81248.855166] kworker/0:0     D ffff88002ed8bb88 13896   948      2 0x00000000
+[81248.855166] Workqueue: xfs-cil/loop1 xlog_cil_push_work
+[81248.855166]  ffff88002ed8bb88 ffffffff82368540 ffff880003e4be00 ffff88001a467cf0
+[81248.855166]  ffff88002ed8c000 ffff880005123cf8 ffff88001a467cf0 ffff880003e4be00
+[81248.855166]  ffff880005123cc0 ffff88002ed8bba8 ffffffff81db608e ffff88002ed8bba8
+[81248.855166] Call Trace:
+[81248.855166]  [<ffffffff81db608e>] schedule+0x3e/0x90
+[81248.855166]  [<ffffffff81511266>] xlog_state_get_iclog_space+0xe6/0x330
+[81248.855166]  [<ffffffff810cd010>] ? wake_up_q+0x70/0x70
+[81248.855166]  [<ffffffff81511666>] xlog_write+0x1b6/0x870
+[81248.855166]  [<ffffffff8151316d>] xlog_cil_push+0x24d/0x400
+[81248.855166]  [<ffffffff81513335>] xlog_cil_push_work+0x15/0x20
+[81248.855166]  [<ffffffff810bd02e>] process_one_work+0x14e/0x410
+[81248.855166]  [<ffffffff810bd63e>] worker_thread+0x4e/0x460
+[81248.855166]  [<ffffffff810bd5f0>] ? rescuer_thread+0x300/0x300
+[81248.855166]  [<ffffffff810bd5f0>] ? rescuer_thread+0x300/0x300
+[81248.855166]  [<ffffffff810c288c>] kthread+0xec/0x110
+[81248.855166]  [<ffffffff810c27a0>] ? kthread_create_on_node+0x1b0/0x1b0
+[81248.855166]  [<ffffffff81dbba5f>] ret_from_fork+0x3f/0x70
+[81248.855166]  [<ffffffff810c27a0>] ? kthread_create_on_node+0x1b0/0x1b0
+
+[81248.855166] kworker/u3:4    D ffff8800290439f8 12456  1066      2 0x00000000
+[81248.855166] Workqueue: kloopd1 loop_queue_write_work
+[81248.855166]  ffff8800290439f8 ffffffff82368540 ffff8800332f9f00 ffff8800290439e8
+[81248.855166]  ffff880029044000 ffffffff00000000 ffff88001366cfd8 ffffffff00000002
+[81248.855166]  ffff8800332f9f00 ffff880029043a18 ffffffff81db608e ffff880029043a18
+[81248.855166] Call Trace:
+[81248.855166]  [<ffffffff81db608e>] schedule+0x3e/0x90
+[81248.855166]  [<ffffffff81db9f3d>] rwsem_down_write_failed+0x13d/0x340
+[81248.855166]  [<ffffffff810cce16>] ? try_to_wake_up+0x1f6/0x330
+[81248.855166]  [<ffffffff814f2e46>] ? xfs_file_buffered_aio_write+0x66/0x250
+[81248.855166]  [<ffffffff817c76a3>] call_rwsem_down_write_failed+0x13/0x20
+[81248.855166]  [<ffffffff81db96bf>] ? down_write+0x3f/0x60
+[81248.855166]  [<ffffffff814fdea4>] xfs_ilock+0x154/0x1d0
+[81248.855166]  [<ffffffff814f2e46>] xfs_file_buffered_aio_write+0x66/0x250
+[81248.855166]  [<ffffffff8179264d>] ? kblockd_schedule_work+0x1d/0x30
+[81248.855166]  [<ffffffff8179dbc5>] ? blk_mq_kick_requeue_list+0x15/0x20
+[81248.855166]  [<ffffffff814f3136>] xfs_file_write_iter+0x106/0x120
+[81248.855166]  [<ffffffff811cbac3>] vfs_iter_write+0x63/0xa0
+[81248.855166]  [<ffffffff81a97828>] lo_write_bvec+0x58/0x100
+[81248.855166]  [<ffffffff81a99248>] loop_handle_cmd.isra.28+0x958/0xaa0
+[81248.855166]  [<ffffffff81a9941f>] loop_queue_write_work+0x8f/0xd0
+[81248.855166]  [<ffffffff810bd02e>] process_one_work+0x14e/0x410
+[81248.855166]  [<ffffffff810bd63e>] worker_thread+0x4e/0x460
+[81248.855166]  [<ffffffff810bd5f0>] ? rescuer_thread+0x300/0x300
+[81248.855166]  [<ffffffff810c288c>] kthread+0xec/0x110
+[81248.855166]  [<ffffffff810c27a0>] ? kthread_create_on_node+0x1b0/0x1b0
+[81248.855166]  [<ffffffff81dbba5f>] ret_from_fork+0x3f/0x70
+[81248.855166]  [<ffffffff810c27a0>] ? kthread_create_on_node+0x1b0/0x1b0
 -- 
-2.1.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
