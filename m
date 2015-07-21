@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 42FAE7F7B
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 20:17:24 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EFC867F7B
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 20:17:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3F50AC007
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:17:23 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AC9DC304043
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:17:25 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Jq8q4M1EglAeGJUf for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 18:17:22 -0700 (PDT)
+	8ol2oOShgy4PzYCK for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 18:17:23 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/4] xfs: various fixes
-Date: Tue, 21 Jul 2015 11:09:01 +1000
-Message-Id: <1437440945-23457-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/4] xfs: remote attribute headers contain an invalid LSN
+Date: Tue, 21 Jul 2015 11:09:03 +1000
+Message-Id: <1437440945-23457-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1437440945-23457-1-git-send-email-david@fromorbit.com>
+References: <1437440945-23457-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +31,163 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: willy@linux.intel.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-The first 3 patches fix various issues that need to head to Linus
-before 4.2 is released. Patch 1 is a bug in the DAX support
-resulting froma botched merge on my part - DAX doesn't do the direct
-access part of DAX without this fix. (Willy, you only need to look
-at this patch. :)
+In recent testing, a system that crashed failed log recovery on
+restart with a bad symlink buffer magic number:
 
-Patch 2 and 3 are stable kernel candidates - if nobody objects I'll
-add stable cc's to them - as they affect recovery behaviour and
-thought they are hard to trigger they can result in silent on-disk
-corruption occurring if they do.
+XFS (vda): Starting recovery (logdev: internal)
+XFS (vda): Bad symlink block magic!
+XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 2060
 
-Patch 4 is just a cleanup that I noticed when looking at other code.
+On examination of the log via xfs_logprint, none of the symlink
+buffers in the log had a bad magic number, nor were any other types
+of buffer log format headers mis-identified as symlink buffers.
+Tracing was used to find the buffer the kernel was tripping over,
+and xfs_db identified it's contents as:
 
-Cheers,
+000: 5841524d 00000000 00000346 64d82b48 8983e692 d71e4680 a5f49e2c b317576e
+020: 00000000 00602038 00000000 006034ce d0020000 00000000 4d4d4d4d 4d4d4d4d
+040: 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d
+060: 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d 4d4d4d4d
+.....
 
-Dave.
+This is a remote attribute buffer, which are notable in that they
+are not logged but are instead written synchronously by the remote
+attribute code so that they exist on disk before the attribute
+transactions are committed to the journal.
+
+The above remote attribute block has an invalid LSN in it - cycle
+0xd002000, block 0 - which means when log recovery comes along to
+determine if the transaction that writes to the underlying block
+should be replayed, it sees a block that has a future LSN and so
+does not replay the buffer data in the transaction. Instead, it
+validates the buffer magic number and attaches the buffer verifier
+to it.  It is this buffer magic number check that is failing in the
+above assert, indicating that we skipped replay due to the LSN of
+the underlying buffer.
+
+The problem here is that the remote attribute buffers cannot have a
+valid LSN placed into them, because the transaction that contains
+the attribute tree pointer changes and the block allocation that the
+attribute data is being written to hasn't yet been committed. Hence
+the LSN field in the attribute block is completely unwritten,
+thereby leaving the underlying contents of the block in the LSN
+field. It could have any value, and hence a future overwrite of the
+block by log recovery may or may not work correctly.
+
+Fix this by always writing an invalid LSN to the remote attribute
+block, as any buffer in log recovery that needs to write over the
+remote attribute should occur. We are protected from having old data
+written over the attribute by the fact that freeing the block before
+the remote attribute is written will result in the buffer being
+marked stale in the log and so all changes prior to the buffer stale
+transaction will be cancelled by log recovery.
+
+Hence it is safe to ignore the LSN in the case or synchronously
+written, unlogged metadata such as remote attribute blocks, and to
+ensure we do that correctly, we need to write an invalid LSN to all
+remote attribute blocks to trigger immediate recovery of metadata
+that is written over the top.
+
+As a further protection for filesystems that may already have remote
+attribute blocks with bad LSNs on disk, change the log recovery code
+to always trigger immediate recovery of metadata over remote
+attribute blocks.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_attr_remote.c | 29 +++++++++++++++++++++++------
+ fs/xfs/xfs_log_recover.c        | 11 ++++++++---
+ 2 files changed, 31 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 20de88d..2faec26 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -159,11 +159,10 @@ xfs_attr3_rmt_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++	int		blksize = mp->m_attr_geo->blksize;
+ 	char		*ptr;
+ 	int		len;
+ 	xfs_daddr_t	bno;
+-	int		blksize = mp->m_attr_geo->blksize;
+ 
+ 	/* no verification of non-crc buffers */
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+@@ -175,16 +174,22 @@ xfs_attr3_rmt_write_verify(
+ 	ASSERT(len >= blksize);
+ 
+ 	while (len > 0) {
++		struct xfs_attr3_rmt_hdr *rmt = (struct xfs_attr3_rmt_hdr *)ptr;
++
+ 		if (!xfs_attr3_rmt_verify(mp, ptr, blksize, bno)) {
+ 			xfs_buf_ioerror(bp, -EFSCORRUPTED);
+ 			xfs_verifier_error(bp);
+ 			return;
+ 		}
+-		if (bip) {
+-			struct xfs_attr3_rmt_hdr *rmt;
+ 
+-			rmt = (struct xfs_attr3_rmt_hdr *)ptr;
+-			rmt->rm_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++		/*
++		 * Ensure we aren't writing bogus LSNs to disk. See
++		 * xfs_attr3_rmt_hdr_set() for the explanation.
++		 */
++		if (rmt->rm_lsn != cpu_to_be64(NULLCOMMITLSN)) {
++			xfs_buf_ioerror(bp, -EFSCORRUPTED);
++			xfs_verifier_error(bp);
++			return;
+ 		}
+ 		xfs_update_cksum(ptr, blksize, XFS_ATTR3_RMT_CRC_OFF);
+ 
+@@ -221,6 +226,18 @@ xfs_attr3_rmt_hdr_set(
+ 	rmt->rm_owner = cpu_to_be64(ino);
+ 	rmt->rm_blkno = cpu_to_be64(bno);
+ 
++	/*
++	 * Remote attribute blocks are written synchronously, so we don't
++	 * have an LSN that we can stamp in them that makes any sense to log
++	 * recovery. To ensure that log recovery handles overwrites of these
++	 * blocks sanely (i.e. once they've been freed and reallocated as some
++	 * other type of metadata) we need to ensure that the LSN has a value
++	 * that tells log recovery to ignore the LSN and overwrite the buffer
++	 * with whatever is in it's log. To do this, we use the magic
++	 * NULLCOMMITLSN to indicate that the LSN is invalid.
++	 */
++	rmt->rm_lsn = cpu_to_be64(NULLCOMMITLSN);
++
+ 	return sizeof(struct xfs_attr3_rmt_hdr);
+ }
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 01dd228..480ebba 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1886,9 +1886,14 @@ xlog_recover_get_buf_lsn(
+ 		uuid = &((struct xfs_dir3_blk_hdr *)blk)->uuid;
+ 		break;
+ 	case XFS_ATTR3_RMT_MAGIC:
+-		lsn = be64_to_cpu(((struct xfs_attr3_rmt_hdr *)blk)->rm_lsn);
+-		uuid = &((struct xfs_attr3_rmt_hdr *)blk)->rm_uuid;
+-		break;
++		/*
++		 * Remote attr blocks are written synchronously, rather than
++		 * being logged. That means they do not contain a valid LSN
++		 * (i.e. transactionally ordered) in them, and hence any time we
++		 * see a buffer to replay over the top of a remote attribute
++		 * block we should simply do so.
++		 */
++		goto recover_immediately;
+ 	case XFS_SB_MAGIC:
+ 		lsn = be64_to_cpu(((struct xfs_dsb *)blk)->sb_lsn);
+ 		uuid = &((struct xfs_dsb *)blk)->sb_uuid;
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
