@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5FC3C7F81
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 07:19:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 28A7F304043
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 05:19:32 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7F0607F82
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 07:32:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 644F930404E
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 05:32:01 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZRPVcbpDughnFP9n (version=TLSv1
+	cuda.sgi.com with ESMTP id q7bpm04pB4KatM2D (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 05:19:31 -0700 (PDT)
-Date: Tue, 21 Jul 2015 08:19:29 -0400
+	Tue, 21 Jul 2015 05:32:00 -0700 (PDT)
+Date: Tue, 21 Jul 2015 08:31:58 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: PATCH 3/3 V6] xfs: test changing UUID on V5 superblock
-Message-ID: <20150721121929.GE23013@bfoster.bfoster>
-References: <55A7D414.2050606@sandeen.net>
- <55A7D5BD.7050805@sandeen.net>
+Subject: Re: [PATCH] xfs_copy: fix up initial sb buffer read on CRC fs
+Message-ID: <20150721123158.GF23013@bfoster.bfoster>
+References: <55A7F5EE.5000500@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55A7D5BD.7050805@sandeen.net>
+In-Reply-To: <55A7F5EE.5000500@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,262 +30,60 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jul 16, 2015 at 11:03:09AM -0500, Eric Sandeen wrote:
-> Tests xfs_db's ability to change & restore UUIDs on V5 filesystems,
-> and tests xfs_copy's ability to change the UUID on the copy.
+On Thu, Jul 16, 2015 at 01:20:30PM -0500, Eric Sandeen wrote:
+> My prior commit, aaf90a2 xfs_copy: fix copy of hard 4k devices
+> causes xfs_copy to emit a CRC error warning when copying a
+> CRC filesystem.
 > 
-> Update to _filter_uuid is so that it will catch the UUID output
-> from xfs_admin -u, which is slightly different than the regexp it
-> was expecting.
+> This is because we are now reading the maximum sector size,
+> and attempting to verify the CRC based on that (likely incorrect)
+> length.
 > 
-> This requires new userspace which knows how to change the UUID on
-> a V5 superblock.
+> In xfs_db, we currently just don't verify this read, so it's
+> not a problem.  In xfs_copy, we almost certainly want to verify.
+> 
+> So, first do the maximal read with no verifier; once it's read,
+> drop that buffer, and re-read with the proper sector size and
+> verifier.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> V6: Take into account Brian's prior review.
-> 
-> diff --git a/common/filter b/common/filter
-> index 05dbae6..8db1b3e 100644
-> --- a/common/filter
-> +++ b/common/filter
-> @@ -275,9 +275,9 @@ _filter_uuid()
->  {
->  	if [ ! -z $1 ]; then
->  		UUID=$1
-> -		sed -e "s/\(uuid:\) $UUID/\1 <EXACTUUID>/i"
-> +		sed -e "s/\(uuid[ :=]\+\) $UUID/\1 <EXACTUUID>/i"
->  	else
-> -		sed -e "s/\(uuid:\) *[0-9a-f-][0-9a-f-]*/\1 <UUID>/i"
-> +		sed -e "s/\(uuid[ :=]\+\) *[0-9a-f-][0-9a-f-]*/\1 <UUID>/ig"
->  	fi
->  }
+> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+> index 44a32e8..fd96e15 100644
+> --- a/copy/xfs_copy.c
+> +++ b/copy/xfs_copy.c
+> @@ -654,11 +654,17 @@ main(int argc, char **argv)
 >  
-> diff --git a/common/rc b/common/rc
-> index 610045e..00b529b 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2702,6 +2702,21 @@ _require_test_fcntl_advisory_locks()
->  		_notrun "Require fcntl advisory locks support"
->  }
+>  	memset(&mbuf, 0, sizeof(xfs_mount_t));
+>  	libxfs_buftarg_init(&mbuf, xargs.ddev, xargs.logdev, xargs.rtdev);
+> +	/* We don't yet know the sector size, so read maximal size */
+>  	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
+> -			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT),
+> -			     0, &xfs_sb_buf_ops);
+> +			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+>  	sb = &mbuf.m_sb;
+>  	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
+> +	/* Do it again, now with proper length and verifier */
+> +	libxfs_putbuf(sbp);
+> +	libxfs_purgebuf(sbp);
+
+Why the purge? On a quick look, it looks like the buffer cache code
+would handle this if the buffer size changes.
+
+Hmm, is it to ensure the verification occurs if the buffer size doesn't
+actually change? If so, I'd suggest to enhance the comment. :)
+
+Brian
+
+> +	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
+> +			     1 << (sb->sb_sectlog - BBSHIFT),
+> +			     0, &xfs_sb_buf_ops);
 >  
-> +# XFS ability to change UUIDs on V5/CRC filesystems
-> +#
-> +_require_meta_uuid()
-> +{
-> +	# This will create a crc fs on $SCRATCH_DEV
-> +	_require_xfs_crc
-> +
-> +	$XFS_DB_PROG -x -c "uuid generate" $SCRATCH_DEV >/dev/null 2>&1 \
-> +	   || _notrun "Userspace doesn't support meta_uuid feature"
-> +
-> +	_scratch_mount >/dev/null 2>&1 \
-> +	   || _notrun "Kernel doesn't support meta_uuid feature"
-> +	umount $SCRATCH_MNT
-> +}
-> +
->  _get_total_inode()
->  {
->  	if [ -z "$1" ]; then
-> diff --git a/tests/xfs/074 b/tests/xfs/074
-> new file mode 100755
-> index 0000000..2592e89
-> --- /dev/null
-> +++ b/tests/xfs/074
-> @@ -0,0 +1,143 @@
-> +#! /bin/bash
-> +# FS QA Test 074
-> +#
-> +# test UUID modification of CRC-enabled filesystems
-> +#
-> +# CRC-enabled / V5 superblock filesystems have a UUID stamped into
-> +# every piece of metadata, and a mechanism was added later to allow
-> +# changing the user-visible UUID by copying the original UUID (which
-> +# matches all the existing metadata) to a new superblock location.
-> +# Exercise some of that behavior.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2015 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_crc
-> +_require_meta_uuid
-> +
-> +# Takes 2 args, 2nd optional:
-> +#  1: generate, rewrite, or restore
-> +#  2: Expected UUID after the action.  Blank if new uuid generated
-> +# After the action check the fs, and make sure it can be mounted
-> +# Sets NEW_UUID to the resulting UUID.
-> +_test_uuid()
-> +{
-> +	ACTION=$1
-> +	EXPECTED_UUID=$2
-> +
-> +	$XFS_DB_PROG -x -c "uuid $ACTION" $SCRATCH_DEV \
-> +					| _filter_uuid $EXPECTED_UUID
-> +	NEW_UUID=`$XFS_DB_PROG -c "uuid"  $SCRATCH_DEV | awk '{print $NF}'`
-> +	_check_scratch_fs
-> +	_scratch_mount || _fail "Mount failed after UUID $ACTION"
-> +	_scratch_unmount
-> +
-> +}
-> +
-> +_fs_has_META_UUID()
-> +{
-> +	FS=$1
-> +	$XFS_DB_PROG -r -c version $FS | grep -q META_UUID
-> +}
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs_xfs -m crc=1 >> $seqres.full 2>&1 || _fail "mkfs failed"
-> +
-> +ORIG_UUID=`$XFS_DB_PROG -c "uuid" $SCRATCH_DEV | awk '{print $NF}'`
-> +
-> +_scratch_mount
-> +# Put some stuff on the fs
-> +$FSSTRESS_PROG -d $SCRATCH_MNT -n 100 -p 4 >> $seqres.full 2>&1
-> +_scratch_unmount
-> +
-> +# Can xfs_db change it?
-> +
-> +echo "== Generate new UUID"
-> +_test_uuid generate
-> +[ "$NEW_UUID" == "$ORIG_UUID" ] && _fail "Failed to change UUID"
-> +_fs_has_META_UUID $SCRATCH_DEV || _fail "META_UUID feature not set"
-> +
-
-FWIW, another cleanup here might be to add a "has_meta_uuid" param to
-_test_uuid that provides the expected _fs_has_META_UUID value following
-the operation. That would condense some of the repeated error
-messages. Otherwise this seems Ok to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +# This should be a no-op
-> +echo "== Rewrite UUID"
-> +_test_uuid rewrite $NEW_UUID
-> +_fs_has_META_UUID $SCRATCH_DEV || _fail "META_UUID feature not set"
-> +
-> +# Can we change it back?
-> +echo "== Restore old UUID"
-> +_test_uuid restore $ORIG_UUID
-> +[ "$NEW_UUID" != "$ORIG_UUID" ] && _fail "Failed to restore UUID"
-> +_fs_has_META_UUID $SCRATCH_DEV && _fail "META_UUID feature should not be not set"
-> +
-> +# This should be a no-op too.
-> +echo "== Rewrite UUID"
-> +_test_uuid rewrite $ORIG_UUID
-> +_fs_has_META_UUID $SCRATCH_DEV && _fail "META_UUID feature should not be not set"
-> +
-> +# Ok, now what does xfs_copy do; it changes UUID by default
-> +
-> +IMGFILE=$TEST_DIR/$seq.copy.img
-> +rm -f $IMGFILE
-> +
-> +# xfs_copy changes the UUID by default
-> +echo "== xfs_copy with new UUID"
-> +$XFS_COPY_PROG $SCRATCH_DEV $IMGFILE 2>&1 >> $seqres.full || \
-> +	_fail "xfs_copy (new UUID) failed"
-> +_check_xfs_filesystem $IMGFILE none none || _fail "Copy looks corrupted"
-> +# The copy should have META_UUID feature set
-> +_fs_has_META_UUID $IMGFILE || _fail "META_UUID feature not set on copy"
-> +_scratch_mount || _fail "Mount failed after UUID rewrite"
-> +_scratch_unmount
-> +
-> +rm -f $IMGFILE
-> +
-> +# duplicating the UUID should be fine too
-> +echo "== xfs_copy with duplicate UUID"
-> +$XFS_COPY_PROG -d $SCRATCH_DEV $IMGFILE 2>&1 >> $seqres.full || \
-> +	_fail "xfs_copy (duplicate) failed"
-> +_check_xfs_filesystem $IMGFILE none none || _fail "Duplicate copy looks corrupted"
-> +# The copy should not have META_UUID feature set
-> +_fs_has_META_UUID $IMGFILE && _fail "META_UUID feature should not be set on copy"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/074.out b/tests/xfs/074.out
-> new file mode 100644
-> index 0000000..b511107
-> --- /dev/null
-> +++ b/tests/xfs/074.out
-> @@ -0,0 +1,21 @@
-> +QA output created by 074
-> +== Generate new UUID
-> +Clearing log and setting UUID
-> +writing all SBs
-> +new UUID =  <UUID>
-> +== Rewrite UUID
-> +old UUID = <EXACTUUID>
-> +Clearing log and setting UUID
-> +writing all SBs
-> +new UUID = <EXACTUUID>
-> +== Restore old UUID
-> +Clearing log and setting UUID
-> +writing all SBs
-> +new UUID = <EXACTUUID>
-> +== Rewrite UUID
-> +old UUID = <EXACTUUID>
-> +Clearing log and setting UUID
-> +writing all SBs
-> +new UUID = <EXACTUUID>
-> +== xfs_copy with new UUID
-> +== xfs_copy with duplicate UUID
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 848a1bd..a66869a 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -71,6 +71,7 @@
->  071 rw auto
->  072 rw auto prealloc quick
->  073 copy auto
-> +074 auto quick copy
->  078 growfs auto quick
->  080 rw ioctl
->  081 deprecated # log logprint quota
+>  	/*
+>  	 * For now, V5 superblock filesystems are not supported without -d;
 > 
 > _______________________________________________
 > xfs mailing list
