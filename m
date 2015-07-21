@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D3D6C7F83
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 20:17:26 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EAA727F7B
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 20:17:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AEDF6304043
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:17:23 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C552E8F8035
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 18:17:24 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	S2TDBozdUwbEE9xQ for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 18:17:21 -0700 (PDT)
+	5bwSaeVlkcxNLIHd for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2015 18:17:23 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfs: call dax_fault on read page faults for DAX
-Date: Tue, 21 Jul 2015 11:09:02 +1000
-Message-Id: <1437440945-23457-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/4] xfs: xfs_bunmapi() does not need XFS_BMAPI_METADATA flag
+Date: Tue, 21 Jul 2015 11:09:05 +1000
+Message-Id: <1437440945-23457-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1437440945-23457-1-git-send-email-david@fromorbit.com>
 References: <1437440945-23457-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,100 +33,107 @@ Cc: willy@linux.intel.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When modifying the patch series to handle the XFS MMAP_LOCK nesting
-of page faults, I botched the conversion of the read page fault
-path, and so it is only every calling through the page cache. Re-add
-the necessary __dax_fault() call for such files.
-
-Because the get_blocks callback on read faults may not set up the
-mapping buffer correctly to allow unwritten extent completion to be
-run, we need to allow callers of __dax_fault() to pass a null
-complete_unwritten() callback. The DAX code always zeros the
-unwritten page when it is read faulted so there are no stale data
-exposure issues with not doing the conversion. The only downside
-will be the potential for increased CPU overhead on repeated read
-faults of the same page. If this proves to be a problem, then the
-filesystem needs to fix it's get_block callback and provide a
-convert_unwritten() callback to the read fault path.
+xfs_bunmapi() doesn't care what type of extent is being freed and
+does not look at the XFS_BMAPI_METADATA flag at all. As such we can
+remove the XFS_BMAPI_METADATA from all callers that use it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/dax.c          |  9 ++++++++-
- fs/xfs/xfs_file.c | 21 +++++++++++++++------
- 2 files changed, 23 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_attr_remote.c |  5 ++---
+ fs/xfs/libxfs/xfs_da_btree.c    |  4 ++--
+ fs/xfs/libxfs/xfs_dir2.c        | 33 +++++++++++++++------------------
+ fs/xfs/xfs_symlink.c            |  2 +-
+ 4 files changed, 20 insertions(+), 24 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index c3e21cc..86d2cee 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -319,6 +319,11 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
-  * @vma: The virtual memory area where the fault occurred
-  * @vmf: The description of the fault
-  * @get_block: The filesystem method used to translate file offsets to blocks
-+ * @complete_unwritten: The filesystem method used to convert unwritten blocks
-+ *	to written so the data written to them is exposed. This is required for
-+ *	write faults, but optional for read faults as dax_insert_mapping() will
-+ *	always do the right thing on a read fault (i.e. zero the underlying
-+ *	page).
-  *
-  * When a page fault occurs, filesystems may call this helper in their
-  * fault handler for DAX files. __dax_fault() assumes the caller has done all
-@@ -339,6 +344,8 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	int error;
- 	int major = 0;
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index dd71403..89356aa 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -618,9 +618,8 @@ xfs_attr_rmtval_remove(
  
-+	WARN_ON_ONCE((vmf->flags & FAULT_FLAG_WRITE) && !complete_unwritten);
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+-				    XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
+-				    1, args->firstblock, args->flist,
+-				    &done);
++				    XFS_BMAPI_ATTRFORK, 1, args->firstblock,
++				    args->flist, &done);
+ 		if (!error) {
+ 			error = xfs_bmap_finish(&args->trans, args->flist,
+ 						&committed);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 2385f8c..2ae91e8 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2351,8 +2351,8 @@ xfs_da_shrink_inode(
+ 		 * the last block to the place we want to kill.
+ 		 */
+ 		error = xfs_bunmapi(tp, dp, dead_blkno, count,
+-				    xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
+-				    0, args->firstblock, args->flist, &done);
++				    xfs_bmapi_aflag(w), 0, args->firstblock,
++				    args->flist, &done);
+ 		if (error == -ENOSPC) {
+ 			if (w != XFS_DATA_FORK)
+ 				break;
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index a69fb3a..e0ba976 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -674,25 +674,22 @@ xfs_dir2_shrink_inode(
+ 	mp = dp->i_mount;
+ 	tp = args->trans;
+ 	da = xfs_dir2_db_to_da(args->geo, db);
+-	/*
+-	 * Unmap the fsblock(s).
+-	 */
+-	if ((error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount,
+-			XFS_BMAPI_METADATA, 0, args->firstblock, args->flist,
+-			&done))) {
 +
- 	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	if (vmf->pgoff >= size)
- 		return VM_FAULT_SIGBUS;
-@@ -437,7 +444,7 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	 * as for normal BH based IO completions.
++	/* Unmap the fsblock(s). */
++	error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount, 0, 0,
++			    args->firstblock, args->flist, &done);
++	if (error) {
+ 		/*
+-		 * ENOSPC actually can happen if we're in a removename with
+-		 * no space reservation, and the resulting block removal
+-		 * would cause a bmap btree split or conversion from extents
+-		 * to btree.  This can only happen for un-fragmented
+-		 * directory blocks, since you need to be punching out
+-		 * the middle of an extent.
+-		 * In this case we need to leave the block in the file,
+-		 * and not binval it.
+-		 * So the block has to be in a consistent empty state
+-		 * and appropriately logged.
+-		 * We don't free up the buffer, the caller can tell it
+-		 * hasn't happened since it got an error back.
++		 * ENOSPC actually can happen if we're in a removename with no
++		 * space reservation, and the resulting block removal would
++		 * cause a bmap btree split or conversion from extents to btree.
++		 * This can only happen for un-fragmented directory blocks,
++		 * since you need to be punching out the middle of an extent.
++		 * In this case we need to leave the block in the file, and not
++		 * binval it.  So the block has to be in a consistent empty
++		 * state and appropriately logged.  We don't free up the buffer,
++		 * the caller can tell it hasn't happened since it got an error
++		 * back.
+ 		 */
+ 		return error;
+ 	}
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 4be27b0..05c44bf 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -501,7 +501,7 @@ xfs_inactive_symlink_rmt(
+ 	/*
+ 	 * Unmap the dead block(s) to the free_list.
  	 */
- 	error = dax_insert_mapping(inode, &bh, vma, vmf);
--	if (buffer_unwritten(&bh))
-+	if (buffer_unwritten(&bh) && complete_unwritten)
- 		complete_unwritten(&bh, !error);
- 
-  out:
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f0e8249..db4acc1 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1514,18 +1514,27 @@ xfs_filemap_fault(
- 	struct vm_area_struct	*vma,
- 	struct vm_fault		*vmf)
- {
--	struct xfs_inode	*ip = XFS_I(file_inode(vma->vm_file));
-+	struct inode		*inode = file_inode(vma->vm_file);
- 	int			ret;
- 
--	trace_xfs_filemap_fault(ip);
-+	trace_xfs_filemap_fault(XFS_I(inode));
- 
- 	/* DAX can shortcut the normal fault path on write faults! */
--	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(VFS_I(ip)))
-+	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
- 		return xfs_filemap_page_mkwrite(vma, vmf);
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
--	ret = filemap_fault(vma, vmf);
--	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-+	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+	if (IS_DAX(inode)) {
-+		/*
-+		 * we do not want to trigger unwritten extent conversion on read
-+		 * faults - that is unnecessary overhead and would also require
-+		 * changes to xfs_get_blocks_direct() to map unwritten extent
-+		 * ioend for conversion on read-only mappings.
-+		 */
-+		ret = __dax_fault(vma, vmf, xfs_get_blocks_direct, NULL);
-+	} else
-+		ret = filemap_fault(vma, vmf);
-+	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	return ret;
- }
+-	error = xfs_bunmapi(tp, ip, 0, size, XFS_BMAPI_METADATA, nmaps,
++	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps,
+ 			    &first_block, &free_list, &done);
+ 	if (error)
+ 		goto error_bmap_cancel;
 -- 
 2.1.4
 
