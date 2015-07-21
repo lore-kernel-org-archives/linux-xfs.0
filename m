@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7F0607F82
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 07:32:01 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2E5CE7F82
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 07:40:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 644F930404E
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 05:32:01 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id q7bpm04pB4KatM2D (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 12A188F8049
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 05:40:01 -0700 (PDT)
+Received: from mx5-phx2.redhat.com (mx5-phx2.redhat.com [209.132.183.37]) by
+	cuda.sgi.com with ESMTP id 6H8cr3qUHipPOhi8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 05:32:00 -0700 (PDT)
-Date: Tue, 21 Jul 2015 08:31:58 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_copy: fix up initial sb buffer read on CRC fs
-Message-ID: <20150721123158.GF23013@bfoster.bfoster>
-References: <55A7F5EE.5000500@sandeen.net>
+	Tue, 21 Jul 2015 05:39:59 -0700 (PDT)
+Date: Tue, 21 Jul 2015 08:39:36 -0400 (EDT)
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <1508777144.956841.1437482376774.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1436346893-11831-1-git-send-email-jtulak@redhat.com>
+References: <1156743222.24471614.1436281858017.JavaMail.zimbra@redhat.com>
+	<1436346893-11831-1-git-send-email-jtulak@redhat.com>
+Subject: Re: [PATCH v3] xfsprogs: blkid is now mandatory
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55A7F5EE.5000500@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,66 +29,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, sandeen@redhat.com
 
-On Thu, Jul 16, 2015 at 01:20:30PM -0500, Eric Sandeen wrote:
-> My prior commit, aaf90a2 xfs_copy: fix copy of hard 4k devices
-> causes xfs_copy to emit a CRC error warning when copying a
-> CRC filesystem.
-> 
-> This is because we are now reading the maximum sector size,
-> and attempting to verify the CRC based on that (likely incorrect)
-> length.
-> 
-> In xfs_db, we currently just don't verify this read, so it's
-> not a problem.  In xfs_copy, we almost certainly want to verify.
-> 
-> So, first do the maximal read with no verifier; once it's read,
-> drop that buffer, and re-read with the proper sector size and
-> verifier.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 44a32e8..fd96e15 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -654,11 +654,17 @@ main(int argc, char **argv)
->  
->  	memset(&mbuf, 0, sizeof(xfs_mount_t));
->  	libxfs_buftarg_init(&mbuf, xargs.ddev, xargs.logdev, xargs.rtdev);
-> +	/* We don't yet know the sector size, so read maximal size */
->  	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
-> -			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT),
-> -			     0, &xfs_sb_buf_ops);
-> +			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
->  	sb = &mbuf.m_sb;
->  	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
-> +	/* Do it again, now with proper length and verifier */
-> +	libxfs_putbuf(sbp);
-> +	libxfs_purgebuf(sbp);
 
-Why the purge? On a quick look, it looks like the buffer cache code
-would handle this if the buffer size changes.
 
-Hmm, is it to ensure the verification occurs if the buffer size doesn't
-actually change? If so, I'd suggest to enhance the comment. :)
-
-Brian
-
-> +	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
-> +			     1 << (sb->sb_sectlog - BBSHIFT),
-> +			     0, &xfs_sb_buf_ops);
->  
->  	/*
->  	 * For now, V5 superblock filesystems are not supported without -d;
+----- Original Message -----
+> From: "Jan Tulak" <jtulak@redhat.com>
+> Subject: [PATCH v3] xfsprogs: blkid is now mandatory
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Because blkid is here for a long time, I hereby propose a patch for
+> removing support for NOT having blkid. The current support through
+> set of #ifdef is prone to errors like
+> making a patch just in one of the branches, and according to a
+> recent talk between Christoph and Eric, it is not necessary to keep
+> it supported.
+> 
+> Remove code for checking ENABLE_BLKID, and the code when
+> ENABLE_BLKID is not defined.  The only use of libdisk was in the
+> removed code, so remove libdisk too.  It makes blkid required for
+> compilation.
+> 
+
+I just found that while it is possible to get blkid on OS X, it is
+in 1.0.0 version which doesn't have blkid_probe_get function.
+I'm examining whether it is possible to get an updated version there,
+but right now, this patch breaks OS X support. Unfortunately I didn't
+noticed of this before, as the OS X port was terribly out of date.
+
+So this patch shouldn't be included until I find how to get around.
+
+Cheers,
+Jan
+
+-- 
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
