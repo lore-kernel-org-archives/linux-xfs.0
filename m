@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E5CE7F82
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 07:40:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 12A188F8049
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 05:40:01 -0700 (PDT)
-Received: from mx5-phx2.redhat.com (mx5-phx2.redhat.com [209.132.183.37]) by
-	cuda.sgi.com with ESMTP id 6H8cr3qUHipPOhi8 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 05:39:59 -0700 (PDT)
-Date: Tue, 21 Jul 2015 08:39:36 -0400 (EDT)
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <1508777144.956841.1437482376774.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1436346893-11831-1-git-send-email-jtulak@redhat.com>
-References: <1156743222.24471614.1436281858017.JavaMail.zimbra@redhat.com>
-	<1436346893-11831-1-git-send-email-jtulak@redhat.com>
-Subject: Re: [PATCH v3] xfsprogs: blkid is now mandatory
+	by oss.sgi.com (Postfix) with ESMTP id 0B4757F89
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 08:58:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EA8238F804B
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 06:58:05 -0700 (PDT)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	B2n4BauuXyLZhPMq for <xfs@oss.sgi.com>;
+	Tue, 21 Jul 2015 06:58:01 -0700 (PDT)
+Date: Tue, 21 Jul 2015 09:57:58 -0400
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH 1/4] xfs: call dax_fault on read page faults for DAX
+Message-ID: <20150721135758.GO13681@linux.intel.com>
+References: <1437440945-23457-1-git-send-email-david@fromorbit.com>
+	<1437440945-23457-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1437440945-23457-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,42 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, sandeen@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On Tue, Jul 21, 2015 at 11:09:02AM +1000, Dave Chinner wrote:
+> @@ -339,6 +344,8 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  	int error;
+>  	int major = 0;
+>  
+> +	WARN_ON_ONCE((vmf->flags & FAULT_FLAG_WRITE) && !complete_unwritten);
+> +
+>  	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+>  	if (vmf->pgoff >= size)
+>  		return VM_FAULT_SIGBUS;
 
+This warning is always going to trigger for ext2, since it doesn't
+support the concept of unwritten extents.  Instead, ext2 zeroes the block
+before linking it into the tree and returning from get_block.
 
------ Original Message -----
-> From: "Jan Tulak" <jtulak@redhat.com>
-> Subject: [PATCH v3] xfsprogs: blkid is now mandatory
-> 
-> Because blkid is here for a long time, I hereby propose a patch for
-> removing support for NOT having blkid. The current support through
-> set of #ifdef is prone to errors like
-> making a patch just in one of the branches, and according to a
-> recent talk between Christoph and Eric, it is not necessary to keep
-> it supported.
-> 
-> Remove code for checking ENABLE_BLKID, and the code when
-> ENABLE_BLKID is not defined.  The only use of libdisk was in the
-> removed code, so remove libdisk too.  It makes blkid required for
-> compilation.
-> 
+> @@ -437,7 +444,7 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  	 * as for normal BH based IO completions.
+>  	 */
+>  	error = dax_insert_mapping(inode, &bh, vma, vmf);
+> -	if (buffer_unwritten(&bh))
+> +	if (buffer_unwritten(&bh) && complete_unwritten)
+>  		complete_unwritten(&bh, !error);
+>  
+>   out:
 
-I just found that while it is possible to get blkid on OS X, it is
-in 1.0.0 version which doesn't have blkid_probe_get function.
-I'm examining whether it is possible to get an updated version there,
-but right now, this patch breaks OS X support. Unfortunately I didn't
-noticed of this before, as the OS X port was terribly out of date.
+... so maybe we should do something here like:
 
-So this patch shouldn't be included until I find how to get around.
+	if (buffer_unwritten(&bh)) {
+		if (complete_unwritten)
+			complete_unwritten(&bh, !error);
+		else
+			BUG_ON(vmf->flags & FAULT_FLAG_WRITE);
+	}
 
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com
+(the XFS changes look fine to me)
 
 _______________________________________________
 xfs mailing list
