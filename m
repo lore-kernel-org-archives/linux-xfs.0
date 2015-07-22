@@ -1,26 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 634D77FA1
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 21:38:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2514130404E
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 19:38:15 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rI1iRuuJeFKuTHc7 for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 19:38:13 -0700 (PDT)
-Date: Wed, 22 Jul 2015 12:37:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] block: xfs: dm thin: train XFS to give up on
-	retrying IO if thinp is out of space
-Message-ID: <20150722023711.GD7943@dastard>
-References: <20150720151849.GA2282@redhat.com> <20150720223610.GV7943@dastard>
-	<55AE6670.40903@redhat.com> <20150721174753.GA8563@redhat.com>
-	<20150722000923.GB7943@dastard> <20150722010056.GC7943@dastard>
-	<20150722014029.GA10628@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id AFA0D7FA9
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 03:54:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 83A78304048
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 01:54:17 -0700 (PDT)
+Received: from mail-wi0-f169.google.com (mail-wi0-f169.google.com
+	[209.85.212.169]) by cuda.sgi.com with ESMTP id
+	sOpxcrDXeDplqeIa (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 22 Jul 2015 01:54:12 -0700 (PDT)
+Received: by wicgb10 with SMTP id gb10so88032128wic.1
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 01:54:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150722014029.GA10628@redhat.com>
+In-Reply-To: <20150720151256.GA17816@bfoster.bfoster>
+References: <CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
+	<20150709183255.GG63282@bfoster.bfoster>
+	<CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
+	<20150713125214.GA50787@bfoster.bfoster>
+	<CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
+	<20150713170158.GB50787@bfoster.bfoster>
+	<CA++_uhvDrO2BmQ+q0bN=M_L-vUUaLZO9bHoKh0ntFveM5t-DNQ@mail.gmail.com>
+	<CA++_uhuJNkO4MDyS_+veFpysGyqzhqLspB3g73DtUCQqK1F80Q@mail.gmail.com>
+	<20150720114648.GB53450@bfoster.bfoster>
+	<CA++_uhvwR1KucdHWnPzS5ysFuYyssFnUB95kS-piC_pRnq=dXw@mail.gmail.com>
+	<20150720151256.GA17816@bfoster.bfoster>
+Date: Wed, 22 Jul 2015 16:54:11 +0800
+Message-ID: <CA++_uhu-2Eq02WAvzDo=TQBZzMmAmfAn4H1gPnDZGV+JsqAHWw@mail.gmail.com>
+Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
+	xfs_dir2_sf_get_parent_ino+0xa/0x20
+From: Kuo Hugo <tonytkdk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,146 +38,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3561209290032458346=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: axboe@kernel.dk, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de, Vivek Goyal <vgoyal@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, Darrell Bishop <darrell@swiftstack.com>, xfs@oss.sgi.com
 
-On Tue, Jul 21, 2015 at 09:40:29PM -0400, Mike Snitzer wrote:
-> On Tue, Jul 21 2015 at  9:00pm -0400,
-> Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > On Wed, Jul 22, 2015 at 10:09:23AM +1000, Dave Chinner wrote:
-> > > On Tue, Jul 21, 2015 at 01:47:53PM -0400, Mike Snitzer wrote:
-> > > > On Tue, Jul 21 2015 at 11:34am -0400, Eric Sandeen <sandeen@redhat.com> wrote:
-> > > > > On 7/20/15 5:36 PM, Dave Chinner wrote:
-> > > > > The issue we had discussed previously is that there is no agreement
-> > > > > across block devices about whether ENOSPC is a permanent or temporary
-> > > > > condition.  Asking the admin to tune  the fs to each block device's
-> > > > > behavior sucks, IMHO.
-> > > > 
-> > > > It does suck, but it beats the alternative of XFS continuing to do
-> > > > nothing about the problem.
-> > > 
-> > > Just a comment on that: doing nothing is better than doing the wrong
-> > > thing and being stuck with it forever. :)
-> > > 
-> > > > Disucssing more with Vivek, might be that XFS would be best served to
-> > > > model what dm-thinp has provided with its 'no_space_timeout'.  It
-> > > > defaults to queueing IO for 60 seconds, once the timeout expires the
-> > > > queued IOs getted errored.  If set to 0 dm-thinp will queue IO
-> > > > indefinitely.
-> > > 
-> > > Yes, that's exactly what I proposed in the thread I referenced in
-> > > my previous email, and what got stuck on the bikeshed wall because
-> > > of these concerns about knob twiddling:
-> > > 
-> > > http://oss.sgi.com/archives/xfs/2015-02/msg00346.html
-> > > 
-> > > | e.g. if we need configurable error handling, it needs to be
-> > > | configurable for different error types, and it needs to be
-> > > | configurable on a per-mount basis. And it needs to be configurable
-> > > | at runtime, not just at mount time. That kind of leads to using
-> > > | sysfs for this. e.g. for each error type we ned to handle different
-> > > | behaviour for:
-> > > | 
-> > > | $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/type
-> > > | [transient] permanent
-> > > | $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_timeout_seconds
-> > > | 300
-> > > | $ cat
-> > > | /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
-> > > | 50
-> > > | $ cat
-> > > | /sys/fs/xfs/vda/meta_write_errors/enospc/transient_fail_at_umount
-> > > | 1
-> > > 
-> > > I've rebased this patchset, and I'm cleaning it up now, so in a few
-> > > days I'll have something for review, likely for the 4.3 merge
-> > > window....
-> > 
-> > Just thinking a bit more on how to make this simpler to configure,
-> > is there a simple way for the filesystem to determine the current
-> > config of the dm thinp volume? i.e. if the dm-thinp volume is
-> > configured to error out immediately on enospc, then XFS should
-> > default to doing the same thing. having XFS be able to grab this
-> > status at mount time and change the default ENOSPC error config from
-> > transient to permanent on such dm-thinp volumes would go a long way
-> > to making these configs Just Do The Right Thing on block dev enospc
-> > errors...
-> > 
-> > e.g. if dm-thinp is configured to queue for 60s and then fail on
-> > ENOSPC, we want XFS to fail immediately on ENOSPC in metadata IO. If
-> > dm-thinp is configured to ENOSPC instantly (i.e. no queueing) then
-> > we want XFS to retry and use it's default retry maximums before
-> > failing permanently.
-> 
-> Yes, that'd be nice.  But there isn't a way to easily get the DM thinp
-> device's config from within the kernel (unless XFS wants to get into the
-> business of issuing ioctls to DM devices.. unlikely). 
+--===============3561209290032458346==
+Content-Type: multipart/alternative; boundary=047d7b4724e21bc373051b72eab9
 
-Not really.
+--047d7b4724e21bc373051b72eab9
+Content-Type: text/plain; charset=UTF-8
 
-> I could be
-> persuaded to expose a per-device sysfs file to get the status (would
-> avoid need for ioctl), e.g.:
->  # cat /sys/block/dm-5/dm/status
-> (but that doesn't _really_ help in-kernel access, awkward for filesystem
-> code to be opening sysfs files!)
+Hi Brain,
 
-No, not going that way.  We have direct access through the bdev we
-opened, so that's the communications channel we'd need to use.
+>The original stacktrace shows the crash in a readdir request. I'm sure
+>there are multiple things going on here (and there are a couple rename
+>traces in the vmcore sitting on locks), of course, but where does the
+>information about the rename come from?
 
-> SO userspace (mkfs.xfs) could easily check the thinp device's setup
-> using 'dmsetup status <device>' (output will either contain
-> 'queue_if_no_space' or 'error_if_no_space').  The DM thinp
-> 'no_space_timeout' (applicable if queue_if_no_space) is a thinp global
-> accessed using a module param:
->  # cat /sys/module/dm_thin_pool/parameters/no_space_timeout
->  60
+I tracked source code of the application. It moves data to a quarantined
+area(another folder on same disk) under some conditions. In the bug report,
+it indicates a condition that DELETE(create empty file in a directory)
+object + list the directory will cause data MOVE (os.rename) to quarantined
+area(another folder). The os.rename function call is the only function of
+the application to touch quarantined folder.
 
-Mkfs is not the right interface - users can change dm-thinp
-behaviour long after the filesystem was created and so the XFS
-config needs to be configurable, too. Further, I really don't want
-to have to add anything to the on-disk format to support error
-configuration because, well, that drives the level of complexity up
-a couple or orders of magnitude (mkfs, repair, metadump, db, etc all
-need to support it), especially when it can be driven easily from
-userspace after mount with far less constraints and support burden.
+>I'm not quite following here because I don't have enough context about
+>what the application server is doing. So far, it sounds like we somehow
+>have multiple threads competing to rename the same file..? Is there
+>anything else in this directory at the time this sequence executes
+>(e.g., a file with object data that also gets quarantined)?
 
-> I'm open to considering alternative interfaces for getting you the info
-> you need.  I just don't have a great sense for what mechanism you'd like
-> to use.  Do we invent a new block device operations table method that
-> sets values in a 'struct no_space_strategy' passed in to the
-> blockdevice?
+The previous behavior (a bug in the application) should not trigger Kernel
+panic. Yes, there's multiple threads competing to DELETE(create a empty
+file) in the same directory also move the existing one to the quarantined
+area. I think this is the root cause of kernel panic. The scenario is 10
+application workers raise 10 thread to do same thing in the same moment.
 
-It's long been frowned on having the filesystems dig into block
-device structures. We have lots of wrapper functions for getting
-information from or performing operations on block devices. (e.g.
-bdev_read_only(), bdev_get_queue(), blkdev_issue_flush(),
-blkdev_issue_zeroout(), etc) and so I think this is the pattern we'd
-need to follow. If we do that - bdev_get_nospace_strategy() - then
-how that information gets to the filesystem is completely opaque
-at the fs level, and the block layer can implement it in whatever
-way is considered sane...
+>Ideally, we'd ultimately like to translate this into a sequence of
+>operations as seen by the fs that hopefully trigger the problem. We
+>might have to start by reproducing through the application server.
+>Looking back at that bug report, it sounds like a 'DELETE' is a
+>high-level server operation that can consist of multiple sub-operations
+>at the filesystem level (e.g., list, conditional rename if *.ts file
+>exists, etc.). Do you have enough information through any of the above
+>to try and run something against Swift that might explicitly reproduce
+>the problem? For example, have one thread that creates and recreates the
+>same object repeatedly and many more competing threads that try to
+>remove (or whatever results in the quarantine) it? Note that I'm just
+>grasping at straws here, you might be able to design a more accurate
+>reproducer based on what it looks like is happening within Swift.
 
-And, realistically, all we really need returned is a enum to tell us
-how the bdev behaves on enospc:
-	- bdev fails fast, (i.e. immediate ENOSPC)
-	- bdev fails slow, (i.e. queue for some time, then ENOSPC)
-	- bdev never fails (i.e. queue forever)
-	- bdev doesn't support this (i.e. EOPNOTSUPP)
+We observe this issue on production cluster. It's hard to have a free gear
+with 100% same HW to test it currently.
+I'll try to figure out an approach to reproduce it. I'll update this mail
+thread if I can make it.
 
-Cheers,
+Thanks // Hugo
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--047d7b4724e21bc373051b72eab9
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_extra"><span style=3D"font-size:14px">=
+Hi Brain,</span></div><div class=3D"gmail_extra"><span style=3D"font-size:1=
+4px"><br></span></div><div class=3D"gmail_extra"><span style=3D"font-size:1=
+4px">&gt;The original stacktrace shows the crash in a readdir request. I&#3=
+9;m sure</span><br style=3D"font-size:14px"><span style=3D"font-size:14px">=
+&gt;there are multiple things going on here (and there are a couple rename<=
+/span><br style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;trace=
+s in the vmcore sitting on locks), of course, but where does the</span><br =
+style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;information abo=
+ut the rename come from?</span><br></div><div class=3D"gmail_extra"><span s=
+tyle=3D"font-size:14px"><br></span></div><div class=3D"gmail_extra"><span s=
+tyle=3D"font-size:14px">I tracked source code of the application. It moves =
+data to a quarantined area(another folder on same disk) under some conditio=
+ns. In the bug report, it indicates a condition that DELETE(create empty fi=
+le in a directory) object + list the directory will cause data MOVE (os.ren=
+ame) to quarantined area(another folder). The os.rename function call is th=
+e only function of the application to touch quarantined folder.=C2=A0</span=
+></div><div class=3D"gmail_extra"><span style=3D"font-size:14px"><br></span=
+></div><div class=3D"gmail_extra"><span style=3D"font-size:14px">&gt;I&#39;=
+m not quite following here because I don&#39;t have enough context about</s=
+pan><br style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;what th=
+e application server is doing. So far, it sounds like we somehow</span><br =
+style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;have multiple t=
+hreads competing to rename the same file..? Is there</span><br style=3D"fon=
+t-size:14px"><span style=3D"font-size:14px">&gt;anything else in this direc=
+tory at the time this sequence executes</span><br style=3D"font-size:14px">=
+<span style=3D"font-size:14px">&gt;(e.g., a file with object data that also=
+ gets quarantined)?</span><br style=3D"font-size:14px"><br>The previous beh=
+avior (a bug in the application) should not trigger Kernel panic. Yes, ther=
+e&#39;s multiple threads competing to DELETE(create a empty file) in the sa=
+me directory also move the existing one to the quarantined area. I think th=
+is is the root cause of kernel panic. The scenario is 10 application worker=
+s raise 10 thread to do same thing in the same moment.=C2=A0<br><br style=
+=3D"font-size:14px"><span style=3D"font-size:14px">&gt;Ideally, we&#39;d ul=
+timately like to translate this into a sequence of</span><br style=3D"font-=
+size:14px"><span style=3D"font-size:14px">&gt;operations as seen by the fs =
+that hopefully trigger the problem. We</span><br style=3D"font-size:14px"><=
+span style=3D"font-size:14px">&gt;might have to start by reproducing throug=
+h the application server.</span><br style=3D"font-size:14px"><span style=3D=
+"font-size:14px">&gt;Looking back at that bug report, it sounds like a &#39=
+;DELETE&#39; is a</span><br style=3D"font-size:14px"><span style=3D"font-si=
+ze:14px">&gt;high-level server operation that can consist of multiple sub-o=
+perations</span><br style=3D"font-size:14px"><span style=3D"font-size:14px"=
+>&gt;at the filesystem level (e.g., list, conditional rename if *.ts file</=
+span><br style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;exists=
+, etc.). Do you have enough information through any of the above</span><br =
+style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;to try and run =
+something against Swift that might explicitly reproduce</span><br style=3D"=
+font-size:14px"><span style=3D"font-size:14px">&gt;the problem? For example=
+, have one thread that creates and recreates the</span><br style=3D"font-si=
+ze:14px"><span style=3D"font-size:14px">&gt;same object repeatedly and many=
+ more competing threads that try to</span><br style=3D"font-size:14px"><spa=
+n style=3D"font-size:14px">&gt;remove (or whatever results in the quarantin=
+e) it? Note that I&#39;m just</span><br style=3D"font-size:14px"><span styl=
+e=3D"font-size:14px">&gt;grasping at straws here, you might be able to desi=
+gn a more accurate</span><br style=3D"font-size:14px"><span style=3D"font-s=
+ize:14px">&gt;reproducer based on what it looks like is happening within Sw=
+ift.</span><span style=3D"font-size:14px"><br></span></div><div class=3D"gm=
+ail_extra"><span style=3D"font-size:14px"><br></span></div><div class=3D"gm=
+ail_extra"><span style=3D"font-size:14px">We observe this issue on producti=
+on cluster. It&#39;s hard to have a free gear with 100% same HW to test it =
+currently.=C2=A0</span></div><div class=3D"gmail_extra"><span style=3D"font=
+-size:14px">I&#39;ll try to figure out an approach to reproduce it. I&#39;l=
+l update this mail thread if I can make it.=C2=A0</span></div><div class=3D=
+"gmail_extra"><span style=3D"font-size:14px"><br></span></div><div class=3D=
+"gmail_extra"><span style=3D"font-size:14px">Thanks // Hugo</span></div><di=
+v class=3D"gmail_extra"><span style=3D"font-size:14px"><br></span></div></d=
+iv>
+
+--047d7b4724e21bc373051b72eab9--
+
+
+--===============3561209290032458346==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3561209290032458346==--
