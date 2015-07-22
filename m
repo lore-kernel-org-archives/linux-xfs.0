@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EF3F7F6A
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 16:17:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EC82B304051
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 14:17:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id my2SQ7h97tKaTW1B for <xfs@oss.sgi.com>;
-	Tue, 21 Jul 2015 14:17:14 -0700 (PDT)
-Received: from Liberator.local (unknown [172.56.36.92])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id B55E76184597
-	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 16:17:13 -0500 (CDT)
-Message-ID: <55AEB6D6.7080007@sandeen.net>
-Date: Tue, 21 Jul 2015 16:17:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 11EBD7F9D
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 19:09:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D76F88F8049
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2015 17:09:37 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	bkGWocD6jFVBCQCD for <xfs@oss.sgi.com>;
+	Tue, 21 Jul 2015 17:09:32 -0700 (PDT)
+Date: Wed, 22 Jul 2015 10:09:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH] block: xfs: dm thin: train XFS to give up on
+	retrying IO if thinp is out of space
+Message-ID: <20150722000923.GB7943@dastard>
+References: <20150720151849.GA2282@redhat.com> <20150720223610.GV7943@dastard>
+	<55AE6670.40903@redhat.com> <20150721174753.GA8563@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: create new metadata UUID field and incompat flag
-References: <55A7D414.2050606@sandeen.net> <55A7D47B.7030200@sandeen.net>
-In-Reply-To: <55A7D47B.7030200@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20150721174753.GA8563@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,35 +31,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: axboe@kernel.dk, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de, Vivek Goyal <vgoyal@redhat.com>
 
-On 7/16/15 10:57 AM, Eric Sandeen wrote:
-> This adds a new superblock field, sb_meta_uuid.  If set, along with
-> a new incompat flag, the code will use that field on a V5 filesystem
-> to compare to metadata UUIDs, which allows us to change the user-
-> visible UUID at will.  Userspace handles the setting and clearing
-> of the incompat flag as appropriate, as the UUID gets changed; i.e.
-> setting the user-visible UUID back to the original UUID (as stored in
-> the new field) will remove the incompatible feature flag.
+On Tue, Jul 21, 2015 at 01:47:53PM -0400, Mike Snitzer wrote:
+> On Tue, Jul 21 2015 at 11:34am -0400, Eric Sandeen <sandeen@redhat.com> wrote:
+> > On 7/20/15 5:36 PM, Dave Chinner wrote:
+> > The issue we had discussed previously is that there is no agreement
+> > across block devices about whether ENOSPC is a permanent or temporary
+> > condition.  Asking the admin to tune  the fs to each block device's
+> > behavior sucks, IMHO.
 > 
-> If the incompat flag is not set, this copies the user-visible UUID into
-> into the meta_uuid slot in memory when the superblock is read from disk;
-> the meta_uuid field is not written back to disk in this case.
-> 
-> The remainder of this patch simply switches verifiers, initializers,
-> etc to use the new sb_meta_uuid field.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> It does suck, but it beats the alternative of XFS continuing to do
+> nothing about the problem.
 
-This one was also
+Just a comment on that: doing nothing is better than doing the wrong
+thing and being stuck with it forever. :)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Disucssing more with Vivek, might be that XFS would be best served to
+> model what dm-thinp has provided with its 'no_space_timeout'.  It
+> defaults to queueing IO for 60 seconds, once the timeout expires the
+> queued IOs getted errored.  If set to 0 dm-thinp will queue IO
+> indefinitely.
 
-but again has small changes to address Dave's points, and rebase
-changes.
+Yes, that's exactly what I proposed in the thread I referenced in
+my previous email, and what got stuck on the bikeshed wall because
+of these concerns about knob twiddling:
 
-THanks,
--Eric
+http://oss.sgi.com/archives/xfs/2015-02/msg00346.html
+
+| e.g. if we need configurable error handling, it needs to be
+| configurable for different error types, and it needs to be
+| configurable on a per-mount basis. And it needs to be configurable
+| at runtime, not just at mount time. That kind of leads to using
+| sysfs for this. e.g. for each error type we ned to handle different
+| behaviour for:
+| 
+| $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/type
+| [transient] permanent
+| $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_timeout_seconds
+| 300
+| $ cat
+| /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
+| 50
+| $ cat
+| /sys/fs/xfs/vda/meta_write_errors/enospc/transient_fail_at_umount
+| 1
+
+I've rebased this patchset, and I'm cleaning it up now, so in a few
+days I'll have something for review, likely for the 4.3 merge
+window....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
