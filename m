@@ -1,35 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AFA0D7FA9
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 03:54:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 83A78304048
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 01:54:17 -0700 (PDT)
-Received: from mail-wi0-f169.google.com (mail-wi0-f169.google.com
-	[209.85.212.169]) by cuda.sgi.com with ESMTP id
-	sOpxcrDXeDplqeIa (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8E9C429E0E
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 07:23:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 646F48F8049
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 05:23:16 -0700 (PDT)
+Received: from mail-ig0-f175.google.com (mail-ig0-f175.google.com
+	[209.85.213.175]) by cuda.sgi.com with ESMTP id
+	yAv4jyYyGHvMOkTn (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Jul 2015 01:54:12 -0700 (PDT)
-Received: by wicgb10 with SMTP id gb10so88032128wic.1
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 01:54:11 -0700 (PDT)
+	Wed, 22 Jul 2015 05:23:13 -0700 (PDT)
+Received: by igbij6 with SMTP id ij6so134925562igb.1
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 05:23:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150720151256.GA17816@bfoster.bfoster>
-References: <CA++_uhu=VNKtjax_JjsCZwDFT0Vk-CAjS5j=ba5+A5HL4nxpmA@mail.gmail.com>
-	<20150709183255.GG63282@bfoster.bfoster>
-	<CA++_uht5N6MtqUQfbB9A3R__UvR4aLN2q5-mFKiO__vU-Cxwpw@mail.gmail.com>
-	<20150713125214.GA50787@bfoster.bfoster>
-	<CA++_uhvrDBuP9nANTc0ZxZudDriYKrrtnaQUZzXPRLs0otD22w@mail.gmail.com>
-	<20150713170158.GB50787@bfoster.bfoster>
-	<CA++_uhvDrO2BmQ+q0bN=M_L-vUUaLZO9bHoKh0ntFveM5t-DNQ@mail.gmail.com>
-	<CA++_uhuJNkO4MDyS_+veFpysGyqzhqLspB3g73DtUCQqK1F80Q@mail.gmail.com>
-	<20150720114648.GB53450@bfoster.bfoster>
-	<CA++_uhvwR1KucdHWnPzS5ysFuYyssFnUB95kS-piC_pRnq=dXw@mail.gmail.com>
-	<20150720151256.GA17816@bfoster.bfoster>
-Date: Wed, 22 Jul 2015 16:54:11 +0800
-Message-ID: <CA++_uhu-2Eq02WAvzDo=TQBZzMmAmfAn4H1gPnDZGV+JsqAHWw@mail.gmail.com>
-Subject: Re: Data can't be wrote to XFS RIP [<ffffffffa041a99a>]
-	xfs_dir2_sf_get_parent_ino+0xa/0x20
-From: Kuo Hugo <tonytkdk@gmail.com>
+In-Reply-To: <20150707003542.GW7943@dastard>
+References: <CADb9451tB71D3XCqcOkDxzpzbdEHqwj7XCZUpL8yg1DzYbpwBw@mail.gmail.com>
+	<20150703235141.GQ7943@dastard>
+	<CADb9451j0WEeL4m-fEHzrOf3ys+eSHJKNzcN9oHAOs2kDLL_kQ@mail.gmail.com>
+	<20150704233802.GS7943@dastard>
+	<CADb9452UYPqo_i2M=-sSwPKwqUrRSMJ4bhV10S=1k0sNCKCVfg@mail.gmail.com>
+	<20150705232443.GA3902@dastard>
+	<CADb9453iT7+2zgKDqY7gpHGjQ6nayqQFES1AJHn0G2FMFjYX-A@mail.gmail.com>
+	<20150707003542.GW7943@dastard>
+Date: Wed, 22 Jul 2015 08:23:12 -0400
+Message-ID: <CADb9453G6=+k0SGj4Q_xJ8KmA4es0_ABHmwk5GFymJ4nEYoo4g@mail.gmail.com>
+Subject: Re: Failing XFS filesystem underlying Ceph OSDs
+From: Alex Gorbachev <ag@iss-integration.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,142 +34,255 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3561209290032458346=="
+Content-Type: multipart/mixed; boundary="===============2804397914870347393=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Hugo Kuo <hugo@swiftstack.com>, Eric Sandeen <sandeen@sandeen.net>, Darrell Bishop <darrell@swiftstack.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---===============3561209290032458346==
-Content-Type: multipart/alternative; boundary=047d7b4724e21bc373051b72eab9
+--===============2804397914870347393==
+Content-Type: multipart/alternative; boundary=001a113f8eb6a41018051b75d5fd
 
---047d7b4724e21bc373051b72eab9
+--001a113f8eb6a41018051b75d5fd
 Content-Type: text/plain; charset=UTF-8
 
-Hi Brain,
+Hi Dave,
 
->The original stacktrace shows the crash in a readdir request. I'm sure
->there are multiple things going on here (and there are a couple rename
->traces in the vmcore sitting on locks), of course, but where does the
->information about the rename come from?
+On Mon, Jul 6, 2015 at 8:35 PM, Dave Chinner <david@fromorbit.com> wrote:
 
-I tracked source code of the application. It moves data to a quarantined
-area(another folder on same disk) under some conditions. In the bug report,
-it indicates a condition that DELETE(create empty file in a directory)
-object + list the directory will cause data MOVE (os.rename) to quarantined
-area(another folder). The os.rename function call is the only function of
-the application to touch quarantined folder.
+> On Mon, Jul 06, 2015 at 03:20:19PM -0400, Alex Gorbachev wrote:
+> > On Sun, Jul 5, 2015 at 7:24 PM, Dave Chinner <david@fromorbit.com>
+> wrote:
+> > > On Sun, Jul 05, 2015 at 12:25:47AM -0400, Alex Gorbachev wrote:
+> > > > > > sysctl vm.swappiness=20 (can probably be 1 as per article)
+> > > > > >
+> > > > > > sysctl vm.min_free_kbytes=262144
+> > > > >
+> > > [...]
+> > > >
+> > > > We have experienced the problem in various guises with kernels 3.14,
+> > > 3.19,
+> > > > 4.1-rc2 and now 4.1, so it's not new to us, just different error
+> stack.
+> > > > Below are some other stack dumps of what manifested as the same
+> error.
+> > > >
+> > > >  [<ffffffff817cf4b9>] schedule+0x29/0x70
+> > > >  [<ffffffffc07caee7>] _xfs_log_force+0x187/0x280 [xfs]
+> > > >  [<ffffffff810a4150>] ? try_to_wake_up+0x2a0/0x2a0
+> > > >  [<ffffffffc07cb019>] xfs_log_force+0x39/0xc0 [xfs]
+> > > >  [<ffffffffc07d6542>] xfsaild_push+0x552/0x5a0 [xfs]
+> > > >  [<ffffffff817d2264>] ? schedule_timeout+0x124/0x210
+> > > >  [<ffffffffc07d662f>] xfsaild+0x9f/0x140 [xfs]
+> > > >  [<ffffffffc07d6590>] ? xfsaild_push+0x5a0/0x5a0 [xfs]
+> > > >  [<ffffffff81095e29>] kthread+0xc9/0xe0
+> > > >  [<ffffffff81095d60>] ? flush_kthread_worker+0x90/0x90
+> > > >  [<ffffffff817d3718>] ret_from_fork+0x58/0x90
+> > > >  [<ffffffff81095d60>] ? flush_kthread_worker+0x90/0x90
+> > > >  INFO: task xfsaild/sdg1:2606 blocked for more than 120 seconds.
+> > > >        Not tainted 3.19.4-031904-generic #201504131440
+> > > >  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+> > > message.
+> > >
+> > > That's indicative of IO completion problems, but not a crash.
+> > >
+> > > >  BUG: unable to handle kernel NULL pointer dereference at
+> > >  (null)
+> > > >  IP: [<ffffffffc04be80f>] xfs_count_page_state+0x3f/0x70 [xfs]
+> > > ....
+> > > >   [<ffffffffc04be880>] xfs_vm_releasepage+0x40/0x120 [xfs]
+> > > >   [<ffffffff8118a7d2>] try_to_release_page+0x32/0x50
+> > > >   [<ffffffff8119fe6d>] shrink_page_list+0x69d/0x720
+> > > >   [<ffffffff811a058d>] shrink_inactive_list+0x1dd/0x5d0
+> > > ....
+> > >
+> > > Again, this is indicative of a page cache issue: a page without
+> > > buffers has been passed to xfs_vm_releasepage(), which implies the
+> > > page flags are not correct. i.e PAGE_FLAGS_PRIVATE is set but
+> > > page->private is null...
+> > >
+> > > Again, this is unlikely to be an XFS issue.
+> > >
+> >
+> > Sorry for my ignorance, but would this likely come from Ceph code or a
+> > hardware issue of some kind, such as a disk drive?  I have reached out to
+> > RedHat and Ceph community on that as well.
+>
+> More likely a kernel bug somewhere in the page cache or memory
+> reclaim paths. The issue is that we only notice the problem long
+> after it has occurred. i.e. when XFS goes to tear down the page it has
+> been handed, the page is already in a bad state and so it doesn't
+> really tell us anything about the cause of the problem.
+>
+> Realisticaly, we need a script that reproduces the problem (that
+> doesn't require a Ceph cluster) to be able to isolate the cause.
+> In the mean time, you can always try running  CONFIG_XFS_WARN=y to
+> see if that catches problems earlier, and you might also want to do
+> things like turn on memory poisoning and other kernel debugging
+> options to try to isolate the cause of the issue....
+>
 
->I'm not quite following here because I don't have enough context about
->what the application server is doing. So far, it sounds like we somehow
->have multiple threads competing to rename the same file..? Is there
->anything else in this directory at the time this sequence executes
->(e.g., a file with object data that also gets quarantined)?
+We have been error free for almost 3 weeks now with these changes:
 
-The previous behavior (a bug in the application) should not trigger Kernel
-panic. Yes, there's multiple threads competing to DELETE(create a empty
-file) in the same directory also move the existing one to the quarantined
-area. I think this is the root cause of kernel panic. The scenario is 10
-application workers raise 10 thread to do same thing in the same moment.
+vm.swappiness=1
+vm.min_free_kbytes=262144
 
->Ideally, we'd ultimately like to translate this into a sequence of
->operations as seen by the fs that hopefully trigger the problem. We
->might have to start by reproducing through the application server.
->Looking back at that bug report, it sounds like a 'DELETE' is a
->high-level server operation that can consist of multiple sub-operations
->at the filesystem level (e.g., list, conditional rename if *.ts file
->exists, etc.). Do you have enough information through any of the above
->to try and run something against Swift that might explicitly reproduce
->the problem? For example, have one thread that creates and recreates the
->same object repeatedly and many more competing threads that try to
->remove (or whatever results in the quarantine) it? Note that I'm just
->grasping at straws here, you might be able to design a more accurate
->reproducer based on what it looks like is happening within Swift.
+I wonder if this is related to us using high speed Areca HBAs with RAM
+writeback cache and having had vm.swappiness=0 previously.  POssibly the
+HBA handing down a large chunk of IO very fast and page cache not being to
+handle it with swappiness=0.  I will keep monitoring, but thank you very
+much for the analysis and info.
 
-We observe this issue on production cluster. It's hard to have a free gear
-with 100% same HW to test it currently.
-I'll try to figure out an approach to reproduce it. I'll update this mail
-thread if I can make it.
+Alex
 
-Thanks // Hugo
 
---047d7b4724e21bc373051b72eab9
+
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+--001a113f8eb6a41018051b75d5fd
 Content-Type: text/html; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr"><div class=3D"gmail_extra"><span style=3D"font-size:14px">=
-Hi Brain,</span></div><div class=3D"gmail_extra"><span style=3D"font-size:1=
-4px"><br></span></div><div class=3D"gmail_extra"><span style=3D"font-size:1=
-4px">&gt;The original stacktrace shows the crash in a readdir request. I&#3=
-9;m sure</span><br style=3D"font-size:14px"><span style=3D"font-size:14px">=
-&gt;there are multiple things going on here (and there are a couple rename<=
-/span><br style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;trace=
-s in the vmcore sitting on locks), of course, but where does the</span><br =
-style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;information abo=
-ut the rename come from?</span><br></div><div class=3D"gmail_extra"><span s=
-tyle=3D"font-size:14px"><br></span></div><div class=3D"gmail_extra"><span s=
-tyle=3D"font-size:14px">I tracked source code of the application. It moves =
-data to a quarantined area(another folder on same disk) under some conditio=
-ns. In the bug report, it indicates a condition that DELETE(create empty fi=
-le in a directory) object + list the directory will cause data MOVE (os.ren=
-ame) to quarantined area(another folder). The os.rename function call is th=
-e only function of the application to touch quarantined folder.=C2=A0</span=
-></div><div class=3D"gmail_extra"><span style=3D"font-size:14px"><br></span=
-></div><div class=3D"gmail_extra"><span style=3D"font-size:14px">&gt;I&#39;=
-m not quite following here because I don&#39;t have enough context about</s=
-pan><br style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;what th=
-e application server is doing. So far, it sounds like we somehow</span><br =
-style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;have multiple t=
-hreads competing to rename the same file..? Is there</span><br style=3D"fon=
-t-size:14px"><span style=3D"font-size:14px">&gt;anything else in this direc=
-tory at the time this sequence executes</span><br style=3D"font-size:14px">=
-<span style=3D"font-size:14px">&gt;(e.g., a file with object data that also=
- gets quarantined)?</span><br style=3D"font-size:14px"><br>The previous beh=
-avior (a bug in the application) should not trigger Kernel panic. Yes, ther=
-e&#39;s multiple threads competing to DELETE(create a empty file) in the sa=
-me directory also move the existing one to the quarantined area. I think th=
-is is the root cause of kernel panic. The scenario is 10 application worker=
-s raise 10 thread to do same thing in the same moment.=C2=A0<br><br style=
-=3D"font-size:14px"><span style=3D"font-size:14px">&gt;Ideally, we&#39;d ul=
-timately like to translate this into a sequence of</span><br style=3D"font-=
-size:14px"><span style=3D"font-size:14px">&gt;operations as seen by the fs =
-that hopefully trigger the problem. We</span><br style=3D"font-size:14px"><=
-span style=3D"font-size:14px">&gt;might have to start by reproducing throug=
-h the application server.</span><br style=3D"font-size:14px"><span style=3D=
-"font-size:14px">&gt;Looking back at that bug report, it sounds like a &#39=
-;DELETE&#39; is a</span><br style=3D"font-size:14px"><span style=3D"font-si=
-ze:14px">&gt;high-level server operation that can consist of multiple sub-o=
-perations</span><br style=3D"font-size:14px"><span style=3D"font-size:14px"=
->&gt;at the filesystem level (e.g., list, conditional rename if *.ts file</=
-span><br style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;exists=
-, etc.). Do you have enough information through any of the above</span><br =
-style=3D"font-size:14px"><span style=3D"font-size:14px">&gt;to try and run =
-something against Swift that might explicitly reproduce</span><br style=3D"=
-font-size:14px"><span style=3D"font-size:14px">&gt;the problem? For example=
-, have one thread that creates and recreates the</span><br style=3D"font-si=
-ze:14px"><span style=3D"font-size:14px">&gt;same object repeatedly and many=
- more competing threads that try to</span><br style=3D"font-size:14px"><spa=
-n style=3D"font-size:14px">&gt;remove (or whatever results in the quarantin=
-e) it? Note that I&#39;m just</span><br style=3D"font-size:14px"><span styl=
-e=3D"font-size:14px">&gt;grasping at straws here, you might be able to desi=
-gn a more accurate</span><br style=3D"font-size:14px"><span style=3D"font-s=
-ize:14px">&gt;reproducer based on what it looks like is happening within Sw=
-ift.</span><span style=3D"font-size:14px"><br></span></div><div class=3D"gm=
-ail_extra"><span style=3D"font-size:14px"><br></span></div><div class=3D"gm=
-ail_extra"><span style=3D"font-size:14px">We observe this issue on producti=
-on cluster. It&#39;s hard to have a free gear with 100% same HW to test it =
-currently.=C2=A0</span></div><div class=3D"gmail_extra"><span style=3D"font=
--size:14px">I&#39;ll try to figure out an approach to reproduce it. I&#39;l=
-l update this mail thread if I can make it.=C2=A0</span></div><div class=3D=
-"gmail_extra"><span style=3D"font-size:14px"><br></span></div><div class=3D=
-"gmail_extra"><span style=3D"font-size:14px">Thanks // Hugo</span></div><di=
-v class=3D"gmail_extra"><span style=3D"font-size:14px"><br></span></div></d=
-iv>
+<div dir=3D"ltr">Hi Dave,<div class=3D"gmail_extra"><br><div class=3D"gmail=
+_quote">On Mon, Jul 6, 2015 at 8:35 PM, Dave Chinner <span dir=3D"ltr">&lt;=
+<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.co=
+m</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margi=
+n:0px 0px 0px 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204=
+);border-left-style:solid;padding-left:1ex">On Mon, Jul 06, 2015 at 03:20:1=
+9PM -0400, Alex Gorbachev wrote:<br>
+<span>&gt; On Sun, Jul 5, 2015 at 7:24 PM, Dave Chinner &lt;<a href=3D"mail=
+to:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&gt; wrote=
+:<br>
+&gt; &gt; On Sun, Jul 05, 2015 at 12:25:47AM -0400, Alex Gorbachev wrote:<b=
+r>
+&gt; &gt; &gt; &gt; &gt; sysctl vm.swappiness=3D20 (can probably be 1 as pe=
+r article)<br>
+&gt; &gt; &gt; &gt; &gt;<br>
+&gt; &gt; &gt; &gt; &gt; sysctl vm.min_free_kbytes=3D262144<br>
+&gt; &gt; &gt; &gt;<br>
+&gt; &gt; [...]<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; We have experienced the problem in various guises with kerne=
+ls 3.14,<br>
+&gt; &gt; 3.19,<br>
+&gt; &gt; &gt; 4.1-rc2 and now 4.1, so it&#39;s not new to us, just differe=
+nt error stack.<br>
+&gt; &gt; &gt; Below are some other stack dumps of what manifested as the s=
+ame error.<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff817cf4b9&gt;] schedule+0x29/0x70<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffffc07caee7&gt;] _xfs_log_force+0x187/0x280 =
+[xfs]<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff810a4150&gt;] ? try_to_wake_up+0x2a0/0x2a=
+0<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffffc07cb019&gt;] xfs_log_force+0x39/0xc0 [xf=
+s]<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffffc07d6542&gt;] xfsaild_push+0x552/0x5a0 [x=
+fs]<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff817d2264&gt;] ? schedule_timeout+0x124/0x=
+210<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffffc07d662f&gt;] xfsaild+0x9f/0x140 [xfs]<br=
+>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffffc07d6590&gt;] ? xfsaild_push+0x5a0/0x5a0 =
+[xfs]<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff81095e29&gt;] kthread+0xc9/0xe0<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff81095d60&gt;] ? flush_kthread_worker+0x90=
+/0x90<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff817d3718&gt;] ret_from_fork+0x58/0x90<br>
+&gt; &gt; &gt;=C2=A0 [&lt;ffffffff81095d60&gt;] ? flush_kthread_worker+0x90=
+/0x90<br>
+&gt; &gt; &gt;=C2=A0 INFO: task xfsaild/sdg1:2606 blocked for more than 120=
+ seconds.<br>
+</span>&gt; &gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 Not tainted <a href=3D"tel=
+:3.19.4-031904" value=3D"+13194031904" target=3D"_blank">3.19.4-031904</a>-=
+generic #201504131440<br>
+<span>&gt; &gt; &gt;=C2=A0 &quot;echo 0 &gt; /proc/sys/kernel/hung_task_tim=
+eout_secs&quot; disables this<br>
+&gt; &gt; message.<br>
+&gt; &gt;<br>
+&gt; &gt; That&#39;s indicative of IO completion problems, but not a crash.=
+<br>
+&gt; &gt;<br>
+&gt; &gt; &gt;=C2=A0 BUG: unable to handle kernel NULL pointer dereference =
+at<br>
+&gt; &gt;=C2=A0 (null)<br>
+&gt; &gt; &gt;=C2=A0 IP: [&lt;ffffffffc04be80f&gt;] xfs_count_page_state+0x=
+3f/0x70 [xfs]<br>
+&gt; &gt; ....<br>
+&gt; &gt; &gt;=C2=A0 =C2=A0[&lt;ffffffffc04be880&gt;] xfs_vm_releasepage+0x=
+40/0x120 [xfs]<br>
+&gt; &gt; &gt;=C2=A0 =C2=A0[&lt;ffffffff8118a7d2&gt;] try_to_release_page+0=
+x32/0x50<br>
+&gt; &gt; &gt;=C2=A0 =C2=A0[&lt;ffffffff8119fe6d&gt;] shrink_page_list+0x69=
+d/0x720<br>
+&gt; &gt; &gt;=C2=A0 =C2=A0[&lt;ffffffff811a058d&gt;] shrink_inactive_list+=
+0x1dd/0x5d0<br>
+&gt; &gt; ....<br>
+&gt; &gt;<br>
+&gt; &gt; Again, this is indicative of a page cache issue: a page without<b=
+r>
+&gt; &gt; buffers has been passed to xfs_vm_releasepage(), which implies th=
+e<br>
+&gt; &gt; page flags are not correct. i.e PAGE_FLAGS_PRIVATE is set but<br>
+&gt; &gt; page-&gt;private is null...<br>
+&gt; &gt;<br>
+&gt; &gt; Again, this is unlikely to be an XFS issue.<br>
+&gt; &gt;<br>
+&gt;<br>
+&gt; Sorry for my ignorance, but would this likely come from Ceph code or a=
+<br>
+&gt; hardware issue of some kind, such as a disk drive?=C2=A0 I have reache=
+d out to<br>
+&gt; RedHat and Ceph community on that as well.<br>
+<br>
+</span>More likely a kernel bug somewhere in the page cache or memory<br>
+reclaim paths. The issue is that we only notice the problem long<br>
+after it has occurred. i.e. when XFS goes to tear down the page it has<br>
+been handed, the page is already in a bad state and so it doesn&#39;t<br>
+really tell us anything about the cause of the problem.<br>
+<br>
+Realisticaly, we need a script that reproduces the problem (that<br>
+doesn&#39;t require a Ceph cluster) to be able to isolate the cause.<br>
+In the mean time, you can always try running=C2=A0 CONFIG_XFS_WARN=3Dy to<b=
+r>
+see if that catches problems earlier, and you might also want to do<br>
+things like turn on memory poisoning and other kernel debugging<br>
+options to try to isolate the cause of the issue....<br></blockquote><div><=
+br></div><div>We have been error free for almost 3 weeks now with these cha=
+nges:</div><div><br></div><div><div style=3D"font-size:12.8000001907349px">=
+vm.swappiness=3D1</div><div style=3D"font-size:12.8000001907349px">vm.min_f=
+ree_kbytes=3D262144</div></div><div style=3D"font-size:12.8000001907349px">=
+<br></div><div style=3D"font-size:12.8000001907349px">I wonder if this is r=
+elated to us using high speed Areca HBAs with RAM writeback cache and havin=
+g had vm.swappiness=3D0 previously.=C2=A0 POssibly the HBA handing down a l=
+arge chunk of IO very fast and page cache not being to handle it with swapp=
+iness=3D0.=C2=A0 I will keep monitoring, but thank you very much for the an=
+alysis and info.</div><div style=3D"font-size:12.8000001907349px"><br></div=
+><div style=3D"font-size:12.8000001907349px">Alex</div><div><br></div><div>=
+=C2=A0</div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0=
+.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);border-left-s=
+tyle:solid;padding-left:1ex">
+<span><br>
+Cheers,<br>
+<br>
+Dave.<br>
+--<br>
+Dave Chinner<br>
+</span><a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromo=
+rbit.com</a><br>
+</blockquote></div><br></div></div>
 
---047d7b4724e21bc373051b72eab9--
+--001a113f8eb6a41018051b75d5fd--
 
 
---===============3561209290032458346==
+--===============2804397914870347393==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -184,4 +293,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3561209290032458346==--
+--===============2804397914870347393==--
