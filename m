@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B2FA87F86
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 15:13:34 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6BD317F94
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 15:13:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 37FF7AC006
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 452228F8035
 	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 13:13:34 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zjxNiyLDUAApkyri (version=TLSv1
+	cuda.sgi.com with ESMTP id PIwAcT9Z1NDfOEaV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 23 Jul 2015 13:13:33 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id C834DC12A7
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id D69AFA202A
 	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 20:13:32 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t6NKDWVF015699
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t6NKDW0i013911
 	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 16:13:32 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC 0/2] xfs: fix up EFI/EFD error handling
-Date: Thu, 23 Jul 2015 16:13:28 -0400
-Message-Id: <1437682410-51778-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH RFC 1/2] xfs: return committed status from xfs_trans_roll()
+Date: Thu, 23 Jul 2015 16:13:29 -0400
+Message-Id: <1437682410-51778-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1437682410-51778-1-git-send-email-bfoster@redhat.com>
+References: <1437682410-51778-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,33 +38,67 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+Some callers need to make error handling decisions based on whether the
+current transaction successfully committed or not. Rename
+xfs_trans_roll(), add a new parameter and provide a wrapper to preserve
+existing callers.
 
-This is another quick RFC related to testing issues I'm hitting with my
-previously posted log recovery fixes. Patch 1 is a small refactor to
-support patch 2. Patch 2 describes the issues I'm hitting in repeated
-shutdown and log recovery testing.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_trans.c | 15 +++++++++++++--
+ fs/xfs/xfs_trans.h |  1 +
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-This passes some spot testing and seems to resolve the hang from the
-test sequence described in the commit log description, but more testing
-is definitely required. I _think_ I follow the log callbacks and how the
-EFI/EFD are expected to be managed, but I could easily be missing
-something. As it is, I'm off for a long weekend after today so I'm
-sending this to hopefully get some eyes to sanity check before I get too
-deep into testing this along with the previous fixes next week...
-
-Brian
-
-Brian Foster (2):
-  xfs: return committed status from xfs_trans_roll()
-  xfs: fix efi/efd error handling to avoid fs shutdown hangs
-
- fs/xfs/xfs_bmap_util.c    | 35 ++++++++++++++++++++--------
- fs/xfs/xfs_extfree_item.c | 59 +++++++++++++++++++++++++----------------------
- fs/xfs/xfs_trans.c        | 15 ++++++++++--
- fs/xfs/xfs_trans.h        |  1 +
- 4 files changed, 71 insertions(+), 39 deletions(-)
-
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 0582a27..a0ab1da 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1019,9 +1019,10 @@ xfs_trans_cancel(
+  * chunk we've been working on and get a new transaction to continue.
+  */
+ int
+-xfs_trans_roll(
++__xfs_trans_roll(
+ 	struct xfs_trans	**tpp,
+-	struct xfs_inode	*dp)
++	struct xfs_inode	*dp,
++	int			*committed)
+ {
+ 	struct xfs_trans	*trans;
+ 	struct xfs_trans_res	tres;
+@@ -1052,6 +1053,7 @@ xfs_trans_roll(
+ 	if (error)
+ 		return error;
+ 
++	*committed = 1;
+ 	trans = *tpp;
+ 
+ 	/*
+@@ -1074,3 +1076,12 @@ xfs_trans_roll(
+ 		xfs_trans_ijoin(trans, dp, 0);
+ 	return 0;
+ }
++
++int
++xfs_trans_roll(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*dp)
++{
++	int			committed = 0;
++	return __xfs_trans_roll(tpp, dp, &committed);
++}
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 3b21b4e..518ae5c 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -226,6 +226,7 @@ void		xfs_trans_log_efd_extent(xfs_trans_t *,
+ 					 xfs_fsblock_t,
+ 					 xfs_extlen_t);
+ int		xfs_trans_commit(struct xfs_trans *);
++int		__xfs_trans_roll(struct xfs_trans **, struct xfs_inode *, int *);
+ int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+ void		xfs_trans_cancel(xfs_trans_t *);
+ int		xfs_trans_ail_init(struct xfs_mount *);
 -- 
 2.1.0
 
