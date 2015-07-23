@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2D4A97F81
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 06:36:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9EB34AC004
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 04:36:52 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 663B37F7B
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 09:33:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F4E5304048
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 07:33:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XtAteIfh8LFyT1H3 (version=TLSv1
+	cuda.sgi.com with ESMTP id mPCW3Apsfg646uup (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Jul 2015 04:36:51 -0700 (PDT)
-Date: Thu, 23 Jul 2015 07:36:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS File system in trouble
-Message-ID: <20150723113647.GA18690@bfoster.bfoster>
-References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
-	<55AA5FCE.4080702@sandeen.net>
-	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
-	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
-	<55AAF73A.4040903@mygrande.net>
-	<20150720111747.GA53450@bfoster.bfoster>
-	<55B04723.6010202@mygrande.net>
+	Thu, 23 Jul 2015 07:33:55 -0700 (PDT)
+Date: Thu, 23 Jul 2015 10:33:52 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [RFC PATCH] block: xfs: dm thin: train XFS to give up on
+	retrying IO if thinp is out of space
+Message-ID: <20150723143352.GA23921@redhat.com>
+References: <20150720223610.GV7943@dastard> <55AE6670.40903@redhat.com>
+	<20150721174753.GA8563@redhat.com> <20150722000923.GB7943@dastard>
+	<20150722010056.GC7943@dastard> <20150722014029.GA10628@redhat.com>
+	<20150722023711.GD7943@dastard> <20150722133451.GB16842@redhat.com>
+	<55AFC496.4000009@redhat.com> <20150723051043.GB3902@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55B04723.6010202@mygrande.net>
+In-Reply-To: <20150723051043.GB3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,96 +34,108 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Kris Rusocki <kszysiu@braxis.org>, "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: axboe@kernel.dk, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de, Vivek Goyal <vgoyal@redhat.com>
 
-On Wed, Jul 22, 2015 at 08:45:07PM -0500, Leslie Rhorer wrote:
-> On 7/20/2015 6:17 AM, Brian Foster wrote:
-> >On Sat, Jul 18, 2015 at 08:02:50PM -0500, Leslie Rhorer wrote:
-> >>
-> >>	I found the problem with md5sum (and probably nfs, as well).  One of the
-> >>memory modules in the server was bad.  The problem with XFS persists.  Every
-> >>time tar tried to create the directory:
-> >>
-> >>/RAID/Server-Main/Equipment/Drive Controllers/HighPoint Adapters/Rocket 2722/Driver/RR276x/Driver/Linux/openSUSE/rr276x-suse-11.2-i386/linux/suse/i386-11.1
-> >>
-> >>	It would begin spitting out errors, starting with "Cannot mkdir: Structure
-> >>needs cleaning".  At that point, XFS had shut down.  I went into
-> >>/RAID/Server-Main/Equipment/Drive Controllers/HighPoint Adapters/Rocket
-> >>2722/Driver/RR276x/Driver/Linux/openSUSE/rr276x-suse-11.2-i386/linux/suse/
-> >>and created the i386-11.1 directory by hand, and tar no longer starts
-> >>spitting out errors at that point, but it does start up again at
-> >>RR2782/Windows/Vista-Win2008-Win7-legacy_single/x64.
-> >>
-> >
-> >So is this untar problem a reliable reproducer? If so, here's what I
-> 
-> 	Absolutely reliable producer.  The only change is if I create the offending
-> directory by hand (after recovering the filesystem, of course) and then
-> start the tar again.  Then it copies all the files into the previously
-> offending directory, failing the next time it tries to create a directory.
-> 
-> >would try to hopefully isolate a filesystem problem from something
-> >underneath:
-> 
-> 	OK.  Frankly, I fail to find it at all likely to be anything above.  I can
-> read and write 100s of megabytes of data without an error.  The only thing
-> that I can find failing is creating directories, and that is only when tar
-> attempts it.  The directory structure is going to be written to different
-> inodes as time goes by, so a failure of mdadm or some structure above it
-> should cause other widesperead issues.  I need to try some other tarballs
-> when I get the chance, and also try dumping that tar on a different
-> directory.
-> 
+On Thu, Jul 23 2015 at  1:10am -0400,
+Dave Chinner <david@fromorbit.com> wrote:
 
-I wouldn't disagree, but I'd still run the test. ;)
+> On Wed, Jul 22, 2015 at 11:28:06AM -0500, Eric Sandeen wrote:
+> > On 7/22/15 8:34 AM, Mike Snitzer wrote:
+> > > On Tue, Jul 21 2015 at 10:37pm -0400,
+> > > Dave Chinner <david@fromorbit.com> wrote:
+> > >> On Tue, Jul 21, 2015 at 09:40:29PM -0400, Mike Snitzer wrote:
+> > >>> I'm open to considering alternative interfaces for getting you the info
+> > >>> you need.  I just don't have a great sense for what mechanism you'd like
+> > >>> to use.  Do we invent a new block device operations table method that
+> > >>> sets values in a 'struct no_space_strategy' passed in to the
+> > >>> blockdevice?
+> > >>
+> > >> It's long been frowned on having the filesystems dig into block
+> > >> device structures. We have lots of wrapper functions for getting
+> > >> information from or performing operations on block devices. (e.g.
+> > >> bdev_read_only(), bdev_get_queue(), blkdev_issue_flush(),
+> > >> blkdev_issue_zeroout(), etc) and so I think this is the pattern we'd
+> > >> need to follow. If we do that - bdev_get_nospace_strategy() - then
+> > >> how that information gets to the filesystem is completely opaque
+> > >> at the fs level, and the block layer can implement it in whatever
+> > >> way is considered sane...
+> > >>
+> > >> And, realistically, all we really need returned is a enum to tell us
+> > >> how the bdev behaves on enospc:
+> > >> 	- bdev fails fast, (i.e. immediate ENOSPC)
+> > >> 	- bdev fails slow, (i.e. queue for some time, then ENOSPC)
+> > >> 	- bdev never fails (i.e. queue forever)
+> > >> 	- bdev doesn't support this (i.e. EOPNOTSUPP)
+> > 
+> > I'm not sure how this is more useful than the bdev simply responding to
+> > a query of "should we keep trying IOs?"
+> 
+> 	- bdev fails fast, (i.e. immediate ENOSPC)
+> 
+> XFS should use a bound retry behaviour for to allow the possiblity of
+> the admin adding more space before we shut down the fs. i.e.
+> XFS fails slow.
+> 
+> 	- bdev fails slow, (i.e. queue for some time, then ENOSPC)
+> 
+> We know that IOs are going to be delayed before they are failed, so
+> there's no point in retrying as the admin has already had a chance
+> to resolve the ENOSPC condition before failure was reported. i.e.
+> XFS fails fast.
+> 
+> 	- bdev never fails (i.e. queue forever)
+> 
+> Block device will appear to hang when it runs out of space. Nothing
+> XFS can do here because IOs never fail, but we need to note this in
+> the log at mount time so that filesystem hangs are easily explained
+> when reported to us.
+> 
+> 	- bdev doesn't support this (i.e. EOPNOTSUPP)
+> 
+> XFS uses default "retry forever" behaviour.
+> 
+> > > This 'struct no_space_strategy' would be invented purely for
+> > > informational purposes for upper layers' benefit -- I don't consider it
+> > > a "block device structure" it the traditional sense.
+> > > 
+> > > I was thinking upper layers would like to know the actual timeout value
+> > > for the "fails slow" case.  As such the 'struct no_space_strategy' would
+> > > have the enum and the timeout.  And would be returned with a call:
+> > >      bdev_get_nospace_strategy(bdev, &no_space_strategy)
+> > 
+> > Asking for the timeout value seems to add complexity.  It could change after
+> > we ask, and knowing it now requires another layer to be handling timeouts...
+> 
+> I don't think knowing the bdev timeout is necessary because the
+> default is most likely to be "fail fast" in this case. i.e. no
+> retries, just shut down.  IOWs, if we describe the configs and
+> actions in neutral terms, then the default configurations easy for
+> users to understand. i.e:
+> 
+> bdev enospc		XFS default
+> -----------		-----------
+> Fail slow		Fail fast
+> Fail fast		Fail slow
+> Fail never		Fail never, Record in log
+> EOPNOTSUPP		Fail never
+> 
+> With that in mind, I'm thinking I should drop the
+> "permanent/transient" error classifications, and change it "failure
+> behaviour" with the options "fast slow [never]" and only the slow
+> option has retry/timeout configuration options.  I think the "never"
+> option still needs to "fail at unmount" config variable, but we
+> enable it by default rather than hanging unmount and requiring a
+> manual shutdown like we do now....
 
-> 
-> >xfs_metadump -go /dev/md0 /somewhere/on/rootfs/md0.metadump
-> >xfs_mdrestore -g /somewhere/on/rootfs/md0.metadump /.../fileonrootfs.img
-> 
-> 	How big are those files going to be, do you think?  The root partition is
-> not all that huge.  There is only a little over 80G free.
-> 
+This all sounds good to me.  The simpler XFS configuration looks like a
+nice improvement.
 
-I'm not really sure. It depends on how much metadata is on the fs. FWIW,
-the image should be compressible if you want to transfer it to another
-server with more room to play with.
+If you just want to stub out the call to bdev_get_nospace_strategy() I
+can crank through implementing it once I get a few minutes.
 
-> >mount /.../fileonrootfs.img /mnt/
-> >
-> >... and repeat the test on that mount using the original tarball (if
-> >it's on the associated fs, the version from the dump will have no data).
-> 
-> 	It is.  I've tried copying it to another fs, and it works fine, there.
-> 
-> >This will create a metadata only dump of the original fs onto another
-> >storage device (e.g., whatever holds the root fs), restore the metadump
-> >to a file and mount it loopback. The resulting fs will not contain any
-> >file data, but will contain all of the metadata such as directory
-> >structure, etc. and is otherwise mountable and usable for experimental
-> >purposes.
-> >
-> >If the problem is in the filesystem or "above" (as in kernel, memory
-> >issue, etc.), the test should fail on this mount. If the problem is
-> >beneath the fs such as somewhere in the storage stack (assuming the
-> >rootfs storage stack is reliable), it probably shouldn't fail.
-> 
-> 	I'll look into this when I can.  Right now I have some critical operations
-> going on both servers (primary and backup), and I can't take down a file
-> system or even risk doing so.  Hopefully I will get around to it this
-> weekend.
-> 
-
-A positive side effect if the problem reproduces with the metadump is
-you can potentially share a reproducer with the developers here. Note
-that the image as created above would create an unobfuscated image and
-thus contain original metadata (filenames, etc.) of the fs. You could
-also create an obfuscated image (without the -o option) to scramble
-filenames and whatnot, but I'd suggest to verify that the tarball test
-reproduces on that independently.
-
-Brian
+Btw, not sure what I was thinking when suggesting XFS would benefit from
+knowing the duration of the thinp no_space_timeout.
 
 _______________________________________________
 xfs mailing list
