@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 41AB47FA7
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 11:51:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 534427F9B
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 20:45:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0AB508F8052
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 09:51:20 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id INHbZUo2ETSvpleW (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Jul 2015 09:51:20 -0700 (PDT)
-Date: Wed, 22 Jul 2015 12:51:18 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC PATCH] block: xfs: dm thin: train XFS to give up on
-	retrying IO if thinp is out of space
-Message-ID: <20150722165117.GA17738@redhat.com>
-References: <20150720151849.GA2282@redhat.com> <20150720223610.GV7943@dastard>
-	<55AE6670.40903@redhat.com> <20150721174753.GA8563@redhat.com>
-	<20150722000923.GB7943@dastard> <20150722010056.GC7943@dastard>
-	<20150722014029.GA10628@redhat.com> <20150722023711.GD7943@dastard>
-	<20150722133451.GB16842@redhat.com> <55AFC496.4000009@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D9848F8035
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2015 18:45:17 -0700 (PDT)
+Received: from mail01.lsn.net (mail01.lsn.net [66.90.130.120]) by cuda.sgi.com
+	with ESMTP id xrYXSTHvSnCOoYGp for <xfs@oss.sgi.com>;
+	Wed, 22 Jul 2015 18:45:13 -0700 (PDT)
+Message-ID: <55B04723.6010202@mygrande.net>
+Date: Wed, 22 Jul 2015 20:45:07 -0500
+From: Leslie Rhorer <lrhorer@mygrande.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55AFC496.4000009@redhat.com>
+Subject: Re: XFS File system in trouble
+References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
+	<55AA5FCE.4080702@sandeen.net>
+	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
+	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
+	<55AAF73A.4040903@mygrande.net>
+	<20150720111747.GA53450@bfoster.bfoster>
+In-Reply-To: <20150720111747.GA53450@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,86 +28,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de, Vivek Goyal <vgoyal@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Kris Rusocki <kszysiu@braxis.org>, "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Jul 22 2015 at 12:28pm -0400,
-Eric Sandeen <sandeen@redhat.com> wrote:
+On 7/20/2015 6:17 AM, Brian Foster wrote:
+> On Sat, Jul 18, 2015 at 08:02:50PM -0500, Leslie Rhorer wrote:
+>>
+>> 	I found the problem with md5sum (and probably nfs, as well).  One of the
+>> memory modules in the server was bad.  The problem with XFS persists.  Every
+>> time tar tried to create the directory:
+>>
+>> /RAID/Server-Main/Equipment/Drive Controllers/HighPoint Adapters/Rocket 2722/Driver/RR276x/Driver/Linux/openSUSE/rr276x-suse-11.2-i386/linux/suse/i386-11.1
+>>
+>> 	It would begin spitting out errors, starting with "Cannot mkdir: Structure
+>> needs cleaning".  At that point, XFS had shut down.  I went into
+>> /RAID/Server-Main/Equipment/Drive Controllers/HighPoint Adapters/Rocket
+>> 2722/Driver/RR276x/Driver/Linux/openSUSE/rr276x-suse-11.2-i386/linux/suse/
+>> and created the i386-11.1 directory by hand, and tar no longer starts
+>> spitting out errors at that point, but it does start up again at
+>> RR2782/Windows/Vista-Win2008-Win7-legacy_single/x64.
+>>
+>
+> So is this untar problem a reliable reproducer? If so, here's what I
 
-> On 7/22/15 8:34 AM, Mike Snitzer wrote:
-> > On Tue, Jul 21 2015 at 10:37pm -0400,
-> > Dave Chinner <david@fromorbit.com> wrote:
-> > 
-> >> On Tue, Jul 21, 2015 at 09:40:29PM -0400, Mike Snitzer wrote:
-> >>
-> >>> I'm open to considering alternative interfaces for getting you the info
-> >>> you need.  I just don't have a great sense for what mechanism you'd like
-> >>> to use.  Do we invent a new block device operations table method that
-> >>> sets values in a 'struct no_space_strategy' passed in to the
-> >>> blockdevice?
-> >>
-> >> It's long been frowned on having the filesystems dig into block
-> >> device structures. We have lots of wrapper functions for getting
-> >> information from or performing operations on block devices. (e.g.
-> >> bdev_read_only(), bdev_get_queue(), blkdev_issue_flush(),
-> >> blkdev_issue_zeroout(), etc) and so I think this is the pattern we'd
-> >> need to follow. If we do that - bdev_get_nospace_strategy() - then
-> >> how that information gets to the filesystem is completely opaque
-> >> at the fs level, and the block layer can implement it in whatever
-> >> way is considered sane...
-> >>
-> >> And, realistically, all we really need returned is a enum to tell us
-> >> how the bdev behaves on enospc:
-> >> 	- bdev fails fast, (i.e. immediate ENOSPC)
-> >> 	- bdev fails slow, (i.e. queue for some time, then ENOSPC)
-> >> 	- bdev never fails (i.e. queue forever)
-> >> 	- bdev doesn't support this (i.e. EOPNOTSUPP)
-> 
-> I'm not sure how this is more useful than the bdev simply responding to
-> a query of "should we keep trying IOs?"
-> 
-> IOWS do we really care if it's failing fast or slow, vs. simply knowing
-> whether it has now permanently failed?
-> 
-> So rather than "bdev_get_nospace_strategy" it seems like all we need
-> to know is "bdev_has_failed" - do we really care about the details?
+	Absolutely reliable producer.  The only change is if I create the 
+offending directory by hand (after recovering the filesystem, of course) 
+and then start the tar again.  Then it copies all the files into the 
+previously offending directory, failing the next time it tries to create 
+a directory.
 
-My bdev_has_space() proposal is no different then bdev_has_failed().  If
-you prefer the more generic name then fine.  But bdev_has_failed() is of
-limited utlity outside of devices that provide support.  So I can see
-why Dave is resisting it.
+> would try to hopefully isolate a filesystem problem from something
+> underneath:
 
-Anyway, the benefit of XFS tailoring its independent config based on
-dm-thinp's comparable config makes sense to me.  The reason for XFS's
-independent config is it could be deployed on any storage (e.g. not
-dm-thinp).
+	OK.  Frankly, I fail to find it at all likely to be anything above.  I 
+can read and write 100s of megabytes of data without an error.  The only 
+thing that I can find failing is creating directories, and that is only 
+when tar attempts it.  The directory structure is going to be written to 
+different inodes as time goes by, so a failure of mdadm or some 
+structure above it should cause other widesperead issues.  I need to try 
+some other tarballs when I get the chance, and also try dumping that tar 
+on a different directory.
 
-Affords XFS to defer to DM thinp but still have comparable functionality
-for HW thinp or some other storage.
 
-> > This 'struct no_space_strategy' would be invented purely for
-> > informational purposes for upper layers' benefit -- I don't consider it
-> > a "block device structure" it the traditional sense.
-> > 
-> > I was thinking upper layers would like to know the actual timeout value
-> > for the "fails slow" case.  As such the 'struct no_space_strategy' would
-> > have the enum and the timeout.  And would be returned with a call:
-> >      bdev_get_nospace_strategy(bdev, &no_space_strategy)
-> 
-> Asking for the timeout value seems to add complexity.  It could change after
-> we ask, and knowing it now requires another layer to be handling timeouts...
+> xfs_metadump -go /dev/md0 /somewhere/on/rootfs/md0.metadump
+> xfs_mdrestore -g /somewhere/on/rootfs/md0.metadump /.../fileonrootfs.img
 
-Dave is already saying XFS will have a timeout it'll be managing.
-Stands to reason that XFS would base its timeout on DM thinp's timeout.
-But yeah it does allow the stacked timeout that XFS uses to be out of
-sync if the lower timeout changes (no different than blk_stack_limits).
+	How big are those files going to be, do you think?  The root partition 
+is not all that huge.  There is only a little over 80G free.
 
-Please fix this however you see fit.  I'll assist anywhere that makes
-sense.
+> mount /.../fileonrootfs.img /mnt/
+>
+> ... and repeat the test on that mount using the original tarball (if
+> it's on the associated fs, the version from the dump will have no data).
+
+	It is.  I've tried copying it to another fs, and it works fine, there.
+
+> This will create a metadata only dump of the original fs onto another
+> storage device (e.g., whatever holds the root fs), restore the metadump
+> to a file and mount it loopback. The resulting fs will not contain any
+> file data, but will contain all of the metadata such as directory
+> structure, etc. and is otherwise mountable and usable for experimental
+> purposes.
+>
+> If the problem is in the filesystem or "above" (as in kernel, memory
+> issue, etc.), the test should fail on this mount. If the problem is
+> beneath the fs such as somewhere in the storage stack (assuming the
+> rootfs storage stack is reliable), it probably shouldn't fail.
+
+	I'll look into this when I can.  Right now I have some critical 
+operations going on both servers (primary and backup), and I can't take 
+down a file system or even risk doing so.  Hopefully I will get around 
+to it this weekend.
 
 _______________________________________________
 xfs mailing list
