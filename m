@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 68D507F86
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 12:08:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8464AC005
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 10:08:39 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B2FA87F86
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 15:13:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 37FF7AC006
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 13:13:34 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gJNmgc6WBFdk8hJ6 (version=TLSv1
+	cuda.sgi.com with ESMTP id zjxNiyLDUAApkyri (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Jul 2015 10:08:38 -0700 (PDT)
-Date: Thu, 23 Jul 2015 13:08:36 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [dm-devel] [RFC PATCH] block: xfs: dm thin: train XFS to give
-	up on retrying IO if thinp is out of space
-In-Reply-To: <20150722010056.GC7943@dastard>
-Message-ID: <alpine.LRH.2.02.1507231306160.16526@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20150720151849.GA2282@redhat.com> <20150720223610.GV7943@dastard>
-	<55AE6670.40903@redhat.com> <20150721174753.GA8563@redhat.com>
-	<20150722000923.GB7943@dastard> <20150722010056.GC7943@dastard>
-MIME-Version: 1.0
+	Thu, 23 Jul 2015 13:13:33 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id C834DC12A7
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 20:13:32 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t6NKDWVF015699
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2015 16:13:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC 0/2] xfs: fix up EFI/EFD error handling
+Date: Thu, 23 Jul 2015 16:13:28 -0400
+Message-Id: <1437682410-51778-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,101 +29,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: axboe@kernel.dk, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, hch@lst.de, Vivek Goyal <vgoyal@redhat.com>
+To: xfs@oss.sgi.com
 
+Hi all,
 
+This is another quick RFC related to testing issues I'm hitting with my
+previously posted log recovery fixes. Patch 1 is a small refactor to
+support patch 2. Patch 2 describes the issues I'm hitting in repeated
+shutdown and log recovery testing.
 
-On Wed, 22 Jul 2015, Dave Chinner wrote:
+This passes some spot testing and seems to resolve the hang from the
+test sequence described in the commit log description, but more testing
+is definitely required. I _think_ I follow the log callbacks and how the
+EFI/EFD are expected to be managed, but I could easily be missing
+something. As it is, I'm off for a long weekend after today so I'm
+sending this to hopefully get some eyes to sanity check before I get too
+deep into testing this along with the previous fixes next week...
 
-> On Wed, Jul 22, 2015 at 10:09:23AM +1000, Dave Chinner wrote:
-> > On Tue, Jul 21, 2015 at 01:47:53PM -0400, Mike Snitzer wrote:
-> > > On Tue, Jul 21 2015 at 11:34am -0400, Eric Sandeen <sandeen@redhat.com> wrote:
-> > > > On 7/20/15 5:36 PM, Dave Chinner wrote:
-> > > > The issue we had discussed previously is that there is no agreement
-> > > > across block devices about whether ENOSPC is a permanent or temporary
-> > > > condition.  Asking the admin to tune  the fs to each block device's
-> > > > behavior sucks, IMHO.
-> > > 
-> > > It does suck, but it beats the alternative of XFS continuing to do
-> > > nothing about the problem.
-> > 
-> > Just a comment on that: doing nothing is better than doing the wrong
-> > thing and being stuck with it forever. :)
-> > 
-> > > Disucssing more with Vivek, might be that XFS would be best served to
-> > > model what dm-thinp has provided with its 'no_space_timeout'.  It
-> > > defaults to queueing IO for 60 seconds, once the timeout expires the
-> > > queued IOs getted errored.  If set to 0 dm-thinp will queue IO
-> > > indefinitely.
-> > 
-> > Yes, that's exactly what I proposed in the thread I referenced in
-> > my previous email, and what got stuck on the bikeshed wall because
-> > of these concerns about knob twiddling:
-> > 
-> > http://oss.sgi.com/archives/xfs/2015-02/msg00346.html
-> > 
-> > | e.g. if we need configurable error handling, it needs to be
-> > | configurable for different error types, and it needs to be
-> > | configurable on a per-mount basis. And it needs to be configurable
-> > | at runtime, not just at mount time. That kind of leads to using
-> > | sysfs for this. e.g. for each error type we ned to handle different
-> > | behaviour for:
-> > | 
-> > | $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/type
-> > | [transient] permanent
-> > | $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_timeout_seconds
-> > | 300
-> > | $ cat
-> > | /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
-> > | 50
-> > | $ cat
-> > | /sys/fs/xfs/vda/meta_write_errors/enospc/transient_fail_at_umount
-> > | 1
-> > 
-> > I've rebased this patchset, and I'm cleaning it up now, so in a few
-> > days I'll have something for review, likely for the 4.3 merge
-> > window....
-> 
-> Just thinking a bit more on how to make this simpler to configure,
-> is there a simple way for the filesystem to determine the current
-> config of the dm thinp volume?
+Brian
 
-You can just stop retrying the I/Os when the user attempts to unmount the 
-filesystem - then, you don't need any configuration option.
+Brian Foster (2):
+  xfs: return committed status from xfs_trans_roll()
+  xfs: fix efi/efd error handling to avoid fs shutdown hangs
 
-Mikulas
+ fs/xfs/xfs_bmap_util.c    | 35 ++++++++++++++++++++--------
+ fs/xfs/xfs_extfree_item.c | 59 +++++++++++++++++++++++++----------------------
+ fs/xfs/xfs_trans.c        | 15 ++++++++++--
+ fs/xfs/xfs_trans.h        |  1 +
+ 4 files changed, 71 insertions(+), 39 deletions(-)
 
-> i.e. if the dm-thinp volume is
-> configured to error out immediately on enospc, then XFS should
-> default to doing the same thing. having XFS be able to grab this
-> status at mount time and change the default ENOSPC error config from
-> transient to permanent on such dm-thinp volumes would go a long way
-> to making these configs Just Do The Right Thing on block dev enospc
-> errors...
-> 
-> e.g. if dm-thinp is configured to queue for 60s and then fail on
-> ENOSPC, we want XFS to fail immediately on ENOSPC in metadata IO. If
-> dm-thinp is configured to ENOSPC instantly (i.e. no queueing) then
-> we want XFS to retry and use it's default retry maximums before
-> failing permanently.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-> 
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
