@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E4E907F69
-	for <xfs@oss.sgi.com>; Sun, 26 Jul 2015 11:16:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C5F667F82
+	for <xfs@oss.sgi.com>; Sun, 26 Jul 2015 11:16:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D251330404E
-	for <xfs@oss.sgi.com>; Sun, 26 Jul 2015 09:16:21 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A61A304039
+	for <xfs@oss.sgi.com>; Sun, 26 Jul 2015 09:16:26 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id ekJAGl0DKLpqYSV7 (version=TLSv1 cipher=AES128-SHA
+	ESMTP id NHW27En1WbYGY6Ej (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 26 Jul 2015 09:16:19 -0700 (PDT)
+	Sun, 26 Jul 2015 09:16:24 -0700 (PDT)
 Received: from p5de57ec4.dip0.t-ipconnect.de ([93.229.126.196] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat
-	Linux)) id 1ZJOb0-0000OZ-FF
-	for xfs@oss.sgi.com; Sun, 26 Jul 2015 16:16:19 +0000
+	Linux)) id 1ZJOb9-0000Om-AB
+	for xfs@oss.sgi.com; Sun, 26 Jul 2015 16:16:24 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/10] xfsprogs: remove swab.h
-Date: Sun, 26 Jul 2015 18:13:22 +0200
-Message-Id: <1437927209-31354-4-git-send-email-hch@lst.de>
+Subject: [PATCH 04/10] xfsprogs: only install *format.h headers in install-qa
+Date: Sun, 26 Jul 2015 18:13:23 +0200
+Message-Id: <1437927209-31354-5-git-send-email-hch@lst.de>
 In-Reply-To: <1437927209-31354-1-git-send-email-hch@lst.de>
 References: <1437927209-31354-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,488 +34,134 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The macros in swab.h are only used to implement those in xfs_arch.h, so let's
-consolidate the two headers.
+Now that we've properly split up the headers we don't need to install all
+the libxfs-internal headers for xfstests.  Just install the three headers
+defining the on-disk format and xfs_arch.h which is required to compile
+them instead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/Makefile      |   1 -
- include/gnukfreebsd.h |   1 -
- include/libxfs.h      |   1 -
- include/swab.h        | 194 --------------------------------------------------
- include/xfs_arch.h    | 191 +++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/crc32.c        |   1 -
- libxfs/libxfs_priv.h  |   1 -
- 7 files changed, 191 insertions(+), 199 deletions(-)
- delete mode 100644 include/swab.h
+ include/Makefile | 12 ++++++++----
+ libxfs/Makefile  | 29 +++++++++++++++++------------
+ 2 files changed, 25 insertions(+), 16 deletions(-)
 
 diff --git a/include/Makefile b/include/Makefile
-index 91b33b0..f033245 100644
+index f033245..0135860 100644
 --- a/include/Makefile
 +++ b/include/Makefile
-@@ -28,7 +28,6 @@ QAHFILES = libxfs.h \
+@@ -18,7 +18,9 @@
+ TOPDIR = ..
+ include $(TOPDIR)/include/builddefs
+ 
+-QAHFILES = libxfs.h \
++QAHFILES = xfs_arch.h
++
++LIBHFILES = libxfs.h \
+ 	libxlog.h \
+ 	atomic.h \
+ 	bitops.h \
+@@ -28,14 +30,17 @@ QAHFILES = libxfs.h \
  	list.h \
  	parent.h \
  	radix-tree.h \
--	swab.h \
- 	xfs_arch.h \
+-	xfs_arch.h \
  	xfs_btree_trace.h \
  	xfs_inode.h \
-diff --git a/include/gnukfreebsd.h b/include/gnukfreebsd.h
-index f2e1bf5..b83c144 100644
---- a/include/gnukfreebsd.h
-+++ b/include/gnukfreebsd.h
-@@ -31,7 +31,6 @@
- #include <ctype.h>
- #include <libgen.h>
- #include <paths.h>
--#include "xfs/swab.h"
+ 	xfs_log_recover.h \
+ 	xfs_metadump.h \
+ 	xfs_mount.h \
+ 	xfs_trace.h \
+-	xfs_trans.h
++	xfs_trans.h \
++	command.h \
++	input.h \
++	path.h \
++	project.h
  
- #define constpp	char * const *
+ HFILES = handle.h \
+ 	jdm.h \
+@@ -46,7 +51,6 @@ HFILES = handle.h \
  
-diff --git a/include/libxfs.h b/include/libxfs.h
-index ab4cc9a..eda664f 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -28,7 +28,6 @@
- #include "xfs/bitops.h"
- #include "xfs/kmem.h"
- #include "xfs/radix-tree.h"
--#include "xfs/swab.h"
- #include "xfs/atomic.h"
+ PHFILES = darwin.h freebsd.h irix.h linux.h gnukfreebsd.h
+ DKHFILES = volume.h fstyp.h dvh.h
+-LIBHFILES = command.h input.h path.h project.h
+ LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
+ LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules install-sh
+ LSRCFILES += $(DKHFILES) $(LIBHFILES)
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index c85f1ed..3d3b448 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -14,15 +14,14 @@ LT_AGE = 0
+ PKGHFILES = xfs_fs.h \
+ 	xfs_types.h
  
- #include "xfs/xfs_types.h"
-diff --git a/include/swab.h b/include/swab.h
-deleted file mode 100644
-index b06346c..0000000
---- a/include/swab.h
-+++ /dev/null
-@@ -1,194 +0,0 @@
--#ifndef SWAB_H
--#define SWAB_H
+-# headers with build dependencies
+-HFILES = init.h \
+-	crc32defs.h \
+-	crc32table.h \
+-	libxfs_priv.h \
+-	xfs_dir2_priv.h \
 -
--/* casts are necessary for constants, because we never know how for sure
-- * how U/UL/ULL map to __u16, __u32, __u64. At least not in a portable way.
-- */
--#define ___swab16(x) \
--({ \
--	__u16 __x = (x); \
--	((__u16)( \
--		(((__u16)(__x) & (__u16)0x00ffU) << 8) | \
--		(((__u16)(__x) & (__u16)0xff00U) >> 8) )); \
--})
--
--#define ___swab32(x) \
--({ \
--	__u32 __x = (x); \
--	((__u32)( \
--		(((__u32)(__x) & (__u32)0x000000ffUL) << 24) | \
--		(((__u32)(__x) & (__u32)0x0000ff00UL) <<  8) | \
--		(((__u32)(__x) & (__u32)0x00ff0000UL) >>  8) | \
--		(((__u32)(__x) & (__u32)0xff000000UL) >> 24) )); \
--})
--
--#define ___swab64(x) \
--({ \
--	__u64 __x = (x); \
--	((__u64)( \
--		(__u64)(((__u64)(__x) & (__u64)0x00000000000000ffULL) << 56) | \
--		(__u64)(((__u64)(__x) & (__u64)0x000000000000ff00ULL) << 40) | \
--		(__u64)(((__u64)(__x) & (__u64)0x0000000000ff0000ULL) << 24) | \
--		(__u64)(((__u64)(__x) & (__u64)0x00000000ff000000ULL) <<  8) | \
--		(__u64)(((__u64)(__x) & (__u64)0x000000ff00000000ULL) >>  8) | \
--		(__u64)(((__u64)(__x) & (__u64)0x0000ff0000000000ULL) >> 24) | \
--		(__u64)(((__u64)(__x) & (__u64)0x00ff000000000000ULL) >> 40) | \
--		(__u64)(((__u64)(__x) & (__u64)0xff00000000000000ULL) >> 56) )); \
--})
--
--#define ___constant_swab16(x) \
--	((__u16)( \
--		(((__u16)(x) & (__u16)0x00ffU) << 8) | \
--		(((__u16)(x) & (__u16)0xff00U) >> 8) ))
--#define ___constant_swab32(x) \
--	((__u32)( \
--		(((__u32)(x) & (__u32)0x000000ffUL) << 24) | \
--		(((__u32)(x) & (__u32)0x0000ff00UL) <<  8) | \
--		(((__u32)(x) & (__u32)0x00ff0000UL) >>  8) | \
--		(((__u32)(x) & (__u32)0xff000000UL) >> 24) ))
--#define ___constant_swab64(x) \
--	((__u64)( \
--		(__u64)(((__u64)(x) & (__u64)0x00000000000000ffULL) << 56) | \
--		(__u64)(((__u64)(x) & (__u64)0x000000000000ff00ULL) << 40) | \
--		(__u64)(((__u64)(x) & (__u64)0x0000000000ff0000ULL) << 24) | \
--		(__u64)(((__u64)(x) & (__u64)0x00000000ff000000ULL) <<  8) | \
--		(__u64)(((__u64)(x) & (__u64)0x000000ff00000000ULL) >>  8) | \
--		(__u64)(((__u64)(x) & (__u64)0x0000ff0000000000ULL) >> 24) | \
--		(__u64)(((__u64)(x) & (__u64)0x00ff000000000000ULL) >> 40) | \
--		(__u64)(((__u64)(x) & (__u64)0xff00000000000000ULL) >> 56) ))
--
--/*
-- * provide defaults when no architecture-specific optimization is detected
-- */
--#ifndef __arch__swab16
--#  define __arch__swab16(x) ({ __u16 __tmp = (x) ; ___swab16(__tmp); })
--#endif
--#ifndef __arch__swab32
--#  define __arch__swab32(x) ({ __u32 __tmp = (x) ; ___swab32(__tmp); })
--#endif
--#ifndef __arch__swab64
--#  define __arch__swab64(x) ({ __u64 __tmp = (x) ; ___swab64(__tmp); })
--#endif
--
--#ifndef __arch__swab16p
--#  define __arch__swab16p(x) __arch__swab16(*(x))
--#endif
--#ifndef __arch__swab32p
--#  define __arch__swab32p(x) __arch__swab32(*(x))
--#endif
--#ifndef __arch__swab64p
--#  define __arch__swab64p(x) __arch__swab64(*(x))
--#endif
--
--#ifndef __arch__swab16s
--#  define __arch__swab16s(x) do { *(x) = __arch__swab16p((x)); } while (0)
--#endif
--#ifndef __arch__swab32s
--#  define __arch__swab32s(x) do { *(x) = __arch__swab32p((x)); } while (0)
--#endif
--#ifndef __arch__swab64s
--#  define __arch__swab64s(x) do { *(x) = __arch__swab64p((x)); } while (0)
--#endif
--
--
--/*
-- * Allow constant folding
-- */
--#  define __swab16(x) \
--(__builtin_constant_p((__u16)(x)) ? \
-- ___constant_swab16((x)) : \
-- __fswab16((x)))
--#  define __swab32(x) \
--(__builtin_constant_p((__u32)(x)) ? \
-- ___constant_swab32((x)) : \
-- __fswab32((x)))
--#  define __swab64(x) \
--(__builtin_constant_p((__u64)(x)) ? \
-- ___constant_swab64((x)) : \
-- __fswab64((x)))
--
--
--static __inline__ __u16 __fswab16(__u16 x)
--{
--	return (__extension__ __arch__swab16(x));
--}
--static __inline__ __u16 __swab16p(__u16 *x)
--{
--	return (__extension__ __arch__swab16p(x));
--}
--static __inline__ void __swab16s(__u16 *addr)
--{
--	(__extension__ ({__arch__swab16s(addr);}));
--}
--
--static __inline__ __u32 __fswab32(__u32 x)
--{
--	return (__extension__ __arch__swab32(x));
--}
--static __inline__ __u32 __swab32p(__u32 *x)
--{
--	return (__extension__ __arch__swab32p(x));
--}
--static __inline__ void __swab32s(__u32 *addr)
--{
--	(__extension__ ({__arch__swab32s(addr);}));
--}
--
--static __inline__ __u64 __fswab64(__u64 x)
--{
--#  ifdef __SWAB_64_THRU_32__
--	__u32 h = x >> 32;
--	__u32 l = x & ((1ULL<<32)-1);
--	return (((__u64)__swab32(l)) << 32) | ((__u64)(__swab32(h)));
--#  else
--	return (__extension__ __arch__swab64(x));
--#  endif
--}
--static __inline__ __u64 __swab64p(__u64 *x)
--{
--	return (__extension__ __arch__swab64p(x));
--}
--static __inline__ void __swab64s(__u64 *addr)
--{
--	(__extension__ ({__arch__swab64s(addr);}));
--}
--
--static inline __uint16_t get_unaligned_be16(void *p)
--{
--	__uint8_t *__p = p;
--	return __p[0] << 8 | __p[1];
--}
--
--static inline __uint32_t get_unaligned_be32(void *p)
--{
--	__uint8_t *__p = p;
--        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
--}
--
--static inline __uint64_t get_unaligned_be64(void *p)
--{
--	return (__uint64_t)get_unaligned_be32(p) << 32 |
--			   get_unaligned_be32(p + 4);
--}
--
--static inline void put_unaligned_be16(__uint16_t val, void *p)
--{
--	__uint8_t *__p = p;
--	*__p++ = val >> 8;
--	*__p++ = val;
--}
--
--static inline void put_unaligned_be32(__uint32_t val, void *p)
--{
--	__uint8_t *__p = p;
--	put_unaligned_be16(val >> 16, __p);
--	put_unaligned_be16(val, __p + 2);
--}
--
--static inline void put_unaligned_be64(__uint64_t val, void *p)
--{
--	put_unaligned_be32(val >> 32, p);
--	put_unaligned_be32(val, p + 4);
--}
--
--#endif /* SWAB_H */
-diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-index 903b02a..310a17e 100644
---- a/include/xfs_arch.h
-+++ b/include/xfs_arch.h
-@@ -24,6 +24,159 @@
- #undef XFS_NATIVE_HOST
- #endif
+ # headers installed in QA targets
+-QAHFILES = xfs_alloc.h \
++QAHFILES = \
++	xfs_da_format.h \
++	xfs_format.h \
++	xfs_log_format.h
++
++LIBHFILES = \
++	xfs_alloc.h \
+ 	xfs_alloc_btree.h \
+ 	xfs_attr_leaf.h \
+ 	xfs_attr_sf.h \
+@@ -33,14 +32,11 @@ QAHFILES = xfs_alloc.h \
+ 	xfs_attr_remote.h \
+ 	xfs_cksum.h \
+ 	xfs_da_btree.h \
+-	xfs_da_format.h \
+ 	xfs_dir2.h \
+-	xfs_format.h \
+ 	xfs_ialloc.h \
+ 	xfs_ialloc_btree.h \
+ 	xfs_inode_buf.h \
+ 	xfs_inode_fork.h \
+-	xfs_log_format.h \
+ 	xfs_quota_defs.h \
+ 	xfs_sb.h \
+ 	xfs_shared.h \
+@@ -49,6 +45,14 @@ QAHFILES = xfs_alloc.h \
+ 	libxfs_io.h \
+ 	libxfs_api_defs.h
  
-+/*
-+ * Casts are necessary for constants, because we never know how for sure
-+ * how U/UL/ULL map to __u16, __u32, __u64. At least not in a portable way.
-+ */
-+#define ___swab16(x) \
-+({ \
-+	__u16 __x = (x); \
-+	((__u16)( \
-+		(((__u16)(__x) & (__u16)0x00ffU) << 8) | \
-+		(((__u16)(__x) & (__u16)0xff00U) >> 8) )); \
-+})
 +
-+#define ___swab32(x) \
-+({ \
-+	__u32 __x = (x); \
-+	((__u32)( \
-+		(((__u32)(__x) & (__u32)0x000000ffUL) << 24) | \
-+		(((__u32)(__x) & (__u32)0x0000ff00UL) <<  8) | \
-+		(((__u32)(__x) & (__u32)0x00ff0000UL) >>  8) | \
-+		(((__u32)(__x) & (__u32)0xff000000UL) >> 24) )); \
-+})
++# headers with build dependencies
++HFILES = init.h \
++	crc32defs.h \
++	crc32table.h \
++	libxfs_priv.h \
++	xfs_dir2_priv.h
 +
-+#define ___swab64(x) \
-+({ \
-+	__u64 __x = (x); \
-+	((__u64)( \
-+		(__u64)(((__u64)(__x) & (__u64)0x00000000000000ffULL) << 56) | \
-+		(__u64)(((__u64)(__x) & (__u64)0x000000000000ff00ULL) << 40) | \
-+		(__u64)(((__u64)(__x) & (__u64)0x0000000000ff0000ULL) << 24) | \
-+		(__u64)(((__u64)(__x) & (__u64)0x00000000ff000000ULL) <<  8) | \
-+		(__u64)(((__u64)(__x) & (__u64)0x000000ff00000000ULL) >>  8) | \
-+		(__u64)(((__u64)(__x) & (__u64)0x0000ff0000000000ULL) >> 24) | \
-+		(__u64)(((__u64)(__x) & (__u64)0x00ff000000000000ULL) >> 40) | \
-+		(__u64)(((__u64)(__x) & (__u64)0xff00000000000000ULL) >> 56) )); \
-+})
-+
-+#define ___constant_swab16(x) \
-+	((__u16)( \
-+		(((__u16)(x) & (__u16)0x00ffU) << 8) | \
-+		(((__u16)(x) & (__u16)0xff00U) >> 8) ))
-+#define ___constant_swab32(x) \
-+	((__u32)( \
-+		(((__u32)(x) & (__u32)0x000000ffUL) << 24) | \
-+		(((__u32)(x) & (__u32)0x0000ff00UL) <<  8) | \
-+		(((__u32)(x) & (__u32)0x00ff0000UL) >>  8) | \
-+		(((__u32)(x) & (__u32)0xff000000UL) >> 24) ))
-+#define ___constant_swab64(x) \
-+	((__u64)( \
-+		(__u64)(((__u64)(x) & (__u64)0x00000000000000ffULL) << 56) | \
-+		(__u64)(((__u64)(x) & (__u64)0x000000000000ff00ULL) << 40) | \
-+		(__u64)(((__u64)(x) & (__u64)0x0000000000ff0000ULL) << 24) | \
-+		(__u64)(((__u64)(x) & (__u64)0x00000000ff000000ULL) <<  8) | \
-+		(__u64)(((__u64)(x) & (__u64)0x000000ff00000000ULL) >>  8) | \
-+		(__u64)(((__u64)(x) & (__u64)0x0000ff0000000000ULL) >> 24) | \
-+		(__u64)(((__u64)(x) & (__u64)0x00ff000000000000ULL) >> 40) | \
-+		(__u64)(((__u64)(x) & (__u64)0xff00000000000000ULL) >> 56) ))
-+
-+/*
-+ * provide defaults when no architecture-specific optimization is detected
-+ */
-+#ifndef __arch__swab16
-+#  define __arch__swab16(x) ({ __u16 __tmp = (x) ; ___swab16(__tmp); })
-+#endif
-+#ifndef __arch__swab32
-+#  define __arch__swab32(x) ({ __u32 __tmp = (x) ; ___swab32(__tmp); })
-+#endif
-+#ifndef __arch__swab64
-+#  define __arch__swab64(x) ({ __u64 __tmp = (x) ; ___swab64(__tmp); })
-+#endif
-+
-+#ifndef __arch__swab16p
-+#  define __arch__swab16p(x) __arch__swab16(*(x))
-+#endif
-+#ifndef __arch__swab32p
-+#  define __arch__swab32p(x) __arch__swab32(*(x))
-+#endif
-+#ifndef __arch__swab64p
-+#  define __arch__swab64p(x) __arch__swab64(*(x))
-+#endif
-+
-+#ifndef __arch__swab16s
-+#  define __arch__swab16s(x) do { *(x) = __arch__swab16p((x)); } while (0)
-+#endif
-+#ifndef __arch__swab32s
-+#  define __arch__swab32s(x) do { *(x) = __arch__swab32p((x)); } while (0)
-+#endif
-+#ifndef __arch__swab64s
-+#  define __arch__swab64s(x) do { *(x) = __arch__swab64p((x)); } while (0)
-+#endif
-+
-+
-+/*
-+ * Allow constant folding
-+ */
-+#  define __swab16(x) \
-+(__builtin_constant_p((__u16)(x)) ? \
-+ ___constant_swab16((x)) : \
-+ __fswab16((x)))
-+#  define __swab32(x) \
-+(__builtin_constant_p((__u32)(x)) ? \
-+ ___constant_swab32((x)) : \
-+ __fswab32((x)))
-+#  define __swab64(x) \
-+(__builtin_constant_p((__u64)(x)) ? \
-+ ___constant_swab64((x)) : \
-+ __fswab64((x)))
-+
-+
-+static __inline__ __u16 __fswab16(__u16 x)
-+{
-+	return (__extension__ __arch__swab16(x));
-+}
-+static __inline__ __u16 __swab16p(__u16 *x)
-+{
-+	return (__extension__ __arch__swab16p(x));
-+}
-+static __inline__ void __swab16s(__u16 *addr)
-+{
-+	(__extension__ ({__arch__swab16s(addr);}));
-+}
-+
-+static __inline__ __u32 __fswab32(__u32 x)
-+{
-+	return (__extension__ __arch__swab32(x));
-+}
-+static __inline__ __u32 __swab32p(__u32 *x)
-+{
-+	return (__extension__ __arch__swab32p(x));
-+}
-+static __inline__ void __swab32s(__u32 *addr)
-+{
-+	(__extension__ ({__arch__swab32s(addr);}));
-+}
-+
-+static __inline__ __u64 __fswab64(__u64 x)
-+{
-+#  ifdef __SWAB_64_THRU_32__
-+	__u32 h = x >> 32;
-+	__u32 l = x & ((1ULL<<32)-1);
-+	return (((__u64)__swab32(l)) << 32) | ((__u64)(__swab32(h)));
-+#  else
-+	return (__extension__ __arch__swab64(x));
-+#  endif
-+}
-+static __inline__ __u64 __swab64p(__u64 *x)
-+{
-+	return (__extension__ __arch__swab64p(x));
-+}
-+static __inline__ void __swab64s(__u64 *addr)
-+{
-+	(__extension__ ({__arch__swab64s(addr);}));
-+}
-+
- #ifdef XFS_NATIVE_HOST
- #define cpu_to_be16(val)	((__force __be16)(__u16)(val))
- #define cpu_to_be32(val)	((__force __be32)(__u32)(val))
-@@ -71,4 +224,42 @@ static inline void be64_add_cpu(__be64 *a, __s64 b)
- 	*a = cpu_to_be64(be64_to_cpu(*a) + b);
- }
+ CFILES = cache.c \
+ 	crc32.c \
+ 	init.c \
+@@ -89,6 +93,7 @@ CFILES = cache.c \
+ CFILES += $(PKG_PLATFORM).c
+ PCFILES = darwin.c freebsd.c irix.c linux.c
+ LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
++LSRCFILES += $(LIBHFILES)
+ LSRCFILES += gen_crc32table.c
  
-+static inline __uint16_t get_unaligned_be16(void *p)
-+{
-+	__uint8_t *__p = p;
-+	return __p[0] << 8 | __p[1];
-+}
-+
-+static inline __uint32_t get_unaligned_be32(void *p)
-+{
-+	__uint8_t *__p = p;
-+        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-+}
-+
-+static inline __uint64_t get_unaligned_be64(void *p)
-+{
-+	return (__uint64_t)get_unaligned_be32(p) << 32 |
-+			   get_unaligned_be32(p + 4);
-+}
-+
-+static inline void put_unaligned_be16(__uint16_t val, void *p)
-+{
-+	__uint8_t *__p = p;
-+	*__p++ = val >> 8;
-+	*__p++ = val;
-+}
-+
-+static inline void put_unaligned_be32(__uint32_t val, void *p)
-+{
-+	__uint8_t *__p = p;
-+	put_unaligned_be16(val >> 16, __p);
-+	put_unaligned_be16(val, __p + 2);
-+}
-+
-+static inline void put_unaligned_be64(__uint64_t val, void *p)
-+{
-+	put_unaligned_be32(val >> 32, p);
-+	put_unaligned_be32(val, p + 4);
-+}
-+
- #endif	/* __XFS_ARCH_H__ */
-diff --git a/libxfs/crc32.c b/libxfs/crc32.c
-index bc1fc98..63b1467 100644
---- a/libxfs/crc32.c
-+++ b/libxfs/crc32.c
-@@ -34,7 +34,6 @@
-  */
+ #
+@@ -133,7 +138,7 @@ include $(BUILDRULES)
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
  
- #include "xfs/platform_defs.h"
--#include "xfs/swab.h"
- #include "xfs/xfs_arch.h"
- #include "crc32defs.h"
+-install-headers: $(addsuffix -hdrs, $(PKGHFILES) $(QAHFILES))
++install-headers: $(addsuffix -hdrs, $(PKGHFILES) $(LIBHFILES) $(QAHFILES))
  
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 72e124b..445a6dc 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -66,7 +66,6 @@
- #include "xfs/bitops.h"
- #include "xfs/kmem.h"
- #include "xfs/radix-tree.h"
--#include "xfs/swab.h"
- #include "xfs/atomic.h"
- 
- #include "xfs/xfs_types.h"
+ %-hdrs:
+ 	$(Q)$(LN_S) -f $(PWD)/libxfs/$* $(TOPDIR)/include/xfs/$*
 -- 
 1.9.1
 
