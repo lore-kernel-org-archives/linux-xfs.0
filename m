@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 49D4A7F8B
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 16:52:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3504B8F8033
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 14:52:12 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ey3YQFzTL3HEl7OI for <xfs@oss.sgi.com>;
-	Tue, 28 Jul 2015 14:52:09 -0700 (PDT)
-Date: Wed, 29 Jul 2015 07:51:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 1/2] xfs: return committed status from xfs_trans_roll()
-Message-ID: <20150728215140.GC24249@dastard>
-References: <1437682410-51778-3-git-send-email-bfoster@redhat.com>
-	<1437682410-51778-2-git-send-email-bfoster@redhat.com>
-	<20150728004009.GB24249@dastard>
-	<20150728134006.GD38784@bfoster.bfoster>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 829607F99
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 17:11:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F17ECAC002
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 15:11:55 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id J75Vo2HigFNPEbeM (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Jul 2015 15:11:54 -0700 (PDT)
+Date: Tue, 28 Jul 2015 18:11:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS File system in trouble
+Message-ID: <20150728221150.GA26604@bfoster.bfoster>
+References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
+	<55AA5FCE.4080702@sandeen.net>
+	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
+	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
+	<55AAF73A.4040903@mygrande.net>
+	<20150720111747.GA53450@bfoster.bfoster>
+	<55B73365.1050908@mygrande.net>
+	<20150728123307.GC38784@bfoster.bfoster>
+	<55B79BFD.6020509@mygrande.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150728134006.GD38784@bfoster.bfoster>
+In-Reply-To: <55B79BFD.6020509@mygrande.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,212 +33,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Leslie Rhorer <lrhorer@mygrande.net>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Kris Rusocki <kszysiu@braxis.org>, "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jul 28, 2015 at 09:40:06AM -0400, Brian Foster wrote:
-> On Tue, Jul 28, 2015 at 10:40:09AM +1000, Dave Chinner wrote:
-> > [ reply to both patches in one reply, because it's related. ]
-> > 
-> > On Thu, Jul 23, 2015 at 04:13:29PM -0400, Brian Foster wrote:
-> > > Some callers need to make error handling decisions based on whether the
-> > > current transaction successfully committed or not. Rename
-> > > xfs_trans_roll(), add a new parameter and provide a wrapper to preserve
-> > > existing callers.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_trans.c | 15 +++++++++++++--
-> > >  fs/xfs/xfs_trans.h |  1 +
-> > >  2 files changed, 14 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > index 0582a27..a0ab1da 100644
-> > > --- a/fs/xfs/xfs_trans.c
-> > > +++ b/fs/xfs/xfs_trans.c
-> > > @@ -1019,9 +1019,10 @@ xfs_trans_cancel(
-> > >   * chunk we've been working on and get a new transaction to continue.
-> > >   */
-> > >  int
-> > > -xfs_trans_roll(
-> > > +__xfs_trans_roll(
-> > >  	struct xfs_trans	**tpp,
-> > > -	struct xfs_inode	*dp)
-> > > +	struct xfs_inode	*dp,
-> > > +	int			*committed)
-> > >  {
-> > >  	struct xfs_trans	*trans;
-> > >  	struct xfs_trans_res	tres;
-> > > @@ -1052,6 +1053,7 @@ xfs_trans_roll(
-> > >  	if (error)
-> > >  		return error;
-> > 
-> > So here we return committed = 0, error != 0.
-> > 
-> > >  
-> > > +	*committed = 1;
-> > >  	trans = *tpp;
-> > 
-> > And from here on in we return committed = 1 regardless of the error.
-> > 
-> > So looking at the next patch in xfs_bmap_finish():
-> > 
-> > >  			free->xbfi_blockcount);
-> > >  
-> > > -	error = xfs_trans_roll(tp, NULL);
-> > > -	*committed = 1;
-> > > +	error = __xfs_trans_roll(tp, NULL, committed);
-> > > +
-> > >  	/*
-> > > -	 * We have a new transaction, so we should return committed=1,
-> > > -	 * even though we're returning an error.
-> > > +	 * We have a new transaction, so we should return committed=1, even
-> > > +	 * though we're returning an error. If an error was returned after the
-> > > +	 * original transaction was committed, defer the error handling until
-> > > +	 * the EFD is logged. We do this because a committed EFI requires an EFD
-> > > +	 * transaction to be processed to ensure the EFI is released.
-> > >  	 */
-> > > -	if (error)
-> > > +	if (error && *committed == 0) {
-> > > +		*committed = 1;
-> > >  		return error;
-> > > +	}
-> > 
-> > So if we failed to commit the EFI, we say we did and then return.
-> > Why do we need to do that?
-> > 
-> > /me goes an looks at all the callers.
-> > 
-> > Hmm - only xfs_itruncate_extents() relies on that behaviour, but it
-> > could just as easily do an inode join on error, because on success
-> > the inode has already been joined to the new transaction by
-> > xfs_trans_roll().
-> > 
-> 
-> Interesting, though I don't follow why this caller even depends on it.
-> It doesn't transfer lock ownership to the transaction. What difference
-> does it make in the error path if the inode is joined?
-
-Callers of xfs_itruncate_extents() expect it to be locked and joined
-on return, even on error.
-
-> > Looking further, we have quite a bit of inconsistency in the error
-> > handling of xfs_bmap_finish() - some callers issue a
-> > xfs_bmap_cancel() in the error path, and some don't. failing to
-> > cancel the freelist on error looks to me like a memory leak, because
-> > we don't free the extents from the free list until the EFD for the
-> > extent has been logged. If we error out earlier, we still have items
-> > on the free list that haven't been processed.
-> > 
-> > So it looks to me like we need fixes there.
-> > 
-> 
-> Heh, not too surprising. I'll make a note to make a pass through these.
-> 
-> > Further, it appears to me that there is really one xfs_bmap_finish()
-> > caller that requires the committed flag: xfs_qm_dqalloc(). All the
-> > others either use it for an assert or joining the inode to the
-> > transaction when committed = 1, which xfs_trans_roll() will have
-> > already done if we return committed = 1....
-> > 
-> 
-> Assuming xfs_trans_reserve() hasn't failed, which could cause *committed
-> == 1 without the inode joined. We could probably change this in
-> __xfs_trans_roll() since the inode is presumably already locked.
-
-I don't think we can join the inode until after the reservation is
-done. It could still be done in __xfs_trans_roll() regardless.
-
-> > > +	return error;
-> > 
-> > This loop doesn't obviously do the right thing now. It
-> > will log the first extent into the EFD and then trigger a shutdown
-> > and return. The extent count in the EFD may not match the
-> > extent count on the EFI, so releasing the EFD at this point may not
-> > release all the extents in the EFI and hence not release the EFI.
-> > 
-> 
-> The EFD unlock handler forcibly releases the EFI on abort. It drops the
-> EFI extent count reference by whatever the extent count on the EFD is,
-> and that is determined on EFD initialization (xfs_trans_get_efd())
-> regardless of how many extents were logged to the EFD.
-> 
-> That said, the error handling here is certainly not obvious because it
-> depends on the lifecycle of the associated log items. The broader goal
-> is to reduce that dependency so the code here is more straightforward...
-
-*nod*
-
-> > I think I'd prefer to see a xfs_trans_cancel_efi() call to handle
-> > this error path rather than having to go through the efd to release
-> > the reference on the EFI. i.e.
-> > 
-> > 	error = __xfs_trans_roll(tp, NULL, &committed);
-> > 	if (error) {
-> > 		if (committed) {
-> > 			if (!XFS_FORCED_SHUTDOWN(mp))
-> > 				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > 			xfs_efi_cancel(tp, efi);
-> > 		}
-> > 		return error;
-> > 	}
-> > 
-> 
-> That's a nice idea. It pulls some error handling out of the log item
-> handling code explicitly. An EFD version might be useful for the
-> unlogged EFD error case as well. IMO, the more of these cases that are
-> handled explicitly in xfs_bmap_finish() rather than implicitly via the
-> transaction management code, the more reliable and robust to future
-> change it will be. I'll explore it further...
-
-Yes, that mirrors my thinking exactly - the EFI/EFD error handling
-has always been problematic with the reliance on reference counting
-via transaction commit/abort callbacks to handle it.
-
-> > Hmmm - something I just noticed: if we only have one EFD per EFI,
-> > why do we do we have that layer of extent counting before dropping
-> > real references?
-> > 
-> 
-> I wondered this myself, but hadn't made it deep enough to see if we used
-> the reference count elsewhere.
-> 
-> > >  xfs_efd_item_unlock(
-> > >  	struct xfs_log_item	*lip)
-> > >  {
-> > > -	if (lip->li_flags & XFS_LI_ABORTED)
-> > > -		xfs_efd_item_free(EFD_ITEM(lip));
-> > > +	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
-> > > +
-> > > +	if (lip->li_flags & XFS_LI_ABORTED) {
-> > > +		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
-> > > +		xfs_efd_item_free(efdp);
-> > > +	}
-> > >  }
-> > 
-> > i.e. we always call xfs_efi_release() with efi_nextents or
-> > efd_nextents, which are always the same, and so we never partially
-> > complete an EFI. Should we just kill that layer, as it does tend to
-> > complicate the EFI release code?
-> > 
-> 
-> Yeah, that might be a good idea if we don't use the reference count
-> elsewhere. I'll look into that as a subsequent cleanup as well.
-
-Excellent!
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBKdWwgMjgsIDIwMTUgYXQgMTA6MTM6MDFBTSAtMDUwMCwgTGVzbGllIFJob3JlciB3
+cm90ZToKPiBPbiA3LzI4LzIwMTUgNzozMyBBTSwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+ID5PbiBU
+dWUsIEp1bCAyOCwgMjAxNSBhdCAwMjo0Njo0NUFNIC0wNTAwLCBMZXNsaWUgUmhvcmVyIHdyb3Rl
+Ogo+ID4+T24gNy8yMC8yMDE1IDY6MTcgQU0sIEJyaWFuIEZvc3RlciB3cm90ZToKPiA+Pj5PbiBT
+YXQsIEp1bCAxOCwgMjAxNSBhdCAwODowMjo1MFBNIC0wNTAwLCBMZXNsaWUgUmhvcmVyIHdyb3Rl
+Ogo+ID4+Pj4KLi4uCj4gPgo+ID4+CUkgdGhlbiBjb3BpZWQgYm90aCB0aGUgdGFyYmFsbCBhbmQg
+dGhlIGltYWdlIG92ZXIgdG8gdGhlIHJvb3QsIGFuZCB3aGlsZQo+ID4+dGhlIHN5c3RlbSB3b3Vs
+ZCBub3QgbGV0IG1lIGNyZWF0ZSB0aGUgaW1hZ2Ugb24gdGhlIHJvb3QsIGl0IGRpZCBsZXQgbWUg
+Y29weQo+ID4+dGhlIGltYWdlIHRvIHRoZSByb290LiAgSSB0aGVuIHVtb3VudGVkIHRoZSBSQUlE
+IGFycmF5LCBtb3VudGVkIHRoZSBpbWFnZSwKPiA+PmFuZCBhdHRlbXB0ZWQgdG8gY2QgdG8gdGhl
+IG9yaWdpbmFsIGRpcmVjdG9yeSBpbiB0aGUgaW1hZ2UgbW91bnQgd2hlcmUgdGhlCj4gPj50YXJi
+YWxsIHdhcyBzYXZlZC4gIFRoYXQgZmFpbGVkIHdpdGggYW4gSS9PIGVycm9yOgo+ID4+Cj4gPgo+
+ID5JdCBzb3VuZHMgYSBiaXQgc3RyYW5nZSBmb3IgdGhlIG1kcmVzdG9yZSB0byBmYWlsIG9uIHJv
+b3QgYnV0IGEgY3Agb2YKPiA+dGhlIHJlc3VsdGluZyBpbWFnZSB0byB3b3JrLiBEbyB0aGUgcmVz
+dWx0aW5nIGltYWdlcyBoYXZlIHRoZSBzYW1lIGZpbGUKPiA+c2l6ZSBvciBpcyB0aGUgcm9vdGZz
+IGNvcHkgdHJ1bmNhdGVkPyBJZiB0aGUgbGF0dGVyLCB5b3UgY291bGQgYmUKPiA+bWlzc2luZyBw
+YXJ0IG9mIHRoZSBmcyBhbmQgdGh1cyBhbnkgb2YgdGhlIGZvbGxvd2luZyB0ZXN0cyBhcmUgcHJv
+YmFibHkKPiA+bW9vdC4KPiAKPiAJV2VsbCwgaXQgY2FuJ3QgYmUgYXMgbGFyZ2UgYXMgaXQgaXMg
+cmVwb3J0ZWQsIGxldCdzIHB1dCBpdCB0aGF0IHdheSwKPiBhbHRob3VnaCB0aGUgcmVwb3J0ZWQg
+ZmlsZSBzaXplIGlzIHRoZSBzYW1lLiAgTHMgY2xhaW1zIGl0IHRvIGJlIDE2VCBpbgo+IHNpemUs
+IHdoaWNoIGNhbm5vdCBiZSB0aGUgY2FzZSBvbiBhIDEwMEcgcGFydGl0aW9uLiAgSSBmb3Jnb3Qg
+dG8gbWVudGlvbiBjcAo+IGRvZXMgY29tcGxhaW46Cj4gCj4gUkFJRC1TZXJ2ZXI6LyMgY3AgL1JB
+SUQvVEVTVC9SQUlEZmlsZS5pbWcgLi8KPiBjcDogY2Fubm90IGxzZWVrIOKAmC4vUkFJRGZpbGUu
+aW1n4oCZOiBJbnZhbGlkIGFyZ3VtZW50Cj4gCj4gCUJ1dCBpdCBkb2VzIHRoZSBzYW1lIHRoaW5n
+IG9uIHRoZSBiYWNrdXAgc2VydmVyLCBhbmQgaXQgd29ya3MgdGhlcmUuICBJCj4gdHJpZWQgYSBj
+bXAsIGFuZCBpdCBzZWVtcyB0byBiZSBodW5nLiAgSXQganVzdCBtYXkgYmUgdGFraW5nIGEgbG9u
+ZyB0aW1lLAo+IGhvd2V2ZXIuCj4gCgpZZWFoLCB5b3UgY2FuJ3QgcmVhbGx5IHRydXN0IHRoZSBy
+ZXN1bHRpbmcgaW1hZ2UuIEl0IGRvZXNuJ3QgdGFrZSBtdWNoCnNwYWNlIHRvIGNyZWF0ZSBhIHZl
+cnkgbGFyZ2Ugc3BhcnNlIGZpbGUsIGJ1dCBkaWZmZXJlbnQgZmlsZXN5c3RlbXMgaGF2ZQpkaWZm
+ZXJlbnQgbWF4aW11bSBmaWxlIHNpemUgbGltaXRzLiBUaGUgcHJvYmxlbSBoZXJlIGlzIHRoYXQg
+c29tZQptZXRhZGF0YSBuZWFyIHRoZSBiZWdpbm5pbmcgb2YgdGhlIGZpbGUgbWlnaHQgcmVmZXJl
+bmNlIG9yIGRlcGVuZCBvbgpzb21ldGhpbmcgbmVhciB0aGUgZW5kLCBhbmQgSS9PcyBiZXlvbmQg
+dGhlIGVuZCBvZiB0aGUgZmlsZSB3aWxsCnByb2JhYmx5IHJlc3VsdCBpbiBlcnJvcnMuCgpJJ2Qg
+cHJvYmFibHkgdHJ5IHRoZSBub3V1aWQgYXBwcm9hY2ggc2luY2UgdGhlIGhhcmR3YXJlIGlzIHNp
+bWlsYXIgYXMKd2VsbCBhcyBzb21lIG9mIHRoZSBvdGhlciBpbnRlcmVzdGluZyBzdWdnZXN0aW9u
+cyB0aGF0IGhhdmUgYmVlbiBtYWRlIHRvCnRyeSBhbmQgZ2V0IHRoZSBpbWFnZSBvbiB0aGUgcm9v
+dGZzIGFuZCBzZWUgd2hhdCBoYXBwZW5zIHRoZXJlIHRvby4KCkJyaWFuCgo+ID5Ccmlhbgo+ID4K
+PiA+PlJBSUQtU2VydmVyOi8jIGNkICIvbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZl
+IENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMvUm9ja2V0IDI3MjIvRHJpdmVyLyIK
+PiA+PmJhc2g6IGNkOiAvbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZlIENvbnRyb2xs
+ZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMvUm9ja2V0IDI3MjIvRHJpdmVyLzogSW5wdXQvb3V0
+cHV0IGVycm9yCj4gPj4KPiA+PglJIGNoYW5nZWQgZGlyZWN0b3JpZXMgdG8gYSBwb2ludCB0d28g
+ZGlyZWN0b3JpZXMgYWJvdmUgdGhlIHByZXZpb3VzIGF0dGVtcHQKPiA+PmFuZCBkaWQgYSBsb25n
+IGxpc3Rpbmc6Cj4gPj4KPiA+PlJBSUQtU2VydmVyOi8jIGNkICIvbWVkaWEvU2VydmVyLU1haW4v
+RXF1aXBtZW50L0RyaXZlIENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMiCj4gPj5S
+QUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZlIENvbnRyb2xsZXJz
+L0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMjIGxsCj4gPj5sczogY2Fubm90IGFjY2VzcyBSb2NrZXRS
+QUlEIDI3MjI6IElucHV0L291dHB1dCBlcnJvcgo+ID4+dG90YWwgNAo+ID4+ZHJ3eHIteHIteCA2
+IHJvb3QgbHJob3JlciA0MDk2IEp1bCAxOCAxOToyNiBSb2NrZXQgMjcyMgo+ID4+Pz8/Pz8/Pz8/
+PyA/ID8gICAgPyAgICAgICAgICA/ICAgICAgICAgICAgPyBSb2NrZXRSQUlEIDI3MjIKPiA+Pgo+
+ID4+CUFzIHlvdSBjYW4gc2VlLCBSb2NrZXQgMjcyMiBpcyBzdGlsbCB0aGVyZSwgYnV0IFJvY2tl
+dFJBSUQgMjcyMiBpcyB2ZXJ5Cj4gPj5zaWNrLiAgUm9ja2V0IDI3MjIgaXMgdGhlIHBhcmVudCBv
+ZiB3aGVyZSB0aGUgdGFyYmFsIHdhcywgaG93ZXZlciwgc28gSSBkaWQKPiA+PmEgY2QgYW5kIGFu
+IGxsIGFnYWluOgo+ID4+Cj4gPj5SQUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1aXBt
+ZW50L0RyaXZlIENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMjIGNkICJSb2NrZXQg
+MjcyMiIvCj4gPj5SQUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZl
+IENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMvUm9ja2V0IDI3MjIjIGxsCj4gPj5s
+czogY2Fubm90IGFjY2VzcyBCSU9TOiBJbnB1dC9vdXRwdXQgZXJyb3IKPiA+PmxzOiBjYW5ub3Qg
+YWNjZXNzIERyaXZlcjogSW5wdXQvb3V0cHV0IGVycm9yCj4gPj5sczogY2Fubm90IGFjY2VzcyBI
+aWdoUG9pbnQgUkFJRCBNYW5hZ2VtZW50IFNvZnR3YXJlOiBJbnB1dC9vdXRwdXQgZXJyb3IKPiA+
+PmxzOiBjYW5ub3QgYWNjZXNzIE1hbnVhbDogSW5wdXQvb3V0cHV0IGVycm9yCj4gPj50b3RhbCAy
+NDgKPiA+Pi1yd3hyLS1yLS0gMSByb290IGxyaG9yZXIgMjQ1NzYwIE5vdiAyMCAgMjAwOCBhdXRv
+cnVuLmV4ZQo+ID4+LXJ3eHItLXItLSAxIHJvb3QgbHJob3JlciAgICAgNTEgTWFyIDIxICAyMDAx
+IGF1dG9ydW4uaW5mCj4gPj4/Pz8/Pz8/Pz8/ID8gPyAgICA/ICAgICAgICAgICAgPyAgICAgICAg
+ICAgID8gQklPUwo+ID4+Pz8/Pz8/Pz8/PyA/ID8gICAgPyAgICAgICAgICAgID8gICAgICAgICAg
+ICA/IERyaXZlcgo+ID4+Pz8/Pz8/Pz8/PyA/ID8gICAgPyAgICAgICAgICAgID8gICAgICAgICAg
+ICA/IEhpZ2hQb2ludCBSQUlEIE1hbmFnZW1lbnQKPiA+PlNvZnR3YXJlCj4gPj4/Pz8/Pz8/Pz8/
+ID8gPyAgICA/ICAgICAgICAgICAgPyAgICAgICAgICAgID8gTWFudWFsCj4gPj4tcnd4ci0tci0t
+IDEgcm9vdCBscmhvcmVyICAgMTEzNCBGZWIgIDUgIDIwMTIgcmVhZG1lLnR4dAo+ID4+Cj4gPj4J
+U28gbm93LCB3aGF0Pwo+ID4+Cj4gPj5fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwo+ID4+eGZzIG1haWxpbmcgbGlzdAo+ID4+eGZzQG9zcy5zZ2kuY29tCj4g
+Pj5odHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPiA+Cj4gCj4gX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBs
+aXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
+Zm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
+ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
+bi9saXN0aW5mby94ZnMK
