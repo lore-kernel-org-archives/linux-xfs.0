@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8E79C7FFE
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 07:33:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E33517FF7
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 08:40:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C015AC003
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 05:33:12 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 639EDAC006
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 06:40:10 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id H4TxyLqO6YpOwtlb (version=TLSv1
+	cuda.sgi.com with ESMTP id wFDuctEFlK2TNH30 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Jul 2015 05:33:11 -0700 (PDT)
-Date: Tue, 28 Jul 2015 08:33:07 -0400
+	Tue, 28 Jul 2015 06:40:09 -0700 (PDT)
+Date: Tue, 28 Jul 2015 09:40:06 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS File system in trouble
-Message-ID: <20150728123307.GC38784@bfoster.bfoster>
-References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
-	<55AA5FCE.4080702@sandeen.net>
-	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
-	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
-	<55AAF73A.4040903@mygrande.net>
-	<20150720111747.GA53450@bfoster.bfoster>
-	<55B73365.1050908@mygrande.net>
+Subject: Re: [PATCH RFC 1/2] xfs: return committed status from xfs_trans_roll()
+Message-ID: <20150728134006.GD38784@bfoster.bfoster>
+References: <1437682410-51778-3-git-send-email-bfoster@redhat.com>
+	<1437682410-51778-2-git-send-email-bfoster@redhat.com>
+	<20150728004009.GB24249@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55B73365.1050908@mygrande.net>
+In-Reply-To: <20150728004009.GB24249@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,152 +31,283 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Kris Rusocki <kszysiu@braxis.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 28, 2015 at 02:46:45AM -0500, Leslie Rhorer wrote:
-> On 7/20/2015 6:17 AM, Brian Foster wrote:
-> >On Sat, Jul 18, 2015 at 08:02:50PM -0500, Leslie Rhorer wrote:
-> >>
-> >>	I found the problem with md5sum (and probably nfs, as well).  One of the
-> >>memory modules in the server was bad.  The problem with XFS persists.  Every
-> >>time tar tried to create the directory:
-> >>
-> >>/RAID/Server-Main/Equipment/Drive Controllers/HighPoint Adapters/Rocket 2722/Driver/RR276x/Driver/Linux/openSUSE/rr276x-suse-11.2-i386/linux/suse/i386-11.1
-> >>
-> >>	It would begin spitting out errors, starting with "Cannot mkdir: Structure
-> >>needs cleaning".  At that point, XFS had shut down.  I went into
-> >>/RAID/Server-Main/Equipment/Drive Controllers/HighPoint Adapters/Rocket
-> >>2722/Driver/RR276x/Driver/Linux/openSUSE/rr276x-suse-11.2-i386/linux/suse/
-> >>and created the i386-11.1 directory by hand, and tar no longer starts
-> >>spitting out errors at that point, but it does start up again at
-> >>RR2782/Windows/Vista-Win2008-Win7-legacy_single/x64.
-> >>
-> >
-> >So is this untar problem a reliable reproducer? If so, here's what I
+On Tue, Jul 28, 2015 at 10:40:09AM +1000, Dave Chinner wrote:
+> [ reply to both patches in one reply, because it's related. ]
 > 
-> 	The processes I was running this weekend ran longer than expected, and in
-> fact were still running just a couple of hours ago.  I was doing an rsync
-> with CRC check from the backup system to the one with the problem.  There
-> were a few corrupt files, but not a huge number.  Although slower than I
-> hoped, everything was running fine until a short time ago, when rsync
-> encountered the very same issue I keep having with tar, which is to say it
-> tried to create a directory and the file system crashed with precisely the
-> same symptoms as when tar was failing.
+> On Thu, Jul 23, 2015 at 04:13:29PM -0400, Brian Foster wrote:
+> > Some callers need to make error handling decisions based on whether the
+> > current transaction successfully committed or not. Rename
+> > xfs_trans_roll(), add a new parameter and provide a wrapper to preserve
+> > existing callers.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_trans.c | 15 +++++++++++++--
+> >  fs/xfs/xfs_trans.h |  1 +
+> >  2 files changed, 14 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index 0582a27..a0ab1da 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -1019,9 +1019,10 @@ xfs_trans_cancel(
+> >   * chunk we've been working on and get a new transaction to continue.
+> >   */
+> >  int
+> > -xfs_trans_roll(
+> > +__xfs_trans_roll(
+> >  	struct xfs_trans	**tpp,
+> > -	struct xfs_inode	*dp)
+> > +	struct xfs_inode	*dp,
+> > +	int			*committed)
+> >  {
+> >  	struct xfs_trans	*trans;
+> >  	struct xfs_trans_res	tres;
+> > @@ -1052,6 +1053,7 @@ xfs_trans_roll(
+> >  	if (error)
+> >  		return error;
 > 
-> >would try to hopefully isolate a filesystem problem from something
-> >underneath:
-> >
-> >xfs_metadump -go /dev/md0 /somewhere/on/rootfs/md0.metadump
-> >xfs_mdrestore -g /somewhere/on/rootfs/md0.metadump /.../fileonrootfs.img
-> >mount /.../fileonrootfs.img /mnt/
+> So here we return committed = 0, error != 0.
 > 
-> 	I tried to do the xfs_mdrestore to the root file system, but it fails:
+> >  
+> > +	*committed = 1;
+> >  	trans = *tpp;
 > 
-> RAID-Server:/TEST# xfs_mdrestore -g md0.metadump RAIDfile.img
-> xfs_mdrestore: cannot set filesystem image size: File too large
+> And from here on in we return committed = 1 regardless of the error.
 > 
-
-Hmm, I guess the file size exceeds the capabilities of the root fs, even
-if there might ultimately be enough space to restore the metadump.
-
-> 	So then I did the same thing to a directory on an nfs mount from another
-> machine.  That worked.  I then went to the other machine, mounted the image
-> on /media, copied the tarball to the location on the mount where the tarball
-> resides on the real array, dn ran the tar job. It completed without errors.
+> So looking at the next patch in xfs_bmap_finish():
 > 
-
-That's interesting. It tells us the fs apparently isn't fundamentally
-broken, but the separate machine potentially introduces a different
-kernel. Is that the case here? What else is different between these
-systems?
-
-> 	I then created the image on the array where the tasks are failing and
-> attempted to mount it to /media on the problematic machine.  That fails
-> with:
+> >  			free->xbfi_blockcount);
+> >  
+> > -	error = xfs_trans_roll(tp, NULL);
+> > -	*committed = 1;
+> > +	error = __xfs_trans_roll(tp, NULL, committed);
+> > +
+> >  	/*
+> > -	 * We have a new transaction, so we should return committed=1,
+> > -	 * even though we're returning an error.
+> > +	 * We have a new transaction, so we should return committed=1, even
+> > +	 * though we're returning an error. If an error was returned after the
+> > +	 * original transaction was committed, defer the error handling until
+> > +	 * the EFD is logged. We do this because a committed EFI requires an EFD
+> > +	 * transaction to be processed to ensure the EFI is released.
+> >  	 */
+> > -	if (error)
+> > +	if (error && *committed == 0) {
+> > +		*committed = 1;
+> >  		return error;
+> > +	}
 > 
-> RAID-Server:/TEST# mount /RAID/TEST/RAIDfile.img /media/
-> mount: wrong fs type, bad option, bad superblock on /dev/loop0,
->        missing codepage or helper program, or other error
+> So if we failed to commit the EFI, we say we did and then return.
+> Why do we need to do that?
 > 
->        In some cases useful info is found in syslog - try
->        dmesg | tail or so.
+> /me goes an looks at all the callers.
 > 
-> 	The problem is this (from syslog):
-> Jul 28 01:53:48 RAID-Server kernel: [431155.847523] loop: module loaded
-> Jul 28 01:53:48 RAID-Server kernel: [431155.927238] XFS (loop0): Filesystem
-> has duplicate UUID 228cfaa7-ae6b-44fc-b703-1c32385231c0 - can't mount
-> Jul 28 01:55:51 RAID-Server kernel: [431278.916490] XFS (loop0): Filesystem
-> has duplicate UUID 228cfaa7-ae6b-44fc-b703-1c32385231c0 - can't mount
-> 
-> 	Presumably it has the same UUID as the RAID array because it is expected to
-> do so.  I can't mount it unless I umount the RAID array, but if I do that, I
-> can't get to the file to mount the dump image, since it is on the array.
+> Hmm - only xfs_itruncate_extents() relies on that behaviour, but it
+> could just as easily do an inode join on error, because on success
+> the inode has already been joined to the new transaction by
+> xfs_trans_roll().
 > 
 
-Ok, somebody already replied with how to get around this. That said, it
-sounds like you've restored the metadump to an image file on the
-problematic fs. I'm not sure how useful a test that is since we're
-testing on the same hardware. I suppose it could be interesting if the
-storage hardware is similar with the alternate machine referenced above.
-For example, if you restore here and the test does not fail, the test on
-the separate machine is probably less informative.
+Interesting, though I don't follow why this caller even depends on it.
+It doesn't transfer lock ownership to the transaction. What difference
+does it make in the error path if the inode is joined?
 
-> 	I then copied both the tarball and the image over to the root, and while
-> the system would not let me create the image on the root, it did let me copy
-> the image to the root.  I then umounted the RAID array, mounted the image,
-> and attempted to cd to the original directory in the image mount where the
-> tarball was saved.  That failed with an I/O error:
+> Looking further, we have quite a bit of inconsistency in the error
+> handling of xfs_bmap_finish() - some callers issue a
+> xfs_bmap_cancel() in the error path, and some don't. failing to
+> cancel the freelist on error looks to me like a memory leak, because
+> we don't free the extents from the free list until the EFD for the
+> extent has been logged. If we error out earlier, we still have items
+> on the free list that haven't been processed.
+> 
+> So it looks to me like we need fixes there.
 > 
 
-It sounds a bit strange for the mdrestore to fail on root but a cp of
-the resulting image to work. Do the resulting images have the same file
-size or is the rootfs copy truncated? If the latter, you could be
-missing part of the fs and thus any of the following tests are probably
-moot.
+Heh, not too surprising. I'll make a note to make a pass through these.
+
+> Further, it appears to me that there is really one xfs_bmap_finish()
+> caller that requires the committed flag: xfs_qm_dqalloc(). All the
+> others either use it for an assert or joining the inode to the
+> transaction when committed = 1, which xfs_trans_roll() will have
+> already done if we return committed = 1....
+> 
+
+Assuming xfs_trans_reserve() hasn't failed, which could cause *committed
+== 1 without the inode joined. We could probably change this in
+__xfs_trans_roll() since the inode is presumably already locked.
+
+> 
+> So xfs_qm_dqalloc(), on error, simply cancels the freelist and
+> returns the error - it ignores the committed flag. So the committed
+> flag is used to determine how to handle the dquot buffer:
+> 
+>         xfs_trans_bhold(tp, bp);
+> 
+>         if ((error = xfs_bmap_finish(tpp, &flist, &committed))) {
+>                 goto error1;
+>         }
+> 
+>         if (committed) {
+>                 tp = *tpp;
+>                 xfs_trans_bjoin(tp, bp);
+>         } else {
+>                 xfs_trans_bhold_release(tp, bp);
+>         }
+> 
+> Now, xfs_trans_bhold() simply sets the BLI_HOLD flag on the buffer,
+> and transaction commit clears it. That means we could call it
+> unconditionally, and all we have to do is remove an assert(BLI_HOLD)
+> from xfs_trans_bhold_release() to enable that. Given this is the
+> only caller of xfs_trans_bhold_release(), I don't see a problem with
+> doing that. Nor is there a problem with multiple joins of an object
+> to a transaction, so we could simply make this:
+> 
+> 	xfs_trans_bhold(tp, bp);
+> 	error = xfs_bmap_finish(tpp, &flist, &committed);
+> 	if (error)
+> 		goto error1;
+> 	tp = *tpp;
+> 	xfs_trans_bjoin(tp, bp);
+> 	xfs_trans_bhold_release(tp, bp);
+> 
+> And the committed flag is not necessary. With this, we can hide
+> everything to do with error on commit vs error after commit inside
+> xfs_bmap_finish()...
+> 
+
+Seems reasonable at a glance.
+
+> >  	efd = xfs_trans_get_efd(*tp, efi, flist->xbf_count);
+> >  	for (free = flist->xbf_first; free != NULL; free = next) {
+> >  		next = free->xbfi_next;
+> > -		if ((error = xfs_free_extent(*tp, free->xbfi_startblock,
+> > -				free->xbfi_blockcount))) {
+> > +
+> > +		/*
+> > +		 * Free the extent if the above trans roll hasn't failed and log
+> > +		 * the EFD before handling errors from either call to ensure the
+> > +		 * EFI reference is accounted for in the tp. Otherwise, the EFI
+> > +		 * is never released on abort and pins the AIL indefinitely.
+> > +		 */
+> > +		if (!error)
+> > +			error = xfs_free_extent(*tp, free->xbfi_startblock,
+> > +						free->xbfi_blockcount);
+> > +		xfs_trans_log_efd_extent(*tp, efd, free->xbfi_startblock,
+> > +					 free->xbfi_blockcount);
+> > +		if (error) {
+> >  			/*
+> >  			 * The bmap free list will be cleaned up at a
+> >  			 * higher level.  The EFI will be canceled when
+> > @@ -118,11 +134,10 @@ xfs_bmap_finish(
+> >  						   SHUTDOWN_META_IO_ERROR);
+> >  			return error;
+> >  		}
+> > -		xfs_trans_log_efd_extent(*tp, efd, free->xbfi_startblock,
+> > -			free->xbfi_blockcount);
+> >  		xfs_bmap_del_free(flist, NULL, free);
+> >  	}
+> > -	return 0;
+> > +
+> > +	return error;
+> 
+> This loop doesn't obviously do the right thing now. It
+> will log the first extent into the EFD and then trigger a shutdown
+> and return. The extent count in the EFD may not match the
+> extent count on the EFI, so releasing the EFD at this point may not
+> release all the extents in the EFI and hence not release the EFI.
+> 
+
+The EFD unlock handler forcibly releases the EFI on abort. It drops the
+EFI extent count reference by whatever the extent count on the EFD is,
+and that is determined on EFD initialization (xfs_trans_get_efd())
+regardless of how many extents were logged to the EFD.
+
+That said, the error handling here is certainly not obvious because it
+depends on the lifecycle of the associated log items. The broader goal
+is to reduce that dependency so the code here is more straightforward...
+
+> I think I'd prefer to see a xfs_trans_cancel_efi() call to handle
+> this error path rather than having to go through the efd to release
+> the reference on the EFI. i.e.
+> 
+> 	error = __xfs_trans_roll(tp, NULL, &committed);
+> 	if (error) {
+> 		if (committed) {
+> 			if (!XFS_FORCED_SHUTDOWN(mp))
+> 				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> 			xfs_efi_cancel(tp, efi);
+> 		}
+> 		return error;
+> 	}
+> 
+
+That's a nice idea. It pulls some error handling out of the log item
+handling code explicitly. An EFD version might be useful for the
+unlogged EFD error case as well. IMO, the more of these cases that are
+handled explicitly in xfs_bmap_finish() rather than implicitly via the
+transaction management code, the more reliable and robust to future
+change it will be. I'll explore it further...
+
+> /*
+>  * Cancel a committed EFI after triggering a shutdown. We need to do
+>  * this so that the committed EFI is removed from the AIL and freed,
+>  * otherwise unmount will hang due to a non-empty AIL.
+>  */
+> xfs_efi_cancel()
+> {
+> 	ASSERT(XFS_FORCED_SHUTDOWN(mp));
+> 	xfs_efi_release(efi, efi->nextents);
+> }
+> 
+> Doing this means there's less complexity on the EFD abort side of
+> things, as we don't have to now handle this failure case via
+> transaction completion callback interface.
+> 
+
+Indeed.
+
+> Hmmm - something I just noticed: if we only have one EFD per EFI,
+> why do we do we have that layer of extent counting before dropping
+> real references?
+> 
+
+I wondered this myself, but hadn't made it deep enough to see if we used
+the reference count elsewhere.
+
+> >  xfs_efd_item_unlock(
+> >  	struct xfs_log_item	*lip)
+> >  {
+> > -	if (lip->li_flags & XFS_LI_ABORTED)
+> > -		xfs_efd_item_free(EFD_ITEM(lip));
+> > +	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
+> > +
+> > +	if (lip->li_flags & XFS_LI_ABORTED) {
+> > +		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
+> > +		xfs_efd_item_free(efdp);
+> > +	}
+> >  }
+> 
+> i.e. we always call xfs_efi_release() with efi_nextents or
+> efd_nextents, which are always the same, and so we never partially
+> complete an EFI. Should we just kill that layer, as it does tend to
+> complicate the EFI release code?
+> 
+
+Yeah, that might be a good idea if we don't use the reference count
+elsewhere. I'll look into that as a subsequent cleanup as well.
 
 Brian
 
-> RAID-Server:/# cd "/media/Server-Main/Equipment/Drive Controllers/HighPoint
-> Adapters/Rocket 2722/Driver/"
-> bash: cd: /media/Server-Main/Equipment/Drive Controllers/HighPoint
-> Adapters/Rocket 2722/Driver/: Input/output error
+> Cheers,
 > 
-> 	I changed directories to a point two directories above the previous attempt
-> and did a long listing:
-> 
-> RAID-Server:/# cd "/media/Server-Main/Equipment/Drive Controllers/HighPoint
-> Adapters"
-> RAID-Server:/media/Server-Main/Equipment/Drive Controllers/HighPoint
-> Adapters# ll
-> ls: cannot access RocketRAID 2722: Input/output error
-> total 4
-> drwxr-xr-x 6 root lrhorer 4096 Jul 18 19:26 Rocket 2722
-> ?????????? ? ?    ?          ?            ? RocketRAID 2722
-> 
-> 	As you can see, Rocket 2722 is still there, but RocketRAID 2722 is very
-> sick.  Rocket 2722 is the parent of where the tarbal was, however, so I did
-> a cd and an ll again:
-> 
-> RAID-Server:/media/Server-Main/Equipment/Drive Controllers/HighPoint
-> Adapters# cd "Rocket 2722"/
-> RAID-Server:/media/Server-Main/Equipment/Drive Controllers/HighPoint
-> Adapters/Rocket 2722# ll
-> ls: cannot access BIOS: Input/output error
-> ls: cannot access Driver: Input/output error
-> ls: cannot access HighPoint RAID Management Software: Input/output error
-> ls: cannot access Manual: Input/output error
-> total 248
-> -rwxr--r-- 1 root lrhorer 245760 Nov 20  2008 autorun.exe
-> -rwxr--r-- 1 root lrhorer     51 Mar 21  2001 autorun.inf
-> ?????????? ? ?    ?            ?            ? BIOS
-> ?????????? ? ?    ?            ?            ? Driver
-> ?????????? ? ?    ?            ?            ? HighPoint RAID Management
-> Software
-> ?????????? ? ?    ?            ?            ? Manual
-> -rwxr--r-- 1 root lrhorer   1134 Feb  5  2012 readme.txt
-> 
-> 	So now, what?
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
 > _______________________________________________
 > xfs mailing list
