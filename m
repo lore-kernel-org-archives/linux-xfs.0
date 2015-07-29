@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 01B957FCB
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:34:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C0FC0304043
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:34:11 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Qr4ih0QpXDbT7by9 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 854877FF9
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:34:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F938304048
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:34:14 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id zQAqWmhkWFcRAXHm (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Jul 2015 15:34:09 -0700 (PDT)
-Subject: [PATCH 09/24] libxfs: adjust refcount when unmapping file blocks
+	Wed, 29 Jul 2015 15:34:12 -0700 (PDT)
+Subject: [PATCH 11/24] xfs: map an inode's offset to an exact physical block
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 29 Jul 2015 15:33:56 -0700
-Message-ID: <20150729223356.17414.64261.stgit@birch.djwong.org>
+Date: Wed, 29 Jul 2015 15:34:09 -0700
+Message-ID: <20150729223409.17414.33569.stgit@birch.djwong.org>
 In-Reply-To: <20150729223258.17414.91354.stgit@birch.djwong.org>
 References: <20150729223258.17414.91354.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,115 +31,78 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-When we're unmapping blocks from a reflinked file, decrease the
-refcount of the affected blocks and free the extents that are no
-longer in use.
+Teach the bmap routine to know how to map a range of file blocks to a
+specific range of physical blocks, instead of simply allocating fresh
+blocks.  This enables reflink to map a file to blocks that are already
+in use.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c     |   16 +++++++++++++---
- fs/xfs/libxfs/xfs_refcount.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_refcount.h |    4 ++++
- 3 files changed, 59 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |   21 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.h |    3 +++
+ 2 files changed, 24 insertions(+)
 
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 057fa9a..dfdd9e6 100644
+index dfdd9e6..1297b94 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -45,6 +45,7 @@
- #include "xfs_symlink.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_filestream.h"
-+#include "xfs_refcount.h"
- 
- 
- kmem_zone_t		*xfs_bmap_free_item_zone;
-@@ -4983,9 +4984,18 @@ xfs_bmap_del_extent(
- 	/*
- 	 * If we need to, add to list of extents to delete.
- 	 */
--	if (do_fx)
--		xfs_bmap_add_free(mp, flist, del->br_startblock,
--				  del->br_blockcount, ip->i_ino);
-+	if (do_fx) {
-+		if (xfs_is_reflink_inode(ip)) {
-+			error = xfs_refcount_put_extent(mp, tp, flist,
-+						del->br_startblock,
-+						del->br_blockcount, ip->i_ino);
-+			if (error)
-+				goto done;
-+		} else
-+			xfs_bmap_add_free(mp, flist, del->br_startblock,
-+					  del->br_blockcount, ip->i_ino);
+@@ -3897,6 +3897,15 @@ STATIC int
+ xfs_bmap_alloc(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
++	if (ap->flags & XFS_BMAPI_EXACT) {
++		trace_xfs_reflink_relink_blocks(ap->ip, *ap->firstblock,
++				ap->length);
++		ap->blkno = *ap->firstblock;
++		ap->ip->i_d.di_nblocks += ap->length;
++		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
++		return 0;
 +	}
 +
- 	/*
- 	 * Adjust inode # blocks in the file.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 83d5677..ef69375 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -939,3 +939,45 @@ xfs_refcount_decrease(
- 	return xfs_refcountbt_adjust_refcount(mp, tp, agbp, agno, agbno,
- 			aglen, -1, flist, owner);
- }
-+
-+/**
-+ * xfs_refcount_put_extent() - release a range of blocks
-+ *
-+ * @mp: XFS mount object
-+ * @tp: transaction that goes with the free operation
-+ * @flist: List of blocks to be freed at the end of the transaction
-+ * @fsbno: First fs block of the range to release
-+ * @len: Length of range
-+ * @owner: owner of the extent
-+ */
-+int
-+xfs_refcount_put_extent(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_bmap_free	*flist,
-+	xfs_fsblock_t		fsbno,
-+	xfs_filblks_t		fslen,
-+	uint64_t		owner)
-+{
-+	int			error;
-+	struct xfs_buf		*agbp;
-+	xfs_agnumber_t		agno;		/* allocation group number */
-+	xfs_agblock_t		agbno;		/* ag start of range to free */
-+	xfs_extlen_t		aglen;		/* ag length of range to free */
-+
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	aglen = fslen;
-+
-+	/*
-+	 * Drop reference counts in the refcount tree.
-+	 */
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_refcount_decrease(mp, tp, agbp, agno, agbno, aglen, flist,
-+			owner);
-+	xfs_trans_brelse(tp, agbp);
-+	return error;
-+}
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 11d773bb..649d679 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -34,4 +34,8 @@ extern int xfs_refcount_decrease(struct xfs_mount *mp, struct xfs_trans *tp,
- 		xfs_extlen_t aglen, struct xfs_bmap_free *flist,
- 		uint64_t owner);
+ 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
+ 		return xfs_bmap_rtalloc(ap);
+ 	return xfs_bmap_btalloc(ap);
+@@ -4519,6 +4528,12 @@ xfs_bmapi_write(
+ 	ASSERT(len > 0);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	if (whichfork == XFS_ATTR_FORK)
++		ASSERT(!(flags & XFS_BMAPI_EXACT));
++	if (flags & XFS_BMAPI_EXACT) {
++		ASSERT(!(flags & XFS_BMAPI_PREALLOC));
++		ASSERT(!(flags & XFS_BMAPI_CONVERT));
++	}
  
-+extern int xfs_refcount_put_extent(struct xfs_mount *mp, struct xfs_trans *tp,
-+		struct xfs_bmap_free *flist, xfs_fsblock_t fsbno,
-+		xfs_filblks_t len, uint64_t owner);
+ 	if (unlikely(XFS_TEST_ERROR(
+ 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+@@ -4568,6 +4583,12 @@ xfs_bmapi_write(
+ 		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
+ 
+ 		/*
++		 * Make sure we only reflink into a hole.
++		 */
++		if (flags & XFS_BMAPI_EXACT)
++			ASSERT(inhole);
 +
- #endif	/* __XFS_REFCOUNT_H__ */
++		/*
+ 		 * First, deal with the hole before the allocated space
+ 		 * that we found, if any.
+ 		 */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 674819f..34db107 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -110,6 +110,9 @@ typedef	struct xfs_bmap_free
+  */
+ #define XFS_BMAPI_CONVERT	0x040
+ 
++#define XFS_BMAPI_EXACT		0x080	/* Map the inode offset to the block */
++					/* ap->firstblock. Used for reflink. */
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
 
 _______________________________________________
 xfs mailing list
