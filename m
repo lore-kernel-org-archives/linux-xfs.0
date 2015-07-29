@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 829607F99
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 17:11:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F17ECAC002
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 15:11:55 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id J75Vo2HigFNPEbeM (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Jul 2015 15:11:54 -0700 (PDT)
-Date: Tue, 28 Jul 2015 18:11:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS File system in trouble
-Message-ID: <20150728221150.GA26604@bfoster.bfoster>
-References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
-	<55AA5FCE.4080702@sandeen.net>
-	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
-	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
-	<55AAF73A.4040903@mygrande.net>
-	<20150720111747.GA53450@bfoster.bfoster>
-	<55B73365.1050908@mygrande.net>
-	<20150728123307.GC38784@bfoster.bfoster>
-	<55B79BFD.6020509@mygrande.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F2FA07FA8
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 00:02:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D1BFA8F8033
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2015 22:02:36 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	nzRkdIc66P8W8x8Z for <xfs@oss.sgi.com>;
+	Tue, 28 Jul 2015 22:02:31 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1ZKJVd-0004PL-BW
+	for xfs@oss.sgi.com; Wed, 29 Jul 2015 15:02:29 +1000
+Date: Wed, 29 Jul 2015 15:02:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 5461ad9
+Message-ID: <20150729050229.GA16638@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55B79BFD.6020509@mygrande.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,87 +25,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============5377898975735124766=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Kris Rusocki <kszysiu@braxis.org>, "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gVHVlLCBKdWwgMjgsIDIwMTUgYXQgMTA6MTM6MDFBTSAtMDUwMCwgTGVzbGllIFJob3JlciB3
-cm90ZToKPiBPbiA3LzI4LzIwMTUgNzozMyBBTSwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+ID5PbiBU
-dWUsIEp1bCAyOCwgMjAxNSBhdCAwMjo0Njo0NUFNIC0wNTAwLCBMZXNsaWUgUmhvcmVyIHdyb3Rl
-Ogo+ID4+T24gNy8yMC8yMDE1IDY6MTcgQU0sIEJyaWFuIEZvc3RlciB3cm90ZToKPiA+Pj5PbiBT
-YXQsIEp1bCAxOCwgMjAxNSBhdCAwODowMjo1MFBNIC0wNTAwLCBMZXNsaWUgUmhvcmVyIHdyb3Rl
-Ogo+ID4+Pj4KLi4uCj4gPgo+ID4+CUkgdGhlbiBjb3BpZWQgYm90aCB0aGUgdGFyYmFsbCBhbmQg
-dGhlIGltYWdlIG92ZXIgdG8gdGhlIHJvb3QsIGFuZCB3aGlsZQo+ID4+dGhlIHN5c3RlbSB3b3Vs
-ZCBub3QgbGV0IG1lIGNyZWF0ZSB0aGUgaW1hZ2Ugb24gdGhlIHJvb3QsIGl0IGRpZCBsZXQgbWUg
-Y29weQo+ID4+dGhlIGltYWdlIHRvIHRoZSByb290LiAgSSB0aGVuIHVtb3VudGVkIHRoZSBSQUlE
-IGFycmF5LCBtb3VudGVkIHRoZSBpbWFnZSwKPiA+PmFuZCBhdHRlbXB0ZWQgdG8gY2QgdG8gdGhl
-IG9yaWdpbmFsIGRpcmVjdG9yeSBpbiB0aGUgaW1hZ2UgbW91bnQgd2hlcmUgdGhlCj4gPj50YXJi
-YWxsIHdhcyBzYXZlZC4gIFRoYXQgZmFpbGVkIHdpdGggYW4gSS9PIGVycm9yOgo+ID4+Cj4gPgo+
-ID5JdCBzb3VuZHMgYSBiaXQgc3RyYW5nZSBmb3IgdGhlIG1kcmVzdG9yZSB0byBmYWlsIG9uIHJv
-b3QgYnV0IGEgY3Agb2YKPiA+dGhlIHJlc3VsdGluZyBpbWFnZSB0byB3b3JrLiBEbyB0aGUgcmVz
-dWx0aW5nIGltYWdlcyBoYXZlIHRoZSBzYW1lIGZpbGUKPiA+c2l6ZSBvciBpcyB0aGUgcm9vdGZz
-IGNvcHkgdHJ1bmNhdGVkPyBJZiB0aGUgbGF0dGVyLCB5b3UgY291bGQgYmUKPiA+bWlzc2luZyBw
-YXJ0IG9mIHRoZSBmcyBhbmQgdGh1cyBhbnkgb2YgdGhlIGZvbGxvd2luZyB0ZXN0cyBhcmUgcHJv
-YmFibHkKPiA+bW9vdC4KPiAKPiAJV2VsbCwgaXQgY2FuJ3QgYmUgYXMgbGFyZ2UgYXMgaXQgaXMg
-cmVwb3J0ZWQsIGxldCdzIHB1dCBpdCB0aGF0IHdheSwKPiBhbHRob3VnaCB0aGUgcmVwb3J0ZWQg
-ZmlsZSBzaXplIGlzIHRoZSBzYW1lLiAgTHMgY2xhaW1zIGl0IHRvIGJlIDE2VCBpbgo+IHNpemUs
-IHdoaWNoIGNhbm5vdCBiZSB0aGUgY2FzZSBvbiBhIDEwMEcgcGFydGl0aW9uLiAgSSBmb3Jnb3Qg
-dG8gbWVudGlvbiBjcAo+IGRvZXMgY29tcGxhaW46Cj4gCj4gUkFJRC1TZXJ2ZXI6LyMgY3AgL1JB
-SUQvVEVTVC9SQUlEZmlsZS5pbWcgLi8KPiBjcDogY2Fubm90IGxzZWVrIOKAmC4vUkFJRGZpbGUu
-aW1n4oCZOiBJbnZhbGlkIGFyZ3VtZW50Cj4gCj4gCUJ1dCBpdCBkb2VzIHRoZSBzYW1lIHRoaW5n
-IG9uIHRoZSBiYWNrdXAgc2VydmVyLCBhbmQgaXQgd29ya3MgdGhlcmUuICBJCj4gdHJpZWQgYSBj
-bXAsIGFuZCBpdCBzZWVtcyB0byBiZSBodW5nLiAgSXQganVzdCBtYXkgYmUgdGFraW5nIGEgbG9u
-ZyB0aW1lLAo+IGhvd2V2ZXIuCj4gCgpZZWFoLCB5b3UgY2FuJ3QgcmVhbGx5IHRydXN0IHRoZSBy
-ZXN1bHRpbmcgaW1hZ2UuIEl0IGRvZXNuJ3QgdGFrZSBtdWNoCnNwYWNlIHRvIGNyZWF0ZSBhIHZl
-cnkgbGFyZ2Ugc3BhcnNlIGZpbGUsIGJ1dCBkaWZmZXJlbnQgZmlsZXN5c3RlbXMgaGF2ZQpkaWZm
-ZXJlbnQgbWF4aW11bSBmaWxlIHNpemUgbGltaXRzLiBUaGUgcHJvYmxlbSBoZXJlIGlzIHRoYXQg
-c29tZQptZXRhZGF0YSBuZWFyIHRoZSBiZWdpbm5pbmcgb2YgdGhlIGZpbGUgbWlnaHQgcmVmZXJl
-bmNlIG9yIGRlcGVuZCBvbgpzb21ldGhpbmcgbmVhciB0aGUgZW5kLCBhbmQgSS9PcyBiZXlvbmQg
-dGhlIGVuZCBvZiB0aGUgZmlsZSB3aWxsCnByb2JhYmx5IHJlc3VsdCBpbiBlcnJvcnMuCgpJJ2Qg
-cHJvYmFibHkgdHJ5IHRoZSBub3V1aWQgYXBwcm9hY2ggc2luY2UgdGhlIGhhcmR3YXJlIGlzIHNp
-bWlsYXIgYXMKd2VsbCBhcyBzb21lIG9mIHRoZSBvdGhlciBpbnRlcmVzdGluZyBzdWdnZXN0aW9u
-cyB0aGF0IGhhdmUgYmVlbiBtYWRlIHRvCnRyeSBhbmQgZ2V0IHRoZSBpbWFnZSBvbiB0aGUgcm9v
-dGZzIGFuZCBzZWUgd2hhdCBoYXBwZW5zIHRoZXJlIHRvby4KCkJyaWFuCgo+ID5Ccmlhbgo+ID4K
-PiA+PlJBSUQtU2VydmVyOi8jIGNkICIvbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZl
-IENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMvUm9ja2V0IDI3MjIvRHJpdmVyLyIK
-PiA+PmJhc2g6IGNkOiAvbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZlIENvbnRyb2xs
-ZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMvUm9ja2V0IDI3MjIvRHJpdmVyLzogSW5wdXQvb3V0
-cHV0IGVycm9yCj4gPj4KPiA+PglJIGNoYW5nZWQgZGlyZWN0b3JpZXMgdG8gYSBwb2ludCB0d28g
-ZGlyZWN0b3JpZXMgYWJvdmUgdGhlIHByZXZpb3VzIGF0dGVtcHQKPiA+PmFuZCBkaWQgYSBsb25n
-IGxpc3Rpbmc6Cj4gPj4KPiA+PlJBSUQtU2VydmVyOi8jIGNkICIvbWVkaWEvU2VydmVyLU1haW4v
-RXF1aXBtZW50L0RyaXZlIENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMiCj4gPj5S
-QUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZlIENvbnRyb2xsZXJz
-L0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMjIGxsCj4gPj5sczogY2Fubm90IGFjY2VzcyBSb2NrZXRS
-QUlEIDI3MjI6IElucHV0L291dHB1dCBlcnJvcgo+ID4+dG90YWwgNAo+ID4+ZHJ3eHIteHIteCA2
-IHJvb3QgbHJob3JlciA0MDk2IEp1bCAxOCAxOToyNiBSb2NrZXQgMjcyMgo+ID4+Pz8/Pz8/Pz8/
-PyA/ID8gICAgPyAgICAgICAgICA/ICAgICAgICAgICAgPyBSb2NrZXRSQUlEIDI3MjIKPiA+Pgo+
-ID4+CUFzIHlvdSBjYW4gc2VlLCBSb2NrZXQgMjcyMiBpcyBzdGlsbCB0aGVyZSwgYnV0IFJvY2tl
-dFJBSUQgMjcyMiBpcyB2ZXJ5Cj4gPj5zaWNrLiAgUm9ja2V0IDI3MjIgaXMgdGhlIHBhcmVudCBv
-ZiB3aGVyZSB0aGUgdGFyYmFsIHdhcywgaG93ZXZlciwgc28gSSBkaWQKPiA+PmEgY2QgYW5kIGFu
-IGxsIGFnYWluOgo+ID4+Cj4gPj5SQUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1aXBt
-ZW50L0RyaXZlIENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMjIGNkICJSb2NrZXQg
-MjcyMiIvCj4gPj5SQUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1aXBtZW50L0RyaXZl
-IENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+ID4+QWRhcHRlcnMvUm9ja2V0IDI3MjIjIGxsCj4gPj5s
-czogY2Fubm90IGFjY2VzcyBCSU9TOiBJbnB1dC9vdXRwdXQgZXJyb3IKPiA+PmxzOiBjYW5ub3Qg
-YWNjZXNzIERyaXZlcjogSW5wdXQvb3V0cHV0IGVycm9yCj4gPj5sczogY2Fubm90IGFjY2VzcyBI
-aWdoUG9pbnQgUkFJRCBNYW5hZ2VtZW50IFNvZnR3YXJlOiBJbnB1dC9vdXRwdXQgZXJyb3IKPiA+
-PmxzOiBjYW5ub3QgYWNjZXNzIE1hbnVhbDogSW5wdXQvb3V0cHV0IGVycm9yCj4gPj50b3RhbCAy
-NDgKPiA+Pi1yd3hyLS1yLS0gMSByb290IGxyaG9yZXIgMjQ1NzYwIE5vdiAyMCAgMjAwOCBhdXRv
-cnVuLmV4ZQo+ID4+LXJ3eHItLXItLSAxIHJvb3QgbHJob3JlciAgICAgNTEgTWFyIDIxICAyMDAx
-IGF1dG9ydW4uaW5mCj4gPj4/Pz8/Pz8/Pz8/ID8gPyAgICA/ICAgICAgICAgICAgPyAgICAgICAg
-ICAgID8gQklPUwo+ID4+Pz8/Pz8/Pz8/PyA/ID8gICAgPyAgICAgICAgICAgID8gICAgICAgICAg
-ICA/IERyaXZlcgo+ID4+Pz8/Pz8/Pz8/PyA/ID8gICAgPyAgICAgICAgICAgID8gICAgICAgICAg
-ICA/IEhpZ2hQb2ludCBSQUlEIE1hbmFnZW1lbnQKPiA+PlNvZnR3YXJlCj4gPj4/Pz8/Pz8/Pz8/
-ID8gPyAgICA/ICAgICAgICAgICAgPyAgICAgICAgICAgID8gTWFudWFsCj4gPj4tcnd4ci0tci0t
-IDEgcm9vdCBscmhvcmVyICAgMTEzNCBGZWIgIDUgIDIwMTIgcmVhZG1lLnR4dAo+ID4+Cj4gPj4J
-U28gbm93LCB3aGF0Pwo+ID4+Cj4gPj5fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwo+ID4+eGZzIG1haWxpbmcgbGlzdAo+ID4+eGZzQG9zcy5zZ2kuY29tCj4g
-Pj5odHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPiA+Cj4gCj4gX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBs
-aXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
-Zm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+
+--===============5377898975735124766==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
+Content-Disposition: inline
+
+
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The for-next branch of the xfs kernel repository at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+has just been updated.
+
+The new head of the for-next branch is commit:
+
+5461ad9 Merge branch 'xfs-meta-uuid' into for-next
+
+New Commits:
+
+Brian Foster (2):
+      [4703da7] xfs: close xc_cil list_empty() races with cil commit sequen=
+ce
+      [89cebc84] xfs: validate transaction header length on log recovery
+
+Dave Chinner (7):
+      [b2442c5] xfs: call dax_fault on read page faults for DAX
+      [e3c32ee] xfs: remote attribute headers contain an invalid LSN
+      [df150ed1] xfs: remote attributes need to be considered data
+      [ab7bb61] xfs: xfs_bunmapi() does not need XFS_BMAPI_METADATA flag
+      [1cfc4a9] libxfs: add xfs_bit.c
+      [20b8394] Merge branch 'xfs-misc-fixes-for-4.3' into for-next
+      [5461ad9] Merge branch 'xfs-meta-uuid' into for-next
+
+Eric Sandeen (1):
+      [ce748ea] xfs: create new metadata UUID field and incompat flag
+
+Jan Kara (1):
+      [d6077aa] xfs: Remove duplicate jumps to the same label
+
+Joe Perches (1):
+      [f41febd] xfs: Use consistent logging message prefixes
+
+
+Code Diffstat:
+
+ fs/dax.c                           | 14 ++++++++--
+ fs/xfs/Makefile                    |  2 +-
+ fs/xfs/libxfs/xfs_alloc.c          |  4 +--
+ fs/xfs/libxfs/xfs_alloc_btree.c    |  4 +--
+ fs/xfs/libxfs/xfs_attr_leaf.c      |  4 +--
+ fs/xfs/libxfs/xfs_attr_remote.c    | 53 +++++++++++++++++++++++++++-------=
+----
+ fs/xfs/{ =3D> libxfs}/xfs_bit.c      |  0
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  5 ++--
+ fs/xfs/libxfs/xfs_btree.c          | 10 ++++---
+ fs/xfs/libxfs/xfs_da_btree.c       |  8 +++---
+ fs/xfs/libxfs/xfs_dir2.c           | 33 +++++++++++-------------
+ fs/xfs/libxfs/xfs_dir2_block.c     |  4 +--
+ fs/xfs/libxfs/xfs_dir2_data.c      |  4 +--
+ fs/xfs/libxfs/xfs_dir2_leaf.c      |  4 +--
+ fs/xfs/libxfs/xfs_dir2_node.c      |  7 +++--
+ fs/xfs/libxfs/xfs_dquot_buf.c      |  4 +--
+ fs/xfs/libxfs/xfs_format.h         | 22 +++++++++++++---
+ fs/xfs/libxfs/xfs_ialloc.c         |  5 ++--
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |  2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c      |  4 +--
+ fs/xfs/libxfs/xfs_sb.c             | 24 +++++++++++++----
+ fs/xfs/libxfs/xfs_symlink_remote.c |  4 +--
+ fs/xfs/xfs_buf.c                   |  5 ++--
+ fs/xfs/xfs_file.c                  | 21 ++++++++++-----
+ fs/xfs/xfs_inode.c                 | 10 ++-----
+ fs/xfs/xfs_log.c                   | 50 +++++++++++++++++------------------
+ fs/xfs/xfs_log_cil.c               |  8 +++++-
+ fs/xfs/xfs_log_recover.c           | 47 ++++++++++++++++++++++++++-------
+ fs/xfs/xfs_symlink.c               |  2 +-
+ 29 files changed, 233 insertions(+), 131 deletions(-)
+ rename fs/xfs/{ =3D> libxfs}/xfs_bit.c (100%)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--0F1p//8PRICkK4MW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJVuF5kAAoJEK3oKUf0dfodYswP/jJEBhKUfUEAhH3Y/vmfxK9d
+5u7zywJ/hgpkUHSqIEhfpTSJB45pDYJrPYOCXMtwW4hvP7rE0lzl7k0NGwzu6yDY
+3xjuvjXW6Uq7eEfVWZ4ThLcRRZTAhw/YT26KWaZfKaDG/o3B/e56niErhO8DUxMc
+64bXHmIhKYVkfezKsn2+TPfqIji+OYSnukugEr0rTwSuJTu9ppVliqieQ8+Qc5Lj
+NR9a56LtO8pNNmvp/rgdOigZP+0VLJtpFWy3f1fQ1T/z/P1URcejK35EgmzFzrxB
+TX1KydcJGQ0cXeu/9+Kab0WLULJZ99oXFIS4/LMmx6sMWQvWCYV6fyV3cOlZQxke
+UysQBbGjFRybzritY708yiRyztMByl+NTnbH4WFKyOq7YfTZw96GMsi8LhnogQA5
+8KXipmGoHgkuylMTaHgumy3dOsTOvstqoVonSzH7P3FoGZhKkILkMzfnHAwM/mBY
+gALUiDRY01czznfdj4dXXPEqL86HINq7gwo+chqd+H2qN+e+uFaxM0z6I3KVuyIq
+v/8Dyyx+QIIG96kg3pOrMNTLpnQ6gj+DsL0r9gmAxluI6dn8GVkVkECgAhp9NFg+
+rffFamMow3RFZYj5AJFtv7gSN2AFiANl0BACGrx89WDyDOUSaEuxOvdW1sF3f+17
+jISJU/+jdH70wi4SnlXr
+=bpBC
+-----END PGP SIGNATURE-----
+
+--0F1p//8PRICkK4MW--
+
+
+--===============5377898975735124766==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5377898975735124766==--
