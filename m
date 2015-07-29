@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5CCB87F94
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:33:08 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3EE4C7F94
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:33:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DB2A98F8033
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:33:07 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id HjZIZDfHf4beVBqK (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2BFFC8F8033
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:33:09 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id r1AbJr8qCgLqIYbG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Jul 2015 15:33:06 -0700 (PDT)
-Subject: [RFC v2 00/24] xfs: add reflink and dedupe support
+	Wed, 29 Jul 2015 15:33:08 -0700 (PDT)
+Subject: [PATCH 01/24] xfs: introduce refcount btree definitions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 29 Jul 2015 15:32:59 -0700
-Message-ID: <20150729223258.17414.91354.stgit@birch.djwong.org>
+Date: Wed, 29 Jul 2015 15:33:05 -0700
+Message-ID: <20150729223305.17414.84520.stgit@birch.djwong.org>
+In-Reply-To: <20150729223258.17414.91354.stgit@birch.djwong.org>
+References: <20150729223258.17414.91354.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,67 +31,214 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Hi all,
+Add new per-AG refcount btree definitions to the per-AG structures.
 
-This is the second revision of an RFC for adding to XFS kernel support
-for mapping multiple file logical blocks to the same physical block,
-more commonly known as reflinking.  The implementation a single [block
-range, refcount] tree to track the reference counts of extents of
-physical blocks.  There's also support code to provide the desired
-copy-on-write behavior and the userland interfaces to reflink, query
-the status of, and un-reflink files.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c  |    5 +++++
+ fs/xfs/libxfs/xfs_btree.c  |    5 +++--
+ fs/xfs/libxfs/xfs_btree.h  |    4 ++++
+ fs/xfs/libxfs/xfs_format.h |   31 ++++++++++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_types.h  |    2 +-
+ fs/xfs/xfs_inode.h         |    5 +++++
+ fs/xfs/xfs_mount.h         |    3 +++
+ 7 files changed, 51 insertions(+), 4 deletions(-)
 
-The patch set is based on the current (4.2-rc4) upstream kernel plus
-Dave's reverse-map RFC patches.  There are plenty of bugs in this
-code; in particular the copy-on-write code is still terrible and prone
-to all sorts of amusing crashes.
 
-To expand on that, the copy on write code is horribly broken, but I'm
-posting this patchset in the hopes of getting some review of the other
-pieces while I try to solve CoW.  Since "RFC(RAP)" post last month I
-broke up the patches into smaller pieces, added tracepoints, and
-provided longer descriptions + ASCII art of what the big algorithms
-are trying to do.
-
-What I'd like to do for CoW is to (ab|re)use the delayed allocation
-code to implement copy on write.  In xfs_get_blocks we'd reserve
-whatever blocks we need (or return ENOSPC to users) as in regular
-delalloc; and in xfs_vm_writepage we'd use xfs_map_blocks to allocate
-the forked blocks, remove the old mapping, and add in the new mapping,
-which is almost what delalloc does now.  One problem I've not yet
-worked around is that __block_write_begin won't call get_blocks if the
-bh is already mapped, which means that we fail to make the necessary
-reservations in certain cases (write file, reflink, rewrite original
-file).  The current CoW patch sort of forces this to work by doing its
-own reservation outside of get_blocks and delalloc, but doesn't
-necessarily get it right.
-
-At the moment, the reverse-map and reflink features are /not/
-compatible.  This will be resolved soon.
-
-The ioctl interface to XFS reflink looks surprisingly like the btrfs
-ioctl interface <cough> -- you can reflink a file, reflink subranges
-of a file, or dedupe subranges of files.  (Dedupe also checks file
-blocks, though I have a feeling it's racy.)  To un-reflink a file,
-simply chattr +C it to mark it no-cow.  xfs_fsr is a better candidate
-for de-reflinking a file since it also defragments the file.
-
-If you're going to start using this mess, you're going to want to pull
-my xfsprogs dev tree[1], which itself is also based on xfsprogs
-for-next and the userland rmap support bits.  I've not had time to get
-reflink and rmap to work together.
-
-I've also prepared a bunch of xfstests[2] to exercise the userland
-interfaces; btrfs' reflink implementation more or less passes.
-
-This is an extraordinary way to eat your data.  Enjoy!
-
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://github.com/djwong/xfsprogs/commits/for-next
-[2] https://github.com/djwong/xfstests/commits/master
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index a95f4a4..40e8129 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2386,6 +2386,10 @@ xfs_agf_verify(
+ 	    be32_to_cpu(agf->agf_btreeblks) > be32_to_cpu(agf->agf_length))
+ 		return false;
+ 
++	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
++	    be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS)
++		return false;
++
+ 	return true;;
+ 
+ }
+@@ -2505,6 +2509,7 @@ xfs_alloc_read_agf(
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
+ 		pag->pagf_levels[XFS_BTNUM_RMAPi] =
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
++		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
+ 		spin_lock_init(&pag->pagb_lock);
+ 		pag->pagb_count = 0;
+ 		pag->pagb_tree = RB_ROOT;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 4c9b9b3..51b56c5 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -43,9 +43,10 @@ kmem_zone_t	*xfs_btree_cur_zone;
+  */
+ static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
+ 	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
+-	  XFS_FIBT_MAGIC },
++	  XFS_FIBT_MAGIC, 0 },
+ 	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
+-	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
++	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC,
++	  XFS_REFC_CRC_MAGIC }
+ };
+ #define xfs_btree_magic(cur) \
+ 	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 48ab2b1..8d9fffe 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -66,6 +66,7 @@ union xfs_btree_rec {
+ #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
+ #define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
+ #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
++#define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
+ 
+ /*
+  * For logging record fields.
+@@ -98,6 +99,7 @@ do {    \
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
+ 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
+ 	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(rmap, stat); break;	\
++	case XFS_BTNUM_REFC: break;	\
+ 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
+ 	}       \
+ } while (0)
+@@ -113,6 +115,7 @@ do {    \
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
+ 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
+ 	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_ADD(rmap, stat, val); break; \
++	case XFS_BTNUM_REFC: break;	\
+ 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
+ 	}       \
+ } while (0)
+@@ -217,6 +220,7 @@ typedef struct xfs_btree_cur
+ 	union {
+ 		struct {			/* needed for BNO, CNT, INO */
+ 			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
++			struct xfs_bmap_free *flist;	/* list to free after */
+ 			xfs_agnumber_t	agno;	/* ag number */
+ 		} a;
+ 		struct {			/* needed for BMAP */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 9cff517..c0dd355 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -446,6 +446,7 @@ xfs_sb_has_compat_feature(
+ 
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
++#define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+ 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+@@ -522,6 +523,12 @@ static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
+ }
+ 
++static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
++{
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
++}
++
+ /*
+  * end of superblock version macros
+  */
+@@ -616,12 +623,15 @@ typedef struct xfs_agf {
+ 	__be32		agf_btreeblks;	/* # of blocks held in AGF btrees */
+ 	uuid_t		agf_uuid;	/* uuid of filesystem */
+ 
++	__be32		agf_refcount_root;	/* refcount tree root block */
++	__be32		agf_refcount_level;	/* refcount btree levels */
++
+ 	/*
+ 	 * reserve some contiguous space for future logged fields before we add
+ 	 * the unlogged fields. This makes the range logging via flags and
+ 	 * structure offsets much simpler.
+ 	 */
+-	__be64		agf_spare64[16];
++	__be64		agf_spare64[15];
+ 
+ 	/* unlogged fields, written during buffer writeback. */
+ 	__be64		agf_lsn;	/* last write sequence */
+@@ -1008,6 +1018,18 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ 	 XFS_DIFLAG_EXTSZINHERIT | XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM)
+ 
+ /*
++ * Values for di_flags2
++ * There should be a one-to-one correspondence between these flags and the
++ * XFS_XFLAG_s.
++ */
++#define XFS_DIFLAG2_REFLINK_BIT   0	/* file's blocks may be reflinked */
++#define XFS_DIFLAG2_REFLINK      (1 << XFS_DIFLAG2_REFLINK_BIT)
++
++#define XFS_DIFLAG2_ANY \
++	(XFS_DIFLAG2_REFLINK)
++
++
++/*
+  * Inode number format:
+  * low inopblog bits - offset in block
+  * next agblklog bits - block number in ag
+@@ -1338,6 +1360,13 @@ typedef __be32 xfs_rmap_ptr_t;
+ 	 XFS_IBT_BLOCK(mp) + 1)
+ 
+ /*
++ * Reference Count Btree format definitions
++ *
++ */
++#define	XFS_REFC_CRC_MAGIC	0x52334643	/* 'R3FC' */
++
++
++/*
+  * BMAP Btree format definitions
+  *
+  * This includes both the root block definition that sits inside an inode fork
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 3d50364..be7b6de 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -109,7 +109,7 @@ typedef enum {
+ 
+ typedef enum {
+ 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+-	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_MAX
++	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
+ 
+ struct xfs_name {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 8f22d20..6153cf2 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -202,6 +202,11 @@ xfs_get_initial_prid(struct xfs_inode *dp)
+ 	return XFS_PROJID_DEFAULT;
+ }
+ 
++static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
++{
++	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
++}
++
+ /*
+  * In-core inode flags.
+  */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index cdced0b..4b286cc 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -315,6 +315,9 @@ typedef struct xfs_perag {
+ 	/* for rcu-safe freeing */
+ 	struct rcu_head	rcu_head;
+ 	int		pagb_count;	/* pagb slots in use */
++
++	/* reference count */
++	__uint8_t	pagf_refcount_level;
+ } xfs_perag_t;
+ 
+ extern int	xfs_log_sbcount(xfs_mount_t *);
 
 _______________________________________________
 xfs mailing list
