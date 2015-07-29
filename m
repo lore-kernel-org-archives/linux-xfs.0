@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 93A077FAE
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:33:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80060304043
+	by oss.sgi.com (Postfix) with ESMTP id 4D7B67FB3
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:33:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 000B0304043
 	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:33:45 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JKlVjNdGjB18TZs5 (version=TLSv1
+	cuda.sgi.com with ESMTP id D3B5gRFKUTWnBznk (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Wed, 29 Jul 2015 15:33:43 -0700 (PDT)
-Subject: [PATCH 05/24] xfs: define the on-disk refcount btree format
+Subject: [PATCH 02/24] xfs: define tracepoints for refcount/reflink activities
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 29 Jul 2015 15:33:30 -0700
-Message-ID: <20150729223330.17414.82692.stgit@birch.djwong.org>
+Date: Wed, 29 Jul 2015 15:33:11 -0700
+Message-ID: <20150729223311.17414.63147.stgit@birch.djwong.org>
 In-Reply-To: <20150729223258.17414.91354.stgit@birch.djwong.org>
 References: <20150729223258.17414.91354.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,452 +31,699 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Start constructing the refcount btree implementation by establishing
-the on-disk format and everything needed to read, write, and
-manipulate the refcount btree blocks.
+Define all the tracepoints we need to inspect the refcount and reflink
+runtime operation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile                    |    1 
- fs/xfs/libxfs/xfs_btree.c          |    3 +
- fs/xfs/libxfs/xfs_btree.h          |    3 +
- fs/xfs/libxfs/xfs_format.h         |   32 ++++++
- fs/xfs/libxfs/xfs_refcount_btree.c |  192 ++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_refcount_btree.h |   65 ++++++++++++
- fs/xfs/libxfs/xfs_sb.c             |    9 ++
- fs/xfs/libxfs/xfs_shared.h         |    2 
- fs/xfs/xfs_mount.h                 |    2 
- 9 files changed, 309 insertions(+)
- create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.c
- create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.h
+ fs/xfs/xfs_trace.h |  673 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 673 insertions(+)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index e338595..f3f7098 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -52,6 +52,7 @@ xfs-y				+= $(addprefix libxfs/, \
- 				   xfs_log_rlimit.o \
- 				   xfs_rmap.o \
- 				   xfs_rmap_btree.o \
-+				   xfs_refcount_btree.o \
- 				   xfs_sb.o \
- 				   xfs_symlink_remote.o \
- 				   xfs_trans_resv.o \
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 51b56c5..708f938 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1118,6 +1118,9 @@ xfs_btree_set_refs(
- 	case XFS_BTNUM_RMAP:
- 		xfs_buf_set_ref(bp, XFS_RMAP_BTREE_REF);
- 		break;
-+	case XFS_BTNUM_REFC:
-+		xfs_buf_set_ref(bp, XFS_REFC_BTREE_REF);
-+		break;
- 	default:
- 		ASSERT(0);
- 	}
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index b747c86..7a71292 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -43,6 +43,7 @@ union xfs_btree_key {
- 	xfs_alloc_key_t			alloc;
- 	struct xfs_inobt_key		inobt;
- 	struct xfs_rmap_key		rmap;
-+	struct xfs_refcount_key		refc;
- };
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 25bd4f5..a7f5f46 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2159,6 +2159,679 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
+ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
+ DEFINE_DISCARD_EVENT(xfs_discard_busy);
  
- union xfs_btree_rec {
-@@ -51,6 +52,7 @@ union xfs_btree_rec {
- 	struct xfs_alloc_rec		alloc;
- 	struct xfs_inobt_rec		inobt;
- 	struct xfs_rmap_rec		rmap;
-+	struct xfs_refcount_rec		refc;
- };
++/* reflink/refcount tracepoint classes */
++
++/* reuse the discard trace class for agbno/aglen-based traces */
++#define DEFINE_AG_EXTENT_EVENT(name) DEFINE_DISCARD_EVENT(name)
++
++/* ag btree lookup tracepoint class */
++#define XFS_AG_BTREE_CMP_FORMAT_STR \
++	{ XFS_LOOKUP_EQ,	"eq" }, \
++	{ XFS_LOOKUP_LE,	"le" }, \
++	{ XFS_LOOKUP_GE,	"ge" }
++DECLARE_EVENT_CLASS(xfs_ag_btree_lookup_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_lookup_t dir),
++	TP_ARGS(mp, agno, agbno, dir),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_lookup_t, dir)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->dir = dir;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u cmp %s(%d)\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __print_symbolic(__entry->dir, XFS_AG_BTREE_CMP_FORMAT_STR),
++		  __entry->dir)
++)
++
++#define DEFINE_AG_BTREE_LOOKUP_EVENT(name) \
++DEFINE_EVENT(xfs_ag_btree_lookup_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_lookup_t dir), \
++	TP_ARGS(mp, agno, agbno, dir))
++
++/* two-file io tracepoint class */
++DECLARE_EVENT_CLASS(xfs_double_io_class,
++	TP_PROTO(struct xfs_inode *src, xfs_off_t soffset, xfs_off_t len,
++		 struct xfs_inode *dest, xfs_off_t doffset),
++	TP_ARGS(src, soffset, len, dest, doffset),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, src_ino)
++		__field(loff_t, src_isize)
++		__field(loff_t, src_disize)
++		__field(loff_t, src_offset)
++		__field(size_t, len)
++		__field(xfs_ino_t, dest_ino)
++		__field(loff_t, dest_isize)
++		__field(loff_t, dest_disize)
++		__field(loff_t, dest_offset)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(src)->i_sb->s_dev;
++		__entry->src_ino = src->i_ino;
++		__entry->src_isize = VFS_I(src)->i_size;
++		__entry->src_disize = src->i_d.di_size;
++		__entry->src_offset = soffset;
++		__entry->len = len;
++		__entry->dest_ino = dest->i_ino;
++		__entry->dest_isize = VFS_I(dest)->i_size;
++		__entry->dest_disize = dest->i_d.di_size;
++		__entry->dest_offset = doffset;
++	),
++	TP_printk("dev %d:%d count %zd "
++		  "ino 0x%llx isize 0x%llx disize 0x%llx offset 0x%llx -> "
++		  "ino 0x%llx isize 0x%llx disize 0x%llx offset 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->len,
++		  __entry->src_ino,
++		  __entry->src_isize,
++		  __entry->src_disize,
++		  __entry->src_offset,
++		  __entry->dest_ino,
++		  __entry->dest_isize,
++		  __entry->dest_disize,
++		  __entry->dest_offset)
++)
++
++#define DEFINE_DOUBLE_IO_EVENT(name)	\
++DEFINE_EVENT(xfs_double_io_class, name,	\
++	TP_PROTO(struct xfs_inode *src, xfs_off_t soffset, xfs_off_t len, \
++		 struct xfs_inode *dest, xfs_off_t doffset), \
++	TP_ARGS(src, soffset, len, dest, doffset))
++
++/* two-file vfs io tracepoint class */
++DECLARE_EVENT_CLASS(xfs_double_vfs_io_class,
++	TP_PROTO(struct inode *src, u64 soffset, u64 len,
++		 struct inode *dest, u64 doffset),
++	TP_ARGS(src, soffset, len, dest, doffset),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned long, src_ino)
++		__field(loff_t, src_isize)
++		__field(loff_t, src_offset)
++		__field(size_t, len)
++		__field(unsigned long, dest_ino)
++		__field(loff_t, dest_isize)
++		__field(loff_t, dest_offset)
++	),
++	TP_fast_assign(
++		__entry->dev = src->i_sb->s_dev;
++		__entry->src_ino = src->i_ino;
++		__entry->src_isize = i_size_read(src);
++		__entry->src_offset = soffset;
++		__entry->len = len;
++		__entry->dest_ino = dest->i_ino;
++		__entry->dest_isize = i_size_read(dest);
++		__entry->dest_offset = doffset;
++	),
++	TP_printk("dev %d:%d count %zd "
++		  "ino 0x%lx isize 0x%llx offset 0x%llx -> "
++		  "ino 0x%lx isize 0x%llx offset 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->len,
++		  __entry->src_ino,
++		  __entry->src_isize,
++		  __entry->src_offset,
++		  __entry->dest_ino,
++		  __entry->dest_isize,
++		  __entry->dest_offset)
++)
++
++#define DEFINE_DOUBLE_VFS_IO_EVENT(name)	\
++DEFINE_EVENT(xfs_double_vfs_io_class, name,	\
++	TP_PROTO(struct inode *src, u64 soffset, u64 len, \
++		 struct inode *dest, u64 doffset), \
++	TP_ARGS(src, soffset, len, dest, doffset))
++
++/* CoW write tracepoint */
++DECLARE_EVENT_CLASS(xfs_copy_on_write_class,
++	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk, xfs_fsblock_t pblk,
++		 xfs_extlen_t len, xfs_fsblock_t new_pblk),
++	TP_ARGS(ip, lblk, pblk, len, new_pblk),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_fileoff_t, lblk)
++		__field(xfs_fsblock_t, pblk)
++		__field(xfs_extlen_t, len)
++		__field(xfs_fsblock_t, new_pblk)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->lblk = lblk;
++		__entry->pblk = pblk;
++		__entry->len = len;
++		__entry->new_pblk = new_pblk;
++	),
++	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx pblk 0x%llx "
++		  "len 0x%x new_pblk %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->lblk,
++		  __entry->pblk,
++		  __entry->len,
++		  __entry->new_pblk)
++)
++
++#define DEFINE_COW_EVENT(name)	\
++DEFINE_EVENT(xfs_copy_on_write_class, name,	\
++	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk, xfs_fsblock_t pblk, \
++		 xfs_extlen_t len, xfs_fsblock_t new_pblk), \
++	TP_ARGS(ip, lblk, pblk, len, new_pblk))
++
++/* single-rlext tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec),
++	TP_ARGS(mp, agno, irec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount)
++)
++
++#define DEFINE_REFCOUNT_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *irec), \
++	TP_ARGS(mp, agno, irec))
++
++/* single-rlext and an agbno tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec, xfs_agblock_t agbno),
++	TP_ARGS(mp, agno, irec, agbno),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++		__field(xfs_agblock_t, agbno)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++		__entry->agbno = agbno;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u @ agbno %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount,
++		  __entry->agbno)
++)
++
++#define DEFINE_REFCOUNT_EXTENT_AT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_extent_at_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *irec, xfs_agblock_t agbno), \
++	TP_ARGS(mp, agno, irec, agbno))
++
++/* double-rlext tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2),
++	TP_ARGS(mp, agno, i1, i2),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, i1_startblock)
++		__field(xfs_extlen_t, i1_blockcount)
++		__field(xfs_nlink_t, i1_refcount)
++		__field(xfs_agblock_t, i2_startblock)
++		__field(xfs_extlen_t, i2_blockcount)
++		__field(xfs_nlink_t, i2_refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->i1_startblock = i1->rc_startblock;
++		__entry->i1_blockcount = i1->rc_blockcount;
++		__entry->i1_refcount = i1->rc_refcount;
++		__entry->i2_startblock = i2->rc_startblock;
++		__entry->i2_blockcount = i2->rc_blockcount;
++		__entry->i2_refcount = i2->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->i1_startblock,
++		  __entry->i1_blockcount,
++		  __entry->i1_refcount,
++		  __entry->i2_startblock,
++		  __entry->i2_blockcount,
++		  __entry->i2_refcount)
++)
++
++#define DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_double_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2), \
++	TP_ARGS(mp, agno, i1, i2))
++
++/* double-rlext and an agbno tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2,
++		 xfs_agblock_t agbno),
++	TP_ARGS(mp, agno, i1, i2, agbno),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, i1_startblock)
++		__field(xfs_extlen_t, i1_blockcount)
++		__field(xfs_nlink_t, i1_refcount)
++		__field(xfs_agblock_t, i2_startblock)
++		__field(xfs_extlen_t, i2_blockcount)
++		__field(xfs_nlink_t, i2_refcount)
++		__field(xfs_agblock_t, agbno)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->i1_startblock = i1->rc_startblock;
++		__entry->i1_blockcount = i1->rc_blockcount;
++		__entry->i1_refcount = i1->rc_refcount;
++		__entry->i2_startblock = i2->rc_startblock;
++		__entry->i2_blockcount = i2->rc_blockcount;
++		__entry->i2_refcount = i2->rc_refcount;
++		__entry->agbno = agbno;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u @ agbno %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->i1_startblock,
++		  __entry->i1_blockcount,
++		  __entry->i1_refcount,
++		  __entry->i2_startblock,
++		  __entry->i2_blockcount,
++		  __entry->i2_refcount,
++		  __entry->agbno)
++)
++
++#define DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_double_extent_at_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2, \
++		 xfs_agblock_t agbno), \
++	TP_ARGS(mp, agno, i1, i2, agbno))
++
++/* triple-rlext tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2,
++		 struct xfs_refcount_irec *i3),
++	TP_ARGS(mp, agno, i1, i2, i3),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, i1_startblock)
++		__field(xfs_extlen_t, i1_blockcount)
++		__field(xfs_nlink_t, i1_refcount)
++		__field(xfs_agblock_t, i2_startblock)
++		__field(xfs_extlen_t, i2_blockcount)
++		__field(xfs_nlink_t, i2_refcount)
++		__field(xfs_agblock_t, i3_startblock)
++		__field(xfs_extlen_t, i3_blockcount)
++		__field(xfs_nlink_t, i3_refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->i1_startblock = i1->rc_startblock;
++		__entry->i1_blockcount = i1->rc_blockcount;
++		__entry->i1_refcount = i1->rc_refcount;
++		__entry->i2_startblock = i2->rc_startblock;
++		__entry->i2_blockcount = i2->rc_blockcount;
++		__entry->i2_refcount = i2->rc_refcount;
++		__entry->i3_startblock = i3->rc_startblock;
++		__entry->i3_blockcount = i3->rc_blockcount;
++		__entry->i3_refcount = i3->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->i1_startblock,
++		  __entry->i1_blockcount,
++		  __entry->i1_refcount,
++		  __entry->i2_startblock,
++		  __entry->i2_blockcount,
++		  __entry->i2_refcount,
++		  __entry->i3_startblock,
++		  __entry->i3_blockcount,
++		  __entry->i3_refcount)
++);
++
++#define DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_triple_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2, \
++		 struct xfs_refcount_irec *i3), \
++	TP_ARGS(mp, agno, i1, i2, i3))
++
++/* simple AG-based error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_ag_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, agno, error, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, error)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->error = error;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d agno %u error %d caller %ps",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->error,
++		  (char *)__entry->caller_ip)
++);
++
++#define DEFINE_AG_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_ag_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, agno, error, caller_ip))
++
++/* simple inode-based error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_inode_error_class,
++	TP_PROTO(struct xfs_inode *ip, int error, unsigned long caller_ip),
++	TP_ARGS(ip, error, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(int, error)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->error = error;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d ino %llx error %d caller %ps",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->error,
++		  (char *)__entry->caller_ip)
++);
++
++#define DEFINE_INODE_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_inode_error_class, name, \
++	TP_PROTO(struct xfs_inode *ip, int error, \
++		 unsigned long caller_ip), \
++	TP_ARGS(ip, error, caller_ip))
++
++/* refcount/reflink tracepoint definitions */
++
++/* reflink allocator */
++TRACE_EVENT(xfs_reflink_relink_blocks,
++	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
++		 xfs_extlen_t len),
++	TP_ARGS(ip, fsbno, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_fsblock_t, fsbno)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->fsbno = fsbno;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->fsbno,
++		  __entry->len)
++);
++
++/* refcount btree tracepoints */
++DEFINE_AG_BTREE_LOOKUP_EVENT(xfs_refcountbt_lookup);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_get);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_update);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_insert);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_delete);
++
++/* refcount adjustment tracepoints */
++DEFINE_AG_EXTENT_EVENT(xfs_refcount_increase);
++DEFINE_AG_EXTENT_EVENT(xfs_refcount_decrease);
++DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(xfs_refcount_merge_center_extents);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_modify_extent);
++DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_left_extent);
++DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_right_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_left_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_right_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_left_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_right_extent);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_center_extents_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_modify_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_split_left_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_split_right_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_left_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_right_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_find_left_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_find_right_extent_error);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_rec_order_error);
++
++/* reflink tracepoints */
++DEFINE_INODE_EVENT(xfs_reflink_set_inode_flag);
++DEFINE_ITRUNC_EVENT(xfs_reflink_update_inode_size);
++DEFINE_IOMAP_EVENT(xfs_reflink_read_iomap);
++TRACE_EVENT(xfs_reflink_main_loop,
++	TP_PROTO(struct xfs_inode *src, xfs_fileoff_t soffset,
++		 xfs_filblks_t len, struct xfs_inode *dest,
++		 xfs_fileoff_t doffset),
++	TP_ARGS(src, soffset, len, dest, doffset),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, src_ino)
++		__field(xfs_fileoff_t, src_lblk)
++		__field(xfs_filblks_t, len)
++		__field(xfs_ino_t, dest_ino)
++		__field(xfs_fileoff_t, dest_lblk)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(src)->i_sb->s_dev;
++		__entry->src_ino = src->i_ino;
++		__entry->src_lblk = soffset;
++		__entry->len = len;
++		__entry->dest_ino = dest->i_ino;
++		__entry->dest_lblk = doffset;
++	),
++	TP_printk("dev %d:%d len 0x%llx "
++		  "ino 0x%llx offset 0x%llx blocks -> "
++		  "ino 0x%llx offset 0x%llx blocks",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->len,
++		  __entry->src_ino,
++		  __entry->src_lblk,
++		  __entry->dest_ino,
++		  __entry->dest_lblk)
++);
++TRACE_EVENT(xfs_reflink_punch_range,
++	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk,
++		 xfs_extlen_t len),
++	TP_ARGS(ip, lblk, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_fileoff_t, lblk)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->lblk = lblk;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->lblk,
++		  __entry->len)
++);
++TRACE_EVENT(xfs_reflink_remap_range,
++	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk,
++		 xfs_extlen_t len, xfs_fsblock_t new_pblk),
++	TP_ARGS(ip, lblk, len, new_pblk),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_fileoff_t, lblk)
++		__field(xfs_extlen_t, len)
++		__field(xfs_fsblock_t, new_pblk)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->lblk = lblk;
++		__entry->len = len;
++		__entry->new_pblk = new_pblk;
++	),
++	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x new_pblk %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->lblk,
++		  __entry->len,
++		  __entry->new_pblk)
++);
++DEFINE_DOUBLE_IO_EVENT(xfs_reflink_range);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_range_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_set_inode_flag_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_update_inode_size_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_reflink_main_loop_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_read_iomap_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_punch_range_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_remap_range_error);
++
++/* dedupe tracepoints */
++DEFINE_DOUBLE_IO_EVENT(xfs_reflink_compare_extents);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_compare_extents_error);
++
++/* ioctl tracepoints */
++DEFINE_DOUBLE_VFS_IO_EVENT(xfs_ioctl_reflink);
++DEFINE_DOUBLE_VFS_IO_EVENT(xfs_ioctl_clone_range);
++DEFINE_DOUBLE_VFS_IO_EVENT(xfs_ioctl_file_extent_same);
++TRACE_EVENT(xfs_ioctl_clone,
++	TP_PROTO(struct inode *src, struct inode *dest),
++	TP_ARGS(src, dest),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned long, src_ino)
++		__field(loff_t, src_isize)
++		__field(unsigned long, dest_ino)
++		__field(loff_t, dest_isize)
++	),
++	TP_fast_assign(
++		__entry->dev = src->i_sb->s_dev;
++		__entry->src_ino = src->i_ino;
++		__entry->src_isize = i_size_read(src);
++		__entry->dest_ino = dest->i_ino;
++		__entry->dest_isize = i_size_read(dest);
++	),
++	TP_printk("dev %d:%d "
++		  "ino 0x%lx isize 0x%llx -> "
++		  "ino 0x%lx isize 0x%llx\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->src_ino,
++		  __entry->src_isize,
++		  __entry->dest_ino,
++		  __entry->dest_isize)
++);
++
++/* unshare tracepoints */
++DEFINE_INODE_EVENT(xfs_reflink_start_unshare);
++DEFINE_INODE_EVENT(xfs_reflink_end_unshare);
++DEFINE_PAGE_EVENT(xfs_reflink_unshare_page);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_start_unshare_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_unshare_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_dirty_page_error);
++
++/* copy on write events */
++TRACE_EVENT(xfs_reflink_bounce_direct_write,
++	TP_PROTO(struct xfs_inode *ip, struct xfs_bmbt_irec *irec),
++	TP_ARGS(ip, irec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_fileoff_t, lblk)
++		__field(xfs_extlen_t, len)
++		__field(xfs_fsblock_t, pblk)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->lblk = irec->br_startoff;
++		__entry->len = irec->br_blockcount;
++		__entry->pblk = irec->br_startblock;
++	),
++	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x pblk %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->lblk,
++		  __entry->len,
++		  __entry->pblk)
++);
++DEFINE_COW_EVENT(xfs_reflink_reserve_fork_block);
++DEFINE_COW_EVENT(xfs_reflink_write_fork_block);
++DEFINE_COW_EVENT(xfs_reflink_remap_after_io);
++DEFINE_COW_EVENT(xfs_reflink_free_forked);
++DEFINE_COW_EVENT(xfs_reflink_fork_buf);
++DEFINE_COW_EVENT(xfs_reflink_finish_fork_buf);
++DEFINE_RW_EVENT(xfs_reflink_force_getblocks);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_reserve_fork_block_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_remap_after_io_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_free_forked_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_fork_buf_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_finish_fork_buf_error);
++DEFINE_INODE_ERROR_EVENT(xfs_reflink_write_fork_block_error);
++
+ #endif /* _TRACE_XFS_H */
  
- /*
-@@ -208,6 +210,7 @@ typedef struct xfs_btree_cur
- 		xfs_bmbt_irec_t		b;
- 		xfs_inobt_rec_incore_t	i;
- 		struct xfs_rmap_irec	r;
-+		struct xfs_refcount_irec	rc;
- 	}		bc_rec;		/* current insert/search record value */
- 	struct xfs_buf	*bc_bufs[XFS_BTREE_MAXLEVELS];	/* buf ptr per level */
- 	int		bc_ptrs[XFS_BTREE_MAXLEVELS];	/* key/record # */
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index b1ad07d..71efa26 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1367,6 +1367,38 @@ typedef __be32 xfs_rmap_ptr_t;
- 
- unsigned int XFS_REFC_BLOCK(struct xfs_mount *mp);
- 
-+/*
-+ * Data record/key structure
-+ *
-+ * Each record associates a range of physical blocks (starting at
-+ * rc_startblock and ending rc_blockcount blocks later) with a
-+ * reference count (rc_refcount).  A record is only stored in the
-+ * btree if the refcount is > 2.  An entry in the free block btree
-+ * means that the refcount is 0, and no entries anywhere means that
-+ * the refcount is 1, as was true in XFS before reflinking.
-+ */
-+struct xfs_refcount_rec {
-+	__be32		rc_startblock;	/* starting block number */
-+	__be32		rc_blockcount;	/* count of blocks */
-+	__be32		rc_refcount;	/* number of inodes linked here */
-+};
-+
-+struct xfs_refcount_key {
-+	__be32		rc_startblock;	/* starting block number */
-+};
-+
-+struct xfs_refcount_irec {
-+	xfs_agblock_t	rc_startblock;	/* starting block number */
-+	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
-+	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
-+};
-+
-+#define MAXREFCOUNT	((xfs_nlink_t)~0U)
-+#define MAXREFCEXTLEN	((xfs_extlen_t)~0U)
-+
-+/* btree pointer type */
-+typedef __be32 xfs_refcount_ptr_t;
-+
- 
- /*
-  * BMAP Btree format definitions
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-new file mode 100644
-index 0000000..cebafb0
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -0,0 +1,192 @@
-+/*
-+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2015 Oracle.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_btree.h"
-+#include "xfs_bmap.h"
-+#include "xfs_refcount_btree.h"
-+#include "xfs_alloc.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_cksum.h"
-+#include "xfs_trans.h"
-+#include "xfs_bit.h"
-+
-+static struct xfs_btree_cur *
-+xfs_refcountbt_dup_cursor(
-+	struct xfs_btree_cur	*cur)
-+{
-+	return xfs_refcountbt_init_cursor(cur->bc_mp, cur->bc_tp,
-+			cur->bc_private.a.agbp, cur->bc_private.a.agno,
-+			cur->bc_private.a.flist);
-+}
-+
-+STATIC bool
-+xfs_refcountbt_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	struct xfs_perag	*pag = bp->b_pag;
-+	unsigned int		level;
-+
-+	if (block->bb_magic != cpu_to_be32(XFS_REFC_CRC_MAGIC))
-+		return false;
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return false;
-+	if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
-+		return false;
-+	if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
-+		return false;
-+	if (pag &&
-+	    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
-+		return false;
-+
-+	level = be16_to_cpu(block->bb_level);
-+	if (pag && pag->pagf_init) {
-+		if (level >= pag->pagf_refcount_level)
-+			return false;
-+	} else if (level >= mp->m_ag_maxlevels)
-+		return false;
-+
-+	/* numrecs verification */
-+	if (be16_to_cpu(block->bb_numrecs) > mp->m_refc_mxr[level != 0])
-+		return false;
-+
-+	/* sibling pointer verification */
-+	if (!block->bb_u.s.bb_leftsib ||
-+	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
-+	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
-+		return false;
-+	if (!block->bb_u.s.bb_rightsib ||
-+	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
-+	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
-+		return false;
-+
-+	return true;
-+}
-+
-+STATIC void
-+xfs_refcountbt_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	if (!xfs_btree_sblock_verify_crc(bp))
-+		xfs_buf_ioerror(bp, -EFSBADCRC);
-+	else if (!xfs_refcountbt_verify(bp))
-+		xfs_buf_ioerror(bp, -EFSCORRUPTED);
-+
-+	if (bp->b_error) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_verifier_error(bp);
-+	}
-+}
-+
-+STATIC void
-+xfs_refcountbt_write_verify(
-+	struct xfs_buf	*bp)
-+{
-+	if (!xfs_refcountbt_verify(bp)) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_buf_ioerror(bp, -EFSCORRUPTED);
-+		xfs_verifier_error(bp);
-+		return;
-+	}
-+	xfs_btree_sblock_calc_crc(bp);
-+
-+}
-+
-+const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
-+	.verify_read		= xfs_refcountbt_read_verify,
-+	.verify_write		= xfs_refcountbt_write_verify,
-+};
-+
-+static const struct xfs_btree_ops xfs_refcountbt_ops = {
-+	.rec_len		= sizeof(struct xfs_refcount_rec),
-+	.key_len		= sizeof(struct xfs_refcount_key),
-+
-+	.dup_cursor		= xfs_refcountbt_dup_cursor,
-+	.buf_ops		= &xfs_refcountbt_buf_ops,
-+};
-+
-+/**
-+ * xfs_refcountbt_init_cursor() -- Allocate a new refcount btree cursor.
-+ *
-+ * @mp: XFS mount object
-+ * @tp: XFS transaction
-+ * @agbp: Buffer containing the AGF
-+ * @agno: AG number
-+ */
-+struct xfs_btree_cur *
-+xfs_refcountbt_init_cursor(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*agbp,
-+	xfs_agnumber_t		agno,
-+	struct xfs_bmap_free	*flist)
-+{
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
-+	struct xfs_btree_cur	*cur;
-+
-+	ASSERT(agno != NULLAGNUMBER);
-+	ASSERT(agno < mp->m_sb.sb_agcount);
-+	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_SLEEP);
-+
-+	cur->bc_tp = tp;
-+	cur->bc_mp = mp;
-+	cur->bc_btnum = XFS_BTNUM_REFC;
-+	cur->bc_blocklog = mp->m_sb.sb_blocklog;
-+	cur->bc_ops = &xfs_refcountbt_ops;
-+
-+	cur->bc_nlevels = be32_to_cpu(agf->agf_refcount_level);
-+
-+	cur->bc_private.a.agbp = agbp;
-+	cur->bc_private.a.agno = agno;
-+	cur->bc_private.a.flist = flist;
-+	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
-+
-+	return cur;
-+}
-+
-+/**
-+ * xfs_refcountbt_maxrecs() -- Calculate number of records in a refcount
-+ *			       btree block.
-+ * @mp: XFS mount object
-+ * @blocklen: Length of block, in bytes.
-+ * @leaf: true if this is a leaf btree block, false otherwise
-+ */
-+int
-+xfs_refcountbt_maxrecs(
-+	struct xfs_mount	*mp,
-+	int			blocklen,
-+	bool			leaf)
-+{
-+	blocklen -= XFS_REFCOUNT_BLOCK_LEN;
-+
-+	if (leaf)
-+		return blocklen / sizeof(struct xfs_refcount_rec);
-+	return blocklen / (sizeof(struct xfs_refcount_key) +
-+			   sizeof(xfs_refcount_ptr_t));
-+}
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-new file mode 100644
-index 0000000..aadb279
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -0,0 +1,65 @@
-+/*
-+ * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2015 Oracle.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef __XFS_REFCOUNT_BTREE_H__
-+#define	__XFS_REFCOUNT_BTREE_H__
-+
-+/*
-+ * Freespace on-disk structures
-+ */
-+
-+struct xfs_buf;
-+struct xfs_btree_cur;
-+struct xfs_mount;
-+
-+/*
-+ * Btree block header size depends on a superblock flag.
-+ */
-+#define XFS_REFCOUNT_BLOCK_LEN	XFS_BTREE_SBLOCK_CRC_LEN
-+
-+/*
-+ * Record, key, and pointer address macros for btree blocks.
-+ *
-+ * (note that some of these may appear unused, but they are used in userspace)
-+ */
-+#define XFS_REFCOUNT_REC_ADDR(block, index) \
-+	((struct xfs_refcount_rec *) \
-+		((char *)(block) + \
-+		 XFS_REFCOUNT_BLOCK_LEN + \
-+		 (((index) - 1) * sizeof(struct xfs_refcount_rec))))
-+
-+#define XFS_REFCOUNT_KEY_ADDR(block, index) \
-+	((struct xfs_refcount_key *) \
-+		((char *)(block) + \
-+		 XFS_REFCOUNT_BLOCK_LEN + \
-+		 ((index) - 1) * sizeof(struct xfs_refcount_key)))
-+
-+#define XFS_REFCOUNT_PTR_ADDR(block, index, maxrecs) \
-+	((xfs_refcount_ptr_t *) \
-+		((char *)(block) + \
-+		 XFS_REFCOUNT_BLOCK_LEN + \
-+		 (maxrecs) * sizeof(struct xfs_refcount_key) + \
-+		 ((index) - 1) * sizeof(xfs_refcount_ptr_t)))
-+
-+extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
-+		struct xfs_trans *tp, struct xfs_buf *agbp, xfs_agnumber_t agno,
-+		struct xfs_bmap_free *flist);
-+extern int xfs_refcountbt_maxrecs(struct xfs_mount *mp, int blocklen,
-+		bool leaf);
-+
-+#endif	/* __XFS_REFCOUNT_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index db5a19d3..a7dcbe0 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -36,6 +36,8 @@
- #include "xfs_alloc_btree.h"
- #include "xfs_ialloc_btree.h"
- #include "xfs_rmap_btree.h"
-+#include "xfs_bmap.h"
-+#include "xfs_refcount_btree.h"
- 
- /*
-  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
-@@ -717,6 +719,13 @@ xfs_sb_mount_common(
- 	mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
- 	mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
- 
-+	mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize,
-+			true);
-+	mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize,
-+			false);
-+	mp->m_refc_mnr[0] = mp->m_refc_mxr[0] / 2;
-+	mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
-+
- 	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
- 	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
- 					sbp->sb_inopblock);
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 88efbb4..77d1220 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -39,6 +39,7 @@ extern const struct xfs_buf_ops xfs_agf_buf_ops;
- extern const struct xfs_buf_ops xfs_agfl_buf_ops;
- extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
- extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
-+extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
- extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
- extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
- extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
-@@ -216,6 +217,7 @@ int	xfs_log_calc_minimum_size(struct xfs_mount *);
- #define	XFS_INO_REF		2
- #define	XFS_ATTR_BTREE_REF	1
- #define	XFS_DQUOT_REF		1
-+#define	XFS_REFC_BTREE_REF	1
- 
- /*
-  * Flags for xfs_trans_ichgtime().
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 4b286cc..aba42d7 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -92,6 +92,8 @@ typedef struct xfs_mount {
- 	uint			m_inobt_mnr[2];	/* min inobt btree records */
- 	uint			m_rmap_mxr[2];	/* max rmap btree records */
- 	uint			m_rmap_mnr[2];	/* min rmap btree records */
-+	uint			m_refc_mxr[2];	/* max refc btree records */
-+	uint			m_refc_mnr[2];	/* min refc btree records */
- 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
- 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
- 	uint			m_in_maxlevels;	/* max inobt btree levels. */
+ #undef TRACE_INCLUDE_PATH
 
 _______________________________________________
 xfs mailing list
