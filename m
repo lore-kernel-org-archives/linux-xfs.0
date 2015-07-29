@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 850017F91
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:19:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5CCB87F94
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:33:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 658268F8035
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:19:13 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	NL0J1hHHOoP7EVyZ for <xfs@oss.sgi.com>;
-	Wed, 29 Jul 2015 15:19:10 -0700 (PDT)
-Date: Thu, 30 Jul 2015 08:18:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 2/2] xfs: fix efi/efd error handling to avoid fs
-	shutdown hangs
-Message-ID: <20150729221835.GD16638@dastard>
-References: <1437682410-51778-1-git-send-email-bfoster@redhat.com>
-	<1437682410-51778-3-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DB2A98F8033
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:33:07 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id HjZIZDfHf4beVBqK (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Jul 2015 15:33:06 -0700 (PDT)
+Subject: [RFC v2 00/24] xfs: add reflink and dedupe support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 29 Jul 2015 15:32:59 -0700
+Message-ID: <20150729223258.17414.91354.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1437682410-51778-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,69 +26,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 23, 2015 at 04:13:30PM -0400, Brian Foster wrote:
-> Freeing an extent in XFS involves logging an EFI (extent free
-> intention), freeing the actual extent, and logging an EFD (extent free
-> done). The EFI object is created with a reference count of 2: one for
-> the current transaction and one for the subsequently created EFD. Under
-> normal circumstances, the first reference is dropped when the EFI is
-> unpinned and the second reference is dropped when the EFD is committed
-> to the on-disk log.
-> 
-> In event of errors or filesystem shutdown, there are various potential
-> cleanup scenarios depending on the state of the EFI/EFD. The cleanup
-> scenarios are confusing and racy, as demonstrated by the following test
-> sequence:
-> 
-> 	# mount $dev $mnt
-> 	# fsstress -d $mnt -n 99999 -p 16 -z -f fallocate=1 \
-> 		-f punch=1 -f creat=1 -f unlink=1 &
-> 	# sleep 5
-> 	# killall -9 fsstress; wait
-> 	# godown -f $mnt
-> 	# umount
-> 
-> ... in which the final umount can hang due to the AIL being pinned
-> indefinitely by one or more EFI items. This can occur due to several
-> conditions. For example, if the shutdown occurs after the EFI is
-> committed to the on-disk log and the EFD committed to the CIL, but
-> before the EFD committed to the log, the EFD iop_committed() abort
-> handler does not drop its reference to the EFI. Alternatively, manual
-> error injection in the xfs_bmap_finish() codepath shows that if an error
-> occurs after the EFI transaction is committed but before the EFD is
-> constructed and logged, the EFI is never released from the AIL.
-> 
-> Update the EFI/EFD item handling code to use a more straightforward and
-> reliable approach to error handling. If the EFI transaction is
-> cancelled, the EFI is freed when the log item is unlocked. If the EFI
-> transaction is committed successfully, from that point forward it is the
-> responsibility of the EFD to drop its EFI reference. This means that the
-> EFI unpin callback only ever drops the log reference to the EFI. It does
-> not free the EFI in the event of log I/O error. This also means that the
-> EFD item must drop its EFI reference either if the EFD transaction is
-> cancelled, committed or itself aborted due to log I/O error. Finally,
-> update xfs_bmap_finish() to ensure that once an EFI transaction is
-> committed, we are guaranteed to construct and log the associated EFD.
-> This ensures that the EFD is aborted and drops the reference to the EFI.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Hi all,
 
-FWIW, we have the same hang problems in log recovery when
-xfs_free_extent fails - the efd is not logged and the filesystem is
-not shut down, so the EFI being processed is not released or removed
-from the AIL. We also abort the processing of EFIs on the first
-error, leaving the AIL full of EFIs that will never be removed and
-so the unmount will hang trying to empty the AIL...
+This is the second revision of an RFC for adding to XFS kernel support
+for mapping multiple file logical blocks to the same physical block,
+more commonly known as reflinking.  The implementation a single [block
+range, refcount] tree to track the reference counts of extents of
+physical blocks.  There's also support code to provide the desired
+copy-on-write behavior and the userland interfaces to reflink, query
+the status of, and un-reflink files.
 
-Cheers,
+The patch set is based on the current (4.2-rc4) upstream kernel plus
+Dave's reverse-map RFC patches.  There are plenty of bugs in this
+code; in particular the copy-on-write code is still terrible and prone
+to all sorts of amusing crashes.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+To expand on that, the copy on write code is horribly broken, but I'm
+posting this patchset in the hopes of getting some review of the other
+pieces while I try to solve CoW.  Since "RFC(RAP)" post last month I
+broke up the patches into smaller pieces, added tracepoints, and
+provided longer descriptions + ASCII art of what the big algorithms
+are trying to do.
+
+What I'd like to do for CoW is to (ab|re)use the delayed allocation
+code to implement copy on write.  In xfs_get_blocks we'd reserve
+whatever blocks we need (or return ENOSPC to users) as in regular
+delalloc; and in xfs_vm_writepage we'd use xfs_map_blocks to allocate
+the forked blocks, remove the old mapping, and add in the new mapping,
+which is almost what delalloc does now.  One problem I've not yet
+worked around is that __block_write_begin won't call get_blocks if the
+bh is already mapped, which means that we fail to make the necessary
+reservations in certain cases (write file, reflink, rewrite original
+file).  The current CoW patch sort of forces this to work by doing its
+own reservation outside of get_blocks and delalloc, but doesn't
+necessarily get it right.
+
+At the moment, the reverse-map and reflink features are /not/
+compatible.  This will be resolved soon.
+
+The ioctl interface to XFS reflink looks surprisingly like the btrfs
+ioctl interface <cough> -- you can reflink a file, reflink subranges
+of a file, or dedupe subranges of files.  (Dedupe also checks file
+blocks, though I have a feeling it's racy.)  To un-reflink a file,
+simply chattr +C it to mark it no-cow.  xfs_fsr is a better candidate
+for de-reflinking a file since it also defragments the file.
+
+If you're going to start using this mess, you're going to want to pull
+my xfsprogs dev tree[1], which itself is also based on xfsprogs
+for-next and the userland rmap support bits.  I've not had time to get
+reflink and rmap to work together.
+
+I've also prepared a bunch of xfstests[2] to exercise the userland
+interfaces; btrfs' reflink implementation more or less passes.
+
+This is an extraordinary way to eat your data.  Enjoy!
+
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://github.com/djwong/xfsprogs/commits/for-next
+[2] https://github.com/djwong/xfstests/commits/master
 
 _______________________________________________
 xfs mailing list
