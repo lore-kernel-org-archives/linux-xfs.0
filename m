@@ -1,18 +1,17 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A25177F55
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 07:57:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3234EAC005
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2015 05:57:09 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uKKdcaKEtGStWwWo (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jul 2015 05:57:08 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2 0/4] xfsprogs: Partial OS X support
-Date: Mon, 20 Jul 2015 14:56:54 +0200
-Message-Id: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E1A147F9C
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 11:34:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B320A8F8050
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 09:34:55 -0700 (PDT)
+Received: from iu.org ([121.228.124.251]) by cuda.sgi.com with ESMTP id
+	JPM20VGcg0cC8xa4 for <xfs@oss.sgi.com>;
+	Wed, 29 Jul 2015 09:34:52 -0700 (PDT)
+Date: Thu, 30 Jul 2015 00:33:23 +0800
+From: =?utf-8?B?6LC354S25p2D?= <gygy@iu.org>
+Subject: =?utf-8?B?54S25p2D6LC3?=
+Message-ID: <20150730003334126433@iu.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,47 +20,147 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2505090731532271692=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Jan Tulak <jtulak@redhat.com>
 
-These patches fixes the current broken OS X support of xfsprogs.
-The goal is to make xfsprogs buildable on current OS X Yosemite,
-and to have a working mkfs.xfs. The usage is indeed limited but 
-"it works".
+This is a multi-part message in MIME format.
 
-This v2 fixes known issues from the first patchset and builds
-entire xfsprogs.
+--===============2505090731532271692==
+Content-Type: multipart/alternative;
+	boundary="=====003_Dragon662732162222_====="
 
-Jan Tulak (4):
-  xfsprogs: Prefix LIST_... macros to XFS_LIST_...
-  xfsprogs: Don't Make .po files with gettext disabled
-  xfsprogs: Use glibtoolize on osx
-  xfsprogs: OS X partial support
+This is a multi-part message in MIME format.
 
- Makefile              |  19 +++++-
- configure.ac          |   1 +
- fsr/xfs_fsr.c         |  20 +++++-
- include/bitops.h      |   2 +
- include/builddefs.in  |   6 +-
- include/darwin.h      | 168 ++++++++++++++++++++++++++++++++++++++++++++------
- include/list.h        |   6 +-
- io/readdir.c          |   4 ++
- libdisk/fstype.c      |   1 +
- libhandle/Makefile    |   4 ++
- libxcmd/paths.c       |   2 +-
- m4/package_libcdev.m4 |  14 +++++
- repair/phase6.c       |   2 +-
- 13 files changed, 218 insertions(+), 31 deletions(-)
+--=====003_Dragon662732162222_=====
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 
--- 
-2.4.3
+eGZzDQoNCuOAiuWuouaIt+WFs+ezu+euoeeQhuS4juWFs+mUruWuouaIt+WIhuaekC0t5aSn5a6i
+5oi35oiQ5Lqk5pa55rOV5ZKM562W55Wl44CLDQoNCiLjgJDln7norq3ml7bpl7TjgJEyMDE15bm0
+IDjmnIgxLTLmt7HlnLMgOOaciDIyLTIz5YyX5LqsIDjmnIgyOS0zMOS4iua1tyANCiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgDQrjgJDln7norq3lr7nosaHjgJHplIDllK7nu4/nkIblkozm
+gLvnm5HjgIHluILlnLrokKXplIDnu4/nkIbjgIHlhajlm73ojIPlm7TlkozljLrln5/plIDllK7n
+u4/nkIbjgIHkuJrliqHlj5HlsZXnu4/nkIbjgIHkuqflk4Hnu4/nkIbku6Xlj4oNCiAgICAgICAg
+ICAgICAgICAgICAg5YW25LuW6aKG5Z+f55qE566h55CG5Lq65ZGY44CCDQrjgJDmjojor77mlrnl
+vI/jgJHorrLluIjorrLmjoggKyDop4bpopHmvJTnu44gKyDmoYjkvovnoJTorqggK+inkuiJsuaJ
+rua8lCArIOiusuW4iOeCueivhA0K44CQ5Z+56K6t6LS555So44CRMzgwMOWFgy8y5aSpLzHkurrv
+vIzvvIjlkKvotYTmlpnotLnjgIHljYjppJDjgIHojLbngrnvvIkNCuOAkOWAvOePreaJi+acuuOA
+kSAwNTEyLTY4NzAwNjUxICAg77yIMO+8iTE4OS0xMjU1LTQxNzcNCg0K44CQ6K++56iL6IOM5pmv
+44CRDQrluILlnLrnq57kuonpq5jluqbmv4Dng4jvvIzmiJDlip/nmoTlhbPplK7mmK/kuI7lhbPp
+lK7lrqLmiLflu7rnq4vlubbkv53mjIHlr4bliIfjgIHniaLlm7rnmoTlhbPns7vjgIINCiDlhazl
+j7jmiJjnlaXnm67moIfmuIXmpZrvvIzlpKflpJrmlbDnrqHnkIbkurrlkZjljbTkuI3mh4Llvpfl
+poLkvZXpgJrov4fotaLlvpflhbPplK7lrqLmiLfmnaXlrp7njrDjgIINCuWQjOi0qOWMluaXtuS7
+o++8jOWuouaIt+abtOWKoOaMkeWJlOOAgeeQhuaAp++8jOi1ouW+l+WFs+mUruWuouaIt+W/hemh
+u+aJk+mAoOezu+e7n+eahOernuS6ieS8mOWKv+OAgg0K6KaB5YGa5Yiw5Y+v5oyB57ut5oCn5Zyw
+6LWi5b6X5YWz6ZSu5a6i5oi377yM6ZSA5ZSu5Lq65ZGY5b+F6aG75a6e546w5LuO5Liq5Lq65Yiw
+5Zui6Zif77yM5LuO6YeO5oiY5Yiw5q2j6KeE55qE6L2s5Y+Y44CCIg0K44CQ6K++56iL55uu5qCH
+44CRDQror4TkvLDvvJrns7vnu5/nmoToh6rmiJHor4TkvLDlhbPplK7lrqLmiLfnmoTpqb7pqa3o
+g73lipvvvIzlubbkuJTnu5nkuojnp5HlrablhbPplK7lrqLmiLfor4TkvLDlt6XlhbcNCuaJp+ih
+jO+8muiuree7g+mUgOWUruS6uuWRmOaOjOaPoeS4gOWll+WFs+mUruWuouaIt+mUgOWUrueahOi3
+r+W+hOWbvuS4juWunueOsOi3r+W+hOWbvueahOWFs+mUrueCuQ0K5a6a5LmJ77ya6K6p6ZSA5ZSu
+5Lq65ZGY5b+r6YCf6K+75Y+W5a6i5oi35a+55YWs5Y+45Lu35YC855qE5pyf5pybDQrmjqLntKLv
+vJrorq3nu4PplIDllK7kurrlkZjmjqLntKLlrqLmiLflpJbpg6jljovlipvjgIHkuJrliqHnm67m
+oIflkozlhoXpg6jmjJHmiJjvvIzlrp7njrDmr5TlrqLmiLfov5jmh4LlrqLmiLcNCuiBlOebn++8
+muWGhemDqOiBlOebn++8muaVtOWQiOWFrOWPuOi1hOa6kO+8jOe7hOaIkOmhueebrumUgOWUruWb
+oumYn+WIhumFjeinkuiJsuS4gOiHtOWvueWklu+8mw0K6IGU55uf77ya5aSW6YOo6IGU55uf77ya
+5YyW6Kej5a6i5oi355qE5aSW6YOo6amx5Yqo77yM5a6e546w5Lia5Yqh55uu5qCH5ZKM6Kej5Yaz
+5YaF6YOo5oyR5oiY77yM5a6e546w5LiO5a6i5oi35YaF6YOo6IGU55ufDQrlrprkvY3vvJrlvbHl
+k43lubbojrflvpflrqLmiLflr7nmiJHku6znp6/mnoHnmoTor4Tku7fvvIzku47ogIzljaDpoobl
+rqLmiLfnmoTlv4PmmboNCuS7t+WAvOWRiOeOsO+8muiuree7g+mUgOWUruS6uuWRmOi/kOeUqOin
+o+WGs+aWueahiOW8j+eahOa8lOiusuaooeW8j+adpeiOt+W+l+WFs+mUruWGs+etluS6uueahOaU
+r+aMgeWSjOaJv+ivuiANCuW3ruW8guWMlu+8mueLrOeJueeahOWuouaIt+S4muWKoeS7t+WAvOe7
+k+WQiOWuouaIt+eahOWklumDqOmpseWKqOOAgeS4muWKoeebruagh+WSjOWGhemDqOaMkeaImO+8
+jOWunueOsOe7neWvueernuS6ieS8mOWKvw0K44CQ6K++56iL5pS255uK44CRDQoi6YCa6L+H5pys
+6K++56iL5L2g5bCG6IO95aSf77yaDQrku47lhajlsYDnmoTop5Lluqbns7vnu5/lnLDmtJ7lr5/l
+hbPplK7lrqLmiLfnrqHnkIYNCiDkuLrlhazlj7jliLblrprkuIDkuKrmiJDlip/nmoTlhbPplK7l
+rqLmiLfnrqHnkIbmlrnmoYgNCiDlhajpnaLlnLDmt7HluqbliZbmnpDlhbPplK7lrqLmiLfnmoTl
+pJbpg6jlkozlhoXpg6jopoHntKANCiDmm7TliqDlh4bnoa7lnLDlnKjlrqLmiLfnmoTlhoXpg6jl
+u7rnq4vlhbPplK7kurrlkZjogZTnm58NCiDlnKjlhazlj7jlhoXpg6jlu7rnq4votaLlvpflhbPp
+lK7lrqLmiLfnmoTogZTnm58NCiDljLrliKvnq57kuonlr7nmiYvlubbojrflvpfmnInliKnnmoTn
+q57kuonkvJjlir8NCiDlvbHlk43ph4fotK3lhrPnrZblm6LpmJ/nmoTlgY/lpb3mnaXlrp7njrDp
+lIDllK4NCiDov5vooYzlhbPplK7lhrPnrZbkurrku7flgLzmvJTorrLmnaXojrflvpflhbPplK7n
+moTmlK/mjIHlkozmib/or7oiDQoNCm04cWtybGpnNnR2a3hrdjR4c25xdWQ5dWxqcHlvZQ==
+
+--=====003_Dragon662732162222_=====
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
+b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIg
+aHR0cC1lcXVpdj1Db250ZW50LVR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
+U0hUTUwgOC4wMC43NjAxLjE4MjY5Ij48L0hFQUQ+DQo8Qk9EWT4NCjxQPjxGT05UIGNvbG9yPXdo
+aXRlPnhmczwvRk9OVD48L1A+DQo8UD4mbmJzcDs8L1A+DQo8UD7jgIrlrqLmiLflhbPns7vnrqHn
+kIbkuI7lhbPplK7lrqLmiLfliIbmnpAtLeWkp+WuouaIt+aIkOS6pOaWueazleWSjOetlueVpeOA
+izwvUD4NCjxQPjxCUj4i44CQ5Z+56K6t5pe26Ze044CRMjAxNeW5tCA45pyIMS0y5rex5ZyzIDjm
+nIgyMi0yM+WMl+S6rCA45pyIMjktMzDkuIrmtbcgDQo8QlI+Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5i
+c3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7
+Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5i
+c3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7IA0KPEJSPuOAkOWfueiureWvueixoeOA
+kemUgOWUrue7j+eQhuWSjOaAu+ebkeOAgeW4guWcuuiQpemUgOe7j+eQhuOAgeWFqOWbveiMg+Wb
+tOWSjOWMuuWfn+mUgOWUrue7j+eQhuOAgeS4muWKoeWPkeWxlee7j+eQhuOAgeS6p+WTgee7j+eQ
+huS7peWPijxCUj4mbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJz
+cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsm
+bmJzcDsmbmJzcDsgDQrlhbbku5bpoobln5/nmoTnrqHnkIbkurrlkZjjgII8QlI+44CQ5o6I6K++
+5pa55byP44CR6K6y5biI6K6y5o6IICsg6KeG6aKR5ryU57uOICsg5qGI5L6L56CU6K6oICvop5Lo
+ibLmia7mvJQgKyANCuiusuW4iOeCueivhDxCUj7jgJDln7norq3otLnnlKjjgJEzODAw5YWDLzLl
+pKkvMeS6uu+8jO+8iOWQq+i1hOaWmei0ueOAgeWNiOmkkOOAgeiMtueCue+8iTxCUj7jgJDlgLzn
+j63miYvmnLrjgJEgMDUxMi02ODcwMDY1MSZuYnNwOyZuYnNwOyANCu+8iDDvvIkxODktMTI1NS00
+MTc3PC9QPg0KPFA+PEJSPuOAkOivvueoi+iDjOaZr+OAkTxCUj7luILlnLrnq57kuonpq5jluqbm
+v4Dng4jvvIzmiJDlip/nmoTlhbPplK7mmK/kuI7lhbPplK7lrqLmiLflu7rnq4vlubbkv53mjIHl
+r4bliIfjgIHniaLlm7rnmoTlhbPns7vjgII8QlI+Jm5ic3A75YWs5Y+45oiY55Wl55uu5qCH5riF
+5qWa77yM5aSn5aSa5pWw566h55CG5Lq65ZGY5Y205LiN5oeC5b6X5aaC5L2V6YCa6L+H6LWi5b6X
+5YWz6ZSu5a6i5oi35p2l5a6e546w44CCPEJSPuWQjOi0qOWMluaXtuS7o++8jOWuouaIt+abtOWK
+oOaMkeWJlOOAgeeQhuaAp++8jOi1ouW+l+WFs+mUruWuouaIt+W/hemhu+aJk+mAoOezu+e7n+ea
+hOernuS6ieS8mOWKv+OAgjxCUj7opoHlgZrliLDlj6/mjIHnu63mgKflnLDotaLlvpflhbPplK7l
+rqLmiLfvvIzplIDllK7kurrlkZjlv4Xpobvlrp7njrDku47kuKrkurrliLDlm6LpmJ/vvIzku47p
+h47miJjliLDmraPop4TnmoTovazlj5jjgIIiPEJSPuOAkOivvueoi+ebruagh+OAkTxCUj7or4Tk
+vLDvvJrns7vnu5/nmoToh6rmiJHor4TkvLDlhbPplK7lrqLmiLfnmoTpqb7pqa3og73lipvvvIzl
+ubbkuJTnu5nkuojnp5HlrablhbPplK7lrqLmiLfor4TkvLDlt6Xlhbc8QlI+5omn6KGM77ya6K6t
+57uD6ZSA5ZSu5Lq65ZGY5o6M5o+h5LiA5aWX5YWz6ZSu5a6i5oi36ZSA5ZSu55qE6Lev5b6E5Zu+
+5LiO5a6e546w6Lev5b6E5Zu+55qE5YWz6ZSu54K5PEJSPuWumuS5ie+8muiuqemUgOWUruS6uuWR
+mOW/q+mAn+ivu+WPluWuouaIt+WvueWFrOWPuOS7t+WAvOeahOacn+acmzxCUj7mjqLntKLvvJro
+rq3nu4PplIDllK7kurrlkZjmjqLntKLlrqLmiLflpJbpg6jljovlipvjgIHkuJrliqHnm67moIfl
+kozlhoXpg6jmjJHmiJjvvIzlrp7njrDmr5TlrqLmiLfov5jmh4LlrqLmiLc8QlI+6IGU55uf77ya
+5YaF6YOo6IGU55uf77ya5pW05ZCI5YWs5Y+46LWE5rqQ77yM57uE5oiQ6aG555uu6ZSA5ZSu5Zui
+6Zif5YiG6YWN6KeS6Imy5LiA6Ie05a+55aSW77ybPEJSPuiBlOebn++8muWklumDqOiBlOebn++8
+muWMluino+WuouaIt+eahOWklumDqOmpseWKqO+8jOWunueOsOS4muWKoeebruagh+WSjOino+WG
+s+WGhemDqOaMkeaImO+8jOWunueOsOS4juWuouaIt+WGhemDqOiBlOebnzxCUj7lrprkvY3vvJrl
+vbHlk43lubbojrflvpflrqLmiLflr7nmiJHku6znp6/mnoHnmoTor4Tku7fvvIzku47ogIzljaDp
+ooblrqLmiLfnmoTlv4Pmmbo8QlI+5Lu35YC85ZGI546w77ya6K6t57uD6ZSA5ZSu5Lq65ZGY6L+Q
+55So6Kej5Yaz5pa55qGI5byP55qE5ryU6K6y5qih5byP5p2l6I635b6X5YWz6ZSu5Yaz562W5Lq6
+55qE5pSv5oyB5ZKM5om/6K+6IA0KPEJSPuW3ruW8guWMlu+8mueLrOeJueeahOWuouaIt+S4muWK
+oeS7t+WAvOe7k+WQiOWuouaIt+eahOWklumDqOmpseWKqOOAgeS4muWKoeebruagh+WSjOWGhemD
+qOaMkeaImO+8jOWunueOsOe7neWvueernuS6ieS8mOWKvzxCUj7jgJDor77nqIvmlLbnm4rjgJE8
+QlI+IumAmui/h+acrOivvueoi+S9oOWwhuiDveWkn++8mjxCUj7ku47lhajlsYDnmoTop5Lluqbn
+s7vnu5/lnLDmtJ7lr5/lhbPplK7lrqLmiLfnrqHnkIY8L1A+DQo8UD4mbmJzcDvkuLrlhazlj7jl
+iLblrprkuIDkuKrmiJDlip/nmoTlhbPplK7lrqLmiLfnrqHnkIbmlrnmoYg8QlI+Jm5ic3A75YWo
+6Z2i5Zyw5rex5bqm5YmW5p6Q5YWz6ZSu5a6i5oi355qE5aSW6YOo5ZKM5YaF6YOo6KaB57SgPEJS
+PiZuYnNwO+abtOWKoOWHhuehruWcsOWcqOWuouaIt+eahOWGhemDqOW7uueri+WFs+mUruS6uuWR
+mOiBlOebnzwvUD4NCjxQPiZuYnNwO+WcqOWFrOWPuOWGhemDqOW7uueri+i1ouW+l+WFs+mUruWu
+ouaIt+eahOiBlOebnzwvUD4NCjxQPiZuYnNwO+WMuuWIq+ernuS6ieWvueaJi+W5tuiOt+W+l+ac
+ieWIqeeahOernuS6ieS8mOWKvzwvUD4NCjxQPiZuYnNwO+W9seWTjemHh+i0reWGs+etluWboumY
+n+eahOWBj+WlveadpeWunueOsOmUgOWUrjwvUD4NCjxQPiZuYnNwO+i/m+ihjOWFs+mUruWGs+et
+luS6uuS7t+WAvOa8lOiusuadpeiOt+W+l+WFs+mUrueahOaUr+aMgeWSjOaJv+ivuiI8QlI+PC9Q
+Pg0KPFA+PEZPTlQgY29sb3I9d2hpdGU+ZXU5MXo4amN1ajZsbjhtOHZreW1teGNobnFrcXF0PC9G
+T05UPjwvUD48L0JPRFk+PC9IVE1MPg0K
+
+--=====003_Dragon662732162222_=====--
+
+
+--===============2505090731532271692==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2505090731532271692==--
