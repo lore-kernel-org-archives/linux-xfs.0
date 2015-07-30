@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F39D7F8C
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 00:03:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CE249AC00B
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 22:03:25 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id 5xLX5DSlfYT9Ov9d (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Jul 2015 22:03:15 -0700 (PDT)
-Subject: Bug#793495: CVE-2012-2150 xfsprogs: xfs_metadump information
-	disclosure
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.793495.B793495.143823235927834@bugs.debian.org>
-Date: Thu, 30 Jul 2015 06:59:10 +0200
-From: Salvatore Bonaccorso <carnil@debian.org>
-Message-ID: <20150730045910.GA16401@elende.valinor.li>
-References: <20150724154157.15119.52609.reportbug@pisco.westfalen.local>
+	by oss.sgi.com (Postfix) with ESMTP id 6593D7F7C
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 12:07:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C12DAC002
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 10:07:35 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 9yH2B8JGEE3EePGx (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 30 Jul 2015 10:07:34 -0700 (PDT)
+Date: Thu, 30 Jul 2015 10:07:34 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/6] xfsprogs: define NBBY if not defined by the system
+	header files
+Message-ID: <20150730170734.GA25395@infradead.org>
+References: <1437913255-7524-1-git-send-email-tytso@mit.edu>
+	<1437913255-7524-2-git-send-email-tytso@mit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150724154157.15119.52609.reportbug@pisco.westfalen.local>
-Reply-To: Salvatore Bonaccorso <carnil@debian.org>, 793495@bugs.debian.org
+In-Reply-To: <1437913255-7524-2-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,26 +31,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 793495@bugs.debian.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-Control: tags -1 + upstream fixed-upstream
-
-Hi,
-
-On Fri, Jul 24, 2015 at 05:41:57PM +0200, Moritz Muehlenhoff wrote:
-> Package: xfsprogs
-> Version: 3.2.3
-> Severity: important
-> Tags: security
+On Sun, Jul 26, 2015 at 08:20:50AM -0400, Theodore Ts'o wrote:
+> Android's bionic libc doesn't define NBBY; this isn't a standard
+> define, and since all modern/sane platforms have 8 bits per byte, use
+> this as a default.
 > 
-> Please see http://seclists.org/oss-sec/2015/q3/181
-> for details.
+> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
 
-A new upstream version addressing CVE-2012-2150 has been released:
-http://oss.sgi.com/pipermail/xfs/2015-July/042726.html
+This looks fine, but it'll clash with my patch that changes
+platform_defs.h so that it's not run through autoconfs m4 anymore.
 
-Regards,
-Salvatore
+Otherwise:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
