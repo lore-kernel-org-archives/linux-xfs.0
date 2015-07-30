@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6593D7F7C
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 12:07:39 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8B6B17F7C
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 12:10:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C12DAC002
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 10:07:35 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 69A278F8033
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 10:10:01 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 9yH2B8JGEE3EePGx (version=TLSv1 cipher=AES128-SHA
+	ESMTP id 0aPWiklUUZCNZt8H (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 30 Jul 2015 10:07:34 -0700 (PDT)
-Date: Thu, 30 Jul 2015 10:07:34 -0700
+	Thu, 30 Jul 2015 10:09:59 -0700 (PDT)
+Date: Thu, 30 Jul 2015 10:09:58 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] xfsprogs: define NBBY if not defined by the system
-	header files
-Message-ID: <20150730170734.GA25395@infradead.org>
+Subject: Re: [PATCH 5/6] xfsprogs: use "unsigned short" instead of ushort
+Message-ID: <20150730170958.GB25395@infradead.org>
 References: <1437913255-7524-1-git-send-email-tytso@mit.edu>
-	<1437913255-7524-2-git-send-email-tytso@mit.edu>
+	<1437913255-7524-6-git-send-email-tytso@mit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1437913255-7524-2-git-send-email-tytso@mit.edu>
+In-Reply-To: <1437913255-7524-6-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +33,17 @@ Sender: xfs-bounces@oss.sgi.com
 To: Theodore Ts'o <tytso@mit.edu>
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Jul 26, 2015 at 08:20:50AM -0400, Theodore Ts'o wrote:
-> Android's bionic libc doesn't define NBBY; this isn't a standard
-> define, and since all modern/sane platforms have 8 bits per byte, use
-> this as a default.
-> 
-> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+On Sun, Jul 26, 2015 at 08:20:54AM -0400, Theodore Ts'o wrote:
+> Android's bionic libc doesn't define ushort.  There isn't a real
+> benefit (other than perhaps conciseness) to use ushort over "unsigned
+> short", and it's only used in a handful of files in xfsprogs.  So
+> change over to using unsigned short everywhere.
 
-This looks fine, but it'll clash with my patch that changes
-platform_defs.h so that it's not run through autoconfs m4 anymore.
+For the files shared with the kernel this should go into the kernel
+first or at least at the same time.  Can you also send
+a kernel patch to remove all uses of ushort under fs/xfs?
 
-Otherwise:
+Otherwise looks fine:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
