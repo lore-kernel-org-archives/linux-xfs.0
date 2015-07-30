@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1886C29E01
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:35:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CC6AA8F8033
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 15:35:35 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id A8o4G8KQ8F0ulSCH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Jul 2015 15:35:34 -0700 (PDT)
-Subject: [PATCH 24/24] xfs: recognize the reflink feature bit
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 29 Jul 2015 15:35:31 -0700
-Message-ID: <20150729223531.17414.5151.stgit@birch.djwong.org>
-In-Reply-To: <20150729223258.17414.91354.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 974807F66
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 19:35:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 84E0F304043
+	for <xfs@oss.sgi.com>; Wed, 29 Jul 2015 17:35:21 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	jNVEwHQXJhVQvr62 for <xfs@oss.sgi.com>;
+	Wed, 29 Jul 2015 17:35:16 -0700 (PDT)
+Date: Thu, 30 Jul 2015 10:34:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 03/24] xfs: add refcount btree stats infrastructure
+Message-ID: <20150730003427.GG16638@dastard>
 References: <20150729223258.17414.91354.stgit@birch.djwong.org>
+	<20150729223318.17414.21535.stgit@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150729223318.17414.21535.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-Add the reflink feature flag to the set of recognized feature flags.
-This enables users to write to reflink filesystems.
+On Wed, Jul 29, 2015 at 03:33:18PM -0700, Darrick J. Wong wrote:
+> The refcount btree presents the same stats as the other btrees, so
+> add all the code for that now.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_btree.h |    4 ++--
+>  fs/xfs/xfs_stats.c        |    1 +
+>  fs/xfs/xfs_stats.h        |   18 +++++++++++++++++-
+>  3 files changed, 20 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index 8d9fffe..b747c86 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -99,7 +99,7 @@ do {    \
+>  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
+>  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
+>  	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(rmap, stat); break;	\
+> -	case XFS_BTNUM_REFC: break;	\
+> +	case XFS_BTNUM_REFC: __XFS_BTREE_STATS_INC(refcbt, stat); break; \
+>  	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
+>  	}       \
+>  } while (0)
+> @@ -115,7 +115,7 @@ do {    \
+>  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
+>  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
+>  	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_ADD(rmap, stat, val); break; \
+> -	case XFS_BTNUM_REFC: break;	\
+> +	case XFS_BTNUM_REFC: __XFS_BTREE_STATS_INC(refcbt, stat); break; \
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- fs/xfs/libxfs/xfs_sb.c     |   10 ++++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+__XFS_BTREE_STATS_ADD()
 
+Cheers,
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index ec14477..c289c2e 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -449,7 +449,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
--		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
-+		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index a7dcbe0..f74287e 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -219,6 +219,16 @@ xfs_mount_validate_sb(
- "EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
- 	}
- 
-+	if (xfs_sb_version_hasreflink(sbp)) {
-+		xfs_alert(mp,
-+"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
-+		if (xfs_sb_version_hasrmapbt(sbp)) {
-+			printk(KERN_ERR
-+"EXPERIMENTAL reverse mapping btree conflicts with reflink!  Mount fails.");
-+			return -EINVAL;
-+		}
-+	}
-+
- 	/*
- 	 * More sanity checking.  Most of these were stolen directly from
- 	 * xfs_repair.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
