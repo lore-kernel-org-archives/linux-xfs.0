@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A22147F6C
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 21:08:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D8D4AC004
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 19:08:03 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 78F307F6C
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 21:55:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1EEC4304032
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2015 19:55:10 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	VAVfGUHWJQjitE6c for <xfs@oss.sgi.com>;
-	Thu, 30 Jul 2015 19:07:57 -0700 (PDT)
-Date: Fri, 31 Jul 2015 12:03:29 +1000
+	9yJHEwrgDmjN2HtK for <xfs@oss.sgi.com>;
+	Thu, 30 Jul 2015 19:55:08 -0700 (PDT)
+Date: Fri, 31 Jul 2015 12:55:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: updates for 4.2-rc4
-Message-ID: <20150731020329.GO16638@dastard>
+Subject: Re: [PATCH 06/10] xfsprogs: use <>-style includes in installed headers
+Message-ID: <20150731025506.GP16638@dastard>
+References: <1437927209-31354-1-git-send-email-hch@lst.de>
+	<1437927209-31354-7-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1437927209-31354-7-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,56 +26,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Hi Linus,
+On Sun, Jul 26, 2015 at 06:13:25PM +0200, Christoph Hellwig wrote:
+> Once installed these are system headers, so we need to use <>-style inclu=
+de
+> statements between them.
+> =
 
-Can you please pull the XFS fixes from the tag below? There are a
-couple of recently found, long standing remote attribute corruption
-fixes caused by log recovery getting confused after a crash, and the
-new DAX code in XFS (merged in 4.2-rc1) needs to actually use the
-DAX fault path on read faults.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks!
+This causes a build failure on my system when doing a parallel
+build. For some reason, make is trying to install libxfs headers
+before the include headers, and fails because include/xfs doesn't
+yet exist.
 
--Dave.
+.....
+config.status: executing libtool commands
+   [HEADERS] libxfs
+   [HEADERS] include
+ln: failed to create symbolic link =BF../include/xfs/xfs_fs.h=BF: No such f=
+ile or directory
+Makefile:141: recipe for target 'xfs_fs.h-hdrs' failed
+....
 
-The following changes since commit bc0195aad0daa2ad5b0d76cce22b167bc3435590:
+I made a small change to pull the creation of include/xfs out of
+include/Makefile and up into include/buildrules where it is done
+before running the install-headers rule on each header subdir,
+and that fixes it. i.e:
 
-  Linux 4.2-rc2 (2015-07-12 15:10:30 -0700)
+diff --git a/include/Makefile b/include/Makefile
+index bd8b0ca..705090a 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -67,12 +67,9 @@ include $(BUILDRULES)
+ # set up include/xfs header directory
+ install-headers: $(addsuffix -hdrs, $(HFILES) $(PHFILES) $(DKHFILES) $(LIB=
+HFILES))
 
-are available in the git repository at:
+-%-hdrs: xfs
++%-hdrs:
+        $(Q)$(LN_S) -f $(PWD)/include/$* xfs/$*
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.2-rc4
+-xfs:
+-       @mkdir -p xfs
+-
+ install: default
+        $(INSTALL) -m 755 -d $(PKG_INC_DIR)
 
-for you to fetch changes up to df150ed102baa0e78c06e08e975dfb47147dd677:
+diff --git a/include/buildrules b/include/buildrules
+index 72491db..1ece843 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -14,10 +14,16 @@ clean clobber : $(addsuffix -clean,$(SUBDIRS))
+        $(Q)$(MAKE) $(MAKEOPTS) -C $* clean
 
-  xfs: remote attributes need to be considered data (2015-07-29 11:48:02 +1000)
+ ifdef HDR_SUBDIRS
+-headers: $(addsuffix -headers, $(HDR_SUBDIRS))
++.PHONY: .xfs
++
++headers: .xfs $(addsuffix -headers, $(HDR_SUBDIRS))
++
+ %-headers:
+        @echo "   [HEADERS] $*"
+        $(Q)$(MAKE) $(MAKEOPTS) -C $* NODEP=3D1 install-headers
++
++.xfs:
++       @mkdir -p include/xfs
+ endif
 
-----------------------------------------------------------------
-xfs: updates for 4.2-rc4
+ # Never blow away subdirs
 
-- remote attribute log recovery corruption fixes
-- DAX page faults need to use direct mappings, not a page cache
-  mapping.
 
-----------------------------------------------------------------
-Dave Chinner (3):
-      xfs: call dax_fault on read page faults for DAX
-      xfs: remote attribute headers contain an invalid LSN
-      xfs: remote attributes need to be considered data
+Now I've just got to work out which patch is breaking 'make deb'....
 
- fs/dax.c                        |   14 +++++++++++--
- fs/xfs/libxfs/xfs_attr_remote.c |   44 ++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_file.c               |   21 +++++++++++++------
- fs/xfs/xfs_log_recover.c        |   11 +++++++---
- 4 files changed, 69 insertions(+), 21 deletions(-)
--- 
+Cheers,
+
+Dave.
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
