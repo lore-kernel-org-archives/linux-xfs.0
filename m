@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 843B97F77
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 07:51:44 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2B1977F77
+	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 08:01:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 635AD8F8033
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 05:51:41 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C7E08AC001
+	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 06:01:31 -0700 (PDT)
 Received: from josefsipek.net (josefsipek.net [71.174.113.7]) by cuda.sgi.com
-	with ESMTP id GK2kFu7oqGQ5VknJ for <xfs@oss.sgi.com>;
-	Sat, 01 Aug 2015 05:51:34 -0700 (PDT)
-Date: Sat, 1 Aug 2015 08:51:35 -0400
+	with ESMTP id HrvPLCqYspxaqt6H for <xfs@oss.sgi.com>;
+	Sat, 01 Aug 2015 06:01:30 -0700 (PDT)
+Date: Sat, 1 Aug 2015 09:01:31 -0400
 From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 22/24] xfs: swap inode reflink flags when swapping inode
-	extents
-Message-ID: <20150801125135.GC101746@meili.valhalla.31bits.net>
+Subject: Re: [RFC v2 00/24] xfs: add reflink and dedupe support
+Message-ID: <20150801130131.GD101746@meili.valhalla.31bits.net>
 References: <20150729223258.17414.91354.stgit@birch.djwong.org>
-	<20150729223519.17414.25444.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150729223519.17414.25444.stgit@birch.djwong.org>
+In-Reply-To: <20150729223258.17414.91354.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,47 +31,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 29, 2015 at 03:35:19PM -0700, Darrick J. Wong wrote:
-> When we're swapping the extents of two inodes, be sure to swap the
-> reflink inode flag too.
+On Wed, Jul 29, 2015 at 03:32:59PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 349a5a6..7bdec90 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1929,6 +1929,11 @@ xfs_swap_extents(
->  		break;
->  	}
->  
-> +	if (xfs_is_reflink_inode(ip)) {
-> +		tip->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
-> +		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> This is the second revision of an RFC for adding to XFS kernel support
+> for mapping multiple file logical blocks to the same physical block,
+> more commonly known as reflinking.  The implementation a single [block
+> range, refcount] tree to track the reference counts of extents of
+> physical blocks.  There's also support code to provide the desired
+> copy-on-write behavior and the userland interfaces to reflink, query
+> the status of, and un-reflink files.
 
-Are you guaranteed that the temp inode does not have the flag set to begin
-with?  This doesn't swap, but rather moves over the flag one way, and clears
-it the other way.
+This is cool work.  I have a random thought to share... IIRC, you keep a
+per-inode flag to avoid expensive ops on files that have no refcounted
+blocks.  ZFS keeps a bit in each block pointer to indicate that the target
+is dedup'd.  I'd have to check if xfs has a spare bit in its block pointer,
+but if it does that's one way to minimize the refcount btree overhead.
 
 Jeff.
 
-> +	}
-> +
->  	xfs_trans_log_inode(tp, ip,  src_log_flags);
->  	xfs_trans_log_inode(tp, tip, target_log_flags);
->  
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
 -- 
-Si hoc legere scis nimium eruditionis habes.
+mainframe, n.:
+  An obsolete device still used by thousands of obsolete companies serving
+  billions of obsolete customers and making huge obsolete profits for their
+  obsolete shareholders. And this year's run twice as fast as last year's.
 
 _______________________________________________
 xfs mailing list
