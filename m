@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D11887F54
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 01:02:06 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 843B97F77
+	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 07:51:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8FA8D8F8035
-	for <xfs@oss.sgi.com>; Fri, 31 Jul 2015 23:02:03 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zJKHyERI8NXJeUHh (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 31 Jul 2015 23:02:02 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 34768A0B68
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 06:02:02 +0000 (UTC)
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7161xNE024886
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 1 Aug 2015 02:02:01 -0400
-Message-ID: <55BC60D7.4020102@redhat.com>
-Date: Fri, 31 Jul 2015 23:01:59 -0700
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 635AD8F8033
+	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 05:51:41 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [71.174.113.7]) by cuda.sgi.com
+	with ESMTP id GK2kFu7oqGQ5VknJ for <xfs@oss.sgi.com>;
+	Sat, 01 Aug 2015 05:51:34 -0700 (PDT)
+Date: Sat, 1 Aug 2015 08:51:35 -0400
+From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Subject: Re: [PATCH 22/24] xfs: swap inode reflink flags when swapping inode
+	extents
+Message-ID: <20150801125135.GC101746@meili.valhalla.31bits.net>
+References: <20150729223258.17414.91354.stgit@birch.djwong.org>
+	<20150729223519.17414.25444.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Subject: xfs_repair: Fix malloc size of rt_ext_tree_ptr (harmless)
+Content-Disposition: inline
+In-Reply-To: <20150729223519.17414.25444.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,31 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-rt_ext_tree_ptr points to an avl64tree_desc_t, but we malloc memory
-according to the size of avltree_desc_t.  Oddly, the latter happens
-to be larger, so we're ok, but may as well make it correct.
+On Wed, Jul 29, 2015 at 03:35:19PM -0700, Darrick J. Wong wrote:
+> When we're swapping the extents of two inodes, be sure to swap the
+> reflink inode flag too.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 349a5a6..7bdec90 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1929,6 +1929,11 @@ xfs_swap_extents(
+>  		break;
+>  	}
+>  
+> +	if (xfs_is_reflink_inode(ip)) {
+> +		tip->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
+> +		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
 
-Addresses-Coverity-Id: 1297533
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Are you guaranteed that the temp inode does not have the flag set to begin
+with?  This doesn't swap, but rather moves over the flag one way, and clears
+it the other way.
 
-Hm, I thought I sent this already, but don't see it on the list.
+Jeff.
 
-diff --git a/repair/incore_ext.c b/repair/incore_ext.c
-index 826bf44..6611d5c 100644
---- a/repair/incore_ext.c
-+++ b/repair/incore_ext.c
-@@ -783,7 +783,7 @@ incore_ext_init(xfs_mount_t *mp)
- 		avl_init_tree(extent_bcnt_ptrs[i], &avl_extent_bcnt_tree_ops);
- 	}
- 
--	if ((rt_ext_tree_ptr = malloc(sizeof(avltree_desc_t))) == NULL)
-+	if ((rt_ext_tree_ptr = malloc(sizeof(avl64tree_desc_t))) == NULL)
- 		do_error(_("couldn't malloc dup rt extent tree descriptor\n"));
- 
- 	avl64_init_tree(rt_ext_tree_ptr, &avl64_extent_tree_ops);
+> +	}
+> +
+>  	xfs_trans_log_inode(tp, ip,  src_log_flags);
+>  	xfs_trans_log_inode(tp, tip, target_log_flags);
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Si hoc legere scis nimium eruditionis habes.
 
 _______________________________________________
 xfs mailing list
