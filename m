@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 181D47F62
-	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 15:24:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0078A304048
-	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 13:24:31 -0700 (PDT)
-Received: from mail02.lsn.net (mail02.lsn.net [66.90.130.128]) by cuda.sgi.com
-	with ESMTP id y8KlFqbKU2tlPets for <xfs@oss.sgi.com>;
-	Sun, 02 Aug 2015 13:24:28 -0700 (PDT)
-Message-ID: <55BE7C75.4060604@mygrande.net>
-Date: Sun, 02 Aug 2015 15:24:21 -0500
-From: Leslie Rhorer <lrhorer@mygrande.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 247697F62
+	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 17:13:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B5920AC00C
+	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 15:13:05 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	jqiAwfIiEj3MzeAu for <xfs@oss.sgi.com>;
+	Sun, 02 Aug 2015 15:13:03 -0700 (PDT)
+Date: Mon, 3 Aug 2015 08:13:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Bug#793495: xfsprogs fails to build on debian ppc64el
+Message-ID: <20150802221301.GO3902@dastard>
+References: <55BB9271.6000300@gmx.net> <55BBEF4F.6070809@linux.vnet.ibm.com>
+	<20150801225230.GR16638@dastard>
+	<41BF7556-AAAB-4F22-B8C2-8991A0917DE2@gmx.net>
 MIME-Version: 1.0
-Subject: Re: XFS File system in trouble
-References: <03864DDC681E664EBF5D47682BE7D7CF0D3574DF@USADCWVEMBX07.corp.global.level3.com>
-	<55AA5FCE.4080702@sandeen.net>
-	<03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
-	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
-	<55AAF73A.4040903@mygrande.net>
-	<20150720111747.GA53450@bfoster.bfoster>
-	<55B73365.1050908@mygrande.net>
-	<20150728123307.GC38784@bfoster.bfoster>
-	<55B79BFD.6020509@mygrande.net>
-	<20150728221150.GA26604@bfoster.bfoster>
-In-Reply-To: <20150728221150.GA26604@bfoster.bfoster>
+Content-Disposition: inline
+In-Reply-To: <41BF7556-AAAB-4F22-B8C2-8991A0917DE2@gmx.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,107 +27,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Kris Rusocki <kszysiu@braxis.org>, "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Daniel Bast <daniel.bast@gmx.net>
+Cc: Fernando Seiti Furusato <ferseiti@linux.vnet.ibm.com>, 793495@bugs.debian.org, Breno Leitao <brenohl@br.ibm.com>, xfs@oss.sgi.com
 
-CglPSywgdGhpcyBpcyBnb29meS4gIEl0IHNlZW1zIHRvIGJlIHdvcmtpbmcsIG5vdy4gIEFzIHVz
-dWFsLCBJJ3ZlIGJlZW4gCmRvaW5nIHNvbWUgd29yayBvbiB0aGUgc2VydmVyIHRoaXMgd2Vla2Vu
-ZCwgYnV0IEkgY2FuJ3QgdGhpbmsgb2YgCmFueXRoaW5nIEkgaGF2ZSBkb25lIHRoYXQgd291bGQg
-Zml4IHRoZSBpc3N1ZS4gIEkgZGlkIHJlcGxhY2UgdGhlIApyZW1haW5pbmcgZ29vZCA0RyBSQU0g
-bW9kdWxlIHdpdGggYSBwYWlyIG9mIDhHIFJBTSBtb2R1bGVzLCBidXQgbWVtdGVzdCAKcmVwb3J0
-ZWQgdGhlIHJlbWFpbmluZyA0RyBtb2R1bGUgYXMgZ29vZCwgYW5kIEkgdmVyaWZpZWQgdGhlIHJl
-bW92ZWQgCm1vZHVsZSByZWFsbHkgd2FzIGJhZC4gIEkgYWxzbyByZXBsYWNlZCB0aGUgcmVtb3Zh
-YmxlIGRyaXZlIGNhcnJpZXIgYW5kIApjYWJsZXMgdGhhdCB3ZXJlIGZlZWRpbmcgdGhlIHR3byBT
-U0RzLCBvbmNlIG9mIHdoaWNoIHdhcyByZXBvcnRpbmcgCmZhaWx1cmVzIGFzIG5vdGVkIGluIHRo
-ZSBzeXNsb2cuICBJdCdzIGhhcmQgZm9yIG1lIHRvIGJlbGlldmUgZWl0aGVyIG9mIAp0aG9zZSB0
-aGluZ3MgY291bGQgaGF2ZSBiZWVuIGNhdXNpbmcgdGhlIGlzc3VlLCB0aG91Z2guCgoJSSBhdHRh
-Y2hlZCBhIDEuNVQgZXh0ZXJuYWwgZHJpdmUgdG8gdGhlIHNlcnZlciBhbmQgZm9ybWF0dGVkIGl0
-IGFzIFhGUyAKaW4gcHJlcGFyYXRpb24gdG8gY29udGludWUgdHJvdWJsZXNob290aW5nLiAgVG8g
-bWFrZSBzdXJlIG9mIHRoaW5ncywgSSAKdHJpZWQgZGVjb21wcmVzc2luZyB0aGUgdGFyYmFsbCwg
-YWdhaW4sIGFuZCB0aGlzIHRpbWUgaXQgd29ya2VkIGFsbCB0aGUgCndheSB0byB0aGUgZW5kLiAg
-SSB0aGVuIGRlbGV0ZWQgdGhlIGVudGlyZSBkaXJlY3Rvcnkgc3RydWN0dXJlIGNyZWF0ZWQgCmJ5
-IHRoZSB0YXJiYWxsIGFuZCBkZWNvbXByZXNzZWQgdGhlIGZpbGUgYWdhaW4gdHdpY2UuICBJJ2xs
-IHNlZSBpZiB0aGUgCnJzeW5jIHByb2Nlc3Mgd29ya3MuICBUaGF0IHdpbGwgdGFrZSBhIGNvdXBs
-ZSBvZiBkYXlzLgoKT24gNy8yOC8yMDE1IDU6MTEgUE0sIEJyaWFuIEZvc3RlciB3cm90ZToKPiBP
-biBUdWUsIEp1bCAyOCwgMjAxNSBhdCAxMDoxMzowMUFNIC0wNTAwLCBMZXNsaWUgUmhvcmVyIHdy
-b3RlOgo+PiBPbiA3LzI4LzIwMTUgNzozMyBBTSwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+Pj4gT24g
-VHVlLCBKdWwgMjgsIDIwMTUgYXQgMDI6NDY6NDVBTSAtMDUwMCwgTGVzbGllIFJob3JlciB3cm90
-ZToKPj4+PiBPbiA3LzIwLzIwMTUgNjoxNyBBTSwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+Pj4+PiBP
-biBTYXQsIEp1bCAxOCwgMjAxNSBhdCAwODowMjo1MFBNIC0wNTAwLCBMZXNsaWUgUmhvcmVyIHdy
-b3RlOgo+Pj4+Pj4KPiAuLi4KPj4+Cj4+Pj4gCUkgdGhlbiBjb3BpZWQgYm90aCB0aGUgdGFyYmFs
-bCBhbmQgdGhlIGltYWdlIG92ZXIgdG8gdGhlIHJvb3QsIGFuZCB3aGlsZQo+Pj4+IHRoZSBzeXN0
-ZW0gd291bGQgbm90IGxldCBtZSBjcmVhdGUgdGhlIGltYWdlIG9uIHRoZSByb290LCBpdCBkaWQg
-bGV0IG1lIGNvcHkKPj4+PiB0aGUgaW1hZ2UgdG8gdGhlIHJvb3QuICBJIHRoZW4gdW1vdW50ZWQg
-dGhlIFJBSUQgYXJyYXksIG1vdW50ZWQgdGhlIGltYWdlLAo+Pj4+IGFuZCBhdHRlbXB0ZWQgdG8g
-Y2QgdG8gdGhlIG9yaWdpbmFsIGRpcmVjdG9yeSBpbiB0aGUgaW1hZ2UgbW91bnQgd2hlcmUgdGhl
-Cj4+Pj4gdGFyYmFsbCB3YXMgc2F2ZWQuICBUaGF0IGZhaWxlZCB3aXRoIGFuIEkvTyBlcnJvcjoK
-Pj4+Pgo+Pj4KPj4+IEl0IHNvdW5kcyBhIGJpdCBzdHJhbmdlIGZvciB0aGUgbWRyZXN0b3JlIHRv
-IGZhaWwgb24gcm9vdCBidXQgYSBjcCBvZgo+Pj4gdGhlIHJlc3VsdGluZyBpbWFnZSB0byB3b3Jr
-LiBEbyB0aGUgcmVzdWx0aW5nIGltYWdlcyBoYXZlIHRoZSBzYW1lIGZpbGUKPj4+IHNpemUgb3Ig
-aXMgdGhlIHJvb3RmcyBjb3B5IHRydW5jYXRlZD8gSWYgdGhlIGxhdHRlciwgeW91IGNvdWxkIGJl
-Cj4+PiBtaXNzaW5nIHBhcnQgb2YgdGhlIGZzIGFuZCB0aHVzIGFueSBvZiB0aGUgZm9sbG93aW5n
-IHRlc3RzIGFyZSBwcm9iYWJseQo+Pj4gbW9vdC4KPj4KPj4gCVdlbGwsIGl0IGNhbid0IGJlIGFz
-IGxhcmdlIGFzIGl0IGlzIHJlcG9ydGVkLCBsZXQncyBwdXQgaXQgdGhhdCB3YXksCj4+IGFsdGhv
-dWdoIHRoZSByZXBvcnRlZCBmaWxlIHNpemUgaXMgdGhlIHNhbWUuICBMcyBjbGFpbXMgaXQgdG8g
-YmUgMTZUIGluCj4+IHNpemUsIHdoaWNoIGNhbm5vdCBiZSB0aGUgY2FzZSBvbiBhIDEwMEcgcGFy
-dGl0aW9uLiAgSSBmb3Jnb3QgdG8gbWVudGlvbiBjcAo+PiBkb2VzIGNvbXBsYWluOgo+Pgo+PiBS
-QUlELVNlcnZlcjovIyBjcCAvUkFJRC9URVNUL1JBSURmaWxlLmltZyAuLwo+PiBjcDogY2Fubm90
-IGxzZWVrIOKAmC4vUkFJRGZpbGUuaW1n4oCZOiBJbnZhbGlkIGFyZ3VtZW50Cj4+Cj4+IAlCdXQg
-aXQgZG9lcyB0aGUgc2FtZSB0aGluZyBvbiB0aGUgYmFja3VwIHNlcnZlciwgYW5kIGl0IHdvcmtz
-IHRoZXJlLiAgSQo+PiB0cmllZCBhIGNtcCwgYW5kIGl0IHNlZW1zIHRvIGJlIGh1bmcuICBJdCBq
-dXN0IG1heSBiZSB0YWtpbmcgYSBsb25nIHRpbWUsCj4+IGhvd2V2ZXIuCj4+Cj4KPiBZZWFoLCB5
-b3UgY2FuJ3QgcmVhbGx5IHRydXN0IHRoZSByZXN1bHRpbmcgaW1hZ2UuIEl0IGRvZXNuJ3QgdGFr
-ZSBtdWNoCj4gc3BhY2UgdG8gY3JlYXRlIGEgdmVyeSBsYXJnZSBzcGFyc2UgZmlsZSwgYnV0IGRp
-ZmZlcmVudCBmaWxlc3lzdGVtcyBoYXZlCj4gZGlmZmVyZW50IG1heGltdW0gZmlsZSBzaXplIGxp
-bWl0cy4gVGhlIHByb2JsZW0gaGVyZSBpcyB0aGF0IHNvbWUKPiBtZXRhZGF0YSBuZWFyIHRoZSBi
-ZWdpbm5pbmcgb2YgdGhlIGZpbGUgbWlnaHQgcmVmZXJlbmNlIG9yIGRlcGVuZCBvbgo+IHNvbWV0
-aGluZyBuZWFyIHRoZSBlbmQsIGFuZCBJL09zIGJleW9uZCB0aGUgZW5kIG9mIHRoZSBmaWxlIHdp
-bGwKPiBwcm9iYWJseSByZXN1bHQgaW4gZXJyb3JzLgo+Cj4gSSdkIHByb2JhYmx5IHRyeSB0aGUg
-bm91dWlkIGFwcHJvYWNoIHNpbmNlIHRoZSBoYXJkd2FyZSBpcyBzaW1pbGFyIGFzCj4gd2VsbCBh
-cyBzb21lIG9mIHRoZSBvdGhlciBpbnRlcmVzdGluZyBzdWdnZXN0aW9ucyB0aGF0IGhhdmUgYmVl
-biBtYWRlIHRvCj4gdHJ5IGFuZCBnZXQgdGhlIGltYWdlIG9uIHRoZSByb290ZnMgYW5kIHNlZSB3
-aGF0IGhhcHBlbnMgdGhlcmUgdG9vLgo+Cj4gQnJpYW4KPgo+Pj4gQnJpYW4KPj4+Cj4+Pj4gUkFJ
-RC1TZXJ2ZXI6LyMgY2QgIi9tZWRpYS9TZXJ2ZXItTWFpbi9FcXVpcG1lbnQvRHJpdmUgQ29udHJv
-bGxlcnMvSGlnaFBvaW50Cj4+Pj4gQWRhcHRlcnMvUm9ja2V0IDI3MjIvRHJpdmVyLyIKPj4+PiBi
-YXNoOiBjZDogL21lZGlhL1NlcnZlci1NYWluL0VxdWlwbWVudC9Ecml2ZSBDb250cm9sbGVycy9I
-aWdoUG9pbnQKPj4+PiBBZGFwdGVycy9Sb2NrZXQgMjcyMi9Ecml2ZXIvOiBJbnB1dC9vdXRwdXQg
-ZXJyb3IKPj4+Pgo+Pj4+IAlJIGNoYW5nZWQgZGlyZWN0b3JpZXMgdG8gYSBwb2ludCB0d28gZGly
-ZWN0b3JpZXMgYWJvdmUgdGhlIHByZXZpb3VzIGF0dGVtcHQKPj4+PiBhbmQgZGlkIGEgbG9uZyBs
-aXN0aW5nOgo+Pj4+Cj4+Pj4gUkFJRC1TZXJ2ZXI6LyMgY2QgIi9tZWRpYS9TZXJ2ZXItTWFpbi9F
-cXVpcG1lbnQvRHJpdmUgQ29udHJvbGxlcnMvSGlnaFBvaW50Cj4+Pj4gQWRhcHRlcnMiCj4+Pj4g
-UkFJRC1TZXJ2ZXI6L21lZGlhL1NlcnZlci1NYWluL0VxdWlwbWVudC9Ecml2ZSBDb250cm9sbGVy
-cy9IaWdoUG9pbnQKPj4+PiBBZGFwdGVycyMgbGwKPj4+PiBsczogY2Fubm90IGFjY2VzcyBSb2Nr
-ZXRSQUlEIDI3MjI6IElucHV0L291dHB1dCBlcnJvcgo+Pj4+IHRvdGFsIDQKPj4+PiBkcnd4ci14
-ci14IDYgcm9vdCBscmhvcmVyIDQwOTYgSnVsIDE4IDE5OjI2IFJvY2tldCAyNzIyCj4+Pj4gPz8/
-Pz8/Pz8/PyA/ID8gICAgPyAgICAgICAgICA/ICAgICAgICAgICAgPyBSb2NrZXRSQUlEIDI3MjIK
-Pj4+Pgo+Pj4+IAlBcyB5b3UgY2FuIHNlZSwgUm9ja2V0IDI3MjIgaXMgc3RpbGwgdGhlcmUsIGJ1
-dCBSb2NrZXRSQUlEIDI3MjIgaXMgdmVyeQo+Pj4+IHNpY2suICBSb2NrZXQgMjcyMiBpcyB0aGUg
-cGFyZW50IG9mIHdoZXJlIHRoZSB0YXJiYWwgd2FzLCBob3dldmVyLCBzbyBJIGRpZAo+Pj4+IGEg
-Y2QgYW5kIGFuIGxsIGFnYWluOgo+Pj4+Cj4+Pj4gUkFJRC1TZXJ2ZXI6L21lZGlhL1NlcnZlci1N
-YWluL0VxdWlwbWVudC9Ecml2ZSBDb250cm9sbGVycy9IaWdoUG9pbnQKPj4+PiBBZGFwdGVycyMg
-Y2QgIlJvY2tldCAyNzIyIi8KPj4+PiBSQUlELVNlcnZlcjovbWVkaWEvU2VydmVyLU1haW4vRXF1
-aXBtZW50L0RyaXZlIENvbnRyb2xsZXJzL0hpZ2hQb2ludAo+Pj4+IEFkYXB0ZXJzL1JvY2tldCAy
-NzIyIyBsbAo+Pj4+IGxzOiBjYW5ub3QgYWNjZXNzIEJJT1M6IElucHV0L291dHB1dCBlcnJvcgo+
-Pj4+IGxzOiBjYW5ub3QgYWNjZXNzIERyaXZlcjogSW5wdXQvb3V0cHV0IGVycm9yCj4+Pj4gbHM6
-IGNhbm5vdCBhY2Nlc3MgSGlnaFBvaW50IFJBSUQgTWFuYWdlbWVudCBTb2Z0d2FyZTogSW5wdXQv
-b3V0cHV0IGVycm9yCj4+Pj4gbHM6IGNhbm5vdCBhY2Nlc3MgTWFudWFsOiBJbnB1dC9vdXRwdXQg
-ZXJyb3IKPj4+PiB0b3RhbCAyNDgKPj4+PiAtcnd4ci0tci0tIDEgcm9vdCBscmhvcmVyIDI0NTc2
-MCBOb3YgMjAgIDIwMDggYXV0b3J1bi5leGUKPj4+PiAtcnd4ci0tci0tIDEgcm9vdCBscmhvcmVy
-ICAgICA1MSBNYXIgMjEgIDIwMDEgYXV0b3J1bi5pbmYKPj4+PiA/Pz8/Pz8/Pz8/ID8gPyAgICA/
-ICAgICAgICAgICAgPyAgICAgICAgICAgID8gQklPUwo+Pj4+ID8/Pz8/Pz8/Pz8gPyA/ICAgID8g
-ICAgICAgICAgICA/ICAgICAgICAgICAgPyBEcml2ZXIKPj4+PiA/Pz8/Pz8/Pz8/ID8gPyAgICA/
-ICAgICAgICAgICAgPyAgICAgICAgICAgID8gSGlnaFBvaW50IFJBSUQgTWFuYWdlbWVudAo+Pj4+
-IFNvZnR3YXJlCj4+Pj4gPz8/Pz8/Pz8/PyA/ID8gICAgPyAgICAgICAgICAgID8gICAgICAgICAg
-ICA/IE1hbnVhbAo+Pj4+IC1yd3hyLS1yLS0gMSByb290IGxyaG9yZXIgICAxMTM0IEZlYiAgNSAg
-MjAxMiByZWFkbWUudHh0Cj4+Pj4KPj4+PiAJU28gbm93LCB3aGF0Pwo+Pj4+Cj4+Pj4gX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPj4+PiB4ZnMgbWFpbGlu
-ZyBsaXN0Cj4+Pj4geGZzQG9zcy5zZ2kuY29tCj4+Pj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxt
-YW4vbGlzdGluZm8veGZzCj4+Pgo+Pgo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwo+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+
-PiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPgoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
-b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Sun, Aug 02, 2015 at 03:06:50PM +0200, Daniel Bast wrote:
+> > Am 02.08.2015 um 00:52 schrieb Dave Chinner
+> > <david@fromorbit.com>:
+> > 
+> > On Fri, Jul 31, 2015 at 06:57:35PM -0300, Fernando Seiti
+> > Furusato wrote:
+> >> That error is common when configure is generated using
+> >> out-of-date config.guess and config.sub.  The ones that come
+> >> with the package are, in fact, old.
+> > 
+> > config.sub and config.guess are generated by the build, we don't
+> > ship them directly from the git repository. Perhaps you are
+> > building from a release tarball rather than from a clean git
+> > repository working area? Can you confirm this is the case?
+> > 
+> 
+> Just some observations from my side:
+> 
+> Extracting the released tarball over a clean xfsprogs git repo and
+> removing the .gitignore file, then git status reveals:
+> 
+> Untracked files:
+>   (use "git add <file>..." to include in what will be committed)
+> 
+> 	.gitcensus
+> 	aclocal.m4
+> 	config.guess
+> 	config.sub
+> 	configure
+> 	install-sh
+> 	ltmain.sh
+> 	m4/libtool.m4
+> 	m4/ltoptions.m4
+> 	m4/ltsugar.m4
+> 	m4/ltversion.m4
+> 	m4/lt~obsolete.m4
+> 	po/xfsprogs.pot
+> 
+> Looks like there are a lot of untracked file. Is this intentional,
+> to have potentially auto-generated but un-versioned files in a
+> release tarball?
+
+Goes back to 2009:
+
+commit 1eb10ccb85261931d5401adbff11acd2dbc5bf63
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 29 15:32:28 2009 +0200
+
+    keep autoconf-generated files over make distclean
+    
+    We do want to ship the autoconf-generated files over make distclean and
+    pick them up in Makepkgs so that a user compiling the program doesn't
+    require autoconf.
+    
+    For that split up make distclean from make realclean and exclude the
+    files we want to keep form the former.
+    
+    To make this easier to maintain adher to stricter rules of use for
+    CONFIGURE and LDIRT.  CONFIGURE now includes all generated files from
+    autoconf (or for it like our copied install-sh) and gets only removed
+    on make realclean, but added to LSRCFILES so that Makepkgs can pick it
+    up.  Everything else than needs to be removed on a realclean gets
+    assigned to LDIRT.
+    
+    Also split up the configure rule into one to generate the configure
+    script and one to run it.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Mike Frysinger <vapier@gentoo.org>
+
+So we've been doing this with release tarballs for more than 6
+years - I checked and found these files in the tarballs back to
+3.0.1. The above commit is the last commit prior to the release of
+3.0.1...
+
+Nowdays, the generated files in the 3.2.4 tarball created via a
+'make dist' rule. I run that on an up to date debian unstable box
+with autoconfig 2.69 installed to generate the files, so the
+question I have is this: why is an up-to-date build box generating
+"out of date" configure/m4 scripts? What, exactly, is out of date,
+and how do I ensure that the pre-build config files are correctly
+up-to-date?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
