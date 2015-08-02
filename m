@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F27BA7F7D
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 17:58:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9ECE4AC003
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 15:58:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	hOTGKMO825poOTfh for <xfs@oss.sgi.com>;
-	Sat, 01 Aug 2015 15:58:46 -0700 (PDT)
-Date: Sun, 2 Aug 2015 08:58:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC v2 00/24] xfs: add reflink and dedupe support
-Message-ID: <20150801225817.GS16638@dastard>
-References: <20150729223258.17414.91354.stgit@birch.djwong.org>
-	<20150801130131.GD101746@meili.valhalla.31bits.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150801130131.GD101746@meili.valhalla.31bits.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5562D7F5A
+	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 08:07:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A30B30404E
+	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 06:07:18 -0700 (PDT)
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.15]) by cuda.sgi.com
+	with ESMTP id 8uBvsIeHMZNxplsZ (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 02 Aug 2015 06:07:14 -0700 (PDT)
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
+Subject: Re: Bug#793495: xfsprogs fails to build on debian ppc64el
+From: Daniel Bast <daniel.bast@gmx.net>
+In-Reply-To: <20150801225230.GR16638@dastard>
+Date: Sun, 2 Aug 2015 15:06:50 +0200
+Message-Id: <41BF7556-AAAB-4F22-B8C2-8991A0917DE2@gmx.net>
+References: <55BB9271.6000300@gmx.net> <55BBEF4F.6070809@linux.vnet.ibm.com>
+	<20150801225230.GR16638@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,47 +25,282 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8224761724430855991=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Cc: xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>, 793495@bugs.debian.org
+Cc: Fernando Seiti Furusato <ferseiti@linux.vnet.ibm.com>, Breno Leitao <brenohl@br.ibm.com>, xfs@oss.sgi.com
 
-On Sat, Aug 01, 2015 at 09:01:31AM -0400, Josef 'Jeff' Sipek wrote:
-> On Wed, Jul 29, 2015 at 03:32:59PM -0700, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > This is the second revision of an RFC for adding to XFS kernel support
-> > for mapping multiple file logical blocks to the same physical block,
-> > more commonly known as reflinking.  The implementation a single [block
-> > range, refcount] tree to track the reference counts of extents of
-> > physical blocks.  There's also support code to provide the desired
-> > copy-on-write behavior and the userland interfaces to reflink, query
-> > the status of, and un-reflink files.
-> 
-> This is cool work.  I have a random thought to share... IIRC, you keep a
-> per-inode flag to avoid expensive ops on files that have no refcounted
-> blocks.  ZFS keeps a bit in each block pointer to indicate that the target
-> is dedup'd.  I'd have to check if xfs has a spare bit in its block pointer,
-> but if it does that's one way to minimize the refcount btree overhead.
 
-No, we don't. We'd have to steal a bit from the extent length field,
-similar to the way unwritten extents were implemented.
+--===============8224761724430855991==
+Content-Type: multipart/alternative; boundary="Apple-Mail=_29B83BC4-7055-48A6-B519-DC2032CCD017"
 
-As it is, we still need a separate tree to track the shared extent
-refcounts, so making this more fine grained to optimise freeing of
-extents can be looked at further down the track once we have an idea
-where the bottlenecks in the shared extent system are....
+
+--Apple-Mail=_29B83BC4-7055-48A6-B519-DC2032CCD017
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
+
+>=20
+> Am 02.08.2015 um 00:52 schrieb Dave Chinner <david@fromorbit.com>:
+>=20
+> On Fri, Jul 31, 2015 at 06:57:35PM -0300, Fernando Seiti Furusato =
+wrote:
+>> That error is common when configure is generated using out-of-date =
+config.guess
+>> and config.sub.
+>> The ones that come with the package are, in fact, old.
+>=20
+> config.sub and config.guess are generated by the build, we don't
+> ship them directly from the git repository. Perhaps you are building
+> from a release tarball rather than from a clean git repository
+> working area? Can you confirm this is the case?
+>=20
+
+Just some observations from my side:
+
+Extracting the released tarball over a clean xfsprogs git repo and =
+removing the .gitignore file, then git status reveals:
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	.gitcensus
+	aclocal.m4
+	config.guess
+	config.sub
+	configure
+	install-sh
+	ltmain.sh
+	m4/libtool.m4
+	m4/ltoptions.m4
+	m4/ltsugar.m4
+	m4/ltversion.m4
+	m4/lt~obsolete.m4
+	po/xfsprogs.pot
+
+Looks like there are a lot of untracked file. Is this intentional, to =
+have potentially auto-generated but un-versioned files in a release =
+tarball?
+
+It gets even more interesting, comparing debian source vs official =
+release:
+http://http.debian.net/debian/pool/main/x/xfsprogs/xfsprogs_3.2.4.tar.gz =
+<http://http.debian.net/debian/pool/main/x/xfsprogs/xfsprogs_3.2.4.tar.gz>=
+
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.4.tar.gz =
+<ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.4.tar.gz>
+
+There are differences in the following files:
+	modified:   aclocal.m4
+	modified:   config.guess
+	modified:   config.sub
+	modified:   configure
+	modified:   ltmain.sh
+	modified:   m4/libtool.m4
+	modified:   po/xfsprogs.pot
+
+
+So, imho the debian source tarball also doesn=E2=80=99t look clean, =
+neither against the release tarball nor against a clean git checkout.
+
+Just my 2 cents, maybe that helps someone to solve this.
 
 Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Daniel
+
+
+> If so, can you remove the configure, config.sub and config.guess
+> files and see if you get the same problem?
+>=20
+>> This package used to run dh_autotools-dev_updateconfig and
+>> dh_autotools-dev_restoreconfig, which worked because it only updates =
+those
+>> files.
+>>=20
+>> They were replaced by dh_autoreconf and dh_autoreconf_clean, which =
+should
+>> update them, but does not run flawlessly.
+>> I think something is wrong with the m4 macros but I am not sure what.
+>> There are errors when running dh_autoreconf alone.
+>>=20
+>> # dh_autoreconf
+>> libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `.'.
+>> libtoolize: copying file `./ltmain.sh'
+>> libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4'.
+>> libtoolize: copying file `m4/libtool.m4'
+>> libtoolize: copying file `m4/ltoptions.m4'
+>> libtoolize: copying file `m4/ltsugar.m4'
+>> libtoolize: copying file `m4/ltversion.m4'
+>> libtoolize: copying file `m4/lt~obsolete.m4'
+>> libtoolize: Consider adding `-I m4' to ACLOCAL_AMFLAGS in =
+Makefile.am.
+>> autoheader: warning: missing template: HAVE_UMODE_T
+>> autoheader: Use AC_DEFINE([HAVE_UMODE_T], [], [Description])
+>> autoheader: warning: missing template: HAVE___PSINT_T
+>> autoheader: warning: missing template: HAVE___PSUNSIGNED_T
+>> autoheader: warning: missing template: HAVE___U32
+>> autoreconf: /usr/bin/autoheader failed with exit status: 1
+>> dh_autoreconf: autoreconf -f -i returned exit code 1
+>>=20
+>> I will keep working on it, but all I will be able to do if I get to a =
+conclusion
+>> is send a patch here.
+>> Thus it will have to be dealt with by the maintainers anyway.
+>=20
+> The XFS list is cc'd on the bug, so the upstream maintainers are
+> watching and will see the patch when you post it. ;)
+>=20
+> Cheers,
+>=20
+> Dave.
+> --=20
+> Dave Chinner
+> david@fromorbit.com
+>=20
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+
+--Apple-Mail=_29B83BC4-7055-48A6-B519-DC2032CCD017
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html;
+	charset=utf-8
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dutf-8"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space;" =
+class=3D""><div><blockquote type=3D"cite" class=3D""><div class=3D""><br =
+class=3D"">Am 02.08.2015 um 00:52 schrieb Dave Chinner &lt;<a =
+href=3D"mailto:david@fromorbit.com" =
+class=3D"">david@fromorbit.com</a>&gt;:</div><br =
+class=3D"Apple-interchange-newline"><div class=3D"">On Fri, Jul 31, 2015 =
+at 06:57:35PM -0300, Fernando Seiti Furusato wrote:<br =
+class=3D""><blockquote type=3D"cite" class=3D"">That error is common =
+when configure is generated using out-of-date config.guess<br =
+class=3D"">and config.sub.<br class=3D"">The ones that come with the =
+package are, in fact, old.<br class=3D""></blockquote><br =
+class=3D"">config.sub and config.guess are generated by the build, we =
+don't<br class=3D"">ship them directly from the git repository. Perhaps =
+you are building<br class=3D"">from a release tarball rather than from a =
+clean git repository<br class=3D"">working area? Can you confirm this is =
+the case?<br class=3D""><br class=3D""></div></blockquote><div><br =
+class=3D""></div><div>Just some observations from my side:</div><div><br =
+class=3D""></div><div>Extracting the released tarball over a clean =
+xfsprogs git repo and removing the .gitignore file, then git status =
+reveals:</div><div><br class=3D""></div><div>Untracked =
+files:</div><div>&nbsp; (use "git add &lt;file&gt;..." to include in =
+what will be committed)</div><div><br class=3D""></div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>.gitcensus</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>aclocal.m4</div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>config.guess</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>config.sub</div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>configure</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>install-sh</div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>ltmain.sh</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>m4/libtool.m4</div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>m4/ltoptions.m4</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>m4/ltsugar.m4</div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>m4/ltversion.m4</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>m4/lt~obsolete.m4</div><div><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	=
+</span>po/xfsprogs.pot</div><div><br class=3D""></div><div>Looks like =
+there are a lot of untracked file. Is this intentional, to have =
+potentially auto-generated but un-versioned files in a release =
+tarball?</div><div><br class=3D""></div><div>It gets even more =
+interesting, comparing debian source vs official release:</div><div><a =
+href=3D"http://http.debian.net/debian/pool/main/x/xfsprogs/xfsprogs_3.2.4.=
+tar.gz" =
+class=3D"">http://http.debian.net/debian/pool/main/x/xfsprogs/xfsprogs_3.2=
+.4.tar.gz</a></div><div><a =
+href=3D"ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.4.tar.gz" =
+class=3D"">ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.4.tar.gz</=
+a></div><div><br class=3D""></div><div>There are differences in the =
+following files:</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+aclocal.m4</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+config.guess</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+config.sub</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+configure</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+ltmain.sh</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+m4/libtool.m4</div><div><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>modified: &nbsp; =
+po/xfsprogs.pot</div><div><br class=3D""></div><div><br =
+class=3D""></div><div>So, imho the debian source tarball also doesn=E2=80=99=
+t look clean, neither against the release tarball nor against a clean =
+git checkout.</div><div><br class=3D""></div><div>Just my 2 cents, maybe =
+that helps someone to solve this.</div><div><br =
+class=3D""></div><div>Cheers,</div><div><br =
+class=3D""></div><div>Daniel</div></div><div><br class=3D""></div><div><br=
+ class=3D""><blockquote type=3D"cite" class=3D""><div class=3D"">If so, =
+can you remove the configure, config.sub and config.guess<br =
+class=3D"">files and see if you get the same problem?<br class=3D""><br =
+class=3D""><blockquote type=3D"cite" class=3D"">This package used to run =
+dh_autotools-dev_updateconfig and<br =
+class=3D"">dh_autotools-dev_restoreconfig, which worked because it only =
+updates those<br class=3D"">files.<br class=3D""><br class=3D"">They =
+were replaced by dh_autoreconf and dh_autoreconf_clean, which should<br =
+class=3D"">update them, but does not run flawlessly.<br class=3D"">I =
+think something is wrong with the m4 macros but I am not sure what.<br =
+class=3D"">There are errors when running dh_autoreconf alone.<br =
+class=3D""><br class=3D""># dh_autoreconf<br class=3D"">libtoolize: =
+putting auxiliary files in AC_CONFIG_AUX_DIR, `.'.<br =
+class=3D"">libtoolize: copying file `./ltmain.sh'<br =
+class=3D"">libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4'.<br =
+class=3D"">libtoolize: copying file `m4/libtool.m4'<br =
+class=3D"">libtoolize: copying file `m4/ltoptions.m4'<br =
+class=3D"">libtoolize: copying file `m4/ltsugar.m4'<br =
+class=3D"">libtoolize: copying file `m4/ltversion.m4'<br =
+class=3D"">libtoolize: copying file `m4/lt~obsolete.m4'<br =
+class=3D"">libtoolize: Consider adding `-I m4' to ACLOCAL_AMFLAGS in =
+Makefile.am.<br class=3D"">autoheader: warning: missing template: =
+HAVE_UMODE_T<br class=3D"">autoheader: Use AC_DEFINE([HAVE_UMODE_T], [], =
+[Description])<br class=3D"">autoheader: warning: missing template: =
+HAVE___PSINT_T<br class=3D"">autoheader: warning: missing template: =
+HAVE___PSUNSIGNED_T<br class=3D"">autoheader: warning: missing template: =
+HAVE___U32<br class=3D"">autoreconf: /usr/bin/autoheader failed with =
+exit status: 1<br class=3D"">dh_autoreconf: autoreconf -f -i returned =
+exit code 1<br class=3D""><br class=3D"">I will keep working on it, but =
+all I will be able to do if I get to a conclusion<br class=3D"">is send =
+a patch here.<br class=3D"">Thus it will have to be dealt with by the =
+maintainers anyway.<br class=3D""></blockquote><br class=3D"">The XFS =
+list is cc'd on the bug, so the upstream maintainers are<br =
+class=3D"">watching and will see the patch when you post it. ;)<br =
+class=3D""><br class=3D"">Cheers,<br class=3D""><br class=3D"">Dave.<br =
+class=3D"">-- <br class=3D"">Dave Chinner<br class=3D""><a =
+href=3D"mailto:david@fromorbit.com" class=3D"">david@fromorbit.com</a><br =
+class=3D""><br =
+class=3D"">_______________________________________________<br =
+class=3D"">xfs mailing list<br class=3D"">xfs@oss.sgi.com<br =
+class=3D"">http://oss.sgi.com/mailman/listinfo/xfs<br =
+class=3D""></div></blockquote></div><br class=3D""></body></html>=
+
+--Apple-Mail=_29B83BC4-7055-48A6-B519-DC2032CCD017--
+
+
+--===============8224761724430855991==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8224761724430855991==--
