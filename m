@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6351D7F58
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 11:18:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E284FAC004
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 09:18:05 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DC8077F59
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 11:23:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B77148F8049
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 09:23:20 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id i1tZ23fbqr7GWDDa for <xfs@oss.sgi.com>;
-	Mon, 03 Aug 2015 09:18:03 -0700 (PDT)
-Message-ID: <55BF9439.8010003@sandeen.net>
-Date: Mon, 03 Aug 2015 09:18:01 -0700
+	ESMTP id bl34CrCza0q8EGJY for <xfs@oss.sgi.com>;
+	Mon, 03 Aug 2015 09:23:19 -0700 (PDT)
+Message-ID: <55BF9575.2010106@sandeen.net>
+Date: Mon, 03 Aug 2015 09:23:17 -0700
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] xfs: growfs not aware of sb_meta_uuid
+Subject: Re: [PATCH 4/4] xfs: dquots should be stamped with sb_meta_uuid
 References: <1438587625-31437-1-git-send-email-david@fromorbit.com>
-	<1438587625-31437-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1438587625-31437-3-git-send-email-david@fromorbit.com>
+	<1438587625-31437-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1438587625-31437-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,67 +33,30 @@ To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 On 8/3/15 12:40 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Adding this simple change to xfstests:common/rc::_scratch_mkfs_xfs:
-> 
-> +       if [ $mkfs_status -eq 0 ]; then
-> +               xfs_admin -U generate $SCRATCH_DEV > /dev/null
-> +       fi
-> 
-> triggers all sorts of errors in xfstests. xfs/104 is an example,
-> where growfs fails with a UUID mismatch corruption detected by
-> xfs_agf_write_verify() when trying to write the first new AG
-> headers.
-> 
-> Fix this problem by making sure we copy the sb_meta_uuid into new
-> metadata written by growfs.
+> Once the sb_uuid is changed, the wrong uuid is stamped into new
+> dquots on disk. Found by inspection, verified by generic/219.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Ok, at least this one has a plausible story; I did have this
-in my tree, and must have somehow (re?)sent outdated patches. :(
-Yeah, it was in all the series I sent up until the last re-send,
-damn.
-
-I'll re-check those prior patches against what we end up with,
-to make sure everything is in sync.
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  fs/xfs/xfs_fsops.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_dquot.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 9b3438a..ee3aaa0a 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -250,7 +250,7 @@ xfs_growfs_data_private(
->  		agf->agf_freeblks = cpu_to_be32(tmpsize);
->  		agf->agf_longest = cpu_to_be32(tmpsize);
->  		if (xfs_sb_version_hascrc(&mp->m_sb))
-> -			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
-> +			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
->  
->  		error = xfs_bwrite(bp);
->  		xfs_buf_relse(bp);
-> @@ -273,7 +273,7 @@ xfs_growfs_data_private(
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 4143dc7..b1b26b6 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -251,7 +251,7 @@ xfs_qm_init_dquot_blk(
+>  		d->dd_diskdq.d_id = cpu_to_be32(curid);
+>  		d->dd_diskdq.d_flags = type;
 >  		if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  			agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
->  			agfl->agfl_seqno = cpu_to_be32(agno);
-> -			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_uuid);
-> +			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+> -			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
+> +			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
+>  			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+>  					 XFS_DQUOT_CRC_OFF);
 >  		}
->  
->  		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
-> @@ -309,7 +309,7 @@ xfs_growfs_data_private(
->  		agi->agi_newino = cpu_to_be32(NULLAGINO);
->  		agi->agi_dirino = cpu_to_be32(NULLAGINO);
->  		if (xfs_sb_version_hascrc(&mp->m_sb))
-> -			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
-> +			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
->  		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
->  			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
->  			agi->agi_free_level = cpu_to_be32(1);
 > 
 
 _______________________________________________
