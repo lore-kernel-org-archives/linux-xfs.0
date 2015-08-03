@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5DFC67F61
-	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 18:42:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE754AC01A
-	for <xfs@oss.sgi.com>; Sun,  2 Aug 2015 16:42:55 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	oKZRlwQwUZJJK9rM for <xfs@oss.sgi.com>;
-	Sun, 02 Aug 2015 16:42:53 -0700 (PDT)
-Date: Mon, 3 Aug 2015 09:42:50 +1000
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 418807F59
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 02:41:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D1068F811E
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 00:41:16 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	rNdCVqIxlcwflGOc for <xfs@oss.sgi.com>;
+	Mon, 03 Aug 2015 00:41:15 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1ZMAMH-0000AS-LR
+	for xfs@oss.sgi.com; Mon, 03 Aug 2015 17:40:29 +1000
+Received: from dave by disappointment with local (Exim 4.86_RC4)
+	(envelope-from <dave@disappointment.disaster>) id 1ZMAMH-0008Cc-Km
+	for xfs@oss.sgi.com; Mon, 03 Aug 2015 17:40:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 1/4] xfsprogs: Prefix LIST_... macros to XFS_LIST_...
-Message-ID: <20150802234250.GT16638@dastard>
-References: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
-	<1437397018-12864-2-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1437397018-12864-2-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 2/4] xfs: growfs not aware of sb_meta_uuid
+Date: Mon,  3 Aug 2015 17:40:23 +1000
+Message-Id: <1438587625-31437-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1438587625-31437-1-git-send-email-david@fromorbit.com>
+References: <1438587625-31437-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +30,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 20, 2015 at 02:56:55PM +0200, Jan Tulak wrote:
-> OS X has some conflicting LIST_ macros, so prefix the XFS ones.
+From: Dave Chinner <dchinner@redhat.com>
 
-What macros, and how do we get them included in the build? I
-shouldn't need to go and use google to work out why a change is
-beign made....
+Adding this simple change to xfstests:common/rc::_scratch_mkfs_xfs:
 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  include/list.h  | 6 +++---
->  repair/phase6.c | 2 +-
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/list.h b/include/list.h
-> index 3f087a4..7e9f748 100644
-> --- a/include/list.h
-> +++ b/include/list.h
-> @@ -27,10 +27,10 @@ struct list_head {
->  	struct list_head *prev;
->  };
->  
-> -#define LIST_HEAD_INIT(name) { &(name), &(name) }
-> +#define XFS_LIST_HEAD_INIT(name) { &(name), &(name) }
->  
-> -#define LIST_HEAD(name) \
-> -		struct list_head name = LIST_HEAD_INIT(name)
-> +#define XFS_LIST_HEAD(name) \
-> +		struct list_head name = XFS_LIST_HEAD_INIT(name)
->  
->  #define INIT_LIST_HEAD(list) list_head_init(list)
->  static inline void list_head_init(struct list_head *list)
++       if [ $mkfs_status -eq 0 ]; then
++               xfs_admin -U generate $SCRATCH_DEV > /dev/null
++       fi
 
-This is supposed to match what is required for libxfs/ so we don't
-have to modify the kernel code we bring across. Without knowing
-exactly how we are including conflicting definitions from the OS X
-include files, it's really hard to suggest other possible
-solutions...
+triggers all sorts of errors in xfstests. xfs/104 is an example,
+where growfs fails with a UUID mismatch corruption detected by
+xfs_agf_write_verify() when trying to write the first new AG
+headers.
 
-Cheers,
+Fix this problem by making sure we copy the sb_meta_uuid into new
+metadata written by growfs.
 
-Dave.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 9b3438a..ee3aaa0a 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -250,7 +250,7 @@ xfs_growfs_data_private(
+ 		agf->agf_freeblks = cpu_to_be32(tmpsize);
+ 		agf->agf_longest = cpu_to_be32(tmpsize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
++			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
+ 
+ 		error = xfs_bwrite(bp);
+ 		xfs_buf_relse(bp);
+@@ -273,7 +273,7 @@ xfs_growfs_data_private(
+ 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 			agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+ 			agfl->agfl_seqno = cpu_to_be32(agno);
+-			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_uuid);
++			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+ 		}
+ 
+ 		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+@@ -309,7 +309,7 @@ xfs_growfs_data_private(
+ 		agi->agi_newino = cpu_to_be32(NULLAGINO);
+ 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
++			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+ 		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+ 			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
+ 			agi->agi_free_level = cpu_to_be32(1);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
 
 _______________________________________________
 xfs mailing list
