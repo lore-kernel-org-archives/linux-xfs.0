@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2F1367F59
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 02:41:18 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 52E057F59
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 02:41:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1B5A9304053
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 00:41:18 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F3E58F811E
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 00:41:15 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	oLQhCzMsohp0DrLy for <xfs@oss.sgi.com>;
-	Mon, 03 Aug 2015 00:41:16 -0700 (PDT)
+	9lC2LLGTN87o38gJ for <xfs@oss.sgi.com>;
+	Mon, 03 Aug 2015 00:41:13 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1ZMAMH-0000AR-L9
+	(envelope-from <dave@fromorbit.com>) id 1ZMAMH-0000AQ-Kh
 	for xfs@oss.sgi.com; Mon, 03 Aug 2015 17:40:29 +1000
 Received: from dave by disappointment with local (Exim 4.86_RC4)
-	(envelope-from <dave@disappointment.disaster>) id 1ZMAMH-0008CX-KR
+	(envelope-from <dave@disappointment.disaster>) id 1ZMAMH-0008CU-Jl
 	for xfs@oss.sgi.com; Mon, 03 Aug 2015 17:40:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfs: fix sb_meta_uuid usage
-Date: Mon,  3 Aug 2015 17:40:22 +1000
-Message-Id: <1438587625-31437-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1438587625-31437-1-git-send-email-david@fromorbit.com>
-References: <1438587625-31437-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/4] xfs: sb_meta_uuid fixes
+Date: Mon,  3 Aug 2015 17:40:21 +1000
+Message-Id: <1438587625-31437-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +35,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-After changing the UUID on a v5 filesystem, xfstests fails
-immediately on a debug kernel with:
+These are fixes to problems I found int eh sb_meta_uuid changes I
+recently pushed to for-next. They were all found by augmenting
+_scratch_mkfs_xfs in xfstests with an extra command to change the
+UUID after the filesystem had been created. I think we should
+probably do that randomly in xfstests to get coverage of both
+cases. No-one shoul dhave been exposed to these yet, because I
+haven't released a userspace that can change the UUID yet on v5
+filesystems.
 
-XFS: Assertion failed: uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid), file: fs/xfs/xfs_inode.c, line: 799
+Cheers,
 
-This needs to check against the sb_meta_uuid, not the user visible
-UUID that was changed.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index fb52ff0..4156e37 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -796,7 +796,7 @@ xfs_ialloc(
- 
- 	if (ip->i_d.di_version == 3) {
- 		ASSERT(ip->i_d.di_ino == ino);
--		ASSERT(uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid));
-+		ASSERT(uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid));
- 		ip->i_d.di_crc = 0;
- 		ip->i_d.di_changecount = 1;
- 		ip->i_d.di_lsn = 0;
--- 
-2.1.4
+Dave.
 
 _______________________________________________
 xfs mailing list
