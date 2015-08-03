@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3EE877F76
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 09:40:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B9338F8049
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 07:40:28 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 856D67F6A
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 09:40:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F5A78F8065
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 07:40:23 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BXyBNHpCLzIyBZD5 (version=TLSv1
+	cuda.sgi.com with ESMTP id Cjqj0FummYykyk1F (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Aug 2015 07:40:27 -0700 (PDT)
+	Mon, 03 Aug 2015 07:40:22 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v3 05/11] xfsprogs: Change OS X-specific CFLAGS/LDFLAGS
-Date: Mon,  3 Aug 2015 16:39:43 +0200
-Message-Id: <1438612789-17486-6-git-send-email-jtulak@redhat.com>
+Subject: [PATCH v2 01/11] xfsprogs: Don't Make .po files with gettext disabled
+Date: Mon,  3 Aug 2015 16:39:39 +0200
+Message-Id: <1438612789-17486-2-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
 References: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,44 +31,37 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-OS X uses clang as a default compiler.
-So remove incompatible options.
+(Already reviewed by Chris, but resubmiting
+as the patchset itself was partially reworked.)
+
+"po" target is added only if gettext binary is found.
+Without this patch, Make tried to build the target even
+with --enable-gettext=no configure option, which led
+to a failing build.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/builddefs.in | 2 +-
- libhandle/Makefile   | 4 ++++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ Makefile | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7e9f53d..7f939f6 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -119,7 +119,7 @@ ifeq ($(PKG_PLATFORM),gnukfreebsd)
- PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
- endif
- ifeq ($(PKG_PLATFORM),darwin)
--PCFLAGS = -traditional-cpp $(GCCFLAGS)
-+PCFLAGS = $(GCCFLAGS)
- DEPENDFLAGS = -D__APPLE__
- endif
- ifeq ($(PKG_PLATFORM),irix)
-diff --git a/libhandle/Makefile b/libhandle/Makefile
-index 865ca22..0b5e1ad 100644
---- a/libhandle/Makefile
-+++ b/libhandle/Makefile
-@@ -10,7 +10,11 @@ LT_CURRENT = 1
- LT_REVISION = 3
- LT_AGE = 0
- 
-+ifeq ($(PKG_PLATFORM),darwin)
-+LTLDFLAGS += -Wl,libhandle.sym
-+else
- LTLDFLAGS += -Wl,--version-script,libhandle.sym
+diff --git a/Makefile b/Makefile
+index 6d6803b..3da4d5d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -46,7 +46,11 @@ HDR_SUBDIRS = include libxfs
+ DLIB_SUBDIRS = libxlog libxcmd libhandle libdisk
+ LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+ TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
+-		mdrestore repair rtcp m4 man doc po debian
++		mdrestore repair rtcp m4 man doc debian
++
++ifneq ("$(XGETTEXT)","")
++TOOL_SUBDIRS += po
 +endif
  
- CFILES = handle.c jdm.c
- LSRCFILES = libhandle.sym
+ # include is listed last so it is processed last in clean rules.
+ SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) include
 -- 
 2.4.3
 
