@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 139237F59
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 12:20:13 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8678D7F59
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 12:27:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 91C0CAC001
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 10:20:09 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id KXFvr2gDulp3vaVL (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Aug 2015 10:20:08 -0700 (PDT)
-Message-ID: <55BFA2C5.20408@redhat.com>
-Date: Mon, 03 Aug 2015 10:20:05 -0700
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 72E9A8F8035
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 10:27:09 -0700 (PDT)
+Received: from mail-wi0-f172.google.com (mail-wi0-f172.google.com
+	[209.85.212.172]) by cuda.sgi.com with ESMTP id
+	n6Fe79kOJbmXIH7Q (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 03 Aug 2015 10:27:08 -0700 (PDT)
+Received: by wibud3 with SMTP id ud3so145069760wib.1
+	for <xfs@oss.sgi.com>; Mon, 03 Aug 2015 10:27:07 -0700 (PDT)
+Received: from [192.168.1.171] (50-197-102-113-static.hfc.comcastbusiness.net.
+	[50.197.102.113]) by smtp.googlemail.com with ESMTPSA id
+	r6sm14582236wiy.13.2015.08.03.10.27.04 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Mon, 03 Aug 2015 10:27:05 -0700 (PDT)
+From: Joe Landman <joe.landman@gmail.com>
+Subject: swalloc/allocsize question
+Message-ID: <55BFA467.8000707@gmail.com>
+Date: Mon, 3 Aug 2015 13:27:03 -0400
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfsprogs: blkid is now mandatory
-References: <1156743222.24471614.1436281858017.JavaMail.zimbra@redhat.com>
-	<1436346893-11831-1-git-send-email-jtulak@redhat.com>
-	<1508777144.956841.1437482376774.JavaMail.zimbra@redhat.com>
-	<20150726162530.GE29329@infradead.org>
-	<1326157887.2004059.1438598404429.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1326157887.2004059.1438598404429.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +30,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>, Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 8/3/15 3:40 AM, Jan Tulak wrote:
-> 
-> 
-> ----- Original Message -----
->> From: "Christoph Hellwig" <hch@infradead.org>
->>
->> On Tue, Jul 21, 2015 at 08:39:36AM -0400, Jan Tulak wrote:
->>> I just found that while it is possible to get blkid on OS X, it is
->>> in 1.0.0 version which doesn't have blkid_probe_get function.
->>> I'm examining whether it is possible to get an updated version there,
->>> but right now, this patch breaks OS X support. Unfortunately I didn't
->>> noticed of this before, as the OS X port was terribly out of date.
->>>
->>> So this patch shouldn't be included until I find how to get around.
->>
->> I don't think this is a lbocker given that OSX support doesn't
->> even work.
->>
->> To the contrary I'd really prefer to go in ASAP to avoid anyone
->> relying on it longer than nessecary.
-> 
-> I tried to get newer blkid on OSX, but so far without a big success 
-> (well, it looks like a kind of a small dependency hell that would 
-> have to be ported, with bigger or smaller effort...). With regards 
-> on the priorities, I think if we can make the OS X support in 
-> "manual patching required" way, then? 
-> 
-> So lets include this patch, and just note it OS X doc "you have to revert
-> commit XXX and re-apply any changes to the relevant code"?
+Hi folks:
 
-IIRC block device signature detection isn't really required, it's just
-a nice-to-have; perhaps if blkid isn't present, that functionality can
-simply be disabled?
+   I've noticed some "odd" behavior while experimenting with xfs mounts 
+on relatively recent kernels (3.18 series).  Basically, the 
+swalloc,allocsize=x options are being modified to something different.  
+That is:
 
--Eric
+root@usn-04:~/burn-in/fio# uname -r
+3.18.12.scalable
+
+root@usn-04:~/burn-in/fio# mount -o 
+inode64,noatime,nodiratime,swalloc,allocsize=1280k /dev/sda /data/1
+
+root@usn-04:~/burn-in/fio# mount | grep sda
+/dev/sda on /data/1 type xfs 
+(rw,noatime,nodiratime,swalloc,attr2,inode64,allocsize=256k,noquota)
+
+This is a hardware RAID6 with a 128k chunk size and 12 elements (so 10 
+data drives, thus the 1280k allocsize for stripe width allocation).  Is 
+this something specific to xfs itself, or is this an issue in the mount 
+tools ?
+
+FWIW: we are using xfs-tools 3.2.2, kernel 3.18.12.  I've also seen this 
+with the 3.10 series though, so I am not sure where to look to track 
+this down.  Any guidance/suggestion?  Thanks!
+
+Joe
+
+joe.landman@gmail.com
+
 
 _______________________________________________
 xfs mailing list
