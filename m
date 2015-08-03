@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4217B7F8D
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 09:40:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2E11330404E
-	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 07:40:31 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ABF4D7F7C
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 09:40:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 478A7AC002
+	for <xfs@oss.sgi.com>; Mon,  3 Aug 2015 07:40:32 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dpiiJaQ5WJ5VEQBE (version=TLSv1
+	cuda.sgi.com with ESMTP id T6IZOXR1t4GGoZEc (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Aug 2015 07:40:30 -0700 (PDT)
+	Mon, 03 Aug 2015 07:40:31 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v3 07/11] xfsprogs: missing and dummy calls for OS X support
-Date: Mon,  3 Aug 2015 16:39:45 +0200
-Message-Id: <1438612789-17486-8-git-send-email-jtulak@redhat.com>
+Subject: [PATCH v3 08/11] xfsprogs: Add fls check into autoconf
+Date: Mon,  3 Aug 2015 16:39:46 +0200
+Message-Id: <1438612789-17486-9-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
 References: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,242 +31,93 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-Add and update various API, macros and types where is some change
-in OS X or xfsprogs. Most changes are in darwin.h.
-
-Add dummy implementations where native support is nonexistent
-and the tools are not expected to work anyway, so all tools can be
-at least compiled.
+Add a check for fls call, and a replacement call
+for platforms without fls.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fsr/xfs_fsr.c    |   8 +++
- include/darwin.h | 153 +++++++++++++++++++++++++++++++++++++++++++++++++------
- 2 files changed, 145 insertions(+), 16 deletions(-)
+ configure.ac          |  1 +
+ include/bitops.h      |  2 ++
+ include/builddefs.in  |  4 ++++
+ m4/package_libcdev.m4 | 14 ++++++++++++++
+ 4 files changed, 21 insertions(+)
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index efc17a8..d8a4ece 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -43,6 +43,14 @@
- #define _PATH_FSRLAST		"/var/tmp/.fsrlast_xfs"
- #define _PATH_PROC_MOUNTS	"/proc/mounts"
+diff --git a/configure.ac b/configure.ac
+index fe991cc..8f966a6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -113,6 +113,7 @@ AC_HAVE_PREADV
+ AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_BLKID_TOPO($enable_blkid)
+ AC_HAVE_READDIR
++AC_HAVE_FLS
  
-+#ifdef USE_DUMMY_XATTR
-+	/* OS X has fsetxattr with different number of arguments.
-+	 * Because it won't work anyway (no fstab/mtab and so on),
-+	 * hijack the call to a dummy function so it can at least
-+	 * compile.
-+	 */
-+#  define fsetxattr(a,b,c,d,e) dummy_fsetxattr(a,b,c,d,e)
-+#endif
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+diff --git a/include/bitops.h b/include/bitops.h
+index 930f64a..44599a7 100644
+--- a/include/bitops.h
++++ b/include/bitops.h
+@@ -5,6 +5,7 @@
+  * fls: find last bit set.
+  */
  
- char *progname;
- 
-diff --git a/include/darwin.h b/include/darwin.h
-index 2b470b4..caec897 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -73,45 +73,37 @@ static __inline__ void platform_getoptreset(void)
- 
- static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
++#ifndef HAVE_FLS
+ static inline int fls(int x)
  {
--	return uuid_compare(uu1, uu2, NULL);
-+	return uuid_compare((const unsigned char *) uu1, (const unsigned char*) uu2);
+ 	int r = 32;
+@@ -32,6 +33,7 @@ static inline int fls(int x)
+ 	}
+ 	return r;
  }
++#endif /* HAVE_FLS */
  
- static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
+ static inline int fls64(__u64 x)
  {
--	uint32_t status;
--	char *s;
--	uuid_to_string(uu, &s, &status);
--	if (status == uuid_s_ok)
--		strcpy(buffer, s);
--	else buffer[0] = '\0';
--	free(s);
-+	uuid_unparse(*uu, buffer);
- }
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 7f939f6..9feb096 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -104,6 +104,7 @@ HAVE_FIEMAP = @have_fiemap@
+ HAVE_PREADV = @have_preadv@
+ HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+ HAVE_READDIR = @have_readdir@
++HAVE_FLS = @have_fls@
  
- static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
- {
--	uint32_t status;
--	uuid_from_string(buffer, uu, &status);
--	return (status == uuid_s_ok);
-+	return uuid_parse(buffer, *uu);
- }
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+@@ -131,6 +132,9 @@ PLDLIBS = -L/usr/local/lib -lintl
+ PCFLAGS = -I/usr/local/include $(GCCFLAGS)
+ DEPENDFLAGS = -D__FreeBSD__
+ endif
++ifeq ($(HAVE_FLS),yes)
++LCFLAGS+= -DHAVE_FLS
++endif
  
- static __inline__ int platform_uuid_is_null(uuid_t *uu)
- {
--	return uuid_is_nil(uu, NULL);
-+	return uuid_is_null(*uu);
- }
+ GCFLAGS = $(OPTIMIZER) $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 919ae0a..d7f37ca 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -202,3 +202,17 @@ AC_DEFUN([AC_HAVE_READDIR],
+     AC_SUBST(have_readdir)
+   ])
  
- static __inline__ void platform_uuid_generate(uuid_t *uu)
- {
--	uuid_create(uu, NULL);
-+	uuid_generate(*uu);
- }
- 
- static __inline__ void platform_uuid_clear(uuid_t *uu)
- {
--	uuid_create_nil(uu, NULL);
-+	uuid_clear(*uu);
- }
- 
- static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
- {
--	memcpy(dst, src, sizeof(uuid_t));
-+	uuid_copy(*dst, *src);
- }
- 
- #define __int8_t	int8_t
-@@ -147,11 +139,13 @@ typedef int64_t		xfs_daddr_t;
- #define O_SYNC          0
- #endif
- 
--#define ENOATTR		989     /* Attribute not found */
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
- #define EFSBADCRC	991	/* Bad CRC detected */
- #define constpp		char * const *
- 
-+#define XATTR_SIZE_MAX 65536    /* size of an extended attribute value (64k) */
-+#define XATTR_LIST_MAX 65536    /* size of extended attribute namelist (64k) */
-+
- #define HAVE_FID	1
- 
- static __inline__ int
-@@ -160,4 +154,131 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- 	return 0;
- }
- 
-+
-+/*
-+ * Dummy POSIX timer replacement
-+ */
-+#define CLOCK_REALTIME 1
-+typedef uint64_t timer_t;
-+typedef double   timer_c;
-+typedef clock_id_t clockid_t;
-+struct itimerspec
-+  {
-+    struct timespec it_interval;
-+    struct timespec it_value;
-+  };
-+
-+static inline int timer_create (clockid_t __clock_id,
-+                         struct sigevent *__restrict __evp,
-+                         timer_t *__restrict __timerid)
-+{
-+	return 0;
-+}
-+
-+static inline int timer_settime (timer_t __timerid, int __flags,
-+                          const struct itimerspec *__restrict __value,
-+                          struct itimerspec *__restrict __ovalue)
-+{
-+	return 0;
-+}
-+
-+static inline int timer_delete (timer_t __timerid)
-+{
-+	return 0;
-+}
-+
-+static inline int timer_gettime (timer_t __timerid, struct itimerspec *__value)
-+{
-+	return 0;
-+}
-+
-+static inline int nftw64(const char *path, int (*fn)(const char *, const struct stat *ptr, int flag, struct FTW *), int depth,
-+         int flags)
-+{
-+	return nftw(path, fn, depth, flags);
-+}
-+
-+#define MREMAP_FIXED 1
-+#define MREMAP_MAYMOVE 2
-+static inline void *mremap(void *old_address, size_t old_size,
-+                    size_t new_size, int flags, ... /* void *new_address */)
-+{
-+	return NULL;
-+}
-+
-+/* FSR */
-+
-+#define		_PATH_MOUNTED   "/etc/mtab"
-+#define		USE_DUMMY_XATTR
-+
-+typedef int __fsblkcnt_t;
-+typedef int __fsfilcnt_t;
-+typedef long long int __fsblkcnt64_t;
-+typedef long long int __fsfilcnt64_t;
-+
-+struct statvfs64
-+{
-+	unsigned long int f_bsize;
-+	unsigned long int f_frsize;
-+	__fsblkcnt64_t f_blocks;
-+	__fsblkcnt64_t f_bfree;
-+	__fsblkcnt64_t f_bavail;
-+	__fsfilcnt64_t f_files;
-+	__fsfilcnt64_t f_ffree;
-+	__fsfilcnt64_t f_favail;
-+	unsigned long int f_fsid;
-+	int __f_unused;
-+	unsigned long int f_flag;
-+	unsigned long int f_namemax;
-+	int __f_spare[6];
-+};
-+
-+struct mntent
-+{
-+	char *mnt_fsname;		/* Device or server for filesystem.  */
-+	char *mnt_dir;		/* Directory mounted on.  */
-+	char *mnt_type;		/* Type of filesystem: ufs, nfs, etc.  */
-+	char *mnt_opts;		/* Comma-separated options for fs.  */
-+	int mnt_freq;		/* Dump frequency (in days).  */
-+	int mnt_passno;		/* Pass number for `fsck'.  */
-+};
-+
-+static inline FILE *setmntent(const char *filename, const char *type)
-+{
-+	return NULL;
-+}
-+
-+static inline int endmntent(FILE *fp)
-+{
-+	return 0;
-+}
-+
-+static inline struct mntent *getmntent(FILE *fp)
-+{
-+	return NULL;
-+}
-+
-+static inline int addmntent(FILE *fp, const struct mntent *mnt)
-+{
-+	return 0;
-+}
-+
-+static inline char *hasmntopt(const struct mntent *mnt, const char *opt)
-+{
-+	return NULL;
-+}
-+
-+static inline int statvfs64 (const char *__restrict __file, 
-+							 struct statvfs64 *__restrict __buf)
-+{
-+	return 0;
-+}
-+
-+static inline int dummy_fsetxattr (int filedes, const char *name,
-+                       const void *value, size_t size, int flags)
-+{
-+	return 0;
-+}
-+
-+
- #endif	/* __XFS_DARWIN_H__ */
++#
++# Check if we have a flc call (Mac OS X)
++#
++AC_DEFUN([AC_HAVE_FLS],
++  [ AC_MSG_CHECKING([for fls])
++    AC_TRY_LINK([
++#include <string.h>
++    ], [
++         fls(0);
++    ], have_fls=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_fls)
++  ])
 -- 
 2.4.3
 
