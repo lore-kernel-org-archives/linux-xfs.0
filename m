@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 61D887F9B
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 03:39:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5055E304039
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 01:39:09 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id JnrFWxs5omOEdLFf (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2015 01:39:07 -0700 (PDT)
-Date: Tue, 4 Aug 2015 04:38:42 -0400 (EDT)
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <2026707053.2526927.1438677522777.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20150803221629.GT3902@dastard>
-References: <1437397018-12864-1-git-send-email-jtulak@redhat.com>
-	<1437397018-12864-2-git-send-email-jtulak@redhat.com>
-	<20150802234250.GT16638@dastard>
-	<1142980605.1953560.1438594488229.JavaMail.zimbra@redhat.com>
-	<20150803221629.GT3902@dastard>
-Subject: Re: [PATCH v2 1/4] xfsprogs: Prefix LIST_... macros to XFS_LIST_...
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2CE977FA9
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 03:41:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BA35EAC001
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 01:41:19 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id jv1OTXXEScStd3UW (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 04 Aug 2015 01:41:17 -0700 (PDT)
+Date: Tue, 4 Aug 2015 01:41:17 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 03/11] xfsprogs: undefined variable fix
+Message-ID: <20150804084117.GA12844@infradead.org>
+References: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
+	<1438612789-17486-4-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1438612789-17486-4-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,49 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
+Looks good,
 
-
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
-
-> > /usr/include/sys/queue.h:417:9: note: previous definition is here
-> > #define LIST_HEAD(name, type)                                           \
-> >         ^
-> > (and the same for LIST_HEAD_INIT)
-> > 
-> > sys/queue.h is not linked directly, but from many system libraries.
-> > A quick grep on /usr/include/ shows 24 header files including the queue,
-> > sys/mount.h one of them. And I didn't found a way how to avoid it.
-> 
-> Ok, so 4.4BSD introduced these years ago. Now it rings a bell, but I
-> can't find the relevant thread I'm thinking of (google has become
-> almost useless as a mailing list search engine in recent times).
-> 
-> I suspect that we are going to need an
-> 
-> #undef LIST_HEAD
-> 
-> somewhere in include/libxfs.h, libxfs/libxfs_priv.h and/or
-> include/list.h just to ensure we don't use the system definitions
-> (with a large comment explaining it).
-> 
-
-Great! Putting it in libxfs/list.h seems to be enough. This header should be
-included anywhere where our lists are used, so I think there should be no
-risk of using the system definition anymore. I'm making an updated patch.
-
-Thanks for pointing on #undef. I'm sure I must have heard of it before, 
-but as I never used it... :-)
-
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
