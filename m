@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C9407FA4
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 06:16:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AE9930404E
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 04:16:37 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5B6277FA4
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 06:17:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C1D2304039
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 04:17:27 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 8eML7cmEdSAw7BFT (version=TLSv1 cipher=AES128-SHA
+	ESMTP id 2veFQDMd7GRriSal (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2015 04:16:35 -0700 (PDT)
-Date: Tue, 4 Aug 2015 04:16:35 -0700
+	Tue, 04 Aug 2015 04:17:10 -0700 (PDT)
+Date: Tue, 4 Aug 2015 04:17:09 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: fix syntax error in include/buildmacros
-Message-ID: <20150804111635.GA18906@infradead.org>
-References: <1438659509-16656-1-git-send-email-eguan@redhat.com>
+Subject: Re: [PATCH] xfs_fsr: Fix parentheses around truth value
+Message-ID: <20150804111709.GB18906@infradead.org>
+References: <55C031DC.6050404@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1438659509-16656-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <55C031DC.6050404@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +29,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Aug 04, 2015 at 11:38:29AM +0800, Eryu Guan wrote:
-> There's an extra ";" in include/buildmacros, which causes make
-> install-dev to fail
-> 
->     ......
->     Installing libhandle-install-dev
->     cd ../libhandle/.libs; ... if [ "x/usr/lib64" != "x/usr/lib64"; ]; ...
->     /bin/sh: line 0: [: missing `]'
->     /bin/sh: ]: command not found
->     ......
-> 
-> This was introduced by
-> 02ef543 libhandle: fix installation for symlinked /usr
-
-Thanks, loosk like some shells are stricter than others here.
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
