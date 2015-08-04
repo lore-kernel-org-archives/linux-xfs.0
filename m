@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 536637FA8
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 04:01:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E511D7FA8
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 04:21:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CFD48AC001
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 02:01:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VlYld3Y1pvrllhOB (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D226A8F8049
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 02:21:46 -0700 (PDT)
+Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
+	cuda.sgi.com with ESMTP id AqijA2SACwKowdAM (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2015 02:01:20 -0700 (PDT)
+	Tue, 04 Aug 2015 02:21:44 -0700 (PDT)
+Date: Tue, 4 Aug 2015 05:21:22 -0400 (EDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v4 11/11] xfsprogs: prevent LIST_ macros conflicts
-Date: Tue,  4 Aug 2015 11:01:14 +0200
-Message-Id: <1438678874-23765-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1438612789-17486-12-git-send-email-jtulak@redhat.com>
-References: <1438612789-17486-12-git-send-email-jtulak@redhat.com>
+Message-ID: <1716990041.2536058.1438680082030.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150804084625.GB12844@infradead.org>
+References: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
+	<1438612789-17486-5-git-send-email-jtulak@redhat.com>
+	<20150804084625.GB12844@infradead.org>
+Subject: Re: [PATCH v3 04/11] xfsprogs: Add ifdef dirent checks where it was
+	missing
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,52 +27,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-BSD 4.4 added some LIST_ macros into system header files, which
-causes "macro redefined" warnings. To ensure we use our own macros,
-undefine the system ones at first.
 
-The conflicting macros are LIST_HEAD and LIST_HEAD_INIT
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- include/list.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+----- Original Message -----
+> From: "Christoph Hellwig" <hch@infradead.org>
+> To: "Jan Tulak" <jtulak@redhat.com>
+> Cc: hch@infradead.org, xfs@oss.sgi.com
+> Sent: Tuesday, August 4, 2015 10:46:25 AM
+> Subject: Re: [PATCH v3 04/11] xfsprogs: Add ifdef dirent checks where it was	missing
+> 
+> > diff --git a/io/readdir.c b/io/readdir.c
+> > index 20b8898..ed8f04d 100644
+> > --- a/io/readdir.c
+> > +++ b/io/readdir.c
+> > @@ -104,12 +104,16 @@ read_directory(
+> >  		if (!dirent)
+> >  			break;
+> >  
+> > +#ifdef _DIRENT_HAVE_D_RECLEN
+> >  		*total += dirent->d_reclen;
+> > +#endif
+> 
+> You probably want to use d_namen + sizeof(*dirent) to approimate
+> the value if d_reclen doesn't exist.
+> 
+> >  		count++;
+> >  
+> >  		if (dump) {
+> >  			dump_dirent(offset, dirent);
+> > +#ifdef _DIRENT_HAVE_D_OFF
+> >  			offset = dirent->d_off;
+> > +#endif
+> 
+> We're only using the offset for dumping the value, maybe setting
+> it to 0 and adding a comment explaining it should go into the else
+> branch here?
+> 
 
-diff --git a/include/list.h b/include/list.h
-index 3f087a4..f92faed 100644
---- a/include/list.h
-+++ b/include/list.h
-@@ -19,6 +19,20 @@
- #define __LIST_H__
- 
- /*
-+ * This undef is here because BSD 4.4 added some LIST_ macros into system
-+ * header file sys/queue.h. This header is included in many other system
-+ * headers and thus causes "macro redefined" warnings.
-+ *
-+ * As OS X is kind of a derivate of BSD, this affects OS X too.
-+ *
-+ * To use our own LIST_ macros (copied from kernel code), we have to
-+ * at first undefine the conflicting system macros.
-+ *
-+ */
-+#undef LIST_HEAD
-+#undef LIST_HEAD_INIT
-+
-+/*
-  * Simple, generic doubly-linked list implementation.
-  */
- 
+That sounds reasonable, sending an updated patch.
+
+Thanks. :-)
+
+Jan
+
 -- 
-2.4.3
+Jan Tulak
+jtulak@redhat.com
 
 _______________________________________________
 xfs mailing list
