@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A6AB67FAE
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 17:43:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BF60AC001
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 15:42:58 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 294247FB1
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 17:58:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB8C6AC001
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 15:58:36 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	xOSR6QG9bDL8Mv9h for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2015 15:42:55 -0700 (PDT)
-Date: Wed, 5 Aug 2015 08:42:40 +1000
+	4PVGBtRNDvdweNDc for <xfs@oss.sgi.com>;
+	Tue, 04 Aug 2015 15:58:32 -0700 (PDT)
+Date: Wed, 5 Aug 2015 08:58:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS File system in trouble
-Message-ID: <20150804224240.GU16638@dastard>
-References: <03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
-	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
-	<55AAF73A.4040903@mygrande.net>
-	<20150720111747.GA53450@bfoster.bfoster>
-	<55B73365.1050908@mygrande.net>
-	<20150728123307.GC38784@bfoster.bfoster>
-	<55B79BFD.6020509@mygrande.net>
-	<20150728221150.GA26604@bfoster.bfoster>
-	<55BE7C75.4060604@mygrande.net> <55C06F41.4030502@mygrande.net>
+Subject: Re: Bug#793495: xfsprogs fails to build on debian ppc64el
+Message-ID: <20150804225819.GV16638@dastard>
+References: <55BB9271.6000300@gmx.net> <55BBEF4F.6070809@linux.vnet.ibm.com>
+	<20150801225230.GR16638@dastard>
+	<41BF7556-AAAB-4F22-B8C2-8991A0917DE2@gmx.net>
+	<20150802221301.GO3902@dastard>
+	<55C0D916.1010102@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55C06F41.4030502@mygrande.net>
+In-Reply-To: <55C0D916.1010102@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,79 +33,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Brian Foster <bfoster@redhat.com>, Kris Rusocki <kszysiu@braxis.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Fernando Seiti Furusato <ferseiti@linux.vnet.ibm.com>
+Cc: xfs@oss.sgi.com, 793495@bugs.debian.org, Breno Leitao <brenohl@br.ibm.com>, Daniel Bast <daniel.bast@gmx.net>
 
-On Tue, Aug 04, 2015 at 02:52:33AM -0500, Leslie Rhorer wrote:
-> 	It's failing, again.  The rsync job failed and when I attempt to
-> untar the file in the image mount, it fails there, as well.  See
-> below.  I formatted a 1.5T drive as xfs and mounted it under /media.
-> I then dumped the failing FS to a file on /media using xfs_metadump
-> and used xfs_mdrestore to create an image of the FS.  I then mounted
-> the image, copied over the tarball to its location, and ran tar to
-> extract the files:
->
-> [131874.545344] loop: module loaded
-> [131874.549914] XFS (loop0): Mounting V4 Filesystem
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+On Tue, Aug 04, 2015 at 12:24:06PM -0300, Fernando Seiti Furusato wrote:
+> Hi Dave.
+> 
+> I have just noticed that for config.guess and config.sub to be updated, no
+> autoreconf or dh_autotools-dev is needed, because of how Makefile was made.
+> 
+> In Makefile, @row 80:
+> 
+>  LIBTOOLIZE_INSTALL = `libtoolize -n -i >/dev/null 2>/dev/null && echo -i`
+> 
+>  configure:
+>          libtoolize -c $(LIBTOOLIZE_INSTALL) -f
+>          cp include/install-sh .
+>          aclocal -I m4
+>          autoconf
+> 
+> This runs libtoolize -c -i which updates those files.
+> 
+> The file debian/rules runs `make default`, which at some point calls the target
+> above (`make configure`). But the file configure already exists, so it does not
+> run.
 
-> [131874.555540] XFS (loop0): Ending clean mount
-> [132020.964431] XFS (loop0): xfs_iread: validation failed for inode 124656869424 failed
-> [132020.964435] ffff88028b078000: 49 4e 00 00 03 02 00 00 00 30 00 70 00 00 03 e8  IN.......0.p....
-> [132020.964437] ffff88028b078010: 00 00 00 00 06 20 b0 6f 01 2e 00 00 00 00 00 16  ..... .o........
-> [132020.964438] ffff88028b078020: 01 57 37 fd 2b 5d 22 9e 1e 0a 61 8c 00 00 00 20  .W7.+]"...a....
-> [132020.964440] ffff88028b078030: ff ff 00 d2 1b f6 27 90 00 00 00 00 00 00 00 00  ......'.........
-> [132020.964454] XFS (loop0): Internal error xfs_iread at line 392 of
-> file /build/linux-QZaPpC/linux-3.16.7-ckt11/fs/xfs/xfs_inode_buf.c.
-> Caller xfs_iget+0x24b/0x690 [xfs]
+Right. Intentionally so.
 
-That's a different error to all the ones you've previously posted.
-This is an inode allocation that has found a bad inode on disk.
+....
 
-Decoding the 64 bytes above:
+> diff -Nru xfsprogs-3.2.4/Makefile xfsprogs-3.2.4ppc64el1/Makefile
+> --- xfsprogs-3.2.4/Makefile	2013-10-10 17:07:16.000000000 -0400
+> +++ xfsprogs-3.2.4ppc64el1/Makefile	2015-08-04 11:06:40.000000000 -0400
+> @@ -116,7 +116,7 @@
+>  	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-qa
+>  
+>  distclean: clean
+> -	$(Q)rm -f $(LDIRT)
+> +	$(Q)rm -f $(LDIRT) $(CONFIGURE)
+>  
+>  realclean: distclean
+>  	$(Q)rm -f $(CONFIGURE) .gitcensus
 
-	di_magic = 0x494e
-	di_mode = 0
-	di_version = 3			<<< That's *wrong*
-	di_format = 2
-	di_onlink = 0
-	di_uid = 0x300070		<<< Looks unlikely
-	di_gid = 0x3e8
-----
-	di_nlink = 0
-	di_projlo = 0x620		<<< should be zero
-	di_projhi = 0xb06f		<<< should be zero
-	di_pad[6] = 0x1 0x2e 0 0 0 0	<<< should be zero
-	di_flushiter = 0x16		<<< should be zero for v3 inode
----
-	di_atime	<random>
-	di_mtime	<random, should be similar to atime>
-	di_ctime	<random, should be similar/same as mtime>
-	di_size = 0x20ffff00d2		<<< should be zero
-----
-	di_nblocks = 0x1bf6279000000000 <<< should be zero
-	di_extsize = 0
-----
+That makes distclean do the same thing that realclean does and, as
+that commit I pointed out previously, has been intentionally
+separated in the build system. You could make the debian/rules file
+simply call 'make realclean' rather than 'make distclean' to acheive
+this without changing the main makefile. Either way, however, I
+don't think that's the problem.
 
-You've just created and mounted a v4 filesystem, which means it is
-using v2 inodes. This inode read back as a v3 inode, with lots of
-crap in places where there should be zeros for either v2 or v3 inodes.
+Darrick Wong noted on #xfs that his builds of xfsprogs on ppc64el
+from a tarball don't fail at all. His libtool chain is:
 
-This does not look like a filesystem problem - it's clear that what
-has come from disk (or a cached memory buffer) is full of garbage
-and contains invalid configuration, and the filesystem has quite
-correctly detected the corruption and shut down. The filesystem
-would give the same errors if it tried to *write* such a corrupt
-block, so we know what was just been detected has not come from the
-filesytem code...
+>       host-triplet:     powerpc64le-unknown-linux-gnu
+>       libtoolize:       (GNU libtool) 2.4.2 Debian-2.4.2-1.7ubuntu1
+>       automake:         automake (GNU automake) 1.14.1
+>       autoconf:         autoconf (GNU Autoconf) 2.69
 
-FWIW, I've occasionally seen this sort of thing happen when a power
-supply had gone bad - it wasn't bad enough to make things fail, it
-ust caused transient issues under load that manifest as corruptions
-and crashes. Given that you've already found one set of hardware
-problems and the corruption patterns are unlike any
-filesystem/storage problem I've ever seen, I'd suggest that you
-still have some kind of hardware issue...
+Which is similar to mine, but libtoolize is slightly older (and I'm
+on x86_64-pc-linux-gnu). It turns out that the reason the build
+works on his machines is that someone had made a small manual change
+to /usr/share/aclocal/libtool.m4:
+
+--- a/libtool.m4       2014-02-11 04:58:49.000000000 -0800
++++ b/libtool.m4  2015-07-31 13:48:23.375432372 -0700
+@@ -1312,7 +1312,7 @@
+   rm -rf conftest*
+   ;;
+
+-x86_64-*kfreebsd*-gnu|x86_64-*linux*|powerpc*-*linux*| \
++x86_64-*kfreebsd*-gnu|x86_64-*linux*|ppc*-*linux*|powerpc*-*linux*| \
+ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+   # Find out which ABI we are using.
+   echo 'int i;' > conftest.$ac_ext
+
+i.e. the problem looks to be that the libtool package shipped in
+debian/unstable does not support ppc64el correctly....
 
 Cheers,
 
