@@ -1,21 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BCDB37FAE
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 11:24:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E635AC004
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 09:24:35 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id z0vD9gspfQsK19kO for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2015 09:24:34 -0700 (PDT)
-Message-ID: <55C0E73B.1000904@sandeen.net>
-Date: Tue, 04 Aug 2015 09:24:27 -0700
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id A6AB67FAE
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 17:43:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BF60AC001
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 15:42:58 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	xOSR6QG9bDL8Mv9h for <xfs@oss.sgi.com>;
+	Tue, 04 Aug 2015 15:42:55 -0700 (PDT)
+Date: Wed, 5 Aug 2015 08:42:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS File system in trouble
+Message-ID: <20150804224240.GU16638@dastard>
+References: <03864DDC681E664EBF5D47682BE7D7CF0D358740@USADCWVEMBX07.corp.global.level3.com>
+	<CAN3tLtJuk3LKHtxvbXATBR7bjr2e=GTX-fgs-jQniuxqRXjeoA@mail.gmail.com>
+	<55AAF73A.4040903@mygrande.net>
+	<20150720111747.GA53450@bfoster.bfoster>
+	<55B73365.1050908@mygrande.net>
+	<20150728123307.GC38784@bfoster.bfoster>
+	<55B79BFD.6020509@mygrande.net>
+	<20150728221150.GA26604@bfoster.bfoster>
+	<55BE7C75.4060604@mygrande.net> <55C06F41.4030502@mygrande.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfsprogs: blkid is now mandatory
-References: <1156743222.24471614.1436281858017.JavaMail.zimbra@redhat.com>	<1436346893-11831-1-git-send-email-jtulak@redhat.com>	<1508777144.956841.1437482376774.JavaMail.zimbra@redhat.com>	<20150726162530.GE29329@infradead.org>	<1326157887.2004059.1438598404429.JavaMail.zimbra@redhat.com>	<55BFA2C5.20408@redhat.com>
-	<1050814645.2742881.1438702230663.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1050814645.2742881.1438702230663.JavaMail.zimbra@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <55C06F41.4030502@mygrande.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,82 +37,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Leslie Rhorer <lrhorer@mygrande.net>
+Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Brian Foster <bfoster@redhat.com>, Kris Rusocki <kszysiu@braxis.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 8/4/15 8:30 AM, Jan Tulak wrote:
-> 
-> 
-> ----- Original Message -----
->> From: "Eric Sandeen" <sandeen@redhat.com>
->> To: "Jan Tulak" <jtulak@redhat.com>, "Christoph Hellwig" <hch@infradead.org>
->> Cc: xfs@oss.sgi.com
->> Sent: Monday, August 3, 2015 7:20:05 PM
->> Subject: Re: [PATCH v3] xfsprogs: blkid is now mandatory
->>
->> On 8/3/15 3:40 AM, Jan Tulak wrote:
->>>
->>>
->>> ----- Original Message -----
->>>> From: "Christoph Hellwig" <hch@infradead.org>
->>>>
->>>> On Tue, Jul 21, 2015 at 08:39:36AM -0400, Jan Tulak wrote:
->>>>> I just found that while it is possible to get blkid on OS X, it is
->>>>> in 1.0.0 version which doesn't have blkid_probe_get function.
->>>>> I'm examining whether it is possible to get an updated version there,
->>>>> but right now, this patch breaks OS X support. Unfortunately I didn't
->>>>> noticed of this before, as the OS X port was terribly out of date.
->>>>>
->>>>> So this patch shouldn't be included until I find how to get around.
->>>>
->>>> I don't think this is a lbocker given that OSX support doesn't
->>>> even work.
->>>>
->>>> To the contrary I'd really prefer to go in ASAP to avoid anyone
->>>> relying on it longer than nessecary.
->>>
->>> I tried to get newer blkid on OSX, but so far without a big success
->>> (well, it looks like a kind of a small dependency hell that would
->>> have to be ported, with bigger or smaller effort...). With regards
->>> on the priorities, I think if we can make the OS X support in
->>> "manual patching required" way, then?
->>>
->>> So lets include this patch, and just note it OS X doc "you have to revert
->>> commit XXX and re-apply any changes to the relevant code"?
->>
->> IIRC block device signature detection isn't really required, it's just
->> a nice-to-have; perhaps if blkid isn't present, that functionality can
->> simply be disabled?
-> 
-> Signature detection (if I understand you correctly 'signature of existing 
-> FS') could be really disabled, I think. That would take care of 
-> check_overwrite(). However, blkid is also used in get_topology. That one
-> calls blkid_get_topology, which uses blkid's functions for finding out
-> sector and io sizes.
+On Tue, Aug 04, 2015 at 02:52:33AM -0500, Leslie Rhorer wrote:
+> 	It's failing, again.  The rsync job failed and when I attempt to
+> untar the file in the image mount, it fails there, as well.  See
+> below.  I formatted a 1.5T drive as xfs and mounted it under /media.
+> I then dumped the failing FS to a file on /media using xfs_metadump
+> and used xfs_mdrestore to create an image of the FS.  I then mounted
+> the image, copied over the tarball to its location, and ran tar to
+> extract the files:
+>
+> [131874.545344] loop: module loaded
+> [131874.549914] XFS (loop0): Mounting V4 Filesystem
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Well, it would be sane to default to 512 sectors; if that fails it'll
-be obvious fairly quickly, and the user can always use the command line
-to specify 4k sectors (or stripe alignment, etc) manually.
+> [131874.555540] XFS (loop0): Ending clean mount
+> [132020.964431] XFS (loop0): xfs_iread: validation failed for inode 124656869424 failed
+> [132020.964435] ffff88028b078000: 49 4e 00 00 03 02 00 00 00 30 00 70 00 00 03 e8  IN.......0.p....
+> [132020.964437] ffff88028b078010: 00 00 00 00 06 20 b0 6f 01 2e 00 00 00 00 00 16  ..... .o........
+> [132020.964438] ffff88028b078020: 01 57 37 fd 2b 5d 22 9e 1e 0a 61 8c 00 00 00 20  .W7.+]"...a....
+> [132020.964440] ffff88028b078030: ff ff 00 d2 1b f6 27 90 00 00 00 00 00 00 00 00  ......'.........
+> [132020.964454] XFS (loop0): Internal error xfs_iread at line 392 of
+> file /build/linux-QZaPpC/linux-3.16.7-ckt11/fs/xfs/xfs_inode_buf.c.
+> Caller xfs_iget+0x24b/0x690 [xfs]
 
-> What I really can do is to say "on osx, you can mkfs only files," and cut
+That's a different error to all the ones you've previously posted.
+This is an inode allocation that has found a bad inode on disk.
 
-bleah!  ;)
+Decoding the 64 bytes above:
 
-> out the blkid parts. But it limits the usage on OS X even further.
-> Although, the removed code for non-blkid systems used platform_findsizes
-> as fallback. Are there some ugly, terrible monsters who would jump from
-> under the bed when doing that?
+	di_magic = 0x494e
+	di_mode = 0
+	di_version = 3			<<< That's *wrong*
+	di_format = 2
+	di_onlink = 0
+	di_uid = 0x300070		<<< Looks unlikely
+	di_gid = 0x3e8
+----
+	di_nlink = 0
+	di_projlo = 0x620		<<< should be zero
+	di_projhi = 0xb06f		<<< should be zero
+	di_pad[6] = 0x1 0x2e 0 0 0 0	<<< should be zero
+	di_flushiter = 0x16		<<< should be zero for v3 inode
+---
+	di_atime	<random>
+	di_mtime	<random, should be similar to atime>
+	di_ctime	<random, should be similar/same as mtime>
+	di_size = 0x20ffff00d2		<<< should be zero
+----
+	di_nblocks = 0x1bf6279000000000 <<< should be zero
+	di_extsize = 0
+----
 
-Well, the old findsizes was there for this reason, but now it's gone ;)
+You've just created and mounted a v4 filesystem, which means it is
+using v2 inodes. This inode read back as a v3 inode, with lots of
+crap in places where there should be zeros for either v2 or v3 inodes.
 
-> However, this patch affects only mkfs. It still should be possible to use
-> xfs_db and xfs_repair even on block devices. 
+This does not look like a filesystem problem - it's clear that what
+has come from disk (or a cached memory buffer) is full of garbage
+and contains invalid configuration, and the filesystem has quite
+correctly detected the corruption and shut down. The filesystem
+would give the same errors if it tried to *write* such a corrupt
+block, so we know what was just been detected has not come from the
+filesytem code...
 
-I don't know how invasive it'd be, but I think in the absence of blkid,
-we should still work, but lose signature detection, and fall back to geometry
-defaults.
+FWIW, I've occasionally seen this sort of thing happen when a power
+supply had gone bad - it wasn't bad enough to make things fail, it
+ust caused transient issues under load that manifest as corruptions
+and crashes. Given that you've already found one set of hardware
+problems and the corruption patterns are unlike any
+filesystem/storage problem I've ever seen, I'd suggest that you
+still have some kind of hardware issue...
 
--Eric
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
