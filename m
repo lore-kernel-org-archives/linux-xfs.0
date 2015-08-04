@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 569647FA4
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 06:18:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D5CB5AC001
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 04:18:43 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 787537FA4
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 06:21:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 24F2DAC002
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2015 04:21:05 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id I85UJfr2fQiKASfC (version=TLSv1 cipher=AES128-SHA
+	ESMTP id gnzoukBPIBAoV3HF (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2015 04:18:42 -0700 (PDT)
-Date: Tue, 4 Aug 2015 04:18:41 -0700
+	Tue, 04 Aug 2015 04:21:03 -0700 (PDT)
+Date: Tue, 4 Aug 2015 04:21:03 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 06/11] xfsprogs: Add includes required for OS X builds
-Message-ID: <20150804111841.GE18906@infradead.org>
+Subject: Re: [PATCH v3 08/11] xfsprogs: Add fls check into autoconf
+Message-ID: <20150804112103.GF18906@infradead.org>
 References: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
-	<1438612789-17486-7-git-send-email-jtulak@redhat.com>
+	<1438612789-17486-9-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1438612789-17486-7-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1438612789-17486-9-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,11 +33,13 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Tulak <jtulak@redhat.com>
 Cc: hch@infradead.org, xfs@oss.sgi.com
 
-First hunk looks good:
+Can't you just use something like:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Second hunk won't apply now that libdisk is gone.
+AC_CHECK_DECL([fls],
+        [AC_DEFINE([HAVE_FLS_PROTOTYPE], [1],
+	 [Define to 1 if have fls prototype])],
+	 [],
+	 [#include <string.h>])
 
 _______________________________________________
 xfs mailing list
