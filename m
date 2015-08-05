@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D764D7FC6
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 06:09:02 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 12D7C7FC7
+	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 06:09:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A6E99304051
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C6F07304053
 	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 04:09:02 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ZLFHgQghCwjOQkIQ for <xfs@oss.sgi.com>;
+	ziJrDPmuM8Vy6m3d for <xfs@oss.sgi.com>;
 	Wed, 05 Aug 2015 04:09:00 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1ZMwYt-0006H0-Mx
+	(envelope-from <dave@fromorbit.com>) id 1ZMwYt-0006H2-NU
 	for xfs@oss.sgi.com; Wed, 05 Aug 2015 21:08:43 +1000
 Received: from dave by disappointment with local (Exim 4.86_RC4)
-	(envelope-from <dave@disappointment.disaster>) id 1ZMwYt-0007nQ-MH
+	(envelope-from <dave@disappointment.disaster>) id 1ZMwYt-0007na-Mu
 	for xfs@oss.sgi.com; Wed, 05 Aug 2015 21:08:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/10] xfs: configurable error behaviour via sysfs
-Date: Wed,  5 Aug 2015 21:08:33 +1000
-Message-Id: <1438772921-28715-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/10] xfs: add configurable error support to metadata buffers
+Date: Wed,  5 Aug 2015 21:08:35 +1000
+Message-Id: <1438772921-28715-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1438772921-28715-1-git-send-email-david@fromorbit.com>
 References: <1438772921-28715-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,224 +39,224 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We need to be able to change the way XFS behaviours in error
-conditions depending on the type of underlying storage. This is
-necessary for handling non-traditional block devices with extended
-error cases, such as thin provisioned devices that can return ENOSPC
-as an IO error.
+With the error configuration handle for async metadata write errors
+in place, we can now add initial support to the IO error processing
+in xfs_buf_iodone_error().
 
-Introduce the basic sysfs infrastructure needed to define and
-configure error behaviours. This is done to be generic enough to
-extend to configuring behaviour in other error conditions, such as
-ENOMEM, which also has different desired behaviours according to
-machine configuration.
+Add an infrastructure function to look up the configuration handle,
+and rearrange the error handling to prepare the way for different
+error handling conigurations to be used.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.c |  9 +++++-
- fs/xfs/xfs_mount.h | 27 +++++++++++++++++
- fs/xfs/xfs_sysfs.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.h |  3 ++
- 4 files changed, 123 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_buf.h      |   1 +
+ fs/xfs/xfs_buf_item.c | 112 ++++++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_mount.h    |   3 ++
+ fs/xfs/xfs_sysfs.c    |  17 ++++++++
+ 4 files changed, 88 insertions(+), 45 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index a094e47..4245b7f3 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -693,10 +693,14 @@ xfs_mountfs(
- 	if (error)
- 		goto out;
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 68c8f2d..ed0ea41 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -181,6 +181,7 @@ typedef struct xfs_buf {
+ 	unsigned int		b_page_count;	/* size of page array */
+ 	unsigned int		b_offset;	/* page offset in first page */
+ 	int			b_error;	/* error code on I/O */
++	int			b_last_error;	/* previous async I/O error */
+ 	const struct xfs_buf_ops	*b_ops;
  
--	error = xfs_uuid_mount(mp);
-+	error = xfs_error_sysfs_init(mp);
- 	if (error)
- 		goto out_remove_sysfs;
+ #ifdef XFS_BUF_LOCK_TRACKING
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index ee63961..a09ae26 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -924,35 +924,22 @@ xfs_buf_do_callbacks(
+ 	}
+ }
  
-+	error = xfs_uuid_mount(mp);
-+	if (error)
-+		goto out_remove_error_sysfs;
+-/*
+- * This is the iodone() function for buffers which have had callbacks
+- * attached to them by xfs_buf_attach_iodone().  It should remove each
+- * log item from the buffer's list and call the callback of each in turn.
+- * When done, the buffer's fsprivate field is set to NULL and the buffer
+- * is unlocked with a call to iodone().
+- */
+-void
+-xfs_buf_iodone_callbacks(
++static bool
++xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_log_item	*lip = bp->b_fspriv;
+ 	struct xfs_mount	*mp = lip->li_mountp;
+ 	static ulong		lasttime;
+ 	static xfs_buftarg_t	*lasttarg;
+-
+-	if (likely(!bp->b_error))
+-		goto do_callbacks;
++	struct xfs_error_cfg	*cfg;
+ 
+ 	/*
+ 	 * If we've already decided to shutdown the filesystem because of
+ 	 * I/O errors, there's no point in giving this a retry.
+ 	 */
+-	if (XFS_FORCED_SHUTDOWN(mp)) {
+-		xfs_buf_stale(bp);
+-		bp->b_flags |= XBF_DONE;
+-		trace_xfs_buf_item_iodone(bp, _RET_IP_);
+-		goto do_callbacks;
+-	}
++	if (XFS_FORCED_SHUTDOWN(mp))
++		goto out_stale;
+ 
+ 	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+@@ -961,45 +948,80 @@ xfs_buf_iodone_callbacks(
+ 	}
+ 	lasttarg = bp->b_target;
+ 
++	/* synchronous writes will have callers process the error */
++	if (!(bp->b_flags & XBF_ASYNC))
++		goto out_stale;
++
++	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
++	ASSERT(bp->b_iodone != NULL);
 +
  	/*
- 	 * Set the minimum read and write sizes
+ 	 * If the write was asynchronous then no one will be looking for the
+-	 * error.  Clear the error state and write the buffer out again.
+-	 *
+-	 * XXX: This helps against transient write errors, but we need to find
+-	 * a way to shut the filesystem down if the writes keep failing.
+-	 *
+-	 * In practice we'll shut the filesystem down soon as non-transient
+-	 * errors tend to affect the whole device and a failing log write
+-	 * will make us give up.  But we really ought to do better here.
++	 * error.  If this is the first failure of this type, clear the error
++	 * state and write the buffer out again. This means we always retry an
++	 * async write failure at least once, but we also need to set the buffer
++	 * up to behave correctly now for repeated failures.
  	 */
-@@ -967,6 +971,8 @@ xfs_mountfs(
- 	xfs_da_unmount(mp);
-  out_remove_uuid:
- 	xfs_uuid_unmount(mp);
-+ out_remove_error_sysfs:
-+	xfs_error_sysfs_del(mp);
-  out_remove_sysfs:
- 	xfs_sysfs_del(&mp->m_kobj);
-  out:
-@@ -1052,6 +1058,7 @@ xfs_unmountfs(
- #endif
- 	xfs_free_perag(mp);
+-	if (XFS_BUF_ISASYNC(bp)) {
+-		ASSERT(bp->b_iodone != NULL);
+-
+-		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
++	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
++	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL)) ||
++	     bp->b_last_error != bp->b_error) {
++		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
++			        XBF_DONE | XBF_WRITE_FAIL);
++		bp->b_last_error = bp->b_error;
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_submit(bp);
++		return true;
++	}
  
-+	xfs_error_sysfs_del(mp);
- 	xfs_sysfs_del(&mp->m_kobj);
- }
+-		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
++	/*
++	 * Repeated failure on an async write. Take action according to the
++	 * error configuration we have been set up to use.
++	 */
++	if (cfg->fail_speed == XFS_ERR_FAIL_FAST)
++		goto permanent_error;
  
+-		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+-			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+-				       XBF_DONE | XBF_WRITE_FAIL;
+-			xfs_buf_submit(bp);
+-		} else {
+-			xfs_buf_relse(bp);
+-		}
+-
+-		return;
+-	}
++	/* still a transient error, higher layers will retry */
++	xfs_buf_ioerror(bp, 0);
++	xfs_buf_relse(bp);
++	return true;
+ 
+ 	/*
+-	 * If the write of the buffer was synchronous, we want to make
+-	 * sure to return the error to the caller of xfs_bwrite().
++	 * Permanent error - we need to trigger a shutdown if we haven't already
++	 * to indicate that inconsistency will result from this action.
+ 	 */
++permanent_error:
++	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++out_stale:
+ 	xfs_buf_stale(bp);
+ 	bp->b_flags |= XBF_DONE;
+-
+ 	trace_xfs_buf_error_relse(bp, _RET_IP_);
++	return false;
++}
++
++/*
++ * This is the iodone() function for buffers which have had callbacks attached
++ * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
++ * callback list, mark the buffer as having no more callbacks and then push the
++ * buffer through IO completion processing.
++ */
++void
++xfs_buf_iodone_callbacks(
++	struct xfs_buf		*bp)
++{
++	/*
++	 * If there is an error, process it. Some errors require us
++	 * to run callbacks after failure processing is done so we
++	 * detect that and take appropriate action.
++	 */
++	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
++		return;
++
++	/*
++	 * Successful IO or permanent error. Either way, we can clear the
++	 * retry state here in preparation for the next error that may occur.
++	 */
++	bp->b_last_error = 0;
+ 
+-do_callbacks:
+ 	xfs_buf_do_callbacks(bp);
+ 	bp->b_fspriv = NULL;
+ 	bp->b_iodone = NULL;
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7999e91..e51c63c 100644
+index 753060f..21caa5a 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -37,6 +37,31 @@ enum {
- 	XFS_LOWSP_MAX,
- };
+@@ -366,4 +366,7 @@ extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
  
-+/*
-+ * Error Configuration
-+ *
-+ * Error classes define the subsystem the configuration belongs to.
-+ * Error numbers define the errors that are configurable.
-+ * Failure types describe when an error is considered fatal.
-+ */
-+enum {
-+	XFS_ERR_CLASS_MAX,
-+};
-+enum {
-+	XFS_ERR_ERRNO_MAX,
-+};
-+enum {
-+	XFS_ERR_FAIL_DEFAULT,
-+	XFS_ERR_FAIL_NEVER,
-+	XFS_ERR_FAIL_SLOW,
-+	XFS_ERR_FAIL_FAST,
-+};
-+
-+struct xfs_error_cfg {
-+	struct xfs_kobj	kobj;
-+	int		fail_speed;
-+};
-+
- typedef struct xfs_mount {
- 	struct super_block	*m_super;
- 	xfs_tid_t		m_tid;		/* next unused tid for fs */
-@@ -127,6 +152,8 @@ typedef struct xfs_mount {
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
- 						/* low free space thresholds */
- 	struct xfs_kobj		m_kobj;
-+	struct xfs_kobj		m_error_kobj;
-+	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
  
- 	struct workqueue_struct *m_buf_workqueue;
- 	struct workqueue_struct	*m_data_workqueue;
++struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
++		int error_class, int error);
++
+ #endif	/* __XFS_MOUNT_H__ */
 diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index aa03670..017dcfb 100644
+index cb7ced0..3667d33 100644
 --- a/fs/xfs/xfs_sysfs.c
 +++ b/fs/xfs/xfs_sysfs.c
-@@ -17,10 +17,14 @@
-  */
- 
- #include "xfs.h"
--#include "xfs_sysfs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
- #include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_sysfs.h"
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
-+#include "xfs_mount.h"
- 
- struct xfs_sysfs_attr {
- 	struct attribute attr;
-@@ -237,3 +241,83 @@ struct kobj_type xfs_log_ktype = {
- 	.sysfs_ops = &xfs_log_ops,
- 	.default_attrs = xfs_log_attrs,
- };
-+
-+/*
-+ * Metadata IO error configuration
-+ *
-+ * The sysfs structure here is:
-+ *	...xfs/<dev>/error/<class>/<errno>/<error_attrs>
-+ *
-+ * where <class> allows use to discriminate between data IO and metadata IO,
-+ * and any other future type of IO (e.g. special inode or directory error
-+ * handling) we care to support.
-+ */
-+static struct attribute *xfs_error_attrs[] = {
-+	NULL,
-+};
-+
-+static inline struct xfs_error_cfg *
-+to_error_cfg(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
-+	return container_of(kobj, struct xfs_error_cfg, kobj);
-+}
-+
-+static ssize_t
-+xfs_error_show(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	char			*buf)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-+
-+	return xfs_attr->show ? xfs_attr->show(buf, cfg) : 0;
-+}
-+
-+static ssize_t
-+xfs_error_store(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	const char		*buf,
-+	size_t			count)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-+
-+	return xfs_attr->store ? xfs_attr->store(buf, count, cfg) : 0;
-+}
-+
-+static struct sysfs_ops xfs_error_ops = {
-+	.show = xfs_error_show,
-+	.store = xfs_error_store,
-+};
-+
-+struct kobj_type xfs_error_cfg_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_error_ops,
-+	.default_attrs = xfs_error_attrs,
-+};
-+
-+struct kobj_type xfs_error_ktype = {
-+	.release = xfs_sysfs_release,
-+};
-+
-+int
-+xfs_error_sysfs_init(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
-+
-+	/* .../xfs/<dev>/error/ */
-+	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
-+				&mp->m_kobj, "error");
-+	return error;
-+}
-+
-+void
-+xfs_error_sysfs_del(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_sysfs_del(&mp->m_error_kobj);
-+}
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index 240eee3..1f662d8 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -57,4 +57,7 @@ xfs_sysfs_del(
- 	wait_for_completion(&kobj->complete);
+@@ -355,3 +355,20 @@ xfs_error_sysfs_del(
+ 	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ 	xfs_sysfs_del(&mp->m_error_kobj);
  }
- 
-+int	xfs_error_sysfs_init(struct xfs_mount *mp);
-+void	xfs_error_sysfs_del(struct xfs_mount *mp);
 +
- #endif	/* __XFS_SYSFS_H__ */
++struct xfs_error_cfg *
++xfs_error_get_cfg(
++	struct xfs_mount	*mp,
++	int			error_class,
++	int			error)
++{
++	struct xfs_error_cfg	*cfg;
++
++	switch (error) {
++	default:
++		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
++		break;
++	}
++
++	return cfg;
++}
 -- 
 2.1.4
 
