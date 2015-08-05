@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E04AC7FEC
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 06:09:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5426D7FED
+	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 06:09:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8971CAC007
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3252AC008
 	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 04:09:04 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	8nX8pLfPHUgzeiK2 for <xfs@oss.sgi.com>;
-	Wed, 05 Aug 2015 04:09:02 -0700 (PDT)
+	Z5hiPp7iYJ3Yi9ZQ for <xfs@oss.sgi.com>;
+	Wed, 05 Aug 2015 04:09:03 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1ZMwYt-0006H4-P9
+	(envelope-from <dave@fromorbit.com>) id 1ZMwYt-0006H3-OY
 	for xfs@oss.sgi.com; Wed, 05 Aug 2015 21:08:43 +1000
 Received: from dave by disappointment with local (Exim 4.86_RC4)
-	(envelope-from <dave@disappointment.disaster>) id 1ZMwYt-0007nk-OH
+	(envelope-from <dave@disappointment.disaster>) id 1ZMwYt-0007nf-ND
 	for xfs@oss.sgi.com; Wed, 05 Aug 2015 21:08:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/10] xfs: add configuration of error failure speed
-Date: Wed,  5 Aug 2015 21:08:37 +1000
-Message-Id: <1438772921-28715-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/10] xfs: introduce table-based init for error behaviours
+Date: Wed,  5 Aug 2015 21:08:36 +1000
+Message-Id: <1438772921-28715-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1438772921-28715-1-git-send-email-david@fromorbit.com>
 References: <1438772921-28715-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,276 +39,116 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-On reception of an error, we can fail immediately, perform some
-bound amount of retries or retry indefinitely. The current behaviour
-we have is to retry forever.
-
-However, we'd like the ability to choose what behaviour we have, and
-that requires the ability to configure the behaviour through the new
-sysfs interfaces. Add configuration options for fail fast, slow or
-never to reflect the three choices above. Fail fast or fail never
-don't require any other options, but "fail slow" needs configuration
-to bound the retry behaviour. Add both a maximum retry count and a
-retry timeout so that we can bound by time and/or physical IO
-attempts.
-
-Finally, plumb these into xfs_buf_iodone error processing so that
-the error behaviour follows the selected configuration.
+Before we start expanding the number of error classes and errors we
+can configure behaviour for, we need a simple and clear way to
+define the default behaviour that we initialised each mount with.
+Introduce a table based method for keeping the initial configuration
+in, and apply that to the existing initialisation code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.h      |  23 +++++++++-
- fs/xfs/xfs_buf_item.c |  22 +++++++++-
- fs/xfs/xfs_mount.h    |   2 +
- fs/xfs/xfs_sysfs.c    | 119 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 164 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_sysfs.c | 72 +++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 60 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index ed0ea41..afc2d2b 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -181,7 +181,28 @@ typedef struct xfs_buf {
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	int			b_error;	/* error code on I/O */
--	int			b_last_error;	/* previous async I/O error */
-+
-+	/*
-+	 * async write failure retry count. Initialised to zero on the first
-+	 * failure, then when it exceeds the maximum configured without a
-+	 * success the write is considered to be failed permanently and the
-+	 * iodone handler will take appropriate action.
-+	 *
-+	 * For retry timeouts, we record the jiffie of the first failure. This
-+	 * means that we can change the retry timeout and it on the next error
-+	 * it will be checked against the newly configured timeout. This
-+	 * prevents buffers getting stuck in retry loops with a really long
-+	 * timeout.
-+	 *
-+	 * last_error is used to ensure that we are getting repeated errors, not
-+	 * different errors. e.g. a block device might change ENOSPC to EIO when
-+	 * a failure timeout occurs, so we want to re-initialise the error
-+	 * retry behaviour appropriately when that happens.
-+	 */
-+	int			b_retries;
-+	unsigned long		b_first_retry_time; /* in jiffies */
-+	int			b_last_error;
-+
- 	const struct xfs_buf_ops	*b_ops;
- 
- #ifdef XFS_BUF_LOCK_TRACKING
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index a09ae26..c785698 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -968,6 +968,9 @@ xfs_buf_iodone_callback_error(
- 		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
- 			        XBF_DONE | XBF_WRITE_FAIL);
- 		bp->b_last_error = bp->b_error;
-+		bp->b_retries = 0;
-+		bp->b_first_retry_time = jiffies;
-+
- 		xfs_buf_ioerror(bp, 0);
- 		xfs_buf_submit(bp);
- 		return true;
-@@ -977,9 +980,25 @@ xfs_buf_iodone_callback_error(
- 	 * Repeated failure on an async write. Take action according to the
- 	 * error configuration we have been set up to use.
- 	 */
--	if (cfg->fail_speed == XFS_ERR_FAIL_FAST)
-+	switch (cfg->fail_speed) {
-+	case XFS_ERR_FAIL_FAST:
- 		goto permanent_error;
- 
-+	case XFS_ERR_FAIL_SLOW:
-+		if (++bp->b_retries > cfg->max_retries)
-+			goto permanent_error;
-+		if (!cfg->retry_timeout)
-+			break;
-+		if (time_after(jiffies,
-+			       cfg->retry_timeout + bp->b_first_retry_time))
-+			goto permanent_error;
-+		break;
-+
-+	case XFS_ERR_FAIL_NEVER:
-+	default:
-+		break;
-+	}
-+
- 	/* still a transient error, higher layers will retry */
- 	xfs_buf_ioerror(bp, 0);
- 	xfs_buf_relse(bp);
-@@ -1021,6 +1040,7 @@ xfs_buf_iodone_callbacks(
- 	 * retry state here in preparation for the next error that may occur.
- 	 */
- 	bp->b_last_error = 0;
-+	bp->b_retries = 0;
- 
- 	xfs_buf_do_callbacks(bp);
- 	bp->b_fspriv = NULL;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 21caa5a..a684a72b 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -62,6 +62,8 @@ enum {
- struct xfs_error_cfg {
- 	struct xfs_kobj	kobj;
- 	int		fail_speed;
-+	int		max_retries;	/* INT_MAX = retry forever */
-+	unsigned long	retry_timeout;	/* in jiffies, 0 = no timeout */
- };
- 
- typedef struct xfs_mount {
 diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 9d66095..1f078e1 100644
+index 3667d33..9d66095 100644
 --- a/fs/xfs/xfs_sysfs.c
 +++ b/fs/xfs/xfs_sysfs.c
-@@ -252,7 +252,119 @@ struct kobj_type xfs_log_ktype = {
-  * and any other future type of IO (e.g. special inode or directory error
-  * handling) we care to support.
-  */
-+static ssize_t
-+failure_speed_store(
-+	const char	*buf,
-+	size_t		count,
-+	void		*data)
-+{
-+	struct xfs_error_cfg *cfg = data;
-+	char		*str = kstrdup(buf, GFP_KERNEL);
-+	char		*sp;
-+	int		len;
-+
-+	if (!str)
-+		return -ENOMEM;
-+
-+	sp = strstrip(str);
-+	len = strlen(sp);
-+	if (strncmp(sp, "fast", len) == 0)
-+		cfg->fail_speed = XFS_ERR_FAIL_FAST;
-+	else if (strncmp(sp, "slow", len) == 0)
-+		cfg->fail_speed = XFS_ERR_FAIL_SLOW;
-+	else if (strncmp(sp, "never", len) == 0)
-+		cfg->fail_speed = XFS_ERR_FAIL_NEVER;
-+	else
-+		count = -EINVAL;
-+	kfree(str);
-+	return count;
-+}
-+
-+static ssize_t
-+failure_speed_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xfs_error_cfg *cfg = data;
-+
-+	if (cfg->fail_speed == XFS_ERR_FAIL_FAST)
-+		return snprintf(buf, PAGE_SIZE, "[fast] slow never\n");
-+	if (cfg->fail_speed == XFS_ERR_FAIL_SLOW)
-+		return snprintf(buf, PAGE_SIZE, "fast [slow] never\n");
-+	return snprintf(buf, PAGE_SIZE, "fast slow [never]\n");
-+}
-+XFS_SYSFS_ATTR_RW(failure_speed);
-+
-+static ssize_t
-+max_retries_store(
-+	const char	*buf,
-+	size_t		count,
-+	void		*data)
-+{
-+	struct xfs_error_cfg *cfg = data;
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val < 0 || val > INT_MAX)
-+		return -EINVAL;
-+
-+	cfg->max_retries = val;
-+	return count;
-+}
-+
-+static ssize_t
-+max_retries_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xfs_error_cfg *cfg = data;
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", cfg->max_retries);
-+}
-+XFS_SYSFS_ATTR_RW(max_retries);
-+
-+static ssize_t
-+retry_timeout_seconds_store(
-+	const char	*buf,
-+	size_t		count,
-+	void		*data)
-+{
-+	struct xfs_error_cfg *cfg = data;
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	/* 1 day timeout maximum */
-+	if (val < 0 || val > 86400)
-+		return -EINVAL;
-+
-+	cfg->retry_timeout = msecs_to_jiffies(val * MSEC_PER_SEC);
-+	return count;
-+}
-+
-+static ssize_t
-+retry_timeout_seconds_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xfs_error_cfg *cfg = data;
-+
-+	return snprintf(buf, PAGE_SIZE, "%ld\n", 
-+			jiffies_to_msecs(cfg->retry_timeout) * MSEC_PER_SEC);
-+}
-+XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
-+
- static struct attribute *xfs_error_attrs[] = {
-+	ATTR_LIST(failure_speed),
-+	ATTR_LIST(max_retries),
-+	ATTR_LIST(retry_timeout_seconds),
- 	NULL,
+@@ -303,11 +303,67 @@ struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
  };
  
-@@ -312,11 +424,15 @@ struct kobj_type xfs_error_ktype = {
- struct xfs_error_init {
- 	char		*name;
- 	int		fail_speed;
-+	int		max_retries;
-+	int		retry_timeout;	/* in seconds */
- };
++/*
++ * Error initialisation tables. These need to be ordered in the same
++ * order as the enums used to index the array. All class init tables need to
++ * define a "default" behaviour as the first entry, all other entries can be
++ * empty.
++ */
++struct xfs_error_init {
++	char		*name;
++	int		fail_speed;
++};
++
++static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
++	{ .name = "Default",
++	  .fail_speed = XFS_ERR_FAIL_NEVER,
++	},
++};
++
++static int
++xfs_error_sysfs_init_class(
++	struct xfs_mount	*mp,
++	int			class,
++	const char		*parent_name,
++	struct xfs_kobj		*parent_kobj,
++	const struct xfs_error_init init[])
++{
++	struct xfs_error_cfg	*cfg;
++	int			error;
++	int			i;
++
++	ASSERT(class < XFS_ERR_CLASS_MAX);
++
++	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
++				&mp->m_error_kobj, parent_name);
++	if (error)
++		return error;
++
++	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
++		cfg = &mp->m_error_cfg[class][i];
++		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
++					parent_kobj, init[i].name);
++		if (error)
++			goto out_error;
++
++		cfg->fail_speed = init[i].fail_speed;
++	}
++	return 0;
++
++out_error:
++	/* unwind the entries that succeeded */
++	for (i--; i >= 0; i--) {
++		cfg = &mp->m_error_cfg[class][i];
++		xfs_sysfs_del(&cfg->kobj);
++	}
++	xfs_sysfs_del(parent_kobj);
++	return error;
++}
++
+ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xfs_error_cfg	*cfg;
+ 	int			error;
  
- static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
- 	{ .name = "Default",
- 	  .fail_speed = XFS_ERR_FAIL_NEVER,
-+	  .max_retries = INT_MAX,
-+	  .retry_timeout = 0,
- 	},
- };
+ 	/* .../xfs/<dev>/error/ */
+@@ -317,22 +373,14 @@ xfs_error_sysfs_init(
+ 		return error;
  
-@@ -347,6 +463,9 @@ xfs_error_sysfs_init_class(
- 			goto out_error;
+ 	/* .../xfs/<dev>/error/metadata/ */
+-	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
+-				&mp->m_error_kobj, "metadata");
++	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
++				"metadata", &mp->m_error_meta_kobj,
++				xfs_error_meta_init);
+ 	if (error)
+ 		goto out_error;
  
- 		cfg->fail_speed = init[i].fail_speed;
-+		cfg->max_retries = init[i].max_retries;
-+		cfg->retry_timeout = msecs_to_jiffies(
-+					init[i].retry_timeout * MSEC_PER_SEC);
- 	}
+-	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
+-	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
+-				&mp->m_error_meta_kobj, "Default");
+-	if (error)
+-		goto out_error_meta;
+-	cfg->fail_speed = XFS_ERR_FAIL_NEVER;
+-
  	return 0;
  
+-out_error_meta:
+-	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ out_error:
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ 	return error;
 -- 
 2.1.4
 
