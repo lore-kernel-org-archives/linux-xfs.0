@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6D4497FC9
+	by oss.sgi.com (Postfix) with ESMTP id 914667FC7
 	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 06:09:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2BA77304051
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 04:09:04 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 619F4304053
+	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 04:09:01 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	TC92udLk2DSkhz0i for <xfs@oss.sgi.com>;
-	Wed, 05 Aug 2015 04:09:02 -0700 (PDT)
+	bCtJile1GvLfC1KG for <xfs@oss.sgi.com>;
+	Wed, 05 Aug 2015 04:08:59 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1ZMwYt-0006H7-QC
+	(envelope-from <dave@fromorbit.com>) id 1ZMwYt-0006H1-NF
 	for xfs@oss.sgi.com; Wed, 05 Aug 2015 21:08:43 +1000
 Received: from dave by disappointment with local (Exim 4.86_RC4)
-	(envelope-from <dave@disappointment.disaster>) id 1ZMwYt-0007nz-Pb
+	(envelope-from <dave@disappointment.disaster>) id 1ZMwYt-0007nV-Mb
 	for xfs@oss.sgi.com; Wed, 05 Aug 2015 21:08:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/10] xfs: disable specific error configurations
-Date: Wed,  5 Aug 2015 21:08:40 +1000
-Message-Id: <1438772921-28715-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/10] xfs: introduce metadata IO error class
+Date: Wed,  5 Aug 2015 21:08:34 +1000
+Message-Id: <1438772921-28715-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1438772921-28715-1-git-send-email-david@fromorbit.com>
 References: <1438772921-28715-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,94 +39,97 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Different error classes are going to need different error to be
-configured, so we don't want them all to be visible in sysfs. Add a
-configuration check into the config initialisation an lookup
-code to determine if the default should be used for a specific
-error. If so, the sysfs entry is not created, and on lookup the
-default config is returned.
-
-Add ENOMEM at this point to exercise this code, as it will be used
-later when adding a kmem error failure class.
+Now we have the basic infrastructure, add the first error class so
+we can build up the infrastructure in a meaningful way. Add the
+metadata async write IO error class and sysfs entry, and introduce a
+default configuration that matches the existing behaviour of
+XFS_ERR_FAIL_NEVER for async write metadata buffers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.h |  1 +
- fs/xfs/xfs_sysfs.c | 22 ++++++++++++++++++----
- 2 files changed, 19 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_mount.h |  3 +++
+ fs/xfs/xfs_sysfs.c | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7d62450..876b86b 100644
+index e51c63c..753060f 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -53,6 +53,7 @@ enum {
- 	XFS_ERR_EIO,
- 	XFS_ERR_ENOSPC,
- 	XFS_ERR_ENODEV,
-+	XFS_ERR_ENOMEM,
+@@ -45,9 +45,11 @@ enum {
+  * Failure types describe when an error is considered fatal.
+  */
+ enum {
++	XFS_ERR_METADATA,
+ 	XFS_ERR_CLASS_MAX,
+ };
+ enum {
++	XFS_ERR_DEFAULT,
  	XFS_ERR_ERRNO_MAX,
  };
  enum {
+@@ -153,6 +155,7 @@ typedef struct xfs_mount {
+ 						/* low free space thresholds */
+ 	struct xfs_kobj		m_kobj;
+ 	struct xfs_kobj		m_error_kobj;
++	struct xfs_kobj		m_error_meta_kobj;
+ 	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+ 
+ 	struct workqueue_struct *m_buf_workqueue;
 diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 019e859..fa46ca4 100644
+index 017dcfb..cb7ced0 100644
 --- a/fs/xfs/xfs_sysfs.c
 +++ b/fs/xfs/xfs_sysfs.c
-@@ -484,6 +484,9 @@ static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
- 	{ .name = "ENODEV",
- 	  .fail_speed = XFS_ERR_FAIL_FAST,
- 	},
-+	{ .name = "ENOMEM",
-+	  .fail_speed = XFS_ERR_FAIL_DEFAULT,
-+	},
- };
+@@ -307,11 +307,34 @@ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+ {
++	struct xfs_error_cfg	*cfg;
+ 	int			error;
  
- static int
-@@ -507,12 +510,17 @@ xfs_error_sysfs_init_class(
- 
- 	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
- 		cfg = &mp->m_error_cfg[class][i];
+ 	/* .../xfs/<dev>/error/ */
+ 	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
+ 				&mp->m_kobj, "error");
++	if (error)
++		return error;
 +
-+		/* skip errors that are not configurable for this class */
-+		cfg->fail_speed = init[i].fail_speed;
-+		if (cfg->fail_speed == XFS_ERR_FAIL_DEFAULT)
-+			continue;
++	/* .../xfs/<dev>/error/metadata/ */
++	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
++				&mp->m_error_kobj, "metadata");
++	if (error)
++		goto out_error;
 +
- 		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
- 					parent_kobj, init[i].name);
- 		if (error)
- 			goto out_error;
++	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
++	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
++				&mp->m_error_meta_kobj, "Default");
++	if (error)
++		goto out_error_meta;
++	cfg->fail_speed = XFS_ERR_FAIL_NEVER;
++
++	return 0;
++
++out_error_meta:
++	xfs_sysfs_del(&mp->m_error_meta_kobj);
++out_error:
++	xfs_sysfs_del(&mp->m_error_kobj);
+ 	return error;
+ }
  
--		cfg->fail_speed = init[i].fail_speed;
- 		cfg->max_retries = init[i].max_retries;
- 		cfg->retry_timeout = msecs_to_jiffies(
- 					init[i].retry_timeout * MSEC_PER_SEC);
-@@ -567,7 +575,8 @@ xfs_error_sysfs_del(
- 		for (j = 0; j < XFS_ERR_ERRNO_MAX; j++) {
- 			cfg = &mp->m_error_cfg[i][j];
- 
--			xfs_sysfs_del(&cfg->kobj);
-+			if (cfg->fail_speed != XFS_ERR_FAIL_DEFAULT)
-+				xfs_sysfs_del(&cfg->kobj);
- 		}
- 	}
- 	xfs_sysfs_del(&mp->m_error_meta_kobj);
-@@ -592,10 +601,15 @@ xfs_error_get_cfg(
- 	case ENODEV:
- 		cfg = &mp->m_error_cfg[error_class][XFS_ERR_ENODEV];
- 		break;
--	default:
--		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
-+	case ENOMEM:
-+		cfg = &mp->m_error_cfg[error_class][XFS_ERR_ENOMEM];
- 		break;
-+	default:
-+		return &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
- 	}
- 
-+	/* The error may not be not configurable, so uses default behaviour */
-+	if (cfg->fail_speed == XFS_ERR_FAIL_DEFAULT)
-+		return &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
- 	return cfg;
+@@ -319,5 +342,16 @@ void
+ xfs_error_sysfs_del(
+ 	struct xfs_mount	*mp)
+ {
++	struct xfs_error_cfg	*cfg;
++	int			i, j;
++
++	for (i = 0; i < XFS_ERR_CLASS_MAX; i++) {
++		for (j = 0; j < XFS_ERR_ERRNO_MAX; j++) {
++			cfg = &mp->m_error_cfg[i][j];
++
++			xfs_sysfs_del(&cfg->kobj);
++		}
++	}
++	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ 	xfs_sysfs_del(&mp->m_error_kobj);
  }
 -- 
 2.1.4
