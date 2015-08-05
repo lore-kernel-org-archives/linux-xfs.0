@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 359597FB7
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 17:57:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B6912AC002
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 15:57:19 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 57D507FB7
+	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 18:10:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22964304059
+	for <xfs@oss.sgi.com>; Wed,  5 Aug 2015 16:10:00 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dziHTYcvmWaFnEy4 for <xfs@oss.sgi.com>;
-	Wed, 05 Aug 2015 15:57:17 -0700 (PDT)
-Date: Thu, 6 Aug 2015 08:57:03 +1000
+	bqBrwMa1USM6DO64 for <xfs@oss.sgi.com>;
+	Wed, 05 Aug 2015 15:50:05 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1ZN7VQ-0007wl-21
+	for xfs@oss.sgi.com; Thu, 06 Aug 2015 08:49:52 +1000
+Received: from dave by disappointment with local (Exim 4.86_RC4)
+	(envelope-from <dave@disappointment.disaster>) id 1ZN7VQ-0008E7-15
+	for xfs@oss.sgi.com; Thu, 06 Aug 2015 08:49:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 10/11] xfsprogs: replace obsolete memalign with
-	posix_memalign
-Message-ID: <20150805225703.GY16638@dastard>
-References: <1438612789-17486-1-git-send-email-jtulak@redhat.com>
-	<1438612789-17486-11-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1438612789-17486-11-git-send-email-jtulak@redhat.com>
+Subject: [PATCH] db: fix uninitialised variable warnings
+Date: Thu,  6 Aug 2015 08:49:52 +1000
+Message-Id: <1438814992-31588-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,49 +28,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 03, 2015 at 04:39:48PM +0200, Jan Tulak wrote:
-> Memalign from <malloc.h> was marked obsolete in favor of a posix
-> variant from <stdlib.h>. So replace all calls and remove <malloc.h>
-> includes. This also enhances support on other posix platforms,
-> which doesn't have <malloc.h>.
-> 
-> Because posix_memalign returns any error as a return code, not in
-> errno, change relevant checks in code (and add a missing one).
-....
-> @@ -74,12 +74,18 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
->  	ssize_t		zsize, bytes;
->  	char		*z;
->  	int		fd;
-> +	int ret;
->  
->  	zsize = min(BDSTRAT_SIZE, BBTOB(len));
-> -	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
-> +	ret = posix_memalign(
-> +						(void **)&z,
-> +						libxfs_device_alignment(),
-> +						zsize
-> +					);
+From: Dave Chinner <dchinner@redhat.com>
 
-Unusual function call formatting. Please use the form the rest of
-the code uses. i.e:
+New versions of gcc barf on the conversion table code in
+db/convert.c. Shut it up by initialising the conversion array.
 
-	ret = posix_memalign((void **)&z, libxfs_device_alignment(), zsize);
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ db/convert.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-(same for the rest of the patch).
-
-Cheers,
-
-Dave.
+diff --git a/db/convert.c b/db/convert.c
+index 09f9225..a337abe 100644
+--- a/db/convert.c
++++ b/db/convert.c
+@@ -157,7 +157,7 @@ convert_f(int argc, char **argv)
+ {
+ 	ctype_t		c;
+ 	int		conmask;
+-	cval_t		cvals[NCTS];
++	cval_t		cvals[NCTS] = {};
+ 	int		i;
+ 	int		mask;
+ 	__uint64_t	v;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
 
 _______________________________________________
 xfs mailing list
