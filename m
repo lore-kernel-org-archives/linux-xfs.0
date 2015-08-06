@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF3E97F61
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 02:11:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B8F708F8037
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 00:10:58 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id axmumAUCl2GIHTZj (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Aug 2015 00:10:56 -0700 (PDT)
-Date: Thu, 6 Aug 2015 03:10:42 -0400 (EDT)
-From: Nathan Scott <nathans@redhat.com>
-Message-ID: <207352255.5354564.1438845042677.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20150806002105.GZ16638@dastard>
-References: <55BB9271.6000300@gmx.net> <20150802221301.GO3902@dastard>
-	<55C0D916.1010102@linux.vnet.ibm.com>
-	<20150804225819.GV16638@dastard>
-	<55C208D2.4060907@linux.vnet.ibm.com>
-	<20150805134729.GX16638@dastard>
-	<55C23152.3030801@linux.vnet.ibm.com>
-	<20150806002105.GZ16638@dastard>
-Subject: Re: Bug#793495: xfsprogs fails to build on debian ppc64el
+	by oss.sgi.com (Postfix) with ESMTP id DB00C7F84
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 02:55:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C1F1C8F8035
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 00:55:00 -0700 (PDT)
+Received: from p-smtp-as-02.sunrise.ch (p-smtp-as-01.sunrise.ch
+	[212.35.39.69]) by cuda.sgi.com with ESMTP id 4C3jH6uyTQJUy7YS
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 06 Aug 2015 00:54:58 -0700 (PDT)
+Message-ID: <55C312CF.2040408@vollmann.ch>
+Date: Thu, 06 Aug 2015 09:54:55 +0200
+From: Detlef Vollmann <dv@vollmann.ch>
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@redhat.com>
+Subject: xfsdump doesn't compile: undefined reference to 'min'
+Content-Type: multipart/mixed; boundary="------------010409060606010109010604"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,44 +23,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, 793495@bugs.debian.org, Fernando Seiti Furusato <ferseiti@linux.vnet.ibm.com>
-Cc: Breno Leitao <brenohl@br.ibm.com>, Daniel Bast <daniel.bast@gmx.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+This is a multi-part message in MIME format.
+--------------010409060606010109010604
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+ > commit 5a2985233c390d59d2a9757b119cb0e001c87a96
+ > Author: Dave Chinner <dchinner@redhat.com>
+ > Date:   Fri Jul 18 08:02:26 2014 +1000
+ >
+ >     dump: don't redefine min() or max()
+ >
+ >     They are included from other header files.
+The message doesn't say from which header and configure doesn't test
+for it.
+If I compile it (cross-compilation, gcc, uclibc, xfsprogs 3.1.11,
+xfsdump 3.1.4), I get lots of errors:
+warning: implicit declaration of function 'max'
+undefined reference to 'min'
 
------ Original Message -----
-> On Wed, Aug 05, 2015 at 12:52:50PM -0300, Fernando Seiti Furusato wrote:
-> > [...]
-> > It is the Debian source package that fails, exclusively.
-> [...]
-> That hunk shows why it is failing - no ppc64le:Linux match in the
-> old script. Nathan is already looking into it...
+Attached is a pragmatic patch.
 
-So, yeah, its definitely got something to do with the local setup here
-inserting configure-generated files that are dated.  I build the .debs
-from a tagged git repo checkout (without the generated files initially)
-so they do get inserted locally.
+   Detlef
 
-Having re-installed all autoconf-related packages now on that machine,
-as well as constructing an entirely new unstable VM for builds :P  ...
-the problem has resolved itself and I see config.sub with ppc64le bits
-too.
+PS: I'm not on the list.
 
-I'll do a build and upload (source-unchanged) 3.2.4-1 package to make
-sure its resolved on the build servers.
+--------------010409060606010109010604
+Content-Type: text/x-patch;
+ name="001-minmax.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="001-minmax.patch"
 
-Thanks to all for looking into it so closely!
+diff --git a/common/util.h b/common/util.h
+index 86ea8d2..460aea5 100644
+--- a/common/util.h
++++ b/common/util.h
+@@ -66,6 +66,12 @@ extern intgen_t read_buf( char *bufp,
+ 			  rrbfp_t return_read_buf_funcp,
+ 			  intgen_t *statp );
+ 
++#ifndef min
++#define min( a, b )	( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
++#endif
++#ifndef max
++#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
++#endif
+ 
+ 
+ /* strncpyterm - like strncpy, but guarantees the destination is null-terminated
+diff --git a/restore/dirattr.c b/restore/dirattr.c
+index fcfa0c8..6413c15 100644
+--- a/restore/dirattr.c
++++ b/restore/dirattr.c
+@@ -51,6 +51,10 @@
+ 
+ /* structure definitions used locally ****************************************/
+ 
++#ifndef max
++#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
++#endif
++
+ /* node handle limits
+  */
+ #ifdef DIRATTRCHK
+diff --git a/restore/namreg.c b/restore/namreg.c
+index 41362d1..4630605 100644
+--- a/restore/namreg.c
++++ b/restore/namreg.c
+@@ -34,6 +34,10 @@
+ 
+ /* structure definitions used locally ****************************************/
+ 
++#ifndef max
++#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
++#endif
++
+ #define NAMREG_AVGLEN	10
+ 
+ /* persistent context for a namreg - placed in first page
+diff --git a/restore/node.c b/restore/node.c
+index 4cc8fb0..97d46e1 100644
+--- a/restore/node.c
++++ b/restore/node.c
+@@ -30,6 +30,13 @@
+ #include "node.h"
+ #include "mmap.h"
+ 
++#ifndef max
++#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
++#endif
++#ifndef min
++#define min( a, b )	( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
++#endif
++
+ extern size_t pgsz;
+ extern size_t pgmask;
+ 
 
-cheers.
-
---
-Nathan
+--------------010409060606010109010604
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------010409060606010109010604--
