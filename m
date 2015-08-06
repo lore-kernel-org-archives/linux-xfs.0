@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CBD6F7F7B
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C693D7F77
 	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 12:44:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B83E68F8068
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A4893304067
 	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 10:44:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ov2sjfBmsacpomCh (version=TLSv1
+	cuda.sgi.com with ESMTP id 3Wx3z5KvFO5m0qYN (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Aug 2015 10:44:36 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 3FE1819F96F
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 17:44:35 +0000 (UTC)
+	Thu, 06 Aug 2015 10:44:35 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id E087583F87
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 17:44:34 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t76HiYiM031729
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t76HiY9a010712
 	for <xfs@oss.sgi.com>; Thu, 6 Aug 2015 13:44:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 08/11] xfs: fix broken icreate log item cancellation
-Date: Thu,  6 Aug 2015 13:44:29 -0400
-Message-Id: <1438883072-28706-9-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 05/11] xfs: use EFI refcount consistently in log recovery
+Date: Thu,  6 Aug 2015 13:44:26 -0400
+Message-Id: <1438883072-28706-6-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
 References: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,112 +38,208 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Inode cluster buffers are invalidated and cancelled when inode chunks
-are freed to notify log recovery that previous logged updates to the
-metadata buffer should be skipped. This ensures that log recovery does
-not overwrite buffers that might have already been reused.
+The EFI is initialized with a reference count of 2. One for the EFI to
+ensure the item makes it to the AIL and one for the subsequently created
+EFD to release the EFI once the EFD is committed. Log recovery uses the
+EFI in a similar manner, but implements a hack to remove both references
+in one call once the EFD is handled.
 
-On v4 filesystems, inode chunk allocation and inode updates are logged
-via the cluster buffers and thus cancellation is easily detected via
-buffer cancellation items. v5 filesystems use the new icreate
-transaction, which uses logical logging and ordered buffers to log a
-full inode chunk allocation at once. The resulting icreate item often
-spans multiple inode cluster buffers.
+Update log recovery to use EFI reference counting in a manner consistent
+with the log. When an EFI is encountered during recovery, an EFI item is
+allocated and inserted to the AIL directly. Since the EFI reference is
+typically dropped when the EFI is unpinned and this is analogous with
+AIL insertion, drop the EFI reference at this point.
 
-Log recovery checks for cancelled buffers when processing icreate log
-items, but it has a couple problems. First, it uses the full length of
-the inode chunk rather than the cluster size. Second, it uses the length
-in FSB units rather than BB units. Either of these problems prevent
-icreate recovery from identifying cancelled buffers and thus inode
-initialization proceeds unconditionally.
+When a corresponding EFD is encountered in the log, this indicates that
+the extents were freed, no processing is required and the EFI can be
+dropped. Update xlog_recover_efd_pass2() to simply drop the EFD
+reference at this point rather than open code the AIL removal and EFI
+free.
 
-Update xlog_recover_do_icreate_pass2() to iterate the icreate range in
-cluster sized increments and check each increment for cancellation.
-Since icreate is currently only used for the minimum atomic inode chunk
-allocation, we expect that either all or none of the buffers will be
-cancelled. Cancel the icreate if at least one buffer is cancelled to
-avoid making a bad situation worse by initializing a partial inode
-chunk, but detect such anomalies and warn the user.
+Remaining EFIs (i.e., with no corresponding EFD) are processed in
+xlog_recover_finish(). An EFD transaction is allocated and the extents
+are freed, which transfers ownership of the EFI reference to the EFD
+item in the log.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 49 ++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 37 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_extfree_item.c | 57 +++++++++++++++++------------------------------
+ fs/xfs/xfs_log_recover.c  | 43 ++++++++++++++++++-----------------
+ 2 files changed, 43 insertions(+), 57 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 76248bf..62a9b57 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3037,6 +3037,11 @@ xlog_recover_do_icreate_pass2(
- 	unsigned int		count;
- 	unsigned int		isize;
- 	xfs_agblock_t		length;
-+	int			blks_per_cluster;
-+	int			bb_per_cluster;
-+	int			cancel_count;
-+	int			nbufs;
-+	int			i;
- 
- 	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
- 	if (icl->icl_type != XFS_LI_ICREATE) {
-@@ -3095,25 +3100,45 @@ xlog_recover_do_icreate_pass2(
- 	}
- 
- 	/*
--	 * Inode buffers can be freed. Do not replay the inode initialisation as
--	 * we could be overwriting something written after this inode buffer was
--	 * cancelled.
-+	 * The icreate transaction can cover multiple cluster buffers and these
-+	 * buffers could have been freed and reused. Check the individual
-+	 * buffers for cancellation so we don't overwrite anything written after
-+	 * a cancellation.
-+	 */
-+	blks_per_cluster = xfs_icluster_size_fsb(mp);
-+	bb_per_cluster = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+	nbufs = length / blks_per_cluster;
-+	for (i = 0, cancel_count = 0; i < nbufs; i++) {
-+		xfs_daddr_t	daddr;
-+
-+		daddr = XFS_AGB_TO_DADDR(mp, agno,
-+					 agbno + i * blks_per_cluster);
-+		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
-+			cancel_count++;
-+	}
-+
-+	/*
-+	 * We currently only use icreate for a single allocation at a time. This
-+	 * means we should expect either all or none of the buffers to be
-+	 * cancelled. Be conservative and skip replay if at least one buffer is
-+	 * cancelled, but warn the user that something is awry if the buffers
-+	 * are not consistent.
- 	 *
--	 * XXX: we need to iterate all buffers and only init those that are not
--	 * cancelled. I think that a more fine grained factoring of
--	 * xfs_ialloc_inode_init may be appropriate here to enable this to be
--	 * done easily.
-+	 * XXX: This must be refined to only skip cancelled clusters once we use
-+	 * icreate for multiple chunk allocations.
- 	 */
--	if (xlog_check_buffer_cancelled(log,
--			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0)) {
-+	ASSERT(!cancel_count || cancel_count == nbufs);
-+	if (cancel_count) {
-+		if (cancel_count != nbufs)
-+			xfs_warn(mp,
-+	"WARNING: partial inode chunk cancellation, skipped icreate.");
- 		trace_xfs_log_recover_icreate_cancel(log, icl);
- 		return 0;
- 	}
- 
- 	trace_xfs_log_recover_icreate_recover(log, icl);
--	xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno, length,
--			      be32_to_cpu(icl->icl_gen));
--	return 0;
-+	return xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno,
-+				     length, be32_to_cpu(icl->icl_gen));
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index aceb54f..2b2acac 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -47,34 +47,6 @@ xfs_efi_item_free(
  }
  
- STATIC void
+ /*
+- * Freeing the efi requires that we remove it from the AIL if it has already
+- * been placed there. However, the EFI may not yet have been placed in the AIL
+- * when called by xfs_efi_release() from EFD processing due to the ordering of
+- * committed vs unpin operations in bulk insert operations. Hence the reference
+- * count to ensure only the last caller frees the EFI.
+- */
+-STATIC void
+-__xfs_efi_release(
+-	struct xfs_efi_log_item	*efip)
+-{
+-	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
+-
+-	if (atomic_dec_and_test(&efip->efi_refcount)) {
+-		spin_lock(&ailp->xa_lock);
+-		/*
+-		 * We don't know whether the EFI made it to the AIL. Remove it
+-		 * if so. Note that xfs_trans_ail_delete() drops the AIL lock.
+-		 */
+-		if (efip->efi_item.li_flags & XFS_LI_IN_AIL)
+-			xfs_trans_ail_delete(ailp, &efip->efi_item,
+-					     SHUTDOWN_LOG_IO_ERROR);
+-		else
+-			spin_unlock(&ailp->xa_lock);
+-		xfs_efi_item_free(efip);
+-	}
+-}
+-
+-/*
+  * This returns the number of iovecs needed to log the given efi item.
+  * We only need 1 iovec for an efi item.  It just logs the efi_log_format
+  * structure.
+@@ -304,20 +276,31 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
+ }
+ 
+ /*
+- * This is called by the efd item code below to release references to the given
+- * efi item.  Each efd calls this with the number of extents that it has
+- * logged, and when the sum of these reaches the total number of extents logged
+- * by this efi item we can free the efi item.
++ * Freeing the efi requires that we remove it from the AIL if it has already
++ * been placed there. However, the EFI may not yet have been placed in the AIL
++ * when called by xfs_efi_release() from EFD processing due to the ordering of
++ * committed vs unpin operations in bulk insert operations. Hence the reference
++ * count to ensure only the last caller frees the EFI.
+  */
+ void
+ xfs_efi_release(struct xfs_efi_log_item	*efip)
+ {
+-	/* recovery needs us to drop the EFI reference, too */
+-	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+-		__xfs_efi_release(efip);
++	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
+ 
+-	__xfs_efi_release(efip);
+-	/* efip may now have been freed, do not reference it again. */
++	if (atomic_dec_and_test(&efip->efi_refcount)) {
++		spin_lock(&ailp->xa_lock);
++		/*
++		 * We don't know whether the EFI made it to the AIL. Remove it
++		 * if so. Note that xfs_trans_ail_delete() drops the AIL lock.
++		 */
++		if (efip->efi_item.li_flags & XFS_LI_IN_AIL)
++			xfs_trans_ail_delete(ailp, &efip->efi_item,
++					     SHUTDOWN_LOG_IO_ERROR);
++		else
++			spin_unlock(&ailp->xa_lock);
++
++		xfs_efi_item_free(efip);
++	}
+ }
+ 
+ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 3433b7b..a74ff68 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2933,16 +2933,16 @@ xlog_recover_efi_pass2(
+ 	struct xlog_recover_item	*item,
+ 	xfs_lsn_t			lsn)
+ {
+-	int			error;
+-	xfs_mount_t		*mp = log->l_mp;
+-	xfs_efi_log_item_t	*efip;
+-	xfs_efi_log_format_t	*efi_formatp;
++	int				error;
++	struct xfs_mount		*mp = log->l_mp;
++	struct xfs_efi_log_item		*efip;
++	struct xfs_efi_log_format	*efi_formatp;
+ 
+ 	efi_formatp = item->ri_buf[0].i_addr;
+ 
+ 	efip = xfs_efi_init(mp, efi_formatp->efi_nextents);
+-	if ((error = xfs_efi_copy_format(&(item->ri_buf[0]),
+-					 &(efip->efi_format)))) {
++	error = xfs_efi_copy_format(&(item->ri_buf[0]), &(efip->efi_format));
++	if (error) {
+ 		xfs_efi_item_free(efip);
+ 		return error;
+ 	}
+@@ -2950,20 +2950,23 @@ xlog_recover_efi_pass2(
+ 
+ 	spin_lock(&log->l_ailp->xa_lock);
+ 	/*
+-	 * xfs_trans_ail_update() drops the AIL lock.
++	 * The EFI has two references. One for the EFD and one for EFI to ensure
++	 * it makes it into the AIL. Insert the EFI into the AIL directly and
++	 * drop the EFI reference. Note that xfs_trans_ail_update() drops the
++	 * AIL lock.
+ 	 */
+ 	xfs_trans_ail_update(log->l_ailp, &efip->efi_item, lsn);
++	xfs_efi_release(efip);
+ 	return 0;
+ }
+ 
+ 
+ /*
+- * This routine is called when an efd format structure is found in
+- * a committed transaction in the log.  It's purpose is to cancel
+- * the corresponding efi if it was still in the log.  To do this
+- * it searches the AIL for the efi with an id equal to that in the
+- * efd format structure.  If we find it, we remove the efi from the
+- * AIL and free it.
++ * This routine is called when an EFD format structure is found in a committed
++ * transaction in the log. Its purpose is to cancel the corresponding EFI if it
++ * was still in the log. To do this it searches the AIL for the EFI with an id
++ * equal to that in the EFD format structure. If we find it we drop the EFD
++ * reference, which removes the EFI from the AIL and frees it.
+  */
+ STATIC int
+ xlog_recover_efd_pass2(
+@@ -2985,8 +2988,8 @@ xlog_recover_efd_pass2(
+ 	efi_id = efd_formatp->efd_efi_id;
+ 
+ 	/*
+-	 * Search for the efi with the id in the efd format structure
+-	 * in the AIL.
++	 * Search for the EFI with the id in the EFD format structure in the
++	 * AIL.
+ 	 */
+ 	spin_lock(&ailp->xa_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+@@ -2995,18 +2998,18 @@ xlog_recover_efd_pass2(
+ 			efip = (xfs_efi_log_item_t *)lip;
+ 			if (efip->efi_format.efi_id == efi_id) {
+ 				/*
+-				 * xfs_trans_ail_delete() drops the
+-				 * AIL lock.
++				 * Drop the EFD reference to the EFI. This
++				 * removes the EFI from the AIL and frees it.
+ 				 */
+-				xfs_trans_ail_delete(ailp, lip,
+-						     SHUTDOWN_CORRUPT_INCORE);
+-				xfs_efi_item_free(efip);
++				spin_unlock(&ailp->xa_lock);
++				xfs_efi_release(efip);
+ 				spin_lock(&ailp->xa_lock);
+ 				break;
+ 			}
+ 		}
+ 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+ 	}
++
+ 	xfs_trans_ail_cursor_done(&cur);
+ 	spin_unlock(&ailp->xa_lock);
+ 
 -- 
 2.1.0
 
