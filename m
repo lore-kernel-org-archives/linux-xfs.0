@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E282B7F74
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 16:06:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A2AA130405F
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 14:06:16 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bBcOEcuLxYUzIueR (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Aug 2015 14:06:15 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 9A4D6A58AA
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 21:06:14 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t76HiYSc017989
-	for <xfs@oss.sgi.com>; Thu, 6 Aug 2015 13:44:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 03/11] xfs: fix efi/efd error handling to avoid fs shutdown
-	hangs
-Date: Thu,  6 Aug 2015 13:44:24 -0400
-Message-Id: <1438883072-28706-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
-References: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5671E7F80
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 16:26:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 340368F8049
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 14:26:36 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	GWkAGxF7MRz7Zz4G for <xfs@oss.sgi.com>;
+	Thu, 06 Aug 2015 14:26:34 -0700 (PDT)
+Date: Fri, 7 Aug 2015 07:26:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsdump doesn't compile: undefined reference to 'min'
+Message-ID: <20150806212620.GD3902@dastard>
+References: <55C312CF.2040408@vollmann.ch>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <55C312CF.2040408@vollmann.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,303 +25,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Detlef Vollmann <dv@vollmann.ch>
+Cc: xfs@oss.sgi.com
 
-Freeing an extent in XFS involves logging an EFI (extent free
-intention), freeing the actual extent, and logging an EFD (extent free
-done). The EFI object is created with a reference count of 2: one for
-the current transaction and one for the subsequently created EFD. Under
-normal circumstances, the first reference is dropped when the EFI is
-unpinned and the second reference is dropped when the EFD is committed
-to the on-disk log.
+On Thu, Aug 06, 2015 at 09:54:55AM +0200, Detlef Vollmann wrote:
+> > commit 5a2985233c390d59d2a9757b119cb0e001c87a96
+> > Author: Dave Chinner <dchinner@redhat.com>
+> > Date:   Fri Jul 18 08:02:26 2014 +1000
+> >
+> >     dump: don't redefine min() or max()
+> >
+> >     They are included from other header files.
+> The message doesn't say from which header and configure doesn't test
+> for it.
+> If I compile it (cross-compilation, gcc, uclibc, xfsprogs 3.1.11,
+> xfsdump 3.1.4), I get lots of errors:
+> warning: implicit declaration of function 'max'
+> undefined reference to 'min'
 
-In event of errors or filesystem shutdown, there are various potential
-cleanup scenarios depending on the state of the EFI/EFD. The cleanup
-scenarios are confusing and racy, as demonstrated by the following test
-sequence:
+#include <xfs/xfs.h>
+  -> /usr/include/xfs/xfs.h
+     #include <xfs/platform_defs.h>
+       -> /usr/include/xfs/platform_defs.h
+          #define min(a,b)	(((a)<(b))?(a):(b))
 
-	# mount $dev $mnt
-	# fsstress -d $mnt -n 99999 -p 16 -z -f fallocate=1 \
-		-f punch=1 -f creat=1 -f unlink=1 &
-	# sleep 5
-	# killall -9 fsstress; wait
-	# godown -f $mnt
-	# umount
+These headers come from xfsprogs, and you'll need to upgrade that
+package to 3.2.x....
 
-... in which the final umount can hang due to the AIL being pinned
-indefinitely by one or more EFI items. This can occur due to several
-conditions. For example, if the shutdown occurs after the EFI is
-committed to the on-disk log and the EFD committed to the CIL, but
-before the EFD committed to the log, the EFD iop_committed() abort
-handler does not drop its reference to the EFI. Alternatively, manual
-error injection in the xfs_bmap_finish() codepath shows that if an error
-occurs after the EFI transaction is committed but before the EFD is
-constructed and logged, the EFI is never released from the AIL.
+Cheers,
 
-Update the EFI/EFD item handling code to use a more straightforward and
-reliable approach to error handling. If an error occurs after the EFI
-transaction is committed and before the EFD is constructed, release the
-EFI explicitly from xfs_bmap_finish(). If the EFI transaction is
-cancelled, release the EFI in the unlock handler.
-
-Once the EFD is constructed, it is responsible for releasing the EFI
-under any circumstances (including whether the EFI item aborts due to
-log I/O error). Update the EFD item handlers to release the EFI if the
-transaction is cancelled or aborts due to log I/O error. Finally, update
-xfs_bmap_finish() to log at least one EFD extent to the transaction
-before xfs_free_extent() errors are handled to ensure the transaction is
-dirty and EFD item error handling is triggered.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c    | 84 +++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_extfree_item.c | 71 ++++++++++++++++++++++-----------------
- 2 files changed, 90 insertions(+), 65 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 0f34886c..fa65f67 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -67,16 +67,15 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
-  */
- int						/* error */
- xfs_bmap_finish(
--	xfs_trans_t		**tp,		/* transaction pointer addr */
--	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
--	int			*committed)	/* xact committed or not */
-+	struct xfs_trans		**tp,	/* transaction pointer addr */
-+	struct xfs_bmap_free		*flist,	/* i/o: list extents to free */
-+	int				*committed)/* xact committed or not */
- {
--	xfs_efd_log_item_t	*efd;		/* extent free data */
--	xfs_efi_log_item_t	*efi;		/* extent free intention */
--	int			error;		/* error return value */
--	xfs_bmap_free_item_t	*free;		/* free extent item */
--	xfs_mount_t		*mp;		/* filesystem mount structure */
--	xfs_bmap_free_item_t	*next;		/* next item on free list */
-+	struct xfs_efd_log_item		*efd;	/* extent free data */
-+	struct xfs_efi_log_item		*efi;	/* extent free intention */
-+	int				error;	/* error return value */
-+	struct xfs_bmap_free_item	*free;	/* free extent item */
-+	struct xfs_bmap_free_item	*next;	/* next item on free list */
- 
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	if (flist->xbf_count == 0) {
-@@ -88,40 +87,55 @@ xfs_bmap_finish(
- 		xfs_trans_log_efi_extent(*tp, efi, free->xbfi_startblock,
- 			free->xbfi_blockcount);
- 
--	error = xfs_trans_roll(tp, NULL);
--	*committed = 1;
--	/*
--	 * We have a new transaction, so we should return committed=1,
--	 * even though we're returning an error.
--	 */
--	if (error)
-+	error = __xfs_trans_roll(tp, NULL, committed);
-+	if (error) {
-+		/*
-+		 * If the transaction was committed, drop the EFD reference
-+		 * since we're bailing out of here. The other reference is
-+		 * dropped when the EFI hits the AIL.
-+		 *
-+		 * If the transaction was not committed, the EFI is freed by the
-+		 * EFI item unlock handler on abort. Also, we have a new
-+		 * transaction so we should return committed=1 even though we're
-+		 * returning an error.
-+		 */
-+		if (*committed) {
-+			xfs_efi_release(efi);
-+			xfs_force_shutdown((*tp)->t_mountp,
-+				(error == -EFSCORRUPTED) ?
-+					SHUTDOWN_CORRUPT_INCORE :
-+					SHUTDOWN_META_IO_ERROR);
-+		} else {
-+			*committed = 1;
-+		}
-+
- 		return error;
-+	}
- 
- 	efd = xfs_trans_get_efd(*tp, efi, flist->xbf_count);
- 	for (free = flist->xbf_first; free != NULL; free = next) {
- 		next = free->xbfi_next;
--		if ((error = xfs_free_extent(*tp, free->xbfi_startblock,
--				free->xbfi_blockcount))) {
--			/*
--			 * The bmap free list will be cleaned up at a
--			 * higher level.  The EFI will be canceled when
--			 * this transaction is aborted.
--			 * Need to force shutdown here to make sure it
--			 * happens, since this transaction may not be
--			 * dirty yet.
--			 */
--			mp = (*tp)->t_mountp;
--			if (!XFS_FORCED_SHUTDOWN(mp))
--				xfs_force_shutdown(mp,
--						   (error == -EFSCORRUPTED) ?
--						   SHUTDOWN_CORRUPT_INCORE :
--						   SHUTDOWN_META_IO_ERROR);
--			return error;
--		}
-+
-+		/*
-+		 * Free the extent and log the EFD to dirty the transaction
-+		 * before handling errors. This ensures that the transaction is
-+		 * aborted, which:
-+		 *
-+		 * 1.) releases the EFI and frees the EFD
-+		 * 2.) shuts down the filesystem
-+		 *
-+		 * The bmap free list is cleaned up at a higher level.
-+		 */
-+		error = xfs_free_extent(*tp, free->xbfi_startblock,
-+					free->xbfi_blockcount);
- 		xfs_trans_log_efd_extent(*tp, efd, free->xbfi_startblock,
--			free->xbfi_blockcount);
-+					 free->xbfi_blockcount);
-+		if (error)
-+			return error;
-+
- 		xfs_bmap_del_free(flist, NULL, free);
- 	}
-+
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 42c9b05..aceb54f 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -61,9 +61,15 @@ __xfs_efi_release(
- 
- 	if (atomic_dec_and_test(&efip->efi_refcount)) {
- 		spin_lock(&ailp->xa_lock);
--		/* xfs_trans_ail_delete() drops the AIL lock. */
--		xfs_trans_ail_delete(ailp, &efip->efi_item,
--				     SHUTDOWN_LOG_IO_ERROR);
-+		/*
-+		 * We don't know whether the EFI made it to the AIL. Remove it
-+		 * if so. Note that xfs_trans_ail_delete() drops the AIL lock.
-+		 */
-+		if (efip->efi_item.li_flags & XFS_LI_IN_AIL)
-+			xfs_trans_ail_delete(ailp, &efip->efi_item,
-+					     SHUTDOWN_LOG_IO_ERROR);
-+		else
-+			spin_unlock(&ailp->xa_lock);
- 		xfs_efi_item_free(efip);
- 	}
- }
-@@ -128,12 +134,12 @@ xfs_efi_item_pin(
- }
- 
- /*
-- * While EFIs cannot really be pinned, the unpin operation is the last place at
-- * which the EFI is manipulated during a transaction.  If we are being asked to
-- * remove the EFI it's because the transaction has been cancelled and by
-- * definition that means the EFI cannot be in the AIL so remove it from the
-- * transaction and free it.  Otherwise coordinate with xfs_efi_release()
-- * to determine who gets to free the EFI.
-+ * The unpin operation is the last place an EFI is manipulated in the log. It is
-+ * either inserted in the AIL or aborted in the event of a log I/O error. In
-+ * either case, the EFI transaction has been successfully committed to make it
-+ * this far. Therefore, we expect whoever committed the EFI to either construct
-+ * and commit the EFD or drop the EFD's reference in the event of error. Simply
-+ * drop the log's EFI reference now that the log is done with it.
-  */
- STATIC void
- xfs_efi_item_unpin(
-@@ -141,14 +147,6 @@ xfs_efi_item_unpin(
- 	int			remove)
- {
- 	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
--
--	if (remove) {
--		ASSERT(!(lip->li_flags & XFS_LI_IN_AIL));
--		if (lip->li_desc)
--			xfs_trans_del_item(lip);
--		xfs_efi_item_free(efip);
--		return;
--	}
- 	xfs_efi_release(efip);
- }
- 
-@@ -167,6 +165,11 @@ xfs_efi_item_push(
- 	return XFS_ITEM_PINNED;
- }
- 
-+/*
-+ * The EFI has been either committed or aborted if the transaction has been
-+ * cancelled. If the transaction was cancelled, an EFD isn't going to be
-+ * constructed and thus we free the EFI here directly.
-+ */
- STATIC void
- xfs_efi_item_unlock(
- 	struct xfs_log_item	*lip)
-@@ -411,20 +414,27 @@ xfs_efd_item_push(
- 	return XFS_ITEM_PINNED;
- }
- 
-+/*
-+ * The EFD is either committed or aborted if the transaction is cancelled. If
-+ * the transaction is cancelled, drop our reference to the EFI and free the EFD.
-+ */
- STATIC void
- xfs_efd_item_unlock(
- 	struct xfs_log_item	*lip)
- {
--	if (lip->li_flags & XFS_LI_ABORTED)
--		xfs_efd_item_free(EFD_ITEM(lip));
-+	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
-+
-+	if (lip->li_flags & XFS_LI_ABORTED) {
-+		xfs_efi_release(efdp->efd_efip);
-+		xfs_efd_item_free(efdp);
-+	}
- }
- 
- /*
-- * When the efd item is committed to disk, all we need to do
-- * is delete our reference to our partner efi item and then
-- * free ourselves.  Since we're freeing ourselves we must
-- * return -1 to keep the transaction code from further referencing
-- * this item.
-+ * When the efd item is committed to disk, all we need to do is delete our
-+ * reference to our partner efi item and then free ourselves. Since we're
-+ * freeing ourselves we must return -1 to keep the transaction code from further
-+ * referencing this item.
-  */
- STATIC xfs_lsn_t
- xfs_efd_item_committed(
-@@ -434,14 +444,15 @@ xfs_efd_item_committed(
- 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
- 
- 	/*
--	 * If we got a log I/O error, it's always the case that the LR with the
--	 * EFI got unpinned and freed before the EFD got aborted.
-+	 * Drop the EFI reference regardless of whether the EFD has been
-+	 * aborted. Once the EFD transaction is constructed, it is the sole
-+	 * responsibility of the EFD to release the EFI (even if the EFI is
-+	 * aborted due to log I/O error).
- 	 */
--	if (!(lip->li_flags & XFS_LI_ABORTED))
--		xfs_efi_release(efdp->efd_efip);
--
-+	xfs_efi_release(efdp->efd_efip);
- 	xfs_efd_item_free(efdp);
--	return (xfs_lsn_t)-1;
-+
-+	return (xfs_lsn_t) -1;
- }
- 
- /*
+Dave.
 -- 
-2.1.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
