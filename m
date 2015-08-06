@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 017D77F74
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 12:44:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C4A937F76
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 12:44:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 74B6EAC00A
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 520DFAC005
 	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 10:44:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rMcjfpNad30e5dE7 (version=TLSv1
+	cuda.sgi.com with ESMTP id WwCLgiDzZZ8K7Vb8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 06 Aug 2015 10:44:35 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 663F9D0A9A
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 4A10FA2C25
 	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 17:44:34 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t76HiXQG017987
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t76HiXXn010703
 	for <xfs@oss.sgi.com>; Thu, 6 Aug 2015 13:44:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 00/11] xfs: miscellaneous logging, recovery, umount fixes
-Date: Thu,  6 Aug 2015 13:44:21 -0400
-Message-Id: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 02/11] xfs: return committed status from xfs_trans_roll()
+Date: Thu,  6 Aug 2015 13:44:23 -0400
+Message-Id: <1438883072-28706-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
+References: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,61 +38,67 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+Some callers need to make error handling decisions based on whether the
+current transaction successfully committed or not. Rename
+xfs_trans_roll(), add a new parameter and provide a wrapper to preserve
+existing callers.
 
-This series includes a bunch of bug fixes from doing some log recovery
-testing. It started with an RFC of the EFI/EFD bits and expanded to
-include more fixes as problems were discovered.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_trans.c | 15 +++++++++++++--
+ fs/xfs/xfs_trans.h |  1 +
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-Patch 1 removes the superfluous EFI/EFD extent count reference tracking.
-Patches 2-6 make a couple cleanups and fix the explicit EFI/EFD
-reference counting to avoid leaving EFI items on the AIL in the event of
-error. Patches 7-8 fix handling of cancelled icreate transactions in log
-recovery. Patch 9 is a repost of a previous log recovery fix. Patches
-10-11 fix a couple more mount related crash/hang issues.
-
-Just about all of these problems were reproduced by running repeated
-fsstress/godown workloads against XFS. This set has gone ~150 iterations
-of said testing before hitting some kind of recovery time directory
-corruption in the form of a dir. block write verifier failure. I'll see
-if it is reproducible, but I don't think it's related to anything
-here since I haven't touched directory code...
-
-Brian
-
-v1:
-- Updated EFI/EFD tracking semantics based on rfc comments.
-- Added more cleanups/fixes to series.
-rfc: http://oss.sgi.com/pipermail/xfs/2015-July/042617.html
-
-Brian Foster (11):
-  xfs: disentagle EFI release from the extent count
-  xfs: return committed status from xfs_trans_roll()
-  xfs: fix efi/efd error handling to avoid fs shutdown hangs
-  xfs: ensure EFD trans aborts on log recovery extent free failure
-  xfs: use EFI refcount consistently in log recovery
-  xfs: don't leave EFIs on AIL on mount failure
-  xfs: icreate log item recovery and cancellation tracepoints
-  xfs: fix broken icreate log item cancellation
-  xfs: checksum log record ext headers based on record size
-  xfs: clean up root inode properly on mount failure
-  xfs: fix btree cursor error cleanups
-
- fs/xfs/libxfs/xfs_ialloc.c |   2 +-
- fs/xfs/xfs_bmap_util.c     |  84 +++++++++++++++-----------
- fs/xfs/xfs_extfree_item.c  | 118 +++++++++++++++++-------------------
- fs/xfs/xfs_extfree_item.h  |   1 +
- fs/xfs/xfs_itable.c        |   3 +-
- fs/xfs/xfs_log.c           |  23 +++++--
- fs/xfs/xfs_log.h           |   2 +-
- fs/xfs/xfs_log_priv.h      |   2 +
- fs/xfs/xfs_log_recover.c   | 147 +++++++++++++++++++++++++++++++++------------
- fs/xfs/xfs_mount.c         |  37 ++++++++----
- fs/xfs/xfs_trace.h         |  34 +++++++++++
- fs/xfs/xfs_trans.c         |  15 ++++-
- fs/xfs/xfs_trans.h         |   2 +-
- 13 files changed, 307 insertions(+), 163 deletions(-)
-
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 0582a27..a0ab1da 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1019,9 +1019,10 @@ xfs_trans_cancel(
+  * chunk we've been working on and get a new transaction to continue.
+  */
+ int
+-xfs_trans_roll(
++__xfs_trans_roll(
+ 	struct xfs_trans	**tpp,
+-	struct xfs_inode	*dp)
++	struct xfs_inode	*dp,
++	int			*committed)
+ {
+ 	struct xfs_trans	*trans;
+ 	struct xfs_trans_res	tres;
+@@ -1052,6 +1053,7 @@ xfs_trans_roll(
+ 	if (error)
+ 		return error;
+ 
++	*committed = 1;
+ 	trans = *tpp;
+ 
+ 	/*
+@@ -1074,3 +1076,12 @@ xfs_trans_roll(
+ 		xfs_trans_ijoin(trans, dp, 0);
+ 	return 0;
+ }
++
++int
++xfs_trans_roll(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*dp)
++{
++	int			committed = 0;
++	return __xfs_trans_roll(tpp, dp, &committed);
++}
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index f48e839..ba1660b 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -225,6 +225,7 @@ void		xfs_trans_log_efd_extent(xfs_trans_t *,
+ 					 xfs_fsblock_t,
+ 					 xfs_extlen_t);
+ int		xfs_trans_commit(struct xfs_trans *);
++int		__xfs_trans_roll(struct xfs_trans **, struct xfs_inode *, int *);
+ int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+ void		xfs_trans_cancel(xfs_trans_t *);
+ int		xfs_trans_ail_init(struct xfs_mount *);
 -- 
 2.1.0
 
