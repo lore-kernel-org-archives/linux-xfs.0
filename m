@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 029737F4E
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 00:18:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7D8927F55
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 00:36:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C21E5304032
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 22:18:54 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B3AC304043
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 22:36:14 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id oUYDoOl05821noA2 for <xfs@oss.sgi.com>;
-	Thu, 06 Aug 2015 22:18:53 -0700 (PDT)
-Received: from Liberator.local (unknown [64.146.202.138])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 58F3C63C6061
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 00:18:52 -0500 (CDT)
-Message-ID: <55C43FBA.1080408@sandeen.net>
-Date: Thu, 06 Aug 2015 22:18:50 -0700
+	ESMTP id 04917m5hOJggsxV4 for <xfs@oss.sgi.com>;
+	Thu, 06 Aug 2015 22:36:10 -0700 (PDT)
+Message-ID: <55C443C7.3010608@sandeen.net>
+Date: Thu, 06 Aug 2015 22:36:07 -0700
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] mkfs.xfs: fix ftype-vs-crc option combination testing
+Subject: Re: why crc req on free-inobt & file-type-indir options?
+References: <55C41D75.4040504@tlinx.org>
+In-Reply-To: <55C41D75.4040504@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +27,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: "L.A. Walsh" <xfs@tlinx.org>, xfs-oss <xfs@oss.sgi.com>
 
-mkfs.xfs got weird along the way; today it has different outcomes
-depending on the order of option specification:
+On 8/6/15 7:52 PM, L.A. Walsh wrote:
+> 
+> Could anyone point me at the discussion or literature as to why
+> a free-inodeB-Tree and inline-types, should *REQUIRE* a -crc=1 option?
 
-$ mkfs/mkfs.xfs -n ftype=1 -m crc=0 -dfile,name=fsfile,size=16g
-cannot specify both crc and ftype
-$ mkfs/mkfs.xfs -m crc=0 -n ftype=1 -dfile,name=fsfile,size=16g
-<succeeds>
+FWIW, you can enable ftype w/o crcs.  Today it's a little broken, if you
+specify in the wrong order it fails.  I just sent a patch for that.
 
-Somehow the tests got written as being constrained on what options
-are specified - and in what order! - vs actually testing for
-incompatible feature sets.
-
-It's fine to specify both crc & ftype options, as long as it's an
-allowed combination, so just test for the incompatible combination
-(crc=1 and ftype=0) after all options have been processed.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 69d61c7..9042796 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1477,11 +1477,6 @@ main(
- 					if (c < 0 || c > 1)
- 						illegal(value, "m crc");
- 					crcs_enabled = c;
--					if (nftype && crcs_enabled) {
--						fprintf(stderr,
--_("cannot specify both crc and ftype\n"));
--						usage();
--					}
- 					break;
- 				case M_FINOBT:
- 					if (!value || *value == '\0')
-@@ -1555,11 +1550,6 @@ _("cannot specify both crc and ftype\n"));
- 					if (nftype)
- 						respec('n', nopts, N_FTYPE);
- 					dirftype = atoi(value);
--					if (crcs_enabled) {
--						fprintf(stderr,
--_("cannot specify both crc and ftype\n"));
--						usage();
--					}
- 					nftype = 1;
- 					break;
- 				default:
-@@ -1714,6 +1704,10 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 			XFS_MIN_CRC_BLOCKSIZE);
- 		usage();
- 	}
-+	if (crcs_enabled && !dirftype) {
-+		fprintf(stderr, _("cannot disable ftype with crcs enabled\n"));
-+		usage();
-+	}
- 
- 	memset(&ft, 0, sizeof(ft));
- 	get_topology(&xi, &ft, force_overwrite);
+-Eric
 
 _______________________________________________
 xfs mailing list
