@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 551277F59
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 06:37:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 446058F8050
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 04:37:45 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F1CBB7F59
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 07:09:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B5AE68F8054
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 05:09:37 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id N8wUB0iF7435abIP (version=TLSv1
+	cuda.sgi.com with ESMTP id bPRLNwpXDfxEVt8E (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Aug 2015 04:37:44 -0700 (PDT)
-Date: Fri, 7 Aug 2015 07:37:42 -0400
+	Fri, 07 Aug 2015 05:09:36 -0700 (PDT)
+Date: Fri, 7 Aug 2015 08:09:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] mkfs.xfs: fix ftype-vs-crc option combination testing
-Message-ID: <20150807113742.GB8322@bfoster.bfoster>
-References: <55C43FBA.1080408@sandeen.net>
+Subject: Re: [PATCH 03/11] xfs: fix efi/efd error handling to avoid fs
+	shutdown hangs
+Message-ID: <20150807120934.GC8322@bfoster.bfoster>
+References: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
+	<1438883072-28706-4-git-send-email-bfoster@redhat.com>
+	<20150807004100.GD16638@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55C43FBA.1080408@sandeen.net>
+In-Reply-To: <20150807004100.GD16638@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,77 +32,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 06, 2015 at 10:18:50PM -0700, Eric Sandeen wrote:
-> mkfs.xfs got weird along the way; today it has different outcomes
-> depending on the order of option specification:
+On Fri, Aug 07, 2015 at 10:41:00AM +1000, Dave Chinner wrote:
+> On Thu, Aug 06, 2015 at 01:44:24PM -0400, Brian Foster wrote:
+> ....
+> > Update the EFI/EFD item handling code to use a more straightforward and
+> > reliable approach to error handling. If an error occurs after the EFI
+> > transaction is committed and before the EFD is constructed, release the
+> > EFI explicitly from xfs_bmap_finish(). If the EFI transaction is
+> > cancelled, release the EFI in the unlock handler.
+> > 
+> > Once the EFD is constructed, it is responsible for releasing the EFI
+> > under any circumstances (including whether the EFI item aborts due to
+> > log I/O error).
 > 
-> $ mkfs/mkfs.xfs -n ftype=1 -m crc=0 -dfile,name=fsfile,size=16g
-> cannot specify both crc and ftype
-> $ mkfs/mkfs.xfs -m crc=0 -n ftype=1 -dfile,name=fsfile,size=16g
-> <succeeds>
-> 
-> Somehow the tests got written as being constrained on what options
-> are specified - and in what order! - vs actually testing for
-> incompatible feature sets.
+> Can you document these rules in a comment at the top of
+> fs/xfs/xfs_extfree_item.c?
 > 
 
-IIRC, I think this is one of the core problems the big mkfs option
-parsing rework that Jan is working on is supposed to fix.
+Sure.
 
-> It's fine to specify both crc & ftype options, as long as it's an
-> allowed combination, so just test for the incompatible combination
-> (crc=1 and ftype=0) after all options have been processed.
+> > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> > index 42c9b05..aceb54f 100644
+> > --- a/fs/xfs/xfs_extfree_item.c
+> > +++ b/fs/xfs/xfs_extfree_item.c
+> > @@ -61,9 +61,15 @@ __xfs_efi_release(
+> >  
+> >  	if (atomic_dec_and_test(&efip->efi_refcount)) {
+> >  		spin_lock(&ailp->xa_lock);
+> > -		/* xfs_trans_ail_delete() drops the AIL lock. */
+> > -		xfs_trans_ail_delete(ailp, &efip->efi_item,
+> > -				     SHUTDOWN_LOG_IO_ERROR);
+> > +		/*
+> > +		 * We don't know whether the EFI made it to the AIL. Remove it
+> > +		 * if so. Note that xfs_trans_ail_delete() drops the AIL lock.
+> > +		 */
+> > +		if (efip->efi_item.li_flags & XFS_LI_IN_AIL)
+> > +			xfs_trans_ail_delete(ailp, &efip->efi_item,
+> > +					     SHUTDOWN_LOG_IO_ERROR);
+> > +		else
+> > +			spin_unlock(&ailp->xa_lock);
+> >  		xfs_efi_item_free(efip);
+> >  	}
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-
-Seems fine to me...
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
+> We now have a lot of this pattern:
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 69d61c7..9042796 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1477,11 +1477,6 @@ main(
->  					if (c < 0 || c > 1)
->  						illegal(value, "m crc");
->  					crcs_enabled = c;
-> -					if (nftype && crcs_enabled) {
-> -						fprintf(stderr,
-> -_("cannot specify both crc and ftype\n"));
-> -						usage();
-> -					}
->  					break;
->  				case M_FINOBT:
->  					if (!value || *value == '\0')
-> @@ -1555,11 +1550,6 @@ _("cannot specify both crc and ftype\n"));
->  					if (nftype)
->  						respec('n', nopts, N_FTYPE);
->  					dirftype = atoi(value);
-> -					if (crcs_enabled) {
-> -						fprintf(stderr,
-> -_("cannot specify both crc and ftype\n"));
-> -						usage();
-> -					}
->  					nftype = 1;
->  					break;
->  				default:
-> @@ -1714,6 +1704,10 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
->  			XFS_MIN_CRC_BLOCKSIZE);
->  		usage();
->  	}
-> +	if (crcs_enabled && !dirftype) {
-> +		fprintf(stderr, _("cannot disable ftype with crcs enabled\n"));
-> +		usage();
-> +	}
->  
->  	memset(&ft, 0, sizeof(ft));
->  	get_topology(&xi, &ft, force_overwrite);
+> 	spin_lock(&ailp->xa_lock);
+> 	if (lip->li_flags & XFS_LI_IN_AIL)
+> 		xfs_trans_ail_delete(ailp, lip, shutdown_reason);
+> 	else
+> 		spin_unlock(&ailp->xa_lock);
+> 
+> occurring in the code. Can you look into adding a helper function
+> for this, say xfs_trans_ail_remove()? (separate patch, of course!)
+> 
+
+There was only one other instance of this with regard to the EFI that is
+ultimately replaced with an xfs_efi_release() call. I'll look into
+whether there's enough instances of this for other items to justify a
+helper.
+
+Brian
+
+> The rest of the patch looks fine - getting rid of almost all of
+> those aborted flag special cases is a big win :)
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
 > _______________________________________________
 > xfs mailing list
