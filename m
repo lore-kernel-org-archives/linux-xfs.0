@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C74277F73
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 16:15:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B18198F804C
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 39A517F73
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 16:15:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C66DBAC001
 	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 14:15:32 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cDcgNrIPhAqduVoE (version=TLSv1
+	cuda.sgi.com with ESMTP id RHwVyDsSLdU7IYav (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 07 Aug 2015 14:15:31 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 1DB498EB2B
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id 4C993373BD1
 	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 21:15:31 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t77LFUZj032035
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t77LFUqv020038
 	for <xfs@oss.sgi.com>; Fri, 7 Aug 2015 17:15:30 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 02/12] xfs: return committed status from xfs_trans_roll()
-Date: Fri,  7 Aug 2015 17:15:18 -0400
-Message-Id: <1438982128-38618-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 01/12] xfs: disentagle EFI release from the extent count
+Date: Fri,  7 Aug 2015 17:15:17 -0400
+Message-Id: <1438982128-38618-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1438982128-38618-1-git-send-email-bfoster@redhat.com>
 References: <1438982128-38618-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,67 +38,109 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Some callers need to make error handling decisions based on whether the
-current transaction successfully committed or not. Rename
-xfs_trans_roll(), add a new parameter and provide a wrapper to preserve
-existing callers.
+Release of the EFI either occurs based on the reference count or the
+extent count. The extent count used is either the count tracked in the
+EFI or EFD, depending on the particular situation. In either case, the
+count is initialized to the final value and thus always matches the
+current efi_next_extent value once the EFI is completely constructed.
+
+Given this along with the fact that the EFI is always completely
+constructed before error can occur, eliminate the unnecessary extent
+count manipulation and release the EFI directly based on reference
+count. The efi_next_extent counter remains because it is still used to
+track the slot to log the next extent to free.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans.c | 15 +++++++++++++--
- fs/xfs/xfs_trans.h |  1 +
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_extfree_item.c | 20 ++++++++------------
+ fs/xfs/xfs_extfree_item.h |  1 +
+ fs/xfs/xfs_log_recover.c  |  2 +-
+ fs/xfs/xfs_trans.h        |  1 -
+ 4 files changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 0582a27..a0ab1da 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1019,9 +1019,10 @@ xfs_trans_cancel(
-  * chunk we've been working on and get a new transaction to continue.
-  */
- int
--xfs_trans_roll(
-+__xfs_trans_roll(
- 	struct xfs_trans	**tpp,
--	struct xfs_inode	*dp)
-+	struct xfs_inode	*dp,
-+	int			*committed)
- {
- 	struct xfs_trans	*trans;
- 	struct xfs_trans_res	tres;
-@@ -1052,6 +1053,7 @@ xfs_trans_roll(
- 	if (error)
- 		return error;
- 
-+	*committed = 1;
- 	trans = *tpp;
- 
- 	/*
-@@ -1074,3 +1076,12 @@ xfs_trans_roll(
- 		xfs_trans_ijoin(trans, dp, 0);
- 	return 0;
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index adc8f8f..42c9b05 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -149,7 +149,7 @@ xfs_efi_item_unpin(
+ 		xfs_efi_item_free(efip);
+ 		return;
+ 	}
+-	__xfs_efi_release(efip);
++	xfs_efi_release(efip);
  }
+ 
+ /*
+@@ -307,18 +307,14 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
+  * by this efi item we can free the efi item.
+  */
+ void
+-xfs_efi_release(xfs_efi_log_item_t	*efip,
+-		uint			nextents)
++xfs_efi_release(struct xfs_efi_log_item	*efip)
+ {
+-	ASSERT(atomic_read(&efip->efi_next_extent) >= nextents);
+-	if (atomic_sub_and_test(nextents, &efip->efi_next_extent)) {
+-		/* recovery needs us to drop the EFI reference, too */
+-		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+-			__xfs_efi_release(efip);
+-
++	/* recovery needs us to drop the EFI reference, too */
++	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+ 		__xfs_efi_release(efip);
+-		/* efip may now have been freed, do not reference it again. */
+-	}
 +
-+int
-+xfs_trans_roll(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*dp)
-+{
-+	int			committed = 0;
-+	return __xfs_trans_roll(tpp, dp, &committed);
-+}
++	__xfs_efi_release(efip);
++	/* efip may now have been freed, do not reference it again. */
+ }
+ 
+ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
+@@ -442,7 +438,7 @@ xfs_efd_item_committed(
+ 	 * EFI got unpinned and freed before the EFD got aborted.
+ 	 */
+ 	if (!(lip->li_flags & XFS_LI_ABORTED))
+-		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
++		xfs_efi_release(efdp->efd_efip);
+ 
+ 	xfs_efd_item_free(efdp);
+ 	return (xfs_lsn_t)-1;
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index 0ffbce3..399562e 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -77,5 +77,6 @@ xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
+ int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
+ 					    xfs_efi_log_format_t *dst_efi_fmt);
+ void			xfs_efi_item_free(xfs_efi_log_item_t *);
++void			xfs_efi_release(struct xfs_efi_log_item *);
+ 
+ #endif	/* __XFS_EXTFREE_ITEM_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index c674b40..9d8f242 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3766,7 +3766,7 @@ xlog_recover_process_efi(
+ 			 * free the memory associated with it.
+ 			 */
+ 			set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+-			xfs_efi_release(efip, efip->efi_format.efi_nextents);
++			xfs_efi_release(efip);
+ 			return -EIO;
+ 		}
+ 	}
 diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index f48e839..ba1660b 100644
+index 3b21b4e..f48e839 100644
 --- a/fs/xfs/xfs_trans.h
 +++ b/fs/xfs/xfs_trans.h
-@@ -225,6 +225,7 @@ void		xfs_trans_log_efd_extent(xfs_trans_t *,
+@@ -213,7 +213,6 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+ void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ struct xfs_efi_log_item	*xfs_trans_get_efi(xfs_trans_t *, uint);
+-void		xfs_efi_release(struct xfs_efi_log_item *, uint);
+ void		xfs_trans_log_efi_extent(xfs_trans_t *,
+ 					 struct xfs_efi_log_item *,
  					 xfs_fsblock_t,
- 					 xfs_extlen_t);
- int		xfs_trans_commit(struct xfs_trans *);
-+int		__xfs_trans_roll(struct xfs_trans **, struct xfs_inode *, int *);
- int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
- void		xfs_trans_cancel(xfs_trans_t *);
- int		xfs_trans_ail_init(struct xfs_mount *);
 -- 
 2.1.0
 
