@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A80BB7F56
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 16:15:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80D6F304043
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 14:15:32 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 489627F56
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 16:15:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 33C8D8F8052
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 14:15:33 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AAfkYfafxLoAxH6a (version=TLSv1
+	cuda.sgi.com with ESMTP id zPuZBvHECKEW24SS (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Aug 2015 14:15:31 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 35F323CA175
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 21:15:31 +0000 (UTC)
+	Fri, 07 Aug 2015 14:15:32 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id 1902D3BF552
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 21:15:32 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-76.bos.redhat.com [10.18.41.76])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t77LFUoW032039
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t77LFVeW020055
 	for <xfs@oss.sgi.com>; Fri, 7 Aug 2015 17:15:31 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 04/12] xfs: ensure EFD trans aborts on log recovery extent
-	free failure
-Date: Fri,  7 Aug 2015 17:15:20 -0400
-Message-Id: <1438982128-38618-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 11/12] xfs: fix btree cursor error cleanups
+Date: Fri,  7 Aug 2015 17:15:27 -0400
+Message-Id: <1438982128-38618-12-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1438982128-38618-1-git-send-email-bfoster@redhat.com>
 References: <1438982128-38618-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,46 +38,49 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Log recovery attempts to free extents with leftover EFIs in the AIL
-after initial processing. If the extent free fails (e.g., due to
-unrelated fs corruption), the transaction is cancelled, though it might
-not be dirtied at the time. If this is the case, the EFD does not abort
-and thus does not release the EFI. This can lead to hangs as the EFI
-pins the AIL.
+The btree cursor cleanup function takes an error parameter that affects
+how buffers are released from the cursor. All buffers are released in
+the event of error. Several callers do not specify the XFS_BTREE_ERROR
+flag in the event of error, however. This can cause buffers to hang
+around locked or with an elevated hold count and thus lead to umount
+hangs in the event of errors.
 
-Update xlog_recover_process_efi() to log the EFD in the transaction
-before xfs_free_extent() errors are handled to ensure the transaction is
-dirty, aborts the EFD and releases the EFI on error. This is consistent
-with how EFDs are handled at runtime in xfs_bmap_finish().
+Fix up the xfs_btree_del_cursor() callers to pass XFS_BTREE_ERROR if the
+cursor is being torn down due to error.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 2 +-
+ fs/xfs/xfs_itable.c        | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9d8f242..3433b7b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3779,11 +3779,16 @@ xlog_recover_process_efi(
- 
- 	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
- 		extp = &(efip->efi_format.efi_extents[i]);
-+		/*
-+		 * Log the EFD before error handling to ensure the EFD aborts
-+		 * (and releases the EFI) on error.
-+		 */
- 		error = xfs_free_extent(tp, extp->ext_start, extp->ext_len);
--		if (error)
--			goto abort_error;
- 		xfs_trans_log_efd_extent(tp, efdp, extp->ext_start,
- 					 extp->ext_len);
-+		if (error)
-+			goto abort_error;
-+
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index ce63e04..54deb2d 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2233,7 +2233,7 @@ xfs_imap_lookup(
  	}
  
- 	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+ 	xfs_trans_brelse(tp, agbp);
+-	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f41b0c3..930ebd8 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -473,7 +473,8 @@ xfs_bulkstat(
+ 		 * pending error, then we are done.
+ 		 */
+ del_cursor:
+-		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error ?
++					  XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+ 		xfs_buf_relse(agbp);
+ 		if (error)
+ 			break;
 -- 
 2.1.0
 
