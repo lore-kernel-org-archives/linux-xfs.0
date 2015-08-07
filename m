@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF8D87F67
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 21:23:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CB9228F804B
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 19:23:53 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	MpxtRmkmDebcAsiu for <xfs@oss.sgi.com>;
-	Thu, 06 Aug 2015 19:23:50 -0700 (PDT)
-Date: Fri, 7 Aug 2015 12:23:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/11] xfs: don't leave EFIs on AIL on mount failure
-Message-ID: <20150807022336.GF16638@dastard>
-References: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
-	<1438883072-28706-7-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 671317F51
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 21:52:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F218CAC003
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 19:52:41 -0700 (PDT)
+Received: from Ishtar.hs.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id IB1GmiJF122mgTqT (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 06 Aug 2015 19:52:40 -0700 (PDT)
+Received: from [192.168.4.12] (Athenae [192.168.4.12])
+	by Ishtar.hs.tlinx.org (8.14.9/8.14.4/SuSE Linux 0.8) with ESMTP id
+	t772qbxv087428 for <xfs@oss.sgi.com>; Thu, 6 Aug 2015 19:52:39 -0700
+Message-ID: <55C41D75.4040504@tlinx.org>
+Date: Thu, 06 Aug 2015 19:52:37 -0700
+From: "L.A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1438883072-28706-7-git-send-email-bfoster@redhat.com>
+Subject: why crc req on free-inobt & file-type-indir options?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,245 +25,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Aug 06, 2015 at 01:44:27PM -0400, Brian Foster wrote:
-> Log recovery occurs in two phases at mount time. In the first phase,
-> EFIs and EFDs are processed and potentially cancelled out. EFIs without
-> EFD objects are inserted into the AIL for processing and recovery in the
-> second phase. xfs_mountfs() runs various other operations between the
-> phases and is thus subject to failure. If failure occurs after the first
-> phase but before the second, pending EFIs sit on the AIL, pin it and
-> cause the mount to hang.
-> 
-> Update the mount sequence to ensure that pending EFIs are cancelled in
-> the event of failure. Add a recovery cancellation mechanism to iterate
-> the AIL and cancel all EFI items when requested. Plumb cancellation
-> support through the log mount finish helper and update xfs_mountfs() to
-> invoke cancellation in the event of failure after recovery has started.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_log.c         | 16 +++++++++++-----
->  fs/xfs/xfs_log.h         |  2 +-
->  fs/xfs/xfs_log_priv.h    |  2 ++
->  fs/xfs/xfs_log_recover.c | 41 ++++++++++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_mount.c       | 35 +++++++++++++++++++++++------------
->  5 files changed, 73 insertions(+), 23 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 6b5a84a..522286c 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -740,19 +740,25 @@ out:
->   * it.
->   */
->  int
-> -xfs_log_mount_finish(xfs_mount_t *mp)
-> +xfs_log_mount_finish(
-> +	struct xfs_mount	*mp,
-> +	bool			cancel)
->  {
->  	int	error = 0;
->  
-> -	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
-> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> +		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> +		return 0;
-> +	}
-> +
-> +	if (cancel) {
-> +		error = xlog_recover_cancel(mp->m_log);
-> +	} else {
->  		error = xlog_recover_finish(mp->m_log);
->  		if (!error)
->  			xfs_log_work_queue(mp);
-> -	} else {
-> -		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
->  	}
->  
-> -
->  	return error;
->  }
 
-As I mentioned on #xfs, I don't think the error/cancel path needs to
-go through this function. Add a new function xfs_log_mount_cancel(),
-and put the contents of xlog_recover_cancel() inside it, along with
-the log unmount function...
+Could anyone point me at the discussion or literature as to why
+a free-inodeB-Tree and inline-types, should *REQUIRE* a -crc=1 option?
 
-(General rule: prefix "xfs_log_....()" is for functions that call
-into the log from outside, passing a struct xfs_mount. prefix
-"xlog_...()" is for internal calls, passing a struct xlog.)
+Ultimately isn't it about the users/customers and what they will want?
 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index a74ff68..a7ba078 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3823,10 +3823,11 @@ abort_error:
->   */
->  STATIC int
->  xlog_recover_process_efis(
-> -	struct xlog	*log)
-> +	struct xlog		*log,
-> +	bool			cancel)
->  {
-> -	xfs_log_item_t		*lip;
-> -	xfs_efi_log_item_t	*efip;
-> +	struct xfs_log_item	*lip;
-> +	struct xfs_efi_log_item	*efip;
->  	int			error = 0;
->  	struct xfs_ail_cursor	cur;
->  	struct xfs_ail		*ailp;
-> @@ -3847,10 +3848,24 @@ xlog_recover_process_efis(
->  			break;
->  		}
->  
-> +		efip = (struct xfs_efi_log_item *) lip;
-> +
-> +		/*
-> +		 * A cancel occurs when the mount has failed and we're bailing
-> +		 * out. Release all pending EFIs so they don't pin the AIL.
-> +		 */
-> +		if (cancel) {
-> +			spin_unlock(&ailp->xa_lock);
-> +			xfs_efi_release(efip);
-> +			spin_lock(&ailp->xa_lock);
-> +
-> +			lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> +			continue;
-> +		}
+I not saying to not make it a default -- but to require it to try
+the other features? 
 
-This might be better to separate into a xlog_recover_cancel_efis()
-function because this is much simpler than the rest of the loop.
-It may be more code, but its simpler to read and understand.
+Main reason I asked, is I have had disks get partly corrupted meta data
+before, and it looks like the crc information just says "this disk
+has errors, so assume ALL is LOST!  Seems like one bit flip out of
+a 32+Tb(4TB) are not great odds.
 
-> +
->  		/*
->  		 * Skip EFIs that we've already processed.
->  		 */
-> -		efip = (xfs_efi_log_item_t *)lip;
->  		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags)) {
->  			lip = xfs_trans_ail_cursor_next(ailp, &cur);
->  			continue;
-> @@ -4617,8 +4632,13 @@ xlog_recover_finish(
->  	 */
->  	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
->  		int	error;
-> -		error = xlog_recover_process_efis(log);
-> +		error = xlog_recover_process_efis(log, false);
->  		if (error) {
-> +			/*
-> +			 * We could still have pending EFIs. Cancel them so we
-> +			 * don't hang...
-> +			 */
-> +			xlog_recover_process_efis(log, true);
+Example:
+sudo mkfs-xfs-raid SCR /dev/mapper/Data-Home2
+mkfs.xfs -mcrc=1,finobt=1 -i maxpct=5,size=512 -l 
+size=32752b,lazy-count=1 -d su=64k,sw=4  -s size=4096 -L SCR -f 
+/dev/mapper/Data-Home2
+meta-data=/dev/mapper/Data-Home2 isize=512    agcount=32, 
+agsize=12582896 blks
+        =                       sectsz=4096  attr=2, projid32bit=1
+        =                       crc=1        finobt=1
+data     =                       bsize=4096   blocks=402652672, imaxpct=5
+        =                       sunit=16     swidth=64 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=32752, version=2
+        =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+xfs_admin: WARNING - filesystem uses v1 dirs,limited functionality provided.
+cache_node_purge: refcount was 1, not zero (node=0x891ea0)
+xfs_admin: cannot read root inode (117)
+cache_node_purge: refcount was 1, not zero (node=0x894410)
+xfs_admin: cannot read realtime bitmap inode (117)
+xfs_admin: WARNING - filesystem uses v1 dirs,limited functionality provided.
+Clearing log and setting UUID
+writing all SBs
+bad sb version # 0xbda5 in AG 0
+failed to set UUID in AG 0
+new UUID = 55c29a43-19b6-ba02-2015-08051620352b
+26.34sec 0.11usr 14.97sys (57.28% cpu)
+Ishtar:law/bin> time sudo mkfs-xfs-raid SCR /dev/mapper/Data-Home2
+mkfs.xfs  -i maxpct=5,size=512 -l size=32752b,lazy-count=1 -d 
+su=64k,sw=4  -s size=4096 -L SCR -f /dev/mapper/Data-Home2
+meta-data=/dev/mapper/Data-Home2 isize=512    agcount=32, 
+agsize=12582896 blks
+        =                       sectsz=4096  attr=2, projid32bit=1
+        =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=402652672, imaxpct=5
+        =                       sunit=16     swidth=64 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=32752, version=2
+        =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Clearing log and setting UUID
+writing all SBs55
+new UUID = 55c29acd-2ce9-d15a-2015-08051622534b
+In case you were curious why  ^^date^^:time^^^?? gives me an idea of
+how long a disk  (or partition) has been in service....
 
-Not actually necessary. We don't clear the XLOG_RECOVERY_NEEDED
-flag, so when the error stack is run in xfs_mountfs(), we will
-call xfs_log_mount_cancel(), it will see the XLOG_RECOVERY_NEEDED
-and run xlog_recover_cancel_efis()....
 
->  			xfs_alert(log->l_mp, "Failed to recover EFIs");
->  			return error;
->  		}
-> @@ -4644,6 +4664,17 @@ xlog_recover_finish(
->  	return 0;
->  }
->  
-> +int
-> +xlog_recover_cancel(
-> +	struct xlog	*log)
-> +{
-> +	int		error = 0;
-> +
-> +	if (log->l_flags & XLOG_RECOVERY_NEEDED)
-> +		error = xlog_recover_process_efis(log, true);
-> +
-> +	return error;
-> +}
+I don't see any benefit in something that fails the disk that quickly.
+While I've heard a patch for the GUID is in the input stream -- that's
+one thing.  If I go in and a bit-error has reduced my disk to v1-dirs
+as a side effect, it sounds like the potential for damage is far greater
+than with that option turned on.  Sure it may make you **aware** of a
+potential problem more quickly (or a new SW error), but I didn't see
+how it helped repair the disk when it was at fault. 
 
-void
-xfs_log_mount_cancel(
-	struct xfs_mount	*mp)
-{
-	int		error = 0;
+Also, is it my imagination or is mkfs.xfs taking longer, occasionally
+alot longer -- on the order of >60 seconds  at long end vs ~30 at
+lower endd.  It sorta felt like a drop cache was being done before
+the real long one but the memusage didn't change. at
+least part of the time.   Has anyone done any benchmarks both
+ways on meta-data intensive workloads (I guess lots of mkdirs,
+touch, rm, adding large ACL's) ...?
 
-	if (log->l_flags & XLOG_RECOVERY_NEEDED)
-		xlog_recover_cancel_efis(log);
 
-	xfs_log_unmount(mp);
-	return error;
-}
+Thanks much!
+L. Walsh
 
-> @@ -799,7 +800,10 @@ xfs_mountfs(
->  	}
->  
->  	/*
-> -	 * log's mount-time initialization. Perform 1st part recovery if needed
-> +	 * Log's mount-time initialization. The first part of recovery can place
-> +	 * some items on the AIL, to be handled when recovery is finished. Set
-> +	 * the cancel flag to ensure that the recovery is cancelled should we
-> +	 * fail before then.
->  	 */
->  	error = xfs_log_mount(mp, mp->m_logdev_targp,
->  			      XFS_FSB_TO_DADDR(mp, sbp->sb_logstart),
-> @@ -808,6 +812,7 @@ xfs_mountfs(
->  		xfs_warn(mp, "log mount failed");
->  		goto out_fail_wait;
->  	}
-> +	log_mount_cancel = true;
-
-At this point, XLOG_RECOVERY_NEEDED will be set if EFI processing is
-required, so a variable to track this here is not needed.
-
-> @@ -910,11 +915,15 @@ xfs_mountfs(
->  	}
->  
->  	/*
-> -	 * Finish recovering the file system.  This part needed to be
-> -	 * delayed until after the root and real-time bitmap inodes
-> -	 * were consistently read in.
-> +	 * Finish recovering the file system.  This part needed to be delayed
-> +	 * until after the root and real-time bitmap inodes were consistently
-> +	 * read in.
-> +	 *
-> +	 * Reset the cancel flag as the finish cleans up after itself on
-> +	 * failure.
->  	 */
-> -	error = xfs_log_mount_finish(mp);
-> +	log_mount_cancel = false;
-> +	error = xfs_log_mount_finish(mp, false);
->  	if (error) {
->  		xfs_warn(mp, "log mount finish failed");
->  		goto out_rtunmount;
-
-xfs_log_mount_finish() will clear the XLOG_RECOVERY_NEEDED. On
-error, we jump into the error stack above the call to
-xfs_log_mount_cancel(), so it will handle the cleanup....
-
-> @@ -956,6 +965,8 @@ xfs_mountfs(
->   out_rele_rip:
->  	IRELE(rip);
->   out_log_dealloc:
-> +	if (log_mount_cancel)
-> +		xfs_log_mount_finish(mp, true);
->  	xfs_log_unmount(mp);
-
-And this just becomes a call to xfs_log_mount_cancel().
-
-I hope this is a bit clearer that mud ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
