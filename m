@@ -1,17 +1,18 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7C33B7F58
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 10:02:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 566A330404E
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2015 08:02:49 -0700 (PDT)
-Received: from mail.poweryourdesign.com (dns25.dnsserverhosting.info
-	[209.148.91.25]) by cuda.sgi.com with ESMTP id 4oZnHr1U8FgnVBZB
-	for <xfs@oss.sgi.com>; Fri, 07 Aug 2015 08:02:47 -0700 (PDT)
-Date: Fri, 7 Aug 2015 14:59:27 +0000
-From: Francis Morales <francis@poweryourdesign.com>
-Subject: Proposal for your website
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E65867F6B
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 20:17:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D27868F804B
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 18:17:56 -0700 (PDT)
+Received: from bhsw.com ([60.169.2.170]) by cuda.sgi.com with ESMTP id
+	x5ALmNlzuj0ChpXY for <xfs@oss.sgi.com>;
+	Thu, 06 Aug 2015 18:17:53 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <20150807150249.33768106C925@cuda.sgi.com>
+From: "www.sportsjc.com" <service.sportsjc@yahoo.com>
+Date: 7 Aug 2015 09:20:40 +0800
+Subject: =?utf-8?B?VGhlIEJlc3QgV2F5IHRvIEdldCBBIE5GTCBKZXJzZXk=?=
+Message-Id: <20150807011756.74DF312961A2@cuda.sgi.com>
+Reply-To: "www.sportsjc.com" <service.sportsjc@yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,63 +21,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0121448006079342295=="
+Content-Type: multipart/mixed; boundary="===============4152974764090535680=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
---===============0121448006079342295==
+--===============4152974764090535680==
 Content-Type: multipart/alternative;
-	boundary="b1_0eb61781498a9d6fce67e556e9d7c3e8"
+ boundary=--boundary_214747_571e5c80-3f22-44fd-89cf-9c9e314148c5
 
 
---b1_0eb61781498a9d6fce67e556e9d7c3e8
-Content-Type: text/plain; charset = "UTF-8"
-Content-Transfer-Encoding: 8bit
+----boundary_214747_571e5c80-3f22-44fd-89cf-9c9e314148c5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
 
-Hello!
+RGVhciBORkwgZmFucywNClRoaXMgaXMgYSBjaGVhcCBhbmQgcXVhbGl0eSBORkwgamVyc2V5
+IHNpdGUgYXQgaHR0cDovL3d3dy5zcG9ydHNqYy5jb20vbmZsLWMtNjguaHRtbCZuYnNwOw0K
+SWYgeW91IGFyZSBhIGZhbnMgb2YgdGhlbSwgcGVsYXNlIHZpc2l0IG91ciBwYWdlLg==
+----boundary_214747_571e5c80-3f22-44fd-89cf-9c9e314148c5
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: base64
 
-My name is Francis from poweryourdesign.com, I'm contacting you today to ask if you would be interested in advertising third party content on your website oss.sgi.com .
-
-We have a team of professional writers and journalists who create content for a range of different niches.
-
-I'm currently looking for websites to place third party content on behalf of my client and it is related to mobile apps business. 
-
-If this is something that you would be interested in, or simply would like some more information please let me know!
-
-
-Best&nbsp; regards,
-Francis Morales
-www.poweryourdesign.com
-
-
---b1_0eb61781498a9d6fce67e556e9d7c3e8
-Content-Type: text/html; charset = "UTF-8"
-Content-Transfer-Encoding: 8bit
-
-Hello!<br />
-<br />
-My name is Francis from poweryourdesign.com, I'm contacting you today to ask if you would be interested in advertising third party content on your website oss.sgi.com .<br />
-<br />
-We have a team of professional writers and journalists who create content for a range of different niches.<br />
-<br />
-I'm currently looking for websites to place third party content on behalf of my client and it is related to mobile apps business. <br />
-<br />
-If this is something that you would be interested in, or simply would like some more information please let me know!<br />
-<br />
-<br />
-Best&nbsp; regards,<br />
-Francis Morales<br />
-www.poweryourdesign.com
+PFA+RGVhciBORkwgZmFucyw8L1A+DQo8UD5UaGlzIGlzIGEgY2hlYXAgYW5kIHF1YWxpdHkg
+TkZMIGplcnNleSBzaXRlIGF0IDxBIGhyZWY9Imh0dHA6Ly93d3cuc3BvcnRzamMuY29tL25m
+bC1jLTY4Lmh0bWwiPmh0dHA6Ly93d3cuc3BvcnRzamMuY29tL25mbC1jLTY4Lmh0bWw8L0E+
+Jm5ic3A7PC9QPg0KPFA+SWYgeW91IGFyZSBhIGZhbnMgb2YgdGhlbSwgcGVsYXNlIHZpc2l0
+IG91ciBwYWdlLjwvUD4=
+----boundary_214747_571e5c80-3f22-44fd-89cf-9c9e314148c5--
 
 
 
---b1_0eb61781498a9d6fce67e556e9d7c3e8--
-
-
-
---===============0121448006079342295==
+--===============4152974764090535680==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -87,4 +63,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0121448006079342295==--
+--===============4152974764090535680==--
