@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 671317F51
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 21:52:45 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AA9B07F51
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 21:54:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F218CAC003
-	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 19:52:41 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 67E208F8035
+	for <xfs@oss.sgi.com>; Thu,  6 Aug 2015 19:54:03 -0700 (PDT)
 Received: from Ishtar.hs.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id IB1GmiJF122mgTqT (version=TLSv1
+	cuda.sgi.com with ESMTP id ffFq5Ls4prAZG2nu (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Aug 2015 19:52:40 -0700 (PDT)
+	Thu, 06 Aug 2015 19:54:01 -0700 (PDT)
 Received: from [192.168.4.12] (Athenae [192.168.4.12])
 	by Ishtar.hs.tlinx.org (8.14.9/8.14.4/SuSE Linux 0.8) with ESMTP id
-	t772qbxv087428 for <xfs@oss.sgi.com>; Thu, 6 Aug 2015 19:52:39 -0700
-Message-ID: <55C41D75.4040504@tlinx.org>
-Date: Thu, 06 Aug 2015 19:52:37 -0700
+	t772rxOL087684 for <xfs@oss.sgi.com>; Thu, 6 Aug 2015 19:54:01 -0700
+Message-ID: <55C41DC7.1050706@tlinx.org>
+Date: Thu, 06 Aug 2015 19:53:59 -0700
 From: "L.A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
 Subject: why crc req on free-inobt & file-type-indir options?
@@ -29,7 +29,7 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
 
 Could anyone point me at the discussion or literature as to why
