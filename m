@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2C9357CBE
-	for <xfs@oss.sgi.com>; Sat,  8 Aug 2015 19:13:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 027188F8035
-	for <xfs@oss.sgi.com>; Sat,  8 Aug 2015 17:13:20 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	q41GwZidrHkS2nxG for <xfs@oss.sgi.com>;
-	Sat, 08 Aug 2015 17:13:15 -0700 (PDT)
-Date: Sun, 9 Aug 2015 10:11:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: why crc req on free-inobt & file-type-indir options?
-Message-ID: <20150809001127.GI3902@dastard>
-References: <55C41D75.4040504@tlinx.org> <55C43B70.4050300@sandeen.net>
-	<55C468F0.2040707@tlinx.org> <20150807225531.GG3902@dastard>
-	<55C55265.4080309@tlinx.org>
-	<620A4212-818A-4375-90FC-DBB0B91A84DB@sandeen.net>
-	<55C5709F.8030705@tlinx.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C6ABF7F47
+	for <xfs@oss.sgi.com>; Sun,  9 Aug 2015 02:36:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 61C22AC004
+	for <xfs@oss.sgi.com>; Sun,  9 Aug 2015 00:36:44 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id wvZXp6M8DVBHtoCv (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 09 Aug 2015 00:36:43 -0700 (PDT)
+Date: Sun, 9 Aug 2015 00:36:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/11] xfs: disentagle EFI release from the extent count
+Message-ID: <20150809073641.GA3163@infradead.org>
+References: <1438883072-28706-1-git-send-email-bfoster@redhat.com>
+	<1438883072-28706-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55C5709F.8030705@tlinx.org>
+In-Reply-To: <1438883072-28706-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,34 +30,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "L.A. Walsh" <xfs@tlinx.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 07, 2015 at 07:59:43PM -0700, L.A. Walsh wrote:
-> 
-> 
-> Eric Sandeen wrote:
-> >
-> >>On Aug 7, 2015, at 5:50 PM, L.A. Walsh <xfs@tlinx.org> wrote:
-> >>Q: should the versions of xfsdump&restore be the same as the rest of the xfsprogs?
-> >Nope, they are separate packages with separate versioning.
-> ---
-> I see.  So how does one tell which version of xfsdump/restore should
-> be used to "safely" dump (and restore) a file system made
-> with version i.j.k of xfsprogs(mkfs.xfs) ?  Or is that possible?
+On Thu, Aug 06, 2015 at 01:44:22PM -0400, Brian Foster wrote:
 
-xfsdump does not care what version of the XFS filesystem it operates
-on as it does not access the raw on-disk srtuctures. i.e.
-xfsdump/restore are just like any other userspace application that
-uses standard syscalls and ioctls to read/write information to/from
-the filesystem.
+-       __xfs_efi_release(efip);
++	xfs_efi_release(efip);
 
-Cheers,
+Can you explain in the changelog why this is safe?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+> -xfs_efi_release(xfs_efi_log_item_t	*efip,
+> -		uint			nextents)
+> +xfs_efi_release(struct xfs_efi_log_item	*efip)
+
+Can you use normal XFS function formatting here? e.g.
+
+xfs_efi_release(
+	struct xfs_efi_log_item		*efip)
+
+
+As a follow on we should be able to remove atomic_inc_return and
+replace it with a local iterator in xfs_bmap_finish().
 
 _______________________________________________
 xfs mailing list
