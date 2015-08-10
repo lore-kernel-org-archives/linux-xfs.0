@@ -1,19 +1,21 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 81C3D7F50
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 03:15:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 32D14304077
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 01:15:26 -0700 (PDT)
-Received: from o215.p8.mailjet.com (o215.p8.mailjet.com [87.253.233.215]) by
-	cuda.sgi.com with ESMTP id Rez9PgA7GZrg4ZMW (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 11 Aug 2015 01:15:23 -0700 (PDT)
-Message-Id: <21db5509.1dw1.1gPf.dZ.1xoEPWLrSH@mailjet.com>
-MIME-Version: 1.0
-From: Indongo <indongo@ministryofmagicdev.com>
-Subject: Indongo Toyota
-Date: Tue, 11 Aug 2015 08:15:21 +0000
-Reply-To: henri@ministryofmagicnam.com
+	by oss.sgi.com (Postfix) with ESMTP id 3BD0E7F47
+	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 13:02:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 271F6304067
+	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 11:01:58 -0700 (PDT)
+Received: from 140.lpadbiz.com (140.lpadbiz.com [209.183.115.140]) by
+	cuda.sgi.com with ESMTP id DJBTcD35KIaUl9sa for
+	<xfs@oss.sgi.com>; Mon, 10 Aug 2015 11:01:55 -0700 (PDT)
+Received: by 140.lpadbiz.com id hp3jfk1goikc for <xfs@oss.sgi.com>;
+	Mon, 10 Aug 2015 13:59:59 -0400 (envelope-from
+	<OliveGarden@lpadbiz.com>)
+Date: 10 Aug 2015 01:42:53 PM -0400
+Mime-Version: 1.0
+From: "Olive Garden" <OliveGarden@lpadbiz.com>
+Subject: Catering Delivery Now Available
+Message-Id: <20150810180158.E3A84106C925@cuda.sgi.com>
+Reply-To: mail@lpadbiz.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,374 +24,311 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7451870433074380042=="
+Content-Type: multipart/mixed; boundary="===============2818041677289869958=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7451870433074380042==
-Content-Type: multipart/alternative; boundary="=-cxeu81gKAzpioQn23wWN"
+--===============2818041677289869958==
+Content-Type: multipart/alternative; boundary="12345"
 
---=-cxeu81gKAzpioQn23wWN
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+--12345
+Content-Type: text/plain;
 
-Special offer from Indongo Toyota
-View online version [http://omi3.mjt.lu/nl2/omi3/xk.html?a=3D1xoEPWLrSH&b=
-=3D21db5509&c=3Domi3&d=3D8dbbd8cf&e=3Da75ed2fd&email=3Dxfs@oss.sgi.com][htt=
-p://omi3.mjt.lu/img/omi3/b/k/x7.jpeg] Drive the Hilux of your Choice! Doubl=
-e Cab, Single Cab or Extra Cab - pick one and SAVE!
-This e-mail has been sent to xfs@oss.sgi.com, click here to unsubscribe [[[=
-UNSUB_LINK_EN]]] .=
+     
+ 	
 
---=-cxeu81gKAzpioQn23wWN
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+ 	Ordering lunch for your group has never been easier!     
+ 		 	
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
-w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns=3D"http://www.w3.org/1999/xhtml">
+ 	
 
+ 	LOCATIONS 	MENUS 	ORDER ONLINE     
+ 	
+
+ 	
+
+ 	
+
+ 	
+
+ 	
+
+ 	Let Us Make Lunch Easy  
+ 	Whether treating clients to lunch or celebrating at the office, getting everyone's favorites just got easier. With a minimum purchase of $125, we'll deliver Olive Garden(r) Catering and set everything up for you. Just call us to place your order* and you can get back to business  we'll take care of the rest.  
+ 	Interested in hearing more from Olive Garden? Join our eClub and receive exclusive news, offers and coupons.  
+ 	
+
+ 	VIEW DELIVERY MENU 	
+
+ 	Delivery minimum phone order of $125 from Catering menu.  
+ 	
+
+ 	
+
+ 	
+
+ 	FOLLOW US 		 		    	
+
+ 	
+
+ 	LOCATIONS 		MENUS 		ORDER ONLINE     
+ 	
+
+ 	If you are having trouble viewing this email,  http://lpadbiz.com/ViewInBrowser.aspx?order=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&rec=123642046&scope=final&appServerId=3&appId=3 .  
+ 	*24-hour notice preferred for orders within delivery area. All orders are subject to a 15% delivery service charge, of which 7% is paid to the driver, and is not a gratuity. Chafing dish, rack and fuel available for purchase. Learn more at www.olivegarden.com/delivery  
+ 	 2015 Darden Concepts, Inc. All rights reserved.  
+ 	
+
+ 	Refer A Friend  |  Contact Us  |  Legal Notices  
+ 	Privacy Notice / Your California Privacy Rights     
+ 	
+
+ 	
+
+ Olive Garden 
+ 1000 Darden Center Dr, Orlando FL 32837 
+ 
+ If you wish to no longer receive messages, please press here    
+ 	
+
+ 	
+
+                                                               
+If you wish to no longer receive messages, please press here: http://lpadbiz.com/optout.aspx?eseq=123642046&cmp=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&appServerId=3&appId=3
+--12345
+Content-Type: text/html;
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8">
-  <title>Indongo Toyota</title>
-  <style type=3D"text/css">
-    @import url(https://fonts.googleapis.com/css?family=3DUbuntu);
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width" />
+<title>Olive Garden</title>
+<meta property="og:title" content="Olive Garden" />
+	<meta name="description" content="Catering Delivery Now Available" />
+	<meta property="og:description" content="Catering Delivery Now Available" /> 
+	<meta property="og:image" content="http://asp-mail.com/olive-garden/2015/154412/images/hero-fb.png" />
+	<meta property="og:url" content="http://asp-mail.com/olive-garden/2015/154412/154412.html" />
+<style type="text/css">
+ExternalClass {
+	width: 100%;
+}
+ExternalClass *, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td {
+	line-height: 100%;
+}
+table, td {
+	border-collapse: collapse;
+	padding: 0px;
+	margin: 0px;
+	mso-table-lspace: -1pt;
+	mso-table-rspace: -1pt;
+}
+td {
+	-webkit-text-size-adjust: none;
+}
+body {
+	background-color: #e4e1dc;
+	margin: 0;
+	padding: 0;
+}
+appleLinkWhite a {
+	color: #ffffff !important;
+}
+appleLinkBrown a {
+	color:#54301a !important;
+	text-decoration:none !important;
+}
+appleLinkPink a {
+	color:#ec008c !important;
+	text-decoration:none !important;
+}
+</style>
 
-    #outlook a { padding: 0; }
-    .ReadMsgBody { width: 100%; }
-    .ExternalClass { width: 100%; }
-
-    .ExternalClass,
-    .ExternalClass p,
-    .ExternalClass span,
-    .ExternalClass font,
-    .ExternalClass td,
-    .ExternalClass div {
-      line-height: 100%;
-    }
-
-    body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%;=
- -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    body { margin: 0; padding: 0; }
-    img { border: 0; height: auto; line-height: 100%; outline: none; text-d=
-ecoration: none; -ms-interpolation-mode: bicubic; }
-    table { border-collapse: collapse !important; }
-    body, #main, #inner {
-      height: 100% !important;
-      margin: 0;
-      padding: 0;
-      width: 100% !important;
-    }
-
-    .sectionInner { width: 600px; }
-    p, ul, a { font-family: Ubuntu, Helvetica, Arial, sans-serif; }
-    a:link,
-    a:visited,
-    a .yshortcuts {
-      color: #000000;
-      font-weight: normal;
-    }
-    .toolContent a span { text-decoration: underline; }
-    .colTool { width: 100%; }
-
-    @media only screen and (max-width: 640px) {
-      body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: non=
-e !important; }
-      body {
-        width: 100% !important;
-        min-width: 100% !important;
-      }
-      body[yahoo] .section {
-        max-width: 100% !important;
-        width: 100% !important;
-      }
-      body[yahoo] .sectionInner {
-        width: 440px;
-      }
-      body[yahoo] .col,
-      body[yahoo] .colToolContainer,
-      body[yahoo] .colTool {
-        display: block !important;
-        width: 440px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] .colToolInner,
-      body[yahoo] .toolContent,
-      body[yahoo] .toolContentInner,
-      body[yahoo] .toolContent2,
-      body[yahoo] .toolContent2 td,
-      body[yahoo] .toolContent2 td a {
-        display: block !important;
-        width: 390px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] img {
-        max-width: 390px !important;
-      }
-
-      body[yahoo] .full .colToolInner,
-      body[yahoo] .full .toolContent,
-      body[yahoo] .full .toolContentInner,
-      body[yahoo] .full .toolContent2,
-      body[yahoo] .full .toolContent2 td,
-      body[yahoo] .full .toolContent2 td a {
-        width: 440px !important;
-      }
-      body[yahoo] .full img {
-        max-width: 440px !important;
-      }
-
-      body[yahoo] .space { height: 10px; }
-    }
-    @media only screen and (max-width: 479px) {
-      body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: non=
-e !important; }
-      body {
-        width: 100% !important;
-        min-width: 100% !important;
-      }
-      body[yahoo] .section {
-        max-width: 100% !important;
-        width: 100% !important;
-      }
-      body[yahoo] .sectionInner{
-        width: 280px;
-      }
-      body[yahoo] .col,
-      body[yahoo] .colToolContainer,
-      body[yahoo] .colTool {
-        display: block !important;
-        width: 280px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] .colToolInner,
-      body[yahoo] .toolContent,
-      body[yahoo] .toolContentInner,
-      body[yahoo] .toolContent2,
-      body[yahoo] .toolContent2 td,
-      body[yahoo] .toolContent2 td a {
-        display: block !important;
-        width: 230px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] img {
-        max-width: 230px !important;
-      }
-
-      body[yahoo] .full .colToolInner,
-      body[yahoo] .full .toolContent,
-      body[yahoo] .full .toolContentInner,
-      body[yahoo] .full .toolContent2,
-      body[yahoo] .full .toolContent2 td,
-      body[yahoo] .full .toolContent2 td a {
-        width: 280px !important;
-      }
-      body[yahoo] .full img {
-        max-width: 280px !important;
-      }
-
-      body[yahoo] .space { height: 10px; }
-    }
-  </style>
 </head>
 
-<body yahoo=3D"fix" leftmargin=3D"0" marginwidth=3D"0" topmargin=3D"0" marg=
-inheight=3D"0" offset=3D"0">
-  <center>
-    <div id=3D"newsletter"><div style=3D"background-color:#D6DDE5;"><table =
-class=3D"section section-locked" width=3D"100%" cellpadding=3D"0" cellspaci=
-ng=3D"0" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-c=
-ollapse:collapse;border-spacing:0px;"><tbody><tr><td><table width=3D"600" c=
-ellpadding=3D"0" cellspacing=3D"0" class=3D"sectionInner" style=3D"font-fam=
-ily:Ubuntu, Helvetica, Arial, sans-serif;border-collapse:collapse;border-sp=
-acing:0px;background-color:#D6DDE5;" data-legacy-bgcolor=3D"#FFFFFF" data-l=
-egacy-align=3D"center" align=3D"center" bgcolor=3D"#FFFFFF"><tbody><tr><td =
-style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border:0;border-s=
-pacing:0px;vertical-align:top;" data-legacy-align=3D"center" data-legacy-va=
-lign=3D"top" align=3D"center"><table cellpadding=3D"0" cellspacing=3D"0" wi=
-dth=3D"100%"><tbody><tr><td height=3D"20"><!--[if mso]>&nbsp;<![endif]--></=
-td></tr><tr><td><table cellpadding=3D"0" cellspacing=3D"0" class=3D"row"><t=
-body><tr><td width=3D"400" class=3D"col" style=3D"border:none;border-spacin=
-g:0px;vertical-align:middle;"><table class=3D"colToolContainer" cellpadding=
-=3D"0" cellspacing=3D"0" width=3D"400"><tbody><tr><td><table class=3D"colTo=
-ol" cellpadding=3D"0" cellspacing=3D"0" data-legacy-align=3D"center" style=
-=3D"border-collapse:collapse;border-spacing:0px;background-color:transparen=
-t;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-legacy-align=
-=3D"left" class=3D"colToolInner" style=3D"border:0;border-spacing:0px;verti=
-cal-align:top;" align=3D"left"><table width=3D"350" class=3D"toolContent" c=
-ellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border=
--spacing:0px;"><tbody><tr><td data-legacy-align=3D"left" class=3D"toolConte=
-ntInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D=
-"left"><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetic=
-a, Arial, sans-serif;line-height:22px;font-size:13px;text-decoration:none;f=
-ont-style:normal;font-weight:normal;" class=3D"content"><span class=3D"tool=
--text-font-size" style=3D"font-size: 11px">Special offer from Indongo Toyot=
-a<br></span></div></td></tr></tbody></table></td><td width=3D"25"></td></tr=
-></tbody></table></td></tr></tbody></table></td><td width=3D"200" class=3D"=
-col" style=3D"border:none;border-spacing:0px;vertical-align:middle;"><table=
- class=3D"colToolContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"20=
-0"><tbody><tr><td><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D=
-"0" data-legacy-align=3D"center" style=3D"border-collapse:collapse;border-s=
-pacing:0px;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-leg=
-acy-align=3D"right" class=3D"colToolInner" style=3D"border:0;border-spacing=
-:0px;vertical-align:top;" align=3D"right"><table width=3D"150" class=3D"too=
-lContent" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:coll=
-apse;border-spacing:0px;"><tbody><tr><td data-legacy-align=3D"right" class=
-=3D"toolContentInner" style=3D"border:0;border-spacing:0px;vertical-align:t=
-op;" align=3D"right"><div style=3D"cursor:auto;color:#333333;font-family:Ub=
-untu, Helvetica, Arial, sans-serif;line-height:22px;font-size:13px;text-dec=
-oration:none;font-style:normal;font-weight:normal;" class=3D"content" conte=
-nteditable=3D"false"><span class=3D"tool-text-font-size" style=3D"font-size=
-: 11px"><a style=3D"color: rgb(51, 51, 51);" href=3D"http://omi3.mjt.lu/lin=
-k/omi3/xlpm84w0xx08/1/DoeNqur0kOTv6E5-rHVRYg/aHR0cDovL29taTMubWp0Lmx1L25sMi=
-9vbWkzL3hrLmh0bWw_YT0xeG9FUFdMclNIJmI9MjFkYjU1MDkmYz1vbWkzJmQ9OGRiYmQ4Y2YmZ=
-T1hNzVlZDJmZCZlbWFpbD14ZnNAb3NzLnNnaS5jb20"><span class=3D"placeholder-repl=
-ace-permalink-label">View online version</span></a></span></div></td></tr><=
-/tbody></table></td><td width=3D"25"></td></tr></tbody></table></td></tr></=
-tbody></table></td></tr></tbody></table></td></tr><tr><td height=3D"20"><!-=
--[if mso]>&nbsp;<![endif]--></td></tr></tbody></table></td></tr></tbody></t=
-able></td></tr></tbody></table><table class=3D"section" width=3D"100%" cell=
-padding=3D"0" cellspacing=3D"0" style=3D"font-family:Ubuntu, Helvetica, Ari=
-al, sans-serif;border-collapse:collapse;border-spacing:0px;"><tbody><tr><td=
-><table width=3D"600" cellpadding=3D"0" cellspacing=3D"0" class=3D"sectionI=
-nner" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-coll=
-apse:collapse;border-spacing:0px;background-color:#FFFFFF;" data-legacy-bgc=
-olor=3D"#FFFFFF" data-legacy-align=3D"center" align=3D"center" bgcolor=3D"#=
-FFFFFF"><tbody><tr><td style=3D"font-family:Ubuntu, Helvetica, Arial, sans-=
-serif;border:0;border-spacing:0px;vertical-align:top;" data-legacy-align=3D=
-"center" data-legacy-valign=3D"top" align=3D"center"><table cellpadding=3D"=
-0" cellspacing=3D"0" width=3D"100%"><tbody><tr><td height=3D"20"><!--[if ms=
-o]>&nbsp;<![endif]--></td></tr><tr><td><table cellpadding=3D"0" cellspacing=
-=3D"0" class=3D"row"><tbody><tr><td width=3D"600" class=3D"col" style=3D"bo=
-rder:none;border-spacing:0px;vertical-align:middle;"><table class=3D"colToo=
-lContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"600"><tbody><tr><t=
-d><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-legacy-=
-align=3D"center" style=3D"border-collapse:collapse;border-spacing:0px;backg=
-round-color:transparent;" align=3D"center"><tbody><tr><td height=3D"10" cla=
-ss=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-height-rule:ex=
-actly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0</td></tr><tr>=
-<td width=3D"25"></td><td data-legacy-align=3D"center" class=3D"colToolInne=
-r" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"cente=
-r"><table width=3D"550" class=3D"toolContent" cellpadding=3D"0" cellspacing=
-=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;"><tbody><tr><t=
-d data-legacy-align=3D"center" class=3D"toolContentInner" style=3D"border:0=
-;border-spacing:0px;vertical-align:top;" align=3D"center"><table data-legac=
-y-align=3D"center" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-coll=
-apse:collapse;border-spacing:0px;" align=3D"center"><tr><td><img src=3D"htt=
-p://omi3.mjt.lu/img/omi3/b/k/x7.jpeg" alt=3D"" width=3D"550" style=3D"displ=
-ay:block;border:none;outline:none;text-decoration:none;max-width:550px;"></=
-td></tr></table></td></tr></tbody></table></td><td width=3D"25"></td></tr><=
-tr><td height=3D"10" class=3D"space" style=3D"font-size:1px;line-height:1px=
-;mso-line-height-rule:exactly;border:0;border-spacing:0px;vertical-align:to=
-p;">=C2=A0</td></tr></tbody></table><table class=3D"colTool" cellpadding=3D=
-"0" cellspacing=3D"0" data-legacy-align=3D"center" style=3D"border-collapse=
-:collapse;border-spacing:0px;background-color:transparent;" align=3D"center=
-"><tbody><tr><td height=3D"10" class=3D"space" style=3D"font-size:1px;line-=
-height:1px;mso-line-height-rule:exactly;border:0;border-spacing:0px;vertica=
-l-align:top;">=C2=A0</td></tr><tr><td width=3D"25"></td><td data-legacy-ali=
-gn=3D"left" class=3D"colToolInner" style=3D"border:0;border-spacing:0px;ver=
-tical-align:top;" align=3D"left"><table width=3D"550" class=3D"toolContent"=
- cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;bord=
-er-spacing:0px;"><tbody><tr><td data-legacy-align=3D"left" class=3D"toolCon=
-tentInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=
-=3D"left"><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helve=
-tica, Arial, sans-serif;line-height:22px;font-size:13px;text-decoration:non=
-e;font-style:normal;font-weight:normal;" class=3D"content"><span class=3D"t=
-ool-text-style-title1" style=3D"display: block; font-size: 28px; font-weigh=
-t: bold; color: rgb(51, 51, 51); font-family: Ubuntu,Helvetica,Arial,sans-s=
-erif; font-style: normal;">Drive the Hilux of your Choice!</span></div></td=
-></tr></tbody></table></td><td width=3D"25"></td></tr><tr><td height=3D"10"=
- class=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-height-rul=
-e:exactly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0</td></tr>=
-</tbody></table><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0=
-" data-legacy-align=3D"center" style=3D"border-collapse:collapse;border-spa=
-cing:0px;background-color:transparent;" align=3D"center"><tbody><tr><td hei=
-ght=3D"10" class=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-=
-height-rule:exactly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0=
-</td></tr><tr><td width=3D"25"></td><td data-legacy-align=3D"left" class=3D=
-"colToolInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" al=
-ign=3D"left"><table width=3D"550" class=3D"toolContent" cellpadding=3D"0" c=
-ellspacing=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;"><tb=
-ody><tr><td data-legacy-align=3D"left" class=3D"toolContentInner" style=3D"=
-border:0;border-spacing:0px;vertical-align:top;" align=3D"left"><div style=
-=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetica, Arial, sans-se=
-rif;line-height:22px;font-size:13px;text-decoration:none;font-style:normal;=
-font-weight:normal;" class=3D"content">Double Cab, Single Cab or Extra Cab =
-- pick one and SAVE!<br></div></td></tr></tbody></table></td><td width=3D"2=
-5"></td></tr><tr><td height=3D"10" class=3D"space" style=3D"font-size:1px;l=
-ine-height:1px;mso-line-height-rule:exactly;border:0;border-spacing:0px;ver=
-tical-align:top;">=C2=A0</td></tr></tbody></table></td></tr></tbody></table=
-></td></tr></tbody></table></td></tr><tr><td height=3D"20"><!--[if mso]>&nb=
-sp;<![endif]--></td></tr></tbody></table></td></tr></tbody></table></td></t=
-r></tbody></table><table class=3D"section section-locked" width=3D"100%" ce=
-llpadding=3D"0" cellspacing=3D"0" style=3D"font-family:Ubuntu, Helvetica, A=
-rial, sans-serif;border-collapse:collapse;border-spacing:0px;"><tbody><tr><=
-td><table width=3D"600" cellpadding=3D"0" cellspacing=3D"0" class=3D"sectio=
-nInner" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-co=
-llapse:collapse;border-spacing:0px;background-color:#D6DDE5;" data-legacy-b=
-gcolor=3D"#FFFFFF" data-legacy-align=3D"center" align=3D"center" bgcolor=3D=
-"#FFFFFF"><tbody><tr><td style=3D"font-family:Ubuntu, Helvetica, Arial, san=
-s-serif;border:0;border-spacing:0px;vertical-align:top;" data-legacy-align=
-=3D"center" data-legacy-valign=3D"top" align=3D"center"><table cellpadding=
-=3D"0" cellspacing=3D"0" width=3D"100%"><tbody><tr><td height=3D"20"><!--[i=
-f mso]>&nbsp;<![endif]--></td></tr><tr><td><table cellpadding=3D"0" cellspa=
-cing=3D"0" class=3D"row"><tbody><tr><td width=3D"600" class=3D"col" style=
-=3D"border:none;border-spacing:0px;vertical-align:middle;"><table class=3D"=
-colToolContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"600"><tbody>=
-<tr><td><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-l=
-egacy-align=3D"center" style=3D"border-collapse:collapse;border-spacing:0px=
-;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-legacy-align=
-=3D"center" class=3D"colToolInner" style=3D"border:0;border-spacing:0px;ver=
-tical-align:top;" align=3D"center"><table width=3D"550" class=3D"toolConten=
-t" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;bo=
-rder-spacing:0px;"><tbody><tr><td data-legacy-align=3D"center" class=3D"too=
-lContentInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" al=
-ign=3D"center"><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, =
-Helvetica, Arial, sans-serif;line-height:22px;font-size:13px;text-decoratio=
-n:none;font-style:normal;font-weight:normal;" class=3D"content" contentedit=
-able=3D"false"><p style=3D"font-size: 11px"><span class=3D"placeholder-repl=
-ace-delivery-info">This e-mail has been sent to xfs@oss.sgi.com, <a href=3D=
-"http://omi3.mjt.lu/unsub?hl=3Den&amp;a=3D1xoEPWLrSH&amp;b=3D21db5509&amp;c=
-=3Domi3&amp;d=3D8dbbd8cf&amp;e=3Da75ed2fd&amp;email=3Dxfs@oss.sgi.com"><spa=
-n class=3D"placeholder-replace-unsub-label">click here to unsubscribe</span=
-></a>.</span></p></div></td></tr></tbody></table></td><td width=3D"25"></td=
-></tr></tbody></table><table class=3D"colTool" cellpadding=3D"0" cellspacin=
-g=3D"0" data-legacy-align=3D"center" style=3D"border-collapse:collapse;bord=
-er-spacing:0px;background-color:transparent;" align=3D"center"><tbody><tr><=
-td width=3D"25"></td><td data-legacy-align=3D"center" class=3D"colToolInner=
-" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"center=
-"><table width=3D"550" class=3D"toolContent" cellpadding=3D"0" cellspacing=
-=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;"><tbody><tr><t=
-d data-legacy-align=3D"center" class=3D"toolContentInner" style=3D"border:0=
-;border-spacing:0px;vertical-align:top;" align=3D"center"><div style=3D"cur=
-sor:auto;color:#333333;font-family:Ubuntu, Helvetica, Arial, sans-serif;lin=
-e-height:22px;font-size:13px;text-decoration:none;font-style:normal;font-we=
-ight:normal;" class=3D"content"><p style=3D"font-size: 11px">   </p></div><=
-/td></tr></tbody></table></td><td width=3D"25"></td></tr></tbody></table></=
-td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td height=
-=3D"20"><!--[if mso]>&nbsp;<![endif]--></td></tr></tbody></table></td></tr>=
-</tbody></table></td></tr></tbody></table></div></div>
-  </center>
+<body bgcolor="#e4e1dc" style="margin:0px; padding:0px;">
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#e4e1dc">
+<tr>
+<td align="center" valign="top" style="background-color:#e4e1dc;">
+<!--Preheader-->
+<table width="600" border="0" align="center" cellpadding="0" cellspacing="0" style="min-width:600px;">
+<tr>
+<td align="right" valign="top" style="font-family:Arial, Helvetica, sans-serif; color:#54301a; font-size:12px; padding:10px 20px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612350&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="text-decoration:none; color:#54301a;"><strong><span style="text-decoration:underline;">Ordering lunch</span></strong> for your group has never been easier!</a></td>
+</tr>
+</table>
+<!--Navigation-->
+<table align="center" width="600" border="0" cellspacing="0" cellpadding="0" style="min-width:600px;">
+<tr>
+<td width="20" align="right" valign="bottom"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_navborder_02.gif" width="20" height="21" border="0" style="display:block;" alt="" /></td>
+<td align="left" valign="top"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612351&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_logo_01.gif" alt="Olive Garden" title="Olive Garden" width="165" height="130" style="display:block;" border="0" /></a></td>
+<td align="right" valign="bottom">
+	<table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+    <td align="right" valign="top" style="padding:0 20px 0 0;">
+        <table width="350" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+        <td align="left" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-weight:bold; font-size:15px; color:#543019;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612352&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#543019; text-decoration:none;">LOCATIONS</a></td>
+        <td align="center" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-weight:bold; font-size:15px; color:#543019;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612353&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#543019; text-decoration:none;">MENUS</a></td>
+        <td align="right" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-weight:bold; font-size:15px; color:#543019;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612354&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#543019; text-decoration:none;">ORDER ONLINE</a></td>
+        </tr>
+        </table>
+    </td>
+    </tr>
+    <tr>
+    <td height="20" align="left" valign="top"><img src="http://asp-mail.com/olive-garden/2015/154412/images/spacer.gif" width="415" height="20" border="0" style="display:block;" alt="" /></td>
+    </tr>
+    <tr>
+    <td align="center" valign="top"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_navborder_03.gif" width="415" height="21" border="0" style="display:block;" alt="" /></td>
+    </tr>
+    </table>
+</td>
+</tr>
+</table>
+<!--PANEL 1-->
+<table width="600" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="min-width:600px;">
+<tr>
+<td align="center" valign="top" style="padding: 0 0px 20px 0px;">
+    <table width="580" border="0" cellspacing="0" cellpadding="0" style="min-width:580px;">
+	<tr>
+    <td align="center" valign="top" style="padding:0px 0 0 0; min-width:580px;"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_Catering_TEST_v1_04.gif" width="580" height="80" alt="Catering Delivery Now Available" title="Catering Delivery Now Available" border="0" style="display:block;"/></td>
+    </tr>
+    <tr>
+    <td align="center" valign="top" style="padding:0px 0 0 0; min-width:580px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612355&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_Catering_TEST_v1_05.jpg" width="580" height="197" alt="Let Us Make Lunch Easy" title="Let Us Make Lunch Easy" border="0" style="display:block;"/></a></td>
+    </tr>
+	<tr>
+    <td align="left" valign="top" style="padding:15px 0px 0px 10px; font-family:Arial, Helvetica, sans-serif; font-size:23px; color:#54301a;"><strong>Let Us Make Lunch Easy</strong></td>
+    </tr>
+    <tr>
+    <td align="left" valign="top" style="padding:13px 27px 0px 10px; font-family:Arial, Helvetica, sans-serif; font-size:18px; color:#54301a;">Whether treating clients to lunch or celebrating at the office, getting everyone's favorites just got easier. With a minimum purchase of $125, we'll deliver <a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612356&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#a02816; font-weight:bold;"><span style="color:#a02816; text-decoration:underline;">Olive Garden</span></a><sup style="line-height:0px; vertical-align:3px; font-size:12px; color:#a02816;">&reg;</sup> <a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612357&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#a02816; font-weight:bold;"><span style="color:#a02816; text-decoration:underline;">Catering</span></a
+ > and set everything up for you. Just call us to place your order* and you can get back to business &ndash; we'll take care of the rest.</td>
+    </tr>
+    <tr>
+    <td align="left" valign="top" style="padding:13px 0px 0px 10px; font-family:Arial, Helvetica, sans-serif; font-size:18px; color:#54301a;"><em>Interested in hearing more from Olive Garden? <a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612358&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#a02816; font-weight:bold;"><span style="color:#a02816; text-decoration:underline;">Join our eClub</span></a> and receive exclusive news, offers and coupons.</em></td>
+    </tr>
+    <tr>
+    <td align="left" valign="top" style="padding:15px 0px 0px 10px;">
+        <table height="50" border="0" cellspacing="0" cellpadding="0" style="background-color:#a02816;">
+        <tr>
+        <td height="50" align="right" style="vertical-align:middle; padding:0px 0px 0px 16px; font-family:Arial, Helvetica, sans-serif; font-weight:bold; font-size:18px; color:#fffffe;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612359&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#fffffe; text-decoration:none;">VIEW DELIVERY MENU</a></td>
+        <td height="50" align="left" style="vertical-align:middle; padding:0px 16px 0px 0px; line-height:14px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612360&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_arrow_w_lg.gif" width="20" height="14" border="0" style="display:block;" alt=""/></a></td>
+        </tr>
+        </table>
+    </td>
+    </tr>
+    <tr>
+    <td align="left" valign="top" style="padding:10px 0px 0px 10px; font-family:Arial, Helvetica, sans-serif; font-size:9px; color:#54301a;">Delivery minimum phone order of $125 from Catering menu.</td>
+    </tr>
+    <tr>
+    <td align="center" valign="top" style="padding:20px 0 0 0; min-width:580px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612361&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_Catering_TEST_v1_06.jpg" width="580" height="283" alt="Olive Garden&reg; Catering" title="Olive Garden&reg; Catering" border="0" style="display:block;"/></a></td>
+    </tr>
+    </table>
+</td>
+</tr>
+</table>
+<!--Social-->
+<table width="600" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#a2b627" style="min-width:600px;">
+<tr>
+<td width="600" height="70" align="center" valign="top">
+	<table width="600" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tr>
+    <td width="489" height="89" align="right" valign="middle" style="padding:0 10px 0 0;">
+        <table border="0" cellspacing="0" cellpadding="0">
+        <tr>
+        <td align="right" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-size:18px; color:#ffffff; font-weight:bold; padding-right:18px;">FOLLOW US</td>
+        <td align="right" valign="middle" style="padding-right:18px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612362&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_facebook.gif" alt="Facebook" title="Facebook" width="44" height="44" border="0" style="display:block;" /></a></td>
+        <td align="right" valign="middle" style="padding-right:18px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612363&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_twitter.gif" alt="Twitter" title="Twitter" width="44" height="44" border="0" style="display:block;" /></a></td>
+        <td align="right" valign="middle" style="padding-right:18px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612364&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_instagram.gif" alt="Instagram" title="Instagram" width="44" height="44" border="0" style="display:block;" /></a></td>
+        <td align="right" valign="middle" style="padding-right:0px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612365&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_youtube.gif" alt="YouTube" title="YouTube" width="44" height="44" border="0" style="display:block;" /></a></td>
+        </tr>
+        </table>
+    </td>
+    <td width="111" align="right" valign="top"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_vine_23b.gif" width="111" height="75" alt="" border="0" style="display:block;" /></td>
+    </tr>
+    </table>
+</td>
+</tr>
+</table>
+<!--Footer-->
+<table width="600" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#a2b627" style="min-width:600px;">
+<tr>
+<td align="center" valign="top">
+	<table width="350" border="0" align="center" cellspacing="0" cellpadding="0">
+    <tr>
+    <td align="right" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-size:15px; color:#ffffff; padding-right:20px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612366&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none;">LOCATIONS</a></td>
+    <td align="center" valign="middle"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_pipe_22.gif" alt="" width="2" height="21" border="0" style="display:block;" /></td>
+    <td align="center" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-size:15px; color:#ffffff; padding:0px 20px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612367&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none;">MENUS</a></td>
+    <td align="center" valign="middle"><img src="http://asp-mail.com/olive-garden/2015/154412/images/og_pipe_22.gif" alt="" width="2" height="21" border="0" style="display:block;" /></td>
+    <td align="center" valign="middle" style="font-family:Arial, Helvetica, sans-serif; font-size:15px; color:#ffffff; padding-left:20px;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612368&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none;">ORDER ONLINE</a></td>
+    </tr>
+    </table>
+</td>
+</tr>
+<tr>
+<td align="center" valign="top" height="15" bgcolor="#a2b627">&nbsp;</td>
+</tr>
+<tr>
+<td align="center" valign="top" bgcolor="#a2b627" style="font-family:Arial, Helvetica, sans-serif; color:#ffffff; font-size:10px; padding:0px 30px 10px 30px;">If you are having trouble viewing this email, <a href="http://lpadbiz.com/ViewInBrowser.aspx?order=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&rec=123642046&scope=final&appServerId=3&appId=3">View email in browser</a>.</td>
+</tr>
+<tr>
+<td align="center" valign="top" bgcolor="#a2b627" style="font-family:Arial, Helvetica, sans-serif; color:#ffffff; font-size:10px; padding:0px 30px 10px 30px;">*24-hour notice preferred for orders within delivery area. All orders are subject to a 15% delivery service charge, of which 7% is paid to the driver, and is not a gratuity.  Chafing dish, rack and fuel available for purchase. Learn more at <span class="appleLinkWhite" style="color:#ffffff; text-decoration:underline;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612369&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff;">www.olivegarden.com/delivery</a></span></td>
+</tr>
+<tr>
+<td align="center" valign="top" bgcolor="#a2b627" style="font-family:Arial, Helvetica, sans-serif; color:#ffffff; font-size:11px; padding:0px 0px 10px 0px;">&#169; 2015 Darden Concepts, Inc. All rights reserved.</td>
+</tr>
+<tr>
+<td align="center" valign="top">
+    <table width="400" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+    <td height="20" align="center" valign="top" style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#ffffff;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612370&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none;">Refer A Friend</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612371&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none;">Contact Us</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612372&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none;">Legal Notices</a></td>
+    </tr>
+    <tr>
+    <td align="center" valign="bottom" bgcolor="#a2b627" style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#ffffff;"><a href="http://lpadbiz.com/LinkCountAndRedirect.aspx?LID=1612373&appServerId=3&appId=3&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046" target="_blank" style="color:#ffffff; text-decoration:none">Privacy Notice / Your California Privacy Rights</a></td>
+    </tr>
+    </table>
+</td>
+</tr>
+<tr>
+	<td align="center" valign="top" height="25" bgcolor="#a2b627">&nbsp;</td>
+</tr>
+<tr>
+    <td width="600" height="100" align="center" valign="middle" bgcolor="#a2b627" style="line-height: normal; color: #fff; font-size: 12px;">
+        <div id="divFTCCompliance" style="text-align: center; font-family: arial; font-size: 12px; color: #fff; width:500px; word-wrap:break-word; margin:auto">
+            Olive Garden
+            <br />
+            1000 Darden Center Dr, Orlando FL 32837
+            <br />
+            <br />
+            If you wish to no longer receive messages, please press <a href="http://lpadbiz.com/optout.aspx?eseq=123642046&cmp=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&appServerId=3&appId=3">here</a>
+        </div>
+    </td>
+</tr>
+<tr>
+	<td align="center" valign="top" height="25" bgcolor="#a2b627">&nbsp;</td>
+</tr>
+</table>
 
-<br/><img src=3D"http://omi3.mjt.lu/o/omi3/a00c3991/xlpm84w0xx08e.gif" heig=
-ht=3D"1" width=3D"1" alt=3D"" border=3D"0" />
-</body>
-</html>=
+<table align="center" width="600" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td height="20" align="left" valign="top">&nbsp;</td>
+</tr>
+</table>
 
---=-cxeu81gKAzpioQn23wWN--
+</td>
+</tr>
+</table>
+<div style="display:none; white-space:nowrap; font:15px courier; line-height:0;">
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+</div>
+<img src="http://lpadbiz.com/EmailOpenCount.aspx?act=o&BID=43797&SID=33739&OID=1299ee75-84de-4b0f-a478-9ed7d5cb6db3&ESEQ=123642046&appServerId=3&appId=3" /></body>
+</html>
+
+--12345--
 
 
---===============7451870433074380042==
+--===============2818041677289869958==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -400,4 +339,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7451870433074380042==--
+--===============2818041677289869958==--
