@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B87D77F5F
+	by oss.sgi.com (Postfix) with ESMTP id CEA8F7F47
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 14:01:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3EC4AAC008
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 629CAAC009
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 12:01:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zAj7eBgU70drQ8kt (version=TLSv1
+	cuda.sgi.com with ESMTP id cvM1zSWjzgSp3vX7 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Aug 2015 12:01:51 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5A64B9D1F8
+	Mon, 10 Aug 2015 12:01:52 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 8DA28461EA
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 19:01:51 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-184.bos.redhat.com [10.18.41.184])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7AJ1o1S009878
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7AJ1pAr002512
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 15:01:51 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 08/13] xfs: fix broken icreate log item cancellation
-Date: Mon, 10 Aug 2015 15:01:44 -0400
-Message-Id: <1439233309-19959-9-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 13/13] xfs: add missing bmap cancel calls in error paths
+Date: Mon, 10 Aug 2015 15:01:49 -0400
+Message-Id: <1439233309-19959-14-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
 References: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,112 +38,220 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Inode cluster buffers are invalidated and cancelled when inode chunks
-are freed to notify log recovery that previous logged updates to the
-metadata buffer should be skipped. This ensures that log recovery does
-not overwrite buffers that might have already been reused.
+If a failure occurs after the bmap free list is populated and before
+xfs_bmap_finish() completes successfully (which returns a partial list
+on failure), the bmap free list must be cancelled. Otherwise, the extent
+items on the list are never freed and a memory leak occurs.
 
-On v4 filesystems, inode chunk allocation and inode updates are logged
-via the cluster buffers and thus cancellation is easily detected via
-buffer cancellation items. v5 filesystems use the new icreate
-transaction, which uses logical logging and ordered buffers to log a
-full inode chunk allocation at once. The resulting icreate item often
-spans multiple inode cluster buffers.
-
-Log recovery checks for cancelled buffers when processing icreate log
-items, but it has a couple problems. First, it uses the full length of
-the inode chunk rather than the cluster size. Second, it uses the length
-in FSB units rather than BB units. Either of these problems prevent
-icreate recovery from identifying cancelled buffers and thus inode
-initialization proceeds unconditionally.
-
-Update xlog_recover_do_icreate_pass2() to iterate the icreate range in
-cluster sized increments and check each increment for cancellation.
-Since icreate is currently only used for the minimum atomic inode chunk
-allocation, we expect that either all or none of the buffers will be
-cancelled. Cancel the icreate if at least one buffer is cancelled to
-avoid making a bad situation worse by initializing a partial inode
-chunk, but detect such anomalies and warn the user.
+Several random error paths throughout the code suffer this problem. Fix
+these up such that xfs_bmap_cancel() is always called on error.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 49 ++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 37 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |  1 +
+ fs/xfs/xfs_bmap_util.c   | 10 +++++----
+ fs/xfs/xfs_inode.c       |  9 ++++----
+ fs/xfs/xfs_rtalloc.c     | 57 ++++++++++++++++++++++++------------------------
+ 4 files changed, 41 insertions(+), 36 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 8369bf3..9ab0866 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3036,6 +3036,11 @@ xlog_recover_do_icreate_pass2(
- 	unsigned int		count;
- 	unsigned int		isize;
- 	xfs_agblock_t		length;
-+	int			blks_per_cluster;
-+	int			bb_per_cluster;
-+	int			cancel_count;
-+	int			nbufs;
-+	int			i;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 63e05b6..8e2010d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5945,6 +5945,7 @@ xfs_bmap_split_extent(
+ 	return xfs_trans_commit(tp);
  
- 	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
- 	if (icl->icl_type != XFS_LI_ICREATE) {
-@@ -3094,25 +3099,45 @@ xlog_recover_do_icreate_pass2(
+ out:
++	xfs_bmap_cancel(&free_list);
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 73aab0d..3bf4ad0 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1474,7 +1474,7 @@ xfs_shift_file_space(
+ 				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+ 				XFS_QMOPT_RES_REGBLKS);
+ 		if (error)
+-			goto out;
++			goto out_trans_cancel;
+ 
+ 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+@@ -1488,18 +1488,20 @@ xfs_shift_file_space(
+ 				&done, stop_fsb, &first_block, &free_list,
+ 				direction, XFS_BMAP_MAX_SHIFT_EXTENTS);
+ 		if (error)
+-			goto out;
++			goto out_bmap_cancel;
+ 
+ 		error = xfs_bmap_finish(&tp, &free_list, &committed);
+ 		if (error)
+-			goto out;
++			goto out_bmap_cancel;
+ 
+ 		error = xfs_trans_commit(tp);
  	}
+ 
+ 	return error;
+ 
+-out:
++out_bmap_cancel:
++	xfs_bmap_cancel(&free_list);
++out_trans_cancel:
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d22a984..d8230ba 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1785,14 +1785,15 @@ xfs_inactive_ifree(
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
  
  	/*
--	 * Inode buffers can be freed. Do not replay the inode initialisation as
--	 * we could be overwriting something written after this inode buffer was
--	 * cancelled.
-+	 * The icreate transaction can cover multiple cluster buffers and these
-+	 * buffers could have been freed and reused. Check the individual
-+	 * buffers for cancellation so we don't overwrite anything written after
-+	 * a cancellation.
-+	 */
-+	blks_per_cluster = xfs_icluster_size_fsb(mp);
-+	bb_per_cluster = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+	nbufs = length / blks_per_cluster;
-+	for (i = 0, cancel_count = 0; i < nbufs; i++) {
-+		xfs_daddr_t	daddr;
-+
-+		daddr = XFS_AGB_TO_DADDR(mp, agno,
-+					 agbno + i * blks_per_cluster);
-+		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
-+			cancel_count++;
-+	}
-+
-+	/*
-+	 * We currently only use icreate for a single allocation at a time. This
-+	 * means we should expect either all or none of the buffers to be
-+	 * cancelled. Be conservative and skip replay if at least one buffer is
-+	 * cancelled, but warn the user that something is awry if the buffers
-+	 * are not consistent.
- 	 *
--	 * XXX: we need to iterate all buffers and only init those that are not
--	 * cancelled. I think that a more fine grained factoring of
--	 * xfs_ialloc_inode_init may be appropriate here to enable this to be
--	 * done easily.
-+	 * XXX: This must be refined to only skip cancelled clusters once we use
-+	 * icreate for multiple chunk allocations.
+-	 * Just ignore errors at this point.  There is nothing we can
+-	 * do except to try to keep going. Make sure it's not a silent
+-	 * error.
++	 * Just ignore errors at this point.  There is nothing we can do except
++	 * to try to keep going. Make sure it's not a silent error.
  	 */
--	if (xlog_check_buffer_cancelled(log,
--			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0)) {
-+	ASSERT(!cancel_count || cancel_count == nbufs);
-+	if (cancel_count) {
-+		if (cancel_count != nbufs)
-+			xfs_warn(mp,
-+	"WARNING: partial inode chunk cancellation, skipped icreate.");
- 		trace_xfs_log_recover_icreate_cancel(log, icl);
- 		return 0;
- 	}
+ 	error = xfs_bmap_finish(&tp,  &free_list, &committed);
+-	if (error)
++	if (error) {
+ 		xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
+ 			__func__, error);
++		xfs_bmap_cancel(&free_list);
++	}
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index f4e8c06..ab1bac6 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -757,31 +757,30 @@ xfs_rtallocate_extent_size(
+ /*
+  * Allocate space to the bitmap or summary file, and zero it, for growfs.
+  */
+-STATIC int				/* error */
++STATIC int
+ xfs_growfs_rt_alloc(
+-	xfs_mount_t	*mp,		/* file system mount point */
+-	xfs_extlen_t	oblocks,	/* old count of blocks */
+-	xfs_extlen_t	nblocks,	/* new count of blocks */
+-	xfs_inode_t	*ip)		/* inode (bitmap/summary) */
++	struct xfs_mount	*mp,		/* file system mount point */
++	xfs_extlen_t		oblocks,	/* old count of blocks */
++	xfs_extlen_t		nblocks,	/* new count of blocks */
++	struct xfs_inode	*ip)		/* inode (bitmap/summary) */
+ {
+-	xfs_fileoff_t	bno;		/* block number in file */
+-	xfs_buf_t	*bp;		/* temporary buffer for zeroing */
+-	int		committed;	/* transaction committed flag */
+-	xfs_daddr_t	d;		/* disk block address */
+-	int		error;		/* error return value */
+-	xfs_fsblock_t	firstblock;	/* first block allocated in xaction */
+-	xfs_bmap_free_t	flist;		/* list of freed blocks */
+-	xfs_fsblock_t	fsbno;		/* filesystem block for bno */
+-	xfs_bmbt_irec_t	map;		/* block map output */
+-	int		nmap;		/* number of block maps */
+-	int		resblks;	/* space reservation */
++	xfs_fileoff_t		bno;		/* block number in file */
++	struct xfs_buf		*bp;	/* temporary buffer for zeroing */
++	int			committed;	/* transaction committed flag */
++	xfs_daddr_t		d;		/* disk block address */
++	int			error;		/* error return value */
++	xfs_fsblock_t		firstblock;/* first block allocated in xaction */
++	struct xfs_bmap_free	flist;		/* list of freed blocks */
++	xfs_fsblock_t		fsbno;		/* filesystem block for bno */
++	struct xfs_bmbt_irec	map;		/* block map output */
++	int			nmap;		/* number of block maps */
++	int			resblks;	/* space reservation */
++	struct xfs_trans	*tp;
  
- 	trace_xfs_log_recover_icreate_recover(log, icl);
--	xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno, length,
--			      be32_to_cpu(icl->icl_gen));
--	return 0;
-+	return xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno,
-+				     length, be32_to_cpu(icl->icl_gen));
+ 	/*
+ 	 * Allocate space to the file, as necessary.
+ 	 */
+ 	while (oblocks < nblocks) {
+-		xfs_trans_t	*tp;
+-
+ 		tp = xfs_trans_alloc(mp, XFS_TRANS_GROWFSRT_ALLOC);
+ 		resblks = XFS_GROWFSRT_SPACE_RES(mp, nblocks - oblocks);
+ 		/*
+@@ -790,7 +789,7 @@ xfs_growfs_rt_alloc(
+ 		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_growrtalloc,
+ 					  resblks, 0);
+ 		if (error)
+-			goto error_cancel;
++			goto out_trans_cancel;
+ 		/*
+ 		 * Lock the inode.
+ 		 */
+@@ -808,16 +807,16 @@ xfs_growfs_rt_alloc(
+ 		if (!error && nmap < 1)
+ 			error = -ENOSPC;
+ 		if (error)
+-			goto error_cancel;
++			goto out_bmap_cancel;
+ 		/*
+ 		 * Free any blocks freed up in the transaction, then commit.
+ 		 */
+ 		error = xfs_bmap_finish(&tp, &flist, &committed);
+ 		if (error)
+-			goto error_cancel;
++			goto out_bmap_cancel;
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+-			goto error;
++			return error;
+ 		/*
+ 		 * Now we need to clear the allocated blocks.
+ 		 * Do this one block per transaction, to keep it simple.
+@@ -832,7 +831,7 @@ xfs_growfs_rt_alloc(
+ 			error = xfs_trans_reserve(tp, &M_RES(mp)->tr_growrtzero,
+ 						  0, 0);
+ 			if (error)
+-				goto error_cancel;
++				goto out_trans_cancel;
+ 			/*
+ 			 * Lock the bitmap inode.
+ 			 */
+@@ -846,9 +845,7 @@ xfs_growfs_rt_alloc(
+ 				mp->m_bsize, 0);
+ 			if (bp == NULL) {
+ 				error = -EIO;
+-error_cancel:
+-				xfs_trans_cancel(tp);
+-				goto error;
++				goto out_trans_cancel;
+ 			}
+ 			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
+ 			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+@@ -857,16 +854,20 @@ error_cancel:
+ 			 */
+ 			error = xfs_trans_commit(tp);
+ 			if (error)
+-				goto error;
++				return error;
+ 		}
+ 		/*
+ 		 * Go on to the next extent, if any.
+ 		 */
+ 		oblocks = map.br_startoff + map.br_blockcount;
+ 	}
++
+ 	return 0;
+ 
+-error:
++out_bmap_cancel:
++	xfs_bmap_cancel(&flist);
++out_trans_cancel:
++	xfs_trans_cancel(tp);
+ 	return error;
  }
  
- STATIC void
 -- 
 2.1.0
 
