@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CE8117F50
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 14:01:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A460C8F8052
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 700207F51
+	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 14:01:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 049A1AC004
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 12:01:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SyXegsuWQ5CF7wyz (version=TLSv1
+	cuda.sgi.com with ESMTP id qJqHupP9zDHeVpS2 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 10 Aug 2015 12:01:51 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 484C79D1E9
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id 5C7A9461DC
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 19:01:51 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-184.bos.redhat.com [10.18.41.184])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7AJ1okG002506
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7AJ1pqN005193
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 15:01:51 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 07/13] xfs: icreate log item recovery and cancellation
-	tracepoints
-Date: Mon, 10 Aug 2015 15:01:43 -0400
-Message-Id: <1439233309-19959-8-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 09/13] xfs: checksum log record ext headers based on record
+	size
+Date: Mon, 10 Aug 2015 15:01:45 -0400
+Message-Id: <1439233309-19959-10-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
 References: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,80 +39,59 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Various log items have recovery tracepoints to identify whether a
-particular log item is recovered or cancelled. Add the equivalent
-tracepoints for the icreate transaction.
+The first 4 bytes of every basic block in the physical log is stamped
+with the current lsn. To support this mechanism, the log record header
+(first block of each new log record) contains space for the original
+first byte of each log record block before it is replaced with the lsn.
+The log record header has space for 32k worth of blocks. The version 2
+log adds new extended record headers for each additional 32k worth of
+blocks beyond what is supported by the record header.
+
+The log record checksum incorporates the log record header, the extended
+headers and the record payload. xlog_cksum() checksums the extended
+headers based on log->l_iclog_heads, which specifies the number of
+extended headers in a log record based on the log buffer size mount
+option. The log buffer size is variable, however, and thus means the
+checksum can be calculated differently based on how a filesystem is
+mounted. This is problematic if a filesystem crashes and recovery occurs
+on a subsequent mount using a different log buffer size. For example,
+crash an active filesystem that is mounted with the default (32k)
+logbsize, attempt remount/recovery using '-o logbsize=64k' and the mount
+fails on or warns about log checksum failures.
+
+To avoid this problem, update xlog_cksum() to calculate the checksum
+based on the size of the log buffer according to the log record. The
+size is already included in the h_size field of the log record header
+and thus is available at log recovery time. Extended log record headers
+are also only written when the log record is large enough to require
+them. This makes checksum calculation of log records consistent with the
+extended record header mechanism as well as how on-disk records are
+checksummed with various log buffer size mount options.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_recover.c |  5 ++++-
- fs/xfs/xfs_trace.h       | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 3016b80..8369bf3 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3104,9 +3104,12 @@ xlog_recover_do_icreate_pass2(
- 	 * done easily.
- 	 */
- 	if (xlog_check_buffer_cancelled(log,
--			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0))
-+			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0)) {
-+		trace_xfs_log_recover_icreate_cancel(log, icl);
- 		return 0;
-+	}
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3a5592c..aaadee0 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1672,8 +1672,13 @@ xlog_cksum(
+ 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
+ 		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
+ 		int		i;
++		int		xheads;
  
-+	trace_xfs_log_recover_icreate_recover(log, icl);
- 	xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno, length,
- 			      be32_to_cpu(icl->icl_gen));
- 	return 0;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 8d916d3..9aeeb21 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2089,6 +2089,40 @@ DEFINE_LOG_RECOVER_INO_ITEM(xfs_log_recover_inode_recover);
- DEFINE_LOG_RECOVER_INO_ITEM(xfs_log_recover_inode_cancel);
- DEFINE_LOG_RECOVER_INO_ITEM(xfs_log_recover_inode_skip);
- 
-+DECLARE_EVENT_CLASS(xfs_log_recover_icreate_item_class,
-+	TP_PROTO(struct xlog *log, struct xfs_icreate_log *in_f),
-+	TP_ARGS(log, in_f),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(unsigned int, count)
-+		__field(unsigned int, isize)
-+		__field(xfs_agblock_t, length)
-+		__field(unsigned int, gen)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = log->l_mp->m_super->s_dev;
-+		__entry->agno = be32_to_cpu(in_f->icl_ag);
-+		__entry->agbno = be32_to_cpu(in_f->icl_agbno);
-+		__entry->count = be32_to_cpu(in_f->icl_count);
-+		__entry->isize = be32_to_cpu(in_f->icl_isize);
-+		__entry->length = be32_to_cpu(in_f->icl_length);
-+		__entry->gen = be32_to_cpu(in_f->icl_gen);
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u count %u isize %u length %u "
-+		  "gen %u", MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno, __entry->agbno, __entry->count, __entry->isize,
-+		  __entry->length, __entry->gen)
-+)
-+#define DEFINE_LOG_RECOVER_ICREATE_ITEM(name) \
-+DEFINE_EVENT(xfs_log_recover_icreate_item_class, name, \
-+	TP_PROTO(struct xlog *log, struct xfs_icreate_log *in_f), \
-+	TP_ARGS(log, in_f))
+-		for (i = 1; i < log->l_iclog_heads; i++) {
++		xheads = size / XLOG_HEADER_CYCLE_SIZE;
++		if (size % XLOG_HEADER_CYCLE_SIZE)
++			xheads++;
 +
-+DEFINE_LOG_RECOVER_ICREATE_ITEM(xfs_log_recover_icreate_cancel);
-+DEFINE_LOG_RECOVER_ICREATE_ITEM(xfs_log_recover_icreate_recover);
-+
- DECLARE_EVENT_CLASS(xfs_discard_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		 xfs_agblock_t agbno, xfs_extlen_t len),
++		for (i = 1; i < xheads; i++) {
+ 			crc = crc32c(crc, &xhdr[i].hic_xheader,
+ 				     sizeof(struct xlog_rec_ext_header));
+ 		}
 -- 
 2.1.0
 
