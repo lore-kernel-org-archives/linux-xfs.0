@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8AB117F47
+	by oss.sgi.com (Postfix) with ESMTP id CBA647F5F
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 14:01:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B8B8AC002
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E201AC003
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 12:01:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8atrkkz8hYdtSSPh (version=TLSv1
+	cuda.sgi.com with ESMTP id sVtz2MYrjsTqP5Sa (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 10 Aug 2015 12:01:51 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 050228F266
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 4B6F89D1F7
 	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 19:01:51 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-184.bos.redhat.com [10.18.41.184])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7AJ1oU4002497
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 15:01:50 -0400
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7AJ1oCo009870
+	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 15:01:51 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 03/13] xfs: fix efi/efd error handling to avoid fs shutdown
-	hangs
-Date: Mon, 10 Aug 2015 15:01:39 -0400
-Message-Id: <1439233309-19959-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 05/13] xfs: use EFI refcount consistently in log recovery
+Date: Mon, 10 Aug 2015 15:01:41 -0400
+Message-Id: <1439233309-19959-6-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
 References: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,180 +38,101 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Freeing an extent in XFS involves logging an EFI (extent free
-intention), freeing the actual extent, and logging an EFD (extent free
-done). The EFI object is created with a reference count of 2: one for
-the current transaction and one for the subsequently created EFD. Under
-normal circumstances, the first reference is dropped when the EFI is
-unpinned and the second reference is dropped when the EFD is committed
-to the on-disk log.
+The EFI is initialized with a reference count of 2. One for the EFI to
+ensure the item makes it to the AIL and one for the subsequently created
+EFD to release the EFI once the EFD is committed. Log recovery uses the
+EFI in a similar manner, but implements a hack to remove both references
+in one call once the EFD is handled.
 
-In event of errors or filesystem shutdown, there are various potential
-cleanup scenarios depending on the state of the EFI/EFD. The cleanup
-scenarios are confusing and racy, as demonstrated by the following test
-sequence:
+Update log recovery to use EFI reference counting in a manner consistent
+with the log. When an EFI is encountered during recovery, an EFI item is
+allocated and inserted to the AIL directly. Since the EFI reference is
+typically dropped when the EFI is unpinned and this is analogous with
+AIL insertion, drop the EFI reference at this point.
 
-	# mount $dev $mnt
-	# fsstress -d $mnt -n 99999 -p 16 -z -f fallocate=1 \
-		-f punch=1 -f creat=1 -f unlink=1 &
-	# sleep 5
-	# killall -9 fsstress; wait
-	# godown -f $mnt
-	# umount
+When a corresponding EFD is encountered in the log, this indicates that
+the extents were freed, no processing is required and the EFI can be
+dropped. Update xlog_recover_efd_pass2() to simply drop the EFD
+reference at this point rather than open code the AIL removal and EFI
+free.
 
-... in which the final umount can hang due to the AIL being pinned
-indefinitely by one or more EFI items. This can occur due to several
-conditions. For example, if the shutdown occurs after the EFI is
-committed to the on-disk log and the EFD committed to the CIL, but
-before the EFD committed to the log, the EFD iop_committed() abort
-handler does not drop its reference to the EFI. Alternatively, manual
-error injection in the xfs_bmap_finish() codepath shows that if an error
-occurs after the EFI transaction is committed but before the EFD is
-constructed and logged, the EFI is never released from the AIL.
-
-Update the EFI/EFD item handling code to use a more straightforward and
-reliable approach to error handling. If an error occurs after the EFI
-transaction is committed and before the EFD is constructed, release the
-EFI explicitly from xfs_bmap_finish(). If the EFI transaction is
-cancelled, release the EFI in the unlock handler.
-
-Once the EFD is constructed, it is responsible for releasing the EFI
-under any circumstances (including whether the EFI item aborts due to
-log I/O error). Update the EFD item handlers to release the EFI if the
-transaction is cancelled or aborts due to log I/O error. Finally, update
-xfs_bmap_finish() to log at least one EFD extent to the transaction
-before xfs_free_extent() errors are handled to ensure the transaction is
-dirty and EFD item error handling is triggered.
+Remaining EFIs (i.e., with no corresponding EFD) are processed in
+xlog_recover_finish(). An EFD transaction is allocated and the extents
+are freed, which transfers ownership of the EFI reference to the EFD
+item in the log.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c    | 84 +++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_extfree_item.c | 69 ++++++++++++++++++++++----------------
- fs/xfs/xfs_extfree_item.h | 25 ++++++++++++--
- 3 files changed, 111 insertions(+), 67 deletions(-)
+ fs/xfs/xfs_extfree_item.c | 57 +++++++++++++++++------------------------------
+ fs/xfs/xfs_log_recover.c  | 43 ++++++++++++++++++-----------------
+ 2 files changed, 43 insertions(+), 57 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 0f34886c..fa65f67 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -67,16 +67,15 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
-  */
- int						/* error */
- xfs_bmap_finish(
--	xfs_trans_t		**tp,		/* transaction pointer addr */
--	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
--	int			*committed)	/* xact committed or not */
-+	struct xfs_trans		**tp,	/* transaction pointer addr */
-+	struct xfs_bmap_free		*flist,	/* i/o: list extents to free */
-+	int				*committed)/* xact committed or not */
- {
--	xfs_efd_log_item_t	*efd;		/* extent free data */
--	xfs_efi_log_item_t	*efi;		/* extent free intention */
--	int			error;		/* error return value */
--	xfs_bmap_free_item_t	*free;		/* free extent item */
--	xfs_mount_t		*mp;		/* filesystem mount structure */
--	xfs_bmap_free_item_t	*next;		/* next item on free list */
-+	struct xfs_efd_log_item		*efd;	/* extent free data */
-+	struct xfs_efi_log_item		*efi;	/* extent free intention */
-+	int				error;	/* error return value */
-+	struct xfs_bmap_free_item	*free;	/* free extent item */
-+	struct xfs_bmap_free_item	*next;	/* next item on free list */
- 
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	if (flist->xbf_count == 0) {
-@@ -88,40 +87,55 @@ xfs_bmap_finish(
- 		xfs_trans_log_efi_extent(*tp, efi, free->xbfi_startblock,
- 			free->xbfi_blockcount);
- 
--	error = xfs_trans_roll(tp, NULL);
--	*committed = 1;
--	/*
--	 * We have a new transaction, so we should return committed=1,
--	 * even though we're returning an error.
--	 */
--	if (error)
-+	error = __xfs_trans_roll(tp, NULL, committed);
-+	if (error) {
-+		/*
-+		 * If the transaction was committed, drop the EFD reference
-+		 * since we're bailing out of here. The other reference is
-+		 * dropped when the EFI hits the AIL.
-+		 *
-+		 * If the transaction was not committed, the EFI is freed by the
-+		 * EFI item unlock handler on abort. Also, we have a new
-+		 * transaction so we should return committed=1 even though we're
-+		 * returning an error.
-+		 */
-+		if (*committed) {
-+			xfs_efi_release(efi);
-+			xfs_force_shutdown((*tp)->t_mountp,
-+				(error == -EFSCORRUPTED) ?
-+					SHUTDOWN_CORRUPT_INCORE :
-+					SHUTDOWN_META_IO_ERROR);
-+		} else {
-+			*committed = 1;
-+		}
-+
- 		return error;
-+	}
- 
- 	efd = xfs_trans_get_efd(*tp, efi, flist->xbf_count);
- 	for (free = flist->xbf_first; free != NULL; free = next) {
- 		next = free->xbfi_next;
--		if ((error = xfs_free_extent(*tp, free->xbfi_startblock,
--				free->xbfi_blockcount))) {
--			/*
--			 * The bmap free list will be cleaned up at a
--			 * higher level.  The EFI will be canceled when
--			 * this transaction is aborted.
--			 * Need to force shutdown here to make sure it
--			 * happens, since this transaction may not be
--			 * dirty yet.
--			 */
--			mp = (*tp)->t_mountp;
--			if (!XFS_FORCED_SHUTDOWN(mp))
--				xfs_force_shutdown(mp,
--						   (error == -EFSCORRUPTED) ?
--						   SHUTDOWN_CORRUPT_INCORE :
--						   SHUTDOWN_META_IO_ERROR);
--			return error;
--		}
-+
-+		/*
-+		 * Free the extent and log the EFD to dirty the transaction
-+		 * before handling errors. This ensures that the transaction is
-+		 * aborted, which:
-+		 *
-+		 * 1.) releases the EFI and frees the EFD
-+		 * 2.) shuts down the filesystem
-+		 *
-+		 * The bmap free list is cleaned up at a higher level.
-+		 */
-+		error = xfs_free_extent(*tp, free->xbfi_startblock,
-+					free->xbfi_blockcount);
- 		xfs_trans_log_efd_extent(*tp, efd, free->xbfi_startblock,
--			free->xbfi_blockcount);
-+					 free->xbfi_blockcount);
-+		if (error)
-+			return error;
-+
- 		xfs_bmap_del_free(flist, NULL, free);
- 	}
-+
- 	return 0;
- }
- 
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 6ff738f..475b9f0 100644
+index 475b9f0..ce1d4fb 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -61,9 +61,15 @@ __xfs_efi_release(
+@@ -47,34 +47,6 @@ xfs_efi_item_free(
+ }
  
- 	if (atomic_dec_and_test(&efip->efi_refcount)) {
- 		spin_lock(&ailp->xa_lock);
--		/* xfs_trans_ail_delete() drops the AIL lock. */
--		xfs_trans_ail_delete(ailp, &efip->efi_item,
--				     SHUTDOWN_LOG_IO_ERROR);
+ /*
+- * Freeing the efi requires that we remove it from the AIL if it has already
+- * been placed there. However, the EFI may not yet have been placed in the AIL
+- * when called by xfs_efi_release() from EFD processing due to the ordering of
+- * committed vs unpin operations in bulk insert operations. Hence the reference
+- * count to ensure only the last caller frees the EFI.
+- */
+-STATIC void
+-__xfs_efi_release(
+-	struct xfs_efi_log_item	*efip)
+-{
+-	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
+-
+-	if (atomic_dec_and_test(&efip->efi_refcount)) {
+-		spin_lock(&ailp->xa_lock);
+-		/*
+-		 * We don't know whether the EFI made it to the AIL. Remove it
+-		 * if so. Note that xfs_trans_ail_delete() drops the AIL lock.
+-		 */
+-		if (efip->efi_item.li_flags & XFS_LI_IN_AIL)
+-			xfs_trans_ail_delete(ailp, &efip->efi_item,
+-					     SHUTDOWN_LOG_IO_ERROR);
+-		else
+-			spin_unlock(&ailp->xa_lock);
+-		xfs_efi_item_free(efip);
+-	}
+-}
+-
+-/*
+  * This returns the number of iovecs needed to log the given efi item.
+  * We only need 1 iovec for an efi item.  It just logs the efi_log_format
+  * structure.
+@@ -304,21 +276,32 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
+ }
+ 
+ /*
+- * This is called by the efd item code below to release references to the given
+- * efi item.  Each efd calls this with the number of extents that it has
+- * logged, and when the sum of these reaches the total number of extents logged
+- * by this efi item we can free the efi item.
++ * Freeing the efi requires that we remove it from the AIL if it has already
++ * been placed there. However, the EFI may not yet have been placed in the AIL
++ * when called by xfs_efi_release() from EFD processing due to the ordering of
++ * committed vs unpin operations in bulk insert operations. Hence the reference
++ * count to ensure only the last caller frees the EFI.
+  */
+ void
+ xfs_efi_release(
+ 	struct xfs_efi_log_item	*efip)
+ {
+-	/* recovery needs us to drop the EFI reference, too */
+-	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+-		__xfs_efi_release(efip);
++	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
+ 
+-	__xfs_efi_release(efip);
+-	/* efip may now have been freed, do not reference it again. */
++	if (atomic_dec_and_test(&efip->efi_refcount)) {
++		spin_lock(&ailp->xa_lock);
 +		/*
 +		 * We don't know whether the EFI made it to the AIL. Remove it
 +		 * if so. Note that xfs_trans_ail_delete() drops the AIL lock.
@@ -222,146 +142,105 @@ index 6ff738f..475b9f0 100644
 +					     SHUTDOWN_LOG_IO_ERROR);
 +		else
 +			spin_unlock(&ailp->xa_lock);
- 		xfs_efi_item_free(efip);
- 	}
- }
-@@ -128,12 +134,12 @@ xfs_efi_item_pin(
- }
- 
- /*
-- * While EFIs cannot really be pinned, the unpin operation is the last place at
-- * which the EFI is manipulated during a transaction.  If we are being asked to
-- * remove the EFI it's because the transaction has been cancelled and by
-- * definition that means the EFI cannot be in the AIL so remove it from the
-- * transaction and free it.  Otherwise coordinate with xfs_efi_release()
-- * to determine who gets to free the EFI.
-+ * The unpin operation is the last place an EFI is manipulated in the log. It is
-+ * either inserted in the AIL or aborted in the event of a log I/O error. In
-+ * either case, the EFI transaction has been successfully committed to make it
-+ * this far. Therefore, we expect whoever committed the EFI to either construct
-+ * and commit the EFD or drop the EFD's reference in the event of error. Simply
-+ * drop the log's EFI reference now that the log is done with it.
-  */
- STATIC void
- xfs_efi_item_unpin(
-@@ -141,14 +147,6 @@ xfs_efi_item_unpin(
- 	int			remove)
- {
- 	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
--
--	if (remove) {
--		ASSERT(!(lip->li_flags & XFS_LI_IN_AIL));
--		if (lip->li_desc)
--			xfs_trans_del_item(lip);
--		xfs_efi_item_free(efip);
--		return;
--	}
- 	xfs_efi_release(efip);
- }
- 
-@@ -167,6 +165,11 @@ xfs_efi_item_push(
- 	return XFS_ITEM_PINNED;
- }
- 
-+/*
-+ * The EFI has been either committed or aborted if the transaction has been
-+ * cancelled. If the transaction was cancelled, an EFD isn't going to be
-+ * constructed and thus we free the EFI here directly.
-+ */
- STATIC void
- xfs_efi_item_unlock(
- 	struct xfs_log_item	*lip)
-@@ -412,20 +415,27 @@ xfs_efd_item_push(
- 	return XFS_ITEM_PINNED;
- }
- 
-+/*
-+ * The EFD is either committed or aborted if the transaction is cancelled. If
-+ * the transaction is cancelled, drop our reference to the EFI and free the EFD.
-+ */
- STATIC void
- xfs_efd_item_unlock(
- 	struct xfs_log_item	*lip)
- {
--	if (lip->li_flags & XFS_LI_ABORTED)
--		xfs_efd_item_free(EFD_ITEM(lip));
-+	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
 +
-+	if (lip->li_flags & XFS_LI_ABORTED) {
-+		xfs_efi_release(efdp->efd_efip);
-+		xfs_efd_item_free(efdp);
++		xfs_efi_item_free(efip);
 +	}
  }
  
- /*
-- * When the efd item is committed to disk, all we need to do
-- * is delete our reference to our partner efi item and then
-- * free ourselves.  Since we're freeing ourselves we must
-- * return -1 to keep the transaction code from further referencing
-- * this item.
-+ * When the efd item is committed to disk, all we need to do is delete our
-+ * reference to our partner efi item and then free ourselves. Since we're
-+ * freeing ourselves we must return -1 to keep the transaction code from further
-+ * referencing this item.
-  */
- STATIC xfs_lsn_t
- xfs_efd_item_committed(
-@@ -435,13 +445,14 @@ xfs_efd_item_committed(
- 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
+ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index c77dfb5..f3965f7 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2932,16 +2932,16 @@ xlog_recover_efi_pass2(
+ 	struct xlog_recover_item	*item,
+ 	xfs_lsn_t			lsn)
+ {
+-	int			error;
+-	xfs_mount_t		*mp = log->l_mp;
+-	xfs_efi_log_item_t	*efip;
+-	xfs_efi_log_format_t	*efi_formatp;
++	int				error;
++	struct xfs_mount		*mp = log->l_mp;
++	struct xfs_efi_log_item		*efip;
++	struct xfs_efi_log_format	*efi_formatp;
  
+ 	efi_formatp = item->ri_buf[0].i_addr;
+ 
+ 	efip = xfs_efi_init(mp, efi_formatp->efi_nextents);
+-	if ((error = xfs_efi_copy_format(&(item->ri_buf[0]),
+-					 &(efip->efi_format)))) {
++	error = xfs_efi_copy_format(&item->ri_buf[0], &efip->efi_format);
++	if (error) {
+ 		xfs_efi_item_free(efip);
+ 		return error;
+ 	}
+@@ -2949,20 +2949,23 @@ xlog_recover_efi_pass2(
+ 
+ 	spin_lock(&log->l_ailp->xa_lock);
  	/*
--	 * If we got a log I/O error, it's always the case that the LR with the
--	 * EFI got unpinned and freed before the EFD got aborted.
-+	 * Drop the EFI reference regardless of whether the EFD has been
-+	 * aborted. Once the EFD transaction is constructed, it is the sole
-+	 * responsibility of the EFD to release the EFI (even if the EFI is
-+	 * aborted due to log I/O error).
+-	 * xfs_trans_ail_update() drops the AIL lock.
++	 * The EFI has two references. One for the EFD and one for EFI to ensure
++	 * it makes it into the AIL. Insert the EFI into the AIL directly and
++	 * drop the EFI reference. Note that xfs_trans_ail_update() drops the
++	 * AIL lock.
  	 */
--	if (!(lip->li_flags & XFS_LI_ABORTED))
--		xfs_efi_release(efdp->efd_efip);
--
-+	xfs_efi_release(efdp->efd_efip);
- 	xfs_efd_item_free(efdp);
-+
- 	return (xfs_lsn_t)-1;
+ 	xfs_trans_ail_update(log->l_ailp, &efip->efi_item, lsn);
++	xfs_efi_release(efip);
+ 	return 0;
  }
  
-diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-index 399562e..8fa8651 100644
---- a/fs/xfs/xfs_extfree_item.h
-+++ b/fs/xfs/xfs_extfree_item.h
-@@ -39,9 +39,28 @@ struct kmem_zone;
-  * "extent free done" log item described below.
-  *
-  * The EFI is reference counted so that it is not freed prior to both the EFI
-- * and EFD being committed and unpinned. This ensures that when the last
-- * reference goes away the EFI will always be in the AIL as it has been
-- * unpinned, regardless of whether the EFD is processed before or after the EFI.
-+ * and EFD being committed and unpinned. This ensures the EFI is inserted into
-+ * the AIL even in the event of out of order EFI/EFD processing. In other words,
-+ * an EFI is born with two references:
-+ *
-+ * 	1.) an EFI held reference to track EFI AIL insertion
-+ * 	2.) an EFD held reference to track EFD commit
-+ *
-+ * On allocation, both references are the responsibility of the caller. Once the
-+ * EFI is added to and dirtied in a transaction, ownership of reference one
-+ * transfers to the transaction. The reference is dropped once the EFI is
-+ * inserted to the AIL or in the event of failure along the way (e.g., commit
-+ * failure, log I/O error, etc.). Note that the caller remains responsible for
-+ * the EFD reference under all circumstances to this point. The caller has no
-+ * means to detect failure once the transaction is committed, however.
-+ * Therefore, an EFD is required after this point, even in the event of
-+ * unrelated failure.
-+ *
-+ * Once an EFD is allocated and dirtied in a transaction, reference two
-+ * transfers to the transaction. The EFD reference is dropped once it reaches
-+ * the unpin handler. Similar to the EFI, the reference also drops in the event
-+ * of commit failure or log I/O errors. Note that the EFD is not inserted in the
-+ * AIL, so at this point both the EFI and EFD are freed.
+ 
+ /*
+- * This routine is called when an efd format structure is found in
+- * a committed transaction in the log.  It's purpose is to cancel
+- * the corresponding efi if it was still in the log.  To do this
+- * it searches the AIL for the efi with an id equal to that in the
+- * efd format structure.  If we find it, we remove the efi from the
+- * AIL and free it.
++ * This routine is called when an EFD format structure is found in a committed
++ * transaction in the log. Its purpose is to cancel the corresponding EFI if it
++ * was still in the log. To do this it searches the AIL for the EFI with an id
++ * equal to that in the EFD format structure. If we find it we drop the EFD
++ * reference, which removes the EFI from the AIL and frees it.
   */
- typedef struct xfs_efi_log_item {
- 	xfs_log_item_t		efi_item;
+ STATIC int
+ xlog_recover_efd_pass2(
+@@ -2984,8 +2987,8 @@ xlog_recover_efd_pass2(
+ 	efi_id = efd_formatp->efd_efi_id;
+ 
+ 	/*
+-	 * Search for the efi with the id in the efd format structure
+-	 * in the AIL.
++	 * Search for the EFI with the id in the EFD format structure in the
++	 * AIL.
+ 	 */
+ 	spin_lock(&ailp->xa_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+@@ -2994,18 +2997,18 @@ xlog_recover_efd_pass2(
+ 			efip = (xfs_efi_log_item_t *)lip;
+ 			if (efip->efi_format.efi_id == efi_id) {
+ 				/*
+-				 * xfs_trans_ail_delete() drops the
+-				 * AIL lock.
++				 * Drop the EFD reference to the EFI. This
++				 * removes the EFI from the AIL and frees it.
+ 				 */
+-				xfs_trans_ail_delete(ailp, lip,
+-						     SHUTDOWN_CORRUPT_INCORE);
+-				xfs_efi_item_free(efip);
++				spin_unlock(&ailp->xa_lock);
++				xfs_efi_release(efip);
+ 				spin_lock(&ailp->xa_lock);
+ 				break;
+ 			}
+ 		}
+ 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+ 	}
++
+ 	xfs_trans_ail_cursor_done(&cur);
+ 	spin_unlock(&ailp->xa_lock);
+ 
 -- 
 2.1.0
 
