@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 95CE77F54
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 09:20:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E848304051
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 07:20:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id t6iRCN1pGSKG1GLn (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 11 Aug 2015 07:20:58 -0700 (PDT)
-Date: Tue, 11 Aug 2015 10:20:56 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC, PATCH 00/10] xfs: configurable error behaviours
-Message-ID: <20150811142056.GD59636@bfoster.bfoster>
-References: <1438772921-28715-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9E9E67CBE
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 11:41:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 21EAAAC003
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 09:41:00 -0700 (PDT)
+Received: from mail-io0-f177.google.com (mail-io0-f177.google.com
+	[209.85.223.177]) by cuda.sgi.com with ESMTP id
+	kZfBpL2sRroJCGXr (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Aug 2015 09:40:58 -0700 (PDT)
+Received: by iods203 with SMTP id s203so11171030iod.0
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 09:40:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1438772921-28715-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1490980415.3591793.1438866795648.JavaMail.zimbra@redhat.com>
+References: <1156743222.24471614.1436281858017.JavaMail.zimbra@redhat.com>
+	<1436346893-11831-1-git-send-email-jtulak@redhat.com>
+	<1508777144.956841.1437482376774.JavaMail.zimbra@redhat.com>
+	<20150726162530.GE29329@infradead.org>
+	<1326157887.2004059.1438598404429.JavaMail.zimbra@redhat.com>
+	<55BFA2C5.20408@redhat.com>
+	<1050814645.2742881.1438702230663.JavaMail.zimbra@redhat.com>
+	<55C0E73B.1000904@sandeen.net>
+	<1490980415.3591793.1438866795648.JavaMail.zimbra@redhat.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 11 Aug 2015 18:40:39 +0200
+Message-ID: <CACj3i71jiiFxZ=M-a+y9vpTsBiLo5Xxqr4Huqf+sc8D9cQNdZQ@mail.gmail.com>
+Subject: Re: [PATCH v3] xfsprogs: blkid is now mandatory
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,152 +35,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1962887444876541359=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Aug 05, 2015 at 09:08:31PM +1000, Dave Chinner wrote:
-> Hi folks,
-> 
-> This is my first pass at introducing a framework for configuring the
-> error handling behaviour of various subsystems in XFS. This is being
-> driven by the need to handle things like ENOSPC from thin
-> provisioned block devices in a sane manner, as well as from the mm/
-> side of the kernel for more configurable memory allocation failure
-> behaviour.
-> 
+--===============1962887444876541359==
+Content-Type: multipart/alternative; boundary=001a11406ee64aa27b051d0bc4ab
 
-By and large, this looks pretty good to me. I sent some comments on the
-individual patches separately. A few more random thoughts below...
+--001a11406ee64aa27b051d0bc4ab
+Content-Type: text/plain; charset=UTF-8
 
-> The patchset introduces the concepts of:
-> 
-> 	- "failure speed", which defines the obvious behaviour of
-> 	  the error handlers. "fast" will fail immediately, "slow"
-> 	  will fail after a bound number of retries or timeout, and
-> 	  "never" means exactly that. The current behaviour is
-> 	  "never", and this patchset mostly leaves the default
-> 	  behaviour configured this way.
-> 
-> 	- "error class", which is the subsystem or error location
-> 	  the error handlers configure the behaviour for. "metadata"
-> 	  configures async write errors in metadata buffers, "kmem"
-> 	  configures memory allocation failure behaviour and we'll
-> 	  add others as we see fit.
-> 
-> 	- "error handler", which is the specific error the
-> 	  configuration applies to. For IO errors, it's obvious that
-> 	  EIO, ENOSPC, ENODEV, etc are errors that need to be
-> 	  handled in different ways. But for the kmem class, the
-> 	  only error is ENOMEM, so while that it is currently
-> 	  configured that way, the error handlers are more likely to
-> 	  refer to failures in transaction context, in buffer
-> 	  allocation context, etc. IOWs, the name and failure
-> 	  context can change, but the same "failure speed"
-> 	  definition still applies.
-> 
+On Thu, Aug 6, 2015 at 3:13 PM, Jan Tulak <jtulak@redhat.com> wrote:
+>
+> It looks like it works. Though I need to do some testing before I send
+the patch.
+> Unfortunately, making FS tests without the ability to mount it on the
+machine
+> requires USB drive shuffling and it is hard to automate it... :-)
+>
+(Sorry for spam, Eric, resubmitting it with mailing list in cc)
 
-At first thought, I'm not a huge fan of encoding the error codes into
-the sysfs interface. This stuff probably shouldn't change much, if ever,
-but it's not exactly under our control since we're talking about
-underlying device error codes.
+My hope was premature. After long searching for "why there is not created
+any FS,"
+I found that using mkfs on OS X on block devices probably wasn't ever
+enabled.
+Some platform_ functions in libxfs/darwin.h used for block device work are
+empty
+(so it just silently fails).
 
-On one hand, I think it would be nice to have something like
-'out_of_space' in the sysfs tree rather than ENOSPC, for example. Then
-the filesystem would just do the right thing for whatever error code
-that happens to reflect. On the other hand, one could have some 3rd
-party storage device that reports EIO or something else in the context
-where a thin volume is out of space, for example. The user would have no
-sense of how to configure that for this particular device without the
-error code based configuration.
+I edited the doc/INSTALL respectively and once I check and clean the
+patches,
+I submit the updates in the compatibility patchset with block devices
+disabled.
 
-> As a result, the infrastructure is quite flexible - anywhere you
-> have a struct xfs_mount you can look up an error handling
-> configuration and apply it appropriately for that context. The
-> patchset really only implements a metadata buffer async write IO
-> error context handler, but that is just the tip of the iceberg....
-> 
-> I've tried to make the initialisation as generic and simple as
-> possible. It's all table based, so all the default values are in one
-> place and easy to find - you don't have to touch the initialisation
-> code to modify the default error config, or to add new errors. Only
-> sysfs handlers need to be added for new error classes and handlers.
-> 
-> The current sysfs layout looks like this:
-> 
-> $ find /sys/fs/xfs/vdc/error
-> /sys/fs/xfs/vdc/error
-> /sys/fs/xfs/vdc/error/kmem
-> /sys/fs/xfs/vdc/error/kmem/ENOMEM
-> /sys/fs/xfs/vdc/error/kmem/ENOMEM/max_retries
-> /sys/fs/xfs/vdc/error/kmem/ENOMEM/failure_speed
-> /sys/fs/xfs/vdc/error/kmem/ENOMEM/fail_at_unmount
-> /sys/fs/xfs/vdc/error/kmem/ENOMEM/retry_timeout_seconds
-> /sys/fs/xfs/vdc/error/kmem/Default
-> /sys/fs/xfs/vdc/error/kmem/Default/max_retries
-> /sys/fs/xfs/vdc/error/kmem/Default/failure_speed
-> /sys/fs/xfs/vdc/error/kmem/Default/fail_at_unmount
-> /sys/fs/xfs/vdc/error/kmem/Default/retry_timeout_seconds
-> /sys/fs/xfs/vdc/error/metadata
-> /sys/fs/xfs/vdc/error/metadata/EIO
-> /sys/fs/xfs/vdc/error/metadata/EIO/max_retries
-> /sys/fs/xfs/vdc/error/metadata/EIO/failure_speed
-> /sys/fs/xfs/vdc/error/metadata/EIO/fail_at_unmount
-> /sys/fs/xfs/vdc/error/metadata/EIO/retry_timeout_seconds
-> /sys/fs/xfs/vdc/error/metadata/ENODEV
-> /sys/fs/xfs/vdc/error/metadata/ENODEV/max_retries
-> /sys/fs/xfs/vdc/error/metadata/ENODEV/failure_speed
-> /sys/fs/xfs/vdc/error/metadata/ENODEV/fail_at_unmount
-> /sys/fs/xfs/vdc/error/metadata/ENODEV/retry_timeout_seconds
-> /sys/fs/xfs/vdc/error/metadata/ENOSPC
-> /sys/fs/xfs/vdc/error/metadata/ENOSPC/max_retries
-> /sys/fs/xfs/vdc/error/metadata/ENOSPC/failure_speed
-> /sys/fs/xfs/vdc/error/metadata/ENOSPC/fail_at_unmount
-> /sys/fs/xfs/vdc/error/metadata/ENOSPC/retry_timeout_seconds
-> /sys/fs/xfs/vdc/error/metadata/Default
-> /sys/fs/xfs/vdc/error/metadata/Default/max_retries
-> /sys/fs/xfs/vdc/error/metadata/Default/failure_speed
-> /sys/fs/xfs/vdc/error/metadata/Default/fail_at_unmount
-> /sys/fs/xfs/vdc/error/metadata/Default/retry_timeout_seconds
-> $
-> 
+Cheers,
+Jan
 
-The error context isn't quite clear from this organization. It is
-consistent and seems functionally sane from the code. I just wonder
-whether users might get confused considering that some of these errors
-can originate from the filesystem vs. the underlying device. Clearly
-we're interested in the latter, but how is that evident from the sysfs
-interface?
+-- 
+Jan Tulak
+jtulak@redhat.com
 
-Maybe tweaking the class name would help clarify a bit. E.g.,
-metadata_io..?
+--001a11406ee64aa27b051d0bc4ab
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Brian
+<div dir=3D"ltr"><span class=3D"im">On Thu, Aug 6, 2015 at 3:13 PM, Jan Tul=
+ak &lt;<a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@redhat=
+.com</a>&gt; wrote:<br>&gt;<br>&gt; It looks like it works. Though I need t=
+o do some testing before I send the patch.<br>&gt; Unfortunately, making FS=
+ tests without the ability to mount it on the machine<br>&gt; requires USB =
+drive shuffling and it is hard to automate it... :-)<br>&gt;</span><div><sp=
+an class=3D"im">(Sorry for spam, Eric, resubmitting it with mailing list in=
+ cc)<div><br></div></span><div>My hope was premature. After long searching =
+for &quot;why there is not created any FS,&quot;</div><div>I found that usi=
+ng mkfs on OS X on block devices probably wasn&#39;t ever enabled.</div><di=
+v>Some platform_ functions in libxfs/darwin.h used for block device work ar=
+e empty</div><div>(so it just silently fails).</div><div><br></div><div>I e=
+dited the doc/INSTALL respectively and once I check and clean the patches,<=
+/div><div>I submit the updates in the compatibility patchset with block dev=
+ices disabled.</div></div><div class=3D"gmail_extra"><div><br></div><div>Ch=
+eers,</div><div>Jan</div><div><br></div>-- <br><div class=3D"gmail_signatur=
+e"><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat=
+.com" target=3D"_blank">jtulak@redhat.com</a><br></div></div>
+</div></div>
 
-> Which shows the classes and error handlers, and how different
-> classes can have different error handlers.
-> 
-> The patchset runs through xfstests without problems on the default
-> configuration it sets. Note that the default config for the metadata
-> class now sets "fail at unmount" so errors that have been retries
-> indefinitely will fail at unmount and trigger a shutdown at that
-> point. This is preferable to hanging unmount as currently happens.
-> 
-> Anyway, have a play, have a poke, and let me know what you think...
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+--001a11406ee64aa27b051d0bc4ab--
+
+
+--===============1962887444876541359==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1962887444876541359==--
