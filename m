@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A44F87F51
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 17:04:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 91A70304039
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 15:04:45 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7E7737F50
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 17:49:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 582828F8035
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 15:49:59 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	KDeGgCC7GGBsCJmq for <xfs@oss.sgi.com>;
-	Tue, 11 Aug 2015 15:04:42 -0700 (PDT)
+	CFqBSvZLYyHaH5mI for <xfs@oss.sgi.com>;
+	Tue, 11 Aug 2015 15:49:57 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1ZPIMh-0005YG-0O
+	for xfs@oss.sgi.com; Wed, 12 Aug 2015 08:49:51 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1ZPIMg-0004OZ-Vw
+	for xfs@oss.sgi.com; Wed, 12 Aug 2015 08:49:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: clean up inode lockdep annotations
-Date: Wed, 12 Aug 2015 08:04:07 +1000
-Message-Id: <1439330648-1057-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1439330648-1057-1-git-send-email-david@fromorbit.com>
-References: <1439330648-1057-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/8] xfs: remove nonblocking mode from xfs_vm_writepage
+Date: Wed, 12 Aug 2015 08:49:43 +1000
+Message-Id: <1439333388-16452-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1439333388-16452-1-git-send-email-david@fromorbit.com>
+References: <1439333388-16452-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,289 +36,89 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: jack@suse.cz, oleg@redhat.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Lockdep annotations are a maintenance nightmare. Locking has to be
-modified to suit the limitations of the annotations, and we're
-always having to fix the annotations because they are unable to
-express the complexity of locking heirarchies correctly.
+Remove the nonblocking optimisation done for mapping lookups during
+writeback. It's not clear that leaving a hole in the writeback range
+just because we couldn't get a lock is really a win, as it makes us
+do another small random IO later on rather than a large sequential
+IO now.
 
-So, next up, we've got more issues with lockdep annotations for
-inode locking w.r.t. XFS_LOCK_PARENT:
-
-	- lockdep classes are exclusive and can't be ORed together
-	  to form new classes.
-	- IOLOCK needs multiple PARENT subclasses to express the
-	  changes needed for the readdir locking rework needed to
-	  stop the endless flow of lockdep false positives involving
-	  readdir calling filldir under the ILOCK.
-	- there are only 8 unique lockdep subclasses available,
-	  so we can't create a generic solution.
-
-IOWs we need to treat the 3-bit space available to each lock type
-differently:
-
-	- IOLOCK uses xfs_lock_two_inodes(), so needs:
-		- at least 2 IOLOCK subclasses
-		- at least 2 IOLOCK_PARENT subclasses
-	- MMAPLOCK uses xfs_lock_two_inodes(), so needs:
-		- at least 2 MMAPLOCK subclasses
-	- ILOCK uses xfs_lock_inodes with up to 5 inodes, so needs:
-		- at least 5 ILOCK subclasses
-		- one ILOCK_PARENT subclass
-		- one RTBITMAP subclass
-		- one RTSUM subclass
-
-For the IOLOCK, split the space into two sets of subclasses.
-For the MMAPLOCK, just use half the space for the one subclass to
-match the non-parent lock classes of the IOLOCK.
-For the ILOCK, use 0-4 as the ILOCK subclasses, 5-7 for the
-remaining individual subclasses.
-
-Because they are now all different, modify xfs_lock_inumorder() to
-handle the nested subclasses, and to assert fail if passed an
-invalid subclass. Further, annotate xfs_lock_inodes() to assert fail
-if an invalid combination of lock primitives and inode counts are
-passed that would result in a lockdep subclass annotation overflow.
+As this gets inteh way of sane error handling later on, just remove
+for the moment and we can re-introduce an equivalent optimisation in
+future if we see problems due to extent map lock contention.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 68 ++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_inode.h | 85 +++++++++++++++++++++++++++++++++++++-----------------
- 2 files changed, 110 insertions(+), 43 deletions(-)
+ fs/xfs/xfs_aops.c | 19 +++----------------
+ 1 file changed, 3 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8d0cbb5..793e6c9 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -164,7 +164,7 @@ xfs_ilock(
- 	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
- 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
- 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
-+	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
- 
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		mrupdate_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
-@@ -212,7 +212,7 @@ xfs_ilock_nowait(
- 	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
- 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
- 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
-+	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
- 
- 	if (lock_flags & XFS_IOLOCK_EXCL) {
- 		if (!mrtryupdate(&ip->i_iolock))
-@@ -281,7 +281,7 @@ xfs_iunlock(
- 	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
- 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
- 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
-+	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
- 	ASSERT(lock_flags != 0);
- 
- 	if (lock_flags & XFS_IOLOCK_EXCL)
-@@ -364,30 +364,38 @@ int xfs_lock_delays;
- 
- /*
-  * Bump the subclass so xfs_lock_inodes() acquires each lock with a different
-- * value. This shouldn't be called for page fault locking, but we also need to
-- * ensure we don't overrun the number of lockdep subclasses for the iolock or
-- * mmaplock as that is limited to 12 by the mmap lock lockdep annotations.
-+ * value. This can be called for any type of inode lock combination, including
-+ * parent locking. Care must be taken to ensure we don't overrun the subclass
-+ * storage fields in the class mask we build.
-  */
- static inline int
- xfs_lock_inumorder(int lock_mode, int subclass)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 4d5479d..b718156 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -285,8 +285,7 @@ xfs_map_blocks(
+ 	struct inode		*inode,
+ 	loff_t			offset,
+ 	struct xfs_bmbt_irec	*imap,
+-	int			type,
+-	int			nonblocking)
++	int			type)
  {
-+	int	class = 0;
-+
-+	ASSERT(!(lock_mode & (XFS_ILOCK_PARENT | XFS_ILOCK_RTBITMAP |
-+			      XFS_ILOCK_RTSUM)));
-+
- 	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
--		ASSERT(subclass + XFS_LOCK_INUMORDER <
--			(1 << (XFS_MMAPLOCK_SHIFT - XFS_IOLOCK_SHIFT)));
--		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_IOLOCK_SHIFT;
-+		ASSERT(subclass <= XFS_IOLOCK_MAX_SUBCLASS);
-+		ASSERT(subclass + XFS_IOLOCK_PARENT_VAL <
-+						MAX_LOCKDEP_SUBCLASSES);
-+		class += subclass << XFS_IOLOCK_SHIFT;
-+		if (lock_mode & XFS_IOLOCK_PARENT)
-+			class += XFS_IOLOCK_PARENT_VAL << XFS_IOLOCK_SHIFT;
- 	}
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -302,12 +301,7 @@ xfs_map_blocks(
+ 	if (type == XFS_IO_UNWRITTEN)
+ 		bmapi_flags |= XFS_BMAPI_IGSTATE;
  
- 	if (lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) {
--		ASSERT(subclass + XFS_LOCK_INUMORDER <
--			(1 << (XFS_ILOCK_SHIFT - XFS_MMAPLOCK_SHIFT)));
--		lock_mode |= (subclass + XFS_LOCK_INUMORDER) <<
--							XFS_MMAPLOCK_SHIFT;
-+		ASSERT(subclass <= XFS_MMAPLOCK_MAX_SUBCLASS);
-+		class += subclass << XFS_MMAPLOCK_SHIFT;
- 	}
- 
--	if (lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL))
--		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_ILOCK_SHIFT;
-+	if (lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)) {
-+		ASSERT(subclass <= XFS_ILOCK_MAX_SUBCLASS);
-+		class += subclass << XFS_ILOCK_SHIFT;
-+	}
- 
--	return lock_mode;
-+	return (lock_mode & ~XFS_LOCK_SUBCLASS_MASK) | class;
- }
- 
- /*
-@@ -399,6 +407,11 @@ xfs_lock_inumorder(int lock_mode, int subclass)
-  * transaction (such as truncate). This can result in deadlock since the long
-  * running trans might need to wait for the inode we just locked in order to
-  * push the tail and free space in the log.
-+ *
-+ * xfs_lock_inodes() can only be used to lock one type of lock at a time -
-+ * the iolock, the mmaplock or the ilock, but not more than one at a time. If we
-+ * lock more than one at a time, lockdep will report false positives saying we
-+ * have violated locking orders.
-  */
- void
- xfs_lock_inodes(
-@@ -409,8 +422,29 @@ xfs_lock_inodes(
- 	int		attempts = 0, i, j, try_lock;
- 	xfs_log_item_t	*lp;
- 
--	/* currently supports between 2 and 5 inodes */
-+	/*
-+	 * Currently supports between 2 and 5 inodes with exclusive locking.  We
-+	 * support an arbitrary depth of locking here, but absolute limits on
-+	 * inodes depend on the the type of locking and the limits placed by
-+	 * lockdep annotations in xfs_lock_inumorder.  These are all checked by
-+	 * the asserts.
-+	 */
- 	ASSERT(ips && inodes >= 2 && inodes <= 5);
-+	ASSERT(lock_mode & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL |
-+			    XFS_ILOCK_EXCL));
-+	ASSERT(!(lock_mode & (XFS_IOLOCK_SHARED | XFS_MMAPLOCK_SHARED |
-+			      XFS_ILOCK_SHARED)));
-+	ASSERT(!(lock_mode & XFS_IOLOCK_EXCL) ||
-+		inodes <= XFS_IOLOCK_MAX_SUBCLASS + 1);
-+	ASSERT(!(lock_mode & XFS_MMAPLOCK_EXCL) ||
-+		inodes <= XFS_MMAPLOCK_MAX_SUBCLASS + 1);
-+	ASSERT(!(lock_mode & XFS_ILOCK_EXCL) ||
-+		inodes <= XFS_ILOCK_MAX_SUBCLASS + 1);
-+
-+	if (lock_mode & XFS_IOLOCK_EXCL) {
-+		ASSERT(!(lock_mode & (XFS_MMAPLOCK_EXCL | XFS_ILOCK_EXCL)));
-+	} else if (lock_mode & XFS_MMAPLOCK_EXCL)
-+		ASSERT(!(lock_mode & XFS_ILOCK_EXCL));
- 
- 	try_lock = 0;
- 	i = 0;
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 8f22d20..ca9e119 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -284,9 +284,9 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
-  * Flags for lockdep annotations.
-  *
-  * XFS_LOCK_PARENT - for directory operations that require locking a
-- * parent directory inode and a child entry inode.  The parent gets locked
-- * with this flag so it gets a lockdep subclass of 1 and the child entry
-- * lock will have a lockdep subclass of 0.
-+ * parent directory inode and a child entry inode. IOLOCK requires nesting,
-+ * MMAPLOCK does not support this class, ILOCK requires a single subclass
-+ * to differentiate parent from child.
-  *
-  * XFS_LOCK_RTBITMAP/XFS_LOCK_RTSUM - the realtime device bitmap and summary
-  * inodes do not participate in the normal lock order, and thus have their
-@@ -295,30 +295,63 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
-  * XFS_LOCK_INUMORDER - for locking several inodes at the some time
-  * with xfs_lock_inodes().  This flag is used as the starting subclass
-  * and each subsequent lock acquired will increment the subclass by one.
-- * So the first lock acquired will have a lockdep subclass of 4, the
-- * second lock will have a lockdep subclass of 5, and so on. It is
-- * the responsibility of the class builder to shift this to the correct
-- * portion of the lock_mode lockdep mask.
-+ * However, MAX_LOCKDEP_SUBCLASSES == 8, which means we are greatly
-+ * limited to the subclasses we can represent via nesting. We need at least
-+ * 5 inodes nest depth for the ILOCK through rename, and we also have to support
-+ * XFS_ILOCK_PARENT, which gives 6 subclasses. Then we have XFS_ILOCK_RTBITMAP
-+ * and XFS_ILOCK_RTSUM, which are another 2 unique subclasses, so that's all
-+ * 8 subclasses supported by lockdep.
-+ *
-+ * This also means we have to number the sub-classes in the lowest bits of
-+ * the mask we keep, and we have to ensure we never exceed 3 bits of lockdep
-+ * mask and we can't use bit-masking to build the subclasses. What a mess.
-+ *
-+ * Bit layout:
-+ *
-+ * Bit		Lock Region
-+ * 16-19	XFS_IOLOCK_SHIFT dependencies
-+ * 20-23	XFS_MMAPLOCK_SHIFT dependencies
-+ * 24-31	XFS_ILOCK_SHIFT dependencies
-+ *
-+ * IOLOCK values
-+ *
-+ * 0-3		subclass value
-+ * 4-7		PARENT subclass values
-+ *
-+ * MMAPLOCK values
-+ *
-+ * 0-3		subclass value
-+ * 4-7		unused
-+ *
-+ * ILOCK values
-+ * 0-4		subclass values
-+ * 5		PARENT subclass (not nestable)
-+ * 6		RTBITMAP subclass (not nestable)
-+ * 7		RTSUM subclass (not nestable)
-+ * 
-  */
--#define XFS_LOCK_PARENT		1
--#define XFS_LOCK_RTBITMAP	2
--#define XFS_LOCK_RTSUM		3
--#define XFS_LOCK_INUMORDER	4
+-	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
+-		if (nonblocking)
+-			return -EAGAIN;
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	}
 -
--#define XFS_IOLOCK_SHIFT	16
--#define	XFS_IOLOCK_PARENT	(XFS_LOCK_PARENT << XFS_IOLOCK_SHIFT)
--
--#define XFS_MMAPLOCK_SHIFT	20
--
--#define XFS_ILOCK_SHIFT		24
--#define	XFS_ILOCK_PARENT	(XFS_LOCK_PARENT << XFS_ILOCK_SHIFT)
--#define	XFS_ILOCK_RTBITMAP	(XFS_LOCK_RTBITMAP << XFS_ILOCK_SHIFT)
--#define	XFS_ILOCK_RTSUM		(XFS_LOCK_RTSUM << XFS_ILOCK_SHIFT)
--
--#define XFS_IOLOCK_DEP_MASK	0x000f0000
--#define XFS_MMAPLOCK_DEP_MASK	0x00f00000
--#define XFS_ILOCK_DEP_MASK	0xff000000
--#define XFS_LOCK_DEP_MASK	(XFS_IOLOCK_DEP_MASK | \
-+#define XFS_IOLOCK_SHIFT		16
-+#define XFS_IOLOCK_PARENT_VAL		4
-+#define XFS_IOLOCK_MAX_SUBCLASS		(XFS_IOLOCK_PARENT_VAL - 1)
-+#define XFS_IOLOCK_DEP_MASK		0x000f0000
-+#define	XFS_IOLOCK_PARENT		(XFS_IOLOCK_PARENT_VAL << XFS_IOLOCK_SHIFT)
-+
-+#define XFS_MMAPLOCK_SHIFT		20
-+#define XFS_MMAPLOCK_NUMORDER		0
-+#define XFS_MMAPLOCK_MAX_SUBCLASS	3
-+#define XFS_MMAPLOCK_DEP_MASK		0x00f00000
-+
-+#define XFS_ILOCK_SHIFT			24
-+#define XFS_ILOCK_PARENT_VAL		5
-+#define XFS_ILOCK_MAX_SUBCLASS		(XFS_ILOCK_PARENT_VAL - 1)
-+#define XFS_ILOCK_RTBITMAP_VAL		6
-+#define XFS_ILOCK_RTSUM_VAL		7
-+#define XFS_ILOCK_DEP_MASK		0xff000000
-+#define	XFS_ILOCK_PARENT		(XFS_ILOCK_PARENT_VAL << XFS_ILOCK_SHIFT)
-+#define	XFS_ILOCK_RTBITMAP		(XFS_ILOCK_RTBITMAP_VAL << XFS_ILOCK_SHIFT)
-+#define	XFS_ILOCK_RTSUM			(XFS_ILOCK_RTSUM_VAL << XFS_ILOCK_SHIFT)
-+
-+#define XFS_LOCK_SUBCLASS_MASK	(XFS_IOLOCK_DEP_MASK | \
- 				 XFS_MMAPLOCK_DEP_MASK | \
- 				 XFS_ILOCK_DEP_MASK)
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+@@ -958,7 +952,6 @@ xfs_do_writepage(
+ 	ssize_t			len;
+ 	int			err, uptodate = 1;
+ 	int			count = 0;
+-	int			nonblocking = 0;
  
+ 	trace_xfs_writepage(inode, page, 0, 0);
+ 
+@@ -1057,9 +1050,6 @@ xfs_do_writepage(
+ 	bh = head = page_buffers(page);
+ 	offset = page_offset(page);
+ 
+-	if (wbc->sync_mode == WB_SYNC_NONE)
+-		nonblocking = 1;
+-
+ 	do {
+ 		int new_ioend = 0;
+ 
+@@ -1121,7 +1111,7 @@ xfs_do_writepage(
+ 			 */
+ 			new_ioend = 1;
+ 			err = xfs_map_blocks(inode, offset, &wpc->imap,
+-					     wpc->io_type, nonblocking);
++					     wpc->io_type);
+ 			if (err)
+ 				goto error;
+ 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+@@ -1192,9 +1182,6 @@ error:
+ 	if (iohead)
+ 		xfs_cancel_ioend(iohead);
+ 
+-	if (err == -EAGAIN)
+-		goto redirty;
+-
+ 	xfs_aops_discard_page(page);
+ 	ClearPageUptodate(page);
+ 	unlock_page(page);
 -- 
 2.5.0
 
