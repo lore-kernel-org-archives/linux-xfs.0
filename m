@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E67467F69
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 14:01:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C5C9D304066
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 12:01:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EF9FE7F54
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 09:19:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A1A9C8F8039
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 07:18:59 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TahlnOUTXyfHKjUe (version=TLSv1
+	cuda.sgi.com with ESMTP id JnluQNKrsRtLDrBj (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Aug 2015 12:01:52 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 765969D1F9
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 19:01:51 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-184.bos.redhat.com [10.18.41.184])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7AJ1pLQ001473
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2015 15:01:51 -0400
+	Tue, 11 Aug 2015 07:18:55 -0700 (PDT)
+Date: Tue, 11 Aug 2015 10:18:53 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 11/13] xfs: fix btree cursor error cleanups
-Date: Mon, 10 Aug 2015 15:01:47 -0400
-Message-Id: <1439233309-19959-12-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
-References: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 04/10] xfs: add configurable error support to metadata
+	buffers
+Message-ID: <20150811141852.GA59636@bfoster.bfoster>
+References: <1438772921-28715-1-git-send-email-david@fromorbit.com>
+	<1438772921-28715-5-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1438772921-28715-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,59 +27,256 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-The btree cursor cleanup function takes an error parameter that affects
-how buffers are released from the cursor. All buffers are released in
-the event of error. Several callers do not specify the XFS_BTREE_ERROR
-flag in the event of error, however. This can cause buffers to hang
-around locked or with an elevated hold count and thus lead to umount
-hangs in the event of errors.
+On Wed, Aug 05, 2015 at 09:08:35PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> With the error configuration handle for async metadata write errors
+> in place, we can now add initial support to the IO error processing
+> in xfs_buf_iodone_error().
+> 
+> Add an infrastructure function to look up the configuration handle,
+> and rearrange the error handling to prepare the way for different
+> error handling conigurations to be used.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.h      |   1 +
+>  fs/xfs/xfs_buf_item.c | 112 ++++++++++++++++++++++++++++++--------------------
+>  fs/xfs/xfs_mount.h    |   3 ++
+>  fs/xfs/xfs_sysfs.c    |  17 ++++++++
+>  4 files changed, 88 insertions(+), 45 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 68c8f2d..ed0ea41 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -181,6 +181,7 @@ typedef struct xfs_buf {
+>  	unsigned int		b_page_count;	/* size of page array */
+>  	unsigned int		b_offset;	/* page offset in first page */
+>  	int			b_error;	/* error code on I/O */
+> +	int			b_last_error;	/* previous async I/O error */
+>  	const struct xfs_buf_ops	*b_ops;
+>  
+>  #ifdef XFS_BUF_LOCK_TRACKING
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index ee63961..a09ae26 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -924,35 +924,22 @@ xfs_buf_do_callbacks(
+>  	}
+>  }
+>  
+> -/*
+> - * This is the iodone() function for buffers which have had callbacks
+> - * attached to them by xfs_buf_attach_iodone().  It should remove each
+> - * log item from the buffer's list and call the callback of each in turn.
+> - * When done, the buffer's fsprivate field is set to NULL and the buffer
+> - * is unlocked with a call to iodone().
+> - */
 
-Fix up the xfs_btree_del_cursor() callers to pass XFS_BTREE_ERROR if the
-cursor is being torn down due to error.
+A pre-function comment would be nice to at least explain what the return
+value means.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_ialloc.c | 2 +-
- fs/xfs/xfs_itable.c        | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+> -void
+> -xfs_buf_iodone_callbacks(
+> +static bool
+> +xfs_buf_iodone_callback_error(
+>  	struct xfs_buf		*bp)
+>  {
+>  	struct xfs_log_item	*lip = bp->b_fspriv;
+>  	struct xfs_mount	*mp = lip->li_mountp;
+>  	static ulong		lasttime;
+>  	static xfs_buftarg_t	*lasttarg;
+> -
+> -	if (likely(!bp->b_error))
+> -		goto do_callbacks;
+> +	struct xfs_error_cfg	*cfg;
+>  
+>  	/*
+>  	 * If we've already decided to shutdown the filesystem because of
+>  	 * I/O errors, there's no point in giving this a retry.
+>  	 */
+> -	if (XFS_FORCED_SHUTDOWN(mp)) {
+> -		xfs_buf_stale(bp);
+> -		bp->b_flags |= XBF_DONE;
+> -		trace_xfs_buf_item_iodone(bp, _RET_IP_);
+> -		goto do_callbacks;
+> -	}
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index ce63e04..54deb2d 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2233,7 +2233,7 @@ xfs_imap_lookup(
- 	}
- 
- 	xfs_trans_brelse(tp, agbp);
--	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index f41b0c3..930ebd8 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -473,7 +473,8 @@ xfs_bulkstat(
- 		 * pending error, then we are done.
- 		 */
- del_cursor:
--		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		xfs_btree_del_cursor(cur, error ?
-+					  XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
- 		xfs_buf_relse(agbp);
- 		if (error)
- 			break;
--- 
-2.1.0
+Looks like we've lost a tracepoint here.
+
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		goto out_stale;
+>  
+>  	if (bp->b_target != lasttarg ||
+>  	    time_after(jiffies, (lasttime + 5*HZ))) {
+> @@ -961,45 +948,80 @@ xfs_buf_iodone_callbacks(
+>  	}
+>  	lasttarg = bp->b_target;
+>  
+> +	/* synchronous writes will have callers process the error */
+> +	if (!(bp->b_flags & XBF_ASYNC))
+> +		goto out_stale;
+> +
+
+Why mark it stale?
+
+> +	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> +	ASSERT(bp->b_iodone != NULL);
+> +
+>  	/*
+>  	 * If the write was asynchronous then no one will be looking for the
+> -	 * error.  Clear the error state and write the buffer out again.
+> -	 *
+> -	 * XXX: This helps against transient write errors, but we need to find
+> -	 * a way to shut the filesystem down if the writes keep failing.
+> -	 *
+> -	 * In practice we'll shut the filesystem down soon as non-transient
+> -	 * errors tend to affect the whole device and a failing log write
+> -	 * will make us give up.  But we really ought to do better here.
+> +	 * error.  If this is the first failure of this type, clear the error
+> +	 * state and write the buffer out again. This means we always retry an
+> +	 * async write failure at least once, but we also need to set the buffer
+> +	 * up to behave correctly now for repeated failures.
+>  	 */
+> -	if (XFS_BUF_ISASYNC(bp)) {
+> -		ASSERT(bp->b_iodone != NULL);
+> -
+> -		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> +	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+
+cfg isn't used until after the following block of code.
+
+Brian
+
+> +	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL)) ||
+> +	     bp->b_last_error != bp->b_error) {
+> +		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
+> +			        XBF_DONE | XBF_WRITE_FAIL);
+> +		bp->b_last_error = bp->b_error;
+> +		xfs_buf_ioerror(bp, 0);
+> +		xfs_buf_submit(bp);
+> +		return true;
+> +	}
+>  
+> -		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+> +	/*
+> +	 * Repeated failure on an async write. Take action according to the
+> +	 * error configuration we have been set up to use.
+> +	 */
+> +	if (cfg->fail_speed == XFS_ERR_FAIL_FAST)
+> +		goto permanent_error;
+>  
+> -		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+> -			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+> -				       XBF_DONE | XBF_WRITE_FAIL;
+> -			xfs_buf_submit(bp);
+> -		} else {
+> -			xfs_buf_relse(bp);
+> -		}
+> -
+> -		return;
+> -	}
+> +	/* still a transient error, higher layers will retry */
+> +	xfs_buf_ioerror(bp, 0);
+> +	xfs_buf_relse(bp);
+> +	return true;
+>  
+>  	/*
+> -	 * If the write of the buffer was synchronous, we want to make
+> -	 * sure to return the error to the caller of xfs_bwrite().
+> +	 * Permanent error - we need to trigger a shutdown if we haven't already
+> +	 * to indicate that inconsistency will result from this action.
+>  	 */
+> +permanent_error:
+> +	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> +out_stale:
+>  	xfs_buf_stale(bp);
+>  	bp->b_flags |= XBF_DONE;
+> -
+>  	trace_xfs_buf_error_relse(bp, _RET_IP_);
+> +	return false;
+> +}
+> +
+> +/*
+> + * This is the iodone() function for buffers which have had callbacks attached
+> + * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
+> + * callback list, mark the buffer as having no more callbacks and then push the
+> + * buffer through IO completion processing.
+> + */
+> +void
+> +xfs_buf_iodone_callbacks(
+> +	struct xfs_buf		*bp)
+> +{
+> +	/*
+> +	 * If there is an error, process it. Some errors require us
+> +	 * to run callbacks after failure processing is done so we
+> +	 * detect that and take appropriate action.
+> +	 */
+> +	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+> +		return;
+> +
+> +	/*
+> +	 * Successful IO or permanent error. Either way, we can clear the
+> +	 * retry state here in preparation for the next error that may occur.
+> +	 */
+> +	bp->b_last_error = 0;
+>  
+> -do_callbacks:
+>  	xfs_buf_do_callbacks(bp);
+>  	bp->b_fspriv = NULL;
+>  	bp->b_iodone = NULL;
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 753060f..21caa5a 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -366,4 +366,7 @@ extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
+>  
+>  extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+>  
+> +struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
+> +		int error_class, int error);
+> +
+>  #endif	/* __XFS_MOUNT_H__ */
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index cb7ced0..3667d33 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -355,3 +355,20 @@ xfs_error_sysfs_del(
+>  	xfs_sysfs_del(&mp->m_error_meta_kobj);
+>  	xfs_sysfs_del(&mp->m_error_kobj);
+>  }
+> +
+> +struct xfs_error_cfg *
+> +xfs_error_get_cfg(
+> +	struct xfs_mount	*mp,
+> +	int			error_class,
+> +	int			error)
+> +{
+> +	struct xfs_error_cfg	*cfg;
+> +
+> +	switch (error) {
+> +	default:
+> +		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
+> +		break;
+> +	}
+> +
+> +	return cfg;
+> +}
+> -- 
+> 2.1.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
