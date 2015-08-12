@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3CD4D7F50
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 18:50:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 296118F8035
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 16:50:43 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id KZ2wOngBFJNEPAFz (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 70EE47F50
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 19:57:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E08FFAC007
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 17:57:28 -0700 (PDT)
+Received: from imx2.toshiba.co.jp (imx2.toshiba.co.jp [106.186.93.51]) by
+	cuda.sgi.com with ESMTP id 0j9Lvn5ctUFBUSDD (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 11 Aug 2015 16:50:41 -0700 (PDT)
-Date: Tue, 11 Aug 2015 16:50:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] libxfs: readahead of dir3 data blocks should use the read
-	verifier
-Message-ID: <20150811235038.GL10043@birch.djwong.org>
+	Tue, 11 Aug 2015 17:57:24 -0700 (PDT)
+From: <katsuki.uwatoko@toshiba.co.jp>
+Subject: Re: PROBLEM: XFS on ARM corruption 'Structure needs cleaning'
+Date: Wed, 12 Aug 2015 00:56:25 +0000
+Message-ID: <C6D0D499B56584katsuki.uwatoko@toshiba.co.jp>
+References: <5579B804.9050707@skylable.com>
+	<20150612122108.GB60661@bfoster.bfoster>
+	<557AD4D4.3010901@skylable.com> <20150612225209.GA20262@dastard>
+In-Reply-To: <20150612225209.GA20262@dastard>
+Content-Language: en-US
+Content-ID: <EBEB34008B81394EB126AAB83ED27EE4@toshiba.local>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +32,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-arm-kernel@lists.infradead.org, david@fromorbit.com
+Cc: gangchen@rdamicro.com, linux@arm.linux.org.uk, karanvir.singh@hgst.com, bfoster@redhat.com, sandeen@sandeen.net, luca@skylable.com, christopher.squires@hgst.com, edwin@skylable.com, wayne.burri@hgst.com
 
-In the dir3 data block readahead function, use the regular read
-verifier to check the block's CRC and spot-check the block contents
-instead of directly calling only the spot-checking routine.  This
-prevents corrupted directory data blocks from being read into the
-kernel, which can lead to garbage ls output and directory loops (if
-say one of the entries contains slashes and other junk).
+On Sat, 13 Jun 2015 08:52:09 +1000, Dave Chinner wrote:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2_data.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Yup, that's looking like a toolchain bug. Thread about arm directory
+> read corruption:
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index de1ea16..534bbf2 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -252,7 +252,8 @@ xfs_dir3_data_reada_verify(
- 		return;
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
--		xfs_dir3_data_verify(bp);
-+		bp->b_ops = &xfs_dir3_data_buf_ops;
-+		bp->b_ops->verify_read(bp);
- 		return;
- 	default:
- 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+I think that this is not a toolchain bug, this is related to 
+Subject: [PATCH v2 1/1] ARM : missing corrupted reg in __do_div_asm
+http://www.spinics.net/lists/arm-kernel/msg426684.html
 
+--
+
+The problematic line in xfs is: 
+irecs->br_startblock = XFS_DADDR_TO_FSB(mp, mappedbno)
+in xfs_dabuf_map()/fs/xfs/xfs_da_btree.c.
+
+The expansion of it is: 
+
+  ld = mappedbno >> mp->m_blkbb_log;
+  do_div(ld, mp->m_sb.sb_agblocks);
+  startblock = ld << mp->m_sb.sb_agblklog;
+  ld = mappedbno >> mp->m_blkbb_log;
+  startblock |= do_div(ld, mp->m_sb.sb_agblocks);
+  irecs->br_startblock = startblock;
+
+The assembler of these are:
+
+:
+	bl	__do_div64
+	ldr	r1, [sp, #44]
+	subs	r3, r7, #32
+	orr	r1, r1, r2, lsr r5
+	add	r5, sp, #80
+	str	r5, [sp, #64]
+	ldr	r5, [sp, #60]
+	movpl	r1, r2, asl r3
+	mov	r2, r2, asl r7
+	str	r2, [sp, #40]
+	str	r1, [sp, #44]
+	mov	r1, r9
+	str	r5, [sp, #96]
+	mov	r7, #0
+	ldr	r2, [sp, #96]
+	mov	r5, #1
+	ldr	fp, [sp, #64]
+	str	r7, [sp, #84]
+	mov	r9, r2, asr #31
+	str	r7, [sp, #104]
+	bl	__do_div64
+:
+
+by GCC 4.7.2 with -O2 option.
+
+Because a result of do_div is stored in the 1st arg (r0),
+r0, which is "ld" in the C,  must be reloaded after the 1st call of do_div, before the 2nd call of do_div.
+But it is not reloaded in the above assembler.
+The problem is macro __do_div_asm, as the patch describes.
+
+I confirmed that the patch fixed this problem.
+
+	mov	r1, sl
+	str	r2, [sp, #56]
+	mov	r0, fp
+	bl	__do_div64
+	ldr	ip, [sp, #36]
+	rsb	r6, r5, #32
+	subs	r3, r5, #32
+	ldr	r1, [sp, #56]
+	orr	ip, ip, r2, lsr r6
+	str	r7, [sp, #96]
+	mov	r6, #1
+	str	r8, [sp, #80]
+	mov	r0, ip
+	str	r1, [sp, #52]
+	movpl	r0, r2, asl r3
+	mov	r2, r2, asl r5
+	str	r0, [sp, #36]
+	mov	r1, sl
+	str	r2, [sp, #32]
+	mov	r0, fp
+	bl	__do_div64
+
+by GCC 4.7.2 with -O2 option and the patch.
+
+Thank you,
+-- 
+UWATOKO
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
