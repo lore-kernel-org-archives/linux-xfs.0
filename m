@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5562F7F50
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 22:14:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 207AD8F8035
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 20:14:12 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	cjpO5r97qVqFHVvm for <xfs@oss.sgi.com>;
-	Tue, 11 Aug 2015 20:14:10 -0700 (PDT)
-Date: Wed, 12 Aug 2015 13:14:07 +1000
-From: Dave Chinner <david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 6181D7F50
+	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 01:19:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AE4E8F8037
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2015 23:19:55 -0700 (PDT)
+Received: from imx2.toshiba.co.jp (imx2.toshiba.co.jp [106.186.93.51]) by
+	cuda.sgi.com with ESMTP id 0cGaNFT3yLjMpJnc (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Aug 2015 23:19:53 -0700 (PDT)
+From: <katsuki.uwatoko@toshiba.co.jp>
 Subject: Re: PROBLEM: XFS on ARM corruption 'Structure needs cleaning'
-Message-ID: <20150812031407.GB20596@dastard>
-References: <5579B804.9050707@skylable.com>
-	<20150612122108.GB60661@bfoster.bfoster>
-	<557AD4D4.3010901@skylable.com> <20150612225209.GA20262@dastard>
+Date: Wed, 12 Aug 2015 06:19:07 +0000
+Message-ID: <CCD0D4C6CA7758katsuki.uwatoko@toshiba.co.jp>
+References: <557AD4D4.3010901@skylable.com> <20150612225209.GA20262@dastard>
 	<C6D0D499B56584katsuki.uwatoko@toshiba.co.jp>
+	<20150812031407.GB20596@dastard>
+In-Reply-To: <20150812031407.GB20596@dastard>
+Content-Language: en-US
+Content-ID: <A43EC053A165A04688965FBED1DF013E@toshiba.local>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <C6D0D499B56584katsuki.uwatoko@toshiba.co.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,87 +32,109 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: katsuki.uwatoko@toshiba.co.jp
+To: david@fromorbit.com
 Cc: gangchen@rdamicro.com, linux@arm.linux.org.uk, karanvir.singh@hgst.com, bfoster@redhat.com, sandeen@sandeen.net, luca@skylable.com, xfs@oss.sgi.com, christopher.squires@hgst.com, edwin@skylable.com, wayne.burri@hgst.com, linux-arm-kernel@lists.infradead.org
 
-On Wed, Aug 12, 2015 at 12:56:25AM +0000, katsuki.uwatoko@toshiba.co.jp wrote:
-> On Sat, 13 Jun 2015 08:52:09 +1000, Dave Chinner wrote:
-> 
-> > Yup, that's looking like a toolchain bug. Thread about arm directory
-> > read corruption:
-> 
-> I think that this is not a toolchain bug, this is related to 
-> Subject: [PATCH v2 1/1] ARM : missing corrupted reg in __do_div_asm
-> http://www.spinics.net/lists/arm-kernel/msg426684.html
+On Wed, 12 Aug 2015 13:14:07 +1000, Dave Chinner wrote:
 
-Interesting! Very good work finding that bug, Katsuki-san. 
-
-FWIW, I suspect this fix will need to go back into stable kernels,
-too.
-
-> --
+> To close the loop, what code do the other versions GCC produce for
+> this macro?  Evidence so far says that the result depends on the
+> compiler version, so I would like to have confirmation that other
+> versions of the compiler generate working code.  There are other
+> XFS_DADDR_TO_FSB() calls in the XFS code, too - do they demonstrate
+> the same problem, maybe with different compiler versions?
 > 
-> The problematic line in xfs is: 
-> irecs->br_startblock = XFS_DADDR_TO_FSB(mp, mappedbno)
-> in xfs_dabuf_map()/fs/xfs/xfs_da_btree.c.
-> 
-> The expansion of it is: 
-> 
->   ld = mappedbno >> mp->m_blkbb_log;
->   do_div(ld, mp->m_sb.sb_agblocks);
->   startblock = ld << mp->m_sb.sb_agblklog;
->   ld = mappedbno >> mp->m_blkbb_log;
->   startblock |= do_div(ld, mp->m_sb.sb_agblocks);
->   irecs->br_startblock = startblock;
-> 
-> The assembler of these are:
-> 
-> :
-> 	bl	__do_div64
-> 	ldr	r1, [sp, #44]
-> 	subs	r3, r7, #32
-> 	orr	r1, r1, r2, lsr r5
-> 	add	r5, sp, #80
-> 	str	r5, [sp, #64]
-> 	ldr	r5, [sp, #60]
-> 	movpl	r1, r2, asl r3
-> 	mov	r2, r2, asl r7
-> 	str	r2, [sp, #40]
-> 	str	r1, [sp, #44]
-> 	mov	r1, r9
-> 	str	r5, [sp, #96]
-> 	mov	r7, #0
-> 	ldr	r2, [sp, #96]
-> 	mov	r5, #1
-> 	ldr	fp, [sp, #64]
-> 	str	r7, [sp, #84]
-> 	mov	r9, r2, asr #31
-> 	str	r7, [sp, #104]
-> 	bl	__do_div64
-> :
-> 
-> by GCC 4.7.2 with -O2 option.
+> Basically I'm asking what is the scope of the problem you've found?
+> i.e. when was the bug introduced, what compilers expose it, etc
+> so that when ARM users report XFS corruptions we have some idea of
+> whether their kernel/compiler combination might have caused the
+> issue they are seeing...
 
-To close the loop, what code do the other versions GCC produce for
-this macro?  Evidence so far says that the result depends on the
-compiler version, so I would like to have confirmation that other
-versions of the compiler generate working code.  There are other
-XFS_DADDR_TO_FSB() calls in the XFS code, too - do they demonstrate
-the same problem, maybe with different compiler versions?
+I have the following versions of GCC now.
+	4.5.1
+	4.6.4
+	4.7.2
+# Sorry I don't have the recent versions of GCC.
 
-Basically I'm asking what is the scope of the problem you've found?
-i.e. when was the bug introduced, what compilers expose it, etc
-so that when ARM users report XFS corruptions we have some idea of
-whether their kernel/compiler combination might have caused the
-issue they are seeing...
+And the results are:
+	4.5.1 (-O2)	OK.
+	4.6.4 (-O2)	BAD.
+	4.7.2 (-O2)	BAD.
 
-Cheers,
+But even using gcc 4.7, this bug does not happen with -Os instead of -O2.
+It means that when CONFIG_CC_OPTIMIZE_FOR_SIZE Kernel option is used, it does not happen.
 
-Dave.
+As for the version of kernel, I am using 3.10 now. At least. it is the same as 2.6.32.
+
+--
+The following are codes generated by GCCs.
+
+GCC 4.5.1 with -O2 (OK)
+     178:       41a00003        movmi   r0, r3
+     17c:       51a00057        asrpl   r0, r7, r0
+     180:       e58da02c        str     sl, [sp, #44]   ; 0x2c
+     184:       ebfffffe        bl      0 <__do_div64>
+     188:       e1cd26f8        strd    r2, [sp, #104]  ; 0x68
+     18c:       e3a08000        mov     r8, #0
+     190:       e5d51175        ldrb    r1, [r5, #373]  ; 0x175
+     194:       e59d2068        ldr     r2, [sp, #104]  ; 0x68
+     198:       e251e020        subs    lr, r1, #32
+     19c:       e5d5308c        ldrb    r3, [r5, #140]  ; 0x8c
+     1a0:       e261c020        rsb     ip, r1, #32
+     1a4:       e1a00136        lsr     r0, r6, r1
+     1a8:       e1800c17        orr     r0, r0, r7, lsl ip
+     1ac:       e2634020        rsb     r4, r3, #32
+     1b0:       51a00e57        asrpl   r0, r7, lr
+     1b4:       e253c020        subs    ip, r3, #32
+     1b8:       e1a0b432        lsr     fp, r2, r4
+     1bc:       e1a0a312        lsl     sl, r2, r3
+     1c0:       51a0bc12        lslpl   fp, r2, ip
+     1c4:       e59dc024        ldr     ip, [sp, #36]   ; 0x24
+     1c8:       e5954064        ldr     r4, [r5, #100]  ; 0x64
+     1cc:       e1a01157        asr     r1, r7, r1
+     1d0:       e58d804c        str     r8, [sp, #76]   ; 0x4c
+     1d4:       e58dc048        str     ip, [sp, #72]   ; 0x48
+     1d8:       ebfffffe        bl      0 <__do_div64>
+
+GCC 4.6.4 with -O2 (BAD)
+     19c:       51a0025e        asrpl   r0, lr, r2
+     1a0:       e3a0a001        mov     sl, #1
+     1a4:       ebfffffe        bl      0 <__do_div64>
+     1a8:       e1a0bb32        lsr     fp, r2, fp
+     1ac:       e2553020        subs    r3, r5, #32
+     1b0:       e1a01008        mov     r1, r8
+     1b4:       e58d704c        str     r7, [sp, #76]   ; 0x4c
+     1b8:       e1a0800b        mov     r8, fp
+     1bc:       e58d7060        str     r7, [sp, #96]   ; 0x60
+     1c0:       51a08312        lslpl   r8, r2, r3
+     1c4:       e1a02512        lsl     r2, r2, r5
+     1c8:       e58d8034        str     r8, [sp, #52]   ; 0x34
+     1cc:       e1a0500a        mov     r5, sl
+     1d0:       e58d2030        str     r2, [sp, #48]   ; 0x30
+     1d4:       e28d8048        add     r8, sp, #72     ; 0x48
+     1d8:       ebfffffe        bl      0 <__do_div64>
+
+GCC 4.7.2 with -Os (OK)
+     1a0:       e1cd02d8        ldrd    r0, [sp, #40]   ; 0x28
+     1a4:       e1a0200b        mov     r2, fp
+     1a8:       ebfffffe        bl      0 <__aeabi_lasr>
+     1ac:       e5954064        ldr     r4, [r5, #100]  ; 0x64
+     1b0:       ebfffffe        bl      0 <__do_div64>
+     1b4:       e3a01000        mov     r1, #0
+     1b8:       e1a00002        mov     r0, r2
+     1bc:       e5d5208c        ldrb    r2, [r5, #140]  ; 0x8c
+     1c0:       ebfffffe        bl      0 <__aeabi_llsl>
+     1c4:       e1a0200b        mov     r2, fp
+     1c8:       e1a06000        mov     r6, r0
+     1cc:       e1a07001        mov     r7, r1
+     1d0:       e1cd02d8        ldrd    r0, [sp, #40]   ; 0x28
+     1d4:       ebfffffe        bl      0 <__aeabi_lasr>
+     1d8:       e58da040        str     sl, [sp, #64]   ; 0x40
+     1dc:       ebfffffe        bl      0 <__do_div64>
+
+Thank you,
 -- 
-Dave Chinner
-david@fromorbit.com
-
+UWATOKO
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
