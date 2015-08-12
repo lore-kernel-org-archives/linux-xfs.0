@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3F2C7F50
-	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 02:27:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BDAFB7F50
+	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 02:28:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8F16A8F8033
-	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 00:27:43 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 98F928F804B
+	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 00:28:36 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id eaGDfI9Ro9N6hB3Q (version=TLSv1 cipher=AES128-SHA
+	ESMTP id 61At1VheiFKcd8F1 (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 12 Aug 2015 00:27:42 -0700 (PDT)
-Date: Wed, 12 Aug 2015 00:27:42 -0700
+	Wed, 12 Aug 2015 00:28:35 -0700 (PDT)
+Date: Wed, 12 Aug 2015 00:28:34 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] xfs: remove nonblocking mode from xfs_vm_writepage
-Message-ID: <20150812072742.GB32399@infradead.org>
-References: <1439333388-16452-1-git-send-email-david@fromorbit.com>
-	<1439333388-16452-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] libxfs: readahead of dir3 data blocks should use the
+	read verifier
+Message-ID: <20150812072834.GC32399@infradead.org>
+References: <20150811235038.GL10043@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1439333388-16452-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20150811235038.GL10043@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-This error handling was the biggest obstacle last time we tried it,
-so let's remove it for now.  However:
+On Tue, Aug 11, 2015 at 04:50:38PM -0700, Darrick J. Wong wrote:
+> In the dir3 data block readahead function, use the regular read
+> verifier to check the block's CRC and spot-check the block contents
+> instead of directly calling only the spot-checking routine.  This
+> prevents corrupted directory data blocks from being read into the
+> kernel, which can lead to garbage ls output and directory loops (if
+> say one of the entries contains slashes and other junk).
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-On Wed, Aug 12, 2015 at 08:49:43AM +1000, Dave Chinner wrote:
-> Remove the nonblocking optimisation done for mapping lookups during
-> writeback. It's not clear that leaving a hole in the writeback range
-> just because we couldn't get a lock is really a win, as it makes us
-> do another small random IO later on rather than a large sequential
-> IO now.
+Looks good,
 
-The fs-writeback.c will usually move to a different inode, so I don't
-think it's actually that bad.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
