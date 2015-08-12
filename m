@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B15607F50
-	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 06:44:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B391304032
-	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 04:44:41 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A50D57CBE
+	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 06:46:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8338F8F8035
+	for <xfs@oss.sgi.com>; Wed, 12 Aug 2015 04:46:03 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v0SVGlH7KqrGPhYb (version=TLSv1
+	cuda.sgi.com with ESMTP id n5ALloPVUzYwSv8o (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 12 Aug 2015 04:44:40 -0700 (PDT)
-Date: Wed, 12 Aug 2015 13:42:25 +0200
+	Wed, 12 Aug 2015 04:46:02 -0700 (PDT)
+Date: Wed, 12 Aug 2015 13:43:47 +0200
 From: Oleg Nesterov <oleg@redhat.com>
 Subject: Re: [PATCH 0/2] xfs: kill lockdep false positives from readdir
-Message-ID: <20150812114225.GA3712@redhat.com>
+Message-ID: <20150812114347.GB3712@redhat.com>
 References: <1439330648-1057-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -31,6 +31,8 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: jack@suse.cz, xfs@oss.sgi.com
+
+forgot to show the patch, sorry for double posting...
 
 On 08/12, Dave Chinner wrote:
 >
@@ -59,6 +61,77 @@ nothing interesting in dmesg.
 Thanks Dave!
 
 Oleg.
+
+
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1215,25 +1215,31 @@ EXPORT_SYMBOL(__sb_start_write);
+ static void sb_wait_write(struct super_block *sb, int level)
+ {
+ 	percpu_down_write(sb->s_writers.rw_sem + level-1);
+-	/*
+-	 * We are going to return to userspace and forget about this lock, the
+-	 * ownership goes to the caller of thaw_super() which does unlock.
+-	 *
+-	 * FIXME: we should do this before return from freeze_super() after we
+-	 * called sync_filesystem(sb) and s_op->freeze_fs(sb), and thaw_super()
+-	 * should re-acquire these locks before s_op->unfreeze_fs(sb). However
+-	 * this leads to lockdep false-positives, so currently we do the early
+-	 * release right after acquire.
+-	 */
+-	percpu_rwsem_release(sb->s_writers.rw_sem + level-1, 0, _THIS_IP_);
+ }
+ 
+-static void sb_freeze_unlock(struct super_block *sb)
++/*
++ * We are going to return to userspace and forget about these locks, the
++ * ownership goes to the caller of thaw_super()->sb_freeze_acquire().
++ */
++static void sb_freeze_release(struct super_block *sb)
++{
++	int level;
++
++	for (level = SB_FREEZE_LEVELS; --level >= 0; )
++		percpu_rwsem_release(sb->s_writers.rw_sem + level, 0, _THIS_IP_);
++}
++
++static void sb_freeze_acquire(struct super_block *sb)
+ {
+ 	int level;
+ 
+ 	for (level = 0; level < SB_FREEZE_LEVELS; ++level)
+ 		percpu_rwsem_acquire(sb->s_writers.rw_sem + level, 0, _THIS_IP_);
++}
++
++static void sb_freeze_unlock(struct super_block *sb)
++{
++	int level;
+ 
+ 	for (level = SB_FREEZE_LEVELS; --level >= 0; )
+ 		percpu_up_write(sb->s_writers.rw_sem + level);
+@@ -1329,6 +1335,7 @@ int freeze_super(struct super_block *sb)
+ 	 * sees write activity when frozen is set to SB_FREEZE_COMPLETE.
+ 	 */
+ 	sb->s_writers.frozen = SB_FREEZE_COMPLETE;
++	sb_freeze_release(sb);
+ 	up_write(&sb->s_umount);
+ 	return 0;
+ }
+@@ -1355,11 +1362,14 @@ int thaw_super(struct super_block *sb)
+ 		goto out;
+ 	}
+ 
++	sb_freeze_acquire(sb);
++
+ 	if (sb->s_op->unfreeze_fs) {
+ 		error = sb->s_op->unfreeze_fs(sb);
+ 		if (error) {
+ 			printk(KERN_ERR
+ 				"VFS:Filesystem thaw failed\n");
++			sb_freeze_release(sb);
+ 			up_write(&sb->s_umount);
+ 			return error;
+ 		}
 
 _______________________________________________
 xfs mailing list
