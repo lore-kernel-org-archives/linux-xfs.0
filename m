@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D9FC87F6F
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 17:44:25 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2FB0B29DF6
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 18:24:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C75188F8039
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 15:44:22 -0700 (PDT)
-Received: from mail-yk0-f181.google.com (mail-yk0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	IbCtLLP9EXpvOqGe (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A2D8AC002
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 16:24:05 -0700 (PDT)
+Received: from mail-yk0-f177.google.com (mail-yk0-f177.google.com
+	[209.85.160.177]) by cuda.sgi.com with ESMTP id
+	YxmjD7iJ13FAsZy1 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 15:44:18 -0700 (PDT)
-Received: by ykaz130 with SMTP id z130so54740176yka.0
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 15:44:17 -0700 (PDT)
-Date: Thu, 13 Aug 2015 18:44:15 -0400
+	Thu, 13 Aug 2015 16:24:03 -0700 (PDT)
+Received: by ykaz130 with SMTP id z130so55405410yka.0
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 16:24:02 -0700 (PDT)
+Date: Thu, 13 Aug 2015 19:24:00 -0400
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME inodes
-Message-ID: <20150813224415.GG4496@mtj.duckdns.org>
+Subject: Re: generic/04[89] fail on XFS due to change in writeback code
+	[4.2-rc1 regression]
+Message-ID: <20150813232400.GH4496@mtj.duckdns.org>
 References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
 	<20150813004435.GN3902@dastard>
 MIME-Version: 1.0
@@ -33,44 +34,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: axboe@fb.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
-updated writeback path to avoid kicking writeback work items if there
-are no inodes to be written out; unfortunately, the avoidance logic
-was too aggressive and made sync_inodes_sb() skip I_DIRTY_TIME inodes.
-This patch fixes the breakage by
+Hello, Eryu.
 
-* Removing bdi_has_dirty_io() shortcut from bdi_split_work_to_wbs().
-  The callers are already testing the condition.
+Can you please do the followings?
 
-* Removing bdi_has_dirty_io() shortcut from sync_inodes_sb() so that
-  it always calls into bdi_split_work_to_wbs().
+1. See if the "writeback: fix syncing of I_DIRTY_TIME inodes" patch
+   changes anything.
 
-* Making bdi_split_work_to_wbs() consider the b_dirty_time list for
-  WB_SYNC_ALL writebacks.
+2. If not, apply this patch.  This patch *should* make the failures go
+   away and might print out some error messages along with stack
+   trace.  Can you please verify that the failures go away with this
+   patch and report the kernel messages if any trigger?
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Fixes: e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
-Cc: Ted Ts'o <tytso@google.com>
-Cc: Jan Kara <jack@suse.com>
----
-Hello,
+Thanks a lot.
 
-So, this fixes I_DIRTY_TIME syncing problem for ext4 but AFAICS xfs
-doesn't even use the generic inode metadata writeback path, so this
-most likely won't do anything for the originally reported problem.
-I'll post another patch for debugging.
-
-Thanks.
-
- fs/fs-writeback.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -844,14 +844,15 @@ static void bdi_split_work_to_wbs(struct
+Index: work/fs/fs-writeback.c
+===================================================================
+--- work.orig/fs/fs-writeback.c
++++ work/fs/fs-writeback.c
+@@ -103,7 +103,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(wbc_writepa
+ 
+ static bool wb_io_lists_populated(struct bdi_writeback *wb)
+ {
+-	if (wb_has_dirty_io(wb)) {
++	if (test_bit(WB_has_dirty_io, &wb->state)) {
+ 		return false;
+ 	} else {
+ 		set_bit(WB_has_dirty_io, &wb->state);
+@@ -844,14 +844,13 @@ static void bdi_split_work_to_wbs(struct
  	struct wb_iter iter;
  
  	might_sleep();
@@ -83,15 +77,13 @@ Thanks.
 -		if (!wb_has_dirty_io(wb) ||
 -		    (skip_if_busy && writeback_in_progress(wb)))
 +		/* SYNC_ALL writes out I_DIRTY_TIME too */
-+		if (!wb_has_dirty_io(wb) &&
-+		    (base_work->sync_mode == WB_SYNC_NONE ||
-+		     list_empty(&wb->b_dirty_time)))
++		if (!wb_has_dirty_io(wb) && base_work->sync_mode == WB_SYNC_NONE)
 +			continue;
 +		if (skip_if_busy && writeback_in_progress(wb))
  			continue;
  
  		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
-@@ -899,8 +900,7 @@ static void bdi_split_work_to_wbs(struct
+@@ -899,8 +898,7 @@ static void bdi_split_work_to_wbs(struct
  {
  	might_sleep();
  
@@ -101,7 +93,7 @@ Thanks.
  		base_work->auto_free = 0;
  		base_work->single_wait = 0;
  		base_work->single_done = 0;
-@@ -2275,8 +2275,8 @@ void sync_inodes_sb(struct super_block *
+@@ -2275,8 +2273,8 @@ void sync_inodes_sb(struct super_block *
  	};
  	struct backing_dev_info *bdi = sb->s_bdi;
  
@@ -112,6 +104,49 @@ Thanks.
  		return;
  	WARN_ON(!rwsem_is_locked(&sb->s_umount));
  
+Index: work/include/linux/backing-dev.h
+===================================================================
+--- work.orig/include/linux/backing-dev.h
++++ work/include/linux/backing-dev.h
+@@ -38,7 +38,17 @@ extern struct workqueue_struct *bdi_wq;
+ 
+ static inline bool wb_has_dirty_io(struct bdi_writeback *wb)
+ {
+-	return test_bit(WB_has_dirty_io, &wb->state);
++	bool ret = test_bit(WB_has_dirty_io, &wb->state);
++
++	if (!ret && (!list_empty(&wb->b_dirty) || !list_empty(&wb->b_io) ||
++		     !list_empty(&wb->b_more_io))) {
++		const char *name = wb->bdi->dev ? dev_name(wb->bdi->dev) : "UNK";
++
++		pr_err("wb_has_dirty_io: ERR %s has_dirty=%d b_dirty=%d b_io=%d b_more_io=%d\n",
++		       name, ret, !list_empty(&wb->b_dirty), !list_empty(&wb->b_io), !list_empty(&wb->b_more_io));
++		WARN_ON(1);
++	}
++	return ret;
+ }
+ 
+ static inline bool bdi_has_dirty_io(struct backing_dev_info *bdi)
+@@ -47,7 +57,18 @@ static inline bool bdi_has_dirty_io(stru
+ 	 * @bdi->tot_write_bandwidth is guaranteed to be > 0 if there are
+ 	 * any dirty wbs.  See wb_update_write_bandwidth().
+ 	 */
+-	return atomic_long_read(&bdi->tot_write_bandwidth);
++	bool ret = atomic_long_read(&bdi->tot_write_bandwidth);
++
++	if (ret != wb_has_dirty_io(&bdi->wb)) {
++		const char *name = bdi->dev ? dev_name(bdi->dev) : "UNK";
++
++		pr_err("bdi_has_dirty_io: ERR %s tot_write_bw=%ld b_dirty=%d b_io=%d b_more_io=%d\n",
++		       name, atomic_long_read(&bdi->tot_write_bandwidth),
++		       !list_empty(&bdi->wb.b_dirty), !list_empty(&bdi->wb.b_io), !list_empty(&bdi->wb.b_more_io));
++		WARN_ON(1);
++	}
++
++	return ret;
+ }
+ 
+ static inline void __add_wb_stat(struct bdi_writeback *wb,
 
 _______________________________________________
 xfs mailing list
