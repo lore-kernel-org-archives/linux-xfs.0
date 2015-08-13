@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D81407F76
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 11:23:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C56778F8037
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 09:23:25 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id nTEv7xHbpRIT9R5J for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 09:23:24 -0700 (PDT)
-Message-ID: <55CCC47A.5030706@sandeen.net>
-Date: Thu, 13 Aug 2015 11:23:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 771C829DF6
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 11:40:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 50D088F804B
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 09:40:26 -0700 (PDT)
+Received: from mx5-phx2.redhat.com (mx5-phx2.redhat.com [209.132.183.37]) by
+	cuda.sgi.com with ESMTP id e86EBgUzoiuoB23o (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2015 09:40:23 -0700 (PDT)
+Date: Thu, 13 Aug 2015 12:40:22 -0400 (EDT)
+From: Zirong Lang <zlang@redhat.com>
+Message-ID: <510394920.8151266.1439484022770.JavaMail.zimbra@redhat.com>
+In-Reply-To: <55CCC47A.5030706@sandeen.net>
+References: <1439478465-14072-1-git-send-email-zlang@redhat.com>
+	<55CCC47A.5030706@sandeen.net>
 Subject: Re: [PATCH][RFC] xfs_copy: don't use DIRECT IO to copy 4k sector
 	device
-References: <1439478465-14072-1-git-send-email-zlang@redhat.com>
-In-Reply-To: <1439478465-14072-1-git-send-email-zlang@redhat.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,91 +26,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On 8/13/15 10:07 AM, Zorro Lang wrote:
-> When I run xfstests xfs/032 in ppc64le, I hit a failure:
-> 
->      xfs_copy: read failed: Invalid argument
->      xfs_copy: size check failed
->      xfs_copy: /dev/sda5 filesystem failed to initialize
->      xfs_copy: Aborting.
->      Copy failed for Sector size 4096 Block size 4096
-> 
-> I try to use gdb trace xfs_copy. I find it try to open the
-> source device with DIRECT flag, then read the device with
-> ((1<<BBSHIFT))=512 bytes length. If the source device is
-> 4k sector, directly read 512 bytes will be failed.
-> 
-> xfs_copy '-b' option only work for target file/device, to
-> sure it will open the target without DIRECT flag. But useless
-> for source device open.
-> 
-> So I make DIRECT flag only be enabled when source device
-> sector size equal BBSIZE.
-
-Which version of xfsprogs did you test?  This is recently upstream:
-
-commit c63ce10a9450020382bbbe2c48788961b19830f4
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Fri Jul 31 09:03:11 2015 +1000
-
-    xfs_copy: fix copy of hard 4k devices
-    
-    If we have a pure 4k device with no 512 emulation, xfs_copy
-    fails straightaway because it tries to do a 512-byte direct
-    IO read of the superblock.
-    
-    Do like we do in xfs_db, and read in the max possible sector size,
-    because we don't yet know what the filesystem's sector size is.
-    
-    This fixes a failure in xfs/032 on a hard 4k device.
-
--Eric
-
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> Hi,
-> 
-> I'm not so familiar for xfsprogs, so I'm not sure this's the best
-> idea to fix this problem. Please help to check, and maybe give me
-> better suggestions.
-> 
-> Thanks very much,
-> Zorro Lang
-> 
->  copy/xfs_copy.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index e13f468..1cd6253 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -666,7 +666,6 @@ main(int argc, char **argv)
->  	/* prepare the libxfs_init structure */
->  
->  	memset(&xargs, 0, sizeof(xargs));
-> -	xargs.isdirect = LIBXFS_DIRECT;
->  	xargs.isreadonly = LIBXFS_ISREADONLY;
->  
->  	if (source_is_file)  {
-> @@ -689,6 +688,8 @@ main(int argc, char **argv)
->  			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
->  	sb = &mbuf.m_sb;
->  	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
-> +	if (sb->sb_sectsize == BBSIZE)
-> +		xargs.isdirect = LIBXFS_DIRECT;
->  
->  	/* Do it again, now with proper length and verifier */
->  	libxfs_putbuf(sbp);
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgotLS0tLSDljp/lp4vpgq7ku7YgLS0tLS0KPiDlj5Hku7bkuro6ICJFcmljIFNhbmRlZW4iIDxz
+YW5kZWVuQHNhbmRlZW4ubmV0Pgo+IOaUtuS7tuS6ujogIlpvcnJvIExhbmciIDx6bGFuZ0ByZWRo
+YXQuY29tPiwgeGZzQG9zcy5zZ2kuY29tCj4g5Y+R6YCB5pe26Ze0OiDmmJ/mnJ/kupQsIDIwMTXl
+ubQgOCDmnIggMTTml6Ug5LiK5Y2IIDEyOjIzOjIyCj4g5Li76aKYOiBSZTogW1BBVENIXVtSRkNd
+IHhmc19jb3B5OiBkb24ndCB1c2UgRElSRUNUIElPIHRvIGNvcHkgNGsgc2VjdG9yIGRldmljZQo+
+IAo+IE9uIDgvMTMvMTUgMTA6MDcgQU0sIFpvcnJvIExhbmcgd3JvdGU6Cj4gPiBXaGVuIEkgcnVu
+IHhmc3Rlc3RzIHhmcy8wMzIgaW4gcHBjNjRsZSwgSSBoaXQgYSBmYWlsdXJlOgo+ID4gCj4gPiAg
+ICAgIHhmc19jb3B5OiByZWFkIGZhaWxlZDogSW52YWxpZCBhcmd1bWVudAo+ID4gICAgICB4ZnNf
+Y29weTogc2l6ZSBjaGVjayBmYWlsZWQKPiA+ICAgICAgeGZzX2NvcHk6IC9kZXYvc2RhNSBmaWxl
+c3lzdGVtIGZhaWxlZCB0byBpbml0aWFsaXplCj4gPiAgICAgIHhmc19jb3B5OiBBYm9ydGluZy4K
+PiA+ICAgICAgQ29weSBmYWlsZWQgZm9yIFNlY3RvciBzaXplIDQwOTYgQmxvY2sgc2l6ZSA0MDk2
+Cj4gPiAKPiA+IEkgdHJ5IHRvIHVzZSBnZGIgdHJhY2UgeGZzX2NvcHkuIEkgZmluZCBpdCB0cnkg
+dG8gb3BlbiB0aGUKPiA+IHNvdXJjZSBkZXZpY2Ugd2l0aCBESVJFQ1QgZmxhZywgdGhlbiByZWFk
+IHRoZSBkZXZpY2Ugd2l0aAo+ID4gKCgxPDxCQlNISUZUKSk9NTEyIGJ5dGVzIGxlbmd0aC4gSWYg
+dGhlIHNvdXJjZSBkZXZpY2UgaXMKPiA+IDRrIHNlY3RvciwgZGlyZWN0bHkgcmVhZCA1MTIgYnl0
+ZXMgd2lsbCBiZSBmYWlsZWQuCj4gPiAKPiA+IHhmc19jb3B5ICctYicgb3B0aW9uIG9ubHkgd29y
+ayBmb3IgdGFyZ2V0IGZpbGUvZGV2aWNlLCB0bwo+ID4gc3VyZSBpdCB3aWxsIG9wZW4gdGhlIHRh
+cmdldCB3aXRob3V0IERJUkVDVCBmbGFnLiBCdXQgdXNlbGVzcwo+ID4gZm9yIHNvdXJjZSBkZXZp
+Y2Ugb3Blbi4KPiA+IAo+ID4gU28gSSBtYWtlIERJUkVDVCBmbGFnIG9ubHkgYmUgZW5hYmxlZCB3
+aGVuIHNvdXJjZSBkZXZpY2UKPiA+IHNlY3RvciBzaXplIGVxdWFsIEJCU0laRS4KPiAKPiBXaGlj
+aCB2ZXJzaW9uIG9mIHhmc3Byb2dzIGRpZCB5b3UgdGVzdD8gIFRoaXMgaXMgcmVjZW50bHkgdXBz
+dHJlYW06CgpTb3JyeSBJIGRpZG4ndCBub3RpY2UgdGhhdCB5b3UgaGF2ZSBmaXggdGhpcyBwcm9i
+bGVtLiBJIHRlc3Qgb24gdGhlCm5ld2VzdCB2ZXJzaW9uIGZyb20gZ2l0Oi8vb3NzLnNnaS5jb20v
+eGZzL2NtZHMveGZzcHJvZ3MsIGl0IGhhdmVuJ3QKZml4IHRoaXMgcHJvYmxlbS4gSSB0ZXN0IHRo
+aXMgcGF0Y2ggb24gaXQgYXQgZmlyc3QuIFRoZW4gSSBmaW5kCnRoZXJlIGlzIGFub3RoZXIgdmVy
+c2lvbiBpbiBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2ZzL3hmcy94ZnNwcm9ncy1kZXYu
+Z2l0CgpJIGRvbid0IGtub3cgdGhleSBhcmUgdG9vIGRpZmZlcmVudCwgc28gSSBkaWRuJ3QgY2hl
+Y2sgaWYgdGhpcyB4ZnNwcm9ncy1kZXYgaGFzCiBmaXhlZCBpdCwgYW5kIGp1c3QgZGlkIHRoaXMg
+cGF0Y2ggb24gaXQgYW5kIHNlbmQgb3V0LgoKU29ycnkgZm9yIHRoaXMgbWlzdGFrZSwgYW5kIHlv
+dXIgcGF0Y2ggaXMgcmVhbGx5IGJldHRlcjopCgpUaGFua3MsClpvcnJvIExhbmcKCj4gCj4gY29t
+bWl0IGM2M2NlMTBhOTQ1MDAyMDM4MmJiYmUyYzQ4Nzg4OTYxYjE5ODMwZjQKPiBBdXRob3I6IEVy
+aWMgU2FuZGVlbiA8c2FuZGVlbkByZWRoYXQuY29tPgo+IERhdGU6ICAgRnJpIEp1bCAzMSAwOTow
+MzoxMSAyMDE1ICsxMDAwCj4gCj4gICAgIHhmc19jb3B5OiBmaXggY29weSBvZiBoYXJkIDRrIGRl
+dmljZXMKPiAgICAgCj4gICAgIElmIHdlIGhhdmUgYSBwdXJlIDRrIGRldmljZSB3aXRoIG5vIDUx
+MiBlbXVsYXRpb24sIHhmc19jb3B5Cj4gICAgIGZhaWxzIHN0cmFpZ2h0YXdheSBiZWNhdXNlIGl0
+IHRyaWVzIHRvIGRvIGEgNTEyLWJ5dGUgZGlyZWN0Cj4gICAgIElPIHJlYWQgb2YgdGhlIHN1cGVy
+YmxvY2suCj4gICAgIAo+ICAgICBEbyBsaWtlIHdlIGRvIGluIHhmc19kYiwgYW5kIHJlYWQgaW4g
+dGhlIG1heCBwb3NzaWJsZSBzZWN0b3Igc2l6ZSwKPiAgICAgYmVjYXVzZSB3ZSBkb24ndCB5ZXQg
+a25vdyB3aGF0IHRoZSBmaWxlc3lzdGVtJ3Mgc2VjdG9yIHNpemUgaXMuCj4gICAgIAo+ICAgICBU
+aGlzIGZpeGVzIGEgZmFpbHVyZSBpbiB4ZnMvMDMyIG9uIGEgaGFyZCA0ayBkZXZpY2UuCj4gCj4g
+LUVyaWMKPiAKPiA+IFNpZ25lZC1vZmYtYnk6IFpvcnJvIExhbmcgPHpsYW5nQHJlZGhhdC5jb20+
+Cj4gPiAtLS0KPiA+IAo+ID4gSGksCj4gPiAKPiA+IEknbSBub3Qgc28gZmFtaWxpYXIgZm9yIHhm
+c3Byb2dzLCBzbyBJJ20gbm90IHN1cmUgdGhpcydzIHRoZSBiZXN0Cj4gPiBpZGVhIHRvIGZpeCB0
+aGlzIHByb2JsZW0uIFBsZWFzZSBoZWxwIHRvIGNoZWNrLCBhbmQgbWF5YmUgZ2l2ZSBtZQo+ID4g
+YmV0dGVyIHN1Z2dlc3Rpb25zLgo+ID4gCj4gPiBUaGFua3MgdmVyeSBtdWNoLAo+ID4gWm9ycm8g
+TGFuZwo+ID4gCj4gPiAgY29weS94ZnNfY29weS5jIHwgMyArKy0KPiA+ICAxIGZpbGUgY2hhbmdl
+ZCwgMiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCj4gPiAKPiA+IGRpZmYgLS1naXQgYS9j
+b3B5L3hmc19jb3B5LmMgYi9jb3B5L3hmc19jb3B5LmMKPiA+IGluZGV4IGUxM2Y0NjguLjFjZDYy
+NTMgMTAwNjQ0Cj4gPiAtLS0gYS9jb3B5L3hmc19jb3B5LmMKPiA+ICsrKyBiL2NvcHkveGZzX2Nv
+cHkuYwo+ID4gQEAgLTY2Niw3ICs2NjYsNiBAQCBtYWluKGludCBhcmdjLCBjaGFyICoqYXJndikK
+PiA+ICAJLyogcHJlcGFyZSB0aGUgbGlieGZzX2luaXQgc3RydWN0dXJlICovCj4gPiAgCj4gPiAg
+CW1lbXNldCgmeGFyZ3MsIDAsIHNpemVvZih4YXJncykpOwo+ID4gLQl4YXJncy5pc2RpcmVjdCA9
+IExJQlhGU19ESVJFQ1Q7Cj4gPiAgCXhhcmdzLmlzcmVhZG9ubHkgPSBMSUJYRlNfSVNSRUFET05M
+WTsKPiA+ICAKPiA+ICAJaWYgKHNvdXJjZV9pc19maWxlKSAgewo+ID4gQEAgLTY4OSw2ICs2ODgs
+OCBAQCBtYWluKGludCBhcmdjLCBjaGFyICoqYXJndikKPiA+ICAJCQkgICAgIDEgPDwgKFhGU19N
+QVhfU0VDVE9SU0laRV9MT0cgLSBCQlNISUZUKSwgMCwgTlVMTCk7Cj4gPiAgCXNiID0gJm1idWYu
+bV9zYjsKPiA+ICAJbGlieGZzX3NiX2Zyb21fZGlzayhzYiwgWEZTX0JVRl9UT19TQlAoc2JwKSk7
+Cj4gPiArCWlmIChzYi0+c2Jfc2VjdHNpemUgPT0gQkJTSVpFKQo+ID4gKwkJeGFyZ3MuaXNkaXJl
+Y3QgPSBMSUJYRlNfRElSRUNUOwo+ID4gIAo+ID4gIAkvKiBEbyBpdCBhZ2Fpbiwgbm93IHdpdGgg
+cHJvcGVyIGxlbmd0aCBhbmQgdmVyaWZpZXIgKi8KPiA+ICAJbGlieGZzX3B1dGJ1ZihzYnApOwo+
+ID4gCj4gCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
+bG1hbi9saXN0aW5mby94ZnMK
