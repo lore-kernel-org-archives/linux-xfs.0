@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CACC87F6C
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 09:08:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B8D157F51
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 09:10:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BA74B304032
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 07:08:27 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 994378F8039
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 07:10:48 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JFCWGGXBm8lp6gHX (version=TLSv1
+	cuda.sgi.com with ESMTP id vipCa4EyGQR83zIa (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 07:08:25 -0700 (PDT)
+	Thu, 13 Aug 2015 07:10:48 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 79B363672B2
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 14:10:47 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 10/11] xfsprogs: replace obsolete memalign with posix_memalign
-Date: Thu, 13 Aug 2015 16:08:20 +0200
-Message-Id: <1439474900-5409-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <20150805225703.GY16638@dastard>
-References: <20150805225703.GY16638@dastard>
+Subject: [PATCH 12/11] xfsprogs: Update doc for OS X
+Date: Thu, 13 Aug 2015 16:10:43 +0200
+Message-Id: <1439475043-5473-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,327 +33,54 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-UPDATE: code format
-
-Memalign from <malloc.h> was marked obsolete in favor of a posix
-variant from <stdlib.h>. So replace all calls and remove <malloc.h>
-includes. This also enhances support on other posix platforms,
-which doesn't have <malloc.h>.
-
-Because posix_memalign returns any error as a return code, not in
-errno, change relevant checks in code (and add a missing one).
+Update build info and limitations.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- copy/xfs_copy.c       |  2 +-
- db/attrset.c          |  2 +-
- fsr/xfs_fsr.c         |  3 ++-
- include/darwin.h      |  1 -
- include/freebsd.h     |  1 -
- include/gnukfreebsd.h |  1 -
- include/linux.h       |  1 -
- io/pread.c            |  4 ++--
- libxfs/rdwr.c         | 12 ++++++++----
- mkfs/xfs_mkfs.c       |  3 ++-
- repair/incore.c       |  2 +-
- repair/incore_ino.c   |  7 ++++---
- repair/phase1.c       |  2 +-
- repair/prefetch.c     |  7 +++----
- repair/sb.c           | 10 +++++-----
- rtcp/xfs_rtcp.c       |  7 ++++++-
- 16 files changed, 36 insertions(+), 29 deletions(-)
+ doc/INSTALL | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index e13f468..8109ac5 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -333,7 +333,7 @@ wbuf *
- wbuf_init(wbuf *buf, int data_size, int data_align, int min_io_size, int id)
- {
- 	ASSERT(data_size % BBSIZE == 0);
--	while ((buf->data = memalign(data_align, data_size)) == NULL) {
-+	while (posix_memalign((void**)&(buf->data), data_align, data_size)) {
- 		data_size >>= 1;
- 		if (data_size < min_io_size)
- 			return NULL;
-diff --git a/db/attrset.c b/db/attrset.c
-index ec9da5a..539765f 100644
---- a/db/attrset.c
-+++ b/db/attrset.c
-@@ -141,7 +141,7 @@ attr_set_f(
- 	name = argv[optind];
+diff --git a/doc/INSTALL b/doc/INSTALL
+index ba3472b..b0443a3 100644
+--- a/doc/INSTALL
++++ b/doc/INSTALL
+@@ -52,12 +52,16 @@ Mac OS X Instructions
+ =====================
  
- 	if (valuelen) {
--		value = (char *)memalign(getpagesize(), valuelen);
-+		posix_memalign((void**)&value, getpagesize(), valuelen);
- 		if (!value) {
- 			dbprintf(_("cannot allocate buffer (%d)\n"), valuelen);
- 			goto out;
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 4912b73..ad52990 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -1306,7 +1306,8 @@ packfile(char *fname, char *tname, int fd,
- 			dio.d_maxiosz, pagesize);
- 	}
+ 0. Note:  since there is no XFS implementation on Mac OS X, you are
+-   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and 
++   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and
+    xfs_repair(8) are the only functional tools on this platform, as
+    they do not interact with the XFS kernel code at all.  Still, it
+    can be useful to have access to these utilities from Mac OS X in
+    a dual boot configuration, for example.
  
--	if (!(fbuf = (char *)memalign(dio.d_mem, blksz_dio))) {
-+	posix_memalign((void **)&fbuf, dio.d_mem, blksz_dio);
-+	if (!fbuf) {
- 		fsrprintf(_("could not allocate buf: %s\n"), tname);
- 		goto out;
- 	}
-diff --git a/include/darwin.h b/include/darwin.h
-index 775dfc8..e3ec863 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -141,7 +141,6 @@ typedef int64_t		xfs_daddr_t;
- #define pwrite64	pwrite
- #define ftruncate64	ftruncate
- #define fdatasync	fsync
--#define memalign(a,sz)	valloc(sz)
++   However, keep on mind that mkfs.xfs on Mac OS X has disabled
++   device access, although you can create a filesystem in a file.
++   Also note that existing filesystem detection is disabled.
++
+ 1. Configure, build and install the package
  
- #define O_LARGEFILE     0
- #ifndef O_DIRECT
-diff --git a/include/freebsd.h b/include/freebsd.h
-index 902b940..7289159 100644
---- a/include/freebsd.h
-+++ b/include/freebsd.h
-@@ -40,7 +40,6 @@
- #define pwrite64	pwrite
- #define pread64		pread
- #define fdatasync	fsync
--#define memalign(a,sz)	valloc(sz)
+    The xfsprogs package uses autoconf/configure and expects a GNU build
+@@ -65,7 +69,8 @@ Mac OS X Instructions
+    and glibtool). 
  
- #define constpp	char * const *
+    You will also need to have built and installed the UUID library which
+-   is provided by the e2fsprogs source package.
++   is provided by the e2fsprogs source package. (Or use Homebrew, Macports
++   or any other 3rd party package manager.)
  
-diff --git a/include/gnukfreebsd.h b/include/gnukfreebsd.h
-index 95c4c13..4605234 100644
---- a/include/gnukfreebsd.h
-+++ b/include/gnukfreebsd.h
-@@ -22,7 +22,6 @@
- #include <sys/vfs.h>
- #include <sys/ioctl.h>
- #include <sys/sysmacros.h>
--#include <malloc.h>
- #include <getopt.h>
- #include <endian.h>
- #include <sys/stat.h>
-diff --git a/include/linux.h b/include/linux.h
-index 8804c2d..7493b76 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -24,7 +24,6 @@
- #include <sys/sysmacros.h>
- #include <sys/stat.h>
- #include <inttypes.h>
--#include <malloc.h>
- #include <getopt.h>
- #include <errno.h>
- #include <endian.h>
-diff --git a/io/pread.c b/io/pread.c
-index 1c77c41..74ba47e 100644
---- a/io/pread.c
-+++ b/io/pread.c
-@@ -77,7 +77,7 @@ alloc_iovec(
+    Building libuuid:
  
- 	buffersize = 0;
- 	for (i = 0; i < vectors; i++) {
--		iov[i].iov_base = memalign(pagesize, bsize);
-+		posix_memalign((void**)&(iov[i].iov_base), pagesize, bsize);
- 		if (!iov[i].iov_base) {
- 			perror("memalign");
- 			goto unwind;
-@@ -108,7 +108,7 @@ alloc_buffer(
- 	if (bsize > highwater) {
- 		if (buffer)
- 			free(buffer);
--		buffer = memalign(pagesize, bsize);
-+		posix_memalign((void**)&buffer, pagesize, bsize);
- 		if (!buffer) {
- 			perror("memalign");
- 			highwater = buffersize = 0;
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 4f8212f..7884cf8 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -74,12 +74,14 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
- 	ssize_t		zsize, bytes;
- 	char		*z;
- 	int		fd;
-+	int ret;
+@@ -84,7 +89,7 @@ Mac OS X Instructions
+ 	TAR=/usr/bin/gnutar
+ 	LIBTOOL=/usr/bin/glibtool
+ 	INSTALL_GROUP=wheel
+-	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"
++	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no"
  
- 	zsize = min(BDSTRAT_SIZE, BBTOB(len));
--	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
-+	ret = posix_memalign((void **)&z, libxfs_device_alignment(), zsize);
-+	if (!z) {
- 		fprintf(stderr,
- 			_("%s: %s can't memalign %d bytes: %s\n"),
--			progname, __FUNCTION__, (int)zsize, strerror(errno));
-+			progname, __FUNCTION__, (int)zsize, strerror(ret));
- 		exit(1);
- 	}
- 	memset(z, 0, zsize);
-@@ -409,6 +411,7 @@ static void
- __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
- 		unsigned int bytes)
- {
-+	int ret;
- 	bp->b_flags = 0;
- 	bp->b_bn = bno;
- 	bp->b_bcount = bytes;
-@@ -416,12 +419,13 @@ __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
- 	bp->b_target = btp;
- 	bp->b_error = 0;
- 	if (!bp->b_addr)
--		bp->b_addr = memalign(libxfs_device_alignment(), bytes);
-+		ret = posix_memalign((void**)&(bp->b_addr),
-+					libxfs_device_alignment(), bytes);
- 	if (!bp->b_addr) {
- 		fprintf(stderr,
- 			_("%s: %s can't memalign %u bytes: %s\n"),
- 			progname, __FUNCTION__, bytes,
--			strerror(errno));
-+			strerror(ret));
- 		exit(1);
- 	}
- 	memset(bp->b_addr, 0, bytes);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 69d61c7..d349b4f 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -770,7 +770,8 @@ zero_old_xfs_structures(
- 	 * read in existing filesystem superblock, use its geometry
- 	 * settings and zero the existing secondary superblocks.
- 	 */
--	buf = memalign(libxfs_device_alignment(), new_sb->sb_sectsize);
-+	posix_memalign((void**)&buf, libxfs_device_alignment(),
-+		       new_sb->sb_sectsize);
- 	if (!buf) {
- 		fprintf(stderr,
- 	_("error reading existing superblock -- failed to memalign buffer\n"));
-diff --git a/repair/incore.c b/repair/incore.c
-index cb57316..81d3b8c 100644
---- a/repair/incore.c
-+++ b/repair/incore.c
-@@ -224,7 +224,7 @@ init_rt_bmap(
- 	rt_bmap_size = roundup(mp->m_sb.sb_rextents / (NBBY / XR_BB),
- 			       sizeof(__uint64_t));
- 
--	rt_bmap = memalign(sizeof(__uint64_t), rt_bmap_size);
-+	posix_memalign((void**)&rt_bmap, sizeof(__uint64_t), rt_bmap_size);
- 	if (!rt_bmap) {
- 		do_error(
- 	_("couldn't allocate realtime block map, size = %" PRIu64 "\n"),
-diff --git a/repair/incore_ino.c b/repair/incore_ino.c
-index 32d7678..dd95996 100644
---- a/repair/incore_ino.c
-+++ b/repair/incore_ino.c
-@@ -626,8 +626,8 @@ set_inode_parent(
- 			irec->ino_un.plist = ptbl;
- 
- 		ptbl->pmask = 1LL << offset;
--		ptbl->pentries = (xfs_ino_t*)memalign(sizeof(xfs_ino_t),
--							sizeof(xfs_ino_t));
-+		posix_memalign((void**)&(ptbl->pentries),sizeof(xfs_ino_t),
-+				sizeof(xfs_ino_t));
- 		if (!ptbl->pentries)
- 			do_error(_("couldn't memalign pentries table\n"));
- #ifdef DEBUG
-@@ -673,7 +673,8 @@ set_inode_parent(
- #endif
- 	ASSERT(cnt >= target);
- 
--	tmp = (xfs_ino_t*)memalign(sizeof(xfs_ino_t), (cnt + 1) * sizeof(xfs_ino_t));
-+	posix_memalign((void**)&tmp, sizeof(xfs_ino_t),
-+		       (cnt + 1) * sizeof(xfs_ino_t));
- 	if (!tmp)
- 		do_error(_("couldn't memalign pentries table\n"));
- 
-diff --git a/repair/phase1.c b/repair/phase1.c
-index 126d0b3..7a1fc7d 100644
---- a/repair/phase1.c
-+++ b/repair/phase1.c
-@@ -35,7 +35,7 @@ alloc_ag_buf(int size)
- {
- 	char	*bp;
- 
--	bp = (char *)memalign(libxfs_device_alignment(), size);
-+	posix_memalign((void**)&bp, libxfs_device_alignment(), size);
- 	if (!bp)
- 		do_error(_("could not allocate ag header buffer (%d bytes)\n"),
- 			size);
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 8b261ae..c6c9450 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -631,10 +631,9 @@ pf_io_worker(
- 	void			*param)
- {
- 	prefetch_args_t		*args = param;
--	void			*buf = memalign(libxfs_device_alignment(),
--						pf_max_bytes);
--
--	if (buf == NULL)
-+	void			*buf;
-+	posix_memalign((void**)&buf, libxfs_device_alignment(), pf_max_bytes);
-+	if (!buf)
- 		return NULL;
- 
- 	pthread_mutex_lock(&args->lock);
-diff --git a/repair/sb.c b/repair/sb.c
-index 4eef14a..cf1ea8b 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -102,7 +102,7 @@ find_secondary_sb(xfs_sb_t *rsb)
- 
- 	do_warn(_("\nattempting to find secondary superblock...\n"));
- 
--	sb = (xfs_sb_t *)memalign(libxfs_device_alignment(), BSIZE);
-+	posix_memalign((void**)&sb, libxfs_device_alignment(), BSIZE);
- 	if (!sb) {
- 		do_error(
- 	_("error finding secondary superblock -- failed to memalign buffer\n"));
-@@ -438,8 +438,8 @@ write_primary_sb(xfs_sb_t *sbp, int size)
- 	if (no_modify)
- 		return;
- 
--	buf = memalign(libxfs_device_alignment(), size);
--	if (buf == NULL) {
-+	posix_memalign((void**)&buf, libxfs_device_alignment(), size);
-+	if (!buf) {
- 		do_error(_("failed to memalign superblock buffer\n"));
- 		return;
- 	}
-@@ -472,8 +472,8 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
- 	int error, rval;
- 	xfs_dsb_t *buf;
- 
--	buf = memalign(libxfs_device_alignment(), size);
--	if (buf == NULL) {
-+	posix_memalign((void**)&buf, libxfs_device_alignment(), size);
-+	if (!buf) {
- 		do_error(
- 	_("error reading superblock %u -- failed to memalign buffer\n"),
- 			agno);
-diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
-index f604b46..e2e3ece 100644
---- a/rtcp/xfs_rtcp.c
-+++ b/rtcp/xfs_rtcp.c
-@@ -327,7 +327,12 @@ rtcp( char *source, char *target, int fextsize)
- 	}
- 
- 	iosz =  dioattr.d_miniosz;
--	fbuf = memalign( dioattr.d_mem, iosz);
-+	posix_memalign((void**)&fbuf, dioattr.d_mem, iosz);
-+	if (!fbuf) {
-+		perror(
-+	_("error finding secondary superblock -- failed to memalign buffer\n"));
-+		exit(1);
-+	}
- 	memset(fbuf, 0, iosz);
- 
- 	/*
+ 	$ make
+ 	$ su root
 -- 
 2.4.5
 
