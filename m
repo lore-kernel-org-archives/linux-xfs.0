@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D62C97F54
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 04:26:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C0ED2304039
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 02:26:53 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 0YHCaCFcx4YFJzzj (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 02:26:51 -0700 (PDT)
-From: Jan Kara <jack@suse.com>
-Subject: [PATCH] xfs: Fix xfs_attr_leafblock definition
-Date: Thu, 13 Aug 2015 11:26:40 +0200
-Message-Id: <1439458000-28395-1-git-send-email-jack@suse.com>
+	by oss.sgi.com (Postfix) with ESMTP id 6CF547F55
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 06:14:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3F68D304032
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 04:14:50 -0700 (PDT)
+Received: from mail-ig0-f171.google.com (mail-ig0-f171.google.com
+	[209.85.213.171]) by cuda.sgi.com with ESMTP id
+	myiqjemvWXCidO5E (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2015 04:14:45 -0700 (PDT)
+Received: by igfj19 with SMTP id j19so33488303igf.1
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 04:14:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <55C4E007.90709@sandeen.net>
+References: <55C43FBA.1080408@sandeen.net>
+	<20150807113742.GB8322@bfoster.bfoster>
+	<55C4E007.90709@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 13 Aug 2015 13:14:25 +0200
+Message-ID: <CACj3i72_w6fKaJyDhaHb-vEA056kSSQnucWkWfO2LsVxci+yfA@mail.gmail.com>
+Subject: Re: [PATCH] mkfs.xfs: fix ftype-vs-crc option combination testing
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,56 +29,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3133938371900600877=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Brian Foster <bfoster@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-struct xfs_attr_leafblock contains 'entries' array which is declared
-with size 1 altough it can in fact contain much more entries. Since this
-array is followed by further struct members, gcc (at least in version
-4.8.3) thinks that the array has the fixed size of 1 element and thus
-may optimize away all accesses beyond the end of array resulting in
-non-working code. This problem was only observed with userspace code in
-xfsprogs, however it's better to be safe in kernel as well and have
-matching kernel and xfsprogs definitions.
+--===============3133938371900600877==
+Content-Type: multipart/alternative; boundary=089e013a01c843ea15051d2f711b
 
-Signed-off-by: Jan Kara <jack@suse.com>
----
- fs/xfs/libxfs/xfs_da_format.h | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+--089e013a01c843ea15051d2f711b
+Content-Type: text/plain; charset=UTF-8
 
- This is a kernel version of the xfsprogs patch I've sent a while ago.
+On Fri, Aug 7, 2015 at 6:42 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> >
+> > IIRC, I think this is one of the core problems the big mkfs option
+> > parsing rework that Jan is working on is supposed to fix.
+>
+> Yeah, I think so - Jan, if this gets in your way, let us know -
+> I didn't mean to make your life difficult by fixing little
+> things while you work.  :)
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 74bcbabfa523..b14bbd6bb05f 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -680,8 +680,15 @@ typedef struct xfs_attr_leaf_name_remote {
- typedef struct xfs_attr_leafblock {
- 	xfs_attr_leaf_hdr_t	hdr;	/* constant-structure header block */
- 	xfs_attr_leaf_entry_t	entries[1];	/* sorted on key, not name */
--	xfs_attr_leaf_name_local_t namelist;	/* grows from bottom of buf */
--	xfs_attr_leaf_name_remote_t valuelist;	/* grows from bottom of buf */
-+	/*
-+	 * The rest of the block contains the following structures after the
-+	 * leaf entries, growing from the bottom up. The variables are never
-+	 * referenced and definining them can actually make gcc optimize away
-+	 * accesses to the 'entries' array above index 0 so don't do that.
-+	 *
-+	 * xfs_attr_leaf_name_local_t namelist;
-+	 * xfs_attr_leaf_name_remote_t valuelist;
-+	 */
- } xfs_attr_leafblock_t;
- 
- /*
--- 
-2.1.4
+Well, I would not mind if the entire codebase froze... :-D
+But realistically, every time I do git fetch I get so many collisions that
+one
+more or less changes nothing. :-)
+
+And yes, in my tests I'm trying to cover the arguments order issue too.
+
+Cheers,
+Jan
+
+--
+Jan Tulak
+jtulak@redhat.com
+
+--089e013a01c843ea15051d2f711b
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br>On Fri, Aug 7, 2015 at 6:42 PM, Eric Sandeen &lt;<a hr=
+ef=3D"mailto:sandeen@sandeen.net">sandeen@sandeen.net</a>&gt; wrote:<br>&gt=
+;<br>&gt; &gt;<br>&gt; &gt; IIRC, I think this is one of the core problems =
+the big mkfs option<br>&gt; &gt; parsing rework that Jan is working on is s=
+upposed to fix.<br>&gt;<br>&gt; Yeah, I think so - Jan, if this gets in you=
+r way, let us know -<br>&gt; I didn&#39;t mean to make your life difficult =
+by fixing little<br>&gt; things while you work. =C2=A0:)<br><br>Well, I wou=
+ld not mind if the entire codebase froze... :-D<br>But realistically, every=
+ time I do git fetch I get so many collisions that one=C2=A0<div>more or le=
+ss=C2=A0changes nothing. :-)</div><div><br></div><div>And yes, in my tests =
+I&#39;m trying to cover the arguments order issue too.</div><div><br></div>=
+<div>Cheers,</div><div>Jan<br><br>--<br>Jan Tulak<br><a href=3D"mailto:jtul=
+ak@redhat.com">jtulak@redhat.com</a></div></div>
+
+--089e013a01c843ea15051d2f711b--
+
+
+--===============3133938371900600877==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3133938371900600877==--
