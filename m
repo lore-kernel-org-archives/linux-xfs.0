@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C006C7F50
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 02:01:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 547F4AC004
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 00:01:28 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CVCzGzNjewkOs19W (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 00:01:24 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id AA1C8AB0
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 07:01:23 +0000 (UTC)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] repair: fix wrong logic when validating node magic number
-Date: Thu, 13 Aug 2015 15:01:16 +0800
-Message-Id: <1439449276-1699-1-git-send-email-eguan@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 73D117F50
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 02:06:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 02F07AC004
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 00:06:24 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id l0xLVcbBWBsjxawp (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2015 00:06:23 -0700 (PDT)
+Date: Thu, 13 Aug 2015 00:06:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsprogs: Fix attr leaf block definition
+Message-ID: <20150813070623.GA15348@infradead.org>
+References: <1439387594-8747-1-git-send-email-jack@suse.com>
+	<20150813012940.GO3902@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150813012940.GO3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +26,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, Jan Kara <jack@suse.com>
 
-Magic number is wrong only when != XFS_DA_NODE_MAGIC and
-!= XFS_DA3_NODE_MAGIC.
+On Thu, Aug 13, 2015 at 11:29:40AM +1000, Dave Chinner wrote:
+> This situation is the same - the xfs_attr_leafblock variables are
+> only accessed by helper functions that return pointers. Can you
+> modify the declaration to match the xfs_attr3_leafblock declaration?
 
-This is triggered by shared/002 when testing 512 block size XFS.
+Yes, I think that's the best approach.
 
-  Phase 1 - find and verify superblock...
-  Phase 2 - using internal log
-          - scan filesystem freespace and inode maps...
-          - found root inode chunk
-  Phase 3 - for each AG...
-          - scan (but don't clear) agi unlinked lists...
-          - process known inodes and perform inode discovery...
-          - agno = 0
-  bad magic number febe in block 64 (108) for directory inode 35
-  ......
+> FWIW, if gcc 4.8.3 is producing non-working xfsprogs code due to
+> these declarations, then I have to wonder if it is also generating
+> bad kernel code. There's also a bigger issue: XFS uses the array[1]
+> declaration technique for several variable size structures across
+> the code base. Are all of these declarations resulting in gcc 4.8.3
+> doing the wrong thing? Or does the problem only manifest when the
+> array definition is followed by more variables?
+> 
+> If the problem does not manifest in the second case, why is this
+> inconsistency not considered a broken compiler optimisation?
+> 
+> Hence I'm guessing we need to convert all the "array[1]"
+> definitions for variable sized arrays in XFS structures to "array[]"
+> to avoid gcc making wrong assumptions about the code? i.e: all of
+> these in kernel space:
 
-Fix it by changing "||" to "&&".
+C compilers are moving away from beeing the portable assemblers
+we (ab)use them for, and add all kinds of optimizations that
+are questionable from our POV and sometimes make behavior illegal
+that's required for low level programming.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- repair/attr_repair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That being said a one element array in the middle of a structure
+is totally bogus, and I wondered what crack the authors of the
+code smoked when I killed most of these during the initial btree
+refactoring and CRC work.  That's unlike a one element array
+at the end of a structure which was the only way to do a variable
+length array before the [0] GNU extention and [] from C99.  
+I don't expect a compiler to trip over those any time soon, but
+I'd still prefer to convert them to the modern portable form.
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 62f80e7..83a07a8 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -570,7 +570,7 @@ verify_da_path(xfs_mount_t	*mp,
- 		 * entry count, verify level
- 		 */
- 		bad = 0;
--		if (nodehdr.magic != XFS_DA_NODE_MAGIC ||
-+		if (nodehdr.magic != XFS_DA_NODE_MAGIC &&
- 		    nodehdr.magic != XFS_DA3_NODE_MAGIC)  {
- 			do_warn(
- 	_("bad magic number %x in block %u (%" PRIu64 ") for directory inode %" PRIu64 "\n"),
--- 
-2.4.3
+I suspect the reason why you can I haven't seen this bug is tht the
+kernel uses very conservative optimization flags, while Jan probably
+used some more aggressive SuSE default to compile an xfsprogs
+package.
 
 _______________________________________________
 xfs mailing list
