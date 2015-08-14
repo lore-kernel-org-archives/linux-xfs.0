@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 334D47F8B
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 01:19:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A813AAC001
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 23:19:44 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 342787F8C
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 01:49:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E41718F8035
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 23:49:09 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Od5ObAMRR3vSDTXi (version=TLSv1
+	cuda.sgi.com with ESMTP id g7bC6ciomDNRqEOL (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 23:19:43 -0700 (PDT)
-Date: Fri, 14 Aug 2015 14:19:39 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: generic/04[89] fail on XFS due to change in writeback code
-	[4.2-rc1 regression]
-Message-ID: <20150814061939.GK17933@dhcp-13-216.nay.redhat.com>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813232400.GH4496@mtj.duckdns.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150813232400.GH4496@mtj.duckdns.org>
+	Thu, 13 Aug 2015 23:49:05 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 13/11 v2] xfsprogs: Add a way to compile without blkid
+Date: Fri, 14 Aug 2015 08:48:52 +0200
+Message-Id: <1439534932-11881-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20150814005430.GS3902@dastard>
+References: <20150814005430.GS3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,139 +23,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@fb.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Aug 13, 2015 at 07:24:00PM -0400, Tejun Heo wrote:
-> Hello, Eryu.
-> 
-> Can you please do the followings?
-> 
-> 1. See if the "writeback: fix syncing of I_DIRTY_TIME inodes" patch
->    changes anything.
+UPDATE: default to "signature found", so without blkid,
+        -f is mandatory.
 
-After applying this patch, I can no longer reproduce the failure.
+Because not all platforms have up-to-date blkid with required
+functions, allow at least partial functionality by adding
+--enable-blkid=yes/no optional configure argument.
 
-> 
-> 2. If not, apply this patch.  This patch *should* make the failures go
->    away and might print out some error messages along with stack
->    trace.  Can you please verify that the failures go away with this
->    patch and report the kernel messages if any trigger?
+When blkid is disabled, signature detection and device geometry
+detection doesn't work.
 
-And this patch fixed the failure too, and no WARNING no kernel message
-triggered.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ configure.ac         | 10 +++++++++-
+ include/builddefs.in |  1 +
+ mkfs/xfs_mkfs.c      | 22 +++++++++++++++++++++-
+ 3 files changed, 31 insertions(+), 2 deletions(-)
 
-All my testings are based on 4.2-rc6 kernel (I confirmed rc6 kernel
-failed the test first), then applied the first patch, and reverted the
-first patch, and applied the second patch.
-
-> 
-> Thanks a lot.
-
-Thanks for looking into this!
-
-Eryu
-> 
-> Index: work/fs/fs-writeback.c
-> ===================================================================
-> --- work.orig/fs/fs-writeback.c
-> +++ work/fs/fs-writeback.c
-> @@ -103,7 +103,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(wbc_writepa
->  
->  static bool wb_io_lists_populated(struct bdi_writeback *wb)
->  {
-> -	if (wb_has_dirty_io(wb)) {
-> +	if (test_bit(WB_has_dirty_io, &wb->state)) {
->  		return false;
->  	} else {
->  		set_bit(WB_has_dirty_io, &wb->state);
-> @@ -844,14 +844,13 @@ static void bdi_split_work_to_wbs(struct
->  	struct wb_iter iter;
->  
->  	might_sleep();
-> -
-> -	if (!bdi_has_dirty_io(bdi))
-> -		return;
->  restart:
->  	rcu_read_lock();
->  	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
-> -		if (!wb_has_dirty_io(wb) ||
-> -		    (skip_if_busy && writeback_in_progress(wb)))
-> +		/* SYNC_ALL writes out I_DIRTY_TIME too */
-> +		if (!wb_has_dirty_io(wb) && base_work->sync_mode == WB_SYNC_NONE)
-> +			continue;
-> +		if (skip_if_busy && writeback_in_progress(wb))
->  			continue;
->  
->  		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
-> @@ -899,8 +898,7 @@ static void bdi_split_work_to_wbs(struct
->  {
->  	might_sleep();
->  
-> -	if (bdi_has_dirty_io(bdi) &&
-> -	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
-> +	if (!skip_if_busy || !writeback_in_progress(&bdi->wb)) {
->  		base_work->auto_free = 0;
->  		base_work->single_wait = 0;
->  		base_work->single_done = 0;
-> @@ -2275,8 +2273,8 @@ void sync_inodes_sb(struct super_block *
->  	};
->  	struct backing_dev_info *bdi = sb->s_bdi;
->  
-> -	/* Nothing to do? */
-> -	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
-> +	/* bdi_has_dirty() ignores I_DIRTY_TIME but we can't, always kick wbs */
-> +	if (bdi == &noop_backing_dev_info)
->  		return;
->  	WARN_ON(!rwsem_is_locked(&sb->s_umount));
->  
-> Index: work/include/linux/backing-dev.h
-> ===================================================================
-> --- work.orig/include/linux/backing-dev.h
-> +++ work/include/linux/backing-dev.h
-> @@ -38,7 +38,17 @@ extern struct workqueue_struct *bdi_wq;
->  
->  static inline bool wb_has_dirty_io(struct bdi_writeback *wb)
->  {
-> -	return test_bit(WB_has_dirty_io, &wb->state);
-> +	bool ret = test_bit(WB_has_dirty_io, &wb->state);
-> +
-> +	if (!ret && (!list_empty(&wb->b_dirty) || !list_empty(&wb->b_io) ||
-> +		     !list_empty(&wb->b_more_io))) {
-> +		const char *name = wb->bdi->dev ? dev_name(wb->bdi->dev) : "UNK";
-> +
-> +		pr_err("wb_has_dirty_io: ERR %s has_dirty=%d b_dirty=%d b_io=%d b_more_io=%d\n",
-> +		       name, ret, !list_empty(&wb->b_dirty), !list_empty(&wb->b_io), !list_empty(&wb->b_more_io));
-> +		WARN_ON(1);
-> +	}
-> +	return ret;
->  }
->  
->  static inline bool bdi_has_dirty_io(struct backing_dev_info *bdi)
-> @@ -47,7 +57,18 @@ static inline bool bdi_has_dirty_io(stru
->  	 * @bdi->tot_write_bandwidth is guaranteed to be > 0 if there are
->  	 * any dirty wbs.  See wb_update_write_bandwidth().
->  	 */
-> -	return atomic_long_read(&bdi->tot_write_bandwidth);
-> +	bool ret = atomic_long_read(&bdi->tot_write_bandwidth);
-> +
-> +	if (ret != wb_has_dirty_io(&bdi->wb)) {
-> +		const char *name = bdi->dev ? dev_name(bdi->dev) : "UNK";
-> +
-> +		pr_err("bdi_has_dirty_io: ERR %s tot_write_bw=%ld b_dirty=%d b_io=%d b_more_io=%d\n",
-> +		       name, atomic_long_read(&bdi->tot_write_bandwidth),
-> +		       !list_empty(&bdi->wb.b_dirty), !list_empty(&bdi->wb.b_io), !list_empty(&bdi->wb.b_more_io));
-> +		WARN_ON(1);
-> +	}
-> +
-> +	return ret;
->  }
->  
->  static inline void __add_wb_stat(struct bdi_writeback *wb,
+diff --git a/configure.ac b/configure.ac
+index 9ea8b22..a734926 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -26,6 +26,11 @@ AC_ARG_ENABLE(gettext,
+ 	enable_gettext=yes)
+ AC_SUBST(enable_gettext)
+ 
++AC_ARG_ENABLE(blkid,
++[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
++	enable_blkid=yes)
++AC_SUBST(enable_blkid)
++
+ AC_ARG_ENABLE(readline,
+ [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
+ 	test $enable_readline = yes && libreadline="-lreadline",
+@@ -115,11 +120,14 @@ AC_HAVE_FALLOCATE
+ AC_HAVE_FIEMAP
+ AC_HAVE_PREADV
+ AC_HAVE_SYNC_FILE_RANGE
+-AC_HAVE_BLKID_TOPO
+ AC_HAVE_READDIR
+ AC_HAVE_MNTENT
+ AC_HAVE_FLS
+ 
++if test "$enable_blkid" = yes; then
++AC_HAVE_BLKID_TOPO
++fi
++
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+ AC_TYPE_UMODE_T
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 8851956..f3f8089 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -89,6 +89,7 @@ ENABLE_SHARED	= @enable_shared@
+ ENABLE_GETTEXT	= @enable_gettext@
+ ENABLE_EDITLINE	= @enable_editline@
+ ENABLE_READLINE	= @enable_readline@
++ENABLE_BLKID	= @enable_blkid@
+ 
+ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+ 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d349b4f..56d2410 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -18,7 +18,9 @@
+ 
+ #include "libxfs.h"
+ #include <ctype.h>
+-#include <blkid/blkid.h>
++#ifdef ENABLE_BLKID
++#  include <blkid/blkid.h>
++#endif /* ENABLE_BLKID */
+ #include "xfs_mkfs.h"
+ 
+ /*
+@@ -298,6 +300,7 @@ calc_stripe_factors(
+  *	 0 for nothing found
+  *	-1 for internal error
+  */
++#ifdef ENABLE_BLKID
+ static int
+ check_overwrite(
+ 	char		*device)
+@@ -451,6 +454,19 @@ out_free_probe:
+ 		_("warning: unable to probe device topology for device %s\n"),
+ 		device);
+ }
++#else /* ifdef ENABLE_BLKID */
++/*
++ * Without blkid, we can't do a good check for signatures.
++ * So instead of some messy attempts, just disable any checks
++ * and always return 'nothing found'.
++ */
++static int
++check_overwrite(
++	char		*device)
++{
++	return 1;
++}
++#endif /* ENABLE_BLKID */
+ 
+ static void get_topology(
+ 	libxfs_init_t		*xi,
+@@ -483,16 +499,20 @@ static void get_topology(
+ 		} else
+ 			ft->psectorsize = ft->lsectorsize = BBSIZE;
+ 	} else {
++#ifdef ENABLE_BLKID
+ 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+ 				   &ft->lsectorsize, &ft->psectorsize,
+ 				   force_overwrite);
++#endif /* ENABLE_BLKID */
+ 	}
+ 
+ 	if (xi->rtname && !xi->risfile) {
+ 		int sunit, lsectorsize, psectorsize;
+ 
++#ifdef ENABLE_BLKID
+ 		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
+ 				   &lsectorsize, &psectorsize, force_overwrite);
++#endif /* ENABLE_BLKID */
+ 	}
+ }
+ 
+-- 
+2.4.5
 
 _______________________________________________
 xfs mailing list
