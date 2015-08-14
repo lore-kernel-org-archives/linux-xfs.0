@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CD6A97F7C
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 19:54:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8480304051
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 17:54:34 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5DA797F80
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 20:27:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2C3F9304043
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 18:27:18 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	4t393afPTBgjd2Jf for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 17:54:32 -0700 (PDT)
-Date: Fri, 14 Aug 2015 10:54:30 +1000
+	uI1nXvHJL87K2SY4 for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2015 18:27:15 -0700 (PDT)
+Date: Fri, 14 Aug 2015 11:26:35 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 13/11] xfsprogs: Add a way to compile without blkid
-Message-ID: <20150814005430.GS3902@dastard>
-References: <1439475055-5519-1-git-send-email-jtulak@redhat.com>
+Subject: Re: XFS File system in trouble
+Message-ID: <20150814012635.GT3902@dastard>
+References: <20150720111747.GA53450@bfoster.bfoster>
+	<55B73365.1050908@mygrande.net>
+	<20150728123307.GC38784@bfoster.bfoster>
+	<55B79BFD.6020509@mygrande.net>
+	<20150728221150.GA26604@bfoster.bfoster>
+	<55BE7C75.4060604@mygrande.net> <55C06F41.4030502@mygrande.net>
+	<20150804224240.GU16638@dastard> <55C8006C.8070807@mygrande.net>
+	<55CC375C.10902@mygrande.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1439475055-5519-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <55CC375C.10902@mygrande.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +36,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Leslie Rhorer <lrhorer@mygrande.net>
+Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Brian Foster <bfoster@redhat.com>, Kris Rusocki <kszysiu@braxis.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Aug 13, 2015 at 04:10:55PM +0200, Jan Tulak wrote:
-> Because not all platforms have up-to-date blkid with required
-> functions, allow at least partial functionality by adding
-> --enable-blkid=yes/no optional configure argument.
+On Thu, Aug 13, 2015 at 01:21:16AM -0500, Leslie Rhorer wrote:
+> 	The compressed tarball containing the dump file and the image are
+> on my web site.
 > 
-> When blkid is disabled, signature detection and device geometry
-> detection doesn't work.
+> http://fletchergeek.com/images/metadump.tar.gz
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> 	It's 22G in size.
 
-.....
-> +#else /* ifdef ENABLE_BLKID */
-> +/*
-> + * Without blkid, we can't do a good check for signatures.
-> + * So instead of some messy attempts, just disable any checks
-> + * and always return 'nothing found'.
-> + */
-> +static int
-> +check_overwrite(
-> +	char		*device)
-> +{
-> +	return 0;
-> +}
-> +#endif /* ENABLE_BLKID */
-
-I'd default the other way around, and always report that something
-was found. That way we don't accidentally overwrite a block device
-when someone fat-fingers the blockdev. It will mean you have to use
-the force flag on OSX until such time that blkid is made to work,
-but I think that's better than just overwriting the blockdev without
-question....
+I only want the metadump image right now. Can you please put that up
+as a separate compressed file so i don't have to blow 25% of my
+monthly download quota and a day downloading that tarball just to
+get it?
 
 Cheers,
 
