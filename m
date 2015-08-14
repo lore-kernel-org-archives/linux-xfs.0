@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5DA797F80
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 20:27:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4253A7F81
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 20:54:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2C3F9304043
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 18:27:18 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CC5EAAC003
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 18:54:11 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uI1nXvHJL87K2SY4 for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 18:27:15 -0700 (PDT)
-Date: Fri, 14 Aug 2015 11:26:35 +1000
+	q5ZBpE3XP4NfaSwF for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2015 18:54:08 -0700 (PDT)
+Date: Fri, 14 Aug 2015 11:53:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS File system in trouble
-Message-ID: <20150814012635.GT3902@dastard>
-References: <20150720111747.GA53450@bfoster.bfoster>
-	<55B73365.1050908@mygrande.net>
-	<20150728123307.GC38784@bfoster.bfoster>
-	<55B79BFD.6020509@mygrande.net>
-	<20150728221150.GA26604@bfoster.bfoster>
-	<55BE7C75.4060604@mygrande.net> <55C06F41.4030502@mygrande.net>
-	<20150804224240.GU16638@dastard> <55C8006C.8070807@mygrande.net>
-	<55CC375C.10902@mygrande.net>
+Subject: Re: [PATCH 1/8] xfs: Introduce writeback context for writepages
+Message-ID: <20150814015309.GU3902@dastard>
+References: <1439333388-16452-1-git-send-email-david@fromorbit.com>
+	<1439333388-16452-2-git-send-email-david@fromorbit.com>
+	<20150812072635.GA32399@infradead.org>
+	<20150813013244.GP3902@dastard>
+	<20150813065258.GA677@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55CC375C.10902@mygrande.net>
+In-Reply-To: <20150813065258.GA677@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,21 +33,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Brian Foster <bfoster@redhat.com>, Kris Rusocki <kszysiu@braxis.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 13, 2015 at 01:21:16AM -0500, Leslie Rhorer wrote:
-> 	The compressed tarball containing the dump file and the image are
-> on my web site.
+On Wed, Aug 12, 2015 at 11:52:58PM -0700, Christoph Hellwig wrote:
+> On Thu, Aug 13, 2015 at 11:32:44AM +1000, Dave Chinner wrote:
+> > > http://thread.gmane.org/gmane.comp.file-systems.xfs.general/39030/focus=39009
+> > 
+> > I completely forgot you did this. I'll go back and look at it
+> > and see what I can pull from it. Thanks for the reminder, Christoph.
 > 
-> http://fletchergeek.com/images/metadump.tar.gz
-> 
-> 	It's 22G in size.
+> As far as I can tell your new version is superior in all aspects
+> except for the patch split :)
 
-I only want the metadump image right now. Can you please put that up
-as a separate compressed file so i don't have to blow 25% of my
-monthly download quota and a day downloading that tarball just to
-get it?
+Ok, I've gone back and had a look at this now and reminded myself of
+the discussion we had and the problems found. The end results are
+remarkably similar - maybe that's why I found it easy to write this
+patch set. i.e. your patchset was buried somewhere in my brain, even
+though I'd forgotten about it at the surface...
+
+How would you like to see this patchset broken up into more
+sensible/reviewable chunks? It's just folding and splitting patches,
+so it's not a big deal to rework it...
 
 Cheers,
 
