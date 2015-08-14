@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B1FF27F88
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 01:13:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3675FAC002
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 23:13:16 -0700 (PDT)
-Received: from mail-ig0-f179.google.com (mail-ig0-f179.google.com
-	[209.85.213.179]) by cuda.sgi.com with ESMTP id
-	1U1nTlCO0xt4l1Fn (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Aug 2015 23:13:11 -0700 (PDT)
-Received: by igui7 with SMTP id i7so6164598igu.1
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 23:13:10 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 334D47F8B
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 01:19:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A813AAC001
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2015 23:19:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Od5ObAMRR3vSDTXi (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2015 23:19:43 -0700 (PDT)
+Date: Fri, 14 Aug 2015 14:19:39 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: generic/04[89] fail on XFS due to change in writeback code
+	[4.2-rc1 regression]
+Message-ID: <20150814061939.GK17933@dhcp-13-216.nay.redhat.com>
+References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
+	<20150813004435.GN3902@dastard>
+	<20150813232400.GH4496@mtj.duckdns.org>
 MIME-Version: 1.0
-In-Reply-To: <20150814015704.GV3902@dastard>
-References: <55C43FBA.1080408@sandeen.net>
-	<20150807113742.GB8322@bfoster.bfoster>
-	<55C4E007.90709@sandeen.net>
-	<CACj3i72_w6fKaJyDhaHb-vEA056kSSQnucWkWfO2LsVxci+yfA@mail.gmail.com>
-	<20150814015704.GV3902@dastard>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 14 Aug 2015 08:12:49 +0200
-Message-ID: <CACj3i70ZOzmpM6Zb+7JZ59nA0GJfJ-FU+h22S5ZA4vbFUAjSCA@mail.gmail.com>
-Subject: Re: [PATCH] mkfs.xfs: fix ftype-vs-crc option combination testing
+Content-Disposition: inline
+In-Reply-To: <20150813232400.GH4496@mtj.duckdns.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,133 +28,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3039194504297518876=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@fb.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
---===============3039194504297518876==
-Content-Type: multipart/alternative; boundary=089e01182a34a3a7d2051d3f58bb
+On Thu, Aug 13, 2015 at 07:24:00PM -0400, Tejun Heo wrote:
+> Hello, Eryu.
+> 
+> Can you please do the followings?
+> 
+> 1. See if the "writeback: fix syncing of I_DIRTY_TIME inodes" patch
+>    changes anything.
 
---089e01182a34a3a7d2051d3f58bb
-Content-Type: text/plain; charset=UTF-8
+After applying this patch, I can no longer reproduce the failure.
 
-On Fri, Aug 14, 2015 at 3:57 AM, Dave Chinner <david@fromorbit.com> wrote:
+> 
+> 2. If not, apply this patch.  This patch *should* make the failures go
+>    away and might print out some error messages along with stack
+>    trace.  Can you please verify that the failures go away with this
+>    patch and report the kernel messages if any trigger?
 
-> On Thu, Aug 13, 2015 at 01:14:25PM +0200, Jan Tulak wrote:
-> > On Fri, Aug 7, 2015 at 6:42 PM, Eric Sandeen <sandeen@sandeen.net>
-> wrote:
-> > >
-> > > >
-> > > > IIRC, I think this is one of the core problems the big mkfs option
-> > > > parsing rework that Jan is working on is supposed to fix.
-> > >
-> > > Yeah, I think so - Jan, if this gets in your way, let us know -
-> > > I didn't mean to make your life difficult by fixing little
-> > > things while you work.  :)
-> >
-> > Well, I would not mind if the entire codebase froze... :-D
-> > But realistically, every time I do git fetch I get so many collisions
-> that
-> > one
-> > more or less changes nothing. :-)
->
-> Well, I'm hoping all the big changes getting libxfs up to date with
-> the kernel code are now done, and things will settle down for the
-> next few months so this will be less of a problem. Also having a
-> stable master branch and a moving for-next branch for xfsprogs
-> should help with this, too...
->
+And this patch fixed the failure too, and no WARNING no kernel message
+triggered.
 
-That would be nice.
+All my testings are based on 4.2-rc6 kernel (I confirmed rc6 kernel
+failed the test first), then applied the first patch, and reverted the
+first patch, and applied the second patch.
 
+> 
+> Thanks a lot.
 
-> > And yes, in my tests I'm trying to cover the arguments order issue too.
->
-> The structure of the table-based parsing should make the order of
-> parsing irrelevant, as conflicts are defined in the table and so
-> will be detected regardless of the order in which the options appear
-> on the command line.
->
+Thanks for looking into this!
 
-However it still has to be tested if it works as supposed. Of course I'm not
-trying all combinations for all arguments. :-)
-
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com
-
---089e01182a34a3a7d2051d3f58bb
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
-te">On Fri, Aug 14, 2015 at 3:57 AM, Dave Chinner <span dir=3D"ltr">&lt;<a =
-href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</=
-a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0=
- 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D"">On =
-Thu, Aug 13, 2015 at 01:14:25PM +0200, Jan Tulak wrote:<br>
-&gt; On Fri, Aug 7, 2015 at 6:42 PM, Eric Sandeen &lt;<a href=3D"mailto:san=
-deen@sandeen.net">sandeen@sandeen.net</a>&gt; wrote:<br>
-&gt; &gt;<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; IIRC, I think this is one of the core problems the big mkfs =
-option<br>
-&gt; &gt; &gt; parsing rework that Jan is working on is supposed to fix.<br=
->
-&gt; &gt;<br>
-&gt; &gt; Yeah, I think so - Jan, if this gets in your way, let us know -<b=
-r>
-&gt; &gt; I didn&#39;t mean to make your life difficult by fixing little<br=
->
-&gt; &gt; things while you work.=C2=A0 :)<br>
-&gt;<br>
-&gt; Well, I would not mind if the entire codebase froze... :-D<br>
-&gt; But realistically, every time I do git fetch I get so many collisions =
-that<br>
-&gt; one<br>
-&gt; more or less changes nothing. :-)<br>
-<br>
-</span>Well, I&#39;m hoping all the big changes getting libxfs up to date w=
-ith<br>
-the kernel code are now done, and things will settle down for the<br>
-next few months so this will be less of a problem. Also having a<br>
-stable master branch and a moving for-next branch for xfsprogs<br>
-should help with this, too...<br></blockquote><div><br></div><div>That woul=
-d be nice.</div><div>=C2=A0</div><blockquote class=3D"gmail_quote" style=3D=
-"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=
-=3D"">
-&gt; And yes, in my tests I&#39;m trying to cover the arguments order issue=
- too.<br>
-<br>
-</span>The structure of the table-based parsing should make the order of<br=
->
-parsing irrelevant, as conflicts are defined in the table and so<br>
-will be detected regardless of the order in which the options appear<br>
-on the command line.<br></blockquote></div><div><br></div><div>However it s=
-till has to be tested if it works as supposed. Of course I&#39;m not</div><=
-div>trying all combinations for all arguments. :-)</div><div><br></div><div=
->Cheers,</div><div>Jan</div><div><br></div>-- <br><div class=3D"gmail_signa=
-ture"><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@red=
-hat.com" target=3D"_blank">jtulak@redhat.com</a><br></div></div>
-</div></div>
-
---089e01182a34a3a7d2051d3f58bb--
-
-
---===============3039194504297518876==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Eryu
+> 
+> Index: work/fs/fs-writeback.c
+> ===================================================================
+> --- work.orig/fs/fs-writeback.c
+> +++ work/fs/fs-writeback.c
+> @@ -103,7 +103,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(wbc_writepa
+>  
+>  static bool wb_io_lists_populated(struct bdi_writeback *wb)
+>  {
+> -	if (wb_has_dirty_io(wb)) {
+> +	if (test_bit(WB_has_dirty_io, &wb->state)) {
+>  		return false;
+>  	} else {
+>  		set_bit(WB_has_dirty_io, &wb->state);
+> @@ -844,14 +844,13 @@ static void bdi_split_work_to_wbs(struct
+>  	struct wb_iter iter;
+>  
+>  	might_sleep();
+> -
+> -	if (!bdi_has_dirty_io(bdi))
+> -		return;
+>  restart:
+>  	rcu_read_lock();
+>  	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
+> -		if (!wb_has_dirty_io(wb) ||
+> -		    (skip_if_busy && writeback_in_progress(wb)))
+> +		/* SYNC_ALL writes out I_DIRTY_TIME too */
+> +		if (!wb_has_dirty_io(wb) && base_work->sync_mode == WB_SYNC_NONE)
+> +			continue;
+> +		if (skip_if_busy && writeback_in_progress(wb))
+>  			continue;
+>  
+>  		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
+> @@ -899,8 +898,7 @@ static void bdi_split_work_to_wbs(struct
+>  {
+>  	might_sleep();
+>  
+> -	if (bdi_has_dirty_io(bdi) &&
+> -	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
+> +	if (!skip_if_busy || !writeback_in_progress(&bdi->wb)) {
+>  		base_work->auto_free = 0;
+>  		base_work->single_wait = 0;
+>  		base_work->single_done = 0;
+> @@ -2275,8 +2273,8 @@ void sync_inodes_sb(struct super_block *
+>  	};
+>  	struct backing_dev_info *bdi = sb->s_bdi;
+>  
+> -	/* Nothing to do? */
+> -	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
+> +	/* bdi_has_dirty() ignores I_DIRTY_TIME but we can't, always kick wbs */
+> +	if (bdi == &noop_backing_dev_info)
+>  		return;
+>  	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+>  
+> Index: work/include/linux/backing-dev.h
+> ===================================================================
+> --- work.orig/include/linux/backing-dev.h
+> +++ work/include/linux/backing-dev.h
+> @@ -38,7 +38,17 @@ extern struct workqueue_struct *bdi_wq;
+>  
+>  static inline bool wb_has_dirty_io(struct bdi_writeback *wb)
+>  {
+> -	return test_bit(WB_has_dirty_io, &wb->state);
+> +	bool ret = test_bit(WB_has_dirty_io, &wb->state);
+> +
+> +	if (!ret && (!list_empty(&wb->b_dirty) || !list_empty(&wb->b_io) ||
+> +		     !list_empty(&wb->b_more_io))) {
+> +		const char *name = wb->bdi->dev ? dev_name(wb->bdi->dev) : "UNK";
+> +
+> +		pr_err("wb_has_dirty_io: ERR %s has_dirty=%d b_dirty=%d b_io=%d b_more_io=%d\n",
+> +		       name, ret, !list_empty(&wb->b_dirty), !list_empty(&wb->b_io), !list_empty(&wb->b_more_io));
+> +		WARN_ON(1);
+> +	}
+> +	return ret;
+>  }
+>  
+>  static inline bool bdi_has_dirty_io(struct backing_dev_info *bdi)
+> @@ -47,7 +57,18 @@ static inline bool bdi_has_dirty_io(stru
+>  	 * @bdi->tot_write_bandwidth is guaranteed to be > 0 if there are
+>  	 * any dirty wbs.  See wb_update_write_bandwidth().
+>  	 */
+> -	return atomic_long_read(&bdi->tot_write_bandwidth);
+> +	bool ret = atomic_long_read(&bdi->tot_write_bandwidth);
+> +
+> +	if (ret != wb_has_dirty_io(&bdi->wb)) {
+> +		const char *name = bdi->dev ? dev_name(bdi->dev) : "UNK";
+> +
+> +		pr_err("bdi_has_dirty_io: ERR %s tot_write_bw=%ld b_dirty=%d b_io=%d b_more_io=%d\n",
+> +		       name, atomic_long_read(&bdi->tot_write_bandwidth),
+> +		       !list_empty(&bdi->wb.b_dirty), !list_empty(&bdi->wb.b_io), !list_empty(&bdi->wb.b_more_io));
+> +		WARN_ON(1);
+> +	}
+> +
+> +	return ret;
+>  }
+>  
+>  static inline void __add_wb_stat(struct bdi_writeback *wb,
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3039194504297518876==--
