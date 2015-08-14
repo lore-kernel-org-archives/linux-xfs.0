@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C8D8B7F37
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 10:14:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 98EB78F804B
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 08:14:04 -0700 (PDT)
-Received: from maiev.nerim.net (smtp-155-friday.nerim.net [194.79.134.155]) by
-	cuda.sgi.com with ESMTP id zdxOXrBd5yHJYRG1 for
-	<xfs@oss.sgi.com>; Fri, 14 Aug 2015 08:14:02 -0700 (PDT)
-Date: Fri, 14 Aug 2015 17:14:01 +0200
-From: Damien Wyart <damien.wyart@gmail.com>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150814151401.GA6906@brouette>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813224415.GG4496@mtj.duckdns.org>
-	<20150814111408.GB8710@quack.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150814111408.GB8710@quack.suse.cz>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1E43D7F37
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 11:25:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8ACF5AC003
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 09:25:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uPJaSVXWvdHCmUMo (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 14 Aug 2015 09:25:29 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 6C2A48E682
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 16:25:28 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-174.bos.redhat.com [10.18.41.174])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7EGPSuR026691
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 12:25:28 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: flush entire file on dio read/write to cached file
+Date: Fri, 14 Aug 2015 12:25:26 -0400
+Message-Id: <1439569526-40423-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,63 +29,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+To: xfs@oss.sgi.com
 
-> On Thu 13-08-15 18:44:15, Tejun Heo wrote:
-> > e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
-> > updated writeback path to avoid kicking writeback work items if there
-> > are no inodes to be written out; unfortunately, the avoidance logic
-> > was too aggressive and made sync_inodes_sb() skip I_DIRTY_TIME inodes.
-> > This patch fixes the breakage by
+Filesystems are responsible to manage file coherency between the page
+cache and direct I/O. The generic dio code flushes dirty pages over the
+range of a dio to ensure that the dio read or a future buffered read
+returns the correct data. XFS has generally followed this pattern,
+though traditionally has flushed and invalidated the range from the
+start of the I/O all the way to the end of the file. This changed after
+the following commit:
 
-> > * Removing bdi_has_dirty_io() shortcut from bdi_split_work_to_wbs().
-> >   The callers are already testing the condition.
+	7d4ea3ce xfs: use ranged writeback and invalidation for direct IO
 
-> > * Removing bdi_has_dirty_io() shortcut from sync_inodes_sb() so that
-> >   it always calls into bdi_split_work_to_wbs().
+... as the full file flush was no longer necessary to deal with the
+strange post-eof delalloc issues that were since fixed. Unfortunately,
+we have since received complaints about performance degradation due to
+the increased exclusive iolock cycles (which locks out parallel dio
+submission) that occur when a file has cached pages. This does not occur
+on filesystems that use the generic code as it also does not incorporate
+locking.
 
-> > * Making bdi_split_work_to_wbs() consider the b_dirty_time list for
-> >   WB_SYNC_ALL writebacks.
+The exclusive iolock is acquired any time the inode mapping has cached
+pages, regardless of whether they reside in the range of the I/O or not.
+If not, the flush/inval calls do no work and the lock was cycled for no
+reason.
 
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
-> > Fixes: e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
-> > Cc: Ted Ts'o <tytso@google.com>
-> > Cc: Jan Kara <jack@suse.com>
+Under consideration of the cost of the exclusive iolock, update the dio
+read and write handlers to flush and invalidate the entire mapping when
+cached pages exist. In most cases, this increases the cost of the
+initial flush sequence but eliminates the need for further lock cycles
+and flushes so long as the workload does not actively mix direct and
+buffered I/O. This also more closely matches historical behavior and
+performance characteristics that users have come to expect.
 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_file.c | 51 +++++++++++++++++++++++++++++----------------------
+ 1 file changed, 29 insertions(+), 22 deletions(-)
 
-* Jan Kara <jack@suse.cz> [2015-08-14 13:14]:
-> So the patch looks good to me. But the fact that is fixes Eryu's problem
-> means there is something fishy going on. Either inodes get wrongly attached
-> to b_dirty_time list or bdi_has_dirty_io() somehow misbehaves only
-> temporarily and we don't catch it with the debug patch.
-
-> Can we add a test to wb_has_dirty_io() to also check whether it matches
-> bdi_has_dirty_io()? Since Eryu doesn't use lazytime (I assume, Eryu, please
-> speak up if you do), we could also warn if b_dirty_time lists get
-> non-empty. Hmm?
-
-Hi,
-
-I had an unstable system when running latest Linus tree with Tejun's
-patch applied on top. Nothing fishy in the logs after rebooting without
-the patch, but remote access with ssh when patch applied did not work
-(as if /home partition could not be read). This system has / as ext4 and
-other partitions (including /home) as XFS. Trying to login on tty
-instead of X resulted in hang of X. I could reboot with sysrq, but can't
-do further tests at the moment.
-
-Back to same tree without the patch resulted in normal system.
-
-So just a heads up the patch doesn't seem OK in its current state.
-
-Cheers
-
-Damien
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index db4acc1..de2c237 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -317,24 +317,33 @@ xfs_file_read_iter(
+ 		return -EIO;
+ 
+ 	/*
+-	 * Locking is a bit tricky here. If we take an exclusive lock
+-	 * for direct IO, we effectively serialise all new concurrent
+-	 * read IO to this file and block it behind IO that is currently in
+-	 * progress because IO in progress holds the IO lock shared. We only
+-	 * need to hold the lock exclusive to blow away the page cache, so
+-	 * only take lock exclusively if the page cache needs invalidation.
+-	 * This allows the normal direct IO case of no page cache pages to
+-	 * proceeed concurrently without serialisation.
++	 * Locking is a bit tricky here. If we take an exclusive lock for direct
++	 * IO, we effectively serialise all new concurrent read IO to this file
++	 * and block it behind IO that is currently in progress because IO in
++	 * progress holds the IO lock shared. We only need to hold the lock
++	 * exclusive to blow away the page cache, so only take lock exclusively
++	 * if the page cache needs invalidation. This allows the normal direct
++	 * IO case of no page cache pages to proceeed concurrently without
++	 * serialisation.
+ 	 */
+ 	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+ 	if ((ioflags & XFS_IO_ISDIRECT) && inode->i_mapping->nrpages) {
+ 		xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
+ 		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
+ 
++		/*
++		 * The generic dio code only flushes the range of the particular
++		 * I/O. Because we take an exclusive lock here, this whole
++		 * sequence is considerably more expensive for us. This has a
++		 * noticeable performance impact for any file with cached pages,
++		 * even when outside of the range of the particular I/O.
++		 *
++		 * Hence, amortize the cost of the lock against a full file
++		 * flush and reduce the chances of repeated iolock cycles going
++		 * forward.
++		 */
+ 		if (inode->i_mapping->nrpages) {
+-			ret = filemap_write_and_wait_range(
+-							VFS_I(ip)->i_mapping,
+-							pos, pos + size - 1);
++			ret = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 			if (ret) {
+ 				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+ 				return ret;
+@@ -345,9 +354,7 @@ xfs_file_read_iter(
+ 			 * we fail to invalidate a page, but this should never
+ 			 * happen on XFS. Warn if it does fail.
+ 			 */
+-			ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+-					pos >> PAGE_CACHE_SHIFT,
+-					(pos + size - 1) >> PAGE_CACHE_SHIFT);
++			ret = invalidate_inode_pages2(VFS_I(ip)->i_mapping);
+ 			WARN_ON_ONCE(ret);
+ 			ret = 0;
+ 		}
+@@ -733,19 +740,19 @@ xfs_file_dio_aio_write(
+ 	pos = iocb->ki_pos;
+ 	end = pos + count - 1;
+ 
++	/*
++	 * See xfs_file_read_iter() for why we do a full-file flush here.
++	 */
+ 	if (mapping->nrpages) {
+-		ret = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-						   pos, end);
++		ret = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 		if (ret)
+ 			goto out;
+ 		/*
+-		 * Invalidate whole pages. This can return an error if
+-		 * we fail to invalidate a page, but this should never
+-		 * happen on XFS. Warn if it does fail.
++		 * Invalidate whole pages. This can return an error if we fail
++		 * to invalidate a page, but this should never happen on XFS.
++		 * Warn if it does fail.
+ 		 */
+-		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+-					pos >> PAGE_CACHE_SHIFT,
+-					end >> PAGE_CACHE_SHIFT);
++		ret = invalidate_inode_pages2(VFS_I(ip)->i_mapping);
+ 		WARN_ON_ONCE(ret);
+ 		ret = 0;
+ 	}
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
