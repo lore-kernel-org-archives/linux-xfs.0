@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 935F47F50
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 20:43:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 62207304051
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 18:43:53 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id OBHY0vUIIrPvzA53 (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 899F27F37
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 20:43:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A13A8F8035
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 18:43:58 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Coh5llqlgvGzi0qG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Aug 2015 18:43:49 -0700 (PDT)
-Subject: [PATCH 01/10] libxfs: readahead of dir3 data blocks should use the
-	read verifier
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 14 Aug 2015 18:43:44 -0700
-Message-ID: <20150815014344.1839.12045.stgit@birch.djwong.org>
+	Fri, 14 Aug 2015 18:43:56 -0700 (PDT)
+Subject: [PATCH 02/10] xfs_db: don't crash on a corrupt inode
+From: "Darrick J. Wong" <djwong@alder.djwong.org>
+Date: Fri, 14 Aug 2015 18:43:51 -0700
+Message-ID: <20150815014351.1839.81382.stgit@birch.djwong.org>
 In-Reply-To: <20150815014338.1839.37405.stgit@birch.djwong.org>
 References: <20150815014338.1839.37405.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,33 +31,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-In the dir3 data block readahead function, use the regular read
-verifier to check the block's CRC and spot-check the block contents
-instead of calling the spot-checking routine directly.  This prevents
-corrupted directory data blocks from being read into the kernel, which
-can lead to garbage ls output and directory loops (if say one of the
-entries contains invalid characters).
+If the user selects a corrupt inode via the 'inode XXX' command, the
+read verifier will fail and the io cursor at the top of the ring will
+not have any data attached.  When this is the case, we cannot
+dereference the NULL pointer or xfs_db will crash.  Therefore, check
+the buffer pointer before using it.
+
+It's arguable that we ought to retry the read without the verifiers
+if the inode is corrupt or fails CRC, since this /is/ a debugging
+tool, and maybe you wanted the contents anyway.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_dir2_data.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db/inode.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index c475ba8..466e096 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -250,7 +250,8 @@ xfs_dir3_data_reada_verify(
- 		return;
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
--		xfs_dir3_data_verify(bp);
-+		bp->b_ops = &xfs_dir3_block_buf_ops;
-+		bp->b_ops->verify_read(bp);
- 		return;
- 	default:
- 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+diff --git a/db/inode.c b/db/inode.c
+index e86dabd..64b263b 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -682,6 +682,8 @@ set_cur_inode(
+ 	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, cluster_agbno),
+ 		numblks, DB_RING_IGN, NULL);
+ 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
++	if (!iocur_top->data)
++		return;
+ 	dip = iocur_top->data;
+ 	iocur_top->ino_buf = 1;
+ 	iocur_top->ino = ino;
 
 _______________________________________________
 xfs mailing list
