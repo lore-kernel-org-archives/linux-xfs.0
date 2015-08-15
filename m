@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E1A9A7F37
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 20:44:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C38AB304043
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 18:44:08 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id pX9uaqyNVxNDB4iK (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 76F067F37
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 20:44:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EB59EAC003
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 18:44:06 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id oBEQJTTSz3Piuqlp (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Aug 2015 18:44:07 -0700 (PDT)
-Subject: [PATCH 04/10] xfs_repair: fix broken EFSBADCRC/EFSCORRUPTED usage
-	with buffer errors
+	Fri, 14 Aug 2015 18:44:05 -0700 (PDT)
+Subject: [PATCH 03/10] xfs_repair: ignore "repaired" flag after we decide to
+	clear xattr block
 From: "Darrick J. Wong" <djwong@alder.djwong.org>
-Date: Fri, 14 Aug 2015 18:44:04 -0700
-Message-ID: <20150815014404.1839.75324.stgit@birch.djwong.org>
+Date: Fri, 14 Aug 2015 18:43:58 -0700
+Message-ID: <20150815014357.1839.68720.stgit@birch.djwong.org>
 In-Reply-To: <20150815014338.1839.37405.stgit@birch.djwong.org>
 References: <20150815014338.1839.37405.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,153 +32,62 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-When we encounter CRC or verifier errors, bp->b_error is set to
--EFSBADCRC and -EFSCORRUPTED; note the negative sign.  For whatever
-reason, repair and db use the positive versions, and therefore fail to
-notice the error, so fix all the broken uses.
-
-Note however that the db and repair turn the negative codes returned
-by libxfs into positive codes that can be used with strerror.
+If in the course of examining extended attribute block contents we
+first decide to repair an entry (*repair = 1) but secondly decide to
+clear the whole block, set *repair = 0 because the clearing action
+only happens if *repair == 0.  Put another way, if we're nuking a
+block, don't pretend like we've fixed it too.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/attr.c     |    4 ++--
- db/dir2.c     |    4 ++--
- db/io.c       |    4 ++--
- db/io.h       |    2 +-
- repair/dir2.c |    2 +-
- repair/scan.c |   12 ++++++------
- 6 files changed, 14 insertions(+), 14 deletions(-)
+ repair/attr_repair.c |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
 
-diff --git a/db/attr.c b/db/attr.c
-index 897834b..5e69100 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -554,7 +554,7 @@ xfs_attr3_db_read_verify(
- 		break;
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 62f80e7..2bd9334 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -1311,6 +1311,13 @@ process_leaf_attr_block(
+ 		* we can add it then.
+ 		*/
+ 	}
++	/*
++	 * If we're just going to zap the block, don't pretend like we
++	 * repaired it, because repairing the block stops the clear
++	 * operation.
++	 */
++	if (clearit)
++		*repair = 0;
+ 	if (*repair)
+ 		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, leaf, &leafhdr);
+ 
+@@ -1524,6 +1531,7 @@ process_longform_attr(
+ 	xfs_dahash_t	next_hashval;
+ 	int		repairlinks = 0;
+ 	struct xfs_attr3_icleaf_hdr leafhdr;
++	int		error;
+ 
+ 	*repair = 0;
+ 
+@@ -1604,12 +1612,16 @@ process_longform_attr(
+ 			libxfs_writebuf(bp, 0);
+ 		} else
+ 			libxfs_putbuf(bp);
+-		return (process_node_attr(mp, ino, dip, blkmap)); /* + repair */
++		error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
++		if (error)
++			*repair = 0;
++		return error;
  	default:
- 		dbprintf(_("Unknown attribute buffer type!\n"));
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 		return;
- 	}
- verify:
-@@ -566,7 +566,7 @@ xfs_attr3_db_write_verify(
- 	struct xfs_buf		*bp)
- {
- 	dbprintf(_("Writing unknown attribute buffer type!\n"));
--	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	xfs_buf_ioerror(bp, -EFSCORRUPTED);
- }
- 
- const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
-diff --git a/db/dir2.c b/db/dir2.c
-index 7f69e6f..cc76662 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -1021,7 +1021,7 @@ xfs_dir3_db_read_verify(
- 		break;
- 	default:
- 		dbprintf(_("Unknown directory buffer type!\n"));
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 		return;
- 	}
- verify:
-@@ -1033,7 +1033,7 @@ xfs_dir3_db_write_verify(
- 	struct xfs_buf		*bp)
- {
- 	dbprintf(_("Writing unknown directory buffer type!\n"));
--	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	xfs_buf_ioerror(bp, -EFSCORRUPTED);
- }
- 
- const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
-diff --git a/db/io.c b/db/io.c
-index 9fa52b8..9452e07 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -535,8 +535,8 @@ set_cur(
- 	 * Keep the buffer even if the verifier says it is corrupted.
- 	 * We're a diagnostic tool, after all.
- 	 */
--	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED &&
--				   bp->b_error != EFSBADCRC))
-+	if (!bp || (bp->b_error && bp->b_error != -EFSCORRUPTED &&
-+				   bp->b_error != -EFSBADCRC))
- 		return;
- 	iocur_top->buf = bp->b_addr;
- 	iocur_top->bp = bp;
-diff --git a/db/io.h b/db/io.h
-index 31d96b4..6201d7b 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -75,6 +75,6 @@ iocur_crc_valid()
- 		return -1;
- 	if (iocur_top->bp->b_flags & LIBXFS_B_UNCHECKED)
- 		return -1;
--	return (iocur_top->bp->b_error != EFSBADCRC &&
-+	return (iocur_top->bp->b_error != -EFSBADCRC &&
- 		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
- }
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 187e069..a5646f8 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -199,7 +199,7 @@ _("bad dir magic number 0x%x in inode %" PRIu64 " bno = %u\n"),
- 			goto error_out;
- 		}
- 		/* corrupt node; rebuild the dir. */
--		if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
-+		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
- 			do_warn(
- _("corrupt tree block %u for directory inode %" PRIu64 "\n"),
- 				bno, da_cursor->ino);
-diff --git a/repair/scan.c b/repair/scan.c
-index 58f45eb..1e7a4da 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -82,7 +82,7 @@ scan_sbtree(
- 		do_error(_("can't read btree block %d/%d\n"), agno, root);
- 		return;
- 	}
--	if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
-+	if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
- 		do_warn(_("btree block %d/%d is suspect, error %d\n"),
- 			agno, root, bp->b_error);
- 		suspect = 1;
-@@ -145,7 +145,7 @@ scan_lbtree(
- 	 * is a corruption or not and whether it got corrected and so needs
- 	 * writing back. CRC errors always imply we need to write the block.
- 	 */
--	if (bp->b_error == EFSBADCRC) {
-+	if (bp->b_error == -EFSBADCRC) {
- 		do_warn(_("btree block %d/%d is suspect, error %d\n"),
- 			XFS_FSB_TO_AGNO(mp, root),
- 			XFS_FSB_TO_AGBNO(mp, root), bp->b_error);
-@@ -1432,7 +1432,7 @@ scan_freelist(
- 		do_abort(_("can't read agfl block for ag %d\n"), agno);
- 		return;
- 	}
--	if (agflbuf->b_error == EFSBADCRC)
-+	if (agflbuf->b_error == -EFSBADCRC)
- 		do_warn(_("agfl has bad CRC for ag %d\n"), agno);
- 
- 	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
-@@ -1705,9 +1705,9 @@ scan_ag(
- 	 * immediately, though.
- 	 */
- 	if (!no_modify) {
--		agi_dirty += (agibuf->b_error == EFSBADCRC);
--		agf_dirty += (agfbuf->b_error == EFSBADCRC);
--		sb_dirty += (sbbuf->b_error == EFSBADCRC);
-+		agi_dirty += (agibuf->b_error == -EFSBADCRC);
-+		agf_dirty += (agfbuf->b_error == -EFSBADCRC);
-+		sb_dirty += (sbbuf->b_error == -EFSBADCRC);
+ 		do_warn(
+ 	_("bad attribute leaf magic # %#x for dir ino %" PRIu64 "\n"),
+ 			be16_to_cpu(leaf->hdr.info.magic), ino);
+ 		libxfs_putbuf(bp);
++		*repair = 0;
+ 		return(1);
  	}
  
- 	if (agi_dirty && !no_modify)
 
 _______________________________________________
 xfs mailing list
