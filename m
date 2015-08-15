@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C30217F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 20:44:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 320E1AC003
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 18:44:41 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 95AB07F4E
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 20:44:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4AD238F8035
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2015 18:44:47 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id NUDjbnWiyNyiI9ME (version=TLSv1
+	cuda.sgi.com with ESMTP id 1SCsz0BvWF0sQ6Nx (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Aug 2015 18:44:39 -0700 (PDT)
-Subject: [PATCH 09/10] xfs_db: trash the block at the top of the cursor stack
+	Fri, 14 Aug 2015 18:44:45 -0700 (PDT)
+Subject: [PATCH 10/10] xfs_db: enable blockget for v5 filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 14 Aug 2015 18:44:36 -0700
-Message-ID: <20150815014436.1839.74362.stgit@birch.djwong.org>
+Date: Fri, 14 Aug 2015 18:44:42 -0700
+Message-ID: <20150815014442.1839.74817.stgit@birch.djwong.org>
 In-Reply-To: <20150815014338.1839.37405.stgit@birch.djwong.org>
 References: <20150815014338.1839.37405.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,231 +31,451 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Add a new -z option to blocktrash to make it trash the block that's at
-the top of the stack, so that we can perform targeted fuzzing.  While
-we're at it, prevent fuzzing off the end of the buffer and add a -o
-parameter so that we can specify an offset to start fuzzing from.
+Plumb in the necessary magic number checks and other fixups required
+to handle v5 filesystems.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/check.c        |   81 +++++++++++++++++++++++++++++++++++++++++------------
- man/man8/xfs_db.8 |   15 +++++++++-
- 2 files changed, 77 insertions(+), 19 deletions(-)
+ db/check.c |  238 +++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ db/type.c  |    2 +
+ 2 files changed, 214 insertions(+), 26 deletions(-)
 
 
 diff --git a/db/check.c b/db/check.c
-index 965d0f5..7c11b0b 100644
+index 7c11b0b..edfe62d 100644
 --- a/db/check.c
 +++ b/db/check.c
-@@ -930,8 +930,7 @@ typedef struct ltab {
+@@ -44,7 +44,7 @@ typedef enum {
+ 	DBM_FREE1,	DBM_FREE2,	DBM_FREELIST,	DBM_INODE,
+ 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
+ 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
+-	DBM_SYMLINK,
++	DBM_SYMLINK,	DBM_BTFINO,
+ 	DBM_NDBM
+ } dbm_t;
  
- static void
- blocktrash_b(
--	xfs_agnumber_t	agno,
--	xfs_agblock_t	agbno,
-+	int		offset,
- 	dbm_t		type,
- 	ltab_t		*ltabp,
- 	int		mode)
-@@ -943,23 +942,36 @@ blocktrash_b(
- 	int		len;
- 	int		mask;
- 	int		newbit;
--	int		offset;
- 	const struct xfs_buf_ops *stashed_ops;
- 	static char	*modestr[] = {
- 		N_("zeroed"), N_("set"), N_("flipped"), N_("randomized")
- 	};
-+	xfs_agnumber_t	agno;
-+	xfs_agblock_t	agbno;
- 
-+	agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
-+	agbno = XFS_FSB_TO_AGBNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
-+	if (iocur_top->len == 0) {
-+		dbprintf(_("zero-length block %u/%u buffer to trash??\n"),
-+				agno, agbno);
-+		return;
-+	}
- 	len = (int)((random() % (ltabp->max - ltabp->min + 1)) + ltabp->min);
--	offset = (int)(random() % (int)(mp->m_sb.sb_blocksize * NBBY));
-+	/*
-+	 * offset >= 0: start fuzzing at this exact offset.
-+	 * offset < 0: pick an offset at least as high at -(offset + 1).
-+	 */
-+	if (offset < 0) {
-+		offset = -(offset + 1);
-+		offset = offset + (int)(random() % (int)((iocur_top->len - offset) * NBBY));
-+	}
-+	if (offset + len >= iocur_top->len * NBBY)
-+		len = (iocur_top->len * NBBY) - offset;
- 	newbit = 0;
--	push_cur();
--	set_cur(NULL,
--		XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb, DB_RING_IGN, NULL);
- 	stashed_ops = iocur_top->bp->b_ops;
- 	iocur_top->bp->b_ops = NULL;
- 	if ((buf = iocur_top->data) == NULL) {
- 		dbprintf(_("can't read block %u/%u for trashing\n"), agno, agbno);
--		pop_cur();
- 		return;
+@@ -170,6 +170,7 @@ static const char	*typename[] = {
+ 	"rtsum",
+ 	"sb",
+ 	"symlink",
++	"btfino",
+ 	NULL
+ };
+ static int		verbose;
+@@ -345,6 +346,9 @@ static void		scanfunc_cnt(struct xfs_btree_block *block, int level,
+ static void		scanfunc_ino(struct xfs_btree_block *block, int level,
+ 				     xfs_agf_t *agf, xfs_agblock_t bno,
+ 				     int isroot);
++static void		scanfunc_fino(struct xfs_btree_block *block, int level,
++				     struct xfs_agf *agf, xfs_agblock_t bno,
++				     int isroot);
+ static void		set_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 				  xfs_extlen_t len, dbm_t type,
+ 				  xfs_agnumber_t c_agno, xfs_agblock_t c_agbno);
+@@ -789,19 +793,6 @@ blockget_f(
+ 		return 0;
  	}
- 	for (bitno = 0; bitno < len; bitno++) {
-@@ -988,7 +1000,6 @@ blocktrash_b(
- 	}
- 	write_cur();
- 	iocur_top->bp->b_ops = stashed_ops;
--	pop_cur();
- 	printf(_("blocktrash: %u/%u %s block %d bit%s starting %d:%d %s\n"),
- 		agno, agbno, typename[type], len, len == 1 ? "" : "s",
- 		offset / NBBY, offset % NBBY, modestr[mode]);
-@@ -1019,11 +1030,9 @@ blocktrash_f(
- 	uint		seed;
- 	int		sopt;
- 	int		tmask;
-+	bool		this_block = false;
-+	int		offset = -1;
  
--	if (!dbmap) {
--		dbprintf(_("must run blockget first\n"));
+-	/*
+-	 * XXX: check does not support CRC enabled filesystems. Return
+-	 * immediately, silently, with success but  without doing anything here
+-	 * initially so that xfstests can run without modification on metadata
+-	 * enabled filesystems.
+-	 *
+-	 * XXX: ultimately we need to dump an error message here that xfstests
+-	 * filters out, or we need to actually do the work to make check support
+-	 * crc enabled filesystems.
+-	 */
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
 -		return 0;
--	}
- 	optind = 0;
- 	count = 1;
- 	min = 1;
-@@ -1050,7 +1059,7 @@ blocktrash_f(
+-
+ 	if (!init(argc, argv)) {
+ 		if (serious_error)
+ 			exitcode = 3;
+@@ -1058,6 +1049,7 @@ blocktrash_f(
+ 		   (1 << DBM_RTBITMAP) |
  		   (1 << DBM_RTSUM) |
  		   (1 << DBM_SYMLINK) |
++		   (1 << DBM_BTFINO) |
  		   (1 << DBM_SB);
--	while ((c = getopt(argc, argv, "0123n:s:t:x:y:")) != EOF) {
-+	while ((c = getopt(argc, argv, "0123n:o:s:t:x:y:z")) != EOF) {
+ 	while ((c = getopt(argc, argv, "0123n:o:s:t:x:y:z")) != EOF) {
  		switch (c) {
- 		case '0':
- 			mode = 0;
-@@ -1071,6 +1080,21 @@ blocktrash_f(
- 				return 0;
- 			}
- 			break;
-+		case 'o': {
-+			int relative = 0;
-+			if (optarg[0] == '+') {
-+				optarg++;
-+				relative = 1;
-+			}
-+			offset = (int)strtol(optarg, &p, 0);
-+			if (*p != '\0' || offset < 0) {
-+				dbprintf(_("bad blocktrash offset %s\n"), optarg);
-+				return 0;
-+			}
-+			if (relative)
-+				offset = -offset - 1;
-+			break;
-+		}
- 		case 's':
- 			seed = (uint)strtoul(optarg, &p, 0);
- 			sopt = 1;
-@@ -1102,11 +1126,22 @@ blocktrash_f(
- 				return 0;
- 			}
- 			break;
-+		case 'z':
-+			this_block = true;
-+			break;
- 		default:
- 			dbprintf(_("bad option for blocktrash command\n"));
- 			return 0;
+@@ -2267,7 +2259,9 @@ process_data_dir_v2(
+ 	data = iocur_top->data;
+ 	block = iocur_top->data;
+ 	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
+-			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC) {
++			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC &&
++			be32_to_cpu(block->magic) != XFS_DIR3_BLOCK_MAGIC &&
++			be32_to_cpu(data->magic) != XFS_DIR3_DATA_MAGIC) {
+ 		if (!sflag || v)
+ 			dbprintf(_("bad directory data magic # %#x for dir ino "
+ 				 "%lld block %d\n"),
+@@ -2278,7 +2272,8 @@ process_data_dir_v2(
+ 	db = xfs_dir2_da_to_db(mp->m_dir_geo, dabno);
+ 	bf = M_DIROPS(mp)->data_bestfree_p(data);
+ 	ptr = (char *)M_DIROPS(mp)->data_unused_p(data);
+-	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC) {
++	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	    be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC) {
+ 		btp = xfs_dir2_block_tail_p(mp->m_dir_geo, block);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endptr = (char *)lep;
+@@ -2424,7 +2419,8 @@ process_data_dir_v2(
+ 			(*dot)++;
  		}
  	}
-+	if (!this_block && !dbmap) {
-+		dbprintf(_("must run blockget first\n"));
-+		return 0;
-+	}
-+	if (this_block && iocur_sp == 0) {
-+		dbprintf(_("nothing on stack\n"));
-+		return 0;
-+	}
- 	if (min > max) {
- 		dbprintf(_("bad min/max for blocktrash command\n"));
- 		return 0;
-@@ -1125,6 +1160,14 @@ blocktrash_f(
- 		} else
- 			lentab[lentablen - 1].max = i;
+-	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) {
++	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	    be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) {
+ 		endptr = (char *)data + mp->m_dir_geo->blksize;
+ 		for (i = stale = 0; lep && i < be32_to_cpu(btp->count); i++) {
+ 			if ((char *)&lep[i] >= endptr) {
+@@ -2456,7 +2452,8 @@ process_data_dir_v2(
+ 				id->ino, dabno);
+ 		error++;
  	}
-+	if (!sopt)
-+		dbprintf(_("blocktrash: seed %u\n"), seed);
-+	srandom(seed);
-+	if (this_block) {
-+		blocktrash_b(offset, DBM_UNKNOWN, &lentab[random() % lentablen],
-+				mode);
-+		goto out;
-+	}
- 	for (blocks = 0, agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
- 		for (agbno = 0, p = dbmap[agno];
- 		     agbno < mp->m_sb.sb_agblocks;
-@@ -1137,9 +1180,6 @@ blocktrash_f(
- 		dbprintf(_("blocktrash: no matching blocks\n"));
- 		goto out;
+-	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC &&
++	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	     be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) &&
+ 	    count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale)) {
+ 		if (!sflag || v)
+ 			dbprintf(_("dir %lld block %d bad block tail count %d "
+@@ -2465,7 +2462,8 @@ process_data_dir_v2(
+ 				be32_to_cpu(btp->stale));
+ 		error++;
  	}
--	if (!sopt)
--		dbprintf(_("blocktrash: seed %u\n"), seed);
--	srandom(seed);
- 	for (i = 0; i < count; i++) {
- 		randb = (xfs_rfsblock_t)((((__int64_t)random() << 32) |
- 					 random()) % blocks);
-@@ -1153,8 +1193,13 @@ blocktrash_f(
- 					continue;
- 				if (bi++ < randb)
- 					continue;
--				blocktrash_b(agno, agbno, (dbm_t)*p,
-+				push_cur();
-+				set_cur(NULL,
-+					XFS_AGB_TO_DADDR(mp, agno, agbno),
-+					blkbb, DB_RING_IGN, NULL);
-+				blocktrash_b(offset, (dbm_t)*p,
- 					&lentab[random() % lentablen], mode);
-+				pop_cur();
- 				done = 1;
- 				break;
- 			}
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index df54bb7..681efc4 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -232,7 +232,7 @@ enables verbose output. Messages will be printed for every block and
- inode processed.
- .RE
- .TP
--.BI "blocktrash [\-n " count "] [\-x " min "] [\-y " max "] [\-s " seed "] [\-0|1|2|3] [\-t " type "] ..."
-+.BI "blocktrash [-z] [\-o " offset "] [\-n " count "] [\-x " min "] [\-y " max "] [\-s " seed "] [\-0|1|2|3] [\-t " type "] ..."
- Trash randomly selected filesystem metadata blocks.
- Trashing occurs to randomly selected bits in the chosen blocks.
- This command is available only in debugging versions of
-@@ -259,6 +259,13 @@ supplies the
- .I count
- of block-trashings to perform (default 1).
- .TP
-+.B \-o
-+supplies the bit
-+.I offset
-+at which to start trashing the block.  If the value is preceded by a '+', the
-+trashing will start at a randomly chosen offset that is larger than the value
-+supplied.  The default is to randomly choose an offset anywhere in the block.
-+.TP
- .B \-s
- supplies a
- .I seed
-@@ -282,6 +289,12 @@ size of bit range to be trashed. The default value is 1.
- sets the
- .I maximum
- size of bit range to be trashed. The default value is 1024.
-+.TP
-+.B \-z
-+trashes the block at the top of the stack.  It is not necessary to
-+run
-+.BI blockget
-+if this option is supplied.
- .RE
- .TP
- .BI "blockuse [\-n] [\-c " count ]
+-	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC && 
++	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	     be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) &&
+ 					stale != be32_to_cpu(btp->stale)) {
+ 		if (!sflag || v)
+ 			dbprintf(_("dir %lld block %d bad stale tail count %d\n"),
+@@ -3051,6 +3049,73 @@ process_leaf_node_dir_v2(
+ }
+ 
+ static void
++process_leaf_node_dir_v3_free(
++	inodata_t		*id,
++	int			v,
++	xfs_dablk_t		dabno,
++	freetab_t		*freetab)
++{
++	xfs_dir2_data_off_t	ent;
++	struct xfs_dir3_free	*free;
++	int			i;
++	int			maxent;
++	int			used;
++
++	free = iocur_top->data;
++	maxent = M_DIROPS(mp)->free_max_bests(mp->m_dir_geo);
++	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp->m_dir_geo, 
++					dabno - mp->m_dir_geo->freeblk) * maxent) {
++		if (!sflag || v)
++			dbprintf(_("bad free block firstdb %d for dir ino %lld "
++				 "block %d\n"),
++				be32_to_cpu(free->hdr.firstdb), id->ino, dabno);
++		error++;
++		return;
++	}
++	if (be32_to_cpu(free->hdr.nvalid) > maxent || 
++				be32_to_cpu(free->hdr.nvalid) < 0 ||
++				be32_to_cpu(free->hdr.nused) > maxent || 
++				be32_to_cpu(free->hdr.nused) < 0 ||
++				be32_to_cpu(free->hdr.nused) > 
++					be32_to_cpu(free->hdr.nvalid)) {
++		if (!sflag || v)
++			dbprintf(_("bad free block nvalid/nused %d/%d for dir "
++				 "ino %lld block %d\n"),
++				be32_to_cpu(free->hdr.nvalid), 
++				be32_to_cpu(free->hdr.nused), id->ino, dabno);
++		error++;
++		return;
++	}
++	for (used = i = 0; i < be32_to_cpu(free->hdr.nvalid); i++) {
++		if (freetab->nents <= be32_to_cpu(free->hdr.firstdb) + i)
++			ent = NULLDATAOFF;
++		else
++			ent = freetab->ents[be32_to_cpu(free->hdr.firstdb) + i];
++		if (ent != be16_to_cpu(free->bests[i])) {
++			if (!sflag || v)
++				dbprintf(_("bad free block ent %d is %d should "
++					 "be %d for dir ino %lld block %d\n"),
++					i, be16_to_cpu(free->bests[i]), ent, 
++					id->ino, dabno);
++			error++;
++		}
++		if (be16_to_cpu(free->bests[i]) != NULLDATAOFF)
++			used++;
++		if (ent != NULLDATAOFF)
++			freetab->ents[be32_to_cpu(free->hdr.firstdb) + i] = 
++								NULLDATAOFF;
++	}
++	if (used != be32_to_cpu(free->hdr.nused)) {
++		if (!sflag || v)
++			dbprintf(_("bad free block nused %d should be %d for dir "
++				 "ino %lld block %d\n"),
++				be32_to_cpu(free->hdr.nused), used, id->ino, 
++				dabno);
++		error++;
++	}
++}
++
++static void
+ process_leaf_node_dir_v2_free(
+ 	inodata_t		*id,
+ 	int			v,
+@@ -3064,7 +3129,8 @@ process_leaf_node_dir_v2_free(
+ 	int			used;
+ 
+ 	free = iocur_top->data;
+-	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC) {
++	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC &&
++	    be32_to_cpu(free->hdr.magic) != XFS_DIR3_FREE_MAGIC) {
+ 		if (!sflag || v)
+ 			dbprintf(_("bad free block magic # %#x for dir ino %lld "
+ 				 "block %d\n"),
+@@ -3072,6 +3138,10 @@ process_leaf_node_dir_v2_free(
+ 		error++;
+ 		return;
+ 	}
++	if (be32_to_cpu(free->hdr.magic) == XFS_DIR3_FREE_MAGIC) {
++		process_leaf_node_dir_v3_free(id, v, dabno, freetab);
++		return;
++	}
+ 	maxent = M_DIROPS(mp)->free_max_bests(mp->m_dir_geo);
+ 	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp->m_dir_geo, 
+ 					dabno - mp->m_dir_geo->freeblk) * maxent) {
+@@ -3125,6 +3195,21 @@ process_leaf_node_dir_v2_free(
+ 	}
+ }
+ 
++/*
++ * Get address of the bestcount field in the single-leaf block.
++ */
++static inline int
++xfs_dir3_leaf_ents_count(struct xfs_dir2_leaf *lp)
++{
++	if (lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
++	    lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
++		struct xfs_dir3_leaf *lp3 = (struct xfs_dir3_leaf *)lp;
++
++		return be16_to_cpu(lp3->hdr.count);
++	}
++	return be16_to_cpu(lp->hdr.count);
++}
++
+ static void
+ process_leaf_node_dir_v2_int(
+ 	inodata_t		*id,
+@@ -3135,6 +3220,7 @@ process_leaf_node_dir_v2_int(
+ 	int			i;
+ 	__be16			*lbp;
+ 	xfs_dir2_leaf_t		*leaf;
++	struct xfs_dir3_leaf	*leaf3 = NULL;
+ 	xfs_dir2_leaf_entry_t	*lep;
+ 	xfs_dir2_leaf_tail_t	*ltp;
+ 	xfs_da_intnode_t	*node;
+@@ -3143,7 +3229,15 @@ process_leaf_node_dir_v2_int(
+ 
+ 	leaf = iocur_top->data;
+ 	switch (be16_to_cpu(leaf->hdr.info.magic)) {
++	case XFS_DIR3_LEAF1_MAGIC:
++	case XFS_DIR3_LEAFN_MAGIC:
++	case XFS_DA3_NODE_MAGIC:
++		leaf3 = iocur_top->data;
++		break;
++	}
++	switch (be16_to_cpu(leaf->hdr.info.magic)) {
+ 	case XFS_DIR2_LEAF1_MAGIC:
++	case XFS_DIR3_LEAF1_MAGIC:
+ 		if (be32_to_cpu(leaf->hdr.info.forw) || 
+ 					be32_to_cpu(leaf->hdr.info.back)) {
+ 			if (!sflag || v)
+@@ -3183,10 +3277,12 @@ process_leaf_node_dir_v2_int(
+ 		}
+ 		break;
+ 	case XFS_DIR2_LEAFN_MAGIC:
++	case XFS_DIR3_LEAFN_MAGIC:
+ 		/* if it's at the root location then we can check the
+ 		 * pointers are null XXX */
+ 		break;
+ 	case XFS_DA_NODE_MAGIC:
++	case XFS_DA3_NODE_MAGIC:
+ 		node = iocur_top->data;
+ 		M_DIROPS(mp)->node_hdr_from_disk(&nodehdr, node);
+ 		if (nodehdr.level < 1 || nodehdr.level > XFS_DA_NODE_MAXDEPTH) {
+@@ -3208,7 +3304,7 @@ process_leaf_node_dir_v2_int(
+ 		return;
+ 	}
+ 	lep = M_DIROPS(mp)->leaf_ents_p(leaf);
+-	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
++	for (i = stale = 0; i < xfs_dir3_leaf_ents_count(leaf); i++) {
+ 		if (be32_to_cpu(lep[i].address) == XFS_DIR2_NULL_DATAPTR)
+ 			stale++;
+ 		else if (dir_hash_see(be32_to_cpu(lep[i].hashval), 
+@@ -3221,7 +3317,14 @@ process_leaf_node_dir_v2_int(
+ 			error++;
+ 		}
+ 	}
+-	if (stale != be16_to_cpu(leaf->hdr.stale)) {
++	if (leaf3 && stale != be16_to_cpu(leaf3->hdr.stale)) {
++		if (!sflag || v)
++			dbprintf(_("dir3 %lld block %d stale mismatch "
++				 "%d/%d\n"),
++				 id->ino, dabno, stale,
++				 be16_to_cpu(leaf3->hdr.stale));
++		error++;
++	} else if (!leaf && stale != be16_to_cpu(leaf->hdr.stale)) {
+ 		if (!sflag || v)
+ 			dbprintf(_("dir %lld block %d stale mismatch "
+ 				 "%d/%d\n"),
+@@ -3808,6 +3911,12 @@ scan_ag(
+ 		be32_to_cpu(agi->agi_root),
+ 		be32_to_cpu(agi->agi_level),
+ 		1, scanfunc_ino, TYP_INOBT);
++	if (agi->agi_free_root) {
++		scan_sbtree(agf,
++			be32_to_cpu(agi->agi_free_root),
++			be32_to_cpu(agi->agi_free_level),
++			1, scanfunc_fino, TYP_FINOBT);
++	}
+ 	if (be32_to_cpu(agf->agf_freeblks) != agffreeblks) {
+ 		if (!sflag)
+ 			dbprintf(_("agf_freeblks %u, counted %u in ag %u\n"),
+@@ -4007,7 +4116,8 @@ scanfunc_bmap(
+ 
+ 	agno = XFS_FSB_TO_AGNO(mp, bno);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
+-	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) {
++	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC &&
++	    be32_to_cpu(block->bb_magic) != XFS_BMAP_CRC_MAGIC) {
+ 		if (!sflag || id->ilist || CHECK_BLIST(bno))
+ 			dbprintf(_("bad magic # %#x in inode %lld bmbt block "
+ 				 "%u/%u\n"),
+@@ -4072,7 +4182,8 @@ scanfunc_bno(
+ 	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
+ 	xfs_agblock_t		lastblock;
+ 
+-	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC) {
++	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC &&
++	    be32_to_cpu(block->bb_magic) != XFS_ABTB_CRC_MAGIC) {
+ 		dbprintf(_("bad magic # %#x in btbno block %u/%u\n"),
+ 			be32_to_cpu(block->bb_magic), seqno, bno);
+ 		serious_error++;
+@@ -4145,7 +4256,8 @@ scanfunc_cnt(
+ 	xfs_alloc_rec_t		*rp;
+ 	xfs_extlen_t		lastcount;
+ 
+-	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
++	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC &&
++	    be32_to_cpu(block->bb_magic) != XFS_ABTC_CRC_MAGIC) {
+ 		dbprintf(_("bad magic # %#x in btcnt block %u/%u\n"),
+ 			be32_to_cpu(block->bb_magic), seqno, bno);
+ 		serious_error++;
+@@ -4225,7 +4337,8 @@ scanfunc_ino(
+ 	xfs_inobt_ptr_t		*pp;
+ 	xfs_inobt_rec_t		*rp;
+ 
+-	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC) {
++	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
++	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
+ 		dbprintf(_("bad magic # %#x in inobt block %u/%u\n"),
+ 			be32_to_cpu(block->bb_magic), seqno, bno);
+ 		serious_error++;
+@@ -4321,6 +4434,79 @@ scanfunc_ino(
+ }
+ 
+ static void
++scanfunc_fino(
++	struct xfs_btree_block	*block,
++	int			level,
++	struct xfs_agf		*agf,
++	xfs_agblock_t		bno,
++	int			isroot)
++{
++	xfs_agino_t		agino;
++	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
++	int			i;
++	int			off;
++	xfs_inobt_ptr_t		*pp;
++	struct xfs_inobt_rec	*rp;
++
++	if (be32_to_cpu(block->bb_magic) != XFS_FIBT_MAGIC &&
++	    be32_to_cpu(block->bb_magic) != XFS_FIBT_CRC_MAGIC) {
++		dbprintf(_("bad magic # %#x in finobt block %u/%u\n"),
++			be32_to_cpu(block->bb_magic), seqno, bno);
++		serious_error++;
++		return;
++	}
++	if (be16_to_cpu(block->bb_level) != level) {
++		if (!sflag)
++			dbprintf(_("expected level %d got %d in finobt block "
++				 "%u/%u\n"),
++				level, be16_to_cpu(block->bb_level), seqno, bno);
++		error++;
++	}
++	set_dbmap(seqno, bno, 1, DBM_BTFINO, seqno, bno);
++	if (level == 0) {
++		if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[0] ||
++		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_inobt_mnr[0])) {
++			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
++				 "finobt block %u/%u\n"),
++				be16_to_cpu(block->bb_numrecs), mp->m_inobt_mnr[0],
++				mp->m_inobt_mxr[0], seqno, bno);
++			serious_error++;
++			return;
++		}
++		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
++		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
++			agino = be32_to_cpu(rp[i].ir_startino);
++			off = XFS_INO_TO_OFFSET(mp, agino);
++			if (off == 0) {
++				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
++				    mp->m_sb.sb_inoalignmt &&
++				    (XFS_INO_TO_AGBNO(mp, agino) %
++				     mp->m_sb.sb_inoalignmt))
++					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
++				check_set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
++					(xfs_extlen_t)MAX(1,
++						XFS_INODES_PER_CHUNK >>
++						mp->m_sb.sb_inopblog),
++					DBM_INODE, DBM_INODE, seqno, bno);
++			}
++		}
++		return;
++	}
++	if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[1] ||
++	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_inobt_mnr[1])) {
++		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in finobt block "
++			 "%u/%u\n"),
++			be16_to_cpu(block->bb_numrecs), mp->m_inobt_mnr[1],
++			mp->m_inobt_mxr[1], seqno, bno);
++		serious_error++;
++		return;
++	}
++	pp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
++	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
++		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_fino, TYP_FINOBT);
++}
++
++static void
+ set_dbmap(
+ 	xfs_agnumber_t	agno,
+ 	xfs_agblock_t	agbno,
+diff --git a/db/type.c b/db/type.c
+index 5c60736..955986b 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -141,6 +141,8 @@ static const typ_t	__typtab_spcrc[] = {
+ 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
+ 		&xfs_symlink_buf_ops },
+ 	{ TYP_TEXT, "text", handle_text, NULL, NULL },
++	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
++		&xfs_inobt_buf_ops },
+ 	{ TYP_NONE, NULL }
+ };
+ 
 
 _______________________________________________
 xfs mailing list
