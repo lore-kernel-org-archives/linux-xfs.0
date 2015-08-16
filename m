@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5BD6F7F47
-	for <xfs@oss.sgi.com>; Sat, 15 Aug 2015 19:20:24 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6D46B7F50
+	for <xfs@oss.sgi.com>; Sat, 15 Aug 2015 19:32:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DFDA2AC003
-	for <xfs@oss.sgi.com>; Sat, 15 Aug 2015 17:20:23 -0700 (PDT)
-Received: from c.mx.filmlight.ltd.uk (c.mx.filmlight.ltd.uk [54.76.112.217])
-	by cuda.sgi.com with ESMTP id 32ogQXyk7XJp6Mk1 for
-	<xfs@oss.sgi.com>; Sat, 15 Aug 2015 17:20:21 -0700 (PDT)
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] v3 inodes are only valid on crc-enabled filesystems.
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-In-Reply-To: <C69467E1-642A-422A-8ECF-FDED92550B1B@filmlight.ltd.uk>
-Date: Sun, 16 Aug 2015 01:20:34 +0100
-Message-Id: <B1687AEF-F6DB-4CC7-9011-A73B233F19D5@filmlight.ltd.uk>
-References: <C69467E1-642A-422A-8ECF-FDED92550B1B@filmlight.ltd.uk>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 562918F8035
+	for <xfs@oss.sgi.com>; Sat, 15 Aug 2015 17:32:57 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id t604S7ZKE0CKjLyl for <xfs@oss.sgi.com>;
+	Sat, 15 Aug 2015 17:32:55 -0700 (PDT)
+Message-ID: <55CFDA36.1030700@sandeen.net>
+Date: Sat, 15 Aug 2015 19:32:54 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: XFS File system in trouble
+References: <20150720111747.GA53450@bfoster.bfoster>	<55B73365.1050908@mygrande.net>	<20150728123307.GC38784@bfoster.bfoster>	<55B79BFD.6020509@mygrande.net>	<20150728221150.GA26604@bfoster.bfoster>	<55BE7C75.4060604@mygrande.net>	<55C06F41.4030502@mygrande.net>	<20150804224240.GU16638@dastard>	<55C8006C.8070807@mygrande.net>	<55CC375C.10902@mygrande.net>	<20150814012635.GT3902@dastard>	<55CE75CA.5070506@mygrande.net>	<74DC7EBF-0029-4E5E-9D96-DF193E2BE83F@filmlight.ltd.uk>	<55CF8972.8020306@sandeen.net>
+	<55CF8C4F.1080906@sandeen.net>
+In-Reply-To: <55CF8C4F.1080906@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,151 +24,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Roger Willcocks <roger@filmlight.ltd.uk>
+To: Roger Willcocks <roger@filmlight.ltd.uk>, Leslie Rhorer <lrhorer@mygrande.net>
+Cc: Brian Foster <bfoster@redhat.com>, Kris Rusocki <kszysiu@braxis.org>, "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-With this patch, Leslie=92s filesystem now reports a Metadata corruption as=
- well as an invalid inode:
+On 8/15/15 2:00 PM, Eric Sandeen wrote:
+> On 8/15/15 1:48 PM, Eric Sandeen wrote:
+>> On 8/15/15 7:28 AM, Roger Willcocks wrote:
+>>> xfs_repair 3.2.1 runs cleanly.
+>>>
+>>> xfs_repair 3.1.1 complains about a load of stuff, including:
+>>
+>> I wouldn't expect v3.1.1 to work at all, because:
+>>
+>> # db/xfs_db -V
+>> xfs_db version 4.2.0-rc1
+>> # db/xfs_db /mnt/test2/leslie/md0.img -c version
+>> versionnum [0xbdb4+0x8a] = V4,NLINK,DIRV2,ATTR,ALIGN,DALIGN,LOGV2,EXTFLG,SECTOR,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT
+>>
+>> the filesystem has 32-bit project IDs, and:
+>>
+>> # git log --oneline | grep -i "projid32bit"
+>> dd536e1 xfsprogs: Note projid32bit default change in mkfs.xfs manpage
+>> 22bc10e xfsprogs: projid32bit handling
+>>
+>> # git describe --contains 22bc10e
+>> v3.1.4~2
+>>
+>> that feature support didn't show up until v3.1.4.  Were you running a stock v3.1.1?
+>>
+>> Anyway, in my testing, up to v3.2.0, repair finds a lot of errors (and spends some
+>> time looking for a proper superblock)
+>>
+>> v3.2.1 finds no errors.
+>>
+>> The errors stopped showing up as of:
+>>
+>> commit d085fb486f8b33304f2fdf704411313ffc8bcc0c
+>> Author: Dave Chinner <dchinner@redhat.com>
+>> Date:   Tue Jul 8 10:36:39 2014 +1000
+>>
+>>     repair: fix quota inode handling in secondary superblocks
+> 
+> I take that back, a bit:  "errors vs. no errors" was for xfs_repair -n.
+> 
+> a "full" repair with v3.1.4 shows only:
+> 
+> # repair/xfs_repair /mnt/test2/leslie/md0.img 
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+> non-null user quota inode field in superblock 5
+> reset bad sb for ag 5
+> non-null user quota inode field in superblock 10
+> reset bad sb for ag 10
+> non-null user quota inode field in superblock 18
+> reset bad sb for ag 18
+> non-null user quota inode field in superblock 23
+> reset bad sb for ag 23
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> ...
+>         - agno = 29
+> bad version number 0x3 on inode 124656869424
+> bad version number 0x3 on inode 124656869424, resetting version number
 
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - 00:41:25: scanning agi unlinked lists - 32 of 32 allocation group=
-s done
-        - process known inodes and perform inode discovery...
-        - agno =3D 0
-...
-        - agno =3D 29
-Metadata corruption detected at block 0x9e7833810/0x2000
-        - agno =3D 11
-bad version number 0x3 on inode 124656869424
-bad version number 0x3 on inode 124656869424, resetting version number
-        - agno =3D 12
-        - agno =3D 13
-        - agno =3D 14
-        - 00:41:26: process known inodes and inode discovery - 42368 of 423=
-68 inodes done
+And that does match the runtime error he was hitting:
 
-=97
-Roger
+It works for a while, because some of the directories already exist, but when it started to try to create directories, it started getting FS errors and I had to wind up rebooting.  After reboot, I get the following when I try to run the command from the directory again:
 
+[  380.556635] XFS (md0): xfs_iread: validation failed for inode 124656869424 failed
 
-On 16 Aug 2015, at 01:14, Roger Willcocks <roger@filmlight.ltd.uk> wrote:
+FWIW, this inode is unused; when he hit it runtime, we were attempting to allocate it.
 
-> Fix an xfs_repair regression reported by Leslie Rhorer where a bad
-> (v3) inode version number was not reset.
-> =
+I suppose the bad version could be chalked up to a bit-flip from the bad memory that was in the box.
 
-> Signed-off-by: Roger Willcocks <roger@filmlight.ltd.uk>
-> ---
-> db/check.c             | 2 +-
-> include/xfs_dinode.h   | 3 ++-
-> libxfs/xfs_inode_buf.c | 2 +-
-> repair/dinode.c        | 7 +++----
-> repair/prefetch.c      | 2 +-
-> 5 files changed, 8 insertions(+), 8 deletions(-)
-> =
-
-> diff --git a/db/check.c b/db/check.c
-> index c4c972f..810fa55 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -2637,7 +2637,7 @@ process_inode(
-> 		error++;
-> 		return;
-> 	}
-> -	if (!XFS_DINODE_GOOD_VERSION(idic.di_version)) {
-> +	if (!XFS_DINODE_GOOD_VERSION(&mp->m_sb, idic.di_version)) {
-> 		if (isfree || v)
-> 			dbprintf(_("bad version number %#x for inode %lld\n"),
-> 				idic.di_version, ino);
-> diff --git a/include/xfs_dinode.h b/include/xfs_dinode.h
-> index 623bbe8..40700e6 100644
-> --- a/include/xfs_dinode.h
-> +++ b/include/xfs_dinode.h
-> @@ -19,7 +19,8 @@
-> #define	__XFS_DINODE_H__
-> =
-
-> #define	XFS_DINODE_MAGIC		0x494e	/* 'IN' */
-> -#define XFS_DINODE_GOOD_VERSION(v)	((v) >=3D 1 && (v) <=3D 3)
-> +#define XFS_DINODE_GOOD_VERSION(sb, v) \
-> +	(xfs_sb_version_hascrc(sb) ? ((v) =3D=3D 3) : ((v) =3D=3D 1 || (v) =3D=
-=3D 2))
-> =
-
-> typedef struct xfs_timestamp {
-> 	__be32		t_sec;		/* timestamp seconds */
-> diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-> index de16ed9..e9cc74c 100644
-> --- a/libxfs/xfs_inode_buf.c
-> +++ b/libxfs/xfs_inode_buf.c
-> @@ -78,7 +78,7 @@ xfs_inode_buf_verify(
-> 		dip =3D (struct xfs_dinode *)xfs_buf_offset(bp,
-> 					(i << mp->m_sb.sb_inodelog));
-> 		di_ok =3D dip->di_magic =3D=3D cpu_to_be16(XFS_DINODE_MAGIC) &&
-> -			    XFS_DINODE_GOOD_VERSION(dip->di_version);
-> +			XFS_DINODE_GOOD_VERSION(&mp->m_sb, dip->di_version);
-> 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
-> 						XFS_ERRTAG_ITOBP_INOTOBP,
-> 						XFS_RANDOM_ITOBP_INOTOBP))) {
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 035212c..29a7a19 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -129,7 +129,7 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t =
-*dinoc, xfs_ino_t ino_num)
-> 		dinoc->di_magic =3D cpu_to_be16(XFS_DINODE_MAGIC);
-> 	}
-> =
-
-> -	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
-> +	if (!XFS_DINODE_GOOD_VERSION(&mp->m_sb, dinoc->di_version) ||
-> 	    (!fs_inode_nlink && dinoc->di_version > 1))  {
-> 		__dirty_no_modify_ret(dirty);
-> 		if (xfs_sb_version_hascrc(&mp->m_sb))
-> @@ -2331,9 +2331,8 @@ process_dinode_int(xfs_mount_t *mp,
-> 		}
-> 	}
-> =
-
-> -	if (!XFS_DINODE_GOOD_VERSION(dino->di_version) ||
-> -	    (!fs_inode_nlink && dino->di_version > 1) ||
-> -	    (xfs_sb_version_hascrc(&mp->m_sb) && dino->di_version < 3) )  {
-> +	if (!XFS_DINODE_GOOD_VERSION(&mp->m_sb, dino->di_version) ||
-> +	    (!fs_inode_nlink && dino->di_version > 1) ) {
-> 		retval =3D 1;
-> 		if (!uncertain)
-> 			do_warn(_("bad version number 0x%x on inode %" PRIu64 "%c"),
-> diff --git a/repair/prefetch.c b/repair/prefetch.c
-> index 7ea0d36..ad7082c 100644
-> --- a/repair/prefetch.c
-> +++ b/repair/prefetch.c
-> @@ -419,7 +419,7 @@ pf_read_inode_dirs(
-> 		if (be16_to_cpu(dino->di_magic) !=3D XFS_DINODE_MAGIC)
-> 			continue;
-> =
-
-> -		if (!XFS_DINODE_GOOD_VERSION(dino->di_version) ||
-> +		if (!XFS_DINODE_GOOD_VERSION(&mp->m_sb, dino->di_version) ||
-> 				(!fs_inode_nlink && dino->di_version > 1))
-> 			continue;
-> =
-
-> -- =
-
-> 2.5.0.rc0
-> =
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> =
-
+-Eric
 
 _______________________________________________
 xfs mailing list
