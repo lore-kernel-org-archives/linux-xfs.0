@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BA15C7F47
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 10:15:37 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AB4357F47
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 11:23:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 48670AC004
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 08:15:34 -0700 (PDT)
-Received: from mail-io0-f172.google.com (mail-io0-f172.google.com
-	[209.85.223.172]) by cuda.sgi.com with ESMTP id
-	Lb22EUZP9wvOexkB (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 08:15:32 -0700 (PDT)
-Received: by iods203 with SMTP id s203so154930532iod.0
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 08:15:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150817150401.GA29056@infradead.org>
-References: <20150804112153.GG18906@infradead.org>
-	<1439823687-7279-1-git-send-email-jtulak@redhat.com>
-	<20150817150401.GA29056@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E01930406B
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 09:23:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id npQ5js5SOYRRVfuB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 17 Aug 2015 09:23:35 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 17 Aug 2015 17:15:12 +0200
-Message-ID: <CACj3i73YH-Dsj_y3mA6Q1opxVf5eyuT3DLgYoKk-qApFQYZ+Bw@mail.gmail.com>
-Subject: Re: [PATCH v4 09/11] xfsprogs: Add mntent.h check into autoconf
+Subject: [PATCH 00/11] xfsprogs: Partial OS X support
+Date: Mon, 17 Aug 2015 18:23:15 +0200
+Message-Id: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +21,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6834394439889352885=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
---===============6834394439889352885==
-Content-Type: multipart/alternative; boundary=001a11402b3ac522b5051d83456f
+This is a third iteration of OS X support patches. Notes with information about
+changes in every patch since the last bulk submittation (or at least the last
+iteration of that patch) follows.
 
---001a11402b3ac522b5051d83456f
-Content-Type: text/plain; charset=UTF-8
+BTW: for the patches which already got "Reviewed-by", I added the line
+to these patches. If this is not a good thing and I should let the reviewer
+to submit his reviewed-by email again, tell me. :-)
 
-On Mon, Aug 17, 2015 at 5:04 PM, Christoph Hellwig <hch@infradead.org>
-wrote:
+undefined variable fix
+- better explanation in commit
 
-> This looks mostly fine.  I think you could just add the
-> AC_CHECK_HEADERS directly to configure.ac, but otherwise it's exactly
-> what I though.
->
+Add ifdef dirent checks where it was missing
+- added approximation of d_reclen
+- text width fix
 
-In configure.ac, there are no direct checks for headers, just calls of all
-the various
-AC_HAVE_*. I'm not sure it is a good idea to mix now. Unless you think that
-all
-the functions should be moved into configure.ac from the m4/ directory.
+Change OS X-specific CFLAGS/LDFLAGS
+- Nothing, already reviewed
+
+Add includes required for OS X builds
+- updated for libdisk gone
+
+missing and dummy calls for OS X support
+- new patch (no review yet)
+
+Add mntent.h check into autoconf
+- new patch
+- autoconf change
+
+Add fls check into autoconf
+- new patch
+- autoconf change
+
+replace obsolete memalign with posix_memalign
+- new patch
+- remove strange code formatted
+
+prevent LIST_ macros conflicts
+- already reviewed
+- new patch
+
+Update doc for OS X
+- new patch (no review yet)
+
+Add a way to compile without blkid
+- new patch
+- changed default behaviour if BLKID is disabled such that mkfs -f is required
 
 
+Jan Tulak (11):
+  xfsprogs: undefined variable fix
+  xfsprogs: Add ifdef dirent checks where it was missing
+  xfsprogs: Change OS X-specific CFLAGS/LDFLAGS
+  xfsprogs: Add includes required for OS X builds
+  xfsprogs: missing and dummy calls for OS X support
+  xfsprogs: Add mntent.h check into autoconf
+  xfsprogs: Add fls check into autoconf
+  xfsprogs: replace obsolete memalign with posix_memalign
+  xfsprogs: prevent LIST_ macros conflicts
+  xfsprogs: Update doc for OS X
+  xfsprogs: Add a way to compile without blkid
 
-> Can you please resend all your pending patches in a single series,
-> and move the UPDATES: lines and other internal changelogs to the
-> cover letter instead of the patch descriptions?
->
-> Thanks for doing this work!
->
-
-Sure, I'll send it again as a whole. And np. :-)
+ configure.ac          |  12 +++-
+ copy/xfs_copy.c       |   2 +-
+ db/attrset.c          |   2 +-
+ doc/INSTALL           |  11 +++-
+ fsr/xfs_fsr.c         |  17 ++++--
+ include/bitops.h      |   2 +
+ include/builddefs.in  |  11 +++-
+ include/darwin.h      | 162 ++++++++++++++++++++++++++++++++++++++++++++------
+ include/freebsd.h     |   1 -
+ include/gnukfreebsd.h |   1 -
+ include/linux.h       |   1 -
+ include/list.h        |  14 +++++
+ io/pread.c            |   4 +-
+ io/readdir.c          |  12 ++++
+ libhandle/Makefile    |   4 ++
+ libxcmd/paths.c       |   2 +-
+ libxfs/rdwr.c         |  12 ++--
+ m4/package_libcdev.m4 |  20 +++++++
+ mkfs/xfs_mkfs.c       |  25 +++++++-
+ repair/incore.c       |   2 +-
+ repair/incore_ino.c   |   7 ++-
+ repair/phase1.c       |   2 +-
+ repair/prefetch.c     |   7 +--
+ repair/sb.c           |  10 ++--
+ rtcp/xfs_rtcp.c       |   7 ++-
+ 25 files changed, 295 insertions(+), 55 deletions(-)
 
 -- 
-Jan Tulak
-jtulak@redhat.com
-
---001a11402b3ac522b5051d83456f
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_extra"><div class=3D"gmail_quote">On M=
-on, Aug 17, 2015 at 5:04 PM, Christoph Hellwig <span dir=3D"ltr">&lt;<a hre=
-f=3D"mailto:hch@infradead.org" target=3D"_blank">hch@infradead.org</a>&gt;<=
-/span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8=
-ex;border-left:1px #ccc solid;padding-left:1ex">This looks mostly fine.=C2=
-=A0 I think you could just add the<br>
-AC_CHECK_HEADERS directly to <a href=3D"http://configure.ac" rel=3D"norefer=
-rer" target=3D"_blank">configure.ac</a>, but otherwise it&#39;s exactly<br>
-what I though.<br></blockquote><div>=C2=A0</div><div>In <a href=3D"http://c=
-onfigure.ac">configure.ac</a>, there are no direct checks for headers, just=
- calls of all the various</div><div>AC_HAVE_*. I&#39;m not sure it is a goo=
-d idea to mix now. Unless you think that all</div><div>the functions should=
- be moved into <a href=3D"http://configure.ac">configure.ac</a> from the m4=
-/ directory.</div><div><br></div><div>=C2=A0</div><blockquote class=3D"gmai=
-l_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left=
-:1ex">
-Can you please resend all your pending patches in a single series,<br>
-and move the UPDATES: lines and other internal changelogs to the<br>
-cover letter instead of the patch descriptions?<br>
-<br>
-Thanks for doing this work!<br>
-</blockquote></div><div><br></div><div>Sure, I&#39;ll send it again as a wh=
-ole. And np. :-)</div><div><br></div>-- <br><div class=3D"gmail_signature">=
-<div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.co=
-m" target=3D"_blank">jtulak@redhat.com</a><br></div></div>
-</div></div>
-
---001a11402b3ac522b5051d83456f--
-
-
---===============6834394439889352885==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+2.4.5
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6834394439889352885==--
