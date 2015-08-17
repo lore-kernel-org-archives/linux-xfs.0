@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0C0BC7F47
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 16:34:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E14F1304077
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 14:34:18 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ECDAA7F47
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 16:55:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD1BB8F8033
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 14:55:53 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	klT9PRU04nktSJNU for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 14:34:16 -0700 (PDT)
-Date: Tue, 18 Aug 2015 07:34:13 +1000
+	IWKbdoaywNqYaEDP for <xfs@oss.sgi.com>;
+	Mon, 17 Aug 2015 14:55:51 -0700 (PDT)
+Date: Tue, 18 Aug 2015 07:55:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/13] xfs: swap leaf buffer into path struct atomically
-	during path shift
-Message-ID: <20150817213413.GC714@dastard>
-References: <1439233309-19959-1-git-send-email-bfoster@redhat.com>
-	<1439830072-61117-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 00/11] xfsprogs: Partial OS X support
+Message-ID: <20150817215549.GD714@dastard>
+References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1439830072-61117-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,108 +29,150 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-On Mon, Aug 17, 2015 at 12:47:52PM -0400, Brian Foster wrote:
-> The node directory lookup code uses a state structure that tracks the
-> path of buffers used to search for the hash of a filename through the
-> leaf blocks. When the lookup encounters a block that ends with the
-> requested hash, but the entry has not yet been found, it must shift over
-> to the next block and continue looking for the entry (i.e., duplicate
-> hashes could continue over into the next block). This shift mechanism
-> involves walking back up and down the state structure, replacing buffers
-> at the appropriate btree levels as necessary.
-> 
-> When a buffer is replaced, the old buffer is released and the new buffer
-> read into the active slot in the path structure. Because the buffer is
-> read directly into the path slot, a buffer read failure can result in
-> setting a NULL buffer pointer in an active slot. This throws off the
-> state cleanup code in xfs_dir2_node_lookup(), which expects to release a
-> buffer from each active slot. Instead, a BUG occurs due to a NULL
-> pointer dereference:
-> 
->   BUG: unable to handle kernel NULL pointer dereference at 00000000000001e8
->   IP: [<ffffffffa0585063>] xfs_trans_brelse+0x2a3/0x3c0 [xfs]
->   ...
->   RIP: 0010:[<ffffffffa0585063>]  [<ffffffffa0585063>] xfs_trans_brelse+0x2a3/0x3c0 [xfs]
->   ...
->   Call Trace:
->    [<ffffffffa05250c6>] xfs_dir2_node_lookup+0xa6/0x2c0 [xfs]
->    [<ffffffffa0519f7c>] xfs_dir_lookup+0x1ac/0x1c0 [xfs]
->    [<ffffffffa055d0e1>] xfs_lookup+0x91/0x290 [xfs]
->    [<ffffffffa05580b3>] xfs_vn_lookup+0x73/0xb0 [xfs]
->    [<ffffffff8122de8d>] lookup_real+0x1d/0x50
->    [<ffffffff8123330e>] path_openat+0x91e/0x1490
->    [<ffffffff81235079>] do_filp_open+0x89/0x100
->    ...
-> 
-> This has been reproduced via a parallel fsstress and filesystem shutdown
-> workload in a loop. The shutdown triggers the read error in the
-> aforementioned codepath and causes the BUG in xfs_dir2_node_lookup().
-> 
-> Update xfs_da3_path_shift() to update the active path slot atomically
-> with respect to the caller when a buffer is replaced. This ensures that
-> the caller always sees the old or new buffer in the slot and prevents
-> the NULL pointer dereference.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> This is just another shutdown/error handling issue I've run into with
-> the same testing associated with all of the other fixes. I'm tacking it
-> on to the end of this series...
-> 
-> Brian
-> 
->  fs/xfs/libxfs/xfs_da_btree.c | 25 ++++++++++++++++---------
->  1 file changed, 16 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 3264d81..04a3765 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -1822,6 +1822,7 @@ xfs_da3_path_shift(
->  	struct xfs_da_args	*args;
->  	struct xfs_da_node_entry *btree;
->  	struct xfs_da3_icnode_hdr nodehdr;
-> +	struct xfs_buf		*bp;
->  	xfs_dablk_t		blkno = 0;
->  	int			level;
->  	int			error;
-> @@ -1865,21 +1866,27 @@ xfs_da3_path_shift(
->  	 * same depth we were at originally.
->  	 */
->  	for (blk++, level++; level < path->active; blk++, level++) {
-> +		struct xfs_buf	**bpp = &blk->bp;
-> +
+On Mon, Aug 17, 2015 at 06:23:15PM +0200, Jan Tulak wrote:
+> This is a third iteration of OS X support patches. Notes with information about
+> changes in every patch since the last bulk submittation (or at least the last
+> iteration of that patch) follows.
 
-What do we need this for? The new code is:
+What version of the patches are these? I see some patches in
+previous thread with "v4" on them, so I don't know whether they are
+more recent than these or not. 
 
->  		/*
-> +		 * Read the next child block into a local buffer.
->  		 */
-> +		error = xfs_da3_node_read(args->trans, dp, blkno, -1, &bp,
-> +					  args->whichfork);
-> +		if (error)
-> +			return error;
->  
->  		/*
-> +		 * Release the old block (if it's dirty, the trans doesn't
-> +		 * actually let go) and swap the local buffer into the path
-> +		 * structure. This ensures failure of the above read doesn't set
-> +		 * a NULL buffer in an active slot in the path.
->  		 */
-> +		if (release)
-> +			xfs_trans_brelse(args->trans, blk->bp);
->  		blk->blkno = blkno;
-> +		*bpp = bp;
+FWIW, I'm not picking on you; I'm trying to explain what I see and
+why it makes it difficult for me to work out what is going on so you
+understand why I might be asking for specific information. Nobody
+explains this stuff to new developers; you pick it up through trial
+an error, and emails like this :/
 
-And this can simply be:
+What I'm seeing in my inbox is threads like this:
 
-		blk->bp = bp;
+patch 0 v1
+  ->patch 1
+  ->patch 2
+  ->patch 3
 
-so I don't think *bpp is necessary at all.
+patch 0 v2
+  ->patch 1 V2
+  ->patch 2 V2
+    ->patch 2 V3
+      -> patch 2 V4
+  ->patch 3 V2
+
+patch 0 v3
+  ->patch 1 v3
+  ->patch 2 v3
+    ->patch 2 V4
+  ->patch 3 v3
+
+And so you can see how confusing "patch 2 V3" or "patch 2 v4" gets
+when they are versioned this way. I don't know which one is most
+recent just by looking at the patch subject.
+
+I try to avoid this problem by putting a version on the patchset
+itself (i.e. on the patch 0 letter) and then the individual patches
+do not have a version. If I update a patch within a series, it gets
+a v2, v3, etc on each repost within that overall patch series. When
+I repost the entire patch series as a new version, however, I send
+the latest version of the patch without a version. i.e. the threads
+look like:
+
+
+patch 0 v1
+  ->patch 1
+  ->patch 2
+  ->patch 3
+
+patch 0 v2 (w/ changelog for v2)
+  ->patch 1
+  ->patch 2
+    ->patch 2 V2 (w/ changelog)
+      -> patch 2 V3 (w/ changelog)
+  ->patch 3
+
+patch 0 v3 (w/ changelog for v3)
+  ->patch 1
+  ->patch 2
+    ->patch 2 V2 (w/ changelog)
+  ->patch 3
+
+And so the lastest patches are always in the latest thread the
+patch series has been posted.
+
+> BTW: for the patches which already got "Reviewed-by", I added the line
+> to these patches. If this is not a good thing and I should let the reviewer
+> to submit his reviewed-by email again, tell me. :-)
+
+No, that's the rigth thing to do, and you don't need to mention it
+in the changelog. Seeing the tag in the commit message tells both
+the reviewer and the maintainer that the patchhas already been
+reviewed and does not need to be rescrutinised.
+
+Of course, that means if you change the patch you need to remove the
+reviewed-by tag to tell reviewers it needs to be looked at again
+and the change documented in the change log...
+
+Speaking of change logs:
+
+> undefined variable fix
+> - better explanation in commit
+> 
+> Add ifdef dirent checks where it was missing
+> - added approximation of d_reclen
+> - text width fix
+> 
+> Change OS X-specific CFLAGS/LDFLAGS
+> - Nothing, already reviewed
+> 
+> Add includes required for OS X builds
+> - updated for libdisk gone
+> 
+> missing and dummy calls for OS X support
+> - new patch (no review yet)
+> 
+> Add mntent.h check into autoconf
+> - new patch
+> - autoconf change
+> 
+> Add fls check into autoconf
+> - new patch
+> - autoconf change
+>
+> replace obsolete memalign with posix_memalign
+> - new patch
+> - remove strange code formatted
+> 
+> prevent LIST_ macros conflicts
+> - already reviewed
+> - new patch
+> 
+> Update doc for OS X
+> - new patch (no review yet)
+> 
+> Add a way to compile without blkid
+> - new patch
+> - changed default behaviour if BLKID is disabled such that mkfs -f is required
+
+Better is this:
+
+Version 3:
+- better commit messages (patch 1)
+- formatting fixes (patch 2, 8)
+- autoconf updates (patch 6, 7)
+- changed default behaviour if BLKID is disabled such that mkfs -f
+  is required (patch 11)
+
+Version 2:
+- added approximation of d_reclen (patch 2)
+- updated for libdisk removal (patch 4)
+- OS X documentation update (new patch 10)
+
+So we have some idea of what changed between two reposts of the
+patch series, and we have some context of the changes that have
+previously been asked for during review without having to go back to
+the previous threads.
 
 Cheers,
 
