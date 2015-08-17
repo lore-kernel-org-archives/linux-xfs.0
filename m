@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1D6AB7F47
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 18:48:23 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6BF157F47
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 18:58:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0E68A8F8035
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 16:48:22 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id UAvNVpYNoxcSVkJu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 16:48:18 -0700 (PDT)
-Date: Mon, 17 Aug 2015 16:48:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/10] xfs_repair: force not-so-bad bmbt blocks back
-	through the verifier
-Message-ID: <20150817234814.GP10043@birch.djwong.org>
-References: <20150815014338.1839.37405.stgit@birch.djwong.org>
-	<20150815014410.1839.33268.stgit@birch.djwong.org>
-	<55D24EB3.2040506@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EE864AC008
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 16:57:59 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	Db6z0VmOvyxsbm25 for <xfs@oss.sgi.com>;
+	Mon, 17 Aug 2015 16:57:57 -0700 (PDT)
+Date: Tue, 18 Aug 2015 09:57:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Fix xfs_attr_leafblock definition
+Message-ID: <20150817235755.GE714@dastard>
+References: <1439458000-28395-1-git-send-email-jack@suse.com>
+	<55CC98DD.6060700@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55D24EB3.2040506@sandeen.net>
+In-Reply-To: <55CC98DD.6060700@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,65 +30,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <djwong@alder.djwong.org>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: tdm@sgi.com, xfs@oss.sgi.com, Jan Kara <jack@suse.com>
 
-On Mon, Aug 17, 2015 at 04:14:27PM -0500, Eric Sandeen wrote:
-> On 8/14/15 8:44 PM, Darrick J. Wong wrote:
-> > If during prefetch we encounter a bmbt block that fails the CRC check
-> > due to corruption in the unused part of the block, force the buffer
-> > back through the non-prefetch verifiers later so that the CRC is
-> > updated.  Otherwise, the bad checksum goes unfixed and the kernel will
-> > still flag the bmbt block as invalid.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  repair/prefetch.c |    8 ++++++++
-> >  1 file changed, 8 insertions(+)
-> > 
-> > 
-> > diff --git a/repair/prefetch.c b/repair/prefetch.c
-> > index 8b261ae..fc7097f 100644
-> > --- a/repair/prefetch.c
-> > +++ b/repair/prefetch.c
-> > @@ -276,6 +276,14 @@ pf_scan_lbtree(
-> >  
-> >  	XFS_BUF_SET_PRIORITY(bp, isadir ? B_DIR_BMAP : B_BMAP);
-> >  
-> > +	/*
-> > +	 * Make this bmbt buffer go back through the verifiers later so that
-> > +	 * we correct checksum errors stemming from bitflips in the unused
-> > +	 * parts of the bmbt block.
-> > +	 */
-> > +	if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED)
-> > +		bp->b_flags |= LIBXFS_B_UNCHECKED;
+On Thu, Aug 13, 2015 at 08:17:17AM -0500, Mark Tinguely wrote:
+> On 08/13/15 04:26, Jan Kara wrote:
+> >struct xfs_attr_leafblock contains 'entries' array which is declared
+> >with size 1 altough it can in fact contain much more entries. Since this
+> >array is followed by further struct members, gcc (at least in version
+> >4.8.3) thinks that the array has the fixed size of 1 element and thus
+> >may optimize away all accesses beyond the end of array resulting in
+> >non-working code. This problem was only observed with userspace code in
+> >xfsprogs, however it's better to be safe in kernel as well and have
+> >matching kernel and xfsprogs definitions.
+> >
+> >Signed-off-by: Jan Kara<jack@suse.com>
+> >---
 > 
-> Hm, so why check EFSCORRUPTED?  If you're doing what the comment says, why
-> not just EFSBADCRC?  EFSCORRUPTED means that in-use portions are bad, no?
+> I hit this bug in SLES12 and RHEL7 XFS kernel code. It is the gcc
+> 4.8's new loop optimization routine. A person can bypass it with the
+> option:
+>     -fno-aggressive-loop-optimizations
+> but this fixes the source of the problem.
+> 
+> Acked-by: Mark Tinguely <tinguely@sgi.com>
 
-You're right, I only need to hook onto EFSBADCRC.  I probably got too used
-to seeing checks for both everywhere. 8)
+Hi Mark - it's great that you had found and identified the exact
+compiler optimisation that was causing miscompilation of the XFS
+code.
 
---D
+Troy, what's not great about this is that SGI hasn't seen fit to
+report this bug upstream or to their distro partners in a prompt
+manner. Can you please make sure that any other XFS bug fixes that
+SGI are sitting on get communicated to the appropriate venue so
+they can be addressed without undue delay?
 
-> 
-> -Eric
-> 
-> > +
-> >  	rc = (*func)(XFS_BUF_TO_BLOCK(bp), level - 1, isadir, args);
-> >  
-> >  	libxfs_putbuf(bp);
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Thanks,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
