@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4972129E17
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 11:23:58 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A8D6329E1D
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 11:23:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2C4C930406B
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 09:23:58 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7BC828F8033
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 09:23:59 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lMwNjwcmHe2jjUdz (version=TLSv1
+	cuda.sgi.com with ESMTP id iYACBi6sQyarnNhG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 09:23:57 -0700 (PDT)
+	Mon, 17 Aug 2015 09:23:58 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 09/11] xfsprogs: prevent LIST_ macros conflicts
-Date: Mon, 17 Aug 2015 18:23:24 +0200
-Message-Id: <1439828606-7886-10-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 10/11] xfsprogs: Update doc for OS X
+Date: Mon, 17 Aug 2015 18:23:25 +0200
+Message-Id: <1439828606-7886-11-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,43 +31,54 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-BSD 4.4 added some LIST_ macros into system header files, which
-causes "macro redefined" warnings. To ensure we use our own macros,
-undefine the system ones at first.
-
-The conflicting macros are LIST_HEAD and LIST_HEAD_INIT
+Update build info and limitations.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/list.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ doc/INSTALL | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/include/list.h b/include/list.h
-index 3f087a4..f92faed 100644
---- a/include/list.h
-+++ b/include/list.h
-@@ -19,6 +19,20 @@
- #define __LIST_H__
+diff --git a/doc/INSTALL b/doc/INSTALL
+index ba3472b..b0443a3 100644
+--- a/doc/INSTALL
++++ b/doc/INSTALL
+@@ -52,12 +52,16 @@ Mac OS X Instructions
+ =====================
  
- /*
-+ * This undef is here because BSD 4.4 added some LIST_ macros into system
-+ * header file sys/queue.h. This header is included in many other system
-+ * headers and thus causes "macro redefined" warnings.
-+ *
-+ * As OS X is kind of a derivate of BSD, this affects OS X too.
-+ *
-+ * To use our own LIST_ macros (copied from kernel code), we have to
-+ * at first undefine the conflicting system macros.
-+ *
-+ */
-+#undef LIST_HEAD
-+#undef LIST_HEAD_INIT
+ 0. Note:  since there is no XFS implementation on Mac OS X, you are
+-   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and 
++   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and
+    xfs_repair(8) are the only functional tools on this platform, as
+    they do not interact with the XFS kernel code at all.  Still, it
+    can be useful to have access to these utilities from Mac OS X in
+    a dual boot configuration, for example.
+ 
++   However, keep on mind that mkfs.xfs on Mac OS X has disabled
++   device access, although you can create a filesystem in a file.
++   Also note that existing filesystem detection is disabled.
 +
-+/*
-  * Simple, generic doubly-linked list implementation.
-  */
+ 1. Configure, build and install the package
  
+    The xfsprogs package uses autoconf/configure and expects a GNU build
+@@ -65,7 +69,8 @@ Mac OS X Instructions
+    and glibtool). 
+ 
+    You will also need to have built and installed the UUID library which
+-   is provided by the e2fsprogs source package.
++   is provided by the e2fsprogs source package. (Or use Homebrew, Macports
++   or any other 3rd party package manager.)
+ 
+    Building libuuid:
+ 
+@@ -84,7 +89,7 @@ Mac OS X Instructions
+ 	TAR=/usr/bin/gnutar
+ 	LIBTOOL=/usr/bin/glibtool
+ 	INSTALL_GROUP=wheel
+-	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"
++	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no"
+ 
+ 	$ make
+ 	$ su root
 -- 
 2.4.5
 
