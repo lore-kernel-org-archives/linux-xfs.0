@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 530847F47
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 15:45:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4315B8F8040
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 13:45:52 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 183187F47
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 15:50:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ED44F8F8040
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 13:50:30 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id cuKSmI9Op1Zip6rH (version=TLSv1
+	cuda.sgi.com with ESMTP id Rkxqs0y7d1uGGcLg (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 13:45:50 -0700 (PDT)
-Date: Mon, 17 Aug 2015 13:45:46 -0700
+	Mon, 17 Aug 2015 13:50:29 -0700 (PDT)
+Date: Mon, 17 Aug 2015 13:50:26 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/10] xfs_db: don't crash on a corrupt inode
-Message-ID: <20150817204546.GN10043@birch.djwong.org>
+Subject: Re: [PATCH 03/10] xfs_repair: ignore "repaired" flag after we decide
+	to clear xattr block
+Message-ID: <20150817205026.GO10043@birch.djwong.org>
 References: <20150815014338.1839.37405.stgit@birch.djwong.org>
-	<20150815014351.1839.81382.stgit@birch.djwong.org>
-	<55D22D62.9060806@sandeen.net>
+	<20150815014357.1839.68720.stgit@birch.djwong.org>
+	<55D23400.7020106@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55D22D62.9060806@sandeen.net>
+In-Reply-To: <55D23400.7020106@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,81 +35,114 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: "Darrick J. Wong" <djwong@alder.djwong.org>, xfs@oss.sgi.com
 
-On Mon, Aug 17, 2015 at 01:52:18PM -0500, Eric Sandeen wrote:
+On Mon, Aug 17, 2015 at 02:20:32PM -0500, Eric Sandeen wrote:
 > On 8/14/15 8:43 PM, Darrick J. Wong wrote:
-> > If the user selects a corrupt inode via the 'inode XXX' command, the
-> > read verifier will fail and the io cursor at the top of the ring will
-> > not have any data attached.  When this is the case, we cannot
-> > dereference the NULL pointer or xfs_db will crash.  Therefore, check
-> > the buffer pointer before using it.
-> > 
-> > It's arguable that we ought to retry the read without the verifiers
-> > if the inode is corrupt or fails CRC, since this /is/ a debugging
-> > tool, and maybe you wanted the contents anyway.
+> > If in the course of examining extended attribute block contents we
+> > first decide to repair an entry (*repair = 1) but secondly decide to
+> > clear the whole block, set *repair = 0 because the clearing action
+> > only happens if *repair == 0.  Put another way, if we're nuking a
+> > block, don't pretend like we've fixed it too.
 > 
-> I agree.  It seems like we should do that, though it probably needs to
-> be done across the board for all metadata types if it's going to be done.
-> Maybe something to add to the TODO?
+> Hm, or what happens otherwise?
+> 
+> TBH this is making my brain hurt, chasing it all the way back up
+> the callchain.  It's *repair not *repaired; it's not saying we
+> fixed it, but that we should fix it, right?  It'll take me a while
+> to work out what all the callers do with the "clearit" return from
+> process_attr_leaf_block and with *repair.
 
-Hmm.  Looks like set_cur() wants to return buffer contents in the verifier
-error case, except that the broken xfs_buf->b_error sign handling prevents
-it from doing that... and the sign handling error is fixed later on in the
-patch set.
+I thought *repair actually did mean *repaired (past tense).  But I might just
+be confused?  xfs_attr.c:939 says:
 
-So... that leaves hard IO errors, for which we still need this patch.
+do_warn(
+	_("removing attribute entry %d for inode %" PRIu64 "\n"),
+	i, ino);
+tempentry = (xfs_attr_sf_entry_t *)
+	((intptr_t) currententry +
+	 XFS_ATTR_SF_ENTSIZE(currententry));
+memmove(currententry,tempentry,remainingspace);
+asf->hdr.count -= 1;
+i--; /* no worries, it will wrap back to 0 */
+*repair = 1;
+
+...that looks like a repair to me?  Also see attr_repair.c:965:
+
+	if (asf->hdr.count != i)  {
+		if (no_modify)  {
+			do_warn(
+_("would have corrected attribute entry count in inode %" PRIu64 " from %d to %d\n"),
+				ino, asf->hdr.count, i);
+		} else  {
+			do_warn(
+_("corrected attribute entry count in inode %" PRIu64 ", was %d, now %d\n"),
+				ino, asf->hdr.count, i);
+			asf->hdr.count = i;
+			*repair = 1;
+		}
+	}
+
+...looks like we fix asf->hdr.count and then set *repair to 1.
+
+> Did you have a specific example of something going wrong?
+
+A few dozen runs of xfs/72[0-2] are pretty good at hitting this.
 
 --D
 
 > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  db/inode.c |    2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > 
-> > diff --git a/db/inode.c b/db/inode.c
-> > index e86dabd..64b263b 100644
-> > --- a/db/inode.c
-> > +++ b/db/inode.c
-> > @@ -682,6 +682,8 @@ set_cur_inode(
-> >  	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, cluster_agbno),
-> >  		numblks, DB_RING_IGN, NULL);
-> >  	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
-> 
-> off_cur checks for iocur_top == NULL, and warns if it is, so that's good.
-> The user should have a clue about what's gone wrong, at least.
-> 
-> But, callers of set_cur_inode() are still going to crash often as not:
-> 
-> ablock_f:
->         set_cur_inode(iocur_top->ino);
->         haveattr = XFS_DFORK_Q((xfs_dinode_t *)iocur_top->data);
-> 
-> bmap:
-> 
->         set_cur_inode(iocur_top->ino);
->         nex = *nexp;
->         *nexp = 0;
->         ASSERT(nex > 0);
->         dip = iocur_top->data;
-> 
-> bmap_f:
-> 
->                 set_cur_inode(iocur_top->ino);
->                 dip = iocur_top->data;
-> 
-> and a few more :(
-> 
-> Perhaps set_cur_inode() should return failure, so the caller knows to bail,
-> pop_cur if it needs to, etc?
-> 
+> thanks,
 > -Eric
 > 
-> > +	if (!iocur_top->data)
-> > +		return;
-> >  	dip = iocur_top->data;
-> >  	iocur_top->ino_buf = 1;
-> >  	iocur_top->ino = ino;
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/attr_repair.c |   14 +++++++++++++-
+> >  1 file changed, 13 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> > index 62f80e7..2bd9334 100644
+> > --- a/repair/attr_repair.c
+> > +++ b/repair/attr_repair.c
+> > @@ -1311,6 +1311,13 @@ process_leaf_attr_block(
+> >  		* we can add it then.
+> >  		*/
+> >  	}
+> > +	/*
+> > +	 * If we're just going to zap the block, don't pretend like we
+> > +	 * repaired it, because repairing the block stops the clear
+> > +	 * operation.
+> > +	 */
+> > +	if (clearit)
+> > +		*repair = 0;
+> >  	if (*repair)
+> >  		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, leaf, &leafhdr);
+> >  
+> > @@ -1524,6 +1531,7 @@ process_longform_attr(
+> >  	xfs_dahash_t	next_hashval;
+> >  	int		repairlinks = 0;
+> >  	struct xfs_attr3_icleaf_hdr leafhdr;
+> > +	int		error;
+> >  
+> >  	*repair = 0;
+> >  
+> > @@ -1604,12 +1612,16 @@ process_longform_attr(
+> >  			libxfs_writebuf(bp, 0);
+> >  		} else
+> >  			libxfs_putbuf(bp);
+> > -		return (process_node_attr(mp, ino, dip, blkmap)); /* + repair */
+> > +		error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
+> > +		if (error)
+> > +			*repair = 0;
+> > +		return error;
+> >  	default:
+> >  		do_warn(
+> >  	_("bad attribute leaf magic # %#x for dir ino %" PRIu64 "\n"),
+> >  			be16_to_cpu(leaf->hdr.info.magic), ino);
+> >  		libxfs_putbuf(bp);
+> > +		*repair = 0;
+> >  		return(1);
+> >  	}
+> >  
 > > 
 > > _______________________________________________
 > > xfs mailing list
