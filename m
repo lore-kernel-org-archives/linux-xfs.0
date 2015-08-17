@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B860A7F37
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 14:57:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BA1A17F37
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 15:00:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D56230405F
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 12:57:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 0Pa2Op5fvXUPNVYY for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 12:57:09 -0700 (PDT)
-Message-ID: <55D23C95.7090501@sandeen.net>
-Date: Mon, 17 Aug 2015 14:57:09 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A24C9304077
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 13:00:43 -0700 (PDT)
+Received: from mail-io0-f181.google.com (mail-io0-f181.google.com
+	[209.85.223.181]) by cuda.sgi.com with ESMTP id
+	BeT3CFjsnFBfUz1W (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 17 Aug 2015 13:00:41 -0700 (PDT)
+Received: by iodb91 with SMTP id b91so164052462iod.1
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 13:00:41 -0700 (PDT)
+Date: Mon, 17 Aug 2015 16:00:34 -0400
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
+	inodes
+Message-ID: <20150817200034.GF21075@mtj.duckdns.org>
+References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
+	<20150813004435.GN3902@dastard>
+	<20150813224415.GG4496@mtj.duckdns.org>
+	<20150814111408.GB8710@quack.suse.cz>
+	<20150814151401.GA6906@brouette>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/10] xfs_repair: fix broken EFSBADCRC/EFSCORRUPTED usage
-	with buffer errors
-References: <20150815014338.1839.37405.stgit@birch.djwong.org>	<20150815014404.1839.75324.stgit@birch.djwong.org>
-	<55D23B3B.6060803@sandeen.net>
-In-Reply-To: <55D23B3B.6060803@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20150814151401.GA6906@brouette>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +37,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <djwong@alder.djwong.org>, david@fromorbit.com, darrick.wong@oracle.com
-Cc: xfs@oss.sgi.com
+To: Damien Wyart <damien.wyart@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
 
-On 8/17/15 2:51 PM, Eric Sandeen wrote:
-> On 8/14/15 8:44 PM, Darrick J. Wong wrote:
->> When we encounter CRC or verifier errors, bp->b_error is set to
->> -EFSBADCRC and -EFSCORRUPTED; note the negative sign.  For whatever
->> reason, repair and db use the positive versions, and therefore fail to
->> notice the error, so fix all the broken uses.
->>
->> Note however that the db and repair turn the negative codes returned
->> by libxfs into positive codes that can be used with strerror.
->>
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> This looks right, but I think there's more; see:
-> 
-> XFS_WANT_CORRUPTED_GOTO
-> XFS_WANT_CORRUPTED_RETURN
-> 
-> (these return negative errors in kernelspace)
-> 
-> and a bunch of stuff in libxlog/xfs_log_recover.c...
+Hello, Damien.
 
-Ok, I guess libxlog/* was never switched to negative, and so far it looks
-ok.
+On Fri, Aug 14, 2015 at 05:14:01PM +0200, Damien Wyart wrote:
+> I had an unstable system when running latest Linus tree with Tejun's
+> patch applied on top. Nothing fishy in the logs after rebooting without
+> the patch, but remote access with ssh when patch applied did not work
+> (as if /home partition could not be read). This system has / as ext4 and
+> other partitions (including /home) as XFS. Trying to login on tty
+> instead of X resulted in hang of X. I could reboot with sysrq, but can't
+> do further tests at the moment.
+> 
+> Back to same tree without the patch resulted in normal system.
+> 
+> So just a heads up the patch doesn't seem OK in its current state.
 
-The XFS_WANT_CORRUPTED* macros seem like a problem, though.
+Have you been able to reproduce the failure?  That sounds like an
+unlikely failure mode for the patch.
 
--Eric
+Thanks.
+
+-- 
+tejun
 
 _______________________________________________
 xfs mailing list
