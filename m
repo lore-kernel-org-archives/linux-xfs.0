@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A8D6329E1D
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 11:23:59 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 87A0129E07
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 11:24:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7BC828F8033
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 09:23:59 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3112EAC008
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 09:24:00 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iYACBi6sQyarnNhG (version=TLSv1
+	cuda.sgi.com with ESMTP id ZdoFbXkie4gdoNuT (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 09:23:58 -0700 (PDT)
+	Mon, 17 Aug 2015 09:23:59 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 10/11] xfsprogs: Update doc for OS X
-Date: Mon, 17 Aug 2015 18:23:25 +0200
-Message-Id: <1439828606-7886-11-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 11/11] xfsprogs: Add a way to compile without blkid
+Date: Mon, 17 Aug 2015 18:23:26 +0200
+Message-Id: <1439828606-7886-12-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,54 +31,129 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-Update build info and limitations.
+UPDATE: default to "signature found", so without blkid is
+        -f mandatory.
+
+Because not all platforms have up-to-date blkid with required
+functions, allow at least partial functionality by adding
+--enable-blkid=yes/no optional configure argument.
+
+When blkid is disabled, signature detection and device geometry
+detection doesn't work.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- doc/INSTALL | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ configure.ac         | 10 +++++++++-
+ include/builddefs.in |  1 +
+ mkfs/xfs_mkfs.c      | 22 +++++++++++++++++++++-
+ 3 files changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/doc/INSTALL b/doc/INSTALL
-index ba3472b..b0443a3 100644
---- a/doc/INSTALL
-+++ b/doc/INSTALL
-@@ -52,12 +52,16 @@ Mac OS X Instructions
- =====================
+diff --git a/configure.ac b/configure.ac
+index abb7904..eeba20d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -26,6 +26,11 @@ AC_ARG_ENABLE(gettext,
+ 	enable_gettext=yes)
+ AC_SUBST(enable_gettext)
  
- 0. Note:  since there is no XFS implementation on Mac OS X, you are
--   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and 
-+   severely limited in what you can do.  mkfs.xfs(8), xfs_db(8) and
-    xfs_repair(8) are the only functional tools on this platform, as
-    they do not interact with the XFS kernel code at all.  Still, it
-    can be useful to have access to these utilities from Mac OS X in
-    a dual boot configuration, for example.
- 
-+   However, keep on mind that mkfs.xfs on Mac OS X has disabled
-+   device access, although you can create a filesystem in a file.
-+   Also note that existing filesystem detection is disabled.
++AC_ARG_ENABLE(blkid,
++[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
++	enable_blkid=yes)
++AC_SUBST(enable_blkid)
 +
- 1. Configure, build and install the package
+ AC_ARG_ENABLE(readline,
+ [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
+ 	test $enable_readline = yes && libreadline="-lreadline",
+@@ -117,9 +122,12 @@ AC_HAVE_PREADV
+ AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_MNTENT
+ AC_HAVE_FLS
+-AC_HAVE_BLKID_TOPO
+ AC_HAVE_READDIR
  
-    The xfsprogs package uses autoconf/configure and expects a GNU build
-@@ -65,7 +69,8 @@ Mac OS X Instructions
-    and glibtool). 
++if test "$enable_blkid" = yes; then
++AC_HAVE_BLKID_TOPO
++fi
++
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+ AC_TYPE_UMODE_T
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 8851956..f3f8089 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -89,6 +89,7 @@ ENABLE_SHARED	= @enable_shared@
+ ENABLE_GETTEXT	= @enable_gettext@
+ ENABLE_EDITLINE	= @enable_editline@
+ ENABLE_READLINE	= @enable_readline@
++ENABLE_BLKID	= @enable_blkid@
  
-    You will also need to have built and installed the UUID library which
--   is provided by the e2fsprogs source package.
-+   is provided by the e2fsprogs source package. (Or use Homebrew, Macports
-+   or any other 3rd party package manager.)
+ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
  
-    Building libuuid:
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d349b4f..56d2410 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -18,7 +18,9 @@
  
-@@ -84,7 +89,7 @@ Mac OS X Instructions
- 	TAR=/usr/bin/gnutar
- 	LIBTOOL=/usr/bin/glibtool
- 	INSTALL_GROUP=wheel
--	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"
-+	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no"
+ #include "libxfs.h"
+ #include <ctype.h>
+-#include <blkid/blkid.h>
++#ifdef ENABLE_BLKID
++#  include <blkid/blkid.h>
++#endif /* ENABLE_BLKID */
+ #include "xfs_mkfs.h"
  
- 	$ make
- 	$ su root
+ /*
+@@ -298,6 +300,7 @@ calc_stripe_factors(
+  *	 0 for nothing found
+  *	-1 for internal error
+  */
++#ifdef ENABLE_BLKID
+ static int
+ check_overwrite(
+ 	char		*device)
+@@ -451,6 +454,19 @@ out_free_probe:
+ 		_("warning: unable to probe device topology for device %s\n"),
+ 		device);
+ }
++#else /* ifdef ENABLE_BLKID */
++/*
++ * Without blkid, we can't do a good check for signatures.
++ * So instead of some messy attempts, just disable any checks
++ * and always return 'nothing found'.
++ */
++static int
++check_overwrite(
++	char		*device)
++{
++	return 1;
++}
++#endif /* ENABLE_BLKID */
+ 
+ static void get_topology(
+ 	libxfs_init_t		*xi,
+@@ -483,16 +499,20 @@ static void get_topology(
+ 		} else
+ 			ft->psectorsize = ft->lsectorsize = BBSIZE;
+ 	} else {
++#ifdef ENABLE_BLKID
+ 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+ 				   &ft->lsectorsize, &ft->psectorsize,
+ 				   force_overwrite);
++#endif /* ENABLE_BLKID */
+ 	}
+ 
+ 	if (xi->rtname && !xi->risfile) {
+ 		int sunit, lsectorsize, psectorsize;
+ 
++#ifdef ENABLE_BLKID
+ 		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
+ 				   &lsectorsize, &psectorsize, force_overwrite);
++#endif /* ENABLE_BLKID */
+ 	}
+ }
+ 
 -- 
 2.4.5
 
