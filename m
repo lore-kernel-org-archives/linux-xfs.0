@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D94E47F47
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 00:33:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ABDED8F8037
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 22:33:11 -0700 (PDT)
-Received: from maiev.nerim.net (smtp-151-monday.nerim.net [194.79.134.151]) by
-	cuda.sgi.com with ESMTP id zd0xjR1RwX2kxr6z for
-	<xfs@oss.sgi.com>; Mon, 17 Aug 2015 22:33:09 -0700 (PDT)
-Date: Tue, 18 Aug 2015 07:33:08 +0200
-From: Damien Wyart <damien.wyart@gmail.com>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150818053308.GA3629@brouette>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813224415.GG4496@mtj.duckdns.org>
-	<20150814111408.GB8710@quack.suse.cz>
-	<20150814151401.GA6906@brouette>
-	<20150817200034.GF21075@mtj.duckdns.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 15CCE7F50
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 01:49:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EC415304043
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 23:49:47 -0700 (PDT)
+Received: from mail-io0-f174.google.com (mail-io0-f174.google.com
+	[209.85.223.174]) by cuda.sgi.com with ESMTP id
+	yruyFx8sybDYOO5t (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 17 Aug 2015 23:49:43 -0700 (PDT)
+Received: by iodb91 with SMTP id b91so177778927iod.1
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 23:49:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150817200034.GF21075@mtj.duckdns.org>
+In-Reply-To: <20150817192300.GC26222@infradead.org>
+References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
+	<1439828606-7886-3-git-send-email-jtulak@redhat.com>
+	<20150817192300.GC26222@infradead.org>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 18 Aug 2015 08:49:23 +0200
+Message-ID: <CACj3i71vOZXx4AR0s5r0Riesm=L3-UMSXh2HQmej5sTp+DO7zw@mail.gmail.com>
+Subject: Re: [PATCH 02/11] xfsprogs: Add ifdef dirent checks where it was
+	missing
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +30,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6848378391472264599=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-> > I had an unstable system when running latest Linus tree with Tejun's
-> > patch applied on top. Nothing fishy in the logs after rebooting without
-> > the patch, but remote access with ssh when patch applied did not work
-> > (as if /home partition could not be read). This system has / as ext4 and
-> > other partitions (including /home) as XFS. Trying to login on tty
-> > instead of X resulted in hang of X. I could reboot with sysrq, but can't
-> > do further tests at the moment.
+--===============6848378391472264599==
+Content-Type: multipart/alternative; boundary=001a1140f3a6a899fb051d905288
 
-> > Back to same tree without the patch resulted in normal system.
-> > So just a heads up the patch doesn't seem OK in its current state.
+--001a1140f3a6a899fb051d905288
+Content-Type: text/plain; charset=UTF-8
 
-Hi Tejun,
+On Mon, Aug 17, 2015 at 9:23 PM, Christoph Hellwig <hch@infradead.org>
+wrote:
+>
+> Looks fine,
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
 
-> Have you been able to reproduce the failure? That sounds like an
-> unlikely failure mode for the patch.
+Thanks.
 
-Unfortunately (as it would be nice to understand what happened), no.
-I reapplied the patch on top of rc7 and could not reproduce the
-unstability after several reboots.
 
-I will continue running with the patch and report if anything strange
-appears again...
+>
+> (and didn't I review this one previously?)
+>
+
+I think not this last iteration, with the d_reclen approximation. Or at
+least I didn't get any reply to that.
+
+Cheers,
+Jan
 
 -- 
-Damien
+Jan Tulak
+jtulak@redhat.com
+
+--001a1140f3a6a899fb051d905288
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
+te">On Mon, Aug 17, 2015 at 9:23 PM, Christoph Hellwig <span dir=3D"ltr">&l=
+t;<a href=3D"mailto:hch@infradead.org" target=3D"_blank">hch@infradead.org<=
+/a>&gt;</span> wrote:<blockquote class=3D"gmail_quote" style=3D"margin:0 0 =
+0 .8ex;border-left:1px #ccc solid;padding-left:1ex">Looks fine,<br>
+<br>
+Reviewed-by: Christoph Hellwig &lt;<a href=3D"mailto:hch@lst.de" target=3D"=
+_blank">hch@lst.de</a>&gt;<br></blockquote><div><br></div><div>Thanks.</div=
+><div>=C2=A0</div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .=
+8ex;border-left:1px #ccc solid;padding-left:1ex">
+<br>
+(and didn&#39;t I review this one previously?)<br>
+</blockquote></div><div class=3D"gmail_extra"><br></div>I think not this la=
+st iteration, with the=C2=A0<span style=3D"background-color:rgb(255,255,255=
+)">d_reclen approximation. Or at least I didn&#39;t get any reply to that.<=
+/span></div><div class=3D"gmail_extra"><br></div><div class=3D"gmail_extra"=
+>Cheers,</div><div class=3D"gmail_extra">Jan<br clear=3D"all"><div><br></di=
+v>-- <br><div><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jt=
+ulak@redhat.com" target=3D"_blank">jtulak@redhat.com</a><br></div></div>
+</div></div>
+
+--001a1140f3a6a899fb051d905288--
+
+
+--===============6848378391472264599==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6848378391472264599==--
