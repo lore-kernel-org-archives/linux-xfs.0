@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FABA7F50
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 07:02:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CEFBAC006
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 05:02:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9GPGGqGp6VAjiLHs (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Aug 2015 05:02:38 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2 11/11] xfsprogs: Add a way to compile without blkid
-Date: Tue, 18 Aug 2015 14:02:26 +0200
-Message-Id: <1439899346-14995-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <20150817193913.GD8444@infradead.org>
-References: <20150817193913.GD8444@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1F5FB7CBE
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 10:36:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 11FA2304043
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 08:36:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id N4hhIKUEhFZfHAux for <xfs@oss.sgi.com>;
+	Tue, 18 Aug 2015 08:36:48 -0700 (PDT)
+Message-ID: <55D3510F.1060106@sandeen.net>
+Date: Tue, 18 Aug 2015 10:36:47 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] mkfs.xfs: fix ftype-vs-crc option combination testing
+References: <55C43FBA.1080408@sandeen.net> <20150818065341.GI714@dastard>
+In-Reply-To: <20150818065341.GI714@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,151 +23,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-CHANGELOG:
-- added #warning message
-- use dummy blkid_get_topology instead of #ifdefs
-- fix autoconf (wasn't passing -DENABLE_BLKID flag, lost during
-  patch cleaning.)
+On 8/18/15 1:53 AM, Dave Chinner wrote:
+> On Thu, Aug 06, 2015 at 10:18:50PM -0700, Eric Sandeen wrote:
+>> mkfs.xfs got weird along the way; today it has different outcomes
+>> depending on the order of option specification:
+>>
+>> $ mkfs/mkfs.xfs -n ftype=1 -m crc=0 -dfile,name=fsfile,size=16g
+>> cannot specify both crc and ftype
+>> $ mkfs/mkfs.xfs -m crc=0 -n ftype=1 -dfile,name=fsfile,size=16g
+>> <succeeds>
+>>
+>> Somehow the tests got written as being constrained on what options
+>> are specified - and in what order! - vs actually testing for
+>> incompatible feature sets.
+>>
+>> It's fine to specify both crc & ftype options, as long as it's an
+>> allowed combination, so just test for the incompatible combination
+>> (crc=1 and ftype=0) after all options have been processed.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Did you test this, Eric?
 
-Because not all platforms have up-to-date blkid with required
-functions, allow at least partial functionality by adding
---enable-blkid=yes/no optional configure argument.
+Yep...
 
-When blkid is disabled, signature detection and device geometry
-detection doesn't work.
+> $  mkfs.xfs /dev/sdc
+> cannot disable ftype with crcs enabled
+> Usage: mkfs.xfs
+> /* blocksize */         [-b log=n|size=num]
+> .....
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- configure.ac         | 10 +++++++++-
- include/builddefs.in |  5 +++++
- mkfs/xfs_mkfs.c      | 37 ++++++++++++++++++++++++++++++++++++-
- 3 files changed, 50 insertions(+), 2 deletions(-)
+God, but not with defaults!  I tested w/ all combinations of ftype/crc specified.  :(
 
-diff --git a/configure.ac b/configure.ac
-index abb7904..eeba20d 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -26,6 +26,11 @@ AC_ARG_ENABLE(gettext,
- 	enable_gettext=yes)
- AC_SUBST(enable_gettext)
- 
-+AC_ARG_ENABLE(blkid,
-+[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
-+	enable_blkid=yes)
-+AC_SUBST(enable_blkid)
-+
- AC_ARG_ENABLE(readline,
- [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
- 	test $enable_readline = yes && libreadline="-lreadline",
-@@ -117,9 +122,12 @@ AC_HAVE_PREADV
- AC_HAVE_SYNC_FILE_RANGE
- AC_HAVE_MNTENT
- AC_HAVE_FLS
--AC_HAVE_BLKID_TOPO
- AC_HAVE_READDIR
- 
-+if test "$enable_blkid" = yes; then
-+AC_HAVE_BLKID_TOPO
-+fi
-+
- AC_CHECK_SIZEOF([long])
- AC_CHECK_SIZEOF([char *])
- AC_TYPE_UMODE_T
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 8851956..6c16a65 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -89,6 +89,7 @@ ENABLE_SHARED	= @enable_shared@
- ENABLE_GETTEXT	= @enable_gettext@
- ENABLE_EDITLINE	= @enable_editline@
- ENABLE_READLINE	= @enable_readline@
-+ENABLE_BLKID	= @enable_blkid@
- 
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- 
-@@ -138,6 +139,10 @@ endif
- ifeq ($(HAVE_MNTENT),yes)
- PCFLAGS+= -DHAVE_MNTENT
- endif
-+ifeq ($(ENABLE_BLKID),yes)
-+PCFLAGS+= -DENABLE_BLKID
-+endif
-+
- 
- GCFLAGS = $(OPTIMIZER) $(DEBUG) \
- 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index d349b4f..e7bbb10 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -18,7 +18,9 @@
- 
- #include "libxfs.h"
- #include <ctype.h>
--#include <blkid/blkid.h>
-+#ifdef ENABLE_BLKID
-+#  include <blkid/blkid.h>
-+#endif /* ENABLE_BLKID */
- #include "xfs_mkfs.h"
- 
- /*
-@@ -298,6 +300,7 @@ calc_stripe_factors(
-  *	 0 for nothing found
-  *	-1 for internal error
-  */
-+#ifdef ENABLE_BLKID
- static int
- check_overwrite(
- 	char		*device)
-@@ -451,6 +454,38 @@ out_free_probe:
- 		_("warning: unable to probe device topology for device %s\n"),
- 		device);
- }
-+#else /* ifdef ENABLE_BLKID */
-+/*
-+ * Without blkid, we can't do a good check for signatures.
-+ * So instead of some messy attempts, just disable any checks
-+ * and always return 'nothing found'.
-+ */
-+#  warning BLKID is disabled, so signature detection and block device\
-+ access are not working!
-+static int
-+check_overwrite(
-+	char		*device)
-+{
-+	return 1;
-+}
-+
-+static void blkid_get_topology(
-+	const char	*device,
-+	int		*sunit,
-+	int		*swidth,
-+	int		*lsectorsize,
-+	int		*psectorsize,
-+	int		force_overwrite)
-+{
-+	/*
-+	 * Shouldn't make any difference (no blkid = no block device access),
-+	 * but make sure this dummy replacement returns with at least some
-+	 * sanity.
-+	 */
-+	*lsectorsize = *psectorsize = 512;
-+}
-+
-+#endif /* ENABLE_BLKID */
- 
- static void get_topology(
- 	libxfs_init_t		*xi,
--- 
-2.4.5
+...
+
+> So we enable crcs by default and do not enable dirftype/nftype by
+> default, and so by default mkfs now fails. I'll fix it to always
+> default to ftype=1 for both v4 and v5 filesystems as there is no go
+> reason not to enable it.
+
+Hell.  Sorry about that.  Thanks for catching ...
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
