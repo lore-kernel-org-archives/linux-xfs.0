@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1F5FB7CBE
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 10:36:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 11FA2304043
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 08:36:50 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id N4hhIKUEhFZfHAux for <xfs@oss.sgi.com>;
-	Tue, 18 Aug 2015 08:36:48 -0700 (PDT)
-Message-ID: <55D3510F.1060106@sandeen.net>
-Date: Tue, 18 Aug 2015 10:36:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3AA787F56
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 12:47:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BBC3DAC00F
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 10:47:26 -0700 (PDT)
+Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
+	[209.85.192.173]) by cuda.sgi.com with ESMTP id
+	Cw8arkV9JRu88Meh (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 18 Aug 2015 10:47:22 -0700 (PDT)
+Received: by pdob1 with SMTP id b1so15068616pdo.2
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 10:47:21 -0700 (PDT)
+Date: Tue, 18 Aug 2015 10:47:18 -0700
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
+	inodes
+Message-ID: <20150818174718.GA15739@mtj.duckdns.org>
+References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
+	<20150813004435.GN3902@dastard>
+	<20150813224415.GG4496@mtj.duckdns.org>
+	<20150814111408.GB8710@quack.suse.cz>
+	<20150817200254.GG21075@mtj.duckdns.org>
+	<20150818091603.GA12317@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs.xfs: fix ftype-vs-crc option combination testing
-References: <55C43FBA.1080408@sandeen.net> <20150818065341.GI714@dastard>
-In-Reply-To: <20150818065341.GI714@dastard>
+Content-Disposition: inline
+In-Reply-To: <20150818091603.GA12317@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,52 +38,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
 
-On 8/18/15 1:53 AM, Dave Chinner wrote:
-> On Thu, Aug 06, 2015 at 10:18:50PM -0700, Eric Sandeen wrote:
->> mkfs.xfs got weird along the way; today it has different outcomes
->> depending on the order of option specification:
->>
->> $ mkfs/mkfs.xfs -n ftype=1 -m crc=0 -dfile,name=fsfile,size=16g
->> cannot specify both crc and ftype
->> $ mkfs/mkfs.xfs -m crc=0 -n ftype=1 -dfile,name=fsfile,size=16g
->> <succeeds>
->>
->> Somehow the tests got written as being constrained on what options
->> are specified - and in what order! - vs actually testing for
->> incompatible feature sets.
->>
->> It's fine to specify both crc & ftype options, as long as it's an
->> allowed combination, so just test for the incompatible combination
->> (crc=1 and ftype=0) after all options have been processed.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Tue, Aug 18, 2015 at 11:16:03AM +0200, Jan Kara wrote:
+> On Mon 17-08-15 16:02:54, Tejun Heo wrote:
+> > Hello, Jan.
+> > 
+> > On Fri, Aug 14, 2015 at 01:14:09PM +0200, Jan Kara wrote:
+> > > So the patch looks good to me. But the fact that is fixes Eryu's problem
+> > > means there is something fishy going on. Either inodes get wrongly attached
+> > 
+> > Seriously, it shouldn't affect size syncing or xfs but then again my
+> > understanding of xfs is severely limited.
 > 
-> Did you test this, Eric?
+> Well, i_size == 0 in XFS usually means that writeback didn't get to
+> flushing delay allocated pages - inode size on disk gets increased only
+> after the pages are written out in ->end_io callback. So at least this part
+> makes some sense to me.
 
-Yep...
+Hmm... the only possibility I can think of is tot_write_bandwidth
+being zero when it shouldn't be.  I've been staring at the code for a
+while now but nothing rings a bell.  Time for another debug patch, I
+guess.
 
-> $  mkfs.xfs /dev/sdc
-> cannot disable ftype with crcs enabled
-> Usage: mkfs.xfs
-> /* blocksize */         [-b log=n|size=num]
-> .....
+Thanks.
 
-God, but not with defaults!  I tested w/ all combinations of ftype/crc specified.  :(
-
-...
-
-> So we enable crcs by default and do not enable dirftype/nftype by
-> default, and so by default mkfs now fails. I'll fix it to always
-> default to ftype=1 for both v4 and v5 filesystems as there is no go
-> reason not to enable it.
-
-Hell.  Sorry about that.  Thanks for catching ...
-
-Thanks,
--Eric
+-- 
+tejun
 
 _______________________________________________
 xfs mailing list
