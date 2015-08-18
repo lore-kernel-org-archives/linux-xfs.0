@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A935E7F5D
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 17:02:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 807C28F8040
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 15:02:09 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 980487F5D
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 17:04:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 25A03AC008
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 15:04:37 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BLhmvlCpsrn5KglJ for <xfs@oss.sgi.com>;
-	Tue, 18 Aug 2015 15:02:04 -0700 (PDT)
-Date: Wed, 19 Aug 2015 08:01:19 +1000
+	UcXHKDnhudo9XqMZ for <xfs@oss.sgi.com>;
+	Tue, 18 Aug 2015 15:04:31 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1ZRozd-0004qF-7c
+	for xfs@oss.sgi.com; Wed, 19 Aug 2015 08:04:29 +1000
+Date: Wed, 19 Aug 2015 08:04:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/11] xfsprogs: replace obsolete memalign with
-	posix_memalign
-Message-ID: <20150818220119.GL714@dastard>
-References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
-	<1439828606-7886-9-git-send-email-jtulak@redhat.com>
-	<20150817193624.GA8444@infradead.org>
-	<CACj3i73JFbDaOtggH2JQX6+5hQU3dJFBMObD3qq_BrfEkYA8mw@mail.gmail.com>
-	<20150818082046.GK714@dastard>
-	<CACj3i714tHuRxmNGve5-Gqn-1yMQaPntyj7ZJYWKw16gkw9bEw@mail.gmail.com>
+Subject: [ANOUNCE] xfsprogs: v4.2.0-rc2 released
+Message-ID: <20150818220429.GM714@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACj3i714tHuRxmNGve5-Gqn-1yMQaPntyj7ZJYWKw16gkw9bEw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,93 +25,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5403363617915320976=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Tue, Aug 18, 2015 at 10:33:49AM +0200, Jan Tulak wrote:
-> On Tue, Aug 18, 2015 at 10:20 AM, Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > On Tue, Aug 18, 2015 at 09:04:24AM +0200, Jan Tulak wrote:
-> > > I thought about it. However, with memalign from malloc marked obsolete
-> > > (and with posix_memalign having guaranteed alignment restrictions [1]), I
-> > > saw it better
-> > > to use the posix variant everywhere.
-> >
-> > Putting a sane wrapper around an nasty library function is just
-> > fine. The memalign wrapper makes sense from this perspective - even
-> > gcc can't tell if variables passed to posix_memalign are correctly
-> > initialised or not, whereas no such problems exist for memalign().
-> >
-> > > I could make a wrapper simulating the old memalign behaviour, but I don't
-> > > think it would make sense.
-> >
-> > I think it makes more sense than using posix_memalign() everywhere
-> > and then ignoring the return variable that tells you it failed...
-> >
-> > > I searched for this, but didn't find any reasonable answer:
-> > > How long can be things in standard libraries marked obsolete before
-> > > removing?
-> >
-> > With a wrapper, we don't care.
-> >
-> > > [1] man memalign:
-> > >        On many systems there are alignment restrictions, for example, on
-> > buf-
-> > >        fers  used  for  direct  block  device  I/O.  POSIX specifies the
-> > path-
-> > >        conf(path,_PC_REC_XFER_ALIGN) call that tells what alignment is
-> > needed.
-> > >        Now one can use posix_memalign() to satisfy this requirement.
-> > >
-> > >        posix_memalign()  verifies  that  alignment  matches  the
-> > requirements
-> > >        detailed above.  memalign() may not check that the  alignment
-> > argument
-> > >        is correct.
-> >
-> > Yes, you can get it wrong with memalign. But we don't, because we
-> > follow the rules for DIO buffer alignment and set it correctly.
-> > Being able to directly control the alignment of the memory buffer is
-> > a reason for using memalign() over posix_memalign(), not the other
-> > way around.
-> >
-> 
-> So a wrapper used on all platforms is an acceptable solution? All right,
-> this explanation makes sense. I will change it that way. The only question
-> I have now is whether to use posix_memalign on every platform, or whether to
-> make it platform_memalign and use the old memalign inside for Linux.
 
-No need for a wrapper on platforms that support memalign. We can add
-a wrapper when and if memalign ever goes away (which, FWIW, will
-break lots of code). Indeed, we alreadyhave these platform dependent
-"wrappers":
+--===============5403363617915320976==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EuxKj2iCbKjpUGkD"
+Content-Disposition: inline
 
-include/darwin.h:#define memalign(a,sz) valloc(sz)
-include/freebsd.h:#define memalign(a,sz)        valloc(sz)
 
-The question now is - do we even need to change anything?
+--EuxKj2iCbKjpUGkD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-https://developer.apple.com/library/ios/documentation/System/Conceptual/ManPages_iPhoneOS/man3/valloc.3.html
+Hi folks,
 
-"The valloc() function allocates size bytes of memory and returns a
- pointer to the allocated memory.  The allocated memory is
- aligned on a page boundary"
+The xfsprogs repositories at:
 
-Which means it does pretty exactly the same thing as
-posix_memalign(), and so we don't need to change anything, right?
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+git://oss.sgi.com/xfs/cmds/xfsprogs
 
-Cheers,
+have just been updated to v4.2.0-rc2.
 
-Dave.
--- 
+Changes since 4.2.0-rc1 are mainly bug fixes, OS X build fixes and
+mkfs.xfs now defaults to enabling the ftype field in the directory
+structure for all filesystem types.
+
+There are still some pending fixes before a 4.2.0 release will be
+made; Darrick has found a bunch of error sign issues that he has
+patches pending for, as well as a couple of xfs_db and xfs_repair
+fixes for problems he found via fuzzing. There are still also a few
+outstanding OS X build changes that need to be finalised before
+release. Hopefully these will all be finalised in the next couple of
+days.
+
+Anyway, go forth and test!
+
+-Dave.
+
+The new head of the master branch is commit:
+
+60feae1 xfsprogs: Release v4.2.0-rc2
+
+New Commits:
+
+Brian Foster (1):
+      [237cb37] libxfs: remove sparse inode mount warning
+
+Dave Chinner (2):
+      [9a35e0d] db: fix uninitialised variable warnings
+      [60feae1] xfsprogs: Release v4.2.0-rc2
+
+Eric Sandeen (2):
+      [98166c9] xfs_fsr: Fix parentheses around truth value
+      [b990de8] mkfs.xfs: fix ftype-vs-crc option combination testing
+
+Eryu Guan (1):
+      [255132a] xfsprogs: fix syntax error in include/buildmacros
+
+Jan Kara (1):
+      [28c1c27] libxfs: Fix attr leaf block definition
+
+Jan Tulak (9):
+      [54ca4ea] xfsprogs: undefined variable fix
+      [19863f7] xfsprogs: Add ifdef dirent checks where it was missing
+      [3f25732] xfsprogs: Add includes required for OS X builds
+      [ff6f019] xfsprogs: missing and dummy calls for OS X support
+      [bfbb770] xfsprogs: prevent LIST_ macros conflicts
+      [96f2cfb] build: Change OS X-specific CFLAGS/LDFLAGS
+      [5ae294e] build:: Add mntent.h check into autoconf
+      [5121281] build: Add fls check into autoconf
+      [6f9377f] doc: Update OS X build info and limitations
+
+Roger Willcocks (1):
+      [307ae95] libxfs: v3 inodes are only valid on crc-enabled filesystems
+
+
+Code Diffstat:
+
+ VERSION                |   2 +-
+ configure.ac           |   4 +-
+ db/check.c             |   2 +-
+ db/convert.c           |   2 +-
+ doc/CHANGES            |  10 ++++
+ doc/INSTALL            |  11 +++-
+ fsr/xfs_fsr.c          |  16 +++--
+ include/bitops.h       |   2 +
+ include/builddefs.in   |  10 +++-
+ include/buildmacros    |   2 +-
+ include/darwin.h       | 158 ++++++++++++++++++++++++++++++++++++++++++++-=
+----
+ include/list.h         |  14 +++++
+ io/readdir.c           |  12 ++++
+ libhandle/Makefile     |   4 ++
+ libxcmd/paths.c        |   2 +-
+ libxfs/xfs_da_format.h |  11 +++-
+ libxfs/xfs_format.h    |   1 -
+ libxfs/xfs_inode_buf.c |  13 +++-
+ libxfs/xfs_inode_buf.h |   2 +
+ libxfs/xfs_sb.c        |   3 -
+ m4/package_libcdev.m4  |  20 +++++++
+ mkfs/xfs_mkfs.c        |  17 ++----
+ repair/dinode.c        |   5 +-
+ repair/prefetch.c      |   2 +-
+ 24 files changed, 273 insertions(+), 52 deletions(-)
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--EuxKj2iCbKjpUGkD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJV06vsAAoJEK3oKUf0dfodf8QQALpHSdgV0OHAscCMkJQgH8Rs
+D9wfbDGwWKpt0jJ4goHBNpAPBi884sH829JCqsGr8quf58w6p3Wo/xRAv36WDL3H
+9Tg7im7A/Zie5poE69+ufTDkOOY5/bfveBCnq9Fki3B+zp/Go3Z5vXZsvLcPX38h
+fSuVqio7i27uqBH3oaWh1fEbkrw95ER7iRcZLES8IjqMBCEMVIj5GfgSjnuHEYYn
+Iji4OgCHhGhkQoZoUsEvWqtyut+gBZqSYVQ3S6ZD5P4AanzCJqNL+XXIbhUGmir+
+4QFGa/AXMC1muZp+ST/akH4vtIjpcEpVwb1/Sq0uUH7yFH0iZKYyc9EpXZ7NXXU+
+TM8dbO2Z7MJKPh/KplmSiMFRTO4/2r0b4YUH4aoV9hQlRf8AEsGWonOV9BvYbynN
+uC0lkVr9pbpwhuTNk4aBxThxjbUQyVJScpGpfptzIX+5YgndB7qJmo/04i9xtoA7
+QSc3N6KQqoyIBO6UtBPpPzqrB5rYCyvWknG+F0Cee4itkK8ibLyVlV2MbG0yqDDm
+4JblWNIjEkAci41TpmFQnOKA50d+COU4DBJgwdfzUJHAfEMCTFeh0Loa4DhLa/YN
+NeE9UFxxOZyp6IhnitR18fBfEQB3RoQwEQzjZcdQmNZqey7OM2DQNbNq7rwBWM1Y
+1c3ajXMVOL1L6r+IqxER
+=NIeO
+-----END PGP SIGNATURE-----
+
+--EuxKj2iCbKjpUGkD--
+
+
+--===============5403363617915320976==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5403363617915320976==--
