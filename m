@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EEEE27F5D
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 16:56:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D13888F8040
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 14:56:19 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A935E7F5D
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 17:02:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 807C28F8040
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 15:02:09 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	mXLTSNkyzxBR7AIH for <xfs@oss.sgi.com>;
-	Tue, 18 Aug 2015 14:56:17 -0700 (PDT)
-Date: Wed, 19 Aug 2015 07:56:11 +1000
+	BLhmvlCpsrn5KglJ for <xfs@oss.sgi.com>;
+	Tue, 18 Aug 2015 15:02:04 -0700 (PDT)
+Date: Wed, 19 Aug 2015 08:01:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150818215611.GD3902@dastard>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813224415.GG4496@mtj.duckdns.org>
-	<20150814111408.GB8710@quack.suse.cz>
-	<20150817200254.GG21075@mtj.duckdns.org>
-	<20150818091603.GA12317@quack.suse.cz>
-	<20150818174718.GA15739@mtj.duckdns.org>
-	<20150818195439.GB15739@mtj.duckdns.org>
+Subject: Re: [PATCH 08/11] xfsprogs: replace obsolete memalign with
+	posix_memalign
+Message-ID: <20150818220119.GL714@dastard>
+References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
+	<1439828606-7886-9-git-send-email-jtulak@redhat.com>
+	<20150817193624.GA8444@infradead.org>
+	<CACj3i73JFbDaOtggH2JQX6+5hQU3dJFBMObD3qq_BrfEkYA8mw@mail.gmail.com>
+	<20150818082046.GK714@dastard>
+	<CACj3i714tHuRxmNGve5-Gqn-1yMQaPntyj7ZJYWKw16gkw9bEw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150818195439.GB15739@mtj.duckdns.org>
+In-Reply-To: <CACj3i714tHuRxmNGve5-Gqn-1yMQaPntyj7ZJYWKw16gkw9bEw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,49 +35,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Aug 18, 2015 at 12:54:39PM -0700, Tejun Heo wrote:
-> Hello,
+On Tue, Aug 18, 2015 at 10:33:49AM +0200, Jan Tulak wrote:
+> On Tue, Aug 18, 2015 at 10:20 AM, Dave Chinner <david@fromorbit.com> wrote:
 > 
-> On Tue, Aug 18, 2015 at 10:47:18AM -0700, Tejun Heo wrote:
-> > Hmm... the only possibility I can think of is tot_write_bandwidth
-> > being zero when it shouldn't be.  I've been staring at the code for a
-> > while now but nothing rings a bell.  Time for another debug patch, I
-> > guess.
+> > On Tue, Aug 18, 2015 at 09:04:24AM +0200, Jan Tulak wrote:
+> > > I thought about it. However, with memalign from malloc marked obsolete
+> > > (and with posix_memalign having guaranteed alignment restrictions [1]), I
+> > > saw it better
+> > > to use the posix variant everywhere.
+> >
+> > Putting a sane wrapper around an nasty library function is just
+> > fine. The memalign wrapper makes sense from this perspective - even
+> > gcc can't tell if variables passed to posix_memalign are correctly
+> > initialised or not, whereas no such problems exist for memalign().
+> >
+> > > I could make a wrapper simulating the old memalign behaviour, but I don't
+> > > think it would make sense.
+> >
+> > I think it makes more sense than using posix_memalign() everywhere
+> > and then ignoring the return variable that tells you it failed...
+> >
+> > > I searched for this, but didn't find any reasonable answer:
+> > > How long can be things in standard libraries marked obsolete before
+> > > removing?
+> >
+> > With a wrapper, we don't care.
+> >
+> > > [1] man memalign:
+> > >        On many systems there are alignment restrictions, for example, on
+> > buf-
+> > >        fers  used  for  direct  block  device  I/O.  POSIX specifies the
+> > path-
+> > >        conf(path,_PC_REC_XFER_ALIGN) call that tells what alignment is
+> > needed.
+> > >        Now one can use posix_memalign() to satisfy this requirement.
+> > >
+> > >        posix_memalign()  verifies  that  alignment  matches  the
+> > requirements
+> > >        detailed above.  memalign() may not check that the  alignment
+> > argument
+> > >        is correct.
+> >
+> > Yes, you can get it wrong with memalign. But we don't, because we
+> > follow the rules for DIO buffer alignment and set it correctly.
+> > Being able to directly control the alignment of the memory buffer is
+> > a reason for using memalign() over posix_memalign(), not the other
+> > way around.
+> >
 > 
-> So, I can now reproduce the bug (it takes a lot of trials but lowering
-> the number of tested files helps quite a bit) and instrumented all the
-> early exit paths w/o the fix patch.  bdi_has_dirty_io() and
-> wb_has_dirty_io() are never out of sync with the actual dirty / io
-> lists even when the test 048 fails, so the bug at least is not caused
-> by writeback skipping due to buggy bdi/wb_has_dirty_io() result.
-> Whenever it skips, all the lists are actually empty (verified while
-> holding list_lock).
-> 
-> One suspicion I have is that this could be a subtle timing issue which
-> is being exposed by the new short-cut path.  Anything which adds delay
-> seems to make the issue go away.  Dave, does anything ring a bell?
+> So a wrapper used on all platforms is an acceptable solution? All right,
+> this explanation makes sense. I will change it that way. The only question
+> I have now is whether to use posix_memalign on every platform, or whether to
+> make it platform_memalign and use the old memalign inside for Linux.
 
-No, it doesn't. The data writeback mechanisms XFS uses are all
-generic. It marks inodes I_DIRTY_PAGES and lets the generic code
-take care of everything else. Yes, we do delayed allocation during
-writeback, and we log the inode size updates during IO completion,
-so if inode sizes are not getting updated, then Occam's Razor
-suggests that writeback is not happening.
+No need for a wrapper on platforms that support memalign. We can add
+a wrapper when and if memalign ever goes away (which, FWIW, will
+break lots of code). Indeed, we alreadyhave these platform dependent
+"wrappers":
 
-I'd suggest looking at some of the XFS tracepoints during the test:
+include/darwin.h:#define memalign(a,sz) valloc(sz)
+include/freebsd.h:#define memalign(a,sz)        valloc(sz)
 
-tracepoint			trigger
-xfs_file_buffered_write		once per write syscall
-xfs_file_sync			once per fsync per inode
-xfs_vm_writepage		every ->writepage call
-xfs_setfilesize			every IO completion that updates inode size
+The question now is - do we even need to change anything?
 
-And it's probably best to also include all the writeback
-tracepoints, too, for context. That will tell you what inodes and
-what part of them are getting written back and when....
+https://developer.apple.com/library/ios/documentation/System/Conceptual/ManPages_iPhoneOS/man3/valloc.3.html
+
+"The valloc() function allocates size bytes of memory and returns a
+ pointer to the allocated memory.  The allocated memory is
+ aligned on a page boundary"
+
+Which means it does pretty exactly the same thing as
+posix_memalign(), and so we don't need to change anything, right?
 
 Cheers,
 
