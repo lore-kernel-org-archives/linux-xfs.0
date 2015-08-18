@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5B46F7F47
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 19:41:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D88617F47
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 21:14:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E368304067
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 17:41:00 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	dojMuH9otg3ynxTV for <xfs@oss.sgi.com>;
-	Mon, 17 Aug 2015 17:40:58 -0700 (PDT)
-Date: Tue, 18 Aug 2015 10:17:18 +1000
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CF5248F8035
+	for <xfs@oss.sgi.com>; Mon, 17 Aug 2015 19:14:16 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	o2dpZFelZPjYiPvt for <xfs@oss.sgi.com>;
+	Mon, 17 Aug 2015 19:14:11 -0700 (PDT)
+Date: Tue, 18 Aug 2015 12:14:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/11] xfsprogs: missing and dummy calls for OS X support
-Message-ID: <20150818001717.GF714@dastard>
-References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
-	<1439828606-7886-6-git-send-email-jtulak@redhat.com>
-	<20150817193223.GE26222@infradead.org>
+Subject: Re: XFS File system in trouble
+Message-ID: <20150818021408.GH714@dastard>
+References: <20150728123307.GC38784@bfoster.bfoster>
+	<55B79BFD.6020509@mygrande.net>
+	<20150728221150.GA26604@bfoster.bfoster>
+	<55BE7C75.4060604@mygrande.net> <55C06F41.4030502@mygrande.net>
+	<20150804224240.GU16638@dastard> <55C8006C.8070807@mygrande.net>
+	<55CC375C.10902@mygrande.net> <20150814012635.GT3902@dastard>
+	<55CE75CA.5070506@mygrande.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150817193223.GE26222@infradead.org>
+In-Reply-To: <55CE75CA.5070506@mygrande.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,78 +35,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Jan Tulak <jtulak@redhat.com>
+To: Leslie Rhorer <lrhorer@mygrande.net>
+Cc: "Rhorer, Leslie" <Leslie.Rhorer@level3.com>, Brian Foster <bfoster@redhat.com>, Kris Rusocki <kszysiu@braxis.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Aug 17, 2015 at 12:32:23PM -0700, Christoph Hellwig wrote:
-> On Mon, Aug 17, 2015 at 06:23:20PM +0200, Jan Tulak wrote:
+On Fri, Aug 14, 2015 at 06:12:10PM -0500, Leslie Rhorer wrote:
 > 
-> > +#define XATTR_SIZE_MAX 65536    /* size of an extended attribute value (64k) */
-> > +#define XATTR_LIST_MAX 65536    /* size of extended attribute namelist (64k) */
-> 
-> Eww, looks like we depend on these Linux values in the on disk
-> defintion.  I think we need to add new XFS_XATTR_SIZE_MAX and
-> XFS_XATTR_LIST_MAX defintions to xfs_format.h and use them where
-> we currently use these.
+> 	OK, try http://fletchergeek.com/images/md0.metadump.gz.  It's only
+> about 18M.
 
-Yeah, that looks like something we need to fix.
+There's a very specific corruption that has occurred here. There are
+7 inodes in a row (i.e. same 4k block) with the same corruption
+signature. Only the first inode has the version number corrupted, so
+that is the only one that is being picked up as corrupt on
+allocation, however.
 
-> > +#define MREMAP_FIXED 1
-> > +#define MREMAP_MAYMOVE 2
-> > +static inline void *mremap(void *old_address, size_t old_size,
-> > +                    size_t new_size, int flags, ... /* void *new_address */)
-> > +{
-> > +	return NULL;
-> > +}
-> > +
-> > +/* FSR */
-> 
-> Please just build the mremap file in xfs_io conditional.
+The pattern is that there are certain fields that have wacky values.
+The timestamps, the uid/gid, the projid_lo/hi, dmstate
+(completely unused field), the extent size and the generation
+number.
 
-Probably should be done on an autconf rule.
+The generation number is particularly interesting, because every
+inode in a chunk is stamped with the same number when the inode
+chunk is allocated on disk. The majority of the inodes in the chunk
+(which have no corruption) have a value of 0x93dc8d4. One of the
+corrupted inodes has a value of 0x7b4bada6, which if valid means the
+inode has been allocated and freed almost 2 billion times.
 
-> 
-> > +typedef int __fsblkcnt_t;
-> > +typedef int __fsfilcnt_t;
-> > +typedef long long int __fsblkcnt64_t;
-> > +typedef long long int __fsfilcnt64_t;
-> > +
-> > +struct statvfs64
-> > +{
-> > +	unsigned long int f_bsize;
-> > +	unsigned long int f_frsize;
-> > +	__fsblkcnt64_t f_blocks;
-> > +	__fsblkcnt64_t f_bfree;
-> > +	__fsblkcnt64_t f_bavail;
-> > +	__fsfilcnt64_t f_files;
-> > +	__fsfilcnt64_t f_ffree;
-> > +	__fsfilcnt64_t f_favail;
-> > +	unsigned long int f_fsid;
-> > +	int __f_unused;
-> > +	unsigned long int f_flag;
-> > +	unsigned long int f_namemax;
-> > +	int __f_spare[6];
-> > +};
-> 
-> Does MacOS support statvfs? or statfs?  We should use the proper API
-> here instead of a dummy.  Or maybe just not build fsr on OSX for now,
-> as that would solve the fsetxattr issue as well.
+That doesn't seem reasonable, especially as the other corrupted
+inodes also having generation cycle deltas of between 50 million and
+1.2 billion I'm verymuch doubting these numbers are correct as it
+implies that these 7 inodes have run through almost 3.7 billion
+inode alloc/free cycles just by themselves.
 
-Apparently so:
+What's really interesting is this pattern shows up in most of the
+corrupted inodes:
 
-https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/statfs.2.html
+600: 494e0000 02020000 00bdf700 00aa4ae8 00000000 005a4a00 00054800 00a94806
+                         ^^^^     ^^^^		    ^^^^     ^^^^     ^^^^
+620: 011cc1e5 3c3aa24c 1ca3ba8c 00a94800 004bf6a2 3868ff92 00000000 00000000
+                                  ^^^^     ^^^^
+640: 00000000 00000000 0087f500 00000000 00000002 00000000 004b0000 093880d4
+                         ^^^^                                ^^^^     ^^^^
 
-Note that we'll need to define _DARWIN_USE_64_BIT_INODE for OS X to
-work correctly.
+All the highlighted bytes are ones that I can confirm are corrupt.
+They are all the middle 2 bytes of a 4 byte word, and they are all
+random garbage. The last four (of 7) corrupted inodes have the same corrupted
+bytes. The bytes have different values, but they all have, at
+minimum, the above bytes corrupted. The initial inode that was
+corrupted (with version = 3) has more corrupted bytes than the
+others, but the corruption follows a very similar pattern and is
+almost identical in inodes 2 and 3.
 
-> > +struct mntent
-> > +{
-> 
-> Another fsr issue, right?  Seems like it would need similar getmntinfo
-> based code.  As a stopgap I'd suggest we stop building fsr on OSX for
-> now.
+Patterns of corruption like this don't come from software. All of
+the corruptions are in the first 64 byte cacheline of the inodes,
+and all have a very similar pattern of corruption and the corrupted
+byte values all appear to be random. Given that you initially said
+this:
 
-That can be based on the HAVE_MNTENT autoconf detection....
+| I found the problem with md5sum (and probably nfs, as
+| well).  One of the memory modules in the server was bad.  The
+| problem with XFS persists.  Every time tar tried to create the
+| directory:
+
+That's what caused the corruption on disk. XFS has validated the
+buffer while it was hot in the CPU cache, and when submitted to the
+hardware to DMA it to disk it first has to be written back to
+memory. That inode buffer page happened to span the bad memory
+location and so the inodes were corrupted on their way to disk by
+the bad memory.
+
+Not a software bug, but a clear demonstration of why we consider
+metadata CRCs very important. On a v5 filesystem, this type of
+metadata corruption will show up as a CRC failure, and hence we'll
+know straight away that the likely cause is a hardware issue....
+
+And to close the loop, I have confirmed that Roger's patch fixes
+repair - it detects the bad inode and fixes it (tested against
+xfsprogs 4.2.0-rc1).
 
 Cheers,
 
