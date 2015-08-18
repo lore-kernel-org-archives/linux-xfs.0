@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 342897F50
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 04:16:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 21BCA30405F
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 02:16:13 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id SaIdsbQ2ILF6gKrb (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Aug 2015 02:16:10 -0700 (PDT)
-Date: Tue, 18 Aug 2015 11:16:03 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150818091603.GA12317@quack.suse.cz>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813224415.GG4496@mtj.duckdns.org>
-	<20150814111408.GB8710@quack.suse.cz>
-	<20150817200254.GG21075@mtj.duckdns.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150817200254.GG21075@mtj.duckdns.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0FABA7F50
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 07:02:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CEFBAC006
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2015 05:02:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9GPGGqGp6VAjiLHs (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 18 Aug 2015 05:02:38 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH v2 11/11] xfsprogs: Add a way to compile without blkid
+Date: Tue, 18 Aug 2015 14:02:26 +0200
+Message-Id: <1439899346-14995-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20150817193913.GD8444@infradead.org>
+References: <20150817193913.GD8444@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +23,151 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-On Mon 17-08-15 16:02:54, Tejun Heo wrote:
-> Hello, Jan.
-> 
-> On Fri, Aug 14, 2015 at 01:14:09PM +0200, Jan Kara wrote:
-> > So the patch looks good to me. But the fact that is fixes Eryu's problem
-> > means there is something fishy going on. Either inodes get wrongly attached
-> 
-> Seriously, it shouldn't affect size syncing or xfs but then again my
-> understanding of xfs is severely limited.
+CHANGELOG:
+- added #warning message
+- use dummy blkid_get_topology instead of #ifdefs
+- fix autoconf (wasn't passing -DENABLE_BLKID flag, lost during
+  patch cleaning.)
 
-Well, i_size == 0 in XFS usually means that writeback didn't get to
-flushing delay allocated pages - inode size on disk gets increased only
-after the pages are written out in ->end_io callback. So at least this part
-makes some sense to me.
+Because not all platforms have up-to-date blkid with required
+functions, allow at least partial functionality by adding
+--enable-blkid=yes/no optional configure argument.
 
-								Honza
+When blkid is disabled, signature detection and device geometry
+detection doesn't work.
+
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ configure.ac         | 10 +++++++++-
+ include/builddefs.in |  5 +++++
+ mkfs/xfs_mkfs.c      | 37 ++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 50 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index abb7904..eeba20d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -26,6 +26,11 @@ AC_ARG_ENABLE(gettext,
+ 	enable_gettext=yes)
+ AC_SUBST(enable_gettext)
  
++AC_ARG_ENABLE(blkid,
++[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
++	enable_blkid=yes)
++AC_SUBST(enable_blkid)
++
+ AC_ARG_ENABLE(readline,
+ [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
+ 	test $enable_readline = yes && libreadline="-lreadline",
+@@ -117,9 +122,12 @@ AC_HAVE_PREADV
+ AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_MNTENT
+ AC_HAVE_FLS
+-AC_HAVE_BLKID_TOPO
+ AC_HAVE_READDIR
+ 
++if test "$enable_blkid" = yes; then
++AC_HAVE_BLKID_TOPO
++fi
++
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+ AC_TYPE_UMODE_T
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 8851956..6c16a65 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -89,6 +89,7 @@ ENABLE_SHARED	= @enable_shared@
+ ENABLE_GETTEXT	= @enable_gettext@
+ ENABLE_EDITLINE	= @enable_editline@
+ ENABLE_READLINE	= @enable_readline@
++ENABLE_BLKID	= @enable_blkid@
+ 
+ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+ 
+@@ -138,6 +139,10 @@ endif
+ ifeq ($(HAVE_MNTENT),yes)
+ PCFLAGS+= -DHAVE_MNTENT
+ endif
++ifeq ($(ENABLE_BLKID),yes)
++PCFLAGS+= -DENABLE_BLKID
++endif
++
+ 
+ GCFLAGS = $(OPTIMIZER) $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d349b4f..e7bbb10 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -18,7 +18,9 @@
+ 
+ #include "libxfs.h"
+ #include <ctype.h>
+-#include <blkid/blkid.h>
++#ifdef ENABLE_BLKID
++#  include <blkid/blkid.h>
++#endif /* ENABLE_BLKID */
+ #include "xfs_mkfs.h"
+ 
+ /*
+@@ -298,6 +300,7 @@ calc_stripe_factors(
+  *	 0 for nothing found
+  *	-1 for internal error
+  */
++#ifdef ENABLE_BLKID
+ static int
+ check_overwrite(
+ 	char		*device)
+@@ -451,6 +454,38 @@ out_free_probe:
+ 		_("warning: unable to probe device topology for device %s\n"),
+ 		device);
+ }
++#else /* ifdef ENABLE_BLKID */
++/*
++ * Without blkid, we can't do a good check for signatures.
++ * So instead of some messy attempts, just disable any checks
++ * and always return 'nothing found'.
++ */
++#  warning BLKID is disabled, so signature detection and block device\
++ access are not working!
++static int
++check_overwrite(
++	char		*device)
++{
++	return 1;
++}
++
++static void blkid_get_topology(
++	const char	*device,
++	int		*sunit,
++	int		*swidth,
++	int		*lsectorsize,
++	int		*psectorsize,
++	int		force_overwrite)
++{
++	/*
++	 * Shouldn't make any difference (no blkid = no block device access),
++	 * but make sure this dummy replacement returns with at least some
++	 * sanity.
++	 */
++	*lsectorsize = *psectorsize = 512;
++}
++
++#endif /* ENABLE_BLKID */
+ 
+ static void get_topology(
+ 	libxfs_init_t		*xi,
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.4.5
 
 _______________________________________________
 xfs mailing list
