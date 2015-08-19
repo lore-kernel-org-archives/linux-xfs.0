@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CC2BF7F54
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 10:23:07 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 76C997F54
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 12:40:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8F03430406A
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 08:23:07 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id BndumEK6CjbKCF0E (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 19 Aug 2015 08:23:05 -0700 (PDT)
-Date: Wed, 19 Aug 2015 08:22:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/10] xfs_db: enable blocktrash for checksummed
-	filesystems
-Message-ID: <20150819152247.GR10043@birch.djwong.org>
-References: <20150815014338.1839.37405.stgit@birch.djwong.org>
-	<20150815014429.1839.69933.stgit@birch.djwong.org>
-	<55D386ED.604@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 45AE28F804C
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 10:40:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id GkRkhylkw4GDIzNq for <xfs@oss.sgi.com>;
+	Wed, 19 Aug 2015 10:40:18 -0700 (PDT)
+Message-ID: <55D4BF81.8090204@sandeen.net>
+Date: Wed, 19 Aug 2015 12:40:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55D386ED.604@sandeen.net>
+Subject: Re: [PATCH] xfs: Fix uninitialized return value in
+	xfs_alloc_fix_freelist()
+References: <1436948168-25051-1-git-send-email-jack@suse.com>
+	<20150715111649.GA60463@bfoster.bfoster>
+In-Reply-To: <20150715111649.GA60463@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,162 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Aug 18, 2015 at 02:26:37PM -0500, Eric Sandeen wrote:
-> On 8/14/15 8:44 PM, Darrick J. Wong wrote:
-> > Disable the write verifiers when we're trashing a block.  With this
-> > in place, create a xfs fuzzer script that formats, populates, corrupts,
-> > tries to use, repairs, and tries again to use a crash test xfs image.
-> > Hopefully this will shake out some v5 filesystem bugs.
+On 7/15/15 6:16 AM, Brian Foster wrote:
+> On Wed, Jul 15, 2015 at 10:16:08AM +0200, Jan Kara wrote:
+>> xfs_alloc_fix_freelist() can sometimes jump to out_agbp_relse without
+>> ever setting value of 'error' variable which is then returned. This can
+>> happen e.g. when pag->pagf_init is set but AG is for metadata and we
+>> want to allocate user data.
+>>
+>> Fix the problem by initializing 'error' to 0, which is the desired
+>> return value when we decide to skip this group.
+>>
+>> CC: xfs@oss.sgi.com
+>> Coverity-id: 1309714
+>> Signed-off-by: Jan Kara <jack@suse.com>
+>> ---
 > 
-> Maybe "we can create an xfs fuzzer script ..." (since it's not in this
-> patch)
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-"With this in place, the new fuzzers group in xfstests can format, populate..."
+Dave, ping on this one?  I don't see it in your latest update, looks important.
+(xfsprogs has the same problem, FWIW)
 
-> > v2: Drop xfsfuzz, don't assume every block is an AGF when blocktrashing.
-> > Don't trash log blocks by default, because that skews the blocktrash
-> > heavily towards damaging only log blocks.
-
-"v3: Fix changelog issues, allow trashing of log blocks and symlinks,
-and require the caller to explicitly ask for trashing of log blocks
-and super blocks.  Allowing log blocks by default skews the trashing
-heavily in favor of (probably unused) log blocks, which doesn't help
-us with fuzzing.  Furthermore, trashing the superblock results in a
-time consuming sector by sector superblock hunt."
-
-> 
-> and skip DBM_SB by default as well, right?
-> 
-> And you added log blocks & symlinks to the allowed mask.
-> 
-> So I think something like:
-> 
-> Allow trashing of symlink & log blocks.
-> By default, do not trash superblocks (why?) or log blocks (because ...)
-> 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  db/check.c |   10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/db/check.c b/db/check.c
-> > index afeea32..965d0f5 100644
-> > --- a/db/check.c
-> > +++ b/db/check.c
-> > @@ -944,6 +944,7 @@ blocktrash_b(
-> >  	int		mask;
-> >  	int		newbit;
-> >  	int		offset;
-> > +	const struct xfs_buf_ops *stashed_ops;
-> >  	static char	*modestr[] = {
-> >  		N_("zeroed"), N_("set"), N_("flipped"), N_("randomized")
-> >  	};
-> > @@ -952,8 +953,10 @@ blocktrash_b(
-> >  	offset = (int)(random() % (int)(mp->m_sb.sb_blocksize * NBBY));
-> >  	newbit = 0;
-> >  	push_cur();
-> > -	set_cur(&typtab[DBM_UNKNOWN],
-> > +	set_cur(NULL,
-> >  		XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb, DB_RING_IGN, NULL);
-> 
-> Ok, you talked about this back on 5/28/15.  Weird.
-> 
-> But calling it with NULL is odd, too; nothing else does that.  What about TYP_NONE,
-> 
->         { TYP_NONE, NULL }
-> 
-> its ops are NULL, as well... does that work?
-> Huh, ok, no callers w/ TYP_NONE, either.  I guess NULL works.
-
-I'm impressed you can remember that far back. :)
-
-> > +	stashed_ops = iocur_top->bp->b_ops;
-> > +	iocur_top->bp->b_ops = NULL;
-> >  	if ((buf = iocur_top->data) == NULL) {
-> >  		dbprintf(_("can't read block %u/%u for trashing\n"), agno, agbno);
-> >  		pop_cur();
-> > @@ -984,6 +987,7 @@ blocktrash_b(
-> >  			buf[byte] &= ~mask;
-> >  	}
-> >  	write_cur();
-> > +	iocur_top->bp->b_ops = stashed_ops;
-> 
-> *nod*
-> 
-> >  	pop_cur();
-> >  	printf(_("blocktrash: %u/%u %s block %d bit%s starting %d:%d %s\n"),
-> >  		agno, agbno, typename[type], len, len == 1 ? "" : "s",
-> > @@ -1040,9 +1044,11 @@ blocktrash_f(
-> >  		   (1 << DBM_BTINO) |
-> >  		   (1 << DBM_DIR) |
-> >  		   (1 << DBM_INODE) |
-> > +		   (1 << DBM_LOG) |
-> 
-> Ok, so you allow log blocks to be specified,
-> 
-> >  		   (1 << DBM_QUOTA) |
-> >  		   (1 << DBM_RTBITMAP) |
-> >  		   (1 << DBM_RTSUM) |
-> > +		   (1 << DBM_SYMLINK) |
-> 
-> and symlink blocks too, but...
-> 
-> >  		   (1 << DBM_SB);
-> >  	while ((c = getopt(argc, argv, "0123n:s:t:x:y:")) != EOF) {
-> >  		switch (c) {
-> > @@ -1106,7 +1112,7 @@ blocktrash_f(
-> >  		return 0;
-> >  	}
-> >  	if (tmask == 0)
-> > -		tmask = goodmask;
-> > +		tmask = goodmask & ~((1 << DBM_LOG) | (1 << DBM_SB));
-> 
-> you disable log & superblocks by default if no mask is specified.
-> 
-> I'm not 100% sure why you want to change this, what did you run into,
-> in practice, if they were allowed?
-
-I found that with log block trashing turned on, we'd most frequently
-trash empty log blocks; if there wasn't anything in the log to get
-replayed, the corruption wouldn't show up.  So, make the user
-explicitly ask for log blocks to be included in the trash mask.
-
-As for requiring the user to ask for superblocks to be in the trash
-mask, that's mostly to prevent the behavior that if repair finds a
-garbage superblock it'll scan every sector on the whole disk looking
-for superblocks, which is pretty slow...
-
-> If the change stays, then the xfs_db manpage needs an update:
-> 
-> "If no -t options are given then all metadata types can be trashed."
-
-Ok.
-
---D
-
-> 
-> Thanks,
-> -Eric
-> 
-> 
-> >  	lentab = xmalloc(sizeof(ltab_t));
-> >  	lentab->min = lentab->max = min;
-> >  	lentablen = 1;
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-Eric
 
 _______________________________________________
 xfs mailing list
