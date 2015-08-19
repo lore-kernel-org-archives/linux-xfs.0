@@ -1,19 +1,24 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1C6307F54
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 07:39:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FC018F8065
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 05:39:08 -0700 (PDT)
-Received: from o117.p8.mailjet.com (o117.p8.mailjet.com [87.253.233.117]) by
-	cuda.sgi.com with ESMTP id gKLlp7cN9b7mOamT (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Aug 2015 05:39:06 -0700 (PDT)
-Message-Id: <eb444114.1dw1.1gPf.cp.1yGAmwsuD0@mailjet.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 665EC7F54
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 16:02:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27E8830405F
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 14:02:38 -0700 (PDT)
+Received: from mta141.182.mdrctr.com (mta141.182.mdrctr.com [62.97.141.182])
+	by cuda.sgi.com with ESMTP id OfWExZB0FTAApk3h for
+	<xfs@oss.sgi.com>; Wed, 19 Aug 2015 14:02:28 -0700 (PDT)
+Received: from pmta4.mta.antevenio.com (127.0.0.1) by mta141.181.mdrctr.com id
+	hqjneg15mio9 for <xfs@oss.sgi.com>;
+	Wed, 19 Aug 2015 23:00:44 +0200 (envelope-from
+	<MD-NO--34306-53-FR-PR--xfs=oss.sgi.com@lists.mdirector.com>)
+From: PICTYEAR <info@pictyear.frmdirector.com>
+Date: Wed, 19 Aug 2015 23:00:44 +0200
+Subject: =?UTF-8?B?VGVudGV6IGRlIGdhZ25lciB1biB2b3lhZ2UgcG91ciAyIMOgIFNhbiBGcmFuY2k=?=
+	=?UTF-8?B?c2NvIGVuIHTDqWzDqWNoYXJnZWFudCBs?='app gratuite PICTYEAR
 MIME-Version: 1.0
-From: Indongo <indongo@ministryofmagicdev.com>
-Subject: Indongo Toyota
-Date: Fri, 21 Aug 2015 12:39:05 +0000
-Reply-To: henri@ministryofmagicnam.com
+Content-Type: multipart/mixed; boundary="boundaryTagForMixed"
+Message-ID: <0.0.13.5F0.1D0DAC21DA40B96.2E1137@mta141.181.mdrctr.com>
+Reply-To: PICTYEAR <noreply@summerpictyear.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,382 +27,359 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3243744623513016121=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============3243744623513016121==
-Content-Type: multipart/alternative; boundary="=-Ry3nySDxKhs9PEtzaL1L"
+--boundaryTagForMixed
+Content-Type: multipart/alternative; boundary="boundaryTagForAlternative"
 
---=-Ry3nySDxKhs9PEtzaL1L
+--boundaryTagForAlternative
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t7JL2lNZ017218
 
-Special offer from Indongo Toyota
-View online version [http://omi3.mjt.lu/nl2/omi3/gp.html?a=3D1yGAmwsuD0&b=
-=3Deb444114&c=3Domi3&d=3D0b12ef5f&e=3D79a42972&email=3Dxfs@oss.sgi.com][htt=
-p://omi3.mjt.lu/img/omi3/b/ot/q4.jpeg] Save on a new Corolla! Save up to N$=
-36,600 on this limited time offer!
-This e-mail has been sent to xfs@oss.sgi.com, click here to unsubscribe [[[=
-UNSUB_LINK_EN]]] .=
 
---=-Ry3nySDxKhs9PEtzaL1L
+
+**********************************************************************
+
+Vous pourrez exercer vos droits d=C3=82=C2=B4acc=C3=83=C2=A8s, annulation=
+, rectification et opposition concernant vos donn=C3=83=C2=A9es =C3=83=C2=
+=A0 caract=C3=83=C2=A8re personnel, en cliquant
+ * annulation
+//www.mdirector.com/track/pre-unsubscribe/category/EMAIL/empId/34306/subI=
+d/53/listId/3/conId/27804/signature/12306a1a5a54b6a8ff33328203d402ea/conE=
+mail/xfs@oss.sgi.com/conMovil/-
+
+
+--boundaryTagForAlternative
 Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
-w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns=3D"http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8">
-  <title>Indongo Toyota</title>
-  <style type=3D"text/css">
-    @import url(https://fonts.googleapis.com/css?family=3DUbuntu:400,500,70=
-0,300);
+ <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+ <meta content="width=device-width" name="viewport" />
+ <title>PICTYEAR</title>
+ <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet" type="text/css" />
+ <style media="screen" type="text/css">/* FONTS */
+@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600);
+*{ font-weight:400; font-family: 'Source Sans Pro', Arial, sans-serif;}
+b{ font-weight:600;}
 
-    #outlook a { padding: 0; }
-    .ReadMsgBody { width: 100%; }
-    .ExternalClass { width: 100%; }
+/* RESET */
+body, p{margin:0; padding:0; margin-bottom:0; -webkit-text-size-adjust:none; -ms-text-size-adjust:none;} img{line-height:100%; outline:none; text-decoration:none; -ms-interpolation-mode: bicubic; border:0; display:block;} a img{border: none;} #backgroundTable {margin:0; padding:0; width:100% !important; } a, a:link{color:#2A5DB0; text-decoration: underline;} .ExternalClass {display: block !important; width:100%;} .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td,
+.ExternalClass div { line-height: 100%; } table td {border-collapse:collapse;} sup{position: relative; top: 4px; line-height:7px !important;font-size:11px !important;} .mobile_link a[href^="tel"], .mobile_link a[href^="sms"] {text-decoration: default; color: #a9a9a9 !important; /* set link color */ pointer-events: auto; cursor: default;} .no-detect a{text-decoration: none; color: #666; /* set text color */ pointer-events: auto; cursor: default;} .no-detect-local a{color: #a9a9a9;} span {color: inherit;
+border-bottom: none;} span:hover { background-color: transparent; }
 
-    .ExternalClass,
-    .ExternalClass p,
-    .ExternalClass span,
-    .ExternalClass font,
-    .ExternalClass td,
-    .ExternalClass div {
-      line-height: 100%;
-    }
-
-    body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%;=
- -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    body { margin: 0; padding: 0; }
-    img { border: 0; height: auto; line-height: 100%; outline: none; text-d=
-ecoration: none; -ms-interpolation-mode: bicubic; }
-    table { border-collapse: collapse !important; }
-    body, #main, #inner {
-      height: 100% !important;
-      margin: 0;
-      padding: 0;
-      width: 100% !important;
-    }
-
-    .sectionInner { width: 600px; }
-    p, ul, a { font-family: Ubuntu, Helvetica, Arial, sans-serif; }
-    a:link,
-    a:visited,
-    a .yshortcuts {
-      color: #000000;
-      font-weight: normal;
-    }
-    .toolContent a span { text-decoration: underline; }
-    .colTool { width: 100%; }
-
-    @media only screen and (max-width: 640px) {
-      body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: non=
-e !important; }
-      body {
-        width: 100% !important;
-        min-width: 100% !important;
-      }
-      body[yahoo] .section {
-        max-width: 100% !important;
-        width: 100% !important;
-      }
-      body[yahoo] .sectionInner {
-        width: 440px;
-      }
-      body[yahoo] .col,
-      body[yahoo] .colToolContainer,
-      body[yahoo] .colTool {
-        display: block !important;
-        width: 440px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] .colToolInner,
-      body[yahoo] .toolContent,
-      body[yahoo] .toolContentInner,
-      body[yahoo] .toolContent2,
-      body[yahoo] .toolContent2 td,
-      body[yahoo] .toolContent2 td a {
-        display: block !important;
-        width: 390px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] img {
-        max-width: 390px !important;
-      }
-
-      body[yahoo] .full .colToolInner,
-      body[yahoo] .full .toolContent,
-      body[yahoo] .full .toolContentInner,
-      body[yahoo] .full .toolContent2,
-      body[yahoo] .full .toolContent2 td,
-      body[yahoo] .full .toolContent2 td a {
-        width: 440px !important;
-      }
-      body[yahoo] .full img {
-        max-width: 440px !important;
-      }
-
-      body[yahoo] .space { height: 10px; }
-    }
-    @media only screen and (max-width: 479px) {
-      body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: non=
-e !important; }
-      body {
-        width: 100% !important;
-        min-width: 100% !important;
-      }
-      body[yahoo] .section {
-        max-width: 100% !important;
-        width: 100% !important;
-      }
-      body[yahoo] .sectionInner{
-        width: 280px;
-      }
-      body[yahoo] .col,
-      body[yahoo] .colToolContainer,
-      body[yahoo] .colTool {
-        display: block !important;
-        width: 280px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] .colToolInner,
-      body[yahoo] .toolContent,
-      body[yahoo] .toolContentInner,
-      body[yahoo] .toolContent2,
-      body[yahoo] .toolContent2 td,
-      body[yahoo] .toolContent2 td a {
-        display: block !important;
-        width: 230px !important;
-        text-align: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      body[yahoo] img {
-        max-width: 230px !important;
-      }
-
-      body[yahoo] .full .colToolInner,
-      body[yahoo] .full .toolContent,
-      body[yahoo] .full .toolContentInner,
-      body[yahoo] .full .toolContent2,
-      body[yahoo] .full .toolContent2 td,
-      body[yahoo] .full .toolContent2 td a {
-        width: 280px !important;
-      }
-      body[yahoo] .full img {
-        max-width: 280px !important;
-      }
-
-      body[yahoo] .space { height: 10px; }
-    }
-  </style>
+/* RESPONSIVE */
+@media only screen and (max-width: 839px) {
+ 
+ table[class="total"]{
+ display:block;
+ width:100%;
+ }
+ td[class="total"]{ width:100% !important;}
+ td[class="td50"]{ width:50% !important;}
+ td[class="td45"]{ width:45% !important;}
+ td[class="td5"]{ width:5% !important;}
+ td[class="td3"]{ width:3% !important;}
+ td[class="td2"]{ width:2% !important;}
+ 
+ span[class="f34"]{ font-size:30px !important;} span[class="f28"]{ font-size:26px !important;} span[class="f20"]{ font-size:18px !important;} span[class="f13"]{ font-size:12px !important;}
+}
+@media only screen and (max-width: 769px) {
+ 
+ table[class="t770"]{
+ display:block;
+ width:94%;
+ }
+ 
+ span[class="f34"]{ font-size:28px !important;} span[class="f28"]{ font-size:24px !important;} 
+}
+@media only screen and (max-width: 640px) {
+ 
+ table[class="t640"]{
+ display:block;
+ width:80%;
+ }
+ span[class="f34"]{ font-size:26px !important;} span[class="f28"]{ font-size:22px !important;} 
+}
+@media only screen and (max-width: 560px) {
+ 
+ table[class="t640"]{
+ display:block;
+ width:85%;
+ }
+ span[class="f34"]{ font-size:24px !important;} span[class="f28"]{ font-size:19px !important;} 
+}
+@media only screen and (max-width: 480px) {
+ 
+ span[class="f34"]{ font-size:20px !important;} span[class="f28"]{ font-size:18px !important;} span[class="f20"]{ font-size:16px !important;} span[class="f18"]{ font-size:15px !important;} span[class="f16"]{ font-size:14px !important;} span[class="f15"]{ font-size:13px !important;} span[class="f14"]{ font-size:12px !important;} span[class="f13"]{ font-size:11px !important;} span[class="f12"]{ font-size:11px !important;} span[class="f11"]{ font-size:10px !important;} span[class="f10"]{ font-size:9px
+!important;}
+}
+@media only screen and (max-width: 400px) {
+ 
+ span[class="f34"]{ font-size:18px !important;} span[class="f28"]{ font-size:16px !important;} span[class="f20"]{ font-size:15px !important;} span[class="f18"]{ font-size:14px !important;} span[class="f16"]{ font-size:13px !important;} span[class="f15"]{ font-size:13px !important;} span[class="f14"]{ font-size:12px !important;} span[class="f13"]{ font-size:11px !important;} span[class="f12"]{ font-size:10px !important;} span[class="f11"]{ font-size:9px !important;} span[class="f10"]{ font-size:8px
+!important;}
+}
+@media only screen and (max-width: 350px) {
+ 
+ span[class="f34"]{ font-size:18px !important;} span[class="f28"]{ font-size:16px !important;} span[class="f20"]{ font-size:14px !important;} span[class="f18"]{ font-size:12px !important;} span[class="f16"]{ font-size:11px !important;} span[class="f15"]{ font-size:10px !important;} span[class="f14"]{ font-size:10px !important;} span[class="f13"]{ font-size:9px !important;} span[class="f12"]{ font-size:9px !important;} span[class="f11"]{ font-size:8px !important;} span[class="f10"]{ font-size:7px
+!important;}
+}
+ </style>
 </head>
-<body yahoo=3D"fix" leftmargin=3D"0" marginwidth=3D"0" topmargin=3D"0" marg=
-inheight=3D"0" offset=3D"0">
-  <center>
-    <div id=3D"newsletter"><div style=3D"background-color:#D6DDE5;"><table =
-class=3D"section section-locked" width=3D"100%" cellpadding=3D"0" cellspaci=
-ng=3D"0" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-c=
-ollapse:collapse;border-spacing:0px;"><tbody><tr><td><table width=3D"600" c=
-ellpadding=3D"0" cellspacing=3D"0" class=3D"sectionInner" style=3D"font-fam=
-ily:Ubuntu, Helvetica, Arial, sans-serif;border-collapse:collapse;border-sp=
-acing:0px;background-color:#D6DDE5;" data-legacy-bgcolor=3D"#FFFFFF" data-l=
-egacy-align=3D"center" align=3D"center" bgcolor=3D"#FFFFFF"><tbody><tr><td =
-style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border:0;border-s=
-pacing:0px;vertical-align:top;" data-legacy-align=3D"center" data-legacy-va=
-lign=3D"top" align=3D"center"><table cellpadding=3D"0" cellspacing=3D"0" wi=
-dth=3D"100%"><tbody><tr><td height=3D"20"><!--[if mso]>&nbsp;<![endif]--></=
-td></tr><tr><td><table cellpadding=3D"0" cellspacing=3D"0" class=3D"row"><t=
-body><tr><td width=3D"400" class=3D"col" style=3D"border:none;border-spacin=
-g:0px;vertical-align:middle;"><table class=3D"colToolContainer" cellpadding=
-=3D"0" cellspacing=3D"0" width=3D"400"><tbody><tr><td><table class=3D"colTo=
-ol" cellpadding=3D"0" cellspacing=3D"0" data-legacy-align=3D"center" style=
-=3D"border-collapse:collapse;border-spacing:0px;background-color:transparen=
-t;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-legacy-align=
-=3D"left" class=3D"colToolInner" style=3D"border:0;border-spacing:0px;verti=
-cal-align:top;" align=3D"left"><table width=3D"350" class=3D"toolContent" c=
-ellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border=
--spacing:0px;"><tbody><tr><td data-legacy-align=3D"left" class=3D"toolConte=
-ntInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D=
-"left"><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetic=
-a, Arial, sans-serif;line-height:22px;font-size:13px;text-decoration:none;f=
-ont-style:normal;font-weight:normal;" class=3D"content"><span class=3D"tool=
--text-font-size" style=3D"font-size: 11px">Special offer from Indongo Toyot=
-a<br></span></div></td></tr></tbody></table></td><td width=3D"25"></td></tr=
-></tbody></table></td></tr></tbody></table></td><td width=3D"200" class=3D"=
-col" style=3D"border:none;border-spacing:0px;vertical-align:middle;"><table=
- class=3D"colToolContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"20=
-0"><tbody><tr><td><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D=
-"0" data-legacy-align=3D"center" style=3D"border-collapse:collapse;border-s=
-pacing:0px;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-leg=
-acy-align=3D"right" class=3D"colToolInner" style=3D"border:0;border-spacing=
-:0px;vertical-align:top;" align=3D"right"><table width=3D"150" class=3D"too=
-lContent" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:coll=
-apse;border-spacing:0px;"><tbody><tr><td data-legacy-align=3D"right" class=
-=3D"toolContentInner" style=3D"border:0;border-spacing:0px;vertical-align:t=
-op;" align=3D"right"><div style=3D"cursor:auto;color:#333333;font-family:Ub=
-untu, Helvetica, Arial, sans-serif;line-height:22px;font-size:13px;text-dec=
-oration:none;font-style:normal;font-weight:normal;" class=3D"content" conte=
-nteditable=3D"false"><span class=3D"tool-text-font-size" style=3D"font-size=
-: 11px"><a style=3D"color: rgb(51, 51, 51);" href=3D"http://omi3.mjt.lu/lin=
-k/omi3/xlkt8jsr6uxq/1/Ls7hl2wC3MSLPTmQCbUlOA/aHR0cDovL29taTMubWp0Lmx1L25sMi=
-9vbWkzL2dwLmh0bWw_YT0xeUdBbXdzdUQwJmI9ZWI0NDQxMTQmYz1vbWkzJmQ9MGIxMmVmNWYmZ=
-T03OWE0Mjk3MiZlbWFpbD14ZnNAb3NzLnNnaS5jb20"><span class=3D"placeholder-repl=
-ace-permalink-label">View online version</span></a></span></div></td></tr><=
-/tbody></table></td><td width=3D"25"></td></tr></tbody></table></td></tr></=
-tbody></table></td></tr></tbody></table></td></tr><tr><td height=3D"20"><!-=
--[if mso]>&nbsp;<![endif]--></td></tr></tbody></table></td></tr></tbody></t=
-able></td></tr></tbody></table><table class=3D"section" width=3D"100%" cell=
-padding=3D"0" cellspacing=3D"0" style=3D"font-family:Ubuntu, Helvetica, Ari=
-al, sans-serif;border-collapse:collapse;border-spacing:0px;"><tbody><tr><td=
-><table width=3D"600" cellpadding=3D"0" cellspacing=3D"0" class=3D"sectionI=
-nner" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-coll=
-apse:collapse;border-spacing:0px;background-color:#FFFFFF;" data-legacy-bgc=
-olor=3D"#FFFFFF" data-legacy-align=3D"center" align=3D"center" bgcolor=3D"#=
-FFFFFF"><tbody><tr><td style=3D"font-family:Ubuntu, Helvetica, Arial, sans-=
-serif;border:0;border-spacing:0px;vertical-align:top;" data-legacy-align=3D=
-"center" data-legacy-valign=3D"top" align=3D"center"><table cellpadding=3D"=
-0" cellspacing=3D"0" width=3D"100%"><tbody><tr><td height=3D"20"><!--[if ms=
-o]>&nbsp;<![endif]--></td></tr><tr><td><table cellpadding=3D"0" cellspacing=
-=3D"0" class=3D"row"><tbody><tr><td width=3D"600" class=3D"col" style=3D"bo=
-rder:none;border-spacing:0px;vertical-align:middle;"><table class=3D"colToo=
-lContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"600"><tbody><tr><t=
-d><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-legacy-=
-align=3D"center" style=3D"border-collapse:collapse;border-spacing:0px;backg=
-round-color:transparent;" align=3D"center"><tbody><tr><td colspan=3D"3" hei=
-ght=3D"10" class=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-=
-height-rule:exactly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0=
-</td></tr><tr><td width=3D"25"></td><td data-legacy-align=3D"center" class=
-=3D"colToolInner" style=3D"border:0;border-spacing:0px;vertical-align:top;"=
- align=3D"center"><table width=3D"550" class=3D"toolContent" cellpadding=3D=
-"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;=
-"><tbody><tr><td data-legacy-align=3D"center" class=3D"toolContentInner" st=
-yle=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"center"><t=
-able data-legacy-align=3D"center" cellpadding=3D"0" cellspacing=3D"0" style=
-=3D"border-collapse:collapse;border-spacing:0px;" align=3D"center"><tr><td>=
-<img src=3D"http://omi3.mjt.lu/img/omi3/b/ot/q4.jpeg" alt=3D"" width=3D"550=
-" style=3D"display:block;border:none;outline:none;text-decoration:none;max-=
-width:550px;"></td></tr></table></td></tr></tbody></table></td><td width=3D=
-"25"></td></tr><tr><td colspan=3D"3" height=3D"10" class=3D"space" style=3D=
-"font-size:1px;line-height:1px;mso-line-height-rule:exactly;border:0;border=
--spacing:0px;vertical-align:top;">=C2=A0</td></tr></tbody></table><table cl=
-ass=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-legacy-align=3D"ce=
-nter" style=3D"border-collapse:collapse;border-spacing:0px;background-color=
-:transparent;" align=3D"center"><tbody><tr><td colspan=3D"3" height=3D"10" =
-class=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-height-rule=
-:exactly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0</td></tr><=
-tr><td width=3D"25"></td><td data-legacy-align=3D"left" class=3D"colToolInn=
-er" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"left=
-"><table width=3D"550" class=3D"toolContent" cellpadding=3D"0" cellspacing=
-=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;"><tbody><tr><t=
-d data-legacy-align=3D"left" class=3D"toolContentInner" style=3D"border:0;b=
-order-spacing:0px;vertical-align:top;" align=3D"left"><div style=3D"cursor:=
-auto;color:#333333;font-family:Ubuntu, Helvetica, Arial, sans-serif;line-he=
-ight:22px;font-size:13px;text-decoration:none;font-style:normal;font-weight=
-:normal;" class=3D"content"><span class=3D"tool-text-style-title1" style=3D=
-"display: block; font-size: 28px; font-weight: bold; color: rgb(51, 51, 51)=
-; font-family: Ubuntu,Helvetica,Arial,sans-serif; font-style: normal;">Save=
- on a new Corolla!</span></div></td></tr></tbody></table></td><td width=3D"=
-25"></td></tr><tr><td colspan=3D"3" height=3D"10" class=3D"space" style=3D"=
-font-size:1px;line-height:1px;mso-line-height-rule:exactly;border:0;border-=
-spacing:0px;vertical-align:top;">=C2=A0</td></tr></tbody></table><table cla=
-ss=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-legacy-align=3D"cen=
-ter" style=3D"border-collapse:collapse;border-spacing:0px;background-color:=
-transparent;" align=3D"center"><tbody><tr><td colspan=3D"3" height=3D"10" c=
-lass=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-height-rule:=
-exactly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0</td></tr><t=
-r><td width=3D"25"></td><td data-legacy-align=3D"left" class=3D"colToolInne=
-r" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"left"=
-><table width=3D"550" class=3D"toolContent" cellpadding=3D"0" cellspacing=
-=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;"><tbody><tr><t=
-d data-legacy-align=3D"left" class=3D"toolContentInner" style=3D"border:0;b=
-order-spacing:0px;vertical-align:top;" align=3D"left"><div style=3D"cursor:=
-auto;color:#333333;font-family:Ubuntu, Helvetica, Arial, sans-serif;line-he=
-ight:22px;font-size:13px;text-decoration:none;font-style:normal;font-weight=
-:normal;" class=3D"content">Save up to N$36,600 on this limited time offer!=
-<br></div></td></tr></tbody></table></td><td width=3D"25"></td></tr><tr><td=
- colspan=3D"3" height=3D"10" class=3D"space" style=3D"font-size:1px;line-he=
-ight:1px;mso-line-height-rule:exactly;border:0;border-spacing:0px;vertical-=
-align:top;">=C2=A0</td></tr></tbody></table></td></tr></tbody></table></td>=
-</tr></tbody></table></td></tr><tr><td height=3D"20"><!--[if mso]>&nbsp;<![=
-endif]--></td></tr></tbody></table></td></tr></tbody></table></td></tr></tb=
-ody></table><table class=3D"section section-locked" width=3D"100%" cellpadd=
-ing=3D"0" cellspacing=3D"0" style=3D"font-family:Ubuntu, Helvetica, Arial, =
-sans-serif;border-collapse:collapse;border-spacing:0px;"><tbody><tr><td><ta=
-ble width=3D"600" cellpadding=3D"0" cellspacing=3D"0" class=3D"sectionInner=
-" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-collapse=
-:collapse;border-spacing:0px;background-color:#D6DDE5;" data-legacy-bgcolor=
-=3D"#FFFFFF" data-legacy-align=3D"center" align=3D"center" bgcolor=3D"#FFFF=
-FF"><tbody><tr><td style=3D"font-family:Ubuntu, Helvetica, Arial, sans-seri=
-f;border:0;border-spacing:0px;vertical-align:top;" data-legacy-align=3D"cen=
-ter" data-legacy-valign=3D"top" align=3D"center"><table cellpadding=3D"0" c=
-ellspacing=3D"0" width=3D"100%"><tbody><tr><td height=3D"20"><!--[if mso]>&=
-nbsp;<![endif]--></td></tr><tr><td><table cellpadding=3D"0" cellspacing=3D"=
-0" class=3D"row"><tbody><tr><td width=3D"600" class=3D"col" style=3D"border=
-:none;border-spacing:0px;vertical-align:middle;"><table class=3D"colToolCon=
-tainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"600"><tbody><tr><td><t=
-able class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-legacy-alig=
-n=3D"center" style=3D"border-collapse:collapse;border-spacing:0px;" align=
-=3D"center"><tbody><tr><td width=3D"25"></td><td data-legacy-align=3D"cente=
-r" class=3D"colToolInner" style=3D"border:0;border-spacing:0px;vertical-ali=
-gn:top;" align=3D"center"><table width=3D"550" class=3D"toolContent" cellpa=
-dding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border-spac=
-ing:0px;"><tbody><tr><td data-legacy-align=3D"center" class=3D"toolContentI=
-nner" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"ce=
-nter"><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetica=
-, Arial, sans-serif;line-height:22px;font-size:13px;text-decoration:none;fo=
-nt-style:normal;font-weight:normal;" class=3D"content" contenteditable=3D"f=
-alse"><p style=3D"font-size: 11px"><span class=3D"placeholder-replace-deliv=
-ery-info">This e-mail has been sent to xfs@oss.sgi.com, <a href=3D"http://o=
-mi3.mjt.lu/unsub?hl=3Den&amp;a=3D1yGAmwsuD0&amp;b=3Deb444114&amp;c=3Domi3&a=
-mp;d=3D0b12ef5f&amp;e=3D79a42972&amp;email=3Dxfs@oss.sgi.com"><span class=
-=3D"placeholder-replace-unsub-label">click here to unsubscribe</span></a>.<=
-/span></p></div></td></tr></tbody></table></td><td width=3D"25"></td></tr><=
-/tbody></table><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0"=
- data-legacy-align=3D"center" style=3D"border-collapse:collapse;border-spac=
-ing:0px;background-color:transparent;" align=3D"center"><tbody><tr><td widt=
-h=3D"25"></td><td data-legacy-align=3D"center" class=3D"colToolInner" style=
-=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"center"><tabl=
-e width=3D"550" class=3D"toolContent" cellpadding=3D"0" cellspacing=3D"0" s=
-tyle=3D"border-collapse:collapse;border-spacing:0px;"><tbody><tr><td data-l=
-egacy-align=3D"center" class=3D"toolContentInner" style=3D"border:0;border-=
-spacing:0px;vertical-align:top;" align=3D"center"><div style=3D"cursor:auto=
-;color:#333333;font-family:Ubuntu, Helvetica, Arial, sans-serif;line-height=
-:22px;font-size:13px;text-decoration:none;font-style:normal;font-weight:nor=
-mal;" class=3D"content"><p style=3D"font-size: 11px">   </p></div></td></tr=
-></tbody></table></td><td width=3D"25"></td></tr></tbody></table></td></tr>=
-</tbody></table></td></tr></tbody></table></td></tr><tr><td height=3D"20"><=
-!--[if mso]>&nbsp;<![endif]--></td></tr></tbody></table></td></tr></tbody><=
-/table></td></tr></tbody></table></div></div>
-  </center>
+<body style="background:#ffffff; font-family:Source Sans Pro, Arial, sans-serif; font-size:14px;"><img src="http://www.mdirector.com/track/open/key/34306-53-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea" style="display:none;" border=0 width=1 height=1 alt="">
+<table border="0" cellpadding="0" cellspacing="0" id="backgroundTable" style="background:#ffffff;" width="100%">
+ <tbody>
+ <tr>
+ <td align="center" class="wrap" style="background:#ffffff;" valign="top" width="100%"><!-- 840PX --><!-- LIEN MIROIR -->
+ <table align="center" bgcolor="#000000" border="0" cellpadding="0" cellspacing="0" class="total" style="background:#000000;" width="840">
+ <tbody>
+ <tr bgcolor="#000000" height="70" valign="middle">
+ <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e6797d4" href="http://www.mdirector.com/track/link/key/34306-53-2030-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#ffffff; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#ffffff;">Si vous n&rsquo;arrivez pas &agrave; visualiser cet email, <u>cliquez ici</u>.</span></a></td>
+ </tr>
+ </tbody>
+ </table>
+ <!-- SUMMER PICTYEAR -->
 
-<br/><img src=3D"http://omi3.mjt.lu/o/omi3/edb0baa1/xlkt8jsr6uxqe.gif" heig=
-ht=3D"1" width=3D"1" alt=3D"" border=3D"0" />
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
+ <tbody>
+ <tr height="40">
+ <td class="total" width="840">&nbsp;</td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e679999" href="http://www.mdirector.com/track/link/key/34306-53-2031-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="T&#233;l&#233;chargez l&#8217;app et tentez de gagner* un voyage pour 2 &#224; SAN FRANCISCO" border="0"
+src="http://veniseactivation.com/pictyear/emailings/img/summer-pictyear.jpg" style="display:block; border:0;" width="100%" /></b></span></a></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t640" width="640">
+ <tbody>
+ <tr height="40">
+ <td class="total" width="640">&nbsp;</td>
+ </tr>
+ <tr height="70" valign="middle">
+ <td align="center" class="total" width="640"><a data-linkid="link_55d4b3e679b39" href="http://www.mdirector.com/track/link/key/34306-53-2032-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f28" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:28px;color:#505050;">OU UN ALBUM PHOTO INSTANTAN&Eacute;MENT COMPOS&Eacute; DE VOS PLUS BEAUX SOUVENIRS PARTAG&Eacute;S</span></a></td>
+ </tr>
+ <tr height="40">
+ <td class="total" width="640">&nbsp;</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
+ <tbody>
+ <tr valign="middle">
+ <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e679cb4" href="http://www.mdirector.com/track/link/key/34306-53-2033-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="Pictyear" border="0" src="http://veniseactivation.com/pictyear/emailings/img/principe.jpg" style="display:block; border:0;"
+width="100%" /></b></span></a></td>
+ </tr>
+ <tr height="20">
+ <td class="total" width="840">&nbsp;</td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e679e5c" href="http://www.mdirector.com/track/link/key/34306-53-2034-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#505050;"><b><img alt="Disponible sur l'APPSTORE" border="0" src="http://veniseactivation.com/pictyear/emailings/img/appstore.jpg"
+style="display:inline-block; border:0;" width="224" /></b></span></a> <a data-linkid="link_55d4b3e67a005" href="http://www.mdirector.com/track/link/key/34306-53-2035-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#505050;"><b><img alt=" - Disponible sur GOOGLE PLAY" border="0"
+src="http://veniseactivation.com/pictyear/emailings/img/google-play.jpg" style="display:inline-block; border:0;" width="224" /></b></span></a></td>
+ </tr>
+ <tr height="60">
+ <td class="total" width="840"><img alt="-" border="0" height="60" src="http://veniseactivation.com/pictyear/emailings/img/separation.jpg" style="display:inline-block; border:0;" width="100%" /></td>
+ </tr>
+ </tbody>
+ </table>
+ <!-- LOGO -->
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
+ <tbody>
+ <tr valign="middle">
+ <td align="center" class="total" width="770"><a data-linkid="link_55d4b3e67a19d" href="http://www.mdirector.com/track/link/key/34306-53-2036-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#00d0fe; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#00d0fe;"><b><img alt="pictyear" border="0" src="http://veniseactivation.com/pictyear/emailings/img/logo.jpg" style="display:block; border:0;" width="310"
+/></b></span></a></td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" width="770"><a data-linkid="link_55d4b3e67a371" href="http://www.mdirector.com/track/link/key/34306-53-2037-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f34" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:34px;color:#505050;"><b>La premi&egrave;re application mobile gratuite et priv&eacute;e</b> qui regroupe toutes les photos que vous prenez avec toutes celles qui sont
+prises par vos proches.</span></a></td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" width="770"><a data-linkid="link_55d4b3e67a4e8" href="http://www.mdirector.com/track/link/key/34306-53-2038-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#00d0fe; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#00d0fe;"><b><img alt="shoot - swipe - print" border="0" src="http://veniseactivation.com/pictyear/emailings/img/shoot-swipe-print.jpg"
+style="display:block; border:0;" width="307" /></b></span></a></td>
+ </tr>
+ </tbody>
+ </table>
+ <!-- PHOTOS -->
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t640" width="640">
+ <tbody>
+ <tr valign="middle">
+ <td align="center" class="total" width="640"><a data-linkid="link_55d4b3e67a68e" href="http://www.mdirector.com/track/link/key/34306-53-2039-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#46c1ed; text-decoration:none;" target="_blank"><span class="f28" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:28px;color:#46c1ed;">Ne laissez plus dans les smartphones des autres les photos sur lesquelles vous apparaissez</span></a></td>
+ </tr>
+ <tr height="20">
+ <td class="total" width="640">&nbsp;</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
+ <tbody>
+ <tr valign="middle">
+ <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e67a828" href="http://www.mdirector.com/track/link/key/34306-53-2040-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="les selfies entre amis - les photos en famille" border="0" src="http://veniseactivation.com/pictyear/emailings/img/photos-1.jpg"
+style="display:block; border:0;" width="100%" /></b></span></a></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t640" width="640">
+ <tbody>
+ <tr height="20">
+ <td class="total" width="640">&nbsp;</td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" width="640"><a data-linkid="link_55d4b3e67a9b8" href="http://www.mdirector.com/track/link/key/34306-53-2041-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#46c1ed; text-decoration:none;" target="_blank"><span class="f28" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:28px;color:#46c1ed;">R&eacute;alisez instantan&eacute;ment vos albums photos personnalis&eacute;s et recevez gratuitement votre FREEBOOK</span></a></td>
+ </tr>
+ <tr height="60">
+ <td class="total" width="640">&nbsp;</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
+ <tbody>
+ <tr valign="middle">
+ <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e67ab61" href="http://www.mdirector.com/track/link/key/34306-53-2042-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="les &#233;clats de rire - les photos entre copines" border="0" src="http://veniseactivation.com/pictyear/emailings/img/photos-2.jpg"
+style="display:block; border:0;" width="100%" /></b></span></a></td>
+ </tr>
+ <tr height="60">
+ <td class="total" width="840">&nbsp;</td>
+ </tr>
+ </tbody>
+ </table>
+ <!-- FOOTER -->
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
+ <tbody>
+ <tr bgcolor="#e9eaee" height="14" valign="middle">
+ <td align="center" bgcolor="#e9eaee" class="total" width="840">&nbsp;</td>
+ </tr>
+ <tr bgcolor="#363839" valign="top">
+ <td align="center" bgcolor="#363839" class="total" width="840">
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
+ <tbody>
+ <tr height="10" valign="middle">
+ <td class="total" colspan="2" width="770">&nbsp;</td>
+ </tr>
+ <tr valign="middle">
+ <td align="left" class="demie" width="50%"><a data-linkid="link_55d4b3e67ad09" href="http://www.mdirector.com/track/link/key/34306-53-2043-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#00d0ff; text-decoration:none;" target="_blank"><span class="f16" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:16px;color:#00d0ff;"><b><img alt="pictyear" border="0" src="http://veniseactivation.com/pictyear/emailings/img/logo-footer.jpg" style="display:block; border:0;"
+width="126" /></b></span></a><br />
+ <a data-linkid="link_55d4b3e67aeb1" href="http://www.mdirector.com/track/link/key/34306-53-2044-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#787878; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#787878;">Pictyear est la premi&egrave;re appli au<br />
+ monde qui vous permet de cr&eacute;er<br />
+ instantan&eacute;ment un album photos<br />
+ imprim&eacute;, seul ou &agrave; plusieurs.</span></a></td>
+ <td align="right" class="demie" width="50%"><span class="f16" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:16px;color:#dddddd;"><b>SUIVEZ-NOUS</b></span><br />
+ <a data-linkid="link_55d4b3e67b050" href="http://www.mdirector.com/track/link/key/34306-53-2045-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Facebook" border="0" src="http://veniseactivation.com/pictyear/emailings/img/facebook.jpg" style="display:inline-block; border:0;" width="20" /></span></a><a
+data-linkid="link_55d4b3e67b1ea" href="http://www.mdirector.com/track/link/key/34306-53-2046-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Twitter" border="0" src="http://veniseactivation.com/pictyear/emailings/img/twitter.jpg" style="display:inline-block; border:0;" width="20" /></span></a><a
+data-linkid="link_55d4b3e67b390" href="http://www.mdirector.com/track/link/key/34306-53-2047-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Instagram" border="0" src="http://veniseactivation.com/pictyear/emailings/img/instagram.jpg" style="display:inline-block; border:0;" width="30" /></span></a><a
+data-linkid="link_55d4b3e67b542" href="http://www.mdirector.com/track/link/key/34306-53-2048-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Pinterest" border="0" src="http://veniseactivation.com/pictyear/emailings/img/pinterest.jpg" style="display:inline-block; border:0;" width="20" /></span></a></td>
+ </tr>
+ <tr height="10" valign="middle">
+ <td class="total" colspan="2" width="770">&nbsp;</td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" colspan="2" width="770"><a data-linkid="link_55d4b3e67b6ea" href="http://www.mdirector.com/track/link/key/34306-53-2049-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#787878; text-decoration:none;" target="_blank"><span class="f12" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:12px;color:#9a9a9a;">Le r&egrave;glement du jeu concours sans obligation d&rsquo;achat &laquo;&nbsp;SUMMER PICTYEAR&nbsp;&raquo; est disponible en
+cliquant ici.</span></a></td>
+ </tr>
+ <tr height="10" valign="middle">
+ <td class="total" colspan="2" width="770">&nbsp;</td>
+ </tr>
+ </tbody>
+ </table>
+ </td>
+ </tr>
+ <tr bgcolor="#282a2b" valign="middle">
+ <td align="center" bgcolor="#282a2b" class="total" width="840">
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
+ <tbody>
+ <tr height="40" valign="middle">
+ <td align="left" class="total" colspan="2" width="770"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#787878;">&copy; Copyright 2015 Pictyear Tous droits r&eacute;serv&eacute;s.</span> <a data-linkid="link_55d4b3e67b88a" href="http://www.mdirector.com/track/link/key/34306-53-2050-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#b1b1b1; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans
+Pro',Arial,sans-serif;font-size:14px;color:#b1b1b1;">Mentions l&eacute;gales.</span></a></td>
+ </tr>
+ </tbody>
+ </table>
+ </td>
+ </tr>
+ </tbody>
+ </table>
+
+ <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
+ <tbody>
+ <tr height="20">
+ <td class="total" width="770">&nbsp;</td>
+ </tr>
+ <tr valign="middle">
+ <td align="center" class="total" width="770"><span class="f11" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:11px;color:#000000;">Conform&eacute;ment &agrave; la loi &quot;Informatique et libert&eacute;s&quot; du 6 janvier 1978, vous b&eacute;n&eacute;ficiez d&#39;un droit d&#39;acc&egrave;s, de modification, de rectification et de suppression des donn&eacute;es qui vous concernent. Si vous souhaitez exercer ce droit et obtenir communication des informations vous concernant, veuillez vous
+adresser &agrave; : Venise Activation &ndash; 7, 13 Bd Paul &Eacute;mile Victor 92200 Neuilly sur Seine.</span><br />
+ <br />
+ <a data-linkid="link_55d4b3e67ba2f" href="http://www.mdirector.com/track/link/key/34306-53-2051-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#46c1ed; text-decoration:none;" target="_blank"><span class="f11" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:11px;color:#46c1ed;">Si vous souhaitez ne plus recevoir de messages, cliquez ici.</span></a></td>
+ </tr>
+ <tr height="20">
+ <td class="total" width="770">&nbsp;</td>
+ </tr>
+ </tbody>
+ </table>
+ </td>
+ </tr>
+ </tbody>
+</table>
+<style>
+.txtPie {
+font-family: Tahoma, Arial, Verdana;
+font-size: 10px;
+color: #8c8c8c;
+text-align: justify;
+}
+.txtPie a {
+color: #FF8549;
+}
+</style>
+<center>
+<table style="max-width:550px;" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_sup_izq.gif"></td>
+    <td style="max-width:538px;" bgcolor="#ffffff"></td>
+    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_sup_dcha.gif"></td>
+  </tr>
+  <tr>
+    <td style="max-width:6px;" bgcolor="#ffffff"></td>
+    <td style="max-width:538px;" bgcolor="#ffffff" valign="top" class="txtPie">
+Vous pourrez exercer vos droits d&acute;acc&egrave;s, annulation, rectification et opposition concernant vos donn&eacute;es &agrave; caract&egrave;re personnel, en cliquant <a href='http://www.mdirector.com/track/pre-unsubscribe/category/EMAIL/empId/34306/subId/53/listId/3/conId/27804/signature/12306a1a5a54b6a8ff33328203d402ea/conEmail/xfs@oss.sgi.com/conMovil/-'>annulation</a>.
+    </td>
+    <td style="max-width:6px;" bgcolor="#ffffff"></td>
+  </tr>
+  <tr>
+    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_inf_izq.gif"></td>
+    <td style="max-width:538px;" bgcolor="#ffffff"></td>
+    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_inf_dcha.gif"></td>
+  </tr>
+</table>
+</center>
+
+
+
 </body>
-</html>=
+</html>
 
---=-Ry3nySDxKhs9PEtzaL1L--
+--boundaryTagForAlternative--
 
-
---===============3243744623513016121==
+--boundaryTagForMixed
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3243744623513016121==--
+--boundaryTagForMixed--
