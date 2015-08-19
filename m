@@ -1,24 +1,19 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 665EC7F54
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 16:02:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 27E8830405F
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 14:02:38 -0700 (PDT)
-Received: from mta141.182.mdrctr.com (mta141.182.mdrctr.com [62.97.141.182])
-	by cuda.sgi.com with ESMTP id OfWExZB0FTAApk3h for
-	<xfs@oss.sgi.com>; Wed, 19 Aug 2015 14:02:28 -0700 (PDT)
-Received: from pmta4.mta.antevenio.com (127.0.0.1) by mta141.181.mdrctr.com id
-	hqjneg15mio9 for <xfs@oss.sgi.com>;
-	Wed, 19 Aug 2015 23:00:44 +0200 (envelope-from
-	<MD-NO--34306-53-FR-PR--xfs=oss.sgi.com@lists.mdirector.com>)
-From: PICTYEAR <info@pictyear.frmdirector.com>
-Date: Wed, 19 Aug 2015 23:00:44 +0200
-Subject: =?UTF-8?B?VGVudGV6IGRlIGdhZ25lciB1biB2b3lhZ2UgcG91ciAyIMOgIFNhbiBGcmFuY2k=?=
-	=?UTF-8?B?c2NvIGVuIHTDqWzDqWNoYXJnZWFudCBs?='app gratuite PICTYEAR
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0B5907F75
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 03:57:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6EFC4AC007
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 01:57:02 -0700 (PDT)
+Received: from mailer195.gate82.rs.smtp.com (mailer195.gate82.rs.smtp.com
+	[74.91.82.195]) by cuda.sgi.com with ESMTP id oiNxCMCsDfGsqVEd
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 19 Aug 2015 01:56:59 -0700 (PDT)
+Message-ID: <4A.64.04976.8D444D55@rs-ord-gm-mta05-3.smtp.com>
+From: "Bushveld Safaris" <reservations@bushveldtsafari.com>
+Subject: Re: Winter Bushveld Breaks
+Date: Wed, 19 Aug 2015 08:56:57 GMT
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="boundaryTagForMixed"
-Message-ID: <0.0.13.5F0.1D0DAC21DA40B96.2E1137@mta141.181.mdrctr.com>
-Reply-To: PICTYEAR <noreply@summerpictyear.fr>
+Reply-To: Bushveld Safaris <reservations@bushveldtsafari.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,359 +22,320 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============5457927972827407409=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---boundaryTagForMixed
-Content-Type: multipart/alternative; boundary="boundaryTagForAlternative"
+--===============5457927972827407409==
+Content-Type: text/html;
+ charset="UTF-8"
+Content-Transfer-Encoding: base64
 
---boundaryTagForAlternative
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t7JL2lNZ017218
-
-
-
-**********************************************************************
-
-Vous pourrez exercer vos droits d=C3=82=C2=B4acc=C3=83=C2=A8s, annulation=
-, rectification et opposition concernant vos donn=C3=83=C2=A9es =C3=83=C2=
-=A0 caract=C3=83=C2=A8re personnel, en cliquant
- * annulation
-//www.mdirector.com/track/pre-unsubscribe/category/EMAIL/empId/34306/subI=
-d/53/listId/3/conId/27804/signature/12306a1a5a54b6a8ff33328203d402ea/conE=
-mail/xfs@oss.sgi.com/conMovil/-
-
-
---boundaryTagForAlternative
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 8bit
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
- <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
- <meta content="width=device-width" name="viewport" />
- <title>PICTYEAR</title>
- <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet" type="text/css" />
- <style media="screen" type="text/css">/* FONTS */
-@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600);
-*{ font-weight:400; font-family: 'Source Sans Pro', Arial, sans-serif;}
-b{ font-weight:600;}
-
-/* RESET */
-body, p{margin:0; padding:0; margin-bottom:0; -webkit-text-size-adjust:none; -ms-text-size-adjust:none;} img{line-height:100%; outline:none; text-decoration:none; -ms-interpolation-mode: bicubic; border:0; display:block;} a img{border: none;} #backgroundTable {margin:0; padding:0; width:100% !important; } a, a:link{color:#2A5DB0; text-decoration: underline;} .ExternalClass {display: block !important; width:100%;} .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td,
-.ExternalClass div { line-height: 100%; } table td {border-collapse:collapse;} sup{position: relative; top: 4px; line-height:7px !important;font-size:11px !important;} .mobile_link a[href^="tel"], .mobile_link a[href^="sms"] {text-decoration: default; color: #a9a9a9 !important; /* set link color */ pointer-events: auto; cursor: default;} .no-detect a{text-decoration: none; color: #666; /* set text color */ pointer-events: auto; cursor: default;} .no-detect-local a{color: #a9a9a9;} span {color: inherit;
-border-bottom: none;} span:hover { background-color: transparent; }
-
-/* RESPONSIVE */
-@media only screen and (max-width: 839px) {
- 
- table[class="total"]{
- display:block;
- width:100%;
- }
- td[class="total"]{ width:100% !important;}
- td[class="td50"]{ width:50% !important;}
- td[class="td45"]{ width:45% !important;}
- td[class="td5"]{ width:5% !important;}
- td[class="td3"]{ width:3% !important;}
- td[class="td2"]{ width:2% !important;}
- 
- span[class="f34"]{ font-size:30px !important;} span[class="f28"]{ font-size:26px !important;} span[class="f20"]{ font-size:18px !important;} span[class="f13"]{ font-size:12px !important;}
-}
-@media only screen and (max-width: 769px) {
- 
- table[class="t770"]{
- display:block;
- width:94%;
- }
- 
- span[class="f34"]{ font-size:28px !important;} span[class="f28"]{ font-size:24px !important;} 
-}
-@media only screen and (max-width: 640px) {
- 
- table[class="t640"]{
- display:block;
- width:80%;
- }
- span[class="f34"]{ font-size:26px !important;} span[class="f28"]{ font-size:22px !important;} 
-}
-@media only screen and (max-width: 560px) {
- 
- table[class="t640"]{
- display:block;
- width:85%;
- }
- span[class="f34"]{ font-size:24px !important;} span[class="f28"]{ font-size:19px !important;} 
-}
-@media only screen and (max-width: 480px) {
- 
- span[class="f34"]{ font-size:20px !important;} span[class="f28"]{ font-size:18px !important;} span[class="f20"]{ font-size:16px !important;} span[class="f18"]{ font-size:15px !important;} span[class="f16"]{ font-size:14px !important;} span[class="f15"]{ font-size:13px !important;} span[class="f14"]{ font-size:12px !important;} span[class="f13"]{ font-size:11px !important;} span[class="f12"]{ font-size:11px !important;} span[class="f11"]{ font-size:10px !important;} span[class="f10"]{ font-size:9px
-!important;}
-}
-@media only screen and (max-width: 400px) {
- 
- span[class="f34"]{ font-size:18px !important;} span[class="f28"]{ font-size:16px !important;} span[class="f20"]{ font-size:15px !important;} span[class="f18"]{ font-size:14px !important;} span[class="f16"]{ font-size:13px !important;} span[class="f15"]{ font-size:13px !important;} span[class="f14"]{ font-size:12px !important;} span[class="f13"]{ font-size:11px !important;} span[class="f12"]{ font-size:10px !important;} span[class="f11"]{ font-size:9px !important;} span[class="f10"]{ font-size:8px
-!important;}
-}
-@media only screen and (max-width: 350px) {
- 
- span[class="f34"]{ font-size:18px !important;} span[class="f28"]{ font-size:16px !important;} span[class="f20"]{ font-size:14px !important;} span[class="f18"]{ font-size:12px !important;} span[class="f16"]{ font-size:11px !important;} span[class="f15"]{ font-size:10px !important;} span[class="f14"]{ font-size:10px !important;} span[class="f13"]{ font-size:9px !important;} span[class="f12"]{ font-size:9px !important;} span[class="f11"]{ font-size:8px !important;} span[class="f10"]{ font-size:7px
-!important;}
-}
- </style>
-</head>
-<body style="background:#ffffff; font-family:Source Sans Pro, Arial, sans-serif; font-size:14px;"><img src="http://www.mdirector.com/track/open/key/34306-53-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea" style="display:none;" border=0 width=1 height=1 alt="">
-<table border="0" cellpadding="0" cellspacing="0" id="backgroundTable" style="background:#ffffff;" width="100%">
- <tbody>
- <tr>
- <td align="center" class="wrap" style="background:#ffffff;" valign="top" width="100%"><!-- 840PX --><!-- LIEN MIROIR -->
- <table align="center" bgcolor="#000000" border="0" cellpadding="0" cellspacing="0" class="total" style="background:#000000;" width="840">
- <tbody>
- <tr bgcolor="#000000" height="70" valign="middle">
- <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e6797d4" href="http://www.mdirector.com/track/link/key/34306-53-2030-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#ffffff; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#ffffff;">Si vous n&rsquo;arrivez pas &agrave; visualiser cet email, <u>cliquez ici</u>.</span></a></td>
- </tr>
- </tbody>
- </table>
- <!-- SUMMER PICTYEAR -->
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
- <tbody>
- <tr height="40">
- <td class="total" width="840">&nbsp;</td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e679999" href="http://www.mdirector.com/track/link/key/34306-53-2031-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="T&#233;l&#233;chargez l&#8217;app et tentez de gagner* un voyage pour 2 &#224; SAN FRANCISCO" border="0"
-src="http://veniseactivation.com/pictyear/emailings/img/summer-pictyear.jpg" style="display:block; border:0;" width="100%" /></b></span></a></td>
- </tr>
- </tbody>
- </table>
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t640" width="640">
- <tbody>
- <tr height="40">
- <td class="total" width="640">&nbsp;</td>
- </tr>
- <tr height="70" valign="middle">
- <td align="center" class="total" width="640"><a data-linkid="link_55d4b3e679b39" href="http://www.mdirector.com/track/link/key/34306-53-2032-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f28" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:28px;color:#505050;">OU UN ALBUM PHOTO INSTANTAN&Eacute;MENT COMPOS&Eacute; DE VOS PLUS BEAUX SOUVENIRS PARTAG&Eacute;S</span></a></td>
- </tr>
- <tr height="40">
- <td class="total" width="640">&nbsp;</td>
- </tr>
- </tbody>
- </table>
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
- <tbody>
- <tr valign="middle">
- <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e679cb4" href="http://www.mdirector.com/track/link/key/34306-53-2033-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="Pictyear" border="0" src="http://veniseactivation.com/pictyear/emailings/img/principe.jpg" style="display:block; border:0;"
-width="100%" /></b></span></a></td>
- </tr>
- <tr height="20">
- <td class="total" width="840">&nbsp;</td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e679e5c" href="http://www.mdirector.com/track/link/key/34306-53-2034-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#505050;"><b><img alt="Disponible sur l'APPSTORE" border="0" src="http://veniseactivation.com/pictyear/emailings/img/appstore.jpg"
-style="display:inline-block; border:0;" width="224" /></b></span></a> <a data-linkid="link_55d4b3e67a005" href="http://www.mdirector.com/track/link/key/34306-53-2035-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#505050;"><b><img alt=" - Disponible sur GOOGLE PLAY" border="0"
-src="http://veniseactivation.com/pictyear/emailings/img/google-play.jpg" style="display:inline-block; border:0;" width="224" /></b></span></a></td>
- </tr>
- <tr height="60">
- <td class="total" width="840"><img alt="-" border="0" height="60" src="http://veniseactivation.com/pictyear/emailings/img/separation.jpg" style="display:inline-block; border:0;" width="100%" /></td>
- </tr>
- </tbody>
- </table>
- <!-- LOGO -->
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
- <tbody>
- <tr valign="middle">
- <td align="center" class="total" width="770"><a data-linkid="link_55d4b3e67a19d" href="http://www.mdirector.com/track/link/key/34306-53-2036-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#00d0fe; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#00d0fe;"><b><img alt="pictyear" border="0" src="http://veniseactivation.com/pictyear/emailings/img/logo.jpg" style="display:block; border:0;" width="310"
-/></b></span></a></td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" width="770"><a data-linkid="link_55d4b3e67a371" href="http://www.mdirector.com/track/link/key/34306-53-2037-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f34" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:34px;color:#505050;"><b>La premi&egrave;re application mobile gratuite et priv&eacute;e</b> qui regroupe toutes les photos que vous prenez avec toutes celles qui sont
-prises par vos proches.</span></a></td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" width="770"><a data-linkid="link_55d4b3e67a4e8" href="http://www.mdirector.com/track/link/key/34306-53-2038-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#00d0fe; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#00d0fe;"><b><img alt="shoot - swipe - print" border="0" src="http://veniseactivation.com/pictyear/emailings/img/shoot-swipe-print.jpg"
-style="display:block; border:0;" width="307" /></b></span></a></td>
- </tr>
- </tbody>
- </table>
- <!-- PHOTOS -->
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t640" width="640">
- <tbody>
- <tr valign="middle">
- <td align="center" class="total" width="640"><a data-linkid="link_55d4b3e67a68e" href="http://www.mdirector.com/track/link/key/34306-53-2039-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#46c1ed; text-decoration:none;" target="_blank"><span class="f28" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:28px;color:#46c1ed;">Ne laissez plus dans les smartphones des autres les photos sur lesquelles vous apparaissez</span></a></td>
- </tr>
- <tr height="20">
- <td class="total" width="640">&nbsp;</td>
- </tr>
- </tbody>
- </table>
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
- <tbody>
- <tr valign="middle">
- <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e67a828" href="http://www.mdirector.com/track/link/key/34306-53-2040-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="les selfies entre amis - les photos en famille" border="0" src="http://veniseactivation.com/pictyear/emailings/img/photos-1.jpg"
-style="display:block; border:0;" width="100%" /></b></span></a></td>
- </tr>
- </tbody>
- </table>
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t640" width="640">
- <tbody>
- <tr height="20">
- <td class="total" width="640">&nbsp;</td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" width="640"><a data-linkid="link_55d4b3e67a9b8" href="http://www.mdirector.com/track/link/key/34306-53-2041-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#46c1ed; text-decoration:none;" target="_blank"><span class="f28" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:28px;color:#46c1ed;">R&eacute;alisez instantan&eacute;ment vos albums photos personnalis&eacute;s et recevez gratuitement votre FREEBOOK</span></a></td>
- </tr>
- <tr height="60">
- <td class="total" width="640">&nbsp;</td>
- </tr>
- </tbody>
- </table>
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
- <tbody>
- <tr valign="middle">
- <td align="center" class="total" width="840"><a data-linkid="link_55d4b3e67ab61" href="http://www.mdirector.com/track/link/key/34306-53-2042-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#505050; text-decoration:none;" target="_blank"><span class="f18" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:18px;color:#505050;"><b><img alt="les &#233;clats de rire - les photos entre copines" border="0" src="http://veniseactivation.com/pictyear/emailings/img/photos-2.jpg"
-style="display:block; border:0;" width="100%" /></b></span></a></td>
- </tr>
- <tr height="60">
- <td class="total" width="840">&nbsp;</td>
- </tr>
- </tbody>
- </table>
- <!-- FOOTER -->
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="total" width="840">
- <tbody>
- <tr bgcolor="#e9eaee" height="14" valign="middle">
- <td align="center" bgcolor="#e9eaee" class="total" width="840">&nbsp;</td>
- </tr>
- <tr bgcolor="#363839" valign="top">
- <td align="center" bgcolor="#363839" class="total" width="840">
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
- <tbody>
- <tr height="10" valign="middle">
- <td class="total" colspan="2" width="770">&nbsp;</td>
- </tr>
- <tr valign="middle">
- <td align="left" class="demie" width="50%"><a data-linkid="link_55d4b3e67ad09" href="http://www.mdirector.com/track/link/key/34306-53-2043-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#00d0ff; text-decoration:none;" target="_blank"><span class="f16" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:16px;color:#00d0ff;"><b><img alt="pictyear" border="0" src="http://veniseactivation.com/pictyear/emailings/img/logo-footer.jpg" style="display:block; border:0;"
-width="126" /></b></span></a><br />
- <a data-linkid="link_55d4b3e67aeb1" href="http://www.mdirector.com/track/link/key/34306-53-2044-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#787878; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#787878;">Pictyear est la premi&egrave;re appli au<br />
- monde qui vous permet de cr&eacute;er<br />
- instantan&eacute;ment un album photos<br />
- imprim&eacute;, seul ou &agrave; plusieurs.</span></a></td>
- <td align="right" class="demie" width="50%"><span class="f16" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:16px;color:#dddddd;"><b>SUIVEZ-NOUS</b></span><br />
- <a data-linkid="link_55d4b3e67b050" href="http://www.mdirector.com/track/link/key/34306-53-2045-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Facebook" border="0" src="http://veniseactivation.com/pictyear/emailings/img/facebook.jpg" style="display:inline-block; border:0;" width="20" /></span></a><a
-data-linkid="link_55d4b3e67b1ea" href="http://www.mdirector.com/track/link/key/34306-53-2046-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Twitter" border="0" src="http://veniseactivation.com/pictyear/emailings/img/twitter.jpg" style="display:inline-block; border:0;" width="20" /></span></a><a
-data-linkid="link_55d4b3e67b390" href="http://www.mdirector.com/track/link/key/34306-53-2047-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Instagram" border="0" src="http://veniseactivation.com/pictyear/emailings/img/instagram.jpg" style="display:inline-block; border:0;" width="30" /></span></a><a
-data-linkid="link_55d4b3e67b542" href="http://www.mdirector.com/track/link/key/34306-53-2048-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#dddddd; text-decoration:none;" target="_blank"><span class="f13" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:13px;color:#dddddd;"><img alt="Pinterest" border="0" src="http://veniseactivation.com/pictyear/emailings/img/pinterest.jpg" style="display:inline-block; border:0;" width="20" /></span></a></td>
- </tr>
- <tr height="10" valign="middle">
- <td class="total" colspan="2" width="770">&nbsp;</td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" colspan="2" width="770"><a data-linkid="link_55d4b3e67b6ea" href="http://www.mdirector.com/track/link/key/34306-53-2049-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#787878; text-decoration:none;" target="_blank"><span class="f12" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:12px;color:#9a9a9a;">Le r&egrave;glement du jeu concours sans obligation d&rsquo;achat &laquo;&nbsp;SUMMER PICTYEAR&nbsp;&raquo; est disponible en
-cliquant ici.</span></a></td>
- </tr>
- <tr height="10" valign="middle">
- <td class="total" colspan="2" width="770">&nbsp;</td>
- </tr>
- </tbody>
- </table>
- </td>
- </tr>
- <tr bgcolor="#282a2b" valign="middle">
- <td align="center" bgcolor="#282a2b" class="total" width="840">
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
- <tbody>
- <tr height="40" valign="middle">
- <td align="left" class="total" colspan="2" width="770"><span class="f14" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:14px;color:#787878;">&copy; Copyright 2015 Pictyear Tous droits r&eacute;serv&eacute;s.</span> <a data-linkid="link_55d4b3e67b88a" href="http://www.mdirector.com/track/link/key/34306-53-2050-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#b1b1b1; text-decoration:none;" target="_blank"><span class="f14" style="font-family:'Source Sans
-Pro',Arial,sans-serif;font-size:14px;color:#b1b1b1;">Mentions l&eacute;gales.</span></a></td>
- </tr>
- </tbody>
- </table>
- </td>
- </tr>
- </tbody>
- </table>
-
- <table align="center" border="0" cellpadding="0" cellspacing="0" class="t770" width="770">
- <tbody>
- <tr height="20">
- <td class="total" width="770">&nbsp;</td>
- </tr>
- <tr valign="middle">
- <td align="center" class="total" width="770"><span class="f11" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:11px;color:#000000;">Conform&eacute;ment &agrave; la loi &quot;Informatique et libert&eacute;s&quot; du 6 janvier 1978, vous b&eacute;n&eacute;ficiez d&#39;un droit d&#39;acc&egrave;s, de modification, de rectification et de suppression des donn&eacute;es qui vous concernent. Si vous souhaitez exercer ce droit et obtenir communication des informations vous concernant, veuillez vous
-adresser &agrave; : Venise Activation &ndash; 7, 13 Bd Paul &Eacute;mile Victor 92200 Neuilly sur Seine.</span><br />
- <br />
- <a data-linkid="link_55d4b3e67ba2f" href="http://www.mdirector.com/track/link/key/34306-53-2051-3-27804/signature/12306a1a5a54b6a8ff33328203d402ea/contactInfo/Y29uSWQ9Mjc4MDR%2BfmVtYWlsPXhmc0Bvc3Muc2dpLmNvbX5%2BbW92aWw9LX5%2Bc3ViSWQ9NTN%2Bfmxpc3RJZD0zfn5zbmFwSWQ9MjI2NDEyfn5jb25fbWQ1PTk5Y2Y5ZjFkNGY4ZjgyYTJhNmNjZjNhMDRhZThlNjAw" style="color:#46c1ed; text-decoration:none;" target="_blank"><span class="f11" style="font-family:'Source Sans Pro',Arial,sans-serif;font-size:11px;color:#46c1ed;">Si vous souhaitez ne plus recevoir de messages, cliquez ici.</span></a></td>
- </tr>
- <tr height="20">
- <td class="total" width="770">&nbsp;</td>
- </tr>
- </tbody>
- </table>
- </td>
- </tr>
- </tbody>
-</table>
-<style>
-.txtPie {
-font-family: Tahoma, Arial, Verdana;
-font-size: 10px;
-color: #8c8c8c;
-text-align: justify;
-}
-.txtPie a {
-color: #FF8549;
-}
-</style>
-<center>
-<table style="max-width:550px;" border="0" cellpadding="0" cellspacing="0">
-  <tr>
-    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_sup_izq.gif"></td>
-    <td style="max-width:538px;" bgcolor="#ffffff"></td>
-    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_sup_dcha.gif"></td>
-  </tr>
-  <tr>
-    <td style="max-width:6px;" bgcolor="#ffffff"></td>
-    <td style="max-width:538px;" bgcolor="#ffffff" valign="top" class="txtPie">
-Vous pourrez exercer vos droits d&acute;acc&egrave;s, annulation, rectification et opposition concernant vos donn&eacute;es &agrave; caract&egrave;re personnel, en cliquant <a href='http://www.mdirector.com/track/pre-unsubscribe/category/EMAIL/empId/34306/subId/53/listId/3/conId/27804/signature/12306a1a5a54b6a8ff33328203d402ea/conEmail/xfs@oss.sgi.com/conMovil/-'>annulation</a>.
-    </td>
-    <td style="max-width:6px;" bgcolor="#ffffff"></td>
-  </tr>
-  <tr>
-    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_inf_izq.gif"></td>
-    <td style="max-width:538px;" bgcolor="#ffffff"></td>
-    <td style="max-width:6px;" height="6"><img src="http://static.2013.mdirector.com/images/email/footer/esq_inf_dcha.gif"></td>
-  </tr>
-</table>
-</center>
+PCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgVHJhbnNpdGlvbmFs
+Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXRyYW5zaXRpb25h
+bC5kdGQiPg0KPGh0bWwgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWwiPg0KPGhl
+YWQ+DQo8bWV0YSBodHRwLWVxdWl2PSJDb250ZW50LVR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsg
+Y2hhcnNldD11dGYtOCIgLz4NCjx0aXRsZT5ad2FoaWxpIC0gT2N0b2JlciAyMDE0IEhhbGYgUHJp
+Y2UgU2FsZTwvdGl0bGU+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KLnJlZHAxIHsJZm9udC1m
+YW1pbHk6ICJMdWNpZGEgU2FucyBVbmljb2RlIiwgIkx1Y2lkYSBHcmFuZGUiLCBzYW5zLXNlcmlm
+Ow0KCWZvbnQtc2l6ZTogMTRweDsNCglmb250LXdlaWdodDogDQoJY29sb3I6ICNGRkY7CQkJY29s
+b3I6ICNGMDA7DQp9DQoucmVkcDEgewlmb250LWZhbWlseTogIkx1Y2lkYSBTYW5zIFVuaWNvZGUi
+LCAiTHVjaWRhIEdyYW5kZSIsIHNhbnMtc2VyaWY7DQoJZm9udC1zaXplOiAxNHB4Ow0KCWZvbnQt
+d2VpZ2h0OiANCgljb2xvcjogI0ZGRjsJCQljb2xvcjogI0YwMDsNCn0NCi5yZWRwMSB7CWZvbnQt
+ZmFtaWx5OiAiTHVjaWRhIFNhbnMgVW5pY29kZSIsICJMdWNpZGEgR3JhbmRlIiwgc2Fucy1zZXJp
+ZjsNCglmb250LXNpemU6IDE0cHg7DQoJZm9udC13ZWlnaHQ6IA0KCWNvbG9yOiAjRkZGOwkJCWNv
+bG9yOiAjRjAwOw0KfQ0KPC9zdHlsZT4NCjwvaGVhZD4NCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+
+DQpoMSB7DQoJZm9udC1mYW1pbHk6ICJMdWNpZGEgU2FucyBVbmljb2RlIiwgIkx1Y2lkYSBHcmFu
+ZGUiLCBzYW5zLXNlcmlmOw0KCWZvbnQtc2l6ZTogMzBweDsNCglmb250LXdlaWdodDogYm9sZDsN
+Cgljb2xvcjogI0ZGRjsNCg0KfQ0KYm9keXsNCgliYWNrZ3JvdW5kLWNvbG9yOiNmZmY7DQoJYmFj
+a2dyb3VuZC1yZXBlYXQ6cmVwZWF0LXkNCn0NCmgyIHsNCglmb250LWZhbWlseTogIkx1Y2lkYSBT
+YW5zIFVuaWNvZGUiLCAiTHVjaWRhIEdyYW5kZSIsIHNhbnMtc2VyaWY7DQoJZm9udC1zaXplOiAx
+OHB4Ow0KCWZvbnQtd2VpZ2h0OiBib2xkOyANCgljb2xvcjogI0ZGRjsNCn0NCnAgew0KCWZvbnQt
+ZmFtaWx5OiAiTHVjaWRhIFNhbnMgVW5pY29kZSIsICJMdWNpZGEgR3JhbmRlIiwgc2Fucy1zZXJp
+ZjsNCglmb250LXNpemU6IDE2cHg7DQoJZm9udC13ZWlnaHQ6IA0KCWNvbG9yOiAjRkZGOw0KfQ0K
+DQoucmVkcCB7DQoJZm9udC1mYW1pbHk6ICJMdWNpZGEgU2FucyBVbmljb2RlIiwgIkx1Y2lkYSBH
+cmFuZGUiLCBzYW5zLXNlcmlmOw0KCWZvbnQtc2l6ZTogMTRweDsNCglmb250LXdlaWdodDogDQoJ
+Y29sb3I6ICNGRkY7CQkJY29sb3I6ICNGMDA7DQp9DQphOmxpbmsgew0KCWNvbG9yOiAjRkZGOw0K
+fQ0KYTp2aXNpdGVkIHsNCgljb2xvcjogI0ZGRjsNCn0NCmE6aG92ZXIgew0KCWNvbG9yOiAjQzYw
+Ow0KfQ0KPC9zdHlsZT4NCjxib2R5PjxpbWcgYWx0PScnIHNyYz0naHR0cDovL2lzLmNpbmNvLnB1
+cmxzbWFpbC5jb20vL3NpdGUvcy9vLmFzcHg/SGl0SUQ9MTQzOTk3NDUwOTY1MCZFbUlEPTEzMTQ5
+ODYyJlN0SUQ9NDc4OTMmU0lEPTE0Jk5JRD02ODk2MTUmRW1haWw9eGZzQG9zcy5zZ2kuY29tJyBi
+b3JkZXI9JzAnIHdpZHRoPScxJyBoZWlnaHQ9JzEnPjxpbWcgYWx0PScnIHNyYz0naHR0cDovL2lz
+LmNpbmNvLnB1cmxzbWFpbC5jb20vL1JXQ29kZS9jbGljay5hc3A/SGl0SUQ9MTQzOTk3NDUwOTY1
+MCZFbUlEPTEzMTQ5ODYyJlN0SUQ9NDc4OTMmU0lEPTE0Jk5JRD02ODk2MTUmRW1haWw9eGZzQG9z
+cy5zZ2kuY29tJyBib3JkZXI9JzAnIHdpZHRoPScxJyBoZWlnaHQ9JzEnPjxzdHlsZSAgdHlwZT0i
+dGV4dC9jc3MiPmJvZHkge2hlaWdodDoxMDAlO3dpZHRoOjEwMCU7bWFyZ2luLXRvcDogMHB4ICFp
+bXBvcnRhbnQ7IG1hcmdpbi1ib3R0b206IDBweCAhaW1wb3J0YW50OyBwYWRkaW5nOjBweCAhaW1w
+b3J0YW50OyBtc28tbWFyZ2luLXRvcC1hbHQ6MHB4ICFpbXBvcnRhbnQ7IG1zby1tYXJnaW4tYm90
+dG9tLWFsdDowcHggIWltcG9ydGFudDsgbXNvLXBhZGRpbmctYWx0OiAwcHggMHB4IDBweCAwcHgg
+IWltcG9ydGFudDt9IEBtZWRpYSBvbmx5IHNjcmVlbiBhbmQgKG1heC13aWR0aCA6IDQ4MHB4KSB7
+IC5mdWxsX3dpZHRoeyB3aWR0aDogMTAwJSAhaW1wb3J0YW50OyB9IH08L3N0eWxlPg0KCTx0YWJs
+ZSBhbGlnbj0iY2VudGVyIiBib3JkZXI9IjAiIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0i
+MCI+DQogICAgDQogICAgICA8dGJvZHk+PHRyPg0KICAgICAgICAJPHRkIGFsaWduPSJsZWZ0Ij48
+aW1nIGFsdD0iIiBzcmM9Imh0dHA6Ly93d3cuendhaGlsaS5jby56YS9tYWlsZXJzL2hhbGYtcHJp
+Y2UvMS5wbmciIC8+PGJyIC8+PGJyIC8+PC90ZD4NCiAgICAgIDwvdHI+DQogICAgICANCiAgICAg
+IA0KICAgCSAgPHRyPg0KICAgICAgICAJPHRkIGFsaWduPSJjZW50ZXIiPjxpbWcgYWx0PSIiIHNy
+Yz0iaHR0cDovL3d3dy56d2FoaWxpLmNvLnphL21haWxlcnMvaGFsZi1wcmljZS8yLnBuZyIgLz48
+YnIgLz48YnIgLz48L3RkPg0KICAgICAgPC90cj4NCiAgICAgIA0KICAgIAkNCiAgICAgIDx0cj4N
+CiAgICAgICAgCTx0ZCBhbGlnbj0iY2VudGVyIj48aW1nIGFsdD0iIiBzcmM9Imh0dHA6Ly93d3cu
+endhaGlsaS5jby56YS9tYWlsZXJzL2hhbGYtcHJpY2UvMy5wbmciIC8+PGJyIC8+PGJyIC8+PC90
+ZD4NCiAgICAgIDwvdHI+DQogICAgICANCiAgICAgIA0KICAgCSAgPHRyPg0KICAgICAgICAJPHRk
+IGFsaWduPSJjZW50ZXIiPjxwPjxpbWcgYWx0PSIiIHNyYz0iaHR0cDovL3d3dy56d2FoaWxpLmNv
+LnphL21haWxlcnMvaGFsZi1wcmljZS80LnBuZyIgLz48YnIgLz48L3A+PGRpdj48c3BhbiBzdHls
+ZT0iZm9udC1mYW1pbHk6IEFyaWFsOyBmb250LXNpemU6IDEwcHQ7Ij48c3Ryb25nPkV4dGVuZGVk
+IGR1ZSB0byBwb3B1bGFyIGRlbWFuZDombmJzcDtTcGVjaWFsIHZhbGlkIHRpbGwmbmJzcDszMSZu
+YnNwO0F1ZyAyMDE1LiZuYnNwOyZuYnNwOzwvc3Ryb25nPjwvc3Bhbj48c3BhbiBzdHlsZT0iZm9u
+dC1mYW1pbHk6IEFyaWFsOyBmb250LXNpemU6IDEwcHQ7Ij48c3Ryb25nPk1pbiAyIG5pZ2h0cyBz
+dGF5IHJlcXVpcmVkLjwvc3Ryb25nPjwvc3Bhbj48L2Rpdj48ZGl2PjxzcGFuIHN0eWxlPSJmb250
+LWZhbWlseTogQXJpYWw7IGZvbnQtc2l6ZTogMTBwdDsiPjxzcGFuIHN0eWxlPSJmb250LWZhbWls
+eTogQXJpYWw7IGZvbnQtc2l6ZTogMTBwdDsiPjxzdHJvbmc+VGVybXMgYW5kIENvbmRpdGlvbnMg
+YXBwbHkgPC9zdHJvbmc+PC9zcGFuPjwvc3Bhbj48L2Rpdj48ZGl2PiZuYnNwOzwvZGl2PjwvdGQ+
+DQogICAgICA8L3RyPg0KICAgICAgDQogICAgICANCiAgICAgIA0KICAgCSAgPHRyPg0KICAgICAg
+ICAJPHRkIGFsaWduPSJjZW50ZXIiPjxpbWcgYWx0PSIiIHNyYz0iaHR0cDovL3d3dy56d2FoaWxp
+LmNvLnphL21haWxlcnMvd2VsbC1kZXNlcnZlZC1idXNoYnJlYWsvNS5wbmciIHVzZW1hcD0iI01h
+cE1hcCIgLz4NCiAgICAgICAgICAgIDxtYXAgbmFtZT0iTWFwTWFwIiBpZD0iTWFwTWFwIj48YXJl
+YSBocmVmPSJodHRwOi8vaXMuY2luY28ucHVybHNtYWlsLmNvbS9zZW5kbGluay5hc3A/SGl0SUQ9
+MTQzOTk3NDUwOTY1MCZTdElEPTQ3ODkzJlNJRD0xNCZOSUQ9Njg5NjE1JkVtSUQ9MTMxNDk4NjIm
+TGluaz1hSFIwY0RvdkwzZDNkeTU2ZDJGb2FXeHBMbU52TG5waEx3PT0mdG9rZW49MmQyN2NmNmQx
+MjVjMTAxNDc3ZjU3NTI2ZGVjMDFmMDNlYTZhMmY2ZiIgc2hhcGU9InJlY3QiIGNvb3Jkcz0iNDk1
+LDM0LDY1Myw0OCIgLz4NCiAgICAgICAgCSAgICA8YXJlYSBocmVmPSJtYWlsdG86cmVzZXJ2YXRp
+b25zQHp3YWhpbGkuY28uemEiIHNoYXBlPSJyZWN0IiBjb29yZHM9IjE4OSwzMiw0MTQsNDgiIC8+
+DQogICAgICAgIDwvbWFwPjwvdGQ+DQogICAgICA8L3RyPiAgICAgICAgICAgICAgICAgDQogICAg
+ICANCiAgICAgICAgICAgICANCjwvdGJvZHk+PC90YWJsZT4NCg0KICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgPHRhYmxlICBiZ2NvbG9yPSIjRkZGRkZGIiAgc3R5
+bGU9Im1pbi13aWR0aDogMTAwJTsgd2lkdGg6IDEwMCUiIGJvcmRlcj0iMCIgY2VsbHBhZGRpbmc9
+IjAiIGNlbGxzcGFjaW5nPSIwIiAgd2lkdGg9IjEwMCUiPjx0cj48dGQ+PHRhYmxlICBiZ2NvbG9y
+PSIjRkZGRkZGIiBhbGlnbj0icmlnaHQiIHN0eWxlPSJtaW4td2lkdGg6IDEwMCU7IHdpZHRoOiAx
+MDAlIiBib3JkZXI9IjAiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgIHdpZHRoPSIx
+MDAlIj48dHI+PHRkPjx0YWJsZSBhbGlnbj0iQ2VudGVyIiBiZ2NvbG9yPSIjRkZGRkZGIiBib3Jk
+ZXI9IjAiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCIgd2lkdGg9IjEwMCUiIHN0eWxl
+PSJ3aWR0aDoxMDAlO21pbi13aWR0aDoxMDAlO3BhZ2UtYnJlYWstYmVmb3JlOiBhbHdheXM7YmFj
+a2dyb3VuZC1jb2xvcjojRkZGRkZGOyI+PHRyIHN0eWxlPSJ3aWR0aDoxMDAlOyI+PHRkIHdpZHRo
+PSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjx0
+ZCBhbGlnbj0iQ2VudGVyIiB2YWxpZ249InRvcCIgIGNsYXNzPSJmb290ZXJDb250ZW50IiBzdHls
+ZT0id2lkdGg6OTklOyI+IDxkaXYgaWQ9ImZvb3RlckxpbmtzIiBzdHlsZT0iZGlzcGxheTpibG9j
+ayAhaW1wb3J0YW50OyB3aWR0aDoxMDAlOyBtYXJnaW4tdG9wOiAxMHB4Ij48YSBocmVmPSJodHRw
+Oi8vaXMuY2luY28ucHVybHNtYWlsLmNvbS9SV0NvZGUvc3Vic2NyaWJlLmFzcD9Nb2RlPXVuc3Vi
+c2NyaWJlJlNpdGVJRD00Nzg5MyZTSUQ9MTQmRW1haWw9eGZzQG9zcy5zZ2kuY29tJmhpdGlkPTE0
+Mzk5NzQ1MDk2NTAmdG9rZW49MmQyN2NmNmQxMjVjMTAxNDc3ZjU3NTI2ZGVjMDFmMDNlYTZhMmY2
+ZiIgdGFyZ2V0PSJuZXciIGNsYXNzPSJmb290ZXJDbGljayIgc3R5bGU9ImNvbG9yOiAjMzMzMzMz
+OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGRpc3BsYXk6IGlubGluZSAhaW1wb3J0YW50O2ZvbnQt
+ZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpO
+b3JtYWwiPnVuc3Vic2NyaWJlPC9hPjxmb250IGlkPSJyZW1vdmVNYWluIiBzdHlsZT0iY29sb3I6
+ICMzMzMzMzM7IGZvbnQtc3R5bGU6IG5vcm1hbDsgZGlzcGxheTogaW5saW5lICFpbXBvcnRhbnQ7
+Zm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZvbnQtd2Vp
+Z2h0Ok5vcm1hbCI+IHwgPC9mb250PiA8YSBocmVmPSJodHRwOi8vaXMuY2luY28ucHVybHNtYWls
+LmNvbS9SV0NvZGUvc3Vic2NyaWJlLmFzcD9Nb2RlPXVwZGF0ZSZTaXRlSUQ9NDc4OTMmU0lEPTE0
+JkVtYWlsPXhmc0Bvc3Muc2dpLmNvbSZoaXRpZD0xNDM5OTc0NTA5NjUwJnRva2VuPTJkMjdjZjZk
+MTI1YzEwMTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYiIHRhcmdldD0ibmV3IiBjbGFzcz0iZm9v
+dGVyQ2xpY2siIHN0eWxlPSJjb2xvcjogIzMzMzMzMzsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBk
+aXNwbGF5OiBpbmxpbmUgIWltcG9ydGFudDtmb250LWZhbWlseTpUaW1lczsgZm9udC1zaXplOjhw
+eDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj4gdXBkYXRlIHByb2ZpbGU8L2E+
+IDxmb250IGlkPSJyZW1vdmVNYWluIiBzdHlsZT0iY29sb3I6ICMzMzMzMzM7IGZvbnQtc3R5bGU6
+IG5vcm1hbDsgIGRpc3BsYXk6IGlubGluZSAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBm
+b250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPiB8IDwvZm9u
+dD4gPGEgaHJlZj0iaHR0cDovL2lzLmNpbmNvLnB1cmxzbWFpbC5jb20vc2l0ZS9mb3J3YXJkX3Rv
+X2ZyaWVuZC5hc3B4P1NpdGVJRD00Nzg5MyZTSUQ9MTQmU2VjdGlvbj02ODk2MTUmaGl0aWQ9MTQz
+OTk3NDUwOTY1MCZGcm9tRW1haWw9eGZzQG9zcy5zZ2kuY29tJnRva2VuPTJkMjdjZjZkMTI1YzEw
+MTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYmRW1haWxJRD0xMzE0OTg2MiIgdGFyZ2V0PSJuZXci
+IGNsYXNzPSJmb290ZXJDbGljayIgc3R5bGU9ImNvbG9yOiAjMzMzMzMzOyB0ZXh0LWRlY29yYXRp
+b246IG5vbmU7IGRpc3BsYXk6IGlubGluZSAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBm
+b250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPmZvcndhcmQ8
+L2E+PGZvbnQgaWQ9InJlbW92ZU1haW4iIHN0eWxlPSJmb250LXN0eWxlOiBub3JtYWw7IGRpc3Bs
+YXk6aW5saW5lICFpbXBvcnRhbnQ7Zm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNv
+bG9yOiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+IHwgPC9mb250PiA8YSBocmVmPSJodHRw
+Oi8vaXMuY2luY28ucHVybHNtYWlsLmNvbS9SV0NvZGUvc3Vic2NyaWJlLmFzcD9TaXRlSUQ9NDc4
+OTMmU0lEPTE0JkVtYWlsPXhmc0Bvc3Muc2dpLmNvbSZoaXRpZD0xNDM5OTc0NTA5NjUwJnRva2Vu
+PTJkMjdjZjZkMTI1YzEwMTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYiICB0YXJnZXQ9Im5ldyIg
+Y2xhc3M9ImZvb3RlckNsaWNrIiBzdHlsZT0iY29sb3I6ICMzMzMzMzM7dGV4dC1kZWNvcmF0aW9u
+OiBub25lOyBkaXNwbGF5OiBpbmxpbmUgIWltcG9ydGFudDtmb250LWZhbWlseTpUaW1lczsgZm9u
+dC1zaXplOjhweDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj5zdWJzY3JpYmU8
+L2E+PC9kaXY+PC90ZD48dGQgd2lkdGg9IjIwIiBiZ2NvbG9yPSIjRkZGRkZGIiBzdHlsZT0id2lk
+dGg6MjBweDsiPiZuYnNwOzwvdGQ+PC90cj48dHI+PHRkIHdpZHRoPSIyMCIgYmdjb2xvcj0iI0ZG
+RkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjx0ZCBhdD0iMSIgYWxpZ249IkNl
+bnRlciIgdmFsaWduPSJ0b3AiIHN0eWxlPSIiIGNsYXNzPSJmb290ZXJDb250ZW50Ij48dGFibGUg
+YWxpZ249IkNlbnRlciI+PHRyPjx0ZCBzdHlsZT0iRGlzcGxheTogaW5saW5lLWJsb2NrO3dpZHRo
+OjEwMCUiPjxkaXYgYXQ9IjEiIHN0eWxlPSJEaXNwbGF5OiBpbmxpbmUtYmxvY2s7d2lkdGg6MTAw
+JSI+PGRpdiBhdD0iMSIgYWxpZ249J0NlbnRlcic+PGEgc3R5bGU9J2Rpc3BsYXk6aW5saW5lLWJs
+b2NrOyd0YXJnZXQ9Il9ibGFuayIgcmVsPSJub2ZvbGxvdyIgaHJlZj0iaHR0cDovL2lzLmNpbmNv
+LnB1cmxzbWFpbC5jb20vc3NwdWJsaXNoLmFzcHg/U0lEPTE0JlNlY3Rpb25JRD02ODk2MTUmU2l0
+ZUlEPTQ3ODkzJkVtYWlsSUQ9MTMxNDk4NjImSGl0SUQ9MTQzOTk3NDUwOTY1MCZTU0xpbmtJRD0y
+MSZ0b2tlbj0yZDI3Y2Y2ZDEyNWMxMDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEyZjZmIiB0aXRsZT0i
+UHVibGljbHkgKzEiPjxpbWcgc3R5bGU9J2Rpc3BsYXk6aW5saW5lLWJsb2NrICFpbXBvcnRhbnQ7
+IGJvcmRlcjogbm9uZTsnIGJvcmRlcj0nMCcgaHNwYWNlPSc1JyB2c3BhY2U9JzUnIHNyYz0iaHR0
+cDovL2lzLmNpbmNvLnB1cmxzbWFpbC5jb20vaW1hZ2VzL2xvZ29fZ29vZ2xlcGx1c19zLnBuZyIg
+dGl0bGU9IlB1YmxpY2x5ICsxIiBhbHQ9IlB1YmxpY2x5ICsxIiBib3JkZXI9IjAiLz48L2E+Jm5i
+c3A7Jm5ic3A7PGEgc3R5bGU9J2Rpc3BsYXk6aW5saW5lLWJsb2NrOyd0YXJnZXQ9Il9ibGFuayIg
+cmVsPSJub2ZvbGxvdyIgaHJlZj0iaHR0cDovL2lzLmNpbmNvLnB1cmxzbWFpbC5jb20vc3NwdWJs
+aXNoLmFzcHg/U0lEPTE0JlNlY3Rpb25JRD02ODk2MTUmU2l0ZUlEPTQ3ODkzJkVtYWlsSUQ9MTMx
+NDk4NjImSGl0SUQ9MTQzOTk3NDUwOTY1MCZTU0xpbmtJRD0zJnRva2VuPTJkMjdjZjZkMTI1YzEw
+MTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYiIHRpdGxlPSJUd2VldCBUaGlzIj48aW1nIHN0eWxl
+PSdkaXNwbGF5OmlubGluZS1ibG9jayAhaW1wb3J0YW50OyBib3JkZXI6IG5vbmU7JyBib3JkZXI9
+JzAnIGhzcGFjZT0nNScgdnNwYWNlPSc1JyBzcmM9Imh0dHA6Ly9pcy5jaW5jby5wdXJsc21haWwu
+Y29tL2ltYWdlcy9sb2dvX3R3aXR0ZXJfcy5wbmciIHRpdGxlPSJUd2VldCBUaGlzIiBhbHQ9IlR3
+ZWV0IFRoaXMiIGJvcmRlcj0iMCIvPjwvYT4mbmJzcDsmbmJzcDs8YSBzdHlsZT0nZGlzcGxheTpp
+bmxpbmUtYmxvY2s7J3RhcmdldD0iX2JsYW5rIiByZWw9Im5vZm9sbG93IiBocmVmPSJodHRwOi8v
+aXMuY2luY28ucHVybHNtYWlsLmNvbS9zc3B1Ymxpc2guYXNweD9TSUQ9MTQmU2VjdGlvbklEPTY4
+OTYxNSZTaXRlSUQ9NDc4OTMmRW1haWxJRD0xMzE0OTg2MiZIaXRJRD0xNDM5OTc0NTA5NjUwJlNT
+TGlua0lEPTEmdG9rZW49MmQyN2NmNmQxMjVjMTAxNDc3ZjU3NTI2ZGVjMDFmMDNlYTZhMmY2ZiIg
+dGl0bGU9IkZhY2Vib29rIj48aW1nIHN0eWxlPSdkaXNwbGF5OmlubGluZS1ibG9jayAhaW1wb3J0
+YW50OyBib3JkZXI6IG5vbmU7JyBib3JkZXI9JzAnIGhzcGFjZT0nNScgdnNwYWNlPSc1JyBzcmM9
+Imh0dHA6Ly9pcy5jaW5jby5wdXJsc21haWwuY29tL2ltYWdlcy9sb2dvX2ZhY2Vib29rX3MucG5n
+IiB0aXRsZT0iRmFjZWJvb2siIGFsdD0iRmFjZWJvb2siIGJvcmRlcj0iMCIvPjwvYT4mbmJzcDsm
+bmJzcDs8YSBzdHlsZT0nZGlzcGxheTppbmxpbmUtYmxvY2s7J3RhcmdldD0iX2JsYW5rIiByZWw9
+Im5vZm9sbG93IiBocmVmPSJodHRwOi8vaXMuY2luY28ucHVybHNtYWlsLmNvbS9zc3B1Ymxpc2gu
+YXNweD9TSUQ9MTQmU2VjdGlvbklEPTY4OTYxNSZTaXRlSUQ9NDc4OTMmRW1haWxJRD0xMzE0OTg2
+MiZIaXRJRD0xNDM5OTc0NTA5NjUwJlNTTGlua0lEPTIwJnRva2VuPTJkMjdjZjZkMTI1YzEwMTQ3
+N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYiIHRpdGxlPSJsaW5rZWRpbiI+PGltZyBzdHlsZT0nZGlz
+cGxheTppbmxpbmUtYmxvY2sgIWltcG9ydGFudDsgYm9yZGVyOiBub25lOycgYm9yZGVyPScwJyBo
+c3BhY2U9JzUnIHZzcGFjZT0nNScgc3JjPSJodHRwOi8vaXMuY2luY28ucHVybHNtYWlsLmNvbS9p
+bWFnZXMvbG9nb19saW5rZWRpbl9zLnBuZyIgdGl0bGU9IkxpbmtlZElOIiBhbHQ9IkxpbmtlZElu
+IiBib3JkZXI9IjAiLz48L2E+Jm5ic3A7Jm5ic3A7PGEgc3R5bGU9J2Rpc3BsYXk6aW5saW5lLWJs
+b2NrOyd0YXJnZXQ9Il9ibGFuayIgcmVsPSJub2ZvbGxvdyIgaHJlZj0iaHR0cDovL2lzLmNpbmNv
+LnB1cmxzbWFpbC5jb20vc3NwdWJsaXNoLmFzcHg/U0lEPTE0JlNlY3Rpb25JRD02ODk2MTUmU2l0
+ZUlEPTQ3ODkzJkVtYWlsSUQ9MTMxNDk4NjImSGl0SUQ9MTQzOTk3NDUwOTY1MCZTU0xpbmtJRD0y
+MiZ0b2tlbj0yZDI3Y2Y2ZDEyNWMxMDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEyZjZmIiB0aXRsZT0i
+cGludGVyZXN0Ij48aW1nIHN0eWxlPSdkaXNwbGF5OmlubGluZS1ibG9jayAhaW1wb3J0YW50OyBi
+b3JkZXI6IG5vbmU7JyBib3JkZXI9JzAnIGhzcGFjZT0nNScgdnNwYWNlPSc1JyBzcmM9Imh0dHA6
+Ly9pcy5jaW5jby5wdXJsc21haWwuY29tL2ltYWdlcy9sb2dvX3BpbnRlcmVzdF9zLnBuZyIgdGl0
+bGU9IlBpbnRlcmVzdCIgYWx0PSJQaW50ZXJlc3QiIGJvcmRlcj0iMCIvPjwvYT4mbmJzcDsmbmJz
+cDs8L2Rpdj48L2RpdiA+PC90ZCA+PC90cj48L3RhYmxlPjwvdGQ+PHRkIHdpZHRoPSIyMCIgYmdj
+b2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjwvdHI+PHRyPjx0
+ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7
+PC90ZD48dGQgYWxpZ249IkNlbnRlciIgdmFsaWduPSJ0b3AiIGNsYXNzPSJhZGRyZXNzQm9va0Nv
+cHkiIHN0eWxlPSJkaXNwbGF5OiBibG9jayAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBm
+b250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWw7Ij48Zm9udCBz
+dHlsZT0iZm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZv
+bnQtd2VpZ2h0Ok5vcm1hbCI+VGhpcyBlbWFpbCB3YXMgc2VudCB0byAgPGEgaHJlZj0iIyIgc3R5
+bGU9InRleHQtZGVjb3JhdGlvbjogbm9uZTtmb250LWZhbWlseTpUaW1lczsgZm9udC1zaXplOjhw
+eDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj4geGZzQG9zcy5zZ2kuY29tIDwv
+YT4gYnkgIDxhIGhyZWY9IiMiIHN0eWxlPSJ0ZXh0LWRlY29yYXRpb246IG5vbmU7Zm9udC1mYW1p
+bHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1h
+bCI+cmVzZXJ2YXRpb25zQGJ1c2h2ZWxkdHNhZmFyaS5jb208L2E+PC9mb250PjwvdGQ+PHRkIHdp
+ZHRoPSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3Rk
+PjwvdHI+PHRyPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoy
+MHB4OyI+Jm5ic3A7PC90ZD48dGQgYWxpZ249IkNlbnRlciIgdmFsaWduPSJ0b3AiIGNsYXNzPSJh
+ZGRyZXNzQm9va0NvcHkiIHN0eWxlPSJkaXNwbGF5OiBibG9jayAhaW1wb3J0YW50O2ZvbnQtZmFt
+aWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3Jt
+YWw7Ij48Zm9udCBzdHlsZT0iZm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9y
+OiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+MTU0IEVkd2FyZCBBdmVudWUsJm5ic3A7Q2Vu
+dHVyaW9uLCZuYnNwOzAxNTcsJm5ic3A7U291dGggQWZyaWNhPC9mb250PjwvdGQ+PHRkIHdpZHRo
+PSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjwv
+dHI+PHRyPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4
+OyI+Jm5ic3A7PC90ZD48dGQgYWxpZ249IkNlbnRlciIgdmFsaWduPSJ0b3AiIGNsYXNzPSJhZGRy
+ZXNzQm9va0NvcHkiIHN0eWxlPSJkaXNwbGF5OiBibG9jayAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5
+OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwi
+Pjxmb250IHN0eWxlPSJmb250LWZhbWlseTpUaW1lczsgZm9udC1zaXplOjhweDsgY29sb3I6Izgw
+ODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj5JIGRpZCBub3QgZ2l2ZSBteSBwZXJtaXNzaW9uIHRv
+IHRoaXMgc2VuZGVyPGEgaHJlZj0iaHR0cDovL2lzLmNpbmNvLnB1cmxzbWFpbC5jb20vc2l0ZS9y
+ZXBvcnRhYnVzZS5hc3B4P3N0aWQ9NDc4OTMmaGl0aWQ9MTQzOTk3NDUwOTY1MCZzZWM9Njg5NjE1
+JmVtYWlsPXhmc0Bvc3Muc2dpLmNvbSZFbUlEPTEzMTQ5ODYyJlNJRD0xNCZ0b2tlbj0yZDI3Y2Y2
+ZDEyNWMxMDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEyZjZmIiAgc3R5bGU9J3RleHQtZGVjb3JhdGlv
+bjpub25lJyA+PGZvbnQgc3R5bGU9ImZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBj
+b2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPiBjbGljayBoZXJlIHRvIHJlcG9ydC48
+L2E+PC9mb250PjwvZm9udD48L3RkPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYiIHN0
+eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48L3RyPjx0ciB3aWR0aD0iMTAwIiBoZWlnaHQ9
+IjE1cHgiPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4
+OyI+Jm5ic3A7PC90ZD48dGQgYWxpZ249IkNlbnRlciIgdmFsaWduPSJ0b3AiIGNsYXNzPSJhZGRy
+ZXNzQm9va0NvcHkiIHN0eWxlPSJkaXNwbGF5OiBibG9jayAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5
+OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwh
+aW1wb3J0YW50OyI+PGZvbnQgc3R5bGU9ImZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4
+OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPjxhIGhyZWY9Imh0dHA6Ly9pcy5j
+aW5jby5wdXJsc21haWwuY29tL2hvbWUvci5hc3A/U0lEPTE1NjgmRz0yIiB0YXJnZXQ9Im5ldyIg
+c3R5bGU9ImZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBm
+b250LXdlaWdodDpOb3JtYWwiPjxpbWcgIHZzcGFjZT0iNSIgc3R5bGU9InZlcnRpY2FsLWFsaWdu
+OnRvcDsgd2lkdGg6IGF1dG8gIWltcG9ydGFudDsgaGVpZ2h0OiBhdXRvICFpbXBvcnRhbnQ7IiBz
+cmM9Imh0dHA6Ly9pcy5jaW5jby5wdXJsc21haWwuY29tLy9pbWFnZXMvZ3JhcGhpY21haWxjb3ph
+L3phXzI0X2dtX3Bvd2VyZWRieV9sb2dvLmdpZj9TSUQ9MTU2OCIgYWx0PSJodHRwOi8vaXMuY2lu
+Y28ucHVybHNtYWlsLmNvbS9ob21lL3IuYXNwP1NJRD0xNTY4Jkc9MiIgYm9yZGVyPSIwIj48L2E+
+PC90ZD48dGQgd2lkdGg9IjIwIiBiZ2NvbG9yPSIjRkZGRkZGIiBzdHlsZT0id2lkdGg6MjBweDsi
+PiZuYnNwOzwvdGQ+PC90cj48dGQgd2lkdGg9IjIwIiBiZ2NvbG9yPSIjRkZGRkZGIiBzdHlsZT0i
+d2lkdGg6MjBweDsiPiZuYnNwOzwvdGQ+PHRyIGhlaWdodD0nMicgc3R5bGU9ImhlaWdodD01Ij48
+dGQ+Jm5ic3A7PC90ZD48dGQ+Jm5ic3A7PC90ZD48L3RyPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9
+IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48L3RhYmxlPjwvdGQ+PC90
+cj48L3RhYmxlPjwvdGQ+PC90cj48L3RhYmxlPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+I291dGxv
+b2sgYXtwYWRkaW5nOiAwO30uUmVhZE1zZ0JvZHl7d2lkdGg6IDEwMCU7fS5FeHRlcm5hbENsYXNz
+e3dpZHRoOiAxMDAlO31ib2R5e21hcmdpbjogMDtwYWRkaW5nOiAwO31pbWd7Ym9yZGVyOiAwO2xp
+bmUtaGVpZ2h0OiAxMDAlOyBvdXRsaW5lOiBub25lO3RleHQtZGVjb3JhdGlvbjogbm9uZTt9dGFi
+bGUsIHRke21zby10YWJsZS1sc3BhY2U6IDBwdDttc28tdGFibGUtcnNwYWNlOiAwcHQ7fSB0YWJs
+ZSwgdGQuYWRkcmVzc0Jvb2tDb3B5e3BhZGRpbmc6IDA7fSAjYm9keVRhYmxlLCAjYm9keUNlbGx7
+aGVpZ2h0OiAxMDAlICFpbXBvcnRhbnQ7bWFyZ2luOiAwO3BhZGRpbmc6IDA7d2lkdGg6IDEwMCUg
+IWltcG9ydGFudDt9I2JvZHlDZWxse3BhZGRpbmctdG9wOiAwO3BhZGRpbmctcmlnaHQ6IDIwcHg7
+cGFkZGluZy1ib3R0b206IDIwcHg7cGFkZGluZy1sZWZ0OiAyMHB4O30jdGVtcGxhdGVDb250YWlu
+ZXJ7d2lkdGg6IDEwMCU7fS8qQHRhYiBQYWdlQHNlY3Rpb24gYmFja2dyb3VuZCBjb2xvckB0aXAg
+U2V0IHRoZSBiYWNrZ3JvdW5kIGNvbG9yIGZvciB5b3VyIGVtYWlsLiBZb3UgbWF5IHdhbnQgdG8g
+Y2hvb3NlIGEgY29sb3IgdGhhdCBtYXRjaGVzIHlvdXIgY29tcGFueSdzIGJyYW5kaW5nLkB0aGVt
+ZSBwYWdlKi9ib2R5LCAjYm9keVRhYmxley8qQGVkaXRhYmxlKi9iYWNrZ3JvdW5kLWNvbG9yOiAj
+ZmZmZmZmO310YWJsZSNmb290ZXJMaW5rc3tmb250LXNpemU6IDE0cHg7d2lkdGg6IDEwMCU7dGV4
+dC1hbGlnbjogY2VudGVyO310YWJsZSNmb290ZXJMaW5rcyB0ZCwgYS5mb290ZXJDbGlja3tjb2xv
+cjogIzMzMzMzMzt9dGFibGUjZm9vdGVyTGlua3MgdGR7cGFkZGluZy10b3A6IDEwcHg7Y29sb3I6
+ICMzMzMzMzM7cGFkZGluZy1ib3R0b206IDEwcHg7fSAgQG1lZGlhIG9ubHkgc2NyZWVuIGFuZCAo
+bWF4LXdpZHRoOiA0ODBweCl7Ym9keSwgdGFibGUsIHRkLCBwLCBhLCBsaSwgYmxvY2txdW90ZXst
+d2Via2l0LXRleHQtc2l6ZS1hZGp1c3Q6IG5vbmUgIWltcG9ydGFudDt9ICBib2R5e3dpZHRoOiBh
+dXRvICFpbXBvcnRhbnQ7fSB0ZFtpZD1ib2R5Q2VsbF17cGFkZGluZzogMTBweDt9IC8qQHRhYiBN
+b2JpbGUgU3R5bGVzQHNlY3Rpb24gdGVtcGxhdGUgd2lkdGhAdGlwIE1ha2UgdGhlIHRlbXBsYXRl
+IGZsdWlkIGZvciBwb3J0cmFpdCBvciBsYW5kc2NhcGUgdmlldyBhZGFwdGFiaWxpdHkuIElmIGEg
+Zmx1aWQgbGF5b3V0IGRvZXNuJ3Qgd29yaywgc2V0IHdpZHRoIHRvIDMwMHB4IGluc3RlYWQuKi8g
+ICAgdGFibGVbaWQ9dGVtcGxhdGVDb250YWluZXJdey8qQHRhYiBNb2JpbGUgU3R5bGVzQHNlY3Rp
+b24gdGVtcGxhdGUgd2lkdGhAdGlwIE1ha2UgdGhlIHRlbXBsYXRlIGZsdWlkIGZvciBwb3J0cmFp
+dCBvciBsYW5kc2NhcGUgdmlldyBhZGFwdGFiaWxpdHkuIElmIGEgZmx1aWQgbGF5b3V0IGRvZXNu
+J3Qgd29yaywgc2V0IHdpZHRoIHRvIDMwMHB4IGluc3RlYWQuKi9tYXgtd2lkdGg6IDYwMHB4ICFp
+bXBvcnRhbnQ7IC8qQGVkaXRhYmxlKi93aWR0aDogMTAwJSAhaW1wb3J0YW50O30gLypAdGFiIE1v
+YmlsZSBTdHlsZXNAc2VjdGlvbiBoZWFkaW5nIDFAdGlwIE1ha2UgdGhlIGZpcnN0LWxldmVsIGhl
+YWRpbmdzIGxhcmdlciBpbiBzaXplIGZvciBiZXR0ZXIgcmVhZGFiaWxpdHkgb24gc21hbGwgc2Ny
+ZWVucy4qLyAgICBoMXsvKkBlZGl0YWJsZSovZm9udC1zaXplOiAzNnB4ICFpbXBvcnRhbnQ7IC8q
+QGVkaXRhYmxlKi9saW5lLWhlaWdodDogMTAwJSAhaW1wb3J0YW50O30gLypAdGFiIE1vYmlsZSBT
+dHlsZXNAc2VjdGlvbiBoZWFkaW5nIDJAdGlwIE1ha2UgdGhlIHNlY29uZC1sZXZlbCBoZWFkaW5n
+cyBsYXJnZXIgaW4gc2l6ZSBmb3IgYmV0dGVyIHJlYWRhYmlsaXR5IG9uIHNtYWxsIHNjcmVlbnMu
+Ki8gICAgaDJ7LypAZWRpdGFibGUqL2ZvbnQtc2l6ZTogMjBweCAhaW1wb3J0YW50OyAvKkBlZGl0
+YWJsZSovbGluZS1oZWlnaHQ6IDEwMCUgIWltcG9ydGFudDt9IC8qQHRhYiBNb2JpbGUgU3R5bGVz
+QHNlY3Rpb24gaGVhZGluZyAzQHRpcCBNYWtlIHRoZSB0aGlyZC1sZXZlbCBoZWFkaW5ncyBsYXJn
+ZXIgaW4gc2l6ZSBmb3IgYmV0dGVyIHJlYWRhYmlsaXR5IG9uIHNtYWxsIHNjcmVlbnMuKi8gICAg
+aDN7LypAZWRpdGFibGUqL2ZvbnQtc2l6ZTogMThweCAhaW1wb3J0YW50OyAvKkBlZGl0YWJsZSov
+bGluZS1oZWlnaHQ6IDEwMCUgIWltcG9ydGFudDt9IC8qQHRhYiBNb2JpbGUgU3R5bGVzQHNlY3Rp
+b24gaGVhZGluZyA0QHRpcCBNYWtlIHRoZSBmb3VydGgtbGV2ZWwgaGVhZGluZ3MgbGFyZ2VyIGlu
+IHNpemUgZm9yIGJldHRlciByZWFkYWJpbGl0eSBvbiBzbWFsbCBzY3JlZW5zLiovICAgIGg0ey8q
+QGVkaXRhYmxlKi9mb250LXNpemU6IDE0cHggIWltcG9ydGFudDsgLypAZWRpdGFibGUqL2xpbmUt
+aGVpZ2h0OiAxMDAlICFpbXBvcnRhbnQ7fSB0YWJsZVtpZD10ZW1wbGF0ZVByZWhlYWRlcl17ZGlz
+cGxheTogbm9uZSAhaW1wb3J0YW50O30gZm9udFtpZD1yZW1vdmVNYWluXXtkaXNwbGF5OiBub25l
+ICFpbXBvcnRhbnQ7dGV4dC1kZWNvcmF0aW9uOiBub25lO30gdGFibGVbaWQ9dGVtcGxhdGVIZWFk
+ZXJde3dpZHRoOiAxMDAlICFpbXBvcnRhbnQ7cGFkZGluZzogNXB4O30gLypAdGFiIE1vYmlsZSBT
+dHlsZXNAc2VjdGlvbiBoZWFkZXIgdGV4dEB0aXAgTWFrZSB0aGUgaGVhZGVyIGNvbnRlbnQgdGV4
+dCBsYXJnZXIgaW4gc2l6ZSBmb3IgYmV0dGVyIHJlYWRhYmlsaXR5IG9uIHNtYWxsIHNjcmVlbnMu
+Ki8gICAgdGRbY2xhc3M9aGVhZGVyQ29udGVudF17LypAZWRpdGFibGUqL2ZvbnQtc2l6ZTogMThw
+eCAhaW1wb3J0YW50OyAvKkBlZGl0YWJsZSovbGluZS1oZWlnaHQ6IDEyNSUgIWltcG9ydGFudDt9
+IC8qQHRhYiBNb2JpbGUgU3R5bGVzQHNlY3Rpb24gYm9keSB0ZXh0QHRpcCBNYWtlIHRoZSBib2R5
+IGNvbnRlbnQgdGV4dCBsYXJnZXIgaW4gc2l6ZSBmb3IgYmV0dGVyIHJlYWRhYmlsaXR5IG9uIHNt
+YWxsIHNjcmVlbnMuKi8gICAgdGRbY2xhc3M9Ym9keUNvbnRlbnRdey8qQGVkaXRhYmxlKi9mb250
+LXNpemU6IDE4cHggIWltcG9ydGFudDsgLypAZWRpdGFibGUqL2xpbmUtaGVpZ2h0OiAxMjUlICFp
+bXBvcnRhbnQ7fSAvKkB0YWIgTW9iaWxlIFN0eWxlc0BzZWN0aW9uIGZvb3RlciB0ZXh0QHRpcCBN
+YWtlIHRoZSBmb290ZXIgY29udGVudCB0ZXh0IGxhcmdlciBpbiBzaXplIGZvciBiZXR0ZXIgcmVh
+ZGFiaWxpdHkgb24gc21hbGwgc2NyZWVucy4qLyAgICB0ZFtjbGFzcz1jXXsvKkBlZGl0YWJsZSov
+Zm9udC1zaXplOiAxNHB4ICFpbXBvcnRhbnQ7IC8qQGVkaXRhYmxlKi9saW5lLWhlaWdodDogMTUw
+JSAhaW1wb3J0YW50O30gdGRbY2xhc3M9Zm9vdGVyQ29udGVudF0gYXtkaXNwbGF5OiBpbmxpbmUt
+YmxvY2sgIWltcG9ydGFudDsgfX0gc3Bhbi55c2hvcnRjdXRzIHtjb2xvcjojMDAwfSBzcGFuLnlz
+aG9ydGN1dHM6aG92ZXIsICBzcGFuLnlzaG9ydGN1dHM6YWN0aXZlLCBzcGFuLnlzaG9ydGN1dHM6
+Zm9jdXMge3RleHQtZGVjb3JhdGlvbjpub25lOyBjb2xvcjojMDAwOyBiYWNrZ3JvdW5kLWNvbG9y
+Om5vbmU7IGJvcmRlcjpub25lfSAgICpbcm9sZXw9Im1haW4iXXtwYWRkaW5nOjBweCAhaW1wb3J0
+YW50O3dpZHRoOjEwMCUgIWltcG9ydGFudDttYXJnaW46MHB4ICFpbXBvcnRhbnQ7fS5tc2ctYm9k
+eSBpbm5lcnt3aWR0aDoxMDAlICFpbXBvcnRhbnQ7IHBhZGRpbmc6MHB4ICFpbXBvcnRhbnQ7bWFy
+Z2luOjBweCAhaW1wb3J0YW50OyBsZWZ0OjBweCAhaW1wb3J0YW50O30ubXNnLWJvZHkge3dpZHRo
+OjEwMCUgIWltcG9ydGFudDsgcGFkZGluZzowcHggIWltcG9ydGFudDttYXJnaW46MHB4ICFpbXBv
+cnRhbnQ7IGxlZnQ6MHB4OyAhaW1wb3J0YW50fS5pbm5lcnt3aWR0aDoxMDAlICFpbXBvcnRhbnQ7
+IHBhZGRpbmc6MHB4ICFpbXBvcnRhbnQgO21hcmdpbjowcHggIWltcG9ydGFudDsgbGVmdDowcHgg
+IWltcG9ydGFudDsgfSA8L3N0eWxlPjwvYm9keT48L2h0bWw+
 
 
-
-</body>
-</html>
-
---boundaryTagForAlternative--
-
---boundaryTagForMixed
+--===============5457927972827407409==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---boundaryTagForMixed--
+--===============5457927972827407409==--
