@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ED8C87F54
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 17:45:12 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BDA257F54
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 17:50:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B346630405F
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 15:45:09 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MJvlyXfGDA1q9Ecg for <xfs@oss.sgi.com>;
-	Wed, 19 Aug 2015 15:45:06 -0700 (PDT)
-Date: Thu, 20 Aug 2015 08:44:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: v5 filesystem corruption due to log recovery lsn ordering
-Message-ID: <20150819224453.GL3902@dastard>
-References: <20150819183904.GB49174@bfoster.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5BA6DAC003
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 15:50:54 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id mKh19zObnGpKlJCL for <xfs@oss.sgi.com>;
+	Wed, 19 Aug 2015 15:50:52 -0700 (PDT)
+Message-ID: <55D5084B.8080500@sandeen.net>
+Date: Wed, 19 Aug 2015 17:50:51 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150819183904.GB49174@bfoster.bfoster>
+Subject: Re: [PATCH] xfs: inode lockdep annotations broke non-lockdep build
+References: <1439979814-18934-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1439979814-18934-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,136 +27,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Wed, Aug 19, 2015 at 02:39:05PM -0400, Brian Foster wrote:
-> Hi all,
+On 8/19/15 5:23 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Here's another issue I've run into from recent log recovery testing...
+> Fix CONFIG_LOCKDEP=n build, because asserts I put in to ensure we
+> aren't overrunning lockdep subclasses in commit 0952c81 ("xfs:
+> clean up inode lockdep annotations") use a define that doesn't
+> exist when CONFIG_LOCKDEP=n
 > 
-> Many on-disk data structures for v5 filesystems have the LSN from the
-> last modification stamped the associated header. As of the following
-> commit, log recovery compares the recovery item LSN against the LSN of
-> the on-disk structure to avoid restoration of stale contents:
+> Only check the subclass limits when lockdep is actually enabled.
 > 
->   50d5c8d xfs: check LSN ordering for v5 superblocks during recovery
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  fs/xfs/xfs_inode.c | 16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
 > 
-> This presumably addresses some problems where recovery of the stale
-> contents leads to CRC failure. The problem here is that xfs_repair
-> clears the log (even when the fs is clean) and resets the current LSN on
-> the next mount. This creates a situation where logging is ineffective
-> for any structure that has not yet been modified since the current LSN
-> was reset.
-
-Well, that was a bit of an oversight...
-
-....
-
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index dd584da..30555f8 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -362,6 +362,17 @@ int xfs_lots_retries;
+>  int xfs_lock_delays;
+>  #endif
+>  
+> +#ifdef CONFIG_LOCKDEP
+> +static bool
+> +xfs_lockdep_subclass_ok(
+> +	int subclass)
+> +{
+> +	return subclass < MAX_LOCKDEP_SUBCLASSES;
+> +}
+> +#else
+> +#define xfs_lockdep_subclass_ok(subclass)	(true)
+> +#endif
+> +
+>  /*
+>   * Bump the subclass so xfs_lock_inodes() acquires each lock with a different
+>   * value. This can be called for any type of inode lock combination, including
+> @@ -375,11 +386,12 @@ xfs_lock_inumorder(int lock_mode, int subclass)
+>  
+>  	ASSERT(!(lock_mode & (XFS_ILOCK_PARENT | XFS_ILOCK_RTBITMAP |
+>  			      XFS_ILOCK_RTSUM)));
+> +	ASSERT(xfs_lockdep_subclass_ok(subclass));
+>  
+>  	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
+>  		ASSERT(subclass <= XFS_IOLOCK_MAX_SUBCLASS);
+> -		ASSERT(subclass + XFS_IOLOCK_PARENT_VAL <
+> -						MAX_LOCKDEP_SUBCLASSES);
+> +		ASSERT(xfs_lockdep_subclass_ok(subclass +
+> +						XFS_IOLOCK_PARENT_VAL));
+>  		class += subclass << XFS_IOLOCK_SHIFT;
+>  		if (lock_mode & XFS_IOLOCK_PARENT)
+>  			class += XFS_IOLOCK_PARENT_VAL << XFS_IOLOCK_SHIFT;
 > 
-> The larger question is how to resolve this problem? I don't think this
-> is something that is ultimately addressed in xfs_repair. Even if we
-> stopped clearing the log, that doesn't help users who might have had to
-> forcibly zero the log to recover a filesystem. Another option in theory
-> might be to unconditionally reset the LSN of everything on disk, but
-> that sounds like overkill just to preserve the current kernel
-> workaround.
-
-Well, it's relatively easy to detect a log that has been zeroed if
-the cycle count is more than a cycle or two lower than the LSN in
-important metadata, but I'm not sure we can reliably detect that.
-
-> It sounds more to me that we have to adjust this behavior on the kernel
-> side. That said, the original commit presumably addresses some log
-> recovery shutdown problems that we do not want to reintroduce. I haven't
-> yet wrapped my head around what that original problem was, but I wanted
-> to get this reported. If the issue was early buffer I/O submission,
-> perhaps we need a new mechanism to defer this I/O submission until a
-> point that CRC verification is expected to pass (or otherwise generate a
-> filesystem error)? Or perhaps do something similar with CRC
-> verification? Any other thoughts, issues or things I might have missed
-> here?
-
-The issue that the LSN ordering fixes is that of unsynchronised
-recovery of different log records that contain the same objects.
-e.g. ordering of inode chunk allocation (in buffers) vs inode object
-modification (in inode items). v4 filesystems have a serious problem
-where inode chunk allocation can be run after the inode item
-modifications, resulting in recovery "losing" file size updates that
-sync flushed to the log.
-
-i.e. create just the right number of small files, sync, crash and
-recovery gives a number of zero length files in certain inode chunks
-because the ordering of item recovery was wrong.
-
-Another problem with inode logging is the flushiter field, which is
-used to try to avoid replaying changes in the log that have already
-been flushed to disk. This could also lead to lost inode
-modifications after a sync because the flushiter is reset to zero
-after each time the inode item is recovered. This was mostly avoided
-by logging all inode modifications and using delayed logging, but
-could still occur...
-
-There was a long history of these sorts of problems occurring (I
-first analysed the inode allocation/inode item update failure mode
-back in 2006), and I found several other possible issues like this
-to do with the inode flushiter at the same time. I also suspected
-that there were problems with directory recovery due to the same
-inode item vs buffer item ordering issues, but could never pin them
-down.
-
-So the solution was to record the LSN of the last modification in
-every item as it is written to disk, thereby ensuring we knew
-exactly what transaction the item was last modified in. This means
-we can skip modifications in transaction recovery that are already
-on disk.
-
-----
-
-The first thing we need to do is not zero the log in xfs_repair when
-the log is clean to minimise future exposure to this issue on
-existing systems.
-
-Then, on the kernel side, we need is a reliable way to detect that
-the log head/tail pointers have been reset in the kernel. This means
-we can - at minimum - issue a warning during log recovery that this
-has been detected.
-
-Finally, we need to work out how to handle recovery in the situation
-that the log has been zeroed and the filesystem has a mix of new and
-old, stale LSNs. I think the simplest way around this is not to
-handle it in log recovery at all, but to avoid it altogether.
-
-That is, when we find the log head/tail point to a zeroed log, we
-pull the current LSN from, say, the superblock (and maybe other
-metadata such as AG headers) and initialise the log head/tail to the
-cycle number + some offset so that every new transaction is
-guaranteed to have a cycle number more recent than any other LSN in
-the filesystem and ordering is preserved, even if the log has been
-zeroed.
-
-This means dirty log recovery requires no changes at all, we only
-need to change xlog_recover() to detect the empty, clean log and
-set:
-
-	l_curr_cycle
-	l_curr_block
-	l_last_sync_lsn
-	l_tail_lsn
-	reserve_head
-	write_head
-
-appropriately for the new cycle number we've given the log. This is
-pretty much how it is already done in xlog_find_tail() with the
-initialisation information coming from the log record found at the
-head of the log - we're just making it up a different source. ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
