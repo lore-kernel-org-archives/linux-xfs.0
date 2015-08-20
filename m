@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CD9C37F47
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 02:33:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5760CAC008
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 00:33:54 -0700 (PDT)
-Received: from mail-io0-f177.google.com (mail-io0-f177.google.com
-	[209.85.223.177]) by cuda.sgi.com with ESMTP id
-	aZNcWzuuWBhk8G1G (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Aug 2015 00:33:52 -0700 (PDT)
-Received: by iodb91 with SMTP id b91so36702307iod.1
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 00:33:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5C6917F47
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 06:32:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 30D4C8F8050
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 04:32:05 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9lC7aq0MFF8HFBEZ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Aug 2015 04:32:02 -0700 (PDT)
+Date: Thu, 20 Aug 2015 07:32:00 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: inode lockdep annotations broke non-lockdep build
+Message-ID: <20150820113200.GA13033@bfoster.bfoster>
+References: <1439979814-18934-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20150820002251.GN3902@dastard>
-References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
-	<1439828606-7886-6-git-send-email-jtulak@redhat.com>
-	<20150818214557.GC3902@dastard>
-	<20150819080940.GA13130@infradead.org> <20150819102623.GK3902@dastard>
-	<20150820002251.GN3902@dastard>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 20 Aug 2015 09:33:33 +0200
-Message-ID: <CACj3i70p4mfqs9HZbxzbnJaGXB=vxNHPUggx183Z_yLYHdP9PA@mail.gmail.com>
-Subject: Re: [PATCH 05/11] xfsprogs: missing and dummy calls for OS X support
+Content-Disposition: inline
+In-Reply-To: <1439979814-18934-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,118 +25,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5387177293745152710=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
---===============5387177293745152710==
-Content-Type: multipart/alternative; boundary=001a11402b3a449ad5051db92c95
-
---001a11402b3a449ad5051db92c95
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Aug 20, 2015 at 2:22 AM, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Wed, Aug 19, 2015 at 08:26:23PM +1000, Dave Chinner wrote:
-> > On Wed, Aug 19, 2015 at 01:09:40AM -0700, Christoph Hellwig wrote:
-> > > On Wed, Aug 19, 2015 at 07:45:57AM +1000, Dave Chinner wrote:
-> > > > Hmmm, looks like I accidentally comitted an earlier version of this
-> > > > patch yesterday. Jan, can you send delta patches to what I committe=
-d
-> > > > to address more recent review comments? Sorry, my bad.
-> > >
-> > > Can you revert it for now? I think most of these changes are incorrec=
-t
-> > > and should either be dropped for now by disabling fsx or will need
-> > > a major rework.
-> >
-> > I'll just rebase the for-next branch, I guess, and remove it
-> > completely from the history. I've got another lockdep fix that needs
-> > to be pushed before it all hits tomorrow's linux-next build, anyway.
->
-> Getting my trees mixed up. I'll revert the patch on the next push.
-
-
-=E2=80=8BAnd as I noticed, '
-xfsprogs: Add includes required for OS X builds
-=E2=80=8B' was =E2=80=8Balso
-selected in an older version. Other patches looks OK, though. :-)
-Should I send delta patch for that one? It is just about three #includes.
-
-=E2=80=8BCheers,
-Jan=E2=80=8B
-
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---001a11402b3a449ad5051db92c95
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><br></div><div class=3D"gmail_extra"><br><div class=3D"=
-gmail_quote">On Thu, Aug 20, 2015 at 2:22 AM, Dave Chinner <span dir=3D"ltr=
-">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromor=
-bit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D=
-"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=
-=3D"">On Wed, Aug 19, 2015 at 08:26:23PM +1000, Dave Chinner wrote:<br>
-&gt; On Wed, Aug 19, 2015 at 01:09:40AM -0700, Christoph Hellwig wrote:<br>
-&gt; &gt; On Wed, Aug 19, 2015 at 07:45:57AM +1000, Dave Chinner wrote:<br>
-&gt; &gt; &gt; Hmmm, looks like I accidentally comitted an earlier version =
-of this<br>
-&gt; &gt; &gt; patch yesterday. Jan, can you send delta patches to what I c=
-ommitted<br>
-&gt; &gt; &gt; to address more recent review comments? Sorry, my bad.<br>
-&gt; &gt;<br>
-&gt; &gt; Can you revert it for now? I think most of these changes are inco=
-rrect<br>
-&gt; &gt; and should either be dropped for now by disabling fsx or will nee=
-d<br>
-&gt; &gt; a major rework.<br>
-&gt;<br>
-&gt; I&#39;ll just rebase the for-next branch, I guess, and remove it<br>
-&gt; completely from the history. I&#39;ve got another lockdep fix that nee=
-ds<br>
-&gt; to be pushed before it all hits tomorrow&#39;s linux-next build, anywa=
-y.<br>
-<br>
-</span>Getting my trees mixed up. I&#39;ll revert the patch on the next pus=
-h.</blockquote><div><br></div><div><div class=3D"gmail_default" style=3D"fo=
-nt-family:arial,helvetica,sans-serif;display:inline">=E2=80=8BAnd as I noti=
-ced, &#39;</div>xfsprogs: Add includes required for OS X builds<div class=
-=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;display:=
-inline">=E2=80=8B&#39; was =E2=80=8Balso</div></div><div><div class=3D"gmai=
-l_default" style=3D"font-family:arial,helvetica,sans-serif;display:inline">=
-selected in an older version. Other patches looks OK, though. :-)</div></di=
-v><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sa=
-ns-serif;display:inline">Should I send delta patch for that one? It is just=
- about three #includes.</div></div></div><div><br></div><div><div class=3D"=
-gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BCh=
-eers,</div><div class=3D"gmail_default" style=3D"font-family:arial,helvetic=
-a,sans-serif">Jan=E2=80=8B</div><br></div><div><br></div>-- <br><div class=
-=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<=
-br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@redh=
-at.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank">jan@tul=
-ak.me</a></div></div></div></div>
-</div></div>
-
---001a11402b3a449ad5051db92c95--
-
-
---===============5387177293745152710==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5387177293745152710==--
+T24gV2VkLCBBdWcgMTksIDIwMTUgYXQgMDg6MjM6MzRQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAKPiBGaXgg
+Q09ORklHX0xPQ0tERVA9biBidWlsZCwgYmVjYXVzZSBhc3NlcnRzIEkgcHV0IGluIHRvIGVuc3Vy
+ZSB3ZQo+IGFyZW4ndCBvdmVycnVubmluZyBsb2NrZGVwIHN1YmNsYXNzZXMgaW4gY29tbWl0IDA5
+NTJjODEgKCJ4ZnM6Cj4gY2xlYW4gdXAgaW5vZGUgbG9ja2RlcCBhbm5vdGF0aW9ucyIpIHVzZSBh
+IGRlZmluZSB0aGF0IGRvZXNuJ3QKPiBleGlzdCB3aGVuIENPTkZJR19MT0NLREVQPW4KPiAKPiBP
+bmx5IGNoZWNrIHRoZSBzdWJjbGFzcyBsaW1pdHMgd2hlbiBsb2NrZGVwIGlzIGFjdHVhbGx5IGVu
+YWJsZWQuCj4gCj4gU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQu
+Y29tPgo+IC0tLQo+ICBmcy94ZnMveGZzX2lub2RlLmMgfCAxNiArKysrKysrKysrKysrKy0tCj4g
+IDEgZmlsZSBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+IAo+IGRp
+ZmYgLS1naXQgYS9mcy94ZnMveGZzX2lub2RlLmMgYi9mcy94ZnMveGZzX2lub2RlLmMKPiBpbmRl
+eCBkZDU4NGRhLi4zMDU1NWY4IDEwMDY0NAo+IC0tLSBhL2ZzL3hmcy94ZnNfaW5vZGUuYwo+ICsr
+KyBiL2ZzL3hmcy94ZnNfaW5vZGUuYwo+IEBAIC0zNjIsNiArMzYyLDE3IEBAIGludCB4ZnNfbG90
+c19yZXRyaWVzOwo+ICBpbnQgeGZzX2xvY2tfZGVsYXlzOwo+ICAjZW5kaWYKPiAgCj4gKyNpZmRl
+ZiBDT05GSUdfTE9DS0RFUAo+ICtzdGF0aWMgYm9vbAo+ICt4ZnNfbG9ja2RlcF9zdWJjbGFzc19v
+aygKPiArCWludCBzdWJjbGFzcykKPiArewo+ICsJcmV0dXJuIHN1YmNsYXNzIDwgTUFYX0xPQ0tE
+RVBfU1VCQ0xBU1NFUzsKPiArfQo+ICsjZWxzZQo+ICsjZGVmaW5lIHhmc19sb2NrZGVwX3N1YmNs
+YXNzX29rKHN1YmNsYXNzKQkodHJ1ZSkKPiArI2VuZGlmCj4gKwoKRllJLCB0aGVyZSdzIGEgY29t
+cGlsZSB3YXJuaW5nIHdpdGggZGVidWcgYW5kIHZlcmJvc2Ugd2FybmluZ3MgZGlzYWJsZWQ6Cgou
+Li4KICBDQyBbTV0gIGZzL3hmcy8veGZzX3N1cGVyLm8KZnMveGZzLy94ZnNfaW5vZGUuYzozNjc6
+MTogd2FybmluZzog4oCYeGZzX2xvY2tkZXBfc3ViY2xhc3Nfb2vigJkgZGVmaW5lZCBidXQgbm90
+IHVzZWQgWy1XdW51c2VkLWZ1bmN0aW9uXQogeGZzX2xvY2tkZXBfc3ViY2xhc3Nfb2soCiBeCi4u
+LgoKUGVyaGFwcyBpdCdzIGJlc3QgdG8ganVzdCB1c2UgdGhlICNkZWZpbmUgaW4gYm90aCBjYXNl
+cz8KCkJyaWFuCgo+ICAvKgo+ICAgKiBCdW1wIHRoZSBzdWJjbGFzcyBzbyB4ZnNfbG9ja19pbm9k
+ZXMoKSBhY3F1aXJlcyBlYWNoIGxvY2sgd2l0aCBhIGRpZmZlcmVudAo+ICAgKiB2YWx1ZS4gVGhp
+cyBjYW4gYmUgY2FsbGVkIGZvciBhbnkgdHlwZSBvZiBpbm9kZSBsb2NrIGNvbWJpbmF0aW9uLCBp
+bmNsdWRpbmcKPiBAQCAtMzc1LDExICszODYsMTIgQEAgeGZzX2xvY2tfaW51bW9yZGVyKGludCBs
+b2NrX21vZGUsIGludCBzdWJjbGFzcykKPiAgCj4gIAlBU1NFUlQoIShsb2NrX21vZGUgJiAoWEZT
+X0lMT0NLX1BBUkVOVCB8IFhGU19JTE9DS19SVEJJVE1BUCB8Cj4gIAkJCSAgICAgIFhGU19JTE9D
+S19SVFNVTSkpKTsKPiArCUFTU0VSVCh4ZnNfbG9ja2RlcF9zdWJjbGFzc19vayhzdWJjbGFzcykp
+Owo+ICAKPiAgCWlmIChsb2NrX21vZGUgJiAoWEZTX0lPTE9DS19TSEFSRUR8WEZTX0lPTE9DS19F
+WENMKSkgewo+ICAJCUFTU0VSVChzdWJjbGFzcyA8PSBYRlNfSU9MT0NLX01BWF9TVUJDTEFTUyk7
+Cj4gLQkJQVNTRVJUKHN1YmNsYXNzICsgWEZTX0lPTE9DS19QQVJFTlRfVkFMIDwKPiAtCQkJCQkJ
+TUFYX0xPQ0tERVBfU1VCQ0xBU1NFUyk7Cj4gKwkJQVNTRVJUKHhmc19sb2NrZGVwX3N1YmNsYXNz
+X29rKHN1YmNsYXNzICsKPiArCQkJCQkJWEZTX0lPTE9DS19QQVJFTlRfVkFMKSk7Cj4gIAkJY2xh
+c3MgKz0gc3ViY2xhc3MgPDwgWEZTX0lPTE9DS19TSElGVDsKPiAgCQlpZiAobG9ja19tb2RlICYg
+WEZTX0lPTE9DS19QQVJFTlQpCj4gIAkJCWNsYXNzICs9IFhGU19JT0xPQ0tfUEFSRU5UX1ZBTCA8
+PCBYRlNfSU9MT0NLX1NISUZUOwo+IC0tIAo+IDIuNS4wCj4gCj4gX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9z
+cy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
+aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
+ZnMK
