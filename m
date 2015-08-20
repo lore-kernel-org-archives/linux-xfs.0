@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DABE47F54
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 01:12:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AD0688F8050
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2015 23:12:29 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JhEGawskNQwzJB1G (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 19 Aug 2015 23:12:28 -0700 (PDT)
-Date: Thu, 20 Aug 2015 14:12:24 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150820061224.GG17933@dhcp-13-216.nay.redhat.com>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813224415.GG4496@mtj.duckdns.org>
-	<20150814111408.GB8710@quack.suse.cz>
-	<20150817200254.GG21075@mtj.duckdns.org>
-	<20150818091603.GA12317@quack.suse.cz>
-	<20150818174718.GA15739@mtj.duckdns.org>
-	<20150818195439.GB15739@mtj.duckdns.org>
-	<20150818215611.GD3902@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CD9C37F47
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 02:33:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5760CAC008
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 00:33:54 -0700 (PDT)
+Received: from mail-io0-f177.google.com (mail-io0-f177.google.com
+	[209.85.223.177]) by cuda.sgi.com with ESMTP id
+	aZNcWzuuWBhk8G1G (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Aug 2015 00:33:52 -0700 (PDT)
+Received: by iodb91 with SMTP id b91so36702307iod.1
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 00:33:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150818215611.GD3902@dastard>
+In-Reply-To: <20150820002251.GN3902@dastard>
+References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
+	<1439828606-7886-6-git-send-email-jtulak@redhat.com>
+	<20150818214557.GC3902@dastard>
+	<20150819080940.GA13130@infradead.org> <20150819102623.GK3902@dastard>
+	<20150820002251.GN3902@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 20 Aug 2015 09:33:33 +0200
+Message-ID: <CACj3i70p4mfqs9HZbxzbnJaGXB=vxNHPUggx183Z_yLYHdP9PA@mail.gmail.com>
+Subject: Re: [PATCH 05/11] xfsprogs: missing and dummy calls for OS X support
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,62 +31,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5387177293745152710=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Aug 19, 2015 at 07:56:11AM +1000, Dave Chinner wrote:
-> On Tue, Aug 18, 2015 at 12:54:39PM -0700, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Tue, Aug 18, 2015 at 10:47:18AM -0700, Tejun Heo wrote:
-> > > Hmm... the only possibility I can think of is tot_write_bandwidth
-> > > being zero when it shouldn't be.  I've been staring at the code for a
-> > > while now but nothing rings a bell.  Time for another debug patch, I
-> > > guess.
-> > 
-> > So, I can now reproduce the bug (it takes a lot of trials but lowering
-> > the number of tested files helps quite a bit) and instrumented all the
-> > early exit paths w/o the fix patch.  bdi_has_dirty_io() and
-> > wb_has_dirty_io() are never out of sync with the actual dirty / io
-> > lists even when the test 048 fails, so the bug at least is not caused
-> > by writeback skipping due to buggy bdi/wb_has_dirty_io() result.
-> > Whenever it skips, all the lists are actually empty (verified while
-> > holding list_lock).
-> > 
-> > One suspicion I have is that this could be a subtle timing issue which
-> > is being exposed by the new short-cut path.  Anything which adds delay
-> > seems to make the issue go away.  Dave, does anything ring a bell?
-> 
-> No, it doesn't. The data writeback mechanisms XFS uses are all
-> generic. It marks inodes I_DIRTY_PAGES and lets the generic code
-> take care of everything else. Yes, we do delayed allocation during
-> writeback, and we log the inode size updates during IO completion,
-> so if inode sizes are not getting updated, then Occam's Razor
-> suggests that writeback is not happening.
-> 
-> I'd suggest looking at some of the XFS tracepoints during the test:
-> 
-> tracepoint			trigger
-> xfs_file_buffered_write		once per write syscall
-> xfs_file_sync			once per fsync per inode
-> xfs_vm_writepage		every ->writepage call
-> xfs_setfilesize			every IO completion that updates inode size
+--===============5387177293745152710==
+Content-Type: multipart/alternative; boundary=001a11402b3a449ad5051db92c95
 
-I gave the tracepoints a try, but my root fs is xfs so I got many
-noises. I'll try to install a new vm with ext4 as root fs. But I'm not
-sure if the new vm could reproduce the failure, will see.
+--001a11402b3a449ad5051db92c95
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-BTW, I guess xfs_vm_writepage should be xfs_writepage, and xfs_file_sync
-should be xfs_file_fsync?
+On Thu, Aug 20, 2015 at 2:22 AM, Dave Chinner <david@fromorbit.com> wrote:
 
-Thanks,
-Eryu
+> On Wed, Aug 19, 2015 at 08:26:23PM +1000, Dave Chinner wrote:
+> > On Wed, Aug 19, 2015 at 01:09:40AM -0700, Christoph Hellwig wrote:
+> > > On Wed, Aug 19, 2015 at 07:45:57AM +1000, Dave Chinner wrote:
+> > > > Hmmm, looks like I accidentally comitted an earlier version of this
+> > > > patch yesterday. Jan, can you send delta patches to what I committe=
+d
+> > > > to address more recent review comments? Sorry, my bad.
+> > >
+> > > Can you revert it for now? I think most of these changes are incorrec=
+t
+> > > and should either be dropped for now by disabling fsx or will need
+> > > a major rework.
+> >
+> > I'll just rebase the for-next branch, I guess, and remove it
+> > completely from the history. I've got another lockdep fix that needs
+> > to be pushed before it all hits tomorrow's linux-next build, anyway.
+>
+> Getting my trees mixed up. I'll revert the patch on the next push.
+
+
+=E2=80=8BAnd as I noticed, '
+xfsprogs: Add includes required for OS X builds
+=E2=80=8B' was =E2=80=8Balso
+selected in an older version. Other patches looks OK, though. :-)
+Should I send delta patch for that one? It is just about three #includes.
+
+=E2=80=8BCheers,
+Jan=E2=80=8B
+
+
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a11402b3a449ad5051db92c95
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><br></div><div class=3D"gmail_extra"><br><div class=3D"=
+gmail_quote">On Thu, Aug 20, 2015 at 2:22 AM, Dave Chinner <span dir=3D"ltr=
+">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromor=
+bit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D=
+"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=
+=3D"">On Wed, Aug 19, 2015 at 08:26:23PM +1000, Dave Chinner wrote:<br>
+&gt; On Wed, Aug 19, 2015 at 01:09:40AM -0700, Christoph Hellwig wrote:<br>
+&gt; &gt; On Wed, Aug 19, 2015 at 07:45:57AM +1000, Dave Chinner wrote:<br>
+&gt; &gt; &gt; Hmmm, looks like I accidentally comitted an earlier version =
+of this<br>
+&gt; &gt; &gt; patch yesterday. Jan, can you send delta patches to what I c=
+ommitted<br>
+&gt; &gt; &gt; to address more recent review comments? Sorry, my bad.<br>
+&gt; &gt;<br>
+&gt; &gt; Can you revert it for now? I think most of these changes are inco=
+rrect<br>
+&gt; &gt; and should either be dropped for now by disabling fsx or will nee=
+d<br>
+&gt; &gt; a major rework.<br>
+&gt;<br>
+&gt; I&#39;ll just rebase the for-next branch, I guess, and remove it<br>
+&gt; completely from the history. I&#39;ve got another lockdep fix that nee=
+ds<br>
+&gt; to be pushed before it all hits tomorrow&#39;s linux-next build, anywa=
+y.<br>
+<br>
+</span>Getting my trees mixed up. I&#39;ll revert the patch on the next pus=
+h.</blockquote><div><br></div><div><div class=3D"gmail_default" style=3D"fo=
+nt-family:arial,helvetica,sans-serif;display:inline">=E2=80=8BAnd as I noti=
+ced, &#39;</div>xfsprogs: Add includes required for OS X builds<div class=
+=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;display:=
+inline">=E2=80=8B&#39; was =E2=80=8Balso</div></div><div><div class=3D"gmai=
+l_default" style=3D"font-family:arial,helvetica,sans-serif;display:inline">=
+selected in an older version. Other patches looks OK, though. :-)</div></di=
+v><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sa=
+ns-serif;display:inline">Should I send delta patch for that one? It is just=
+ about three #includes.</div></div></div><div><br></div><div><div class=3D"=
+gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BCh=
+eers,</div><div class=3D"gmail_default" style=3D"font-family:arial,helvetic=
+a,sans-serif">Jan=E2=80=8B</div><br></div><div><br></div>-- <br><div class=
+=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<=
+br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@redh=
+at.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank">jan@tul=
+ak.me</a></div></div></div></div>
+</div></div>
+
+--001a11402b3a449ad5051db92c95--
+
+
+--===============5387177293745152710==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5387177293745152710==--
