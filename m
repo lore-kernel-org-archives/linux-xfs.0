@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 32AF47F56
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:10:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0A14AC00E
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 11:10:10 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A2BF7F56
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:11:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 533D130405F
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 11:11:22 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id B3KTKR7ATDZ0KNw9 for <xfs@oss.sgi.com>;
-	Thu, 20 Aug 2015 11:10:09 -0700 (PDT)
+	ESMTP id 6IS9FhClKKabDprT for <xfs@oss.sgi.com>;
+	Thu, 20 Aug 2015 11:11:21 -0700 (PDT)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id BC3A461D1A43
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:10:08 -0500 (CDT)
-Message-ID: <55D61800.2080802@sandeen.net>
-Date: Thu, 20 Aug 2015 13:10:08 -0500
+	by sandeen.net (Postfix) with ESMTPSA id D36D461D1A43
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:11:20 -0500 (CDT)
+Message-ID: <55D61848.7070607@sandeen.net>
+Date: Thu, 20 Aug 2015 13:11:20 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 3/4] xfs_repair: call IRELE(ip) after libxfs_trans_iget calls
+Subject: [PATCH 4/4] xfs_repair: unconditionally free blockmaps when threads
+	complete
 References: <55D61740.9070507@sandeen.net>
 In-Reply-To: <55D61740.9070507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,82 +35,103 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Commit 260c85e libxfs: dont free xfs_inode until complete
-changed the alloc/free convention a bit:
+blkmap_free() doesn't actually free the block map unless it's
+inordinately large; this keeps us from constantly freeing
+and re-allocating blockmaps for each inode, which makes sense.
 
-    Originally, the xfs_inode are released upon the first
-    call to xfs_trans_cancel, xfs_trans_commit, or
-    inode_item_done.
-    <snip>
-    This patch does the following:
-     1) Removes the iput from the transaction completion and
-        requires that the xfs_inode allocators call IRELE()
-        when they are done with the pointer.
+However, once the threads which have allocated these structures
+exit, we should actually free them; they can grow up to 2MB
+for each of the data and attr maps, for each thread, and not
+be freed through the normal blkmap_free() test.
 
-But that change missed several callers in xfs_repair phase6;
-fix that up.
-
-Addresses-Coverity-Id: 1315100
-Addresses-Coverity-Id: 1315101
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- repair/phase6.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ repair/bmap.c   |   17 ++++++++++++++++-
+ repair/bmap.h   |    1 +
+ repair/phase3.c |    2 ++
+ repair/phase4.c |    1 +
+ 4 files changed, 20 insertions(+), 1 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 9cfedbf..04638c2 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -585,6 +585,7 @@ mk_rbmino(xfs_mount_t *mp)
- 			error);
- 	}
- 	libxfs_trans_commit(tp);
-+	IRELE(ip);
+diff --git a/repair/bmap.c b/repair/bmap.c
+index 2655632..abe9f48 100644
+--- a/repair/bmap.c
++++ b/repair/bmap.c
+@@ -82,7 +82,8 @@ blkmap_alloc(
+  * extents) then free it to release the memory. This prevents us from pinning
+  * large tracts of memory due to corrupted fork values or one-off fragmented
+  * files. Otherwise we have nothing to do but keep the memory around for the
+- * next inode
++ * next inode.
++ * When the thread is done, it should do an unconditional, final free.
+  */
+ void
+ blkmap_free(
+@@ -103,6 +104,20 @@ blkmap_free(
+ 	free(blkmap);
  }
  
- static int
-@@ -654,6 +655,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
- 	}
- 
- 	libxfs_trans_commit(tp);
-+	IRELE(ip);
- 	return(0);
- }
- 
-@@ -714,6 +716,7 @@ fill_rsumino(xfs_mount_t *mp)
- 			do_warn(
- _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode %" PRIu64 "\n"),
- 				bno, map.br_startblock, mp->m_sb.sb_rsumino);
-+			IRELE(ip);
- 			return(1);
- 		}
- 
-@@ -726,6 +729,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
- 	}
- 
- 	libxfs_trans_commit(tp);
-+	IRELE(ip);
- 	return(0);
- }
- 
-@@ -846,6 +850,7 @@ mk_rsumino(xfs_mount_t *mp)
- 			error);
- 	}
- 	libxfs_trans_commit(tp);
-+	IRELE(ip);
- }
- 
++void
++blkmap_free_final(void)
++{
++	blkmap_t	*blkmap;
++
++	blkmap = pthread_getspecific(dblkmap_key);
++	pthread_setspecific(dblkmap_key, NULL);
++	free(blkmap);
++
++	blkmap = pthread_getspecific(ablkmap_key);
++	pthread_setspecific(ablkmap_key, NULL);
++	free(blkmap);
++}
++
  /*
-@@ -920,6 +925,7 @@ mk_root_dir(xfs_mount_t *mp)
- 	libxfs_dir_init(tp, ip, ip);
+  * Get one entry from a block map.
+  */
+diff --git a/repair/bmap.h b/repair/bmap.h
+index 973081a..501ef6b 100644
+--- a/repair/bmap.h
++++ b/repair/bmap.h
+@@ -58,6 +58,7 @@ extern pthread_key_t ablkmap_key;
  
- 	libxfs_trans_commit(tp);
-+	IRELE(ip);
+ blkmap_t	*blkmap_alloc(xfs_extnum_t nex, int whichfork);
+ void		blkmap_free(blkmap_t *blkmap);
++void		blkmap_free_final(void);
  
- 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
- 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
+ int		blkmap_set_ext(blkmap_t **blkmapp, xfs_fileoff_t o,
+ 			       xfs_fsblock_t b, xfs_filblks_t c);
+diff --git a/repair/phase3.c b/repair/phase3.c
+index 20786af..76c9440 100644
+--- a/repair/phase3.c
++++ b/repair/phase3.c
+@@ -27,6 +27,7 @@
+ #include "err_protos.h"
+ #include "dinode.h"
+ #include "progress.h"
++#include "bmap.h"
+ 
+ static void
+ process_agi_unlinked(
+@@ -75,6 +76,7 @@ process_ag_func(
+ 	wait_for_inode_prefetch(arg);
+ 	do_log(_("        - agno = %d\n"), agno);
+ 	process_aginodes(wq->mp, arg, agno, 1, 0, 1);
++	blkmap_free_final();
+ 	cleanup_inode_prefetch(arg);
+ }
+ 
+diff --git a/repair/phase4.c b/repair/phase4.c
+index e0571e8..1a7d7b5 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -138,6 +138,7 @@ process_ag_func(
+ 	wait_for_inode_prefetch(arg);
+ 	do_log(_("        - agno = %d\n"), agno);
+ 	process_aginodes(wq->mp, arg, agno, 0, 1, 0);
++	blkmap_free_final();
+ 	cleanup_inode_prefetch(arg);
+ 
+ 	/*
 -- 1.7.1
-
 
 _______________________________________________
 xfs mailing list
