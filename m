@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A67D87F56
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:09:23 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 32AF47F56
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:10:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8228A304059
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 11:09:23 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C0A14AC00E
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 11:10:10 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id s1lDxH9OokEtSqWd for <xfs@oss.sgi.com>;
-	Thu, 20 Aug 2015 11:09:21 -0700 (PDT)
+	ESMTP id B3KTKR7ATDZ0KNw9 for <xfs@oss.sgi.com>;
+	Thu, 20 Aug 2015 11:10:09 -0700 (PDT)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 494AD61D1A43
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:09:21 -0500 (CDT)
-Message-ID: <55D617D1.7070405@sandeen.net>
-Date: Thu, 20 Aug 2015 13:09:21 -0500
+	by sandeen.net (Postfix) with ESMTPSA id BC3A461D1A43
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 13:10:08 -0500 (CDT)
+Message-ID: <55D61800.2080802@sandeen.net>
+Date: Thu, 20 Aug 2015 13:10:08 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 2/4] xfs_repair: free msgbuf on exit
+Subject: [PATCH 3/4] xfs_repair: call IRELE(ip) after libxfs_trans_iget calls
 References: <55D61740.9070507@sandeen.net>
 In-Reply-To: <55D61740.9070507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,27 +34,82 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Just to keep valgrind less noisy, and make it easiser to spot
-more things that actually matter ...
+Commit 260c85e libxfs: dont free xfs_inode until complete
+changed the alloc/free convention a bit:
 
+    Originally, the xfs_inode are released upon the first
+    call to xfs_trans_cancel, xfs_trans_commit, or
+    inode_item_done.
+    <snip>
+    This patch does the following:
+     1) Removes the iput from the transaction completion and
+        requires that the xfs_inode allocators call IRELE()
+        when they are done with the pointer.
+
+But that change missed several callers in xfs_repair phase6;
+fix that up.
+
+Addresses-Coverity-Id: 1315100
+Addresses-Coverity-Id: 1315101
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- repair/xfs_repair.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ repair/phase6.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index db703d0..85a012b 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -946,5 +946,7 @@ _("Repair of readonly mount complete.  Immediate reboot encouraged.\n"));
- 
- 	pftrace_done();
- 
-+	free(msgbuf);
-+
- 	return (0);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 9cfedbf..04638c2 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -585,6 +585,7 @@ mk_rbmino(xfs_mount_t *mp)
+ 			error);
+ 	}
+ 	libxfs_trans_commit(tp);
++	IRELE(ip);
  }
+ 
+ static int
+@@ -654,6 +655,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
+ 	}
+ 
+ 	libxfs_trans_commit(tp);
++	IRELE(ip);
+ 	return(0);
+ }
+ 
+@@ -714,6 +716,7 @@ fill_rsumino(xfs_mount_t *mp)
+ 			do_warn(
+ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode %" PRIu64 "\n"),
+ 				bno, map.br_startblock, mp->m_sb.sb_rsumino);
++			IRELE(ip);
+ 			return(1);
+ 		}
+ 
+@@ -726,6 +729,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
+ 	}
+ 
+ 	libxfs_trans_commit(tp);
++	IRELE(ip);
+ 	return(0);
+ }
+ 
+@@ -846,6 +850,7 @@ mk_rsumino(xfs_mount_t *mp)
+ 			error);
+ 	}
+ 	libxfs_trans_commit(tp);
++	IRELE(ip);
+ }
+ 
+ /*
+@@ -920,6 +925,7 @@ mk_root_dir(xfs_mount_t *mp)
+ 	libxfs_dir_init(tp, ip, ip);
+ 
+ 	libxfs_trans_commit(tp);
++	IRELE(ip);
+ 
+ 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+ 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
 -- 1.7.1
+
 
 _______________________________________________
 xfs mailing list
