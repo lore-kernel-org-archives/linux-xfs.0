@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 37EAD7F9D
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 15:11:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 176F0304032
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 13:11:20 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 3poFfqhxYSxiijbQ for <xfs@oss.sgi.com>;
-	Fri, 21 Aug 2015 13:11:19 -0700 (PDT)
-Message-ID: <55D785E7.8050503@sandeen.net>
-Date: Fri, 21 Aug 2015 15:11:19 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id B121D7F6F
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 16:15:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A26F2304039
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 14:15:54 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id iyurrHfDagktsTic (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 21 Aug 2015 14:15:50 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 22CF18E676
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 21:15:50 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7LLFmiE017551
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 17:15:49 -0400
+Message-ID: <55D79504.6040305@redhat.com>
+Date: Fri, 21 Aug 2015 16:15:48 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/2] xfsdump: fix problems in cb_add_inogrp
-References: <20150821193047.661578219@gulag1.americas.sgi.com>
-	<55D747FE.4070401@sandeen.net> <55D7854A.9030706@sgi.com>
-In-Reply-To: <55D7854A.9030706@sgi.com>
+Subject: [PATCH] xfs: collapse allocsize and biosize mount option handling
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,28 +36,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 8/21/15 3:08 PM, Rich Johnston wrote:
-> On 08/21/2015 10:47 AM, Eric Sandeen wrote:
->> Hi -
->>
->> Are there any testcases for these?  xfsdump is alien code, I swear;
->> I'm not quite sure offhand how to tickle any of these bugs.
->>
->> Thanks,
->> -Eric
->>
-> 
-> Hey Eric,
-> 
-> Many thanks for taking the time to review these patches.
-> I take a look at all your responses and get a V2 out early next week.
+The allocsize and biosize mount options are handled identically,
+other than allocsize accepting suffixes.  suffix_kstrtoint handles
+bare numbers just fine too, so these can be collapsed.
 
-Sounds good.  If I was off track about the need for the extra 64-bit vars,
-just educate me.  ;)
+(In other news, though, maybe biosize needs to be deprecated?
+XFS_IOC_SETBIOSIZE and XFS_IOC_GETBIOSIZE are deprecated, and
+"biosize" was removed from Documentation/ back in 2005 ...)
 
--Eric
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 1fb1656..4bd6c0d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -261,16 +261,8 @@ xfs_parseargs(
+ 			mp->m_rtname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
+ 			if (!mp->m_rtname)
+ 				return -ENOMEM;
+-		} else if (!strcmp(this_char, MNTOPT_BIOSIZE)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return -EINVAL;
+-			}
+-			if (kstrtoint(value, 10, &iosize))
+-				return -EINVAL;
+-			iosizelog = ffs(iosize) - 1;
+-		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE)) {
++		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE) ||
++			   !strcmp(this_char, MNTOPT_BIOSIZE)) {
+ 			if (!value || !*value) {
+ 				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
 
 _______________________________________________
 xfs mailing list
