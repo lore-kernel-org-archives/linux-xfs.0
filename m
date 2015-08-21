@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2CD8C29DFE
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 09:01:12 -0500 (CDT)
-Message-Id: <20150821193241.899709228@gulag1.americas.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B5A8329E04
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 09:01:19 -0500 (CDT)
+Message-Id: <20150821193241.973348815@gulag1.americas.sgi.com>
 From: rjohnston@sgi.com
-Subject: [PATCH 1/2] xfsdump: use 64bit local variables in inode.c
+Subject: [PATCH 2/2] xfsdump: don't do pointer math twice
 References: <20150821193047.661578219@gulag1.americas.sgi.com>
-Content-Disposition: inline;
-	filename=xfsdump-use-64bit-local-variables-in-inode-c.patch
-Date: Fri, 21 Aug 2015 09:01:08 -0500 (CDT)
+Content-Disposition: inline; filename=fix-pointer-math-in-cb_add_inogrp.patch
+Date: Fri, 21 Aug 2015 09:01:15 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,159 +23,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The memset in cb_add_inogrp will segfault when the index oldsize
-overflows. In cb_add_inogrp(), the temp variables used in
-calculating the new i2gmap segment offset should be int64 instead
-of intgen_t (int32).
+The pointer math when calculating the address for the call to memset
+is incorrect, so we are clearing the wrong memory location.
 
-Fix this:
-  a. simplify the calculation of oldsize by moving it
-     before hnkmaplen is incremented.
-  b. change the index variables int64 to prevent overflow. 
+i2gmap is of type i2gseg_t 
 
-Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+oldsize has already computed the pointer offset
+	oldsize = inomap.hnkmaplen * SEGPERHNK * sizeof(i2gseg_t);
+the memset call is using
+	inomap.i2gmap + oldsize == &inomap.i2gmap[oldsize]
+so we were doing the pointer math twice.
+
+We already compensate for the length of each item in oldsize so
+adding need to add a (char *) cast to the memset parameter.
+
 ---
- dump/inomap.c |   41 +++++++++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+ dump/inomap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 Index: b/dump/inomap.c
 ===================================================================
 --- a/dump/inomap.c
 +++ b/dump/inomap.c
-@@ -71,7 +71,7 @@ static intgen_t cb_context( bool_t last,
- 			    drange_t *,
- 			    startpt_t *,
- 			    size_t,
--			    intgen_t,
-+			    int64_t,
- 			    bool_t,
- 			    bool_t *);
- static void cb_context_free( void );
-@@ -96,7 +96,7 @@ static off64_t estimate_dump_space( xfs_
- 
- /* inomap primitives
-  */
--static intgen_t inomap_init( intgen_t igrpcnt );
-+static intgen_t inomap_init( int64_t igrpcnt );
- static void inomap_add( void *, xfs_ino_t ino, gen_t gen, intgen_t );
- static intgen_t inomap_set_state( void *, xfs_ino_t ino, intgen_t );
- static void inomap_set_gen(void *, xfs_ino_t, gen_t );
-@@ -160,7 +160,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
- 	xfs_bstat_t *bstatbufp;
- 	size_t bstatbuflen;
- 	bool_t pruneneeded = BOOL_FALSE;
--	intgen_t igrpcnt = 0;
-+	int64_t igrpcnt = 0;
- 	intgen_t stat;
- 	intgen_t rval;
- 
-@@ -449,7 +449,7 @@ cb_context( bool_t last,
- 	    drange_t *resumerangep,
- 	    startpt_t *startptp,
- 	    size_t startptcnt,
--	    intgen_t igrpcnt,
-+	    int64_t igrpcnt,
- 	    bool_t skip_unchanged_dirs,
- 	    bool_t *pruneneededp )
- {
-@@ -949,14 +949,14 @@ struct i2gseg {
- typedef struct i2gseg i2gseg_t;
- 
- typedef struct seg_addr {
--	intgen_t hnkoff;
--	intgen_t segoff;
--	intgen_t inooff;
-+	int64_t hnkoff;
-+	int64_t segoff;
-+	int64_t inooff;
- } seg_addr_t;
- 
- static struct inomap {
- 	hnk_t *hnkmap;
--	intgen_t hnkmaplen;
-+	int64_t hnkmaplen;
- 	i2gseg_t *i2gmap;
- 	seg_addr_t lastseg;
- } inomap;
-@@ -1040,7 +1040,7 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino
- /* context for inomap construction - initialized by map_init
-  */
- static intgen_t
--inomap_init( intgen_t igrpcnt )
-+inomap_init( int64_t igrpcnt )
- {
- 	ASSERT( sizeof( hnk_t ) == HNKSZ );
- 
-@@ -1066,7 +1066,7 @@ inomap_getsz( void )
- static inline bool_t
- inomap_validaddr( seg_addr_t *addrp )
- {
--	intgen_t maxseg;
-+	int64_t maxseg;
- 
- 	if ( addrp->hnkoff < 0 || addrp->hnkoff > inomap.lastseg.hnkoff )
- 		return BOOL_FALSE;
-@@ -1093,13 +1093,13 @@ inomap_addr2seg( seg_addr_t *addrp )
- 	return &hunkp->seg[addrp->segoff];
- }
- 
--static inline intgen_t
-+static inline int64_t
- inomap_addr2segix( seg_addr_t *addrp )
- {
- 	return ( addrp->hnkoff * SEGPERHNK ) + addrp->segoff;
- }
- 
--static inline intgen_t
-+static inline int64_t
- inomap_lastseg( intgen_t hnkoff )
- {
- 	if ( hnkoff == inomap.lastseg.hnkoff )
-@@ -1125,8 +1125,11 @@ cb_add_inogrp( void *arg1, intgen_t fsfd
- 		lastsegp->segoff = 0;
- 
- 		if (lastsegp->hnkoff == inomap.hnkmaplen) {
--			intgen_t numsegs;
--			intgen_t oldsize;
-+			int64_t numsegs;
-+			int64_t oldsize;
-+
-+			oldsize = inomap.hnkmaplen * SEGPERHNK
-+				  * sizeof(i2gseg_t);
- 
- 			inomap.hnkmaplen++;
- 			inomap.hnkmap = (hnk_t *)
-@@ -1140,8 +1143,6 @@ cb_add_inogrp( void *arg1, intgen_t fsfd
+@@ -1143,7 +1143,7 @@ cb_add_inogrp( void *arg1, intgen_t fsfd
  				return -1;
  
  			/* zero the new portion of the i2gmap */
--			oldsize = (numsegs - SEGPERHNK) * sizeof(i2gseg_t);
--
- 			memset(inomap.i2gmap + oldsize,
+-			memset(inomap.i2gmap + oldsize,
++			memset((char *)inomap.i2gmap + oldsize,
  			       0,
  			       SEGPERHNK * sizeof(i2gseg_t));
-@@ -1199,8 +1200,8 @@ static bool_t
- inomap_find_hnk( seg_addr_t *addrp, xfs_ino_t ino )
- {
- 	hnk_t *hunkp;
--	intgen_t lower;
--	intgen_t upper;
-+	int64_t lower;
-+	int64_t upper;
- 
- 	lower = 0;
- 	upper = inomap.lastseg.hnkoff;
-@@ -1231,8 +1232,8 @@ static bool_t
- inomap_find_seg( seg_addr_t *addrp, xfs_ino_t ino )
- {
- 	seg_t *segp;
--	intgen_t lower;
--	intgen_t upper;
-+	int64_t lower;
-+	int64_t upper;
- 
- 	if ( !inomap_validaddr( addrp ) ) {
- 		inomap_reset_context( addrp );
+ 		}
 
 _______________________________________________
 xfs mailing list
