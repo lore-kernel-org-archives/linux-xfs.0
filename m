@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3D0127F90
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 16:36:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BEF33AC003
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 14:36:55 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QvoEmUPgWwoGq3Hu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Aug 2015 14:36:55 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 71A5649
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 21:36:54 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7LLaqia005683
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 17:36:54 -0400
-Message-ID: <55D799F5.9020304@redhat.com>
-Date: Fri, 21 Aug 2015 16:36:53 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EB7E67FA1
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 17:52:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BCAA58F804C
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 15:52:53 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	GVzZ34z7w48LK0v5 for <xfs@oss.sgi.com>;
+	Fri, 21 Aug 2015 15:52:51 -0700 (PDT)
+Date: Sat, 22 Aug 2015 08:52:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: document dax in xfs.5 and other minor fixes
+Message-ID: <20150821225248.GQ3902@dastard>
+References: <55D799B9.8040002@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: document dax mount option
+Content-Disposition: inline
+In-Reply-To: <55D799B9.8040002@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,29 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Add dax to the list of mount options in xfs.txt.
+On Fri, Aug 21, 2015 at 04:35:53PM -0500, Eric Sandeen wrote:
+> Document the dax option, fix whitespace around logdev/rtdev,
+> and add missing qnoenforce.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+No, I don't want the DAX mount option documented. As the code says:
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 8146e9f..e7e935d 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -58,6 +58,11 @@ default behaviour.
- 	This allows for drive level write caching to be enabled, for
- 	devices that support write barriers.
- 
-+  dax
-+	Use direct access (no page cache) for block devices which are
-+	memory-like, performing reads and writes directly to the storage
-+	device.  See Documentation/filesystems/dax.txt.
-+
-   discard
-   nodiscard (*)
- 	Enable/disable the issuing of commands to let the block
+#define XFS_MOUNT_DAX           (1ULL << 62)    /* TEST ONLY! */
+
+The mount option needs to go away and be replaced by on-disk
+inheritable per-inode flags. I have the kernel patch to do this, but
+I have not written the xfs_io patch to get/set/clear the flags yet.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
