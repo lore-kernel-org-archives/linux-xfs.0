@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2306C7CBE
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 19:51:52 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D8F407F6F
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 19:51:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 13026304066
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 17:51:49 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C93E98F8068
+	for <xfs@oss.sgi.com>; Thu, 20 Aug 2015 17:51:52 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	n7QBHRf6LTWU8Yo7 for <xfs@oss.sgi.com>;
-	Thu, 20 Aug 2015 17:51:46 -0700 (PDT)
-Date: Fri, 21 Aug 2015 10:42:54 +1000
+	VDGuDS8BENIkIaEB for <xfs@oss.sgi.com>;
+	Thu, 20 Aug 2015 17:51:50 -0700 (PDT)
+Date: Fri, 21 Aug 2015 10:43:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: inode lockdep annotations broke non-lockdep build
-Message-ID: <20150821004254.GV714@dastard>
-References: <1439979814-18934-1-git-send-email-david@fromorbit.com>
-	<20150820113200.GA13033@bfoster.bfoster>
+Subject: Re: [PATCH 05/11] xfsprogs: missing and dummy calls for OS X support
+Message-ID: <20150821004326.GW714@dastard>
+References: <1439828606-7886-1-git-send-email-jtulak@redhat.com>
+	<1439828606-7886-6-git-send-email-jtulak@redhat.com>
+	<20150818214557.GC3902@dastard>
+	<20150819080940.GA13130@infradead.org>
+	<20150819102623.GK3902@dastard> <20150820002251.GN3902@dastard>
+	<CACj3i70p4mfqs9HZbxzbnJaGXB=vxNHPUggx183Z_yLYHdP9PA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150820113200.GA13033@bfoster.bfoster>
+In-Reply-To: <CACj3i70p4mfqs9HZbxzbnJaGXB=vxNHPUggx183Z_yLYHdP9PA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,47 +34,32 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-T24gVGh1LCBBdWcgMjAsIDIwMTUgYXQgMDc6MzI6MDBBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdy
-b3RlOgo+IE9uIFdlZCwgQXVnIDE5LCAyMDE1IGF0IDA4OjIzOjM0UE0gKzEwMDAsIERhdmUgQ2hp
-bm5lciB3cm90ZToKPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4K
-PiA+IAo+ID4gRml4IENPTkZJR19MT0NLREVQPW4gYnVpbGQsIGJlY2F1c2UgYXNzZXJ0cyBJIHB1
-dCBpbiB0byBlbnN1cmUgd2UKPiA+IGFyZW4ndCBvdmVycnVubmluZyBsb2NrZGVwIHN1YmNsYXNz
-ZXMgaW4gY29tbWl0IDA5NTJjODEgKCJ4ZnM6Cj4gPiBjbGVhbiB1cCBpbm9kZSBsb2NrZGVwIGFu
-bm90YXRpb25zIikgdXNlIGEgZGVmaW5lIHRoYXQgZG9lc24ndAo+ID4gZXhpc3Qgd2hlbiBDT05G
-SUdfTE9DS0RFUD1uCj4gPiAKPiA+IE9ubHkgY2hlY2sgdGhlIHN1YmNsYXNzIGxpbWl0cyB3aGVu
-IGxvY2tkZXAgaXMgYWN0dWFsbHkgZW5hYmxlZC4KPiA+IAo+ID4gU2lnbmVkLW9mZi1ieTogRGF2
-ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+ID4gLS0tCj4gPiAgZnMveGZzL3hmc19p
-bm9kZS5jIHwgMTYgKysrKysrKysrKysrKystLQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxNCBpbnNl
-cnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+ID4gCj4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hm
-c19pbm9kZS5jIGIvZnMveGZzL3hmc19pbm9kZS5jCj4gPiBpbmRleCBkZDU4NGRhLi4zMDU1NWY4
-IDEwMDY0NAo+ID4gLS0tIGEvZnMveGZzL3hmc19pbm9kZS5jCj4gPiArKysgYi9mcy94ZnMveGZz
-X2lub2RlLmMKPiA+IEBAIC0zNjIsNiArMzYyLDE3IEBAIGludCB4ZnNfbG90c19yZXRyaWVzOwo+
-ID4gIGludCB4ZnNfbG9ja19kZWxheXM7Cj4gPiAgI2VuZGlmCj4gPiAgCj4gPiArI2lmZGVmIENP
-TkZJR19MT0NLREVQCj4gPiArc3RhdGljIGJvb2wKPiA+ICt4ZnNfbG9ja2RlcF9zdWJjbGFzc19v
-aygKPiA+ICsJaW50IHN1YmNsYXNzKQo+ID4gK3sKPiA+ICsJcmV0dXJuIHN1YmNsYXNzIDwgTUFY
-X0xPQ0tERVBfU1VCQ0xBU1NFUzsKPiA+ICt9Cj4gPiArI2Vsc2UKPiA+ICsjZGVmaW5lIHhmc19s
-b2NrZGVwX3N1YmNsYXNzX29rKHN1YmNsYXNzKQkodHJ1ZSkKPiA+ICsjZW5kaWYKPiA+ICsKPiAK
-PiBGWUksIHRoZXJlJ3MgYSBjb21waWxlIHdhcm5pbmcgd2l0aCBkZWJ1ZyBhbmQgdmVyYm9zZSB3
-YXJuaW5ncyBkaXNhYmxlZDoKPiAKPiAuLi4KPiAgIENDIFtNXSAgZnMveGZzLy94ZnNfc3VwZXIu
-bwo+IGZzL3hmcy8veGZzX2lub2RlLmM6MzY3OjE6IHdhcm5pbmc6IOKAmHhmc19sb2NrZGVwX3N1
-YmNsYXNzX29r4oCZIGRlZmluZWQgYnV0IG5vdCB1c2VkIFstV3VudXNlZC1mdW5jdGlvbl0KPiAg
-eGZzX2xvY2tkZXBfc3ViY2xhc3Nfb2soCj4gIF4KPiAuLi4KClllYWgsIEkga25vdy4gSSd2ZSBn
-b3QgYW5vdGhlciBwYXRjaCB0byBmaXggdGhhdC4gSSBkaWRuJ3QgdGVzdCBhbGwKNiBkaWZmZXJl
-bnQgY29tYmluYXRpb25zIG9mIHRoZSByZWxldmFudCBjb25maWcgcGFyYW1ldGVycyBiZWZvcmUK
-cHVzaGluZyB0aGUgY2hhbmdlLiAoSSB0dXJuZWQgb2ZmIENPTkZJR19YRlNfREVCVUcsIGJ1dCB0
-dXJuZWQgb24KQ09ORklHX1hGU19XQVJOLCBzbyB0aGUgZnVuY3Rpb24gd2FzIHN0aWxsIHVzZWQp
-LgoKSSBoYXZlbid0IHB1c2hlZCBpdCB5ZXQsIGJlY3VzZSBpdCdzIGp1c3QgYSB1c2VsZXNzIHdh
-cm5pbmcgcmF0aGVyCnRoYW4gYSBmdWxsIGJ1aWxkIGJyZWFrYWdlIGFuZCB0aGVyZSdzIGJlZW4g
-b3RoZXIgc3R1ZmYgSSd2ZSBuZWVkZWQKdG8gZGVhbCB3aXRoLgoKKEkgZG9uJ3Qgd29yayBhdCBh
-bGwgZWZmaWNpZW50bHkgd2hlbiBJIGhhdmUgdG8gY29udGV4dCBzd2l0Y2gKYWxsIHRoZSB0aW1l
-LiBBbmQgdGhlcmUncyBzbyBtYW55IHRoaW5ncyBJIG5lZSBkdG8gcGF5IGF0dGVudGlvbiB0bwp0
-aGF0IEknbSBjb250ZXh0IHN3aXRjaGluZyBldmVyeSBmZXcgbWludXRlcy4uLikKCj4gUGVyaGFw
-cyBpdCdzIGJlc3QgdG8ganVzdCB1c2UgdGhlICNkZWZpbmUgaW4gYm90aCBjYXNlcz8KCi0jaWZk
-ZWYgQ09ORklHX0xPQ0tERVAKKyNpZiAoZGVmaW5lZChERUJVRykgfHwgZGVmaW5lZChYRlNfV0FS
-TikpICYmIENPTkZJR19MT0NLREVQCgppcyBob3cgSSBmaXhlZCBpdC4KCkNoZWVycywKCkRhdmUu
-Ci0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+T24gVGh1LCBBdWcgMjAsIDIwMTUgYXQgMDk6MzM6MzNBTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
+Ogo+IE9uIFRodSwgQXVnIDIwLCAyMDE1IGF0IDI6MjIgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
+ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gCj4gPiBPbiBXZWQsIEF1ZyAxOSwgMjAxNSBhdCAwODoy
+NjoyM1BNICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPiA+IE9uIFdlZCwgQXVnIDE5LCAy
+MDE1IGF0IDAxOjA5OjQwQU0gLTA3MDAsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOgo+ID4gPiA+
+IE9uIFdlZCwgQXVnIDE5LCAyMDE1IGF0IDA3OjQ1OjU3QU0gKzEwMDAsIERhdmUgQ2hpbm5lciB3
+cm90ZToKPiA+ID4gPiA+IEhtbW0sIGxvb2tzIGxpa2UgSSBhY2NpZGVudGFsbHkgY29taXR0ZWQg
+YW4gZWFybGllciB2ZXJzaW9uIG9mIHRoaXMKPiA+ID4gPiA+IHBhdGNoIHllc3RlcmRheS4gSmFu
+LCBjYW4geW91IHNlbmQgZGVsdGEgcGF0Y2hlcyB0byB3aGF0IEkgY29tbWl0dGVkCj4gPiA+ID4g
+PiB0byBhZGRyZXNzIG1vcmUgcmVjZW50IHJldmlldyBjb21tZW50cz8gU29ycnksIG15IGJhZC4K
+PiA+ID4gPgo+ID4gPiA+IENhbiB5b3UgcmV2ZXJ0IGl0IGZvciBub3c/IEkgdGhpbmsgbW9zdCBv
+ZiB0aGVzZSBjaGFuZ2VzIGFyZSBpbmNvcnJlY3QKPiA+ID4gPiBhbmQgc2hvdWxkIGVpdGhlciBi
+ZSBkcm9wcGVkIGZvciBub3cgYnkgZGlzYWJsaW5nIGZzeCBvciB3aWxsIG5lZWQKPiA+ID4gPiBh
+IG1ham9yIHJld29yay4KPiA+ID4KPiA+ID4gSSdsbCBqdXN0IHJlYmFzZSB0aGUgZm9yLW5leHQg
+YnJhbmNoLCBJIGd1ZXNzLCBhbmQgcmVtb3ZlIGl0Cj4gPiA+IGNvbXBsZXRlbHkgZnJvbSB0aGUg
+aGlzdG9yeS4gSSd2ZSBnb3QgYW5vdGhlciBsb2NrZGVwIGZpeCB0aGF0IG5lZWRzCj4gPiA+IHRv
+IGJlIHB1c2hlZCBiZWZvcmUgaXQgYWxsIGhpdHMgdG9tb3Jyb3cncyBsaW51eC1uZXh0IGJ1aWxk
+LCBhbnl3YXkuCj4gPgo+ID4gR2V0dGluZyBteSB0cmVlcyBtaXhlZCB1cC4gSSdsbCByZXZlcnQg
+dGhlIHBhdGNoIG9uIHRoZSBuZXh0IHB1c2guCj4gCj4gCj4g4oCLQW5kIGFzIEkgbm90aWNlZCwg
+Jwo+IHhmc3Byb2dzOiBBZGQgaW5jbHVkZXMgcmVxdWlyZWQgZm9yIE9TIFggYnVpbGRzCj4g4oCL
+JyB3YXMg4oCLYWxzbwo+IHNlbGVjdGVkIGluIGFuIG9sZGVyIHZlcnNpb24uIE90aGVyIHBhdGNo
+ZXMgbG9va3MgT0ssIHRob3VnaC4gOi0pCj4gU2hvdWxkIEkgc2VuZCBkZWx0YSBwYXRjaCBmb3Ig
+dGhhdCBvbmU/IEl0IGlzIGp1c3QgYWJvdXQgdGhyZWUgI2luY2x1ZGVzLgoKWWVzLgoKQ2hlZXJz
+LAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
