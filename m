@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 62DE37F7C
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 06:21:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3B15AC003
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 04:21:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HmqDaqDMVnq5vuoC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Aug 2015 04:21:20 -0700 (PDT)
-Date: Fri, 21 Aug 2015 07:21:18 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs directory quota doesn't work
-Message-ID: <20150821112118.GB46372@bfoster.bfoster>
-References: <CANX=BtYB4yoGwxz72sUN+6aSVL0fQ1JnS3PEw0zRqTbtO4_KDg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CANX=BtYB4yoGwxz72sUN+6aSVL0fQ1JnS3PEw0zRqTbtO4_KDg@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 0C21D29DF5
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2015 09:01:08 -0500 (CDT)
+Message-Id: <20150821193047.661578219@gulag1.americas.sgi.com>
+From: rjohnston@sgi.com
+Subject: [PATCH 0/2] xfsdump: fix problems in cb_add_inogrp
+Date: Fri, 21 Aug 2015 09:01:04 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +14,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Simon Xia <simonxiaomg@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBBdWcgMjEsIDIwMTUgYXQgMDU6MDU6MDBQTSArMDgwMCwgU2ltb24gWGlhIHdyb3Rl
-Ogo+IGhpLCBldmVyeW9uZSwgSSBlbmNvdW50ZXIgYSBwcm9ibGVtIHdoZW4gdXNpbmcgeGZzCj4g
-Cj4gbm93IEkgaGF2ZSB0d28gdGFza3MgYW5kIEkgd2FubmEgcnVuIHRoZW0gaW4gZGlmZmVyZW50
-IGRpcmVjdG9yeSBhbmQgbGltaXQKPiB0aGUgZGlyZWN0b3J54oCZcyBzaXplLiBJIHVzZSB4ZnPi
-gJlzIHByb2plY3QgcXVvdGEgdG8gYWNoaWV2ZSB0aGlzLgo+IAo+IEkgZm9sbG93IHRoZSBzdGVw
-cyBmcm9tIGhlcmU6Cj4gaHR0cHM6Ly9zb2xpZGxpbnV4LndvcmRwcmVzcy5jb20vMjAxMi8xMi8w
-OS94ZnMtcXVvdGEtbWFuYWdhbWVudC8KPiAKPiBoZXJlIGlzIGRldGFpbCBvZiBteSB0d28gY29u
-ZmlnIGZpbGVzCj4gCj4gL2V0Yy9wcm9qZWN0czoKPiAKPiAxMTovaG9tZS94aWFtZW5nLnhtL3hm
-c19kaXIvdGFzazEKPiAxMjovaG9tZS94aWFtZW5nLnhtL3hmc19kaXIvdGFzazIKPiAKPiAvZXRj
-L3Byb2ppZDoKPiAKPiB0YXNrMToxMQo+IHRhc2syOjEyCj4gCj4gYW5kIGhlcmUgaXMgbXkgc3Rl
-cDoKPiAKPiB0b3VjaCB0ZXN0X3hmcwo+IGRkIGlmPS9kZXYvemVybyBvZj10ZXN0X3hmcyBicz0x
-MDAwMDAwIGNvdW50PTEKPiBta2ZzLnhmcyB0ZXN0X3hmcwo+IAoKVGhhdCBsb29rcyBzbWFsbCwg
-SSBjYW4ndCBldmVuIG1rZnMgYSBmaWxlIHRoYXQgc21hbGwuIEkgcmFuIHRocm91Z2gKdGhpcyB1
-c2luZyAnYnM9MU0gY291bnQ9MTAwLicKCj4gbWtkaXIgeGZzX2Rpcgo+IG1vdW50IHRlc3RfeGZz
-IC4veGZzX2RpciAtbyBwcXVvdGEsbG9vcAo+IAo+IHhmc19xdW90YSAteGMgJ3Byb2plY3Qg4oCT
-cyB0YXNrMScgL2hvbWUveGlhbWVuZy54bS94ZnNfZGlyCj4geGZzX3F1b3RhIC14YyAncHJvamVj
-dCDigJNzIHRhc2syJyAvaG9tZS94aWFtZW5nLnhtL3hmc19kaXIKPiAKCkkgZG9uJ3Qgc2VlIHdo
-ZXJlIHlvdSd2ZSBjcmVhdGVkIHRoZSBkaXJlY3RvcmllcyB5ZXQuLj8gSSBnZXQgdGhlCmZvbGxv
-d2luZzoKCiMgeGZzX3F1b3RhIC14YyAncHJvamVjdCAtcyB0YXNrMScgL21udC8KeGZzX3F1b3Rh
-OiBjYW5ub3QgZmluZCBtb3VudCBwb2ludCBmb3IgcGF0aCBgL21udC90YXNrMSc6IE5vIHN1Y2gg
-ZmlsZSBvciBkaXJlY3RvcnkKCi4uLiB1bnRpbCBJIGNyZWF0ZSB0aGUgdGFzazEvdGFzazIgZGly
-ZWN0b3JpZXMuIFRoaXMgaXMgcmVxdWlyZWQgYmVjYXVzZQp0aGUgcHJvamVjdCBxdW90YSBjb21t
-YW5kIGhhcyB0byBzZXQgdGhlIHByb2plY3QgaWQgb24gdGhlIGRpcmVjdG9yeQppbm9kZS4gSXQg
-d29uJ3Qgd29yayBpZiB0aGUgZGlyZWN0b3J5IGlzIGNyZWF0ZWQgYWZ0ZXIgdGhpcyBwb2ludCwK
-cmVnYXJkbGVzcyBvZiB3aGV0aGVyIHRoZSBxdW90YSBsaW1pdCBpcyBzcGVjaWZpZWQuCgpPbmNl
-IEkgY3JlYXRlIHRob3NlIGRpcmVjdG9yaWVzIGFuZCBydW4gdGhlIHByb2plY3QgY29tbWFuZCwg
-ZXZlcnl0aGluZwpzZWVtcyB0byB3b3JrLiBJIGNhbiB3cml0ZSB1cCB0byAyTUIgdG8gdGFzazEg
-YW5kIDEwTUIgdG8gdGFzazIuCgpCcmlhbgoKPiB4ZnNfcXVvdGEgLXggLWMgJ2xpbWl0IC1wIGJo
-YXJkPTJtIHRhc2sxJyAvaG9tZS94aWFtZW5nLnhtL3hmc19kaXIKPiB4ZnNfcXVvdGEgLXggLWMg
-J2xpbWl0IC1wIGJoYXJkPTEwbSB0YXNrMicgL2hvbWUveGlhbWVuZy54bS94ZnNfZGlyCj4gCj4g
-aGVyZSBpcyB0aGUgb3V0cHV0IG9mIHhmc19xdW90YSAteCAtYyAncmVwb3J0IC9ob21lL3hpYW1l
-bmcueG0veGZzX2RpcicKPiAKPiBQcm9qZWN0IHF1b3RhIG9uIC9ob21lL3hpYW1lbmcueG0veGZz
-X2RpciAoL2Rldi9sb29wMSkKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgQmxvY2tz
-Cj4gUHJvamVjdCBJRCAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAgSGFyZCAgICBXYXJuL0dy
-YWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQo+IHRhc2sxICAgICAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgIDIwNDgg
-ICAgIDAwIFstLS0tLS0tLV0KPiB0YXNrMiAgICAgICAgICAgICAgIDAgICAgICAgICAgMCAgICAg
-IDEwMjQwICAgICAwMCBbLS0tLS0tLS1dCj4gCj4gdGhlIHF1ZXN0aW9uIGlzIG5vIG1hdGVyIGhv
-dyBsYXJnZSBJIGNyZWF0ZSBhIGZpbGUgaW4gLi94ZnNfZGlyL3Rhc2sxIG9yCj4gLi94ZnNfZGly
-L3Rhc2syLCBpdCBzdWNjZXNzIQo+IAo+IHRoZSBxdW90YSBsaW1pdCBkb2VzbuKAmXQgd29yayEK
-PiAKPiBBbnkgaGVscCB3aWxsIGJlIGFwcHJlY2lhdGVkIDopCj4gCj4gCj4gcHM6IEkgYWxzbyBw
-b3N0IG15IHF1ZXN0aW9uIGhlcmU6Cj4gaHR0cDovL3VuaXguc3RhY2tleGNoYW5nZS5jb20vcXVl
-c3Rpb25zLzIyNDYwNi94ZnMtZGlyZWN0b3J5LXF1b3RhLWRvZXNudC13b3JrCj4gCj4gLS0tLQo+
-IAo+IEJlc3QgUmVnYXJkcwo+IFNpbW9uIFhpYQo+IOKAiwoKPiBfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3Nz
-LnNnaS5jb20KPiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
-c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
-cwo=
+The memset in cb_add_inogrp will segfault when the index oldsize
+overflows. In cb_add_inogrp(), the temp variables used in
+calculating the new i2gmap segment offset should be int64 instead
+of intgen_t (int32).
+
+A second bug also occurs because we already compensate for the
+length of each item in oldsize so are 32bit wrap becomes a 40bit
+wrap.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
