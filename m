@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 462DA7F37
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 17:27:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 15F94304032
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 15:27:25 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	1bB7QL6WoyrOYNKc for <xfs@oss.sgi.com>;
-	Mon, 24 Aug 2015 15:27:23 -0700 (PDT)
-Date: Tue, 25 Aug 2015 08:27:20 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9F19A7F37
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 17:54:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 681448F804B
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 15:54:00 -0700 (PDT)
+Received: from mail-yk0-f181.google.com (mail-yk0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	4qoVKOcIQ67VrRlV (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 24 Aug 2015 15:53:59 -0700 (PDT)
+Received: by ykdt205 with SMTP id t205so138692590ykd.1
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 15:53:58 -0700 (PDT)
+Date: Mon, 24 Aug 2015 18:53:56 -0400
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
 	inodes
-Message-ID: <20150824222720.GD714@dastard>
-References: <20150818091603.GA12317@quack.suse.cz>
-	<20150818174718.GA15739@mtj.duckdns.org>
+Message-ID: <20150824225356.GP28944@mtj.duckdns.org>
+References: <20150818174718.GA15739@mtj.duckdns.org>
 	<20150818195439.GB15739@mtj.duckdns.org>
 	<20150818215611.GD3902@dastard>
 	<20150820061224.GG17933@dhcp-13-216.nay.redhat.com>
@@ -24,9 +26,10 @@ References: <20150818091603.GA12317@quack.suse.cz>
 	<20150820165537.GA2044@mtj.duckdns.org>
 	<20150820230451.GT714@dastard>
 	<20150824181038.GA28944@mtj.duckdns.org>
+	<20150824222720.GD714@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150824181038.GA28944@mtj.duckdns.org>
+In-Reply-To: <20150824222720.GD714@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,70 +42,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
 
-On Mon, Aug 24, 2015 at 02:10:38PM -0400, Tejun Heo wrote:
-> Hello, Dave.
-> 
-> On Fri, Aug 21, 2015 at 09:04:51AM +1000, Dave Chinner wrote:
-> > > Maybe I'm misunderstanding the code but all xfs_writepage() calls are
-> > > from unbound workqueues - the writeback workers - while
-> > > xfs_setfilesize() are from bound workqueues, so I wondered why that
-> > > was and looked at the code and the setsize functions are run off of a
-> > > separate work item which is queued from the end_bio callback and I
-> > > can't tell who would be waiting for them.  Dave, what am I missing?
+Hello, Dave.
+
+On Tue, Aug 25, 2015 at 08:27:20AM +1000, Dave Chinner wrote:
+> > I'm still a bit confused.  What prevents the following from happening?
 > > 
-> > xfs_setfilesize runs transactions, so it can't be run from IO
-> > completion context as it needs to block (i.e. on log space or inode
-> > locks). It also can't block log IO completion, nor metadata Io
-> > completion, as only log IO completion can free log space, and the
-> > inode lock might be waiting on metadata buffer IO completion (e.g.
-> > during delayed allocation). Hence we have multiple IO completion
-> > workqueues to keep these things separated and deadlock free. i.e.
-> > they all get punted to a workqueue where they are then processed in
-> > a context that can block safely.
+> > 1. io completion of last dirty page of an inode and work item for
+> >    xfs_setfilesize() is queued.
+> > 
+> > 2. inode removed from dirty list.
 > 
-> I'm still a bit confused.  What prevents the following from happening?
-> 
-> 1. io completion of last dirty page of an inode and work item for
->    xfs_setfilesize() is queued.
-> 
-> 2. inode removed from dirty list.
+> The inode has already been removed from the dirty list - that
+> happens at inode writeback submission time, not IO completion.
 
-The inode has already been removed from the dirty list - that
-happens at inode writeback submission time, not IO completion.
+Ah, yeah, right, somehow was thinking requeue_io() was being called
+from completion path.  That's where I was confused.
 
-> 3. __sync_filesystem() invokes sync_inodes_sb().  There are no dirty
->    pages, so it finishes.
+Thanks.
 
-There are no dirty pages, but the pages aren't clean, either. i.e
-they are still under writeback.  Hence we need to invoke
-wait_inodes_sb() to wait for writeback on all pages to complete
-before returning.
-
-> 4. xfs_fs_sync_fs() is called which calls _xfs_log_force() but the
->    work item from #1 hasn't run yet, so the size update isn't written
->    out.
-
-The bug here is that wait_inodes_sb() has not been run, therefore
-->syncfs is being run before IO completions have been processed and
-pages marked clean.
-
-> 5. Crash.
-> 
-> Is it that _xfs_log_force() waits for the setfilesize transaction
-> created during writepage?
-
-No, it's wait_inodes_sb() that does the waiting for data IO
-completion for sync.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+tejun
 
 _______________________________________________
 xfs mailing list
