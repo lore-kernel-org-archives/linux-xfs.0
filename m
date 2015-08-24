@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F3DF97F37
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 07:41:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CD22B8F8040
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 05:41:15 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id CA5967F58
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 07:41:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B89D68F8035
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 05:41:18 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6670fRWISor7XKu7 (version=TLSv1
+	cuda.sgi.com with ESMTP id EWdK0e61AS7XUJtI (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Aug 2015 05:41:14 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 710FEABE
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 12:41:13 +0000 (UTC)
-Date: Mon, 24 Aug 2015 08:41:12 -0400
+	Mon, 24 Aug 2015 05:41:18 -0700 (PDT)
+Date: Mon, 24 Aug 2015 08:41:15 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: collapse allocsize and biosize mount option handling
-Message-ID: <20150824124110.GC50895@bfoster.bfoster>
-References: <55D79504.6040305@redhat.com>
+Subject: Re: [PATCH] xfs: fix non-debug build warnings
+Message-ID: <20150824124115.GD50895@bfoster.bfoster>
+References: <1440370721-23931-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55D79504.6040305@redhat.com>
+In-Reply-To: <1440370721-23931-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,47 +29,123 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 21, 2015 at 04:15:48PM -0500, Eric Sandeen wrote:
-> The allocsize and biosize mount options are handled identically,
-> other than allocsize accepting suffixes.  suffix_kstrtoint handles
-> bare numbers just fine too, so these can be collapsed.
+On Mon, Aug 24, 2015 at 08:58:41AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> (In other news, though, maybe biosize needs to be deprecated?
-> XFS_IOC_SETBIOSIZE and XFS_IOC_GETBIOSIZE are deprecated, and
-> "biosize" was removed from Documentation/ back in 2005 ...)
+> There seem to be a couple of new set-but-unused build warnings
+> that gcc 4.9.3 is now warning about. These are not regressions, just
+> hte compiler being more picky.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
+>  fs/xfs/xfs_buf.c      |  4 +---
+>  fs/xfs/xfs_buf_item.c | 20 +++++++++++++-------
+>  fs/xfs/xfs_buf_item.h |  2 +-
+>  3 files changed, 15 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 1fb1656..4bd6c0d 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -261,16 +261,8 @@ xfs_parseargs(
->  			mp->m_rtname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
->  			if (!mp->m_rtname)
->  				return -ENOMEM;
-> -		} else if (!strcmp(this_char, MNTOPT_BIOSIZE)) {
-> -			if (!value || !*value) {
-> -				xfs_warn(mp, "%s option requires an argument",
-> -					this_char);
-> -				return -EINVAL;
-> -			}
-> -			if (kstrtoint(value, 10, &iosize))
-> -				return -EINVAL;
-> -			iosizelog = ffs(iosize) - 1;
-> -		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE)) {
-> +		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE) ||
-> +			   !strcmp(this_char, MNTOPT_BIOSIZE)) {
->  			if (!value || !*value) {
->  				xfs_warn(mp, "%s option requires an argument",
->  					this_char);
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d7dbd81..c46166b 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -438,7 +438,6 @@ _xfs_buf_find(
+>  	xfs_buf_flags_t		flags,
+>  	xfs_buf_t		*new_bp)
+>  {
+> -	size_t			numbytes;
+>  	struct xfs_perag	*pag;
+>  	struct rb_node		**rbp;
+>  	struct rb_node		*parent;
+> @@ -450,10 +449,9 @@ _xfs_buf_find(
+>  
+>  	for (i = 0; i < nmaps; i++)
+>  		numblks += map[i].bm_len;
+> -	numbytes = BBTOB(numblks);
+>  
+>  	/* Check for IOs smaller than the sector size / not sector aligned */
+> -	ASSERT(!(numbytes < btp->bt_meta_sectorsize));
+> +	ASSERT(!(BBTOB(numblks) < btp->bt_meta_sectorsize));
+>  	ASSERT(!(BBTOB(blkno) & (xfs_off_t)btp->bt_meta_sectormask));
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 919057e..7e986da 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -746,13 +746,13 @@ xfs_buf_item_free_format(
+>   * buffer (see xfs_buf_attach_iodone() below), then put the
+>   * buf log item at the front.
+>   */
+> -void
+> +int
+>  xfs_buf_item_init(
+> -	xfs_buf_t	*bp,
+> -	xfs_mount_t	*mp)
+> +	struct xfs_buf	*bp,
+> +	struct xfs_mount *mp)
+>  {
+> -	xfs_log_item_t		*lip = bp->b_fspriv;
+> -	xfs_buf_log_item_t	*bip;
+> +	struct xfs_log_item	*lip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip;
+>  	int			chunks;
+>  	int			map_size;
+>  	int			error;
+> @@ -766,12 +766,11 @@ xfs_buf_item_init(
+>  	 */
+>  	ASSERT(bp->b_target->bt_mount == mp);
+>  	if (lip != NULL && lip->li_type == XFS_LI_BUF)
+> -		return;
+> +		return 0;
+>  
+>  	bip = kmem_zone_zalloc(xfs_buf_item_zone, KM_SLEEP);
+>  	xfs_log_item_init(mp, &bip->bli_item, XFS_LI_BUF, &xfs_buf_item_ops);
+>  	bip->bli_buf = bp;
+> -	xfs_buf_hold(bp);
+>  
+>  	/*
+>  	 * chunks is the number of XFS_BLF_CHUNK size pieces the buffer
+> @@ -784,6 +783,11 @@ xfs_buf_item_init(
+>  	 */
+>  	error = xfs_buf_item_get_format(bip, bp->b_map_count);
+>  	ASSERT(error == 0);
+> +	if (error) {	/* to stop gcc throwing set-but-unused warnings */
+> +		kmem_zone_free(xfs_buf_item_zone, bip);
+> +		return error;
+> +	}
+> +
+>  
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		chunks = DIV_ROUND_UP(BBTOB(bp->b_maps[i].bm_len),
+> @@ -803,6 +807,8 @@ xfs_buf_item_init(
+>  	if (bp->b_fspriv)
+>  		bip->bli_item.li_bio_list = bp->b_fspriv;
+>  	bp->b_fspriv = bip;
+> +	xfs_buf_hold(bp);
+> +	return 0;
+>  }
+>  
+>  
+> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+> index 3f3455a..f7eba99 100644
+> --- a/fs/xfs/xfs_buf_item.h
+> +++ b/fs/xfs/xfs_buf_item.h
+> @@ -61,7 +61,7 @@ typedef struct xfs_buf_log_item {
+>  	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
+>  } xfs_buf_log_item_t;
+>  
+> -void	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+> +int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+>  void	xfs_buf_item_relse(struct xfs_buf *);
+>  void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
+>  uint	xfs_buf_item_dirty(xfs_buf_log_item_t *);
+> -- 
+> 2.5.0
 > 
 > _______________________________________________
 > xfs mailing list
