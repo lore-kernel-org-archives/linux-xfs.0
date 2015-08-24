@@ -1,32 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E17517F37
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 01:24:34 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 45EEB7F37
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 01:43:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C214C304032
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 23:24:31 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	FHLrsWJMmGD4dzAJ for <xfs@oss.sgi.com>;
-	Sun, 23 Aug 2015 23:24:28 -0700 (PDT)
-Date: Mon, 24 Aug 2015 16:24:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150824062425.GU3902@dastard>
-References: <20150817200254.GG21075@mtj.duckdns.org>
-	<20150818091603.GA12317@quack.suse.cz>
-	<20150818174718.GA15739@mtj.duckdns.org>
-	<20150818195439.GB15739@mtj.duckdns.org>
-	<20150818215611.GD3902@dastard>
-	<20150821102053.GL17933@dhcp-13-216.nay.redhat.com>
-	<20150822003025.GS3902@dastard>
-	<20150822044609.GM17933@dhcp-13-216.nay.redhat.com>
-	<20150824011123.GA714@dastard>
-	<20150824031816.GO17933@dhcp-13-216.nay.redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C7BF0AC004
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 23:43:09 -0700 (PDT)
+Received: from mail-io0-f182.google.com (mail-io0-f182.google.com
+	[209.85.223.182]) by cuda.sgi.com with ESMTP id
+	MebdvaJwOGrO2EoH (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 23 Aug 2015 23:43:07 -0700 (PDT)
+Received: by iodt126 with SMTP id t126so138458895iod.2
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 23:43:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150824031816.GO17933@dhcp-13-216.nay.redhat.com>
+In-Reply-To: <20150821112118.GB46372@bfoster.bfoster>
+References: <CANX=BtYB4yoGwxz72sUN+6aSVL0fQ1JnS3PEw0zRqTbtO4_KDg@mail.gmail.com>
+	<20150821112118.GB46372@bfoster.bfoster>
+Date: Mon, 24 Aug 2015 14:43:07 +0800
+Message-ID: <CANX=BtY-Q0w5q4WZx869u0q=up+yE9f6u-gJ_O28L9TYzze_Dw@mail.gmail.com>
+Subject: Re: xfs directory quota doesn't work
+From: Simon Xia <simonxiaomg@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,146 +28,284 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2480416075001409188=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 24, 2015 at 11:18:16AM +0800, Eryu Guan wrote:
-> On Mon, Aug 24, 2015 at 11:11:23AM +1000, Dave Chinner wrote:
-> > 
-> > Eryu, can you change the way you run the event trace to be:
-> > 
-> > $ sudo trace-cmd <options> -o <outfile location> ./check <test options>
-> > 
-> > rather than running the trace as a background operation elsewhere?
-> > Maybe that will give better results.
-> 
-> The results are here
-> 
-> http://128.199.137.77/writeback-v3/
+--===============2480416075001409188==
+Content-Type: multipart/alternative; boundary=001a1140a9c21dc137051e08eeca
 
-OK, the trace is still missing a few events, but it's much more
-complete, and contains the events that tell more of the story:
+--001a1140a9c21dc137051e08eeca
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-$ ls -li /mnt/scr
-total 51196
-15688955 -rw------- 1 root root 10481664 Aug 24 13:06 985
-15688959 -rw------- 1 root root        0 Aug 24 13:06 989
-15688961 -rw------- 1 root root        0 Aug 24 13:06 991
-15688964 -rw------- 1 root root        0 Aug 24 13:06 994
-15688966 -rw------- 1 root root        0 Aug 24 13:06 996
-$
+I do create two subdirectory for project
+
+and the error maybe caused by this step:
+xfs_quota -x -c 'project =E2=80=93c task1' /home/xiameng.xm/xfs_dir
+
+=E2=80=93c - no such project in /etc/projects
+Checking project task1 (path /home/xiameng.xm/xfs_dir/task1)...
+/home/xiameng.xm/xfs_dir/task1 - project identifier is not set (inode=3D0,
+tree=3D11)
+/home/xiameng.xm/xfs_dir/task1 - project inheritance flag is not set
+Processed 1 /etc/projects paths for project task1
+
+I'm a little confused about the output message, cause everything is ok in
+config file
+
+2015-08-21 19:21 GMT+08:00 Brian Foster <bfoster@redhat.com>:
+
+> On Fri, Aug 21, 2015 at 05:05:00PM +0800, Simon Xia wrote:
+> > hi, everyone, I encounter a problem when using xfs
+> >
+> > now I have two tasks and I wanna run them in different directory and
+> limit
+> > the directory=E2=80=99s size. I use xfs=E2=80=99s project quota to achi=
+eve this.
+> >
+> > I follow the steps from here:
+> > https://solidlinux.wordpress.com/2012/12/09/xfs-quota-managament/
+> >
+> > here is detail of my two config files
+> >
+> > /etc/projects:
+> >
+> > 11:/home/xiameng.xm/xfs_dir/task1
+> > 12:/home/xiameng.xm/xfs_dir/task2
+> >
+> > /etc/projid:
+> >
+> > task1:11
+> > task2:12
+> >
+> > and here is my step:
+> >
+> > touch test_xfs
+> > dd if=3D/dev/zero of=3Dtest_xfs bs=3D1000000 count=3D1
+> > mkfs.xfs test_xfs
+> >
+>
+> That looks small, I can't even mkfs a file that small. I ran through
+> this using 'bs=3D1M count=3D100.'
+>
+> > mkdir xfs_dir
+> > mount test_xfs ./xfs_dir -o pquota,loop
+> >
+> > xfs_quota -xc 'project =E2=80=93s task1' /home/xiameng.xm/xfs_dir
+> > xfs_quota -xc 'project =E2=80=93s task2' /home/xiameng.xm/xfs_dir
+> >
+>
+> I don't see where you've created the directories yet..? I get the
+> following:
+>
+> # xfs_quota -xc 'project -s task1' /mnt/
+> xfs_quota: cannot find mount point for path `/mnt/task1': No such file or
+> directory
+>
+> ... until I create the task1/task2 directories. This is required because
+> the project quota command has to set the project id on the directory
+> inode. It won't work if the directory is created after this point,
+> regardless of whether the quota limit is specified.
+>
+> Once I create those directories and run the project command, everything
+> seems to work. I can write up to 2MB to task1 and 10MB to task2.
+>
+> Brian
+>
+> > xfs_quota -x -c 'limit -p bhard=3D2m task1' /home/xiameng.xm/xfs_dir
+> > xfs_quota -x -c 'limit -p bhard=3D10m task2' /home/xiameng.xm/xfs_dir
+> >
+> > here is the output of xfs_quota -x -c 'report /home/xiameng.xm/xfs_dir'
+> >
+> > Project quota on /home/xiameng.xm/xfs_dir (/dev/loop1)
+> >                                Blocks
+> > Project ID       Used       Soft       Hard    Warn/Grace
+> > ---------- --------------------------------------------------
+> > task1               0          0       2048     00 [--------]
+> > task2               0          0      10240     00 [--------]
+> >
+> > the question is no mater how large I create a file in ./xfs_dir/task1 o=
+r
+> > ./xfs_dir/task2, it success!
+> >
+> > the quota limit doesn=E2=80=99t work!
+> >
+> > Any help will be appreciated :)
+> >
+> >
+> > ps: I also post my question here:
+> >
+> http://unix.stackexchange.com/questions/224606/xfs-directory-quota-doesnt=
+-work
+> >
+> > ----
+> >
+> > Best Regards
+> > Simon Xia
+> > =E2=80=8B
+>
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+>
+>
 
 
-     Inode #              Size        block count      flushiter
-   dec      hex       inode     log    inode   log      inode  log
-15688955  0xef64fb  0x9ff000  0x9ff000 0x9ff  0xa00      1      0
-15688959  0xef64ff      0        0     0xa00  0xa00      0      0
-15688961  0xef6501      0        0     0xa00  0xa00      0      0
-15688964  0xef6504      0        0     0xa00  0xa00      0      0
-15688966  0xef6506      0        0     0xa00  0xa00      0      0
+--=20
+Best Regards
+
+Simon Xia
+
+--001a1140a9c21dc137051e08eeca
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">I do create two subdirectory for project<div><br></div><di=
+v>and the error maybe caused by this step:</div><div><div>xfs_quota -x -c &=
+#39;project =E2=80=93c task1&#39; /home/xiameng.xm/xfs_dir</div><div><br></=
+div><div>=E2=80=93c - no such project in /etc/projects</div><div>Checking p=
+roject task1 (path /home/xiameng.xm/xfs_dir/task1)...</div><div>/home/xiame=
+ng.xm/xfs_dir/task1 - project identifier is not set (inode=3D0, tree=3D11)<=
+/div><div>/home/xiameng.xm/xfs_dir/task1 - project inheritance flag is not =
+set</div><div>Processed 1 /etc/projects paths for project task1</div></div>=
+<div><br></div><div>I&#39;m a little confused about the output message, cau=
+se everything is ok in config file</div><div class=3D"gmail_extra"><br><div=
+ class=3D"gmail_quote">2015-08-21 19:21 GMT+08:00 Brian Foster <span dir=3D=
+"ltr">&lt;<a href=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@r=
+edhat.com</a>&gt;</span>:<br><blockquote class=3D"gmail_quote" style=3D"mar=
+gin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D"=
+">On Fri, Aug 21, 2015 at 05:05:00PM +0800, Simon Xia wrote:<br>
+&gt; hi, everyone, I encounter a problem when using xfs<br>
+&gt;<br>
+&gt; now I have two tasks and I wanna run them in different directory and l=
+imit<br>
+&gt; the directory=E2=80=99s size. I use xfs=E2=80=99s project quota to ach=
+ieve this.<br>
+&gt;<br>
+&gt; I follow the steps from here:<br>
+&gt; <a href=3D"https://solidlinux.wordpress.com/2012/12/09/xfs-quota-manag=
+ament/" rel=3D"noreferrer" target=3D"_blank">https://solidlinux.wordpress.c=
+om/2012/12/09/xfs-quota-managament/</a><br>
+&gt;<br>
+&gt; here is detail of my two config files<br>
+&gt;<br>
+&gt; /etc/projects:<br>
+&gt;<br>
+&gt; 11:/home/xiameng.xm/xfs_dir/task1<br>
+&gt; 12:/home/xiameng.xm/xfs_dir/task2<br>
+&gt;<br>
+&gt; /etc/projid:<br>
+&gt;<br>
+&gt; task1:11<br>
+&gt; task2:12<br>
+&gt;<br>
+&gt; and here is my step:<br>
+&gt;<br>
+&gt; touch test_xfs<br>
+&gt; dd if=3D/dev/zero of=3Dtest_xfs bs=3D1000000 count=3D1<br>
+&gt; mkfs.xfs test_xfs<br>
+&gt;<br>
+<br>
+</span>That looks small, I can&#39;t even mkfs a file that small. I ran thr=
+ough<br>
+this using &#39;bs=3D1M count=3D100.&#39;<br>
+<span class=3D""><br>
+&gt; mkdir xfs_dir<br>
+&gt; mount test_xfs ./xfs_dir -o pquota,loop<br>
+&gt;<br>
+&gt; xfs_quota -xc &#39;project =E2=80=93s task1&#39; /home/xiameng.xm/xfs_=
+dir<br>
+&gt; xfs_quota -xc &#39;project =E2=80=93s task2&#39; /home/xiameng.xm/xfs_=
+dir<br>
+&gt;<br>
+<br>
+</span>I don&#39;t see where you&#39;ve created the directories yet..? I ge=
+t the<br>
+following:<br>
+<br>
+# xfs_quota -xc &#39;project -s task1&#39; /mnt/<br>
+xfs_quota: cannot find mount point for path `/mnt/task1&#39;: No such file =
+or directory<br>
+<br>
+... until I create the task1/task2 directories. This is required because<br=
+>
+the project quota command has to set the project id on the directory<br>
+inode. It won&#39;t work if the directory is created after this point,<br>
+regardless of whether the quota limit is specified.<br>
+<br>
+Once I create those directories and run the project command, everything<br>
+seems to work. I can write up to 2MB to task1 and 10MB to task2.<br>
+<br>
+Brian<br>
+<span class=3D""><br>
+&gt; xfs_quota -x -c &#39;limit -p bhard=3D2m task1&#39; /home/xiameng.xm/x=
+fs_dir<br>
+&gt; xfs_quota -x -c &#39;limit -p bhard=3D10m task2&#39; /home/xiameng.xm/=
+xfs_dir<br>
+&gt;<br>
+&gt; here is the output of xfs_quota -x -c &#39;report /home/xiameng.xm/xfs=
+_dir&#39;<br>
+&gt;<br>
+&gt; Project quota on /home/xiameng.xm/xfs_dir (/dev/loop1)<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Blocks<br>
+&gt; Project ID=C2=A0 =C2=A0 =C2=A0 =C2=A0Used=C2=A0 =C2=A0 =C2=A0 =C2=A0So=
+ft=C2=A0 =C2=A0 =C2=A0 =C2=A0Hard=C2=A0 =C2=A0 Warn/Grace<br>
+&gt; ---------- --------------------------------------------------<br>
+&gt; task1=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00=C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A02048=C2=A0 =C2=A0 =
+=C2=A000 [--------]<br>
+&gt; task2=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00=C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 10240=C2=A0 =C2=A0 =C2=A0=
+00 [--------]<br>
+&gt;<br>
+&gt; the question is no mater how large I create a file in ./xfs_dir/task1 =
+or<br>
+&gt; ./xfs_dir/task2, it success!<br>
+&gt;<br>
+&gt; the quota limit doesn=E2=80=99t work!<br>
+&gt;<br>
+&gt; Any help will be appreciated :)<br>
+&gt;<br>
+&gt;<br>
+&gt; ps: I also post my question here:<br>
+&gt; <a href=3D"http://unix.stackexchange.com/questions/224606/xfs-director=
+y-quota-doesnt-work" rel=3D"noreferrer" target=3D"_blank">http://unix.stack=
+exchange.com/questions/224606/xfs-directory-quota-doesnt-work</a><br>
+&gt;<br>
+&gt; ----<br>
+&gt;<br>
+&gt; Best Regards<br>
+&gt; Simon Xia<br>
+&gt; =E2=80=8B<br>
+<br>
+</span>&gt; _______________________________________________<br>
+&gt; xfs mailing list<br>
+&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
+&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer"=
+ target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
+<br>
+</blockquote></div><br><br clear=3D"all"><div><br></div>-- <br><div class=
+=3D"gmail_signature"><div dir=3D"ltr">Best Regards<div><br></div><div>Simon=
+ Xia</div></div></div>
+</div></div>
+
+--001a1140a9c21dc137051e08eeca--
 
 
-Ok, that tallies with the previous symptoms. However, the trace
-tells us something different. the xfs_setfilesize events. here's the
-last 12 xfs_setfilesize events delivered in the trace (trimmed for
-brevity and focus):
-
-ino 0xef64fa isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-ino 0xef64fa isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 409
-ino 0xef64fb isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-ino 0xef64fb isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
-ino 0xef64ff isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-ino 0xef64ff isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
-ino 0xef6501 isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-ino 0xef6501 isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
-ino 0xef6504 isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-ino 0xef6504 isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
-ino 0xef6506 isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-ino 0xef6506 isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
-
-Yeah, the last 9 transactions corresponding to these events are not
-in the log.  Which means, most likely, that they occurred after
-->sync_fs forced the log out. THe next thing that happens is the fs
-is shut down, and that's preventing the dirty log from being written
-to disk.
-
-Eryu, this can be confirmed by add the xfs_log_force event to the
-trace.
-
-What I can't see in the traces is where sync is doing a blocking
-sync pass on the fileystem. The wbc control structure being passed
-to XFS is:
-
-wbc_writepage:        bdi 253:0: towrt=45569 skip=0 mode=0 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
-
-Which is not coming from sync_inodes_sb() as the sync mode is
-incorrect (i.e. not WB_SYNC_ALL). It looks to me that writeback is
-coming from a generic bdi flusher command rather than a directed
-superblock sync. i.e. through wakeup_flusher_threads() which sets:
-
-        work->sync_mode = WB_SYNC_NONE;
-        work->nr_pages  = nr_pages;
-        work->range_cyclic = range_cyclic;
-        work->reason    = reason;
-        work->auto_free = 1;
-
-as the reason is "sync":
-
-            sync-18849  writeback_queue:      bdi 253:0: sb_dev 0:0 nr_pages=308986 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-            sync-18849  writeback_queue:      bdi 253:0: sb_dev 253:1 nr_pages=9223372036854775807 sync_mode=1 kupdate=0 range_cyclic=0 background=0 reason=sync
-....
-    kworker/u8:1-1563   writeback_exec:       bdi 253:0: sb_dev 0:0 nr_pages=308986 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-    kworker/u8:1-1563   writeback_start:      bdi 253:0: sb_dev 0:0 nr_pages=308986 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-
-The next writeback_queue/writeback_exec tracepoint pair are:
-
-....
-     kworker/2:1-17163  xfs_setfilesize:      dev 253:6 ino 0xef6506 isize 0xa00000 disize 0x0 offset 0x0 count 10481664
-     kworker/2:1-17163  xfs_setfilesize:      dev 253:6 ino 0xef6506 isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
-            sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775798 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
-            sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775797 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
-            sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775796 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
-            sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775795 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
-          umount-18852  writeback_queue:      bdi 253:0: sb_dev 253:6 nr_pages=22059 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-    kworker/u8:1-1563   writeback_exec:       bdi 253:0: sb_dev 253:6 nr_pages=22059 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-....
-
-which shows unmount being the next writeback event queued and
-executed after the IO completions have come in (that missed the
-log). What is missing is the specific queue/exec events for
-sync_sb_inodes() from the sync code for each filesystem.
-
-Anyway, Eryum long and short of it is that you don't need to worry
-about testing all the different combinations - we now know that the
-completion events are occurring, so let's focus on whether the sync
-code is not waiting for them correctly. Can you trace the following
-events:
-
-	xfs_log_force
-	xfs_setfilesize
-	writeback_queue
-	writeback_exec
-	writeback_start
-	writeback_queue_io
-	writeback_written
-	writeback_pages_written
-
-basically I'm trying to see if we've got all the BDI events as we'd
-expect then to be queued and run for sync, and when the ->sync_fs
-call occurs during the sync process before shutdown and unmount...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--===============2480416075001409188==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2480416075001409188==--
