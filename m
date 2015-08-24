@@ -1,32 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B33A87F37
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 04:20:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9228C304032
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 02:20:07 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 73DC57F37
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 04:26:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3134D304032
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 02:26:43 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id SiXnEEj1urlZqP0G (version=TLSv1 cipher=AES256-SHA
+	ESMTP id kdlcn5uupMxCVzI6 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Aug 2015 02:20:04 -0700 (PDT)
-Date: Mon, 24 Aug 2015 11:19:59 +0200
+	Mon, 24 Aug 2015 02:26:41 -0700 (PDT)
+Date: Mon, 24 Aug 2015 11:26:37 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150824091959.GA2936@quack.suse.cz>
-References: <20150818091603.GA12317@quack.suse.cz>
-	<20150818174718.GA15739@mtj.duckdns.org>
-	<20150818195439.GB15739@mtj.duckdns.org>
-	<20150818215611.GD3902@dastard>
-	<20150821102053.GL17933@dhcp-13-216.nay.redhat.com>
-	<20150822003025.GS3902@dastard>
-	<20150822044609.GM17933@dhcp-13-216.nay.redhat.com>
-	<20150824011123.GA714@dastard>
-	<20150824031816.GO17933@dhcp-13-216.nay.redhat.com>
-	<20150824062425.GU3902@dastard>
+Subject: Re: [PATCH] xfs: Fix file type directory corruption for btree
+	directories
+Message-ID: <20150824092637.GB2936@quack.suse.cz>
+References: <1440179722-6029-1-git-send-email-jack@suse.com>
+	<20150821231154.GR3902@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150824062425.GU3902@dastard>
+In-Reply-To: <20150821231154.GR3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,81 +32,90 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+Cc: xfs@oss.sgi.com, Jan Kara <jack@suse.com>
 
-On Mon 24-08-15 16:24:25, Dave Chinner wrote:
-> On Mon, Aug 24, 2015 at 11:18:16AM +0800, Eryu Guan wrote:
-> > On Mon, Aug 24, 2015 at 11:11:23AM +1000, Dave Chinner wrote:
-> > > 
-> > > Eryu, can you change the way you run the event trace to be:
-> > > 
-> > > $ sudo trace-cmd <options> -o <outfile location> ./check <test options>
-> > > 
-> > > rather than running the trace as a background operation elsewhere?
-> > > Maybe that will give better results.
+On Sat 22-08-15 09:11:54, Dave Chinner wrote:
+> On Fri, Aug 21, 2015 at 07:55:22PM +0200, Jan Kara wrote:
+> > Users have occasionally reported that file type for some directory
+> > entries is wrong. This mostly happened after updating libraries some
+> > libraries. After some debugging the problem was traced down to
+> > xfs_dir2_node_replace(). The function uses args->filetype as a file type
+> > to store in the replaced directory entry however it also calls
+> > xfs_da3_node_lookup_int() which will store file type of the current
+> > directory entry in args->filetype. Thus we fail to change file type of a
+> > directory entry to a proper type.
 > > 
-> > The results are here
+> > Fix the problem by storing new file type in a local variable before
+> > calling xfs_da3_node_lookup_int().
 > > 
-> > http://128.199.137.77/writeback-v3/
+> > Reported-by: Giacomo Comes <comes@naic.edu>
+> > Signed-off-by: Jan Kara <jack@suse.com>
+> 
+> So this is being triggered by a rename() operation on a large
+> directory? node format is the optimised form form for large dirs, so
+> I suspect that's why only few people see this. Can you see if you
+> can write a reproducer for it baseed on a large single directory and
+> renaming two files of different types (e.g. BLKDEV over REG) to see
+> if the cause is that simple?
 
-<snip>
-
-> What I can't see in the traces is where sync is doing a blocking
-> sync pass on the fileystem. The wbc control structure being passed
-> to XFS is:
-> 
-> wbc_writepage:        bdi 253:0: towrt=45569 skip=0 mode=0 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
-> 
-> Which is not coming from sync_inodes_sb() as the sync mode is
-> incorrect (i.e. not WB_SYNC_ALL). It looks to me that writeback is
-> coming from a generic bdi flusher command rather than a directed
-> superblock sync. i.e. through wakeup_flusher_threads() which sets:
-> 
->         work->sync_mode = WB_SYNC_NONE;
->         work->nr_pages  = nr_pages;
->         work->range_cyclic = range_cyclic;
->         work->reason    = reason;
->         work->auto_free = 1;
-> 
-> as the reason is "sync":
-> 
->             sync-18849  writeback_queue:      bdi 253:0: sb_dev 0:0 nr_pages=308986 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
->             sync-18849  writeback_queue:      bdi 253:0: sb_dev 253:1 nr_pages=9223372036854775807 sync_mode=1 kupdate=0 range_cyclic=0 background=0 reason=sync
-> ....
->     kworker/u8:1-1563   writeback_exec:       bdi 253:0: sb_dev 0:0 nr_pages=308986 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
->     kworker/u8:1-1563   writeback_start:      bdi 253:0: sb_dev 0:0 nr_pages=308986 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-> 
-> The next writeback_queue/writeback_exec tracepoint pair are:
-> 
-> ....
->      kworker/2:1-17163  xfs_setfilesize:      dev 253:6 ino 0xef6506 isize 0xa00000 disize 0x0 offset 0x0 count 10481664
->      kworker/2:1-17163  xfs_setfilesize:      dev 253:6 ino 0xef6506 isize 0xa00000 disize 0x9ff000 offset 0x9ff000 count 4096
->             sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775798 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
->             sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775797 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
->             sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775796 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
->             sync-18849  wbc_writepage:        bdi 253:0: towrt=9223372036854775795 skip=0 mode=1 kupd=0 bgrd=0 reclm=0 cyclic=0 start=0x0 end=0x7fffffffffffffff
->           umount-18852  writeback_queue:      bdi 253:0: sb_dev 253:6 nr_pages=22059 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
->     kworker/u8:1-1563   writeback_exec:       bdi 253:0: sb_dev 253:6 nr_pages=22059 sync_mode=0 kupdate=0 range_cyclic=0 background=0 reason=sync
-> ....
-> 
-> which shows unmount being the next writeback event queued and
-> executed after the IO completions have come in (that missed the
-> log). What is missing is the specific queue/exec events for
-> sync_sb_inodes() from the sync code for each filesystem.
-
-Bah, I see the problem and indeed it was introduced by commit e79729123f639
-"writeback: don't issue wb_writeback_work if clean". The problem is that
-we bail out of sync_inodes_sb() if there is no dirty IO. Which is wrong
-because we have to wait for any outstanding IO (i.e. call wait_sb_inodes())
-regardless of dirty state! And that also explains why Tejun's patch fixes
-the problem because it backs out the change to the exit condition in
-sync_inodes_sb().
-
-So Tejun's patch from this thread is indeed fixing the real problem but the
-comment in sync_inodes_sb() should be fixed to mention wait_sb_inodes()
-must be called in all cases... Tejun, will you fixup the comment please?
+Yes, I've tried and for a large enough directory renaming symlink over a
+regular file is all that is needed to corrupt the file type in the
+directory. Should I write a dedicated test for this or is there something
+that already excercises directory code? I know about fsstress runs but
+those would be hard to tweak to trigger this I guess.
 
 								Honza
+
+> > ---
+> >  fs/xfs/libxfs/xfs_dir2_node.c | 8 +++++++-
+> >  1 file changed, 7 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> > index 41b80d3d3877..1006710a7c92 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> > @@ -2132,6 +2132,7 @@ xfs_dir2_node_replace(
+> >  	int			error;		/* error return value */
+> >  	int			i;		/* btree level */
+> >  	xfs_ino_t		inum;		/* new inode number */
+> > +	int			ftype;		/* new file type */
+> >  	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+> >  	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry being changed */
+> >  	int			rval;		/* internal return value */
+> > @@ -2145,7 +2146,12 @@ xfs_dir2_node_replace(
+> >  	state = xfs_da_state_alloc();
+> >  	state->args = args;
+> >  	state->mp = args->dp->i_mount;
+> > +	/*
+> > +	 * We have to save new inode number and ftype since
+> > +	 * xfs_da3_node_lookup_int() is going to overwrite them
+> > +	 */
+> >  	inum = args->inumber;
+> > +	ftype = args->filetype;
+> >  	/*
+> >  	 * Lookup the entry to change in the btree.
+> >  	 */
+> > @@ -2183,7 +2189,7 @@ xfs_dir2_node_replace(
+> >  		 * Fill in the new inode number and log the entry.
+> >  		 */
+> >  		dep->inumber = cpu_to_be64(inum);
+> > -		args->dp->d_ops->data_put_ftype(dep, args->filetype);
+> > +		args->dp->d_ops->data_put_ftype(dep, ftype);
+> >  		xfs_dir2_data_log_entry(args, state->extrablk.bp, dep);
+> >  		rval = 0;
+> >  	}
+> 
+> The change looks sane (i'll add whitespace around the comments when
+> i commit) and I'll also add the stable cc. I would like to have a
+> reproducer to test it, though ;)
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
