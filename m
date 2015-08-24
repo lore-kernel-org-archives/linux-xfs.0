@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4A25D7F37
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 22:18:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BC06304039
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 20:18:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id d6AeDc9WAA1ec7Zm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 23 Aug 2015 20:18:20 -0700 (PDT)
-Date: Mon, 24 Aug 2015 11:18:16 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
-	inodes
-Message-ID: <20150824031816.GO17933@dhcp-13-216.nay.redhat.com>
-References: <20150814111408.GB8710@quack.suse.cz>
-	<20150817200254.GG21075@mtj.duckdns.org>
-	<20150818091603.GA12317@quack.suse.cz>
-	<20150818174718.GA15739@mtj.duckdns.org>
-	<20150818195439.GB15739@mtj.duckdns.org>
-	<20150818215611.GD3902@dastard>
-	<20150821102053.GL17933@dhcp-13-216.nay.redhat.com>
-	<20150822003025.GS3902@dastard>
-	<20150822044609.GM17933@dhcp-13-216.nay.redhat.com>
-	<20150824011123.GA714@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 260EC7F37
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 23:44:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D7A98F804B
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 21:44:58 -0700 (PDT)
+Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com
+	[209.85.218.49]) by cuda.sgi.com with ESMTP id i3kFEAs1RkKvaSsB
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 23 Aug 2015 21:44:53 -0700 (PDT)
+Received: by oiey141 with SMTP id y141so73153671oie.1
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 21:44:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150824011123.GA714@dastard>
+In-Reply-To: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
+References: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
+Date: Mon, 24 Aug 2015 10:14:52 +0530
+Message-ID: <CAJtCNH1EyP6d+rGeJRzaAx7Mh+s89hEudDbfbwofYK_tJD6x4A@mail.gmail.com>
+Subject: Re: How to determine the reserved blocks in xfs filesystem ?
+From: Mukul Malhotra <smilemukul2005@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,63 +26,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7490691284891282589=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 24, 2015 at 11:11:23AM +1000, Dave Chinner wrote:
-> 
-> Eryu, can you change the way you run the event trace to be:
-> 
-> $ sudo trace-cmd <options> -o <outfile location> ./check <test options>
-> 
-> rather than running the trace as a background operation elsewhere?
-> Maybe that will give better results.
+--===============7490691284891282589==
+Content-Type: multipart/alternative; boundary=001a113cdbbe419e57051e074777
 
-The results are here
+--001a113cdbbe419e57051e074777
+Content-Type: text/plain; charset=UTF-8
 
-http://128.199.137.77/writeback-v3/
+Hi,
 
-> 
-> Also, it would be informative to us if you can reproduce this with a
-> v5 filesystem (i.e. mkfs.xfs -m crc=1) because it has much better
-> on-disk information for sequence-of-event triage like this. If you
-> can reproduce it with a v5 filesystem, can you post the trace and
-> metadump?
+I have below queries on XFS log device as,
 
-This seems to be harder to reproduce with tracepoints enabled, but I'll
-keep trying, and the tests below.
+1. After creating a XFS filesystem with an external log device (journal),
+is there a way to mount the filesystem if I lose the external log device or
+a way to recover files?
 
-Thanks,
-Eryu
+2. Is there a way to convert an existing XFS filesystem which has internal
+log to external log and vice versa.
 
-> 
-> Other things to check (separately):
-> 
-> 	- change godown to godown -f
-> 	- add a "sleep 5" before running godown after sync
-> 	- add a "sleep 5; sync" before running godown
-> 
-> i.e. I'm wondering if sync is not waiting for everything, and so we
-> aren't capturing the IO completions because the filesystem is
-> already shut down by the time they are delivered...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Need help on above queries.
+
+
+Thank You
+Mukul Malhotra
+
+--001a113cdbbe419e57051e074777
+Content-Type: text/html; charset=UTF-8
+
+<div dir="ltr"><div class="gmail_default" style="font-size:small">Hi,<br><br></div><div class="gmail_default" style="font-size:small">I have below queries on XFS log device as,<br><br>1. After creating a XFS filesystem with an external log device
+    (journal), is there a way to mount the filesystem if I lose the
+    external log device or a way to recover files?<br>
+    <br>
+    2. Is there a way to convert an existing XFS filesystem which has
+    internal log to external log and vice versa. <br>
+    <br>
+    Need help on above queries.<br><br></div><div class="gmail_extra"><br clear="all"><div><div class="gmail_signature"><div dir="ltr">Thank You<br>Mukul Malhotra<br></div></div></div></div></div>
+
+--001a113cdbbe419e57051e074777--
+
+
+--===============7490691284891282589==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7490691284891282589==--
