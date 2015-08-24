@@ -1,26 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4881C7F37
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 19:12:30 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E3D467F37
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 20:11:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E36F1AC003
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 17:12:26 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E64DAC003
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2015 18:11:28 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	3EtfIScFEILGxgRj for <xfs@oss.sgi.com>;
-	Sun, 23 Aug 2015 17:12:24 -0700 (PDT)
-Date: Mon, 24 Aug 2015 10:10:35 +1000
+	ziYevdOZfaF62I5o for <xfs@oss.sgi.com>;
+	Sun, 23 Aug 2015 18:11:25 -0700 (PDT)
+Date: Mon, 24 Aug 2015 11:11:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: v5 filesystem corruption due to log recovery lsn ordering
-Message-ID: <20150824001035.GZ714@dastard>
-References: <20150819183904.GB49174@bfoster.bfoster>
-	<20150819224453.GL3902@dastard>
-	<20150820162529.GB13033@bfoster.bfoster>
-	<20150821003449.GU714@dastard>
-	<20150821143923.GC46372@bfoster.bfoster>
+Subject: Re: [PATCH block/for-linus] writeback: fix syncing of I_DIRTY_TIME
+	inodes
+Message-ID: <20150824011123.GA714@dastard>
+References: <20150813224415.GG4496@mtj.duckdns.org>
+	<20150814111408.GB8710@quack.suse.cz>
+	<20150817200254.GG21075@mtj.duckdns.org>
+	<20150818091603.GA12317@quack.suse.cz>
+	<20150818174718.GA15739@mtj.duckdns.org>
+	<20150818195439.GB15739@mtj.duckdns.org>
+	<20150818215611.GD3902@dastard>
+	<20150821102053.GL17933@dhcp-13-216.nay.redhat.com>
+	<20150822003025.GS3902@dastard>
+	<20150822044609.GM17933@dhcp-13-216.nay.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150821143923.GC46372@bfoster.bfoster>
+In-Reply-To: <20150822044609.GM17933@dhcp-13-216.nay.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,121 +39,135 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
 
-On Fri, Aug 21, 2015 at 10:39:23AM -0400, Brian Foster wrote:
-> On Fri, Aug 21, 2015 at 10:34:49AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 20, 2015 at 12:25:29PM -0400, Brian Foster wrote:
-> > > On Thu, Aug 20, 2015 at 08:44:53AM +1000, Dave Chinner wrote:
-> > > That's an interesting idea, but I wonder if it truly fixes the problem
-> > > or just makes it potentially more difficult to reproduce. One concern is
-> > > that even with this in place, all it takes to reintroduce the problem is
-> > > for a filesystem to run a bit on an older kernel in a situation where
-> > > the LSN is reset and enough modification has occurred to update whatever
-> > > key metadata we determine as important with the reset LSNs.
+On Sat, Aug 22, 2015 at 12:46:09PM +0800, Eryu Guan wrote:
+> On Sat, Aug 22, 2015 at 10:30:25AM +1000, Dave Chinner wrote:
+> > On Fri, Aug 21, 2015 at 06:20:53PM +0800, Eryu Guan wrote:
+> [snip]
 > > 
-> > We can't prevent that - that horse has already bolted.
+> > Eryu, can you try again, this time manually specifying the writeback
+> > tracepoints so you exclude the really noisy ones? You can also drop
+> > the xfs_file_buffered_write and xfs_file_fsync tracepoints as well,
+> > as we can see that the incoming side of the code is doing the right
+> > thing....
 > 
-> Well, the feature bit can potentially do that. I'm not terribly fond of
-> it (overkill) and the goal was't to fix older kernels so much as to
-> prevent the problem from being reintroduced on newer kernels going
-> forward (provided newer kernels implemented this mount-time LSN
-> inheritance scheme).
-
-We can prevent the problem of old userspace on newer kernels by
-detecting a zeroed log - we don't need a feature bit for that.
-
-> In other words, the proposed solution depends on trust of the metadata
-> LSNs. One way we can trust those metadata LSNs is to prevent older
-> kernels/xfsprogs from messing with them.
-
-Well, it's old userspace we need to worry about here - kernels don't
-zero the log...
-
-> That said, I don't really agree with the assertion that upgraded
-> userspace alone sufficiently alleviates the problem. A filesystem that's
-> been around a while and has more recently been repaired is susceptible
-> to this problem for the foreseeable future, upgraded userspace or not,
-> until either all metadata with stale LSNs is updated or the problem is
-> identified and repaired explicitly.
-
-But there's nothing we can do in userspace to fix that. More on that
-below.
-
-> > > Another concern is that we're assuming that the key metadata will always
-> > > have the most recent LSN. I think the closest thing to a guarantee we
-> > > have of that is the superblock being updated on umount and every so
-> > > often by xfs_log_worker() to cover the log. After a bit of playing
-> > > around, I'm not so sure that is enough.
-> > 
-> > Sure, I just threw it out as a way to get a more recent LSN. The
-> > only way to reliably get the highest LSN is to walk all the metadata
-> > in the filesystem. We can't do that at mount time, so perhaps it
-> > is best to just refuse to mount read-write and issue a warning to
-> > upgrade xfsprogs and re-run xfs_repair.
-> > 
+> I excluded the writeback tracepoints you mentioned
 > 
-> Indeed, that sounds like a nicer approach to me. We're really only
-> considering the superblock at mount time though (note that repair resets
-> AG header LSNs), so we're not going to be guaranteed the mount fails for
-> all affected fs'. What do you think about also firing a (one-time,
-> probably) warning if we ever update a bit of metadata with a smaller
-> LSN?
-
-Larger LSN, you mean? ;)
-
-But, yes, that is what I was thinking for solving the "horse has
-already bolted" condition you described above. We can detect LSNs
-beyond the current log in the metadata we read from disk and issue a
-warning.  e.g in each metadata verifiers we add a:
-
-	if (xfs_verify_lsn(mp, hdr->lsn))
-		return false;
-
-then we can warn immediately that this is a problem. If we discover
-it during log recovery (i.e. lsn beyond the current head in the log
-in a block that passes all the other metadata self checks) then we
-can shut down or force the filesystem into read-only mode so that
-the user has to update xfsprogs and run repair to fix it because we
-can't safely run log recovery at this point.
-
-> That bit of metadata is now "fixed" once written out, but the point is
-> that the log item for this metadata was probably not effective and to
-> notify the user that the fs' LSNs are potentially out of whack and a
-> repair is in order.
-
-That's true - if we don't hit a bad lsn in recovery, we just issue a
-one-time warning from the verifiers and continue onwards. If the
-user is lucky, the problem will fix itself before it is ever a
-problem for recovery.
-
-> > So, to repair: have it record LSNs as it walks the metadata and
-> > at the start of phase 5 have it select a new cycle number higher
-> > than the highest LSN found in the filesystem. Stamp the log with
-> > that cycle number as well as all metadata that is being rebuilt
-> > in phase 5, and all the superblocks.
-> > 
-> > Problem solved.
-> > 
+> writeback_mark_inode_dirty
+> writeback_dirty_inode_start
+> writeback_dirty_inode
+> writeback_dirty_page
+> writeback_write_inode
 > 
-> Yeah, I was thinking of just using the current head of the log, as
-> described in my random note. Using the LSN from the metadata is probably
-> necessary in the cases where the log might be corrupted, however.
+> and left all other writeback tracepoints enabled, also dropped
+> xfs_file_buffered_write and xfs_file_fsync.
+> 
+> This time I can reproduce generic/048 quickly and please download the
+> trace info from below
+> 
+> http://128.199.137.77/writeback-v2/
 
-And as a minor detail, I'd take the cycle number from the highest
-LSN and bump it a few cycles just to make sure that the new LSN is
-well beyond anything in the filesystem...
+ok:
 
-> The solution of detection in the kernel and a fix in repair sounds
-> pretty good to me provided the detection is robust (e.g., the point
-> above wrt a warning). Then we have something in current kernels that can
-> effectively handle the problem regardless of how it might have been
-> (re)introduced and it's fairly simple as well.
+$ ls -li /mnt/scr
+total 102396
+15688948 -rw------- 1 root root        0 Aug 22 14:31 978
+15688950 -rw------- 1 root root        0 Aug 22 14:31 980
+15688952 -rw------- 1 root root 10481664 Aug 22 14:31 982
+15688957 -rw------- 1 root root        0 Aug 22 14:31 987
+15688961 -rw------- 1 root root        0 Aug 22 14:31 991
+15688963 -rw------- 1 root root        0 Aug 22 14:31 993
+15688964 -rw------- 1 root root        0 Aug 22 14:31 994
+15688966 -rw------- 1 root root        0 Aug 22 14:31 996
+15688967 -rw------- 1 root root        0 Aug 22 14:31 997
+15688968 -rw------- 1 root root        0 Aug 22 14:31 998
+$
 
-*nod*
+So, looking at what is on disk and what is in the log:
 
-I think we have a plan :)
+      Inode #		   Size	       block count	flushiter
+   dec	    hex	      inode	log    inode   log	inode  log
+15688948  0xef64f4      0        0     0xa00  0xa00      0      0
+15688950  0xef64f6      0        0     0xa00  0xa00      0      0
+15688952  0xef64f8  0x9ff000 0x9ff000  0x9ff  0xa00      1      0
+15688957  0xef64fd      0        0     0xa00  0xa00      0      0
+15688961  0xef6501      0        0     0xa00  0xa00      0      0
+15688963  0xef6503      0        0     0xa00  0xa00      0      0
+15688964  0xef6504      0        0     0xa00  0xa00      0      0
+15688966  0xef6506      0        0     0xa00  0xa00      0      0
+15688967  0xef6507      0        0     0xa00  0xa00      0      0
+15688968  0xef6508      0        0     0xa00  0xa00      0      0
+
+Now, inode #15688952 looks like there's some weirdness going on
+there with a non-zero flushiter and a block count that doesn't match
+between what is in the log and what is on disk. However, this is a
+result of the second mount that checks the file sizes and extent
+counts - it loads the inode into memory, checks it, and then when
+it is purged from the cache on unmount the blocks beyond EOF are
+punched away and the inode writen to disk. Hence there is a second
+transaction in the log for that inode after all the other inodes
+have been unlinked:
+
+INODE: #regs: 3   ino: 0xef64f8  flags: 0x5   dsize: 16
+.....
+size 0x9ff000 nblocks 0x9ff extsize 0x0 nextents 0x1
+
+It is preceeded in the log by modifications to the AGF and frees
+space btree buffers. It's then followed by the superblock buffer and
+the unmount record. Hence this is not unexpected.
+
+What it does tell us, though, is that the log never recorded file
+size changes for all of the inode with zero size. We see the block
+count of 0xa00, which means the delayed allocation transaction
+during IO submission has hit the disk, but there are none of the
+IO completion transactions in the log.
+
+So let's go look at the event trace now now that we know the EOF
+size update transactions were not run before the filesystem shut
+down.
+
+ Inode #     writeback		completion
+  hex      first     last    first     last
+0xef64f4  0-0x9ff000  yes     no        no
+0xef64f6  0-0x9ff000  yes     no        no
+0xef64f8  0-0x9ff000  yes     no        no
+0xef64fd  0-0x9ff000  yes     no        no
+0xef6501  0-0x9ff000  yes     no        no
+0xef6503     no       no      no        no
+0xef6504     no       no      no        no
+0xef6506     no       no      no        no
+0xef6507     no       no      no        no
+0xef6508     no       no      no        no
+
+Ok, so we still can't trust the event trace to be complete - we know
+from the log and the on-disk state that that allocation occurred for
+those last 5 inodes, so we can't read anything into the fact the
+traces for completions are missing.
+
+Eryu, can you change the way you run the event trace to be:
+
+$ sudo trace-cmd <options> -o <outfile location> ./check <test options>
+
+rather than running the trace as a background operation elsewhere?
+Maybe that will give better results.
+
+Also, it would be informative to us if you can reproduce this with a
+v5 filesystem (i.e. mkfs.xfs -m crc=1) because it has much better
+on-disk information for sequence-of-event triage like this. If you
+can reproduce it with a v5 filesystem, can you post the trace and
+metadump?
+
+Other things to check (separately):
+
+	- change godown to godown -f
+	- add a "sleep 5" before running godown after sync
+	- add a "sleep 5; sync" before running godown
+
+i.e. I'm wondering if sync is not waiting for everything, and so we
+aren't capturing the IO completions because the filesystem is
+already shut down by the time they are delivered...
 
 Cheers,
 
