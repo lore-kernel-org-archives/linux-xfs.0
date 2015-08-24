@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 65D0A7F37
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 07:02:31 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A84D57F37
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 07:19:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 39D998F804C
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 05:02:28 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6CPCDSra2nR1kSYb (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Aug 2015 05:02:27 -0700 (PDT)
-Date: Mon, 24 Aug 2015 08:02:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs directory quota doesn't work
-Message-ID: <20150824120225.GA50895@bfoster.bfoster>
-References: <CANX=BtYB4yoGwxz72sUN+6aSVL0fQ1JnS3PEw0zRqTbtO4_KDg@mail.gmail.com>
-	<20150821112118.GB46372@bfoster.bfoster>
-	<CANX=BtY-Q0w5q4WZx869u0q=up+yE9f6u-gJ_O28L9TYzze_Dw@mail.gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7B64F8F8035
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2015 05:19:52 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	dDrShubayfS1F1Gv for <xfs@oss.sgi.com>;
+	Mon, 24 Aug 2015 05:19:47 -0700 (PDT)
+Date: Mon, 24 Aug 2015 22:19:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Fix file type directory corruption for btree
+	directories
+Message-ID: <20150824121945.GC714@dastard>
+References: <1440179722-6029-1-git-send-email-jack@suse.com>
+	<20150821231154.GR3902@dastard>
+	<20150824092637.GB2936@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CANX=BtY-Q0w5q4WZx869u0q=up+yE9f6u-gJ_O28L9TYzze_Dw@mail.gmail.com>
+In-Reply-To: <20150824092637.GB2936@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,105 +28,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Simon Xia <simonxiaomg@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: xfs@oss.sgi.com, Jan Kara <jack@suse.com>
 
-T24gTW9uLCBBdWcgMjQsIDIwMTUgYXQgMDI6NDM6MDdQTSArMDgwMCwgU2ltb24gWGlhIHdyb3Rl
-Ogo+IEkgZG8gY3JlYXRlIHR3byBzdWJkaXJlY3RvcnkgZm9yIHByb2plY3QKPiAKClBsZWFzZSB0
-cnkgbm90IHRvIHRvcC1wb3N0Li4uCgo+IGFuZCB0aGUgZXJyb3IgbWF5YmUgY2F1c2VkIGJ5IHRo
-aXMgc3RlcDoKPiB4ZnNfcXVvdGEgLXggLWMgJ3Byb2plY3Qg4oCTYyB0YXNrMScgL2hvbWUveGlh
-bWVuZy54bS94ZnNfZGlyCgkJCSAgIF4KVGhhdCBsb29rcyBsaWtlIGFuIGludmFsaWQgY2hhcmFj
-dGVyIGluIHRoZSBjb21tYW5kIGhlcmUgKGFuZCB0aG9zZQpiZWxvdykuIEkgcHJvYmFibHkgZGlk
-bid0IG5vdGljZSBpdCBiZWZvcmUgYW5kIGp1c3QgZml4ZWQgdXAgbXkgbG9jYWwKY29tbWFuZHMu
-Li4KCj4gCj4g4oCTYyAtIG5vIHN1Y2ggcHJvamVjdCBpbiAvZXRjL3Byb2plY3RzCgouLi4gYnV0
-IHRoaXMgc3VnZ2VzdHMgaXQncyBub3QgYmVpbmcgaW50ZXJwcmV0ZWQgYXMgYSBjb21tYW5kIGZs
-YWcuCkUuZy4sIGEgY29tbWFuZCB3aXRoIHRoZSB3cm9uZyBjaGFyYWN0ZXI6CgojIHhmc19xdW90
-YSAteCAtYyAncHJvamVjdCDigJNjIHRhc2sxJyAvbW50CuKAk2MgLSBubyBzdWNoIHByb2plY3Qg
-aW4gL2V0Yy9wcm9qZWN0cyBvciBpbnZhbGlkIHByb2plY3QgbnVtYmVyCkNoZWNraW5nIHByb2pl
-Y3QgdGFzazEgKHBhdGggL21udC90YXNrMSkuLi4KL21udC90YXNrMSAtIHByb2plY3QgaWRlbnRp
-ZmllciBpcyBub3Qgc2V0IChpbm9kZT0wLCB0cmVlPTExKQovbW50L3Rhc2sxIC0gcHJvamVjdCBp
-bmhlcml0YW5jZSBmbGFnIGlzIG5vdCBzZXQKUHJvY2Vzc2VkIDEgKC9ldGMvcHJvamVjdHMgYW5k
-IGNtZGxpbmUpIHBhdGhzIGZvciBwcm9qZWN0IHRhc2sxIHdpdGggcmVjdXJzaW9uIGRlcHRoIGlu
-ZmluaXRlICgtMSkuCgp2cy4gd2l0aCB0aGUgY29ycmVjdDoKCiMgeGZzX3F1b3RhIC14IC1jICdw
-cm9qZWN0IC1jIHRhc2sxJyAvbW50CkNoZWNraW5nIHByb2plY3QgdGFzazEgKHBhdGggL21udC90
-YXNrMSkuLi4KL21udC90YXNrMSAtIHByb2plY3QgaWRlbnRpZmllciBpcyBub3Qgc2V0IChpbm9k
-ZT0wLCB0cmVlPTExKQovbW50L3Rhc2sxIC0gcHJvamVjdCBpbmhlcml0YW5jZSBmbGFnIGlzIG5v
-dCBzZXQKUHJvY2Vzc2VkIDEgKC9ldGMvcHJvamVjdHMgYW5kIGNtZGxpbmUpIHBhdGhzIGZvciBw
-cm9qZWN0IHRhc2sxIHdpdGggcmVjdXJzaW9uIGRlcHRoIGluZmluaXRlICgtMSkuCgpBbGwgaW4g
-YWxsLCB5b3Ugc2hvdWxkIHNlZSBzb21ldGhpbmcgbGlrZSB0aGUgZm9sbG93aW5nIGZyb20gdGhl
-ICctcycKY29tbWFuZCBiZWZvcmUgdGhpcyBpcyBleHBlY3RlZCB0byB3b3JrOgoKIyB4ZnNfcXVv
-dGEgLXhjICdwcm9qZWN0IC1zIHRhc2sxJyAvbW50ClNldHRpbmcgdXAgcHJvamVjdCB0YXNrMSAo
-cGF0aCAvbW50L3Rhc2sxKS4uLgpQcm9jZXNzZWQgMSAoL2V0Yy9wcm9qZWN0cyBhbmQgY21kbGlu
-ZSkgcGF0aHMgZm9yIHByb2plY3QgdGFzazEgd2l0aCByZWN1cnNpb24gZGVwdGggaW5maW5pdGUg
-KC0xKS4KCkFuZCBmb3IgZnVydGhlciB2ZXJpZmljYXRpb24sIHRoZSBwcm9qZWN0IElEIHNob3Vs
-ZCBiZSBzZXQgb24gdGhlCmFzc29jaWF0ZWQgZGlyZWN0b3J5OgoKIyB4ZnNfaW8gLWMgImxzcHJv
-aiIgL21udC90YXNrMQpwcm9qaWQgPSAxMQoKQnJpYW4KCj4gQ2hlY2tpbmcgcHJvamVjdCB0YXNr
-MSAocGF0aCAvaG9tZS94aWFtZW5nLnhtL3hmc19kaXIvdGFzazEpLi4uCj4gL2hvbWUveGlhbWVu
-Zy54bS94ZnNfZGlyL3Rhc2sxIC0gcHJvamVjdCBpZGVudGlmaWVyIGlzIG5vdCBzZXQgKGlub2Rl
-PTAsCj4gdHJlZT0xMSkKPiAvaG9tZS94aWFtZW5nLnhtL3hmc19kaXIvdGFzazEgLSBwcm9qZWN0
-IGluaGVyaXRhbmNlIGZsYWcgaXMgbm90IHNldAo+IFByb2Nlc3NlZCAxIC9ldGMvcHJvamVjdHMg
-cGF0aHMgZm9yIHByb2plY3QgdGFzazEKPiAKPiBJJ20gYSBsaXR0bGUgY29uZnVzZWQgYWJvdXQg
-dGhlIG91dHB1dCBtZXNzYWdlLCBjYXVzZSBldmVyeXRoaW5nIGlzIG9rIGluCj4gY29uZmlnIGZp
-bGUKPiAKPiAyMDE1LTA4LTIxIDE5OjIxIEdNVCswODowMCBCcmlhbiBGb3N0ZXIgPGJmb3N0ZXJA
-cmVkaGF0LmNvbT46Cj4gCj4gPiBPbiBGcmksIEF1ZyAyMSwgMjAxNSBhdCAwNTowNTowMFBNICsw
-ODAwLCBTaW1vbiBYaWEgd3JvdGU6Cj4gPiA+IGhpLCBldmVyeW9uZSwgSSBlbmNvdW50ZXIgYSBw
-cm9ibGVtIHdoZW4gdXNpbmcgeGZzCj4gPiA+Cj4gPiA+IG5vdyBJIGhhdmUgdHdvIHRhc2tzIGFu
-ZCBJIHdhbm5hIHJ1biB0aGVtIGluIGRpZmZlcmVudCBkaXJlY3RvcnkgYW5kCj4gPiBsaW1pdAo+
-ID4gPiB0aGUgZGlyZWN0b3J54oCZcyBzaXplLiBJIHVzZSB4ZnPigJlzIHByb2plY3QgcXVvdGEg
-dG8gYWNoaWV2ZSB0aGlzLgo+ID4gPgo+ID4gPiBJIGZvbGxvdyB0aGUgc3RlcHMgZnJvbSBoZXJl
-Ogo+ID4gPiBodHRwczovL3NvbGlkbGludXgud29yZHByZXNzLmNvbS8yMDEyLzEyLzA5L3hmcy1x
-dW90YS1tYW5hZ2FtZW50Lwo+ID4gPgo+ID4gPiBoZXJlIGlzIGRldGFpbCBvZiBteSB0d28gY29u
-ZmlnIGZpbGVzCj4gPiA+Cj4gPiA+IC9ldGMvcHJvamVjdHM6Cj4gPiA+Cj4gPiA+IDExOi9ob21l
-L3hpYW1lbmcueG0veGZzX2Rpci90YXNrMQo+ID4gPiAxMjovaG9tZS94aWFtZW5nLnhtL3hmc19k
-aXIvdGFzazIKPiA+ID4KPiA+ID4gL2V0Yy9wcm9qaWQ6Cj4gPiA+Cj4gPiA+IHRhc2sxOjExCj4g
-PiA+IHRhc2syOjEyCj4gPiA+Cj4gPiA+IGFuZCBoZXJlIGlzIG15IHN0ZXA6Cj4gPiA+Cj4gPiA+
-IHRvdWNoIHRlc3RfeGZzCj4gPiA+IGRkIGlmPS9kZXYvemVybyBvZj10ZXN0X3hmcyBicz0xMDAw
-MDAwIGNvdW50PTEKPiA+ID4gbWtmcy54ZnMgdGVzdF94ZnMKPiA+ID4KPiA+Cj4gPiBUaGF0IGxv
-b2tzIHNtYWxsLCBJIGNhbid0IGV2ZW4gbWtmcyBhIGZpbGUgdGhhdCBzbWFsbC4gSSByYW4gdGhy
-b3VnaAo+ID4gdGhpcyB1c2luZyAnYnM9MU0gY291bnQ9MTAwLicKPiA+Cj4gPiA+IG1rZGlyIHhm
-c19kaXIKPiA+ID4gbW91bnQgdGVzdF94ZnMgLi94ZnNfZGlyIC1vIHBxdW90YSxsb29wCj4gPiA+
-Cj4gPiA+IHhmc19xdW90YSAteGMgJ3Byb2plY3Qg4oCTcyB0YXNrMScgL2hvbWUveGlhbWVuZy54
-bS94ZnNfZGlyCj4gPiA+IHhmc19xdW90YSAteGMgJ3Byb2plY3Qg4oCTcyB0YXNrMicgL2hvbWUv
-eGlhbWVuZy54bS94ZnNfZGlyCj4gPiA+Cj4gPgo+ID4gSSBkb24ndCBzZWUgd2hlcmUgeW91J3Zl
-IGNyZWF0ZWQgdGhlIGRpcmVjdG9yaWVzIHlldC4uPyBJIGdldCB0aGUKPiA+IGZvbGxvd2luZzoK
-PiA+Cj4gPiAjIHhmc19xdW90YSAteGMgJ3Byb2plY3QgLXMgdGFzazEnIC9tbnQvCj4gPiB4ZnNf
-cXVvdGE6IGNhbm5vdCBmaW5kIG1vdW50IHBvaW50IGZvciBwYXRoIGAvbW50L3Rhc2sxJzogTm8g
-c3VjaCBmaWxlIG9yCj4gPiBkaXJlY3RvcnkKPiA+Cj4gPiAuLi4gdW50aWwgSSBjcmVhdGUgdGhl
-IHRhc2sxL3Rhc2syIGRpcmVjdG9yaWVzLiBUaGlzIGlzIHJlcXVpcmVkIGJlY2F1c2UKPiA+IHRo
-ZSBwcm9qZWN0IHF1b3RhIGNvbW1hbmQgaGFzIHRvIHNldCB0aGUgcHJvamVjdCBpZCBvbiB0aGUg
-ZGlyZWN0b3J5Cj4gPiBpbm9kZS4gSXQgd29uJ3Qgd29yayBpZiB0aGUgZGlyZWN0b3J5IGlzIGNy
-ZWF0ZWQgYWZ0ZXIgdGhpcyBwb2ludCwKPiA+IHJlZ2FyZGxlc3Mgb2Ygd2hldGhlciB0aGUgcXVv
-dGEgbGltaXQgaXMgc3BlY2lmaWVkLgo+ID4KPiA+IE9uY2UgSSBjcmVhdGUgdGhvc2UgZGlyZWN0
-b3JpZXMgYW5kIHJ1biB0aGUgcHJvamVjdCBjb21tYW5kLCBldmVyeXRoaW5nCj4gPiBzZWVtcyB0
-byB3b3JrLiBJIGNhbiB3cml0ZSB1cCB0byAyTUIgdG8gdGFzazEgYW5kIDEwTUIgdG8gdGFzazIu
-Cj4gPgo+ID4gQnJpYW4KPiA+Cj4gPiA+IHhmc19xdW90YSAteCAtYyAnbGltaXQgLXAgYmhhcmQ9
-Mm0gdGFzazEnIC9ob21lL3hpYW1lbmcueG0veGZzX2Rpcgo+ID4gPiB4ZnNfcXVvdGEgLXggLWMg
-J2xpbWl0IC1wIGJoYXJkPTEwbSB0YXNrMicgL2hvbWUveGlhbWVuZy54bS94ZnNfZGlyCj4gPiA+
-Cj4gPiA+IGhlcmUgaXMgdGhlIG91dHB1dCBvZiB4ZnNfcXVvdGEgLXggLWMgJ3JlcG9ydCAvaG9t
-ZS94aWFtZW5nLnhtL3hmc19kaXInCj4gPiA+Cj4gPiA+IFByb2plY3QgcXVvdGEgb24gL2hvbWUv
-eGlhbWVuZy54bS94ZnNfZGlyICgvZGV2L2xvb3AxKQo+ID4gPiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgQmxvY2tzCj4gPiA+IFByb2plY3QgSUQgICAgICAgVXNlZCAgICAgICBTb2Z0
-ICAgICAgIEhhcmQgICAgV2Fybi9HcmFjZQo+ID4gPiAtLS0tLS0tLS0tIC0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gPiA+IHRhc2sxICAgICAgICAg
-ICAgICAgMCAgICAgICAgICAwICAgICAgIDIwNDggICAgIDAwIFstLS0tLS0tLV0KPiA+ID4gdGFz
-azIgICAgICAgICAgICAgICAwICAgICAgICAgIDAgICAgICAxMDI0MCAgICAgMDAgWy0tLS0tLS0t
-XQo+ID4gPgo+ID4gPiB0aGUgcXVlc3Rpb24gaXMgbm8gbWF0ZXIgaG93IGxhcmdlIEkgY3JlYXRl
-IGEgZmlsZSBpbiAuL3hmc19kaXIvdGFzazEgb3IKPiA+ID4gLi94ZnNfZGlyL3Rhc2syLCBpdCBz
-dWNjZXNzIQo+ID4gPgo+ID4gPiB0aGUgcXVvdGEgbGltaXQgZG9lc27igJl0IHdvcmshCj4gPiA+
-Cj4gPiA+IEFueSBoZWxwIHdpbGwgYmUgYXBwcmVjaWF0ZWQgOikKPiA+ID4KPiA+ID4KPiA+ID4g
-cHM6IEkgYWxzbyBwb3N0IG15IHF1ZXN0aW9uIGhlcmU6Cj4gPiA+Cj4gPiBodHRwOi8vdW5peC5z
-dGFja2V4Y2hhbmdlLmNvbS9xdWVzdGlvbnMvMjI0NjA2L3hmcy1kaXJlY3RvcnktcXVvdGEtZG9l
-c250LXdvcmsKPiA+ID4KPiA+ID4gLS0tLQo+ID4gPgo+ID4gPiBCZXN0IFJlZ2FyZHMKPiA+ID4g
-U2ltb24gWGlhCj4gPiA+IOKAiwo+ID4KPiA+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KPiA+ID4geGZzIG1haWxpbmcgbGlzdAo+ID4gPiB4ZnNAb3Nz
-LnNnaS5jb20KPiA+ID4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4g
-Pgo+ID4KPiAKPiAKPiAtLSAKPiBCZXN0IFJlZ2FyZHMKPiAKPiBTaW1vbiBYaWEKCj4gX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBs
-aXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
-Zm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+On Mon, Aug 24, 2015 at 11:26:37AM +0200, Jan Kara wrote:
+> On Sat 22-08-15 09:11:54, Dave Chinner wrote:
+> > On Fri, Aug 21, 2015 at 07:55:22PM +0200, Jan Kara wrote:
+> > > Users have occasionally reported that file type for some directory
+> > > entries is wrong. This mostly happened after updating libraries some
+> > > libraries. After some debugging the problem was traced down to
+> > > xfs_dir2_node_replace(). The function uses args->filetype as a file type
+> > > to store in the replaced directory entry however it also calls
+> > > xfs_da3_node_lookup_int() which will store file type of the current
+> > > directory entry in args->filetype. Thus we fail to change file type of a
+> > > directory entry to a proper type.
+> > > 
+> > > Fix the problem by storing new file type in a local variable before
+> > > calling xfs_da3_node_lookup_int().
+> > > 
+> > > Reported-by: Giacomo Comes <comes@naic.edu>
+> > > Signed-off-by: Jan Kara <jack@suse.com>
+> > 
+> > So this is being triggered by a rename() operation on a large
+> > directory? node format is the optimised form form for large dirs, so
+> > I suspect that's why only few people see this. Can you see if you
+> > can write a reproducer for it baseed on a large single directory and
+> > renaming two files of different types (e.g. BLKDEV over REG) to see
+> > if the cause is that simple?
+> 
+> Yes, I've tried and for a large enough directory renaming symlink over a
+> regular file is all that is needed to corrupt the file type in the
+> directory. Should I write a dedicated test for this or is there something
+> that already excercises directory code? I know about fsstress runs but
+> those would be hard to tweak to trigger this I guess.
+
+I don't think there's anything specific that tests ftype after
+rename. It might be worth writing a specific test for it that steps
+through different directory formats and checks that ftype swaps with
+rename corectly as we move through shortform, block, leaf and node
+formats (i.e. as the directory gets larger).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
