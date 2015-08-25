@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 05A6B7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 13:12:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E843730404E
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:11:57 -0700 (PDT)
-Received: from mail-yk0-f178.google.com (mail-yk0-f178.google.com
-	[209.85.160.178]) by cuda.sgi.com with ESMTP id
-	0arlPr9I7NODKek8 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 11:11:55 -0700 (PDT)
-Received: by ykfw73 with SMTP id w73so164390065ykf.3
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:11:55 -0700 (PDT)
-Date: Tue, 25 Aug 2015 14:11:52 -0400
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v2 block/for-linus] writeback: sync_inodes_sb() must write
-	out I_DIRTY_TIME inodes and always call wait_sb_inodes()
-Message-ID: <20150825181152.GA26785@mtj.duckdns.org>
-References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
-	<20150813004435.GN3902@dastard>
-	<20150813224415.GG4496@mtj.duckdns.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 77D3D7F54
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 13:18:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 152C2AC005
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:18:02 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id mWrOmUOLnlHI6ea6 for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 11:18:01 -0700 (PDT)
+Message-ID: <55DCB158.20505@sandeen.net>
+Date: Tue, 25 Aug 2015 13:18:00 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150813224415.GG4496@mtj.duckdns.org>
+Subject: Re: Cant mount xfs lvm. Experimental Features?
+References: <8a6d5afa8829aec73d911f35815d7b92@zbfmail.de>	<20150825115412.GI714@dastard>
+	<5ab00519660fd5ed1b3d347658dba1f2@zbfmail.de>
+In-Reply-To: <5ab00519660fd5ed1b3d347658dba1f2@zbfmail.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,95 +28,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
+To: weber@zbfmail.de, Xfs <xfs@oss.sgi.com>
 
-e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
-updated writeback path to avoid kicking writeback work items if there
-are no inodes to be written out; unfortunately, the avoidance logic
-was too aggressive and broke sync_inodes_sb().
+On 8/25/15 11:51 AM, Marko Weber|8000 wrote:
+> 
+> dave,
+> 
+> Am 2015-08-25 13:54, schrieb Dave Chinner:
+>> On Tue, Aug 25, 2015 at 10:25:16AM +0200, Marko Weber|8000 wrote:
+>>>
+>>> Hello List, Hello Dave...
+>>>
+>>>
+>>> i try to mount on my backup server an Lvm Partition and get errors
+>>> in stdout and log:
+>>>
+>>> /var/log/messages:
+>>>
+>>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): Version 5
+>>> superblock detected. This kernel has EXPERIMENTAL support enabled!
+>>> Aug 25 10:20:31 backupserver kernel: Use of these features in this
+>>> kernel is at your own risk!
+>>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): Superblock has
+>>> unknown read-only compatible features (0x1) enabled.
+>>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): Attempted to mount
+>>> read-only compatible filesystem read-write.
+>>> Aug 25 10:20:31 backupserver kernel: Filesystem can only be safely
+>>> mounted read only.
+>>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): SB validate failed
+>>> with error 22.
+>>
+>> You need to run the same version kernel on both servers. The primary
+>> has a more recent kernel and feature set than your older backup
+>> server is running.
+>>
+>> Cheers,
+>>
+>> Dave.
+> 
+> you was right.
+> There was new kernel built. /usr/src/linux pointed to new kernel source.
+> But machine was not rebooted. So kernel version before kernel built was loaded.
+> I rebooted machine.
+> i renoved logical volume
+> i created logical volume
 
-* sync_inodes_sb() must write out I_DIRTY_TIME inodes but I_DIRTY_TIME
-  inodes dont't contribute to bdi/wb_has_dirty_io() tests and were
-  being skipped over.
+Hope it landed back in the same place!
 
-* inodes are taken off wb->b_dirty/io/more_io lists after writeback
-  starts on them.  sync_inodes_sb() skipping wait_sb_inodes() when
-  bdi_has_dirty_io() breaks it by making it return while writebacks
-  are in-flight.
+> i tried to mount it and get:
+> 
+> Aug 25 18:43:15 backupserver kernel: md4: unknown partition table
+> Aug 25 18:43:15 backupserver syslog-ng[1417]: Internal error, alarm_set() called while an alarm is still active;
+> Aug 25 18:43:56 backupserver kernel: md4: unknown partition table
+> Aug 25 18:44:01 backupserver kernel: XFS (dm-2): Invalid superblock magic number
+> 
+> pvdisplay shows:
+> 
+> # pvdisplay
+>   --- Physical volume ---
+>   PV Name               /dev/md4
+>   VG Name               VolGroup01
+>   PV Size               2.69 TiB / not usable 1.25 MiB
+> 
+> 
+> so what is XFS missing?
 
-This patch fixes the breakages by
+what does blkid /dev/md4 say?
 
-* Removing bdi_has_dirty_io() shortcut from bdi_split_work_to_wbs().
-  The callers are already testing the condition.
+It looks like you might have a storage problem, now, and xfs can't even find a proper magic number on that device.
 
-* Removing bdi_has_dirty_io() shortcut from sync_inodes_sb() so that
-  it always calls into bdi_split_work_to_wbs() and wait_sb_inodes().
+-Eric
 
-* Making bdi_split_work_to_wbs() consider the b_dirty_time list for
-  WB_SYNC_ALL writebacks.
-
-Kudos to Eryu, Dave and Jan for tracking down the issue.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Fixes: e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
-Link: http://lkml.kernel.org/g/20150812101204.GE17933@dhcp-13-216.nay.redhat.com
-Reported-and-bisected-by: Eryu Guan <eguan@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.com>
-Cc: Ted Ts'o <tytso@google.com>
----
- fs/fs-writeback.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -844,14 +844,15 @@ static void bdi_split_work_to_wbs(struct
- 	struct wb_iter iter;
- 
- 	might_sleep();
--
--	if (!bdi_has_dirty_io(bdi))
--		return;
- restart:
- 	rcu_read_lock();
- 	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
--		if (!wb_has_dirty_io(wb) ||
--		    (skip_if_busy && writeback_in_progress(wb)))
-+		/* SYNC_ALL writes out I_DIRTY_TIME too */
-+		if (!wb_has_dirty_io(wb) &&
-+		    (base_work->sync_mode == WB_SYNC_NONE ||
-+		     list_empty(&wb->b_dirty_time)))
-+			continue;
-+		if (skip_if_busy && writeback_in_progress(wb))
- 			continue;
- 
- 		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
-@@ -899,8 +900,7 @@ static void bdi_split_work_to_wbs(struct
- {
- 	might_sleep();
- 
--	if (bdi_has_dirty_io(bdi) &&
--	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
-+	if (!skip_if_busy || !writeback_in_progress(&bdi->wb)) {
- 		base_work->auto_free = 0;
- 		base_work->single_wait = 0;
- 		base_work->single_done = 0;
-@@ -2275,8 +2275,12 @@ void sync_inodes_sb(struct super_block *
- 	};
- 	struct backing_dev_info *bdi = sb->s_bdi;
- 
--	/* Nothing to do? */
--	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
-+	/*
-+	 * Can't skip on !bdi_has_dirty() because we should wait for !dirty
-+	 * inodes under writeback and I_DIRTY_TIME inodes ignored by
-+	 * bdi_has_dirty() need to be written out too.
-+	 */
-+	if (bdi == &noop_backing_dev_info)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
 
 _______________________________________________
 xfs mailing list
