@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2434B7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 15:04:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A3565AC005
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 13:04:43 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id HrNg66cVXpE9dVPq for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 13:04:38 -0700 (PDT)
-Message-ID: <55DCCA55.4010901@sandeen.net>
-Date: Tue, 25 Aug 2015 15:04:37 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 04D007F54
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 15:32:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 830AEAC007
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 13:32:49 -0700 (PDT)
+Received: from mail-lb0-f171.google.com (mail-lb0-f171.google.com
+	[209.85.217.171]) by cuda.sgi.com with ESMTP id
+	HUeOzXtPyIScxs1R (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 13:32:46 -0700 (PDT)
+Received: by lbbpu9 with SMTP id pu9so107588572lbb.3
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 13:32:44 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Cant mount xfs lvm. Experimental Features?
-References: <8a6d5afa8829aec73d911f35815d7b92@zbfmail.de>	<20150825115412.GI714@dastard>	<5ab00519660fd5ed1b3d347658dba1f2@zbfmail.de>	<55DCB158.20505@sandeen.net>
-	<accadc1d9218bdf0935af4bb1f1446f7@zbfmail.de>
-In-Reply-To: <accadc1d9218bdf0935af4bb1f1446f7@zbfmail.de>
+Date: Tue, 25 Aug 2015 13:32:44 -0700
+Message-ID: <CABppvi6GdaTQgqpYJi6RhkpjP9ydTV8-2VV8LF9tHSN63XzWtA@mail.gmail.com>
+Subject: Performance impact of mkfs.xfs vs mkfs.xfs -f
+From: Shrinand Javadekar <shrinand@maginatics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: weber@zbfmail.de, Xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 8/25/15 2:26 PM, Marko Weber|8000 wrote:
+Hi,
 
->>> pvdisplay shows:
->>>
->>> # pvdisplay
->>>   --- Physical volume ---
->>>   PV Name               /dev/md4
->>>   VG Name               VolGroup01
->>>   PV Size               2.69 TiB / not usable 1.25 MiB
->>>
->>>
->>> so what is XFS missing?
->>
->> what does blkid /dev/md4 say?
->>
->> It looks like you might have a storage problem, now, and xfs can't
->> even find a proper magic number on that device.
-> 
-> smartcl says all is ok.
-> AND the othetr two lvm partitions get mounted well....
-> 
-> blkid output:
-> 
-> ~ # blkid /dev/md4
-> /dev/md4: UUID="7LYlkp-33ro-qyal-yGkZ-pMwC-Ei1L-Viy4UJ" TYPE="LVM2_member"
+I have 23 disks formatted with XFS on a single server. The workload is
+Openstack Swift. See this email from a few months ago about the
+details:
 
-Sorry, I shouldn't have asked for /dev/md4; that's your physical volume,
-not a logical volume.  I meant to ask for blkid of whatever dm-2 is.
+http://oss.sgi.com/archives/xfs/2015-06/msg00108.html
 
-Anyway, from:
+I am observing some strange behavior and would like to get some
+feedback about why this is happening.
 
-> Aug 25 18:44:01 backupserver kernel: XFS (dm-2): Invalid superblock magic number
+I formatted the disks with xfs (mkfs.xfs) and deployed Openstack Swift
+on it. Writing 100GB of data into Swift in batches of 20GB each gave
+us the following throughput:
 
-it seems that the dm-2 device doesn't actually contain an xfs filesystem,
-so this looks like a storage config problem, not an xfs problem.
+ 20 GB: 93MB/s
+ 40 GB: 65MB/s
+ 60 GB: 52MB/s
+ 80 GB: 50MB/s
+100 GB: 48MB/s
 
--Eric
+I then re-formatted the disks with mkfs.xfs -f and ran the experiment
+again. This time I got the following throughput:
 
--Eric
+ 20 GB: 118MB/s
+ 40 GB: 95MB/s
+ 60 GB: 74MB/s
+ 80 GB: 68MB/s
+100 GB: 63MB/s
+
+I've seen similar results twice.
+
+Any ideas why this might be happening?
+
+Thanks in advance.
+-Shri
 
 _______________________________________________
 xfs mailing list
