@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C9317F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:56:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 39C15AC008
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 09:56:07 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id v6nrhinPvBv6kg8j for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 09:55:58 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 638ED63C77A5
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:55:57 -0500 (CDT)
-Message-ID: <55DC9E1C.8090009@sandeen.net>
-Date: Tue, 25 Aug 2015 11:55:56 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 05A6B7F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 13:12:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E843730404E
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:11:57 -0700 (PDT)
+Received: from mail-yk0-f178.google.com (mail-yk0-f178.google.com
+	[209.85.160.178]) by cuda.sgi.com with ESMTP id
+	0arlPr9I7NODKek8 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 11:11:55 -0700 (PDT)
+Received: by ykfw73 with SMTP id w73so164390065ykf.3
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:11:55 -0700 (PDT)
+Date: Tue, 25 Aug 2015 14:11:52 -0400
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH v2 block/for-linus] writeback: sync_inodes_sb() must write
+	out I_DIRTY_TIME inodes and always call wait_sb_inodes()
+Message-ID: <20150825181152.GA26785@mtj.duckdns.org>
+References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
+	<20150813004435.GN3902@dastard>
+	<20150813224415.GG4496@mtj.duckdns.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: set args.geo in dir2_kill_block
-References: <55B14B40.5030209@sandeen.net>
-In-Reply-To: <55B14B40.5030209@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20150813224415.GG4496@mtj.duckdns.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,48 +35,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.com>
+Cc: Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
 
-Dave, ping on this?
+e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
+updated writeback path to avoid kicking writeback work items if there
+are no inodes to be written out; unfortunately, the avoidance logic
+was too aggressive and broke sync_inodes_sb().
 
-Thanks,
--Eric
+* sync_inodes_sb() must write out I_DIRTY_TIME inodes but I_DIRTY_TIME
+  inodes dont't contribute to bdi/wb_has_dirty_io() tests and were
+  being skipped over.
 
-On 7/23/15 3:14 PM, Eric Sandeen wrote:
-> This path in xfs_repair:
-> 
-> dir2_kill_block
-> 	libxfs_da_shrink_inode
-> 		xfs_dir2_shrink_inode
-> 			xfs_dir2_db_to_da
-> 
-> segfaults, because dir2_kill_block() does not initialize
-> args.geo, and a null geometry winds up in xfs_dir2_db_to_da(),
-> which dereferences it.
-> 
-> Fix that.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index de445c6..0c952ed 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1438,6 +1438,7 @@ dir2_kill_block(
->  	args.firstblock = &firstblock;
->  	args.flist = &flist;
->  	args.whichfork = XFS_DATA_FORK;
-> +	args.geo = mp->m_dir_geo;
->  	if (da_bno >= mp->m_dir_geo->leafblk && da_bno < mp->m_dir_geo->freeblk)
->  		error = -libxfs_da_shrink_inode(&args, da_bno, bp);
->  	else
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+* inodes are taken off wb->b_dirty/io/more_io lists after writeback
+  starts on them.  sync_inodes_sb() skipping wait_sb_inodes() when
+  bdi_has_dirty_io() breaks it by making it return while writebacks
+  are in-flight.
+
+This patch fixes the breakages by
+
+* Removing bdi_has_dirty_io() shortcut from bdi_split_work_to_wbs().
+  The callers are already testing the condition.
+
+* Removing bdi_has_dirty_io() shortcut from sync_inodes_sb() so that
+  it always calls into bdi_split_work_to_wbs() and wait_sb_inodes().
+
+* Making bdi_split_work_to_wbs() consider the b_dirty_time list for
+  WB_SYNC_ALL writebacks.
+
+Kudos to Eryu, Dave and Jan for tracking down the issue.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Fixes: e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
+Link: http://lkml.kernel.org/g/20150812101204.GE17933@dhcp-13-216.nay.redhat.com
+Reported-and-bisected-by: Eryu Guan <eguan@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.com>
+Cc: Ted Ts'o <tytso@google.com>
+---
+ fs/fs-writeback.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -844,14 +844,15 @@ static void bdi_split_work_to_wbs(struct
+ 	struct wb_iter iter;
+ 
+ 	might_sleep();
+-
+-	if (!bdi_has_dirty_io(bdi))
+-		return;
+ restart:
+ 	rcu_read_lock();
+ 	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
+-		if (!wb_has_dirty_io(wb) ||
+-		    (skip_if_busy && writeback_in_progress(wb)))
++		/* SYNC_ALL writes out I_DIRTY_TIME too */
++		if (!wb_has_dirty_io(wb) &&
++		    (base_work->sync_mode == WB_SYNC_NONE ||
++		     list_empty(&wb->b_dirty_time)))
++			continue;
++		if (skip_if_busy && writeback_in_progress(wb))
+ 			continue;
+ 
+ 		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
+@@ -899,8 +900,7 @@ static void bdi_split_work_to_wbs(struct
+ {
+ 	might_sleep();
+ 
+-	if (bdi_has_dirty_io(bdi) &&
+-	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
++	if (!skip_if_busy || !writeback_in_progress(&bdi->wb)) {
+ 		base_work->auto_free = 0;
+ 		base_work->single_wait = 0;
+ 		base_work->single_done = 0;
+@@ -2275,8 +2275,12 @@ void sync_inodes_sb(struct super_block *
+ 	};
+ 	struct backing_dev_info *bdi = sb->s_bdi;
+ 
+-	/* Nothing to do? */
+-	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
++	/*
++	 * Can't skip on !bdi_has_dirty() because we should wait for !dirty
++	 * inodes under writeback and I_DIRTY_TIME inodes ignored by
++	 * bdi_has_dirty() need to be written out too.
++	 */
++	if (bdi == &noop_backing_dev_info)
+ 		return;
+ 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+ 
 
 _______________________________________________
 xfs mailing list
