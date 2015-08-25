@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A3AAD7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 18:09:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D2BDAC007
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 16:09:36 -0700 (PDT)
-Received: from mail-lb0-f169.google.com (mail-lb0-f169.google.com
-	[209.85.217.169]) by cuda.sgi.com with ESMTP id
-	BrMgFfuGD5um7hlB (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 16:09:35 -0700 (PDT)
-Received: by lbbpu9 with SMTP id pu9so109622067lbb.3
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 16:09:33 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9AA967F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 18:10:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 86303304043
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 16:10:44 -0700 (PDT)
+Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
+	with ESMTP id a4zHugbxZR48Ofkx (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 16:10:42 -0700 (PDT)
+Received: from mail.zbfmail.de (localhost [127.0.0.1])
+	by mail.zbfmail.de (Postfix) with ESMTP id 5D79211C6FC
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 01:10:41 +0200 (CEST)
 MIME-Version: 1.0
-In-Reply-To: <55DCE1CF.5030708@sandeen.net>
-References: <CABppvi6GdaTQgqpYJi6RhkpjP9ydTV8-2VV8LF9tHSN63XzWtA@mail.gmail.com>
-	<55DCE1CF.5030708@sandeen.net>
-Date: Tue, 25 Aug 2015 16:09:33 -0700
-Message-ID: <CABppvi6W5_1GBrb8x1wOAq3X6yraTtt1UYEFE+dBzcXj3yTzrg@mail.gmail.com>
-Subject: Re: Performance impact of mkfs.xfs vs mkfs.xfs -f
-From: Shrinand Javadekar <shrinand@maginatics.com>
+Date: Wed, 26 Aug 2015 01:10:41 +0200
+From: Marko Weber|8000 <weber@zbfmail.de>
+Subject: Re: Cant mount xfs lvm. Experimental Features?
+In-Reply-To: <20150825230353.GK714@dastard>
+References: <8a6d5afa8829aec73d911f35815d7b92@zbfmail.de>
+	<20150825115412.GI714@dastard>
+	<5ab00519660fd5ed1b3d347658dba1f2@zbfmail.de>
+	<55DCB158.20505@sandeen.net>
+	<fe88fd1604660f15cea80477b3855e77@zbfmail.de>
+	<20150825230353.GK714@dastard>
+Message-ID: <e4d6436ce2242107ab96dd3be2669046@zbfmail.de>
+Reply-To: weber@zbfmail.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,104 +33,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Xfs <xfs@oss.sgi.com>
 
-Thanks for the reply Eric. Please see my responses inline:
 
-On Tue, Aug 25, 2015 at 2:44 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 8/25/15 3:32 PM, Shrinand Javadekar wrote:
->> Hi,
->>
->> I have 23 disks formatted with XFS on a single server. The workload is
->> Openstack Swift. See this email from a few months ago about the
->> details:
->>
->> http://oss.sgi.com/archives/xfs/2015-06/msg00108.html
->>
->> I am observing some strange behavior and would like to get some
->> feedback about why this is happening.
->>
->> I formatted the disks with xfs (mkfs.xfs) and deployed Openstack Swift
->> on it. Writing 100GB of data into Swift in batches of 20GB each gave
->> us the following throughput:
->>
->>  20 GB: 93MB/s
->>  40 GB: 65MB/s
->>  60 GB: 52MB/s
->>  80 GB: 50MB/s
->> 100 GB: 48MB/s
->>
->> I then re-formatted the disks with mkfs.xfs -f and ran the experiment
->> again. This time I got the following throughput:
->>
->>  20 GB: 118MB/s
->>  40 GB: 95MB/s
->>  60 GB: 74MB/s
->>  80 GB: 68MB/s
->> 100 GB: 63MB/s
->>
->> I've seen similar results twice.
->
-> How did you do the above twice, out of curiosity?  If it's the same set of disks,
-> the 3rd mkfs would require "-f" to overwrite the old format.
 
-I did this on 2 different setups.
+Am 2015-08-26 01:03, schrieb Dave Chinner:
+> On Wed, Aug 26, 2015 at 12:53:51AM +0200, Marko Weber|8000 wrote:
+> [....]
+>> i rebootet the machine and created a new logical volume.
+>> i formatted the lv with mkfs.xfs
+>> i tried to mount it on the new kernel:
+>> 
+>> Aug 26 00:47:17 backupserver kernel: XFS (dm-2): Version 5
+>> superblock detected. This kernel has EXPERIMENTAL support enabled!
+>> Aug 26 00:47:17 backupserver kernel: Use of these features in this
+>> kernel is at your own risk!
+>> Aug 26 00:47:17 backupserver kernel: XFS (dm-2): Superblock has
+>> unknown read-only compatible features (0x1) enabled.
+>> Aug 26 00:47:17 backupserver kernel: XFS (dm-2): Attempted to mount
+>> read-only compatible filesystem read-write.
+>> Aug 26 00:47:17 backupserver kernel: Filesystem can only be safely
+>> mounted read only.
+>> Aug 26 00:47:17 backupserver kernel: XFS (dm-2): SB validate failed
+>> with error 22.
+>> 
+>> 
+>> this happens with the newly created logical volume.
+>> 
+>> the other 2 lvm partitions with xfs are fine.
+>> 
+>> any idea?
+> 
+> Clearly you have a kernel too old to read the on-disk format that
+> mkfs.xfs has written - as I pointed out originally.
+> 
+> Would you please tell us what the versions of the kernels
+> you are using, as well as the mkfs.xfs version?
 
-Formatted the new disks with mkfs.xfs. Ran the workload.
-Reformatted the disks with mkfs.xfs -f. Ran the workload.
+Kernel vanilla-sources 3.14.51 (longterm support)
+xfs-progs 3.2.4 (gentoo)
+mkfs.xfs 3.2.4
 
->
->> Any ideas why this might be happening?
->
-> With the paucity of information you've provided, nope!
+AND HEY!  Eric, your hint worked:
 
-Apologies. What more information can I provide?
+backupserver ~ # mkfs.xfs -f -m crc=0,finobt=0 /dev/VolGroup01/vmstore
+meta-data=/dev/VolGroup01/vmstore isize=256    agcount=4, 
+agsize=19660800 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=78643200, 
+imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=38400, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+backupserver ~ # mount /dev/VolGroup01/vmstore /var/storage01/
+backupserver ~ # df -h
+Filesystem                      Size  Used Avail Use% Mounted on
+/dev/root                        35G   21G   15G  60% /
+devtmpfs                         10M     0   10M   0% /dev
+tmpfs                           1.6G  464K  1.6G   1% /run
+shm                             7.7G   72K  7.7G   1% /dev/shm
+cgroup_root                      10M     0   10M   0% /sys/fs/cgroup
+/dev/mapper/VolGroup01-backup   500G  396G  105G  80% 
+/var/volgroup01/backup
+/dev/mapper/VolGroup01-dumps    200G   89G  112G  45% /var/dumps
+/dev/mapper/VolGroup01-vmstore  300G   33M  300G   1% /var/storage01
 
->
-> What version of xfsprogs are you using?
 
-# xfs_repair -V
-xfs_repair version 3.1.9
 
-> What was the output of mkfs.xfs each time; did the geometry differ?
+dave, so the latest lts kernel 3.14.51 does not support to mount lvm2 
+partitions formatted with mkfs.xfs 3.2.4?
 
-I have the output of xfs_info /mount/point from the first experiment
-and that of mkfs.xfs -f. One difference I see is that reformatting
-adds projid32bit=0 for the inode section.
 
->
-> -f sets force_overwrite, which only does 3 things:
->
-> 1) overwrite existing filesystem signatures
-> 3) zeros out old xfs structures on disk
-> 2) allow mkfs to proceed on a misaligned device
->
-> I don't see why any of those behaviors would change runtime behavior.
->
-> Maybe you have other variables in your performance testing, and two
-> tests isn't enough to sort out noise?
+marko
 
-We have seen this again on a third setup of one of my colleagues.
 
-What more data can I look at for identifying the differences?
-
->
-> -Eric
->
->> Thanks in advance.
->> -Shri
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>
->
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
