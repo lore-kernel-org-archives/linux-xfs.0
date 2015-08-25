@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E4DA77F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:39:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A07227F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 11:51:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 910B3AC007
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 09:39:31 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id WEpIwuAocEIMllqI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 09:39:31 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id B4CE58E3E8
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 16:39:30 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7PGdT5H030964
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 12:39:30 -0400
-Message-ID: <55DC9A41.8060006@redhat.com>
-Date: Tue, 25 Aug 2015 11:39:29 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4C417AC009
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 09:51:10 -0700 (PDT)
+Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
+	with ESMTP id UvDIE2LzdBu4N0qc (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 09:51:07 -0700 (PDT)
+Received: from mail.zbfmail.de (localhost [127.0.0.1])
+	by mail.zbfmail.de (Postfix) with ESMTP id E3C4A1129A3
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 18:51:05 +0200 (CEST)
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: properly terminate string in quota's restore_file()
+Date: Tue, 25 Aug 2015 18:51:05 +0200
+From: Marko Weber|8000 <weber@zbfmail.de>
+Subject: Re: Cant mount xfs lvm. Experimental Features?
+In-Reply-To: <20150825115412.GI714@dastard>
+References: <8a6d5afa8829aec73d911f35815d7b92@zbfmail.de>
+	<20150825115412.GI714@dastard>
+Message-ID: <5ab00519660fd5ed1b3d347658dba1f2@zbfmail.de>
+Reply-To: weber@zbfmail.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +29,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Xfs <xfs@oss.sgi.com>
 
-This code copies up to the entire size of devbuffer, and then
-tries to use "strlen" to null terminate it.
 
-But strlen works by *finding* the null, so it's at best a
-no-op, and at worst not properly terminating the string.
+dave,
 
-Fix this by placing the null at the last byte of the buffer.
+Am 2015-08-25 13:54, schrieb Dave Chinner:
+> On Tue, Aug 25, 2015 at 10:25:16AM +0200, Marko Weber|8000 wrote:
+>> 
+>> Hello List, Hello Dave...
+>> 
+>> 
+>> i try to mount on my backup server an Lvm Partition and get errors
+>> in stdout and log:
+>> 
+>> /var/log/messages:
+>> 
+>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): Version 5
+>> superblock detected. This kernel has EXPERIMENTAL support enabled!
+>> Aug 25 10:20:31 backupserver kernel: Use of these features in this
+>> kernel is at your own risk!
+>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): Superblock has
+>> unknown read-only compatible features (0x1) enabled.
+>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): Attempted to mount
+>> read-only compatible filesystem read-write.
+>> Aug 25 10:20:31 backupserver kernel: Filesystem can only be safely
+>> mounted read only.
+>> Aug 25 10:20:31 backupserver kernel: XFS (dm-2): SB validate failed
+>> with error 22.
+> 
+> You need to run the same version kernel on both servers. The primary
+> has a more recent kernel and feature set than your older backup
+> server is running.
+> 
+> Cheers,
+> 
+> Dave.
 
-Addresses-Coverity-Id: 1297519
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+you was right.
+There was new kernel built. /usr/src/linux pointed to new kernel source.
+But machine was not rebooted. So kernel version before kernel built was 
+loaded.
+I rebooted machine.
+i renoved logical volume
+i created logical volume
+i tried to mount it and get:
 
-diff --git a/quota/edit.c b/quota/edit.c
-index d226e89..a53a7e6 100644
---- a/quota/edit.c
-+++ b/quota/edit.c
-@@ -385,7 +385,7 @@ restore_file(
- 	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
- 		if (strncmp("fs = ", buffer, 5) == 0) {
- 			dev = strncpy(devbuffer, buffer+5, sizeof(devbuffer));
--			dev[strlen(dev) - 1] = '\0';
-+			dev[sizeof(devbuffer) - 1] = '\0';
- 			continue;
- 		}
- 		rtbsoft = rtbhard = 0;
+Aug 25 18:43:15 backupserver kernel: md4: unknown partition table
+Aug 25 18:43:15 backupserver syslog-ng[1417]: Internal error, 
+alarm_set() called while an alarm is still active;
+Aug 25 18:43:56 backupserver kernel: md4: unknown partition table
+Aug 25 18:44:01 backupserver kernel: XFS (dm-2): Invalid superblock 
+magic number
+
+pvdisplay shows:
+
+# pvdisplay
+   --- Physical volume ---
+   PV Name               /dev/md4
+   VG Name               VolGroup01
+   PV Size               2.69 TiB / not usable 1.25 MiB
+
+
+so what is XFS missing?
 
 _______________________________________________
 xfs mailing list
