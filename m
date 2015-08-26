@@ -1,21 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 992FB29E0B
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 07:02:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1FBD7AC001
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 05:02:57 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NHvMxC3Repk7GVm6 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 05:02:56 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 11/11] xfsprogs: add dummy mremap for OS X
-Date: Wed, 26 Aug 2015 14:02:35 +0200
-Message-Id: <1440590555-20463-11-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1440590555-20463-1-git-send-email-jtulak@redhat.com>
-References: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
-	<1440590555-20463-1-git-send-email-jtulak@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8C9157F37
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 09:33:54 -0500 (CDT)
+Message-Id: <20150924193241.975348815@gulag1.americas.sgi.com>
+From: rjohnston@sgi.com
+Subject: [PATCH] xfsdump: prevent segfault in cb_add_inogrp
+Content-Disposition: inline; filename=prevent-segfault-in-cb_add_inogrp.patch
+Date: Wed, 26 Aug 2015 09:33:50 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +21,57 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+The call to memset will segfault because the offset for the first
+parameter is done twice. We are using pointer math to do the
+calculation.
+The first time is when calculating oldsize, the size of i2gseg_t
+is accounted for.
+	oldsize = (numsegs - SEGPERHNK) * sizeof(i2gseg_t);
+Then in the call to memset, oldsize is again multiplied by the size
+of i2gmap_t.
+	memset(inomap.i2gmap + oldsize, ...)
+	
+i2gmap holds the used inodes in each chunk. When there are 2^31 chunk
+entries, it could describe 2^31 (1 inode/chunk)- 2^40 (64 inodes/chunk).
+
+With 100s of millions of inodes there are enough entries to wrap the
+32 bit variable oldsize.
+
+Switching to use array index notation instead of calculating the
+pointer address twice ;) would resolve this issue. The unneeded
+local variable oldsize can be removed as well.
+
 ---
- include/darwin.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ dump/inomap.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/include/darwin.h b/include/darwin.h
-index d47c96c..2e16f65 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -33,6 +33,7 @@
- #include <mach/mach_time.h>
- #include <inttypes.h>
- #include <stdio.h>
-+#include <sys/mman.h>
+Index: b/dump/inomap.c
+===================================================================
+--- a/dump/inomap.c
++++ b/dump/inomap.c
+@@ -1125,8 +1125,7 @@ cb_add_inogrp( void *arg1, intgen_t fsfd
+ 		lastsegp->segoff = 0;
  
- #include <machine/endian.h>
- #define __BYTE_ORDER	BYTE_ORDER
-@@ -217,6 +218,14 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
- 	return getitimer(ITIMER_REAL, value);
- }
+ 		if (lastsegp->hnkoff == inomap.hnkmaplen) {
+-			intgen_t numsegs;
+-			intgen_t oldsize;
++			int64_t numsegs;
  
-+#define MREMAP_FIXED 1
-+#define MREMAP_MAYMOVE 2
-+static inline void *mremap(void *old_address, size_t old_size,
-+                    size_t new_size, int flags, ...)
-+{
-+	return MAP_FAILED;
-+}
-+
- /* FSR */
+ 			inomap.hnkmaplen++;
+ 			inomap.hnkmap = (hnk_t *)
+@@ -1140,10 +1139,7 @@ cb_add_inogrp( void *arg1, intgen_t fsfd
+ 				return -1;
  
- //#define statvfs64 statfs
--- 
-2.4.5
+ 			/* zero the new portion of the i2gmap */
+-			oldsize = (numsegs - SEGPERHNK) * sizeof(i2gseg_t);
+-
+-			memset(inomap.i2gmap + oldsize,
+-			       0,
++			memset(&inomap.i2gmap[numsegs - SEGPERHNK], 0,
+ 			       SEGPERHNK * sizeof(i2gseg_t));
+ 		}
+ 
 
 _______________________________________________
 xfs mailing list
