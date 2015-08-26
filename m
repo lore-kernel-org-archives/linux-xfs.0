@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D7AD77F47
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 23:28:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6042304032
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 21:28:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ax6WKDfHzaVWmRII for <xfs@oss.sgi.com>;
-	Mon, 31 Aug 2015 21:28:38 -0700 (PDT)
-Subject: Re: Ask help on an issue 'XFS (sd*): discard failed for extent, error
-	5'
-References: <55E52198.7070607@unitedstack.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <55E52975.8020005@sandeen.net>
-Date: Mon, 31 Aug 2015 23:28:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <55E52198.7070607@unitedstack.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A57B97F37
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 07:00:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 91AB78F8040
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 05:00:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1A6odVsVFz5B4N6M (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 05:00:58 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 00/11 v4] xfsprogs: Partial OSX support
+Date: Wed, 26 Aug 2015 14:00:49 +0200
+Message-Id: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +21,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jevon Qiao <qiaojianfeng@unitedstack.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-On 8/31/15 10:55 PM, Jevon Qiao wrote:
-> Hi All,
-> 
-> Currently, I notice that there are lot's of errors written in the /var/log/messages file.
-> 
->     2015-08-29T23:58:54.477236+00:00 server-68 kernel: sd 0:0:4:0: [sdc]
->     2015-08-29T23:58:54.477255+00:00 server-68 kernel: Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
->     2015-08-29T23:58:54.477256+00:00 server-68 kernel: sd 0:0:4:0: [sdc]
->     2015-08-29T23:58:54.477257+00:00 server-68 kernel: Sense Key : Illegal Request [current]
->     2015-08-29T23:58:54.477258+00:00 server-68 kernel: sd 0:0:4:0: [sdc]
->     2015-08-29T23:58:54.477259+00:00 server-68 kernel: Add. Sense: Invalid field in parameter list
->     2015-08-29T23:58:54.477260+00:00 server-68 kernel: sd 0:0:4:0: [sdc] CDB:
->     2015-08-29T23:58:54.477261+00:00 server-68 kernel: Unmap/Read sub-channel: 42 00 00 00 00 00 00 00 18 00
->     2015-08-29T23:58:54.477263+00:00 server-68 kernel: end_request: critical target error, dev sdc, sector 325046824
->     2015-08-29T23:58:54.477268+00:00 server-68 kernel: XFS (sdc2): discard failed for extent [0x64815,2021], error 5
-> 
-> Has anyone encountered the same issue before? How can you solve it?
+Fourth iteration. Most of the patches in this set are from splitting
+one patch in the previous iteration.
 
-Looks like xfs is simply reacting to errors from the storage; I'd try to get
-to the bottom of why you're getting all those scsi errors.
+Specifically, only patch 1 is from the previous set as it wasn't
+in a good shape yet. Patch 3 is a delta for an older version which was
+merged accidentaly instead of the newest one.
 
-But probably not on the xfs list.  :)
+All the other patches in this set originate from
+[PATCH 05/11] xfsprogs: missing and dummy calls for OS X support.
 
--Eric
+FSR is still compiled, even if it requires empty functions. There is
+no drawback from this for other platforms. Some of the calls can be made
+working. However, for example the mntent calls are not usefull anywhere
+else, and as fsr can't work without a mounted system, there is no way
+how to use and test the alternative implementation.
 
-> Thanks,
-> Jevon
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+If in futre xfs can be mounted on OS X, then at least the empty functions
+are clear as "TODO". If there is an untested code, they will most likely
+need to be debugged and possibly even rewritten to respect future changes
+in OS X. So in short, I see implementing them as a waste of time.
+
+Stopping the FSR build is, with the current target audience of this port
+between developers, unnecessary.
+
+Cheers,
+Jan
+
+CHANGELOG:
+
+v4:
+- added #warning message (patch 1) 
+- use dummy blkid_get_topology instead of #ifdefs (patch 1)
+- fix autoconf (wasn't passing -DENABLE_BLKID flag, lost during
+  patch cleaning.) (patch 1)
+- remove dependency on linux XATTR_ constants (patch 2)
+- add autoconf detection for fsetxattr (patch 4)
+- use uuid_t instead of unsigned char (patch 5)
+- add a basic timer functionality (patch 8)
+- mremap replacement now returns MAP_FAILED (patch 11)
+
+
+
+Version 3:
+- better commit messages (patch 1)
+- formatting fixes (patch 2, 8)
+- autoconf updates (patch 6, 7)
+- changed default behaviour if BLKID is disabled such that mkfs -f
+  is required (patch 11)
+
+Jan Tulak (11):
+  xfsprogs: Add a way to compile without blkid
+  xfsprogs: avoid dependency on linux XATTR_SIZE/LIST_MAX
+  xfsprogs: Add includes required for OS X builds (delta)
+  xfsprogs: Add autoconf check for fsetxattr call
+  xfsprogs: uuid changes for OS X
+  xfsprogs: Remove conflicting define for OS X
+  xfsprogs: add nftw64 translation for OS X
+  xfsprogs: Add a timer implementation for OS X
+  xfsprogs: Add statvfs64 for osx
+  xfsprogs: add dummy mntent for OS X
+  xfsprogs: add dummy mremap for OS X
+
+ configure.ac             |  11 +++-
+ fsr/xfs_fsr.c            |   8 +++
+ include/builddefs.in     |  11 +++-
+ include/darwin.h         | 157 ++++++++++++++++++++++++++++++++++++++++++-----
+ libhandle/handle.c       |   6 +-
+ libhandle/jdm.c          |   6 +-
+ libxfs/xfs_attr_remote.c |   2 +-
+ libxfs/xfs_format.h      |  11 +++-
+ m4/package_libcdev.m4    |  13 ++++
+ mkfs/xfs_mkfs.c          |  37 ++++++++++-
+ repair/progress.c        |  16 ++++-
+ 11 files changed, 251 insertions(+), 27 deletions(-)
+
+-- 
+2.4.5
 
 _______________________________________________
 xfs mailing list
