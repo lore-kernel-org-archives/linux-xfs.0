@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4DBF37F58
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:32:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CFEFBAC009
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:32:36 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Fk6dCBFRoDG2v1u9 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 18BAC7F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:32:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB772AC007
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:32:42 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id nY9Uwrfi0D72Hjw3 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 17:32:35 -0700 (PDT)
-Subject: [PATCH 02/11] libxfs: verifier should set buffer error when da
-	block has a bad magic number
+	Tue, 25 Aug 2015 17:32:41 -0700 (PDT)
+Subject: [PATCH 03/11] libxfs: fix XFS_WANT_CORRUPTED_* macros to return
+	negative error codes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Aug 2015 17:32:33 -0700
-Message-ID: <20150826003233.23973.47226.stgit@birch.djwong.org>
+Date: Tue, 25 Aug 2015 17:32:39 -0700
+Message-ID: <20150826003239.23973.614.stgit@birch.djwong.org>
 In-Reply-To: <20150826003220.23973.59731.stgit@birch.djwong.org>
 References: <20150826003220.23973.59731.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,30 +32,42 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-If xfs_da3_node_read_verify() doesn't recognize the magic number of a
-buffer it's just read, set the buffer error to -EFSCORRUPTED so that
-the error can be sent up to userspace.  Without this patch we'll
-notice the bad magic eventually while trying to traverse or change
-the block, but we really ought to fail early in the verifier.
+Since the rest of libxfs returns negative error codes, these two sanity
+checking macros ought to have the same applied.  While we're at it,
+fix a couple more sign errors in the same file.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_da_btree.c |    1 +
- 1 file changed, 1 insertion(+)
+ libxfs/libxfs_priv.h |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index c874164..289dc1e 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -229,6 +229,7 @@ xfs_da3_node_read_verify(
- 			bp->b_ops->verify_read(bp);
- 			return;
- 		default:
-+			xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 			break;
- 	}
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 2a8b850..22f2d53 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -148,9 +148,9 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+ #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
+ #define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)	\
+-		{ (mp) = (mp); if (!(expr)) { error = EFSCORRUPTED; goto l; } }
++		{ (mp) = (mp); if (!(expr)) { error = -EFSCORRUPTED; goto l; } }
+ #define XFS_WANT_CORRUPTED_RETURN(mp, expr)	\
+-		{ (mp) = (mp); if (!(expr)) { return EFSCORRUPTED; } }
++		{ (mp) = (mp); if (!(expr)) { return -EFSCORRUPTED; } }
  
+ #ifdef __GNUC__
+ #define __return_address	__builtin_return_address(0)
+@@ -417,8 +417,7 @@ do { \
+ })
+ 
+ #define xfs_rotorstep				1
+-#define xfs_bmap_rtalloc(a)			(ENOSYS)
+-#define xfs_rtpick_extent(mp,tp,len,p)		(ENOSYS)
++#define xfs_bmap_rtalloc(a)			(-ENOSYS)
+ #define xfs_get_extsz_hint(ip)			(0)
+ #define xfs_inode_is_filestream(ip)		(0)
+ #define xfs_filestream_lookup_ag(ip)		(0)
 
 _______________________________________________
 xfs mailing list
