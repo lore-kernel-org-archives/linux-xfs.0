@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7310A7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:32:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 62253304043
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:32:49 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6638A29E07
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:32:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 470F58F804B
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:32:56 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id HrxG1hiNAGnDmqnm (version=TLSv1
+	cuda.sgi.com with ESMTP id FmuXx1Zt6tBmxw8N (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 17:32:48 -0700 (PDT)
-Subject: [PATCH 04/11] libxfs: clear buffer state flags in libxfs_getbuf and
-	variants
+	Tue, 25 Aug 2015 17:32:55 -0700 (PDT)
+Subject: [PATCH 05/11] xfs_repair: ignore "repaired" flag after we decide to
+	clear xattr block
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Aug 2015 17:32:46 -0700
-Message-ID: <20150826003246.23973.12895.stgit@birch.djwong.org>
+Date: Tue, 25 Aug 2015 17:32:52 -0700
+Message-ID: <20150826003252.23973.60802.stgit@birch.djwong.org>
 In-Reply-To: <20150826003220.23973.59731.stgit@birch.djwong.org>
 References: <20150826003220.23973.59731.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,109 +32,72 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-When we're running xfs_repair with prefetch enabled, it's possible
-that repair will decide to clear an inode without examining all
-metadata blocks owned by that inode.  This leaves the unreferenced
-prefetched buffers marked UNCHECKED, which will cause a subsequent CRC
-error if the block is reallocated to a different structure and read
-more than once.  Typically this happens when a large directory is
-corrupted and lost+found has to grow to accomodate all the
-disconnected inodes.
+If in the course of examining extended attribute block contents we
+first decide to repair an entry (*repair = 1) but secondly decide to
+clear the whole block, set *repair = 0 because the clearing action
+only happens if *repair == 0.  Put another way, if we're nuking a
+block, don't pretend like we've fixed it too.
 
-In libxfs_getbuf*(), we're supposed to return an unused buffer which
-has a clean state.  Unfortunately, things like UNCHECKED can hang
-around to cause incorrect verifier errors later, so change those
-functions to launder the state bits clean.
+v2: fix all the paths to clear the attr block if the processing
+functions error out.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/rdwr.c |   47 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 41 insertions(+), 6 deletions(-)
+ repair/attr_repair.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 4f8212f..d28cea8 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -631,15 +631,39 @@ libxfs_getbuf_flags(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len,
- 	return __cache_lookup(&key, flags);
- }
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 83a07a8..c2b7c3a 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -1311,6 +1311,13 @@ process_leaf_attr_block(
+ 		* we can add it then.
+ 		*/
+ 	}
++	/*
++	 * If we're just going to zap the block, don't pretend like we
++	 * repaired it, because repairing the block stops the clear
++	 * operation.
++	 */
++	if (clearit)
++		*repair = 0;
+ 	if (*repair)
+ 		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, leaf, &leafhdr);
  
-+/*
-+ * Clean the buffer flags for libxfs_getbuf*(), which wants to return
-+ * an unused buffer with clean state.  This prevents CRC errors on a
-+ * re-read of a corrupt block that was prefetched and freed.  This
-+ * can happen with a massively corrupt directory that is discarded,
-+ * but whose blocks are then recycled into expanding lost+found.
-+ *
-+ * Note however that if the buffer's dirty (prefetch calls getbuf)
-+ * we'll leave the state alone because we don't want to discard blocks
-+ * that have been fixed.
-+ */
-+static void
-+try_clean_buf(
-+	struct xfs_buf	*bp)
-+{
-+	if (bp && !(bp->b_flags & LIBXFS_B_DIRTY))
-+		bp->b_flags &= ~(LIBXFS_B_UNCHECKED | LIBXFS_B_STALE |
-+				LIBXFS_B_UPTODATE);
-+}
-+
- struct xfs_buf *
- libxfs_getbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len)
- {
--	return libxfs_getbuf_flags(btp, blkno, len, 0);
-+	struct xfs_buf	*bp;
-+
-+	bp = libxfs_getbuf_flags(btp, blkno, len, 0);
-+	try_clean_buf(bp);
-+	return bp;
- }
+@@ -1524,6 +1531,7 @@ process_longform_attr(
+ 	xfs_dahash_t	next_hashval;
+ 	int		repairlinks = 0;
+ 	struct xfs_attr3_icleaf_hdr leafhdr;
++	int		error;
  
--struct xfs_buf *
--libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
--		  int nmaps, int flags)
-+static struct xfs_buf *
-+__libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
-+		    int nmaps, int flags)
- {
- 	struct xfs_bufkey key = {0};
- 	int i;
-@@ -659,6 +683,17 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
- 	return __cache_lookup(&key, flags);
- }
+ 	*repair = 0;
  
-+struct xfs_buf *
-+libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
-+		  int nmaps, int flags)
-+{
-+	struct xfs_buf	*bp;
-+
-+	bp = __libxfs_getbuf_map(btp, map, nmaps, flags);
-+	try_clean_buf(bp);
-+	return bp;
-+}
-+
- void
- libxfs_putbuf(xfs_buf_t *bp)
- {
-@@ -779,7 +814,7 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
- 	xfs_buf_t	*bp;
- 	int		error;
- 
--	bp = libxfs_getbuf(btp, blkno, len);
-+	bp = libxfs_getbuf_flags(btp, blkno, len, 0);
- 	if (!bp)
- 		return NULL;
- 
-@@ -860,7 +895,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
- 		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
- 					flags, ops);
- 
--	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
-+	bp = __libxfs_getbuf_map(btp, map, nmaps, 0);
- 	if (!bp)
- 		return NULL;
+@@ -1589,6 +1597,7 @@ process_longform_attr(
+ 	case XFS_ATTR3_LEAF_MAGIC:
+ 		if (process_leaf_attr_block(mp, leaf, 0, ino, blkmap,
+ 				0, &next_hashval, repair)) {
++			*repair = 0;
+ 			/* the block is bad.  lose the attribute fork. */
+ 			libxfs_putbuf(bp);
+ 			return(1);
+@@ -1604,12 +1613,16 @@ process_longform_attr(
+ 			libxfs_writebuf(bp, 0);
+ 		} else
+ 			libxfs_putbuf(bp);
+-		return (process_node_attr(mp, ino, dip, blkmap)); /* + repair */
++		error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
++		if (error)
++			*repair = 0;
++		return error;
+ 	default:
+ 		do_warn(
+ 	_("bad attribute leaf magic # %#x for dir ino %" PRIu64 "\n"),
+ 			be16_to_cpu(leaf->hdr.info.magic), ino);
+ 		libxfs_putbuf(bp);
++		*repair = 0;
+ 		return(1);
+ 	}
  
 
 _______________________________________________
