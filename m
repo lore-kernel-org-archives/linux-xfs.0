@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 83A7E29E01
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 07:02:56 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 992FB29E0B
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 07:02:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 707118F8049
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 05:02:53 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1FBD7AC001
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 05:02:57 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PLYAkhH7DX7vno4Z (version=TLSv1
+	cuda.sgi.com with ESMTP id NHvMxC3Repk7GVm6 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 05:02:52 -0700 (PDT)
+	Wed, 26 Aug 2015 05:02:56 -0700 (PDT)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 08/11] xfsprogs: Add a timer implementation for OS X
-Date: Wed, 26 Aug 2015 14:02:32 +0200
-Message-Id: <1440590555-20463-8-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 11/11] xfsprogs: add dummy mremap for OS X
+Date: Wed, 26 Aug 2015 14:02:35 +0200
+Message-Id: <1440590555-20463-11-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1440590555-20463-1-git-send-email-jtulak@redhat.com>
 References: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
 	<1440590555-20463-1-git-send-email-jtulak@redhat.com>
@@ -32,109 +32,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-OS X does not have the timer used in xfs_repair.
-Add a simple implementation providing the required
-capabilities.
-
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- include/darwin.h  | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
- repair/progress.c | 16 ++++++++++++++--
- 2 files changed, 62 insertions(+), 2 deletions(-)
+ include/darwin.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/include/darwin.h b/include/darwin.h
-index 94e7551..f5f28df 100644
+index d47c96c..2e16f65 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -28,6 +28,7 @@
- #include <sys/ioctl.h>
- #include <sys/mount.h>
- #include <sys/types.h>
-+#include <sys/time.h>
- #include <ftw.h>
+@@ -33,6 +33,7 @@
  #include <mach/mach_time.h>
  #include <inttypes.h>
-@@ -169,4 +170,51 @@ static inline int nftw64(const char *path, int (*fn)(const char *, const struct
- 	return nftw(path, fn, depth, flags);
+ #include <stdio.h>
++#include <sys/mman.h>
+ 
+ #include <machine/endian.h>
+ #define __BYTE_ORDER	BYTE_ORDER
+@@ -217,6 +218,14 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+ 	return getitimer(ITIMER_REAL, value);
  }
  
-+/*
-+ * POSIX timer replacement.
-+ * It really just do the minimum we need for xfs_repair.
-+ * Also, as setitimer can't create multiple timers,
-+ * the timerid things are useless - we have only one ITIMER_REAL
-+ * timer.
-+ */
-+#define CLOCK_REALTIME ITIMER_REAL
-+#define itimerspec itimerval
-+typedef uint64_t timer_t;
-+typedef double   timer_c;
-+typedef clock_id_t clockid_t;
-+
-+
-+static inline int timer_create (clockid_t __clock_id,
-+                         struct sigevent *__restrict __evp,
-+                         timer_t *__restrict timer)
++#define MREMAP_FIXED 1
++#define MREMAP_MAYMOVE 2
++static inline void *mremap(void *old_address, size_t old_size,
++                    size_t new_size, int flags, ...)
 +{
-+	// set something, to initialize the variable, just in case
-+	*timer = 0;
-+	return 0;
++	return MAP_FAILED;
 +}
 +
-+static inline int timer_settime (timer_t timerid, int flags,
-+                          const struct itimerspec *__restrict timerspec,
-+                          struct itimerspec *__restrict ovalue)
-+{
-+	return setitimer(ITIMER_REAL, timerspec, ovalue);
-+}
-+
-+static inline int timer_delete (timer_t timerid)
-+{
-+	struct itimerspec timespec;
-+
-+	timespec.it_interval.tv_sec=0;
-+	timespec.it_interval.tv_usec=0;
-+	timespec.it_value.tv_sec=0;
-+	timespec.it_value.tv_usec=0;
-+
-+	return setitimer(ITIMER_REAL, &timespec, NULL);
-+}
-+
-+static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
-+{
-+	return getitimer(ITIMER_REAL, value);
-+}
-+
- #endif	/* __XFS_DARWIN_H__ */
-diff --git a/repair/progress.c b/repair/progress.c
-index 27cbaef..0fee7dc 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -184,10 +184,22 @@ progress_rpt_thread (void *p)
- 	 */
+ /* FSR */
  
- 	timespec.it_value.tv_sec = msgp->interval;
--	timespec.it_value.tv_nsec = 0;
- 	timespec.it_interval.tv_sec = msgp->interval;
-+	/*
-+	 * On some platforms (like OS X), timers and time things are slightly
-+	 * different: itimerspec is replaced with itimerval and timeval struct
-+	 * has no tv_nsec, but just tv_usec member.
-+	 * For compatibility, itimerspec is a macro defined to the existing
-+	 * itimerval on these platforms, and in such case, use usec instead
-+	 * of nsec.
-+	 */
-+#ifndef itimerspec
-+	timespec.it_value.tv_nsec = 0;
- 	timespec.it_interval.tv_nsec = 0;
--
-+#else
-+	timespec.it_value.tv_usec = 0;
-+	timespec.it_interval.tv_usec = 0;
-+#endif
- 	if (timer_create (CLOCK_REALTIME, NULL, &timerid))
- 		do_error(_("progress_rpt: cannot create timer\n"));
- 
+ //#define statvfs64 statfs
 -- 
 2.4.5
 
