@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8E20E7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 22:59:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0B5EBAC007
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 20:59:52 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ylHEldFUCApLm972 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 75FA47F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 23:06:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3307AC008
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 21:05:56 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id MUPsM8QeP46HQDoy (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 20:59:47 -0700 (PDT)
-Date: Tue, 25 Aug 2015 20:59:43 -0700
+	Tue, 25 Aug 2015 21:05:52 -0700 (PDT)
+Date: Tue, 25 Aug 2015 21:05:46 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/11] xfs_repair: force not-so-bad bmbt blocks back
-	through the verifier
-Message-ID: <20150826035943.GW10043@birch.djwong.org>
+Subject: Re: [PATCH 04/11] libxfs: clear buffer state flags in libxfs_getbuf
+	and variants
+Message-ID: <20150826040546.GX10043@birch.djwong.org>
 References: <20150826003220.23973.59731.stgit@birch.djwong.org>
-	<20150826003305.23973.65768.stgit@birch.djwong.org>
-	<20150826005447.GS714@dastard>
+	<20150826003246.23973.12895.stgit@birch.djwong.org>
+	<20150826010232.GT714@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150826005447.GS714@dastard>
+In-Reply-To: <20150826010232.GT714@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,58 +35,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Aug 26, 2015 at 10:54:47AM +1000, Dave Chinner wrote:
-> On Tue, Aug 25, 2015 at 05:33:05PM -0700, Darrick J. Wong wrote:
-> > If during prefetch we encounter a bmbt block that fails the CRC check
-> > due to corruption in the unused part of the block, force the buffer
-> > back through the non-prefetch verifiers later so that the CRC is
-> > updated.  Otherwise, the bad checksum goes unfixed and the kernel will
-> > still flag the bmbt block as invalid.
+On Wed, Aug 26, 2015 at 11:02:32AM +1000, Dave Chinner wrote:
+> On Tue, Aug 25, 2015 at 05:32:46PM -0700, Darrick J. Wong wrote:
+> > When we're running xfs_repair with prefetch enabled, it's possible
+> > that repair will decide to clear an inode without examining all
+> > metadata blocks owned by that inode.  This leaves the unreferenced
+> > prefetched buffers marked UNCHECKED, which will cause a subsequent CRC
+> > error if the block is reallocated to a different structure and read
+> > more than once.  Typically this happens when a large directory is
+> > corrupted and lost+found has to grow to accomodate all the
+> > disconnected inodes.
+> > 
+> > In libxfs_getbuf*(), we're supposed to return an unused buffer which
+> > has a clean state.  Unfortunately, things like UNCHECKED can hang
+> > around to cause incorrect verifier errors later, so change those
+> > functions to launder the state bits clean.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  repair/prefetch.c |    8 ++++++++
-> >  1 file changed, 8 insertions(+)
+> >  libxfs/rdwr.c |   47 +++++++++++++++++++++++++++++++++++++++++------
+> >  1 file changed, 41 insertions(+), 6 deletions(-)
 > > 
 > > 
-> > diff --git a/repair/prefetch.c b/repair/prefetch.c
-> > index 1de3ec0..77d29c8 100644
-> > --- a/repair/prefetch.c
-> > +++ b/repair/prefetch.c
-> > @@ -276,6 +276,14 @@ pf_scan_lbtree(
+> > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> > index 4f8212f..d28cea8 100644
+> > --- a/libxfs/rdwr.c
+> > +++ b/libxfs/rdwr.c
+> > @@ -631,15 +631,39 @@ libxfs_getbuf_flags(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len,
+> >  	return __cache_lookup(&key, flags);
+> >  }
 > >  
-> >  	XFS_BUF_SET_PRIORITY(bp, isadir ? B_DIR_BMAP : B_BMAP);
-> >  
-> > +	/*
-> > +	 * Make this bmbt buffer go back through the verifiers later so that
-> > +	 * we correct checksum errors stemming from bitflips in the unused
-> > +	 * parts of the bmbt block.
-> > +	 */
-> > +	if (bp->b_error == -EFSBADCRC)
-> > +		bp->b_flags |= LIBXFS_B_UNCHECKED;
+> > +/*
+> > + * Clean the buffer flags for libxfs_getbuf*(), which wants to return
+> > + * an unused buffer with clean state.  This prevents CRC errors on a
+> > + * re-read of a corrupt block that was prefetched and freed.  This
+> > + * can happen with a massively corrupt directory that is discarded,
+> > + * but whose blocks are then recycled into expanding lost+found.
+> > + *
+> > + * Note however that if the buffer's dirty (prefetch calls getbuf)
+> > + * we'll leave the state alone because we don't want to discard blocks
+> > + * that have been fixed.
+> > + */
+> > +static void
+> > +try_clean_buf(
 > 
-> This is because the next read of the buffer clears bp->b_error,
-> right?
-> 
-> So, while I think this is necessary, I also think the prefetch on
-> this btree should stop as we can't trust the contents of the buffer
-> to be correct. Hence I'd suggest that:
-> 
-> 	/*
-> 	 * If the verfier flagged a problem with the buffer, we
-> 	 * can't trust it's contents for the purposes of readahead.
-> 	 * Stop prefetching the tree, and mark this buffer as
-> 	 * unchecked so that the next read of the buffer by the
-> 	 * repair code will retain the error status and hence be
-> 	 * acted on appropriately.
-> 	 */
-> 	if (bp->b_error) {
-> 		bp->b_flags |= LIBXFS_B_UNCHECKED;
-> 		libxfs_putbuf(bp);
-> 		return 0;
-> 	}
+> Only thing I don't like about this patch is the name of this
+> function. It's really a "reset buffer state" function, so I think
+> that calling it something like reset_buf_state() would be more
+> appropriate.
 
-Ok, I'll change it to stop prefetch on the bmapbt.
+Done.
 
 --D
 
@@ -94,8 +92,6 @@ Ok, I'll change it to stop prefetch on the bmapbt.
 > Cheers,
 > 
 > Dave.
-> 
-> 
 > -- 
 > Dave Chinner
 > david@fromorbit.com
