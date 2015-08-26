@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 28B117F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 18:43:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 057768F8037
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 16:43:20 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ok9JwfQmNUcfQMcG for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 16:43:13 -0700 (PDT)
-Date: Wed, 26 Aug 2015 09:43:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Performance impact of mkfs.xfs vs mkfs.xfs -f
-Message-ID: <20150825234300.GN714@dastard>
-References: <CABppvi6GdaTQgqpYJi6RhkpjP9ydTV8-2VV8LF9tHSN63XzWtA@mail.gmail.com>
-	<55DCE1CF.5030708@sandeen.net>
-	<CABppvi6W5_1GBrb8x1wOAq3X6yraTtt1UYEFE+dBzcXj3yTzrg@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id CDED97F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:32:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BD0638F8040
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:32:25 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id CX9DN3QAoaqfpSOH (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 17:32:24 -0700 (PDT)
+Subject: [PATCH v3 00/11] xfsprogs fuzzing fixes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Aug 2015 17:32:20 -0700
+Message-ID: <20150826003220.23973.59731.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CABppvi6W5_1GBrb8x1wOAq3X6yraTtt1UYEFE+dBzcXj3yTzrg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +26,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shrinand Javadekar <shrinand@maginatics.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 25, 2015 at 04:09:33PM -0700, Shrinand Javadekar wrote:
-> I did this on 2 different setups.
+Hi all,
 
-Details?
+This is a rollup of various fuzzing fixes for xfsprogs 4.2.0-rc3.
 
-> Formatted the new disks with mkfs.xfs. Ran the workload.
-> Reformatted the disks with mkfs.xfs -f. Ran the workload.
-> 
-> >
-> >> Any ideas why this might be happening?
-> >
-> > With the paucity of information you've provided, nope!
-> 
-> Apologies. What more information can I provide?
+The first patch fixes a crash in xfs_repair where args.geo wasn't
+getting initialized when killing a directory block.  Previously
+sent by sandeen, but seemed to have fallen off everyone's radars?
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+Patch 2, a port of a kernel patch, ensures that the dir/attr verifier
+marks the buffer corrupt if the magic number isn't recognized.  This
+helps us to fail faster in the event of magic number corruption.
 
-> > What version of xfsprogs are you using?
-> 
-> # xfs_repair -V
-> xfs_repair version 3.1.9
+Patch 3 fixes libxfs' WANT_CORRUPTED macros to return negative error
+codes like the rest of libxfs does.
 
-That's pretty old.
+Patch 4 amends libxfs_getbuf*() to clear the buffer state if the
+buffer isn't dirty.  This prevents repair from throwing CRC errors if
+a block is prefetched, freed without being examined (the exam clears
+the UNCHECKED flag), reallocated to some other data structure, and
+then read for a subsequent operation.
 
-> > What was the output of mkfs.xfs each time; did the geometry differ?
-> 
-> I have the output of xfs_info /mount/point from the first experiment
-> and that of mkfs.xfs -f. One difference I see is that reformatting
-> adds projid32bit=0 for the inode section.
+Patch 5 fixes a bug in xfs_repair wherein if xfs_repair fixes a broken
+xattr block and later decides to unmap the block, the "repaired" flag
+inadvertently prohibits the unmapping of that block.
 
-xfs_info didn't get projid32bit status output until 3.2.0.
+Patch 6 forces repair's xattr block checker to take a look at the
+header for incorrect owner data.  If the header info looks bad, we'll
+discard the xattr block.
 
-Anyway, please post the output so we can see the differences for
-ourselves. What we need is mkfs output in both cases, and xfs_info
-output in both cases after mount.
+Patch 7 forces prefetch to mark corrupt bmbt blocks UNCHECKED so that
+the regular bmbt examination will fix the bad CRC if it doesn't take
+any other action against the block.  Without this, a corruption in the
+unused area will trigger a kernel error yet never get fixed by repair.
 
-Cheers,
+Patch 8 implements a 'reflink' and 'dedupe' command in xfs_io.  This
+will be used in future xfstests to test reflink and dedupe features of
+btrfs and xfs filesystems.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Patch 9 fixes xfs_db/blocktrash to not fail write verification when
+corrupting a block and allows trashing of log and symlink blocks.
+
+Patch 10 enhances the blocktrash command with a '-z' option that
+trashes the block at the top of the cursor stack and doesn't require
+blockget to have been run.
+
+Patch 11 implements blockget for v5 filesystems.  This is a second try
+at a previous patch which didn't quite catch all the new magic numbers
+and had some problems iterating directory index data.
+
+I've tested these xfsprogs changes against the for-next branch as of
+8/24.  The rmap/reflink patches will be dealt with separately.
+
+Scary rewound github repo with everything attached:
+https://github.com/djwong/xfsprogs
+
+Fuzz tests and more are at:
+https://github.com/djwong/xfstests
+
+Comments and questions are, as always, welcome.
+
+--D
 
 _______________________________________________
 xfs mailing list
