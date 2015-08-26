@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8A5F27F37
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 16:38:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7845C8F8040
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 14:38:32 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2RFhKfOSEwCwq9r9 for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 14:38:31 -0700 (PDT)
-Date: Thu, 27 Aug 2015 07:37:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfsdump: prevent segfault in cb_add_inogrp
-Message-ID: <20150826213746.GC3902@dastard>
-References: <20150924193241.975348815@gulag1.americas.sgi.com>
-	<55EDF3BA.60409@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 293E07F37
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 16:56:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EF1DF8F8033
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 14:56:19 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 0SSvjrBMmI1hDGsW for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 14:56:17 -0700 (PDT)
+Message-ID: <55DE3600.4000401@sandeen.net>
+Date: Wed, 26 Aug 2015 16:56:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55EDF3BA.60409@sgi.com>
+Subject: Re: [PATCH] xfsprogs: properly terminate string in quota's
+	restore_file()
+References: <55DC9A41.8060006@redhat.com>
+	<20150826115308.GB11759@bfoster.bfoster>
+In-Reply-To: <20150826115308.GB11759@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,48 +29,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Aug 26, 2015 at 12:36:42PM -0500, rjohnston@sgi.com wrote:
-> The call to memset will segfault because the offset for the first
-> parameter is done twice. We are using pointer math to do the
-> calculation.
-> The first time is when calculating oldsize, the size of i2gseg_t
-> is accounted for.
-> 	oldsize = (numsegs - SEGPERHNK) * sizeof(i2gseg_t);
-> Then in the call to memset, oldsize is again multiplied by the size
-> of i2gmap_t.
-> 	memset(inomap.i2gmap + oldsize, ...)
-> 	
-> i2gmap holds the used inodes in each chunk. When there are 2^31 chunk
-> entries, it could describe 2^31 (1 inode/chunk)- 2^40 (64 inodes/chunk).
+On 8/26/15 6:53 AM, Brian Foster wrote:
+> On Tue, Aug 25, 2015 at 11:39:29AM -0500, Eric Sandeen wrote:
+>> This code copies up to the entire size of devbuffer, and then
+>> tries to use "strlen" to null terminate it.
+>>
+>> But strlen works by *finding* the null, so it's at best a
+>> no-op, and at worst not properly terminating the string.
+>>
+>> Fix this by placing the null at the last byte of the buffer.
+>>
+>> Addresses-Coverity-Id: 1297519
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/quota/edit.c b/quota/edit.c
+>> index d226e89..a53a7e6 100644
+>> --- a/quota/edit.c
+>> +++ b/quota/edit.c
+>> @@ -385,7 +385,7 @@ restore_file(
+>>  	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+>>  		if (strncmp("fs = ", buffer, 5) == 0) {
+>>  			dev = strncpy(devbuffer, buffer+5, sizeof(devbuffer));
+>> -			dev[strlen(dev) - 1] = '\0';
+>> +			dev[sizeof(devbuffer) - 1] = '\0';
 > 
-> With 100s of millions of inodes there are enough entries to wrap the
-> 32 bit variable oldsize.
+> According to the man page, fgets() NULL terminates the provided buffer.
+
+Yep, I should have looked more closely.
+
+It copies at most size-1 (511 bytes), including the newline if it fits,
+and terminates with \0.
+
+> Next, we attempt to strncpy() just the device name part of the string
+> (copying up to 512 bytes from a 512-5 byte buffer).
+
+In fact since the original buffer (via fgets, 512) will be <= 512 long,
+copying again from 5 bytes in will always result in less than 512 bytes
+copied.
+
+> I'm not quite sure,
+> but it looks like the above line could be trying to replace a newline
+> with a NULL terminator..? E.g., it expects the last character in an
+> already NULL terminated line to be a newline.
+
+Yes, that's exactly it, thanks.
+
+There is one very corner case where if the last char in the buffer is
+part of the device name, the buffer won't contain the newline, and the
+'\0' will actually take out one char, rather than the newline.  But
+that's one heck of a corner case, the exactly-sized-device-name case ...
+probably not worth worrying about, though I might send a patch just to
+satisfy my OCD.
+
+Thanks for keeping me straight on this one, sorry for the noise.
+
+-Eric
+
+> Brian
 > 
-> Switching to use array index notation instead of calculating the
-> pointer address twice ;) would resolve this issue. The unneeded
-> local variable oldsize can be removed as well.
+>>  			continue;
+>>  		}
+>>  		rtbsoft = rtbhard = 0;
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 > 
-> numsegs is used to calculate an array index, change it from a
-> signed int (intgen_t) to an unsigned (uint32_t).
-
-Description does not match code:
-
-> -			intgen_t numsegs;
-> -			intgen_t oldsize;
-> +			int32_t numsegs;
-
-It's still a signed int here. And, really, just a plain old "int" is
-fine here.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
