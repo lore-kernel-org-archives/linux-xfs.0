@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD8DC7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:55:02 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4D08D7F47
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 19:59:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C9BC28F8049
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:55:02 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	kBlWs6mAcmkfR3j9 for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 17:55:00 -0700 (PDT)
-Date: Wed, 26 Aug 2015 10:54:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/11] xfs_repair: force not-so-bad bmbt blocks back
-	through the verifier
-Message-ID: <20150826005447.GS714@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3997B304039
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 17:59:19 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id u5X0p0HyUtWc6ujl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 17:59:17 -0700 (PDT)
+Date: Tue, 25 Aug 2015 17:59:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/11] xfs_repair: check v5 filesystem attr block header
+	sanity
+Message-ID: <20150826005911.GA23656@birch.djwong.org>
 References: <20150826003220.23973.59731.stgit@birch.djwong.org>
-	<20150826003305.23973.65768.stgit@birch.djwong.org>
+	<20150826003259.23973.34038.stgit@birch.djwong.org>
+	<20150826004502.GR714@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150826003305.23973.65768.stgit@birch.djwong.org>
+In-Reply-To: <20150826004502.GR714@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +32,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Aug 25, 2015 at 05:33:05PM -0700, Darrick J. Wong wrote:
-> If during prefetch we encounter a bmbt block that fails the CRC check
-> due to corruption in the unused part of the block, force the buffer
-> back through the non-prefetch verifiers later so that the CRC is
-> updated.  Otherwise, the bad checksum goes unfixed and the kernel will
-> still flag the bmbt block as invalid.
+On Wed, Aug 26, 2015 at 10:45:02AM +1000, Dave Chinner wrote:
+> On Tue, Aug 25, 2015 at 05:32:59PM -0700, Darrick J. Wong wrote:
+> > Check the v5 fields (uuid, blocknr, owner) of attribute blocks for
+> > obvious errors while scanning xattr blocks.  If the ownership info
+> > is incorrect, kill the block.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/prefetch.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+> Why hasn't the buffer verifier done this validation?
+
+Maybe I'm confused here, so here's what I think is going on:
+
+AFAICT most of the verifiers do things like this:
+
+if (crcs_enabled && cksum_verification fails) {
+	xfs_buf_ioerror(bp, -EFSBADCRC);
+} else if (header_is_insane) {
+	xfs_buf_ioerror(bp, -EFSCORRUPTED);
+}
+
+The fuzzer corrupts the UUID without updating the CRC.  The verifier first
+checks the CRC and it doesn't match, so it sets b_error to -EFSBADCRC and
+doesn't get to the header check.  Then the verifier returns, so we end up back
+in process_longform_attr.  Where do we set -EFSCORRUPTED when the CRC also
+doesn't match?
+
+--D
+
 > 
+> > @@ -1564,6 +1602,13 @@ process_longform_attr(
+> >  	if (bp->b_error == -EFSBADCRC)
+> >  		(*repair)++;
+> >  
+> > +	/* is this block sane? */
+> > +	if (__check_attr_header(mp, bp, ino)) {
+> > +		*repair = 0;
+> > +		libxfs_putbuf(bp);
+> > +		return 1;
+> > +	}
 > 
-> diff --git a/repair/prefetch.c b/repair/prefetch.c
-> index 1de3ec0..77d29c8 100644
-> --- a/repair/prefetch.c
-> +++ b/repair/prefetch.c
-> @@ -276,6 +276,14 @@ pf_scan_lbtree(
->  
->  	XFS_BUF_SET_PRIORITY(bp, isadir ? B_DIR_BMAP : B_BMAP);
->  
-> +	/*
-> +	 * Make this bmbt buffer go back through the verifiers later so that
-> +	 * we correct checksum errors stemming from bitflips in the unused
-> +	 * parts of the bmbt block.
-> +	 */
-> +	if (bp->b_error == -EFSBADCRC)
-> +		bp->b_flags |= LIBXFS_B_UNCHECKED;
-
-This is because the next read of the buffer clears bp->b_error,
-right?
-
-So, while I think this is necessary, I also think the prefetch on
-this btree should stop as we can't trust the contents of the buffer
-to be correct. Hence I'd suggest that:
-
-	/*
-	 * If the verfier flagged a problem with the buffer, we
-	 * can't trust it's contents for the purposes of readahead.
-	 * Stop prefetching the tree, and mark this buffer as
-	 * unchecked so that the next read of the buffer by the
-	 * repair code will retain the error status and hence be
-	 * acted on appropriately.
-	 */
-	if (bp->b_error) {
-		bp->b_flags |= LIBXFS_B_UNCHECKED;
-		libxfs_putbuf(bp);
-		return 0;
-	}
-
-Cheers,
-
-Dave.
-
-
--- 
-Dave Chinner
-david@fromorbit.com
+> As you can see the above hunk has a bad CRC check from the verifier,
+> and if the attr header is wrong then the verifier should be setting
+> bp->b_error == -EFSCORRUPTED.
+> 
+> So shouldn't this simply be:
+> 
+> +	if (bp->b_error == -EFSCORRUPTED) {
+> +		*repair = 0;
+> +		libxfs_putbuf(bp);
+> +		return 1;
+> +	}
+> +
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
