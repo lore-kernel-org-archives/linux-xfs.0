@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9DCAD7F37
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 14:04:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D8A9304043
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 12:04:54 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Dm1336kULtBCt53r for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 12:04:52 -0700 (PDT)
-Message-ID: <55DE0DD3.90108@sandeen.net>
-Date: Wed, 26 Aug 2015 14:04:51 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 10C847F37
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 14:06:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D4587304062
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 12:06:41 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id TnQVTcmXNJudiuCY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 12:06:40 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id D819D8CF40
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 19:06:39 +0000 (UTC)
+Received: from rage.redhat.com (unused [10.10.50.192] (may be forged))
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7QJ6brm013519
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 15:06:38 -0400
+Date: Wed, 26 Aug 2015 15:06:36 -0400
+From: David Jeffery <djeffery@redhat.com>
+Subject: [PATCH] xfs: return errors from partial I/O failures to files
+Message-ID: <20150826190636.GA16540@rage.redhat.com>
 MIME-Version: 1.0
-Subject: Re: Performance impact of mkfs.xfs vs mkfs.xfs -f
-References: <CABppvi6GdaTQgqpYJi6RhkpjP9ydTV8-2VV8LF9tHSN63XzWtA@mail.gmail.com>	<55DCE1CF.5030708@sandeen.net>	<CABppvi6W5_1GBrb8x1wOAq3X6yraTtt1UYEFE+dBzcXj3yTzrg@mail.gmail.com>	<20150825234300.GN714@dastard>
-	<CABppvi7AYbqiskyrEp3As6RPyRz0pThoqVEcjX4736KV-wLkCA@mail.gmail.com>
-In-Reply-To: <CABppvi7AYbqiskyrEp3As6RPyRz0pThoqVEcjX4736KV-wLkCA@mail.gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +36,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shrinand Javadekar <shrinand@maginatics.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 8/26/15 12:48 PM, Shrinand Javadekar wrote:
->>>>> >> >> Any ideas why this might be happening?
->>>> >> >
->>>> >> > With the paucity of information you've provided, nope!
->>> >>
->>> >> Apologies. What more information can I provide?
->> >
->> > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> [Shri] I mentioned this in my first email. Here's the information:
-> http://oss.sgi.com/archives/xfs/2015-06/msg00108.html
+There is an issue with xfs's error reporting in some cases of I/O partially
+failing and partially succeeding. Calls like fsync() can report success even
+though not all I/O was successful.
 
-Just as an aside:
+The issue can occur when there are multiple bio per xfs_ioend struct.
+Each call to xfs_end_bio() for a bio completing will write a value to
+ioend->io_error.  If a successful bio completes after any failed bio, no
+error is reported do to it writing 0 over the error code set by any failed bio.
+The I/O error information is now lost and when the ioend is completed
+only success is reported back up the filesystem stack.
 
-A 3 month old email under a different subject doesn't really help
-us in this thread.  ;)
+xfs_end_bio() should only set ioend->io_error in the case of BIO_UPTODATE
+being clear.  ioend->io_error is initialized to 0 at allocation so only needs
+to be updated by any failed bio structs. This ensures an error can be reported
+to the application.
 
-You're the only one who knows if this is the same machine, whether you've
-upgraded since, etc.  So we had to ask...
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+---
 
-For anyone reading: 
 
-If you're having a problem, please, please always start with as much information
-about your environment as you can provide, as described in the xfs.org URL
-above.  It saves many email round-trips, and helps us help you better.
-
-Thanks,
--Eric
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 3859f5e..b82b128 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -356,7 +356,8 @@ xfs_end_bio(
+ {
+ 	xfs_ioend_t		*ioend = bio->bi_private;
+ 
+-	ioend->io_error = test_bit(BIO_UPTODATE, &bio->bi_flags) ? 0 : error;
++	if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
++		ioend->io_error = error;
+ 
+ 	/* Toss bio and pass work off to an xfsdatad thread */
+ 	bio->bi_private = NULL;
 
 _______________________________________________
 xfs mailing list
