@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DFEEE7F47
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 20:09:42 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id EEF957F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 20:15:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CEED18F8037
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 18:09:42 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DBC458F8049
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2015 18:15:45 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FNT7ayGtY6CDWYVf for <xfs@oss.sgi.com>;
-	Tue, 25 Aug 2015 18:09:37 -0700 (PDT)
-Date: Wed, 26 Aug 2015 11:09:23 +1000
+	09tXZBopJeG7cEql for <xfs@oss.sgi.com>;
+	Tue, 25 Aug 2015 18:15:44 -0700 (PDT)
+Date: Wed, 26 Aug 2015 11:15:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Performance impact of mkfs.xfs vs mkfs.xfs -f
-Message-ID: <20150826010923.GX3902@dastard>
-References: <CABppvi6GdaTQgqpYJi6RhkpjP9ydTV8-2VV8LF9tHSN63XzWtA@mail.gmail.com>
-	<55DCE1CF.5030708@sandeen.net>
-	<CABppvi6W5_1GBrb8x1wOAq3X6yraTtt1UYEFE+dBzcXj3yTzrg@mail.gmail.com>
-	<20150825234300.GN714@dastard> <55DD0AAF.9090401@opensuse.org>
+Subject: Re: [PATCH 06/11] xfs_repair: check v5 filesystem attr block header
+	sanity
+Message-ID: <20150826011520.GU714@dastard>
+References: <20150826003220.23973.59731.stgit@birch.djwong.org>
+	<20150826003259.23973.34038.stgit@birch.djwong.org>
+	<20150826004502.GR714@dastard>
+	<20150826005911.GA23656@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55DD0AAF.9090401@opensuse.org>
+In-Reply-To: <20150826005911.GA23656@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,38 +33,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Carlos E. R." <carlos.e.r@opensuse.org>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 26, 2015 at 02:39:11AM +0200, Carlos E. R. wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA256
+On Tue, Aug 25, 2015 at 05:59:11PM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 26, 2015 at 10:45:02AM +1000, Dave Chinner wrote:
+> > On Tue, Aug 25, 2015 at 05:32:59PM -0700, Darrick J. Wong wrote:
+> > > Check the v5 fields (uuid, blocknr, owner) of attribute blocks for
+> > > obvious errors while scanning xattr blocks.  If the ownership info
+> > > is incorrect, kill the block.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Why hasn't the buffer verifier done this validation?
 > 
-> On 2015-08-26 01:43, Dave Chinner wrote:
-> > On Tue, Aug 25, 2015 at 04:09:33PM -0700, Shrinand Javadekar 
-> > wrote:
+> Maybe I'm confused here, so here's what I think is going on:
 > 
-> >> Formatted the new disks with mkfs.xfs. Ran the workload. 
-> >> Reformatted the disks with mkfs.xfs -f. Ran the workload.
+> AFAICT most of the verifiers do things like this:
 > 
+> if (crcs_enabled && cksum_verification fails) {
+> 	xfs_buf_ioerror(bp, -EFSBADCRC);
+> } else if (header_is_insane) {
+> 	xfs_buf_ioerror(bp, -EFSCORRUPTED);
+> }
 > 
-> > Anyway, please post the output so we can see the differences for 
-> > ourselves. What we need is mkfs output in both cases, and xfs_info
-> >  output in both cases after mount.
-> 
-> Suggestion (for the OP):
-> 
-> To reformat a third time without "-f", you can reformat as ext4, then
-> format a second time as xfs.
+> The fuzzer corrupts the UUID without updating the CRC.  The verifier first
+> checks the CRC and it doesn't match, so it sets b_error to -EFSBADCRC and
+> doesn't get to the header check. 
 
-That doesn't work - mkfs.xfs detects that the device has an ext4
-filesystem on it, and demands you use -f to overwrite it.
+Ok, that explains it - I didn't consider that case. This would seem
+like a general problem for repair when CRC errors are detected? i.e.
+we set the repair flag without doing the remaining verifier validity
+checks?
 
-> But to imitate a new disk, you have to
-> zero it with dd.
+As it is, I don't really like duplicating the verifier checks in
+repair. ISTR I recently suggested that we need to factor all the
+common verifier checks (magic, owner, uuid, blockno) into a single
+function that all verifiers called to remove all the code
+duplication. If we do this, then repair can also call the function
+to verify headers after a CRC failure to determine if repair is
+possible....
 
-Only the first MB or so - enough for blkid not to be able to see a
-filesystem signature on it.
+This is a bit more work, so I'll probably take this specific patch
+for 4.2.0, but I'd like to see this all factored out so we aren't
+duplicating code unnecessarily.
 
 Cheers,
 
