@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2E92C7F47
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 05:30:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1CFCC304066
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 03:30:49 -0700 (PDT)
-Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
-	with ESMTP id tl7anTUTCpIDRRQ2 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 03:30:46 -0700 (PDT)
-Received: from mail.zbfmail.de (localhost [127.0.0.1])
-	by mail.zbfmail.de (Postfix) with ESMTP id C0E376EE0E9
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 12:30:45 +0200 (CEST)
+	by oss.sgi.com (Postfix) with ESMTP id 31B6D7F37
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 05:56:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D20AB30404E
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 03:56:46 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id VA75P5GEwsdljUOD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 03:56:45 -0700 (PDT)
+Date: Wed, 26 Aug 2015 06:56:42 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: disk is broken after mount , then fix the disk ,i still can not
+	use the mount path
+Message-ID: <20150826105642.GA11759@bfoster.bfoster>
+References: <1CB94550540AE44E9CAAE8CD5AF40BF846CE8508@H3CMLB12-EX.srv.huawei-3com.com>
 MIME-Version: 1.0
-Date: Wed, 26 Aug 2015 12:30:45 +0200
-From: Marko Weber|8000 <weber@zbfmail.de>
-Subject: Re: Cant mount xfs lvm. Experimental Features?
-In-Reply-To: <20150825233348.GM714@dastard>
-References: <8a6d5afa8829aec73d911f35815d7b92@zbfmail.de>
-	<20150825115412.GI714@dastard>
-	<5ab00519660fd5ed1b3d347658dba1f2@zbfmail.de>
-	<55DCB158.20505@sandeen.net>
-	<fe88fd1604660f15cea80477b3855e77@zbfmail.de>
-	<20150825230353.GK714@dastard>
-	<e4d6436ce2242107ab96dd3be2669046@zbfmail.de>
-	<20150825233348.GM714@dastard>
-Message-ID: <01b4c31b71895d772a0db8a024e6ec12@zbfmail.de>
-Reply-To: weber@zbfmail.de
+Content-Disposition: inline
+In-Reply-To: <1CB94550540AE44E9CAAE8CD5AF40BF846CE8508@H3CMLB12-EX.srv.huawei-3com.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,49 +26,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xfs <xfs@oss.sgi.com>
+To: "zhao.mingyue@h3c.com" <zhao.mingyue@h3c.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-
-dave,
-
-Am 2015-08-26 01:33, schrieb Dave Chinner:
-> On Wed, Aug 26, 2015 at 01:10:41AM +0200, Marko Weber|8000 wrote:
->> dave, so the latest lts kernel 3.14.51 does not support to mount
->> lvm2 partitions formatted with mkfs.xfs 3.2.4?
-> 
-> As we've always done in the past, we've waited for around a year
-> after upstream kernel support for a feature has been supported
-> before turning on the feature by default in xfsprogs. Kernel 3.16
-> was released just over a year ago with full CRC support. Our hand
-> was kinda forced by distros independently enabling these features by
-> default before upstream enabled them, so we enabled it a bt sooner
-> than previous feature default changes.
-> 
-> Clearly we (upstream) have no control over what distros ship and
-> enable. We can't stop distros from upgrading userspace out of step
-> with the kernel they ship, nor can we stop them from changing
-> default feature enablement. However, it's up to the distro to make
-> sure that the userspace package and the default configurations they
-> ship work correctly with the kernel they ship.
-> 
-> i.e. if Gentoo are shipping xfsprogs 3.2.4 w/ kernel 3.14.51, then
-> Gentoo has a quality control problem - they have failed to verify
-> that the packages they are shipping work correctly before shipping
-> them to users...
-> 
-> Cheers,
-> 
-> Dave.
-
-just want to report that with vanilla-kernel 3.18.19 all is fine again.
-
-marko
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBBdWcgMjYsIDIwMTUgYXQgMDk6NTg6MjZBTSArMDAwMCwgemhhby5taW5neXVlQGgz
+Yy5jb20gd3JvdGU6Cj4gaGnvvJoKPiAgICBJIGhhdmUgYSBwcm9ibGVtIGFib3V0IHhmcyAsY2Fu
+IHNvbWVvbmUgaGVscCBtZT8KPiAgICAxIC4gbW91bnQgIC9kZXYvc2RiICAvaG9tZS90ZXN0LAo+
+ICAgIDIuIC9kZXYvc2RiIGlzIGRvd24obXkgZGlzayBoYXMgc29tZXRoaW5nIHdyb25nKQo+ICAg
+IDMuSSBwdWxsIG91dCB0aGUgZGlzaywgZml4IGl0IGFuZCBpbnNlcnQKPiAgICB0aGVuIEkgZmlu
+ZCB0aGF0IEkgc3RpbGwgY2FuIG5vdCBvcGVyYXRlIGluIC9ob21lL3Rlc3QKPiBJcyB0aGUgbWVj
+aGFuaXNtIG9mIFhGUyBsaWtlIHRoaXM/IGlmIEkgd2FudCB0byB1c2UgL2hvbWUvdGVzdCBhZ2Fp
+biwgSSBtdXN0IHVtb3VudCBmaXJzdCBhbmQgbW91bnQgYWdhaW4/CgpZZXMsIG9uY2UgdGhlIGZp
+bGVzeXN0ZW0gaGFzIGVycm9ycyBvciBhIGRpc2sgaXMgcGh5c2ljYWxseSByZW1vdmVkLCB0aGUK
+ZnMgd2lsbCBzaHV0ZG93biBhbmQgbm90IGFsbG93IGZ1cnRoZXIgbW9kaWZpY2F0aW9uIHVudGls
+IGl0IGlzCnJlbW91bnRlZCBjb3JyZWN0bHkuIFRoaXMgaXMgbW9zdCBsaWtlbHkgdGhlIGJlaGF2
+aW9yIHlvdSdsbCBzZWUgZm9yIGFueQpsb2NhbCBmaWxlc3lzdGVtIHVubGVzcyB0aGVyZSdzIHNv
+bWUga2luZCBvZiBibG9jayBkZXZpY2UgYWJzdHJhY3Rpb24gaW4KdGhlIHN0YWNrIHRoYXQgZG9l
+c24ndCBleHBvc2UgdGhlIGVycm9ycyB0byB0aGUgZnMgKGUuZy4sIG1kIHJhaWQpLgoKQWxzbyBu
+b3RlIHRoYXQgdGhlIGZzIGhvbGRzIHRoZSB1bmRlcmx5aW5nIGJsb2NrIGRldmljZSBvcGVuLiBU
+aGF0IG1lYW5zCnRoZSBkZXZpY2Ugbm9kZSAoc2RiKSB3b24ndCBkaXNhcHBlYXIganVzdCBiZWNh
+dXNlIGl0J3MgYmVlbiB1bnBsdWdnZWQuCklmIHRoZSBkZXZpY2UgaXMgcmVhdHRhY2hlZCwgaXQg
+bW9zdCBsaWtlbHkgaGFzIGEgbmV3IGRldmljZSBub2RlLgpZb3UnbGwgaGF2ZSB0byBpbnNwZWN0
+IHRoZSBsb2dzIG9yIC9zeXMvYmxvY2svLi4uIHRvIGZpbmQgaXQuIFRoZSBvbGQKb25lIHdpbGwg
+cHJvYmFibHkgZ28gYXdheSB3aGVuIHRoZSBvbGQgbW91bnQgaXMgcmVtb3ZlZC4KCkZXSVcsIGl0
+J3MgcHJvYmFibHkgYmVzdCB0byB1bW91bnQgYW5kIHJlbGVhc2UgYW55IGFjdGl2ZSByZWZlcmVu
+Y2VzIG9uCnRoZSBibG9jayBkZXZpY2UgYmVmb3JlaGFuZCBpZiB5b3Uga25vdyB5b3UncmUgZ29p
+bmcgdG8gcGh5c2ljYWxseQpkaXNjb25uZWN0IGl0LgoKQnJpYW4KCj4gLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLQo+IOacrOmCruS7tuWPiuWFtumZhOS7tuWQq+acieadreW3nuWNjuS4iemAmuS/oeaKgOac
+r+aciemZkOWFrOWPuOeahOS/neWvhuS/oeaBr++8jOS7hemZkOS6juWPkemAgee7meS4iumdouWc
+sOWdgOS4reWIl+WHugo+IOeahOS4quS6uuaIlue+pOe7hOOAguemgeatouS7u+S9leWFtuS7luS6
+uuS7peS7u+S9leW9ouW8j+S9v+eUqO+8iOWMheaLrOS9huS4jemZkOS6juWFqOmDqOaIlumDqOWI
+huWcsOazhOmcsuOAgeWkjeWItuOAgQo+IOaIluaVo+WPke+8ieacrOmCruS7tuS4reeahOS/oeaB
+r+OAguWmguaenOaCqOmUmeaUtuS6huacrOmCruS7tu+8jOivt+aCqOeri+WNs+eUteivneaIlumC
+ruS7tumAmuefpeWPkeS7tuS6uuW5tuWIoOmZpOacrAo+IOmCruS7tu+8gQo+IFRoaXMgZS1tYWls
+IGFuZCBpdHMgYXR0YWNobWVudHMgY29udGFpbiBjb25maWRlbnRpYWwgaW5mb3JtYXRpb24gZnJv
+bSBIM0MsIHdoaWNoIGlzCj4gaW50ZW5kZWQgb25seSBmb3IgdGhlIHBlcnNvbiBvciBlbnRpdHkg
+d2hvc2UgYWRkcmVzcyBpcyBsaXN0ZWQgYWJvdmUuIEFueSB1c2Ugb2YgdGhlCj4gaW5mb3JtYXRp
+b24gY29udGFpbmVkIGhlcmVpbiBpbiBhbnkgd2F5IChpbmNsdWRpbmcsIGJ1dCBub3QgbGltaXRl
+ZCB0bywgdG90YWwgb3IgcGFydGlhbAo+IGRpc2Nsb3N1cmUsIHJlcHJvZHVjdGlvbiwgb3IgZGlz
+c2VtaW5hdGlvbikgYnkgcGVyc29ucyBvdGhlciB0aGFuIHRoZSBpbnRlbmRlZAo+IHJlY2lwaWVu
+dChzKSBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgcmVjZWl2ZSB0aGlzIGUtbWFpbCBpbiBlcnJvciwg
+cGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyCj4gYnkgcGhvbmUgb3IgZW1haWwgaW1tZWRpYXRlbHkg
+YW5kIGRlbGV0ZSBpdCEKCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
