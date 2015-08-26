@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 332AF7F37
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 17:01:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12471304066
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 15:01:41 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	9rMfr6y80KgwCq14 for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 15:01:39 -0700 (PDT)
-Date: Thu, 27 Aug 2015 08:01:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/11] xfsprogs: avoid dependency on linux
-	XATTR_SIZE/LIST_MAX
-Message-ID: <20150826220122.GD3902@dastard>
-References: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
-	<1440590555-20463-1-git-send-email-jtulak@redhat.com>
-	<1440590555-20463-2-git-send-email-jtulak@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3ACF57F37
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 17:19:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27BBC304043
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 15:19:42 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ZqF8TAHwdKqKnllB for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 15:19:40 -0700 (PDT)
+Message-ID: <55DE3B7B.8010608@sandeen.net>
+Date: Wed, 26 Aug 2015 17:19:39 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1440590555-20463-2-git-send-email-jtulak@redhat.com>
+Subject: Re: [PATCH V2] xfsdump: prevent segfault in cb_add_inogrp
+References: <20150924193241.975348815@gulag1.americas.sgi.com>	<55EDF3BA.60409@sgi.com>
+	<20150826213746.GC3902@dastard> <55DE3651.5030803@sgi.com>
+In-Reply-To: <55DE3651.5030803@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,95 +28,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 26, 2015 at 02:02:26PM +0200, Jan Tulak wrote:
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-
-Explanation of the change?
-
-> ---
->  libhandle/handle.c       |  6 ++++--
->  libhandle/jdm.c          |  6 ++++--
->  libxfs/xfs_attr_remote.c |  2 +-
->  libxfs/xfs_format.h      | 11 ++++++++++-
->  4 files changed, 19 insertions(+), 6 deletions(-)
+On 8/26/15 4:57 PM, Rich Johnston wrote:
+> Dave,
 > 
-> diff --git a/libhandle/handle.c b/libhandle/handle.c
-> index b1c0c10..d532f44 100644
-> --- a/libhandle/handle.c
-> +++ b/libhandle/handle.c
-....
-> diff --git a/libhandle/jdm.c b/libhandle/jdm.c
-> index d804423..db7d1fe 100644
-> --- a/libhandle/jdm.c
-> +++ b/libhandle/jdm.c
-> @@ -21,6 +21,8 @@
->  #include "handle.h"
->  #include "jdm.h"
->  #include "parent.h"
-> +#include "xfs/xfs_arch.h"
-> +#include "xfs/xfs_format.h"
+> On 08/26/2015 04:37 PM, Dave Chinner wrote:
+>> On Wed, Aug 26, 2015 at 12:36:42PM -0500, rjohnston@sgi.com wrote:
+>>> The call to memset will segfault because the offset for the first
+>>> parameter is done twice. We are using pointer math to do the
+>>> calculation.
+>>> The first time is when calculating oldsize, the size of i2gseg_t
+>>> is accounted for.
+>>>     oldsize = (numsegs - SEGPERHNK) * sizeof(i2gseg_t);
+>>> Then in the call to memset, oldsize is again multiplied by the size
+>>> of i2gmap_t.
+>>>     memset(inomap.i2gmap + oldsize, ...)
+>>>     
+>>> i2gmap holds the used inodes in each chunk. When there are 2^31 chunk
+>>> entries, it could describe 2^31 (1 inode/chunk)- 2^40 (64 inodes/chunk).
+>>>
+>>> With 100s of millions of inodes there are enough entries to wrap the
+>>> 32 bit variable oldsize.
+>>>
+>>> Switching to use array index notation instead of calculating the
+>>> pointer address twice ;) would resolve this issue. The unneeded
+>>> local variable oldsize can be removed as well.
+>>>
+> Per your other comment I will add a bounds check after calculating numsegs:
+>     if (numsegs < 0)
+>         return -1;
 
-I don't think you need the xfs/ prefix now.
+probably fine, but probably not really necessary.
 
-> diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-> index bb7cc04..2380084 100644
-> --- a/libxfs/xfs_format.h
-> +++ b/libxfs/xfs_format.h
-> @@ -60,6 +60,14 @@ struct xfs_ifork;
->  #define	XFS_SB_VERSION_MOREBITSBIT	0x8000
->  
->  /*
-> + * Avoid dependency on linux values of XATTR.
-> + * It has to be on the beginning of this file, because we use these Values
-> + * later in this header file.
-> + */
+numsegs = inomap.hnkmaplen * SEGPERHNK;
 
-This is an explanation of why the change is being made, not what
-the definitions are for. This belongs in the commit message, not
-the code.
+hnkmaplen initializes as:
 
-> +#define XFS_XATTR_SIZE_MAX 65536    /* size of an extended attribute value (64k) */
+inomap.hnkmaplen = (igrpcnt + SEGPERHNK - 1) / SEGPERHNK;
 
-We try to avoid comments like these for defines (they tend only to
-be added to structure definitions now).
+>From my prior email, if I was right,
 
-/*
- * The size of a single extended attribute on disk is limited by
- * the size of index values within the attribute entries themselves.
- * These are be16 fields, so we can only support attribute data
- * sizes up to 2^16 bytes in length.
- */
-#define XFS_XATTR_SIZE_MAX	(1 << 16)
+> so I guess that means that if we have more than 2^31 inode groups,
+> i.e. 2^31 * 256 = 500 billion inodes, (int) igrpcnt could overflow.
 
+so unless you have > 500 billion inodes, it's not going to be a problem...
 
-> +#define XFS_XATTR_LIST_MAX 65536    /* size of extended attribute namelist (64k) */
+I'd just focus on the single problem at hand (extending a pointer
+to an array by number of bytes, not number of elements) and leave it
+at that.
 
-XATTR_LIST_MAX is not an on-disk format definition - it's a syscall
-buffer size limit and is defined by the OS. This belongs in the
-platform headers, such as:
+-Eric
 
-#ifndef XATTR_LIST_MAX
-#define XATTR_LIST_MAX	65536
-#endif
-
-And so in a common header (e.g. include/xfs.h after including the
-platform headers):
-
-#define XFS_XATTR_LIST_MAX	XATTR_LIST_MAX
-
-IOWs, this is really two separate patches - one for the
-XFS_XATTR_SIZE_MAX change (which also needs to go back to the
-kernel) and one for XFS_XATTR_LIST_MAX (which is purely userspace).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> The description above will change to:
+> 
+> Adding a bounds check (numsegs < 0) and switching to use array
+> index notation instead of calculating the pointer address twice ;)
+> would resolve this issue. The unneeded local variable oldsize
+> can be removed as well.
+> 
+>>> numsegs is used to calculate an array index, change it from a
+>>> signed int (intgen_t) to an unsigned (uint32_t).
+>>
+> I will remove the above description and leave it as is (intgen_t)
+>> Description does not match code:
+>>
+>>> -            intgen_t numsegs;
+>>> -            intgen_t oldsize;
+>>> +            int32_t numsegs;
+>>
+>> It's still a signed int here. And, really, just a plain old "int" is
+>> fine here.
+>>
+>> Cheers,
+>>
+>> Dave.
+>>
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
