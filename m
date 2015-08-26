@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9FA8B7F47
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 02:25:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2ADCDAC005
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 00:25:36 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id oxjmAIjLYlbKOk2I for
-	<xfs@oss.sgi.com>; Wed, 26 Aug 2015 00:25:34 -0700 (PDT)
-From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: Re: Performance impact of mkfs.xfs vs mkfs.xfs -f
-Date: Wed, 26 Aug 2015 09:25:33 +0200
-Message-ID: <1594865.42kc89uJrg@merkaba>
-In-Reply-To: <20150826010923.GX3902@dastard>
-References: <CABppvi6GdaTQgqpYJi6RhkpjP9ydTV8-2VV8LF9tHSN63XzWtA@mail.gmail.com>
-	<55DD0AAF.9090401@opensuse.org> <20150826010923.GX3902@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D9C1F7F47
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 04:00:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 654CAAC008
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 02:00:27 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id ARAjNEOwt7UIAzvy (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 02:00:24 -0700 (PDT)
+Date: Wed, 26 Aug 2015 11:00:19 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 block/for-linus] writeback: sync_inodes_sb() must
+	write out I_DIRTY_TIME inodes and always call wait_sb_inodes()
+Message-ID: <20150826090019.GA3871@quack.suse.cz>
+References: <20150812101204.GE17933@dhcp-13-216.nay.redhat.com>
+	<20150813004435.GN3902@dastard>
+	<20150813224415.GG4496@mtj.duckdns.org>
+	<20150825181152.GA26785@mtj.duckdns.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150825181152.GA26785@mtj.duckdns.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +33,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: "Carlos E. R." <carlos.e.r@opensuse.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Eryu Guan <eguan@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, axboe@fb.com, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, kernel-team@fb.com
 
-Am Mittwoch, 26. August 2015, 11:09:23 schrieb Dave Chinner:
-> On Wed, Aug 26, 2015 at 02:39:11AM +0200, Carlos E. R. wrote:
-> > -----BEGIN PGP SIGNED MESSAGE-----
-> > Hash: SHA256
-> > 
-> > On 2015-08-26 01:43, Dave Chinner wrote:
-> > > On Tue, Aug 25, 2015 at 04:09:33PM -0700, Shrinand Javadekar
-> > > 
-> > > wrote:
-> > >> Formatted the new disks with mkfs.xfs. Ran the workload.
-> > >> Reformatted the disks with mkfs.xfs -f. Ran the workload.
-> > > 
-> > > Anyway, please post the output so we can see the differences for
-> > > ourselves. What we need is mkfs output in both cases, and xfs_info
-> > > 
-> > >  output in both cases after mount.
-> > 
-> > Suggestion (for the OP):
-> > 
-> > To reformat a third time without "-f", you can reformat as ext4, then
-> > format a second time as xfs.
+On Tue 25-08-15 14:11:52, Tejun Heo wrote:
+> e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
+> updated writeback path to avoid kicking writeback work items if there
+> are no inodes to be written out; unfortunately, the avoidance logic
+> was too aggressive and broke sync_inodes_sb().
 > 
-> That doesn't work - mkfs.xfs detects that the device has an ext4
-> filesystem on it, and demands you use -f to overwrite it.
+> * sync_inodes_sb() must write out I_DIRTY_TIME inodes but I_DIRTY_TIME
+>   inodes dont't contribute to bdi/wb_has_dirty_io() tests and were
+>   being skipped over.
 > 
-> > But to imitate a new disk, you have to
-> > zero it with dd.
+> * inodes are taken off wb->b_dirty/io/more_io lists after writeback
+>   starts on them.  sync_inodes_sb() skipping wait_sb_inodes() when
+>   bdi_has_dirty_io() breaks it by making it return while writebacks
+>   are in-flight.
 > 
-> Only the first MB or so - enough for blkid not to be able to see a
-> filesystem signature on it.
+> This patch fixes the breakages by
+> 
+> * Removing bdi_has_dirty_io() shortcut from bdi_split_work_to_wbs().
+>   The callers are already testing the condition.
+> 
+> * Removing bdi_has_dirty_io() shortcut from sync_inodes_sb() so that
+>   it always calls into bdi_split_work_to_wbs() and wait_sb_inodes().
+> 
+> * Making bdi_split_work_to_wbs() consider the b_dirty_time list for
+>   WB_SYNC_ALL writebacks.
+> 
+> Kudos to Eryu, Dave and Jan for tracking down the issue.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Fixes: e79729123f63 ("writeback: don't issue wb_writeback_work if clean")
+> Link: http://lkml.kernel.org/g/20150812101204.GE17933@dhcp-13-216.nay.redhat.com
+> Reported-and-bisected-by: Eryu Guan <eguan@redhat.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Jan Kara <jack@suse.com>
+> Cc: Ted Ts'o <tytso@google.com>
+> ---
+>  fs/fs-writeback.c |   22 +++++++++++++---------
+>  1 file changed, 13 insertions(+), 9 deletions(-)
 
-wipefs command.
+The patch looks good. You can add:
 
-Thanks,
+Reviewed-by: Jan Kara <jack@suse.com>
+
+								Honza
+
+> 
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -844,14 +844,15 @@ static void bdi_split_work_to_wbs(struct
+>  	struct wb_iter iter;
+>  
+>  	might_sleep();
+> -
+> -	if (!bdi_has_dirty_io(bdi))
+> -		return;
+>  restart:
+>  	rcu_read_lock();
+>  	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
+> -		if (!wb_has_dirty_io(wb) ||
+> -		    (skip_if_busy && writeback_in_progress(wb)))
+> +		/* SYNC_ALL writes out I_DIRTY_TIME too */
+> +		if (!wb_has_dirty_io(wb) &&
+> +		    (base_work->sync_mode == WB_SYNC_NONE ||
+> +		     list_empty(&wb->b_dirty_time)))
+> +			continue;
+> +		if (skip_if_busy && writeback_in_progress(wb))
+>  			continue;
+>  
+>  		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
+> @@ -899,8 +900,7 @@ static void bdi_split_work_to_wbs(struct
+>  {
+>  	might_sleep();
+>  
+> -	if (bdi_has_dirty_io(bdi) &&
+> -	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
+> +	if (!skip_if_busy || !writeback_in_progress(&bdi->wb)) {
+>  		base_work->auto_free = 0;
+>  		base_work->single_wait = 0;
+>  		base_work->single_done = 0;
+> @@ -2275,8 +2275,12 @@ void sync_inodes_sb(struct super_block *
+>  	};
+>  	struct backing_dev_info *bdi = sb->s_bdi;
+>  
+> -	/* Nothing to do? */
+> -	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
+> +	/*
+> +	 * Can't skip on !bdi_has_dirty() because we should wait for !dirty
+> +	 * inodes under writeback and I_DIRTY_TIME inodes ignored by
+> +	 * bdi_has_dirty() need to be written out too.
+> +	 */
+> +	if (bdi == &noop_backing_dev_info)
+>  		return;
+>  	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+>  
+> 
 -- 
-Martin
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
