@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0B3147F37
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 01:09:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F0C24304039
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 23:09:47 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8DFDD29DF5
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 08:41:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 28D89AC008
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 06:41:55 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LlMeiD694U5bEEXG (version=TLSv1
+	cuda.sgi.com with ESMTP id gbH3wHBELGEN535E (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Aug 2015 23:09:47 -0700 (PDT)
-Date: Thu, 27 Aug 2015 14:09:44 +0800
-From: Eryu Guan <eguan@redhat.com>
+	Thu, 27 Aug 2015 06:41:54 -0700 (PDT)
+Message-ID: <55DF13A0.1090706@redhat.com>
+Date: Thu, 27 Aug 2015 09:41:52 -0400
+From: David Jeffery <djeffery@redhat.com>
+MIME-Version: 1.0
 Subject: Re: [PATCH] xfs: return errors from partial I/O failures to files
-Message-ID: <20150827060943.GX17933@dhcp-13-216.nay.redhat.com>
 References: <20150826190636.GA16540@rage.redhat.com>
 	<20150826221951.GE3902@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
 In-Reply-To: <20150826221951.GE3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,13 +30,13 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: David Jeffery <djeffery@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 27, 2015 at 08:19:52AM +1000, Dave Chinner wrote:
+On 08/26/2015 06:19 PM, Dave Chinner wrote:
 > On Wed, Aug 26, 2015 at 03:06:36PM -0400, David Jeffery wrote:
-> > There is an issue with xfs's error reporting in some cases of I/O partially
-> > failing and partially succeeding. Calls like fsync() can report success even
-> > though not all I/O was successful.
+>> There is an issue with xfs's error reporting in some cases of I/O partially
+>> failing and partially succeeding. Calls like fsync() can report success even
+>> though not all I/O was successful.
 > 
 > Hi David,
 > 
@@ -47,12 +46,12 @@ On Thu, Aug 27, 2015 at 08:19:52AM +1000, Dave Chinner wrote:
 > 
 > Nice work! :)
 > 
-> > The issue can occur when there are multiple bio per xfs_ioend struct.
-> > Each call to xfs_end_bio() for a bio completing will write a value to
-> > ioend->io_error.  If a successful bio completes after any failed bio, no
-> > error is reported do to it writing 0 over the error code set by any failed bio.
-> > The I/O error information is now lost and when the ioend is completed
-> > only success is reported back up the filesystem stack.
+>> The issue can occur when there are multiple bio per xfs_ioend struct.
+>> Each call to xfs_end_bio() for a bio completing will write a value to
+>> ioend->io_error.  If a successful bio completes after any failed bio, no
+>> error is reported do to it writing 0 over the error code set by any failed bio.
+>> The I/O error information is now lost and when the ioend is completed
+>> only success is reported back up the filesystem stack.
 > 
 > It's worth mentioning the case that this was seen in - a single
 > failed disk in a raid 0 stripe, and the error from the bio to the
@@ -64,11 +63,59 @@ On Thu, Aug 27, 2015 at 08:19:52AM +1000, Dave Chinner wrote:
 > (i.e.  partial block device failure). It might be best to talk to
 > Eryu (cc'd) to get your reproducer converted into a xfstest case
 > that we can then test all filesystems against?
+> 
+>> xfs_end_bio() should only set ioend->io_error in the case of BIO_UPTODATE
+>> being clear.  ioend->io_error is initialized to 0 at allocation so only needs
+>> to be updated by any failed bio structs. This ensures an error can be reported
+>> to the application.
+>>
+>> Signed-off-by: David Jeffery <djeffery@redhat.com>
+>> ---
+> 
+> Best to add a "cc: <stable@vger.kernel.org>" so that it gets pushed
+> back to all the stable kernels automatically which it hits Linus'
+> tree.
+> 
+> One minor change to the fix:
+> 
+>> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+>> index 3859f5e..b82b128 100644
+>> --- a/fs/xfs/xfs_aops.c
+>> +++ b/fs/xfs/xfs_aops.c
+>> @@ -356,7 +356,8 @@ xfs_end_bio(
+>>  {
+>>  	xfs_ioend_t		*ioend = bio->bi_private;
+>>  
+>> -	ioend->io_error = test_bit(BIO_UPTODATE, &bio->bi_flags) ? 0 : error;
+>> +	if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
+>> +		ioend->io_error = error;
+> 
+> We should preserve the original error that was reported, rather than
+> report the last one. ioend->io_error is always initialised to zero,
+> so we can simply do:
 
-Sure, I'll look into the reproducer and work on a fstests case.
+Is there a particular reason to prefer the first error?  Is it just
+standard practice?  I originally made a version which preserved the
+first error but couldn't think of a reason why the first or last would
+be best.  So I went with the patch which has the simpler if statement.
 
-Thanks,
-Eryu
+> 
+> 	if (!ioend->io_error && !test_bit(BIO_UPTODATE, &bio->bi_flags))
+> 		ioend->io_error = error;
+> 
+> Can you update the patch and resend it? I've got a couple of other
+> fixes that I need to push to the for-next tree in the next couple of
+> days (i.e. before the 4.3. merge window opens) and I'd like to get
+> this one in as well.
+> 
+> Cheers,
+> 
+> Dave
+> 
+
+I'll get a new version sent.
+
+David Jeffery
 
 _______________________________________________
 xfs mailing list
