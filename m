@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A75127F37
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 22:35:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 43202AC006
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 20:35:24 -0700 (PDT)
-Received: from mail-la0-f54.google.com (mail-la0-f54.google.com
-	[209.85.215.54]) by cuda.sgi.com with ESMTP id eG897zvBHEAb7wWV
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 26 Aug 2015 20:35:22 -0700 (PDT)
-Received: by labgv11 with SMTP id gv11so4003139lab.2
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 20:35:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150813071524.GI17933@dhcp-13-216.nay.redhat.com>
-References: <1439449276-1699-1-git-send-email-eguan@redhat.com>
-	<20150813071524.GI17933@dhcp-13-216.nay.redhat.com>
-Date: Thu, 27 Aug 2015 11:35:20 +0800
-Message-ID: <CADVQ27qSWx1jJS_8+X3Xf+oF-ttZSdZysnKbcujx_Qegfufybw@mail.gmail.com>
-Subject: Re: [PATCH] repair: fix wrong logic when validating node magic number
-From: Zorro Lang <zorro.lang@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4E77C7F37
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 01:02:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4009A8F8033
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2015 23:02:31 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mUtdgyyG9DHpDLNC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2015 23:02:27 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 02/11] xfsprogs: avoid dependency on linux XATTR_SIZE/LIST_MAX
+Date: Thu, 27 Aug 2015 08:02:20 +0200
+Message-Id: <1440655340-27550-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1440590555-20463-2-git-send-email-jtulak@redhat.com>
+References: <1440590555-20463-2-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,108 +23,126 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-2015-08-13 15:15 GMT+08:00 Eryu Guan <eguan@redhat.com>:
-> On Thu, Aug 13, 2015 at 03:01:16PM +0800, Eryu Guan wrote:
->> Magic number is wrong only when != XFS_DA_NODE_MAGIC and
->> != XFS_DA3_NODE_MAGIC.
->>
->> This is triggered by shared/002 when testing 512 block size XFS.
->>
->>   Phase 1 - find and verify superblock...
->>   Phase 2 - using internal log
->>           - scan filesystem freespace and inode maps...
->>           - found root inode chunk
->>   Phase 3 - for each AG...
->>           - scan (but don't clear) agi unlinked lists...
->>           - process known inodes and perform inode discovery...
->>           - agno = 0
->>   bad magic number febe in block 64 (108) for directory inode 35
->>   ......
->>
->> Fix it by changing "||" to "&&".
->>
->> Signed-off-by: Eryu Guan <eguan@redhat.com>
->
-> With this patch applied, shared/002 still fails on 512 block size XFS,
+Currently, we depends on Linux XATTR values for on disk
+definitions. Which causes trouble on other platforms and
+maybe also if these values were to change.
 
+Fix it by creating a custom definition independent from
+those in Linux (although with the same values).
 
-This failure not only be reproduced on 512 block size XFS. When I increase
-the stress of shared/002, this bug can be reproduced on any block size XFS.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ libhandle/handle.c       |  6 ++++--
+ libhandle/jdm.c          |  6 ++++--
+ libxfs/xfs_attr_remote.c |  2 +-
+ libxfs/xfs_format.h      | 11 ++++++++++-
+ 4 files changed, 19 insertions(+), 6 deletions(-)
 
-For example, on my test machine, when I increase $num_attrs to 6000, this
-bug be reproduced on 1k block size xfs. When increased $num_attrs to 80k,
-this bug be reproduced on 4k block size xfs.
-
-So this's not a block size related bug.
-
-BTW, xfs_repair can repair this corruption. And from shared/002 output, we can
-see shared/002 use getfattr to sure all xattrs haven been wrote in
-device correctly.
-So this corruption maybe due to xfs log problems.
-
-Thanks,
-Zorro Lang
-
-> full xfs_repair -n output is
->
-> *** xfs_repair -n output ***
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> problem with attribute contents in inode 35
-> would clear attr fork
-> bad nblocks 67 for inode 35, would reset to 0
-> bad anextents 5 for inode 35, would reset to 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
-> *** end xfs_repair output
->
-> And a simplified reproducer is just adding >= 577 xattrs to file foo on
-> 512 block size XFS, no dmflaky is needed.
->
-> num_xattrs=577
-> for ((i = 1; i <= $num_xattrs; i++)); do
->         name="user.attr_$(printf "%04d" $i)"
->         $SETFATTR_PROG -n $name -v "val_$(printf "%04d" $i)" $SCRATCH_MNT/foo
-> done
->
-> And it's easily reproduced.
->
-> Thanks,
-> Eryu
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/libhandle/handle.c b/libhandle/handle.c
+index b1c0c10..d532f44 100644
+--- a/libhandle/handle.c
++++ b/libhandle/handle.c
+@@ -21,6 +21,8 @@
+ #include "xfs.h"
+ #include "handle.h"
+ #include "parent.h"
++#include "xfs/xfs_arch.h"
++#include "xfs/xfs_format.h"
+ 
+ /* just pick a value we know is more than big enough */
+ #define	MAXHANSIZ	64
+@@ -397,8 +399,8 @@ attr_list_by_handle(
+ 	alhreq.buffer = buf;
+ 	alhreq.buflen = bufsize;
+ 	/* prevent needless EINVAL from the kernel */
+-	if (alhreq.buflen > XATTR_LIST_MAX)
+-		alhreq.buflen = XATTR_LIST_MAX;
++	if (alhreq.buflen > XFS_XATTR_LIST_MAX)
++		alhreq.buflen = XFS_XATTR_LIST_MAX;
+ 
+ 	error = xfsctl(path, fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
+ 
+diff --git a/libhandle/jdm.c b/libhandle/jdm.c
+index d804423..db7d1fe 100644
+--- a/libhandle/jdm.c
++++ b/libhandle/jdm.c
+@@ -21,6 +21,8 @@
+ #include "handle.h"
+ #include "jdm.h"
+ #include "parent.h"
++#include "xfs/xfs_arch.h"
++#include "xfs/xfs_format.h"
+ 
+ /* internal fshandle - typecast to a void for external use */
+ #define FSHANDLE_SZ		8
+@@ -168,8 +170,8 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
+ 	int rval;
+ 
+ 	/* prevent needless EINVAL from the kernel */
+-	if (bufsz > XATTR_LIST_MAX)
+-		bufsz = XATTR_LIST_MAX;
++	if (bufsz > XFS_XATTR_LIST_MAX)
++		bufsz = XFS_XATTR_LIST_MAX;
+ 
+ 	jdm_fill_filehandle( &filehandle, fshandlep, statp );
+ 	rval = attr_list_by_handle (( void * )&filehandle,
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 5feaf55..98893e2 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -102,7 +102,7 @@ xfs_attr3_rmt_verify(
+ 	if (be32_to_cpu(rmt->rm_bytes) > fsbsize - sizeof(*rmt))
+ 		return false;
+ 	if (be32_to_cpu(rmt->rm_offset) +
+-				be32_to_cpu(rmt->rm_bytes) > XATTR_SIZE_MAX)
++				be32_to_cpu(rmt->rm_bytes) > XFS_XATTR_SIZE_MAX)
+ 		return false;
+ 	if (rmt->rm_owner == 0)
+ 		return false;
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index bb7cc04..2380084 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -60,6 +60,14 @@ struct xfs_ifork;
+ #define	XFS_SB_VERSION_MOREBITSBIT	0x8000
+ 
+ /*
++ * Avoid dependency on linux values of XATTR.
++ * It has to be on the beginning of this file, because we use these Values
++ * later in this header file.
++ */
++#define XFS_XATTR_SIZE_MAX 65536    /* size of an extended attribute value (64k) */
++#define XFS_XATTR_LIST_MAX 65536    /* size of extended attribute namelist (64k) */
++
++/*
+  * Supported feature bit list is just all bits in the versionnum field because
+  * we've used them all up and understand them all. Except, of course, for the
+  * shared superblock bit, which nobody knows what it does and so is unsupported.
+@@ -1483,7 +1491,7 @@ struct xfs_acl {
+  */
+ #define XFS_ACL_MAX_ENTRIES(mp)	\
+ 	(xfs_sb_version_hascrc(&mp->m_sb) \
+-		?  (XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
++		?  (XFS_XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
+ 						sizeof(struct xfs_acl_entry) \
+ 		: 25)
+ 
+@@ -1497,4 +1505,5 @@ struct xfs_acl {
+ #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+ #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+ 
++
+ #endif /* __XFS_FORMAT_H__ */
+-- 
+2.4.5
 
 _______________________________________________
 xfs mailing list
