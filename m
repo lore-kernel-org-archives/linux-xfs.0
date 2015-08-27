@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E398F29DF5
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 13:54:48 -0500 (CDT)
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C78B5304062
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 11:54:45 -0700 (PDT)
-Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
-	[128.162.236.41])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 9594970030FB
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 13:54:45 -0500 (CDT)
-Subject: xfsrestore: fix 2GB directory dump limitation for multi-stream
-From: Rich Johnston <rjohnston@sgi.com>
-Content-Disposition: inline;
-	filename=fix-2GB-directory-dump-limitation-for-multi-stream.patch
-Message-Id: <20150827185445.6E13960EDE2F0@gulag1.americas.sgi.com>
-Date: Thu, 27 Aug 2015 13:54:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 67B8729DF5
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 14:04:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 48F7A30405F
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 12:04:30 -0700 (PDT)
+Received: from lynxeye.de (ns.lynxeye.de [87.118.118.114]) by cuda.sgi.com
+	with ESMTP id 6kEHQrNa91eKdD4F for <xfs@oss.sgi.com>;
+	Thu, 27 Aug 2015 12:04:27 -0700 (PDT)
+From: Lucas Stach <dev@lynxeye.de>
+Subject: [PATCH] xfs: add mssing inode cache attempts counter increment
+Date: Thu, 27 Aug 2015 21:04:21 +0200
+Message-Id: <1440702261-3018-1-git-send-email-dev@lynxeye.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +25,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+Increasing the inode cache attempt counter was apparently dropped while
+refactoring the cache code and so stayed at the initial 0 value. Add the
+increment back to make the runtime stats more useful.
 
-The drive_simple restore path has a 2GB directory limit. Instead of
-ASSERTing if nreadneeded64 is greater than INTGENMAX (2GB), add a loop
-to handle it.
-
-Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+Signed-off-by: Lucas Stach <dev@lynxeye.de>
 ---
- common/drive_simple.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_icache.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Index: b/common/drive_simple.c
-===================================================================
---- a/common/drive_simple.c
-+++ b/common/drive_simple.c
-@@ -765,18 +765,20 @@ do_seek_mark( drive_t *drivep, drive_mar
- 	/* use read_buf util func to eat up difference
- 	 */
- 	nreadneeded64 = mark - strmoff;
--	ASSERT( nreadneeded64 <= INTGENMAX );
--	nreadneeded = ( intgen_t )nreadneeded64;
--	nread = read_buf( 0,
--			  ( size_t )nreadneeded,
--			  ( void * )drivep,
--			  ( rfp_t )drivep->d_opsp->do_read,
--			  ( rrbfp_t )drivep->d_opsp->do_return_read_buf,
--			  &rval );
--	if  ( rval ) {
--		return rval;
-+	while ( nreadneeded64 > 0 ) {
-+		if ( nreadneeded64 > INTGENMAX )
-+			nreadneeded = INTGENMAX;
-+		else
-+			nreadneeded = ( intgen_t )nreadneeded64;
-+		nread = read_buf( 0, nreadneeded, drivep,
-+				  ( rfp_t )drivep->d_opsp->do_read,
-+				( rrbfp_t )drivep->d_opsp->do_return_read_buf,
-+				  &rval );
-+		if  ( rval ) {
-+			return rval;
-+		}
-+		nreadneeded64 -= nread;
- 	}
--	ASSERT( nread == nreadneeded );
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 76a9f27..0a326bd 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -412,6 +412,8 @@ xfs_iget(
+ 	if (!ino || XFS_INO_TO_AGNO(mp, ino) >= mp->m_sb.sb_agcount)
+ 		return -EINVAL;
  
- 	/* verify we are on the mark
- 	 */
++	XFS_STATS_INC(xs_ig_attempts);
++
+ 	/* get the perag structure and ensure that it's inode capable */
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
+ 	agino = XFS_INO_TO_AGINO(mp, ino);
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
