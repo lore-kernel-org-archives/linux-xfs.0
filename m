@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7D9347F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 13:06:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EB86FAC003
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 11:06:50 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dSjrBYLaWR7ULFMK (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Aug 2015 11:06:49 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 6DEC48F2ED
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 18:06:49 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-103.bos.redhat.com [10.18.41.103])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7SI6nXB027615
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 14:06:49 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/9] libxfs: don't hardcode cycle 1 into unmount op header
-Date: Fri, 28 Aug 2015 14:06:41 -0400
-Message-Id: <1440785207-17543-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
-References: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CFAC07F37
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 17:05:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AF5FB8F8049
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 15:05:29 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Oe4lEBUeEwGdW8DJ for <xfs@oss.sgi.com>;
+	Fri, 28 Aug 2015 15:05:26 -0700 (PDT)
+Date: Sat, 29 Aug 2015 08:04:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: timestamp updates cause excessive fdatasync log
+	traffic
+Message-ID: <20150828220454.GC26895@dastard>
+References: <1440724990-25073-1-git-send-email-david@fromorbit.com>
+	<20150828043253.GB26895@dastard>
+	<alpine.DEB.2.00.1508280804040.13116@cobra.newdream.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1508280804040.13116@cobra.newdream.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,98 +28,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Sage Weil <sage@newdream.net>
+Cc: xfs@oss.sgi.com
 
-The libxfs helper to write a log record after zeroing the log fills much
-of the record header and unmount record with dummy data. It also
-hardcodes the cycle number into the transaction oh_tid field as the
-kernel expects to find the cycle stamped at the top of each block and
-the original oh_tid value packed into h_cycle_data of the record header.
+On Fri, Aug 28, 2015 at 08:11:20AM -0700, Sage Weil wrote:
+> Hi Dave,
+> 
+> On Fri, 28 Aug 2015, Dave Chinner wrote:
+> > 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Sage Weil reported that a ceph test workload was writing to the
+> > log on every fdatasync during an overwrite workload. Event tracing
+> > showed that the only metadata modification being made was the
+> > timestamp updates during the write(2) syscall, but fdatasync(2)
+> > is supposed to ignore them. The key observation was that the
+> > transactions in the log all looked like this:
+[....]
 
-The log clearing code requires the ability to format the log to an
-arbitrary cycle number to fix v5 superblock log recovery ordering
-problems. As a result, the unmount record helper must not hardcode a
-cycle of 1.
+> > ---
+> > Version 2:
+> > - include the hunk from fs/xfs/xfs_trans_inode.c that I missed
+> >   when committing the patch locally the first time.
+> 
+> I gave this a go on my machine but I'm still seeing the same symptom.  
 
-Fix up libxfs_log_header() to pack the unmount record appropriately, as
-is already done for extra blocks that might exist beyond the record. Use
-h_cycle_data for the original 32-bit word of the log record data block
-and stamp the cycle number in its place. This allows unmount_record() to
-work for arbitrary cycle numbers and libxfs_log_header() to pack a cycle
-value that matches the lsn used in the record header. Note that this
-patch does not change behavior as the lsn is still hardcoded to (1:0).
+OK, that implies the inode buffer has not been submitted for IO and
+so the inode is being held in "flushing" state for an extended
+period of time.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- libxfs/rdwr.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+> I've gathered the trace, strace, and other useful bits at
+> 
+>    http://newdream.net/~sage/drop/rocksdb.2/
+> 
+> This is pretty easy to reproduce with the ceph_test_keyvaluedb binary 
+> (built on fedora 22), also in that dir:
+> 
+>    rm -rf kv_test_temp_dir/
+>    ./ceph_test_keyvaluedb --gtest_filter=KeyValueDB/KVTest.BenchCommit/1
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 4f8212f..3c0179f 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -122,7 +122,7 @@ static void unmount_record(void *p)
- 	} magic = { XLOG_UNMOUNT_TYPE, 0, 0 };
- 
- 	memset(p, 0, BBSIZE);
--	op->oh_tid = cpu_to_be32(1);
-+	op->oh_tid = cpu_to_be32(0xb0c0d0d0);
- 	op->oh_len = cpu_to_be32(sizeof(magic));
- 	op->oh_clientid = XFS_LOG;
- 	op->oh_flags = XLOG_UNMOUNT_TRANS;
-@@ -188,10 +188,6 @@ libxfs_log_header(
- 
- 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 1;
- 
--	/* note that oh_tid actually contains the cycle number
--	 * and the tid is stored in h_cycle_data[0] - that's the
--	 * way things end up on disk.
--	 */
- 	memset(p, 0, BBSIZE);
- 	head->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
- 	head->h_cycle = cpu_to_be32(1);
-@@ -203,7 +199,6 @@ libxfs_log_header(
- 	head->h_crc = cpu_to_le32(0);
- 	head->h_prev_block = cpu_to_be32(-1);
- 	head->h_num_logops = cpu_to_be32(1);
--	head->h_cycle_data[0] = cpu_to_be32(0xb0c0d0d0);
- 	head->h_fmt = cpu_to_be32(fmt);
- 	head->h_size = cpu_to_be32(XLOG_HEADER_CYCLE_SIZE);
- 
-@@ -212,11 +207,25 @@ libxfs_log_header(
- 
- 	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
- 
--	len = MAX(len, 2);
- 	p = nextfunc(p, BBSIZE, private);
- 	unmount_record(p);
- 
-+	/*
-+	 * The kernel expects to see either a log record header magic or the LSN
-+	 * cycle at the top of every log block (for example, see
-+	 * xlog_[un]pack_data() and xlog_get_cycle()). Pack the unmount record
-+	 * block appropriately here.
-+	 */
- 	cycle_lsn = CYCLE_LSN_DISK(head->h_lsn);
-+	head->h_cycle_data[0] = *(__be32 *)p;
-+	*(__be32 *)p = cycle_lsn;
-+
-+	/*
-+	 * Now zero any remaining blocks in the record and stamp with the cycle.
-+	 * Note that we don't need to swap into h_cycle_data because it has
-+	 * already been initialized to zero.
-+	 */
-+	len = MAX(len, 2);
- 	for (i = 2; i < len; i++) {
- 		p = nextfunc(p, BBSIZE, private);
- 		memset(p, 0, BBSIZE);
+I'll have a deeper look.
+
+Cheers,
+
+Dave.
 -- 
-2.1.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
