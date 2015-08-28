@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8273B29DF5
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 20:23:56 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 673B329DF5
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 23:33:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DEE8DAC004
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 18:23:52 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 47CF28F8033
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2015 21:33:03 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	bAQ5AQD9OCGkvrXG for <xfs@oss.sgi.com>;
-	Thu, 27 Aug 2015 18:23:48 -0700 (PDT)
+	380B82mV5URlsNlz for <xfs@oss.sgi.com>;
+	Thu, 27 Aug 2015 21:32:56 -0700 (PDT)
+Date: Fri, 28 Aug 2015 14:32:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: timestamp updates cause excessive fdatasync log traffic
-Date: Fri, 28 Aug 2015 11:23:10 +1000
-Message-Id: <1440724990-25073-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH V2] xfs: timestamp updates cause excessive fdatasync log
+	traffic
+Message-ID: <20150828043253.GB26895@dastard>
+References: <1440724990-25073-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1440724990-25073-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,13 +26,13 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: sage@redhat.com
+
 
 From: Dave Chinner <dchinner@redhat.com>
 
@@ -139,9 +144,14 @@ right thing (i.e. force the log).
 Reported-by: Sage Weil <sage@redhat.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode_item.c | 161 ++++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_inode_item.h |   1 +
- 2 files changed, 115 insertions(+), 47 deletions(-)
+Version 2:
+- include the hunk from fs/xfs/xfs_trans_inode.c that I missed
+  when committing the patch locally the first time.
+
+ fs/xfs/xfs_inode_item.c  | 161 +++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_inode_item.h  |   1 +
+ fs/xfs/xfs_trans_inode.c |   8 ---
+ 3 files changed, 115 insertions(+), 55 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
 index 62bd80f..be04eb2 100644
@@ -501,8 +511,24 @@ index 488d812..43a9e1c 100644
  } xfs_inode_log_item_t;
  
  static inline int xfs_inode_clean(xfs_inode_t *ip)
--- 
-2.5.0
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 17280cd..77f1e8a 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -123,13 +123,5 @@ xfs_trans_log_inode(
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+ 
+-	/*
+-	 * Always OR in the bits from the ili_last_fields field.
+-	 * This is to coordinate with the xfs_iflush() and xfs_iflush_done()
+-	 * routines in the eventual clearing of the ili_fields bits.
+-	 * See the big comment in xfs_iflush() for an explanation of
+-	 * this coordination mechanism.
+-	 */
+-	flags |= ip->i_itemp->ili_last_fields;
+ 	ip->i_itemp->ili_fields |= flags;
+ }
 
 _______________________________________________
 xfs mailing list
