@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7DEDF7F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 13:06:51 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A6C327F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 13:06:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6AC218F8035
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 11:06:51 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 997C0304051
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 11:06:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QN01TTOcDh9Sr2Qu (version=TLSv1
+	cuda.sgi.com with ESMTP id EIoq19zH6UCLfBiD (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Aug 2015 11:06:50 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id F20B3A2C36
+	Fri, 28 Aug 2015 11:06:49 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 495FFA2C32
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 18:06:49 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-103.bos.redhat.com [10.18.41.103])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7SI6nIc024543
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t7SI6mN4007984
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 14:06:49 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 9/9] xfs_repair: don't clear the log by default
-Date: Fri, 28 Aug 2015 14:06:47 -0400
-Message-Id: <1440785207-17543-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/9] libxfs: track largest metadata LSN in use via verifiers
+Date: Fri, 28 Aug 2015 14:06:40 -0400
+Message-Id: <1440785207-17543-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
 References: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,117 +38,80 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_repair currently clears the log regardless of whether it is
-corrupted, clean or contains data. This is traditionally harmless but
-now causes log recovery problems on v5 filesystems. v5 filesystems
-expect a clean log to always have an LSN out ahead of the maximum last
-modification LSN stamped on any bit of metadata throughout the fs. If
-this is not the case, repair must reformat the log with a larger cycle
-number after fs processing is complete.
+The LSN validation helper is called in the I/O verifier codepath for
+metadata that embed a last-modification LSN. While the codepath exists,
+this is not used in userspace as in the kernel because the former
+doesn't have an active log.
 
-Given that unconditional log clearing actually introduces a filesystem
-inconsistency on v5 superblocks (that repair must subsequently recover
-from) and provides no tangible benefit for v4 filesystems that otherwise
-have a clean and covered log, it is more appropriate behavior to not
-clear the log by default.
-
-Update xfs_repair to always and only clear the log when the -L parameter
-is specified. Retain the existing logic to require -L or otherwise exit
-if the log appears to contain data. Adopt similar behavior if the log
-appears to be corrupted.
+xfs_repair does need to check the validity of the LSN metadata with
+respect to the on-disk log, however. Use the LSN validation mechanism to
+track the largest LSN that has been seen. Export the value so repair can
+use it once it has processed the entire filesystem. Note that the helper
+continues to always return true to preserve existing behavior.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase2.c | 60 ++++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 40 insertions(+), 20 deletions(-)
+ include/libxfs.h |  1 +
+ libxfs/util.c    | 28 +++++++++++++++++++++++++++-
+ 2 files changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 72132ce..fe7ed2b 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -36,11 +36,13 @@ int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
- }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index b1604e2..cc06fc6 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -134,6 +134,7 @@ typedef struct {
+ #define LIBXFS_DIRECT		0x0020	/* can use direct I/O, not buffered */
  
- static void
--zero_log(xfs_mount_t *mp)
-+zero_log(
-+	struct xfs_mount	*mp)
- {
--	int error;
--	xfs_daddr_t head_blk, tail_blk;
--	struct xlog	*log = mp->m_log;
-+	int			error;
-+	xfs_daddr_t		head_blk;
-+	xfs_daddr_t		tail_blk;
-+	struct xlog		*log = mp->m_log;
- 
- 	memset(log, 0, sizeof(struct xlog));
- 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
-@@ -65,10 +67,22 @@ zero_log(xfs_mount_t *mp)
- 	}
- 	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
- 
--	if ((error = xlog_find_tail(log, &head_blk, &tail_blk))) {
--		do_warn(_("zero_log: cannot find log head/tail "
--			  "(xlog_find_tail=%d), zeroing it anyway\n"),
-+	/*
-+	 * Find the log head and tail and alert the user to the situation if the
-+	 * log appears corrupted or contains data. In either case, we do not
-+	 * proceed past this point unless the user explicitly requests to zap
-+	 * the log.
-+	 */
-+	error = xlog_find_tail(log, &head_blk, &tail_blk);
-+	if (error) {
-+		do_warn(
-+		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
- 			error);
-+		if (!no_modify && !zap_log)
-+			do_error(_(
-+"ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
-+"filesystem to replay the log or use the -L option to destroy the log and\n"
-+"attempt a repair.\n"));
- 	} else {
- 		if (verbose) {
- 			do_warn(
-@@ -93,19 +107,25 @@ zero_log(xfs_mount_t *mp)
- 		}
- 	}
- 
--	if (no_modify)
--		return;
--
--	libxfs_log_clear(log->l_dev, XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
--		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
--		&mp->m_sb.sb_uuid,
--		xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
--		mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
--
--	/* update the log data structure with new state */
--	error = xlog_find_tail(log, &head_blk, &tail_blk);
--	if (error || head_blk != tail_blk)
--		do_error(_("failed to clear log"));
-+	/*
-+	 * Only clear the log when explicitly requested. Doing so is unnecessary
-+	 * unless something is wrong. Further, this resets the current LSN of
-+	 * the filesystem and creates more work for repair of v5 superblock
-+	 * filesystems.
-+	 */
-+	if (!no_modify && zap_log) {
-+		libxfs_log_clear(log->l_dev,
-+			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-+			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
-+			&mp->m_sb.sb_uuid,
-+			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
-+			mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
-+
-+		/* update the log data structure with new state */
-+		error = xlog_find_tail(log, &head_blk, &tail_blk);
-+		if (error || head_blk != tail_blk)
-+			do_error(_("failed to clear log"));
-+	}
- }
- 
+ extern char	*progname;
++extern xfs_lsn_t libxfs_max_lsn;
+ extern int	libxfs_init (libxfs_init_t *);
+ extern void	libxfs_destroy (void);
+ extern int	libxfs_device_to_fd (dev_t);
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 96ce31f..0116e3d 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -733,13 +733,39 @@ xfs_verifier_error(
  /*
+  * This is called from I/O verifiers on v5 superblock filesystems. In the
+  * kernel, it validates the metadata LSN parameter against the current LSN of
+- * the active log. We don't have an active log in userspace, so just return
++ * the active log. We don't have an active log in userspace so always return
+  * true.
++ *
++ * xfs_repair piggybacks off this mechanism to help track the largest metadata
++ * LSN in use on a filesystem. Keep a record of the largest LSN seen such that
++ * repair can validate it against the state of the log.
+  */
++xfs_lsn_t	libxfs_max_lsn = 0;
++pthread_mutex_t	libxfs_max_lsn_lock = PTHREAD_MUTEX_INITIALIZER;
++
+ bool
+ xfs_valid_lsn(
+ 	struct xfs_mount	*mp,
+ 	xfs_lsn_t		lsn)
+ {
++	int			cycle = CYCLE_LSN(lsn);
++	int			block = BLOCK_LSN(lsn);
++	int			max_cycle;
++	int			max_block;
++
++	if (lsn == NULLCOMMITLSN)
++		return true;
++
++	pthread_mutex_lock(&libxfs_max_lsn_lock);
++
++	max_cycle = CYCLE_LSN(libxfs_max_lsn);
++	max_block = BLOCK_LSN(libxfs_max_lsn);
++
++	if ((cycle > max_cycle) ||
++	    (cycle == max_cycle && block > max_block))
++		libxfs_max_lsn = lsn;
++
++	pthread_mutex_unlock(&libxfs_max_lsn_lock);
++
+ 	return true;
+ }
 -- 
 2.1.0
 
