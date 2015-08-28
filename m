@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A6C327F3F
+	by oss.sgi.com (Postfix) with ESMTP id E24F07F60
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 13:06:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 997C0304051
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B801D304051
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 11:06:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EIoq19zH6UCLfBiD (version=TLSv1
+	cuda.sgi.com with ESMTP id dN5Dw4tZrijCwcmn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 28 Aug 2015 11:06:49 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 495FFA2C32
+	by mx1.redhat.com (Postfix) with ESMTPS id 7758FC1CAC9A
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 18:06:49 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-103.bos.redhat.com [10.18.41.103])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7SI6mN4007984
+	id t7SI6nrR007988
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 14:06:49 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/9] libxfs: track largest metadata LSN in use via verifiers
-Date: Fri, 28 Aug 2015 14:06:40 -0400
-Message-Id: <1440785207-17543-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 4/9] libxfs: pass lsn param to log clear and record header
+	logging helpers
+Date: Fri, 28 Aug 2015 14:06:42 -0400
+Message-Id: <1440785207-17543-5-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
 References: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,80 +39,182 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The LSN validation helper is called in the I/O verifier codepath for
-metadata that embed a last-modification LSN. While the codepath exists,
-this is not used in userspace as in the kernel because the former
-doesn't have an active log.
+In preparation to support the ability to format the log with an
+arbitrary cycle number, the log clear and record logging helpers must be
+updated to receive the desired cycle and LSN values as parameters.
 
-xfs_repair does need to check the validity of the LSN metadata with
-respect to the on-disk log, however. Use the LSN validation mechanism to
-track the largest LSN that has been seen. Export the value so repair can
-use it once it has processed the entire filesystem. Note that the helper
-continues to always return true to preserve existing behavior.
+Update libxfs_log_clear() to receive the desired cycle number to format
+the log with. Define a preprocessor directive to represent the currently
+hardcoded case of cycle 1. Update libxfs_log_header() to receive the lsn
+and tail_lsn of the record to write. Use a NULL value LSN to represent
+the currently hardcoded behavior.
+
+All callers are updated to use the current default values. As such, this
+patch does not change behavior in any way.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- include/libxfs.h |  1 +
- libxfs/util.c    | 28 +++++++++++++++++++++++++++-
- 2 files changed, 28 insertions(+), 1 deletion(-)
+ copy/xfs_copy.c  |  4 ++--
+ db/sb.c          |  2 +-
+ include/libxfs.h | 12 ++++++++----
+ libxfs/rdwr.c    | 26 ++++++++++++++++++++------
+ mkfs/xfs_mkfs.c  |  2 +-
+ repair/phase2.c  |  2 +-
+ 6 files changed, 33 insertions(+), 15 deletions(-)
 
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 2f4f5cb..949be5f 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -1212,8 +1212,8 @@ write_log_header(int fd, wbuf *buf, xfs_mount_t *mp)
+ 
+ 	offset = libxfs_log_header(p, &buf->owner->uuid,
+ 			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
+-			mp->m_sb.sb_logsunit, XLOG_FMT,
+-			next_log_chunk, buf);
++			mp->m_sb.sb_logsunit, XLOG_FMT, NULLCOMMITLSN,
++			NULLCOMMITLSN, next_log_chunk, buf);
+ 	do_write(buf->owner);
+ 
+ 	return roundup(logstart + offset, buf->length);
+diff --git a/db/sb.c b/db/sb.c
+index 598e787..560e653 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -278,7 +278,7 @@ sb_logzero(uuid_t *uuidp)
+ 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
+ 			uuidp,
+ 			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
+-			mp->m_sb.sb_logsunit, XLOG_FMT)) {
++			mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE)) {
+ 		dbprintf(_("ERROR: cannot clear the log\n"));
+ 		return 0;
+ 	}
 diff --git a/include/libxfs.h b/include/libxfs.h
-index b1604e2..cc06fc6 100644
+index cc06fc6..6c87934 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -134,6 +134,7 @@ typedef struct {
- #define LIBXFS_DIRECT		0x0020	/* can use direct I/O, not buffered */
+@@ -149,10 +149,14 @@ extern int	platform_nproc(void);
+ /* check or write log footer: specify device, log size in blocks & uuid */
+ typedef char	*(libxfs_get_block_t)(char *, int, void *);
  
- extern char	*progname;
-+extern xfs_lsn_t libxfs_max_lsn;
- extern int	libxfs_init (libxfs_init_t *);
- extern void	libxfs_destroy (void);
- extern int	libxfs_device_to_fd (dev_t);
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 96ce31f..0116e3d 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -733,13 +733,39 @@ xfs_verifier_error(
- /*
-  * This is called from I/O verifiers on v5 superblock filesystems. In the
-  * kernel, it validates the metadata LSN parameter against the current LSN of
-- * the active log. We don't have an active log in userspace, so just return
-+ * the active log. We don't have an active log in userspace so always return
-  * true.
-+ *
-+ * xfs_repair piggybacks off this mechanism to help track the largest metadata
-+ * LSN in use on a filesystem. Keep a record of the largest LSN seen such that
-+ * repair can validate it against the state of the log.
-  */
-+xfs_lsn_t	libxfs_max_lsn = 0;
-+pthread_mutex_t	libxfs_max_lsn_lock = PTHREAD_MUTEX_INITIALIZER;
-+
- bool
- xfs_valid_lsn(
- 	struct xfs_mount	*mp,
- 	xfs_lsn_t		lsn)
+-extern int	libxfs_log_clear (struct xfs_buftarg *, xfs_daddr_t, uint,
+-				uuid_t *, int, int, int);
+-extern int	libxfs_log_header (char *, uuid_t *, int, int, int,
+-				libxfs_get_block_t *, void *);
++/*
++ * Helpers to clear the log to a particular log cycle.
++ */
++#define XLOG_INIT_CYCLE	1
++extern int	libxfs_log_clear(struct xfs_buftarg *, xfs_daddr_t, uint,
++				 uuid_t *, int, int, int, int);
++extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
++				  xfs_lsn_t, libxfs_get_block_t *, void *);
+ 
+ 
+ /* Shared utility routines */
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 3c0179f..9cd7f3d 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -149,14 +149,21 @@ libxfs_log_clear(
+ 	uuid_t			*fs_uuid,
+ 	int			version,
+ 	int			sunit,
+-	int			fmt)
++	int			fmt,
++	int			cycle)
  {
-+	int			cycle = CYCLE_LSN(lsn);
-+	int			block = BLOCK_LSN(lsn);
-+	int			max_cycle;
-+	int			max_block;
+ 	xfs_buf_t		*bp;
+ 	int			len;
++	xfs_lsn_t		lsn;
+ 
+ 	if (!btp->dev || !fs_uuid)
+ 		return -EINVAL;
+ 
++	if (cycle != XLOG_INIT_CYCLE)
++		return -EINVAL;
 +
++	lsn = xlog_assign_lsn(cycle, 0);
++
+ 	/* first zero the log */
+ 	libxfs_device_zero(btp, start, length);
+ 
+@@ -164,8 +171,8 @@ libxfs_log_clear(
+ 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 2;
+ 	len = MAX(len, 2);
+ 	bp = libxfs_getbufr(btp, start, len);
+-	libxfs_log_header(XFS_BUF_PTR(bp),
+-			  fs_uuid, version, sunit, fmt, next, bp);
++	libxfs_log_header(XFS_BUF_PTR(bp), fs_uuid, version, sunit, fmt, lsn,
++			  lsn, next, bp);
+ 	bp->b_flags |= LIBXFS_B_DIRTY;
+ 	libxfs_putbufr(bp);
+ 	return 0;
+@@ -178,6 +185,8 @@ libxfs_log_header(
+ 	int			version,
+ 	int			sunit,
+ 	int			fmt,
++	xfs_lsn_t		lsn,
++	xfs_lsn_t		tail_lsn,
+ 	libxfs_get_block_t	*nextfunc,
+ 	void			*private)
+ {
+@@ -186,11 +195,16 @@ libxfs_log_header(
+ 	__be32			cycle_lsn;
+ 	int			i, len;
+ 
 +	if (lsn == NULLCOMMITLSN)
-+		return true;
++		lsn = xlog_assign_lsn(XLOG_INIT_CYCLE, 0);
++	if (tail_lsn == NULLCOMMITLSN)
++		tail_lsn = lsn;
 +
-+	pthread_mutex_lock(&libxfs_max_lsn_lock);
-+
-+	max_cycle = CYCLE_LSN(libxfs_max_lsn);
-+	max_block = BLOCK_LSN(libxfs_max_lsn);
-+
-+	if ((cycle > max_cycle) ||
-+	    (cycle == max_cycle && block > max_block))
-+		libxfs_max_lsn = lsn;
-+
-+	pthread_mutex_unlock(&libxfs_max_lsn_lock);
-+
- 	return true;
+ 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 1;
+ 
+ 	memset(p, 0, BBSIZE);
+ 	head->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
+-	head->h_cycle = cpu_to_be32(1);
++	head->h_cycle = cpu_to_be32(CYCLE_LSN(lsn));
+ 	head->h_version = cpu_to_be32(version);
+ 	if (len != 1)
+ 		head->h_len = cpu_to_be32(sunit - BBSIZE);
+@@ -202,8 +216,8 @@ libxfs_log_header(
+ 	head->h_fmt = cpu_to_be32(fmt);
+ 	head->h_size = cpu_to_be32(XLOG_HEADER_CYCLE_SIZE);
+ 
+-	head->h_lsn = cpu_to_be64(xlog_assign_lsn(1, 0));
+-	head->h_tail_lsn = cpu_to_be64(xlog_assign_lsn(1, 0));
++	head->h_lsn = cpu_to_be64(lsn);
++	head->h_tail_lsn = cpu_to_be64(tail_lsn);
+ 
+ 	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
+ 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d993fc0..238d400 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2670,7 +2670,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	libxfs_log_clear(mp->m_logdev_targp,
+ 		XFS_FSB_TO_DADDR(mp, logstart),
+ 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+-		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
++		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT, XLOG_INIT_CYCLE);
+ 
+ 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
+ 	if (mp == NULL) {
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 7e264c4..0673a0c 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -98,7 +98,7 @@ zero_log(xfs_mount_t *mp)
+ 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
+ 		&mp->m_sb.sb_uuid,
+ 		xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
+-		mp->m_sb.sb_logsunit, XLOG_FMT);
++		mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
  }
+ 
+ /*
 -- 
 2.1.0
 
