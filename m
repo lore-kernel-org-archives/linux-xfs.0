@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E24F07F60
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 13:06:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B801D304051
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0EF4E7F37
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 13:06:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EED488F8040
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 11:06:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dN5Dw4tZrijCwcmn (version=TLSv1
+	cuda.sgi.com with ESMTP id 9VdegGesLUnplbqv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 28 Aug 2015 11:06:49 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 7758FC1CAC9A
+	by mx1.redhat.com (Postfix) with ESMTPS id 65BA3A2C33
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 18:06:49 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-103.bos.redhat.com [10.18.41.103])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t7SI6nrR007988
+	id t7SI6nSN007986
 	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 14:06:49 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 4/9] libxfs: pass lsn param to log clear and record header
-	logging helpers
-Date: Fri, 28 Aug 2015 14:06:42 -0400
-Message-Id: <1440785207-17543-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 1/9] xfs: validate metadata LSNs against log on v5 superblocks
+Date: Fri, 28 Aug 2015 14:06:39 -0400
+Message-Id: <1440785207-17543-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
 References: <1440785207-17543-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,182 +38,267 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-In preparation to support the ability to format the log with an
-arbitrary cycle number, the log clear and record logging helpers must be
-updated to receive the desired cycle and LSN values as parameters.
-
-Update libxfs_log_clear() to receive the desired cycle number to format
-the log with. Define a preprocessor directive to represent the currently
-hardcoded case of cycle 1. Update libxfs_log_header() to receive the lsn
-and tail_lsn of the record to write. Use a NULL value LSN to represent
-the currently hardcoded behavior.
-
-All callers are updated to use the current default values. As such, this
-patch does not change behavior in any way.
+Backport of kernel commit. Replace xfs_valid_lsn() with stub.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- copy/xfs_copy.c  |  4 ++--
- db/sb.c          |  2 +-
- include/libxfs.h | 12 ++++++++----
- libxfs/rdwr.c    | 26 ++++++++++++++++++++------
- mkfs/xfs_mkfs.c  |  2 +-
- repair/phase2.c  |  2 +-
- 6 files changed, 33 insertions(+), 15 deletions(-)
+ libxfs/libxfs_priv.h        |  2 ++
+ libxfs/util.c               | 14 ++++++++++++++
+ libxfs/xfs_alloc.c          | 10 ++++++++--
+ libxfs/xfs_attr_leaf.c      |  3 +++
+ libxfs/xfs_btree.c          | 18 ++++++++++++++++--
+ libxfs/xfs_da_btree.c       |  3 +++
+ libxfs/xfs_dir2_block.c     |  2 ++
+ libxfs/xfs_dir2_data.c      |  2 ++
+ libxfs/xfs_dir2_leaf.c      |  2 ++
+ libxfs/xfs_dir2_node.c      |  2 ++
+ libxfs/xfs_ialloc.c         |  9 +++++++--
+ libxfs/xfs_sb.c             |  9 +++++++++
+ libxfs/xfs_symlink_remote.c |  3 +++
+ 13 files changed, 73 insertions(+), 6 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 2f4f5cb..949be5f 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -1212,8 +1212,8 @@ write_log_header(int fd, wbuf *buf, xfs_mount_t *mp)
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 2a8b850..d21e78e 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -506,4 +506,6 @@ void xfs_verifier_error(struct xfs_buf *bp);
+ /* xfs_rtalloc.c */
+ int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
  
- 	offset = libxfs_log_header(p, &buf->owner->uuid,
- 			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
--			mp->m_sb.sb_logsunit, XLOG_FMT,
--			next_log_chunk, buf);
-+			mp->m_sb.sb_logsunit, XLOG_FMT, NULLCOMMITLSN,
-+			NULLCOMMITLSN, next_log_chunk, buf);
- 	do_write(buf->owner);
- 
- 	return roundup(logstart + offset, buf->length);
-diff --git a/db/sb.c b/db/sb.c
-index 598e787..560e653 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -278,7 +278,7 @@ sb_logzero(uuid_t *uuidp)
- 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
- 			uuidp,
- 			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
--			mp->m_sb.sb_logsunit, XLOG_FMT)) {
-+			mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE)) {
- 		dbprintf(_("ERROR: cannot clear the log\n"));
- 		return 0;
- 	}
-diff --git a/include/libxfs.h b/include/libxfs.h
-index cc06fc6..6c87934 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -149,10 +149,14 @@ extern int	platform_nproc(void);
- /* check or write log footer: specify device, log size in blocks & uuid */
- typedef char	*(libxfs_get_block_t)(char *, int, void *);
- 
--extern int	libxfs_log_clear (struct xfs_buftarg *, xfs_daddr_t, uint,
--				uuid_t *, int, int, int);
--extern int	libxfs_log_header (char *, uuid_t *, int, int, int,
--				libxfs_get_block_t *, void *);
-+/*
-+ * Helpers to clear the log to a particular log cycle.
-+ */
-+#define XLOG_INIT_CYCLE	1
-+extern int	libxfs_log_clear(struct xfs_buftarg *, xfs_daddr_t, uint,
-+				 uuid_t *, int, int, int, int);
-+extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
-+				  xfs_lsn_t, libxfs_get_block_t *, void *);
- 
- 
- /* Shared utility routines */
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 3c0179f..9cd7f3d 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -149,14 +149,21 @@ libxfs_log_clear(
- 	uuid_t			*fs_uuid,
- 	int			version,
- 	int			sunit,
--	int			fmt)
-+	int			fmt,
-+	int			cycle)
- {
- 	xfs_buf_t		*bp;
- 	int			len;
-+	xfs_lsn_t		lsn;
- 
- 	if (!btp->dev || !fs_uuid)
- 		return -EINVAL;
- 
-+	if (cycle != XLOG_INIT_CYCLE)
-+		return -EINVAL;
++bool xfs_valid_lsn(struct xfs_mount *, xfs_lsn_t);
 +
-+	lsn = xlog_assign_lsn(cycle, 0);
-+
- 	/* first zero the log */
- 	libxfs_device_zero(btp, start, length);
- 
-@@ -164,8 +171,8 @@ libxfs_log_clear(
- 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 2;
- 	len = MAX(len, 2);
- 	bp = libxfs_getbufr(btp, start, len);
--	libxfs_log_header(XFS_BUF_PTR(bp),
--			  fs_uuid, version, sunit, fmt, next, bp);
-+	libxfs_log_header(XFS_BUF_PTR(bp), fs_uuid, version, sunit, fmt, lsn,
-+			  lsn, next, bp);
- 	bp->b_flags |= LIBXFS_B_DIRTY;
- 	libxfs_putbufr(bp);
- 	return 0;
-@@ -178,6 +185,8 @@ libxfs_log_header(
- 	int			version,
- 	int			sunit,
- 	int			fmt,
-+	xfs_lsn_t		lsn,
-+	xfs_lsn_t		tail_lsn,
- 	libxfs_get_block_t	*nextfunc,
- 	void			*private)
- {
-@@ -186,11 +195,16 @@ libxfs_log_header(
- 	__be32			cycle_lsn;
- 	int			i, len;
- 
-+	if (lsn == NULLCOMMITLSN)
-+		lsn = xlog_assign_lsn(XLOG_INIT_CYCLE, 0);
-+	if (tail_lsn == NULLCOMMITLSN)
-+		tail_lsn = lsn;
-+
- 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 1;
- 
- 	memset(p, 0, BBSIZE);
- 	head->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
--	head->h_cycle = cpu_to_be32(1);
-+	head->h_cycle = cpu_to_be32(CYCLE_LSN(lsn));
- 	head->h_version = cpu_to_be32(version);
- 	if (len != 1)
- 		head->h_len = cpu_to_be32(sunit - BBSIZE);
-@@ -202,8 +216,8 @@ libxfs_log_header(
- 	head->h_fmt = cpu_to_be32(fmt);
- 	head->h_size = cpu_to_be32(XLOG_HEADER_CYCLE_SIZE);
- 
--	head->h_lsn = cpu_to_be64(xlog_assign_lsn(1, 0));
--	head->h_tail_lsn = cpu_to_be64(xlog_assign_lsn(1, 0));
-+	head->h_lsn = cpu_to_be64(lsn);
-+	head->h_tail_lsn = cpu_to_be64(tail_lsn);
- 
- 	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
- 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index d993fc0..238d400 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2670,7 +2670,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	libxfs_log_clear(mp->m_logdev_targp,
- 		XFS_FSB_TO_DADDR(mp, logstart),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
--		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
-+		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT, XLOG_INIT_CYCLE);
- 
- 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
- 	if (mp == NULL) {
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 7e264c4..0673a0c 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -98,7 +98,7 @@ zero_log(xfs_mount_t *mp)
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
- 		&mp->m_sb.sb_uuid,
- 		xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
--		mp->m_sb.sb_logsunit, XLOG_FMT);
-+		mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
+ #endif	/* __LIBXFS_INTERNAL_XFS_H__ */
+diff --git a/libxfs/util.c b/libxfs/util.c
+index c9f9175..96ce31f 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -729,3 +729,17 @@ xfs_verifier_error(
+ 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+ 		  bp->b_bn, BBTOB(bp->b_length));
  }
++
++/*
++ * This is called from I/O verifiers on v5 superblock filesystems. In the
++ * kernel, it validates the metadata LSN parameter against the current LSN of
++ * the active log. We don't have an active log in userspace, so just return
++ * true.
++ */
++bool
++xfs_valid_lsn(
++	struct xfs_mount	*mp,
++	xfs_lsn_t		lsn)
++{
++	return true;
++}
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 4f3008a..4a3df1f 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -464,6 +464,8 @@ xfs_agfl_verify(
+ 		return false;
+ 	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
+ 		return false;
++	if (!xfs_valid_lsn(mp, be64_to_cpu(XFS_BUF_TO_AGFL(bp)->agfl_lsn)))
++		return false;
+ 	/*
+ 	 * during growfs operations, the perag is not fully initialised,
+ 	 * so we can't use it for any useful checking. growfs ensures we can't
+@@ -2255,9 +2257,13 @@ xfs_agf_verify(
+  {
+ 	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
  
- /*
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		if (!uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
+ 			return false;
++		if (!xfs_valid_lsn(mp,
++				   be64_to_cpu(XFS_BUF_TO_AGF(bp)->agf_lsn)))
++			return false;
++	}
+ 
+ 	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+ 	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index cc25068..ae49d7f 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -262,6 +262,9 @@ xfs_attr3_leaf_verify(
+ 			return false;
+ 		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+ 			return false;
++
++		if (!xfs_valid_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
++			return false;
+ 	} else {
+ 		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
+ 			return false;
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index a16ae7d..9c1296f 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -240,8 +240,15 @@ bool
+ xfs_btree_lblock_verify_crc(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb)) {
++		if (!xfs_valid_lsn(mp, be64_to_cpu(block->bb_u.l.bb_lsn)))
++			return false;
++
+ 		return xfs_buf_verify_cksum(bp, XFS_BTREE_LBLOCK_CRC_OFF);
++	}
+ 
+ 	return true;
+ }
+@@ -272,8 +279,15 @@ bool
+ xfs_btree_sblock_verify_crc(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
++	struct xfs_btree_block  *block = XFS_BUF_TO_BLOCK(bp);
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb)) {
++		if (!xfs_valid_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
++			return false;
++
+ 		return xfs_buf_verify_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
++	}
+ 
+ 	return true;
+ }
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index c874164..99a8ad7 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -146,6 +146,9 @@ xfs_da3_node_verify(
+ 			return false;
+ 		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+ 			return false;
++
++		if (!xfs_valid_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
++			return false;
+ 	} else {
+ 		if (ichdr.magic != XFS_DA_NODE_MAGIC)
+ 			return false;
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index 489f301..567b5a4 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -68,6 +68,8 @@ xfs_dir3_block_verify(
+ 			return false;
+ 		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+ 			return false;
++		if (!xfs_valid_lsn(mp, be64_to_cpu(hdr3->lsn)))
++			return false;
+ 	} else {
+ 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
+ 			return false;
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index 0c9f529..58bbc80 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -222,6 +222,8 @@ xfs_dir3_data_verify(
+ 			return false;
+ 		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+ 			return false;
++		if (!xfs_valid_lsn(mp, be64_to_cpu(hdr3->lsn)))
++			return false;
+ 	} else {
+ 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC))
+ 			return false;
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 80d03b3..37b9c4a 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -162,6 +162,8 @@ xfs_dir3_leaf_verify(
+ 			return false;
+ 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+ 			return false;
++		if (!xfs_valid_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
++			return false;
+ 	} else {
+ 		if (leaf->hdr.info.magic != cpu_to_be16(magic))
+ 			return false;
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 0514cea..d03b7ff 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -95,6 +95,8 @@ xfs_dir3_free_verify(
+ 			return false;
+ 		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+ 			return false;
++		if (!xfs_valid_lsn(mp, be64_to_cpu(hdr3->lsn)))
++			return false;
+ 	} else {
+ 		if (hdr->magic != cpu_to_be32(XFS_DIR2_FREE_MAGIC))
+ 			return false;
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 93bfaea..6a0e4e2 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -2495,9 +2495,14 @@ xfs_agi_verify(
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !uuid_equal(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid))
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		if (!uuid_equal(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid))
++			return false;
++		if (!xfs_valid_lsn(mp,
++				   be64_to_cpu(XFS_BUF_TO_AGI(bp)->agi_lsn)))
+ 			return false;
++	}
++
+ 	/*
+ 	 * Validate the magic number of the agi block.
+ 	 */
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index f944a58..97e2b66 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -161,6 +161,15 @@ xfs_mount_validate_sb(
+ "Filesystem can not be safely mounted by this kernel.");
+ 			return -EINVAL;
+ 		}
++	} else if (xfs_sb_version_hascrc(sbp)) {
++		/*
++		 * We can't read verify the sb LSN because the read verifier is
++		 * called before the log is allocated and processed. We know the
++		 * log is set up before write verifier (!check_version) calls,
++		 * so just check it here.
++		 */
++		if (!xfs_valid_lsn(mp, sbp->sb_lsn))
++			return -EINVAL;
+ 	}
+ 
+ 	if (xfs_sb_version_has_pquotino(sbp)) {
+diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
+index 7d46d9e..bb9f89f 100644
+--- a/libxfs/xfs_symlink_remote.c
++++ b/libxfs/xfs_symlink_remote.c
+@@ -57,6 +57,7 @@ xfs_symlink_hdr_set(
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return 0;
+ 
++	memset(dsl, 0, sizeof(struct xfs_dsymlink_hdr));
+ 	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
+ 	dsl->sl_offset = cpu_to_be32(offset);
+ 	dsl->sl_bytes = cpu_to_be32(size);
+@@ -113,6 +114,8 @@ xfs_symlink_verify(
+ 		return false;
+ 	if (dsl->sl_owner == 0)
+ 		return false;
++	if (!xfs_valid_lsn(mp, be64_to_cpu(dsl->sl_lsn)))
++		return false;
+ 
+ 	return true;
+ }
 -- 
 2.1.0
 
