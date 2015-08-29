@@ -1,16 +1,16 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4FD397F37
-	for <xfs@oss.sgi.com>; Sat, 29 Aug 2015 00:30:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3365A30404E
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 22:30:36 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D19257F37
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 23:43:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C3C398F8035
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2015 21:43:24 -0700 (PDT)
 Received: from xiyu.917778.com (xiyu.917778.com [89.46.100.232]) by
-	cuda.sgi.com with ESMTP id g5edyW0esz8ywGgv for
-	<xfs@oss.sgi.com>; Fri, 28 Aug 2015 22:30:34 -0700 (PDT)
+	cuda.sgi.com with ESMTP id bGG3S8qaTmJQYdd0 for
+	<xfs@oss.sgi.com>; Fri, 28 Aug 2015 21:43:22 -0700 (PDT)
 Subject: Quick Question
-Message-ID: <6771f1285fa664d7224e735b1b7f2f6e@westshorewindspirals.com>
-Date: Sat, 29 Aug 2015 07:56:10 +0200
-From: "Larry" <drompri@mail.com>
+Message-ID: <3ff9c45fae08f63c60277859d044617d@thebaynet.com>
+Date: Sat, 29 Aug 2015 06:44:04 +0200
+From: "Larry North" <drompri@mail.com>
 MIME-Version: 1.0
 Reply-To: wuyankunbb@aliyun.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
