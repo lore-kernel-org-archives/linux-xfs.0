@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1542E7F5F
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 03:07:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 093D3304032
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 01:07:02 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3E3167F56
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 03:48:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1547D304043
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 01:48:19 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	iX58vDHOEBFDTIvk for <xfs@oss.sgi.com>;
-	Mon, 31 Aug 2015 01:07:00 -0700 (PDT)
-Date: Mon, 31 Aug 2015 18:06:57 +1000
+	qRevSsyPzyHSBLTZ for <xfs@oss.sgi.com>;
+	Mon, 31 Aug 2015 01:48:16 -0700 (PDT)
+Date: Mon, 31 Aug 2015 18:48:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 21/22] xfs: %pF is only for function pointers
-Message-ID: <20150831080657.GF26895@dastard>
-References: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
-	<1426130037-17956-21-git-send-email-scottwood@freescale.com>
+Subject: Re: [PATCH V2] xfs: timestamp updates cause excessive fdatasync log
+	traffic
+Message-ID: <20150831084814.GG26895@dastard>
+References: <1440724990-25073-1-git-send-email-david@fromorbit.com>
+	<20150828043253.GB26895@dastard>
+	<alpine.DEB.2.00.1508280804040.13116@cobra.newdream.net>
+	<20150828220454.GC26895@dastard> <20150831022155.GE26895@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1426130037-17956-21-git-send-email-scottwood@freescale.com>
+In-Reply-To: <20150831022155.GE26895@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +33,128 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Scott Wood <scottwood@freescale.com>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Sage Weil <sage@newdream.net>
+Cc: xfs@oss.sgi.com
 
-On Wed, Mar 11, 2015 at 10:13:56PM -0500, Scott Wood wrote:
-> Use %pS for actual addresses, otherwise you'll get bad output
-> on arches like ppc64 where %pF expects a function descriptor.
+On Mon, Aug 31, 2015 at 12:21:55PM +1000, Dave Chinner wrote:
+> On Sat, Aug 29, 2015 at 08:04:54AM +1000, Dave Chinner wrote:
+> > On Fri, Aug 28, 2015 at 08:11:20AM -0700, Sage Weil wrote:
+> > > Hi Dave,
+> > > 
+> > > On Fri, 28 Aug 2015, Dave Chinner wrote:
+> > > > 
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > Sage Weil reported that a ceph test workload was writing to the
+> > > > log on every fdatasync during an overwrite workload. Event tracing
+> > > > showed that the only metadata modification being made was the
+> > > > timestamp updates during the write(2) syscall, but fdatasync(2)
+> > > > is supposed to ignore them. The key observation was that the
+> > > > transactions in the log all looked like this:
+> > [....]
+> > 
+> > > > ---
+> > > > Version 2:
+> > > > - include the hunk from fs/xfs/xfs_trans_inode.c that I missed
+> > > >   when committing the patch locally the first time.
+> > > 
+> > > I gave this a go on my machine but I'm still seeing the same symptom.  
+> > 
+> > OK, that implies the inode buffer has not been submitted for IO and
+> > so the inode is being held in "flushing" state for an extended
+> > period of time.
+> > 
+> > > I've gathered the trace, strace, and other useful bits at
+> > > 
+> > >    http://newdream.net/~sage/drop/rocksdb.2/
+> > > 
+> > > This is pretty easy to reproduce with the ceph_test_keyvaluedb binary 
+> > > (built on fedora 22), also in that dir:
+> > > 
+> > >    rm -rf kv_test_temp_dir/
+> > >    ./ceph_test_keyvaluedb --gtest_filter=KeyValueDB/KVTest.BenchCommit/1
+> > 
+> > I'll have a deeper look.
 > 
-> Signed-off-by: Scott Wood <scottwood@freescale.com>
-> Cc: xfs@oss.sgi.com
+> Ok, I was assuming this is a longer running test than it is - it
+> only takes about 2300ms to run on my test box. Hence the problem is
+> that the inode has never been flushed out, and so it's being
+> relogged in full on every fdatasync() operation. Another, similar
+> change is necessary to track the changes since the last time the
+> inode was flushed to the log.
 
-Scott, I've just found that this change (commit 65dd297 "xfs: %pF is
-only for function pointers") breaks the symbolic printing in XFS
-trace events on x86_64. eg.
+This is more complex than I expected, and I ended up chasing down a
+rathole because performance is now *highly variable*.
 
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 51372e3..b5ac81e 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -115,7 +115,7 @@ DECLARE_EVENT_CLASS(xfs_perag_class,
->  		__entry->refcount = refcount;
->  		__entry->caller_ip = caller_ip;
->  	),
-> -	TP_printk("dev %d:%d agno %u refcount %d caller %pf",
-> +	TP_printk("dev %d:%d agno %u refcount %d caller %ps",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->agno,
->  		  __entry->refcount,
+Before making these changes, the performance was consistent at
+2.3-2.6s for a test run on my test machine. It's on SSDs, with a 1GB
+BBWC in front of them, so there's minimal IO latency, and hence the
+average commit latency was around 2.5ms for the original (bad)
+fdatasync behaviour.
 
-This results in output like this:
+priming
+now doing small writes
+1024 commits in 2.582939, avg latency 0.0025224
+[       OK ] KeyValueDB/KVTest.BenchCommit/1 (2600 ms)
+[----------] 1 test from KeyValueDB/KVTest (2600 ms total)
 
-760.828474: xfs_perag_get:  dev 253:32 agno 13 refcount 10 caller 0xffffffff814eef02s
-760.828476: xfs_perag_put:  dev 253:32 agno 13 refcount 9 caller 0xffffffff814eefe8s
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (2600 ms total)
+[  PASSED  ] 1 test.
 
-When I revert this commit, I get:
 
-71.911265: xfs_perag_get:   dev 253:32 agno 0 refcount 11 caller xfs_extent_busy_insert
-71.911266: xfs_perag_put:   dev 253:32 agno 0 refcount 10 caller xfs_extent_busy_insert
+Now I see the test often complete in about 1.1s, or ~1.1ms per
+write/fdatasync operation. That's definitely an improvement,
 
-Which is exactly what we should be getting from the tracing. I'm
-using trace-cmd to gather and print the events, and it breaks
-both old and current versions of trace-cmd.
+priming
+now doing small writes
+1024 commits in 1.133530, avg latency 0.00110696
+[       OK ] KeyValueDB/KVTest.BenchCommit/1 (1148 ms)
+[----------] 1 test from KeyValueDB/KVTest (1148 ms total)
 
-Can you please look into why this change broke the tracing output
-on x86-64 - if there is no obvious/easy fix for it, then I'm simply
-going to revert it because having the tracing work correctly on
-x86-64 is far more important to us than ppc64 or ia64....
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (1149 ms total)
+[  PASSED  ] 1 test.
+
+but every 4-5 test runs I'd see a test run that would take 8s to
+complete:
+
+priming
+now doing small writes
+1024 commits in 8.373202, avg latency 0.00817696
+[       OK ] KeyValueDB/KVTest.BenchCommit/1 (8429 ms)
+[----------] 1 test from KeyValueDB/KVTest (8430 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (8430 ms total)
+[  PASSED  ] 1 test.
+
+This is completely reproducable, and very annoying as it doesn't
+happen without these fdatasync optimisation patches.
+
+After taking a tangent to find a tracepoint regression that was
+getting in my way, I found that there was a significant pause
+between the inode locking calls within xfs_file_fsync and the inode
+locking calls on the buffered write. Roughly 8ms, in fact, on almost
+every call. After adding a couple more test trace points into the
+XFS fsync code, it turns out that a hardware cache flush is causing
+the delay. That is, because we aren't doing log writes that trigger
+cache flushes and FUA writes, we have to issue a
+blkdev_issue_flush() call from xfs_file_fsync and that is taking 8ms
+to complete.
+
+IOWs, on my hardware, making fdatasync work correctly completely
+destroys workload determinism.  The full fsync adds 1ms to each
+operation, but it is constant and unchanging. The fdatasyncs fast
+most of the time, but every so often the cache flush blows
+performance all to hell and so over time (e.g. 100 test runs)
+fdatasync is little faster than using a full fsync.
+
+So, that's the rat hole I've been down today - once again proving
+that Modern Storage Hardware Still Sucks.
+
+Anyway, I'm going to do correctness testing now that I know the
+performance problems are hardware and not software.....
 
 Cheers,
 
