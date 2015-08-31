@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C6FF57F47
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 13:58:36 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6B4A57F47
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 13:59:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 67DE4AC005
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 11:58:36 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D5E3AC004
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 11:59:03 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id GVRZGhSjMJVOH9br (version=TLSv1 cipher=AES128-SHA
+	ESMTP id 0HOk6MmiLIzugqBw (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 31 Aug 2015 11:58:34 -0700 (PDT)
-Date: Mon, 31 Aug 2015 11:58:34 -0700
+	Mon, 31 Aug 2015 11:59:03 -0700 (PDT)
+Date: Mon, 31 Aug 2015 11:59:03 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/11] xfsprogs: Add includes required for OS X builds
-	(delta)
-Message-ID: <20150831185834.GE349@infradead.org>
+Subject: Re: [PATCH 04/11] xfsprogs: Add autoconf check for fsetxattr call
+Message-ID: <20150831185903.GF349@infradead.org>
 References: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
 	<1440590555-20463-1-git-send-email-jtulak@redhat.com>
-	<1440590555-20463-3-git-send-email-jtulak@redhat.com>
+	<1440590555-20463-4-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1440590555-20463-3-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1440590555-20463-4-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,7 +34,7 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Tulak <jtulak@redhat.com>
 Cc: hch@infradead.org, xfs@oss.sgi.com
 
-Looks fine,
+Looks ok,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
