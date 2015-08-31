@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C5C8729DF5
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 07:40:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E8EAAC005
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 05:40:08 -0700 (PDT)
-Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
-	cuda.sgi.com with ESMTP id xCepLHiZrlan7CRa for
-	<xfs@oss.sgi.com>; Mon, 31 Aug 2015 05:40:04 -0700 (PDT)
-Date: Mon, 31 Aug 2015 05:40:04 -0700 (PDT)
-From: Sage Weil <sage@newdream.net>
-Subject: Re: [PATCH V2] xfs: timestamp updates cause excessive fdatasync log
-	traffic
-In-Reply-To: <20150831084814.GG26895@dastard>
-Message-ID: <alpine.DEB.2.00.1508310529170.13116@cobra.newdream.net>
-References: <1440724990-25073-1-git-send-email-david@fromorbit.com>
-	<20150828043253.GB26895@dastard>
-	<alpine.DEB.2.00.1508280804040.13116@cobra.newdream.net>
-	<20150828220454.GC26895@dastard> <20150831022155.GE26895@dastard>
-	<20150831084814.GG26895@dastard>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 0E86C29DF5
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 08:30:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 814B7AC005
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 06:30:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id r4z6sH5qwC0Vxbq2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 31 Aug 2015 06:30:10 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] generic: test partial block device failure
+Date: Mon, 31 Aug 2015 21:28:24 +0800
+Message-Id: <1441027704-25185-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,147 +21,161 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: fstests@vger.kernel.org
+Cc: djeffery@redhat.com, Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-On Mon, 31 Aug 2015, Dave Chinner wrote:
-> On Mon, Aug 31, 2015 at 12:21:55PM +1000, Dave Chinner wrote:
-> > On Sat, Aug 29, 2015 at 08:04:54AM +1000, Dave Chinner wrote:
-> > > On Fri, Aug 28, 2015 at 08:11:20AM -0700, Sage Weil wrote:
-> > > > Hi Dave,
-> > > > 
-> > > > On Fri, 28 Aug 2015, Dave Chinner wrote:
-> > > > > 
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > Sage Weil reported that a ceph test workload was writing to the
-> > > > > log on every fdatasync during an overwrite workload. Event tracing
-> > > > > showed that the only metadata modification being made was the
-> > > > > timestamp updates during the write(2) syscall, but fdatasync(2)
-> > > > > is supposed to ignore them. The key observation was that the
-> > > > > transactions in the log all looked like this:
-> > > [....]
-> > > 
-> > > > > ---
-> > > > > Version 2:
-> > > > > - include the hunk from fs/xfs/xfs_trans_inode.c that I missed
-> > > > >   when committing the patch locally the first time.
-> > > > 
-> > > > I gave this a go on my machine but I'm still seeing the same symptom.  
-> > > 
-> > > OK, that implies the inode buffer has not been submitted for IO and
-> > > so the inode is being held in "flushing" state for an extended
-> > > period of time.
-> > > 
-> > > > I've gathered the trace, strace, and other useful bits at
-> > > > 
-> > > >    http://newdream.net/~sage/drop/rocksdb.2/
-> > > > 
-> > > > This is pretty easy to reproduce with the ceph_test_keyvaluedb binary 
-> > > > (built on fedora 22), also in that dir:
-> > > > 
-> > > >    rm -rf kv_test_temp_dir/
-> > > >    ./ceph_test_keyvaluedb --gtest_filter=KeyValueDB/KVTest.BenchCommit/1
-> > > 
-> > > I'll have a deeper look.
-> > 
-> > Ok, I was assuming this is a longer running test than it is - it
-> > only takes about 2300ms to run on my test box. Hence the problem is
-> > that the inode has never been flushed out, and so it's being
-> > relogged in full on every fdatasync() operation. Another, similar
-> > change is necessary to track the changes since the last time the
-> > inode was flushed to the log.
-> 
-> This is more complex than I expected, and I ended up chasing down a
-> rathole because performance is now *highly variable*.
-> 
-> Before making these changes, the performance was consistent at
-> 2.3-2.6s for a test run on my test machine. It's on SSDs, with a 1GB
-> BBWC in front of them, so there's minimal IO latency, and hence the
-> average commit latency was around 2.5ms for the original (bad)
-> fdatasync behaviour.
-> 
-> priming
-> now doing small writes
-> 1024 commits in 2.582939, avg latency 0.0025224
-> [       OK ] KeyValueDB/KVTest.BenchCommit/1 (2600 ms)
-> [----------] 1 test from KeyValueDB/KVTest (2600 ms total)
-> 
-> [----------] Global test environment tear-down
-> [==========] 1 test from 1 test case ran. (2600 ms total)
-> [  PASSED  ] 1 test.
-> 
-> 
-> Now I see the test often complete in about 1.1s, or ~1.1ms per
-> write/fdatasync operation. That's definitely an improvement,
-> 
-> priming
-> now doing small writes
-> 1024 commits in 1.133530, avg latency 0.00110696
-> [       OK ] KeyValueDB/KVTest.BenchCommit/1 (1148 ms)
-> [----------] 1 test from KeyValueDB/KVTest (1148 ms total)
-> 
-> [----------] Global test environment tear-down
-> [==========] 1 test from 1 test case ran. (1149 ms total)
-> [  PASSED  ] 1 test.
-> 
-> but every 4-5 test runs I'd see a test run that would take 8s to
-> complete:
-> 
-> priming
-> now doing small writes
-> 1024 commits in 8.373202, avg latency 0.00817696
-> [       OK ] KeyValueDB/KVTest.BenchCommit/1 (8429 ms)
-> [----------] 1 test from KeyValueDB/KVTest (8430 ms total)
-> 
-> [----------] Global test environment tear-down
-> [==========] 1 test from 1 test case ran. (8430 ms total)
-> [  PASSED  ] 1 test.
-> 
-> This is completely reproducable, and very annoying as it doesn't
-> happen without these fdatasync optimisation patches.
+Calls like fsync() should report failure on partial I/O failure, e.g. a
+single failed disk in a raid 0 stripe.
 
-Note that rocksdb itself might be doing something nondeterministic too 
-(like writing out 4mb sst files from the priming stage).  Though it sounds 
-like that isn't (the only thing) happening here... and it certainly 
-wouldn't account for 7 seconds.
+This test is motivated by an XFS bug, and this commit fixed the issue
+xfs: return errors from partial I/O failures to files
 
-> After taking a tangent to find a tracepoint regression that was
-> getting in my way, I found that there was a significant pause
-> between the inode locking calls within xfs_file_fsync and the inode
-> locking calls on the buffered write. Roughly 8ms, in fact, on almost
-> every call. After adding a couple more test trace points into the
-> XFS fsync code, it turns out that a hardware cache flush is causing
-> the delay. That is, because we aren't doing log writes that trigger
-> cache flushes and FUA writes, we have to issue a
-> blkdev_issue_flush() call from xfs_file_fsync and that is taking 8ms
-> to complete.
+This case is written by David Jeffery <djeffery@redhat.com> originally.
 
-This is where my understanding of block layer flushing really breaks down, 
-but in both cases we're issues flush requests to the hardware, right? Is 
-the difference that the log write is a FUA flush request with data, and 
-blkdev_issue_flush() issues a flush request without associated data?
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
 
-> IOWs, on my hardware, making fdatasync work correctly completely
-> destroys workload determinism.  The full fsync adds 1ms to each
-> operation, but it is constant and unchanging. The fdatasyncs fast
-> most of the time, but every so often the cache flush blows
-> performance all to hell and so over time (e.g. 100 test runs)
-> fdatasync is little faster than using a full fsync.
-> 
-> So, that's the rat hole I've been down today - once again proving
-> that Modern Storage Hardware Still Sucks.
-> 
-> Anyway, I'm going to do correctness testing now that I know the
-> performance problems are hardware and not software.....
+Tested this case on 4.2-rc7 kernel and test failed as expected, and test passed
+on 4.2-rc7+patch kernel. ExtN and btrfs all passed the test.
 
-Thanks, Dave!  Sorry this snowballed...
+ tests/generic/107     | 98 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/107.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 101 insertions(+)
+ create mode 100755 tests/generic/107
+ create mode 100644 tests/generic/107.out
 
-sage
+diff --git a/tests/generic/107 b/tests/generic/107
+new file mode 100755
+index 0000000..84e9354
+--- /dev/null
++++ b/tests/generic/107
+@@ -0,0 +1,98 @@
++#! /bin/bash
++# FS QA Test 107
++#
++# Test partial block device failure. Calls like fsync() should report failure
++# on partial I/O failure, e.g. a single failed disk in a raid 0 stripe.
++#
++# Test motivated by an XFS bug, and this commit fixed the issue
++# xfs: return errors from partial I/O failures to files
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015 Red Hat Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	echo running > /sys/block/`_short_dev $SCSI_DEBUG_DEV`/device/state
++	$UMOUNT_PROG $SCRATCH_MNT >>$seqres.full 2>&1
++	$LVM_PROG vgremove -f $vgname >>$seqres.full 2>&1
++	$LVM_PROG pvremove -f $SCRATCH_DEV $SCSI_DEBUG_DEV >>$seqres.full 2>&1
++	_put_scsi_debug_dev
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_nocheck
++_require_block_device $SCRATCH_DEV
++_require_scsi_debug
++_require_command "$LVM_PROG" lvm
++
++lvname=lv_$seq
++vgname=vg_$seq
++rm -f $seqres.full
++
++# _get_scsi_debug_dev returns a scsi debug device with 128M in size by default
++SCSI_DEBUG_DEV=`_get_scsi_debug_dev`
++if [ "$SCSI_DEBUG_DEV" == "" ]; then
++	_fail "Failed to initialize scsi debug device"
++fi
++echo "SCSI debug device $SCSI_DEBUG_DEV" >>$seqres.full
++
++# create striped volume with 4MB stripe size
++$LVM_PROG pvcreate -f $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
++$LVM_PROG vgcreate -f $vgname $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
++$LVM_PROG lvcreate --yes -i 2 -I 4m -l 100%FREE -n $lvname $vgname \
++	>>$seqres.full 2>&1
++# wait for lv creation to fully complete
++$UDEV_SETTLE_PROG >>$seqres.full 2>&1
++
++# _mkfs_dev exits the test on failure, this makes sure test lv is created by
++# above vgcreate/lvcreate operations
++_mkfs_dev /dev/mapper/$vgname-$lvname
++
++_mount /dev/mapper/$vgname-$lvname $SCRATCH_MNT
++
++# create a test file with contiguous blocks which will span across the 2 disks
++$XFS_IO_PROG -f -c "pwrite 0 16M" -c fsync $SCRATCH_MNT/testfile >>$seqres.full
++
++# offline the scsi debug device
++echo offline > /sys/block/`_short_dev $SCSI_DEBUG_DEV`/device/state
++
++# write to an allocated area of the test file with writes which spans both disks
++# and call fsync, the fsync should report failure
++$XFS_IO_PROG -c "pwrite -b 1M 0 6M" -c fsync $SCRATCH_MNT/testfile \
++	>>$seqres.full
++
++status=0
++exit
+diff --git a/tests/generic/107.out b/tests/generic/107.out
+new file mode 100644
+index 0000000..9d57184
+--- /dev/null
++++ b/tests/generic/107.out
+@@ -0,0 +1,2 @@
++QA output created by 107
++fsync: Input/output error
+diff --git a/tests/generic/group b/tests/generic/group
+index a33536e..4ccbb09 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -109,6 +109,7 @@
+ 104 auto quick metadata
+ 105 acl auto quick
+ 106 auto quick metadata
++107 auto quick rw
+ 112 rw aio auto quick
+ 113 rw aio auto quick
+ 117 attr auto quick
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
