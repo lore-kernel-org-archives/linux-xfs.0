@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1CD087F47
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 13:57:09 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8C72D7F47
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 13:58:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E671B8F804B
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 11:57:08 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 703468F8035
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2015 11:58:19 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id ed6qT5oqWHmdHXE2 (version=TLSv1 cipher=AES128-SHA
+	ESMTP id JDZU4mb9Y8go8Vii (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 31 Aug 2015 11:57:04 -0700 (PDT)
-Date: Mon, 31 Aug 2015 11:57:03 -0700
+	Mon, 31 Aug 2015 11:58:18 -0700 (PDT)
+Date: Mon, 31 Aug 2015 11:58:17 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/11] xfsprogs: Add a way to compile without blkid
-Message-ID: <20150831185703.GC349@infradead.org>
+Subject: Re: [PATCH 02/11] xfsprogs: avoid dependency on linux
+	XATTR_SIZE/LIST_MAX
+Message-ID: <20150831185817.GD349@infradead.org>
 References: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
 	<1440590555-20463-1-git-send-email-jtulak@redhat.com>
+	<1440590555-20463-2-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1440590555-20463-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1440590555-20463-2-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +35,19 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Tulak <jtulak@redhat.com>
 Cc: hch@infradead.org, xfs@oss.sgi.com
 
-On Wed, Aug 26, 2015 at 02:02:25PM +0200, Jan Tulak wrote:
-> Because not all platforms have up-to-date blkid with required
-> functions, allow at least partial functionality by adding
-> --enable-blkid=yes/no optional configure argument.
-> 
-> When blkid is disabled, signature detection and device geometry
-> detection doesn't work.
+> index b1c0c10..d532f44 100644
+> --- a/libhandle/handle.c
+> +++ b/libhandle/handle.c
+> @@ -21,6 +21,8 @@
+>  #include "xfs.h"
+>  #include "handle.h"
+>  #include "parent.h"
+> +#include "xfs/xfs_arch.h"
+> +#include "xfs/xfs_format.h"
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+These headers should not be used in libhandle.  As mentioned last time I
+think libhandle should get it's own LIBHANDLE_XATTR_LIST_MAX define,
+separate frome the one for the on disk format.
 
 _______________________________________________
 xfs mailing list
