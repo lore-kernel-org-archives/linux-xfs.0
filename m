@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 928EF7F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 09:24:34 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6A6107F47
+	for <xfs@oss.sgi.com>; Tue,  1 Sep 2015 02:41:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F45D304048
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:24:34 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id tMuh3b2gCMnt1U1O (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 08 Sep 2015 07:24:33 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 09/11 v2] xfsprogs: Add statvfs64 for osx
-Date: Tue,  8 Sep 2015 16:24:23 +0200
-Message-Id: <1441722263-9194-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1440590555-20463-9-git-send-email-jtulak@redhat.com>
-References: <1440590555-20463-9-git-send-email-jtulak@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EA9B5AC004
+	for <xfs@oss.sgi.com>; Tue,  1 Sep 2015 00:41:06 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Hu4H50NbfzKQXpaI (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Sep 2015 00:41:05 -0700 (PDT)
+Date: Tue, 1 Sep 2015 00:41:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/4] xfs: Introduce writeback context for writepages
+Message-ID: <20150901074103.GA27231@infradead.org>
+References: <1440479153-1584-1-git-send-email-david@fromorbit.com>
+	<1440479153-1584-3-git-send-email-david@fromorbit.com>
+	<20150831180221.GA16371@bfoster.bfoster>
+	<20150831185612.GB349@infradead.org>
+	<20150831221743.GI26895@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150831221743.GI26895@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,96 +29,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Simply rename statvfs64 to statfs with a #define.
+On Tue, Sep 01, 2015 at 08:17:43AM +1000, Dave Chinner wrote:
+> The patch changes the bio allocation patterns - it allocates them on
+> the fly and holds them, so we could potentially exhaust the bio
+> mempool with this submission technique.
 
-CHANGE:
-remove dummy code, add rename
+I've spend time to look over the patch again, and still don't see
+a change.  Both in the old and new code we walk over the ioends
+and build bios on the fly in xfs_submit_ioend(), which is always
+called near then end of the writeback code; at the end of
+xfs_vm_writepage in the old version, and from the end of
+xfs_vm_writepage/xfs_vm_writepages through xfs_writepage_submit in
+the new code (not taking the error case into account, which probably
+should moe there, too).
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- fsr/xfs_fsr.c        | 14 ++++++++++++++
- include/builddefs.in |  2 +-
- include/darwin.h     |  5 +++++
- 3 files changed, 20 insertions(+), 1 deletion(-)
+The only big difference is..
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index e1b7bd6..5f95cdc 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -36,6 +36,12 @@
- #  include <mntent.h>
- #endif
- 
-+#ifdef __APPLE__
-+//#  define statvfs64 statfs;
-+#  include <sys/param.h>
-+#  include <sys/mount.h>
-+#endif
-+
- #ifndef XFS_XFLAG_NODEFRAG
- #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
- #endif
-@@ -948,7 +954,11 @@ fsrfile_common(
- 			fname, strerror(errno));
- 		return -1;
- 	}
-+#ifndef statvfs64
- 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
-+#else
-+	bsize = vfss.f_bsize;
-+#endif
- 	if (statp->bs_blksize * statp->bs_blocks >
- 	    vfss.f_bfree * bsize - minimumfree) {
- 		fsrprintf(_("insufficient freespace for: %s: "
-@@ -1728,7 +1738,11 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
- 		close(fd);
- 		return -1;
- 	}
-+#ifndef statvfs64
- 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
-+#else
-+	bsize = sfbp->f_bsize;
-+#endif
- 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
- 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
- 	return 0;
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 25b8816..31e21ba 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -123,7 +123,7 @@ PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
- endif
- ifeq ($(PKG_PLATFORM),darwin)
- PCFLAGS = $(GCCFLAGS)
--DEPENDFLAGS = -D__APPLE__
-+DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
- endif
- ifeq ($(PKG_PLATFORM),irix)
- PLDLIBS = -ldisk -lgen
-diff --git a/include/darwin.h b/include/darwin.h
-index 0d2f175..288ad1f 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -216,4 +216,9 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
- 	return getitimer(ITIMER_REAL, value);
- }
- 
-+/* FSR */
-+
-+#define statvfs64 statfs
-+#define		_PATH_MOUNTED   "/etc/mtab"
-+
- #endif	/* __XFS_DARWIN_H__ */
--- 
-2.4.5
+> The ioend allocation pattern
+> is different, too, because we only used to have 1 per buffer on a
+> writepage call and the last one was used for the write clustering.
+
+.. that we now build up way bigger ioend chains.
+
+
+So back to Brians concern:  we can now have fairly large piles of
+ioends built up while potentially getting scheduled out, and this
+does look like a potential real issue to me.  I wonder if we should
+(ab-)use the blk_plug_cb infrastructure so that we can flush the
+pending ioends out on a context switch?
 
 _______________________________________________
 xfs mailing list
