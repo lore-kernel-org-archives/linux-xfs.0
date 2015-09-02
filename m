@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE7F27F5F
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2015 21:19:24 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D7017F5F
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 00:12:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CA5AD8F8054
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2015 19:19:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CetCaKOM7PqF7Dsx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 01 Sep 2015 19:19:23 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id C0E50A4673
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 02:19:22 +0000 (UTC)
-Date: Wed, 2 Sep 2015 10:19:20 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] repair: fix wrong logic when validating node magic number
-Message-ID: <20150902021920.GF538@dhcp-13-216.nay.redhat.com>
-References: <1439449276-1699-1-git-send-email-eguan@redhat.com>
-	<20150813071524.GI17933@dhcp-13-216.nay.redhat.com>
-	<20150901140442.GA16640@bfoster.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94D3BAC012
+	for <xfs@oss.sgi.com>; Tue,  1 Sep 2015 22:12:19 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id H6Vafm0QL2b2BNH0 (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Sep 2015 22:12:18 -0700 (PDT)
+Date: Tue, 1 Sep 2015 22:12:17 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: add ->pfn_mkwrite support for DAX
+Message-ID: <20150902051217.GA18906@infradead.org>
+References: <1441157100-1658-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150901140442.GA16640@bfoster.bfoster>
+In-Reply-To: <1441157100-1658-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,107 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: boaz@plexistor.com, kirill.shutemov@linux.intel.com, xfs@oss.sgi.com
 
-On Tue, Sep 01, 2015 at 10:04:43AM -0400, Brian Foster wrote:
-> On Thu, Aug 13, 2015 at 03:15:24PM +0800, Eryu Guan wrote:
-> > On Thu, Aug 13, 2015 at 03:01:16PM +0800, Eryu Guan wrote:
-> > > Magic number is wrong only when != XFS_DA_NODE_MAGIC and
-> > > != XFS_DA3_NODE_MAGIC.
-> > > 
-> > > This is triggered by shared/002 when testing 512 block size XFS.
-> > > 
-> > >   Phase 1 - find and verify superblock...
-> > >   Phase 2 - using internal log
-> > >           - scan filesystem freespace and inode maps...
-> > >           - found root inode chunk
-> > >   Phase 3 - for each AG...
-> > >           - scan (but don't clear) agi unlinked lists...
-> > >           - process known inodes and perform inode discovery...
-> > >           - agno = 0
-> > >   bad magic number febe in block 64 (108) for directory inode 35
-> > >   ......
-> > > 
-> > > Fix it by changing "||" to "&&".
-> > > 
-> > > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > 
-> > With this patch applied, shared/002 still fails on 512 block size XFS,
-> > full xfs_repair -n output is                                                                                                                  
-> >                                                                                                                                               
-> > *** xfs_repair -n output ***                                                                                                                  
-> > Phase 1 - find and verify superblock...                                                                                                       
-> > Phase 2 - using internal log                                                                                                                  
-> >         - scan filesystem freespace and inode maps...                                                                                         
-> >         - found root inode chunk                                                                                                              
-> > Phase 3 - for each AG...                                                                                                                      
-> >         - scan (but don't clear) agi unlinked lists...                                                                                        
-> >         - process known inodes and perform inode discovery...                                                                                 
-> >         - agno = 0                                                                                                                            
-> > problem with attribute contents in inode 35                                                                                                   
-> > would clear attr fork                                                                                                                         
-> > bad nblocks 67 for inode 35, would reset to 0                                                                                                 
-> > bad anextents 5 for inode 35, would reset to 0                                                                                                
-> >         - agno = 1                                                                                                                            
-> >         - agno = 2                                                                                                                            
-> >         - agno = 3                                                                                                                            
-> >         - process newly discovered inodes...                                                                                                  
-> > Phase 4 - check for duplicate blocks...                                                                                                       
-> >         - setting up duplicate extent list...                                                                                                 
-> >         - check for inodes claiming duplicate blocks...                                                                                       
-> >         - agno = 0                                                                                                                            
-> >         - agno = 1                                                                                                                            
-> >         - agno = 2                                                                                                                            
-> >         - agno = 3                                                                                                                            
-> > No modify flag set, skipping phase 5                                                                                                          
-> > Phase 6 - check inode connectivity...                                                                                                         
-> >         - traversing filesystem ...                                                                                                           
-> >         - traversal finished ...                                                                                                              
-> >         - moving disconnected inodes to lost+found ...                                                                                        
-> > Phase 7 - verify link counts...                                                                                                               
-> > No modify flag set, skipping filesystem flush and exiting.                                                                                    
-> > *** end xfs_repair output
-> > 
-> > And a simplified reproducer is just adding >= 577 xattrs to file foo on
-> > 512 block size XFS, no dmflaky is needed.
-> > 
-> > num_xattrs=577
-> > for ((i = 1; i <= $num_xattrs; i++)); do
-> >         name="user.attr_$(printf "%04d" $i)"
-> >         $SETFATTR_PROG -n $name -v "val_$(printf "%04d" $i)" $SCRATCH_MNT/foo
-> > done
-> > 
-> > And it's easily reproduced.
-> > 
+On Wed, Sep 02, 2015 at 11:25:00AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Thanks for the reproducer. This looks like a bug in xfs_repair. Care to
-> test the appended hunk?
+> ->pfn_mkwrite support is needed so that when a page with allocated
+> backing store first takes a write fault the timestamps on the
+> file are updated. THis fixes a generic/080 failure.
 
-Test passed after applying this patch, thanks! Tested by shared/002 and
-the simplified reproducer above.
-
-Thanks,
-Eryu
-
-> 
-> Brian
-> 
-> ---8<---
-> 
-> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 83a07a8..b76618a 100644
-> --- a/repair/attr_repair.c
-> +++ b/repair/attr_repair.c
-> @@ -562,7 +562,7 @@ verify_da_path(xfs_mount_t	*mp,
->  		}
->  
->  		newnode = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
-> -		btree = M_DIROPS(mp)->node_tree_p(node);
-> +		btree = M_DIROPS(mp)->node_tree_p(newnode);
->  		M_DIROPS(mp)->node_hdr_from_disk(&nodehdr, newnode);
->  
->  		/*
+Shouldn't you be able to drop the call to xfs_filemap_page_mkwrite from
+xfs_filemap_fault now?
 
 _______________________________________________
 xfs mailing list
