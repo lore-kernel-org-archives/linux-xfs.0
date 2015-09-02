@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 05AF07F5F
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 08:03:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8494FAC012
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 06:03:47 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id BnHN56XZstNV34So (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Sep 2015 06:03:45 -0700 (PDT)
-Date: Wed, 2 Sep 2015 23:03:42 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: manual merge of the block tree with the xfs tree
-Message-ID: <20150902230342.125e23ce@canb.auug.org.au>
-In-Reply-To: <C57DF728-E46C-433C-AA9D-209557D795E2@filmlight.ltd.uk>
-References: <20150902121649.7a686b6c@canb.auug.org.au>
-	<C57DF728-E46C-433C-AA9D-209557D795E2@filmlight.ltd.uk>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BD8797F5F
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 08:21:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 972D18F8052
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 06:21:16 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Agch6ubzLHOLMtub (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 02 Sep 2015 06:21:15 -0700 (PDT)
+Date: Wed, 2 Sep 2015 09:21:13 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RESEND PATCH] xfsrestore: fix fs uuid order check for
+	incremental restores
+Message-ID: <20150902132112.GB23587@bfoster.bfoster>
+References: <20150826213133.GB3902@dastard>
+ <55D5FB95.1280108@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <55D5FB95.1280108@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,65 +31,193 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: Jens Axboe <axboe@kernel.dk>, David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi Roger,
-
-On Wed, 2 Sep 2015 10:45:29 +0100 Roger Willcocks <roger@filmlight.ltd.uk> wrote:
->
-> On 2 Sep 2015, at 03:16, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+On Tue, Sep 01, 2015 at 03:38:29PM -0500, Rich Johnston wrote:
+> Restoring an incremental level 1 dump will fail with the following error
+> if the fs uuid of the most recent level 0 dump in the inventory does not
+> match level 1 dump we are restoring.
 > 
-> > Today's linux-next merge of the block tree got a conflict in:
-> > 
-> >  fs/xfs/xfs_aops.c
-> > 
-> > between commit:
-> > 
-> >  c9eb256eda44 ("xfs: return errors from partial I/O failures to files")
-> > 
-> > from the xfs tree and commit:
-> > 
-> >  4246a0b63bd8 ("block: add a bi_error field to struct bio")
-> > 
-> > from the block tree.
-> > 
-> > I fixed it up (I think - see below) and can carry the fix as necessary
-> > (no action is required).
-> > 
-> > -- 
-> > Cheers,
-> > Stephen Rothwell                    sfr@canb.auug.org.au
-> > 
-> > diff --cc fs/xfs/xfs_aops.c
-> > index c8637073ef25,c77499bcbd7a..000000000000
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@@ -354,8 -355,7 +353,8 @@@ xfs_end_bio
-> >  {
-> >  	xfs_ioend_t		*ioend = bio->bi_private;
-> > 
-> > - 	if (!ioend->io_error && !test_bit(BIO_UPTODATE, &bio->bi_flags))
-> > - 		ioend->io_error = error;
-> > -	ioend->io_error = bio->bi_error;
-> > ++	if (!ioend->io_error)
-> > ++		ioend->io_error = bio->bi_error;
-> > 
-> >  	/* Toss bio and pass work off to an xfsdatad thread */
-> >  	bio->bi_private = NULL;
-> > 
-> > 
+>   xfsrestore: ERROR: selected dump not based on previously applied dump
 > 
-> This is incorrect; it can clear an earlier error status. It should probably read:
+> This can happen when you have multiple filesystems and you are restoring
+> a level 1 or greater dump of filesystem FS1 but the most recent level 0
+> dump in the inventory was filesystem FS2
 > 
->  	if (!ioend->io_error && bio->bi_error)
->  		ioend->io_error = bio->bi_error;
+> The fix is to ensure the fs uuid of the inventory entry and the dump to
+> be restored match.
+> 
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> ---
 
-Thanks, I will use that from tomorrow.
+I'm not really familiar with xfsdump, but a few comments below...
 
--- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+>  dump/content.c        |    8 ++-
+>  inventory/inv_api.c   |  108 ++++++++++++++++++++++++++++++--------------------
+>  inventory/inv_mgr.c   |   32 ++++++++++----
+>  inventory/inv_priv.h  |    7 +--
+>  inventory/inventory.h |    5 ++
+>  restore/content.c     |   17 +++++--
+>  6 files changed, 113 insertions(+), 64 deletions(-)
+> 
+...
+> Index: b/inventory/inv_mgr.c
+> ===================================================================
+> --- a/inventory/inv_mgr.c
+> +++ b/inventory/inv_mgr.c
+> @@ -134,6 +134,7 @@ get_sesstoken( inv_idbtoken_t tok )
+>  /*---------------------------------------------------------------------------*/
+>  bool_t
+>  invmgr_query_all_sessions (
+> +	uuid_t *fsidp,
+>  	void *inarg,
+>  	void **outarg,
+>  	search_callback_t func)
+> @@ -169,7 +170,7 @@ invmgr_query_all_sessions (
+>  			mlog( MLOG_NORMAL | MLOG_INV, _(
+>  			     "INV: Cant get inv-name for uuid\n")
+>  			     );
+> -			return BOOL_FALSE;
+> +			continue;
+>  		}
+>  		strcat( fname, INV_INVINDEX_PREFIX );
+>  		invfd = open( fname, INV_OFLAG(forwhat) );
+> @@ -178,9 +179,9 @@ invmgr_query_all_sessions (
+>  			     "INV: Open failed on %s\n"),
+>  			     fname
+>  			     );
+> -			return BOOL_FALSE;
+> +			continue;
+>  		}
+
+Now that the above two cases don't return false, we can end up returning
+true if these error cases persist throughout the loop. Perhaps we should
+define 'bool ret = false,' return that variable everywhere and only set
+it true when appropriate.
+
+> -		result = search_invt( invfd, inarg, &objectfound, func );
+> +		result = search_invt(fsidp, invfd, inarg, &objectfound, func);
+>  		close(invfd);		
+>  
+>  		/* if error return BOOL_FALSE */
+...
+> @@ -272,19 +274,31 @@ search_invt(
+>  		}
+>  		free ( scnt );
+>  
+> -		while ( nsess ) {
+> +		for (j = nsess - 1; j >= 0; j--) {
+> +			invt_session_t ses;
+> +
+>  			/* fd is kept locked until we return from the 
+>  			   callback routine */
+>  
+>  			/* Check to see if this session has been pruned 
+>  			 * by xfsinvutil before checking it. 
+>  			 */
+> -			if ( harr[nsess - 1].sh_pruned ) {
+> -				--nsess;
+> +			if (harr[j].sh_pruned) {
+>  				continue;
+>  			}
+> -			found = (* do_chkcriteria ) ( fd, &harr[ --nsess ],
+> -						      arg, buf );
+> +
+> +			/* if we need to check the fs uuid's and they don't
+> +			 * match or we fail to get the session record,
+> +			 * then keep looking
+> +			 */
+> +			if (fsidp &&
+> +			    (GET_REC_NOLOCK(fd, &ses, sizeof(invt_session_t),
+> +					    harr[j].sh_sess_off) ==
+> +			    sizeof(invt_session_t)) &&
+> +			    uuid_compare(ses.s_fsid, *fsidp))
+> +				continue ;
+> +
+
+This seems like kind of a loaded check. GET_REC_NOLOCK() looks like it
+returns -1 if the read doesn't return the exact size of the buffer, so
+we probably don't need to check that here. It also seems like we should
+return an error if an error occurs rather than just continue on. How
+about something like this?
+
+			...
+			if (fsidp) {
+				ret = GET_REC_NOLOCK(fd, &ses,
+						     sizeof(invt_session_t),
+						     harr[j].sh_sess_off);
+				if (ret < 0) {
+					/* XXX: clean up here */
+					return ret;
+				}
+				ret = uuid_compare(ses.s_fsid, *fsidp);
+				if (ret)
+					continue;
+			}
+
+> +			found = (* do_chkcriteria ) (fd, &harr[j], arg, buf);
+>  			if (! found ) continue;
+>  			
+>  			/* we found what we need; just return */
+...
+> Index: b/restore/content.c
+> ===================================================================
+> --- a/restore/content.c
+> +++ b/restore/content.c
+> @@ -2179,8 +2179,9 @@ content_stream_restore( ix_t thrdix )
+>  		if ( ! drivep->d_isnamedpipepr
+>  		     &&
+>  		     ! drivep->d_isunnamedpipepr ) {
+> -			ok = inv_get_session_byuuid( &grhdrp->gh_dumpid,
+> -						     &sessp );
+> +			ok = inv_get_session_byuuid((uuid_t *)0,
+> +						    &grhdrp->gh_dumpid,
+> +						    &sessp);
+>  			if ( ok && sessp ) {
+>  				mlog( MLOG_VERBOSE, _(
+>  				      "using online session inventory\n") );
+> @@ -3736,9 +3737,11 @@ Inv_validate_cmdline( void )
+>  	ok = BOOL_FALSE;
+>  	sessp = 0;
+>  	if ( tranp->t_reqdumpidvalpr ) {
+> -		ok = inv_get_session_byuuid( &tranp->t_reqdumpid, &sessp );
+> +		ok = inv_get_session_byuuid((uuid_t *)0, &tranp->t_reqdumpid,
+> +					    &sessp );
+>  	} else if ( tranp->t_reqdumplabvalpr ) {
+> -		ok = inv_get_session_bylabel( tranp->t_reqdumplab, &sessp );
+> +		ok = inv_get_session_bylabel((uuid_t *)0, tranp->t_reqdumplab,
+> +					     &sessp );
+
+Can we use NULL instead of 0 in these cases? Not sure the cast is really
+necessary either..?.
+
+Brian
+
+>  	}
+>  	rok = BOOL_FALSE;
+>  	if ( ok && sessp ) {
+> @@ -6812,11 +6815,13 @@ askinvforbaseof( uuid_t baseid, inv_sess
+>  	/* get the base session
+>  	 */
+>  	if ( resumedpr ) {
+> -		ok = inv_lastsession_level_equalto( invtok,
+> +		ok = inv_lastsession_level_equalto( &sessp->s_fsid,
+> +						    invtok,
+>  						    ( u_char_t )level,
+>  						    &basesessp );
+>  	} else {
+> -		ok = inv_lastsession_level_lessthan( invtok,
+> +		ok = inv_lastsession_level_lessthan( &sessp->s_fsid,
+> +						     invtok,
+>  						     ( u_char_t )level,
+>  						     &basesessp );
+>  	}
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
