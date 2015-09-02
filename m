@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AFE227F66
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 08:21:20 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id DB21C7F5F
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 08:34:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 31737AC012
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 06:21:20 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8nBcolQVUaopYgGF (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Sep 2015 06:21:19 -0700 (PDT)
-Date: Wed, 2 Sep 2015 09:21:17 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfsrestore: fix 2GB directory dump limitation for multi-stream
-Message-ID: <20150902132117.GC23587@bfoster.bfoster>
-References: <20150827185445.6E13960EDE2F0@gulag1.americas.sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150827185445.6E13960EDE2F0@gulag1.americas.sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 74915AC013
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 06:34:54 -0700 (PDT)
+Received: from c.mx.filmlight.ltd.uk (c.mx.filmlight.ltd.uk [54.76.112.217])
+	by cuda.sgi.com with ESMTP id B35FN6Eyyeblg0Tf for
+	<xfs@oss.sgi.com>; Wed, 02 Sep 2015 06:34:52 -0700 (PDT)
+Subject: Re: linux-next: manual merge of the block tree with the xfs tree
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <20150902230342.125e23ce@canb.auug.org.au>
+References: <20150902121649.7a686b6c@canb.auug.org.au>
+	<C57DF728-E46C-433C-AA9D-209557D795E2@filmlight.ltd.uk>
+	<20150902230342.125e23ce@canb.auug.org.au>
+Date: Wed, 02 Sep 2015 14:34:51 +0100
+Message-Id: <1441200891.17400.1277.camel@localhost.localdomain>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,70 +29,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Jens Axboe <axboe@kernel.dk>, David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Thu, Aug 27, 2015 at 01:54:45PM -0500, Rich Johnston wrote:
+
+On Wed, 2015-09-02 at 23:03 +1000, Stephen Rothwell wrote:
+> Hi Roger,
 > 
-> The drive_simple restore path has a 2GB directory limit. Instead of
-> ASSERTing if nreadneeded64 is greater than INTGENMAX (2GB), add a loop
-> to handle it.
+> On Wed, 2 Sep 2015 10:45:29 +0100 Roger Willcocks <roger@filmlight.ltd.uk> wrote:
+> >
+> > On 2 Sep 2015, at 03:16, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> > 
+
+> > > ++	if (!ioend->io_error)
+> > > ++		ioend->io_error = bio->bi_error;
+
+> > 
+> > This is incorrect; it can clear an earlier error status. It should probably read:
+> > 
+> >  	if (!ioend->io_error && bio->bi_error)
+> >  		ioend->io_error = bio->bi_error;
 > 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> ---
-
-I'm not a huge fan of all the spaces used in this code (around the
-braces and whatnot). It is consistent with the rest of the code but I'd
-probably get away from that as code is modified.
-
-That aside, the change seems fine to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  common/drive_simple.c |   24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
+> Thanks, I will use that from tomorrow.
 > 
-> Index: b/common/drive_simple.c
-> ===================================================================
-> --- a/common/drive_simple.c
-> +++ b/common/drive_simple.c
-> @@ -765,18 +765,20 @@ do_seek_mark( drive_t *drivep, drive_mar
->  	/* use read_buf util func to eat up difference
->  	 */
->  	nreadneeded64 = mark - strmoff;
-> -	ASSERT( nreadneeded64 <= INTGENMAX );
-> -	nreadneeded = ( intgen_t )nreadneeded64;
-> -	nread = read_buf( 0,
-> -			  ( size_t )nreadneeded,
-> -			  ( void * )drivep,
-> -			  ( rfp_t )drivep->d_opsp->do_read,
-> -			  ( rrbfp_t )drivep->d_opsp->do_return_read_buf,
-> -			  &rval );
-> -	if  ( rval ) {
-> -		return rval;
-> +	while ( nreadneeded64 > 0 ) {
-> +		if ( nreadneeded64 > INTGENMAX )
-> +			nreadneeded = INTGENMAX;
-> +		else
-> +			nreadneeded = ( intgen_t )nreadneeded64;
-> +		nread = read_buf( 0, nreadneeded, drivep,
-> +				  ( rfp_t )drivep->d_opsp->do_read,
-> +				( rrbfp_t )drivep->d_opsp->do_return_read_buf,
-> +				  &rval );
-> +		if  ( rval ) {
-> +			return rval;
-> +		}
-> +		nreadneeded64 -= nread;
->  	}
-> -	ASSERT( nread == nreadneeded );
->  
->  	/* verify we are on the mark
->  	 */
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+
+Huh, now I've had my coffee, that extra check doesn't add anything.
+(There's no harm done in assigning zero to io_error if it's already
+zero.) Apologies for the noise.
+
+-- 
+Roger Willcocks <roger@filmlight.ltd.uk>
 
 _______________________________________________
 xfs mailing list
