@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DBE417F5F
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 08:37:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B7EE9304048
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 06:37:33 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id 3L1Oqtae6rcOPcWM (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Sep 2015 06:37:31 -0700 (PDT)
-Date: Wed, 2 Sep 2015 23:37:29 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: manual merge of the block tree with the xfs tree
-Message-ID: <20150902233729.4e824342@canb.auug.org.au>
-In-Reply-To: <1441200891.17400.1277.camel@localhost.localdomain>
-References: <20150902121649.7a686b6c@canb.auug.org.au>
-	<C57DF728-E46C-433C-AA9D-209557D795E2@filmlight.ltd.uk>
-	<20150902230342.125e23ce@canb.auug.org.au>
-	<1441200891.17400.1277.camel@localhost.localdomain>
+	by oss.sgi.com (Postfix) with ESMTP id 882147F5F
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 11:06:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 74548304059
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 09:06:27 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id dUVBoa5RWqQyQrZ2 for <xfs@oss.sgi.com>;
+	Wed, 02 Sep 2015 09:06:26 -0700 (PDT)
+Subject: Re: [PATCH] xfs_repair: update btree ptr when attr node level moves
+	to next buffer
+References: <1441200906-37170-1-git-send-email-bfoster@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <55E71E80.3070508@sandeen.net>
+Date: Wed, 2 Sep 2015 11:06:24 -0500
 MIME-Version: 1.0
+In-Reply-To: <1441200906-37170-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +28,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: Jens Axboe <axboe@kernel.dk>, David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-Hi Roger,
+On 9/2/15 8:35 AM, Brian Foster wrote:
+> xfs_repair walks the attribute fork btree for files with a significant
+> number of extended attributes. It creates a cursor, walks the leaf
+> blocks, and verifies the path from each leaf block back to the root of
+> the tree. Eryu reports that the following test causes xfs_repair to
+> report corruption on 512b filesystems:
+> 
+> 	num_xattrs=577
+> 	for ((i = 1; i <= $num_xattrs; i++)); do
+> 		name="user.attr_$(printf "%04d" $i)"
+> 		setfattr -n $name -v "val_$(printf "%04d" $i)" <file>
+> 	done
+> 
+> xfs_repair complains that the block number of the leaf (level 0) does
+> not match the block number of the level 1 node block entry. This occurs
+> as soon as the left-most level 1 node block is completely processed and
+> the cursor is walked to the next level 1 block in the array. The problem
+> is that while verify_da_path() updates level 1 of the cursor to the next
+> level 1 buffer, it fails to correctly update the btree pointer to the
+> entry list of the new buffer. As a result, the child leaf block of the
+> next node block is incorrectly validated against the entry list of the
+> previous node block.
+> 
+> Update verify_da_path() to correctly update the btree pointer to the
+> entry list of the new node block when the cursor is walked forward at
+> higher (non-leaf) levels.
+> 
+> Reported-by: Eryu Guan <eguan@redhat.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  repair/attr_repair.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index 83a07a8..b76618a 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -562,7 +562,7 @@ verify_da_path(xfs_mount_t	*mp,
+>  		}
+>  
+>  		newnode = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
+> -		btree = M_DIROPS(mp)->node_tree_p(node);
+> +		btree = M_DIROPS(mp)->node_tree_p(newnode);
+>  		M_DIROPS(mp)->node_hdr_from_disk(&nodehdr, newnode);
+>  
+>  		/*
+> 
 
-On Wed, 02 Sep 2015 14:34:51 +0100 Roger Willcocks <roger@filmlight.ltd.uk> wrote:
->
-> Huh, now I've had my coffee, that extra check doesn't add anything.
-> (There's no harm done in assigning zero to io_error if it's already
-> zero.) Apologies for the noise.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-That's OK, my excuse is being to far at the other end of the day ...
+Incidentally, the same (correct) logic exists in verify_dir2_path()
 
-I actually now remember thinking the same thing at the time I did it :-)
--- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+Looks like it was just a thinko or cut/paste error here, originally.
+
+(Incidentally^2, I wonder if we should combine those functions, they
+are remarkably similar yet slightly divergent)
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
