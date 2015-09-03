@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9AA9D7F66
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 04:58:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BD4F304048
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 02:58:18 -0700 (PDT)
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id 7h6onvzuq7J5cgd1
-	for <xfs@oss.sgi.com>; Thu, 03 Sep 2015 02:58:16 -0700 (PDT)
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] xfs: fix null pointer dereference when mapping is NULL
-Date: Thu,  3 Sep 2015 10:57:40 +0100
-Message-Id: <1441274260-10120-1-git-send-email-colin.king@canonical.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D87377F6B
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 05:33:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C98418F8052
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 03:33:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id XPlMDCjetNbNpGz4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 Sep 2015 03:33:18 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 02a/11] xfsprogs: Add XATTR_LIST_MAX to OS X headers
+Date: Thu,  3 Sep 2015 12:33:09 +0200
+Message-Id: <1441276391-23587-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1440655340-27550-1-git-send-email-jtulak@redhat.com>
+References: <1440655340-27550-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,45 +28,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+OS X has no XATTR_LIST_MAX value. So add it to the platform header.
 
-xfs_vm_set_page_dirty checks to see if mapping is NULL however
-before this unlikely check it already dereferenced mapping when
-initializing inode. Move the inode initialization after the mapping
-null check to avoid a potential null pointer dereference.
-
-Fixes: 22e757a49cf0 ("xfs: don't dirty buffers beyond EOF")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fs/xfs/xfs_aops.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/darwin.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index c77499b..d15ae85 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1935,7 +1935,7 @@ xfs_vm_set_page_dirty(
- 	struct page		*page)
+diff --git a/include/darwin.h b/include/darwin.h
+index b904898..4b7ba3a 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -39,6 +39,11 @@
+ # ifndef SYS_fsctl
+ #  define SYS_fsctl	242
+ # endif
++
++#ifndef XATTR_LIST_MAX
++#define XATTR_LIST_MAX  65536
++#endif
++
+ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
  {
- 	struct address_space	*mapping = page->mapping;
--	struct inode		*inode = mapping->host;
-+	struct inode		*inode;
- 	loff_t			end_offset;
- 	loff_t			offset;
- 	int			newly_dirty;
-@@ -1944,6 +1944,7 @@ xfs_vm_set_page_dirty(
- 	if (unlikely(!mapping))
- 		return !TestSetPageDirty(page);
- 
-+	inode = mapping->host;
- 	end_offset = i_size_read(inode);
- 	offset = page_offset(page);
- 
+ 	return syscall(SYS_fsctl, path, cmd, p, 0);
 -- 
-2.5.0
+2.4.5
 
 _______________________________________________
 xfs mailing list
