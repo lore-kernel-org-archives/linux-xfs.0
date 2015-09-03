@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E7ED87F5F
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 21:25:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 607AAAC015
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2015 19:25:03 -0700 (PDT)
-Received: from mail-vk0-f42.google.com (mail-vk0-f42.google.com
-	[209.85.213.42]) by cuda.sgi.com with ESMTP id bJ3CAIbYDTTlABMZ
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Sep 2015 19:24:58 -0700 (PDT)
-Received: by vkaw128 with SMTP id w128so16801967vka.2
-	for <xfs@oss.sgi.com>; Wed, 02 Sep 2015 19:24:57 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E71227F60
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 04:02:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 573D5AC002
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 02:02:05 -0700 (PDT)
+Received: from mail-io0-f180.google.com (mail-io0-f180.google.com
+	[209.85.223.180]) by cuda.sgi.com with ESMTP id
+	8p7LfSaEfdCiuQX7 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 Sep 2015 02:02:04 -0700 (PDT)
+Received: by ioiz6 with SMTP id z6so50304335ioi.2
+	for <xfs@oss.sgi.com>; Thu, 03 Sep 2015 02:02:04 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 3 Sep 2015 14:24:57 +1200
-Message-ID: <CA+nZN+grRZBNruxua4inJ-cMe_WX2XSPjsrP+qb579Si8R6ihA@mail.gmail.com>
-Subject: XFS and nobarriers on Intel SSD
-From: Richard Bade <hitrich@gmail.com>
+In-Reply-To: <20150831190120.GK349@infradead.org>
+References: <1440590449-20372-1-git-send-email-jtulak@redhat.com>
+	<1440590555-20463-1-git-send-email-jtulak@redhat.com>
+	<1440590555-20463-10-git-send-email-jtulak@redhat.com>
+	<20150831190120.GK349@infradead.org>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 3 Sep 2015 11:01:44 +0200
+Message-ID: <CACj3i73Px4Zxfyz1GMZN=4r_LeONPMwfLT=P7C7bNDDshJ1ipA@mail.gmail.com>
+Subject: Re: [PATCH 10/11] xfsprogs: add dummy mntent for OS X
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,77 +30,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8583955529140234271=="
+Content-Type: multipart/mixed; boundary="===============4642377753699671035=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---===============8583955529140234271==
-Content-Type: multipart/alternative; boundary=bcaec548a7ef45e997051ece7d0b
+--===============4642377753699671035==
+Content-Type: multipart/alternative; boundary=001a11409e3e763f1f051ed4091a
 
---bcaec548a7ef45e997051ece7d0b
+--001a11409e3e763f1f051ed4091a
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-Hi Everyone,
-I have a question about nobarriers. In the XFS FAQ it looks like the
-recommendation is that if you have a Battery Backed raid controller you
-should set nobarriers for performance reasons.
-Our LSI card doesn=E2=80=99t have battery backed cache as it=E2=80=99s conf=
-igured in HBA
-mode (IT) rather than Raid (IR). Our Intel s3710 SSD=E2=80=99s do have a ca=
-pacitor
-backed cache though.
-So is it recommended that barriers are turned off as the drive has a safe
-cache (I am confident that the cache will write out to disk on power
-failure)?
+On Mon, Aug 31, 2015 at 9:01 PM, Christoph Hellwig <hch@infradead.org>
+wrote:
 
-The reason I am asking about this is that we are seeing some significant
-I/O delays on the disks causing a =E2=80=9CSCSI Task Abort=E2=80=9D from th=
-e OS. This seems
-to be triggered by the drive receiving a =E2=80=9CSynchronize cache command=
-=E2=80=9D.
-My current thinking is that setting no barriers will stop the drive
-receiving a sync command and therefore stop the I/O delay associated with
-it.
+> On Wed, Aug 26, 2015 at 02:02:34PM +0200, Jan Tulak wrote:
+> > Because these calls are used only by xfs_fsr, which can't
+> > work on OS X unless a way how to mount XFS is found,
+> > there is not use in implementing these calls.
+>
+> Take a look at the quota code for the BSD alternative to mntent.
+> That code should be moved into a common location and used by fsr.
+>
 
-This is happening on our Ceph storage cluster. For those not familiar with
-Ceph, it uses XFS as the underlying filesystem for the object stores.
+=E2=80=8BI tried to find it, but didn't found... Could you point me where i=
+t is?
+Quota/freebsd.h has just few lines with one definition with errno =3D
+-ENOSYS, and in other files in quota/, I didn't saw anything BSD specific.
 
-Has anyone else encountered this issue?
-Any info or suggestions about this would be appreciated.
+Thanks,
+Jan
 
-Regards,
-Richard
 
---bcaec548a7ef45e997051ece7d0b
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a11409e3e763f1f051ed4091a
 Content-Type: text/html; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr"><div>Hi Everyone,</div><div>I have a question about nobarr=
-iers. In the XFS FAQ it looks like the recommendation is that if you have a=
- Battery Backed raid controller you should set nobarriers for performance r=
-easons.</div><div>Our LSI card doesn=E2=80=99t have battery backed cache as=
- it=E2=80=99s configured in HBA mode (IT) rather than Raid (IR). Our Intel =
-s3710 SSD=E2=80=99s do have a capacitor backed cache though.</div><div>So i=
-s it recommended that barriers are turned off as the drive has a safe cache=
- (I am confident that the cache will write out to disk on power failure)?</=
-div><div><br></div><div>The reason I am asking about this is that we are se=
-eing some significant I/O delays on the disks causing a =E2=80=9CSCSI Task =
-Abort=E2=80=9D from the OS. This seems to be triggered by the drive receivi=
-ng a =E2=80=9CSynchronize cache command=E2=80=9D.</div><div>My current thin=
-king is that setting no barriers will stop the drive receiving a sync comma=
-nd and therefore stop the I/O delay associated with it.</div><div><br></div=
-><div>This is happening on our Ceph storage cluster. For those not familiar=
- with Ceph, it uses XFS as the underlying filesystem for the object stores.=
-</div><div><br></div><div>Has anyone else encountered this issue?</div><div=
->Any info or suggestions about this would be appreciated.=C2=A0</div><div><=
-br></div><div>Regards,</div><div>Richard</div><div><br></div></div>
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><br></div><div class=3D"gmail_extra"><br><div class=3D"=
+gmail_quote">On Mon, Aug 31, 2015 at 9:01 PM, Christoph Hellwig <span dir=
+=3D"ltr">&lt;<a href=3D"mailto:hch@infradead.org" target=3D"_blank">hch@inf=
+radead.org</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span cl=
+ass=3D"">On Wed, Aug 26, 2015 at 02:02:34PM +0200, Jan Tulak wrote:<br>
+&gt; Because these calls are used only by xfs_fsr, which can&#39;t<br>
+&gt; work on OS X unless a way how to mount XFS is found,<br>
+&gt; there is not use in implementing these calls.<br>
+<br>
+</span>Take a look at the quota code for the BSD alternative to mntent.<br>
+That code should be moved into a common location and used by fsr.<br>
+</blockquote></div><br><div class=3D"gmail_default" style=3D"font-family:ar=
+ial,helvetica,sans-serif">=E2=80=8BI tried to find it, but didn&#39;t found=
+... Could you point me where it is?=C2=A0</div><div class=3D"gmail_default"=
+ style=3D"font-family:arial,helvetica,sans-serif">Quota/freebsd.h has just =
+few lines with one definition with errno =3D -ENOSYS, and in other files in=
+ quota/, I didn&#39;t saw anything BSD specific.</div><div class=3D"gmail_d=
+efault" style=3D"font-family:arial,helvetica,sans-serif"><br></div><div cla=
+ss=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">Thank=
+s,</div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,s=
+ans-serif">Jan</div><br clear=3D"all"><div><br></div>-- <br><div class=3D"g=
+mail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<br></=
+div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@redhat.co=
+m</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank">jan@tulak.me=
+</a></div></div></div></div>
+</div></div>
 
---bcaec548a7ef45e997051ece7d0b--
+--001a11409e3e763f1f051ed4091a--
 
 
---===============8583955529140234271==
+--===============4642377753699671035==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -105,4 +115,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8583955529140234271==--
+--===============4642377753699671035==--
