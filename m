@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E741D7F58
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 05:39:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D59EF8F8050
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 03:39:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 860F67F83
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 05:45:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6693B8F8050
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 03:45:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0VBoLxevoqfuw7fU (version=TLSv1
+	cuda.sgi.com with ESMTP id E3jKhkRJs44Qq18s (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 Sep 2015 03:39:51 -0700 (PDT)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2 07/11] xfsprogs: change nftw64 to nftw
-Date: Thu,  3 Sep 2015 12:39:44 +0200
-Message-Id: <1441276784-23701-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1440590555-20463-7-git-send-email-jtulak@redhat.com>
-References: <1440590555-20463-7-git-send-email-jtulak@redhat.com>
+	Thu, 03 Sep 2015 03:45:39 -0700 (PDT)
+Date: Thu, 3 Sep 2015 06:45:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix null pointer dereference when mapping is NULL
+Message-ID: <20150903104537.GA46225@bfoster.bfoster>
+References: <1441274260-10120-1-git-send-email-colin.king@canonical.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1441274260-10120-1-git-send-email-colin.king@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,43 +25,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
+To: Colin King <colin.king@canonical.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Changelog:
- - Subject was "add nftw64 translation for OS X"
- - Changed from #define to renaming
+On Thu, Sep 03, 2015 at 10:57:40AM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> xfs_vm_set_page_dirty checks to see if mapping is NULL however
+> before this unlikely check it already dereferenced mapping when
+> initializing inode. Move the inode initialization after the mapping
+> null check to avoid a potential null pointer dereference.
+> 
+> Fixes: 22e757a49cf0 ("xfs: don't dirty buffers beyond EOF")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
 
-There is only one usage of nftw64 in entire xfsprogs, but
-multiple usages of nftw. It seems the 64 variant has no reason,
-and causes difficulties with some other platforms which has
-only nftw call.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- estimate/xfs_estimate.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/estimate/xfs_estimate.c b/estimate/xfs_estimate.c
-index 65b7168..632e4ec 100644
---- a/estimate/xfs_estimate.c
-+++ b/estimate/xfs_estimate.c
-@@ -168,7 +168,7 @@ main(int argc, char **argv)
- 		ndirs=0LL;		/* number of directories */
- 		nspecial=0LL;		/* number of special files */
- 
--		nftw64(argv[optind], ffn, 40, FTW_PHYS | FTW_MOUNT);
-+		nftw(argv[optind], ffn, 40, FTW_PHYS | FTW_MOUNT);
- 
- 		if (__debug) {
- 			printf(_("dirsize=%llu\n"), dirsize);
--- 
-2.4.5
+>  fs/xfs/xfs_aops.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index c77499b..d15ae85 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1935,7 +1935,7 @@ xfs_vm_set_page_dirty(
+>  	struct page		*page)
+>  {
+>  	struct address_space	*mapping = page->mapping;
+> -	struct inode		*inode = mapping->host;
+> +	struct inode		*inode;
+>  	loff_t			end_offset;
+>  	loff_t			offset;
+>  	int			newly_dirty;
+> @@ -1944,6 +1944,7 @@ xfs_vm_set_page_dirty(
+>  	if (unlikely(!mapping))
+>  		return !TestSetPageDirty(page);
+>  
+> +	inode = mapping->host;
+>  	end_offset = i_size_read(inode);
+>  	offset = page_offset(page);
+>  
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
