@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 958837F73
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 08:22:31 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8081C7F77
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 08:33:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1618AAC001
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 06:22:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 629FE304048
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 06:33:54 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Y9eB4pi9T1Ub3rAM for <xfs@oss.sgi.com>;
-	Thu, 03 Sep 2015 06:22:24 -0700 (PDT)
-Subject: Re: xfs corruption
-References: <CAC=x_0hAQR9Ynmnqohv1R8xv3TBot5wmn7DODx6GbKU7tYv2sA@mail.gmail.com>
+	ESMTP id qo4MLYAZLwycJkQL for <xfs@oss.sgi.com>;
+	Thu, 03 Sep 2015 06:33:52 -0700 (PDT)
+Subject: Re: XFS and nobarriers on Intel SSD
+References: <CA+nZN+grRZBNruxua4inJ-cMe_WX2XSPjsrP+qb579Si8R6ihA@mail.gmail.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <55E8498F.8090508@sandeen.net>
-Date: Thu, 3 Sep 2015 08:22:23 -0500
+Message-ID: <55E84C40.8020602@sandeen.net>
+Date: Thu, 3 Sep 2015 08:33:52 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAC=x_0hAQR9Ynmnqohv1R8xv3TBot5wmn7DODx6GbKU7tYv2sA@mail.gmail.com>
+In-Reply-To: <CA+nZN+grRZBNruxua4inJ-cMe_WX2XSPjsrP+qb579Si8R6ihA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,94 +23,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Danny Shavit <danny@zadarastorage.com>, xfs@oss.sgi.com
-Cc: Alex Lyakas <alex@zadarastorage.com>
+To: Richard Bade <hitrich@gmail.com>, xfs@oss.sgi.com
 
-On 9/3/15 6:09 AM, Danny Shavit wrote:
-> Hi Dave,
-> 
-> We couple of more xfs corruption that we would like to share:
+On 9/2/15 9:24 PM, Richard Bade wrote:
+> Hi Everyone, I have a question about nobarriers. In the XFS FAQ it
+> looks like the recommendation is that if you have a Battery Backed
+> raid controller you should set nobarriers for performance reasons. =
 
-On the same box as the one that seemed to be experiencing some
-bit-flips in your earlier email?
+> Our LSI card doesn=92t have battery backed cache as it=92s configured in
+> HBA mode (IT) rather than Raid (IR). Our Intel s3710 SSD=92s do have a
+> capacitor backed cache though. So is it recommended that barriers are
+> turned off as the drive has a safe cache (I am confident that the
+> cache will write out to disk on power failure)?
 
-As a general note: You are not providing enough information for
-us to effectively help you.
+If you have a device which guarantees that every acknowledged write
+will persist even if power is lost, then you can safely turn off
+barriers.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> The reason I am asking about this is that we are seeing some
+> significant I/O delays on the disks causing a =93SCSI Task Abort=94 from
+> the OS. This seems to be triggered by the drive receiving a
+> =93Synchronize cache command=94. My current thinking is that setting no
+> barriers will stop the drive receiving a sync command and therefore
+> stop the I/O delay associated with it.
 
-Kernel version?  xfsprogs version?  At a bare minimum...
+Interesting, I thought that usually devices with battery-backed cache
+will just ignore synchronize cache commands.
+ =
 
-Your dmesg snippets are edited.  You've provided what you feel is
-important, omitting the parts that may actually be important or
-informational.
-
-You haven't described the sequence of events that led to these issues.
-
-You haven't made clear what these attachments are; which repair log goes
-with which kernel event?
-
-Etc...
-
-> 1. This is an interesting one, since xfs reported corruption but when
-> running xfs_repair, no error was found. Attached is the kernel log
-> section regarding the corruption (6458). Does xfs_repair explicitly
-> read data from the disk? In such case it might be a memory
-> corruption. Are you familiar with such cases?
-
-Yes, xfs_repair opens the block device O_DIRECT.
-
-your 6485-kernel.log shows a failure in xfs_allocbt_verify(), right
-after the allocation btree is read from disk.  i.e. this is an in-kernel
-metadata consistency check that is failing.
-
-It also shows:
-
-kworker/0:1H Tainted: GF       W 
-
-So it's tainted:
-
-  2: 'F' if any module was force loaded by "insmod -f", ' ' if all
-     modules were loaded normally.
-
- 10: 'W' if a warning has previously been issued by the kernel.
-     (Though some warnings may set more specific taint flags.)
-
-You force-loaded a module?  And previous warnings were emitted (though we
-can't see them in your edited dmesg).  
-All bets are off.  If you had included the full dmesg, we might know 
-more about what's going on, at least.
-
-> 2. xfs corruption occurred suddenly with no apparent external event.
->  Attached are xfs_repair and kernel logs are. Xfs dump can be found
-> in: https://zadarastorage-public.s3.amazonaws.com/xfs/82.metadump.gz
-
-Your 6442-82-xfs_repair.log is from an xfs_repair -L, so of course it
-is finding corruption, and the output is more or less meaningless
-from a triage POV.  Repair said:
-
-> Note that destroying the log may cause corruption -- please attempt a mount
-> of the filesystem before doing this.
-
-Why did you run it with -L? Did mount fail? If so how?
-
-dm-82-kernel.log also shows a failing verifier, this time xfs_bmbt_verify,
-when reading metadata from disk.
-
-You've truncated other parts, though:
-
-Aug 22 23:24:48 vsa-00000110-vc-0 kernel: [4194599.685353] ffff88010ec36000: ea bb 12 3a 5f 44 01 a8 b9 2a 80 10 b3 a7 d5 af  ...:_D...*
-......
-
-so there's not a ton to go on, just hints that there is more information
-that's not provided.
-
+But if not, then sure, maybe that's the issue.
 
 -Eric
+
+> This is happening on our Ceph storage cluster. For those not familiar
+> with Ceph, it uses XFS as the underlying filesystem for the object
+> stores.
+> =
+
+> Has anyone else encountered this issue? Any info or suggestions about
+> this would be appreciated.
+> =
+
+> Regards, Richard
+> =
+
+> =
+
+> =
+
+> _______________________________________________ xfs mailing list =
+
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> =
+
 
 _______________________________________________
 xfs mailing list
