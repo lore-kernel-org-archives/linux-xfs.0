@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F5447F3F
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 06:09:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3F1AAC006
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 04:09:33 -0700 (PDT)
-Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
-	[209.85.212.180]) by cuda.sgi.com with ESMTP id
-	GB69RhenWsKpoKPr (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 Sep 2015 04:09:31 -0700 (PDT)
-Received: by wicfx3 with SMTP id fx3so15956626wic.1
-	for <xfs@oss.sgi.com>; Thu, 03 Sep 2015 04:09:30 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 958837F73
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 08:22:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1618AAC001
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2015 06:22:27 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Y9eB4pi9T1Ub3rAM for <xfs@oss.sgi.com>;
+	Thu, 03 Sep 2015 06:22:24 -0700 (PDT)
+Subject: Re: xfs corruption
+References: <CAC=x_0hAQR9Ynmnqohv1R8xv3TBot5wmn7DODx6GbKU7tYv2sA@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <55E8498F.8090508@sandeen.net>
+Date: Thu, 3 Sep 2015 08:22:23 -0500
 MIME-Version: 1.0
-Date: Thu, 3 Sep 2015 14:09:30 +0300
-Message-ID: <CAC=x_0hAQR9Ynmnqohv1R8xv3TBot5wmn7DODx6GbKU7tYv2sA@mail.gmail.com>
-Subject: xfs corruption
-From: Danny Shavit <danny@zadarastorage.com>
-Content-Type: multipart/mixed; boundary=f46d04388e0d343012051ed5d1ea
+In-Reply-To: <CAC=x_0hAQR9Ynmnqohv1R8xv3TBot5wmn7DODx6GbKU7tYv2sA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,288 +23,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Danny Shavit <danny@zadarastorage.com>, xfs@oss.sgi.com
 Cc: Alex Lyakas <alex@zadarastorage.com>
 
---f46d04388e0d343012051ed5d1ea
-Content-Type: multipart/alternative; boundary=f46d04388e0d34300d051ed5d1e8
+On 9/3/15 6:09 AM, Danny Shavit wrote:
+> Hi Dave,
+> 
+> We couple of more xfs corruption that we would like to share:
 
---f46d04388e0d34300d051ed5d1e8
-Content-Type: text/plain; charset=UTF-8
+On the same box as the one that seemed to be experiencing some
+bit-flips in your earlier email?
 
-Hi Dave,
+As a general note: You are not providing enough information for
+us to effectively help you.
 
-We couple of more xfs corruption that we would like to share:
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-1. This is an interesting one, since xfs reported corruption but when
-running xfs_repair, no error was found.
-Attached is the kernel log section regarding the corruption (6458).
-Does xfs_repair explicitly read data from the disk? In such case it might
-be a memory corruption. Are you familiar with such cases?
+Kernel version?  xfsprogs version?  At a bare minimum...
 
-2. xfs corruption occurred suddenly with no apparent external event.
-Attached are xfs_repair and kernel logs are.
-Xfs dump can be found in:
-https://zadarastorage-public.s3.amazonaws.com/xfs/82.metadump.gz
+Your dmesg snippets are edited.  You've provided what you feel is
+important, omitting the parts that may actually be important or
+informational.
+
+You haven't described the sequence of events that led to these issues.
+
+You haven't made clear what these attachments are; which repair log goes
+with which kernel event?
+
+Etc...
+
+> 1. This is an interesting one, since xfs reported corruption but when
+> running xfs_repair, no error was found. Attached is the kernel log
+> section regarding the corruption (6458). Does xfs_repair explicitly
+> read data from the disk? In such case it might be a memory
+> corruption. Are you familiar with such cases?
+
+Yes, xfs_repair opens the block device O_DIRECT.
+
+your 6485-kernel.log shows a failure in xfs_allocbt_verify(), right
+after the allocation btree is read from disk.  i.e. this is an in-kernel
+metadata consistency check that is failing.
+
+It also shows:
+
+kworker/0:1H Tainted: GF       W 
+
+So it's tainted:
+
+  2: 'F' if any module was force loaded by "insmod -f", ' ' if all
+     modules were loaded normally.
+
+ 10: 'W' if a warning has previously been issued by the kernel.
+     (Though some warnings may set more specific taint flags.)
+
+You force-loaded a module?  And previous warnings were emitted (though we
+can't see them in your edited dmesg).  
+All bets are off.  If you had included the full dmesg, we might know 
+more about what's going on, at least.
+
+> 2. xfs corruption occurred suddenly with no apparent external event.
+>  Attached are xfs_repair and kernel logs are. Xfs dump can be found
+> in: https://zadarastorage-public.s3.amazonaws.com/xfs/82.metadump.gz
+
+Your 6442-82-xfs_repair.log is from an xfs_repair -L, so of course it
+is finding corruption, and the output is more or less meaningless
+from a triage POV.  Repair said:
+
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
+
+Why did you run it with -L? Did mount fail? If so how?
+
+dm-82-kernel.log also shows a failing verifier, this time xfs_bmbt_verify,
+when reading metadata from disk.
+
+You've truncated other parts, though:
+
+Aug 22 23:24:48 vsa-00000110-vc-0 kernel: [4194599.685353] ffff88010ec36000: ea bb 12 3a 5f 44 01 a8 b9 2a 80 10 b3 a7 d5 af  ...:_D...*
+......
+
+so there's not a ton to go on, just hints that there is more information
+that's not provided.
 
 
-
-
--- 
-Thanks,
-Danny Shavit
-ZadaraStorage
-
---f46d04388e0d34300d051ed5d1e8
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi Dave,<div><br></div><div>We couple of more xfs corrupti=
-on that we would like to share:</div><div><br></div><div>1. This is an inte=
-resting one, since xfs reported corruption but when running xfs_repair, no =
-error was found.</div><div>Attached is the kernel log section regarding the=
- corruption (6458).</div><div>Does xfs_repair explicitly read data from the=
- disk? In such case it might be a memory corruption. Are you familiar with =
-such cases?</div><div><br></div><div>2. xfs corruption occurred suddenly wi=
-th no apparent external event.=C2=A0</div><div>Attached are xfs_repair and =
-kernel logs are.=C2=A0</div><div>Xfs dump can be found in:</div><div><a hre=
-f=3D"https://zadarastorage-public.s3.amazonaws.com/xfs/82.metadump.gz">http=
-s://zadarastorage-public.s3.amazonaws.com/xfs/82.metadump.gz</a></div><div>=
-<br></div><div><br></div><div><br clear=3D"all"><div><br></div>-- <br><div =
-class=3D"gmail_signature"><div dir=3D"ltr"><div>Thanks,<br></div>Danny Shav=
-it<br></div><div>ZadaraStorage</div></div>
-</div></div>
-
---f46d04388e0d34300d051ed5d1e8--
-
---f46d04388e0d343012051ed5d1ea
-Content-Type: application/octet-stream; name="6458-kernel.log"
-Content-Disposition: attachment; filename="6458-kernel.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ie40vumg0
-
-VGhlIFhGUyB2b2x1bWVzIHRoZW4gZW50ZXJlZCBhIGNvcnJ1cHRlZCBzdGF0ZToKCkF1ZyAyNyAw
-MTowMTozNCB2c2EtMDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMwNzc0M10gWEZTIChk
-bS0zOSk6IEludGVybmFsIGVycm9yIHhmc19hbGxvY2J0X3ZlcmlmeSBhdCBsaW5lIDMzMCBvZiBm
-aWxlIC9tbnQvc2hhcmUvYnVpbGRzLzE0LjExLS0zLjguMTMtMDMwODEzLWdlbmVyaWMvMjAxNS0w
-NC0yOV8xMC00NS00Mi0tMTQuMTEtMTYwMS0xMjQvc3JjL3phZGFyYS1idHJmcy9mcy94ZnMveGZz
-X2FsbG9jX2J0cmVlLmMuICBDYWxsZXIgMHhmZmZmZmZmZmEwNjRlOWNlCkF1ZyAyNyAwMTowMToz
-NCB2c2EtMDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMwNzc0M10KQXVnIDI3IDAxOjAx
-OjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE0NDQ2XSBQaWQ6IDI1MjMx
-LCBjb21tOiBrd29ya2VyLzA6MEggVGFpbnRlZDogR0YgICAgICAgVyAgTyAzLjguMTMtMDMwODEz
-LWdlbmVyaWMgIzIwMTMwNTExMTg0MwpBdWcgMjcgMDE6MDE6MzQgdnNhLTAwMDAwMTRlLXZjLTAg
-a2VybmVsOiBbMzUwNzEwNS4zMTQ0NDldIENhbGwgVHJhY2U6CkF1ZyAyNyAwMTowMTozNCB2c2Et
-MDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMxNDQ4N10gIFs8ZmZmZmZmZmZhMDYzMWJh
-Zj5dIHhmc19lcnJvcl9yZXBvcnQrMHgzZi8weDUwIFt4ZnNdCkF1ZyAyNyAwMTowMTozNCB2c2Et
-MDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMxNDUwMl0gIFs8ZmZmZmZmZmZhMDY0ZTlj
-ZT5dID8geGZzX2FsbG9jYnRfcmVhZF92ZXJpZnkrMHhlLzB4MTAgW3hmc10KQXVnIDI3IDAxOjAx
-OjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE0NTE0XSAgWzxmZmZmZmZm
-ZmEwNjMxYzFlPl0geGZzX2NvcnJ1cHRpb25fZXJyb3IrMHg1ZS8weDkwIFt4ZnNdCkF1ZyAyNyAw
-MTowMTozNCB2c2EtMDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMxNDUyOF0gIFs8ZmZm
-ZmZmZmZhMDY0ZTg2Mj5dIHhmc19hbGxvY2J0X3ZlcmlmeSsweDkyLzB4MWUwIFt4ZnNdCkF1ZyAy
-NyAwMTowMTozNCB2c2EtMDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMxNDU0MF0gIFs8
-ZmZmZmZmZmZhMDY0ZTljZT5dID8geGZzX2FsbG9jYnRfcmVhZF92ZXJpZnkrMHhlLzB4MTAgW3hm
-c10KQXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE0
-NTQ3XSAgWzxmZmZmZmZmZjgxMDEzNWFhPl0gPyBfX3N3aXRjaF90bysweDEyYS8weDRhMApBdWcg
-MjcgMDE6MDE6MzQgdnNhLTAwMDAwMTRlLXZjLTAga2VybmVsOiBbMzUwNzEwNS4zMTQ1NTFdICBb
-PGZmZmZmZmZmODEwOTZjZDg+XSA/IHNldF9uZXh0X2VudGl0eSsweGE4LzB4YzAKQXVnIDI3IDAx
-OjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE0NTY2XSAgWzxmZmZm
-ZmZmZmEwNjRlOWNlPl0geGZzX2FsbG9jYnRfcmVhZF92ZXJpZnkrMHhlLzB4MTAgW3hmc10KQXVn
-IDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE1MjUxXSAg
-WzxmZmZmZmZmZmEwNjJmNDhmPl0geGZzX2J1Zl9pb2RvbmVfd29yaysweDNmLzB4YTAgW3hmc10K
-QXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE1MjU1
-XSAgWzxmZmZmZmZmZjgxMDc4YjgxPl0gcHJvY2Vzc19vbmVfd29yaysweDE0MS8weDQ5MApBdWcg
-MjcgMDE6MDE6MzQgdnNhLTAwMDAwMTRlLXZjLTAga2VybmVsOiBbMzUwNzEwNS4zMTUyNTddICBb
-PGZmZmZmZmZmODEwNzliNDg+XSB3b3JrZXJfdGhyZWFkKzB4MTY4LzB4NDAwCkF1ZyAyNyAwMTow
-MTozNCB2c2EtMDAwMDAxNGUtdmMtMCBrZXJuZWw6IFszNTA3MTA1LjMxNTI1OV0gIFs8ZmZmZmZm
-ZmY4MTA3OTllMD5dID8gbWFuYWdlX3dvcmtlcnMrMHgxMjAvMHgxMjAKQXVnIDI3IDAxOjAxOjM0
-IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE1MjYyXSAgWzxmZmZmZmZmZjgx
-MDdmMDUwPl0ga3RocmVhZCsweGMwLzB4ZDAKQXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12
-Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE1MjY1XSAgWzxmZmZmZmZmZjgxMDdlZjkwPl0gPyBmbHVz
-aF9rdGhyZWFkX3dvcmtlcisweGIwLzB4YjAKQXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12
-Yy0wIGtlcm5lbDogWzM1MDcxMDUuMzE1MjcwXSAgWzxmZmZmZmZmZjgxNmY2MWVjPl0gcmV0X2Zy
-b21fZm9yaysweDdjLzB4YjAKQXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5l
-bDogWzM1MDcxMDUuMzE1MjczXSAgWzxmZmZmZmZmZjgxMDdlZjkwPl0gPyBmbHVzaF9rdGhyZWFk
-X3dvcmtlcisweGIwLzB4YjAKQXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0wIGtlcm5l
-bDogWzM1MDcxMDUuMzE1Mjc1XSBYRlMgKGRtLTM5KTogQ29ycnVwdGlvbiBkZXRlY3RlZC4gVW5t
-b3VudCBhbmQgcnVuIHhmc19yZXBhaXIKQXVnIDI3IDAxOjAxOjM0IHZzYS0wMDAwMDE0ZS12Yy0w
-IGtlcm5lbDogWzM1MDcxMDUuMzE2NzA2XSBYRlMgKGRtLTM5KTogbWV0YWRhdGEgSS9PIGVycm9y
-OiBibG9jayAweDQxYTZlZmY4ICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIpIGVycm9yIDExNyBu
-dW1ibGtzIDgK
---f46d04388e0d343012051ed5d1ea
-Content-Type: application/octet-stream; name="6442-82-xfs_repair.log"
-Content-Disposition: attachment; filename="6442-82-xfs_repair.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ie43r2yp1
-
-cm9vdEB2c2EtMDAwMDAxMTAtdmMtMDp+IyB4ZnNfcmVwYWlyIC9kZXYvZG0tODIKUGhhc2UgMSAt
-IGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBs
-b2cKICAgICAgICAtIHplcm8gbG9nLi4uCkVSUk9SOiBUaGUgZmlsZXN5c3RlbSBoYXMgdmFsdWFi
-bGUgbWV0YWRhdGEgY2hhbmdlcyBpbiBhIGxvZyB3aGljaCBuZWVkcyB0bwpiZSByZXBsYXllZC4g
-IE1vdW50IHRoZSBmaWxlc3lzdGVtIHRvIHJlcGxheSB0aGUgbG9nLCBhbmQgdW5tb3VudCBpdCBi
-ZWZvcmUKcmUtcnVubmluZyB4ZnNfcmVwYWlyLiAgSWYgeW91IGFyZSB1bmFibGUgdG8gbW91bnQg
-dGhlIGZpbGVzeXN0ZW0sIHRoZW4gdXNlCnRoZSAtTCBvcHRpb24gdG8gZGVzdHJveSB0aGUgbG9n
-IGFuZCBhdHRlbXB0IGEgcmVwYWlyLgpOb3RlIHRoYXQgZGVzdHJveWluZyB0aGUgbG9nIG1heSBj
-YXVzZSBjb3JydXB0aW9uIC0tIHBsZWFzZSBhdHRlbXB0IGEgbW91bnQKb2YgdGhlIGZpbGVzeXN0
-ZW0gYmVmb3JlIGRvaW5nIHRoaXMuCnJvb3RAdnNhLTAwMDAwMTEwLXZjLTA6fiMgeGZzX3JlcGFp
-ciAtTCAvZGV2L2RtLTgyClBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgpQ
-aGFzZSAyIC0gdXNpbmcgaW50ZXJuYWwgbG9nCiAgICAgICAgLSB6ZXJvIGxvZy4uLgpBTEVSVDog
-VGhlIGZpbGVzeXN0ZW0gaGFzIHZhbHVhYmxlIG1ldGFkYXRhIGNoYW5nZXMgaW4gYSBsb2cgd2hp
-Y2ggaXMgYmVpbmcKZGVzdHJveWVkIGJlY2F1c2UgdGhlIC1MIG9wdGlvbiB3YXMgdXNlZC4KICAg
-ICAgICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KYWdpIHVu
-bGlua2VkIGJ1Y2tldCAxIGlzIDEyNTgwMzUzIGluIGFnIDMgKGlub2RlPTIxMzkwNjk0NSkKc2Jf
-aWNvdW50IDEyMjY0OTYsIGNvdW50ZWQgMTIyNzc3NgpzYl9pZnJlZSAyOTIxODAsIGNvdW50ZWQg
-Mjk3MDgyCnNiX2ZkYmxvY2tzIDMxMTgyNzM5LCBjb3VudGVkIDU1MTU4MDQ0CiAgICAgICAgLSBm
-b3VuZCByb290IGlub2RlIGNodW5rClBoYXNlIDMgLSBmb3IgZWFjaCBBRy4uLgogICAgICAgIC0g
-c2NhbiBhbmQgY2xlYXIgYWdpIHVubGlua2VkIGxpc3RzLi4uCiAgICAgICAgLSBwcm9jZXNzIGtu
-b3duIGlub2RlcyBhbmQgcGVyZm9ybSBpbm9kZSBkaXNjb3ZlcnkuLi4KICAgICAgICAtIGFnbm8g
-PSAwCiAgICAgICAgLSBhZ25vID0gMQogICAgICAgIC0gYWdubyA9IDIKN2Y4ZDIyYTJjNzAwOiBC
-YWRuZXNzIGluIGtleSBsb29rdXAgKGxlbmd0aCkKYnA9KGJubyA4NDkzMjk5MiwgbGVuIDE2Mzg0
-IGJ5dGVzKSBrZXk9KGJubyA4NDkzMjk5MiwgbGVuIDgxOTIgYnl0ZXMpCiAgICAgICAgLSBhZ25v
-ID0gMwpiYWQgbWFnaWMgIyAweGVhYmIxMjNhIGluIGlub2RlIDIxMzkwNjk0NSAoZGF0YSBmb3Jr
-KSBibWJ0IGJsb2NrIDEzMzY5MjQyCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMjEzOTA2OTQ1CmNs
-ZWFyZWQgaW5vZGUgMjEzOTA2OTQ1CmNsZWFyaW5nIGZvcncvYmFjayBwb2ludGVycyBpbiBibG9j
-ayAwIGZvciBhdHRyaWJ1dGVzIGluIGlub2RlIDIxMzkwNjk1MwpiYWQgYXR0cmlidXRlIGxlYWYg
-bWFnaWMgIyAweGJjNmMgZm9yIGRpciBpbm8gMjEzOTA2OTUzCnByb2JsZW0gd2l0aCBhdHRyaWJ1
-dGUgY29udGVudHMgaW4gaW5vZGUgMjEzOTA2OTUzCmNsZWFyaW5nIGlub2RlIDIxMzkwNjk1MyBh
-dHRyaWJ1dGVzCmNvcnJlY3RpbmcgbmJsb2NrcyBmb3IgaW5vZGUgMjEzOTA2OTUzLCB3YXMgNjYg
-LSBjb3VudGVkIDY1CmNsZWFyaW5nIGZvcncvYmFjayBwb2ludGVycyBpbiBibG9jayAwIGZvciBh
-dHRyaWJ1dGVzIGluIGlub2RlIDIxMzkwNjk1NApiYWQgYXR0cmlidXRlIGxlYWYgbWFnaWMgIyAw
-eGRlNzIgZm9yIGRpciBpbm8gMjEzOTA2OTU0CnByb2JsZW0gd2l0aCBhdHRyaWJ1dGUgY29udGVu
-dHMgaW4gaW5vZGUgMjEzOTA2OTU0CmNsZWFyaW5nIGlub2RlIDIxMzkwNjk1NCBhdHRyaWJ1dGVz
-CmNvcnJlY3RpbmcgbmJsb2NrcyBmb3IgaW5vZGUgMjEzOTA2OTU0LCB3YXMgMiAtIGNvdW50ZWQg
-MQpjbGVhcmluZyBmb3J3L2JhY2sgcG9pbnRlcnMgaW4gYmxvY2sgMCBmb3IgYXR0cmlidXRlcyBp
-biBpbm9kZSAyMTM5MDY5NjAKYmFkIGF0dHJpYnV0ZSBsZWFmIG1hZ2ljICMgMHhkMGViIGZvciBk
-aXIgaW5vIDIxMzkwNjk2MApwcm9ibGVtIHdpdGggYXR0cmlidXRlIGNvbnRlbnRzIGluIGlub2Rl
-IDIxMzkwNjk2MApjbGVhcmluZyBpbm9kZSAyMTM5MDY5NjAgYXR0cmlidXRlcwpjb3JyZWN0aW5n
-IG5ibG9ja3MgZm9yIGlub2RlIDIxMzkwNjk2MCwgd2FzIDQgLSBjb3VudGVkIDMKY2xlYXJpbmcg
-Zm9ydy9iYWNrIHBvaW50ZXJzIGluIGJsb2NrIDAgZm9yIGF0dHJpYnV0ZXMgaW4gaW5vZGUgMjEz
-OTA2OTYxCmJhZCBhdHRyaWJ1dGUgbGVhZiBtYWdpYyAjIDB4Yjg3NiBmb3IgZGlyIGlubyAyMTM5
-MDY5NjEKcHJvYmxlbSB3aXRoIGF0dHJpYnV0ZSBjb250ZW50cyBpbiBpbm9kZSAyMTM5MDY5NjEK
-Y2xlYXJpbmcgaW5vZGUgMjEzOTA2OTYxIGF0dHJpYnV0ZXMKY29ycmVjdGluZyBuYmxvY2tzIGZv
-ciBpbm9kZSAyMTM5MDY5NjEsIHdhcyA1IC0gY291bnRlZCA0CiAgICAgICAgLSBhZ25vID0gNAog
-ICAgICAgIC0gYWdubyA9IDUKY2xlYXJpbmcgZm9ydy9iYWNrIHBvaW50ZXJzIGluIGJsb2NrIDAg
-Zm9yIGF0dHJpYnV0ZXMgaW4gaW5vZGUgMzQ3MjM1MTA1CmJhZCBhdHRyaWJ1dGUgbGVhZiBtYWdp
-YyAjIDB4YjAzMyBmb3IgZGlyIGlubyAzNDcyMzUxMDUKcHJvYmxlbSB3aXRoIGF0dHJpYnV0ZSBj
-b250ZW50cyBpbiBpbm9kZSAzNDcyMzUxMDUKY2xlYXJpbmcgaW5vZGUgMzQ3MjM1MTA1IGF0dHJp
-YnV0ZXMKY29ycmVjdGluZyBuYmxvY2tzIGZvciBpbm9kZSAzNDcyMzUxMDUsIHdhcyA5IC0gY291
-bnRlZCA4CmNsZWFyaW5nIGZvcncvYmFjayBwb2ludGVycyBpbiBibG9jayAwIGZvciBhdHRyaWJ1
-dGVzIGluIGlub2RlIDM0NzIzNTEwNgpiYWQgYXR0cmlidXRlIGxlYWYgbWFnaWMgIyAweGUxMyBm
-b3IgZGlyIGlubyAzNDcyMzUxMDYKcHJvYmxlbSB3aXRoIGF0dHJpYnV0ZSBjb250ZW50cyBpbiBp
-bm9kZSAzNDcyMzUxMDYKY2xlYXJpbmcgaW5vZGUgMzQ3MjM1MTA2IGF0dHJpYnV0ZXMKY29ycmVj
-dGluZyBuYmxvY2tzIGZvciBpbm9kZSAzNDcyMzUxMDYsIHdhcyA5IC0gY291bnRlZCA4CiAgICAg
-ICAgLSBhZ25vID0gNgogICAgICAgIC0gYWdubyA9IDcKY2xlYXJpbmcgZm9ydy9iYWNrIHBvaW50
-ZXJzIGluIGJsb2NrIDAgZm9yIGF0dHJpYnV0ZXMgaW4gaW5vZGUgNDc4NzU5NzAyCmJhZCBhdHRy
-aWJ1dGUgbGVhZiBtYWdpYyAjIDB4YTA2NSBmb3IgZGlyIGlubyA0Nzg3NTk3MDIKcHJvYmxlbSB3
-aXRoIGF0dHJpYnV0ZSBjb250ZW50cyBpbiBpbm9kZSA0Nzg3NTk3MDIKY2xlYXJpbmcgaW5vZGUg
-NDc4NzU5NzAyIGF0dHJpYnV0ZXMKY29ycmVjdGluZyBuYmxvY2tzIGZvciBpbm9kZSA0Nzg3NTk3
-MDIsIHdhcyAxNTYxIC0gY291bnRlZCAxNTYwCiAgICAgICAgLSBhZ25vID0gOAogICAgICAgIC0g
-YWdubyA9IDkKICAgICAgICAtIGFnbm8gPSAxMAogICAgICAgIC0gYWdubyA9IDExCiAgICAgICAg
-LSBhZ25vID0gMTIKICAgICAgICAtIGFnbm8gPSAxMwogICAgICAgIC0gYWdubyA9IDE0CiAgICAg
-ICAgLSBhZ25vID0gMTUKICAgICAgICAtIGFnbm8gPSAxNgogICAgICAgIC0gYWdubyA9IDE3CiAg
-ICAgICAgLSBhZ25vID0gMTgKICAgICAgICAtIGFnbm8gPSAxOQogICAgICAgIC0gYWdubyA9IDIw
-CiAgICAgICAgLSBhZ25vID0gMjEKICAgICAgICAtIGFnbm8gPSAyMgogICAgICAgIC0gYWdubyA9
-IDIzCiAgICAgICAgLSBhZ25vID0gMjQKICAgICAgICAtIHByb2Nlc3MgbmV3bHkgZGlzY292ZXJl
-ZCBpbm9kZXMuLi4KUGhhc2UgNCAtIGNoZWNrIGZvciBkdXBsaWNhdGUgYmxvY2tzLi4uCiAgICAg
-ICAgLSBzZXR0aW5nIHVwIGR1cGxpY2F0ZSBleHRlbnQgbGlzdC4uLgogICAgICAgIC0gY2hlY2sg
-Zm9yIGlub2RlcyBjbGFpbWluZyBkdXBsaWNhdGUgYmxvY2tzLi4uCiAgICAgICAgLSBhZ25vID0g
-MAogICAgICAgIC0gYWdubyA9IDEKICAgICAgICAtIGFnbm8gPSAyCiAgICAgICAgLSBhZ25vID0g
-MwpiYWQgbWFnaWMgIyAweDU4NDY1MzQyIGluIGlub2RlIDIxMzkwNjk1MyAoZGF0YSBmb3JrKSBi
-bWJ0IGJsb2NrIDAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAyMTM5MDY5NTMKY2xlYXJlZCBpbm9k
-ZSAyMTM5MDY5NTMKYmFkIGF0dHJpYnV0ZSBmb3JtYXQgMSBpbiBpbm9kZSAyMTM5MDY5NTQsIHJl
-c2V0dGluZyB2YWx1ZQpiYWQgYXR0cmlidXRlIGZvcm1hdCAxIGluIGlub2RlIDIxMzkwNjk2MCwg
-cmVzZXR0aW5nIHZhbHVlCmJhZCBhdHRyaWJ1dGUgZm9ybWF0IDEgaW4gaW5vZGUgMjEzOTA2OTYx
-LCByZXNldHRpbmcgdmFsdWUKICAgICAgICAtIGFnbm8gPSA0CiAgICAgICAgLSBhZ25vID0gNQpi
-YWQgYXR0cmlidXRlIGZvcm1hdCAxIGluIGlub2RlIDM0NzIzNTEwNSwgcmVzZXR0aW5nIHZhbHVl
-CmJhZCBhdHRyaWJ1dGUgZm9ybWF0IDEgaW4gaW5vZGUgMzQ3MjM1MTA2LCByZXNldHRpbmcgdmFs
-dWUKICAgICAgICAtIGFnbm8gPSA2CiAgICAgICAgLSBhZ25vID0gNwpiYWQgbWFnaWMgIyAweDU4
-NDY1MzQyIGluIGlub2RlIDQ3ODc1OTcwMiAoZGF0YSBmb3JrKSBibWJ0IGJsb2NrIDAKYmFkIGRh
-dGEgZm9yayBpbiBpbm9kZSA0Nzg3NTk3MDIKY2xlYXJlZCBpbm9kZSA0Nzg3NTk3MDIKICAgICAg
-ICAtIGFnbm8gPSA4CiAgICAgICAgLSBhZ25vID0gOQogICAgICAgIC0gYWdubyA9IDEwCiAgICAg
-ICAgLSBhZ25vID0gMTEKICAgICAgICAtIGFnbm8gPSAxMgogICAgICAgIC0gYWdubyA9IDEzCiAg
-ICAgICAgLSBhZ25vID0gMTQKICAgICAgICAtIGFnbm8gPSAxNQogICAgICAgIC0gYWdubyA9IDE2
-CiAgICAgICAgLSBhZ25vID0gMTcKICAgICAgICAtIGFnbm8gPSAxOAogICAgICAgIC0gYWdubyA9
-IDE5CiAgICAgICAgLSBhZ25vID0gMjAKICAgICAgICAtIGFnbm8gPSAyMQogICAgICAgIC0gYWdu
-byA9IDIyCiAgICAgICAgLSBhZ25vID0gMjMKICAgICAgICAtIGFnbm8gPSAyNApQaGFzZSA1IC0g
-cmVidWlsZCBBRyBoZWFkZXJzIGFuZCB0cmVlcy4uLgogICAgICAgIC0gcmVzZXQgc3VwZXJibG9j
-ay4uLgo3ZjhkMjQ0Nzg3NDA6IEJhZG5lc3MgaW4ga2V5IGxvb2t1cCAobGVuZ3RoKQpicD0oYm5v
-IDAsIGxlbiA0MDk2IGJ5dGVzKSBrZXk9KGJubyAwLCBsZW4gNTEyIGJ5dGVzKQpQaGFzZSA2IC0g
-Y2hlY2sgaW5vZGUgY29ubmVjdGl2aXR5Li4uCiAgICAgICAgLSByZXNldHRpbmcgY29udGVudHMg
-b2YgcmVhbHRpbWUgYml0bWFwIGFuZCBzdW1tYXJ5IGlub2RlcwogICAgICAgIC0gdHJhdmVyc2lu
-ZyBmaWxlc3lzdGVtIC4uLgplbnRyeSAiMzI0Ny5wbmciIGluIGRpcmVjdG9yeSBpbm9kZSAyMDEz
-MjY5MjQgcG9pbnRzIHRvIGZyZWUgaW5vZGUgMjEzOTA2OTUzCmJhZCBoYXNoIHRhYmxlIGZvciBk
-aXJlY3RvcnkgaW5vZGUgMjAxMzI2OTI0IChubyBkYXRhIGVudHJ5KTogcmVidWlsZGluZwpyZWJ1
-aWxkaW5nIGRpcmVjdG9yeSBpbm9kZSAyMDEzMjY5MjQKZW50cnkgIjAyNTEwNTAuTldCIiBpbiBk
-aXJlY3RvcnkgaW5vZGUgNDY5NzYyMzY2IHBvaW50cyB0byBmcmVlIGlub2RlIDQ3ODc1OTcwMgpy
-ZWJ1aWxkaW5nIGRpcmVjdG9yeSBpbm9kZSA0Njk3NjIzNjYKICAgICAgICAtIHRyYXZlcnNhbCBm
-aW5pc2hlZCAuLi4KICAgICAgICAtIG1vdmluZyBkaXNjb25uZWN0ZWQgaW5vZGVzIHRvIGxvc3Qr
-Zm91bmQgLi4uClBoYXNlIDcgLSB2ZXJpZnkgYW5kIGNvcnJlY3QgbGluayBjb3VudHMuLi4KZG9u
-ZQpyb290QHZzYS0wMDAwMDExMC12Yy0wOn4jIGVjaG8gJD8KMApyb290QHZzYS0wMDAwMDExMC12
-Yy0wOn4jIGNybV9tb24KQ29ubmVjdGlvbiB0byB0aGUgQ0lCIHRlcm1pbmF0ZWQKUmVjb25uZWN0
-aW5nLi4ucm9vdEB2c2EtMDAwMDAxMTAtdmMtMDp+IyBsZXNzIC92YXIvbG9nL2tlcm4ubG9nCnJv
-b3RAdnNhLTAwMDAwMTEwLXZjLTA6fiMK
---f46d04388e0d343012051ed5d1ea
-Content-Type: application/octet-stream; name="dm-82-kernel.log"
-Content-Disposition: attachment; filename="dm-82-kernel.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ie43rzge2
-
-QXVnIDIyIDIzOjI0OjQ4IHZzYS0wMDAwMDExMC12Yy0wIGtlcm5lbDogWzQxOTQ1OTkuNjg1MzUz
-XSBmZmZmODgwMTBlYzM2MDAwOiBlYSBiYiAxMiAzYSA1ZiA0NCAwMSBhOCBiOSAyYSA4MCAxMCBi
-MyBhNyBkNSBhZiAgLi4uOl9ELi4uKi4uLi4uLgpBdWcgMjIgMjM6MjQ6NDggdnNhLTAwMDAwMTEw
-LXZjLTAga2VybmVsOiBbNDE5NDU5OS42ODY1NjhdIFhGUyAoZG0tODIpOiBJbnRlcm5hbCBlcnJv
-ciB4ZnNfYm1idF92ZXJpZnkgYXQgbGluZSA3NDcgb2YgZmlsZSAvbW50L3NoYXJlL2J1aWxkcy8x
-NC4xMS0tMy44LjEzLTAzMDgxMy1nZW5lcmljLzIwMTUtMDYtMTdfMDMtMzAtMzctLTE0LjExLTE2
-MDEtMTI5L3NyYy96YWRhcmEtYnRyZnMvZnMveGZzL3hmc19ibWFwX2J0cmVlLmMuICBDYWxsZXIg
-MHhmZmZmZmZmZmEwNzc3OWVlCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJu
-ZWw6IFs0MTk0NTk5LjY4NjU2OF0gCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBr
-ZXJuZWw6IFs0MTk0NTk5LjY4OTM5M10gUGlkOiAxNzA2MywgY29tbToga3dvcmtlci8wOjFIIFRh
-aW50ZWQ6IEdGICAgICAgIFcgIE8gMy44LjEzLTAzMDgxMy1nZW5lcmljICMyMDEzMDUxMTE4NDMK
-QXVnIDIyIDIzOjI0OjQ4IHZzYS0wMDAwMDExMC12Yy0wIGtlcm5lbDogWzQxOTQ1OTkuNjg5Mzk1
-XSBDYWxsIFRyYWNlOgpBdWcgMjIgMjM6MjQ6NDggdnNhLTAwMDAwMTEwLXZjLTAga2VybmVsOiBb
-NDE5NDU5OS42ODk0NDNdICBbPGZmZmZmZmZmYTA3NDZiYWY+XSB4ZnNfZXJyb3JfcmVwb3J0KzB4
-M2YvMHg1MCBbeGZzXQpBdWcgMjIgMjM6MjQ6NDggdnNhLTAwMDAwMTEwLXZjLTAga2VybmVsOiBb
-NDE5NDU5OS42ODk0OTFdICBbPGZmZmZmZmZmYTA3Nzc5ZWU+XSA/IHhmc19ibWJ0X3JlYWRfdmVy
-aWZ5KzB4ZS8weDEwIFt4ZnNdCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJu
-ZWw6IFs0MTk0NTk5LjY4OTUwM10gIFs8ZmZmZmZmZmZhMDc0NmMxZT5dIHhmc19jb3JydXB0aW9u
-X2Vycm9yKzB4NWUvMHg5MCBbeGZzXQpBdWcgMjIgMjM6MjQ6NDggdnNhLTAwMDAwMTEwLXZjLTAg
-a2VybmVsOiBbNDE5NDU5OS42ODk1MTddICBbPGZmZmZmZmZmYTA3Nzc4Njc+XSB4ZnNfYm1idF92
-ZXJpZnkrMHg3Ny8weDFlMCBbeGZzXQpBdWcgMjIgMjM6MjQ6NDggdnNhLTAwMDAwMTEwLXZjLTAg
-a2VybmVsOiBbNDE5NDU5OS42ODk1MzVdICBbPGZmZmZmZmZmYTA3Nzc5ZWU+XSA/IHhmc19ibWJ0
-X3JlYWRfdmVyaWZ5KzB4ZS8weDEwIFt4ZnNdCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAt
-dmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4OTU0OF0gIFs8ZmZmZmZmZmZhMDc3NzllZT5dIHhmc19i
-bWJ0X3JlYWRfdmVyaWZ5KzB4ZS8weDEwIFt4ZnNdCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAx
-MTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4OTU1OF0gIFs8ZmZmZmZmZmZhMDc0NDQ4Zj5dIHhm
-c19idWZfaW9kb25lX3dvcmsrMHgzZi8weGEwIFt4ZnNdCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAw
-MDAxMTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4OTU2NF0gIFs8ZmZmZmZmZmY4MTA3OGI4MT5d
-IHByb2Nlc3Nfb25lX3dvcmsrMHgxNDEvMHg0OTAKQXVnIDIyIDIzOjI0OjQ4IHZzYS0wMDAwMDEx
-MC12Yy0wIGtlcm5lbDogWzQxOTQ1OTkuNjg5NTY2XSAgWzxmZmZmZmZmZjgxMDc5YjQ4Pl0gd29y
-a2VyX3RocmVhZCsweDE2OC8weDQwMApBdWcgMjIgMjM6MjQ6NDggdnNhLTAwMDAwMTEwLXZjLTAg
-a2VybmVsOiBbNDE5NDU5OS42ODk1NjldICBbPGZmZmZmZmZmODEwNzk5ZTA+XSA/IG1hbmFnZV93
-b3JrZXJzKzB4MTIwLzB4MTIwCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJu
-ZWw6IFs0MTk0NTk5LjY4OTU3MV0gIFs8ZmZmZmZmZmY4MTA3ZjA1MD5dIGt0aHJlYWQrMHhjMC8w
-eGQwCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4
-OTU3NF0gIFs8ZmZmZmZmZmY4MTA3ZWY5MD5dID8gZmx1c2hfa3RocmVhZF93b3JrZXIrMHhiMC8w
-eGIwCkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4
-OTU3OV0gIFs8ZmZmZmZmZmY4MTZmNjFlYz5dIHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwCkF1ZyAy
-MiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4OTU4Ml0gIFs8
-ZmZmZmZmZmY4MTA3ZWY5MD5dID8gZmx1c2hfa3RocmVhZF93b3JrZXIrMHhiMC8weGIwCkF1ZyAy
-MiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY4OTU4NF0gWEZT
-IChkbS04Mik6IENvcnJ1cHRpb24gZGV0ZWN0ZWQuIFVubW91bnQgYW5kIHJ1biB4ZnNfcmVwYWly
-CkF1ZyAyMiAyMzoyNDo0OCB2c2EtMDAwMDAxMTAtdmMtMCBrZXJuZWw6IFs0MTk0NTk5LjY5MDUw
-OF0gWEZTIChkbS04Mik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHg1MGZmYjUwICgieGZz
-X3RyYW5zX3JlYWRfYnVmX21hcCIpIGVycm9yIDExNyBudW1ibGtzIDg=
---f46d04388e0d343012051ed5d1ea
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---f46d04388e0d343012051ed5d1ea--
