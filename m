@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D6C827F77
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2015 15:15:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id F1EF17FAC
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2015 15:42:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B81A68F8040
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2015 13:15:55 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C911C8F8049
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2015 13:42:20 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YbvrYusANChQCJxA (version=TLSv1
+	cuda.sgi.com with ESMTP id GTpkiPH1TYK5iXu9 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 04 Sep 2015 13:15:54 -0700 (PDT)
-Date: Fri, 4 Sep 2015 15:15:51 -0500
+	Fri, 04 Sep 2015 13:42:19 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id 31BCDA19C4
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2015 20:42:19 +0000 (UTC)
+Received: from localhost.localdomain.com (vpn-56-195.rdu2.redhat.com
+	[10.10.56.195])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t84KgH5V006999
+	for <xfs@oss.sgi.com>; Fri, 4 Sep 2015 16:42:18 -0400
 From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: create global stats and stats_clear in sysfs
-Message-ID: <20150904201551.GA20161@redhat.com>
-References: <1441371319-31625-1-git-send-email-billodo@redhat.com>
-	<1441371319-31625-2-git-send-email-billodo@redhat.com>
-	<55E9FB7D.2060502@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55E9FB7D.2060502@sandeen.net>
+Subject: [PATCH 3/3] xfs: remove unused procfs code
+Date: Fri,  4 Sep 2015 15:42:14 -0500
+Message-Id: <1441399334-7924-3-git-send-email-billodo@redhat.com>
+In-Reply-To: <1441399334-7924-2-git-send-email-billodo@redhat.com>
+References: <1441399334-7924-2-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,44 +32,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Sep 04, 2015 at 03:13:49PM -0500, Eric Sandeen wrote:
-> On 9/4/15 7:55 AM, Bill O'Donnell wrote:
-> > Currently, xfs global stats are in procfs. This patch introduces
-> > (replicates) the global stats in sysfs. Additionally a stats_clear file
-> > is introduced in sysfs.
-> > 
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> 
-> 
-> > +STATIC ssize_t
-> > +xfs_stats_store(
-> > +	struct kobject          *kobject,
-> > +	struct attribute        *attr,
-> > +	const char              *buf,
-> > +	size_t                  count)
-> 
-> still have some spaces after the types, before the vars...
-> 
-> Otherwise, this looks good to me; it's not the only place we have
-> missing tabs... *shrug* you could resend, or maybe Dave's willing
-> to fix up on commit.
+As a part of the work to move xfs global stats from procfs to sysfs,
+this patch removes the now unused procfs code that was xfs stat specific.
 
-Nah. I'll fix it and resubmit.
-Thanks again for the review ;)
--Bill
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ fs/xfs/xfs_stats.c | 74 ------------------------------------------------------
+ 1 file changed, 74 deletions(-)
 
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Thanks,
-> -Eric
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index a9f05de..05d5227 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -112,80 +112,6 @@ void xfs_stats_clearall(void)
+ 	}
+ }
+ 
+-static int xfs_stat_proc_show(struct seq_file *m, void *v)
+-{
+-	int		i, j;
+-	__uint64_t	xs_xstrat_bytes = 0;
+-	__uint64_t	xs_write_bytes = 0;
+-	__uint64_t	xs_read_bytes = 0;
+-
+-	static const struct xstats_entry {
+-		char	*desc;
+-		int	endpoint;
+-	} xstats[] = {
+-		{ "extent_alloc",	XFSSTAT_END_EXTENT_ALLOC	},
+-		{ "abt",		XFSSTAT_END_ALLOC_BTREE		},
+-		{ "blk_map",		XFSSTAT_END_BLOCK_MAPPING	},
+-		{ "bmbt",		XFSSTAT_END_BLOCK_MAP_BTREE	},
+-		{ "dir",		XFSSTAT_END_DIRECTORY_OPS	},
+-		{ "trans",		XFSSTAT_END_TRANSACTIONS	},
+-		{ "ig",			XFSSTAT_END_INODE_OPS		},
+-		{ "log",		XFSSTAT_END_LOG_OPS		},
+-		{ "push_ail",		XFSSTAT_END_TAIL_PUSHING	},
+-		{ "xstrat",		XFSSTAT_END_WRITE_CONVERT	},
+-		{ "rw",			XFSSTAT_END_READ_WRITE_OPS	},
+-		{ "attr",		XFSSTAT_END_ATTRIBUTE_OPS	},
+-		{ "icluster",		XFSSTAT_END_INODE_CLUSTER	},
+-		{ "vnodes",		XFSSTAT_END_VNODE_OPS		},
+-		{ "buf",		XFSSTAT_END_BUF			},
+-		{ "abtb2",		XFSSTAT_END_ABTB_V2		},
+-		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
+-		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
+-		{ "ibt2",		XFSSTAT_END_IBT_V2		},
+-		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
+-		/* we print both series of quota information together */
+-		{ "qm",			XFSSTAT_END_QM			},
+-	};
+-
+-	/* Loop over all stats groups */
+-	for (i = j = 0; i < ARRAY_SIZE(xstats); i++) {
+-		seq_printf(m, "%s", xstats[i].desc);
+-		/* inner loop does each group */
+-		for (; j < xstats[i].endpoint; j++)
+-			seq_printf(m, " %u", counter_val(j));
+-		seq_putc(m, '\n');
+-	}
+-	/* extra precision counters */
+-	for_each_possible_cpu(i) {
+-		xs_xstrat_bytes += per_cpu(xfsstats, i).xs_xstrat_bytes;
+-		xs_write_bytes += per_cpu(xfsstats, i).xs_write_bytes;
+-		xs_read_bytes += per_cpu(xfsstats, i).xs_read_bytes;
+-	}
+-
+-	seq_printf(m, "xpc %Lu %Lu %Lu\n",
+-			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
+-	seq_printf(m, "debug %u\n",
+-#if defined(DEBUG)
+-		1);
+-#else
+-		0);
+-#endif
+-	return 0;
+-}
+-
+-static int xfs_stat_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, xfs_stat_proc_show, NULL);
+-}
+-
+-static const struct file_operations xfs_stat_proc_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= xfs_stat_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-
+ /* legacy quota interfaces */
+ #ifdef CONFIG_XFS_QUOTA
+ static int xqm_proc_show(struct seq_file *m, void *v)
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
