@@ -1,20 +1,19 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5CBFC7F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 08:15:56 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 15CE67CBF
+	for <xfs@oss.sgi.com>; Mon,  7 Sep 2015 09:45:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DC2E5AC003
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 06:15:52 -0700 (PDT)
-Received: from smtp.mydomain.com ([198.100.31.161]) by cuda.sgi.com with ESMTP
-	id 8VnFgLpxHjv8PTR4 for <xfs@oss.sgi.com>;
-	Tue, 08 Sep 2015 06:15:51 -0700 (PDT)
-Received: from ratikala (triband-mum-120.60.35.72.mtnl.net.in [120.60.35.72])
-	by smtp.mydomain.com (Postfix) with ESMTP id 72EF32E5A5D
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 18:45:50 +0530 (IST)
-Message-ID: <411-22015928131924921@ratikala>
-From: "Aaliyah" <Aaliyah@avellacrew.com>
-Subject: Following Up !
-Date: Tue, 8 Sep 2015 18:49:25 +0500
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E92018F8035
+	for <xfs@oss.sgi.com>; Mon,  7 Sep 2015 07:45:55 -0700 (PDT)
+Received: from o206.p8.mailjet.com (o206.p8.mailjet.com [87.253.233.206]) by
+	cuda.sgi.com with ESMTP id Aeuihr7jtGasHZPv (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 07 Sep 2015 07:45:53 -0700 (PDT)
+Message-Id: <509dcbf0.1dw1.1gPf.dQ.1xoEPZcFPk@mailjet.com>
 MIME-Version: 1.0
+From: Indongo <indongo@ministryofmagicdev.com>
+Subject: Indongo Toyota
+Date: Mon, 7 Sep 2015 14:45:52 +0000
+Reply-To: henri@ministryofmagicnam.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,159 +22,374 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2039044884273345765=="
+Content-Type: multipart/mixed; boundary="===============2695641702458269238=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============2039044884273345765==
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_84815C5ABAF209EF376268C8"
+--===============2695641702458269238==
+Content-Type: multipart/alternative; boundary="=-y8z6lAY8RsOviv4dRX1I"
 
-------=_NextPart_84815C5ABAF209EF376268C8
-Content-type: text/plain; charset=US-ASCII
+--=-y8z6lAY8RsOviv4dRX1I
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Dear Business Leader,
+Special offer from Indongo Toyota
+View online version [http://omi3.mjt.lu/nl2/omi3/14320.html?a=3D1xoEPZcFPk&=
+b=3D509dcbf0&c=3Domi3&d=3Def69449b&e=3Dbc025ff5&email=3Dxfs@oss.sgi.com][ht=
+tp://omi3.mjt.lu/img/omi3/b/k/x7.jpeg] Drive the Hilux of your Choice! Doub=
+le Cab, Single Cab or Extra Cab - pick one and SAVE!
+This e-mail has been sent to xfs@oss.sgi.com, click here to unsubscribe [[[=
+UNSUB_LINK_EN]]] .=
 
-Email marketing has proven to produce magical results=2E
-
-You can use web-based email marketing software to BOOST your business=2E
-
-We will setup on your domain=2E No customization=2E
-
-Your Key Benefits:-
-
-1) Free Trial: Start sending email newsletter and email messages to your c=
-ontacts in just 30 minutes=20=0D
-without any risk with 2000 emails per day=2EYou get free trial to try the =
-software and check the=20=0D
-features=2E
-
-2) Advanced Tracking: You can track the delivery status and click-through =
-rates of EACH email=20=0D
-message=2E
-
-3) Keep In Touch: Keep in touch with clients by sending targeted newslette=
-r and company news=2E
-
-5) Low-Rates: After your free trial, if you are happy with the service, yo=
-u can start using the=20=0D
-system=2E
-
-Start your FREE trial NOW by responding to this email=2E
-
-Email Marketing is the BEST decision you can take for your business=2E
-
-Regards,
-Rati singh=2E
-------=_NextPart_84815C5ABAF209EF376268C8
-Content-Type: text/html; charset=US-ASCII
+--=-y8z6lAY8RsOviv4dRX1I
+Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4=2E0 Transitional//EN">
-<HTML><HEAD><TITLE></TITLE>
-<META content=3D"text/html; charset=3Dunicode" http-equiv=3DContent-Type>
-<META name=3DGENERATOR content=3D"MSHTML 8=2E00=2E6001=2E23588"></HEAD>
-<BODY>
-<DIV><FONT face=3DCalibri>Dear Sir/Madam,<BR></FONT></DIV>
-<DIV><FONT face=3DCalibri></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DCalibri><STRONG>
-<DIV><FONT face=3DCalibri><STRONG>Hurry!!! We are providing various web an=
-d=20
-marketing solutions at very competitive prices=2E</STRONG></FONT></DIV>
-<DIV>&nbsp;</DIV></STRONG></FONT><FONT face=3DCalibri></FONT></DIV>
-<DIV><FONT face=3DCalibri>Please let me know if you are interested in any =
-of below=20
-services:</FONT></DIV>
-<DIV><FONT face=3DCalibri></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DCalibri>a) Google apps - Corporate email solutions</FONT=
-></DIV>
-<DIV><FONT face=3DCalibri>b) Mobile website design and SEO</FONT></DIV>
-<DIV><FONT face=3DCalibri>c) Responsive website design and SEO</FONT></DIV=
->
-<DIV><FONT face=3DCalibri>d) Internet Marketing - Listing website at bette=
-r=20
-position in Google Yahoo and Bing with power of social media like Youtube,=
-=20
-Twitter and Facebook=2E</FONT></DIV>
-<DIV><FONT face=3DCalibri>e) Domain name registration and web hosting</FON=
-T></DIV>
-<DIV><FONT face=3DCalibri></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DCalibri>There are many other services from which your bu=
-siness=20
-can explore further=2E</FONT></DIV>
-<DIV><FONT face=3DCalibri></FONT>&nbsp;</DIV>
-<DIV><STRONG><FONT face=3DCalibri>Send us an email and contact details tod=
-ay with=20
-your Website Name=2E</FONT></STRONG></DIV>
-<DIV><STRONG><FONT face=3DCalibri></FONT></STRONG>&nbsp;</DIV>
-<DIV><FONT face=3DCalibri><STRONG>Regards</STRONG></FONT><STRONG><FONT=20
-face=3DCalibri></FONT></STRONG></DIV>
-<DIV><FONT face=3DCalibri>
-<STYLE type=3Dtext/css><!--td {border: 1px solid #ccc;}br {mso-data-placem=
-ent:same-cell;}--></STYLE>
-<SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZE: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'>Aaliyah=2E</SPAN></FONT></DIV>=
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8">
+  <title>Indongo Toyota</title>
+  <style type=3D"text/css">
+    @import url(https://fonts.googleapis.com/css?family=3DUbuntu:400,500,70=
+0,300);
 
-<DIV><FONT face=3DCalibri><SPAN=20
-style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZE: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><FONT=20
-face=3DCalibri><SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZ=
-E: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><FONT=20
-face=3DCalibri><SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZ=
-E: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><FONT=20
-face=3DCalibri><SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZ=
-E: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><FONT=20
-face=3DCalibri><SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZ=
-E: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><FONT=20
-face=3DCalibri><SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZ=
-E: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><FONT=20
-face=3DCalibri><SPAN style=3D"FONT-FAMILY: arial,sans,sans-serif; FONT-SIZ=
-E: 100%"=20
-data-sheets-value=3D'[null,2,"Bailey"]'=20
-data-sheets-userformat=3D'[null,null,2109697,[null,0,null,1],null,null,nul=
-l,null,null,null,null,0,null,null,null,"arial,sans,sans-serif",10,null,nul=
-l,null,null,null,null,null,[null,0,3,0,3]]'></SPAN></FONT><STRONG><FONT=20=
+    #outlook a { padding: 0; }
+    .ReadMsgBody { width: 100%; }
+    .ExternalClass { width: 100%; }
 
-face=3DCalibri>8652522293</FONT></STRONG></DIV>
-<DIV><FONT face=3DCalibri><SPAN=20
-style=3D"FONT-FAMILY: 'Calibri','sans-serif'"><STRONG>Direct Line</STRONG>=
-</SPAN>:=20
-91-22-2885904</FONT><FONT face=3D"Times New Roman">1</FONT></DIV></BODY></=
-HTML>
+    .ExternalClass,
+    .ExternalClass p,
+    .ExternalClass span,
+    .ExternalClass font,
+    .ExternalClass td,
+    .ExternalClass div {
+      line-height: 100%;
+    }
 
-------=_NextPart_84815C5ABAF209EF376268C8--
+    body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%;=
+ -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    body { margin: 0; padding: 0; }
+    img { border: 0; height: auto; line-height: 100%; outline: none; text-d=
+ecoration: none; -ms-interpolation-mode: bicubic; }
+    table { border-collapse: collapse !important; }
+    body, #main, #inner {
+      height: 100% !important;
+      margin: 0;
+      padding: 0;
+      width: 100% !important;
+    }
+
+    .sectionInner { width: 600px; }
+    p, ul, a { font-family: Ubuntu, Helvetica, Arial, sans-serif; }
+    a:link,
+    a:visited,
+    a .yshortcuts {
+      color: #000000;
+      font-weight: normal;
+    }
+    .toolContent a span { text-decoration: underline; }
+    .colTool { width: 100%; }
+
+    @media only screen and (max-width: 640px) {
+      body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: non=
+e !important; }
+      body {
+        width: 100% !important;
+        min-width: 100% !important;
+      }
+      body[yahoo] .section {
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+      body[yahoo] .sectionInner {
+        width: 440px;
+      }
+      body[yahoo] .col,
+      body[yahoo] .colToolContainer,
+      body[yahoo] .colTool {
+        display: block !important;
+        width: 440px !important;
+        text-align: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      body[yahoo] .colToolInner,
+      body[yahoo] .toolContent,
+      body[yahoo] .toolContentInner,
+      body[yahoo] .toolContent2,
+      body[yahoo] .toolContent2 td,
+      body[yahoo] .toolContent2 td a {
+        display: block !important;
+        width: 390px !important;
+        text-align: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      body[yahoo] img {
+        max-width: 390px !important;
+      }
+
+      body[yahoo] .full .colToolInner,
+      body[yahoo] .full .toolContent,
+      body[yahoo] .full .toolContentInner,
+      body[yahoo] .full .toolContent2,
+      body[yahoo] .full .toolContent2 td,
+      body[yahoo] .full .toolContent2 td a {
+        width: 440px !important;
+      }
+      body[yahoo] .full img {
+        max-width: 440px !important;
+      }
+
+      body[yahoo] .space { height: 10px; }
+    }
+    @media only screen and (max-width: 479px) {
+      body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: non=
+e !important; }
+      body {
+        width: 100% !important;
+        min-width: 100% !important;
+      }
+      body[yahoo] .section {
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+      body[yahoo] .sectionInner{
+        width: 280px;
+      }
+      body[yahoo] .col,
+      body[yahoo] .colToolContainer,
+      body[yahoo] .colTool {
+        display: block !important;
+        width: 280px !important;
+        text-align: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      body[yahoo] .colToolInner,
+      body[yahoo] .toolContent,
+      body[yahoo] .toolContentInner,
+      body[yahoo] .toolContent2,
+      body[yahoo] .toolContent2 td,
+      body[yahoo] .toolContent2 td a {
+        display: block !important;
+        width: 230px !important;
+        text-align: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      body[yahoo] img {
+        max-width: 230px !important;
+      }
+
+      body[yahoo] .full .colToolInner,
+      body[yahoo] .full .toolContent,
+      body[yahoo] .full .toolContentInner,
+      body[yahoo] .full .toolContent2,
+      body[yahoo] .full .toolContent2 td,
+      body[yahoo] .full .toolContent2 td a {
+        width: 280px !important;
+      }
+      body[yahoo] .full img {
+        max-width: 280px !important;
+      }
+
+      body[yahoo] .space { height: 10px; }
+    }
+  </style>
+</head>
+<body yahoo=3D"fix" leftmargin=3D"0" marginwidth=3D"0" topmargin=3D"0" marg=
+inheight=3D"0" offset=3D"0">
+  <center>
+    <div id=3D"newsletter"><div style=3D"background-color:#D6DDE5;"><table =
+class=3D"section section-locked" width=3D"100%" cellpadding=3D"0" cellspaci=
+ng=3D"0" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-c=
+ollapse:collapse;border-spacing:0px;"><tbody><tr><td><table width=3D"600" c=
+ellpadding=3D"0" cellspacing=3D"0" class=3D"sectionInner" style=3D"font-fam=
+ily:Ubuntu, Helvetica, Arial, sans-serif;border-collapse:collapse;border-sp=
+acing:0px;background-color:#D6DDE5;" data-legacy-bgcolor=3D"#FFFFFF" data-l=
+egacy-align=3D"center" align=3D"center" bgcolor=3D"#FFFFFF"><tbody><tr><td =
+style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border:0;border-s=
+pacing:0px;vertical-align:top;" data-legacy-align=3D"center" data-legacy-va=
+lign=3D"top" align=3D"center"><table cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td height=3D"20"><!--[if mso]>&nbsp;<![endif]--></=
+td></tr><tr><td><table cellpadding=3D"0" cellspacing=3D"0" class=3D"row"><t=
+body><tr><td width=3D"400" class=3D"col" style=3D"border:none;border-spacin=
+g:0px;vertical-align:middle;"><table class=3D"colToolContainer" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"400"><tbody><tr><td><table class=3D"colTo=
+ol" cellpadding=3D"0" cellspacing=3D"0" data-legacy-align=3D"center" style=
+=3D"border-collapse:collapse;border-spacing:0px;background-color:transparen=
+t;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-legacy-align=
+=3D"left" class=3D"colToolInner" style=3D"border:0;border-spacing:0px;verti=
+cal-align:top;" align=3D"left"><table width=3D"350" class=3D"toolContent" c=
+ellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border=
+-spacing:0px;"><tbody><tr><td data-legacy-align=3D"left" class=3D"toolConte=
+ntInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D=
+"left"><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetic=
+a, Arial, sans-serif;line-height:22px;font-size:13px;text-decoration:none;f=
+ont-style:normal;font-weight:normal;" class=3D"content"><span class=3D"tool=
+-text-font-size" style=3D"font-size: 11px">Special offer from Indongo Toyot=
+a<br></span></div></td></tr></tbody></table></td><td width=3D"25"></td></tr=
+></tbody></table></td></tr></tbody></table></td><td width=3D"200" class=3D"=
+col" style=3D"border:none;border-spacing:0px;vertical-align:middle;"><table=
+ class=3D"colToolContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"20=
+0"><tbody><tr><td><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D=
+"0" data-legacy-align=3D"center" style=3D"border-collapse:collapse;border-s=
+pacing:0px;" align=3D"center"><tbody><tr><td width=3D"25"></td><td data-leg=
+acy-align=3D"right" class=3D"colToolInner" style=3D"border:0;border-spacing=
+:0px;vertical-align:top;" align=3D"right"><table width=3D"150" class=3D"too=
+lContent" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:coll=
+apse;border-spacing:0px;"><tbody><tr><td data-legacy-align=3D"right" class=
+=3D"toolContentInner" style=3D"border:0;border-spacing:0px;vertical-align:t=
+op;" align=3D"right"><div style=3D"cursor:auto;color:#333333;font-family:Ub=
+untu, Helvetica, Arial, sans-serif;line-height:22px;font-size:13px;text-dec=
+oration:none;font-style:normal;font-weight:normal;" class=3D"content" conte=
+nteditable=3D"false"><span class=3D"tool-text-font-size" style=3D"font-size=
+: 11px"><a style=3D"color: rgb(51, 51, 51);" href=3D"http://omi3.mjt.lu/lin=
+k/omi3/xlpm84xvt7q0/1/iWhXvXFASjU7_TJWgq14kg/aHR0cDovL29taTMubWp0Lmx1L25sMi=
+9vbWkzLzE0MzIwLmh0bWw_YT0xeG9FUFpjRlBrJmI9NTA5ZGNiZjAmYz1vbWkzJmQ9ZWY2OTQ0O=
+WImZT1iYzAyNWZmNSZlbWFpbD14ZnNAb3NzLnNnaS5jb20"><span class=3D"placeholder-=
+replace-permalink-label">View online version</span></a></span></div></td></=
+tr></tbody></table></td><td width=3D"25"></td></tr></tbody></table></td></t=
+r></tbody></table></td></tr></tbody></table></td></tr><tr><td height=3D"20"=
+><!--[if mso]>&nbsp;<![endif]--></td></tr></tbody></table></td></tr></tbody=
+></table></td></tr></tbody></table><table class=3D"section" width=3D"100%" =
+cellpadding=3D"0" cellspacing=3D"0" style=3D"font-family:Ubuntu, Helvetica,=
+ Arial, sans-serif;border-collapse:collapse;border-spacing:0px;"><tbody><tr=
+><td><table width=3D"600" cellpadding=3D"0" cellspacing=3D"0" class=3D"sect=
+ionInner" style=3D"font-family:Ubuntu, Helvetica, Arial, sans-serif;border-=
+collapse:collapse;border-spacing:0px;background-color:#FFFFFF;" data-legacy=
+-bgcolor=3D"#FFFFFF" data-legacy-align=3D"center" align=3D"center" bgcolor=
+=3D"#FFFFFF"><tbody><tr><td style=3D"font-family:Ubuntu, Helvetica, Arial, =
+sans-serif;border:0;border-spacing:0px;vertical-align:top;" data-legacy-ali=
+gn=3D"center" data-legacy-valign=3D"top" align=3D"center"><table cellpaddin=
+g=3D"0" cellspacing=3D"0" width=3D"100%"><tbody><tr><td height=3D"20"><!--[=
+if mso]>&nbsp;<![endif]--></td></tr><tr><td><table cellpadding=3D"0" cellsp=
+acing=3D"0" class=3D"row"><tbody><tr><td width=3D"600" class=3D"col" style=
+=3D"border:none;border-spacing:0px;vertical-align:middle;"><table class=3D"=
+colToolContainer" cellpadding=3D"0" cellspacing=3D"0" width=3D"600"><tbody>=
+<tr><td><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-l=
+egacy-align=3D"center" style=3D"border-collapse:collapse;border-spacing:0px=
+;background-color:transparent;" align=3D"center"><tbody><tr><td colspan=3D"=
+3" height=3D"10" class=3D"space" style=3D"font-size:1px;line-height:1px;mso=
+-line-height-rule:exactly;border:0;border-spacing:0px;vertical-align:top;">=
+=C2=A0</td></tr><tr><td width=3D"25"></td><td data-legacy-align=3D"center" =
+class=3D"colToolInner" style=3D"border:0;border-spacing:0px;vertical-align:=
+top;" align=3D"center"><table width=3D"550" class=3D"toolContent" cellpaddi=
+ng=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border-spacing=
+:0px;"><tbody><tr><td data-legacy-align=3D"center" class=3D"toolContentInne=
+r" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"cente=
+r"><table data-legacy-align=3D"center" cellpadding=3D"0" cellspacing=3D"0" =
+style=3D"border-collapse:collapse;border-spacing:0px;" align=3D"center"><tr=
+><td><img src=3D"http://omi3.mjt.lu/img/omi3/b/k/x7.jpeg" alt=3D"" width=3D=
+"550" style=3D"display:block;border:none;outline:none;text-decoration:none;=
+max-width:550px;"></td></tr></table></td></tr></tbody></table></td><td widt=
+h=3D"25"></td></tr><tr><td colspan=3D"3" height=3D"10" class=3D"space" styl=
+e=3D"font-size:1px;line-height:1px;mso-line-height-rule:exactly;border:0;bo=
+rder-spacing:0px;vertical-align:top;">=C2=A0</td></tr></tbody></table><tabl=
+e class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-legacy-align=
+=3D"center" style=3D"border-collapse:collapse;border-spacing:0px;background=
+-color:transparent;" align=3D"center"><tbody><tr><td colspan=3D"3" height=
+=3D"10" class=3D"space" style=3D"font-size:1px;line-height:1px;mso-line-hei=
+ght-rule:exactly;border:0;border-spacing:0px;vertical-align:top;">=C2=A0</t=
+d></tr><tr><td width=3D"25"></td><td data-legacy-align=3D"left" class=3D"co=
+lToolInner" style=3D"border:0;border-spacing:0px;vertical-align:top;" align=
+=3D"left"><table width=3D"550" class=3D"toolContent" cellpadding=3D"0" cell=
+spacing=3D"0" style=3D"border-collapse:collapse;border-spacing:0px;"><tbody=
+><tr><td data-legacy-align=3D"left" class=3D"toolContentInner" style=3D"bor=
+der:0;border-spacing:0px;vertical-align:top;" align=3D"left"><div style=3D"=
+cursor:auto;color:#333333;font-family:Ubuntu, Helvetica, Arial, sans-serif;=
+line-height:22px;font-size:13px;text-decoration:none;font-style:normal;font=
+-weight:normal;" class=3D"content"><span class=3D"tool-text-style-title1" s=
+tyle=3D"display: block; font-size: 28px; font-weight: bold; color: rgb(51, =
+51, 51); font-family: Ubuntu,Helvetica,Arial,sans-serif; font-style: normal=
+;">Drive the Hilux of your Choice!</span></div></td></tr></tbody></table></=
+td><td width=3D"25"></td></tr><tr><td colspan=3D"3" height=3D"10" class=3D"=
+space" style=3D"font-size:1px;line-height:1px;mso-line-height-rule:exactly;=
+border:0;border-spacing:0px;vertical-align:top;">=C2=A0</td></tr></tbody></=
+table><table class=3D"colTool" cellpadding=3D"0" cellspacing=3D"0" data-leg=
+acy-align=3D"center" style=3D"border-collapse:collapse;border-spacing:0px;b=
+ackground-color:transparent;" align=3D"center"><tbody><tr><td colspan=3D"3"=
+ height=3D"10" class=3D"space" style=3D"font-size:1px;line-height:1px;mso-l=
+ine-height-rule:exactly;border:0;border-spacing:0px;vertical-align:top;">=
+=C2=A0</td></tr><tr><td width=3D"25"></td><td data-legacy-align=3D"left" cl=
+ass=3D"colToolInner" style=3D"border:0;border-spacing:0px;vertical-align:to=
+p;" align=3D"left"><table width=3D"550" class=3D"toolContent" cellpadding=
+=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border-spacing:0=
+px;"><tbody><tr><td data-legacy-align=3D"left" class=3D"toolContentInner" s=
+tyle=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"left"><di=
+v style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetica, Arial, =
+sans-serif;line-height:22px;font-size:13px;text-decoration:none;font-style:=
+normal;font-weight:normal;" class=3D"content">Double Cab, Single Cab or Ext=
+ra Cab - pick one and SAVE!<br></div></td></tr></tbody></table></td><td wid=
+th=3D"25"></td></tr><tr><td colspan=3D"3" height=3D"10" class=3D"space" sty=
+le=3D"font-size:1px;line-height:1px;mso-line-height-rule:exactly;border:0;b=
+order-spacing:0px;vertical-align:top;">=C2=A0</td></tr></tbody></table></td=
+></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td height=3D=
+"20"><!--[if mso]>&nbsp;<![endif]--></td></tr></tbody></table></td></tr></t=
+body></table></td></tr></tbody></table><table class=3D"section section-lock=
+ed" width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"font-family=
+:Ubuntu, Helvetica, Arial, sans-serif;border-collapse:collapse;border-spaci=
+ng:0px;"><tbody><tr><td><table width=3D"600" cellpadding=3D"0" cellspacing=
+=3D"0" class=3D"sectionInner" style=3D"font-family:Ubuntu, Helvetica, Arial=
+, sans-serif;border-collapse:collapse;border-spacing:0px;background-color:#=
+D6DDE5;" data-legacy-bgcolor=3D"#FFFFFF" data-legacy-align=3D"center" align=
+=3D"center" bgcolor=3D"#FFFFFF"><tbody><tr><td style=3D"font-family:Ubuntu,=
+ Helvetica, Arial, sans-serif;border:0;border-spacing:0px;vertical-align:to=
+p;" data-legacy-align=3D"center" data-legacy-valign=3D"top" align=3D"center=
+"><table cellpadding=3D"0" cellspacing=3D"0" width=3D"100%"><tbody><tr><td =
+height=3D"20"><!--[if mso]>&nbsp;<![endif]--></td></tr><tr><td><table cellp=
+adding=3D"0" cellspacing=3D"0" class=3D"row"><tbody><tr><td width=3D"600" c=
+lass=3D"col" style=3D"border:none;border-spacing:0px;vertical-align:middle;=
+"><table class=3D"colToolContainer" cellpadding=3D"0" cellspacing=3D"0" wid=
+th=3D"600"><tbody><tr><td><table class=3D"colTool" cellpadding=3D"0" cellsp=
+acing=3D"0" data-legacy-align=3D"center" style=3D"border-collapse:collapse;=
+border-spacing:0px;" align=3D"center"><tbody><tr><td width=3D"25"></td><td =
+data-legacy-align=3D"center" class=3D"colToolInner" style=3D"border:0;borde=
+r-spacing:0px;vertical-align:top;" align=3D"center"><table width=3D"550" cl=
+ass=3D"toolContent" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-col=
+lapse:collapse;border-spacing:0px;"><tbody><tr><td data-legacy-align=3D"cen=
+ter" class=3D"toolContentInner" style=3D"border:0;border-spacing:0px;vertic=
+al-align:top;" align=3D"center"><div style=3D"cursor:auto;color:#333333;fon=
+t-family:Ubuntu, Helvetica, Arial, sans-serif;line-height:22px;font-size:13=
+px;text-decoration:none;font-style:normal;font-weight:normal;" class=3D"con=
+tent" contenteditable=3D"false"><p style=3D"font-size: 11px"><span class=3D=
+"placeholder-replace-delivery-info">This e-mail has been sent to xfs@oss.sg=
+i.com, <a href=3D"http://omi3.mjt.lu/unsub?hl=3Den&amp;a=3D1xoEPZcFPk&amp;b=
+=3D509dcbf0&amp;c=3Domi3&amp;d=3Def69449b&amp;e=3Dbc025ff5&amp;email=3Dxfs@=
+oss.sgi.com"><span class=3D"placeholder-replace-unsub-label">click here to =
+unsubscribe</span></a>.</span></p></div></td></tr></tbody></table></td><td =
+width=3D"25"></td></tr></tbody></table><table class=3D"colTool" cellpadding=
+=3D"0" cellspacing=3D"0" data-legacy-align=3D"center" style=3D"border-colla=
+pse:collapse;border-spacing:0px;background-color:transparent;" align=3D"cen=
+ter"><tbody><tr><td width=3D"25"></td><td data-legacy-align=3D"center" clas=
+s=3D"colToolInner" style=3D"border:0;border-spacing:0px;vertical-align:top;=
+" align=3D"center"><table width=3D"550" class=3D"toolContent" cellpadding=
+=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;border-spacing:0=
+px;"><tbody><tr><td data-legacy-align=3D"center" class=3D"toolContentInner"=
+ style=3D"border:0;border-spacing:0px;vertical-align:top;" align=3D"center"=
+><div style=3D"cursor:auto;color:#333333;font-family:Ubuntu, Helvetica, Ari=
+al, sans-serif;line-height:22px;font-size:13px;text-decoration:none;font-st=
+yle:normal;font-weight:normal;" class=3D"content"><p style=3D"font-size: 11=
+px">   </p></div></td></tr></tbody></table></td><td width=3D"25"></td></tr>=
+</tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></=
+tr><tr><td height=3D"20"><!--[if mso]>&nbsp;<![endif]--></td></tr></tbody><=
+/table></td></tr></tbody></table></td></tr></tbody></table></div></div>
+  </center>
+
+<br/><img src=3D"http://omi3.mjt.lu/o/omi3/fa087615/xlpm84xvt7q0e.gif" heig=
+ht=3D"1" width=3D"1" alt=3D"" border=3D"0" />
+</body>
+</html>=
+
+--=-y8z6lAY8RsOviv4dRX1I--
 
 
-
---===============2039044884273345765==
+--===============2695641702458269238==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -186,4 +400,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============2039044884273345765==--
+--===============2695641702458269238==--
