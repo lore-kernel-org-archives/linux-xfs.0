@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 659F97F50
-	for <xfs@oss.sgi.com>; Sun,  6 Sep 2015 16:56:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 46F738F8049
-	for <xfs@oss.sgi.com>; Sun,  6 Sep 2015 14:56:13 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id egmY9vv8mkmTVoeq for <xfs@oss.sgi.com>;
-	Sun, 06 Sep 2015 14:56:12 -0700 (PDT)
-Subject: Re: xfs corruption
-References: <CAC=x_0hAQR9Ynmnqohv1R8xv3TBot5wmn7DODx6GbKU7tYv2sA@mail.gmail.com>
-	<55E8498F.8090508@sandeen.net>
-	<CAC=x_0iUc2VEfW9qChuvUpDk5Kz=wvRGH-1w6sS0XP6CG_ERBQ@mail.gmail.com>
-	<55E85F5F.6010005@sandeen.net> <55E871EF.4040603@sandeen.net>
-	<42D7AA163AD247998B82E3C75D289FC2@alyakaslap>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <55ECB67A.2070707@sandeen.net>
-Date: Sun, 6 Sep 2015 16:56:10 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E66507F4E
+	for <xfs@oss.sgi.com>; Mon,  7 Sep 2015 00:26:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D4795304039
+	for <xfs@oss.sgi.com>; Sun,  6 Sep 2015 22:26:30 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	sHPwI6RAL2UMQz0t for <xfs@oss.sgi.com>;
+	Sun, 06 Sep 2015 22:26:26 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1ZYowh-000655-Mf
+	for xfs@oss.sgi.com; Mon, 07 Sep 2015 15:26:23 +1000
+Date: Mon, 7 Sep 2015 15:26:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: v4.2.0 released
+Message-ID: <20150907052623.GE3902@dastard>
 MIME-Version: 1.0
-In-Reply-To: <42D7AA163AD247998B82E3C75D289FC2@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,117 +25,170 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3770355245318954336=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>, Danny Shavit <danny@zadarastorage.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 9/6/15 5:19 AM, Alex Lyakas wrote:
-> Hi Eric,
-> Thank you for your comments.
-> 
-> Yes, we made the ACL limit change, being fully aware that this breaks
-> compatibility with the mainline kernel and future mainline kernels.
-> We mount our XFS filesystems with our kernel only. We are also aware
-> that this change needs to be carefully forward-ported, when we move
-> to a newer kernel.
 
-Ok, sorry for the lecture...  ;)  I did want to make sure it
-hadn't been mounted on an unmodified kernel, though.
+--===============3770355245318954336==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oPmsXEqKQNHCSXW7"
+Content-Disposition: inline
 
-> I have an additional question regarding the latest XFS corruption report:
-> kernel: [3507105.314446] Pid: 25231, comm: kworker/0:0H Tainted: GF       W O 3.8.13-030813-generic #201305111843
-> kernel: [3507105.314449] Call Trace:
-> kernel: [3507105.314487]  [<ffffffffa0631baf>] xfs_error_report+0x3f/0x50 [xfs]
-> kernel: [3507105.314502]  [<ffffffffa064e9ce>] ? xfs_allocbt_read_verify+0xe/0x10 [xfs]
-> kernel: [3507105.314514]  [<ffffffffa0631c1e>] xfs_corruption_error+0x5e/0x90 [xfs]
-> kernel: [3507105.314528]  [<ffffffffa064e862>] xfs_allocbt_verify+0x92/0x1e0 [xfs]
-> kernel: [3507105.314540]  [<ffffffffa064e9ce>] ? xfs_allocbt_read_verify+0xe/0x10 [xfs]
-> kernel: [3507105.314547]  [<ffffffff810135aa>] ? __switch_to+0x12a/0x4a0
-> kernel: [3507105.314551]  [<ffffffff81096cd8>] ? set_next_entity+0xa8/0xc0
-> kernel: [3507105.314566]  [<ffffffffa064e9ce>] xfs_allocbt_read_verify+0xe/0x10 [xfs]
-> kernel: [3507105.315251]  [<ffffffffa062f48f>] xfs_buf_iodone_work+0x3f/0xa0 [xfs]
-> kernel: [3507105.315255]  [<ffffffff81078b81>] process_one_work+0x141/0x490
-> kernel: [3507105.315257]  [<ffffffff81079b48>] worker_thread+0x168/0x400
-> kernel: [3507105.315259]  [<ffffffff810799e0>] ? manage_workers+0x120/0x120
-> kernel: [3507105.315262]  [<ffffffff8107f050>] kthread+0xc0/0xd0
-> kernel: [3507105.315265]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
-> kernel: [3507105.315270]  [<ffffffff816f61ec>] ret_from_fork+0x7c/0xb0
-> kernel: [3507105.315273]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
-> kernel: [3507105.315275] XFS (dm-39): Corruption detected. Unmount and run xfs_repair
-> kernel: [3507105.316706] XFS (dm-39): metadata I/O error: block 0x41a6eff8 ("xfs_trans_read_buf_map") error 117 numblks 8
-> 
-> From looking at XFS code, it appears that XFS read metadata block
-> from disk, and discovered that it was corrupted.
 
-Yes.  Unfortunately the verifier didn't say what it thinks is wrong.
+--oPmsXEqKQNHCSXW7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'd have to look to see for sure, but I think that on your kernel version,
-if you turn up the xfs error level sysctl, you should get a hexdump of the
-first 64 bytes of the buffer when this happens, and that would hopefully
-tell us enough to know what was wrong, and -
+Hi folks,
 
-> At this point, the
-> system was rebooted, and after reboot we prevented this particular
-> XFS from mounting. Then we ran xfs-metadump and xfs-repair. The
-> latter found absolutely no issues, and XFS was able to successfully
-> mount and continue operation.
+The xfsprogs repositories have just been updated and tagged with the
+v4.2.0 release tag. It can be found here:
 
-- and why repair found no issue
+git://oss.sgi.com/xfs/cmds/xfsprogs.git v4.2.0
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.2.0
 
-With the buffer dump, and then from that hopefully knowing what the verifier
-didn't like, we could then check your repair version and be sure it is
-performing the same checks as the verifier
+A signed gzipped-tar archive of the source code is available
+here:
 
--Eric
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.2.0.tar.gz
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.2.0.tar.gz.sign
 
-> Can you think of a way to explain this?
-> Can you confirm that the above trace really means that XFS was reading its metadata from disk?
-> From XFS code, I see that XFS does not use Linux page cache for its
-> metadata (unlike btrfs, for example). Is my understanding correct?
-> (Otherwise, I could assume that somebody wrongly touched a page in
-> the page-cache and messed up its in-memory content).
-> 
-> Thanks,
-> Alex.
-> 
-> 
-> 
-> 
-> 
-> -----Original Message----- From: Eric Sandeen
-> Sent: 03 September, 2015 6:14 PM
-> To: Danny Shavit
-> Cc: Alex Lyakas ; xfs@oss.sgi.com
-> Subject: Re: xfs corruption
-> 
-> On 9/3/15 9:55 AM, Eric Sandeen wrote:
->> On 9/3/15 9:26 AM, Danny Shavit wrote:
-> 
-> ...
-> 
->>> We are using modified xfs. Mainly, added some reporting features and
->>> changed discard operation to be aligned with chunk sizes used in our
->>> systems. The modified code resides at  https://github.com/zadarastora
->>> <https://github.com/zadarastorage/zadara-xfs-pushback>ge/zadara-xfs-pushback
->>> <https://github.com/zadarastorage/zadara-xfs-pushback>.
->>
->> Interesting, thanks for the pointer.  I guess at this point I have to
->> ask, do you see these same problems without your modifications?
-> 
-> Have you ever mounted this filesystem on non-zadara kernels?
-> 
-> looking at
-> https://github.com/zadarastorage/zadara-xfs-pushback/commit/094df949fd080ede546bb7518405ab873a444823
-> 
-> you've changed the disk format w/o adding a feature flag,
-> which is pretty dangerous.
-> 
-> -Eric
+The archive is signed with my gpg key (the same one that this
+release announcement is signed with).
+
+There has been a large amount of change since v3.2.4:
+
+ 297 files changed, 12703 insertions(+), 11987 deletions(-)
+
+and so many thanks go out to all the contributors to this release
+(in no particular order):
+
+	Theodore Ts'o
+	Roger Willcocks
+	Mike Grant
+	Lucas Stach
+	Jan Tulak
+	Jan Kara
+	George Wang
+	Eryu Guan
+	Eric Sandeen
+	Darrick J. Wong
+	Christoph Hellwig
+	Brian Foster
+
+The main driver for the all this change has been to get the shared
+libxfs code up to the same base as the released 4.2 kernel codebase
+and to put tools and processes in place to easily maintain the
+shared libxfs code base in future.
+
+The numbering of this release should now be obvious - it matches the
+version of the kernel that shares the same libxfs/ code. In future,
+the major/minor release numbers for xfsprogs will follow the version
+of the shared libxfs code. This makes it easy to work out what
+version of xfsprogs supports the features of a given kernel - if the
+xfsprogs version is the same or higher than the kernel version, then
+it will support all the features of the kernel that is running.
+
+Problems, issues, questions and general discussion about the release
+should be directed to the XFS mailing list (xfs@oss.sgi.com).
+
+-Dave.
+
+
+The new head of the master branch is commit:
+
+28f55cc xfsprogs: Release v4.2.0
+
+New Commits since 4.2.0-rc3:
+
+Brian Foster (1):
+      [350f962] xfs_repair: update btree ptr when attr node level moves to =
+next buffer
+
+Darrick J. Wong (7):
+      [7fc5180] libxfs: verifier should set buffer error when da block has =
+a bad magic number
+      [1f2ace6] libxfs: fix XFS_WANT_CORRUPTED_* macros to return negative =
+error codes
+      [e8ecd76] libxfs: clear buffer state flags in libxfs_getbuf and varia=
+nts
+      [aedb9c1] xfs_repair: ignore "repaired" flag after we decide to clear=
+ xattr block
+      [1c8e2f0] xfs_repair: check v5 filesystem attr block header sanity
+      [43ba186] xfs_repair: force not-so-bad bmbt blocks back through the v=
+erifier
+      [f625305] xfs_repair: release corrupt directory node buffer
+
+Dave Chinner (1):
+      [28f55cc] xfsprogs: Release v4.2.0
+
+Eric Sandeen (2):
+      [fe0591e] xfs_repair: set args.geo in dir2_kill_block
+      [a545950] xfs_repair: set args.geo in longform_dir2_entry_check_data
+
+Lucas Stach (1):
+      [f4a2ea0] progs: use CURDIR instead of relative paths for header syml=
+inks
+
+
+Code Diffstat:
+
+ VERSION               |  2 +-
+ configure.ac          |  2 +-
+ debian/changelog      |  6 +++++
+ doc/CHANGES           |  9 ++++++++
+ include/Makefile      |  2 +-
+ libxfs/Makefile       |  2 +-
+ libxfs/libxfs_priv.h  |  7 +++---
+ libxfs/rdwr.c         | 47 +++++++++++++++++++++++++++++++++-----
+ libxfs/xfs_da_btree.c |  1 +
+ repair/attr_repair.c  | 62 +++++++++++++++++++++++++++++++++++++++++++++++=
+++--
+ repair/dir2.c         |  1 +
+ repair/phase6.c       |  2 ++
+ repair/prefetch.c     | 12 ++++++++++
+ 13 files changed, 139 insertions(+), 16 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--oPmsXEqKQNHCSXW7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJV7R//AAoJEK3oKUf0dfodRXAQAMBHwR6kaImDGqHfFFoO9eWH
+RQtTyjT4tvFZWkqZ/LiwcDFuNk1nfG/1cSgvzJ0OdVfzcMgVH0sQCS/LQCMZn/Lo
+a80bGiP1m40gjVjj+BpbGEj7aDlPEPrG6MOT0xBo2MUqg3HONB6EpqmbtfmYZVGL
+dDtmeryUe+QuZzOcQ0ys92DLsf1VoMhn9wB8PnWqtCfCIe+lCNjNdeyxVkpciVij
+9GrwufKQSUSTf7vsdzVwWHzwG37PNk13pBKlfoohe8aPGaSuPjsh3gHOF6VBDsQh
+Wzci/m2SVrFLVjc/K3tOuH3mookmlqsrTL3sHESCA5Wsiqmdn8tn/PVNkPGRWj7r
+lQGYJ6tzU+Q+Zjv41WmGVZ/0Us0uerMlTt2drbxsdnwAOWHlXK4lBMIqvKa3p5H7
+p7LThhpbrgwrp+I2CROaOaBR3aRiVtiOLzNYEiDrg3ZT0WwUpfrhxeqBgVZg30KB
+zokiXhyoL4YE67zJAlnJZB+hpAHO54uyt74Pa+P8eVQCd3xp662t7hEnKHi8q3Pn
+I0ywVawM1g7/RN/lxbJ0Up0TLalJ9PeNh6msKKK9fjx+SLyaLJbdnMO6Z96joxZI
+3OiSaRAZ+uxbYFEv/BKneSR1A1XV9wHpZC/qpd+JQgkAuQ8GupkmbOuJVSe8o1Qj
+PmEDH3ChLVMMnGTSiinF
+=m3JI
+-----END PGP SIGNATURE-----
+
+--oPmsXEqKQNHCSXW7--
+
+
+--===============3770355245318954336==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3770355245318954336==--
