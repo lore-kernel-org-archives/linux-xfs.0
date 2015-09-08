@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 442217F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 09:45:35 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 885A87F37
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 09:48:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2357F304039
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:45:32 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JDeAzV9e0KtevDHM (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 07:45:29 -0700 (PDT)
-Date: Tue, 8 Sep 2015 10:45:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] xfs: timestamp updates cause excessive fdatasync log
-	traffic
-Message-ID: <20150908144527.GB5305@bfoster.bfoster>
-References: <1440724990-25073-1-git-send-email-david@fromorbit.com>
-	<20150828043253.GB26895@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 76E368F8050
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:48:12 -0700 (PDT)
+Received: from mail-wi0-f174.google.com (mail-wi0-f174.google.com
+	[209.85.212.174]) by cuda.sgi.com with ESMTP id
+	o4b2xXjyJMBuGccp (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 07:48:10 -0700 (PDT)
+Received: by wiclk2 with SMTP id lk2so118481853wic.1
+	for <xfs@oss.sgi.com>; Tue, 08 Sep 2015 07:48:08 -0700 (PDT)
+Received: from teal.hq.k1024.org (178-83-234-80.dynamic.hispeed.ch.
+	[178.83.234.80])
+	by smtp.gmail.com with ESMTPSA id s9sm5274951wiy.1.2015.09.08.07.48.07
+	for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+	Tue, 08 Sep 2015 07:48:07 -0700 (PDT)
+Date: Tue, 8 Sep 2015 16:48:06 +0200
+From: Iustin Pop <iustin@k1024.org>
+Subject: xfsrestore and multi-tape backups
+Message-ID: <20150908144806.GA22811@teal.hq.k1024.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150828043253.GB26895@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,566 +32,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: sage@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Aug 28, 2015 at 02:32:53PM +1000, Dave Chinner wrote:
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Sage Weil reported that a ceph test workload was writing to the
-> log on every fdatasync during an overwrite workload. Event tracing
-> showed that the only metadata modification being made was the
-> timestamp updates during the write(2) syscall, but fdatasync(2)
-> is supposed to ignore them. The key observation was that the
-> transactions in the log all looked like this:
-> 
-> INODE: #regs: 4   ino: 0x8b  flags: 0x45   dsize: 32
-> 
-> And contained a flags field of 0x45 or 0x85, and had data and
-> attribute forks following the inode core. This means that the
-> timestamp updates were triggering dirty relogging of previously
-> logged parts of the inode that hadn't yet been flushed back to
-> disk.
-> 
-> This is caused by xfs_trans_log_inode(), where it folds the dirty
-> fields that have previously been logged back into the current
-> transaction dirty fields from the inode item ili_last_fields. The
-> issue is that ili_last_fields only contains a non-zero value when
-> the inode is in the process of being flushed. The typical state
-> progression is this, using a core field update as the modification
-> occuring:
-> 
-> state			ili_fields		ili_last_fields
-> clean			    0			      0
-> modified, logged	XFS_ILOG_CORE		      0
-> flushed to buffer	    0			XFS_ILOG_CORE
-> <buffer submitted>
-> buffer IO done (clean)	    0			      0
-> 
-> However, if we run a new transaction after it has been flushed to
-> buffer but before the buffer IO is done, we don't know if the
-> modifications in the inode buffer (i.e. what is in ili_last_fields)
-> will reach the disk before the new transaction reaches the log.
-> Hence to keep transactional ordering correct in recovery, we need to
-> ensure the new transaction re-logs the modifications that are being
-> flushed to disk.
-> 
-> By relogging, we ensure that if the transaction makes it to disk and
-> the buffer doesn't, then recovery replays all the changes upto that
-> point correctly. If the transaction does not make it disk, but the
-> buffer does, then recovery will see that the inode on disk is more
-> recent than in the log and won't overwrite it with changes that it
-> already contains.
-> 
-> The upshot of this is that while the inode buffer sits in memory
-> with the inode in the "flushed" state, fdatasync is going to see
-> the relogged state in the ili_fields. i.e:
-> 
-> What is happening here is this:
-> 
-> state			ili_fields		ili_last_fields
-> clean			    0			      0
-> modified, logged	   CORE			      0
-> flushed to buffer	    0			     CORE
-> <write>
-> timestamp update	 TIMESTAMP		     CORE
-> <xfs_trans_inode_log pulls in ili_last_fields>
-> 		       CORE|TIMESTAMP		     CORE
-> <fdatasync>
->   sees field other than TIMESTAMP in ili_fields,
->   triggers xfs_log_force_lsn to flush inode
-> 
-> <buffer submittted>
-> buffer IO done (clean) CORE|TIMESTAMP		      0
-> .....
-
-Shouldn't both states be cleared here? If so, I don't see how the
-problem persists unless the race is perpetual...
-
-> <write>
-> timestamp update       CORE|TIMESTAMP		      0
-> <fdatasync>
->   sees field other than TIMESTAMP in ili_fields,
->   triggers xfs_log_force_lsn to flush inode
-> .....
-> <write>
-> timestamp update       CORE|TIMESTAMP		      0
-> <fdatasync>
->   sees field other than TIMESTAMP in ili_fields,
->   triggers xfs_log_force_lsn to flush inode
-> 
-> So, essentially, once a race condition on the buffer flush has
-> occurred, the condition is not cleared until the inode is flushed to
-> the buffer again and it is written without racing against the inode
-> being dirtied again.
-> 
-
-Ok, so we would have to continuously race between the buffer I/O and
-inode logging events for this behavior to continue. How likely is that
-to happen on a constant workload? I ask because I see Sage had pointed
-out that this might not address his originally reported problem, so I'm
-wondering whether we still want to pursue this change.
-
-> The behaviour we really want here is to capture the timestamp
-> update transactionally, but not trigger fdatasync because of the
-> relogged fields that haven't been modified since the inode was
-> flushed to the buffer. We still need to relog them, but we don't
-> need to force the log in the fdatasync case.
-> 
-> To do this, don't fold the ili_last_fields value into ili_fields
-> when logging the inode. Instead, fold it into the fields that get
-> logged during formatting of the inode item. This means that we will
-> stop logging those fields the moment we know that there is a more
-> recent version of the inode on disk than we have in the log and so
-> we don't need to log those fields anymore as the next transaction on
-> disk doesn't need to replay them.
-> 
-> Doing this separates changes that are in memory but are not being
-> flushed from those that have been flushed. Hence we can now look at
-> ili_fields and hence see what fields have been modified since the
-> last flush, and hence whether fdatasync needs to force the log or
-> not. If non-timestamp changes have been made since the inode was
-> flushed to the backing buffer, then fdatasync will do exactly the
-> right thing (i.e. force the log).
-> 
-> Reported-by: Sage Weil <sage@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
-> Version 2:
-> - include the hunk from fs/xfs/xfs_trans_inode.c that I missed
->   when committing the patch locally the first time.
-> 
->  fs/xfs/xfs_inode_item.c  | 161 +++++++++++++++++++++++++++++++++--------------
->  fs/xfs/xfs_inode_item.h  |   1 +
->  fs/xfs/xfs_trans_inode.c |   8 ---
->  3 files changed, 115 insertions(+), 55 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 62bd80f..be04eb2 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -29,6 +29,63 @@
->  #include "xfs_trans_priv.h"
->  #include "xfs_log.h"
->  
-> +/*
-> + * Notes on ili_fields, ili_format_fields and ili_last_fields.
-> + *
-> + * ili_fields contains the flags that reflect the current changes that are in
-> + * memory and have been logged, but have not been flushed to the backing buffer
-> + * for writeback yet. When a transaction is done, the fields that are modified
-> + * are added to ili_fields and all those fields are logged. This results in
-> + * repeated transactions correctly relogging all the other changes in memory and
-> + * allows the inode to be re-ordered (moved forward) in the AIL safely.
-> + * ili_fields is copied to ili_last_fields when the inode is flushed to the
-> + * backing buffer and is then cleared, indicating that the inode in memory is
-> + * now clean from a transactional change point of view and does not need to
-> + * relog those fields anymore on tranaction commit.
-> + *
-> + * ili_last_fields, therefore, is only set while there is an unresolved inode
-> + * flush being done (i.e. flush lock is held). We need to keep this state
-> + * available to avoid a transaction recovery vs inode buffer IO completion race
-> + * if we crash. If the inode is logged again makes it to disk before the inode
-					       ^ and
-
-
-> + * buffer IO complete, log recovery will replay the latest inode transaction and
-		completes
-
-> + * can lose the changes that were in the inode buffer. Hence we still need to
-> + * log the changes that have been flushed so that transactions issued during the
-> + * inode buffer write still contain the modifications being flushed. Once the
-> + * inode buffer IO completes, we no longer need to log those changes as the
-> + * inode on disk the same as the inode in memory apart from the changes made
-		   ^ is
-
-> + * since the inode was flushed (i.e. those recorded in ili_fields).
-> + *
-> + * ili_format_fields is only used during transaction commit. It is the
-> + * aggregation of ili_fields and ili_last_fields, as sampled during the sizing
-> + * of the inode item to be logged. We need this field definition to be constant
-> + * between sizing and formatting, but inode buffer IO can complete
-> + * asynchronously with transaction commit and so we must only read it once so
-> + * that the different stages of the item formatting work correctly. We don't
-
->From the comment alone, I'm a little confused as to whether this means
-we must combine and sample ili_format_fields only once, or just
-ili_last_fields as aggregrated into the former (and ili_format_fields is
-safe for the remainder of the transaction sizing/format sequence).
-
-> + * care about the async completion clearing ili_last_fields after we've sampled
-> + * it - if we log too much then so be it - we won't log it next time. Once we've
-> + * formatted the inode item, we need to propagate the ili_format_fields value to
-> + * the on-disk inode log item format field, and then use it to clear all the
-> + * fields that we marked for logging but were not dirty from ili_fields.
-> + *
-> + * This separation of changes allows us to accurately determine what fields in
-> + * the inode have changed since it was last flushed to disk. This is important
-> + * for fdatasync() performance as there are certain fields that, if modified,
-> + * should not trigger log forces because they contain metadata that fdatasync()
-> + * does not need to guarantee is safe on disk. This is, currently, just
-> + * XFS_ILOG_TIMESTAMP, though may be extended in future to cover other metadata.
-> + *
-> + * If we simply fold ili_last_fields back into ili_fields when we log the inode
-> + * in a transaction, then if we have a flush/modification race it results in
-> + * every timestamp update causing fdatasync to flush the log because ili_fields
-> + * has fields other than XFS_ILOG_TIMESTAMP set in it. This behaviour will
-> + * persist until the inode is next flushed to it's backing buffer and that
-> + * buffer is written and completed without another flush/modification race
-> + * occuring.  Hence we keep the change state separate and only combine them when
-> + * formatting the inode into the log.
-> + *
-
-Thanks for the big comment. I think the above two paragraphs could
-probably be a bit more generic/succinct, however:
-
-"This separation of changes is necessary because certain codepaths
-require precise knowledge about what has been dirtied in the inode since
-the last transaction commit. For example, fdatasync() is allowed to skip
-log flushes in the event that only XFS_ILOG_TIMESTAMP is specified in
-ili_fields. Repopulating ili_fields from ili_last_fields at log time, as
-was previously done, pollutes this information and can defeat the
-optimization."
-
-> + * For more information, there's another big comment in xfs_iflush_int() about
-> + * this flush/modification race condition.
-> + */
->  
->  kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
->  
-> @@ -40,6 +97,7 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
->  STATIC void
->  xfs_inode_item_data_fork_size(
->  	struct xfs_inode_log_item *iip,
-> +	unsigned int		fields,
->  	int			*nvecs,
->  	int			*nbytes)
->  {
-> @@ -47,7 +105,7 @@ xfs_inode_item_data_fork_size(
->  
->  	switch (ip->i_d.di_format) {
->  	case XFS_DINODE_FMT_EXTENTS:
-> -		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
-> +		if ((fields & XFS_ILOG_DEXT) &&
->  		    ip->i_d.di_nextents > 0 &&
->  		    ip->i_df.if_bytes > 0) {
->  			/* worst case, doesn't subtract delalloc extents */
-> @@ -56,14 +114,14 @@ xfs_inode_item_data_fork_size(
->  		}
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
-> +		if ((fields & XFS_ILOG_DBROOT) &&
->  		    ip->i_df.if_broot_bytes > 0) {
->  			*nbytes += ip->i_df.if_broot_bytes;
->  			*nvecs += 1;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_LOCAL:
-> -		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
-> +		if ((fields & XFS_ILOG_DDATA) &&
->  		    ip->i_df.if_bytes > 0) {
->  			*nbytes += roundup(ip->i_df.if_bytes, 4);
->  			*nvecs += 1;
-> @@ -82,6 +140,7 @@ xfs_inode_item_data_fork_size(
->  STATIC void
->  xfs_inode_item_attr_fork_size(
->  	struct xfs_inode_log_item *iip,
-> +	unsigned int		fields,
->  	int			*nvecs,
->  	int			*nbytes)
->  {
-> @@ -89,7 +148,7 @@ xfs_inode_item_attr_fork_size(
->  
->  	switch (ip->i_d.di_aformat) {
->  	case XFS_DINODE_FMT_EXTENTS:
-> -		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
-> +		if ((fields & XFS_ILOG_AEXT) &&
->  		    ip->i_d.di_anextents > 0 &&
->  		    ip->i_afp->if_bytes > 0) {
->  			/* worst case, doesn't subtract unused space */
-> @@ -98,14 +157,14 @@ xfs_inode_item_attr_fork_size(
->  		}
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		if ((iip->ili_fields & XFS_ILOG_ABROOT) &&
-> +		if ((fields & XFS_ILOG_ABROOT) &&
->  		    ip->i_afp->if_broot_bytes > 0) {
->  			*nbytes += ip->i_afp->if_broot_bytes;
->  			*nvecs += 1;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_LOCAL:
-> -		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
-> +		if ((fields & XFS_ILOG_ADATA) &&
->  		    ip->i_afp->if_bytes > 0) {
->  			*nbytes += roundup(ip->i_afp->if_bytes, 4);
->  			*nvecs += 1;
-> @@ -133,13 +192,17 @@ xfs_inode_item_size(
->  	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
->  	struct xfs_inode	*ip = iip->ili_inode;
->  
-> +	iip->ili_format_fields = iip->ili_fields | iip->ili_last_fields;
-> +
->  	*nvecs += 2;
->  	*nbytes += sizeof(struct xfs_inode_log_format) +
->  		   xfs_icdinode_size(ip->i_d.di_version);
->  
-> -	xfs_inode_item_data_fork_size(iip, nvecs, nbytes);
-> +	xfs_inode_item_data_fork_size(iip, iip->ili_format_fields,
-> +				      nvecs, nbytes);
->  	if (XFS_IFORK_Q(ip))
-> -		xfs_inode_item_attr_fork_size(iip, nvecs, nbytes);
-> +		xfs_inode_item_attr_fork_size(iip, iip->ili_format_fields,
-> +					      nvecs, nbytes);
-
-We aggregate ili_format_fields and pass the result as a parameter to the
-sizing helpers, but we just use ili_format_fields directly from the
-subsequent formatting helpers. The latter seems more clean to me since
-we pass iip everywhere already. Could we use that same pattern here as
-well?
-
-I suppose this also answers my question above in that ili_last_fields is
-sampled once and ili_format_fields used thereafter in the commit
-sequence.
-
-Brian
-
->  }
->  
->  STATIC void
-> @@ -151,14 +214,14 @@ xfs_inode_item_format_data_fork(
->  {
->  	struct xfs_inode	*ip = iip->ili_inode;
->  	size_t			data_bytes;
-> +	unsigned int		fields = iip->ili_format_fields;
->  
->  	switch (ip->i_d.di_format) {
->  	case XFS_DINODE_FMT_EXTENTS:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-> +		fields &= ~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> +			    XFS_ILOG_DEV | XFS_ILOG_UUID);
->  
-> -		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
-> +		if ((fields & XFS_ILOG_DEXT) &&
->  		    ip->i_d.di_nextents > 0 &&
->  		    ip->i_df.if_bytes > 0) {
->  			struct xfs_bmbt_rec *p;
-> @@ -175,15 +238,14 @@ xfs_inode_item_format_data_fork(
->  			ilf->ilf_dsize = data_bytes;
->  			ilf->ilf_size++;
->  		} else {
-> -			iip->ili_fields &= ~XFS_ILOG_DEXT;
-> +			fields &= ~XFS_ILOG_DEXT;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
-> -			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-> +		fields &= ~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
-> +			    XFS_ILOG_DEV | XFS_ILOG_UUID);
->  
-> -		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
-> +		if ((fields & XFS_ILOG_DBROOT) &&
->  		    ip->i_df.if_broot_bytes > 0) {
->  			ASSERT(ip->i_df.if_broot != NULL);
->  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IBROOT,
-> @@ -192,16 +254,15 @@ xfs_inode_item_format_data_fork(
->  			ilf->ilf_dsize = ip->i_df.if_broot_bytes;
->  			ilf->ilf_size++;
->  		} else {
-> -			ASSERT(!(iip->ili_fields &
-> -				 XFS_ILOG_DBROOT));
-> -			iip->ili_fields &= ~XFS_ILOG_DBROOT;
-> +			ASSERT(!(fields & XFS_ILOG_DBROOT));
-> +			fields &= ~XFS_ILOG_DBROOT;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_LOCAL:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-> -		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
-> +		fields &= ~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT |
-> +			    XFS_ILOG_DEV | XFS_ILOG_UUID);
-> +
-> +		if ((fields & XFS_ILOG_DDATA) &&
->  		    ip->i_df.if_bytes > 0) {
->  			/*
->  			 * Round i_bytes up to a word boundary.
-> @@ -218,27 +279,28 @@ xfs_inode_item_format_data_fork(
->  			ilf->ilf_dsize = (unsigned)data_bytes;
->  			ilf->ilf_size++;
->  		} else {
-> -			iip->ili_fields &= ~XFS_ILOG_DDATA;
-> +			fields &= ~XFS_ILOG_DDATA;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_DEV:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEXT | XFS_ILOG_UUID);
-> -		if (iip->ili_fields & XFS_ILOG_DEV)
-> +		fields &= ~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> +			    XFS_ILOG_DEXT | XFS_ILOG_UUID);
-> +		if (fields & XFS_ILOG_DEV)
->  			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
->  		break;
->  	case XFS_DINODE_FMT_UUID:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> -			  XFS_ILOG_DEXT | XFS_ILOG_DEV);
-> -		if (iip->ili_fields & XFS_ILOG_UUID)
-> +		fields &= ~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
-> +			    XFS_ILOG_DEXT | XFS_ILOG_DEV);
-> +		if (fields & XFS_ILOG_UUID)
->  			ilf->ilf_u.ilfu_uuid = ip->i_df.if_u2.if_uuid;
->  		break;
->  	default:
->  		ASSERT(0);
->  		break;
->  	}
-> +
-> +	/* reflect the logged fields back in ili_format_fields */
-> +	iip->ili_format_fields = fields;
->  }
->  
->  STATIC void
-> @@ -250,13 +312,13 @@ xfs_inode_item_format_attr_fork(
->  {
->  	struct xfs_inode	*ip = iip->ili_inode;
->  	size_t			data_bytes;
-> +	unsigned int		fields = iip->ili_format_fields;
->  
->  	switch (ip->i_d.di_aformat) {
->  	case XFS_DINODE_FMT_EXTENTS:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT);
-> +		fields &= ~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT);
->  
-> -		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
-> +		if ((fields & XFS_ILOG_AEXT) &&
->  		    ip->i_d.di_anextents > 0 &&
->  		    ip->i_afp->if_bytes > 0) {
->  			struct xfs_bmbt_rec *p;
-> @@ -272,14 +334,13 @@ xfs_inode_item_format_attr_fork(
->  			ilf->ilf_asize = data_bytes;
->  			ilf->ilf_size++;
->  		} else {
-> -			iip->ili_fields &= ~XFS_ILOG_AEXT;
-> +			fields &= ~XFS_ILOG_AEXT;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_ADATA | XFS_ILOG_AEXT);
-> +		fields &= ~(XFS_ILOG_ADATA | XFS_ILOG_AEXT);
->  
-> -		if ((iip->ili_fields & XFS_ILOG_ABROOT) &&
-> +		if ((fields & XFS_ILOG_ABROOT) &&
->  		    ip->i_afp->if_broot_bytes > 0) {
->  			ASSERT(ip->i_afp->if_broot != NULL);
->  
-> @@ -289,14 +350,13 @@ xfs_inode_item_format_attr_fork(
->  			ilf->ilf_asize = ip->i_afp->if_broot_bytes;
->  			ilf->ilf_size++;
->  		} else {
-> -			iip->ili_fields &= ~XFS_ILOG_ABROOT;
-> +			fields &= ~XFS_ILOG_ABROOT;
->  		}
->  		break;
->  	case XFS_DINODE_FMT_LOCAL:
-> -		iip->ili_fields &=
-> -			~(XFS_ILOG_AEXT | XFS_ILOG_ABROOT);
-> +		fields &= ~(XFS_ILOG_AEXT | XFS_ILOG_ABROOT);
->  
-> -		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
-> +		if ((fields & XFS_ILOG_ADATA) &&
->  		    ip->i_afp->if_bytes > 0) {
->  			/*
->  			 * Round i_bytes up to a word boundary.
-> @@ -313,13 +373,16 @@ xfs_inode_item_format_attr_fork(
->  			ilf->ilf_asize = (unsigned)data_bytes;
->  			ilf->ilf_size++;
->  		} else {
-> -			iip->ili_fields &= ~XFS_ILOG_ADATA;
-> +			fields &= ~XFS_ILOG_ADATA;
->  		}
->  		break;
->  	default:
->  		ASSERT(0);
->  		break;
->  	}
-> +
-> +	/* reflect the logged fields back in ili_format_fields */
-> +	iip->ili_format_fields = fields;
->  }
->  
->  /*
-> @@ -359,12 +422,16 @@ xfs_inode_item_format(
->  	if (XFS_IFORK_Q(ip)) {
->  		xfs_inode_item_format_attr_fork(iip, ilf, lv, &vecp);
->  	} else {
-> -		iip->ili_fields &=
-> +		iip->ili_format_fields &=
->  			~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AEXT);
->  	}
->  
->  	/* update the format with the exact fields we actually logged */
-> -	ilf->ilf_fields |= (iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
-> +	ilf->ilf_fields |= (iip->ili_format_fields & ~XFS_ILOG_TIMESTAMP);
-> +
-> +	/* clear any fields we didn't log from ili_fields */
-> +	iip->ili_fields &= iip->ili_format_fields;
-> +	iip->ili_format_fields = 0;
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-> index 488d812..43a9e1c 100644
-> --- a/fs/xfs/xfs_inode_item.h
-> +++ b/fs/xfs/xfs_inode_item.h
-> @@ -34,6 +34,7 @@ typedef struct xfs_inode_log_item {
->  	unsigned short		ili_logged;	   /* flushed logged data */
->  	unsigned int		ili_last_fields;   /* fields when flushed */
->  	unsigned int		ili_fields;	   /* fields to be logged */
-> +	unsigned int		ili_format_fields; /* combined log fields */
->  } xfs_inode_log_item_t;
->  
->  static inline int xfs_inode_clean(xfs_inode_t *ip)
-> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-> index 17280cd..77f1e8a 100644
-> --- a/fs/xfs/xfs_trans_inode.c
-> +++ b/fs/xfs/xfs_trans_inode.c
-> @@ -123,13 +123,5 @@ xfs_trans_log_inode(
->  	tp->t_flags |= XFS_TRANS_DIRTY;
->  	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
->  
-> -	/*
-> -	 * Always OR in the bits from the ili_last_fields field.
-> -	 * This is to coordinate with the xfs_iflush() and xfs_iflush_done()
-> -	 * routines in the eventual clearing of the ili_fields bits.
-> -	 * See the big comment in xfs_iflush() for an explanation of
-> -	 * this coordination mechanism.
-> -	 */
-> -	flags |= ip->i_itemp->ili_last_fields;
->  	ip->i_itemp->ili_fields |= flags;
->  }
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgYWxsLAoKU29ycnkgZm9yIHRoZSBsb25nIGVtYWlsLiBJIGRvbid0IHVuZGVyc3RhbmQgaG93
+IHhmc3Jlc3RvcmUgaXMgc3VwcG9zZWQKdG8gd29yayB3aGVuIHJlc3RvcmluZyBhIGR1bXAgc3Bh
+bm5pbmcgbXVsdGlwbGUgdGFwZXMsIG1heWJlIHNvbWVvbmUgY2FuCmV4cGxhaW4gdGhpbmdzIHRv
+IG1lLgoKSSBkaWQgYW4geGZzZHVtcDoKCiAgeGZzZHVtcCAtcCAzMCAtZiAvZGV2L25zdDAgLWwg
+MCAtTCAiLi4uIiAtTSB0YXBlXzAgLUogL2ZzCgpJIGRvbid0IGhhdmUgdGhlIG91dHB1dCBmcm9t
+IGl0IGFueW1vcmUsIGJ1dCBpdCBydW4gb3V0IG9mIHRhcGUsCnByb21wdGVkIG1lIHRvIGluc2Vy
+dCBhIG5ldyBtZWRpYSAod2hpY2ggSSBuYW1lZCB0YXBlXzAyKSwgSSBkaWQsIGFuZAp0aGVuIGl0
+IGZpbmlzaGVkIHN1Y2Nlc3NmdWxseS4KCkkgd2VudCB0aGVuIHRvIGRvIHRoZSByZXN0b3JlIGFm
+dGVyIHJlY3JlYXRpbmcgdGhlIGZpbGVzeXN0ZW0gKHNvIEkKZG9uJ3QgaGF2ZSB0aGUgb3JpZ2lu
+YWwgRlMgdG8gZG8gY29tcGFyaXNvbnMpLCBhbmQgcGVyIHRoZSB4ZnNyZXN0b3JlCm1hbiBwYWdl
+ICgiSWYgYSBkdW1wIHNwYW5zIG11bHRpcGxlIG1lZGlhIG9iamVjdHMsIHRoZSByZXN0b3JlIG11
+c3QKYmVnaW4gd2l0aCB0aGUgIG1lZGlhICBvYmplY3QgY29udGFpbmluZyAgdGhlICBmaXJzdCBt
+ZWRpYSBmaWxlIGR1bXBlZC4KVGhlIG9wZXJhdG9yIGlzIHByb21wdGVkIHdoZW4gdGhlIG5leHQg
+bWVkaWEgb2JqZWN0IGlzIG5lZWRlZC4iKSBJCmluc2VydGVkIHRoZSBmaXJzdCB0YXBlLCBhbmQg
+cnVuIHRoZSByZXN0b3JlIChub3RlIHNhbWUgdGFwZSBJRCBhcyBpbgp0aGUgZHVtcCk6Cgp4ZnNy
+ZXN0b3JlIC1wIDMwMCAtVCAtSiAtZiAvZGV2L25zdDAgL2ZzCnhmc3Jlc3RvcmU6IHVzaW5nIHNj
+c2kgdGFwZSAoZHJpdmVfc2NzaXRhcGUpIHN0cmF0ZWd5Cnhmc3Jlc3RvcmU6IHZlcnNpb24gMy4x
+LjQgKGR1bXAgZm9ybWF0IDMuMCkgLSB0eXBlIF5DIGZvciBzdGF0dXMgYW5kIGNvbnRyb2wKeGZz
+cmVzdG9yZTogc2VhcmNoaW5nIG1lZGlhIGZvciBkdW1wCnhmc3Jlc3RvcmU6IHByZXBhcmluZyBk
+cml2ZQp4ZnNyZXN0b3JlOiBleGFtaW5pbmcgbWVkaWEgZmlsZSAwCgogPT09PT09PT09PT09PT09
+PT09PT09PT09PT09IGR1bXAgc2VsZWN0aW9uIGRpYWxvZyA9PT09PT09PT09PT09PT09PT09PT09
+PT09PT09Cgp0aGUgZm9sbG93aW5nIGR1bXAgaGFzIGJlZW4gZm91bmQgb24gZHJpdmUgMArigKYK
+bWVkaWEgbGFiZWw6ICJ0YXBlXzAiCuKApgpyZXN0b3JlIHRoaXMgZHVtcD8KMTogc2tpcAoyOiBy
+ZXN0b3JlCiAoZGVmYXVsdCkKIC0+IDIKdGhpcyBkdW1wIHNlbGVjdGVkIGZvciByZXN0b3JhbAoK
+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSBlbmQgZGlhbG9nIC0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKeGZzcmVzdG9yZTogc2VhcmNoaW5nIG1lZGlhIGZvciBk
+aXJlY3RvcnkgZHVtcAp4ZnNyZXN0b3JlOiByZWFkaW5nIGRpcmVjdG9yaWVzCnhmc3Jlc3RvcmU6
+IDE3MjQxIGRpcmVjdG9yaWVzIGFuZCA4NzU5MzEgZW50cmllcyBwcm9jZXNzZWQK4oCmCnhmc3Jl
+c3RvcmU6IHN0YXR1cyBhdCAwMTowNDowMzogNzg1NTk0Lzg1ODYxMyBmaWxlcyByZXN0b3JlZCwg
+ODkuMiUgY29tcGxldGUsIDE4MzAwIHNlY29uZHMgZWxhcHNlZAp4ZnNyZXN0b3JlOiBhdHRlbXB0
+IHRvIHJlYWQgMzcxOTE2OCBieXRlcyBmYWlsZWQ6IGVuZCBvZiBtZWRpYSBmaWxlCnhmc3Jlc3Rv
+cmU6IHJlc3RvcmUgY29tcGxldGU6IDE4NDQ5IHNlY29uZHMgZWxhcHNlZAp4ZnNyZXN0b3JlOiBS
+ZXN0b3JlIFN1bW1hcnk6Cnhmc3Jlc3RvcmU6ICAgc3RyZWFtIDAgL2Rldi9uc3QwIE9LIChzdWNj
+ZXNzKQp4ZnNyZXN0b3JlOiBSZXN0b3JlIFN0YXR1czogU1VDQ0VTUwoKQW5kIGJhY2sgdG8gdGhl
+IHNoZWxsLCB3aXRob3V0IGFza2luZyBtZSB0byBpbnNlcnQgYSBuZXcgbWVkaWEuIEkgdGhvdWdo
+Cm1heWJlIEkgbmVlZCB0byBtYW51YWxseSBkbyB0aGUgc2Vjb25kIHRhcGUsIHNvIEkgZGlkIGlu
+c2VydCB0YXBlXzAyCmFuZCBydW46Cgp4ZnNyZXN0b3JlIC1wIDMwMCAtVCAtSiAtZiAvZGV2L25z
+dDAgL3N3YW1wCnhmc3Jlc3RvcmU6IHVzaW5nIHNjc2kgdGFwZSAoZHJpdmVfc2NzaXRhcGUpIHN0
+cmF0ZWd5Cnhmc3Jlc3RvcmU6IHZlcnNpb24gMy4xLjQgKGR1bXAgZm9ybWF0IDMuMCkgLSB0eXBl
+IF5DIGZvciBzdGF0dXMgYW5kIGNvbnRyb2wKeGZzcmVzdG9yZTogc2VhcmNoaW5nIG1lZGlhIGZv
+ciBkdW1wCnhmc3Jlc3RvcmU6IHByZXBhcmluZyBkcml2ZQp4ZnNyZXN0b3JlOiBleGFtaW5pbmcg
+bWVkaWEgZmlsZSAwCgogPT09PT09PT09PT09PT09PT09PT09PT09PT09IGR1bXAgc2VsZWN0aW9u
+IGRpYWxvZyA9PT09PT09PT09PT09PT09PT09PT09PT09PT09Cgp0aGUgZm9sbG93aW5nIGR1bXAg
+aGFzIGJlZW4gZm91bmQgb24gZHJpdmUgMArigKYKbWVkaWEgbGFiZWw6ICJ0YXBlXzAyIgrigKYK
+cmVzdG9yZSB0aGlzIGR1bXA/CjE6IHNraXAKMjogcmVzdG9yZQogKGRlZmF1bHQpCiAtPiAyCnRo
+aXMgZHVtcCBzZWxlY3RlZCBmb3IgcmVzdG9yYWwKCiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0gZW5kIGRpYWxvZyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCnhm
+c3Jlc3RvcmU6IHNlYXJjaGluZyBtZWRpYSBmb3IgZGlyZWN0b3J5IGR1bXAKeGZzcmVzdG9yZTog
+cmVhZGluZyBkaXJlY3Rvcmllcwp4ZnNyZXN0b3JlOiAxNzI0MSBkaXJlY3RvcmllcyBhbmQgODc1
+OTMxIGVudHJpZXMgcHJvY2Vzc2VkCnhmc3Jlc3RvcmU6IGRpcmVjdG9yeSBwb3N0LXByb2Nlc3Np
+bmcKeGZzcmVzdG9yZTogcmVzdG9yaW5nIG5vbi1kaXJlY3RvcnkgZmlsZXMK4oCmCnhmc3Jlc3Rv
+cmU6IHN0YXR1cyBhdCAwMTo0MzozMjogNjYwMjEvODU4NjEzIGZpbGVzIHJlc3RvcmVkLCA5Ljcl
+IGNvbXBsZXRlLCAyMTAwIHNlY29uZHMgZWxhcHNlZAp4ZnNyZXN0b3JlOiBleGFtaW5pbmcgbWVk
+aWEgZmlsZSAxCgogPT09PT09PT09PT09PT09PT09PT09PT09PT09PSBjaGFuZ2UgbWVkaWEgZGlh
+bG9nID09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgpwbGVhc2UgY2hhbmdlIG1lZGlhIGlu
+IGRyaXZlCjE6IG1lZGlhIGNoYW5nZSBkZWNsaW5lZAoyOiBkaXNwbGF5IG1lZGlhIGludmVudG9y
+eSBzdGF0dXMKMzogbGlzdCBuZWVkZWQgbWVkaWEgb2JqZWN0cwo0OiBtZWRpYSBjaGFuZ2VkIChk
+ZWZhdWx0KQogLT4KCkhlcmUgSSB3YXMgc3VyZSB0aGF0IGl0IHdpbGwga25vdyB0byBwcm9tcHQg
+bWUgZm9yIHRoZSBmaXJzdCB0YXBlIChtYXliZQp0aGUgcmVzdG9yZSBuZWVkcyB0byBzdGFydCBm
+cm9tIHRoZSBsYXN0IG1lZGlhIG9iamVjdD8pLCBidXQ6CgogKHNlbGVjdGluZyBsaXN0IG5lZWRl
+ZCBtZWRpYSBvYmplY3RzKQogLT4gMwoKICAgICAgICBoZXJlIG1heSBiZSB1bmlkZW50aWZpZWQg
+bWVkaWEgb2JqZWN0cyBub3QgeWV0IGZ1bGx5IHJlc3RvcmVkCgogLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tIGVuZCBkaWFsb2cgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tCgoKID09PT09PT09PT09PT09PT09PT09PT09PT09PT0gY2hhbmdlIG1lZGlhIGRpYWxvZyA9
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKU28gaXQgZGlkbid0IGtub3cgYWJvdXQgYW55
+IG1pc3NpbmcgbWVkaWEuIEkgcmVpbnNlcnRlZCB0aGUgZmlyc3QgdGFwZSwKcmVzdG9yZWQgYWdh
+aW4gaXQgY29udGVudHMgKGxvbmcgcHJvY2VzcywgaXQgZGlkIHJlYWQgdGhlIGVudGlyZSB0YXBl
+KSwKYXQgdGhlIGVuZCBpdCBwcm9tcHRlZCBtZSAqb25jZSBtb3JlKiBmb3IgbW9yZSBtZWRpYS4g
+Tm90ZSB0aGF0IG5vdyBpdApoYWQgYSBkaWZmZXJlbnQgZXJyb3IgbWVzc2FnZSB0aGFuIGluIHRo
+ZSBmaXJzdCByZXN0b3JlICh3aGVyZSBpdCBzYWlkCiJhdHRlbXB0IHRvIHJlYWQgTk5OTiBieXRl
+cyBmYWlsZWQiKToKCnhmc3Jlc3RvcmU6IHN0YXR1cyBhdCAxNToyMzozMjogODQ5NzMyLzg1ODYx
+MyBmaWxlcyByZXN0b3JlZCwgOTkuMCUgY29tcGxldGUsIDUxMzAwIHNlY29uZHMgZWxhcHNlZAp4
+ZnNyZXN0b3JlOiBhdHRlbXB0IHRvIHJlYWQgMzcxOTE2OCBieXRlcyBmYWlsZWQ6IGVuZCBvZiBt
+ZWRpYSBmaWxlCnhmc3Jlc3RvcmU6IFdBUk5JTkc6IGhpdCBFT0QgYXQgc3RyZWFtIDAgb2JqZWN0
+IDAsIHlldCBpbnZlbnRvcnkgaW5kaWNhdGVzIGxhc3Qgb2JqZWN0IGluZGV4IGlzIDEKCiA9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09IGNoYW5nZSBtZWRpYSBkaWFsb2cgPT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KCkl0IHN0aWxsIGRpZG4ndCBrbm93IGFib3V0IGFueSAibWlzc2lu
+ZyIgbWVkaWEsIGFuZCB0aGUKbWVkaWEgaW52ZW50b3J5IHN0YXR1cyBhdCB0aGlzIHRpbWUgd2Fz
+OgoKIC0+IDIKCnNlc3Npb24gaW52ZW50b3J5IGRpc3BsYXkKCm1lZGlhIHN0cmVhbSAwOgoKICAg
+IG1lZGlhIG9iamVjdCAwOgoKICAgIGxhYmVsOiAidGFwZV8wIgogICAgaWQ6IDlmMDQwNWI4LWQ0
+YmMtNGYxMy1hYTgwLTMyYTU4N2RlY2ZkMwogICAgaW5kZXggd2l0aGluIG9iamVjdCBvZiBmaXJz
+dCBtZWRpYSBmaWxlOiAwCgogICAgICAgIG1lZGlhIGZpbGUgMCAoMCk6CiAgICAgICAgZmlyc3Qg
+ZXh0ZW50IGNvbnRhaW5lZDogaW5vIDUxNSBvZmYgMAogICAgICAgIG5leHQgZXh0ZW50IHRvIHJl
+c3RvcmU6IGlubyA3NTIyNDEwNTQ3IG9mZiAxMzQyMTc3MjgKICAgICAgICBub24tZGlyZWN0b3Jp
+ZXMgZG9uZQoKICAgICAgICBtYXkgYmUgYWRkaXRpb25hbCB1bmlkZW50aWZpZWQgbWVkaWEgZmls
+ZXMKCiAgICBtZWRpYSBvYmplY3QgMToKCiAgICBsYWJlbDogInRhcGVfMDIiCiAgICBpZDogMjMy
+ZWQyMzktOTAyMC00ZGE2LThlYTUtYWJlNmYyMmM5ZjBhCiAgICBpbmRleCB3aXRoaW4gb2JqZWN0
+IG9mIGZpcnN0IG1lZGlhIGZpbGU6IDAKCiAgICAgICAgbWVkaWEgZmlsZSAwICgwKToKICAgICAg
+ICB1c2VkIGZvciBkaXJlY3RvcnkgcmVzdG9yYWwKICAgICAgICBmaXJzdCBleHRlbnQgY29udGFp
+bmVkOiBpbm8gNzUyMjQxMDU0NyBvZmYgMTM0MjE3NzI4CiAgICAgICAgbmV4dCBleHRlbnQgdG8g
+cmVzdG9yZTogaW5vIDgyODM2NTkzMjcgb2ZmIDAKICAgICAgICBub24tZGlyZWN0b3JpZXMgZG9u
+ZQoKICAgICAgICBtZWRpYSBmaWxlIDEgKDEpOgogICAgICAgIGlzIHN0cmVhbSB0ZXJtaW5hdG9y
+CgogLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tIGVuZCBkaWFsb2cgLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpJIGRvbid0IGtub3cgaG93IHRvIHBhcnNlIHRoaXMg
+b3V0cHV0LiB0YXBlXzAyIHNlZW1zIGNvbnNpc3RlbnQsIHRhcGVfMApzZWVtcyB0byBub3QgaGF2
+ZSBhbGwgdGhlIGluZm9ybWF0aW9uIG5lZWRlZCBtYXliZT8KCkkgaW5zZXJ0ZWQgdGhlIDJuZCB0
+YXBlIGFnYWluOgoKNDogbWVkaWEgY2hhbmdlZCAoZGVmYXVsdCkKIC0+IDQKZXhhbWluaW5nIG5l
+dyBtZWRpYQoKIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSBlbmQgZGlhbG9nIC0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKeGZzcmVzdG9yZTogc3RhdHVzIGF0IDE1
+OjI4OjMyOiA4NTgwNjkvODU4NjEzIGZpbGVzIHJlc3RvcmVkLCAxMDAuMCUgY29tcGxldGUsIDUx
+NjAwIHNlY29uZHMgZWxhcHNlZAp4ZnNyZXN0b3JlOiBwcmVwYXJpbmcgZHJpdmUKeGZzcmVzdG9y
+ZTogZXhhbWluaW5nIG1lZGlhIGZpbGUgMAp4ZnNyZXN0b3JlOiByZXN0b3JlIGNvbXBsZXRlOiA1
+MTk0NiBzZWNvbmRzIGVsYXBzZWQKeGZzcmVzdG9yZTogUmVzdG9yZSBTdW1tYXJ5Ogp4ZnNyZXN0
+b3JlOiAgIHN0cmVhbSAwIC9kZXYvbnN0MCBPSyAoc3VjY2VzcykKeGZzcmVzdG9yZTogUmVzdG9y
+ZSBTdGF0dXM6IFNVQ0NFU1MKClRoaXMgdGltZSBpdCBkaWRuJ3QgYWN0dWFsbHkgcmVhZCBhbnl0
+aGluZyBmcm9tIHRhcGUgYmV5b25kIHRoZSBpbmRleAoobXQgdGVsbCBzYWlkIGJsb2NrIDEgYWZ0
+ZXJ3YXJkcywgYW5kIHRoZXJlIHdhcyBubyAidGFwZSByZWFkaW5nIgpub2lzZSkuIEl0IGxvb2tz
+IGxpa2UgaXQgZmluaXNoZWQgY29ycmVjdGx5LCBidXQgYWxzbyB0aGUgZmlyc3QKaW5jb21wbGV0
+ZSByZXN0b3JlIGFsc28gc2FpZCAiU1VDQ0VTUyIuCgpTbyBhdCB0aGlzIHBvaW50OiBJIGRvbid0
+IGtub3cgd2hhdCBJIGRpZCB3cm9uZywgb3IgaWYgdGhlcmUgd2FzIGFuCmlzc3VlIHdpdGggbXkg
+dGFwZSB1bml0IHdoZXJlIGl0IGRpZG4ndCB3cml0ZSB0aGluZ3MgY29ycmVjdGx5IHRvIHRoZQpl
+bmQgb2YgdGhlIGZpcnN0IHRhcGUuIE9yIGlzIHRoZSBtYW4gcGFnZSBvdXQgb2YgZGF0ZT8KCkkg
+YWxzbyBkb24ndCBrbm93IGZvciBzdXJlIGlmIGV2ZXJ5dGhpbmcgd2FzIHJlc3RvcmVkICg4NTgw
+NjkvODU4NjEzCmZpbGVzIHJlc3RvcmVkIG1lYW5zIEkgbG9zdCBhdCBtb3N0IDU0NCBmaWxlcyBs
+b3N0LCBidXQgSSBwcmVzdW1lIHRoYXQKd2FzIGp1c3QgYmVjYXVzZSB0aGUgcHJvZ3Jlc3MgcmVw
+b3J0IGludGVydmFsIHdhcyBoaWdoKS4gSSBkaWRuJ3QgZG8gYQoiZmluZCIgYmVmb3JlIHRoZSBk
+dW1wIHRvIGNvbXBhcmUgZmlsZSBsaXN0cy4KCkhvcGUgc29tZW9uZSBjYW4gZW5saWdodGVuIG1l
+IDopCgp0aGFua3MgaW4gYWR2YW5jZSwKaXVzdGluCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
