@@ -1,21 +1,20 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 59DA37F7B
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 23:38:46 -0500 (CDT)
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 928EF7F37
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 09:24:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D6AA2AC001
-	for <xfs@oss.sgi.com>; Sat,  1 Aug 2015 21:38:42 -0700 (PDT)
-Received: from armoniaeventos.vservers.es (scienceknowconferences.com
-	[149.62.168.164]) by cuda.sgi.com with ESMTP id
-	4TXv4NZ2ActXvlD5 (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 01 Aug 2015 21:38:38 -0700 (PDT)
-Date: Sun, 2 Aug 2015 06:38:35 +0200
-From: ScienceKNOW Conferences <newsletter@scienceknowconferences.com>
-Subject: Deadlines extended: International Congress on Education,
-	Innovation and Learning Technologies (Granada, Spain)
-Message-ID: <NzM2NTYxMAAC554613Y259BAMTQzODQ5MDMxNTk4MTYw@www.scienceknowconferences.com>
-MIME-Version: 1.0
-Reply-To: bounce@scienceknowconferences.com
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F45D304048
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:24:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tMuh3b2gCMnt1U1O (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 08 Sep 2015 07:24:33 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 09/11 v2] xfsprogs: Add statvfs64 for osx
+Date: Tue,  8 Sep 2015 16:24:23 +0200
+Message-Id: <1441722263-9194-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1440590555-20463-9-git-send-email-jtulak@redhat.com>
+References: <1440590555-20463-9-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,172 +23,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3903619230436602407=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
---===============3903619230436602407==
-Content-Type: multipart/alternative;
-	boundary="b1_cb8e0167b5829914300a50ad0793ee04"
+Simply rename statvfs64 to statfs with a #define.
 
---b1_cb8e0167b5829914300a50ad0793ee04
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t724cuEq019992
+CHANGE:
+remove dummy code, add rename
 
-International Congress in Education, Innovation and Learning Technologies
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ fsr/xfs_fsr.c        | 14 ++++++++++++++
+ include/builddefs.in |  2 +-
+ include/darwin.h     |  5 +++++
+ 3 files changed, 20 insertions(+), 1 deletion(-)
 
-Granada, Spain
-21st - 23rd September, 2015
-
-Deadlines
-Abstracts sending: August 15th 2015
-Decision notification: August 20th 2015
-Early bird registration: August 30th 2015
-(Please note that it is not compulsory to submit an Abstract to attend th=
-e Conference)
-
-Dear Colleague,
-=20
-We would like to remember you that the call to submit abstracts to the In=
-ternational Congress on Education, Innovation and Learning Technologies
-(ICEILT) is now open. Best time to register with ICEILT with lowest Regis=
-tration Fee as early bird registration.
-=20
-The conference will be held at the World Heritage City of Granada ( http:=
-//whc.unesco.org/en/list/314 ) (Spain), in September 2015.
-=20
-Please register on the following link: http://iceilt.com/registration/on-=
-line-registration-form/ (
-http://iceilt.com/registration/on-line-registration-form/ )
-=20
-Looking forward for your quick and positive response.
-=20
-Best regards,
-=20
-Paulo S=C3=A9rgio Duque de Brito
-President of the Organizing Committee
-International Congress on Education, Innovation and Learning Technologies=
- (ICEILT)
-=20
-E-mail: info@iceilt.com ( mailto:info@iceilt.com )
-Webpage: www.iceilt.com ( http://www.iceilt.com )
-Facebook: Click here for ICEILT's Facebook page (
-https://www.facebook.com/pages/International-Congress-on-Education-Innova=
-tion-and-Learning-Technologies/1391116977785408 )
-Twitter: @ICEILT ( https://twitter.com/ICEILT )
-
-
---b1_cb8e0167b5829914300a50ad0793ee04
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 8bit
-
-<html><head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Deadlines extended: International Congress on Education, Innovation and Learning Technologies (Granada, Spain)</title>
-<style type="text/css">
-.ReadMsgBody{width: 100%;}
-.ExternalClass{width: 100%;}
-div, p, a, li, td { -webkit-text-size-adjust:none; }
-</style>
-</head>
-<body yahoo="fix">
-<style type="text/css">.ReadMsgBody {width: 100%;}
-	.ExternalClass {width: 100%; }
-	body     {width: 100%; margin:0; padding:0; -webkit-font-smoothing: antialiased;font-family: Georgia, Times, serif}
-	table {border-collapse: collapse;}
-
-	@media only screen and (max-width: 640px)  {
-					body[yahoo] .deviceWidth {width:440px!important; padding:0;}    
-					body[yahoo] .center {text-align: center!important;}  
-			}
-			
-	@media only screen and (max-width: 479px) {
-					body[yahoo] .deviceWidth {width:280px!important; padding:0;}    
-					body[yahoo] .center {text-align: center!important;}  
-			}
-</style>
-<!-- background: #E5E5E5;border-radius:30px;-moz-border-radius:30px;-webkit-border-radius:30px; -->
-<title></title>
-<div style="text-align: center; font-family: Arial, sans-serif;">
-<table align="center" border="0" cellpadding="10" cellspacing="2" style="background: #CCFFCC; width: 90%">
-	
-		<tr style="width: 80%">
-			<td style="line-height: 0px;"></td>
-			<td style="width: 80%">
-			<h2><span style="font-size:36px;"><span style="color:#000000;">International Congress in Education, Innovation and Learning
-Technologies</span></span></h2>
-
-			<h1><span style="font-size: 36px;"><span style="color:#008000;">Granada, Spain</span><br />
-			21<sup>st</sup> - 23<sup>rd</sup> September, 2015</span></h1>
-			</td>
-		</tr>
-	
-</table>
-
-<table align="center" border="0" cellspacing="2" style="background: #CCFFCC; width: 90%; padding:5px 145px 5px 5px">
-	
-		<tr style="width: 50%">
-			<td style="text-align: right;"><font color="#ff8c00"><span style="font-size: 36px;"><b>Deadlines</b></span></font><br />
-			<span style="font-size:20px;"><strong>Abstracts sending: <span style="color:#FF8C00;">August 15<sup>th</sup>&nbsp;2015</span><br />
-			Decision notification:<span style="color:#008000;"> </span><span style="color:#FF8C00;">August 20<sup>th</sup> 2015</span><br />
-			Early bird registration: <span style="color:#FF8C00;">August 30<sup>th</sup> 2015</span></strong></span><br />
-			(Please note that it is not compulsory to submit an Abstract to attend the Conference)</td>
-		</tr>
-	
-</table>
-
-<div style="text-align: center;"></div>
-<br />
-Dear Colleague,<br />
-&nbsp;<br />
-We would like to remember you that the call to submit abstracts to the International Congress on Education, Innovation and Learning Technologies
-(ICEILT) is now open. Best time to register with ICEILT with lowest Registration Fee as early bird registration.<br />
-&nbsp;<br />
-The conference will be held at the <a
-href="http://www.scienceknowconferences.com/index.php/component/acymailing/?subid=554613&ctrl=url&urlid=256&mailid=259">World Heritage City of
-Granada</a> (Spain), in September 2015.<br />
-&nbsp;<br />
-Please register on the following link: <a
-href="http://www.scienceknowconferences.com/index.php/component/acymailing/?subid=554613&ctrl=url&urlid=267&mailid=259">http://iceilt.com/registration/on-line-registration-form/</a><br
-/>
-&nbsp;<br />
-Looking forward for your quick and positive response.<br />
-&nbsp;<br />
-Best regards,<br />
-&nbsp;<br />
-Paulo S&eacute;rgio Duque de Brito<br />
-President of the Organizing Committee<br />
-International Congress on Education, Innovation and Learning Technologies (ICEILT)<br />
-&nbsp;<br />
-E-mail: <a href="mailto:info@iceilt.com">info@iceilt.com</a><br />
-Webpage: <a
-href="http://www.scienceknowconferences.com/index.php/component/acymailing/?subid=554613&ctrl=url&urlid=258&mailid=259">www.iceilt.com</a><br />
-Facebook: <a href="http://www.scienceknowconferences.com/index.php/component/acymailing/?subid=554613&ctrl=url&urlid=268&mailid=259">Click here for
-ICEILT&#39;s Facebook page</a><br />
-Twitter: <a href="http://www.scienceknowconferences.com/index.php/component/acymailing/?subid=554613&ctrl=url&urlid=269&mailid=259">@ICEILT</a>
-
-<div style="text-align: center;">&nbsp;&nbsp;</div>
-</div><img class="spict" alt="" src="http://www.scienceknowconferences.com/index.php/component/acymailing/?ctrl=stats&mailid=259&subid=554613" 
-border="0"  height="1"  width="50" /></body>
-</html>
-
-
-
---b1_cb8e0167b5829914300a50ad0793ee04--
-
-
---===============3903619230436602407==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index e1b7bd6..5f95cdc 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -36,6 +36,12 @@
+ #  include <mntent.h>
+ #endif
+ 
++#ifdef __APPLE__
++//#  define statvfs64 statfs;
++#  include <sys/param.h>
++#  include <sys/mount.h>
++#endif
++
+ #ifndef XFS_XFLAG_NODEFRAG
+ #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
+ #endif
+@@ -948,7 +954,11 @@ fsrfile_common(
+ 			fname, strerror(errno));
+ 		return -1;
+ 	}
++#ifndef statvfs64
+ 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
++#else
++	bsize = vfss.f_bsize;
++#endif
+ 	if (statp->bs_blksize * statp->bs_blocks >
+ 	    vfss.f_bfree * bsize - minimumfree) {
+ 		fsrprintf(_("insufficient freespace for: %s: "
+@@ -1728,7 +1738,11 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
+ 		close(fd);
+ 		return -1;
+ 	}
++#ifndef statvfs64
+ 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
++#else
++	bsize = sfbp->f_bsize;
++#endif
+ 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
+ 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
+ 	return 0;
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 25b8816..31e21ba 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -123,7 +123,7 @@ PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
+ endif
+ ifeq ($(PKG_PLATFORM),darwin)
+ PCFLAGS = $(GCCFLAGS)
+-DEPENDFLAGS = -D__APPLE__
++DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
+ endif
+ ifeq ($(PKG_PLATFORM),irix)
+ PLDLIBS = -ldisk -lgen
+diff --git a/include/darwin.h b/include/darwin.h
+index 0d2f175..288ad1f 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -216,4 +216,9 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+ 	return getitimer(ITIMER_REAL, value);
+ }
+ 
++/* FSR */
++
++#define statvfs64 statfs
++#define		_PATH_MOUNTED   "/etc/mtab"
++
+ #endif	/* __XFS_DARWIN_H__ */
+-- 
+2.4.5
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3903619230436602407==--
