@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7C6567F50
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 12:50:22 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 342DA7F50
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 12:50:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 12C6CAC005
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 10:50:18 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EB862304048
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 10:50:19 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id T8lcBjU7psPZdXiI (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3K6clvMKH7r8JcVq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 10:50:18 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 10:50:19 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id A4D2D8EA21
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 17:50:17 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id B514BC0B988A
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 17:50:18 +0000 (UTC)
 Received: from localhost.localdomain.com (vpn-57-55.rdu2.redhat.com
 	[10.10.57.55])
 	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t88HoHBX022169
-	for <xfs@oss.sgi.com>; Tue, 8 Sep 2015 13:50:17 -0400
+	id t88HoHBZ022169
+	for <xfs@oss.sgi.com>; Tue, 8 Sep 2015 13:50:18 -0400
 From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 0/4 V5] xfs: new global stats in sysfs
-Date: Tue,  8 Sep 2015 12:49:50 -0500
-Message-Id: <1441734594-4175-1-git-send-email-billodo@redhat.com>
+Subject: [PATCH 2/4] xfs: create symlink proc/fs/xfs/stat to sys/fs/xfs/stats
+Date: Tue,  8 Sep 2015 12:49:52 -0500
+Message-Id: <1441734594-4175-3-git-send-email-billodo@redhat.com>
+In-Reply-To: <1441734594-4175-1-git-send-email-billodo@redhat.com>
+References: <1441734594-4175-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,49 +39,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+As a part of the work to move xfs global stats from procfs to sysfs,
+this patch creates the symlink from proc/fs/xfs/stat to sys/fs/xfs/stats.
 
-Hi all-
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ fs/xfs/xfs_stats.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Here is another pass at the series to add new global stats to sysfs.
-----------history---------------
-V5:
--optimization of sysfs_ops function.
--style fixups
-V4:
--whitespace fixup of patch 1
--add patch 4 (sysfs ops consolidation - dbg, stats, log)
-V3:
--style fixups and removal of extraneous printk.
-V2:
--style fixups.
-V1:
---------------------------------
-
-The series provides the beginnings of the infrastructure for per-fs
-stats (in addition to global accumulative stats).
-
-We already have per-fs information in /sys, so it makes sense to
-have per-fs stats there too.  As a first step, moving existing
-global stats infrastructure to /sys will allow us to re-use that
-sysfs code for per-fs stats as well.
-
-Patch 1 handles the bring-up and tear down of xfs/stats directory
-structure in sysfs when an fs is mounted. The directory contains
-the stats file and the stats_clear file. The stats file contents mimic
-those of /proc/fs/xfs/stat. The stats_clear file is empty, and much
-like the current stat_clear command, handles the zeroing of the stats
-file when a "1" is echoed to the stats_clear file.
-
-Patch 2 creates the symlink for stats from procfs to sysfs.
-
-Patch 3 removes the now unused portions of procfs for stat.
-
-Patch 4 consolidates the sysfs ops for dbg, stats, log.
-
-Once again, comments and questions are welcome.
-
-Thanks-
-Bill
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index 6008e25..a9f05de 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -244,9 +244,10 @@ xfs_init_procfs(void)
+ 	if (!proc_mkdir("fs/xfs", NULL))
+ 		goto out;
+ 
+-	if (!proc_create("fs/xfs/stat", 0, NULL,
+-			 &xfs_stat_proc_fops))
++	if (!proc_symlink("fs/xfs/stat", NULL,
++			  "/sys/fs/xfs/stats/stats"))
+ 		goto out_remove_xfs_dir;
++
+ #ifdef CONFIG_XFS_QUOTA
+ 	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
+ 			 &xqmstat_proc_fops))
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
