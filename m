@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 044147F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 14:49:14 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BA7C17F37
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 16:06:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 84003AC00E
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 12:49:10 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jtF5K6eV9Q24FZQf (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 12:49:06 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 9FB7CC0B9890
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 19:49:05 +0000 (UTC)
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t88Jn26Y011197
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 8 Sep 2015 15:49:05 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: simplify /proc teardown & error handling
-Message-ID: <55EF3BAE.5010904@redhat.com>
-Date: Tue, 8 Sep 2015 14:49:02 -0500
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A97838F8033
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 14:06:49 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	m18S2g4T86RjA1xt for <xfs@oss.sgi.com>;
+	Tue, 08 Sep 2015 14:06:47 -0700 (PDT)
+Date: Wed, 9 Sep 2015 07:06:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] xfs: consolidate sysfs ops (dbg, stats, log)
+Message-ID: <20150908210644.GK3902@dastard>
+References: <1441734594-4175-1-git-send-email-billodo@redhat.com>
+	<1441734594-4175-5-git-send-email-billodo@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1441734594-4175-5-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,72 +30,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-remove_proc_subtree() was added in 3.9, and can be
-used to simplify our procfile creation error handling
-and cleanup, removing the nested gotos.  It simply
-removes fs/xfs and everything created under it.
+On Tue, Sep 08, 2015 at 12:49:54PM -0500, Bill O'Donnell wrote:
+> As a part of the series to move xfs global stats from procfs to sysfs,
+> this patch consolidates the sysfs ops functions and removes redundancy.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  fs/xfs/xfs_stats.c |   2 +-
+>  fs/xfs/xfs_sysfs.c | 144 +++++++++++++++++------------------------------------
+>  2 files changed, 48 insertions(+), 98 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+> index 05d5227..dc6ca67 100644
+> --- a/fs/xfs/xfs_stats.c
+> +++ b/fs/xfs/xfs_stats.c
+> @@ -92,7 +92,7 @@ int xfs_stats_format(char *buf)
+>  		0);
+>  #endif
+>  
+> -return len;
+> +	return len;
+>  }
+>  
+>  void xfs_stats_clearall(void)
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index a094e20..6fd597b 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -54,6 +54,50 @@ struct kobj_type xfs_mp_ktype = {
+>  	.release = xfs_sysfs_release,
+>  };
+>  
+> +static inline struct xlog *
+> +to_xlog(struct kobject *kobject)
+> +{
+> +	struct xfs_kobj *kobj = to_kobj(kobject);
+> +
+> +	return container_of(kobj, struct xlog, l_kobj);
+> +}
+> +
+> +STATIC ssize_t
+> +xfs_sysfs_object_show(
+> +	struct kobject		*kobject,
+> +	struct attribute	*attr,
+> +	char			*buf)
+> +{
+> +	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+> +	struct kobj_type *ktype = get_ktype(kobject);
+> +	void *data = NULL;
+> +
+> +	if (ktype == &xfs_log_ktype)
+> +		data = to_xlog(kobject);
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Move the to_xlog(kobject) to the relevant ->show/->store operations
+and just pass the kobject to them. Otherwise we'll end up with a lot
+of non-generic functionality in these functions.
 
-This goes after Bill's patches, I just noticed it
-while reviewing them.
+Cheers,
 
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index 05d5227..009a860 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -168,41 +168,29 @@ int
- xfs_init_procfs(void)
- {
- 	if (!proc_mkdir("fs/xfs", NULL))
--		goto out;
-+		return -ENOMEM;
- 
- 	if (!proc_symlink("fs/xfs/stat", NULL,
- 			  "/sys/fs/xfs/stats/stats"))
--		goto out_remove_xfs_dir;
-+		goto out;
- 
- #ifdef CONFIG_XFS_QUOTA
- 	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
- 			 &xqmstat_proc_fops))
--		goto out_remove_stat_file;
-+		goto out;
- 	if (!proc_create("fs/xfs/xqm", 0, NULL,
- 			 &xqm_proc_fops))
--		goto out_remove_xqmstat_file;
-+		goto out;
- #endif
- 	return 0;
- 
--#ifdef CONFIG_XFS_QUOTA
-- out_remove_xqmstat_file:
--	remove_proc_entry("fs/xfs/xqmstat", NULL);
-- out_remove_stat_file:
--	remove_proc_entry("fs/xfs/stat", NULL);
--#endif
-- out_remove_xfs_dir:
--	remove_proc_entry("fs/xfs", NULL);
-- out:
-+out:
-+	remove_proc_subtree("fs/xfs", NULL);
- 	return -ENOMEM;
- }
- 
- void
- xfs_cleanup_procfs(void)
- {
--#ifdef CONFIG_XFS_QUOTA
--	remove_proc_entry("fs/xfs/xqm", NULL);
--	remove_proc_entry("fs/xfs/xqmstat", NULL);
--#endif
--	remove_proc_entry("fs/xfs/stat", NULL);
--	remove_proc_entry("fs/xfs", NULL);
-+	remove_proc_subtree("fs/xfs", NULL);
- }
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
