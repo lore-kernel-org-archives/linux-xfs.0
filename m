@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F6777F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 10:09:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D92B30404E
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 08:09:55 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2DCC87F56
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 10:09:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1939C304039
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 08:09:54 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fAM1H8j0GMaI6TEk (version=TLSv1.2
+	cuda.sgi.com with ESMTP id NrRGbnZhyNJcixn5 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 08:09:53 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 2BC3E461C4
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 15:09:53 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id A4FEDC04FF81
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 15:09:52 +0000 (UTC)
 Received: from localhost.localdomain.com (vpn-57-55.rdu2.redhat.com
 	[10.10.57.55])
 	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t88F9pIO001556
+	id t88F9pIN001556
 	for <xfs@oss.sgi.com>; Tue, 8 Sep 2015 11:09:52 -0400
 From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 1/4] xfs: create global stats and stats_clear in sysfs
-Date: Tue,  8 Sep 2015 10:09:29 -0500
-Message-Id: <1441724972-7086-2-git-send-email-billodo@redhat.com>
-In-Reply-To: <1441724972-7086-1-git-send-email-billodo@redhat.com>
-References: <1441724972-7086-1-git-send-email-billodo@redhat.com>
+Subject: [PATCH 0/4 V4] xfs: new global stats in sysfs
+Date: Tue,  8 Sep 2015 10:09:28 -0500
+Message-Id: <1441724972-7086-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,343 +37,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently, xfs global stats are in procfs. This patch introduces
-(replicates) the global stats in sysfs. Additionally a stats_clear file
-is introduced in sysfs.
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- fs/xfs/xfs_stats.c  | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_stats.h  |  2 ++
- fs/xfs/xfs_super.c  | 20 +++++++++----
- fs/xfs/xfs_sysctl.c | 15 ++--------
- fs/xfs/xfs_sysfs.c  | 75 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sysfs.h  |  1 +
- 6 files changed, 179 insertions(+), 17 deletions(-)
+Hi all-
 
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index f224038..6008e25 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -29,6 +29,89 @@ static int counter_val(int idx)
- 	return val;
- }
- 
-+int xfs_stats_format(char *buf)
-+{
-+	int		i, j;
-+	int		len = 0;
-+	__uint64_t	xs_xstrat_bytes = 0;
-+	__uint64_t	xs_write_bytes = 0;
-+	__uint64_t	xs_read_bytes = 0;
-+
-+	static const struct xstats_entry {
-+		char	*desc;
-+		int	endpoint;
-+	} xstats[] = {
-+		{ "extent_alloc",	XFSSTAT_END_EXTENT_ALLOC	},
-+		{ "abt",		XFSSTAT_END_ALLOC_BTREE		},
-+		{ "blk_map",		XFSSTAT_END_BLOCK_MAPPING	},
-+		{ "bmbt",		XFSSTAT_END_BLOCK_MAP_BTREE	},
-+		{ "dir",		XFSSTAT_END_DIRECTORY_OPS	},
-+		{ "trans",		XFSSTAT_END_TRANSACTIONS	},
-+		{ "ig",			XFSSTAT_END_INODE_OPS		},
-+		{ "log",		XFSSTAT_END_LOG_OPS		},
-+		{ "push_ail",		XFSSTAT_END_TAIL_PUSHING	},
-+		{ "xstrat",		XFSSTAT_END_WRITE_CONVERT	},
-+		{ "rw",			XFSSTAT_END_READ_WRITE_OPS	},
-+		{ "attr",		XFSSTAT_END_ATTRIBUTE_OPS	},
-+		{ "icluster",		XFSSTAT_END_INODE_CLUSTER	},
-+		{ "vnodes",		XFSSTAT_END_VNODE_OPS		},
-+		{ "buf",		XFSSTAT_END_BUF			},
-+		{ "abtb2",		XFSSTAT_END_ABTB_V2		},
-+		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
-+		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
-+		{ "ibt2",		XFSSTAT_END_IBT_V2		},
-+		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
-+		/* we print both series of quota information together */
-+		{ "qm",			XFSSTAT_END_QM			},
-+	};
-+
-+	/* Loop over all stats groups */
-+
-+	for (i = j = 0; i < ARRAY_SIZE(xstats); i++) {
-+		len += snprintf(buf + len, PATH_MAX - len, "%s",
-+				xstats[i].desc);
-+		/* inner loop does each group */
-+		for (; j < xstats[i].endpoint; j++)
-+			len += snprintf(buf + len, PATH_MAX - len, " %u",
-+					counter_val(j));
-+		len += snprintf(buf + len, PATH_MAX - len, "\n");
-+	}
-+	/* extra precision counters */
-+	for_each_possible_cpu(i) {
-+		xs_xstrat_bytes += per_cpu(xfsstats, i).xs_xstrat_bytes;
-+		xs_write_bytes += per_cpu(xfsstats, i).xs_write_bytes;
-+		xs_read_bytes += per_cpu(xfsstats, i).xs_read_bytes;
-+	}
-+
-+	len += snprintf(buf+len, PATH_MAX-len, "xpc %Lu %Lu %Lu\n",
-+			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
-+	len += snprintf(buf+len, PATH_MAX-len, "debug %u\n",
-+#if defined(DEBUG)
-+		1);
-+#else
-+		0);
-+#endif
-+
-+return len;
-+}
-+
-+void xfs_stats_clearall(void)
-+{
-+	int		c;
-+	__uint32_t	vn_active;
-+
-+	xfs_notice(NULL, "Clearing xfsstats");
-+	for_each_possible_cpu(c) {
-+		preempt_disable();
-+		/* save vn_active, it's a universal truth! */
-+		vn_active = per_cpu(xfsstats, c).vn_active;
-+		memset(&per_cpu(xfsstats, c), 0,
-+		       sizeof(struct xfsstats));
-+		per_cpu(xfsstats, c).vn_active = vn_active;
-+		preempt_enable();
-+	}
-+}
-+
- static int xfs_stat_proc_show(struct seq_file *m, void *v)
- {
- 	int		i, j;
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index c8f238b..18807b5 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -18,6 +18,8 @@
- #ifndef __XFS_STATS_H__
- #define __XFS_STATS_H__
- 
-+int xfs_stats_format(char *buf);
-+void xfs_stats_clearall(void);
- 
- #if defined(CONFIG_PROC_FS) && !defined(XFS_STATS_OFF)
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 3bf503a..31ad281 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -61,6 +61,7 @@ static kmem_zone_t *xfs_ioend_zone;
- mempool_t *xfs_ioend_pool;
- 
- static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
-+static struct xfs_kobj xfs_stats_kobj;	/* global stats sysfs attrs */
- #ifdef DEBUG
- static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
- #endif
-@@ -1838,19 +1839,25 @@ init_xfs_fs(void)
- 	xfs_kset = kset_create_and_add("xfs", NULL, fs_kobj);
- 	if (!xfs_kset) {
- 		error = -ENOMEM;
--		goto out_sysctl_unregister;;
-+		goto out_sysctl_unregister;
- 	}
- 
-+	xfs_stats_kobj.kobject.kset = xfs_kset;
-+	error = xfs_sysfs_init(&xfs_stats_kobj, &xfs_stats_ktype, NULL,
-+			       "stats");
-+	if (error)
-+		goto out_kset_unregister;
-+
- #ifdef DEBUG
- 	xfs_dbg_kobj.kobject.kset = xfs_kset;
- 	error = xfs_sysfs_init(&xfs_dbg_kobj, &xfs_dbg_ktype, NULL, "debug");
- 	if (error)
--		goto out_kset_unregister;
-+		goto out_remove_stats_kobj;
- #endif
- 
- 	error = xfs_qm_init();
- 	if (error)
--		goto out_remove_kobj;
-+		goto out_remove_dbg_kobj;
- 
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
-@@ -1859,11 +1866,13 @@ init_xfs_fs(void)
- 
-  out_qm_exit:
- 	xfs_qm_exit();
-- out_remove_kobj:
-+ out_remove_dbg_kobj:
- #ifdef DEBUG
- 	xfs_sysfs_del(&xfs_dbg_kobj);
-- out_kset_unregister:
-+ out_remove_stats_kobj:
- #endif
-+	xfs_sysfs_del(&xfs_stats_kobj);
-+ out_kset_unregister:
- 	kset_unregister(xfs_kset);
-  out_sysctl_unregister:
- 	xfs_sysctl_unregister();
-@@ -1889,6 +1898,7 @@ exit_xfs_fs(void)
- #ifdef DEBUG
- 	xfs_sysfs_del(&xfs_dbg_kobj);
- #endif
-+	xfs_sysfs_del(&xfs_stats_kobj);
- 	kset_unregister(xfs_kset);
- 	xfs_sysctl_unregister();
- 	xfs_cleanup_procfs();
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index a0c8067..5defabb 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -19,6 +19,7 @@
- #include <linux/sysctl.h>
- #include <linux/proc_fs.h>
- #include "xfs_error.h"
-+#include "xfs_stats.h"
- 
- static struct ctl_table_header *xfs_table_header;
- 
-@@ -31,22 +32,12 @@ xfs_stats_clear_proc_handler(
- 	size_t			*lenp,
- 	loff_t			*ppos)
- {
--	int		c, ret, *valp = ctl->data;
--	__uint32_t	vn_active;
-+	int		ret, *valp = ctl->data;
- 
- 	ret = proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
- 
- 	if (!ret && write && *valp) {
--		xfs_notice(NULL, "Clearing xfsstats");
--		for_each_possible_cpu(c) {
--			preempt_disable();
--			/* save vn_active, it's a universal truth! */
--			vn_active = per_cpu(xfsstats, c).vn_active;
--			memset(&per_cpu(xfsstats, c), 0,
--			       sizeof(struct xfsstats));
--			per_cpu(xfsstats, c).vn_active = vn_active;
--			preempt_enable();
--		}
-+		xfs_stats_clearall();
- 		xfs_stats_clear = 0;
- 	}
- 
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index aa03670..a094e20 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -21,6 +21,7 @@
- #include "xfs_log_format.h"
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
-+#include "xfs_stats.h"
- 
- struct xfs_sysfs_attr {
- 	struct attribute attr;
-@@ -38,6 +39,8 @@ to_attr(struct attribute *attr)
- 	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_RW(name)
- #define XFS_SYSFS_ATTR_RO(name) \
- 	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_RO(name)
-+#define XFS_SYSFS_ATTR_WO(name) \
-+	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_WO(name)
- 
- #define ATTR_LIST(name) &xfs_sysfs_attr_##name.attr
- 
-@@ -125,6 +128,78 @@ struct kobj_type xfs_dbg_ktype = {
- 
- #endif /* DEBUG */
- 
-+
-+/* stats */
-+
-+STATIC ssize_t
-+stats_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	return xfs_stats_format(buf);
-+}
-+XFS_SYSFS_ATTR_RO(stats);
-+
-+STATIC ssize_t
-+stats_clear_store(
-+	const char	*buf,
-+	size_t		count,
-+	void		*data)
-+{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val != 1)
-+		return -EINVAL;
-+	xfs_stats_clearall();
-+	return count;
-+}
-+XFS_SYSFS_ATTR_WO(stats_clear);
-+
-+static struct attribute *xfs_stats_attrs[] = {
-+	ATTR_LIST(stats),
-+	ATTR_LIST(stats_clear),
-+	NULL,
-+};
-+
-+STATIC ssize_t
-+xfs_stats_show(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	char			*buf)
-+{
-+	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-+
-+	return xfs_attr->show ? xfs_attr->show(buf, NULL) : 0;
-+}
-+
-+STATIC ssize_t
-+xfs_stats_store(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	const char		*buf,
-+	size_t			count)
-+{
-+	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-+
-+	return xfs_attr->store ? xfs_attr->store(buf, count, NULL) : 0;
-+}
-+
-+static struct sysfs_ops xfs_stats_ops = {
-+	.show = xfs_stats_show,
-+	.store = xfs_stats_store,
-+};
-+
-+struct kobj_type xfs_stats_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_stats_ops,
-+	.default_attrs = xfs_stats_attrs,
-+};
-+
- /* xlog */
- 
- STATIC ssize_t
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index 240eee3..be692e5 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -22,6 +22,7 @@
- extern struct kobj_type xfs_mp_ktype;	/* xfs_mount */
- extern struct kobj_type xfs_dbg_ktype;	/* debug */
- extern struct kobj_type xfs_log_ktype;	/* xlog */
-+extern struct kobj_type xfs_stats_ktype;	/* stats */
- 
- static inline struct xfs_kobj *
- to_kobj(struct kobject *kobject)
--- 
-2.4.3
+Here is a new pass at the series to add new global stats to sysfs.
+The new series now includes a fourth patch that consolidates sysfs
+ops for debug, stats and log. (Per Dave Chinner's suggestion to
+create a common sysfs_ops structure to help streamline).
+
+The series provides the beginnings of the infrastructure for per-fs
+stats (in addition to global accumulative stats).
+
+We already have per-fs information in /sys, so it makes sense to
+have per-fs stats there too.  As a first step, moving existing
+global stats infrastructure to /sys will allow us to re-use that
+sysfs code for per-fs stats as well.
+
+Patch 1 handles the bring-up and tear down of xfs/stats directory
+structure in sysfs when an fs is mounted. The directory contains
+the stats file and the stats_clear file. The stats file contents mimic
+those of /proc/fs/xfs/stat. The stats_clear file is empty, and much
+like the current stat_clear command, handles the zeroing of the stats
+file when a "1" is echoed to the stats_clear file.
+
+Patch 2 creates the symlink for stats from procfs to sysfs.
+
+Patch 3 removes the now unused portions of procfs for stat.
+
+Patch 4 consolidates the sysfs ops for dbg, stats, log.
+
+Once again, comments and questions are welcome.
+
+Thanks-
+Bill
 
 _______________________________________________
 xfs mailing list
