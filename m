@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 63EF97F55
-	for <xfs@oss.sgi.com>; Mon,  7 Sep 2015 04:42:41 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D42677F37
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:47:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C637AC004
-	for <xfs@oss.sgi.com>; Mon,  7 Sep 2015 02:42:37 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	VL6UrA5nUSR9MSyC for <xfs@oss.sgi.com>;
-	Mon, 07 Sep 2015 02:42:34 -0700 (PDT)
-Date: Mon, 7 Sep 2015 19:42:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: updates for 4.3
-Message-ID: <20150907094232.GF3902@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6FAEFAC003
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 05:47:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rFzFb6Sl0Rtbt42Q (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 08 Sep 2015 05:47:28 -0700 (PDT)
+Date: Tue, 8 Sep 2015 08:47:26 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V3] xfsrestore: fix fs uuid order check for incremental
+	restores
+Message-ID: <20150908124726.GA5305@bfoster.bfoster>
+References: <20150826213133.GB3902@dastard> <55D5FB95.1280108@sgi.com>
+	<20150902132112.GB23587@bfoster.bfoster>
+	<20150903234346.2473A600006AF@gulag1.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20150903234346.2473A600006AF@gulag1.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,196 +32,583 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi Linus,
+On Thu, Sep 03, 2015 at 06:43:46PM -0500, Rich Johnston wrote:
+> Restoring an incremental level 1 dump will fail with the following error
+> if the fs uuid of the most recent level 0 dump in the inventory does not
+> match level 1 dump we are restoring.
+> 
+>   xfsrestore: ERROR: selected dump not based on previously applied dump
+> 
+> This can happen when you have multiple filesystems and you are restoring
+> a level 1 or greater dump of filesystem FS1 but the most recent level 0
+> dump in the inventory was filesystem FS2
+> 
+> The fix is to ensure the fs uuid of the inventory entry and the dump to
+> be restored match.
+> 
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> ---
+> 
+> Changelog
+> V2 wrong file sent
+> 
+> V3
+>  Address review comments from Brian:
+> 
+>  fix invmgr_query_all_sessions() returning true if these error cases
+>  persist throughout the loop
+> 
+>  make if check more readable and less overloaded in search_inv() and
+>  return an error if GET_REC_NOLOCK() fails
+> 
+>  use NULL instead of (uuid_t *)0 in Inv_validate_cmdline()
+> 
+>  remove any spaces around braces of code that was changed
+> 
+>  dump/content.c        |   16 +++---
+>  inventory/inv_api.c   |  130 +++++++++++++++++++++++++++++---------------------
+>  inventory/inv_mgr.c   |   55 ++++++++++++++-------
+>  inventory/inv_priv.h  |    7 +-
+>  inventory/inventory.h |   21 +++++---
+>  restore/content.c     |   23 +++++---
+>  6 files changed, 152 insertions(+), 100 deletions(-)
+> 
+> Index: b/dump/content.c
+> ===================================================================
+> --- a/dump/content.c
+> +++ b/dump/content.c
+> @@ -872,7 +872,7 @@ content_init( intgen_t argc,
+>  		sameinterruptedpr = BOOL_FALSE;
+>  		interruptedpr = BOOL_FALSE;
+>  
+> -		ok = inv_get_session_byuuid( &baseuuid, &sessp );
+> +		ok = inv_get_session_byuuid(&fsid, &baseuuid, &sessp);
+>  		if ( ! ok ) {
+>  			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+>  			      "could not find specified base dump (%s) "
+> @@ -983,9 +983,10 @@ content_init( intgen_t argc,
+>  			      "online inventory not available\n") );
+>  			return BOOL_FALSE;
+>  		}
+> -		ok = inv_lastsession_level_lessthan( inv_idbt,
+> -						     ( u_char_t )sc_level,
+> -						     &sessp );
+> +		ok = inv_lastsession_level_lessthan(&fsid,
+> +						    inv_idbt,
+> +						    (u_char_t)sc_level,
+> +						    &sessp);
+>  		if ( ! ok ) {
+>  			sessp = 0;
+>  		}
+> @@ -1022,9 +1023,10 @@ content_init( intgen_t argc,
+>  	if ( inv_idbt != INV_TOKEN_NULL ) {
+>  		/* REFERENCED */
+>  		bool_t ok1;
+> -		ok = inv_lastsession_level_equalto( inv_idbt,
+> -						    ( u_char_t )sc_level,
+> -						    &sessp );
+> +		ok = inv_lastsession_level_equalto(&fsid,
+> +						   inv_idbt,
+> +						   (u_char_t)sc_level,
+> +						   &sessp);
+>  		ok1 = inv_close( inv_idbt );
+>  		ASSERT( ok1 );
+>  		if ( ! ok ) {
+> Index: b/inventory/inv_api.c
+> ===================================================================
+> --- a/inventory/inv_api.c
+> +++ b/inventory/inv_api.c
+> @@ -596,69 +596,78 @@ inv_free_session(
+>  
+>  
+>  /*----------------------------------------------------------------------*/
+> -/* inventory_lasttime_level_lessthan					*/
+> -/*                                                                      */
+> -/* Given a token that refers to a file system, and a level, this returns*/
+> -/* the last time when a session of a lesser level was done.             */
+> -/*                                                                      */
+> -/* returns -1 on error.                                                 */
+> +/* inv_lasttime_level_lessthan						*/
+> +/*									*/
+> +/* Given a file system uuid, token that refers to a file system, and a	*/
+> +/* level, tm is populated with last time when a session of a lesser	*/
+> +/* level was done.							*/
+> +/*									*/
+> +/* Returns TRUE on success.						*/
+>  /*----------------------------------------------------------------------*/
+>  
+>  bool_t
+>  inv_lasttime_level_lessthan( 
+> -	inv_idbtoken_t  tok,
+> -	u_char level,
+> -	time32_t **tm )
+> +	uuid_t		*fsidp,
+> +	inv_idbtoken_t	tok,
+> +	u_char		level,
+> +	time32_t	**tm)
+>  {
+>  	int 	rval;
+>  	if ( tok != INV_TOKEN_NULL ) {
+> -		rval =  search_invt( tok->d_invindex_fd, &level, (void **) tm,
+> -				    (search_callback_t) tm_level_lessthan );
+> +		rval =  search_invt(fsidp, tok->d_invindex_fd, &level,
+> +				    (void **)tm,
+> +				    (search_callback_t)tm_level_lessthan);
+>  
+>  		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
+>  	}
+>  	
+> -	return invmgr_query_all_sessions((void *) &level, /* in */
+> -					 (void **) tm,   /* out */
+> -			       (search_callback_t) tm_level_lessthan); 
+> +	return invmgr_query_all_sessions(fsidp,		 /* fs uuid ptr */
+> +					 (void *)&level, /* in */
+> +					 (void **)tm,	 /* out */
+> +			       (search_callback_t)tm_level_lessthan);
+>  }
+>  
+> -
+> -
+> -
+> -
+>  /*----------------------------------------------------------------------*/
+> -/*                                                                      */
+> -/*                                                                      */
+> -/*                                                                      */
+> +/* inv_lastsession_level_lessthan					*/
+> +/*									*/
+> +/* Given a file system uuid, token that refers to a file system, and a	*/
+> +/* level, ses is populated with a session of lesser than the level	*/
+> +/* passed in.								*/
+> +/*									*/
+> +/* Returns FALSE on an error, TRUE if not. If (*ses) is NULL, then the	*/
+> +/* search failed.                                                       */
+>  /*----------------------------------------------------------------------*/
+>  
+>  bool_t
+>  inv_lastsession_level_lessthan( 
+> -	inv_idbtoken_t 	tok,
+> +	uuid_t		*fsidp,
+> +	inv_idbtoken_t	tok,
+>  	u_char		level,
+> -	inv_session_t 	**ses )
+> +	inv_session_t	**ses)
+>  {
+>  	int 	rval;
+>  	if ( tok != INV_TOKEN_NULL ) {
+> -		rval = search_invt( tok->d_invindex_fd, &level, (void **) ses, 
+> -				   (search_callback_t) lastsess_level_lessthan );
+> +		rval = search_invt(fsidp, tok->d_invindex_fd, &level,
+> +				   (void **)ses,
+> +				   (search_callback_t)lastsess_level_lessthan);
+>  
+>  		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
+>  	}
+>  
+> -	return invmgr_query_all_sessions((void *) &level, /* in */
+> -					 (void **) ses,   /* out */
+> -			       (search_callback_t) lastsess_level_lessthan);
+> +	return invmgr_query_all_sessions(fsidp		 /* fs uuid */
 
-Can you please pull the XFS updates from the tag below? There isn't
-a whole lot to this update - it's mostly bug fixes and they are
-spread pretty much all over XFS. There are some corruption fixes,
-some fixes for log recovery, some fixes that prevent unount from
-hanging, a lockdep annotation rework for inode locking to prevent
-false positives and the usual random bunch of cleanups and minor
-improvements.
+This doesn't compile because of a missing comma after fsidp above.
 
-There is a merge conflict with your current tree in
-fs/xfs/xfs_aops.c. The merge diff in my tree is this:
+> +					 (void *)&level, /* in */
+> +					 (void **)ses,	 /* out */
+> +			       (search_callback_t)lastsess_level_lessthan);
+>  
+>  }
+>  
+> -
+> -
+> -
+>  /*----------------------------------------------------------------------*/
+> -/*                                                                      */
+> -/*                                                                      */
+> +/* inv_lastsession_level_equalto					*/
+> +/*									*/
+> +/* Given a file system uuid, token that refers to a file system, and a	*/
+> +/* level, this populates ses with last time when a session of a lesser	*/
+> +/* level was done.							*/
+> +/*									*/
+>  /* Return FALSE on an error, TRUE if not. If (*ses) is NULL, then the   */
+>  /* search failed.                                                       */
+>  /*----------------------------------------------------------------------*/
+> @@ -666,21 +675,24 @@ inv_lastsession_level_lessthan(
+>  
+>  bool_t
+>  inv_lastsession_level_equalto( 
+> -	inv_idbtoken_t 	tok,			    
+> +	uuid_t		*fsidp,
+> +	inv_idbtoken_t	tok,
+>  	u_char		level,
+>  	inv_session_t	**ses )
+>  {
+>  	int 	rval;
+>  	if ( tok != INV_TOKEN_NULL ) {
+> -		rval = search_invt( tok->d_invindex_fd, &level, (void **) ses, 
+> -				   (search_callback_t) lastsess_level_equalto );
+> +		rval = search_invt(fsidp, tok->d_invindex_fd, &level,
+> +				   (void **)ses,
+> +				   (search_callback_t)lastsess_level_equalto);
+>  
+>  		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
+>  	}
+>  	
+> -	return invmgr_query_all_sessions((void *) &level, /* in */
+> -					 (void **) ses,   /* out */
+> -			       (search_callback_t) lastsess_level_equalto);
+> +	return invmgr_query_all_sessions(fsidp,		 /* fs uuid */
+> +					 (void *)&level, /* in */
+> +					 (void **)ses,	 /* out */
+> +			       (search_callback_t)lastsess_level_equalto);
+>  
+>  }
+>  
+> @@ -688,35 +700,45 @@ inv_lastsession_level_equalto(
+>  /*----------------------------------------------------------------------*/
+>  /* inv_getsession_byuuid                                                */
+>  /*                                                                      */
+> +/* Given a file system uuid and a session uuid , ses is populated with	*/
+> +/* the session that contains the matching system uuid.			*/
+> +/*									*/
+> +/* Returns FALSE on an error, TRUE if the session was found.		*/
+>  /*----------------------------------------------------------------------*/
+>  
+>  bool_t
+>  inv_get_session_byuuid(
+> -	uuid_t	*sesid,
+> -	inv_session_t **ses)
+> +	uuid_t		*fsidp,
+> +	uuid_t		*sesid,
+> +	inv_session_t	**ses)
+>  {
+>  
+> -	return (invmgr_query_all_sessions((void *)sesid, /* in */
+> -					  (void **) ses, /* out */
+> -			       (search_callback_t) stobj_getsession_byuuid));
+> +	return invmgr_query_all_sessions(fsidp,		/* fs uuid */
+> +					 (void *)sesid, /* in */
+> +					 (void **)ses,	/* out */
+> +			       (search_callback_t)stobj_getsession_byuuid);
+>  }
+>  
+> -
+> -
+>  /*----------------------------------------------------------------------*/
+> -/* inv_getsession_byuuid                                                */
+> +/* inv_getsession_bylabel						*/
+>  /*                                                                      */
+> +/* Given a file system uuid and a session uuid, ses is populated with	*/
+> +/* the session that contains the matching system label.			*/
+> +/*									*/
+> +/* Returns FALSE on an error, TRUE if the session was found.		*/
+>  /*----------------------------------------------------------------------*/
+>  
+>  bool_t
+>  inv_get_session_bylabel(
+> -	char *session_label,
+> -	inv_session_t **ses)
+> +	uuid_t		*fsidp,
+> +	char		*session_label,
+> +	inv_session_t	**ses)
+>  {
+>  
+> -	return (invmgr_query_all_sessions((void *)session_label, /* in */
+> -					  (void **) ses, /* out */
+> -			       (search_callback_t) stobj_getsession_bylabel));
+> +	return invmgr_query_all_sessions(fsidp,			/* fs uuid */
+> +					 (void *)session_label, /* in */
+> +					 (void **)ses,		/* out */
+> +			       (search_callback_t)stobj_getsession_bylabel);
+>  }
+>  
+>  
+> @@ -786,8 +808,8 @@ inv_delete_mediaobj( uuid_t *moid )
+>  			return BOOL_FALSE;
+>  		}
+>  
+> -		if ( search_invt( invfd, NULL, (void **)&moid, 
+> -				  (search_callback_t) stobj_delete_mobj )
+> +		if (search_invt(&arr[i].ft_uuid, invfd, NULL, (void **)&moid,
+> +				(search_callback_t)stobj_delete_mobj)
+>  		    < 0 )
+>  			return BOOL_FALSE;
+>  		/* we have to delete the session, etc */
+> Index: b/inventory/inv_mgr.c
+> ===================================================================
+> --- a/inventory/inv_mgr.c
+> +++ b/inventory/inv_mgr.c
+> @@ -134,8 +134,9 @@ get_sesstoken( inv_idbtoken_t tok )
+>  /*---------------------------------------------------------------------------*/
+>  bool_t
+>  invmgr_query_all_sessions (
+> -	void *inarg,
+> -	void **outarg,
+> +	uuid_t		  *fsidp,
+> +	void 		  *inarg,
+> +	void 		  **outarg,
+>  	search_callback_t func)
+>  {
+>  	invt_counter_t *cnt;
+> @@ -145,6 +146,7 @@ invmgr_query_all_sessions (
+>  	int result;
+>  	inv_oflag_t forwhat = INV_SEARCH_ONLY;
+>  	void *objectfound;
+> +	bool_t ret = BOOL_FALSE;
+>  
+>  	/* if on return, this is still null, the search failed */
+>  	*outarg = NULL; 
+> @@ -157,7 +159,7 @@ invmgr_query_all_sessions (
+>  	}
+>  	if ( fd < 0 || numfs <= 0 ) {
+>  		mlog( MLOG_NORMAL | MLOG_INV, _("INV: Error in fstab\n") );
+> -		return BOOL_FALSE;
+> +		return ret;
+>  	}
+>  	
+>  	close( fd );
+> @@ -169,7 +171,7 @@ invmgr_query_all_sessions (
+>  			mlog( MLOG_NORMAL | MLOG_INV, _(
+>  			     "INV: Cant get inv-name for uuid\n")
+>  			     );
+> -			return BOOL_FALSE;
+> +			continue;
+>  		}
+>  		strcat( fname, INV_INVINDEX_PREFIX );
+>  		invfd = open( fname, INV_OFLAG(forwhat) );
+> @@ -178,26 +180,27 @@ invmgr_query_all_sessions (
+>  			     "INV: Open failed on %s\n"),
+>  			     fname
+>  			     );
+> -			return BOOL_FALSE;
+> +			continue;
+>  		}
+> -		result = search_invt( invfd, inarg, &objectfound, func );
+> +		result = search_invt(fsidp, invfd, inarg, &objectfound, func);
+>  		close(invfd);		
+>  
+>  		/* if error return BOOL_FALSE */
+>  		if (result < 0) {
+> -			return BOOL_FALSE;
+> +			return ret;
 
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@@ -353,7 -356,8 +353,8 @@@ xfs_end_bio
-  {
-  	xfs_ioend_t		*ioend = bio->bi_private;
-  
-- 	ioend->io_error = bio->bi_error;
- -	if (!ioend->io_error && !test_bit(BIO_UPTODATE, &bio->bi_flags))
- -		ioend->io_error = error;
-++	if (!ioend->io_error)
-++		ioend->io_error = bio->bi_error;
-  
-  	/* Toss bio and pass work off to an xfsdatad thread */
-  	bio->bi_private = NULL;
+Should this always return false? It's now possible to return true if an
+error occurs after we've found one object.
 
--Dave.
+The rest seems Ok to me.
 
-The following changes since commit bc0195aad0daa2ad5b0d76cce22b167bc3435590:
+Brian
 
-  Linux 4.2-rc2 (2015-07-12 15:10:30 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.3
-
-for you to fetch changes up to 5d54b8cdeaf4679c51a510dea3f8921992d0b064:
-
-  Merge branch 'xfs-misc-fixes-for-4.3-4' into for-next (2015-09-01 10:30:11 +1000)
-
-----------------------------------------------------------------
-
-xfs: updates for 4.3-rc1
-
-This update contains:
-o large rework of EFI/EFD lifecycle handling to fix log recovery corruption
-  issues, crashes and unmount hangs
-o separate metadata UUID on disk to enable changing boot label UUID for v5
-  filesystems
-o fixes for gcc miscompilation on certain platforms and optimisation levels
-o remote attribute allocation and recovery corruption fixes
-o inode lockdep annotation rework to fix bugs with too many subclasses
-o directory inode locking changes to prevent lockdep false positives
-o a handful of minor corruption fixes
-o various other small cleanups and bug fixes
-
-----------------------------------------------------------------
-Brian Foster (18):
-      xfs: close xc_cil list_empty() races with cil commit sequence
-      xfs: validate transaction header length on log recovery
-      xfs: disentagle EFI release from the extent count
-      xfs: return committed status from xfs_trans_roll()
-      xfs: fix efi/efd error handling to avoid fs shutdown hangs
-      xfs: ensure EFD trans aborts on log recovery extent free failure
-      xfs: use EFI refcount consistently in log recovery
-      xfs: don't leave EFIs on AIL on mount failure
-      xfs: icreate log item recovery and cancellation tracepoints
-      xfs: fix broken icreate log item cancellation
-      xfs: checksum log record ext headers based on record size
-      xfs: clean up root inode properly on mount failure
-      xfs: fix btree cursor error cleanups
-      xfs: add helper to conditionally remove items from the AIL
-      xfs: add missing bmap cancel calls in error paths
-      xfs: relocate sparse inode mount warning
-      xfs: swap leaf buffer into path struct atomically during path shift
-      xfs: flush entire file on dio read/write to cached file
-
-Darrick J. Wong (2):
-      libxfs: readahead of dir3 data blocks should use the read verifier
-      libxfs: bad magic number should set da block buffer error
-
-Dave Chinner (20):
-      xfs: call dax_fault on read page faults for DAX
-      xfs: remote attribute headers contain an invalid LSN
-      xfs: remote attributes need to be considered data
-      xfs: xfs_bunmapi() does not need XFS_BMAPI_METADATA flag
-      libxfs: add xfs_bit.c
-      Merge branch 'xfs-misc-fixes-for-4.3' into for-next
-      Merge branch 'xfs-meta-uuid' into for-next
-      Merge branch 'xfs-efi-rework' into for-next
-      xfs: fix sb_meta_uuid usage
-      xfs: growfs not aware of sb_meta_uuid
-      xfs: log recovery needs to validate against sb_meta_uuid
-      xfs: dquots should be stamped with sb_meta_uuid
-      xfs: clean up inode lockdep annotations
-      xfs: stop holding ILOCK over filldir callbacks
-      xfs: inode lockdep annotations broke non-lockdep build
-      Merge branch 'xfs-misc-fixes-for-4.3-2' into for-next
-      xfs: lockdep annotations throw warnings on non-debug builds
-      xfs: fix non-debug build warnings
-      Merge branch 'xfs-misc-fixes-for-4.3-3' into for-next
-      Merge branch 'xfs-misc-fixes-for-4.3-4' into for-next
-
-David Jeffery (1):
-      xfs: return errors from partial I/O failures to files
-
-Eric Sandeen (4):
-      xfs: create new metadata UUID field and incompat flag
-      xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
-      xfs: collapse allocsize and biosize mount option handling
-      xfs: fix error gotos in xfs_setattr_nonsize
-
-Jan Kara (4):
-      xfs: Remove duplicate jumps to the same label
-      xfs: Fix xfs_attr_leafblock definition
-      xfs: Fix uninitialized return value in xfs_alloc_fix_freelist()
-      xfs: Fix file type directory corruption for btree directories
-
-Joe Perches (1):
-      xfs: Use consistent logging message prefixes
-
-Lucas Stach (1):
-      xfs: add mssing inode cache attempts counter increment
-
- fs/dax.c                           |   14 ++-
- fs/xfs/Makefile                    |    2 +-
- fs/xfs/libxfs/xfs_alloc.c          |    6 +-
- fs/xfs/libxfs/xfs_alloc_btree.c    |    4 +-
- fs/xfs/libxfs/xfs_attr.c           |    2 +
- fs/xfs/libxfs/xfs_attr_leaf.c      |    4 +-
- fs/xfs/libxfs/xfs_attr_remote.c    |   53 ++++++---
- fs/xfs/{ => libxfs}/xfs_bit.c      |    0
- fs/xfs/libxfs/xfs_bmap.c           |    1 +
- fs/xfs/libxfs/xfs_bmap_btree.c     |    5 +-
- fs/xfs/libxfs/xfs_btree.c          |   10 +-
- fs/xfs/libxfs/xfs_da_btree.c       |   32 ++---
- fs/xfs/libxfs/xfs_da_format.h      |   11 +-
- fs/xfs/libxfs/xfs_dir2.c           |   36 +++---
- fs/xfs/libxfs/xfs_dir2_block.c     |    4 +-
- fs/xfs/libxfs/xfs_dir2_data.c      |    7 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c      |    4 +-
- fs/xfs/libxfs/xfs_dir2_node.c      |   17 ++-
- fs/xfs/libxfs/xfs_dquot_buf.c      |    4 +-
- fs/xfs/libxfs/xfs_format.h         |   22 +++-
- fs/xfs/libxfs/xfs_ialloc.c         |    7 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 +-
- fs/xfs/libxfs/xfs_inode_buf.c      |    4 +-
- fs/xfs/libxfs/xfs_sb.c             |   27 +++--
- fs/xfs/libxfs/xfs_symlink_remote.c |    4 +-
- fs/xfs/xfs_aops.c                  |    3 +-
- fs/xfs/xfs_bmap_util.c             |   87 +++++++-------
- fs/xfs/xfs_buf.c                   |    9 +-
- fs/xfs/xfs_buf_item.c              |   26 +++--
- fs/xfs/xfs_buf_item.h              |    2 +-
- fs/xfs/xfs_dir2_readdir.c          |   11 +-
- fs/xfs/xfs_dquot.c                 |   10 +-
- fs/xfs/xfs_extfree_item.c          |  105 +++++++----------
- fs/xfs/xfs_extfree_item.h          |   26 ++++-
- fs/xfs/xfs_file.c                  |   72 +++++++-----
- fs/xfs/xfs_fsops.c                 |    6 +-
- fs/xfs/xfs_icache.c                |    2 +
- fs/xfs/xfs_inode.c                 |  141 +++++++++++++++-------
- fs/xfs/xfs_inode.h                 |   85 +++++++++-----
- fs/xfs/xfs_inode_item.c            |   11 +-
- fs/xfs/xfs_iops.c                  |    8 +-
- fs/xfs/xfs_itable.c                |    3 +-
- fs/xfs/xfs_log.c                   |   87 +++++++++-----
- fs/xfs/xfs_log.h                   |    1 +
- fs/xfs/xfs_log_cil.c               |    8 +-
- fs/xfs/xfs_log_priv.h              |    2 +
- fs/xfs/xfs_log_recover.c           |  227 ++++++++++++++++++++++++++++--------
- fs/xfs/xfs_mount.c                 |   28 +++--
- fs/xfs/xfs_rtalloc.c               |   57 ++++-----
- fs/xfs/xfs_super.c                 |   16 +--
- fs/xfs/xfs_symlink.c               |    9 +-
- fs/xfs/xfs_trace.h                 |   34 ++++++
- fs/xfs/xfs_trans.c                 |   15 ++-
- fs/xfs/xfs_trans.h                 |    9 +-
- fs/xfs/xfs_trans_extfree.c         |   32 +++--
- fs/xfs/xfs_trans_priv.h            |   15 +++
- 56 files changed, 930 insertions(+), 499 deletions(-)
- rename fs/xfs/{ => libxfs}/xfs_bit.c (100%)
--- 
-Dave Chinner
-david@fromorbit.com
+>  		} else if ((result == 1) && *outarg) {
+>  			/* multiple entries found,  more info needed */
+>  			*outarg = NULL;
+>  			return BOOL_TRUE;
+>  		} else if (result == 1) {
+>  			*outarg = objectfound;
+> +			ret = BOOL_TRUE;
+>  		}
+>  	}
+>  	
+>  	/* return val indicates if there was an error or not. *buf
+>  	   says whether the search was successful */
+> -	return BOOL_TRUE;
+> +	return ret;
+>  }
+>  
+>  
+> @@ -213,10 +216,11 @@ invmgr_query_all_sessions (
+>  
+>  intgen_t
+>  search_invt( 
+> -	int 			invfd,
+> -	void 			*arg, 
+> -	void 			**buf,
+> -	search_callback_t 	do_chkcriteria )
+> +	uuid_t			*fsidp,
+> +	int			invfd,
+> +	void			*arg,
+> +	void			**buf,
+> +	search_callback_t	do_chkcriteria)
+>  {
+>  
+>  	int 		fd, i;
+> @@ -247,7 +251,7 @@ search_invt(
+>  	/* we need to get all the invindex headers and seshdrs in reverse
+>  	   order */
+>  	for (i = nindices - 1; i >= 0; i--) {
+> -		int 			nsess;
+> +		int			nsess, j;
+>  		invt_sescounter_t 	*scnt = NULL;
+>  		invt_seshdr_t		*harr = NULL;
+>  		bool_t                  found;
+> @@ -272,19 +276,34 @@ search_invt(
+>  		}
+>  		free ( scnt );
+>  
+> -		while ( nsess ) {
+> +		for (j = nsess - 1; j >= 0; j--) {
+> +			invt_session_t ses;
+> +
+>  			/* fd is kept locked until we return from the 
+>  			   callback routine */
+>  
+>  			/* Check to see if this session has been pruned 
+>  			 * by xfsinvutil before checking it. 
+>  			 */
+> -			if ( harr[nsess - 1].sh_pruned ) {
+> -				--nsess;
+> +			if (harr[j].sh_pruned) {
+>  				continue;
+>  			}
+> -			found = (* do_chkcriteria ) ( fd, &harr[ --nsess ],
+> -						      arg, buf );
+> +
+> +			/* if we need to check the fs uuid's and they don't
+> +			 * match or we fail to get the session record,
+> +			 * then keep looking
+> +			 */
+> +			if (fsidp) {
+> +				int ret = GET_REC_NOLOCK(fd, &ses,
+> +						         sizeof(invt_session_t),
+> +						         harr[j].sh_sess_off);
+> +				if (ret < 0)
+> +					return ret;
+> +				if (uuid_compare(ses.s_fsid, *fsidp))
+> +					continue;
+> +			}
+> +
+> +			found = (* do_chkcriteria)(fd, &harr[j], arg, buf);
+>  			if (! found ) continue;
+>  			
+>  			/* we found what we need; just return */
+> Index: b/inventory/inv_priv.h
+> ===================================================================
+> --- a/inventory/inv_priv.h
+> +++ b/inventory/inv_priv.h
+> @@ -548,11 +548,12 @@ get_headerinfo( int fd, void **hdrs, voi
+>  	        size_t hdrsz, size_t cntsz, bool_t doblock );
+>  
+>  bool_t
+> -invmgr_query_all_sessions (void *inarg,	void **outarg, search_callback_t func);
+> +invmgr_query_all_sessions(uuid_t *fsidp, void *inarg, void **outarg,
+> +			  search_callback_t func);
+>  
+>  intgen_t
+> -search_invt( int invfd, void *arg, void **buf, 
+> -	    search_callback_t do_chkcriteria );
+> +search_invt(uuid_t *fsidp, int invfd, void *arg, void **buf,
+> +	    search_callback_t do_chkcriteria);
+>  intgen_t
+>  invmgr_inv_print( int invfd, invt_pr_ctx_t *prctx);
+>  
+> Index: b/inventory/inventory.h
+> ===================================================================
+> --- a/inventory/inventory.h
+> +++ b/inventory/inventory.h
+> @@ -247,32 +247,37 @@ inv_put_mediafile(
+>   */
+>  extern bool_t
+>  inv_lasttime_level_lessthan( 
+> +	uuid_t			*fsidp,
+>  	inv_idbtoken_t 		tok,
+> -	u_char  		level,
+> -	time32_t		**time );/* out */
+> +	u_char			level,
+> +	time32_t		**time); /* out */
+>  
+>  extern bool_t
+>  inv_lastsession_level_lessthan( 
+> +	uuid_t			*fsidp,
+>  	inv_idbtoken_t 		tok,			     
+>  	u_char  		level,
+> -	inv_session_t		**ses );/* out */
+> +	inv_session_t		**ses); /* out */
+>  
+>  extern bool_t
+>  inv_lastsession_level_equalto( 
+> +	uuid_t			*fsidp,
+>  	inv_idbtoken_t 		tok,			     
+>  	u_char  		level,
+> -	inv_session_t		**ses );/* out */
+> +	inv_session_t		**ses); /* out */
+>  
+>  /* Given a uuid of a session, return the session structure.*/
+>  extern bool_t
+>  inv_get_session_byuuid(
+> -	uuid_t	*sesid,
+> -	inv_session_t **ses);
+> +	uuid_t		*fsidp,
+> +	uuid_t		*sesid,
+> +	inv_session_t	**ses);
+>  
+>  extern bool_t
+>  inv_get_session_bylabel(
+> -	char *session_label,
+> -	inv_session_t **ses);
+> +	uuid_t		*fsidp,
+> +	char		*session_label,
+> +	inv_session_t	**ses);
+>  
+>  
+>  /* on return, *ses is NULL */
+> Index: b/restore/content.c
+> ===================================================================
+> --- a/restore/content.c
+> +++ b/restore/content.c
+> @@ -2179,8 +2179,9 @@ content_stream_restore( ix_t thrdix )
+>  		if ( ! drivep->d_isnamedpipepr
+>  		     &&
+>  		     ! drivep->d_isunnamedpipepr ) {
+> -			ok = inv_get_session_byuuid( &grhdrp->gh_dumpid,
+> -						     &sessp );
+> +			ok = inv_get_session_byuuid(NULL,
+> +						    &grhdrp->gh_dumpid,
+> +						    &sessp);
+>  			if ( ok && sessp ) {
+>  				mlog( MLOG_VERBOSE, _(
+>  				      "using online session inventory\n") );
+> @@ -3736,9 +3737,9 @@ Inv_validate_cmdline( void )
+>  	ok = BOOL_FALSE;
+>  	sessp = 0;
+>  	if ( tranp->t_reqdumpidvalpr ) {
+> -		ok = inv_get_session_byuuid( &tranp->t_reqdumpid, &sessp );
+> +		ok = inv_get_session_byuuid(NULL, &tranp->t_reqdumpid, &sessp);
+>  	} else if ( tranp->t_reqdumplabvalpr ) {
+> -		ok = inv_get_session_bylabel( tranp->t_reqdumplab, &sessp );
+> +		ok = inv_get_session_bylabel(NULL, tranp->t_reqdumplab, &sessp);
+>  	}
+>  	rok = BOOL_FALSE;
+>  	if ( ok && sessp ) {
+> @@ -6812,13 +6813,15 @@ askinvforbaseof( uuid_t baseid, inv_sess
+>  	/* get the base session
+>  	 */
+>  	if ( resumedpr ) {
+> -		ok = inv_lastsession_level_equalto( invtok,
+> -						    ( u_char_t )level,
+> -						    &basesessp );
+> +		ok = inv_lastsession_level_equalto(&sessp->s_fsid,
+> +						    invtok,
+> +						    (u_char_t)level,
+> +						    &basesessp);
+>  	} else {
+> -		ok = inv_lastsession_level_lessthan( invtok,
+> -						     ( u_char_t )level,
+> -						     &basesessp );
+> +		ok = inv_lastsession_level_lessthan(&sessp->s_fsid,
+> +						     invtok,
+> +						     (u_char_t)level,
+> +						     &basesessp);
+>  	}
+>  	if ( ! ok ) {
+>  		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
