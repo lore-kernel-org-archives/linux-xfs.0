@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D42677F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:47:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6FAEFAC003
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 05:47:30 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2334A7F37
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 09:23:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 10BF28F8050
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:23:43 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rFzFb6Sl0Rtbt42Q (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 08 Sep 2015 05:47:28 -0700 (PDT)
-Date: Tue, 8 Sep 2015 08:47:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V3] xfsrestore: fix fs uuid order check for incremental
-	restores
-Message-ID: <20150908124726.GA5305@bfoster.bfoster>
-References: <20150826213133.GB3902@dastard> <55D5FB95.1280108@sgi.com>
-	<20150902132112.GB23587@bfoster.bfoster>
-	<20150903234346.2473A600006AF@gulag1.americas.sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150903234346.2473A600006AF@gulag1.americas.sgi.com>
+	cuda.sgi.com with ESMTP id wBpJHigMxvGZ8LaS (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 07:23:41 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 10/11 v2] xfsprogs: make fsr use mntinfo when there is no
+	mntent
+Date: Tue,  8 Sep 2015 16:23:27 +0200
+Message-Id: <1441722207-9141-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1440590555-20463-10-git-send-email-jtulak@redhat.com>
+References: <1440590555-20463-10-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,587 +24,219 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
 
-On Thu, Sep 03, 2015 at 06:43:46PM -0500, Rich Johnston wrote:
-> Restoring an incremental level 1 dump will fail with the following error
-> if the fs uuid of the most recent level 0 dump in the inventory does not
-> match level 1 dump we are restoring.
-> 
->   xfsrestore: ERROR: selected dump not based on previously applied dump
-> 
-> This can happen when you have multiple filesystems and you are restoring
-> a level 1 or greater dump of filesystem FS1 but the most recent level 0
-> dump in the inventory was filesystem FS2
-> 
-> The fix is to ensure the fs uuid of the inventory entry and the dump to
-> be restored match.
-> 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> ---
-> 
-> Changelog
-> V2 wrong file sent
-> 
-> V3
->  Address review comments from Brian:
-> 
->  fix invmgr_query_all_sessions() returning true if these error cases
->  persist throughout the loop
-> 
->  make if check more readable and less overloaded in search_inv() and
->  return an error if GET_REC_NOLOCK() fails
-> 
->  use NULL instead of (uuid_t *)0 in Inv_validate_cmdline()
-> 
->  remove any spaces around braces of code that was changed
-> 
->  dump/content.c        |   16 +++---
->  inventory/inv_api.c   |  130 +++++++++++++++++++++++++++++---------------------
->  inventory/inv_mgr.c   |   55 ++++++++++++++-------
->  inventory/inv_priv.h  |    7 +-
->  inventory/inventory.h |   21 +++++---
->  restore/content.c     |   23 +++++---
->  6 files changed, 152 insertions(+), 100 deletions(-)
-> 
-> Index: b/dump/content.c
-> ===================================================================
-> --- a/dump/content.c
-> +++ b/dump/content.c
-> @@ -872,7 +872,7 @@ content_init( intgen_t argc,
->  		sameinterruptedpr = BOOL_FALSE;
->  		interruptedpr = BOOL_FALSE;
->  
-> -		ok = inv_get_session_byuuid( &baseuuid, &sessp );
-> +		ok = inv_get_session_byuuid(&fsid, &baseuuid, &sessp);
->  		if ( ! ok ) {
->  			mlog( MLOG_NORMAL | MLOG_ERROR, _(
->  			      "could not find specified base dump (%s) "
-> @@ -983,9 +983,10 @@ content_init( intgen_t argc,
->  			      "online inventory not available\n") );
->  			return BOOL_FALSE;
->  		}
-> -		ok = inv_lastsession_level_lessthan( inv_idbt,
-> -						     ( u_char_t )sc_level,
-> -						     &sessp );
-> +		ok = inv_lastsession_level_lessthan(&fsid,
-> +						    inv_idbt,
-> +						    (u_char_t)sc_level,
-> +						    &sessp);
->  		if ( ! ok ) {
->  			sessp = 0;
->  		}
-> @@ -1022,9 +1023,10 @@ content_init( intgen_t argc,
->  	if ( inv_idbt != INV_TOKEN_NULL ) {
->  		/* REFERENCED */
->  		bool_t ok1;
-> -		ok = inv_lastsession_level_equalto( inv_idbt,
-> -						    ( u_char_t )sc_level,
-> -						    &sessp );
-> +		ok = inv_lastsession_level_equalto(&fsid,
-> +						   inv_idbt,
-> +						   (u_char_t)sc_level,
-> +						   &sessp);
->  		ok1 = inv_close( inv_idbt );
->  		ASSERT( ok1 );
->  		if ( ! ok ) {
-> Index: b/inventory/inv_api.c
-> ===================================================================
-> --- a/inventory/inv_api.c
-> +++ b/inventory/inv_api.c
-> @@ -596,69 +596,78 @@ inv_free_session(
->  
->  
->  /*----------------------------------------------------------------------*/
-> -/* inventory_lasttime_level_lessthan					*/
-> -/*                                                                      */
-> -/* Given a token that refers to a file system, and a level, this returns*/
-> -/* the last time when a session of a lesser level was done.             */
-> -/*                                                                      */
-> -/* returns -1 on error.                                                 */
-> +/* inv_lasttime_level_lessthan						*/
-> +/*									*/
-> +/* Given a file system uuid, token that refers to a file system, and a	*/
-> +/* level, tm is populated with last time when a session of a lesser	*/
-> +/* level was done.							*/
-> +/*									*/
-> +/* Returns TRUE on success.						*/
->  /*----------------------------------------------------------------------*/
->  
->  bool_t
->  inv_lasttime_level_lessthan( 
-> -	inv_idbtoken_t  tok,
-> -	u_char level,
-> -	time32_t **tm )
-> +	uuid_t		*fsidp,
-> +	inv_idbtoken_t	tok,
-> +	u_char		level,
-> +	time32_t	**tm)
->  {
->  	int 	rval;
->  	if ( tok != INV_TOKEN_NULL ) {
-> -		rval =  search_invt( tok->d_invindex_fd, &level, (void **) tm,
-> -				    (search_callback_t) tm_level_lessthan );
-> +		rval =  search_invt(fsidp, tok->d_invindex_fd, &level,
-> +				    (void **)tm,
-> +				    (search_callback_t)tm_level_lessthan);
->  
->  		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
->  	}
->  	
-> -	return invmgr_query_all_sessions((void *) &level, /* in */
-> -					 (void **) tm,   /* out */
-> -			       (search_callback_t) tm_level_lessthan); 
-> +	return invmgr_query_all_sessions(fsidp,		 /* fs uuid ptr */
-> +					 (void *)&level, /* in */
-> +					 (void **)tm,	 /* out */
-> +			       (search_callback_t)tm_level_lessthan);
->  }
->  
-> -
-> -
-> -
-> -
->  /*----------------------------------------------------------------------*/
-> -/*                                                                      */
-> -/*                                                                      */
-> -/*                                                                      */
-> +/* inv_lastsession_level_lessthan					*/
-> +/*									*/
-> +/* Given a file system uuid, token that refers to a file system, and a	*/
-> +/* level, ses is populated with a session of lesser than the level	*/
-> +/* passed in.								*/
-> +/*									*/
-> +/* Returns FALSE on an error, TRUE if not. If (*ses) is NULL, then the	*/
-> +/* search failed.                                                       */
->  /*----------------------------------------------------------------------*/
->  
->  bool_t
->  inv_lastsession_level_lessthan( 
-> -	inv_idbtoken_t 	tok,
-> +	uuid_t		*fsidp,
-> +	inv_idbtoken_t	tok,
->  	u_char		level,
-> -	inv_session_t 	**ses )
-> +	inv_session_t	**ses)
->  {
->  	int 	rval;
->  	if ( tok != INV_TOKEN_NULL ) {
-> -		rval = search_invt( tok->d_invindex_fd, &level, (void **) ses, 
-> -				   (search_callback_t) lastsess_level_lessthan );
-> +		rval = search_invt(fsidp, tok->d_invindex_fd, &level,
-> +				   (void **)ses,
-> +				   (search_callback_t)lastsess_level_lessthan);
->  
->  		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
->  	}
->  
-> -	return invmgr_query_all_sessions((void *) &level, /* in */
-> -					 (void **) ses,   /* out */
-> -			       (search_callback_t) lastsess_level_lessthan);
-> +	return invmgr_query_all_sessions(fsidp		 /* fs uuid */
 
-This doesn't compile because of a missing comma after fsidp above.
+For what fsr needs, mntinfo can be used instead of mntent.
+Custom mntent struct is used to avoid too big ifdefs:
+We only change few lines and the rest of the code can still
+use mntent as before.
 
-> +					 (void *)&level, /* in */
-> +					 (void **)ses,	 /* out */
-> +			       (search_callback_t)lastsess_level_lessthan);
->  
->  }
->  
-> -
-> -
-> -
->  /*----------------------------------------------------------------------*/
-> -/*                                                                      */
-> -/*                                                                      */
-> +/* inv_lastsession_level_equalto					*/
-> +/*									*/
-> +/* Given a file system uuid, token that refers to a file system, and a	*/
-> +/* level, this populates ses with last time when a session of a lesser	*/
-> +/* level was done.							*/
-> +/*									*/
->  /* Return FALSE on an error, TRUE if not. If (*ses) is NULL, then the   */
->  /* search failed.                                                       */
->  /*----------------------------------------------------------------------*/
-> @@ -666,21 +675,24 @@ inv_lastsession_level_lessthan(
->  
->  bool_t
->  inv_lastsession_level_equalto( 
-> -	inv_idbtoken_t 	tok,			    
-> +	uuid_t		*fsidp,
-> +	inv_idbtoken_t	tok,
->  	u_char		level,
->  	inv_session_t	**ses )
->  {
->  	int 	rval;
->  	if ( tok != INV_TOKEN_NULL ) {
-> -		rval = search_invt( tok->d_invindex_fd, &level, (void **) ses, 
-> -				   (search_callback_t) lastsess_level_equalto );
-> +		rval = search_invt(fsidp, tok->d_invindex_fd, &level,
-> +				   (void **)ses,
-> +				   (search_callback_t)lastsess_level_equalto);
->  
->  		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
->  	}
->  	
-> -	return invmgr_query_all_sessions((void *) &level, /* in */
-> -					 (void **) ses,   /* out */
-> -			       (search_callback_t) lastsess_level_equalto);
-> +	return invmgr_query_all_sessions(fsidp,		 /* fs uuid */
-> +					 (void *)&level, /* in */
-> +					 (void **)ses,	 /* out */
-> +			       (search_callback_t)lastsess_level_equalto);
->  
->  }
->  
-> @@ -688,35 +700,45 @@ inv_lastsession_level_equalto(
->  /*----------------------------------------------------------------------*/
->  /* inv_getsession_byuuid                                                */
->  /*                                                                      */
-> +/* Given a file system uuid and a session uuid , ses is populated with	*/
-> +/* the session that contains the matching system uuid.			*/
-> +/*									*/
-> +/* Returns FALSE on an error, TRUE if the session was found.		*/
->  /*----------------------------------------------------------------------*/
->  
->  bool_t
->  inv_get_session_byuuid(
-> -	uuid_t	*sesid,
-> -	inv_session_t **ses)
-> +	uuid_t		*fsidp,
-> +	uuid_t		*sesid,
-> +	inv_session_t	**ses)
->  {
->  
-> -	return (invmgr_query_all_sessions((void *)sesid, /* in */
-> -					  (void **) ses, /* out */
-> -			       (search_callback_t) stobj_getsession_byuuid));
-> +	return invmgr_query_all_sessions(fsidp,		/* fs uuid */
-> +					 (void *)sesid, /* in */
-> +					 (void **)ses,	/* out */
-> +			       (search_callback_t)stobj_getsession_byuuid);
->  }
->  
-> -
-> -
->  /*----------------------------------------------------------------------*/
-> -/* inv_getsession_byuuid                                                */
-> +/* inv_getsession_bylabel						*/
->  /*                                                                      */
-> +/* Given a file system uuid and a session uuid, ses is populated with	*/
-> +/* the session that contains the matching system label.			*/
-> +/*									*/
-> +/* Returns FALSE on an error, TRUE if the session was found.		*/
->  /*----------------------------------------------------------------------*/
->  
->  bool_t
->  inv_get_session_bylabel(
-> -	char *session_label,
-> -	inv_session_t **ses)
-> +	uuid_t		*fsidp,
-> +	char		*session_label,
-> +	inv_session_t	**ses)
->  {
->  
-> -	return (invmgr_query_all_sessions((void *)session_label, /* in */
-> -					  (void **) ses, /* out */
-> -			       (search_callback_t) stobj_getsession_bylabel));
-> +	return invmgr_query_all_sessions(fsidp,			/* fs uuid */
-> +					 (void *)session_label, /* in */
-> +					 (void **)ses,		/* out */
-> +			       (search_callback_t)stobj_getsession_bylabel);
->  }
->  
->  
-> @@ -786,8 +808,8 @@ inv_delete_mediaobj( uuid_t *moid )
->  			return BOOL_FALSE;
->  		}
->  
-> -		if ( search_invt( invfd, NULL, (void **)&moid, 
-> -				  (search_callback_t) stobj_delete_mobj )
-> +		if (search_invt(&arr[i].ft_uuid, invfd, NULL, (void **)&moid,
-> +				(search_callback_t)stobj_delete_mobj)
->  		    < 0 )
->  			return BOOL_FALSE;
->  		/* we have to delete the session, etc */
-> Index: b/inventory/inv_mgr.c
-> ===================================================================
-> --- a/inventory/inv_mgr.c
-> +++ b/inventory/inv_mgr.c
-> @@ -134,8 +134,9 @@ get_sesstoken( inv_idbtoken_t tok )
->  /*---------------------------------------------------------------------------*/
->  bool_t
->  invmgr_query_all_sessions (
-> -	void *inarg,
-> -	void **outarg,
-> +	uuid_t		  *fsidp,
-> +	void 		  *inarg,
-> +	void 		  **outarg,
->  	search_callback_t func)
->  {
->  	invt_counter_t *cnt;
-> @@ -145,6 +146,7 @@ invmgr_query_all_sessions (
->  	int result;
->  	inv_oflag_t forwhat = INV_SEARCH_ONLY;
->  	void *objectfound;
-> +	bool_t ret = BOOL_FALSE;
->  
->  	/* if on return, this is still null, the search failed */
->  	*outarg = NULL; 
-> @@ -157,7 +159,7 @@ invmgr_query_all_sessions (
->  	}
->  	if ( fd < 0 || numfs <= 0 ) {
->  		mlog( MLOG_NORMAL | MLOG_INV, _("INV: Error in fstab\n") );
-> -		return BOOL_FALSE;
-> +		return ret;
->  	}
->  	
->  	close( fd );
-> @@ -169,7 +171,7 @@ invmgr_query_all_sessions (
->  			mlog( MLOG_NORMAL | MLOG_INV, _(
->  			     "INV: Cant get inv-name for uuid\n")
->  			     );
-> -			return BOOL_FALSE;
-> +			continue;
->  		}
->  		strcat( fname, INV_INVINDEX_PREFIX );
->  		invfd = open( fname, INV_OFLAG(forwhat) );
-> @@ -178,26 +180,27 @@ invmgr_query_all_sessions (
->  			     "INV: Open failed on %s\n"),
->  			     fname
->  			     );
-> -			return BOOL_FALSE;
-> +			continue;
->  		}
-> -		result = search_invt( invfd, inarg, &objectfound, func );
-> +		result = search_invt(fsidp, invfd, inarg, &objectfound, func);
->  		close(invfd);		
->  
->  		/* if error return BOOL_FALSE */
->  		if (result < 0) {
-> -			return BOOL_FALSE;
-> +			return ret;
+CHANGE
+- subject was: "add dummy mntent for OS X"
+- reduced the stuby code.
 
-Should this always return false? It's now possible to return true if an
-error occurs after we've found one object.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ fsr/Makefile     |  8 +++++++
+ fsr/xfs_fsr.c    | 69 ++++++++++++++++++++++++++++++++++++++++++++++++--------
+ include/darwin.h | 20 ++++++++++++++++
+ 3 files changed, 87 insertions(+), 10 deletions(-)
 
-The rest seems Ok to me.
-
-Brian
-
->  		} else if ((result == 1) && *outarg) {
->  			/* multiple entries found,  more info needed */
->  			*outarg = NULL;
->  			return BOOL_TRUE;
->  		} else if (result == 1) {
->  			*outarg = objectfound;
-> +			ret = BOOL_TRUE;
->  		}
->  	}
->  	
->  	/* return val indicates if there was an error or not. *buf
->  	   says whether the search was successful */
-> -	return BOOL_TRUE;
-> +	return ret;
->  }
->  
->  
-> @@ -213,10 +216,11 @@ invmgr_query_all_sessions (
->  
->  intgen_t
->  search_invt( 
-> -	int 			invfd,
-> -	void 			*arg, 
-> -	void 			**buf,
-> -	search_callback_t 	do_chkcriteria )
-> +	uuid_t			*fsidp,
-> +	int			invfd,
-> +	void			*arg,
-> +	void			**buf,
-> +	search_callback_t	do_chkcriteria)
->  {
->  
->  	int 		fd, i;
-> @@ -247,7 +251,7 @@ search_invt(
->  	/* we need to get all the invindex headers and seshdrs in reverse
->  	   order */
->  	for (i = nindices - 1; i >= 0; i--) {
-> -		int 			nsess;
-> +		int			nsess, j;
->  		invt_sescounter_t 	*scnt = NULL;
->  		invt_seshdr_t		*harr = NULL;
->  		bool_t                  found;
-> @@ -272,19 +276,34 @@ search_invt(
->  		}
->  		free ( scnt );
->  
-> -		while ( nsess ) {
-> +		for (j = nsess - 1; j >= 0; j--) {
-> +			invt_session_t ses;
-> +
->  			/* fd is kept locked until we return from the 
->  			   callback routine */
->  
->  			/* Check to see if this session has been pruned 
->  			 * by xfsinvutil before checking it. 
->  			 */
-> -			if ( harr[nsess - 1].sh_pruned ) {
-> -				--nsess;
-> +			if (harr[j].sh_pruned) {
->  				continue;
->  			}
-> -			found = (* do_chkcriteria ) ( fd, &harr[ --nsess ],
-> -						      arg, buf );
-> +
-> +			/* if we need to check the fs uuid's and they don't
-> +			 * match or we fail to get the session record,
-> +			 * then keep looking
-> +			 */
-> +			if (fsidp) {
-> +				int ret = GET_REC_NOLOCK(fd, &ses,
-> +						         sizeof(invt_session_t),
-> +						         harr[j].sh_sess_off);
-> +				if (ret < 0)
-> +					return ret;
-> +				if (uuid_compare(ses.s_fsid, *fsidp))
-> +					continue;
-> +			}
-> +
-> +			found = (* do_chkcriteria)(fd, &harr[j], arg, buf);
->  			if (! found ) continue;
->  			
->  			/* we found what we need; just return */
-> Index: b/inventory/inv_priv.h
-> ===================================================================
-> --- a/inventory/inv_priv.h
-> +++ b/inventory/inv_priv.h
-> @@ -548,11 +548,12 @@ get_headerinfo( int fd, void **hdrs, voi
->  	        size_t hdrsz, size_t cntsz, bool_t doblock );
->  
->  bool_t
-> -invmgr_query_all_sessions (void *inarg,	void **outarg, search_callback_t func);
-> +invmgr_query_all_sessions(uuid_t *fsidp, void *inarg, void **outarg,
-> +			  search_callback_t func);
->  
->  intgen_t
-> -search_invt( int invfd, void *arg, void **buf, 
-> -	    search_callback_t do_chkcriteria );
-> +search_invt(uuid_t *fsidp, int invfd, void *arg, void **buf,
-> +	    search_callback_t do_chkcriteria);
->  intgen_t
->  invmgr_inv_print( int invfd, invt_pr_ctx_t *prctx);
->  
-> Index: b/inventory/inventory.h
-> ===================================================================
-> --- a/inventory/inventory.h
-> +++ b/inventory/inventory.h
-> @@ -247,32 +247,37 @@ inv_put_mediafile(
->   */
->  extern bool_t
->  inv_lasttime_level_lessthan( 
-> +	uuid_t			*fsidp,
->  	inv_idbtoken_t 		tok,
-> -	u_char  		level,
-> -	time32_t		**time );/* out */
-> +	u_char			level,
-> +	time32_t		**time); /* out */
->  
->  extern bool_t
->  inv_lastsession_level_lessthan( 
-> +	uuid_t			*fsidp,
->  	inv_idbtoken_t 		tok,			     
->  	u_char  		level,
-> -	inv_session_t		**ses );/* out */
-> +	inv_session_t		**ses); /* out */
->  
->  extern bool_t
->  inv_lastsession_level_equalto( 
-> +	uuid_t			*fsidp,
->  	inv_idbtoken_t 		tok,			     
->  	u_char  		level,
-> -	inv_session_t		**ses );/* out */
-> +	inv_session_t		**ses); /* out */
->  
->  /* Given a uuid of a session, return the session structure.*/
->  extern bool_t
->  inv_get_session_byuuid(
-> -	uuid_t	*sesid,
-> -	inv_session_t **ses);
-> +	uuid_t		*fsidp,
-> +	uuid_t		*sesid,
-> +	inv_session_t	**ses);
->  
->  extern bool_t
->  inv_get_session_bylabel(
-> -	char *session_label,
-> -	inv_session_t **ses);
-> +	uuid_t		*fsidp,
-> +	char		*session_label,
-> +	inv_session_t	**ses);
->  
->  
->  /* on return, *ses is NULL */
-> Index: b/restore/content.c
-> ===================================================================
-> --- a/restore/content.c
-> +++ b/restore/content.c
-> @@ -2179,8 +2179,9 @@ content_stream_restore( ix_t thrdix )
->  		if ( ! drivep->d_isnamedpipepr
->  		     &&
->  		     ! drivep->d_isunnamedpipepr ) {
-> -			ok = inv_get_session_byuuid( &grhdrp->gh_dumpid,
-> -						     &sessp );
-> +			ok = inv_get_session_byuuid(NULL,
-> +						    &grhdrp->gh_dumpid,
-> +						    &sessp);
->  			if ( ok && sessp ) {
->  				mlog( MLOG_VERBOSE, _(
->  				      "using online session inventory\n") );
-> @@ -3736,9 +3737,9 @@ Inv_validate_cmdline( void )
->  	ok = BOOL_FALSE;
->  	sessp = 0;
->  	if ( tranp->t_reqdumpidvalpr ) {
-> -		ok = inv_get_session_byuuid( &tranp->t_reqdumpid, &sessp );
-> +		ok = inv_get_session_byuuid(NULL, &tranp->t_reqdumpid, &sessp);
->  	} else if ( tranp->t_reqdumplabvalpr ) {
-> -		ok = inv_get_session_bylabel( tranp->t_reqdumplab, &sessp );
-> +		ok = inv_get_session_bylabel(NULL, tranp->t_reqdumplab, &sessp);
->  	}
->  	rok = BOOL_FALSE;
->  	if ( ok && sessp ) {
-> @@ -6812,13 +6813,15 @@ askinvforbaseof( uuid_t baseid, inv_sess
->  	/* get the base session
->  	 */
->  	if ( resumedpr ) {
-> -		ok = inv_lastsession_level_equalto( invtok,
-> -						    ( u_char_t )level,
-> -						    &basesessp );
-> +		ok = inv_lastsession_level_equalto(&sessp->s_fsid,
-> +						    invtok,
-> +						    (u_char_t)level,
-> +						    &basesessp);
->  	} else {
-> -		ok = inv_lastsession_level_lessthan( invtok,
-> -						     ( u_char_t )level,
-> -						     &basesessp );
-> +		ok = inv_lastsession_level_lessthan(&sessp->s_fsid,
-> +						     invtok,
-> +						     (u_char_t)level,
-> +						     &basesessp);
->  	}
->  	if ( ! ok ) {
->  		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fsr/Makefile b/fsr/Makefile
+index a9d1bf6..d3521b2 100644
+--- a/fsr/Makefile
++++ b/fsr/Makefile
+@@ -9,6 +9,14 @@ LTCOMMAND = xfs_fsr
+ CFILES = xfs_fsr.c
+ LLDLIBS = $(LIBHANDLE)
+ 
++ifeq ($(HAVE_GETMNTENT),yes)
++LCFLAGS += -DHAVE_GETMNTENT
++endif
++
++ifeq ($(HAVE_GETMNTINFO),yes)
++LCFLAGS += -DHAVE_GETMNTINFO
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 5f95cdc..ff791d3 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -32,8 +32,10 @@
+ #include <sys/statvfs.h>
+ #include <sys/xattr.h>
+ 
+-#ifdef HAVE_MNTENT
++#if defined(HAVE_GETMNTENT)
+ #  include <mntent.h>
++#elif defined(HAVE_GETMNTINFO)
++#  include <sys/mount.h>
+ #endif
+ 
+ #ifdef __APPLE__
+@@ -191,9 +193,10 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ {
+ 	struct mntent *t;
+ 	struct stat64 ms;
+-	FILE *mtabp;
+ 	char *mntp = NULL;
+ 
++#if defined(HAVE_GETMNTENT)
++	FILE *mtabp;
+ 	mtabp = setmntent(mtab, "r");
+ 	if (!mtabp) {
+ 		fprintf(stderr, _("%s: cannot read %s\n"),
+@@ -202,6 +205,27 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ 	}
+ 
+ 	while ((t = getmntent(mtabp))) {
++#elif defined(HAVE_GETMNTINFO)
++	struct statfs	*stats;
++	int error, i, count;
++	// because "t" is a pointer, but we don't need to use
++	// malloc for this usage
++	struct mntent t_tmp;
++	t = &t_tmp;
++
++		
++	error = 0;
++	if ((count = getmntinfo(&stats, 0)) < 0) {
++		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
++				progname, strerror(errno));
++		return 0;
++	}
++
++	for (i = 0; i < count; i++) {
++		mntinfo2mntent(&stats[i], t);
++#else
++# error "How do I extract info about mounted filesystems on this platform?"
++#endif
+ 		if (S_ISDIR(sb->st_mode)) {		/* mount point */
+ 			if (stat64(t->mnt_dir, &ms) < 0)
+ 				continue;
+@@ -233,10 +257,11 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ 		break;
+ 	}
+ 
++#if defined(HAVE_GETMNTENT)
+ 	endmntent(mtabp);
++#endif
+ 	return mntp;
+ }
+-
+ int
+ main(int argc, char **argv)
+ {
+@@ -411,18 +436,11 @@ usage(int ret)
+ static void
+ initallfs(char *mtab)
+ {
+-	FILE *fp;
+ 	struct mntent *mp;
+ 	int mi;
+ 	char *cp;
+ 	struct stat64 sb;
+ 
+-	fp = setmntent(mtab, "r");
+-	if (fp == NULL) {
+-		fsrprintf(_("could not open mtab file: %s\n"), mtab);
+-		exit(1);
+-	}
+-
+ 	/* malloc a number of descriptors, increased later if needed */
+ 	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
+ 		fsrprintf(_("out of memory: %s\n"), strerror(errno));
+@@ -433,7 +451,36 @@ initallfs(char *mtab)
+ 	/* find all rw xfs file systems */
+ 	mi = 0;
+ 	fs = fsbase;
++
++#if defined(HAVE_GETMNTENT)
++	FILE *fp;
++	fp = setmntent(mtab, "r");
++	if (fp == NULL) {
++		fsrprintf(_("could not open mtab file: %s\n"), mtab);
++		exit(1);
++	}
++
+ 	while ((mp = getmntent(fp))) {
++#elif defined(HAVE_GETMNTINFO)
++	struct statfs	*stats;
++	int error, i, count;
++	// because "t" is a pointer, but we don't need to use
++	// malloc for this usage
++	struct mntent mp_tmp;
++	mp = &mp_tmp;
++	error = 0;
++	if ((count = getmntinfo(&stats, 0)) < 0) {
++		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
++				progname, strerror(errno));
++		exit(1);
++	}
++
++	for (i = 0; i < count; i++) {
++		mntinfo2mntent(&stats[i], mp);
++#else
++# error "How do I extract info about mounted filesystems on this platform?"
++#endif
++
+ 		int rw = 0;
+ 
+ 		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
+@@ -485,7 +532,9 @@ initallfs(char *mtab)
+ 	}
+ 	numfs = mi;
+ 	fsend = (fsbase + numfs);
++#if defined(HAVE_GETMNTENT)
+ 	endmntent(fp);
++#endif
+ 	if (numfs == 0) {
+ 		fsrprintf(_("no rw xfs file systems in mtab: %s\n"), mtab);
+ 		exit(0);
+diff --git a/include/darwin.h b/include/darwin.h
+index 288ad1f..0313f46 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -218,7 +218,27 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+ 
+ /* FSR */
+ 
++#  include <sys/mount.h>
++#  include <sys/param.h>
++#include <sys/ucred.h>
++#include <errno.h>
+ #define statvfs64 statfs
+ #define		_PATH_MOUNTED   "/etc/mtab"
+ 
++struct mntent
++{
++	char *mnt_fsname;
++	char *mnt_dir;
++	char *mnt_type;
++	char *mnt_opts;
++	int mnt_freq;
++	int mnt_passno;
++};
++
++static inline void mntinfo2mntent (struct statfs * stats, struct mntent * mnt) {
++	mnt->mnt_fsname = stats->f_mntfromname;
++	mnt->mnt_dir = stats->f_mntonname;
++	mnt->mnt_type = stats->f_fstypename;
++}
++
+ #endif	/* __XFS_DARWIN_H__ */
+-- 
+2.4.5
 
 _______________________________________________
 xfs mailing list
