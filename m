@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C31DB7F37
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 09:43:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AF8888F8050
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 07:43:35 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8BCF07F37
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 12:07:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68202304059
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 10:07:24 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sdonHKVqd1XfxcAT (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kgEKSXPniwzeDyqC (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Sep 2015 07:43:34 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 17D9567
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 14:43:34 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: add missing ilock around dio write last extent alignment
-Date: Wed,  9 Sep 2015 10:43:32 -0400
-Message-Id: <1441809812-60175-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 09 Sep 2015 10:07:23 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id F0530A2C12
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 17:07:22 +0000 (UTC)
+Received: from localhost.localdomain.com (unused [10.10.52.30] (may be forged))
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t89H7Mv8003396
+	for <xfs@oss.sgi.com>; Wed, 9 Sep 2015 13:07:22 -0400
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH 0/4 v6] xfs: new global stats in sysfs
+Date: Wed,  9 Sep 2015 12:06:31 -0500
+Message-Id: <1441818395-11612-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,56 +35,56 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: David Jeffery <djeffery@redhat.com>
 
-The iomap codepath (via get_blocks()) acquires and release the inode
-lock in the case of a direct write that requires block allocation. This
-is because xfs_iomap_write_direct() allocates a transaction, which means
-the ilock must be dropped and reacquired after the transaction is
-allocated and reserved.
 
-xfs_iomap_write_direct() invokes xfs_iomap_eof_align_last_fsb() before
-the transaction is created and thus before the ilock is reacquired. This
-can lead to calls to xfs_iread_extents() and reads of the in-core extent
-list without any synchronization (via xfs_bmap_eof() and
-xfs_bmap_last_extent()). xfs_iread_extents() assert fails if the ilock
-is not held, but this is not currently seen in practice as the current
-callers had already invoked xfs_bmapi_read().
+Hi all-
 
-What has been seen in practice are reports of crashes down in the
-xfs_bmap_eof() codepath on direct writes due to seemingly bogus pointer
-references from xfs_iext_get_ext(). While an explicit reproducer is not
-currently available to confirm the cause of the problem, crash analysis
-and code inspection from David Jeffrey had identified the insufficient
-locking.
+Here is the sixth iteration of the series to add new global stats to sysfs.
+----------history---------------
+v6:
+-patch 4/4: move to_xlog(kobject) to the relevant show/store operations.
+This keeps the xfs_sysfs_object_show/store functions generic. Also,
+with the change, there can be some cleanup of the show/store function
+arguments.
 
-xfs_iomap_eof_align_last_fsb() is called from other contexts with the
-inode lock already held. __xfs_get_blocks() acquires and drops the ilock
-with variable flags. Therefore, take the simple approach to cycle ilock
-around the last extent alignment call from xfs_iomap_write_direct().
+V5:
+-optimization of sysfs_ops function.
+-style fixups
+V4:
+-whitespace fixup of patch 1
+-add patch 4 (sysfs ops consolidation - dbg, stats, log)
+V3:
+-style fixups and removal of extraneous printk.
+V2:
+-style fixups.
+V1:
+--------------------------------
 
-Reported-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iomap.c | 2 ++
- 1 file changed, 2 insertions(+)
+The series provides the beginnings of the infrastructure for per-fs
+stats (in addition to global accumulative stats).
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 1f86033..4d7534e 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -142,7 +142,9 @@ xfs_iomap_write_direct(
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
- 	if ((offset + count) > XFS_ISIZE(ip)) {
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		if (error)
- 			return error;
- 	} else {
--- 
-2.1.0
+We already have per-fs information in /sys, so it makes sense to
+have per-fs stats there too.  As a first step, moving existing
+global stats infrastructure to /sys will allow us to re-use that
+sysfs code for per-fs stats as well.
+
+Patch 1 handles the bring-up and tear down of xfs/stats directory
+structure in sysfs when an fs is mounted. The directory contains
+the stats file and the stats_clear file. The stats file contents mimic
+those of /proc/fs/xfs/stat. The stats_clear file is empty, and much
+like the current stat_clear command, handles the zeroing of the stats
+file when a "1" is echoed to the stats_clear file.
+
+Patch 2 creates the symlink for stats from procfs to sysfs.
+
+Patch 3 removes the now unused portions of procfs for stat.
+
+Patch 4 consolidates the sysfs ops for dbg, stats, log.
+
+Comments/questions welcome.
+
+Thanks-
+Bill
 
 _______________________________________________
 xfs mailing list
