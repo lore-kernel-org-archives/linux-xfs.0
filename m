@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA7C17F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 16:06:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A97838F8033
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 14:06:49 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	m18S2g4T86RjA1xt for <xfs@oss.sgi.com>;
-	Tue, 08 Sep 2015 14:06:47 -0700 (PDT)
-Date: Wed, 9 Sep 2015 07:06:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: consolidate sysfs ops (dbg, stats, log)
-Message-ID: <20150908210644.GK3902@dastard>
-References: <1441734594-4175-1-git-send-email-billodo@redhat.com>
-	<1441734594-4175-5-git-send-email-billodo@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 803D77F37
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 01:54:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42358304032
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 23:54:29 -0700 (PDT)
+Received: from mail-qg0-f41.google.com (mail-qg0-f41.google.com
+	[209.85.192.41]) by cuda.sgi.com with ESMTP id GcsSkU5SUT762dcm
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 08 Sep 2015 23:54:27 -0700 (PDT)
+Received: by qgev79 with SMTP id v79so526286qge.0
+	for <xfs@oss.sgi.com>; Tue, 08 Sep 2015 23:54:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1441734594-4175-5-git-send-email-billodo@redhat.com>
+From: Austin Schuh <austin@peloton-tech.com>
+Date: Tue, 8 Sep 2015 23:54:07 -0700
+Message-ID: <CANGgnMa7jXARYkfCKOgvphunKvVaxRWZcSFgGC1b2m74Dgt+jQ@mail.gmail.com>
+Subject: [RT XFS] BUG from lockdep in xfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,71 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: xfs@oss.sgi.com
+To: rt-users <linux-rt-users@vger.kernel.org>, xfs <xfs@oss.sgi.com>, Philipp Schrader <philipp@peloton-tech.com>, Brian Silverman <brian@peloton-tech.com>, Dave Chinner <david@fromorbit.com>
 
-On Tue, Sep 08, 2015 at 12:49:54PM -0500, Bill O'Donnell wrote:
-> As a part of the series to move xfs global stats from procfs to sysfs,
-> this patch consolidates the sysfs ops functions and removes redundancy.
-> 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> ---
->  fs/xfs/xfs_stats.c |   2 +-
->  fs/xfs/xfs_sysfs.c | 144 +++++++++++++++++------------------------------------
->  2 files changed, 48 insertions(+), 98 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index 05d5227..dc6ca67 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -92,7 +92,7 @@ int xfs_stats_format(char *buf)
->  		0);
->  #endif
->  
-> -return len;
-> +	return len;
->  }
->  
->  void xfs_stats_clearall(void)
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index a094e20..6fd597b 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -54,6 +54,50 @@ struct kobj_type xfs_mp_ktype = {
->  	.release = xfs_sysfs_release,
->  };
->  
-> +static inline struct xlog *
-> +to_xlog(struct kobject *kobject)
-> +{
-> +	struct xfs_kobj *kobj = to_kobj(kobject);
-> +
-> +	return container_of(kobj, struct xlog, l_kobj);
-> +}
-> +
-> +STATIC ssize_t
-> +xfs_sysfs_object_show(
-> +	struct kobject		*kobject,
-> +	struct attribute	*attr,
-> +	char			*buf)
-> +{
-> +	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-> +	struct kobj_type *ktype = get_ktype(kobject);
-> +	void *data = NULL;
-> +
-> +	if (ktype == &xfs_log_ktype)
-> +		data = to_xlog(kobject);
+I'm running xfstests and got the following BUG with lockdep enabled.
+I'm running the 4.1.6-rt5 kernel from TI's tree on a TI ARM chip.
 
-Move the to_xlog(kobject) to the relevant ->show/->store operations
-and just pass the kobject to them. Otherwise we'll end up with a lot
-of non-generic functionality in these functions.
+Any ideas on what could be causing it, or if it is a real problem?
 
-Cheers,
+I see some patches in Dave's latest 4.3 pull request that discuss
+lockdep.  Are there any ones there that are worth backporting to my
+4.1.6 kernel?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+[ 4349.692989] run fstests generic/078 at 2015-09-09 04:58:56
+[ 4357.394974] BUG: looking up invalid subclass: 8
+[ 4357.394979] turning off the locking correctness validator.
+[ 4357.394989] CPU: 0 PID: 22963 Comm: renameat2 Not tainted 4.1.6-rt5+ #9
+[ 4357.394993] Hardware name: Generic DRA74X (Flattened Device Tree)
+[ 4357.395012] [<c00196b8>] (unwind_backtrace) from [<c001515c>]
+(show_stack+0x20/0x24)
+[ 4357.395026] [<c001515c>] (show_stack) from [<c07bb6e0>]
+(dump_stack+0x84/0xa0)
+[ 4357.395038] [<c07bb6e0>] (dump_stack) from [<c009ef0c>]
+(__lock_acquire+0x694/0x1ec0)
+[ 4357.395046] [<c009ef0c>] (__lock_acquire) from [<c00a1014>]
+(lock_acquire+0x10c/0x354)
+[ 4357.395055] [<c00a1014>] (lock_acquire) from [<c00a60ac>]
+(rt_down_write_nested+0x3c/0x4c)
+[ 4357.395069] [<c00a60ac>] (rt_down_write_nested) from [<c03b9874>]
+(xfs_ilock+0x110/0x328)
+[ 4357.395080] [<c03b9874>] (xfs_ilock) from [<c03baa84>]
+(xfs_lock_inodes+0x80/0x1b0)
+[ 4357.395088] [<c03baa84>] (xfs_lock_inodes) from [<c03bede0>]
+(xfs_rename+0x214/0xd24)
+[ 4357.395097] [<c03bede0>] (xfs_rename) from [<c03b7398>]
+(xfs_vn_rename+0x94/0xa8)
+[ 4357.395110] [<c03b7398>] (xfs_vn_rename) from [<c01a9c64>]
+(vfs_rename+0x5c0/0x870)
+[ 4357.395119] [<c01a9c64>] (vfs_rename) from [<c01af684>]
+(SyS_renameat2+0x458/0x48c)
+[ 4357.395130] [<c01af684>] (SyS_renameat2) from [<c0010940>]
+(ret_fast_syscall+0x0/0x54)
+
+Thanks!
+Austin
 
 _______________________________________________
 xfs mailing list
