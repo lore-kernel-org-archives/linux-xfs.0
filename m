@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B58047F37
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C937C7F3F
 	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 14:34:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A246B304062
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 74887AC004
 	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 12:34:17 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id GIFDXEI7CsdefXI5 for <xfs@oss.sgi.com>;
+	ESMTP id naCYAbBbjcCO4qhX for <xfs@oss.sgi.com>;
 	Wed, 09 Sep 2015 12:34:16 -0700 (PDT)
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 09/13] xfs_repair: better checking of v5 attributes
-Date: Wed,  9 Sep 2015 14:34:07 -0500
-Message-Id: <1441827251-13128-10-git-send-email-sandeen@sandeen.net>
+Subject: [PATCH 08/13] xfs_repair: catch bad level/depth in da node
+Date: Wed,  9 Sep 2015 14:34:06 -0500
+Message-Id: <1441827251-13128-9-git-send-email-sandeen@sandeen.net>
 In-Reply-To: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
 References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,39 +29,46 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The commit:
+Two tests added some time ago to dir2.c:
 
-0519f66 xfs_repair: better checking of v5 metadata fields
+44dae5e xfs_repair: test for bad level in dir2 node
+28148f6 xfs_repair: catch bad depth in traverse_int_dir2block
 
-added new corruption checks to dir2.c but missed the similar
-code in attr_repair.c; add that here.
+never made it to the similar tree-walking code in attr_repair.c;
+fix that up here.  The error string details will be fixed up
+later.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by; Eric Sandeen <sandeen@redhat.com>
+
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- repair/attr_repair.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ repair/attr_repair.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 2aafdf6..c8ba484 100644
+index 5ae2356..2aafdf6 100644
 --- a/repair/attr_repair.c
 +++ b/repair/attr_repair.c
-@@ -201,6 +201,15 @@ traverse_int_dablock(xfs_mount_t	*mp,
- 			goto error_out;
- 		}
- 
-+		/* corrupt node; rebuild the dir. */
-+		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
-+			libxfs_putbuf(bp);
-+			do_warn(
-+_("corrupt tree block %u for directory inode %" PRIu64 "\n"),
-+				bno, da_cursor->ino);
-+			goto error_out;
-+		}
-+
- 		if (nodehdr.count > geo->node_ents)  {
- 			do_warn(_("bad record count in inode %" PRIu64 ", "
- 				  "count = %d, max = %d\n"),
+@@ -212,9 +212,17 @@ traverse_int_dablock(xfs_mount_t	*mp,
+ 		/*
+ 		 * maintain level counter
+ 		 */
+-		if (i == -1)
++		if (i == -1) {
+ 			i = da_cursor->active = nodehdr.level;
+-		else  {
++			if (i < 1 || i >= XFS_DA_NODE_MAXDEPTH) {
++				do_warn(
++_("bad header depth for directory inode %" PRIu64 "\n"),
++					da_cursor->ino);
++				libxfs_putbuf(bp);
++				i = -1;
++				goto error_out;
++			}
++		} else  {
+ 			if (nodehdr.level == i - 1)  {
+ 				i--;
+ 			} else  {
 -- 
 1.7.1
 
