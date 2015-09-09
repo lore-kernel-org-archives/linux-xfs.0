@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C8D027F6D
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 14:34:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5AD5B7F72
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 14:34:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B8A378F8049
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D98BAAC004
 	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 12:34:16 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id O8Hhu16bK0F02tqd for <xfs@oss.sgi.com>;
+	ESMTP id BLU3bAEXifQSnZPn for <xfs@oss.sgi.com>;
 	Wed, 09 Sep 2015 12:34:14 -0700 (PDT)
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 02/13] xfs_repair: remove type from da & dir2 cursors
-Date: Wed,  9 Sep 2015 14:34:00 -0500
-Message-Id: <1441827251-13128-3-git-send-email-sandeen@sandeen.net>
+Subject: [PATCH 03/13] xfs_repair: make CRC checking consistent in path
+	verification
+Date: Wed,  9 Sep 2015 14:34:01 -0500
+Message-Id: <1441827251-13128-4-git-send-email-sandeen@sandeen.net>
 In-Reply-To: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
 References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,49 +30,81 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The type field in these cursors is only set (and only
-in the attr code), and it's never read; just remove
-it.
+verify_da_path and verify_dir2_path both take steps to
+re-compute the CRC of the block if it otherwise looks
+ok and no other changes are needed.  They do this inside
+a loop, but the approach differs; verify_da_path expects
+its caller to check the first buffer prior to the loop,
+and verify_dir2_path expects its caller to check the last
+buffer after the loop.
+
+Make this consistent by semi-arbitrarily choosing to make
+verify_da_path (and its caller) match the method used by
+verify_dir2_path, and check the last buffer after the
+loop is done.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- repair/attr_repair.c |    2 --
- repair/dir2.h        |    1 -
- 2 files changed, 0 insertions(+), 3 deletions(-)
+ repair/attr_repair.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
 diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index d63bc87..f29a5bd 100644
+index f29a5bd..aba0782 100644
 --- a/repair/attr_repair.c
 +++ b/repair/attr_repair.c
-@@ -67,7 +67,6 @@ typedef struct da_level_state  {
+@@ -606,6 +606,14 @@ verify_da_path(xfs_mount_t	*mp,
+ 		ASSERT(cursor->level[this_level].dirty == 0 ||
+ 			(cursor->level[this_level].dirty && !no_modify));
  
- typedef struct da_bt_cursor  {
- 	int			active;	/* highest level in tree (# levels-1) */
--	int			type;	/* 0 if dir, 1 if attr */
- 	xfs_ino_t		ino;
- 	xfs_dablk_t		greatest_bno;
- 	xfs_dinode_t		*dip;
-@@ -1477,7 +1476,6 @@ process_node_attr(
- 	 */
- 	memset(&da_cursor, 0, sizeof(da_bt_cursor_t));
- 	da_cursor.active = 0;
--	da_cursor.type = 0;
- 	da_cursor.ino = ino;
- 	da_cursor.dip = dip;
- 	da_cursor.greatest_bno = 0;
-diff --git a/repair/dir2.h b/repair/dir2.h
-index df68d5c..3cc1941 100644
---- a/repair/dir2.h
-+++ b/repair/dir2.h
-@@ -51,7 +51,6 @@ typedef struct dir2_level_state  {
++		/*
++		 * If block looks ok but CRC didn't match, make sure to
++		 * recompute it.
++		 */
++		if (!no_modify &&
++		    cursor->level[this_level].bp->b_error == -EFSBADCRC)
++			cursor->level[this_level].dirty = 1;
++
+ 		if (cursor->level[this_level].dirty && !no_modify)
+ 			libxfs_writebuf(cursor->level[this_level].bp, 0);
+ 		else
+@@ -618,14 +626,6 @@ verify_da_path(xfs_mount_t	*mp,
+ 		cursor->level[this_level].hashval =
+ 					be32_to_cpu(btree[0].hashval);
+ 		entry = cursor->level[this_level].index = 0;
+-
+-		/*
+-		 * We want to rewrite the buffer on a CRC error seeing as it
+-		 * contains what appears to be a valid node block, but only if
+-		 * we are fixing errors.
+-		 */
+-		if (bp->b_error == -EFSBADCRC && !no_modify)
+-			cursor->level[this_level].dirty++;
+ 	}
+ 	/*
+ 	 * ditto for block numbers
+@@ -1363,8 +1363,6 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 				da_bno, dev_bno, ino);
+ 			goto error_out;
+ 		}
+-		if (bp->b_error == -EFSBADCRC)
+-			repair++;
  
- typedef struct dir2_bt_cursor  {
- 	int			active;	/* highest level in tree (# levels-1) */
--	int			type;	/* 0 if dir, 1 if attr */
- 	xfs_ino_t		ino;
- 	xfs_dablk_t		greatest_bno;
- 	xfs_dinode_t		*dip;
+ 		leaf = bp->b_addr;
+ 		xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
+@@ -1419,6 +1417,12 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 		}
+ 
+ 		current_hashval = greatest_hashval;
++                /*
++		 * If block looks ok but CRC didn't match, make sure to
++		 * recompute it.
++		 */
++		if (!no_modify && bp->b_error == -EFSBADCRC)
++			repair++;
+ 
+ 		if (repair && !no_modify)
+ 			libxfs_writebuf(bp, 0);
 -- 
 1.7.1
 
