@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5ED7C7F37
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 06:49:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 92E6F7F37
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 07:36:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 406D58F8052
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 04:49:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JIbDRCcCGDtZCrUz (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Sep 2015 04:49:18 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 79E0F91DAC
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 11:49:17 +0000 (UTC)
-Date: Wed, 9 Sep 2015 07:49:16 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: simplify /proc teardown & error handling
-Message-ID: <20150909114915.GB30015@bfoster.bfoster>
-References: <55EF3BAE.5010904@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 82CD18F8040
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2015 05:36:18 -0700 (PDT)
+Received: from mail-io0-f170.google.com (mail-io0-f170.google.com
+	[209.85.223.170]) by cuda.sgi.com with ESMTP id
+	bdTlc50tJ5nKNMPf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 09 Sep 2015 05:36:14 -0700 (PDT)
+Received: by iofh134 with SMTP id h134so20016378iof.0
+	for <xfs@oss.sgi.com>; Wed, 09 Sep 2015 05:36:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55EF3BAE.5010904@redhat.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 9 Sep 2015 14:35:54 +0200
+Message-ID: <CACj3i72MONG=8c=t+X=_Ki5cNs_fKgNzPKJ9f70qnnRh8EmQ1g@mail.gmail.com>
+Subject: xfsprogs - debug build with -O0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,88 +25,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0123355018538656727=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Sep 08, 2015 at 02:49:02PM -0500, Eric Sandeen wrote:
-> remove_proc_subtree() was added in 3.9, and can be
-> used to simplify our procfile creation error handling
-> and cleanup, removing the nested gotos.  It simply
-> removes fs/xfs and everything created under it.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+--===============0123355018538656727==
+Content-Type: multipart/alternative; boundary=001a113ec2ac6ab04e051f4fba0e
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+--001a113ec2ac6ab04e051f4fba0e
+Content-Type: text/plain; charset=UTF-8
 
-> 
-> This goes after Bill's patches, I just noticed it
-> while reviewing them.
-> 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index 05d5227..009a860 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -168,41 +168,29 @@ int
->  xfs_init_procfs(void)
->  {
->  	if (!proc_mkdir("fs/xfs", NULL))
-> -		goto out;
-> +		return -ENOMEM;
->  
->  	if (!proc_symlink("fs/xfs/stat", NULL,
->  			  "/sys/fs/xfs/stats/stats"))
-> -		goto out_remove_xfs_dir;
-> +		goto out;
->  
->  #ifdef CONFIG_XFS_QUOTA
->  	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
->  			 &xqmstat_proc_fops))
-> -		goto out_remove_stat_file;
-> +		goto out;
->  	if (!proc_create("fs/xfs/xqm", 0, NULL,
->  			 &xqm_proc_fops))
-> -		goto out_remove_xqmstat_file;
-> +		goto out;
->  #endif
->  	return 0;
->  
-> -#ifdef CONFIG_XFS_QUOTA
-> - out_remove_xqmstat_file:
-> -	remove_proc_entry("fs/xfs/xqmstat", NULL);
-> - out_remove_stat_file:
-> -	remove_proc_entry("fs/xfs/stat", NULL);
-> -#endif
-> - out_remove_xfs_dir:
-> -	remove_proc_entry("fs/xfs", NULL);
-> - out:
-> +out:
-> +	remove_proc_subtree("fs/xfs", NULL);
->  	return -ENOMEM;
->  }
->  
->  void
->  xfs_cleanup_procfs(void)
->  {
-> -#ifdef CONFIG_XFS_QUOTA
-> -	remove_proc_entry("fs/xfs/xqm", NULL);
-> -	remove_proc_entry("fs/xfs/xqmstat", NULL);
-> -#endif
-> -	remove_proc_entry("fs/xfs/stat", NULL);
-> -	remove_proc_entry("fs/xfs", NULL);
-> +	remove_proc_subtree("fs/xfs", NULL);
->  }
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Hi all,
+
+Is there a way how to disable compiler optimisation in xfsprogs? It should
+be done with setting env variable OPTIMIZER='-O0', however, even though
+this is mentioned on few places in xfsprogs, it doesn't work and the
+configure file always use "-O2" from autogenerated m4/libtool.m4. Other
+environment variables works as expected.
+
+So far, when in need of debugging, I have been manually replacing -O2 with
+-O0 in configure, but this isn't a good solution. So, is there another way,
+or it is just broken? I find it strange that nobody would mind messed GDB
+outputs... :-)
+
+Cheers,
+Jan
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a113ec2ac6ab04e051f4fba0e
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif">Hi all,</div><div class=3D"gmail_default" style=3D"font=
+-family:arial,helvetica,sans-serif"><br></div><div class=3D"gmail_default" =
+style=3D"font-family:arial,helvetica,sans-serif">Is there a way how to disa=
+ble compiler optimisation in xfsprogs? It should be done with setting env v=
+ariable OPTIMIZER=3D&#39;-O0&#39;, however, even though this is mentioned o=
+n few places in xfsprogs, it doesn&#39;t work and the configure file always=
+ use &quot;-O2&quot; from autogenerated m4/libtool.m4. Other environment va=
+riables works as expected.</div><div class=3D"gmail_default" style=3D"font-=
+family:arial,helvetica,sans-serif"><br></div><div class=3D"gmail_default" s=
+tyle=3D"font-family:arial,helvetica,sans-serif">So far, when in need of deb=
+ugging, I have been manually replacing -O2 with -O0 in configure, but this =
+isn&#39;t a good solution. So, is there another way, or it is just broken? =
+I find it strange that nobody would mind messed GDB outputs... :-)</div><di=
+v class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=
+<br></div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica=
+,sans-serif">Cheers,</div><div class=3D"gmail_default" style=3D"font-family=
+:arial,helvetica,sans-serif">Jan</div><div><br></div>-- <br><div class=3D"g=
+mail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<br></=
+div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@redhat.co=
+m</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank">jan@tulak.me=
+</a></div></div></div></div>
+</div>
+
+--001a113ec2ac6ab04e051f4fba0e--
+
+
+--===============0123355018538656727==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0123355018538656727==--
