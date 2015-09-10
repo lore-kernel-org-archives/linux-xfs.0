@@ -1,30 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EEC5E7F54
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 10:05:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DBB2A304051
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 08:05:28 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id RoD0rxt4HlnDc87k (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 08:05:27 -0700 (PDT)
-Date: Thu, 10 Sep 2015 11:05:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: "This is a bug."
-Message-ID: <20150910150525.GD27863@bfoster.bfoster>
-References: <20150910091834.GC24937@tehanu.it.jyu.fi>
-	<20150910134828.0bdfcc4c@harpe.intellique.com>
-	<20150910115548.GD26847@tehanu.it.jyu.fi>
-	<20150910123030.GG26847@tehanu.it.jyu.fi>
-	<20150910123603.GA27863@bfoster.bfoster>
-	<20150910125441.GA28374@tehanu.it.jyu.fi>
-	<20150910130106.GB27863@bfoster.bfoster>
-	<20150910130530.GB28374@tehanu.it.jyu.fi>
-	<20150910145154.GC27863@bfoster.bfoster>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 03AF57F47
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 12:06:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96424AC00A
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 10:06:10 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id J2hy7ZSYtWCn3D3F for <xfs@oss.sgi.com>;
+	Thu, 10 Sep 2015 10:06:08 -0700 (PDT)
+Received: from Liberator.local (unknown [10.0.0.195])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 0CB2F6371E26
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 11:51:11 -0500 (CDT)
+Subject: Re: [PATCH 0/13] xfs_repair: recombine cut&waste code in
+	dir2.c/attr_repair.c
+References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
+	<20150910092224.GB2613@zion.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <55F1B4FC.5040207@sandeen.net>
+Date: Thu, 10 Sep 2015 11:51:08 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150910145154.GC27863@bfoster.bfoster>
+In-Reply-To: <20150910092224.GB2613@zion.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,81 +34,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Sep 10, 2015 at 10:51:54AM -0400, Brian Foster wrote:
-> On Thu, Sep 10, 2015 at 04:05:30PM +0300, Tapani Tarvainen wrote:
-> > On 10 Sep 09:01, Brian Foster (bfoster@redhat.com) wrote:
-> > 
-> > > > It is 2.5GB so not really nice to mail...
-> > 
-> > > Can you compress it?
-> > 
-> > Ah. Of course, should've done it in the first place.
-> > Still 250MB though:
-> > 
-> > https://huom.it.jyu.fi/tmp/data1.metadump.gz
-> > 
-> 
-> First off, I see ~60MB of corruption output before I even get to the
-> reported repair failure, so this appears to be an extremely severe
-> corruption and I wouldn't be surprised if ultimately beyond repair (not
-> that it matters for you, since you are restoring from backups).
-> 
-> The failure itself is an assert failure against an error return value
-> that appears to have a fallback path, so I'm not really sure why it's
-> there. I tried just removing it to see what happens. It ran to
-> completion, but there was a ton of output, write verifier errors, etc.,
-> so I'm not totally sure how coherent the result is yet. I'll run another
-> repair pass and do some directory traversals and whatnot and see if it
-> explodes...
-> 
+On 9/10/15 4:22 AM, Carlos Maiolino wrote:
+> On Wed, Sep 09, 2015 at 02:33:58PM -0500, Eric Sandeen wrote:
 
-FWIW, the follow up repair did come up clean so it appears (so far) to
-have put the fs back together from a metadata standpoint. That said,
->570k files end up in lost+found and who knows whether the files
-themselves would have contained the expected data once all of the bmaps
-are fixed up and whatnot.
+...
 
-Brian
+>> The last patch fixes up the dir vs. attr text in error messages
+>> and comments.  I do have a question about whether this is ok
+>> for i8n:
+>>
+>> 	printf(_("This string is %s"), _("awesome"));
+> 
+> This should be fine for i18n, I had used it a lot when I added i18n support in
+> gfs2-utils, and _() is the default macro that should embrace every string that
+> needs to be translated. It will be replaced by gettext("awesome"), and there is
+> no problem in using it as printf() argument for format specifiers.
+> 
+> What you should be careful though, is that how these strings will 'look' to the
+> person translating it, which, in most of cases, they are not going to look at
+> the code to get a better meaning of the string. So, the sentences to be
+> translated, should make sense by itself.
+> 
+> 
+> I particularly, don't like much the idea of split strings as you did in the
+> example, exactly because how it might look to the translators, both strings
+> makes the same sentence, but they will show to the translators as completely
+> different strings, and the translator might not be able to find the proper
+> grammatical construction. So, I'd do something like:
+> 
+> printf(funny ? _("This string is awesome") : _("This string is boring")) 
+> 
+> 
+> I know that I might sound picky here, but, this is the best way to avoid weird
+> and non-sense string translations.
 
-> I suspect what's more interesting at this point is what happened to
-> cause this level of corruption? What kind of event lead to this? Was it
-> a pure filesystem crash or some kind of hardware/raid failure?
-> 
-> Also, do you happen to know the geometry (xfs_info) of the original fs?
-> Repair was showing agno's up in the 20k's and now that I've mounted the
-> repaired image, xfs_info shows the following:
-> 
-> meta-data=/dev/loop0             isize=256    agcount=24576, agsize=65536 blks
->          =                       sectsz=4096  attr=2, projid32bit=0
->          =                       crc=0        finobt=0 spinodes=0
-> data     =                       bsize=4096   blocks=1610612736, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-> log      =internal               bsize=4096   blocks=2560, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> So that's a 6TB fs with over 24000 allocation groups of size 256MB, as
-> opposed to the mkfs default of 6 allocation groups of 1TB each. Is that
-> intentional?
-> 
-> Brian
-> 
-> > -- 
-> > Tapani Tarvainen
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+No, that makes sense, but it kind of sucks, too - writing the same string
+twice everywhere, once for attr & once for dir, is a bit bleah.
+
+Maybe I can restructure it such that it's more easily translatable,
+something like using a prefix, i.e.
+
+%s: block %d is unreadable for inode %lld
+
+-> turns into ->
+
+dir: block %d is unreadable for inode %lld
+ - or -
+attr: block %d is unreadable for inode %lld
+
+and then it's not cutting a sentence in half, to interfere with grammar
+from other languages ...
+
+-Eric
 
 _______________________________________________
 xfs mailing list
