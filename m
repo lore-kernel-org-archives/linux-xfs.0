@@ -1,36 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5949B7F47
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 05:31:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C6EDDAC008
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 03:31:49 -0700 (PDT)
-Received: from posti5.jyu.fi (posti5.jyu.fi [130.234.4.34]) by cuda.sgi.com
-	with ESMTP id wQsAH3rqFZWdBAFV (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 03:31:44 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by posti5.jyu.fi (8.13.8/8.13.8) with ESMTP id t8AAVhRM032731
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 13:31:43 +0300
-Received: from posti5.jyu.fi ([127.0.0.1])
-	by localhost (posti5.jyu.fi [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 17roYesaK6ff for <xfs@oss.sgi.com>;
-	Thu, 10 Sep 2015 13:31:42 +0300 (EEST)
-Received: from tehanu.it.jyu.fi (tehanu.it.jyu.fi [130.234.160.128])
-	by posti5.jyu.fi (8.13.8/8.13.8) with ESMTP id t8AAVgvC032717
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 13:31:42 +0300
-Received: (from tt@localhost)
-	by tehanu.it.jyu.fi (8.14.4/8.14.4/Submit) id t8AAVgBs026892
-	for xfs@oss.sgi.com; Thu, 10 Sep 2015 13:31:42 +0300
-Date: Thu, 10 Sep 2015 13:31:42 +0300
-From: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
-Subject: Re: "This is a bug."
-Message-ID: <20150910103142.GA26847@tehanu.it.jyu.fi>
-References: <20150910091834.GC24937@tehanu.it.jyu.fi>
+	by oss.sgi.com (Postfix) with ESMTP id B79D17F47
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 06:37:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FEDEAC008
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 04:37:37 -0700 (PDT)
+Received: from mail-io0-f169.google.com (mail-io0-f169.google.com
+	[209.85.223.169]) by cuda.sgi.com with ESMTP id
+	TGQVbFETa9kYJhB1 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 04:37:36 -0700 (PDT)
+Received: by iofb144 with SMTP id b144so57030338iof.1
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 04:37:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150910091834.GC24937@tehanu.it.jyu.fi>
+In-Reply-To: <CACj3i72MONG=8c=t+X=_Ki5cNs_fKgNzPKJ9f70qnnRh8EmQ1g@mail.gmail.com>
+References: <CACj3i72MONG=8c=t+X=_Ki5cNs_fKgNzPKJ9f70qnnRh8EmQ1g@mail.gmail.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 10 Sep 2015 13:37:16 +0200
+Message-ID: <CACj3i72TFpeqggck8jw0GKqH0WsPpN14EMG4d59mzDxegXiE3Q@mail.gmail.com>
+Subject: Re: xfsprogs - debug build with -O0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,64 +27,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8119617563334832662=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-A perhaps interesting addition: xfs_metadump succeeds with
-the -o option (without it it fails consistently).
+--===============8119617563334832662==
+Content-Type: multipart/alternative; boundary=001a113ff20e8a263e051f6306ce
 
-If you think the dump would be useful to you I can probably
-send it unobfuscated (would have to check but I don't think
-there's anything sensitive in the filenames or attributes).
+--001a113ff20e8a263e051f6306ce
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Tapani Tarvainen
+On Wed, Sep 9, 2015 at 2:35 PM, Jan Tulak <jtulak@redhat.com> wrote:
 
-On 10 Sep 12:18, Tapani Tarvainen (tapani.j.tarvainen@jyu.fi) wrote:
-> 
-> Hi,
-> 
-> After a rather spectacular crash we've got an xfs filesystem
-> in unrepairable state: mount fails with "Structure needs cleaning",
-> xfs_repair without options refuses to work (asks to mount first),
-> and xfs_repair -L stopped with
-> 
-> corrupt dinode 2151195170, extent total = 1, nblocks = 0.  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> 
-> I tried to dump the metadata and it failed, too:
-> 
-> # xfs_metadump /dev/sdata1/data1 /data2/tmp/data1_metadump
-> xfs_metadump: cannot init perag data (117)
-> *** glibc detected *** xfs_db: double free or corruption (!prev): 0x0000000003361000 ***
-> ======= Backtrace: ========= 
-> [...]
-> Aborted
-> 
-> 
-> At this point I'm going to give up trying to recover the data
-> (recreate filesystem and restore from backup), but if you want to
-> analyze it to find the bug, I have enough spare disk space to keep a
-> copy for a while (took lvm snapshot of it before recovery attempt,
-> could dd it to another location).
-> 
-> The machine is running Debian Wheezy (7.8),
-> kernel 3.2.0-4-amd64 #1 SMP Debian 3.2.68-1+deb7u1 x86_64 GNU/Linux,
-> xfsprogs version 3.1.7+b1.
-> And the filesystem is 6TB in size.
-> 
-> If you want to take a look, please let me know what I can do to help.
-> 
-> Thank you,
-> 
-> -- 
-> Tapani Tarvainen
+> Hi all,
+>
+> Is there a way how to disable compiler optimisation in xfsprogs? It shoul=
+d
+> be done with setting env variable OPTIMIZER=3D'-O0', however, even though
+> this is mentioned on few places in xfsprogs, it doesn't work and the
+> configure file always use "-O2" from autogenerated m4/libtool.m4. Other
+> environment variables works as expected.
+>
+> So far, when in need of debugging, I have been manually replacing -O2 wit=
+h
+> -O0 in configure, but this isn't a good solution. So, is there another wa=
+y,
+> or it is just broken? I find it strange that nobody would mind messed GDB
+> outputs... :-)
+>
+
+=E2=80=8BSo to reply to myself, it looks like it was an issue only on my ho=
+st.
+
+When I tried it on another pc, it worked ok and after some time with
+changing various global environment variables, it suddenly began to work on
+the first host too. I will keep an eye on it if the issue appears again, to
+find what really caused it. But for now, consider the previous email as a
+false alert.
+
+Cheers,
+Jan
+
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a113ff20e8a263e051f6306ce
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Wed, Se=
+p 9, 2015 at 2:35 PM, Jan Tulak </span><span dir=3D"ltr" style=3D"font-fami=
+ly:arial,sans-serif">&lt;<a href=3D"mailto:jtulak@redhat.com" target=3D"_bl=
+ank">jtulak@redhat.com</a>&gt;</span><span style=3D"font-family:arial,sans-=
+serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div class=3D"gma=
+il_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8=
+ex;border-left-width:1px;border-left-color:rgb(204,204,204);border-left-sty=
+le:solid;padding-left:1ex"><div dir=3D"ltr"><div style=3D"font-family:arial=
+,helvetica,sans-serif">Hi all,</div><div style=3D"font-family:arial,helveti=
+ca,sans-serif"><br></div><div style=3D"font-family:arial,helvetica,sans-ser=
+if">Is there a way how to disable compiler optimisation in xfsprogs? It sho=
+uld be done with setting env variable OPTIMIZER=3D&#39;-O0&#39;, however, e=
+ven though this is mentioned on few places in xfsprogs, it doesn&#39;t work=
+ and the configure file always use &quot;-O2&quot; from autogenerated m4/li=
+btool.m4. Other environment variables works as expected.</div><div style=3D=
+"font-family:arial,helvetica,sans-serif"><br></div><div style=3D"font-famil=
+y:arial,helvetica,sans-serif">So far, when in need of debugging, I have bee=
+n manually replacing -O2 with -O0 in configure, but this isn&#39;t a good s=
+olution. So, is there another way, or it is just broken? I find it strange =
+that nobody would mind messed GDB outputs... :-)</div></div></blockquote><d=
+iv><br></div><div><div class=3D"gmail_default" style=3D"font-family:arial,h=
+elvetica,sans-serif;display:inline">=E2=80=8BSo to reply to myself, it look=
+s like it was an issue only on my host.=C2=A0</div></div><div><div class=3D=
+"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;display:inl=
+ine"><br></div></div><div><div class=3D"gmail_default" style=3D"font-family=
+:arial,helvetica,sans-serif;display:inline">When I tried it on another pc, =
+it worked ok and after some time with changing various global environment v=
+ariables, it suddenly began to work on the first host too. I will keep an e=
+ye on it if the issue appears again, to find what really caused it. But for=
+ now, consider the previous email as a false alert.</div></div><div><div cl=
+ass=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;displ=
+ay:inline"><br></div></div><div><div class=3D"gmail_default" style=3D"font-=
+family:arial,helvetica,sans-serif;display:inline">Cheers,</div></div><div><=
+div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif=
+;display:inline">Jan</div></div><div><div class=3D"gmail_default" style=3D"=
+font-family:arial,helvetica,sans-serif;display:inline"><br></div></div></di=
+v>-- <br><div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"l=
+tr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"=
+_blank">jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=
+=3D"_blank">jan@tulak.me</a></div></div></div></div>
+</div></div>
+
+--001a113ff20e8a263e051f6306ce--
+
+
+--===============8119617563334832662==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8119617563334832662==--
