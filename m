@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD1127CBF
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 13:03:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BBED78F8050
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 11:03:43 -0700 (PDT)
-Received: from hauki.tapanitarvainen.fi (hauki.tapanitarvainen.fi
-	[80.68.90.32]) by cuda.sgi.com with ESMTP id bNoGQ6BDR9ZwFNUB
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 10 Sep 2015 11:03:41 -0700 (PDT)
-Date: Thu, 10 Sep 2015 21:03:39 +0300
-From: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
+	by oss.sgi.com (Postfix) with ESMTP id C60287CBF
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 13:34:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A3B4C8F806F
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 11:34:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qORfNlOQTgGwwa6j (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 11:34:01 -0700 (PDT)
+Date: Thu, 10 Sep 2015 14:33:59 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: "This is a bug."
-Message-ID: <20150910180339.GB18739@tarvainen.info>
-References: <20150910134828.0bdfcc4c@harpe.intellique.com>
-	<20150910115548.GD26847@tehanu.it.jyu.fi>
+Message-ID: <20150910183358.GF27863@bfoster.bfoster>
+References: <20150910115548.GD26847@tehanu.it.jyu.fi>
 	<20150910123030.GG26847@tehanu.it.jyu.fi>
 	<20150910123603.GA27863@bfoster.bfoster>
 	<20150910125441.GA28374@tehanu.it.jyu.fi>
@@ -24,9 +22,10 @@ References: <20150910134828.0bdfcc4c@harpe.intellique.com>
 	<20150910145154.GC27863@bfoster.bfoster>
 	<20150910173138.GB18940@tarvainen.info>
 	<20150910175557.GE27863@bfoster.bfoster>
+	<20150910180339.GB18739@tarvainen.info>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150910175557.GE27863@bfoster.bfoster>
+In-Reply-To: <20150910180339.GB18739@tarvainen.info>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,27 +38,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 10, 2015 at 01:55:58PM -0400, Brian Foster (bfoster@redhat.com) wrote:
+On Thu, Sep 10, 2015 at 09:03:39PM +0300, Tapani Tarvainen wrote:
+> On Thu, Sep 10, 2015 at 01:55:58PM -0400, Brian Foster (bfoster@redhat.com) wrote:
+> 
+> > > > So that's a 6TB fs with over 24000 allocation groups of size 256MB, as
+> > > > opposed to the mkfs default of 6 allocation groups of 1TB each. Is that
+> > > > intentional?
+> > > 
+> > > Not to my knowledge. Unless I'm mistaken, the filesystem was created
+> > > while the machine was running Debian Squeeze, using whatever defaults
+> > > were back then.
+> 
+> > Strange... was the filesystem created small and then grown to a much
+> > larger size via xfs_growfs?
+> 
+> Almost certainly yes, although how small it initially was I'm not
+> sure.
+> 
 
-> > > So that's a 6TB fs with over 24000 allocation groups of size 256MB, as
-> > > opposed to the mkfs default of 6 allocation groups of 1TB each. Is that
-> > > intentional?
-> > 
-> > Not to my knowledge. Unless I'm mistaken, the filesystem was created
-> > while the machine was running Debian Squeeze, using whatever defaults
-> > were back then.
+That probably explains that then. While growfs is obviously supported,
+it's not usually a great idea to grow from something really small to
+really large like this precisely because you end up with this kind of
+weird geometry. mkfs tries to format the fs to an ideal default geometry
+based on the current size of the device, but the allocation group size
+cannot be modified once the filesystem is created. Therefore, growfs can
+only add more AGs of the original size.
 
-> Strange... was the filesystem created small and then grown to a much
-> larger size via xfs_growfs?
+As a result, you end up with a 6TB filesystem with >24k allocation
+groups, whereas mkfs will format a 6TB device with 6 allocation groups
+by default (though I think specifying a stripe unit can tweak this). My
+understanding is that this could be increased sanely on large cpu count
+systems and such, but we're probably talking about going to something on
+the order of 32 or 64 allocation groups as opposed to thousands.
 
-Almost certainly yes, although how small it initially was I'm not
-sure.
+I'd expect such a large filesystem with such small allocation groups to
+probably introduce overhead in terms of metadata usage (24k agi's,
+agf's, 2x free space btrees and 1x inode btree per AG), spending more
+time in AG selection algorithms for allocations and whatnot, increased
+fragmentation due to capping the maximum contiguous extent size,
+creating more work for userspace tools such as repair, etc., and
+probably to have other weird or non-obvious side effects that I'm not
+familiar with.
 
--- 
-Tapani Tarvainen
+Brian
+
+> -- 
+> Tapani Tarvainen
 
 _______________________________________________
 xfs mailing list
