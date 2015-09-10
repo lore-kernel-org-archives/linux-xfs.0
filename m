@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 40CB57CBF
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 04:18:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DC36BAC009
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 02:18:39 -0700 (PDT)
-Received: from posti5.jyu.fi (posti5.jyu.fi [130.234.4.34]) by cuda.sgi.com
-	with ESMTP id IAxwi2Zn6F1JggnJ (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 02:18:37 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by posti5.jyu.fi (8.13.8/8.13.8) with ESMTP id t8A9IZCW020826
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 12:18:35 +0300
-Received: from posti5.jyu.fi ([127.0.0.1])
-	by localhost (posti5.jyu.fi [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id SjrYQm0CssDu for <xfs@oss.sgi.com>;
-	Thu, 10 Sep 2015 12:18:35 +0300 (EEST)
-Received: from tehanu.it.jyu.fi (tehanu.it.jyu.fi [130.234.160.128])
-	by posti5.jyu.fi (8.13.8/8.13.8) with ESMTP id t8A9IYwF020822
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 12:18:35 +0300
-Received: (from tt@localhost)
-	by tehanu.it.jyu.fi (8.14.4/8.14.4/Submit) id t8A9IYw6026290
-	for xfs@oss.sgi.com; Thu, 10 Sep 2015 12:18:34 +0300
-Date: Thu, 10 Sep 2015 12:18:34 +0300
-From: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
-Subject: "This is a bug."
-Message-ID: <20150910091834.GC24937@tehanu.it.jyu.fi>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3D86A7CBF
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 04:22:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 30913304039
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 02:22:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id pe7dun57H8P37Qte (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 02:22:29 -0700 (PDT)
+Date: Thu, 10 Sep 2015 11:22:24 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/13] xfs_repair: recombine cut&waste code in
+	dir2.c/attr_repair.c
+Message-ID: <20150910092224.GB2613@zion.usersys.redhat.com>
+References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,46 +30,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Wed, Sep 09, 2015 at 02:33:58PM -0500, Eric Sandeen wrote:
+> repair/dir2.c and repair/attr_repair.c got cut and pasted
+> long, long ago and have diverged since.
+> 
+> This series brings them back together, presumably fixes some
+> bugs, and loses a few hundred lines in the process.
+> 
+> o/~ reunited, and it feels so so good ... o/~
+> 
+> The series accomplishes this through a combination of trivial changes
+> (removing unused structure members, whitespace, etc) as well
+> as by "cross-porting" changes & fixes which happened to one
+> file but not the other over the past many years.
+> 
+> Along the way, a graphical diff of dir2 vs. attr_repair should
+> show the convergence.
+> 
+> Up until the last patch, I don't worry about dir vs. attr naming
+> in comments or error messages; the goal is to make these chunks
+> of the two files sufficiently similar so that by patch 11, the
+> reviewer can do a diff and say "yeah, ok, those really are
+> substantially the same now."
+> 
+> Also instructive is to apply up to patch 11, copy dir2.c and
+> attr_repair.c to /tmp, apply patch 12, and do a 3-way graphical
+> diff of the 3 files to see that the move really is OK and
+> didn't play any significant tricks.
+> 
+> The last patch fixes up the dir vs. attr text in error messages
+> and comments.  I do have a question about whether this is ok
+> for i8n:
+> 
+> 	printf(_("This string is %s"), _("awesome"));
 
-After a rather spectacular crash we've got an xfs filesystem
-in unrepairable state: mount fails with "Structure needs cleaning",
-xfs_repair without options refuses to work (asks to mount first),
-and xfs_repair -L stopped with
+This should be fine for i18n, I had used it a lot when I added i18n support in
+gfs2-utils, and _() is the default macro that should embrace every string that
+needs to be translated. It will be replaced by gettext("awesome"), and there is
+no problem in using it as printf() argument for format specifiers.
 
-corrupt dinode 2151195170, extent total = 1, nblocks = 0.  This is a bug.
-Please capture the filesystem metadata with xfs_metadump and
-report it to xfs@oss.sgi.com.
-
-I tried to dump the metadata and it failed, too:
-
-# xfs_metadump /dev/sdata1/data1 /data2/tmp/data1_metadump
-xfs_metadump: cannot init perag data (117)
-*** glibc detected *** xfs_db: double free or corruption (!prev): 0x0000000003361000 ***
-======= Backtrace: ========= 
-[...]
-Aborted
+What you should be careful though, is that how these strings will 'look' to the
+person translating it, which, in most of cases, they are not going to look at
+the code to get a better meaning of the string. So, the sentences to be
+translated, should make sense by itself.
 
 
-At this point I'm going to give up trying to recover the data
-(recreate filesystem and restore from backup), but if you want to
-analyze it to find the bug, I have enough spare disk space to keep a
-copy for a while (took lvm snapshot of it before recovery attempt,
-could dd it to another location).
+I particularly, don't like much the idea of split strings as you did in the
+example, exactly because how it might look to the translators, both strings
+makes the same sentence, but they will show to the translators as completely
+different strings, and the translator might not be able to find the proper
+grammatical construction. So, I'd do something like:
 
-The machine is running Debian Wheezy (7.8),
-kernel 3.2.0-4-amd64 #1 SMP Debian 3.2.68-1+deb7u1 x86_64 GNU/Linux,
-xfsprogs version 3.1.7+b1.
-And the filesystem is 6TB in size.
+printf(funny ? _("This string is awesome") : _("This string is boring")) 
 
-If you want to take a look, please let me know what I can do to help.
 
-Thank you,
+I know that I might sound picky here, but, this is the best way to avoid weird
+and non-sense string translations.
+
+>
+> because that's essentially the trick I used...
+> 
+> Thanks,
+> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 -- 
-Tapani Tarvainen
+Carlos
 
 _______________________________________________
 xfs mailing list
