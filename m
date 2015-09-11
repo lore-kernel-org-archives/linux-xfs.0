@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CE59D7F37
-	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 01:19:57 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 267877F37
+	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 03:20:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BEDFE8F8049
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 23:19:54 -0700 (PDT)
-Received: from posti6.jyu.fi (posti6.jyu.fi [130.234.4.43]) by cuda.sgi.com
-	with ESMTP id 8Z5KN3k2j2rYFrDE (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 23:19:52 -0700 (PDT)
-Date: Fri, 11 Sep 2015 09:19:47 +0300
-From: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
-Subject: Re: "This is a bug."
-Message-ID: <20150911061947.GA3398@tehanu.it.jyu.fi>
-References: <20150910123030.GG26847@tehanu.it.jyu.fi>
-	<20150910123603.GA27863@bfoster.bfoster>
-	<20150910125441.GA28374@tehanu.it.jyu.fi>
-	<20150910130106.GB27863@bfoster.bfoster>
-	<20150910130530.GB28374@tehanu.it.jyu.fi>
-	<20150910145154.GC27863@bfoster.bfoster>
-	<20150910173138.GB18940@tarvainen.info>
-	<20150910175557.GE27863@bfoster.bfoster>
-	<20150910180339.GB18739@tarvainen.info>
-	<20150910183358.GF27863@bfoster.bfoster>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 17261304032
+	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 01:20:26 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kT2i9zkjw5XAmXct (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 11 Sep 2015 01:20:24 -0700 (PDT)
+Date: Fri, 11 Sep 2015 10:20:20 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/13] xfs_repair: recombine cut&waste code in
+	dir2.c/attr_repair.c
+Message-ID: <20150911082020.GA2523@zion.usersys.redhat.com>
+References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
+	<20150910092224.GB2613@zion.usersys.redhat.com>
+	<55F1B4FC.5040207@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150910183358.GF27863@bfoster.bfoster>
+In-Reply-To: <55F1B4FC.5040207@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,60 +32,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On 10 Sep 14:33, Brian Foster (bfoster@redhat.com) wrote:
-
-> > >... was the filesystem created small and then grown to a much
-> > > larger size via xfs_growfs?
+On Thu, Sep 10, 2015 at 11:51:08AM -0500, Eric Sandeen wrote:
+> On 9/10/15 4:22 AM, Carlos Maiolino wrote:
+> > On Wed, Sep 09, 2015 at 02:33:58PM -0500, Eric Sandeen wrote:
+> 
+> ...
+> 
+> >> The last patch fixes up the dir vs. attr text in error messages
+> >> and comments.  I do have a question about whether this is ok
+> >> for i8n:
+> >>
+> >> 	printf(_("This string is %s"), _("awesome"));
 > > 
-> > Almost certainly yes, although how small it initially was I'm not
-> > sure.
+> > This should be fine for i18n, I had used it a lot when I added i18n support in
+> > gfs2-utils, and _() is the default macro that should embrace every string that
+> > needs to be translated. It will be replaced by gettext("awesome"), and there is
+> > no problem in using it as printf() argument for format specifiers.
+> > 
+> > What you should be careful though, is that how these strings will 'look' to the
+> > person translating it, which, in most of cases, they are not going to look at
+> > the code to get a better meaning of the string. So, the sentences to be
+> > translated, should make sense by itself.
+> > 
+> > 
+> > I particularly, don't like much the idea of split strings as you did in the
+> > example, exactly because how it might look to the translators, both strings
+> > makes the same sentence, but they will show to the translators as completely
+> > different strings, and the translator might not be able to find the proper
+> > grammatical construction. So, I'd do something like:
+> > 
+> > printf(funny ? _("This string is awesome") : _("This string is boring")) 
+> > 
+> > 
+> > I know that I might sound picky here, but, this is the best way to avoid weird
+> > and non-sense string translations.
+> 
+> No, that makes sense, but it kind of sucks, too - writing the same string
 
-It actually been grown several times over the years - the system is
-rather old. Indeed, all its disks have been replaced with bigger ones
-without reinstallation, so the filesystem could not have been
-initially created as big as it is now.
+> twice everywhere, once for attr & once for dir, is a bit bleah.
+> 
+> Maybe I can restructure it such that it's more easily translatable,
+> something like using a prefix, i.e.
+> 
+> %s: block %d is unreadable for inode %lld
+> 
+> -> turns into ->
+> 
+> dir: block %d is unreadable for inode %lld
+>  - or -
+> attr: block %d is unreadable for inode %lld
+> 
+> and then it's not cutting a sentence in half, to interfere with grammar
+> from other languages ...
+> 
 
-> That probably explains that then. While growfs is obviously supported,
-> it's not usually a great idea to grow from something really small to
-> really large like this
+Yep, that makes sense. Or, you can play with variables, but, that would make the
+code only a huge spaghetti of strings and probably nobody would want to see
+things like that.
 
-That's good to know - but sometimes you just can't plan
-ahead far enough.
 
-> I'd expect such a large filesystem with such small allocation groups to
-> probably introduce overhead in terms of metadata usage (24k agi's,
-> agf's, 2x free space btrees and 1x inode btree per AG), spending more
-> time in AG selection algorithms for allocations and whatnot, increased
-> fragmentation due to capping the maximum contiguous extent size,
-> creating more work for userspace tools such as repair, etc., and
-> probably to have other weird or non-obvious side effects that I'm not
-> familiar with.
-
-So it's likely to also make it more fragile and harder to repair in
-case of a disaster like this.
-
-So, my take from this is that
-
-(1) The bug was real but it was just in the old version of xfs_repair
-in Debian Wheezy, and even when the machine is updated to Jessie
-(due soon) it's better to install latest (4.20) xfsprogs from sources
-rather Jessie's packaged 3.20; and
-
-(2) When a filesystem grows a lot it is better to recreate it
-(at least every now and then if the growth is incremental)
-rather than keep growing it forever.
-
-If there's anything you'd like to add, and especially if there
-is something you'd still like to debug where I could help,
-please let me know.
-
-Thank you for your help,
+> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 -- 
-Tapani Tarvainen
+Carlos
 
 _______________________________________________
 xfs mailing list
