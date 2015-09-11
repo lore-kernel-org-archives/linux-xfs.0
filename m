@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7C4CE7F54
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E721F7F50
 	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 13:55:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27944AC007
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA24830404E
 	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 11:55:46 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qJguXnA8dHwRhBJw (version=TLSv1.2
+	cuda.sgi.com with ESMTP id w7jcQi1fy0EsRLyQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Fri, 11 Sep 2015 11:55:45 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id EC0D5A7569
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id D234C2620
 	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 18:55:44 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-37.bos.redhat.com [10.18.41.37])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t8BItimF014643
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8BItiCQ020251
 	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 14:55:44 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 10/12] xfs_repair: don't clear the log by default
-Date: Fri, 11 Sep 2015 14:55:40 -0400
-Message-Id: <1441997742-37160-11-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 12/12] db/metadump: bump lsn when log is cleared on v5
+	supers
+Date: Fri, 11 Sep 2015 14:55:42 -0400
+Message-Id: <1441997742-37160-13-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
 References: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,117 +39,271 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_repair currently clears the log regardless of whether it is
-corrupted, clean or contains data. This is traditionally harmless but
-now causes log recovery problems on v5 filesystems. v5 filesystems
-expect a clean log to always have an LSN out ahead of the maximum last
-modification LSN stamped on any bit of metadata throughout the fs. If
-this is not the case, repair must reformat the log with a larger cycle
-number after fs processing is complete.
+xfs_metadump handles the log in different ways depending on the mode of
+operation. If the log is dirty or obfuscation and stale data zeroing are
+disabled, the log is copied as is. In all other scenarios, the log is
+explicitly zeroed. This is incorrect for version 5 superblocks where the
+current LSN is always expected to be ahead of all fs metadata.
 
-Given that unconditional log clearing actually introduces a filesystem
-inconsistency on v5 superblocks (that repair must subsequently recover
-from) and provides no tangible benefit for v4 filesystems that otherwise
-have a clean and covered log, it is more appropriate behavior to not
-clear the log by default.
-
-Update xfs_repair to always and only clear the log when the -L parameter
-is specified. Retain the existing logic to require -L or otherwise exit
-if the log appears to contain data. Adopt similar behavior if the log
-appears to be corrupted.
+Update metadump to use libxfs_log_clear() to format the log with an
+elevated LSN rather than zero the log and reset the current the LSN.
+Metadump does not use buffers for the dump target, instead using a
+cursor implementation to access the log via a single memory buffer.
+Therefore, update libxfs_log_clear() to receive an optional (but
+exclusive to the buftarg parameter) memory buffer pointer for the log.
+If the pointer is provided, the log format is written out to this
+buffer. Otherwise, fall back to the original behavior and access the log
+through buftarg buffers.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase2.c | 60 ++++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 40 insertions(+), 20 deletions(-)
+ db/metadump.c       | 16 +++++++++++--
+ db/sb.c             |  2 +-
+ include/libxfs.h    |  4 ++--
+ libxfs/rdwr.c       | 68 +++++++++++++++++++++++++++++++++++++++--------------
+ mkfs/xfs_mkfs.c     |  2 +-
+ repair/phase2.c     |  2 +-
+ repair/xfs_repair.c |  5 ++--
+ 7 files changed, 72 insertions(+), 27 deletions(-)
 
+diff --git a/db/metadump.c b/db/metadump.c
+index 129670e..56b733e 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2514,6 +2514,10 @@ copy_log(void)
+ {
+ 	struct xlog	log;
+ 	int		dirty;
++	xfs_daddr_t	logstart;
++	int		logblocks;
++	int		logversion;
++	int		cycle = XLOG_INIT_CYCLE;
+ 
+ 	if (show_progress)
+ 		print_progress("Copying log");
+@@ -2538,8 +2542,16 @@ copy_log(void)
+ 		/* clear out a clean log */
+ 		if (show_progress)
+ 			print_progress("Zeroing clean log");
+-		memset(iocur_top->data, 0,
+-			mp->m_sb.sb_logblocks * mp->m_sb.sb_blocksize);
++
++		logstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
++		logblocks = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
++		logversion = xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1;
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			cycle = log.l_curr_cycle + 1;
++
++		libxfs_log_clear(NULL, iocur_top->data, logstart, logblocks,
++				 &mp->m_sb.sb_uuid, logversion,
++				 mp->m_sb.sb_logsunit, XLOG_FMT, cycle);
+ 		break;
+ 	case 1:
+ 		/* keep the dirty log */
+diff --git a/db/sb.c b/db/sb.c
+index 30c622d..17d446c 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -283,7 +283,7 @@ sb_logzero(uuid_t *uuidp)
+ 
+ 	dbprintf(_("Clearing log and setting UUID\n"));
+ 
+-	error =  libxfs_log_clear(mp->m_logdev_targp,
++	error =  libxfs_log_clear(mp->m_logdev_targp, NULL,
+ 			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+ 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
+ 			uuidp,
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 6c87934..f733c36 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -153,8 +153,8 @@ typedef char	*(libxfs_get_block_t)(char *, int, void *);
+  * Helpers to clear the log to a particular log cycle.
+  */
+ #define XLOG_INIT_CYCLE	1
+-extern int	libxfs_log_clear(struct xfs_buftarg *, xfs_daddr_t, uint,
+-				 uuid_t *, int, int, int, int);
++extern int	libxfs_log_clear(struct xfs_buftarg *, char *, xfs_daddr_t,
++				 uint, uuid_t *, int, int, int, int);
+ extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
+ 				  xfs_lsn_t, libxfs_get_block_t *, void *);
+ 
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index d87baec..a4cc3f4 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -132,41 +132,57 @@ static void unmount_record(void *p)
+ 	memcpy((char *)p + sizeof(xlog_op_header_t), &magic, sizeof(magic));
+ }
+ 
+-static char *next(char *ptr, int offset, void *private)
++static char *next(
++	char		*ptr,
++	int		offset,
++	void		*private)
+ {
+-	xfs_buf_t	*buf = (xfs_buf_t *)private;
++	struct xfs_buf	*buf = (struct xfs_buf *)private;
+ 
+-	if (XFS_BUF_COUNT(buf) < (int)(ptr - XFS_BUF_PTR(buf)) + offset)
++	if (buf &&
++	    (XFS_BUF_COUNT(buf) < (int)(ptr - XFS_BUF_PTR(buf)) + offset))
+ 		abort();
++
+ 	return ptr + offset;
+ }
+ 
++/*
++ * Format the log. The caller provides either a buftarg which is used to access
++ * the log via buffers or a direct pointer to a buffer that encapsulates the
++ * entire log.
++ */
+ int
+ libxfs_log_clear(
+ 	struct xfs_buftarg	*btp,
++	char			*dptr,
+ 	xfs_daddr_t		start,
+-	uint			length,
++	uint			length,		/* basic blocks */
+ 	uuid_t			*fs_uuid,
+ 	int			version,
+-	int			sunit,
++	int			sunit,		/* bytes */
+ 	int			fmt,
+ 	int			cycle)
+ {
+-	xfs_buf_t		*bp;
++	struct xfs_buf		*bp = NULL;
+ 	int			len;
+ 	xfs_lsn_t		lsn;
+ 	xfs_lsn_t		tail_lsn;
+ 	xfs_daddr_t		blk;
+ 	xfs_daddr_t		end_blk;
++	char			*ptr;
+ 
+-	if (!btp->dev || !fs_uuid)
++	if (((btp && dptr) || (!btp && !dptr)) ||
++	    (btp && !btp->dev) || !fs_uuid)
+ 		return -EINVAL;
+ 
+ 	if (cycle < XLOG_INIT_CYCLE)
+ 		return -EINVAL;
+ 
+ 	/* first zero the log */
+-	libxfs_device_zero(btp, start, length);
++	if (btp)
++		libxfs_device_zero(btp, start, length);
++	else
++		memset(dptr, 0, BBTOB(length));
+ 
+ 	/*
+ 	 * Initialize the log record length and LSNs. XLOG_INIT_CYCLE is a
+@@ -184,11 +200,17 @@ libxfs_log_clear(
+ 		tail_lsn = xlog_assign_lsn(cycle - 1, length - len);
+ 
+ 	/* write out the first log record */
+-	bp = libxfs_getbufr(btp, start, len);
+-	libxfs_log_header(XFS_BUF_PTR(bp), fs_uuid, version, sunit, fmt,
+-			  lsn, tail_lsn, next, bp);
+-	bp->b_flags |= LIBXFS_B_DIRTY;
+-	libxfs_putbufr(bp);
++	ptr = dptr;
++	if (btp) {
++		bp = libxfs_getbufr(btp, start, len);
++		ptr = XFS_BUF_PTR(bp);
++	}
++	libxfs_log_header(ptr, fs_uuid, version, sunit, fmt, lsn, tail_lsn,
++			  next, bp);
++	if (bp) {
++		bp->b_flags |= LIBXFS_B_DIRTY;
++		libxfs_putbufr(bp);
++	}
+ 
+ 	/*
+ 	 * There's nothing else to do if this is a log reset. The kernel detects
+@@ -209,6 +231,8 @@ libxfs_log_clear(
+ 	 */
+ 	cycle--;
+ 	blk = start + len;
++	if (dptr)
++		dptr += BBTOB(len);
+ 	end_blk = start + length;
+ 
+ 	len = min(end_blk - blk, BTOBB(BDSTRAT_SIZE));
+@@ -216,18 +240,26 @@ libxfs_log_clear(
+ 		lsn = xlog_assign_lsn(cycle, blk - start);
+ 		tail_lsn = xlog_assign_lsn(cycle, blk - start - len);
+ 
+-		bp = libxfs_getbufr(btp, blk, len);
++		ptr = dptr;
++		if (btp) {
++			bp = libxfs_getbufr(btp, blk, len);
++			ptr = XFS_BUF_PTR(bp);
++		}
+ 		/*
+ 		 * Note: pass the full buffer length as the sunit to initialize
+ 		 * the entire buffer.
+ 		 */
+-		libxfs_log_header(XFS_BUF_PTR(bp), fs_uuid, version, BBTOB(len),
+-				  fmt, lsn, tail_lsn, next, bp);
+-		bp->b_flags |= LIBXFS_B_DIRTY;
+-		libxfs_putbufr(bp);
++		libxfs_log_header(ptr, fs_uuid, version, BBTOB(len), fmt, lsn,
++				  tail_lsn, next, bp);
++		if (bp) {
++			bp->b_flags |= LIBXFS_B_DIRTY;
++			libxfs_putbufr(bp);
++		}
+ 
+ 		len = min(end_blk - blk, BTOBB(BDSTRAT_SIZE));
+ 		blk += len;
++		if (dptr)
++			dptr += BBTOB(len);
+ 	}
+ 
+ 	return 0;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 238d400..5f939b5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2667,7 +2667,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	/*
+ 	 * Zero the log....
+ 	 */
+-	libxfs_log_clear(mp->m_logdev_targp,
++	libxfs_log_clear(mp->m_logdev_targp, NULL,
+ 		XFS_FSB_TO_DADDR(mp, logstart),
+ 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+ 		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT, XLOG_INIT_CYCLE);
 diff --git a/repair/phase2.c b/repair/phase2.c
-index 72132ce..fe7ed2b 100644
+index fe7ed2b..e26e2fc 100644
 --- a/repair/phase2.c
 +++ b/repair/phase2.c
-@@ -36,11 +36,13 @@ int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
- }
- 
- static void
--zero_log(xfs_mount_t *mp)
-+zero_log(
-+	struct xfs_mount	*mp)
- {
--	int error;
--	xfs_daddr_t head_blk, tail_blk;
--	struct xlog	*log = mp->m_log;
-+	int			error;
-+	xfs_daddr_t		head_blk;
-+	xfs_daddr_t		tail_blk;
-+	struct xlog		*log = mp->m_log;
- 
- 	memset(log, 0, sizeof(struct xlog));
- 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
-@@ -65,10 +67,22 @@ zero_log(xfs_mount_t *mp)
- 	}
- 	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
- 
--	if ((error = xlog_find_tail(log, &head_blk, &tail_blk))) {
--		do_warn(_("zero_log: cannot find log head/tail "
--			  "(xlog_find_tail=%d), zeroing it anyway\n"),
-+	/*
-+	 * Find the log head and tail and alert the user to the situation if the
-+	 * log appears corrupted or contains data. In either case, we do not
-+	 * proceed past this point unless the user explicitly requests to zap
-+	 * the log.
-+	 */
-+	error = xlog_find_tail(log, &head_blk, &tail_blk);
-+	if (error) {
-+		do_warn(
-+		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
- 			error);
-+		if (!no_modify && !zap_log)
-+			do_error(_(
-+"ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
-+"filesystem to replay the log or use the -L option to destroy the log and\n"
-+"attempt a repair.\n"));
- 	} else {
- 		if (verbose) {
- 			do_warn(
-@@ -93,19 +107,25 @@ zero_log(xfs_mount_t *mp)
- 		}
+@@ -114,7 +114,7 @@ zero_log(
+ 	 * filesystems.
+ 	 */
+ 	if (!no_modify && zap_log) {
+-		libxfs_log_clear(log->l_dev,
++		libxfs_log_clear(log->l_dev, NULL,
+ 			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+ 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
+ 			&mp->m_sb.sb_uuid,
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 8285d9d..bed2ff5 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -584,8 +584,9 @@ format_log_max_lsn(
  	}
  
--	if (no_modify)
--		return;
--
--	libxfs_log_clear(log->l_dev, XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
--		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
--		&mp->m_sb.sb_uuid,
--		xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
--		mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
--
--	/* update the log data structure with new state */
--	error = xlog_find_tail(log, &head_blk, &tail_blk);
--	if (error || head_blk != tail_blk)
--		do_error(_("failed to clear log"));
-+	/*
-+	 * Only clear the log when explicitly requested. Doing so is unnecessary
-+	 * unless something is wrong. Further, this resets the current LSN of
-+	 * the filesystem and creates more work for repair of v5 superblock
-+	 * filesystems.
-+	 */
-+	if (!no_modify && zap_log) {
-+		libxfs_log_clear(log->l_dev,
-+			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-+			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
-+			&mp->m_sb.sb_uuid,
-+			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
-+			mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
-+
-+		/* update the log data structure with new state */
-+		error = xlog_find_tail(log, &head_blk, &tail_blk);
-+		if (error || head_blk != tail_blk)
-+			do_error(_("failed to clear log"));
-+	}
+ 	do_warn(_("Format log to cycle %d.\n"), new_cycle);
+-	libxfs_log_clear(log->l_dev, logstart, logblocks, &mp->m_sb.sb_uuid,
+-			 logversion, mp->m_sb.sb_logsunit, XLOG_FMT, new_cycle);
++	libxfs_log_clear(log->l_dev, NULL, logstart, logblocks,
++			 &mp->m_sb.sb_uuid, logversion, mp->m_sb.sb_logsunit,
++			 XLOG_FMT, new_cycle);
  }
  
- /*
+ int
 -- 
 2.1.0
 
