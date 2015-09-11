@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B1D0B7F50
-	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 13:55:45 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 41E937F51
+	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 13:55:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 820C530404E
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0ADDE8F8040
 	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 11:55:45 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9Hr5ZMBu5uehVOxM (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mWWFxaG6K9GmifgV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Sep 2015 11:55:44 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 2055DA19CC
+	<xfs@oss.sgi.com>; Fri, 11 Sep 2015 11:55:45 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id D0741C0BB24E
 	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 18:55:44 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-37.bos.redhat.com [10.18.41.37])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t8BIthLI022528
-	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 14:55:43 -0400
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8BItirP014638
+	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 14:55:44 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 00/12] xfsprogs: format the log correctly on v5 supers
-Date: Fri, 11 Sep 2015 14:55:30 -0400
-Message-Id: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 08/12] xfs_repair: process the log in no_modify mode
+Date: Fri, 11 Sep 2015 14:55:38 -0400
+Message-Id: <1441997742-37160-9-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
+References: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,75 +38,57 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is pass 2 of the userspace side of the invalid metadata LSN fixes.
-It is based on the RFCv2 version of the associated kernel fixes:
+xfs_repair does not zero the log in no_modify mode. In doing so, it also
+skips the function that scans the log, locates the head/tail blocks and
+sets the current LSN. Now that the log state is used beyond phase 2, the
+log scan must occur regardless of whether no_modify mode is enabled or
+not.
 
-  http://oss.sgi.com/pipermail/xfs/2015-September/043627.html
+Update phase 2 to always execute the log scanning code. Push down the
+no_modify checks into the log clearing helper such that the log is still
+not modified in no_modify mode.
 
-Outside of the rebase to the latest kernel patch, this version adds
-support for the xfs_db uuid command and xfs_metadump. Both of these
-utilities clear the log under certain circumstances and thus both have
-been updated to format the log with a bumped cycle number when
-appropriate.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ repair/phase2.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-The only remaining gap that I'm aware of is xfs_copy. xfs_copy support
-is not included because the log formatting code therein is slightly more
-complicated than what is done in other places. In particular, it uses
-its own buffer and alignment mechanisms that have to deal with direct
-I/O alignment rules and aren't easily compatible with the existing
-buffered log formatting mechanism. I haven't quite figured out how best
-to deal with that yet.
-
-Thoughts, reviews, flames appreciated.
-
-Brian
-
-v2:
-- Rebase to latest kernel variant of invalid metadata LSN detection.
-- Added support for xfs_db's uuid command and xfs_metadump.
-v1: http://oss.sgi.com/pipermail/xfs/2015-August/043397.html
-
-Brian Foster (12):
-  libxfs: validate metadata LSNs against log on v5 superblocks
-  libxfs: track largest metadata LSN in use via verifiers
-  libxfs: don't hardcode cycle 1 into unmount op header
-  libxfs: pass lsn param to log clear and record header logging helpers
-  libxfs: add ability to clear log to arbitrary log cycle
-  libxlog: pull struct xlog out of xlog_is_dirty()
-  xfs_repair: track log state throughout all recovery phases
-  xfs_repair: process the log in no_modify mode
-  xfs_repair: format the log with forward cycle number on v5 supers
-  xfs_repair: don't clear the log by default
-  xfs_db: do not reset current lsn from uuid command on v5 supers
-  db/metadump: bump lsn when log is cleared on v5 supers
-
- copy/xfs_copy.c             |   4 +-
- db/init.c                   |  25 ++++---
- db/metadump.c               |  21 ++++--
- db/sb.c                     |  18 ++++-
- include/libxfs.h            |  13 ++--
- include/libxlog.h           |   3 +-
- include/xfs_mount.h         |   6 ++
- libxfs/libxfs_priv.h        |   2 +
- libxfs/rdwr.c               | 160 +++++++++++++++++++++++++++++++++++++-------
- libxfs/util.c               |  38 +++++++++++
- libxfs/xfs_alloc.c          |   9 ++-
- libxfs/xfs_attr_leaf.c      |   2 +
- libxfs/xfs_btree.c          |  14 +++-
- libxfs/xfs_da_btree.c       |   3 +
- libxfs/xfs_dir2_block.c     |   1 +
- libxfs/xfs_dir2_data.c      |   1 +
- libxfs/xfs_dir2_leaf.c      |   1 +
- libxfs/xfs_dir2_node.c      |   1 +
- libxfs/xfs_ialloc.c         |   8 ++-
- libxfs/xfs_sb.c             |   8 +++
- libxfs/xfs_symlink_remote.c |   3 +
- libxlog/util.c              |  37 +++++-----
- mkfs/xfs_mkfs.c             |   4 +-
- repair/phase2.c             |  83 +++++++++++++++--------
- repair/xfs_repair.c         |  79 +++++++++++++++++++++-
- 25 files changed, 436 insertions(+), 108 deletions(-)
-
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 11504e3..72132ce 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -75,7 +75,7 @@ zero_log(xfs_mount_t *mp)
+ 	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
+ 				head_blk, tail_blk);
+ 		}
+-		if (head_blk != tail_blk) {
++		if (!no_modify && head_blk != tail_blk) {
+ 			if (zap_log) {
+ 				do_warn(_(
+ "ALERT: The filesystem has valuable metadata changes in a log which is being\n"
+@@ -93,6 +93,9 @@ zero_log(xfs_mount_t *mp)
+ 		}
+ 	}
+ 
++	if (no_modify)
++		return;
++
+ 	libxfs_log_clear(log->l_dev, XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+ 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
+ 		&mp->m_sb.sb_uuid,
+@@ -136,10 +139,8 @@ phase2(
+ 		do_log(_("Phase 2 - using internal log\n"));
+ 
+ 	/* Zero log if applicable */
+-	if (!no_modify)  {
+-		do_log(_("        - zero log...\n"));
+-		zero_log(mp);
+-	}
++	do_log(_("        - zero log...\n"));
++	zero_log(mp);
+ 
+ 	do_log(_("        - scan filesystem freespace and inode maps...\n"));
+ 
 -- 
 2.1.0
 
