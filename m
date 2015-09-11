@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 33FB57CBF
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 19:12:49 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CE59D7F37
+	for <xfs@oss.sgi.com>; Fri, 11 Sep 2015 01:19:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 23A1C304032
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 17:12:45 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id dVPGG5Ap815Griqk for <xfs@oss.sgi.com>;
-	Thu, 10 Sep 2015 17:12:41 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 657E165EBB85
-	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 19:12:40 -0500 (CDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BEDFE8F8049
+	for <xfs@oss.sgi.com>; Thu, 10 Sep 2015 23:19:54 -0700 (PDT)
+Received: from posti6.jyu.fi (posti6.jyu.fi [130.234.4.43]) by cuda.sgi.com
+	with ESMTP id 8Z5KN3k2j2rYFrDE (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 10 Sep 2015 23:19:52 -0700 (PDT)
+Date: Fri, 11 Sep 2015 09:19:47 +0300
+From: Tapani Tarvainen <tapani.j.tarvainen@jyu.fi>
 Subject: Re: "This is a bug."
-References: <20150910134828.0bdfcc4c@harpe.intellique.com>
-	<20150910115548.GD26847@tehanu.it.jyu.fi>
-	<20150910123030.GG26847@tehanu.it.jyu.fi>
+Message-ID: <20150911061947.GA3398@tehanu.it.jyu.fi>
+References: <20150910123030.GG26847@tehanu.it.jyu.fi>
 	<20150910123603.GA27863@bfoster.bfoster>
 	<20150910125441.GA28374@tehanu.it.jyu.fi>
 	<20150910130106.GB27863@bfoster.bfoster>
@@ -25,11 +22,10 @@ References: <20150910134828.0bdfcc4c@harpe.intellique.com>
 	<20150910173138.GB18940@tarvainen.info>
 	<20150910175557.GE27863@bfoster.bfoster>
 	<20150910180339.GB18739@tarvainen.info>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <55F21C77.6030009@sandeen.net>
-Date: Thu, 10 Sep 2015 19:12:39 -0500
+	<20150910183358.GF27863@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20150910180339.GB18739@tarvainen.info>
+Content-Disposition: inline
+In-Reply-To: <20150910183358.GF27863@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,31 +38,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 9/10/15 1:03 PM, Tapani Tarvainen wrote:
-> On Thu, Sep 10, 2015 at 01:55:58PM -0400, Brian Foster (bfoster@redhat.com) wrote:
-> 
->>>> So that's a 6TB fs with over 24000 allocation groups of size 256MB, as
->>>> opposed to the mkfs default of 6 allocation groups of 1TB each. Is that
->>>> intentional?
->>>
->>> Not to my knowledge. Unless I'm mistaken, the filesystem was created
->>> while the machine was running Debian Squeeze, using whatever defaults
->>> were back then.
-> 
->> Strange... was the filesystem created small and then grown to a much
->> larger size via xfs_growfs?
-> 
-> Almost certainly yes, although how small it initially was I'm not
-> sure.
+On 10 Sep 14:33, Brian Foster (bfoster@redhat.com) wrote:
 
-Oof; with a default of 4 AGs that means that this filesystem was likely
-grown from 1G to 6T.
+> > >... was the filesystem created small and then grown to a much
+> > > larger size via xfs_growfs?
+> > 
+> > Almost certainly yes, although how small it initially was I'm not
+> > sure.
 
-Like Brian says, that is definitely not recommended.  ;)
+It actually been grown several times over the years - the system is
+rather old. Indeed, all its disks have been replaced with bigger ones
+without reinstallation, so the filesystem could not have been
+initially created as big as it is now.
 
--Eric
+> That probably explains that then. While growfs is obviously supported,
+> it's not usually a great idea to grow from something really small to
+> really large like this
+
+That's good to know - but sometimes you just can't plan
+ahead far enough.
+
+> I'd expect such a large filesystem with such small allocation groups to
+> probably introduce overhead in terms of metadata usage (24k agi's,
+> agf's, 2x free space btrees and 1x inode btree per AG), spending more
+> time in AG selection algorithms for allocations and whatnot, increased
+> fragmentation due to capping the maximum contiguous extent size,
+> creating more work for userspace tools such as repair, etc., and
+> probably to have other weird or non-obvious side effects that I'm not
+> familiar with.
+
+So it's likely to also make it more fragile and harder to repair in
+case of a disaster like this.
+
+So, my take from this is that
+
+(1) The bug was real but it was just in the old version of xfs_repair
+in Debian Wheezy, and even when the machine is updated to Jessie
+(due soon) it's better to install latest (4.20) xfsprogs from sources
+rather Jessie's packaged 3.20; and
+
+(2) When a filesystem grows a lot it is better to recreate it
+(at least every now and then if the growth is incremental)
+rather than keep growing it forever.
+
+If there's anything you'd like to add, and especially if there
+is something you'd still like to debug where I could help,
+please let me know.
+
+Thank you for your help,
+
+-- 
+Tapani Tarvainen
 
 _______________________________________________
 xfs mailing list
