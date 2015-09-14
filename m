@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5ABD57F3F
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:44:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2BE82304048
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:44:15 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 528E77F37
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:55:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 30F9E8F8035
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:55:17 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZPRorkQiIjGybivC (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ISj9iYrNA44H6liL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:44:14 -0700 (PDT)
-Date: Mon, 14 Sep 2015 15:44:12 -0400
+	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:55:16 -0700 (PDT)
+Date: Mon, 14 Sep 2015 15:55:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/13] xfs_repair: better checking of v5 attributes
-Message-ID: <20150914194412.GJ34083@bfoster.bfoster>
+Subject: Re: [PATCH 10/13] xfs_repair: Remove more differences between attr &
+	dir2
+Message-ID: <20150914195513.GK34083@bfoster.bfoster>
 References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
-	<1441827251-13128-10-git-send-email-sandeen@sandeen.net>
+	<1441827251-13128-11-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1441827251-13128-10-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1441827251-13128-11-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,53 +34,125 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 09, 2015 at 02:34:07PM -0500, Eric Sandeen wrote:
-> The commit:
+On Wed, Sep 09, 2015 at 02:34:08PM -0500, Eric Sandeen wrote:
+> This is a hodgepodge of unrelated but not-completely-trivial
+> chagnes to both the dir2 and attr code to make their common
+> code more similar.
 > 
-> 0519f66 xfs_repair: better checking of v5 metadata fields
+> * It removes the whichfork checking in attr_repair, because we
+>   only get there with XFS_ATTR_FORK.
+> * It changes the magic-checking logic slightly to match.
+> * It swaps some (bp == NULL) tests for (!bp)
 > 
-> added new corruption checks to dir2.c but missed the similar
-> code in attr_repair.c; add that here.
+> These should be purely cosmetic changes.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
->  repair/attr_repair.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  repair/attr_repair.c |   20 +++++---------------
+>  repair/dir2.c        |   14 ++++++++------
+>  2 files changed, 13 insertions(+), 21 deletions(-)
 > 
 > diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 2aafdf6..c8ba484 100644
+> index c8ba484..26a0e71 100644
 > --- a/repair/attr_repair.c
 > +++ b/repair/attr_repair.c
-> @@ -201,6 +201,15 @@ traverse_int_dablock(xfs_mount_t	*mp,
+> @@ -177,19 +177,13 @@ traverse_int_dablock(xfs_mount_t	*mp,
+>  			free(bmp);
+>  
+>  		if (!bp) {
+> -			if (whichfork == XFS_DATA_FORK)
+> -				do_warn(
+> -	_("can't read block %u (fsbno %" PRIu64 ") for directory inode %" PRIu64 "\n"),
+> -					bno, fsbno, da_cursor->ino);
+> -			else
+> -				do_warn(
+> +			do_warn(
+>  	_("can't read block %u (fsbno %" PRIu64 ") for attrbute fork of inode %" PRIu64 "\n"),
+>  					bno, fsbno, da_cursor->ino);
 >  			goto error_out;
 >  		}
 >  
-> +		/* corrupt node; rebuild the dir. */
-> +		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
-> +			libxfs_putbuf(bp);
-> +			do_warn(
-> +_("corrupt tree block %u for directory inode %" PRIu64 "\n"),
-> +				bno, da_cursor->ino);
-> +			goto error_out;
-> +		}
-> +
-
-Hmm, well this certainly looks similar, but is it the right thing to do
-for xattrs? I haven't followed through how exactly directories are
-rebuilt, but there does appear to be a recovery path in the dir2
-context. A failure there simply puts the inode on a "bad" list to be
-rebuilt later, presumably from data collected from all of the inodes.
-
-If we fail here, it looks like we just clear the attribute fork. So are
-we failing too hard, too soon here if a dablock crc happens to be
-incorrect?
-
-Brian
-
+>  		node = bp->b_addr;
+> -		btree = M_DIROPS(mp)->node_tree_p(node);
+>  		M_DIROPS(mp)->node_hdr_from_disk(&nodehdr, node);
+>  
+>  		if (nodehdr.magic != XFS_DA_NODE_MAGIC &&
+> @@ -210,6 +204,7 @@ _("corrupt tree block %u for directory inode %" PRIu64 "\n"),
+>  			goto error_out;
+>  		}
+>  
+> +		btree = M_DIROPS(mp)->node_tree_p(node);
 >  		if (nodehdr.count > geo->node_ents)  {
 >  			do_warn(_("bad record count in inode %" PRIu64 ", "
 >  				  "count = %d, max = %d\n"),
+> @@ -235,14 +230,9 @@ _("bad header depth for directory inode %" PRIu64 "\n"),
+>  			if (nodehdr.level == i - 1)  {
+>  				i--;
+>  			} else  {
+> -				if (whichfork == XFS_DATA_FORK)
+> -					do_warn(_("bad directory btree for "
+> -						  "directory inode %" PRIu64 "\n"),
+> -						da_cursor->ino);
+> -				else
+> -					do_warn(_("bad attribute fork btree "
+> -						  "for inode %" PRIu64 "\n"),
+> -						da_cursor->ino);
+> +				do_warn(_("bad attribute fork btree "
+> +					  "for inode %" PRIu64 "\n"),
+> +					da_cursor->ino);
+>  				libxfs_putbuf(bp);
+>  				goto error_out;
+>  			}
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index 9398df5..8cf981f 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -172,7 +172,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
+>  		bp = da_read_buf(mp, nex, bmp, &xfs_da3_node_buf_ops);
+>  		if (bmp != &lbmp)
+>  			free(bmp);
+> -		if (bp == NULL) {
+> +		if (!bp) {
+>  			do_warn(
+>  _("can't read block %u for directory inode %" PRIu64 "\n"),
+>  				bno, da_cursor->ino);
+> @@ -192,8 +192,10 @@ _("found non-root LEAFN node in inode %" PRIu64 " bno = %u\n"),
+>  			*rbno = 0;
+>  			libxfs_putbuf(bp);
+>  			return(1);
+> -		} else if (!(nodehdr.magic == XFS_DA_NODE_MAGIC ||
+> -			     nodehdr.magic == XFS_DA3_NODE_MAGIC))  {
+> +		}
+> +
+> +		if (nodehdr.magic != XFS_DA_NODE_MAGIC &&
+> +		    nodehdr.magic != XFS_DA3_NODE_MAGIC)  {
+>  			libxfs_putbuf(bp);
+>  			do_warn(
+>  _("bad dir magic number 0x%x in inode %" PRIu64 " bno = %u\n"),
+> @@ -574,7 +576,7 @@ _("can't get map info for block %u of directory inode %" PRIu64 "\n"),
+>  		if (bmp != &lbmp)
+>  			free(bmp);
+>  
+> -		if (bp == NULL) {
+> +		if (!bp) {
+>  			do_warn(
+>  _("can't read block %u for directory inode %" PRIu64 "\n"),
+>  				dabno, cursor->ino);
+> @@ -589,8 +591,8 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
+>  		 * entry count, verify level
+>  		 */
+>  		bad = 0;
+> -		if (!(nodehdr.magic == XFS_DA_NODE_MAGIC ||
+> -		      nodehdr.magic == XFS_DA3_NODE_MAGIC)) {
+> +		if (nodehdr.magic != XFS_DA_NODE_MAGIC &&
+> +		    nodehdr.magic != XFS_DA3_NODE_MAGIC) {
+>  			do_warn(
+>  _("bad magic number %x in block %u for directory inode %" PRIu64 "\n"),
+>  				nodehdr.magic,
 > -- 
 > 1.7.1
 > 
