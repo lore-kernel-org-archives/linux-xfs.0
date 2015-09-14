@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F34FD7F54
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:44:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E56C78F8035
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:44:10 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5ABD57F3F
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:44:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2BE82304048
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:44:15 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YPhj1fhMK0AMM9O4 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ZPRorkQiIjGybivC (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:44:10 -0700 (PDT)
-Date: Mon, 14 Sep 2015 15:44:07 -0400
+	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:44:14 -0700 (PDT)
+Date: Mon, 14 Sep 2015 15:44:12 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/13] xfs_repair: catch bad level/depth in da node
-Message-ID: <20150914194407.GI34083@bfoster.bfoster>
+Subject: Re: [PATCH 09/13] xfs_repair: better checking of v5 attributes
+Message-ID: <20150914194412.GJ34083@bfoster.bfoster>
 References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
-	<1441827251-13128-9-git-send-email-sandeen@sandeen.net>
+	<1441827251-13128-10-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1441827251-13128-9-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1441827251-13128-10-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +33,53 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 09, 2015 at 02:34:06PM -0500, Eric Sandeen wrote:
-> Two tests added some time ago to dir2.c:
+On Wed, Sep 09, 2015 at 02:34:07PM -0500, Eric Sandeen wrote:
+> The commit:
 > 
-> 44dae5e xfs_repair: test for bad level in dir2 node
-> 28148f6 xfs_repair: catch bad depth in traverse_int_dir2block
+> 0519f66 xfs_repair: better checking of v5 metadata fields
 > 
-> never made it to the similar tree-walking code in attr_repair.c;
-> fix that up here.  The error string details will be fixed up
-> later.
+> added new corruption checks to dir2.c but missed the similar
+> code in attr_repair.c; add that here.
 > 
-> Signed-off-by; Eric Sandeen <sandeen@redhat.com>
-> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  repair/attr_repair.c |   12 ++++++++++--
->  1 files changed, 10 insertions(+), 2 deletions(-)
+>  repair/attr_repair.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
 > 
 > diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 5ae2356..2aafdf6 100644
+> index 2aafdf6..c8ba484 100644
 > --- a/repair/attr_repair.c
 > +++ b/repair/attr_repair.c
-> @@ -212,9 +212,17 @@ traverse_int_dablock(xfs_mount_t	*mp,
->  		/*
->  		 * maintain level counter
->  		 */
-> -		if (i == -1)
-> +		if (i == -1) {
->  			i = da_cursor->active = nodehdr.level;
-> -		else  {
-> +			if (i < 1 || i >= XFS_DA_NODE_MAXDEPTH) {
-> +				do_warn(
-> +_("bad header depth for directory inode %" PRIu64 "\n"),
-> +					da_cursor->ino);
-> +				libxfs_putbuf(bp);
-> +				i = -1;
-> +				goto error_out;
-> +			}
-> +		} else  {
->  			if (nodehdr.level == i - 1)  {
->  				i--;
->  			} else  {
+> @@ -201,6 +201,15 @@ traverse_int_dablock(xfs_mount_t	*mp,
+>  			goto error_out;
+>  		}
+>  
+> +		/* corrupt node; rebuild the dir. */
+> +		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
+> +			libxfs_putbuf(bp);
+> +			do_warn(
+> +_("corrupt tree block %u for directory inode %" PRIu64 "\n"),
+> +				bno, da_cursor->ino);
+> +			goto error_out;
+> +		}
+> +
+
+Hmm, well this certainly looks similar, but is it the right thing to do
+for xattrs? I haven't followed through how exactly directories are
+rebuilt, but there does appear to be a recovery path in the dir2
+context. A failure there simply puts the inode on a "bad" list to be
+rebuilt later, presumably from data collected from all of the inodes.
+
+If we fail here, it looks like we just clear the attribute fork. So are
+we failing too hard, too soon here if a dablock crc happens to be
+incorrect?
+
+Brian
+
+>  		if (nodehdr.count > geo->node_ents)  {
+>  			do_warn(_("bad record count in inode %" PRIu64 ", "
+>  				  "count = %d, max = %d\n"),
 > -- 
 > 1.7.1
 > 
