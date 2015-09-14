@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DF9B27F5D
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:18:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 57D44AC001
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:18:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mMwAgGEHyzo78NfM (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:18:28 -0700 (PDT)
-Date: Mon, 14 Sep 2015 15:18:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/13] xfs_repair: add XR_DIR_TRACE to dir2.c
-Message-ID: <20150914191825.GF34083@bfoster.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C14747F3F
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:24:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7B7AC8F8033
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:24:59 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id LSOQEEDDgOVT8vDe for <xfs@oss.sgi.com>;
+	Mon, 14 Sep 2015 12:24:56 -0700 (PDT)
+Subject: Re: [PATCH 04/13] xfs_repair: use multibuffer read routines in
+	attr_repair.c
 References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
-	<1441827251-13128-7-git-send-email-sandeen@sandeen.net>
+	<1441827251-13128-5-git-send-email-sandeen@sandeen.net>
+	<20150914191816.GD34083@bfoster.bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <55F71F05.90905@sandeen.net>
+Date: Mon, 14 Sep 2015 14:24:53 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1441827251-13128-7-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <20150914191816.GD34083@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,129 +26,167 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 09, 2015 at 02:34:04PM -0500, Eric Sandeen wrote:
-> attr_repair.c has many printf-tracepoints under
-> #ifdef XR_DIR_TRACE, but the similar code in dir2.c does not.
-> 
-> Add these same tracepoints to remove more differences between
-> these two pieces of code.
-> 
-> Not all messages are quite correct; those will be fixed up last.
-> For now we just make the code more obviously similar.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  repair/dir2.c |   39 ++++++++++++++++++++++++++++++++++++---
->  1 files changed, 36 insertions(+), 3 deletions(-)
-> 
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index 898b27e..d9bd5fc 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -337,6 +337,11 @@ verify_final_dir2_path(xfs_mount_t	*mp,
->  	struct xfs_da_node_entry *btree;
->  	struct xfs_da3_icnode_hdr nodehdr;
->  
-> +#ifdef XR_DIR_TRACE
-> +	fprintf(stderr, "in verify_final_dir2_path, this_level = %d\n",
-> +		this_level);
-> +#endif
-> +
->  	/*
->  	 * the index should point to the next "unprocessed" entry
->  	 * in the block which should be the final (rightmost) entry
-> @@ -388,8 +393,17 @@ verify_final_dir2_path(xfs_mount_t	*mp,
->  	/*
->  	 * ok, now check descendant block number against this level
->  	 */
-> -	if (cursor->level[p_level].bno != be32_to_cpu(btree[entry].before))
-> +	if (cursor->level[p_level].bno != be32_to_cpu(btree[entry].before)) {
-> +#ifdef XR_DIR_TRACE
-> +		fprintf(stderr, "bad directory btree pointer, child bno should "
-> +				"be %d, block bno is %d, hashval is %u\n",
-> +			be16_to_cpu(btree[entry].before),
-> +			cursor->level[p_level].bno,
-> +			cursor->level[p_level].hashval);
-> +		fprintf(stderr, "verify_final_dir2_path returns 1 (bad) #1a\n");
-> +#endif
->  		return(1);
-> +	}
->  
->  	if (cursor->level[p_level].hashval !=
->  				be32_to_cpu(btree[entry].hashval))  {
-> @@ -431,8 +445,12 @@ _("would correct bad hashval in non-leaf dir block\n"
->  	/*
->  	 * bail out if this is the root block (top of tree)
->  	 */
-> -	if (this_level >= cursor->active)
-> +	if (this_level >= cursor->active) {
-> +#ifdef XR_DIR_TRACE
-> +		fprintf(stderr, "verify_final_dir2_path returns 0 (ok)\n");
-> +#endif
->  		return(0);
-> +	}
->  	/*
->  	 * set hashvalue to correctl reflect the now-validated
->  	 * last entry in this block and continue upwards validation
-> @@ -600,6 +618,9 @@ _("bad level %d in block %u for directory inode %" PRIu64 "\n"),
->  			bad++;
->  		}
->  		if (bad)  {
-> +#ifdef XR_DIR_TRACE
-> +			fprintf(stderr, "verify_dir2_path returns 1 (bad) #4\n");
-> +#endif
->  			libxfs_putbuf(bp);
->  			return(1);
->  		}
-> @@ -631,8 +652,17 @@ _("bad level %d in block %u for directory inode %" PRIu64 "\n"),
->  	/*
->  	 * ditto for block numbers
->  	 */
-> -	if (cursor->level[p_level].bno != be32_to_cpu(btree[entry].before))
-> +	if (cursor->level[p_level].bno != be32_to_cpu(btree[entry].before)) {
-> +#ifdef XR_DIR_TRACE
-> +		fprintf(stderr, "bad directory btree pointer, child bno "
-> +			"should be %d, block bno is %d, hashval is %u\n",
-> +			be32_to_cpu(btree[entry].before),
-> +			cursor->level[p_level].bno,
-> +			cursor->level[p_level].hashval);
-> +		fprintf(stderr, "verify_dir2_path returns 1 (bad) #1a\n");
-> +#endif
->  		return(1);
-> +	}
->  	/*
->  	 * ok, now validate last hashvalue in the descendant
->  	 * block against the hashval in the current entry
-> @@ -659,6 +689,9 @@ _("would correct bad hashval in interior dir block\n"
->  	 * (which should point to the next descendant block)
->  	 */
->  	cursor->level[this_level].index++;
-> +#ifdef XR_DIR_TRACE
-> +       fprintf(stderr, "verify_dir2_path returns 0 (ok)\n");
-> +#endif
->  	return(0);
->  }
->  
-> -- 
-> 1.7.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgpPbiA5LzE0LzE1IDI6MTggUE0sIEJyaWFuIEZvc3RlciB3cm90ZToKPiBPbiBXZWQsIFNlcCAw
+OSwgMjAxNSBhdCAwMjozNDowMlBNIC0wNTAwLCBFcmljIFNhbmRlZW4gd3JvdGU6Cj4+IHZlcmlm
+eV9kYV9wYXRoIGFuZCB0cmF2ZXJzZV9pbnRfZGFibG9jayBhcmUgc2ltaWxhciB0bwo+PiB2ZXJp
+ZnlfZGlyMl9wYXRoIGFuZCB0cmF2ZXJzZV9pbnRfZGlyMmJsb2NrLCBidXQgb25lCj4+IGRpZmZl
+cmVuY2UgaXMgdGhhdCB0aGUgZGlyMiBjb2RlIHJlYWRzIHVzaW5nIHRoZQo+PiBtdWx0aWJ1ZmZl
+ciBjYXBhYmxlIGRhX3JlYWRfYnVmKCkgcm91dGluZSwgd2hlcmVhcwo+PiB0aGUgYXR0ciBjb2Rl
+IGRvZXNuJ3QgbmVlZCB0bywgYW5kIGp1c3QgY2FsbHMKPj4gbGlieGZzX3JlYWRidWYuCj4+Cj4+
+IFRoZSBtdWx0aWJ1ZmZlciBjb2RlIGZhbGxzIGJhY2sganVzdCBmaW5lIHdoZW4gdGhlCj4+IGdl
+b21ldHJ5IGluZGljYXRlcyB0aGF0IGl0J3Mgbm90IG5lZWRlZCwgc28gdXNlIHRoYXQKPj4gc2Ft
+ZSBjb2RlIGluIHRoZSBhdHRyaWJ1dGUgcm91dGluZXMsIGFuZCByZW1vdmUKPj4gYW5vdGhlciBk
+aXIyIC8gZGEgZGlmZmVyZW5jZS4gIFdlIG1ha2UgZGFfcmVhZF9idWYoKQo+PiBub24tc3RhdGlj
+IHRvIGZhY2lsaXRhdGUgdGhpcy4KPj4KPj4gRmluYWxseSwgYWRkIGEgbG9jYWwgKmdlbyB0byB0
+aGVzZSByb3V0aW5lcywKPj4gdG8gbWFrZSB0aGUgY29kZSBldmVuIG1vcmUgc2ltaWxhciBhdCB0
+aGlzIHBvaW50Lgo+PiBUaGUgZ2VvbWV0cnkgd2lsbCBnZXQgcGFzc2VkIGluIGxhdGVyIGluIHRo
+ZSBzZXJpZXMuCj4+Cj4+IFNpZ25lZC1vZmYtYnk6IEVyaWMgU2FuZGVlbiA8c2FuZGVlbkByZWRo
+YXQuY29tPgo+PiBTaWduZWQtb2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5u
+ZXQ+Cj4+IC0tLQo+PiAgcmVwYWlyL2F0dHJfcmVwYWlyLmMgfCAgIDQ5ICsrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0KPj4gIHJlcGFpci9kaXIyLmMgICAg
+ICAgIHwgICAyMiArKysrKysrKysrKysrLS0tLS0tLS0tCj4+ICByZXBhaXIvZGlyMi5oICAgICAg
+ICB8ICAgIDggKysrKysrKysKPj4gIDMgZmlsZXMgY2hhbmdlZCwgNTQgaW5zZXJ0aW9ucygrKSwg
+MjUgZGVsZXRpb25zKC0pCj4+Cj4+IGRpZmYgLS1naXQgYS9yZXBhaXIvYXR0cl9yZXBhaXIuYyBi
+L3JlcGFpci9hdHRyX3JlcGFpci5jCj4+IGluZGV4IGFiYTA3ODIuLmZlODFkZjQgMTAwNjQ0Cj4+
+IC0tLSBhL3JlcGFpci9hdHRyX3JlcGFpci5jCj4+ICsrKyBiL3JlcGFpci9hdHRyX3JlcGFpci5j
+Cj4+IEBAIC0xMzgsMTQgKzEzOCwyMCBAQCB0cmF2ZXJzZV9pbnRfZGFibG9jayh4ZnNfbW91bnRf
+dAkqbXAsCj4+ICAJCXhmc19kYWJsa190CQkqcmJubywKPj4gIAkJaW50CQkJd2hpY2hmb3JrKQo+
+PiAgewo+PiArCWJtYXBfZXh0X3QJCSpibXA7CgpXZWxsLCB5ZWFoIC0gSSB0aG91Z2h0IGFib3V0
+IHRoYXQuICBUaGUgZ29hbCB3YXMgdG8gbWFrZSBpdCBhcyBjbG9zZQphcyBwb3NzaWJsZSB0byB0
+aGUgb3RoZXIgY29kZSwgc28gSSBkZWNpZGVkIGFnYWluc3QgdGhlIHN0cnVjdCBmb28ncy4KCkkg
+Y291bGQgZG8gYSAiZ2V0IHJpZCBvZiB0eXBlZGVmcyIgYXMgdGhlIGxhc3QgcGF0Y2ggdG8gdGhl
+IG5ldyB1dGlsCmNvZGUgaWYgeW91IGxpa2UuCgo+IHN0cnVjdCBibWFwX2V4dAo+IAo+IChhbmQg
+c2V2ZXJhbCBvdGhlciBwbGFjZXMgYmVsb3cpCj4gCj4+ICAJeGZzX2RhYmxrX3QJCWJubzsKPj4g
+IAlpbnQJCQlpOwo+PiArCWludAkJCW5leDsKPj4gIAl4ZnNfZGFfaW50bm9kZV90CSpub2RlOwo+
+PiArCWJtYXBfZXh0X3QJCWxibXA7Cj4+ICAJeGZzX2ZzYmxvY2tfdAkJZnNibm87Cj4+ICAJeGZz
+X2J1Zl90CQkqYnA7Cj4+ICsJc3RydWN0IHhmc19kYV9nZW9tZXRyeQkqZ2VvOwo+PiAgCXN0cnVj
+dCB4ZnNfZGFfbm9kZV9lbnRyeSAqYnRyZWU7Cj4+ICAJc3RydWN0IHhmc19kYTNfaWNub2RlX2hk
+ciBub2RlaGRyOwo+PiAgCj4+ICsJZ2VvID0gbXAtPm1fYXR0cl9nZW87Cj4+ICsKPj4gIAkvKgo+
+PiAgCSAqIHRyYXZlcnNlIGRvd24gbGVmdC1zaWRlIG9mIHRyZWUgdW50aWwgd2UgaGl0IHRoZQo+
+PiAgCSAqIGxlZnQtbW9zdCBsZWFmIGJsb2NrIHNldHRpbmcgdXAgdGhlIGJ0cmVlIGN1cnNvciBh
+bG9uZwo+PiBAQCAtMTYwLDEzICsxNjYsMTYgQEAgdHJhdmVyc2VfaW50X2RhYmxvY2soeGZzX21v
+dW50X3QJKm1wLAo+PiAgCQkvKgo+PiAgCQkgKiByZWFkIGluIGVhY2ggYmxvY2sgYWxvbmcgdGhl
+IHdheSBhbmQgc2V0IHVwIGN1cnNvcgo+PiAgCQkgKi8KPj4gLQkJZnNibm8gPSBibGttYXBfZ2V0
+KGRhX2N1cnNvci0+YmxrbWFwLCBibm8pOwo+PiArCQluZXggPSBibGttYXBfZ2V0bihkYV9jdXJz
+b3ItPmJsa21hcCwgYm5vLAo+PiArCQkJCWdlby0+ZnNiY291bnQsICZibXAsICZsYm1wKTsKPj4g
+IAo+IAo+IC4uLgo+IGF0dHJfcmVwYWlyLmM6IEluIGZ1bmN0aW9uIOKAmHByb2Nlc3NfYXR0cmli
+dXRlc+KAmToKPiBhdHRyX3JlcGFpci5jOjE4NTo1OiB3YXJuaW5nOiDigJhmc2Jub+KAmSBtYXkg
+YmUgdXNlZCB1bmluaXRpYWxpemVkIGluIHRoaXMgZnVuY3Rpb24gWy1XbWF5YmUtdW5pbml0aWFs
+aXplZF0KCmhtLCB3aG9vcHMuICBXZWxsLCBpdCBnb2VzIGF3YXkgaW4gdGhlIGxvbmcgcnVuLCBi
+dXQgSSBjYW4gc3RpbGwgZml4CnRoYXQgdXAuCgpUaGFua3MsCi1FcmljCgo+ICAgICAgZG9fd2Fy
+bigKPiAuLi4KPiAKPiBCcmlhbgo+IAo+PiAtCQlpZiAoZnNibm8gPT0gTlVMTEZTQkxPQ0spCj4+
+ICsJCWlmIChuZXggPT0gMCkKPj4gIAkJCWdvdG8gZXJyb3Jfb3V0Owo+PiAgCj4+IC0JCWJwID0g
+bGlieGZzX3JlYWRidWYobXAtPm1fZGV2LCBYRlNfRlNCX1RPX0RBRERSKG1wLCBmc2JubyksCj4+
+IC0JCQkJWEZTX0ZTQl9UT19CQihtcCwgMSksIDAsICZ4ZnNfZGEzX25vZGVfYnVmX29wcyk7Cj4+
+ICsJCWJwID0gZGFfcmVhZF9idWYobXAsIG5leCwgYm1wLCAmeGZzX2RhM19ub2RlX2J1Zl9vcHMp
+Owo+PiArCQlpZiAoYm1wICE9ICZsYm1wKQo+PiArCQkJZnJlZShibXApOwo+PiArCj4+ICAJCWlm
+ICghYnApIHsKPj4gIAkJCWlmICh3aGljaGZvcmsgPT0gWEZTX0RBVEFfRk9SSykKPj4gIAkJCQlk
+b193YXJuKAo+PiBAQCAtMTkyLDEyICsyMDEsMTAgQEAgdHJhdmVyc2VfaW50X2RhYmxvY2soeGZz
+X21vdW50X3QJKm1wLAo+PiAgCQkJZ290byBlcnJvcl9vdXQ7Cj4+ICAJCX0KPj4gIAo+PiAtCQlp
+ZiAobm9kZWhkci5jb3VudCA+IG1wLT5tX2F0dHJfZ2VvLT5ub2RlX2VudHMpICB7Cj4+ICsJCWlm
+IChub2RlaGRyLmNvdW50ID4gZ2VvLT5ub2RlX2VudHMpICB7Cj4+ICAJCQlkb193YXJuKF8oImJh
+ZCByZWNvcmQgY291bnQgaW4gaW5vZGUgJSIgUFJJdTY0ICIsICIKPj4gIAkJCQkgICJjb3VudCA9
+ICVkLCBtYXggPSAlZFxuIiksCj4+IC0JCQkJZGFfY3Vyc29yLT5pbm8sCj4+IC0JCQkJbm9kZWhk
+ci5jb3VudCwKPj4gLQkJCQltcC0+bV9hdHRyX2dlby0+bm9kZV9lbnRzKTsKPj4gKwkJCQlkYV9j
+dXJzb3ItPmlubywgbm9kZWhkci5jb3VudCwgZ2VvLT5ub2RlX2VudHMpOwo+PiAgCQkJbGlieGZz
+X3B1dGJ1ZihicCk7Cj4+ICAJCQlnb3RvIGVycm9yX291dDsKPj4gIAkJfQo+PiBAQCAtNDkyLDkg
+KzQ5OSwxNSBAQCB2ZXJpZnlfZGFfcGF0aCh4ZnNfbW91bnRfdAkqbXAsCj4+ICAJaW50CQkJYmFk
+Owo+PiAgCWludAkJCWVudHJ5Owo+PiAgCWludAkJCXRoaXNfbGV2ZWwgPSBwX2xldmVsICsgMTsK
+Pj4gKwlibWFwX2V4dF90CQkqYm1wOwo+PiArCWludAkJCW5leDsKPj4gKwlibWFwX2V4dF90CQls
+Ym1wOwo+PiArCXN0cnVjdCB4ZnNfZGFfZ2VvbWV0cnkJKmdlbzsKPj4gIAlzdHJ1Y3QgeGZzX2Rh
+X25vZGVfZW50cnkgKmJ0cmVlOwo+PiAgCXN0cnVjdCB4ZnNfZGEzX2ljbm9kZV9oZHIgbm9kZWhk
+cjsKPj4gIAo+PiArCWdlbyA9IG1wLT5tX2F0dHJfZ2VvOwo+PiArCj4+ICAJLyoKPj4gIAkgKiBp
+bmRleCBpcyBjdXJyZW50bHkgc2V0IHRvIHBvaW50IHRvIHRoZSBlbnRyeSB0aGF0Cj4+ICAJICog
+c2hvdWxkIGJlIHByb2Nlc3NlZCBub3cgaW4gdGhpcyBsZXZlbC4KPj4gQEAgLTUzNiwxNyArNTQ5
+LDIxIEBAIHZlcmlmeV9kYV9wYXRoKHhmc19tb3VudF90CSptcCwKPj4gIAkJICovCj4+ICAJCWRh
+Ym5vID0gbm9kZWhkci5mb3J3Owo+PiAgCQlBU1NFUlQoZGFibm8gIT0gMCk7Cj4+IC0JCWZzYm5v
+ID0gYmxrbWFwX2dldChjdXJzb3ItPmJsa21hcCwgZGFibm8pOwo+PiAtCj4+IC0JCWlmIChmc2Ju
+byA9PSBOVUxMRlNCTE9DSykgewo+PiAtCQkJZG9fd2FybihfKCJjYW4ndCBnZXQgbWFwIGluZm8g
+Zm9yIGJsb2NrICV1ICIKPj4gLQkJCQkgICJvZiBkaXJlY3RvcnkgaW5vZGUgJSIgUFJJdTY0ICJc
+biIpLAo+PiArCQluZXggPSBibGttYXBfZ2V0bihjdXJzb3ItPmJsa21hcCwgZGFibm8sIGdlby0+
+ZnNiY291bnQsCj4+ICsJCQkmYm1wLCAmbGJtcCk7Cj4+ICsJCWlmIChuZXggPT0gMCkgewo+PiAr
+CQkJZG9fd2FybigKPj4gK18oImNhbid0IGdldCBtYXAgaW5mbyBmb3IgYmxvY2sgJXUgb2YgZGly
+ZWN0b3J5IGlub2RlICUiIFBSSXU2NCAiXG4iKSwKPj4gIAkJCQlkYWJubywgY3Vyc29yLT5pbm8p
+Owo+PiAgCQkJcmV0dXJuKDEpOwo+PiAgCQl9Cj4+ICAKPj4gLQkJYnAgPSBsaWJ4ZnNfcmVhZGJ1
+ZihtcC0+bV9kZXYsIFhGU19GU0JfVE9fREFERFIobXAsIGZzYm5vKSwKPj4gLQkJCQlYRlNfRlNC
+X1RPX0JCKG1wLCAxKSwgMCwgJnhmc19kYTNfbm9kZV9idWZfb3BzKTsKPj4gKwkJZnNibm8gPSBi
+bXBbMF0uc3RhcnRibG9jazsKPj4gKwo+PiArCQlicCA9IGRhX3JlYWRfYnVmKG1wLCBuZXgsIGJt
+cCwgJnhmc19kYTNfbm9kZV9idWZfb3BzKTsKPj4gKwkJaWYgKGJtcCAhPSAmbGJtcCkKPj4gKwkJ
+CWZyZWUoYm1wKTsKPj4gKwo+PiAgCQlpZiAoIWJwKSB7Cj4+ICAJCQlkb193YXJuKAo+PiAgCV8o
+ImNhbid0IHJlYWQgYmxvY2sgJXUgKCUiIFBSSXU2NCAiKSBmb3IgZGlyZWN0b3J5IGlub2RlICUi
+IFBSSXU2NCAiXG4iKSwKPj4gQEAgLTU3Nyw3ICs1OTQsNyBAQCB2ZXJpZnlfZGFfcGF0aCh4ZnNf
+bW91bnRfdAkqbXAsCj4+ICAJCQkJZGFibm8sIGZzYm5vLCBjdXJzb3ItPmlubyk7Cj4+ICAJCQli
+YWQrKzsKPj4gIAkJfQo+PiAtCQlpZiAobm9kZWhkci5jb3VudCA+IG1wLT5tX2F0dHJfZ2VvLT5u
+b2RlX2VudHMpIHsKPj4gKwkJaWYgKG5vZGVoZHIuY291bnQgPiBnZW8tPm5vZGVfZW50cykgewo+
+PiAgCQkJZG9fd2FybigKPj4gIAlfKCJlbnRyeSBjb3VudCAlZCB0b28gbGFyZ2UgaW4gYmxvY2sg
+JXUgKCUiIFBSSXU2NCAiKSBmb3IgZGlyZWN0b3J5IGlub2RlICUiIFBSSXU2NCAiXG4iKSwKPj4g
+IAkJCQlub2RlaGRyLmNvdW50LAo+PiBkaWZmIC0tZ2l0IGEvcmVwYWlyL2RpcjIuYyBiL3JlcGFp
+ci9kaXIyLmMKPj4gaW5kZXggNTRjNDllYi4uNDQzNjdjNiAxMDA2NDQKPj4gLS0tIGEvcmVwYWly
+L2RpcjIuYwo+PiArKysgYi9yZXBhaXIvZGlyMi5jCj4+IEBAIC05Miw3ICs5Miw3IEBAIG5hbWVj
+aGVjayhjaGFyICpuYW1lLCBpbnQgbGVuZ3RoKQo+PiAgICogTXVsdGlidWZmZXIgaGFuZGxpbmcu
+Cj4+ICAgKiBWMiBkaXJlY3RvcnkgYmxvY2tzIGNhbiBiZSBub25jb250aWd1b3VzLCBuZWVkaW5n
+IG11bHRpcGxlIGJ1ZmZlcnMuCj4+ICAgKi8KPj4gLXN0YXRpYyBzdHJ1Y3QgeGZzX2J1ZiAqCj4+
+ICtzdHJ1Y3QgeGZzX2J1ZiAqCj4+ICBkYV9yZWFkX2J1ZigKPj4gIAl4ZnNfbW91bnRfdAkqbXAs
+Cj4+ICAJaW50CQluZXgsCj4+IEBAIC0xNDMsOSArMTQzLDEyIEBAIHRyYXZlcnNlX2ludF9kaXIy
+YmxvY2soeGZzX21vdW50X3QJKm1wLAo+PiAgCWludAkJCW5leDsKPj4gIAl4ZnNfZGFfaW50bm9k
+ZV90CSpub2RlOwo+PiAgCWJtYXBfZXh0X3QJCWxibXA7Cj4+ICsJc3RydWN0IHhmc19kYV9nZW9t
+ZXRyeQkqZ2VvOwo+PiAgCXN0cnVjdCB4ZnNfZGFfbm9kZV9lbnRyeSAqYnRyZWU7Cj4+ICAJc3Ry
+dWN0IHhmc19kYTNfaWNub2RlX2hkciBub2RlaGRyOwo+PiAgCj4+ICsJZ2VvID0gbXAtPm1fZGly
+X2dlbzsKPj4gKwo+PiAgCS8qCj4+ICAJICogdHJhdmVyc2UgZG93biBsZWZ0LXNpZGUgb2YgdHJl
+ZSB1bnRpbCB3ZSBoaXQgdGhlCj4+ICAJICogbGVmdC1tb3N0IGxlYWYgYmxvY2sgc2V0dGluZyB1
+cCB0aGUgYnRyZWUgY3Vyc29yIGFsb25nCj4+IEBAIC0xNjEsNyArMTY0LDcgQEAgdHJhdmVyc2Vf
+aW50X2RpcjJibG9jayh4ZnNfbW91bnRfdAkqbXAsCj4+ICAJCSAqIHJlYWQgaW4gZWFjaCBibG9j
+ayBhbG9uZyB0aGUgd2F5IGFuZCBzZXQgdXAgY3Vyc29yCj4+ICAJCSAqLwo+PiAgCQluZXggPSBi
+bGttYXBfZ2V0bihkYV9jdXJzb3ItPmJsa21hcCwgYm5vLAo+PiAtCQkJCW1wLT5tX2Rpcl9nZW8t
+PmZzYmNvdW50LCAmYm1wLCAmbGJtcCk7Cj4+ICsJCQkJZ2VvLT5mc2Jjb3VudCwgJmJtcCwgJmxi
+bXApOwo+PiAgCj4+ICAJCWlmIChuZXggPT0gMCkKPj4gIAkJCWdvdG8gZXJyb3Jfb3V0Owo+PiBA
+QCAtMjA3LDEzICsyMTAsMTEgQEAgXygiY29ycnVwdCB0cmVlIGJsb2NrICV1IGZvciBkaXJlY3Rv
+cnkgaW5vZGUgJSIgUFJJdTY0ICJcbiIpLAo+PiAgCQkJZ290byBlcnJvcl9vdXQ7Cj4+ICAJCX0K
+Pj4gIAkJYnRyZWUgPSBNX0RJUk9QUyhtcCktPm5vZGVfdHJlZV9wKG5vZGUpOwo+PiAtCQlpZiAo
+bm9kZWhkci5jb3VudCA+IG1wLT5tX2Rpcl9nZW8tPm5vZGVfZW50cykgIHsKPj4gLQkJCWxpYnhm
+c19wdXRidWYoYnApOwo+PiArCQlpZiAobm9kZWhkci5jb3VudCA+IGdlby0+bm9kZV9lbnRzKSAg
+ewo+PiAgCQkJZG9fd2FybigKPj4gIF8oImJhZCByZWNvcmQgY291bnQgaW4gaW5vZGUgJSIgUFJJ
+dTY0ICIsIGNvdW50ID0gJWQsIG1heCA9ICVkXG4iKSwKPj4gLQkJCQlkYV9jdXJzb3ItPmlubywK
+Pj4gLQkJCQlub2RlaGRyLmNvdW50LAo+PiAtCQkJCW1wLT5tX2Rpcl9nZW8tPm5vZGVfZW50cyk7
+Cj4+ICsJCQkJZGFfY3Vyc29yLT5pbm8sIG5vZGVoZHIuY291bnQsIGdlby0+bm9kZV9lbnRzKTsK
+Pj4gKwkJCWxpYnhmc19wdXRidWYoYnApOwo+PiAgCQkJZ290byBlcnJvcl9vdXQ7Cj4+ICAJCX0K
+Pj4gIAkJLyoKPj4gQEAgLTQ4OCw5ICs0ODksMTIgQEAgdmVyaWZ5X2RpcjJfcGF0aCh4ZnNfbW91
+bnRfdAkqbXAsCj4+ICAJYm1hcF9leHRfdAkJKmJtcDsKPj4gIAlpbnQJCQluZXg7Cj4+ICAJYm1h
+cF9leHRfdAkJbGJtcDsKPj4gKwlzdHJ1Y3QgeGZzX2RhX2dlb21ldHJ5CSpnZW87Cj4+ICAJc3Ry
+dWN0IHhmc19kYV9ub2RlX2VudHJ5ICpidHJlZTsKPj4gIAlzdHJ1Y3QgeGZzX2RhM19pY25vZGVf
+aGRyIG5vZGVoZHI7Cj4+ICAKPj4gKwlnZW8gPSBtcC0+bV9kaXJfZ2VvOwo+PiArCj4+ICAJLyoK
+Pj4gIAkgKiBpbmRleCBpcyBjdXJyZW50bHkgc2V0IHRvIHBvaW50IHRvIHRoZSBlbnRyeSB0aGF0
+Cj4+ICAJICogc2hvdWxkIGJlIHByb2Nlc3NlZCBub3cgaW4gdGhpcyBsZXZlbC4KPj4gQEAgLTUz
+Miw3ICs1MzYsNyBAQCB2ZXJpZnlfZGlyMl9wYXRoKHhmc19tb3VudF90CSptcCwKPj4gIAkJICov
+Cj4+ICAJCWRhYm5vID0gbm9kZWhkci5mb3J3Owo+PiAgCQlBU1NFUlQoZGFibm8gIT0gMCk7Cj4+
+IC0JCW5leCA9IGJsa21hcF9nZXRuKGN1cnNvci0+YmxrbWFwLCBkYWJubywgbXAtPm1fZGlyX2dl
+by0+ZnNiY291bnQsCj4+ICsJCW5leCA9IGJsa21hcF9nZXRuKGN1cnNvci0+YmxrbWFwLCBkYWJu
+bywgZ2VvLT5mc2Jjb3VudCwKPj4gIAkJCSZibXAsICZsYm1wKTsKPj4gIAkJaWYgKG5leCA9PSAw
+KSB7Cj4+ICAJCQlkb193YXJuKAo+PiBAQCAtNTc0LDcgKzU3OCw3IEBAIF8oImJhZCBiYWNrIHBv
+aW50ZXIgaW4gYmxvY2sgJXUgZm9yIGRpcmVjdG9yeSBpbm9kZSAlIiBQUkl1NjQgIlxuIiksCj4+
+ICAJCQkJZGFibm8sIGN1cnNvci0+aW5vKTsKPj4gIAkJCWJhZCsrOwo+PiAgCQl9Cj4+IC0JCWlm
+IChub2RlaGRyLmNvdW50ID4gbXAtPm1fZGlyX2dlby0+bm9kZV9lbnRzKSAgewo+PiArCQlpZiAo
+bm9kZWhkci5jb3VudCA+IGdlby0+bm9kZV9lbnRzKSAgewo+PiAgCQkJZG9fd2FybigKPj4gIF8o
+ImVudHJ5IGNvdW50ICVkIHRvbyBsYXJnZSBpbiBibG9jayAldSBmb3IgZGlyZWN0b3J5IGlub2Rl
+ICUiIFBSSXU2NCAiXG4iKSwKPj4gIAkJCQlub2RlaGRyLmNvdW50LAo+PiBkaWZmIC0tZ2l0IGEv
+cmVwYWlyL2RpcjIuaCBiL3JlcGFpci9kaXIyLmgKPj4gaW5kZXggM2NjMTk0MS4uMTg2NjMzZiAx
+MDA2NDQKPj4gLS0tIGEvcmVwYWlyL2RpcjIuaAo+PiArKysgYi9yZXBhaXIvZGlyMi5oCj4+IEBA
+IC01OCw2ICs1OCwxNCBAQCB0eXBlZGVmIHN0cnVjdCBkaXIyX2J0X2N1cnNvciAgewo+PiAgCXN0
+cnVjdCBibGttYXAJCSpibGttYXA7Cj4+ICB9IGRpcjJfYnRfY3Vyc29yX3Q7Cj4+ICAKPj4gKyNp
+bmNsdWRlICJibWFwLmgiCS8qIEdvZXMgYXdheSBpbiBsYXRlciByZWZhY3RvcmluZyAqLwo+PiAr
+c3RydWN0IHhmc19idWYgKgo+PiArZGFfcmVhZF9idWYoCj4+ICsJeGZzX21vdW50X3QJKm1wLAo+
+PiArCWludAkJbmV4LAo+PiArCWJtYXBfZXh0X3QJKmJtcCwKPj4gKwljb25zdCBzdHJ1Y3QgeGZz
+X2J1Zl9vcHMgKm9wcyk7Cj4+ICsKPj4gIGludAo+PiAgcHJvY2Vzc19kaXIyKAo+PiAgCXhmc19t
+b3VudF90CSptcCwKPj4gLS0gCj4+IDEuNy4xCj4+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5z
+Z2kuY29tCj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+IAoKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
+bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
+eGZzCg==
