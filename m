@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6F6997F37
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:18:22 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2E3D37F61
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 14:18:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DD39AAC006
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:18:21 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1DC02304048
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:18:25 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BMW7HZ9Dqr5QcBXT (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kCQ7lsEBtX05UsxS (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:18:19 -0700 (PDT)
-Date: Mon, 14 Sep 2015 15:18:17 -0400
+	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:18:24 -0700 (PDT)
+Date: Mon, 14 Sep 2015 15:18:22 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/13] xfs_repair: use multibuffer read routines in
-	attr_repair.c
-Message-ID: <20150914191816.GD34083@bfoster.bfoster>
+Subject: Re: [PATCH 05/13] xfs_repair: fix use-after-free in
+	verify_final_dir2_path
+Message-ID: <20150914191821.GE34083@bfoster.bfoster>
 References: <1441827251-13128-1-git-send-email-sandeen@sandeen.net>
-	<1441827251-13128-5-git-send-email-sandeen@sandeen.net>
+	<1441827251-13128-6-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1441827251-13128-5-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1441827251-13128-6-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,155 +27,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBTZXAgMDksIDIwMTUgYXQgMDI6MzQ6MDJQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IHZlcmlmeV9kYV9wYXRoIGFuZCB0cmF2ZXJzZV9pbnRfZGFibG9jayBhcmUgc2ltaWxh
-ciB0bwo+IHZlcmlmeV9kaXIyX3BhdGggYW5kIHRyYXZlcnNlX2ludF9kaXIyYmxvY2ssIGJ1dCBv
-bmUKPiBkaWZmZXJlbmNlIGlzIHRoYXQgdGhlIGRpcjIgY29kZSByZWFkcyB1c2luZyB0aGUKPiBt
-dWx0aWJ1ZmZlciBjYXBhYmxlIGRhX3JlYWRfYnVmKCkgcm91dGluZSwgd2hlcmVhcwo+IHRoZSBh
-dHRyIGNvZGUgZG9lc24ndCBuZWVkIHRvLCBhbmQganVzdCBjYWxscwo+IGxpYnhmc19yZWFkYnVm
-Lgo+IAo+IFRoZSBtdWx0aWJ1ZmZlciBjb2RlIGZhbGxzIGJhY2sganVzdCBmaW5lIHdoZW4gdGhl
-Cj4gZ2VvbWV0cnkgaW5kaWNhdGVzIHRoYXQgaXQncyBub3QgbmVlZGVkLCBzbyB1c2UgdGhhdAo+
-IHNhbWUgY29kZSBpbiB0aGUgYXR0cmlidXRlIHJvdXRpbmVzLCBhbmQgcmVtb3ZlCj4gYW5vdGhl
-ciBkaXIyIC8gZGEgZGlmZmVyZW5jZS4gIFdlIG1ha2UgZGFfcmVhZF9idWYoKQo+IG5vbi1zdGF0
-aWMgdG8gZmFjaWxpdGF0ZSB0aGlzLgo+IAo+IEZpbmFsbHksIGFkZCBhIGxvY2FsICpnZW8gdG8g
-dGhlc2Ugcm91dGluZXMsCj4gdG8gbWFrZSB0aGUgY29kZSBldmVuIG1vcmUgc2ltaWxhciBhdCB0
-aGlzIHBvaW50Lgo+IFRoZSBnZW9tZXRyeSB3aWxsIGdldCBwYXNzZWQgaW4gbGF0ZXIgaW4gdGhl
-IHNlcmllcy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5AcmVkaGF0
-LmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+
-Cj4gLS0tCj4gIHJlcGFpci9hdHRyX3JlcGFpci5jIHwgICA0OSArKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tCj4gIHJlcGFpci9kaXIyLmMgICAgICAgIHwg
-ICAyMiArKysrKysrKysrKysrLS0tLS0tLS0tCj4gIHJlcGFpci9kaXIyLmggICAgICAgIHwgICAg
-OCArKysrKysrKwo+ICAzIGZpbGVzIGNoYW5nZWQsIDU0IGluc2VydGlvbnMoKyksIDI1IGRlbGV0
-aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9yZXBhaXIvYXR0cl9yZXBhaXIuYyBiL3JlcGFpci9h
-dHRyX3JlcGFpci5jCj4gaW5kZXggYWJhMDc4Mi4uZmU4MWRmNCAxMDA2NDQKPiAtLS0gYS9yZXBh
-aXIvYXR0cl9yZXBhaXIuYwo+ICsrKyBiL3JlcGFpci9hdHRyX3JlcGFpci5jCj4gQEAgLTEzOCwx
-NCArMTM4LDIwIEBAIHRyYXZlcnNlX2ludF9kYWJsb2NrKHhmc19tb3VudF90CSptcCwKPiAgCQl4
-ZnNfZGFibGtfdAkJKnJibm8sCj4gIAkJaW50CQkJd2hpY2hmb3JrKQo+ICB7Cj4gKwlibWFwX2V4
-dF90CQkqYm1wOwoKc3RydWN0IGJtYXBfZXh0CgooYW5kIHNldmVyYWwgb3RoZXIgcGxhY2VzIGJl
-bG93KQoKPiAgCXhmc19kYWJsa190CQlibm87Cj4gIAlpbnQJCQlpOwo+ICsJaW50CQkJbmV4Owo+
-ICAJeGZzX2RhX2ludG5vZGVfdAkqbm9kZTsKPiArCWJtYXBfZXh0X3QJCWxibXA7Cj4gIAl4ZnNf
-ZnNibG9ja190CQlmc2JubzsKPiAgCXhmc19idWZfdAkJKmJwOwo+ICsJc3RydWN0IHhmc19kYV9n
-ZW9tZXRyeQkqZ2VvOwo+ICAJc3RydWN0IHhmc19kYV9ub2RlX2VudHJ5ICpidHJlZTsKPiAgCXN0
-cnVjdCB4ZnNfZGEzX2ljbm9kZV9oZHIgbm9kZWhkcjsKPiAgCj4gKwlnZW8gPSBtcC0+bV9hdHRy
-X2dlbzsKPiArCj4gIAkvKgo+ICAJICogdHJhdmVyc2UgZG93biBsZWZ0LXNpZGUgb2YgdHJlZSB1
-bnRpbCB3ZSBoaXQgdGhlCj4gIAkgKiBsZWZ0LW1vc3QgbGVhZiBibG9jayBzZXR0aW5nIHVwIHRo
-ZSBidHJlZSBjdXJzb3IgYWxvbmcKPiBAQCAtMTYwLDEzICsxNjYsMTYgQEAgdHJhdmVyc2VfaW50
-X2RhYmxvY2soeGZzX21vdW50X3QJKm1wLAo+ICAJCS8qCj4gIAkJICogcmVhZCBpbiBlYWNoIGJs
-b2NrIGFsb25nIHRoZSB3YXkgYW5kIHNldCB1cCBjdXJzb3IKPiAgCQkgKi8KPiAtCQlmc2JubyA9
-IGJsa21hcF9nZXQoZGFfY3Vyc29yLT5ibGttYXAsIGJubyk7Cj4gKwkJbmV4ID0gYmxrbWFwX2dl
-dG4oZGFfY3Vyc29yLT5ibGttYXAsIGJubywKPiArCQkJCWdlby0+ZnNiY291bnQsICZibXAsICZs
-Ym1wKTsKPiAgCgouLi4KYXR0cl9yZXBhaXIuYzogSW4gZnVuY3Rpb24g4oCYcHJvY2Vzc19hdHRy
-aWJ1dGVz4oCZOgphdHRyX3JlcGFpci5jOjE4NTo1OiB3YXJuaW5nOiDigJhmc2Jub+KAmSBtYXkg
-YmUgdXNlZCB1bmluaXRpYWxpemVkIGluIHRoaXMgZnVuY3Rpb24gWy1XbWF5YmUtdW5pbml0aWFs
-aXplZF0KICAgICBkb193YXJuKAouLi4KCkJyaWFuCgo+IC0JCWlmIChmc2JubyA9PSBOVUxMRlNC
-TE9DSykKPiArCQlpZiAobmV4ID09IDApCj4gIAkJCWdvdG8gZXJyb3Jfb3V0Owo+ICAKPiAtCQli
-cCA9IGxpYnhmc19yZWFkYnVmKG1wLT5tX2RldiwgWEZTX0ZTQl9UT19EQUREUihtcCwgZnNibm8p
-LAo+IC0JCQkJWEZTX0ZTQl9UT19CQihtcCwgMSksIDAsICZ4ZnNfZGEzX25vZGVfYnVmX29wcyk7
-Cj4gKwkJYnAgPSBkYV9yZWFkX2J1ZihtcCwgbmV4LCBibXAsICZ4ZnNfZGEzX25vZGVfYnVmX29w
-cyk7Cj4gKwkJaWYgKGJtcCAhPSAmbGJtcCkKPiArCQkJZnJlZShibXApOwo+ICsKPiAgCQlpZiAo
-IWJwKSB7Cj4gIAkJCWlmICh3aGljaGZvcmsgPT0gWEZTX0RBVEFfRk9SSykKPiAgCQkJCWRvX3dh
-cm4oCj4gQEAgLTE5MiwxMiArMjAxLDEwIEBAIHRyYXZlcnNlX2ludF9kYWJsb2NrKHhmc19tb3Vu
-dF90CSptcCwKPiAgCQkJZ290byBlcnJvcl9vdXQ7Cj4gIAkJfQo+ICAKPiAtCQlpZiAobm9kZWhk
-ci5jb3VudCA+IG1wLT5tX2F0dHJfZ2VvLT5ub2RlX2VudHMpICB7Cj4gKwkJaWYgKG5vZGVoZHIu
-Y291bnQgPiBnZW8tPm5vZGVfZW50cykgIHsKPiAgCQkJZG9fd2FybihfKCJiYWQgcmVjb3JkIGNv
-dW50IGluIGlub2RlICUiIFBSSXU2NCAiLCAiCj4gIAkJCQkgICJjb3VudCA9ICVkLCBtYXggPSAl
-ZFxuIiksCj4gLQkJCQlkYV9jdXJzb3ItPmlubywKPiAtCQkJCW5vZGVoZHIuY291bnQsCj4gLQkJ
-CQltcC0+bV9hdHRyX2dlby0+bm9kZV9lbnRzKTsKPiArCQkJCWRhX2N1cnNvci0+aW5vLCBub2Rl
-aGRyLmNvdW50LCBnZW8tPm5vZGVfZW50cyk7Cj4gIAkJCWxpYnhmc19wdXRidWYoYnApOwo+ICAJ
-CQlnb3RvIGVycm9yX291dDsKPiAgCQl9Cj4gQEAgLTQ5Miw5ICs0OTksMTUgQEAgdmVyaWZ5X2Rh
-X3BhdGgoeGZzX21vdW50X3QJKm1wLAo+ICAJaW50CQkJYmFkOwo+ICAJaW50CQkJZW50cnk7Cj4g
-IAlpbnQJCQl0aGlzX2xldmVsID0gcF9sZXZlbCArIDE7Cj4gKwlibWFwX2V4dF90CQkqYm1wOwo+
-ICsJaW50CQkJbmV4Owo+ICsJYm1hcF9leHRfdAkJbGJtcDsKPiArCXN0cnVjdCB4ZnNfZGFfZ2Vv
-bWV0cnkJKmdlbzsKPiAgCXN0cnVjdCB4ZnNfZGFfbm9kZV9lbnRyeSAqYnRyZWU7Cj4gIAlzdHJ1
-Y3QgeGZzX2RhM19pY25vZGVfaGRyIG5vZGVoZHI7Cj4gIAo+ICsJZ2VvID0gbXAtPm1fYXR0cl9n
-ZW87Cj4gKwo+ICAJLyoKPiAgCSAqIGluZGV4IGlzIGN1cnJlbnRseSBzZXQgdG8gcG9pbnQgdG8g
-dGhlIGVudHJ5IHRoYXQKPiAgCSAqIHNob3VsZCBiZSBwcm9jZXNzZWQgbm93IGluIHRoaXMgbGV2
-ZWwuCj4gQEAgLTUzNiwxNyArNTQ5LDIxIEBAIHZlcmlmeV9kYV9wYXRoKHhmc19tb3VudF90CSpt
-cCwKPiAgCQkgKi8KPiAgCQlkYWJubyA9IG5vZGVoZHIuZm9ydzsKPiAgCQlBU1NFUlQoZGFibm8g
-IT0gMCk7Cj4gLQkJZnNibm8gPSBibGttYXBfZ2V0KGN1cnNvci0+YmxrbWFwLCBkYWJubyk7Cj4g
-LQo+IC0JCWlmIChmc2JubyA9PSBOVUxMRlNCTE9DSykgewo+IC0JCQlkb193YXJuKF8oImNhbid0
-IGdldCBtYXAgaW5mbyBmb3IgYmxvY2sgJXUgIgo+IC0JCQkJICAib2YgZGlyZWN0b3J5IGlub2Rl
-ICUiIFBSSXU2NCAiXG4iKSwKPiArCQluZXggPSBibGttYXBfZ2V0bihjdXJzb3ItPmJsa21hcCwg
-ZGFibm8sIGdlby0+ZnNiY291bnQsCj4gKwkJCSZibXAsICZsYm1wKTsKPiArCQlpZiAobmV4ID09
-IDApIHsKPiArCQkJZG9fd2FybigKPiArXygiY2FuJ3QgZ2V0IG1hcCBpbmZvIGZvciBibG9jayAl
-dSBvZiBkaXJlY3RvcnkgaW5vZGUgJSIgUFJJdTY0ICJcbiIpLAo+ICAJCQkJZGFibm8sIGN1cnNv
-ci0+aW5vKTsKPiAgCQkJcmV0dXJuKDEpOwo+ICAJCX0KPiAgCj4gLQkJYnAgPSBsaWJ4ZnNfcmVh
-ZGJ1ZihtcC0+bV9kZXYsIFhGU19GU0JfVE9fREFERFIobXAsIGZzYm5vKSwKPiAtCQkJCVhGU19G
-U0JfVE9fQkIobXAsIDEpLCAwLCAmeGZzX2RhM19ub2RlX2J1Zl9vcHMpOwo+ICsJCWZzYm5vID0g
-Ym1wWzBdLnN0YXJ0YmxvY2s7Cj4gKwo+ICsJCWJwID0gZGFfcmVhZF9idWYobXAsIG5leCwgYm1w
-LCAmeGZzX2RhM19ub2RlX2J1Zl9vcHMpOwo+ICsJCWlmIChibXAgIT0gJmxibXApCj4gKwkJCWZy
-ZWUoYm1wKTsKPiArCj4gIAkJaWYgKCFicCkgewo+ICAJCQlkb193YXJuKAo+ICAJXygiY2FuJ3Qg
-cmVhZCBibG9jayAldSAoJSIgUFJJdTY0ICIpIGZvciBkaXJlY3RvcnkgaW5vZGUgJSIgUFJJdTY0
-ICJcbiIpLAo+IEBAIC01NzcsNyArNTk0LDcgQEAgdmVyaWZ5X2RhX3BhdGgoeGZzX21vdW50X3QJ
-Km1wLAo+ICAJCQkJZGFibm8sIGZzYm5vLCBjdXJzb3ItPmlubyk7Cj4gIAkJCWJhZCsrOwo+ICAJ
-CX0KPiAtCQlpZiAobm9kZWhkci5jb3VudCA+IG1wLT5tX2F0dHJfZ2VvLT5ub2RlX2VudHMpIHsK
-PiArCQlpZiAobm9kZWhkci5jb3VudCA+IGdlby0+bm9kZV9lbnRzKSB7Cj4gIAkJCWRvX3dhcm4o
-Cj4gIAlfKCJlbnRyeSBjb3VudCAlZCB0b28gbGFyZ2UgaW4gYmxvY2sgJXUgKCUiIFBSSXU2NCAi
-KSBmb3IgZGlyZWN0b3J5IGlub2RlICUiIFBSSXU2NCAiXG4iKSwKPiAgCQkJCW5vZGVoZHIuY291
-bnQsCj4gZGlmZiAtLWdpdCBhL3JlcGFpci9kaXIyLmMgYi9yZXBhaXIvZGlyMi5jCj4gaW5kZXgg
-NTRjNDllYi4uNDQzNjdjNiAxMDA2NDQKPiAtLS0gYS9yZXBhaXIvZGlyMi5jCj4gKysrIGIvcmVw
-YWlyL2RpcjIuYwo+IEBAIC05Miw3ICs5Miw3IEBAIG5hbWVjaGVjayhjaGFyICpuYW1lLCBpbnQg
-bGVuZ3RoKQo+ICAgKiBNdWx0aWJ1ZmZlciBoYW5kbGluZy4KPiAgICogVjIgZGlyZWN0b3J5IGJs
-b2NrcyBjYW4gYmUgbm9uY29udGlndW91cywgbmVlZGluZyBtdWx0aXBsZSBidWZmZXJzLgo+ICAg
-Ki8KPiAtc3RhdGljIHN0cnVjdCB4ZnNfYnVmICoKPiArc3RydWN0IHhmc19idWYgKgo+ICBkYV9y
-ZWFkX2J1ZigKPiAgCXhmc19tb3VudF90CSptcCwKPiAgCWludAkJbmV4LAo+IEBAIC0xNDMsOSAr
-MTQzLDEyIEBAIHRyYXZlcnNlX2ludF9kaXIyYmxvY2soeGZzX21vdW50X3QJKm1wLAo+ICAJaW50
-CQkJbmV4Owo+ICAJeGZzX2RhX2ludG5vZGVfdAkqbm9kZTsKPiAgCWJtYXBfZXh0X3QJCWxibXA7
-Cj4gKwlzdHJ1Y3QgeGZzX2RhX2dlb21ldHJ5CSpnZW87Cj4gIAlzdHJ1Y3QgeGZzX2RhX25vZGVf
-ZW50cnkgKmJ0cmVlOwo+ICAJc3RydWN0IHhmc19kYTNfaWNub2RlX2hkciBub2RlaGRyOwo+ICAK
-PiArCWdlbyA9IG1wLT5tX2Rpcl9nZW87Cj4gKwo+ICAJLyoKPiAgCSAqIHRyYXZlcnNlIGRvd24g
-bGVmdC1zaWRlIG9mIHRyZWUgdW50aWwgd2UgaGl0IHRoZQo+ICAJICogbGVmdC1tb3N0IGxlYWYg
-YmxvY2sgc2V0dGluZyB1cCB0aGUgYnRyZWUgY3Vyc29yIGFsb25nCj4gQEAgLTE2MSw3ICsxNjQs
-NyBAQCB0cmF2ZXJzZV9pbnRfZGlyMmJsb2NrKHhmc19tb3VudF90CSptcCwKPiAgCQkgKiByZWFk
-IGluIGVhY2ggYmxvY2sgYWxvbmcgdGhlIHdheSBhbmQgc2V0IHVwIGN1cnNvcgo+ICAJCSAqLwo+
-ICAJCW5leCA9IGJsa21hcF9nZXRuKGRhX2N1cnNvci0+YmxrbWFwLCBibm8sCj4gLQkJCQltcC0+
-bV9kaXJfZ2VvLT5mc2Jjb3VudCwgJmJtcCwgJmxibXApOwo+ICsJCQkJZ2VvLT5mc2Jjb3VudCwg
-JmJtcCwgJmxibXApOwo+ICAKPiAgCQlpZiAobmV4ID09IDApCj4gIAkJCWdvdG8gZXJyb3Jfb3V0
-Owo+IEBAIC0yMDcsMTMgKzIxMCwxMSBAQCBfKCJjb3JydXB0IHRyZWUgYmxvY2sgJXUgZm9yIGRp
-cmVjdG9yeSBpbm9kZSAlIiBQUkl1NjQgIlxuIiksCj4gIAkJCWdvdG8gZXJyb3Jfb3V0Owo+ICAJ
-CX0KPiAgCQlidHJlZSA9IE1fRElST1BTKG1wKS0+bm9kZV90cmVlX3Aobm9kZSk7Cj4gLQkJaWYg
-KG5vZGVoZHIuY291bnQgPiBtcC0+bV9kaXJfZ2VvLT5ub2RlX2VudHMpICB7Cj4gLQkJCWxpYnhm
-c19wdXRidWYoYnApOwo+ICsJCWlmIChub2RlaGRyLmNvdW50ID4gZ2VvLT5ub2RlX2VudHMpICB7
-Cj4gIAkJCWRvX3dhcm4oCj4gIF8oImJhZCByZWNvcmQgY291bnQgaW4gaW5vZGUgJSIgUFJJdTY0
-ICIsIGNvdW50ID0gJWQsIG1heCA9ICVkXG4iKSwKPiAtCQkJCWRhX2N1cnNvci0+aW5vLAo+IC0J
-CQkJbm9kZWhkci5jb3VudCwKPiAtCQkJCW1wLT5tX2Rpcl9nZW8tPm5vZGVfZW50cyk7Cj4gKwkJ
-CQlkYV9jdXJzb3ItPmlubywgbm9kZWhkci5jb3VudCwgZ2VvLT5ub2RlX2VudHMpOwo+ICsJCQls
-aWJ4ZnNfcHV0YnVmKGJwKTsKPiAgCQkJZ290byBlcnJvcl9vdXQ7Cj4gIAkJfQo+ICAJCS8qCj4g
-QEAgLTQ4OCw5ICs0ODksMTIgQEAgdmVyaWZ5X2RpcjJfcGF0aCh4ZnNfbW91bnRfdAkqbXAsCj4g
-IAlibWFwX2V4dF90CQkqYm1wOwo+ICAJaW50CQkJbmV4Owo+ICAJYm1hcF9leHRfdAkJbGJtcDsK
-PiArCXN0cnVjdCB4ZnNfZGFfZ2VvbWV0cnkJKmdlbzsKPiAgCXN0cnVjdCB4ZnNfZGFfbm9kZV9l
-bnRyeSAqYnRyZWU7Cj4gIAlzdHJ1Y3QgeGZzX2RhM19pY25vZGVfaGRyIG5vZGVoZHI7Cj4gIAo+
-ICsJZ2VvID0gbXAtPm1fZGlyX2dlbzsKPiArCj4gIAkvKgo+ICAJICogaW5kZXggaXMgY3VycmVu
-dGx5IHNldCB0byBwb2ludCB0byB0aGUgZW50cnkgdGhhdAo+ICAJICogc2hvdWxkIGJlIHByb2Nl
-c3NlZCBub3cgaW4gdGhpcyBsZXZlbC4KPiBAQCAtNTMyLDcgKzUzNiw3IEBAIHZlcmlmeV9kaXIy
-X3BhdGgoeGZzX21vdW50X3QJKm1wLAo+ICAJCSAqLwo+ICAJCWRhYm5vID0gbm9kZWhkci5mb3J3
-Owo+ICAJCUFTU0VSVChkYWJubyAhPSAwKTsKPiAtCQluZXggPSBibGttYXBfZ2V0bihjdXJzb3It
-PmJsa21hcCwgZGFibm8sIG1wLT5tX2Rpcl9nZW8tPmZzYmNvdW50LAo+ICsJCW5leCA9IGJsa21h
-cF9nZXRuKGN1cnNvci0+YmxrbWFwLCBkYWJubywgZ2VvLT5mc2Jjb3VudCwKPiAgCQkJJmJtcCwg
-JmxibXApOwo+ICAJCWlmIChuZXggPT0gMCkgewo+ICAJCQlkb193YXJuKAo+IEBAIC01NzQsNyAr
-NTc4LDcgQEAgXygiYmFkIGJhY2sgcG9pbnRlciBpbiBibG9jayAldSBmb3IgZGlyZWN0b3J5IGlu
-b2RlICUiIFBSSXU2NCAiXG4iKSwKPiAgCQkJCWRhYm5vLCBjdXJzb3ItPmlubyk7Cj4gIAkJCWJh
-ZCsrOwo+ICAJCX0KPiAtCQlpZiAobm9kZWhkci5jb3VudCA+IG1wLT5tX2Rpcl9nZW8tPm5vZGVf
-ZW50cykgIHsKPiArCQlpZiAobm9kZWhkci5jb3VudCA+IGdlby0+bm9kZV9lbnRzKSAgewo+ICAJ
-CQlkb193YXJuKAo+ICBfKCJlbnRyeSBjb3VudCAlZCB0b28gbGFyZ2UgaW4gYmxvY2sgJXUgZm9y
-IGRpcmVjdG9yeSBpbm9kZSAlIiBQUkl1NjQgIlxuIiksCj4gIAkJCQlub2RlaGRyLmNvdW50LAo+
-IGRpZmYgLS1naXQgYS9yZXBhaXIvZGlyMi5oIGIvcmVwYWlyL2RpcjIuaAo+IGluZGV4IDNjYzE5
-NDEuLjE4NjYzM2YgMTAwNjQ0Cj4gLS0tIGEvcmVwYWlyL2RpcjIuaAo+ICsrKyBiL3JlcGFpci9k
-aXIyLmgKPiBAQCAtNTgsNiArNTgsMTQgQEAgdHlwZWRlZiBzdHJ1Y3QgZGlyMl9idF9jdXJzb3Ig
-IHsKPiAgCXN0cnVjdCBibGttYXAJCSpibGttYXA7Cj4gIH0gZGlyMl9idF9jdXJzb3JfdDsKPiAg
-Cj4gKyNpbmNsdWRlICJibWFwLmgiCS8qIEdvZXMgYXdheSBpbiBsYXRlciByZWZhY3RvcmluZyAq
-Lwo+ICtzdHJ1Y3QgeGZzX2J1ZiAqCj4gK2RhX3JlYWRfYnVmKAo+ICsJeGZzX21vdW50X3QJKm1w
-LAo+ICsJaW50CQluZXgsCj4gKwlibWFwX2V4dF90CSpibXAsCj4gKwljb25zdCBzdHJ1Y3QgeGZz
-X2J1Zl9vcHMgKm9wcyk7Cj4gKwo+ICBpbnQKPiAgcHJvY2Vzc19kaXIyKAo+ICAJeGZzX21vdW50
-X3QJKm1wLAo+IC0tIAo+IDEuNy4xCj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4g
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Sep 09, 2015 at 02:34:03PM -0500, Eric Sandeen wrote:
+> Way back in 2002, commit 948ce18 fixed a potential use-after-free
+> in verify_final_da_path, but the same fix was not applied to
+> verify_final_dir2_path; apply it now.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  repair/dir2.c |    9 ++++++++-
+>  1 files changed, 8 insertions(+), 1 deletions(-)
+> 
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index 44367c6..898b27e 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -330,6 +330,7 @@ verify_final_dir2_path(xfs_mount_t	*mp,
+>  		const int		p_level)
+>  {
+>  	xfs_da_intnode_t	*node;
+> +	xfs_dahash_t		hashval;
+>  	int			bad = 0;
+>  	int			entry;
+>  	int			this_level = p_level + 1;
+> @@ -409,6 +410,12 @@ _("would correct bad hashval in non-leaf dir block\n"
+>  	}
+>  
+>  	/*
+> +	 * Note: squirrel hashval away _before_ releasing the
+> +	 * buffer, preventing a use-after-free problem.
+> +	 */
+> +	hashval = be32_to_cpu(btree[entry].hashval);
+> +
+> +	/*
+>  	 * release/write buffer
+>  	 */
+>  	ASSERT(cursor->level[this_level].dirty == 0 ||
+> @@ -430,7 +437,7 @@ _("would correct bad hashval in non-leaf dir block\n"
+>  	 * set hashvalue to correctl reflect the now-validated
+>  	 * last entry in this block and continue upwards validation
+>  	 */
+> -	cursor->level[this_level].hashval = be32_to_cpu(btree[entry].hashval);
+> +	cursor->level[this_level].hashval = hashval;
+>  
+>  	return(verify_final_dir2_path(mp, cursor, this_level));
+>  }
+> -- 
+> 1.7.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
