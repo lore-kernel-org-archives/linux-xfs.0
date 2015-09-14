@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6AF977F37
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 08:25:05 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 14AC47F37
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 12:02:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D4D08F8037
-	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 06:25:02 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CAB7930404E
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 10:02:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CFEZNsaPzcIgGxqI (version=TLSv1.2
+	cuda.sgi.com with ESMTP id wakNk03qUk5CV2ZG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 06:24:57 -0700 (PDT)
-Date: Mon, 14 Sep 2015 09:24:55 -0400
+	<xfs@oss.sgi.com>; Mon, 14 Sep 2015 10:02:35 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id EA962A9A
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 17:02:34 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-92.bos.redhat.com [10.18.41.92])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8EH2YS7000980
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 13:02:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add missing ilock around dio write last extent
+Subject: [PATCH v2] xfs: add missing ilock around dio write last extent
 	alignment
-Message-ID: <20150914132455.GA22770@bfoster.bfoster>
-References: <1441809812-60175-1-git-send-email-bfoster@redhat.com>
-	<20150913235835.GV26895@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150913235835.GV26895@dastard>
+Date: Mon, 14 Sep 2015 13:02:33 -0400
+Message-Id: <1442250153-38295-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,131 +30,182 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: David Jeffery <djeffery@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Sep 14, 2015 at 09:58:35AM +1000, Dave Chinner wrote:
-> On Wed, Sep 09, 2015 at 10:43:32AM -0400, Brian Foster wrote:
-> > The iomap codepath (via get_blocks()) acquires and release the inode
-> > lock in the case of a direct write that requires block allocation. This
-> > is because xfs_iomap_write_direct() allocates a transaction, which means
-> > the ilock must be dropped and reacquired after the transaction is
-> > allocated and reserved.
-> > 
-> > xfs_iomap_write_direct() invokes xfs_iomap_eof_align_last_fsb() before
-> > the transaction is created and thus before the ilock is reacquired. This
-> > can lead to calls to xfs_iread_extents() and reads of the in-core extent
-> > list without any synchronization (via xfs_bmap_eof() and
-> > xfs_bmap_last_extent()). xfs_iread_extents() assert fails if the ilock
-> > is not held, but this is not currently seen in practice as the current
-> > callers had already invoked xfs_bmapi_read().
-> > 
-> > What has been seen in practice are reports of crashes down in the
-> > xfs_bmap_eof() codepath on direct writes due to seemingly bogus pointer
-> > references from xfs_iext_get_ext(). While an explicit reproducer is not
-> > currently available to confirm the cause of the problem, crash analysis
-> > and code inspection from David Jeffrey had identified the insufficient
-> > locking.
-> > 
-> > xfs_iomap_eof_align_last_fsb() is called from other contexts with the
-> > inode lock already held. __xfs_get_blocks() acquires and drops the ilock
-> > with variable flags. Therefore, take the simple approach to cycle ilock
-> > around the last extent alignment call from xfs_iomap_write_direct().
-> > 
-> > Reported-by: David Jeffery <djeffery@redhat.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_iomap.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 1f86033..4d7534e 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -142,7 +142,9 @@ xfs_iomap_write_direct(
-> >  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> >  	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
-> >  	if ((offset + count) > XFS_ISIZE(ip)) {
-> > +		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-> > +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> 
-> XFS_ILOCK_SHARED?
-> 
+The iomap codepath (via get_blocks()) acquires and release the inode
+lock in the case of a direct write that requires block allocation. This
+is because xfs_iomap_write_direct() allocates a transaction, which means
+the ilock must be dropped and reacquired after the transaction is
+allocated and reserved.
 
-I suspect that is technically sufficient in this particular call path
-given that we've called xfs_bmapi_read(). The problem is that there is a
-call to xfs_iread_extents() buried a few calls deep in
-xfs_bmap_last_extent(). My understanding is that we need the exclusive
-lock because it's not safe for multiple threads to populate the in-core
-extent list at the same time, so I don't really want to replace the
-existing race with a landmine should the context happen to change in the
-future.
+xfs_iomap_write_direct() invokes xfs_iomap_eof_align_last_fsb() before
+the transaction is created and thus before the ilock is reacquired. This
+can lead to calls to xfs_iread_extents() and reads of the in-core extent
+list without any synchronization (via xfs_bmap_eof() and
+xfs_bmap_last_extent()). xfs_iread_extents() assert fails if the ilock
+is not held, but this is not currently seen in practice as the current
+callers had already invoked xfs_bmapi_read().
 
-> Also, looking at __xfs_get_blocks(), we drop the ilock immediately
-> before calling xfs_iomap_write_direct(), which we already hold in
-> shared mode for the xfs_bmapi_read() for direct IO.
-> 
-> Can we push that lock dropping into xfs_iomap_write_direct() after
-> we've done the xfs_iomap_eof_align_last_fsb() call and before we do
-> transaction reservations so we don't need an extra lock round-trip
-> here? e.g. xfs_iomap_write_delay() is called under the lock context
-> held by __xfs_get_blocks()....
-> 
+What has been seen in practice are reports of crashes down in the
+xfs_bmap_eof() codepath on direct writes due to seemingly bogus pointer
+references from xfs_iext_get_ext(). While an explicit reproducer is not
+currently available to confirm the cause of the problem, crash analysis
+and code inspection from David Jeffrey had identified the insufficient
+locking.
 
-That was my initial thought when looking at this code... e.g., to just
-carry the lock over and drop it prior to transaction setup. I didn't go
-that route because __xfs_get_blocks() uses a variable locking mode and
-it seemed ugly to pass along the lock mode to xfs_iomap_direct_write().
-Further, given the above it also looked like we'd have to check and
-cycle the ilock EXCL if it were ILOCK_SHARED. Finally,
-xfs_iomap_direct_write() has a call to xfs_qm_dqattach() which itself
-acquires ILOCK_EXCL. Looking at xfs_iomap_write_delay(), we do have a
-dqattach_locked() variant but it also expects to have ILOCK_EXCL.
+xfs_iomap_eof_align_last_fsb() is called from other contexts with the
+inode lock already held, so we cannot acquire it therein.
+__xfs_get_blocks() acquires and drops the ilock with variable flags to
+cover the event that the extent list must be read in. The common case is
+that __xfs_get_blocks() acquires the shared ilock. To provide locking
+around the last extent alignment call without adding more lock cycles to
+the dio path, update xfs_iomap_write_direct() to expect the shared ilock
+held on entry and do the extent alignment under its protection. Demote
+the lock, if necessary, from __xfs_get_blocks() and push the
+xfs_qm_dqattach() call outside of the shared lock critical section.
+Also, add an assert to document that the extent list is always expected
+to be present in this path. Otherwise, we risk a call to
+xfs_iread_extents() while under the shared ilock. This is safe as all
+current callers have executed an xfs_bmapi_read() call under the current
+iolock context.
 
-Hmm, so in the common case both the extent list and a quota are handled
-once and thus the only notable lock cycle is the align_last_fsb() case.
-I think we could do something like this:
+Reported-by: David Jeffery <djeffery@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-- Create a shared lock safe variant of xfs_iomap_eof_align_last_fsb() to
-  be called from xfs_iomap_write_direct().
-- __xfs_get_blocks() continues to call xfs_ilock_data_map_shared(), but
-  unconditionally demotes XFS_ILOCK_EXCL to XFS_ILOCK_SHARED before
-  calling xfs_iomap_write_direct().
-- xfs_iomap_write_direct() moves the xfs_qm_dqattach() call to
-  immediately before the transaction allocation. E.g., it executes the
-  existing align_last_fsb() bits and whatnot under XFS_ILOCK_SHARED, drops
-  the lock, potentially attaches the quota and carries on as normal with
-  the transaction.
-
-The only thing I'm not sure about is the shared lock safe version of
-xfs_iomap_eof_align_last_fsb(). The xfs_iread_extents() call is a few
-calls deep and xfs_bmap_last_extent() is called from other contexts. I
-suppose we could call it as is and pull up an assert to check for
-XFS_IFEXTENTS such that the situation is explicitly documented in the
-appropriate context (we do already have the assert in
-xfs_iread_extents() if it were called). Also, I take it we can safely
-assume the in-core extent list is still around if we still hold the lock
-from the xfs_bmapi_read() call. Thoughts? I guess I'll float another
-patch...
+Note that I opted not to complicate the pnfs caller, but I could do so
+similar to __xfs_get_blocks() if we think it's necessary...
 
 Brian
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+v2:
+- Updated xfs_iomap_write_direct() to use ilock acquired by caller.
+v1: http://oss.sgi.com/pipermail/xfs/2015-September/043570.html
+
+ fs/xfs/xfs_aops.c  | 10 +++++-----
+ fs/xfs/xfs_iomap.c | 33 ++++++++++++++++++++++++++-------
+ fs/xfs/xfs_pnfs.c  |  5 +++++
+ 3 files changed, 36 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 458fced..c5e743c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1403,12 +1403,12 @@ __xfs_get_blocks(
+ 	      imap.br_startblock == DELAYSTARTBLOCK))) {
+ 		if (direct || xfs_get_extsz_hint(ip)) {
+ 			/*
+-			 * Drop the ilock in preparation for starting the block
+-			 * allocation transaction.  It will be retaken
+-			 * exclusively inside xfs_iomap_write_direct for the
+-			 * actual allocation.
++			 * xfs_iomap_write_direct() expects the shared lock. It
++			 * is unlocked on return.
+ 			 */
+-			xfs_iunlock(ip, lockmode);
++			if (lockmode == XFS_ILOCK_EXCL)
++				xfs_ilock_demote(ip, lockmode);
++
+ 			error = xfs_iomap_write_direct(ip, offset, size,
+ 						       &imap, nimaps);
+ 			if (error)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1f86033..1beda33 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -131,20 +131,29 @@ xfs_iomap_write_direct(
+ 	uint		qblocks, resblks, resrtextents;
+ 	int		committed;
+ 	int		error;
+-
+-	error = xfs_qm_dqattach(ip, 0);
+-	if (error)
+-		return error;
++	int		lockmode;
+ 
+ 	rt = XFS_IS_REALTIME_INODE(ip);
+ 	extsz = xfs_get_extsz_hint(ip);
++	lockmode = XFS_ILOCK_SHARED;	/* locked by caller */
++
++	ASSERT(xfs_isilocked(ip, lockmode));
+ 
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
+ 	if ((offset + count) > XFS_ISIZE(ip)) {
++		/*
++		 * Assert that the in-core extent list is present since this can
++		 * call xfs_iread_extents() and we only have the ilock shared.
++		 * This should be safe because the lock was held around a bmapi
++		 * call in the caller and we only need it to access the in-core
++		 * list.
++		 */
++		ASSERT(XFS_IFORK_PTR(ip, XFS_DATA_FORK)->if_flags &
++								XFS_IFEXTENTS);
+ 		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
+ 		if (error)
+-			return error;
++			goto out_unlock;
+ 	} else {
+ 		if (nmaps && (imap->br_startblock == HOLESTARTBLOCK))
+ 			last_fsb = MIN(last_fsb, (xfs_fileoff_t)
+@@ -174,6 +183,15 @@ xfs_iomap_write_direct(
+ 	}
+ 
+ 	/*
++	 * Drop the shared lock acquired by the caller, attach the dquot if
++	 * necessary and move on to transaction setup.
++	 */
++	xfs_iunlock(ip, lockmode);
++	error = xfs_qm_dqattach(ip, 0);
++	if (error)
++		return error;
++
++	/*
+ 	 * Allocate and setup the transaction
+ 	 */
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+@@ -187,7 +205,8 @@ xfs_iomap_write_direct(
+ 		return error;
+ 	}
+ 
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	lockmode = XFS_ILOCK_EXCL;
++	xfs_ilock(ip, lockmode);
+ 
+ 	error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks, 0, quota_flag);
+ 	if (error)
+@@ -229,7 +248,7 @@ xfs_iomap_write_direct(
+ 		error = xfs_alert_fsblock_zero(ip, imap);
+ 
+ out_unlock:
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(ip, lockmode);
+ 	return error;
+ 
+ out_bmap_cancel:
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index ab4a606..dc62219 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -181,6 +181,11 @@ xfs_fs_map_blocks(
+ 		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+ 
+ 		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK) {
++			/*
++			 * xfs_iomap_write_direct() expects to take ownership of
++			 * the shared ilock.
++			 */
++			xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 			error = xfs_iomap_write_direct(ip, offset, length,
+ 						       &imap, nimaps);
+ 			if (error)
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
