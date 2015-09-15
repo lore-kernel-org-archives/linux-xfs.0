@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2334A7F37
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 09:23:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 10BF28F8050
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2015 07:23:43 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2F5F87F81
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0759F8F8037
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wBpJHigMxvGZ8LaS (version=TLSv1.2
+	cuda.sgi.com with ESMTP id bgZgEnxptqGNZ9FH (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 08 Sep 2015 07:23:41 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:49 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 957B640C4D
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:48 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 10/11 v2] xfsprogs: make fsr use mntinfo when there is no
-	mntent
-Date: Tue,  8 Sep 2015 16:23:27 +0200
-Message-Id: <1441722207-9141-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1440590555-20463-10-git-send-email-jtulak@redhat.com>
-References: <1440590555-20463-10-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 10/14] xfsprogs: Add a timer implementation for OS X
+Date: Tue, 15 Sep 2015 11:59:20 +0200
+Message-Id: <1442311164-12921-11-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
+References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,213 +33,113 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Tulak <jtulak@redhat.com>
+Cc: Jan Tulak <jtulak@redhat.com>
 
-
-For what fsr needs, mntinfo can be used instead of mntent.
-Custom mntent struct is used to avoid too big ifdefs:
-We only change few lines and the rest of the code can still
-use mntent as before.
-
-CHANGE
-- subject was: "add dummy mntent for OS X"
-- reduced the stuby code.
+OS X does not have the timer used in xfs_repair.
+Add a simple implementation providing the required
+capabilities.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fsr/Makefile     |  8 +++++++
- fsr/xfs_fsr.c    | 69 ++++++++++++++++++++++++++++++++++++++++++++++++--------
- include/darwin.h | 20 ++++++++++++++++
- 3 files changed, 87 insertions(+), 10 deletions(-)
+ include/darwin.h  | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/progress.c | 16 ++++++++++++++--
+ 2 files changed, 62 insertions(+), 2 deletions(-)
 
-diff --git a/fsr/Makefile b/fsr/Makefile
-index a9d1bf6..d3521b2 100644
---- a/fsr/Makefile
-+++ b/fsr/Makefile
-@@ -9,6 +9,14 @@ LTCOMMAND = xfs_fsr
- CFILES = xfs_fsr.c
- LLDLIBS = $(LIBHANDLE)
- 
-+ifeq ($(HAVE_GETMNTENT),yes)
-+LCFLAGS += -DHAVE_GETMNTENT
-+endif
-+
-+ifeq ($(HAVE_GETMNTINFO),yes)
-+LCFLAGS += -DHAVE_GETMNTINFO
-+endif
-+
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 5f95cdc..ff791d3 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -32,8 +32,10 @@
- #include <sys/statvfs.h>
- #include <sys/xattr.h>
- 
--#ifdef HAVE_MNTENT
-+#if defined(HAVE_GETMNTENT)
- #  include <mntent.h>
-+#elif defined(HAVE_GETMNTINFO)
-+#  include <sys/mount.h>
- #endif
- 
- #ifdef __APPLE__
-@@ -191,9 +193,10 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
- {
- 	struct mntent *t;
- 	struct stat64 ms;
--	FILE *mtabp;
- 	char *mntp = NULL;
- 
-+#if defined(HAVE_GETMNTENT)
-+	FILE *mtabp;
- 	mtabp = setmntent(mtab, "r");
- 	if (!mtabp) {
- 		fprintf(stderr, _("%s: cannot read %s\n"),
-@@ -202,6 +205,27 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
- 	}
- 
- 	while ((t = getmntent(mtabp))) {
-+#elif defined(HAVE_GETMNTINFO)
-+	struct statfs	*stats;
-+	int error, i, count;
-+	// because "t" is a pointer, but we don't need to use
-+	// malloc for this usage
-+	struct mntent t_tmp;
-+	t = &t_tmp;
-+
-+		
-+	error = 0;
-+	if ((count = getmntinfo(&stats, 0)) < 0) {
-+		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-+				progname, strerror(errno));
-+		return 0;
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		mntinfo2mntent(&stats[i], t);
-+#else
-+# error "How do I extract info about mounted filesystems on this platform?"
-+#endif
- 		if (S_ISDIR(sb->st_mode)) {		/* mount point */
- 			if (stat64(t->mnt_dir, &ms) < 0)
- 				continue;
-@@ -233,10 +257,11 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
- 		break;
- 	}
- 
-+#if defined(HAVE_GETMNTENT)
- 	endmntent(mtabp);
-+#endif
- 	return mntp;
- }
--
- int
- main(int argc, char **argv)
- {
-@@ -411,18 +436,11 @@ usage(int ret)
- static void
- initallfs(char *mtab)
- {
--	FILE *fp;
- 	struct mntent *mp;
- 	int mi;
- 	char *cp;
- 	struct stat64 sb;
- 
--	fp = setmntent(mtab, "r");
--	if (fp == NULL) {
--		fsrprintf(_("could not open mtab file: %s\n"), mtab);
--		exit(1);
--	}
--
- 	/* malloc a number of descriptors, increased later if needed */
- 	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
- 		fsrprintf(_("out of memory: %s\n"), strerror(errno));
-@@ -433,7 +451,36 @@ initallfs(char *mtab)
- 	/* find all rw xfs file systems */
- 	mi = 0;
- 	fs = fsbase;
-+
-+#if defined(HAVE_GETMNTENT)
-+	FILE *fp;
-+	fp = setmntent(mtab, "r");
-+	if (fp == NULL) {
-+		fsrprintf(_("could not open mtab file: %s\n"), mtab);
-+		exit(1);
-+	}
-+
- 	while ((mp = getmntent(fp))) {
-+#elif defined(HAVE_GETMNTINFO)
-+	struct statfs	*stats;
-+	int error, i, count;
-+	// because "t" is a pointer, but we don't need to use
-+	// malloc for this usage
-+	struct mntent mp_tmp;
-+	mp = &mp_tmp;
-+	error = 0;
-+	if ((count = getmntinfo(&stats, 0)) < 0) {
-+		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-+				progname, strerror(errno));
-+		exit(1);
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		mntinfo2mntent(&stats[i], mp);
-+#else
-+# error "How do I extract info about mounted filesystems on this platform?"
-+#endif
-+
- 		int rw = 0;
- 
- 		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
-@@ -485,7 +532,9 @@ initallfs(char *mtab)
- 	}
- 	numfs = mi;
- 	fsend = (fsbase + numfs);
-+#if defined(HAVE_GETMNTENT)
- 	endmntent(fp);
-+#endif
- 	if (numfs == 0) {
- 		fsrprintf(_("no rw xfs file systems in mtab: %s\n"), mtab);
- 		exit(0);
 diff --git a/include/darwin.h b/include/darwin.h
-index 288ad1f..0313f46 100644
+index 1409c91..0d2f175 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -218,7 +218,27 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+@@ -28,6 +28,7 @@
+ #include <sys/ioctl.h>
+ #include <sys/mount.h>
+ #include <sys/types.h>
++#include <sys/time.h>
+ #include <ftw.h>
+ #include <mach/mach_time.h>
+ #include <inttypes.h>
+@@ -168,4 +169,51 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ 	return 0;
+ }
  
- /* FSR */
- 
-+#  include <sys/mount.h>
-+#  include <sys/param.h>
-+#include <sys/ucred.h>
-+#include <errno.h>
- #define statvfs64 statfs
- #define		_PATH_MOUNTED   "/etc/mtab"
- 
-+struct mntent
-+{
-+	char *mnt_fsname;
-+	char *mnt_dir;
-+	char *mnt_type;
-+	char *mnt_opts;
-+	int mnt_freq;
-+	int mnt_passno;
-+};
++/*
++ * POSIX timer replacement.
++ * It really just do the minimum we need for xfs_repair.
++ * Also, as setitimer can't create multiple timers,
++ * the timerid things are useless - we have only one ITIMER_REAL
++ * timer.
++ */
++#define CLOCK_REALTIME ITIMER_REAL
++#define itimerspec itimerval
++typedef uint64_t timer_t;
++typedef double   timer_c;
++typedef clock_id_t clockid_t;
 +
-+static inline void mntinfo2mntent (struct statfs * stats, struct mntent * mnt) {
-+	mnt->mnt_fsname = stats->f_mntfromname;
-+	mnt->mnt_dir = stats->f_mntonname;
-+	mnt->mnt_type = stats->f_fstypename;
++
++static inline int timer_create (clockid_t __clock_id,
++                         struct sigevent *__restrict __evp,
++                         timer_t *__restrict timer)
++{
++	// set something, to initialize the variable, just in case
++	*timer = 0;
++	return 0;
++}
++
++static inline int timer_settime (timer_t timerid, int flags,
++                          const struct itimerspec *__restrict timerspec,
++                          struct itimerspec *__restrict ovalue)
++{
++	return setitimer(ITIMER_REAL, timerspec, ovalue);
++}
++
++static inline int timer_delete (timer_t timerid)
++{
++	struct itimerspec timespec;
++
++	timespec.it_interval.tv_sec=0;
++	timespec.it_interval.tv_usec=0;
++	timespec.it_value.tv_sec=0;
++	timespec.it_value.tv_usec=0;
++
++	return setitimer(ITIMER_REAL, &timespec, NULL);
++}
++
++static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
++{
++	return getitimer(ITIMER_REAL, value);
 +}
 +
  #endif	/* __XFS_DARWIN_H__ */
+diff --git a/repair/progress.c b/repair/progress.c
+index 27cbaef..0fee7dc 100644
+--- a/repair/progress.c
++++ b/repair/progress.c
+@@ -184,10 +184,22 @@ progress_rpt_thread (void *p)
+ 	 */
+ 
+ 	timespec.it_value.tv_sec = msgp->interval;
+-	timespec.it_value.tv_nsec = 0;
+ 	timespec.it_interval.tv_sec = msgp->interval;
++	/*
++	 * On some platforms (like OS X), timers and time things are slightly
++	 * different: itimerspec is replaced with itimerval and timeval struct
++	 * has no tv_nsec, but just tv_usec member.
++	 * For compatibility, itimerspec is a macro defined to the existing
++	 * itimerval on these platforms, and in such case, use usec instead
++	 * of nsec.
++	 */
++#ifndef itimerspec
++	timespec.it_value.tv_nsec = 0;
+ 	timespec.it_interval.tv_nsec = 0;
+-
++#else
++	timespec.it_value.tv_usec = 0;
++	timespec.it_interval.tv_usec = 0;
++#endif
+ 	if (timer_create (CLOCK_REALTIME, NULL, &timerid))
+ 		do_error(_("progress_rpt: cannot create timer\n"));
+ 
 -- 
-2.4.5
+2.4.3
 
 _______________________________________________
 xfs mailing list
