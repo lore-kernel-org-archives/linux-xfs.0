@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 536147F8D
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B7A257F8D
 	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D3888F8049
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9B88304051
 	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id D2eiaMb9JVM4TwDo (version=TLSv1.2
+	cuda.sgi.com with ESMTP id iK0bl3OunDv9JRp6 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:51 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:52 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5B885461D7
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:51 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 3B7DC8E3E9
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:52 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 13/14] xfsprogs: Make mremap conditional
-Date: Tue, 15 Sep 2015 11:59:23 +0200
-Message-Id: <1442311164-12921-14-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 14/14] xfsprogs: rename lstat64 to lstat for OS X
+Date: Tue, 15 Sep 2015 11:59:24 +0200
+Message-Id: <1442311164-12921-15-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,127 +35,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-Don't build mremap (in xfs_io) on platforms where it has no support.
+OS X has a different means to distinguish between
+a 32 and 64bit calls - using xxx64 is deprecated.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- configure.ac          |  1 +
- include/builddefs.in  |  1 +
- include/darwin.h      |  1 +
- io/mmap.c             |  8 ++++++++
- m4/package_libcdev.m4 | 13 +++++++++++++
- 5 files changed, 24 insertions(+)
+ include/darwin.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/configure.ac b/configure.ac
-index 5d8486e..7cb87bc 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -124,6 +124,7 @@ AC_HAVE_MNTENT
- AC_HAVE_FLS
- AC_HAVE_READDIR
- AC_HAVE_FSETXATTR
-+AC_HAVE_MREMAP
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 31e21ba..c1797fd 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -107,6 +107,7 @@ HAVE_READDIR = @have_readdir@
- HAVE_MNTENT = @have_mntent@
- HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
-+HAVE_MREMAP = @have_mremap@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
 diff --git a/include/darwin.h b/include/darwin.h
-index 0313f46..16ead12 100644
+index 16ead12..4ad2de1 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -33,6 +33,7 @@
- #include <mach/mach_time.h>
- #include <inttypes.h>
- #include <stdio.h>
-+#include <sys/mman.h>
+@@ -224,6 +224,7 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+ #include <sys/ucred.h>
+ #include <errno.h>
+ #define statvfs64 statfs
++#define lstat64 lstat
+ #define		_PATH_MOUNTED   "/etc/mtab"
  
- #include <machine/endian.h>
- #define __BYTE_ORDER	BYTE_ORDER
-diff --git a/io/mmap.c b/io/mmap.c
-index f26276e..7093650 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -28,7 +28,9 @@ static cmdinfo_t mread_cmd;
- static cmdinfo_t msync_cmd;
- static cmdinfo_t munmap_cmd;
- static cmdinfo_t mwrite_cmd;
-+#ifdef HAVE_MREMAP
- static cmdinfo_t mremap_cmd;
-+#endif /* HAVE_MREMAP */
- 
- mmap_region_t	*maptable;
- int		mapcount;
-@@ -574,6 +576,7 @@ mwrite_f(
- 	return 0;
- }
- 
-+#ifdef HAVE_MREMAP
- static void
- mremap_help(void)
- {
-@@ -633,6 +636,7 @@ mremap_f(
- 
- 	return 0;
- }
-+#endif /* HAVE_MREMAP */
- 
- void
- mmap_init(void)
-@@ -688,6 +692,7 @@ mmap_init(void)
- 		_("writes data into a region in the current memory mapping");
- 	mwrite_cmd.help = mwrite_help;
- 
-+#ifdef HAVE_MREMAP
- 	mremap_cmd.name = "mremap";
- 	mremap_cmd.altname = "mrm";
- 	mremap_cmd.cfunc = mremap_f;
-@@ -698,11 +703,14 @@ mmap_init(void)
- 	mremap_cmd.oneline =
- 		_("alters the size of the current memory mapping");
- 	mremap_cmd.help = mremap_help;
-+#endif /* HAVE_MREMAP */
- 
- 	add_command(&mmap_cmd);
- 	add_command(&mread_cmd);
- 	add_command(&msync_cmd);
- 	add_command(&munmap_cmd);
- 	add_command(&mwrite_cmd);
-+#ifdef HAVE_MREMAP
- 	add_command(&mremap_cmd);
-+#endif /* HAVE_MREMAP */
- }
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 5e900ab..b6a7a54 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -235,3 +235,16 @@ AC_DEFUN([AC_HAVE_MNTENT],
-     have_mntent=yes)
-     AC_SUBST(have_mntent)
-   ])
-+
-+#
-+# Check if we have a mremap call (not on Mac OS X)
-+#
-+AC_DEFUN([AC_HAVE_MREMAP],
-+  [ AC_CHECK_DECL([mremap],
-+       have_mremap=yes,
-+       [],
-+       [#define _GNU_SOURCE
-+        #include <sys/mman.h>]
-+       )
-+    AC_SUBST(have_mremap)
-+  ])
+ struct mntent
 -- 
 2.4.3
 
