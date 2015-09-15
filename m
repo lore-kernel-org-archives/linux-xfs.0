@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C814E7F8D
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F31537F90
 	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AB60730404E
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DCD9AC002
 	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Yt8RHKzoCLsXG83p (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kncj3RlHR704h2BX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:49 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:50 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 7C0E3C0B91A1
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:49 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 6883991C02
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:50 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 11/14] xfsprogs: Add statvfs64 for osx
-Date: Tue, 15 Sep 2015 11:59:21 +0200
-Message-Id: <1442311164-12921-12-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 12/14] xfsprogs: make fsr use mntinfo when there is no mntent
+Date: Tue, 15 Sep 2015 11:59:22 +0200
+Message-Id: <1442311164-12921-13-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,84 +35,202 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-Simply rename statvfs64 to statfs with a #define.
-OSX version of statvfs is missing some members, so if the renaming
-is in effect (stavfs64 is defined), don't try to use them and go
-directly for the other member value.
+For what fsr needs, mntinfo can be used instead of mntent.
+Custom mntent struct is used to avoid too big ifdefs:
+We only change few lines and the rest of the code can still
+use mntent as before.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fsr/xfs_fsr.c        | 14 ++++++++++++++
- include/builddefs.in |  2 +-
- include/darwin.h     |  5 +++++
- 3 files changed, 20 insertions(+), 1 deletion(-)
+ fsr/Makefile     |  8 +++++++
+ fsr/xfs_fsr.c    | 69 ++++++++++++++++++++++++++++++++++++++++++++++++--------
+ include/darwin.h | 20 ++++++++++++++++
+ 3 files changed, 87 insertions(+), 10 deletions(-)
 
+diff --git a/fsr/Makefile b/fsr/Makefile
+index a9d1bf6..d3521b2 100644
+--- a/fsr/Makefile
++++ b/fsr/Makefile
+@@ -9,6 +9,14 @@ LTCOMMAND = xfs_fsr
+ CFILES = xfs_fsr.c
+ LLDLIBS = $(LIBHANDLE)
+ 
++ifeq ($(HAVE_GETMNTENT),yes)
++LCFLAGS += -DHAVE_GETMNTENT
++endif
++
++ifeq ($(HAVE_GETMNTINFO),yes)
++LCFLAGS += -DHAVE_GETMNTINFO
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
 diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index e1b7bd6..5f95cdc 100644
+index 5f95cdc..ff791d3 100644
 --- a/fsr/xfs_fsr.c
 +++ b/fsr/xfs_fsr.c
-@@ -36,6 +36,12 @@
+@@ -32,8 +32,10 @@
+ #include <sys/statvfs.h>
+ #include <sys/xattr.h>
+ 
+-#ifdef HAVE_MNTENT
++#if defined(HAVE_GETMNTENT)
  #  include <mntent.h>
++#elif defined(HAVE_GETMNTINFO)
++#  include <sys/mount.h>
  #endif
  
-+#ifdef __APPLE__
-+//#  define statvfs64 statfs;
-+#  include <sys/param.h>
-+#  include <sys/mount.h>
+ #ifdef __APPLE__
+@@ -191,9 +193,10 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ {
+ 	struct mntent *t;
+ 	struct stat64 ms;
+-	FILE *mtabp;
+ 	char *mntp = NULL;
+ 
++#if defined(HAVE_GETMNTENT)
++	FILE *mtabp;
+ 	mtabp = setmntent(mtab, "r");
+ 	if (!mtabp) {
+ 		fprintf(stderr, _("%s: cannot read %s\n"),
+@@ -202,6 +205,27 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ 	}
+ 
+ 	while ((t = getmntent(mtabp))) {
++#elif defined(HAVE_GETMNTINFO)
++	struct statfs	*stats;
++	int error, i, count;
++	// because "t" is a pointer, but we don't need to use
++	// malloc for this usage
++	struct mntent t_tmp;
++	t = &t_tmp;
++
++		
++	error = 0;
++	if ((count = getmntinfo(&stats, 0)) < 0) {
++		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
++				progname, strerror(errno));
++		return 0;
++	}
++
++	for (i = 0; i < count; i++) {
++		mntinfo2mntent(&stats[i], t);
++#else
++# error "How do I extract info about mounted filesystems on this platform?"
++#endif
+ 		if (S_ISDIR(sb->st_mode)) {		/* mount point */
+ 			if (stat64(t->mnt_dir, &ms) < 0)
+ 				continue;
+@@ -233,10 +257,11 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ 		break;
+ 	}
+ 
++#if defined(HAVE_GETMNTENT)
+ 	endmntent(mtabp);
++#endif
+ 	return mntp;
+ }
+-
+ int
+ main(int argc, char **argv)
+ {
+@@ -411,18 +436,11 @@ usage(int ret)
+ static void
+ initallfs(char *mtab)
+ {
+-	FILE *fp;
+ 	struct mntent *mp;
+ 	int mi;
+ 	char *cp;
+ 	struct stat64 sb;
+ 
+-	fp = setmntent(mtab, "r");
+-	if (fp == NULL) {
+-		fsrprintf(_("could not open mtab file: %s\n"), mtab);
+-		exit(1);
+-	}
+-
+ 	/* malloc a number of descriptors, increased later if needed */
+ 	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
+ 		fsrprintf(_("out of memory: %s\n"), strerror(errno));
+@@ -433,7 +451,36 @@ initallfs(char *mtab)
+ 	/* find all rw xfs file systems */
+ 	mi = 0;
+ 	fs = fsbase;
++
++#if defined(HAVE_GETMNTENT)
++	FILE *fp;
++	fp = setmntent(mtab, "r");
++	if (fp == NULL) {
++		fsrprintf(_("could not open mtab file: %s\n"), mtab);
++		exit(1);
++	}
++
+ 	while ((mp = getmntent(fp))) {
++#elif defined(HAVE_GETMNTINFO)
++	struct statfs	*stats;
++	int error, i, count;
++	// because "t" is a pointer, but we don't need to use
++	// malloc for this usage
++	struct mntent mp_tmp;
++	mp = &mp_tmp;
++	error = 0;
++	if ((count = getmntinfo(&stats, 0)) < 0) {
++		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
++				progname, strerror(errno));
++		exit(1);
++	}
++
++	for (i = 0; i < count; i++) {
++		mntinfo2mntent(&stats[i], mp);
++#else
++# error "How do I extract info about mounted filesystems on this platform?"
 +#endif
 +
- #ifndef XFS_XFLAG_NODEFRAG
- #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
- #endif
-@@ -948,7 +954,11 @@ fsrfile_common(
- 			fname, strerror(errno));
- 		return -1;
+ 		int rw = 0;
+ 
+ 		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
+@@ -485,7 +532,9 @@ initallfs(char *mtab)
  	}
-+#ifndef statvfs64
- 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
-+#else
-+	bsize = vfss.f_bsize;
+ 	numfs = mi;
+ 	fsend = (fsbase + numfs);
++#if defined(HAVE_GETMNTENT)
+ 	endmntent(fp);
 +#endif
- 	if (statp->bs_blksize * statp->bs_blocks >
- 	    vfss.f_bfree * bsize - minimumfree) {
- 		fsrprintf(_("insufficient freespace for: %s: "
-@@ -1728,7 +1738,11 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
- 		close(fd);
- 		return -1;
- 	}
-+#ifndef statvfs64
- 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
-+#else
-+	bsize = sfbp->f_bsize;
-+#endif
- 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
- 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
- 	return 0;
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 25b8816..31e21ba 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -123,7 +123,7 @@ PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
- endif
- ifeq ($(PKG_PLATFORM),darwin)
- PCFLAGS = $(GCCFLAGS)
--DEPENDFLAGS = -D__APPLE__
-+DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
- endif
- ifeq ($(PKG_PLATFORM),irix)
- PLDLIBS = -ldisk -lgen
+ 	if (numfs == 0) {
+ 		fsrprintf(_("no rw xfs file systems in mtab: %s\n"), mtab);
+ 		exit(0);
 diff --git a/include/darwin.h b/include/darwin.h
-index 0d2f175..288ad1f 100644
+index 288ad1f..0313f46 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -216,4 +216,9 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
- 	return getitimer(ITIMER_REAL, value);
- }
+@@ -218,7 +218,27 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
  
-+/* FSR */
+ /* FSR */
+ 
++#  include <sys/mount.h>
++#  include <sys/param.h>
++#include <sys/ucred.h>
++#include <errno.h>
+ #define statvfs64 statfs
+ #define		_PATH_MOUNTED   "/etc/mtab"
+ 
++struct mntent
++{
++	char *mnt_fsname;
++	char *mnt_dir;
++	char *mnt_type;
++	char *mnt_opts;
++	int mnt_freq;
++	int mnt_passno;
++};
 +
-+#define statvfs64 statfs
-+#define		_PATH_MOUNTED   "/etc/mtab"
++static inline void mntinfo2mntent (struct statfs * stats, struct mntent * mnt) {
++	mnt->mnt_fsname = stats->f_mntfromname;
++	mnt->mnt_dir = stats->f_mntonname;
++	mnt->mnt_type = stats->f_fstypename;
++}
 +
  #endif	/* __XFS_DARWIN_H__ */
 -- 
