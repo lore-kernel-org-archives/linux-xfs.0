@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F1B5F7F54
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C54188F8037
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:42 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 985B27F54
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 244FFAC002
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:43 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id N1Ux3hYEYa6gyP2H (version=TLSv1.2
+	cuda.sgi.com with ESMTP id xEDfYqBP8rMAyrQd (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:39 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:41 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id A8F7E8E3E9
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:39 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 74EBB40C4D
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:41 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 01/14] xfsprogs: Add a way to compile without blkid
-Date: Tue, 15 Sep 2015 11:59:11 +0200
-Message-Id: <1442311164-12921-2-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 03/14] xfsprogs: avoid dependency on Linux XATTR_SIZE_MAX
+Date: Tue, 15 Sep 2015 11:59:13 +0200
+Message-Id: <1442311164-12921-4-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,136 +35,61 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-Because not all platforms have up-to-date blkid with required
-functions, allow at least partial functionality by adding
---enable-blkid=yes/no optional configure argument.
+Currently, we depends on Linux XATTR value for on disk
+definitions. Which causes trouble on other platforms and
+maybe also if this value was to change.
 
-When blkid is disabled, signature detection and device geometry
-detection doesn't work.
+Fix it by creating a custom definition independent from
+those in Linux (although with the same values), so it is OK
+with the be16 fields used for holding these attributes.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- configure.ac         | 10 +++++++++-
- include/builddefs.in |  5 +++++
- mkfs/xfs_mkfs.c      | 37 ++++++++++++++++++++++++++++++++++++-
- 3 files changed, 50 insertions(+), 2 deletions(-)
+ libxfs/xfs_attr_remote.c |  2 +-
+ libxfs/xfs_format.h      | 10 +++++++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 16f3f68..aa241cd 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -26,6 +26,11 @@ AC_ARG_ENABLE(gettext,
- 	enable_gettext=yes)
- AC_SUBST(enable_gettext)
- 
-+AC_ARG_ENABLE(blkid,
-+[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
-+	enable_blkid=yes)
-+AC_SUBST(enable_blkid)
-+
- AC_ARG_ENABLE(readline,
- [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
- 	test $enable_readline = yes && libreadline="-lreadline",
-@@ -117,9 +122,12 @@ AC_HAVE_PREADV
- AC_HAVE_SYNC_FILE_RANGE
- AC_HAVE_MNTENT
- AC_HAVE_FLS
--AC_HAVE_BLKID_TOPO
- AC_HAVE_READDIR
- 
-+if test "$enable_blkid" = yes; then
-+AC_HAVE_BLKID_TOPO
-+fi
-+
- AC_CHECK_SIZEOF([long])
- AC_CHECK_SIZEOF([char *])
- AC_TYPE_UMODE_T
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 8851956..6c16a65 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -89,6 +89,7 @@ ENABLE_SHARED	= @enable_shared@
- ENABLE_GETTEXT	= @enable_gettext@
- ENABLE_EDITLINE	= @enable_editline@
- ENABLE_READLINE	= @enable_readline@
-+ENABLE_BLKID	= @enable_blkid@
- 
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- 
-@@ -138,6 +139,10 @@ endif
- ifeq ($(HAVE_MNTENT),yes)
- PCFLAGS+= -DHAVE_MNTENT
- endif
-+ifeq ($(ENABLE_BLKID),yes)
-+PCFLAGS+= -DENABLE_BLKID
-+endif
-+
- 
- GCFLAGS = $(OPTIMIZER) $(DEBUG) \
- 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index d993fc0..5964eaf 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -18,7 +18,9 @@
- 
- #include "libxfs.h"
- #include <ctype.h>
--#include <blkid/blkid.h>
-+#ifdef ENABLE_BLKID
-+#  include <blkid/blkid.h>
-+#endif /* ENABLE_BLKID */
- #include "xfs_mkfs.h"
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 3b3c24b..39ab350 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -102,7 +102,7 @@ xfs_attr3_rmt_verify(
+ 	if (be32_to_cpu(rmt->rm_bytes) > fsbsize - sizeof(*rmt))
+ 		return false;
+ 	if (be32_to_cpu(rmt->rm_offset) +
+-				be32_to_cpu(rmt->rm_bytes) > XATTR_SIZE_MAX)
++				be32_to_cpu(rmt->rm_bytes) > XFS_XATTR_SIZE_MAX)
+ 		return false;
+ 	if (rmt->rm_owner == 0)
+ 		return false;
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 3c98635..946bcd1 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -60,6 +60,14 @@ struct xfs_ifork;
+ #define	XFS_SB_VERSION_MOREBITSBIT	0x8000
  
  /*
-@@ -298,6 +300,7 @@ calc_stripe_factors(
-  *	 0 for nothing found
-  *	-1 for internal error
-  */
-+#ifdef ENABLE_BLKID
- static int
- check_overwrite(
- 	char		*device)
-@@ -451,6 +454,38 @@ out_free_probe:
- 		_("warning: unable to probe device topology for device %s\n"),
- 		device);
- }
-+#else /* ifdef ENABLE_BLKID */
-+/*
-+ * Without blkid, we can't do a good check for signatures.
-+ * So instead of some messy attempts, just disable any checks
-+ * and always return 'nothing found'.
++ * The size of a single extended attribute on disk is limited by
++ * the size of index values within the attribute entries themselves.
++ * These are be16 fields, so we can only support attribute data
++ * sizes up to 2^16 bytes in length.
 + */
-+#  warning BLKID is disabled, so signature detection and block device\
-+ access are not working!
-+static int
-+check_overwrite(
-+	char		*device)
-+{
-+	return 1;
-+}
++#define XFS_XATTR_SIZE_MAX (1 << 16)
 +
-+static void blkid_get_topology(
-+	const char	*device,
-+	int		*sunit,
-+	int		*swidth,
-+	int		*lsectorsize,
-+	int		*psectorsize,
-+	int		force_overwrite)
-+{
-+	/*
-+	 * Shouldn't make any difference (no blkid = no block device access),
-+	 * but make sure this dummy replacement returns with at least some
-+	 * sanity.
-+	 */
-+	*lsectorsize = *psectorsize = 512;
-+}
-+
-+#endif /* ENABLE_BLKID */
++/*
+  * Supported feature bit list is just all bits in the versionnum field because
+  * we've used them all up and understand them all. Except, of course, for the
+  * shared superblock bit, which nobody knows what it does and so is unsupported.
+@@ -1483,7 +1491,7 @@ struct xfs_acl {
+  */
+ #define XFS_ACL_MAX_ENTRIES(mp)	\
+ 	(xfs_sb_version_hascrc(&mp->m_sb) \
+-		?  (XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
++		?  (XFS_XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
+ 						sizeof(struct xfs_acl_entry) \
+ 		: 25)
  
- static void get_topology(
- 	libxfs_init_t		*xi,
 -- 
 2.4.3
 
