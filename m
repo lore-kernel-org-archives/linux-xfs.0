@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 529BC7F55
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 449A48F8040
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:49 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C814E7F8D
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB60730404E
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FcZcRWwusejCbART (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Yt8RHKzoCLsXG83p (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:48 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:49 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id AF9128EA29
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:47 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 7C0E3C0B91A1
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:49 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 09/14] xfsprogs: change nftw64 to nftw
-Date: Tue, 15 Sep 2015 11:59:19 +0200
-Message-Id: <1442311164-12921-10-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 11/14] xfsprogs: Add statvfs64 for osx
+Date: Tue, 15 Sep 2015 11:59:21 +0200
+Message-Id: <1442311164-12921-12-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,47 +35,86 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-There is only one usage of nftw64 in entire xfsprogs, but
-multiple usages of nftw. It seems the 64 variant has no reason,
-and causes difficulties with some other platforms which has
-only nftw call.
+Simply rename statvfs64 to statfs with a #define.
+OSX version of statvfs is missing some members, so if the renaming
+is in effect (stavfs64 is defined), don't try to use them and go
+directly for the other member value.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- estimate/xfs_estimate.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fsr/xfs_fsr.c        | 14 ++++++++++++++
+ include/builddefs.in |  2 +-
+ include/darwin.h     |  5 +++++
+ 3 files changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/estimate/xfs_estimate.c b/estimate/xfs_estimate.c
-index 65b7168..323137c 100644
---- a/estimate/xfs_estimate.c
-+++ b/estimate/xfs_estimate.c
-@@ -45,7 +45,7 @@ cvtnum(char *s)
- 	return 0LL;
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index e1b7bd6..5f95cdc 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -36,6 +36,12 @@
+ #  include <mntent.h>
+ #endif
+ 
++#ifdef __APPLE__
++//#  define statvfs64 statfs;
++#  include <sys/param.h>
++#  include <sys/mount.h>
++#endif
++
+ #ifndef XFS_XFLAG_NODEFRAG
+ #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
+ #endif
+@@ -948,7 +954,11 @@ fsrfile_common(
+ 			fname, strerror(errno));
+ 		return -1;
+ 	}
++#ifndef statvfs64
+ 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
++#else
++	bsize = vfss.f_bsize;
++#endif
+ 	if (statp->bs_blksize * statp->bs_blocks >
+ 	    vfss.f_bfree * bsize - minimumfree) {
+ 		fsrprintf(_("insufficient freespace for: %s: "
+@@ -1728,7 +1738,11 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
+ 		close(fd);
+ 		return -1;
+ 	}
++#ifndef statvfs64
+ 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
++#else
++	bsize = sfbp->f_bsize;
++#endif
+ 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
+ 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
+ 	return 0;
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 25b8816..31e21ba 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -123,7 +123,7 @@ PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
+ endif
+ ifeq ($(PKG_PLATFORM),darwin)
+ PCFLAGS = $(GCCFLAGS)
+-DEPENDFLAGS = -D__APPLE__
++DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
+ endif
+ ifeq ($(PKG_PLATFORM),irix)
+ PLDLIBS = -ldisk -lgen
+diff --git a/include/darwin.h b/include/darwin.h
+index 0d2f175..288ad1f 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -216,4 +216,9 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+ 	return getitimer(ITIMER_REAL, value);
  }
  
--int ffn(const char *, const struct stat64 *, int, struct FTW *);
-+int ffn(const char *, const struct stat *, int, struct FTW *);
- 
- #define BLOCKSIZE	4096
- #define INODESIZE	256
-@@ -168,7 +168,7 @@ main(int argc, char **argv)
- 		ndirs=0LL;		/* number of directories */
- 		nspecial=0LL;		/* number of special files */
- 
--		nftw64(argv[optind], ffn, 40, FTW_PHYS | FTW_MOUNT);
-+		nftw(argv[optind], ffn, 40, FTW_PHYS | FTW_MOUNT);
- 
- 		if (__debug) {
- 			printf(_("dirsize=%llu\n"), dirsize);
-@@ -214,7 +214,7 @@ main(int argc, char **argv)
- }
- 
- int
--ffn(const char *path, const struct stat64 *stb, int flags, struct FTW *f)
-+ffn(const char *path, const struct stat *stb, int flags, struct FTW *f)
- {
- 	/* cases are in most-encountered to least-encountered order */
- 	dirsize+=PERDIRENTRY+strlen(path);
++/* FSR */
++
++#define statvfs64 statfs
++#define		_PATH_MOUNTED   "/etc/mtab"
++
+ #endif	/* __XFS_DARWIN_H__ */
 -- 
 2.4.3
 
