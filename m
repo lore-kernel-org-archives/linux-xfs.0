@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F31537F90
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DCD9AC002
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 536147F8D
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D3888F8049
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kncj3RlHR704h2BX (version=TLSv1.2
+	cuda.sgi.com with ESMTP id D2eiaMb9JVM4TwDo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:50 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:51 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 6883991C02
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:50 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 5B885461D7
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:51 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 12/14] xfsprogs: make fsr use mntinfo when there is no mntent
-Date: Tue, 15 Sep 2015 11:59:22 +0200
-Message-Id: <1442311164-12921-13-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 13/14] xfsprogs: Make mremap conditional
+Date: Tue, 15 Sep 2015 11:59:23 +0200
+Message-Id: <1442311164-12921-14-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,204 +35,127 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-For what fsr needs, mntinfo can be used instead of mntent.
-Custom mntent struct is used to avoid too big ifdefs:
-We only change few lines and the rest of the code can still
-use mntent as before.
+Don't build mremap (in xfs_io) on platforms where it has no support.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fsr/Makefile     |  8 +++++++
- fsr/xfs_fsr.c    | 69 ++++++++++++++++++++++++++++++++++++++++++++++++--------
- include/darwin.h | 20 ++++++++++++++++
- 3 files changed, 87 insertions(+), 10 deletions(-)
+ configure.ac          |  1 +
+ include/builddefs.in  |  1 +
+ include/darwin.h      |  1 +
+ io/mmap.c             |  8 ++++++++
+ m4/package_libcdev.m4 | 13 +++++++++++++
+ 5 files changed, 24 insertions(+)
 
-diff --git a/fsr/Makefile b/fsr/Makefile
-index a9d1bf6..d3521b2 100644
---- a/fsr/Makefile
-+++ b/fsr/Makefile
-@@ -9,6 +9,14 @@ LTCOMMAND = xfs_fsr
- CFILES = xfs_fsr.c
- LLDLIBS = $(LIBHANDLE)
+diff --git a/configure.ac b/configure.ac
+index 5d8486e..7cb87bc 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -124,6 +124,7 @@ AC_HAVE_MNTENT
+ AC_HAVE_FLS
+ AC_HAVE_READDIR
+ AC_HAVE_FSETXATTR
++AC_HAVE_MREMAP
  
-+ifeq ($(HAVE_GETMNTENT),yes)
-+LCFLAGS += -DHAVE_GETMNTENT
-+endif
-+
-+ifeq ($(HAVE_GETMNTINFO),yes)
-+LCFLAGS += -DHAVE_GETMNTINFO
-+endif
-+
- default: depend $(LTCOMMAND)
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 31e21ba..c1797fd 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -107,6 +107,7 @@ HAVE_READDIR = @have_readdir@
+ HAVE_MNTENT = @have_mntent@
+ HAVE_FLS = @have_fls@
+ HAVE_FSETXATTR = @have_fsetxattr@
++HAVE_MREMAP = @have_mremap@
  
- include $(BUILDRULES)
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 5f95cdc..ff791d3 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -32,8 +32,10 @@
- #include <sys/statvfs.h>
- #include <sys/xattr.h>
- 
--#ifdef HAVE_MNTENT
-+#if defined(HAVE_GETMNTENT)
- #  include <mntent.h>
-+#elif defined(HAVE_GETMNTINFO)
-+#  include <sys/mount.h>
- #endif
- 
- #ifdef __APPLE__
-@@ -191,9 +193,10 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
- {
- 	struct mntent *t;
- 	struct stat64 ms;
--	FILE *mtabp;
- 	char *mntp = NULL;
- 
-+#if defined(HAVE_GETMNTENT)
-+	FILE *mtabp;
- 	mtabp = setmntent(mtab, "r");
- 	if (!mtabp) {
- 		fprintf(stderr, _("%s: cannot read %s\n"),
-@@ -202,6 +205,27 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
- 	}
- 
- 	while ((t = getmntent(mtabp))) {
-+#elif defined(HAVE_GETMNTINFO)
-+	struct statfs	*stats;
-+	int error, i, count;
-+	// because "t" is a pointer, but we don't need to use
-+	// malloc for this usage
-+	struct mntent t_tmp;
-+	t = &t_tmp;
-+
-+		
-+	error = 0;
-+	if ((count = getmntinfo(&stats, 0)) < 0) {
-+		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-+				progname, strerror(errno));
-+		return 0;
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		mntinfo2mntent(&stats[i], t);
-+#else
-+# error "How do I extract info about mounted filesystems on this platform?"
-+#endif
- 		if (S_ISDIR(sb->st_mode)) {		/* mount point */
- 			if (stat64(t->mnt_dir, &ms) < 0)
- 				continue;
-@@ -233,10 +257,11 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
- 		break;
- 	}
- 
-+#if defined(HAVE_GETMNTENT)
- 	endmntent(mtabp);
-+#endif
- 	return mntp;
- }
--
- int
- main(int argc, char **argv)
- {
-@@ -411,18 +436,11 @@ usage(int ret)
- static void
- initallfs(char *mtab)
- {
--	FILE *fp;
- 	struct mntent *mp;
- 	int mi;
- 	char *cp;
- 	struct stat64 sb;
- 
--	fp = setmntent(mtab, "r");
--	if (fp == NULL) {
--		fsrprintf(_("could not open mtab file: %s\n"), mtab);
--		exit(1);
--	}
--
- 	/* malloc a number of descriptors, increased later if needed */
- 	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
- 		fsrprintf(_("out of memory: %s\n"), strerror(errno));
-@@ -433,7 +451,36 @@ initallfs(char *mtab)
- 	/* find all rw xfs file systems */
- 	mi = 0;
- 	fs = fsbase;
-+
-+#if defined(HAVE_GETMNTENT)
-+	FILE *fp;
-+	fp = setmntent(mtab, "r");
-+	if (fp == NULL) {
-+		fsrprintf(_("could not open mtab file: %s\n"), mtab);
-+		exit(1);
-+	}
-+
- 	while ((mp = getmntent(fp))) {
-+#elif defined(HAVE_GETMNTINFO)
-+	struct statfs	*stats;
-+	int error, i, count;
-+	// because "t" is a pointer, but we don't need to use
-+	// malloc for this usage
-+	struct mntent mp_tmp;
-+	mp = &mp_tmp;
-+	error = 0;
-+	if ((count = getmntinfo(&stats, 0)) < 0) {
-+		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-+				progname, strerror(errno));
-+		exit(1);
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		mntinfo2mntent(&stats[i], mp);
-+#else
-+# error "How do I extract info about mounted filesystems on this platform?"
-+#endif
-+
- 		int rw = 0;
- 
- 		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
-@@ -485,7 +532,9 @@ initallfs(char *mtab)
- 	}
- 	numfs = mi;
- 	fsend = (fsbase + numfs);
-+#if defined(HAVE_GETMNTENT)
- 	endmntent(fp);
-+#endif
- 	if (numfs == 0) {
- 		fsrprintf(_("no rw xfs file systems in mtab: %s\n"), mtab);
- 		exit(0);
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
 diff --git a/include/darwin.h b/include/darwin.h
-index 288ad1f..0313f46 100644
+index 0313f46..16ead12 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -218,7 +218,27 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+@@ -33,6 +33,7 @@
+ #include <mach/mach_time.h>
+ #include <inttypes.h>
+ #include <stdio.h>
++#include <sys/mman.h>
  
- /* FSR */
+ #include <machine/endian.h>
+ #define __BYTE_ORDER	BYTE_ORDER
+diff --git a/io/mmap.c b/io/mmap.c
+index f26276e..7093650 100644
+--- a/io/mmap.c
++++ b/io/mmap.c
+@@ -28,7 +28,9 @@ static cmdinfo_t mread_cmd;
+ static cmdinfo_t msync_cmd;
+ static cmdinfo_t munmap_cmd;
+ static cmdinfo_t mwrite_cmd;
++#ifdef HAVE_MREMAP
+ static cmdinfo_t mremap_cmd;
++#endif /* HAVE_MREMAP */
  
-+#  include <sys/mount.h>
-+#  include <sys/param.h>
-+#include <sys/ucred.h>
-+#include <errno.h>
- #define statvfs64 statfs
- #define		_PATH_MOUNTED   "/etc/mtab"
+ mmap_region_t	*maptable;
+ int		mapcount;
+@@ -574,6 +576,7 @@ mwrite_f(
+ 	return 0;
+ }
  
-+struct mntent
-+{
-+	char *mnt_fsname;
-+	char *mnt_dir;
-+	char *mnt_type;
-+	char *mnt_opts;
-+	int mnt_freq;
-+	int mnt_passno;
-+};
++#ifdef HAVE_MREMAP
+ static void
+ mremap_help(void)
+ {
+@@ -633,6 +636,7 @@ mremap_f(
+ 
+ 	return 0;
+ }
++#endif /* HAVE_MREMAP */
+ 
+ void
+ mmap_init(void)
+@@ -688,6 +692,7 @@ mmap_init(void)
+ 		_("writes data into a region in the current memory mapping");
+ 	mwrite_cmd.help = mwrite_help;
+ 
++#ifdef HAVE_MREMAP
+ 	mremap_cmd.name = "mremap";
+ 	mremap_cmd.altname = "mrm";
+ 	mremap_cmd.cfunc = mremap_f;
+@@ -698,11 +703,14 @@ mmap_init(void)
+ 	mremap_cmd.oneline =
+ 		_("alters the size of the current memory mapping");
+ 	mremap_cmd.help = mremap_help;
++#endif /* HAVE_MREMAP */
+ 
+ 	add_command(&mmap_cmd);
+ 	add_command(&mread_cmd);
+ 	add_command(&msync_cmd);
+ 	add_command(&munmap_cmd);
+ 	add_command(&mwrite_cmd);
++#ifdef HAVE_MREMAP
+ 	add_command(&mremap_cmd);
++#endif /* HAVE_MREMAP */
+ }
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 5e900ab..b6a7a54 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -235,3 +235,16 @@ AC_DEFUN([AC_HAVE_MNTENT],
+     have_mntent=yes)
+     AC_SUBST(have_mntent)
+   ])
 +
-+static inline void mntinfo2mntent (struct statfs * stats, struct mntent * mnt) {
-+	mnt->mnt_fsname = stats->f_mntfromname;
-+	mnt->mnt_dir = stats->f_mntonname;
-+	mnt->mnt_type = stats->f_fstypename;
-+}
-+
- #endif	/* __XFS_DARWIN_H__ */
++#
++# Check if we have a mremap call (not on Mac OS X)
++#
++AC_DEFUN([AC_HAVE_MREMAP],
++  [ AC_CHECK_DECL([mremap],
++       have_mremap=yes,
++       [],
++       [#define _GNU_SOURCE
++        #include <sys/mman.h>]
++       )
++    AC_SUBST(have_mremap)
++  ])
 -- 
 2.4.3
 
