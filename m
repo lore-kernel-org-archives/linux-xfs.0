@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3FE4C7F56
-	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 08:08:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF90230404E
-	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 06:07:59 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id DCCEE7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB19F30404E
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ofi5nQMZq9bdal6t (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 7ZRDwwlaAQdCIR9K (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 25 Sep 2015 06:07:56 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 1F2ED19F20B
-	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 13:07:56 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t8PD7paa000474
-	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 09:07:55 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/3] xfs_io: Add inode '-s' command to query physical size of
-	largest inode
-Date: Fri, 25 Sep 2015 15:07:45 +0200
-Message-Id: <1443186467-20110-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1443186467-20110-1-git-send-email-cmaiolino@redhat.com>
-References: <1443186467-20110-1-git-send-email-cmaiolino@redhat.com>
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:39 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id C3A6E8EA21
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:38 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 00/14 v5]  xfsprogs: Partial OSX support
+Date: Tue, 15 Sep 2015 11:59:10 +0200
+Message-Id: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,136 +31,91 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-Add a new inode command to xfs_io, which aims to implement a tool for query
-information about inode usage of the filesystem.
+Hi all,
 
-This patch implements '-s' inode option, which query the filesystem for the
-physical size of the largest filesystem inode
+An updated version. This set is intended to put together the current
+versions of the individual patches with the exception of a new patch 14,
+and rebase it against the current master branch.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- io/open.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
+Patch 4 contains renaming required by Dave, however I'm not sure
+if it is still needed with the changes in patches 2 and 3.
 
-diff --git a/io/open.c b/io/open.c
-index ac5a5e0..6a794ba 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -20,6 +20,7 @@
- #include "input.h"
- #include "init.h"
- #include "io.h"
-+#include "libxfs.h"
- 
- #ifndef __O_TMPFILE
- #if defined __alpha__
-@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
- static cmdinfo_t chproj_cmd;
- static cmdinfo_t lsproj_cmd;
- static cmdinfo_t extsize_cmd;
-+static cmdinfo_t inode_cmd;
- static prid_t prid;
- static long extsize;
- 
-@@ -750,6 +752,74 @@ statfs_f(
- 	return 0;
- }
- 
-+static void
-+inode_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Query physical information about the inode"
-+"\n"
-+" -s	-- Returns the physical size (in bits) of the\n"
-+"	   largest inode number in the filesystem\n"
-+"\n"));
-+}
-+
-+static int
-+inode_f(
-+	  int			argc,
-+	  char			**argv)
-+{
-+	__s32			count = 0;
-+	__s32			lastgrp = 0;
-+	__u64			last = 0;
-+	__u64			lastino = 0;
-+	struct xfs_inogrp	igroup[1024];
-+	struct xfs_fsop_bulkreq	bulkreq;
-+	int			c;
-+	int			ret_lsize = 0;
-+
-+	bulkreq.lastip = &last;
-+	bulkreq.icount = 1024; /* maybe an user-defined value!? */
-+	bulkreq.ubuffer = &igroup;
-+	bulkreq.ocount = &count;
-+
-+	while ((c = getopt(argc, argv, "s")) != EOF) {
-+		switch (c) {
-+		case 's':
-+			ret_lsize = 1;
-+			break;
-+		default:
-+			return command_usage(&inode_cmd);
-+		}
-+	}
-+
-+	if (ret_lsize) {
-+		for (;;) {
-+			if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-+					&bulkreq)) {
-+				perror("XFS_IOC_FSINUMBERS");
-+				exitcode = 1;
-+				return 0;
-+			}
-+			if (count < XFS_INODES_PER_CHUNK && count > 0)
-+				lastgrp = count;
-+			if (!count)
-+				break;
-+		}
-+
-+		lastgrp--;
-+		lastino = igroup[lastgrp].xi_startino +
-+			  xfs_highbit64(igroup[lastgrp].xi_allocmask);
-+
-+		printf (_("Largest inode size: %d\n"),
-+			 lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-+
-+	}
-+
-+
-+	return 0;
-+}
-+
- void
- open_init(void)
- {
-@@ -815,6 +885,16 @@ open_init(void)
- 		_("get/set preferred extent size (in bytes) for the open file");
- 	extsize_cmd.help = extsize_help;
- 
-+	inode_cmd.name = "inode";
-+	inode_cmd.cfunc = inode_f;
-+	inode_cmd.args = _("[-s]");
-+	inode_cmd.argmin = 1;
-+	inode_cmd.argmax = 1;
-+	inode_cmd.flags = CMD_NOMAP_OK;
-+	inode_cmd.oneline =
-+		_("Query inode number usage in the filesystem");
-+	inode_cmd.help = inode_help;
-+
- 	add_command(&open_cmd);
- 	add_command(&stat_cmd);
- 	add_command(&close_cmd);
-@@ -822,4 +902,5 @@ open_init(void)
- 	add_command(&chproj_cmd);
- 	add_command(&lsproj_cmd);
- 	add_command(&extsize_cmd);
-+	add_command(&inode_cmd);
- }
+Patch 10 (adding timer) was mentioned that it "doesn't look to work",
+but I didn't get a reasoning. The added code, when tested,
+really run. For testing it in xfs_repair, I don't have how to
+create a large enough FS where the timer would be noticable on OSX.
+(Not enough of empty space.)
+
+Cheers,
+Jan
+
+CHANGELOG:
+v5:
+- patch 2 was split into 3 patches, numbered 2, 3 and 4
+- in patches 2-4, instead of just prefixing it all, a mixed
+  approach was used.
+- patch 9 renames the function directly instead of using #define
+- patch 11 now adds a simple rename
+- patch 12 uses mntinfo instead of dummy code
+- in patch 13, make mremap build optional instead of dummy code
+- new patch 14 with lstat64
+
+
+v4:
+- added #warning message (patch 1)
+- use dummy blkid_get_topology instead of #ifdefs (patch 1)
+- fix autoconf (wasn't passing -DENABLE_BLKID flag, lost during
+  patch cleaning.) (patch 1)
+- remove dependency on linux XATTR_ constants (patch 2)
+- add autoconf detection for fsetxattr (patch 4)
+- use uuid_t instead of unsigned char (patch 5)
+- add a basic timer functionality (patch 8)
+- mremap replacement now returns MAP_FAILED (patch 11)
+
+
+
+Version 3:
+- better commit messages (patch 1)
+- formatting fixes (patch 2, 8)
+- autoconf updates (patch 6, 7)
+- changed default behaviour if BLKID is disabled such that mkfs -f
+  is required (patch 11)
+
+Jan Tulak (14):
+  xfsprogs: Add a way to compile without blkid
+  xfsprogs: Add XATTR_LIST_MAX to OS X headers
+  xfsprogs: avoid dependency on Linux XATTR_SIZE_MAX
+  xfsprogs: prefix XATTR_LIST_MAX with XFS_
+  xfsprogs: Add includes required for OS X builds (delta)
+  xfsprogs: Add autoconf check for fsetxattr call
+  xfsprogs: uuid changes for OS X
+  xfsprogs: Remove conflicting define for OS X
+  xfsprogs: change nftw64 to nftw
+  xfsprogs: Add a timer implementation for OS X
+  xfsprogs: Add statvfs64 for osx
+  xfsprogs: make fsr use mntinfo when there is no mntent
+  xfsprogs: Make mremap conditional
+  xfsprogs: rename lstat64 to lstat for OS X
+
+ configure.ac             |  12 +++++-
+ estimate/xfs_estimate.c  |   6 +--
+ fsr/Makefile             |   8 ++++
+ fsr/xfs_fsr.c            |  85 ++++++++++++++++++++++++++++++++-----
+ include/builddefs.in     |  12 +++++-
+ include/darwin.h         | 106 ++++++++++++++++++++++++++++++++++++++++-------
+ include/xfs.h            |   2 +
+ io/mmap.c                |   8 ++++
+ libhandle/handle.c       |   4 +-
+ libhandle/jdm.c          |   4 +-
+ libxfs/xfs_attr_remote.c |   2 +-
+ libxfs/xfs_format.h      |  10 ++++-
+ m4/package_libcdev.m4    |  26 ++++++++++++
+ mkfs/xfs_mkfs.c          |  37 ++++++++++++++++-
+ repair/progress.c        |  16 ++++++-
+ 15 files changed, 298 insertions(+), 40 deletions(-)
+
 -- 
 2.4.3
 
