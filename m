@@ -1,17 +1,18 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BA6717F37
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 16:27:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 545DFAC007
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 14:27:14 -0700 (PDT)
-Received: from minivps2072 ([42.112.16.151]) by cuda.sgi.com with ESMTP id
-	JZKBpRCzcDrl3J1i for <xfs@oss.sgi.com>;
-	Tue, 15 Sep 2015 14:27:11 -0700 (PDT)
-From: <diemloan@yeah123.net>
-Subject: =?utf-8?Q?Di=E1=BB=85m_Loan_invites_you_to_Startupf.net.?=
-Date: Tue, 15 Sep 2015 17:18:20 +0000
-Message-ID: <2433c5fc9255b0c90d29088215e9b5d0@startupf.net>
+	by oss.sgi.com (Postfix) with ESMTP id A712E7F37
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 01:24:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1E645AC002
+	for <xfs@oss.sgi.com>; Mon, 14 Sep 2015 23:24:52 -0700 (PDT)
+Received: from yyft.com ([114.97.98.103]) by cuda.sgi.com with ESMTP id
+	cQ0eGl25BuZH6J9n for <xfs@oss.sgi.com>;
+	Mon, 14 Sep 2015 23:24:49 -0700 (PDT)
 MIME-Version: 1.0
+From: "KT Team" <huixinsoft58@foxmail.com>
+Date: 15 Sep 2015 14:24:40 +0800
+Subject: =?utf-8?B?UHJvZmVzc2lvbmFsIGluamVjdGlvbiBtb3VsZCBmYWN0b3J5IGluIENoaW5h?=
+Message-Id: <20150915062452.3D09D106C09D@cuda.sgi.com>
+Reply-To: KT Team <huixinsoft58@foxmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,92 +21,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8990740860539831446=="
+Content-Type: multipart/mixed; boundary="===============4908257259241375209=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
-
---===============8990740860539831446==
-Content-Type: multipart/alternative;
-	boundary="b1_2433c5fc9255b0c90d29088215e9b5d0"
-
-This is a multi-part message in MIME format.
-
---b1_2433c5fc9255b0c90d29088215e9b5d0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t8FLRNd0006104
-
-Hello,
-Di=E1=BB=85m Loan invites you to Startupf.net.
-
-To check out this invitation, follow the link below:<br>
-<a href=3D"http://startupf.net">http://startupf.net</a><br>
-<a
-href=3D"https://www.youtube.com/watch?v=3DZY_euf2sw9s&list=3DPLlQ4orXHw4c=
--8hsOIUcys5CQU_bA5ZyU8"
-target=3D"_blank" title=3D"Takeoff and landing in Tan son Nhat">Takeoff a=
-nd
-landing in Tan son Nhat</a>
-<br>
-<a
-href=3D"https://www.youtube.com/watch?v=3DCIzc5u7LyFA&list=3DPLF9NVNiGy_c=
-vb44OvkCQnrGm3XhIXBkcN"
-target=3D"_blank" title=3D"Aeon Mall l=E1=BB=9Bn nh=E1=BA=A5t Vi=E1=BB=87=
-t Nam">Aeon Mall l=E1=BB=9Bn
-nh=E1=BA=A5t Vi=E1=BB=87t Nam</a>
-<br>
-<a
-href=3D"https://www.youtube.com/watch?v=3DLf8q4bFshyw&list=3DPLlQ4orXHw4c=
-_mV79qYmv7wLrxUYFCwOxm"
-target=3D"_blank" title=3D"Biggest Airplan">Biggest Airplan</a>
-Diem Loan
-
-
---b1_2433c5fc9255b0c90d29088215e9b5d0
+--===============4908257259241375209==
 Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t8FLRNd0006104
+Content-Transfer-Encoding: base64
 
-=09
-Hello,
-	<br />
-	<br />
-Di=E1=BB=85m Loan invites you to Startupf.net.
-<br />
-<br />To check out this invitation, follow the link below:<br>
-<br /><a href=3D"http://startupf.net">http://startupf.net</a><br>
-<br /><a href=3D"https://www.youtube.com/watch?v=3DZY_euf2sw9s&list=3DPLl=
-Q4orXHw4c-8hsOIUcys5CQU_bA5ZyU8" target=3D"_blank" title=3D"Takeoff and l=
-anding in Tan son Nhat">Takeoff and landing in Tan son Nhat</a>
-<br /><br>
-<br /><a href=3D"https://www.youtube.com/watch?v=3DCIzc5u7LyFA&list=3DPLF=
-9NVNiGy_cvb44OvkCQnrGm3XhIXBkcN" target=3D"_blank" title=3D"Aeon Mall l=E1=
-=BB=9Bn nh=E1=BA=A5t Vi=E1=BB=87t Nam">Aeon Mall l=E1=BB=9Bn nh=E1=BA=A5t=
- Vi=E1=BB=87t Nam</a>
-<br /><br>
-<br /><a href=3D"https://www.youtube.com/watch?v=3DLf8q4bFshyw&list=3DPLl=
-Q4orXHw4c_mV79qYmv7wLrxUYFCwOxm" target=3D"_blank" title=3D"Biggest Airpl=
-an">Biggest Airplan</a>	<br />
-	<br />
-Diem Loan
+PGh0bWw+PGJvZHk+PFAgc3R5bGU9IlRFWFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5E
+LUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyBNQVJHSU46IDBp
+biAwaW4gMHB0OyBGT05UOiAxMXB0IENhbGlicmksIHNhbnMtc2VyaWY7IFdISVRFLVNQQUNF
+OiBub3JtYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBX
+T1JELVNQQUNJTkc6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4IiBjbGFz
+cz1Nc29QbGFpblRleHQ+SGVsbG8sPD94bWw6bmFtZXNwYWNlIHByZWZpeCA9IG8gLz48bzpw
+PjwvbzpwPjwvUD4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFDS0dST1VO
+RC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lOOiAw
+aW4gMGluIDBwdDsgRk9OVDogMTFwdCBDYWxpYnJpLCBzYW5zLXNlcmlmOyBXSElURS1TUEFD
+RTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsg
+V09SRC1TUEFDSU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xh
+c3M9TXNvUGxhaW5UZXh0PjxvOnA+Jm5ic3A7PC9vOnA+PC9QPg0KPFAgc3R5bGU9IlRFWFQt
+VFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBU
+RVhULUlOREVOVDogMHB4OyBNQVJHSU46IDBpbiAwaW4gMHB0OyBGT05UOiAxMXB0IENhbGli
+cmksIHNhbnMtc2VyaWY7IFdISVRFLVNQQUNFOiBub3JtYWw7IExFVFRFUi1TUEFDSU5HOiBu
+b3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBXT1JELVNQQUNJTkc6IDBweDsgLXdlYmtpdC10
+ZXh0LXN0cm9rZS13aWR0aDogMHB4IiBjbGFzcz1Nc29QbGFpblRleHQ+SXQncyBnbGFkIHRv
+IHdyaXRlIHRvIHlvdSB3aXRoIGtlZW4gaG9wZSB0byBlc3RhYmxpc2ggYSBidXNpbmVzcyBy
+ZWxhdGlvbnNoaXAgd2l0aCB5b3UuPG86cD48L286cD48L1A+DQo8UCBzdHlsZT0iVEVYVC1U
+UkFOU0ZPUk06IG5vbmU7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRF
+WFQtSU5ERU5UOiAwcHg7IE1BUkdJTjogMGluIDBpbiAwcHQ7IEZPTlQ6IDExcHQgQ2FsaWJy
+aSwgc2Fucy1zZXJpZjsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5v
+cm1hbDsgQ09MT1I6IHJnYigwLDAsMCk7IFdPUkQtU1BBQ0lORzogMHB4OyAtd2Via2l0LXRl
+eHQtc3Ryb2tlLXdpZHRoOiAwcHgiIGNsYXNzPU1zb1BsYWluVGV4dD48bzpwPiZuYnNwOzwv
+bzpwPjwvUD4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFDS0dST1VORC1D
+T0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lOOiAwaW4g
+MGluIDBwdDsgRk9OVDogMTFwdCBDYWxpYnJpLCBzYW5zLXNlcmlmOyBXSElURS1TUEFDRTog
+bm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsgV09S
+RC1TUEFDSU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xhc3M9
+TXNvUGxhaW5UZXh0PldlIGFyZSBmcm9tIENoaW5lc2UgS2luZyBUZWNoIE1vdWxkIENvLixM
+aW1pdGVkLiBXZSBhcmU/YSByZWd1bGFyIG1hbnVmYWN0dXJlcnMgYW5kIGV4cG9ydHMgb2Yg
+dmFyaW91cyBraW5kcyBvZiBQbGFzdGljIG1vdWxkIGFuZCBwYXJ0cy48bzpwPjwvbzpwPjwv
+UD4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFDS0dST1VORC1DT0xPUjog
+cmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lOOiAwaW4gMGluIDBw
+dDsgRk9OVDogMTFwdCBDYWxpYnJpLCBzYW5zLXNlcmlmOyBXSElURS1TUEFDRTogbm9ybWFs
+OyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsgV09SRC1TUEFD
+SU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xhc3M9TXNvUGxh
+aW5UZXh0PjEuIENvbGQgJmFtcDsgSG90IFJ1bm5lciAvIFNpbmdsZSAmYW1wOyBNdWx0aS1D
+YXZpdHktSW5qZWN0aW9uIG1vdWxkaW5nIDIuIFNpbmdsZSAmYW1wOyBNdXRpLVNob3QgMy4g
+RGllIENhc3QtQWx1bWludW0gJmFtcDsgWmluYyA0LiBJbnNlcnQgTW9sZHMgNS4gUHJvdG90
+eXBlIFRvb2xpbmcgNi4gT3Zlcm1vbGRpbmcgNy4gTWFzcyBwcm9kdWN0aW9uPG86cD48L286
+cD48L1A+DQo8UCBzdHlsZT0iVEVYVC1UUkFOU0ZPUk06IG5vbmU7IEJBQ0tHUk9VTkQtQ09M
+T1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IE1BUkdJTjogMGluIDBp
+biAwcHQ7IEZPTlQ6IDExcHQgQ2FsaWJyaSwgc2Fucy1zZXJpZjsgV0hJVEUtU1BBQ0U6IG5v
+cm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMCk7IFdPUkQt
+U1BBQ0lORzogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiIGNsYXNzPU1z
+b1BsYWluVGV4dD48bzpwPiZuYnNwOzwvbzpwPjwvUD4NCjxQIHN0eWxlPSJURVhULVRSQU5T
+Rk9STTogbm9uZTsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1J
+TkRFTlQ6IDBweDsgTUFSR0lOOiAwaW4gMGluIDBwdDsgRk9OVDogMTFwdCBDYWxpYnJpLCBz
+YW5zLXNlcmlmOyBXSElURS1TUEFDRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFs
+OyBDT0xPUjogcmdiKDAsMCwwKTsgV09SRC1TUEFDSU5HOiAwcHg7IC13ZWJraXQtdGV4dC1z
+dHJva2Utd2lkdGg6IDBweCIgY2xhc3M9TXNvUGxhaW5UZXh0PlBsZWFzZSBzZW5kIDNELzJE
+IGRyYXdpbmcgb3Igc2FtcGxlcyB0byB1cyBpZiB5b3UgaGF2ZSBhbnkgbmVlZHMsIHdlIHdp
+bGwgcXVvdGUgZm9yIGZyZWUgd2l0aCBhIHNvdW5kIHByaWNlLjxvOnA+PC9vOnA+PC9QPg0K
+PFAgc3R5bGU9IlRFWFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2Io
+MjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyBNQVJHSU46IDBpbiAwaW4gMHB0OyBG
+T05UOiAxMXB0IENhbGlicmksIHNhbnMtc2VyaWY7IFdISVRFLVNQQUNFOiBub3JtYWw7IExF
+VFRFUi1TUEFDSU5HOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBXT1JELVNQQUNJTkc6
+IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4IiBjbGFzcz1Nc29QbGFpblRl
+eHQ+PG86cD4mbmJzcDs8L286cD48L1A+DQo8UCBzdHlsZT0iVEVYVC1UUkFOU0ZPUk06IG5v
+bmU7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAw
+cHg7IE1BUkdJTjogMGluIDBpbiAwcHQ7IEZPTlQ6IDExcHQgQ2FsaWJyaSwgc2Fucy1zZXJp
+ZjsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQ09MT1I6
+IHJnYigwLDAsMCk7IFdPUkQtU1BBQ0lORzogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdp
+ZHRoOiAwcHgiIGNsYXNzPU1zb1BsYWluVGV4dD5CZXN0IHdpc2hlcy48bzpwPjwvbzpwPjwv
+UD4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFDS0dST1VORC1DT0xPUjog
+cmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lOOiAwaW4gMGluIDBw
+dDsgRk9OVDogMTFwdCBDYWxpYnJpLCBzYW5zLXNlcmlmOyBXSElURS1TUEFDRTogbm9ybWFs
+OyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsgV09SRC1TUEFD
+SU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xhc3M9TXNvUGxh
+aW5UZXh0PktUIFRlYW08bzpwPjwvbzpwPjwvUD4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9S
+TTogbm9uZTsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRF
+TlQ6IDBweDsgTUFSR0lOOiAwaW4gMGluIDBwdDsgRk9OVDogMTFwdCBDYWxpYnJpLCBzYW5z
+LXNlcmlmOyBXSElURS1TUEFDRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBD
+T0xPUjogcmdiKDAsMCwwKTsgV09SRC1TUEFDSU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJv
+a2Utd2lkdGg6IDBweCIgY2xhc3M9TXNvUGxhaW5UZXh0PjxvOnA+Jm5ic3A7PC9vOnA+PC9Q
+Pg0KPFAgc3R5bGU9IlRFWFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiBy
+Z2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyBNQVJHSU46IDBpbiAwaW4gMHB0
+OyBGT05UOiAxMXB0IENhbGlicmksIHNhbnMtc2VyaWY7IFdISVRFLVNQQUNFOiBub3JtYWw7
+IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBXT1JELVNQQUNJ
+Tkc6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4IiBjbGFzcz1Nc29QbGFp
+blRleHQ+S2luZyBUZWNoIE1vdWxkIENvLixMaW1pdGVkJm5ic3A7PG86cD48L286cD48L1A+
+DQo8UCBzdHlsZT0iVEVYVC1UUkFOU0ZPUk06IG5vbmU7IEJBQ0tHUk9VTkQtQ09MT1I6IHJn
+YigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IE1BUkdJTjogMGluIDBpbiAwcHQ7
+IEZPTlQ6IDExcHQgQ2FsaWJyaSwgc2Fucy1zZXJpZjsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsg
+TEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMCk7IFdPUkQtU1BBQ0lO
+RzogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiIGNsYXNzPU1zb1BsYWlu
+VGV4dD5Sb29tNzAyLCAxc3QgQmxkZy4sIEZhbnRhc2lhIE1pYyBQbGF6YSwgTmFuSGFpIFJv
+YWQsIFNoZWtvdSBTdHJlZXQsJm5ic3A7Jm5ic3A7Jm5ic3A7IE5hbnNoYW4gRGlzdHJpY3Qs
+IFNoZW56aGVuIENpdHksIEd1YW5nZG9uZyBQcm92aW5jZSwgQ2hpbmEmbmJzcDs8bzpwPjwv
+bzpwPjwvUD4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFDS0dST1VORC1D
+T0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lOOiAwaW4g
+MGluIDBwdDsgRk9OVDogMTFwdCBDYWxpYnJpLCBzYW5zLXNlcmlmOyBXSElURS1TUEFDRTog
+bm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsgV09S
+RC1TUEFDSU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xhc3M9
+TXNvUGxhaW5UZXh0PlppcCBDb2RlOiA1MTgwNjc8bzpwPjwvbzpwPjwvUD4NCjxQIHN0eWxl
+PSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUs
+MjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lOOiAwaW4gMGluIDBwdDsgRk9OVDogMTFw
+dCBDYWxpYnJpLCBzYW5zLXNlcmlmOyBXSElURS1TUEFDRTogbm9ybWFsOyBMRVRURVItU1BB
+Q0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsgV09SRC1TUEFDSU5HOiAwcHg7IC13
+ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xhc3M9TXNvUGxhaW5UZXh0PlRlbC46
+ICs4NiA3NTUgODYxOCAyNDEwJm5ic3A7Jm5ic3A7PG86cD48L286cD48L1A+DQo8UCBzdHls
+ZT0iVEVYVC1UUkFOU0ZPUk06IG5vbmU7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1
+LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IE1BUkdJTjogMGluIDBpbiAwcHQ7IEZPTlQ6IDEx
+cHQgQ2FsaWJyaSwgc2Fucy1zZXJpZjsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgTEVUVEVSLVNQ
+QUNJTkc6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMCk7IFdPUkQtU1BBQ0lORzogMHB4OyAt
+d2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiIGNsYXNzPU1zb1BsYWluVGV4dD5GYXg6
+ICs4NiA3NTUgODYxOCAyNzQwPC9QPjwvYm9keT48L2h0bWw+
 
 
-
---b1_2433c5fc9255b0c90d29088215e9b5d0--
-
-
---===============8990740860539831446==
+--===============4908257259241375209==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8990740860539831446==--
+--===============4908257259241375209==--
