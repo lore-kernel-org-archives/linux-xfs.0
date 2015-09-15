@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEA227F37
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:37:01 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F1B5F7F54
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C1FC930404E
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:36:58 -0700 (PDT)
-Received: from mail-wi0-f170.google.com (mail-wi0-f170.google.com
-	[209.85.212.170]) by cuda.sgi.com with ESMTP id
-	sSClbvHYPuFIRFFh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:36:56 -0700 (PDT)
-Received: by wicgb1 with SMTP id gb1so19897580wic.1
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:36:55 -0700 (PDT)
-Received: from teal.hq.k1024.org (178-83-234-80.dynamic.hispeed.ch.
-	[178.83.234.80]) by smtp.gmail.com with ESMTPSA id
-	kb5sm20046970wjc.17.2015.09.15.02.36.53 for <xfs@oss.sgi.com>
-	(version=TLSv1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-	Tue, 15 Sep 2015 02:36:53 -0700 (PDT)
-Date: Tue, 15 Sep 2015 11:36:53 +0200
-From: Iustin Pop <iustin@k1024.org>
-Subject: Re: xfsrestore and multi-tape backups
-Message-ID: <20150915093653.GA31370@teal.hq.k1024.org>
-References: <20150908144806.GA22811@teal.hq.k1024.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150908144806.GA22811@teal.hq.k1024.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C54188F8037
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id N1Ux3hYEYa6gyP2H (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:39 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id A8F7E8E3E9
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:39 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 01/14] xfsprogs: Add a way to compile without blkid
+Date: Tue, 15 Sep 2015 11:59:11 +0200
+Message-Id: <1442311164-12921-2-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
+References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,31 +27,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On 2015-09-08 16:48:06, Iustin Pop wrote:
-> Hi all,
-> 
-> Sorry for the long email. I don't understand how xfsrestore is supposed
-> to work when restoring a dump spanning multiple tapes, maybe someone can
-> explain things to me.
+Because not all platforms have up-to-date blkid with required
+functions, allow at least partial functionality by adding
+--enable-blkid=yes/no optional configure argument.
 
-Anyone? A TL;DR version is:
+When blkid is disabled, signature detection and device geometry
+detection doesn't work.
 
-- restoring from tape 1 doesn't ask for the 2nd, reads finishes with
-  "failed; end of file" but restore is SUCCESS
-- restoring from tape 2 asks for more tapes, inserting tape 1 continues
-  the restore but at the end asks for more tapes
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ configure.ac         | 10 +++++++++-
+ include/builddefs.in |  5 +++++
+ mkfs/xfs_mkfs.c      | 37 ++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 50 insertions(+), 2 deletions(-)
 
-So what's the correct way to restore a multi-tape dump? (Man page says
-to start with tape 1, but that doesn't seem to be working).
-
-thanks in advance,
-iustin
+diff --git a/configure.ac b/configure.ac
+index 16f3f68..aa241cd 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -26,6 +26,11 @@ AC_ARG_ENABLE(gettext,
+ 	enable_gettext=yes)
+ AC_SUBST(enable_gettext)
+ 
++AC_ARG_ENABLE(blkid,
++[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
++	enable_blkid=yes)
++AC_SUBST(enable_blkid)
++
+ AC_ARG_ENABLE(readline,
+ [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
+ 	test $enable_readline = yes && libreadline="-lreadline",
+@@ -117,9 +122,12 @@ AC_HAVE_PREADV
+ AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_MNTENT
+ AC_HAVE_FLS
+-AC_HAVE_BLKID_TOPO
+ AC_HAVE_READDIR
+ 
++if test "$enable_blkid" = yes; then
++AC_HAVE_BLKID_TOPO
++fi
++
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+ AC_TYPE_UMODE_T
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 8851956..6c16a65 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -89,6 +89,7 @@ ENABLE_SHARED	= @enable_shared@
+ ENABLE_GETTEXT	= @enable_gettext@
+ ENABLE_EDITLINE	= @enable_editline@
+ ENABLE_READLINE	= @enable_readline@
++ENABLE_BLKID	= @enable_blkid@
+ 
+ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+ 
+@@ -138,6 +139,10 @@ endif
+ ifeq ($(HAVE_MNTENT),yes)
+ PCFLAGS+= -DHAVE_MNTENT
+ endif
++ifeq ($(ENABLE_BLKID),yes)
++PCFLAGS+= -DENABLE_BLKID
++endif
++
+ 
+ GCFLAGS = $(OPTIMIZER) $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d993fc0..5964eaf 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -18,7 +18,9 @@
+ 
+ #include "libxfs.h"
+ #include <ctype.h>
+-#include <blkid/blkid.h>
++#ifdef ENABLE_BLKID
++#  include <blkid/blkid.h>
++#endif /* ENABLE_BLKID */
+ #include "xfs_mkfs.h"
+ 
+ /*
+@@ -298,6 +300,7 @@ calc_stripe_factors(
+  *	 0 for nothing found
+  *	-1 for internal error
+  */
++#ifdef ENABLE_BLKID
+ static int
+ check_overwrite(
+ 	char		*device)
+@@ -451,6 +454,38 @@ out_free_probe:
+ 		_("warning: unable to probe device topology for device %s\n"),
+ 		device);
+ }
++#else /* ifdef ENABLE_BLKID */
++/*
++ * Without blkid, we can't do a good check for signatures.
++ * So instead of some messy attempts, just disable any checks
++ * and always return 'nothing found'.
++ */
++#  warning BLKID is disabled, so signature detection and block device\
++ access are not working!
++static int
++check_overwrite(
++	char		*device)
++{
++	return 1;
++}
++
++static void blkid_get_topology(
++	const char	*device,
++	int		*sunit,
++	int		*swidth,
++	int		*lsectorsize,
++	int		*psectorsize,
++	int		force_overwrite)
++{
++	/*
++	 * Shouldn't make any difference (no blkid = no block device access),
++	 * but make sure this dummy replacement returns with at least some
++	 * sanity.
++	 */
++	*lsectorsize = *psectorsize = 512;
++}
++
++#endif /* ENABLE_BLKID */
+ 
+ static void get_topology(
+ 	libxfs_init_t		*xi,
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
