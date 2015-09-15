@@ -1,38 +1,17 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 24C0C7F47
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 19:47:40 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BA6717F37
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 16:27:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EC32E30404E
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 17:47:36 -0700 (PDT)
-Received: from mail-wi0-f193.google.com (mail-wi0-f193.google.com
-	[209.85.212.193]) by cuda.sgi.com with ESMTP id
-	AxEHc9yrooC9ugtB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Sep 2015 17:47:34 -0700 (PDT)
-Received: by wicxq10 with SMTP id xq10so1276071wic.2
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 17:47:33 -0700 (PDT)
-Received: from Telcontar.valinor (3.Red-83-42-78.dynamicIP.rima-tde.net.
-	[83.42.78.3]) by smtp.gmail.com with ESMTPSA id
-	lh11sm7070156wic.18.2015.09.16.17.47.32 for <xfs@oss.sgi.com>
-	(version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Wed, 16 Sep 2015 17:47:32 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 62BB960E7E
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 02:47:31 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id sML0khlo4tL0 for <xfs@oss.sgi.com>;
-	Thu, 17 Sep 2015 02:47:30 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 9D32B606CF
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 02:47:30 +0200 (CEST)
-Subject: Re: XFS FAQ - out of date?
-References: <55FA0B1D.8000905@troja.ch>
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Message-ID: <55FA0DA2.5050609@opensuse.org>
-Date: Thu, 17 Sep 2015 02:47:30 +0200
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 545DFAC007
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 14:27:14 -0700 (PDT)
+Received: from minivps2072 ([42.112.16.151]) by cuda.sgi.com with ESMTP id
+	JZKBpRCzcDrl3J1i for <xfs@oss.sgi.com>;
+	Tue, 15 Sep 2015 14:27:11 -0700 (PDT)
+From: <diemloan@yeah123.net>
+Subject: =?utf-8?Q?Di=E1=BB=85m_Loan_invites_you_to_Startupf.net.?=
+Date: Tue, 15 Sep 2015 17:18:20 +0000
+Message-ID: <2433c5fc9255b0c90d29088215e9b5d0@startupf.net>
 MIME-Version: 1.0
-In-Reply-To: <55FA0B1D.8000905@troja.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,47 +20,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8990740860539831446=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mail list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+This is a multi-part message in MIME format.
 
-On 2015-09-17 02:36, Viktor Trojanovic wrote:
-> Hi,
-> 
-> I just tried to do a fresh install of Arch Linux using XFS for my
-> root system. According to the xfs.org FAQ, this is supported. But
-> it didn't work.
-> 
-> I later found (very few) sources that confirmed that Grub is not 
-> compatible with the current XFS level 5, that SuSE created a patch
-> for the problem but it wasn't adopted upstream. If this is true,
-> consider updating the FAQ. If it is not true, I would very much
-> appreciate some hints how to do it properly.
+--===============8990740860539831446==
+Content-Type: multipart/alternative;
+	boundary="b1_2433c5fc9255b0c90d29088215e9b5d0"
 
-I don't know if it is true or not, and I use openSUSE, so I'd have
-that patch. However, in the past there have been problems with XFS and
-grub, so my routine is to use a separate /boot partition and install
-grub there.
+This is a multi-part message in MIME format.
 
-- -- 
-Cheers / Saludos,
+--b1_2433c5fc9255b0c90d29088215e9b5d0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t8FLRNd0006104
 
-		Carlos E. R.
-		(from 13.1 x86_64 "Bottle" at Telcontar)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Hello,
+Di=E1=BB=85m Loan invites you to Startupf.net.
 
-iEYEARECAAYFAlX6DaAACgkQtTMYHG2NR9UlKQCbB4lfGsxqm/Niq6isjNqGn/Bi
-n4EAn3t5NgIumeMwgrEnDxd18rPSoOGY
-=Jufm
------END PGP SIGNATURE-----
+To check out this invitation, follow the link below:<br>
+<a href=3D"http://startupf.net">http://startupf.net</a><br>
+<a
+href=3D"https://www.youtube.com/watch?v=3DZY_euf2sw9s&list=3DPLlQ4orXHw4c=
+-8hsOIUcys5CQU_bA5ZyU8"
+target=3D"_blank" title=3D"Takeoff and landing in Tan son Nhat">Takeoff a=
+nd
+landing in Tan son Nhat</a>
+<br>
+<a
+href=3D"https://www.youtube.com/watch?v=3DCIzc5u7LyFA&list=3DPLF9NVNiGy_c=
+vb44OvkCQnrGm3XhIXBkcN"
+target=3D"_blank" title=3D"Aeon Mall l=E1=BB=9Bn nh=E1=BA=A5t Vi=E1=BB=87=
+t Nam">Aeon Mall l=E1=BB=9Bn
+nh=E1=BA=A5t Vi=E1=BB=87t Nam</a>
+<br>
+<a
+href=3D"https://www.youtube.com/watch?v=3DLf8q4bFshyw&list=3DPLlQ4orXHw4c=
+_mV79qYmv7wLrxUYFCwOxm"
+target=3D"_blank" title=3D"Biggest Airplan">Biggest Airplan</a>
+Diem Loan
+
+
+--b1_2433c5fc9255b0c90d29088215e9b5d0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0022.oracle.com id t8FLRNd0006104
+
+=09
+Hello,
+	<br />
+	<br />
+Di=E1=BB=85m Loan invites you to Startupf.net.
+<br />
+<br />To check out this invitation, follow the link below:<br>
+<br /><a href=3D"http://startupf.net">http://startupf.net</a><br>
+<br /><a href=3D"https://www.youtube.com/watch?v=3DZY_euf2sw9s&list=3DPLl=
+Q4orXHw4c-8hsOIUcys5CQU_bA5ZyU8" target=3D"_blank" title=3D"Takeoff and l=
+anding in Tan son Nhat">Takeoff and landing in Tan son Nhat</a>
+<br /><br>
+<br /><a href=3D"https://www.youtube.com/watch?v=3DCIzc5u7LyFA&list=3DPLF=
+9NVNiGy_cvb44OvkCQnrGm3XhIXBkcN" target=3D"_blank" title=3D"Aeon Mall l=E1=
+=BB=9Bn nh=E1=BA=A5t Vi=E1=BB=87t Nam">Aeon Mall l=E1=BB=9Bn nh=E1=BA=A5t=
+ Vi=E1=BB=87t Nam</a>
+<br /><br>
+<br /><a href=3D"https://www.youtube.com/watch?v=3DLf8q4bFshyw&list=3DPLl=
+Q4orXHw4c_mV79qYmv7wLrxUYFCwOxm" target=3D"_blank" title=3D"Biggest Airpl=
+an">Biggest Airplan</a>	<br />
+	<br />
+Diem Loan
+
+
+
+--b1_2433c5fc9255b0c90d29088215e9b5d0--
+
+
+--===============8990740860539831446==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8990740860539831446==--
