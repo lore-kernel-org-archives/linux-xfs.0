@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BFE827F5A
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A0C59304048
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:44 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 82D747F5A
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 099E3AC002
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dAzxC93VdvsigETi (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 8zHnW8q2Fu9ADjGQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:43 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:41 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 4872BC0B9190
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:43 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 8D8B28C1A3
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:40 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 05/14] xfsprogs: Add includes required for OS X builds (delta)
-Date: Tue, 15 Sep 2015 11:59:15 +0200
-Message-Id: <1442311164-12921-6-git-send-email-jtulak@redhat.com>
+Subject: [PATCH 02/14] xfsprogs: Add XATTR_LIST_MAX to OS X headers
+Date: Tue, 15 Sep 2015 11:59:12 +0200
+Message-Id: <1442311164-12921-3-git-send-email-jtulak@redhat.com>
 In-Reply-To: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,29 +35,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Tulak <jtulak@redhat.com>
 
-Delta patch, an older version missing 3 includes was merged
-into 4.2.0-rc2.
+OS X has no XATTR_LIST_MAX value. So add it to the platform header.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/darwin.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/darwin.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/include/darwin.h b/include/darwin.h
-index 4b7ba3a..fe489a6 100644
+index b904898..4b7ba3a 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -18,6 +18,9 @@
- #ifndef __XFS_DARWIN_H__
- #define __XFS_DARWIN_H__
- 
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <string.h>
- #include <uuid/uuid.h>
- #include <libgen.h>
- #include <sys/vm.h>
+@@ -39,6 +39,11 @@
+ # ifndef SYS_fsctl
+ #  define SYS_fsctl	242
+ # endif
++
++#ifndef XATTR_LIST_MAX
++#define XATTR_LIST_MAX  65536
++#endif
++
+ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+ {
+ 	return syscall(SYS_fsctl, path, cmd, p, 0);
 -- 
 2.4.3
 
