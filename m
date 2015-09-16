@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F30817F37
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 06:13:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D3246304051
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 04:13:27 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B42807F37
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 06:42:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F205304053
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 04:42:34 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LYI83hxmMVt2G1eE (version=TLSv1.2
+	cuda.sgi.com with ESMTP id syEZLWjMLkEH0wyi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Sep 2015 04:13:26 -0700 (PDT)
-Date: Wed, 16 Sep 2015 13:13:20 +0200 (CEST)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 16 Sep 2015 04:42:33 -0700 (PDT)
+Date: Wed, 16 Sep 2015 07:42:31 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: rm Tainted warning after kernel update.
-In-Reply-To: <20150916105022.GA37016@bfoster.bfoster>
-Message-ID: <alpine.LFD.2.00.1509161312480.3070@localhost.localdomain>
+Message-ID: <20150916114230.GB37016@bfoster.bfoster>
 References: <55F718A1.10801@sonic.com> <20150915110042.GA21323@bfoster.bfoster>
 	<55F89C76.4090808@sonic.com>
 	<20150916105022.GA37016@bfoster.bfoster>
+	<alpine.LFD.2.00.1509161312480.3070@localhost.localdomain>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1509161312480.3070@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,136 +28,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
 Cc: Grant Keller <grant.keller@sonic.com>, xfs@oss.sgi.com
 
-On Wed, 16 Sep 2015, Brian Foster wrote:
-
-> Date: Wed, 16 Sep 2015 06:50:23 -0400
-> From: Brian Foster <bfoster@redhat.com>
-> To: Grant Keller <grant.keller@sonic.com>
-> Cc: lczerner@redhat.com, xfs@oss.sgi.com
-> Subject: Re: rm Tainted warning after kernel update.
-> 
-> cc Lukas
-> 
-> On Tue, Sep 15, 2015 at 03:32:22PM -0700, Grant Keller wrote:
-> > On 09/15/2015 04:00 AM, Brian Foster wrote:
-> > > On Mon, Sep 14, 2015 at 11:57:37AM -0700, Grant Keller wrote:
-> > >> Hello,
-> > >>
-> > >> I have a server running Scientific Linux 6.7, and since updating to
-> > >> kernel 2.6.32-573.3.1.el6.x86_64 the following error has begun appearing
-> > >> in our message logs:
-> > >>
-> > >> Sep 14 11:43:03 localhost kernel: ------------[ cut here ]------------
-> > >> Sep 14 11:43:03 localhost kernel: WARNING: at fs/dcache.c:758
-> > >> d_delete+0x260/0x2c0() (Tainted: G        W  -- ------------   )
-> > >> Sep 14 11:43:03 localhost kernel: Hardware name: X7DB8
-> > >> Sep 14 11:43:03 localhost kernel: Modules linked in: nfsd nfs_acl
-> > >> auth_rpcgss autofs4 lockd sunrpc p4_clockmod freq_table speedstep_lib
-> > >> nf_conntrack_ftp iptable_mangle xt_comment nf_conntrack_ipv4
-> > >> nf_defrag_ipv4 xt_multiport iptable_filter ip_tables ip6t_REJECT
-> > >> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter
-> > >> ip6_tables ib_ipoib rdma_ucm ib_ucm ib_uverbs ib_umad rdma_cm ib_cm
-> > >> iw_cm ib_sa ib_mad ib_core ib_addr ipv6 xfs exportfs ppdev parport_pc
-> > >> parport sg e1000e microcode serio_raw iTCO_wdt iTCO_vendor_support ixgbe
-> > >> ptp pps_core mdio i2c_i801 lpc_ich mfd_core i5000_edac edac_core i5k_amb
-> > >> ioatdma dca shpchp ext4 jbd2 mbcache sd_mod crc_t10dif 3w_9xxx pata_acpi
-> > >> ata_generic ata_piix radeon ttm drm_kms_helper drm i2c_algo_bit i2c_core
-> > >> dm_mirror dm_region_hash dm_log dm_mod [last unloaded: ipmi_msghandler]
-> > >> Sep 14 11:43:03 localhost kernel: Pid: 15893, comm: rm Tainted: G       
-> > >> W  -- ------------    2.6.32-573.3.1.el6.x86_64 #1
-> > >> Sep 14 11:43:03 localhost kernel: Call Trace:
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff81077491>] ?
-> > >> warn_slowpath_common+0x91/0xe0
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff810774fa>] ?
-> > >> warn_slowpath_null+0x1a/0x20
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811ae660>] ?
-> > >> d_delete+0x260/0x2c0
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811a0908>] ? vfs_rmdir+0xe8/0xf0
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811a3b64>] ?
-> > >> do_rmdir+0x184/0x1f0
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff81193511>] ? __fput+0x1a1/0x210
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff810e8ab7>] ?
-> > >> audit_syscall_entry+0x1d7/0x200
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811a3bfd>] ?
-> > >> sys_unlinkat+0x2d/0x40
-> > >> Sep 14 11:43:03 localhost kernel: [<ffffffff8100b0d2>] ?
-> > >> system_call_fastpath+0x16/0x1b
-> > >> Sep 14 11:43:03 localhost kernel: ---[ end trace 6080ec4a7ec5ec25 ]---
-> > >>
-> > >> This happens when we are expiring older backups from the archives, so I
-> > >> have quite a few of these. We have xfsprogs 3.1.1-16.el6.x86_64
-> > >> installed. Looking for advice on how to proceed.
-> > >>
-> > > This looks like something funky going on in the vfs. The warning is from
-> > > unhash_offsprings() and it appears to be complaining about a refcount on
-> > > a dentry that is a child of a directory being removed. It checks a
-> > > refcount on a dentry in one loop and either drops it or moves it to
-> > > another list for apparent deletion. The second iteration of the
-> > > aforementioned list sees a refcount on an object that wasn't there
-> > > before.
-> > >
-> > > I suspect this means something is going from 0->1 unexpectedly, but I'm
-> > > not familiar enough with that code to grok why that shouldn't happen and
-> > > how it could without reproducing it and digging into it from there. Have
-> > > you identified an explicit reproducer? I assume files are simply being
-> > > removed with 'rm -rf' here..? If so, does anything else have access to
-> > > this directory structure (e.g., separate commands, a running backup
-> > > application?) at the the time of removal.
-> > There could be something else running, but I would have to investigate
-> > the next time this happens. The rm -rf is called by our backup program
-> > expiring older backups from the filesystem.  The thing is, the
-> > expirations happen on a nightly basis, but we don't always see these
-> > warnings in the logs. On the nights we do, there are 1000+ warnings.
-> > >
-> > > Also, what kernel were you running before this started to occur?
-> >  2.6.32-573.el6.x86_64 was the previous kernel.
-> 
-> Interesting... there are only a few fs changes between this kernel and
-> the current. One of them is this:
-> 
->   959c503 [fs] vfs: Unhash and evict unused children dentries after rmdir
-> 
-> ... which actually introduces the unhash_offsprings() thing. I've cc'd
-> Lukas who is probably more familiar with this code.
-> 
-> FWIW, I suspect the more you can elaborate on what the backup
-> application might be doing here (beyond just the rm -rf), the more
-> likely this can be reproduced and resolved.
-
-Hi the lockdep warning should be fixed in the recent rhel6 kernel.
-Sorry about that.
-
--Lukas
-
-> 
-> Brian
-> 
-> > >
-> > > Brian
-> > >
-> > >
-> > 
-> > -- 
-> > Grant Keller
-> > System Operations
-> > 707-237-2451
-> > grant.keller@sonic.com
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBTZXAgMTYsIDIwMTUgYXQgMDE6MTM6MjBQTSArMDIwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIFdlZCwgMTYgU2VwIDIwMTUsIEJyaWFuIEZvc3RlciB3cm90ZToKPiAKPiA+
+IERhdGU6IFdlZCwgMTYgU2VwIDIwMTUgMDY6NTA6MjMgLTA0MDAKPiA+IEZyb206IEJyaWFuIEZv
+c3RlciA8YmZvc3RlckByZWRoYXQuY29tPgo+ID4gVG86IEdyYW50IEtlbGxlciA8Z3JhbnQua2Vs
+bGVyQHNvbmljLmNvbT4KPiA+IENjOiBsY3plcm5lckByZWRoYXQuY29tLCB4ZnNAb3NzLnNnaS5j
+b20KPiA+IFN1YmplY3Q6IFJlOiBybSBUYWludGVkIHdhcm5pbmcgYWZ0ZXIga2VybmVsIHVwZGF0
+ZS4KPiA+IAo+ID4gY2MgTHVrYXMKPiA+IAo+ID4gT24gVHVlLCBTZXAgMTUsIDIwMTUgYXQgMDM6
+MzI6MjJQTSAtMDcwMCwgR3JhbnQgS2VsbGVyIHdyb3RlOgo+ID4gPiBPbiAwOS8xNS8yMDE1IDA0
+OjAwIEFNLCBCcmlhbiBGb3N0ZXIgd3JvdGU6Cj4gPiA+ID4gT24gTW9uLCBTZXAgMTQsIDIwMTUg
+YXQgMTE6NTc6MzdBTSAtMDcwMCwgR3JhbnQgS2VsbGVyIHdyb3RlOgo+ID4gPiA+PiBIZWxsbywK
+PiA+ID4gPj4KPiA+ID4gPj4gSSBoYXZlIGEgc2VydmVyIHJ1bm5pbmcgU2NpZW50aWZpYyBMaW51
+eCA2LjcsIGFuZCBzaW5jZSB1cGRhdGluZyB0bwo+ID4gPiA+PiBrZXJuZWwgMi42LjMyLTU3My4z
+LjEuZWw2Lng4Nl82NCB0aGUgZm9sbG93aW5nIGVycm9yIGhhcyBiZWd1biBhcHBlYXJpbmcKPiA+
+ID4gPj4gaW4gb3VyIG1lc3NhZ2UgbG9nczoKPiA+ID4gPj4KPiA+ID4gPj4gU2VwIDE0IDExOjQz
+OjAzIGxvY2FsaG9zdCBrZXJuZWw6IC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0t
+LQo+ID4gPiA+PiBTZXAgMTQgMTE6NDM6MDMgbG9jYWxob3N0IGtlcm5lbDogV0FSTklORzogYXQg
+ZnMvZGNhY2hlLmM6NzU4Cj4gPiA+ID4+IGRfZGVsZXRlKzB4MjYwLzB4MmMwKCkgKFRhaW50ZWQ6
+IEcgICAgICAgIFcgIC0tIC0tLS0tLS0tLS0tLSAgICkKPiA+ID4gPj4gU2VwIDE0IDExOjQzOjAz
+IGxvY2FsaG9zdCBrZXJuZWw6IEhhcmR3YXJlIG5hbWU6IFg3REI4Cj4gPiA+ID4+IFNlcCAxNCAx
+MTo0MzowMyBsb2NhbGhvc3Qga2VybmVsOiBNb2R1bGVzIGxpbmtlZCBpbjogbmZzZCBuZnNfYWNs
+Cj4gPiA+ID4+IGF1dGhfcnBjZ3NzIGF1dG9mczQgbG9ja2Qgc3VucnBjIHA0X2Nsb2NrbW9kIGZy
+ZXFfdGFibGUgc3BlZWRzdGVwX2xpYgo+ID4gPiA+PiBuZl9jb25udHJhY2tfZnRwIGlwdGFibGVf
+bWFuZ2xlIHh0X2NvbW1lbnQgbmZfY29ubnRyYWNrX2lwdjQKPiA+ID4gPj4gbmZfZGVmcmFnX2lw
+djQgeHRfbXVsdGlwb3J0IGlwdGFibGVfZmlsdGVyIGlwX3RhYmxlcyBpcDZ0X1JFSkVDVAo+ID4g
+PiA+PiBuZl9jb25udHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiB4dF9zdGF0ZSBuZl9jb25udHJh
+Y2sgaXA2dGFibGVfZmlsdGVyCj4gPiA+ID4+IGlwNl90YWJsZXMgaWJfaXBvaWIgcmRtYV91Y20g
+aWJfdWNtIGliX3V2ZXJicyBpYl91bWFkIHJkbWFfY20gaWJfY20KPiA+ID4gPj4gaXdfY20gaWJf
+c2EgaWJfbWFkIGliX2NvcmUgaWJfYWRkciBpcHY2IHhmcyBleHBvcnRmcyBwcGRldiBwYXJwb3J0
+X3BjCj4gPiA+ID4+IHBhcnBvcnQgc2cgZTEwMDBlIG1pY3JvY29kZSBzZXJpb19yYXcgaVRDT193
+ZHQgaVRDT192ZW5kb3Jfc3VwcG9ydCBpeGdiZQo+ID4gPiA+PiBwdHAgcHBzX2NvcmUgbWRpbyBp
+MmNfaTgwMSBscGNfaWNoIG1mZF9jb3JlIGk1MDAwX2VkYWMgZWRhY19jb3JlIGk1a19hbWIKPiA+
+ID4gPj4gaW9hdGRtYSBkY2Egc2hwY2hwIGV4dDQgamJkMiBtYmNhY2hlIHNkX21vZCBjcmNfdDEw
+ZGlmIDN3Xzl4eHggcGF0YV9hY3BpCj4gPiA+ID4+IGF0YV9nZW5lcmljIGF0YV9waWl4IHJhZGVv
+biB0dG0gZHJtX2ttc19oZWxwZXIgZHJtIGkyY19hbGdvX2JpdCBpMmNfY29yZQo+ID4gPiA+PiBk
+bV9taXJyb3IgZG1fcmVnaW9uX2hhc2ggZG1fbG9nIGRtX21vZCBbbGFzdCB1bmxvYWRlZDogaXBt
+aV9tc2doYW5kbGVyXQo+ID4gPiA+PiBTZXAgMTQgMTE6NDM6MDMgbG9jYWxob3N0IGtlcm5lbDog
+UGlkOiAxNTg5MywgY29tbTogcm0gVGFpbnRlZDogRyAgICAgICAKPiA+ID4gPj4gVyAgLS0gLS0t
+LS0tLS0tLS0tICAgIDIuNi4zMi01NzMuMy4xLmVsNi54ODZfNjQgIzEKPiA+ID4gPj4gU2VwIDE0
+IDExOjQzOjAzIGxvY2FsaG9zdCBrZXJuZWw6IENhbGwgVHJhY2U6Cj4gPiA+ID4+IFNlcCAxNCAx
+MTo0MzowMyBsb2NhbGhvc3Qga2VybmVsOiBbPGZmZmZmZmZmODEwNzc0OTE+XSA/Cj4gPiA+ID4+
+IHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4OTEvMHhlMAo+ID4gPiA+PiBTZXAgMTQgMTE6NDM6MDMg
+bG9jYWxob3N0IGtlcm5lbDogWzxmZmZmZmZmZjgxMDc3NGZhPl0gPwo+ID4gPiA+PiB3YXJuX3Ns
+b3dwYXRoX251bGwrMHgxYS8weDIwCj4gPiA+ID4+IFNlcCAxNCAxMTo0MzowMyBsb2NhbGhvc3Qg
+a2VybmVsOiBbPGZmZmZmZmZmODExYWU2NjA+XSA/Cj4gPiA+ID4+IGRfZGVsZXRlKzB4MjYwLzB4
+MmMwCj4gPiA+ID4+IFNlcCAxNCAxMTo0MzowMyBsb2NhbGhvc3Qga2VybmVsOiBbPGZmZmZmZmZm
+ODExYTA5MDg+XSA/IHZmc19ybWRpcisweGU4LzB4ZjAKPiA+ID4gPj4gU2VwIDE0IDExOjQzOjAz
+IGxvY2FsaG9zdCBrZXJuZWw6IFs8ZmZmZmZmZmY4MTFhM2I2ND5dID8KPiA+ID4gPj4gZG9fcm1k
+aXIrMHgxODQvMHgxZjAKPiA+ID4gPj4gU2VwIDE0IDExOjQzOjAzIGxvY2FsaG9zdCBrZXJuZWw6
+IFs8ZmZmZmZmZmY4MTE5MzUxMT5dID8gX19mcHV0KzB4MWExLzB4MjEwCj4gPiA+ID4+IFNlcCAx
+NCAxMTo0MzowMyBsb2NhbGhvc3Qga2VybmVsOiBbPGZmZmZmZmZmODEwZThhYjc+XSA/Cj4gPiA+
+ID4+IGF1ZGl0X3N5c2NhbGxfZW50cnkrMHgxZDcvMHgyMDAKPiA+ID4gPj4gU2VwIDE0IDExOjQz
+OjAzIGxvY2FsaG9zdCBrZXJuZWw6IFs8ZmZmZmZmZmY4MTFhM2JmZD5dID8KPiA+ID4gPj4gc3lz
+X3VubGlua2F0KzB4MmQvMHg0MAo+ID4gPiA+PiBTZXAgMTQgMTE6NDM6MDMgbG9jYWxob3N0IGtl
+cm5lbDogWzxmZmZmZmZmZjgxMDBiMGQyPl0gPwo+ID4gPiA+PiBzeXN0ZW1fY2FsbF9mYXN0cGF0
+aCsweDE2LzB4MWIKPiA+ID4gPj4gU2VwIDE0IDExOjQzOjAzIGxvY2FsaG9zdCBrZXJuZWw6IC0t
+LVsgZW5kIHRyYWNlIDYwODBlYzRhN2VjNWVjMjUgXS0tLQo+ID4gPiA+Pgo+ID4gPiA+PiBUaGlz
+IGhhcHBlbnMgd2hlbiB3ZSBhcmUgZXhwaXJpbmcgb2xkZXIgYmFja3VwcyBmcm9tIHRoZSBhcmNo
+aXZlcywgc28gSQo+ID4gPiA+PiBoYXZlIHF1aXRlIGEgZmV3IG9mIHRoZXNlLiBXZSBoYXZlIHhm
+c3Byb2dzIDMuMS4xLTE2LmVsNi54ODZfNjQKPiA+ID4gPj4gaW5zdGFsbGVkLiBMb29raW5nIGZv
+ciBhZHZpY2Ugb24gaG93IHRvIHByb2NlZWQuCj4gPiA+ID4+Cj4gPiA+ID4gVGhpcyBsb29rcyBs
+aWtlIHNvbWV0aGluZyBmdW5reSBnb2luZyBvbiBpbiB0aGUgdmZzLiBUaGUgd2FybmluZyBpcyBm
+cm9tCj4gPiA+ID4gdW5oYXNoX29mZnNwcmluZ3MoKSBhbmQgaXQgYXBwZWFycyB0byBiZSBjb21w
+bGFpbmluZyBhYm91dCBhIHJlZmNvdW50IG9uCj4gPiA+ID4gYSBkZW50cnkgdGhhdCBpcyBhIGNo
+aWxkIG9mIGEgZGlyZWN0b3J5IGJlaW5nIHJlbW92ZWQuIEl0IGNoZWNrcyBhCj4gPiA+ID4gcmVm
+Y291bnQgb24gYSBkZW50cnkgaW4gb25lIGxvb3AgYW5kIGVpdGhlciBkcm9wcyBpdCBvciBtb3Zl
+cyBpdCB0bwo+ID4gPiA+IGFub3RoZXIgbGlzdCBmb3IgYXBwYXJlbnQgZGVsZXRpb24uIFRoZSBz
+ZWNvbmQgaXRlcmF0aW9uIG9mIHRoZQo+ID4gPiA+IGFmb3JlbWVudGlvbmVkIGxpc3Qgc2VlcyBh
+IHJlZmNvdW50IG9uIGFuIG9iamVjdCB0aGF0IHdhc24ndCB0aGVyZQo+ID4gPiA+IGJlZm9yZS4K
+PiA+ID4gPgo+ID4gPiA+IEkgc3VzcGVjdCB0aGlzIG1lYW5zIHNvbWV0aGluZyBpcyBnb2luZyBm
+cm9tIDAtPjEgdW5leHBlY3RlZGx5LCBidXQgSSdtCj4gPiA+ID4gbm90IGZhbWlsaWFyIGVub3Vn
+aCB3aXRoIHRoYXQgY29kZSB0byBncm9rIHdoeSB0aGF0IHNob3VsZG4ndCBoYXBwZW4gYW5kCj4g
+PiA+ID4gaG93IGl0IGNvdWxkIHdpdGhvdXQgcmVwcm9kdWNpbmcgaXQgYW5kIGRpZ2dpbmcgaW50
+byBpdCBmcm9tIHRoZXJlLiBIYXZlCj4gPiA+ID4geW91IGlkZW50aWZpZWQgYW4gZXhwbGljaXQg
+cmVwcm9kdWNlcj8gSSBhc3N1bWUgZmlsZXMgYXJlIHNpbXBseSBiZWluZwo+ID4gPiA+IHJlbW92
+ZWQgd2l0aCAncm0gLXJmJyBoZXJlLi4/IElmIHNvLCBkb2VzIGFueXRoaW5nIGVsc2UgaGF2ZSBh
+Y2Nlc3MgdG8KPiA+ID4gPiB0aGlzIGRpcmVjdG9yeSBzdHJ1Y3R1cmUgKGUuZy4sIHNlcGFyYXRl
+IGNvbW1hbmRzLCBhIHJ1bm5pbmcgYmFja3VwCj4gPiA+ID4gYXBwbGljYXRpb24/KSBhdCB0aGUg
+dGhlIHRpbWUgb2YgcmVtb3ZhbC4KPiA+ID4gVGhlcmUgY291bGQgYmUgc29tZXRoaW5nIGVsc2Ug
+cnVubmluZywgYnV0IEkgd291bGQgaGF2ZSB0byBpbnZlc3RpZ2F0ZQo+ID4gPiB0aGUgbmV4dCB0
+aW1lIHRoaXMgaGFwcGVucy4gVGhlIHJtIC1yZiBpcyBjYWxsZWQgYnkgb3VyIGJhY2t1cCBwcm9n
+cmFtCj4gPiA+IGV4cGlyaW5nIG9sZGVyIGJhY2t1cHMgZnJvbSB0aGUgZmlsZXN5c3RlbS4gIFRo
+ZSB0aGluZyBpcywgdGhlCj4gPiA+IGV4cGlyYXRpb25zIGhhcHBlbiBvbiBhIG5pZ2h0bHkgYmFz
+aXMsIGJ1dCB3ZSBkb24ndCBhbHdheXMgc2VlIHRoZXNlCj4gPiA+IHdhcm5pbmdzIGluIHRoZSBs
+b2dzLiBPbiB0aGUgbmlnaHRzIHdlIGRvLCB0aGVyZSBhcmUgMTAwMCsgd2FybmluZ3MuCj4gPiA+
+ID4KPiA+ID4gPiBBbHNvLCB3aGF0IGtlcm5lbCB3ZXJlIHlvdSBydW5uaW5nIGJlZm9yZSB0aGlz
+IHN0YXJ0ZWQgdG8gb2NjdXI/Cj4gPiA+ICAyLjYuMzItNTczLmVsNi54ODZfNjQgd2FzIHRoZSBw
+cmV2aW91cyBrZXJuZWwuCj4gPiAKPiA+IEludGVyZXN0aW5nLi4uIHRoZXJlIGFyZSBvbmx5IGEg
+ZmV3IGZzIGNoYW5nZXMgYmV0d2VlbiB0aGlzIGtlcm5lbCBhbmQKPiA+IHRoZSBjdXJyZW50LiBP
+bmUgb2YgdGhlbSBpcyB0aGlzOgo+ID4gCj4gPiAgIDk1OWM1MDMgW2ZzXSB2ZnM6IFVuaGFzaCBh
+bmQgZXZpY3QgdW51c2VkIGNoaWxkcmVuIGRlbnRyaWVzIGFmdGVyIHJtZGlyCj4gPiAKPiA+IC4u
+LiB3aGljaCBhY3R1YWxseSBpbnRyb2R1Y2VzIHRoZSB1bmhhc2hfb2Zmc3ByaW5ncygpIHRoaW5n
+LiBJJ3ZlIGNjJ2QKPiA+IEx1a2FzIHdobyBpcyBwcm9iYWJseSBtb3JlIGZhbWlsaWFyIHdpdGgg
+dGhpcyBjb2RlLgo+ID4gCj4gPiBGV0lXLCBJIHN1c3BlY3QgdGhlIG1vcmUgeW91IGNhbiBlbGFi
+b3JhdGUgb24gd2hhdCB0aGUgYmFja3VwCj4gPiBhcHBsaWNhdGlvbiBtaWdodCBiZSBkb2luZyBo
+ZXJlIChiZXlvbmQganVzdCB0aGUgcm0gLXJmKSwgdGhlIG1vcmUKPiA+IGxpa2VseSB0aGlzIGNh
+biBiZSByZXByb2R1Y2VkIGFuZCByZXNvbHZlZC4KPiAKPiBIaSB0aGUgbG9ja2RlcCB3YXJuaW5n
+IHNob3VsZCBiZSBmaXhlZCBpbiB0aGUgcmVjZW50IHJoZWw2IGtlcm5lbC4KPiBTb3JyeSBhYm91
+dCB0aGF0Lgo+IAoKTXkgdW5kZXJzdGFuZGluZyBpcyB0aGF0IHRoaXMgcGF0Y2ggaGFzIGJlZW4g
+cmV2ZXJ0ZWQuLi4KCkdyYW50LAoKSWYgYSBuZXdlciBrZXJuZWwgaXMgbm90IHlldCBhdmFpbGFi
+bGUsIHlvdSBtaWdodCB3YW50IHRvIHJldmVydCB0byB0aGUKcHJldmlvdXMgdmVyc2lvbiB1bnRp
+bCBvbmUgaXMgYW5kIHRoZW4gZ28gc3RyYWlnaHQgdG8gdGhhdC4KCkx1a2FzLAoKSWYgdGhlIHBh
+dGNoIGlzIGluZGVlZCByZXZlcnRlZCwgdGhlbiBjbGVhcmx5IHRoaXMgcHJvYmxlbSB3aWxsIGdv
+IGF3YXkuClRoYXQgYXNpZGUsIHdoZXJlIGRvZXMgbG9ja2RlcCBjb21lIGludG8gcGxheT8gTm90
+ZSB0aGUgd2FybmluZyByZXBvcnRlZAphYm92ZToKCglXQVJOSU5HOiBhdCBmcy9kY2FjaGUuYzo3
+NTggZF9kZWxldGUrMHgyNjAvMHgyYzAoKQoKLi4uIGlzIGFuIGV4cGxpY2l0IFdBUk5fT04oKSBp
+biB0aGUgY29kZSBhZGRlZCBieSB0aGlzIGNvbW1pdC4gQXJlIHdlCnJlZmVycmluZyB0byB0aGUg
+c2FtZSBpc3N1ZSBoZXJlPwoKQnJpYW4KCgo+IC1MdWthcwo+IAo+ID4gCj4gPiBCcmlhbgo+ID4g
+Cj4gPiA+ID4KPiA+ID4gPiBCcmlhbgo+ID4gPiA+Cj4gPiA+ID4KPiA+ID4gCj4gPiA+IC0tIAo+
+ID4gPiBHcmFudCBLZWxsZXIKPiA+ID4gU3lzdGVtIE9wZXJhdGlvbnMKPiA+ID4gNzA3LTIzNy0y
+NDUxCj4gPiA+IGdyYW50LmtlbGxlckBzb25pYy5jb20KPiA+ID4gCj4gPiAKPiA+IF9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPiB4ZnMgbWFpbGluZyBs
+aXN0Cj4gPiB4ZnNAb3NzLnNnaS5jb20KPiA+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo+ID4gCj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
+bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
