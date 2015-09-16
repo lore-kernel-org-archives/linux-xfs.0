@@ -1,27 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8FAB57F37
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 07:22:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7F3D38F8040
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 05:22:04 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id a2JToHCujuqbaTMg (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Sep 2015 05:22:03 -0700 (PDT)
-Date: Wed, 16 Sep 2015 14:21:57 +0200 (CEST)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: rm Tainted warning after kernel update.
-In-Reply-To: <20150916114230.GB37016@bfoster.bfoster>
-Message-ID: <alpine.LFD.2.00.1509161415260.3070@localhost.localdomain>
-References: <55F718A1.10801@sonic.com> <20150915110042.GA21323@bfoster.bfoster>
-	<55F89C76.4090808@sonic.com>
-	<20150916105022.GA37016@bfoster.bfoster>
-	<alpine.LFD.2.00.1509161312480.3070@localhost.localdomain>
-	<20150916114230.GB37016@bfoster.bfoster>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AC7187F47
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 07:54:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 72259304059
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 05:54:06 -0700 (PDT)
+Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
+	[209.85.212.180]) by cuda.sgi.com with ESMTP id
+	fSikMOCDvU9rBbUo (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Sep 2015 05:54:00 -0700 (PDT)
+Received: by wicfx3 with SMTP id fx3so71592151wic.1
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 05:53:59 -0700 (PDT)
+Received: from minas-tirith.valinor (3.Red-83-42-78.dynamicIP.rima-tde.net.
+	[83.42.78.3]) by smtp.gmail.com with ESMTPSA id
+	mc18sm4357358wic.23.2015.09.16.05.53.58 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Wed, 16 Sep 2015 05:53:58 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by minas-tirith.valinor (Postfix) with ESMTP id D0F8118286E
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2015 14:53:56 +0200 (CEST)
+Date: Wed, 16 Sep 2015 14:53:56 +0200 (CEST)
+From: "Carlos E. R." <carlos.e.r@opensuse.org>
+Subject: Re: What's up with this list?
+In-Reply-To: <541AFB60.5030403@sgi.com>
+Message-ID: <alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>
+References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+	<541AFB60.5030403@sgi.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1519359409-1442405836=:3070"
-Content-ID: <alpine.LFD.2.00.1509161421020.3070@localhost.localdomain>
+Content-Type: MULTIPART/MIXED;
+	BOUNDARY="-1463779071-2002901569-1442407685=:25528"
+Content-ID: <alpine.LSU.2.11.1509161452080.25528@minas-tirith.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,156 +41,95 @@ List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Grant Keller <grant.keller@sonic.com>, xfs@oss.sgi.com
+To: XFS mailing list <xfs@oss.sgi.com>
 
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-1519359409-1442405836=:3070
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15
+---1463779071-2002901569-1442407685=:25528
+Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8BIT
-Content-ID: <alpine.LFD.2.00.1509161421021.3070@localhost.localdomain>
+Content-ID: <alpine.LSU.2.11.1509161452081.25528@minas-tirith.valinor>
 
-On Wed, 16 Sep 2015, Brian Foster wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-> Date: Wed, 16 Sep 2015 07:42:31 -0400
-> From: Brian Foster <bfoster@redhat.com>
-> To: Luk� Czerner <lczerner@redhat.com>
-> Cc: Grant Keller <grant.keller@sonic.com>, xfs@oss.sgi.com
-> Subject: Re: rm Tainted warning after kernel update.
-> 
-> On Wed, Sep 16, 2015 at 01:13:20PM +0200, Luk� Czerner wrote:
-> > On Wed, 16 Sep 2015, Brian Foster wrote:
-> > 
-> > > Date: Wed, 16 Sep 2015 06:50:23 -0400
-> > > From: Brian Foster <bfoster@redhat.com>
-> > > To: Grant Keller <grant.keller@sonic.com>
-> > > Cc: lczerner@redhat.com, xfs@oss.sgi.com
-> > > Subject: Re: rm Tainted warning after kernel update.
-> > > 
-> > > cc Lukas
-> > > 
-> > > On Tue, Sep 15, 2015 at 03:32:22PM -0700, Grant Keller wrote:
-> > > > On 09/15/2015 04:00 AM, Brian Foster wrote:
-> > > > > On Mon, Sep 14, 2015 at 11:57:37AM -0700, Grant Keller wrote:
-> > > > >> Hello,
-> > > > >>
-> > > > >> I have a server running Scientific Linux 6.7, and since updating to
-> > > > >> kernel 2.6.32-573.3.1.el6.x86_64 the following error has begun appearing
-> > > > >> in our message logs:
-> > > > >>
-> > > > >> Sep 14 11:43:03 localhost kernel: ------------[ cut here ]------------
-> > > > >> Sep 14 11:43:03 localhost kernel: WARNING: at fs/dcache.c:758
-> > > > >> d_delete+0x260/0x2c0() (Tainted: G        W  -- ------------   )
-> > > > >> Sep 14 11:43:03 localhost kernel: Hardware name: X7DB8
-> > > > >> Sep 14 11:43:03 localhost kernel: Modules linked in: nfsd nfs_acl
-> > > > >> auth_rpcgss autofs4 lockd sunrpc p4_clockmod freq_table speedstep_lib
-> > > > >> nf_conntrack_ftp iptable_mangle xt_comment nf_conntrack_ipv4
-> > > > >> nf_defrag_ipv4 xt_multiport iptable_filter ip_tables ip6t_REJECT
-> > > > >> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter
-> > > > >> ip6_tables ib_ipoib rdma_ucm ib_ucm ib_uverbs ib_umad rdma_cm ib_cm
-> > > > >> iw_cm ib_sa ib_mad ib_core ib_addr ipv6 xfs exportfs ppdev parport_pc
-> > > > >> parport sg e1000e microcode serio_raw iTCO_wdt iTCO_vendor_support ixgbe
-> > > > >> ptp pps_core mdio i2c_i801 lpc_ich mfd_core i5000_edac edac_core i5k_amb
-> > > > >> ioatdma dca shpchp ext4 jbd2 mbcache sd_mod crc_t10dif 3w_9xxx pata_acpi
-> > > > >> ata_generic ata_piix radeon ttm drm_kms_helper drm i2c_algo_bit i2c_core
-> > > > >> dm_mirror dm_region_hash dm_log dm_mod [last unloaded: ipmi_msghandler]
-> > > > >> Sep 14 11:43:03 localhost kernel: Pid: 15893, comm: rm Tainted: G       
-> > > > >> W  -- ------------    2.6.32-573.3.1.el6.x86_64 #1
-> > > > >> Sep 14 11:43:03 localhost kernel: Call Trace:
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff81077491>] ?
-> > > > >> warn_slowpath_common+0x91/0xe0
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff810774fa>] ?
-> > > > >> warn_slowpath_null+0x1a/0x20
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811ae660>] ?
-> > > > >> d_delete+0x260/0x2c0
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811a0908>] ? vfs_rmdir+0xe8/0xf0
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811a3b64>] ?
-> > > > >> do_rmdir+0x184/0x1f0
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff81193511>] ? __fput+0x1a1/0x210
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff810e8ab7>] ?
-> > > > >> audit_syscall_entry+0x1d7/0x200
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff811a3bfd>] ?
-> > > > >> sys_unlinkat+0x2d/0x40
-> > > > >> Sep 14 11:43:03 localhost kernel: [<ffffffff8100b0d2>] ?
-> > > > >> system_call_fastpath+0x16/0x1b
-> > > > >> Sep 14 11:43:03 localhost kernel: ---[ end trace 6080ec4a7ec5ec25 ]---
-> > > > >>
-> > > > >> This happens when we are expiring older backups from the archives, so I
-> > > > >> have quite a few of these. We have xfsprogs 3.1.1-16.el6.x86_64
-> > > > >> installed. Looking for advice on how to proceed.
-> > > > >>
-> > > > > This looks like something funky going on in the vfs. The warning is from
-> > > > > unhash_offsprings() and it appears to be complaining about a refcount on
-> > > > > a dentry that is a child of a directory being removed. It checks a
-> > > > > refcount on a dentry in one loop and either drops it or moves it to
-> > > > > another list for apparent deletion. The second iteration of the
-> > > > > aforementioned list sees a refcount on an object that wasn't there
-> > > > > before.
-> > > > >
-> > > > > I suspect this means something is going from 0->1 unexpectedly, but I'm
-> > > > > not familiar enough with that code to grok why that shouldn't happen and
-> > > > > how it could without reproducing it and digging into it from there. Have
-> > > > > you identified an explicit reproducer? I assume files are simply being
-> > > > > removed with 'rm -rf' here..? If so, does anything else have access to
-> > > > > this directory structure (e.g., separate commands, a running backup
-> > > > > application?) at the the time of removal.
-> > > > There could be something else running, but I would have to investigate
-> > > > the next time this happens. The rm -rf is called by our backup program
-> > > > expiring older backups from the filesystem.  The thing is, the
-> > > > expirations happen on a nightly basis, but we don't always see these
-> > > > warnings in the logs. On the nights we do, there are 1000+ warnings.
-> > > > >
-> > > > > Also, what kernel were you running before this started to occur?
-> > > >  2.6.32-573.el6.x86_64 was the previous kernel.
-> > > 
-> > > Interesting... there are only a few fs changes between this kernel and
-> > > the current. One of them is this:
-> > > 
-> > >   959c503 [fs] vfs: Unhash and evict unused children dentries after rmdir
-> > > 
-> > > ... which actually introduces the unhash_offsprings() thing. I've cc'd
-> > > Lukas who is probably more familiar with this code.
-> > > 
-> > > FWIW, I suspect the more you can elaborate on what the backup
-> > > application might be doing here (beyond just the rm -rf), the more
-> > > likely this can be reproduced and resolved.
-> > 
-> > Hi the lockdep warning should be fixed in the recent rhel6 kernel.
-> > Sorry about that.
-> > 
-> 
-> My understanding is that this patch has been reverted...
-> 
-> Grant,
-> 
-> If a newer kernel is not yet available, you might want to revert to the
-> previous version until one is and then go straight to that.
-> 
-> Lukas,
-> 
-> If the patch is indeed reverted, then clearly this problem will go away.
-> That aside, where does lockdep come into play? Note the warning reported
-> above:
-> 
-> 	WARNING: at fs/dcache.c:758 d_delete+0x260/0x2c0()
-> 
-> ... is an explicit WARN_ON() in the code added by this commit. Are we
-> referring to the same issue here?
-> 
-> Brian
+Content-ID: <alpine.LSU.2.11.1509161452080.25528@minas-tirith.valinor>
 
-Hi Brian,
 
-seems like we're not referring to the same issue as I though we're
-talking about the lockdep problem, but apparently we're not.
-Can we get a RH bugzilla for this issue so it can be dealt with
-properly ?
+El 2014-09-18 a las 10:33 -0500, Troy McCorkell escribió:
+> On 09/18/2014 07:46 AM, Carlos E. R. wrote:
+>
+>       Hi,
+>
+>       Now an then I get messages like this:
+>
+>       ++·································
+>       Your membership in the mailing list xfs has been disabled due to
+>       excessive bounces The last bounce received from you was dated
+>       18-Sep-2014.  You will not get any more messages from this list until
+>       you re-enable your membership.  You will receive 3 more reminders like
+>       this before your membership in the list is deleted.
+>
+>       To re-enable your membership, you can simply respond to this message
+>       (leaving the Subject: line intact), or visit the confirmation page at
+>
+>       ...
+>
+>       ·································++-
+> 
+>
+>       Bounces? I'm subscribed to several mail lists, and this is the only one "complaining". And as I do not know
+>       what messages bounced, I can not investigate it.
+>
+>       My guess is that those emails were clear and flagrant spam, and as such were rejected by my ISP.
+>
+>       The mail list should refuse them on entry and not resend them to the listers.
+>
+>       - -- Cheers,
+>              Carlos E. R.
+>              (from 13.1 x86_64 "Bottle" at Telcontar)
+> 
+> Carlos,
+> 
+> I will forward your email to the SGI IT group.
 
-Thanks!
--Lukas
---8323328-1519359409-1442405836=:3070
+Well, I got no further feedback, and the issue continues, a year later.
+
+As I see it, it goes like this:
+
+Spam is sent to the list. The list forwards it to subscribers. Some mail 
+servers, like my ISP, point blank refuse to accept what is flagrant spam; 
+not a doubt about it, it doesn't reach the spam folder. That spam probably 
+breaks a rule such as having no valid sender domain, breaking SPF, 
+something. I don't know for sure, because I can not see the logs of my 
+ISP. But the oss.sgi.com admin can, surely.
+
+
+The problem for me is that this list server automatically unsubscribes me, 
+and I have to re-subscribe, posibly loosing interveening posts.
+
+
+I suggest that the list server implements filters to remove those spam 
+mails on entry, instead of forwarding them. Alternatively, other mail list 
+servers send a probe email to the subscriber; if the probe bounces, twice, 
+then the subscription is temporarily disabled. But they don't unsubscribe 
+people because some "list" posts bounce, unless it is excesive.
+
+
+- -- 
+Cheers
+        Carlos E. R.
+
+        (from 13.1 x86_64 "Bottle" (Minas Tirith))
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iF4EAREIAAYFAlX5ZmQACgkQja8UbcUWM1wcxQD7BUPP7V8jRho3G3H0Oz/ZqVVs
+APLSE6oLIsGW/4GYn54A/0RiNx3Nd5gLhW8hYv6ljyNLqH26aUzYdiw3YO7c3mbb
+=oF/M
+-----END PGP SIGNATURE-----
+---1463779071-2002901569-1442407685=:25528
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -192,4 +140,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---8323328-1519359409-1442405836=:3070--
+---1463779071-2002901569-1442407685=:25528--
