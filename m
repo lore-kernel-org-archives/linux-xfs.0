@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 07CC87F4E
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 07:16:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 76BF0AC001
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 05:16:10 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 00B767F4E
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 09:24:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A08DDAC007
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 07:24:13 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xWD9nWpbZ4ABHYvz (version=TLSv1.2
+	cuda.sgi.com with ESMTP id dNoUfrSD5xi7V6Qi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 17 Sep 2015 05:16:09 -0700 (PDT)
-Date: Thu, 17 Sep 2015 08:16:06 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add missing ilock around dio write last extent
-	alignment
-Message-ID: <20150917121606.GA19577@bfoster.bfoster>
-References: <1441809812-60175-1-git-send-email-bfoster@redhat.com>
-	<20150913235835.GV26895@dastard>
-	<20150914132455.GA22770@bfoster.bfoster>
-	<20150916223435.GW26895@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150916223435.GW26895@dastard>
+	<xfs@oss.sgi.com>; Thu, 17 Sep 2015 07:24:12 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 758E28EA2E
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 14:24:12 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8HEOBvG030660
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 10:24:12 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [RFC PATCH] xfs_io: Implement inodes64 command
+Date: Thu, 17 Sep 2015 16:24:06 +0200
+Message-Id: <1442499846-10470-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,121 +30,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: David Jeffery <djeffery@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Sep 17, 2015 at 08:34:35AM +1000, Dave Chinner wrote:
-> On Mon, Sep 14, 2015 at 09:24:55AM -0400, Brian Foster wrote:
-> > On Mon, Sep 14, 2015 at 09:58:35AM +1000, Dave Chinner wrote:
-> > > On Wed, Sep 09, 2015 at 10:43:32AM -0400, Brian Foster wrote:
-...
-> > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > > index 1f86033..4d7534e 100644
-> > > > --- a/fs/xfs/xfs_iomap.c
-> > > > +++ b/fs/xfs/xfs_iomap.c
-> > > > @@ -142,7 +142,9 @@ xfs_iomap_write_direct(
-> > > >  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > > >  	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
-> > > >  	if ((offset + count) > XFS_ISIZE(ip)) {
-> > > > +		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > >  		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-> > > > +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > 
-> > > XFS_ILOCK_SHARED?
-> > > 
-> > 
-> > I suspect that is technically sufficient in this particular call path
-> > given that we've called xfs_bmapi_read(). The problem is that there is a
-> > call to xfs_iread_extents() buried a few calls deep in
-> > xfs_bmap_last_extent().
-> 
-> Sure.
-> 
-> > My understanding is that we need the exclusive
-> > lock because it's not safe for multiple threads to populate the in-core
-> > extent list at the same time, so I don't really want to replace the
-> > existing race with a landmine should the context happen to change in the
-> > future.
-> 
-> yes, but that can't happen here because we are guaranteed to have
-> the extent list in memory because we've alreay called
-> xfs_bmapi_read() and that will populate the extent list with the
-> appropriate lock held.
-> 
-> > > Also, looking at __xfs_get_blocks(), we drop the ilock immediately
-> > > before calling xfs_iomap_write_direct(), which we already hold in
-> > > shared mode for the xfs_bmapi_read() for direct IO.
-> > > 
-> > > Can we push that lock dropping into xfs_iomap_write_direct() after
-> > > we've done the xfs_iomap_eof_align_last_fsb() call and before we do
-> > > transaction reservations so we don't need an extra lock round-trip
-> > > here? e.g. xfs_iomap_write_delay() is called under the lock context
-> > > held by __xfs_get_blocks()....
-> > > 
-> > 
-> > That was my initial thought when looking at this code... e.g., to just
-> > carry the lock over and drop it prior to transaction setup. I didn't go
-> > that route because __xfs_get_blocks() uses a variable locking mode and
-> > it seemed ugly to pass along the lock mode to xfs_iomap_direct_write().
-> > Further, given the above it also looked like we'd have to check and
-> > cycle the ilock EXCL if it were ILOCK_SHARED. Finally,
-> 
-> No, because the __xfs_get_blocks code calls
-> xfs_ilock_data_map_shared() for direct IO, so already holds the
-> correct lock for populating the extent list (not that this matters
-> here).
-> 
-> > xfs_iomap_direct_write() has a call to xfs_qm_dqattach() which itself
-> > acquires ILOCK_EXCL. Looking at xfs_iomap_write_delay(), we do have a
-> > dqattach_locked() variant but it also expects to have ILOCK_EXCL.
-> 
-> That can be moved to after we've calculated the last extent. i.e.
-> to just before we start the transaction....
-> 
-> > The only thing I'm not sure about is the shared lock safe version of
-> > xfs_iomap_eof_align_last_fsb().
-> 
-> All the callers are guaranteed to have first populated the extent
-> list, so this should be safe. If you are really worried, add an
-> assert that verifies either ILOCK_EXCL or (ILOCK_SHARED && extents
-> read in)
-> 
-> > xfs_iread_extents() if it were called). Also, I take it we can safely
-> > assume the in-core extent list is still around if we still hold the lock
-> > from the xfs_bmapi_read() call. Thoughts? I guess I'll float another
-> > patch...
-> 
-> Once the extents are read in, they are in memory until the inode is
-> reclaimed. That won't happen while we have active references to it.
-> :)
-> 
+This command aims to implement an easy way to check a filesystem for the
+existence of 64bit inodes.
 
-Yeah, there's a v2 on the list that pretty much matches what is
-suggested here. My main concern with the xfs_iread_extents() thing was
-the landmine nature of it (after all, it was obfuscated enough that it
-wasn't obvious locking was even necessary). I've addressed that with a
-comment and asserts at the callsite. The only difference is I made it
-such that xfs_iomap_write_direct() expects ILOCK_SHARED rather than take
-a variable lockflag parameter, but we could do that either way. Thanks
-for the comments.
+Based on XFS_IOC_FSINUMBERS, and starting with a lastip = 0xffffffff
+instead of 0.
 
-Brian
+For now, it just returns a string saying there is or there is no 64bit inodes
+in the filesystem, but, I was wondering if it might not be better to just return
+0 or 1, so it can be used inside scripts to check for that. Or maybe an argument
+to chose between an integer output or a string verbose output.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Also, I was wondering if might be useful to, besides return the existence of
+64bit inodes, also inform if there is any 64bit inodes allocated in the groups
+or not. Although, this will need the tool to walk through all the inode groups
+checking for allocated inodes or not, instead of just stop at the first 64bit
+inode found.
+
+Also, I'm still not sure if 'inodes64' is a good name for the command, I was
+also thinking about something like 'chk64inos' but 'inodes64' was the best and
+easy to be remembered I could find.
+
+Comments are appreciated :-)
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ io/open.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/io/open.c b/io/open.c
+index ac5a5e0..3a98fdf 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -44,6 +44,7 @@ static cmdinfo_t statfs_cmd;
+ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+ static cmdinfo_t extsize_cmd;
++static cmdinfo_t inodes64_cmd;
+ static prid_t prid;
+ static long extsize;
+ 
+@@ -750,6 +751,37 @@ statfs_f(
+ 	return 0;
+ }
+ 
++static int
++inodes64_f(
++	  int			argc,
++	  char			**argv)
++{
++	int			i;
++	__s32			count;
++	__u64			last = 0xffffffff;
++	xfs_inogrp_t		igroup[64];
++	xfs_fsop_bulkreq_t	bulkreq;
++
++	/* Setup bulkreq structure */
++	bulkreq.lastip = &last;
++	bulkreq.icount = 64;
++	bulkreq.ubuffer = &igroup;
++	bulkreq.ocount = &count;
++
++	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
++		if (count > 0) {
++			printf("Filesystem does have 64bit inodes\n");
++			return 0;
++		} else {
++			printf("Filesystem does not have 64bit inodes\n");
++			return 0;
++		}
++	}
++	perror("xfsctl(XFS_IOC_FSINUMBERS)");
++	exitcode = 1;
++	return 0;
++}
++
+ void
+ open_init(void)
+ {
+@@ -815,6 +847,12 @@ open_init(void)
+ 		_("get/set preferred extent size (in bytes) for the open file");
+ 	extsize_cmd.help = extsize_help;
+ 
++	inodes64_cmd.name = "inodes64";
++	inodes64_cmd.cfunc = inodes64_f;
++	inodes64_cmd.flags = CMD_NOMAP_OK;
++	inodes64_cmd.oneline =
++		_("Checks if filesyste contais 64bit inodes");
++
+ 	add_command(&open_cmd);
+ 	add_command(&stat_cmd);
+ 	add_command(&close_cmd);
+@@ -822,4 +860,5 @@ open_init(void)
+ 	add_command(&chproj_cmd);
+ 	add_command(&lsproj_cmd);
+ 	add_command(&extsize_cmd);
++	add_command(&inodes64_cmd);
+ }
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
