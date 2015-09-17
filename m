@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E62E57F4E
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 06:17:46 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 62EC87F4E
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 06:32:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 84F31AC001
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 04:17:43 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id XVRMEJgGa5AIIaxf (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 17 Sep 2015 04:17:41 -0700 (PDT)
-Date: Thu, 17 Sep 2015 13:17:42 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: easily reproducible filesystem crash on rebuilding array
-Message-ID: <20150917131742.335e2021@harpe.intellique.com>
-In-Reply-To: <CAH-PCH6w31ChsBzr4x91sf1CPi=qtACuypnpT0PqmGbKxG_5UA@mail.gmail.com>
-References: <CAH-PCH7W4yTDRhAiKQwN_wQJMx2sTitQYrLNPcLYHvJRucXBjA@mail.gmail.com>
-	<20150917081757.48aaf891@galadriel.home>
-	<CAH-PCH6w31ChsBzr4x91sf1CPi=qtACuypnpT0PqmGbKxG_5UA@mail.gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4E73B8F8049
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 04:32:00 -0700 (PDT)
+Received: from mail-wi0-f178.google.com (mail-wi0-f178.google.com
+	[209.85.212.178]) by cuda.sgi.com with ESMTP id
+	mxsDdCoEDF3OBHRz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 17 Sep 2015 04:31:54 -0700 (PDT)
+Received: by wicfx3 with SMTP id fx3so19532140wic.1
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 04:31:53 -0700 (PDT)
+Subject: Re: XFS FAQ - out of date?
+References: <55FA0B1D.8000905@troja.ch>
+	<CA+o=1OUpgK6w2W9Y8JHeN7ByopEuzEx1u87FhBPTcmZRSA0Bdg@mail.gmail.com>
+From: Viktor Trojanovic <viktor@troja.ch>
+Message-ID: <55FAA4A5.7000701@troja.ch>
+Date: Thu, 17 Sep 2015 13:31:49 +0200
 MIME-Version: 1.0
+In-Reply-To: <CA+o=1OUpgK6w2W9Y8JHeN7ByopEuzEx1u87FhBPTcmZRSA0Bdg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,28 +28,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ferenc Kovacs <tyra3l@gmail.com>
+To: Fanael Linithien <fanael4@gmail.com>
 Cc: xfs@oss.sgi.com
 
-TGUgVGh1LCAxNyBTZXAgMjAxNSAwOToyMTowNyArMDIwMApGZXJlbmMgS292YWNzIDx0eXJhM2xA
-Z21haWwuY29tPiDDqWNyaXZhaXQ6Cgo+ID4gVGhhbmtzIGdvZCBmb3IgWEZTLiBleHQ0IGlzIGNv
-bXBsZXRlbHkgdW5hd2FyZSBvZiB0aGUgY29ycnVwdGlvbnMsCj4gPiBidXQgdGhleSdyZSBwcmVz
-ZW50IG5vbmV0aGVsZXNzIChtZDVzdW1taW5nIGZpbGVzIGJlZm9yZSwgZHVyaW5nIGFuZAo+ID4g
-YWZ0ZXIgcmVidWlsZCkuLi4KPiA+ICAKPiAKPiBUaGFua3MgZm9yIHRoZSBpbmZvIQo+IAoKQmUg
-Y2FyZWZ1bCBhbnl3YXksIGluIG9uZSBvY2N1cnJlbmNlIEkgd2FzIGFibGUgdG8gZ2V0IGEgc2xp
-Z2h0CmNvcnJ1cHRpb24gZXZlbiBpbiB0aGlzIGNhc2UuIEZvciBzb21lIHJlYXNvbiAoY2FjaGUg
-Zmx1c2hpbmc/KSBpdCdzCnRoZSB2ZXJ5IGVuZCBvZiB0aGUgcmVidWlsZCBwcm9jZXNzICh0aGUg
-bGFzdCAxNSBtaW51dGVzIG9yIHNvKSB3aGljaAppcyBzZW5zaXRpdmUgdG8gY29ycnVwdGlvbiB1
-bmRlciBoZWF2eSBJT3MuCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAg
-fCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1
-ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAg
-ICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+On 17.09.2015 06:06, Fanael Linithien wrote:
+> 2015-09-17 2:36 GMT+02:00 Viktor Trojanovic <viktor@troja.ch>:
+>> I later found (very few) sources that confirmed that Grub is not compatible
+>> with the current XFS level 5, that SuSE created a patch for the problem but
+>> it wasn't adopted upstream.
+> It is merged upstream[1], but last GRUB release was 2.02 beta 2, which
+> is almost two years old. If you have no qualms about using grub-git
+> from AUR, there will be no problems with XFS, even with v5 superblock.
+>
+> [1] http://git.savannah.gnu.org/cgit/grub.git/commit/grub-core/fs/xfs.c?id=b6e80c7778b708c1632d957d00507aad60d9e255
+
+Great, I'll try that. Thanks for replying.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
