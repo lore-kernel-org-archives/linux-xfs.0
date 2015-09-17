@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 085BE7F4E
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 14:21:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A09AAC003
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 12:21:09 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DCY9bWKwTaNaTuRd (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 23F807F4E
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 16:37:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 10DD7304059
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2015 14:37:20 -0700 (PDT)
+Received: from pp-mta1.drexelmed.edu ([198.17.30.172]) by cuda.sgi.com with
+	ESMTP id ObfKis6ap0g8DZKG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 17 Sep 2015 12:21:05 -0700 (PDT)
-Date: Thu, 17 Sep 2015 15:21:03 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfsxyncd in 'D' state
-Message-ID: <20150917192102.GA5342@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Thu, 17 Sep 2015 14:37:17 -0700 (PDT)
+From: "Earl, Joshua P" <Joshua.Earl@DrexelMed.edu>
+Subject: RE: xfsxyncd in 'D' state
+Date: Thu, 17 Sep 2015 21:37:09 +0000
+Message-ID: <2CC86DBF85FEEC41A2DFE1647B40613D5DAF2DFC@NCB-SV-117.DUCOM.edu>
 References: <2CC86DBF85FEEC41A2DFE1647B40613D5DAF2CA0@NCB-SV-117.DUCOM.edu>
 	<2CC86DBF85FEEC41A2DFE1647B40613D5DAF2DB8@NCB-SV-117.DUCOM.edu>
+	<20150917192102.GA5342@bfoster.bfoster>
+In-Reply-To: <20150917192102.GA5342@bfoster.bfoster>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <2CC86DBF85FEEC41A2DFE1647B40613D5DAF2DB8@NCB-SV-117.DUCOM.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,15 +31,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Earl, Joshua P" <Joshua.Earl@DrexelMed.edu>
+To: Brian Foster <bfoster@redhat.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+
+Hi Brian,
+
+Sorry about the top posting thing... I'm not sure how to control that, is my replying somehow messing with that?
+
+With good news, I seem to have figured out what was going on.  I had a cron job which would run every 15 minutes which changed the permissions in a directory: 
+chmod -R g+rwx /data/shared/homes/bjanto/*
+chmod -R g+rwx /data/shared/homes/lanastor/*
+chgrp -hR ilmn /data/nextseq/*
+chgrp -hR lab /data/shared/homes/*
+
+Where /data was a directory in the mounted xfs file system.  The script itself would complete in under a minute, and I thought everything was fine.  However, this would trigger the xfssyncd process to go into the 'D' state, and no writing was allowed until that had completed whatever it was doing.  Apparently this would take longer than 15 minutes.  As long as cron was running the drive would never become available for writing.
+
+I've solved the problem by just using a setguid on the directories in question (so anything in those directories get the correct group on creation), so no cron job is needed.  But is this expected behavior?  Should I change any settings on the mount?
+
+I can definitely compress the files if need be, they were the /proc/meminfo etc. outputs requested in the faq.  I'm not sure at this point if they are required.
+
+~josh
+
+-----Original Message-----
+From: Brian Foster [mailto:bfoster@redhat.com] 
+Sent: Thursday, September 17, 2015 3:21 PM
+To: Earl, Joshua P <Joshua.Earl@DrexelMed.edu>
+Cc: xfs@oss.sgi.com
+Subject: Re: xfsxyncd in 'D' state
 
 On Thu, Sep 17, 2015 at 04:45:03PM +0000, Earl, Joshua P wrote:
 > Anyone have any ideas on this?  Is this the right mailing list?  It looks like the email I sent with attachments didn't go through, should I copy and paste the outputs into an email?  We are pretty crippled without the use of this drive, and it took several weeks to figure out that it was this process going into uninterruptible sleep that was the 'cause'.   I don't know what causes this however, I'm not sure how to track that down.  There doesn't seem to be anything accessing the drive as far as processes go... but on a clean reboot within about 5 minutes this pops up:
 > 
 
-Were the attachments large? You could try to compress them or perhaps
-host them somewhere and post a link.
+Were the attachments large? You could try to compress them or perhaps host them somewhere and post a link.
 
 (Also, please try not to top-post).
 
@@ -47,16 +72,15 @@ host them somewhere and post a link.
 > And we are dead in the water until it lets go, which is currently hours later.  When we first experienced this problem it would only take a few minutes to get back to a writable state.
 > 
 
-That is responsible for writing out metadata and things on older
-kernels. When was this problem "first experienced" as opposed to the
-current state? Did performance drop off slowly or rapidly?
+That is responsible for writing out metadata and things on older kernels. When was this problem "first experienced" as opposed to the current state? Did performance drop off slowly or rapidly?
 
 > Any help would be greatly appreciated!
 > 
 > Thanks,
 > ~josh
 > 
-> From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of Earl, Joshua P
+> From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On 
+> Behalf Of Earl, Joshua P
 > Sent: Wednesday, September 16, 2015 12:50 PM
 > To: xfs@oss.sgi.com
 > Subject: RE: xfsxyncd in 'D' state
@@ -74,11 +98,9 @@ current state? Did performance drop off slowly or rapidly?
 > realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
 
-So this is a 70TB fs with what looks like mostly default settings. Note
-that no stripe unit/width are set, fwiw.
+So this is a 70TB fs with what looks like mostly default settings. Note that no stripe unit/width are set, fwiw.
 
-I don't see current fs utilization (df, df -i) or mount options reported
-anywhere. Can you provide that information?
+I don't see current fs utilization (df, df -i) or mount options reported anywhere. Can you provide that information?
 
 > From: Earl, Joshua P
 > Sent: Tuesday, September 15, 2015 1:53 PM
@@ -88,23 +110,12 @@ anywhere. Can you provide that information?
 > Hello, I hope I'm writing to the correct list.  I've recently run into a problem, which has me stumped.  I'm running a cluster which shares an xfs filesystem to 10 nodes via nfs.  This has been working for almost two years.  However, I've been running into trouble with the drive where if anything tries to write to it at certain times it will simply hang, and every process trying to write will also hang and go into the 'D' state.  For example (just editing a text file with emacs):
 > 
 
-You haven't really described the workload either. If not much is going
-on from the server itself, what are those 10 nfs clients doing when this
-occurs? In general, the more information you provide about the
-environment and workload, the more likely other folks here who might be
-more familiar with NFS and/or hwraid might chime in with suggestions.
+You haven't really described the workload either. If not much is going on from the server itself, what are those 10 nfs clients doing when this occurs? In general, the more information you provide about the environment and workload, the more likely other folks here who might be more familiar with NFS and/or hwraid might chime in with suggestions.
 
-Not being an NFS expert myself, I'd probably unexport the filesystem,
-mount it locally and run some tests there to see what seems to induce
-this behavior, if anything. For example, what happens if existing files
-are read or directories listed? In terms of writes, does a sequential
-file writer have reasonable performance (dd)? Can you allocate inodes
-(e.g., create a temp dir somewhere and run a 'touch' loop to create new
-files) without any issues? You could also try to untar a tarball, run a
-short fio/fsstress/whatever workload, etc.
+Not being an NFS expert myself, I'd probably unexport the filesystem, mount it locally and run some tests there to see what seems to induce this behavior, if anything. For example, what happens if existing files are read or directories listed? In terms of writes, does a sequential file writer have reasonable performance (dd)? Can you allocate inodes (e.g., create a temp dir somewhere and run a 'touch' loop to create new
+files) without any issues? You could also try to untar a tarball, run a short fio/fsstress/whatever workload, etc.
 
-If nothing seems to trigger it locally, I'd start to look at adding back
-the clients to try identify contributors.
+If nothing seems to trigger it locally, I'd start to look at adding back the clients to try identify contributors.
 
 > [root@ncb-sv-016 ~]# ps aux|grep D
 > USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
@@ -113,24 +124,22 @@ the clients to try identify contributors.
 > root     11453  0.0  0.0 103312   868 pts/1    S+   12:47   0:00 grep D
 > 
 
-What's the stack trace for the emacs process when this occurs? I suspect
-it would eventually get dumped to the logs as a stalled task, but
-/proc/<pid>/stack should show it as well.
+What's the stack trace for the emacs process when this occurs? I suspect it would eventually get dumped to the logs as a stalled task, but /proc/<pid>/stack should show it as well.
 
-> This will remain like this for hours.  Can't remount/unmount drive (sends the unmount command into 'D' state)
+> This will remain like this for hours.  Can't remount/unmount drive 
+> (sends the unmount command into 'D' state)
 > 
 > I have no idea what's going on or how to fix it, but I'm hoping you guys might be able to point me in the right direction. Here is the info that's requested in the FAQ:
 > ?  kernel version (uname -a)
-> Linux ncb-sv-016.ducom.edu 2.6.32-358.23.2.el6.x86_64 #1 SMP Wed Oct 16 18:37:12 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
-> ?  xfsprogs version (xfs_repair -V)
-> xfs_repair version 3.1.1
-> ?  number of CPUs
+> Linux ncb-sv-016.ducom.edu 2.6.32-358.23.2.el6.x86_64 #1 SMP Wed Oct 
+> 16 18:37:12 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux ?  xfsprogs 
+> version (xfs_repair -V) xfs_repair version 3.1.1 ?  number of CPUs
 > 16
 > ?  contents of /proc/meminfo
 > ?  contents of /proc/mounts
 > ?  contents of /proc/partitions
-> Attached except for mounts (not currently in the /proc directory, attached the fstab instead (hopefully helpful?)
-> ?  RAID layout (hardware and/or software) The RAID-6 is the problem one
+> Attached except for mounts (not currently in the /proc directory, 
+> attached the fstab instead (hopefully helpful?) ?  RAID layout (hardware and/or software) The RAID-6 is the problem one
 > Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
 > ------------------------------------------------------------------------------
 > u0    RAID-1    OK             -       -       -       3725.28   RiW    ON
@@ -164,8 +173,7 @@ it would eventually get dumped to the logs as a stalled task, but
 > p30   OK             u1   3.63 TB   SATA  -   /c0/e0/slt19 WDC WD4000FYYZ-01UL
 > p31   OK             u2   3.63 TB   SATA  -   /c0/e0/slt23 WDC WD4000FYYZ-01UL
 
-That's a 21 disk raid6, which seems like a high spindle count for a
-stripe geometry like raid6 to me. I guess it depends on the use case.
+That's a 21 disk raid6, which seems like a high spindle count for a stripe geometry like raid6 to me. I guess it depends on the use case.
 Was this always the geometry of the array or was it grown over time?
 
 > ?  LVM configuration
@@ -173,11 +181,11 @@ Was this always the geometry of the array or was it grown over time?
 > ?  type of disks you are using
 > Models included above in raid config.
 > ?  write cache status of drives
-> ?  size of BBWC and mode it is running in
-> ?  xfs_info output on the filesystem in question
-> For the above three questions I'm not sure how to get the the cache status of the drives, or what the BBWC is? xfs_info won't currently run (I'm waiting on the drive to unmount) but I ran an xfs_check and an xfs_repair -n and no errors were shown.
-> ?  dmesg output showing all error messages and stack traces
-> Then you need to describe your workload that is causing the problem, and a demonstration of the bad behaviour that is occurring. If it is a performance problem, then 30s - 1 minute samples of:
+> ?  size of BBWC and mode it is running in ?  xfs_info output on the 
+> filesystem in question For the above three questions I'm not sure how 
+> to get the the cache status of the drives, or what the BBWC is? xfs_info won't currently run (I'm waiting on the drive to unmount) but I ran an xfs_check and an xfs_repair -n and no errors were shown.
+> ?  dmesg output showing all error messages and stack traces Then you 
+> need to describe your workload that is causing the problem, and a demonstration of the bad behaviour that is occurring. If it is a performance problem, then 30s - 1 minute samples of:
 > 1.    iostat -x -d -m 5
 > [root@ncb-sv-016 ~]# iostat -x -d -m 5
 > Linux 2.6.32-358.23.2.el6.x86_64 (ncb-sv-016.ducom.edu)       09/15/2015    _x86_64_      (16 CPU)
@@ -191,11 +199,7 @@ Was this always the geometry of the array or was it grown over time?
 > sdb               0.00     0.00    0.00    0.80     0.00     0.03    64.00     6.46 6332.75 1250.00 100.00
 > 
 
-It looks like not much write activity causes severe I/O latencies (on
-the order of seconds) and 100% device utilization. Without some of the
-details noted above, it's kind of hard to grasp at what's going wrong
-here beyond the fact that the storage just appears to be running really
-slow.
+It looks like not much write activity causes severe I/O latencies (on the order of seconds) and 100% device utilization. Without some of the details noted above, it's kind of hard to grasp at what's going wrong here beyond the fact that the storage just appears to be running really slow.
 
 Brian
 
@@ -311,8 +315,8 @@ Brian
 > Josh Earl, MS
 > Research Instructor
 > Drexel College of Medicine
-> Center for Advanced Microbial Processing (CAMP)
-> Institute of Molecular Medicine and Infectious Disease
+> Center for Advanced Microbial Processing (CAMP) Institute of Molecular 
+> Medicine and Infectious Disease
 > (215) 762-8133
 > 
 > ________________________________
@@ -322,7 +326,8 @@ Brian
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> https://urldefense.proofpoint.com/v2/url?u=http-3A__oss.sgi.com_mailma
+> n_listinfo_xfs&d=AwIBAg&c=3kkgRanvEDK8hL9DynGJVVH69jkBMvrwECTgfOmvv0E&r=HiolWjLw4P5HxQGEvzKcfCwD3EYUiDpGfeAhgr7hw3M&m=0SleLEBijJl2B8Pk6Lsu8ECDCQDIKASaEIYUKaWRyAo&s=aAZVjeECRjIdMS-OkbTo3YNdphVwt74N-HK5ie2KBbc&e=
 
 _______________________________________________
 xfs mailing list
