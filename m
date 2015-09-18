@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 87E437F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 11:17:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C0AA8F8035
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:17:01 -0700 (PDT)
-Received: from mail-wi0-f176.google.com (mail-wi0-f176.google.com
-	[209.85.212.176]) by cuda.sgi.com with ESMTP id
-	toudkCfiVMDQIBz8 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:16:59 -0700 (PDT)
-Received: by wicfx3 with SMTP id fx3so37391480wic.0
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:16:58 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4931B7F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 11:38:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 36E898F8037
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:38:44 -0700 (PDT)
+Received: from mail.nomovok.com (mail.nomovok.com [83.150.122.238]) by
+	cuda.sgi.com with ESMTP id LKqdXc39b2gARSUR (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:38:41 -0700 (PDT)
 Received: from [192.168.0.111]
-	(host22-235-dynamic.248-95-r.retail.telecomitalia.it.
-	[95.248.235.22]) by smtp.googlemail.com with ESMTPSA id
-	cm6sm16301827wib.22.2015.09.18.09.16.57 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Fri, 18 Sep 2015 09:16:58 -0700 (PDT)
-Message-ID: <55FC38F9.1000102@gmail.com>
-Date: Fri, 18 Sep 2015 18:16:57 +0200
-From: angelo <angelo70@gmail.com>
+	(host22-235-dynamic.248-95-r.retail.telecomitalia.it [95.248.235.22])
+	by mail.nomovok.com (Postfix) with ESMTPSA id BAA94AE089
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 19:38:39 +0300 (EEST)
+Message-ID: <55FC3E0E.9060506@nomovok.com>
+Date: Fri, 18 Sep 2015 18:38:38 +0200
+From: Angelo Dureghello <angelo.dureghello@nomovok.com>
 MIME-Version: 1.0
 Subject: xfstests, bad generic tests 009 and 308
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,7 +35,7 @@ To: xfs@oss.sgi.com
 Hi all,
 
 working on arm (32bit arch), kernel 4.1.6.
-Looking to find the reason of a bad result on xfstests,
+Looking to find the reason of some bad results on xfstests,
 
 -tests/generic/009
 ------------------
@@ -90,7 +85,7 @@ never been finally applied.
 
 I applied this patch anyway, and tests pass.
 
-
+-- 
 Best regards,
 Angelo Dureghello
 
