@@ -1,15 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 070FE7F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 11:01:49 -0500 (CDT)
-Message-ID: <55FC3569.5020801@sgi.com>
-Date: Fri, 18 Sep 2015 11:01:45 -0500
-From: Troy McCorkell <tdm@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 87E437F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 11:17:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C0AA8F8035
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:17:01 -0700 (PDT)
+Received: from mail-wi0-f176.google.com (mail-wi0-f176.google.com
+	[209.85.212.176]) by cuda.sgi.com with ESMTP id
+	toudkCfiVMDQIBz8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:16:59 -0700 (PDT)
+Received: by wicfx3 with SMTP id fx3so37391480wic.0
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:16:58 -0700 (PDT)
+Received: from [192.168.0.111]
+	(host22-235-dynamic.248-95-r.retail.telecomitalia.it.
+	[95.248.235.22]) by smtp.googlemail.com with ESMTPSA id
+	cm6sm16301827wib.22.2015.09.18.09.16.57 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Fri, 18 Sep 2015 09:16:58 -0700 (PDT)
+Message-ID: <55FC38F9.1000102@gmail.com>
+Date: Fri, 18 Sep 2015 18:16:57 +0200
+From: angelo <angelo70@gmail.com>
 MIME-Version: 1.0
-Subject: Re: What's up with this list?
-References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>	<541AFB60.5030403@sgi.com>	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>	<55FAF053.3020405@sgi.com>
-	<55FB06E8.1020203@opensuse.org>
-In-Reply-To: <55FB06E8.1020203@opensuse.org>
+Subject: xfstests, bad generic tests 009 and 308
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,55 +35,64 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, carlos.e.r@opensuse.org
+To: xfs@oss.sgi.com
 
-On 09/17/2015 01:31 PM, Carlos E. R. wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA256
->
-> On 2015-09-17 18:54, Troy McCorkell wrote:
->    
->> On 09/16/2015 07:53 AM, Carlos E. R. wrote:
->>      
->
->    
->> I'll chat with the SGI IT group again.
->>      
-> Thanks :-)
->
-> - -- 
-> Cheers / Saludos,
->
-> 		Carlos E. R.
->
->    (from 13.1 x86_64 "Bottle" (Minas Tirith))
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v2.0.22 (GNU/Linux)
->
-> iF4EAREIAAYFAlX7BugACgkQja8UbcUWM1yf2gD9GZrVQopDE+YS1yrbhHS+GiYd
-> nV4ZiwQ15EJkRpvwOssA/jEGl2f3SMHd6s2wCpStP2Smm/mOwMszoWX6N5qTS/34
-> =tcZ8
-> -----END PGP SIGNATURE-----
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->    
-Carlos,
+Hi all,
 
-I discussed the spam issue on the xfs@oss.sgi.com mailing list with SGI IT.
+working on arm (32bit arch), kernel 4.1.6.
+Looking to find the reason of a bad result on xfstests,
 
-xfs@oss.sgi.com is an open list and does not require people to be members
-of the list to post to it.    The spam filters applied to 
-xfs@oss.sgi.com are
-as aggressive as they can be and still allow for an open list.
+-tests/generic/009
+------------------
+i get several "all holes" messages
 
-Next option would be to add a moderator to the list.   Adding a moderator
-would interfere with non-list members posting to the list.
+generic/009    [  842.949643] run fstests generic/009 at 2015-09-18 
+15:29:36
+  - output mismatch (see 
+/home/angelo/xfstests/results//generic/009.out.bad)
+     --- tests/generic/009.out    2015-09-17 10:54:06.689071257 +0000
+     +++ /home/angelo/xfstests/results//generic/009.out.bad 2015-09-18 
+15:29:41.412784177 +0000
+     @@ -1,79 +1,45 @@
+      QA output created by 009
+          1. into a hole
+     -0: [0..7]: hole
+     -1: [8..23]: unwritten
+     -2: [24..39]: hole
+     +0: [0..39]: hole
+      daa100df6e6711906b61c9ab5aa16032
 
-Thanks,
-Troy
+also some other tests are giving the same bad notices.
+
+
+-tests/generic/308
+------------------
+
+I have now: CONFIG_LBDAF=y
+
+In my target device this test creates a 16 Terabytes file 308.tempfile
+
+-rw------- 1 root root  17592186044415 Sep 18 09:40 testfile.308
+
+While "df" is not complaining about:
+
+/dev/mmcblk0p5   8378368   45252   8333116   1% /media/p5
+
+and next rm -f on it hands the cpu to 95%, forever.
+
+This issue seems known from a long time, as it has been discussed in the 
+thread:
+
+http://oss.sgi.com/archives/xfs/2013-04/msg00273.html
+
+I was wondering if there was any special reason why the Jeff patch has
+never been finally applied.
+
+I applied this patch anyway, and tests pass.
+
+
+Best regards,
+Angelo Dureghello
 
 _______________________________________________
 xfs mailing list
