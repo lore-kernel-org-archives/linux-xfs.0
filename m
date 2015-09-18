@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6EB537F4E
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 06:06:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 07854AC003
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 04:06:45 -0700 (PDT)
-Received: from mail-yk0-f169.google.com (mail-yk0-f169.google.com
-	[209.85.160.169]) by cuda.sgi.com with ESMTP id
-	QEMVQBAosMBqkQGR (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 04:06:40 -0700 (PDT)
-Received: by ykdu9 with SMTP id u9so43167660ykd.2
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 04:06:40 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 174157F37
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 09:21:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 83EB9AC007
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 07:21:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lP2oCCXtGbbZpdzF (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 07:21:22 -0700 (PDT)
+Date: Fri, 18 Sep 2015 16:21:17 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [RFC PATCH] xfs_io: Implement inodes64 command
+Message-ID: <20150918142117.GA20717@redhat.com>
+References: <1442499846-10470-1-git-send-email-cmaiolino@redhat.com>
+	<55FAF212.2010308@sandeen.net>
 MIME-Version: 1.0
-Date: Fri, 18 Sep 2015 19:06:39 +0800
-Message-ID: <CAPBX1xLUbxfSSK-SSKY-JtLyUpqZC7uB_iPY64ZuAEYD4KtM3w@mail.gmail.com>
-Subject: How Can I Get Writeback Status When Running fs_mark
-From: George Wang <xuw2015@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <55FAF212.2010308@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +30,196 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Hi, Dave,
+On Thu, Sep 17, 2015 at 12:02:10PM -0500, Eric Sandeen wrote:
+> (oops, resending to list not just Carlos)
+> 
+> On 9/17/15 9:24 AM, Carlos Maiolino wrote:
+> > This command aims to implement an easy way to check a filesystem for the
+> > existence of 64bit inodes.
+> >
+> > Based on XFS_IOC_FSINUMBERS, and starting with a lastip = 0xffffffff
+> > instead of 0.
+> >
+> > For now, it just returns a string saying there is or there is no 64bit inodes
+> > in the filesystem, but, I was wondering if it might not be better to just return
+> > 0 or 1, so it can be used inside scripts to check for that. Or maybe an argument
+> > to chose between an integer output or a string verbose output.
+> >
+> > Also, I was wondering if might be useful to, besides return the existence of
+> > 64bit inodes, also inform if there is any 64bit inodes allocated in the groups
+> > or not. Although, this will need the tool to walk through all the inode groups
+> > checking for allocated inodes or not, instead of just stop at the first 64bit
+> > inode found.
+> 
+> I'm not sure what you mean here - list the groups which contain them?
+> Any group above the one where the first 64 bit inode is found will also
+> have 64-bit inodes, (unless they have no inodes at all) - so I don't see
+> the value, but maybe I'm missing something.
+> 
 
-I read the mail you post for "fs-writeback: drop wb->list_lock during
-blk_finish_plug()",  and I
-adore you very much.
+Inodes are allocated in 'clusters', you might have a 64-bit inodes cluster
+allocated, but not in use at all, the  xfs_inogrp_t.xi_allocmask field will show
+which inodes from that cluster is allocated or not, so, I was wondering if the
+information that "64bit inodes were created" is enough, of if would be useful to
+say that '64bits inodes were created and are/aren't in use'.
 
-I'm very curious that how you get the writeback status when running fs_mark.
 
-I will appreciate very much if you can share the way you get writeback
-status and iops, etc.
-And maybe people in community can use this way to do the same tests as you.
+> > Also, I'm still not sure if 'inodes64' is a good name for the command, I was
+> > also thinking about something like 'chk64inos' but 'inodes64' was the best and
+> > easy to be remembered I could find.
+> 
+> Eh, seems reasonable to me.  Not super, but I can't think of anything much
+> better. 
+> 
+> > Comments are appreciated 
+> 
+> Below...
+> 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  io/open.c | 39 +++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 39 insertions(+)
+> >
+> > diff --git a/io/open.c b/io/open.c
+> > index ac5a5e0..3a98fdf 100644
+> > --- a/io/open.c
+> > +++ b/io/open.c
+> > @@ -44,6 +44,7 @@ static cmdinfo_t statfs_cmd;
+> >  static cmdinfo_t chproj_cmd;
+> >  static cmdinfo_t lsproj_cmd;
+> >  static cmdinfo_t extsize_cmd;
+> > +static cmdinfo_t inodes64_cmd;
+> >  static prid_t prid;
+> >  static long extsize;
+> >  
+> > @@ -750,6 +751,37 @@ statfs_f(
+> >  	return 0;
+> >  }
+> >  
+> > +static int
+> > +inodes64_f(
+> > +	  int			argc,
+> > +	  char			**argv)
+> > +{
+> > +	int			i;
+> > +	__s32			count;
+> > +	__u64			last = 0xffffffff;
+> 
+> might be good to use XFS_MAXINUMBER_32 here
+> 
 
-The following is a part copy of the test result you got:
+Good, I didn't know about this flag :)
 
-$ ~/tests/fsmark-10-4-test-xfs.sh
-meta-data=/dev/vdc               isize=512    agcount=500, agsize=268435455 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0
-data     =                       bsize=4096   blocks=134217727500, imaxpct=1
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=131072, version=2
-         =                       sectsz=512   sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > +	xfs_inogrp_t		igroup[64];
+> 
+> why 64?  wouldn't one suffice?
+> 
 
-#  ./fs_mark  -D  10000  -S0  -n  10000  -s  4096  -L  120  -d
-/mnt/scratch/0  -d  /mnt/scratch/1  -d  /mnt/scratch/2  -d
-/mnt/scratch/3  -d  /mnt/scratch/4  -d  /mnt/scratch/5  -d
-/mnt/scratch/6  -d  /mnt/scratch/7
-#       Version 3.3, 8 thread(s) starting at Thu Sep 17 08:08:36 2015
-#       Sync method: NO SYNC: Test does not issue sync() or fsync() calls.
-#       Directories:  Time based hash between directories across 10000
-subdirectories with 180 seconds per subdirectory.
-#       File names: 40 bytes long, (16 initial bytes of time stamp
-with 24 random bytes at end of name)
-#       Files info: size 4096 bytes, written with an IO size of 16384
-bytes per write
-#       App overhead is time in microseconds spent in the test not
-doing file writing related system calls.
+well, 64 is the default size of the inode chunks (or clusters, whatever we call
+it), so we can get a whole inode cluster at a time.
 
-FSUse%        Count         Size    Files/sec     App Overhead
-     0        80000         4096     106938.0           543310
-     0       160000         4096     102922.7           476362
-     0       240000         4096     107182.9           538206
-     0       320000         4096     107871.7           619821
-     0       400000         4096      99255.6           622021
-     0       480000         4096     103217.8           609943
-     0       560000         4096      96544.2           640988
-     0       640000         4096     100347.3           676237
-     0       720000         4096      87534.8           483495
-     0       800000         4096      72577.5          2556920
-     0       880000         4096      97569.0           646996
 
-<RAM fills here, sustained performance is now dependent on writeback>
+> > +	xfs_fsop_bulkreq_t	bulkreq;
+> > +
+> > +	/* Setup bulkreq structure */
+> > +	bulkreq.lastip = &last;
+> > +	bulkreq.icount = 64;
+> > +	bulkreq.ubuffer = &igroup;
+> > +	bulkreq.ocount = &count;
+> > +
+> > +	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+> > +		if (count > 0) {
+> > +			printf("Filesystem does have 64bit inodes\n");
+> > +			return 0;
+> > +		} else {
+> > +			printf("Filesystem does not have 64bit inodes\n");
+> > +			return 0;
+> > +		}
+> > +	}
+> 
+> I'm also not sure what the "while" is for, here.
+> 
+> If you start at XFS_MAXINUMBER_32, won't a single call either
+> give you count = 1 or count = 0?
+> 
 
-     0       960000         4096      80147.0           515679
-     0      1040000         4096     100394.2           816979
-     0      1120000         4096      91466.5           739009
-     0      1200000         4096      85868.1           977506
-     0      1280000         4096      89691.5           715207
-     0      1360000         4096      52547.5           712810
-     0      1440000         4096      47999.1           685282
-     0      1520000         4096      47894.3           697261
-     0      1600000         4096      47549.4           789977
-     0      1680000         4096      40029.2           677885
-     0      1760000         4096      16637.4         12804557
-     0      1840000         4096      16883.6         24295975
+Probably you are right. I used the while() keeping in mind the possibility to
+return the status of all 64bit inodes existing in the filesystem, also, I had
+this question:
 
-thanks
-George
+"What if the inode XFS_MAXINUMBER_32 does not exist, but bigger inodes do? Like
+in different, bigger AGs?"
+
+I was considering that each call using XFS_IOC_FSINUMBERS, will return only the
+inodes in the same allocation group, and another xfsctl call was needed to
+continue in the following ones. But I really don't know from where I took it,
+probably misinterpreting the xfsctl manpage :)
+
+I should have read the kernel implementation before writing it :)
+
+So, yes, you're right, just a single xfsctl call here will return the next valid
+inode bigger than 0xffffffff.
+
+while{} needed only if we want to keep track of the status of the remaining
+ones, which, IMHO is not the goal of this command.
+
+
+
+> > +	perror("xfsctl(XFS_IOC_FSINUMBERS)");
+> > +	exitcode = 1;
+> > +	return 0;
+> > +}
+> > +
+> >  void
+> >  open_init(void)
+> >  {
+> > @@ -815,6 +847,12 @@ open_init(void)
+> >  		_("get/set preferred extent size (in bytes) for the open file");
+> >  	extsize_cmd.help = extsize_help;
+> >  
+> > +	inodes64_cmd.name = "inodes64";
+> > +	inodes64_cmd.cfunc = inodes64_f;
+> > +	inodes64_cmd.flags = CMD_NOMAP_OK;
+> > +	inodes64_cmd.oneline =
+> > +		_("Checks if filesyste contais 64bit inodes");
+> 
+> "if filesystem contains"
+> 
+
+Typo, sorry 
+
+> > +
+> >  	add_command(&open_cmd);
+> >  	add_command(&stat_cmd);
+> >  	add_command(&close_cmd);
+> > @@ -822,4 +860,5 @@ open_init(void)
+> >  	add_command(&chproj_cmd);
+> >  	add_command(&lsproj_cmd);
+> >  	add_command(&extsize_cmd);
+> > +	add_command(&inodes64_cmd);
+> >  }
+> 
+> needs xfs_io manpage updates too, and possibly an xfstest test case?
+> 
+> -Eric
+
+Will do, this was just an RFC to get comments about it. I wasn't willing to
+write a manpage entry without even know if people agreed with the command name,
+or even with the idea :)
+
+Thanks for the comments, much appreciated.
+
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
