@@ -1,26 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB94B7F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 18:52:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5A4907F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 19:31:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F8018F804B
-	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 16:52:01 -0700 (PDT)
-Received: from pp-mta2.drexelmed.edu ([198.17.30.173]) by cuda.sgi.com with
-	ESMTP id ggCVF2NqotbLZ8Nd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 16:51:59 -0700 (PDT)
-From: "Earl, Joshua P" <Joshua.Earl@DrexelMed.edu>
-Subject: RE: xfsxyncd in 'D' state
-Date: Fri, 18 Sep 2015 23:51:53 +0000
-Message-ID: <2CC86DBF85FEEC41A2DFE1647B40613D6B6217BD@NCB-SV-117.DUCOM.edu>
-References: <2CC86DBF85FEEC41A2DFE1647B40613D5DAF2CA0@NCB-SV-117.DUCOM.edu>
-	<2CC86DBF85FEEC41A2DFE1647B40613D5DAF2DB8@NCB-SV-117.DUCOM.edu>
-	<20150917192102.GA5342@bfoster.bfoster>
-	<2CC86DBF85FEEC41A2DFE1647B40613D5DAF2DFC@NCB-SV-117.DUCOM.edu>,
-	<20150918020351.GS3902@dastard>
-In-Reply-To: <20150918020351.GS3902@dastard>
-Content-Language: en-US
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CD0D8F8037
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 17:31:10 -0700 (PDT)
+Received: from mail-wi0-f175.google.com (mail-wi0-f175.google.com
+	[209.85.212.175]) by cuda.sgi.com with ESMTP id
+	fX0jGRFNBhjlJwxE (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 18 Sep 2015 17:31:07 -0700 (PDT)
+Received: by wicfx3 with SMTP id fx3so82618719wic.1
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2015 17:31:06 -0700 (PDT)
+Received: from minas-tirith.valinor (111.Red-2-140-5.dynamicIP.rima-tde.net.
+	[2.140.5.111]) by smtp.gmail.com with ESMTPSA id
+	r9sm11317286wjz.35.2015.09.18.17.31.03 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Fri, 18 Sep 2015 17:31:05 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by minas-tirith.valinor (Postfix) with ESMTP id CE67C1814DB
+	for <xfs@oss.sgi.com>; Sat, 19 Sep 2015 02:30:57 +0200 (CEST)
+Date: Sat, 19 Sep 2015 02:30:42 +0200 (CEST)
+From: "Carlos E. R." <carlos.e.r@opensuse.org>
+Subject: Re: What's up with this list?
+In-Reply-To: <20150918225624.GF26895@dastard>
+Message-ID: <alpine.LSU.2.11.1509190219340.24753@minas-tirith.valinor>
+References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+	<541AFB60.5030403@sgi.com>
+	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>
+	<55FAF053.3020405@sgi.com> <55FB06E8.1020203@opensuse.org>
+	<55FC3569.5020801@sgi.com> <20150918225624.GF26895@dastard>
 MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED;
+	BOUNDARY="-1463758550-202773465-1442622657=:24753"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,81 +41,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: XFS mailing list <xfs@oss.sgi.com>
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---1463758550-202773465-1442622657=:24753
+Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8BIT
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
 
-On Thu, Sep 17, 2015 at 09:37:09PM +0000, Earl, Joshua P wrote:
-> Hi Brian,
+
+El 2015-09-19 a las 08:56 +1000, Dave Chinner escribió:
+> On Fri, Sep 18, 2015 at 11:01:45AM -0500, Troy McCorkell wrote:
+>> xfs@oss.sgi.com is an open list and does not require people to be members
+>> of the list to post to it.    The spam filters applied to
+>> xfs@oss.sgi.com are
+>> as aggressive as they can be and still allow for an open list.
+>>
+>> Next option would be to add a moderator to the list.   Adding a moderator
+>> would interfere with non-list members posting to the list.
 >
-> Sorry about the top posting thing... I'm not sure how to control
-> that, is my replying somehow messing with that?
+> Moderation is not an option because of this interference and the
+> burden it puts on the moderator to respond in a timely fashion.
 
-when everthing is backwards
-to read the thread
-it makes it hard
+There is no need to go to extreme measures; I think it is easier than 
+that. I do not have access to the oss.sgi.com logs, but surely the admins 
+can, and find out what were the posts that bounced and for what reason.
 
-And please wrap your text at 72 columns.
+My guess is that they were sent from an invalid domain (no dns), or no 
+reverse dns, or something like that (not content analysis, that comes 
+once the mail is accepted and stored). Surely a filter for those is simple 
+enough to implement, and should not harm other participants.
 
-Thanks, sorry for my ignorance! I didn't understand the nomenclature
-(first time posting)
+- -- 
+Cheers
+        Carlos E. R.
 
-> With good news, I seem to have figured out what was going on.  I
-> had a cron job which would run every 15 minutes which changed the
-> permissions in a directory:
-> chmod -R g+rwx /data/shared/homes/bjanto/*
-> chmod -R g+rwx /data/shared/homes/lanastor/*
-> chgrp -hR ilmn /data/nextseq/*
-> chgrp -hR lab /data/shared/homes/*
+        (from 13.1 x86_64 "Bottle" (Minas Tirith))
 
-So you are modifying a large amount of metadata every 15 minutes,
-and then you have a problem with your 22-disk wide RAID6 array when
-the metadata gets written back. metadata writeback is, by the nature
-of metadata in a filesystem, done in small, isolated IOs that cause
-large RAID5/6 arrays to do an stripe-wide RMW cycle on every IO.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-> > Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await  svctm  %util
-> > sda               0.29     3.61    5.78    3.58     0.10     0.03    28.27     0.05    5.19   2.39   2.24
-> > sdb               1.02     8.66   31.50    3.91     0.33     0.12    26.14     5.94  167.54  27.47  97.25
-> >
-> > Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await  svctm  %util
-> > sda               0.00     1.60    0.00    2.00     0.00     0.01    14.40     0.01    4.30   4.30   0.86
-> > sdb               0.00     0.00    0.00    0.80     0.00     0.03    64.00     6.46 6332.75 1250.00 100.00
-
-That's pretty clear that your hardware raid array is taking over a
-second per IO that requires a RMW cycle. So not a filesystem
-problem...
-
-I appreciate your insight, I honestly had no idea.
-It is unintuitive to me when you make a change to a file
-that the file has an additional 'metadata' write
-which takes a lot longer.
-
-I guess in the future if I make changes to the
-owner/group of files there is just going to be some
-lag associated with it on a raid 5/6 with many disks
-
-
-Thanks!
-
-~josh
-
-
-Cheers,
-
-Dave.
---
-Dave Chinner
-david@fromorbit.com
-________________________________
-
-This email and any accompanying attachments are confidential. The information is intended solely for the use of the individual to whom it is addressed. Any review, disclosure, copying, distribution, or use of this email communication by others is strictly prohibited. If you are not the intended recipient, please notify the sender immediately and delete all copies. Thank you for your cooperation.
+iF4EAREIAAYFAlX8rMEACgkQja8UbcUWM1zCvQD8ChIl3emugmUA3OzXZNlbDb+a
+RHppXrwnmLVMwmhRXXAA/RwwQZn/di5yKZZQFDwhFsEnALkmeycPdKNhGHRXLePN
+=Y84u
+-----END PGP SIGNATURE-----
+---1463758550-202773465-1442622657=:24753
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+---1463758550-202773465-1442622657=:24753--
