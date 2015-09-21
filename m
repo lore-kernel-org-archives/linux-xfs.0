@@ -1,41 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F2E657F37
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 05:03:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C28F48F8040
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:03:28 -0700 (PDT)
-Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com
-	[209.85.212.182]) by cuda.sgi.com with ESMTP id
-	rV8kkui3ftSqy4ze (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:03:19 -0700 (PDT)
-Received: by wicge5 with SMTP id ge5so108209994wic.0
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:03:18 -0700 (PDT)
-Received: from minas-tirith.valinor (221.Red-2-140-92.dynamicIP.rima-tde.net.
-	[2.140.92.221]) by smtp.gmail.com with ESMTPSA id
-	cx3sm23255468wjc.27.2015.09.21.03.03.15 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 21 Sep 2015 03:03:17 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id 927A518286E
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 12:03:08 +0200 (CEST)
-Date: Mon, 21 Sep 2015 12:02:58 +0200 (CEST)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: Re: What's up with this list?
-In-Reply-To: <alpine.LSU.2.11.1509191346220.24753@minas-tirith.valinor>
-Message-ID: <alpine.LSU.2.11.1509211158510.24753@minas-tirith.valinor>
-References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
-	<541AFB60.5030403@sgi.com>
-	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>
-	<55FAF053.3020405@sgi.com> <55FB06E8.1020203@opensuse.org>
-	<55FC3569.5020801@sgi.com> <20150918225624.GF26895@dastard>
-	<alpine.LSU.2.11.1509190219340.24753@minas-tirith.valinor>
-	<alpine.LSU.2.11.1509191346220.24753@minas-tirith.valinor>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463758550-1540614313-1442829649=:24753"
-Content-ID: <alpine.LSU.2.11.1509211201120.24753@minas-tirith.valinor>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 45A457F37
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 06:10:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 36E87304032
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 04:10:28 -0700 (PDT)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id 8CVRXQKIoHhd5SCC (version=TLSv1
+	cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 04:10:24 -0700 (PDT)
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: [PATCH] mm,
+	vmscan: Warn about possible deadlock at shirink_inactive_list
+Date: Mon, 21 Sep 2015 20:09:54 +0900
+Message-Id: <1442833794-23117-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,77 +22,266 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: david@fromorbit.com
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-mm@kvack.org, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This is a difficult-to-trigger silent hang up bug.
 
----1463758550-1540614313-1442829649=:24753
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-Content-ID: <alpine.LSU.2.11.1509211201121.24753@minas-tirith.valinor>
+The kswapd is allowed to bypass too_many_isolated() check in
+shrink_inactive_list(). But the kswapd can be blocked by locks in
+shrink_page_list() in shrink_inactive_list(). If the task which is
+blocking the kswapd is trying to allocate memory with the locks held,
+it forms memory reclaim deadlock.
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+----------
+[  142.870301] kswapd0         D ffff88007fcd5b80     0    51      2 0x00000000
+[  142.871941]  ffff88007c98f660 0000000000000046 ffff88007cde4c80 ffff88007c990000
+[  142.873772]  ffff880035d08b40 ffff880035d08b58 ffff880079e4a828 ffff88007c98f890
+[  142.875544]  ffff88007c98f678 ffffffff81632c68 ffff88007cde4c80 ffff88007c98f6d8
+[  142.877338] Call Trace:
+[  142.878220]  [<ffffffff81632c68>] schedule+0x38/0x90
+[  142.879477]  [<ffffffff81636163>] rwsem_down_read_failed+0xd3/0x140
+[  142.880937]  [<ffffffff81328314>] call_rwsem_down_read_failed+0x14/0x30
+[  142.882595]  [<ffffffff81635b12>] ? down_read+0x12/0x20
+[  142.883882]  [<ffffffff8126488b>] xfs_log_commit_cil+0x5b/0x460
+[  142.885326]  [<ffffffff8125f67b>] __xfs_trans_commit+0x10b/0x1f0
+[  142.886756]  [<ffffffff8125f9eb>] xfs_trans_commit+0xb/0x10
+[  142.888085]  [<ffffffff81251505>] xfs_iomap_write_allocate+0x165/0x320
+[  142.889657]  [<ffffffff8123f4aa>] xfs_map_blocks+0x15a/0x170
+[  142.891002]  [<ffffffff8124045b>] xfs_vm_writepage+0x18b/0x5a0
+[  142.892372]  [<ffffffff811295bc>] pageout.isra.42+0x18c/0x250
+[  142.893813]  [<ffffffff8112a720>] shrink_page_list+0x650/0xa10
+[  142.895182]  [<ffffffff8112b1f2>] shrink_inactive_list+0x1f2/0x560
+[  142.896606]  [<ffffffff8112bedf>] shrink_lruvec+0x59f/0x760
+[  142.898037]  [<ffffffff8112c146>] shrink_zone+0xa6/0x2d0
+[  142.899320]  [<ffffffff8112d162>] kswapd+0x4c2/0x8e0
+[  142.900545]  [<ffffffff8112cca0>] ? mem_cgroup_shrink_node_zone+0xe0/0xe0
+[  142.902152]  [<ffffffff81086fb3>] kthread+0xd3/0xf0
+[  142.903381]  [<ffffffff81086ee0>] ? kthread_create_on_node+0x1a0/0x1a0
+[  142.904919]  [<ffffffff81637b9f>] ret_from_fork+0x3f/0x70
+[  142.906237]  [<ffffffff81086ee0>] ? kthread_create_on_node+0x1a0/0x1a0
+(...snipped...)
+[  148.995189] a.out           D ffffffff813360c7     0  7821   7788 0x00000080
+[  148.996854]  ffff88007c6b73d8 0000000000000086 ffff880078e7f2c0 ffff88007c6b8000
+[  148.998583]  ffff88007c6b7410 ffff88007fc8dfc0 00000000fffd94f9 0000000000000002
+[  149.000560]  ffff88007c6b73f0 ffffffff81632c68 ffff88007fc8dfc0 ffff88007c6b7470
+[  149.002415] Call Trace:
+[  149.003285]  [<ffffffff81632c68>] schedule+0x38/0x90
+[  149.004624]  [<ffffffff816366e2>] schedule_timeout+0x122/0x1c0
+[  149.006003]  [<ffffffff8108fc63>] ? preempt_count_add+0x43/0x90
+[  149.007412]  [<ffffffff810c81b0>] ? cascade+0x90/0x90
+[  149.008704]  [<ffffffff81632291>] io_schedule_timeout+0xa1/0x110
+[  149.010109]  [<ffffffff811359bd>] congestion_wait+0x7d/0xd0
+[  149.011536]  [<ffffffff810a64a0>] ? wait_woken+0x80/0x80
+[  149.012891]  [<ffffffff8112b519>] shrink_inactive_list+0x519/0x560
+[  149.014327]  [<ffffffff8109aa6e>] ? check_preempt_wakeup+0x10e/0x1f0
+[  149.015867]  [<ffffffff8112bedf>] shrink_lruvec+0x59f/0x760
+[  149.017340]  [<ffffffff8117bb4f>] ? mem_cgroup_iter+0xef/0x4e0
+[  149.018742]  [<ffffffff8112c146>] shrink_zone+0xa6/0x2d0
+[  149.020150]  [<ffffffff8112c6e4>] do_try_to_free_pages+0x164/0x420
+[  149.021605]  [<ffffffff8112ca34>] try_to_free_pages+0x94/0xc0
+[  149.022968]  [<ffffffff8112101b>] __alloc_pages_nodemask+0x4fb/0x930
+[  149.024476]  [<ffffffff811626bc>] alloc_pages_current+0x8c/0x100
+[  149.025883]  [<ffffffff81169b68>] new_slab+0x458/0x4d0
+[  149.027209]  [<ffffffff8116bdbe>] ___slab_alloc+0x49e/0x610
+[  149.028580]  [<ffffffff81260014>] ? kmem_alloc+0x74/0xe0
+[  149.029864]  [<ffffffff81099548>] ? update_curr+0x58/0xe0
+[  149.031327]  [<ffffffff8109969d>] ? update_cfs_shares+0xad/0xf0
+[  149.032808]  [<ffffffff81099af9>] ? dequeue_entity+0x1e9/0x800
+[  149.034301]  [<ffffffff811889be>] __slab_alloc.isra.67+0x53/0x6f
+[  149.035780]  [<ffffffff81260014>] ? kmem_alloc+0x74/0xe0
+[  149.037076]  [<ffffffff81260014>] ? kmem_alloc+0x74/0xe0
+[  149.038344]  [<ffffffff8116c23d>] __kmalloc+0x14d/0x1a0
+[  149.039677]  [<ffffffff81260014>] kmem_alloc+0x74/0xe0
+[  149.040940]  [<ffffffff81264b82>] xfs_log_commit_cil+0x352/0x460
+[  149.042321]  [<ffffffff8125f67b>] __xfs_trans_commit+0x10b/0x1f0
+[  149.043733]  [<ffffffff8125f9eb>] xfs_trans_commit+0xb/0x10
+[  149.045065]  [<ffffffff81251b9f>] xfs_vn_update_time+0xdf/0x130
+[  149.046430]  [<ffffffff811a4768>] file_update_time+0xb8/0x110
+[  149.047833]  [<ffffffff81249cde>] xfs_file_aio_write_checks+0x16e/0x1c0
+[  149.049386]  [<ffffffff8124a089>] xfs_file_buffered_aio_write+0x79/0x1f0
+[  149.051031]  [<ffffffff81636fd5>] ? _raw_spin_lock_irqsave+0x25/0x50
+[  149.052581]  [<ffffffff8163709f>] ? _raw_spin_unlock_irqrestore+0x1f/0x40
+[  149.054084]  [<ffffffff8124a274>] xfs_file_write_iter+0x74/0x110
+[  149.055729]  [<ffffffff8118ada7>] __vfs_write+0xc7/0x100
+[  149.057023]  [<ffffffff8118b574>] vfs_write+0xa4/0x190
+[  149.058330]  [<ffffffff8118c200>] SyS_write+0x50/0xc0
+[  149.059553]  [<ffffffff811b7c78>] ? do_fsync+0x38/0x60
+[  149.060811]  [<ffffffff8163782e>] entry_SYSCALL_64_fastpath+0x12/0x71
+(...snipped...)
+[  264.199092] kswapd0         D ffff88007fcd5b80     0    51      2 0x00000000
+[  264.200724]  ffff88007c98f660 0000000000000046 ffff88007cde4c80 ffff88007c990000
+[  264.202469]  ffff880035d08b40 ffff880035d08b58 ffff880079e4a828 ffff88007c98f890
+[  264.204233]  ffff88007c98f678 ffffffff81632c68 ffff88007cde4c80 ffff88007c98f6d8
+[  264.206173] Call Trace:
+[  264.207202]  [<ffffffff81632c68>] schedule+0x38/0x90
+[  264.208536]  [<ffffffff81636163>] rwsem_down_read_failed+0xd3/0x140
+[  264.210044]  [<ffffffff81328314>] call_rwsem_down_read_failed+0x14/0x30
+[  264.211602]  [<ffffffff81635b12>] ? down_read+0x12/0x20
+[  264.212929]  [<ffffffff8126488b>] xfs_log_commit_cil+0x5b/0x460
+[  264.214369]  [<ffffffff8125f67b>] __xfs_trans_commit+0x10b/0x1f0
+[  264.215820]  [<ffffffff8125f9eb>] xfs_trans_commit+0xb/0x10
+[  264.217193]  [<ffffffff81251505>] xfs_iomap_write_allocate+0x165/0x320
+[  264.218721]  [<ffffffff8123f4aa>] xfs_map_blocks+0x15a/0x170
+[  264.220109]  [<ffffffff8124045b>] xfs_vm_writepage+0x18b/0x5a0
+[  264.221586]  [<ffffffff811295bc>] pageout.isra.42+0x18c/0x250
+[  264.222989]  [<ffffffff8112a720>] shrink_page_list+0x650/0xa10
+[  264.224404]  [<ffffffff8112b1f2>] shrink_inactive_list+0x1f2/0x560
+[  264.225876]  [<ffffffff8112bedf>] shrink_lruvec+0x59f/0x760
+[  264.227248]  [<ffffffff8112c146>] shrink_zone+0xa6/0x2d0
+[  264.228573]  [<ffffffff8112d162>] kswapd+0x4c2/0x8e0
+[  264.229840]  [<ffffffff8112cca0>] ? mem_cgroup_shrink_node_zone+0xe0/0xe0
+[  264.231407]  [<ffffffff81086fb3>] kthread+0xd3/0xf0
+[  264.232662]  [<ffffffff81086ee0>] ? kthread_create_on_node+0x1a0/0x1a0
+[  264.234185]  [<ffffffff81637b9f>] ret_from_fork+0x3f/0x70
+[  264.235527]  [<ffffffff81086ee0>] ? kthread_create_on_node+0x1a0/0x1a0
+(...snipped...)
+[  270.339774] a.out           D ffffffff813360c7     0  7821   7788 0x00000080
+[  270.341391]  ffff88007c6b73d8 0000000000000086 ffff880078e7f2c0 ffff88007c6b8000
+[  270.343114]  ffff88007c6b7410 ffff88007fc4dfc0 00000000ffff8b29 0000000000000002
+[  270.344859]  ffff88007c6b73f0 ffffffff81632c68 ffff88007fc4dfc0 ffff88007c6b7470
+[  270.346670] Call Trace:
+[  270.347608]  [<ffffffff81632c68>] schedule+0x38/0x90
+[  270.348929]  [<ffffffff816366e2>] schedule_timeout+0x122/0x1c0
+[  270.350354]  [<ffffffff8108fc63>] ? preempt_count_add+0x43/0x90
+[  270.351790]  [<ffffffff810c81b0>] ? cascade+0x90/0x90
+[  270.353106]  [<ffffffff81632291>] io_schedule_timeout+0xa1/0x110
+[  270.354558]  [<ffffffff811359bd>] congestion_wait+0x7d/0xd0
+[  270.355958]  [<ffffffff810a64a0>] ? wait_woken+0x80/0x80
+[  270.357298]  [<ffffffff8112b519>] shrink_inactive_list+0x519/0x560
+[  270.358779]  [<ffffffff8109aa6e>] ? check_preempt_wakeup+0x10e/0x1f0
+[  270.360307]  [<ffffffff8112bedf>] shrink_lruvec+0x59f/0x760
+[  270.361687]  [<ffffffff8117bb4f>] ? mem_cgroup_iter+0xef/0x4e0
+[  270.363147]  [<ffffffff8112c146>] shrink_zone+0xa6/0x2d0
+[  270.364462]  [<ffffffff8112c6e4>] do_try_to_free_pages+0x164/0x420
+[  270.365898]  [<ffffffff8112ca34>] try_to_free_pages+0x94/0xc0
+[  270.367261]  [<ffffffff8112101b>] __alloc_pages_nodemask+0x4fb/0x930
+[  270.368744]  [<ffffffff811626bc>] alloc_pages_current+0x8c/0x100
+[  270.370151]  [<ffffffff81169b68>] new_slab+0x458/0x4d0
+[  270.371420]  [<ffffffff8116bdbe>] ___slab_alloc+0x49e/0x610
+[  270.372769]  [<ffffffff81260014>] ? kmem_alloc+0x74/0xe0
+[  270.374053]  [<ffffffff81099548>] ? update_curr+0x58/0xe0
+[  270.375351]  [<ffffffff8109969d>] ? update_cfs_shares+0xad/0xf0
+[  270.376748]  [<ffffffff81099af9>] ? dequeue_entity+0x1e9/0x800
+[  270.378200]  [<ffffffff811889be>] __slab_alloc.isra.67+0x53/0x6f
+[  270.379604]  [<ffffffff81260014>] ? kmem_alloc+0x74/0xe0
+[  270.380879]  [<ffffffff81260014>] ? kmem_alloc+0x74/0xe0
+[  270.382148]  [<ffffffff8116c23d>] __kmalloc+0x14d/0x1a0
+[  270.383424]  [<ffffffff81260014>] kmem_alloc+0x74/0xe0
+[  270.384668]  [<ffffffff81264b82>] xfs_log_commit_cil+0x352/0x460
+[  270.386049]  [<ffffffff8125f67b>] __xfs_trans_commit+0x10b/0x1f0
+[  270.387449]  [<ffffffff8125f9eb>] xfs_trans_commit+0xb/0x10
+[  270.388761]  [<ffffffff81251b9f>] xfs_vn_update_time+0xdf/0x130
+[  270.390126]  [<ffffffff811a4768>] file_update_time+0xb8/0x110
+[  270.391484]  [<ffffffff81249cde>] xfs_file_aio_write_checks+0x16e/0x1c0
+[  270.392962]  [<ffffffff8124a089>] xfs_file_buffered_aio_write+0x79/0x1f0
+[  270.394728]  [<ffffffff81636fd5>] ? _raw_spin_lock_irqsave+0x25/0x50
+[  270.396218]  [<ffffffff8163709f>] ? _raw_spin_unlock_irqrestore+0x1f/0x40
+[  270.397769]  [<ffffffff8124a274>] xfs_file_write_iter+0x74/0x110
+[  270.399194]  [<ffffffff8118ada7>] __vfs_write+0xc7/0x100
+[  270.400507]  [<ffffffff8118b574>] vfs_write+0xa4/0x190
+[  270.401788]  [<ffffffff8118c200>] SyS_write+0x50/0xc0
+[  270.403048]  [<ffffffff811b7c78>] ? do_fsync+0x38/0x60
+[  270.404324]  [<ffffffff8163782e>] entry_SYSCALL_64_fastpath+0x12/0x71
+----------
 
-Content-ID: <alpine.LSU.2.11.1509211201120.24753@minas-tirith.valinor>
+While OOM-killer deadlock shows OOM-killer messages and CPU usage remains
+100%, this hang up shows no kernel messages and CPU usage remains 0% as if
+the system is completely idle.
 
+This patch shows progress of shrinking inactive list in order to assist
+warning about possible deadlock. So far I haven't succeeded to reproduce
+this bug after applying this patch; excuse me for output messages example
+is not available.
 
-El 2015-09-19 a las 13:52 +0200, Carlos E. R. escribió:
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+ mm/vmscan.c | 45 +++++++++++++++++++++++++++++++--------------
+ 1 file changed, 31 insertions(+), 14 deletions(-)
 
->   To re-enable your membership, you can simply respond to this message
->   (leaving the Subject: line intact), or visit the confirmation page at
->
->
-> THAT is the problem I'm having. The spam I get I can filter out, it is not
-> that bad.
-
-See how frequent it is:
-
-X   4434 14-08-31 16:20 xfs-request@oss.sgi.com  (3931)   confirm c706bfb352b42c74758b652ef1378b81002b724b 
-X   4769 14-09-18 01:53 xfs-request@oss.sgi.com  (4169)   confirm e22de168da621e139335f532773c160ba9e26da9 
-X   5291 14-10-17 11:28 xfs-request@oss.sgi.com  (4169)   confirm fd7fd355f3c9235210d1db382713e95e29760dd5 
-X   5628 14-11-06 06:46 xfs-request@oss.sgi.com  (4165)   confirm 61426741797fd5050e2f1f55d0dc5260cd4f9684 
-X   6196 14-12-27 05:42 xfs-request@oss.sgi.com  (4166)   confirm 8a23e93612ea5b3287ab1b47dfeeb40ff96c6db7 
-X   6787 15-02-10 05:20 xfs-request@oss.sgi.com  (3733)   confirm 8417559808c8eee163d93343717004747a589fe9 
-X   7282 15-03-15 22:13 xfs-request@oss.sgi.com  (3733)   confirm 5f12062a2ad09d461a99e934af624b776abb64ae 
-X   7529 15-03-28 13:29 xfs-request@oss.sgi.com  (3735)   confirm 5cadd0c89284d0ec3e6e1dbf4e26d7717eb3770c 
-X   8062 15-05-14 04:35 xfs-request@oss.sgi.com  (4224)   confirm 0d8739847c3b8c11df497bd57e4f39831a110fe4 
-X   8100 15-05-25 09:57 xfs-request@oss.sgi.com  (4224)   confirm b0967d8558a96e20601b3259c8cb512f61f73212 
-X   8260 15-06-06 22:02 xfs-request@oss.sgi.com  (4221)   confirm 1f01a2b717a50d6df4fdb37eec5628bd645e105b 
-X   8430 15-06-20 08:43 xfs-request@oss.sgi.com  (4223)   confirm 2d9b43b9bf7db276432ef4e527dbcd81ed6b3c12 
-X   8556 15-06-30 11:44 xfs-request@oss.sgi.com  (3736)   confirm 4953159bc1315891147b0b3d0e3a34adaeccff34 
-X   8719 15-07-16 09:00 xfs-request@oss.sgi.com  (3735)   confirm 72781f7c7177a3fd5e21d3f487bae5d42082abfe 
-X   8747 15-07-23 10:04 xfs-request@oss.sgi.com  (3736)   confirm b11f194b6da57b46a62a13ae185bbc4677fd9120 
-X   8885 15-08-03 10:36 xfs-request@oss.sgi.com  (4220)   confirm 94cf2c9ffd5f48909d3aa5d0159d310756ae8a14 
-X   9077 15-08-12 10:03 xfs-request@oss.sgi.com  (4223)   confirm 12ee9b4720921c68209e95255fbe1e130444c4b6 
-X   9311 15-08-23 10:31 xfs-request@oss.sgi.com  (4223)   confirm fd0b55cf93d7323c177de55f7a981bf13c7f699b 
-X   9635 15-09-04 10:55 xfs-request@oss.sgi.com  (4222)   confirm bd1e72efe20cf78e76a605db5d0a7c7de0ab3318 
-X   9854 15-09-16 01:08 xfs-request@oss.sgi.com  (4225)   confirm c107ce18b6e885bcc572a65cd7dc73ecba7334dc
-
-- -- 
-Cheers
-        Carlos E. R.
-
-        (from 13.1 x86_64 "Bottle" (Minas Tirith))
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iF4EAREIAAYFAlX/1dwACgkQja8UbcUWM1xm3QD+Im7KHmJkfmrTaI+E86p61vy2
-tAhu1CaM8KuL1BMyzvYA/iNM+nthggpzvu5GGkb0rEf+Cy33ypPa/ukbDXh+fDsR
-=RLEU
------END PGP SIGNATURE-----
----1463758550-1540614313-1442829649=:24753
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index db5339d..0464537 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1476,20 +1476,12 @@ int isolate_lru_page(struct page *page)
+ 	return ret;
+ }
+ 
+-static int __too_many_isolated(struct zone *zone, int file,
+-			       struct scan_control *sc, int safe)
++static inline unsigned long inactive_pages(struct zone *zone, int file,
++					   struct scan_control *sc, int safe)
+ {
+-	unsigned long inactive, isolated;
+-
+-	if (safe) {
+-		inactive = zone_page_state_snapshot(zone,
+-				NR_INACTIVE_ANON + 2 * file);
+-		isolated = zone_page_state_snapshot(zone,
+-				NR_ISOLATED_ANON + file);
+-	} else {
+-		inactive = zone_page_state(zone, NR_INACTIVE_ANON + 2 * file);
+-		isolated = zone_page_state(zone, NR_ISOLATED_ANON + file);
+-	}
++	unsigned long inactive = safe ?
++		zone_page_state_snapshot(zone, NR_INACTIVE_ANON + 2 * file) :
++		zone_page_state(zone, NR_INACTIVE_ANON + 2 * file);
+ 
+ 	/*
+ 	 * GFP_NOIO/GFP_NOFS callers are allowed to isolate more pages, so they
+@@ -1498,8 +1490,21 @@ static int __too_many_isolated(struct zone *zone, int file,
+ 	 */
+ 	if ((sc->gfp_mask & GFP_IOFS) == GFP_IOFS)
+ 		inactive >>= 3;
++	return inactive;
++}
+ 
+-	return isolated > inactive;
++static inline unsigned long isolated_pages(struct zone *zone, int file,
++					   int safe)
++{
++	return safe ? zone_page_state_snapshot(zone, NR_ISOLATED_ANON + file) :
++		zone_page_state(zone, NR_ISOLATED_ANON + file);
++}
++
++static int __too_many_isolated(struct zone *zone, int file,
++			       struct scan_control *sc, int safe)
++{
++	return isolated_pages(zone, file, safe) >
++		inactive_pages(zone, file, sc, safe);
+ }
+ 
+ /*
+@@ -1619,8 +1624,20 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	int file = is_file_lru(lru);
+ 	struct zone *zone = lruvec_zone(lruvec);
+ 	struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
++	unsigned long start = jiffies;
++	unsigned long prev = start + 30 * HZ;
+ 
+ 	while (unlikely(too_many_isolated(zone, file, sc))) {
++		unsigned long now = jiffies;
++
++		if (time_after(now, prev)) {
++			pr_warn("vmscan: %s(%u) is waiting for %lu seconds at %s (mode:0x%x,isolated:%lu,inactive:%lu)\n",
++				current->comm, current->pid, (now - start) / HZ,
++				__func__, sc->gfp_mask,
++				isolated_pages(zone, file, 1),
++				inactive_pages(zone, file, sc, 1));
++			prev = now + 30 * HZ;
++		}
+ 		congestion_wait(BLK_RW_ASYNC, HZ/10);
+ 
+ 		/* We are about to die and free our memory. Return now. */
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
----1463758550-1540614313-1442829649=:24753--
