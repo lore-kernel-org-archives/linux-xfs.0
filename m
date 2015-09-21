@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C67D57F37
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 17:52:49 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 474877F3F
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 17:56:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B26248F804C
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 15:52:49 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	w0N5aSTZnIRWzgzv for <xfs@oss.sgi.com>;
-	Mon, 21 Sep 2015 15:52:46 -0700 (PDT)
-Date: Tue, 22 Sep 2015 08:52:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests, bad generic tests 009 and 308
-Message-ID: <20150921225244.GD19114@dastard>
-References: <55FC3E0E.9060506@nomovok.com> <20150918224412.GE26895@dastard>
-	<55FFE665.7040004@nomovok.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55FFE665.7040004@nomovok.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22B94304053
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 15:56:58 -0700 (PDT)
+Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com
+	[66.111.4.25]) by cuda.sgi.com with ESMTP id EOQBkFF1OURKLUUL
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 21 Sep 2015 15:56:56 -0700 (PDT)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
+	by mailout.nyi.internal (Postfix) with ESMTP id BAB5620A41
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 18:56:55 -0400 (EDT)
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Subject: Re: [PATCH] mkfs.xfs: add [-U uuid] option
+From: Mika Eloranta <mika.eloranta@ohmu.fi>
+In-Reply-To: <20150921221839.GC19114@dastard>
+Date: Tue, 22 Sep 2015 01:56:53 +0300
+Message-Id: <2640913C-6C95-4128-9055-B155AECA0206@ohmu.fi>
+References: <1442855060-38259-1-git-send-email-mel@ohmu.fi>
+	<20150921221839.GC19114@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,150 +29,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Angelo Dureghello <angelo.dureghello@nomovok.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Sep 21, 2015 at 01:13:41PM +0200, Angelo Dureghello wrote:
-> Hi Dave,
-> 
-> many thanks for the support. Sorry for the double mail, after
-> first registering mails was not accepted, so i re-registered
-> with a company mail.
-> 
-> 
-> On 19/09/2015 00:44, Dave Chinner wrote:
-> >On Fri, Sep 18, 2015 at 06:38:38PM +0200, Angelo Dureghello wrote:
-> >>Hi all,
-> >>
-> >>working on arm (32bit arch), kernel 4.1.6.
-> >Is this a new platform?
-> >
-> >Also, we need to know what compiler you are using, because we know
-> >that certain versions of gcc miscompile XFS kernel code on arm
-> >(4.6, 4.7 and certain versions of 4.8 are suspect) due to a
-> >combination of compiler mis-optimisations and kernel bugs in the
-> >arm 64 bit division asm implementation.
-> >
-> >As such, it would be worthwhile trying gcc-4.9 and a 4.3-rc1 kernel
-> >to see if the problems still occur.
-> 
-> I am using actually gcc-linaro-4.9-2015.05-x86_64_arm-linux-gnueabihf
-
-So gcc-4.9 patched with a bunch of stuff from linaro and built as a
-cross compiler from x86-64 to 32 bit arm? ISTR we had a bunch of
-different compiler problems at one point that only showed up in
-kernels build with a x86-64 to arm cross-compiler.  In case you
-haven't guessed, XFS has a history of being bitten by ARM compiler
-problems. There's been a lot more problems in the past couple of
-years than the historical trend, though.
-
-As it is, I highly recommend that you try a current 4.3 kernel, as
-there are several code fixes in the XFS kernel code that work around
-compiler issues we know about. AFAIA, the do_div() asm bug that
-trips recent gcc optimisations isn't in the upstream kernel yet, but
-that can be worked around by setting CONFIG_CC_OPTIMIZE_FOR_SIZE=y
-in your build.
-
-> >>generic/009    [  842.949643] run fstests generic/009 at 2015-09-18
-> >>15:29:36
-> >>  - output mismatch (see
-> >>/home/angelo/xfstests/results//generic/009.out.bad)
-> >>     --- tests/generic/009.out    2015-09-17 10:54:06.689071257 +0000
-> >>     +++ /home/angelo/xfstests/results//generic/009.out.bad
-> >>2015-09-18 15:29:41.412784177 +0000
-> >>     @@ -1,79 +1,45 @@
-> >>      QA output created by 009
-> >>          1. into a hole
-> >>     -0: [0..7]: hole
-> >>     -1: [8..23]: unwritten
-> >>     -2: [24..39]: hole
-> >>     +0: [0..39]: hole
-> >>      daa100df6e6711906b61c9ab5aa16032
-> >>
-> >>also some other tests are giving the same bad notices.
-> >Can you attach the entire
-> >/home/angelo/xfstests/results//generic/009.out.bad file? I'm not
-> >sure which of the tests this output comes from, so I need to
-> >confirm which specific operations are resulting in errors.
-> Sure, i completed the whole generic + shared + xfs tests.
-> In total i have 38 errors. And trying now one by one to understand
-> the reason.
-> I attached the 009 output.
-> 
-> >>-tests/generic/308
-> >>------------------
-....
-> I have recent git version of xfstests, but generic/308 shows
-> 
-> #! /bin/bash
-> # FS QA Test No. 308
-> #
-> # Regression test for commit:
-> # f17722f ext4: Fix max file size and logical block counting of
-> extent format file
-
-More that one filesystem had problems with maximum file sizes on 32
-bit systems. Compare the contents of the test; don't stop reading
-because the summary of the test makes you think the rest of the test
-is unrelated to the problem at hand.
-
-> I have a 16MB partition, and wondering why xfs allows from test 308
-> to create a 16TB file.
-> 
-> -rw------- 1 root root  17592186044415 Sep 18 09:40 testfile.308
-
-https://en.wikipedia.org/wiki/Sparse_file
-
-> QA output created by 009
-> 	1. into a hole
-> 0: [0..39]: hole
-> daa100df6e6711906b61c9ab5aa16032
-> 	2. into allocated space
-> cc58a7417c2d7763adc45b6fcd3fa024
-> 	3. into unwritten space
-> daa100df6e6711906b61c9ab5aa16032
-
-I don't need to look any further to see that something is badly
-wrong here. This is telling me that no extents are being allocated
-at all, which indicates either fiemap is broken, awk/sed is
-broken or misbehaving (and hence mangling the output) or something
-deep in the filesystem code is fundamentally broken in some
-strange, silent way.
-
-Can you create an xfs filesystem on your scratch device, and
-manually run this command and post the output:
-
-# mkfs.xfs -V
-# mkfs.xfs <dev>
-# mount <dev> /mnt/xfs
-# xfs_io -f -c "pwrite 0 64k" -c sync \
-	    -c "bmap -vp" -c "fiemap -v" \
-	    -c "falloc 1024k 256k" -c sync \
-	    -c "pwrite 1088k 64k" -c sync \
-	    -c "bmap -vp" -c "fiemap -v" \
-	    /mnt/xfs/testfile
-
-and attach the entire output?
-
-It would also be good if you can run this command under trace-cmd
-and capture all the XFS events that occur during the test. See
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-for details, and attach the (compressed) report file.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMjIgU2VwIDIwMTUsIGF0IDAxOjE4LCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5j
+b20+IHdyb3RlOgo+IAo+IE9uIE1vbiwgU2VwIDIxLCAyMDE1IGF0IDA4OjA0OjIwUE0gKzAzMDAs
+IE1pa2EgRWxvcmFudGEgd3JvdGU6Cj4+IFRoZSBVVUlEIGNhbiBub3cgYmUgb3B0aW9uYWxseSBz
+cGVjaWZpZWQgZHVyaW5nIGZpbGVzeXN0ZW0KPj4gY3JlYXRpb24uCj4gCj4gV2hpY2ggVVVJRCBh
+cmUgeW91IHdhbnRpbmcgdG8gc2V0IC0gdGhlIG1ldGFkYXRhIHV1aWQgb3IgdGhlIHVzZXIKPiB2
+aXNpYmxlIFVVSUQgbGFiZWw/IE9yIGJvdGg/IENhbiB5b3UgZXhwbGFpbiB0aGUgdXNlIGNhc2Ug
+Zm9yIHRoaXM/Cj4gaS5lLiBJJ20gdHJ5aW5nIHRvIHdvcmsgb3V0IHdoeSBXaHkgZG9lc24ndCBt
+a2ZzLnhmcyArCj4geGZzX2FkbWluIC1VIDx1dWlkPiBkb2Vzbid0IHdvcmsgZm9yIHlvdT8KCkkg
+d2FudCB0byBzZXQgdGhlIHVzZXIgdmlzaWJsZSBVVUlEIChzYW1lIGFzIHhmc19hZG1pbiAtVS8t
+dSkuIFdoZXRoZXIgdGhpcyBpbXBhY3RzIHRoZSAibWV0YWRhdGEgdXVpZOKAnSBvciBub3QsIEkg
+ZG8gbm90IGtub3csIEnigJltIG5vdCBhbiBleHBlcnQgb24gdGhlIFhGUyBpbnRlcm5hbHMsIGp1
+c3QgYSB1c2VyLgpVc2UgY2FzZTogcHJlLWRlZmluZWQgVVVJRCBzZXQgZm9yIHRoZSBmaWxlc3lz
+dGVtIGJ5IGFuIF9leHRlcm5hbCBzeXN0ZW1fIHNvIHRoYXQgYSBkZXRhY2hlZCAobmV0d29yaykg
+ZmlsZXN5c3RlbSBjYW4gbGF0ZXIgYmUgY29ycmVjdGx5IGlkZW50aWZpZWQvdmVyaWZpZWQgYnkg
+aXRzIFVVSUQgKGkuZS4gYnkgdGhlIGNvbnRlbnRzIG9mIHRoZSBmaWxlc3lzdGVtIGluc3RlYWQg
+b2YgbWV0YWRhdGEgb3V0c2lkZSB0aGUgZmlsZXN5c3RlbSkuIEZvciBleGFtcGxlLCBmaXJzdCBj
+cmVhdGluZyBhIGRhdGFiYXNlIHJlY29yZCBmb3IgYSBibG9jayBmaWxlc3lzdGVtIHdpdGggYSBy
+YW5kb20gVVVJRHY0IGFuZCBjcmVhdGluZyB0aGUgYWN0dWFsIGZpbGVzeXN0ZW0gd2l0aCB0aGUg
+c2FtZSBVVUlEIG9ubHkgYWZ0ZXIgdGhhdC4K4oCcbWtmcy5leHQ0IiBhbHJlYWR5IHN1cHBvcnRz
+IHRoaXMgd2l0aCB0aGUgc2FtZSBleGFjdCBpbnZvY2F0aW9uLgoKeGZzX2FkbWluIC1VIDx1dWlk
+PiBkb2VzIG5vdCBzZWVtIHRvIGJlIGFuIG9wdGlvbiBiZWNhdXNlOgoKKiB4ZnNfYWRtaW4gLVUg
+b3B0aW9uIGlzIGdvaW5nIGF3YXk/IGh0dHA6Ly9vc3Muc2dpLmNvbS9waXBlcm1haWwveGZzLzIw
+MTUtQXByaWwvMDQxMjY1Lmh0bWwKKiBPdGhlciBwZW9wbGUgaGF2ZSBpc3N1ZXMgd2l0aCBpdDog
+aHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVnLmNnaT9pZD0xMjMzMjIwCiogSSBn
+ZXQgaW5jb25zaXN0ZW50IGJlaGF2aW9yIHdpdGggaXQ6IGFib3V0IGhhbGYgb2YgdGhlIHRpbWUg
+L2Rldi9kaXNrL2J5LXV1aWQvKiBvciDigJxsc2JsayIgZG8gTk9UIHNlZSB0aGUgY2hhbmdlIChG
+ZWRvcmEgMjIpLgoqIFByZS1hc3NpZ25pbmcgdGhlIFVVSUQgc3RyYWlnaHQgYXdheSBkdXJpbmcg
+dGhlIGZpbGVzeXN0ZW0gY3JlYXRpb24gd2lsbCB3b3JrIGFyb3VuZCBhbnkgY3VycmVudCBvciBm
+dXR1cmUgYnVncyAoZS5nLiBhYm92ZSkgYW5kIGxpbWl0YXRpb25zIHJlZ2FyZGluZyBjaGFuZ2lu
+ZyB0aGUgVVVJRC4KKiBXaGVuIHlvdSBuZWVkIGEgZmlsZXN5c3RlbSB3aXRoIGEgc3BlY2lmaWMg
+VVVJRCwgaXQgaXMgYW4gdW5uZWNlc3NhcnkgZXh0cmEgc3RlcCB0byBmaXJzdCBjcmVhdGUgaXQg
+d2l0aCBhIHJhbmRvbSBVVUlEIGFuZCBvbmx5IGFmdGVyd2FyZHMgc2V0IGl0IHRvIHRoZSBvbmUg
+eW91IG5lZWQuCgo+IFdlIG5lZWQgc29tZSBleHBsYWluYXRpb24gaW4gdGhlIGNvbW1pdCBtZXNz
+YWdlIHNvIHRoYXQgd2hlbiB3ZSBsb29rCj4gYXQgdGhpcyBpbiBhIGNvdXBsZSBvZiB5ZWFycyB0
+aW1lIHdlIGtub3cgd2h5IHdlIGFkZGVkIHRoaXMgdG8KPiBta2Zz4oCmCgpTdXJlLCBJIGNhbiB1
+cGRhdGUgdGhlIGNvbW1pdCBtZXNzYWdlLgoKUGxlYXNlIGxldCBtZSBrbm93IGlmIHlvdSBuZWVk
+IG1vcmUgY2xhcmlmaWNhdGlvbnMsIHRoYW5rcyEKCkNoZWVycywKCgktIE1pa2EKCj4gCj4+IEBA
+IC05NDgsNiArOTQ4LDcgQEAgbWFpbigKPj4gCWJvb2wJCQlmaW5vYnRmbGFnOwo+PiAJaW50CQkJ
+c3Bpbm9kZXM7Cj4+IAo+PiArCXBsYXRmb3JtX3V1aWRfY2xlYXIoJnV1aWQpOwo+PiAJcHJvZ25h
+bWUgPSBiYXNlbmFtZShhcmd2WzBdKTsKPj4gCXNldGxvY2FsZShMQ19BTEwsICIiKTsKPj4gCWJp
+bmR0ZXh0ZG9tYWluKFBBQ0tBR0UsIExPQ0FMRURJUik7Cj4+IEBAIC05OTAsNyArOTkxLDcgQEAg
+bWFpbigKPj4gCXhpLmlzZGlyZWN0ID0gTElCWEZTX0RJUkVDVDsKPj4gCXhpLmlzcmVhZG9ubHkg
+PSBMSUJYRlNfRVhDTFVTSVZFTFk7Cj4+IAo+PiAtCXdoaWxlICgoYyA9IGdldG9wdChhcmdjLCBh
+cmd2LCAiYjpkOmk6bDpMOm06bjpLTnA6cXI6czpDZlYiKSkgIT0gRU9GKSB7Cj4+ICsJd2hpbGUg
+KChjID0gZ2V0b3B0KGFyZ2MsIGFyZ3YsICJiOmQ6aTpsOkw6VTptOm46S05wOnFyOnM6Q2ZWIikp
+ICE9IEVPRikgewo+PiAJCXN3aXRjaCAoYykgewo+PiAJCWNhc2UgJ0MnOgo+PiAJCWNhc2UgJ2Yn
+Ogo+PiBAQCAtMTQ2NSw2ICsxNDY2LDEwIEBAIG1haW4oCj4+IAkJCQlpbGxlZ2FsKG9wdGFyZywg
+IkwiKTsKPj4gCQkJbGFiZWwgPSBvcHRhcmc7Cj4+IAkJCWJyZWFrOwo+PiArCQljYXNlICdVJzoK
+Pj4gKwkJCWlmIChwbGF0Zm9ybV91dWlkX3BhcnNlKG9wdGFyZywgJnV1aWQpKQo+PiArCQkJCWls
+bGVnYWwob3B0YXJnLCAiVSIpOwo+PiArCQkJYnJlYWs7Cj4gCj4gSSdkIHByZWZlciBub3QgdG8g
+aW50cm9kdWNlIG5ldyB0b3AgbGV2ZWwgb3B0aW9ucyBpZiBwb3NzaWJsZSAtIHRoaXMKPiBzZWVt
+cyB0byBmaXQgdW5kZXIgdGhlIC1tIChnbG9iYWwgbWV0YWRhdGEgb3B0aW9ucykgb3B0aW9uIHN1
+Ymdyb3VwCj4gKGkuZS4gLW0gdXVpZD08VVVJRD4pLgo+IAo+PiAJCWNhc2UgJ20nOgo+PiAJCQlw
+ID0gb3B0YXJnOwo+PiAJCQl3aGlsZSAoKnAgIT0gJ1wwJykgewo+PiBAQCAtMjU1MCw3ICsyNTU1
+LDkgQEAgXygic2l6ZSAlcyBzcGVjaWZpZWQgZm9yIGxvZyBzdWJ2b2x1bWUgaXMgdG9vIGxhcmdl
+LCBtYXhpbXVtIGlzICVsbGQgYmxvY2tzXG4iKSwKPj4gCXNicC0+c2JfZGJsb2NrcyA9IGRibG9j
+a3M7Cj4+IAlzYnAtPnNiX3JibG9ja3MgPSBydGJsb2NrczsKPj4gCXNicC0+c2JfcmV4dGVudHMg
+PSBydGV4dGVudHM7Cj4+IC0JcGxhdGZvcm1fdXVpZF9nZW5lcmF0ZSgmdXVpZCk7Cj4+ICsJaWYg
+KHBsYXRmb3JtX3V1aWRfaXNfbnVsbCgmdXVpZCkpIHsKPj4gKwkgICAgcGxhdGZvcm1fdXVpZF9n
+ZW5lcmF0ZSgmdXVpZCk7Cj4+ICsJfQo+IAo+IEp1c3QgZ2VuZXJhdGUgdGhlIHV1aWQgaW5pdGlh
+bGx5IGFuZCB0aGVuIGl0IGdldHMgb3ZlcndyaXR0ZW4gYnkgdGhlCj4gQ0xJIG9wdGlvbiBpZiBp
+dCBpcyBzZXQuIE5vIG5lZWQgZm9yIG51bGwgZGV0ZWN0aW9uIGFuZCBnZW5lcmF0aW9uCj4gaGVy
+ZS4KPiAKPiBDaGVlcnMsCj4gCj4gRGF2ZS4KPiAtLSAKPiBEYXZlIENoaW5uZXIKPiBkYXZpZEBm
+cm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMK
