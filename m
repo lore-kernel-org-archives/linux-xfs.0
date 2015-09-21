@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C2E357F37
-	for <xfs@oss.sgi.com>; Sun, 20 Sep 2015 20:24:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 913D3304032
-	for <xfs@oss.sgi.com>; Sun, 20 Sep 2015 18:24:13 -0700 (PDT)
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id cDeMquz12QU3tL3P (version=TLSv1
-	cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 20 Sep 2015 18:24:11 -0700 (PDT)
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: [PATCH v2] xfs: Print comm name and pid when open-coded __GFP_NOFAIL
-	allocation stucks
-Date: Mon, 21 Sep 2015 10:23:57 +0900
-Message-Id: <1442798637-5941-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
-In-Reply-To: <20150920231858.GY3902@dastard>
-References: <20150920231858.GY3902@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 791F87F37
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 02:03:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E8AA3AC003
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 00:03:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tr7WiUtwzI3eX4Vb (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 00:03:17 -0700 (PDT)
+Date: Mon, 21 Sep 2015 09:03:12 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: What's up with this list?
+Message-ID: <20150921070312.GA2617@redhat.com>
+References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+	<541AFB60.5030403@sgi.com>
+	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>
+	<55FAF053.3020405@sgi.com> <55FB06E8.1020203@opensuse.org>
+	<55FC3569.5020801@sgi.com> <20150918225624.GF26895@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150918225624.GF26895@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,86 +29,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Troy McCorkell <tdm@sgi.com>, carlos.e.r@opensuse.org, xfs@oss.sgi.com
 
-This patch adds comm name and pid to warning messages printed by
-kmem_alloc(), kmem_zone_alloc() and xfs_buf_allocate_memory().
-This will help telling which memory allocations (e.g. kernel worker
-threads, OOM victim tasks, neither) are stalling because these functions
-are passing __GFP_NOWARN which suppresses not only backtrace but comm name
-and pid.
+On Sat, Sep 19, 2015 at 08:56:24AM +1000, Dave Chinner wrote:
+> On Fri, Sep 18, 2015 at 11:01:45AM -0500, Troy McCorkell wrote:
+> > xfs@oss.sgi.com is an open list and does not require people to be members
+> > of the list to post to it.    The spam filters applied to
+> > xfs@oss.sgi.com are
+> > as aggressive as they can be and still allow for an open list.
+> > 
+> > Next option would be to add a moderator to the list.   Adding a moderator
+> > would interfere with non-list members posting to the list.
+> 
+> Moderation is not an option because of this interference and the
+> burden it puts on the moderator to respond in a timely fashion.
+> 
+> If the spam rejection does not improve our next option is to move to
+> the linux-xfs@vger.kernel.org list - the vger infrastructure is not
+> perfect, but it does have better spam rejection than the current
+> filtering on this list.  This may be the best long-term solution to
+> the problem, but it does involve short term pain for everyone.
+> 
 
-  [  135.568662] Out of memory: Kill process 9593 (a.out) score 998 or sacrifice child
-  [  135.570195] Killed process 9593 (a.out) total-vm:4700kB, anon-rss:488kB, file-rss:0kB
-  [  137.473691] XFS: kworker/u16:29(383) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  137.497662] XFS: a.out(8944) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  137.598219] XFS: a.out(9658) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  139.494529] XFS: kworker/u16:29(383) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  139.517196] XFS: a.out(8944) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  139.616396] XFS: a.out(9658) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  141.512753] XFS: kworker/u16:29(383) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  141.531421] XFS: a.out(8944) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
-  [  141.633574] XFS: a.out(9658) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
++1 for that, the pain is not that much, and we've discussed moving xfs list to
+vger.kernel.org for a while, I really don't see a reason to do so, other than
+people needing to update their e-mail addresses and maybe git configurations. To
+relief even more the pain, xfs@sgi, could just forward the e-mails to linux-xfs
+with a InReplyTo modified to linux-xfs even.
 
-(Strictly speaking, we want task_lock()/task_unlock() when reading comm name.)
+Althouh, I'm not sure how feasible is the last part.
 
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Michal Hocko <mhocko@suse.com>
----
- fs/xfs/kmem.c    | 10 ++++++----
- fs/xfs/xfs_buf.c |  3 ++-
- 2 files changed, 8 insertions(+), 5 deletions(-)
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index a7a3a63..735095a 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -55,8 +55,9 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
--		"possible memory allocation deadlock in %s (mode:0x%x)",
--					__func__, lflags);
-+				"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-+				current->comm, current->pid,
-+				__func__, lflags);
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
- }
-@@ -120,8 +121,9 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
--		"possible memory allocation deadlock in %s (mode:0x%x)",
--					__func__, lflags);
-+				"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-+				current->comm, current->pid,
-+				__func__, lflags);
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
- }
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 8ecffb3..86785b5 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -354,7 +354,8 @@ retry:
- 			 */
- 			if (!(++retries % 100))
- 				xfs_err(NULL,
--		"possible memory allocation deadlock in %s (mode:0x%x)",
-+					"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-+					current->comm, current->pid,
- 					__func__, gfp_mask);
- 
- 			XFS_STATS_INC(xb_page_retries);
 -- 
-1.8.3.1
+Carlos
 
 _______________________________________________
 xfs mailing list
