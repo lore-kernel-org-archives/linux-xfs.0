@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 791F87F37
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 02:03:22 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D3A767F37
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:56:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E8AA3AC003
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 00:03:18 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B59158F8049
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 01:56:15 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id tr7WiUtwzI3eX4Vb (version=TLSv1.2
+	cuda.sgi.com with ESMTP id nKdvimWGFVVFlh0D (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 00:03:17 -0700 (PDT)
-Date: Mon, 21 Sep 2015 09:03:12 +0200
+	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 01:56:14 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 36A3224B
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 08:56:14 +0000 (UTC)
+Received: from zion.usersys.redhat.com (vpn-225-125.phx2.redhat.com
+	[10.3.225.125])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8L8uCUv011786
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 04:56:13 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: What's up with this list?
-Message-ID: <20150921070312.GA2617@redhat.com>
-References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
-	<541AFB60.5030403@sgi.com>
-	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>
-	<55FAF053.3020405@sgi.com> <55FB06E8.1020203@opensuse.org>
-	<55FC3569.5020801@sgi.com> <20150918225624.GF26895@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150918225624.GF26895@dastard>
+Subject: [PATCH] xfs_io: Implement inodes64 command
+Date: Mon, 21 Sep 2015 10:56:08 +0200
+Message-Id: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +30,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Troy McCorkell <tdm@sgi.com>, carlos.e.r@opensuse.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Sep 19, 2015 at 08:56:24AM +1000, Dave Chinner wrote:
-> On Fri, Sep 18, 2015 at 11:01:45AM -0500, Troy McCorkell wrote:
-> > xfs@oss.sgi.com is an open list and does not require people to be members
-> > of the list to post to it.    The spam filters applied to
-> > xfs@oss.sgi.com are
-> > as aggressive as they can be and still allow for an open list.
-> > 
-> > Next option would be to add a moderator to the list.   Adding a moderator
-> > would interfere with non-list members posting to the list.
-> 
-> Moderation is not an option because of this interference and the
-> burden it puts on the moderator to respond in a timely fashion.
-> 
-> If the spam rejection does not improve our next option is to move to
-> the linux-xfs@vger.kernel.org list - the vger infrastructure is not
-> perfect, but it does have better spam rejection than the current
-> filtering on this list.  This may be the best long-term solution to
-> the problem, but it does involve short term pain for everyone.
-> 
+Implement an easy way to check a filesystem for the existence of 64bit inodes.
 
-+1 for that, the pain is not that much, and we've discussed moving xfs list to
-vger.kernel.org for a while, I really don't see a reason to do so, other than
-people needing to update their e-mail addresses and maybe git configurations. To
-relief even more the pain, xfs@sgi, could just forward the e-mails to linux-xfs
-with a InReplyTo modified to linux-xfs even.
+Based on XFS_IOC_FSINUMBERS, and starting with a lastip of XFS_MAXINUMBER_32, it
+returns a string saying if there is or there isn't 64bit inodes in the
+filesystem.
 
-Althouh, I'm not sure how feasible is the last part.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ io/open.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+diff --git a/io/open.c b/io/open.c
+index ac5a5e0..b25b09d 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -20,6 +20,7 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "libxfs.h"
+ 
+ #ifndef __O_TMPFILE
+ #if defined __alpha__
+@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
+ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+ static cmdinfo_t extsize_cmd;
++static cmdinfo_t inodes64_cmd;
+ static prid_t prid;
+ static long extsize;
+ 
+@@ -750,6 +752,36 @@ statfs_f(
+ 	return 0;
+ }
+ 
++static int
++inodes64_f(
++	  int			argc,
++	  char			**argv)
++{
++	int			i;
++	__s32			count;
++	__u64			last = XFS_MAXINUMBER_32;
++	xfs_inogrp_t		igroup;
++	xfs_fsop_bulkreq_t	bulkreq;
++
++	bulkreq.lastip = &last;
++	bulkreq.icount = 1;
++	bulkreq.ubuffer = &igroup;
++	bulkreq.ocount = &count;
++
++	if (!xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq)) {
++		if (count > 0) {
++			printf("Filesystem does have 64bit inodes\n");
++			return 0;
++		} else {
++			printf("Filesystem does not have 64bit inodes\n");
++			return 0;
++		}
++	}
++	perror("xfsctl(XFS_IOC_FSINUMBERS)");
++	exitcode = 1;
++	return 0;
++}
++
+ void
+ open_init(void)
+ {
+@@ -815,6 +847,12 @@ open_init(void)
+ 		_("get/set preferred extent size (in bytes) for the open file");
+ 	extsize_cmd.help = extsize_help;
+ 
++	inodes64_cmd.name = "inodes64";
++	inodes64_cmd.cfunc = inodes64_f;
++	inodes64_cmd.flags = CMD_NOMAP_OK;
++	inodes64_cmd.oneline =
++		_("Checks if filesyste contais 64bit inodes");
++
+ 	add_command(&open_cmd);
+ 	add_command(&stat_cmd);
+ 	add_command(&close_cmd);
+@@ -822,4 +860,5 @@ open_init(void)
+ 	add_command(&chproj_cmd);
+ 	add_command(&lsproj_cmd);
+ 	add_command(&extsize_cmd);
++	add_command(&inodes64_cmd);
+ }
 -- 
-Carlos
+2.4.3
 
 _______________________________________________
 xfs mailing list
