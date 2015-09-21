@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8D8607F37
-	for <xfs@oss.sgi.com>; Sun, 20 Sep 2015 20:23:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6A453304032
-	for <xfs@oss.sgi.com>; Sun, 20 Sep 2015 18:23:46 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C2E357F37
+	for <xfs@oss.sgi.com>; Sun, 20 Sep 2015 20:24:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 913D3304032
+	for <xfs@oss.sgi.com>; Sun, 20 Sep 2015 18:24:13 -0700 (PDT)
 Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id hdFU7xUtgdWbORpy (version=TLSv1
+	cuda.sgi.com with ESMTP id cDeMquz12QU3tL3P (version=TLSv1
 	cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 20 Sep 2015 18:23:45 -0700 (PDT)
-Subject: Re: [PATCH 1/2] xfs: Add __GFP_NORETRY and __GFP_NOWARN to open-coded
-	__GFP_NOFAIL allocations
+	<xfs@oss.sgi.com>; Sun, 20 Sep 2015 18:24:11 -0700 (PDT)
 From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <1442732594-4205-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
-	<20150920231146.GX3902@dastard>
-In-Reply-To: <20150920231146.GX3902@dastard>
-Message-Id: <201509211023.GED18760.HOSMFFOFLtJOVQ@I-love.SAKURA.ne.jp>
-Date: Mon, 21 Sep 2015 10:23:37 +0900
-Mime-Version: 1.0
+Subject: [PATCH v2] xfs: Print comm name and pid when open-coded __GFP_NOFAIL
+	allocation stucks
+Date: Mon, 21 Sep 2015 10:23:57 +0900
+Message-Id: <1442798637-5941-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
+In-Reply-To: <20150920231858.GY3902@dastard>
+References: <20150920231858.GY3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +24,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com
-Cc: linux-mm@kvack.org, mhocko@suse.com, xfs@oss.sgi.com
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Sun, Sep 20, 2015 at 04:03:13PM +0900, Tetsuo Handa wrote:
-> > kmem_alloc(), kmem_zone_alloc() and xfs_buf_allocate_memory() are doing
-> > open-coded __GFP_NOFAIL allocations with warning messages as a canary.
-> > But since small !__GFP_NOFAIL allocations retry forever inside memory
-> > allocator unless TIF_MEMDIE is set, the canary does not help even if
-> > allocations are stalling. Thus, this patch adds __GFP_NORETRY so that
-> > we can know possibility of allocation deadlock.
-> > 
-> > If a patchset which makes small !__GFP_NOFAIL !__GFP_FS allocations not
-> > retry inside memory allocator is merged, warning messages by
-> > warn_alloc_failed() will dominate warning messages by the canary
-> > because each thread calls warn_alloc_failed() for approximately
-> > every 2 milliseconds. Thus, this patch also adds __GFP_NOWARN so that
-> > we won't flood kernel logs by these open-coded __GFP_NOFAIL allocations.
-> 
-> Please, at minimum, look at the code you are modifying. __GFP_NOWARN
-> is already set by both kmem_flags_convert() and xb_to_gfp(),
-> precisely for this reason. Any changes to the default gfp flags we
-> use need to be inside those wrappers - that's why they exist.
+This patch adds comm name and pid to warning messages printed by
+kmem_alloc(), kmem_zone_alloc() and xfs_buf_allocate_memory().
+This will help telling which memory allocations (e.g. kernel worker
+threads, OOM victim tasks, neither) are stalling because these functions
+are passing __GFP_NOWARN which suppresses not only backtrace but comm name
+and pid.
 
-Indeed.
+  [  135.568662] Out of memory: Kill process 9593 (a.out) score 998 or sacrifice child
+  [  135.570195] Killed process 9593 (a.out) total-vm:4700kB, anon-rss:488kB, file-rss:0kB
+  [  137.473691] XFS: kworker/u16:29(383) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  137.497662] XFS: a.out(8944) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  137.598219] XFS: a.out(9658) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  139.494529] XFS: kworker/u16:29(383) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  139.517196] XFS: a.out(8944) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  139.616396] XFS: a.out(9658) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  141.512753] XFS: kworker/u16:29(383) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  141.531421] XFS: a.out(8944) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
+  [  141.633574] XFS: a.out(9658) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x1250)
 
-> 
-> Further, xb_to_gfp() may already return just "__GFP_NORETRY |
-> __GFP_NOWARN", so appending them unconditionally is clearly not the
-> best approach.
+(Strictly speaking, we want task_lock()/task_unlock() when reading comm name.)
 
-I see.
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c    | 10 ++++++----
+ fs/xfs/xfs_buf.c |  3 ++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-> 
-> Further, fundamentally changing the allocation behaviour of the
-> filesystem requires some indication of the testing and
-> characterisation of how the change has impacted low memory balance
-> and performance of the filesystem.
-
-Well, I don't have rich environment for evaluating how the change impacts
-low memory balance and performance of the filesystem. Therefore, I cancel
-this patch.
-
-Please reply if you have comments on "[RFC 0/8] Allow GFP_NOFS allocation
-to fail" patchset ( http://marc.info/?l=linux-mm&m=143876830616538 )?
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index a7a3a63..735095a 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -55,8 +55,9 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+-		"possible memory allocation deadlock in %s (mode:0x%x)",
+-					__func__, lflags);
++				"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
++				current->comm, current->pid,
++				__func__, lflags);
+ 		congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 	} while (1);
+ }
+@@ -120,8 +121,9 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+-		"possible memory allocation deadlock in %s (mode:0x%x)",
+-					__func__, lflags);
++				"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
++				current->comm, current->pid,
++				__func__, lflags);
+ 		congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 	} while (1);
+ }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 8ecffb3..86785b5 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -354,7 +354,8 @@ retry:
+ 			 */
+ 			if (!(++retries % 100))
+ 				xfs_err(NULL,
+-		"possible memory allocation deadlock in %s (mode:0x%x)",
++					"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
++					current->comm, current->pid,
+ 					__func__, gfp_mask);
+ 
+ 			XFS_STATS_INC(xb_page_retries);
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
