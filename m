@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 455687F37
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 08:43:13 -0500 (CDT)
-Subject: Re: [PATCH V3] xfsdump: prevent segfault in cb_add_inogrp
-References: <20150924193241.975348815@gulag1.americas.sgi.com>
-	<77EDF3BA.60409@sgi.com> <20150826225601.GG3902@dastard>
-	<55DE4492.90105@sgi.com>
-From: Rich Johnston <rjohnston@sgi.com>
-Message-ID: <5600094B.3090206@sgi.com>
-Date: Mon, 21 Sep 2015 08:42:35 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A1C687F37
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 10:13:58 -0500 (CDT)
+Message-ID: <56001EB2.2000109@sgi.com>
+Date: Mon, 21 Sep 2015 10:13:54 -0500
+From: Troy McCorkell <tdm@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <55DE4492.90105@sgi.com>
+Subject: Re: What's up with this list?
+References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>	<541AFB60.5030403@sgi.com>	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>	<55FAF053.3020405@sgi.com>
+	<55FB06E8.1020203@opensuse.org>	<55FC3569.5020801@sgi.com>
+	<20150918225624.GF26895@dastard>
+In-Reply-To: <20150918225624.GF26895@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +23,49 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: carlos.e.r@opensuse.org
 
-On 08/26/2015 05:58 PM, Rich Johnston wrote:
-> On 08/26/2015 05:56 PM, Dave Chinner wrote:
-...
->> Can't believe I missed this first two times time through - the patch
->> is missing your signed-off-by. Just reply with it, and I'll fix it
->> up on commit. :)
-> Dooh my bad
+On 09/18/2015 05:56 PM, Dave Chinner wrote:
+> On Fri, Sep 18, 2015 at 11:01:45AM -0500, Troy McCorkell wrote:
+>    
+>> xfs@oss.sgi.com is an open list and does not require people to be members
+>> of the list to post to it.    The spam filters applied to
+>> xfs@oss.sgi.com are
+>> as aggressive as they can be and still allow for an open list.
+>>
+>> Next option would be to add a moderator to the list.   Adding a moderator
+>> would interfere with non-list members posting to the list.
+>>      
+> Moderation is not an option because of this interference and the
+> burden it puts on the moderator to respond in a timely fashion.
 >
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
->>
->> Thanks, Rich!
->>
->> Cheers,
->>
->> Dave.
->>
+> If the spam rejection does not improve our next option is to move to
+> the linux-xfs@vger.kernel.org list - the vger infrastructure is not
+> perfect, but it does have better spam rejection than the current
+> filtering on this list.  This may be the best long-term solution to
+> the problem, but it does involve short term pain for everyone.
 >
-Hey Dave,
+> Cheers,
+>
+> Dave.
+>    
 
-Just curious when this patch are going to be committed?
+I understand moderation is not an option.   Just reviewing the options.
 
-Thanks
---Rich
+oss.sgi.com is not a stand alone system when it comes to email.   All 
+emails received
+by oss.sgi.com first pass through the SGI corporate spam filters.    
+Several of the
+old defunct mailing lists on oss.sgi.com have been configured as spam-traps.
+Additional spam filters have been added specifically for oss.sgi.com.
+And yet spam continues to hit the list.
 
-These are also ready to go.
+I'll continue the conversation with the SGI IT group.
 
-[PATCH V4] xfsrestore: fix fs uuid order check for incremental restores
-http://oss.sgi.com/archives/xfs/2015-09/msg00185.html
+Thanks,
+Troy
 
-[PATCH V2] xfsrestore: fix 2GB directory dump limitation for multi-stream
-http://oss.sgi.com/archives/xfs/2015-09/msg00033.html
 
 _______________________________________________
 xfs mailing list
