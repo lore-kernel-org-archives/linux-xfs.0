@@ -1,27 +1,41 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D3A767F37
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:56:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B59158F8049
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 01:56:15 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nKdvimWGFVVFlh0D (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 01:56:14 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 36A3224B
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 08:56:14 +0000 (UTC)
-Received: from zion.usersys.redhat.com (vpn-225-125.phx2.redhat.com
-	[10.3.225.125])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t8L8uCUv011786
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 04:56:13 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs_io: Implement inodes64 command
-Date: Mon, 21 Sep 2015 10:56:08 +0200
-Message-Id: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id F2E657F37
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 05:03:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C28F48F8040
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:03:28 -0700 (PDT)
+Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com
+	[209.85.212.182]) by cuda.sgi.com with ESMTP id
+	rV8kkui3ftSqy4ze (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:03:19 -0700 (PDT)
+Received: by wicge5 with SMTP id ge5so108209994wic.0
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 03:03:18 -0700 (PDT)
+Received: from minas-tirith.valinor (221.Red-2-140-92.dynamicIP.rima-tde.net.
+	[2.140.92.221]) by smtp.gmail.com with ESMTPSA id
+	cx3sm23255468wjc.27.2015.09.21.03.03.15 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Mon, 21 Sep 2015 03:03:17 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by minas-tirith.valinor (Postfix) with ESMTP id 927A518286E
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2015 12:03:08 +0200 (CEST)
+Date: Mon, 21 Sep 2015 12:02:58 +0200 (CEST)
+From: "Carlos E. R." <carlos.e.r@opensuse.org>
+Subject: Re: What's up with this list?
+In-Reply-To: <alpine.LSU.2.11.1509191346220.24753@minas-tirith.valinor>
+Message-ID: <alpine.LSU.2.11.1509211158510.24753@minas-tirith.valinor>
+References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+	<541AFB60.5030403@sgi.com>
+	<alpine.LSU.2.11.1509161436390.25528@minas-tirith.valinor>
+	<55FAF053.3020405@sgi.com> <55FB06E8.1020203@opensuse.org>
+	<55FC3569.5020801@sgi.com> <20150918225624.GF26895@dastard>
+	<alpine.LSU.2.11.1509190219340.24753@minas-tirith.valinor>
+	<alpine.LSU.2.11.1509191346220.24753@minas-tirith.valinor>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED;
+	BOUNDARY="-1463758550-1540614313-1442829649=:24753"
+Content-ID: <alpine.LSU.2.11.1509211201120.24753@minas-tirith.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,104 +44,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: XFS mailing list <xfs@oss.sgi.com>
 
-Implement an easy way to check a filesystem for the existence of 64bit inodes.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Based on XFS_IOC_FSINUMBERS, and starting with a lastip of XFS_MAXINUMBER_32, it
-returns a string saying if there is or there isn't 64bit inodes in the
-filesystem.
+---1463758550-1540614313-1442829649=:24753
+Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8BIT
+Content-ID: <alpine.LSU.2.11.1509211201121.24753@minas-tirith.valinor>
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- io/open.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-diff --git a/io/open.c b/io/open.c
-index ac5a5e0..b25b09d 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -20,6 +20,7 @@
- #include "input.h"
- #include "init.h"
- #include "io.h"
-+#include "libxfs.h"
- 
- #ifndef __O_TMPFILE
- #if defined __alpha__
-@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
- static cmdinfo_t chproj_cmd;
- static cmdinfo_t lsproj_cmd;
- static cmdinfo_t extsize_cmd;
-+static cmdinfo_t inodes64_cmd;
- static prid_t prid;
- static long extsize;
- 
-@@ -750,6 +752,36 @@ statfs_f(
- 	return 0;
- }
- 
-+static int
-+inodes64_f(
-+	  int			argc,
-+	  char			**argv)
-+{
-+	int			i;
-+	__s32			count;
-+	__u64			last = XFS_MAXINUMBER_32;
-+	xfs_inogrp_t		igroup;
-+	xfs_fsop_bulkreq_t	bulkreq;
-+
-+	bulkreq.lastip = &last;
-+	bulkreq.icount = 1;
-+	bulkreq.ubuffer = &igroup;
-+	bulkreq.ocount = &count;
-+
-+	if (!xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq)) {
-+		if (count > 0) {
-+			printf("Filesystem does have 64bit inodes\n");
-+			return 0;
-+		} else {
-+			printf("Filesystem does not have 64bit inodes\n");
-+			return 0;
-+		}
-+	}
-+	perror("xfsctl(XFS_IOC_FSINUMBERS)");
-+	exitcode = 1;
-+	return 0;
-+}
-+
- void
- open_init(void)
- {
-@@ -815,6 +847,12 @@ open_init(void)
- 		_("get/set preferred extent size (in bytes) for the open file");
- 	extsize_cmd.help = extsize_help;
- 
-+	inodes64_cmd.name = "inodes64";
-+	inodes64_cmd.cfunc = inodes64_f;
-+	inodes64_cmd.flags = CMD_NOMAP_OK;
-+	inodes64_cmd.oneline =
-+		_("Checks if filesyste contais 64bit inodes");
-+
- 	add_command(&open_cmd);
- 	add_command(&stat_cmd);
- 	add_command(&close_cmd);
-@@ -822,4 +860,5 @@ open_init(void)
- 	add_command(&chproj_cmd);
- 	add_command(&lsproj_cmd);
- 	add_command(&extsize_cmd);
-+	add_command(&inodes64_cmd);
- }
--- 
-2.4.3
+Content-ID: <alpine.LSU.2.11.1509211201120.24753@minas-tirith.valinor>
+
+
+El 2015-09-19 a las 13:52 +0200, Carlos E. R. escribió:
+
+>   To re-enable your membership, you can simply respond to this message
+>   (leaving the Subject: line intact), or visit the confirmation page at
+>
+>
+> THAT is the problem I'm having. The spam I get I can filter out, it is not
+> that bad.
+
+See how frequent it is:
+
+X   4434 14-08-31 16:20 xfs-request@oss.sgi.com  (3931)   confirm c706bfb352b42c74758b652ef1378b81002b724b 
+X   4769 14-09-18 01:53 xfs-request@oss.sgi.com  (4169)   confirm e22de168da621e139335f532773c160ba9e26da9 
+X   5291 14-10-17 11:28 xfs-request@oss.sgi.com  (4169)   confirm fd7fd355f3c9235210d1db382713e95e29760dd5 
+X   5628 14-11-06 06:46 xfs-request@oss.sgi.com  (4165)   confirm 61426741797fd5050e2f1f55d0dc5260cd4f9684 
+X   6196 14-12-27 05:42 xfs-request@oss.sgi.com  (4166)   confirm 8a23e93612ea5b3287ab1b47dfeeb40ff96c6db7 
+X   6787 15-02-10 05:20 xfs-request@oss.sgi.com  (3733)   confirm 8417559808c8eee163d93343717004747a589fe9 
+X   7282 15-03-15 22:13 xfs-request@oss.sgi.com  (3733)   confirm 5f12062a2ad09d461a99e934af624b776abb64ae 
+X   7529 15-03-28 13:29 xfs-request@oss.sgi.com  (3735)   confirm 5cadd0c89284d0ec3e6e1dbf4e26d7717eb3770c 
+X   8062 15-05-14 04:35 xfs-request@oss.sgi.com  (4224)   confirm 0d8739847c3b8c11df497bd57e4f39831a110fe4 
+X   8100 15-05-25 09:57 xfs-request@oss.sgi.com  (4224)   confirm b0967d8558a96e20601b3259c8cb512f61f73212 
+X   8260 15-06-06 22:02 xfs-request@oss.sgi.com  (4221)   confirm 1f01a2b717a50d6df4fdb37eec5628bd645e105b 
+X   8430 15-06-20 08:43 xfs-request@oss.sgi.com  (4223)   confirm 2d9b43b9bf7db276432ef4e527dbcd81ed6b3c12 
+X   8556 15-06-30 11:44 xfs-request@oss.sgi.com  (3736)   confirm 4953159bc1315891147b0b3d0e3a34adaeccff34 
+X   8719 15-07-16 09:00 xfs-request@oss.sgi.com  (3735)   confirm 72781f7c7177a3fd5e21d3f487bae5d42082abfe 
+X   8747 15-07-23 10:04 xfs-request@oss.sgi.com  (3736)   confirm b11f194b6da57b46a62a13ae185bbc4677fd9120 
+X   8885 15-08-03 10:36 xfs-request@oss.sgi.com  (4220)   confirm 94cf2c9ffd5f48909d3aa5d0159d310756ae8a14 
+X   9077 15-08-12 10:03 xfs-request@oss.sgi.com  (4223)   confirm 12ee9b4720921c68209e95255fbe1e130444c4b6 
+X   9311 15-08-23 10:31 xfs-request@oss.sgi.com  (4223)   confirm fd0b55cf93d7323c177de55f7a981bf13c7f699b 
+X   9635 15-09-04 10:55 xfs-request@oss.sgi.com  (4222)   confirm bd1e72efe20cf78e76a605db5d0a7c7de0ab3318 
+X   9854 15-09-16 01:08 xfs-request@oss.sgi.com  (4225)   confirm c107ce18b6e885bcc572a65cd7dc73ecba7334dc
+
+- -- 
+Cheers
+        Carlos E. R.
+
+        (from 13.1 x86_64 "Bottle" (Minas Tirith))
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iF4EAREIAAYFAlX/1dwACgkQja8UbcUWM1xm3QD+Im7KHmJkfmrTaI+E86p61vy2
+tAhu1CaM8KuL1BMyzvYA/iNM+nthggpzvu5GGkb0rEf+Cy33ypPa/ukbDXh+fDsR
+=RLEU
+-----END PGP SIGNATURE-----
+---1463758550-1540614313-1442829649=:24753
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+---1463758550-1540614313-1442829649=:24753--
