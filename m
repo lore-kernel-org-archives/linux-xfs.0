@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5E587F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 03:06:43 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 121EB7F37
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 03:07:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A52DB8F8033
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:06:40 -0700 (PDT)
-Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com
-	[66.111.4.25]) by cuda.sgi.com with ESMTP id XBRG9lfFOkLsAX1G
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 22 Sep 2015 01:06:38 -0700 (PDT)
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-	by mailout.nyi.internal (Postfix) with ESMTP id CA7992101E
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 04:06:37 -0400 (EDT)
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Subject: Re: [PATCH] mkfs.xfs: add [-U uuid] option
-From: Mika Eloranta <mika.eloranta@ohmu.fi>
-In-Reply-To: <20150922075249.GI19114@dastard>
-Date: Tue, 22 Sep 2015 11:06:35 +0300
-Message-Id: <AF226911-F11E-42E8-91F1-10C0E2E31E1D@ohmu.fi>
-References: <1442855060-38259-1-git-send-email-mel@ohmu.fi>
-	<20150921221839.GC19114@dastard>
-	<2640913C-6C95-4128-9055-B155AECA0206@ohmu.fi>
-	<20150921233627.GE19114@dastard>
-	<5E0C9EC9-8ABE-47CC-BB7F-2BC0A872AEDB@ohmu.fi>
-	<20150922075249.GI19114@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 91828AC004
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:07:30 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	1k92xmPP6FvYaBXW for <xfs@oss.sgi.com>;
+	Tue, 22 Sep 2015 01:07:27 -0700 (PDT)
+Date: Tue, 22 Sep 2015 18:07:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC v2 2/2] xfs: validate metadata LSNs against log on v5
+	superblocks
+Message-ID: <20150922080725.GC3902@dastard>
+References: <1441997635-36644-1-git-send-email-bfoster@redhat.com>
+	<1441997635-36644-3-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1441997635-36644-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,116 +27,226 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Cj4gT24gMjIgU2VwIDIwMTUsIGF0IDEwOjUyLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJp
-dC5jb20+IHdyb3RlOgo+IAo+IE9uIFR1ZSwgU2VwIDIyLCAyMDE1IGF0IDA5OjQzOjM0QU0gKzAz
-MDAsIE1pa2EgRWxvcmFudGEgd3JvdGU6Cj4+IE9uIDIyIFNlcCAyMDE1LCBhdCAwMjozNiwgRGF2
-ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToKPj4+IAo+Pj4gT24gVHVlLCBT
-ZXAgMjIsIDIwMTUgYXQgMDE6NTY6NTNBTSArMDMwMCwgTWlrYSBFbG9yYW50YSB3cm90ZToKPj4+
-PiBPbiAyMiBTZXAgMjAxNSwgYXQgMDE6MTgsIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0
-LmNvbT4KPj4+PiB3cm90ZToKPj4+Pj4gCj4+Pj4+IE9uIE1vbiwgU2VwIDIxLCAyMDE1IGF0IDA4
-OjA0OjIwUE0gKzAzMDAsIE1pa2EgRWxvcmFudGEgd3JvdGU6Cj4+Pj4+PiBUaGUgVVVJRCBjYW4g
-bm93IGJlIG9wdGlvbmFsbHkgc3BlY2lmaWVkIGR1cmluZyBmaWxlc3lzdGVtCj4+Pj4+PiBjcmVh
-dGlvbi4KPj4+Pj4gCj4+Pj4+IFdoaWNoIFVVSUQgYXJlIHlvdSB3YW50aW5nIHRvIHNldCAtIHRo
-ZSBtZXRhZGF0YSB1dWlkIG9yIHRoZQo+Pj4+PiB1c2VyIHZpc2libGUgVVVJRCBsYWJlbD8gT3Ig
-Ym90aD8gQ2FuIHlvdSBleHBsYWluIHRoZSB1c2UgY2FzZQo+Pj4+PiBmb3IgdGhpcz8gIGkuZS4g
-SSdtIHRyeWluZyB0byB3b3JrIG91dCB3aHkgV2h5IGRvZXNuJ3QgbWtmcy54ZnMKPj4+Pj4gKyB4
-ZnNfYWRtaW4gLVUgPHV1aWQ+IGRvZXNuJ3Qgd29yayBmb3IgeW91Pwo+Pj4+IAo+Pj4+IEkgd2Fu
-dCB0byBzZXQgdGhlIHVzZXIgdmlzaWJsZSBVVUlEIChzYW1lIGFzIHhmc19hZG1pbiAtVS8tdSku
-Cj4+Pj4gV2hldGhlciB0aGlzIGltcGFjdHMgdGhlICJtZXRhZGF0YSB1dWlk4oCdIG9yIG5vdCwg
-SSBkbyBub3QKPj4+PiBrbm93LCBJ4oCZbSBub3QgYW4gZXhwZXJ0IG9uIHRoZSBYRlMgaW50ZXJu
-YWxzLCBqdXN0IGEgdXNlci4KPj4+IAo+Pj4gV2hpY2ggdGVsbHMgbWUgd2hhdCBJIG5lZWQgdG8g
-a25vdyAtIFlvdSBhcmUgdHJ5aW5nIHRvIHVzZSB0aGUgVVVJRAo+Pj4gYXMgYSB1c2VyIGNvbnRy
-b2xsZWQgZmlsZXN5c3RlbSBsYWJlbC4gRnVubmlseSBlbm91Z2gsIHdlIGhhdmUgYQo+Pj4gdGhp
-bmcgZm9yIHRoaXMgYWxyZWFkeSAtIGEgdXNlciBjb250cm9sbGVkIGZpbGVzeXN0ZW0gbGFiZWw6
-Cj4+PiAKPj4+ICMgbWtmcy54ZnMgLUwgImxhYmVsIiAuLi4uCj4+PiAKPj4+IEl0J3MgMTIgY2hh
-cmFjdGVycyBsb25nLCBzbyBtb3JlIHRoYW4gZW5vdWdoIGZvciBhbnkgc29ydCBvZiB1bmlxdWUK
-Pj4+IGlkZW50aWZpY2F0aW9uIHNjaGVtZSB5b3Ugd2FudCB0byB1c2UgZm9yIHlvdXIgZmlsZXN5
-c3RlbXMuCj4+PiB4ZnNfYWRtaW4gZW5hYmxlcyB5b3UgdG8gY2hhbmdlIGl0IGFmdGVyIHRoZSBm
-YWN0LCBhbGwgbWFqb3IKPj4+IGZpbGVzeXN0ZW1zIHN1cHBvcnQgaXQgYW5kIGFsbCB0aGUgaW5m
-cmFzdHJ1Y3R1cmUga25vdyBhYm91dCBpdAo+Pj4gKGxzYmxrLCAvZXRjL2ZzdGFiLiAvZGV2L2Rp
-c2svYnktbGFiZWwsIGV0Yykgc28gdXNpbmcgaXQgaXMgbm8KPj4+IGRpZmZlcmVudCB0byB1c2lu
-ZyBVVUlEcy4gRXhjZXB0IHRoYXQsIHVubGlrZSBVVUlEcywgeW91IGNhbiBtYWtlCj4+PiBmaWxl
-eXN0ZW0gbGFiZWxzIGh1bWFuIHJlYWRhYmxlLiA6KQo+Pj4gCj4+PiBQZXJoYXBzIHlvdSBzaG91
-bGQgdHJ5IHVzaW5nIGZpbGVzeXN0ZW0gbGFiZWxzIHNlZWluZyBhcyBldmVyeXRoaW5nCj4+PiB5
-b3UgbmVlZCBpcyBhbHJlYWR5IHRoZXJlPwo+PiAKPj4gTGFiZWxzIGFyZSBncmVhdCBmb3IgdXNl
-ci1yZWFkYWJsZSBpZGVudGlmaWVycywgYnV0IFVVSUQgaXMgbm93YWRheXMKPj4gcHJldHR5IG11
-Y2ggdGhlIG5vcm0gZm9yIHJhbmRvbS1nZW5lcmF0ZWQgaWRlbnRpZmllcnMuIE15IHVzZS1jYXNl
-Cj4+IGNvbmNlcm5zIGRpc3RyaWJ1dGVkIGFuZCBhdXRvbWF0ZWQgdmlydHVhbCBzeXN0ZW1zLCB3
-aGVyZSBmaWxlc3lzdGVtcwo+PiBhcmUgY29uc3RhbnRseSBidWlsdCBhbmQgdG9ybiBkb3duLgo+
-IAo+IFN1cmUuIFlvdXIgdXNlIGNhc2UgYm9pbHMgZG93biB0byAid2UgbmVlZCB0byByZXBsYWNl
-IGEgcmFuZG9tbHkKPiBnZW5lcmF0ZWQgbWtmcyBVVUlEIHdpdGggb3VyIG93biByYW5kb21seSBn
-ZW5lcmF0ZWQgVVVJRCIuIFdoeSBub3QKPiBqdXN0IHJlYWQgdGhlIHJhbmRvbWx5IGdlbmVyYXRl
-ZCBVVUlEIG91dCBvZiB0aGUgZmlsZXN5c3RlbSBhbmQgcHV0Cj4gdGhhdCBpbiB0aGUgZGF0YWJh
-c2U/Cj4gCj4gVGhlcmUgYXJlIG1hbnkgd2F5cyBvdCBza2luIGEgY2F0LCBhbmQgSSdtIHRyeWlu
-ZyB0byB1bmRlcnN0YW5kIHdoeQo+IHlvdSBuZWVkIHRvIHNraW4gaXQgaW4gdGhpcyBwYXJ0aWN1
-bGFyIHdheS4uLiA6Lwo+IAo+PiBVc2luZyB0aGUgZmlsZXN5c3RlbSBsYWJlbCB0byBzdG9yZSBh
-IHRydW5jYXRlZCB2ZXJzaW9uIG9mIGEgVVVJRCBpcwo+PiBraW5kIG9mIGFuIG9wdGlvbiwgYnV0
-IEknZCByZWFsbHkgcmF0aGVyIHVzZSB0aGUgZW50aXJlIFVVSUQgYmVjYXVzZToKPj4gCj4+IDEp
-IElkZW50aWZ5aW5nIGFuIG9ycGhhbiBmaWxlc3lzdGVtIGJhc2VkIG9uIGl0cyBjb250ZW50cyBi
-ZWNvbWVzCj4+ICAgbW9yZSBzdHJhaWdodGZvcndhcmQsIGUuZy4gaWYgdGhleSBhcmUgYWxyZWFk
-eSBsaXN0ZWQgaW4gYSBrZXktdmFsdWUKPj4gICBzdG9yZSBiYXNlZCBvbiB0aGVpciBmdWxsIFVV
-SUQgYW5kIHByZWZpeCBsb29rdXBzIGFyZSBub3QgcG9zc2libGUuCj4+IAo+PiAyKSBUaGUgbGFi
-ZWwgaXMgYWN0dWFsbHkgcmF0aGVyIHNob3J0IGZvciBzdG9yaW5nIGEgcmFuZG9tIElELiBGb3IK
-Pj4gICBleGFtcGxlIHN0b3JpbmcgNDggYml0cyBmcm9tIHRoZSBVVUlEIGluIHRoZSBsYWJlbCBo
-ZXgtZW5jb2RlZAo+PiAgIHdvdWxkIGdpdmUgbWUgYSBjb2xsaXNpb24gYWxyZWFkeSBpbiAyMCBt
-aWxsaW9uIGZzIGluc3RhbmNlcyB3aXRoCj4+PiA1MCUgcHJvYmFiaWxpdHkuCj4gCj4gQSBsYWJl
-bCBzdG9yZXMgY2hhcmFjdGVycywgbm90IGhleC1lbmNvZGVkIHZhbHVlcy4gMTIgY2hhcmFjdGVy
-cywKPiBhc3N1bWluZyBBLVosIGEteiwgMC05IGlzIDYyXjEyIHBvc3NpYmxlIGNvbWJpbmF0aW9u
-cyB0aGF0IGNhbiBiZQo+IHN0b3JlZC4gSW5kZWVkLCBKdXN0IDYgY2hhcmFjdGVycyAoaGFsZiB0
-aGUgbGFiZWwpIGdpdmVzIHlvdSA1Ngo+ICpiaWxsaW9uKiB1bmlxdWUgbGFiZWxzLiBCdXQgdGhh
-dCdzIG5vdCBvYnZpb3VzIHVudGlsIHlvdSBzdG9wCj4gdGhpbmtpbmcgYWJvdXQgdXNpbmcgVVVJ
-RHMgZm9yIGV2ZXJ5dGhpbmfigKYuLgoKWW91IGFyZSBhYnNvbHV0ZWx5IGNvcnJlY3QuIEhvd2V2
-ZXIsIHdoZW4gSSBoYXZlIGEgVVVJRCBpbiBteSBoYW5kIGFuZAp0aGVyZSBpcyBhIHNsb3QgY2Fs
-bGVkIOKAnFVVSUQiIGFuZCBpdCBpcyB1c2VyLXNldHRhYmxlIGFuZCBpdCBmaXRzIG15IElEIHBl
-cmZlY3RseSwKdG8gbWUgaXQgaXMgcmF0aGVyIG5hdHVyYWwgdG8gdXNlIGl0IGluc3RlYWQgb2Yg
-dHJ5aW5nIHRvIGludmVudCBuZXcgZW5jb2RpbmcKc2NoZW1lcyBmb3Igc3RvcmluZyBhIHBhcnQg
-b2YgaXQuCgo+IFsgSSdtIHN0YXJ0aW5nIHRvIHRoaW5rIHRoZSBtZXJlIG1lbnRpb24gb2YgIlVV
-SUQiIGNhdXNlcyBwZW9wbGUgdG8KPiBsb3NlIDIwIElRIHBvaW50cyBpbnN0YW50bHkuIDpQIF0K
-Ck5vIGNvbW1lbnRzIGFib3V0IHRoaXMgb25lLgoKPj4gSSB0aG91Z2h0IGFkZGluZyB0aGUgb3B0
-aW9uIHdvdWxkIGJlIGEgcmF0aGVyIHN0cmFpZ2h0Zm9yd2FyZCB0aGluZywKPj4gZXNwZWNpYWxs
-eSB3aGVuIG1vcmUgcHJvYmxlbWF0aWMgInhmc19hZG1pbiAtVSIgaXMgKHdhcz8pIGFscmVhZHkK
-Pj4gc3VwcG9ydGVkLgo+IAo+IEJ1Z3MgYXJlIGEgcmVhbGl0eSB3ZSBoYXZlIHRvIGxpdmUgd2l0
-aC4gV2UndmUgZml4ZWQgdGhlbSAoSSB0aGluaykuCgpBbmQgSSB0aGFuayB5b3UgZ3V5cyBmb3Ig
-dGhhdC4gTmV2ZXIgaGFkIGEgc2hvd3N0b3BwZXIgd2l0aCBYRlMuIFVubGlrZQp3aXRoIHNvbWUg
-b3RoZXIsIGtybWgsIHVubmFtZWQgb3B0aW9ucy4uLgoKPj4gSXMgdGhlcmUgdGVjaG5pY2FsIHJl
-YXNvbiB3aHkgYXNzaWduaW5nIHRoZSBVVUlEIGlzIG5vIGxvbmdlcgo+PiByZWNvbW1lbmRlZD8K
-PiAKPiBUaGUgY2hhbmdpbmcgb2YgdGhlIFhGUyBVVUlEIHdhcyBhZGRlZCBmb3IgYSB2ZXJ5IHNw
-ZWNpZmljIHVzZSBjYXNlCj4gLSBhbGxvd2luZyB3cml0YWJsZSBjbG9uZXMgb2YgYSBmaWxlc3lz
-dGVtIHRvIGJlIG1vdW50ZWQgc28gdGhlCj4gIm5vdXVpZCIgbW91bnQgb3B0aW9uIHdhcyB1bm5l
-Y2Vzc2FyeS4gWW91J3JlIHRoZSBmaXJzdCBwZXJzb24gbgo+IDEwIHllYXJzIHRvIGFzayBmb3Ig
-c29tZXRoaW5nIG5ldyBpbiBVVUlEIGhhbmRsaW5nIGFuZCB0aGF0IGlzIHdoeQo+IEknbSBhc2tp
-bmcgbG90cyBvZiBxdWVzdGlvbnMuLi4uCj4gCj4+IFRoZSBwYXRjaCBvbmx5IGFsbG93cyBvcHRp
-b25hbGx5IHVzaW5nIGEgdXNlci1zcGVjaWZpZWQgVVVJRAo+PiBpbnN0ZWFkIG9mIGEgb25lIGdl
-bmVyYXRlZCByYW5kb21seSBvbiB0aGUgc3BvdCB3aXRoaW4gbWtmcy54ZnMsCj4+IGFuZCBJIGNh
-bm5vdCBzZWUgYW55IGhhcm0gaW4gdGhhdC4KPiAKPiBTdXJlLCB0aGVyZSBtYXkgYmUgbm8gaGFy
-bSwgYnV0IEknbSBzdGFydGluZyBmcm9tIHRoZSBwb3NpdGlvbiBvZgo+IGtub3dpbmcgbm90aGlu
-ZyBhYm91dCB3aHkgeW91IHdhbnQgdGhlIGZlYXR1cmUgb3IgaG93IGl0IHdpbGwgYmUKPiB1c2Vk
-IHNvIEkgY2FuJ3QgbWFrZSB0aGF0IGp1ZGdlbWVudCBqdXN0IGJ5IGxvb2tpbmcgYXQgdGhlIGNv
-ZGUuCj4gCj4gVGhpbmsgb24gdGhhdCBmb3IgYSBtb21lbnQgLSBkbyB5b3UganVzdCBpbmNsdWRl
-IHJhbmRvbSBjb2RlIGNoYW5nZXMKPiBpbiB5b3VyIGNvZGUgYmFzZSB0aGF0IHlvdSByZWFsbHkg
-a25vdyBub3RoaW5nIGFib3V0PyBPciBkbyB5b3UgYXNrCj4gcXVlc3Rpb25zIGFuZCB0cnkgdG8g
-dW5kZXJzdGFuZCB3aHkgaXQgaXMgbmVlZGVkIGZpcnN0PyAgSW5kZWVkLAo+IHdvdWxkIHlvdSB0
-cnVzdCBzb2Z0d2FyZSBtYWludGFpbmVkIGJ5IHNvbWVvbmUgd2hvIGRvZXNuJ3QgY2FyZSB0bwo+
-IG1ha2UgaW5mb3JtZWQgZGVjaXNpb25zIGFib3V0IHRoZSBjb2RlIGJhc2UgdGhleSBhcmUgcmVz
-cG9uc2libGUKPiBmb3IgbWFpbnRhaW5pbmc/Cj4gCj4gRG9uJ3QgZ2V0IG1lIHdyb25nIGhlcmUg
-LSBJIHdpbGwgdGFrZSBhbiB1cGRhdGVkIHBhdGNoIGZyb20geW91IGZvcgo+IHRoaXMgZnVuY3Rp
-b25hbGl0eS4gQm90aCB5b3UgYW5kIEVyaWMgaGF2ZSB2ZXJ5IGdvb2QgcG9pbnRzIGFzIHRvCj4g
-d2h5IG1rZnMgc2hvdWxkIGFsbG93IHRoaXMsIGJ1dCBJIG5lZWQgdG8gbWFrZSBzdXJlIC9JLyB1
-bmRlcnN0YW5kCj4gdGhlIGJpZ2dlciBwaWN0dXJlIGJlZm9yZSBjb21taXR0aW5nIGl04oCmCgpM
-ZXNzb24gbGVhcm5lZC4gQ29taW5nIGZyb20gbXkgcHJvYmxlbSBkb21haW4gdGhlIGZlYXR1cmUg
-c2VlbWVkCm9idmlvdXMsIGJ1dCBJIGNhbiBzZWUgdGhlIG5lZWQgZm9yIGJlaW5nIG1vcmUgdmVy
-Ym9zZSBhYm91dCB0aGUg4oCcd2h5P+KAnQpwYXJ0LiBJIGRpZCBub3QgcmVhbGl6ZSB0aGlzIGZl
-YXR1cmUgaXMgbm90IHNvIGNvbW1vbmx5IHVzZWQuCgpSZWdhcmRpbmcgdXBkYXRpbmcgdGhlIHBh
-dGNoOiDigJwtVSB1dWlk4oCdIChta2ZzLmV4dCovbWtmcy5idHJmcyAtc3R5bGUpIG9yCiItbSB1
-dWlkPTx1dWlkPuKAnSBhcyBwZXIgcHJvcG9zYWwgYnkgQ2FybG9zPwoKSeKAmWxsIGFsc28gdHJ5
-IHRvIHN1bW1hcml6ZSBhIGJldHRlciBjb21taXQgbWVzc2FnZS4KCkNoZWVycywKCgktIE1pa2EK
-CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+On Fri, Sep 11, 2015 at 02:53:55PM -0400, Brian Foster wrote:
+> Since the onset of v5 superblocks, the LSN of the last modification has
+> been included in a variety of on-disk data structures. This LSN is used
+> to provide log recovery ordering guarantees (e.g., to ensure an older
+> log recovery item is not replayed over a newer target data structure).
+> 
+> While this works correctly from the point a filesystem is formatted and
+> mounted, userspace tools have some problematic behaviors that defeat
+> this mechanism. For example, xfs_repair historically zeroes out the log
+> unconditionally (regardless of whether corruption is detected). If this
+> occurs, the LSN of the filesystem is reset and the log is now in a
+> problematic state with respect to on-disk metadata structures that might
+> have a larger LSN. Until either the log catches up to the highest
+> previously used metadata LSN or each affected data structure is modified
+> and written out without incident (which resets the metadata LSN), log
+> recovery is susceptible to filesystem corruption.
+> 
+> This problem is ultimately addressed and repaired in the associated
+> userspace tools. The kernel is still responsible to detect the problem
+> and notify the user that something is wrong. Check the superblock LSN at
+> mount time and notify the user and fail the mount if it is invalid.
+> From that point on, simply warn the user if an invalid metadata LSN is
+> detected from the various metadata I/O verifiers. A new xfs_mount flag
+> is added to guarantee that a warning fires at least once for each
+> affected filesystem mount. From that point forward, further instances of
+> the problem are rate limited to a once per 24 hour period.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c          |  9 +++++--
+>  fs/xfs/libxfs/xfs_attr_leaf.c      |  2 ++
+>  fs/xfs/libxfs/xfs_btree.c          | 14 +++++++++--
+>  fs/xfs/libxfs/xfs_da_btree.c       |  3 +++
+>  fs/xfs/libxfs/xfs_dir2_block.c     |  1 +
+>  fs/xfs/libxfs/xfs_dir2_data.c      |  1 +
+>  fs/xfs/libxfs/xfs_dir2_leaf.c      |  1 +
+>  fs/xfs/libxfs/xfs_dir2_node.c      |  1 +
+>  fs/xfs/libxfs/xfs_ialloc.c         |  8 +++++--
+>  fs/xfs/libxfs/xfs_sb.c             |  8 +++++++
+>  fs/xfs/libxfs/xfs_symlink_remote.c |  3 +++
+>  fs/xfs/xfs_log.c                   |  1 -
+>  fs/xfs/xfs_log_priv.h              | 24 +++++++++++++++++++
+>  fs/xfs/xfs_log_recover.c           | 15 +++++++++++-
+>  fs/xfs/xfs_mount.c                 | 49 ++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_mount.h                 |  3 +++
+>  16 files changed, 135 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index ffad7f2..cb26016 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -482,6 +482,8 @@ xfs_agfl_verify(
+>  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+>  			return false;
+>  	}
+> +
+> +	xfs_detect_invalid_lsn(mp, be64_to_cpu(XFS_BUF_TO_AGFL(bp)->agfl_lsn));
+>  	return true;
+
+	xfs_log_check_lsn(mp, <lsn>);
+
+> +/*
+> + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+> + * means that the next log record that includes this metadata could have a
+> + * smaller LSN. In turn, this means that the modification in the log would not
+> + * replay.
+> + */
+> +static inline bool
+> +xlog_valid_lsn(
+> +	struct xlog	*log,
+> +	xfs_lsn_t	lsn)
+> +{
+> +	int		cycle = CYCLE_LSN(lsn);
+> +	int		block = BLOCK_LSN(lsn);
+> +	bool		valid = true;
+> +
+> +	spin_lock(&log->l_icloglock);
+> +	if ((cycle > log->l_curr_cycle) ||
+> +	    (cycle == log->l_curr_cycle && block > log->l_curr_block))
+> +		valid = false;
+> +	spin_unlock(&log->l_icloglock);
+> +
+> +	return valid;
+> +}
+
+We do not want to take the l_icloglock in metadata IO
+context. It's a global fs lock, and it's a hot lock, too, so we
+do not want to be taking this during every metadata IO completion.
+
+I think, at minimum, we need to sample the current values and do an
+unlocked check, then if the result is suspect we need to do an
+accurate locked check. This means that we will almost never take the
+l_icloglock here. e.g:
+
+{
+	int cycle = ACCESS_ONCE(log->l_curr_cycle);
+	int block = ACCESS_ONCE(log->l_curr_block);
+
+	if (CYCLE_LSN(lsn) > cycle ||
+	    (CYCLE_LSN(lsn) == cycle && BLOCK_LSN(lsn) > block)) {
+		/* suspect, take icloglock to check again */
+		bool valid = true;
+
+		....
+		return valid;
+	}
+	return true;
+}
+
+
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -41,6 +41,7 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_icache.h"
+>  #include "xfs_sysfs.h"
+> +#include "xfs_log_priv.h"
+>  
+>  
+>  static DEFINE_MUTEX(xfs_uuid_table_mutex);
+> @@ -1301,3 +1302,51 @@ xfs_dev_is_read_only(
+>  	}
+>  	return 0;
+>  }
+> +
+> +/*
+> + * Verify that an LSN stamped into a piece of metadata is valid. This is
+> + * intended for use in read verifiers on v5 superblocks.
+> + */
+> +void
+> +xfs_detect_invalid_lsn(
+> +	struct xfs_mount	*mp,
+> +	xfs_lsn_t		lsn)
+> +{
+
+This shoul dbe called xfs_log_check_lsn() and be located in
+xfs_log.c.
+
+> +	struct xlog		*log = mp->m_log;
+> +	int			cycle = CYCLE_LSN(lsn);
+> +	int			block = BLOCK_LSN(lsn);
+> +	const char 		*fmt;
+> +
+> +	/*
+> +	 * 'norecovery' mode skips mount-time log processing and unconditionally
+> +	 * resets the LSN.
+> +	 */
+> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
+> +		return;
+> +
+> +	if (xlog_valid_lsn(mp->m_log, lsn))
+> +		return;
+> +
+> +	/*
+> +	 * Warn at least once for each filesystem susceptible to this problem
+> +	 * and once per day thereafter.
+> +	 *
+> +	 * XXX: Specify the minimum xfs_repair version required to resolve?
+> +	 * Older versions will silently reintroduce the problem.
+> +	 *
+> +	 * We should eventually convert this condition into a hard error (via
+> +	 * verifier failure). Defer that behavior for a few release cycles or so
+> +	 * until the userspace fixes have had the opportunity to propogate
+> +	 * throughout the various distributions.
+> +	 */
+> +	fmt = "WARNING: Metadata has LSN (%d:%d) ahead of current LSN (%d:%d). "
+> +"This may result in filesystem failure. Please unmount and run xfs_repair to resolve.";
+> +	if (!mp->m_warned_bad_lsn) {
+> +		mp->m_warned_bad_lsn = true;
+> +		xfs_warn(mp, fmt, cycle, block, log->l_curr_cycle,
+> +			 log->l_curr_block);
+> +	} else {
+> +		xfs_warn_daily(mp, fmt, cycle, block, log->l_curr_cycle,
+> +			       log->l_curr_block);
+> +	}
+
+That's really ugly. Rate limited prints should always occur at least
+once for each ratelimit key, and now i've seen this I can say the
+first patch needs rework.
+
+that is, each xfs_warn_daily() caller needs it's own ratelimit key,
+rather than sharing the global ratelimit key that all other XFS
+messages share.
+
+e.g.:
+	xfs_warn_daily(mp, mp->m_log->l_lsn_rlstate,
+"Corruption warning: Metadata has LSN (%d:%d) ahead of current LSN (%d:%d). "
+"Please unmount and run xfs_repair (>= v4.3) to resolve.".
+			cycle, block, log->l_curr_cycle, log->l_curr_block);
+
+But really, thinking on this further (the "corruption warning" bit)
+I'm starting to think we should just shut the filesystem down when
+we hit this and force the user to fix it immediately. if we don't,
+then who knows whether we are making things worse or not...
+
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -127,6 +127,7 @@ typedef struct xfs_mount {
+>  	int64_t			m_low_space[XFS_LOWSP_MAX];
+>  						/* low free space thresholds */
+>  	struct xfs_kobj		m_kobj;
+> +	bool			m_warned_bad_lsn;/* bad metadata lsn detected */
+
+That's where I'd put the ratelimit key (or in the struct xlog).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
