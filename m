@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 121EB7F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 03:07:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 91828AC004
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:07:30 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5247E7F37
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 03:25:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3DE0C8F8033
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:25:14 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	1k92xmPP6FvYaBXW for <xfs@oss.sgi.com>;
-	Tue, 22 Sep 2015 01:07:27 -0700 (PDT)
-Date: Tue, 22 Sep 2015 18:07:25 +1000
+	wHPUE4x3tlgsdoQM for <xfs@oss.sgi.com>;
+	Tue, 22 Sep 2015 01:25:11 -0700 (PDT)
+Date: Tue, 22 Sep 2015 18:25:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC v2 2/2] xfs: validate metadata LSNs against log on v5
-	superblocks
-Message-ID: <20150922080725.GC3902@dastard>
-References: <1441997635-36644-1-git-send-email-bfoster@redhat.com>
-	<1441997635-36644-3-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] mkfs.xfs: add [-U uuid] option
+Message-ID: <20150922082509.GD3902@dastard>
+References: <1442855060-38259-1-git-send-email-mel@ohmu.fi>
+	<20150921221839.GC19114@dastard>
+	<2640913C-6C95-4128-9055-B155AECA0206@ohmu.fi>
+	<20150921233627.GE19114@dastard>
+	<5E0C9EC9-8ABE-47CC-BB7F-2BC0A872AEDB@ohmu.fi>
+	<20150922075249.GI19114@dastard>
+	<AF226911-F11E-42E8-91F1-10C0E2E31E1D@ohmu.fi>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1441997635-36644-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <AF226911-F11E-42E8-91F1-10C0E2E31E1D@ohmu.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,226 +31,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Mika Eloranta <mika.eloranta@ohmu.fi>
 Cc: xfs@oss.sgi.com
 
-On Fri, Sep 11, 2015 at 02:53:55PM -0400, Brian Foster wrote:
-> Since the onset of v5 superblocks, the LSN of the last modification has
-> been included in a variety of on-disk data structures. This LSN is used
-> to provide log recovery ordering guarantees (e.g., to ensure an older
-> log recovery item is not replayed over a newer target data structure).
-> 
-> While this works correctly from the point a filesystem is formatted and
-> mounted, userspace tools have some problematic behaviors that defeat
-> this mechanism. For example, xfs_repair historically zeroes out the log
-> unconditionally (regardless of whether corruption is detected). If this
-> occurs, the LSN of the filesystem is reset and the log is now in a
-> problematic state with respect to on-disk metadata structures that might
-> have a larger LSN. Until either the log catches up to the highest
-> previously used metadata LSN or each affected data structure is modified
-> and written out without incident (which resets the metadata LSN), log
-> recovery is susceptible to filesystem corruption.
-> 
-> This problem is ultimately addressed and repaired in the associated
-> userspace tools. The kernel is still responsible to detect the problem
-> and notify the user that something is wrong. Check the superblock LSN at
-> mount time and notify the user and fail the mount if it is invalid.
-> From that point on, simply warn the user if an invalid metadata LSN is
-> detected from the various metadata I/O verifiers. A new xfs_mount flag
-> is added to guarantee that a warning fires at least once for each
-> affected filesystem mount. From that point forward, further instances of
-> the problem are rate limited to a once per 24 hour period.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c          |  9 +++++--
->  fs/xfs/libxfs/xfs_attr_leaf.c      |  2 ++
->  fs/xfs/libxfs/xfs_btree.c          | 14 +++++++++--
->  fs/xfs/libxfs/xfs_da_btree.c       |  3 +++
->  fs/xfs/libxfs/xfs_dir2_block.c     |  1 +
->  fs/xfs/libxfs/xfs_dir2_data.c      |  1 +
->  fs/xfs/libxfs/xfs_dir2_leaf.c      |  1 +
->  fs/xfs/libxfs/xfs_dir2_node.c      |  1 +
->  fs/xfs/libxfs/xfs_ialloc.c         |  8 +++++--
->  fs/xfs/libxfs/xfs_sb.c             |  8 +++++++
->  fs/xfs/libxfs/xfs_symlink_remote.c |  3 +++
->  fs/xfs/xfs_log.c                   |  1 -
->  fs/xfs/xfs_log_priv.h              | 24 +++++++++++++++++++
->  fs/xfs/xfs_log_recover.c           | 15 +++++++++++-
->  fs/xfs/xfs_mount.c                 | 49 ++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_mount.h                 |  3 +++
->  16 files changed, 135 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index ffad7f2..cb26016 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -482,6 +482,8 @@ xfs_agfl_verify(
->  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
->  			return false;
->  	}
-> +
-> +	xfs_detect_invalid_lsn(mp, be64_to_cpu(XFS_BUF_TO_AGFL(bp)->agfl_lsn));
->  	return true;
-
-	xfs_log_check_lsn(mp, <lsn>);
-
-> +/*
-> + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
-> + * means that the next log record that includes this metadata could have a
-> + * smaller LSN. In turn, this means that the modification in the log would not
-> + * replay.
-> + */
-> +static inline bool
-> +xlog_valid_lsn(
-> +	struct xlog	*log,
-> +	xfs_lsn_t	lsn)
-> +{
-> +	int		cycle = CYCLE_LSN(lsn);
-> +	int		block = BLOCK_LSN(lsn);
-> +	bool		valid = true;
-> +
-> +	spin_lock(&log->l_icloglock);
-> +	if ((cycle > log->l_curr_cycle) ||
-> +	    (cycle == log->l_curr_cycle && block > log->l_curr_block))
-> +		valid = false;
-> +	spin_unlock(&log->l_icloglock);
-> +
-> +	return valid;
-> +}
-
-We do not want to take the l_icloglock in metadata IO
-context. It's a global fs lock, and it's a hot lock, too, so we
-do not want to be taking this during every metadata IO completion.
-
-I think, at minimum, we need to sample the current values and do an
-unlocked check, then if the result is suspect we need to do an
-accurate locked check. This means that we will almost never take the
-l_icloglock here. e.g:
-
-{
-	int cycle = ACCESS_ONCE(log->l_curr_cycle);
-	int block = ACCESS_ONCE(log->l_curr_block);
-
-	if (CYCLE_LSN(lsn) > cycle ||
-	    (CYCLE_LSN(lsn) == cycle && BLOCK_LSN(lsn) > block)) {
-		/* suspect, take icloglock to check again */
-		bool valid = true;
-
-		....
-		return valid;
-	}
-	return true;
-}
-
-
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -41,6 +41,7 @@
->  #include "xfs_trace.h"
->  #include "xfs_icache.h"
->  #include "xfs_sysfs.h"
-> +#include "xfs_log_priv.h"
->  
->  
->  static DEFINE_MUTEX(xfs_uuid_table_mutex);
-> @@ -1301,3 +1302,51 @@ xfs_dev_is_read_only(
->  	}
->  	return 0;
->  }
-> +
-> +/*
-> + * Verify that an LSN stamped into a piece of metadata is valid. This is
-> + * intended for use in read verifiers on v5 superblocks.
-> + */
-> +void
-> +xfs_detect_invalid_lsn(
-> +	struct xfs_mount	*mp,
-> +	xfs_lsn_t		lsn)
-> +{
-
-This shoul dbe called xfs_log_check_lsn() and be located in
-xfs_log.c.
-
-> +	struct xlog		*log = mp->m_log;
-> +	int			cycle = CYCLE_LSN(lsn);
-> +	int			block = BLOCK_LSN(lsn);
-> +	const char 		*fmt;
-> +
-> +	/*
-> +	 * 'norecovery' mode skips mount-time log processing and unconditionally
-> +	 * resets the LSN.
-> +	 */
-> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +		return;
-> +
-> +	if (xlog_valid_lsn(mp->m_log, lsn))
-> +		return;
-> +
-> +	/*
-> +	 * Warn at least once for each filesystem susceptible to this problem
-> +	 * and once per day thereafter.
-> +	 *
-> +	 * XXX: Specify the minimum xfs_repair version required to resolve?
-> +	 * Older versions will silently reintroduce the problem.
-> +	 *
-> +	 * We should eventually convert this condition into a hard error (via
-> +	 * verifier failure). Defer that behavior for a few release cycles or so
-> +	 * until the userspace fixes have had the opportunity to propogate
-> +	 * throughout the various distributions.
-> +	 */
-> +	fmt = "WARNING: Metadata has LSN (%d:%d) ahead of current LSN (%d:%d). "
-> +"This may result in filesystem failure. Please unmount and run xfs_repair to resolve.";
-> +	if (!mp->m_warned_bad_lsn) {
-> +		mp->m_warned_bad_lsn = true;
-> +		xfs_warn(mp, fmt, cycle, block, log->l_curr_cycle,
-> +			 log->l_curr_block);
-> +	} else {
-> +		xfs_warn_daily(mp, fmt, cycle, block, log->l_curr_cycle,
-> +			       log->l_curr_block);
-> +	}
-
-That's really ugly. Rate limited prints should always occur at least
-once for each ratelimit key, and now i've seen this I can say the
-first patch needs rework.
-
-that is, each xfs_warn_daily() caller needs it's own ratelimit key,
-rather than sharing the global ratelimit key that all other XFS
-messages share.
-
-e.g.:
-	xfs_warn_daily(mp, mp->m_log->l_lsn_rlstate,
-"Corruption warning: Metadata has LSN (%d:%d) ahead of current LSN (%d:%d). "
-"Please unmount and run xfs_repair (>= v4.3) to resolve.".
-			cycle, block, log->l_curr_cycle, log->l_curr_block);
-
-But really, thinking on this further (the "corruption warning" bit)
-I'm starting to think we should just shut the filesystem down when
-we hit this and force the user to fix it immediately. if we don't,
-then who knows whether we are making things worse or not...
-
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -127,6 +127,7 @@ typedef struct xfs_mount {
->  	int64_t			m_low_space[XFS_LOWSP_MAX];
->  						/* low free space thresholds */
->  	struct xfs_kobj		m_kobj;
-> +	bool			m_warned_bad_lsn;/* bad metadata lsn detected */
-
-That's where I'd put the ratelimit key (or in the struct xlog).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBTZXAgMjIsIDIwMTUgYXQgMTE6MDY6MzVBTSArMDMwMCwgTWlrYSBFbG9yYW50YSB3
+cm90ZToKPiA+IE9uIDIyIFNlcCAyMDE1LCBhdCAxMDo1MiwgRGF2ZSBDaGlubmVyIDxkYXZpZEBm
+cm9tb3JiaXQuY29tPiB3cm90ZToKPiA+IERvbid0IGdldCBtZSB3cm9uZyBoZXJlIC0gSSB3aWxs
+IHRha2UgYW4gdXBkYXRlZCBwYXRjaCBmcm9tIHlvdSBmb3IKPiA+IHRoaXMgZnVuY3Rpb25hbGl0
+eS4gQm90aCB5b3UgYW5kIEVyaWMgaGF2ZSB2ZXJ5IGdvb2QgcG9pbnRzIGFzIHRvCj4gPiB3aHkg
+bWtmcyBzaG91bGQgYWxsb3cgdGhpcywgYnV0IEkgbmVlZCB0byBtYWtlIHN1cmUgL0kvIHVuZGVy
+c3RhbmQKPiA+IHRoZSBiaWdnZXIgcGljdHVyZSBiZWZvcmUgY29tbWl0dGluZyBpdOKApgo+IAo+
+IExlc3NvbiBsZWFybmVkLiBDb21pbmcgZnJvbSBteSBwcm9ibGVtIGRvbWFpbiB0aGUgZmVhdHVy
+ZSBzZWVtZWQKPiBvYnZpb3VzLCBidXQgSSBjYW4gc2VlIHRoZSBuZWVkIGZvciBiZWluZyBtb3Jl
+IHZlcmJvc2UgYWJvdXQgdGhlIOKAnHdoeT/igJ0KPiBwYXJ0LiBJIGRpZCBub3QgcmVhbGl6ZSB0
+aGlzIGZlYXR1cmUgaXMgbm90IHNvIGNvbW1vbmx5IHVzZWQuCgpUaGUgdXN1YWwgcHJvYmxlbSAt
+IHdlJ3JlIGFsbCBzdWJqZWN0IG1hdHRlciBleHBlcnRzIGluCm91ciBvd24gZG9tYWlucywgYW5k
+IHdoYXQgaXMgb2J2aW91cyB0byB1cyBpc24ndCBvYnZpb3VzIHRvCnNvbWVvbmUgaW4gYSBzbGln
+aHRseSBkaWZmZXJlbnQgZG9tYWluLCBldmVuIHRob3VnaCB0aGV5IGludGVyYWN0IGF0CnNvbWUg
+bGV2ZWwuCgo+IFJlZ2FyZGluZyB1cGRhdGluZyB0aGUgcGF0Y2g6IOKAnC1VIHV1aWTigJ0gKG1r
+ZnMuZXh0Ki9ta2ZzLmJ0cmZzIC1zdHlsZSkgb3IKPiAiLW0gdXVpZD08dXVpZD7igJ0gYXMgcGVy
+IHByb3Bvc2FsIGJ5IENhcmxvcz8KCi1tIHV1aWQ9PHV1aWQ+LCBwbGVhc2UuCgpDaGVlcnMsCgpE
+YXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
