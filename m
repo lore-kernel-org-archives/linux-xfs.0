@@ -1,21 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 67EBE7F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 03:04:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 39883304039
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:04:08 -0700 (PDT)
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id uc1yt6Gw9YagbB7m (version=TLSv1
-	cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:04:06 -0700 (PDT)
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: [PATCH v3] xfs: Print comm name and pid when open-coded __GFP_NOFAIL
-	allocation stucks
-Date: Tue, 22 Sep 2015 17:03:43 +0900
-Message-Id: <1442909023-4088-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
-In-Reply-To: <20150922051253.GB3902@dastard>
-References: <20150922051253.GB3902@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B5E587F37
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 03:06:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A52DB8F8033
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 01:06:40 -0700 (PDT)
+Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com
+	[66.111.4.25]) by cuda.sgi.com with ESMTP id XBRG9lfFOkLsAX1G
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 22 Sep 2015 01:06:38 -0700 (PDT)
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+	by mailout.nyi.internal (Postfix) with ESMTP id CA7992101E
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 04:06:37 -0400 (EDT)
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Subject: Re: [PATCH] mkfs.xfs: add [-U uuid] option
+From: Mika Eloranta <mika.eloranta@ohmu.fi>
+In-Reply-To: <20150922075249.GI19114@dastard>
+Date: Tue, 22 Sep 2015 11:06:35 +0300
+Message-Id: <AF226911-F11E-42E8-91F1-10C0E2E31E1D@ohmu.fi>
+References: <1442855060-38259-1-git-send-email-mel@ohmu.fi>
+	<20150921221839.GC19114@dastard>
+	<2640913C-6C95-4128-9055-B155AECA0206@ohmu.fi>
+	<20150921233627.GE19114@dastard>
+	<5E0C9EC9-8ABE-47CC-BB7F-2BC0A872AEDB@ohmu.fi>
+	<20150922075249.GI19114@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,88 +33,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This patch adds comm name and pid to warning messages printed by
-kmem_alloc(), kmem_zone_alloc() and xfs_buf_allocate_memory().
-This will help telling which memory allocations (e.g. kernel worker
-threads, OOM victim tasks, neither) are stalling because these functions
-are passing __GFP_NOWARN which suppresses not only backtrace but comm name
-and pid.
-
-  [   66.089978] Kill process 8505 (a.out) sharing same memory
-  [   69.748060] XFS: a.out(8082) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   69.798580] XFS: kworker/u16:28(381) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   69.876952] XFS: xfs-data/sda1(399) possible memory allocation deadlock in kmem_alloc (mode:0x8250)
-  [   70.359518] XFS: a.out(8412) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   73.299509] XFS: kworker/u16:28(381) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   73.470350] XFS: xfs-data/sda1(399) possible memory allocation deadlock in kmem_alloc (mode:0x8250)
-  [   73.664420] XFS: a.out(8082) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   73.967434] XFS: a.out(8412) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   76.950038] XFS: kworker/u16:28(381) possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-  [   76.957938] XFS: xfs-data/sda1(399) possible memory allocation deadlock in kmem_alloc (mode:0x8250)
-
-(Strictly speaking, we want task_lock()/task_unlock() when reading comm name.)
-
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Michal Hocko <mhocko@suse.com>
----
- fs/xfs/kmem.c    | 10 ++++++----
- fs/xfs/xfs_buf.c |  3 ++-
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index a7a3a63..535c136 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -55,8 +55,9 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
--		"possible memory allocation deadlock in %s (mode:0x%x)",
--					__func__, lflags);
-+		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-+				current->comm, current->pid,
-+				__func__, lflags);
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
- }
-@@ -120,8 +121,9 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
--		"possible memory allocation deadlock in %s (mode:0x%x)",
--					__func__, lflags);
-+		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-+				current->comm, current->pid,
-+				__func__, lflags);
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
- }
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 8ecffb3..cac62e1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -354,7 +354,8 @@ retry:
- 			 */
- 			if (!(++retries % 100))
- 				xfs_err(NULL,
--		"possible memory allocation deadlock in %s (mode:0x%x)",
-+		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-+					current->comm, current->pid,
- 					__func__, gfp_mask);
- 
- 			XFS_STATS_INC(xb_page_retries);
--- 
-1.8.3.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Cj4gT24gMjIgU2VwIDIwMTUsIGF0IDEwOjUyLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJp
+dC5jb20+IHdyb3RlOgo+IAo+IE9uIFR1ZSwgU2VwIDIyLCAyMDE1IGF0IDA5OjQzOjM0QU0gKzAz
+MDAsIE1pa2EgRWxvcmFudGEgd3JvdGU6Cj4+IE9uIDIyIFNlcCAyMDE1LCBhdCAwMjozNiwgRGF2
+ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToKPj4+IAo+Pj4gT24gVHVlLCBT
+ZXAgMjIsIDIwMTUgYXQgMDE6NTY6NTNBTSArMDMwMCwgTWlrYSBFbG9yYW50YSB3cm90ZToKPj4+
+PiBPbiAyMiBTZXAgMjAxNSwgYXQgMDE6MTgsIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0
+LmNvbT4KPj4+PiB3cm90ZToKPj4+Pj4gCj4+Pj4+IE9uIE1vbiwgU2VwIDIxLCAyMDE1IGF0IDA4
+OjA0OjIwUE0gKzAzMDAsIE1pa2EgRWxvcmFudGEgd3JvdGU6Cj4+Pj4+PiBUaGUgVVVJRCBjYW4g
+bm93IGJlIG9wdGlvbmFsbHkgc3BlY2lmaWVkIGR1cmluZyBmaWxlc3lzdGVtCj4+Pj4+PiBjcmVh
+dGlvbi4KPj4+Pj4gCj4+Pj4+IFdoaWNoIFVVSUQgYXJlIHlvdSB3YW50aW5nIHRvIHNldCAtIHRo
+ZSBtZXRhZGF0YSB1dWlkIG9yIHRoZQo+Pj4+PiB1c2VyIHZpc2libGUgVVVJRCBsYWJlbD8gT3Ig
+Ym90aD8gQ2FuIHlvdSBleHBsYWluIHRoZSB1c2UgY2FzZQo+Pj4+PiBmb3IgdGhpcz8gIGkuZS4g
+SSdtIHRyeWluZyB0byB3b3JrIG91dCB3aHkgV2h5IGRvZXNuJ3QgbWtmcy54ZnMKPj4+Pj4gKyB4
+ZnNfYWRtaW4gLVUgPHV1aWQ+IGRvZXNuJ3Qgd29yayBmb3IgeW91Pwo+Pj4+IAo+Pj4+IEkgd2Fu
+dCB0byBzZXQgdGhlIHVzZXIgdmlzaWJsZSBVVUlEIChzYW1lIGFzIHhmc19hZG1pbiAtVS8tdSku
+Cj4+Pj4gV2hldGhlciB0aGlzIGltcGFjdHMgdGhlICJtZXRhZGF0YSB1dWlk4oCdIG9yIG5vdCwg
+SSBkbyBub3QKPj4+PiBrbm93LCBJ4oCZbSBub3QgYW4gZXhwZXJ0IG9uIHRoZSBYRlMgaW50ZXJu
+YWxzLCBqdXN0IGEgdXNlci4KPj4+IAo+Pj4gV2hpY2ggdGVsbHMgbWUgd2hhdCBJIG5lZWQgdG8g
+a25vdyAtIFlvdSBhcmUgdHJ5aW5nIHRvIHVzZSB0aGUgVVVJRAo+Pj4gYXMgYSB1c2VyIGNvbnRy
+b2xsZWQgZmlsZXN5c3RlbSBsYWJlbC4gRnVubmlseSBlbm91Z2gsIHdlIGhhdmUgYQo+Pj4gdGhp
+bmcgZm9yIHRoaXMgYWxyZWFkeSAtIGEgdXNlciBjb250cm9sbGVkIGZpbGVzeXN0ZW0gbGFiZWw6
+Cj4+PiAKPj4+ICMgbWtmcy54ZnMgLUwgImxhYmVsIiAuLi4uCj4+PiAKPj4+IEl0J3MgMTIgY2hh
+cmFjdGVycyBsb25nLCBzbyBtb3JlIHRoYW4gZW5vdWdoIGZvciBhbnkgc29ydCBvZiB1bmlxdWUK
+Pj4+IGlkZW50aWZpY2F0aW9uIHNjaGVtZSB5b3Ugd2FudCB0byB1c2UgZm9yIHlvdXIgZmlsZXN5
+c3RlbXMuCj4+PiB4ZnNfYWRtaW4gZW5hYmxlcyB5b3UgdG8gY2hhbmdlIGl0IGFmdGVyIHRoZSBm
+YWN0LCBhbGwgbWFqb3IKPj4+IGZpbGVzeXN0ZW1zIHN1cHBvcnQgaXQgYW5kIGFsbCB0aGUgaW5m
+cmFzdHJ1Y3R1cmUga25vdyBhYm91dCBpdAo+Pj4gKGxzYmxrLCAvZXRjL2ZzdGFiLiAvZGV2L2Rp
+c2svYnktbGFiZWwsIGV0Yykgc28gdXNpbmcgaXQgaXMgbm8KPj4+IGRpZmZlcmVudCB0byB1c2lu
+ZyBVVUlEcy4gRXhjZXB0IHRoYXQsIHVubGlrZSBVVUlEcywgeW91IGNhbiBtYWtlCj4+PiBmaWxl
+eXN0ZW0gbGFiZWxzIGh1bWFuIHJlYWRhYmxlLiA6KQo+Pj4gCj4+PiBQZXJoYXBzIHlvdSBzaG91
+bGQgdHJ5IHVzaW5nIGZpbGVzeXN0ZW0gbGFiZWxzIHNlZWluZyBhcyBldmVyeXRoaW5nCj4+PiB5
+b3UgbmVlZCBpcyBhbHJlYWR5IHRoZXJlPwo+PiAKPj4gTGFiZWxzIGFyZSBncmVhdCBmb3IgdXNl
+ci1yZWFkYWJsZSBpZGVudGlmaWVycywgYnV0IFVVSUQgaXMgbm93YWRheXMKPj4gcHJldHR5IG11
+Y2ggdGhlIG5vcm0gZm9yIHJhbmRvbS1nZW5lcmF0ZWQgaWRlbnRpZmllcnMuIE15IHVzZS1jYXNl
+Cj4+IGNvbmNlcm5zIGRpc3RyaWJ1dGVkIGFuZCBhdXRvbWF0ZWQgdmlydHVhbCBzeXN0ZW1zLCB3
+aGVyZSBmaWxlc3lzdGVtcwo+PiBhcmUgY29uc3RhbnRseSBidWlsdCBhbmQgdG9ybiBkb3duLgo+
+IAo+IFN1cmUuIFlvdXIgdXNlIGNhc2UgYm9pbHMgZG93biB0byAid2UgbmVlZCB0byByZXBsYWNl
+IGEgcmFuZG9tbHkKPiBnZW5lcmF0ZWQgbWtmcyBVVUlEIHdpdGggb3VyIG93biByYW5kb21seSBn
+ZW5lcmF0ZWQgVVVJRCIuIFdoeSBub3QKPiBqdXN0IHJlYWQgdGhlIHJhbmRvbWx5IGdlbmVyYXRl
+ZCBVVUlEIG91dCBvZiB0aGUgZmlsZXN5c3RlbSBhbmQgcHV0Cj4gdGhhdCBpbiB0aGUgZGF0YWJh
+c2U/Cj4gCj4gVGhlcmUgYXJlIG1hbnkgd2F5cyBvdCBza2luIGEgY2F0LCBhbmQgSSdtIHRyeWlu
+ZyB0byB1bmRlcnN0YW5kIHdoeQo+IHlvdSBuZWVkIHRvIHNraW4gaXQgaW4gdGhpcyBwYXJ0aWN1
+bGFyIHdheS4uLiA6Lwo+IAo+PiBVc2luZyB0aGUgZmlsZXN5c3RlbSBsYWJlbCB0byBzdG9yZSBh
+IHRydW5jYXRlZCB2ZXJzaW9uIG9mIGEgVVVJRCBpcwo+PiBraW5kIG9mIGFuIG9wdGlvbiwgYnV0
+IEknZCByZWFsbHkgcmF0aGVyIHVzZSB0aGUgZW50aXJlIFVVSUQgYmVjYXVzZToKPj4gCj4+IDEp
+IElkZW50aWZ5aW5nIGFuIG9ycGhhbiBmaWxlc3lzdGVtIGJhc2VkIG9uIGl0cyBjb250ZW50cyBi
+ZWNvbWVzCj4+ICAgbW9yZSBzdHJhaWdodGZvcndhcmQsIGUuZy4gaWYgdGhleSBhcmUgYWxyZWFk
+eSBsaXN0ZWQgaW4gYSBrZXktdmFsdWUKPj4gICBzdG9yZSBiYXNlZCBvbiB0aGVpciBmdWxsIFVV
+SUQgYW5kIHByZWZpeCBsb29rdXBzIGFyZSBub3QgcG9zc2libGUuCj4+IAo+PiAyKSBUaGUgbGFi
+ZWwgaXMgYWN0dWFsbHkgcmF0aGVyIHNob3J0IGZvciBzdG9yaW5nIGEgcmFuZG9tIElELiBGb3IK
+Pj4gICBleGFtcGxlIHN0b3JpbmcgNDggYml0cyBmcm9tIHRoZSBVVUlEIGluIHRoZSBsYWJlbCBo
+ZXgtZW5jb2RlZAo+PiAgIHdvdWxkIGdpdmUgbWUgYSBjb2xsaXNpb24gYWxyZWFkeSBpbiAyMCBt
+aWxsaW9uIGZzIGluc3RhbmNlcyB3aXRoCj4+PiA1MCUgcHJvYmFiaWxpdHkuCj4gCj4gQSBsYWJl
+bCBzdG9yZXMgY2hhcmFjdGVycywgbm90IGhleC1lbmNvZGVkIHZhbHVlcy4gMTIgY2hhcmFjdGVy
+cywKPiBhc3N1bWluZyBBLVosIGEteiwgMC05IGlzIDYyXjEyIHBvc3NpYmxlIGNvbWJpbmF0aW9u
+cyB0aGF0IGNhbiBiZQo+IHN0b3JlZC4gSW5kZWVkLCBKdXN0IDYgY2hhcmFjdGVycyAoaGFsZiB0
+aGUgbGFiZWwpIGdpdmVzIHlvdSA1Ngo+ICpiaWxsaW9uKiB1bmlxdWUgbGFiZWxzLiBCdXQgdGhh
+dCdzIG5vdCBvYnZpb3VzIHVudGlsIHlvdSBzdG9wCj4gdGhpbmtpbmcgYWJvdXQgdXNpbmcgVVVJ
+RHMgZm9yIGV2ZXJ5dGhpbmfigKYuLgoKWW91IGFyZSBhYnNvbHV0ZWx5IGNvcnJlY3QuIEhvd2V2
+ZXIsIHdoZW4gSSBoYXZlIGEgVVVJRCBpbiBteSBoYW5kIGFuZAp0aGVyZSBpcyBhIHNsb3QgY2Fs
+bGVkIOKAnFVVSUQiIGFuZCBpdCBpcyB1c2VyLXNldHRhYmxlIGFuZCBpdCBmaXRzIG15IElEIHBl
+cmZlY3RseSwKdG8gbWUgaXQgaXMgcmF0aGVyIG5hdHVyYWwgdG8gdXNlIGl0IGluc3RlYWQgb2Yg
+dHJ5aW5nIHRvIGludmVudCBuZXcgZW5jb2RpbmcKc2NoZW1lcyBmb3Igc3RvcmluZyBhIHBhcnQg
+b2YgaXQuCgo+IFsgSSdtIHN0YXJ0aW5nIHRvIHRoaW5rIHRoZSBtZXJlIG1lbnRpb24gb2YgIlVV
+SUQiIGNhdXNlcyBwZW9wbGUgdG8KPiBsb3NlIDIwIElRIHBvaW50cyBpbnN0YW50bHkuIDpQIF0K
+Ck5vIGNvbW1lbnRzIGFib3V0IHRoaXMgb25lLgoKPj4gSSB0aG91Z2h0IGFkZGluZyB0aGUgb3B0
+aW9uIHdvdWxkIGJlIGEgcmF0aGVyIHN0cmFpZ2h0Zm9yd2FyZCB0aGluZywKPj4gZXNwZWNpYWxs
+eSB3aGVuIG1vcmUgcHJvYmxlbWF0aWMgInhmc19hZG1pbiAtVSIgaXMgKHdhcz8pIGFscmVhZHkK
+Pj4gc3VwcG9ydGVkLgo+IAo+IEJ1Z3MgYXJlIGEgcmVhbGl0eSB3ZSBoYXZlIHRvIGxpdmUgd2l0
+aC4gV2UndmUgZml4ZWQgdGhlbSAoSSB0aGluaykuCgpBbmQgSSB0aGFuayB5b3UgZ3V5cyBmb3Ig
+dGhhdC4gTmV2ZXIgaGFkIGEgc2hvd3N0b3BwZXIgd2l0aCBYRlMuIFVubGlrZQp3aXRoIHNvbWUg
+b3RoZXIsIGtybWgsIHVubmFtZWQgb3B0aW9ucy4uLgoKPj4gSXMgdGhlcmUgdGVjaG5pY2FsIHJl
+YXNvbiB3aHkgYXNzaWduaW5nIHRoZSBVVUlEIGlzIG5vIGxvbmdlcgo+PiByZWNvbW1lbmRlZD8K
+PiAKPiBUaGUgY2hhbmdpbmcgb2YgdGhlIFhGUyBVVUlEIHdhcyBhZGRlZCBmb3IgYSB2ZXJ5IHNw
+ZWNpZmljIHVzZSBjYXNlCj4gLSBhbGxvd2luZyB3cml0YWJsZSBjbG9uZXMgb2YgYSBmaWxlc3lz
+dGVtIHRvIGJlIG1vdW50ZWQgc28gdGhlCj4gIm5vdXVpZCIgbW91bnQgb3B0aW9uIHdhcyB1bm5l
+Y2Vzc2FyeS4gWW91J3JlIHRoZSBmaXJzdCBwZXJzb24gbgo+IDEwIHllYXJzIHRvIGFzayBmb3Ig
+c29tZXRoaW5nIG5ldyBpbiBVVUlEIGhhbmRsaW5nIGFuZCB0aGF0IGlzIHdoeQo+IEknbSBhc2tp
+bmcgbG90cyBvZiBxdWVzdGlvbnMuLi4uCj4gCj4+IFRoZSBwYXRjaCBvbmx5IGFsbG93cyBvcHRp
+b25hbGx5IHVzaW5nIGEgdXNlci1zcGVjaWZpZWQgVVVJRAo+PiBpbnN0ZWFkIG9mIGEgb25lIGdl
+bmVyYXRlZCByYW5kb21seSBvbiB0aGUgc3BvdCB3aXRoaW4gbWtmcy54ZnMsCj4+IGFuZCBJIGNh
+bm5vdCBzZWUgYW55IGhhcm0gaW4gdGhhdC4KPiAKPiBTdXJlLCB0aGVyZSBtYXkgYmUgbm8gaGFy
+bSwgYnV0IEknbSBzdGFydGluZyBmcm9tIHRoZSBwb3NpdGlvbiBvZgo+IGtub3dpbmcgbm90aGlu
+ZyBhYm91dCB3aHkgeW91IHdhbnQgdGhlIGZlYXR1cmUgb3IgaG93IGl0IHdpbGwgYmUKPiB1c2Vk
+IHNvIEkgY2FuJ3QgbWFrZSB0aGF0IGp1ZGdlbWVudCBqdXN0IGJ5IGxvb2tpbmcgYXQgdGhlIGNv
+ZGUuCj4gCj4gVGhpbmsgb24gdGhhdCBmb3IgYSBtb21lbnQgLSBkbyB5b3UganVzdCBpbmNsdWRl
+IHJhbmRvbSBjb2RlIGNoYW5nZXMKPiBpbiB5b3VyIGNvZGUgYmFzZSB0aGF0IHlvdSByZWFsbHkg
+a25vdyBub3RoaW5nIGFib3V0PyBPciBkbyB5b3UgYXNrCj4gcXVlc3Rpb25zIGFuZCB0cnkgdG8g
+dW5kZXJzdGFuZCB3aHkgaXQgaXMgbmVlZGVkIGZpcnN0PyAgSW5kZWVkLAo+IHdvdWxkIHlvdSB0
+cnVzdCBzb2Z0d2FyZSBtYWludGFpbmVkIGJ5IHNvbWVvbmUgd2hvIGRvZXNuJ3QgY2FyZSB0bwo+
+IG1ha2UgaW5mb3JtZWQgZGVjaXNpb25zIGFib3V0IHRoZSBjb2RlIGJhc2UgdGhleSBhcmUgcmVz
+cG9uc2libGUKPiBmb3IgbWFpbnRhaW5pbmc/Cj4gCj4gRG9uJ3QgZ2V0IG1lIHdyb25nIGhlcmUg
+LSBJIHdpbGwgdGFrZSBhbiB1cGRhdGVkIHBhdGNoIGZyb20geW91IGZvcgo+IHRoaXMgZnVuY3Rp
+b25hbGl0eS4gQm90aCB5b3UgYW5kIEVyaWMgaGF2ZSB2ZXJ5IGdvb2QgcG9pbnRzIGFzIHRvCj4g
+d2h5IG1rZnMgc2hvdWxkIGFsbG93IHRoaXMsIGJ1dCBJIG5lZWQgdG8gbWFrZSBzdXJlIC9JLyB1
+bmRlcnN0YW5kCj4gdGhlIGJpZ2dlciBwaWN0dXJlIGJlZm9yZSBjb21taXR0aW5nIGl04oCmCgpM
+ZXNzb24gbGVhcm5lZC4gQ29taW5nIGZyb20gbXkgcHJvYmxlbSBkb21haW4gdGhlIGZlYXR1cmUg
+c2VlbWVkCm9idmlvdXMsIGJ1dCBJIGNhbiBzZWUgdGhlIG5lZWQgZm9yIGJlaW5nIG1vcmUgdmVy
+Ym9zZSBhYm91dCB0aGUg4oCcd2h5P+KAnQpwYXJ0LiBJIGRpZCBub3QgcmVhbGl6ZSB0aGlzIGZl
+YXR1cmUgaXMgbm90IHNvIGNvbW1vbmx5IHVzZWQuCgpSZWdhcmRpbmcgdXBkYXRpbmcgdGhlIHBh
+dGNoOiDigJwtVSB1dWlk4oCdIChta2ZzLmV4dCovbWtmcy5idHJmcyAtc3R5bGUpIG9yCiItbSB1
+dWlkPTx1dWlkPuKAnSBhcyBwZXIgcHJvcG9zYWwgYnkgQ2FybG9zPwoKSeKAmWxsIGFsc28gdHJ5
+IHRvIHN1bW1hcml6ZSBhIGJldHRlciBjb21taXQgbWVzc2FnZS4KCkNoZWVycywKCgktIE1pa2EK
+CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
+aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCg==
