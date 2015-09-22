@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3B63D7F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 17:26:41 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DF4427F37
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 17:34:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 09CB8304032
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 15:26:40 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AB7EF8F8033
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 15:34:42 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	AXcfvg89zT8M2YBp for <xfs@oss.sgi.com>;
-	Tue, 22 Sep 2015 15:26:38 -0700 (PDT)
-Date: Wed, 23 Sep 2015 08:26:36 +1000
+	r0rXveA6Qy6Ird0Z for <xfs@oss.sgi.com>;
+	Tue, 22 Sep 2015 15:34:40 -0700 (PDT)
+Date: Wed, 23 Sep 2015 08:34:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: incorporate sysfs/kobject in xfsstats: handlers
-	take kobjects.
-Message-ID: <20150922222636.GM19114@dastard>
-References: <1442923671-14125-1-git-send-email-billodo@redhat.com>
-	<1442923671-14125-6-git-send-email-billodo@redhat.com>
-	<56016A1E.8080103@sandeen.net> <20150922151605.GA29067@redhat.com>
+Subject: Re: [PATCH] mkfs.xfs: option for using a pre-defined filesystem UUID
+Message-ID: <20150922223402.GN19114@dastard>
+References: <1442924691-42001-1-git-send-email-mel@ohmu.fi>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150922151605.GA29067@redhat.com>
+In-Reply-To: <1442924691-42001-1-git-send-email-mel@ohmu.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,118 +29,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Mika Eloranta <mel@ohmu.fi>
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 22, 2015 at 10:16:05AM -0500, Bill O'Donnell wrote:
-> > >  		goto out;
-> > >  
-> > >  	if (!proc_symlink("fs/xfs/stat", NULL,
-> > > -			  "/sys/fs/xfs/stats/stats"))
-> > > +			"/sys/fs/xfs/stats/stats"))
-> > 
-> > intentional whitespace changes?
-> > 
-> > >  		goto out_remove_xfs_dir;
-> > >  
-> > >  #ifdef CONFIG_XFS_QUOTA
-> > >  	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
-> > > -			 &xqmstat_proc_fops))
-> > > +			&xqmstat_proc_fops))
-> > >  		goto out_remove_stat_file;
-> > >  	if (!proc_create("fs/xfs/xqm", 0, NULL,
-> > > -			 &xqm_proc_fops))
-> > > +			&xqm_proc_fops))
-> > 
-> > Same question.  (did checkpatch complain or something?)
+On Tue, Sep 22, 2015 at 03:24:51PM +0300, Mika Eloranta wrote:
+> Usage: mkfs.xfs -m uuid=<uuid> <device>
 > 
-> Yes. Checkpatch didn't like any spaces, so I turned em into tabs.
-
-Checkpatch should be considered harmful.
-
-It's a good starting point, but it ends up doing more harm than good
-because it doesn't understand the subtle differences in code across
-different subsystems.
-
-In this case, the standard we use for XFS is that multi-line
-parameters should be lined up with the first parameter, unless the
-new parameters don't fit on a single line, and then we back up the
-indent by a tab at a time. i.e. This is correct:
-
-	if (!proc_create("fs/xfs/xqm", 0, NULL,
-			 &xqm_proc_fops))
-
-regardless of what checkpatch says. Indeed, if checkpatch had any
-brains, it would have noticed that a line break is not necessary
-as this:
-
-	if (!proc_create("fs/xfs/xqm", 0, NULL, &xqm_proc_fops))
-
-fits in 80 columns just fine.
-
-Remember that Documentation/CodingStyle is a set of guidelines, not
-a strict, enforcable set of rules.  The basic guidelines canbe
-summarised as:
-
-	1. Use the same style as the existing code in the file,
-	   unless reviewers/maintainers ask otherwise.
-	2. new files should follow the format used in other files in
-	   the subsystem, unless reviewers/maintainer asks otherwise.
-	3. Do not reformat code that you don't need to directly
-	   modify in the patch.
-	4. modify your editor to highlight common style things that
-	   you need reminders to get right
-	5. Immolate checkpatch before the plague spreads further
-
-As to #4, there's plenty of simple things you can do. e.g to
-identify stray whitespace in files, add this to your .vimrc file
-(you can do similar with emacs, google it):
-
-	" highlight whitespace damage
-	highlight RedundantSpaces ctermbg=red guibg=red
-	match RedundantSpaces /\s\+$\| \+\ze\t/
-
-This will catch things like "tab-space-tab" and it will also find
-trailing whitespace at the end of lines. They will appear in red.
-
-> > > -#define XFS_STATS_INC(v)	(per_cpu(xfsstats, current_cpu()).v++)
-> > > -#define XFS_STATS_DEC(v)	(per_cpu(xfsstats, current_cpu()).v--)
-> > > -#define XFS_STATS_ADD(v, inc)	(per_cpu(xfsstats, current_cpu()).v += (inc))
-> > > +#define XFS_STATS_INC(v)	(per_cpu(*xfsstats.xs_stats, current_cpu()).v++)
-> > > +#define XFS_STATS_DEC(v)	(per_cpu(*xfsstats.xs_stats, current_cpu()).v--)
-> > > +#define XFS_STATS_ADD(v, inc)	(per_cpu(*xfsstats.xs_stats, current_cpu()).v += (inc))
-> > 
-> > Line > 80 chars
+> The filesystem UUID can now be optionally specified during filesystem
+> creation. The default behavior is still to generate a random UUID.
 > 
-> I'll fix it.
+> Allows using pre-generated UUIDs for identifying a filesystem based
+> on the metadata stored inside the filesystem. Filesystem labels can
+> be used for the same purpose, but are limited by their length
+> (12 chars in the case of xfs) whereas the UUID field can store an
+> entire 128bit UUID, which is plenty for e.g. random ID collision
+> avoidance.
+> 
+> Random UUID generated during the creation of the filesystem is not
+> always feasible when an external DB or other system is used to track
+> the created filesystem, e.g. in automated VM provisioning systems,
+> as this would require a feedback mechanism which is not always
+> available. In these cases the best approach often is to generate
+> a random UUID for the filesystem before the filesystem even exists,
+> store it in the tracking DB and later create the filesystem directly
+> with the correct UUID (instead of "mkfs.xfs + xfs_admin -U <new_uuid>").
 
-Checkpatch got changed not to warn about that, because too many
-people complained about it when modifying files with >80 column
-formatting.
+Much nicer! Just needs a signed-off-by tag now...
 
-To that end, I also use custom column width highlights based on file
-names so that line wrapping occurs automatically at the correct
-spot, and when looking at code I can clearly see long lines:
+> @@ -948,6 +950,7 @@ main(
+>  	bool			finobtflag;
+>  	int			spinodes;
+>  
+> +	platform_uuid_clear(&uuid);
+>  	progname = basename(argv[0]);
+>  	setlocale(LC_ALL, "");
+>  	bindtextdomain(PACKAGE, LOCALEDIR);
 
-	" set the textwidth to 80 characters by default
-	set tw=80
+You can just call platform_uuid_generate(&uuid) here.
 
-	" set the textwidth to 68 characters for guilt commit messages
-	au BufNewFile,BufRead guilt.msg.*,.gitsendemail*,.git* set tw=68
+> @@ -1488,6 +1491,12 @@ main(
+>  					finobt = c;
+>  					finobtflag = true;
+>  					break;
+> +				case M_UUID:
+> +					if (!value || *value == '\0')
+> +						reqval('m', mopts, M_UUID);
+> +					if (platform_uuid_parse(value, &uuid))
+> +						illegal(optarg, "m uuid");
+> +					break;
 
-	" set the textwidth to 68 characters for replies (email&usenet)
-	au BufNewFile,BufRead .letter,mutt*,nn.*,snd.* set tw=68
+This will overwrite the pre-generated uuid if it is specified.
 
-	" highlight textwidth
-	set cc=+1
+>  				default:
+>  					unknown('m', value);
+>  				}
+> @@ -2550,7 +2559,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+>  	sbp->sb_dblocks = dblocks;
+>  	sbp->sb_rblocks = rtblocks;
+>  	sbp->sb_rextents = rtextents;
+> -	platform_uuid_generate(&uuid);
+> +	if (platform_uuid_is_null(&uuid)) {
+> +	    platform_uuid_generate(&uuid);
+> +	}
 
-If you do little things like this, the need for checkpatch goes
-away. With a default tw=80 and a highlight, I only have to glance
-at a patch to know it has lines longer than 80 columns in it.
-
-As such, I haven't used checkpatch for years, and I recommend that
-you develop the right habits and automation such that you don't need
-to use it after a couple of months, either...
+And this code can go away completely as we are guaranteed to have a
+valid uuid by this point.
 
 Cheers,
 
