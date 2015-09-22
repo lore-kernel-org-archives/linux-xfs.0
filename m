@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1524929DF5
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:41:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E623B8F8033
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:41:11 -0700 (PDT)
-Received: from mail.nomovok.com (mail.nomovok.com [83.150.122.238]) by
-	cuda.sgi.com with ESMTP id lJwFEEkv6ctGj0m1 (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:41:09 -0700 (PDT)
-Received: from [192.168.0.111]
-	(host46-236-dynamic.8-87-r.retail.telecomitalia.it [87.8.236.46])
-	by mail.nomovok.com (Postfix) with ESMTPSA id 49652AE17E
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 15:41:07 +0300 (EEST)
-Message-ID: <56014C62.1070403@nomovok.com>
-Date: Tue, 22 Sep 2015 14:41:06 +0200
-From: Angelo Dureghello <angelo.dureghello@nomovok.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8571F7F5E
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 09:21:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 75F7D304032
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:21:05 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id u7l1vYDpeuhtmU7U (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:21:04 -0700 (PDT)
+Date: Tue, 22 Sep 2015 10:21:01 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC v2 2/2] xfs: validate metadata LSNs against log on v5
+	superblocks
+Message-ID: <20150922142100.GB46026@bfoster.bfoster>
+References: <1441997635-36644-1-git-send-email-bfoster@redhat.com>
+	<1441997635-36644-3-git-send-email-bfoster@redhat.com>
+	<20150922080725.GC3902@dastard>
 MIME-Version: 1.0
-Subject: Re: xfstests, bad generic tests 009 and 308
-References: <55FC3E0E.9060506@nomovok.com> <20150918224412.GE26895@dastard>
-	<55FFE665.7040004@nomovok.com> <20150921225244.GD19114@dastard>
-In-Reply-To: <20150921225244.GD19114@dastard>
-Content-Type: multipart/mixed; boundary="------------090109000100090403070109"
+Content-Disposition: inline
+In-Reply-To: <20150922080725.GC3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,286 +28,271 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------090109000100090403070109
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, Sep 22, 2015 at 06:07:25PM +1000, Dave Chinner wrote:
+> On Fri, Sep 11, 2015 at 02:53:55PM -0400, Brian Foster wrote:
+> > Since the onset of v5 superblocks, the LSN of the last modification has
+> > been included in a variety of on-disk data structures. This LSN is used
+> > to provide log recovery ordering guarantees (e.g., to ensure an older
+> > log recovery item is not replayed over a newer target data structure).
+> > 
+> > While this works correctly from the point a filesystem is formatted and
+> > mounted, userspace tools have some problematic behaviors that defeat
+> > this mechanism. For example, xfs_repair historically zeroes out the log
+> > unconditionally (regardless of whether corruption is detected). If this
+> > occurs, the LSN of the filesystem is reset and the log is now in a
+> > problematic state with respect to on-disk metadata structures that might
+> > have a larger LSN. Until either the log catches up to the highest
+> > previously used metadata LSN or each affected data structure is modified
+> > and written out without incident (which resets the metadata LSN), log
+> > recovery is susceptible to filesystem corruption.
+> > 
+> > This problem is ultimately addressed and repaired in the associated
+> > userspace tools. The kernel is still responsible to detect the problem
+> > and notify the user that something is wrong. Check the superblock LSN at
+> > mount time and notify the user and fail the mount if it is invalid.
+> > From that point on, simply warn the user if an invalid metadata LSN is
+> > detected from the various metadata I/O verifiers. A new xfs_mount flag
+> > is added to guarantee that a warning fires at least once for each
+> > affected filesystem mount. From that point forward, further instances of
+> > the problem are rate limited to a once per 24 hour period.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_alloc.c          |  9 +++++--
+> >  fs/xfs/libxfs/xfs_attr_leaf.c      |  2 ++
+> >  fs/xfs/libxfs/xfs_btree.c          | 14 +++++++++--
+> >  fs/xfs/libxfs/xfs_da_btree.c       |  3 +++
+> >  fs/xfs/libxfs/xfs_dir2_block.c     |  1 +
+> >  fs/xfs/libxfs/xfs_dir2_data.c      |  1 +
+> >  fs/xfs/libxfs/xfs_dir2_leaf.c      |  1 +
+> >  fs/xfs/libxfs/xfs_dir2_node.c      |  1 +
+> >  fs/xfs/libxfs/xfs_ialloc.c         |  8 +++++--
+> >  fs/xfs/libxfs/xfs_sb.c             |  8 +++++++
+> >  fs/xfs/libxfs/xfs_symlink_remote.c |  3 +++
+> >  fs/xfs/xfs_log.c                   |  1 -
+> >  fs/xfs/xfs_log_priv.h              | 24 +++++++++++++++++++
+> >  fs/xfs/xfs_log_recover.c           | 15 +++++++++++-
+> >  fs/xfs/xfs_mount.c                 | 49 ++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_mount.h                 |  3 +++
+> >  16 files changed, 135 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index ffad7f2..cb26016 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -482,6 +482,8 @@ xfs_agfl_verify(
+> >  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+> >  			return false;
+> >  	}
+> > +
+> > +	xfs_detect_invalid_lsn(mp, be64_to_cpu(XFS_BUF_TO_AGFL(bp)->agfl_lsn));
+> >  	return true;
+> 
+> 	xfs_log_check_lsn(mp, <lsn>);
+> 
 
-Hi Dave,
+Ok.
 
-still thanks for following.
+> > +/*
+> > + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+> > + * means that the next log record that includes this metadata could have a
+> > + * smaller LSN. In turn, this means that the modification in the log would not
+> > + * replay.
+> > + */
+> > +static inline bool
+> > +xlog_valid_lsn(
+> > +	struct xlog	*log,
+> > +	xfs_lsn_t	lsn)
+> > +{
+> > +	int		cycle = CYCLE_LSN(lsn);
+> > +	int		block = BLOCK_LSN(lsn);
+> > +	bool		valid = true;
+> > +
+> > +	spin_lock(&log->l_icloglock);
+> > +	if ((cycle > log->l_curr_cycle) ||
+> > +	    (cycle == log->l_curr_cycle && block > log->l_curr_block))
+> > +		valid = false;
+> > +	spin_unlock(&log->l_icloglock);
+> > +
+> > +	return valid;
+> > +}
+> 
+> We do not want to take the l_icloglock in metadata IO
+> context. It's a global fs lock, and it's a hot lock, too, so we
+> do not want to be taking this during every metadata IO completion.
+> 
+> I think, at minimum, we need to sample the current values and do an
+> unlocked check, then if the result is suspect we need to do an
+> accurate locked check. This means that we will almost never take the
+> l_icloglock here. e.g:
+> 
+> {
+> 	int cycle = ACCESS_ONCE(log->l_curr_cycle);
+> 	int block = ACCESS_ONCE(log->l_curr_block);
+> 
+> 	if (CYCLE_LSN(lsn) > cycle ||
+> 	    (CYCLE_LSN(lsn) == cycle && BLOCK_LSN(lsn) > block)) {
+> 		/* suspect, take icloglock to check again */
+> 		bool valid = true;
+> 
+> 		....
+> 		return valid;
+> 	}
+> 	return true;
+> }
+> 
 
->> I am using actually gcc-linaro-4.9-2015.05-x86_64_arm-linux-gnueabihf
-> So gcc-4.9 patched with a bunch of stuff from linaro and built as a
-> cross compiler from x86-64 to 32 bit arm? ISTR we had a bunch of
-> different compiler problems at one point that only showed up in
-> kernels build with a x86-64 to arm cross-compiler.  In case you
-> haven't guessed, XFS has a history of being bitten by ARM compiler
-> problems. There's been a lot more problems in the past couple of
-> years than the historical trend, though.
->
-> As it is, I highly recommend that you try a current 4.3 kernel, as
-> there are several code fixes in the XFS kernel code that work around
-> compiler issues we know about. AFAIA, the do_div() asm bug that
-> trips recent gcc optimisations isn't in the upstream kernel yet, but
-> that can be worked around by setting CONFIG_CC_OPTIMIZE_FOR_SIZE=y
-> in your build.
+Good point. In this case, I may just lift the lock out of the helper and
+allow this to be the responsibility of the caller, but I'll see how it
+looks.
 
-Well, i updated to this toolchain recently, but built the kernel also
-with an i686 4.9 toolchain, and had exactly same tests errors.
-Yes i am always cross compiling for armhf btw.
-I am using a 4.1.5-rt from TI,
-will try possibly some more recent version and let you know.
+> 
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -41,6 +41,7 @@
+> >  #include "xfs_trace.h"
+> >  #include "xfs_icache.h"
+> >  #include "xfs_sysfs.h"
+> > +#include "xfs_log_priv.h"
+> >  
+> >  
+> >  static DEFINE_MUTEX(xfs_uuid_table_mutex);
+> > @@ -1301,3 +1302,51 @@ xfs_dev_is_read_only(
+> >  	}
+> >  	return 0;
+> >  }
+> > +
+> > +/*
+> > + * Verify that an LSN stamped into a piece of metadata is valid. This is
+> > + * intended for use in read verifiers on v5 superblocks.
+> > + */
+> > +void
+> > +xfs_detect_invalid_lsn(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_lsn_t		lsn)
+> > +{
+> 
+> This shoul dbe called xfs_log_check_lsn() and be located in
+> xfs_log.c.
+> 
 
->> I have recent git version of xfstests, but generic/308 shows
->>
->> #! /bin/bash
->> # FS QA Test No. 308
->> #
->> # Regression test for commit:
->> # f17722f ext4: Fix max file size and logical block counting of
->> extent format file
-> More that one filesystem had problems with maximum file sizes on 32
-> bit systems. Compare the contents of the test; don't stop reading
-> because the summary of the test makes you think the rest of the test
-> is unrelated to the problem at hand.
->
->> I have a 16MB partition, and wondering why xfs allows from test 308
->> to create a 16TB file.
->>
->> -rw------- 1 root root  17592186044415 Sep 18 09:40 testfile.308
-> https://en.wikipedia.org/wiki/Sparse_file
->
->> QA output created by 009
->> 	1. into a hole
->> 0: [0..39]: hole
->> daa100df6e6711906b61c9ab5aa16032
->> 	2. into allocated space
->> cc58a7417c2d7763adc45b6fcd3fa024
->> 	3. into unwritten space
->> daa100df6e6711906b61c9ab5aa16032
-> I don't need to look any further to see that something is badly
-> wrong here. This is telling me that no extents are being allocated
-> at all, which indicates either fiemap is broken, awk/sed is
-> broken or misbehaving (and hence mangling the output) or something
-> deep in the filesystem code is fundamentally broken in some
-> strange, silent way.
->
-> Can you create an xfs filesystem on your scratch device, and
-> manually run this command and post the output:
->
-> # mkfs.xfs -V
-> # mkfs.xfs <dev>
-> # mount <dev> /mnt/xfs
-> # xfs_io -f -c "pwrite 0 64k" -c sync \
-> 	    -c "bmap -vp" -c "fiemap -v" \
-> 	    -c "falloc 1024k 256k" -c sync \
-> 	    -c "pwrite 1088k 64k" -c sync \
-> 	    -c "bmap -vp" -c "fiemap -v" \
-> 	    /mnt/xfs/testfile
->
-> and attach the entire output?
+Ok.
 
-I attached the output. I can be completely wrong, but file system
-seems quite reliable for rootfs operations until now. At least,
-never had any issue after installing and removing several and several
-debian packages.
-Only issues i had are created from test 308 that, if left running too long,
-it damages the fs.
+> > +	struct xlog		*log = mp->m_log;
+> > +	int			cycle = CYCLE_LSN(lsn);
+> > +	int			block = BLOCK_LSN(lsn);
+> > +	const char 		*fmt;
+> > +
+> > +	/*
+> > +	 * 'norecovery' mode skips mount-time log processing and unconditionally
+> > +	 * resets the LSN.
+> > +	 */
+> > +	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
+> > +		return;
+> > +
+> > +	if (xlog_valid_lsn(mp->m_log, lsn))
+> > +		return;
+> > +
+> > +	/*
+> > +	 * Warn at least once for each filesystem susceptible to this problem
+> > +	 * and once per day thereafter.
+> > +	 *
+> > +	 * XXX: Specify the minimum xfs_repair version required to resolve?
+> > +	 * Older versions will silently reintroduce the problem.
+> > +	 *
+> > +	 * We should eventually convert this condition into a hard error (via
+> > +	 * verifier failure). Defer that behavior for a few release cycles or so
+> > +	 * until the userspace fixes have had the opportunity to propogate
+> > +	 * throughout the various distributions.
+> > +	 */
+> > +	fmt = "WARNING: Metadata has LSN (%d:%d) ahead of current LSN (%d:%d). "
+> > +"This may result in filesystem failure. Please unmount and run xfs_repair to resolve.";
+> > +	if (!mp->m_warned_bad_lsn) {
+> > +		mp->m_warned_bad_lsn = true;
+> > +		xfs_warn(mp, fmt, cycle, block, log->l_curr_cycle,
+> > +			 log->l_curr_block);
+> > +	} else {
+> > +		xfs_warn_daily(mp, fmt, cycle, block, log->l_curr_cycle,
+> > +			       log->l_curr_block);
+> > +	}
+> 
+> That's really ugly. Rate limited prints should always occur at least
+> once for each ratelimit key, and now i've seen this I can say the
+> first patch needs rework.
+> 
 
-> It would also be good if you can run this command under trace-cmd
-> and capture all the XFS events that occur during the test. See
+This is definitely more ugly than the shutdown approach. As mentioned,
+I've been waffling back and forth on how to handle this condition. I had
+already sent the shutdown version, so I figured I would put together
+what I thought would be necessary to handle this with a warning for
+comparison.
 
-Ok, about test 308, the 2 xfs_io operations passes, it stops on the rm 
-exiting
-the tests, while trying to erase the 16t file.
+> that is, each xfs_warn_daily() caller needs it's own ratelimit key,
+> rather than sharing the global ratelimit key that all other XFS
+> messages share.
+> 
 
-# Create a sparse file with an extent lays at one block before old 
-s_maxbytes
-offset=$(((2**32 - 2) * $block_size))
-$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile 
- >$seqres.full 2>&1
+What do you mean by a key? What is the purpose?
 
-rm can remove remove correctly this file (17592186040320)
+On further thought... I think I see what you mean. Each mount should
+report in the ratelimited timeframe independently. Or in other words,
+the rate limit of one mount should not affect message delivery on
+another.
 
-# Write to the block after the extent just created
-offset=$(((2**32 - 1) * $block_size))
-$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile 
- >>$seqres.full 2>&1
+> e.g.:
+> 	xfs_warn_daily(mp, mp->m_log->l_lsn_rlstate,
+> "Corruption warning: Metadata has LSN (%d:%d) ahead of current LSN (%d:%d). "
+> "Please unmount and run xfs_repair (>= v4.3) to resolve.".
+> 			cycle, block, log->l_curr_cycle, log->l_curr_block);
+> 
+> But really, thinking on this further (the "corruption warning" bit)
+> I'm starting to think we should just shut the filesystem down when
+> we hit this and force the user to fix it immediately. if we don't,
+> then who knows whether we are making things worse or not...
+> 
 
-while rm hangs on removing this file (17592186044415)
+I was originally thinking the shutdown might not be ideal because we
+induce the very situation we're warning about (forcing a log recovery).
+Since this verifies on metadata reads, however, we should in theory
+avoid the problem before it could ever be introduced. My follow on
+question to that was whether a shutdown is appropriate for something
+that is somewhat minor and self-corrective..?
 
-Magic sysrq l or t is not helping, nothing useful comes out.
-But i collected the strace log. Since the issue is at unlinkat().
+Given the ugliness of the multiple warnings, new mount flag, additional
+complication of the ratelimit mechanism, etc., I might just go back to
+the shutdown and call it a day. ;) I think the subtle point raised above
+about calling this a corruption is a sufficient argument. While this
+might be minor and self-correcting, it is still technically a corruption
+of sorts and should be identified and repaired appropriately. Thanks for
+the feedback.
 
+Brian
 
-
-Many thanks
-Best regards
-Angelo
-
-
--- 
-Best regards,
-Angelo Dureghello
-
-
---------------090109000100090403070109
-Content-Type: text/plain; charset=UTF-8;
- name="mkfs_output.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="mkfs_output.txt"
-
-root[249] ~
-# mkfs.xfs -V
-mkfs.xfs version 3.2.1
-root[250] ~
-# mkfs.xfs /dev/mmcblk0p6
-mkfs.xfs: /dev/mmcblk0p6 appears to contain an existing filesystem (xfs).
-mkfs.xfs: Use the -f option to force overwrite.
-root[251] ~
-# mkfs.xfs -f /dev/mmcblk0p6
-meta-data=/dev/mmcblk0p6         isize=256    agcount=4, agsize=551008 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=0        finobt=0
-data     =                       bsize=4096   blocks=2204032, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-root[252] ~
-# mount /dev/mmcblk0p6 /media/p6                
-[38946.599770] XFS (mmcblk0p6): Mounting V4 Filesystem
-[38946.800708] XFS (mmcblk0p6): Ending clean mount
-
-# xfs_io -f -c "pwrite 0 64k" -c sync \
-                       -c "bmap -vp" -c "fiemap -v" \
-                       -c "falloc 1024k 256k" -c sync \
-                       -c "pwrite 1088k 64k" -c sync \
-                       -c "bmap -vp" -c "fiemap -v" \
-                       /media/p6/testfile
-wrote 65536/65536 bytes at offset 0
-64 KiB, 16 ops; 0.0000 sec (96.154 MiB/sec and 24615.3846 ops/sec)
-command "sync" not found
-/media/p6/testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-   0: [0..127]:        96..223           0 (96..223)          128 00000
-/media/p6/testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-   0: [0..127]:        96..223            128   0x1
-command "sync" not found
-wrote 65536/65536 bytes at offset 1114112
-64 KiB, 16 ops; 0.0000 sec (112.208 MiB/sec and 28725.3142 ops/sec)
-command "sync" not found
-/media/p6/testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-   0: [0..127]:        96..223           0 (96..223)          128 00000
-   1: [128..2047]:     hole                                  1920
-   2: [2048..2559]:    2144..2655        0 (2144..2655)       512 10000
-/media/p6/testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-   0: [0..127]:        96..223            128   0x0
-   1: [128..2047]:     hole              1920
-   2: [2048..2175]:    2144..2271         128 0x800
-   3: [2176..2303]:    2272..2399         128   0x0
-   4: [2304..2559]:    2400..2655         256 0x801
-
-Step by step xfs_io
--------------------
-
-Due to the "sync" is missing, i tried also command by command with
-shell "sync" after each command. Output is exactly the same.
-
-
-
---------------090109000100090403070109
-Content-Type: text/plain; charset=UTF-8;
- name="strace_rm_308.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="strace_rm_308.txt"
-
--rw-------  1 root root 17592186040320 Sep 22 10:55 testfile.308
-
-
-rm ok
-
--rw-------  1 root root 17592186044415 Sep 22 10:58 testfile.308
-
-total 496
-drwxr-xr-x 11 root root           4096 Sep 22 10:58 .
-drwxr-xr-x  4 root root            101 Sep 22 08:40 ..
--rw-------  1 root root         131072 Sep 21 14:50 008.24410
--rw-------  1 root root         131072 Sep 21 14:52 008.2913
--rw-------  1 root root           4096 Sep 21 14:50 009.25001
--rw-------  1 root root           4096 Sep 21 14:52 009.3505
--rw-------  1 root root          81920 Sep 21 14:50 012.26531
--rw-------  1 root root          49152 Sep 21 14:52 012.5039
-drwxr-xr-x  3 root root           4096 Sep 21 15:16 14536
-drwxr-xr-x  3 root root             38 Sep 21 15:25 16802
-drwxr-xr-x  3 root root           4096 Sep 21 15:26 18438
-drwxr-xr-x  3 root root             38 Sep 21 15:27 21042
-drwxr-xr-x  3 root root             38 Sep 21 14:50 27593
-drwxr-xr-x  3 root root             70 Sep 21 15:08 8274
-drwxr-xr-x  3 root root             15 Sep 21 14:53 fsstress.5653.1
-drwxr-xr-x 22 root root           4096 Sep 21 14:53 fsstress.5653.2
--rw-------  1 root root 17592186044415 Sep 22 11:44 testfile.308
-drwxr-xr-x  2 root root             20 Sep 21 15:12 tmp
-root[252] vpc24 /media/p5
-# rm testfile.308 
-
-# strace rm testfile.308 
-execve("/bin/rm", ["rm", "testfile.308"], [/* 16 vars */]) = 0
-brk(0)                                  = 0x2a000
-uname({sys="Linux", node="vpc24", ...}) = 0
-access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
-mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb6f36000
-access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
-open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
-fstat64(3, {st_mode=S_IFREG|0644, st_size=34089, ...}) = 0
-mmap2(NULL, 34089, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb6f2d000
-close(3)                                = 0
-access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
-open("/lib/arm-linux-gnueabihf/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
-read(3, "\177ELF\1\1\1\3\0\0\0\0\0\0\0\0\3\0(\0\1\0\0\0Mw\1\0004\0\0\0"..., 512) = 512
-lseek(3, 899996, SEEK_SET)              = 899996
-read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2880) = 2880
-lseek(3, 896548, SEEK_SET)              = 896548
-read(3, "A4\0\0\0aeabi\0\1*\0\0\0\0057-A\0\6\n\7A\10\1\t\2\n\3\f"..., 53) = 53
-fstat64(3, {st_mode=S_IFREG|0755, st_size=902876, ...}) = 0
-mmap2(NULL, 972200, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb6e23000
-mprotect(0xb6efc000, 61440, PROT_NONE)  = 0
-mmap2(0xb6f0b000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xd8000) = 0xb6f0b000
-mmap2(0xb6f0e000, 9640, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb6f0e000
-close(3)                                = 0
-mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb6f2c000
-set_tls(0xb6f2c850, 0xb6f39050, 0xb6f2cf38, 0xb6f2c850, 0xb6f39050) = 0
-mprotect(0xb6f0b000, 8192, PROT_READ)   = 0
-mprotect(0x28000, 4096, PROT_READ)      = 0
-mprotect(0xb6f38000, 4096, PROT_READ)   = 0
-munmap(0xb6f2d000, 34089)               = 0
-brk(0)                                  = 0x2a000
-brk(0x4b000)                            = 0x4b000
-ioctl(0, SNDCTL_TMR_TIMEBASE or SNDRV_TIMER_IOCTL_NEXT_DEVICE or TCGETS, {B115200 opost isig icanon echo ...}) = 0
-newfstatat(AT_FDCWD, "testfile.308", {st_mode=S_IFREG|0600, st_size=17592186044415, ...}, AT_SYMLINK_NOFOLLOW) = 0
-geteuid32()                             = 0
-unlinkat(AT_FDCWD, "testfile.308", 0
-
---------------090109000100090403070109
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -127,6 +127,7 @@ typedef struct xfs_mount {
+> >  	int64_t			m_low_space[XFS_LOWSP_MAX];
+> >  						/* low free space thresholds */
+> >  	struct xfs_kobj		m_kobj;
+> > +	bool			m_warned_bad_lsn;/* bad metadata lsn detected */
+> 
+> That's where I'd put the ratelimit key (or in the struct xlog).
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---------------090109000100090403070109--
