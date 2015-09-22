@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA9587F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:08:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 90F8C8F8037
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:08:05 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 579017F50
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:08:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 37238304048
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:08:07 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Nz8C1lSXtaf1AsWG (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Tqi5bcXXEs72zA96 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:08:03 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:08:05 -0700 (PDT)
 Received: from int-mx13.intmail.prod.int.phx2.redhat.com
 	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 8531CA2A1A
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 12:08:02 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 8157BC0A1469
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 12:08:04 +0000 (UTC)
 Received: from localhost.localdomain.com (vpn-53-129.rdu2.redhat.com
 	[10.10.53.129])
 	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t8MC81nf022782
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 08:08:02 -0400
+	id t8MC81nj022782
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 08:08:04 -0400
 From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 0/5 v7] xfs: stats in sysfs
-Date: Tue, 22 Sep 2015 07:07:46 -0500
-Message-Id: <1442923671-14125-1-git-send-email-billodo@redhat.com>
+Subject: [PATCH 4/5] xfs: consolidate sysfs ops (dbg, stats, log)
+Date: Tue, 22 Sep 2015 07:07:50 -0500
+Message-Id: <1442923671-14125-5-git-send-email-billodo@redhat.com>
+In-Reply-To: <1442923671-14125-1-git-send-email-billodo@redhat.com>
+References: <1442923671-14125-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,73 +39,326 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello-
+As a part of the series to move xfs global stats from procfs to sysfs,
+this patch consolidates the sysfs ops functions and removes redundancy.
 
-Following is the next iteration of the series to add xfs stats to
-sysfs. This iteration adds patch 5/5 to incorporate sysfs/kobject
-into xfsstats.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ fs/xfs/xfs_stats.c |   2 +-
+ fs/xfs/xfs_sysfs.c | 182 +++++++++++++++++++----------------------------------
+ 2 files changed, 64 insertions(+), 120 deletions(-)
 
-----------history---------------
-v7:
--add patch 5/5: incorporate sysfs/kobject in xfsstats: handlers
-take kobjects. Allocate & deallocate per-fs stats structures
-and set up the sysfs entries for them. Add kobject and a pointer
-to a per-cpu struct xfsstats. Modify the macros that manipulate
-the stats accordingly.
-
-v6:
--add patch 4/4: move to_xlog(kobject) to the relevant show/store
-operations. This keeps the xfs_sysfs_object_show/store functions
-generic. Also, with the change, there can be some cleanup of the
-show/store function arguments.
-
-v5:
--optimization of sysfs_ops function.
--style fixups
-
-v4:
--whitespace fixup of patch 1
--add patch 4 (sysfs ops consolidation - dbg, stats, log)
-
-v3:
--style fixups and removal of extraneous printk.
-
-v2:
--style fixups.
-
-v1:
---------------------------------
-
-The series provides infrastructure for per-fs stats (in addition
-to global accumulative stats).
-
-We already have per-fs information in /sys, so it makes sense to
-have per-fs stats there too.  As a first step, moving existing
-global stats infrastructure to /sys will allow us to re-use that
-sysfs code for per-fs stats as well.
-
-Patch 1 handles the bring-up and tear down of xfs/stats directory
-structure in sysfs when an fs is mounted. The directory contains
-the stats file and the stats_clear file. The stats file contents mimic
-those of /proc/fs/xfs/stat. The stats_clear file is empty, and much
-like the current stat_clear command, handles the zeroing of the stats
-file when a "1" is echoed to the stats_clear file.
-
-Patch 2 creates the symlink for stats from procfs to sysfs.
-
-Patch 3 removes the now unused portions of procfs for stat.
-
-Patch 4 consolidates the sysfs ops for dbg, stats, log.
-
-Patch 5 allocates and deallocates per-fs stats structures and
-sets up the sysfs entries for them. Add kobject and a pointer
-to a per-cpu struct xfsstats. Modify the macros that manipulate
-the stats accordingly.
-
-Again, comments and questions are welcome.
-
-Thanks-
-Bill
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index 05d5227..dc6ca67 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -92,7 +92,7 @@ int xfs_stats_format(char *buf)
+ 		0);
+ #endif
+ 
+-return len;
++	return len;
+ }
+ 
+ void xfs_stats_clearall(void)
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index a094e20..ab4850b 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -25,8 +25,9 @@
+ 
+ struct xfs_sysfs_attr {
+ 	struct attribute attr;
+-	ssize_t (*show)(char *buf, void *data);
+-	ssize_t (*store)(const char *buf, size_t count, void *data);
++	ssize_t (*show)(struct kobject *kobject, char *buf);
++	ssize_t (*store)(struct kobject *kobject, const char *buf,
++			 size_t count);
+ };
+ 
+ static inline struct xfs_sysfs_attr *
+@@ -54,14 +55,42 @@ struct kobj_type xfs_mp_ktype = {
+ 	.release = xfs_sysfs_release,
+ };
+ 
++STATIC ssize_t
++xfs_sysfs_object_show(
++	struct kobject		*kobject,
++	struct attribute	*attr,
++	char			*buf)
++{
++	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
++
++	return xfs_attr->show ? xfs_attr->show(kobject, buf) : 0;
++}
++
++STATIC ssize_t
++xfs_sysfs_object_store(
++	struct kobject		*kobject,
++	struct attribute	*attr,
++	const char		*buf,
++	size_t			count)
++{
++	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
++
++	return xfs_attr->store ? xfs_attr->store(kobject, buf, count) : 0;
++}
++
++static const struct sysfs_ops xfs_sysfs_ops = {
++	.show = xfs_sysfs_object_show,
++	.store = xfs_sysfs_object_store,
++};
++
+ #ifdef DEBUG
+ /* debug */
+ 
+ STATIC ssize_t
+ log_recovery_delay_store(
++	struct kobject	*kobject,
+ 	const char	*buf,
+-	size_t		count,
+-	void		*data)
++	size_t		count)
+ {
+ 	int		ret;
+ 	int		val;
+@@ -80,8 +109,8 @@ log_recovery_delay_store(
+ 
+ STATIC ssize_t
+ log_recovery_delay_show(
+-	char	*buf,
+-	void	*data)
++	struct kobject	*kobject,
++	char	*buf)
+ {
+ 	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.log_recovery_delay);
+ }
+@@ -92,49 +121,20 @@ static struct attribute *xfs_dbg_attrs[] = {
+ 	NULL,
+ };
+ 
+-STATIC ssize_t
+-xfs_dbg_show(
+-	struct kobject		*kobject,
+-	struct attribute	*attr,
+-	char			*buf)
+-{
+-	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+-
+-	return xfs_attr->show ? xfs_attr->show(buf, NULL) : 0;
+-}
+-
+-STATIC ssize_t
+-xfs_dbg_store(
+-	struct kobject		*kobject,
+-	struct attribute	*attr,
+-	const char		*buf,
+-	size_t			count)
+-{
+-	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+-
+-	return xfs_attr->store ? xfs_attr->store(buf, count, NULL) : 0;
+-}
+-
+-static struct sysfs_ops xfs_dbg_ops = {
+-	.show = xfs_dbg_show,
+-	.store = xfs_dbg_store,
+-};
+-
+ struct kobj_type xfs_dbg_ktype = {
+ 	.release = xfs_sysfs_release,
+-	.sysfs_ops = &xfs_dbg_ops,
++	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_attrs = xfs_dbg_attrs,
+ };
+ 
+ #endif /* DEBUG */
+ 
+-
+ /* stats */
+ 
+ STATIC ssize_t
+ stats_show(
+-	char	*buf,
+-	void	*data)
++	struct kobject	*kobject,
++	char	*buf)
+ {
+ 	return xfs_stats_format(buf);
+ }
+@@ -142,9 +142,9 @@ XFS_SYSFS_ATTR_RO(stats);
+ 
+ STATIC ssize_t
+ stats_clear_store(
++	struct kobject	*kobject,
+ 	const char	*buf,
+-	size_t		count,
+-	void		*data)
++	size_t		count)
+ {
+ 	int		ret;
+ 	int		val;
+@@ -166,50 +166,30 @@ static struct attribute *xfs_stats_attrs[] = {
+ 	NULL,
+ };
+ 
+-STATIC ssize_t
+-xfs_stats_show(
+-	struct kobject		*kobject,
+-	struct attribute	*attr,
+-	char			*buf)
+-{
+-	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+-
+-	return xfs_attr->show ? xfs_attr->show(buf, NULL) : 0;
+-}
+-
+-STATIC ssize_t
+-xfs_stats_store(
+-	struct kobject		*kobject,
+-	struct attribute	*attr,
+-	const char		*buf,
+-	size_t			count)
+-{
+-	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+-
+-	return xfs_attr->store ? xfs_attr->store(buf, count, NULL) : 0;
+-}
+-
+-static struct sysfs_ops xfs_stats_ops = {
+-	.show = xfs_stats_show,
+-	.store = xfs_stats_store,
+-};
+-
+ struct kobj_type xfs_stats_ktype = {
+ 	.release = xfs_sysfs_release,
+-	.sysfs_ops = &xfs_stats_ops,
++	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_attrs = xfs_stats_attrs,
+ };
+ 
+ /* xlog */
+ 
++static inline struct xlog *
++to_xlog(struct kobject *kobject)
++{
++	struct xfs_kobj *kobj = to_kobj(kobject);
++
++	return container_of(kobj, struct xlog, l_kobj);
++}
++
+ STATIC ssize_t
+ log_head_lsn_show(
+-	char	*buf,
+-	void	*data)
++	struct kobject	*kobject,
++	char	*buf)
+ {
+-	struct xlog *log = data;
+ 	int cycle;
+ 	int block;
++	struct xlog *log = to_xlog(kobject);
+ 
+ 	spin_lock(&log->l_icloglock);
+ 	cycle = log->l_curr_cycle;
+@@ -222,12 +202,12 @@ XFS_SYSFS_ATTR_RO(log_head_lsn);
+ 
+ STATIC ssize_t
+ log_tail_lsn_show(
+-	char	*buf,
+-	void	*data)
++	struct kobject	*kobject,
++	char	*buf)
+ {
+-	struct xlog *log = data;
+ 	int cycle;
+ 	int block;
++	struct xlog *log = to_xlog(kobject);
+ 
+ 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &cycle, &block);
+ 	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, block);
+@@ -236,12 +216,13 @@ XFS_SYSFS_ATTR_RO(log_tail_lsn);
+ 
+ STATIC ssize_t
+ reserve_grant_head_show(
+-	char	*buf,
+-	void	*data)
++	struct kobject	*kobject,
++	char	*buf)
++
+ {
+-	struct xlog *log = data;
+ 	int cycle;
+ 	int bytes;
++	struct xlog *log = to_xlog(kobject);
+ 
+ 	xlog_crack_grant_head(&log->l_reserve_head.grant, &cycle, &bytes);
+ 	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, bytes);
+@@ -250,12 +231,12 @@ XFS_SYSFS_ATTR_RO(reserve_grant_head);
+ 
+ STATIC ssize_t
+ write_grant_head_show(
+-	char	*buf,
+-	void	*data)
++	struct kobject	*kobject,
++	char	*buf)
+ {
+-	struct xlog *log = data;
+ 	int cycle;
+ 	int bytes;
++	struct xlog *log = to_xlog(kobject);
+ 
+ 	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &bytes);
+ 	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, bytes);
+@@ -270,45 +251,8 @@ static struct attribute *xfs_log_attrs[] = {
+ 	NULL,
+ };
+ 
+-static inline struct xlog *
+-to_xlog(struct kobject *kobject)
+-{
+-	struct xfs_kobj *kobj = to_kobj(kobject);
+-	return container_of(kobj, struct xlog, l_kobj);
+-}
+-
+-STATIC ssize_t
+-xfs_log_show(
+-	struct kobject		*kobject,
+-	struct attribute	*attr,
+-	char			*buf)
+-{
+-	struct xlog *log = to_xlog(kobject);
+-	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+-
+-	return xfs_attr->show ? xfs_attr->show(buf, log) : 0;
+-}
+-
+-STATIC ssize_t
+-xfs_log_store(
+-	struct kobject		*kobject,
+-	struct attribute	*attr,
+-	const char		*buf,
+-	size_t			count)
+-{
+-	struct xlog *log = to_xlog(kobject);
+-	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
+-
+-	return xfs_attr->store ? xfs_attr->store(buf, count, log) : 0;
+-}
+-
+-static struct sysfs_ops xfs_log_ops = {
+-	.show = xfs_log_show,
+-	.store = xfs_log_store,
+-};
+-
+ struct kobj_type xfs_log_ktype = {
+ 	.release = xfs_sysfs_release,
+-	.sysfs_ops = &xfs_log_ops,
++	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_attrs = xfs_log_attrs,
+ };
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
