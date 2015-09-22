@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A9E2F7F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 02:22:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 899778F8033
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 00:22:29 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B5CDE7F47
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 02:45:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9265F8F81CD
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 00:45:05 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YZDKBJTFHM09Dcjg (version=TLSv1.2
+	cuda.sgi.com with ESMTP id GOKOwFuZhBRxF9St (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 00:22:28 -0700 (PDT)
-Date: Tue, 22 Sep 2015 09:22:24 +0200
+	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 00:45:03 -0700 (PDT)
+Date: Tue, 22 Sep 2015 09:44:58 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] mkfs.xfs: add [-U uuid] option
-Message-ID: <20150922072224.GA26699@redhat.com>
-References: <1442855060-38259-1-git-send-email-mel@ohmu.fi>
-	<20150921221839.GC19114@dastard>
-	<2640913C-6C95-4128-9055-B155AECA0206@ohmu.fi>
-	<20150921233627.GE19114@dastard>
-	<5E0C9EC9-8ABE-47CC-BB7F-2BC0A872AEDB@ohmu.fi>
+Subject: Re: [PATCH] xfs_io: Implement inodes64 command
+Message-ID: <20150922074458.GB26699@redhat.com>
+References: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
+	<67F3D80A-F1B2-468C-A105-4AA881BC4F72@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5E0C9EC9-8ABE-47CC-BB7F-2BC0A872AEDB@ohmu.fi>
+In-Reply-To: <67F3D80A-F1B2-468C-A105-4AA881BC4F72@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,84 +26,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mika Eloranta <mika.eloranta@ohmu.fi>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBTZXAgMjIsIDIwMTUgYXQgMDk6NDM6MzRBTSArMDMwMCwgTWlrYSBFbG9yYW50YSB3
-cm90ZToKPiBPbiAyMiBTZXAgMjAxNSwgYXQgMDI6MzYsIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJv
-bW9yYml0LmNvbT4gd3JvdGU6Cj4gPiAKPiA+IE9uIFR1ZSwgU2VwIDIyLCAyMDE1IGF0IDAxOjU2
-OjUzQU0gKzAzMDAsIE1pa2EgRWxvcmFudGEgd3JvdGU6Cj4gPj4gT24gMjIgU2VwIDIwMTUsIGF0
-IDAxOjE4LCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+Cj4gPj4gd3JvdGU6Cj4g
-Pj4+IAo+ID4+PiBPbiBNb24sIFNlcCAyMSwgMjAxNSBhdCAwODowNDoyMFBNICswMzAwLCBNaWth
-IEVsb3JhbnRhIHdyb3RlOgo+ID4+Pj4gVGhlIFVVSUQgY2FuIG5vdyBiZSBvcHRpb25hbGx5IHNw
-ZWNpZmllZCBkdXJpbmcgZmlsZXN5c3RlbQo+ID4+Pj4gY3JlYXRpb24uCj4gPj4+IAo+ID4+PiBX
-aGljaCBVVUlEIGFyZSB5b3Ugd2FudGluZyB0byBzZXQgLSB0aGUgbWV0YWRhdGEgdXVpZCBvciB0
-aGUKPiA+Pj4gdXNlciB2aXNpYmxlIFVVSUQgbGFiZWw/IE9yIGJvdGg/IENhbiB5b3UgZXhwbGFp
-biB0aGUgdXNlIGNhc2UKPiA+Pj4gZm9yIHRoaXM/ICBpLmUuIEknbSB0cnlpbmcgdG8gd29yayBv
-dXQgd2h5IFdoeSBkb2Vzbid0IG1rZnMueGZzCj4gPj4+ICsgeGZzX2FkbWluIC1VIDx1dWlkPiBk
-b2Vzbid0IHdvcmsgZm9yIHlvdT8KPiA+PiAKPiA+PiBJIHdhbnQgdG8gc2V0IHRoZSB1c2VyIHZp
-c2libGUgVVVJRCAoc2FtZSBhcyB4ZnNfYWRtaW4gLVUvLXUpLgo+ID4+IFdoZXRoZXIgdGhpcyBp
-bXBhY3RzIHRoZSAibWV0YWRhdGEgdXVpZOKAnSBvciBub3QsIEkgZG8gbm90Cj4gPj4ga25vdywg
-SeKAmW0gbm90IGFuIGV4cGVydCBvbiB0aGUgWEZTIGludGVybmFscywganVzdCBhIHVzZXIuCj4g
-PiAKPiA+IFdoaWNoIHRlbGxzIG1lIHdoYXQgSSBuZWVkIHRvIGtub3cgLSBZb3UgYXJlIHRyeWlu
-ZyB0byB1c2UgdGhlIFVVSUQKPiA+IGFzIGEgdXNlciBjb250cm9sbGVkIGZpbGVzeXN0ZW0gbGFi
-ZWwuIEZ1bm5pbHkgZW5vdWdoLCB3ZSBoYXZlIGEKPiA+IHRoaW5nIGZvciB0aGlzIGFscmVhZHkg
-LSBhIHVzZXIgY29udHJvbGxlZCBmaWxlc3lzdGVtIGxhYmVsOgo+ID4gCj4gPiAjIG1rZnMueGZz
-IC1MICJsYWJlbCIgLi4uLgo+ID4gCj4gPiBJdCdzIDEyIGNoYXJhY3RlcnMgbG9uZywgc28gbW9y
-ZSB0aGFuIGVub3VnaCBmb3IgYW55IHNvcnQgb2YgdW5pcXVlCj4gPiBpZGVudGlmaWNhdGlvbiBz
-Y2hlbWUgeW91IHdhbnQgdG8gdXNlIGZvciB5b3VyIGZpbGVzeXN0ZW1zLgo+ID4geGZzX2FkbWlu
-IGVuYWJsZXMgeW91IHRvIGNoYW5nZSBpdCBhZnRlciB0aGUgZmFjdCwgYWxsIG1ham9yCj4gPiBm
-aWxlc3lzdGVtcyBzdXBwb3J0IGl0IGFuZCBhbGwgdGhlIGluZnJhc3RydWN0dXJlIGtub3cgYWJv
-dXQgaXQKPiA+IChsc2JsaywgL2V0Yy9mc3RhYi4gL2Rldi9kaXNrL2J5LWxhYmVsLCBldGMpIHNv
-IHVzaW5nIGl0IGlzIG5vCj4gPiBkaWZmZXJlbnQgdG8gdXNpbmcgVVVJRHMuIEV4Y2VwdCB0aGF0
-LCB1bmxpa2UgVVVJRHMsIHlvdSBjYW4gbWFrZQo+ID4gZmlsZXlzdGVtIGxhYmVscyBodW1hbiBy
-ZWFkYWJsZS4gOikKPiA+IAo+ID4gUGVyaGFwcyB5b3Ugc2hvdWxkIHRyeSB1c2luZyBmaWxlc3lz
-dGVtIGxhYmVscyBzZWVpbmcgYXMgZXZlcnl0aGluZwo+ID4geW91IG5lZWQgaXMgYWxyZWFkeSB0
-aGVyZT8KPiAKPiBMYWJlbHMgYXJlIGdyZWF0IGZvciB1c2VyLXJlYWRhYmxlIGlkZW50aWZpZXJz
-LCBidXQgVVVJRCBpcyBub3dhZGF5cwo+IHByZXR0eSBtdWNoIHRoZSBub3JtIGZvciByYW5kb20t
-Z2VuZXJhdGVkIGlkZW50aWZpZXJzLiBNeSB1c2UtY2FzZQo+IGNvbmNlcm5zIGRpc3RyaWJ1dGVk
-IGFuZCBhdXRvbWF0ZWQgdmlydHVhbCBzeXN0ZW1zLCB3aGVyZSBmaWxlc3lzdGVtcwo+IGFyZSBj
-b25zdGFudGx5IGJ1aWx0IGFuZCB0b3JuIGRvd24uCj4gCj4gVXNpbmcgdGhlIGZpbGVzeXN0ZW0g
-bGFiZWwgdG8gc3RvcmUgYSB0cnVuY2F0ZWQgdmVyc2lvbiBvZiBhIFVVSUQgaXMKPiBraW5kIG9m
-IGFuIG9wdGlvbiwgYnV0IEknZCByZWFsbHkgcmF0aGVyIHVzZSB0aGUgZW50aXJlIFVVSUQgYmVj
-YXVzZToKPiAKPiAxKSBJZGVudGlmeWluZyBhbiBvcnBoYW4gZmlsZXN5c3RlbSBiYXNlZCBvbiBp
-dHMgY29udGVudHMgYmVjb21lcwo+ICAgIG1vcmUgc3RyYWlnaHRmb3J3YXJkLCBlLmcuIGlmIHRo
-ZXkgYXJlIGFscmVhZHkgbGlzdGVkIGluIGEga2V5LXZhbHVlCj4gICAgc3RvcmUgYmFzZWQgb24g
-dGhlaXIgZnVsbCBVVUlEIGFuZCBwcmVmaXggbG9va3VwcyBhcmUgbm90IHBvc3NpYmxlLgo+IAo+
-IDIpIFRoZSBsYWJlbCBpcyBhY3R1YWxseSByYXRoZXIgc2hvcnQgZm9yIHN0b3JpbmcgYSByYW5k
-b20gSUQuIEZvcgo+ICAgIGV4YW1wbGUgc3RvcmluZyA0OCBiaXRzIGZyb20gdGhlIFVVSUQgaW4g
-dGhlIGxhYmVsIGhleC1lbmNvZGVkCj4gICAgd291bGQgZ2l2ZSBtZSBhIGNvbGxpc2lvbiBhbHJl
-YWR5IGluIDIwIG1pbGxpb24gZnMgaW5zdGFuY2VzIHdpdGgKPiAgICA+NTAlIHByb2JhYmlsaXR5
-Lgo+IAo+IEkgdGhvdWdodCBhZGRpbmcgdGhlIG9wdGlvbiB3b3VsZCBiZSBhIHJhdGhlciBzdHJh
-aWdodGZvcndhcmQgdGhpbmcsCj4gZXNwZWNpYWxseSB3aGVuIG1vcmUgcHJvYmxlbWF0aWMgInhm
-c19hZG1pbiAtVSIgaXMgKHdhcz8pIGFscmVhZHkKPiBzdXBwb3J0ZWQuIElzIHRoZXJlIHRlY2hu
-aWNhbCByZWFzb24gd2h5IGFzc2lnbmluZyB0aGUgVVVJRCBpcyBubyBsb25nZXIKPiByZWNvbW1l
-bmRlZD8gVGhlIHBhdGNoIG9ubHkgYWxsb3dzIG9wdGlvbmFsbHkgdXNpbmcgYSB1c2VyLXNwZWNp
-ZmllZAo+IFVVSUQgaW5zdGVhZCBvZiBhIG9uZSBnZW5lcmF0ZWQgcmFuZG9tbHkgb24gdGhlIHNw
-b3Qgd2l0aGluIG1rZnMueGZzLAo+IGFuZCBJIGNhbm5vdCBzZWUgYW55IGhhcm0gaW4gdGhhdC4K
-PiAKCkhpIE1pa2EsCgpJIGRvbid0IHRoaW5rIHRoYXQgRGF2ZSdzIGFyZ3VtZW50IHdhcyByZWdh
-cmRpbmcgdGVjaG5pY2FsIHJlYXNvbnMsIGJ1dCB0aGUgbGFjawpvZiBpbmZvcm1hdGlvbiBhYm91
-dCB0aGUgZmVhdHVyZS4gVXNlIGNhc2UsIGV0YwoKV2UgYWxyZWFkeSBoYXZlIHRvbyBtYW55IG9w
-dGlvbnMgaW4gdGhlIHhmcyB0b29scywgYW5kIGFsc28sIGEgd2F5IHRvIHNldCB0aGUKdXVpZCB0
-byBhIGZpbGVzeXN0ZW0gYXMgZXhwbGFpbmVkIGJlZm9yZSwgYW5kLCBhbHRob3VnaCBpdCBpcyBu
-b3QgaGFybWZ1bCBhcyB5b3UKc2FpZCwgYW5kIEkgc2hvdWxkIHNheSBJIGFncmVlIHdpdGggeW91
-IGluIHRoaXMgcG9pbnQsIHRoZSBmYWN0IHRoYXQgeW91IHNlbnQKdGhlIHBhdGNoIHdpdGhvdXQg
-ZGV0YWlsZWQgaW5mb3JtYXRpb24gYWJvdXQgd2h5IGl0IGlzIHVzZWZ1bCBhbmQgdGhlIHVzZSBj
-YXNlcwpmb3IgdGhhdCAodGhhdCB5b3UganVzdCBkZXNjcmliZWQgaGVyZSksIG1ha2VzIHBlb3Bs
-ZSBhc2sgeW91IGFsbCB0aGVzZQpxdWVzdGlvbnMsIG1haW5seSB3aGVuIHRoZXJlIHdlcmUgbm8g
-cHJldmlvdXMgZGlzY3Vzc2lvbiByZWdhcmRpbmcgdGhlIGZlYXR1cmUsCnNvLCBqdXN0IGtlZXAg
-aW4gbWluZCB0aGF0IGluIHRoZSBuZXh0IHBhdGNoZXMgeW91IG1pZ2h0IHNlbmQsIGFkZCBhcyBt
-dWNoCmluZm9ybWF0aW9uIGFzIHBvc3NpYmxlLCB0byAobWF5YmUgOikgc3BlZWQgdXAgdGhlIGlu
-dGVncmF0aW9uIG9mIHRoZSBwYXRjaCwgYW5kCmV2ZW4gdGhvdWdoLCB5b3UncmUgbm90IGZyZWUg
-dG8gaGF2ZSBwZW9wbGUgYXNraW5nIHlvdSBsb3RzIG9mIHF1ZXN0aW9ucwpyZWdhcmRpbmcgeW91
-ciBwYXRjaC4KCgpCdXQgYW55d2F5LCBJIGFncmVlIHdpdGggdGhlIHBhdGNoc2V0IGFuZCB0aGUg
-cG9pbnRzIGFyZSBmYWlyIGVub3VnaCBmb3IgaGF2aW5nCnRoaXMgb3B0aW9uLCBidXQgaGF2aW5n
-IGl0IGFzIGEgLW0gdXVpZD08dXVpZD4gaW5zdGVhZCBvZiAtVSA8dXVpZD4gbWFrZXMgbW9yZQpz
-ZW5zZSBoZXJlLgoKPiBDaGVlcnMsCj4gCj4gICAgIE1pa2EKPiAKCi0tIApDYXJsb3MKCl9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
-c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
-cwo=
+On Mon, Sep 21, 2015 at 03:50:21PM -0500, Eric Sandeen wrote:
+> On Sep 21, 2015, at 3:56 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+> > 
+> > Implement an easy way to check a filesystem for the existence of 64bit inodes.
+> > 
+> > Based on XFS_IOC_FSINUMBERS, and starting with a lastip of XFS_MAXINUMBER_32, it
+> > returns a string saying if there is or there isn't 64bit inodes in the
+> > filesystem.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> > io/open.c | 39 +++++++++++++++++++++++++++++++++++++++
+> > 1 file changed, 39 insertions(+)
+> > 
+> > diff --git a/io/open.c b/io/open.c
+> > index ac5a5e0..b25b09d 100644
+> > --- a/io/open.c
+> > +++ b/io/open.c
+> > @@ -20,6 +20,7 @@
+> > #include "input.h"
+> > #include "init.h"
+> > #include "io.h"
+> > +#include "libxfs.h"
+> > 
+> > #ifndef __O_TMPFILE
+> > #if defined __alpha__
+> > @@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
+> > static cmdinfo_t chproj_cmd;
+> > static cmdinfo_t lsproj_cmd;
+> > static cmdinfo_t extsize_cmd;
+> > +static cmdinfo_t inodes64_cmd;
+> > static prid_t prid;
+> > static long extsize;
+> > 
+> > @@ -750,6 +752,36 @@ statfs_f(
+> >    return 0;
+> > }
+> > 
+> > +static int
+> > +inodes64_f(
+> > +      int            argc,
+> > +      char            **argv)
+> > +{
+> > +    int            i;
+> > +    __s32            count;
+> > +    __u64            last = XFS_MAXINUMBER_32;
+> > +    xfs_inogrp_t        igroup;
+> > +    xfs_fsop_bulkreq_t    bulkreq;
+> > +
+> > +    bulkreq.lastip = &last;
+> > +    bulkreq.icount = 1;
+> > +    bulkreq.ubuffer = &igroup;
+> > +    bulkreq.ocount = &count;
+> > +
+> > +    if (!xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq)) {
+> > +        if (count > 0) {
+> > +            printf("Filesystem does have 64bit inodes\n");
+> > +            return 0;
+> > +        } else {
+> > +            printf("Filesystem does not have 64bit inodes\n");
+> > +            return 0;
+> > +        }
+> > +    }
+> > +    perror("xfsctl(XFS_IOC_FSINUMBERS)");
+> > +    exitcode = 1;
+> > +    return 0;
+> > +}
+> > +
+> > void
+> > open_init(void)
+> > {
+> > @@ -815,6 +847,12 @@ open_init(void)
+> >        _("get/set preferred extent size (in bytes) for the open file");
+> >    extsize_cmd.help = extsize_help;
+> > 
+> > +    inodes64_cmd.name = "inodes64";
+> > +    inodes64_cmd.cfunc = inodes64_f;
+> > +    inodes64_cmd.flags = CMD_NOMAP_OK;
+> > +    inodes64_cmd.oneline =
+> > +        _("Checks if filesyste contais 64bit inodes");
+> 
+> "Check if filesystem contains 64bit inodes"
+> 
+Oh lord.. I completely forgot to fix this, thanks :-)
+
+> Still needs a manpage update ;)
+> 
+Writing it :)
+
+> Also is it ok to not have inodes64_cmd.help?  (Sorry, on phone right now, can't look, perhaps it's fine)
+
+I thought about it too, but not having a .help method is fine, and, it looks
+that the only options which contains a .help method are those who have arguments
+to the command itself. So, since inodes64 does not have arguments, a .help is
+not necessary from what I could figure out.
+> 
+> Thanks,
+> Eric
+> 
+> 
+> > +
+> >    add_command(&open_cmd);
+> >    add_command(&stat_cmd);
+> >    add_command(&close_cmd);
+> > @@ -822,4 +860,5 @@ open_init(void)
+> >    add_command(&chproj_cmd);
+> >    add_command(&lsproj_cmd);
+> >    add_command(&extsize_cmd);
+> > +    add_command(&inodes64_cmd);
+> > }
+> > -- 
+> > 2.4.3
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
