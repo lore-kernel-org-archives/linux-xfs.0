@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA1397F56
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:22:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BAABA304048
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:22:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fgCSZDU13aVEnql5 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A80C27F58
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 07:25:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 87BEE8F8035
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:25:00 -0700 (PDT)
+Received: from smtp.suomicom.fi (smtp.suomicom.fi [217.119.36.23]) by
+	cuda.sgi.com with ESMTP id pxwBWLahX3nuJs2H (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:22:41 -0700 (PDT)
-Date: Tue, 22 Sep 2015 08:22:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_io: Implement inodes64 command
-Message-ID: <20150922122238.GA46026@bfoster.bfoster>
-References: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
-	<20150921220832.GB19114@dastard>
-	<20150922075432.GC26699@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150922075432.GC26699@redhat.com>
+	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 05:24:58 -0700 (PDT)
+From: Mika Eloranta <mel@ohmu.fi>
+Subject: [PATCH] mkfs.xfs: option for using a pre-defined filesystem UUID
+Date: Tue, 22 Sep 2015 15:24:51 +0300
+Message-Id: <1442924691-42001-1-git-send-email-mel@ohmu.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,144 +21,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Mika Eloranta <mel@ohmu.fi>
 
-On Tue, Sep 22, 2015 at 09:54:32AM +0200, Carlos Maiolino wrote:
-> On Tue, Sep 22, 2015 at 08:08:32AM +1000, Dave Chinner wrote:
-> > On Mon, Sep 21, 2015 at 10:56:08AM +0200, Carlos Maiolino wrote:
-...
-> > > +
-> > > +	bulkreq.lastip = &last;
-> > > +	bulkreq.icount = 1;
-> > > +	bulkreq.ubuffer = &igroup;
-> > > +	bulkreq.ocount = &count;
-> > > +
-> > > +	if (!xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq)) {
-> > > +		if (count > 0) {
-> > > +			printf("Filesystem does have 64bit inodes\n");
-> > > +			return 0;
-> > > +		} else {
-> > > +			printf("Filesystem does not have 64bit inodes\n");
-> > > +			return 0;
-> > > +		}
-> > > +	}
-> > > +	perror("xfsctl(XFS_IOC_FSINUMBERS)");
-> > 
-> > I'd do this the other way around:
-> > 
-> > 	if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq)) {
-> > 		perror("XFS_IOC_FSINUMBERS");
-> > 		exitcode = 1;
-> > 		return 0;
-> > 	}
-> > 
-> > 	if (count > 0)
-> > 		printf("Filesystem does have 64bit inodes\n");
-> > 	else
-> > 		printf("Filesystem does not have 64bit inodes\n");
-> > 	return 0;
-> > 
-> > is sufficient, xfsctl is a one line wrapper around ioctl().
-> >
-> 
-> Ok, I'll change this, but, just a matter of curiosity, what are the technical
-> reasons to write the conditional this way, instead of the way I wrote first?
-> Just to avoid entering the conditional?
-> 
+Usage: mkfs.xfs -m uuid=<uuid> <device>
 
-Not to speak for Dave, but I had the same thought just skimming through
-the patch. I don't think it's a technical reason so much as a style one.
-The further the function is grown, the easier it is to see that this
-kind of flow is not the most friendly thing. E.g.:
+The filesystem UUID can now be optionally specified during filesystem
+creation. The default behavior is still to generate a random UUID.
 
-	ret = do_stuff();
-	if (!ret) {
-		...
-		ret = do_more_stuff();
-		if (!ret) {
-			...
-		}
-	}
+Allows using pre-generated UUIDs for identifying a filesystem based
+on the metadata stored inside the filesystem. Filesystem labels can
+be used for the same purpose, but are limited by their length
+(12 chars in the case of xfs) whereas the UUID field can store an
+entire 128bit UUID, which is plenty for e.g. random ID collision
+avoidance.
 
-In other words, the common execution path of the function starts to flow
-"inward" rather than the natural top-down flow of the function:
+Random UUID generated during the creation of the filesystem is not
+always feasible when an external DB or other system is used to track
+the created filesystem, e.g. in automated VM provisioning systems,
+as this would require a feedback mechanism which is not always
+available. In these cases the best approach often is to generate
+a random UUID for the filesystem before the filesystem even exists,
+store it in the tracking DB and later create the filesystem directly
+with the correct UUID (instead of "mkfs.xfs + xfs_admin -U <new_uuid>").
+---
+ man/man8/mkfs.xfs.8 |  4 ++++
+ mkfs/xfs_mkfs.c     | 15 +++++++++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
-	ret = do_stuff();
-	if (ret)
-		handle_err;
-
-	ret = do_more_stuff();
-	if (ret)
-		handle_err;
-	...
-
-The latter tends to be easier to follow, easier to review the error
-handling cases, probably avoids indentation problems down the road, etc.
-The function as it is right now is simple and so this probably isn't a
-big deal, but I suspect seeing the latter form so frequently in all of
-our other code is probably what causes something like the former to
-stand out (even in a simple/harmless example). Just my .02. :)
-
-Brian
-
->  
-> > > @@ -815,6 +847,12 @@ open_init(void)
-> > >  		_("get/set preferred extent size (in bytes) for the open file");
-> > >  	extsize_cmd.help = extsize_help;
-> > >  
-> > > +	inodes64_cmd.name = "inodes64";
-> > > +	inodes64_cmd.cfunc = inodes64_f;
-> > > +	inodes64_cmd.flags = CMD_NOMAP_OK;
-> > > +	inodes64_cmd.oneline =
-> > > +		_("Checks if filesyste contais 64bit inodes");
-> >                                     ^^^     ^^ 64 bit
-> > 
-> > "inodes64" could be improved as a command name. e.g:
-> > 
-> > oneline = _("Query inode number usage in the filesystem")
-> > 
-> > And could do a little more to help users work out what the
-> > problematic inode is. e.g:
-> > 
-> > Long help:
-> > 
-> > Inode_numbers [-s|-l] [num]
-> > 
-> > 	[-s]	returns the physical size of the largest inode
-> > 		number in the filesystem (32 bit of 64 bit)
-> > 	[-l]	returns the largest inode number in the filesystem
-> > 	[-n]	returns the next inode number after [num]
-> > 	[num]	returns whether the inode number exists
-> > 
-> > i.e. if you want 32 bit inodes in the fs, you can use [-n num] to
-> > iterate all the inode numbers above 32 bits in size...
-> > 
-> 
-> Ok, np
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> -- 
-> Carlos
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 6260e0c..e98b94d 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -169,6 +169,10 @@ will create free inode btrees for filesystems created with the (default)
+ option set. When the option
+ .B \-m crc=0
+ is used, the free inode btree feature is not supported and is disabled.
++.TP
++.BI uuid= value
++Use the given value as the filesystem UUID for the newly created filesystem.
++The default is to generate a random UUID.
+ .RE
+ .TP
+ .BI \-d " data_section_options"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d993fc0..696c96d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -181,6 +181,8 @@ char	*mopts[] = {
+ 	"crc",
+ #define M_FINOBT	1
+ 	"finobt",
++#define M_UUID		2
++	"uuid",
+ 	NULL
+ };
+ 
+@@ -948,6 +950,7 @@ main(
+ 	bool			finobtflag;
+ 	int			spinodes;
+ 
++	platform_uuid_clear(&uuid);
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+@@ -1488,6 +1491,12 @@ main(
+ 					finobt = c;
+ 					finobtflag = true;
+ 					break;
++				case M_UUID:
++					if (!value || *value == '\0')
++						reqval('m', mopts, M_UUID);
++					if (platform_uuid_parse(value, &uuid))
++						illegal(optarg, "m uuid");
++					break;
+ 				default:
+ 					unknown('m', value);
+ 				}
+@@ -2550,7 +2559,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	sbp->sb_dblocks = dblocks;
+ 	sbp->sb_rblocks = rtblocks;
+ 	sbp->sb_rextents = rtextents;
+-	platform_uuid_generate(&uuid);
++	if (platform_uuid_is_null(&uuid)) {
++	    platform_uuid_generate(&uuid);
++	}
+ 	platform_uuid_copy(&sbp->sb_uuid, &uuid);
+ 	/* Only in memory; libxfs expects this as if read from disk */
+ 	platform_uuid_copy(&sbp->sb_meta_uuid, &uuid);
+@@ -3163,7 +3174,7 @@ usage( void )
+ {
+ 	fprintf(stderr, _("Usage: %s\n\
+ /* blocksize */		[-b log=n|size=num]\n\
+-/* metadata */		[-m crc=0|1,finobt=0|1]\n\
++/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx]\n\
+ /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+ 			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+ 			    sectlog=n|sectsize=num\n\
+-- 
+2.3.5
 
 _______________________________________________
 xfs mailing list
