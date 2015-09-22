@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CF6D67F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 10:25:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B604AC005
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 08:25:00 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id EEE957F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 10:25:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6EFF2AC00B
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 08:25:07 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6HwrDbgY3mFfhrf1 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id uHIhqJ8oUCjCNvA4 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 08:24:55 -0700 (PDT)
-Subject: [RFC PATCH 1/2] VFS: Kill use of O_LARGEFILE inside the kernel
+	<xfs@oss.sgi.com>; Tue, 22 Sep 2015 08:25:05 -0700 (PDT)
+Subject: [RFC PATCH 2/2] VFS: Don't pass O_LARGEFILE when opening a file
+	internally
 From: David Howells <dhowells@redhat.com>
-Date: Tue, 22 Sep 2015 16:24:50 +0100
-Message-ID: <20150922152450.32539.55285.stgit@warthog.procyon.org.uk>
+Date: Tue, 22 Sep 2015 16:25:00 +0100
+Message-ID: <20150922152500.32539.4726.stgit@warthog.procyon.org.uk>
+In-Reply-To: <20150922152450.32539.55285.stgit@warthog.procyon.org.uk>
+References: <20150922152450.32539.55285.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,329 +32,298 @@ Sender: xfs-bounces@oss.sgi.com
 To: viro@zeniv.linux.org.uk
 Cc: dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-We don't need to use O_LARGEFILE anymore inside the kernel and can for the
-most part just let it sit in the UAPI headers and ignore it everywhere else.
-Indeed on 64-bit arches, we enforce the use of O_LARGEFILE.
-
-Quite a few places turn it on, but only the following places actually take
-any notice of it directly:
-
- (1) fs/9p/vfs_inode_dotl.c.  Converts O_LARGEFILE to P9_DOTL_LARGEFILE but
-     otherwise seems to ignore it.  Possibly it gets sent to a server.
-
- (2) fs/notify/fanotify/fanotify_user.c.  Pass in event_f_flags.
-
- (3) fs/hfsplus/inode.c.  Length check in hfsplus_file_open().
-
- (4) fs/open.c:  Length check in ftruncate().
-
- (5) fs/open.c:  Length check in generic_file_open().
-
- (6) fs/xfs/xfs_file.c:  Length check in xfs_file_open().
-
- (7) mm/filemap.c:  Length check in generic_write_checks().
-
-All but the first two are just making length checks that are waived
-unconditionally on a 64-bit system.  Just skip the length checks, assuming
-that O_LARGEFILE is actually set.
-
-There's also things like fcntl(F_GETFL) and fuse that pass it to userspace.
-NFS may be in the same boat, but if it is, I can't see where the
-flag->protocol translation takes place for it.  For F_GETFL, fuse and
-fanotify, just set it unconditionally in the places that then pass it to
-userspace.
-
-We don't actually then set it in file->f_flags - except when userspace
-passes it in - since nothing then examines the bit in f_flags.
+Don't pass O_LARGEFILE when opening a file internally within the kernel
+because due to the preceeding commit, the flag is now assumed fixed on for
+all arches, not just 64-bit ones.
 
 Signed-off-by: David Howells <dhowells@redhat.com>
 ---
 
- fs/compat.c                        |    9 +++------
- fs/fcntl.c                         |    2 +-
- fs/fhandle.c                       |    8 +-------
- fs/fuse/file.c                     |    7 ++++---
- fs/hfsplus/inode.c                 |    2 --
- fs/notify/fanotify/fanotify_user.c |    3 +--
- fs/open.c                          |   28 ++++------------------------
- fs/xfs/xfs_file.c                  |    2 --
- fs/xfs/xfs_ioctl.c                 |    4 ----
- mm/filemap.c                       |   10 ----------
- 10 files changed, 14 insertions(+), 61 deletions(-)
+ drivers/media/pci/cx25821/cx25821-audio-upstream.c |    4 ++--
+ drivers/mtd/nand/nandsim.c                         |    2 +-
+ drivers/staging/lustre/lustre/libcfs/tracefile.c   |    4 ++--
+ drivers/target/target_core_file.c                  |    4 ++--
+ drivers/usb/gadget/function/storage_common.c       |    4 ++--
+ fs/block_dev.c                                     |    2 --
+ fs/cachefiles/rdwr.c                               |    2 +-
+ fs/coredump.c                                      |    3 +--
+ fs/ecryptfs/kthread.c                              |    4 ++--
+ fs/exec.c                                          |    4 ++--
+ fs/nfsd/vfs.c                                      |    6 +++---
+ kernel/acct.c                                      |    2 +-
+ mm/shmem.c                                         |    2 +-
+ mm/swapfile.c                                      |    4 ++--
+ tools/lguest/lguest.c                              |    2 +-
+ 15 files changed, 23 insertions(+), 26 deletions(-)
 
-diff --git a/fs/compat.c b/fs/compat.c
-index 6fd272d455e4..51579f09a135 100644
---- a/fs/compat.c
-+++ b/fs/compat.c
-@@ -1084,8 +1084,7 @@ COMPAT_SYSCALL_DEFINE3(getdents64, unsigned int, fd,
- #endif /* __ARCH_WANT_COMPAT_SYS_GETDENTS64 */
+diff --git a/drivers/media/pci/cx25821/cx25821-audio-upstream.c b/drivers/media/pci/cx25821/cx25821-audio-upstream.c
+index 68dbc2dbc982..aa6011bb88cf 100644
+--- a/drivers/media/pci/cx25821/cx25821-audio-upstream.c
++++ b/drivers/media/pci/cx25821/cx25821-audio-upstream.c
+@@ -271,7 +271,7 @@ static int cx25821_get_audio_data(struct cx25821_dev *dev,
+ 	if (dev->_audiofile_status == END_OF_FILE)
+ 		return 0;
  
- /*
-- * Exactly like fs/open.c:sys_open(), except that it doesn't set the
-- * O_LARGEFILE flag.
-+ * Exactly like fs/open.c:sys_open().
-  */
- COMPAT_SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
- {
-@@ -1093,8 +1092,7 @@ COMPAT_SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t,
- }
+-	file = filp_open(dev->_audiofilename, O_RDONLY | O_LARGEFILE, 0);
++	file = filp_open(dev->_audiofilename, O_RDONLY, 0);
+ 	if (IS_ERR(file)) {
+ 		pr_err("%s(): ERROR opening file(%s) with errno = %ld!\n",
+ 		       __func__, dev->_audiofilename, -PTR_ERR(file));
+@@ -326,7 +326,7 @@ static int cx25821_openfile_audio(struct cx25821_dev *dev,
+ 	loff_t offset;
+ 	int i, j;
  
- /*
-- * Exactly like fs/open.c:sys_openat(), except that it doesn't set the
-- * O_LARGEFILE flag.
-+ * Exactly like fs/open.c:sys_openat().
-  */
- COMPAT_SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags, umode_t, mode)
- {
-@@ -1470,8 +1468,7 @@ COMPAT_SYSCALL_DEFINE5(ppoll, struct pollfd __user *, ufds,
+-	file = filp_open(dev->_audiofilename, O_RDONLY | O_LARGEFILE, 0);
++	file = filp_open(dev->_audiofilename, O_RDONLY, 0);
+ 	if (IS_ERR(file)) {
+ 		pr_err("%s(): ERROR opening file(%s) with errno = %ld!\n",
+ 			__func__, dev->_audiofilename, PTR_ERR(file));
+diff --git a/drivers/mtd/nand/nandsim.c b/drivers/mtd/nand/nandsim.c
+index 95d0cc49cfc2..f932022e2ff0 100644
+--- a/drivers/mtd/nand/nandsim.c
++++ b/drivers/mtd/nand/nandsim.c
+@@ -575,7 +575,7 @@ static int alloc_device(struct nandsim *ns)
+ 	int i, err;
  
- #ifdef CONFIG_FHANDLE
- /*
-- * Exactly like fs/open.c:sys_open_by_handle_at(), except that it
-- * doesn't set the O_LARGEFILE flag.
-+ * Exactly like fs/open.c:sys_open_by_handle_at().
-  */
- COMPAT_SYSCALL_DEFINE3(open_by_handle_at, int, mountdirfd,
- 			     struct file_handle __user *, handle, int, flags)
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index ee85cd4e136a..a7a8e07e0d59 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -260,7 +260,7 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
- 		set_close_on_exec(fd, arg & FD_CLOEXEC);
- 		break;
- 	case F_GETFL:
--		err = filp->f_flags;
-+		err = filp->f_flags | O_LARGEFILE;
- 		break;
- 	case F_SETFL:
- 		err = setfl(fd, filp, arg);
-diff --git a/fs/fhandle.c b/fs/fhandle.c
-index d59712dfa3e7..93948172d186 100644
---- a/fs/fhandle.c
-+++ b/fs/fhandle.c
-@@ -256,11 +256,5 @@ SYSCALL_DEFINE3(open_by_handle_at, int, mountdirfd,
- 		struct file_handle __user *, handle,
- 		int, flags)
- {
--	long ret;
--
--	if (force_o_largefile())
--		flags |= O_LARGEFILE;
--
--	ret = do_handle_open(mountdirfd, handle, flags);
--	return ret;
-+	return do_handle_open(mountdirfd, handle, flags);
- }
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index f523f2f04c19..680bcbb9613b 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -28,6 +28,7 @@ static int fuse_send_open(struct fuse_conn *fc, u64 nodeid, struct file *file,
+ 	if (cache_file) {
+-		cfile = filp_open(cache_file, O_CREAT | O_RDWR | O_LARGEFILE, 0600);
++		cfile = filp_open(cache_file, O_CREAT | O_RDWR, 0600);
+ 		if (IS_ERR(cfile))
+ 			return PTR_ERR(cfile);
+ 		if (!(cfile->f_mode & FMODE_CAN_READ)) {
+diff --git a/drivers/staging/lustre/lustre/libcfs/tracefile.c b/drivers/staging/lustre/lustre/libcfs/tracefile.c
+index effa2af58c13..a862b2f21111 100644
+--- a/drivers/staging/lustre/lustre/libcfs/tracefile.c
++++ b/drivers/staging/lustre/lustre/libcfs/tracefile.c
+@@ -683,7 +683,7 @@ int cfs_tracefile_dump_all_pages(char *filename)
  
- 	memset(&inarg, 0, sizeof(inarg));
- 	inarg.flags = file->f_flags & ~(O_CREAT | O_EXCL | O_NOCTTY);
-+	inarg.flags |= O_LARGEFILE;
- 	if (!fc->atomic_o_trunc)
- 		inarg.flags &= ~O_TRUNC;
- 	args.in.h.opcode = opcode;
-@@ -235,7 +236,7 @@ static void fuse_prepare_release(struct fuse_file *ff, int flags, int opcode)
- 	wake_up_interruptible_all(&ff->poll_wait);
+ 	cfs_tracefile_write_lock();
  
- 	inarg->fh = ff->fh;
--	inarg->flags = flags;
-+	inarg->flags = flags | O_LARGEFILE;
- 	req->in.h.opcode = opcode;
- 	req->in.h.nodeid = ff->nodeid;
- 	req->in.numargs = 1;
-@@ -505,7 +506,7 @@ void fuse_read_fill(struct fuse_req *req, struct file *file, loff_t pos,
- 	inarg->fh = ff->fh;
- 	inarg->offset = pos;
- 	inarg->size = count;
--	inarg->flags = file->f_flags;
-+	inarg->flags = file->f_flags | O_LARGEFILE;
- 	req->in.h.opcode = opcode;
- 	req->in.h.nodeid = ff->nodeid;
- 	req->in.numargs = 1;
-@@ -947,7 +948,7 @@ static size_t fuse_send_write(struct fuse_req *req, struct fuse_io_priv *io,
- 	struct fuse_write_in *inarg = &req->misc.write.in;
- 
- 	fuse_write_fill(req, ff, pos, count);
--	inarg->flags = file->f_flags;
-+	inarg->flags = file->f_flags | O_LARGEFILE;
- 	if (owner != NULL) {
- 		inarg->write_flags |= FUSE_WRITE_LOCKOWNER;
- 		inarg->lock_owner = fuse_lock_owner_id(fc, owner);
-diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
-index 6dd107d7421e..0d73a3732532 100644
---- a/fs/hfsplus/inode.c
-+++ b/fs/hfsplus/inode.c
-@@ -216,8 +216,6 @@ static int hfsplus_file_open(struct inode *inode, struct file *file)
- {
- 	if (HFSPLUS_IS_RSRC(inode))
- 		inode = HFSPLUS_I(inode)->rsrc_inode;
--	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
--		return -EOVERFLOW;
- 	atomic_inc(&HFSPLUS_I(inode)->opencnt);
- 	return 0;
- }
-diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
-index 8e8e6bcd1d43..eaf202ef3d99 100644
---- a/fs/notify/fanotify/fanotify_user.c
-+++ b/fs/notify/fanotify/fanotify_user.c
-@@ -748,8 +748,7 @@ SYSCALL_DEFINE2(fanotify_init, unsigned int, flags, unsigned int, event_f_flags)
- 	}
- 	group->overflow_event = &oevent->fse;
- 
--	if (force_o_largefile())
--		event_f_flags |= O_LARGEFILE;
-+	event_f_flags |= O_LARGEFILE;
- 	group->fanotify_data.f_flags = event_f_flags;
- #ifdef CONFIG_FANOTIFY_ACCESS_PERMISSIONS
- 	spin_lock_init(&group->fanotify_data.access_lock);
-diff --git a/fs/open.c b/fs/open.c
-index b6f1e96a7c0b..d1fbb8ee69f6 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -151,7 +151,7 @@ COMPAT_SYSCALL_DEFINE2(truncate, const char __user *, path, compat_off_t, length
- }
- #endif
- 
--static long do_sys_ftruncate(unsigned int fd, loff_t length, int small)
-+static long do_sys_ftruncate(unsigned int fd, loff_t length)
- {
- 	struct inode *inode;
- 	struct dentry *dentry;
-@@ -166,21 +166,12 @@ static long do_sys_ftruncate(unsigned int fd, loff_t length, int small)
- 	if (!f.file)
- 		goto out;
- 
--	/* explicitly opened as large or we are on 64-bit box */
--	if (f.file->f_flags & O_LARGEFILE)
--		small = 0;
--
- 	dentry = f.file->f_path.dentry;
- 	inode = dentry->d_inode;
- 	error = -EINVAL;
- 	if (!S_ISREG(inode->i_mode) || !(f.file->f_mode & FMODE_WRITE))
- 		goto out_putf;
- 
--	error = -EINVAL;
--	/* Cannot ftruncate over 2^31 bytes without large file support */
--	if (small && length > MAX_NON_LFS)
--		goto out_putf;
--
- 	error = -EPERM;
- 	if (IS_APPEND(inode))
- 		goto out_putf;
-@@ -200,13 +191,13 @@ out:
- 
- SYSCALL_DEFINE2(ftruncate, unsigned int, fd, unsigned long, length)
- {
--	return do_sys_ftruncate(fd, length, 1);
-+	return do_sys_ftruncate(fd, length);
- }
- 
- #ifdef CONFIG_COMPAT
- COMPAT_SYSCALL_DEFINE2(ftruncate, unsigned int, fd, compat_ulong_t, length)
- {
--	return do_sys_ftruncate(fd, length, 1);
-+	return do_sys_ftruncate(fd, length);
- }
- #endif
- 
-@@ -219,7 +210,7 @@ SYSCALL_DEFINE2(truncate64, const char __user *, path, loff_t, length)
- 
- SYSCALL_DEFINE2(ftruncate64, unsigned int, fd, loff_t, length)
- {
--	return do_sys_ftruncate(fd, length, 0);
-+	return do_sys_ftruncate(fd, length);
- }
- #endif /* BITS_PER_LONG == 32 */
- 
-@@ -1037,18 +1028,12 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
- 
- SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
- {
--	if (force_o_largefile())
--		flags |= O_LARGEFILE;
--
- 	return do_sys_open(AT_FDCWD, filename, flags, mode);
- }
- 
- SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
- 		umode_t, mode)
- {
--	if (force_o_largefile())
--		flags |= O_LARGEFILE;
--
- 	return do_sys_open(dfd, filename, flags, mode);
- }
- 
-@@ -1126,14 +1111,9 @@ SYSCALL_DEFINE0(vhangup)
- 
- /*
-  * Called when an inode is about to be open.
-- * We use this to disallow opening large files on 32bit systems if
-- * the caller didn't specify O_LARGEFILE.  On 64bit systems we force
-- * on this flag in sys_open.
-  */
- int generic_file_open(struct inode * inode, struct file * filp)
- {
--	if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
--		return -EOVERFLOW;
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e78feb400e22..7c8d9b4e44eb 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1031,8 +1031,6 @@ xfs_file_open(
- 	struct inode	*inode,
- 	struct file	*file)
- {
--	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
--		return -EFBIG;
- 	if (XFS_FORCED_SHUTDOWN(XFS_M(inode->i_sb)))
- 		return -EIO;
- 	return 0;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index ea7d85af5310..0c5b4ae746c0 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -218,10 +218,6 @@ xfs_open_by_handle(
- 		goto out_dput;
- 	}
- 
--#if BITS_PER_LONG != 32
--	hreq->oflags |= O_LARGEFILE;
--#endif
--
- 	permflag = hreq->oflags;
- 	fmode = OPEN_FMODE(permflag);
- 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 72940fb38666..1d1e75aa49cf 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2311,16 +2311,6 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	}
+-	filp = filp_open(filename, O_CREAT|O_EXCL|O_WRONLY|O_LARGEFILE, 0600);
++	filp = filp_open(filename, O_CREAT|O_EXCL|O_WRONLY, 0600);
+ 	if (IS_ERR(filp)) {
+ 		rc = PTR_ERR(filp);
+ 		filp = NULL;
+@@ -985,7 +985,7 @@ static int tracefiled(void *arg)
+ 		cfs_tracefile_read_lock();
+ 		if (cfs_tracefile[0] != 0) {
+ 			filp = filp_open(cfs_tracefile,
+-					 O_CREAT | O_RDWR | O_LARGEFILE,
++					 O_CREAT | O_RDWR,
+ 					 0600);
+ 			if (IS_ERR(filp)) {
+ 				rc = PTR_ERR(filp);
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index e3195700211a..e7474fc79ea8 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -114,7 +114,7 @@ static int fd_configure_device(struct se_device *dev)
+ 	 * Use O_DSYNC by default instead of O_SYNC to forgo syncing
+ 	 * of pure timestamp updates.
+ 	 */
+-	flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
++	flags = O_RDWR | O_CREAT | O_DSYNC;
  
  	/*
--	 * LFS rule
--	 */
--	if (unlikely(pos + iov_iter_count(from) > MAX_NON_LFS &&
--				!(file->f_flags & O_LARGEFILE))) {
--		if (pos >= MAX_NON_LFS)
--			return -EFBIG;
--		iov_iter_truncate(from, MAX_NON_LFS - (unsigned long)pos);
--	}
+ 	 * Optionally allow fd_buffered_io=1 to be enabled for people
+@@ -732,7 +732,7 @@ static int fd_init_prot(struct se_device *dev)
+ 	struct fd_dev *fd_dev = FD_DEV(dev);
+ 	struct file *prot_file, *file = fd_dev->fd_file;
+ 	struct inode *inode;
+-	int ret, flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
++	int ret, flags = O_RDWR | O_CREAT | O_DSYNC;
+ 	char buf[FD_MAX_DEV_PROT_NAME];
+ 
+ 	if (!file) {
+diff --git a/drivers/usb/gadget/function/storage_common.c b/drivers/usb/gadget/function/storage_common.c
+index d62683017cf3..73d33930beb8 100644
+--- a/drivers/usb/gadget/function/storage_common.c
++++ b/drivers/usb/gadget/function/storage_common.c
+@@ -196,12 +196,12 @@ int fsg_lun_open(struct fsg_lun *curlun, const char *filename)
+ 	/* R/W if we can, R/O if we must */
+ 	ro = curlun->initially_ro;
+ 	if (!ro) {
+-		filp = filp_open(filename, O_RDWR | O_LARGEFILE, 0);
++		filp = filp_open(filename, O_RDWR, 0);
+ 		if (PTR_ERR(filp) == -EROFS || PTR_ERR(filp) == -EACCES)
+ 			ro = 1;
+ 	}
+ 	if (ro)
+-		filp = filp_open(filename, O_RDONLY | O_LARGEFILE, 0);
++		filp = filp_open(filename, O_RDONLY, 0);
+ 	if (IS_ERR(filp)) {
+ 		LINFO(curlun, "unable to open backing file: %s\n", filename);
+ 		return PTR_ERR(filp);
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 22ea424ee741..170abedc983a 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1462,8 +1462,6 @@ static int blkdev_open(struct inode * inode, struct file * filp)
+ 	 * binary needs it. We might want to drop this workaround
+ 	 * during an unstable branch.
+ 	 */
+-	filp->f_flags |= O_LARGEFILE;
 -
--	/*
- 	 * Are we about to exceed the fs block limit ?
- 	 *
- 	 * If we have written data it becomes a short write.  If we have
+ 	if (filp->f_flags & O_NDELAY)
+ 		filp->f_mode |= FMODE_NDELAY;
+ 	if (filp->f_flags & O_EXCL)
+diff --git a/fs/cachefiles/rdwr.c b/fs/cachefiles/rdwr.c
+index 3cbb0e834694..9b0c7348cf22 100644
+--- a/fs/cachefiles/rdwr.c
++++ b/fs/cachefiles/rdwr.c
+@@ -909,7 +909,7 @@ int cachefiles_write_page(struct fscache_storage *op, struct page *page)
+ 	 * own time */
+ 	path.mnt = cache->mnt;
+ 	path.dentry = object->backer;
+-	file = dentry_open(&path, O_RDWR | O_LARGEFILE, cache->cache_cred);
++	file = dentry_open(&path, O_RDWR, cache->cache_cred);
+ 	if (IS_ERR(file)) {
+ 		ret = PTR_ERR(file);
+ 	} else {
+diff --git a/fs/coredump.c b/fs/coredump.c
+index a8f75640ac86..8e4a0feb145d 100644
+--- a/fs/coredump.c
++++ b/fs/coredump.c
+@@ -667,8 +667,7 @@ void do_coredump(const siginfo_t *siginfo)
+ 		 * writes its coredump successfully, not which one.
+ 		 */
+ 		cprm.file = filp_open(cn.corename,
+-				 O_CREAT | 2 | O_NOFOLLOW |
+-				 O_LARGEFILE | O_EXCL,
++				 O_CREAT | 2 | O_NOFOLLOW | O_EXCL,
+ 				 0600);
+ 		if (IS_ERR(cprm.file))
+ 			goto fail_unlock;
+diff --git a/fs/ecryptfs/kthread.c b/fs/ecryptfs/kthread.c
+index 866bb18efefe..3fef39d3345f 100644
+--- a/fs/ecryptfs/kthread.c
++++ b/fs/ecryptfs/kthread.c
+@@ -74,7 +74,7 @@ static int ecryptfs_threadfn(void *ignored)
+ 					       kthread_ctl_list);
+ 			list_del(&req->kthread_ctl_list);
+ 			*req->lower_file = dentry_open(&req->path,
+-				(O_RDWR | O_LARGEFILE), current_cred());
++						       O_RDWR, current_cred());
+ 			complete(&req->done);
+ 		}
+ 		mutex_unlock(&ecryptfs_kthread_ctl.mux);
+@@ -133,7 +133,7 @@ int ecryptfs_privileged_open(struct file **lower_file,
+ 			     const struct cred *cred)
+ {
+ 	struct ecryptfs_open_req req;
+-	int flags = O_LARGEFILE;
++	int flags = 0;
+ 	int rc = 0;
+ 
+ 	init_completion(&req.done);
+diff --git a/fs/exec.c b/fs/exec.c
+index b06623a9347f..35668aaa3400 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -118,7 +118,7 @@ SYSCALL_DEFINE1(uselib, const char __user *, library)
+ 	struct filename *tmp = getname(library);
+ 	int error = PTR_ERR(tmp);
+ 	static const struct open_flags uselib_flags = {
+-		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
++		.open_flag = O_RDONLY | __FMODE_EXEC,
+ 		.acc_mode = MAY_READ | MAY_EXEC | MAY_OPEN,
+ 		.intent = LOOKUP_OPEN,
+ 		.lookup_flags = LOOKUP_FOLLOW,
+@@ -762,7 +762,7 @@ static struct file *do_open_execat(int fd, struct filename *name, int flags)
+ 	struct file *file;
+ 	int err;
+ 	struct open_flags open_exec_flags = {
+-		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
++		.open_flag = O_RDONLY | __FMODE_EXEC,
+ 		.acc_mode = MAY_EXEC | MAY_OPEN,
+ 		.intent = LOOKUP_OPEN,
+ 		.lookup_flags = LOOKUP_FOLLOW,
+diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
+index 45c04979e7b3..41adbadf9a01 100644
+--- a/fs/nfsd/vfs.c
++++ b/fs/nfsd/vfs.c
+@@ -640,7 +640,7 @@ nfsd_open(struct svc_rqst *rqstp, struct svc_fh *fhp, umode_t type,
+ 	struct path	path;
+ 	struct inode	*inode;
+ 	struct file	*file;
+-	int		flags = O_RDONLY|O_LARGEFILE;
++	int		flags = O_RDONLY;
+ 	__be32		err;
+ 	int		host_err = 0;
+ 
+@@ -690,9 +690,9 @@ nfsd_open(struct svc_rqst *rqstp, struct svc_fh *fhp, umode_t type,
+ 
+ 	if (may_flags & NFSD_MAY_WRITE) {
+ 		if (may_flags & NFSD_MAY_READ)
+-			flags = O_RDWR|O_LARGEFILE;
++			flags = O_RDWR;
+ 		else
+-			flags = O_WRONLY|O_LARGEFILE;
++			flags = O_WRONLY;
+ 	}
+ 
+ 	file = dentry_open(&path, flags, current_cred());
+diff --git a/kernel/acct.c b/kernel/acct.c
+index 74963d192c5d..c292fdf35757 100644
+--- a/kernel/acct.c
++++ b/kernel/acct.c
+@@ -201,7 +201,7 @@ static int acct_on(struct filename *pathname)
+ 		return -ENOMEM;
+ 
+ 	/* Difference from BSD - they don't do O_APPEND */
+-	file = file_open_name(pathname, O_WRONLY|O_APPEND|O_LARGEFILE, 0);
++	file = file_open_name(pathname, O_WRONLY|O_APPEND, 0);
+ 	if (IS_ERR(file)) {
+ 		kfree(acct);
+ 		return PTR_ERR(file);
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 48ce82926d93..4073e785cda4 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -2968,7 +2968,7 @@ SYSCALL_DEFINE2(memfd_create,
+ 	}
+ 	info = SHMEM_I(file_inode(file));
+ 	file->f_mode |= FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE;
+-	file->f_flags |= O_RDWR | O_LARGEFILE;
++	file->f_flags |= O_RDWR;
+ 	if (flags & MFD_ALLOW_SEALING)
+ 		info->seals &= ~F_SEAL_SEAL;
+ 
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 58877312cf6b..53e854ab0960 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -1863,7 +1863,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+ 	if (IS_ERR(pathname))
+ 		return PTR_ERR(pathname);
+ 
+-	victim = file_open_name(pathname, O_RDWR|O_LARGEFILE, 0);
++	victim = file_open_name(pathname, O_RDWR, 0);
+ 	err = PTR_ERR(victim);
+ 	if (IS_ERR(victim))
+ 		goto out;
+@@ -2419,7 +2419,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
+ 		name = NULL;
+ 		goto bad_swap;
+ 	}
+-	swap_file = file_open_name(name, O_RDWR|O_LARGEFILE, 0);
++	swap_file = file_open_name(name, O_RDWR, 0);
+ 	if (IS_ERR(swap_file)) {
+ 		error = PTR_ERR(swap_file);
+ 		swap_file = NULL;
+diff --git a/tools/lguest/lguest.c b/tools/lguest/lguest.c
+index 80159e6811c2..a82e6bc0978e 100644
+--- a/tools/lguest/lguest.c
++++ b/tools/lguest/lguest.c
+@@ -3046,7 +3046,7 @@ static void setup_block_file(const char *filename)
+ 	vblk = dev->priv = malloc(sizeof(*vblk));
+ 
+ 	/* First we open the file and store the length. */
+-	vblk->fd = open_or_die(filename, O_RDWR|O_LARGEFILE);
++	vblk->fd = open_or_die(filename, O_RDWR);
+ 	vblk->len = lseek64(vblk->fd, 0, SEEK_END);
+ 
+ 	/* Tell Guest how many sectors this device has. */
 
 _______________________________________________
 xfs mailing list
