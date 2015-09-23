@@ -1,35 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1774A7F37
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 05:45:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A6254AC005
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 03:45:08 -0700 (PDT)
-Received: from smtp-tls.univ-nantes.fr (smtptls2-lmb.cpub.univ-nantes.fr
-	[193.52.103.111]) by cuda.sgi.com with ESMTP id
-	MIfJzReAoeBG0f6S for <xfs@oss.sgi.com>;
-	Wed, 23 Sep 2015 03:45:06 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTP id 1AF9240171C
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 12:45:06 +0200 (CEST)
-Received: from smtp-tls.univ-nantes.fr ([127.0.0.1])
-	by localhost (smtptls2-lmb.cpub.univ-nantes.fr [127.0.0.1])
-	(amavisd-new, port 10024)
-	with LMTP id W-LdVlmiaFyg for <xfs@oss.sgi.com>;
-	Wed, 23 Sep 2015 12:45:06 +0200 (CEST)
-Received: from [172.20.13.174] (unknown [172.20.13.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTPSA id F0057401715
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 12:45:05 +0200 (CEST)
-Subject: Re: xfstests, bad generic tests 009 and 308
-References: <55FC3E0E.9060506@nomovok.com> <20150918224412.GE26895@dastard>
-	<55FFE665.7040004@nomovok.com> <20150921225244.GD19114@dastard>
-From: Yann Dupont - Veille Techno <veilletechno-irts@univ-nantes.fr>
-Message-ID: <56028249.7040103@univ-nantes.fr>
-Date: Wed, 23 Sep 2015 12:43:21 +0200
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 72F7E7F37
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 07:24:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 31ACA304039
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 05:24:05 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id bYswj6kxvELN3iW2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 23 Sep 2015 05:24:04 -0700 (PDT)
+Date: Wed, 23 Sep 2015 08:24:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_io: Implement inodes64 command - bug in
+	XFS_IOC_FSINUMBERS?
+Message-ID: <20150923122401.GA37210@bfoster.bfoster>
+References: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
+	<20150921220832.GB19114@dastard>
+	<20150922075432.GC26699@redhat.com>
+	<20150922122238.GA46026@bfoster.bfoster>
+	<20150922220054.GL19114@dastard> <20150923102834.GA4490@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20150921225244.GD19114@dastard>
+Content-Disposition: inline
+In-Reply-To: <20150923102834.GA4490@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,54 +30,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="windows-1252"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-Le 22/09/2015 00:52, Dave Chinner a =E9crit :
-> As it is, I highly recommend that you try a current 4.3 kernel, as =
+On Wed, Sep 23, 2015 at 12:28:34PM +0200, Carlos Maiolino wrote:
+> Howdy folks,
+> 
+> I was working in implementing the suggested feature in my patch, about getting
+> the next inode used after one is provided, and I hit something that I'm not really
+> sure if this might be considered a bug, or just a work form.
+> 
+> XFS_IOC_FSINUMBERS, is supposed to be called with a zeroed
+> xfs_fsop_bulkreq.lastip, so at each call, kernel will update this number to the
+> last inode returned, and, the next call will return in xfs_inogrp.xi_startino,
+> the next existing inode after .lastip.
+> 
+> So, I was expecting that, passing a non-zero .lastip at the first call, I would
+> be able to get the next inode right after the one I passed through .lastip, but,
+> after some tests and reading the code, I noticed that this is not the case.
+> 
+> The problem (not sure if I can really say it's a problem), is that, if the inode
+> number passed, happens to be somewhere in the middle of an inode chunk, the
+> whole chunk will not be printed, only the next inode chunk will start to be
+> printed, hiding all information of the previous one.
+> 
+> I'm not sure if this is the desired behavior or not, but, I'd say that, if the
+> inode passed in .lastip, is not the first in the chunk, the output should start
+> for its own chunk, instead of the next one, but, I prefer to see you folks POV
+> before starting to fix something that I'm not sure if it's actually broken :-)
+> 
 
-> there are several code fixes in the XFS kernel code that work around =
+On a quick pass through, it seems like this is probably just the nature
+of the granularity and typical use case of the inumbers interface. For
+one, I think the lastip parameter is intended to be used as a cookie as
+opposed to an inode-granularity search key. The return structures also
+appear to describe inode records so there isn't any natural way to get a
+partial record that I can see. Note that bulkstat does appear to support
+an inode granularity starting point (see xfs_bulkstat_grab_ichunk()) as
+the output format is inode granularity.
 
-> compiler issues we know about. AFAIA, the do_div() asm bug that trips =
+FWIW, I would probably try to handle something like the above in
+userspace by working with the interface rather than modifying it. In
+other words, subtract (at least) XFS_INODES_PER_CHUNK from the inode
+number in question and use that as a starting point to ensure the output
+contains the record for the inode if one exists.
 
-> recent gcc optimisations isn't in the upstream kernel yet, but that =
+It seems like you could change the inumbers behavior to return the
+record that contains lastip + 1 if you really wanted to, we'd just have
+to take care not to break the lastip behavior itself (e.g., we can't
+just search for any record that contains lastip). What looks
+interesting, and might justify doing something in this area, is the
+behavior presumably caused by doing a greater than or equal to
+(XFS_LOOKUP_GE) lookup in xfs_inumbers(). If lastino happens to be a
+record startino, we'll actually return the record that contains that
+inode (thus technically supporting a mid-record start). If the index in
+the record is beyond that, we'll skip it and start at the next record.
+Unless I misinterpret that, it seems like that should be fixed one way
+or another.
 
-> can be worked around by setting CONFIG_CC_OPTIMIZE_FOR_SIZE=3Dy in your =
+Brian
 
-> build. =
-
-
-Hi dave,
-
-I can confirm that CONFIG_CC_OPTIMIZE_FOR_SIZE=3Dy is (was ?) the only way =
-
-for me to have reliable XFS kernel code on different arm platforms =
-
-(Marvell kirkwood, Allwinner A20, Amlogic S805), no matter what recent =
-
-gcc version I've been using.
-
-I must admit I was cross-compiling from X86-64 too, but I think (not =
-
-sure) that it was also the case with native gcc.
-
-I must also admit that I didn't tried since some months, because =
-
-CONFIG_CC_OPTIMIZE_FOR_SIZE=3Dy was the silver bullet for arm xfs kernel =
-
-crashes. This crash was difficult to understand because it occurs quite =
-
-randomly (I.e it can take several hours to trigger)
-
-If there's a patch floating around for gcc (or kernel), I'm interested =
-
-to test.
-
-Cheers,
-
+> Cheers
+> 
+> -- 
+> Carlos
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
