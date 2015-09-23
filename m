@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 72F7E7F37
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 07:24:08 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 676D27F37
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 08:18:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 31ACA304039
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 05:24:05 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F130BAC005
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2015 06:18:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bYswj6kxvELN3iW2 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kcXs9STEyFMJHaqB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 23 Sep 2015 05:24:04 -0700 (PDT)
-Date: Wed, 23 Sep 2015 08:24:02 -0400
+	<xfs@oss.sgi.com>; Wed, 23 Sep 2015 06:18:33 -0700 (PDT)
+Date: Wed, 23 Sep 2015 09:18:31 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_io: Implement inodes64 command - bug in
-	XFS_IOC_FSINUMBERS?
-Message-ID: <20150923122401.GA37210@bfoster.bfoster>
-References: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
-	<20150921220832.GB19114@dastard>
-	<20150922075432.GC26699@redhat.com>
-	<20150922122238.GA46026@bfoster.bfoster>
-	<20150922220054.GL19114@dastard> <20150923102834.GA4490@redhat.com>
+Subject: Re: [PATCH v2 02/12] libxfs: track largest metadata LSN in use via
+	verifiers
+Message-ID: <20150923131831.GB37210@bfoster.bfoster>
+References: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
+	<1441997742-37160-3-git-send-email-bfoster@redhat.com>
+	<20150923034406.GR3902@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150923102834.GA4490@redhat.com>
+In-Reply-To: <20150923034406.GR3902@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,69 +32,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 23, 2015 at 12:28:34PM +0200, Carlos Maiolino wrote:
-> Howdy folks,
+On Wed, Sep 23, 2015 at 01:44:06PM +1000, Dave Chinner wrote:
+> On Fri, Sep 11, 2015 at 02:55:32PM -0400, Brian Foster wrote:
+> > The LSN validation helper is called in the I/O verifier codepath for
+> > metadata that embed a last-modification LSN. While the codepath exists,
+> > this is not used in userspace as in the kernel because the former
+> > doesn't have an active log.
+> > 
+> > xfs_repair does need to check the validity of the LSN metadata with
+> > respect to the on-disk log, however. Use the LSN validation mechanism to
+> > track the largest LSN that has been seen. Export the value so repair can
+> > use it once it has processed the entire filesystem. Note that the helper
+> > continues to always return true to preserve existing behavior.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ....
+> > +xfs_lsn_t		libxfs_max_lsn = 0;
+> > +pthread_mutex_t		libxfs_max_lsn_lock = PTHREAD_MUTEX_INITIALIZER;
+> > +
+> >  void
+> >  xfs_detect_invalid_lsn(
+> >  	struct xfs_mount	*mp,
+> >  	xfs_lsn_t		lsn)
+> >  {
+> > +	int			cycle = CYCLE_LSN(lsn);
+> > +	int			block = BLOCK_LSN(lsn);
+> > +	int			max_cycle;
+> > +	int			max_block;
+> > +
+> > +	if (lsn == NULLCOMMITLSN)
+> > +		return;
+> > +
+> > +	pthread_mutex_lock(&libxfs_max_lsn_lock);
+> > +
+> > +	max_cycle = CYCLE_LSN(libxfs_max_lsn);
+> > +	max_block = BLOCK_LSN(libxfs_max_lsn);
+> > +
+> > +	if ((cycle > max_cycle) ||
+> > +	    (cycle == max_cycle && block > max_block))
+> > +		libxfs_max_lsn = lsn;
+> > +
+> > +	pthread_mutex_unlock(&libxfs_max_lsn_lock);
 > 
-> I was working in implementing the suggested feature in my patch, about getting
-> the next inode used after one is provided, and I hit something that I'm not really
-> sure if this might be considered a bug, or just a work form.
-> 
-> XFS_IOC_FSINUMBERS, is supposed to be called with a zeroed
-> xfs_fsop_bulkreq.lastip, so at each call, kernel will update this number to the
-> last inode returned, and, the next call will return in xfs_inogrp.xi_startino,
-> the next existing inode after .lastip.
-> 
-> So, I was expecting that, passing a non-zero .lastip at the first call, I would
-> be able to get the next inode right after the one I passed through .lastip, but,
-> after some tests and reading the code, I noticed that this is not the case.
-> 
-> The problem (not sure if I can really say it's a problem), is that, if the inode
-> number passed, happens to be somewhere in the middle of an inode chunk, the
-> whole chunk will not be printed, only the next inode chunk will start to be
-> printed, hiding all information of the previous one.
-> 
-> I'm not sure if this is the desired behavior or not, but, I'd say that, if the
-> inode passed in .lastip, is not the first in the chunk, the output should start
-> for its own chunk, instead of the next one, but, I prefer to see you folks POV
-> before starting to fix something that I'm not sure if it's actually broken :-)
+> This will have the same lock contention problems that the kernel
+> code would have had - my repair scalablity tests regularly reach
+> over 1GB/s of metadata being prefetched through tens of threads, so
+> this is going have a significant impact on performance in those
+> tests....
 > 
 
-On a quick pass through, it seems like this is probably just the nature
-of the granularity and typical use case of the inumbers interface. For
-one, I think the lastip parameter is intended to be used as a cookie as
-opposed to an inode-granularity search key. The return structures also
-appear to describe inode records so there isn't any natural way to get a
-partial record that I can see. Note that bulkstat does appear to support
-an inode granularity starting point (see xfs_bulkstat_grab_ichunk()) as
-the output format is inode granularity.
+Hmm, Ok. I initially didn't have locking here (by accident) but
+reproduced some breakage for which the exact details escape me. I
+suspect it was a test and set race.
 
-FWIW, I would probably try to handle something like the above in
-userspace by working with the interface rather than modifying it. In
-other words, subtract (at least) XFS_INODES_PER_CHUNK from the inode
-number in question and use that as a starting point to ensure the output
-contains the record for the inode if one exists.
+I suppose we could try doing something like what we plan to do on the
+kernel side in terms of a racy check followed by the locked check so the
+lock contention goes away once we find the max lsn. The context here is
+different, however, in that we're using a 64-bit LSN rather than
+independently updated cycle and block fields. It could also take a while
+to stabilize the max lsn depending on the fs. (There are some details on
+the kernel side I'd like to get worked out first as well).
 
-It seems like you could change the inumbers behavior to return the
-record that contains lastip + 1 if you really wanted to, we'd just have
-to take care not to break the lastip behavior itself (e.g., we can't
-just search for any record that contains lastip). What looks
-interesting, and might justify doing something in this area, is the
-behavior presumably caused by doing a greater than or equal to
-(XFS_LOOKUP_GE) lookup in xfs_inumbers(). If lastino happens to be a
-record startino, we'll actually return the record that contains that
-inode (thus technically supporting a mid-record start). If the index in
-the record is beyond that, we'll skip it and start at the next record.
-Unless I misinterpret that, it seems like that should be fixed one way
-or another.
+Perhaps we could try to make this smarter... in the case where either
+the log has been zeroed or we've identified an LSN beyond the current
+log state, we only really need to track the max cycle value since a log
+format is imminent at that point. In the case where the fs is
+consistent, we could seed the starting value with the current log lsn,
+or track per-ag max LSNs without locking and compare them at at the end,
+etc.
+
+I'll have to think about this some more and see what's effective. I'd
+also like to quantify the effect the current locking has on performance
+if possible. Can you provide a brief description of your typical repair
+test that you would expect this to hurt? E.g., a large fs, many AGs,
+populated with fs_mark and repaired with many threads..? Any special
+storage configuration? Thanks.
 
 Brian
 
-> Cheers
+> Cheers,
 > 
+> Dave.
 > -- 
-> Carlos
+> Dave Chinner
+> david@fromorbit.com
 > 
 > _______________________________________________
 > xfs mailing list
