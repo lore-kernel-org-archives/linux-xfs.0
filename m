@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF4427F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 17:34:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D9A287F37
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 21:08:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AB7EF8F8033
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 15:34:42 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B9A938F8037
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 19:08:05 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	r0rXveA6Qy6Ird0Z for <xfs@oss.sgi.com>;
-	Tue, 22 Sep 2015 15:34:40 -0700 (PDT)
-Date: Wed, 23 Sep 2015 08:34:02 +1000
+	WyWnDT8eobiD7DrO for <xfs@oss.sgi.com>;
+	Tue, 22 Sep 2015 19:08:01 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1ZeZTT-0001zp-Ox
+	for xfs@oss.sgi.com; Wed, 23 Sep 2015 12:07:59 +1000
+Date: Wed, 23 Sep 2015 12:07:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs.xfs: option for using a pre-defined filesystem UUID
-Message-ID: <20150922223402.GN19114@dastard>
-References: <1442924691-42001-1-git-send-email-mel@ohmu.fi>
+Subject: [ANNOUNCE] xfs: master, for-next branches updated to v4.3-rc2
+Message-ID: <20150923020759.GJ3902@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1442924691-42001-1-git-send-email-mel@ohmu.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,84 +25,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1415851979794386765=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mika Eloranta <mel@ohmu.fi>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 22, 2015 at 03:24:51PM +0300, Mika Eloranta wrote:
-> Usage: mkfs.xfs -m uuid=<uuid> <device>
-> 
-> The filesystem UUID can now be optionally specified during filesystem
-> creation. The default behavior is still to generate a random UUID.
-> 
-> Allows using pre-generated UUIDs for identifying a filesystem based
-> on the metadata stored inside the filesystem. Filesystem labels can
-> be used for the same purpose, but are limited by their length
-> (12 chars in the case of xfs) whereas the UUID field can store an
-> entire 128bit UUID, which is plenty for e.g. random ID collision
-> avoidance.
-> 
-> Random UUID generated during the creation of the filesystem is not
-> always feasible when an external DB or other system is used to track
-> the created filesystem, e.g. in automated VM provisioning systems,
-> as this would require a feedback mechanism which is not always
-> available. In these cases the best approach often is to generate
-> a random UUID for the filesystem before the filesystem even exists,
-> store it in the tracking DB and later create the filesystem directly
-> with the correct UUID (instead of "mkfs.xfs + xfs_admin -U <new_uuid>").
 
-Much nicer! Just needs a signed-off-by tag now...
+--===============1415851979794386765==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qVHblb/y9DPlgkHs"
+Content-Disposition: inline
 
-> @@ -948,6 +950,7 @@ main(
->  	bool			finobtflag;
->  	int			spinodes;
->  
-> +	platform_uuid_clear(&uuid);
->  	progname = basename(argv[0]);
->  	setlocale(LC_ALL, "");
->  	bindtextdomain(PACKAGE, LOCALEDIR);
 
-You can just call platform_uuid_generate(&uuid) here.
+--qVHblb/y9DPlgkHs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> @@ -1488,6 +1491,12 @@ main(
->  					finobt = c;
->  					finobtflag = true;
->  					break;
-> +				case M_UUID:
-> +					if (!value || *value == '\0')
-> +						reqval('m', mopts, M_UUID);
-> +					if (platform_uuid_parse(value, &uuid))
-> +						illegal(optarg, "m uuid");
-> +					break;
+Hi folks,
 
-This will overwrite the pre-generated uuid if it is specified.
+I've just updated the master and for-next branches of the XFs
+repository here:
 
->  				default:
->  					unknown('m', value);
->  				}
-> @@ -2550,7 +2559,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
->  	sbp->sb_dblocks = dblocks;
->  	sbp->sb_rblocks = rtblocks;
->  	sbp->sb_rextents = rtextents;
-> -	platform_uuid_generate(&uuid);
-> +	if (platform_uuid_is_null(&uuid)) {
-> +	    platform_uuid_generate(&uuid);
-> +	}
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-And this code can go away completely as we are guaranteed to have a
-valid uuid by this point.
+to v4.3-rc2. Please update your local dev trees and rebase your
+current patches against this.
 
-Cheers,
+Thanks!
 
-Dave.
--- 
+-Dave.
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--qVHblb/y9DPlgkHs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJWAgl/AAoJEK3oKUf0dfodDv4P/0kNljxs0RQrHARIjM0bCKz2
+gMvFX226nBHaDhNwvRmbMLU/JVcPs83rASG6Q8MMWw9XSqB1AlqUZCf65nvlzDpi
+qyouR8EQ1+Sg3u7MxEOo5PBr2YixJvmQgxVDo2asEb53fWjFbYikPXm9CcQOmET8
+Fj5NPPeskMxE1YgrEMeJ3hHdkd55zPNFv14EnLN7Up0n/g4iMgsrR+cE0jE7ebDR
+4yJpvAdcVA3PDDVIQBACkruiuHVWSY5oceyAD9+LEmga9KUw03KqiRCFXuwU1TIy
+6yp4LAZfqNofMKBsJoV5VyvbOlWZ6Kotp0gfwBzg+qpOpnM5bpQgFusfdtD8Dvwy
+En1m1C+8QlHusZnVWayIeMvji6bLDdTRUmxqgwgorcBp+8bB8PJPwJCsZNcoCrMj
+bmlmCyoLOghpiI6t6owqpUkUiRhahVhIKXt+lPzb4J2/pMI/eZ9OhaxW5807Ng8o
+172npSv+WdHKBONq6HtP+vUYsEmP+22yk/RcCd4Rg/4NEAvHZt7vUExfwtJ7Co01
+b1HAnw7AUk9tpLw8z67oZKiscPN9EAmkhFBjn4OsyXRlXykUJi+N+/f+aCCnP+lQ
+37R/lO42JfxVCdTup9szXufQ/n6r8LEv7pmygGbjl4mLT7eILFWFkaZTmSBN+qgn
+v4T4uAjHlmVda/gCKQC+
+=Suz+
+-----END PGP SIGNATURE-----
+
+--qVHblb/y9DPlgkHs--
+
+
+--===============1415851979794386765==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1415851979794386765==--
