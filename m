@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F2CBE7F37
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 22:37:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E4B1AC00C
-	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 20:37:07 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 87A187F37
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 22:44:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1053EAC00A
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2015 20:44:11 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EpEUZo0I40W6NsLa for <xfs@oss.sgi.com>;
-	Tue, 22 Sep 2015 20:37:04 -0700 (PDT)
-Date: Wed, 23 Sep 2015 13:36:55 +1000
+	GBquUt0hWvZskcBL for <xfs@oss.sgi.com>;
+	Tue, 22 Sep 2015 20:44:08 -0700 (PDT)
+Date: Wed, 23 Sep 2015 13:44:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 12/14] xfsprogs: make fsr use mntinfo when there is no
-	mntent
-Message-ID: <20150923033655.GQ3902@dastard>
-References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
-	<1442311164-12921-13-git-send-email-jtulak@redhat.com>
+Subject: Re: [PATCH v2 02/12] libxfs: track largest metadata LSN in use via
+	verifiers
+Message-ID: <20150923034406.GR3902@dastard>
+References: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
+	<1441997742-37160-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1442311164-12921-13-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1441997742-37160-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,137 +31,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 15, 2015 at 11:59:22AM +0200, Jan Tulak wrote:
-> For what fsr needs, mntinfo can be used instead of mntent.
-> Custom mntent struct is used to avoid too big ifdefs:
-> We only change few lines and the rest of the code can still
-> use mntent as before.
+On Fri, Sep 11, 2015 at 02:55:32PM -0400, Brian Foster wrote:
+> The LSN validation helper is called in the I/O verifier codepath for
+> metadata that embed a last-modification LSN. While the codepath exists,
+> this is not used in userspace as in the kernel because the former
+> doesn't have an active log.
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  fsr/Makefile     |  8 +++++++
->  fsr/xfs_fsr.c    | 69 ++++++++++++++++++++++++++++++++++++++++++++++++--------
->  include/darwin.h | 20 ++++++++++++++++
->  3 files changed, 87 insertions(+), 10 deletions(-)
+> xfs_repair does need to check the validity of the LSN metadata with
+> respect to the on-disk log, however. Use the LSN validation mechanism to
+> track the largest LSN that has been seen. Export the value so repair can
+> use it once it has processed the entire filesystem. Note that the helper
+> continues to always return true to preserve existing behavior.
 > 
-> diff --git a/fsr/Makefile b/fsr/Makefile
-> index a9d1bf6..d3521b2 100644
-> --- a/fsr/Makefile
-> +++ b/fsr/Makefile
-> @@ -9,6 +9,14 @@ LTCOMMAND = xfs_fsr
->  CFILES = xfs_fsr.c
->  LLDLIBS = $(LIBHANDLE)
->  
-> +ifeq ($(HAVE_GETMNTENT),yes)
-> +LCFLAGS += -DHAVE_GETMNTENT
-> +endif
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+....
+> +xfs_lsn_t		libxfs_max_lsn = 0;
+> +pthread_mutex_t		libxfs_max_lsn_lock = PTHREAD_MUTEX_INITIALIZER;
 > +
-> +ifeq ($(HAVE_GETMNTINFO),yes)
-> +LCFLAGS += -DHAVE_GETMNTINFO
-> +endif
-> +
->  default: depend $(LTCOMMAND)
->  
->  include $(BUILDRULES)
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 5f95cdc..ff791d3 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -32,8 +32,10 @@
->  #include <sys/statvfs.h>
->  #include <sys/xattr.h>
->  
-> -#ifdef HAVE_MNTENT
-> +#if defined(HAVE_GETMNTENT)
->  #  include <mntent.h>
-> +#elif defined(HAVE_GETMNTINFO)
-> +#  include <sys/mount.h>
->  #endif
->  
->  #ifdef __APPLE__
-> @@ -191,9 +193,10 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+>  void
+>  xfs_detect_invalid_lsn(
+>  	struct xfs_mount	*mp,
+>  	xfs_lsn_t		lsn)
 >  {
->  	struct mntent *t;
->  	struct stat64 ms;
-> -	FILE *mtabp;
->  	char *mntp = NULL;
->  
-> +#if defined(HAVE_GETMNTENT)
-> +	FILE *mtabp;
->  	mtabp = setmntent(mtab, "r");
->  	if (!mtabp) {
->  		fprintf(stderr, _("%s: cannot read %s\n"),
-> @@ -202,6 +205,27 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
->  	}
->  
->  	while ((t = getmntent(mtabp))) {
-> +#elif defined(HAVE_GETMNTINFO)
-> +	struct statfs	*stats;
-> +	int error, i, count;
-> +	// because "t" is a pointer, but we don't need to use
-> +	// malloc for this usage
-> +	struct mntent t_tmp;
-> +	t = &t_tmp;
+> +	int			cycle = CYCLE_LSN(lsn);
+> +	int			block = BLOCK_LSN(lsn);
+> +	int			max_cycle;
+> +	int			max_block;
 > +
-> +		
-> +	error = 0;
-> +	if ((count = getmntinfo(&stats, 0)) < 0) {
-> +		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-> +				progname, strerror(errno));
-> +		return 0;
-> +	}
+> +	if (lsn == NULLCOMMITLSN)
+> +		return;
 > +
-> +	for (i = 0; i < count; i++) {
-> +		mntinfo2mntent(&stats[i], t);
-> +#else
-> +# error "How do I extract info about mounted filesystems on this platform?"
-> +#endif
+> +	pthread_mutex_lock(&libxfs_max_lsn_lock);
+> +
+> +	max_cycle = CYCLE_LSN(libxfs_max_lsn);
+> +	max_block = BLOCK_LSN(libxfs_max_lsn);
+> +
+> +	if ((cycle > max_cycle) ||
+> +	    (cycle == max_cycle && block > max_block))
+> +		libxfs_max_lsn = lsn;
+> +
+> +	pthread_mutex_unlock(&libxfs_max_lsn_lock);
 
-No, please don't do that. Having a loop iterator split across two
-separate defines is unmaintainable. Write two separate functions
-with the different loop iterators, then factor the common bit out
-of them into a single function.
+This will have the same lock contention problems that the kernel
+code would have had - my repair scalablity tests regularly reach
+over 1GB/s of metadata being prefetched through tens of threads, so
+this is going have a significant impact on performance in those
+tests....
 
->  	/* find all rw xfs file systems */
->  	mi = 0;
->  	fs = fsbase;
-> +
-> +#if defined(HAVE_GETMNTENT)
-> +	FILE *fp;
-> +	fp = setmntent(mtab, "r");
-> +	if (fp == NULL) {
-> +		fsrprintf(_("could not open mtab file: %s\n"), mtab);
-> +		exit(1);
-> +	}
-> +
->  	while ((mp = getmntent(fp))) {
-> +#elif defined(HAVE_GETMNTINFO)
-> +	struct statfs	*stats;
-> +	int error, i, count;
-> +	// because "t" is a pointer, but we don't need to use
-> +	// malloc for this usage
-> +	struct mntent mp_tmp;
-> +	mp = &mp_tmp;
-> +	error = 0;
-> +	if ((count = getmntinfo(&stats, 0)) < 0) {
-> +		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-> +				progname, strerror(errno));
-> +		exit(1);
-> +	}
-> +
-> +	for (i = 0; i < count; i++) {
-> +		mntinfo2mntent(&stats[i], mp);
-> +#else
-> +# error "How do I extract info about mounted filesystems on this platform?"
-> +#endif
-> +
+Cheers,
 
-Same again here.
-
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
