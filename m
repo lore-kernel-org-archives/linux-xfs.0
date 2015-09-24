@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D74C27F37
-	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 16:27:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 739A1AC005
-	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 14:27:06 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cQc94SgefY9QWQ6L (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Sep 2015 14:27:02 -0700 (PDT)
-Date: Thu, 24 Sep 2015 16:26:58 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 5/5] xfs: incorporate sysfs/kobject in xfsstats: handlers
-	take kobjects.
-Message-ID: <20150924212658.GA21293@redhat.com>
-References: <1442923671-14125-1-git-send-email-billodo@redhat.com>
-	<1442923671-14125-6-git-send-email-billodo@redhat.com>
-	<56016A1E.8080103@sandeen.net> <20150922151605.GA29067@redhat.com>
-	<20150922222636.GM19114@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 864537F37
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 17:41:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 13A02AC002
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 15:41:41 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	xmbfoDGvlvuN6u1E for <xfs@oss.sgi.com>;
+	Thu, 24 Sep 2015 15:41:39 -0700 (PDT)
+Date: Fri, 25 Sep 2015 08:41:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 04/14] xfsprogs: prefix XATTR_LIST_MAX with XFS_
+Message-ID: <20150924224136.GU19114@dastard>
+References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
+	<1442311164-12921-5-git-send-email-jtulak@redhat.com>
+	<20150923031532.GN3902@dastard>
+	<CACj3i715Tiy0prfeYgLfEfupe8aGxJuv5yvDOi+AE08ofueO_A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150922222636.GM19114@dastard>
+In-Reply-To: <CACj3i715Tiy0prfeYgLfEfupe8aGxJuv5yvDOi+AE08ofueO_A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,138 +28,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Sep 23, 2015 at 08:26:36AM +1000, Dave Chinner wrote:
-> On Tue, Sep 22, 2015 at 10:16:05AM -0500, Bill O'Donnell wrote:
-> > > >  		goto out;
-> > > >  
-> > > >  	if (!proc_symlink("fs/xfs/stat", NULL,
-> > > > -			  "/sys/fs/xfs/stats/stats"))
-> > > > +			"/sys/fs/xfs/stats/stats"))
-> > > 
-> > > intentional whitespace changes?
-> > > 
-> > > >  		goto out_remove_xfs_dir;
-> > > >  
-> > > >  #ifdef CONFIG_XFS_QUOTA
-> > > >  	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
-> > > > -			 &xqmstat_proc_fops))
-> > > > +			&xqmstat_proc_fops))
-> > > >  		goto out_remove_stat_file;
-> > > >  	if (!proc_create("fs/xfs/xqm", 0, NULL,
-> > > > -			 &xqm_proc_fops))
-> > > > +			&xqm_proc_fops))
-> > > 
-> > > Same question.  (did checkpatch complain or something?)
-> > 
-> > Yes. Checkpatch didn't like any spaces, so I turned em into tabs.
-> 
-> Checkpatch should be considered harmful.
-> 
-> It's a good starting point, but it ends up doing more harm than good
-> because it doesn't understand the subtle differences in code across
-> different subsystems.
-> 
-> In this case, the standard we use for XFS is that multi-line
-> parameters should be lined up with the first parameter, unless the
-> new parameters don't fit on a single line, and then we back up the
-> indent by a tab at a time. i.e. This is correct:
-> 
-> 	if (!proc_create("fs/xfs/xqm", 0, NULL,
-> 			 &xqm_proc_fops))
-> 
-> regardless of what checkpatch says. Indeed, if checkpatch had any
-> brains, it would have noticed that a line break is not necessary
-> as this:
-> 
-> 	if (!proc_create("fs/xfs/xqm", 0, NULL, &xqm_proc_fops))
-> 
-> fits in 80 columns just fine.
-> 
-> Remember that Documentation/CodingStyle is a set of guidelines, not
-> a strict, enforcable set of rules.  The basic guidelines canbe
-> summarised as:
-> 
-> 	1. Use the same style as the existing code in the file,
-> 	   unless reviewers/maintainers ask otherwise.
-> 	2. new files should follow the format used in other files in
-> 	   the subsystem, unless reviewers/maintainer asks otherwise.
-> 	3. Do not reformat code that you don't need to directly
-> 	   modify in the patch.
-> 	4. modify your editor to highlight common style things that
-> 	   you need reminders to get right
-> 	5. Immolate checkpatch before the plague spreads further
-> 
-> As to #4, there's plenty of simple things you can do. e.g to
-> identify stray whitespace in files, add this to your .vimrc file
-> (you can do similar with emacs, google it):
-> 
-> 	" highlight whitespace damage
-> 	highlight RedundantSpaces ctermbg=red guibg=red
-> 	match RedundantSpaces /\s\+$\| \+\ze\t/
-> 
-> This will catch things like "tab-space-tab" and it will also find
-> trailing whitespace at the end of lines. They will appear in red.
-> 
-> > > > -#define XFS_STATS_INC(v)	(per_cpu(xfsstats, current_cpu()).v++)
-> > > > -#define XFS_STATS_DEC(v)	(per_cpu(xfsstats, current_cpu()).v--)
-> > > > -#define XFS_STATS_ADD(v, inc)	(per_cpu(xfsstats, current_cpu()).v += (inc))
-> > > > +#define XFS_STATS_INC(v)	(per_cpu(*xfsstats.xs_stats, current_cpu()).v++)
-> > > > +#define XFS_STATS_DEC(v)	(per_cpu(*xfsstats.xs_stats, current_cpu()).v--)
-> > > > +#define XFS_STATS_ADD(v, inc)	(per_cpu(*xfsstats.xs_stats, current_cpu()).v += (inc))
-> > > 
-> > > Line > 80 chars
-> > 
-> > I'll fix it.
-> 
-> Checkpatch got changed not to warn about that, because too many
-> people complained about it when modifying files with >80 column
-> formatting.
-> 
-> To that end, I also use custom column width highlights based on file
-> names so that line wrapping occurs automatically at the correct
-> spot, and when looking at code I can clearly see long lines:
-> 
-> 	" set the textwidth to 80 characters by default
-> 	set tw=80
-> 
-> 	" set the textwidth to 68 characters for guilt commit messages
-> 	au BufNewFile,BufRead guilt.msg.*,.gitsendemail*,.git* set tw=68
-> 
-> 	" set the textwidth to 68 characters for replies (email&usenet)
-> 	au BufNewFile,BufRead .letter,mutt*,nn.*,snd.* set tw=68
-> 
-> 	" highlight textwidth
-> 	set cc=+1
-> 
-> If you do little things like this, the need for checkpatch goes
-> away. With a default tw=80 and a highlight, I only have to glance
-> at a patch to know it has lines longer than 80 columns in it.
-> 
-> As such, I haven't used checkpatch for years, and I recommend that
-> you develop the right habits and automation such that you don't need
-> to use it after a couple of months, either...
-
-All points well taken. I'm fixing it all up in the next patch!
-
-Thanks!
-Bill
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBTZXAgMjQsIDIwMTUgYXQgMTA6Mjg6MDVBTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
+Ogo+IE9uIFdlZCwgU2VwIDIzLCAyMDE1IGF0IDU6MTUgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
+ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gPiBXaWxsIHdvcmsgb24gYm90aCB0aGUga2VybmVsIGFu
+ZCB1c2Vyc3BhY2Ugc2lkZS4gVGhpcyB3aWxsIGFsc28gbmVlZAo+ID4gYSBrZXJuZWwgc2lkZSBw
+YXRjaC4uLgo+IAo+IAo+IOKAi05vdywgdGhpcyBpcyBzb21ldGhpbmcgd2hlcmUgSSBtYXkgbmVl
+ZCBhIGJpdCBoZWxwL2NvbmZpcm1hdGlvbiwgSSBndWVzcy7igIsKPiBXaGF0IEkgc3VwcG9zZSBJ
+IHNob3VsZCBkbyBpczoKPiAKPiAxKSBDbG9uZSBsaW51eC14ZnMgKGdpdDovLwo+IGdpdC5rZXJu
+ZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9kZ2MvbGludXgteGZzLmdpdCkKPiAyKSBF
+ZGl0IGxpbnV4LXhmcy9mcy94ZnMvbGlieGZzL3hmc19mcy5oIGFuZCBhZGQgdGhlIHNhbWUgY2hh
+bmdlIHRoZXJlCgphbmQgdG8gdGhlIGZpbGVzIGluIGZzL3hmcyB0aGF0IGRpcmVjdGx5IHVzZSBY
+QVRUUl9MSVNUX01BWC4KCjIuNSkgY29tcGlsZSwgaW5zdGFsbCBrZXJuZWwsIHJ1biB4ZnN0ZXN0
+cy4KCj4gMykgU2VuZCBpdCB0byB0aGlzIG1haWxpbmcgbGlzdCBhcyB1c3VhbCwgd2l0aCAiW1BB
+VENIXSB4ZnM6IC4uLiIKPgo+IChUaGUgc2FtZSBnb2VzIGZvciB0aGUgb3RoZXIgcGF0Y2ggd2l0
+aCB0aGUga2VybmVsIG5lZWQgdG9vLikKPiAKPiBJcyBpdCBhbGwgcmlnaHQ/IENvcnJlY3QgcmVw
+b3NpdG9yeSBVUkw/IDotKQoKWXVwLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
+YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
