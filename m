@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A9DFF7F37
-	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 17:53:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 98EA4304067
-	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 15:53:42 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HvWRWfXTXKapgmsr for <xfs@oss.sgi.com>;
-	Thu, 24 Sep 2015 15:53:39 -0700 (PDT)
-Date: Fri, 25 Sep 2015 08:53:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 12/14] xfsprogs: make fsr use mntinfo when there is no
-	mntent
-Message-ID: <20150924225338.GV19114@dastard>
-References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
-	<1442311164-12921-13-git-send-email-jtulak@redhat.com>
-	<20150923033655.GQ3902@dastard>
-	<CACj3i70gPpRyO-Mho9WC4SE+=69pTu8d4RCLXJR7hnTxUbOGzA@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6A45B7F37
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 18:17:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 48BD18F8054
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 16:17:50 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id 20mNZd7XnnwwBJ7t (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Sep 2015 16:17:45 -0700 (PDT)
+Received: from zmail20.collab.prod.int.phx2.redhat.com
+	(zmail20.collab.prod.int.phx2.redhat.com [10.5.83.23])
+	by mx3-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id t8ONHiHP008867
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 19:17:44 -0400
+Date: Thu, 24 Sep 2015 19:17:44 -0400 (EDT)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <1482498135.42591149.1443136664561.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1054663595.42590503.1443136351475.JavaMail.zimbra@redhat.com>
+Subject: Remove use of __psint_t in xfsdump as well
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACj3i70gPpRyO-Mho9WC4SE+=69pTu8d4RCLXJR7hnTxUbOGzA@mail.gmail.com>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,61 +28,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBTZXAgMjQsIDIwMTUgYXQgMDQ6Mzg6NDlQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
-Ogo+IE9uIFdlZCwgU2VwIDIzLCAyMDE1IGF0IDU6MzYgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
-ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gCj4gPiBPbiBUdWUsIFNlcCAxNSwgMjAxNSBhdCAxMTo1
-OToyMkFNICswMjAwLCBKYW4gVHVsYWsgd3JvdGU6Cj4gPiA+IEBAIC0yMDIsNiArMjA1LDI3IEBA
-IGZpbmRfbW91bnRwb2ludChjaGFyICptdGFiLCBjaGFyICphcmduYW1lLCBzdHJ1Y3QKPiA+IHN0
-YXQ2NCAqc2IpCj4gPiA+ICAgICAgIH0KPiA+ID4KPiA+ID4gICAgICAgd2hpbGUgKCh0ID0gZ2V0
-bW50ZW50KG10YWJwKSkpIHsKPiA+ID4gKyNlbGlmIGRlZmluZWQoSEFWRV9HRVRNTlRJTkZPKQo+
-ID4gPiArICAgICBzdHJ1Y3Qgc3RhdGZzICAgKnN0YXRzOwo+ID4gPiArICAgICBpbnQgZXJyb3Is
-IGksIGNvdW50Owo+ID4gPiArICAgICAvLyBiZWNhdXNlICJ0IiBpcyBhIHBvaW50ZXIsIGJ1dCB3
-ZSBkb24ndCBuZWVkIHRvIHVzZQo+ID4gPiArICAgICAvLyBtYWxsb2MgZm9yIHRoaXMgdXNhZ2UK
-PiA+ID4gKyAgICAgc3RydWN0IG1udGVudCB0X3RtcDsKPiA+ID4gKyAgICAgdCA9ICZ0X3RtcDsK
-PiA+ID4gKwo+ID4gPiArCj4gPiA+ICsgICAgIGVycm9yID0gMDsKPiA+ID4gKyAgICAgaWYgKChj
-b3VudCA9IGdldG1udGluZm8oJnN0YXRzLCAwKSkgPCAwKSB7Cj4gPiA+ICsgICAgICAgICAgICAg
-ZnByaW50ZihzdGRlcnIsIF8oIiVzOiBnZXRtbnRpbmZvKCkgZmFpbGVkOiAlc1xuIiksCj4gPiA+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHByb2duYW1lLCBzdHJlcnJvcihlcnJubykp
-Owo+ID4gPiArICAgICAgICAgICAgIHJldHVybiAwOwo+ID4gPiArICAgICB9Cj4gPiA+ICsKPiA+
-ID4gKyAgICAgZm9yIChpID0gMDsgaSA8IGNvdW50OyBpKyspIHsKPiA+ID4gKyAgICAgICAgICAg
-ICBtbnRpbmZvMm1udGVudCgmc3RhdHNbaV0sIHQpOwo+ID4gPiArI2Vsc2UKPiA+ID4gKyMgZXJy
-b3IgIkhvdyBkbyBJIGV4dHJhY3QgaW5mbyBhYm91dCBtb3VudGVkIGZpbGVzeXN0ZW1zIG9uIHRo
-aXMKPiA+IHBsYXRmb3JtPyIKPiA+ID4gKyNlbmRpZgo+ID4KPiA+IE5vLCBwbGVhc2UgZG9uJ3Qg
-ZG8gdGhhdC4gSGF2aW5nIGEgbG9vcCBpdGVyYXRvciBzcGxpdCBhY3Jvc3MgdHdvCj4gPiBzZXBh
-cmF0ZSBkZWZpbmVzIGlzIHVubWFpbnRhaW5hYmxlLiBXcml0ZSB0d28gc2VwYXJhdGUgZnVuY3Rp
-b25zCj4gPiB3aXRoIHRoZSBkaWZmZXJlbnQgbG9vcCBpdGVyYXRvcnMsIHRoZW4gZmFjdG9yIHRo
-ZSBjb21tb24gYml0IG91dAo+ID4gb2YgdGhlbSBpbnRvIGEgc2luZ2xlIGZ1bmN0aW9uLgo+ID4K
-PiA+Cj4gSSBkaWQgYSBsaXR0bGUgcmVmYWN0b3JpbmcgdG8gc29sdmUgaXQuIFdoYXQgSSB3b3Vs
-ZCBsaWtlIHRvIGFzayBhYuKAi291dCBpcwo+IHRoaXM6Cj4gV2hlbiBJIGNhbiBwdXQgaWZkZWYg
-anVzdCBpbnNpZGUgb2YgYSBmdW5jdGlvbiBsaWtlIGZuYyh2b2lkKSB7ICNpZmRlZi4uLgo+ICNl
-bHNlIC4uLiAjZW5kaWYgfSwgd2l0aCBsaXR0bGUgdG8gbm8gY29kZSBvdXRzaWRlIG9mIHRoZSBp
-ZmRlZiwgaXMgaXQKPiBiZXR0ZXIgdG8gcHV0IHRoZSBpZmRlZiBvdXRzaWRlLCBvciBrZWVwIGl0
-IGluc2lkZT8KClRoZSBpZGVhIGlzIHRoYXQgdGhlICJsaXR0bGUgZGlmZmVyZW5jZXMiIGFyZSBw
-dXQgaW4gZnVuY3Rpb25zIHRoYXQKZW5kIHVwIGluIGluY2x1ZGUvPHBsYXRmb3JtPi5oIG9yIGxp
-Ynhmcy88cGxhdGZvcm0+LmMsIHNvIHRoZXJlIGFyZQpubyBpZmRlZnMgaW4gYW55IG9mIHRoZSBh
-cHBsaWNhdGlvbiBvciBsaWJyYXJ5IGNvZGUuIFRoZSBidWlsZCB3aWxsCmF1dG9tYXRpY2FsbHkg
-aW5jbHVkZSB0aGUgY29ycmVjdCBmdW5jdGlvbiBvbiB0aGUgZ2l2ZW4gcGxhdGZvcm0sCmFuZCBz
-byB0aGUgYXBwbGljYXRpb24gY29kZSBkb2VzIG5vdCBuZWVkIHN1Y2ggaWZkZWZzIGF0IGFsbC4K
-CmUuZy4geW91IGNvdWxkIGltcGxlbWVudCB0aGVzZSBmdW5jdGlvbnMgdG8gYWJzdHJhY3QgdGhl
-IGRpZmZlcmVuY2VzCmF3YXkgZnJvbSB4ZnNfZnNyIGFuZCBhbnkgb3RoZXIgY29kZSB0aGF0IGl0
-ZXJhdGVzIHRoZSBtb3VudCB0YWJsZToKCnN0cnVjdCBtbnRlbnRfY3Vyc29yIHsKCS8qIHZhcmlh
-YmxlcyBuZWVkZWQgdG8gdHJhY2sgaXRlcmF0aW9uIG9mIHRoZSBtdGFiICovCn07CgpwbGF0Zm9y
-bV9maXJzdF9tbnRlbnQoKQpwbGF0Zm9ybV9uZXh0X21udGVudCgpCnBsYXRmb3JtX2VuZF9tbnRl
-bnQoKQoKYW5kIHNvIHRoZSBjb2RlIHdvdWxkIGxvb2sgbGlrZToKCglzdHJ1Y3QgbW50ZW50X2N1
-cnNvcgljdXJzb3I7CgoJbW50ZW50ID0gcGxhdGZvcm1fZmlyc3RfbW50ZW50KCZjdXJzb3IpCgoJ
-ZG8gewoJCS8qIHByb2Nlc3MgbW50ZW50ICovCgl9IHdoaWxlIChtbnRlbnQgPSBwbGF0Zm9ybV9u
-ZXh0X21udGVudCgmY3Vyc29yLCBtbnRlbnQpKTsKCglwbGF0Zm9ybV9lbmRfbW50ZW50KCZjdXJz
-b3IpOwoKVGhpcyBjb21wbGV0ZWx5IGFic3RyYWN0cyB0aGUgZGlmZmVyZW5jZXMgcmVsYXRlZCB0
-byB0aGUgdGhlIG1vdW50CnRhYmxlIHRyYXZlcnNhbCwgYW5kIGFsbG93cyB0aGUgYXBsaWNhdGlv
-biBsZXZlbCBjb2RlIHRvIGJlIHdyaXR0ZW4KaW4gYSBjbGVhbiwgZWFzaWx5IG1haW50YWluYWJs
-ZSBmYXNoaW9uLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21v
-cmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+Changes committed to git://oss.sgi.com/nathans/xfsdump.git master
+
+Nathan Scott (1):
+      xfsdump: remove use of __psint_t, it is no longer available
+
+
+ common/drive_minrmt.c   |    4 ++--
+ common/drive_scsitape.c |    4 ++--
+ common/drive_simple.c   |    4 ++--
+ common/util.h           |    4 ++--
+ debian/changelog        |    6 ++++++
+ 5 files changed, 14 insertions(+), 8 deletions(-)
+
+
+commit 8a468340b2b0592daa553d722b4eff5997e18fc1
+Author: Nathan Scott <nathans@debian.org>
+Date:   Fri Sep 25 09:11:31 2015 +1000
+
+    xfsdump: remove use of __psint_t, it is no longer available
+    
+    Commit ee6cd73ed1e in xfsprogs switched __psint_t to the standards
+    conforming intptr_t type - we need to make the same change here in
+    xfsdump for builds using the latest xfsprogs headers.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
