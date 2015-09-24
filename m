@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE83E7F37
-	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 03:47:16 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 44ADD7F37
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 04:26:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A23378F8035
-	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 01:47:16 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VHPILNswt3CtiJGw (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Sep 2015 01:47:15 -0700 (PDT)
-Date: Thu, 24 Sep 2015 10:47:11 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs_io: Implement inodes64 command - bug in
-	XFS_IOC_FSINUMBERS?
-Message-ID: <20150924084711.GA25260@redhat.com>
-References: <1442825768-5793-1-git-send-email-cmaiolino@redhat.com>
-	<20150921220832.GB19114@dastard>
-	<20150922075432.GC26699@redhat.com>
-	<20150922122238.GA46026@bfoster.bfoster>
-	<20150922220054.GL19114@dastard> <20150923102834.GA4490@redhat.com>
-	<20150923231040.GS19114@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C379EAC005
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 02:26:56 -0700 (PDT)
+Received: from mail-ig0-f172.google.com (mail-ig0-f172.google.com
+	[209.85.213.172]) by cuda.sgi.com with ESMTP id
+	2OF4NWcdRwuVtu2B (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Sep 2015 02:26:55 -0700 (PDT)
+Received: by igcpb10 with SMTP id pb10so10707889igc.1
+	for <xfs@oss.sgi.com>; Thu, 24 Sep 2015 02:26:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150923231040.GS19114@dastard>
+In-Reply-To: <20150923032550.GO3902@dastard>
+References: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
+	<1442311164-12921-11-git-send-email-jtulak@redhat.com>
+	<20150923032550.GO3902@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 24 Sep 2015 11:26:34 +0200
+Message-ID: <CACj3i71cWQi0-YQuSEpVHP8P_6aTXJZZbzB84rhREa9kDpFZ8w@mail.gmail.com>
+Subject: Re: [PATCH 10/14] xfsprogs: Add a timer implementation for OS X
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,73 +29,157 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8088488961542890701=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Thanks Brian and Eric,
+--===============8088488961542890701==
+Content-Type: multipart/alternative; boundary=047d7bdca610f42f5905207ad455
 
-I'll rework my patch according to this talk,
+--047d7bdca610f42f5905207ad455
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Sep 23, 2015 at 5:25 AM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Tue, Sep 15, 2015 at 11:59:20AM +0200, Jan Tulak wrote:
+> > OS X does not have the timer used in xfs_repair.
+> > Add a simple implementation providing the required
+> > capabilities.
+> ....
+> >  #endif       /* __XFS_DARWIN_H__ */
+> > diff --git a/repair/progress.c b/repair/progress.c
+> > index 27cbaef..0fee7dc 100644
+> > --- a/repair/progress.c
+> > +++ b/repair/progress.c
+> > @@ -184,10 +184,22 @@ progress_rpt_thread (void *p)
+> >        */
+> >
+> >       timespec.it_value.tv_sec =3D msgp->interval;
+> > -     timespec.it_value.tv_nsec =3D 0;
+> >       timespec.it_interval.tv_sec =3D msgp->interval;
+> > +     /*
+> > +      * On some platforms (like OS X), timers and time things are
+> slightly
+> > +      * different: itimerspec is replaced with itimerval and timeval
+> struct
+> > +      * has no tv_nsec, but just tv_usec member.
+> > +      * For compatibility, itimerspec is a macro defined to the existi=
+ng
+> > +      * itimerval on these platforms, and in such case, use usec inste=
+ad
+> > +      * of nsec.
+> > +      */
+> > +#ifndef itimerspec
+> > +     timespec.it_value.tv_nsec =3D 0;
+> >       timespec.it_interval.tv_nsec =3D 0;
+> > -
+> > +#else
+> > +     timespec.it_value.tv_usec =3D 0;
+> > +     timespec.it_interval.tv_usec =3D 0;
+> > +#endif
+>
+> That's pretty nasty. How about this:
+>
+>         memset(&timespec, 0, sizeof(timespec));
+>         timespec.it_value.tv_sec =3D msgp->interval;
+>         timespec.it_interval.tv_sec =3D msgp->interval;
+>
+
+=E2=80=8BThis is much better and elegant =E2=80=8Bsolution. :-)
+
+Cheers,
+Jan
 
 
-On Thu, Sep 24, 2015 at 09:10:40AM +1000, Dave Chinner wrote:
-> On Wed, Sep 23, 2015 at 12:28:34PM +0200, Carlos Maiolino wrote:
-> > Howdy folks,
-> > 
-> > I was working in implementing the suggested feature in my patch, about getting
-> > the next inode used after one is provided, and I hit something that I'm not really
-> > sure if this might be considered a bug, or just a work form.
-> > 
-> > XFS_IOC_FSINUMBERS, is supposed to be called with a zeroed
-> > xfs_fsop_bulkreq.lastip, so at each call, kernel will update this number to the
-> > last inode returned, and, the next call will return in xfs_inogrp.xi_startino,
-> > the next existing inode after .lastip.
-> > 
-> > So, I was expecting that, passing a non-zero .lastip at the first call, I would
-> > be able to get the next inode right after the one I passed through .lastip, but,
-> > after some tests and reading the code, I noticed that this is not the case.
-> 
-> XFS_IOC_FSNUMBERS is not a "does this inode exist" query API - you
-> use the bulkstat interface for that. XFS_IOC_FSNUMBERS is for
-> iterating the "inode table", and it's API returns records, not
-> individual inodes.
-> 
-> Those records contain information about a chunk of inodes, not
-> individual inodes. The "lastino" cookie it uses always points to the
-> last inode in the last chunk it returns - the next iteration will
-> start at the chunk *after* the one that contains lastino.
-> 
-> Hence it is behaving as intended...
-> 
-> > I'm not sure if this is the desired behavior or not, but, I'd say that, if the
-> > inode passed in .lastip, is not the first in the chunk, the output should start
-> > for its own chunk, instead of the next one, but, I prefer to see you folks POV
-> > before starting to fix something that I'm not sure if it's actually broken :-)
-> 
-> It doesn't matter if it is "desired behaviour" or not, we can't
-> change it. If we change it we risk breaking userspace applications
-> that relies on it working the way it currently does. Most likely
-> that application will be xfsdump, and the breakage will be silent
-> and very hard to detect....
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
 
-I thought about this possibility too, but didn't mention in my e-mail, but, it's
-good to know that.
-> 
-> Perhaps reading the recent history fs/xfs/xfs_itable.c would be
-> instructive. ;)
-> 
-I certainly will :)
+--047d7bdca610f42f5905207ad455
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><br></div><div class=3D"gmail_extra"><br><div class=3D"=
+gmail_quote">On Wed, Sep 23, 2015 at 5:25 AM, Dave Chinner <span dir=3D"ltr=
+">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromor=
+bit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D=
+"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=
+=3D"">On Tue, Sep 15, 2015 at 11:59:20AM +0200, Jan Tulak wrote:<br>
+&gt; OS X does not have the timer used in xfs_repair.<br>
+&gt; Add a simple implementation providing the required<br>
+&gt; capabilities.<br>
+</span>....<br>
+<div><div class=3D"h5">&gt;=C2=A0 #endif=C2=A0 =C2=A0 =C2=A0 =C2=A0/* __XFS=
+_DARWIN_H__ */<br>
+&gt; diff --git a/repair/progress.c b/repair/progress.c<br>
+&gt; index 27cbaef..0fee7dc 100644<br>
+&gt; --- a/repair/progress.c<br>
+&gt; +++ b/repair/progress.c<br>
+&gt; @@ -184,10 +184,22 @@ progress_rpt_thread (void *p)<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 */<br>
+&gt;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0timespec.it_value.tv_sec =3D msgp-&gt;interv=
+al;<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0timespec.it_value.tv_nsec =3D 0;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0timespec.it_interval.tv_sec =3D msgp-&gt;int=
+erval;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0/*<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * On some platforms (like OS X), timers and time=
+ things are slightly<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * different: itimerspec is replaced with itimerv=
+al and timeval struct<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * has no tv_nsec, but just tv_usec member.<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * For compatibility, itimerspec is a macro defin=
+ed to the existing<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * itimerval on these platforms, and in such case=
+, use usec instead<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * of nsec.<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 */<br>
+&gt; +#ifndef itimerspec<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0timespec.it_value.tv_nsec =3D 0;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0timespec.it_interval.tv_nsec =3D 0;<br>
+&gt; -<br>
+&gt; +#else<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0timespec.it_value.tv_usec =3D 0;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0timespec.it_interval.tv_usec =3D 0;<br>
+&gt; +#endif<br>
+<br>
+</div></div>That&#39;s pretty nasty. How about this:<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 memset(&amp;timespec, 0, sizeof(timespec));<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 timespec.it_value.tv_sec =3D msgp-&gt;interval;=
+<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 timespec.it_interval.tv_sec =3D msgp-&gt;interv=
+al;<br></blockquote><div><br></div><div><div class=3D"gmail_default" style=
+=3D"font-family:arial,helvetica,sans-serif;display:inline">=E2=80=8BThis is=
+ much better and elegant =E2=80=8Bsolution. :-)</div></div><div><div class=
+=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;display:=
+inline"><br></div></div><div><div class=3D"gmail_default" style=3D"font-fam=
+ily:arial,helvetica,sans-serif;display:inline">Cheers,</div></div><div><div=
+ class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;di=
+splay:inline">Jan</div></div></div><br clear=3D"all"><div><br></div>-- <br>=
+<div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>=
+Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">j=
+tulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blan=
+k">jan@tulak.me</a></div></div></div></div>
+</div></div>
+
+--047d7bdca610f42f5905207ad455--
 
 
-Cheers.
-
--- 
-Carlos
+--===============8088488961542890701==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8088488961542890701==--
