@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1D2667F37
-	for <xfs@oss.sgi.com>; Wed, 30 Sep 2015 11:53:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0DE09304059
-	for <xfs@oss.sgi.com>; Wed, 30 Sep 2015 09:53:41 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3FE4C7F56
+	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 08:08:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EF90230404E
+	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 06:07:59 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IiUZxbMNopCnUfiP (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ofi5nQMZq9bdal6t (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 30 Sep 2015 09:53:40 -0700 (PDT)
-Date: Wed, 30 Sep 2015 12:53:37 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] test extending sub-block AIO writes for races
-Message-ID: <20150930165337.GB16725@bfoster.bfoster>
-References: <560B34E3.4080107@sandeen.net>
- <560C06E3.4090708@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <560C06E3.4090708@sandeen.net>
+	<xfs@oss.sgi.com>; Fri, 25 Sep 2015 06:07:56 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 1F2ED19F20B
+	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 13:07:56 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8PD7paa000474
+	for <xfs@oss.sgi.com>; Fri, 25 Sep 2015 09:07:55 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 1/3] xfs_io: Add inode '-s' command to query physical size of
+	largest inode
+Date: Fri, 25 Sep 2015 15:07:45 +0200
+Message-Id: <1443186467-20110-2-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1443186467-20110-1-git-send-email-cmaiolino@redhat.com>
+References: <1443186467-20110-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,210 +33,144 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: fstests <fstests@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Sep 30, 2015 at 10:59:31AM -0500, Eric Sandeen wrote:
-> This tests bfoster's
-> [PATCH 1/2] xfs: always drain dio before extending aio write submission
-> patch; it launches four adjacent 1k IOs past EOF, then reads back
-> to see if we have 4k worth of the data we wrote, or something else - 
-> possibly zeros from sub-block zeroing and eof racing.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> V2:
-> 	do 4x512 IOs to get as much sub-block goodness as possible
-> 	fix up comments & typos
-> 
-> diff --git a/src/aio-dio-regress/aio-dio-eof-race.c b/src/aio-dio-regress/aio-dio-eof-race.c
-> new file mode 100644
-> index 0000000..ce5d715
-> --- /dev/null
-> +++ b/src/aio-dio-regress/aio-dio-eof-race.c
-> @@ -0,0 +1,173 @@
-...
-> +void
-> +dump_buffer(
-> +	void	*buf,
-> +	off64_t	offset,
-> +	ssize_t	len)
-> +{
-> +	int	i, j;
-> +	char	*p;
-> +	int	new;
-> +	
+Add a new inode command to xfs_io, which aims to implement a tool for query
+information about inode usage of the filesystem.
 
-Whitespace damage on the line above...
+This patch implements '-s' inode option, which query the filesystem for the
+physical size of the largest filesystem inode
 
-> +	for (i = 0, p = (char *)buf; i < len; i += 16) {
-> +		char    *s = p;
-> +
-...
-> +
-> +	}
-> +	printf("%08llx\n", (unsigned long long)offset + i);
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-...
-> +		/*
-> +		 * Split the buffer into multiple I/Os to send a mix of block
-> +		 * aligned/unaligned writes as well as writes that start beyond
-> +		 * the current EOF. This stresses things like inode size
-> +		 * management and stale block zeroing for races and can lead to
-> +		 * data corruption when not handled properly.
-> +		 */
-> +		io_prep_pwrite(&iocb1, fd, buf, BUF_SIZE/4, eof + 0*BUF_SIZE/4);
-> +		io_prep_pwrite(&iocb2, fd, buf, BUF_SIZE/4, eof + 1*BUF_SIZE/4);
-> +		io_prep_pwrite(&iocb3, fd, buf, BUF_SIZE/4, eof + 2*BUF_SIZE/4);
-> +		io_prep_pwrite(&iocb4, fd, buf, BUF_SIZE/4, eof + 3*BUF_SIZE/4);
-> +	
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ io/open.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
 
-... and above here as well. Otherwise looks good to me. Thanks again!
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +		err = io_submit(ctx, 4, iocbs);
-> +		if (err != 4) {
-> +			fprintf(stderr, "error %s during %s\n",
-> +				strerror(err),
-> +				"io_submit");
-> +			return 1;
-> +		}
-> +
-> +		err = io_getevents(ctx, 4, 4, evs, NULL);
-> +		if (err != 4) {
-> +			fprintf(stderr, "error %s during %s\n",
-> +				strerror(err),
-> +				"io_getevents");
-> +			return 1;
-> +		}
-> +
-> +		/*
-> +		 * And then read it back.
-> +		 *
-> +		 * Using pread to keep it simple, but AIO has the same effect.
-> +		 * eof is the prior eof; we just wrote BUF_SIZE more.
-> +		 */
-> +		if (pread(fd, buf, BUF_SIZE, eof) != BUF_SIZE) {
-> +			perror("pread");
-> +			return 1;
-> +		}
-> +
-> +		/*
-> +		 * We launched 4 AIOs which, stitched together, should write
-> +		 * a seamless BUF_SIZE worth of IO_PATTERN to the last block.
-> +		 */
-> +		if (memcmp(buf, cmp_buf, BUF_SIZE)) {
-> +			printf("corruption while extending from %ld\n", eof);
-> +			dump_buffer(buf, 0, BUF_SIZE);
-> +			return 1;
-> +		}
-> +	}
-> +
-> +	printf("Success, all done.\n");
-> +	return 0;
-> +}
-> diff --git a/tests/generic/326 b/tests/generic/326
-> new file mode 100755
-> index 0000000..f20375a
-> --- /dev/null
-> +++ b/tests/generic/326
-> @@ -0,0 +1,65 @@
-> +#! /bin/bash
-> +# FS QA Test No. 326
-> +#
-> +# Test races while extending past EOF via sub-block AIO writes
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2015 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $TEST_DIR/tst-aio-dio-eof-race
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_supported_fs generic
-> +_supported_os Linux
-> +
-> +_require_test
-> +_require_sparse_files
-> +_require_aiodio aio-dio-eof-race
-> +
-> +# Test does 512 byte DIO, so make sure that'll work
-> +logical_block_size=`_min_dio_alignment $TEST_DEV`
-> +
-> +if [ "$logical_block_size" -gt "512" ]; then
-> +	_notrun "device block size: $logical_block_size greater than 512"
-> +fi
-> +
-> +# We don't mind 512-byte fs blocks; the IOs won't be sub-block,
-> +# but the test should still pass, even if it doesn't stress the code
-> +# we're targeting.
-> +
-> +# Note, this test does several extending loops internally
-> +$AIO_TEST $TEST_DIR/tst-aio-dio-eof-race
-> +
-> +status=$?
-> +exit
-> diff --git a/tests/generic/326.out b/tests/generic/326.out
-> new file mode 100644
-> index 0000000..22a3e78
-> --- /dev/null
-> +++ b/tests/generic/326.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 326
-> +Success, all done.
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 4ae256f..a5f3008 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -207,3 +207,4 @@
->  323 auto aio stress
->  324 auto fsr quick
->  325 auto quick data log
-> +326 auto quick aio
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/io/open.c b/io/open.c
+index ac5a5e0..6a794ba 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -20,6 +20,7 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "libxfs.h"
+ 
+ #ifndef __O_TMPFILE
+ #if defined __alpha__
+@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
+ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+ static cmdinfo_t extsize_cmd;
++static cmdinfo_t inode_cmd;
+ static prid_t prid;
+ static long extsize;
+ 
+@@ -750,6 +752,74 @@ statfs_f(
+ 	return 0;
+ }
+ 
++static void
++inode_help(void)
++{
++	printf(_(
++"\n"
++"Query physical information about the inode"
++"\n"
++" -s	-- Returns the physical size (in bits) of the\n"
++"	   largest inode number in the filesystem\n"
++"\n"));
++}
++
++static int
++inode_f(
++	  int			argc,
++	  char			**argv)
++{
++	__s32			count = 0;
++	__s32			lastgrp = 0;
++	__u64			last = 0;
++	__u64			lastino = 0;
++	struct xfs_inogrp	igroup[1024];
++	struct xfs_fsop_bulkreq	bulkreq;
++	int			c;
++	int			ret_lsize = 0;
++
++	bulkreq.lastip = &last;
++	bulkreq.icount = 1024; /* maybe an user-defined value!? */
++	bulkreq.ubuffer = &igroup;
++	bulkreq.ocount = &count;
++
++	while ((c = getopt(argc, argv, "s")) != EOF) {
++		switch (c) {
++		case 's':
++			ret_lsize = 1;
++			break;
++		default:
++			return command_usage(&inode_cmd);
++		}
++	}
++
++	if (ret_lsize) {
++		for (;;) {
++			if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
++					&bulkreq)) {
++				perror("XFS_IOC_FSINUMBERS");
++				exitcode = 1;
++				return 0;
++			}
++			if (count < XFS_INODES_PER_CHUNK && count > 0)
++				lastgrp = count;
++			if (!count)
++				break;
++		}
++
++		lastgrp--;
++		lastino = igroup[lastgrp].xi_startino +
++			  xfs_highbit64(igroup[lastgrp].xi_allocmask);
++
++		printf (_("Largest inode size: %d\n"),
++			 lastino > XFS_MAXINUMBER_32 ? 64 : 32);
++
++	}
++
++
++	return 0;
++}
++
+ void
+ open_init(void)
+ {
+@@ -815,6 +885,16 @@ open_init(void)
+ 		_("get/set preferred extent size (in bytes) for the open file");
+ 	extsize_cmd.help = extsize_help;
+ 
++	inode_cmd.name = "inode";
++	inode_cmd.cfunc = inode_f;
++	inode_cmd.args = _("[-s]");
++	inode_cmd.argmin = 1;
++	inode_cmd.argmax = 1;
++	inode_cmd.flags = CMD_NOMAP_OK;
++	inode_cmd.oneline =
++		_("Query inode number usage in the filesystem");
++	inode_cmd.help = inode_help;
++
+ 	add_command(&open_cmd);
+ 	add_command(&stat_cmd);
+ 	add_command(&close_cmd);
+@@ -822,4 +902,5 @@ open_init(void)
+ 	add_command(&chproj_cmd);
+ 	add_command(&lsproj_cmd);
+ 	add_command(&extsize_cmd);
++	add_command(&inode_cmd);
+ }
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
