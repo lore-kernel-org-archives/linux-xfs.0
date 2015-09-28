@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9689F7F37
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 10:40:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 83A128F8059
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 08:40:41 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Z7mE6izjbDBtWaEF for <xfs@oss.sgi.com>;
-	Mon, 28 Sep 2015 08:40:39 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9ED5D70F6B09
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 10:40:39 -0500 (CDT)
-Subject: Re: [PATCH 5/7] xfs: incorporate sysfs/kobject in xfsstats: handlers
-	take kobjects.
-References: <1443223380-18870-1-git-send-email-billodo@redhat.com>
-	<1443223380-18870-6-git-send-email-billodo@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56095F77.7030403@sandeen.net>
-Date: Mon, 28 Sep 2015 10:40:39 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 47DC57F37
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 12:04:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 23AC28F804C
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 10:04:04 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id zwTwnsavxIwhobGb (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 28 Sep 2015 10:03:58 -0700 (PDT)
+Date: Mon, 28 Sep 2015 10:03:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 08/11] xfs_io: support reflinking and deduping file ranges
+Message-ID: <20150928170350.GA1600@birch.djwong.org>
+References: <20150826003220.23973.59731.stgit@birch.djwong.org>
+	<20150826003311.23973.64761.stgit@birch.djwong.org>
+	<20150922021755.GF19114@dastard>
 MIME-Version: 1.0
-In-Reply-To: <1443223380-18870-6-git-send-email-billodo@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20150922021755.GF19114@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,137 +31,340 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 9/25/15 6:22 PM, Bill O'Donnell wrote:
-> This patch is the next step toward per-fs xfs stats. Allocate &
-> deallocate per-fs stats structures and set up the sysfs entries for them.
+On Tue, Sep 22, 2015 at 12:17:55PM +1000, Dave Chinner wrote:
+> On Tue, Aug 25, 2015 at 05:33:11PM -0700, Darrick J. Wong wrote:
+> > +static int
+> > +dedupe_f(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	off64_t		soffset, doffset;
+> > +	long long	count, total;
+> > +	char		s1[64], s2[64], ts[64];
 > 
-> Instead of a single global xfsstats structure, add kobject and a pointer
-> to a per-cpu struct xfsstats. Modify the macros that manipulate the stats
-> accordingly: XFS_STATS_INC, XFS_STATS_DEC, and XFS_STATS_ADD now access
-> xfsstats->xs_stats.
+> Magic!
 > 
-> The sysfs functions need to get from the kobject back to the xfsstats
-> structure which contains it, and pass the pointer to the ->xs_stats
-> percpu structure into the show & clear routines.
+> > +	char		*infile;
+> > +	int		Cflag, qflag, wflag, Wflag;
+> 
+> Urk. Variables that differ only by case!
+
+Yeah.  I seriously hate those variable names, but they seemed to occur in
+other parts of io/.  I'll stop considering awkward naming to be precedent
+and change these here to have sensible names.
+
+(FWIW I was just following pwrite.c's lead...)
+
+> 
+> > +	struct xfs_ioctl_file_extent_same_args	*args = NULL;
+> > +	struct xfs_ioctl_file_extent_same_info	*info;
+> 
+> verbosity--;
+
+I was trying to keep the XFS names as close to the BTRFS names as possible
+since they're the same feature, but since you later advocate for name changes
+I'll gladly change 'em to be less annoying and more visually distinct. :)
+
+> 
+> > +	size_t		fsblocksize, fssectsize;
+> > +	struct timeval	t1, t2;
+> > +	int		c, fd = -1;
+> > +
+> > +	Cflag = qflag = wflag = Wflag = 0;
+> > +	init_cvtnum(&fsblocksize, &fssectsize);
+> > +
+> > +	while ((c = getopt(argc, argv, "CqwW")) != EOF) {
+> > +		switch (c) {
+> > +		case 'C':
+> > +			Cflag = 1;
+> > +			break;
+> > +		case 'q':
+> > +			qflag = 1;
+> > +			break;
+> > +		case 'w':
+> > +			wflag = 1;
+> > +			break;
+> > +		case 'W':
+> > +			Wflag = 1;
+> > +			break;
+> > +		default:
+> > +			return command_usage(&dedupe_cmd);
+> > +		}
+> > +	}
+> > +	if (optind != argc - 4)
+> > +		return command_usage(&dedupe_cmd);
+> > +	infile = argv[optind];
+> > +	optind++;
+> > +	soffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> > +	if (soffset < 0) {
+> > +		printf(_("non-numeric src offset argument -- %s\n"), argv[optind]);
+> > +		return 0;
+> > +	}
+> > +	optind++;
+> > +	doffset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> > +	if (doffset < 0) {
+> > +		printf(_("non-numeric dest offset argument -- %s\n"), argv[optind]);
+> > +		return 0;
+> > +	}
+> > +	optind++;
+> > +	count = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> > +	if (count < 1) {
+> > +		printf(_("non-positive length argument -- %s\n"), argv[optind]);
+> > +		return 0;
+> > +	}
+> > +
+> > +	c = IO_READONLY;
+> > +	fd = openfile(infile, NULL, c, 0);
+> > +	if (fd < 0)
+> > +		return 0;
+> > +
+> > +	gettimeofday(&t1, NULL);
+> > +	args = calloc(1, sizeof(struct xfs_ioctl_file_extent_same_args) +
+> > +			 sizeof(struct xfs_ioctl_file_extent_same_info));
+> > +	if (!args)
+> > +		goto done;
+> > +	info = (struct xfs_ioctl_file_extent_same_info *)(args + 1);
+> > +	args->logical_offset = soffset;
+> > +	args->length = count;
+> > +	args->dest_count = 1;
+> > +	info->fd = file->fd;
+> > +	info->logical_offset = doffset;
+> > +	do {
+> > +		c = ioctl(fd, XFS_IOC_FILE_EXTENT_SAME, args);
+> > +		if (c)
+> > +			break;
+> > +		args->logical_offset += info->bytes_deduped;
+> > +		info->logical_offset += info->bytes_deduped;
+> > +		args->length -= info->bytes_deduped;
+> > +	} while (c == 0 && info->status == 0 && info->bytes_deduped > 0);
+> 
+> What's "c"? it's actually a return value, and it's already been
+> handled if it's non zero. and there's nothing preventing
+> args->length from going negative.
+
+args->length is u64, so I'll bail out of the loop if bytes_deduped > length;
+that's probably a sign of badness going on.
+
+> 
+> > +	if (c)
+> > +		perror(_("dedupe ioctl"));
+> > +	if (info->status < 0)
+> > +		printf("dedupe: %s\n", _(strerror(-info->status)));
+> > +	if (info->status == XFS_SAME_DATA_DIFFERS)
+> 
+> "same data differs"? Really? :P
+
+<shrug> spoiled btrfs leftovers. :(
+
+> 
+> > +		printf(_("Extents did not match.\n"));
+> 
+> And putting hte error messages outside the loop is going to be hard
+> to maintain. I'd much prefer to see this written as:
+> 
+> 	while (args->length > 0) {
+> 		result = ioctl(fd, XFS_IOC_FILE_EXTENT_SAME, args);
+> 		if (result) {
+> 			perror("XFS_IOC_FILE_EXTENT_SAME");
+> 			goto done;
+> 		}
+> 		if (info->status != 0) {
+> 			printf("dedupe: %s\n", _(strerror(-info->status)));
+> 			if (info->status == XFS_SAME_DATA_DIFFERS)
+> 				printf(_("Extents did not match.\n"));
+> 			goto done;
+> 		}
+> 		if (info->bytes_deduped == 0)
+> 			break;
+> 
+> 		args->logical_offset += info->bytes_deduped;
+> 		info->logical_offset += info->bytes_deduped;
+> 		args->length -= info->bytes_deduped;
+> 	}
+> 
+> Actually, I'd really lik eto see this bit factored out into a
+> separate function, so there's clear separation between arg parsing,
+> the operation and post-op cleanup.
+> 
+> > +	total = info->bytes_deduped;
+> > +	c = 1;
+> > +	if (Wflag)
+> > +		fsync(file->fd);
+> > +	if (wflag)
+> > +		fdatasync(file->fd);
+> 
+> So these flags are just for syncing. This does not need to be a part
+> of this function, because the user can simply do:
+> 
+> xfs_io -c "dedupe ...." -c "fsync" ...
+> 
+> if an fsync or fdatasync is required after dedupe. So kill those
+> options.
+
+Ok.  I wonder why they're in pwrite.c...
 > 
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> > +	if (qflag)
+> > +		goto done;
+> 
+> Urk.
+> 
+> > +	gettimeofday(&t2, NULL);
+> > +	t2 = tsub(t2, t1);
+> > +
+> > +	/* Finally, report back -- -C gives a parsable format */
+> > +	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
+> > +	if (!Cflag) {
+> > +		cvtstr((double)total, s1, sizeof(s1));
+> > +		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+> > +		printf(_("linked %lld/%lld bytes at offset %lld\n"),
+> > +			total, count, (long long)doffset);
+> > +		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+> > +			s1, c, ts, s2, tdiv((double)c, t2));
+> > +	} else {/* bytes,ops,time,bytes/sec,ops/sec */
+> > +		printf("%lld,%d,%s,%.3f,%.3f\n",
+> > +			total, c, ts,
+> > +			tdiv((double)total, t2), tdiv((double)c, t2));
+> > +	}
+> 
+> This must be common with other timing code. Factor it out?
 
-<snip>
+Yep.
 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 0dfc53b..23e5681 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -61,7 +61,6 @@ static kmem_zone_t *xfs_ioend_zone;
->  mempool_t *xfs_ioend_pool;
->  
->  static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
-> -static struct xfs_kobj xfs_stats_kobj;	/* global stats sysfs attrs */
->  #ifdef DEBUG
->  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
->  #endif
-> @@ -1802,6 +1801,7 @@ xfs_destroy_workqueues(void)
->  	destroy_workqueue(xfs_alloc_wq);
->  }
->  
-> +
->  STATIC int __init
->  init_xfs_fs(void)
->  {
-> @@ -1842,8 +1842,9 @@ init_xfs_fs(void)
->  		goto out_sysctl_unregister;
->  	}
->  
-> -	xfs_stats_kobj.kobject.kset = xfs_kset;
-> -	error = xfs_sysfs_init(&xfs_stats_kobj, &xfs_stats_ktype, NULL,
-> +	xfsstats.xs_stats = alloc_percpu(struct xfsstats);
+> 
+> > +static void
+> > +reflink_help(void)
+> > +{
+> > +	printf(_(
+> > +"\n"
+> > +" Links a range of bytes (in block size increments) from a file into a range \n"
+> > +" of bytes in the open file.  The two extent ranges need not contain identical\n"
+> > +" data. \n"
+> > +"\n"
+> > +" Example:\n"
+> > +" 'reflink some_file 0 4096 32768' - links 32768 bytes from some_file at \n"
+> > +"                                    offset 0 to into the open file at \n"
+> > +"                                    position 4096\n"
+> > +" 'reflink some_file' - links all bytes from some_file into the open file\n"
+> > +"                       at position 0\n"
+> > +"\n"
+> > +" Reflink a range of blocks from a given input file to the open file.  Both\n"
+> > +" files share the same range of physical disk blocks; a write to the shared\n"
+> > +" range of either file should result in the write landing in a new block and\n"
+> > +" that range of the file being remapped (i.e. copy-on-write).  Both files\n"
+> > +" must reside on the same filesystem.\n"
+> > +" -w   -- call fdatasync(2) at the end (included in timing results)\n"
+> > +" -W   -- call fsync(2) at the end (included in timing results)\n"
+> > +"\n"));
+> > +}
+> 
+> FWIW, could these just be a single string like:
+> 
+> "
+>  Links a range of bytes (in block size increments) from a file into a range
+>  of bytes in the open file.  The two extent ranges need not contain identical
+> ....
+> \n"));
+> 
+> So we don't have to mangle the entire layout if we modify the help
+> tet in future?
 
-alloc_percpu can fail, so:
+Ok.
+> 
+> > +static int
+> > +reflink_f(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> 
+> Same comments as the dedupe_f() function about factoring and
+> variable names and reusing "c" for a bunch of unrelated values.
+> 
+> indeed, most of this is common with the dedupe_f function, so
+> perhaps it might be worth putting them in the same file and
+> factoring them appropriately to shared common elements?
 
-if (!xfsstats.xs_stats) {
-	error = -ENOMEM;
-	goto out_kset_unregister ...
-}
+Sounds good.
 
-> +	xfsstats.xs_kobj.kobject.kset = xfs_kset;
-> +	error = xfs_sysfs_init(&xfsstats.xs_kobj, &xfs_stats_ktype, NULL,
->  			       "stats");
->  	if (error)
->  		goto out_kset_unregister;
+> 
+> > diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+> > index 89689c6..0c922ad 100644
+> > --- a/libxfs/xfs_fs.h
+> > +++ b/libxfs/xfs_fs.h
+> > @@ -559,6 +559,42 @@ typedef struct xfs_swapext
+> >  #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+> >  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+> >  
+> > +/* reflink ioctls; these MUST match the btrfs ioctl definitions */
+> > +struct xfs_ioctl_clone_range_args {
+> > +	__s64 src_fd;
+> > +	__u64 src_offset;
+> > +	__u64 src_length;
+> > +	__u64 dest_offset;
+> > +};
+> 
+> struct xfs_clone_args
+> 
+> > +
+> > +#define XFS_SAME_DATA_DIFFERS	1
+> 
+> #define XFS_EXTENT_DATA_SAME		0
+> #define XFS_EXTENT_DATA_DIFFERS		1
+> 
+> > +/* For extent-same ioctl */
+> > +struct xfs_ioctl_file_extent_same_info {
+> > +	__s64 fd;		/* in - destination file */
+> > +	__u64 logical_offset;	/* in - start of extent in destination */
+> > +	__u64 bytes_deduped;	/* out - total # of bytes we were able
+> > +				 * to dedupe from this file */
+> > +	/* status of this dedupe operation:
+> > +	 * 0 if dedup succeeds
+> > +	 * < 0 for error
+> > +	 * == XFS_SAME_DATA_DIFFERS if data differs
+> > +	 */
+> > +	__s32 status;		/* out - see above description */
+> > +	__u32 reserved;
+> > +};
+> 
+> struct xfs_extent_data_info
+> 
+> > +
+> > +struct xfs_ioctl_file_extent_same_args {
+> > +	__u64 logical_offset;	/* in - start of extent in source */
+> > +	__u64 length;		/* in - length of extent */
+> > +	__u16 dest_count;	/* in - total elements in info array */
+> > +	__u16 reserved1;
+> > +	__u32 reserved2;
+> > +	struct xfs_ioctl_file_extent_same_info info[0];
+> > +};
+> 
+> struct xfs_extent_data
 
-If this fails, you need to free the percpu allocation, so this would
-be "goto out_free_stats" I think
+Yay, less ugly names!
 
-> @@ -1852,7 +1853,7 @@ init_xfs_fs(void)
->  	xfs_dbg_kobj.kobject.kset = xfs_kset;
->  	error = xfs_sysfs_init(&xfs_dbg_kobj, &xfs_dbg_ktype, NULL, "debug");
->  	if (error)
-> -		goto out_remove_stats_kobj;
-> +		goto out_remove_stats;
+> 
+> > +
+> > +#define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
+> > +#define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_ioctl_clone_range_args)
+> > +#define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_ioctl_file_extent_same_args)
+> 
+> FWIW, these structure and ioctl definitions really need to be in a
+> separate patch as they need to be shared with the kernel code.
 
-And this remains as out_remove_stats_kobj, I think.
+Ok.  libxfs/ changes in separate patches, got it.
 
->  #endif
->  
->  	error = xfs_qm_init();
-> @@ -1869,9 +1870,9 @@ init_xfs_fs(void)
->   out_remove_dbg_kobj:
->  #ifdef DEBUG
->  	xfs_sysfs_del(&xfs_dbg_kobj);
-> - out_remove_stats_kobj:
-> + out_remove_stats:
->  #endif
-> -	xfs_sysfs_del(&xfs_stats_kobj);
-> +	free_percpu(xfsstats.xs_stats);
+--D
 
-hm, now nothing deletes the stats kobject?
-
-xfs_sysfs_del(&xfsstats.xs_kobj);
-
-but there should be another goto target ...
-there's one more thing to unwind (the percpu allocation) so you should
-end up with more unwind goto target (i.e. out_free_stats), but you still
-need the unwind target for the stats kobject sysfs deletion.
-
-something like:
-
-out_remove_dbg_kobj:
-#ifdef DEBUG
-	xfs_sysfs_del(&xfs_dbg_kobj);
-out_remove_stats_kobj:
-#endif
-	xfs_sysfs_del(&xfs_stats_kobj);
-out_free_stats:
-	free_percpu(xfsstats.xs_stats);
-out_kset_unregister:
-	kset_unregister(xfs_kset);
-out_sysctl_unregister:
-
-but double-check me ;)
-
->   out_kset_unregister:
->  	kset_unregister(xfs_kset);
->   out_sysctl_unregister:
-> @@ -1898,7 +1899,7 @@ exit_xfs_fs(void)
->  #ifdef DEBUG
->  	xfs_sysfs_del(&xfs_dbg_kobj);
->  #endif
-> -	xfs_sysfs_del(&xfs_stats_kobj);
-> +	free_percpu(xfsstats.xs_stats);
-
-
-here as well, you still need to delete the stats kobject:
-
-	xfs_sysfs_del(&xfsstats.xs_kobj); 
-
->  	kset_unregister(xfs_kset);
->  	xfs_sysctl_unregister();
->  	xfs_cleanup_procfs();
-
--Eric
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
