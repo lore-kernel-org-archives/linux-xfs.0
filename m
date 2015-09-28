@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C345F7F56
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 13:38:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D04EAC005
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 11:38:05 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2FD307F3F
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 16:33:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C0638AC007
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 14:33:17 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id g5zKiTu0lOMXnyPy (version=TLSv1.2
+	cuda.sgi.com with ESMTP id f7hVsuDAiREaYIdr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 28 Sep 2015 11:38:04 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id AAABCAA8
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 18:38:03 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-128.bos.redhat.com [10.18.41.128])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t8SIc3t4018011
-	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 14:38:03 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/2] xfs: add an xfs_zero_eof() tracepoint
-Date: Mon, 28 Sep 2015 14:38:01 -0400
-Message-Id: <1443465481-63460-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1443465481-63460-1-git-send-email-bfoster@redhat.com>
-References: <1443465481-63460-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Mon, 28 Sep 2015 14:33:16 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id A13EEA37E2
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 21:33:16 +0000 (UTC)
+Received: from localhost.localdomain.com (vpn-55-26.rdu2.redhat.com
+	[10.10.55.26])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t8SLXDo6005461
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2015 17:33:16 -0400
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH 3/7] xfs: remove unused procfs code
+Date: Mon, 28 Sep 2015 16:33:04 -0500
+Message-Id: <1443475988-15251-4-git-send-email-billodo@redhat.com>
+In-Reply-To: <1443475988-15251-1-git-send-email-billodo@redhat.com>
+References: <1443475988-15251-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,44 +39,101 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add a tracepoint in xfs_zero_eof() to facilitate tracking and debugging
-EOF zeroing events. This has proven useful in the context of other
-direct I/O tracepoints to ensure EOF zeroing occurs within appropriate
-file ranges.
+As a part of the work to move xfs global stats from procfs to sysfs,
+this patch removes the now unused procfs code that was xfs stat specific.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 ---
- fs/xfs/xfs_file.c  | 2 ++
- fs/xfs/xfs_trace.h | 1 +
- 2 files changed, 3 insertions(+)
+ fs/xfs/xfs_stats.c | 74 ------------------------------------------------------
+ 1 file changed, 74 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 347b3e0..541dcfb 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -482,6 +482,8 @@ xfs_zero_eof(
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 	ASSERT(offset > isize);
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index afd19e1..dc6ca67 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -112,80 +112,6 @@ void xfs_stats_clearall(void)
+ 	}
+ }
  
-+	trace_xfs_zero_eof(ip, isize, offset - isize);
-+
- 	/*
- 	 * First handle zeroing the block on which isize resides.
- 	 *
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 5ed36b1..957f5cc 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1312,6 +1312,7 @@ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enospc);
- DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
- DEFINE_SIMPLE_IO_EVENT(xfs_get_blocks_notfound);
- DEFINE_SIMPLE_IO_EVENT(xfs_setfilesize);
-+DEFINE_SIMPLE_IO_EVENT(xfs_zero_eof);
- 
- DECLARE_EVENT_CLASS(xfs_itrunc_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size),
+-static int xfs_stat_proc_show(struct seq_file *m, void *v)
+-{
+-	int		i, j;
+-	__uint64_t	xs_xstrat_bytes = 0;
+-	__uint64_t	xs_write_bytes = 0;
+-	__uint64_t	xs_read_bytes = 0;
+-
+-	static const struct xstats_entry {
+-		char	*desc;
+-		int	endpoint;
+-	} xstats[] = {
+-		{ "extent_alloc",	XFSSTAT_END_EXTENT_ALLOC	},
+-		{ "abt",		XFSSTAT_END_ALLOC_BTREE		},
+-		{ "blk_map",		XFSSTAT_END_BLOCK_MAPPING	},
+-		{ "bmbt",		XFSSTAT_END_BLOCK_MAP_BTREE	},
+-		{ "dir",		XFSSTAT_END_DIRECTORY_OPS	},
+-		{ "trans",		XFSSTAT_END_TRANSACTIONS	},
+-		{ "ig",			XFSSTAT_END_INODE_OPS		},
+-		{ "log",		XFSSTAT_END_LOG_OPS		},
+-		{ "push_ail",		XFSSTAT_END_TAIL_PUSHING	},
+-		{ "xstrat",		XFSSTAT_END_WRITE_CONVERT	},
+-		{ "rw",			XFSSTAT_END_READ_WRITE_OPS	},
+-		{ "attr",		XFSSTAT_END_ATTRIBUTE_OPS	},
+-		{ "icluster",		XFSSTAT_END_INODE_CLUSTER	},
+-		{ "vnodes",		XFSSTAT_END_VNODE_OPS		},
+-		{ "buf",		XFSSTAT_END_BUF			},
+-		{ "abtb2",		XFSSTAT_END_ABTB_V2		},
+-		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
+-		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
+-		{ "ibt2",		XFSSTAT_END_IBT_V2		},
+-		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
+-		/* we print both series of quota information together */
+-		{ "qm",			XFSSTAT_END_QM			},
+-	};
+-
+-	/* Loop over all stats groups */
+-	for (i = j = 0; i < ARRAY_SIZE(xstats); i++) {
+-		seq_printf(m, "%s", xstats[i].desc);
+-		/* inner loop does each group */
+-		for (; j < xstats[i].endpoint; j++)
+-			seq_printf(m, " %u", counter_val(j));
+-		seq_putc(m, '\n');
+-	}
+-	/* extra precision counters */
+-	for_each_possible_cpu(i) {
+-		xs_xstrat_bytes += per_cpu(xfsstats, i).xs_xstrat_bytes;
+-		xs_write_bytes += per_cpu(xfsstats, i).xs_write_bytes;
+-		xs_read_bytes += per_cpu(xfsstats, i).xs_read_bytes;
+-	}
+-
+-	seq_printf(m, "xpc %Lu %Lu %Lu\n",
+-			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
+-	seq_printf(m, "debug %u\n",
+-#if defined(DEBUG)
+-		1);
+-#else
+-		0);
+-#endif
+-	return 0;
+-}
+-
+-static int xfs_stat_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, xfs_stat_proc_show, NULL);
+-}
+-
+-static const struct file_operations xfs_stat_proc_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= xfs_stat_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-
+ /* legacy quota interfaces */
+ #ifdef CONFIG_XFS_QUOTA
+ static int xqm_proc_show(struct seq_file *m, void *v)
 -- 
-2.1.0
+2.4.3
 
 _______________________________________________
 xfs mailing list
