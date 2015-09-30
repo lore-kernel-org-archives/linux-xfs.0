@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7A88F7F37
-	for <xfs@oss.sgi.com>; Wed, 30 Sep 2015 00:04:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A355AC00C
-	for <xfs@oss.sgi.com>; Tue, 29 Sep 2015 22:04:30 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	SxcGrm9au5txIOdh for <xfs@oss.sgi.com>;
-	Tue, 29 Sep 2015 22:04:28 -0700 (PDT)
-Date: Wed, 30 Sep 2015 15:04:26 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests, xfs test 080 fails on arm 32bit
-Message-ID: <20150930050425.GC3902@dastard>
-References: <560A9307.6080600@nomovok.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <560A9307.6080600@nomovok.com>
+	by oss.sgi.com (Postfix) with ESMTP id BBD867F37
+	for <xfs@oss.sgi.com>; Wed, 30 Sep 2015 03:22:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 503BEAC007
+	for <xfs@oss.sgi.com>; Wed, 30 Sep 2015 01:22:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tJBdanOhG66baHsK (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 30 Sep 2015 01:22:00 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 11/14 v2] xfsprogs: Add statvfs64 for osx
+Date: Wed, 30 Sep 2015 10:21:55 +0200
+Message-Id: <1443601315-774-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1442311164-12921-12-git-send-email-jtulak@redhat.com>
+References: <1442311164-12921-12-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,88 +23,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Angelo Dureghello <angelo.dureghello@nomovok.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Tue, Sep 29, 2015 at 03:32:55PM +0200, Angelo Dureghello wrote:
-> Hi,
-> 
-> executing this test on a 32bit arm. i get (i traced mmapping sizes):
-> 
-> # ./start_xfs_test.sh
-> QA output created by 080
-> [  161.827446] XFS (mmcblk0p5): Mounting V4 Filesystem
-> [  162.357952] XFS (mmcblk0p5): Ending clean mount
-> 
-> mmapping 512000000
-> mmapping 512000000
-> mmapping 512000000
-> mmapping 512000000
-> mmapping 512000000
-> mmapping 512000000
-> 
-> oio ( 3241) 15:18:17
-> ---------------------
-> mmap() failed - 0xffffffff 12
-> 
-> doio ( 3241) 15:18:17
-> ---------------------
-> mmap-read() request failed:  Cannot allocate memory (12)
-> Request number 15
->           fd 4 is file /media/p5/rwtest.file - open flags are 0 O_RDONLY,
->           read done at file offset 978498
->           number of requests is 1, strides per request is 1
->           i/o byte count = 119505
->           memory alignment is unaligned
-> 
-> syscall:  mmap-read(NULL, 512000000, PROT_READ, MAP_SHARED, 4, 0)
->     file is mmaped to: 0x0
->     file-mem=0xeee42, length=119505, buffer=0x484a6
+UPDATE:
+- removing unnecessary include lines (again)
 
-Does it close/unmap the other files it mmaps? i.e. 32 bit only has a
-3GB address space for user applications (IIRC), so the 6th 512MB
-mapping will run the process out of address space and hence fail....
+Simply rename statvfs64 to statfs with a #define.
+OSX version of statvfs is missing some members, so if the renaming
+is in effect (stavfs64 is defined), don't try to use them and go
+directly for the other member value.
 
-> doio ( 3241) 15:18:17
-> ---------------------
-> doio(): operation 120 returned != 0
-> rwtest.sh : iogen reported errors (r=141)
-> 
-> 
-> Is it possible the test was thought to pass on 64bit systems ?
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ fsr/xfs_fsr.c        | 8 ++++++++
+ include/builddefs.in | 2 +-
+ include/darwin.h     | 5 +++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-Works just fine on 64 bit systems:
-
- $ sudo ./check xfs/080
- FSTYP         -- xfs (debug)
- PLATFORM      -- Linux/x86_64 test2 4.3.0-rc1-dgc+
- MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdg
- MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sdg
- /mnt/scratch
-
- xfs/080 2s ... 7s
- Ran: xfs/080
- Passed all 1 tests
-
-And looking at the memory footprint:
-
-  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
- 3300 root      20   0 3010672   1612   1344 D   4.7  0.0   0:00.14 doio
-
-Yup, 3GB of virtual address space used, 1.6MB of actual memory used.
-
-_require_64bit_userspace is probably needed here...
-
-Cheers,
-
-Dave.
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index e1b7bd6..c8ef18f 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -948,7 +948,11 @@ fsrfile_common(
+ 			fname, strerror(errno));
+ 		return -1;
+ 	}
++#ifndef statvfs64
+ 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
++#else
++	bsize = vfss.f_bsize;
++#endif
+ 	if (statp->bs_blksize * statp->bs_blocks >
+ 	    vfss.f_bfree * bsize - minimumfree) {
+ 		fsrprintf(_("insufficient freespace for: %s: "
+@@ -1728,7 +1732,11 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
+ 		close(fd);
+ 		return -1;
+ 	}
++#ifndef statvfs64
+ 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
++#else
++	bsize = sfbp->f_bsize;
++#endif
+ 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
+ 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
+ 	return 0;
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 25b8816..31e21ba 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -123,7 +123,7 @@ PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
+ endif
+ ifeq ($(PKG_PLATFORM),darwin)
+ PCFLAGS = $(GCCFLAGS)
+-DEPENDFLAGS = -D__APPLE__
++DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
+ endif
+ ifeq ($(PKG_PLATFORM),irix)
+ PLDLIBS = -ldisk -lgen
+diff --git a/include/darwin.h b/include/darwin.h
+index 0d2f175..288ad1f 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -216,4 +216,9 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+ 	return getitimer(ITIMER_REAL, value);
+ }
+ 
++/* FSR */
++
++#define statvfs64 statfs
++#define		_PATH_MOUNTED   "/etc/mtab"
++
+ #endif	/* __XFS_DARWIN_H__ */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.1
 
 _______________________________________________
 xfs mailing list
