@@ -1,22 +1,19 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DCCEE7F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 04:59:40 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A01CA7F37
+	for <xfs@oss.sgi.com>; Tue, 29 Sep 2015 22:28:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB19F30404E
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7ZRDwwlaAQdCIR9K (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2015 02:59:39 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id C3A6E8EA21
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2015 09:59:38 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 00/14 v5]  xfsprogs: Partial OSX support
-Date: Tue, 15 Sep 2015 11:59:10 +0200
-Message-Id: <1442311164-12921-1-git-send-email-jtulak@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80A12304051
+	for <xfs@oss.sgi.com>; Tue, 29 Sep 2015 20:28:20 -0700 (PDT)
+Received: from smtp-a18.md-connecting.com (smtp-a18.md-connecting.com
+	[82.97.42.76]) by cuda.sgi.com with ESMTP id Rz8UWFKGWTtSN0Tb
+	for <xfs@oss.sgi.com>; Tue, 29 Sep 2015 20:28:16 -0700 (PDT)
+Subject: =?utf-8?Q?d=C3=A9posez_votre_demande_et_recevez_jusqu'=C3=A0_3_devis_grat?=
+	=?utf-8?Q?uits!?=
+Date: Wed, 30 Sep 2015 05:28:08 +0200
+From: solution travaux batiment <Neo_devis@maximeo-com.com>
+Message-ID: <b9bed32e681b518886a423b37c38d771@maximeo-com.com>
+MIME-Version: 1.0
+Reply-To: solution travaux batiment <2kx_dhh.h57.1db@maximeo-com.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,101 +22,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4936892045320189021=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Tulak <jtulak@redhat.com>
+To: xfs <xfs@oss.sgi.com>
 
-Hi all,
+--===============4936892045320189021==
+Content-Type: multipart/alternative;
+	boundary="Part1_b9bed32e681b518886a423b37c38d771"
 
-An updated version. This set is intended to put together the current
-versions of the individual patches with the exception of a new patch 14,
-and rebase it against the current master branch.
+--Part1_b9bed32e681b518886a423b37c38d771
+Content-Type: text/plain; charset = "utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Patch 4 contains renaming required by Dave, however I'm not sure
-if it is still needed with the changes in patches 2 and 3.
-
-Patch 10 (adding timer) was mentioned that it "doesn't look to work",
-but I didn't get a reasoning. The added code, when tested,
-really run. For testing it in xfs_repair, I don't have how to
-create a large enough FS where the timer would be noticable on OSX.
-(Not enough of empty space.)
-
-Cheers,
-Jan
-
-CHANGELOG:
-v5:
-- patch 2 was split into 3 patches, numbered 2, 3 and 4
-- in patches 2-4, instead of just prefixing it all, a mixed
-  approach was used.
-- patch 9 renames the function directly instead of using #define
-- patch 11 now adds a simple rename
-- patch 12 uses mntinfo instead of dummy code
-- in patch 13, make mremap build optional instead of dummy code
-- new patch 14 with lstat64
-
-
-v4:
-- added #warning message (patch 1)
-- use dummy blkid_get_topology instead of #ifdefs (patch 1)
-- fix autoconf (wasn't passing -DENABLE_BLKID flag, lost during
-  patch cleaning.) (patch 1)
-- remove dependency on linux XATTR_ constants (patch 2)
-- add autoconf detection for fsetxattr (patch 4)
-- use uuid_t instead of unsigned char (patch 5)
-- add a basic timer functionality (patch 8)
-- mremap replacement now returns MAP_FAILED (patch 11)
+Pour visualiser et se d=C3=A9sabonner ce message,
+=20
+Veuillez, copier puis coller, l'adresse URL compl=C3=A8te ci-dessous dans=
+ la
+barre d'adresse de votre navigateur et appuyer sur la touche "Entr=C3=A9e=
+" de
+votre clavier.
 
 
 
-Version 3:
-- better commit messages (patch 1)
-- formatting fixes (patch 2, 8)
-- autoconf updates (patch 6, 7)
-- changed default behaviour if BLKID is disabled such that mkfs -f
-  is required (patch 11)
+- - - - - - - - - - - - - - - - -=20
 
-Jan Tulak (14):
-  xfsprogs: Add a way to compile without blkid
-  xfsprogs: Add XATTR_LIST_MAX to OS X headers
-  xfsprogs: avoid dependency on Linux XATTR_SIZE_MAX
-  xfsprogs: prefix XATTR_LIST_MAX with XFS_
-  xfsprogs: Add includes required for OS X builds (delta)
-  xfsprogs: Add autoconf check for fsetxattr call
-  xfsprogs: uuid changes for OS X
-  xfsprogs: Remove conflicting define for OS X
-  xfsprogs: change nftw64 to nftw
-  xfsprogs: Add a timer implementation for OS X
-  xfsprogs: Add statvfs64 for osx
-  xfsprogs: make fsr use mntinfo when there is no mntent
-  xfsprogs: Make mremap conditional
-  xfsprogs: rename lstat64 to lstat for OS X
+http://app.maximeo-com.com/v/?camp=3D44181406984402735757094_47&ms=3DeGZz=
+QG9zcy5zZ2kuY29t
 
- configure.ac             |  12 +++++-
- estimate/xfs_estimate.c  |   6 +--
- fsr/Makefile             |   8 ++++
- fsr/xfs_fsr.c            |  85 ++++++++++++++++++++++++++++++++-----
- include/builddefs.in     |  12 +++++-
- include/darwin.h         | 106 ++++++++++++++++++++++++++++++++++++++++-------
- include/xfs.h            |   2 +
- io/mmap.c                |   8 ++++
- libhandle/handle.c       |   4 +-
- libhandle/jdm.c          |   4 +-
- libxfs/xfs_attr_remote.c |   2 +-
- libxfs/xfs_format.h      |  10 ++++-
- m4/package_libcdev.m4    |  26 ++++++++++++
- mkfs/xfs_mkfs.c          |  37 ++++++++++++++++-
- repair/progress.c        |  16 ++++++-
- 15 files changed, 298 insertions(+), 40 deletions(-)
+- - - - - - - - - - - - - - - - -=20
 
--- 
-2.4.3
+
+
+
+--Part1_b9bed32e681b518886a423b37c38d771
+Content-Type: text/html; charset = "utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://ww=
+w.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml" xml:lang=3D"fr" lang=3D"fr">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8" =
+/>
+<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
+1.0" />
+<title>d=C3=A9posez votre demande et recevez jusqu\'=C3=A0 3 devis gratui=
+ts!</title>
+</head><body topmargin=3D"0" marginheight=3D"0" leftmargin=3D"0" style=3D=
+"padding:0px; -moz-text-size-adjust:none; margin:0px; -webkit-text-size-a=
+djust:none; text-size-adjust:none; -ms-text-size-adjust:none;" marginwidt=
+h=3D"0">
+<center><p>
+<a href=3D"http://app.maximeo-com.com/v/?camp=3D44181406984402735757094_4=
+7&ms=3DeGZzQG9zcy5zZ2kuY29t" target=3D"_blank" title=3D"Si cet e-mail ne =
+s'affiche pas correctement, suivez ce lien." style=3D"color:#00F; font-fa=
+mily:'Arial'; font-size:12px; text-decoration:underline;">Si cet email ne=
+ s&rsquo;affiche pas correctement, suivez ce lien.</a></p><table width=3D=
+"100%"><tbody><tr><td align=3D"center"> <a href=3D"http://app.maximeo-com=
+.com/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D44181406984402735757094_47&rc=3DaHR0=
+cDovL3d3dy5uZW8tZGV2aXMuY29tL3RyYXZhdXgtZHUtYmF0aW1lbnQ=3D" title=3D""> <=
+table cellpadding=3D"0" cellspacing=3D"0" width=3D"600"> <tbody><tr> <td =
+style=3D"font-size:0px;" align=3D"center"><img src=3D"http://app.maximeo-=
+com.com/r/?rc=3DaHR0cDovL3d3dy5sYXVyZW5jeS5uZXQvaW1nL3VwbG9hZC80NDE4MTQwN=
+jk4NDQwMjczNTc1NzA5NC9oZWFkZXJfYlNjbi5qcGc=3D" alt=3D"header" style=3D"bo=
+rder:0px;"></td> </tr> <tr> <td align=3D"center"> <img src=3D"http://app.=
+maximeo-com.com/r/?rc=3DaHR0cDovL3d3dy5sYXVyZW5jeS5uZXQvaW1nL3VwbG9hZC80N=
+DE4MTQwNjk4NDQwMjczNTc1NzA5NC9
+ pbWFnZV9kRjM2LmpwZw=3D=3D" alt=3D"image devis" style=3D"border:0px; widt=
+h: 100%;"> </td> </tr> <tr> <td style=3D"font-size:0px;" align=3D"center"=
+> <img src=3D"http://app.maximeo-com.com/r/?rc=3DaHR0cDovL3d3dy5sYXVyZW5j=
+eS5uZXQvaW1nL3VwbG9hZC80NDE4MTQwNjk4NDQwMjczNTc1NzA5NC9ldGFwZXNfcGNFUy5qc=
+Gc=3D" alt=3D"&eacute;tapes" style=3D"border:0px;"></td> </tr> </tbody></=
+table>   </a></td></tr></tbody></table><img src=3D"http://app.maximeo-com=
+.com/t/?i=3D44181406984402735757094_47&m=3DeGZzQG9zcy5zZ2kuY29t&url=3Dhtt=
+p://app.maximeo-com.com/images/blank.jpg" alt=3D"_pspacer4"  /><p>
+<a href=3D"http://app.maximeo-com.com/d/?camp=3D44181406984402735757094_4=
+7&ms=3DeGZzQG9zcy5zZ2kuY29t" target=3D"_blank" title=3D"Ne plus recevoir =
+d'informations de notre part" style=3D"color:#00F; font-family:'Arial'; f=
+ont-size:12px; text-decoration:underline;">Pour se d&eacute;sabonner : Su=
+ivez ce lien.</a><br />Si ce message vous a caus&eacute; un quelconque d&=
+eacute;rangement, nous vous prions de nous en excuser.
+</p><center>
+</body>
+</html>
+
+
+
+--Part1_b9bed32e681b518886a423b37c38d771--
+
+
+--===============4936892045320189021==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4936892045320189021==--
