@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8752C7F3F
+	by oss.sgi.com (Postfix) with ESMTP id 5E5047F37
 	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 02:48:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E50AFAC006
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CA364AC001
 	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 00:48:02 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	y5hgyZ0nGjJ7KdzY for <xfs@oss.sgi.com>;
-	Thu, 01 Oct 2015 00:48:00 -0700 (PDT)
+	f1wSchjEXE34Pct8 for <xfs@oss.sgi.com>;
+	Thu, 01 Oct 2015 00:47:56 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/7] xfs: DAX does not use IO completion callbacks
-Date: Thu,  1 Oct 2015 17:46:38 +1000
-Message-Id: <1443685599-4843-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1443685599-4843-1-git-send-email-david@fromorbit.com>
-References: <1443685599-4843-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/7] xfs, dax: fix the page fault/allocation mess
+Date: Thu,  1 Oct 2015 17:46:32 +1000
+Message-Id: <1443685599-4843-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,108 +29,86 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, willy@linux.intel.com, ross.zwisler@linux.intel.com, dan.j.williams@intel.com, kirill.shutemov@linux.intel.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-For DAX, we are now doing block zeroing and
-we are updating the file size during allocation. This means we no
-longer need an IO completion callback to do these things, so remove
-the completion callbacks from the __dax_fault and __dax_mkwrite
-calls.
+As discussed in the recent thread about problems with DAX locking:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c | 39 ---------------------------------------
- fs/xfs/xfs_aops.h |  1 -
- fs/xfs/xfs_file.c |  5 ++---
- 3 files changed, 2 insertions(+), 43 deletions(-)
+http://www.gossamer-threads.com/lists/linux/kernel/2264090?do=post_view_threaded
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index df3dabd..69c2dbc 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1657,45 +1657,6 @@ xfs_end_io_direct_write(
- 	__xfs_end_io_direct_write(inode, ioend, offset, size);
- }
- 
--/*
-- * For DAX we need a mapping buffer callback for unwritten extent conversion
-- * when page faults allocate blocks and then zero them. Note that in this
-- * case the mapping indicated by the ioend may extend beyond EOF. We most
-- * definitely do not want to extend EOF here, so we trim back the ioend size to
-- * EOF.
-- */
--#ifdef CONFIG_FS_DAX
--void
--xfs_end_io_dax_write(
--	struct buffer_head	*bh,
--	int			uptodate)
--{
--	struct xfs_ioend	*ioend = bh->b_private;
--	struct inode		*inode = ioend->io_inode;
--	ssize_t			size = ioend->io_size;
--
--	ASSERT(IS_DAX(ioend->io_inode));
--
--	/* if there was an error zeroing, then don't convert it */
--	if (!uptodate)
--		ioend->io_error = -EIO;
--
--	/*
--	 * Trim update to EOF, so we don't extend EOF during unwritten extent
--	 * conversion of partial EOF blocks.
--	 */
--	spin_lock(&XFS_I(inode)->i_flags_lock);
--	if (ioend->io_offset + size > i_size_read(inode))
--		size = i_size_read(inode) - ioend->io_offset;
--	spin_unlock(&XFS_I(inode)->i_flags_lock);
--
--	__xfs_end_io_direct_write(inode, ioend, ioend->io_offset, size);
--
--}
--#else
--void xfs_end_io_dax_write(struct buffer_head *bh, int uptodate) { }
--#endif
--
- static inline ssize_t
- xfs_vm_do_dio(
- 	struct inode		*inode,
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index d39ba25..f6ffc9a 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -60,7 +60,6 @@ int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
- 			      struct buffer_head *map_bh, int create);
- int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
- 			         struct buffer_head *map_bh, int create);
--void	xfs_end_io_dax_write(struct buffer_head *bh, int uptodate);
- 
- extern void xfs_count_page_state(struct page *, int *, int *);
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 27abe1c..9c8eef7 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1503,8 +1503,7 @@ xfs_filemap_page_mkwrite(
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (IS_DAX(inode)) {
--		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault,
--				    xfs_end_io_dax_write);
-+		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault, NULL);
- 	} else {
- 		ret = __block_page_mkwrite(vma, vmf, xfs_get_blocks);
- 		ret = block_page_mkwrite_return(ret);
-@@ -1566,7 +1565,7 @@ xfs_filemap_pmd_fault(
- 	file_update_time(vma->vm_file);
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	ret = __dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault,
--				    xfs_end_io_dax_write);
-+			      NULL);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	sb_end_pagefault(inode->i_sb);
- 
--- 
-2.5.0
+I said that I'd post the patch set that fixed the problems for XFS
+as soon as I had something sane and workable. That's what this
+series is.
+
+To start with, it passes xfstests "auto" group with only the only
+failures being expected failures or failures due to unexpected
+allocation patterns or trying to use unsupported block sizes. That
+makes it better than any previous version of the XFS/DAX code.
+
+The patchset starts by reverting the two patches that were
+introduced in 4.3-rc1 to try to fix the fault vs fault and fault vs
+truncate races that caused deadlocks. This fixes the hangs in
+generic/075 that these patches introduced.
+
+Patch 3 enables XFS to handle the behaviour of DAX and DIO when
+asking to allocate the block at (2^63 - 1FSB), where the offset +
+count s technically illegal (larger than sb->s_maxbytes) and
+overflows a s64 variable. This is currently hidden by the fact that
+all DAX and DIO allocation is currently unwritten, but patch 5
+exposes it for DAX.
+
+Patch 4 introduces the ability for XFS to allocate physically zeroed
+data blocks. This is done for each physical extent that is
+allocated, deep inside the allocator itself and guaranteed to be
+atomic with the allocation transaction and hence has no
+crash+recovery exposure issues.
+
+This is necessary because the BMAPI layer merges allocated extents
+in the BMBT before it returns the mapped extent back to the high
+level get_blocks() code. Hence the high level code can have a single
+extent presented that is made of merged new and existing extents,
+and so zeroing can't be done at this layer.
+
+The advantage of driving the zeroing deep into the allocator is the
+functionality is now available to all XFS code. Hence we can
+allocate pre-zeroed blocks on any type of storage, and we can
+utilise storage-based hardware acceleration (e.g. discard to zero,
+WRITE_SAME, etc) to do the zeroing. From this POV, DAX is just
+another hardware accelerated physical zeroing mechanism for XFS. :)
+
+[ This is an example of the mantra I repeat a lot: solve the problem
+  properly the first time and it will make everything simpler! Sure,
+  it took me three attempts to work out how to solve it in a sane
+  manner, but that's pretty much par for the course with anything
+  non-trivial. ]
+
+Patch 5 makes __xfs_get_blocks() aware that it is being called from
+the DAX fault path and makes sure it returns zeroed blocks rather
+than unwritten extents via XFS_BMAPI_ZERO. It also now sets
+XFS_BMAPI_CONVERT, which tells it to convert unwritten extents to
+written, zeroed blocks. This is the major change of behaviour.
+
+Patch 6 removes the IO completion callbacks from the XFS DAX code as
+they are not longer necessary after patch 5.
+
+Patch 7 adds pfn_mkwrite support to XFS. This is needed to fix
+generic/080, which detects a failure to update the inode timestamp
+on a pfn fault. It also adds the same locking as the XFS
+implementation of ->fault and ->page_mkwrite and hence provide
+correct serialisation against truncate, hole punching, etc that
+doesn't currently exist.
+
+The next steps that are needed are to do the same "block zeroing
+during allocation" to ext4, and then the block zeroing and
+complete_unwritten callbacks can be removed from the DAX API and
+code. I've had a breif look at the ext4 code - the block zeroing
+should be able to be done by overloading the existing zeroout code
+that ext4 has in the unwritten extent allocation code. I'd much
+prefer that an ext4 expert does this work, and then we can clean up
+the DAX code...
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
