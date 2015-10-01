@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4565F7F50
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1C57C7F4E
 	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 02:48:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D1077AC004
-	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 00:47:57 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5E4F8F8049
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 00:48:00 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	S6FzliuTGtBywnGl for <xfs@oss.sgi.com>;
-	Thu, 01 Oct 2015 00:47:55 -0700 (PDT)
+	1vkBHKvWtpzo5AVA for <xfs@oss.sgi.com>;
+	Thu, 01 Oct 2015 00:47:58 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/7] Revert "mm: take i_mmap_lock in unmap_mapping_range() for
-	DAX"
-Date: Thu,  1 Oct 2015 17:46:33 +1000
-Message-Id: <1443685599-4843-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/7] xfs: Don't use unwritten extents for DAX
+Date: Thu,  1 Oct 2015 17:46:37 +1000
+Message-Id: <1443685599-4843-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1443685599-4843-1-git-send-email-david@fromorbit.com>
 References: <1443685599-4843-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,97 +31,160 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, willy@linux.intel.com, ross.zwisler@linux.intel.com, dan.j.williams@intel.com, kirill.shutemov@linux.intel.com
 
-This reverts commit 46c043ede4711e8d598b9d63c5616c1fedb0605e.
+From: Dave Chinner <dchinner@redhat.com>
+
+DAX has a page fault serialisation problem with block allocation.
+Because it allows concurrent page faults and does not have a page
+lock to serialise faults to the same page, it can get two concurrent
+faults to the page that race.
+
+When two read faults race, this isn't a huge problem as the data
+underlying the page is not changing and so "detect and drop" works
+just fine. The issues are to do with write faults.
+
+When two write faults occur, we serialise block allocation in
+get_blocks() so only one faul will allocate the extent. It will,
+however, be marked as an unwritten extent, and that is where the
+problem lies - the DAX fault code cannot differentiate between a
+block that was just allocated and a block that was preallocated and
+needs zeroing. The result is that both write faults end up zeroing
+the block and attempting to convert it back to written.
+
+The problem is that the first fault can zero and convert before the
+second fault starts zeroing, resulting in the zeroing for the second
+fault overwriting the data that the first fault wrote with zeros.
+The second fault then attempts to convert the unwritten extent,
+which is then a no-op because it's already written. Data loss occurs
+as a result of this race.
+
+Because there is no sane locking construct in the page fault code
+that we can use for serialisation across the page faults, we need to
+ensure block allocation and zeroing occurs atomically in the
+filesystem. This means we can still take concurrent page faults and
+the only time they will serialise is in the filesystem
+mapping/allocation callback. The page fault code will always see
+written, initialised extents, so we will be able to remove the
+unwritten extent handling from the DAX code when all filesystems are
+converted.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/dax.c    | 36 ++++++++++++++++--------------------
- mm/memory.c | 11 +++++++++--
- 2 files changed, 25 insertions(+), 22 deletions(-)
+ fs/dax.c           |  5 +++++
+ fs/xfs/xfs_aops.c  | 13 +++++++++----
+ fs/xfs/xfs_iomap.c | 17 ++++++++++++++++-
+ 3 files changed, 30 insertions(+), 5 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index 7ae6df7..400fe95 100644
+index 3994a2b..b36d6d2 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -569,26 +569,6 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 	if (!buffer_size_valid(&bh) || bh.b_size < PMD_SIZE)
- 		goto fallback;
+@@ -29,6 +29,11 @@
+ #include <linux/uio.h>
+ #include <linux/vmstat.h>
  
--	if (buffer_unwritten(&bh) || buffer_new(&bh)) {
--		int i;
--		for (i = 0; i < PTRS_PER_PMD; i++)
--			clear_pmem(kaddr + i * PAGE_SIZE, PAGE_SIZE);
--		wmb_pmem();
--		count_vm_event(PGMAJFAULT);
--		mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
--		result |= VM_FAULT_MAJOR;
--	}
--
--	/*
--	 * If we allocated new storage, make sure no process has any
--	 * zero pages covering this hole
--	 */
--	if (buffer_new(&bh)) {
--		i_mmap_unlock_write(mapping);
--		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
--		i_mmap_lock_write(mapping);
--	}
--
- 	/*
- 	 * If a truncate happened while we were allocating blocks, we may
- 	 * leave blocks allocated to the file that are beyond EOF.  We can't
-@@ -603,6 +583,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 	if ((pgoff | PG_PMD_COLOUR) >= size)
- 		goto fallback;
++/*
++ * dax_clear_blocks() is called from within transaction context from XFS,
++ * and hence this means the stack from this point must follow GFP_NOFS
++ * semantics for all operations.
++ */
+ int dax_clear_blocks(struct inode *inode, sector_t block, long size)
+ {
+ 	struct block_device *bdev = inode->i_sb->s_bdev;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e747d6a..df3dabd 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1284,15 +1284,12 @@ xfs_map_direct(
  
-+	/*
-+	 * If we allocated new storage, make sure no process has any
-+	 * zero pages covering this hole
-+	 */
-+	if (buffer_new(&bh))
-+		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
-+
- 	if (!write && !buffer_mapped(&bh) && buffer_uptodate(&bh)) {
- 		spinlock_t *ptl;
- 		pmd_t entry;
-@@ -633,6 +620,15 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		if ((length < PMD_SIZE) || (pfn & PG_PMD_COLOUR))
- 			goto fallback;
+ 	trace_xfs_gbmap_direct(XFS_I(inode), offset, size, type, imap);
  
-+		if (buffer_unwritten(&bh) || buffer_new(&bh)) {
-+			int i;
-+			for (i = 0; i < PTRS_PER_PMD; i++)
-+				clear_page(kaddr + i * PAGE_SIZE);
-+			count_vm_event(PGMAJFAULT);
-+			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
-+			result |= VM_FAULT_MAJOR;
-+		}
-+
- 		result |= vmf_insert_pfn_pmd(vma, address, pmd, pfn, write);
+-	/* XXX: preparation for removing unwritten extents in DAX */
+-#if 0
+ 	if (dax_fault) {
+ 		ASSERT(type == XFS_IO_OVERWRITE);
+ 		trace_xfs_gbmap_direct_none(XFS_I(inode), offset, size, type,
+ 					    imap);
+ 		return;
+ 	}
+-#endif
+ 
+ 	if (bh_result->b_private) {
+ 		ioend = bh_result->b_private;
+@@ -1420,10 +1417,12 @@ __xfs_get_blocks(
+ 	if (error)
+ 		goto out_unlock;
+ 
++	/* for DAX, we convert unwritten extents directly */
+ 	if (create &&
+ 	    (!nimaps ||
+ 	     (imap.br_startblock == HOLESTARTBLOCK ||
+-	      imap.br_startblock == DELAYSTARTBLOCK))) {
++	      imap.br_startblock == DELAYSTARTBLOCK) ||
++	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
+ 		if (direct || xfs_get_extsz_hint(ip)) {
+ 			/*
+ 			 * Drop the ilock in preparation for starting the block
+@@ -1468,6 +1467,12 @@ __xfs_get_blocks(
+ 		goto out_unlock;
  	}
  
-diff --git a/mm/memory.c b/mm/memory.c
-index 9cb2747..5ec066f 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -2426,10 +2426,17 @@ void unmap_mapping_range(struct address_space *mapping,
- 	if (details.last_index < details.first_index)
- 		details.last_index = ULONG_MAX;
++	if (IS_DAX(inode) && create) {
++		ASSERT(!ISUNWRITTEN(&imap));
++		/* zeroing is not needed at a higher layer */
++		new = 0;
++	}
++
+ 	/* trim mapping down to size requested */
+ 	if (direct || size > (1 << inode->i_blkbits))
+ 		xfs_map_trim_size(inode, iblock, bh_result,
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1f86033..8b2b4a9 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -131,6 +131,7 @@ xfs_iomap_write_direct(
+ 	uint		qblocks, resblks, resrtextents;
+ 	int		committed;
+ 	int		error;
++	int		bmapi_flags = XFS_BMAPI_PREALLOC;
  
--	i_mmap_lock_write(mapping);
+ 	error = xfs_qm_dqattach(ip, 0);
+ 	if (error)
+@@ -196,13 +197,26 @@ xfs_iomap_write_direct(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	/*
++	 * For DAX, we do not allocate unwritten extents, but instead we zero
++	 * the block before we commit the transaction.  Ideally we'd like to do
++	 * this outside the transaction context, but if we commit and then crash
++	 * we may not have zeroed the blocks and this will be exposed on
++	 * recovery of the allocation. Hence we must zero before commit.
++	 * Further, if we are mapping unwritten extents here, we need to zero
++	 * and convert them to written so that we don't need an unwritten extent
++	 * callback for DAX.
++	 */
++	if (IS_DAX(VFS_I(ip)))
++		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
 +
 +	/*
-+	 * DAX already holds i_mmap_lock to serialise file truncate vs
-+	 * page fault and page fault vs page fault.
-+	 */
-+	if (!IS_DAX(mapping->host))
-+		i_mmap_lock_write(mapping);
- 	if (unlikely(!RB_EMPTY_ROOT(&mapping->i_mmap)))
- 		unmap_mapping_range_tree(&mapping->i_mmap, &details);
--	i_mmap_unlock_write(mapping);
-+	if (!IS_DAX(mapping->host))
-+		i_mmap_unlock_write(mapping);
- }
- EXPORT_SYMBOL(unmap_mapping_range);
- 
+ 	 * From this point onwards we overwrite the imap pointer that the
+ 	 * caller gave to us.
+ 	 */
+ 	xfs_bmap_init(&free_list, &firstfsb);
+ 	nimaps = 1;
+ 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
+-				XFS_BMAPI_PREALLOC, &firstfsb, 0,
++				bmapi_flags, &firstfsb, 0,
+ 				imap, &nimaps, &free_list);
+ 	if (error)
+ 		goto out_bmap_cancel;
+@@ -213,6 +227,7 @@ xfs_iomap_write_direct(
+ 	error = xfs_bmap_finish(&tp, &free_list, &committed);
+ 	if (error)
+ 		goto out_bmap_cancel;
++
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		goto out_unlock;
 -- 
 2.5.0
 
