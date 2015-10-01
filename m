@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CCFAE7F47
-	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 02:48:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C1CA58F8049
-	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 00:48:00 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4565F7F50
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 02:48:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D1077AC004
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 00:47:57 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Iore8twZLkjx902G for <xfs@oss.sgi.com>;
-	Thu, 01 Oct 2015 00:47:58 -0700 (PDT)
+	S6FzliuTGtBywnGl for <xfs@oss.sgi.com>;
+	Thu, 01 Oct 2015 00:47:55 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/7] xfs: fix inode size update overflow in xfs_map_direct()
-Date: Thu,  1 Oct 2015 17:46:35 +1000
-Message-Id: <1443685599-4843-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/7] Revert "mm: take i_mmap_lock in unmap_mapping_range() for
+	DAX"
+Date: Thu,  1 Oct 2015 17:46:33 +1000
+Message-Id: <1443685599-4843-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1443685599-4843-1-git-send-email-david@fromorbit.com>
 References: <1443685599-4843-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,196 +32,97 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, willy@linux.intel.com, ross.zwisler@linux.intel.com, dan.j.williams@intel.com, kirill.shutemov@linux.intel.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Both direct IO and DAX pass an offset and count into get_blocks that
-will overflow a s64 variable when an IO goes into the last supported
-block in a file (i.e. at offset 2^63 - 1FSB bytes). This can be seen
-from the tracing:
-
-xfs_get_blocks_alloc: [...] offset 0x7ffffffffffff000 count 4096
-xfs_gbmap_direct:     [...] offset 0x7ffffffffffff000 count 4096
-xfs_gbmap_direct_none:[...] offset 0x7ffffffffffff000 count 4096
-
-0x7ffffffffffff000 + 4096 = 0x8000000000000000, and hence that
-overflows the s64 offset and we fail to detect the need for a
-filesize update and an ioend is not allocated.
-
-This is *mostly* avoided for direct IO because such extending IOs
-occur with full block allocation, and so the "IS_UNWRITTEN()" check
-still evaluates as true and we get an ioend that way. However, doing
-single sector extending IOs to this last block will expose the fact
-that file size updates will not occur after the first allocating
-direct IO as the overflow will then be exposed.
-
-There is one further complexity: the DAX page fault path also
-exposes the same issue in block allocation. However, page faults
-cannot extend the file size, so in this case we want to allocate the
-block but do not want to allocate an ioend to enable file size
-update at IO completion. Hence we now need to distinguish between
-the direct IO patch allocation and dax fault path allocation to
-avoid leaking ioend structures.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+This reverts commit 46c043ede4711e8d598b9d63c5616c1fedb0605e.
 ---
- fs/xfs/xfs_aops.c | 50 ++++++++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_aops.h |  2 ++
- fs/xfs/xfs_file.c |  6 +++---
- 3 files changed, 49 insertions(+), 9 deletions(-)
+ fs/dax.c    | 36 ++++++++++++++++--------------------
+ mm/memory.c | 11 +++++++++--
+ 2 files changed, 25 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 50ab287..e747d6a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1250,13 +1250,28 @@ xfs_vm_releasepage(
-  * the DIO. There is only going to be one reference to the ioend and its life
-  * cycle is constrained by the DIO completion code. hence we don't need
-  * reference counting here.
-+ *
-+ * Note that for DIO, an IO to the highest supported file block offset (i.e.
-+ * 2^63 - 1FSB bytes) will result in the offset + count overflowing a signed 64
-+ * bit variable. Hence if we see this overflow, we have to assume that the IO is
-+ * extending the file size. We won't know for sure until IO completion is run
-+ * and the actual max write offset is communicated to the IO completion
-+ * routine.
-+ *
-+ * For DAX page faults, we are preparing to never see unwritten extents here,
-+ * nor should we ever extend the inode size. Hence we will soon have nothing to
-+ * do here for this case, ensuring we don't have to provide an IO completion
-+ * callback to free an ioend that we don't actually need for a fault into the
-+ * page at offset (2^63 - 1FSB) bytes.
-  */
-+
- static void
- xfs_map_direct(
- 	struct inode		*inode,
- 	struct buffer_head	*bh_result,
- 	struct xfs_bmbt_irec	*imap,
--	xfs_off_t		offset)
-+	xfs_off_t		offset,
-+	bool			dax_fault)
- {
- 	struct xfs_ioend	*ioend;
- 	xfs_off_t		size = bh_result->b_size;
-@@ -1269,6 +1284,16 @@ xfs_map_direct(
+diff --git a/fs/dax.c b/fs/dax.c
+index 7ae6df7..400fe95 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -569,26 +569,6 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 	if (!buffer_size_valid(&bh) || bh.b_size < PMD_SIZE)
+ 		goto fallback;
  
- 	trace_xfs_gbmap_direct(XFS_I(inode), offset, size, type, imap);
+-	if (buffer_unwritten(&bh) || buffer_new(&bh)) {
+-		int i;
+-		for (i = 0; i < PTRS_PER_PMD; i++)
+-			clear_pmem(kaddr + i * PAGE_SIZE, PAGE_SIZE);
+-		wmb_pmem();
+-		count_vm_event(PGMAJFAULT);
+-		mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
+-		result |= VM_FAULT_MAJOR;
+-	}
+-
+-	/*
+-	 * If we allocated new storage, make sure no process has any
+-	 * zero pages covering this hole
+-	 */
+-	if (buffer_new(&bh)) {
+-		i_mmap_unlock_write(mapping);
+-		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
+-		i_mmap_lock_write(mapping);
+-	}
+-
+ 	/*
+ 	 * If a truncate happened while we were allocating blocks, we may
+ 	 * leave blocks allocated to the file that are beyond EOF.  We can't
+@@ -603,6 +583,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 	if ((pgoff | PG_PMD_COLOUR) >= size)
+ 		goto fallback;
  
-+	/* XXX: preparation for removing unwritten extents in DAX */
-+#if 0
-+	if (dax_fault) {
-+		ASSERT(type == XFS_IO_OVERWRITE);
-+		trace_xfs_gbmap_direct_none(XFS_I(inode), offset, size, type,
-+					    imap);
-+		return;
-+	}
-+#endif
++	/*
++	 * If we allocated new storage, make sure no process has any
++	 * zero pages covering this hole
++	 */
++	if (buffer_new(&bh))
++		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
 +
- 	if (bh_result->b_private) {
- 		ioend = bh_result->b_private;
- 		ASSERT(ioend->io_size > 0);
-@@ -1283,7 +1308,8 @@ xfs_map_direct(
- 					      ioend->io_size, ioend->io_type,
- 					      imap);
- 	} else if (type == XFS_IO_UNWRITTEN ||
--		   offset + size > i_size_read(inode)) {
-+		   offset + size > i_size_read(inode) ||
-+		   offset + size < 0) {
- 		ioend = xfs_alloc_ioend(inode, type);
- 		ioend->io_offset = offset;
- 		ioend->io_size = size;
-@@ -1345,7 +1371,8 @@ __xfs_get_blocks(
- 	sector_t		iblock,
- 	struct buffer_head	*bh_result,
- 	int			create,
--	bool			direct)
-+	bool			direct,
-+	bool			dax_fault)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -1458,7 +1485,8 @@ __xfs_get_blocks(
- 			set_buffer_unwritten(bh_result);
- 		/* direct IO needs special help */
- 		if (create && direct)
--			xfs_map_direct(inode, bh_result, &imap, offset);
-+			xfs_map_direct(inode, bh_result, &imap, offset,
-+				       dax_fault);
+ 	if (!write && !buffer_mapped(&bh) && buffer_uptodate(&bh)) {
+ 		spinlock_t *ptl;
+ 		pmd_t entry;
+@@ -633,6 +620,15 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 		if ((length < PMD_SIZE) || (pfn & PG_PMD_COLOUR))
+ 			goto fallback;
+ 
++		if (buffer_unwritten(&bh) || buffer_new(&bh)) {
++			int i;
++			for (i = 0; i < PTRS_PER_PMD; i++)
++				clear_page(kaddr + i * PAGE_SIZE);
++			count_vm_event(PGMAJFAULT);
++			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
++			result |= VM_FAULT_MAJOR;
++		}
++
+ 		result |= vmf_insert_pfn_pmd(vma, address, pmd, pfn, write);
  	}
  
- 	/*
-@@ -1505,7 +1533,7 @@ xfs_get_blocks(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
- }
+diff --git a/mm/memory.c b/mm/memory.c
+index 9cb2747..5ec066f 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2426,10 +2426,17 @@ void unmap_mapping_range(struct address_space *mapping,
+ 	if (details.last_index < details.first_index)
+ 		details.last_index = ULONG_MAX;
  
- int
-@@ -1515,7 +1543,17 @@ xfs_get_blocks_direct(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
-+}
+-	i_mmap_lock_write(mapping);
 +
-+int
-+xfs_get_blocks_dax_fault(
-+	struct inode		*inode,
-+	sector_t		iblock,
-+	struct buffer_head	*bh_result,
-+	int			create)
-+{
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
++	/*
++	 * DAX already holds i_mmap_lock to serialise file truncate vs
++	 * page fault and page fault vs page fault.
++	 */
++	if (!IS_DAX(mapping->host))
++		i_mmap_lock_write(mapping);
+ 	if (unlikely(!RB_EMPTY_ROOT(&mapping->i_mmap)))
+ 		unmap_mapping_range_tree(&mapping->i_mmap, &details);
+-	i_mmap_unlock_write(mapping);
++	if (!IS_DAX(mapping->host))
++		i_mmap_unlock_write(mapping);
  }
+ EXPORT_SYMBOL(unmap_mapping_range);
  
- static void
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 86afd1a..d39ba25 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -58,6 +58,8 @@ int	xfs_get_blocks(struct inode *inode, sector_t offset,
- 		       struct buffer_head *map_bh, int create);
- int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
- 			      struct buffer_head *map_bh, int create);
-+int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
-+			         struct buffer_head *map_bh, int create);
- void	xfs_end_io_dax_write(struct buffer_head *bh, int uptodate);
- 
- extern void xfs_count_page_state(struct page *, int *, int *);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e78feb4..27abe1c 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1503,7 +1503,7 @@ xfs_filemap_page_mkwrite(
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (IS_DAX(inode)) {
--		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_direct,
-+		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault,
- 				    xfs_end_io_dax_write);
- 	} else {
- 		ret = __block_page_mkwrite(vma, vmf, xfs_get_blocks);
-@@ -1538,7 +1538,7 @@ xfs_filemap_fault(
- 		 * changes to xfs_get_blocks_direct() to map unwritten extent
- 		 * ioend for conversion on read-only mappings.
- 		 */
--		ret = __dax_fault(vma, vmf, xfs_get_blocks_direct, NULL);
-+		ret = __dax_fault(vma, vmf, xfs_get_blocks_dax_fault, NULL);
- 	} else
- 		ret = filemap_fault(vma, vmf);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-@@ -1565,7 +1565,7 @@ xfs_filemap_pmd_fault(
- 	sb_start_pagefault(inode->i_sb);
- 	file_update_time(vma->vm_file);
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = __dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_direct,
-+	ret = __dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault,
- 				    xfs_end_io_dax_write);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	sb_end_pagefault(inode->i_sb);
 -- 
 2.5.0
 
