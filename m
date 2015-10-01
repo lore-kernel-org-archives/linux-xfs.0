@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B903F7F55
-	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 17:47:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 92C7D304051
-	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 15:47:48 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id sYSUO9BGEUU23YyM for
-	<xfs@oss.sgi.com>; Thu, 01 Oct 2015 15:47:46 -0700 (PDT)
-Date: Thu, 1 Oct 2015 16:47:45 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 1/7] Revert "mm: take i_mmap_lock in
-	unmap_mapping_range() for DAX"
-Message-ID: <20151001224745.GB7634@linux.intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id CCD827F55
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 17:54:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A7985304051
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 15:54:56 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	lGEYCUIc2coR6DxW for <xfs@oss.sgi.com>;
+	Thu, 01 Oct 2015 15:54:53 -0700 (PDT)
+Date: Fri, 2 Oct 2015 08:54:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/7] xfs, dax: fix the page fault/allocation mess
+Message-ID: <20151001225448.GJ27164@dastard>
 References: <1443685599-4843-1-git-send-email-david@fromorbit.com>
-	<1443685599-4843-2-git-send-email-david@fromorbit.com>
-	<20151001202729.GA23495@linux.intel.com>
-	<20151001223240.GI27164@dastard>
+	<20151001203121.GB23495@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151001223240.GI27164@dastard>
+In-Reply-To: <20151001203121.GB23495@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,40 +30,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, willy@linux.intel.com, Ross Zwisler <ross.zwisler@linux.intel.com>, dan.j.williams@intel.com, kirill.shutemov@linux.intel.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, willy@linux.intel.com, dan.j.williams@intel.com, kirill.shutemov@linux.intel.com, linux-nvdimm@lists.01.org, jack@suse.cz, linux-kernel@vger.kernel.org
 
-On Fri, Oct 02, 2015 at 08:32:40AM +1000, Dave Chinner wrote:
-> I couldn't work out what set of commits I needed to revert to get a
-> clean revert, so I just reverted the commits and hacked out the
-> revert failures to what looked ok. Feel free to send me a clean set
-> of reverts, and I'll replace these patches with them... :)
+On Thu, Oct 01, 2015 at 02:31:21PM -0600, Ross Zwisler wrote:
+> On Thu, Oct 01, 2015 at 05:46:32PM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > As discussed in the recent thread about problems with DAX locking:
+> > 
+> > http://www.gossamer-threads.com/lists/linux/kernel/2264090?do=post_view_threaded
+> > 
+> > I said that I'd post the patch set that fixed the problems for XFS
+> > as soon as I had something sane and workable. That's what this
+> > series is.
+> > 
+> > To start with, it passes xfstests "auto" group with only the only
+> > failures being expected failures or failures due to unexpected
+> > allocation patterns or trying to use unsupported block sizes. That
+> > makes it better than any previous version of the XFS/DAX code.
+.....
 
-Will do.  I will queue the reverts in my external tree & ask Linus to pull
-them into v4.3 so we don't ship with deadlocks.
+> Thank you for working on this, and for documenting your thinking so clearly.
 
-> > Also, if I understood your previous mails correctly you were targeting the
-> > first two revert patches for v4.3 so we get back to v4.2 level locking, and
-> > the rest of the series will target v4.4, correct?  How does this work?  Do the
-> > patches need to be split into two series and tested separately?
+To put this in perspective, "patch 0" descriptions like this is a
+requirement for any non-trivial XFS modification. It saves reviewers
+so much time and many round trips in email and IRC to understand the
+changes being proposed that it's a no-brainer.
+
+Lead by example, and all that...
+
+> One thing I noticed is that in my test setup XFS+DAX is now failing
+> generic/274:
 > 
-> Test it and push the reverts however you like. I don't care how the
-> reverts get to 4.3 - I'll be carrying them locally in my trees from
-> now and so my development and testing is now unaffected by the bugs
-> that are in the 4.3 code. If you aren't going to push them for 4.3
-> then I'd suggest that they go to linus along with the rest of the
-> XFS changes in this series.
+> 	# diff -u tests/generic/274.out /root/xfstests/results//generic/274.out.bad
+> 	--- tests/generic/274.out	2015-08-24 11:05:41.490926305 -0600
+> 	+++ /root/xfstests/results//generic/274.out.bad	2015-10-01 13:53:50.498354091 -0600
+> 	@@ -2,4 +2,5 @@
+> 	 ------------------------------
+> 	 preallocation test
+> 	 ------------------------------
+> 	-done
+> 	+failed to write to test file
+> 	+(see /root/xfstests/results//generic/274.full for details)
 > 
-> FWIW, I'm quite happy to host all the pending DAX changes in a
-> public git tree and ask for it to be included in linux-next. It's
-> probably a good idea to do this because it makes it much easier to
-> co-ordinate merges when we are touching multiple subsystems (ext4,
-> xfs, dax, mm, etc). And it will help prevent the "patches molder on
-> the list until Andrew hoovers them up" problem and so prevent this
-> situation from happening in the future...
+> I've verified that the test passes 100% of the time with my baseline
+> (v4.3-rc3), and with the set applied but without the DAX mount option.  With
+> the series and with DAX it fails 100% of the time.  I haven't looked into the
+> details of the failure yet, I just wanted to let you know that it was
+> happening.
 
-No objections from me. :)  I agree that it would be nice to have a central
-home for all the DAX patches.
+See above - I classified this under the "failures due to unexpected
+allocation patterns". This is a ENOSPC test, and we've change the
+allocation pattern and the unwritten extent conversion algorithm and
+so changed the metadata allocation demand of the test.
+
+I haven't looked any further than this yet, but I suspect the issue
+is that the up-front unwritten extent conversion is not being
+allowed to dip into the reserve block pool for BMBT allocations when
+the extent list grows past a single block. If that's the case, then
+it's a couple of lines of code to conditionally at XFS_TRANS_RESERVE
+to the transaction handle to allow it access to the reserve pool...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
