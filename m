@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 38D547F63
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 11:30:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8CE3304053
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 09:30:58 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kyrBdmtcK1n5GMAm for <xfs@oss.sgi.com>;
-	Fri, 02 Oct 2015 09:30:56 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 2A3F665F9383
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 11:30:56 -0500 (CDT)
-Subject: Re: [PATCH 0/7 v10] xfs: per-fs stats in sysfs
-References: <1443802960-26662-1-git-send-email-billodo@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <560EB13F.6090004@sandeen.net>
-Date: Fri, 2 Oct 2015 11:30:55 -0500
-MIME-Version: 1.0
-In-Reply-To: <1443802960-26662-1-git-send-email-billodo@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C99017F54
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 12:30:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B857AC026
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 10:30:22 -0700 (PDT)
+Received: from g1t6214.austin.hp.com (g1t6214.austin.hp.com [15.73.96.122]) by
+	cuda.sgi.com with ESMTP id 17ixUAB7vDONYyok (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 02 Oct 2015 10:30:20 -0700 (PDT)
+From: Waiman Long <Waiman.Long@hpe.com>
+Subject: [PATCH] percpu_counter: return precise count from
+	__percpu_counter_compare()
+Date: Fri,  2 Oct 2015 13:29:57 -0400
+Message-Id: <1443806997-30792-1-git-send-email-Waiman.Long@hpe.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,138 +22,159 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux-foundation.org>
+Cc: Scott J Norton <scott.norton@hpe.com>, Douglas Hatch <doug.hatch@hpe.com>, linux-kernel@vger.kernel.org, Waiman Long <Waiman.Long@hpe.com>, xfs@oss.sgi.com
 
-For the series:
+In __percpu_counter_compare(), if the current imprecise count is
+within (batch*nr_cpus) of the input value to be compared, a call
+to percpu_counter_sum() will be made to get the precise count. The
+percpu_counter_sum() call, however, can be expensive especially on
+large systems where there are a lot of CPUs. Large systems also make
+it more likely that percpu_counter_sum() will be called.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+The xfs_mod_fdblocks() function calls __percpu_counter_compare()
+twice. First to see if a smaller batch size should be used for
+__percpu_counter_add() and the second call to compare the actual
+size needed. This can potentially lead to 2 calls to the expensive
+percpu_counter_sum() function.
 
-I think we caught everything!  ;)
+This patch added an extra argument to __percpu_counter_compare()
+to return the precise count, if computed. The caller will need to
+initialize it to an invalid value that it can tell if the precise
+count is being returned.
 
-Thanks,
--Eric
+The xfs_mod_fdblocks() function was then modified to use the
+precise count for comparison, if returned. Otherwise, it will call
+__percpu_counter_compare() the second time.
 
-On 10/2/15 11:22 AM, Bill O'Donnell wrote:
-> 
-> Hello-
-> 
-> Following is the next iteration of the series to add per-fs xfs stats to
-> sysfs.
-> 
-> ----------history---------------
-> v10:
-> -style fixups in patches 1,4,5,7
-> 
-> v9:
-> -adjust individual patch content, so that fixes actually correspond
-> to reviews accordingly.
-> 
-> -fix xfs_btree.h XFS_BTREE_STATS_ADD macro error made in patch 7.
-> -fix xfs_stats.h macro style errors made in patch 7
-> 
-> 
-> v8: (add patches 6 and 7)
-> -patch 6: per-filesystem stats in sysfs.
-> Implement per-filesystem stats objects in sysfs. Stats objects are
-> instantiated when an xfs filesystem is mounted and deleted on unmount.
-> With this patch, the stats directory is created and populated with
-> the familiar stats and stats_clear files.
->     Example:
->             /sys/fs/xfs/sda9/stats/stats
->             /sys/fs/xfs/sda9/stats/stats_clear
-> 
-> With this patch, the individual counts within the new per-fs
-> stats file(s) remain at zero. Functions that use the the macros
-> to increment, decrement, and add-to the per-fs stats counts will
-> be covered in the next patch (7).
-> 
-> -patch 7: per-filesystem stats counter implementation
-> Modify the stats counting macros and the callers
-> to those macros to properly increment, decrement, and add-to
-> the xfs stats counts. The counts for global and per-fs stats
-> are correctly advanced, and cleared by writing a "1" to the
-> corresponding clear file.
-> 
-> global counts: /sys/fs/xfs/stats/stats
-> per-fs counts: /sys/fs/xfs/sda*/stats/stats
-> 
-> global clear:  /sys/fs/xfs/stats/stats_clear
-> per-fs clear:  /sys/fs/xfs/sda*/stats/stats_clear
-> 
-> v7:
-> add patch 5/5: incorporate sysfs/kobject in xfsstats: handlers
-> take kobjects. Allocate & deallocate per-fs stats structures
-> and set up the sysfs entries for them. Add kobject and a pointer
-> to a per-cpu struct xfsstats. Modify the macros that manipulate
-> the stats accordingly.
-> 
-> v6:
-> -move to_xlog(kobject) to the relevant show/store operations.
-> This keeps the xfs_sysfs_object_show/store functions generic.
-> Also, with the change, there can be some cleanup of the
-> show/store function arguments.
-> 
-> v5:
-> -optimization of sysfs_ops function.
-> -style fixups
-> 
-> v4:
-> -add patch 4 (sysfs ops consolidation - dbg, stats, log)
-> 
-> v3:
-> -style fixups.
-> 
-> v2:
-> -style fixups.
-> v1:
-> --------------------------------
-> 
-> We already have per-fs information in /sys, so it makes sense to
-> have per-fs stats there too.  The series moves existing
-> global stats infrastructure to /sys and reuses that code to
-> create per-fs stats in /sys.
-> 
-> Patch 1 handles the bring-up and tear down of xfs/stats directory
-> structure in sysfs when an fs is mounted. The directory contains
-> the stats file and the stats_clear file. The stats file contents mimic
-> those of /proc/fs/xfs/stat. The stats_clear file is empty, and much
-> like the current stat_clear command, handles the zeroing of the stats
-> file when a "1" is echoed to the stats_clear file.
-> 
-> Patch 2 creates the symlink for stats from procfs to sysfs.
-> 
-> Patch 3 removes the now unused portions of procfs for stat.
-> 
-> Patch 4 consolidates the sysfs ops for dbg, stats, log.
-> 
-> Patch 5 allocates and deallocates per-fs stats structures and
-> sets up the sysfs entries for them. Add kobject and a pointer
-> to a per-cpu struct xfsstats. Modify the macros that manipulate
-> 
-> Patch 6 implements per-filesystem stats objects in sysfs. Stats
-> objects are instantiated when an xfs filesystem is mounted and
-> deleted on unmount.
-> 
-> Patch 7 modifies the stats counting macros and the callers
-> to those macros to properly increment, decrement, and add-to
-> the xfs stats counts. The counts for global and per-fs stats
-> are correctly advanced, and cleared by writing a "1" to the
-> corresponding clear file.
-> 
-> Once again, comments and questions are welcome.
-> 
-> Thanks-
-> Bill
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Running the AIM7 disk workload with XFS filesystem, the jobs/min
+on a 40-core 80-thread 4-socket Haswell-EX system increases from
+3805k to 4276k (12% increase) with this patch applied. As measured
+by the perf tool, the %CPU cycle consumed by __percpu_counter_sum()
+decreases from 12.64% to 7.08%.
+
+Signed-off-by: Waiman Long <Waiman.Long@hpe.com>
+---
+ fs/xfs/xfs_mount.c             |   17 +++++++++++++----
+ include/linux/percpu_counter.h |    9 +++++----
+ lib/percpu_counter.c           |   11 ++++++++++-
+ 3 files changed, 28 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bf92e0c..8586b62 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1115,7 +1115,7 @@ xfs_mod_icount(
+ 	int64_t			delta)
+ {
+ 	__percpu_counter_add(&mp->m_icount, delta, XFS_ICOUNT_BATCH);
+-	if (__percpu_counter_compare(&mp->m_icount, 0, XFS_ICOUNT_BATCH) < 0) {
++	if (__percpu_counter_compare(&mp->m_icount, 0, XFS_ICOUNT_BATCH, NULL) < 0) {
+ 		ASSERT(0);
+ 		percpu_counter_add(&mp->m_icount, -delta);
+ 		return -EINVAL;
+@@ -1154,6 +1154,7 @@ xfs_mod_fdblocks(
+ 	int64_t			lcounter;
+ 	long long		res_used;
+ 	s32			batch;
++	s64			pcount;	/* Precise count */
+ 
+ 	if (delta > 0) {
+ 		/*
+@@ -1187,15 +1188,23 @@ xfs_mod_fdblocks(
+ 	 * then make everything serialise as we are real close to
+ 	 * ENOSPC.
+ 	 */
++	pcount = -1;
+ 	if (__percpu_counter_compare(&mp->m_fdblocks, 2 * XFS_FDBLOCKS_BATCH,
+-				     XFS_FDBLOCKS_BATCH) < 0)
++				     XFS_FDBLOCKS_BATCH, &pcount) < 0)
+ 		batch = 1;
+ 	else
+ 		batch = XFS_FDBLOCKS_BATCH;
+ 
+ 	__percpu_counter_add(&mp->m_fdblocks, delta, batch);
+-	if (__percpu_counter_compare(&mp->m_fdblocks, XFS_ALLOC_SET_ASIDE(mp),
+-				     XFS_FDBLOCKS_BATCH) >= 0) {
++	if (pcount >= 0) {
++		/*
++		 * No need to call __percpu_counter_compare() again if the
++		 * precise count has been computed.
++		 */
++		if (pcount + delta >= XFS_ALLOC_SET_ASIDE(mp))
++			return 0;	/* we have space */
++	} else if (__percpu_counter_compare(&mp->m_fdblocks,
++		   XFS_ALLOC_SET_ASIDE(mp), XFS_FDBLOCKS_BATCH, NULL) >= 0) {
+ 		/* we had space! */
+ 		return 0;
+ 	}
+diff --git a/include/linux/percpu_counter.h b/include/linux/percpu_counter.h
+index 84a1094..4690143 100644
+--- a/include/linux/percpu_counter.h
++++ b/include/linux/percpu_counter.h
+@@ -41,11 +41,12 @@ void percpu_counter_destroy(struct percpu_counter *fbc);
+ void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
+ void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch);
+ s64 __percpu_counter_sum(struct percpu_counter *fbc);
+-int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch);
++int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch,
++			     s64 *pcnt);
+ 
+ static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
+ {
+-	return __percpu_counter_compare(fbc, rhs, percpu_counter_batch);
++	return __percpu_counter_compare(fbc, rhs, percpu_counter_batch, NULL);
+ }
+ 
+ static inline void percpu_counter_add(struct percpu_counter *fbc, s64 amount)
+@@ -121,8 +122,8 @@ static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
+ 		return 0;
+ }
+ 
+-static inline int
+-__percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
++static inline int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs,
++					   s32 batch, s64 *pcnt))
+ {
+ 	return percpu_counter_compare(fbc, rhs);
+ }
+diff --git a/lib/percpu_counter.c b/lib/percpu_counter.c
+index f051d69..37e253c 100644
+--- a/lib/percpu_counter.c
++++ b/lib/percpu_counter.c
+@@ -196,8 +196,14 @@ static int percpu_counter_hotcpu_callback(struct notifier_block *nb,
+ /*
+  * Compare counter against given value.
+  * Return 1 if greater, 0 if equal and -1 if less
++ *
++ * The precise count, if computed, will be returned in the location pointed
++ * to by pcnt. The *pcnt value should be properly initialized before calling
++ * this function so that the caller can easily distinguish if the count has
++ * been returned.
+  */
+-int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
++int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch,
++			     s64 *pcnt)
+ {
+ 	s64	count;
+ 
+@@ -211,6 +217,9 @@ int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
+ 	}
+ 	/* Need to use precise count */
+ 	count = percpu_counter_sum(fbc);
++
++	if (pcnt)
++		*pcnt = count;	/* Store the precise count */
+ 	if (count > rhs)
+ 		return 1;
+ 	else if (count < rhs)
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
