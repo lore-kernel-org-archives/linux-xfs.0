@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A4CA67F55
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 06:33:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1749AAC004
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 04:33:07 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 167517F55
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 11:22:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 91E85AC020
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 09:22:57 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qRYAYx92h8KiHv2B (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 9FVOUMuzWQtYACHW (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 02 Oct 2015 04:33:06 -0700 (PDT)
-Date: Fri, 2 Oct 2015 07:33:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 02/12] libxfs: track largest metadata LSN in use via
-	verifiers
-Message-ID: <20151002113304.GB51208@bfoster.bfoster>
-References: <1441997742-37160-1-git-send-email-bfoster@redhat.com>
-	<1441997742-37160-3-git-send-email-bfoster@redhat.com>
-	<20150923034406.GR3902@dastard>
-	<20150923131831.GB37210@bfoster.bfoster>
-	<20150923223625.GR19114@dastard>
-	<20151001203851.GA3349@bfoster.bfoster>
-	<20151002021634.GJ3902@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151002021634.GJ3902@dastard>
+	<xfs@oss.sgi.com>; Fri, 02 Oct 2015 09:22:56 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id ECCAD8E697
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 16:22:55 +0000 (UTC)
+Received: from localhost.localdomain.com (vpn-48-121.rdu2.redhat.com
+	[10.10.48.121])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t92GMqq9005602
+	for <xfs@oss.sgi.com>; Fri, 2 Oct 2015 12:22:55 -0400
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH 2/7] xfs: create symlink proc/fs/xfs/stat to sys/fs/xfs/stats
+Date: Fri,  2 Oct 2015 11:22:35 -0500
+Message-Id: <1443802960-26662-3-git-send-email-billodo@redhat.com>
+In-Reply-To: <1443802960-26662-1-git-send-email-billodo@redhat.com>
+References: <1443802960-26662-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,153 +32,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Oct 02, 2015 at 12:16:34PM +1000, Dave Chinner wrote:
-> On Thu, Oct 01, 2015 at 04:38:51PM -0400, Brian Foster wrote:
-> > On Thu, Sep 24, 2015 at 08:36:25AM +1000, Dave Chinner wrote:
-> > > On Wed, Sep 23, 2015 at 09:18:31AM -0400, Brian Foster wrote:
-> > > > > This will have the same lock contention problems that the kernel
-> > > > > code would have had - my repair scalablity tests regularly reach
-> > > > > over 1GB/s of metadata being prefetched through tens of threads, so
-> > > > > this is going have a significant impact on performance in those
-> > > > > tests....
-> > ...
-> > > 
-> > > > I'll have to think about this some more and see what's effective. I'd
-> > > > also like to quantify the effect the current locking has on performance
-> > > > if possible. Can you provide a brief description of your typical repair
-> > > > test that you would expect this to hurt? E.g., a large fs, many AGs,
-> > > > populated with fs_mark and repaired with many threads..? Any special
-> > > > storage configuration? Thanks.
-> > > 
-> > > Just my usual 500TB fs_mark test...
-> > 
-> > Thanks for the test information and sample results. I wasn't able to get
-> > close enough to the base numbers you mentioned on IRC with the spinning
-> > rust storage I have available. Instead, I tried running something
-> > similar using a large ramdisk as a backing store. I have a 500T sparse
-> > file formatted with XFS and populated with ~25m inodes that uses roughly
-> > ~16GB of the backing store (leaving another 16GB of usable RAM for the
-> > server).
-> 
-> Keep in mind when doing this sort of testing that a ramdisk does not
-> perform like normal storage - it does synchronous IO via memcpy()
-> rather than async IO via DMA, and hence has a very different CPU
-> cache footprint, concurrency and latency profile to normal IO.
-> 
-> I'm not saying your numbers are invalid, just making sure that you
-> remember that ramdisks, while fast, may not give results that are
-> representative of normal storage behaviour...
-> 
+As a part of the work to move xfs global stats from procfs to sysfs,
+this patch creates the symlink from proc/fs/xfs/stat to sys/fs/xfs/stats.
 
-Yeah, good point. I kind of just got here as a last resort. I'm going to
-see if I can get something set up to more easily test this kind of thing
-in the future.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ fs/xfs/xfs_stats.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> > I run xfs_repair[1] against that 500TB fs and see spikes of throughput up
-> > over 2GB/s and get repair result reports like the following:
-> 
-> <snip>
-> 
-> > So I'm not seeing much difference here with the max lsn tracking as it
-> > is implemented in this series.
-> 
-> Yup, same here.  min/max spread between the 4.2.0 debian unstable
-> package and a locally built 4.2.0+lsn tracking is the same. Both
-> varied between 2m55s and 3m5s, all used roughly the same user and
-> system CPU.  So we'll commit it as is ;)
-> 
-
-Ok, thanks for verifying that. I still have to rebase this code once the
-kernel side is reviewed and make a couple minor updates as well.
-
-> > Out of curiosity, I ran a v3.2.2
-> > xfs_repair binary that happened to be installed on this host, got a much
-> > faster result than even the current master, and via perf diff discovered
-> > that the biggest difference between the runs was actual CRC calculation.
-> 
-> I think you might have drawn the incorrect conclusion from the
-> profile data...
-> 
-> > Based on that, I ran the same crc=0 test against the current code with
-> > the following results:
-> > 
-> > Phase           Start           End             Duration
-> > Phase 1:        10/01 13:53:49  10/01 13:53:49
-> > Phase 2:        10/01 13:53:49  10/01 13:53:50  1 second
-> > Phase 3:        10/01 13:53:50  10/01 13:54:52  1 minute, 2 seconds
-> > Phase 4:        10/01 13:54:52  10/01 13:55:01  9 seconds
-> > Phase 5:        10/01 13:55:01  10/01 13:55:01
-> > Phase 6:        10/01 13:55:01  10/01 13:55:35  34 seconds
-> > Phase 7:        10/01 13:55:35  10/01 13:55:35
-> > 
-> > ... so that knocks off another 15s or so from the test. Note that the
-> > lsn lock is irrelevant in the crc=0 case as there are no metadata LSNs,
-> > thus no verification occurs.
-> 
-> My results:
-> 			    fsmark creation
-> mkfs (4.2.0)		files/s (avg)	wall time	repair
-> defaults		203209		4m57s		2m55s-3m05s
-> -m crc=0		188837		5m06s		2m07s-2m10s
-> 
-> On first glance, I've just replicated your results. But the PCP
-> monitoring I run all the time tell a different story.  Both
-> xfs_repair runs are io bound during phase 3 and 4, but the crc=0 run
-> does a *lot less IO*.
-> 
-> The reason for this will be obvious when I tell you: inodes are 512
-> bytes when CRCs are enabled, 256 bytes when they aren't. Hence
-> there's twice as much metadata to be read when CRCs are enabled, and
-> when it is read at a fixed rate, it takes twice as long to read.
-> 
-
-Ah, right. I probably should have formatted the crc=0 fs with isize=512.
-
-> The trap here is that perf profiles tend to present
-> "percentage of CPU used by a function" rather than absolute CPU
-> consumed by the function across a test run. That's why you might
-> think that the CPU consumed by CRCs is responsible for the
-> difference in performance - it's the only really obvious difference
-> in the profile. What I think you'll find if you look deeper is that
-> the time spent in memcpy() deep in the ramdisk IO path has doubled
-> and that's where most of the additional time comes from.
-> 
-> Apples to apples comparison at the IO level on my test rig:
-> 
-> 			    fsmark creation
-> mkfs			files/s (avg)	wall time	repair
-> defaults		203209		4m57s		2m55s-3m05s
-> -m crc=0		188837		5m06s		2m07s-2m10s
-> -m crc=0 -i size=512	194331		5m00s		3m00s-3m10s
-> 
-> Yup, when doing IO-equivalent testing, CRCs have no measurable
-> wall time impact on xfs_repair runtime.
-> 
-
-Ok, that minor range shift definitely seems much more reasonable a
-result. I thought the 1m or so difference I saw (on spinning storage)
-seemed a bit much, enough to try and figure out what was going on there.
-I was thinking a regression at first, but the crc stuff jumped out at
-the top of the cpu profile so I left it at that and forgot about the
-isize change. Thanks for the analysis...
-
-Brian
-
-> Performance analysis is tricky stuff.... ;)
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index e19b84a..e6efebb 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -243,9 +243,10 @@ xfs_init_procfs(void)
+ 	if (!proc_mkdir("fs/xfs", NULL))
+ 		goto out;
+ 
+-	if (!proc_create("fs/xfs/stat", 0, NULL,
+-			 &xfs_stat_proc_fops))
++	if (!proc_symlink("fs/xfs/stat", NULL,
++			  "/sys/fs/xfs/stats/stats"))
+ 		goto out_remove_xfs_dir;
++
+ #ifdef CONFIG_XFS_QUOTA
+ 	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
+ 			 &xqmstat_proc_fops))
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
