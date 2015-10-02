@@ -1,30 +1,30 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111]) by
- oss.sgi.com (Postfix) with ESMTP id C166F7F55 for <xfs@oss.sgi.com>; Thu,  1
- Oct 2015 20:02:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15]) by
- relay1.corp.sgi.com (Postfix) with ESMTP id B8C608F8040 for
- <xfs@oss.sgi.com>; Thu,  1 Oct 2015 18:02:08 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1B4547F55
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 19:52:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4E43AC004
+	for <xfs@oss.sgi.com>; Thu,  1 Oct 2015 17:52:21 -0700 (PDT)
 Received: from xitang.baidupopin.com (xitang.baidupopin.com [5.255.87.224]) by
- cuda.sgi.com with ESMTP id DTg4CUSXRZHEctaM for <xfs@oss.sgi.com>; Thu, 01
- Oct 2015 18:02:06 -0700 (PDT)
-LIST-HELP: <mailto:xfs-request@oss.sgi.com?subject=help>
-LIST-SUBSCRIBE: <http://oss.sgi.com/mailman/listinfo/xfs>,
- <mailto:xfs-request@oss.sgi.com?subject=subscribe>
-LIST-UNSUBSCRIBE: <http://oss.sgi.com/mailman/options/xfs>,
- <mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-LIST-POST: <mailto:xfs@oss.sgi.com>
-ERRORS-TO: xfs-bounces@oss.sgi.com
-LIST-ARCHIVE: <http://oss.sgi.com/pipermail/xfs>
-LIST-ID: XFS Filesystem from SGI <xfs.oss.sgi.com>
-MIME-Version: 1.0
-Message-ID: <8a9a21911110794a772fbacd59b8d5b4@thebrick.com>
-Date: Thu, 1 Oct 2015 18:01:30 -0700 (PDT)
-From: Jensen Lewis <fanyuai@mail.com>
-Sender: xfs-bounces@oss.sgi.com
+	cuda.sgi.com with ESMTP id 4t1ry2MVFzen5Jzk for
+	<xfs@oss.sgi.com>; Thu, 01 Oct 2015 17:52:15 -0700 (PDT)
 Subject: solutions for your business
+Message-ID: <4de047374d43872d791fcfba4140bc50@bassettfurniture.com>
+Date: Fri, 02 Oct 2015 03:17:03 +0200
+From: "Jensen Lewis" <fanyuai@mail.com>
+MIME-Version: 1.0
 Reply-To: alvinin@aliyun.com
-Content-Type: text/plain; charset=us-ascii; format=flowed
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 Hey,
