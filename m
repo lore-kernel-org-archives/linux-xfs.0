@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1FD697F59
+	by oss.sgi.com (Postfix) with ESMTP id 274F67F5D
 	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 13:20:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 77D7DAC02B
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 839CBAC02C
 	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 11:19:59 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id p5QYIVHYCj8xutyj (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 2MH5NmIgphZCUmFZ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Fri, 02 Oct 2015 11:19:58 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 7DB752C76F6
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 8344EC0A15E4
 	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 18:19:57 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-128.bos.redhat.com [10.18.41.128])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t92IJveC023986
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t92IJvLr026230
 	for <xfs@oss.sgi.com>; Fri, 2 Oct 2015 14:19:57 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 07/18] xfs_repair: track log state throughout all recovery
-	phases
-Date: Fri,  2 Oct 2015 14:19:44 -0400
-Message-Id: <1443809995-20395-8-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 09/18] xfs_repair: format the log with forward cycle number
+	on v5 supers
+Date: Fri,  2 Oct 2015 14:19:46 -0400
+Message-Id: <1443809995-20395-10-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1443809995-20395-1-git-send-email-bfoster@redhat.com>
 References: <1443809995-20395-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,146 +39,126 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_repair examines and clears the log in phase 2. Phase 2 acquires the
-log state in local data structures that are lost upon phase exit. v5
-filesystems require that the log is formatted with a higher cycle number
-after the fs is repaired. This requires assessment of the log state to
-determine whether a reformat is necessary.
+v5 filesystems use the current LSN and the last modified LSN stored
+within fs metadata to provide correct log recovery ordering. xfs_repair
+historically clears the log in phase 2. This resets to the current LSN
+of the filesystem to the initial cycle, as if the fs was just created.
 
-Rather than duplicate the log processing code, update phase 2 to
-populate a globally available log data structure. Add a log pointer to
-xfs_mount, as exists in kernel space, that repair uses to store a
-reference to the log that is available to various phases. Note that this
-patch simply plumbs through the global log data structure and does not
-change behavior in any way.
+This is problematic because the filesystem LSN is now behind many
+pre-existing metadata structures on-disk until either the current
+filesystem LSN catches up or those particular data structures are
+modified and written out. If a filesystem crash occurs in the meantime,
+log recovery can incorrectly skip log items and cause filesystem
+corruption.
+
+Update xfs_repair to check the maximum metadata LSN value against the
+current log state once the filesystem has been processed. If the maximum
+LSN exceeds the current LSN with respect to the log, reformat the log
+with a cycle number that exceeds that of the maximum LSN.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- include/xfs_mount.h |  6 ++++++
- repair/phase2.c     | 34 +++++++++++++++++++---------------
- repair/xfs_repair.c |  8 +++++++-
- 3 files changed, 32 insertions(+), 16 deletions(-)
+ repair/xfs_repair.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 68 insertions(+), 2 deletions(-)
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index ed897a2..5ec6866 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -98,6 +98,12 @@ typedef struct xfs_mount {
- 		int	qi_dqperchunk;
- 	}			*m_quotainfo;
- 
-+	/*
-+	 * xlog is defined in libxlog and thus is not intialized by libxfs. This
-+	 * allows an application to initialize and store a reference to the log
-+	 * if warranted.
-+	 */
-+	struct xlog		*m_log;
- } xfs_mount_t;
- 
- /*
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 0673a0c..11504e3 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -39,33 +39,33 @@ static void
- zero_log(xfs_mount_t *mp)
- {
- 	int error;
--	struct xlog	log;
- 	xfs_daddr_t head_blk, tail_blk;
-+	struct xlog	*log = mp->m_log;
- 
--	memset(&log, 0, sizeof(log));
-+	memset(log, 0, sizeof(struct xlog));
- 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
- 	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
- 	x.lbsize = BBSIZE;
- 	if (xfs_sb_version_hassector(&mp->m_sb))
- 		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
- 
--	log.l_dev = mp->m_logdev_targp;
--	log.l_logBBsize = x.logBBsize;
--	log.l_logBBstart = x.logBBstart;
--	log.l_sectBBsize  = BTOBB(x.lbsize);
--	log.l_mp = mp;
-+	log->l_dev = mp->m_logdev_targp;
-+	log->l_logBBsize = x.logBBsize;
-+	log->l_logBBstart = x.logBBstart;
-+	log->l_sectBBsize  = BTOBB(x.lbsize);
-+	log->l_mp = mp;
- 	if (xfs_sb_version_hassector(&mp->m_sb)) {
--		log.l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
--		ASSERT(log.l_sectbb_log <= mp->m_sectbb_log);
-+		log->l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
-+		ASSERT(log->l_sectbb_log <= mp->m_sectbb_log);
- 		/* for larger sector sizes, must have v2 or external log */
--		ASSERT(log.l_sectbb_log == 0 ||
--			log.l_logBBstart == 0 ||
-+		ASSERT(log->l_sectbb_log == 0 ||
-+			log->l_logBBstart == 0 ||
- 			xfs_sb_version_haslogv2(&mp->m_sb));
- 		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
- 	}
--	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
-+	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
- 
--	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk))) {
-+	if ((error = xlog_find_tail(log, &head_blk, &tail_blk))) {
- 		do_warn(_("zero_log: cannot find log head/tail "
- 			  "(xlog_find_tail=%d), zeroing it anyway\n"),
- 			error);
-@@ -93,12 +93,16 @@ zero_log(xfs_mount_t *mp)
- 		}
- 	}
- 
--	libxfs_log_clear(log.l_dev,
--		XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-+	libxfs_log_clear(log->l_dev, XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
- 		&mp->m_sb.sb_uuid,
- 		xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
- 		mp->m_sb.sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE);
-+
-+	/* update the log data structure with new state */
-+	error = xlog_find_tail(log, &head_blk, &tail_blk);
-+	if (error || head_blk != tail_blk)
-+		do_error(_("failed to clear log"));
- }
- 
- /*
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 85a012b..0e80124 100644
+index 0e80124..8285d9d 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -539,6 +539,7 @@ main(int argc, char **argv)
- 	xfs_dsb_t	*dsb;
- 	xfs_buf_t	*sbp;
- 	xfs_mount_t	xfs_m;
-+	struct xlog	log = {0};
- 	char		*msgbuf;
- 	struct xfs_sb	psb;
- 	int		rval;
-@@ -620,7 +621,11 @@ main(int argc, char **argv)
- 		}
- 	}
+@@ -531,6 +531,63 @@ _("sb realtime summary inode %" PRIu64 " %sinconsistent with calculated value %u
  
--	/* prepare the mount structure */
+ }
+ 
++/*
++ * v5 superblock metadata track the LSN of last modification and thus require
++ * that the current LSN is always moving forward. The current LSN is reset if
++ * the log has been cleared, which puts the log behind parts of the filesystem
++ * on-disk and can disrupt log recovery.
++ *
++ * We have tracked the maximum LSN of every piece of metadata that has been read
++ * in via the read verifiers. Compare the max LSN with the log and if the log is
++ * behind, bump the cycle number and reformat the log.
++ */
++static void
++format_log_max_lsn(
++	struct xfs_mount	*mp)
++{
++	struct xlog		*log = mp->m_log;
++	int			max_cycle;
++	int			max_block;
++	int			new_cycle;
++	xfs_daddr_t		logstart;
++	xfs_daddr_t		logblocks;
++	int			logversion;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
 +	/*
-+	 * Prepare the mount structure. Point the log reference to our local
-+	 * copy so it's available to the various phases. The log bits are
-+	 * initialized in phase 2.
++	 * If the log is ahead of the highest metadata LSN we've seen, we're
++	 * safe and there's nothing to do.
 +	 */
- 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
- 	mp = libxfs_mount(&xfs_m, &psb, x.ddev, x.logdev, x.rtdev, 0);
++	max_cycle = CYCLE_LSN(libxfs_max_lsn);
++	max_block = BLOCK_LSN(libxfs_max_lsn);
++	if (max_cycle < log->l_curr_cycle ||
++	    (max_cycle == log->l_curr_cycle && max_block < log->l_curr_block))
++		return;
++
++	/*
++	 * Going to the next cycle should be sufficient but we bump by a few
++	 * counts to help cover any metadata LSNs we could have missed.
++	 */
++	new_cycle = max_cycle + 3;
++	logstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
++	logblocks = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
++	logversion = xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1;
++
++	do_warn(_("Maximum metadata LSN (%d:%d) is ahead of log (%d:%d).\n"),
++		max_cycle, max_block, log->l_curr_cycle, log->l_curr_block);
++
++	if (no_modify) {
++		do_warn(_("Would format log to cycle %d.\n"), new_cycle);
++		return;
++	}
++
++	do_warn(_("Format log to cycle %d.\n"), new_cycle);
++	libxfs_log_clear(log->l_dev, logstart, logblocks, &mp->m_sb.sb_uuid,
++			 logversion, mp->m_sb.sb_logsunit, XLOG_FMT, new_cycle);
++}
++
+ int
+ main(int argc, char **argv)
+ {
+@@ -896,6 +953,12 @@ _("Warning:  project quota information would be cleared.\n"
+ 		stop_progress_rpt();
  
-@@ -630,6 +635,7 @@ main(int argc, char **argv)
- 			progname);
- 		exit(1);
- 	}
-+	mp->m_log = &log;
+ 	if (no_modify)  {
++		/*
++		 * Warn if the current LSN is problematic and the log requires a
++		 * reformat.
++		 */
++		format_log_max_lsn(mp);
++
+ 		do_log(
+ 	_("No modify flag set, skipping filesystem flush and exiting.\n"));
+ 		if (verbose)
+@@ -931,11 +994,14 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+ 	libxfs_writebuf(sbp, 0);
  
  	/*
- 	 * set XFS-independent status vars from the mount/sb structure
+-	 * Done, flush all cached buffers and inodes.
++	 * Done. Flush all cached buffers and inodes first to ensure all
++	 * verifiers are run (where we discover the max metadata LSN), reformat
++	 * the log if necessary and unmount.
+ 	 */
+ 	libxfs_bcache_flush();
+-
++	format_log_max_lsn(mp);
+ 	libxfs_umount(mp);
++
+ 	if (x.rtdev)
+ 		libxfs_device_close(x.rtdev);
+ 	if (x.logdev && x.logdev != x.ddev)
 -- 
 2.1.0
 
