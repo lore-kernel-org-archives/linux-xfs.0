@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C73F929DFA
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 11:23:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 376DBAC022
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9111129E0E
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 11:23:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 582158F8035
 	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 09:23:01 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id n9rkRA5Cxzd6K6nL (version=TLSv1.2
+	cuda.sgi.com with ESMTP id aYA2y1izCBRxCjrS (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 02 Oct 2015 09:22:59 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 02 Oct 2015 09:23:00 -0700 (PDT)
 Received: from int-mx14.intmail.prod.int.phx2.redhat.com
 	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 0926D461E2
+	by mx1.redhat.com (Postfix) with ESMTPS id 023C6A8D
 	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 16:22:59 +0000 (UTC)
 Received: from localhost.localdomain.com (vpn-48-121.rdu2.redhat.com
 	[10.10.48.121])
 	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t92GMqqC005602
-	for <xfs@oss.sgi.com>; Fri, 2 Oct 2015 12:22:58 -0400
+	id t92GMqqD005602
+	for <xfs@oss.sgi.com>; Fri, 2 Oct 2015 12:22:59 -0400
 From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 5/7] xfs: incorporate sysfs/kobject in xfsstats: handlers take
-	kobjects.
-Date: Fri,  2 Oct 2015 11:22:38 -0500
-Message-Id: <1443802960-26662-6-git-send-email-billodo@redhat.com>
+Subject: [PATCH 6/7] xfs: per-filesystem stats in sysfs.
+Date: Fri,  2 Oct 2015 11:22:39 -0500
+Message-Id: <1443802960-26662-7-git-send-email-billodo@redhat.com>
 In-Reply-To: <1443802960-26662-1-git-send-email-billodo@redhat.com>
 References: <1443802960-26662-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,293 +39,94 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This patch is the next step toward per-fs xfs stats. The patch makes
-the show and clear routines able to handle any stats structure
-associated with a kobject.
+This patch implements per-filesystem stats objects in sysfs. It
+depends on the application of the previous patch series that
+develops the infrastructure to support both xfs global stats and
+xfs per-fs stats in sysfs.
 
-Instead of a single global xfsstats structure, add kobject and a pointer
-to a per-cpu struct xfsstats. Modify the macros that manipulate the stats
-accordingly: XFS_STATS_INC, XFS_STATS_DEC, and XFS_STATS_ADD now access
-xfsstats->xs_stats.
+Stats objects are instantiated when an xfs filesystem is mounted
+and deleted on unmount. With this patch, the stats directory is
+created and populated with the familiar stats and stats_clear files.
+Example:
+        /sys/fs/xfs/sda9/stats/stats
+        /sys/fs/xfs/sda9/stats/stats_clear
 
-The sysfs functions need to get from the kobject back to the xfsstats
-structure which contains it, and pass the pointer to the ->xs_stats
-percpu structure into the show & clear routines.
-
+With this patch, the individual counts within the new per-fs
+stats file(s) remain at zero. Functions that use the the macros
+to increment, decrement, and add-to the per-fs stats counts will
+be covered in a separate new patch to follow this one. Note that
+the counts within the global stats file (/sys/fs/xfs/stats/stats)
+advance normally and can be cleared as it was prior to this patch.
 
 Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 ---
- fs/xfs/xfs_linux.h  |  7 +++++++
- fs/xfs/xfs_stats.c  | 32 +++++++++++++++-----------------
- fs/xfs/xfs_stats.h  | 22 +++++++++++-----------
- fs/xfs/xfs_super.c  | 21 +++++++++++++++------
- fs/xfs/xfs_sysctl.c |  2 +-
- fs/xfs/xfs_sysfs.c  | 16 ++++++++++++++--
- 6 files changed, 63 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_mount.c | 24 +++++++++++++++++++++++-
+ fs/xfs/xfs_mount.h |  1 +
+ 2 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 85f883d..ec0e239 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -171,6 +171,13 @@ struct xfs_kobj {
- 	struct completion	complete;
- };
- 
-+struct xstats {
-+	struct xfsstats __percpu	*xs_stats;
-+	struct xfs_kobj			xs_kobj;
-+};
-+
-+extern struct xstats xfsstats;
-+
- /* Kernel uid/gid conversion. These are used to convert to/from the on disk
-  * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
-  * The conversion here is type only, the value will remain the same since we
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index f481da0..3348b0b 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -18,18 +18,18 @@
- #include "xfs.h"
- #include <linux/proc_fs.h>
- 
--DEFINE_PER_CPU(struct xfsstats, xfsstats);
-+struct xstats xfsstats;
- 
--static int counter_val(int idx)
-+static int counter_val(struct xfsstats __percpu *stats, int idx)
- {
- 	int val = 0, cpu;
- 
- 	for_each_possible_cpu(cpu)
--		val += *(((__u32 *)&per_cpu(xfsstats, cpu) + idx));
-+		val += *(((__u32 *)per_cpu_ptr(stats, cpu) + idx));
- 	return val;
- }
- 
--int xfs_stats_format(char *buf)
-+int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
- {
- 	int		i, j;
- 	int		len = 0;
-@@ -73,14 +73,14 @@ int xfs_stats_format(char *buf)
- 		/* inner loop does each group */
- 		for (; j < xstats[i].endpoint; j++)
- 			len += snprintf(buf + len, PATH_MAX - len, " %u",
--					counter_val(j));
-+					counter_val(stats, j));
- 		len += snprintf(buf + len, PATH_MAX - len, "\n");
- 	}
- 	/* extra precision counters */
- 	for_each_possible_cpu(i) {
--		xs_xstrat_bytes += per_cpu(xfsstats, i).xs_xstrat_bytes;
--		xs_write_bytes += per_cpu(xfsstats, i).xs_write_bytes;
--		xs_read_bytes += per_cpu(xfsstats, i).xs_read_bytes;
-+		xs_xstrat_bytes += per_cpu_ptr(stats, i)->xs_xstrat_bytes;
-+		xs_write_bytes += per_cpu_ptr(stats, i)->xs_write_bytes;
-+		xs_read_bytes += per_cpu_ptr(stats, i)->xs_read_bytes;
- 	}
- 
- 	len += snprintf(buf + len, PATH_MAX-len, "xpc %Lu %Lu %Lu\n",
-@@ -95,7 +95,7 @@ int xfs_stats_format(char *buf)
- 	return len;
- }
- 
--void xfs_stats_clearall(void)
-+void xfs_stats_clearall(struct xfsstats __percpu *stats)
- {
- 	int		c;
- 	__uint32_t	vn_active;
-@@ -104,9 +104,9 @@ void xfs_stats_clearall(void)
- 	for_each_possible_cpu(c) {
- 		preempt_disable();
- 		/* save vn_active, it's a universal truth! */
--		vn_active = per_cpu(xfsstats, c).vn_active;
--		memset(&per_cpu(xfsstats, c), 0, sizeof(struct xfsstats));
--		per_cpu(xfsstats, c).vn_active = vn_active;
-+		vn_active = per_cpu_ptr(stats, c)->vn_active;
-+		memset(per_cpu_ptr(stats, c), 0, sizeof(*stats));
-+		per_cpu_ptr(stats, c)->vn_active = vn_active;
- 		preempt_enable();
- 	}
- }
-@@ -117,10 +117,8 @@ static int xqm_proc_show(struct seq_file *m, void *v)
- {
- 	/* maximum; incore; ratio free to inuse; freelist */
- 	seq_printf(m, "%d\t%d\t%d\t%u\n",
--			0,
--			counter_val(XFSSTAT_END_XQMSTAT),
--			0,
--			counter_val(XFSSTAT_END_XQMSTAT + 1));
-+		   0, counter_val(xfsstats.xs_stats, XFSSTAT_END_XQMSTAT),
-+		   0, counter_val(xfsstats.xs_stats, XFSSTAT_END_XQMSTAT + 1));
- 	return 0;
- }
- 
-@@ -144,7 +142,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
- 
- 	seq_printf(m, "qm");
- 	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
--		seq_printf(m, " %u", counter_val(j));
-+		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
- 	seq_putc(m, '\n');
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index 18807b5..54f2260 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -18,9 +18,6 @@
- #ifndef __XFS_STATS_H__
- #define __XFS_STATS_H__
- 
--int xfs_stats_format(char *buf);
--void xfs_stats_clearall(void);
--
- #if defined(CONFIG_PROC_FS) && !defined(XFS_STATS_OFF)
- 
- #include <linux/percpu.h>
-@@ -217,15 +214,18 @@ struct xfsstats {
- 	__uint64_t		xs_read_bytes;
- };
- 
--DECLARE_PER_CPU(struct xfsstats, xfsstats);
-+int xfs_stats_format(struct xfsstats __percpu *stats, char *buf);
-+void xfs_stats_clearall(struct xfsstats __percpu *stats);
-+extern struct xstats xfsstats;
- 
--/*
-- * We don't disable preempt, not too worried about poking the
-- * wrong CPU's stat for now (also aggregated before reporting).
-- */
--#define XFS_STATS_INC(v)	(per_cpu(xfsstats, current_cpu()).v++)
--#define XFS_STATS_DEC(v)	(per_cpu(xfsstats, current_cpu()).v--)
--#define XFS_STATS_ADD(v, inc)	(per_cpu(xfsstats, current_cpu()).v += (inc))
-+#define XFS_STATS_INC(v)	\
-+	(per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v++)
-+
-+#define XFS_STATS_DEC(v)	\
-+	(per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v--)
-+
-+#define XFS_STATS_ADD(v, inc)	\
-+	(per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v += (inc))
- 
- extern int xfs_init_procfs(void);
- extern void xfs_cleanup_procfs(void);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 0dfc53b..e1a35a5 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -61,7 +61,6 @@ static kmem_zone_t *xfs_ioend_zone;
- mempool_t *xfs_ioend_pool;
- 
- static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
--static struct xfs_kobj xfs_stats_kobj;	/* global stats sysfs attrs */
- #ifdef DEBUG
- static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
- #endif
-@@ -1842,11 +1841,18 @@ init_xfs_fs(void)
- 		goto out_sysctl_unregister;
- 	}
- 
--	xfs_stats_kobj.kobject.kset = xfs_kset;
--	error = xfs_sysfs_init(&xfs_stats_kobj, &xfs_stats_ktype, NULL,
-+	xfsstats.xs_kobj.kobject.kset = xfs_kset;
-+
-+	xfsstats.xs_stats = alloc_percpu(struct xfsstats);
-+	if (!xfsstats.xs_stats) {
-+		error = -ENOMEM;
-+		goto out_kset_unregister;
-+	}
-+
-+	error = xfs_sysfs_init(&xfsstats.xs_kobj, &xfs_stats_ktype, NULL,
- 			       "stats");
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bf92e0c..89ac1bd 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -693,9 +693,23 @@ xfs_mountfs(
  	if (error)
--		goto out_kset_unregister;
+ 		goto out;
+ 
++	/*
++	 * Allocate stats memory and create stats sysfs object.
++	 */
++	mp->m_stats.xs_stats = alloc_percpu(struct xfsstats);
++	if (!mp->m_stats.xs_stats) {
++		error = PTR_ERR(mp->m_stats.xs_stats);
++		goto out_remove_sysfs;
++	}
++	error = xfs_sysfs_init(&mp->m_stats.xs_kobj, &xfs_stats_ktype,
++				&mp->m_kobj,
++				"stats");
++	if (error)
 +		goto out_free_stats;
++
+ 	error = xfs_uuid_mount(mp);
+ 	if (error)
+-		goto out_remove_sysfs;
++		goto out_del_stats;
  
- #ifdef DEBUG
- 	xfs_dbg_kobj.kobject.kset = xfs_kset;
-@@ -1871,7 +1877,9 @@ init_xfs_fs(void)
- 	xfs_sysfs_del(&xfs_dbg_kobj);
-  out_remove_stats_kobj:
- #endif
--	xfs_sysfs_del(&xfs_stats_kobj);
-+	xfs_sysfs_del(&xfsstats.xs_kobj);
+ 	/*
+ 	 * Set the minimum read and write sizes
+@@ -971,6 +985,10 @@ xfs_mountfs(
+ 	xfs_da_unmount(mp);
+  out_remove_uuid:
+ 	xfs_uuid_unmount(mp);
++ out_del_stats:
++	xfs_sysfs_del(&mp->m_stats.xs_kobj);
 + out_free_stats:
-+	free_percpu(xfsstats.xs_stats);
-  out_kset_unregister:
- 	kset_unregister(xfs_kset);
-  out_sysctl_unregister:
-@@ -1898,7 +1906,8 @@ exit_xfs_fs(void)
- #ifdef DEBUG
- 	xfs_sysfs_del(&xfs_dbg_kobj);
- #endif
--	xfs_sysfs_del(&xfs_stats_kobj);
-+	xfs_sysfs_del(&xfsstats.xs_kobj);
-+	free_percpu(xfsstats.xs_stats);
- 	kset_unregister(xfs_kset);
- 	xfs_sysctl_unregister();
- 	xfs_cleanup_procfs();
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index 5defabb..aed74d3 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -37,7 +37,7 @@ xfs_stats_clear_proc_handler(
- 	ret = proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
++	free_percpu(mp->m_stats.xs_stats);
+  out_remove_sysfs:
+ 	xfs_sysfs_del(&mp->m_kobj);
+  out:
+@@ -1047,6 +1065,10 @@ xfs_unmountfs(
+ 		xfs_warn(mp, "Unable to update superblock counters. "
+ 				"Freespace may not be correct on next mount.");
  
- 	if (!ret && write && *valp) {
--		xfs_stats_clearall();
-+		xfs_stats_clearall(xfsstats.xs_stats);
- 		xfs_stats_clear = 0;
- 	}
- 
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index fa3dc66..ee70f5d 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -131,12 +131,22 @@ struct kobj_type xfs_dbg_ktype = {
- 
- /* stats */
- 
-+static inline struct xstats *
-+to_xstats(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
++	/* remove the stats kobject and free stats memory */
++	xfs_sysfs_del(&mp->m_stats.xs_kobj);
++	free_percpu(mp->m_stats.xs_stats);
 +
-+	return container_of(kobj, struct xstats, xs_kobj);
-+}
-+
- STATIC ssize_t
- stats_show(
- 	struct kobject	*kobject,
- 	char		*buf)
- {
--	return xfs_stats_format(buf);
-+	struct xstats	*stats = to_xstats(kobject);
-+
-+	return xfs_stats_format(stats->xs_stats, buf);
- }
- XFS_SYSFS_ATTR_RO(stats);
+ 	xfs_log_unmount(mp);
+ 	xfs_da_unmount(mp);
+ 	xfs_uuid_unmount(mp);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 7999e91..8795272 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -127,6 +127,7 @@ typedef struct xfs_mount {
+ 	int64_t			m_low_space[XFS_LOWSP_MAX];
+ 						/* low free space thresholds */
+ 	struct xfs_kobj		m_kobj;
++	struct xstats		m_stats;	/* per-fs stats */
  
-@@ -148,6 +158,7 @@ stats_clear_store(
- {
- 	int		ret;
- 	int		val;
-+	struct xstats	*stats = to_xstats(kobject);
- 
- 	ret = kstrtoint(buf, 0, &val);
- 	if (ret)
-@@ -155,7 +166,8 @@ stats_clear_store(
- 
- 	if (val != 1)
- 		return -EINVAL;
--	xfs_stats_clearall();
-+
-+	xfs_stats_clearall(stats->xs_stats);
- 	return count;
- }
- XFS_SYSFS_ATTR_WO(stats_clear);
+ 	struct workqueue_struct *m_buf_workqueue;
+ 	struct workqueue_struct	*m_data_workqueue;
 -- 
 2.4.3
 
