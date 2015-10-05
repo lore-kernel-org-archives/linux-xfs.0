@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC67B7F55
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 17:34:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BFCCC8F8033
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2015 15:34:40 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sIdaJNZgKfbYgTBf for <xfs@oss.sgi.com>;
-	Fri, 02 Oct 2015 15:34:37 -0700 (PDT)
-Date: Sat, 3 Oct 2015 08:34:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: two failing xfstests using xfs (no DAX)
-Message-ID: <20151002223402.GM27164@dastard>
-References: <20151002174941.GA25082@linux.intel.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 639DD7F37
+	for <xfs@oss.sgi.com>; Mon,  5 Oct 2015 18:02:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E345BAC005
+	for <xfs@oss.sgi.com>; Mon,  5 Oct 2015 16:02:24 -0700 (PDT)
+Received: from g1t6216.austin.hp.com (g1t6216.austin.hp.com [15.73.96.123]) by
+	cuda.sgi.com with ESMTP id dbejrbFjtnIiEAAr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 05 Oct 2015 16:02:22 -0700 (PDT)
+Message-ID: <5613017D.7080909@hpe.com>
+Date: Mon, 05 Oct 2015 19:02:21 -0400
+From: Waiman Long <waiman.long@hpe.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151002174941.GA25082@linux.intel.com>
+Subject: Re: [PATCH] percpu_counter: return precise count from
+	__percpu_counter_compare()
+References: <1443806997-30792-1-git-send-email-Waiman.Long@hpe.com>
+	<20151002221649.GL27164@dastard>
+In-Reply-To: <20151002221649.GL27164@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,91 +26,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Scott J Norton <scott.norton@hpe.com>, Christoph Lameter <cl@linux-foundation.org>, Douglas Hatch <doug.hatch@hpe.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Tejun Heo <tj@kernel.org>
 
-On Fri, Oct 02, 2015 at 11:49:41AM -0600, Ross Zwisler wrote:
-> Recently I've been trying to get a stable baseline for my DAX testing using
-> various filesystems, and in doing so I noticed a pair of tests that were
-> behaving badly when run on XFS without DAX.  These test failures happen in
-> both v4.2 and v4.3-rc3, though the signatures may vary a bit.
-> 
-> My testing setup is a kvm virtual machine with 8 GiB of its 16GiB of memory
-> reserved for PMEM using the mmap parameter (memmap=8G!8G) and with the
-> CONFIG_X86_PMEM_LEGACY config option enabled.  I've attached my full kernel
-> config to this mail.
-> 
-> The first test failure is generic/299, which consistently deadlocks in the XFS
-> code in both v4.2 and v4.3-rc3.  The stack traces presented in dmesg via "echo
-> w > /proc/sysrq-trigger" are consistent between these two kernel versions, and
-> can be found in the "generic_299.deadlock" attachment.
+On 10/02/2015 06:16 PM, Dave Chinner wrote:
+> On Fri, Oct 02, 2015 at 01:29:57PM -0400, Waiman Long wrote:
+>> In __percpu_counter_compare(), if the current imprecise count is
+>> within (batch*nr_cpus) of the input value to be compared, a call
+>> to percpu_counter_sum() will be made to get the precise count. The
+>> percpu_counter_sum() call, however, can be expensive especially on
+>> large systems where there are a lot of CPUs. Large systems also make
+>> it more likely that percpu_counter_sum() will be called.
+>>
+>> The xfs_mod_fdblocks() function calls __percpu_counter_compare()
+>> twice. First to see if a smaller batch size should be used for
+>> __percpu_counter_add() and the second call to compare the actual
+>> size needed. This can potentially lead to 2 calls to the expensive
+>> percpu_counter_sum() function.
+> There should not be that much overhead in __percpu_counter_compare()
+> through this path in normal operation. The slow path is only taken
+> as you near ENOSPC...
 
-Yes, we've recently identified a AGF locking order problem on an
-older kernel that this looks like. We haven't found the root cause
-of it yet, but it's good to know that generic/299 seems to reproduce
-it. I'll run that in a loop to see if I can get it to fail here...
+Yes, it is for optimizing the case there the filesystem is near ENOSP.
 
-> The second test failure is xfs/083, which in v4.2 seems to fail with an XFS
-> assertion (I have XFS_DEBUG turned on):
-> 
-> XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_dir2_data.c, line: 168
+>> This patch added an extra argument to __percpu_counter_compare()
+>> to return the precise count, if computed. The caller will need to
+>> initialize it to an invalid value that it can tell if the precise
+>> count is being returned.
+> This doesn't work. ENOSPC detection is a lockless algorithm that
+> requires absolute precision. Assuming the XFS_ALLOC_SET_ASIDE()
+> definition of ENOSPC is 0 blocks free, your change allows this race:
+>
+> free space: 1 block
+>
+> thread 1		thread 2			free space
+> allocate 1 block	allocate 1 block		  1
+> sample pcount = 1					  1
+> 			sample pcount = 1		  1
+> add fdblocks, -1, 1)					  0
+> 			add fdblocks, -1, 1)		  -1
+> if (pcount - 1>= 0)	if (pcount - 1>= 0)
+>     OK!			    OK!				  -1
+>
+> So, we've just failed to detect ENOSPC correct. One of those two
+> threads should have returned ENOSPC and failed the allocation,
+> but instead we've just allowed XFS to allocate a block that doesn't
+> exist. Hence we have to resample the percpu counter after the
+> modification to ensure that we don't miss this race condition.
+>
+> Sure, the curent code could race on the second comparisions and
+> return ENOSPC to both threads, but that is a perfectly OK thing
+> to do. It is vitally important that we don't oversubscribe
+> filesystem space, because that will lead to all sorts of other
+> problems (deadlocks, hangs, shutdowns, etc) that are very difficult
+> to identify the cause of.
+>
+> FWIW, I'm guessing that you didn't run this patch through xfstests?
+> xfstests will find these ENOSPC accounting bugs, and usually quite
+> quickly...
 
-No surprise:
+Thanks for the review. I did miss the case that there was a race 
+condition here. I also haven't run xfstests with this patch. I will do 
+so next time.
 
-$ grep 083 tests/xfs/group
-083 dangerous_fuzzers
-$
+>> Running the AIM7 disk workload with XFS filesystem, the jobs/min
+>> on a 40-core 80-thread 4-socket Haswell-EX system increases from
+>> 3805k to 4276k (12% increase) with this patch applied. As measured
+>> by the perf tool, the %CPU cycle consumed by __percpu_counter_sum()
+>> decreases from 12.64% to 7.08%.
+> XFS should only hit the slow __percpu_counter_sum() path patch as
+> the fs gets close to ENOSPC, which for your system will be less
+> than:
+>
+> threshold = num_online_cpus * XFS_FDBLOCKS_BATCH * 2 blocks
+> 	  = 80 * 1024 * 2 blocks
+> 	  = 160,000 blocks
+> 	  = 640MB of disk space.
+>
+> Having less than 1GB of free space in an XFS filesystem is
+> considered to be "almost ENOSPC" - when you have TB to PB of space,
+> less than 1GB really "moments before ENOSPC".
 
-Yup, it's expected to trigger corruptions and when a
-CONFIG_XFS_DEBUG=y kernel triggers a corruption warning it triggers
-an ASSERT failure ot allow debugging.  That particular corruption is
-being detected in the /block validation function/ that is run to
-detect corruptions in directory data blocks as they are read for
-disk (__xfs_dir3_data_check).
+We have systems with more than 500 CPUs (HT on). I think SGI has systems 
+with thousands of CPUs. For those large system, the slowpath will be 
+triggered if there is less than 4G or 10G for those thousand CPUs 
+systems. What I am trying to do with my patch is to reduce the 
+performance overhead in those cases. I have no worry for systems that 
+have only a few CPUs. In essence, the per-cpu counter code doesn't scale 
+well for systems with large number of CPUs.
 
-Any test that is not in the auto group is not expected to work
-reliably as a regression test. Any many are actively dangerous like
-this and will crash/panic machines when they hit whatever problem
-they were written to exercise. For regression test purposes, the
-test groups to run are:
+> XFS trades off low overhead for fast path allocation  with slowdowns
+> as we near ENOSPC in allocation routines. It gets harder to find
+> contiguous free space, files get more fragmented, IO takes longer
+> because we seek more, etc. Hence we accept that performance slows
+> down as as the need for precision increases as we near ENOSPC.
+>
+> I'd suggest you retry your benchmark with larger filesystems, and
+> see what happens...
 
-# check -g quick
-
-For a fast smoke test, and
-
-# check -g auto
-
-to run all the tests that should function correctly as regression
-tests.
-
-> In v4.3, though, this same test seems to create some random memory corruption
-> in XFS.  I've hit at least two failure signatures that look nothing alike
-> except they both look like somebody corrupted memory.
-
-There's no memory corruption evident. The hexdumps are of disk
-buffers and, well, they've been fuzzed by the test...
-
-> [   53.636917] run fstests xfs/083 at 2015-10-02 11:24:09
-> [   53.760098] XFS (pmem0p2): Unmounting Filesystem
-> [   53.779642] XFS (pmem0p2): Mounting V4 Filesystem
-
-You're using v4 XFS filesystems. It's only valid to use CRC enabled
-XFS filesystems ("V5 filesystems") on pmem devices so we can detect
-torn sector writes correctly.
-
-I'd suggest upgrading xfsprogs to the latest (v4.2.0) as it
-defaults to creating CRC enabled filesystems.
+I don't think I am going to see the slowdown that I observed on larger 
+filesystems with more free space. However, I still think that doing 2 
+precise count computations is wasteful. I am planning to rework my patch 
+to disable precise count for the first comparison in xfs_mod_fdblocks as 
+that comparison is used to gauge how far it is from ENOSPC. So we don't 
+really need to get the precise count as long as number of CPUs are taken 
+into consideration in the comparison. This change should enable the new 
+patch to have similar performance overhead reduction effect as the old 
+one without the racing condition you mentioned above.
 
 Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Longman
 
 _______________________________________________
 xfs mailing list
