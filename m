@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 662EF29F01
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:10:39 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B6D1729EFE
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:10:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CC8E2AC006
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:10:38 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id RG6lzNEo1h6nxcs1 (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 98C918F8035
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:10:48 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id O16k1FOWvAcV9r11 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:10:36 -0700 (PDT)
-Subject: [PATCH 49/51] xfs_repair: rebuild the refcount btree
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:10:46 -0700 (PDT)
+Subject: [PATCH 50/51] mkfs.xfs: format reflink enabled filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:10:32 -0700
-Message-ID: <20151007051032.1504.56113.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:10:39 -0700
+Message-ID: <20151007051039.1504.53891.stgit@birch.djwong.org>
 In-Reply-To: <20151007050513.1504.28089.stgit@birch.djwong.org>
 References: <20151007050513.1504.28089.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,389 +31,206 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Rebuild the refcount btree with the reference count data we assembled
-during phase 4.
+Create the refcount btree at mkfs time and set the feature flag.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase5.c |  309 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 307 insertions(+), 2 deletions(-)
+ man/man8/mkfs.xfs.8 |   28 +++++++++++++++++++++++
+ mkfs/xfs_mkfs.c     |   62 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 85 insertions(+), 5 deletions(-)
 
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 734291a..8a4ec43 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1624,6 +1624,290 @@ _("Insufficient memory to construct reverse-map cursor."));
- 	free_slab_cursor(&rmap_cur);
- }
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 6260e0c..4caf7b1 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -169,6 +169,34 @@ will create free inode btrees for filesystems created with the (default)
+ option set. When the option
+ .B \-m crc=0
+ is used, the free inode btree feature is not supported and is disabled.
++.TP
++.BI reflink= value
++This option enables the use of a separate reference count btree index in each
++allocation group. The value is either 0 to disable the feature, or 1 to create
++a reference count btree in each allocation group.
++.IP
++The reference count btree enables the sharing of physical extents between
++the data forks of different files, which is commonly known as "reflink".
++Unlike traditional Unix filesystems which assume that every inode and
++logical block pair map to a unique physical block, a reflink-capable
++XFS filesystem removes the uniqueness requirement, allowing up to four
++billion arbitrary inode/logical block pairs to map to a physical block.
++If a program tries to write to a multiply-referenced block in a file, the write
++will be redirected to a new block, and that file's logical-to-physical
++mapping will be changed to the new block ("copy on write").  This feature
++enables the creation of per-file snapshots and deduplication.  It is only
++available for the data forks of regular files.
++.IP
++By default,
++.B mkfs.xfs
++will not create reference count btrees and therefore will not enable the
++reflink feature.  This feature is only available for filesystems created with
++the (default)
++.B \-m crc=1
++option set. When the option
++.B \-m crc=0
++is used, the reference count btree feature is not supported and reflink is
++disabled.
+ .RE
+ .TP
+ .BI \-d " data_section_options"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 573774c..556b691 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -183,6 +183,8 @@ char	*mopts[] = {
+ 	"finobt",
+ #define M_RMAPBT	2
+ 	"rmapbt",
++#define M_REFLINK	3
++	"reflink",
+ 	NULL
+ };
  
-+/* rebuild the refcount tree */
-+
-+#define XR_REFCOUNTBT_BLOCK_MAXRECS(mp, level) \
-+			((mp)->m_refc_mxr[(level) != 0])
-+
-+/*
-+ * we don't have to worry here about how chewing up free extents
-+ * may perturb things because reflink tree building happens before
-+ * freespace tree building.
-+ */
-+static void
-+init_refc_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs)
-+{
-+	size_t			num_recs;
-+	int			level;
-+	bt_stat_level_t		*lptr;
-+	bt_stat_level_t		*p_lptr;
-+	xfs_extlen_t		blocks_allocated;
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		memset(btree_curs, 0, sizeof(bt_status_t));
-+		return;
-+	}
-+
-+	lptr = &btree_curs->level[0];
-+	btree_curs->init = 1;
-+	btree_curs->owner = XFS_RMAP_OWN_REFC;
-+
-+	/*
-+	 * build up statistics
-+	 */
-+	num_recs = refcount_record_count(mp, agno);
-+	if (num_recs == 0) {
-+		/*
-+		 * easy corner-case -- no refcount records
-+		 */
-+		lptr->num_blocks = 1;
-+		lptr->modulo = 0;
-+		lptr->num_recs_pb = 0;
-+		lptr->num_recs_tot = 0;
-+
-+		btree_curs->num_levels = 1;
-+		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
-+
-+		setup_cursor(mp, agno, btree_curs);
-+
-+		return;
-+	}
-+
-+	blocks_allocated = lptr->num_blocks = howmany(num_recs,
-+					XR_REFCOUNTBT_BLOCK_MAXRECS(mp, 0));
-+
-+	lptr->modulo = num_recs % lptr->num_blocks;
-+	lptr->num_recs_pb = num_recs / lptr->num_blocks;
-+	lptr->num_recs_tot = num_recs;
-+	level = 1;
-+
-+	if (lptr->num_blocks > 1)  {
-+		for (; btree_curs->level[level-1].num_blocks > 1
-+				&& level < XFS_BTREE_MAXLEVELS;
-+				level++)  {
-+			lptr = &btree_curs->level[level];
-+			p_lptr = &btree_curs->level[level - 1];
-+			lptr->num_blocks = howmany(p_lptr->num_blocks,
-+				XR_REFCOUNTBT_BLOCK_MAXRECS(mp, level));
-+			lptr->modulo = p_lptr->num_blocks % lptr->num_blocks;
-+			lptr->num_recs_pb = p_lptr->num_blocks
-+					/ lptr->num_blocks;
-+			lptr->num_recs_tot = p_lptr->num_blocks;
-+
-+			blocks_allocated += lptr->num_blocks;
-+		}
-+	}
-+	ASSERT(lptr->num_blocks == 1);
-+	btree_curs->num_levels = level;
-+
-+	btree_curs->num_tot_blocks = btree_curs->num_free_blocks
-+			= blocks_allocated;
-+
-+	setup_cursor(mp, agno, btree_curs);
-+}
-+
-+static void
-+prop_refc_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-+	xfs_agblock_t startbno, int level)
-+{
-+	struct xfs_btree_block	*bt_hdr;
-+	struct xfs_refcount_key	*bt_key;
-+	xfs_refcount_ptr_t	*bt_ptr;
-+	xfs_agblock_t		agbno;
-+	bt_stat_level_t		*lptr;
-+
-+	level++;
-+
-+	if (level >= btree_curs->num_levels)
-+		return;
-+
-+	lptr = &btree_curs->level[level];
-+	bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+
-+	if (be16_to_cpu(bt_hdr->bb_numrecs) == 0)  {
-+		/*
-+		 * this only happens once to initialize the
-+		 * first path up the left side of the tree
-+		 * where the agbno's are already set up
-+		 */
-+		prop_refc_cursor(mp, agno, btree_curs, startbno, level);
-+	}
-+
-+	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
-+				lptr->num_recs_pb + (lptr->modulo > 0))  {
-+		/*
-+		 * write out current prev block, grab us a new block,
-+		 * and set the rightsib pointer of current block
-+		 */
-+#ifdef XR_BLD_INO_TRACE
-+		fprintf(stderr, " ino prop agbno %d ", lptr->prev_agbno);
-+#endif
-+		if (lptr->prev_agbno != NULLAGBLOCK)  {
-+			ASSERT(lptr->prev_buf_p != NULL);
-+			libxfs_writebuf(lptr->prev_buf_p, 0);
-+		}
-+		lptr->prev_agbno = lptr->agbno;
-+		lptr->prev_buf_p = lptr->buf_p;
-+		agbno = get_next_blockaddr(agno, level, btree_curs);
-+
-+		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(agbno);
-+
-+		lptr->buf_p = libxfs_getbuf(mp->m_dev,
-+					XFS_AGB_TO_DADDR(mp, agno, agbno),
-+					XFS_FSB_TO_BB(mp, 1));
-+		lptr->agbno = agbno;
-+
-+		if (lptr->modulo)
-+			lptr->modulo--;
-+
-+		/*
-+		 * initialize block header
-+		 */
-+		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
-+		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-+		xfs_btree_init_block(mp, lptr->buf_p, XFS_REFC_CRC_MAGIC,
-+					level, 0, agno,
-+					XFS_BTREE_CRC_BLOCKS);
-+
-+		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-+
-+		/*
-+		 * propagate extent record for first extent in new block up
-+		 */
-+		prop_refc_cursor(mp, agno, btree_curs, startbno, level);
-+	}
-+	/*
-+	 * add inode info to current block
-+	 */
-+	be16_add_cpu(&bt_hdr->bb_numrecs, 1);
-+
-+	bt_key = XFS_REFCOUNT_KEY_ADDR(bt_hdr,
-+				    be16_to_cpu(bt_hdr->bb_numrecs));
-+	bt_ptr = XFS_REFCOUNT_PTR_ADDR(bt_hdr,
-+				    be16_to_cpu(bt_hdr->bb_numrecs),
-+				    mp->m_refc_mxr[1]);
-+
-+	bt_key->rc_startblock = cpu_to_be32(startbno);
-+	*bt_ptr = cpu_to_be32(btree_curs->level[level-1].agbno);
-+}
-+
-+/*
-+ * rebuilds a refcount btree given a cursor.
-+ */
-+static void
-+build_refcount_tree(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs)
-+{
-+	xfs_agnumber_t		i;
-+	xfs_agblock_t		j;
-+	xfs_agblock_t		agbno;
-+	struct xfs_btree_block	*bt_hdr;
-+	struct xfs_refcount_irec	*refc_rec;
-+	struct xfs_slab_cursor	*refc_cur;
-+	struct xfs_refcount_rec	*bt_rec;
-+	struct bt_stat_level	*lptr;
-+	int			level = btree_curs->num_levels;
-+	int			error;
-+
-+	for (i = 0; i < level; i++)  {
-+		lptr = &btree_curs->level[i];
-+
-+		agbno = get_next_blockaddr(agno, i, btree_curs);
-+		lptr->buf_p = libxfs_getbuf(mp->m_dev,
-+					XFS_AGB_TO_DADDR(mp, agno, agbno),
-+					XFS_FSB_TO_BB(mp, 1));
-+
-+		if (i == btree_curs->num_levels - 1)
-+			btree_curs->root = agbno;
-+
-+		lptr->agbno = agbno;
-+		lptr->prev_agbno = NULLAGBLOCK;
-+		lptr->prev_buf_p = NULL;
-+		/*
-+		 * initialize block header
-+		 */
-+
-+		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
-+		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-+		xfs_btree_init_block(mp, lptr->buf_p, XFS_REFC_CRC_MAGIC,
-+					i, 0, agno,
-+					XFS_BTREE_CRC_BLOCKS);
-+	}
-+
-+	/*
-+	 * run along leaf, setting up records.  as we have to switch
-+	 * blocks, call the prop_refc_cursor routine to set up the new
-+	 * pointers for the parent.  that can recurse up to the root
-+	 * if required.  set the sibling pointers for leaf level here.
-+	 */
-+	error = init_refcount_cursor(agno, &refc_cur);
-+	if (error)
-+		do_error(
-+_("Insufficient memory to construct refcount cursor."));
-+	refc_rec = pop_slab_cursor(refc_cur);
-+	lptr = &btree_curs->level[0];
-+
-+	for (i = 0; i < lptr->num_blocks; i++)  {
-+		/*
-+		 * block initialization, lay in block header
-+		 */
-+		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
-+		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-+		xfs_btree_init_block(mp, lptr->buf_p, XFS_REFC_CRC_MAGIC,
-+					0, 0, agno,
-+					XFS_BTREE_CRC_BLOCKS);
-+
-+		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-+		bt_hdr->bb_numrecs = cpu_to_be16(lptr->num_recs_pb +
-+							(lptr->modulo > 0));
-+
-+		if (lptr->modulo > 0)
-+			lptr->modulo--;
-+
-+		if (lptr->num_recs_pb > 0)
-+			prop_refc_cursor(mp, agno, btree_curs,
-+					refc_rec->rc_startblock, 0);
-+
-+		bt_rec = (struct xfs_refcount_rec *)
-+			  ((char *)bt_hdr + XFS_REFCOUNT_BLOCK_LEN);
-+		for (j = 0; j < be16_to_cpu(bt_hdr->bb_numrecs); j++) {
-+			ASSERT(refc_rec != NULL);
-+			bt_rec[j].rc_startblock =
-+					cpu_to_be32(refc_rec->rc_startblock);
-+			bt_rec[j].rc_blockcount =
-+					cpu_to_be32(refc_rec->rc_blockcount);
-+			bt_rec[j].rc_refcount = cpu_to_be32(refc_rec->rc_refcount);
-+
-+			refc_rec = pop_slab_cursor(refc_cur);
-+		}
-+
-+		if (refc_rec != NULL)  {
-+			/*
-+			 * get next leaf level block
-+			 */
-+			if (lptr->prev_buf_p != NULL)  {
-+#ifdef XR_BLD_RL_TRACE
-+				fprintf(stderr, "writing refcntbt agbno %u\n",
-+					lptr->prev_agbno);
-+#endif
-+				ASSERT(lptr->prev_agbno != NULLAGBLOCK);
-+				libxfs_writebuf(lptr->prev_buf_p, 0);
-+			}
-+			lptr->prev_buf_p = lptr->buf_p;
-+			lptr->prev_agbno = lptr->agbno;
-+			lptr->agbno = get_next_blockaddr(agno, 0, btree_curs);
-+			bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(lptr->agbno);
-+
-+			lptr->buf_p = libxfs_getbuf(mp->m_dev,
-+					XFS_AGB_TO_DADDR(mp, agno, lptr->agbno),
-+					XFS_FSB_TO_BB(mp, 1));
-+		}
-+	}
-+	free_slab_cursor(&refc_cur);
-+}
-+
- /*
-  * build both the agf and the agfl for an agno given both
-  * btree cursors.
-@@ -1637,7 +1921,8 @@ build_agf_agfl(xfs_mount_t	*mp,
- 		bt_status_t	*bcnt_bt,
- 		xfs_extlen_t	freeblks,	/* # free blocks in tree */
- 		int		lostblocks,	/* # blocks that will be lost */
--		bt_status_t	*rmap_bt)
-+		bt_status_t	*rmap_bt,
-+		bt_status_t	*refcnt_bt)
- {
- 	extent_tree_node_t	*ext_ptr;
- 	xfs_buf_t		*agf_buf, *agfl_buf;
-@@ -1679,6 +1964,8 @@ build_agf_agfl(xfs_mount_t	*mp,
- 	agf->agf_roots[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->root);
- 	agf->agf_levels[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->num_levels);
- 	agf->agf_freeblks = cpu_to_be32(freeblks);
-+	agf->agf_refcount_root = cpu_to_be32(refcnt_bt->root);
-+	agf->agf_refcount_level = cpu_to_be32(refcnt_bt->num_levels);
+@@ -950,6 +952,7 @@ main(
+ 	bool			finobtflag;
+ 	int			spinodes;
+ 	bool			rmapbt;
++	bool			reflink;
  
- 	/*
- 	 * Count and record the number of btree blocks consumed if required.
-@@ -1796,6 +2083,10 @@ build_agf_agfl(xfs_mount_t	*mp,
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -988,6 +991,7 @@ main(
+ 	finobtflag = false;
+ 	spinodes = 0;
+ 	rmapbt = false;
++	reflink = false;
+ 	memset(&fsx, 0, sizeof(fsx));
  
- 	ASSERT(be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]) !=
- 		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
-+	ASSERT(be32_to_cpu(agf->agf_refcount_root) !=
-+		be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]));
-+	ASSERT(be32_to_cpu(agf->agf_refcount_root) !=
-+		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
+ 	memset(&xi, 0, sizeof(xi));
+@@ -1500,6 +1504,14 @@ main(
+ 						illegal(value, "m rmapbt");
+ 					rmapbt = c;
+ 					break;
++				case M_REFLINK:
++					if (!value || *value == '\0')
++						reqval('m', mopts, M_CRC);
++					c = atoi(value);
++					if (c < 0 || c > 1)
++						illegal(value, "m reflink");
++					reflink = c;
++					break;
+ 				default:
+ 					unknown('m', value);
+ 				}
+@@ -1862,6 +1874,12 @@ _("warning: rmapbt not supported without CRC support, disabled.\n"));
+ 		rmapbt = 0;
+ 	}
  
- 	libxfs_writebuf(agf_buf, 0);
- 
-@@ -1865,6 +2156,7 @@ phase5_func(
- 	bt_status_t	ino_btree_curs;
- 	bt_status_t	fino_btree_curs;
- 	bt_status_t	rmap_btree_curs;
-+	bt_status_t	refcnt_btree_curs;
- 	int		extra_blocks = 0;
- 	uint		num_freeblocks;
- 	xfs_extlen_t	freeblks1;
-@@ -1927,6 +2219,12 @@ phase5_func(
- 		 */
- 		init_rmapbt_cursor(mp, agno, &rmap_btree_curs);
- 
-+		/*
-+		 * Set up the btree cursors for the on-disk refcount btrees,
-+		 * which includes pre-allocating all required blocks.
-+		 */
-+		init_refc_cursor(mp, agno, &refcnt_btree_curs);
++	if (reflink && !crcs_enabled) {
++		fprintf(stderr,
++_("warning: reflink not supported without CRC support, disabled.\n"));
++		reflink = false;
++	}
 +
- 		num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
+ 	if (nsflag || nlflag) {
+ 		if (dirblocksize < blocksize ||
+ 					dirblocksize > XFS_MAX_BLOCKSIZE) {
+@@ -2479,6 +2497,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		sbp->sb_features_ro_compat = XFS_SB_FEAT_RO_COMPAT_FINOBT;
+ 	if (rmapbt)
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
++	if (reflink)
++		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
+ 
+ 	if (loginternal) {
  		/*
- 		 * lose two blocks per AG -- the space tree roots
-@@ -2020,12 +2318,17 @@ phase5_func(
- 					rmap_btree_curs.num_free_blocks) - 1;
+@@ -2542,7 +2562,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		printf(_(
+ 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+ 		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
++		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
+ 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+@@ -2551,7 +2571,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+ 			dfile, isize, (long long)agcount, (long long)agsize,
+ 			"", sectorsize, attrversion, !projid16bit,
+-			"", crcs_enabled, finobt, spinodes, rmapbt,
++			"", crcs_enabled, finobt, spinodes, rmapbt, reflink,
+ 			"", blocksize, (long long)dblocks, imaxpct,
+ 			"", dsunit, dswidth,
+ 			dirversion, dirblocksize, nci, dirftype,
+@@ -2746,7 +2766,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 						cpu_to_be32(XFS_RMAP_BLOCK(mp));
+ 			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
  		}
+-
++		if (reflink) {
++			agf->agf_refcount_root = cpu_to_be32(xfs_refc_block(mp));
++			agf->agf_refcount_level = cpu_to_be32(1);
++		}
+ 		agf->agf_flfirst = 0;
+ 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+ 		agf->agf_flcount = 0;
+@@ -2915,6 +2938,23 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
  
-+		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+			build_refcount_tree(mp, agno, &refcnt_btree_curs);
-+			write_cursor(&refcnt_btree_curs);
+ 		/*
++		 * refcount btree root block
++		 */
++		if (reflink) {
++			buf = libxfs_getbuf(mp->m_ddev_targp,
++					XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
++					bsize);
++			buf->b_ops = &xfs_refcountbt_buf_ops;
++
++			block = XFS_BUF_TO_BLOCK(buf);
++			memset(block, 0, blocksize);
++			xfs_btree_init_block(mp, buf, XFS_REFC_CRC_MAGIC, 0, 0,
++						agno, XFS_BTREE_CRC_BLOCKS);
++
++			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 +		}
 +
- 		/*
- 		 * set up agf and agfl
++		/*
+ 		 * INO btree root block
  		 */
- 		build_agf_agfl(mp, agno, &bno_btree_curs,
- 				&bcnt_btree_curs, freeblks1, extra_blocks,
--				&rmap_btree_curs);
-+				&rmap_btree_curs, &refcnt_btree_curs);
- 		/*
- 		 * build inode allocation tree.
- 		 */
-@@ -2056,6 +2359,8 @@ phase5_func(
- 		finish_cursor(&ino_btree_curs);
- 		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
- 			finish_cursor(&rmap_btree_curs);
-+		if (xfs_sb_version_hasreflink(&mp->m_sb))
-+			finish_cursor(&refcnt_btree_curs);
- 		if (xfs_sb_version_hasfinobt(&mp->m_sb))
- 			finish_cursor(&fino_btree_curs);
- 		finish_cursor(&bcnt_btree_curs);
+ 		buf = libxfs_getbuf(mp->m_ddev_targp,
+@@ -3002,9 +3042,21 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
++			/* account for refcount btree root */ 
++			if (reflink) {
++				rrec = XFS_RMAP_REC_ADDR(block, 5);
++				rrec->rm_startblock = cpu_to_be32(
++							xfs_refc_block(mp));
++				rrec->rm_blockcount = cpu_to_be32(1);
++				rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
++				rrec->rm_offset = 0;
++				be16_add_cpu(&block->bb_numrecs, 1);
++			}
++
+ 			/* account for the log space */
+ 			if (loginternal && agno == logagno) {
+-				rrec = XFS_RMAP_REC_ADDR(block, 5);
++				rrec = XFS_RMAP_REC_ADDR(block,
++					be16_to_cpu(block->bb_numrecs) + 1);
+ 				rrec->rm_startblock = cpu_to_be32(
+ 						XFS_FSB_TO_AGBNO(mp, logstart));
+ 				rrec->rm_blockcount = cpu_to_be32(logblocks);
+@@ -3253,7 +3305,7 @@ usage( void )
+ {
+ 	fprintf(stderr, _("Usage: %s\n\
+ /* blocksize */		[-b log=n|size=num]\n\
+-/* metadata */		[-m crc=0|1,finobt=0|1]\n\
++/* metadata */		[-m crc=0|1,finobt=0|1,reflink=0|1]\n\
+ /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+ 			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+ 			    sectlog=n|sectsize=num\n\
 
 _______________________________________________
 xfs mailing list
