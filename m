@@ -1,19 +1,19 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5D74F7F37
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 07:36:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B32B8F8033
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 05:36:19 -0700 (PDT)
-Received: from smtp-b25.md-connecting.com (smtp-b25.md-connecting.com
-	[82.97.45.79]) by cuda.sgi.com with ESMTP id S03uM7KjF2ezMfEa
-	for <xfs@oss.sgi.com>; Thu, 08 Oct 2015 05:36:13 -0700 (PDT)
-Subject: =?utf-8?Q?Envie_de_changer_votre_int=C3=A9rieur=3F?=
-Date: Thu, 8 Oct 2015 14:36:07 +0200
-From: =?utf-8?Q?solution_travaux_int=C3=A9rieur?= <tech@laurency.fr>
-Message-ID: <f45644deedad7d4c3df2564d1667a0cf@laurency.fr>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 460707F63
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 09:23:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DA4ABAC00B
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 07:23:02 -0700 (PDT)
+Received: from o100.p9.mailjet.com (o100.p9.mailjet.com [87.253.234.100]) by
+	cuda.sgi.com with ESMTP id Euw4O8f1qpS1B3Vl (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2015 07:22:58 -0700 (PDT)
+Message-Id: <1ae54aaa.1dw1.1gPf.ga.1flFOQc17x@mailjet.com>
 MIME-Version: 1.0
-Reply-To: =?utf-8?Q?solution_travaux_int=C3=A9rieur?=
-	<2kx_dhh.h57.1db@laurency.fr>
+From: "forsale@bayviewhotel-luderitz.com" <forsale@bayviewhotel-luderitz.com>
+Subject: Bay View Hotel in Luderitz is FOR SALE
+Date: Wed, 7 Oct 2015 13:07:37 +0000
+Reply-To: info@bayviewhotel-luderitz.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,299 +22,272 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1087373504284570837=="
+Content-Type: multipart/mixed; boundary="===============2127257471951202312=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============1087373504284570837==
-Content-Type: multipart/alternative;
-	boundary="Part1_f45644deedad7d4c3df2564d1667a0cf"
+--===============2127257471951202312==
+Content-Type: multipart/alternative; boundary="=-DUZsPkelu55/6nvrugSH"
 
---Part1_f45644deedad7d4c3df2564d1667a0cf
-Content-Type: text/plain; charset = "utf-8"
+--=-DUZsPkelu55/6nvrugSH
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Pour visualiser et se d=C3=A9sabonner ce message,
-=20
-Veuillez, copier puis coller, l'adresse URL compl=C3=A8te ci-dessous dans=
- la
-barre d'adresse de votre navigateur et appuyer sur la touche "Entr=C3=A9e=
-" de
-votre clavier.
+View online version
+<http://omi3.mjt.lu/nl/omi3/14npw.html?a=3D1flFOQc17x&b=3D1ae54aaa&c=3Domi3=
+&d=3D88de7cea&e=3Df4ffc66b&email=3Dxfs@oss.sgi.com>=20
+Yes, that is correct!
 
+The iconic Bay View Hotel in Luderitz is for sale. This is a once in a
+lifetime opportunity for individuals or business entities, who want to
+own a business in this well-kept secret of a historic town.
+The hotel is as much a landmark and part of the history of Luderitz
+than the old town itself. Situated right in the middle of town, within
+walking distance from anything you may need and a stone's throw from
+the lagoon, this hotel has successfully catered to tourists, business
+travellers and overlanders for decades.
+Asking Price: N$ 4,950,000
+* Selling well under value!
+<http://bayviewhotel-luderitz.com/index.php/ct-menu-item-4/ct-menu-item-12>
+* WSituated in the centre of Luderitz
 
+	* Walking distance to shops, restaurants and the waterfront.
+	* 24 Spacious rooms.
+	* Average of 41% occupancy throughout the year.
+	* Comfortably owner operated.
 
-- - - - - - - - - - - - - - - - -=20
+	* Secure courtyard layout with sparkling pool.
 
-http://app.laurency.fr/v/?camp=3D270_44&ms=3DeGZzQG9zcy5zZ2kuY29t
+	* Restaurant with fully equipped kitchen and Cozy pub.
+* Regular client base consisting of business travellers and tour
+groups.
+	* Strong growth opportunity.
 
-- - - - - - - - - - - - - - - - -=20
+	* Massive economy boosting project planned for Luderitz.
+<http://www.bayviewhotel-luderitz.com/index.php/ct-menu-item-20>
 
+Inquiries are welcomed from serious interested buyers.=20
+For more complete valuation information, kindly visit our website,
+where you will find most of the answers to the questions you may have.
 
+ Information <http://www.bayviewhotel-luderitz.com>=20
+=C2=A0
+This email has been sent to xfs@oss.sgi.com, click here to unsubscribe
+<http://omi3.mjt.lu/unsub?hl=3Den&a=3D1flFOQc17x&b=3D1ae54aaa&c=3Domi3&d=3D=
+88de7cea&e=3Df4ffc66b&email=3Dxfs@oss.sgi.com>.=20
+=
 
-
---Part1_f45644deedad7d4c3df2564d1667a0cf
-Content-Type: text/html; charset = "utf-8"
+--=-DUZsPkelu55/6nvrugSH
+Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://ww=
-w.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns=3D"http://www.w3.org/1999/xhtml" xml:lang=3D"fr" lang=3D"fr">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8" =
-/>
-<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
-1.0" />
-<title>Envie de changer votre int=C3=A9rieur?</title>
-</head><body marginwidth=3D"0" leftmargin=3D"0" style=3D"margin:0px; -moz=
--text-size-adjust:none; padding:0px; text-size-adjust:none; -webkit-text-=
-size-adjust:none; -ms-text-size-adjust:none;" topmargin=3D"0" marginheigh=
-t=3D"0">
-<center><p>
-<a href=3D"http://app.laurency.fr/v/?camp=3D270_44&ms=3DeGZzQG9zcy5zZ2kuY=
-29t" target=3D"_blank" title=3D"Si cet e-mail ne s'affiche pas correcteme=
-nt, suivez ce lien." style=3D"color:#00F; font-family:'Arial'; font-size:=
-12px; text-decoration:underline;">Si cet email ne s&rsquo;affiche pas cor=
-rectement, suivez ce lien.</a></p><table width=3D"100%"><tbody><tr><td al=
-ign=3D"center"><table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" he=
-ight=3D"703" width=3D"601"><tbody><tr><td colspan=3D"8" align=3D"center">=
-<br></td></tr> 	<tr> 		<td colspan=3D"3"> 			<a href=3D"http://app.lauren=
-cy.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV=
-2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05=
-" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos fut=
-ures travaux ]" style=3D"text-decoration:none;font-size:20px; color:#438f=
-bc; font-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laur=
-ency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90c=
-mF2YXV4LWludGVfcmlldXJfMDE
- uanBn" alt=3D"Logo NeoDevis" style=3D"border:0;" height=3D"73" width=3D"=
-269"></a></td> 		<td colspan=3D"4" style=3D"color:#FFF; font-family:Arial=
-, Helvetica, sans-serif; font-size:20px;" align=3D"center" bgcolor=3D"#38=
-3838" height=3D"73" width=3D"331"><a href=3D"http://app.laurency.fr/r/?m=3D=
-eGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2Rl=
-dmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" target=3D"_=
-blank" title=3D"[Demander un devis Gratuitement pour vos futures travaux =
-]" style=3D"text-decoration:none;color:#FFF; font-family:Arial, Helvetica=
-, sans-serif; font-size:20px;">Envie de changer votre int&eacute;rieur ?<=
-/a></td> 		 	</tr> 	<tr> 		<td colspan=3D"7"> 			<a href=3D"http://app.la=
-urency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8=
-tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1=
-ci05" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos=
- futures travaux ]" style=3D"text-decoration:none;font-size:20px; color:#=
-438fbc; font-family:Aria
- l, Helvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR=
-0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmll=
-dXJfMDEtMDMuanBn" alt=3D"Photographie d'un artisan [TROUVEZ L'ARTISAN ADA=
-PTE A VOTRE PROJET !]" style=3D"border:0;" height=3D"372" width=3D"600"><=
-/a></td> 		<td> 			<img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d=
-3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image s=
-pacer" style=3D"border:0;" height=3D"372" width=3D"1"></td> 	</tr> 	<tr> =
-		<td rowspan=3D"2" height=3D"95" width=3D"18"> 			<img src=3D"http://app=
-.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1=
-eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"95" =
-width=3D"18"></td> 		<td rowspan=3D"2"> 			<a href=3D"http://app.laurency=
-.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2a=
-XMuY29tL2RldmlzLXBlaW50dXJlLTU5" target=3D"_blank" title=3D"[Demander un =
-devis Gratuitement pour vos futures travaux ]" style=3D"text-decoration:n=
-one;font-size:20px; color:#438fbc;
-  font-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.lauren=
-cy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF=
-2YXV4LWludGVfcmlldXJfMDUuanBn" alt=3D"photographie d'une femme faisant de=
- la peinture" style=3D"border:0;" height=3D"95" width=3D"141"></a></td> 	=
-	<td colspan=3D"2"> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zc=
-y5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXBsb=
-21iZXJpZS03Mw=3D=3D" target=3D"_blank" title=3D"[Demander un devis Gratui=
-tement pour vos futures travaux ]" style=3D"text-decoration:none;font-siz=
-e:20px; color:#438fbc; font-family:Arial, Helvetica, sans-serif"><img src=
-=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haW=
-xpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMDYuanBn" alt=3D"Photographie d=
-'un Plombier" style=3D"border:0;" height=3D"94" width=3D"141"></a></td> 	=
-	<td rowspan=3D"2"> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zc=
-y5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyY=
-XZhdXgtZ3Jvcy1vZXV2cmUtY29uc3R
- ydWN0aW9uLXJlbm92YXRpb24taXNvbGF0aW9uLTY=3D" target=3D"_blank" title=3D"=
-[Demander un devis Gratuitement pour vos futures travaux ]" style=3D"text=
--decoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvet=
-ica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3d=
-y5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMDcuan=
-Bn" alt=3D"Photographie d'une maisson sur un plan" style=3D"border:0;" he=
-ight=3D"95" width=3D"140"></a></td> 		<td rowspan=3D"2"> 			<a href=3D"ht=
-tp://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDov=
-L3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXZlcmFuZGEtcGVyZ29sYS12ZXJyaWVyZS03" tar=
-get=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos futures =
-travaux ]" style=3D"text-decoration:none;font-size:20px; color:#438fbc; f=
-ont-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.=
-fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YX=
-V4LWludGVfcmlldXJfMDguanBn" alt=3D"Photographie d'une V&eacute;randas" st=
-yle=3D"border:0;" he
- ight=3D"95" width=3D"140"></a></td> 		<td rowspan=3D"2" bgcolor=3D"#FFFF=
-FF" height=3D"95" width=3D"20"> 			<img src=3D"http://app.laurency.fr/r/?=
-rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm=
-" alt=3D"image spacer" style=3D"border:0;" height=3D"95" width=3D"20"></t=
-d> 		<td> 			<img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZ=
-W8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer"=
- style=3D"border:0;" height=3D"94" width=3D"1"></td> 	</tr> 	<tr> 		<td c=
-olspan=3D"2" rowspan=3D"2" style=3D"color:#3c3c3c;font-family:Arial, Helv=
-etica, sans-serif;" align=3D"center" height=3D"26" width=3D"141"><a href=3D=
-"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0c=
-DovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXBsb21iZXJpZS03Mw=3D=3D" style=3D"col=
-or:#3c3c3c;font-family:Arial, Helvetica, sans-serif; text-decoration:none=
-" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos fut=
-ures travaux ]">Plomberie</a></td> 		<td> 			<img src=3D"http://app.laure=
-ncy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY
- 29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"b=
-order:0;" height=3D"1" width=3D"1"></td> 	</tr> 	<tr> 		<td bgcolor=3D"#F=
-FFFFF" height=3D"25" width=3D"18">&nbsp;</td> 		<td style=3D"color:#3c3c3=
-c;font-family:Arial, Helvetica, sans-serif;" align=3D"center" bgcolor=3D"=
-#FFFFFF" height=3D"25" width=3D"141"><a href=3D"http://app.laurency.fr/r/=
-?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29=
-tL2RldmlzLXBlaW50dXJlLTU5" style=3D"color:#3c3c3c;font-family:Arial, Helv=
-etica, sans-serif; text-decoration:none" target=3D"_blank" title=3D"[Dema=
-nder un devis Gratuitement pour vos futures travaux ]">Peinture</a></td> =
-		<td style=3D"color:#3c3c3c;font-family:Arial, Helvetica, sans-serif;" a=
-lign=3D"center" height=3D"25" width=3D"140"><a href=3D"http://app.laurenc=
-y.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2=
-aXMuY29tL2RldmlzLXRyYXZhdXgtZ3Jvcy1vZXV2cmUtY29uc3RydWN0aW9uLXJlbm92YXRpb=
-24taXNvbGF0aW9uLTY=3D" style=3D"color:#3c3c3c;font-family:Arial, Helvetic=
-a, sans-serif; text-decoration:non
- e" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos f=
-utures travaux ]">R&eacute;novation</a></td> 		<td style=3D"color:#3c3c3c=
-;font-family:Arial, Helvetica, sans-serif;" align=3D"center" bgcolor=3D"#=
-FFFFFF" height=3D"25" width=3D"140"><a href=3D"http://app.laurency.fr/r/?=
-m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29t=
-L2RldmlzLXZlcmFuZGEtcGVyZ29sYS12ZXJyaWVyZS03" style=3D"color:#3c3c3c;font=
--family:Arial, Helvetica, sans-serif; text-decoration:none" target=3D"_bl=
-ank" title=3D"[Demander un devis Gratuitement pour vos futures travaux ]"=
->Fen&ecirc;tres - V&eacute;randas</a></td> 		<td bgcolor=3D"#FFFFFF" heig=
-ht=3D"25" width=3D"20">&nbsp;</td> 		<td> 			<img src=3D"http://app.laure=
-ncy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcG=
-FjZXIuZ2lm" alt=3D"spacer" style=3D"border:0;" height=3D"25" width=3D"1">=
-</td> 	</tr> 	<tr> 		<td bgcolor=3D"#FFFFFF" height=3D"37" width=3D"18"> =
-			<br></td> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zc=
-y5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDov
- L3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXBlaW50dXJlLTU5" target=3D"_blank" titl=
-e=3D"[Demander un devis Gratuitement pour vos futures travaux ]" style=3D=
-"text-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, H=
-elvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDov=
-L3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfM=
-TUuanBn" alt=3D"Bouton [Devis Gratuit]" style=3D"border:0;" height=3D"37"=
- width=3D"141"></a></td> 		<td colspan=3D"2"> 			<a href=3D"http://app.la=
-urency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8=
-tZGV2aXMuY29tL2RldmlzLXBsb21iZXJpZS03Mw=3D=3D" target=3D"_blank" title=3D=
-"[Demander un devis Gratuitement pour vos futures travaux ]" style=3D"tex=
-t-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helve=
-tica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3=
-dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMTUua=
-nBn" alt=3D"Bouton [Devis Gratuit]" style=3D"border:0;" height=3D"37" wid=
-th=3D"141"></a></td> 		<td
- > 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D2=
-70_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtZ3Jvcy1vZX=
-V2cmUtY29uc3RydWN0aW9uLXJlbm92YXRpb24taXNvbGF0aW9uLTY=3D" style=3D"text-d=
-ecoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetic=
-a, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5=
-uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMTUuanBn=
-" alt=3D"Bouton [Devis Gratuit]" style=3D"border:0;" height=3D"37" width=3D=
-"141"></a></td> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG=
-9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLX=
-ZlcmFuZGEtcGVyZ29sYS12ZXJyaWVyZS03" target=3D"_blank" title=3D"[Demander =
-un devis Gratuitement pour vos futures travaux ]" style=3D"text-decoratio=
-n:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetica, sans-=
-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV=
-2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMTUuanBn" alt=3D=
-"Bouton [Devis Gra
- tuit]" style=3D"border:0;" height=3D"37" width=3D"141"></a></td> 		<td b=
-gcolor=3D"#FFFFFF" height=3D"37" width=3D"20"> 			<br></td> 		<td> 			<a =
-href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3D=
-aHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ=
-2VtZW50LWludGVyaWV1ci05" style=3D"text-decoration:none;font-size:20px; co=
-lor:#438fbc; font-family:Arial, Helvetica, sans-serif"><img src=3D"http:/=
-/app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJh=
-dmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"=
-37" width=3D"1"></a></td> 	</tr> 	<tr> 		<td colspan=3D"7"> 			<a href=3D=
-"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0c=
-DovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW=
-50LWludGVyaWV1ci05" target=3D"_blank" title=3D"[Demander un devis Gratuit=
-ement pour vos futures travaux ]" style=3D"text-decoration:none;font-size=
-:20px; color:#438fbc; font-family:Arial, Helvetica, sans-serif"><img src=3D=
-"http://app.laurency.fr/
- r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4=
-LWludGVfcmlldXJfMjAuanBn" alt=3D"Bouton [DEMANDER GRATUITEMENT VOTRE DEVI=
-S]" height=3D"100" width=3D"600"></a></td> 		<td> 			<a href=3D"http://ap=
-p.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5=
-uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVy=
-aWV1ci05" style=3D"text-decoration:none;font-size:20px; color:#438fbc; fo=
-nt-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.f=
-r/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXI=
-uZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"100" width=3D"1=
-"></a></td> 	</tr> 	<tr> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=
-=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL=
-2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D=
-"text-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, H=
-elvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDov=
-L3d3dy5uZW8tZGV2aXMu
- Y29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"=
-border:0;" height=3D"1" width=3D"18"></a></td> 		<td> 			<a href=3D"http:=
-//app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d=
-3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWlu=
-dGVyaWV1ci05" style=3D"text-decoration:none;font-size:20px; color:#438fbc=
-; font-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.lauren=
-cy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGF=
-jZXIuZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"1" width=3D=
-"141"></a></td> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG=
-9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLX=
-RyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D"text-dec=
-oration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetica,=
- sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZ=
-W8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer"=
- style=3D"border:0;" hei
- ght=3D"1" width=3D"110"></a></td> 		<td> 			<a href=3D"http://app.lauren=
-cy.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV=
-2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05=
-" style=3D"text-decoration:none;font-size:20px; color:#438fbc; font-famil=
-y:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3D=
-aHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=
-=3D"image spacer" style=3D"border:0;" height=3D"1" width=3D"31"></a></td>=
- 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&=
-c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50Z=
-XJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D"text-decoration:none;fo=
-nt-size:20px; color:#438fbc; font-family:Arial, Helvetica, sans-serif"><i=
-mg src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29t=
-L21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"borde=
-r:0;" height=3D"1" width=3D"140"></a></td> 		<td> 			<a href=3D"http://ap=
-p.laurency.fr/r/?m=3DeGZzQ
- G9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2Rldmlz=
-LXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D"text-d=
-ecoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetic=
-a, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5=
-uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image space=
-r" height=3D"1" width=3D"140"></a></td> 		<td> 			<a href=3D"http://app.l=
-aurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW=
-8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV=
-1ci05" style=3D"text-decoration:none;font-size:20px; color:#438fbc; font-=
-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.fr/r=
-/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2=
-lm" alt=3D"image spacer" height=3D"1" width=3D"20"></a></td> 		<td><br></=
-td> 	</tr>     <tr><td colspan=3D"8" align=3D"center"><br></td></tr> </tb=
-ody></table> </td></tr></tbody></table>  <img src=3D"http://app.laurency.=
-fr/t/?i=3D270_44&m=3De
- GZzQG9zcy5zZ2kuY29t&url=3Dhttp://app.laurency.fr/images/blank.jpg" alt=3D=
-"_pspacer4"  /><p>
-<a href=3D"http://app.laurency.fr/d/?camp=3D270_44&ms=3DeGZzQG9zcy5zZ2kuY=
-29t" target=3D"_blank" title=3D"Ne plus recevoir d'informations de notre =
-part" style=3D"color:#00F; font-family:'Arial'; font-size:12px; text-deco=
-ration:underline;">Pour se d&eacute;sabonner : Suivez ce lien.</a><br />S=
-i ce message vous a caus&eacute; un quelconque d&eacute;rangement, nous v=
-ous prions de nous en excuser.
-</p><center>
-</body>
-</html>
+<!DOCTYPE HTML>
+<html lang=3D"en"><head><meta content=3D"text/html; charset=3Dutf-8" http-e=
+quiv=3D"Content-Type"><title>Bay View Hotel in Luderitz is FOR SALE</title>=
+<link rel=3D"image_src" href=3D"http://omi3.mjt.lu/nlt/omi3/14npw.png"><sty=
+le type=3D"text/css">
+                    a { border: none; }
+                    img { border: none; }
+                        p { margin: 0; line-height: 1.3em; }
+                        #footer-msg a { color: #F3A836; }
+                    h1,h2,h3,h4,h5,h6 {font-size:100%;margin:0;}
+                </style></head><body style=3D"margin: 0; padding: 0; backgr=
+ound-color: #1b2e85" bgcolor=3D"#1b2e85">
+                               =20
+                                                                    <table =
+cellpadding=3D"0" cellspacing=3D"0" border=3D"0" align=3D"center" width=3D"=
+100%"><tr><td align=3D"center" style=3D"padding: 37px 0; background-color: =
+#1b2e85;" bgcolor=3D"#1b2e85"><div style=3D"padding: 0 0 10px"><a href=3D"h=
+ttp://omi3.mjt.lu/link/omi3/y6wnwgxzt1s/1/tnxyfOer0wnVUyYUgwSW-w/aHR0cDovL2=
+9taTMubWp0Lmx1L25sL29taTMvMTRucHcuaHRtbD9hPTFmbEZPUWMxN3gmYj0xYWU1NGFhYSZjP=
+W9taTMmZD04OGRlN2NlYSZlPWY0ZmZjNjZiJmVtYWlsPXhmc0Bvc3Muc2dpLmNvbQ" style=3D=
+"line-height: 1;vertical-align: bottom;color: #fff2f8; font-family: arial; =
+font-size: 11px; ;border: none;">View online version</a></div>
+                                                    <!-- #nl_container -->
+                                                    <table cellpadding=3D"0=
+" cellspacing=3D"0" border=3D"0" style=3D"margin: 0; border: 1px solid #ddd=
+ddd; color: #66505b; font-family: arial; font-size: 12px; border-color: #cf=
+b0bf; background-color: #dadfeb; " width=3D"600"><tr><td>
+   =20
+                        <!-- #nl_header -->
+                        <table cellpadding=3D"0" cellspacing=3D"0" border=
+=3D"0" width=3D"100%"><tr><td>
+                            <img width=3D"600" alt=3D"" style=3D"display: b=
+lock; width: 600px;border: none;" src=3D"http://omi3.mjt.lu/img/omi3/14k8x/=
+332w.jpg"></td>
+                                    </tr></table><!-- #nl_content --><table=
+ cellpadding=3D"0" cellspacing=3D"0" border=3D"0" style=3D"margin: 0; borde=
+r-collapse: collapse;" width=3D"100%"><tr><td style=3D"color: #66505b; font=
+-family: arial; font-size: 12px; border-color: #cfb0bf; background-color: #=
+dadfeb;  padding: 5px 0;" align=3D"left"><table cellpadding=3D"0" cellspaci=
+ng=3D"0" style=3D"border-collapse:collapse;color: #66505b; font-family: ari=
+al; font-size: 12px; border-color: #cfb0bf; background-color: #dadfeb; "><t=
+r><td width=3D"10px"></td><td width=3D"580" style=3D"vertical-align: top; p=
+adding: 5px 0; "><table cellpadding=3D"0" cellspacing=3D"0" style=3D"border=
+-collapse:collapse; text-align: center; width: 100% "><tr><td><img alt=3D""=
+ width=3D"568" height=3D"379" style=3D"border: none;" src=3D"http://omi3.mj=
+t.lu/img/omi3/14k8x/332x.jpg"></td></tr></table></td></tr></table><table ce=
+llpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;color: =
+#66505b; font-family: arial; font-size: 12px; border-color: #cfb0bf; backgr=
+ound-color: #dadfeb; "><tr><td width=3D"10px"></td><td width=3D"580" style=
+=3D"vertical-align: top; padding: 5px 0; "><table cellpadding=3D"0" cellspa=
+cing=3D"0" style=3D"border-collapse:collapse;width:565px;color: #66505b; fo=
+nt-family: arial; font-size: 12px; border-color: #cfb0bf; background-color:=
+ #dadfeb; " width=3D"565"><tr><td style=3D"padding:5px 0 5px 5px;line-heigh=
+t:normal;color: #66505b; font-family: arial; font-size: 12px; border-color:=
+ #cfb0bf; background-color: #dadfeb; ">
+      <h2 style=3D"font-size: 1.5em;margin: 0 0 10px;text-align: center;">Y=
+es, that is correct!<br></h2><p style=3D"text-align: center;margin: 0 0 10p=
+x;line-height: 1.3em;">The iconic <span style=3D"font-weight: bold;">Bay Vi=
+ew Hotel</span> in Luderitz is <span style=3D"font-weight: bold;">for sale<=
+/span>. This is a once in a lifetime opportunity for individuals or busines=
+s entities, who want to own a business in this well-kept secret of a histor=
+ic town.</p><p style=3D"text-align: center;margin: 0 0 10px;line-height: 1.=
+3em;">The hotel is as much a landmark and part of the history of Luderitz t=
+han the old town itself. Situated right in the middle of town, within walki=
+ng distance from anything you may need and a stone's throw from the lagoon,=
+ this hotel has successfully catered to tourists, business travellers and o=
+verlanders for decades.</p><p style=3D"text-align: center;margin: 0 0 10px;=
+line-height: 1.3em;"><span style=3D"font-weight: bold;">Asking Price: N$ 4,=
+950,000</span><br></p>
+      </td></tr></table></td></tr></table><table cellpadding=3D"0" cellspac=
+ing=3D"0" style=3D"border-collapse:collapse;color: #66505b; font-family: ar=
+ial; font-size: 12px; border-color: #cfb0bf; background-color: #dadfeb; "><=
+tr><td width=3D"10px"></td><td width=3D"580" style=3D"vertical-align: top; =
+padding: 5px 0; ">
+      <table cellpadding=3D"0" cellspacing=3D"0" border=3D"0" width=3D"100%=
+" style=3D"color: #66505b; font-family: arial; font-size: 12px; border-colo=
+r: #cfb0bf; background-color: #dadfeb; "><tr><td style=3D"vertical-align: t=
+op; padding: 5px;"><ul style=3D"line-height: 1.5em;"><li><a href=3D"http://=
+omi3.mjt.lu/link/omi3/y6wnwgxzt1s/2/n6H5HrmqMfyZc4l4RXkvKg/aHR0cDovL2JheXZp=
+ZXdob3RlbC1sdWRlcml0ei5jb20vaW5kZXgucGhwL2N0LW1lbnUtaXRlbS00L2N0LW1lbnUtaXR=
+lbS0xMg" style=3D"border: none;">Selling well under value!</a><br></li><li>=
+WSituated in the centre of Luderitz<br></li><li>Walking distance to shops, =
+restaurants and the waterfront.<br></li><li>24 Spacious rooms.</li><li>Aver=
+age of 41% occupancy throughout the year.</li><li>Comfortably owner operate=
+d.</li><li>Secure courtyard layout with sparkling pool.<br></li></ul></td>
+          <td width=3D"10"></td>
+          <td style=3D"vertical-align: top; padding: 5px; text-align: cente=
+r;" width=3D"284"><img alt=3D"" width=3D"273" height=3D"205" style=3D"borde=
+r: none;" src=3D"http://omi3.mjt.lu/img/omi3/14k8x/33lz.jpg"></td>
+        </tr></table></td></tr></table><table cellpadding=3D"0" cellspacing=
+=3D"0" style=3D"border-collapse:collapse;color: #66505b; font-family: arial=
+; font-size: 12px; border-color: #cfb0bf; background-color: #dadfeb; "><tr>=
+<td width=3D"10px"></td><td width=3D"580" style=3D"vertical-align: top; pad=
+ding: 5px 0; ">
+      <table cellpadding=3D"0" cellspacing=3D"0" border=3D"0" width=3D"100%=
+" style=3D"color: #66505b; font-family: arial; font-size: 12px; border-colo=
+r: #cfb0bf; background-color: #dadfeb; "><tr><td style=3D"vertical-align: t=
+op; padding: 5px; text-align: center;" width=3D"284"><img alt=3D"" width=3D=
+"273" height=3D"182" style=3D"border: none;" src=3D"http://omi3.mjt.lu/img/=
+omi3/14k8x/33lk.jpg"></td>
+          <td width=3D"10"></td>
+          <td style=3D"vertical-align: top; padding: 5px;"><p style=3D"marg=
+in: 0 0 10px;line-height: 1.3em;"></p><ul style=3D"line-height: 1.5em;"><li=
+>Restaurant with fully equipped kitchen and Cozy pub.</li><li>Regular clien=
+t base consisting of business travellers and tour groups.</li><li>Strong gr=
+owth opportunity.</li><li><a href=3D"http://omi3.mjt.lu/link/omi3/y6wnwgxzt=
+1s/3/NNnI-FN-QSF01kKDVRFMPg/aHR0cDovL3d3dy5iYXl2aWV3aG90ZWwtbHVkZXJpdHouY29=
+tL2luZGV4LnBocC9jdC1tZW51LWl0ZW0tMjA" style=3D"color: #0033cc; ;border: non=
+e;">Massive economy boosting project planned for Luderitz.</a><br></li></ul=
+><p style=3D"margin: 0 0 10px;line-height: 1.3em;"></p></td>
+        </tr></table></td></tr></table><table cellpadding=3D"0" cellspacing=
+=3D"0" style=3D"border-collapse:collapse;color: #66505b; font-family: arial=
+; font-size: 12px; border-color: #cfb0bf; background-color: #dadfeb; "><tr>=
+<td width=3D"10px"></td><td width=3D"580" style=3D"vertical-align: top; pad=
+ding: 5px 0; "><table cellpadding=3D"0" cellspacing=3D"0" style=3D"border-c=
+ollapse:collapse; text-align: center; width: 100% "><tr><td><img alt=3D"" w=
+idth=3D"568" height=3D"379" style=3D"border: none;" src=3D"http://omi3.mjt.=
+lu/img/omi3/14k8x/33mx.jpg"></td></tr></table></td></tr></table><table cell=
+padding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse;color: #6=
+6505b; font-family: arial; font-size: 12px; border-color: #cfb0bf; backgrou=
+nd-color: #dadfeb; "><tr><td width=3D"10px"></td><td width=3D"580" style=3D=
+"vertical-align: top; padding: 5px 0; "><table cellpadding=3D"0" cellspacin=
+g=3D"0" style=3D"border-collapse:collapse;width:565px;color: #66505b; font-=
+family: arial; font-size: 12px; border-color: #cfb0bf; background-color: #d=
+adfeb; " width=3D"565"><tr><td style=3D"padding:5px 0 5px 5px;line-height:n=
+ormal;color: #66505b; font-family: arial; font-size: 12px; border-color: #c=
+fb0bf; background-color: #dadfeb; ">
+      <div style=3D"text-align: center;">Inquiries are welcomed from seriou=
+s interested buyers. <br><br>For more complete valuation information, kindl=
+y visit our website, where you will find most of the answers to the questio=
+ns you may have.<br></div>
+      </td></tr></table></td></tr></table><table cellpadding=3D"0" cellspac=
+ing=3D"0" style=3D"border-collapse:collapse;color: #66505b; font-family: ar=
+ial; font-size: 12px; border-color: #cfb0bf; background-color: #dadfeb; "><=
+tr><td width=3D"10px"></td><td width=3D"580" style=3D"vertical-align: top; =
+padding: 5px 0; ">
+      <table cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:c=
+ollapse;width:565px;color: #66505b; font-family: arial; font-size: 12px; bo=
+rder-color: #cfb0bf; background-color: #dadfeb; " width=3D"565"><tr><td sty=
+le=3D"padding:5px 0 5px 5px;line-height:normal;"><table cellpadding=3D"0" c=
+ellspacing=3D"0" border=3D"0" width=3D"100%"><tr><td><table cellpadding=3D"=
+0" cellspacing=3D"0" border=3D"0" align=3D"center"><tr><td>
+          <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" align=3D"=
+"><tbody><tr><td align=3D"center" valign=3D"middle" bgcolor=3D"" background=
+=3D"http://www.mailjet.com/images/theme/v1/bg/bg_nl_bt_top_gradient.png" st=
+yle=3D"background:url(http://www.mailjet.com/images/theme/v1/bg/bg_nl_bt_to=
+p_gradient.png) repeat-x scroll 100% 0 transparent;background-repeat: repea=
+t-x; -moz-border-radius:4px;-webkit-border-radius:4px;border-radius:4px;bor=
+der: 1px solid;background-color: #94697e; border-color: #785465; ">
+                <div style=3D"padding:0;padding-left: 5px;padding-right: 5p=
+x;background: transparent url(http://www.mailjet.com/images/theme/v1/bg/bg_=
+nl_bt_bottom_gradient.png) bottom left repeat-x; background-repeat: repeat-=
+x; border-radius: 0 0 4px 4px; -moz-border-radius: 0 0 4px 4px; -webkit-bor=
+der-radius: 0 0 4px 4px;">
+                  <table cellpadding=3D"12" cellspacing=3D"1"><tr><td>
+                        <a href=3D"http://omi3.mjt.lu/link/omi3/y6wnwgxzt1s=
+/4/v8UCEb9iTePuZ72oyElZfw/aHR0cDovL3d3dy5iYXl2aWV3aG90ZWwtbHVkZXJpdHouY29t"=
+ style=3D"text-decoration:none;border: none;">
+                          <span style=3D"color: #ffffff; font-family: arial=
+; font-size: 12px; ;white-space:nowrap;display:block;">
+                            Information
+                          </span>
+                        </a>
+                      </td>
+                    </tr></table></div>
+              </td>
+            </tr></tbody></table></td></tr></table></td></tr></table></td><=
+/tr></table></td></tr></table></td>
+    </tr></table></td>
+                </tr></table><table cellpadding=3D"0" cellspacing=3D"0" bor=
+der=3D"0" height=3D"10" style=3D"height: 10px;border-collapse: collapse;fon=
+t-size: 1px;"><tr><td height=3D"10" style=3D"height:10px; border-spacing: 0=
+;font-size: 1px;">=C2=A0</td></tr></table><table cellpadding=3D"10" cellspa=
+cing=3D"0" border=3D"0" style=3D"margin: 0; border-collapse: collapse;" wid=
+th=3D"600"><tr><td style=3D"color: #87596f; background-color: #d8d9e8; bord=
+er-color: #cfb0bf; align: left; font-family: arial; font-size: 12px; ">
+            <table cellpadding=3D"0" cellspacing=3D"0" border=3D"0" style=
+=3D"width: 100%; margin: 0; border-collapse: collapse;" width=3D"100%"><tr>=
+<td align=3D"left" valign=3D"top" style=3D"vertical-align: top; text-align:=
+ left; color: #87596f; background-color: #d8d9e8; border-color: #cfb0bf; al=
+ign: left; font-family: arial; font-size: 12px; ">
+                    <div id=3D"nl_footer" style=3D"display: block; text-ali=
+gn: left; margin: 0;">This email has been sent to <a href=3D"mailto:xfs@oss=
+.sgi.com" style=3D"color:#b06a8a;border: none;">xfs@oss.sgi.com</a>, <a hre=
+f=3D"http://omi3.mjt.lu/unsub?hl=3Den&amp;a=3D1flFOQc17x&amp;b=3D1ae54aaa&a=
+mp;c=3Domi3&amp;d=3D88de7cea&amp;e=3Df4ffc66b&amp;email=3Dxfs@oss.sgi.com" =
+style=3D"color:#b06a8a;border: none;">click here to unsubscribe</a>.</div>
+                    <div id=3D"footer_address" style=3D"display: block; tex=
+t-align: left; margin: 5px 0 0;"></div>
+                            </td>
+                            <td align=3D"right" valign=3D"top" style=3D"ver=
+tical-align: top; text-align: right">
+                   =20
+                    </td>
+                               =20
+                        </tr></table></td>
+                            </tr></table></td>
+    </tr></table>
+<br/><img src=3D"http://omi3.mjt.lu/o/omi3/c872a8df/y6wnwgxzt1se.gif" heigh=
+t=3D"1" width=3D"1" alt=3D"" border=3D"0" />
+</body></html>=
+
+--=-DUZsPkelu55/6nvrugSH--
 
 
-
---Part1_f45644deedad7d4c3df2564d1667a0cf--
-
-
---===============1087373504284570837==
+--===============2127257471951202312==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -325,4 +298,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1087373504284570837==--
+--===============2127257471951202312==--
