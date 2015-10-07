@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B64887F37
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:55:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 22DC5AC007
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:55:34 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A8AB47F37
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:55:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 99843304032
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:55:43 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id AV9i8LvrvrLQynf7 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id EuRQ144OEavnfo4X (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:55:30 -0700 (PDT)
-Subject: [PATCH 06/58] xfs: add owner field to extent allocation and freeing
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:55:40 -0700 (PDT)
+Subject: [PATCH 07/58] xfs: add extended owner field to extent allocation
+	and freeing
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 21:55:26 -0700
-Message-ID: <20151007045526.30457.5263.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 21:55:33 -0700
+Message-ID: <20151007045532.30457.93731.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,413 +30,467 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
->From : Dave Chinner <dchinner@redhat.com>
+Extend the owner field to include both the owner type and some sort
+of index within the owner.
 
-For the rmap btree to work, we have to fed the extent owner
-information to the the allocation and freeing functions. This
-information is what will end up in the rmap btree that tracks
-allocated extents. While we technically don't need the owner
-information when freeing extents, passing it allows us to validate
-that the extent we are removing from the rmap btree actually
-belonged to the owner we expected it to belong to.
-
-We also define a special set of owner values for internal metadata
-that would otherwise have no owner. This allows us to tell the
-difference between metadata owned by different per-ag btrees, as
-well as static fs metadata (e.g. AG headers) and internal journal
-blocks.
-
-There are also a couple of special cases we need to take care of -
-during EFI recovery, we don't actually know who the original owner
-was, so we need to pass a wildcard to indicate that we aren't
-checking the owner for validity. We also need special handling in
-growfs, as we "free" the space in the last AG when extending it, but
-because it's new space it has no actual owner...
-
-While touching the xfs_bmap_add_free() function, re-order the
-parameters to put the struct xfs_mount first.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c        |   11 ++++++++---
- fs/xfs/libxfs/xfs_alloc.h        |    4 +++-
- fs/xfs/libxfs/xfs_bmap.c         |   17 ++++++++++++-----
- fs/xfs/libxfs/xfs_bmap.h         |    5 +++--
- fs/xfs/libxfs/xfs_bmap_btree.c   |    3 ++-
- fs/xfs/libxfs/xfs_format.h       |   16 ++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc.c       |   10 +++++-----
- fs/xfs/libxfs/xfs_ialloc_btree.c |    3 ++-
- fs/xfs/xfs_bmap_util.c           |    3 ++-
- fs/xfs/xfs_fsops.c               |   13 +++++++++----
- fs/xfs/xfs_log_recover.c         |    3 ++-
+ fs/xfs/libxfs/xfs_alloc.c        |   11 +++++----
+ fs/xfs/libxfs/xfs_alloc.h        |    4 ++-
+ fs/xfs/libxfs/xfs_bmap.c         |   20 +++++++++-------
+ fs/xfs/libxfs/xfs_bmap.h         |    5 ++--
+ fs/xfs/libxfs/xfs_bmap_btree.c   |    7 ++++-
+ fs/xfs/libxfs/xfs_format.h       |   49 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.c       |    8 ++++--
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    6 +++--
+ fs/xfs/xfs_bmap_util.c           |    2 +-
+ fs/xfs/xfs_fsops.c               |    5 +++-
+ fs/xfs/xfs_log_recover.c         |    4 ++-
  fs/xfs/xfs_trans.h               |    2 +-
- fs/xfs/xfs_trans_extfree.c       |    5 +++--
- 13 files changed, 68 insertions(+), 27 deletions(-)
+ fs/xfs/xfs_trans_extfree.c       |    4 ++-
+ 13 files changed, 97 insertions(+), 30 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 8bb2a32..af570ce 100644
+index af570ce..44db7b1 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1592,6 +1592,7 @@ xfs_free_ag_extent(
+@@ -1592,7 +1592,7 @@ xfs_free_ag_extent(
  	xfs_agnumber_t	agno,	/* allocation group number */
  	xfs_agblock_t	bno,	/* starting block number */
  	xfs_extlen_t	len,	/* length of extent */
-+	uint64_t	owner,	/* extent owner */
+-	uint64_t	owner,	/* extent owner */
++	struct xfs_owner_info	*oinfo,	/* extent owner */
  	int		isfl)	/* set if is freelist blocks - no sb acctg */
  {
  	xfs_btree_cur_t	*bno_cur;	/* cursor for by-block btree */
-@@ -2018,7 +2019,8 @@ xfs_alloc_fix_freelist(
- 		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+@@ -2013,6 +2013,7 @@ xfs_alloc_fix_freelist(
+ 	 * back on the free list? Maybe we should only do this when space is
+ 	 * getting low or the AGFL is more than half full?
+ 	 */
++	XFS_RMAP_AG_OWNER(&targs.oinfo, XFS_RMAP_OWN_AG);
+ 	while (pag->pagf_flcount > need) {
+ 		struct xfs_buf	*bp;
+ 
+@@ -2020,7 +2021,7 @@ xfs_alloc_fix_freelist(
  		if (error)
  			goto out_agbp_relse;
--		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1, 1);
-+		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
-+					   XFS_RMAP_OWN_AG, 1);
+ 		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
+-					   XFS_RMAP_OWN_AG, 1);
++					   &targs.oinfo, 1);
  		if (error)
  			goto out_agbp_relse;
  		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-@@ -2028,6 +2030,7 @@ xfs_alloc_fix_freelist(
+@@ -2030,7 +2031,7 @@ xfs_alloc_fix_freelist(
  	memset(&targs, 0, sizeof(targs));
  	targs.tp = tp;
  	targs.mp = mp;
-+	targs.owner = XFS_RMAP_OWN_AG;
+-	targs.owner = XFS_RMAP_OWN_AG;
++	XFS_RMAP_AG_OWNER(&targs.oinfo, XFS_RMAP_OWN_AG);
  	targs.agbp = agbp;
  	targs.agno = args->agno;
  	targs.alignment = targs.minlen = targs.prod = targs.isfl = 1;
-@@ -2668,7 +2671,8 @@ int				/* error */
- xfs_free_extent(
+@@ -2672,7 +2673,7 @@ xfs_free_extent(
  	xfs_trans_t	*tp,	/* transaction pointer */
  	xfs_fsblock_t	bno,	/* starting block number of extent */
--	xfs_extlen_t	len)	/* length of extent */
-+	xfs_extlen_t	len,	/* length of extent */
-+	uint64_t	owner)	/* extent owner */
+ 	xfs_extlen_t	len,	/* length of extent */
+-	uint64_t	owner)	/* extent owner */
++	struct xfs_owner_info	*oinfo)	/* extent owner */
  {
  	xfs_alloc_arg_t	args;
  	int		error;
-@@ -2704,7 +2708,8 @@ xfs_free_extent(
- 		goto error0;
+@@ -2709,7 +2710,7 @@ xfs_free_extent(
  	}
  
--	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
-+	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno,
-+				   len, owner, 0);
+ 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno,
+-				   len, owner, 0);
++				   len, oinfo, 0);
  	if (!error)
  		xfs_extent_busy_insert(tp, args.agno, args.agbno, len, 0);
  error0:
 diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 1993644..cff44e0 100644
+index cff44e0..95b161f 100644
 --- a/fs/xfs/libxfs/xfs_alloc.h
 +++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -122,6 +122,7 @@ typedef struct xfs_alloc_arg {
+@@ -122,7 +122,7 @@ typedef struct xfs_alloc_arg {
  	char		isfl;		/* set if is freelist blocks - !acctg */
  	char		userdata;	/* set if this is user data */
  	xfs_fsblock_t	firstblock;	/* io first block allocated */
-+	uint64_t	owner;		/* owner of blocks being allocated */
+-	uint64_t	owner;		/* owner of blocks being allocated */
++	struct xfs_owner_info	oinfo;		/* owner of blocks being allocated */
  } xfs_alloc_arg_t;
  
  /*
-@@ -208,7 +209,8 @@ int				/* error */
- xfs_free_extent(
+@@ -210,7 +210,7 @@ xfs_free_extent(
  	struct xfs_trans *tp,	/* transaction pointer */
  	xfs_fsblock_t	bno,	/* starting block number of extent */
--	xfs_extlen_t	len);	/* length of extent */
-+	xfs_extlen_t	len,	/* length of extent */
-+	uint64_t	owner);	/* extent owner */
+ 	xfs_extlen_t	len,	/* length of extent */
+-	uint64_t	owner);	/* extent owner */
++	struct xfs_owner_info	*oinfo);	/* extent owner */
  
  int					/* error */
  xfs_alloc_lookup_le(
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 8e2010d..d4c2c4a 100644
+index d4c2c4a..fef3767 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -567,10 +567,11 @@ xfs_bmap_validate_ret(
-  */
- void
- xfs_bmap_add_free(
-+	struct xfs_mount	*mp,		/* mount point structure */
-+	struct xfs_bmap_free	*flist,		/* list of extents */
+@@ -571,7 +571,7 @@ xfs_bmap_add_free(
+ 	struct xfs_bmap_free	*flist,		/* list of extents */
  	xfs_fsblock_t		bno,		/* fs block number of extent */
  	xfs_filblks_t		len,		/* length of extent */
--	xfs_bmap_free_t		*flist,		/* list of extents */
--	xfs_mount_t		*mp)		/* mount point structure */
-+	uint64_t		owner)		/* extent owner */
+-	uint64_t		owner)		/* extent owner */
++	struct xfs_owner_info	*oinfo)		/* extent owner */
  {
  	xfs_bmap_free_item_t	*cur;		/* current (next) element */
  	xfs_bmap_free_item_t	*new;		/* new element */
-@@ -591,9 +592,12 @@ xfs_bmap_add_free(
+@@ -592,12 +592,14 @@ xfs_bmap_add_free(
  	ASSERT(agbno + len <= mp->m_sb.sb_agblocks);
  #endif
  	ASSERT(xfs_bmap_free_item_zone != NULL);
-+	ASSERT(owner);
-+
+-	ASSERT(owner);
+ 
  	new = kmem_zone_alloc(xfs_bmap_free_item_zone, KM_SLEEP);
  	new->xbfi_startblock = bno;
  	new->xbfi_blockcount = (xfs_extlen_t)len;
-+	new->xbfi_owner = owner;
+-	new->xbfi_owner = owner;
++	if (oinfo)
++		memcpy(&new->xbfi_oinfo, oinfo, sizeof(struct xfs_owner_info));
++	else
++		memset(&new->xbfi_oinfo, 0, sizeof(struct xfs_owner_info));
  	for (prev = NULL, cur = flist->xbf_first;
  	     cur != NULL;
  	     prev = cur, cur = cur->xbfi_next) {
-@@ -696,7 +700,7 @@ xfs_bmap_btree_to_extents(
+@@ -677,6 +679,7 @@ xfs_bmap_btree_to_extents(
+ 	xfs_mount_t		*mp;	/* mount point structure */
+ 	__be64			*pp;	/* ptr to block address */
+ 	struct xfs_btree_block	*rblock;/* root btree block */
++	struct xfs_owner_info	oinfo;
+ 
+ 	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+@@ -700,7 +703,8 @@ xfs_bmap_btree_to_extents(
  	cblock = XFS_BUF_TO_BLOCK(cbp);
  	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
  		return error;
--	xfs_bmap_add_free(cbno, 1, cur->bc_private.b.flist, mp);
-+	xfs_bmap_add_free(mp, cur->bc_private.b.flist, cbno, 1, ip->i_ino);
+-	xfs_bmap_add_free(mp, cur->bc_private.b.flist, cbno, 1, ip->i_ino);
++	XFS_RMAP_INO_BMBT_OWNER(&oinfo, ip->i_ino, whichfork);
++	xfs_bmap_add_free(mp, cur->bc_private.b.flist, cbno, 1, &oinfo);
  	ip->i_d.di_nblocks--;
  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
  	xfs_trans_binval(tp, cbp);
-@@ -777,6 +781,7 @@ xfs_bmap_extents_to_btree(
+@@ -781,7 +785,7 @@ xfs_bmap_extents_to_btree(
  	memset(&args, 0, sizeof(args));
  	args.tp = tp;
  	args.mp = mp;
-+	args.owner = ip->i_ino;
+-	args.owner = ip->i_ino;
++	XFS_RMAP_INO_BMBT_OWNER(&args.oinfo, ip->i_ino, whichfork);
  	args.firstblock = *firstblock;
  	if (*firstblock == NULLFSBLOCK) {
  		args.type = XFS_ALLOCTYPE_START_BNO;
-@@ -923,6 +928,7 @@ xfs_bmap_local_to_extents(
+@@ -928,7 +932,7 @@ xfs_bmap_local_to_extents(
  	memset(&args, 0, sizeof(args));
  	args.tp = tp;
  	args.mp = ip->i_mount;
-+	args.owner = ip->i_ino;
+-	args.owner = ip->i_ino;
++	XFS_RMAP_INO_OWNER(&args.oinfo, ip->i_ino, whichfork, 0);
  	args.firstblock = *firstblock;
  	/*
  	 * Allocate a block.  We know we need only one, since the
-@@ -3703,6 +3709,7 @@ xfs_bmap_btalloc(
+@@ -3709,7 +3713,6 @@ xfs_bmap_btalloc(
  	memset(&args, 0, sizeof(args));
  	args.tp = ap->tp;
  	args.mp = mp;
-+	args.owner = ap->ip->i_ino;
+-	args.owner = ap->ip->i_ino;
  	args.fsbno = ap->blkno;
  
  	/* Trim the allocation back to the maximum an AG can fit. */
-@@ -4977,8 +4984,8 @@ xfs_bmap_del_extent(
- 	 * If we need to, add to list of extents to delete.
+@@ -4799,6 +4802,7 @@ xfs_bmap_del_extent(
+ 		nblks = 0;
+ 		do_fx = 0;
+ 	}
++
+ 	/*
+ 	 * Set flag value to use in switch statement.
+ 	 * Left-contig is 2, right-contig is 1.
+@@ -4985,7 +4989,7 @@ xfs_bmap_del_extent(
  	 */
  	if (do_fx)
--		xfs_bmap_add_free(del->br_startblock, del->br_blockcount, flist,
--			mp);
-+		xfs_bmap_add_free(mp, flist, del->br_startblock,
-+				  del->br_blockcount, ip->i_ino);
+ 		xfs_bmap_add_free(mp, flist, del->br_startblock,
+-				  del->br_blockcount, ip->i_ino);
++				  del->br_blockcount, NULL);
  	/*
  	 * Adjust inode # blocks in the file.
  	 */
 diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 6aaa0c1..674819f 100644
+index 674819f..89fa3dd 100644
 --- a/fs/xfs/libxfs/xfs_bmap.h
 +++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -66,6 +66,7 @@ typedef struct xfs_bmap_free_item
+@@ -66,7 +66,7 @@ typedef struct xfs_bmap_free_item
  {
  	xfs_fsblock_t		xbfi_startblock;/* starting fs block number */
  	xfs_extlen_t		xbfi_blockcount;/* number of blocks in extent */
-+	uint64_t		xbfi_owner;	/* extent owner */
+-	uint64_t		xbfi_owner;	/* extent owner */
++	struct xfs_owner_info	xbfi_oinfo;	/* extent owner */
  	struct xfs_bmap_free_item *xbfi_next;	/* link to next entry */
  } xfs_bmap_free_item_t;
  
-@@ -182,8 +183,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- 
+@@ -184,7 +184,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
  void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
--void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
--		struct xfs_bmap_free *flist, struct xfs_mount *mp);
-+void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_bmap_free *flist,
-+			  xfs_fsblock_t bno, xfs_filblks_t len, uint64_t owner);
+ void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_bmap_free *flist,
+-			  xfs_fsblock_t bno, xfs_filblks_t len, uint64_t owner);
++			  xfs_fsblock_t bno, xfs_filblks_t len,
++			  struct xfs_owner_info *oinfo);
  void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
  int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
  			int *committed);
 diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 6b0cf65..fcbbbef 100644
+index fcbbbef..1035128 100644
 --- a/fs/xfs/libxfs/xfs_bmap_btree.c
 +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -446,6 +446,7 @@ xfs_bmbt_alloc_block(
+@@ -446,7 +446,8 @@ xfs_bmbt_alloc_block(
  	args.mp = cur->bc_mp;
  	args.fsbno = cur->bc_private.b.firstblock;
  	args.firstblock = args.fsbno;
-+	args.owner = cur->bc_private.b.ip->i_ino;
+-	args.owner = cur->bc_private.b.ip->i_ino;
++	XFS_RMAP_INO_BMBT_OWNER(&args.oinfo, cur->bc_private.b.ip->i_ino,
++			cur->bc_private.b.whichfork);
  
  	if (args.fsbno == NULLFSBLOCK) {
  		args.fsbno = be64_to_cpu(start->l);
-@@ -526,7 +527,7 @@ xfs_bmbt_free_block(
+@@ -526,8 +527,10 @@ xfs_bmbt_free_block(
+ 	struct xfs_inode	*ip = cur->bc_private.b.ip;
  	struct xfs_trans	*tp = cur->bc_tp;
  	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
++	struct xfs_owner_info	oinfo;
  
--	xfs_bmap_add_free(fsbno, 1, cur->bc_private.b.flist, mp);
-+	xfs_bmap_add_free(mp, cur->bc_private.b.flist, fsbno, 1, ip->i_ino);
+-	xfs_bmap_add_free(mp, cur->bc_private.b.flist, fsbno, 1, ip->i_ino);
++	XFS_RMAP_INO_BMBT_OWNER(&oinfo, ip->i_ino, cur->bc_private.b.whichfork);
++	xfs_bmap_add_free(mp, cur->bc_private.b.flist, fsbno, 1, &oinfo);
  	ip->i_d.di_nblocks--;
  
  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index a926134..b1e11ba 100644
+index b1e11ba..0c89c87 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1304,6 +1304,22 @@ typedef __be32 xfs_inobt_ptr_t;
-  */
+@@ -1305,6 +1305,55 @@ typedef __be32 xfs_inobt_ptr_t;
  #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
  
-+/*
-+ * Special owner types.
-+ *
-+ * Seeing as we only support up to 8EB, we have the upper bit of the owner field
-+ * to tell us we have a special owner value. We use these for static metadata
-+ * allocated at mkfs/growfs time, as well as for freespace management metadata.
+ /*
++ * Ownership info for an extent.  This is used to create reverse-mapping
++ * entries.
 + */
-+#define XFS_RMAP_OWN_NULL	(-1ULL)	/* No owner, for growfs */
-+#define XFS_RMAP_OWN_UNKNOWN	(-2ULL)	/* Unknown owner, for EFI recovery */
-+#define XFS_RMAP_OWN_FS		(-3ULL)	/* static fs metadata */
-+#define XFS_RMAP_OWN_LOG	(-4ULL)	/* static fs metadata */
-+#define XFS_RMAP_OWN_AG		(-5ULL)	/* AG freespace btree blocks */
-+#define XFS_RMAP_OWN_INOBT	(-6ULL)	/* Inode btree blocks */
-+#define XFS_RMAP_OWN_INODES	(-7ULL)	/* Inode chunk */
-+#define XFS_RMAP_OWN_MIN	(-8ULL) /* guard */
++#define XFS_RMAP_INO_ATTR_FORK	(1)
++#define XFS_RMAP_BMBT_BLOCK	(2)
++struct xfs_owner_info {
++	uint64_t		oi_owner;
++	xfs_fileoff_t		oi_offset;
++	unsigned int		oi_flags;
++};
 +
- #define	XFS_RMAP_BLOCK(mp) \
- 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
- 	 XFS_FIBT_BLOCK(mp) + 1 : \
++static inline void
++XFS_RMAP_AG_OWNER(
++	struct xfs_owner_info	*oi,
++	uint64_t		owner)
++{
++	oi->oi_owner = owner;
++	oi->oi_offset = 0;
++	oi->oi_flags = 0;
++}
++
++static inline void
++XFS_RMAP_INO_BMBT_OWNER(
++	struct xfs_owner_info	*oi,
++	xfs_ino_t		ino,
++	int			whichfork)
++{
++	oi->oi_owner = ino;
++	oi->oi_offset = 0;
++	oi->oi_flags = XFS_RMAP_BMBT_BLOCK;
++	if (whichfork == XFS_ATTR_FORK)
++		oi->oi_flags |= XFS_RMAP_INO_ATTR_FORK;
++}
++
++static inline void
++XFS_RMAP_INO_OWNER(
++	struct xfs_owner_info	*oi,
++	xfs_ino_t		ino,
++	int			whichfork,
++	xfs_fileoff_t		offset)
++{
++	oi->oi_owner = ino;
++	oi->oi_offset = offset;
++	oi->oi_flags = 0;
++	if (whichfork == XFS_ATTR_FORK)
++		oi->oi_flags |= XFS_RMAP_INO_ATTR_FORK;
++}
++
++/*
+  * Special owner types.
+  *
+  * Seeing as we only support up to 8EB, we have the upper bit of the owner field
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 54deb2d..ed91eb5 100644
+index ed91eb5..8f28256 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -613,6 +613,7 @@ xfs_ialloc_ag_alloc(
+@@ -613,7 +613,7 @@ xfs_ialloc_ag_alloc(
  	args.tp = tp;
  	args.mp = tp->t_mountp;
  	args.fsbno = NULLFSBLOCK;
-+	args.owner = XFS_RMAP_OWN_INODES;
+-	args.owner = XFS_RMAP_OWN_INODES;
++	XFS_RMAP_AG_OWNER(&args.oinfo, XFS_RMAP_OWN_INODES);
  
  #ifdef DEBUG
  	/* randomly do sparse inode allocations */
-@@ -1827,9 +1828,8 @@ xfs_difree_inode_chunk(
+@@ -1824,12 +1824,14 @@ xfs_difree_inode_chunk(
+ 	int		nextbit;
+ 	xfs_agblock_t	agbno;
+ 	int		contigblk;
++	struct xfs_owner_info	oinfo;
+ 	DECLARE_BITMAP(holemask, XFS_INOBT_HOLEMASK_BITS);
++	XFS_RMAP_AG_OWNER(&oinfo, XFS_RMAP_OWN_INODES);
  
  	if (!xfs_inobt_issparse(rec->ir_holemask)) {
  		/* not sparse, calculate extent info directly */
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
--				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
--				  mp->m_ialloc_blks, flist, mp);
-+		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, sagbno),
-+				  mp->m_ialloc_blks, XFS_RMAP_OWN_INODES);
+ 		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, sagbno),
+-				  mp->m_ialloc_blks, XFS_RMAP_OWN_INODES);
++				  mp->m_ialloc_blks, &oinfo);
  		return;
  	}
  
-@@ -1872,8 +1872,8 @@ xfs_difree_inode_chunk(
- 
+@@ -1873,7 +1875,7 @@ xfs_difree_inode_chunk(
  		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
  		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
--				  flist, mp);
-+		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, agbno),
-+				  contigblk, XFS_RMAP_OWN_INODES);
+ 		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, agbno),
+-				  contigblk, XFS_RMAP_OWN_INODES);
++				  contigblk, &oinfo);
  
  		/* reset range to current bit and carry on... */
  		startidx = endidx = nextbit;
 diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index f39b285..445245f 100644
+index 445245f..bd8a1da 100644
 --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
 +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -96,6 +96,7 @@ xfs_inobt_alloc_block(
+@@ -96,7 +96,7 @@ xfs_inobt_alloc_block(
  	memset(&args, 0, sizeof(args));
  	args.tp = cur->bc_tp;
  	args.mp = cur->bc_mp;
-+	args.owner = XFS_RMAP_OWN_INOBT;
+-	args.owner = XFS_RMAP_OWN_INOBT;
++	XFS_RMAP_AG_OWNER(&args.oinfo, XFS_RMAP_OWN_INOBT);
  	args.fsbno = XFS_AGB_TO_FSB(args.mp, cur->bc_private.a.agno, sbno);
  	args.minlen = 1;
  	args.maxlen = 1;
-@@ -129,7 +130,7 @@ xfs_inobt_free_block(
+@@ -128,9 +128,11 @@ xfs_inobt_free_block(
+ {
+ 	xfs_fsblock_t		fsbno;
  	int			error;
++	struct xfs_owner_info	oinfo;
  
++	XFS_RMAP_AG_OWNER(&oinfo, XFS_RMAP_OWN_INOBT);
  	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp));
--	error = xfs_free_extent(cur->bc_tp, fsbno, 1);
-+	error = xfs_free_extent(cur->bc_tp, fsbno, 1, XFS_RMAP_OWN_INOBT);
+-	error = xfs_free_extent(cur->bc_tp, fsbno, 1, XFS_RMAP_OWN_INOBT);
++	error = xfs_free_extent(cur->bc_tp, fsbno, 1, &oinfo);
  	if (error)
  		return error;
  
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 3bf4ad0..f1081de 100644
+index f1081de..8b2e505 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -122,7 +122,8 @@ xfs_bmap_finish(
- 		next = free->xbfi_next;
+@@ -123,7 +123,7 @@ xfs_bmap_finish(
  
  		error = xfs_trans_free_extent(*tp, efd, free->xbfi_startblock,
--					      free->xbfi_blockcount);
-+					      free->xbfi_blockcount,
-+					      free->xbfi_owner);
+ 					      free->xbfi_blockcount,
+-					      free->xbfi_owner);
++					      &free->xbfi_oinfo);
  		if (error)
  			return error;
  
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 32e24ec..5711700 100644
+index 5711700..b3d1665 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -466,14 +466,19 @@ xfs_growfs_data_private(
- 		       be32_to_cpu(agi->agi_length));
- 
- 		xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+@@ -439,6 +439,8 @@ xfs_growfs_data_private(
+ 	 * There are new blocks in the old last a.g.
+ 	 */
+ 	if (new) {
++		struct xfs_owner_info	oinfo;
 +
  		/*
- 		 * Free the new space.
-+		 *
-+		 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
-+		 * this doesn't actually exist in the rmap btree.
+ 		 * Change the agi length.
  		 */
--		error = xfs_free_extent(tp, XFS_AGB_TO_FSB(mp, agno,
--			be32_to_cpu(agf->agf_length) - new), new);
--		if (error) {
-+		error = xfs_free_extent(tp,
-+				XFS_AGB_TO_FSB(mp, agno,
-+					be32_to_cpu(agf->agf_length) - new),
-+				new, XFS_RMAP_OWN_NULL);
-+		if (error)
+@@ -473,10 +475,11 @@ xfs_growfs_data_private(
+ 		 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
+ 		 * this doesn't actually exist in the rmap btree.
+ 		 */
++		XFS_RMAP_AG_OWNER(&oinfo, XFS_RMAP_OWN_NULL);
+ 		error = xfs_free_extent(tp,
+ 				XFS_AGB_TO_FSB(mp, agno,
+ 					be32_to_cpu(agf->agf_length) - new),
+-				new, XFS_RMAP_OWN_NULL);
++				new, &oinfo);
+ 		if (error)
  			goto error0;
--		}
  	}
- 
- 	/*
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 512a094..242ed5d 100644
+index 242ed5d..129b9a1 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -3821,7 +3821,8 @@ xlog_recover_process_efi(
+@@ -3786,6 +3786,7 @@ xlog_recover_process_efi(
+ 	int			error = 0;
+ 	xfs_extent_t		*extp;
+ 	xfs_fsblock_t		startblock_fsb;
++	struct xfs_owner_info	oinfo;
+ 
+ 	ASSERT(!test_bit(XFS_EFI_RECOVERED, &efip->efi_flags));
+ 
+@@ -3818,11 +3819,12 @@ xlog_recover_process_efi(
+ 		goto abort_error;
+ 	efdp = xfs_trans_get_efd(tp, efip, efip->efi_format.efi_nextents);
+ 
++	XFS_RMAP_AG_OWNER(&oinfo, XFS_RMAP_OWN_UNKNOWN);
  	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
  		extp = &(efip->efi_format.efi_extents[i]);
  		error = xfs_trans_free_extent(tp, efdp, extp->ext_start,
--					      extp->ext_len);
-+					      extp->ext_len,
-+					      XFS_RMAP_OWN_UNKNOWN);
+ 					      extp->ext_len,
+-					      XFS_RMAP_OWN_UNKNOWN);
++					      &oinfo);
  		if (error)
  			goto abort_error;
  
 diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 4643070..ee277fa 100644
+index ee277fa..50fe77e 100644
 --- a/fs/xfs/xfs_trans.h
 +++ b/fs/xfs/xfs_trans.h
 @@ -222,7 +222,7 @@ struct xfs_efd_log_item	*xfs_trans_get_efd(xfs_trans_t *,
  				  uint);
  int		xfs_trans_free_extent(struct xfs_trans *,
  				      struct xfs_efd_log_item *, xfs_fsblock_t,
--				      xfs_extlen_t);
-+				      xfs_extlen_t, uint64_t);
+-				      xfs_extlen_t, uint64_t);
++				      xfs_extlen_t, struct xfs_owner_info *);
  int		xfs_trans_commit(struct xfs_trans *);
  int		__xfs_trans_roll(struct xfs_trans **, struct xfs_inode *, int *);
  int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
 diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-index a96ae54..1b7d6d5 100644
+index 1b7d6d5..d1b8833 100644
 --- a/fs/xfs/xfs_trans_extfree.c
 +++ b/fs/xfs/xfs_trans_extfree.c
-@@ -118,13 +118,14 @@ xfs_trans_free_extent(
- 	struct xfs_trans	*tp,
+@@ -119,13 +119,13 @@ xfs_trans_free_extent(
  	struct xfs_efd_log_item	*efdp,
  	xfs_fsblock_t		start_block,
--	xfs_extlen_t		ext_len)
-+	xfs_extlen_t		ext_len,
-+	uint64_t		owner)
+ 	xfs_extlen_t		ext_len,
+-	uint64_t		owner)
++	struct xfs_owner_info	*oinfo)
  {
  	uint			next_extent;
  	struct xfs_extent	*extp;
  	int			error;
  
--	error = xfs_free_extent(tp, start_block, ext_len);
-+	error = xfs_free_extent(tp, start_block, ext_len, owner);
+-	error = xfs_free_extent(tp, start_block, ext_len, owner);
++	error = xfs_free_extent(tp, start_block, ext_len, oinfo);
  
  	/*
  	 * Mark the transaction dirty, even on error. This ensures the
