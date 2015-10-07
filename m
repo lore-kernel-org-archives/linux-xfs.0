@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7E5297FB3
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:00:15 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4CAE27FAF
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:00:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F35EFAC00D
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:00:14 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Lq3vIjAlZmceRyzw (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B303FAC007
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:00:23 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id CJUEgfZhZzdgk7nH (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:00:13 -0700 (PDT)
-Subject: [PATCH 45/58] xfs: create a separate workqueue for copy-on-write
-	activities
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:00:22 -0700 (PDT)
+Subject: [PATCH 47/58] xfs: handle directio copy-on-write for reflinked blocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:00:05 -0700
-Message-ID: <20151007050005.30457.80025.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:00:18 -0700
+Message-ID: <20151007050018.30457.90081.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,104 +31,105 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Create a separate workqueue to handle copy on write blocks so that we
-don't explode the number of kworkers if a flood of writes comes
-through.  We could possibly use m_buf_wq for this too...
+We hope that CoW writes will be rare and that directio CoW writes will
+be even more rare.  Therefore, fall-back any such write to the
+buffered path.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_mount.h |    1 +
- fs/xfs/xfs_super.c |   36 +++++++++++++++++++++++++++++++++++-
- 2 files changed, 36 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_aops.c    |    6 ++++++
+ fs/xfs/xfs_file.c    |   12 ++++++++++--
+ fs/xfs/xfs_reflink.c |   34 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index aba42d7..6f4c335 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -142,6 +142,7 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_reclaim_workqueue;
- 	struct workqueue_struct	*m_log_workqueue;
- 	struct workqueue_struct *m_eofblocks_workqueue;
-+	struct workqueue_struct *m_cow_workqueue;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 06a1d2f..4ab24fa 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1491,6 +1491,12 @@ __xfs_get_blocks(
+ 	if (imap.br_startblock != HOLESTARTBLOCK &&
+ 	    imap.br_startblock != DELAYSTARTBLOCK &&
+ 	    (create || !ISUNWRITTEN(&imap))) {
++		if (create && direct) {
++			error = xfs_reflink_redirect_directio_write(ip, &imap,
++					offset);
++			if (error)
++				return error;
++		}
+ 		xfs_map_buffer(inode, bh_result, &imap, offset);
+ 		if (ISUNWRITTEN(&imap))
+ 			set_buffer_unwritten(bh_result);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 593223f..fc5b9ea 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -876,10 +876,18 @@ xfs_file_write_iter(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
  
- 	/*
- 	 * Generation of the filesysyem layout.  This is incremented by each
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6dc5993..c6a26b0 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -883,6 +883,33 @@ xfs_destroy_mount_workqueues(
- 	destroy_workqueue(mp->m_buf_workqueue);
+-	if ((iocb->ki_flags & IOCB_DIRECT) || IS_DAX(inode))
++	/*
++	 * Allow DIO to fall back to buffered *only* in the case that we're
++	 * doing a reflink CoW.
++	 */
++	if ((iocb->ki_flags & IOCB_DIRECT) || IS_DAX(inode)) {
+ 		ret = xfs_file_dio_aio_write(iocb, from);
+-	else
++		if (ret == -EREMCHG)
++			goto buffered;
++	} else {
++buffered:
+ 		ret = xfs_file_buffered_aio_write(iocb, from);
++	}
+ 
+ 	if (ret > 0) {
+ 		ssize_t err;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 1e00be2..226e23f 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -407,6 +407,40 @@ advloop:
  }
  
-+STATIC int
-+xfs_init_feature_workqueues(
-+	struct xfs_mount	*mp)
+ /**
++ * xfs_reflink_redirect_directio_write() - bounce a directio write to a
++ *					   reflinked region down to buffered
++ *					   write mode.
++ *
++ * @ip: XFS inode object
++ * @imap: the fileoff:fsblock mapping that we might fork
++ * @offset: the file byte offset of the block we're examining
++ */
++int
++xfs_reflink_redirect_directio_write(
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	xfs_off_t		offset)
 +{
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		/* XXX awful, but it'll improve when bh's go away */
-+		/* XXX probably need locking around the endio rbtree */
-+		mp->m_cow_workqueue = alloc_workqueue("xfs-cow/%s",
-+				WQ_MEM_RECLAIM|WQ_FREEZABLE|WQ_UNBOUND,
-+				1, mp->m_fsname);
-+		if (!mp->m_cow_workqueue)
-+			goto out;
-+	}
++	bool			type = false;
++	int			error;
 +
-+	return 0;
-+out:
-+	return -ENOMEM;
-+}
-+
-+STATIC void
-+xfs_destroy_feature_workqueues(
-+	struct xfs_mount	*mp)
-+{
-+	if (mp->m_cow_workqueue)
-+		destroy_workqueue(mp->m_cow_workqueue);
-+}
-+
- /*
-  * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
-  * or a page lock. We use sync_inodes_sb() here to ensure we block while waiting
-@@ -1490,6 +1517,10 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto out_free_sb;
- 
-+	error = xfs_init_feature_workqueues(mp);
++	error = xfs_reflink_should_fork_block(ip, imap, offset, &type);
 +	if (error)
-+		goto out_filestream_unmount;
++		return error;
++	if (!type)
++		return 0;
 +
- 	/*
- 	 * we must configure the block size in the superblock before we run the
- 	 * full mount process as the mount process can lookup and cache inodes.
-@@ -1526,7 +1557,7 @@ xfs_fs_fill_super(
- 
- 	error = xfs_mountfs(mp);
- 	if (error)
--		goto out_filestream_unmount;
-+		goto out_destroy_feature_workqueues;
- 
- 	root = igrab(VFS_I(mp->m_rootip));
- 	if (!root) {
-@@ -1541,6 +1572,8 @@ xfs_fs_fill_super(
- 
- 	return 0;
- 
-+out_destroy_feature_workqueues:
-+	xfs_destroy_feature_workqueues(mp);
-  out_filestream_unmount:
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
-@@ -1570,6 +1603,7 @@ xfs_fs_put_super(
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
- 	xfs_notice(mp, "Unmounting Filesystem");
-+	xfs_destroy_feature_workqueues(mp);
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
- 
++	/*
++	 * Are we doing a DIO write to a reflinked block?  In the ideal world
++	 * we at least would fork full blocks, but for now just fall back to
++	 * buffered mode.  Yuck.  Use -EREMCHG ("remote address changed") to
++	 * signal this, since in general XFS doesn't do this sort of fallback.
++	 */
++	trace_xfs_reflink_bounce_direct_write(ip, imap);
++	return -EREMCHG;
++}
++
++/**
+  * xfs_reflink_write_fork_block() -- find a remapping object and redirect the
+  *				     write.
+  *
 
 _______________________________________________
 xfs mailing list
