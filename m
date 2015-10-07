@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3DCCB7F62
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:06:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1194A8F8035
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:06:10 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E0F8D29E70
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:06:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B843B8F8035
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:06:22 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id xnhCmpq7tT4yspS3 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id gtoC1n2NOwySctMl (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:06:08 -0700 (PDT)
-Subject: [PATCH 08/51] libxfs: reorder xfs_bmap_add_free args
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:06:21 -0700 (PDT)
+Subject: [PATCH 10/51] libxfs: resync xfs_prealloc_blocks with the kernel
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:06:05 -0700
-Message-ID: <20151007050605.1504.86527.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:06:18 -0700
+Message-ID: <20151007050618.1504.21379.stgit@birch.djwong.org>
 In-Reply-To: <20151007050513.1504.28089.stgit@birch.djwong.org>
 References: <20151007050513.1504.28089.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,112 +31,72 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Move the mount & transaction arguments to the start of xfs_bmap_add_free,
-like most API calls.  The kernel version of rmap makes this change, so
-porting it to xfsprogs will make maintenance easier.
+Move xfs_prealloc_blocks() to the same line as in the kernel code.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_bmap.c       |   12 ++++++------
- libxfs/xfs_bmap.h       |    4 ++--
- libxfs/xfs_bmap_btree.c |    2 +-
- libxfs/xfs_ialloc.c     |    8 ++++----
- 4 files changed, 13 insertions(+), 13 deletions(-)
+ libxfs/xfs_alloc.c |   22 +++++++++++-----------
+ libxfs/xfs_alloc.h |    4 ++--
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 68869f6..46f8469 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -559,10 +559,10 @@ xfs_bmap_validate_ret(
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 9141b58..eeb682e 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -46,6 +46,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+ 
++xfs_extlen_t
++xfs_prealloc_blocks(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
++
+ /*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
   */
- void
- xfs_bmap_add_free(
-+	struct xfs_mount	*mp,		/* mount point structure */
-+	struct xfs_bmap_free	*flist,		/* list of extents */
- 	xfs_fsblock_t		bno,		/* fs block number of extent */
--	xfs_filblks_t		len,		/* length of extent */
--	xfs_bmap_free_t		*flist,		/* list of extents */
--	xfs_mount_t		*mp)		/* mount point structure */
-+	xfs_filblks_t		len)		/* length of extent */
- {
- 	xfs_bmap_free_item_t	*cur;		/* current (next) element */
- 	xfs_bmap_free_item_t	*new;		/* new element */
-@@ -688,7 +688,7 @@ xfs_bmap_btree_to_extents(
- 	cblock = XFS_BUF_TO_BLOCK(cbp);
- 	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
- 		return error;
--	xfs_bmap_add_free(cbno, 1, cur->bc_private.b.flist, mp);
-+	xfs_bmap_add_free(mp, cur->bc_private.b.flist, cbno, 1);
- 	ip->i_d.di_nblocks--;
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
- 	xfs_trans_binval(tp, cbp);
-@@ -4969,8 +4969,8 @@ xfs_bmap_del_extent(
- 	 * If we need to, add to list of extents to delete.
- 	 */
- 	if (do_fx)
--		xfs_bmap_add_free(del->br_startblock, del->br_blockcount, flist,
--			mp);
-+		xfs_bmap_add_free(mp, flist, del->br_startblock,
-+			del->br_blockcount);
- 	/*
- 	 * Adjust inode # blocks in the file.
- 	 */
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 85143e5..d3daf6d 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -182,8 +182,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+@@ -2707,14 +2718,3 @@ error0:
+ 	xfs_perag_put(args.pag);
+ 	return error;
+ }
+-
+-xfs_extlen_t
+-xfs_prealloc_blocks(
+-	struct xfs_mount	*mp)
+-{
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		return XFS_RMAP_BLOCK(mp) + 1;
+-	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+-		return XFS_FIBT_BLOCK(mp) + 1;
+-	return XFS_IBT_BLOCK(mp) + 1;
+-}
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index a9d8e97..35b60ae 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -94,8 +94,6 @@ typedef unsigned int xfs_alloctype_t;
+ #define XFS_ALLOC_AG_MAX_USABLE(mp)	\
+ 	((mp)->m_sb.sb_agblocks - XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)) - 7)
  
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
--void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
--		struct xfs_bmap_free *flist, struct xfs_mount *mp);
-+void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_bmap_free *flist,
-+			  xfs_fsblock_t bno, xfs_filblks_t len);
- void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
- int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
- 			int *committed);
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index f42bc2d..088d74d 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -523,7 +523,7 @@ xfs_bmbt_free_block(
- 	struct xfs_trans	*tp = cur->bc_tp;
- 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+-xfs_extlen_t	xfs_prealloc_blocks(struct xfs_mount *mp);
+-
+ /*
+  * Argument structure for xfs_alloc routines.
+  * This is turned into a structure to avoid having 20 arguments passed
+@@ -241,4 +239,6 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
  
--	xfs_bmap_add_free(fsbno, 1, cur->bc_private.b.flist, mp);
-+	xfs_bmap_add_free(mp, cur->bc_private.b.flist, fsbno, 1);
- 	ip->i_d.di_nblocks--;
- 
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 93bfaea..8fffb54 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1822,9 +1822,9 @@ xfs_difree_inode_chunk(
- 
- 	if (!xfs_inobt_issparse(rec->ir_holemask)) {
- 		/* not sparse, calculate extent info directly */
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
-+		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno,
- 				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
--				  mp->m_ialloc_blks, flist, mp);
-+				  mp->m_ialloc_blks);
- 		return;
- 	}
- 
-@@ -1867,8 +1867,8 @@ xfs_difree_inode_chunk(
- 
- 		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
- 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
--				  flist, mp);
-+		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, agbno),
-+				  contigblk);
- 
- 		/* reset range to current bit and carry on... */
- 		startidx = endidx = nextbit;
++xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
++
+ #endif	/* __XFS_ALLOC_H__ */
 
 _______________________________________________
 xfs mailing list
