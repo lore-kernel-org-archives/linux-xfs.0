@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7CAB329E4E
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:05:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C73C304039
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:05:26 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7A69829E59
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:05:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4D180304039
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:05:32 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id KEhuBLIubf1NdDIB (version=TLSv1.2
+	cuda.sgi.com with ESMTP id OdUVVHUAA6BmT9jz (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:05:24 -0700 (PDT)
-Subject: [PATCH 01/51] libxcmd: provide a common function to report command
-	runtimes
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:05:30 -0700 (PDT)
+Subject: [PATCH 02/51] libxfs: add reflink and dedupe ioctls
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:05:20 -0700
-Message-ID: <20151007050520.1504.59073.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:05:27 -0700
+Message-ID: <20151007050527.1504.88163.stgit@birch.djwong.org>
 In-Reply-To: <20151007050513.1504.28089.stgit@birch.djwong.org>
 References: <20151007050513.1504.28089.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,177 +31,67 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Refactor the open-coded runtime stats reporting into a library
-command, then update xfs_io commands to use it.
+This is a port of the reflink and dedupe ioctl definitions from the
+kernel.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/command.h |    6 ++++++
- io/pread.c        |   16 +---------------
- io/pwrite.c       |   16 +---------------
- io/sendfile.c     |   16 +---------------
- libxcmd/command.c |   26 ++++++++++++++++++++++++++
- 5 files changed, 35 insertions(+), 45 deletions(-)
+ libxfs/xfs_fs.h |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
 
-diff --git a/include/command.h b/include/command.h
-index 4869edf..51dae6a 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -18,6 +18,8 @@
- #ifndef __COMMAND_H__
- #define __COMMAND_H__
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 89689c6..8f7014f 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -559,6 +559,47 @@ typedef struct xfs_swapext
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
-+#include <sys/time.h>
++/* reflink ioctls; these MUST match the btrfs ioctl definitions */
++/* from struct btrfs_ioctl_clone_range_args */
++struct xfs_clone_args {
++	__s64 src_fd;
++	__u64 src_offset;
++	__u64 src_length;
++	__u64 dest_offset;
++};
 +
- #define CMD_FLAG_GLOBAL	((int)0x80000000)	/* don't iterate "args" */
- 
- typedef int (*cfunc_t)(int argc, char **argv);
-@@ -56,4 +58,8 @@ extern void		command_loop(void);
- extern int		command_usage(const cmdinfo_t *ci);
- extern int		command(const cmdinfo_t *ci, int argc, char **argv);
- 
-+extern void		report_io_times(struct timeval *t2, long long offset,
-+				     long long count, long long total,
-+				     int ops, int condensed);
++/* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl definitions */
++#define XFS_EXTENT_DATA_SAME	0
++#define XFS_EXTENT_DATA_DIFFERS	1
 +
- #endif	/* __COMMAND_H__ */
-diff --git a/io/pread.c b/io/pread.c
-index 1c77c41..66ea945 100644
---- a/io/pread.c
-+++ b/io/pread.c
-@@ -379,7 +379,6 @@ pread_f(
- 	long long	count, total, tmp;
- 	size_t		fsblocksize, fssectsize;
- 	struct timeval	t1, t2;
--	char		s1[64], s2[64], ts[64];
- 	char		*sp;
- 	int		Cflag, qflag, uflag, vflag;
- 	int		eof = 0, direction = IO_FORWARD;
-@@ -488,20 +487,7 @@ pread_f(
- 	gettimeofday(&t2, NULL);
- 	t2 = tsub(t2, t1);
- 
--	/* Finally, report back -- -C gives a parsable format */
--	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
--	if (!Cflag) {
--		cvtstr((double)total, s1, sizeof(s1));
--		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
--		printf(_("read %lld/%lld bytes at offset %lld\n"),
--			total, count, (long long)offset);
--		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
--			s1, c, ts, s2, tdiv((double)c, t2));
--	} else {/* bytes,ops,time,bytes/sec,ops/sec */
--		printf("%lld,%d,%s,%.3f,%.3f\n",
--			total, c, ts,
--			tdiv((double)total, t2), tdiv((double)c, t2));
--	}
-+	report_io_times(&t2, (long long)offset, count, total, c, Cflag);
- 	return 0;
- }
- 
-diff --git a/io/pwrite.c b/io/pwrite.c
-index 10f78e4..81f6abe 100644
---- a/io/pwrite.c
-+++ b/io/pwrite.c
-@@ -250,7 +250,6 @@ pwrite_f(
- 	unsigned int	zeed = 0, seed = 0xcdcdcdcd;
- 	size_t		fsblocksize, fssectsize;
- 	struct timeval	t1, t2;
--	char		s1[64], s2[64], ts[64];
- 	char		*sp, *infile = NULL;
- 	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
- 	int		direction = IO_FORWARD;
-@@ -385,20 +384,7 @@ pwrite_f(
- 	gettimeofday(&t2, NULL);
- 	t2 = tsub(t2, t1);
- 
--	/* Finally, report back -- -C gives a parsable format */
--	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
--	if (!Cflag) {
--		cvtstr((double)total, s1, sizeof(s1));
--		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
--		printf(_("wrote %lld/%lld bytes at offset %lld\n"),
--			total, count, (long long)offset);
--		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
--			s1, c, ts, s2, tdiv((double)c, t2));
--	} else {/* bytes,ops,time,bytes/sec,ops/sec */
--		printf("%lld,%d,%s,%.3f,%.3f\n",
--			total, c, ts,
--			tdiv((double)total, t2), tdiv((double)c, t2));
--	}
-+	report_io_times(&t2, (long long)offset, count, total, c, Cflag);
- done:
- 	if (infile)
- 		close(fd);
-diff --git a/io/sendfile.c b/io/sendfile.c
-index 5c1638f..ced6369 100644
---- a/io/sendfile.c
-+++ b/io/sendfile.c
-@@ -81,7 +81,6 @@ sendfile_f(
- 	long long	count, total;
- 	size_t		blocksize, sectsize;
- 	struct timeval	t1, t2;
--	char		s1[64], s2[64], ts[64];
- 	char		*infile = NULL;
- 	int		Cflag, qflag;
- 	int		c, fd = -1;
-@@ -152,20 +151,7 @@ sendfile_f(
- 	gettimeofday(&t2, NULL);
- 	t2 = tsub(t2, t1);
- 
--	/* Finally, report back -- -C gives a parsable format */
--	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
--	if (!Cflag) {
--		cvtstr((double)total, s1, sizeof(s1));
--		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
--		printf(_("sent %lld/%lld bytes from offset %lld\n"),
--			total, count, (long long)offset);
--		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
--			s1, c, ts, s2, tdiv((double)c, t2));
--	} else {/* bytes,ops,time,bytes/sec,ops/sec */
--		printf("%lld,%d,%s,%.3f,%.3f\n",
--			total, c, ts,
--			tdiv((double)total, t2), tdiv((double)c, t2));
--	}
-+	report_io_times(&t2, (long long)offset, count, total, c, Cflag);
- done:
- 	if (infile)
- 		close(fd);
-diff --git a/libxcmd/command.c b/libxcmd/command.c
-index 42a77e9..5a5bb01 100644
---- a/libxcmd/command.c
-+++ b/libxcmd/command.c
-@@ -192,3 +192,29 @@ command_loop(void)
- 		doneline(input, v);
- 	}
- }
++/* from struct btrfs_ioctl_file_extent_same_info */
++struct xfs_extent_data_info {
++	__s64 fd;		/* in - destination file */
++	__u64 logical_offset;	/* in - start of extent in destination */
++	__u64 bytes_deduped;	/* out - total # of bytes we were able
++				 * to dedupe from this file */
++	/* status of this dedupe operation:
++	 * 0 if dedup succeeds
++	 * < 0 for error
++	 * == XFS_SAME_DATA_DIFFERS if data differs
++	 */
++	__s32 status;		/* out - see above description */
++	__u32 reserved;
++};
 +
-+void
-+report_io_times(
-+	struct timeval		*t2,
-+	long long		offset,
-+	long long		count,
-+	long long		total,
-+	int			ops,
-+	int			condensed)
-+{
-+	char			s1[64], s2[64], ts[64];
++/* from struct btrfs_ioctl_file_extent_same_args */
++struct xfs_extent_data {
++	__u64 logical_offset;	/* in - start of extent in source */
++	__u64 length;		/* in - length of extent */
++	__u16 dest_count;	/* in - total elements in info array */
++	__u16 reserved1;
++	__u32 reserved2;
++	struct xfs_extent_data_info info[0];
++};
 +
-+	timestr(t2, ts, sizeof(ts), condensed ? VERBOSE_FIXED_TIME : 0);
-+	if (!condensed) {
-+		cvtstr((double)total, s1, sizeof(s1));
-+		cvtstr(tdiv((double)total, *t2), s2, sizeof(s2));
-+		printf(_("linked %lld/%lld bytes at offset %lld\n"),
-+			total, count, (long long)offset);
-+		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
-+			s1, ops, ts, s2, tdiv((double)ops, *t2));
-+	} else {/* bytes,ops,time,bytes/sec,ops/sec */
-+		printf("%lld,%d,%s,%.3f,%.3f\n",
-+			total, ops, ts,
-+			tdiv((double)total, *t2), tdiv((double)ops, *t2));
-+	}
-+}
++#define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
++#define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_clone_args)
++#define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_extent_data)
+ 
+ #ifndef HAVE_BBMACROS
+ /*
 
 _______________________________________________
 xfs mailing list
