@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE6C67FAA
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 01:21:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 704DB304032
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:21:37 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4522A7FA8
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 01:29:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AFC61AC005
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:29:20 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ceMYHTEUbAbyODIu for <xfs@oss.sgi.com>;
-	Tue, 06 Oct 2015 23:21:34 -0700 (PDT)
-Date: Wed, 7 Oct 2015 17:21:14 +1100
+	dmkOD8uYBFeYfn1x for <xfs@oss.sgi.com>;
+	Tue, 06 Oct 2015 23:29:17 -0700 (PDT)
+Date: Wed, 7 Oct 2015 17:29:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7 v11] xfs: per-filesystem stats counter implementation
-Message-ID: <20151007062114.GF32150@dastard>
+Subject: Re: [PATCH 6/7] xfs: per-filesystem stats in sysfs.
+Message-ID: <20151007062913.GR27164@dastard>
 References: <1443802960-26662-1-git-send-email-billodo@redhat.com>
-	<1443802960-26662-8-git-send-email-billodo@redhat.com>
-	<20151006213553.GA21334@redhat.com> <5614938F.3020000@sandeen.net>
+	<1443802960-26662-7-git-send-email-billodo@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5614938F.3020000@sandeen.net>
+In-Reply-To: <1443802960-26662-7-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,78 +30,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Bill O'Donnell <billodo@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 06, 2015 at 10:37:51PM -0500, Eric Sandeen wrote:
+On Fri, Oct 02, 2015 at 11:22:39AM -0500, Bill O'Donnell wrote:
+> This patch implements per-filesystem stats objects in sysfs. It
+> depends on the application of the previous patch series that
+> develops the infrastructure to support both xfs global stats and
+> xfs per-fs stats in sysfs.
 > 
+> Stats objects are instantiated when an xfs filesystem is mounted
+> and deleted on unmount. With this patch, the stats directory is
+> created and populated with the familiar stats and stats_clear files.
+> Example:
+>         /sys/fs/xfs/sda9/stats/stats
+>         /sys/fs/xfs/sda9/stats/stats_clear
 > 
-> On 10/6/15 4:35 PM, Bill O'Donnell wrote:
-> > UPDATE:
-> > -v11: fix errors in dfs_dquot.c functions touching stats counts.
-> > 
-> > This patch modifies the stats counting macros and the callers
-> > to those macros to properly increment, decrement, and add-to
-> > the xfs stats counts. The counts for global and per-fs stats
-> > are correctly advanced, and cleared by writing a "1" to the
-> > corresponding clear file.
-> > 
-> > global counts: /sys/fs/xfs/stats/stats
-> > per-fs counts: /sys/fs/xfs/sda*/stats/stats
-> > 
-> > global clear:  /sys/fs/xfs/stats/stats_clear
-> > per-fs clear:  /sys/fs/xfs/sda*/stats/stats_clear
-> > 
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> > ---
+> With this patch, the individual counts within the new per-fs
+> stats file(s) remain at zero. Functions that use the the macros
+> to increment, decrement, and add-to the per-fs stats counts will
+> be covered in a separate new patch to follow this one. Note that
+> the counts within the global stats file (/sys/fs/xfs/stats/stats)
+> advance normally and can be cleared as it was prior to this patch.
 > 
-> ...
-> 
-> > diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-> > index 54f2260..2ab82c5 100644
-> > --- a/fs/xfs/xfs_stats.h
-> > +++ b/fs/xfs/xfs_stats.h
-> > @@ -218,14 +218,23 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf);
-> >  void xfs_stats_clearall(struct xfsstats __percpu *stats);
-> >  extern struct xstats xfsstats;
-> >  
-> > -#define XFS_STATS_INC(v)	\
-> > -	(per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v++)
-> > +#define XFS_STATS_INC(mp, v)					\
-> > +do {								\
-> > +	per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v++;	\
-> > +	per_cpu_ptr(mp->m_stats.xs_stats, current_cpu())->v++;	\
-> > +} while (0)
-> >  
-> > -#define XFS_STATS_DEC(v)	\
-> > -	(per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v--)
-> > +#define XFS_STATS_DEC(mp, v)					\
-> > +do {								\
-> > +	per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v--;	\
-> > +	per_cpu_ptr(mp->m_stats.xs_stats, current_cpu())->v--;	\
-> > +} while (0)
-> >  
-> > -#define XFS_STATS_ADD(v, inc)	\
-> > -	(per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v += (inc))
-> > +#define XFS_STATS_ADD(mp, v, inc)					\
-> > +do {									\
-> > +	per_cpu_ptr(xfsstats.xs_stats, current_cpu())->v += (inc);	\
-> > +	per_cpu_ptr(mp->m_stats.xs_stats, current_cpu())->v += (inc);	\
-> > +} while (0)
-> >  
-> >  extern int xfs_init_procfs(void);
-> >  extern void xfs_cleanup_procfs(void);
-> 
-> One other thing that I just caught looking at the code (not enough context
-> in the patch to see it) - this is all under #ifdef CONFIG_PROC_FS, and now
-> that it's all moved to sysfs, we should just remove that conditional from
-> this file.  The only thing that matters w.r.t. procfs is the symlink
-> creation, and that's already handled in xfs_init_procfs() definitions.
-> 
-> Dave, maybe you can just fix that on commit ...
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-I moved the conditional just to cover the xfs_init_procfs()
-definitions.
+.....
+
+> @@ -1047,6 +1065,10 @@ xfs_unmountfs(
+>  		xfs_warn(mp, "Unable to update superblock counters. "
+>  				"Freespace may not be correct on next mount.");
+>  
+> +	/* remove the stats kobject and free stats memory */
+> +	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+> +	free_percpu(mp->m_stats.xs_stats);
+> +
+>  	xfs_log_unmount(mp);
+
+Ok, there's an obvious (to me!) problem here. xfs_log_unmount() is
+called while there are still active objects in the AIL, which means
+there is still AIL operations that need to be done. The AIL
+operations have stats in them, so this will result in use-after-free
+of the mp->m_stats structure here.
+
+Actually, looking at the alloc side of this patch, we're doing a
+XFS_STATS_INC(xb_create) through:
+
+xfs_fs_fill_super
+  xfs_readsb
+    xfs_buf_read_uncached
+      xfs_buf_get_uncached
+        _xfs_buf_alloc
+	  XFS_STATS_INC(target->bt_mount, xb_create)
+
+at mount time before we've set up mp->m_stats. Ok, so the
+initialisation and teardown of the per-mount stats memory is being
+done at the wrong layer - it needs to be done in xfs_fs_fill_super()
+before we do any IO at all and dropped in xfs_fs_put_super() after
+we've torn down all the IO structures. The sysfs object
+initialisation is fine where it is, but the actual stats storage is
+needed earlier/later than the sysfs object is.
+
+/me now wonders why this doesn't go kaboom at mount time...
+
+Reworked patch is inline below.
 
 Cheers,
 
@@ -110,6 +101,144 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+xfs: per-filesystem stats in sysfs
+
+From: Bill O'Donnell <billodo@redhat.com>
+
+This patch implements per-filesystem stats objects in sysfs. It
+depends on the application of the previous patch series that
+develops the infrastructure to support both xfs global stats and
+xfs per-fs stats in sysfs.
+
+Stats objects are instantiated when an xfs filesystem is mounted
+and deleted on unmount. With this patch, the stats directory is
+created and populated with the familiar stats and stats_clear files.
+Example:
+        /sys/fs/xfs/sda9/stats/stats
+        /sys/fs/xfs/sda9/stats/stats_clear
+
+With this patch, the individual counts within the new per-fs
+stats file(s) remain at zero. Functions that use the the macros
+to increment, decrement, and add-to the per-fs stats counts will
+be covered in a separate new patch to follow this one. Note that
+the counts within the global stats file (/sys/fs/xfs/stats/stats)
+advance normally and can be cleared as it was prior to this patch.
+
+[dchinner: move setup/teardown to xfs_fs_{fill|put}_super() so
+it is down before/after any path that uses the per-mount stats. ]
+
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+---
+ fs/xfs/xfs_mount.c | 11 ++++++++++-
+ fs/xfs/xfs_mount.h |  1 +
+ fs/xfs/xfs_super.c | 14 ++++++++++++--
+ 3 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bf92e0c..eb498ce 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -693,10 +693,15 @@ xfs_mountfs(
+ 	if (error)
+ 		goto out;
+ 
+-	error = xfs_uuid_mount(mp);
++	error = xfs_sysfs_init(&mp->m_stats.xs_kobj, &xfs_stats_ktype,
++			       &mp->m_kobj, "stats");
+ 	if (error)
+ 		goto out_remove_sysfs;
+ 
++	error = xfs_uuid_mount(mp);
++	if (error)
++		goto out_del_stats;
++
+ 	/*
+ 	 * Set the minimum read and write sizes
+ 	 */
+@@ -971,6 +976,8 @@ xfs_mountfs(
+ 	xfs_da_unmount(mp);
+  out_remove_uuid:
+ 	xfs_uuid_unmount(mp);
++ out_del_stats:
++	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+  out_remove_sysfs:
+ 	xfs_sysfs_del(&mp->m_kobj);
+  out:
+@@ -1047,6 +1054,7 @@ xfs_unmountfs(
+ 		xfs_warn(mp, "Unable to update superblock counters. "
+ 				"Freespace may not be correct on next mount.");
+ 
++
+ 	xfs_log_unmount(mp);
+ 	xfs_da_unmount(mp);
+ 	xfs_uuid_unmount(mp);
+@@ -1056,6 +1064,7 @@ xfs_unmountfs(
+ #endif
+ 	xfs_free_perag(mp);
+ 
++	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+ 	xfs_sysfs_del(&mp->m_kobj);
+ }
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 404bfa5..f20e5de 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -127,6 +127,7 @@ typedef struct xfs_mount {
+ 	int64_t			m_low_space[XFS_LOWSP_MAX];
+ 						/* low free space thresholds */
+ 	struct xfs_kobj		m_kobj;
++	struct xstats		m_stats;	/* per-fs stats */
+ 
+ 	struct workqueue_struct *m_buf_workqueue;
+ 	struct workqueue_struct	*m_data_workqueue;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e1a35a5..9d11d3e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1474,9 +1474,16 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_destroy_workqueues;
+ 
++	/* Allocate stats memory before we do operations that might use it */
++	mp->m_stats.xs_stats = alloc_percpu(struct xfsstats);
++	if (!mp->m_stats.xs_stats) {
++		error = PTR_ERR(mp->m_stats.xs_stats);
++		goto out_destroy_counters;
++	}
++
+ 	error = xfs_readsb(mp, flags);
+ 	if (error)
+-		goto out_destroy_counters;
++		goto out_free_stats;
+ 
+ 	error = xfs_finish_flags(mp);
+ 	if (error)
+@@ -1545,9 +1552,11 @@ xfs_fs_fill_super(
+ 	xfs_filestream_unmount(mp);
+  out_free_sb:
+ 	xfs_freesb(mp);
++ out_free_stats:
++	free_percpu(mp->m_stats.xs_stats);
+  out_destroy_counters:
+ 	xfs_destroy_percpu_counters(mp);
+-out_destroy_workqueues:
++ out_destroy_workqueues:
+ 	xfs_destroy_mount_workqueues(mp);
+  out_close_devices:
+ 	xfs_close_devices(mp);
+@@ -1574,6 +1583,7 @@ xfs_fs_put_super(
+ 	xfs_unmountfs(mp);
+ 
+ 	xfs_freesb(mp);
++	free_percpu(mp->m_stats.xs_stats);
+ 	xfs_destroy_percpu_counters(mp);
+ 	xfs_destroy_mount_workqueues(mp);
+ 	xfs_close_devices(mp);
 
 _______________________________________________
 xfs mailing list
