@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 86F957F37
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:55:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 677818F8040
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:55:18 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A84AE7F60
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:55:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D7A98F8050
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:55:24 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id HOi5Ajz352sHNo3J (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3teUW2SWrVS12LXe (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:55:16 -0700 (PDT)
-Subject: [PATCH 04/58] xfs: add rmap btree stats infrastructure
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:55:22 -0700 (PDT)
+Subject: [PATCH 05/58] xfs: rmap btree add more reserved blocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 21:55:10 -0700
-Message-ID: <20151007045510.30457.59178.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 21:55:19 -0700
+Message-ID: <20151007045519.30457.79528.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -33,80 +33,141 @@ Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, xfs@oss.s
 
 >From : Dave Chinner <dchinner@redhat.com>
 
-The rmap btree will require the same stats as all the other generic
-btrees, so add al the code for that now.
+XFS reserves a small amount of space in each AG for the minimum
+number of free blocks needed for operation. Adding the rmap btree
+increases the number of reserved blocks, but it also increases the
+complexity of the calculation as the free inode btree is optional
+(like the rmbt).
+
+Rather than calculate the prealloc blocks every time we need to
+check it, add a function to calculate it at mount time and store it
+in the struct xfs_mount, and convert the XFS_PREALLOC_BLOCKS macro
+just to use the xfs-mount variable directly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_btree.h |    4 ++--
- fs/xfs/xfs_stats.c        |    1 +
- fs/xfs/xfs_stats.h        |   18 +++++++++++++++++-
- 3 files changed, 20 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c  |   11 +++++++++++
+ fs/xfs/libxfs/xfs_alloc.h  |    2 ++
+ fs/xfs/libxfs/xfs_format.h |    9 +--------
+ fs/xfs/xfs_fsops.c         |    6 +++---
+ fs/xfs/xfs_mount.c         |    2 ++
+ fs/xfs/xfs_mount.h         |    1 +
+ 6 files changed, 20 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index ace1995..494ee0b 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -95,7 +95,7 @@ do {    \
- 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
- 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
- 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
--	case XFS_BTNUM_RMAP: break;	\
-+	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(rmap, stat); break;	\
- 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
- 	}       \
- } while (0)
-@@ -110,7 +110,7 @@ do {    \
- 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
- 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
- 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
--	case XFS_BTNUM_RMAP: break; \
-+	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_ADD(rmap, stat, val); break; \
- 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
- 	}       \
- } while (0)
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index f224038..67bbfa2 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -60,6 +60,7 @@ static int xfs_stat_proc_show(struct seq_file *m, void *v)
- 		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
- 		{ "ibt2",		XFSSTAT_END_IBT_V2		},
- 		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
-+		{ "rmapbt",		XFSSTAT_END_RMAP_V2		},
- 		/* we print both series of quota information together */
- 		{ "qm",			XFSSTAT_END_QM			},
- 	};
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index c8f238b..8414db2 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -199,7 +199,23 @@ struct xfsstats {
- 	__uint32_t		xs_fibt_2_alloc;
- 	__uint32_t		xs_fibt_2_free;
- 	__uint32_t		xs_fibt_2_moves;
--#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_FIBT_V2+6)
-+#define XFSSTAT_END_RMAP_V2		(XFSSTAT_END_FIBT_V2+15)
-+	__uint32_t		xs_rmap_2_lookup;
-+	__uint32_t		xs_rmap_2_compare;
-+	__uint32_t		xs_rmap_2_insrec;
-+	__uint32_t		xs_rmap_2_delrec;
-+	__uint32_t		xs_rmap_2_newroot;
-+	__uint32_t		xs_rmap_2_killroot;
-+	__uint32_t		xs_rmap_2_increment;
-+	__uint32_t		xs_rmap_2_decrement;
-+	__uint32_t		xs_rmap_2_lshift;
-+	__uint32_t		xs_rmap_2_rshift;
-+	__uint32_t		xs_rmap_2_split;
-+	__uint32_t		xs_rmap_2_join;
-+	__uint32_t		xs_rmap_2_alloc;
-+	__uint32_t		xs_rmap_2_free;
-+	__uint32_t		xs_rmap_2_moves;
-+#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
- 	__uint32_t		xs_qm_dqreclaims;
- 	__uint32_t		xs_qm_dqreclaim_misses;
- 	__uint32_t		xs_qm_dquot_dups;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index e5bede9..8bb2a32 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -49,6 +49,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+ 
++xfs_extlen_t
++xfs_prealloc_blocks(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
++
+ /*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
+  */
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 071b28b..1993644 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -235,4 +235,6 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ 
++xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
++
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 3350013..a926134 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1304,18 +1304,11 @@ typedef __be32 xfs_inobt_ptr_t;
+  */
+ #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
+ 
+-/*
+- * The first data block of an AG depends on whether the filesystem was formatted
+- * with the finobt feature. If so, account for the finobt reserved root btree
+- * block.
+- */
+-#define XFS_PREALLOC_BLOCKS(mp) \
++#define	XFS_RMAP_BLOCK(mp) \
+ 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
+ 	 XFS_FIBT_BLOCK(mp) + 1 : \
+ 	 XFS_IBT_BLOCK(mp) + 1)
+ 
+-
+-
+ /*
+  * BMAP Btree format definitions
+  *
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index ee3aaa0a..32e24ec 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -246,7 +246,7 @@ xfs_growfs_data_private(
+ 		agf->agf_flfirst = 0;
+ 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+ 		agf->agf_flcount = 0;
+-		tmpsize = agsize - XFS_PREALLOC_BLOCKS(mp);
++		tmpsize = agsize - mp->m_ag_prealloc_blocks;
+ 		agf->agf_freeblks = cpu_to_be32(tmpsize);
+ 		agf->agf_longest = cpu_to_be32(tmpsize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+@@ -343,7 +343,7 @@ xfs_growfs_data_private(
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
++		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+ 		arec->ar_blockcount = cpu_to_be32(
+ 			agsize - be32_to_cpu(arec->ar_startblock));
+ 
+@@ -372,7 +372,7 @@ xfs_growfs_data_private(
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
++		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+ 		arec->ar_blockcount = cpu_to_be32(
+ 			agsize - be32_to_cpu(arec->ar_startblock));
+ 		nfree += be32_to_cpu(arec->ar_blockcount);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bf92e0c..1b2f72c 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -239,6 +239,8 @@ xfs_initialize_perag(
+ 
+ 	if (maxagi)
+ 		*maxagi = index;
++
++	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+ 	return 0;
+ 
+ out_unwind:
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 7999e91..d9c9834 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -93,6 +93,7 @@ typedef struct xfs_mount {
+ 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+ 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+ 	uint			m_in_maxlevels;	/* max inobt btree levels. */
++	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
+ 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+ 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+ 	struct mutex		m_growlock;	/* growfs mutex */
 
 _______________________________________________
 xfs mailing list
