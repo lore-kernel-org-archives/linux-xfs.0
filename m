@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D63D37F37
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:56:10 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 554007F7E
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:56:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54F28AC007
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:56:10 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id cyb1YVfJ6qIkaC3Z (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB988AC009
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:56:16 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id RQAzu8YDPfKZpS7c (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:56:08 -0700 (PDT)
-Subject: [PATCH 12/58] xfs: add rmap btree growfs support
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:56:15 -0700 (PDT)
+Subject: [PATCH 13/58] xfs: enhance rmap btree growfs support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 21:56:05 -0700
-Message-ID: <20151007045605.30457.1194.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 21:56:12 -0700
+Message-ID: <20151007045612.30457.1731.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,112 +29,70 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
->From : Dave Chinner <dchinner@redhat.com>
+Fill out the rmap offset fields.
 
-Now we can read and write rmap btree blocks, we can add support to
-the growfs code to initialise new rmap btree blocks.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_fsops.c |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
+ fs/xfs/xfs_fsops.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index b3d1665..38c78da 100644
+index 38c78da..119be0a 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -32,6 +32,7 @@
- #include "xfs_btree.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_alloc.h"
-+#include "xfs_rmap_btree.h"
- #include "xfs_ialloc.h"
- #include "xfs_fsops.h"
- #include "xfs_itable.h"
-@@ -243,6 +244,12 @@ xfs_growfs_data_private(
- 		agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
- 		agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
- 		agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+			agf->agf_roots[XFS_BTNUM_RMAPi] =
-+						cpu_to_be32(XFS_RMAP_BLOCK(mp));
-+			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
-+		}
+@@ -393,6 +393,7 @@ xfs_growfs_data_private(
+ 		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+ 			struct xfs_rmap_rec	*rrec;
+ 			struct xfs_btree_block	*block;
 +
- 		agf->agf_flfirst = 0;
- 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
- 		agf->agf_flcount = 0;
-@@ -382,6 +389,67 @@ xfs_growfs_data_private(
- 		if (error)
- 			goto error0;
+ 			bp = xfs_growfs_get_hdr_buf(mp,
+ 				XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+ 				BTOBB(mp->m_sb.sb_blocksize), 0,
+@@ -402,7 +403,7 @@ xfs_growfs_data_private(
+ 				goto error0;
+ 			}
  
-+		/* RMAP btree root block */
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+			struct xfs_rmap_rec	*rrec;
-+			struct xfs_btree_block	*block;
-+			bp = xfs_growfs_get_hdr_buf(mp,
-+				XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
-+				BTOBB(mp->m_sb.sb_blocksize), 0,
-+				&xfs_rmapbt_buf_ops);
-+			if (!bp) {
-+				error = -ENOMEM;
-+				goto error0;
-+			}
-+
-+			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 2,
-+						agno, XFS_BTREE_CRC_BLOCKS);
-+			block = XFS_BUF_TO_BLOCK(bp);
-+
-+
-+			/*
-+			 * mark the AG header regions as static metadata The BNO
-+			 * btree block is the first block after the headers, so
-+			 * it's location defines the size of region the static
-+			 * metadata consumes.
-+			 *
-+			 * Note: unlike mkfs, we never have to account for log
-+			 * space when growing the data regions
-+			 */
-+			rrec = XFS_RMAP_REC_ADDR(block, 1);
-+			rrec->rm_startblock = 0;
-+			rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			/* account freespace btree root blocks */
-+			rrec = XFS_RMAP_REC_ADDR(block, 2);
-+			rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
-+			rrec->rm_blockcount = cpu_to_be32(2);
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			/* account inode btree root blocks */
-+			rrec = XFS_RMAP_REC_ADDR(block, 3);
-+			rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
-+			rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
-+							XFS_IBT_BLOCK(mp));
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			/* account for rmap btree root */ 
-+			rrec = XFS_RMAP_REC_ADDR(block, 4);
-+			rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
-+			rrec->rm_blockcount = cpu_to_be32(1);
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			error = xfs_bwrite(bp);
-+			xfs_buf_relse(bp);
-+			if (error)
-+				goto error0;
-+		}
-+
- 		/*
- 		 * INO btree root block
- 		 */
+-			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 2,
++			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 0,
+ 						agno, XFS_BTREE_CRC_BLOCKS);
+ 			block = XFS_BUF_TO_BLOCK(bp);
+ 
+@@ -420,6 +421,7 @@ xfs_growfs_data_private(
+ 			rrec->rm_startblock = 0;
+ 			rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+ 			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
++			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
+ 			/* account freespace btree root blocks */
+@@ -427,6 +429,7 @@ xfs_growfs_data_private(
+ 			rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+ 			rrec->rm_blockcount = cpu_to_be32(2);
+ 			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
++			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
+ 			/* account inode btree root blocks */
+@@ -435,13 +438,15 @@ xfs_growfs_data_private(
+ 			rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+ 							XFS_IBT_BLOCK(mp));
+ 			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
++			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
+-			/* account for rmap btree root */ 
++			/* account for rmap btree root */
+ 			rrec = XFS_RMAP_REC_ADDR(block, 4);
+ 			rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+ 			rrec->rm_blockcount = cpu_to_be32(1);
+ 			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
++			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
+ 			error = xfs_bwrite(bp);
 
 _______________________________________________
 xfs mailing list
