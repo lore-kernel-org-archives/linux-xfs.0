@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CACCA7FAA
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:00:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3E30BAC007
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:00:50 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1ECE27FAA
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:00:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B18D4AC006
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:00:56 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id FFz4zCDg0kD0yAA8 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id W7zEqRwch8BgESzR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:00:48 -0700 (PDT)
-Subject: [PATCH 51/58] xfs: add clone file and clone range ioctls
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:00:54 -0700 (PDT)
+Subject: [PATCH 52/58] xfs: emulate the btrfs dedupe extent same ioctl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:00:44 -0700
-Message-ID: <20151007050044.30457.38096.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:00:51 -0700
+Message-ID: <20151007050051.30457.45420.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,278 +31,434 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Define two ioctls which allow userspace to reflink a range of blocks
-between two files or to reflink one file's contents to another.
-These ioctls must have the same ABI as the btrfs ioctls with similar
-names.
+Emulate the BTRFS_IOC_EXTENT_SAME ioctl.  This operation is similar
+to clone_range, but the kernel must confirm that the contents of the
+two extents are identical before performing the reflink.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   11 +++
- fs/xfs/xfs_ioctl.c     |  192 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_ioctl32.c   |    2 +
- 3 files changed, 205 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h |   30 ++++++++++++
+ fs/xfs/xfs_ioctl.c     |  124 ++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_ioctl32.c   |    1 
+ fs/xfs/xfs_reflink.c   |  120 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_reflink.h   |    6 ++
+ 5 files changed, 275 insertions(+), 6 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b6ee5d8..2c8cd04 100644
+index 2c8cd04..c63afd4 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -561,6 +561,17 @@ typedef struct xfs_swapext
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+@@ -570,8 +570,38 @@ struct xfs_clone_args {
+ 	__u64 dest_offset;
+ };
  
-+/* reflink ioctls; these MUST match the btrfs ioctl definitions */
-+/* from struct btrfs_ioctl_clone_range_args */
-+struct xfs_clone_args {
-+	__s64 src_fd;
-+	__u64 src_offset;
-+	__u64 src_length;
-+	__u64 dest_offset;
++/* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl definitions */
++#define XFS_EXTENT_DATA_SAME	0
++#define XFS_EXTENT_DATA_DIFFERS	1
++
++/* from struct btrfs_ioctl_file_extent_same_info */
++struct xfs_extent_data_info {
++	__s64 fd;		/* in - destination file */
++	__u64 logical_offset;	/* in - start of extent in destination */
++	__u64 bytes_deduped;	/* out - total # of bytes we were able
++				 * to dedupe from this file */
++	/* status of this dedupe operation:
++	 * 0 if dedup succeeds
++	 * < 0 for error
++	 * == XFS_SAME_DATA_DIFFERS if data differs
++	 */
++	__s32 status;		/* out - see above description */
++	__u32 reserved;
 +};
 +
-+#define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
-+#define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_clone_args)
++/* from struct btrfs_ioctl_file_extent_same_args */
++struct xfs_extent_data {
++	__u64 logical_offset;	/* in - start of extent in source */
++	__u64 length;		/* in - length of extent */
++	__u16 dest_count;	/* in - total elements in info array */
++	__u16 reserved1;
++	__u32 reserved2;
++	struct xfs_extent_data_info info[0];
++};
++
+ #define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
+ #define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_clone_args)
++#define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_extent_data)
  
  #ifndef HAVE_BBMACROS
  /*
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index ea7d85a..ce4812e 100644
+index ce4812e..50ea19e 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -40,6 +40,7 @@
- #include "xfs_symlink.h"
- #include "xfs_trans.h"
- #include "xfs_pnfs.h"
-+#include "xfs_reflink.h"
+@@ -1541,7 +1541,8 @@ xfs_ioctl_reflink(
+ 	loff_t		pos_in,
+ 	struct file	*file_out,
+ 	loff_t		pos_out,
+-	size_t		len)
++	size_t		len,
++	bool		is_dedupe)
+ {
+ 	struct inode	*inode_in;
+ 	struct inode	*inode_out;
+@@ -1550,6 +1551,7 @@ xfs_ioctl_reflink(
+ 	loff_t		isize;
+ 	int		same_inode;
+ 	loff_t		blen;
++	unsigned int	flags;
  
- #include <linux/capability.h>
- #include <linux/dcache.h>
-@@ -48,6 +49,8 @@
- #include <linux/pagemap.h>
- #include <linux/slab.h>
- #include <linux/exportfs.h>
-+#include <linux/fsnotify.h>
-+#include <linux/security.h>
+ 	if (len == 0)
+ 		return 0;
+@@ -1629,8 +1631,12 @@ xfs_ioctl_reflink(
+ 	if (ret)
+ 		goto out_unlock;
  
- /*
-  * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
-@@ -1503,6 +1506,153 @@ xfs_ioc_swapext(
++	flags = 0;
++	if (is_dedupe)
++		flags |= XFS_REFLINK_DEDUPE;
++
+ 	ret = xfs_reflink(XFS_I(inode_in), pos_in, XFS_I(inode_out),
+-			pos_out, len);
++			pos_out, len, flags);
+ 	if (ret < 0)
+ 		goto out_unlock;
+ 
+@@ -1652,6 +1658,112 @@ out_unlock:
+ 	return ret;
  }
  
- /*
-+ * Flush all file writes out to disk.
-+ */
-+static int
-+wait_for_io(
-+	struct inode	*inode,
-+	loff_t		offset,
-+	size_t		len)
++#define XFS_MAX_DEDUPE_LEN	(16 * 1024 * 1024)
++
++static long
++xfs_ioctl_file_extent_same(
++	struct file			*file,
++	struct xfs_extent_data __user	*argp)
 +{
-+	loff_t		rounding;
-+	loff_t		ioffset;
-+	loff_t		iendoffset;
-+	loff_t		bs;
-+	int		ret;
++	struct xfs_extent_data		*same;
++	struct xfs_extent_data_info	*info;
++	struct inode			*src;
++	u64				off;
++	u64				len;
++	int				i;
++	int				ret;
++	unsigned long			size;
++	bool				is_admin;
++	u16				count;
 +
-+	bs = inode->i_sb->s_blocksize;
-+	inode_dio_wait(inode);
-+
-+	rounding = max_t(xfs_off_t, bs, PAGE_CACHE_SIZE);
-+	ioffset = round_down(offset, rounding);
-+	iendoffset = round_up(offset + len, rounding) - 1;
-+	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
-+					   iendoffset);
-+	return ret;
-+}
-+
-+/*
-+ * For reflink, validate the VFS parameters, convert them into the XFS
-+ * equivalents, and then call the internal reflink function.
-+ */
-+STATIC int
-+xfs_ioctl_reflink(
-+	struct file	*file_in,
-+	loff_t		pos_in,
-+	struct file	*file_out,
-+	loff_t		pos_out,
-+	size_t		len)
-+{
-+	struct inode	*inode_in;
-+	struct inode	*inode_out;
-+	ssize_t		ret;
-+	loff_t		bs;
-+	loff_t		isize;
-+	int		same_inode;
-+	loff_t		blen;
-+
-+	if (len == 0)
-+		return 0;
-+	else if (len != ~0ULL && (ssize_t)len < 0)
++	is_admin = capable(CAP_SYS_ADMIN);
++	src = file_inode(file);
++	if (!(file->f_mode & FMODE_READ))
 +		return -EINVAL;
 +
-+	/* Do we have the correct permissions? */
-+	if (!(file_in->f_mode & FMODE_READ) ||
-+	    !(file_out->f_mode & FMODE_WRITE) ||
-+	    (file_out->f_flags & O_APPEND))
-+		return -EPERM;
-+	ret = security_file_permission(file_out, MAY_WRITE);
-+	if (ret)
-+		return ret;
-+
-+	inode_in = file_inode(file_in);
-+	inode_out = file_inode(file_out);
-+	bs = inode_out->i_sb->s_blocksize;
-+
-+	/* Don't touch certain kinds of inodes */
-+	if (IS_IMMUTABLE(inode_out))
-+		return -EPERM;
-+	if (IS_SWAPFILE(inode_in) ||
-+	    IS_SWAPFILE(inode_out))
-+		return -ETXTBSY;
-+
-+	/* Reflink only works within this filesystem. */
-+	if (inode_in->i_sb != inode_out->i_sb ||
-+	    file_in->f_path.mnt != file_out->f_path.mnt)
-+		return -EXDEV;
-+	same_inode = (inode_in->i_ino == inode_out->i_ino);
-+
-+	/* Don't reflink dirs, pipes, sockets... */
-+	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-+		return -EISDIR;
-+	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
-+		return -ESPIPE;
-+	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-+		return -EINVAL;
-+
-+	/* Are we going all the way to the end? */
-+	isize = i_size_read(inode_in);
-+	if (isize == 0)
-+		return 0;
-+	if (len  == ~0ULL)
-+		len = isize - pos_in;
-+
-+	/* Ensure offsets don't wrap and the input is inside i_size */
-+	if (pos_in + len < pos_in || pos_out + len < pos_out ||
-+	    pos_in + len > isize)
-+		return -EINVAL;
-+
-+	/* If we're linking to EOF, continue to the block boundary. */
-+	if (pos_in + len == isize)
-+		blen = ALIGN(isize, bs) - pos_in;
-+	else
-+		blen = len;
-+
-+	/* Only reflink if we're aligned to block boundaries */
-+	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
-+	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
-+		return -EINVAL;
-+
-+	/* Don't allow overlapped reflink within the same file */
-+	if (same_inode && pos_out + blen > pos_in && pos_out < pos_in + blen)
-+		return -EINVAL;
-+
-+	ret = mnt_want_write_file(file_out);
-+	if (ret)
-+		return ret;
-+
-+	/* Wait for the completion of any pending IOs on srcfile */
-+	ret = wait_for_io(inode_in, pos_in, len);
-+	if (ret)
-+		goto out_unlock;
-+	ret = wait_for_io(inode_out, pos_out, len);
-+	if (ret)
-+		goto out_unlock;
-+
-+	ret = xfs_reflink(XFS_I(inode_in), pos_in, XFS_I(inode_out),
-+			pos_out, len);
-+	if (ret < 0)
-+		goto out_unlock;
-+
-+	/* Truncate the page cache so we don't see stale data */
-+	truncate_inode_pages_range(&inode_out->i_data, pos_out,
-+				   PAGE_CACHE_ALIGN(pos_out + len) - 1);
-+
-+out_unlock:
-+	if (ret == 0) {
-+		fsnotify_access(file_in);
-+		add_rchar(current, len);
-+		fsnotify_modify(file_out);
-+		add_wchar(current, len);
++	if (get_user(count, &argp->dest_count)) {
++		ret = -EFAULT;
++		goto out;
 +	}
-+	inc_syscr(current);
-+	inc_syscw(current);
 +
-+	mnt_drop_write_file(file_out);
++	size = offsetof(struct xfs_extent_data __user,
++			info[count]);
++
++	same = memdup_user(argp, size);
++
++	if (IS_ERR(same)) {
++		ret = PTR_ERR(same);
++		goto out;
++	}
++
++	off = same->logical_offset;
++	len = same->length;
++
++	/*
++	 * Limit the total length we will dedupe for each operation.
++	 * This is intended to bound the total time spent in this
++	 * ioctl to something sane.
++	 */
++	if (len > XFS_MAX_DEDUPE_LEN)
++		len = XFS_MAX_DEDUPE_LEN;
++
++	ret = -EISDIR;
++	if (S_ISDIR(src->i_mode))
++		goto out;
++
++	ret = -EACCES;
++	if (!S_ISREG(src->i_mode))
++		goto out;
++
++	/* pre-format output fields to sane values */
++	for (i = 0; i < count; i++) {
++		same->info[i].bytes_deduped = 0ULL;
++		same->info[i].status = 0;
++	}
++
++	for (i = 0, info = same->info; i < count; i++, info++) {
++		struct inode *dst;
++		struct fd dst_file = fdget(info->fd);
++
++		if (!dst_file.file) {
++			info->status = -EBADF;
++			continue;
++		}
++		dst = file_inode(dst_file.file);
++
++		trace_xfs_ioctl_file_extent_same(file_inode(file), off, len,
++				dst, info->logical_offset);
++
++		info->bytes_deduped = 0;
++		if (!(is_admin || (dst_file.file->f_mode & FMODE_WRITE))) {
++			info->status = -EINVAL;
++		} else if (file->f_path.mnt != dst_file.file->f_path.mnt) {
++			info->status = -EXDEV;
++		} else if (S_ISDIR(dst->i_mode)) {
++			info->status = -EISDIR;
++		} else if (!S_ISREG(dst->i_mode)) {
++			info->status = -EACCES;
++		} else {
++			info->status = xfs_ioctl_reflink(file, off,
++							 dst_file.file,
++							 info->logical_offset,
++							 len, true);
++			if (info->status == -EBADE)
++				info->status = XFS_EXTENT_DATA_DIFFERS;
++			else if (info->status == 0)
++				info->bytes_deduped = len;
++		}
++		fdput(dst_file);
++	}
++
++	ret = copy_to_user(argp, same, size);
++	if (ret)
++		ret = -EFAULT;
++
++out:
 +	return ret;
 +}
 +
-+/*
+ /*
   * Note: some of the ioctl's return positive numbers as a
   * byte count indicating success, such as readlink_by_handle.
-  * So we don't "sign flip" like most other routines.  This means
-@@ -1800,6 +1950,48 @@ xfs_file_ioctl(
- 		return xfs_icache_free_eofblocks(mp, &keofb);
+@@ -1959,7 +2071,7 @@ xfs_file_ioctl(
+ 
+ 		trace_xfs_ioctl_clone(file_inode(src.file), file_inode(filp));
+ 
+-		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL);
++		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL, false);
+ 		fdput(src);
+ 		if (error > 0)
+ 			error = 0;
+@@ -1984,7 +2096,8 @@ xfs_file_ioctl(
+ 				file_inode(filp), args.dest_offset);
+ 
+ 		error = xfs_ioctl_reflink(src.file, args.src_offset, filp,
+-					  args.dest_offset, args.src_length);
++					  args.dest_offset, args.src_length,
++					  false);
+ 		fdput(src);
+ 		if (error > 0)
+ 			error = 0;
+@@ -1992,6 +2105,9 @@ xfs_file_ioctl(
+ 		return error;
  	}
  
-+	case XFS_IOC_CLONE: {
-+		struct fd src;
-+
-+		src = fdget(p);
-+		if (!src.file)
-+			return -EBADF;
-+
-+		trace_xfs_ioctl_clone(file_inode(src.file), file_inode(filp));
-+
-+		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL);
-+		fdput(src);
-+		if (error > 0)
-+			error = 0;
-+
-+		return error;
-+	}
-+
-+	case XFS_IOC_CLONE_RANGE: {
-+		struct fd src;
-+		struct xfs_clone_args args;
-+
-+		if (copy_from_user(&args, arg, sizeof(args)))
-+			return -EFAULT;
-+		src = fdget(args.src_fd);
-+		if (!src.file)
-+			return -EBADF;
-+		if (args.src_length == 0)
-+			args.src_length = ~0ULL;
-+
-+		trace_xfs_ioctl_clone_range(file_inode(src.file),
-+				args.src_offset, args.src_length,
-+				file_inode(filp), args.dest_offset);
-+
-+		error = xfs_ioctl_reflink(src.file, args.src_offset, filp,
-+					  args.dest_offset, args.src_length);
-+		fdput(src);
-+		if (error > 0)
-+			error = 0;
-+
-+		return error;
-+	}
++	case XFS_IOC_FILE_EXTENT_SAME:
++		return xfs_ioctl_file_extent_same(filp, arg);
 +
  	default:
  		return -ENOTTY;
  	}
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index b88bdc8..76d8729 100644
+index 76d8729..575c292 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -558,6 +558,8 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_GOINGDOWN:
- 	case XFS_IOC_ERROR_INJECTION:
+@@ -560,6 +560,7 @@ xfs_file_compat_ioctl(
  	case XFS_IOC_ERROR_CLEARALL:
-+	case XFS_IOC_CLONE:
-+	case XFS_IOC_CLONE_RANGE:
+ 	case XFS_IOC_CLONE:
+ 	case XFS_IOC_CLONE_RANGE:
++	case XFS_IOC_FILE_EXTENT_SAME:
  		return xfs_file_ioctl(filp, cmd, p);
  #ifndef BROKEN_X86_ALIGNMENT
  	/* These are handled fine if no alignment issues */
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index ac81b02..dee3556 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1386,6 +1386,103 @@ advloop:
+ }
+ #undef IMAPNEXT
+ 
++/*
++ * Read a page's worth of file data into the page cache.
++ */
++STATIC struct page *
++xfs_get_page(
++	struct inode	*inode,		/* inode */
++	xfs_off_t	offset)		/* where in the inode to read */
++{
++	struct address_space	*mapping;
++	struct page		*page;
++	pgoff_t			n;
++
++	n = offset >> PAGE_CACHE_SHIFT;
++	mapping = inode->i_mapping;
++	page = read_mapping_page(mapping, n, NULL);
++	if (IS_ERR(page))
++		return page;
++	if (!PageUptodate(page)) {
++		page_cache_release(page);
++		return NULL;
++	}
++	return page;
++}
++
++/*
++ * Compare extents of two files to see if they are the same.
++ */
++STATIC int
++xfs_compare_extents(
++	struct inode	*src,		/* first inode */
++	xfs_off_t	srcoff,		/* offset of first inode */
++	struct inode	*dest,		/* second inode */
++	xfs_off_t	destoff,	/* offset of second inode */
++	xfs_off_t	len,		/* length of data to compare */
++	bool		*is_same)	/* out: true if the contents match */
++{
++	xfs_off_t	src_poff;
++	xfs_off_t	dest_poff;
++	void		*src_addr;
++	void		*dest_addr;
++	struct page	*src_page;
++	struct page	*dest_page;
++	xfs_off_t	cmp_len;
++	bool		same;
++	int		error;
++
++	error = -EINVAL;
++	same = true;
++	while (len) {
++		src_poff = srcoff & (PAGE_CACHE_SIZE - 1);
++		dest_poff = destoff & (PAGE_CACHE_SIZE - 1);
++		cmp_len = min(PAGE_CACHE_SIZE - src_poff,
++			      PAGE_CACHE_SIZE - dest_poff);
++		cmp_len = min(cmp_len, len);
++		ASSERT(cmp_len > 0);
++
++		trace_xfs_reflink_compare_extents(XFS_I(src), srcoff, cmp_len,
++				XFS_I(dest), destoff);
++
++		src_page = xfs_get_page(src, srcoff);
++		if (!src_page)
++			goto out_error;
++		dest_page = xfs_get_page(dest, destoff);
++		if (!dest_page) {
++			page_cache_release(src_page);
++			goto out_error;
++		}
++		src_addr = kmap_atomic(src_page);
++		dest_addr = kmap_atomic(dest_page);
++
++		flush_dcache_page(src_page);
++		flush_dcache_page(dest_page);
++
++		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
++			same = false;
++
++		kunmap_atomic(src_addr);
++		kunmap_atomic(dest_addr);
++		page_cache_release(src_page);
++		page_cache_release(dest_page);
++
++		if (!same)
++			break;
++
++		srcoff += cmp_len;
++		destoff += cmp_len;
++		len -= cmp_len;
++	}
++
++	*is_same = same;
++	return 0;
++
++out_error:
++	trace_xfs_reflink_compare_extents_error(XFS_I(dest), error, _RET_IP_);
++	return error;
++}
++
+ /**
+  * xfs_reflink() - link a range of blocks from one inode to another
+  *
+@@ -1394,6 +1491,7 @@ advloop:
+  * @dest: Inode to clone to
+  * @destoff: Offset within @inode to start clone
+  * @len: Original length, passed by user, of range to clone
++ * @flags: Flags to modify reflink's behavior
+  */
+ int
+ xfs_reflink(
+@@ -1401,12 +1499,14 @@ xfs_reflink(
+ 	xfs_off_t		srcoff,
+ 	struct xfs_inode	*dest,
+ 	xfs_off_t		destoff,
+-	xfs_off_t		len)
++	xfs_off_t		len,
++	unsigned int		flags)
+ {
+ 	struct xfs_mount	*mp = src->i_mount;
+ 	xfs_fileoff_t		sfsbno, dfsbno;
+ 	xfs_filblks_t		fsblen;
+ 	int			error;
++	bool			is_same;
+ 
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return -EOPNOTSUPP;
+@@ -1418,6 +1518,9 @@ xfs_reflink(
+ 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
+ 		return -EINVAL;
+ 
++	if (flags & ~XFS_REFLINK_ALL)
++		return -EINVAL;
++
+ 	trace_xfs_reflink_range(src, srcoff, len, dest, destoff);
+ 
+ 	/* Lock both files against IO */
+@@ -1429,6 +1532,21 @@ xfs_reflink(
+ 		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
+ 	}
+ 
++	/*
++	 * Check that the extents are the same.
++	 */
++	if (flags & XFS_REFLINK_DEDUPE) {
++		is_same = false;
++		error = xfs_compare_extents(VFS_I(src), srcoff, VFS_I(dest),
++				destoff, len, &is_same);
++		if (error)
++			goto out_error;
++		if (!is_same) {
++			error = -EBADE;
++			goto out_error;
++		}
++	}
++
+ 	error = set_inode_reflink_flag(src, dest);
+ 	if (error)
+ 		goto out_error;
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index b633824..c60a9bd 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -44,7 +44,11 @@ extern int xfs_reflink_finish_fork_buf(struct xfs_inode *ip, struct xfs_buf *bp,
+ 		xfs_fileoff_t fileoff, struct xfs_trans *tp, int write_error,
+ 		xfs_fsblock_t old_fsbno);
+ 
++#define XFS_REFLINK_DEDUPE	1	/* only reflink if contents match */
++#define XFS_REFLINK_ALL		(XFS_REFLINK_DEDUPE)
++
+ extern int xfs_reflink(struct xfs_inode *src, xfs_off_t srcoff,
+-		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len);
++		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
++		unsigned int flags);
+ 
+ #endif /* __XFS_REFLINK_H */
 
 _______________________________________________
 xfs mailing list
