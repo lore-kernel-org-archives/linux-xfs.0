@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CFCA229E59
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:05:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C15088F8035
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:05:44 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id PAXFGPOm9mNBWHdb (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0976129E51
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:05:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A4AEAC00A
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:05:50 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id iLSHM1eyqHGhaBGN (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:05:42 -0700 (PDT)
-Subject: [PATCH 04/51] xfs_io: unshare blocks via fallocate
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:05:49 -0700 (PDT)
+Subject: [PATCH 05/51] xfs_db: enable blocktrash for checksummed filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:05:39 -0700
-Message-ID: <20151007050539.1504.84390.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:05:46 -0700
+Message-ID: <20151007050546.1504.55364.stgit@birch.djwong.org>
 In-Reply-To: <20151007050513.1504.28089.stgit@birch.djwong.org>
 References: <20151007050513.1504.28089.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,117 +31,82 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Try to unshare copy-on-write blocks via fallocate.
+Disable the write verifiers when we're trashing a block.  With this
+in place, create a xfs fuzzer script that formats, populates, corrupts,
+tries to use, repairs, and tries again to use a crash test xfs image.
+Hopefully this will shake out some v5 filesystem bugs.
+
+v2: Drop xfsfuzz, don't assume every block is an AGF when blocktrashing.
+Don't trash log blocks by default, because that skews the blocktrash
+heavily towards damaging only log blocks.
+
+v3: Fix changelog issues, allow trashing of log blocks and symlinks,
+and require the caller to explicitly ask for trashing of log blocks
+and super blocks because they seem to have been left out.  Allowing
+log blocks by default skews the trashing heavily in favor of (probably
+unused) log blocks, which doesn't help us with fuzzing.  Furthermore,
+trashing the superblock results in a time consuming sector by sector
+superblock hunt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/prealloc.c     |   41 +++++++++++++++++++++++++++++++++++++++--
- man/man8/xfs_io.8 |    5 +++++
- 2 files changed, 44 insertions(+), 2 deletions(-)
+ db/check.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 
-diff --git a/io/prealloc.c b/io/prealloc.c
-index 713ea7b..5b77768 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -40,6 +40,10 @@
- #define FALLOC_FL_INSERT_RANGE 0x20
- #endif
- 
-+#ifndef FALLOC_FL_UNSHARE_RANGE
-+#define FALLOC_FL_UNSHARE_RANGE 0x40
-+#endif
-+
- static cmdinfo_t allocsp_cmd;
- static cmdinfo_t freesp_cmd;
- static cmdinfo_t resvsp_cmd;
-@@ -173,7 +177,7 @@ fallocate_f(
- 	int		mode = 0;
- 	int		c;
- 
--	while ((c = getopt(argc, argv, "cikp")) != EOF) {
-+	while ((c = getopt(argc, argv, "cikpu")) != EOF) {
- 		switch (c) {
- 		case 'c':
- 			mode = FALLOC_FL_COLLAPSE_RANGE;
-@@ -187,6 +191,9 @@ fallocate_f(
- 		case 'p':
- 			mode = FALLOC_FL_PUNCH_HOLE;
- 			break;
-+		case 'u':
-+			mode = FALLOC_FL_UNSHARE_RANGE;
-+			break;
- 		default:
- 			command_usage(&falloc_cmd);
- 		}
-@@ -286,6 +293,26 @@ fzero_f(
+diff --git a/db/check.c b/db/check.c
+index d28199d..8f3b5b6 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -944,6 +944,7 @@ blocktrash_b(
+ 	int		mask;
+ 	int		newbit;
+ 	int		offset;
++	const struct xfs_buf_ops *stashed_ops;
+ 	static char	*modestr[] = {
+ 		N_("zeroed"), N_("set"), N_("flipped"), N_("randomized")
+ 	};
+@@ -952,8 +953,10 @@ blocktrash_b(
+ 	offset = (int)(random() % (int)(mp->m_sb.sb_blocksize * NBBY));
+ 	newbit = 0;
+ 	push_cur();
+-	set_cur(&typtab[DBM_UNKNOWN],
++	set_cur(NULL,
+ 		XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb, DB_RING_IGN, NULL);
++	stashed_ops = iocur_top->bp->b_ops;
++	iocur_top->bp->b_ops = NULL;
+ 	if ((buf = iocur_top->data) == NULL) {
+ 		dbprintf(_("can't read block %u/%u for trashing\n"), agno, agbno);
+ 		pop_cur();
+@@ -984,6 +987,7 @@ blocktrash_b(
+ 			buf[byte] &= ~mask;
  	}
- 	return 0;
- }
-+
-+static int
-+funshare_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	xfs_flock64_t	segment;
-+	int		mode = FALLOC_FL_UNSHARE_RANGE;
-+	int		index = 1;
-+
-+	if (!offset_length(argv[index], argv[index + 1], &segment))
-+		return 0;
-+
-+	if (fallocate(file->fd, mode,
-+			segment.l_start, segment.l_len)) {
-+		perror("fallocate");
-+		return 0;
-+	}
-+	return 0;
-+}
- #endif	/* HAVE_FALLOCATE */
- 
- void
-@@ -346,7 +373,7 @@ prealloc_init(void)
- 	falloc_cmd.argmin = 2;
- 	falloc_cmd.argmax = -1;
- 	falloc_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	falloc_cmd.args = _("[-c] [-k] [-p] off len");
-+	falloc_cmd.args = _("[-c] [-k] [-p] [-u] off len");
- 	falloc_cmd.oneline =
- 	_("allocates space associated with part of a file via fallocate");
- 	add_command(&falloc_cmd);
-@@ -390,5 +417,15 @@ prealloc_init(void)
- 	fzero_cmd.oneline =
- 	_("zeroes space and eliminates holes by preallocating");
- 	add_command(&fzero_cmd);
-+
-+	fzero_cmd.name = "funshare";
-+	fzero_cmd.cfunc = funshare_f;
-+	fzero_cmd.argmin = 2;
-+	fzero_cmd.argmax = 2;
-+	fzero_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	fzero_cmd.args = _("off len");
-+	fzero_cmd.oneline =
-+	_("unshares shared blocks within the range");
-+	add_command(&fzero_cmd);
- #endif	/* HAVE_FALLOCATE */
- }
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index e0a901f..d66dfbf 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -415,6 +415,11 @@ the FALLOC_FL_PUNCH_HOLE flag as described in the
- .BR fallocate (2)
- manual page.
- .TP
-+.BI funshare " offset length"
-+Call fallocate with FALLOC_FL_UNSHARE_RANGE flag as described in the
-+.BR fallocate (2)
-+manual page to unshare all shared blocks within the range.
-+.TP
- .BI fzero " offset length"
- Call fallocate with FALLOC_FL_ZERO_RANGE flag as described in the
- .BR fallocate (2)
+ 	write_cur();
++	iocur_top->bp->b_ops = stashed_ops;
+ 	pop_cur();
+ 	printf(_("blocktrash: %u/%u %s block %d bit%s starting %d:%d %s\n"),
+ 		agno, agbno, typename[type], len, len == 1 ? "" : "s",
+@@ -1040,9 +1044,11 @@ blocktrash_f(
+ 		   (1 << DBM_BTINO) |
+ 		   (1 << DBM_DIR) |
+ 		   (1 << DBM_INODE) |
++		   (1 << DBM_LOG) |
+ 		   (1 << DBM_QUOTA) |
+ 		   (1 << DBM_RTBITMAP) |
+ 		   (1 << DBM_RTSUM) |
++		   (1 << DBM_SYMLINK) |
+ 		   (1 << DBM_SB);
+ 	while ((c = getopt(argc, argv, "0123n:s:t:x:y:")) != EOF) {
+ 		switch (c) {
+@@ -1106,7 +1112,7 @@ blocktrash_f(
+ 		return 0;
+ 	}
+ 	if (tmask == 0)
+-		tmask = goodmask;
++		tmask = goodmask & ~((1 << DBM_LOG) | (1 << DBM_SB));
+ 	lentab = xmalloc(sizeof(ltab_t));
+ 	lentab->min = lentab->max = min;
+ 	lentablen = 1;
 
 _______________________________________________
 xfs mailing list
