@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 885757F4E
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 03:06:40 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CFF717F77
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 06:08:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EFCEDAC005
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 01:06:36 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F28AAC009
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 04:08:17 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id q2VePny0tnmUG8c7 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id WQheGmzzAFCa8SbH (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 07 Oct 2015 01:06:35 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id A32434AD5F
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 08:06:34 +0000 (UTC)
-Date: Wed, 7 Oct 2015 10:06:28 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/3] xfs_io: add inode -l argument to return largest
-	inode number
-Message-ID: <20151007080628.GA8866@redhat.com>
-References: <1443186467-20110-1-git-send-email-cmaiolino@redhat.com>
-	<1443186467-20110-3-git-send-email-cmaiolino@redhat.com>
-	<20151006170039.GC63205@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151006170039.GC63205@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2015 04:08:13 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 0F4A68EA21
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 11:08:13 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 0/2] xfs: prefix two XATTR_ names with XFS_
+Date: Wed,  7 Oct 2015 13:07:49 +0200
+Message-Id: <1444216071-6281-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,109 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Tue, Oct 06, 2015 at 01:00:39PM -0400, Brian Foster wrote:
-> On Fri, Sep 25, 2015 at 03:07:46PM +0200, Carlos Maiolino wrote:
-> > Implements '-l' argument in inode command, returning to the user, the largest
-> > inode allocated and used in the filesystem.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  io/open.c | 18 +++++++++++++-----
-> >  1 file changed, 13 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/io/open.c b/io/open.c
-> > index 6a794ba..57ff0bf 100644
-> > --- a/io/open.c
-> > +++ b/io/open.c
-> > @@ -759,6 +759,7 @@ inode_help(void)
-> >  "\n"
-> >  "Query physical information about the inode"
-> >  "\n"
-> > +" -l	-- Returns the largest inode number in the filesystem\n"
-> >  " -s	-- Returns the physical size (in bits) of the\n"
-> >  "	   largest inode number in the filesystem\n"
-> >  "\n"));
-> > @@ -777,23 +778,27 @@ inode_f(
-> >  	struct xfs_fsop_bulkreq	bulkreq;
-> >  	int			c;
-> >  	int			ret_lsize = 0;
-> > +	int			ret_largest = 0;
-> >  
-> >  	bulkreq.lastip = &last;
-> >  	bulkreq.icount = 1024; /* maybe an user-defined value!? */
-> >  	bulkreq.ubuffer = &igroup;
-> >  	bulkreq.ocount = &count;
-> >  
-> > -	while ((c = getopt(argc, argv, "s")) != EOF) {
-> > +	while ((c = getopt(argc, argv, "sl")) != EOF) {
-> >  		switch (c) {
-> >  		case 's':
-> >  			ret_lsize = 1;
-> >  			break;
-> > +		case 'l':
-> > +			ret_largest = 1;
-> > +			break;
-> >  		default:
-> >  			return command_usage(&inode_cmd);
-> >  		}
-> >  	}
-> >  
-> > -	if (ret_lsize) {
-> > +	if (ret_lsize || ret_largest) {
-> >  		for (;;) {
-> >  			if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-> >  					&bulkreq)) {
-> > @@ -811,8 +816,11 @@ inode_f(
-> >  		lastino = igroup[lastgrp].xi_startino +
-> >  			  xfs_highbit64(igroup[lastgrp].xi_allocmask);
-> >  
-> > -		printf (_("Largest inode size: %d\n"),
-> > -			 lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-> > +		if (ret_lsize)
-> > +			printf (_("Largest inode size: %d\n"),
-> > +				lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-> > +		else
-> > +			printf(_("Largest inode: %llu\n"), lastino);
-> 
-> Hmm, do we need the -s option if we have -l to print the actual largest
-> inode number?
-> 
+This set introduces renaming of XATTR_LIST_MAX and XATTR_SIZE_MAX
+to XFS_XATTR_... to make it the same as in xfsprogs. See specific
+patches for reasoning.
 
-Well, I understand your question, my point here was to implement the options
-Dave suggested, but I'm not sure if he had in mind anything else that checking
-the return value size of -l would not work as -s argument.
+Jan Tulak (2):
+  xfs: prefix XATTR_LIST_MAX with XFS_
+  xfs: avoid dependency on Linux XATTR_SIZE_MAX
 
-> Brian
-> 
-> >  
-> >  	}
-> >  
-> > @@ -887,7 +895,7 @@ open_init(void)
-> >  
-> >  	inode_cmd.name = "inode";
-> >  	inode_cmd.cfunc = inode_f;
-> > -	inode_cmd.args = _("[-s]");
-> > +	inode_cmd.args = _("[-s | -l]");
-> >  	inode_cmd.argmin = 1;
-> >  	inode_cmd.argmax = 1;
-> >  	inode_cmd.flags = CMD_NOMAP_OK;
-> > -- 
-> > 2.4.3
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+ fs/xfs/libxfs/xfs_attr_remote.c |  2 +-
+ fs/xfs/libxfs/xfs_format.h      | 10 +++++++++-
+ fs/xfs/libxfs/xfs_fs.h          | 10 ++++++++++
+ fs/xfs/xfs_ioctl.c              |  6 +++---
+ fs/xfs/xfs_ioctl32.c            |  2 +-
+ 5 files changed, 24 insertions(+), 6 deletions(-)
 
 -- 
-Carlos
+2.4.3
 
 _______________________________________________
 xfs mailing list
