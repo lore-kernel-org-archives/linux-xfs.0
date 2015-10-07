@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0125529EFE
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:14:01 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5578629F28
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:14:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E5487304039
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:14:00 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id gs8rOgHAhYa1qDHz (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:13:56 -0700 (PDT)
-Subject: [PATCH 07/12] reflink: concurrent operations tests
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:13:51 -0700
-Message-ID: <20151007051351.3260.25873.stgit@birch.djwong.org>
-In-Reply-To: <20151007051257.3260.73072.stgit@birch.djwong.org>
-References: <20151007051257.3260.73072.stgit@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A8387AC005
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:14:08 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	UfHNrmQxNLNVv6TR for <xfs@oss.sgi.com>;
+	Tue, 06 Oct 2015 22:14:06 -0700 (PDT)
+Date: Wed, 7 Oct 2015 13:12:56 +0800
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 50/58] xfs: reflink extents from one file to another
+Message-ID: <201510071320.FYMFHkEN%fengguang.wu@intel.com>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="qMm9M+Fa2AknHoGS"
+Content-Disposition: inline
+In-Reply-To: <20151007050038.30457.18221.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,1122 +24,366 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, kbuild-all@01.org
 
-Make sure that running reflink ops while other IO is ongoing doesn't
-break the filesystem.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+--qMm9M+Fa2AknHoGS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi Darrick,
+
+[auto build test WARNING on v4.3-rc4 -- if it's inappropriate base, please ignore]
+
+config: sh-titan_defconfig (attached as .config)
+reproduce:
+        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        make.cross ARCH=sh 
+
+Note: it may well be a FALSE warning. FWIW you are at least aware of it now.
+http://gcc.gnu.org/wiki/Better_Uninitialized_Warnings
+
+All warnings (new ones prefixed by >>):
+
+   fs/xfs/xfs_reflink.c: In function 'remap_blocks':
+>> fs/xfs/xfs_reflink.c:1385:2: warning: 'error' may be used uninitialized in this function [-Wuninitialized]
+
+vim +/error +1385 fs/xfs/xfs_reflink.c
+
+  1369			 */
+  1370			if (imap.br_startblock == HOLESTARTBLOCK ||
+  1371			    imap.br_startblock == DELAYSTARTBLOCK ||
+  1372			    ISUNWRITTEN(&imap))
+  1373				goto advloop;
+  1374	
+  1375			error = remap_one_range(dest, &imap, destoff + srcioff);
+  1376			if (error)
+  1377				break;
+  1378	advloop:
+  1379			/* Advance drange/srange */
+  1380			srcoff += srcioff + imap.br_blockcount;
+  1381			destoff += srcioff + imap.br_blockcount;
+  1382			len -= srcioff + imap.br_blockcount;
+  1383		}
+  1384	
+> 1385		return error;
+  1386	}
+  1387	#undef IMAPNEXT
+  1388	
+  1389	/**
+  1390	 * xfs_reflink() - link a range of blocks from one inode to another
+  1391	 *
+  1392	 * @src: Inode to clone from
+  1393	 * @srcoff: Offset within source to start clone from
+
 ---
- tests/generic/821     |   96 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/821.out |    6 +++
- tests/generic/822     |   96 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/822.out |    6 +++
- tests/generic/823     |   94 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/823.out |    6 +++
- tests/generic/824     |   95 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/824.out |    6 +++
- tests/generic/825     |  108 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/825.out |    7 +++
- tests/generic/826     |  108 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/826.out |    7 +++
- tests/generic/827     |   98 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/827.out |    7 +++
- tests/generic/828     |   98 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/828.out |    7 +++
- tests/generic/829     |   84 ++++++++++++++++++++++++++++++++++++++
- tests/generic/829.out |    6 +++
- tests/generic/group   |    9 ++++
- 19 files changed, 944 insertions(+)
- create mode 100755 tests/generic/821
- create mode 100644 tests/generic/821.out
- create mode 100755 tests/generic/822
- create mode 100644 tests/generic/822.out
- create mode 100755 tests/generic/823
- create mode 100644 tests/generic/823.out
- create mode 100755 tests/generic/824
- create mode 100644 tests/generic/824.out
- create mode 100755 tests/generic/825
- create mode 100644 tests/generic/825.out
- create mode 100755 tests/generic/826
- create mode 100644 tests/generic/826.out
- create mode 100755 tests/generic/827
- create mode 100644 tests/generic/827.out
- create mode 100755 tests/generic/828
- create mode 100644 tests/generic/828.out
- create mode 100755 tests/generic/829
- create mode 100644 tests/generic/829.out
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
+--qMm9M+Fa2AknHoGS
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
-diff --git a/tests/generic/821 b/tests/generic/821
-new file mode 100755
-index 0000000..77393cb
---- /dev/null
-+++ b/tests/generic/821
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# FS QA Test No. 821
-+#
-+# Test for race between direct I/O and reflink
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=1024
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize files"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+
-+# Direct I/O overwriter...
-+overwrite() {
-+	while [ ! -e $TESTDIR/finished ]; do
-+		dd if=/dev/zero of=$TESTDIR/file2 oflag=direct bs=$iosize count=$loops conv=notrunc 2> /dev/null
-+	done
-+}
-+
-+echo "Reflink and dio write the target"
-+overwrite &
-+start=`expr $loops - 1`
-+for i in `seq $start -1 0`
-+do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file2 >> $seqres.full
-+	[ $? -ne 0 ] && exit
-+done
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check for damage"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/821.out b/tests/generic/821.out
-new file mode 100644
-index 0000000..ca6bc53
---- /dev/null
-+++ b/tests/generic/821.out
-@@ -0,0 +1,6 @@
-+QA output created by 821
-+Format and mount
-+Initialize files
-+Reflink and dio write the target
-+Check for damage
-+Done
-diff --git a/tests/generic/822 b/tests/generic/822
-new file mode 100755
-index 0000000..6ee7a8c
---- /dev/null
-+++ b/tests/generic/822
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# FS QA Test No. 822
-+#
-+# Test for race between buffered I/O and reflink
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=1024
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize file"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+
-+# Buffered I/O overwriter...
-+overwrite() {
-+	while [ ! -e $TESTDIR/finished ]; do
-+		dd if=/dev/zero of=$TESTDIR/file2 bs=$iosize count=$loops conv=notrunc 2> /dev/null
-+	done
-+}
-+
-+echo "reflink while overwriting target"
-+overwrite &
-+start=`expr $loops - 1`
-+for i in `seq $start -1 0`
-+do
-+	$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file2 >> $seqres.full
-+	[ $? -ne 0 ] && exit
-+done
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check for damage"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/822.out b/tests/generic/822.out
-new file mode 100644
-index 0000000..4c86f97
---- /dev/null
-+++ b/tests/generic/822.out
-@@ -0,0 +1,6 @@
-+QA output created by 822
-+Format and mount
-+Initialize file
-+reflink while overwriting target
-+Check for damage
-+Done
-diff --git a/tests/generic/823 b/tests/generic/823
-new file mode 100755
-index 0000000..bf3a712
---- /dev/null
-+++ b/tests/generic/823
-@@ -0,0 +1,94 @@
-+#! /bin/bash
-+# FS QA Test No. 823
-+#
-+# Test for race between buffered I/O while creating reflink snapshots
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=1024
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize file"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+
-+# Snapshot creator...
-+snappy() {
-+	n=0
-+	while [ ! -e $TESTDIR/finished ]; do
-+		cp --reflink=always $TESTDIR/file1 $TESTDIR/snap_$n || break
-+		n=$((n + 1))
-+	done
-+}
-+
-+echo "Snapshot a file undergoing buffered rewrite"
-+snappy &
-+for i in `seq 1 5`; do
-+	dd if=/dev/zero of=$TESTDIR/file1 bs=$iosize count=$loops conv=notrunc 2> /dev/null
-+done
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check for damage"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/823.out b/tests/generic/823.out
-new file mode 100644
-index 0000000..ef3e209
---- /dev/null
-+++ b/tests/generic/823.out
-@@ -0,0 +1,6 @@
-+QA output created by 823
-+Format and mount
-+Initialize file
-+Snapshot a file undergoing buffered rewrite
-+Check for damage
-+Done
-diff --git a/tests/generic/824 b/tests/generic/824
-new file mode 100755
-index 0000000..38737c6
---- /dev/null
-+++ b/tests/generic/824
-@@ -0,0 +1,95 @@
-+#! /bin/bash
-+# FS QA Test No. 824
-+#
-+# Test for race between direct I/O while creating reflink snapshots
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=1024
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize file"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+
-+# Snapshot creator...
-+snappy() {
-+	n=0
-+	while [ ! -e $TESTDIR/finished ]; do
-+		cp --reflink=always $TESTDIR/file1 $TESTDIR/snap_$n || break
-+		n=$((n + 1))
-+	done
-+}
-+
-+echo "Snapshot a file while directio rewriting it"
-+snappy &
-+touch $TESTDIR/running
-+for i in `seq 1 5`; do
-+	dd if=/dev/zero of=$TESTDIR/file1 oflag=direct bs=$iosize count=$loops conv=notrunc 2> /dev/null
-+done
-+mv $TESTDIR/running $TESTDIR/finished
-+wait
-+
-+echo "Check for damage"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/824.out b/tests/generic/824.out
-new file mode 100644
-index 0000000..27c9bc0
---- /dev/null
-+++ b/tests/generic/824.out
-@@ -0,0 +1,6 @@
-+QA output created by 824
-+Format and mount
-+Initialize file
-+Snapshot a file while directio rewriting it
-+Check for damage
-+Done
-diff --git a/tests/generic/825 b/tests/generic/825
-new file mode 100755
-index 0000000..476527a
---- /dev/null
-+++ b/tests/generic/825
-@@ -0,0 +1,108 @@
-+#! /bin/bash
-+# FS QA Test No. 825
-+#
-+# Test for race between reflink and direct I/O reading the target file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=512
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize files"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+cp --reflink=always $TESTDIR/file1 $TESTDIR/file3
-+sync
-+
-+reader() {
-+	while [ ! -e $TESTDIR/finished ]; do
-+		dd if=$TESTDIR/file3 iflag=direct 2> /dev/null | od -tx1 -Ax | while read addr rest; do
-+				test -n "$rest" && echo "$rest"
-+		done | egrep -v '(61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61|62 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62)'
-+	done
-+}
-+
-+echo "Reflink and dio reread the files!"
-+reader &
-+for i in `seq 1 2`; do
-+	start=`expr $loops - 1`
-+	for i in `seq $start -1 0`
-+	do
-+		$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file3 >> $seqres.full
-+		[ $? -ne 0 ] && break
-+	done
-+	start=`expr $loops - 1`
-+	for i in `seq $start -1 0`
-+	do
-+		$XFS_IO_PROG -f -c "reflink $TESTDIR/file2 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file3 >> $seqres.full
-+		[ $? -ne 0 ] && break
-+	done
-+done
-+echo "Finished reflinking"
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check fs"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/825.out b/tests/generic/825.out
-new file mode 100644
-index 0000000..1e2f36c
---- /dev/null
-+++ b/tests/generic/825.out
-@@ -0,0 +1,7 @@
-+QA output created by 825
-+Format and mount
-+Initialize files
-+Reflink and dio reread the files!
-+Finished reflinking
-+Check fs
-+Done
-diff --git a/tests/generic/826 b/tests/generic/826
-new file mode 100755
-index 0000000..1739778
---- /dev/null
-+++ b/tests/generic/826
-@@ -0,0 +1,108 @@
-+#! /bin/bash
-+# FS QA Test No. 826
-+#
-+# Test for race between reflink and buffered I/O reading the target file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=512
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize files"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+cp --reflink=always $TESTDIR/file1 $TESTDIR/file3
-+sync
-+
-+reader() {
-+	while [ ! -e $TESTDIR/finished ]; do
-+		cat $TESTDIR/file3 | od -tx1 -Ax | while read addr rest; do
-+				test -n "$rest" && echo "$rest"
-+		done | egrep -v '(61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61|62 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62)'
-+	done
-+}
-+
-+echo "Reflink and reread the files!"
-+reader &
-+for i in `seq 1 2`; do
-+	start=`expr $loops - 1`
-+	for i in `seq $start -1 0`
-+	do
-+		$XFS_IO_PROG -f -c "reflink $TESTDIR/file1 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file3 >> $seqres.full
-+		[ $? -ne 0 ] && break
-+	done
-+	start=`expr $loops - 1`
-+	for i in `seq $start -1 0`
-+	do
-+		$XFS_IO_PROG -f -c "reflink $TESTDIR/file2 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file3 >> $seqres.full
-+		[ $? -ne 0 ] && break
-+	done
-+done
-+echo "Finished reflinking"
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check fs"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/826.out b/tests/generic/826.out
-new file mode 100644
-index 0000000..144f4bc
---- /dev/null
-+++ b/tests/generic/826.out
-@@ -0,0 +1,7 @@
-+QA output created by 826
-+Format and mount
-+Initialize files
-+Reflink and reread the files!
-+Finished reflinking
-+Check fs
-+Done
-diff --git a/tests/generic/827 b/tests/generic/827
-new file mode 100755
-index 0000000..fa2ba2e
---- /dev/null
-+++ b/tests/generic/827
-@@ -0,0 +1,98 @@
-+#! /bin/bash
-+# FS QA Test No. 827
-+#
-+# Test for race between dedupe and writing the source file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=512
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize files"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+sync
-+
-+overwrite() {
-+	while [ ! -e $TESTDIR/finished ]; do
-+		$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+	done
-+}
-+
-+echo "Dedupe and rewrite the file!"
-+overwrite &
-+for i in `seq 1 2`; do
-+	start=`expr $loops - 1`
-+	for i in `seq $start -1 0`
-+	do
-+		$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file2 >> $seqres.full
-+		[ $? -ne 0 ] && break
-+	done
-+done
-+echo "Finished dedupeing"
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check fs"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/827.out b/tests/generic/827.out
-new file mode 100644
-index 0000000..1b05f59
---- /dev/null
-+++ b/tests/generic/827.out
-@@ -0,0 +1,7 @@
-+QA output created by 827
-+Format and mount
-+Initialize files
-+Dedupe and rewrite the file!
-+Finished dedupeing
-+Check fs
-+Done
-diff --git a/tests/generic/828 b/tests/generic/828
-new file mode 100755
-index 0000000..43b1682
---- /dev/null
-+++ b/tests/generic/828
-@@ -0,0 +1,98 @@
-+#! /bin/bash
-+# FS QA Test No. 828
-+#
-+# Test for race between dedupe and writing the dest file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=512
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize files"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+sync
-+
-+overwrite() {
-+	while [ ! -e $TESTDIR/finished ]; do
-+		$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file2 >> $seqres.full
-+	done
-+}
-+
-+echo "Dedupe and rewrite the file!"
-+overwrite &
-+for i in `seq 1 2`; do
-+	start=`expr $loops - 1`
-+	for i in `seq $start -1 0`
-+	do
-+		$XFS_IO_PROG -f -c "dedupe $TESTDIR/file1 $((i * iosize)) $((i * iosize)) $iosize" $TESTDIR/file2 >> $seqres.full
-+		[ $? -ne 0 ] && break
-+	done
-+done
-+echo "Finished dedupeing"
-+touch $TESTDIR/finished
-+wait
-+
-+echo "Check fs"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/828.out b/tests/generic/828.out
-new file mode 100644
-index 0000000..fb31777
---- /dev/null
-+++ b/tests/generic/828.out
-@@ -0,0 +1,7 @@
-+QA output created by 828
-+Format and mount
-+Initialize files
-+Dedupe and rewrite the file!
-+Finished dedupeing
-+Check fs
-+Done
-diff --git a/tests/generic/829 b/tests/generic/829
-new file mode 100755
-index 0000000..76fe937
---- /dev/null
-+++ b/tests/generic/829
-@@ -0,0 +1,84 @@
-+#! /bin/bash
-+# FS QA Test No. 829
-+#
-+# Test for race between delete a file while rewriting its reflinked twin
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+    wait
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "reflink"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+TESTDIR=$SCRATCH_MNT/test-$seq
-+rm -rf $TESTDIR
-+mkdir $TESTDIR
-+
-+loops=4096
-+BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+iosize=$((BLKSZ * 16))
-+
-+echo "Initialize files"
-+echo > $seqres.full
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+cp --reflink=always $TESTDIR/file1 $TESTDIR/file2
-+sync
-+
-+echo "Delete while rewriting"
-+rm -rf $TESTDIR/file1 &
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $((loops * iosize))" $TESTDIR/file1 >> $seqres.full
-+wait
-+
-+echo "Check fs"
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "Done"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/829.out b/tests/generic/829.out
-new file mode 100644
-index 0000000..9cee8ba
---- /dev/null
-+++ b/tests/generic/829.out
-@@ -0,0 +1,6 @@
-+QA output created by 829
-+Format and mount
-+Initialize files
-+Delete while rewriting
-+Check fs
-+Done
-diff --git a/tests/generic/group b/tests/generic/group
-index b4ba56a..7f70690 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -227,5 +227,14 @@
- 817 auto quick clone
- 818 auto quick clone
- 819 auto quick clone
-+821 auto quick clone
-+822 auto quick clone
-+823 auto quick clone
-+824 auto quick clone
-+825 auto quick clone
-+826 auto quick clone
-+827 auto quick clone
-+828 auto quick clone
-+829 auto quick clone
- 837 auto quick clone
- 838 auto quick clone
+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
+xgozWtL/AZuT/3mC+AAA
+
+--qMm9M+Fa2AknHoGS
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--qMm9M+Fa2AknHoGS--
