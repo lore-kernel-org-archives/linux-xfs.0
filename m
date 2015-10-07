@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AA9EA29E10
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:00:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A31A8F8040
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:00:04 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 2ectLQ3tLEUbESPl (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7E5297FB3
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:00:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F35EFAC00D
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:00:14 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Lq3vIjAlZmceRyzw (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:00:03 -0700 (PDT)
-Subject: [PATCH 44/58] xfs: add reflink feature flag to geometry
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:00:13 -0700 (PDT)
+Subject: [PATCH 45/58] xfs: create a separate workqueue for copy-on-write
+	activities
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 21:59:59 -0700
-Message-ID: <20151007045959.30457.9537.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:00:05 -0700
+Message-ID: <20151007050005.30457.80025.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,45 +32,104 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Report the reflink feature in the XFS geometry so that xfs_info and
-friends know the filesystem has this feature.
+Create a separate workqueue to handle copy on write blocks so that we
+don't explode the number of kworkers if a flood of writes comes
+through.  We could possibly use m_buf_wq for this too...
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |    3 ++-
- fs/xfs/xfs_fsops.c     |    4 +++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.h |    1 +
+ fs/xfs/xfs_super.c |   36 +++++++++++++++++++++++++++++++++++-
+ 2 files changed, 36 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 9fbdb86..b6ee5d8 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -240,7 +240,8 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
- #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
--#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* Reverse mapping btree */
-+#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
-+#define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index aba42d7..6f4c335 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -142,6 +142,7 @@ typedef struct xfs_mount {
+ 	struct workqueue_struct	*m_reclaim_workqueue;
+ 	struct workqueue_struct	*m_log_workqueue;
+ 	struct workqueue_struct *m_eofblocks_workqueue;
++	struct workqueue_struct *m_cow_workqueue;
  
+ 	/*
+ 	 * Generation of the filesysyem layout.  This is incremented by each
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 6dc5993..c6a26b0 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -883,6 +883,33 @@ xfs_destroy_mount_workqueues(
+ 	destroy_workqueue(mp->m_buf_workqueue);
+ }
+ 
++STATIC int
++xfs_init_feature_workqueues(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		/* XXX awful, but it'll improve when bh's go away */
++		/* XXX probably need locking around the endio rbtree */
++		mp->m_cow_workqueue = alloc_workqueue("xfs-cow/%s",
++				WQ_MEM_RECLAIM|WQ_FREEZABLE|WQ_UNBOUND,
++				1, mp->m_fsname);
++		if (!mp->m_cow_workqueue)
++			goto out;
++	}
++
++	return 0;
++out:
++	return -ENOMEM;
++}
++
++STATIC void
++xfs_destroy_feature_workqueues(
++	struct xfs_mount	*mp)
++{
++	if (mp->m_cow_workqueue)
++		destroy_workqueue(mp->m_cow_workqueue);
++}
++
  /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 7c37c22..920db9d 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -106,7 +106,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
- 			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0);
-+				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
-+			(xfs_sb_version_hasreflink(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
+  * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
+  * or a page lock. We use sync_inodes_sb() here to ensure we block while waiting
+@@ -1490,6 +1517,10 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_free_sb;
+ 
++	error = xfs_init_feature_workqueues(mp);
++	if (error)
++		goto out_filestream_unmount;
++
+ 	/*
+ 	 * we must configure the block size in the superblock before we run the
+ 	 * full mount process as the mount process can lookup and cache inodes.
+@@ -1526,7 +1557,7 @@ xfs_fs_fill_super(
+ 
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+-		goto out_filestream_unmount;
++		goto out_destroy_feature_workqueues;
+ 
+ 	root = igrab(VFS_I(mp->m_rootip));
+ 	if (!root) {
+@@ -1541,6 +1572,8 @@ xfs_fs_fill_super(
+ 
+ 	return 0;
+ 
++out_destroy_feature_workqueues:
++	xfs_destroy_feature_workqueues(mp);
+  out_filestream_unmount:
+ 	xfs_filestream_unmount(mp);
+  out_free_sb:
+@@ -1570,6 +1603,7 @@ xfs_fs_put_super(
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+ 	xfs_notice(mp, "Unmounting Filesystem");
++	xfs_destroy_feature_workqueues(mp);
+ 	xfs_filestream_unmount(mp);
+ 	xfs_unmountfs(mp);
+ 
 
 _______________________________________________
 xfs mailing list
