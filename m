@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 894897FB6
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:05:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D559304039
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:05:19 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7CAB329E4E
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:05:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C73C304039
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:05:26 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id fcr6jVGJrc3ZhXxl (version=TLSv1.2
+	cuda.sgi.com with ESMTP id KEhuBLIubf1NdDIB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:05:17 -0700 (PDT)
-Subject: [RFCv3 00/51] xfsprogs: add reverse-mapping, reflink,
-	and dedupe support
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:05:24 -0700 (PDT)
+Subject: [PATCH 01/51] libxcmd: provide a common function to report command
+	runtimes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:05:14 -0700
-Message-ID: <20151007050513.1504.28089.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:05:20 -0700
+Message-ID: <20151007050520.1504.59073.stgit@birch.djwong.org>
+In-Reply-To: <20151007050513.1504.28089.stgit@birch.djwong.org>
+References: <20151007050513.1504.28089.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -30,60 +32,177 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Hi all,
+Refactor the open-coded runtime stats reporting into a library
+command, then update xfs_io commands to use it.
 
-This is the third revision of an RFC for adding to xfsprogs support
-for tracking reverse-mappings of physical blocks to file and metadata;
-and support for mapping multiple file logical blocks to the same
-physical block, more commonly known as reflinking.  Given the
-significant amount of re-engineering required to make the initial rmap
-implementation compatible with reflink, I decided to publish both
-features as an integrated patchset off of upstream.  This means that
-rmap and reflink are now compatible with each other.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/command.h |    6 ++++++
+ io/pread.c        |   16 +---------------
+ io/pwrite.c       |   16 +---------------
+ io/sendfile.c     |   16 +---------------
+ libxcmd/command.c |   26 ++++++++++++++++++++++++++
+ 5 files changed, 35 insertions(+), 45 deletions(-)
 
-The patch set is based on the current (4.2.0+) for-next branch.  This
-code should be relatively bug-free, and the bulk of the patches are to
-teach xfs_repair how to record all mappings and to use that data both
-to regenerate the reference count data (refcntbt) and the reverse
-mapping index (rmapbt).  There are way too many patches to discuss
-them individually, but roughly speaking they're grouped by functional
-area:
 
-0. Cleanups
-1. Implement reflink and dedupe in xfs_io
-2. Spot-check and fuzz v5 filesystems in xfs_db
-   (otherwise the test/scratch fs checks in xfstests get unhappy)
-3. rmapbt support
-4. rmapbt rebuilding in xfs_repair
-5. refcntbt support
-6. refcntbt rebuilding in xfs_repair
-
-Issues:
-
- * I'm not 100% sure xfs_repair correctly handles rebuilding all the
-XFS_RMAP_OWN_AG rmap entries (which are the bnobt, cntbt, rmapbt, and
-the AGFL).
-
- * General shakiness of the code that spots errors in the rmapbt and
-refcntbt.  Given that we're either readonly or rebuilding them anyway,
-I wonder if it matters...
-
- * Under certain circumstances, mkfs underestimates the minimum log
-size and the kernel refuses to mount.  The last patch in the set
-hacks around this in an ugly way.
-
-If you're going to start using this mess, you probably ought to just
-pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-
-This is an extraordinary way to eat your data.  Enjoy!
-
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://github.com/djwong/linux-xfs-dev/commits/master
-[2] https://github.com/djwong/xfsprogs/commits/for-next
-[3] https://github.com/djwong/xfstests/commits/master
+diff --git a/include/command.h b/include/command.h
+index 4869edf..51dae6a 100644
+--- a/include/command.h
++++ b/include/command.h
+@@ -18,6 +18,8 @@
+ #ifndef __COMMAND_H__
+ #define __COMMAND_H__
+ 
++#include <sys/time.h>
++
+ #define CMD_FLAG_GLOBAL	((int)0x80000000)	/* don't iterate "args" */
+ 
+ typedef int (*cfunc_t)(int argc, char **argv);
+@@ -56,4 +58,8 @@ extern void		command_loop(void);
+ extern int		command_usage(const cmdinfo_t *ci);
+ extern int		command(const cmdinfo_t *ci, int argc, char **argv);
+ 
++extern void		report_io_times(struct timeval *t2, long long offset,
++				     long long count, long long total,
++				     int ops, int condensed);
++
+ #endif	/* __COMMAND_H__ */
+diff --git a/io/pread.c b/io/pread.c
+index 1c77c41..66ea945 100644
+--- a/io/pread.c
++++ b/io/pread.c
+@@ -379,7 +379,6 @@ pread_f(
+ 	long long	count, total, tmp;
+ 	size_t		fsblocksize, fssectsize;
+ 	struct timeval	t1, t2;
+-	char		s1[64], s2[64], ts[64];
+ 	char		*sp;
+ 	int		Cflag, qflag, uflag, vflag;
+ 	int		eof = 0, direction = IO_FORWARD;
+@@ -488,20 +487,7 @@ pread_f(
+ 	gettimeofday(&t2, NULL);
+ 	t2 = tsub(t2, t1);
+ 
+-	/* Finally, report back -- -C gives a parsable format */
+-	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
+-	if (!Cflag) {
+-		cvtstr((double)total, s1, sizeof(s1));
+-		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+-		printf(_("read %lld/%lld bytes at offset %lld\n"),
+-			total, count, (long long)offset);
+-		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+-			s1, c, ts, s2, tdiv((double)c, t2));
+-	} else {/* bytes,ops,time,bytes/sec,ops/sec */
+-		printf("%lld,%d,%s,%.3f,%.3f\n",
+-			total, c, ts,
+-			tdiv((double)total, t2), tdiv((double)c, t2));
+-	}
++	report_io_times(&t2, (long long)offset, count, total, c, Cflag);
+ 	return 0;
+ }
+ 
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 10f78e4..81f6abe 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -250,7 +250,6 @@ pwrite_f(
+ 	unsigned int	zeed = 0, seed = 0xcdcdcdcd;
+ 	size_t		fsblocksize, fssectsize;
+ 	struct timeval	t1, t2;
+-	char		s1[64], s2[64], ts[64];
+ 	char		*sp, *infile = NULL;
+ 	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
+ 	int		direction = IO_FORWARD;
+@@ -385,20 +384,7 @@ pwrite_f(
+ 	gettimeofday(&t2, NULL);
+ 	t2 = tsub(t2, t1);
+ 
+-	/* Finally, report back -- -C gives a parsable format */
+-	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
+-	if (!Cflag) {
+-		cvtstr((double)total, s1, sizeof(s1));
+-		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+-		printf(_("wrote %lld/%lld bytes at offset %lld\n"),
+-			total, count, (long long)offset);
+-		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+-			s1, c, ts, s2, tdiv((double)c, t2));
+-	} else {/* bytes,ops,time,bytes/sec,ops/sec */
+-		printf("%lld,%d,%s,%.3f,%.3f\n",
+-			total, c, ts,
+-			tdiv((double)total, t2), tdiv((double)c, t2));
+-	}
++	report_io_times(&t2, (long long)offset, count, total, c, Cflag);
+ done:
+ 	if (infile)
+ 		close(fd);
+diff --git a/io/sendfile.c b/io/sendfile.c
+index 5c1638f..ced6369 100644
+--- a/io/sendfile.c
++++ b/io/sendfile.c
+@@ -81,7 +81,6 @@ sendfile_f(
+ 	long long	count, total;
+ 	size_t		blocksize, sectsize;
+ 	struct timeval	t1, t2;
+-	char		s1[64], s2[64], ts[64];
+ 	char		*infile = NULL;
+ 	int		Cflag, qflag;
+ 	int		c, fd = -1;
+@@ -152,20 +151,7 @@ sendfile_f(
+ 	gettimeofday(&t2, NULL);
+ 	t2 = tsub(t2, t1);
+ 
+-	/* Finally, report back -- -C gives a parsable format */
+-	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
+-	if (!Cflag) {
+-		cvtstr((double)total, s1, sizeof(s1));
+-		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+-		printf(_("sent %lld/%lld bytes from offset %lld\n"),
+-			total, count, (long long)offset);
+-		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+-			s1, c, ts, s2, tdiv((double)c, t2));
+-	} else {/* bytes,ops,time,bytes/sec,ops/sec */
+-		printf("%lld,%d,%s,%.3f,%.3f\n",
+-			total, c, ts,
+-			tdiv((double)total, t2), tdiv((double)c, t2));
+-	}
++	report_io_times(&t2, (long long)offset, count, total, c, Cflag);
+ done:
+ 	if (infile)
+ 		close(fd);
+diff --git a/libxcmd/command.c b/libxcmd/command.c
+index 42a77e9..5a5bb01 100644
+--- a/libxcmd/command.c
++++ b/libxcmd/command.c
+@@ -192,3 +192,29 @@ command_loop(void)
+ 		doneline(input, v);
+ 	}
+ }
++
++void
++report_io_times(
++	struct timeval		*t2,
++	long long		offset,
++	long long		count,
++	long long		total,
++	int			ops,
++	int			condensed)
++{
++	char			s1[64], s2[64], ts[64];
++
++	timestr(t2, ts, sizeof(ts), condensed ? VERBOSE_FIXED_TIME : 0);
++	if (!condensed) {
++		cvtstr((double)total, s1, sizeof(s1));
++		cvtstr(tdiv((double)total, *t2), s2, sizeof(s2));
++		printf(_("linked %lld/%lld bytes at offset %lld\n"),
++			total, count, (long long)offset);
++		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
++			s1, ops, ts, s2, tdiv((double)ops, *t2));
++	} else {/* bytes,ops,time,bytes/sec,ops/sec */
++		printf("%lld,%d,%s,%.3f,%.3f\n",
++			total, ops, ts,
++			tdiv((double)total, *t2), tdiv((double)ops, *t2));
++	}
++}
 
 _______________________________________________
 xfs mailing list
