@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EB7BB7FB6
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:01:15 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CEC7329E4D
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 00:01:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD404304032
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:01:12 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 6iVmaYf9auBVbe5K (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 511A8AC006
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 22:01:15 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id cDh1D75j0MvCTHDc (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:01:11 -0700 (PDT)
-Subject: [PATCH 54/58] xfs: swap inode reflink flags when swapping inode
-	extents
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 22:01:14 -0700 (PDT)
+Subject: [PATCH 55/58] vfs: add a FALLOC_FL_UNSHARE mode to fallocate to
+	unshare a range of blocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 22:01:04 -0700
-Message-ID: <20151007050104.30457.29336.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 22:01:10 -0700
+Message-ID: <20151007050110.30457.66869.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,38 +32,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-When we're swapping the extents of two inodes, be sure to swap the
-reflink inode flag too.
+Add a new mode to fallocate that unshares a range of blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ fs/open.c                   |    5 +++++
+ include/linux/falloc.h      |    3 ++-
+ include/uapi/linux/falloc.h |   14 ++++++++++++++
+ 3 files changed, 21 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f161db1..6d7bd6a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1948,6 +1948,18 @@ xfs_swap_extents(
- 		break;
- 	}
+diff --git a/fs/open.c b/fs/open.c
+index b6f1e96..58e2b61 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -256,6 +256,11 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	    (mode & ~FALLOC_FL_INSERT_RANGE))
+ 		return -EINVAL;
  
-+	/* Do we have to swap reflink flags? */
-+	if ((ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK) ^
-+	    (tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK)) {
-+		__uint64_t	f;
++	/* Unshare range should only be used exclusively. */
++	if ((mode & FALLOC_FL_UNSHARE_RANGE) &&
++	    (mode & ~FALLOC_FL_UNSHARE_RANGE))
++		return -EINVAL;
 +
-+		f = ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
-+		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-+		ip->i_d.di_flags2 |= tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
-+		tip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-+		tip->i_d.di_flags2 |= f & XFS_DIFLAG2_REFLINK;
-+	}
-+
- 	xfs_trans_log_inode(tp, ip,  src_log_flags);
- 	xfs_trans_log_inode(tp, tip, target_log_flags);
+ 	if (!(file->f_mode & FMODE_WRITE))
+ 		return -EBADF;
  
+diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+index 9961110..7494dc6 100644
+--- a/include/linux/falloc.h
++++ b/include/linux/falloc.h
+@@ -25,6 +25,7 @@ struct space_resv {
+ 					 FALLOC_FL_PUNCH_HOLE |		\
+ 					 FALLOC_FL_COLLAPSE_RANGE |	\
+ 					 FALLOC_FL_ZERO_RANGE |		\
+-					 FALLOC_FL_INSERT_RANGE)
++					 FALLOC_FL_INSERT_RANGE |	\
++					 FALLOC_FL_UNSHARE_RANGE)
+ 
+ #endif /* _FALLOC_H_ */
+diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+index 3e445a7..a1c293b 100644
+--- a/include/uapi/linux/falloc.h
++++ b/include/uapi/linux/falloc.h
+@@ -58,4 +58,18 @@
+  */
+ #define FALLOC_FL_INSERT_RANGE		0x20
+ 
++/*
++ * FALLOC_FL_UNSHARE_RANGE is used to unshare shared blocks within the
++ * file size without overwriting any existing data. The purpose of this
++ * call is to preemptively reallocate any blocks that are subject to
++ * copy-on-write.
++ *
++ * Different filesystems may implement different limitations on the
++ * granularity of the operation. Most will limit operations to filesystem
++ * block size boundaries, but this boundary may be larger or smaller
++ * depending on the filesystem and/or the configuration of the filesystem
++ * or file.
++ */
++#define FALLOC_FL_UNSHARE_RANGE		0x40
++
+ #endif /* _UAPI_FALLOC_H_ */
 
 _______________________________________________
 xfs mailing list
