@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A722E29E0F
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:58:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 22D9829E12
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 23:58:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27D68AC006
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:58:30 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id keIqm19ZQrdfADD3 (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F3C528F8037
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2015 21:58:36 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id ssN84iI7uxkOAG0q (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:58:28 -0700 (PDT)
-Subject: [PATCH 30/58] xfs: implement XFS_IOC_SWAPEXT when rmap btree is
-	enabled
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2015 21:58:35 -0700 (PDT)
+Subject: [PATCH 31/58] libxfs: refactor short btree block verification
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Oct 2015 21:58:25 -0700
-Message-ID: <20151007045825.30457.37098.stgit@birch.djwong.org>
+Date: Tue, 06 Oct 2015 21:58:32 -0700
+Message-ID: <20151007045832.30457.20472.stgit@birch.djwong.org>
 In-Reply-To: <20151007045443.30457.47038.stgit@birch.djwong.org>
 References: <20151007045443.30457.47038.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,280 +31,255 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Implement extent swapping when reverse-mapping is enabled.
+Create xfs_btree_sblock_verify() to verify short-format btree blocks
+(i.e. the per-AG btrees with 32-bit block pointers) instead of
+open-coding them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c      |   17 ++++++
- fs/xfs/libxfs/xfs_rmap.c       |  112 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rmap_btree.h |    8 +++
- fs/xfs/xfs_bmap_util.c         |   38 +++++++++-----
- 4 files changed, 161 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_alloc_btree.c  |   34 ++--------------------
+ fs/xfs/libxfs/xfs_btree.c        |   58 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h        |    3 ++
+ fs/xfs/libxfs/xfs_ialloc_btree.c |   26 ++---------------
+ fs/xfs/libxfs/xfs_rmap_btree.c   |   23 ++-------------
+ 5 files changed, 70 insertions(+), 74 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 13971c6..2d7dc8c 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -32,6 +32,7 @@
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
- #include "xfs_alloc.h"
-+#include "xfs_rmap_btree.h"
- 
- /*
-  * Cursor allocation zone.
-@@ -3988,6 +3989,8 @@ xfs_btree_block_change_owner(
- 	struct xfs_btree_block	*block;
- 	struct xfs_buf		*bp;
- 	union xfs_btree_ptr     rptr;
-+	struct xfs_owner_info	old_oinfo, new_oinfo;
-+	int			error;
- 
- 	/* do right sibling readahead */
- 	xfs_btree_readahead(cur, level, XFS_BTCUR_RIGHTRA);
-@@ -3999,6 +4002,20 @@ xfs_btree_block_change_owner(
- 	else
- 		block->bb_u.s.bb_owner = cpu_to_be32(new_owner);
- 
-+	/* change rmap owners (bmbt blocks only) */
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		XFS_RMAP_INO_BMBT_OWNER(&old_oinfo,
-+				cur->bc_private.b.ip->i_ino,
-+				cur->bc_private.b.whichfork);
-+		XFS_RMAP_INO_BMBT_OWNER(&new_oinfo,
-+				new_owner,
-+				cur->bc_private.b.whichfork);
-+		error = xfs_rmap_change_bmbt_owner(cur, bp, &old_oinfo,
-+				&new_oinfo);
-+		if (error)
-+			return error;
-+	}
-+
- 	/*
- 	 * If the block is a root block hosted in an inode, we might not have a
- 	 * buffer pointer here and we shouldn't attempt to log the change as the
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index d821b1a..b2781f5 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -35,6 +35,8 @@
- #include "xfs_trace.h"
- #include "xfs_error.h"
- #include "xfs_extent_busy.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_btree.h"
- 
- /*
-  * Lookup the first record less than or equal to [bno, len, owner, offset]
-@@ -859,3 +861,113 @@ xfs_rmap_resize(
- done:
- 	return error;
- }
-+
-+/**
-+ * Change ownership of a file's BMBT block reverse-mappings.
-+ */
-+int
-+xfs_rmap_change_bmbt_owner(
-+	struct xfs_btree_cur	*bcur,
-+	struct xfs_buf		*bp,
-+	struct xfs_owner_info	*old_owner,
-+	struct xfs_owner_info	*new_owner)
-+{
-+	struct xfs_buf		*agfbp;
-+	xfs_fsblock_t		fsbno;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	int			error;
-+
-+	if (!xfs_sb_version_hasrmapbt(&bcur->bc_mp->m_sb) || !bp)
-+		return 0;
-+
-+	fsbno = XFS_DADDR_TO_FSB(bcur->bc_mp, XFS_BUF_ADDR(bp));
-+	agno = XFS_FSB_TO_AGNO(bcur->bc_mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(bcur->bc_mp, fsbno);
-+
-+	error = xfs_read_agf(bcur->bc_mp, bcur->bc_tp, agno, 0, &agfbp);
-+
-+	error = xfs_rmap_free(bcur->bc_tp, agfbp, agno, agbno, 1, old_owner);
-+	if (error)
-+		goto err;
-+
-+	error = xfs_rmap_alloc(bcur->bc_tp, agfbp, agno, agbno, 1, new_owner);
-+	if (error)
-+		goto err;
-+
-+err:
-+	xfs_trans_brelse(bcur->bc_tp, agfbp);
-+	return error;
-+}
-+
-+/**
-+ * Change the ownership on a file's extent's reverse-mappings.
-+ */
-+int
-+xfs_rmap_change_extent_owner(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*ip,
-+	xfs_ino_t		ino,
-+	xfs_fileoff_t		isize,
-+	struct xfs_trans	*tp,
-+	int			whichfork,
-+	xfs_ino_t		new_owner)
-+{
-+	struct xfs_bmbt_irec	imap;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_buf		*agfbp = NULL;
-+	int			nimaps;
-+	xfs_fileoff_t		offset;
-+	xfs_filblks_t		len;
-+	xfs_agnumber_t		agno;
-+	int			flags = 0;
-+	int			error;
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return 0;
-+
-+	if (whichfork == XFS_ATTR_FORK)
-+		flags |= XFS_BMAPI_ATTRFORK;
-+
-+	offset = 0;
-+	len = XFS_B_TO_FSB(mp, isize);
-+	nimaps = 1;
-+	error = xfs_bmapi_read(ip, offset, len, &imap, &nimaps, flags);
-+	while (error == 0 && nimaps > 0) {
-+		if (imap.br_startblock == HOLESTARTBLOCK ||
-+		    imap.br_startblock == DELAYSTARTBLOCK)
-+			goto advloop;
-+
-+		agno = XFS_FSB_TO_AGNO(mp, imap.br_startblock);
-+
-+		error = xfs_read_agf(mp, tp, agno, 0, &agfbp);
-+		if (error)
-+			break;
-+
-+		cur = xfs_rmapbt_init_cursor(mp, tp, agfbp, agno);
-+
-+		error = xfs_rmap_delete(cur, ino, whichfork, &imap);
-+		if (error)
-+			break;
-+		error = xfs_rmap_insert(cur, new_owner, whichfork, &imap);
-+		if (error)
-+			break;
-+
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
-+		xfs_trans_brelse(tp, agfbp);
-+		agfbp = NULL;
-+advloop:
-+		offset += imap.br_blockcount;
-+		len -= imap.br_blockcount;
-+		nimaps = 1;
-+		error = xfs_bmapi_read(ip, offset, len, &imap, &nimaps, flags);
-+	}
-+
-+	if (cur)
-+		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+					  XFS_BTREE_NOERROR);
-+	if (agfbp)
-+		xfs_trans_brelse(tp, agfbp);
-+	return error;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index 0131d9a..5d248b5 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -88,4 +88,12 @@ int xfs_rmap_slide(struct xfs_btree_cur *rcur, xfs_ino_t ino, int whichfork,
- int xfs_rmap_resize(struct xfs_btree_cur *rcur, xfs_ino_t ino, int whichfork,
- 		struct xfs_bmbt_irec *PREV, long size_adj);
- 
-+/* functions for changing rmap ownership */
-+int xfs_rmap_change_extent_owner(struct xfs_mount *mp, struct xfs_inode *ip,
-+		xfs_ino_t ino, xfs_fileoff_t isize, struct xfs_trans *tp,
-+		int whichfork, xfs_ino_t new_owner);
-+int xfs_rmap_change_bmbt_owner(struct xfs_btree_cur *bcur, struct xfs_buf *bp,
-+		struct xfs_owner_info *old_owner,
-+		struct xfs_owner_info *new_owner);
-+
- #endif	/* __XFS_RMAP_BTREE_H__ */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f41a6f7..245a34a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -40,6 +40,7 @@
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- #include "xfs_log.h"
-+#include "xfs_rmap_btree.h"
- 
- /* Kernel only BMAP related definitions and functions */
- 
-@@ -1668,6 +1669,17 @@ xfs_swap_extent_flush(
- 	return 0;
- }
- 
-+static int
-+change_extent_owner(
-+	struct xfs_inode	*ip,
-+	struct xfs_trans	*tp,
-+	int			whichfork,
-+	struct xfs_inode	*tip)
-+{
-+	return xfs_rmap_change_extent_owner(ip->i_mount, ip, ip->i_ino,
-+			ip->i_d.di_size, tp, whichfork, tip->i_ino);
-+}
-+
- int
- xfs_swap_extents(
- 	xfs_inode_t	*ip,	/* target inode */
-@@ -1684,19 +1696,7 @@ xfs_swap_extents(
- 	int		taforkblks = 0;
- 	__uint64_t	tmp;
- 	int		lock_flags;
--
--	/*
--	 * We can't swap extents on rmap btree enabled filesystems yet
--	 * as there is no mechanism to update the owner of extents in
--	 * the rmap tree yet. Hence, for the moment, just reject attempts
--	 * to swap extents with EINVAL after emitting a warning once to remind
--	 * us this needs fixing.
--	 */
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
--		WARN_ONCE(1,
--	"XFS: XFS_IOC_SWAPEXT not supported on RMAP enabled filesystems\n");
--		return -EINVAL;
--	}
-+	struct xfs_trans_res	tres = {.tr_logres = 262144, .tr_logcount = 1, .tr_logflags = 0};
- 
- 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
- 	if (!tempifp) {
-@@ -1734,7 +1734,9 @@ xfs_swap_extents(
- 		goto out_unlock;
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
--	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
-+	/* XXX How do we create a potentially huge transaction here? */
-+	/* error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0); */
-+	error = xfs_trans_reserve(tp, &tres, 0, 0);
- 	if (error) {
- 		xfs_trans_cancel(tp);
- 		goto out_unlock;
-@@ -1834,6 +1836,14 @@ xfs_swap_extents(
- 			goto out_trans_cancel;
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 90de071..1352322 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -293,14 +293,7 @@ xfs_allocbt_verify(
+ 	level = be16_to_cpu(block->bb_level);
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+-		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+-		if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
+-			return false;
+-		if (pag &&
+-		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
++		if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_ABTB_MAGIC):
+@@ -311,14 +304,7 @@ xfs_allocbt_verify(
+ 			return false;
+ 		break;
+ 	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+-		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+-		if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
+-			return false;
+-		if (pag &&
+-		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
++		if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_ABTC_MAGIC):
+@@ -332,21 +318,7 @@ xfs_allocbt_verify(
+ 		return false;
  	}
  
-+	/* Change owners in the extent rmaps */
-+	error = change_extent_owner(ip, tp, XFS_DATA_FORK, tip);
-+	if (error)
-+		goto out_trans_cancel;
-+	error = change_extent_owner(tip, tp, XFS_DATA_FORK, ip);
-+	if (error)
-+		goto out_trans_cancel;
+-	/* numrecs verification */
+-	if (be16_to_cpu(block->bb_numrecs) > mp->m_alloc_mxr[level != 0])
+-		return false;
+-
+-	/* sibling pointer verification */
+-	if (!block->bb_u.s.bb_leftsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
+-		return false;
+-	if (!block->bb_u.s.bb_rightsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
+-		return false;
+-
+-	return true;
++	return xfs_btree_sblock_verify(bp, mp->m_alloc_mxr[level != 0]);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 2d7dc8c..a24c092 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4087,3 +4087,61 @@ xfs_btree_change_owner(
+ 
+ 	return 0;
+ }
 +
++/**
++ * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
++ *				      btree block
++ *
++ * @bp: buffer containing the btree block
++ * @max_recs: pointer to the m_*_mxr max records field in the xfs mount
++ * @pag_max_level: pointer to the per-ag max level field
++ */
++bool
++xfs_btree_sblock_v5hdr_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++	struct xfs_perag	*pag = bp->b_pag;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
++		return false;
++	if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
++		return false;
++	if (pag && be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
++		return false;
++	return true;
++}
++
++/**
++ * xfs_btree_sblock_verify() -- verify a short-format btree block
++ *
++ * @bp: buffer containing the btree block
++ * @max_recs: maximum records allowed in this btree node
++ */
++bool
++xfs_btree_sblock_verify(
++	struct xfs_buf		*bp,
++	unsigned int		max_recs)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++
++	/* numrecs verification */
++	if (be16_to_cpu(block->bb_numrecs) > max_recs)
++		return false;
++
++	/* sibling pointer verification */
++	if (!block->bb_u.s.bb_leftsib ||
++	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
++	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
++		return false;
++	if (!block->bb_u.s.bb_rightsib ||
++	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
++	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
++		return false;
++
++	return true;
++}
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 48ab2b1..dd29d15 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -471,4 +471,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ #define XFS_BTREE_TRACE_ARGR(c, r)
+ #define	XFS_BTREE_TRACE_CURSOR(c, t)
+ 
++bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
++bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index bd8a1da..97228d6 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -224,7 +224,6 @@ xfs_inobt_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+-	struct xfs_perag	*pag = bp->b_pag;
+ 	unsigned int		level;
+ 
  	/*
- 	 * Swap the data forks of the inodes
- 	 */
+@@ -240,14 +239,7 @@ xfs_inobt_verify(
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
+ 	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+-		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+-		if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
+-			return false;
+-		if (pag &&
+-		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
++		if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_IBT_MAGIC):
+@@ -257,24 +249,12 @@ xfs_inobt_verify(
+ 		return 0;
+ 	}
+ 
+-	/* numrecs and level verification */
++	/* level verification */
+ 	level = be16_to_cpu(block->bb_level);
+ 	if (level >= mp->m_in_maxlevels)
+ 		return false;
+-	if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[level != 0])
+-		return false;
+-
+-	/* sibling pointer verification */
+-	if (!block->bb_u.s.bb_leftsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
+-		return false;
+-	if (!block->bb_u.s.bb_rightsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
+-		return false;
+ 
+-	return true;
++	return xfs_btree_sblock_verify(bp, mp->m_inobt_mxr[level != 0]);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 5fe717b..6546d80 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -253,13 +253,10 @@ xfs_rmapbt_verify(
+ 
+ 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return false;
+-	if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
+-		return false;
+-	if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))
+-		return false;
+-	if (pag && be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
++	if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 		return false;
+ 
++	/* level verification */
+ 	level = be16_to_cpu(block->bb_level);
+ 	if (pag && pag->pagf_init) {
+ 		if (level >= pag->pagf_levels[XFS_BTNUM_RMAPi])
+@@ -267,21 +264,7 @@ xfs_rmapbt_verify(
+ 	} else if (level >= mp->m_ag_maxlevels)
+ 		return false;
+ 
+-	/* numrecs verification */
+-	if (be16_to_cpu(block->bb_numrecs) > mp->m_rmap_mxr[level != 0])
+-		return false;
+-
+-	/* sibling pointer verification */
+-	if (!block->bb_u.s.bb_leftsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
+-		return false;
+-	if (!block->bb_u.s.bb_rightsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
+-		return false;
+-
+-	return true;
++	return xfs_btree_sblock_verify(bp, mp->m_rmap_mxr[level != 0]);
+ }
+ 
+ static void
 
 _______________________________________________
 xfs mailing list
