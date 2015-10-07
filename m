@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5E1D97F51
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 10:13:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AAC9F7F37
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 10:59:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4009F8F8050
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 08:13:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id koRW7Qm4Ww9VtObn for <xfs@oss.sgi.com>;
-	Wed, 07 Oct 2015 08:13:10 -0700 (PDT)
-Subject: Re: Question about non asynchronous aio calls.
-References: <20151007141833.GB11716@scylladb.com>
-	<56152B0F.2040809@sandeen.net> <20151007150833.GB30191@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56153685.3040401@sandeen.net>
-Date: Wed, 7 Oct 2015 10:13:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <20151007150833.GB30191@bfoster.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2B349AC009
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2015 08:59:01 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id J3mf0QVQfTWofUFB (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2015 08:59:00 -0700 (PDT)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: pass total block res. as total xfs_bmapi_write()
+	parameter
+Date: Wed,  7 Oct 2015 11:58:58 -0400
+Message-Id: <1444233538-52658-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,124 +22,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
 
+The total field from struct xfs_alloc_arg is a bit of an unknown
+commodity. It is documented as the total block requirement for the
+transaction and is used in this manner from most call sites by virtue of
+passing the total block reservation of the transaction associated with
+an allocation. Several xfs_bmapi_write() callers pass hardcoded values
+of 0 or 1 for the total block requirement, which is a historical oddity
+without any clear reasoning.
 
+The xfs_iomap_write_direct() caller, for example, passes 0 for the total
+block requirement. This has been determined to cause problems in the
+form of ABBA deadlocks of AGF buffers due to incorrect AG selection in
+the block allocator. Specifically, the xfs_alloc_space_available()
+function incorrectly selects an AG that doesn't actually have sufficient
+space for the allocation. This occurs because the args.total field is 0
+and thus the remaining free space check on the AG doesn't actually
+consider the size of the allocation request. This locks the AGF buffer,
+the allocation attempt proceeds and ultimately fails (in
+xfs_alloc_fix_minleft()), and xfs_alloc_vexent() moves on to the next
+AG. In turn, this can lead to incorrect AG locking order (if the
+allocator wraps around, attempting to lock AG 0 after acquiring AG N)
+and thus deadlock if racing with another operation. This problem has
+been reproduced via generic/299 on smallish (1GB) ramdisk test devices.
 
-On 10/7/15 10:08 AM, Brian Foster wrote:
-> On Wed, Oct 07, 2015 at 09:24:15AM -0500, Eric Sandeen wrote:
->>
->>
->> On 10/7/15 9:18 AM, Gleb Natapov wrote:
->>> Hello XFS developers,
->>>
->>> We are working on scylladb[1] database which is written using seastar[2]
->>> - highly asynchronous C++ framework. The code uses aio heavily: no
->>> synchronous operation is allowed at all by the framework otherwise
->>> performance drops drastically. We noticed that the only mainstream FS
->>> in Linux that takes aio seriously is XFS. So let me start by thanking
->>> you guys for the great work! But unfortunately we also noticed that
->>> sometimes io_submit() is executed synchronously even on XFS.
->>>
->>> Looking at the code I see two cases when this is happening: unaligned
->>> IO and write past EOF. It looks like we hit both. For the first one we
->>> make special afford to never issue unaligned IO and we use XFS_IOC_DIOINFO
->>> to figure out what alignment should be, but it does not help. Looking at the
->>> code though xfs_file_dio_aio_write() checks alignment against m_blockmask which
->>> is set to be sbp->sb_blocksize - 1, so aio expects buffer to be aligned to
->>> filesystem block size not values that DIOINFO returns. Is it intentional? How
->>> should our code know what it should align buffers to?
->>
->>         /* "unaligned" here means not aligned to a filesystem block */
->>         if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
->>                 unaligned_io = 1;
->>
->> It should be aligned to the filesystem block size.
->>
-> 
-> I'm not sure exactly what kinds of races are opened if the above locking
-> were absent, but I'd guess it's related to the buffer/block state
-> management, block zeroing and whatnot that is buried in the depths of
-> the generic dio code.
+To avoid this problem, replace the undocumented hardcoded total
+parameters from the iomap and utility callers to pass the block
+reservation used for the associated transaction. This is consistent with
+other xfs_bmapi_write() callers throughout XFS. The assumption is that
+the total field allows the selection of an AG that can handle the entire
+operation rather than simply the allocation/range being requested (e.g.,
+resulting btree splits, etc.). This addresses the aforementioned
+generic/299 hang by ensuring AG selection only occurs when the
+allocation can be satisfied by the AG.
 
-Yep:
+Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c |  2 +-
+ fs/xfs/xfs_iomap.c     | 14 +++++++-------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-commit eda77982729b7170bdc9e8855f0682edf322d277
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Jan 11 10:22:40 2011 +1100
-
-    xfs: serialise unaligned direct IOs
-    
-    When two concurrent unaligned, non-overlapping direct IOs are issued
-    to the same block, the direct Io layer will race to zero the block.
-    The result is that one of the concurrent IOs will overwrite data
-    written by the other IO with zeros. This is demonstrated by the
-    xfsqa test 240.
-    
-    To avoid this problem, serialise all unaligned direct IOs to an
-    inode with a big hammer. We need a big hammer approach as we need to
-    serialise AIO as well, so we can't just block writes on locks.
-    Hence, the big hammer is calling xfs_ioend_wait() while holding out
-    other unaligned direct IOs from starting.
-    
-    We don't bother trying to serialised aligned vs unaligned IOs as
-    they are overlapping IO and the result of concurrent overlapping IOs
-    is undefined - the result of either IO is a valid result so we let
-    them race. Hence we only penalise unaligned IO, which already has a
-    major overhead compared to aligned IO so this isn't a major problem.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Alex Elder <aelder@sgi.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-I fixed something similar in ext4 at the time, FWIW.
-
-> I suspect the dioinfo information describes the capabilities of the
-> filesystem (e.g., what kinds of DIO are allowable) as opposed to any
-> kind of optimal I/O related values. Something like statfs() can be used
-> to determine the filesystem block size. I suppose you could also
-> intentionally format the filesystem with a smaller block size if
-> concurrent, smaller dio's are a requirement.
-> 
->>> Second one is harder. We do need to write past the end of a file, actually
->>> most of our writes are like that, so it would have been great for XFS to
->>> handle this case asynchronously.
->>
->> You didn't say what kernel you're on, but these:
->>
->> 9862f62 xfs: allow appending aio writes
->> 7b7a866 direct-io: Implement generic deferred AIO completions
->>
->> hit kernel v3.15.
->>
->> However, we had a bug report about this, and Brian has sent a fix
->> which has not yet been merged, see:
->>
->> [PATCH 1/2] xfs: always drain dio before extending aio write submission
->>
->> on this list last week.
->>
->> With those 3 patches, things should just work for you I think.
->>
-> 
-> These fix some problems in that code, but the "beyond EOF" submission is
-> still synchronous in nature by virtue of cycling the IOLOCK and draining
-> pending dio. This is required to check for EOF zeroing, and we can't do
-> that safely without a stable i_size.
-> 
-> Note that according to the commit Eric referenced above, ordering your
-> I/O to always append (rather than start at some point beyond the current
-> EOF) might be another option to avoid the synchronization here. Whether
-> that is an option is specific to your application, of course.
-
-Thanks for keeping me honest Brian.  :)
-
--Eric
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 3bf4ad0..eca325e 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1027,7 +1027,7 @@ xfs_alloc_file_space(
+ 		xfs_bmap_init(&free_list, &firstfsb);
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+ 					allocatesize_fsb, alloc_type, &firstfsb,
+-					0, imapp, &nimaps, &free_list);
++					resblks, imapp, &nimaps, &free_list);
+ 		if (error) {
+ 			goto error0;
+ 		}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1f86033..3d9fa36 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -202,8 +202,8 @@ xfs_iomap_write_direct(
+ 	xfs_bmap_init(&free_list, &firstfsb);
+ 	nimaps = 1;
+ 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
+-				XFS_BMAPI_PREALLOC, &firstfsb, 0,
+-				imap, &nimaps, &free_list);
++				XFS_BMAPI_PREALLOC, &firstfsb, resblks, imap,
++				&nimaps, &free_list);
+ 	if (error)
+ 		goto out_bmap_cancel;
+ 
+@@ -750,9 +750,9 @@ xfs_iomap_write_allocate(
+ 			 * pointer that the caller gave to us.
+ 			 */
+ 			error = xfs_bmapi_write(tp, ip, map_start_fsb,
+-						count_fsb, 0,
+-						&first_block, 1,
+-						imap, &nimaps, &free_list);
++						count_fsb, 0, &first_block,
++						nres, imap, &nimaps,
++						&free_list);
+ 			if (error)
+ 				goto trans_cancel;
+ 
+@@ -866,8 +866,8 @@ xfs_iomap_write_unwritten(
+ 		xfs_bmap_init(&free_list, &firstfsb);
+ 		nimaps = 1;
+ 		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
+-				  XFS_BMAPI_CONVERT, &firstfsb,
+-				  1, &imap, &nimaps, &free_list);
++					XFS_BMAPI_CONVERT, &firstfsb, resblks,
++					&imap, &nimaps, &free_list);
+ 		if (error)
+ 			goto error_on_bmapi_transaction;
+ 
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
