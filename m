@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4395A7F3F
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 03:34:59 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C8CB7F37
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 06:46:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BD2A304032
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 01:34:55 -0700 (PDT)
-Received: from mail-wi0-f169.google.com (mail-wi0-f169.google.com
-	[209.85.212.169]) by cuda.sgi.com with ESMTP id
-	tR0pmyI4z58RH0yH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 08 Oct 2015 01:34:53 -0700 (PDT)
-Received: by wiclk2 with SMTP id lk2so17455281wic.0
-	for <xfs@oss.sgi.com>; Thu, 08 Oct 2015 01:34:52 -0700 (PDT)
-Date: Thu, 8 Oct 2015 11:34:49 +0300
-From: Gleb Natapov <gleb@scylladb.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 06D02AC00A
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 04:46:51 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	0ZHHCYHDKmRdtPXU for <xfs@oss.sgi.com>;
+	Thu, 08 Oct 2015 04:46:49 -0700 (PDT)
+Date: Thu, 8 Oct 2015 22:46:22 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Question about non asynchronous aio calls.
-Message-ID: <20151008083449.GF11716@scylladb.com>
+Message-ID: <20151008114622.GV27164@dastard>
 References: <20151007141833.GB11716@scylladb.com>
 	<56152B0F.2040809@sandeen.net>
 	<20151007150833.GB30191@bfoster.bfoster>
+	<56153685.3040401@sandeen.net> <561560B2.1080902@scylladb.com>
+	<20151008042831.GU27164@dastard> <5615FD76.1090309@scylladb.com>
+	<20151008082307.GE11716@scylladb.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151007150833.GB30191@bfoster.bfoster>
+In-Reply-To: <20151008082307.GE11716@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,47 +34,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Gleb Natapov <gleb@scylladb.com>
+Cc: Avi Kivity <avi@scylladb.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Oct 07, 2015 at 11:08:34AM -0400, Brian Foster wrote:
-> > > Second one is harder. We do need to write past the end of a file, actually
-> > > most of our writes are like that, so it would have been great for XFS to
-> > > handle this case asynchronously.
+On Thu, Oct 08, 2015 at 11:23:07AM +0300, Gleb Natapov wrote:
+> On Thu, Oct 08, 2015 at 08:21:58AM +0300, Avi Kivity wrote:
+> > >>>I fixed something similar in ext4 at the time, FWIW.
+> > >>Makes sense.
+> > >>
+> > >>Is there a way to relax this for reads?
+> > >The above mostly only applies to writes. Reads don't modify data so
+> > >racing unaligned reads against other reads won't given unexpected
+> > >results and so aren't serialised.
+> > >
+> > >i.e. serialisation will only occur when:
+> > >	- unaligned write IO will serialise until sub-block zeroing
+> > >	  is complete.
+> > >	- write IO extending EOF will serialis until post-EOF
+> > >	  zeroing is complete
 > > 
-> > You didn't say what kernel you're on, but these:
 > > 
-> > 9862f62 xfs: allow appending aio writes
-> > 7b7a866 direct-io: Implement generic deferred AIO completions
+> > By "complete" here, do you mean that a call to truncate() returned, or that
+> > its results reached the disk an unknown time later?
 > > 
-> > hit kernel v3.15.
-> > 
-> > However, we had a bug report about this, and Brian has sent a fix
-> > which has not yet been merged, see:
-> > 
-> > [PATCH 1/2] xfs: always drain dio before extending aio write submission
-> > 
-> > on this list last week.
-> > 
-> > With those 3 patches, things should just work for you I think.
-> > 
-> 
-> These fix some problems in that code, but the "beyond EOF" submission is
-> still synchronous in nature by virtue of cycling the IOLOCK and draining
-> pending dio. This is required to check for EOF zeroing, and we can't do
-> that safely without a stable i_size.
-> 
-> Note that according to the commit Eric referenced above, ordering your
-> I/O to always append (rather than start at some point beyond the current
-> EOF) might be another option to avoid the synchronization here. Whether
-> that is an option is specific to your application, of course.
-> 
-Our IO should be always append IIRC, the above explains why most aio we
-do is truly async, but may be somewhere there is a reordering and then
-we see synchronous behaviour. Will have to check it.
 
---
-			Gleb.
+No, I'm talking purely about DIO here. If you do write that
+starts beyond the existing EOF, there is a region between the
+current EOF and the offset the write starts at. i.e.
+
+   0             EOF            offset     new EOF
+   +dddddddddddddd+..............+nnnnnnnnnnn+
+
+It is the region between EOF and offset that we must ensure is made
+up of either holes, unwritten extents or fully zeroed blocks before
+allowing the write to proceed. If we have to zero allocated blocks,
+then we have to ensure that completes before the write can start.
+This means that when we update the EOF on completion of the write,
+we don't expose stale data in blocks that were between EOF and
+offset...
+
+> I think Brian already answered that one with:
+> 
+>   There are no such pitfalls as far as I'm aware. The entire AIO
+>   submission synchronization sequence triggers off an in-memory i_size
+>   check in xfs_file_aio_write_checks(). The in-memory i_size is updated in
+>   the truncate path (xfs_setattr_size()) via truncate_setsize(), so at
+>   that point the new size should be visible to subsequent AIO writers.
+
+Different situation as truncate serialises all IO. Extending the file
+via truncate also runs the same "EOF zeroing" that the DIO code runs
+above, for the same reasons.
+
+> 
+> > >	- truncate/extent manipulation syscall is run
+> > 
+> > Actually, we do call fallocate() ahead of io_submit() (in a worker thread,
+> > in non-overlapping ranges) to optimize file layout and also in the belief
+> > that it would reduce the amount of blocking io_submit() does.
+
+fallocate serialises all IO submission - including reads. Unlike
+truncate, however, it doesn't drain the queue of IO for
+preallocation so the impact on AIO is somewhat limited.
+
+Ideally you want to limit fallocate calls to large chunks at a time.
+If you have a 1:1 mapping of fallocate calls to write calls, then
+you're likely making things worse for the AIO submission path
+because you'll block reads as well as writes. Doing the allocation
+in the write submission path will not block reads, and only writes
+that are attempting to do concurrent allocations to the same file
+will serialise...
+
+If you want to limit fragmentation without adding and overhead on
+XFS for non-sparse files (which it sounds like your case), then the
+best thing to use in XFS is the per-inode extent size hints. You set
+it on the file when first creating it (or the parent directory so
+all children inherit it at create), and then the allocator will
+round out allocations to the size hint alignment and size, including
+beyond EOF so appending writes can take advantage of it....
+
+> > A final point is discoverability.  There is no way to discover safe
+> > alignment for reads and writes, and which operations block io_submit(),
+> > except by asking here, which cannot be done at runtime.  Interfaces that
+> > provide a way to query these attributes are very important to us.
+> As Brian pointed statfs() can be use to get f_bsize which is defined as
+> "optimal transfer block size".
+
+Well, that's what posix calls it. It's not really the optimal IO
+size, though, it's just the IO size that avoids page cache RMW
+cycles. For direct IO, larger tends to be better, and IO aligned to
+the underlying geometry of the storage is even better. See, for
+example, the "largeio" mount option, which will make XFS report the
+stripe width in f_bsize rather than the PAGE_SIZE of the machine....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
