@@ -1,24 +1,19 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4FC6C7F55
-	for <xfs@oss.sgi.com>; Fri,  9 Oct 2015 08:45:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A2A0FAC003
-	for <xfs@oss.sgi.com>; Fri,  9 Oct 2015 06:45:52 -0700 (PDT)
-Received: from mta2.email.beachbody.com (mta2.email.beachbody.com
-	[136.147.138.56]) by cuda.sgi.com with ESMTP id
-	rebg2pKUn7EWZ1Ay for <xfs@oss.sgi.com>;
-	Fri, 09 Oct 2015 06:45:46 -0700 (PDT)
-Received: by mta2.email.beachbody.com id h2v2gk163hs3 for <xfs@oss.sgi.com>;
-	Fri, 9 Oct 2015 07:45:43 -0600 (envelope-from
-	<bounce-74_HTML-148158268-2149508-6010530-1945@bounce.email.beachbody.com>)
-From: "Steve Conder,
-	Independent Team Beachbody Coach" <ETbounce@beachbodycoach.com>
-Subject: Thought you might want to see this!
-Date: Fri, 09 Oct 2015 07:45:42 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5D74F7F37
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 07:36:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B32B8F8033
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 05:36:19 -0700 (PDT)
+Received: from smtp-b25.md-connecting.com (smtp-b25.md-connecting.com
+	[82.97.45.79]) by cuda.sgi.com with ESMTP id S03uM7KjF2ezMfEa
+	for <xfs@oss.sgi.com>; Thu, 08 Oct 2015 05:36:13 -0700 (PDT)
+Subject: =?utf-8?Q?Envie_de_changer_votre_int=C3=A9rieur=3F?=
+Date: Thu, 8 Oct 2015 14:36:07 +0200
+From: =?utf-8?Q?solution_travaux_int=C3=A9rieur?= <tech@laurency.fr>
+Message-ID: <f45644deedad7d4c3df2564d1667a0cf@laurency.fr>
 MIME-Version: 1.0
-Message-ID: <cbfe7413-219a-42db-9932-a8d7803d429e@xtinp2mta1693.xt.local>
-Reply-To: "Steve Conder, Independent Team Beachbody Coach"
-	<reply-fe921671716d017d7d-74_HTML-148158268-6010530-1945@email.beachbody.com>
+Reply-To: =?utf-8?Q?solution_travaux_int=C3=A9rieur?=
+	<2kx_dhh.h57.1db@laurency.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,239 +22,299 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6571988484518462304=="
+Content-Type: multipart/mixed; boundary="===============1087373504284570837=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
---===============6571988484518462304==
-Content-Type: text/html;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+--===============1087373504284570837==
+Content-Type: multipart/alternative;
+	boundary="Part1_f45644deedad7d4c3df2564d1667a0cf"
 
-<img src="http://click.email.beachbody.com/open.aspx?ffcb10-fe921671716d017d7d-fe2c12737663027c771774-fea012707464017e75-ff941374-fe2415747d650175771278-ff2c15797161" width="1" height="1">
+--Part1_f45644deedad7d4c3df2564d1667a0cf
+Content-Type: text/plain; charset = "utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-
-
-<style type="text/css"></style><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>
-<!--a.textOnBackground {  font-family: Verdana, Arial, helvetica, sans-serif;  font-size:11px;  font-weight: bold;  color:#0000ff;}a.textOnBackground:hover {  font-family: Verdana, Arial, helvetica, sans-serif;  font-size:11px;  font-weight: bold;  color:#0000ff;}.textOnBackground {  font-family: Verdana, Arial, helvetica, sans-serif;  font-size: 11px;  color:#000000;}.editText{  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 11px;  font-weight: bold;  color: #000000;}.displayText, td.displayText{  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 11px;  color: #000000; }a.viewMap{font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 11px;font-weight: bold;color: #006699;}--></style><title>21DF and Shakeology Challenge Pack</title></head>
-<!-- END HEADER --><body text="#000000" startBackgroundColor bgcolor="" endBackgroundColor><table cellpadding=0 cellspacing=0 border=0 width="100%" height="100%" startBackgroundColor bgcolor="" endBackgroundColor>  <tr>    <td valign=middle align=center><!-- BODY START --><br />
-<!--  -->
-<style type="text/css">table, tr, th, td, tbody {margin: 0px; padding: 0px; border-spacing:0;}
-img {display:block;}
-</style>
-<table border="0" cellpadding="0" cellspacing="0" width="600">
-	<tbody>
-		<tr>
-			<td colspan="3"><a href="http://click.email.beachbody.com/?qs=8de1d25f72999f4d76fe782f7c7c262fabf250a4e284472607acb7c9f439bf0da66c216473450e52"><img alt="TEAM BEACHBODY" border="0" height="60" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/tbb_header_blue.jpg" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="600" /></a></td>
-		</tr>
-		<tr>
-			<td bgcolor="#67b6e6" rowspan="6" width="6"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="6" /></td>
-			<td align="left"><a href="http://click.email.beachbody.com/?qs=2c89efb72a9949a877e1327c2f998eff47bea49e0a828d9dfd3e38547317c7f4e419aa4e73f48bcf" target="_blank"><img alt="21 DAY FIX CHALLENGE PACK" border="0" height="328" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/File/Images/ecards/21DFX_ChallengePack/21DF_and_SHK_CP_Ecard_09242015.jpg" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="588" /></a></td>
-			<td bgcolor="#67b6e6" rowspan="6" width="6"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="6" /></td>
-		</tr>
-		<tr>
-			<td align="center" bgcolor="#FFF" height="0" style="background-color:#FFF; height:0px; text-align:center; padding-top:6px;">&nbsp;</td>
-		</tr>
-		<tr>
-			<td>
-			<table border="0" cellpadding="0" cellspacing="0" width="588">
-				<tbody>
-					<tr>
-						<td rowspan="17" width="10"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="10" /></td>
-						<td height="5" width="554"><img alt="" height="5" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-						<td rowspan="17" width="10"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="10" /></td>
-					</tr>
-					<tr>
-						<td align="center" style="text-align:center;"><font color="#ff0000" face="Arial" style="font-size:22px; color:#ff0000; font-weight:bold;">Fitness + Nutrition + Support = Results</font></td>
-					</tr>
-					<tr>
-						<td height="15"><img alt="" height="15" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-					</tr>
-					<tr>
-						<td style="text-align:left;"><font color="#000000" face="Arial, Helvetica, sans-serif" style="font-size:14px; color:#000000;">Take advantage of this special offer on the 21 Day Fix<sup>&reg;</sup> and Shakeology<sup>&reg;</sup> Challenge Pack&mdash;for a limited time only! The 21 Day Fix program was specifically designed to work with Shakeology to give you maximum weight-loss results. And when you choose the 21 Day Fix and Shakeology Challenge Pack you also get the best healthy nutrition, support, and motivation you need to get amazing results in just 21 days. </font><br />
-						&nbsp;</td>
-					</tr>
-					<tr>
-						<td height="5"><img alt="" height="5" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-					</tr>
-					<tr>
-						<td height="10" style="text-align:left; letter-spacing: -.015em"><font color="#000000" face="Arial" style="font-size:14px; color:#000000;"><strong>Here&#39;s what you&#39;ll get:</strong></font></td>
-					</tr>
-					<tr>
-						<td height="10"><img alt="" height="10" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-					</tr>
-					<tr>
-						<td>
-						<table border="0" cellpadding="0" cellspacing="0" width="565">
-							<tbody>
-								<tr>
-									<td width="15"><img alt="" border="0" height="5" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/bullets/red-bullet-round-5x5.png" style="padding:0 0 15px; margin-bottom:12pt; margin-left:10px; display:block; border:0pt none; vertical-align: top;" width="5" /></td>
-									<td width="10"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="10" /></td>
-									<td align="left" style="text-align:left;"><font color="#000000" face="Arial, Helvetica, sans-serif" style="font-size:14px; color:#000000;">The 21 Day Fix program, including 7 color-coded portion-control containers, 6 easy-to-follow 30-minute workouts, 1 Shakeology shaker cup, and a simple Eating Plan to ensure your success.</font></td>
-								</tr>
-								<tr>
-									<td colspan="3" height="10"><img alt="" height="10" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="1" /></td>
-								</tr>
-								<tr>
-									<td width="5"><img alt="" border="0" height="" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/bullets/red-bullet-round-5x5.png" style="padding:0 0 0px; margin:0pt; display:block; border:0pt none; margin-bottom: 20px; margin-left:10px; vertical-align: top;" width="5" /></td>
-									<td width="10"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="10" /></td>
-									<td align="left" style="text-align:left;"><font color="#000000" face="Arial, Helvetica, sans-serif" style="font-size:14px; color:#000000;">A 30-day supply of Shakeology&mdash;the superfood shake that helps give you energy, reduce cravings, and accelerate your fitness results**&mdash;delivered on Home Direct.<sup>&dagger;</sup></font></td>
-								</tr>
-								<tr>
-									<td colspan="3" height="10"><img alt="" height="10" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="1" /></td>
-								</tr>
-								<tr>
-									<td width="5"><img alt="" border="0" height="5" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/bullets/red-bullet-round-5x5.png" style="padding:0pt; margin:0pt; display:block; border:0pt none; margin-bottom:16px; margin-left:10px; vertical-align: top;" width="5" /></td>
-									<td width="10"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="10" /></td>
-									<td align="left" style="text-align:left;"><font color="#000000" face="Arial, Helvetica, sans-serif" style="font-size:14px; color:#000000;">A FREE 30-day Premium Trial Membership to the Team Beachbody<sup>&reg;</sup> Club giving you access to stream your 21 Day Fix workouts.<sup>&dagger;</sup></font></td>
-								</tr>
-								<tr>
-									<td colspan="3" height="10"><img alt="" height="10" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="1" /></td>
-								</tr>
-								<tr>
-									<td width="5"><img alt="" border="0" height="5" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/bullets/red-bullet-round-5x5.png" style="padding:0pt; margin:0pt; display:block; border:0pt none; margin-bottom:2px; margin-left:10px; vertical-align: top;" width="5" /></td>
-									<td width="10"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="10" /></td>
-									<td align="left" style="text-align:left;"><font color="#000000" face="Arial, Helvetica, sans-serif" style="font-size:14px; color:#000000;">A BONUS Exclusive &ldquo;Dirty 30&rdquo; workout with even more fat-burning moves!</font></td>
-								</tr>
-								<tr>
-									<td colspan="3" height="10"><img alt="" height="10" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="1" /></td>
-								</tr>
-							</tbody>
-						</table>
-						</td>
-					</tr>
-					<tr>
-						<td height="10" style="text-align:left;"><font color="#000000" face="Arial" style="font-size:14px; color:#000000;">Contact me with any questions.<br />
-						<br />
-						I&#39;m here to help you along the way to reaching your health and fitness goals!</font></td>
-					</tr>
-					<tr>
-						<td height="20"><img alt="" height="20" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-					</tr>
-					<tr>
-						<td>
-						<table border="0" cellpadding="0" cellspacing="0" width="554">
-							<tbody>
-								<tr>
-									<td align="left" style="display:block;" width="296"><a href="http://click.email.beachbody.com/?qs=2c89efb72a9949a877e1327c2f998eff47bea49e0a828d9dfd3e38547317c7f4e419aa4e73f48bcf" target="_blank"><img alt="LEARN MORE" border="0" height="40" src="http://beachbodycoach.com/uploads/fckeditor/mdbody/File/ecard_images/21Day_Fix_Extreme_CP/US/btn_learn_more_05142015.jpg" style="padding:0pt; margin:0pt; border:0pt none;" width="177" /></a></td>
-								</tr>
-								<tr>
-									<td colspan="3" height="10"><img alt="" height="20" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; display:block; border:0pt none;" width="1" /></td>
-								</tr>
-								<tr>
-									<td align="left" style="text-align:left;">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>
-									<table border="0" cellpadding="0" cellspacing="0" width="540">
-										<tbody>
-											<tr>
-												<td>
-												<table border="0" cellpadding="0" cellspacing="0" width="540">
-													<tbody>
-														<tr>
-															<td rowspan="12" width="0"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="0" /></td>
-															<td align="left" colspan="5" style="text-align:left;"><img alt="" border="0" height="12" src="http://www.beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/contact_info_box-top.gif" style="display: block;" width="560" /></td>
-															<td rowspan="12" width="0"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="0" /></td>
-														</tr>
-														<tr>
-															<td bgcolor="#d0d0d0" rowspan="6" width="1"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-															<td bgcolor="#f6f6f6" rowspan="6" width="15"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="15" /></td>
-															<td bgcolor="#f6f6f6" height="8" width="536"><img alt="" height="8" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-															<td bgcolor="#f6f6f6" rowspan="6" width="15"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="15" /></td>
-															<td bgcolor="#d0d0d0" rowspan="6" width="1"><img alt="" height="1" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-														</tr>
-														<tr>
-															<td align="left" bgcolor="#f6f6f6" style="text-align:left;"><font color="#4d4d4f" face="Arial" style="font-size:18px; color:#4d4d4f;"><b><em>Your Coach,</em></b></font></td>
-														</tr>
-														<tr>
-															<td align="left" bgcolor="#f6f6f6" height="16px" style="text-align:left;"><font color="#4d4d4f" face="Arial" style="font-size:13px; color:#4d4d4f;"><b>Steve Conder</b></font></td>
-														</tr>
-														<tr>
-															<td align="left" bgcolor="#f6f6f6" height="16px" style="text-align:left;"><font color="#4d4d4f" face="Arial" style="font-size:13px; color:#4d4d4f;">(360)852-0374</font></td>
-														</tr>
-														<tr>
-															<td align="left" bgcolor="#f6f6f6" height="16px" style="text-align:left;"><a href="mailto:steveconder.fitness@gmail.com" style="color:#4d4d4f; text-decoration:none;" target="_blank"><font color="#009bdd" face="Arial, Helvetica, sans-serif" style="font-size:13px; color:#009bdd; text-decoration:none;">steveconder.fitness@gmail.com</font></a></td>
-														</tr>
-														<tr>
-															<td align="left" bgcolor="#f6f6f6" style="text-align:left; padding-top: 5px;"><font color="#939598" face="Arial, Helvetica, sans-serif" style="font-size:12px; line-height:20px; color:#939598; text-decoration:none;">*All savings in USD. International pricing will vary.<br />
-															<br />
-															**These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.<br />
-															<br />
-															<sup>&dagger;</sup>With Shakeology on Home Direct, you&rsquo;ll be enrolled in our monthly autoship program, and with your trial membership to the Team Beachbody Club, you&rsquo;ll be enrolled in our monthly Premium membership. You may cancel either at any time. Please see our site for full details.</font></td>
-														</tr>
-														<tr>
-															<td align="left" colspan="5" style="text-align:left;"><img alt="" border="0" height="12" src="http://www.beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/contact_info_box-bottom.gif" style="display: block;" width="560" /></td>
-														</tr>
-														<tr>
-															<td align="left" colspan="5" style="text-align:left; padding-top: 5px;">&nbsp;</td>
-														</tr>
-													</tbody>
-												</table>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			</td>
-		</tr>
-		<tr>
-			<td>
-			<table border="0" cellpadding="0" cellspacing="0" width="588">
-				<tbody>
-					<tr>
-						<td>
-						<table border="0" cellpadding="0" cellspacing="0" width="568">
-							<tbody>
-							</tbody>
-						</table>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			</td>
-		</tr>
-		<tr>
-			<td height="0"><img alt="" height="0" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-		</tr>
-		<tr>
-			<td>
-			<table border="0" cellpadding="0" cellspacing="0" width="588">
-				<tbody>
-					<tr>
-						<td>
-						<table border="0" cellpadding="0" cellspacing="0" width="560">
-							<tbody>
-								<tr>
-									<td height="0"><img alt="" height="0" src="http://www.beachbody.com/images/en_US/email/offers/i/blank.gif" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="1" /></td>
-								</tr>
-							</tbody>
-						</table>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="3"><img border="0" height="12" src="http://www.beachbodycoach.com/uploads/fckeditor/mdbody/Image/ecards/blue_border-bottom.jpg" style="padding:0pt; margin:0pt; border:0pt none; display:block;" width="600" /></td>
-		</tr>
-	</tbody>
-</table>
-<!-- BODY END -->      <br>       <!-- 0 --><div align=center class=textOnBackground><b>You have been sent an eCard</B> <br/>If you cannot see the eCard <a class=textOnBackground href="http://click.email.beachbody.com/?qs=8de1d25f72999f4de8127506816750c7a95f27d0be075344090500345660e2148f6f4a92bdee5a8d" target="_blank">please click here</a> to view this card in your web browser.</div><br><br><!-- 0 -->      <p>    </td>  </tr></table></body></html><img src="http://www.beachbodycoach.com/esuite/control/usageTracker?linkId=1aa630&table=ECARD" width=1 height=1 border=0><br />
-<p align="center" class="textOnBackground">
-	If you do not wish to receive further emails from this person, all you have to do is <a class="textOnBackground" href="http://click.email.beachbody.com/?qs=8de1d25f72999f4d5a675f9722fd34d4d1badc69a61ab5feaafedd8805b23ab63b31ae75922aece1">click here to reject any future mailings</a> or copy this URL into your browser&#39;s address bar http://www.beachbodycoach.com/esuite/control/optOut?r_guid=1aa630</p>
+Pour visualiser et se d=C3=A9sabonner ce message,
+=20
+Veuillez, copier puis coller, l'adresse URL compl=C3=A8te ci-dessous dans=
+ la
+barre d'adresse de votre navigateur et appuyer sur la touche "Entr=C3=A9e=
+" de
+votre clavier.
 
 
---===============6571988484518462304==
+
+- - - - - - - - - - - - - - - - -=20
+
+http://app.laurency.fr/v/?camp=3D270_44&ms=3DeGZzQG9zcy5zZ2kuY29t
+
+- - - - - - - - - - - - - - - - -=20
+
+
+
+
+--Part1_f45644deedad7d4c3df2564d1667a0cf
+Content-Type: text/html; charset = "utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://ww=
+w.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml" xml:lang=3D"fr" lang=3D"fr">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8" =
+/>
+<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
+1.0" />
+<title>Envie de changer votre int=C3=A9rieur?</title>
+</head><body marginwidth=3D"0" leftmargin=3D"0" style=3D"margin:0px; -moz=
+-text-size-adjust:none; padding:0px; text-size-adjust:none; -webkit-text-=
+size-adjust:none; -ms-text-size-adjust:none;" topmargin=3D"0" marginheigh=
+t=3D"0">
+<center><p>
+<a href=3D"http://app.laurency.fr/v/?camp=3D270_44&ms=3DeGZzQG9zcy5zZ2kuY=
+29t" target=3D"_blank" title=3D"Si cet e-mail ne s'affiche pas correcteme=
+nt, suivez ce lien." style=3D"color:#00F; font-family:'Arial'; font-size:=
+12px; text-decoration:underline;">Si cet email ne s&rsquo;affiche pas cor=
+rectement, suivez ce lien.</a></p><table width=3D"100%"><tbody><tr><td al=
+ign=3D"center"><table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" he=
+ight=3D"703" width=3D"601"><tbody><tr><td colspan=3D"8" align=3D"center">=
+<br></td></tr> 	<tr> 		<td colspan=3D"3"> 			<a href=3D"http://app.lauren=
+cy.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV=
+2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05=
+" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos fut=
+ures travaux ]" style=3D"text-decoration:none;font-size:20px; color:#438f=
+bc; font-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laur=
+ency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90c=
+mF2YXV4LWludGVfcmlldXJfMDE
+ uanBn" alt=3D"Logo NeoDevis" style=3D"border:0;" height=3D"73" width=3D"=
+269"></a></td> 		<td colspan=3D"4" style=3D"color:#FFF; font-family:Arial=
+, Helvetica, sans-serif; font-size:20px;" align=3D"center" bgcolor=3D"#38=
+3838" height=3D"73" width=3D"331"><a href=3D"http://app.laurency.fr/r/?m=3D=
+eGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2Rl=
+dmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" target=3D"_=
+blank" title=3D"[Demander un devis Gratuitement pour vos futures travaux =
+]" style=3D"text-decoration:none;color:#FFF; font-family:Arial, Helvetica=
+, sans-serif; font-size:20px;">Envie de changer votre int&eacute;rieur ?<=
+/a></td> 		 	</tr> 	<tr> 		<td colspan=3D"7"> 			<a href=3D"http://app.la=
+urency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8=
+tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1=
+ci05" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos=
+ futures travaux ]" style=3D"text-decoration:none;font-size:20px; color:#=
+438fbc; font-family:Aria
+ l, Helvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR=
+0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmll=
+dXJfMDEtMDMuanBn" alt=3D"Photographie d'un artisan [TROUVEZ L'ARTISAN ADA=
+PTE A VOTRE PROJET !]" style=3D"border:0;" height=3D"372" width=3D"600"><=
+/a></td> 		<td> 			<img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d=
+3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image s=
+pacer" style=3D"border:0;" height=3D"372" width=3D"1"></td> 	</tr> 	<tr> =
+		<td rowspan=3D"2" height=3D"95" width=3D"18"> 			<img src=3D"http://app=
+.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1=
+eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"95" =
+width=3D"18"></td> 		<td rowspan=3D"2"> 			<a href=3D"http://app.laurency=
+.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2a=
+XMuY29tL2RldmlzLXBlaW50dXJlLTU5" target=3D"_blank" title=3D"[Demander un =
+devis Gratuitement pour vos futures travaux ]" style=3D"text-decoration:n=
+one;font-size:20px; color:#438fbc;
+  font-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.lauren=
+cy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF=
+2YXV4LWludGVfcmlldXJfMDUuanBn" alt=3D"photographie d'une femme faisant de=
+ la peinture" style=3D"border:0;" height=3D"95" width=3D"141"></a></td> 	=
+	<td colspan=3D"2"> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zc=
+y5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXBsb=
+21iZXJpZS03Mw=3D=3D" target=3D"_blank" title=3D"[Demander un devis Gratui=
+tement pour vos futures travaux ]" style=3D"text-decoration:none;font-siz=
+e:20px; color:#438fbc; font-family:Arial, Helvetica, sans-serif"><img src=
+=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haW=
+xpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMDYuanBn" alt=3D"Photographie d=
+'un Plombier" style=3D"border:0;" height=3D"94" width=3D"141"></a></td> 	=
+	<td rowspan=3D"2"> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zc=
+y5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyY=
+XZhdXgtZ3Jvcy1vZXV2cmUtY29uc3R
+ ydWN0aW9uLXJlbm92YXRpb24taXNvbGF0aW9uLTY=3D" target=3D"_blank" title=3D"=
+[Demander un devis Gratuitement pour vos futures travaux ]" style=3D"text=
+-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvet=
+ica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3d=
+y5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMDcuan=
+Bn" alt=3D"Photographie d'une maisson sur un plan" style=3D"border:0;" he=
+ight=3D"95" width=3D"140"></a></td> 		<td rowspan=3D"2"> 			<a href=3D"ht=
+tp://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDov=
+L3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXZlcmFuZGEtcGVyZ29sYS12ZXJyaWVyZS03" tar=
+get=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos futures =
+travaux ]" style=3D"text-decoration:none;font-size:20px; color:#438fbc; f=
+ont-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.=
+fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YX=
+V4LWludGVfcmlldXJfMDguanBn" alt=3D"Photographie d'une V&eacute;randas" st=
+yle=3D"border:0;" he
+ ight=3D"95" width=3D"140"></a></td> 		<td rowspan=3D"2" bgcolor=3D"#FFFF=
+FF" height=3D"95" width=3D"20"> 			<img src=3D"http://app.laurency.fr/r/?=
+rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm=
+" alt=3D"image spacer" style=3D"border:0;" height=3D"95" width=3D"20"></t=
+d> 		<td> 			<img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZ=
+W8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer"=
+ style=3D"border:0;" height=3D"94" width=3D"1"></td> 	</tr> 	<tr> 		<td c=
+olspan=3D"2" rowspan=3D"2" style=3D"color:#3c3c3c;font-family:Arial, Helv=
+etica, sans-serif;" align=3D"center" height=3D"26" width=3D"141"><a href=3D=
+"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0c=
+DovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXBsb21iZXJpZS03Mw=3D=3D" style=3D"col=
+or:#3c3c3c;font-family:Arial, Helvetica, sans-serif; text-decoration:none=
+" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos fut=
+ures travaux ]">Plomberie</a></td> 		<td> 			<img src=3D"http://app.laure=
+ncy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY
+ 29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"b=
+order:0;" height=3D"1" width=3D"1"></td> 	</tr> 	<tr> 		<td bgcolor=3D"#F=
+FFFFF" height=3D"25" width=3D"18">&nbsp;</td> 		<td style=3D"color:#3c3c3=
+c;font-family:Arial, Helvetica, sans-serif;" align=3D"center" bgcolor=3D"=
+#FFFFFF" height=3D"25" width=3D"141"><a href=3D"http://app.laurency.fr/r/=
+?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29=
+tL2RldmlzLXBlaW50dXJlLTU5" style=3D"color:#3c3c3c;font-family:Arial, Helv=
+etica, sans-serif; text-decoration:none" target=3D"_blank" title=3D"[Dema=
+nder un devis Gratuitement pour vos futures travaux ]">Peinture</a></td> =
+		<td style=3D"color:#3c3c3c;font-family:Arial, Helvetica, sans-serif;" a=
+lign=3D"center" height=3D"25" width=3D"140"><a href=3D"http://app.laurenc=
+y.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2=
+aXMuY29tL2RldmlzLXRyYXZhdXgtZ3Jvcy1vZXV2cmUtY29uc3RydWN0aW9uLXJlbm92YXRpb=
+24taXNvbGF0aW9uLTY=3D" style=3D"color:#3c3c3c;font-family:Arial, Helvetic=
+a, sans-serif; text-decoration:non
+ e" target=3D"_blank" title=3D"[Demander un devis Gratuitement pour vos f=
+utures travaux ]">R&eacute;novation</a></td> 		<td style=3D"color:#3c3c3c=
+;font-family:Arial, Helvetica, sans-serif;" align=3D"center" bgcolor=3D"#=
+FFFFFF" height=3D"25" width=3D"140"><a href=3D"http://app.laurency.fr/r/?=
+m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29t=
+L2RldmlzLXZlcmFuZGEtcGVyZ29sYS12ZXJyaWVyZS03" style=3D"color:#3c3c3c;font=
+-family:Arial, Helvetica, sans-serif; text-decoration:none" target=3D"_bl=
+ank" title=3D"[Demander un devis Gratuitement pour vos futures travaux ]"=
+>Fen&ecirc;tres - V&eacute;randas</a></td> 		<td bgcolor=3D"#FFFFFF" heig=
+ht=3D"25" width=3D"20">&nbsp;</td> 		<td> 			<img src=3D"http://app.laure=
+ncy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcG=
+FjZXIuZ2lm" alt=3D"spacer" style=3D"border:0;" height=3D"25" width=3D"1">=
+</td> 	</tr> 	<tr> 		<td bgcolor=3D"#FFFFFF" height=3D"37" width=3D"18"> =
+			<br></td> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zc=
+y5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDov
+ L3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXBlaW50dXJlLTU5" target=3D"_blank" titl=
+e=3D"[Demander un devis Gratuitement pour vos futures travaux ]" style=3D=
+"text-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, H=
+elvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDov=
+L3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfM=
+TUuanBn" alt=3D"Bouton [Devis Gratuit]" style=3D"border:0;" height=3D"37"=
+ width=3D"141"></a></td> 		<td colspan=3D"2"> 			<a href=3D"http://app.la=
+urency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8=
+tZGV2aXMuY29tL2RldmlzLXBsb21iZXJpZS03Mw=3D=3D" target=3D"_blank" title=3D=
+"[Demander un devis Gratuitement pour vos futures travaux ]" style=3D"tex=
+t-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helve=
+tica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3=
+dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMTUua=
+nBn" alt=3D"Bouton [Devis Gratuit]" style=3D"border:0;" height=3D"37" wid=
+th=3D"141"></a></td> 		<td
+ > 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D2=
+70_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtZ3Jvcy1vZX=
+V2cmUtY29uc3RydWN0aW9uLXJlbm92YXRpb24taXNvbGF0aW9uLTY=3D" style=3D"text-d=
+ecoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetic=
+a, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5=
+uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMTUuanBn=
+" alt=3D"Bouton [Devis Gratuit]" style=3D"border:0;" height=3D"37" width=3D=
+"141"></a></td> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG=
+9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLX=
+ZlcmFuZGEtcGVyZ29sYS12ZXJyaWVyZS03" target=3D"_blank" title=3D"[Demander =
+un devis Gratuitement pour vos futures travaux ]" style=3D"text-decoratio=
+n:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetica, sans-=
+serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV=
+2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4LWludGVfcmlldXJfMTUuanBn" alt=3D=
+"Bouton [Devis Gra
+ tuit]" style=3D"border:0;" height=3D"37" width=3D"141"></a></td> 		<td b=
+gcolor=3D"#FFFFFF" height=3D"37" width=3D"20"> 			<br></td> 		<td> 			<a =
+href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3D=
+aHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ=
+2VtZW50LWludGVyaWV1ci05" style=3D"text-decoration:none;font-size:20px; co=
+lor:#438fbc; font-family:Arial, Helvetica, sans-serif"><img src=3D"http:/=
+/app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJh=
+dmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"=
+37" width=3D"1"></a></td> 	</tr> 	<tr> 		<td colspan=3D"7"> 			<a href=3D=
+"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0c=
+DovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW=
+50LWludGVyaWV1ci05" target=3D"_blank" title=3D"[Demander un devis Gratuit=
+ement pour vos futures travaux ]" style=3D"text-decoration:none;font-size=
+:20px; color:#438fbc; font-family:Arial, Helvetica, sans-serif"><img src=3D=
+"http://app.laurency.fr/
+ r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC90cmF2YXV4=
+LWludGVfcmlldXJfMjAuanBn" alt=3D"Bouton [DEMANDER GRATUITEMENT VOTRE DEVI=
+S]" height=3D"100" width=3D"600"></a></td> 		<td> 			<a href=3D"http://ap=
+p.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5=
+uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVy=
+aWV1ci05" style=3D"text-decoration:none;font-size:20px; color:#438fbc; fo=
+nt-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.f=
+r/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXI=
+uZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"100" width=3D"1=
+"></a></td> 	</tr> 	<tr> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=
+=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL=
+2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D=
+"text-decoration:none;font-size:20px; color:#438fbc; font-family:Arial, H=
+elvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDov=
+L3d3dy5uZW8tZGV2aXMu
+ Y29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"=
+border:0;" height=3D"1" width=3D"18"></a></td> 		<td> 			<a href=3D"http:=
+//app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d=
+3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWlu=
+dGVyaWV1ci05" style=3D"text-decoration:none;font-size:20px; color:#438fbc=
+; font-family:Arial, Helvetica, sans-serif"><img src=3D"http://app.lauren=
+cy.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGF=
+jZXIuZ2lm" alt=3D"image spacer" style=3D"border:0;" height=3D"1" width=3D=
+"141"></a></td> 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG=
+9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLX=
+RyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D"text-dec=
+oration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetica,=
+ sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZ=
+W8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer"=
+ style=3D"border:0;" hei
+ ght=3D"1" width=3D"110"></a></td> 		<td> 			<a href=3D"http://app.lauren=
+cy.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV=
+2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05=
+" style=3D"text-decoration:none;font-size:20px; color:#438fbc; font-famil=
+y:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3D=
+aHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=
+=3D"image spacer" style=3D"border:0;" height=3D"1" width=3D"31"></a></td>=
+ 		<td> 			<a href=3D"http://app.laurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&=
+c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50Z=
+XJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D"text-decoration:none;fo=
+nt-size:20px; color:#438fbc; font-family:Arial, Helvetica, sans-serif"><i=
+mg src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29t=
+L21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image spacer" style=3D"borde=
+r:0;" height=3D"1" width=3D"140"></a></td> 		<td> 			<a href=3D"http://ap=
+p.laurency.fr/r/?m=3DeGZzQ
+ G9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL2Rldmlz=
+LXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV1ci05" style=3D"text-d=
+ecoration:none;font-size:20px; color:#438fbc; font-family:Arial, Helvetic=
+a, sans-serif"><img src=3D"http://app.laurency.fr/r/?rc=3DaHR0cDovL3d3dy5=
+uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2lm" alt=3D"image space=
+r" height=3D"1" width=3D"140"></a></td> 		<td> 			<a href=3D"http://app.l=
+aurency.fr/r/?m=3DeGZzQG9zcy5zZ2kuY29t&c=3D270_44&rc=3DaHR0cDovL3d3dy5uZW=
+8tZGV2aXMuY29tL2RldmlzLXRyYXZhdXgtaW50ZXJpZXVyLWFtZW5hZ2VtZW50LWludGVyaWV=
+1ci05" style=3D"text-decoration:none;font-size:20px; color:#438fbc; font-=
+family:Arial, Helvetica, sans-serif"><img src=3D"http://app.laurency.fr/r=
+/?rc=3DaHR0cDovL3d3dy5uZW8tZGV2aXMuY29tL21haWxpbmcvdHJhdmF1eC9zcGFjZXIuZ2=
+lm" alt=3D"image spacer" height=3D"1" width=3D"20"></a></td> 		<td><br></=
+td> 	</tr>     <tr><td colspan=3D"8" align=3D"center"><br></td></tr> </tb=
+ody></table> </td></tr></tbody></table>  <img src=3D"http://app.laurency.=
+fr/t/?i=3D270_44&m=3De
+ GZzQG9zcy5zZ2kuY29t&url=3Dhttp://app.laurency.fr/images/blank.jpg" alt=3D=
+"_pspacer4"  /><p>
+<a href=3D"http://app.laurency.fr/d/?camp=3D270_44&ms=3DeGZzQG9zcy5zZ2kuY=
+29t" target=3D"_blank" title=3D"Ne plus recevoir d'informations de notre =
+part" style=3D"color:#00F; font-family:'Arial'; font-size:12px; text-deco=
+ration:underline;">Pour se d&eacute;sabonner : Suivez ce lien.</a><br />S=
+i ce message vous a caus&eacute; un quelconque d&eacute;rangement, nous v=
+ous prions de nous en excuser.
+</p><center>
+</body>
+</html>
+
+
+
+--Part1_f45644deedad7d4c3df2564d1667a0cf--
+
+
+--===============1087373504284570837==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -270,4 +325,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6571988484518462304==--
+--===============1087373504284570837==--
