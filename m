@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B323E7F37
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 307C8AC001
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 17:24:58 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 35C277F37
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EE633304032
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 17:25:28 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id DRx8TG42gJEURyHH for <xfs@oss.sgi.com>;
-	Thu, 08 Oct 2015 17:24:56 -0700 (PDT)
+	ESMTP id fxiF8pyIApJQ6TPt for <xfs@oss.sgi.com>;
+	Thu, 08 Oct 2015 17:25:26 -0700 (PDT)
 Received: from Liberator.local (unknown [205.215.222.148])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 4C3EE61F8992
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:24:56 -0500 (CDT)
-Subject: [PATCH 1/4] libxfs: avoid negative (and full-width) shifts in
-	radix-tree.c
+	by sandeen.net (Postfix) with ESMTPSA id 7FE0561F8992
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:26 -0500 (CDT)
+Subject: [PATCH 2/4] xfs_repair: fix unaligned accesses
 References: <56170906.5090301@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56170955.9020105@sandeen.net>
-Date: Thu, 8 Oct 2015 19:24:53 -0500
+Message-ID: <56170974.5020604@sandeen.net>
+Date: Thu, 8 Oct 2015 19:25:24 -0500
 MIME-Version: 1.0
 In-Reply-To: <56170906.5090301@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,72 +34,89 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Pull this commit over from the kernel, as libubsan spotted a
-bad shift at runtime:
-
-    commit 430d275a399175c7c0673459738979287ec1fd22
-    Author: Peter Lund <firefly@vax64.dk>
-    Date:   Tue Oct 16 23:29:35 2007 -0700
-
-    avoid negative (and full-width) shifts in radix-tree.c
-
-    Negative shifts are not allowed in C (the result is undefined).  Same thing
-    with full-width shifts.
-
-    It works on most platforms but not on the VAX with gcc 4.0.1 (it results in an
-    "operand reserved" fault).
-
-    Shifting by more than the width of the value on the left is also not
-    allowed.  I think the extra '>> 1' tacked on at the end in the original
-    code was an attempt to work around that.  Getting rid of that is an extra
-    feature of this patch.
-
-    Here's the chapter and verse, taken from the final draft of the C99
-    standard ("6.5.7 Bitwise shift operators", paragraph 3):
-
-      "The integer promotions are performed on each of the operands. The
-      type of the result is that of the promoted left operand. If the
-      value of the right operand is negative or is greater than or equal
-      to the width of the promoted left operand, the behavior is
-      undefined."
-
-    Thank you to Jan-Benedict Glaw, Christoph Hellwig, Maciej Rozycki, Pekka
-    Enberg, Andreas Schwab, and Christoph Lameter for review.  Special thanks
-    to Andreas for spotting that my fix only removed half the undefined
-    behaviour.
-
-    Signed-off-by: Peter Lund <firefly@vax64.dk>
+This fixes some unaligned accesses spotted by libubsan in repair.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- libxfs/radix-tree.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+ repair/dinode.c   |   19 +++++++++----------
+ repair/prefetch.c |    4 ++--
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/libxfs/radix-tree.c b/libxfs/radix-tree.c
-index 4d44ab4..eef9c36 100644
---- a/libxfs/radix-tree.c
-+++ b/libxfs/radix-tree.c
-@@ -784,12 +784,14 @@ int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag)
+diff --git a/repair/dinode.c b/repair/dinode.c
+index f78f907..44bbb8f 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -960,13 +960,13 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+ 		 * btree, we'd do it right here.  For now, if there's a
+ 		 * problem, we'll bail out and presumably clear the inode.
+ 		 */
+-		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
++		if (!verify_dfsbno(mp, get_unaligned_be64(&pp[i])))  {
+ 			do_warn(_("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
+-			       (unsigned long long) be64_to_cpu(pp[i]), lino);
++			       get_unaligned_be64(&pp[i]), lino);
+ 			return(1);
+ 		}
  
- static unsigned long __maxindex(unsigned int height)
- {
--	unsigned int tmp = height * RADIX_TREE_MAP_SHIFT;
--	unsigned long index = (~0UL >> (RADIX_TREE_INDEX_BITS - tmp - 1)) >> 1;
--
--	if (tmp >= RADIX_TREE_INDEX_BITS)
--		index = ~0UL;
--	return index;
-+	unsigned int width = height * RADIX_TREE_MAP_SHIFT;
-+	int shift = RADIX_TREE_INDEX_BITS - width;
-+
-+	if (shift < 0)
-+		return ~0UL;
-+	if (shift >= BITS_PER_LONG)
-+		return 0UL;
-+	return ~0UL >> shift;
- }
+-		if (scan_lbtree(be64_to_cpu(pp[i]), level, scan_bmapbt, type,
++		if (scan_lbtree(get_unaligned_be64(&pp[i]), level, scan_bmapbt, type,
+ 				whichfork, lino, tot, nex, blkmapp, &cursor,
+ 				1, check_dups, magic, &xfs_bmbt_buf_ops))
+ 			return(1);
+@@ -977,25 +977,24 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+ 		 * blocks but the parent hasn't been updated
+ 		 */
+ 		if (!check_dups && cursor.level[level-1].first_key !=
+-					be64_to_cpu(pkey[i].br_startoff))  {
++				   get_unaligned_be64(&pkey[i].br_startoff)) {
+ 			if (!no_modify)  {
+ 				do_warn(
+ 	_("correcting key in bmbt root (was %llu, now %" PRIu64") in inode "
+ 	  "%" PRIu64" %s fork\n"),
+-				       (unsigned long long)
+-					       be64_to_cpu(pkey[i].br_startoff),
++					get_unaligned_be64(&pkey[i].br_startoff),
+ 					cursor.level[level-1].first_key,
+ 					XFS_AGINO_TO_INO(mp, agno, ino),
+ 					forkname);
+ 				*dirty = 1;
+-				pkey[i].br_startoff = cpu_to_be64(
+-					cursor.level[level-1].first_key);
++				put_unaligned_be64(
++					cpu_to_be64(cursor.level[level-1].first_key),
++					&pkey[i].br_startoff);
+ 			} else  {
+ 				do_warn(
+ 	_("bad key in bmbt root (is %llu, would reset to %" PRIu64 ") in inode "
+ 	  "%" PRIu64 " %s fork\n"),
+-				       (unsigned long long)
+-					       be64_to_cpu(pkey[i].br_startoff),
++					get_unaligned_be64(&pkey[i].br_startoff),
+ 					cursor.level[level-1].first_key,
+ 					XFS_AGINO_TO_INO(mp, agno, ino),
+ 					forkname);
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 32ec55e..52238ca 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -330,7 +330,7 @@ pf_scanfunc_bmap(
+ 	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
  
- static void radix_tree_init_maxindex(void)
+ 	for (i = 0; i < numrecs; i++) {
+-		dbno = be64_to_cpu(pp[i]);
++		dbno = get_unaligned_be64(&pp[i]);
+ 		if (!verify_dfsbno(mp, dbno))
+ 			return 0;
+ 		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
+@@ -372,7 +372,7 @@ pf_read_btinode(
+ 	pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(dsize, 0));
+ 
+ 	for (i = 0; i < numrecs; i++) {
+-		dbno = be64_to_cpu(pp[i]);
++		dbno = get_unaligned_be64(&pp[i]);
+ 		if (!verify_dfsbno(mp, dbno))
+ 			break;
+ 		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
 -- 
 1.7.1
 
