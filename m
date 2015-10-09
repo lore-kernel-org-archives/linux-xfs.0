@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6DE3C7F47
-	for <xfs@oss.sgi.com>; Fri,  9 Oct 2015 08:23:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EAC1DAC001
-	for <xfs@oss.sgi.com>; Fri,  9 Oct 2015 06:23:43 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C074A7F47
+	for <xfs@oss.sgi.com>; Fri,  9 Oct 2015 08:24:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 94CFE8F8035
+	for <xfs@oss.sgi.com>; Fri,  9 Oct 2015 06:24:37 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yljqQXQXofo8HlbO (version=TLSv1.2
+	cuda.sgi.com with ESMTP id UUnvki9WdhOaJt6Q (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 09 Oct 2015 06:23:39 -0700 (PDT)
-Date: Fri, 9 Oct 2015 09:23:37 -0400
+	<xfs@oss.sgi.com>; Fri, 09 Oct 2015 06:24:36 -0700 (PDT)
+Date: Fri, 9 Oct 2015 09:24:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] libxfs: avoid negative (and full-width) shifts in
-	radix-tree.c
-Message-ID: <20151009132337.GB27982@bfoster.bfoster>
+Subject: Re: [PATCH 2/4] xfs_repair: fix unaligned accesses
+Message-ID: <20151009132433.GC27982@bfoster.bfoster>
 References: <56170906.5090301@redhat.com>
- <56170955.9020105@sandeen.net>
+ <56170974.5020604@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56170955.9020105@sandeen.net>
+In-Reply-To: <56170974.5020604@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,76 +33,101 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 08, 2015 at 07:24:53PM -0500, Eric Sandeen wrote:
-> Pull this commit over from the kernel, as libubsan spotted a
-> bad shift at runtime:
+On Thu, Oct 08, 2015 at 07:25:24PM -0500, Eric Sandeen wrote:
+> This fixes some unaligned accesses spotted by libubsan in repair.
 > 
->     commit 430d275a399175c7c0673459738979287ec1fd22
->     Author: Peter Lund <firefly@vax64.dk>
->     Date:   Tue Oct 16 23:29:35 2007 -0700
-> 
->     avoid negative (and full-width) shifts in radix-tree.c
-> 
->     Negative shifts are not allowed in C (the result is undefined).  Same thing
->     with full-width shifts.
-> 
->     It works on most platforms but not on the VAX with gcc 4.0.1 (it results in an
->     "operand reserved" fault).
-> 
->     Shifting by more than the width of the value on the left is also not
->     allowed.  I think the extra '>> 1' tacked on at the end in the original
->     code was an attempt to work around that.  Getting rid of that is an extra
->     feature of this patch.
-> 
->     Here's the chapter and verse, taken from the final draft of the C99
->     standard ("6.5.7 Bitwise shift operators", paragraph 3):
-> 
->       "The integer promotions are performed on each of the operands. The
->       type of the result is that of the promoted left operand. If the
->       value of the right operand is negative or is greater than or equal
->       to the width of the promoted left operand, the behavior is
->       undefined."
-> 
->     Thank you to Jan-Benedict Glaw, Christoph Hellwig, Maciej Rozycki, Pekka
->     Enberg, Andreas Schwab, and Christoph Lameter for review.  Special thanks
->     to Andreas for spotting that my fix only removed half the undefined
->     behaviour.
-> 
->     Signed-off-by: Peter Lund <firefly@vax64.dk>
-> 
+
+Could we add a couple sentences about why this is a problem? I take it
+unaligned accesses are "bad" on certain arches..?
+
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  libxfs/radix-tree.c |   14 ++++++++------
->  1 files changed, 8 insertions(+), 6 deletions(-)
+>  repair/dinode.c   |   19 +++++++++----------
+>  repair/prefetch.c |    4 ++--
+>  2 files changed, 11 insertions(+), 12 deletions(-)
 > 
-> diff --git a/libxfs/radix-tree.c b/libxfs/radix-tree.c
-> index 4d44ab4..eef9c36 100644
-> --- a/libxfs/radix-tree.c
-> +++ b/libxfs/radix-tree.c
-> @@ -784,12 +784,14 @@ int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag)
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index f78f907..44bbb8f 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -960,13 +960,13 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+>  		 * btree, we'd do it right here.  For now, if there's a
+>  		 * problem, we'll bail out and presumably clear the inode.
+>  		 */
+> -		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
+> +		if (!verify_dfsbno(mp, get_unaligned_be64(&pp[i])))  {
+>  			do_warn(_("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
+> -			       (unsigned long long) be64_to_cpu(pp[i]), lino);
+> +			       get_unaligned_be64(&pp[i]), lino);
+>  			return(1);
+>  		}
 >  
->  static unsigned long __maxindex(unsigned int height)
->  {
-> -	unsigned int tmp = height * RADIX_TREE_MAP_SHIFT;
-> -	unsigned long index = (~0UL >> (RADIX_TREE_INDEX_BITS - tmp - 1)) >> 1;
-> -
-> -	if (tmp >= RADIX_TREE_INDEX_BITS)
-> -		index = ~0UL;
-> -	return index;
-> +	unsigned int width = height * RADIX_TREE_MAP_SHIFT;
-> +	int shift = RADIX_TREE_INDEX_BITS - width;
-> +
-> +	if (shift < 0)
-> +		return ~0UL;
-> +	if (shift >= BITS_PER_LONG)
-> +		return 0UL;
-> +	return ~0UL >> shift;
->  }
+> -		if (scan_lbtree(be64_to_cpu(pp[i]), level, scan_bmapbt, type,
+> +		if (scan_lbtree(get_unaligned_be64(&pp[i]), level, scan_bmapbt, type,
+>  				whichfork, lino, tot, nex, blkmapp, &cursor,
+>  				1, check_dups, magic, &xfs_bmbt_buf_ops))
+>  			return(1);
+> @@ -977,25 +977,24 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+>  		 * blocks but the parent hasn't been updated
+>  		 */
+>  		if (!check_dups && cursor.level[level-1].first_key !=
+> -					be64_to_cpu(pkey[i].br_startoff))  {
+> +				   get_unaligned_be64(&pkey[i].br_startoff)) {
+>  			if (!no_modify)  {
+>  				do_warn(
+>  	_("correcting key in bmbt root (was %llu, now %" PRIu64") in inode "
+>  	  "%" PRIu64" %s fork\n"),
+> -				       (unsigned long long)
+> -					       be64_to_cpu(pkey[i].br_startoff),
+> +					get_unaligned_be64(&pkey[i].br_startoff),
+>  					cursor.level[level-1].first_key,
+>  					XFS_AGINO_TO_INO(mp, agno, ino),
+>  					forkname);
+>  				*dirty = 1;
+> -				pkey[i].br_startoff = cpu_to_be64(
+> -					cursor.level[level-1].first_key);
+> +				put_unaligned_be64(
+> +					cpu_to_be64(cursor.level[level-1].first_key),
+> +					&pkey[i].br_startoff);
+
+I could be confused here... but if get_unaligned_be64() takes a be64 and
+transforms to cpu order, shouldn't put_unaligned_be64() take a cpu order
+parameter? Is this a double byte order swap?
+
+Brian
+
+>  			} else  {
+>  				do_warn(
+>  	_("bad key in bmbt root (is %llu, would reset to %" PRIu64 ") in inode "
+>  	  "%" PRIu64 " %s fork\n"),
+> -				       (unsigned long long)
+> -					       be64_to_cpu(pkey[i].br_startoff),
+> +					get_unaligned_be64(&pkey[i].br_startoff),
+>  					cursor.level[level-1].first_key,
+>  					XFS_AGINO_TO_INO(mp, agno, ino),
+>  					forkname);
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index 32ec55e..52238ca 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -330,7 +330,7 @@ pf_scanfunc_bmap(
+>  	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
 >  
->  static void radix_tree_init_maxindex(void)
+>  	for (i = 0; i < numrecs; i++) {
+> -		dbno = be64_to_cpu(pp[i]);
+> +		dbno = get_unaligned_be64(&pp[i]);
+>  		if (!verify_dfsbno(mp, dbno))
+>  			return 0;
+>  		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
+> @@ -372,7 +372,7 @@ pf_read_btinode(
+>  	pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(dsize, 0));
+>  
+>  	for (i = 0; i < numrecs; i++) {
+> -		dbno = be64_to_cpu(pp[i]);
+> +		dbno = get_unaligned_be64(&pp[i]);
+>  		if (!verify_dfsbno(mp, dbno))
+>  			break;
+>  		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
 > -- 
 > 1.7.1
 > 
