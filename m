@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 35C277F37
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EE633304032
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 17:25:28 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2FD8B7F37
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0EDA88F8035
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 17:25:53 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id fxiF8pyIApJQ6TPt for <xfs@oss.sgi.com>;
-	Thu, 08 Oct 2015 17:25:26 -0700 (PDT)
+	ESMTP id 8ZEJx0QtveUTTbaW for <xfs@oss.sgi.com>;
+	Thu, 08 Oct 2015 17:25:52 -0700 (PDT)
 Received: from Liberator.local (unknown [205.215.222.148])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 7FE0561F8992
-	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:26 -0500 (CDT)
-Subject: [PATCH 2/4] xfs_repair: fix unaligned accesses
+	by sandeen.net (Postfix) with ESMTPSA id 82EB461F8992
+	for <xfs@oss.sgi.com>; Thu,  8 Oct 2015 19:25:52 -0500 (CDT)
+Subject: [PATCH 3/4] xfs_logprint: fix some unaligned accesses
 References: <56170906.5090301@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56170974.5020604@sandeen.net>
-Date: Thu, 8 Oct 2015 19:25:24 -0500
+Message-ID: <5617098E.9090102@sandeen.net>
+Date: Thu, 8 Oct 2015 19:25:50 -0500
 MIME-Version: 1.0
 In-Reply-To: <56170906.5090301@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,89 +34,70 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This fixes some unaligned accesses spotted by libubsan in repair.
+This routine had a fair bit of gyration to avoid unaligned accesses,
+but didn't fix them all.  Fix some more spotted at runtime by libubsan.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- repair/dinode.c   |   19 +++++++++----------
- repair/prefetch.c |    4 ++--
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ logprint/log_misc.c |   18 +++++++++++++++---
+ repair/btree.c      |    1 +
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index f78f907..44bbb8f 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -960,13 +960,13 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
- 		 * btree, we'd do it right here.  For now, if there's a
- 		 * problem, we'll bail out and presumably clear the inode.
- 		 */
--		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
-+		if (!verify_dfsbno(mp, get_unaligned_be64(&pp[i])))  {
- 			do_warn(_("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
--			       (unsigned long long) be64_to_cpu(pp[i]), lino);
-+			       get_unaligned_be64(&pp[i]), lino);
- 			return(1);
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index d76145c..6cd249a 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -325,7 +325,11 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
  		}
- 
--		if (scan_lbtree(be64_to_cpu(pp[i]), level, scan_bmapbt, type,
-+		if (scan_lbtree(get_unaligned_be64(&pp[i]), level, scan_bmapbt, type,
- 				whichfork, lino, tot, nex, blkmapp, &cursor,
- 				1, check_dups, magic, &xfs_bmbt_buf_ops))
- 			return(1);
-@@ -977,25 +977,24 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
- 		 * blocks but the parent hasn't been updated
- 		 */
- 		if (!check_dups && cursor.level[level-1].first_key !=
--					be64_to_cpu(pkey[i].br_startoff))  {
-+				   get_unaligned_be64(&pkey[i].br_startoff)) {
- 			if (!no_modify)  {
- 				do_warn(
- 	_("correcting key in bmbt root (was %llu, now %" PRIu64") in inode "
- 	  "%" PRIu64" %s fork\n"),
--				       (unsigned long long)
--					       be64_to_cpu(pkey[i].br_startoff),
-+					get_unaligned_be64(&pkey[i].br_startoff),
- 					cursor.level[level-1].first_key,
- 					XFS_AGINO_TO_INO(mp, agno, ino),
- 					forkname);
- 				*dirty = 1;
--				pkey[i].br_startoff = cpu_to_be64(
--					cursor.level[level-1].first_key);
-+				put_unaligned_be64(
-+					cpu_to_be64(cursor.level[level-1].first_key),
-+					&pkey[i].br_startoff);
- 			} else  {
- 				do_warn(
- 	_("bad key in bmbt root (is %llu, would reset to %" PRIu64 ") in inode "
- 	  "%" PRIu64 " %s fork\n"),
--				       (unsigned long long)
--					       be64_to_cpu(pkey[i].br_startoff),
-+					get_unaligned_be64(&pkey[i].br_startoff),
- 					cursor.level[level-1].first_key,
- 					XFS_AGINO_TO_INO(mp, agno, ino),
- 					forkname);
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 32ec55e..52238ca 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -330,7 +330,7 @@ pf_scanfunc_bmap(
- 	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
- 
- 	for (i = 0; i < numrecs; i++) {
--		dbno = be64_to_cpu(pp[i]);
-+		dbno = get_unaligned_be64(&pp[i]);
- 		if (!verify_dfsbno(mp, dbno))
- 			return 0;
- 		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
-@@ -372,7 +372,7 @@ pf_read_btinode(
- 	pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(dsize, 0));
- 
- 	for (i = 0; i < numrecs; i++) {
--		dbno = be64_to_cpu(pp[i]);
-+		dbno = get_unaligned_be64(&pp[i]);
- 		if (!verify_dfsbno(mp, dbno))
- 			break;
- 		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
+ 		super_block = 0;
+ 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
+-		agi = (xfs_agi_t *)(*ptr);
++		struct xfs_agi agi_s;
++
++		/* memmove because *ptr may not be 8-byte aligned */
++		memmove(&agi_s, *ptr, sizeof(struct xfs_agi));
++		agi = &agi_s;
+ 		printf(_("AGI Buffer: XAGI  "));
+ 		/*
+ 		 * v4 filesystems only contain the fields before the uuid.
+@@ -375,7 +379,11 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
+ 			}
+ 		}
+ 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGF_MAGIC) {
+-		agf = (xfs_agf_t *)(*ptr);
++		struct xfs_agf agf_s;
++
++		/* memmove because *ptr may not be 8-byte aligned */
++		memmove(&agf_s, *ptr, sizeof(struct xfs_agf));
++		agf = &agf_s;
+ 		printf(_("AGF Buffer: XAGF  "));
+ 		/*
+ 		 * v4 filesystems only contain the fields before the uuid.
+@@ -408,7 +416,11 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
+ 				be32_to_cpu(agf->agf_longest));
+ 		}
+ 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_DQUOT_MAGIC) {
+-		dq = (xfs_disk_dquot_t *)(*ptr);
++		struct xfs_disk_dquot dq_s;
++
++		/* memmove because *ptr may not be 8-byte aligned */
++		memmove(&dq_s, *ptr, sizeof(struct xfs_disk_dquot));
++		dq = &dq_s;
+ 		printf(_("DQUOT Buffer: DQ  "));
+ 		if (be32_to_cpu(head->oh_len) <
+ 				sizeof(xfs_disk_dquot_t)) {
+diff --git a/repair/btree.c b/repair/btree.c
+index 66fb40b..e31e67a 100644
+--- a/repair/btree.c
++++ b/repair/btree.c
+@@ -230,6 +230,7 @@ btree_get_next(
+ 	}
+ 	if (level == 0) {
+ 		if (key) {
++		/* XXXX what if index past MAX?  What if no next? */
+ 			cur->index++;
+ 			*key = btree_key_of_cursor(cur, root->height);
+ 			cur->index--;
 -- 
 1.7.1
 
