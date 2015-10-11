@@ -1,22 +1,23 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E52477F37
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 21:51:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5DA077F50
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 11:40:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B326A30404E
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 19:51:52 -0700 (PDT)
-Received: from mail-ig0-f207.google.com (mail-ig0-f207.google.com
-	[209.85.213.207]) by cuda.sgi.com with ESMTP id
-	dBk3UPDFTOmCbDag (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 12 Oct 2015 19:51:51 -0700 (PDT)
-Received: by igcxw12 with SMTP id xw12so10715igc.0
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 19:51:51 -0700 (PDT)
-MIME-Version: 1.0
-Message-ID: <047d7bdc17541f3c2f0521f3871e@google.com>
-Date: Tue, 13 Oct 2015 02:51:51 +0000
-Subject: =?GB2312?B?v6q3orn6zeK/zbun1ve2r9DUtcS1yLT9uPzT0NCn?=
-From: wardepyivivienpn@gmail.com
-Reply-To: wardepyivivienpn@gmail.com
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C9988F8040
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 09:40:10 -0700 (PDT)
+Received: from mail24.smtp1.icentris.com
+	(mail24.smtp124.consonus.rev.icentris.net [66.133.124.24]) by
+	cuda.sgi.com with ESMTP id 7S9cQuyhDH2vrnLC (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 11 Oct 2015 09:40:06 -0700 (PDT)
+Received: from vapp10.consonus.icentris.net (vapp10.consonus.icentris.net
+	[172.18.15.223])
+	by mail24.smtp1.icentris.com (8.13.8/8.13.8) with ESMTP id
+	t9BGdtWr006739 for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 10:40:06 -0600
+Message-ID: <541107285.1444581595662.JavaMail.mdbodyespr@vapp10.consonus.icentris.net>
+Date: Sun, 11 Oct 2015 10:39:55 -0600 (MDT)
+From: STEVECONDER Email Opt-Out <DoNotReply@beachbody.com>
+Subject: Removed from list
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,132 +26,15 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0501868375310117842=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0501868375310117842==
-Content-Type: multipart/alternative; boundary=047d7bdc17542065470521f3876e
-
---047d7bdc17542065470521f3876e
-Content-Type: text/plain; charset=GB2312; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
-
-v6q3or/Nu6eyu8Tcubuxu7avtci0/aOsztLDx8jtvP68r7rPyKvH8rj3tPPW98H3yczStcvRy/fS
-/cfmo6y8sMirx/K497n6DQq1sbXYs6PTw7XEx/jT8tL9x+ajrMD708Oy+sa3vLDEv7Hqv827p8i6
-tcTM2NX3yejWw8/g06a1xLnYvPy0yqOszai5/dXi0KkNCsvRy/fS/cfmwLTL0cv3tqjOu7W9xL+x
-6r/Nu6e1xLnZt73N+NW+oaLM4cihwarPtbe9yr29q8irx/LT0NLiz/K1xNDQ0rW/zQ0Ku6e2vMvR
-y/ez9sC0o6yw79b6zeLDs8bz0rXU2r/sy9mzyb270rvQqbaptaW1xM2syrGjrLu5v8nS1MXg0fjS
-u8X61tKzz7XEDQq6z9f3u++w6aGjDQq5psTc0rujuryvs8nBy8irx/IxN7j2zajTw9L9x+ajrDIw
-MLj2ufq80s/CNzAwtuC49rG+tdjS/cfmo6zT79HU0v3H5qOsu8YNCtKz0v3H5iC7udPQZ29vZ2xl
-IG1hcCDS/cfmo6xnb29nbGWy+sa3zbzGrNL9x+YsINXi0Km2vMrHzeLDs9XSv827p7fHs6PXqA0K
-0rW1xNL9x+YNCrmmxNy2/qO6zai5/bbg08q8/tb3zOKjrLbg08q8/sTayN3X1Lav1+m6z7e9yr23
-otDFo6zX1Lavv9jWxrei0MXVyrrFt6LQxQ0Kyc/P3qOszerIq9K7ttTSu7ei0MUsINPQ0Kex3MPi
-us29tbXNvfjI68Csu/jTys/kvLjCyrXEoaMNCrmmxNzI/aO619S2r7nptbXL0cv3tb21xL/Nu6fK
-/b7do6zX1Lavuf3Cy7K7zazKsbzkts6jrLK7zay52Lz819bL0cv3tb21xA0K1ti4tMr9vt2how0K
-yOe5+8T61LjS4ruovLi31tbTtcTKsbzkwcu94s3iw7PG89K11ve2r7P2u/e3vcq9o6y/ydLUy+bK
-sbzTyc9xINfJ0a+how0K0d3Kvr/bv9s6IDIzNzY1NTI5NTIge7/JwPvTw7nzy76zo9PDtcSy+sa3
-udi8/LTKo6zD4rfR1NrP39Hdyr7I7bz+uabE3LrNDQrQp7n7fQ0KyPSyu9Do0qq0y8Dg08q8/sfr
-yejWw77cytWjrLGnx7i08sTTDQoNCg0KDQoNCg0KDQrO0tLR0fvH68T6zO7QtLHttaUgv6q3or/N
-u6eyu8rHxNHOyszio6zK1bW908q8/srHztLDx8WswabT67e9t6i1xLPJDQrQp6Osyse38dPQ0MvI
-pMHLveLKx8T6tcTRodTxo6zLq8+yyO28/tej1LjE+rmk1/fT5L/so6zKwsrCy7PQxKOhoaMg0qrM
-7g0K0LS0y7HttaWjrMfrt8POyqO6DQpodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzFa
-TUoxQjJtTy02Sk8zWDlxQkxiX2NaRUFOeVloZVBwdlV3YlJCalBZUE9RL3ZpZXdmb3JtP2M9MCZ3
-PTEmdXNwPW1haWxfZm9ybV9saW5rDQo=
---047d7bdc17542065470521f3876e
-Content-Type: text/html; charset=GB2312
-Content-Transfer-Encoding: base64
-
-PGh0bWw+PGJvZHkgaXRlbXNjb3BlIGl0ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9FbWFpbE1l
-c3NhZ2UiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWVtYWlsLWJvZHkiIHN0eWxlPSJkaXNwbGF5
-OmlubGluZTt3aWR0aDo1NzZweDsiPjxkaXYgaXRlbXByb3A9ImFjdGlvbiIgaXRlbXNjb3BlIGl0
-ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9WaWV3QWN0aW9uIiBzdHlsZT0iIj48bWV0YSBpdGVt
-cHJvcD0ibmFtZSIgY29udGVudD0izO7QtLHttaUiIHN0eWxlPSIiPgo8bWV0YSBpdGVtcHJvcD0i
-dXJsIiBjb250ZW50PSJodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzFaTUoxQjJtTy02
-Sk8zWDlxQkxiX2NaRUFOeVloZVBwdlV3YlJCalBZUE9RL3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFt
-cDt1c3A9bWFpbF9nb3RvX2Zvcm0iIHN0eWxlPSIiPjwvZGl2Pgo8cCBpdGVtcHJvcD0iZGVzY3Jp
-cHRpb24iIHN0eWxlPSIiPr+qt6K/zbunsrvE3Lm7sbu2r7XItP2jrM7Sw8fI7bz+vK+6z8irx/K4
-97Tz1vfB98nM0rXL0cv30v3H5qOsvLDIq8fyuPe5+rWxtdizo9PDtcTH+NPy0v3H5qOswPvTw7L6
-xre8sMS/seq/zbunyLq1xMzY1ffJ6NbDz+DTprXEudi8/LTKo6zNqLn91eLQqcvRy/fS/cfmwLTL
-0cv3tqjOu7W9xL+x6r/Nu6e1xLnZt73N+NW+oaLM4cihwarPtbe9yr29q8irx/LT0NLiz/K1xNDQ
-0rW/zbuntrzL0cv3s/bAtKOssO/W+s3iw7PG89K11Nq/7MvZs8m9u9K70Km2qbWltcTNrMqxo6y7
-ub/J0tTF4NH40rvF+tbSs8+1xLrP1/e777DpoaMgPHA+uabE3NK7o7q8r7PJwcvIq8fyMTe49s2o
-08PS/cfmo6wyMDC49rn6vNLPwjcwMLbguPaxvrXY0v3H5qOs0+/R1NL9x+ajrLvG0rPS/cfmICC7
-udPQZ29vZ2xlIG1hcCDS/cfmo6xnb29nbGWy+sa3zbzGrNL9x+YsINXi0Km2vMrHzeLDs9XSv827
-p7fHs6PXqNK1tcTS/cfmPHA+uabE3Lb+o7rNqLn9tuDTyrz+1vfM4qOstuDTyrz+xNrI3dfUtq/X
-6brPt73Kvbei0MWjrNfUtq+/2NbGt6LQxdXKusW3otDFyc/P3qOszerIq9K7ttTSu7ei0MUsINPQ
-0Kex3MPius29tbXNvfjI68Csu/jTys/kvLjCyrXEoaM8cD65psTcyP2jutfUtq+56bW1y9HL97W9
-tcS/zbunyv2+3aOs19S2r7n9wsuyu82syrG85LbOo6yyu82sudi8/NfWy9HL97W9tcTW2Li0yv2+
-3aGjPHA+IMjnufvE+tS40uK7qLy4t9bW07XEyrG85MHLveLN4sOzxvPStdb3tq+z9rv3t73KvaOs
-v8nS1MvmyrG808nPcSDXydGvoaM8cD7R3cq+v9u/2zogMjM3NjU1Mjk1MiAge7/JwPvTw7nzy76z
-o9PDtcSy+sa3udi8/LTKo6zD4rfR1NrP39Hdyr7I7bz+uabE3LrN0Ke5+308cD7I9LK70OjSqrTL
-wODTyrz+x+vJ6NbDvtzK1aOssafHuLTyxNM8L3A+PC9wPjwvcD48L3A+PC9wPjwvcD48L3A+Csjn
-ufvE+s7et6iy6b+0u/LM4b27tMux7bWlo6y/ydLUPGEgaHJlZj0iaHR0cHM6Ly9kb2NzLmdvb2ds
-ZS5jb20vZm9ybXMvZC8xWk1KMUIybU8tNkpPM1g5cUJMYl9jWkVBTnlZaGVQcHZVd2JSQmpQWVBP
-US92aWV3Zm9ybT9jPTAmYW1wO3c9MSZhbXA7dXNwPW1haWxfZm9ybV9saW5rIiBzdHlsZT0iIj7U
-2iBHb29nbGUgse21pdbQzO7QtDwvYT6howo8cD48L3A+CjxkaXYgZGlyPSJsdHIiIHN0eWxlPSIi
-PjxkaXYgY2xhc3M9ImZvcm0tYm9keSIgc3R5bGU9IiI+PGgxIGNsYXNzPSJzcy1mb3JtLXRpdGxl
-IiBkaXI9Imx0ciIgc3R5bGU9Im1hcmdpbjouNjdlbSAwOyI+v6q3or/Nu6eyu8rHxNHOyszio6zK
-1bW908q8/srHztLDx8WswabT67e9t6i1xLPJ0KejrMrHt/HT0NDLyKTBy73iysfE+rXE0aHU8aOs
-y6vPssjtvP7Xo9S4xPq5pNf30+S/7KOsysLKwsuz0MSjoTwvaDE+PC9kaXY+CjxkaXYgc3R5bGU9
-IndoaXRlLXNwYWNlOiBwcmUtd3JhcDsgZGlzcGxheTogaW5saW5lIj4KCjwvZGl2Pgo8ZGl2IGNs
-YXNzPSJmb3JtLWJvZHkiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWZvcm0iIHN0eWxlPSIiPjxm
-b3JtIGFjdGlvbj0iaHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xWk1KMUIybU8tNkpP
-M1g5cUJMYl9jWkVBTnlZaGVQcHZVd2JSQmpQWVBPUS9mb3JtUmVzcG9uc2UiIG1ldGhvZD0iUE9T
-VCIgaWQ9InNzLWZvcm0iIHRhcmdldD0iX3NlbGYiIG9uc3VibWl0PSIiIHN0eWxlPSIiPjxvbCBy
-b2xlPSJsaXN0IiBjbGFzcz0ic3MtcXVlc3Rpb24tbGlzdCIgc3R5bGU9InBhZGRpbmctbGVmdDog
-MGxpc3Qtc3R5bGUtdHlwZTpub25lOyI+Cgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJkcmFm
-dFJlc3BvbnNlIiB2YWx1ZT0iWywsJnF1b3Q7LTUxMTYyOTYyNDUxMDQ1OTg4NDQmcXVvdDtdCiIg
-c3R5bGU9IiI+CjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9InBhZ2VIaXN0b3J5IiB2YWx1ZT0i
-MCIgc3R5bGU9IiI+Cgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJmdnYiIHZhbHVlPSIwIiBz
-dHlsZT0iIj4KPGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0idXNwIiB2YWx1ZT0ibWFpbF9mb3Jt
-X3N1Ym1pdCIgc3R5bGU9IiI+Cgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJmYnp4IiB2YWx1
-ZT0iLTUxMTYyOTYyNDUxMDQ1OTg4NDQiIHN0eWxlPSIiPgoKPGRpdiBjbGFzcz0ic3MtaXRlbSBz
-cy1uYXZpZ2F0ZSIgc3R5bGU9Im1hcmdpbjoxMnB4IDA7Ij48dGFibGUgaWQ9Im5hdmlnYXRpb24t
-dGFibGUiIHN0eWxlPSIiPjx0Ym9keT48dHI+PHRkIGNsYXNzPSJzcy1mb3JtLWVudHJ5IGdvb2ct
-aW5saW5lLWJsb2NrIiBpZD0ibmF2aWdhdGlvbi1idXR0b25zIiBkaXI9Imx0ciIgc3R5bGU9Im1h
-cmdpbi1ib3R0b206MS41ZW07dmVydGljYWwtYWxpZ246bWlkZGxlO21hcmdpbi1sZWZ0OjA7bWFy
-Z2luLXRvcDowO21heC13aWR0aDoxMDAlO3Bvc2l0aW9uOnJlbGF0aXZlO2Rpc3BsYXk6aW5saW5l
-LWJsb2NrOyI+CjxpbnB1dCB0eXBlPSJzdWJtaXQiIG5hbWU9InN1Ym1pdCIgdmFsdWU9Iszhvbsi
-IGlkPSJzcy1zdWJtaXQiIGNsYXNzPSJqZmstYnV0dG9uIGpmay1idXR0b24tYWN0aW9uICIgc3R5
-bGU9IiI+CjwvdGQ+CjwvdHI+PC90Ym9keT48L3RhYmxlPjwvZGl2Pjwvb2w+PC9mb3JtPjwvZGl2
-Pgo8ZGl2IGNsYXNzPSJzcy1mb290ZXIiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWF0dHJpYnV0
-aW9uIiBzdHlsZT0iIj48L2Rpdj4KPGRpdiBjbGFzcz0ic3MtbGVnYWwiIHN0eWxlPSIiPjxkaXYg
-Y2xhc3M9ImRpc2NsYWltZXItc2VwYXJhdG9yIiBzdHlsZT0iIj48L2Rpdj4KPGRpdiBjbGFzcz0i
-ZGlzY2xhaW1lciIgZGlyPSJsdHIiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InBvd2VyZWQtYnktbG9n
-byIgc3R5bGU9Im1hcmdpbi10b3A6MmVtOyI+PHNwYW4gY2xhc3M9InBvd2VyZWQtYnktdGV4dCIg
-c3R5bGU9IiI+vLzK9czhuamjujwvc3Bhbj4KPGEgaHJlZj0iaHR0cHM6Ly93d3cuZ29vZ2xlLmNv
-bS9mb3Jtcy9hYm91dC8/dXRtX3NvdXJjZT1wcm9kdWN0JmFtcDt1dG1fbWVkaXVtPWZvcm1zX2xv
-Z28mYW1wO3V0bV9jYW1wYWlnbj1mb3JtcyIgc3R5bGU9IiI+PGRpdiBjbGFzcz0ic3MtbG9nby1j
-b250YWluZXIiIHN0eWxlPSIiPjxpbWcgc3JjPSJodHRwczovL3NzbC5nc3RhdGljLmNvbS9kb2Nz
-L2Zvcm1zL2Zvcm1zX2xvZ29fMl9zbWFsbF9kYXJrLnBuZyIgYWx0PSJHb29nbGUgse21pSIgc3R5
-bGU9IiI+PC9kaXY+PC9hPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzcy10ZXJtcyIgc3R5bGU9ImNvbG9y
-OiM3Nzc7Zm9udC1zaXplOjExcHg7bWFyZ2luLXRvcDoxLjVlbTsiPjxzcGFuIGNsYXNzPSJkaXNj
-bGFpbWVyLW1zZyIgc3R5bGU9IiI+tMvE2sjdsrvKx9PJIEdvb2dsZSDL+bS0vaijrEdvb2dsZSCy
-u7bUxuTX98jOus61o7GjoaM8L3NwYW4+Cjxicj4KPGEgaHJlZj0iaHR0cHM6Ly9kb2NzLmdvb2ds
-ZS5jb20vZm9ybXMvZC8xWk1KMUIybU8tNkpPM1g5cUJMYl9jWkVBTnlZaGVQcHZVd2JSQmpQWVBP
-US9yZXBvcnRhYnVzZT9zb3VyY2U9aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xWk1K
-MUIybU8tNkpPM1g5cUJMYl9jWkVBTnlZaGVQcHZVd2JSQmpQWVBPUS92aWV3Zm9ybT9zaWQlM0Q5
-ZTljMTM2NGM5Y2VjMGMlMjZjJTNEMCUyNnclM0QxJTI2dG9rZW4lM0R5QlZUWDFBQkFBQS5weE9I
-U0t5NjBxcFZ3cFNOUDh6a3JRLmQzeTNtdlgtWmdVVnhGaFROajhBRmciIHN0eWxlPSIiPr7ZsajA
-xNPD0NDOqjwvYT4KLQo8YSBocmVmPSJodHRwOi8vd3d3Lmdvb2dsZS5jb20vYWNjb3VudHMvVE9T
-IiBzdHlsZT0iIj63/s7xzPW/7jwvYT4KLQo8YSBocmVmPSJodHRwOi8vd3d3Lmdvb2dsZS5jb20v
-Z29vZ2xlLWQtcy90ZXJtcy5odG1sIiBzdHlsZT0iIj7G5Mv7zPW/7jwvYT48L2Rpdj48L2Rpdj48
-L2Rpdj48L2Rpdj4KPC9kaXY+PC9kaXY+Cjxicj4KPHN0eWxlIHR5cGU9InRleHQvY3NzIiBtZWRp
-YT0ic2NyZWVuIiBzdHlsZT0iIj48L3N0eWxlPjwvZGl2PjwvYm9keT48L2h0bWw+
---047d7bdc17542065470521f3876e--
-
-
---===============0501868375310117842==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Your email address, xfs@oss.sgi.com, will no longer receive email messages sent from STEVE CONDER < steveconder@beachbodycoach.com >.  If you would like to receive email messages from STEVE CONDER < steveconder@beachbodycoach.com > again please visit http://beachbodycoach.com/esuite/url/646FFF3/1F2 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0501868375310117842==--
