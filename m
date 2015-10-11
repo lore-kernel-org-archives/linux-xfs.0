@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 62EFA29E0E
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 18:03:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 238DF29DFA
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 18:03:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4493D304048
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 16:03:43 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 13F9A304053
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 16:03:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Sw4P9ogsx4HihMuT (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mug3T5SsW84BHVBB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 11 Oct 2015 16:03:42 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 11 Oct 2015 16:03:49 -0700 (PDT)
 From: Andreas Gruenbacher <andreas.gruenbacher@gmail.com>
-Subject: [PATCH v10 39/46] ext4: Don't allow unmapped identifiers in richacls
-Date: Mon, 12 Oct 2015 00:58:50 +0200
-Message-Id: <1444604337-17651-40-git-send-email-andreas.gruenbacher@gmail.com>
+Subject: [PATCH v10 40/46] sunrpc: Allow to demand-allocate pages to encode
+	into
+Date: Mon, 12 Oct 2015 00:58:51 +0200
+Message-Id: <1444604337-17651-41-git-send-email-andreas.gruenbacher@gmail.com>
 In-Reply-To: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
 References: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,29 +34,35 @@ Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
 From: Andreas Gruenbacher <agruenba@redhat.com>
 
-Don't allow acls which contain unmapped identifiers: they are meaningful
-for remote file systems only.
+When encoding large, variable-length objects such as acls into xdr_bufs,
+it is easier to allocate buffer pages on demand rather than precomputing
+the required buffer size.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/ext4/richacl.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/sunrpc/xdr.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/fs/ext4/richacl.c b/fs/ext4/richacl.c
-index b46ac60..2581117 100644
---- a/fs/ext4/richacl.c
-+++ b/fs/ext4/richacl.c
-@@ -62,6 +62,10 @@ __ext4_set_richacl(handle_t *handle, struct inode *inode, struct richacl *acl)
- 	int retval;
- 
- 	if (acl) {
-+		/* Don't allow acls with unmapped identifiers. */
-+		if (richacl_has_unmapped_identifiers(acl))
-+			return -EINVAL;
+diff --git a/net/sunrpc/xdr.c b/net/sunrpc/xdr.c
+index 4439ac4..63c1c36 100644
+--- a/net/sunrpc/xdr.c
++++ b/net/sunrpc/xdr.c
+@@ -537,6 +537,15 @@ static __be32 *xdr_get_next_encode_buffer(struct xdr_stream *xdr,
+ 	 */
+ 	xdr->scratch.iov_base = xdr->p;
+ 	xdr->scratch.iov_len = frag1bytes;
 +
- 		if (richacl_equiv_mode(acl, &mode) == 0) {
- 			inode->i_ctime = ext4_current_time(inode);
- 			inode->i_mode = mode;
++	if (!*xdr->page_ptr) {
++		struct page *page = alloc_page(GFP_NOFS);
++
++		if (!page)
++			return NULL;
++		*xdr->page_ptr = page;
++	}
++
+ 	p = page_address(*xdr->page_ptr);
+ 	/*
+ 	 * Note this is where the next encode will start after we've
 -- 
 2.5.0
 
