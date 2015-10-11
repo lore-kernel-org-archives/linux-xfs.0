@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 818947F37
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 17:59:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 71F67304039
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 15:59:33 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 95EF17F37
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 17:59:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 77668304039
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 15:59:42 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bgLC4mVtOSDO6ysf (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 8NzLnCs4OtKLiKje (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 11 Oct 2015 15:59:32 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 11 Oct 2015 15:59:39 -0700 (PDT)
 From: Andreas Gruenbacher <andreas.gruenbacher@gmail.com>
-Subject: [PATCH v10 03/46] vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD
-	permission flags
-Date: Mon, 12 Oct 2015 00:58:14 +0200
-Message-Id: <1444604337-17651-4-git-send-email-andreas.gruenbacher@gmail.com>
+Subject: [PATCH v10 04/46] vfs: Make the inode passed to inode_change_ok
+	non-const
+Date: Mon, 12 Oct 2015 00:58:15 +0200
+Message-Id: <1444604337-17651-5-git-send-email-andreas.gruenbacher@gmail.com>
 In-Reply-To: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
 References: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,86 +34,43 @@ Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
 From: Andreas Gruenbacher <agruenba@redhat.com>
 
-Normally, deleting a file requires MAY_WRITE access to the parent
-directory.  With richacls, a file may be deleted with MAY_DELETE_CHILD access
-to the parent directory or with MAY_DELETE_SELF access to the file.
-
-To support that, pass the MAY_DELETE_CHILD mask flag to inode_permission()
-when checking for delete access inside a directory, and MAY_DELETE_SELF
-when checking for delete access to a file itelf.
-
-The MAY_DELETE_SELF permission overrides the sticky directory check.
+We will need to call iop->permission and iop->get_acl from
+inode_change_ok() for additional permission checks, and both take a
+non-const inode.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Reviewed-by: J. Bruce Fields <bfields@redhat.com>
 ---
- fs/namei.c         | 21 ++++++++++++---------
- include/linux/fs.h |  2 ++
- 2 files changed, 14 insertions(+), 9 deletions(-)
+ fs/attr.c          | 2 +-
+ include/linux/fs.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 0259392..2eab19e 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -453,9 +453,9 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
-  * this, letting us set arbitrary permissions for filesystem access without
-  * changing the "normal" UIDs which are used for other things.
-  *
-- * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE, or
-- * MAY_CREATE_DIR are set.  That way, file systems that don't support these
-- * permissions will check for MAY_WRITE instead.
-+ * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE,
-+ * MAY_CREATE_DIR, or MAY_DELETE_CHILD are set.  That way, file systems that
-+ * don't support these permissions will check for MAY_WRITE instead.
+diff --git a/fs/attr.c b/fs/attr.c
+index 6530ced..328be71 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -28,7 +28,7 @@
+  * Should be called as the first thing in ->setattr implementations,
+  * possibly after taking additional locks.
   */
- int inode_permission(struct inode *inode, int mask)
+-int inode_change_ok(const struct inode *inode, struct iattr *attr)
++int inode_change_ok(struct inode *inode, struct iattr *attr)
  {
-@@ -2555,7 +2555,7 @@ static int may_delete(struct inode *dir, struct dentry *victim,
- 		      bool isdir, bool replace)
- {
- 	struct inode *inode = d_backing_inode(victim);
--	int error, mask = MAY_WRITE | MAY_EXEC;
-+	int error, mask = MAY_EXEC;
+ 	unsigned int ia_valid = attr->ia_valid;
  
- 	if (d_is_negative(victim))
- 		return -ENOENT;
-@@ -2565,15 +2565,18 @@ static int may_delete(struct inode *dir, struct dentry *victim,
- 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
- 
- 	if (replace)
--		mask |= isdir ? MAY_CREATE_DIR : MAY_CREATE_FILE;
--	error = inode_permission(dir, mask);
-+		mask |= MAY_WRITE | (isdir ? MAY_CREATE_DIR : MAY_CREATE_FILE);
-+	error = inode_permission(dir, mask | MAY_WRITE | MAY_DELETE_CHILD);
-+	if (!error && check_sticky(dir, inode))
-+		error = -EPERM;
-+	if (error && IS_RICHACL(inode) &&
-+	    inode_permission(inode, MAY_DELETE_SELF) == 0)
-+		error = 0;
- 	if (error)
- 		return error;
- 	if (IS_APPEND(dir))
- 		return -EPERM;
--
--	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
--	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode))
-+	if (IS_APPEND(inode) || IS_IMMUTABLE(inode) || IS_SWAPFILE(inode))
- 		return -EPERM;
- 	if (isdir) {
- 		if (!d_is_dir(victim))
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index d6e2330..402acd7 100644
+index 402acd7..aab32c8 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -84,6 +84,8 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
- #define MAY_NOT_BLOCK		0x00000080
- #define MAY_CREATE_FILE		0x00000100
- #define MAY_CREATE_DIR		0x00000200
-+#define MAY_DELETE_CHILD	0x00000400
-+#define MAY_DELETE_SELF		0x00000800
+@@ -2871,7 +2871,7 @@ extern int buffer_migrate_page(struct address_space *,
+ #define buffer_migrate_page NULL
+ #endif
  
- /*
-  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
+-extern int inode_change_ok(const struct inode *, struct iattr *);
++extern int inode_change_ok(struct inode *, struct iattr *);
+ extern int inode_newsize_ok(const struct inode *, loff_t offset);
+ extern void setattr_copy(struct inode *inode, const struct iattr *attr);
+ 
 -- 
 2.5.0
 
