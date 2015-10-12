@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9DA6E7F4E
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 05:50:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 369A2AC001
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 03:50:36 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FkvtO7m1AQa3ose3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 12 Oct 2015 03:50:34 -0700 (PDT)
-Date: Mon, 12 Oct 2015 06:50:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: validate metadata LSNs against log on v5 superblocks
-Message-ID: <20151012105032.GA25023@bfoster.bfoster>
-References: <1443183869-16487-1-git-send-email-bfoster@redhat.com>
-	<20151012045817.GE27164@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 88C0F7F51
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 07:37:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 78BDD8F8033
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 05:37:10 -0700 (PDT)
+Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
+	[209.85.212.173]) by cuda.sgi.com with ESMTP id
+	Ov7A7091CTIBPJ0U (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 12 Oct 2015 05:37:08 -0700 (PDT)
+Received: by wicge5 with SMTP id ge5so15798258wic.0
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 05:37:07 -0700 (PDT)
+Subject: Re: Question about non asynchronous aio calls.
+References: <20151007141833.GB11716@scylladb.com>
+	<56152B0F.2040809@sandeen.net> <20151007150833.GB30191@bfoster.bfoster>
+	<56153685.3040401@sandeen.net> <561560B2.1080902@scylladb.com>
+	<20151008042831.GU27164@dastard> <5615FD76.1090309@scylladb.com>
+	<20151008082307.GE11716@scylladb.com> <20151008114622.GV27164@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <561BA970.8080504@scylladb.com>
+Date: Mon, 12 Oct 2015 15:37:04 +0300
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151012045817.GE27164@dastard>
+In-Reply-To: <20151008114622.GV27164@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,170 +31,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Gleb Natapov <gleb@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Mon, Oct 12, 2015 at 03:58:17PM +1100, Dave Chinner wrote:
-> On Fri, Sep 25, 2015 at 08:24:29AM -0400, Brian Foster wrote:
-> > Since the onset of v5 superblocks, the LSN of the last modification has
-> > been included in a variety of on-disk data structures. This LSN is used
-> > to provide log recovery ordering guarantees (e.g., to ensure an older
-> > log recovery item is not replayed over a newer target data structure).
-> > 
-> > While this works correctly from the point a filesystem is formatted and
-> > mounted, userspace tools have some problematic behaviors that defeat
-> > this mechanism. For example, xfs_repair historically zeroes out the log
-> > unconditionally (regardless of whether corruption is detected). If this
-> > occurs, the LSN of the filesystem is reset and the log is now in a
-> > problematic state with respect to on-disk metadata structures that might
-> > have a larger LSN. Until either the log catches up to the highest
-> > previously used metadata LSN or each affected data structure is modified
-> > and written out without incident (which resets the metadata LSN), log
-> > recovery is susceptible to filesystem corruption.
-> > 
-> > This problem is ultimately addressed and repaired in the associated
-> > userspace tools. The kernel is still responsible to detect the problem
-> > and notify the user that something is wrong. Check the superblock LSN at
-> > mount time and fail the mount if it is invalid. From that point on,
-> > trigger verifier failure on any metadata I/O where an invalid LSN is
-> > detected. This results in a filesystem shutdown and guarantees that we
-> > do not log metadata changes with invalid LSNs on disk. Since this is a
-> > known issue with a known recovery path, present a warning to instruct
-> > the user how to recover.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-...
-> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > index be43248..e89a0f8 100644
-> > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-...
-> > @@ -322,6 +325,7 @@ xfs_da3_node_create(
-> >  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> >  		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-> >  
-> > +		memset(hdr3, 0, sizeof(struct xfs_da3_node_hdr));
-> >  		ichdr.magic = XFS_DA3_NODE_MAGIC;
-> >  		hdr3->info.blkno = cpu_to_be64(bp->b_bn);
-> >  		hdr3->info.owner = cpu_to_be64(args->dp->i_ino);
-> 
-> Is this a bug fix or just cleanliness? The LSN gets written into the
-> header before it goes to disk, so there is nothing uninitialised
-> that I am unaware of ending up on disk from this. 
-> 
+On 10/08/2015 02:46 PM, Dave Chinner wrote:
+> On Thu, Oct 08, 2015 at 11:23:07AM +0300, Gleb Natapov wrote:
+>> On Thu, Oct 08, 2015 at 08:21:58AM +0300, Avi Kivity wrote:
+>>>>>> I fixed something similar in ext4 at the time, FWIW.
+>>>>> Makes sense.
+>>>>>
+>>>>> Is there a way to relax this for reads?
+>>>> The above mostly only applies to writes. Reads don't modify data so
+>>>> racing unaligned reads against other reads won't given unexpected
+>>>> results and so aren't serialised.
+>>>>
+>>>> i.e. serialisation will only occur when:
+>>>> 	- unaligned write IO will serialise until sub-block zeroing
+>>>> 	  is complete.
+>>>> 	- write IO extending EOF will serialis until post-EOF
+>>>> 	  zeroing is complete
+>>>
+>>> By "complete" here, do you mean that a call to truncate() returned, or that
+>>> its results reached the disk an unknown time later?
+>>>
+> No, I'm talking purely about DIO here. If you do write that
+> starts beyond the existing EOF, there is a region between the
+> current EOF and the offset the write starts at. i.e.
+>
+>     0             EOF            offset     new EOF
+>     +dddddddddddddd+..............+nnnnnnnnnnn+
+>
+> It is the region between EOF and offset that we must ensure is made
+> up of either holes, unwritten extents or fully zeroed blocks before
+> allowing the write to proceed. If we have to zero allocated blocks,
+> then we have to ensure that completes before the write can start.
+> This means that when we update the EOF on completion of the write,
+> we don't expose stale data in blocks that were between EOF and
+> offset...
 
-Sorry, I should have pointed this out in the commit log description. I
-probably forgot as these were added after the fact from testing and
-reproducing write verifier failures.
+Thanks.  We found, experimentally, that io_submit(write_at_eof) followed 
+by (without waiting) io_submit(write_at_what_would_be_the_new_eof) 
+occasionally blocks.
 
-Both memset() calls are actually bug fixes with respect to the LSN
-checks that this patch adds. They don't affect anything on disk. They
-just prevent spurious write verifier failures on object creation because
-the write verifiers first verify the data structure and then update the
-LSN, which means uninitialized data structures in memory can get into
-the verifiers with garbage in the LSN field. IIRC, I dug around at the
-time and saw that most of such data structures were initialized or
-allocated with zeroed memory and so took the same approach here.
+So I guess we have to employ a train algorithm here and keep at most one 
+aio in flight for append loads (which are very common for us).
 
-Thanks for the other fixups.
+>
+>> I think Brian already answered that one with:
+>>
+>>    There are no such pitfalls as far as I'm aware. The entire AIO
+>>    submission synchronization sequence triggers off an in-memory i_size
+>>    check in xfs_file_aio_write_checks(). The in-memory i_size is updated in
+>>    the truncate path (xfs_setattr_size()) via truncate_setsize(), so at
+>>    that point the new size should be visible to subsequent AIO writers.
+> Different situation as truncate serialises all IO. Extending the file
+> via truncate also runs the same "EOF zeroing" that the DIO code runs
+> above, for the same reasons.
 
-Brian
+Does that mean that truncate() will wait for inflight aios, or that new 
+aios will wait for the truncate() to complete, or both?
 
-> > @@ -60,6 +61,7 @@ xfs_symlink_hdr_set(
-> >  	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> >  		return 0;
-> >  
-> > +	memset(dsl, 0, sizeof(struct xfs_dsymlink_hdr));
-> >  	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
-> >  	dsl->sl_offset = cpu_to_be32(offset);
-> >  	dsl->sl_bytes = cpu_to_be32(size);
-> 
-> Ditto.
-> 
-> > index aaadee0..0c8ef76 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -3165,11 +3165,19 @@ xlog_state_switch_iclogs(
-> >  	}
-> >  
-> >  	if (log->l_curr_block >= log->l_logBBsize) {
-> > +		/*
-> > +		 * Rewind the current block before the cycle is bumped to make
-> > +		 * sure that the combined LSN never transiently moves forward
-> > +		 * when the log wraps to the next cycle. This is to support the
-> > +		 * unlocked sample of these fields from xlog_valid_lsn(). Most
-> > +		 * other cases should acquire l_icloglock.
-> > +		 */
-> > +		log->l_curr_block -= log->l_logBBsize;
-> > +		ASSERT(log->l_curr_block >= 0);
-> > +		smp_wmb();
-> >  		log->l_curr_cycle++;
-> 
-> OK, so we make sure the write of the l_curr_block cannot be
-> reordered to after the write of the l_curr_cycle.
-> 
-> > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> > index 950f3f9..8daba74 100644
-> > --- a/fs/xfs/xfs_log_priv.h
-> > +++ b/fs/xfs/xfs_log_priv.h
-> > @@ -560,4 +560,55 @@ static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
-> >  	remove_wait_queue(wq, &wait);
-> >  }
-> >  
-> > +/*
-> > + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
-> > + * means that the next log record that includes this metadata could have a
-> > + * smaller LSN. In turn, this means that the modification in the log would not
-> > + * replay.
-> > + */
-> > +static inline bool
-> > +xlog_valid_lsn(
-> > +	struct xlog	*log,
-> > +	xfs_lsn_t	lsn)
-> > +{
-> > +	int		cur_cycle;
-> > +	int		cur_block;
-> > +	bool		valid = true;
-> > +
-> > +	/*
-> > +	 * First, sample the current lsn without locking to avoid added
-> > +	 * contention from metadata I/O. The current cycle and block are updated
-> > +	 * (in xlog_state_switch_iclogs()) and read here in a particular order
-> > +	 * to avoid false negatives (e.g., thinking the metadata LSN is valid
-> > +	 * when it is not).
-> > +	 *
-> > +	 * The current block is always rewound before the cycle is bumped in
-> > +	 * xlog_state_switch_iclogs() to ensure the current LSN is never seen in
-> > +	 * a transiently forward state. Instead, we can see the LSN in a
-> > +	 * transiently behind state if we happen to race with a cycle wrap.
-> > +	 */
-> > +	cur_cycle = ACCESS_ONCE(log->l_curr_cycle);
-> > +	smp_rmb();
-> > +	cur_block = ACCESS_ONCE(log->l_curr_block);
-> 
-> And we make sure the read of the block cannot be reordered to before
-> the l_curr_cycle. Looks ok to me.
-> 
-> I'm going to commit this as is because I don't think the memset()s
-> above actuallly change anything on disk. I can always redo the
-> commit if this is in error...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+>
+>>>> 	- truncate/extent manipulation syscall is run
+>>> Actually, we do call fallocate() ahead of io_submit() (in a worker thread,
+>>> in non-overlapping ranges) to optimize file layout and also in the belief
+>>> that it would reduce the amount of blocking io_submit() does.
+> fallocate serialises all IO submission - including reads. Unlike
+> truncate, however, it doesn't drain the queue of IO for
+> preallocation so the impact on AIO is somewhat limited.
+>
+> Ideally you want to limit fallocate calls to large chunks at a time.
+> If you have a 1:1 mapping of fallocate calls to write calls, then
+> you're likely making things worse for the AIO submission path
+> because you'll block reads as well as writes. Doing the allocation
+> in the write submission path will not block reads, and only writes
+> that are attempting to do concurrent allocations to the same file
+> will serialise...
+
+We have a 1:8 ratio (128K:1M), but that's just random numbers we guessed.
+
+Again, not only for reduced xfs metadata, but also to reduce the amount 
+of write amplification done by the FTL. We have a concurrent append 
+workload on many files, and files are reclaimed out of order, so larger 
+extends means less fragmentation for the FTL later on.
+
+>
+> If you want to limit fragmentation without adding and overhead on
+> XFS for non-sparse files (which it sounds like your case), then the
+> best thing to use in XFS is the per-inode extent size hints. You set
+> it on the file when first creating it (or the parent directory so
+> all children inherit it at create), and then the allocator will
+> round out allocations to the size hint alignment and size, including
+> beyond EOF so appending writes can take advantage of it....
+
+We'll try that out.  That's fsxattr::fsx_extsize?
+
+What about small files that are eventually closed, do I need to do 
+anything to reclaim the preallocated space?
+
+>
+>>> A final point is discoverability.  There is no way to discover safe
+>>> alignment for reads and writes, and which operations block io_submit(),
+>>> except by asking here, which cannot be done at runtime.  Interfaces that
+>>> provide a way to query these attributes are very important to us.
+>> As Brian pointed statfs() can be use to get f_bsize which is defined as
+>> "optimal transfer block size".
+> Well, that's what posix calls it. It's not really the optimal IO
+> size, though, it's just the IO size that avoids page cache RMW
+> cycles. For direct IO, larger tends to be better, and IO aligned to
+> the underlying geometry of the storage is even better. See, for
+> example, the "largeio" mount option, which will make XFS report the
+> stripe width in f_bsize rather than the PAGE_SIZE of the machine....
+>
+
+Well, random reads will still be faster with 512 byte alignment, yes? 
+and for random writes, you can't just make those I/Os larger, you'll 
+overwrite something.
+
+So I read "optimal" here to mean "smallest I/O size that doesn't incur a 
+penalty; but if you really need more data, making it larger will help".
 
 _______________________________________________
 xfs mailing list
