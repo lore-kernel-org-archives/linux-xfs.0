@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 62A4B7F50
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 23:05:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0099FAC002
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 21:05:52 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BE3117F50
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 23:28:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AE511304048
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 21:28:47 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Dl27zb1mCzlAaOpJ for <xfs@oss.sgi.com>;
-	Sun, 11 Oct 2015 21:05:49 -0700 (PDT)
-Date: Mon, 12 Oct 2015 15:05:45 +1100
+	GtTDFWX1CN7EV6bk for <xfs@oss.sgi.com>;
+	Sun, 11 Oct 2015 21:28:44 -0700 (PDT)
+Date: Mon, 12 Oct 2015 15:28:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v10 24/46] xfs: Add richacl support
-Message-ID: <20151012040545.GC27164@dastard>
-References: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
-	<1444604337-17651-25-git-send-email-andreas.gruenbacher@gmail.com>
-	<20151012001033.GA27164@dastard>
-	<CAHpGcMKeJHDegs2cYKaJdX4Tw43Jp30Nv_2WoSNZfBzGJKu=BQ@mail.gmail.com>
+Subject: Re: [PATCH] cancel the setfilesize transation when io error happen
+Message-ID: <20151012042827.GD27164@dastard>
+References: <55F0DF7A.7050404@huawei.com>
+	<20150915114244.GC21323@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAHpGcMKeJHDegs2cYKaJdX4Tw43Jp30Nv_2WoSNZfBzGJKu=BQ@mail.gmail.com>
+In-Reply-To: <20150915114244.GC21323@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,152 +26,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas =?iso-8859-1?Q?Gr=FCnbacher?= <andreas.gruenbacher@gmail.com>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, Linux API Mailing List <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: hch@infradead.org, Zhaohongjiang <zhaohongjiang@huawei.com>, xfs@oss.sgi.com
 
-On Mon, Oct 12, 2015 at 03:51:15AM +0200, Andreas Gr=FCnbacher wrote:
-> 2015-10-12 2:10 GMT+02:00 Dave Chinner <david@fromorbit.com>:
-> > On Mon, Oct 12, 2015 at 12:58:35AM +0200, Andreas Gruenbacher wrote:
-> >> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> >> index 5d47b4d..05dd312 100644
-> >> --- a/fs/xfs/Kconfig
-> >> +++ b/fs/xfs/Kconfig
-> >> @@ -52,6 +52,17 @@ config XFS_POSIX_ACL
-> >>
-> >>         If you don't know what Access Control Lists are, say N.
-> >>
-> >> +config XFS_RICHACL
-> >> +        bool "XFS Rich Access Control Lists (EXPERIMENTAL)"
-> >> +        depends on XFS_FS
-> >> +        select FS_RICHACL
-> >> +        help
-> >> +          Richacls are an implementation of NFSv4 ACLs, extended by f=
-ile masks
-> >> +          to cleanly integrate into the POSIX file permission model. =
- To learn
-> >> +       more about them, see http://www.bestbits.at/richacl/.
-> >> +
-> >> +          If you don't know what Richacls are, say N.
-> >> +
-> >
-> > So now we have multiple compile time ACL configs that we have to
-> > test. Personally, I see no reason for making either posix or rich
-> > acls compile time dependent. How about we just change CONFIG_FS_XFS
-> > to have "select FS_POSIX_ACL" and "select FS_RICHACL"
-> > unconditionally, and then we can get rid of all the conditional
-> > code?
-> =
+On Tue, Sep 15, 2015 at 07:42:45AM -0400, Brian Foster wrote:
+> On Thu, Sep 10, 2015 at 09:40:10AM +0800, Zhaohongjiang wrote:
+> > When I ran xfstest/073 case, the remount process was blocked to wait
+> > transactions to be zero. I found there was a io error happened, and the
+> > setfilesize transaction was not released properly. We should add the
+> > changes to cancel the io error in this case.
+> > 
+> 
+> Thanks for the patch. Was the io error by chance or part of the test? I
+> ask because it would be good to have test coverage for this if we don't
+> currently.
+> 
+> > Reproduction steps:
+> > 1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
+> > 2. mkfs.xfs xfs1.img
+> > 3. losetup -f ./xfs1.img /dev/loop0
+> > 4. mount -t xfs /dev/loop0 /home/test_dir/
+> > 5. mkdir /home/test_dir/test
+> > 6. mkfs.xfs -dfile,name=image,size=2g
+> > 7. mount -t xfs -o loop image /home/test_dir/test
+> > 8. cp a file bigger than 2g to /home/test_dir/test
+> > 9. mount -t xfs -o remount,ro /home/test_dir/test
+> > 
+> > Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
+> > ---
+> >  fs/xfs/xfs_aops.c | 15 ++++++++++++++-
+> >  1 file changed, 14 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 50ab287..fab55da 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -212,8 +212,21 @@ xfs_end_io(
+> >  		ioend->io_error = -EIO;
+> >  		goto done;
+> >  	}
+> > -	if (ioend->io_error)
+> > +	if (ioend->io_error) {
+> > +		/*
+> > +		 * We should cancel the setfilesize transation when io error
+> > +		 * happen.
+> > +		 */
+> > +		if (ioend->io_append_trans) {
+> > +			current_set_flags_nested(&ioend->io_append_trans->t_pflags,
+> > +								PF_FSTRANS);
+> > +			rwsem_acquire_read(&VFS_I(XFS_I(ioend->io_inode))->i_sb
+> > +				->s_writers.lock_map[SB_FREEZE_FS-1], 0, 1, _THIS_IP_);
+> > +			xfs_trans_cancel(ioend->io_append_trans);			
+> 
+> Trailing whitespace on the line above.
+> 
+> That aside, I wonder if it would be cleaner to put this stuff in a
+> helper similar to xfs_setfilesize_ioend(). In fact, we could probably
+> just update xfs_setfilesize_ioend() to check ioend->io_error after
+> fixing up the task flags and whatnot and cancel the transaction instead
+> of calling xfs_setfilesize(). Then, call it here also and update the new
+> comment to point out that it cancels the transaction on error. Thoughts?
 
-> I'm sure neither kind of ACLs makes sense on many tiny systems, it
-> should be possible to disable them. XFS may not make sense on those
-> kinds of systems either, that is not my call to make though.
-
-Well, the smallest systems that use XFS are typically 1-2 disk NAS
-boxes, and I can see them wanting richacls. As it is, the xfs kernel
-module is almost 1MB of object code, so it you have a small embedded
-box you don't want XFS. Almost all distros turn on ACL support I'm
-not sure that it makes sense to have these config options in XFS
-anymore....
-
-> >> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> >> index 9590a06..8c6da45 100644
-> >> --- a/fs/xfs/libxfs/xfs_format.h
-> >> +++ b/fs/xfs/libxfs/xfs_format.h
-> >> @@ -461,10 +461,18 @@ xfs_sb_has_ro_compat_feature(
-> >>  #define XFS_SB_FEAT_INCOMPAT_FTYPE   (1 << 0)        /* filetype in d=
-irent */
-> >>  #define XFS_SB_FEAT_INCOMPAT_SPINODES        (1 << 1)        /* spars=
-e inode chunks */
-> >>  #define XFS_SB_FEAT_INCOMPAT_META_UUID       (1 << 2)        /* metad=
-ata UUID */
-> >> +
-> >> +#ifdef CONFIG_XFS_RICHACL
-> >> +#define XFS_SB_FEAT_INCOMPAT_RICHACL (1 << 3)        /* richacls */
-> >> +#else
-> >> +#define XFS_SB_FEAT_INCOMPAT_RICHACL 0
-> >> +#endif
-> >> +
-> >
-> > Regardless of whether we build in richacl support, this is wrong.
-> > Feature bits are on-disk format definitions, so it will always have
-> > this value whether or not the kernel supports the feature.
-> =
-
-> This is so that xfs_mount_validate_sb() will complain when mounting a
-> richacl filesystem on a kernel which doesn't have richacl suport
-> compiled in. The same effect can be had with extra code there of
-> course.
-
-If the kernel doesn't know about a feature, then it will report
-"unknown feature". However, as of this patch set, the kernel will
-know about the richacl feature, and so the correct error message
-is to say "Rich ACLs not supported by this kernel".
-
-Also, from a disk format perspective, this is a this is a read-only
-compat feature, as kernels that don't have richacl support are still
-able to mount and walk the filesystem without errors occurring. It's
-only when allowing modifications are made that problems will arise,
-so why did you make it an incompat feature?
-
-> >> +int
-> >> +xfs_set_richacl(struct inode *inode, struct richacl *acl)
-> >> +{
-> >> +     struct xfs_inode *ip =3D XFS_I(inode);
-> >> +     umode_t mode =3D inode->i_mode;
-> >> +     int error;
-> >> +
-> >> +     if (acl) {
-> >> +             /* Don't allow acls with unmapped identifiers. */
-> >> +             if (richacl_has_unmapped_identifiers(acl))
-> >> +                     return -EINVAL;
-> >> +
-> >> +             if (richacl_equiv_mode(acl, &mode) =3D=3D 0) {
-> >> +                     xfs_set_mode(inode, mode);
-> >> +                     acl =3D NULL;
-> >> +             }
-> >
-> > Comment needed here - why does this now seem to accidentally fall
-> > through to removing the ACL?
-> =
-
-> Setting an ACL that is equivalent to a file mode is the same as
-> removing any existing ACLs and doing a chmod to that equivalent file
-> mode. It's the sams as with POSIX ACLs, and the code is the same as
-> well. I'll add a comment though.
-> =
-
-> > Also, why is this in the XFS specific
-> > code when it's generic richacl functionality that is being checked?
-> =
-
-> This turns into two non-atomic operations if we move it into generic code.
-
-I don't follow you - this isn't an atomic operation to begin with...
-
-> > Also, I really dislike the API where passing a NULL acl means to
-> > "set this acl" actually means "remove the existing ACL". Why no
-> > ->remove_acl method called from the generic code?
-> =
-
-> It's not uncommon, it saves inode operations and wiring-up code.
-
-I know it's common. All it does is put extra branches in the
-filesystem code to do this, because remove is a different operation
-to set. The API sucks, and we're not limited on inode operations,
-and the operator overloading makes the filesystem code unnecessarily
-complex as it has to detect when to branch out ot remove or not...
+Agreed, I made this modification on commit. See below.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
+
+cancel the setfilesize transation when io error happen
+
+From: Zhaohongjiang <zhaohongjiang@huawei.com>
+
+When I ran xfstest/073 case, the remount process was blocked to wait
+transactions to be zero. I found there was a io error happened, and the
+setfilesize transaction was not released properly. We should add the
+changes to cancel the io error in this case.
+
+Reproduction steps:
+1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
+2. mkfs.xfs xfs1.img
+3. losetup -f ./xfs1.img /dev/loop0
+4. mount -t xfs /dev/loop0 /home/test_dir/
+5. mkdir /home/test_dir/test
+6. mkfs.xfs -dfile,name=image,size=2g
+7. mount -t xfs -o loop image /home/test_dir/test
+8. cp a file bigger than 2g to /home/test_dir/test
+9. mount -t xfs -o remount,ro /home/test_dir/test
+
+[ dchinner: moved io error detection to xfs_setfilesize_ioend() after
+  transaction context restoration. ]
+
+Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_aops.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index aa9b441..c1c87f9 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -172,6 +172,12 @@ xfs_setfilesize_ioend(
+ 	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
+ 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+ 
++	/* we abort the update if there was an IO error */
++	if (ioend->io_error) {
++		xfs_trans_cancel(tp);
++		return ioend->io_error;
++	}
++
+ 	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+ }
+ 
+@@ -212,14 +218,17 @@ xfs_end_io(
+ 		ioend->io_error = -EIO;
+ 		goto done;
+ 	}
+-	if (ioend->io_error)
+-		goto done;
+ 
+ 	/*
+ 	 * For unwritten extents we need to issue transactions to convert a
+ 	 * range to normal written extens after the data I/O has finished.
++	 * Detecting and handling completion IO errors is done individually
++	 * for each case as different cleanup operations need to be performed
++	 * on error.
+ 	 */
+ 	if (ioend->io_type == XFS_IO_UNWRITTEN) {
++		if (ioend->io_error)
++			goto done;
+ 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+ 						  ioend->io_size);
+ 	} else if (ioend->io_append_trans) {
 
 _______________________________________________
 xfs mailing list
