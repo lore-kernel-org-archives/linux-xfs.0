@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE3117F50
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 23:28:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AE511304048
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 21:28:47 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 505F97F50
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 23:59:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2DD8A8F8033
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 21:59:02 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	GtTDFWX1CN7EV6bk for <xfs@oss.sgi.com>;
-	Sun, 11 Oct 2015 21:28:44 -0700 (PDT)
-Date: Mon, 12 Oct 2015 15:28:27 +1100
+	D7xUtqafBX4TpITW for <xfs@oss.sgi.com>;
+	Sun, 11 Oct 2015 21:58:58 -0700 (PDT)
+Date: Mon, 12 Oct 2015 15:58:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] cancel the setfilesize transation when io error happen
-Message-ID: <20151012042827.GD27164@dastard>
-References: <55F0DF7A.7050404@huawei.com>
-	<20150915114244.GC21323@bfoster.bfoster>
+Subject: Re: [PATCH] xfs: validate metadata LSNs against log on v5 superblocks
+Message-ID: <20151012045817.GE27164@dastard>
+References: <1443183869-16487-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150915114244.GC21323@bfoster.bfoster>
+In-Reply-To: <1443183869-16487-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +30,200 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: hch@infradead.org, Zhaohongjiang <zhaohongjiang@huawei.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 15, 2015 at 07:42:45AM -0400, Brian Foster wrote:
-> On Thu, Sep 10, 2015 at 09:40:10AM +0800, Zhaohongjiang wrote:
-> > When I ran xfstest/073 case, the remount process was blocked to wait
-> > transactions to be zero. I found there was a io error happened, and the
-> > setfilesize transaction was not released properly. We should add the
-> > changes to cancel the io error in this case.
-> > 
+On Fri, Sep 25, 2015 at 08:24:29AM -0400, Brian Foster wrote:
+> Since the onset of v5 superblocks, the LSN of the last modification has
+> been included in a variety of on-disk data structures. This LSN is used
+> to provide log recovery ordering guarantees (e.g., to ensure an older
+> log recovery item is not replayed over a newer target data structure).
 > 
-> Thanks for the patch. Was the io error by chance or part of the test? I
-> ask because it would be good to have test coverage for this if we don't
-> currently.
+> While this works correctly from the point a filesystem is formatted and
+> mounted, userspace tools have some problematic behaviors that defeat
+> this mechanism. For example, xfs_repair historically zeroes out the log
+> unconditionally (regardless of whether corruption is detected). If this
+> occurs, the LSN of the filesystem is reset and the log is now in a
+> problematic state with respect to on-disk metadata structures that might
+> have a larger LSN. Until either the log catches up to the highest
+> previously used metadata LSN or each affected data structure is modified
+> and written out without incident (which resets the metadata LSN), log
+> recovery is susceptible to filesystem corruption.
 > 
-> > Reproduction steps:
-> > 1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
-> > 2. mkfs.xfs xfs1.img
-> > 3. losetup -f ./xfs1.img /dev/loop0
-> > 4. mount -t xfs /dev/loop0 /home/test_dir/
-> > 5. mkdir /home/test_dir/test
-> > 6. mkfs.xfs -dfile,name=image,size=2g
-> > 7. mount -t xfs -o loop image /home/test_dir/test
-> > 8. cp a file bigger than 2g to /home/test_dir/test
-> > 9. mount -t xfs -o remount,ro /home/test_dir/test
-> > 
-> > Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
-> > ---
-> >  fs/xfs/xfs_aops.c | 15 ++++++++++++++-
-> >  1 file changed, 14 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 50ab287..fab55da 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -212,8 +212,21 @@ xfs_end_io(
-> >  		ioend->io_error = -EIO;
-> >  		goto done;
-> >  	}
-> > -	if (ioend->io_error)
-> > +	if (ioend->io_error) {
-> > +		/*
-> > +		 * We should cancel the setfilesize transation when io error
-> > +		 * happen.
-> > +		 */
-> > +		if (ioend->io_append_trans) {
-> > +			current_set_flags_nested(&ioend->io_append_trans->t_pflags,
-> > +								PF_FSTRANS);
-> > +			rwsem_acquire_read(&VFS_I(XFS_I(ioend->io_inode))->i_sb
-> > +				->s_writers.lock_map[SB_FREEZE_FS-1], 0, 1, _THIS_IP_);
-> > +			xfs_trans_cancel(ioend->io_append_trans);			
+> This problem is ultimately addressed and repaired in the associated
+> userspace tools. The kernel is still responsible to detect the problem
+> and notify the user that something is wrong. Check the superblock LSN at
+> mount time and fail the mount if it is invalid. From that point on,
+> trigger verifier failure on any metadata I/O where an invalid LSN is
+> detected. This results in a filesystem shutdown and guarantees that we
+> do not log metadata changes with invalid LSNs on disk. Since this is a
+> known issue with a known recovery path, present a warning to instruct
+> the user how to recover.
 > 
-> Trailing whitespace on the line above.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> That aside, I wonder if it would be cleaner to put this stuff in a
-> helper similar to xfs_setfilesize_ioend(). In fact, we could probably
-> just update xfs_setfilesize_ioend() to check ioend->io_error after
-> fixing up the task flags and whatnot and cancel the transaction instead
-> of calling xfs_setfilesize(). Then, call it here also and update the new
-> comment to point out that it cancels the transaction on error. Thoughts?
+> Here's a first non-rfc version of v5 sb metadata LSN verification. The
+> biggest difference with this version is the attempt to mitigate lock
+> contention in the LSN helper and corresponding tweak to how the log
+> fields are updated when the head wraps around the end of the log. The
+> idea is to do a racy check and only acquire the lock when there appears
+> to be risk of an invalid LSN.
+> 
+> AFAICS, this is not safe with the current code as the current LSN can be
+> sampled in a state that transiently pushes the LSN forward to the end of
+> the next cycle (if the cycle is updated, both cycle/block are sampled,
+> and then the block is updated). This means that a false negative can
+> occur if an invalid LSN happens to exist but is within the bounds of the
+> next full log cycle. Therefore, this patch also tweaks the current LSN
+> update and sample code to rewind the current block before the cycle is
+> updated and uses a memory barrier to guarantee that the sample code
+> always sees the rewound current block if it sees the updated cycle. Note
+> that it is still possible to see the rewound block before the cycle
+> update (a transient backwards LSN), but this is safe because such false
+> positives are explicitly reverified with the lock held before failure is
+> triggered.
+> 
+> Otherwise, this refactors/relocates the helpers and converts back to the
+> more simple behavior of verifier failure on detection of invalid
+> metadata LSN. Thoughts, reviews, flames appreciated.
+> 
+> Brian
+.....
+> @@ -243,8 +244,14 @@ bool
+>  xfs_btree_lblock_verify_crc(
+>  	struct xfs_buf		*bp)
+>  {
+> -	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
+> +	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +
+> +	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb)) {
 
-Agreed, I made this modification on commit. See below.
+mp->m_sb.
+
+>  xfs_btree_sblock_verify_crc(
+>  	struct xfs_buf		*bp)
+>  {
+> -	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
+> +	struct xfs_btree_block  *block = XFS_BUF_TO_BLOCK(bp);
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +
+> +	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb)) {
+
+Ditto.
+
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index be43248..e89a0f8 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -39,6 +39,7 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_cksum.h"
+>  #include "xfs_buf_item.h"
+> +#include "xfs_log.h"
+>  
+>  /*
+>   * xfs_da_btree.c
+> @@ -150,6 +151,8 @@ xfs_da3_node_verify(
+>  			return false;
+>  		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+>  			return false;
+> +		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+> +			return false;
+>  	} else {
+>  		if (ichdr.magic != XFS_DA_NODE_MAGIC)
+>  			return false;
+> @@ -322,6 +325,7 @@ xfs_da3_node_create(
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+>  
+> +		memset(hdr3, 0, sizeof(struct xfs_da3_node_hdr));
+>  		ichdr.magic = XFS_DA3_NODE_MAGIC;
+>  		hdr3->info.blkno = cpu_to_be64(bp->b_bn);
+>  		hdr3->info.owner = cpu_to_be64(args->dp->i_ino);
+
+Is this a bug fix or just cleanliness? The LSN gets written into the
+header before it goes to disk, so there is nothing uninitialised
+that I am unaware of ending up on disk from this. 
+
+> @@ -60,6 +61,7 @@ xfs_symlink_hdr_set(
+>  	if (!xfs_sb_version_hascrc(&mp->m_sb))
+>  		return 0;
+>  
+> +	memset(dsl, 0, sizeof(struct xfs_dsymlink_hdr));
+>  	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
+>  	dsl->sl_offset = cpu_to_be32(offset);
+>  	dsl->sl_bytes = cpu_to_be32(size);
+
+Ditto.
+
+> index aaadee0..0c8ef76 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3165,11 +3165,19 @@ xlog_state_switch_iclogs(
+>  	}
+>  
+>  	if (log->l_curr_block >= log->l_logBBsize) {
+> +		/*
+> +		 * Rewind the current block before the cycle is bumped to make
+> +		 * sure that the combined LSN never transiently moves forward
+> +		 * when the log wraps to the next cycle. This is to support the
+> +		 * unlocked sample of these fields from xlog_valid_lsn(). Most
+> +		 * other cases should acquire l_icloglock.
+> +		 */
+> +		log->l_curr_block -= log->l_logBBsize;
+> +		ASSERT(log->l_curr_block >= 0);
+> +		smp_wmb();
+>  		log->l_curr_cycle++;
+
+OK, so we make sure the write of the l_curr_block cannot be
+reordered to after the write of the l_curr_cycle.
+
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 950f3f9..8daba74 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -560,4 +560,55 @@ static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
+>  	remove_wait_queue(wq, &wait);
+>  }
+>  
+> +/*
+> + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+> + * means that the next log record that includes this metadata could have a
+> + * smaller LSN. In turn, this means that the modification in the log would not
+> + * replay.
+> + */
+> +static inline bool
+> +xlog_valid_lsn(
+> +	struct xlog	*log,
+> +	xfs_lsn_t	lsn)
+> +{
+> +	int		cur_cycle;
+> +	int		cur_block;
+> +	bool		valid = true;
+> +
+> +	/*
+> +	 * First, sample the current lsn without locking to avoid added
+> +	 * contention from metadata I/O. The current cycle and block are updated
+> +	 * (in xlog_state_switch_iclogs()) and read here in a particular order
+> +	 * to avoid false negatives (e.g., thinking the metadata LSN is valid
+> +	 * when it is not).
+> +	 *
+> +	 * The current block is always rewound before the cycle is bumped in
+> +	 * xlog_state_switch_iclogs() to ensure the current LSN is never seen in
+> +	 * a transiently forward state. Instead, we can see the LSN in a
+> +	 * transiently behind state if we happen to race with a cycle wrap.
+> +	 */
+> +	cur_cycle = ACCESS_ONCE(log->l_curr_cycle);
+> +	smp_rmb();
+> +	cur_block = ACCESS_ONCE(log->l_curr_block);
+
+And we make sure the read of the block cannot be reordered to before
+the l_curr_cycle. Looks ok to me.
+
+I'm going to commit this as is because I don't think the memset()s
+above actuallly change anything on disk. I can always redo the
+commit if this is in error...
 
 Cheers,
 
@@ -99,73 +231,6 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-cancel the setfilesize transation when io error happen
-
-From: Zhaohongjiang <zhaohongjiang@huawei.com>
-
-When I ran xfstest/073 case, the remount process was blocked to wait
-transactions to be zero. I found there was a io error happened, and the
-setfilesize transaction was not released properly. We should add the
-changes to cancel the io error in this case.
-
-Reproduction steps:
-1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
-2. mkfs.xfs xfs1.img
-3. losetup -f ./xfs1.img /dev/loop0
-4. mount -t xfs /dev/loop0 /home/test_dir/
-5. mkdir /home/test_dir/test
-6. mkfs.xfs -dfile,name=image,size=2g
-7. mount -t xfs -o loop image /home/test_dir/test
-8. cp a file bigger than 2g to /home/test_dir/test
-9. mount -t xfs -o remount,ro /home/test_dir/test
-
-[ dchinner: moved io error detection to xfs_setfilesize_ioend() after
-  transaction context restoration. ]
-
-Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_aops.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index aa9b441..c1c87f9 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -172,6 +172,12 @@ xfs_setfilesize_ioend(
- 	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
- 
-+	/* we abort the update if there was an IO error */
-+	if (ioend->io_error) {
-+		xfs_trans_cancel(tp);
-+		return ioend->io_error;
-+	}
-+
- 	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
- }
- 
-@@ -212,14 +218,17 @@ xfs_end_io(
- 		ioend->io_error = -EIO;
- 		goto done;
- 	}
--	if (ioend->io_error)
--		goto done;
- 
- 	/*
- 	 * For unwritten extents we need to issue transactions to convert a
- 	 * range to normal written extens after the data I/O has finished.
-+	 * Detecting and handling completion IO errors is done individually
-+	 * for each case as different cleanup operations need to be performed
-+	 * on error.
- 	 */
- 	if (ioend->io_type == XFS_IO_UNWRITTEN) {
-+		if (ioend->io_error)
-+			goto done;
- 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
- 						  ioend->io_size);
- 	} else if (ioend->io_append_trans) {
 
 _______________________________________________
 xfs mailing list
