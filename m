@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B686D7F5E
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 16:45:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 529B4AC004
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 14:45:37 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A44517F5F
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 17:23:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9374F304053
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 15:23:50 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	G1qs9QgcYeLmPtMX for <xfs@oss.sgi.com>;
-	Mon, 12 Oct 2015 14:45:35 -0700 (PDT)
-Date: Tue, 13 Oct 2015 08:45:32 +1100
+	UFUyrdbDEcECPWi7 for <xfs@oss.sgi.com>;
+	Mon, 12 Oct 2015 15:23:14 -0700 (PDT)
+Date: Tue, 13 Oct 2015 09:23:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs_repair: fix unaligned accesses
-Message-ID: <20151012214532.GC31326@dastard>
-References: <56170906.5090301@redhat.com> <56170974.5020604@sandeen.net>
-	<20151011222618.GX27164@dastard> <561C26B4.3080008@sandeen.net>
+Subject: Re: Question about non asynchronous aio calls.
+Message-ID: <20151012222311.GD31326@dastard>
+References: <20151007141833.GB11716@scylladb.com>
+	<56152B0F.2040809@sandeen.net>
+	<20151007150833.GB30191@bfoster.bfoster>
+	<56153685.3040401@sandeen.net> <561560B2.1080902@scylladb.com>
+	<20151008042831.GU27164@dastard> <5615FD76.1090309@scylladb.com>
+	<20151008082307.GE11716@scylladb.com>
+	<20151008114622.GV27164@dastard> <561BA970.8080504@scylladb.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <561C26B4.3080008@sandeen.net>
+In-Reply-To: <561BA970.8080504@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,58 +35,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Avi Kivity <avi@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Gleb Natapov <gleb@scylladb.com>, xfs@oss.sgi.com
 
-On Mon, Oct 12, 2015 at 04:31:32PM -0500, Eric Sandeen wrote:
+On Mon, Oct 12, 2015 at 03:37:04PM +0300, Avi Kivity wrote:
+> On 10/08/2015 02:46 PM, Dave Chinner wrote:
+> >On Thu, Oct 08, 2015 at 11:23:07AM +0300, Gleb Natapov wrote:
+> >>On Thu, Oct 08, 2015 at 08:21:58AM +0300, Avi Kivity wrote:
+> >>>>>>I fixed something similar in ext4 at the time, FWIW.
+> >>>>>Makes sense.
+> >>>>>
+> >>>>>Is there a way to relax this for reads?
+> >>>>The above mostly only applies to writes. Reads don't modify data so
+> >>>>racing unaligned reads against other reads won't given unexpected
+> >>>>results and so aren't serialised.
+> >>>>
+> >>>>i.e. serialisation will only occur when:
+> >>>>	- unaligned write IO will serialise until sub-block zeroing
+> >>>>	  is complete.
+> >>>>	- write IO extending EOF will serialis until post-EOF
+> >>>>	  zeroing is complete
+> >>>
+> >>>By "complete" here, do you mean that a call to truncate() returned, or that
+> >>>its results reached the disk an unknown time later?
+> >>>
+> >No, I'm talking purely about DIO here. If you do write that
+> >starts beyond the existing EOF, there is a region between the
+> >current EOF and the offset the write starts at. i.e.
+> >
+> >    0             EOF            offset     new EOF
+> >    +dddddddddddddd+..............+nnnnnnnnnnn+
+> >
+> >It is the region between EOF and offset that we must ensure is made
+> >up of either holes, unwritten extents or fully zeroed blocks before
+> >allowing the write to proceed. If we have to zero allocated blocks,
+> >then we have to ensure that completes before the write can start.
+> >This means that when we update the EOF on completion of the write,
+> >we don't expose stale data in blocks that were between EOF and
+> >offset...
 > 
-> 
-> On 10/11/15 5:26 PM, Dave Chinner wrote:
-> > On Thu, Oct 08, 2015 at 07:25:24PM -0500, Eric Sandeen wrote:
-> >> This fixes some unaligned accesses spotted by libubsan in repair.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>  repair/dinode.c   |   19 +++++++++----------
-> >>  repair/prefetch.c |    4 ++--
-> >>  2 files changed, 11 insertions(+), 12 deletions(-)
-> >>
-> >> diff --git a/repair/dinode.c b/repair/dinode.c
-> >> index f78f907..44bbb8f 100644
-> >> --- a/repair/dinode.c
-> >> +++ b/repair/dinode.c
-> >> @@ -960,13 +960,13 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
-> >>  		 * btree, we'd do it right here.  For now, if there's a
-> >>  		 * problem, we'll bail out and presumably clear the inode.
-> >>  		 */
-> >> -		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
-> >> +		if (!verify_dfsbno(mp, get_unaligned_be64(&pp[i])))  {
-> > 
-> > I don't understand - when are pointers in the BMBT not 64 bit
-> > aligned? The buffers are allocated by memalign to be 64 bit aligned,
-> > and all the internal BMBT structures are 64 bit aligned, too. i.e
-> > the BMBT block header is 24/72 bytes in length (depending on CRCs),
-> > the pointers are 64 bit, and the records are 128 bit.
-> > 
-> > So where's the unaligned access coming from?
-> 
-> Ok, so on a recheck, I'm not crazy w.r.t. what gcc said, anyway:
-> 
-> dinode.c:964:26: runtime error: load of misaligned address 0x7fc4f800ef54 for type 'xfs_bmbt_ptr_t', which requires 8 byte alignment
-> 0x7fc4f800ef54: note: pointer points here
->   00 00 00 00 00 00 00 00  00 20 38 5e 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->               ^ 
-> 
-> with some added printfs, it came from:
-> 
->         pp = XFS_BMDR_PTR_ADDR(dib, 1,
->                 xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
->         printf("dib at %p pp at %p\n", dib, pp);
-> 
-> dib at 0x7fc4f800eeb0 pp at 0x7fc4f800ef54
+> Thanks.  We found, experimentally, that io_submit(write_at_eof)
+> followed by (without waiting)
+> io_submit(write_at_what_would_be_the_new_eof) occasionally blocks.
 
-Ah, ok, it's in extent format in the inode fork, not in btree
-format in blocks. Let me go back and look at it again.
+Yes, that matches up with needing to wait for IO completion to
+update the inode size before submitting the next IO.
+
+> So I guess we have to employ a train algorithm here and keep at most
+> one aio in flight for append loads (which are very common for us).
+
+Or use prealloc that extends the file and on staartup use and
+algorithm that detects the end of data by looking for zeroed area
+that hasn't been written.  SEEK_DATA/SEEK_HOLE can be used to do
+this efficiently...
+
+> >>I think Brian already answered that one with:
+> >>
+> >>   There are no such pitfalls as far as I'm aware. The entire AIO
+> >>   submission synchronization sequence triggers off an in-memory i_size
+> >>   check in xfs_file_aio_write_checks(). The in-memory i_size is updated in
+> >>   the truncate path (xfs_setattr_size()) via truncate_setsize(), so at
+> >>   that point the new size should be visible to subsequent AIO writers.
+> >Different situation as truncate serialises all IO. Extending the file
+> >via truncate also runs the same "EOF zeroing" that the DIO code runs
+> >above, for the same reasons.
+> 
+> Does that mean that truncate() will wait for inflight aios, or that
+> new aios will wait for the truncate() to complete, or both?
+
+Both.
+
+> >If you want to limit fragmentation without adding and overhead on
+> >XFS for non-sparse files (which it sounds like your case), then the
+> >best thing to use in XFS is the per-inode extent size hints. You set
+> >it on the file when first creating it (or the parent directory so
+> >all children inherit it at create), and then the allocator will
+> >round out allocations to the size hint alignment and size, including
+> >beyond EOF so appending writes can take advantage of it....
+> 
+> We'll try that out.  That's fsxattr::fsx_extsize?
+
+*nod*
+
+> What about small files that are eventually closed, do I need to do
+> anything to reclaim the preallocated space?
+
+Truncate to the current size (i.e. new size = old size) will remove
+the extents beyond EOF, so will punching a hole from EOF for a
+distance larger than the extent size hint.
+
+> >>>A final point is discoverability.  There is no way to discover safe
+> >>>alignment for reads and writes, and which operations block io_submit(),
+> >>>except by asking here, which cannot be done at runtime.  Interfaces that
+> >>>provide a way to query these attributes are very important to us.
+> >>As Brian pointed statfs() can be use to get f_bsize which is defined as
+> >>"optimal transfer block size".
+> >Well, that's what posix calls it. It's not really the optimal IO
+> >size, though, it's just the IO size that avoids page cache RMW
+> >cycles. For direct IO, larger tends to be better, and IO aligned to
+> >the underlying geometry of the storage is even better. See, for
+> >example, the "largeio" mount option, which will make XFS report the
+> >stripe width in f_bsize rather than the PAGE_SIZE of the machine....
+> >
+> 
+> Well, random reads will still be faster with 512 byte alignment,
+> yes?
+
+Define "faster". :)
+
+If you are talking about minimal latency, then an
+individual IO will be marginally faster. If you are worried about
+bulk throughput, then you storage will be IOPS bound (hence
+destroying latency determinism) and it won't be faster by any metric
+you care to measure because you'll end up with blocking in the
+request queues during submission...
+
+> and for random writes, you can't just make those I/Os larger,
+> you'll overwrite something.
+> 
+> So I read "optimal" here to mean "smallest I/O size that doesn't
+> incur a penalty; but if you really need more data, making it larger
+> will help".
+
+You hit the nail on the head. For an asynchornous IO engine like
+you seem to be building, I'd be aiming for an IO size that maximises
+the bulk throughput to/from the storage devices, rather than one
+that aims for minimum latency on any one individiual IO. i.e. aim
+for the minimum IO size that acheives >80% of the usable bandwidth
+the storage device has...
 
 Cheers,
 
