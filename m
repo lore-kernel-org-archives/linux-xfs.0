@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 505F97F50
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 23:59:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2DD8A8F8033
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 21:59:02 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	D7xUtqafBX4TpITW for <xfs@oss.sgi.com>;
-	Sun, 11 Oct 2015 21:58:58 -0700 (PDT)
-Date: Mon, 12 Oct 2015 15:58:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: validate metadata LSNs against log on v5 superblocks
-Message-ID: <20151012045817.GE27164@dastard>
-References: <1443183869-16487-1-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id BFB737F37
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 00:57:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AF8028F8033
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 22:57:38 -0700 (PDT)
+Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
+	[209.85.217.181]) by cuda.sgi.com with ESMTP id
+	C2vPkslI7kCuawH2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 11 Oct 2015 22:57:36 -0700 (PDT)
+Received: by lbwr8 with SMTP id r8so130562416lbw.2
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2015 22:57:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1443183869-16487-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20151012040545.GC27164@dastard>
+References: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
+	<1444604337-17651-25-git-send-email-andreas.gruenbacher@gmail.com>
+	<20151012001033.GA27164@dastard>
+	<CAHpGcMKeJHDegs2cYKaJdX4Tw43Jp30Nv_2WoSNZfBzGJKu=BQ@mail.gmail.com>
+	<20151012040545.GC27164@dastard>
+Date: Mon, 12 Oct 2015 07:57:34 +0200
+Message-ID: <CAHc6FU55eOK4gWH1bhKvoujQ1zkT+we0xcfPUOeWrF_X0XHXZg@mail.gmail.com>
+Subject: Re: [PATCH v10 24/46] xfs: Add richacl support
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,214 +31,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API Mailing List <linux-api@vger.kernel.org>, =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>, Trond Myklebust <trond.myklebust@primarydata.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri, Sep 25, 2015 at 08:24:29AM -0400, Brian Foster wrote:
-> Since the onset of v5 superblocks, the LSN of the last modification has
-> been included in a variety of on-disk data structures. This LSN is used
-> to provide log recovery ordering guarantees (e.g., to ensure an older
-> log recovery item is not replayed over a newer target data structure).
-> 
-> While this works correctly from the point a filesystem is formatted and
-> mounted, userspace tools have some problematic behaviors that defeat
-> this mechanism. For example, xfs_repair historically zeroes out the log
-> unconditionally (regardless of whether corruption is detected). If this
-> occurs, the LSN of the filesystem is reset and the log is now in a
-> problematic state with respect to on-disk metadata structures that might
-> have a larger LSN. Until either the log catches up to the highest
-> previously used metadata LSN or each affected data structure is modified
-> and written out without incident (which resets the metadata LSN), log
-> recovery is susceptible to filesystem corruption.
-> 
-> This problem is ultimately addressed and repaired in the associated
-> userspace tools. The kernel is still responsible to detect the problem
-> and notify the user that something is wrong. Check the superblock LSN at
-> mount time and fail the mount if it is invalid. From that point on,
-> trigger verifier failure on any metadata I/O where an invalid LSN is
-> detected. This results in a filesystem shutdown and guarantees that we
-> do not log metadata changes with invalid LSNs on disk. Since this is a
-> known issue with a known recovery path, present a warning to instruct
-> the user how to recover.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Here's a first non-rfc version of v5 sb metadata LSN verification. The
-> biggest difference with this version is the attempt to mitigate lock
-> contention in the LSN helper and corresponding tweak to how the log
-> fields are updated when the head wraps around the end of the log. The
-> idea is to do a racy check and only acquire the lock when there appears
-> to be risk of an invalid LSN.
-> 
-> AFAICS, this is not safe with the current code as the current LSN can be
-> sampled in a state that transiently pushes the LSN forward to the end of
-> the next cycle (if the cycle is updated, both cycle/block are sampled,
-> and then the block is updated). This means that a false negative can
-> occur if an invalid LSN happens to exist but is within the bounds of the
-> next full log cycle. Therefore, this patch also tweaks the current LSN
-> update and sample code to rewind the current block before the cycle is
-> updated and uses a memory barrier to guarantee that the sample code
-> always sees the rewound current block if it sees the updated cycle. Note
-> that it is still possible to see the rewound block before the cycle
-> update (a transient backwards LSN), but this is safe because such false
-> positives are explicitly reverified with the lock held before failure is
-> triggered.
-> 
-> Otherwise, this refactors/relocates the helpers and converts back to the
-> more simple behavior of verifier failure on detection of invalid
-> metadata LSN. Thoughts, reviews, flames appreciated.
-> 
-> Brian
-.....
-> @@ -243,8 +244,14 @@ bool
->  xfs_btree_lblock_verify_crc(
->  	struct xfs_buf		*bp)
->  {
-> -	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
-> +	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +
-> +	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb)) {
-
-mp->m_sb.
-
->  xfs_btree_sblock_verify_crc(
->  	struct xfs_buf		*bp)
->  {
-> -	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
-> +	struct xfs_btree_block  *block = XFS_BUF_TO_BLOCK(bp);
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +
-> +	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb)) {
-
-Ditto.
-
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index be43248..e89a0f8 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -39,6 +39,7 @@
->  #include "xfs_trace.h"
->  #include "xfs_cksum.h"
->  #include "xfs_buf_item.h"
-> +#include "xfs_log.h"
->  
->  /*
->   * xfs_da_btree.c
-> @@ -150,6 +151,8 @@ xfs_da3_node_verify(
->  			return false;
->  		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
->  			return false;
-> +		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
-> +			return false;
->  	} else {
->  		if (ichdr.magic != XFS_DA_NODE_MAGIC)
->  			return false;
-> @@ -322,6 +325,7 @@ xfs_da3_node_create(
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
->  
-> +		memset(hdr3, 0, sizeof(struct xfs_da3_node_hdr));
->  		ichdr.magic = XFS_DA3_NODE_MAGIC;
->  		hdr3->info.blkno = cpu_to_be64(bp->b_bn);
->  		hdr3->info.owner = cpu_to_be64(args->dp->i_ino);
-
-Is this a bug fix or just cleanliness? The LSN gets written into the
-header before it goes to disk, so there is nothing uninitialised
-that I am unaware of ending up on disk from this. 
-
-> @@ -60,6 +61,7 @@ xfs_symlink_hdr_set(
->  	if (!xfs_sb_version_hascrc(&mp->m_sb))
->  		return 0;
->  
-> +	memset(dsl, 0, sizeof(struct xfs_dsymlink_hdr));
->  	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
->  	dsl->sl_offset = cpu_to_be32(offset);
->  	dsl->sl_bytes = cpu_to_be32(size);
-
-Ditto.
-
-> index aaadee0..0c8ef76 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3165,11 +3165,19 @@ xlog_state_switch_iclogs(
->  	}
->  
->  	if (log->l_curr_block >= log->l_logBBsize) {
-> +		/*
-> +		 * Rewind the current block before the cycle is bumped to make
-> +		 * sure that the combined LSN never transiently moves forward
-> +		 * when the log wraps to the next cycle. This is to support the
-> +		 * unlocked sample of these fields from xlog_valid_lsn(). Most
-> +		 * other cases should acquire l_icloglock.
-> +		 */
-> +		log->l_curr_block -= log->l_logBBsize;
-> +		ASSERT(log->l_curr_block >= 0);
-> +		smp_wmb();
->  		log->l_curr_cycle++;
-
-OK, so we make sure the write of the l_curr_block cannot be
-reordered to after the write of the l_curr_cycle.
-
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 950f3f9..8daba74 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -560,4 +560,55 @@ static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
->  	remove_wait_queue(wq, &wait);
->  }
->  
-> +/*
-> + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
-> + * means that the next log record that includes this metadata could have a
-> + * smaller LSN. In turn, this means that the modification in the log would not
-> + * replay.
-> + */
-> +static inline bool
-> +xlog_valid_lsn(
-> +	struct xlog	*log,
-> +	xfs_lsn_t	lsn)
-> +{
-> +	int		cur_cycle;
-> +	int		cur_block;
-> +	bool		valid = true;
-> +
-> +	/*
-> +	 * First, sample the current lsn without locking to avoid added
-> +	 * contention from metadata I/O. The current cycle and block are updated
-> +	 * (in xlog_state_switch_iclogs()) and read here in a particular order
-> +	 * to avoid false negatives (e.g., thinking the metadata LSN is valid
-> +	 * when it is not).
-> +	 *
-> +	 * The current block is always rewound before the cycle is bumped in
-> +	 * xlog_state_switch_iclogs() to ensure the current LSN is never seen in
-> +	 * a transiently forward state. Instead, we can see the LSN in a
-> +	 * transiently behind state if we happen to race with a cycle wrap.
-> +	 */
-> +	cur_cycle = ACCESS_ONCE(log->l_curr_cycle);
-> +	smp_rmb();
-> +	cur_block = ACCESS_ONCE(log->l_curr_block);
-
-And we make sure the read of the block cannot be reordered to before
-the l_curr_cycle. Looks ok to me.
-
-I'm going to commit this as is because I don't think the memset()s
-above actuallly change anything on disk. I can always redo the
-commit if this is in error...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBPY3QgMTIsIDIwMTUgYXQgNjowNSBBTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9t
+b3JiaXQuY29tPiB3cm90ZToKPiBPbiBNb24sIE9jdCAxMiwgMjAxNSBhdCAwMzo1MToxNUFNICsw
+MjAwLCBBbmRyZWFzIEdyw7xuYmFjaGVyIHdyb3RlOgo+PiAyMDE1LTEwLTEyIDI6MTAgR01UKzAy
+OjAwIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT46Cj4+ID4gT24gTW9uLCBPY3Qg
+MTIsIDIwMTUgYXQgMTI6NTg6MzVBTSArMDIwMCwgQW5kcmVhcyBHcnVlbmJhY2hlciB3cm90ZToK
+Pj4gPj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9LY29uZmlnIGIvZnMveGZzL0tjb25maWcKPj4gPj4g
+aW5kZXggNWQ0N2I0ZC4uMDVkZDMxMiAxMDA2NDQKPj4gPj4gLS0tIGEvZnMveGZzL0tjb25maWcK
+Pj4gPj4gKysrIGIvZnMveGZzL0tjb25maWcKPj4gPj4gQEAgLTUyLDYgKzUyLDE3IEBAIGNvbmZp
+ZyBYRlNfUE9TSVhfQUNMCj4+ID4+Cj4+ID4+ICAgICAgICAgSWYgeW91IGRvbid0IGtub3cgd2hh
+dCBBY2Nlc3MgQ29udHJvbCBMaXN0cyBhcmUsIHNheSBOLgo+PiA+Pgo+PiA+PiArY29uZmlnIFhG
+U19SSUNIQUNMCj4+ID4+ICsgICAgICAgIGJvb2wgIlhGUyBSaWNoIEFjY2VzcyBDb250cm9sIExp
+c3RzIChFWFBFUklNRU5UQUwpIgo+PiA+PiArICAgICAgICBkZXBlbmRzIG9uIFhGU19GUwo+PiA+
+PiArICAgICAgICBzZWxlY3QgRlNfUklDSEFDTAo+PiA+PiArICAgICAgICBoZWxwCj4+ID4+ICsg
+ICAgICAgICAgUmljaGFjbHMgYXJlIGFuIGltcGxlbWVudGF0aW9uIG9mIE5GU3Y0IEFDTHMsIGV4
+dGVuZGVkIGJ5IGZpbGUgbWFza3MKPj4gPj4gKyAgICAgICAgICB0byBjbGVhbmx5IGludGVncmF0
+ZSBpbnRvIHRoZSBQT1NJWCBmaWxlIHBlcm1pc3Npb24gbW9kZWwuICBUbyBsZWFybgo+PiA+PiAr
+ICAgICAgIG1vcmUgYWJvdXQgdGhlbSwgc2VlIGh0dHA6Ly93d3cuYmVzdGJpdHMuYXQvcmljaGFj
+bC8uCj4+ID4+ICsKPj4gPj4gKyAgICAgICAgICBJZiB5b3UgZG9uJ3Qga25vdyB3aGF0IFJpY2hh
+Y2xzIGFyZSwgc2F5IE4uCj4+ID4+ICsKPj4gPgo+PiA+IFNvIG5vdyB3ZSBoYXZlIG11bHRpcGxl
+IGNvbXBpbGUgdGltZSBBQ0wgY29uZmlncyB0aGF0IHdlIGhhdmUgdG8KPj4gPiB0ZXN0LiBQZXJz
+b25hbGx5LCBJIHNlZSBubyByZWFzb24gZm9yIG1ha2luZyBlaXRoZXIgcG9zaXggb3IgcmljaAo+
+PiA+IGFjbHMgY29tcGlsZSB0aW1lIGRlcGVuZGVudC4gSG93IGFib3V0IHdlIGp1c3QgY2hhbmdl
+IENPTkZJR19GU19YRlMKPj4gPiB0byBoYXZlICJzZWxlY3QgRlNfUE9TSVhfQUNMIiBhbmQgInNl
+bGVjdCBGU19SSUNIQUNMIgo+PiA+IHVuY29uZGl0aW9uYWxseSwgYW5kIHRoZW4gd2UgY2FuIGdl
+dCByaWQgb2YgYWxsIHRoZSBjb25kaXRpb25hbAo+PiA+IGNvZGU/Cj4+Cj4+IEknbSBzdXJlIG5l
+aXRoZXIga2luZCBvZiBBQ0xzIG1ha2VzIHNlbnNlIG9uIG1hbnkgdGlueSBzeXN0ZW1zLCBpdAo+
+PiBzaG91bGQgYmUgcG9zc2libGUgdG8gZGlzYWJsZSB0aGVtLiBYRlMgbWF5IG5vdCBtYWtlIHNl
+bnNlIG9uIHRob3NlCj4+IGtpbmRzIG9mIHN5c3RlbXMgZWl0aGVyLCB0aGF0IGlzIG5vdCBteSBj
+YWxsIHRvIG1ha2UgdGhvdWdoLgo+Cj4gV2VsbCwgdGhlIHNtYWxsZXN0IHN5c3RlbXMgdGhhdCB1
+c2UgWEZTIGFyZSB0eXBpY2FsbHkgMS0yIGRpc2sgTkFTCj4gYm94ZXMsIGFuZCBJIGNhbiBzZWUg
+dGhlbSB3YW50aW5nIHJpY2hhY2xzLiBBcyBpdCBpcywgdGhlIHhmcyBrZXJuZWwKPiBtb2R1bGUg
+aXMgYWxtb3N0IDFNQiBvZiBvYmplY3QgY29kZSwgc28gaXQgeW91IGhhdmUgYSBzbWFsbCBlbWJl
+ZGRlZAo+IGJveCB5b3UgZG9uJ3Qgd2FudCBYRlMuIEFsbW9zdCBhbGwgZGlzdHJvcyB0dXJuIG9u
+IEFDTCBzdXBwb3J0IEknbQo+IG5vdCBzdXJlIHRoYXQgaXQgbWFrZXMgc2Vuc2UgdG8gaGF2ZSB0
+aGVzZSBjb25maWcgb3B0aW9ucyBpbiBYRlMKPiBhbnltb3JlLi4uLgoKWW91IGhhdmUgbWUgY29u
+dmluY2VkIGFib3V0IHJlbW92aW5nIENPTkZJR19YRlNfUklDSEFDTC4KCj4+ID4+IGRpZmYgLS1n
+aXQgYS9mcy94ZnMvbGlieGZzL3hmc19mb3JtYXQuaCBiL2ZzL3hmcy9saWJ4ZnMveGZzX2Zvcm1h
+dC5oCj4+ID4+IGluZGV4IDk1OTBhMDYuLjhjNmRhNDUgMTAwNjQ0Cj4+ID4+IC0tLSBhL2ZzL3hm
+cy9saWJ4ZnMveGZzX2Zvcm1hdC5oCj4+ID4+ICsrKyBiL2ZzL3hmcy9saWJ4ZnMveGZzX2Zvcm1h
+dC5oCj4+ID4+IEBAIC00NjEsMTAgKzQ2MSwxOCBAQCB4ZnNfc2JfaGFzX3JvX2NvbXBhdF9mZWF0
+dXJlKAo+PiA+PiAgI2RlZmluZSBYRlNfU0JfRkVBVF9JTkNPTVBBVF9GVFlQRSAgICgxIDw8IDAp
+ICAgICAgICAvKiBmaWxldHlwZSBpbiBkaXJlbnQgKi8KPj4gPj4gICNkZWZpbmUgWEZTX1NCX0ZF
+QVRfSU5DT01QQVRfU1BJTk9ERVMgICAgICAgICgxIDw8IDEpICAgICAgICAvKiBzcGFyc2UgaW5v
+ZGUgY2h1bmtzICovCj4+ID4+ICAjZGVmaW5lIFhGU19TQl9GRUFUX0lOQ09NUEFUX01FVEFfVVVJ
+RCAgICAgICAoMSA8PCAyKSAgICAgICAgLyogbWV0YWRhdGEgVVVJRCAqLwo+PiA+PiArCj4+ID4+
+ICsjaWZkZWYgQ09ORklHX1hGU19SSUNIQUNMCj4+ID4+ICsjZGVmaW5lIFhGU19TQl9GRUFUX0lO
+Q09NUEFUX1JJQ0hBQ0wgKDEgPDwgMykgICAgICAgIC8qIHJpY2hhY2xzICovCj4+ID4+ICsjZWxz
+ZQo+PiA+PiArI2RlZmluZSBYRlNfU0JfRkVBVF9JTkNPTVBBVF9SSUNIQUNMIDAKPj4gPj4gKyNl
+bmRpZgo+PiA+PiArCj4+ID4KPj4gPiBSZWdhcmRsZXNzIG9mIHdoZXRoZXIgd2UgYnVpbGQgaW4g
+cmljaGFjbCBzdXBwb3J0LCB0aGlzIGlzIHdyb25nLgo+PiA+IEZlYXR1cmUgYml0cyBhcmUgb24t
+ZGlzayBmb3JtYXQgZGVmaW5pdGlvbnMsIHNvIGl0IHdpbGwgYWx3YXlzIGhhdmUKPj4gPiB0aGlz
+IHZhbHVlIHdoZXRoZXIgb3Igbm90IHRoZSBrZXJuZWwgc3VwcG9ydHMgdGhlIGZlYXR1cmUuCj4+
+Cj4+IFRoaXMgaXMgc28gdGhhdCB4ZnNfbW91bnRfdmFsaWRhdGVfc2IoKSB3aWxsIGNvbXBsYWlu
+IHdoZW4gbW91bnRpbmcgYQo+PiByaWNoYWNsIGZpbGVzeXN0ZW0gb24gYSBrZXJuZWwgd2hpY2gg
+ZG9lc24ndCBoYXZlIHJpY2hhY2wgc3Vwb3J0Cj4+IGNvbXBpbGVkIGluLiBUaGUgc2FtZSBlZmZl
+Y3QgY2FuIGJlIGhhZCB3aXRoIGV4dHJhIGNvZGUgdGhlcmUgb2YKPj4gY291cnNlLgo+Cj4gSWYg
+dGhlIGtlcm5lbCBkb2Vzbid0IGtub3cgYWJvdXQgYSBmZWF0dXJlLCB0aGVuIGl0IHdpbGwgcmVw
+b3J0Cj4gInVua25vd24gZmVhdHVyZSIuIEhvd2V2ZXIsIGFzIG9mIHRoaXMgcGF0Y2ggc2V0LCB0
+aGUga2VybmVsIHdpbGwKPiBrbm93IGFib3V0IHRoZSByaWNoYWNsIGZlYXR1cmUsIGFuZCBzbyB0
+aGUgY29ycmVjdCBlcnJvciBtZXNzYWdlCj4gaXMgdG8gc2F5ICJSaWNoIEFDTHMgbm90IHN1cHBv
+cnRlZCBieSB0aGlzIGtlcm5lbCIuCj4KPiBBbHNvLCBmcm9tIGEgZGlzayBmb3JtYXQgcGVyc3Bl
+Y3RpdmUsIHRoaXMgaXMgYSB0aGlzIGlzIGEgcmVhZC1vbmx5Cj4gY29tcGF0IGZlYXR1cmUsIGFz
+IGtlcm5lbHMgdGhhdCBkb24ndCBoYXZlIHJpY2hhY2wgc3VwcG9ydCBhcmUgc3RpbGwKPiBhYmxl
+IHRvIG1vdW50IGFuZCB3YWxrIHRoZSBmaWxlc3lzdGVtIHdpdGhvdXQgZXJyb3JzIG9jY3Vycmlu
+Zy4gSXQncwo+IG9ubHkgd2hlbiBhbGxvd2luZyBtb2RpZmljYXRpb25zIGFyZSBtYWRlIHRoYXQg
+cHJvYmxlbXMgd2lsbCBhcmlzZSwKPiBzbyB3aHkgZGlkIHlvdSBtYWtlIGl0IGFuIGluY29tcGF0
+IGZlYXR1cmU/CgpBcyBhIHJlYWQtb25seSBjb21wYXQgZmxhZywga2VybmVscyB0aGF0IGNhbm5v
+dCBlbmZvcmNlIHJpY2hhY2xzIHdvdWxkCnN0aWxsIGJlIGFibGUgdG8gbW91bnQgcmljaGFjbCBm
+aWxlIHN5c3RlbXMgcmVhZC1vbmx5LiBUaGF0J3MgYQpwcm9ibGVtIHdoZW4gYWNscyBhcmUgdXNl
+ZCB0byBmb3JiaWQgcmVhZC9leGVjdXRlIGFjY2Vzcy4KCj4+ID4+ICtpbnQKPj4gPj4gK3hmc19z
+ZXRfcmljaGFjbChzdHJ1Y3QgaW5vZGUgKmlub2RlLCBzdHJ1Y3QgcmljaGFjbCAqYWNsKQo+PiA+
+PiArewo+PiA+PiArICAgICBzdHJ1Y3QgeGZzX2lub2RlICppcCA9IFhGU19JKGlub2RlKTsKPj4g
+Pj4gKyAgICAgdW1vZGVfdCBtb2RlID0gaW5vZGUtPmlfbW9kZTsKPj4gPj4gKyAgICAgaW50IGVy
+cm9yOwo+PiA+PiArCj4+ID4+ICsgICAgIGlmIChhY2wpIHsKPj4gPj4gKyAgICAgICAgICAgICAv
+KiBEb24ndCBhbGxvdyBhY2xzIHdpdGggdW5tYXBwZWQgaWRlbnRpZmllcnMuICovCj4+ID4+ICsg
+ICAgICAgICAgICAgaWYgKHJpY2hhY2xfaGFzX3VubWFwcGVkX2lkZW50aWZpZXJzKGFjbCkpCj4+
+ID4+ICsgICAgICAgICAgICAgICAgICAgICByZXR1cm4gLUVJTlZBTDsKPj4gPj4gKwo+PiA+PiAr
+ICAgICAgICAgICAgIGlmIChyaWNoYWNsX2VxdWl2X21vZGUoYWNsLCAmbW9kZSkgPT0gMCkgewo+
+PiA+PiArICAgICAgICAgICAgICAgICAgICAgeGZzX3NldF9tb2RlKGlub2RlLCBtb2RlKTsKPj4g
+Pj4gKyAgICAgICAgICAgICAgICAgICAgIGFjbCA9IE5VTEw7Cj4+ID4+ICsgICAgICAgICAgICAg
+fQo+PiA+Cj4+ID4gQ29tbWVudCBuZWVkZWQgaGVyZSAtIHdoeSBkb2VzIHRoaXMgbm93IHNlZW0g
+dG8gYWNjaWRlbnRhbGx5IGZhbGwKPj4gPiB0aHJvdWdoIHRvIHJlbW92aW5nIHRoZSBBQ0w/Cj4+
+Cj4+IFNldHRpbmcgYW4gQUNMIHRoYXQgaXMgZXF1aXZhbGVudCB0byBhIGZpbGUgbW9kZSBpcyB0
+aGUgc2FtZSBhcwo+PiByZW1vdmluZyBhbnkgZXhpc3RpbmcgQUNMcyBhbmQgZG9pbmcgYSBjaG1v
+ZCB0byB0aGF0IGVxdWl2YWxlbnQgZmlsZQo+PiBtb2RlLiBJdCdzIHRoZSBzYW1zIGFzIHdpdGgg
+UE9TSVggQUNMcywgYW5kIHRoZSBjb2RlIGlzIHRoZSBzYW1lIGFzCj4+IHdlbGwuIEknbGwgYWRk
+IGEgY29tbWVudCB0aG91Z2guCj4+Cj4+ID4gQWxzbywgd2h5IGlzIHRoaXMgaW4gdGhlIFhGUyBz
+cGVjaWZpYwo+PiA+IGNvZGUgd2hlbiBpdCdzIGdlbmVyaWMgcmljaGFjbCBmdW5jdGlvbmFsaXR5
+IHRoYXQgaXMgYmVpbmcgY2hlY2tlZD8KPj4KPj4gVGhpcyB0dXJucyBpbnRvIHR3byBub24tYXRv
+bWljIG9wZXJhdGlvbnMgaWYgd2UgbW92ZSBpdCBpbnRvIGdlbmVyaWMgY29kZS4KPgo+IEkgZG9u
+J3QgZm9sbG93IHlvdSAtIHRoaXMgaXNuJ3QgYW4gYXRvbWljIG9wZXJhdGlvbiB0byBiZWdpbiB3
+aXRoLi4uCgpSaWdodCwgSSBzaG91bGRuJ3QgaGF2ZSB1c2VkIHRoZSB0ZXJtIGF0b21pYy4gSXQn
+cyBvbmUgaW5vZGUgb3BlcmF0aW9uCnVuZGVyIGlfbXV0ZXgsIGFuZCB0aGUgZmlsZXN5c3RlbSBj
+YW4gcGFjayBpdCBpbnRvIG9uZSB0cmFuc2FjdGlvbi4KClRoYW5rcywKQW5kcmVhcwoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
