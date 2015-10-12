@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A87067F3F
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 02:48:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 850C4304053
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 00:48:57 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	f0yFjGTELtLnKHPr for <xfs@oss.sgi.com>;
-	Mon, 12 Oct 2015 00:48:54 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1ZlXqd-0006qS-Gt
-	for xfs@oss.sgi.com; Mon, 12 Oct 2015 18:48:43 +1100
-Date: Mon, 12 Oct 2015 18:48:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to 1e2103c
-Message-ID: <20151012074843.GB31326@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9DA6E7F4E
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 05:50:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 369A2AC001
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 03:50:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FkvtO7m1AQa3ose3 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 12 Oct 2015 03:50:34 -0700 (PDT)
+Date: Mon, 12 Oct 2015 06:50:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: validate metadata LSNs against log on v5 superblocks
+Message-ID: <20151012105032.GA25023@bfoster.bfoster>
+References: <1443183869-16487-1-git-send-email-bfoster@redhat.com>
+	<20151012045817.GE27164@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20151012045817.GE27164@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,174 +26,172 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3734549261620904330=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On Mon, Oct 12, 2015 at 03:58:17PM +1100, Dave Chinner wrote:
+> On Fri, Sep 25, 2015 at 08:24:29AM -0400, Brian Foster wrote:
+> > Since the onset of v5 superblocks, the LSN of the last modification has
+> > been included in a variety of on-disk data structures. This LSN is used
+> > to provide log recovery ordering guarantees (e.g., to ensure an older
+> > log recovery item is not replayed over a newer target data structure).
+> > 
+> > While this works correctly from the point a filesystem is formatted and
+> > mounted, userspace tools have some problematic behaviors that defeat
+> > this mechanism. For example, xfs_repair historically zeroes out the log
+> > unconditionally (regardless of whether corruption is detected). If this
+> > occurs, the LSN of the filesystem is reset and the log is now in a
+> > problematic state with respect to on-disk metadata structures that might
+> > have a larger LSN. Until either the log catches up to the highest
+> > previously used metadata LSN or each affected data structure is modified
+> > and written out without incident (which resets the metadata LSN), log
+> > recovery is susceptible to filesystem corruption.
+> > 
+> > This problem is ultimately addressed and repaired in the associated
+> > userspace tools. The kernel is still responsible to detect the problem
+> > and notify the user that something is wrong. Check the superblock LSN at
+> > mount time and fail the mount if it is invalid. From that point on,
+> > trigger verifier failure on any metadata I/O where an invalid LSN is
+> > detected. This results in a filesystem shutdown and guarantees that we
+> > do not log metadata changes with invalid LSNs on disk. Since this is a
+> > known issue with a known recovery path, present a warning to instruct
+> > the user how to recover.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+...
+> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> > index be43248..e89a0f8 100644
+> > --- a/fs/xfs/libxfs/xfs_da_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
+...
+> > @@ -322,6 +325,7 @@ xfs_da3_node_create(
+> >  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> >  		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+> >  
+> > +		memset(hdr3, 0, sizeof(struct xfs_da3_node_hdr));
+> >  		ichdr.magic = XFS_DA3_NODE_MAGIC;
+> >  		hdr3->info.blkno = cpu_to_be64(bp->b_bn);
+> >  		hdr3->info.owner = cpu_to_be64(args->dp->i_ino);
+> 
+> Is this a bug fix or just cleanliness? The LSN gets written into the
+> header before it goes to disk, so there is nothing uninitialised
+> that I am unaware of ending up on disk from this. 
+> 
 
---===============3734549261620904330==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
-Content-Disposition: inline
+Sorry, I should have pointed this out in the commit log description. I
+probably forgot as these were added after the fact from testing and
+reproducing write verifier failures.
 
+Both memset() calls are actually bug fixes with respect to the LSN
+checks that this patch adds. They don't affect anything on disk. They
+just prevent spurious write verifier failures on object creation because
+the write verifiers first verify the data structure and then update the
+LSN, which means uninitialized data structures in memory can get into
+the verifiers with garbage in the LSN field. IIRC, I dug around at the
+time and saw that most of such data structures were initialized or
+allocated with zeroed memory and so took the same approach here.
 
---ibTvN161/egqYuK8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks for the other fixups.
 
-Hi folks,
+Brian
 
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated.
-
-The new head of the for-next branch is commit:
-
-1e2103c Merge branch 'xfs-misc-fixes-for-4.4-1' into for-next
-
-New Commits:
-
-Bill O'Donnell (7):
-      [bb230c1] xfs: create global stats and stats_clear in sysfs
-      [32f0ea0] xfs: create symlink proc/fs/xfs/stat to sys/fs/xfs/stats
-      [50cf5b7] xfs: remove unused procfs code
-      [a27c264] xfs: consolidate sysfs ops
-      [80529c4] xfs: pass xfsstats structures to handlers and macros
-      [225e463] xfs: per-filesystem stats in sysfs
-      [ff6d6af] xfs: per-filesystem stats counter implementation
-
-Brian Foster (6):
-      [009c6e8] xfs: add missing ilock around dio write last extent alignme=
-nt
-      [b7cdc66] xfs: log local to remote symlink conversions correctly on v=
-5 supers
-      [a45086e] xfs: validate metadata LSNs against log on v5 superblocks
-      [3136e8b] xfs: always drain dio before extending aio write submission
-      [0a50f16] xfs: add an xfs_zero_eof() tracepoint
-      [dbd5c8c] xfs: pass total block res. as total xfs_bmapi_write() param=
-eter
-
-Dave Chinner (3):
-      [316433b] Merge branch 'xfs-logging-fixes' into for-next
-      [8a56d7c] Merge branch 'xfs-io-fixes' into for-next
-      [1e2103c] Merge branch 'xfs-misc-fixes-for-4.4-1' into for-next
-
-Eric Sandeen (3):
-      [91f9f5f] xfs: avoid null *src in memcpy call in xlog_write
-      [847f9f6] xfs: more info from kmem deadlocks and high-level error msgs
-      [9e92054] xfs: simplify /proc teardown & error handling
-
-Geliang Tang (1):
-      [fef4ded] libxfs: fix two comment typos
-
-Jan Tulak (2):
-      [4e24761] xfs: prefix XATTR_LIST_MAX with XFS_
-      [51fcbfe] xfs: avoid dependency on Linux XATTR_SIZE_MAX
-
-Tetsuo Handa (1):
-      [5bf97b1] xfs: Print name and pid when memory allocation loops
-
-Zhaohongjiang (1):
-      [5cb13dc] cancel the setfilesize transation when io error happen
-
-
-Code Diffstat:
-
- fs/xfs/kmem.c                      |  10 +-
- fs/xfs/libxfs/xfs_alloc.c          |  20 ++--
- fs/xfs/libxfs/xfs_attr.c           |   6 +-
- fs/xfs/libxfs/xfs_attr_leaf.c      |   3 +
- fs/xfs/libxfs/xfs_attr_remote.c    |   2 +-
- fs/xfs/libxfs/xfs_bmap.c           |  30 +++---
- fs/xfs/libxfs/xfs_btree.c          |  21 ++++-
- fs/xfs/libxfs/xfs_btree.h          |  39 ++++----
- fs/xfs/libxfs/xfs_da_btree.c       |   4 +
- fs/xfs/libxfs/xfs_dir2.c           |   6 +-
- fs/xfs/libxfs/xfs_dir2_block.c     |   3 +
- fs/xfs/libxfs/xfs_dir2_data.c      |   3 +
- fs/xfs/libxfs/xfs_dir2_leaf.c      |   3 +
- fs/xfs/libxfs/xfs_dir2_node.c      |   3 +
- fs/xfs/libxfs/xfs_format.h         |  10 +-
- fs/xfs/libxfs/xfs_fs.h             |  10 ++
- fs/xfs/libxfs/xfs_ialloc.c         |  10 +-
- fs/xfs/libxfs/xfs_sb.c             |  10 ++
- fs/xfs/libxfs/xfs_symlink_remote.c |   7 ++
- fs/xfs/xfs_aops.c                  |  23 +++--
- fs/xfs/xfs_attr_list.c             |   2 +-
- fs/xfs/xfs_bmap_util.c             |   2 +-
- fs/xfs/xfs_buf.c                   |  21 +++--
- fs/xfs/xfs_dir2_readdir.c          |   2 +-
- fs/xfs/xfs_dquot.c                 |  14 +--
- fs/xfs/xfs_file.c                  |  29 +++---
- fs/xfs/xfs_icache.c                |  18 ++--
- fs/xfs/xfs_inode.c                 |   6 +-
- fs/xfs/xfs_ioctl.c                 |   8 +-
- fs/xfs/xfs_ioctl32.c               |   2 +-
- fs/xfs/xfs_iomap.c                 |  51 ++++++----
- fs/xfs/xfs_iops.c                  |   4 +-
- fs/xfs/xfs_linux.h                 |   7 ++
- fs/xfs/xfs_log.c                   |  93 +++++++++++++++----
- fs/xfs/xfs_log.h                   |   1 +
- fs/xfs/xfs_log_priv.h              |  51 ++++++++++
- fs/xfs/xfs_log_recover.c           |  12 ++-
- fs/xfs/xfs_message.c               |   7 ++
- fs/xfs/xfs_mount.c                 |  11 ++-
- fs/xfs/xfs_mount.h                 |   1 +
- fs/xfs/xfs_pnfs.c                  |   5 +
- fs/xfs/xfs_qm.c                    |  14 +--
- fs/xfs/xfs_stats.c                 |  91 +++++++++---------
- fs/xfs/xfs_stats.h                 |  36 +++++---
- fs/xfs/xfs_super.c                 |  49 ++++++++--
- fs/xfs/xfs_sysctl.c                |  15 +--
- fs/xfs/xfs_sysfs.c                 | 185 ++++++++++++++++++++++-----------=
-----
- fs/xfs/xfs_sysfs.h                 |   1 +
- fs/xfs/xfs_trace.h                 |   1 +
- fs/xfs/xfs_trans.c                 |   6 +-
- fs/xfs/xfs_trans_ail.c             |  12 +--
- 51 files changed, 655 insertions(+), 325 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---ibTvN161/egqYuK8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJWG2XbAAoJEK3oKUf0dfod4AUP/1gTJ9O0KKVa39kKgBW2VGAc
-JHSyrr1U3Pva7JVCWolnlthNCAY6O6SGC/z2Va5AT42SMpXCsH5TkLUaThf3difs
-KxT2GMeaF/LtpOEkpx6zJKDIvn5tFPcMW8cHzRYun+NIJQ1vumLS8yaHYsjldUwW
-mTEYC1PXVH9a/cSEovE5C2ALJEIRoGGWjWruRXEThCn7w10u8ffipyjqk7LMxxHW
-U+LwINmCDHtGtt7oEh6VcsIF54YfwfuU4rn8PoocI58ENX/YuPU/735xmtAzc6rX
-/6iNiDtJN70w4dGcfIpZJXkPXfe/iZvarVwRAusmfGR5ZFqdkI4GzgS9b8L1kL4J
-ONCOGEzlPhzQENWPQN4BPwcXOrtFfQVSzJDwIy/1Q2Th4UBMk3ihXANUQJDhCoOW
-lgLTzYvnWRxKMbuPl5LZ6DcaIpXLxZQvxo3Jk+8zBiwwvFhRjzQo9Wx/zfSevGl0
-hH3SdPLhjGGUtsmj6rjOMF+ABXncUIgbdK6Y+CS20IHeyc0kjhdGnl6qaHY7APrW
-p/o+StHKXT2bJU/W2iMt//u9FmTKLaAJsrus1yuMFlrdqHLYpA/w77GhIK+3n8X5
-xHHNiNFWTFXcnJfVBtyn2AEm2dryNow0ZalL3BVic+9pCgJH0ZayVPn3dMRa7BRw
-Uz2D10c/+mJByZ+CTgad
-=kSOA
------END PGP SIGNATURE-----
-
---ibTvN161/egqYuK8--
-
-
---===============3734549261620904330==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> > @@ -60,6 +61,7 @@ xfs_symlink_hdr_set(
+> >  	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> >  		return 0;
+> >  
+> > +	memset(dsl, 0, sizeof(struct xfs_dsymlink_hdr));
+> >  	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
+> >  	dsl->sl_offset = cpu_to_be32(offset);
+> >  	dsl->sl_bytes = cpu_to_be32(size);
+> 
+> Ditto.
+> 
+> > index aaadee0..0c8ef76 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -3165,11 +3165,19 @@ xlog_state_switch_iclogs(
+> >  	}
+> >  
+> >  	if (log->l_curr_block >= log->l_logBBsize) {
+> > +		/*
+> > +		 * Rewind the current block before the cycle is bumped to make
+> > +		 * sure that the combined LSN never transiently moves forward
+> > +		 * when the log wraps to the next cycle. This is to support the
+> > +		 * unlocked sample of these fields from xlog_valid_lsn(). Most
+> > +		 * other cases should acquire l_icloglock.
+> > +		 */
+> > +		log->l_curr_block -= log->l_logBBsize;
+> > +		ASSERT(log->l_curr_block >= 0);
+> > +		smp_wmb();
+> >  		log->l_curr_cycle++;
+> 
+> OK, so we make sure the write of the l_curr_block cannot be
+> reordered to after the write of the l_curr_cycle.
+> 
+> > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> > index 950f3f9..8daba74 100644
+> > --- a/fs/xfs/xfs_log_priv.h
+> > +++ b/fs/xfs/xfs_log_priv.h
+> > @@ -560,4 +560,55 @@ static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
+> >  	remove_wait_queue(wq, &wait);
+> >  }
+> >  
+> > +/*
+> > + * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+> > + * means that the next log record that includes this metadata could have a
+> > + * smaller LSN. In turn, this means that the modification in the log would not
+> > + * replay.
+> > + */
+> > +static inline bool
+> > +xlog_valid_lsn(
+> > +	struct xlog	*log,
+> > +	xfs_lsn_t	lsn)
+> > +{
+> > +	int		cur_cycle;
+> > +	int		cur_block;
+> > +	bool		valid = true;
+> > +
+> > +	/*
+> > +	 * First, sample the current lsn without locking to avoid added
+> > +	 * contention from metadata I/O. The current cycle and block are updated
+> > +	 * (in xlog_state_switch_iclogs()) and read here in a particular order
+> > +	 * to avoid false negatives (e.g., thinking the metadata LSN is valid
+> > +	 * when it is not).
+> > +	 *
+> > +	 * The current block is always rewound before the cycle is bumped in
+> > +	 * xlog_state_switch_iclogs() to ensure the current LSN is never seen in
+> > +	 * a transiently forward state. Instead, we can see the LSN in a
+> > +	 * transiently behind state if we happen to race with a cycle wrap.
+> > +	 */
+> > +	cur_cycle = ACCESS_ONCE(log->l_curr_cycle);
+> > +	smp_rmb();
+> > +	cur_block = ACCESS_ONCE(log->l_curr_block);
+> 
+> And we make sure the read of the block cannot be reordered to before
+> the l_curr_cycle. Looks ok to me.
+> 
+> I'm going to commit this as is because I don't think the memset()s
+> above actuallly change anything on disk. I can always redo the
+> commit if this is in error...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3734549261620904330==--
