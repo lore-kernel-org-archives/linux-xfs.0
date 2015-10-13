@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 31EEB7F37
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 02:23:59 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 75F1D7F47
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 02:29:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AA22AAC006
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 00:23:58 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id BTdkPtPxCay4x1qH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2015 00:23:56 -0700 (PDT)
-Date: Tue, 13 Oct 2015 00:23:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] db: fix AGI ops definition in CRC type table
-Message-ID: <20151013072350.GG10397@birch.djwong.org>
-References: <1444709821-5009-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 65AD0304059
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 00:29:04 -0700 (PDT)
+Received: from alln-iport-8.cisco.com (alln-iport-8.cisco.com [173.37.142.95])
+	by cuda.sgi.com with ESMTP id ysgrhnfw8x838f31 (version=TLSv1
+	cipher=IDEA-CBC-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2015 00:29:02 -0700 (PDT)
+From: "Al Lau (alau2)" <alau2@cisco.com>
+Subject: RE: mkfs.xfs -n size=65536
+Date: Tue, 13 Oct 2015 07:28:48 +0000
+Message-ID: <b391cb17b6714a479150f9681380e102@XCH-ALN-020.cisco.com>
+References: <0F279340237AA148AD7E3C6A70561A5E01266BE7@xmb-rcd-x14.cisco.com>
+	<20151013002308.GI27164@dastard>
+	<8a1b26a3b869448e805485c529c447a4@XCH-ALN-020.cisco.com>
+	<20151013033304.GL27164@dastard>
+	<c88efb6bc4ad49779e965a7a67b2df57@XCH-ALN-020.cisco.com>
+	<20151013043016.GE31326@dastard>
+In-Reply-To: <20151013043016.GE31326@dastard>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1444709821-5009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,88 +35,42 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+
+Are the xfs_db and filefrag the utilities to use to determine file fragmentation?
+
+# df -k /var/kmem_alloc
+Filesystem      1K-blocks       Used Available Use% Mounted on
+/dev/sdf1      3905109820 3359385616 545724204  87% /var/kmem_alloc
+# xfs_db -r -c frag /dev/sdf1 
+actual 438970, ideal 388168, fragmentation factor 11.57%
+
+# ls -l fragmented
+-rw-r--r--. 1 root root 3360239878657 Oct 13 07:25 fragmented
+# filefrag fragmented 
+fragmented: 385533 extents found
+
+Thanks,
+-Al
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com] 
+Sent: Monday, October 12, 2015 9:30 PM
+To: Al Lau (alau2)
 Cc: xfs@oss.sgi.com
+Subject: Re: mkfs.xfs -n size=65536
 
-On Tue, Oct 13, 2015 at 03:17:01PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The wrong buffer ops structure was added to the AGI field of the
-> type table when initially committed. This was not noticed because it
-> only affects manually setting the type of a buffer from xfs_db. e.g
-> 
-> xfs_db> agi 0
-> xfs_db> p
-> .....
-> crc = 0xbc58d757 (correct)
-> .....
-> xfs_db> fsb 2
-> xfs_db> type agi
-> Metadata CRC error detected at block 0x10/0x1000
-> xfs_db>
-> 
-> This is because (trimmed for clarity):
-> 
-> Breakpoint 1, xfs_verifier_error:
-> (gdb) bt
-> #0  xfs_verifier_error
-> #1  xfs_agfl_read_verify
-> #2  set_iocur_type
-> #3  type_f
-> #4  main
-> 
-> It's clear that the wrong verifier is being run (AGFL, not AGI).
-> The fix is simple.
+On Tue, Oct 13, 2015 at 03:55:26AM +0000, Al Lau (alau2) wrote:
+> To remedy the fragmented files in our production systems, can I run 
+> the xfs_fsr utility to de-fragment the files?
 
-Looks reasonable, so you can add my reviewed-by if you like.
+Well, first you need to determine that the files are fragmented and that it is affecting performance....
 
-For my part I'm still figuring out how to fix this:
+Cheers,
 
-xfs_db> agf 2
-xfs_db> type agi
-Metadata CRC error detected at block 0x10/0x1000
-xfs_db> p
-Segmentation fault
-
-Granted, trying to print the AGF fields of an AGI block doesn't make sense, but
-I feel like xfs_db should probably have a better reaction than crashing.
-
---D
-
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  db/type.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/db/type.c b/db/type.c
-> index 955986b..1da7ee1 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -77,7 +77,7 @@ static const typ_t	__typtab[] = {
->  static const typ_t	__typtab_crc[] = {
->  	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
->  	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
-> -	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
-> +	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops },
->  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
->  		&xfs_attr3_db_buf_ops },
->  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
-> @@ -113,7 +113,7 @@ static const typ_t	__typtab_crc[] = {
->  static const typ_t	__typtab_spcrc[] = {
->  	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
->  	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
-> -	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
-> +	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops },
->  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
->  		&xfs_attr3_db_buf_ops },
->  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
-> -- 
-> 2.5.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+--
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
