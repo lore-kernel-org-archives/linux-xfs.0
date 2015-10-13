@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BECA87F37
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 22:42:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38FF6AC004
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 20:42:17 -0700 (PDT)
-Received: from rcdn-iport-7.cisco.com (rcdn-iport-7.cisco.com [173.37.86.78])
-	by cuda.sgi.com with ESMTP id PqwJf8Of2gjrGIHC (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id E6C0C7F37
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 22:55:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 72CD0AC004
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 20:55:46 -0700 (PDT)
+Received: from rcdn-iport-1.cisco.com (rcdn-iport-1.cisco.com [173.37.86.72])
+	by cuda.sgi.com with ESMTP id Bc2KNYYEBSN9vseZ (version=TLSv1
 	cipher=IDEA-CBC-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Oct 2015 20:42:15 -0700 (PDT)
+	Mon, 12 Oct 2015 20:55:42 -0700 (PDT)
 From: "Al Lau (alau2)" <alau2@cisco.com>
 Subject: RE: mkfs.xfs -n size=65536
-Date: Tue, 13 Oct 2015 03:42:01 +0000
-Message-ID: <4b186a62d5f64c4fbbbe25e1bf4b6883@XCH-ALN-020.cisco.com>
+Date: Tue, 13 Oct 2015 03:55:26 +0000
+Message-ID: <c88efb6bc4ad49779e965a7a67b2df57@XCH-ALN-020.cisco.com>
 References: <0F279340237AA148AD7E3C6A70561A5E01266BE7@xmb-rcd-x14.cisco.com>
 	<20151013002308.GI27164@dastard>
 	<8a1b26a3b869448e805485c529c447a4@XCH-ALN-020.cisco.com>
@@ -35,12 +35,7 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Dave,
-
-I can try the dev kernel with your change.  How do I go about getting the new bits?
-
-# uname -a 
-Linux abc.company.com 3.10.0-229.1.2.el7.x86_64 #1 SMP Fri Mar 6 17:12:08 EST 2015 x86_64 x86_64 x86_64 GNU/Linux
+To remedy the fragmented files in our production systems, can I run the xfs_fsr utility to de-fragment the files?
 
 Thanks,
 -Al
