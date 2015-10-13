@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 88FFA7F59
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 17:05:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 631A57F54
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 17:05:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4ABAB8F8065
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 15:05:26 -0700 (PDT)
-Received: from alln-iport-1.cisco.com (alln-iport-1.cisco.com [173.37.142.88])
-	by cuda.sgi.com with ESMTP id aU3h2g5AByAGXRrx (version=TLSv1
-	cipher=IDEA-CBC-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Oct 2015 15:05:24 -0700 (PDT)
-From: "Al Lau (alau2)" <alau2@cisco.com>
-Subject: RE: mkfs.xfs -n size=65536
-Date: Tue, 13 Oct 2015 22:05:09 +0000
-Message-ID: <f73d29c82bc74555a203914c72bb04e0@XCH-ALN-020.cisco.com>
-References: <0F279340237AA148AD7E3C6A70561A5E01266BE7@xmb-rcd-x14.cisco.com>
-	<20151013002308.GI27164@dastard>
-In-Reply-To: <20151013002308.GI27164@dastard>
-Content-Language: en-US
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 363338F8059
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 15:05:02 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id qdXesl1oEDDxJeAV for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2015 15:05:00 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 625CE63BCF81
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 17:04:59 -0500 (CDT)
+Subject: Re: Any way to slow down fragmentation ?
+References: <561D7D9D.4030409@ixblue.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <561D800B.90307@sandeen.net>
+Date: Tue, 13 Oct 2015 17:04:59 -0500
 MIME-Version: 1.0
+In-Reply-To: <561D7D9D.4030409@ixblue.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,54 +28,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-With xfs file system that has about 1 million files, would the default value for the directory structure be sufficient?  We can remove the "-n size=<value>'" option and just use the default.
-
-Thanks,
--Al
-
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com] 
-Sent: Monday, October 12, 2015 5:23 PM
-To: Al Lau (alau2)
-Cc: xfs@oss.sgi.com
-Subject: Re: mkfs.xfs -n size=65536
-
-On Fri, Oct 09, 2015 at 10:40:00PM +0000, Al Lau (alau2) wrote:
-> I am looking for more details on the "-n size=65536" option in 
-> mkfs.xfs.  The question is the memory allocation this option 
-> generates.  The system is Redhat EL 7.0 (3.10.0-229.1.2.el7.x86_64).
-> 
-> We have been getting this memory allocation deadlock message in the 
-> /var/log/messages file.  The file system is used for ceph OSD and it 
-> has about 531894 files.
-
-So, if you only have half a million files being stored, why would you optimised the directory structure for tens of millions of files in a single directory?
-
-> Oct  6 07:11:09 abc-ceph1-xyz kernel: XFS: possible memory allocation 
-> deadlock in kmem_alloc (mode:0x8250)
-
-mode = ___GFP_WAIT | ___GFP_IO | ___GFP_NOWARN | ___GFP_ZERO
-     = GFP_NOFS | GFP_ZERO | GFP_NOWARN
-
-which means it's come through kmem_zalloc() and so is a heap allocation and hence probably quite small.
-
-Hence I doubt that has anything to do with the directory block size, as the directory blocks are allocated as single pages through a completely allocation different path and them virtually mapped...
-
-Cheers,
-
-Dave.
---
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgpPbiAxMC8xMy8xNSA0OjU0IFBNLCBDw6lkcmljIExlbWFyY2hhbmQgd3JvdGU6Cj4gSSB0aGlu
+ayBJIGFjdHVhbGx5IGhhdmUgdmVyeSBiYWQgZnJhZ21lbnRhdGlvbiB2YWx1ZXMsIHdoaWNoCj4g
+dW5mb3J0dW5hdGVseSBpbnZvbHZlIHBlcmZvcm1hbmNlcyBkcm9wIGJ5IGFuIG9yZGVyIG9mIG1h
+Z25pdHVkZSBvZgo+IDN4LzR4LiBBIGRlZnJhZyBpcyBhY3R1YWxseSBydW5uaW5nLCBidXQgaXQn
+cyByZWFsbHkgcmVhbGx5IHNsb3csIHRvIHRoZQo+IHBvaW50IHRoYXQgSSB3aWxsIG5lZWQgdG8g
+Y29uc3RhbnRseSBkZWZyYWcgdGhlIHBhcnRpdGlvbiwgd2hpY2ggaXMgbm90Cj4gb3B0aW1hbC4g
+VGhlcmUgYXJlIGFwcHJveGltYXRpdmVseSA1MDBHbyB3cml0dGVuIHNlcXVlbnRpYWxseSBldmVy
+eSBkYXksCj4gYW5kIGFsbW9zdCAxMC8xMlQgcmFuZG9tIHdyaXRlcyBldmVyeSB3ZWVrIGR1ZSB0
+byBiYWNrdXAgZmlsZXMgcm90YXRpb25zLgoKRG9lcyBhbnl0aGluZyBiZXNpZGVzIHRoZSB4ZnNf
+ZGIgImZyYWciIGNvbW1hbmQgbWFrZSB5b3UgdGhpbmsgdGhhdApmcmFnbWVudGF0aW9uIGlzIGEg
+cHJvYmxlbT8gIFNlZSBiZWxvdy4uLgoKPiBUaGUgcGFydGl0aW9uIGhhcyBiZWVuIGZvcm1hdGVk
+IHdpdGggZGVmYXVsdCBvcHRpb25zLCBvdmVyIExWTSAob25lCj4gVkcvb25lIExWKS4KPiAKPiBI
+ZXJlIGFyZSBzb21lcyBxdWVzdGlvbnMgOgo+IAo+IC0gaXMgdGhlcmUgbWtmcy54ZnMgb3IgbW91
+bnRpbmcgb3B0aW9ucyB0aGF0IGNvdWxkIHJlZHVjZSB0aGUKPiBmcmFnbWVudGF0aW9uIG92ZXIg
+dGhlIHRpbWUgPwo+IC0gdGhlIGJhY2t1cCBzb2Z0d2FyZSB3cml0ZXMgdXNlIGJsb2NrcyBzaXpl
+IG9mIH40TUIsIGFzIHRoZSBwcmV2aW91cwo+IHF1ZXN0aW9uLCBhbnkgb3B0aW9ucyB0byBvcHRp
+bWl6ZSBkaWZmZXJlbnRzIGxheWVycyAoTFZNICYgWEZTKSA/IFRoZQo+IHVuZGVybGF5aW5nIEZT
+IGNvdWxkIGhhbmRsZSAxTUIgYmxvY2sgc2l6ZSwgc2hvdWxkIEkgc2V0IHRoaXMgdmFsdWUgZm9y
+Cj4gWEZTIHRvbyA/IGRvIEkgbmVlZCB0byBwbGF5IHdpdGggInN1IiBhbmQgInN3IiBhcyBzdGF0
+ZWQgaW4gdGhlIEZBUSA/Cj4gCj4gSSBhZG1pdCB0aGF0IHRoZXJlIGFyZSBzbyBtYW55IG9wdGlv
+bnMgdGhhdCBJIGFtIGEgYml0IGxvc3QuCj4gCj4gVGhhbmtzLAo+IAo+IEPDqWRyaWMKPiAKPiAt
+LQo+IFNvbWUgaW5mb3JtYXRpb25zIDogVk0gcnVubmluZyBEZWJpYW4gSmVzc2llLCB1bmRlcmxh
+eWluZyBzdG9yYWdlIGlzCj4gc29mdHdhcmUgcmFpZCAoWkZTKS4KPiAKPiAKPiBkZiAtawo+IEZp
+bGVzeXN0ZW0gICAgICAgICAgICAxSy1ibG9ja3MgICAgICAgIFVzZWQgICBBdmFpbGFibGUgVXNl
+JSBNb3VudGVkIG9uCj4gL2Rldi9tYXBwZXIvVkcyLUxWMSA1MzY4NTAwMDE5MiA0MDkyMTg1Mzky
+OCAxMjc2MzE0NjI2NCAgNzclIC92cmVwbzEKPiAKPiB4ZnNfZGIgLXIgL2Rldi9WRzIvTFYxIC1j
+IGZyYWcKPiBhY3R1YWwgNDIyMiwgaWRlYWwgMTM3LCBmcmFnbWVudGF0aW9uIGZhY3RvciA5Ni43
+NiUKCmh0dHA6Ly94ZnMub3JnL2luZGV4LnBocC9YRlNfRkFRI1E6X1RoZV94ZnNfZGJfLjIyZnJh
+Zy4yMl9jb21tYW5kX3NheXNfSS4yN21fb3Zlcl81MC4yNS5fSXNfdGhhdF9iYWQuM0YKClNvIGlu
+IDEzNyBmaWxlcywgeW91IGhhdmUgNDIyMiBleHRlbnRzLCBvciBhbiBhdmVyYWdlIG9mCmFib3V0
+IDMwIGV4dGVudHMgcGVyIGZpbGUuCgpPciBwdXQgYW5vdGhlciB3YXksIHlvdSBoYXZlIDM5MDI2
+IGdpZ2FieXRlcyB1c2VkLCBpbgo0MjIyIGV4dGVudHMsIGZvciBhbiBhdmVyYWdlIG9mIDkgZ2ln
+YWJ5dGVzIHBlciBleHRlbnQuCgpUaG9zZSBkb24ndCBzb3VuZCBsaWtlIHByb2JsZW1hdGljIG51
+bWJlcnMuCgp4ZnNfYm1hcCBvbiBhbiBpbmRpdmlkdWFsIGZpbGUgd2lsbCBzaG93IHlvdSBpdHMg
+bWFwcGluZy4KQnV0IGZvciBmaWxlcyBvZiBzZXZlcmFsIGh1bmRyZWQgZ2lncywgaGF2aW5nIHNl
+dmVyYWwKdmVyeSBsYXJnZSBleHRlbnRzIHJlYWxseSBpcyBub3QgYSBwcm9ibGVtLgoKSSB0aGlu
+ayB0aGUgeGZzX2RiIGZyYWcgY29tbWFuZCBtYXkgYmUgbWlzbGVhZGluZyB5b3UgYWJvdXQKd2hl
+cmUgdGhlIHByb2JsZW0gbGllcy4KCk9mIGNvdXJzZSBpdCdzIHBvc3NpYmxlIHRoYXQgYWxsIGJ1
+dCBvbmUgb2YgeW91ciBmaWxlcyBpcwp3ZWxsIGxhaWQgb3V0LCBhbmQgdGhhdCBsYXN0IGZpbGUg
+aXMgaG9ycmlibHksIGhvcnJpYmx5CmZyYWdtZW50ZWQuICBCdXQgdGhlIHRvcC1sZXZlbCBudW1i
+ZXJzIGRvbid0IHRlbGwgdXMgd2hldGhlcgp0aGF0IG1pZ2h0IGJlIHRoZSBjYXNlLgoKLUVyaWMK
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
