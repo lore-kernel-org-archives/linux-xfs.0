@@ -1,25 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6816D7F37
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 16:25:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 489548F8035
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 14:25:11 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	V0EwK5M923uOGNy4 for <xfs@oss.sgi.com>;
-	Tue, 13 Oct 2015 14:25:09 -0700 (PDT)
-Date: Wed, 14 Oct 2015 08:24:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: randconfig build error with next-20151013, in
-	fs/xfs/libxfs/xfs_alloc.c
-Message-ID: <20151013212454.GJ31326@dastard>
-References: <CA+r1Zhg0y-47JuzOMANcXykyU=No-TEBksLnnT-g0OsTKwazRQ@mail.gmail.com>
-	<20151013204119.GI31326@dastard>
-	<CA+r1ZhiKiVja7vm5F-mmtq3xVm4gufGW1fFuF6FD7RpU17T6PA@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CEB5F7F37
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 16:54:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D785AC004
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 14:54:43 -0700 (PDT)
+Received: from mail.ixserver.net (mail.ixserver.net [94.143.114.23]) by
+	cuda.sgi.com with ESMTP id KJX6w95Ti9o4LduK for
+	<xfs@oss.sgi.com>; Tue, 13 Oct 2015 14:54:40 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.ixserver.net (Postfix) with ESMTP id ABF508479CC
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 23:54:43 +0200 (CEST)
+Received: from mail.ixserver.net ([127.0.0.1])
+	by localhost (mail.ixserver.net [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id A6VxVglSxHWP for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2015 23:54:42 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.ixserver.net (Postfix) with ESMTP id D382D8479CF
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 23:54:42 +0200 (CEST)
+Received: from mail.ixserver.net ([127.0.0.1])
+	by localhost (mail.ixserver.net [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id eUbNKHZXd4kB for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2015 23:54:42 +0200 (CEST)
+Received: from Cedrics-MacBook-Pro.local (unknown [185.105.31.249])
+	by mail.ixserver.net (Postfix) with ESMTPSA id A622C8479CA
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 23:54:42 +0200 (CEST)
+From: =?UTF-8?Q?C=c3=a9dric_Lemarchand?= <cedric.lemarchand@ixblue.com>
+Subject: Any way to slow down fragmentation ?
+Message-ID: <561D7D9D.4030409@ixblue.com>
+Date: Tue, 13 Oct 2015 23:54:37 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+r1ZhiKiVja7vm5F-mmtq3xVm4gufGW1fFuF6FD7RpU17T6PA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +38,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jim Davis <jim.epost@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Oct 13, 2015 at 02:08:28PM -0700, Jim Davis wrote:
-> On Tue, Oct 13, 2015 at 1:41 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, Oct 13, 2015 at 09:41:25AM -0700, Jim Davis wrote:
-> >> Building with the attached random configuration file,
-> >>
-> >> fs/built-in.o: In function `xfs_free_ag_extent':
-> >> /home/jim/linux-next/fs/xfs/libxfs/xfs_alloc.c:1813: undefined
-> >> reference to `xfsstats'
-> >
-> > Please test the patch below.
-> 
-> Looks good!  Thanks.
-> 
-> Tested-by: Jim Davis <jim.epost@gmail.com>
-
-Thanks for testing it quickly, Jim.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SSB0aGluayBJIGFjdHVhbGx5IGhhdmUgdmVyeSBiYWQgZnJhZ21lbnRhdGlvbiB2YWx1ZXMsIHdo
+aWNoCnVuZm9ydHVuYXRlbHkgaW52b2x2ZSBwZXJmb3JtYW5jZXMgZHJvcCBieSBhbiBvcmRlciBv
+ZiBtYWduaXR1ZGUgb2YKM3gvNHguIEEgZGVmcmFnIGlzIGFjdHVhbGx5IHJ1bm5pbmcsIGJ1dCBp
+dCdzIHJlYWxseSByZWFsbHkgc2xvdywgdG8gdGhlCnBvaW50IHRoYXQgSSB3aWxsIG5lZWQgdG8g
+Y29uc3RhbnRseSBkZWZyYWcgdGhlIHBhcnRpdGlvbiwgd2hpY2ggaXMgbm90Cm9wdGltYWwuIFRo
+ZXJlIGFyZSBhcHByb3hpbWF0aXZlbHkgNTAwR28gd3JpdHRlbiBzZXF1ZW50aWFsbHkgZXZlcnkg
+ZGF5LAphbmQgYWxtb3N0IDEwLzEyVCByYW5kb20gd3JpdGVzIGV2ZXJ5IHdlZWsgZHVlIHRvIGJh
+Y2t1cCBmaWxlcyByb3RhdGlvbnMuCgpUaGUgcGFydGl0aW9uIGhhcyBiZWVuIGZvcm1hdGVkIHdp
+dGggZGVmYXVsdCBvcHRpb25zLCBvdmVyIExWTSAob25lClZHL29uZSBMVikuCgpIZXJlIGFyZSBz
+b21lcyBxdWVzdGlvbnMgOgoKLSBpcyB0aGVyZSBta2ZzLnhmcyBvciBtb3VudGluZyBvcHRpb25z
+IHRoYXQgY291bGQgcmVkdWNlIHRoZQpmcmFnbWVudGF0aW9uIG92ZXIgdGhlIHRpbWUgPwotIHRo
+ZSBiYWNrdXAgc29mdHdhcmUgd3JpdGVzIHVzZSBibG9ja3Mgc2l6ZSBvZiB+NE1CLCBhcyB0aGUg
+cHJldmlvdXMKcXVlc3Rpb24sIGFueSBvcHRpb25zIHRvIG9wdGltaXplIGRpZmZlcmVudHMgbGF5
+ZXJzIChMVk0gJiBYRlMpID8gVGhlCnVuZGVybGF5aW5nIEZTIGNvdWxkIGhhbmRsZSAxTUIgYmxv
+Y2sgc2l6ZSwgc2hvdWxkIEkgc2V0IHRoaXMgdmFsdWUgZm9yClhGUyB0b28gPyBkbyBJIG5lZWQg
+dG8gcGxheSB3aXRoICJzdSIgYW5kICJzdyIgYXMgc3RhdGVkIGluIHRoZSBGQVEgPwoKSSBhZG1p
+dCB0aGF0IHRoZXJlIGFyZSBzbyBtYW55IG9wdGlvbnMgdGhhdCBJIGFtIGEgYml0IGxvc3QuCgpU
+aGFua3MsCgpDw6lkcmljCgotLQpTb21lIGluZm9ybWF0aW9ucyA6IFZNIHJ1bm5pbmcgRGViaWFu
+IEplc3NpZSwgdW5kZXJsYXlpbmcgc3RvcmFnZSBpcwpzb2Z0d2FyZSByYWlkIChaRlMpLgoKCmRm
+IC1rCkZpbGVzeXN0ZW0gICAgICAgICAgICAxSy1ibG9ja3MgICAgICAgIFVzZWQgICBBdmFpbGFi
+bGUgVXNlJSBNb3VudGVkIG9uCi9kZXYvbWFwcGVyL1ZHMi1MVjEgNTM2ODUwMDAxOTIgNDA5MjE4
+NTM5MjggMTI3NjMxNDYyNjQgIDc3JSAvdnJlcG8xCgp4ZnNfZGIgLXIgL2Rldi9WRzIvTFYxIC1j
+IGZyYWcKYWN0dWFsIDQyMjIsIGlkZWFsIDEzNywgZnJhZ21lbnRhdGlvbiBmYWN0b3IgOTYuNzYl
+Cgp4ZnNfaW5mbyAvZGV2L1ZHMi9MVjEKbWV0YS1kYXRhPS9kZXYvbWFwcGVyL1ZHMi1MVjEgICAg
+aXNpemU9MjU2ICAgIGFnY291bnQ9NTAsCmFnc2l6ZT0yNjg0MzU0NTUgYmxrcwogICAgICAgICA9
+ICAgICAgICAgICAgICAgICAgICAgICBzZWN0c3o9NTEyICAgYXR0cj0yLCBwcm9qaWQzMmJpdD0x
+CiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIGNyYz0wICAgICAgICBmaW5vYnQ9MApk
+YXRhICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTEzNDIx
+NzcxNzc2LCBpbWF4cGN0PTUKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9
+MCAgICAgIHN3aWR0aD0wIGJsa3MKbmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAgICAgICAgYnNp
+emU9NDA5NiAgIGFzY2lpLWNpPTAgZnR5cGU9MApsb2cgICAgICA9aW50ZXJuYWwgICAgICAgICAg
+ICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTUyMTcyOCwgdmVyc2lvbj0yCiAgICAgICAgID0gICAg
+ICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9
+MQpyZWFsdGltZSA9bm9uZSAgICAgICAgICAgICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAs
+IHJ0ZXh0ZW50cz0wCgpscyAtbGgKdG90YWwgMjZUCi1ydy1ydy1ydy0gMSByb290IHJvb3QgIDIw
+TSBPY3QgMTMgMjM6NDUgU0cgREFJTFkgQkFDS1VQLnZibQotcnctci0tci0tIDEgcm9vdCByb290
+IDU1MEcgU2VwIDIwIDA5OjA4IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMDRUMjAwMTE2LnZyYgot
+cnctci0tci0tIDEgcm9vdCByb290IDM2M0cgT2N0IDEyIDAwOjI1IFNHIERBSUxZCkJBQ0tVUDIw
+MTUtMDktMDdUMjAwMTI5LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDE1NkcgU2VwIDEyIDIy
+OjQwIFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMDhUMjAwMTAwLnZyYgotcnctci0tci0tIDEgcm9v
+dCByb290IDc3N0cgT2N0IDEyIDAwOjIwIFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMDlUMjAwMTAw
+LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDQ3MkcgU2VwIDE5IDA5OjExIFNHIERBSUxZCkJB
+Q0tVUDIwMTUtMDktMTBUMjAwMTEzLnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDYxN0cgU2Vw
+IDE5IDE3OjE1IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMTFUMjAwMTA1LnZyYgotcnctci0tci0t
+IDEgcm9vdCByb290IDQ4NEcgU2VwIDIwIDAxOjE0IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMTRU
+MjAwMDU2LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDQ1NEcgU2VwIDIwIDE1OjQ1IFNHIERB
+SUxZCkJBQ0tVUDIwMTUtMDktMTVUMjAwMTE5LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDM3
+NEcgU2VwIDIwIDE1OjQ4IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMTZUMjAwMTAxLnZyYgotcnct
+ci0tci0tIDEgcm9vdCByb290IDQ2NUcgU2VwIDI2IDIyOjUwIFNHIERBSUxZCkJBQ0tVUDIwMTUt
+MDktMTdUMjAwMTA1LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDYyNkcgU2VwIDI3IDA4OjQz
+IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMThUMjAwMTEwLnZyYgotcnctci0tci0tIDEgcm9vdCBy
+b290IDUzM0cgU2VwIDI3IDE3OjI1IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMjFUMjAwMTAxLnZy
+Ygotcnctci0tci0tIDEgcm9vdCByb290IDQ1OUcgU2VwIDI4IDAyOjM2IFNHIERBSUxZCkJBQ0tV
+UDIwMTUtMDktMjJUMjAwMDU5LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDQ2MEcgU2VwIDI4
+IDExOjMyIFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMjNUMjAwMTExLnZyYgotcnctci0tci0tIDEg
+cm9vdCByb290IDUxNkcgT2N0IDEyIDAwOjI3IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMjRUMjAw
+MDU4LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDU5M0cgT2N0ICAzIDIwOjA1IFNHIERBSUxZ
+CkJBQ0tVUDIwMTUtMDktMjVUMjAwMTA0LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDQ4Mkcg
+T2N0IDEyIDAwOjIwIFNHIERBSUxZCkJBQ0tVUDIwMTUtMDktMjhUMjAwMTA4LnZyYgotcnctci0t
+ci0tIDEgcm9vdCByb290IDQ2NkcgT2N0IDEyIDAwOjI2IFNHIERBSUxZCkJBQ0tVUDIwMTUtMDkt
+MjlUMjAwMTE1LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDQ4MUcgT2N0ICA0IDIzOjQxIFNH
+IERBSUxZCkJBQ0tVUDIwMTUtMDktMzBUMjAwMTA5LnZyYgotcnctci0tci0tIDEgcm9vdCByb290
+IDU0OEcgT2N0IDEyIDAwOjI2IFNHIERBSUxZCkJBQ0tVUDIwMTUtMTAtMDFUMjAwMTE1LnZyYgot
+cnctci0tci0tIDEgcm9vdCByb290IDcwM0cgT2N0IDExIDA3OjU5IFNHIERBSUxZCkJBQ0tVUDIw
+MTUtMTAtMDJUMjAwMDU1LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDQwOUcgT2N0IDExIDA0
+OjA1IFNHIERBSUxZCkJBQ0tVUDIwMTUtMTAtMDVUMjAwMTA2LnZyYgotcnctci0tci0tIDEgcm9v
+dCByb290IDM4NEcgT2N0IDExIDEwOjE0IFNHIERBSUxZCkJBQ0tVUDIwMTUtMTAtMDZUMjAwMDU5
+LnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDMzNUcgT2N0IDExIDE5OjQ5IFNHIERBSUxZCkJB
+Q0tVUDIwMTUtMTAtMDdUMTA0NjIxLnZyYgotcnctci0tci0tIDEgcm9vdCByb290IDU1MkcgT2N0
+IDEyIDAwOjI3IFNHIERBSUxZCkJBQ0tVUDIwMTUtMTAtMDdUMjAwMTIzLnZyYgotcnctci0tci0t
+IDEgcm9vdCByb290ICA5MEcgT2N0IDEyIDAwOjI3IFNHIERBSUxZCkJBQ0tVUDIwMTUtMTAtMDhU
+MjAwMTEzLnZyYgotcnctci0tci0tIDEgcm9vdCByb290ICAxM1QgT2N0IDEyIDAwOjI3IFNHIERB
+SUxZCkJBQ0tVUDIwMTUtMTAtMDlUMjAwMTEyLnZiawotcnctci0tci0tIDEgcm9vdCByb290IDYy
+MEcgT2N0IDEzIDIwOjAxIFNHIERBSUxZCkJBQ0tVUDIwMTUtMTAtMTJUMjAwMTA4LnZpYgotcnct
+ci0tci0tIDEgcm9vdCByb290IDQyNEcgT2N0IDEzIDIzOjQ2IFNHIERBSUxZCkJBQ0tVUDIwMTUt
+MTAtMTNUMjAwMTM2LnZpYgoKcHZkaXNwbGF5IC9kZXYvc2RjCiAgLS0tIFBoeXNpY2FsIHZvbHVt
+ZSAtLS0KICBQViBOYW1lICAgICAgICAgICAgICAgL2Rldi9zZGMKICBWRyBOYW1lICAgICAgICAg
+ICAgICAgVkcyCiAgUFYgU2l6ZSAgICAgICAgICAgICAgIDUwLjAwIFRpQiAvIG5vdCB1c2FibGUg
+My4wMCBNaUIKICBBbGxvY2F0YWJsZSAgICAgICAgICAgeWVzIChidXQgZnVsbCkKICBQRSBTaXpl
+ICAgICAgICAgICAgICAgNC4wMCBNaUIKICBUb3RhbCBQRSAgICAgICAgICAgICAgMTMxMDcxOTkK
+ICBGcmVlIFBFICAgICAgICAgICAgICAgMAogIEFsbG9jYXRlZCBQRSAgICAgICAgICAxMzEwNzE5
+OQogIFBWIFVVSUQgICAgICAgICAgICAgICBua2JMRzAtZlVOeC1TdFQ3LWh0aWwtVWtzRi1HQzdp
+LWFtRElBOQoKCnZnZGlzcGxheSBWRzIKICAtLS0gVm9sdW1lIGdyb3VwIC0tLQogIFZHIE5hbWUg
+ICAgICAgICAgICAgICBWRzIKICBTeXN0ZW0gSUQKICBGb3JtYXQgICAgICAgICAgICAgICAgbHZt
+MgogIE1ldGFkYXRhIEFyZWFzICAgICAgICAxCiAgTWV0YWRhdGEgU2VxdWVuY2UgTm8gIDEyCiAg
+VkcgQWNjZXNzICAgICAgICAgICAgIHJlYWQvd3JpdGUKICBWRyBTdGF0dXMgICAgICAgICAgICAg
+cmVzaXphYmxlCiAgTUFYIExWICAgICAgICAgICAgICAgIDAKICBDdXIgTFYgICAgICAgICAgICAg
+ICAgMQogIE9wZW4gTFYgICAgICAgICAgICAgICAxCiAgTWF4IFBWICAgICAgICAgICAgICAgIDAK
+ICBDdXIgUFYgICAgICAgICAgICAgICAgMQogIEFjdCBQViAgICAgICAgICAgICAgICAxCiAgVkcg
+U2l6ZSAgICAgICAgICAgICAgIDUwLjAwIFRpQgogIFBFIFNpemUgICAgICAgICAgICAgICA0LjAw
+IE1pQgogIFRvdGFsIFBFICAgICAgICAgICAgICAxMzEwNzE5OQogIEFsbG9jIFBFIC8gU2l6ZSAg
+ICAgICAxMzEwNzE5OSAvIDUwLjAwIFRpQgogIEZyZWUgIFBFIC8gU2l6ZSAgICAgICAwIC8gMAog
+IFZHIFVVSUQgICAgICAgICAgICAgICBzalpqZ1ItTTU4Zi1TaHJnLWp4S3UtVHdCcS1xTDNYLUJN
+WFlFbgoKbHZkaXNwbGF5IC9kZXYvVkcyL0xWMQogIC0tLSBMb2dpY2FsIHZvbHVtZSAtLS0KICBM
+ViBQYXRoICAgICAgICAgICAgICAgIC9kZXYvVkcyL0xWMQogIExWIE5hbWUgICAgICAgICAgICAg
+ICAgTFYxCiAgVkcgTmFtZSAgICAgICAgICAgICAgICBWRzIKICBMViBVVUlEICAgICAgICAgICAg
+ICAgIHJFbGNuOS1jbXNILUszUDUtbktPQi1HY1YwLWZEZjktZ296ZGdUCiAgTFYgV3JpdGUgQWNj
+ZXNzICAgICAgICByZWFkL3dyaXRlCiAgTFYgQ3JlYXRpb24gaG9zdCwgdGltZSBTRy1WUkVQTzEu
+aXhibHVlLmNvcnAsIDIwMTUtMDgtMDkgMTA6NDA6NTMgKzAyMDAKICBMViBTdGF0dXMgICAgICAg
+ICAgICAgIGF2YWlsYWJsZQogICMgb3BlbiAgICAgICAgICAgICAgICAgMgogIExWIFNpemUgICAg
+ICAgICAgICAgICAgNTAuMDAgVGlCCiAgQ3VycmVudCBMRSAgICAgICAgICAgICAxMzEwNzE5OQog
+IFNlZ21lbnRzICAgICAgICAgICAgICAgMQogIEFsbG9jYXRpb24gICAgICAgICAgICAgaW5oZXJp
+dAogIFJlYWQgYWhlYWQgc2VjdG9ycyAgICAgYXV0bwogIC0gY3VycmVudGx5IHNldCB0byAgICAg
+MjU2CiAgQmxvY2sgZGV2aWNlICAgICAgICAgICAyNTQ6MAoKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
