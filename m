@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6180E7F37
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 23:54:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 31EEB7F37
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 02:23:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BF4A8AC007
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 21:54:57 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	vkm7RuGIuqonKwyE for <xfs@oss.sgi.com>;
-	Mon, 12 Oct 2015 21:54:55 -0700 (PDT)
-Date: Tue, 13 Oct 2015 15:54:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 12/14 v2] xfsprogs: make fsr use mntinfo when there is no
-	mntent
-Message-ID: <20151013045442.GG31326@dastard>
-References: <1442311164-12921-13-git-send-email-jtulak@redhat.com>
-	<1443542653-10525-1-git-send-email-jtulak@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AA22AAC006
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 00:23:58 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id BTdkPtPxCay4x1qH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 13 Oct 2015 00:23:56 -0700 (PDT)
+Date: Tue, 13 Oct 2015 00:23:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] db: fix AGI ops definition in CRC type table
+Message-ID: <20151013072350.GG10397@birch.djwong.org>
+References: <1444709821-5009-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1443542653-10525-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1444709821-5009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,83 +29,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 29, 2015 at 06:04:13PM +0200, Jan Tulak wrote:
-> UPDATE:
-> - refactor ifdefs to platform_ functions
+On Tue, Oct 13, 2015 at 03:17:01PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> For what fsr needs, mntinfo can be used instead of mntent on some
-> platforms. Exctract the platform-specific code to platform headers.
+> The wrong buffer ops structure was added to the AGI field of the
+> type table when initially committed. This was not noticed because it
+> only affects manually setting the type of a buffer from xfs_db. e.g
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> xfs_db> agi 0
+> xfs_db> p
+> .....
+> crc = 0xbc58d757 (correct)
+> .....
+> xfs_db> fsb 2
+> xfs_db> type agi
+> Metadata CRC error detected at block 0x10/0x1000
+> xfs_db>
+> 
+> This is because (trimmed for clarity):
+> 
+> Breakpoint 1, xfs_verifier_error:
+> (gdb) bt
+> #0  xfs_verifier_error
+> #1  xfs_agfl_read_verify
+> #2  set_iocur_type
+> #3  type_f
+> #4  main
+> 
+> It's clear that the wrong verifier is being run (AGFL, not AGI).
+> The fix is simple.
 
-I haven't commited this patch - I think it still needs some work
-to clean up....
+Looks reasonable, so you can add my reviewed-by if you like.
 
->  static void
->  initallfs(char *mtab)
->  {
-> -	FILE *fp;
->  	struct mntent *mp;
->  	int mi;
->  	char *cp;
->  	struct stat64 sb;
->  
-> -	fp = setmntent(mtab, "r");
-> -	if (fp == NULL) {
-> -		fsrprintf(_("could not open mtab file: %s\n"), mtab);
-> -		exit(1);
-> -	}
-> -
->  	/* malloc a number of descriptors, increased later if needed */
->  	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
->  		fsrprintf(_("out of memory: %s\n"), strerror(errno));
-> @@ -427,7 +425,36 @@ initallfs(char *mtab)
->  	/* find all rw xfs file systems */
->  	mi = 0;
->  	fs = fsbase;
-> +
-> +#if defined(HAVE_GETMNTENT)
-> +	FILE *fp;
-> +	fp = setmntent(mtab, "r");
-> +	if (fp == NULL) {
-> +		fsrprintf(_("could not open mtab file: %s\n"), mtab);
-> +		exit(1);
-> +	}
-> +
->  	while ((mp = getmntent(fp))) {
-> +#elif defined(HAVE_GETMNTINFO)
-> +	struct statfs	*stats;
-> +	int error, i, count;
-> +	// because "t" is a pointer, but we don't need to use
-> +	// malloc for this usage
-> +	struct mntent mp_tmp;
-> +	mp = &mp_tmp;
-> +	error = 0;
-> +	if ((count = getmntinfo(&stats, 0)) < 0) {
-> +		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
-> +				progname, strerror(errno));
-> +		exit(1);
-> +	}
-> +
-> +	for (i = 0; i < count; i++) {
-> +		mntinfo2mntent(&stats[i], mp);
-> +#else
-> +# error "How do I extract info about mounted filesystems on this platform?"
-> +#endif
+For my part I'm still figuring out how to fix this:
 
-this stuff here. This iteration should be able to be done via the
-cursor abstraction, such as by keeping the iteration information
-within the cursor...
+xfs_db> agf 2
+xfs_db> type agi
+Metadata CRC error detected at block 0x10/0x1000
+xfs_db> p
+Segmentation fault
 
-Cheers,
+Granted, trying to print the AGF fields of an AGI block doesn't make sense, but
+I feel like xfs_db should probably have a better reaction than crashing.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  db/type.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/db/type.c b/db/type.c
+> index 955986b..1da7ee1 100644
+> --- a/db/type.c
+> +++ b/db/type.c
+> @@ -77,7 +77,7 @@ static const typ_t	__typtab[] = {
+>  static const typ_t	__typtab_crc[] = {
+>  	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+>  	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+> -	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+> +	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops },
+>  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+>  		&xfs_attr3_db_buf_ops },
+>  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+> @@ -113,7 +113,7 @@ static const typ_t	__typtab_crc[] = {
+>  static const typ_t	__typtab_spcrc[] = {
+>  	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+>  	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+> -	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+> +	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops },
+>  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+>  		&xfs_attr3_db_buf_ops },
+>  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
