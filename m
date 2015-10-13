@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0A0987F37
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 19:23:54 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 10B6C7F37
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 19:32:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EC4268F8035
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 17:23:50 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB9A08F8033
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 17:32:35 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	AiDdeHQLmTPYG7Y4 for <xfs@oss.sgi.com>;
-	Mon, 12 Oct 2015 17:23:47 -0700 (PDT)
-Date: Tue, 13 Oct 2015 11:23:08 +1100
+	HC0VC8CPn6IzshUY for <xfs@oss.sgi.com>;
+	Mon, 12 Oct 2015 17:32:30 -0700 (PDT)
+Date: Tue, 13 Oct 2015 11:32:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: mkfs.xfs -n size=65536
-Message-ID: <20151013002308.GI27164@dastard>
-References: <0F279340237AA148AD7E3C6A70561A5E01266BE7@xmb-rcd-x14.cisco.com>
+Subject: Re: [PATCH 2/4] xfs_repair: fix unaligned accesses
+Message-ID: <20151013003228.GJ27164@dastard>
+References: <56170906.5090301@redhat.com> <56170974.5020604@sandeen.net>
+	<20151011222618.GX27164@dastard> <561C26B4.3080008@sandeen.net>
+	<20151012214532.GC31326@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <0F279340237AA148AD7E3C6A70561A5E01266BE7@xmb-rcd-x14.cisco.com>
+In-Reply-To: <20151012214532.GC31326@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +31,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Al Lau (alau2)" <alau2@cisco.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 09, 2015 at 10:40:00PM +0000, Al Lau (alau2) wrote:
-> I am looking for more details on the "-n size=65536" option in
-> mkfs.xfs.  The question is the memory allocation this option
-> generates.  The system is Redhat EL 7.0
-> (3.10.0-229.1.2.el7.x86_64).
+On Tue, Oct 13, 2015 at 08:45:32AM +1100, Dave Chinner wrote:
+> On Mon, Oct 12, 2015 at 04:31:32PM -0500, Eric Sandeen wrote:
+> > 
+> > 
+> > On 10/11/15 5:26 PM, Dave Chinner wrote:
+> > > On Thu, Oct 08, 2015 at 07:25:24PM -0500, Eric Sandeen wrote:
+> > >> This fixes some unaligned accesses spotted by libubsan in repair.
+> > >>
+> > >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > >> ---
+> > >>  repair/dinode.c   |   19 +++++++++----------
+> > >>  repair/prefetch.c |    4 ++--
+> > >>  2 files changed, 11 insertions(+), 12 deletions(-)
+> > >>
+> > >> diff --git a/repair/dinode.c b/repair/dinode.c
+> > >> index f78f907..44bbb8f 100644
+> > >> --- a/repair/dinode.c
+> > >> +++ b/repair/dinode.c
+> > >> @@ -960,13 +960,13 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+> > >>  		 * btree, we'd do it right here.  For now, if there's a
+> > >>  		 * problem, we'll bail out and presumably clear the inode.
+> > >>  		 */
+> > >> -		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
+> > >> +		if (!verify_dfsbno(mp, get_unaligned_be64(&pp[i])))  {
+> > > 
+> > > I don't understand - when are pointers in the BMBT not 64 bit
+> > > aligned? The buffers are allocated by memalign to be 64 bit aligned,
+> > > and all the internal BMBT structures are 64 bit aligned, too. i.e
+> > > the BMBT block header is 24/72 bytes in length (depending on CRCs),
+> > > the pointers are 64 bit, and the records are 128 bit.
+> > > 
+> > > So where's the unaligned access coming from?
+> > 
+> > Ok, so on a recheck, I'm not crazy w.r.t. what gcc said, anyway:
+> > 
+> > dinode.c:964:26: runtime error: load of misaligned address 0x7fc4f800ef54 for type 'xfs_bmbt_ptr_t', which requires 8 byte alignment
+> > 0x7fc4f800ef54: note: pointer points here
+> >   00 00 00 00 00 00 00 00  00 20 38 5e 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> >               ^ 
+> > 
+> > with some added printfs, it came from:
+> > 
+> >         pp = XFS_BMDR_PTR_ADDR(dib, 1,
+> >                 xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+> >         printf("dib at %p pp at %p\n", dib, pp);
+> > 
+> > dib at 0x7fc4f800eeb0 pp at 0x7fc4f800ef54
 > 
-> We have been getting this memory allocation deadlock message in
-> the /var/log/messages file.  The file system is used for ceph OSD
-> and it has about 531894 files.
+> Ah, ok, it's in extent format in the inode fork, not in btree
+> format in blocks. Let me go back and look at it again.
 
-So, if you only have half a million files being stored, why would you
-optimised the directory structure for tens of millions of files in a
-single directory?
-
-> Oct  6 07:11:09 abc-ceph1-xyz kernel: XFS: possible memory allocation deadlock in kmem_alloc (mode:0x8250)
-
-mode = ___GFP_WAIT | ___GFP_IO | ___GFP_NOWARN | ___GFP_ZERO
-     = GFP_NOFS | GFP_ZERO | GFP_NOWARN
-
-which means it's come through kmem_zalloc() and so is a heap
-allocation and hence probably quite small.
-
-Hence I doubt that has anything to do with the directory
-block size, as the directory blocks are allocated as single pages
-through a completely allocation different path and them virtually
-mapped...
+My head was not screwed on properly that early in the morning.  BMDR
+is the btree root block in the inode, not an extent format inode.
+And that set of pointers are being walked as an array which is then
+fed into the block scan itself. OK, makes sense now.
 
 Cheers,
 
