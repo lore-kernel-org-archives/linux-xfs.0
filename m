@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9117B7F37
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 20:39:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7FF5F8F8040
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 18:39:51 -0700 (PDT)
-Received: from alln-iport-4.cisco.com (alln-iport-4.cisco.com [173.37.142.91])
-	by cuda.sgi.com with ESMTP id TJawCooBZxzKCGgP (version=TLSv1
-	cipher=IDEA-CBC-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Oct 2015 18:39:49 -0700 (PDT)
-From: "Al Lau (alau2)" <alau2@cisco.com>
-Subject: RE: mkfs.xfs -n size=65536
-Date: Tue, 13 Oct 2015 01:39:13 +0000
-Message-ID: <8a1b26a3b869448e805485c529c447a4@XCH-ALN-020.cisco.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4C5167F37
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 22:33:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1C00D304048
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2015 20:33:09 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	nVQNlTtOiGlBsQMm for <xfs@oss.sgi.com>;
+	Mon, 12 Oct 2015 20:33:06 -0700 (PDT)
+Date: Tue, 13 Oct 2015 14:33:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: mkfs.xfs -n size=65536
+Message-ID: <20151013033304.GL27164@dastard>
 References: <0F279340237AA148AD7E3C6A70561A5E01266BE7@xmb-rcd-x14.cisco.com>
 	<20151013002308.GI27164@dastard>
-In-Reply-To: <20151013002308.GI27164@dastard>
-Content-Language: en-US
+	<8a1b26a3b869448e805485c529c447a4@XCH-ALN-020.cisco.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <8a1b26a3b869448e805485c529c447a4@XCH-ALN-020.cisco.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,56 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Al Lau (alau2)" <alau2@cisco.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Dave,
-
-The "-n size=65536" was introduced to our system before I arrived.  We can adjust the value with respect to the usage on our system.
-
-I also did not think the kmme_alloc failure was related to the size=65536 setting.
-
-I am attempting to reproduce the kmem_alloc error as requested in https://access.redhat.com/support/cases/#/case/01500239
-
-Have a 3 TB file.  Logically divide into 1024 sections.  Each section has a process doing dd to a randomly selected 4K block in a loop.  Will this test case eventually cause the extent fragmentation that lead to the kmem_alloc message?
-
-dd if=/var/kmem_alloc/junk of=/var/kmem_alloc/fragmented obs=4096 bs=4096 count=1 seek=604885543 conv=fsync,notrunc oflag=direct
-
-Thanks,
--Al
-
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com] 
-Sent: Monday, October 12, 2015 5:23 PM
-To: Al Lau (alau2)
-Cc: xfs@oss.sgi.com
-Subject: Re: mkfs.xfs -n size=65536
-
-On Fri, Oct 09, 2015 at 10:40:00PM +0000, Al Lau (alau2) wrote:
-> I am looking for more details on the "-n size=65536" option in 
-> mkfs.xfs.  The question is the memory allocation this option 
-> generates.  The system is Redhat EL 7.0 (3.10.0-229.1.2.el7.x86_64).
+On Tue, Oct 13, 2015 at 01:39:13AM +0000, Al Lau (alau2) wrote:
+> Have a 3 TB file.  Logically divide into 1024 sections.  Each
+> section has a process doing dd to a randomly selected 4K block in
+> a loop.  Will this test case eventually cause the extent
+> fragmentation that lead to the kmem_alloc message?
 > 
-> We have been getting this memory allocation deadlock message in the 
-> /var/log/messages file.  The file system is used for ceph OSD and it 
-> has about 531894 files.
+> dd if=/var/kmem_alloc/junk of=/var/kmem_alloc/fragmented obs=4096 bs=4096 count=1 seek=604885543 conv=fsync,notrunc oflag=direct
 
-So, if you only have half a million files being stored, why would you optimised the directory structure for tens of millions of files in a single directory?
+If you were loking for a recipe to massively fragment a file, then
+you found it. And, yes, when you start to get millions of extents in
+a file such as this workload will cause, you'll start having memory
+allocation problems.
 
-> Oct  6 07:11:09 abc-ceph1-xyz kernel: XFS: possible memory allocation 
-> deadlock in kmem_alloc (mode:0x8250)
-
-mode = ___GFP_WAIT | ___GFP_IO | ___GFP_NOWARN | ___GFP_ZERO
-     = GFP_NOFS | GFP_ZERO | GFP_NOWARN
-
-which means it's come through kmem_zalloc() and so is a heap allocation and hence probably quite small.
-
-Hence I doubt that has anything to do with the directory block size, as the directory blocks are allocated as single pages through a completely allocation different path and them virtually mapped...
+But I don't think that sets the GFP_ZERO flag anywhere, so that's
+not necessarily where the memroy shortage is coming from. I just
+committed some changes to the dev tree that allow for more detailed
+information from this allocation error point to be obtained -
+perhaps if woul dbe worthwhile trying a kernel build form the
+current for-next tree and turning the error level up to 11?
 
 Cheers,
 
 Dave.
---
+-- 
 Dave Chinner
 david@fromorbit.com
 
