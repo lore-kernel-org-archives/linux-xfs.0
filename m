@@ -1,28 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E4B9B7F37
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 08:39:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C7C8AC006
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 06:39:22 -0700 (PDT)
-Received: from mail-lb0-f177.google.com (mail-lb0-f177.google.com
-	[209.85.217.177]) by cuda.sgi.com with ESMTP id
-	BKKDqDtFhKXy9zK6 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2015 06:39:17 -0700 (PDT)
-Received: by lbwr8 with SMTP id r8so20322337lbw.2
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 06:39:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20151012040545.GC27164@dastard>
-References: <1444604337-17651-1-git-send-email-andreas.gruenbacher@gmail.com>
-	<1444604337-17651-25-git-send-email-andreas.gruenbacher@gmail.com>
-	<20151012001033.GA27164@dastard>
-	<CAHpGcMKeJHDegs2cYKaJdX4Tw43Jp30Nv_2WoSNZfBzGJKu=BQ@mail.gmail.com>
-	<20151012040545.GC27164@dastard>
-Date: Tue, 13 Oct 2015 15:39:15 +0200
-Message-ID: <CAHc6FU7aNW3drN+Mj2PHyz0Tv8RHexSuUzWCPnCA7eCWY68pHQ@mail.gmail.com>
-Subject: Re: [PATCH v10 24/46] xfs: Add richacl support
-From: Andreas Gruenbacher <agruenba@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8C6D57F37
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 11:19:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AEB7FAC009
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 09:19:49 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	y1MxurAPgvSKGQfb for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2015 09:19:47 -0700 (PDT)
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH] vfs: remove unused wrapper block_page_mkwrite()
+Date: Tue, 13 Oct 2015 10:19:40 -0600
+Message-Id: <1444753180-27993-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,32 +20,143 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API Mailing List <linux-api@vger.kernel.org>, =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>, Trond Myklebust <trond.myklebust@primarydata.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-nilfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-T24gTW9uLCBPY3QgMTIsIDIwMTUgYXQgNjowNSBBTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9t
-b3JiaXQuY29tPiB3cm90ZToKPiBPbiBNb24sIE9jdCAxMiwgMjAxNSBhdCAwMzo1MToxNUFNICsw
-MjAwLCBBbmRyZWFzIEdyw7xuYmFjaGVyIHdyb3RlOgo+PiAyMDE1LTEwLTEyIDI6MTAgR01UKzAy
-OjAwIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT46Cj4+ID4gQWxzbywgSSByZWFs
-bHkgZGlzbGlrZSB0aGUgQVBJIHdoZXJlIHBhc3NpbmcgYSBOVUxMIGFjbCBtZWFucyB0bwo+PiA+
-ICJzZXQgdGhpcyBhY2wiIGFjdHVhbGx5IG1lYW5zICJyZW1vdmUgdGhlIGV4aXN0aW5nIEFDTCIu
-IFdoeSBubwo+PiA+IC0+cmVtb3ZlX2FjbCBtZXRob2QgY2FsbGVkIGZyb20gdGhlIGdlbmVyaWMg
-Y29kZT8KPj4KPj4gSXQncyBub3QgdW5jb21tb24sIGl0IHNhdmVzIGlub2RlIG9wZXJhdGlvbnMg
-YW5kIHdpcmluZy11cCBjb2RlLgo+Cj4gSSBrbm93IGl0J3MgY29tbW9uLiBBbGwgaXQgZG9lcyBp
-cyBwdXQgZXh0cmEgYnJhbmNoZXMgaW4gdGhlCj4gZmlsZXN5c3RlbSBjb2RlIHRvIGRvIHRoaXMs
-IGJlY2F1c2UgcmVtb3ZlIGlzIGEgZGlmZmVyZW50IG9wZXJhdGlvbgo+IHRvIHNldC4gVGhlIEFQ
-SSBzdWNrcywgYW5kIHdlJ3JlIG5vdCBsaW1pdGVkIG9uIGlub2RlIG9wZXJhdGlvbnMsCj4gYW5k
-IHRoZSBvcGVyYXRvciBvdmVybG9hZGluZyBtYWtlcyB0aGUgZmlsZXN5c3RlbSBjb2RlIHVubmVj
-ZXNzYXJpbHkKPiBjb21wbGV4IGFzIGl0IGhhcyB0byBkZXRlY3Qgd2hlbiB0byBicmFuY2ggb3V0
-IG90IHJlbW92ZSBvciBub3QuLi4KCkkndmUgdHJpZWQgaXQgb3V0LiBUaGUgZmlsZXN5c3RlbSBj
-b2RlIGNvdWxkIGJlIHNpbXBsaWZpZWQgKHNlZSB0aGUKcmljaGFjbC13aXAgWypdIGJyYW5jaCB1
-bnRpbCB0aGUgbmV4dCBwb3N0aW5nKS4gQWRkaW5nIGEKcmVtb3ZlX3JpY2hhY2wgaW5vZGUgb3Bl
-cmF0aW9uIG9uIHRvcCBvZiB0aGF0IHJlYWxseSBkb2Vzbid0IGhlbHAuCgpUaGFua3MsCkFuZHJl
-YXMKClsqXSBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvYWdy
-dWVuL2xpbnV4LXJpY2hhY2wuZ2l0CnJpY2hhY2wtd2lwCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+The function currently called "__block_page_mkwrite()" used to be called
+"block_page_mkwrite()" until a wrapper for this function was added by:
+
+commit 24da4fab5a61 ("vfs: Create __block_page_mkwrite() helper passing
+	error values back")
+
+This wrapper, the current "block_page_mkwrite()", is currently unused.
+__block_page_mkwrite() is used directly by ext4, nilfs2 and xfs.
+
+Remove the unused wrapper and rename __block_page_mkwrite() back to
+block_page_mkwrite().
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/buffer.c                 | 22 +---------------------
+ fs/ext4/inode.c             |  4 ++--
+ fs/nilfs2/file.c            |  2 +-
+ fs/xfs/xfs_file.c           |  2 +-
+ include/linux/buffer_head.h |  2 --
+ 5 files changed, 5 insertions(+), 27 deletions(-)
+
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 82283ab..7e496dc 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2422,7 +2422,7 @@ EXPORT_SYMBOL(block_commit_write);
+  * Direct callers of this function should protect against filesystem freezing
+  * using sb_start_write() - sb_end_write() functions.
+  */
+-int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
++int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 			 get_block_t get_block)
+ {
+ 	struct page *page = vmf->page;
+@@ -2459,26 +2459,6 @@ out_unlock:
+ 	unlock_page(page);
+ 	return ret;
+ }
+-EXPORT_SYMBOL(__block_page_mkwrite);
+-
+-int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+-		   get_block_t get_block)
+-{
+-	int ret;
+-	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
+-
+-	sb_start_pagefault(sb);
+-
+-	/*
+-	 * Update file times before taking page lock. We may end up failing the
+-	 * fault so this update may be superfluous but who really cares...
+-	 */
+-	file_update_time(vma->vm_file);
+-
+-	ret = __block_page_mkwrite(vma, vmf, get_block);
+-	sb_end_pagefault(sb);
+-	return block_page_mkwrite_return(ret);
+-}
+ EXPORT_SYMBOL(block_page_mkwrite);
+ 
+ /*
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 612fbcf..2d1ecd2 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -5244,7 +5244,7 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 	    !ext4_should_journal_data(inode) &&
+ 	    !ext4_nonda_switch(inode->i_sb)) {
+ 		do {
+-			ret = __block_page_mkwrite(vma, vmf,
++			ret = block_page_mkwrite(vma, vmf,
+ 						   ext4_da_get_block_prep);
+ 		} while (ret == -ENOSPC &&
+ 		       ext4_should_retry_alloc(inode->i_sb, &retries));
+@@ -5291,7 +5291,7 @@ retry_alloc:
+ 		ret = VM_FAULT_SIGBUS;
+ 		goto out;
+ 	}
+-	ret = __block_page_mkwrite(vma, vmf, get_block);
++	ret = block_page_mkwrite(vma, vmf, get_block);
+ 	if (!ret && ext4_should_journal_data(inode)) {
+ 		if (ext4_walk_page_buffers(handle, page_buffers(page), 0,
+ 			  PAGE_CACHE_SIZE, NULL, do_journal_get_write_access)) {
+diff --git a/fs/nilfs2/file.c b/fs/nilfs2/file.c
+index 54575e3..088ba00 100644
+--- a/fs/nilfs2/file.c
++++ b/fs/nilfs2/file.c
+@@ -109,7 +109,7 @@ static int nilfs_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 		goto out;
+ 
+ 	file_update_time(vma->vm_file);
+-	ret = __block_page_mkwrite(vma, vmf, nilfs_get_block);
++	ret = block_page_mkwrite(vma, vmf, nilfs_get_block);
+ 	if (ret) {
+ 		nilfs_transaction_abort(inode->i_sb);
+ 		goto out;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e78feb4..f80e90f 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1506,7 +1506,7 @@ xfs_filemap_page_mkwrite(
+ 		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_direct,
+ 				    xfs_end_io_dax_write);
+ 	} else {
+-		ret = __block_page_mkwrite(vma, vmf, xfs_get_blocks);
++		ret = block_page_mkwrite(vma, vmf, xfs_get_blocks);
+ 		ret = block_page_mkwrite_return(ret);
+ 	}
+ 
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index e6797de..89d9aa9 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -227,8 +227,6 @@ int cont_write_begin(struct file *, struct address_space *, loff_t,
+ 			get_block_t *, loff_t *);
+ int generic_cont_expand_simple(struct inode *inode, loff_t size);
+ int block_commit_write(struct page *page, unsigned from, unsigned to);
+-int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+-				get_block_t get_block);
+ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 				get_block_t get_block);
+ /* Convert errno to return value from ->page_mkwrite() call */
+-- 
+2.1.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
