@@ -1,20 +1,20 @@
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0B7137F50
-	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 05:10:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D1E778F8040
-	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 03:10:48 -0700 (PDT)
-Received: from mailgw.unionpay.com ([58.246.226.19]) by cuda.sgi.com with
-	ESMTP id ZIBlyqfViiwkO0Ob for <xfs@oss.sgi.com>;
-	Thu, 15 Oct 2015 03:10:44 -0700 (PDT)
-Received: from /spool/local by unionpay.com with XMail ESMTP
-	for <xfs@oss.sgi.com> from <jijianwu@unionpay.com>;
-	Thu, 15 Oct 2015 18:11:14 +0800
-Date: Thu, 15 Oct 2015 18:09:18 +0800
-From: "admin" <jijianwu@unionpay.com>
-Subject: =?utf-8?B?MjAxNS0xMC0xNeWNh+e6p+WujOavlQ==?=
-Message-ID: <20151015180929804507@unionpay.com>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 850227F37
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 15:30:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 744A98F8040
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 13:30:17 -0700 (PDT)
+Received: from connet.janaconda.com (connet.janaconda.com [23.95.21.13]) by
+	cuda.sgi.com with ESMTP id wnfFPN0c4AcevIxJ for
+	<xfs@oss.sgi.com>; Wed, 14 Oct 2015 13:30:15 -0700 (PDT)
+Received: by connet.janaconda.com id h3qtlg0001g1 for <xfs@oss.sgi.com>;
+	Wed, 14 Oct 2015 13:27:47 -0700 (envelope-from
+	<tracy-xfs=oss.sgi.com@janaconda.com>)
+MIME-Version: 1.0
+From: "Tracy E. Blankenship" <tracy@janaconda.com>
+Subject: Is Your Business Ready for Apple Pay?
+Date: Wed, 14 Oct 2015 13:27:47 -0700
+Message-ID: <0.0.0.6A.1D106BEC9F82080.62BB21B@connet.janaconda.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,80 +23,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5587311296562347771=="
+Content-Type: multipart/mixed; boundary="===============5705523865499757629=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
+--===============5705523865499757629==
+Content-Type: multipart/alternative; boundary="b097f9d21b422ae2607cb198a318c3"
 
---===============5587311296562347771==
-Content-Type: multipart/alternative;
-	boundary="=====003_Dragon064227526083_====="
-
-This is a multi-part message in MIME format.
-
---=====003_Dragon064227526083_=====
-Content-Transfer-Encoding: base64
+--b097f9d21b422ae2607cb198a318c3
 Content-Type: text/plain;
-	charset="utf-8"
 
-5ZCE5L2N5ZCM5LqL77yaDQoNCuWFrOWPuOWGhemDqOmCruS7tuezu+e7n+WwhuWcqOS4ieWkqeWQ
-jui/m+ihjOWNh+e6p++8jOeOsOWcqOS9v+eUqOeahOeJiOacrOWNs+WwhuWBnOatouS9v+eUqOOA
-gg0KDQror7fkvaDlsL3lv6vlsIbmlbDmja7ov5vooYzlpIfku73vvIzpgb/lhY3lsYrml7booqvm
-uIXnqbrvvIzpgL7ml7blsIbml6Dms5Xov5vooYzmgaLlpI0NCuivt+eCueWHu+i/memHjOi/m+ih
-jA0K5pys5qyh6YCa55+l55qE5pyJ5pWI5pe26Ze05Li6M+Wwj+aXtu+8jOi2heaXtuWwhuiiq+m7
-mOiupOS4uuaUvuW8g+OAgg0KMjAxNS0xMC0xNSzkuIvljYggMDY6MDk6Mjk=
+The Ins And Outs Of Homeschooling Children
+Just as in regular school, your child may find that they are having trouble with a certain subject. If this is the case for your child, do not be ashamed to hire a tutor and do not get down on yourself. Many parents feel as though it is their fault if their child is not excelling in a certain subject; the truth is this is natural. The only thing you can do about it is get them the help they need.
+Learning isn't restricted to your children - you also have to learn as much as you can about the topics you teach, how to teach more effectively and how to run an efficient homeschool. You can find a plethora of information online on blogs, websites and through videos and podcasts. Locate experts in the field and follow what they share. Pick up books and keep them as references. The more you know, the more your kids will learn.
+If you plan to home school your child or children, always remember that books and the chosen curricula are just the basics. The best learning experience within the home is one that incorporates materials and concepts from outside the home and the curriculum. If you cannot find a single curricula that meets your needs, don't be afraid to use multiple sources.
+When you home school your child, you take on more than the role of teacher. Actually, you'll also have to be the cafeteria worker, physical education coach and possibly even a counselor. Consider the responsibilities each title carries as you plan out your daily schedule and routine. Prepare lunches in advance, schedule outdoor time and make yourself available for emotional support and motivation.
+Hands-on practice is very important for your child's learning process. Cooking is one great way to engage them in the topic. To illustrate, if they are learning about India, they could try their hand making some Indian curry. When learning about wars, you can cook foods from the countries you are studying. Learning with all senses will allow your child to more fully understand the topics.
+With increasing frequency, countless parents are determining that homeschooling is the best possible option in terms of ensuring that their children receive a truly great education. The process of schooling children in the home does, however, post substantial challenges for just about every parents, no matter how motivated. Fortunately, the advice in the article above has provide a solid foundation for getting a home-based educational program off the ground.
+If you have smaller children around while homeschooling, you need to set some ground rules for them. It's okay for the toddler to stay in the room if they are not causing a disruption to class time. During breaks from teaching, make sure to give your toddler attention during those times. Doing this will make things run more smoothly in the long run and improve educational outcomes for the older child.
+To keep your student (and yourself) connected with the world outside the home-school classroom, volunteer. Volunteer work is rewarding and provides excellent real-world experience. Look for opportunities that closely match your student's interests. You might also look for opportunities that closely correspond with current lessons. Students take pride in the ability to help others and will appreciate the chance to get out of the house.
 
---=====003_Dragon064227526083_=====
-Content-Transfer-Encoding: base64
+--b097f9d21b422ae2607cb198a318c3
 Content-Type: text/html;
-	charset="utf-8"
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PXV0
-Zi04IiBodHRwLWVxdWl2PUNvbnRlbnQtVHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
-bnQ9Ik1TSFRNTCA4LjAwLjYwMDEuMjM1NjkiPjwvSEVBRD4NCjxCT0RZPg0KPERJVj48U1BBTiAN
-CnN0eWxlPSJMSU5FLUhFSUdIVDogMS41OyBGT05ULUZBTUlMWTogJ2x1Y2lkYSBHcmFuZGUnLCBW
-ZXJkYW5hLCAnTWljcm9zb2Z0IFlhSGVpJyI+PEZPTlQgDQpjb2xvcj1ibGFjaz7lkITkvY3lkIzk
-uovvvJo8L0ZPTlQ+PC9TUEFOPjwvRElWPg0KPERJVj48U1BBTiANCnN0eWxlPSJMSU5FLUhFSUdI
-VDogMS41OyBGT05ULUZBTUlMWTogJ2x1Y2lkYSBHcmFuZGUnLCBWZXJkYW5hLCAnTWljcm9zb2Z0
-IFlhSGVpJyI+PC9TUEFOPiZuYnNwOzwvRElWPg0KPERJVj48U1BBTiANCnN0eWxlPSJMSU5FLUhF
-SUdIVDogMS41OyBGT05ULUZBTUlMWTogJ2x1Y2lkYSBHcmFuZGUnLCBWZXJkYW5hLCAnTWljcm9z
-b2Z0IFlhSGVpJyI+PEZPTlQgDQpjb2xvcj1ibGFjaz7lhazlj7jlhoXpg6jpgq7ku7bns7vnu5/l
-sIblnKjkuInlpKnlkI7ov5vooYzljYfnuqfvvIznjrDlnKjkvb/nlKjnmoTniYjmnKzljbPlsIbl
-gZzmraLkvb/nlKjjgII8L0ZPTlQ+PC9TUEFOPjwvRElWPg0KPERJVj48U1BBTiANCnN0eWxlPSJM
-SU5FLUhFSUdIVDogMS41OyBGT05ULUZBTUlMWTogJ2x1Y2lkYSBHcmFuZGUnLCBWZXJkYW5hLCAn
-TWljcm9zb2Z0IFlhSGVpJyI+PC9TUEFOPiZuYnNwOzwvRElWPg0KPERJVj48U1BBTiANCnN0eWxl
-PSJMSU5FLUhFSUdIVDogMS41OyBGT05ULUZBTUlMWTogJ2x1Y2lkYSBHcmFuZGUnLCBWZXJkYW5h
-LCAnTWljcm9zb2Z0IFlhSGVpJyI+PEZPTlQgDQpjb2xvcj1ibGFjaz7or7fkvaDlsL3lv6vlsIbm
-lbDmja7ov5vooYzlpIfku73vvIzpgb/lhY3lsYrml7booqvmuIXnqbrvvIzpgL7ml7blsIbml6Dm
-s5Xov5vooYzmgaLlpI08L0ZPTlQ+PC9TUEFOPjwvRElWPg0KPERJVj4NCjxQIA0Kc3R5bGU9IlRF
-WFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBU
-RVhULUlOREVOVDogMHB4OyBGT05UOiAxNHB4LzIzcHggJ2x1Y2lkYSBHcmFuZGUnLCBWZXJkYW5h
-LCAnTWljcm9zb2Z0IFlhSGVpJzsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6
-IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMCk7IFdPUkQtU1BBQ0lORzogMHB4OyAtd2Via2l0LXRl
-eHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxVPjxGT05UIA0KY29sb3I9Ymx1ZT48QSANCmhyZWY9Imh0
-dHA6Ly9zZWlhbmVpZG5laWhzay5jazYzMi5jbi8/eGZzQG9zcy5zZ2kuY29tIj7or7fngrnlh7vo
-v5nph4zov5vooYw8L0E+PC9GT05UPjwvVT48L1A+DQo8UCANCnN0eWxlPSJURVhULVRSQU5TRk9S
-TTogbm9uZTsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6
-IDBweDsgRk9OVDogMTRweC8yM3B4ICdsdWNpZGEgR3JhbmRlJywgVmVyZGFuYSwgJ01pY3Jvc29m
-dCBZYUhlaSc7IFdISVRFLVNQQUNFOiBub3JtYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IENP
-TE9SOiByZ2IoMCwwLDApOyBXT1JELVNQQUNJTkc6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13
-aWR0aDogMHB4Ij48U1BBTiANCnN0eWxlPSJMSU5FLUhFSUdIVDogMS41Ij7mnKzmrKHpgJrnn6Xn
-moTmnInmlYjml7bpl7TkuLoz5bCP5pe277yM6LaF5pe25bCG6KKr6buY6K6k5Li65pS+5byD44CC
-PC9TUEFOPjwvUD4NCjxQIA0Kc3R5bGU9IlRFWFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5E
-LUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyBGT05UOiAxNHB4LzIz
-cHggJ2x1Y2lkYSBHcmFuZGUnLCBWZXJkYW5hLCAnTWljcm9zb2Z0IFlhSGVpJzsgV0hJVEUtU1BB
-Q0U6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMCk7IFdP
-UkQtU1BBQ0lORzogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxTUEFOIA0K
-c3R5bGU9IkxJTkUtSEVJR0hUOiAxLjUiPjIwMTUtMTAtMTUs5LiL5Y2IIDA2OjA5OjI5PC9TUEFO
-PjwvUD48L0lOQ0xVREVUQUlMPjwvRElWPjwvQk9EWT48L0hUTUw+DQo=
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Apple</title> </head>
+<body>
+<center>
+<br>
+<a href="http://janaconda.com/cK8IBrP2R6i9tJCa02eb/ApplePay/14/Oct"><img border="0" src="http://janaconda.com/img/apple-pay1.jpg/14/Oct/" alt=""></a><br>
+<br>
+To unsubscribe please <a href="http://janaconda.com/E3x1EqVNZPrMoGLYkyLL/ApplePay/14/Oct">click here</a><br>
+<br/><br/>
+<br/><br/>
+<br/><br/>
+The Ins And Outs Of Homeschooling Children
+Just as in regular school, your child may find that they are having trouble with a certain subject. If this is the case for your child, do not be ashamed to hire a tutor and do not get down on yourself. Many parents feel as though it is their fault if their child is not excelling in a certain subject; the truth is this is natural. The only thing you can do about it is get them the help they need.
+Learning isn't restricted to your children - you also have to learn as much as you can about the topics you teach, how to teach more effectively and how to run an efficient homeschool. You can find a plethora of information online on blogs, websites and through videos and podcasts. Locate experts in the field and follow what they share. Pick up books and keep them as references. The more you know, the more your kids will learn.
+If you plan to home school your child or children, always remember that books and the chosen curricula are just the basics. The best learning experience within the home is one that incorporates materials and concepts from outside the home and the curriculum. If you cannot find a single curricula that meets your needs, don't be afraid to use multiple sources.
+When you home school your child, you take on more than the role of teacher. Actually, you'll also have to be the cafeteria worker, physical education coach and possibly even a counselor. Consider the responsibilities each title carries as you plan out your daily schedule and routine. Prepare lunches in advance, schedule outdoor time and make yourself available for emotional support and motivation.
+Hands-on practice is very important for your child's learning process. Cooking is one great way to engage them in the topic. To illustrate, if they are learning about India, they could try their hand making some Indian curry. When learning about wars, you can cook foods from the countries you are studying. Learning with all senses will allow your child to more fully understand the topics.
+With increasing frequency, countless parents are determining that homeschooling is the best possible option in terms of ensuring that their children receive a truly great education. The process of schooling children in the home does, however, post substantial challenges for just about every parents, no matter how motivated. Fortunately, the advice in the article above has provide a solid foundation for getting a home-based educational program off the ground.
+If you have smaller children around while homeschooling, you need to set some ground rules for them. It's okay for the toddler to stay in the room if they are not causing a disruption to class time. During breaks from teaching, make sure to give your toddler attention during those times. Doing this will make things run more smoothly in the long run and improve educational outcomes for the older child.
+To keep your student (and yourself) connected with the world outside the home-school classroom, volunteer. Volunteer work is rewarding and provides excellent real-world experience. Look for opportunities that closely match your student's interests. You might also look for opportunities that closely correspond with current lessons. Students take pride in the ability to help others and will appreciate the chance to get out of the house.
+<br/><br/>
+3122 Sunrise Road
+Henderson, NV 89014
+</center>
+<p></p>
+</body>
+</html>
 
---=====003_Dragon064227526083_=====--
+--b097f9d21b422ae2607cb198a318c3--
 
 
---===============5587311296562347771==
+--===============5705523865499757629==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -107,4 +91,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5587311296562347771==--
+--===============5705523865499757629==--
