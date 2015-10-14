@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EC4CE7F37
-	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 13:36:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4F680AC007
-	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 11:36:53 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id BGpWlpz6tAZ3stNb for <xfs@oss.sgi.com>;
-	Wed, 14 Oct 2015 11:36:49 -0700 (PDT)
-Subject: Re: Any way to slow down fragmentation ?
-References: <561D7D9D.4030409@ixblue.com> <561D800B.90307@sandeen.net>
-	<A51D31C2-A5F0-45A9-A258-3F6AB692DBD5@ixblue.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <561EA0C0.8040305@sandeen.net>
-Date: Wed, 14 Oct 2015 13:36:48 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2B79A7F37
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 14:53:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A5548F8040
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 12:53:00 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id A4rBAJO3t60VixpH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 14 Oct 2015 12:52:55 -0700 (PDT)
+Date: Wed, 14 Oct 2015 12:52:27 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/51] xfs_db: enable blockget for v5 filesystems
+Message-ID: <20151014195227.GG11398@birch.djwong.org>
+References: <20151007050513.1504.28089.stgit@birch.djwong.org>
+	<20151007050558.1504.97525.stgit@birch.djwong.org>
+	<20151014170818.GA10559@infradead.org>
+	<20151014182013.GK10397@birch.djwong.org>
+	<20151014182344.GA28670@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <A51D31C2-A5F0-45A9-A258-3F6AB692DBD5@ixblue.com>
+Content-Disposition: inline
+In-Reply-To: <20151014182344.GA28670@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,76 +29,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?Q?C=c3=a9dric_Lemarchand?= <cedric.lemarchand@ixblue.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-CgpPbiAxMC8xNC8xNSAxOjI5IFBNLCBDw6lkcmljIExlbWFyY2hhbmQgd3JvdGU6Cj4gV2VsbCAu
-LiBpdCBzZWVtcyBJIG1pc3NlZCB0aGUgbW9zdCBpbXBvcnRhbnQgcGFydCBvZiB0aGUgRkFRLCB0
-aGFuawo+IGZvciBwb2ludGluZyBpdC4gQXMgeW91IHN0YXRlZCwgcGxheWluZyB3aXRoIHhmc19i
-bWFwIHNob3dzIHRoYXQgdGhlCj4gMTNUQiBmaWxlIGlzIGZyYWdtZW50ZWQgYSBsb3QsIHhmc19m
-c3IgaXMgbm93IHdvcmtpbmcgb24gaXQuCgpob3cgbXVjaCB3YXMgImEgbG90PyIKCmEgMTNUQiBm
-aWxlIGNhbiBoYXZlICJhIGxvdCIgb2YgKnZlcnkqIGxhcmdlIGV4dGVudHMuCgo+IEFueSBoaW50
-cyBhYm91dCBzZWN0b3Igc2l6ZSA/IFJlZ2FyZGluZyB0aGUgd29ya2xvYWQsIG15IHBvaW50IHdv
-dWxkCj4gYmUgdGhhdCB1c2UgNGsgY291bGQgbm90IGh1cnRzIGhlcmUuCgpUaGVyZSdzIG5vIHJl
-YWwgcmVhc29uIHRvIGNoYW5nZSBmcm9tIHRoZSBkZWZhdWx0cyBta2ZzLnhmcwpkZXRlY3RzIGFu
-ZCB1c2VzIGZvciBzZWN0b3Igc2l6ZS4KCkNlcnRhaW5seSBzZWN0b3Igc2l6ZSBoYXMgbm90aGlu
-ZyBhdCBhbGwgdG8gZG8gd2l0aCBmcmFnbWVudGF0aW9uLgoKLUVyaWMKCj4gVGhhbmtzLAo+IAo+
-IEPDqWRyaWMKPiAKPiAtLSAKPiBDw6lkcmljIExlbWFyY2hhbmQKPiBJVCBJbmZyYXN0cnVjdHVy
-ZSBNYW5hZ2VyCj4gaVhCbHVlCj4gMzQgcnVlIGRlIGxhIENyb2l4IGRlIEZlcgo+IDc4MTAwIFN0
-IEdlcm1haW4gZW4gTGF5ZQo+IEZyYW5jZQo+IFRlbC4gKzMzIDEgMzAgMDggODggODgKPiBNb2Iu
-ICszMyA2IDM3IDIzIDQwIDkzCj4gRmF4ICszMyAxIDMwIDA4IDg4IDAwCj4gd3d3Lml4Ymx1ZS5j
-b20gPGh0dHA6Ly93d3cuaXhibHVlLmNvbT4KPiAKPj4gT24gMTQgT2N0IDIwMTUsIGF0IDAwOjA0
-LCBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQgPG1haWx0bzpzYW5kZWVuQHNhbmRl
-ZW4ubmV0Pj4gd3JvdGU6Cj4+Cj4+Cj4+Cj4+IE9uIDEwLzEzLzE1IDQ6NTQgUE0sIEPDqWRyaWMg
-TGVtYXJjaGFuZCB3cm90ZToKPj4+IEkgdGhpbmsgSSBhY3R1YWxseSBoYXZlIHZlcnkgYmFkIGZy
-YWdtZW50YXRpb24gdmFsdWVzLCB3aGljaAo+Pj4gdW5mb3J0dW5hdGVseSBpbnZvbHZlIHBlcmZv
-cm1hbmNlcyBkcm9wIGJ5IGFuIG9yZGVyIG9mIG1hZ25pdHVkZSBvZgo+Pj4gM3gvNHguIEEgZGVm
-cmFnIGlzIGFjdHVhbGx5IHJ1bm5pbmcsIGJ1dCBpdCdzIHJlYWxseSByZWFsbHkgc2xvdywgdG8g
-dGhlCj4+PiBwb2ludCB0aGF0IEkgd2lsbCBuZWVkIHRvIGNvbnN0YW50bHkgZGVmcmFnIHRoZSBw
-YXJ0aXRpb24sIHdoaWNoIGlzIG5vdAo+Pj4gb3B0aW1hbC4gVGhlcmUgYXJlIGFwcHJveGltYXRp
-dmVseSA1MDBHbyB3cml0dGVuIHNlcXVlbnRpYWxseSBldmVyeSBkYXksCj4+PiBhbmQgYWxtb3N0
-IDEwLzEyVCByYW5kb20gd3JpdGVzIGV2ZXJ5IHdlZWsgZHVlIHRvIGJhY2t1cCBmaWxlcyByb3Rh
-dGlvbnMuCj4+Cj4+IERvZXMgYW55dGhpbmcgYmVzaWRlcyB0aGUgeGZzX2RiICJmcmFnIiBjb21t
-YW5kIG1ha2UgeW91IHRoaW5rIHRoYXQKPj4gZnJhZ21lbnRhdGlvbiBpcyBhIHByb2JsZW0/ICBT
-ZWUgYmVsb3cuLi4KPj4KPj4+IFRoZSBwYXJ0aXRpb24gaGFzIGJlZW4gZm9ybWF0ZWQgd2l0aCBk
-ZWZhdWx0IG9wdGlvbnMsIG92ZXIgTFZNIChvbmUKPj4+IFZHL29uZSBMVikuCj4+Pgo+Pj4gSGVy
-ZSBhcmUgc29tZXMgcXVlc3Rpb25zIDoKPj4+Cj4+PiAtIGlzIHRoZXJlIG1rZnMueGZzIG9yIG1v
-dW50aW5nIG9wdGlvbnMgdGhhdCBjb3VsZCByZWR1Y2UgdGhlCj4+PiBmcmFnbWVudGF0aW9uIG92
-ZXIgdGhlIHRpbWUgPwo+Pj4gLSB0aGUgYmFja3VwIHNvZnR3YXJlIHdyaXRlcyB1c2UgYmxvY2tz
-IHNpemUgb2YgfjRNQiwgYXMgdGhlIHByZXZpb3VzCj4+PiBxdWVzdGlvbiwgYW55IG9wdGlvbnMg
-dG8gb3B0aW1pemUgZGlmZmVyZW50cyBsYXllcnMgKExWTSAmIFhGUykgPyBUaGUKPj4+IHVuZGVy
-bGF5aW5nIEZTIGNvdWxkIGhhbmRsZSAxTUIgYmxvY2sgc2l6ZSwgc2hvdWxkIEkgc2V0IHRoaXMg
-dmFsdWUgZm9yCj4+PiBYRlMgdG9vID8gZG8gSSBuZWVkIHRvIHBsYXkgd2l0aCAic3UiIGFuZCAi
-c3ciIGFzIHN0YXRlZCBpbiB0aGUgRkFRID8KPj4+Cj4+PiBJIGFkbWl0IHRoYXQgdGhlcmUgYXJl
-IHNvIG1hbnkgb3B0aW9ucyB0aGF0IEkgYW0gYSBiaXQgbG9zdC4KPj4+Cj4+PiBUaGFua3MsCj4+
-Pgo+Pj4gQ8OpZHJpYwo+Pj4KPj4+IC0tCj4+PiBTb21lIGluZm9ybWF0aW9ucyA6IFZNIHJ1bm5p
-bmcgRGViaWFuIEplc3NpZSwgdW5kZXJsYXlpbmcgc3RvcmFnZSBpcwo+Pj4gc29mdHdhcmUgcmFp
-ZCAoWkZTKS4KPj4+Cj4+Pgo+Pj4gZGYgLWsKPj4+IEZpbGVzeXN0ZW0gICAgICAgICAgICAxSy1i
-bG9ja3MgICAgICAgIFVzZWQgICBBdmFpbGFibGUgVXNlJSBNb3VudGVkIG9uCj4+PiAvZGV2L21h
-cHBlci9WRzItTFYxIDUzNjg1MDAwMTkyIDQwOTIxODUzOTI4IDEyNzYzMTQ2MjY0ICA3NyUgL3Zy
-ZXBvMQo+Pj4KPj4+IHhmc19kYiAtciAvZGV2L1ZHMi9MVjEgLWMgZnJhZwo+Pj4gYWN0dWFsIDQy
-MjIsIGlkZWFsIDEzNywgZnJhZ21lbnRhdGlvbiBmYWN0b3IgOTYuNzYlCj4+Cj4+IGh0dHA6Ly94
-ZnMub3JnL2luZGV4LnBocC9YRlNfRkFRI1E6X1RoZV94ZnNfZGJfLjIyZnJhZy4yMl9jb21tYW5k
-X3NheXNfSS4yN21fb3Zlcl81MC4yNS5fSXNfdGhhdF9iYWQuM0YKPj4KPj4gU28gaW4gMTM3IGZp
-bGVzLCB5b3UgaGF2ZSA0MjIyIGV4dGVudHMsIG9yIGFuIGF2ZXJhZ2Ugb2YKPj4gYWJvdXQgMzAg
-ZXh0ZW50cyBwZXIgZmlsZS4KPj4KPj4gT3IgcHV0IGFub3RoZXIgd2F5LCB5b3UgaGF2ZSAzOTAy
-NiBnaWdhYnl0ZXMgdXNlZCwgaW4KPj4gNDIyMiBleHRlbnRzLCBmb3IgYW4gYXZlcmFnZSBvZiA5
-IGdpZ2FieXRlcyBwZXIgZXh0ZW50Lgo+Pgo+PiBUaG9zZSBkb24ndCBzb3VuZCBsaWtlIHByb2Js
-ZW1hdGljIG51bWJlcnMuCj4+Cj4+IHhmc19ibWFwIG9uIGFuIGluZGl2aWR1YWwgZmlsZSB3aWxs
-IHNob3cgeW91IGl0cyBtYXBwaW5nLgo+PiBCdXQgZm9yIGZpbGVzIG9mIHNldmVyYWwgaHVuZHJl
-ZCBnaWdzLCBoYXZpbmcgc2V2ZXJhbAo+PiB2ZXJ5IGxhcmdlIGV4dGVudHMgcmVhbGx5IGlzIG5v
-dCBhIHByb2JsZW0uCj4+Cj4+IEkgdGhpbmsgdGhlIHhmc19kYiBmcmFnIGNvbW1hbmQgbWF5IGJl
-IG1pc2xlYWRpbmcgeW91IGFib3V0Cj4+IHdoZXJlIHRoZSBwcm9ibGVtIGxpZXMuCj4+Cj4+IE9m
-IGNvdXJzZSBpdCdzIHBvc3NpYmxlIHRoYXQgYWxsIGJ1dCBvbmUgb2YgeW91ciBmaWxlcyBpcwo+
-PiB3ZWxsIGxhaWQgb3V0LCBhbmQgdGhhdCBsYXN0IGZpbGUgaXMgaG9ycmlibHksIGhvcnJpYmx5
-Cj4+IGZyYWdtZW50ZWQuICBCdXQgdGhlIHRvcC1sZXZlbCBudW1iZXJzIGRvbid0IHRlbGwgdXMg
-d2hldGhlcgo+PiB0aGF0IG1pZ2h0IGJlIHRoZSBjYXNlLgo+Pgo+PiAtRXJpYwo+Pgo+PiBfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+PiB4ZnMgbWFpbGlu
-ZyBsaXN0Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+PiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Wed, Oct 14, 2015 at 11:23:44AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 14, 2015 at 11:20:13AM -0700, Darrick J. Wong wrote:
+> > > As is this makes xfstests rather unhappy by failing tests.  I'm not
+> > > sure if that's issues in the blockget / xfs_check functionality or
+> > > because it actually finds bugs in the kernel code.
+> > 
+> > Which tests, specifically?  I ran all the tests in the 'quick' group and of
+> > the relatively few errors I saw, I couldn't trace any of them back to blockget.
+> > 
+> > Earlier patch editions caused such problems, but afaict I've fixed them all. :)
+> 
+> shared/006 xfs/076 xfs/206 xfs/250
+> 
+> although xfs/206 also fails just due to reflink output from mkfs, but
+> I'll send a patch for that soon.
+
+Hmm.  I suspect shared/006 and xfs/250 are fixed by Dave's patch to validate
+AGI blocks with the AGI buf ops instead of the AGFL buf ops.  They don't
+trigger errors now that I've rebased on xfsprogs 4.3-rc1.
+
+I suspect xfs/076 fails because xfs_db doesn't know about sparse inodes.
+That's probably because I haven't totally figured them out either.  I'll
+have a look at that.
+
+--D
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
