@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B79A7F37
-	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 14:53:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A5548F8040
-	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 12:53:00 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id A4rBAJO3t60VixpH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 14 Oct 2015 12:52:55 -0700 (PDT)
-Date: Wed, 14 Oct 2015 12:52:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B12107F37
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 16:26:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5E1CDAC002
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 14:26:52 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	fzbIJRZ4BmkMjRCa for <xfs@oss.sgi.com>;
+	Wed, 14 Oct 2015 14:26:51 -0700 (PDT)
+Date: Thu, 15 Oct 2015 08:26:30 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 07/51] xfs_db: enable blockget for v5 filesystems
-Message-ID: <20151014195227.GG11398@birch.djwong.org>
+Message-ID: <20151014212630.GO31326@dastard>
 References: <20151007050513.1504.28089.stgit@birch.djwong.org>
 	<20151007050558.1504.97525.stgit@birch.djwong.org>
 	<20151014170818.GA10559@infradead.org>
@@ -34,7 +34,7 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 On Wed, Oct 14, 2015 at 11:23:44AM -0700, Christoph Hellwig wrote:
 > On Wed, Oct 14, 2015 at 11:20:13AM -0700, Darrick J. Wong wrote:
@@ -52,15 +52,30 @@ On Wed, Oct 14, 2015 at 11:23:44AM -0700, Christoph Hellwig wrote:
 > although xfs/206 also fails just due to reflink output from mkfs, but
 > I'll send a patch for that soon.
 
-Hmm.  I suspect shared/006 and xfs/250 are fixed by Dave's patch to validate
-AGI blocks with the AGI buf ops instead of the AGFL buf ops.  They don't
-trigger errors now that I've rebased on xfsprogs 4.3-rc1.
+Current failures here with v4.3-rcX on both sides and a current
+xfstests:
 
-I suspect xfs/076 fails because xfs_db doesn't know about sparse inodes.
-That's probably because I haven't totally figured them out either.  I'll
-have a look at that.
+Failures: generic/042 xfs/076 xfs/078 xfs/079
 
---D
+042 is expected to fail, xfs/076 is testing sparse inodes (check
+doesn't understand them), xfs/078 is failing because I'm testing on
+4k sector devices and it wants to use a 2k block size.
+
+xfs/079 is failing because repair is reporting:
+
+found illegal null character in symlink inode 16811448
+problem with symbolic link in inode 16811448
+would have cleared inode 16811448
+
+but the check is clean. So that may be a new regression. I haven't
+looked into it more deeply than that.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
