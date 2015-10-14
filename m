@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 46CE77F37
-	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 13:29:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 271AF304053
-	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 11:29:27 -0700 (PDT)
-Received: from mail.ixserver.net (mail.ixserver.net [94.143.114.23]) by
-	cuda.sgi.com with ESMTP id aOH3BHZxw7GmlCdk for
-	<xfs@oss.sgi.com>; Wed, 14 Oct 2015 11:29:23 -0700 (PDT)
-Mime-Version: 1.0 (Mac OS X Mail 9.0 \(3094\))
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EC4CE7F37
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 13:36:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4F680AC007
+	for <xfs@oss.sgi.com>; Wed, 14 Oct 2015 11:36:53 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id BGpWlpz6tAZ3stNb for <xfs@oss.sgi.com>;
+	Wed, 14 Oct 2015 11:36:49 -0700 (PDT)
 Subject: Re: Any way to slow down fragmentation ?
-From: =?utf-8?Q?C=C3=A9dric_Lemarchand?= <cedric.lemarchand@ixblue.com>
-In-Reply-To: <561D800B.90307@sandeen.net>
-Date: Wed, 14 Oct 2015 20:29:19 +0200
-Message-Id: <A51D31C2-A5F0-45A9-A258-3F6AB692DBD5@ixblue.com>
 References: <561D7D9D.4030409@ixblue.com> <561D800B.90307@sandeen.net>
+	<A51D31C2-A5F0-45A9-A258-3F6AB692DBD5@ixblue.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <561EA0C0.8040305@sandeen.net>
+Date: Wed, 14 Oct 2015 13:36:48 -0500
+MIME-Version: 1.0
+In-Reply-To: <A51D31C2-A5F0-45A9-A258-3F6AB692DBD5@ixblue.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,252 +24,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6355480903983112128=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: =?UTF-8?Q?C=c3=a9dric_Lemarchand?= <cedric.lemarchand@ixblue.com>
 Cc: xfs@oss.sgi.com
 
-
---===============6355480903983112128==
-Content-Type: multipart/alternative; boundary="Apple-Mail=_C0B526B3-FED3-49AC-AEC3-0FCB942EF57D"
-
-
---Apple-Mail=_C0B526B3-FED3-49AC-AEC3-0FCB942EF57D
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=utf-8
-
-Well .. it seems I missed the most important part of the FAQ, thank for =
-pointing it. As you stated, playing with xfs_bmap shows that the 13TB =
-file is fragmented a lot, xfs_fsr is now working on it.
-
-Any hints about sector size ? Regarding the workload, my point would be =
-that use 4k could not hurts here.
-
-Thanks,
-
-C=C3=A9dric
-
---=20
-C=C3=A9dric Lemarchand
-IT Infrastructure Manager
-iXBlue
-34 rue de la Croix de Fer
-78100 St Germain en Laye
-France
-Tel. +33 1 30 08 88 88
-Mob. +33 6 37 23 40 93
-Fax +33 1 30 08 88 00
-www.ixblue.com <http://www.ixblue.com/>
-> On 14 Oct 2015, at 00:04, Eric Sandeen <sandeen@sandeen.net> wrote:
->=20
->=20
->=20
-> On 10/13/15 4:54 PM, C=C3=A9dric Lemarchand wrote:
->> I think I actually have very bad fragmentation values, which
->> unfortunately involve performances drop by an order of magnitude of
->> 3x/4x. A defrag is actually running, but it's really really slow, to =
-the
->> point that I will need to constantly defrag the partition, which is =
-not
->> optimal. There are approximatively 500Go written sequentially every =
-day,
->> and almost 10/12T random writes every week due to backup files =
-rotations.
->=20
-> Does anything besides the xfs_db "frag" command make you think that
-> fragmentation is a problem?  See below...
->=20
->> The partition has been formated with default options, over LVM (one
->> VG/one LV).
->>=20
->> Here are somes questions :
->>=20
->> - is there mkfs.xfs or mounting options that could reduce the
->> fragmentation over the time ?
->> - the backup software writes use blocks size of ~4MB, as the previous
->> question, any options to optimize differents layers (LVM & XFS) ? The
->> underlaying FS could handle 1MB block size, should I set this value =
-for
->> XFS too ? do I need to play with "su" and "sw" as stated in the FAQ ?
->>=20
->> I admit that there are so many options that I am a bit lost.
->>=20
->> Thanks,
->>=20
->> C=C3=A9dric
->>=20
->> --
->> Some informations : VM running Debian Jessie, underlaying storage is
->> software raid (ZFS).
->>=20
->>=20
->> df -k
->> Filesystem            1K-blocks        Used   Available Use% Mounted =
-on
->> /dev/mapper/VG2-LV1 53685000192 40921853928 12763146264  77% /vrepo1
->>=20
->> xfs_db -r /dev/VG2/LV1 -c frag
->> actual 4222, ideal 137, fragmentation factor 96.76%
->=20
-> =
-http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_says_I.2=
-7m_over_50.25._Is_that_bad.3F
->=20
-> So in 137 files, you have 4222 extents, or an average of
-> about 30 extents per file.
->=20
-> Or put another way, you have 39026 gigabytes used, in
-> 4222 extents, for an average of 9 gigabytes per extent.
->=20
-> Those don't sound like problematic numbers.
->=20
-> xfs_bmap on an individual file will show you its mapping.
-> But for files of several hundred gigs, having several
-> very large extents really is not a problem.
->=20
-> I think the xfs_db frag command may be misleading you about
-> where the problem lies.
->=20
-> Of course it's possible that all but one of your files is
-> well laid out, and that last file is horribly, horribly
-> fragmented.  But the top-level numbers don't tell us whether
-> that might be the case.
->=20
-> -Eric
->=20
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-
---Apple-Mail=_C0B526B3-FED3-49AC-AEC3-0FCB942EF57D
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/html;
-	charset=utf-8
-
-<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
-charset=3Dutf-8"></head><body style=3D"word-wrap: break-word; =
--webkit-nbsp-mode: space; -webkit-line-break: after-white-space;" =
-class=3D""><div class=3D"">Well .. it seems I missed the most important =
-part of the FAQ, thank for pointing it. As you stated, playing with =
-xfs_bmap shows that the 13TB file is fragmented a lot, xfs_fsr is now =
-working on it.</div><div class=3D""><br class=3D""></div><div =
-class=3D"">Any hints about sector size ? Regarding the workload, my =
-point would be that use 4k could not hurts here.</div><div class=3D""><br =
-class=3D""></div><div class=3D"">Thanks,</div><div class=3D""><br =
-class=3D""></div><div class=3D"">C=C3=A9dric</div><div class=3D""><br =
-class=3D""></div><div class=3D"">
-<div style=3D"color: rgb(0, 0, 0); letter-spacing: normal; orphans: =
-auto; text-align: start; text-indent: 0px; text-transform: none; =
-white-space: normal; widows: auto; word-spacing: 0px; =
--webkit-text-stroke-width: 0px; word-wrap: break-word; =
--webkit-nbsp-mode: space; -webkit-line-break: after-white-space;" =
-class=3D""><div style=3D"color: rgb(0, 0, 0); letter-spacing: normal; =
-orphans: auto; text-align: start; text-indent: 0px; text-transform: =
-none; white-space: normal; widows: auto; word-spacing: 0px; =
--webkit-text-stroke-width: 0px; word-wrap: break-word; =
--webkit-nbsp-mode: space; -webkit-line-break: after-white-space;" =
-class=3D""><div style=3D"color: rgb(0, 0, 0); letter-spacing: normal; =
-orphans: auto; text-align: start; text-indent: 0px; text-transform: =
-none; white-space: normal; widows: auto; word-spacing: 0px; =
--webkit-text-stroke-width: 0px; word-wrap: break-word; =
--webkit-nbsp-mode: space; -webkit-line-break: after-white-space;" =
-class=3D""><div class=3D""><span style=3D"background-color: rgb(255, =
-255, 255);" class=3D"">--&nbsp;</span><br class=3D""><div =
-style=3D"font-weight: bold; font-size: 13px; font-family: Arial; color: =
-rgb(0, 63, 128); margin-top: 10px;" class=3D""><div class=3D"">C=C3=A9dric=
- Lemarchand</div><div style=3D"font-weight: normal; color: rgb(126, 124, =
-131);" class=3D"">IT Infrastructure Manager</div><div style=3D"margin-top:=
- 12px;" class=3D"">iXBlue</div><div style=3D"font-weight: normal; =
-font-size: 10px; color: rgb(126, 124, 131);" class=3D"">34 rue de la =
-Croix de Fer</div><div style=3D"font-weight: normal; font-size: 10px; =
-color: rgb(126, 124, 131);" class=3D"">78100 St Germain en Laye<br =
-class=3D"">France</div><div style=3D"font-weight: normal; font-size: =
-12px; margin: 12px 0px;" class=3D"">Tel. +33 1 30 08 88 88<br =
-class=3D"">Mob. +33 6 37 23 40 93<br class=3D"">Fax +33 1 30 08 88 =
-00</div><div style=3D"margin-bottom: 20px;" class=3D""><a =
-href=3D"http://www.ixblue.com" style=3D"font-weight: normal; font-size: =
-12px; color: rgb(0, 63, 128);" =
-class=3D"">www.ixblue.com</a></div></div></div></div></div></div>
-</div>
-<br class=3D""><div style=3D""><blockquote type=3D"cite" class=3D""><div =
-class=3D"">On 14 Oct 2015, at 00:04, Eric Sandeen &lt;<a =
-href=3D"mailto:sandeen@sandeen.net" class=3D"">sandeen@sandeen.net</a>&gt;=
- wrote:</div><br class=3D"Apple-interchange-newline"><div class=3D""><div =
-class=3D""><br class=3D""><br class=3D"">On 10/13/15 4:54 PM, C=C3=A9dric =
-Lemarchand wrote:<br class=3D""><blockquote type=3D"cite" class=3D"">I =
-think I actually have very bad fragmentation values, which<br =
-class=3D"">unfortunately involve performances drop by an order of =
-magnitude of<br class=3D"">3x/4x. A defrag is actually running, but it's =
-really really slow, to the<br class=3D"">point that I will need to =
-constantly defrag the partition, which is not<br class=3D"">optimal. =
-There are approximatively 500Go written sequentially every day,<br =
-class=3D"">and almost 10/12T random writes every week due to backup =
-files rotations.<br class=3D""></blockquote><br class=3D"">Does anything =
-besides the xfs_db "frag" command make you think that<br =
-class=3D"">fragmentation is a problem? &nbsp;See below...<br =
-class=3D""><br class=3D""><blockquote type=3D"cite" class=3D"">The =
-partition has been formated with default options, over LVM (one<br =
-class=3D"">VG/one LV).<br class=3D""><br class=3D"">Here are somes =
-questions :<br class=3D""><br class=3D"">- is there mkfs.xfs or mounting =
-options that could reduce the<br class=3D"">fragmentation over the time =
-?<br class=3D"">- the backup software writes use blocks size of ~4MB, as =
-the previous<br class=3D"">question, any options to optimize differents =
-layers (LVM &amp; XFS) ? The<br class=3D"">underlaying FS could handle =
-1MB block size, should I set this value for<br class=3D"">XFS too ? do I =
-need to play with "su" and "sw" as stated in the FAQ ?<br class=3D""><br =
-class=3D"">I admit that there are so many options that I am a bit =
-lost.<br class=3D""><br class=3D"">Thanks,<br class=3D""><br =
-class=3D"">C=C3=A9dric<br class=3D""><br class=3D"">--<br class=3D"">Some =
-informations : VM running Debian Jessie, underlaying storage is<br =
-class=3D"">software raid (ZFS).<br class=3D""><br class=3D""><br =
-class=3D"">df -k<br class=3D"">Filesystem =
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1K-block=
-s &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Used &nbsp;&nbsp;Available =
-Use% Mounted on<br class=3D"">/dev/mapper/VG2-LV1 53685000192 =
-40921853928 12763146264 &nbsp;77% /vrepo1<br class=3D""><br =
-class=3D"">xfs_db -r /dev/VG2/LV1 -c frag<br class=3D"">actual 4222, =
-ideal 137, fragmentation factor 96.76%<br class=3D""></blockquote><br =
-class=3D""><a =
-href=3D"http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_=
-says_I.27m_over_50.25._Is_that_bad.3F" =
-class=3D"">http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_comma=
-nd_says_I.27m_over_50.25._Is_that_bad.3F</a><br class=3D""><br =
-class=3D"">So in 137 files, you have 4222 extents, or an average of<br =
-class=3D"">about 30 extents per file.<br class=3D""><br class=3D"">Or =
-put another way, you have 39026 gigabytes used, in<br class=3D"">4222 =
-extents, for an average of 9 gigabytes per extent.<br class=3D""><br =
-class=3D"">Those don't sound like problematic numbers.<br class=3D""><br =
-class=3D"">xfs_bmap on an individual file will show you its mapping.<br =
-class=3D"">But for files of several hundred gigs, having several<br =
-class=3D"">very large extents really is not a problem.<br class=3D""><br =
-class=3D"">I think the xfs_db frag command may be misleading you =
-about<br class=3D"">where the problem lies.<br class=3D""><br =
-class=3D"">Of course it's possible that all but one of your files is<br =
-class=3D"">well laid out, and that last file is horribly, horribly<br =
-class=3D"">fragmented. &nbsp;But the top-level numbers don't tell us =
-whether<br class=3D"">that might be the case.<br class=3D""><br =
-class=3D"">-Eric<br class=3D""><br =
-class=3D"">_______________________________________________<br =
-class=3D"">xfs mailing list<br class=3D"">xfs@oss.sgi.com<br =
-class=3D"">http://oss.sgi.com/mailman/listinfo/xfs<br =
-class=3D""></div></div></blockquote></div><br class=3D""></body></html>=
-
---Apple-Mail=_C0B526B3-FED3-49AC-AEC3-0FCB942EF57D--
-
-
---===============6355480903983112128==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6355480903983112128==--
+CgpPbiAxMC8xNC8xNSAxOjI5IFBNLCBDw6lkcmljIExlbWFyY2hhbmQgd3JvdGU6Cj4gV2VsbCAu
+LiBpdCBzZWVtcyBJIG1pc3NlZCB0aGUgbW9zdCBpbXBvcnRhbnQgcGFydCBvZiB0aGUgRkFRLCB0
+aGFuawo+IGZvciBwb2ludGluZyBpdC4gQXMgeW91IHN0YXRlZCwgcGxheWluZyB3aXRoIHhmc19i
+bWFwIHNob3dzIHRoYXQgdGhlCj4gMTNUQiBmaWxlIGlzIGZyYWdtZW50ZWQgYSBsb3QsIHhmc19m
+c3IgaXMgbm93IHdvcmtpbmcgb24gaXQuCgpob3cgbXVjaCB3YXMgImEgbG90PyIKCmEgMTNUQiBm
+aWxlIGNhbiBoYXZlICJhIGxvdCIgb2YgKnZlcnkqIGxhcmdlIGV4dGVudHMuCgo+IEFueSBoaW50
+cyBhYm91dCBzZWN0b3Igc2l6ZSA/IFJlZ2FyZGluZyB0aGUgd29ya2xvYWQsIG15IHBvaW50IHdv
+dWxkCj4gYmUgdGhhdCB1c2UgNGsgY291bGQgbm90IGh1cnRzIGhlcmUuCgpUaGVyZSdzIG5vIHJl
+YWwgcmVhc29uIHRvIGNoYW5nZSBmcm9tIHRoZSBkZWZhdWx0cyBta2ZzLnhmcwpkZXRlY3RzIGFu
+ZCB1c2VzIGZvciBzZWN0b3Igc2l6ZS4KCkNlcnRhaW5seSBzZWN0b3Igc2l6ZSBoYXMgbm90aGlu
+ZyBhdCBhbGwgdG8gZG8gd2l0aCBmcmFnbWVudGF0aW9uLgoKLUVyaWMKCj4gVGhhbmtzLAo+IAo+
+IEPDqWRyaWMKPiAKPiAtLSAKPiBDw6lkcmljIExlbWFyY2hhbmQKPiBJVCBJbmZyYXN0cnVjdHVy
+ZSBNYW5hZ2VyCj4gaVhCbHVlCj4gMzQgcnVlIGRlIGxhIENyb2l4IGRlIEZlcgo+IDc4MTAwIFN0
+IEdlcm1haW4gZW4gTGF5ZQo+IEZyYW5jZQo+IFRlbC4gKzMzIDEgMzAgMDggODggODgKPiBNb2Iu
+ICszMyA2IDM3IDIzIDQwIDkzCj4gRmF4ICszMyAxIDMwIDA4IDg4IDAwCj4gd3d3Lml4Ymx1ZS5j
+b20gPGh0dHA6Ly93d3cuaXhibHVlLmNvbT4KPiAKPj4gT24gMTQgT2N0IDIwMTUsIGF0IDAwOjA0
+LCBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQgPG1haWx0bzpzYW5kZWVuQHNhbmRl
+ZW4ubmV0Pj4gd3JvdGU6Cj4+Cj4+Cj4+Cj4+IE9uIDEwLzEzLzE1IDQ6NTQgUE0sIEPDqWRyaWMg
+TGVtYXJjaGFuZCB3cm90ZToKPj4+IEkgdGhpbmsgSSBhY3R1YWxseSBoYXZlIHZlcnkgYmFkIGZy
+YWdtZW50YXRpb24gdmFsdWVzLCB3aGljaAo+Pj4gdW5mb3J0dW5hdGVseSBpbnZvbHZlIHBlcmZv
+cm1hbmNlcyBkcm9wIGJ5IGFuIG9yZGVyIG9mIG1hZ25pdHVkZSBvZgo+Pj4gM3gvNHguIEEgZGVm
+cmFnIGlzIGFjdHVhbGx5IHJ1bm5pbmcsIGJ1dCBpdCdzIHJlYWxseSByZWFsbHkgc2xvdywgdG8g
+dGhlCj4+PiBwb2ludCB0aGF0IEkgd2lsbCBuZWVkIHRvIGNvbnN0YW50bHkgZGVmcmFnIHRoZSBw
+YXJ0aXRpb24sIHdoaWNoIGlzIG5vdAo+Pj4gb3B0aW1hbC4gVGhlcmUgYXJlIGFwcHJveGltYXRp
+dmVseSA1MDBHbyB3cml0dGVuIHNlcXVlbnRpYWxseSBldmVyeSBkYXksCj4+PiBhbmQgYWxtb3N0
+IDEwLzEyVCByYW5kb20gd3JpdGVzIGV2ZXJ5IHdlZWsgZHVlIHRvIGJhY2t1cCBmaWxlcyByb3Rh
+dGlvbnMuCj4+Cj4+IERvZXMgYW55dGhpbmcgYmVzaWRlcyB0aGUgeGZzX2RiICJmcmFnIiBjb21t
+YW5kIG1ha2UgeW91IHRoaW5rIHRoYXQKPj4gZnJhZ21lbnRhdGlvbiBpcyBhIHByb2JsZW0/ICBT
+ZWUgYmVsb3cuLi4KPj4KPj4+IFRoZSBwYXJ0aXRpb24gaGFzIGJlZW4gZm9ybWF0ZWQgd2l0aCBk
+ZWZhdWx0IG9wdGlvbnMsIG92ZXIgTFZNIChvbmUKPj4+IFZHL29uZSBMVikuCj4+Pgo+Pj4gSGVy
+ZSBhcmUgc29tZXMgcXVlc3Rpb25zIDoKPj4+Cj4+PiAtIGlzIHRoZXJlIG1rZnMueGZzIG9yIG1v
+dW50aW5nIG9wdGlvbnMgdGhhdCBjb3VsZCByZWR1Y2UgdGhlCj4+PiBmcmFnbWVudGF0aW9uIG92
+ZXIgdGhlIHRpbWUgPwo+Pj4gLSB0aGUgYmFja3VwIHNvZnR3YXJlIHdyaXRlcyB1c2UgYmxvY2tz
+IHNpemUgb2YgfjRNQiwgYXMgdGhlIHByZXZpb3VzCj4+PiBxdWVzdGlvbiwgYW55IG9wdGlvbnMg
+dG8gb3B0aW1pemUgZGlmZmVyZW50cyBsYXllcnMgKExWTSAmIFhGUykgPyBUaGUKPj4+IHVuZGVy
+bGF5aW5nIEZTIGNvdWxkIGhhbmRsZSAxTUIgYmxvY2sgc2l6ZSwgc2hvdWxkIEkgc2V0IHRoaXMg
+dmFsdWUgZm9yCj4+PiBYRlMgdG9vID8gZG8gSSBuZWVkIHRvIHBsYXkgd2l0aCAic3UiIGFuZCAi
+c3ciIGFzIHN0YXRlZCBpbiB0aGUgRkFRID8KPj4+Cj4+PiBJIGFkbWl0IHRoYXQgdGhlcmUgYXJl
+IHNvIG1hbnkgb3B0aW9ucyB0aGF0IEkgYW0gYSBiaXQgbG9zdC4KPj4+Cj4+PiBUaGFua3MsCj4+
+Pgo+Pj4gQ8OpZHJpYwo+Pj4KPj4+IC0tCj4+PiBTb21lIGluZm9ybWF0aW9ucyA6IFZNIHJ1bm5p
+bmcgRGViaWFuIEplc3NpZSwgdW5kZXJsYXlpbmcgc3RvcmFnZSBpcwo+Pj4gc29mdHdhcmUgcmFp
+ZCAoWkZTKS4KPj4+Cj4+Pgo+Pj4gZGYgLWsKPj4+IEZpbGVzeXN0ZW0gICAgICAgICAgICAxSy1i
+bG9ja3MgICAgICAgIFVzZWQgICBBdmFpbGFibGUgVXNlJSBNb3VudGVkIG9uCj4+PiAvZGV2L21h
+cHBlci9WRzItTFYxIDUzNjg1MDAwMTkyIDQwOTIxODUzOTI4IDEyNzYzMTQ2MjY0ICA3NyUgL3Zy
+ZXBvMQo+Pj4KPj4+IHhmc19kYiAtciAvZGV2L1ZHMi9MVjEgLWMgZnJhZwo+Pj4gYWN0dWFsIDQy
+MjIsIGlkZWFsIDEzNywgZnJhZ21lbnRhdGlvbiBmYWN0b3IgOTYuNzYlCj4+Cj4+IGh0dHA6Ly94
+ZnMub3JnL2luZGV4LnBocC9YRlNfRkFRI1E6X1RoZV94ZnNfZGJfLjIyZnJhZy4yMl9jb21tYW5k
+X3NheXNfSS4yN21fb3Zlcl81MC4yNS5fSXNfdGhhdF9iYWQuM0YKPj4KPj4gU28gaW4gMTM3IGZp
+bGVzLCB5b3UgaGF2ZSA0MjIyIGV4dGVudHMsIG9yIGFuIGF2ZXJhZ2Ugb2YKPj4gYWJvdXQgMzAg
+ZXh0ZW50cyBwZXIgZmlsZS4KPj4KPj4gT3IgcHV0IGFub3RoZXIgd2F5LCB5b3UgaGF2ZSAzOTAy
+NiBnaWdhYnl0ZXMgdXNlZCwgaW4KPj4gNDIyMiBleHRlbnRzLCBmb3IgYW4gYXZlcmFnZSBvZiA5
+IGdpZ2FieXRlcyBwZXIgZXh0ZW50Lgo+Pgo+PiBUaG9zZSBkb24ndCBzb3VuZCBsaWtlIHByb2Js
+ZW1hdGljIG51bWJlcnMuCj4+Cj4+IHhmc19ibWFwIG9uIGFuIGluZGl2aWR1YWwgZmlsZSB3aWxs
+IHNob3cgeW91IGl0cyBtYXBwaW5nLgo+PiBCdXQgZm9yIGZpbGVzIG9mIHNldmVyYWwgaHVuZHJl
+ZCBnaWdzLCBoYXZpbmcgc2V2ZXJhbAo+PiB2ZXJ5IGxhcmdlIGV4dGVudHMgcmVhbGx5IGlzIG5v
+dCBhIHByb2JsZW0uCj4+Cj4+IEkgdGhpbmsgdGhlIHhmc19kYiBmcmFnIGNvbW1hbmQgbWF5IGJl
+IG1pc2xlYWRpbmcgeW91IGFib3V0Cj4+IHdoZXJlIHRoZSBwcm9ibGVtIGxpZXMuCj4+Cj4+IE9m
+IGNvdXJzZSBpdCdzIHBvc3NpYmxlIHRoYXQgYWxsIGJ1dCBvbmUgb2YgeW91ciBmaWxlcyBpcwo+
+PiB3ZWxsIGxhaWQgb3V0LCBhbmQgdGhhdCBsYXN0IGZpbGUgaXMgaG9ycmlibHksIGhvcnJpYmx5
+Cj4+IGZyYWdtZW50ZWQuICBCdXQgdGhlIHRvcC1sZXZlbCBudW1iZXJzIGRvbid0IHRlbGwgdXMg
+d2hldGhlcgo+PiB0aGF0IG1pZ2h0IGJlIHRoZSBjYXNlLgo+Pgo+PiAtRXJpYwo+Pgo+PiBfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+PiB4ZnMgbWFpbGlu
+ZyBsaXN0Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+PiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
