@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D5D137F37
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 21:04:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A6282304059
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 19:04:01 -0700 (PDT)
-Received: from mail-pa0-f42.google.com (mail-pa0-f42.google.com
-	[209.85.220.42]) by cuda.sgi.com with ESMTP id pU4ubbZ3dOaBob8H
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Oct 2015 19:03:59 -0700 (PDT)
-Received: by pacex6 with SMTP id ex6so38221008pac.3
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 19:03:59 -0700 (PDT)
-Date: Wed, 14 Oct 2015 11:03:52 +0900 (JST)
-Message-Id: <20151014.110352.146137690378248054.konishi.ryusuke@lab.ntt.co.jp>
-Subject: Re: [PATCH v2] vfs: remove unused wrapper block_page_mkwrite()
-From: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
-In-Reply-To: <1444776662-26574-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1444776662-26574-1-git-send-email-ross.zwisler@linux.intel.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8846C7F37
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 21:22:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 08575AC004
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2015 19:22:24 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	OhSUXwU6q5ZgOA6S for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2015 19:22:20 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1ZmBgb-0003km-7y
+	for xfs@oss.sgi.com; Wed, 14 Oct 2015 13:21:01 +1100
+Date: Wed, 14 Oct 2015 13:21:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsdump: v3.1.5 released
+Message-ID: <20151014022101.GP27164@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,158 +25,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9120548748863551332=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-nilfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: xfs@oss.sgi.com
 
-On Tue, 13 Oct 2015 16:51:02 -0600, Ross Zwisler wrote:
-> The function currently called "__block_page_mkwrite()" used to be called
-> "block_page_mkwrite()" until a wrapper for this function was added by:
-> 
-> commit 24da4fab5a61 ("vfs: Create __block_page_mkwrite() helper passing
-> 	error values back")
-> 
-> This wrapper, the current "block_page_mkwrite()", is currently unused.
-> __block_page_mkwrite() is used directly by ext4, nilfs2 and xfs.
-> 
-> Remove the unused wrapper, rename __block_page_mkwrite() back to
-> block_page_mkwrite() and update the comment above block_page_mkwrite().
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reviewed-by: Jan Kara <jack@suse.com>
-> Cc: Jan Kara <jack@suse.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Al Viro <viro@zeniv.linux.org.uk>
 
-Acked-by: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
+--===============9120548748863551332==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UHN/qo2QbUvPLonB"
+Content-Disposition: inline
 
-Thanks,
-Ryusuke Konishi
 
-> ---
->  fs/buffer.c                 | 24 ++----------------------
->  fs/ext4/inode.c             |  4 ++--
->  fs/nilfs2/file.c            |  2 +-
->  fs/xfs/xfs_file.c           |  2 +-
->  include/linux/buffer_head.h |  2 --
->  5 files changed, 6 insertions(+), 28 deletions(-)
-> 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 82283ab..e46c916 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2420,9 +2420,9 @@ EXPORT_SYMBOL(block_commit_write);
->   * unlock the page.
->   *
->   * Direct callers of this function should protect against filesystem freezing
-> - * using sb_start_write() - sb_end_write() functions.
-> + * using sb_start_pagefault() - sb_end_pagefault() functions.
->   */
-> -int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-> +int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
->  			 get_block_t get_block)
->  {
->  	struct page *page = vmf->page;
-> @@ -2459,26 +2459,6 @@ out_unlock:
->  	unlock_page(page);
->  	return ret;
->  }
-> -EXPORT_SYMBOL(__block_page_mkwrite);
-> -
-> -int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-> -		   get_block_t get_block)
-> -{
-> -	int ret;
-> -	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
-> -
-> -	sb_start_pagefault(sb);
-> -
-> -	/*
-> -	 * Update file times before taking page lock. We may end up failing the
-> -	 * fault so this update may be superfluous but who really cares...
-> -	 */
-> -	file_update_time(vma->vm_file);
-> -
-> -	ret = __block_page_mkwrite(vma, vmf, get_block);
-> -	sb_end_pagefault(sb);
-> -	return block_page_mkwrite_return(ret);
-> -}
->  EXPORT_SYMBOL(block_page_mkwrite);
->  
->  /*
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 612fbcf..2d1ecd2 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -5244,7 +5244,7 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
->  	    !ext4_should_journal_data(inode) &&
->  	    !ext4_nonda_switch(inode->i_sb)) {
->  		do {
-> -			ret = __block_page_mkwrite(vma, vmf,
-> +			ret = block_page_mkwrite(vma, vmf,
->  						   ext4_da_get_block_prep);
->  		} while (ret == -ENOSPC &&
->  		       ext4_should_retry_alloc(inode->i_sb, &retries));
-> @@ -5291,7 +5291,7 @@ retry_alloc:
->  		ret = VM_FAULT_SIGBUS;
->  		goto out;
->  	}
-> -	ret = __block_page_mkwrite(vma, vmf, get_block);
-> +	ret = block_page_mkwrite(vma, vmf, get_block);
->  	if (!ret && ext4_should_journal_data(inode)) {
->  		if (ext4_walk_page_buffers(handle, page_buffers(page), 0,
->  			  PAGE_CACHE_SIZE, NULL, do_journal_get_write_access)) {
-> diff --git a/fs/nilfs2/file.c b/fs/nilfs2/file.c
-> index 54575e3..088ba00 100644
-> --- a/fs/nilfs2/file.c
-> +++ b/fs/nilfs2/file.c
-> @@ -109,7 +109,7 @@ static int nilfs_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
->  		goto out;
->  
->  	file_update_time(vma->vm_file);
-> -	ret = __block_page_mkwrite(vma, vmf, nilfs_get_block);
-> +	ret = block_page_mkwrite(vma, vmf, nilfs_get_block);
->  	if (ret) {
->  		nilfs_transaction_abort(inode->i_sb);
->  		goto out;
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e78feb4..f80e90f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1506,7 +1506,7 @@ xfs_filemap_page_mkwrite(
->  		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_direct,
->  				    xfs_end_io_dax_write);
->  	} else {
-> -		ret = __block_page_mkwrite(vma, vmf, xfs_get_blocks);
-> +		ret = block_page_mkwrite(vma, vmf, xfs_get_blocks);
->  		ret = block_page_mkwrite_return(ret);
->  	}
->  
-> diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-> index e6797de..89d9aa9 100644
-> --- a/include/linux/buffer_head.h
-> +++ b/include/linux/buffer_head.h
-> @@ -227,8 +227,6 @@ int cont_write_begin(struct file *, struct address_space *, loff_t,
->  			get_block_t *, loff_t *);
->  int generic_cont_expand_simple(struct inode *inode, loff_t size);
->  int block_commit_write(struct page *page, unsigned from, unsigned to);
-> -int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-> -				get_block_t get_block);
->  int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
->  				get_block_t get_block);
->  /* Convert errno to return value from ->page_mkwrite() call */
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--UHN/qo2QbUvPLonB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The xfsdump repositories have just been updated and tagged with the
+v3.1.5 release tag. This is a minor bugfix release, and the changes
+can be found below.
+
+The source code can be found in these git repositories:
+
+git://oss.sgi.com/xfs/cmds/xfsdump v3.1.5
+git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git v3.1.5
+
+A signed gzipped-tar archive of the source code is available
+here:
+
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.1.5.tar.gz
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.1.5.tar.gz.sign
+
+The archive is signed with my gpg key (the same one that this
+release announcement is signed with).
+
+-Dave.
+
+The new head of the master branch is commit:
+
+60e04ee xfsdump: Release v3.1.5
+
+New Commits:
+
+Dave Chinner (1):
+      [60e04ee] xfsdump: Release v3.1.5
+
+Nathan Scott (1):
+      [5ce9dae] xfsdump: remove use of __psint_t, it is no longer available
+
+Rich Johnston (2):
+      [be93e52] xfsrestore: fix fs uuid order check for incremental restores
+      [87d192c] xfsrestore: fix 2GB directory dump limitation for multi-str=
+eam
+
+rjohnston@sgi.com (1):
+      [33ff057] xfsdump: prevent segfault in cb_add_inogrp
+
+
+Code Diffstat:
+
+ VERSION                 |   2 +-
+ common/drive_minrmt.c   |   4 +-
+ common/drive_scsitape.c |   4 +-
+ common/drive_simple.c   |  28 ++++++-----
+ common/util.h           |   4 +-
+ configure.ac            |   2 +-
+ debian/changelog        |   6 +++
+ doc/CHANGES             |   6 +++
+ dump/content.c          |  16 +++---
+ dump/inomap.c           |   8 ++-
+ inventory/inv_api.c     | 130 ++++++++++++++++++++++++++++----------------=
+----
+ inventory/inv_mgr.c     |  53 +++++++++++++-------
+ inventory/inv_priv.h    |   7 +--
+ inventory/inventory.h   |  21 +++++---
+ restore/content.c       |  23 +++++----
+ 15 files changed, 189 insertions(+), 125 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--UHN/qo2QbUvPLonB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJWHbwMAAoJEK3oKUf0dfodUKIQAKO5YPwteaoicqUN2N5othnx
+CI6dCM5ir4XXtxSnyqK9uZAzUCZrPVNAXGiD5P3Y2F0N+XCNno/1LK+4BTu+D0eR
+lq5tztGNfgdLyagvf6VwgXjrC1KJ7d+jpsWEq/CAh7kdMgE3rHZkWWvHm7KbbeTb
+EEhiqYnO0B1Mbd3i4WoLWcbJNNthB5wmgSLoTau8xnh+I5DXt0C8PbfS+3ASEH2t
+xLV1HPBSuDb2JASX7PM294dwtpae0CwtopqASVtJeu/RgiDganvD5s0+aDZxy72Q
+NcIHsWEB2v38rkGh3LHRA5UwEK+x2wt6X0vHnhhb21yiCP0954Rnxaj6RBquFrIs
+bjSVJ93nJ8vEcNerESC6joNiwB9b8xiPkhN4I1IkxZcHT2Y4E1GmvPFiOXXPW+uI
+BuXAl1xWa6uDrCsXWNNPIDOlgVG0tMMRUmi5zeWoAUylC6YQTviOfql59/M8lst0
+h2vgZAT1Y7MDX3KFAJVqz7uFkrp84XtRcBZQbCqx+9VFDEVLuE/WCoGdCW7Ah5RA
+weprQnsixhC/+MV9vtcco2OEnySUVnG+GSrlV6HCF0YSwAMKZ4NmTN6m1rI+BYzt
+eG6iT9NficZl+qjzgkMFZyfONqF86iwy5JVttEXm7Z3RJ3krS35axe5tXJdCEpO4
+9Fr2JWqYz1VVoNl/QP45
+=Ayw0
+-----END PGP SIGNATURE-----
+
+--UHN/qo2QbUvPLonB--
+
+
+--===============9120548748863551332==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9120548748863551332==--
