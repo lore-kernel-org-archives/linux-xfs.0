@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F2C517F58
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 00:35:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E1AEF8F8052
-	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 22:35:11 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id vvjGzgBQgJ8sOXSh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 15 Oct 2015 22:35:06 -0700 (PDT)
-Date: Thu, 15 Oct 2015 22:35:04 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] headers: remove definition of ASSERT from xfs.h
-Message-ID: <20151016053504.GA22243@infradead.org>
-References: <1444952814-13063-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4B4AD7F5A
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 03:09:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B5BE7AC001
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 01:09:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 2UIp17TIKsLNTJhF (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 16 Oct 2015 01:09:43 -0700 (PDT)
+Date: Fri, 16 Oct 2015 10:09:39 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] db: fix AGI ops definition in CRC type table
+Message-ID: <20151016080939.GA3970@redhat.com>
+References: <1444709821-5009-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1444952814-13063-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1444709821-5009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,19 +32,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Oct 16, 2015 at 10:46:54AM +1100, Dave Chinner wrote:
+On Tue, Oct 13, 2015 at 03:17:01PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> If we define ASSERT() in the installed xfs.h header file, programs
-> including this header file will have their local definitions of
-> ASSERT screwed up. This is something internal to the xfsprogs build,
-> so move it to platform_defs.h.in where it will no longer be public.
+> The wrong buffer ops structure was added to the AGI field of the
+> type table when initially committed. This was not noticed because it
+> only affects manually setting the type of a buffer from xfs_db. e.g
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> 
+> xfs_db> agi 0
+> xfs_db> p
+> .....
+> crc = 0xbc58d757 (correct)
+> .....
+> xfs_db> fsb 2
+> xfs_db> type agi
+> Metadata CRC error detected at block 0x10/0x1000
+> xfs_db>
+> 
+> This is because (trimmed for clarity):
+> 
+> Breakpoint 1, xfs_verifier_error:
+> (gdb) bt
+> #0  xfs_verifier_error
+> #1  xfs_agfl_read_verify
+> #2  set_iocur_type
+> #3  type_f
+> #4  main
+> 
+> It's clear that the wrong verifier is being run (AGFL, not AGI).
+> The fix is simple.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  db/type.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/db/type.c b/db/type.c
+> index 955986b..1da7ee1 100644
+> --- a/db/type.c
+> +++ b/db/type.c
+> @@ -77,7 +77,7 @@ static const typ_t	__typtab[] = {
+>  static const typ_t	__typtab_crc[] = {
+>  	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+>  	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+> -	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+> +	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops },
+>  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+>  		&xfs_attr3_db_buf_ops },
+>  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+> @@ -113,7 +113,7 @@ static const typ_t	__typtab_crc[] = {
+>  static const typ_t	__typtab_spcrc[] = {
+>  	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+>  	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+> -	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+> +	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops },
+>  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+>  		&xfs_attr3_db_buf_ops },
+>  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
