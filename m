@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 00A09800F
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 10:23:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C6009304062
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 08:23:00 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B518C7FD6
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 10:23:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A54D8304053
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 08:23:07 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Yo8oZdlFKbLDx4VW (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ofAnUO6LXzyRuAZF (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 16 Oct 2015 08:23:00 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 16 Oct 2015 08:23:06 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v11 40/48] ext4: Don't allow unmapped identifiers in richacls
-Date: Fri, 16 Oct 2015 17:18:18 +0200
-Message-Id: <1445008706-15115-41-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v11 41/48] xfs: Don't allow unmapped identifiers in richacls
+Date: Fri, 16 Oct 2015 17:18:19 +0200
+Message-Id: <1445008706-15115-42-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
 References: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,24 +35,24 @@ for remote file systems only.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/ext4/richacl.c | 4 ++++
+ fs/xfs/xfs_richacl.c | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/fs/ext4/richacl.c b/fs/ext4/richacl.c
-index 906d048..2115385 100644
---- a/fs/ext4/richacl.c
-+++ b/fs/ext4/richacl.c
-@@ -74,6 +74,10 @@ __ext4_set_richacl(handle_t *handle, struct inode *inode, struct richacl *acl)
- 	int retval, size;
- 	void *value;
+diff --git a/fs/xfs/xfs_richacl.c b/fs/xfs/xfs_richacl.c
+index 73c2d24..4f938b7 100644
+--- a/fs/xfs/xfs_richacl.c
++++ b/fs/xfs/xfs_richacl.c
+@@ -77,6 +77,10 @@ xfs_set_richacl(struct inode *inode, struct richacl *acl)
+ 	if (!acl)
+ 		return xfs_remove_richacl(inode);
  
 +	/* Don't allow acls with unmapped identifiers. */
 +	if (richacl_has_unmapped_identifiers(acl))
 +		return -EINVAL;
 +
  	if (richacl_equiv_mode(acl, &mode) == 0) {
- 		inode->i_ctime = ext4_current_time(inode);
- 		inode->i_mode = mode;
+ 		xfs_set_mode(inode, mode);
+ 		return xfs_remove_richacl(inode);
 -- 
 2.5.0
 
