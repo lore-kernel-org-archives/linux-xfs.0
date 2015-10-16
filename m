@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9B00C7F3F
-	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 20:45:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 26B01AC003
-	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 18:45:22 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0B1797F3F
+	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 20:45:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 997E1AC003
+	for <xfs@oss.sgi.com>; Thu, 15 Oct 2015 18:45:20 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	yY5E34ehLO2aEgeH for <xfs@oss.sgi.com>;
-	Thu, 15 Oct 2015 18:45:19 -0700 (PDT)
+	na16nuw0PCBNRm6P for <xfs@oss.sgi.com>;
+	Thu, 15 Oct 2015 18:45:18 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Zmu4v-00019x-0O
-	for xfs@oss.sgi.com; Fri, 16 Oct 2015 12:45:05 +1100
+	(envelope-from <dave@fromorbit.com>) id 1Zmu4u-00019p-Qj
+	for xfs@oss.sgi.com; Fri, 16 Oct 2015 12:45:04 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1Zmu4u-00006K-VB
+	(envelope-from <dave@disappointment.disaster>) id 1Zmu4u-00005n-Pi
 	for xfs@oss.sgi.com; Fri, 16 Oct 2015 12:45:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/8] cleanup: move fold_t out of util.h
-Date: Fri, 16 Oct 2015 12:45:00 +1100
-Message-Id: <1444959901-31319-8-git-send-email-david@fromorbit.com>
-In-Reply-To: <1444959901-31319-1-git-send-email-david@fromorbit.com>
-References: <1444959901-31319-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/8] xfsdump: Ouchie! My bleeding eyes!
+Date: Fri, 16 Oct 2015 12:44:53 +1100
+Message-Id: <1444959901-31319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,187 +35,79 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Many files just want the fold_t type, but pulling in util.h requires
-all the XFS and JDM headers to be pulled in, too. Move fold_t to
-mlog.[ch] as it tends to be common with log output. Similarly, move
-the PREEMPT_* definitions to common/types.h to remove that
-dependency on util.h as well.
+Turns out that changes to exported XFS headers in xfsprogs v4.2.0
+broke the xfsdump build. the XFS dump build was implicitly including
+the platform definitions calculated for the xfsprogs build and so
+removing them from the xfsprogs headers made xfsdump very unhappy.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- common/mlog.c  | 45 +++++++++++++++++++++++++++++++++++++++++++++
- common/mlog.h  |  6 ++++++
- common/types.h |  5 +++++
- common/util.c  | 45 ---------------------------------------------
- common/util.h  | 11 -----------
- 5 files changed, 56 insertions(+), 56 deletions(-)
+I've spend the last couple of days dripping blood from my eyeballs
+all over my keyboard trying to clean up the mess a bit. This patch
+set fixes the build issue and tries to minimise the amount of XFS
+header inclusion across the xfsdump code base.
 
-diff --git a/common/mlog.c b/common/mlog.c
-index fd21c18..c8b3129 100644
---- a/common/mlog.c
-+++ b/common/mlog.c
-@@ -802,3 +802,48 @@ mlog_sym_lookup( char *sym )
- 
- 	return -1;
- }
-+
-+void
-+fold_init( fold_t fold, char *infostr, char c )
-+{
-+	size_t infolen;
-+	size_t dashlen;
-+	size_t predashlen;
-+	size_t postdashlen;
-+	char *p;
-+	char *endp;
-+	ix_t cnt;
-+
-+	assert( sizeof( fold_t ) == FOLD_LEN + 1 );
-+
-+	infolen = strlen( infostr );
-+	if ( infolen > FOLD_LEN - 4 ) {
-+		infolen = FOLD_LEN - 4;
-+	}
-+	dashlen = FOLD_LEN - infolen - 3;
-+	predashlen = dashlen / 2;
-+	postdashlen = dashlen - predashlen;
-+
-+	p = &fold[ 0 ];
-+	endp = &fold[ sizeof( fold_t ) - 1 ];
-+
-+	assert( p < endp );
-+	*p++ = ' ';
-+	for ( cnt = 0 ; cnt < predashlen && p < endp ; cnt++, p++ ) {
-+		*p = c;
-+	}
-+	assert( p < endp );
-+	*p++ = ' ';
-+	assert( p < endp );
-+	assert( p + infolen < endp );
-+	strcpy( p, infostr );
-+	p += infolen;
-+	assert( p < endp );
-+	*p++ = ' ';
-+	assert( p < endp );
-+	for ( cnt = 0 ; cnt < postdashlen && p < endp ; cnt++, p++ ) {
-+		*p = c;
-+	}
-+	assert( p <= endp );
-+	*p = 0;
-+}
-diff --git a/common/mlog.h b/common/mlog.h
-index d7bbfce..e080f9e 100644
---- a/common/mlog.h
-+++ b/common/mlog.h
-@@ -123,4 +123,10 @@ extern void mlog_exit_flush( void );
- extern void mlog_lock( void );
- extern void mlog_unlock( void );
- 
-+/* fold_t - a character string made to look like a "fold here"
-+ */
-+#define FOLD_LEN	79
-+typedef char fold_t[ FOLD_LEN + 1 ];
-+extern void fold_init( fold_t fold, char *infostr, char c );
-+
- #endif /* MLOG_H */
-diff --git a/common/types.h b/common/types.h
-index 0923897..f902828 100644
---- a/common/types.h
-+++ b/common/types.h
-@@ -136,4 +136,9 @@ typedef struct stat64 stat64_t;
- typedef struct getbmapx getbmapx_t;
- typedef struct fsdmidata fsdmidata_t;
- 
-+/* flg definitions for preemptchk 
-+ */
-+#define PREEMPT_FULL		0
-+#define PREEMPT_PROGRESSONLY	1
-+
- #endif /* TYPES_H */
-diff --git a/common/util.c b/common/util.c
-index 93dd9c8..0d49d5c 100644
---- a/common/util.c
-+++ b/common/util.c
-@@ -532,48 +532,3 @@ cvtnum( int blocksize, char *s )
- 		return 1024 * 1024 * i;
- 	return -1;
- }
--
--void
--fold_init( fold_t fold, char *infostr, char c )
--{
--	size_t infolen;
--	size_t dashlen;
--	size_t predashlen;
--	size_t postdashlen;
--	char *p;
--	char *endp;
--	ix_t cnt;
--
--	assert( sizeof( fold_t ) == FOLD_LEN + 1 );
--
--	infolen = strlen( infostr );
--	if ( infolen > FOLD_LEN - 4 ) {
--		infolen = FOLD_LEN - 4;
--	}
--	dashlen = FOLD_LEN - infolen - 3;
--	predashlen = dashlen / 2;
--	postdashlen = dashlen - predashlen;
--
--	p = &fold[ 0 ];
--	endp = &fold[ sizeof( fold_t ) - 1 ];
--
--	assert( p < endp );
--	*p++ = ' ';
--	for ( cnt = 0 ; cnt < predashlen && p < endp ; cnt++, p++ ) {
--		*p = c;
--	}
--	assert( p < endp );
--	*p++ = ' ';
--	assert( p < endp );
--	assert( p + infolen < endp );
--	strcpy( p, infostr );
--	p += infolen;
--	assert( p < endp );
--	*p++ = ' ';
--	assert( p < endp );
--	for ( cnt = 0 ; cnt < postdashlen && p < endp ; cnt++, p++ ) {
--		*p = c;
--	}
--	assert( p <= endp );
--	*p = 0;
--}
-diff --git a/common/util.h b/common/util.h
-index 5284811..558bf7e 100644
---- a/common/util.h
-+++ b/common/util.h
-@@ -143,22 +143,11 @@ extern int diriter( jdm_fshandle_t *fshandlep,
- 			 size_t usrgdsz );
- 
- 
--/* fold_t - a character string made to look like a "fold here"
-- */
--#define FOLD_LEN	79
--typedef char fold_t[ FOLD_LEN + 1 ];
--extern void fold_init( fold_t fold, char *infostr, char c );
--
- 
- /* macro to copy uuid structures
-  */
- #define COPY_LABEL( lab1, lab2) ( bcopy( lab1, lab2, GLOBAL_HDR_STRING_SZ) )
- 
--/* flg definitions for preemptchk 
-- */
--#define PREEMPT_FULL		0
--#define PREEMPT_PROGRESSONLY	1
--
- /*
-  * Align pointer up to alignment
-  */
--- 
-2.5.0
+To this end:
+
+	1. remove xfsdump's use of ASSERT because the definition in
+	the XFs headers overrode everything else. So the first patch
+	is a global s/ASSERT/assert/, #include <assert.h> change.
+
+	2. fix the build issues. With the assert conflict out of the
+	way, patch 2 includes all the bits xfsdump really needed
+	from the xfsprogs platform defs. This is added to the
+	include/config.h.in file, and this is then included across
+	the code base.
+
+	3. xfs/jdm.h does "typedef int intgen_t;" for it's API.
+	xfsdump uses it *everywhere* (~900 instances across the code
+	base), yet everywhere it is used an "int" will sufficient
+	and there's only a handful of jdm_* API calls anyway.  Patch
+	3 is therefore s/intgen_t/int/g
+
+	4. why use uint*_t when you can use a random mix of types?
+	Patch 4 is therefore s/u_int/uint/g
+
+	5. xfs_ino_t. Always going to be uint64_t. Use a local
+	definition, not pull all of XFS into all of xfsdump just for
+	a single typedef (patch 5).
+
+	6. Use <uuid/uuid.h>, not whatever hacked up uuid interface
+	that you get from the XFS headers, which is not then used
+	correctly because nothing uses the "platform_uuid_*()"
+	abstraction the XFS headers provide. Clearly, xfsdump has
+	only *ever* been compiled on Linux, as the build will break
+	on BSD based platforms like Irix and FreeBSD. xfsdump is a
+	Linux only source tree right now....
+
+	7. Yeah, lets put random stuff in a header file that is
+	included all over the place that requires the XFS headers to
+	be included. Patch 7 pulls out the bits used by
+	logging/reporting and puts them in the logging/reporting
+	source files.
+
+	8. Kill as many <xfs/xfs.h> and <xfs/jdm.h> includes as
+	possible. Most of the files including them are now just
+	missing system header includes and no longer need util.h, so
+	patch 8 cleans up all that mess. 
+
+So, now the code base is a little bit cleaner, a lot less dependent
+on the xfsprogs header files, compiles cleanly on xfsprogs 3.2.x and
+4.x releases, can easily have asserts build in or excluded (distro
+packages need to use "export DEBUG=-DNDEBUG" to exclude asserts),
+passes xfstests with asserts enabled and disabled, and best of all
+the source code is a little less eye-bleedy.
+
+I really don't expect anyone to review this closely - it's *huge*
+chunk of boring search/replace change:
+
+ 94 files changed, 2929 insertions(+), 2652 deletions(-)
+
+but I would like people to comment on/ack the approach I've taken
+here. If nobody objects/cares, I'll then do a 3.1.6 release early
+next week....
+
+-Dave.
 
 _______________________________________________
 xfs mailing list
