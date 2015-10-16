@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A29377F85
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 11:13:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 836BE8F804C
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 09:13:22 -0700 (PDT)
-Received: from mail-lb0-f173.google.com (mail-lb0-f173.google.com
-	[209.85.217.173]) by cuda.sgi.com with ESMTP id
-	hjQ5YtGcWh6xFfvd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 16 Oct 2015 09:13:20 -0700 (PDT)
-Received: by lbbes7 with SMTP id es7so14264223lbb.2
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 09:13:19 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ED70A7F92
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 11:29:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BDCAE304032
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 09:29:23 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id LuJBdAEdlTpiI2lF for <xfs@oss.sgi.com>;
+	Fri, 16 Oct 2015 09:29:20 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 3804E63BCF80
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2015 11:29:20 -0500 (CDT)
+Subject: Re: Error in `xfs_repair': double free or corruption
+References: <trinity-74aaa980-3667-4c6d-9e1e-60f3f70dc888-1445005584585@3capp-gmx-bs54>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <562125DF.3050006@sandeen.net>
+Date: Fri, 16 Oct 2015 11:29:19 -0500
 MIME-Version: 1.0
-In-Reply-To: <CALCETrXFkB01tk21FuEOqABHWg1XyOQwsT+s=Lq0RYye6X_7xw@mail.gmail.com>
-References: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
-	<1445008706-15115-17-git-send-email-agruenba@redhat.com>
-	<CALCETrXFkB01tk21FuEOqABHWg1XyOQwsT+s=Lq0RYye6X_7xw@mail.gmail.com>
-Date: Fri, 16 Oct 2015 18:13:19 +0200
-Message-ID: <CAHc6FU7SNs6+xt34s18xM-C4U_7v5DLcN_feHXhVMY1q=K6zxA@mail.gmail.com>
-Subject: Re: [PATCH v11 16/48] richacl: Automatic Inheritance
-From: Andreas Gruenbacher <agruenba@redhat.com>
+In-Reply-To: <trinity-74aaa980-3667-4c6d-9e1e-60f3f70dc888-1445005584585@3capp-gmx-bs54>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,37 +32,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-On Fri, Oct 16, 2015 at 6:00 PM, Andy Lutomirski <luto@amacapital.net> wrote:
-> On Fri, Oct 16, 2015 at 8:17 AM, Andreas Gruenbacher
-> <agruenba@redhat.com> wrote:
->> Automatic Inheritance works as follows:
->>
->>  - When the RICHACL_AUTO_INHERIT flag in the acl of a file or directory
->>    is not set, the file or directory is not affected by AI.
->>
->>  - When the RICHACL_AUTO_INHERIT flag in the acl of a directory is set
->>    and a file or subdirectory is created in that directory, the
->>    inherited acl will have the RICHACL_AUTO_INHERIT flag set, and all
->>    inherited aces will have the RICHACE_INHERITED_ACE flag set.  This
->>    allows user space to distinguish between aces which have been
->>    inherited and aces which have been explicitly added.
->
-> What if the file or subdirectory that's created in that directory is a
-> hard link?
 
-Directories cannot have hard links.
 
-When a file is hard linked into multiple directories with different
-inheritable permissions, the permissions set last will "win". This
-isn't particularly pretty, but it's the way this has worked on that
-other operating system with significant marked share for the last
-fifteen years.
+On 10/16/15 9:26 AM, Dragon wrote:
+> Hello Emmanuel,
+> 
+> kernel version is 3.16-0.bpo.2-amd64 and xfsprogs in version 3.2.1
+> from stable. the question is if xfs_repair can repair a raid which
+> has missed a disk with over 240gb bad blocks.
 
-Thanks,
-Andreas
+Well, we shouldn't hit that "double free or corruption" bug.  But you
+have an old xfsprogs, so the suggestion of using something up to date
+is a good one.
+
+As for "can xfs_repair repair a raid which is missing a disk with 240g
+of bad blocks?" -
+
+xfs_repair cannot make something out of nothing; it should always end
+up with a filesystem which has consistent metadata, but that might be
+the result of throwing away a lot of un-fixable things.
+
+All too often I see people try to use xfs_repair on a raid which is
+in bad shape; not properly reassembled, etc, and that's only going to
+make things worse.  You must get your storage into the best shape you
+can, first, and then xfs_repair will do its best to create consistency,
+but it cannot recreate lost (meta)data, in general.
+
+Running xfs_repair -n, or creating a metadump image, and running a full
+repair on that as a test, is often a good idea before you commit to
+changes on your original filesystem.
+
+-Eric
+
+> gretings
+> 
+> 
+>     Hello,
+>     i have a problem after repaired a degraded Softare Raid6. System is
+>     Debian Jessi and Root and Boot are on Raid1, and Data on Raid6 on md2
+>     which miss one Disk. The mainproblem was a missing Disk because of
+>     badblocks which i cloned and exchanged agains a new one. After that i
+>     could successfully rebuild the raid (md2), while now only one disk is
+>     midding. But i recognised that xfs reports inode problems. Therefor i
+>     run xfs_repair on the raid device md2, but get message "Error in
+>     &#96;xfs_repair': double free or corruption" What can i do the fix
+>     this? thx 
+> 
+> 
+> You didn't provide enough information (kernel and xfs-progs version at
+> the very least) but you should use the latest version of xfs_repair, the
+> one included in Debian is probably quite old. Here's one new:
+> 
+> http://update.intellique.com/pub/xfs_repair-4.2.0.gz
+> 
+> Or if you like it better in debian form:
+> http://update.intellique.com/repository/pool/storiq3/unstable/amd64/xfsprogs_4.2.0+1_amd64.deb
+> 
+> 
 
 _______________________________________________
 xfs mailing list
