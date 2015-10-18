@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C35FF7F53
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 18:12:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DC2DAC002
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 16:12:22 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gpV6CXu2ajVTke7h for <xfs@oss.sgi.com>;
-	Sun, 18 Oct 2015 16:12:20 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id EC38E63CBCF9
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 18:12:19 -0500 (CDT)
-Subject: Re: Problem with data recovery
-References: <20151018144937.5406805.67472.2273@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56242753.7000807@sandeen.net>
-Date: Sun, 18 Oct 2015 18:12:19 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C50497F55
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 18:24:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A1DD98F8033
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 16:24:24 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	YTaAGbPoLe8GbvgH for <xfs@oss.sgi.com>;
+	Sun, 18 Oct 2015 16:24:22 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1ZnxIl-00081u-E8
+	for xfs@oss.sgi.com; Mon, 19 Oct 2015 10:23:43 +1100
+Date: Mon, 19 Oct 2015 10:23:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to fcd8a39
+Message-ID: <20151018232343.GB27164@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20151018144937.5406805.67472.2273@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +25,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0665079396293358561=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
+--===============0665079396293358561==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sHrvAb52M6C8blB9"
+Content-Disposition: inline
 
-On 10/18/15 9:49 AM, Matteo Sarti wrote:
-> I have a buffalo terastation with both two failed drive on 4 drives of raid 5.
-> Problem is very simple hardware is ok, but someone goes wrong during normal process of this dataserver.
 
-I don't understand what that means - how can you have two failed drives, but hardware is ok?
+--sHrvAb52M6C8blB9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If you lost 2 drives out of a 3+1 RAID5, then you have essentially lost your filesystem,
-I'm sorry.
+Hi folks,
 
-> I check both driver on other PC with ufs explorer and drive is full of data, but xfs file system is not recognized.
+The for-next branch of the xfs kernel repository at
 
-because the drives are part of a raid set, and they are not xfs filesystems
-on their own.
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-https://en.wikipedia.org/wiki/Standard_RAID_levels#RAID_5
+has just been updated.
 
-> How can I write manually on harddrive using raw data the beginning of xfs definition??
+The new head of the for-next branch is commit:
 
-You can't.
+fcd8a39 Merge branch 'xfs-stats-fixes' into for-next
 
-> I hope someone can help me because buffalo is very good in selling, but not so much in Support :(.
+New Commits:
 
-If you lost 2 of your 4 drives, there's not much support to do, I'm afraid.
+Dan Carpenter (1):
+      [f9d460b] xfs: fix an error code in xfs_fs_fill_super()
 
--Eric
+Dave Chinner (2):
+      [985ef4d] xfs: stats are no longer dependent on CONFIG_PROC_FS
+      [fcd8a39] Merge branch 'xfs-stats-fixes' into for-next
+
+
+Code Diffstat:
+
+ fs/xfs/Makefile    | 2 +-
+ fs/xfs/xfs_stats.c | 2 ++
+ fs/xfs/xfs_super.c | 2 +-
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--sHrvAb52M6C8blB9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJWJCn+AAoJEK3oKUf0dfodmsAQALo9bwJL3wmCnE6NU8xI3Get
+levf9wTTgP5m/Pk88gTSO5XmybUHCh38uhOpalTcap8t6xcN9CsWvGcBvXTRn5Yx
+uBl0qE4hkjUGJQr7tSPkTDKidmFN+tJM+wgp8Q8zkoXeVYCZZVpsagf0nqpPnWMV
+PFbKRXQZujyUYDhGwKw0HuSou5nPxUf+2cqiUUxXBFFppEtF+BVMQg0XgDD5gey8
+SugzGYL3gjdjYIiMV6jpVoRxfE01VjUXeFDaUdC+g2pPDh6mdBBACbrNRZoVvvJI
+LipB2D/UWiFPMDs/UyvhC4exuWUqsYi4jIebfL1Fir0LGsQK4AP6H0jZrHLX6zTt
+c5RyXQK4SW5ePHcu98Xw4qbsZ3jtnnC4HNRuHTHkEng/+8mUa+eH5QNmsZbiDfMp
+GtUlfLe66AzUBVCIZuwz5+L+xUjte1Vvahv/QRnxGY6lODm8mrDD0CckZ4wOwmQr
+mztY40Bafp/VD+3PCVmAsiGvceO6j7omJP2ii742nsS/GIKPTtTOs18CF+IfWAs9
+RVIMPdozPeF7VAGDyfSvCJ27bBOtoCpbiKQlz8RRkx28G2V0MFLTVLAWhluHpytx
+weOYXyDKWAG+NfsLyN7CipAHrJhgzBPucS61wqr4+ToPJ+cLZq0/YaGQdhGuZJp7
+tlvF6bXxPiJ2rl//o4fE
+=V8dt
+-----END PGP SIGNATURE-----
+
+--sHrvAb52M6C8blB9--
+
+
+--===============0665079396293358561==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0665079396293358561==--
