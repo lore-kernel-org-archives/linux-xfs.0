@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CFCD37F53
-	for <xfs@oss.sgi.com>; Sat, 17 Oct 2015 18:22:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A15DD304032
-	for <xfs@oss.sgi.com>; Sat, 17 Oct 2015 16:22:56 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	rO90wasUNKjKu2lg for <xfs@oss.sgi.com>;
-	Sat, 17 Oct 2015 16:22:53 -0700 (PDT)
-Date: Sun, 18 Oct 2015 10:17:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v11 21/48] ext4: Add richacl feature flag
-Message-ID: <20151017231759.GV27164@dastard>
-References: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
-	<1445008706-15115-22-git-send-email-agruenba@redhat.com>
-	<5621346E.5000500@gmail.com>
-	<CAHc6FU7sR2zN-K3un74wCv+1NPnrqJ=LYiWo+YQ_2X0kopyoTQ@mail.gmail.com>
-	<562141AD.60302@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A0E0A7F58
+	for <xfs@oss.sgi.com>; Sat, 17 Oct 2015 19:35:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7F4BB8F8040
+	for <xfs@oss.sgi.com>; Sat, 17 Oct 2015 17:35:40 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id FtgiHIGQQPYMcXcu (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 17 Oct 2015 17:35:37 -0700 (PDT)
+Date: Sat, 17 Oct 2015 20:35:32 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: e2fsprogs: Richacl support
+Message-ID: <20151018003532.GD2678@thunk.org>
+References: <CAHc6FU5s7-t3+jtKDusVFqc542Ag7pEOTUqp1LSxg8_uCPyF=A@mail.gmail.com>
+	<20151016231615.GF15011@thunk.org>
+	<CAHc6FU5B35D30Cc0-iSAfKDrCfc29paYe-tg-GGP7KEH08+2rA@mail.gmail.com>
+	<20151017143951.GA2678@thunk.org> <20151017225910.GT27164@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <562141AD.60302@gmail.com>
+In-Reply-To: <20151017225910.GT27164@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +32,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Austin S Hemmelgarn <ahferroin7@gmail.com>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-ext4 <linux-ext4@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Oct 16, 2015 at 02:27:57PM -0400, Austin S Hemmelgarn wrote:
-> On 2015-10-16 13:41, Andreas Gruenbacher wrote:
-> >On Fri, Oct 16, 2015 at 7:31 PM, Austin S Hemmelgarn
-> ><ahferroin7@gmail.com> wrote:
-> >>I would like to re-iterate, on both XFS and ext4, I _really_ think this
-> >>should be a ro_compat flag, and not an incompat one.  If a person has the
-> >>ability to mount the FS (even if it's a read-only mount), then they by
-> >>definition have read access to the file or partition that the filesystem is
-> >>contained in, which means that any ACL's stored on the filesystem are
-> >>functionally irrelevant,
-> >
-> >It is unfortunately not safe to make such a file system accessible to
-> >other users, so the feature is not strictly read-only compatible.
-> If it's not safe WRT data integrity, then the design needs to be
-> reworked, as that directly implies that isn't safe for even every
-> day usage on a writable filesystem.
+On Sun, Oct 18, 2015 at 09:59:10AM +1100, Dave Chinner wrote:
+> For XFS userspace we also need this feature bit for xfs_repair so
+> that it doesn't attempt to validate the on-disk ACL format is in a
+> valid posix ACL format. IOWs, we need an on-disk feature bit to
+> indicate the on-disk format of the ACL in XFS.
+> 
+> Further, a user could mount the ext4 fs with "norichacl,acl" to
+> force the kernel to parse the rich acls as posix acls because
+> without a feature bit the fs does not know what format it's acls are
+> in on-disk. This will only end in tears for users.
 
-This is exactly what we have *incompat feature flags for*: to
-protect old code that doesn't know about potentially dangerous new
-on-disk formats from trying to parse those formats and causing
-unpredictable bad things from happening.
+So at least for ext4, the richacl xattr using a completely different
+index, and so it's not possible to interpret the richacl as an acl.
+The only question is whether we pay attention to the richacl acl's at
+all.  One thing that's not clear to me is what VFS is supposed to do
+if an inode has both an Posix ACL xattr and a Richacl xattr at the
+same time.
 
-Austin, your arguments hold no weight because they are no different
-to the considerations for any new on-disk feature: the user needs to
-have both kernel and userspace support to recover filesystems that
-go bad. If you are using a brand new fs/kernel feature, then it is
-expected that you know that your DR processes take this into
-account.
+We're also not trying to validate the on-disk ACL format at all using
+e2fsck, just as we're not trying to validate say, the SELinux xattr.
+They are just bags of bits as far as e2fsck is concerned.  So for that
+reason, at least as the patches I've seen for richacl for ext4,
+e2fsprogs doesn't actually need a file system feature bit at all.  We
+could in theory use the 1.42 version of e2fsck against an ext4 file
+system with richacl, and modulo the incompat flag, there wouldn't be
+any problems from e2fsck point of view.
 
-This is also why we XFS devs wait at least a year after new on-disk
-features are merged into XFS before we consider turning them on by
-default. i.e.  to give distros and recovery utilities time to pick
-up kernels and userspace pacakges that support the new feature
-before the average user will encounter it....
+What Andreas G. has said is that the only problem is if the file
+system is mounted read/write, and someone creates an inode on a
+non-richacl knowledgeable kernel, the inode would get created w/o an
+richacl.  This might be surprising to the user if he or she was
+expecting richacl semantics, but that would only happen if they had
+say, enabled richacl's on a distribution that had full richacl support
+(including the richacl userspace utilities so they could set and get
+richacl entries), and then booted an older kernel on that
+distribution.  This doesn't seem like _that_ likely a scenario, but I
+suppose it could happen.  And whether you call the file system
+"inconsistent" really depends on your point of view.  From the
+perspective of fsck, which for ext4 is completely, happily ignorant of
+richacl support, it's not inconsistent and all of the inodes are
+valid.
 
-Cheers,
+> I asked this same question on the kernel side of things. While I
+> think that from an "on-disk consistency" POV using RO_INCOMPAT would
+> be fine, from a user visible POV the behaviour won't be compatible
+> and so INCOMPAT makes sense from that perspective.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If you believe that the only real use of richacl will be primarily for
+supporting Samba and NFSv4 servers, then using a read-only compat
+feature flag isn't that terrible, and it might be helpful in the case
+of someone using a rescue media that hasn't been updated yet to be
+able to access the system --- since it seems unlikely that the user
+would try to launch a Samba or NFSv4 server from a rescue CD.
+
+But I different people of good will can differ with each other, and at
+the end of the day I don't think it makes *that* much difference
+unless we drop the use of the feature flag entirely.  Given that
+systemd has infected all of the distributions, and systemd is getting
+more and more tightly integrated into modern kernel features w/o
+offerring backwards compatibility, it seems very likely to me that you
+wouldn't even be able to *boot* a downrev kernel on a modern
+distribution that has richacl support without seeing systemd or its
+dependencies explode into millions of tiny pleaces, so I'm not that
+terribly worried one way or another.  :-)
+
+						- Ted
 
 _______________________________________________
 xfs mailing list
