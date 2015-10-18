@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 06B127CBF
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 09:49:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA41D8F804B
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 07:49:43 -0700 (PDT)
-Received: from mail-wi0-f170.google.com (mail-wi0-f170.google.com
-	[209.85.212.170]) by cuda.sgi.com with ESMTP id
-	kPHFaEsyOjtXNiLx (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C5BC67F3F
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 15:46:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A74C2304039
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 13:46:26 -0700 (PDT)
+Received: from mail-lb0-f177.google.com (mail-lb0-f177.google.com
+	[209.85.217.177]) by cuda.sgi.com with ESMTP id
+	nnaBtpmquJG9fTSB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 18 Oct 2015 07:49:40 -0700 (PDT)
-Received: by wicfv8 with SMTP id fv8so45995851wic.0
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 07:49:38 -0700 (PDT)
-Received: from [127.0.0.1] ([5.90.231.216]) by smtp.gmail.com with ESMTPSA id
-	p7sm34420310wjf.26.2015.10.18.07.49.37 for <xfs@oss.sgi.com>
-	(version=TLSv1/SSLv3 cipher=OTHER);
-	Sun, 18 Oct 2015 07:49:37 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 18 Oct 2015 13:46:24 -0700 (PDT)
+Received: by lbcao8 with SMTP id ao8so128464689lbc.3
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 13:46:23 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <20151018144937.5406805.67472.2273@gmail.com>
-Date: Sun, 18 Oct 2015 16:49:37 +0200
-Subject: Problem with data recovery
-From: Matteo Sarti <matteo.sarti@gmail.com>
+In-Reply-To: <20151018003532.GD2678@thunk.org>
+References: <CAHc6FU5s7-t3+jtKDusVFqc542Ag7pEOTUqp1LSxg8_uCPyF=A@mail.gmail.com>
+	<20151016231615.GF15011@thunk.org>
+	<CAHc6FU5B35D30Cc0-iSAfKDrCfc29paYe-tg-GGP7KEH08+2rA@mail.gmail.com>
+	<20151017143951.GA2678@thunk.org> <20151017225910.GT27164@dastard>
+	<20151018003532.GD2678@thunk.org>
+Date: Sun, 18 Oct 2015 22:46:23 +0200
+Message-ID: <CAHc6FU6U-r4YjxdvhW_OAmdekzK-tBT62Hs_JBYFB0V65qDw4w@mail.gmail.com>
+Subject: Re: e2fsprogs: Richacl support
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +31,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8220597411993572856=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4 <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
---===============8220597411993572856==
-Content-Type: text/html; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Sun, Oct 18, 2015 at 2:35 AM, Theodore Ts'o <tytso@mit.edu> wrote:
+> On Sun, Oct 18, 2015 at 09:59:10AM +1100, Dave Chinner wrote:
+>> For XFS userspace we also need this feature bit for xfs_repair so
+>> that it doesn't attempt to validate the on-disk ACL format is in a
+>> valid posix ACL format. IOWs, we need an on-disk feature bit to
+>> indicate the on-disk format of the ACL in XFS.
+>>
+>> Further, a user could mount the ext4 fs with "norichacl,acl" to
+>> force the kernel to parse the rich acls as posix acls because
+>> without a feature bit the fs does not know what format it's acls are
+>> in on-disk. This will only end in tears for users.
+>
+> So at least for ext4, the richacl xattr using a completely different
+> index, and so it's not possible to interpret the richacl as an acl.
 
-<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
-=3Dutf-8"><style> body {  font-family: "Calibri","Slate Pro",sans-serif,"sa=
-ns-serif"; color:#262626 }</style> </head> <body lang=3D"it-IT" style=3D"">=
-<div>I have a buffalo terastation with both two failed drive on 4 drives of=
- raid 5.</div><div>Problem is very simple hardware is ok, but someone goes =
-wrong during normal process of this dataserver.</div><div>I check both driv=
-er on other PC with ufs explorer and drive is full of data, but xfs file sy=
-stem is not recognized.</div><div>How can I write manually on harddrive usi=
-ng raw data the beginning of xfs definition??</div><div><span>I hope someon=
-e can help me because buffalo is very good in selling, but not so much in S=
-upport :(.</span></div><div><span><br></span></div><div><span>Tks</span></d=
-iv><div><span><br></span></div><div>Invio&nbsp;eseguito&nbsp;dallo&nbsp;sma=
-rtphone&nbsp;BlackBerry&nbsp;10.</div></body></html>
+It's the same on xfs.
 
+> The only question is whether we pay attention to the richacl acl's at
+> all.  One thing that's not clear to me is what VFS is supposed to do
+> if an inode has both an Posix ACL xattr and a Richacl xattr at the
+> same time.
 
---===============8220597411993572856==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+The VFS will either look for POSIX ACLs or for a richacl; it won't
+even notice if both are present.
+
+> We're also not trying to validate the on-disk ACL format at all using
+> e2fsck, just as we're not trying to validate say, the SELinux xattr.
+> They are just bags of bits as far as e2fsck is concerned.
+
+Right now, filesystems that e2fsck is perfectly happy with can still
+cause errors when used. It would be nice to fix that.
+
+With POSIX ACLs, this problem is slightly less severe because the ACL
+isn't looked at for the owner; it would even be possible to replace a
+corrupted POSIX ACL. Richacls unfortunately don't allow this
+optimization.
+
+>> I asked this same question on the kernel side of things. While I
+>> think that from an "on-disk consistency" POV using RO_INCOMPAT would
+>> be fine, from a user visible POV the behaviour won't be compatible
+>> and so INCOMPAT makes sense from that perspective.
+>
+> If you believe that the only real use of richacl will be primarily for
+> supporting Samba and NFSv4 servers, then using a read-only compat
+> feature flag isn't that terrible, and it might be helpful in the case
+> of someone using a rescue media that hasn't been updated yet to be
+> able to access the system --- since it seems unlikely that the user
+> would try to launch a Samba or NFSv4 server from a rescue CD.
+
+You wouldn't be able to fsck a filesystem that has unknown features,
+incompat or ro-incompat, from such a rescue environment.
+
+> But I different people of good will can differ with each other, and at
+> the end of the day I don't think it makes *that* much difference
+> unless we drop the use of the feature flag entirely.
+
+This really should be a feature flag and not a mount option, it just
+doesn't make sense to switch at mount time.
+
+>From this discussion, I'm even more convinced that we should use an
+incompat feature rather than a ro-incompat feature.
+
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8220597411993572856==--
