@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 42F6A7F37
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 22:27:40 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 377D97F47
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 22:27:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C3C0AC001
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 20:27:39 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9EE85AC002
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 20:27:40 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	YGpMpUX7zsTJBp27 for <xfs@oss.sgi.com>;
-	Sun, 18 Oct 2015 20:27:37 -0700 (PDT)
+	NjroiSe10A94e2EZ for <xfs@oss.sgi.com>;
+	Sun, 18 Oct 2015 20:27:38 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] xfs: xfs_filemap_pmd_fault treats read faults as write
-	faults
-Date: Mon, 19 Oct 2015 14:27:18 +1100
-Message-Id: <1445225238-30413-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/6] xfs: DAX does not use IO completion callbacks
+Date: Mon, 19 Oct 2015 14:27:16 +1100
+Message-Id: <1445225238-30413-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1445225238-30413-1-git-send-email-david@fromorbit.com>
 References: <1445225238-30413-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,68 +33,104 @@ Cc: ross.zwisler@linux.intel.com, jack@suse.cz
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The code initially committed didn't have the same checks for write
-faults as the dax_pmd_fault code and hence treats all faults as
-write faults. We can get read faults through this path because they
-is no pmd_mkwrite path for write faults similar to the normal page
-fault path. Hence we need to ensure that we only do c/mtime updates
-on write faults, and freeze protection is unnecessary for read
-faults.
+For DAX, we are now doing block zeroing and
+we are updating the file size during allocation. This means we no
+longer need an IO completion callback to do these things, so remove
+the completion callbacks from the __dax_fault and __dax_mkwrite
+calls.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_file.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_aops.c | 39 ---------------------------------------
+ fs/xfs/xfs_aops.h |  1 -
+ fs/xfs/xfs_file.c |  5 ++---
+ 3 files changed, 2 insertions(+), 43 deletions(-)
 
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 7b4f849..29e7e5d 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1666,45 +1666,6 @@ xfs_end_io_direct_write(
+ 	__xfs_end_io_direct_write(inode, ioend, offset, size);
+ }
+ 
+-/*
+- * For DAX we need a mapping buffer callback for unwritten extent conversion
+- * when page faults allocate blocks and then zero them. Note that in this
+- * case the mapping indicated by the ioend may extend beyond EOF. We most
+- * definitely do not want to extend EOF here, so we trim back the ioend size to
+- * EOF.
+- */
+-#ifdef CONFIG_FS_DAX
+-void
+-xfs_end_io_dax_write(
+-	struct buffer_head	*bh,
+-	int			uptodate)
+-{
+-	struct xfs_ioend	*ioend = bh->b_private;
+-	struct inode		*inode = ioend->io_inode;
+-	ssize_t			size = ioend->io_size;
+-
+-	ASSERT(IS_DAX(ioend->io_inode));
+-
+-	/* if there was an error zeroing, then don't convert it */
+-	if (!uptodate)
+-		ioend->io_error = -EIO;
+-
+-	/*
+-	 * Trim update to EOF, so we don't extend EOF during unwritten extent
+-	 * conversion of partial EOF blocks.
+-	 */
+-	spin_lock(&XFS_I(inode)->i_flags_lock);
+-	if (ioend->io_offset + size > i_size_read(inode))
+-		size = i_size_read(inode) - ioend->io_offset;
+-	spin_unlock(&XFS_I(inode)->i_flags_lock);
+-
+-	__xfs_end_io_direct_write(inode, ioend, ioend->io_offset, size);
+-
+-}
+-#else
+-void xfs_end_io_dax_write(struct buffer_head *bh, int uptodate) { }
+-#endif
+-
+ static inline ssize_t
+ xfs_vm_do_dio(
+ 	struct inode		*inode,
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index d39ba25..f6ffc9a 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -60,7 +60,6 @@ int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
+ 			      struct buffer_head *map_bh, int create);
+ int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+ 			         struct buffer_head *map_bh, int create);
+-void	xfs_end_io_dax_write(struct buffer_head *bh, int uptodate);
+ 
+ extern void xfs_count_page_state(struct page *, int *, int *);
+ 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e7cf9ec..0045b0a 100644
+index 7f873bc..403151a 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1482,7 +1482,7 @@ xfs_file_llseek(
-  *
-  * mmap_sem (MM)
-  *   sb_start_pagefault(vfs, freeze)
-- *     i_mmap_lock (XFS - truncate serialisation)
-+ *     i_mmaplock (XFS - truncate serialisation)
-  *       page_lock (MM)
-  *         i_lock (XFS - extent map serialisation)
-  */
-@@ -1550,6 +1550,13 @@ xfs_filemap_fault(
- 	return ret;
- }
+@@ -1508,8 +1508,7 @@ xfs_filemap_page_mkwrite(
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
  
-+/*
-+ * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
-+ * both read and write faults. Hence we need to handle both cases. There is no
-+ * ->pmd_mkwrite callout for huge pages, so we have a single function here to
-+ * handle both cases here. @flags carries the information on the type of fault
-+ * occuring.
-+ */
- STATIC int
- xfs_filemap_pmd_fault(
- 	struct vm_area_struct	*vma,
-@@ -1566,13 +1573,18 @@ xfs_filemap_pmd_fault(
- 
- 	trace_xfs_filemap_pmd_fault(ip);
- 
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vma->vm_file);
-+	if (flags & FAULT_FLAG_WRITE) {
-+		sb_start_pagefault(inode->i_sb);
-+		file_update_time(vma->vm_file);
-+	}
-+
+ 	if (IS_DAX(inode)) {
+-		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault,
+-				    xfs_end_io_dax_write);
++		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault, NULL);
+ 	} else {
+ 		ret = __block_page_mkwrite(vma, vmf, xfs_get_blocks);
+ 		ret = block_page_mkwrite_return(ret);
+@@ -1571,7 +1570,7 @@ xfs_filemap_pmd_fault(
+ 	file_update_time(vma->vm_file);
  	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
  	ret = __dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault,
- 			      NULL);
+-				    xfs_end_io_dax_write);
++			      NULL);
  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	sb_end_pagefault(inode->i_sb);
-+
-+	if (flags & FAULT_FLAG_WRITE)
-+		sb_end_pagefault(inode->i_sb);
+ 	sb_end_pagefault(inode->i_sb);
  
- 	return ret;
- }
 -- 
 2.5.0
 
