@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C50497F55
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 18:24:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A1DD98F8033
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 16:24:24 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	YTaAGbPoLe8GbvgH for <xfs@oss.sgi.com>;
-	Sun, 18 Oct 2015 16:24:22 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1ZnxIl-00081u-E8
-	for xfs@oss.sgi.com; Mon, 19 Oct 2015 10:23:43 +1100
-Date: Mon, 19 Oct 2015 10:23:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to fcd8a39
-Message-ID: <20151018232343.GB27164@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 087C87F58
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 19:17:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DC9D9304032
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2015 17:17:08 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id rDQTcqbGB86f4RiX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 18 Oct 2015 17:17:07 -0700 (PDT)
+Date: Sun, 18 Oct 2015 20:17:04 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: e2fsprogs: Richacl support
+Message-ID: <20151019001704.GQ2678@thunk.org>
+References: <CAHc6FU5s7-t3+jtKDusVFqc542Ag7pEOTUqp1LSxg8_uCPyF=A@mail.gmail.com>
+	<20151016231615.GF15011@thunk.org>
+	<CAHc6FU5B35D30Cc0-iSAfKDrCfc29paYe-tg-GGP7KEH08+2rA@mail.gmail.com>
+	<20151017143951.GA2678@thunk.org> <20151017225910.GT27164@dastard>
+	<20151018003532.GD2678@thunk.org>
+	<CAHc6FU6U-r4YjxdvhW_OAmdekzK-tBT62Hs_JBYFB0V65qDw4w@mail.gmail.com>
+	<20151018214456.GM2678@thunk.org>
+	<CAHc6FU7J9OESpAJzOKOmu-UP-bC_kzKT-oVg-MVKAaVzswOacA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU7J9OESpAJzOKOmu-UP-bC_kzKT-oVg-MVKAaVzswOacA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,89 +32,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0665079396293358561=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-ext4 <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
+On Mon, Oct 19, 2015 at 12:46:49AM +0200, Andreas Gruenbacher wrote:
+> The filesystem sets the MS_POSIXACL super-block flag for POSIX ACLs or
+> the MS_RICHACL super-block flag for richacls. These flags are checked
+> with the IS_POSIXACL(inode) and IS_RICHACL(inode) macros.
 
---===============0665079396293358561==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sHrvAb52M6C8blB9"
-Content-Disposition: inline
+Ah, OK.  So it's either one thing or another.
 
+> I can send the validation code; not sure how removing corrupt xattrs
+> would fit into e2fsck though. Can e2fsck remove individual xattrs?
 
---sHrvAb52M6C8blB9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yep.  Using the libext2fs function ext2fs_xattr_remove(), in
+lib/ext2fs/ext_attr.c.  This requires the development branch of
+e2fsprogs, but by adding a new feature flag, richacl is going to
+require a 1.43 version of e2fsprogs (not yet released, but hopefully
+will be released soon).
 
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated.
-
-The new head of the for-next branch is commit:
-
-fcd8a39 Merge branch 'xfs-stats-fixes' into for-next
-
-New Commits:
-
-Dan Carpenter (1):
-      [f9d460b] xfs: fix an error code in xfs_fs_fill_super()
-
-Dave Chinner (2):
-      [985ef4d] xfs: stats are no longer dependent on CONFIG_PROC_FS
-      [fcd8a39] Merge branch 'xfs-stats-fixes' into for-next
-
-
-Code Diffstat:
-
- fs/xfs/Makefile    | 2 +-
- fs/xfs/xfs_stats.c | 2 ++
- fs/xfs/xfs_super.c | 2 +-
- 3 files changed, 4 insertions(+), 2 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---sHrvAb52M6C8blB9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJWJCn+AAoJEK3oKUf0dfodmsAQALo9bwJL3wmCnE6NU8xI3Get
-levf9wTTgP5m/Pk88gTSO5XmybUHCh38uhOpalTcap8t6xcN9CsWvGcBvXTRn5Yx
-uBl0qE4hkjUGJQr7tSPkTDKidmFN+tJM+wgp8Q8zkoXeVYCZZVpsagf0nqpPnWMV
-PFbKRXQZujyUYDhGwKw0HuSou5nPxUf+2cqiUUxXBFFppEtF+BVMQg0XgDD5gey8
-SugzGYL3gjdjYIiMV6jpVoRxfE01VjUXeFDaUdC+g2pPDh6mdBBACbrNRZoVvvJI
-LipB2D/UWiFPMDs/UyvhC4exuWUqsYi4jIebfL1Fir0LGsQK4AP6H0jZrHLX6zTt
-c5RyXQK4SW5ePHcu98Xw4qbsZ3jtnnC4HNRuHTHkEng/+8mUa+eH5QNmsZbiDfMp
-GtUlfLe66AzUBVCIZuwz5+L+xUjte1Vvahv/QRnxGY6lODm8mrDD0CckZ4wOwmQr
-mztY40Bafp/VD+3PCVmAsiGvceO6j7omJP2ii742nsS/GIKPTtTOs18CF+IfWAs9
-RVIMPdozPeF7VAGDyfSvCJ27bBOtoCpbiKQlz8RRkx28G2V0MFLTVLAWhluHpytx
-weOYXyDKWAG+NfsLyN7CipAHrJhgzBPucS61wqr4+ToPJ+cLZq0/YaGQdhGuZJp7
-tlvF6bXxPiJ2rl//o4fE
-=V8dt
------END PGP SIGNATURE-----
-
---sHrvAb52M6C8blB9--
-
-
---===============0665079396293358561==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+						- Ted
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0665079396293358561==--
