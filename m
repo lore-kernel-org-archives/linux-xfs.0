@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 486757F50
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 07:31:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 167028F8049
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 05:31:29 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rOP5kMYrvqzA7l70 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 19 Oct 2015 05:31:27 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 99E4619F223
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 12:31:26 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t9JCVPvi026933
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 08:31:26 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs_io: implement 'inode' command V3
-Date: Mon, 19 Oct 2015 14:31:20 +0200
-Message-Id: <1445257880-30797-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6DF177F47
+	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 08:12:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BDF5DAC001
+	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 06:12:46 -0700 (PDT)
+Received: from mail-io0-f173.google.com (mail-io0-f173.google.com
+	[209.85.223.173]) by cuda.sgi.com with ESMTP id
+	XLwz5vdGnesr5CRm (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 19 Oct 2015 06:12:45 -0700 (PDT)
+Received: by iofz202 with SMTP id z202so44611607iof.2
+	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 06:12:44 -0700 (PDT)
+Subject: Re: [PATCH v11 21/48] ext4: Add richacl feature flag
+References: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
+	<1445008706-15115-22-git-send-email-agruenba@redhat.com>
+	<5621346E.5000500@gmail.com>
+	<CAHc6FU7sR2zN-K3un74wCv+1NPnrqJ=LYiWo+YQ_2X0kopyoTQ@mail.gmail.com>
+	<562141AD.60302@gmail.com> <20151017231759.GV27164@dastard>
+From: Austin S Hemmelgarn <ahferroin7@gmail.com>
+Message-ID: <5624EC42.8050708@gmail.com>
+Date: Mon, 19 Oct 2015 09:12:34 -0400
+MIME-Version: 1.0
+In-Reply-To: <20151017231759.GV27164@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,244 +31,158 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2409286779900194158=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-Implements a new xfs_io command, named 'inode', which is supposed to be used to
-query information about inode's existence and its physical size in the
-filesystem.
+This is a cryptographically signed message in MIME format.
 
-Currently supporting three arguments:
--s       -- return physical size of the largest inode
--l       -- return the largest inode number allocated and used
--n [num] -- Return the next existing inode after [num], even if [num] is not
-            allocated/used
-[num]    -- Return if the inode exists or not.
+--===============2409286779900194158==
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-512; boundary="------------ms010802090608060909070409"
 
-I didn't send the man page patch because I'm sure I'll get some points to
-improve, and I'll write the manpage for the next revision.
+This is a cryptographically signed message in MIME format.
 
-- Changelog
+--------------ms010802090608060909070409
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-V3:
-	- Merge all 3 patches from the V2 together in a single patch
-	- Rework of '-n [num]' and 'num' only arguments algorithm
-	- Argument -n now relies on bulkreq.count to check for next inodes, not
-	  on bstat.bs_ino anymore.
-	- for loop in ret_lsize or ret_largest case, now relies on count being 0
-	  to break the loop
+On 2015-10-17 19:17, Dave Chinner wrote:
+> On Fri, Oct 16, 2015 at 02:27:57PM -0400, Austin S Hemmelgarn wrote:
+>> On 2015-10-16 13:41, Andreas Gruenbacher wrote:
+>>> On Fri, Oct 16, 2015 at 7:31 PM, Austin S Hemmelgarn
+>>> <ahferroin7@gmail.com> wrote:
+>>>> I would like to re-iterate, on both XFS and ext4, I _really_ think t=
+his
+>>>> should be a ro_compat flag, and not an incompat one.  If a person ha=
+s the
+>>>> ability to mount the FS (even if it's a read-only mount), then they =
+by
+>>>> definition have read access to the file or partition that the filesy=
+stem is
+>>>> contained in, which means that any ACL's stored on the filesystem ar=
+e
+>>>> functionally irrelevant,
+>>>
+>>> It is unfortunately not safe to make such a file system accessible to=
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- io/open.c | 161 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 161 insertions(+)
+>>> other users, so the feature is not strictly read-only compatible.
+>> If it's not safe WRT data integrity, then the design needs to be
+>> reworked, as that directly implies that isn't safe for even every
+>> day usage on a writable filesystem.
+>
+> This is exactly what we have *incompat feature flags for*: to
+> protect old code that doesn't know about potentially dangerous new
+> on-disk formats from trying to parse those formats and causing
+> unpredictable bad things from happening.
+However, unless things have changed (I haven't had time to re-read the=20
+patch-set yet), then the only change will be a new set of xattrs, and=20
+that type of change _shouldn't_ break existing code that doesn't know=20
+about them. Andreas really needs to explain _exactly_ why it isn't safe=20
+to mount this on a kernel that doesn't support it and let other users=20
+access it, and if the answer is 'because the ACL's won't be honored'=20
+then that really isn't acceptable reason IMHO, because (as I outlined in =
 
-diff --git a/io/open.c b/io/open.c
-index ac5a5e0..59b5c94 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -20,6 +20,7 @@
- #include "input.h"
- #include "init.h"
- #include "io.h"
-+#include "libxfs.h"
- 
- #ifndef __O_TMPFILE
- #if defined __alpha__
-@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
- static cmdinfo_t chproj_cmd;
- static cmdinfo_t lsproj_cmd;
- static cmdinfo_t extsize_cmd;
-+static cmdinfo_t inode_cmd;
- static prid_t prid;
- static long extsize;
- 
-@@ -750,6 +752,154 @@ statfs_f(
- 	return 0;
- }
- 
-+static void
-+inode_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Query physical information about the inode"
-+"\n"
-+" -l	-- Returns the largest inode number in the filesystem\n"
-+" -s	-- Returns the physical size (in bits) of the\n"
-+"	   largest inode number in the filesystem\n"
-+" -n	-- Return the next valid inode after [num]"
-+"[num]	   Check if the inode [num] exists in the filesystem"
-+"\n"));
-+}
-+
-+static int
-+inode_f(
-+	  int			argc,
-+	  char			**argv)
-+{
-+	__s32			count = 0;
-+	__s32			lastgrp = 0;
-+	__u64			last = 0;
-+	__u64			lastino = 0;
-+	__u64			userino = 0;
-+	char			*p;
-+	int			c;
-+	int			ret_lsize = 0;
-+	int			ret_largest = 0;
-+	int			ret_next = 0;
-+	struct xfs_inogrp	igroup[1024], igrp_rec[1024];
-+	struct xfs_fsop_bulkreq	bulkreq;
-+	struct xfs_bstat	bstat;
-+
-+
-+	while ((c = getopt(argc, argv, "sln:")) != EOF) {
-+		switch (c) {
-+		case 's':
-+			ret_lsize = 1;
-+			break;
-+		case 'l':
-+			ret_largest = 1;
-+			break;
-+		case 'n':
-+			ret_next = 1;
-+			userino = strtoull(optarg, &p, 10);
-+			break;
-+		default:
-+			return command_usage(&inode_cmd);
-+		}
-+	}
-+
-+	if (((optind < argc) || ret_next) &&
-+	     !(ret_lsize || ret_largest)) {
-+
-+		/* Setup bulkreq for -n or [num] only */
-+		bulkreq.lastip = &last;
-+		bulkreq.icount = 1;
-+		bulkreq.ubuffer = &bstat;
-+		bulkreq.ocount = &count;
-+
-+		if (ret_next) {
-+				if ((*p != '\0')) {
-+					printf(_("[num] must be a numeric value\n"));
-+					exitcode = 1;
-+					return 0;
-+				}
-+			last = userino;
-+			if (xfsctl(file->name, file->fd, XFS_IOC_FSBULKSTAT,
-+					&bulkreq)) {
-+				if (errno == EINVAL)
-+					printf(_("Invalid or non-existent inode\n"));
-+				else
-+					perror("XFS_IOC_FSBULKSTAT");
-+				exitcode = 1;
-+				return 0;
-+			}
-+
-+			if (!count) {
-+			printf(_("There are no further inodes in the filesystem\n"));
-+			return 0;
-+			}
-+
-+			printf(_("Next inode: %llu\n"), bstat.bs_ino);
-+			return 0;
-+		} else {
-+			userino = strtoull(argv[optind], &p, 10);
-+				if ((*p != '\0')) {
-+					printf(_("[num] must be a numeric value\n"));
-+					exitcode = 1;
-+					return 0;
-+				}
-+			last = userino;
-+			if (xfsctl(file->name, file->fd, XFS_IOC_FSBULKSTAT_SINGLE,
-+					&bulkreq)) {
-+				if (errno == EINVAL) {
-+					printf(_("Invalid or non-existent inode number\n"));
-+				} else
-+					perror("XFS_IOC_FSBULKSTAT_SINGLE");
-+				exitcode = 1;
-+				return 0;
-+			}
-+			printf(_("Valid inode: %llu\n"), bstat.bs_ino);
-+			return 0;
-+
-+		}
-+	}
-+
-+	if (ret_lsize || ret_largest) {
-+
-+		bulkreq.lastip = &last;
-+		bulkreq.icount = 1024; /* User-defined maybe!? */
-+		bulkreq.ubuffer = &igroup;
-+		bulkreq.ocount = &count;
-+
-+		for (;;) {
-+
-+			if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-+					&bulkreq)) {
-+				perror("XFS_IOC_FSINUMBERS");
-+				exitcode = 1;
-+				return 0;
-+			}
-+
-+			if (count == 0)
-+				break;
-+
-+			lastgrp = count;
-+			memcpy(igrp_rec, igroup,
-+				sizeof(struct xfs_inogrp) * 1024);
-+		}
-+
-+		lastgrp--;
-+		lastino = igrp_rec[lastgrp].xi_startino +
-+			  xfs_highbit64(igrp_rec[lastgrp].xi_allocmask);
-+
-+		if (ret_lsize)
-+			printf (_("Largest inode size: %d\n"),
-+				lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-+		else
-+			printf(_("Largest inode: %llu\n"), lastino);
-+
-+		return 0;
-+	}
-+
-+	return command_usage(&inode_cmd);
-+}
-+
- void
- open_init(void)
- {
-@@ -815,6 +965,16 @@ open_init(void)
- 		_("get/set preferred extent size (in bytes) for the open file");
- 	extsize_cmd.help = extsize_help;
- 
-+	inode_cmd.name = "inode";
-+	inode_cmd.cfunc = inode_f;
-+	inode_cmd.args = _("[-s | -l | -n] [num]");
-+	inode_cmd.argmin = 1;
-+	inode_cmd.argmax = 2;
-+	inode_cmd.flags = CMD_NOMAP_OK;
-+	inode_cmd.oneline =
-+		_("Query inode number usage in the filesystem");
-+	inode_cmd.help = inode_help;
-+
- 	add_command(&open_cmd);
- 	add_command(&stat_cmd);
- 	add_command(&close_cmd);
-@@ -822,4 +982,5 @@ open_init(void)
- 	add_command(&chproj_cmd);
- 	add_command(&lsproj_cmd);
- 	add_command(&extsize_cmd);
-+	add_command(&inode_cmd);
- }
--- 
-2.4.3
+the previous e-mail) being able to mount the filesystem implies that=20
+they have at least read access to the underlying storage, which means=20
+that the ACL's in the filesystem are irrelevant as far as any competent=20
+individual who is actively trying to illegitimately access the data is=20
+concerned.
+> Austin, your arguments hold no weight because they are no different
+> to the considerations for any new on-disk feature: the user needs to
+> have both kernel and userspace support to recover filesystems that
+> go bad. If you are using a brand new fs/kernel feature, then it is
+> expected that you know that your DR processes take this into
+> account.
+Except that the given argument from Andreas as to why it's an incompat=20
+feature does not clarify whether it's to prevent breaking the existing=20
+filesystem code (which I understand and agree is a proper usage for such =
+
+a flag), or to try and provide some thin facade of security when there=20
+really is none (which is what the bit about 'and expose it to other=20
+users' really sounds like to me).  Yes the argument that I made which=20
+you have replied to was admittedly shortsighted and didn't need to be=20
+made to get the point that I was actually trying to make across, and I=20
+sincerely apologize for that.
+
+
+
+
+--------------ms010802090608060909070409
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+cnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcN
+AQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxEt+DANBglghkgBZQMEAgMFAKCCAiEwGAYJKoZI
+hvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTUxMDE5MTMxMjM0WjBPBgkq
+hkiG9w0BCQQxQgRAmxOkF4plL1+dwwSYoBxHLizItbQwDrZjHhG9YUbOSe6ygHc0hiNJtVFK
+Gaub22tFDKBLPwrAPce6uAazICXIWTBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFA
+MAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGRBgkrBgEEAYI3EAQxgYMwgYAweTEQMA4GA1UE
+ChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlD
+QSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2Vy
+dC5vcmcCAxEt+DCBkwYLKoZIhvcNAQkQAgsxgYOggYAweTEQMA4GA1UEChMHUm9vdCBDQTEe
+MBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25p
+bmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxEt+DAN
+BgkqhkiG9w0BAQEFAASCAgAvII814wRDy81RBAJMCIQY6ZG4Mi5WOHhz9sVic+8gAEJjNpP5
+VTYhuVJokfgQ8YVIN5WTV4+8oEC9prO+QABhvUbKdJghrAafOiji+RHvPw53wO5ITMKLbZlY
+ay0kXDIKRb5CAuLfNOEOrScZ/quNVSRb95hO7c7u0a+v54VYGgdLA7gkdHCGpiU0LWwMFqkQ
+vajdy6jVj2JBftkTpBoki8eiK0PjTyp1PrSpnRq6P6bhGqwl6SirgyLbIzTBEG5BvKH8LEe/
+wxRoky7aEEJUWnXwdCj8G+AZyFb2dvDjZnURihi8jpkPBH8HA7g6OE5pEsebUgiEr5dBpY/5
+K7Ag0cXXvhfHBI8hSN2kFwBhbW7VAOATRf+uHjmAVRtDG52p2VWPfdmgaekpF1cqKZ0Ch8ym
+twB+RNHFzWJkz3x0FDuXCgicjbkyehKZeuMPDrs/MuT/H3Y1C7twgftS8eLNDBJDDJB+/FgV
+s/rKccEhbG7cgy71pa/8/3Uifg6rslx5QOKNyqLS+MESfEC16G1D6v26ocUAfLd3qsu5aevC
+GAC8LBBxXTE7cFSibnC3ZVTQhxBrCMnfbBTe4VQBLNIZXwaLfiokw/SLjyTaMfYqt1s/l8i0
+rJGcLE0Aw2SD1NI38lQzCFLlq4670K+mhszfc243K60zRrMy5ntEVvwEcQAAAAAAAA==
+--------------ms010802090608060909070409--
+
+
+--===============2409286779900194158==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2409286779900194158==--
