@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 47CE07F54
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 09:15:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0C25AC004
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 07:15:47 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sf4tXVM8jQBzWlP9 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 19 Oct 2015 07:15:43 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 00D42C0B786B
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 14:15:42 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t9JEFfhm032330
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 10:15:42 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs_io: inode command manpage V1
-Date: Mon, 19 Oct 2015 16:15:37 +0200
-Message-Id: <1445264137-329-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 861817F59
+	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 10:35:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 73A55304053
+	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 08:35:00 -0700 (PDT)
+Received: from mail-lb0-f172.google.com (mail-lb0-f172.google.com
+	[209.85.217.172]) by cuda.sgi.com with ESMTP id
+	HKf0skJflmqSXMuD (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 19 Oct 2015 08:34:56 -0700 (PDT)
+Received: by lbcao8 with SMTP id ao8so146517555lbc.3
+	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 08:34:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5624ED40.7040206@gmail.com>
+References: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
+	<1445008706-15115-22-git-send-email-agruenba@redhat.com>
+	<5621346E.5000500@gmail.com>
+	<CAHc6FU7sR2zN-K3un74wCv+1NPnrqJ=LYiWo+YQ_2X0kopyoTQ@mail.gmail.com>
+	<5624ED40.7040206@gmail.com>
+Date: Mon, 19 Oct 2015 17:34:54 +0200
+Message-ID: <CAHc6FU4CVQAn6TCQzC8r9m9URmqD_eHQBwhDK2o_o4eb3myW=A@mail.gmail.com>
+Subject: Re: [PATCH v11 21/48] ext4: Add richacl feature flag
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,61 +31,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Austin S Hemmelgarn <ahferroin7@gmail.com>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This is the first try to update xfs_io manpage to include information about
-'inode' command usage.
+On Mon, Oct 19, 2015 at 3:16 PM, Austin S Hemmelgarn
+<ahferroin7@gmail.com> wrote:
+> On 2015-10-16 13:41, Andreas Gruenbacher wrote:
+>>
+>> On Fri, Oct 16, 2015 at 7:31 PM, Austin S Hemmelgarn
+>> <ahferroin7@gmail.com> wrote:
+>>>
+>>> I would like to re-iterate, on both XFS and ext4, I _really_ think this
+>>> should be a ro_compat flag, and not an incompat one.  If a person has the
+>>> ability to mount the FS (even if it's a read-only mount), then they by
+>>> definition have read access to the file or partition that the filesystem
+>>> is contained in, which means that any ACL's stored on the filesystem are
+>>> functionally irrelevant,
+>>
+>> It is unfortunately not safe to make such a file system accessible to
+>> other users, so the feature is not strictly read-only compatible.
+>>
+> OK, seeing as I wasn't particularly clear as to why I object to this in my
+> other e-mail, let's try this again.
+>
+> Can you please explain exactly why it isn't safe to make such a filesystem
+> accessible to other users?
 
-Improvements and grammar corrections are welcome :-)
+See here: http://www.spinics.net/lists/linux-ext4/msg49541.html
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- man/man8/xfs_io.8 | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 416206f..457f0eb 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -490,7 +490,31 @@ Recursively display all the specified segments starting at the specified
- .B \-s
- Display the starting lseek(2) offset. This offset will be a calculated value when
- both data and holes are displayed together or performing a recusively display.
-+.RE
-+.PD
-+.TP
-+.TP
-+.BI "inode  \-s | \-l | \-n [num] | [num]"
-+Query physical inode information from a xfs filesystem.
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.B \-s
-+Display the physical size of the largest inode existing in the filesystem (32 or
-+64 bit).
-+.TP
-+.B -l
-+Display the largest allocated and used inode (inodes can be allocated in the
-+filesystem, but not used by any file). See
-+.B ikeep
-+xfs mount option).
-+.TP
-+.B -n [num]
-+Return the next existing inode after [num], even if [num] is not allocated in
-+the filesystem.
- .TP
-+.B [num]
-+Check if the inode [num] exists or not.
- 
- .SH MEMORY MAPPED I/O COMMANDS
- .TP
--- 
-2.4.3
+Andreas
 
 _______________________________________________
 xfs mailing list
