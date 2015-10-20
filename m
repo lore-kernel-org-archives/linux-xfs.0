@@ -1,32 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B515E7F63
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 15:20:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 26337AC002
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 13:20:47 -0700 (PDT)
-Received: from mail-lb0-f174.google.com (mail-lb0-f174.google.com
-	[209.85.217.174]) by cuda.sgi.com with ESMTP id
-	t4QO0ku10sUIRvYO (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 19 Oct 2015 13:20:45 -0700 (PDT)
-Received: by lbcao8 with SMTP id ao8so155021451lbc.3
-	for <xfs@oss.sgi.com>; Mon, 19 Oct 2015 13:20:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <56253A35.4070309@gmail.com>
-References: <1445008706-15115-1-git-send-email-agruenba@redhat.com>
-	<1445008706-15115-22-git-send-email-agruenba@redhat.com>
-	<5621346E.5000500@gmail.com>
-	<CAHc6FU7sR2zN-K3un74wCv+1NPnrqJ=LYiWo+YQ_2X0kopyoTQ@mail.gmail.com>
-	<5624ED40.7040206@gmail.com>
-	<CAHc6FU4CVQAn6TCQzC8r9m9URmqD_eHQBwhDK2o_o4eb3myW=A@mail.gmail.com>
-	<5625182C.3050007@gmail.com>
-	<CAHc6FU75GXGeav1ho-QraPS_F8fpOXnoDyv17+b=koiF=9YE5A@mail.gmail.com>
-	<56253A35.4070309@gmail.com>
-Date: Mon, 19 Oct 2015 22:20:43 +0200
-Message-ID: <CAHc6FU4jcatmY+A39oQb-2x9Gs8WFVsXOD_9eBV=_fgNzZx3Xg@mail.gmail.com>
-Subject: Re: [PATCH v11 21/48] ext4: Add richacl feature flag
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B3CC77F66
+	for <xfs@oss.sgi.com>; Tue, 20 Oct 2015 04:10:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80F8A304039
+	for <xfs@oss.sgi.com>; Tue, 20 Oct 2015 02:10:25 -0700 (PDT)
+Received: from smtpbg65.qq.com (smtpbg65.qq.com [103.7.28.233]) by
+	cuda.sgi.com with ESMTP id 5emOgRbGF0zTBaFY (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 20 Oct 2015 02:10:19 -0700 (PDT)
+From: "=?ISO-8859-1?B?WWVZaW4=?=" <eyniy@qq.com>
+Subject: du result is smaller than xfs_quota report
+Mime-Version: 1.0
+Date: Tue, 20 Oct 2015 17:09:58 +0800
+Message-ID: <tencent_7585C3B40C484DE23B248E82@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,72 +22,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1938869491370914839=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Austin S Hemmelgarn <ahferroin7@gmail.com>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: =?ISO-8859-1?B?eGZz?= <xfs@oss.sgi.com>
 
-On Mon, Oct 19, 2015 at 8:45 PM, Austin S Hemmelgarn
-<ahferroin7@gmail.com> wrote:
-> On 2015-10-19 13:33, Andreas Gruenbacher wrote:
->> Please spare me with all that nonsense. Compared to mount options,
->> filesystem feature flags in this case simplify things (you don't have
->> to specify whether a filesystem contains POSIX ACLs or richacls), and
->> they prevent administrator errors: when a filesystem mounts, it is
->> safe to use; when it doesn't, it is not. That's all there is to it.
->
-> You're ignoring what I'm actually saying. I've said absolutely nothing
-> about needing to use mount options at all, and I'm not arguing against using
-> filesystem feature flags, I'm arguing for using them sensibly in a way that
-> does not present a false sense of security.
+This is a multi-part message in MIME format.
 
-We could be on a multi-user system, and the user mounting the
-filesystem may not be the only user on the system. When a filesystem
-can be mounted read-only, it should be safe to use read-only. It is
-not safe in general to use such a filesystem read-only, so an
-incompatible feature flag which prevents such unsafe mounting is more
-approporiate than a read-only incompatible feature flag.
+--===============1938869491370914839==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_562604E6_0A6820B0_47223F78"
+Content-Transfer-Encoding: 8Bit
 
-Mounting a filesystem read-only doesn't mean that the filesystem is
-being recovered, it is perfectly legal to mount a filesystem read-only
-for other reasons. I don't want to give people using read-only
-filesystems the false sense that everything is okay.
+This is a multi-part message in MIME format.
 
-> Making it an incompatible flag will likely cause headaches for some
-> legitimate users,
+------=_NextPart_562604E6_0A6820B0_47223F78
+Content-Type: text/plain;
+	charset="ISO-8859-1"
+Content-Transfer-Encoding: base64
 
-Indeed. It will also make it less likely for users to accidentally
-shoot themselves in the foot. If someone knows better, they can clear
-the feature flag.
+SGksIGFsbCwNCkkgZW5jb3VudGVyZWQgc29tZSBwcm9ibGVtcyB3aGVuIEkgdXNlZCBYRlMg
+d2l0aCBwcm9qZWN0IHF1b3RhOg0KDQoNCiMgY2F0IC9ldGMvcHJvamlkIA0KZG9ja2VyLTE1
+MDkxNDIxMzk2NDI2OjY1MDYxDQpkb2NrZXItMTUwOTIzMTE1MjI0MDk6MjYyODYNCmRvY2tl
+ci0xNTEwMTIxNTYzNzI5NDoxNDE2Mg0KDQoNCg0KIyBjYXQgL2V0Yy9wcm9qZWN0cyANCjY1
+MDYxOi9kYXRhL2RvY2tlci12b2x1bWVzL2RvY2tlci0xNTA5MTQyMTM5NjQyNg0KMjYyODY6
+L2RhdGEvZG9ja2VyLXZvbHVtZXMvZG9ja2VyLTE1MDkyMzExNTIyNDA5DQoxNDE2MjovZGF0
+YS9kb2NrZXItdm9sdW1lcy9kb2NrZXItMTUxMDEyMTU2MzcyOTQNCg0KDQoNCiMgeGZzX3F1
+b3RhIC14YyAncmVwb3J0IC1oJyAvZGF0YSAgICAgICAgICANClByb2plY3QgcXVvdGEgb24g
+L2RhdGEgKC9kZXYvc2RhNCkNCiAgICAgICAgICAgICAgICAgICAgICAgIEJsb2NrcyAgICAg
+ICAgICAgICAgDQpQcm9qZWN0IElEICAgVXNlZCAgIFNvZnQgICBIYXJkIFdhcm4vR3JhY2Ug
+ICANCi0tLS0tLS0tLS0gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tIA0KZG9j
+a2VyLTE1MDkxNDIxMzk2NDI2ICAgMS4wRyAgICAgIDAgICAxMDBHICAwMCBbLS0tLS0tXQ0K
+ZG9ja2VyLTE1MDkyMzExNTIyNDA5IDM3MS41RyAgICAgIDAgICA3MDBHICAwMCBbLS0tLS0t
+XQ0KZG9ja2VyLTE1MTAxMjE1NjM3Mjk0IDkyMC44TSAgICAgIDAgICA0MDBHICAwMCBbLS0t
+LS0tXQ0KDQoNCg0KIyBkdSAtc2ggL2RhdGEvZG9ja2VyLXZvbHVtZXMvZG9ja2VyLTE1MDky
+MzExNTIyNDA5IA0KMjAwRyAgICAvZGF0YS9kb2NrZXItdm9sdW1lcy9kb2NrZXItMTUwOTIz
+MTE1MjI0MDkNCg0KDQoNCkFzIHdlIGNhbiBzZWUsICBkdSdzIHJlc3VsdCgyMDBHKSBpcyBz
+bWFsbGVyIHRoYW4geGZzX3F1b3RhIHJlcG9ydC4NCg0KDQojIHhmc19kYiAteHIgLWMgJ2Rx
+dW90IC1wIDI2Mjg2JyAtYyBwIC9kZXYvc2RhNA0KZGlza2RxLm1hZ2ljID0gMHg0NDUxDQpk
+aXNrZHEudmVyc2lvbiA9IDB4MQ0KZGlza2RxLmZsYWdzID0gMHgyDQpkaXNrZHEuaWQgPSAy
+NjI4Ng0KZGlza2RxLmJsa19oYXJkbGltaXQgPSAxODM1MDA4MDANCmRpc2tkcS5ibGtfc29m
+dGxpbWl0ID0gMA0KZGlza2RxLmlub19oYXJkbGltaXQgPSAwDQpkaXNrZHEuaW5vX3NvZnRs
+aW1pdCA9IDANCmRpc2tkcS5iY291bnQgPSA5NzA0OTAwOA0KZGlza2RxLmljb3VudCA9IDEx
+NzI1DQpkaXNrZHEuaXRpbWVyID0gMA0KZGlza2RxLmJ0aW1lciA9IDANCmRpc2tkcS5pd2Fy
+bnMgPSAwDQpkaXNrZHEuYndhcm5zID0gMA0KZGlza2RxLnJ0Yl9oYXJkbGltaXQgPSAwDQpk
+aXNrZHEucnRiX3NvZnRsaW1pdCA9IDANCmRpc2tkcS5ydGJjb3VudCA9IDANCmRpc2tkcS5y
+dGJ0aW1lciA9IDANCmRpc2tkcS5ydGJ3YXJucyA9IDANCg0KDQoNCkl0IHNlZW1zIHRoYXQg
+c29tZSBibG9ja3Mgb3duZWQgYnkgcHJvamVjdCB3YXNuJ3QgYmUgZnJlZWQuIEFueW9uZSBj
+YW4gZ2l2ZSBtZSBzb21lIHN1Z2dlc3Rpb25zIHRvIGZpbmQgdGhlIHJlYXNvbj8NCg0KDQpU
+aGFua3MsDQpZZQ==
 
-When recovering a broken system that contains richacl filesystems, you
-really want to have richacl support in the rescue system as well.
-Otherwise, you won't be able to fsck those filesystems.
+------=_NextPart_562604E6_0A6820B0_47223F78
+Content-Type: text/html;
+	charset="ISO-8859-1"
+Content-Transfer-Encoding: base64
 
-> and at most delay competent hackers by a few seconds to a
-> few minutes, and script kiddies by a few hours, and is really no better than
-> security by obscurity (and from a purely logistical standpoint, that's _all_
-> it is) in that it actively tries to hide the fact that someone having read
-> access to the storage the filesystem is on can bypass the ACL's.
->
-> To reiterate, if someone can call mount() on a filesystem, and mount() does
-> not return -EPERM, then even if mount() returns a different error, they
-> still have the ability to completely bypass all permissions and ACL's in
-> that filesystem, because they have the ability to read the entire filesystem
-> directly.
->
-> The _only_ way to properly protect against people bypassing the ACL's is to
-> use full disk encryption and lock down root access on the system, and even
-> that can't completely prevent it from happening.
+PGRpdj5IaSwgYWxsLDwvZGl2PjxkaXY+SSBlbmNvdW50ZXJlZCBzb21lIHByb2JsZW1zIHdo
+ZW4gSSZuYnNwO3VzZWQgWEZTIHdpdGggcHJvamVjdCBxdW90YTo8L2Rpdj48ZGl2Pjxicj48
+L2Rpdj48ZGl2PjxkaXY+IyBjYXQgL2V0Yy9wcm9qaWQmbmJzcDs8L2Rpdj48ZGl2PmRvY2tl
+ci0xNTA5MTQyMTM5NjQyNjo2NTA2MTwvZGl2PjxkaXY+ZG9ja2VyLTE1MDkyMzExNTIyNDA5
+OjI2Mjg2PC9kaXY+PGRpdj5kb2NrZXItMTUxMDEyMTU2MzcyOTQ6MTQxNjI8L2Rpdj48L2Rp
+dj48ZGl2Pjxicj48L2Rpdj48ZGl2PjxkaXY+IyBjYXQgL2V0Yy9wcm9qZWN0cyZuYnNwOzwv
+ZGl2PjxkaXY+NjUwNjE6L2RhdGEvZG9ja2VyLXZvbHVtZXMvZG9ja2VyLTE1MDkxNDIxMzk2
+NDI2PC9kaXY+PGRpdj4yNjI4NjovZGF0YS9kb2NrZXItdm9sdW1lcy9kb2NrZXItMTUwOTIz
+MTE1MjI0MDk8L2Rpdj48ZGl2PjE0MTYyOi9kYXRhL2RvY2tlci12b2x1bWVzL2RvY2tlci0x
+NTEwMTIxNTYzNzI5NDwvZGl2PjwvZGl2PjxkaXY+PGJyPjwvZGl2PjxkaXY+PGRpdj4jIHhm
+c19xdW90YSAteGMgJ3JlcG9ydCAtaCcgL2RhdGEgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5i
+c3A7ICZuYnNwOzwvZGl2PjxkaXY+UHJvamVjdCBxdW90YSBvbiAvZGF0YSAoL2Rldi9zZGE0
+KTwvZGl2PjxkaXY+Jm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsg
+Jm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgQmxvY2tzICZuYnNw
+OyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOzwvZGl2PjxkaXY+
+UHJvamVjdCBJRCAmbmJzcDsgVXNlZCAmbmJzcDsgU29mdCAmbmJzcDsgSGFyZCBXYXJuL0dy
+YWNlICZuYnNwOyZuYnNwOzwvZGl2PjxkaXY+LS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0mbmJzcDs8L2Rpdj48ZGl2PmRvY2tlci0xNTA5MTQyMTM5NjQy
+NiAmbmJzcDsgMS4wRyAmbmJzcDsgJm5ic3A7ICZuYnNwOzAgJm5ic3A7IDEwMEcgJm5ic3A7
+MDAgWy0tLS0tLV08L2Rpdj48ZGl2PmRvY2tlci0xNTA5MjMxMTUyMjQwOSAzNzEuNUcgJm5i
+c3A7ICZuYnNwOyAmbmJzcDswICZuYnNwOyA3MDBHICZuYnNwOzAwIFstLS0tLS1dPC9kaXY+
+PGRpdj5kb2NrZXItMTUxMDEyMTU2MzcyOTQgOTIwLjhNICZuYnNwOyAmbmJzcDsgJm5ic3A7
+MCAmbmJzcDsgNDAwRyAmbmJzcDswMCBbLS0tLS0tXTwvZGl2PjwvZGl2PjxkaXY+PGJyPjwv
+ZGl2PjxkaXY+PGRpdj4jIGR1IC1zaCAvZGF0YS9kb2NrZXItdm9sdW1lcy9kb2NrZXItMTUw
+OTIzMTE1MjI0MDkmbmJzcDs8L2Rpdj48ZGl2PjIwMEcgJm5ic3A7ICZuYnNwOy9kYXRhL2Rv
+Y2tlci12b2x1bWVzL2RvY2tlci0xNTA5MjMxMTUyMjQwOTwvZGl2PjwvZGl2PjxkaXY+PGJy
+PjwvZGl2PjxkaXY+QXMgd2UgY2FuIHNlZSwgJm5ic3A7ZHUncyByZXN1bHQoMjAwRykgaXMg
+c21hbGxlciB0aGFuIHhmc19xdW90YSByZXBvcnQuPC9kaXY+PGRpdj48YnI+PC9kaXY+PGRp
+dj48ZGl2PiMgeGZzX2RiIC14ciAtYyAnZHF1b3QgLXAgMjYyODYnIC1jIHAgL2Rldi9zZGE0
+PC9kaXY+PGRpdj5kaXNrZHEubWFnaWMgPSAweDQ0NTE8L2Rpdj48ZGl2PmRpc2tkcS52ZXJz
+aW9uID0gMHgxPC9kaXY+PGRpdj5kaXNrZHEuZmxhZ3MgPSAweDI8L2Rpdj48ZGl2PmRpc2tk
+cS5pZCA9IDI2Mjg2PC9kaXY+PGRpdj5kaXNrZHEuYmxrX2hhcmRsaW1pdCA9IDE4MzUwMDgw
+MDwvZGl2PjxkaXY+ZGlza2RxLmJsa19zb2Z0bGltaXQgPSAwPC9kaXY+PGRpdj5kaXNrZHEu
+aW5vX2hhcmRsaW1pdCA9IDA8L2Rpdj48ZGl2PmRpc2tkcS5pbm9fc29mdGxpbWl0ID0gMDwv
+ZGl2PjxkaXY+ZGlza2RxLmJjb3VudCA9IDk3MDQ5MDA4PC9kaXY+PGRpdj5kaXNrZHEuaWNv
+dW50ID0gMTE3MjU8L2Rpdj48ZGl2PmRpc2tkcS5pdGltZXIgPSAwPC9kaXY+PGRpdj5kaXNr
+ZHEuYnRpbWVyID0gMDwvZGl2PjxkaXY+ZGlza2RxLml3YXJucyA9IDA8L2Rpdj48ZGl2PmRp
+c2tkcS5id2FybnMgPSAwPC9kaXY+PGRpdj5kaXNrZHEucnRiX2hhcmRsaW1pdCA9IDA8L2Rp
+dj48ZGl2PmRpc2tkcS5ydGJfc29mdGxpbWl0ID0gMDwvZGl2PjxkaXY+ZGlza2RxLnJ0YmNv
+dW50ID0gMDwvZGl2PjxkaXY+ZGlza2RxLnJ0YnRpbWVyID0gMDwvZGl2PjxkaXY+ZGlza2Rx
+LnJ0Yndhcm5zID0gMDwvZGl2PjwvZGl2PjxkaXY+PGJyPjwvZGl2PjxkaXY+SXQgc2VlbXMg
+dGhhdCBzb21lIGJsb2NrcyBvd25lZCBieSBwcm9qZWN0IHdhc24ndCBiZSBmcmVlZC4gQW55
+b25lIGNhbiBnaXZlIG1lIHNvbWUgc3VnZ2VzdGlvbnMgdG8gZmluZCB0aGUgcmVhc29uPzwv
+ZGl2PjxkaXY+PGJyPjwvZGl2PjxkaXY+VGhhbmtzLDwvZGl2PjxkaXY+WWU8L2Rpdj4=
 
-That's all completely beside the point. I'm not talking about
-preventing attacks at all, just basic administrative workflows.
+------=_NextPart_562604E6_0A6820B0_47223F78--
 
-Andreas
+
+
+
+--===============1938869491370914839==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1938869491370914839==--
