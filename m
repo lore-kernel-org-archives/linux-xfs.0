@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5BDBA29DF5
-	for <xfs@oss.sgi.com>; Wed, 21 Oct 2015 16:08:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 08713AC001
-	for <xfs@oss.sgi.com>; Wed, 21 Oct 2015 14:08:43 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B0A6629DF5
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2015 16:17:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8DFF78F804C
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2015 14:17:37 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id vvJ5covx4uNythiu (version=TLSv1.2
+	cuda.sgi.com with ESMTP id K1oUSDWApDhErfrf (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 21 Oct 2015 14:08:42 -0700 (PDT)
-Date: Wed, 21 Oct 2015 14:08:34 -0700
+	<xfs@oss.sgi.com>; Wed, 21 Oct 2015 14:17:35 -0700 (PDT)
+Date: Wed, 21 Oct 2015 14:17:27 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 32/51] xfs_repair: add fixed-location per-AG rmaps
-Message-ID: <20151021210834.GL10397@birch.djwong.org>
-References: <20151007050513.1504.28089.stgit@birch.djwong.org>
-	<20151007050838.1504.57156.stgit@birch.djwong.org>
+Subject: Re: [PATCH 48/58] xfs: copy-on-write reflinked blocks when zeroing
+	ranges of blocks
+Message-ID: <20151021211727.GM10397@birch.djwong.org>
+References: <20151007045443.30457.47038.stgit@birch.djwong.org>
+	<20151007050025.30457.19562.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151007050838.1504.57156.stgit@birch.djwong.org>
+In-Reply-To: <20151007050025.30457.19562.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,162 +32,268 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Oct 06, 2015 at 10:08:38PM -0700, Darrick J. Wong wrote:
-> Add reverse-mappings for fixed-location per-AG metadata such as inode
-> chunks, superblocks, and the log to the raw rmap list, then merge the
-> raw rmap data (which also has the BMBT data) into the main rmap list.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/phase4.c |   41 +++++++++++++++++++++++++++++++++++++++++
->  repair/rmap.c   |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  repair/rmap.h   |    2 ++
->  3 files changed, 94 insertions(+)
-> 
-> 
-> diff --git a/repair/phase4.c b/repair/phase4.c
-> index bc43cd8..cbdb92e 100644
-> --- a/repair/phase4.c
-> +++ b/repair/phase4.c
-> @@ -157,6 +157,40 @@ process_ags(
->  	do_inode_prefetch(mp, ag_stride, process_ag_func, true, false);
->  }
->  
-> +static void
-> +check_rmap_btrees(
-> +	work_queue_t	*wq,
-> +	xfs_agnumber_t	agno,
-> +	void		*arg)
-> +{
-> +	int		error;
-> +
-> +	error = add_fixed_ag_rmap_data(wq->mp, agno);
-> +	if (error)
-> +		do_error(
-> +_("unable to add AG %u metadata reverse-mapping data.\n"), agno);
-> +
-> +	error = fold_raw_rmaps(wq->mp, agno);
-> +	if (error)
-> +		do_error(
-> +_("unable to merge AG %u metadata reverse-mapping data.\n"), agno);
-> +}
-> +
-> +static void
-> +process_rmap_data(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct work_queue	wq;
-> +	xfs_agnumber_t		i;
-> +
-> +	if (!needs_rmap_work(mp))
-> +		return;
-> +
-> +	create_work_queue(&wq, mp, libxfs_nproc());
-> +	for (i = 0; i < mp->m_sb.sb_agcount; i++)
-> +		queue_work(&wq, check_rmap_btrees, i, NULL);
-> +	destroy_work_queue(&wq);
-> +}
->  
->  void
->  phase4(xfs_mount_t *mp)
-> @@ -306,6 +340,13 @@ phase4(xfs_mount_t *mp)
->  	 * already in phase 3.
->  	 */
->  	process_ags(mp);
-> +
-> +	/*
-> +	 * Process all the reverse-mapping data that we collected.  This
-> +	 * involves checking the rmap data against the btree.
-> +	 */
-> +	process_rmap_data(mp);
-> +
->  	print_final_rpt();
->  
->  	/*
-> diff --git a/repair/rmap.c b/repair/rmap.c
-> index 40bdae3..a5ea685 100644
-> --- a/repair/rmap.c
-> +++ b/repair/rmap.c
-> @@ -344,6 +344,57 @@ err:
->  	return error;
->  }
->  
-> +/**
-> + * add_fixed_ag_rmap_data() - Add fixed per-AG metadata to the rmap list.
-> + *			      This includes sb/agi/agf/agfl headers, inode
-> + *			      chunks, and the log.
-> + *
-> + * @mp: XFS mountpoint.
-> + * @agno: AG number.
-> + */
-> +int
-> +add_fixed_ag_rmap_data(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno)
-> +{
-> +	xfs_fsblock_t		fsbno;
-> +	xfs_agblock_t		agbno;
-> +	ino_tree_node_t		*ino_rec;
-> +	int			error;
-> +
-> +	if (!needs_rmap_work(mp))
-> +		return 0;
-> +
-> +	/* sb/agi/agf/agfl headers */
-> +	error = add_ag_rmap(mp, agno, 0, XFS_BNO_BLOCK(mp),
-> +			XFS_RMAP_OWN_FS);
-> +	if (error)
-> +		goto out;
-> +
-> +	/* inodes */
-> +	ino_rec = findfirst_inode_rec(agno);
-> +	for (; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec)) {
-> +		agbno = XFS_AGINO_TO_AGBNO(mp, ino_rec->ino_startnum);
-> +		error = add_ag_rmap(mp, agno, agbno,
-> +				64 / mp->m_sb.sb_inopblock, /* XXX */
+On Tue, Oct 06, 2015 at 10:00:25PM -0700, Darrick J. Wong wrote:
+> When we're writing zeroes to a reflinked block (such as when we're
+> punching a reflinked range), we need to fork the the block and write
+> to that, otherwise we can corrupt the other reflinks.
 
-This won't work with sparse inode support turned on, because inode chunks
-can be shorter than 64 inodes.  Assuming ir_holemask is accurate, it
-shouldn't be difficult to make this emit the correct records.
-
-Fixed now.
+Something that's missing from this patch series: when we shorten a file,
+the VFS will zero the page contents between the new and old EOF.  Therefore,
+we must ensure that the block is forked prior to this happening, or else we
+end up changing the shared block, corrupting the other files.
 
 --D
 
-> +				XFS_RMAP_OWN_INODES);
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c |   25 +++++++-
+>  fs/xfs/xfs_reflink.c   |  154 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_reflink.h   |    6 ++
+>  3 files changed, 183 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 245a34a..b054b28 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -41,6 +41,7 @@
+>  #include "xfs_icache.h"
+>  #include "xfs_log.h"
+>  #include "xfs_rmap_btree.h"
+> +#include "xfs_reflink.h"
+>  
+>  /* Kernel only BMAP related definitions and functions */
+>  
+> @@ -1095,7 +1096,9 @@ xfs_zero_remaining_bytes(
+>  	xfs_buf_t		*bp;
+>  	xfs_mount_t		*mp = ip->i_mount;
+>  	int			nimap;
+> -	int			error = 0;
+> +	int			error = 0, err2;
+> +	bool			should_fork;
+> +	struct xfs_trans	*tp;
+>  
+>  	/*
+>  	 * Avoid doing I/O beyond eof - it's not necessary
+> @@ -1136,8 +1139,14 @@ xfs_zero_remaining_bytes(
+>  		if (lastoffset > endoff)
+>  			lastoffset = endoff;
+>  
+> +		/* Do we need to CoW this block? */
+> +		error = xfs_reflink_should_fork_block(ip, &imap, offset,
+> +				&should_fork);
 > +		if (error)
-> +			goto out;
-> +	}
+> +			return error;
 > +
-> +	/* log */
-> +	fsbno = mp->m_sb.sb_logstart;
-> +	if (fsbno && XFS_FSB_TO_AGNO(mp, fsbno) == agno) {
-> +		agbno = XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart);
-> +		error = add_ag_rmap(mp, agno, agbno, mp->m_sb.sb_logblocks,
-> +				XFS_RMAP_OWN_LOG);
-> +		if (error)
-> +			goto out;
+>  		/* DAX can just zero the backing device directly */
+> -		if (IS_DAX(VFS_I(ip))) {
+> +		if (IS_DAX(VFS_I(ip)) && !should_fork) {
+>  			error = dax_zero_page_range(VFS_I(ip), offset,
+>  						    lastoffset - offset + 1,
+>  						    xfs_get_blocks_direct);
+> @@ -1158,10 +1167,22 @@ xfs_zero_remaining_bytes(
+>  				(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
+>  		       0, lastoffset - offset + 1);
+>  
+> +		tp = NULL;
+> +		if (should_fork) {
+> +			error = xfs_reflink_fork_buf(ip, bp, offset_fsb, &tp);
+> +			if (error)
+> +				return error;
+> +		}
+> +
+>  		error = xfs_bwrite(bp);
+> +
+> +		err2 = xfs_reflink_finish_fork_buf(ip, bp, offset_fsb, tp,
+> +						   error, imap.br_startblock);
+>  		xfs_buf_relse(bp);
+>  		if (error)
+>  			return error;
+> +		if (err2)
+> +			return err2;
+>  	}
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 226e23f..f5eed2f 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -788,3 +788,157 @@ xfs_reflink_add_ioend(
+>  {
+>  	list_add_tail(&eio->rlei_list, &ioend->io_reflink_endio_list);
+>  }
+> +
+> +/**
+> + * xfs_reflink_fork_buf() - start a transaction to fork a buffer (if needed)
+> + *
+> + * @mp: XFS mount point
+> + * @ip: XFS inode
+> + * @bp: the buffer that we might need to fork
+> + * @fileoff: file offset of the buffer
+> + * @ptp: pointer to an XFS transaction
+> + */
+> +int
+> +xfs_reflink_fork_buf(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_buf		*bp,
+> +	xfs_fileoff_t		fileoff,
+> +	struct xfs_trans	**ptp)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	xfs_fsblock_t		fsbno;
+> +	xfs_fsblock_t		new_fsbno;
+> +	xfs_agnumber_t		agno;
+> +	xfs_agblock_t		agbno;
+> +	uint			resblks;
+> +	int			error;
+> +
+> +	fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+> +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +	CHECK_AG_NUMBER(mp, agno);
+> +	CHECK_AG_EXTENT(mp, agno, 1);
+> +
+> +	/*
+> +	 * Get ready to remap the thing...
+> +	 */
+> +	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 3);
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
+> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write, resblks, 0);
+> +
+> +	/*
+> +	 * check for running out of space
+> +	 */
+> +	if (error) {
+> +		/*
+> +		 * Free the transaction structure.
+> +		 */
+> +		ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+> +		goto out_cancel;
 > +	}
-> +out:
+> +	error = xfs_trans_reserve_quota(tp, mp,
+> +			ip->i_udquot, ip->i_gdquot, ip->i_pdquot,
+> +			resblks, 0, XFS_QMOPT_RES_REGBLKS);
+> +	if (error)
+> +		goto out_cancel;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> +
+> +	/* fork block, remap buffer */
+> +	error = fork_one_block(mp, tp, ip, fsbno, &new_fsbno, fileoff);
+> +	if (error)
+> +		goto out_cancel;
+> +
+> +	trace_xfs_reflink_fork_buf(ip, fileoff, fsbno, 1, new_fsbno);
+> +
+> +	XFS_BUF_SET_ADDR(bp, XFS_FSB_TO_DADDR(mp, new_fsbno));
+> +	*ptp = tp;
+> +	return error;
+> +
+> +out_cancel:
+> +	xfs_trans_cancel(tp);
+> +	trace_xfs_reflink_fork_buf_error(ip, error, _RET_IP_);
 > +	return error;
 > +}
 > +
->  #ifdef RMAP_DEBUG
->  static void
->  dump_rmap(
-> diff --git a/repair/rmap.h b/repair/rmap.h
-> index 57d56a0..7bab450 100644
-> --- a/repair/rmap.h
-> +++ b/repair/rmap.h
-> @@ -31,4 +31,6 @@ extern int add_ag_rmap(struct xfs_mount *, xfs_agnumber_t agno,
->  extern int add_bmbt_rmap(struct xfs_mount *, xfs_ino_t, int, xfs_fsblock_t);
->  extern int fold_raw_rmaps(struct xfs_mount *mp, xfs_agnumber_t agno);
->  
-> +extern int add_fixed_ag_rmap_data(struct xfs_mount *, xfs_agnumber_t);
+> +/**
+> + * xfs_reflink_finish_fork_buf() - finish forking a file buffer
+> + *
+> + * @ip: XFS inode
+> + * @bp: the buffer that was forked
+> + * @fileoff: file offset of the buffer
+> + * @tp: transaction that was returned from xfs_reflink_fork_buf()
+> + * @write_error: status code from writing the block
+> + */
+> +int
+> +xfs_reflink_finish_fork_buf(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_buf		*bp,
+> +	xfs_fileoff_t		fileoff,
+> +	struct xfs_trans	*tp,
+> +	int			write_error,
+> +	xfs_fsblock_t		old_fsbno)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_bmap_free	free_list;
+> +	xfs_fsblock_t		firstfsb;
+> +	xfs_fsblock_t		fsbno;
+> +	struct xfs_bmbt_irec	imaps[1];
+> +	xfs_agnumber_t		agno;
+> +	int			nimaps = 1;
+> +	int			done;
+> +	int			error = write_error;
+> +	int			committed;
+> +	struct xfs_owner_info	oinfo;
 > +
->  #endif /* RMAP_H_ */
+> +	if (tp == NULL)
+> +		return 0;
+> +
+> +	fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+> +	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	XFS_RMAP_INO_OWNER(&oinfo, ip->i_ino, XFS_DATA_FORK, fileoff);
+> +	if (write_error != 0)
+> +		goto out_write_error;
+> +
+> +	trace_xfs_reflink_fork_buf(ip, fileoff, old_fsbno, 1, fsbno);
+> +	/*
+> +	 * Remap the old blocks.
+> +	 */
+> +	xfs_bmap_init(&free_list, &firstfsb);
+> +	error = xfs_bunmapi(tp, ip, fileoff, 1, 0, 1, &firstfsb, &free_list,
+> +			    &done);
+> +	if (error)
+> +		goto out_free;
+> +	ASSERT(done == 1);
+> +
+> +	error = xfs_bmapi_write(tp, ip, fileoff, 1, XFS_BMAPI_REMAP, &fsbno,
+> +					1, &imaps[0], &nimaps, &free_list);
+> +	if (error)
+> +		goto out_free;
+> +
+> +	/*
+> +	 * complete the transaction
+> +	 */
+> +	error = xfs_bmap_finish(&tp, &free_list, &committed);
+> +	if (error)
+> +		goto out_cancel;
+> +
+> +	error = xfs_trans_commit(tp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	return error;
+> +out_free:
+> +	xfs_bmap_finish(&tp, &free_list, &committed);
+> +out_write_error:
+> +	done = xfs_free_extent(tp, fsbno, 1, &oinfo);
+> +	if (error == 0)
+> +		error = done;
+> +out_cancel:
+> +	xfs_trans_cancel(tp);
+> +out_error:
+> +	trace_xfs_reflink_finish_fork_buf_error(ip, error, _RET_IP_);
+> +	return error;
+> +}
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index b3e12d2..ce00cf6 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -38,4 +38,10 @@ extern void xfs_reflink_add_ioend(struct xfs_ioend *ioend,
+>  extern int xfs_reflink_should_fork_block(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *imap, xfs_off_t offset, bool *type);
+>  
+> +extern int xfs_reflink_fork_buf(struct xfs_inode *ip, struct xfs_buf *bp,
+> +		xfs_fileoff_t fileoff, struct xfs_trans **ptp);
+> +extern int xfs_reflink_finish_fork_buf(struct xfs_inode *ip, struct xfs_buf *bp,
+> +		xfs_fileoff_t fileoff, struct xfs_trans *tp, int write_error,
+> +		xfs_fsblock_t old_fsbno);
+> +
+>  #endif /* __XFS_REFLINK_H */
 > 
 > _______________________________________________
 > xfs mailing list
