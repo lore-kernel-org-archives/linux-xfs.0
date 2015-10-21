@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4C5F47CBF
-	for <xfs@oss.sgi.com>; Tue, 20 Oct 2015 21:59:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E756AC002
-	for <xfs@oss.sgi.com>; Tue, 20 Oct 2015 19:59:25 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	evcTIC0naVq2Bbb1 for <xfs@oss.sgi.com>;
-	Tue, 20 Oct 2015 19:59:21 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: optimise away log forces on timestamp updates for
-	fdatasync
-Date: Wed, 21 Oct 2015 13:59:03 +1100
-Message-Id: <1445396343-4361-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AAA297F37
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2015 01:37:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 79E9130404E
+	for <xfs@oss.sgi.com>; Tue, 20 Oct 2015 23:37:41 -0700 (PDT)
+Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130]) by
+	cuda.sgi.com with ESMTP id x85Ucbp3SUSd7knX (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 20 Oct 2015 23:37:39 -0700 (PDT)
+In-Reply-To: <0952A0E9-F360-46CE-BE7A-1B8473700F08@sandeen.net>
+References: <tencent_7585C3B40C484DE23B248E82@qq.com>
+	<0952A0E9-F360-46CE-BE7A-1B8473700F08@sandeen.net>
+From: "=?ISO-8859-1?B?WWVZaW4=?=" <eyniy@qq.com>
+Subject: Re:  du result is smaller than xfs_quota report
+Mime-Version: 1.0
+Date: Wed, 21 Oct 2015 14:37:04 +0800
+Message-ID: <tencent_756CDB1668EC804906FB9672@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,173 +25,197 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1401078416455294920=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: sage@redhat.com
+To: =?ISO-8859-1?B?RXJpYyBTYW5kZWVu?= <sandeen@sandeen.net>
+Cc: =?ISO-8859-1?B?eGZz?= <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+This is a multi-part message in MIME format.
 
-xfs: timestamp updates cause excessive fdatasync log traffic
+--===============1401078416455294920==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_56273290_0926DA60_26BE58AB"
+Content-Transfer-Encoding: 8Bit
 
-Sage Weil reported that a ceph test workload was writing to the
-log on every fdatasync during an overwrite workload. Event tracing
-showed that the only metadata modification being made was the
-timestamp updates during the write(2) syscall, but fdatasync(2)
-is supposed to ignore them. The key observation was that the
-transactions in the log all looked like this:
+This is a multi-part message in MIME format.
 
-INODE: #regs: 4   ino: 0x8b  flags: 0x45   dsize: 32
+------=_NextPart_56273290_0926DA60_26BE58AB
+Content-Type: text/plain;
+	charset="ISO-8859-1"
+Content-Transfer-Encoding: base64
 
-And contained a flags field of 0x45 or 0x85, and had data and
-attribute forks following the inode core. This means that the
-timestamp updates were triggering dirty relogging of previously
-logged parts of the inode that hadn't yet been flushed back to
-disk.
+PiBJcyBhbnl0aGluZyBtb3VudGVkIHVuZGVyIHRoYXQgZGlyZWN0b3J5IGhpZXJhcmNoeSwg
+YW5kIGhpZGluZyBmaWxlcyBmcm9tIGR1J3Mgdmlldz8NCg0KDQpObywgVGhhbmtzLiBJIGZv
+dW5kIHNvbWUgdW5saW5rZWQgaW5vZGVzLCBidXQgSSBjYW4ndCBnZXQgc29tZSB1c2VmdWwg
+aW5mb3JtYXRpb246DQoNCg0KIyB4ZnNfZGIgLXhyIC1jICdhZ2kgMScgLWMgcCAvZGV2L3Nk
+YTQgIA0KbWFnaWNudW0gPSAweDU4NDE0NzQ5DQp2ZXJzaW9ubnVtID0gMQ0Kc2Vxbm8gPSAx
+DQpsZW5ndGggPSA4OTE1MDU5Mg0KY291bnQgPSA5NDcyDQpyb290ID0gMw0KbGV2ZWwgPSAx
+DQpmcmVlY291bnQgPSAxOTAyDQpuZXdpbm8gPSA5OTc5NTINCmRpcmlubyA9IG51bGwNCnVu
+bGlua2VkWzAtNjNdID0gMDo3ODI3MiAxOjk4NTYxIDI6OTg1NjIgMzo3ODI3NSA0Ojc3MDYw
+IDU6NzgyNzcgNjo3NzA2MiA3Ojc4Mjc5IDg6OTg1NjggOTo5ODU2OSAxMDo5ODU3MCAxMTo3
+NzA2NyAxMjo3NzA2OCAxMzo5ODU3MyAxNDo5ODU3NCAxNTo3ODI4NyAxNjo5ODU3NiAxNzo5
+ODU3NyAxODo3ODI5MCAxOTo5ODUxNSAyMDo5ODA2OCAyMTo3ODE2NSAyMjo3ODI5NCAyMzo3
+ODI5NSAyNDo3ODE2OCAyNTo4ODg5ODUgMjY6NzgxNzAgMjc6OTgwNzUgMjg6NzgxNzIgMjk6
+NzgzMDEgMzA6NzgzMDIgMzE6OTgwNzkgMzI6ODg4OTkyIDMzOjc2MTI5IDM0Ojk4MDgyIDM1
+Ojc2MTMxIDM2Ojk4MDg0IDM3Ojk4Mjc3IDM4Ojk4Mjc4IDM5OjkxMDUwMyA0MDo5ODI4MCA0
+MTo5ODI4MSA0Mjo5ODI4MiA0Mzo5ODA5MSA0NDo5ODA5MiA0NTo5ODU0MSA0Njo5ODA5NCA0
+Nzo5ODA5NSA0ODo3Njk3NiA0OTo3NTk1MyA1MDo3NTk1NCA1MTo5ODU0NyA1Mjo5ODQ4NCA1
+Mzo5ODQ4NSA1NDo5ODU1MCA1NTo5ODU1MSA1Njo5ODQ4OCA1Nzo5ODQ4OSA1ODo5ODEwNiA1
+OTo5ODQ5MSA2MDo5ODQ5MiA2MTo4ODkwMjEgNjI6OTg1NTggNjM6OTg0OTUNCg0KDQoNCg0K
+DQojIHhmc19kYiAteHIgLWMgJ2lub2RlIDc4MjcyJyAtYyBwIC9kZXYvc2RhNA0KY29yZS5t
+YWdpYyA9IDANCmNvcmUubW9kZSA9IDANCmNvcmUudmVyc2lvbiA9IDANCmNvcmUuZm9ybWF0
+ID0gMCAoZGV2KQ0KY29yZS51aWQgPSAwDQpjb3JlLmdpZCA9IDANCmNvcmUuZmx1c2hpdGVy
+ID0gMA0KY29yZS5hdGltZS5zZWMgPSBUaHUgSmFuICAxIDA4OjAwOjAwIDE5NzANCmNvcmUu
+YXRpbWUubnNlYyA9IDAwMDAwMDAwMA0KY29yZS5tdGltZS5zZWMgPSBUaHUgSmFuICAxIDA4
+OjAwOjAwIDE5NzANCmNvcmUubXRpbWUubnNlYyA9IDAwMDAwMDAwMA0KY29yZS5jdGltZS5z
+ZWMgPSBUaHUgSmFuICAxIDA4OjAwOjAwIDE5NzANCmNvcmUuY3RpbWUubnNlYyA9IDAwMDAw
+MDAwMA0KY29yZS5zaXplID0gMA0KY29yZS5uYmxvY2tzID0gMA0KY29yZS5leHRzaXplID0g
+MA0KY29yZS5uZXh0ZW50cyA9IDANCmNvcmUubmFleHRlbnRzID0gMA0KY29yZS5mb3Jrb2Zm
+ID0gMA0KY29yZS5hZm9ybWF0ID0gMCAoZGV2KQ0KY29yZS5kbWV2bWFzayA9IDANCmNvcmUu
+ZG1zdGF0ZSA9IDANCmNvcmUubmV3cnRibSA9IDANCmNvcmUucHJlYWxsb2MgPSAwDQpjb3Jl
+LnJlYWx0aW1lID0gMA0KY29yZS5pbW11dGFibGUgPSAwDQpjb3JlLmFwcGVuZCA9IDANCmNv
+cmUuc3luYyA9IDANCmNvcmUubm9hdGltZSA9IDANCmNvcmUubm9kdW1wID0gMA0KY29yZS5y
+dGluaGVyaXQgPSAwDQpjb3JlLnByb2ppbmhlcml0ID0gMA0KY29yZS5ub3N5bWxpbmtzID0g
+MA0KY29yZS5leHRzeiA9IDANCmNvcmUuZXh0c3ppbmhlcml0ID0gMA0KY29yZS5ub2RlZnJh
+ZyA9IDANCmNvcmUuZmlsZXN0cmVhbSA9IDANCmNvcmUuZ2VuID0gMA0KbmV4dF91bmxpbmtl
+ZCA9IDANCnUuZGV2ID0gMA0KDQoNCg0KVGhhbmtzLA0KWWUNCg0KDQotLS0tLS0tLS0tLS0t
+LS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIkVyaWMgU2FuZGVl
+biI7PHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ow0KRGF0ZTogIFdlZCwgT2N0IDIxLCAyMDE1IDAz
+OjM1IEFNDQpUbzogICJZZVlpbiI8ZXluaXlAcXEuY29tPjsgDQpDYzogICJ4ZnMiPHhmc0Bv
+c3Muc2dpLmNvbT47IA0KU3ViamVjdDogIFJlOiBkdSByZXN1bHQgaXMgc21hbGxlciB0aGFu
+IHhmc19xdW90YSByZXBvcnQNCg0KDQoNCg0KPiBPbiBPY3QgMjAsIDIwMTUsIGF0IDQ6MDkg
+QU0sIFllWWluIDxleW5peUBxcS5jb20+IHdyb3RlOg0KPiANCj4gSGksIGFsbCwNCj4gSSBl
+bmNvdW50ZXJlZCBzb21lIHByb2JsZW1zIHdoZW4gSSB1c2VkIFhGUyB3aXRoIHByb2plY3Qg
+cXVvdGE6DQo+IA0KPiAjIGNhdCAvZXRjL3Byb2ppZCANCj4gZG9ja2VyLTE1MDkxNDIxMzk2
+NDI2OjY1MDYxDQo+IGRvY2tlci0xNTA5MjMxMTUyMjQwOToyNjI4Ng0KPiBkb2NrZXItMTUx
+MDEyMTU2MzcyOTQ6MTQxNjINCj4gDQo+ICMgY2F0IC9ldGMvcHJvamVjdHMgDQo+IDY1MDYx
+Oi9kYXRhL2RvY2tlci12b2x1bWVzL2RvY2tlci0xNTA5MTQyMTM5NjQyNg0KPiAyNjI4Njov
+ZGF0YS9kb2NrZXItdm9sdW1lcy9kb2NrZXItMTUwOTIzMTE1MjI0MDkNCj4gMTQxNjI6L2Rh
+dGEvZG9ja2VyLXZvbHVtZXMvZG9ja2VyLTE1MTAxMjE1NjM3Mjk0DQo+IA0KPiAjIHhmc19x
+dW90YSAteGMgJ3JlcG9ydCAtaCcgL2RhdGEgICAgICAgICAgDQo+IFByb2plY3QgcXVvdGEg
+b24gL2RhdGEgKC9kZXYvc2RhNCkNCj4gICAgICAgICAgICAgICAgICAgICAgICAgQmxvY2tz
+ICAgICAgICAgICAgICANCj4gUHJvamVjdCBJRCAgIFVzZWQgICBTb2Z0ICAgSGFyZCBXYXJu
+L0dyYWNlICAgDQo+IC0tLS0tLS0tLS0gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tIA0KPiBkb2NrZXItMTUwOTE0MjEzOTY0MjYgICAxLjBHICAgICAgMCAgIDEwMEcgIDAw
+IFstLS0tLS1dDQo+IGRvY2tlci0xNTA5MjMxMTUyMjQwOSAzNzEuNUcgICAgICAwICAgNzAw
+RyAgMDAgWy0tLS0tLV0NCj4gZG9ja2VyLTE1MTAxMjE1NjM3Mjk0IDkyMC44TSAgICAgIDAg
+ICA0MDBHICAwMCBbLS0tLS0tXQ0KPiANCj4gIyBkdSAtc2ggL2RhdGEvZG9ja2VyLXZvbHVt
+ZXMvZG9ja2VyLTE1MDkyMzExNTIyNDA5IA0KPiAyMDBHICAgIC9kYXRhL2RvY2tlci12b2x1
+bWVzL2RvY2tlci0xNTA5MjMxMTUyMjQwOQ0KPiANCj4gQXMgd2UgY2FuIHNlZSwgIGR1J3Mg
+cmVzdWx0KDIwMEcpIGlzIHNtYWxsZXIgdGhhbiB4ZnNfcXVvdGEgcmVwb3J0Lg0KPiANCklz
+IGFueXRoaW5nIG1vdW50ZWQgdW5kZXIgdGhhdCBkaXJlY3RvcnkgaGllcmFyY2h5LCBhbmQg
+aGlkaW5nIGZpbGVzIGZyb20gZHUncyB2aWV3Pw0KDQpFcmlj
 
-There are two parts to this problem. The first is that XFS relogs
-dirty regions in subsequnet transactions, so it carries around the
-fields that have been dirtied since the last time the inode was
-written back to disk, not since the last time the inode was forced
-into the log.
+------=_NextPart_56273290_0926DA60_26BE58AB
+Content-Type: text/html;
+	charset="ISO-8859-1"
+Content-Transfer-Encoding: base64
 
-The second part is that on v5 filesystems, the inode change count
-update during inode dirtying also sets the XFS_ILOG_CORE flag, so
-on v5 filesystems this makes a timestamp update dirty the entire
-inode.
+PGRpdj4mZ3Q7IElzIGFueXRoaW5nIG1vdW50ZWQgdW5kZXIgdGhhdCBkaXJlY3RvcnkgaGll
+cmFyY2h5LCBhbmQgaGlkaW5nIGZpbGVzIGZyb20gZHUncyB2aWV3PzwvZGl2PjxkaXY+PGJy
+PjwvZGl2PjxkaXY+Tm8sIFRoYW5rcy4gSSBmb3VuZCBzb21lIHVubGlua2VkIGlub2Rlcywg
+YnV0IEkgY2FuJ3QgZ2V0IHNvbWUgdXNlZnVsIGluZm9ybWF0aW9uOjwvZGl2PjxkaXY+PGJy
+PjwvZGl2PjxkaXY+PGRpdj4jIHhmc19kYiAteHIgLWMgJ2FnaSAxJyAtYyBwIC9kZXYvc2Rh
+NCAmbmJzcDs8L2Rpdj48ZGl2Pm1hZ2ljbnVtID0gMHg1ODQxNDc0OTwvZGl2PjxkaXY+dmVy
+c2lvbm51bSA9IDE8L2Rpdj48ZGl2PnNlcW5vID0gMTwvZGl2PjxkaXY+bGVuZ3RoID0gODkx
+NTA1OTI8L2Rpdj48ZGl2PmNvdW50ID0gOTQ3MjwvZGl2PjxkaXY+cm9vdCA9IDM8L2Rpdj48
+ZGl2PmxldmVsID0gMTwvZGl2PjxkaXY+ZnJlZWNvdW50ID0gMTkwMjwvZGl2PjxkaXY+bmV3
+aW5vID0gOTk3OTUyPC9kaXY+PGRpdj5kaXJpbm8gPSBudWxsPC9kaXY+PGRpdj51bmxpbmtl
+ZFswLTYzXSA9IDA6NzgyNzIgMTo5ODU2MSAyOjk4NTYyIDM6NzgyNzUgNDo3NzA2MCA1Ojc4
+Mjc3IDY6NzcwNjIgNzo3ODI3OSA4Ojk4NTY4IDk6OTg1NjkgMTA6OTg1NzAgMTE6NzcwNjcg
+MTI6NzcwNjggMTM6OTg1NzMgMTQ6OTg1NzQgMTU6NzgyODcgMTY6OTg1NzYgMTc6OTg1Nzcg
+MTg6NzgyOTAgMTk6OTg1MTUgMjA6OTgwNjggMjE6NzgxNjUgMjI6NzgyOTQgMjM6NzgyOTUg
+MjQ6NzgxNjggMjU6ODg4OTg1IDI2Ojc4MTcwIDI3Ojk4MDc1IDI4Ojc4MTcyIDI5Ojc4MzAx
+IDMwOjc4MzAyIDMxOjk4MDc5IDMyOjg4ODk5MiAzMzo3NjEyOSAzNDo5ODA4MiAzNTo3NjEz
+MSAzNjo5ODA4NCAzNzo5ODI3NyAzODo5ODI3OCAzOTo5MTA1MDMgNDA6OTgyODAgNDE6OTgy
+ODEgNDI6OTgyODIgNDM6OTgwOTEgNDQ6OTgwOTIgNDU6OTg1NDEgNDY6OTgwOTQgNDc6OTgw
+OTUgNDg6NzY5NzYgNDk6NzU5NTMgNTA6NzU5NTQgNTE6OTg1NDcgNTI6OTg0ODQgNTM6OTg0
+ODUgNTQ6OTg1NTAgNTU6OTg1NTEgNTY6OTg0ODggNTc6OTg0ODkgNTg6OTgxMDYgNTk6OTg0
+OTEgNjA6OTg0OTIgNjE6ODg5MDIxIDYyOjk4NTU4IDYzOjk4NDk1PC9kaXY+PC9kaXY+PGRp
+dj48ZGl2Pjxicj48L2Rpdj48ZGl2Pjxicj48L2Rpdj48ZGl2PjxkaXY+IyB4ZnNfZGIgLXhy
+IC1jICdpbm9kZSA3ODI3MicgLWMgcCAvZGV2L3NkYTQ8L2Rpdj48ZGl2PmNvcmUubWFnaWMg
+PSAwPC9kaXY+PGRpdj5jb3JlLm1vZGUgPSAwPC9kaXY+PGRpdj5jb3JlLnZlcnNpb24gPSAw
+PC9kaXY+PGRpdj5jb3JlLmZvcm1hdCA9IDAgKGRldik8L2Rpdj48ZGl2PmNvcmUudWlkID0g
+MDwvZGl2PjxkaXY+Y29yZS5naWQgPSAwPC9kaXY+PGRpdj5jb3JlLmZsdXNoaXRlciA9IDA8
+L2Rpdj48ZGl2PmNvcmUuYXRpbWUuc2VjID0gVGh1IEphbiAmbmJzcDsxIDA4OjAwOjAwIDE5
+NzA8L2Rpdj48ZGl2PmNvcmUuYXRpbWUubnNlYyA9IDAwMDAwMDAwMDwvZGl2PjxkaXY+Y29y
+ZS5tdGltZS5zZWMgPSBUaHUgSmFuICZuYnNwOzEgMDg6MDA6MDAgMTk3MDwvZGl2PjxkaXY+
+Y29yZS5tdGltZS5uc2VjID0gMDAwMDAwMDAwPC9kaXY+PGRpdj5jb3JlLmN0aW1lLnNlYyA9
+IFRodSBKYW4gJm5ic3A7MSAwODowMDowMCAxOTcwPC9kaXY+PGRpdj5jb3JlLmN0aW1lLm5z
+ZWMgPSAwMDAwMDAwMDA8L2Rpdj48ZGl2PmNvcmUuc2l6ZSA9IDA8L2Rpdj48ZGl2PmNvcmUu
+bmJsb2NrcyA9IDA8L2Rpdj48ZGl2PmNvcmUuZXh0c2l6ZSA9IDA8L2Rpdj48ZGl2PmNvcmUu
+bmV4dGVudHMgPSAwPC9kaXY+PGRpdj5jb3JlLm5hZXh0ZW50cyA9IDA8L2Rpdj48ZGl2PmNv
+cmUuZm9ya29mZiA9IDA8L2Rpdj48ZGl2PmNvcmUuYWZvcm1hdCA9IDAgKGRldik8L2Rpdj48
+ZGl2PmNvcmUuZG1ldm1hc2sgPSAwPC9kaXY+PGRpdj5jb3JlLmRtc3RhdGUgPSAwPC9kaXY+
+PGRpdj5jb3JlLm5ld3J0Ym0gPSAwPC9kaXY+PGRpdj5jb3JlLnByZWFsbG9jID0gMDwvZGl2
+PjxkaXY+Y29yZS5yZWFsdGltZSA9IDA8L2Rpdj48ZGl2PmNvcmUuaW1tdXRhYmxlID0gMDwv
+ZGl2PjxkaXY+Y29yZS5hcHBlbmQgPSAwPC9kaXY+PGRpdj5jb3JlLnN5bmMgPSAwPC9kaXY+
+PGRpdj5jb3JlLm5vYXRpbWUgPSAwPC9kaXY+PGRpdj5jb3JlLm5vZHVtcCA9IDA8L2Rpdj48
+ZGl2PmNvcmUucnRpbmhlcml0ID0gMDwvZGl2PjxkaXY+Y29yZS5wcm9qaW5oZXJpdCA9IDA8
+L2Rpdj48ZGl2PmNvcmUubm9zeW1saW5rcyA9IDA8L2Rpdj48ZGl2PmNvcmUuZXh0c3ogPSAw
+PC9kaXY+PGRpdj5jb3JlLmV4dHN6aW5oZXJpdCA9IDA8L2Rpdj48ZGl2PmNvcmUubm9kZWZy
+YWcgPSAwPC9kaXY+PGRpdj5jb3JlLmZpbGVzdHJlYW0gPSAwPC9kaXY+PGRpdj5jb3JlLmdl
+biA9IDA8L2Rpdj48ZGl2Pm5leHRfdW5saW5rZWQgPSAwPC9kaXY+PGRpdj51LmRldiA9IDA8
+L2Rpdj48L2Rpdj48ZGl2Pjxicj48L2Rpdj48ZGl2PlRoYW5rcyw8L2Rpdj48ZGl2PlllPC9k
+aXY+PGRpdj48YnI+PC9kaXY+PGRpdiBzdHlsZT0iZm9udC1zaXplOiAxMnB4O2ZvbnQtZmFt
+aWx5OiBBcmlhbCBOYXJyb3c7cGFkZGluZzoycHggMCAycHggMDsiPi0tLS0tLS0tLS0tLS0t
+LS0tLSZuYnNwO09yaWdpbmFsJm5ic3A7LS0tLS0tLS0tLS0tLS0tLS0tPC9kaXY+PGRpdiBz
+dHlsZT0iZm9udC1zaXplOiAxMnB4O2JhY2tncm91bmQ6I2VmZWZlZjtwYWRkaW5nOjhweDsi
+PjxkaXY+PGI+RnJvbTogPC9iPiZuYnNwOyJFcmljIFNhbmRlZW4iOyZsdDtzYW5kZWVuQHNh
+bmRlZW4ubmV0Jmd0Ozs8L2Rpdj48ZGl2PjxiPkRhdGU6IDwvYj4mbmJzcDtXZWQsIE9jdCAy
+MSwgMjAxNSAwMzozNSBBTTwvZGl2PjxkaXY+PGI+VG86IDwvYj4mbmJzcDsiWWVZaW4iJmx0
+O2V5bml5QHFxLmNvbSZndDs7IDx3YnI+PC9kaXY+PGRpdj48Yj5DYzogPC9iPiZuYnNwOyJ4
+ZnMiJmx0O3hmc0Bvc3Muc2dpLmNvbSZndDs7IDx3YnI+PC9kaXY+PGRpdj48Yj5TdWJqZWN0
+OiA8L2I+Jm5ic3A7UmU6IGR1IHJlc3VsdCBpcyBzbWFsbGVyIHRoYW4geGZzX3F1b3RhIHJl
+cG9ydDwvZGl2PjwvZGl2PjxkaXY+PGJyPjwvZGl2Pjxicj4mZ3Q7IE9uIE9jdCAyMCwgMjAx
+NSwgYXQgNDowOSBBTSwgWWVZaW4gJmx0O2V5bml5QHFxLmNvbSZndDsgd3JvdGU6PGJyPiZn
+dDsgPGJyPiZndDsgSGksIGFsbCw8YnI+Jmd0OyBJIGVuY291bnRlcmVkIHNvbWUgcHJvYmxl
+bXMgd2hlbiBJIHVzZWQgWEZTIHdpdGggcHJvamVjdCBxdW90YTo8YnI+Jmd0OyA8YnI+Jmd0
+OyAjIGNhdCAvZXRjL3Byb2ppZCA8YnI+Jmd0OyBkb2NrZXItMTUwOTE0MjEzOTY0MjY6NjUw
+NjE8YnI+Jmd0OyBkb2NrZXItMTUwOTIzMTE1MjI0MDk6MjYyODY8YnI+Jmd0OyBkb2NrZXIt
+MTUxMDEyMTU2MzcyOTQ6MTQxNjI8YnI+Jmd0OyA8YnI+Jmd0OyAjIGNhdCAvZXRjL3Byb2pl
+Y3RzIDxicj4mZ3Q7IDY1MDYxOi9kYXRhL2RvY2tlci12b2x1bWVzL2RvY2tlci0xNTA5MTQy
+MTM5NjQyNjxicj4mZ3Q7IDI2Mjg2Oi9kYXRhL2RvY2tlci12b2x1bWVzL2RvY2tlci0xNTA5
+MjMxMTUyMjQwOTxicj4mZ3Q7IDE0MTYyOi9kYXRhL2RvY2tlci12b2x1bWVzL2RvY2tlci0x
+NTEwMTIxNTYzNzI5NDxicj4mZ3Q7IDxicj4mZ3Q7ICMgeGZzX3F1b3RhIC14YyAncmVwb3J0
+IC1oJyAvZGF0YSZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyA8YnI+Jmd0OyBQcm9qZWN0IHF1b3RhIG9uIC9kYXRhICgvZGV2L3NkYTQp
+PGJyPiZndDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJz
+cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJz
+cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsgQmxvY2tzJm5i
+c3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5i
+c3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7IDxicj4mZ3Q7IFByb2plY3QgSUQmbmJzcDsmbmJzcDsg
+VXNlZCZuYnNwOyZuYnNwOyBTb2Z0Jm5ic3A7Jm5ic3A7IEhhcmQgV2Fybi9HcmFjZSZuYnNw
+OyZuYnNwOyA8YnI+Jmd0OyAtLS0tLS0tLS0tIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLSA8YnI+Jmd0OyBkb2NrZXItMTUwOTE0MjEzOTY0MjYmbmJzcDsmbmJzcDsgMS4w
+RyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyAwJm5ic3A7Jm5ic3A7IDEwMEcmbmJz
+cDsgMDAgWy0tLS0tLV08YnI+Jmd0OyBkb2NrZXItMTUwOTIzMTE1MjI0MDkgMzcxLjVHJm5i
+c3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7IDAmbmJzcDsmbmJzcDsgNzAwRyZuYnNwOyAw
+MCBbLS0tLS0tXTxicj4mZ3Q7IGRvY2tlci0xNTEwMTIxNTYzNzI5NCA5MjAuOE0mbmJzcDsm
+bmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsgMCZuYnNwOyZuYnNwOyA0MDBHJm5ic3A7IDAwIFst
+LS0tLS1dPGJyPiZndDsgPGJyPiZndDsgIyBkdSAtc2ggL2RhdGEvZG9ja2VyLXZvbHVtZXMv
+ZG9ja2VyLTE1MDkyMzExNTIyNDA5IDxicj4mZ3Q7IDIwMEcmbmJzcDsmbmJzcDsmbmJzcDsg
+L2RhdGEvZG9ja2VyLXZvbHVtZXMvZG9ja2VyLTE1MDkyMzExNTIyNDA5PGJyPiZndDsgPGJy
+PiZndDsgQXMgd2UgY2FuIHNlZSwmbmJzcDsgZHUncyByZXN1bHQoMjAwRykgaXMgc21hbGxl
+ciB0aGFuIHhmc19xdW90YSByZXBvcnQuPGJyPiZndDsgPGJyPklzIGFueXRoaW5nIG1vdW50
+ZWQgdW5kZXIgdGhhdCBkaXJlY3RvcnkgaGllcmFyY2h5LCBhbmQgaGlkaW5nIGZpbGVzIGZy
+b20gZHUncyB2aWV3Pzxicj48YnI+RXJpYzwvZGl2Pg==
 
-As a result when fdatasync is run, it looks at the dirty fields in
-the inode, and sees more than just the timestamp flag, even though
-the only metadata change since the last fdatasync was just the
-timestamps. Hence we force the log on every subsequent fdatasync
-even though it is not needed.
+------=_NextPart_56273290_0926DA60_26BE58AB--
 
-To fix this, add a new field to the inode log item that tracks
-changes since the last time fsync/fdatasync forced the log to flush
-the changes to the journal. This flag is updated when we dirty the
-inode, but we do it before updating the change count so it does not
-carry the "core dirty" flag from timestamp updates. The fields are
-zeroed when the inode is marked clean (due to writeback/freeing) or
-when an fsync/datasync forces the log. Hence if we only dirty the
-timestamps on the inode between fsync/fdatasync calls, the fdatasync
-will not trigger another log force.
 
-Over 100 runs of the test program:
 
-Ext4 baseline:
-	runtime: 1.63s +/- 0.24s
-	avg lat: 1.59ms +/- 0.24ms
-	iops: ~2000
 
-XFS, vanilla kernel:
-        runtime: 2.45s +/- 0.18s
-	avg lat: 2.39ms +/- 0.18ms
-	log forces: ~400/s
-	iops: ~1000
-
-XFS, patched kernel:
-        runtime: 1.49s +/- 0.26s
-	avg lat: 1.46ms +/- 0.25ms
-	log forces: ~30/s
-	iops: ~1500
-
-Reported-by: Sage Weil <sage@redhat.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_file.c        | 4 +++-
- fs/xfs/xfs_inode.c       | 2 ++
- fs/xfs/xfs_inode_item.c  | 1 +
- fs/xfs/xfs_inode_item.h  | 1 +
- fs/xfs/xfs_trans_inode.c | 9 +++++++++
- 5 files changed, 16 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0045b0a..cb4204d 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -248,8 +248,10 @@ xfs_file_fsync(
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	if (xfs_ipincount(ip)) {
- 		if (!datasync ||
--		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
-+		    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP)) {
- 			lsn = ip->i_itemp->ili_last_lsn;
-+			ip->i_itemp->ili_fsync_fields = 0;
-+		}
- 	}
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4c52e3f..144baab 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2379,6 +2379,7 @@ retry:
- 
- 			iip->ili_last_fields = iip->ili_fields;
- 			iip->ili_fields = 0;
-+			iip->ili_fsync_fields = 0;
- 			iip->ili_logged = 1;
- 			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
- 						&iip->ili_item.li_lsn);
-@@ -3574,6 +3575,7 @@ xfs_iflush_int(
- 	 */
- 	iip->ili_last_fields = iip->ili_fields;
- 	iip->ili_fields = 0;
-+	iip->ili_fsync_fields = 0;
- 	iip->ili_logged = 1;
- 
- 	xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 62bd80f..d14b12b 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -719,6 +719,7 @@ xfs_iflush_abort(
- 		 * attempted.
- 		 */
- 		iip->ili_fields = 0;
-+		iip->ili_fsync_fields = 0;
- 	}
- 	/*
- 	 * Release the inode's flush lock since we're done with it.
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index 488d812..4c7722e 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -34,6 +34,7 @@ typedef struct xfs_inode_log_item {
- 	unsigned short		ili_logged;	   /* flushed logged data */
- 	unsigned int		ili_last_fields;   /* fields when flushed */
- 	unsigned int		ili_fields;	   /* fields to be logged */
-+	unsigned int		ili_fsync_fields;  /* logged since last fsync */
- } xfs_inode_log_item_t;
- 
- static inline int xfs_inode_clean(xfs_inode_t *ip)
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index 17280cd..b97f1df 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -108,6 +108,15 @@ xfs_trans_log_inode(
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 
- 	/*
-+	 * Record the specific change for fdatasync optimisation. This
-+	 * allows fdatasync to skip log forces for inodes that are only
-+	 * timestamp dirty. We do this before the change count so that
-+	 * the core being logged in this case does not impact on fdatasync
-+	 * behaviour.
-+	 */
-+	ip->i_itemp->ili_fsync_fields |= flags;
-+
-+	/*
- 	 * First time we log the inode in a transaction, bump the inode change
- 	 * counter if it is configured for this to occur. We don't use
- 	 * inode_inc_version() because there is no need for extra locking around
--- 
-2.5.0
+--===============1401078416455294920==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1401078416455294920==--
