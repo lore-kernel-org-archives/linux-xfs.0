@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2696F7F37
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 06:48:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DF9F7304032
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 04:48:07 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id IgCec2cxkCwLSjKQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 04:48:05 -0700 (PDT)
-Date: Fri, 23 Oct 2015 13:48:05 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: hdd + ssd
-Message-ID: <20151023134805.3c7998e4@harpe.intellique.com>
-In-Reply-To: <20151022202324.5f00807f@linux>
-References: <20151022202324.5f00807f@linux>
+	by oss.sgi.com (Postfix) with ESMTP id AF6EB7F37
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 08:53:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 92E0B304032
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 06:53:01 -0700 (PDT)
+Received: from mail-lf0-f45.google.com (mail-lf0-f45.google.com
+	[209.85.215.45]) by cuda.sgi.com with ESMTP id 0lA8yAIMFedr9JGu
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Oct 2015 06:52:56 -0700 (PDT)
+Received: by lfbn126 with SMTP id n126so49855563lfb.2
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 06:52:54 -0700 (PDT)
 MIME-Version: 1.0
+Date: Fri, 23 Oct 2015 15:52:54 +0200
+Message-ID: <CAHc6FU5gS4BA+iTRHo1oHJMVHkLs4aa0eYd5T1ftLC9biRaxrg@mail.gmail.com>
+Subject: Inconsistencies with trusted.SGI_ACL_{FILE,DEFAULT}
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +25,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "krautus@kr916.org" <krautus@kr916.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-TGUgVGh1LCAyMiBPY3QgMjAxNSAyMDoyMzoyNCArMDIwMAoia3JhdXR1c0BrcjkxNi5vcmciIDxr
-cmF1dHVzQGtyOTE2Lm9yZz4gw6ljcml2YWl0OgoKPiBIZWxsbyBJJ20gdHJ5aW5nIHRvIHVuZGVy
-c3RhbmQgd2h5IGFuZCBob3cgdG8gYWRkIG9uZSBvciBtb3JlIFNTRCAoYXMKPiBhIGNhY2hlIGRy
-aXZlIC8ga2VlcGluZyB4ZnMgbG9nKSB0byBhIHRyYWRpdGlvbmFsIHNwaW5uaW5nIHhmcwo+IHN0
-b3JhZ2Ugdm9sdW1lLiBJIG1lYW46IHdoaWNoIGRhdGEgd2lsbCBnbyB0byB0aGUgc3NkID8gSW5v
-ZGVzIGFuZAo+IGRlbnRyaWVzIHdpbGwgZ28gdG8gdGhlIHNzZCA/IFdpbGwgdGhlIF9yZWFkXyBw
-ZXJmb3JtYW5jZSBpbmNyZWFzZSA/Cj4gCj4gSW4gZ2VuZXJhbCBJJ20gbG9va2luZyB0byBpbmNy
-ZWFzZSAoY2FjaGUpIHRoZSByZWFkaW5nIHBlcmZvcm1hbmNlIG9mCj4gZm9sZGVycyB3aXRoIGEg
-bG90IG9mIHNtYWxsIGZpbGVzIChlbWFpbHMpLCBmb3IgZW1haWwgc2VydmVycy4KPiAKPiBGZWVs
-IGZyZWUgdG8gbGV0IG1lIHJ0Zm0gOikKPiBJJ2QgZ2xhZGx5IHN0dWR5IHRoZSBkb2N1bWVudGF0
-aW9uIC8gYXJ0aWNsZXMgLyBiZW5jaG1hcmtzIGJ1dCBteQo+IGdvb2dsZS1mdSBpc24ndCBpbiBi
-ZXN0IHNoYXBlLgoKWW91J3ZlIGdvdCBzZXZlcmFsIG9wdGlvbnMsIHNvbWUgaW50ZWdyYXRlZCB3
-aXRoIHRoZSBrZXJuZWw6IGRtLWNhY2hlCmFuZCBiY2FjaGUsIHNvbWUgYXZhaWxhYmxlIGFzIGFk
-ZGl0aW9uYWwgdG9vbHM6IGZsYXNoY2FjaGUgYW5kCkVuaGFuY2VJTy4KCllNTVYsIGJ1dCBoZXJl
-J3MgbXkgdGFrZToKCiAqIGZsYXNoY2FjaGUgYmVpbmcgYSBmYWNlYm9vayBpbnRlcm5hbCBkZXYs
-IHByb2JhYmx5IGlzIHRoZSBtb3N0CiAgIGxhcmdlbHkgZGVwbG95ZWQgb25lLiBJdCdzIGNsZWFy
-bHkgcHJvZHVjdGlvbi1yZWFkeS4KCiAqIEVuaGFuY2VJTyB3b3JrcyBmaW5lIGJ1dCBJIGhhdmVu
-J3QgdGVzdGVkIGl0IHRob3JvdWdobHkuIEl0IGFkZHMgbm8KICAgc2lnbmF0dXJlIHRvIHRoZSBk
-cml2ZXMgc28gaXQgY2FuIGJlIGFkZGVkIHRvIGV4aXN0aW5nIGZpbGVzeXN0ZW1zCiAgIChmbGFz
-aGNhY2hlIGFuZCBiY2FjaGUgbmVlZCByZWZvcm1hdHRpbmcpLiBIb3dldmVyIHRoYXQgbWVhbnMg
-dGhhdAogICBiYWQgdGhpbmcgbWF5IGhhcHBlbiBpZiB5b3UncmUgY2FyZWxlc3MgLS0gaXQncyBj
-bGVhcmx5IHRhcmdldGVkIGF0CiAgIGFsd2F5cy1vbiBzZXJ2ZXJzLgoKICogYmNhY2hlIHdvcmtz
-IGZpbmUgYnV0IHRoZSBsYXRlc3QgZml4ZXMgaGF2ZW4ndCBiZWVuIGJhY2twb3J0ZWQsIHNvCiAg
-IHlvdSBzaG91bGQgcHJvYmFibHkgdXNlIGl0IG9ubHkgd2l0aCBsYXRlc3QgKDQuMiwgNC4zKSBr
-ZXJuZWxzLiBJdCdzCiAgIG5vdCB2ZXJ5IG1hdHVyZSB5ZXQgYnV0IGl0J3MgKmZyaWdnaW4nIGZh
-c3QqLgoKICogZG0tY2FjaGUgaXMgdGhlIGVhc2llc3QgdG8gc2V0LXVwIHdpdGggdGhlIGx2bWNh
-Y2hlIGNvbW1hbmQgKGlmIHlvdXIKICAgZGlzdHJvIGlzIHJlY2VudCBlbm91Z2ggb2YgY291cnNl
-KS4gTGlrZSB2ZXJ5IHZlcnkgZWFzeS4gSXQncwogICB1bmZvcnR1bmF0ZWx5IHRoZSBzbG93ZXN0
-IG9mIHRoZSBwYWNrLCBhcHBhcmVudGx5LiBEb2Vzbid0IG5lZWQKICAgcmVmb3JtYXR0aW5nIElG
-IHlvdXIgZXhpc3RpbmcgRlMgYWxyZWFkeSBsaXZlcyBpbiBhIExWLiAKCi0tIAotLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAg
-ICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3Jh
-Y0BpbnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQg
-MDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hello,
+
+The usual way of manipulating a file's POSIX ACL is through the
+system.posix_acl_{access,default} xattrs. Setting
+system.posix_acl_access also sets the permission bits in the file
+mode. The acls are cached in inode->i_acl and inode->i_default_acl.
+
+On XFS, POSIX ACLs are also exposed as trusted.SGI_ACL_{FILE,DEFAULT}
+xattrs in a different value format. However, setting these xattrs does
+not update inode->i_{,default_}acl, and setting trusted.SGI_ACL_FILE
+does not update the file mode; things can get out of sync:
+
+  $ touch f
+  $ setfacl -m u:agruenba:rw f
+  $ ls -l f
+  -rw-rw-r--+ 1 root root 0 Oct 23 15:04 f
+  $ getfattr -m- -d f
+  # file: f
+  security.selinux="unconfined_u:object_r:user_tmp_t:s0"
+  system.posix_acl_access=0sAgAAAAEABgD/////AgAGAOgDAAAEAAQA/////xAABgD/////IAAEAP////8=
+  trusted.SGI_ACL_FILE=0sAAAABQAAAAH/////AAYAAAAAAAIAAAPoAAYAAAAAAAT/////AAQAAAAAABD/////AAYAAAAAACD/////AAQAAA==
+
+  $ chmod 0 f
+  $ setfattr -n trusted.SGI_ACL_FILE -v
+0sAAAABQAAAAH/////AAYAAAAAAAIAAAPoAAYAAAAAAAT/////AAQAAAAAABD/////AAYAAAAAACD/////AAQAAA==
+f
+  $ ls -l f
+  ----------+ 1 root root 0 Oct 23 15:04 /var/tmp/f
+  $ getfacl f
+  # file: f
+  # owner: root
+  # group: root
+  user::---
+  user:agruenba:rw-        #effective:---
+  group::r--            #effective:---
+  mask::---
+  other::---
+  $ getfattr -m- -d f
+  # file: f
+  security.selinux="unconfined_u:object_r:user_tmp_t:s0"
+  system.posix_acl_access=0sAgAAAAEAAAD/////AgAGAOgDAAAEAAQA/////xAAAAD/////IAAAAP////8=
+  trusted.SGI_ACL_FILE=0sAAAABQAAAAH/////AAYAAAAAAAIAAAPoAAYAAAAAAAT/////AAQAAAAAABD/////AAYAAAAAACD/////AAQAAA==
+
+Here, the file mode and the reported value of system.posix_acl_access
+are both wrong; trusted.SGI_ACL_FILE corresponds to what's stored on
+disk.
+
+Access to trusted.* attributes is limited to users capable of
+CAP_SYS_ADMIN so ordinary users cannot cause this kind of damage, but
+this still deserves fixing.
+
+Thanks,
+Andreas
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
