@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 95ECA7F53
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 15:05:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 853EC30404E
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 13:05:21 -0700 (PDT)
-Received: from elasmtp-dupuy.atl.sa.earthlink.net
-	(elasmtp-dupuy.atl.sa.earthlink.net [209.86.89.62]) by
-	cuda.sgi.com with ESMTP id LpD5ETgQgEDGNzjJ for
-	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 13:05:16 -0700 (PDT)
-From: "Frank Filz" <ffilzlnx@mindspring.com>
-References: <1445625722-13791-1-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1445625722-13791-1-git-send-email-agruenba@redhat.com>
-Subject: RE: [PATCH v12 00/49] Richacls
-Date: Fri, 23 Oct 2015 13:03:59 -0700
-Message-ID: <002f01d10dcd$f5f9f170$e1edd450$@mindspring.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ADA8C7F6F
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 16:31:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 35C31AC005
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 14:31:01 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	YFGLsNtMcArBu1da for <xfs@oss.sgi.com>;
+	Fri, 23 Oct 2015 14:30:58 -0700 (PDT)
+Date: Sat, 24 Oct 2015 08:30:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: very long log recovery at mount
+Message-ID: <20151023213048.GG19199@dastard>
+References: <201510211127.52794.arekm@maven.pl>
+	<20151023070532.GF19199@dastard>
+	<201510230922.04906.arekm@maven.pl>
 MIME-Version: 1.0
-Content-Language: en-us
+Content-Disposition: inline
+In-Reply-To: <201510230922.04906.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,43 +27,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 'Andreas Gruenbacher' <agruenba@redhat.com>, 'Alexander Viro' <viro@zeniv.linux.org.uk>, 'Theodore Ts'o' <tytso@mit.edu>, 'Andreas Dilger' <adilger.kernel@dilger.ca>, "'J. Bruce Fields'" <bfields@fieldses.org>, 'Jeff Layton' <jlayton@poochiereds.net>, 'Trond Myklebust' <trond.myklebust@primarydata.com>, 'Anna Schumaker' <anna.schumaker@netapp.com>, 'Dave Chinner' <david@fromorbit.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs <xfs@oss.sgi.com>
 
-Andreas Gruenbacher:
-> 
-> Here is another update of the richacl patch queue.  I would like to ask
-for
-> feedback so that the core and local filesystem code (patches 1-25) can be
-> merged in the 4.4 merge window.
-> 
-> Changes since the last posting (http://lwn.net/Articles/661078/):
-> 
->  * On ext4, filesystems with the richacl feature can no longer be mounted
->    with -o noacl; richacls cannot be turned off.
-> 
->  * XFS was listing richacl xattrs as "trusted.system.richacl"; this has
->    been fixed.
-> 
->  * Some definitions have been moved from include/linux/ to
->    include/uapi/linux/.  The license of the uapi headers has been changed
->    to LGPL.
-
-Thanks for that last. I kept meaning to ask about that for cleaner use in
-Ganesha.
-
-Frank
-
-
-
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBPY3QgMjMsIDIwMTUgYXQgMDk6MjI6MDRBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIEZyaWRheSAyMyBvZiBPY3RvYmVyIDIwMTUsIERhdmUgQ2hpbm5l
+ciB3cm90ZToKPiA+IE9uIFdlZCwgT2N0IDIxLCAyMDE1IGF0IDExOjI3OjUyQU0gKzAyMDAsIEFy
+a2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+ID4gSGkuCj4gPiA+IAo+ID4gPiBJIGdvdCBz
+dWNoIHNpdHVhdGlvbiwgZnJlc2ggYm9vdCwgNC4xLjEwIGtlcm5lbCwgaW5pdCBzY3JpcHRzIHN0
+YXJ0Cj4gPiA+IG1vdW50aW5nIGZpbGVzeXN0ZW1zLiBPbmUgZnMgd2Fzbid0IHZlcnkgbHVja3k6
+Cj4gPiA+IAo+ID4gPiBbICAgMTUuOTc5NTM4XSBYRlMgKG1kMyk6IE1vdW50aW5nIFY0IEZpbGVz
+eXN0ZW0KPiA+ID4gWyAgIDE2LjI1NjMxNl0gWEZTIChtZDMpOiBFbmRpbmcgY2xlYW4gbW91bnQK
+PiA+ID4gWyAgIDI4LjM0MzM0Nl0gWEZTIChtZDQpOiBNb3VudGluZyBWNCBGaWxlc3lzdGVtCj4g
+PiA+IFsgICAyOC42Mjk5MThdIFhGUyAobWQ0KTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiA+IFsg
+ICAyOC42NjIxMjVdIFhGUyAobWQ1KTogTW91bnRpbmcgVjQgRmlsZXN5c3RlbQo+ID4gPiBbICAg
+MjguOTgwMTQyXSBYRlMgKG1kNSk6IEVuZGluZyBjbGVhbiBtb3VudAo+ID4gPiBbICAgMjkuMDQ5
+NDIxXSBYRlMgKG1kNik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+ID4gWyAgIDI5LjQ0Nzcy
+NV0gWEZTIChtZDYpOiBTdGFydGluZyByZWNvdmVyeSAobG9nZGV2OiBpbnRlcm5hbCkKPiA+ID4g
+WyA0NTE3LjMyNzMzMl0gWEZTIChtZDYpOiBFbmRpbmcgcmVjb3ZlcnkgKGxvZ2RldjogaW50ZXJu
+YWwpCj4gPiA+IAo+ID4gPiBJdCB0b29rIG92ZXIgMWggdG8gbW91bnQgbWQ2IGZpbGVzeXN0ZW0u
+Cj4gPiA+IAo+ID4gPiBRdWVzdGlvbnM6Cj4gPiA+IC0gaXMgaXQgcG9zc2libGUgdG8gbG9nIGhv
+dyBtdWNoIGRhdGEgaXMgbmVlZGVkIHRvIGJlIHJlY292ZXJlZAo+ID4gPiBmcm9tIGxvZz8KPiA+
+IAo+ID4gWWVzLgo+ID4gCj4gPiA+IFNvbWUgZGF0YSB0aGF0IHdvdWxkIGdpdmUgYSBoaW50IG9u
+IGhvdyBiaWcgdGhpcyBpcyAoYW5kIHRodXMKPiA+ID4gcm91Z2ggZXN0aW1hdGUgb24gaG93IGxv
+bmcgaXQgd2lsbCB0YWtlKS4gTm90IHN1cmUgaWYgdGhhdCdzIGtub3duCj4gPiA+IGF0IHRpbWUg
+d2hlbiB0aGlzIG1lc3NhZ2UgaXMgYmVpbmcgcHJpbnRlZC4KPiA+IAo+ID4gSXQncyBub3Qga25v
+d24sIHRoZW4sIGFuZCBjYW4ndCBiZSBrbm93biB1bnRpbCByZWNvdmVyeSBoYXMgc3BhcnNlZAo+
+ID4gdGhlIGxvZyBhbmQgcmVhZCBhbGwgdGhlIG9iamVjdHMgZnJvbSBkaXNrIGl0IG5lZWRzIHRv
+IHJlY292ZXIuCj4gCj4gU28gSSBhc3N1bWUgbm90IGF2YWlsYWJsZSBlYXJseSBlbm91Z2ggdG8g
+YmUgdXNhYmxlLgoKTm8sIGl0J3Mgbm90LgoKPiA+ID4gLSBub3cgc3VjaCBsb25nIG1vdW50IHRp
+bWUgaXMgYWxtb3N0IGluc2FuZSwgc28gSSB3b25kZXIgd2h5IGNvdWxkCj4gPiA+IGJlIHRoZSBy
+ZWFzb24uIElzIHRoZSBwcm9jZXNzIG11bHRpdGhyZWFkZWQsIHNpbmdsZSB0aHJlYWRlZD8gY3B1
+cwo+ID4gPiB3ZXJlIGlkbGUKPiA+IAo+ID4gV2hhdCBrZXJuZWw/IAo+IAo+ICI+ID4gSSBnb3Qg
+c3VjaCBzaXR1YXRpb24sIGZyZXNoIGJvb3QsIDQuMS4xMCBrZXJuZWwiCgpTb3JyeSwgbXkgZmF1
+bHQsIEkgbWlzc2VkIHRoYXQuCgo+ID4gV2Ugbm93IGhhdmUgcmVhZGFoZWFkIHdoaWNoIG1pbmlt
+aXNlcyB0aGUgSU8gbGF0ZW5jeSBvZgo+ID4gcHVsbGluZyBvYmplY3RzIGludG8gdGhlIGtlcm5l
+bCBmb3IgcmVjb3ZlcnksIGJ1dCBpZiB5b3UgYXJlCj4gPiByZWNvdmVyaW5nIGEgY291cGxlIG9m
+IG1pbGxpb24gaW5kaXZpZHVhbCBpbm9kZSBjaGFuZ2VzIChlLmcuIGZyb20gYQo+ID4gJ2NocHJv
+aiAtUiAvcGF0aC93aXRoL21pbGxpb25zL29mL2ZpbGVzJykgdGhlbiBpdCB0YWtlIGEgbG9uZyB0
+aWVtCj4gPiB0byByZWFkIGluIGFsbCB0aGUgaW5vZGVzIGFuZCB3cml0ZSB0aGVtIGFsbCBiYWNr
+IG91dC4KPiAKPiBJdCB3YXMgbGlrZSAxMHggcnNuYXBzaG90cyB0aGVyZSAoc28gdG9ucyBvZiBm
+aWxlcyBjb3BpZWQvaGFyZGxpbmtlZCwgdGhlbiAKPiByc3luY2VkIGV0YykuCgpPaywgc28gbG90
+cyBvZiBoYXJkbGlua3MsIHdoaWNoIHdpbGwgcmVzdWx0IGluIGxvZ3Mgb2YgaW5kaXZpZHVhbApp
+bm9kZSBjb3JlcyBiZWluZyBsb2dnZWQgZHVlIHRvIHRoZSBsaW5rIGNvdW50IGNoYW5nZS4KCj4g
+PiBBIHNpbmdsZQo+ID4gaW5vZGUgaW4gdGhlIGxvZyBsaWsgZXRoaXMgb25seSBjb25zdW1lcyBh
+Ym91dCAyMDAgYnl0ZXMgb2YgbG9nCj4gPiBzcGFjZSwgc28gdGhlcmUgY2FuIGVhc2lseSBiZSA1
+MDAwIGlub2RlcyB0byByZWNvdmVyIHBlciBtZWdhYnl0ZQo+ID4gb2YgbG9nIHNwYWNlIHlvdSBo
+YXZlLiBBbmQgaWYgeW91IGhhdmUgYSAyR0IgbG9nLCB0aGVuIHRoYXQgY291bGQKPiA+IGNvbnRh
+aW4gMTAgbWlsbGlvbiBpbm9kZSBjb3JlIGNoYW5nZXMgdGhhdCBuZWVkIHRvIGJlIHJlY292ZXJl
+ZC4uLi4KPiAKPiBPaywgc28gd2hhdCBJJ20gbG9va2luZyBmb3IgaXMgYW55IGtpbmQgb2YgaW5k
+aWNhdGlvbiAoaW4gZG1lc2cgcHJvYmFibHkpIHRoYXQgCj4gaXQgd2lsbCB0YWtlIGxvbmcgdGlt
+ZSAodGh1cyB3YXMgYXNraW5nIGFib3V0IGxvZyByZWNvdmVyeSBzaXplKS4gQmVjYXVzZSAKPiBy
+aWdodCBub3cgaXQncyBoYXJkIHRvIGVzdGltYXRlIGhvdyBsb25nIGRvd250aW1lIHdpbGwgYmUg
+YW5kIGFiaWxpdHkgdG8gCj4gZXN0aW1hdGUgc3VjaCB0aGluZ3MgaXMgaW1wb3J0YW50LgoKV2Vs
+bCwgd2UgZG9uJ3QgY291bnQgc3VjaCB0aGluZ3MgYXQgcHJlc2VudC4gV2UgbXVsdGlwbGUgcGFz
+c2VzIG9mCnRoZSBsb2cgZHVyaW5nIHJlY292ZXJ5IC0gdGhlIGZpcnN0IHBhc3MgcmVjb3JkcyBh
+bGwgdGhlIGNhbmNlbGxlZApidWZmZXJzIChpLmUuIGZyZWVkIG1ldGFkYXRhIGJ1ZmZlcnMpIHNv
+IHRoYXQgd2UgY2FuIGF2b2lkIHJlcGxheQppbnRvIHRoZW0uIHhsb2dfcmVjb3Zlcl9jb21taXRf
+cGFzczEoKSBkb2Vzbid0IGNvdW50IG9yIGxvb2sgYXQKYW55dGhpbmcgZWxzZSwgYnV0IEkgc3Vz
+cGVjdCB3ZSBjb3VsZCBhZGQgc29tZSBraW5kIG9mICJ0aGlzIG1hbnkKb2JqZWN0cyB0byByZWNv
+dmVyIiBhY2NvdW50aW5nIG91dHB1dCBhdCB0aGUgZW5kIG9mIHRoYXQgcGhhc2UuIFdlCmNhbid0
+IGRvIGFueSB0aW1lIGVzdGltYXRlcywgdGhvdWdoLCBiZWNhdXNlIHRoYXQncyBlbnRpcmVseQpk
+ZXBlbmRlbnQgb24gdGhlIHVuZGVybHlpbmcgc3RvcmFnZSB3aGljaCB3ZSBrbm93IG5vdGhpbmcg
+YWJvdXQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5j
+b20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
+YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo=
