@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7157E7F37
-	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 20:00:26 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2696F7F37
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 06:48:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FABA8F8040
-	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 18:00:25 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	C8AXLg8gWYh8J6io for <xfs@oss.sgi.com>;
-	Tue, 27 Oct 2015 18:00:23 -0700 (PDT)
-Date: Wed, 28 Oct 2015 11:59:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_io: implement 'inode' command V3
-Message-ID: <20151028005924.GP19199@dastard>
-References: <1445257880-30797-1-git-send-email-cmaiolino@redhat.com>
-	<20151022144255.GB13661@bfoster.bfoster>
-	<20151023092946.GA752@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DF9F7304032
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 04:48:07 -0700 (PDT)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id IgCec2cxkCwLSjKQ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 04:48:05 -0700 (PDT)
+Date: Fri, 23 Oct 2015 13:48:05 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: hdd + ssd
+Message-ID: <20151023134805.3c7998e4@harpe.intellique.com>
+In-Reply-To: <20151022202324.5f00807f@linux>
+References: <20151022202324.5f00807f@linux>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151023092946.GA752@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,45 +24,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: "krautus@kr916.org" <krautus@kr916.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 23, 2015 at 11:29:46AM +0200, Carlos Maiolino wrote:
-> Thanks for the review Brian, I'll walk over it and fix the points you mentioned.
-> > 
-> > 
-> > I still don't really get why we have separate -l and -s options here. It
-> > seems to me that the behavior of -l already gives us the information
-> > that -s does. Even if that's not obvious enough, the -l command could
-> > just print out both. For example:
-> > 
-> >       "Largest inode: 1234 (32-bit)"
-> 
-> I agree with you here, but, I'll let Dave answer this question, maybe he had 
-> some another idea for it that I'm not aware of. 
-
-No preference here; all that I was suggesting was that if you want
-to know whether inodes are 32/64 bit it doesn't matter what the
-largest inode number is.
-
-i.e. "Can I mount this with inode32 and have no problems (yes/no)?"
-
-And it's a lot easier to just query for *any* 64 bit inode than it
-is to find the largest inode number...
-
-If you want to combine the two, then that's fine by me.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVGh1LCAyMiBPY3QgMjAxNSAyMDoyMzoyNCArMDIwMAoia3JhdXR1c0BrcjkxNi5vcmciIDxr
+cmF1dHVzQGtyOTE2Lm9yZz4gw6ljcml2YWl0OgoKPiBIZWxsbyBJJ20gdHJ5aW5nIHRvIHVuZGVy
+c3RhbmQgd2h5IGFuZCBob3cgdG8gYWRkIG9uZSBvciBtb3JlIFNTRCAoYXMKPiBhIGNhY2hlIGRy
+aXZlIC8ga2VlcGluZyB4ZnMgbG9nKSB0byBhIHRyYWRpdGlvbmFsIHNwaW5uaW5nIHhmcwo+IHN0
+b3JhZ2Ugdm9sdW1lLiBJIG1lYW46IHdoaWNoIGRhdGEgd2lsbCBnbyB0byB0aGUgc3NkID8gSW5v
+ZGVzIGFuZAo+IGRlbnRyaWVzIHdpbGwgZ28gdG8gdGhlIHNzZCA/IFdpbGwgdGhlIF9yZWFkXyBw
+ZXJmb3JtYW5jZSBpbmNyZWFzZSA/Cj4gCj4gSW4gZ2VuZXJhbCBJJ20gbG9va2luZyB0byBpbmNy
+ZWFzZSAoY2FjaGUpIHRoZSByZWFkaW5nIHBlcmZvcm1hbmNlIG9mCj4gZm9sZGVycyB3aXRoIGEg
+bG90IG9mIHNtYWxsIGZpbGVzIChlbWFpbHMpLCBmb3IgZW1haWwgc2VydmVycy4KPiAKPiBGZWVs
+IGZyZWUgdG8gbGV0IG1lIHJ0Zm0gOikKPiBJJ2QgZ2xhZGx5IHN0dWR5IHRoZSBkb2N1bWVudGF0
+aW9uIC8gYXJ0aWNsZXMgLyBiZW5jaG1hcmtzIGJ1dCBteQo+IGdvb2dsZS1mdSBpc24ndCBpbiBi
+ZXN0IHNoYXBlLgoKWW91J3ZlIGdvdCBzZXZlcmFsIG9wdGlvbnMsIHNvbWUgaW50ZWdyYXRlZCB3
+aXRoIHRoZSBrZXJuZWw6IGRtLWNhY2hlCmFuZCBiY2FjaGUsIHNvbWUgYXZhaWxhYmxlIGFzIGFk
+ZGl0aW9uYWwgdG9vbHM6IGZsYXNoY2FjaGUgYW5kCkVuaGFuY2VJTy4KCllNTVYsIGJ1dCBoZXJl
+J3MgbXkgdGFrZToKCiAqIGZsYXNoY2FjaGUgYmVpbmcgYSBmYWNlYm9vayBpbnRlcm5hbCBkZXYs
+IHByb2JhYmx5IGlzIHRoZSBtb3N0CiAgIGxhcmdlbHkgZGVwbG95ZWQgb25lLiBJdCdzIGNsZWFy
+bHkgcHJvZHVjdGlvbi1yZWFkeS4KCiAqIEVuaGFuY2VJTyB3b3JrcyBmaW5lIGJ1dCBJIGhhdmVu
+J3QgdGVzdGVkIGl0IHRob3JvdWdobHkuIEl0IGFkZHMgbm8KICAgc2lnbmF0dXJlIHRvIHRoZSBk
+cml2ZXMgc28gaXQgY2FuIGJlIGFkZGVkIHRvIGV4aXN0aW5nIGZpbGVzeXN0ZW1zCiAgIChmbGFz
+aGNhY2hlIGFuZCBiY2FjaGUgbmVlZCByZWZvcm1hdHRpbmcpLiBIb3dldmVyIHRoYXQgbWVhbnMg
+dGhhdAogICBiYWQgdGhpbmcgbWF5IGhhcHBlbiBpZiB5b3UncmUgY2FyZWxlc3MgLS0gaXQncyBj
+bGVhcmx5IHRhcmdldGVkIGF0CiAgIGFsd2F5cy1vbiBzZXJ2ZXJzLgoKICogYmNhY2hlIHdvcmtz
+IGZpbmUgYnV0IHRoZSBsYXRlc3QgZml4ZXMgaGF2ZW4ndCBiZWVuIGJhY2twb3J0ZWQsIHNvCiAg
+IHlvdSBzaG91bGQgcHJvYmFibHkgdXNlIGl0IG9ubHkgd2l0aCBsYXRlc3QgKDQuMiwgNC4zKSBr
+ZXJuZWxzLiBJdCdzCiAgIG5vdCB2ZXJ5IG1hdHVyZSB5ZXQgYnV0IGl0J3MgKmZyaWdnaW4nIGZh
+c3QqLgoKICogZG0tY2FjaGUgaXMgdGhlIGVhc2llc3QgdG8gc2V0LXVwIHdpdGggdGhlIGx2bWNh
+Y2hlIGNvbW1hbmQgKGlmIHlvdXIKICAgZGlzdHJvIGlzIHJlY2VudCBlbm91Z2ggb2YgY291cnNl
+KS4gTGlrZSB2ZXJ5IHZlcnkgZWFzeS4gSXQncwogICB1bmZvcnR1bmF0ZWx5IHRoZSBzbG93ZXN0
+IG9mIHRoZSBwYWNrLCBhcHBhcmVudGx5LiBEb2Vzbid0IG5lZWQKICAgcmVmb3JtYXR0aW5nIElG
+IHlvdXIgZXhpc3RpbmcgRlMgYWxyZWFkeSBsaXZlcyBpbiBhIExWLiAKCi0tIAotLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAg
+ICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3Jh
+Y0BpbnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQg
+MDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
