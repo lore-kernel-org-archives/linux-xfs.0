@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 38B317F37
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2015 13:23:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B19C8F8033
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2015 11:23:28 -0700 (PDT)
-Received: from posta3.euchiamail.it (posta3.euchiamail.it [46.30.241.112]) by
-	cuda.sgi.com with ESMTP id 64EFPfRYTYeFVA4H (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 22 Oct 2015 11:23:25 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by posta3.euchiamail.it (Postfix) with ESMTP id 41CA1234F2A
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2015 20:23:24 +0200 (CEST)
-Received: from posta3.euchiamail.it ([127.0.0.1])
-	by localhost (sufferone.euchiamail.it [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id HoZyfPkU9Dn1 for <xfs@oss.sgi.com>;
-	Thu, 22 Oct 2015 20:23:22 +0200 (CEST)
-Received: from linux (2-227-160-98.ip186.fastwebnet.it [2.227.160.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by posta3.euchiamail.it (Postfix) with ESMTPSA id 4F8F122598E
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2015 20:23:21 +0200 (CEST)
-Date: Thu, 22 Oct 2015 20:23:24 +0200
-From: "krautus@kr916.org" <krautus@kr916.org>
-Subject: hdd + ssd
-Message-ID: <20151022202324.5f00807f@linux>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E767A7F37
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 01:55:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D6657304039
+	for <xfs@oss.sgi.com>; Thu, 22 Oct 2015 23:55:42 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	St6BCoVZj2E1oiC8 for <xfs@oss.sgi.com>;
+	Thu, 22 Oct 2015 23:55:40 -0700 (PDT)
+Date: Fri, 23 Oct 2015 17:55:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: du result is smaller than xfs_quota report
+Message-ID: <20151023065537.GE19199@dastard>
+References: <tencent_7585C3B40C484DE23B248E82@qq.com>
+	<0952A0E9-F360-46CE-BE7A-1B8473700F08@sandeen.net>
+	<tencent_756CDB1668EC804906FB9672@qq.com>
+	<20151021071331.GD19199@dastard>
+	<tencent_309A49F965AE688A078ADD3E@qq.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <tencent_309A49F965AE688A078ADD3E@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,21 +33,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: YeYin <eyniy@qq.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <xfs@oss.sgi.com>
 
-Hello I'm trying to understand why and how to add one or more SSD (as a cache drive / keeping xfs log)
-to a traditional spinning xfs storage volume.
-I mean: which data will go to the ssd ? Inodes and dentries will go to the ssd ?
-Will the _read_ performance increase ?
+On Wed, Oct 21, 2015 at 04:09:20PM +0800, YeYin wrote:
+> Hi, Dave,
+> Thank you very much. I got some results:
+> # xfs_db -xr  /dev/sda4                        
+> xfs_db> convert agno 1 agino 78272 ino
+> 0x800131c0 (2147561920)
+> xfs_db> inode 2147561920
+> xfs_db> p
+> core.magic = 0x494e
+> core.mode = 0100600
+> core.version = 2
+> core.format = 2 (extents)
+> core.nlinkv2 = 0
+....
+> However, I want to ask how this situation to happen?
 
-In general I'm looking to increase (cache) the reading performance of folders with a lot of small files (emails),
-for email servers.
+Either O_TMPFILE files that are still open, or files that have been
+unlinked but still have an open file descriptor referencing them.
+They won't be unlinked until the last reference goes away.
 
-Feel free to let me rtfm :)
-I'd gladly study the documentation / articles / benchmarks but my google-fu isn't in best shape.
+> # tail -f /data/test.data &
+> [1] 27598
+> # unlink /data/test.data 
+> 
+> 
+> # xfs_db -xr -c 'inode 29409295' -c p /dev/sda4
+> core.magic = 0x494e
+> core.mode = 0100644
+> core.version = 2
+> core.format = 2 (extents)
+> core.nlinkv2 = 1
 
-Thank you,
-Mike
+Inode hasn't been written back to disk yet. That happens
+asynchronously, usually based on time, sometimes sooner due to log
+space demands, sometimes longer due to repeated modifications.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
