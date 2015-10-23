@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ADA8C7F6F
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 16:31:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 35C31AC005
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 14:31:01 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	YFGLsNtMcArBu1da for <xfs@oss.sgi.com>;
-	Fri, 23 Oct 2015 14:30:58 -0700 (PDT)
-Date: Sat, 24 Oct 2015 08:30:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: very long log recovery at mount
-Message-ID: <20151023213048.GG19199@dastard>
-References: <201510211127.52794.arekm@maven.pl>
-	<20151023070532.GF19199@dastard>
-	<201510230922.04906.arekm@maven.pl>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8FEDE7F6F
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 16:34:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7014D304059
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 14:34:03 -0700 (PDT)
+Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
+	[209.85.212.179]) by cuda.sgi.com with ESMTP id
+	qsCMlh1ruvkBK37C (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 14:34:01 -0700 (PDT)
+Received: by wicfx6 with SMTP id fx6so47533006wic.1
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 14:34:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201510230922.04906.arekm@maven.pl>
+In-Reply-To: <20151023134805.3c7998e4@harpe.intellique.com>
+References: <20151022202324.5f00807f@linux>
+	<20151023134805.3c7998e4@harpe.intellique.com>
+Date: Fri, 23 Oct 2015 23:34:00 +0200
+Message-ID: <CAAxjCEzE68m66mhdr7KoXG7p515cmrogyT5Yr6S18nUXK9xNnw@mail.gmail.com>
+Subject: Re: hdd + ssd
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,73 +28,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs <xfs@oss.sgi.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Linux fs XFS <xfs@oss.sgi.com>, "krautus@kr916.org" <krautus@kr916.org>
 
-T24gRnJpLCBPY3QgMjMsIDIwMTUgYXQgMDk6MjI6MDRBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIEZyaWRheSAyMyBvZiBPY3RvYmVyIDIwMTUsIERhdmUgQ2hpbm5l
-ciB3cm90ZToKPiA+IE9uIFdlZCwgT2N0IDIxLCAyMDE1IGF0IDExOjI3OjUyQU0gKzAyMDAsIEFy
-a2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+ID4gSGkuCj4gPiA+IAo+ID4gPiBJIGdvdCBz
-dWNoIHNpdHVhdGlvbiwgZnJlc2ggYm9vdCwgNC4xLjEwIGtlcm5lbCwgaW5pdCBzY3JpcHRzIHN0
-YXJ0Cj4gPiA+IG1vdW50aW5nIGZpbGVzeXN0ZW1zLiBPbmUgZnMgd2Fzbid0IHZlcnkgbHVja3k6
-Cj4gPiA+IAo+ID4gPiBbICAgMTUuOTc5NTM4XSBYRlMgKG1kMyk6IE1vdW50aW5nIFY0IEZpbGVz
-eXN0ZW0KPiA+ID4gWyAgIDE2LjI1NjMxNl0gWEZTIChtZDMpOiBFbmRpbmcgY2xlYW4gbW91bnQK
-PiA+ID4gWyAgIDI4LjM0MzM0Nl0gWEZTIChtZDQpOiBNb3VudGluZyBWNCBGaWxlc3lzdGVtCj4g
-PiA+IFsgICAyOC42Mjk5MThdIFhGUyAobWQ0KTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiA+IFsg
-ICAyOC42NjIxMjVdIFhGUyAobWQ1KTogTW91bnRpbmcgVjQgRmlsZXN5c3RlbQo+ID4gPiBbICAg
-MjguOTgwMTQyXSBYRlMgKG1kNSk6IEVuZGluZyBjbGVhbiBtb3VudAo+ID4gPiBbICAgMjkuMDQ5
-NDIxXSBYRlMgKG1kNik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+ID4gWyAgIDI5LjQ0Nzcy
-NV0gWEZTIChtZDYpOiBTdGFydGluZyByZWNvdmVyeSAobG9nZGV2OiBpbnRlcm5hbCkKPiA+ID4g
-WyA0NTE3LjMyNzMzMl0gWEZTIChtZDYpOiBFbmRpbmcgcmVjb3ZlcnkgKGxvZ2RldjogaW50ZXJu
-YWwpCj4gPiA+IAo+ID4gPiBJdCB0b29rIG92ZXIgMWggdG8gbW91bnQgbWQ2IGZpbGVzeXN0ZW0u
-Cj4gPiA+IAo+ID4gPiBRdWVzdGlvbnM6Cj4gPiA+IC0gaXMgaXQgcG9zc2libGUgdG8gbG9nIGhv
-dyBtdWNoIGRhdGEgaXMgbmVlZGVkIHRvIGJlIHJlY292ZXJlZAo+ID4gPiBmcm9tIGxvZz8KPiA+
-IAo+ID4gWWVzLgo+ID4gCj4gPiA+IFNvbWUgZGF0YSB0aGF0IHdvdWxkIGdpdmUgYSBoaW50IG9u
-IGhvdyBiaWcgdGhpcyBpcyAoYW5kIHRodXMKPiA+ID4gcm91Z2ggZXN0aW1hdGUgb24gaG93IGxv
-bmcgaXQgd2lsbCB0YWtlKS4gTm90IHN1cmUgaWYgdGhhdCdzIGtub3duCj4gPiA+IGF0IHRpbWUg
-d2hlbiB0aGlzIG1lc3NhZ2UgaXMgYmVpbmcgcHJpbnRlZC4KPiA+IAo+ID4gSXQncyBub3Qga25v
-d24sIHRoZW4sIGFuZCBjYW4ndCBiZSBrbm93biB1bnRpbCByZWNvdmVyeSBoYXMgc3BhcnNlZAo+
-ID4gdGhlIGxvZyBhbmQgcmVhZCBhbGwgdGhlIG9iamVjdHMgZnJvbSBkaXNrIGl0IG5lZWRzIHRv
-IHJlY292ZXIuCj4gCj4gU28gSSBhc3N1bWUgbm90IGF2YWlsYWJsZSBlYXJseSBlbm91Z2ggdG8g
-YmUgdXNhYmxlLgoKTm8sIGl0J3Mgbm90LgoKPiA+ID4gLSBub3cgc3VjaCBsb25nIG1vdW50IHRp
-bWUgaXMgYWxtb3N0IGluc2FuZSwgc28gSSB3b25kZXIgd2h5IGNvdWxkCj4gPiA+IGJlIHRoZSBy
-ZWFzb24uIElzIHRoZSBwcm9jZXNzIG11bHRpdGhyZWFkZWQsIHNpbmdsZSB0aHJlYWRlZD8gY3B1
-cwo+ID4gPiB3ZXJlIGlkbGUKPiA+IAo+ID4gV2hhdCBrZXJuZWw/IAo+IAo+ICI+ID4gSSBnb3Qg
-c3VjaCBzaXR1YXRpb24sIGZyZXNoIGJvb3QsIDQuMS4xMCBrZXJuZWwiCgpTb3JyeSwgbXkgZmF1
-bHQsIEkgbWlzc2VkIHRoYXQuCgo+ID4gV2Ugbm93IGhhdmUgcmVhZGFoZWFkIHdoaWNoIG1pbmlt
-aXNlcyB0aGUgSU8gbGF0ZW5jeSBvZgo+ID4gcHVsbGluZyBvYmplY3RzIGludG8gdGhlIGtlcm5l
-bCBmb3IgcmVjb3ZlcnksIGJ1dCBpZiB5b3UgYXJlCj4gPiByZWNvdmVyaW5nIGEgY291cGxlIG9m
-IG1pbGxpb24gaW5kaXZpZHVhbCBpbm9kZSBjaGFuZ2VzIChlLmcuIGZyb20gYQo+ID4gJ2NocHJv
-aiAtUiAvcGF0aC93aXRoL21pbGxpb25zL29mL2ZpbGVzJykgdGhlbiBpdCB0YWtlIGEgbG9uZyB0
-aWVtCj4gPiB0byByZWFkIGluIGFsbCB0aGUgaW5vZGVzIGFuZCB3cml0ZSB0aGVtIGFsbCBiYWNr
-IG91dC4KPiAKPiBJdCB3YXMgbGlrZSAxMHggcnNuYXBzaG90cyB0aGVyZSAoc28gdG9ucyBvZiBm
-aWxlcyBjb3BpZWQvaGFyZGxpbmtlZCwgdGhlbiAKPiByc3luY2VkIGV0YykuCgpPaywgc28gbG90
-cyBvZiBoYXJkbGlua3MsIHdoaWNoIHdpbGwgcmVzdWx0IGluIGxvZ3Mgb2YgaW5kaXZpZHVhbApp
-bm9kZSBjb3JlcyBiZWluZyBsb2dnZWQgZHVlIHRvIHRoZSBsaW5rIGNvdW50IGNoYW5nZS4KCj4g
-PiBBIHNpbmdsZQo+ID4gaW5vZGUgaW4gdGhlIGxvZyBsaWsgZXRoaXMgb25seSBjb25zdW1lcyBh
-Ym91dCAyMDAgYnl0ZXMgb2YgbG9nCj4gPiBzcGFjZSwgc28gdGhlcmUgY2FuIGVhc2lseSBiZSA1
-MDAwIGlub2RlcyB0byByZWNvdmVyIHBlciBtZWdhYnl0ZQo+ID4gb2YgbG9nIHNwYWNlIHlvdSBo
-YXZlLiBBbmQgaWYgeW91IGhhdmUgYSAyR0IgbG9nLCB0aGVuIHRoYXQgY291bGQKPiA+IGNvbnRh
-aW4gMTAgbWlsbGlvbiBpbm9kZSBjb3JlIGNoYW5nZXMgdGhhdCBuZWVkIHRvIGJlIHJlY292ZXJl
-ZC4uLi4KPiAKPiBPaywgc28gd2hhdCBJJ20gbG9va2luZyBmb3IgaXMgYW55IGtpbmQgb2YgaW5k
-aWNhdGlvbiAoaW4gZG1lc2cgcHJvYmFibHkpIHRoYXQgCj4gaXQgd2lsbCB0YWtlIGxvbmcgdGlt
-ZSAodGh1cyB3YXMgYXNraW5nIGFib3V0IGxvZyByZWNvdmVyeSBzaXplKS4gQmVjYXVzZSAKPiBy
-aWdodCBub3cgaXQncyBoYXJkIHRvIGVzdGltYXRlIGhvdyBsb25nIGRvd250aW1lIHdpbGwgYmUg
-YW5kIGFiaWxpdHkgdG8gCj4gZXN0aW1hdGUgc3VjaCB0aGluZ3MgaXMgaW1wb3J0YW50LgoKV2Vs
-bCwgd2UgZG9uJ3QgY291bnQgc3VjaCB0aGluZ3MgYXQgcHJlc2VudC4gV2UgbXVsdGlwbGUgcGFz
-c2VzIG9mCnRoZSBsb2cgZHVyaW5nIHJlY292ZXJ5IC0gdGhlIGZpcnN0IHBhc3MgcmVjb3JkcyBh
-bGwgdGhlIGNhbmNlbGxlZApidWZmZXJzIChpLmUuIGZyZWVkIG1ldGFkYXRhIGJ1ZmZlcnMpIHNv
-IHRoYXQgd2UgY2FuIGF2b2lkIHJlcGxheQppbnRvIHRoZW0uIHhsb2dfcmVjb3Zlcl9jb21taXRf
-cGFzczEoKSBkb2Vzbid0IGNvdW50IG9yIGxvb2sgYXQKYW55dGhpbmcgZWxzZSwgYnV0IEkgc3Vz
-cGVjdCB3ZSBjb3VsZCBhZGQgc29tZSBraW5kIG9mICJ0aGlzIG1hbnkKb2JqZWN0cyB0byByZWNv
-dmVyIiBhY2NvdW50aW5nIG91dHB1dCBhdCB0aGUgZW5kIG9mIHRoYXQgcGhhc2UuIFdlCmNhbid0
-IGRvIGFueSB0aW1lIGVzdGltYXRlcywgdGhvdWdoLCBiZWNhdXNlIHRoYXQncyBlbnRpcmVseQpk
-ZXBlbmRlbnQgb24gdGhlIHVuZGVybHlpbmcgc3RvcmFnZSB3aGljaCB3ZSBrbm93IG5vdGhpbmcg
-YWJvdXQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5j
-b20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+On Fri, Oct 23, 2015 at 1:48 PM, Emmanuel Florac <eflorac@intellique.com> wrote:
+> YMMV, but here's my take:
+>
+>  * flashcache being a facebook internal dev, probably is the most
+>    largely deployed one. It's clearly production-ready.
+>
+>  * EnhanceIO works fine but I haven't tested it thoroughly. It adds no
+>    signature to the drives so it can be added to existing filesystems
+>    (flashcache and bcache need reformatting). However that means that
+>    bad thing may happen if you're careless -- it's clearly targeted at
+>    always-on servers.
+>
+>  * bcache works fine but the latest fixes haven't been backported, so
+>    you should probably use it only with latest (4.2, 4.3) kernels. It's
+>    not very mature yet but it's *friggin' fast*.
+>
+>  * dm-cache is the easiest to set-up with the lvmcache command (if your
+>    distro is recent enough of course). Like very very easy. It's
+>    unfortunately the slowest of the pack, apparently. Doesn't need
+>    reformatting IF your existing FS already lives in a LV.
+
+Very good summary, thanks! Do you also happen to know if all of these
+retain cache contents across reboots?
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
