@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E767A7F37
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 01:55:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D6657304039
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2015 23:55:42 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D0FAF7F37
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 02:05:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A511B30406A
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 00:05:40 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	St6BCoVZj2E1oiC8 for <xfs@oss.sgi.com>;
-	Thu, 22 Oct 2015 23:55:40 -0700 (PDT)
-Date: Fri, 23 Oct 2015 17:55:37 +1100
+	7KI2rJmOaHdsTzW4 for <xfs@oss.sgi.com>;
+	Fri, 23 Oct 2015 00:05:34 -0700 (PDT)
+Date: Fri, 23 Oct 2015 18:05:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: du result is smaller than xfs_quota report
-Message-ID: <20151023065537.GE19199@dastard>
-References: <tencent_7585C3B40C484DE23B248E82@qq.com>
-	<0952A0E9-F360-46CE-BE7A-1B8473700F08@sandeen.net>
-	<tencent_756CDB1668EC804906FB9672@qq.com>
-	<20151021071331.GD19199@dastard>
-	<tencent_309A49F965AE688A078ADD3E@qq.com>
+Subject: Re: very long log recovery at mount
+Message-ID: <20151023070532.GF19199@dastard>
+References: <201510211127.52794.arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <tencent_309A49F965AE688A078ADD3E@qq.com>
+In-Reply-To: <201510211127.52794.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +25,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: YeYin <eyniy@qq.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <xfs@oss.sgi.com>
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs <xfs@oss.sgi.com>
 
-On Wed, Oct 21, 2015 at 04:09:20PM +0800, YeYin wrote:
-> Hi, Dave,
-> Thank you very much. I got some results:
-> # xfs_db -xr  /dev/sda4                        
-> xfs_db> convert agno 1 agino 78272 ino
-> 0x800131c0 (2147561920)
-> xfs_db> inode 2147561920
-> xfs_db> p
-> core.magic = 0x494e
-> core.mode = 0100600
-> core.version = 2
-> core.format = 2 (extents)
-> core.nlinkv2 = 0
-....
-> However, I want to ask how this situation to happen?
-
-Either O_TMPFILE files that are still open, or files that have been
-unlinked but still have an open file descriptor referencing them.
-They won't be unlinked until the last reference goes away.
-
-> # tail -f /data/test.data &
-> [1] 27598
-> # unlink /data/test.data 
-> 
-> 
-> # xfs_db -xr -c 'inode 29409295' -c p /dev/sda4
-> core.magic = 0x494e
-> core.mode = 0100644
-> core.version = 2
-> core.format = 2 (extents)
-> core.nlinkv2 = 1
-
-Inode hasn't been written back to disk yet. That happens
-asynchronously, usually based on time, sometimes sooner due to log
-space demands, sometimes longer due to repeated modifications.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBPY3QgMjEsIDIwMTUgYXQgMTE6Mjc6NTJBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IAo+IEhpLgo+IAo+IEkgZ290IHN1Y2ggc2l0dWF0aW9uLCBmcmVzaCBi
+b290LCA0LjEuMTAga2VybmVsLCBpbml0IHNjcmlwdHMgc3RhcnQgbW91bnRpbmcgCj4gZmlsZXN5
+c3RlbXMuIE9uZSBmcyB3YXNuJ3QgdmVyeSBsdWNreToKPiAKPiBbICAgMTUuOTc5NTM4XSBYRlMg
+KG1kMyk6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiBbICAgMTYuMjU2MzE2XSBYRlMgKG1kMyk6
+IEVuZGluZyBjbGVhbiBtb3VudAo+IFsgICAyOC4zNDMzNDZdIFhGUyAobWQ0KTogTW91bnRpbmcg
+VjQgRmlsZXN5c3RlbQo+IFsgICAyOC42Mjk5MThdIFhGUyAobWQ0KTogRW5kaW5nIGNsZWFuIG1v
+dW50Cj4gWyAgIDI4LjY2MjEyNV0gWEZTIChtZDUpOiBNb3VudGluZyBWNCBGaWxlc3lzdGVtCj4g
+WyAgIDI4Ljk4MDE0Ml0gWEZTIChtZDUpOiBFbmRpbmcgY2xlYW4gbW91bnQKPiBbICAgMjkuMDQ5
+NDIxXSBYRlMgKG1kNik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiBbICAgMjkuNDQ3NzI1XSBY
+RlMgKG1kNik6IFN0YXJ0aW5nIHJlY292ZXJ5IChsb2dkZXY6IGludGVybmFsKQo+IFsgNDUxNy4z
+MjczMzJdIFhGUyAobWQ2KTogRW5kaW5nIHJlY292ZXJ5IChsb2dkZXY6IGludGVybmFsKQo+IAo+
+IEl0IHRvb2sgb3ZlciAxaCB0byBtb3VudCBtZDYgZmlsZXN5c3RlbS4KPiAKPiBRdWVzdGlvbnM6
+Cj4gLSBpcyBpdCBwb3NzaWJsZSB0byBsb2cgaG93IG11Y2ggZGF0YSBpcyBuZWVkZWQgdG8gYmUg
+cmVjb3ZlcmVkCj4gZnJvbSBsb2c/CgpZZXMuCgo+IFNvbWUgZGF0YSB0aGF0IHdvdWxkIGdpdmUg
+YSBoaW50IG9uIGhvdyBiaWcgdGhpcyBpcyAoYW5kIHRodXMKPiByb3VnaCBlc3RpbWF0ZSBvbiBo
+b3cgbG9uZyBpdCB3aWxsIHRha2UpLiBOb3Qgc3VyZSBpZiB0aGF0J3Mga25vd24KPiBhdCB0aW1l
+IHdoZW4gdGhpcyBtZXNzYWdlIGlzIGJlaW5nIHByaW50ZWQuCgpJdCdzIG5vdCBrbm93biwgdGhl
+biwgYW5kIGNhbid0IGJlIGtub3duIHVudGlsIHJlY292ZXJ5IGhhcyBzcGFyc2VkCnRoZSBsb2cg
+YW5kIHJlYWQgYWxsIHRoZSBvYmplY3RzIGZyb20gZGlzayBpdCBuZWVkcyB0byByZWNvdmVyLgoK
+PiAtIG5vdyBzdWNoIGxvbmcgbW91bnQgdGltZSBpcyBhbG1vc3QgaW5zYW5lLCBzbyBJIHdvbmRl
+ciB3aHkgY291bGQKPiBiZSB0aGUgcmVhc29uLiBJcyB0aGUgcHJvY2VzcyBtdWx0aXRocmVhZGVk
+LCBzaW5nbGUgdGhyZWFkZWQ/IGNwdXMKPiB3ZXJlIGlkbGUKCldoYXQga2VybmVsPyBXZSBub3cg
+aGF2ZSByZWFkYWhlYWQgd2hpY2ggbWluaW1pc2VzIHRoZSBJTyBsYXRlbmN5IG9mCnB1bGxpbmcg
+b2JqZWN0cyBpbnRvIHRoZSBrZXJuZWwgZm9yIHJlY292ZXJ5LCBidXQgaWYgeW91IGFyZQpyZWNv
+dmVyaW5nIGEgY291cGxlIG9mIG1pbGxpb24gaW5kaXZpZHVhbCBpbm9kZSBjaGFuZ2VzIChlLmcu
+IGZyb20gYQonY2hwcm9qIC1SIC9wYXRoL3dpdGgvbWlsbGlvbnMvb2YvZmlsZXMnKSB0aGVuIGl0
+IHRha2UgYSBsb25nIHRpZW0KdG8gcmVhZCBpbiBhbGwgdGhlIGlub2RlcyBhbmQgd3JpdGUgdGhl
+bSBhbGwgYmFjayBvdXQuIEEgc2luZ2xlCmlub2RlIGluIHRoZSBsb2cgbGlrIGV0aGlzIG9ubHkg
+Y29uc3VtZXMgYWJvdXQgMjAwIGJ5dGVzIG9mIGxvZwpzcGFjZSwgc28gdGhlcmUgY2FuIGVhc2ls
+eSBiZSA1MDAwIGlub2RlcyB0byByZWNvdmVyIHBlciBtZWdhYnl0ZQpvZiBsb2cgc3BhY2UgeW91
+IGhhdmUuIEFuZCBpZiB5b3UgaGF2ZSBhIDJHQiBsb2csIHRoZW4gdGhhdCBjb3VsZApjb250YWlu
+IDEwIG1pbGxpb24gaW5vZGUgY29yZSBjaGFuZ2VzIHRoYXQgbmVlZCB0byBiZSByZWNvdmVyZWQu
+Li4uCgpBbmQgaWYgeW91IGhhdmUgYSBzbG93IFNBVEEgUkFJRCwgdGhlIHNtYWxsIHJhbmRvbSB3
+cml0ZXMgZm9yIGlub2RlCndyaXRlYmFjayBtaWdodCBvbmx5IHJldGlyZSBhIGh1bmRyZWQgaW5v
+ZGVzIGEgc2Vjb25kIGFuZCBsb2cKcmVjb3Zlcnkgd2lsbCBibG9jayB1bnRpbCBhbGwgdGhvc2Ug
+aW5vZGVzIGFyZSBjb21wbGV0ZWx5IHdyaXR0ZW4KYmFjayAoaS5lLiBzYW1lIHByb2JsZW0gdGhh
+dCBjYW4gbGVhZCB0byB1bm1vdW50IHRha2luZyBob3VycyB3aGVuCnRoZXJlIGFyZSBodW5kcmVk
+cyBvZiB0aG91c2FuZHMgb2YgZGlydHkgaW5vZGUgaW4gbWVtb3J5KS4KCkNoZWVycywKCkRhdmUu
+Ci0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
