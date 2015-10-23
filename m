@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 696FB29DFC
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D870729DFE
 	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 14:17:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 578E930404E
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 12:17:24 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8848AAC001
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 12:17:21 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CPFT4Cd3IWmGmb3w (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 0ZEr5NDWsyha2JHW (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 12:17:23 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 12:17:20 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 4/4] xfs_repair: Validate richacl attributes
-Date: Fri, 23 Oct 2015 21:17:08 +0200
-Message-Id: <1445627828-14661-5-git-send-email-agruenba@redhat.com>
+Subject: [PATCH 3/4] xfs_repair: Improve warning for invalid attributes
+Date: Fri, 23 Oct 2015 21:17:07 +0200
+Message-Id: <1445627828-14661-4-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1445627828-14661-1-git-send-email-agruenba@redhat.com>
 References: <1445627828-14661-1-git-send-email-agruenba@redhat.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,172 +24,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com, david@fromorbit.com
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-When we have the <sys/richacl.h> header and a working copy of librichacl.a (the
-static version of the richacl library), use that to validate richacl attribute
-values.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- configure.ac         | 22 ++++++++++++++++++++++
- include/builddefs.in |  5 +++++
- repair/Makefile      |  2 +-
- repair/attr_repair.c | 41 ++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 68 insertions(+), 2 deletions(-)
-
-diff --git a/configure.ac b/configure.ac
-index 7b57521..2584ea2 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -101,6 +101,28 @@ AC_PACKAGE_GLOBALS(xfsprogs)
- AC_PACKAGE_UTILITIES(xfsprogs)
- AC_MULTILIB($enable_lib64)
- 
-+have_richacl=no
-+librichacl=
-+AC_CHECK_HEADERS([sys/richacl.h])
-+if test "$ac_cv_header_sys_richacl_h" = yes; then
-+    AC_CHECK_HEADERS([linux/xattr.h])
-+    saved_LIBS=$LIBS
-+    librichacl=-l:librichacl.a
-+    LIBS="$LIBS $librichacl"
-+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
-+	#include <sys/richacl.h>
-+    ],[
-+	int valid = richacl_valid((struct richacl *)0);
-+    ])], [
-+	have_richacl=yes
-+    ], [
-+	librichacl=
-+    ])
-+    LIBS=$saved_LIBS
-+fi
-+AC_SUBST([have_richacl])
-+AC_SUBST([librichacl])
-+
- AC_PACKAGE_NEED_AIO_H
- AC_PACKAGE_NEED_LIO_LISTIO
- 
-diff --git a/include/builddefs.in b/include/builddefs.in
-index c1797fd..b64e027 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -34,6 +34,7 @@ LIBTERMCAP = @libtermcap@
- LIBEDITLINE = @libeditline@
- LIBREADLINE = @libreadline@
- LIBBLKID = @libblkid@
-+LIBRICHACL = @librichacl@
- LIBXFS = $(TOPDIR)/libxfs/libxfs.la
- LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
- LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
-@@ -108,6 +109,7 @@ HAVE_MNTENT = @have_mntent@
- HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
-+HAVE_RICHACL = @have_richacl@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -147,6 +149,9 @@ endif
- ifeq ($(ENABLE_BLKID),yes)
- PCFLAGS+= -DENABLE_BLKID
- endif
-+ifeq ($(HAVE_RICHACL),yes)
-+PCFLAGS += -DHAVE_RICHACL
-+endif
- 
- 
- GCFLAGS = $(OPTIMIZER) $(DEBUG) \
-diff --git a/repair/Makefile b/repair/Makefile
-index 251722b..032f453 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -20,7 +20,7 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
- 	progress.c prefetch.c rt.c sb.c scan.c threads.c \
- 	versions.c xfs_repair.c
- 
--LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-+LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) $(LIBRICHACL)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index e03f360..e7f03a8 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -26,6 +26,17 @@
- #include "dir2.h"
- #include "da_util.h"
- 
-+#ifdef HAVE_RICHACL
-+# if HAVE_LINUX_XATTR_H
-+#  include <linux/xattr.h>
-+# endif
-+# ifndef XATTR_RICHACL
-+#  define XATTR_RICHACL "richacl"
-+# endif
-+
-+# include <sys/richacl.h>
-+#endif
-+
- static int xfs_acl_valid(struct xfs_mount *mp, struct xfs_acl *daclp);
- static int xfs_mac_valid(xfs_mac_label_t *lp);
- 
-@@ -195,6 +206,35 @@ valuecheck(
- 		if ( valuelen != sizeof(xfs_cap_set_t))
- 			clearit = 1;
- 	}
-+#if HAVE_RICHACL
-+	else if (namelen == strlen(XATTR_RICHACL) &&
-+		 strncmp(namevalue, XATTR_RICHACL, strlen(XATTR_RICHACL)) == 0) {
-+		struct richacl *acl;
-+
-+		if (value == NULL) {
-+			valuep = malloc(valuelen);
-+			if (!valuep)
-+				do_error(_("No memory for ACL check!\n"));
-+			memcpy(valuep, namevalue + namelen, valuelen);
-+		} else
-+			valuep = value;
-+
-+		acl = richacl_from_xattr(valuep, valuelen);
-+		if (!acl) {
-+			if (errno == ENOMEM)
-+				do_error(_("No memory for ACL check!\n"));
-+			else
-+				clearit = 1;
-+		} else {
-+			if (richacl_valid(acl) != 0)
-+				clearit = 1;
-+			richacl_free(acl);
-+		}
-+
-+		if (valuep != value)
-+			free(valuep);
-+	}
-+#endif
- 
- 	if (clearit)
- 		do_warn(_("entry contains illegal value in attribute named %.*s\n"),
-@@ -202,7 +242,6 @@ valuecheck(
- 	return(clearit);
- }
- 
--
- /*
-  * this routine validates the attributes in shortform format.
-  * a non-zero return repair value means certain attributes are bogus
--- 
-2.5.0
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SW5jbHVkZSB0aGUgYXR0cmlidXRlIG5hbWUgaW4gdGhlIHdhcm5pbmcgYXMgYSBwcmludGYgcGFy
+YW1ldGVyIGluc3RlYWQgb2YKaGFyZGNvZGluZyBpdCBmb3IgdGhyZWUgZGlmZmVyZW50IGNhc2Vz
+LgoKU2lnbmVkLW9mZi1ieTogQW5kcmVhcyBHcnVlbmJhY2hlciA8YWdydWVuYmFAcmVkaGF0LmNv
+bT4KLS0tCiBwby9kZS5wbyAgICAgICAgICAgICB8IDE4ICsrKy0tLS0tLS0tLS0tLS0tLQogcG8v
+cGwucG8gICAgICAgICAgICAgfCAxNCArKystLS0tLS0tLS0tLQogcmVwYWlyL2F0dHJfcmVwYWly
+LmMgfCAxNiArKysrKy0tLS0tLS0tLS0tCiAzIGZpbGVzIGNoYW5nZWQsIDExIGluc2VydGlvbnMo
+KyksIDM3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL3BvL2RlLnBvIGIvcG8vZGUucG8KaW5k
+ZXggZmM2MjUyNS4uZTYwNWMyMiAxMDA2NDQKLS0tIGEvcG8vZGUucG8KKysrIGIvcG8vZGUucG8K
+QEAgLTEzNTQzLDIxICsxMzU0Myw5IEBAIG1zZ3N0ciAiIgogbXNnaWQgImRvbmVcbiIKIG1zZ3N0
+ciAiZXJsZWRpZ3RcbiIKIAotIzogLi4vLi9yZXBhaXIvYXR0cl9yZXBhaXIuYzoxMDYKLW1zZ2lk
+ICIiCi0iZW50cnkgY29udGFpbnMgaWxsZWdhbCB2YWx1ZSBpbiBhdHRyaWJ1dGUgbmFtZWQgU0dJ
+X0FDTF9GSUxFIG9yICIKLSJTR0lfQUNMX0RFRkFVTFRcbiIKLW1zZ3N0ciAiIgotIkVpbnRyYWcg
+ZW50aMOkbHQgdW5lcmxhdWJ0ZW4gV2VydCBpbSBBdHRyaWJ1dCBtaXQgTmFtZW4gU0dJX0FDTF9G
+SUxFXG4iCi0ib2RlciBTR0lfQUNMX0RFRkFVTFRcbiIKLQotIzogLi4vLi9yZXBhaXIvYXR0cl9y
+ZXBhaXIuYzoxMjgKLW1zZ2lkICJlbnRyeSBjb250YWlucyBpbGxlZ2FsIHZhbHVlIGluIGF0dHJp
+YnV0ZSBuYW1lZCBTR0lfTUFDX0xBQkVMXG4iCi1tc2dzdHIgIkVpbnRyYWcgZW50aMOkbHQgdW5l
+cmxhdWJ0ZW4gV2VydCBpbSBBdHRyaWJ1dCBtaXQgTmFtZW4gU0dJX01BQ19MQUJFTFxuIgotCi0j
+OiAuLi8uL3JlcGFpci9hdHRyX3JlcGFpci5jOjEzNAotbXNnaWQgImVudHJ5IGNvbnRhaW5zIGls
+bGVnYWwgdmFsdWUgaW4gYXR0cmlidXRlIG5hbWVkIFNHSV9DQVBfRklMRVxuIgotbXNnc3RyICJF
+aW50cmFnIGVudGjDpGx0IHVuZXJsYXVidGVuIFdlcnQgaW0gQXR0cmlidXQgbWl0IE5hbWVuIFNH
+SV9DQVBfRklMRVxuIgorIzogLi4vLi9yZXBhaXIvYXR0cl9yZXBhaXIuYzoyMDAKK21zZ2lkICJl
+bnRyeSBjb250YWlucyBpbGxlZ2FsIHZhbHVlIGluIGF0dHJpYnV0ZSBuYW1lZCAlLipzXG4iCitt
+c2dzdHIgIkVpbnRyYWcgZW50aMOkbHQgdW5lcmxhdWJ0ZW4gV2VydCBpbSBBdHRyaWJ1dCBtaXQg
+TmFtZW4gJS4qc1xuIgogCiAjOiAuLi8uL3JlcGFpci9hdHRyX3JlcGFpci5jOjE3MwogIywgYy1m
+b3JtYXQKZGlmZiAtLWdpdCBhL3BvL3BsLnBvIGIvcG8vcGwucG8KaW5kZXggYTk1MGY3Ny4uNDY0
+MDJmNiAxMDA2NDQKLS0tIGEvcG8vcGwucG8KKysrIGIvcG8vcGwucG8KQEAgLTkwNzgsMTcgKzkw
+NzgsOSBAQCBtc2dzdHIgIiIKIG1zZ2lkICJObyBtZW1vcnkgZm9yIEFDTCBjaGVjayFcbiIKIG1z
+Z3N0ciAiQnJhayBwYW1pxJljaSBuYSBzcHJhd2R6ZW5pZSBBQ0whXG4iCiAKLSM6IC4uLy4vcmVw
+YWlyL2F0dHJfcmVwYWlyLmM6NzYzCi1tc2dpZCAiZW50cnkgY29udGFpbnMgaWxsZWdhbCB2YWx1
+ZSBpbiBhdHRyaWJ1dGUgbmFtZWQgU0dJX0FDTF9GSUxFIG9yIFNHSV9BQ0xfREVGQVVMVFxuIgot
+bXNnc3RyICJ3cGlzIHphd2llcmEgbmllZG96d29sb27EhSB3YXJ0b8WbxIcgdyBhdHJ5YnVjaWUg
+U0dJX0FDTF9GSUxFIGx1YiBTR0lfQUNMX0RFRkFVTFRcbiIKLQotIzogLi4vLi9yZXBhaXIvYXR0
+cl9yZXBhaXIuYzo3ODkKLW1zZ2lkICJlbnRyeSBjb250YWlucyBpbGxlZ2FsIHZhbHVlIGluIGF0
+dHJpYnV0ZSBuYW1lZCBTR0lfTUFDX0xBQkVMXG4iCi1tc2dzdHIgIndwaXMgemF3aWVyYSBuaWVk
+b3p3b2xvbsSFIHdhcnRvxZvEhyB3IGF0cnlidWNpZSBTR0lfTUFDX0xBQkVMXG4iCi0KLSM6IC4u
+Ly4vcmVwYWlyL2F0dHJfcmVwYWlyLmM6Nzk1Ci1tc2dpZCAiZW50cnkgY29udGFpbnMgaWxsZWdh
+bCB2YWx1ZSBpbiBhdHRyaWJ1dGUgbmFtZWQgU0dJX0NBUF9GSUxFXG4iCi1tc2dzdHIgIndwaXMg
+emF3aWVyYSBuaWVkb3p3b2xvbsSFIHdhcnRvxZvEhyB3IGF0cnlidWNpZSBTR0lfQ0FQX0ZJTEVc
+biIKKyM6IC4uLy4vcmVwYWlyL2F0dHJfcmVwYWlyLmM6MjAwCittc2dpZCAiZW50cnkgY29udGFp
+bnMgaWxsZWdhbCB2YWx1ZSBpbiBhdHRyaWJ1dGUgbmFtZWQgJS4qc1xuIgorbXNnc3RyICJ3cGlz
+IHphd2llcmEgbmllZG96d29sb27EhSB3YXJ0b8WbxIcgdyBhdHJ5YnVjaWUgJS4qc1xuIgogCiAj
+OiAuLi8uL3JlcGFpci9hdHRyX3JlcGFpci5jOjgzNQogIywgYy1mb3JtYXQKZGlmZiAtLWdpdCBh
+L3JlcGFpci9hdHRyX3JlcGFpci5jIGIvcmVwYWlyL2F0dHJfcmVwYWlyLmMKaW5kZXggZGEyODAw
+ZC4uZTAzZjM2MCAxMDA2NDQKLS0tIGEvcmVwYWlyL2F0dHJfcmVwYWlyLmMKKysrIGIvcmVwYWly
+L2F0dHJfcmVwYWlyLmMKQEAgLTE2NiwxMiArMTY2LDggQEAgdmFsdWVjaGVjaygKIAkJfSBlbHNl
+CiAJCQl2YWx1ZXAgPSB2YWx1ZTsKIAotCQlpZiAoeGZzX2FjbF92YWxpZChtcCwgdmFsdWVwKSAh
+PSAwKSB7CisJCWlmICh4ZnNfYWNsX3ZhbGlkKG1wLCB2YWx1ZXApICE9IDApCiAJCQljbGVhcml0
+ID0gMTsKLQkJCWRvX3dhcm4oCi0JXygiZW50cnkgY29udGFpbnMgaWxsZWdhbCB2YWx1ZSBpbiBh
+dHRyaWJ1dGUgbmFtZWQgU0dJX0FDTF9GSUxFICIKLQkgICJvciBTR0lfQUNMX0RFRkFVTFRcbiIp
+KTsKLQkJfQogCiAJCWlmICh2YWx1ZXAgIT0gdmFsdWUpCiAJCQlmcmVlKHZhbHVlcCk7CkBAIC0x
+OTQsMTcgKzE5MCwxNSBAQCB2YWx1ZWNoZWNrKAogCQkJICogZWxzZSBjbGVhcml0ID0gMTsKIAkJ
+CSAqLwogCQkJY2xlYXJpdCA9IDE7Ci0JCQlkb193YXJuKAotCV8oImVudHJ5IGNvbnRhaW5zIGls
+bGVnYWwgdmFsdWUgaW4gYXR0cmlidXRlIG5hbWVkIFNHSV9NQUNfTEFCRUxcbiIpKTsKIAkJfQog
+CX0gZWxzZSBpZiAoc3RybmNtcChuYW1ldmFsdWUsIFNHSV9DQVBfRklMRSwgU0dJX0NBUF9GSUxF
+X1NJWkUpID09IDApIHsKLQkJaWYgKCB2YWx1ZWxlbiAhPSBzaXplb2YoeGZzX2NhcF9zZXRfdCkp
+IHsKKwkJaWYgKCB2YWx1ZWxlbiAhPSBzaXplb2YoeGZzX2NhcF9zZXRfdCkpCiAJCQljbGVhcml0
+ID0gMTsKLQkJCWRvX3dhcm4oCi0JXygiZW50cnkgY29udGFpbnMgaWxsZWdhbCB2YWx1ZSBpbiBh
+dHRyaWJ1dGUgbmFtZWQgU0dJX0NBUF9GSUxFXG4iKSk7Ci0JCX0KIAl9CiAKKwlpZiAoY2xlYXJp
+dCkKKwkJZG9fd2FybihfKCJlbnRyeSBjb250YWlucyBpbGxlZ2FsIHZhbHVlIGluIGF0dHJpYnV0
+ZSBuYW1lZCAlLipzXG4iKSwKKwkJCW5hbWVsZW4sIG5hbWV2YWx1ZSk7CiAJcmV0dXJuKGNsZWFy
+aXQpOwogfQogCi0tIAoyLjUuMAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
