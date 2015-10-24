@@ -1,35 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A2E2C7F47
-	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 00:39:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27A18AC001
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 22:39:04 -0700 (PDT)
-Received: from posta3.euchiamail.it (posta3.euchiamail.it [46.30.241.112]) by
-	cuda.sgi.com with ESMTP id kL68QVGnCQCrLzCp (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 966417F50
+	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 07:57:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 66EDF8F8049
+	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 05:57:03 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id NJZhGbegJwi3IO7l (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 22:39:01 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by posta3.euchiamail.it (Postfix) with ESMTP id 12FDA7E5FA6
-	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 07:38:57 +0200 (CEST)
-Received: from posta3.euchiamail.it ([127.0.0.1])
-	by localhost (sufferone.euchiamail.it [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id dGx3xLSuMjc8 for <xfs@oss.sgi.com>;
-	Sat, 24 Oct 2015 07:38:54 +0200 (CEST)
-Received: from linux (2-227-160-98.ip186.fastwebnet.it [2.227.160.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by posta3.euchiamail.it (Postfix) with ESMTPSA id 011A87E5FA5
-	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 07:38:52 +0200 (CEST)
-Date: Sat, 24 Oct 2015 07:38:57 +0200
-From: "krautus@kr916.org" <krautus@kr916.org>
-Subject: Re: hdd + ssd
-Message-ID: <20151024073857.6a77ee5f@linux>
-In-Reply-To: <CAAxjCEzE68m66mhdr7KoXG7p515cmrogyT5Yr6S18nUXK9xNnw@mail.gmail.com>
-References: <20151022202324.5f00807f@linux>
-	<20151023134805.3c7998e4@harpe.intellique.com>
-	<CAAxjCEzE68m66mhdr7KoXG7p515cmrogyT5Yr6S18nUXK9xNnw@mail.gmail.com>
+	<xfs@oss.sgi.com>; Sat, 24 Oct 2015 05:57:02 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id B50F18EA45
+	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 12:57:01 +0000 (UTC)
+Date: Sat, 24 Oct 2015 08:57:00 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Inconsistencies with trusted.SGI_ACL_{FILE,DEFAULT}
+Message-ID: <20151024125659.GA8095@bfoster.bfoster>
+References: <CAHc6FU5gS4BA+iTRHo1oHJMVHkLs4aa0eYd5T1ftLC9biRaxrg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU5gS4BA+iTRHo1oHJMVHkLs4aa0eYd5T1ftLC9biRaxrg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,40 +33,125 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Thank you all for the suggestions!
-I'll report back my progress, will take a while .. :)
-
-Bye and have a nice week-end,
-Mike
-
-On Fri, 23 Oct 2015 23:34:00 +0200
-Stefan Ring <stefanrin@gmail.com> wrote:
-
-> On Fri, Oct 23, 2015 at 1:48 PM, Emmanuel Florac <eflorac@intellique.com> wrote:
-> > YMMV, but here's my take:
-> >
-> >  * flashcache being a facebook internal dev, probably is the most
-> >    largely deployed one. It's clearly production-ready.
-> >
-> >  * EnhanceIO works fine but I haven't tested it thoroughly. It adds no
-> >    signature to the drives so it can be added to existing filesystems
-> >    (flashcache and bcache need reformatting). However that means that
-> >    bad thing may happen if you're careless -- it's clearly targeted at
-> >    always-on servers.
-> >
-> >  * bcache works fine but the latest fixes haven't been backported, so
-> >    you should probably use it only with latest (4.2, 4.3) kernels. It's
-> >    not very mature yet but it's *friggin' fast*.
-> >
-> >  * dm-cache is the easiest to set-up with the lvmcache command (if your
-> >    distro is recent enough of course). Like very very easy. It's
-> >    unfortunately the slowest of the pack, apparently. Doesn't need
-> >    reformatting IF your existing FS already lives in a LV.
+On Fri, Oct 23, 2015 at 03:52:54PM +0200, Andreas Gruenbacher wrote:
+> Hello,
 > 
-> Very good summary, thanks! Do you also happen to know if all of these
-> retain cache contents across reboots?
+> The usual way of manipulating a file's POSIX ACL is through the
+> system.posix_acl_{access,default} xattrs. Setting
+> system.posix_acl_access also sets the permission bits in the file
+> mode. The acls are cached in inode->i_acl and inode->i_default_acl.
+> 
+> On XFS, POSIX ACLs are also exposed as trusted.SGI_ACL_{FILE,DEFAULT}
+> xattrs in a different value format. However, setting these xattrs does
+> not update inode->i_{,default_}acl, and setting trusted.SGI_ACL_FILE
+> does not update the file mode; things can get out of sync:
+> 
+
+It looks like the posix_acl_* values are virtual xattrs on XFS. They get
+translated to the SGI_ACL_* names before the acl code calls down into
+the xattr code. The result is cached into the inode via set_cached_acl()
+before the call returns.
+
+The xattr code doesn't know anything about this so I suspect this is the
+reason for the inconsistency. A direct xattr update just updates the
+data on-disk and has no knowledge of the ACLs cached to the inode, the
+latter of which is probably what is returned after the setxattr.
+
+>   $ touch f
+>   $ setfacl -m u:agruenba:rw f
+>   $ ls -l f
+>   -rw-rw-r--+ 1 root root 0 Oct 23 15:04 f
+>   $ getfattr -m- -d f
+>   # file: f
+>   security.selinux="unconfined_u:object_r:user_tmp_t:s0"
+>   system.posix_acl_access=0sAgAAAAEABgD/////AgAGAOgDAAAEAAQA/////xAABgD/////IAAEAP////8=
+>   trusted.SGI_ACL_FILE=0sAAAABQAAAAH/////AAYAAAAAAAIAAAPoAAYAAAAAAAT/////AAQAAAAAABD/////AAYAAAAAACD/////AAQAAA==
+> 
+>   $ chmod 0 f
+>   $ setfattr -n trusted.SGI_ACL_FILE -v
+> 0sAAAABQAAAAH/////AAYAAAAAAAIAAAPoAAYAAAAAAAT/////AAQAAAAAABD/////AAYAAAAAACD/////AAQAAA==
+> f
+>   $ ls -l f
+>   ----------+ 1 root root 0 Oct 23 15:04 /var/tmp/f
+>   $ getfacl f
+>   # file: f
+>   # owner: root
+>   # group: root
+>   user::---
+>   user:agruenba:rw-        #effective:---
+>   group::r--            #effective:---
+>   mask::---
+>   other::---
+>   $ getfattr -m- -d f
+>   # file: f
+>   security.selinux="unconfined_u:object_r:user_tmp_t:s0"
+>   system.posix_acl_access=0sAgAAAAEAAAD/////AgAGAOgDAAAEAAQA/////xAAAAD/////IAAAAP////8=
+>   trusted.SGI_ACL_FILE=0sAAAABQAAAAH/////AAYAAAAAAAIAAAPoAAYAAAAAAAT/////AAQAAAAAABD/////AAYAAAAAACD/////AAQAAA==
+> 
+> Here, the file mode and the reported value of system.posix_acl_access
+> are both wrong; trusted.SGI_ACL_FILE corresponds to what's stored on
+> disk.
+> 
+> Access to trusted.* attributes is limited to users capable of
+> CAP_SYS_ADMIN so ordinary users cannot cause this kind of damage, but
+> this still deserves fixing.
+> 
+
+Not sure there's a real use case for this, but it looks like we could
+invalidate the cached ACLs if those xattrs are modified directly via the
+xattr interface. Care to test the (compile tested only) hunk below? An
+alternative could be to just disallow setting these xattrs directly.
+
+Brian
+
+> Thanks,
+> Andreas
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index c0368151..651c2a3 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -57,7 +57,8 @@ static int
+ xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
+ 		size_t size, int flags, int xflags)
+ {
+-	struct xfs_inode *ip = XFS_I(d_inode(dentry));
++	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
++	int			error;
+ 
+ 	if (strcmp(name, "") == 0)
+ 		return -EINVAL;
+@@ -70,8 +71,20 @@ xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
+ 
+ 	if (!value)
+ 		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
+-	return xfs_attr_set(ip, (unsigned char *)name,
++	error = xfs_attr_set(ip, (unsigned char *)name,
+ 				(void *)value, size, xflags);
++	/*
++	 * Invalidate any cached ACLs if the user has bypassed the ACL
++	 * interface.
++	 */
++	if (!error && (xflags & ATTR_ROOT)) {
++		if (!strncmp(name, SGI_ACL_FILE, strlen(name)))
++			forget_cached_acl(VFS_I(ip), ACL_TYPE_ACCESS);
++		else if (!strncmp(name, SGI_ACL_DEFAULT, strlen(name)))
++			forget_cached_acl(VFS_I(ip), ACL_TYPE_DEFAULT);
++	}
++
++	return error;
+ }
+ 
+ static const struct xattr_handler xfs_xattr_user_handler = {
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
