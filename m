@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B7C8E7F37
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 15:54:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D76AAC001
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 13:54:09 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 12FB37F47
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 16:34:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9162EAC004
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 14:33:57 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sDCl0DD2RuCRzuFs for <xfs@oss.sgi.com>;
-	Mon, 26 Oct 2015 13:54:06 -0700 (PDT)
-Date: Tue, 27 Oct 2015 07:54:04 +1100
+	kE1Zy98KQs1fZoQU for <xfs@oss.sgi.com>;
+	Mon, 26 Oct 2015 14:33:54 -0700 (PDT)
+Date: Tue, 27 Oct 2015 08:32:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: optimise away log forces on timestamp updates for
-	fdatasync
-Message-ID: <20151026205404.GH8773@dastard>
-References: <1445396343-4361-1-git-send-email-david@fromorbit.com>
-	<20151022173618.GC13661@bfoster.bfoster>
-	<20151026050720.GG8773@dastard>
-	<20151026114929.GA59738@bfoster.bfoster>
+Subject: Re: Inconsistencies with trusted.SGI_ACL_{FILE,DEFAULT}
+Message-ID: <20151026213228.GI8773@dastard>
+References: <CAHc6FU5gS4BA+iTRHo1oHJMVHkLs4aa0eYd5T1ftLC9biRaxrg@mail.gmail.com>
+	<20151024125659.GA8095@bfoster.bfoster>
+	<CAHc6FU6eVn=KpKvhD2N8hvAgdFQVdBHHS9tUgaVQJf5wnipY=g@mail.gmail.com>
+	<20151024152254.GA22232@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151026114929.GA59738@bfoster.bfoster>
+In-Reply-To: <20151024152254.GA22232@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,24 +33,37 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: sage@redhat.com, xfs@oss.sgi.com
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, xfs@oss.sgi.com
 
-On Mon, Oct 26, 2015 at 07:49:29AM -0400, Brian Foster wrote:
-> On Mon, Oct 26, 2015 at 04:07:20PM +1100, Dave Chinner wrote:
-> > > Also, is it me or are we sending an unconditional flush in the hunk
-> > > following the log force call in xfs_file_fsync() (even if we've skipped
-> > > the log force)?
+On Sat, Oct 24, 2015 at 11:22:55AM -0400, Brian Foster wrote:
+> On Sat, Oct 24, 2015 at 03:58:04PM +0200, Andreas Gruenbacher wrote:
+> > On Sat, Oct 24, 2015 at 2:57 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > > An alternative could be to just disallow setting these xattrs directly.
 > > 
-> > The flush is needed - fdatasync needs to guarantee the data is
-> > on stable storage even if no metadata needs to be written to the
-> > journal.
+> > Probably not because that would cause applications to fail in
+> > unexpected new ways.
 > > 
 > 
-> Ok. Well it's too bad we don't get any feedback about what was written
-> from the filemap_write_and_wait_range() call. As it is, we send a flush
-> even if there's nothing to write back.
+> I suppose a backup/restore application might want to set these, but I'm
+> not aware of any other sane usage given they're in a filesystem specific
+> format at this point. We'd probably have to take a look at xfsdump, see
+> how it handles this, then see if there's a clean way to run through
+> necessary acl bits if we're called via setxattr().
 
-Direct IO still needs cache flushes.
+xfsrestore restores all the xattrs via setxattr(). It does not care
+what they contain, it just restores them with the appropriate
+namespace flags (ATTR_ROOT, ATTR_SECURE or 0) that they had when
+read by xfsdump. So we cannot disable this functionality without
+breaking dump/restore.
+
+Really, I'm struggling to understand what the problem is with XFS
+doing translation to it's own special xattr names for ACLs
+underneath the posix layer. Yes, there's a caching issue when
+someone directly manipulates the underlying xattr, but you need root
+to shoot yourself in the foot that way, and that is easily
+solveable.
+
+What other problems are there?
 
 Cheers,
 
