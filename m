@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6BBF67F37
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 15:15:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4823B304039
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 13:15:55 -0700 (PDT)
-Received: from mail-lb0-f172.google.com (mail-lb0-f172.google.com
-	[209.85.217.172]) by cuda.sgi.com with ESMTP id
-	dsx1XdLP8vFC4s5G (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 26 Oct 2015 13:15:52 -0700 (PDT)
-Received: by lbbwb3 with SMTP id wb3so48915230lbb.1
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 13:15:51 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B7C8E7F37
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 15:54:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D76AAC001
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 13:54:09 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	sDCl0DD2RuCRzuFs for <xfs@oss.sgi.com>;
+	Mon, 26 Oct 2015 13:54:06 -0700 (PDT)
+Date: Tue, 27 Oct 2015 07:54:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: optimise away log forces on timestamp updates for
+	fdatasync
+Message-ID: <20151026205404.GH8773@dastard>
+References: <1445396343-4361-1-git-send-email-david@fromorbit.com>
+	<20151022173618.GC13661@bfoster.bfoster>
+	<20151026050720.GG8773@dastard>
+	<20151026114929.GA59738@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <1445721369-25679-5-git-send-email-agruenba@redhat.com>
-References: <1445721369-25679-1-git-send-email-agruenba@redhat.com>
-	<1445721369-25679-5-git-send-email-agruenba@redhat.com>
-Date: Mon, 26 Oct 2015 21:15:51 +0100
-Message-ID: <CAHc6FU4_qNY+iXdc6+SOhZOWbVu-PRN=_S6JyjNg4ubL=5NN9w@mail.gmail.com>
-Subject: Re: [PATCH 4/4] xfs: SGI ACLs: Prepare for richacls
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20151026114929.GA59738@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,53 +33,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
-Cc: Andreas Gruenbacher <agruenba@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: sage@redhat.com, xfs@oss.sgi.com
 
-On Sat, Oct 24, 2015 at 11:16 PM, Andreas Gruenbacher
-<agruenba@redhat.com> wrote:
-> In case an inode has trusted.SGI_ACL_* attributes but POSIX ACLs are not
-> enabled, treat those attributes as normal trusted attributes and bypass the
-> get_acl and set_acl inode operations to prevent corrupting inode->i_mode,
-> inode->i_acl, or inode->i_default_acl.
->
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> ---
->  fs/xfs/xfs_acl.c   |  5 +++++
->  fs/xfs/xfs_xattr.c |  5 +++--
->  fs/xfs/xfs_xattr.h | 28 ++++++++++++++++++++++++++++
->  3 files changed, 36 insertions(+), 2 deletions(-)
->  create mode 100644 fs/xfs/xfs_xattr.h
->
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index 64ffb85..bee1493 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -21,6 +21,7 @@
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
->  #include "xfs_inode.h"
-> +#include "xfs_xattr.h"
->  #include "xfs_acl.h"
->  #include "xfs_attr.h"
->  #include "xfs_trace.h"
-> @@ -319,6 +320,8 @@ xfs_xattr_acl_get(struct dentry *dentry, const char *name,
->         struct posix_acl *acl;
->         int error;
->
-> +       if (!IS_POSIXACL(inode))
-> +               return xfs_xattr_get(dentry, name, value, size, type);
+On Mon, Oct 26, 2015 at 07:49:29AM -0400, Brian Foster wrote:
+> On Mon, Oct 26, 2015 at 04:07:20PM +1100, Dave Chinner wrote:
+> > > Also, is it me or are we sending an unconditional flush in the hunk
+> > > following the log force call in xfs_file_fsync() (even if we've skipped
+> > > the log force)?
+> > 
+> > The flush is needed - fdatasync needs to guarantee the data is
+> > on stable storage even if no metadata needs to be written to the
+> > journal.
+> > 
+> 
+> Ok. Well it's too bad we don't get any feedback about what was written
+> from the filemap_write_and_wait_range() call. As it is, we send a flush
+> even if there's nothing to write back.
 
-This doesn't give us UID/GID mapping. In-place rewriting as the VFS
-does would help, but the value is a const * here so we cannot really
-modify it.
+Direct IO still needs cache flushes.
 
->         if (S_ISLNK(inode->i_mode))
->                 return -EOPNOTSUPP;
->
+Cheers,
 
-
-Andreas
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
