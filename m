@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DB0F47F3F
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 09:08:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B8D787F47
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 10:39:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D219AC003
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 07:08:51 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BqqnY93yZHiwBiYX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 26 Oct 2015 07:08:49 -0700 (PDT)
-Date: Mon, 26 Oct 2015 10:08:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: clear PF_NOFREEZE for xfsaild kthread
-Message-ID: <20151026140847.GD59738@bfoster.bfoster>
-References: <alpine.LNX.2.00.1510261552160.8998@pobox.suse.cz>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 318C0AC001
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 08:39:24 -0700 (PDT)
+Received: from mail-lf0-f52.google.com (mail-lf0-f52.google.com
+	[209.85.215.52]) by cuda.sgi.com with ESMTP id XLiddyd2UUGQg0pq
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Oct 2015 08:39:21 -0700 (PDT)
+Received: by lfbn126 with SMTP id n126so118405661lfb.2
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 08:39:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1510261552160.8998@pobox.suse.cz>
+In-Reply-To: <20151026140202.GB59738@bfoster.bfoster>
+References: <1445721369-25679-1-git-send-email-agruenba@redhat.com>
+	<1445721369-25679-3-git-send-email-agruenba@redhat.com>
+	<20151026140202.GB59738@bfoster.bfoster>
+Date: Mon, 26 Oct 2015 16:39:20 +0100
+Message-ID: <CAHc6FU5a-20aTceoKKZNmk=v+WQt+xLtSGZPo4yXN7Uq9ZDWOA@mail.gmail.com>
+Subject: Re: [PATCH 2/4] xfs: SGI ACLs: Fix caching and mode setting
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,51 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jiri Kosina <jikos@kernel.org>
-Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Oct 26, 2015 at 03:53:40PM +0900, Jiri Kosina wrote:
-> From: Jiri Kosina <jkosina@suse.cz>
-> 
-> Since xfsaild has been converted to kthread in 0030807c, it calls 
-> try_to_freeze() during every AIL push iteration. It however doesn't set 
-> itself as freezable, and therefore this try_to_freeze() will never do 
-> anything.
-> 
-> Before (hopefully eventually) kthread freezing gets converted to fileystem 
-> freezing, we'd rather mark xfsaild freezable (as it can generate I/O 
-> during suspend).
-> 
-> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-> ---
+On Mon, Oct 26, 2015 at 3:02 PM, Brian Foster <bfoster@redhat.com> wrote:
+> Finally, another random thought... another way to approach this whole
+> thing might be just to redirect the SGI_FILE_* xattr calls to the
+> system.posix_acl_* calls.
 
-Looks fine to me:
+You mean silently changing the binary format of those attributes?
+That's the worst thing we could possibly do.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> The SGI_FILE_* xattr data changes along with the required conversions
+> and whatnot, but then at least we expose data in a more generic format.
 
->  fs/xfs/xfs_trans_ail.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 1098cf4..06d1a29 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -497,6 +497,7 @@ xfsaild(
->  	long		tout = 0;	/* milliseconds */
->  
->  	current->flags |= PF_MEMALLOC;
-> +	set_freezable();
->  
->  	while (!kthread_should_stop()) {
->  		if (tout && tout <= 20)
-> -- 
-> Jiri Kosina
-> SUSE Labs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I really doubt that we can get rid of those attributes.
+
+The patches in this queue don't "change" the format of those
+attributes, they only fix them for use in UID/GID  namespaces where
+they are currently broken. Validation when setting those xattrs could
+be removed, allowing sysadmins to set acls which the kernel and
+xfs_repair would reject; it seems rather pointless though.
+
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
