@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8E4617F6F
-	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 16:16:23 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8F217F4E
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 00:08:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 561CB8F8040
-	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 14:16:23 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yLBNbLTJfIsLCw8v (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 24 Oct 2015 14:16:22 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 300AF8F2FE
-	for <xfs@oss.sgi.com>; Sat, 24 Oct 2015 21:16:22 +0000 (UTC)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 4/4] xfs: SGI ACLs: Prepare for richacls
-Date: Sat, 24 Oct 2015 23:16:09 +0200
-Message-Id: <1445721369-25679-5-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1445721369-25679-1-git-send-email-agruenba@redhat.com>
-References: <1445721369-25679-1-git-send-email-agruenba@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8DC25304032
+	for <xfs@oss.sgi.com>; Sun, 25 Oct 2015 22:07:58 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	15YmFUn7TJifzCnm for <xfs@oss.sgi.com>;
+	Sun, 25 Oct 2015 22:07:51 -0700 (PDT)
+Date: Mon, 26 Oct 2015 16:07:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: optimise away log forces on timestamp updates for
+	fdatasync
+Message-ID: <20151026050720.GG8773@dastard>
+References: <1445396343-4361-1-git-send-email-david@fromorbit.com>
+	<20151022173618.GC13661@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20151022173618.GC13661@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,122 +27,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
-Cc: Andreas Gruenbacher <agruenba@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: sage@redhat.com, xfs@oss.sgi.com
 
-In case an inode has trusted.SGI_ACL_* attributes but POSIX ACLs are not
-enabled, treat those attributes as normal trusted attributes and bypass the
-get_acl and set_acl inode operations to prevent corrupting inode->i_mode,
-inode->i_acl, or inode->i_default_acl.
+On Thu, Oct 22, 2015 at 01:36:19PM -0400, Brian Foster wrote:
+> On Wed, Oct 21, 2015 at 01:59:03PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfs: timestamp updates cause excessive fdatasync log traffic
+....
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -248,8 +248,10 @@ xfs_file_fsync(
+> >  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> >  	if (xfs_ipincount(ip)) {
+> >  		if (!datasync ||
+> > -		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
+> > +		    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP)) {
+> >  			lsn = ip->i_itemp->ili_last_lsn;
+> > +			ip->i_itemp->ili_fsync_fields = 0;
+> > +		}
+> 
+> Ok, so we check what's been logged since the last fsync that forced the
+> log. If anything other than the timestamp has been logged, we force the
+> log and clear the fields. Seems like a reasonable optimization to me.
+> 
+> One question... is it safe to clear the ili_fsync fields here if we have
+> parallel fsync()/fdatasync() calls coming in? This is under the shared
+> ilock, so assume that one fsync() comes in and finds non-timestamp
+> changes to flush. It grabs the lsn, clears the flags and calls the log
+> force. If an fdatasync() comes in before the log force completes,
+> shouldn't it wait?
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/xfs/xfs_acl.c   |  5 +++++
- fs/xfs/xfs_xattr.c |  5 +++--
- fs/xfs/xfs_xattr.h | 28 ++++++++++++++++++++++++++++
- 3 files changed, 36 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/xfs_xattr.h
+Probably, but the only way to do that is to run a log force on that
+same lsn. Actually, it is safe to do that log force while holding
+the XFS_ILOCK (xfs_trans_commit() does that for synchronous
+transactions), so we should simply be able to do:
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 64ffb85..bee1493 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -21,6 +21,7 @@
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
- #include "xfs_inode.h"
-+#include "xfs_xattr.h"
- #include "xfs_acl.h"
- #include "xfs_attr.h"
- #include "xfs_trace.h"
-@@ -319,6 +320,8 @@ xfs_xattr_acl_get(struct dentry *dentry, const char *name,
- 	struct posix_acl *acl;
- 	int error;
- 
-+	if (!IS_POSIXACL(inode))
-+		return xfs_xattr_get(dentry, name, value, size, type);
- 	if (S_ISLNK(inode->i_mode))
- 		return -EOPNOTSUPP;
- 
-@@ -350,6 +353,8 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 	struct posix_acl *acl = NULL;
- 	int error;
- 
-+	if (!IS_POSIXACL(inode))
-+		return xfs_xattr_set(dentry, name, value, size, flags, type);
- 	if (!inode->i_op->set_acl)
- 		return -EOPNOTSUPP;
- 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 7534cb5..78540c3 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -25,13 +25,14 @@
- #include "xfs_inode.h"
- #include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
-+#include "xfs_xattr.h"
- #include "xfs_acl.h"
- 
- #include <linux/posix_acl_xattr.h>
- #include <linux/xattr.h>
- 
- 
--static int
-+int
- xfs_xattr_get(struct dentry *dentry, const char *name,
- 		void *value, size_t size, int xflags)
- {
-@@ -53,7 +54,7 @@ xfs_xattr_get(struct dentry *dentry, const char *name,
- 	return asize;
- }
- 
--static int
-+int
- xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
- 		size_t size, int flags, int xflags)
- {
-diff --git a/fs/xfs/xfs_xattr.h b/fs/xfs/xfs_xattr.h
-new file mode 100644
-index 0000000..69560052
---- /dev/null
-+++ b/fs/xfs/xfs_xattr.h
-@@ -0,0 +1,28 @@
-+/*
-+ * Copyright (c) 2001-2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef __XFS_XATTR_H__
-+#define __XFS_XATTR_H__
-+
-+struct dentry;
-+
-+extern int xfs_xattr_get(struct dentry *dentry, const char *name, void *value,
-+			 size_t size, int xflags);
-+extern int xfs_xattr_set(struct dentry *dentry, const char *name,
-+			 const void *value, size_t size, int flags, int xflags);
-+
-+#endif	/* __XFS_XATTR_H__ */
+	xfs_ilock(ip, XFS_ILOCK_SHARED);
+	if (xfs_ipincount(ip)) {
+		if (!datasync ||
+		    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+			lsn = ip->i_itemp->ili_last_lsn;
+	}
+
+	if (lsn) {
+		error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
+		ip->i_itemp->ili_fsync_fields = 0;
+	}
+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+
+
+> Also, is it me or are we sending an unconditional flush in the hunk
+> following the log force call in xfs_file_fsync() (even if we've skipped
+> the log force)?
+
+The flush is needed - fdatasync needs to guarantee the data is
+on stable storage even if no metadata needs to be written to the
+journal.
+
+Cheers,
+
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
