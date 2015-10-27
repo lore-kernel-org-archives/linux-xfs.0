@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 302817F37
-	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 15:18:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AB416AC001
-	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 13:18:30 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	kTZoEgeRxL0POm1A for <xfs@oss.sgi.com>;
-	Tue, 27 Oct 2015 13:18:27 -0700 (PDT)
-Date: Wed, 28 Oct 2015 07:18:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Inconsistencies with trusted.SGI_ACL_{FILE,DEFAULT}
-Message-ID: <20151027201825.GO8773@dastard>
-References: <CAHc6FU5gS4BA+iTRHo1oHJMVHkLs4aa0eYd5T1ftLC9biRaxrg@mail.gmail.com>
-	<20151024125659.GA8095@bfoster.bfoster>
-	<CAHc6FU6eVn=KpKvhD2N8hvAgdFQVdBHHS9tUgaVQJf5wnipY=g@mail.gmail.com>
-	<20151024152254.GA22232@bfoster.bfoster>
-	<20151026213228.GI8773@dastard>
-	<CAHc6FU68MYTGWKM5S14_dQBqXeebd2GwQcKj4RztLvPWL2eksA@mail.gmail.com>
-	<20151027053045.GL8773@dastard>
-	<CAHc6FU4ZgJDKphScucvDfEWPFFu4dGfDVund9Wrah=X-vxnz3w@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id A35077F37
+	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 16:10:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 464A5AC003
+	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 14:10:31 -0700 (PDT)
+Received: from mail-lb0-f179.google.com (mail-lb0-f179.google.com
+	[209.85.217.179]) by cuda.sgi.com with ESMTP id
+	jJxoJFZiWYBN601Q (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 27 Oct 2015 14:10:28 -0700 (PDT)
+Received: by lbbes7 with SMTP id es7so73390761lbb.2
+	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 14:10:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAHc6FU4ZgJDKphScucvDfEWPFFu4dGfDVund9Wrah=X-vxnz3w@mail.gmail.com>
+In-Reply-To: <20151027195502.GN8773@dastard>
+References: <1445721369-25679-1-git-send-email-agruenba@redhat.com>
+	<1445721369-25679-4-git-send-email-agruenba@redhat.com>
+	<20151026214651.GJ8773@dastard>
+	<CAHc6FU7YbdmH+S0HZUg1cL++NM4FXFot=GLBr1_6HPhJSP+dvA@mail.gmail.com>
+	<20151027195502.GN8773@dastard>
+Date: Tue, 27 Oct 2015 22:10:26 +0100
+Message-ID: <CAHc6FU4+z_1EqJHHpv7yPgO_s6k2gpcmq_zBofYyudAtK-bFyg@mail.gmail.com>
+Subject: Re: [PATCH 3/4] xfs: SGI ACLs: Map uid/gid namespaces
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,87 +35,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Oct 27, 2015 at 11:56:46AM +0100, Andreas Gruenbacher wrote:
-> On Tue, Oct 27, 2015 at 6:30 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, Oct 27, 2015 at 12:52:10AM +0100, Andreas Gruenbacher wrote:
-> >> On Mon, Oct 26, 2015 at 10:32 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> > Really, I'm struggling to understand what the problem is with XFS
-> >> > doing translation to it's own special xattr names for ACLs
-> >> > underneath the posix layer.
-> >>
-> >> Right now, setting one of the SGI_ACL attributes leads to stale i_acl
-> >> / i_default_acl fields and in the case of SGI_ACL_FILE, possibly to
-> >> outdated permissions in i_mode. You would get different information
-> >> from getfacl than what's stored on disk.
-> >
-> > That's because we're not marking the cached acl as stale when
-> > setting the acl directly...
-> >
-> >> > Yes, there's a caching issue when someone directly manipulates
-> >> > the underlying xattr,
-> >>
-> >> "Directly manipulating" could be doing a setxattr of an attribute that
-> >> was previously retrieved by getxattr, like restoring a backup.
-> >
-> > Sure, that's what xfsdump/restore effectively does.
-> >
-> >> > but you need root to shoot yourself in the foot that way, and that is easily
-> >> > solveable.
-> >>
-> >> What do you mean, it's easily solvable?
-> >
-> > forget_all_cached_acls()
-> 
-> Brian has already suggested that in this thread. Still leaves the
-> i_mode permission bits stale and is broken wrt. uid/gid namespaces.
+On Tue, Oct 27, 2015 at 8:55 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Oct 27, 2015 at 04:55:22PM +0100, Andreas Gruenbacher wrote:
+>> On Mon, Oct 26, 2015 at 10:46 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Sat, Oct 24, 2015 at 11:16:08PM +0200, Andreas Gruenbacher wrote:
+>> >> @@ -71,10 +72,10 @@ xfs_acl_from_disk(
+>> >>
+>> >>               switch (acl_e->e_tag) {
+>> >>               case ACL_USER:
+>> >> -                     acl_e->e_uid = xfs_uid_to_kuid(be32_to_cpu(ace->ae_id));
+>> >> +                     acl_e->e_uid = make_kuid(ns, be32_to_cpu(ace->ae_id));
+>> >
+>> > Please don't replace the xfs wrappers with the horribly named
+>> > generic functions. Pass the namespace to xfs_uid_to_kuid(), and
+>> > modify them, please. That way people who don't deal with namespaces
+>> > every day can tell exactly what format conversion is taking place
+>> > just by reading the code...
+>>
+>> We would effectively end up with:
+>>
+>>   #define xfs_kuid_to_uid from_kuid
+>>   #define xfs_kgid_to_gid from_kgid
+>>   #define xfs_uid_to_kuid make_kuid
+>>   #define xfs_gid_to_kgid make_kgid
+>
+> No, you'd just add the namespace pointer to the static inline
+> functions we already have, and add a comment stating when the caller
+> should pass the init_ns vs user_ns.
 
-But for xfsrestore we don't want to do that because it's already
-set the mode correctly. Indeed, we order operations in xfs_restore
-to prevent the kernel from fucking with the inode modes and capabilities
-and giving use the incorrect result once the backup is complete. e.g.:
+Yep, same result though.
 
-struct stream_context {
-        bstat_t    sc_bstat;
-        char       sc_path[2 * MAXPATHLEN];
-        int   sc_fd;
-        int   sc_hsmflags;
+> But now that I've thought about this a bit more, I don't think that
+> the changes you've made are correct - we shouldn't be doing uid/gid
+> namespace conversion in disk formating functions. That is, the
+> conversion of user/group types should be done at the incoming layers
+> (i.e. at VFS/ioctl layers), not deep in the guts of the XFS code.
 
-        /*
-         * we have to set the owner before we set extended attributes otherwise
-         * capabilities will not be restored correctly as setting the owner with
-         * fchmod will strip the capability attribute from the file. Hence we
-         * need to do this before restoring xattrs and record it so we don't do
-         * it again on completion of file restoration.
-         */
-        bool_t     sc_ownerset;
-};
+There are two kinds of code paths where we need to convert between the
+SGI_ACL and the kernel's in-memory representation (struct posix_acl
+*): one is in the get_acl and set_acl iops, converting to/from the
+actual on-disk attrbutes, and the actual IDs stay the same. The other
+is in the get and set SGI_ACL xattr handlers which are invoked from
+the getxattr and setxattr iops. The conversion there is to/from the
+user-facing SGI_ACL xattrs, and ID mappings may be in effect.
 
+The VFS doesn't know anything about the SGI_ACL attributes, so XFS
+will have to do the ID mappings itself. We could convert the IDS
+in-place in separate pre- / post-passes over the xattr value and leave
+xfs_acl_from_disk and xfs_acl_to_disk alone. That's what the VFS does
+for POSIX ACLs. The problem there is that the setxattr iop and set
+xattr handler give us a const void * value; we cannot modify it
+without casting const away. Hence the additional namespace parameter
+to xfs_acl_from_disk and xfs_acl_to_disk instead.
 
-Further, user namespaces are irrelevant here - you can't run
-xfsdump/restore outside the init_ns.  xfsdump requires access to the
-handle interface, which is unsafe to use inside a user ns because it
-allows complete access to any inode in the filesystem without
-limitations. xfs_restore requires unfettered access to directly
-manipulate the uid/gid/security attrs of inodes, which once again is
-something that isn't allowed inside user namespaces.
+Only converting the IDs in place without going through the get_acl and
+set_acl iops would not work very well because then the i_acl,
+i_default_acl, and the permissions in i_mode wouldn't be updated
+appropriately.
 
-Setting Posix acls by directly poking the on-disk attr format rather
-than going through the proper kernel ACL namespace is not a *general
-purpose user interface*.  Thi exists for backup/restore utilities to
-do things like restore ACLs and security labels simply by treating
-them as opaque xattrs.  If a user sets ACLs using this low level
-"opaque xattr" method, then they get to keep all the broken bits to
-themselves.
+> i.e. the disk formating functions should be passed uids/gids that
+> are already mapped to the init namespace, because there is no
+> guarantee that the formatting occurs in the same user context as the
+> syscall (e.g. low level disk formatting work gets deferred to a work
+> queue).
 
-Cheers,
+There very well is a guarantee that the getxattr and setxattr
+operations and thus the get and set xattr handler ops occur in the
+appropriate context. The actual on-disk format conversions happen to
+and from init_user_ns and they are effectively type casts.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>> Are you sure you really want that?
+>
+> Why do you think we added the wrappers in the first place? It was
+> because the ns maintainer refused to follow standard, self
+> documenting type conversion naming conventions of <type>_to_<type>
+> so we added them ourselves. The user namespace code is horrible
+> enough without adding confusing type change functions everywhere...
+
+Well, so far these functions were at least hiding the &init_user_ns
+part, they didn't just introduce XFS specific names for generic
+things. It would be sad if every subsystem introduced their own names
+when they don't like the generic ones.
+
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
