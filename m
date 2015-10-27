@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4F4B97F5F
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 20:24:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C825EAC002
-	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 18:23:57 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uOoTTdH9veSlsxcD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 26 Oct 2015 18:23:56 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH] xfs_repair: Check for invalid ACL types
-Date: Tue, 27 Oct 2015 02:23:52 +0100
-Message-Id: <1445909032-10974-1-git-send-email-agruenba@redhat.com>
-References: <1445627828-14661-1-git-send-email-agruenba@redhat.com>
-	<1445627828-14661-5-git-send-email-agruenba@redhat.com>
-	<20151026225520.GK8773@dastard>
-In-Reply-To: <20151026225520.GK8773@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BD59E7F5F
+	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 00:31:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 92C9A8F8037
+	for <xfs@oss.sgi.com>; Mon, 26 Oct 2015 22:31:37 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	h15QJuYwQ3PQ5lvE for <xfs@oss.sgi.com>;
+	Mon, 26 Oct 2015 22:31:34 -0700 (PDT)
+Date: Tue, 27 Oct 2015 16:30:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Inconsistencies with trusted.SGI_ACL_{FILE,DEFAULT}
+Message-ID: <20151027053045.GL8773@dastard>
+References: <CAHc6FU5gS4BA+iTRHo1oHJMVHkLs4aa0eYd5T1ftLC9biRaxrg@mail.gmail.com>
+	<20151024125659.GA8095@bfoster.bfoster>
+	<CAHc6FU6eVn=KpKvhD2N8hvAgdFQVdBHHS9tUgaVQJf5wnipY=g@mail.gmail.com>
+	<20151024152254.GA22232@bfoster.bfoster>
+	<20151026213228.GI8773@dastard>
+	<CAHc6FU68MYTGWKM5S14_dQBqXeebd2GwQcKj4RztLvPWL2eksA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU68MYTGWKM5S14_dQBqXeebd2GwQcKj4RztLvPWL2eksA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,66 +30,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, xfs@oss.sgi.com
-Cc: Andreas Gruenbacher <agruenba@redhat.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Filesystems with the richacl feature are not supposed to contain POSIX
-ACLs, and filesystems without the richacl feature are not supposed to
-contain richacls.  Fix by removing unexpected attributes.
+On Tue, Oct 27, 2015 at 12:52:10AM +0100, Andreas Gruenbacher wrote:
+> On Mon, Oct 26, 2015 at 10:32 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > Really, I'm struggling to understand what the problem is with XFS
+> > doing translation to it's own special xattr names for ACLs
+> > underneath the posix layer.
+> 
+> Right now, setting one of the SGI_ACL attributes leads to stale i_acl
+> / i_default_acl fields and in the case of SGI_ACL_FILE, possibly to
+> outdated permissions in i_mode. You would get different information
+> from getfacl than what's stored on disk.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- repair/attr_repair.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+That's because we're not marking the cached acl as stale when
+setting the acl directly...
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index e7f03a8..8ded369 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -160,6 +160,8 @@ valuecheck(
- 	int		namelen,
- 	int		valuelen)
- {
-+	const bool feature_richacl = xfs_sb_has_incompat_feature(&mp->m_sb,
-+		XFS_SB_FEAT_INCOMPAT_RICHACL);
- 	/* for proper alignment issues, get the structs and memmove the values */
- 	xfs_mac_label_t macl;
- 	void *valuep;
-@@ -169,6 +171,13 @@ valuecheck(
- 	     strncmp(namevalue, SGI_ACL_FILE, SGI_ACL_FILE_SIZE) == 0) ||
- 	    (namelen == SGI_ACL_DEFAULT_SIZE &&
- 	     strncmp(namevalue, SGI_ACL_DEFAULT, SGI_ACL_DEFAULT_SIZE) == 0)) {
-+		if (feature_richacl) {
-+			do_warn(_("filesystem feature %s set "
-+				  "but attribute %.*s exists\n"),
-+				"richacl", namelen, namevalue);
-+			return 1;
-+		}
-+
- 		if (value == NULL) {
- 			valuep = malloc(valuelen);
- 			if (!valuep)
-@@ -211,6 +220,13 @@ valuecheck(
- 		 strncmp(namevalue, XATTR_RICHACL, strlen(XATTR_RICHACL)) == 0) {
- 		struct richacl *acl;
- 
-+		if (!feature_richacl) {
-+			do_warn(_("filesystem feature %s not set "
-+				  "but attribute %.*s exists\n"),
-+				"richacl", namelen, namevalue);
-+			return 1;
-+		}
-+
- 		if (value == NULL) {
- 			valuep = malloc(valuelen);
- 			if (!valuep)
+> > Yes, there's a caching issue when someone directly manipulates
+> > the underlying xattr,
+> 
+> "Directly manipulating" could be doing a setxattr of an attribute that
+> was previously retrieved by getxattr, like restoring a backup.
+
+Sure, that's what xfsdump/restore effectively does.
+
+> > but you need root to shoot yourself in the foot that way, and that is easily
+> > solveable.
+> 
+> What do you mean, it's easily solvable?
+
+forget_all_cached_acls()
+
+Cheers,
+
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
