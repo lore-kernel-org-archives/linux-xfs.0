@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CDF897F37
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 02:22:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ABFE9304039
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 00:22:13 -0700 (PDT)
-Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
-	[209.85.212.173]) by cuda.sgi.com with ESMTP id
-	RIMpMj0PGgihBthg (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 23 Oct 2015 00:22:08 -0700 (PDT)
-Received: by wicll6 with SMTP id ll6so18751192wic.0
-	for <xfs@oss.sgi.com>; Fri, 23 Oct 2015 00:22:07 -0700 (PDT)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: very long log recovery at mount
-Date: Fri, 23 Oct 2015 09:22:04 +0200
-References: <201510211127.52794.arekm@maven.pl>
-	<20151023070532.GF19199@dastard>
-In-Reply-To: <20151023070532.GF19199@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7157E7F37
+	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 20:00:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FABA8F8040
+	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 18:00:25 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	C8AXLg8gWYh8J6io for <xfs@oss.sgi.com>;
+	Tue, 27 Oct 2015 18:00:23 -0700 (PDT)
+Date: Wed, 28 Oct 2015 11:59:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_io: implement 'inode' command V3
+Message-ID: <20151028005924.GP19199@dastard>
+References: <1445257880-30797-1-git-send-email-cmaiolino@redhat.com>
+	<20151022144255.GB13661@bfoster.bfoster>
+	<20151023092946.GA752@redhat.com>
 MIME-Version: 1.0
-Message-Id: <201510230922.04906.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <20151023092946.GA752@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,65 +27,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-T24gRnJpZGF5IDIzIG9mIE9jdG9iZXIgMjAxNSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFdl
-ZCwgT2N0IDIxLCAyMDE1IGF0IDExOjI3OjUyQU0gKzAyMDAsIEFya2FkaXVzeiBNacWba2lld2lj
-eiB3cm90ZToKPiA+IEhpLgo+ID4gCj4gPiBJIGdvdCBzdWNoIHNpdHVhdGlvbiwgZnJlc2ggYm9v
-dCwgNC4xLjEwIGtlcm5lbCwgaW5pdCBzY3JpcHRzIHN0YXJ0Cj4gPiBtb3VudGluZyBmaWxlc3lz
-dGVtcy4gT25lIGZzIHdhc24ndCB2ZXJ5IGx1Y2t5Ogo+ID4gCj4gPiBbICAgMTUuOTc5NTM4XSBY
-RlMgKG1kMyk6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+IFsgICAxNi4yNTYzMTZdIFhGUyAo
-bWQzKTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiBbICAgMjguMzQzMzQ2XSBYRlMgKG1kNCk6IE1v
-dW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+IFsgICAyOC42Mjk5MThdIFhGUyAobWQ0KTogRW5kaW5n
-IGNsZWFuIG1vdW50Cj4gPiBbICAgMjguNjYyMTI1XSBYRlMgKG1kNSk6IE1vdW50aW5nIFY0IEZp
-bGVzeXN0ZW0KPiA+IFsgICAyOC45ODAxNDJdIFhGUyAobWQ1KTogRW5kaW5nIGNsZWFuIG1vdW50
-Cj4gPiBbICAgMjkuMDQ5NDIxXSBYRlMgKG1kNik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+
-IFsgICAyOS40NDc3MjVdIFhGUyAobWQ2KTogU3RhcnRpbmcgcmVjb3ZlcnkgKGxvZ2RldjogaW50
-ZXJuYWwpCj4gPiBbIDQ1MTcuMzI3MzMyXSBYRlMgKG1kNik6IEVuZGluZyByZWNvdmVyeSAobG9n
-ZGV2OiBpbnRlcm5hbCkKPiA+IAo+ID4gSXQgdG9vayBvdmVyIDFoIHRvIG1vdW50IG1kNiBmaWxl
-c3lzdGVtLgo+ID4gCj4gPiBRdWVzdGlvbnM6Cj4gPiAtIGlzIGl0IHBvc3NpYmxlIHRvIGxvZyBo
-b3cgbXVjaCBkYXRhIGlzIG5lZWRlZCB0byBiZSByZWNvdmVyZWQKPiA+IGZyb20gbG9nPwo+IAo+
-IFllcy4KPiAKPiA+IFNvbWUgZGF0YSB0aGF0IHdvdWxkIGdpdmUgYSBoaW50IG9uIGhvdyBiaWcg
-dGhpcyBpcyAoYW5kIHRodXMKPiA+IHJvdWdoIGVzdGltYXRlIG9uIGhvdyBsb25nIGl0IHdpbGwg
-dGFrZSkuIE5vdCBzdXJlIGlmIHRoYXQncyBrbm93bgo+ID4gYXQgdGltZSB3aGVuIHRoaXMgbWVz
-c2FnZSBpcyBiZWluZyBwcmludGVkLgo+IAo+IEl0J3Mgbm90IGtub3duLCB0aGVuLCBhbmQgY2Fu
-J3QgYmUga25vd24gdW50aWwgcmVjb3ZlcnkgaGFzIHNwYXJzZWQKPiB0aGUgbG9nIGFuZCByZWFk
-IGFsbCB0aGUgb2JqZWN0cyBmcm9tIGRpc2sgaXQgbmVlZHMgdG8gcmVjb3Zlci4KClNvIEkgYXNz
-dW1lIG5vdCBhdmFpbGFibGUgZWFybHkgZW5vdWdoIHRvIGJlIHVzYWJsZS4KCj4gPiAtIG5vdyBz
-dWNoIGxvbmcgbW91bnQgdGltZSBpcyBhbG1vc3QgaW5zYW5lLCBzbyBJIHdvbmRlciB3aHkgY291
-bGQKPiA+IGJlIHRoZSByZWFzb24uIElzIHRoZSBwcm9jZXNzIG11bHRpdGhyZWFkZWQsIHNpbmds
-ZSB0aHJlYWRlZD8gY3B1cwo+ID4gd2VyZSBpZGxlCj4gCj4gV2hhdCBrZXJuZWw/IAoKIj4gPiBJ
-IGdvdCBzdWNoIHNpdHVhdGlvbiwgZnJlc2ggYm9vdCwgNC4xLjEwIGtlcm5lbCIKCj4gV2Ugbm93
-IGhhdmUgcmVhZGFoZWFkIHdoaWNoIG1pbmltaXNlcyB0aGUgSU8gbGF0ZW5jeSBvZgo+IHB1bGxp
-bmcgb2JqZWN0cyBpbnRvIHRoZSBrZXJuZWwgZm9yIHJlY292ZXJ5LCBidXQgaWYgeW91IGFyZQo+
-IHJlY292ZXJpbmcgYSBjb3VwbGUgb2YgbWlsbGlvbiBpbmRpdmlkdWFsIGlub2RlIGNoYW5nZXMg
-KGUuZy4gZnJvbSBhCj4gJ2NocHJvaiAtUiAvcGF0aC93aXRoL21pbGxpb25zL29mL2ZpbGVzJykg
-dGhlbiBpdCB0YWtlIGEgbG9uZyB0aWVtCj4gdG8gcmVhZCBpbiBhbGwgdGhlIGlub2RlcyBhbmQg
-d3JpdGUgdGhlbSBhbGwgYmFjayBvdXQuCgpJdCB3YXMgbGlrZSAxMHggcnNuYXBzaG90cyB0aGVy
-ZSAoc28gdG9ucyBvZiBmaWxlcyBjb3BpZWQvaGFyZGxpbmtlZCwgdGhlbiAKcnN5bmNlZCBldGMp
-LgoKPiBBIHNpbmdsZQo+IGlub2RlIGluIHRoZSBsb2cgbGlrIGV0aGlzIG9ubHkgY29uc3VtZXMg
-YWJvdXQgMjAwIGJ5dGVzIG9mIGxvZwo+IHNwYWNlLCBzbyB0aGVyZSBjYW4gZWFzaWx5IGJlIDUw
-MDAgaW5vZGVzIHRvIHJlY292ZXIgcGVyIG1lZ2FieXRlCj4gb2YgbG9nIHNwYWNlIHlvdSBoYXZl
-LiBBbmQgaWYgeW91IGhhdmUgYSAyR0IgbG9nLCB0aGVuIHRoYXQgY291bGQKPiBjb250YWluIDEw
-IG1pbGxpb24gaW5vZGUgY29yZSBjaGFuZ2VzIHRoYXQgbmVlZCB0byBiZSByZWNvdmVyZWQuLi4u
-CgpPaywgc28gd2hhdCBJJ20gbG9va2luZyBmb3IgaXMgYW55IGtpbmQgb2YgaW5kaWNhdGlvbiAo
-aW4gZG1lc2cgcHJvYmFibHkpIHRoYXQgCml0IHdpbGwgdGFrZSBsb25nIHRpbWUgKHRodXMgd2Fz
-IGFza2luZyBhYm91dCBsb2cgcmVjb3Zlcnkgc2l6ZSkuIEJlY2F1c2UgCnJpZ2h0IG5vdyBpdCdz
-IGhhcmQgdG8gZXN0aW1hdGUgaG93IGxvbmcgZG93bnRpbWUgd2lsbCBiZSBhbmQgYWJpbGl0eSB0
-byAKZXN0aW1hdGUgc3VjaCB0aGluZ3MgaXMgaW1wb3J0YW50LgoKPiBBbmQgaWYgeW91IGhhdmUg
-YSBzbG93IFNBVEEgUkFJRCwgdGhlIHNtYWxsIHJhbmRvbSB3cml0ZXMgZm9yIGlub2RlCj4gd3Jp
-dGViYWNrIG1pZ2h0IG9ubHkgcmV0aXJlIGEgaHVuZHJlZCBpbm9kZXMgYSBzZWNvbmQgYW5kIGxv
-Zwo+IHJlY292ZXJ5IHdpbGwgYmxvY2sgdW50aWwgYWxsIHRob3NlIGlub2RlcyBhcmUgY29tcGxl
-dGVseSB3cml0dGVuCj4gYmFjayAoaS5lLiBzYW1lIHByb2JsZW0gdGhhdCBjYW4gbGVhZCB0byB1
-bm1vdW50IHRha2luZyBob3VycyB3aGVuCj4gdGhlcmUgYXJlIGh1bmRyZWRzIG9mIHRob3VzYW5k
-cyBvZiBkaXJ0eSBpbm9kZSBpbiBtZW1vcnkpLgoKVGhhdCdzIGEgbmlnaHRtYXJlIChmb3J0dW5h
-dGVseSByYXJlbHkgaGFwZW5pbmcgaGVyZSkuCgpUaGFua3MgZm9yIGV4cGxhbmF0aW9ucy4KCj4g
-Q2hlZXJzLAo+IERhdmUuCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6LCBhcmVrbSAvICggbWF2
-ZW4ucGwgfCBwbGQtbGludXgub3JnICkKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
-c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Fri, Oct 23, 2015 at 11:29:46AM +0200, Carlos Maiolino wrote:
+> Thanks for the review Brian, I'll walk over it and fix the points you mentioned.
+> > 
+> > 
+> > I still don't really get why we have separate -l and -s options here. It
+> > seems to me that the behavior of -l already gives us the information
+> > that -s does. Even if that's not obvious enough, the -l command could
+> > just print out both. For example:
+> > 
+> >       "Largest inode: 1234 (32-bit)"
+> 
+> I agree with you here, but, I'll let Dave answer this question, maybe he had 
+> some another idea for it that I'm not aware of. 
+
+No preference here; all that I was suggesting was that if you want
+to know whether inodes are 32/64 bit it doesn't matter what the
+largest inode number is.
+
+i.e. "Can I mount this with inode32 and have no problems (yes/no)?"
+
+And it's a lot easier to just query for *any* 64 bit inode than it
+is to find the largest inode number...
+
+If you want to combine the two, then that's fine by me.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
