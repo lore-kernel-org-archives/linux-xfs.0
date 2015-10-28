@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 28EF97CBF
-	for <xfs@oss.sgi.com>; Wed, 28 Oct 2015 17:32:47 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EAE0429DF5
+	for <xfs@oss.sgi.com>; Wed, 28 Oct 2015 17:35:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C97E2AC001
-	for <xfs@oss.sgi.com>; Wed, 28 Oct 2015 15:32:43 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A4BF030405F
+	for <xfs@oss.sgi.com>; Wed, 28 Oct 2015 15:35:46 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	SL4m1hZ67EoQuXCB for <xfs@oss.sgi.com>;
-	Wed, 28 Oct 2015 15:32:41 -0700 (PDT)
-Date: Thu, 29 Oct 2015 09:32:34 +1100
+	1oQfAbzq5Oj9oIrA for <xfs@oss.sgi.com>;
+	Wed, 28 Oct 2015 15:35:43 -0700 (PDT)
+Date: Thu, 29 Oct 2015 09:35:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/8] cleanup: get rid of ASSERT
-Message-ID: <20151028223234.GQ8773@dastard>
+Subject: Re: [PATCH 0/8] xfsdump: Ouchie! My bleeding eyes!
+Message-ID: <20151028223542.GR8773@dastard>
 References: <1444959901-31319-1-git-send-email-david@fromorbit.com>
-	<1444959901-31319-2-git-send-email-david@fromorbit.com>
-	<20151028115121.GA50552@bfoster.bfoster>
+	<20151028115138.GB50552@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151028115121.GA50552@bfoster.bfoster>
+In-Reply-To: <20151028115138.GB50552@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,63 +33,54 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 28, 2015 at 07:51:22AM -0400, Brian Foster wrote:
-> On Fri, Oct 16, 2015 at 12:44:54PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Oct 28, 2015 at 07:51:39AM -0400, Brian Foster wrote:
+> On Fri, Oct 16, 2015 at 12:44:53PM +1100, Dave Chinner wrote:
+> > Hi folks,
 > > 
-> > ASSERT comes from the xfs/xfs.h include, and we don't ever define
-> > DEBUG so we never get asserts built in. We want asserts built in for
-> > testing, but not for distro packages. The debian package already
-> > tries to do this by using "export DEBUG=-DNDEBUG" for the build
-> > context, but seeing as we pull in #define ASSERT(ex) (0) from the
-> > XFS headers it's a no-op.
+> > Turns out that changes to exported XFS headers in xfsprogs v4.2.0
+> > broke the xfsdump build. the XFS dump build was implicitly including
+> > the platform definitions calculated for the xfsprogs build and so
+> > removing them from the xfsprogs headers made xfsdump very unhappy.
 > > 
-> > Convert all the ASSERT calls to assert to remove this conflict with
-> > the xfsprogs headers and so local developer builds are built with
-> > asserts enabled.
+> ...
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
+> > So, now the code base is a little bit cleaner, a lot less dependent
+> > on the xfsprogs header files, compiles cleanly on xfsprogs 3.2.x and
+> > 4.x releases, can easily have asserts build in or excluded (distro
+> > packages need to use "export DEBUG=-DNDEBUG" to exclude asserts),
+> > passes xfstests with asserts enabled and disabled, and best of all
+> > the source code is a little less eye-bleedy.
+> > 
+> > I really don't expect anyone to review this closely - it's *huge*
+> > chunk of boring search/replace change:
+> > 
+> >  94 files changed, 2929 insertions(+), 2652 deletions(-)
+> > 
+> > but I would like people to comment on/ack the approach I've taken
+> > here. If nobody objects/cares, I'll then do a 3.1.6 release early
+> > next week....
+> > 
 > 
-> My initial concern when reading this was that asserts were now
-> unconditionally enabled. According to the man page, assert() is enabled
-> unless NDEBUG is defined at include time. The debian builder apparently
-> does this, but is this standard for other such utils?
+> I sent some comments on patch 1, otherwise the rest looks reasonable to
+> me on a quick pass through. The only thing I noticed is that the series
+> introduced a handful of whitespace problems. I didn't go and track them
+> into the individual patches, but here's the full output from my patch
+> import:
 
-For other XFS utilities? Yes. For other packages I don't maintain? I
-don't know, I don't care, and I don't think it's relevant at all.
-How the distro builds and packages a utility is up to the distro
-maintainers - if they define -NDEBUG, then there is absolutely no
-change in behaviour of xfsdump. I think the binary is effectively
-unchanged as assert() is defined out in that case...
+it didn't add any whitespace problems...
 
-> That aside, this seems like an inconsistent approach from our other
-> tools. For example, the debian/rules from xfsprogs does the same thing,
-> yet DEBUG must be defined to enable asserts in the first place.
+> 
+> Applying: cleanup: get rid of ASSERT
+> /home/bfoster/repos/xfsdump/.git/rebase-apply/patch:3725: space before tab in indent.
+>         assert( namebuf );
+> /home/bfoster/repos/xfsdump/.git/rebase-apply/patch:5656: trailing whitespace.
+>         assert ( ent != NULL );
+> /home/bfoster/repos/xfsdump/.git/rebase-apply/patch:5855: trailing whitespace.
+>         assert ( ent != NULL );
 
-That's a issue with the way xfsprogs uses asserts - ASSERT should
-never have been exported in the first, nor should the xfsdump buildi
-rely on it, but here we are....
-
-> If the
-> problem is that asserts cannot be enabled, I'm wondering why the
-> appropriate fix isn't to define DEBUG somewhere for debug-enabled builds
-> rather than unconditionally convert all of the ASSERT() calls into
-> actual assert()'s..?
-
-Becuase it has to build with both old and new xfsprogs userspace
-headers. Hence we cannot use ASSERT reliably in xfsdump at all,
-because it's owned by the old xfsprogs headers and it's behaviour is
-determined by whatever that xfsprogs installation defined......
-
-> We do actually have a bunch of '#ifdef DEBUG' code
-> throughout xfsdump (and DEBUG appears in 'configure' as well, though I
-> have no idea if that actually does anything)...
-
-I'm not going to pull that string and have this turn into a massive
-"we have to change everything" exercise. I've built the code with
-and without NDEBUG enabled, and had no problems with the assert code
-either way.
+s/ASSERT/assert/ does not change any of the whitespace, but it will
+complain about it because the new line has whitespace problems
+because they existed in the old line...
 
 Cheers,
 
