@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9B0887F37
-	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 23:57:31 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 59FC629DF5
+	for <xfs@oss.sgi.com>; Wed, 28 Oct 2015 06:51:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6DAB0304032
-	for <xfs@oss.sgi.com>; Tue, 27 Oct 2015 21:57:28 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	6XkfZL83bpJU5eTn for <xfs@oss.sgi.com>;
-	Tue, 27 Oct 2015 21:57:25 -0700 (PDT)
-Date: Wed, 28 Oct 2015 15:56:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: make fsr use mntinfo when there is no mntent
-Message-ID: <20151028045645.GQ19199@dastard>
-References: <1445338883-7000-1-git-send-email-jtulak@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F40A8F8035
+	for <xfs@oss.sgi.com>; Wed, 28 Oct 2015 04:51:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QrpHXnTO4E2XVWy2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Oct 2015 04:51:40 -0700 (PDT)
+Date: Wed, 28 Oct 2015 07:51:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/8] xfsdump: Ouchie! My bleeding eyes!
+Message-ID: <20151028115138.GB50552@bfoster.bfoster>
+References: <1444959901-31319-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1445338883-7000-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1444959901-31319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,98 +25,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 20, 2015 at 01:01:23PM +0200, Jan Tulak wrote:
-> I'm resubmitting this patch from my OS X set - it wasn't included with
-> others, nor in the current for-next, and I didn't got any review/reply
-> to this last iteration.
-> =
+On Fri, Oct 16, 2015 at 12:44:53PM +1100, Dave Chinner wrote:
+> Hi folks,
+> 
+> Turns out that changes to exported XFS headers in xfsprogs v4.2.0
+> broke the xfsdump build. the XFS dump build was implicitly including
+> the platform definitions calculated for the xfsprogs build and so
+> removing them from the xfsprogs headers made xfsdump very unhappy.
+> 
+...
+> 
+> So, now the code base is a little bit cleaner, a lot less dependent
+> on the xfsprogs header files, compiles cleanly on xfsprogs 3.2.x and
+> 4.x releases, can easily have asserts build in or excluded (distro
+> packages need to use "export DEBUG=-DNDEBUG" to exclude asserts),
+> passes xfstests with asserts enabled and disabled, and best of all
+> the source code is a little less eye-bleedy.
+> 
+> I really don't expect anyone to review this closely - it's *huge*
+> chunk of boring search/replace change:
+> 
+>  94 files changed, 2929 insertions(+), 2652 deletions(-)
+> 
+> but I would like people to comment on/ack the approach I've taken
+> here. If nobody objects/cares, I'll then do a 3.1.6 release early
+> next week....
+> 
 
-> So my guess is it fell under the sofa, forgotten... :-)
-> =
+I sent some comments on patch 1, otherwise the rest looks reasonable to
+me on a quick pass through. The only thing I noticed is that the series
+introduced a handful of whitespace problems. I didn't go and track them
+into the individual patches, but here's the full output from my patch
+import:
 
-> .........
-> =
+Applying: cleanup: get rid of ASSERT
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:3725: space before tab in indent.
+        assert( namebuf );
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:5656: trailing whitespace.
+        assert ( ent != NULL );
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:5855: trailing whitespace.
+        assert ( ent != NULL );
+warning: 3 lines add whitespace errors.
+Applying: build: don't rely on xfs/xfs.h to include necessary headers
+Applying: cleanup: kill intgen_t
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:2018: trailing whitespace.
+static int
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:3295: space before tab in indent.
+                                                int fsfd,
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:6044: trailing whitespace.
+                        int namebuflen;
+warning: 3 lines add whitespace errors.
+Applying: cleanup: kill u_int*_t types
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:255: trailing whitespace.
+static uint32_t erase_and_verify( drive_t *drivep );
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:1372: trailing whitespace.
+        uint             s_max_nstreams;/* number of media streams in
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:1461: trailing whitespace.
+DEBUG_displayallsessions( int fd, invt_seshdr_t *hdr, uint ref,
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:1816: trailing whitespace.
+        uint16_t d_sum;
+warning: 4 lines add whitespace errors.
+Applying: cleanup: define a local xfs_ino_t
+Applying: cleanup: use system uuid.h headers
+Applying: cleanup: move fold_t out of util.h
+/home/bfoster/repos/xfsdump/.git/rebase-apply/patch:85: trailing whitespace.
+/* flg definitions for preemptchk
+warning: 1 line adds whitespace errors.
+Applying: cleanup: Kill unnecessary xfs includes
 
-> UPDATE:
-> - refactor ifdefs to platform_ functions
-> - refactor also the other ifdef which I forgot to change before
-> - (and rebase against current for-next)
-> =
+Brian
 
-> For what fsr needs, mntinfo can be used instead of mntent on some
-> platforms. Exctract the platform-specific code to platform headers.
-> =
-
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-
-Code structure looks good now, but build warnings on linux:
-
-    [CC]     xfs_fsr.o
-xfs_fsr.c: In function =BFfind_mountpoint_check=BF:
-xfs_fsr.c:184:26: warning: passing argument 2 of =BFstat64=BF from incompat=
-ible pointer type
-   if (stat64(t->mnt_dir, &ms) < 0)
-                          ^
-In file included from /usr/include/features.h:374:0,
-                 from /usr/include/stdio.h:27,
-                 from ../include/platform_defs.h:24,
-                 from ../include/libxfs.h:23,
-                 from xfs_fsr.c:19:
-/usr/include/x86_64-linux-gnu/sys/stat.h:502:1: note: expected =BFstruct st=
-at64 *=BF but argument is of type =BFstruct stat64 **=BF
- __NTH (stat64 (const char *__path, struct stat64 *__statbuf))
- ^
-xfs_fsr.c:195:29: warning: passing argument 2 of =BFstat64=BF from incompat=
-ible pointer type
-   if (stat64(t->mnt_fsname, &ms) < 0)
-                             ^
-In file included from /usr/include/features.h:374:0,
-                 from /usr/include/stdio.h:27,
-                 from ../include/platform_defs.h:24,
-                 from ../include/libxfs.h:23,
-                 from xfs_fsr.c:19:
-/usr/include/x86_64-linux-gnu/sys/stat.h:502:1: note: expected =BFstruct st=
-at64 *=BF but argument is of type =BFstruct stat64 **=BF
- __NTH (stat64 (const char *__path, struct stat64 *__statbuf))
- ^
-xfs_fsr.c: In function =BFinitallfs=BF:
-xfs_fsr.c:435:39: warning: passing argument 2 of =BFplatform_mntent_next=BF=
- from incompatible pointer type
-  while (platform_mntent_next(&cursor, &mp) =3D=3D 0) {
-                                       ^
-In file included from ../include/xfs.h:37:0,
-                 from ../include/libxfs.h:24,
-                 from xfs_fsr.c:19:
-../include/xfs/linux.h:166:19: note: expected =BFstruct mntent *=BF but arg=
-ument is of type =BFstruct mntent **=BF
- static inline int platform_mntent_next(struct mntent_cursor * cursor, stru=
-ct mntent * t)
-                   ^
-xfs_fsr.c:436:37: warning: passing argument 2 of =BFfind_mountpoint_check=
-=BF from incompatible pointer type
-   mntp =3D find_mountpoint_check(&sb, &mp, &ms);
-                                     ^
-xfs_fsr.c:181:1: note: expected =BFstruct mntent *=BF but argument is of ty=
-pe =BFstruct mntent **=BF
- find_mountpoint_check(struct stat64 *sb, struct mntent *t, struct stat64 *=
-ms)
- ^
-    [LD]     libxcmd.la
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+> -Dave.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
