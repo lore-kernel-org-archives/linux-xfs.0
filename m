@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B8917F56
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 09:30:06 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 05D467F61
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 09:30:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E9B528F8035
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 07:30:05 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8E2E3AC002
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 07:30:08 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0cMzFWAhxi2m4ssb (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Nep9VsW4rjmjbGNb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 07:30:04 -0700 (PDT)
-Date: Thu, 29 Oct 2015 10:30:02 -0400
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 07:30:07 -0700 (PDT)
+Date: Thu, 29 Oct 2015 10:30:06 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/6] xfs: add ->pfn_mkwrite support for DAX
-Message-ID: <20151029143002.GG11663@bfoster.bfoster>
+Subject: Re: [PATCH 6/6] xfs: xfs_filemap_pmd_fault treats read faults as
+	write faults
+Message-ID: <20151029143005.GH11663@bfoster.bfoster>
 References: <1445225238-30413-1-git-send-email-david@fromorbit.com>
-	<1445225238-30413-6-git-send-email-david@fromorbit.com>
+	<1445225238-30413-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1445225238-30413-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1445225238-30413-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,89 +34,74 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Mon, Oct 19, 2015 at 02:27:17PM +1100, Dave Chinner wrote:
+On Mon, Oct 19, 2015 at 02:27:18PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> ->pfn_mkwrite support is needed so that when a page with allocated
-> backing store takes a write fault we can check that the fault has
-> not raced with a truncate and is pointing to a region beyond the
-> current end of file.
-> 
-> This also allows us to update the timestamp on the inode, too, which
-> fixes a generic/080 failure.
+> The code initially committed didn't have the same checks for write
+> faults as the dax_pmd_fault code and hence treats all faults as
+> write faults. We can get read faults through this path because they
+> is no pmd_mkwrite path for write faults similar to the normal page
+> fault path. Hence we need to ensure that we only do c/mtime updates
+> on write faults, and freeze protection is unnecessary for read
+> faults.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_file.c  | 35 +++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_trace.h |  1 +
->  2 files changed, 36 insertions(+)
+>  fs/xfs/xfs_file.c | 20 ++++++++++++++++----
+>  1 file changed, 16 insertions(+), 4 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 403151a..e7cf9ec 100644
+> index e7cf9ec..0045b0a 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -1577,11 +1577,46 @@ xfs_filemap_pmd_fault(
+> @@ -1482,7 +1482,7 @@ xfs_file_llseek(
+>   *
+>   * mmap_sem (MM)
+>   *   sb_start_pagefault(vfs, freeze)
+> - *     i_mmap_lock (XFS - truncate serialisation)
+> + *     i_mmaplock (XFS - truncate serialisation)
+>   *       page_lock (MM)
+>   *         i_lock (XFS - extent map serialisation)
+>   */
+> @@ -1550,6 +1550,13 @@ xfs_filemap_fault(
 >  	return ret;
 >  }
 >  
 > +/*
-> + * pfn_mkwrite was originally inteneded to ensure we capture time stamp
-> + * updates on write faults. In reality, it's need to serialise against
-> + * truncate similar to page_mkwrite. Hence we open-code dax_pfn_mkwrite()
-> + * here and cycle the XFS_MMAPLOCK_SHARED to ensure we serialise the fault
-> + * barrier in place.
+> + * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
+> + * both read and write faults. Hence we need to handle both cases. There is no
+> + * ->pmd_mkwrite callout for huge pages, so we have a single function here to
+> + * handle both cases here. @flags carries the information on the type of fault
+> + * occuring.
 > + */
-> +static int
-> +xfs_filemap_pfn_mkwrite(
-> +	struct vm_area_struct	*vma,
-> +	struct vm_fault		*vmf)
-> +{
-> +
-> +	struct inode		*inode = file_inode(vma->vm_file);
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	int			ret = VM_FAULT_NOPAGE;
-> +	loff_t			size;
-> +
-> +	trace_xfs_filemap_pfn_mkwrite(ip);
-> +
-> +	sb_start_pagefault(inode->i_sb);
-> +	file_update_time(vma->vm_file);
-> +
-> +	/* check if the faulting page hasn't raced with truncate */
-> +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> +	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> +	if (vmf->pgoff >= size)
-> +		ret = VM_FAULT_SIGBUS;
-> +	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-> +	sb_end_pagefault(inode->i_sb);
-> +	return ret;
-> +
-> +}
-> +
->  static const struct vm_operations_struct xfs_file_vm_ops = {
->  	.fault		= xfs_filemap_fault,
->  	.pmd_fault	= xfs_filemap_pmd_fault,
->  	.map_pages	= filemap_map_pages,
->  	.page_mkwrite	= xfs_filemap_page_mkwrite,
-> +	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
->  };
->  
 >  STATIC int
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 957f5cc..877079eb 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -689,6 +689,7 @@ DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
->  DEFINE_INODE_EVENT(xfs_filemap_fault);
->  DEFINE_INODE_EVENT(xfs_filemap_pmd_fault);
->  DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
-> +DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
+>  xfs_filemap_pmd_fault(
+>  	struct vm_area_struct	*vma,
+> @@ -1566,13 +1573,18 @@ xfs_filemap_pmd_fault(
 >  
->  DECLARE_EVENT_CLASS(xfs_iref_class,
->  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+>  	trace_xfs_filemap_pmd_fault(ip);
+>  
+> -	sb_start_pagefault(inode->i_sb);
+> -	file_update_time(vma->vm_file);
+> +	if (flags & FAULT_FLAG_WRITE) {
+> +		sb_start_pagefault(inode->i_sb);
+> +		file_update_time(vma->vm_file);
+> +	}
+> +
+>  	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>  	ret = __dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault,
+>  			      NULL);
+>  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	sb_end_pagefault(inode->i_sb);
+> +
+> +	if (flags & FAULT_FLAG_WRITE)
+> +		sb_end_pagefault(inode->i_sb);
+>  
+>  	return ret;
+>  }
 > -- 
 > 2.5.0
 > 
