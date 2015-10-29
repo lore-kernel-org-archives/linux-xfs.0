@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4603A7CBF
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 18:36:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 372EF30404E
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 16:35:56 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 946247CBF
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 18:38:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 83432304053
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 16:38:01 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	IWBJt4r6oTr8FQgv for <xfs@oss.sgi.com>;
-	Thu, 29 Oct 2015 16:35:50 -0700 (PDT)
-Date: Fri, 30 Oct 2015 10:35:48 +1100
+	j8HRuE1OtDk3P6hK for <xfs@oss.sgi.com>;
+	Thu, 29 Oct 2015 16:37:58 -0700 (PDT)
+Date: Fri, 30 Oct 2015 10:37:56 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfs: introduce BMAPI_ZERO for allocating zeroed
-	extents
-Message-ID: <20151029233548.GR19199@dastard>
+Subject: Re: [PATCH 3/6] xfs: Don't use unwritten extents for DAX
+Message-ID: <20151029233756.GS19199@dastard>
 References: <1445225238-30413-1-git-send-email-david@fromorbit.com>
-	<1445225238-30413-3-git-send-email-david@fromorbit.com>
-	<20151029142757.GD11663@bfoster.bfoster>
+	<1445225238-30413-4-git-send-email-david@fromorbit.com>
+	<20151029142950.GE11663@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151029142757.GD11663@bfoster.bfoster>
+In-Reply-To: <20151029142950.GE11663@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,115 +34,84 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Thu, Oct 29, 2015 at 10:27:58AM -0400, Brian Foster wrote:
-> On Mon, Oct 19, 2015 at 02:27:14PM +1100, Dave Chinner wrote:
+On Thu, Oct 29, 2015 at 10:29:50AM -0400, Brian Foster wrote:
+> On Mon, Oct 19, 2015 at 02:27:15PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > To enable DAX to do atomic allocation of zeroed extents, we need to
-> > drive the block zeroing deep into the allocator. Because
-> > xfs_bmapi_write() can return merged extents on allocation that were
-> > only partially allocated (i.e. requested range spans allocated and
-> > hole regions, allocation into the hole was contiguous), we cannot
-> > zero the extent returned from xfs_bmapi_write() as that can
-> > overwrite existing data with zeros.
+> > DAX has a page fault serialisation problem with block allocation.
+> > Because it allows concurrent page faults and does not have a page
+> > lock to serialise faults to the same page, it can get two concurrent
+> > faults to the page that race.
 > > 
-> > Hence we have to drive the extent zeroing into the allocation code,
-> > prior to where we merge the extents into the BMBT and return the
-> > resultant map. This means we need to propagate this need down to
-> > the xfs_alloc_vextent() and issue the block zeroing at this point.
+> > When two read faults race, this isn't a huge problem as the data
+> > underlying the page is not changing and so "detect and drop" works
+> > just fine. The issues are to do with write faults.
 > > 
-> > While this functionality is being introduced for DAX, there is no
-> > reason why it is specific to DAX - we can per-zero blocks during the
-> > allocation transaction on any type of device. It's just slow (and
-> > usually slower than unwritten allocation and conversion) on
-> > traditional block devices so doesn't tend to get used. We can,
-> > however, hook hardware zeroing optimisations via sb_issue_zeroout()
-> > to this operation, so it may be useful in future and hence the
-> > "allocate zeroed blocks" API needs to be implementation neutral.
+> > When two write faults occur, we serialise block allocation in
+> > get_blocks() so only one faul will allocate the extent. It will,
+> > however, be marked as an unwritten extent, and that is where the
+> > problem lies - the DAX fault code cannot differentiate between a
+> > block that was just allocated and a block that was preallocated and
+> > needs zeroing. The result is that both write faults end up zeroing
+> > the block and attempting to convert it back to written.
+> > 
+> > The problem is that the first fault can zero and convert before the
+> > second fault starts zeroing, resulting in the zeroing for the second
+> > fault overwriting the data that the first fault wrote with zeros.
+> > The second fault then attempts to convert the unwritten extent,
+> > which is then a no-op because it's already written. Data loss occurs
+> > as a result of this race.
+> > 
+> > Because there is no sane locking construct in the page fault code
+> > that we can use for serialisation across the page faults, we need to
+> > ensure block allocation and zeroing occurs atomically in the
+> > filesystem. This means we can still take concurrent page faults and
+> > the only time they will serialise is in the filesystem
+> > mapping/allocation callback. The page fault code will always see
+> > written, initialised extents, so we will be able to remove the
+> > unwritten extent handling from the DAX code when all filesystems are
+> > converted.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-....
-> >  #endif
+> > ---
+> >  fs/dax.c           |  5 +++++
+> >  fs/xfs/xfs_aops.c  | 13 +++++++++----
+> >  fs/xfs/xfs_iomap.c | 21 ++++++++++++++++++++-
+> >  3 files changed, 34 insertions(+), 5 deletions(-)
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index c3cb5a5..f4f5b43 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> ...
+> >  	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
 > > +
-> > +		/* Zero the extent if we were asked to do so */
-> > +		if (args->userdata & XFS_ALLOC_USERDATA_ZERO) {
-> > +			error = xfs_zero_extent(args->ip, args->fsbno, args->len);
-> > +			if (error)
-> > +				goto error0;
-> > +		}
-> > +
-> 
-> Ok, so we wire up zeroing to the actual block allocation here...
-
-Yes.
-
-> > @@ -4421,6 +4429,17 @@ xfs_bmapi_convert_unwritten(
-> >  	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
-> >  				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
-> >  
 > > +	/*
-> > +	 * Before insertion into the bmbt, zero the range being converted
-> > +	 * if required.
+> > +	 * For DAX, we do not allocate unwritten extents, but instead we zero
+> > +	 * the block before we commit the transaction.  Ideally we'd like to do
+> > +	 * this outside the transaction context, but if we commit and then crash
+> > +	 * we may not have zeroed the blocks and this will be exposed on
+> > +	 * recovery of the allocation. Hence we must zero before commit.
+> > +	 * Further, if we are mapping unwritten extents here, we need to zero
+> > +	 * and convert them to written so that we don't need an unwritten extent
+> > +	 * callback for DAX. This also means that we need to be able to dip into
+> > +	 * the reserve block pool if there is no space left but we need to do
+> > +	 * unwritten extent conversion.
 > > +	 */
-> > +	if (flags & XFS_BMAPI_ZERO) {
-> > +		error = xfs_zero_extent(bma->ip, mval->br_startblock,
-> > +					mval->br_blockcount);
-> > +		if (error)
-> > +			return error;
+> > +	if (IS_DAX(VFS_I(ip))) {
+> > +		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
+> > +		tp->t_flags |= XFS_TRANS_RESERVE;
 > > +	}
-> > +
 > 
-> ... and also zero the extent on unwritten conversion, if necessary.
+> Am I following the commit log description correctly in that block
+> zeroing is only required for DAX faults? Do we zero blocks for DAX DIO
+> as well to be consistent, or is that also required (because it looks
+> like we still have end_io completion for dio writes anyways)?
 
-Correct.
-
-> I suspect there's no use case to pass XFS_BMAPI_ZERO for new unwritten
-> allocations, but if the flag is passed, doesn't this cause duplicate
-> block zeroing?
-
-It probably would, but....
-
-> Perhaps we should drop the zero flag from 'flags' after
-> allocation in xfs_bmapi_write() just to ensure this executes in one
-> place or the other..?
-
-I think that if we hit this, we're doing something else wrong - why
-would we allocate unwritten extents and still need to initialise
-them to zero?
-
-> > +	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
-> > +	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
-> > +	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
-> > +
-> > +	if (IS_DAX(VFS_I(ip)))
-> > +		return dax_clear_blocks(VFS_I(ip), block, size);
-> > +
-> > +	/*
-> > +	 * let the block layer decide on the fastest method of
-> > +	 * implementing the zeroing.
-> > +	 */
-> > +	return sb_issue_zeroout(mp->m_super, block, count_fsb, GFP_NOFS);
-> 
-> The count param to sb_issue_zeroout() is a sector_t and we're passing an
-> FSB.
-
-"sector_t" does not mean the function takes parameters in units of
-sectors. It's the only variable that you can guarantee will be sized
-correctly to the kernel's configured block device capacity
-support. Indeed:
-
-static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
-                sector_t nr_blocks, gfp_t gfp_mask)
-{
-        return blkdev_issue_zeroout(sb->s_bdev,
-                                    block << (sb->s_blocksize_bits - 9),
-                                    nr_blocks << (sb->s_blocksize_bits - 9),
-                                    gfp_mask, true);
-}
-
-sb_issue_zeroout() takes a block device offset and length in
-filesystem block size units and converts them back to sectors to
-pass it to the block layer.
+DAX DIO will do the zeroing rather than using unwritten extents,
+too. But we still have DIO IO completion as that needs to do file
+size updates.
 
 Cheers,
 
