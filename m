@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A6CFB7CBF
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 17:26:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 970B730404E
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 15:26:14 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ulyB6FixkKQZvL7x for <xfs@oss.sgi.com>;
-	Thu, 29 Oct 2015 15:26:11 -0700 (PDT)
-Date: Fri, 30 Oct 2015 09:26:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/8] cleanup: get rid of ASSERT
-Message-ID: <20151029222609.GC10656@dastard>
-References: <1444959901-31319-1-git-send-email-david@fromorbit.com>
-	<1444959901-31319-2-git-send-email-david@fromorbit.com>
-	<20151028115121.GA50552@bfoster.bfoster>
-	<20151028223234.GQ8773@dastard>
-	<20151029121333.GA11663@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151029121333.GA11663@bfoster.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EBF697CBF
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 15:12:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DBA588F8049
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:31 -0700 (PDT)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id dL7R1tmoTZbvxvof for
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:30 -0700 (PDT)
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [RFC 02/11] mm: add pmd_mkclean()
+Date: Thu, 29 Oct 2015 14:12:06 -0600
+Message-Id: <1446149535-16200-3-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,98 +22,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Jeff Layton <jlayton@poochiereds.net>, x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Thu, Oct 29, 2015 at 08:13:34AM -0400, Brian Foster wrote:
-> On Thu, Oct 29, 2015 at 09:32:34AM +1100, Dave Chinner wrote:
-> > On Wed, Oct 28, 2015 at 07:51:22AM -0400, Brian Foster wrote:
-> > > On Fri, Oct 16, 2015 at 12:44:54PM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > ASSERT comes from the xfs/xfs.h include, and we don't ever define
-> > > > DEBUG so we never get asserts built in. We want asserts built in for
-> > > > testing, but not for distro packages. The debian package already
-> > > > tries to do this by using "export DEBUG=-DNDEBUG" for the build
-> > > > context, but seeing as we pull in #define ASSERT(ex) (0) from the
-> > > > XFS headers it's a no-op.
-> > > > 
-> > > > Convert all the ASSERT calls to assert to remove this conflict with
-> > > > the xfsprogs headers and so local developer builds are built with
-> > > > asserts enabled.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > ---
-> > > 
-> > > My initial concern when reading this was that asserts were now
-> > > unconditionally enabled. According to the man page, assert() is enabled
-> > > unless NDEBUG is defined at include time. The debian builder apparently
-> > > does this, but is this standard for other such utils?
-> > 
-> > For other XFS utilities? Yes. For other packages I don't maintain? I
-> > don't know, I don't care, and I don't think it's relevant at all.
-> > How the distro builds and packages a utility is up to the distro
-> > maintainers - if they define -NDEBUG, then there is absolutely no
-> > change in behaviour of xfsdump. I think the binary is effectively
-> > unchanged as assert() is defined out in that case...
-> > 
-> 
-> I'm talking about common packaging tools (e.g., yum/dnf being the
-> obvious next example) and XFS packages, not random other packages. If
-> they don't define NDEBUG, then apparently there is a change in behavior.
+Currently PMD pages can be dirtied via pmd_mkdirty(), but cannot be
+cleaned.  For DAX mmap dirty page tracking we need to be able to clean PMD
+pages when we flush them to media so that we get a new write fault the next
+time the are written to.
 
-If they don't define that, then they've been building the packages
-incorrectly... ;)
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ arch/x86/include/asm/pgtable.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> > > If the
-> > > problem is that asserts cannot be enabled, I'm wondering why the
-> > > appropriate fix isn't to define DEBUG somewhere for debug-enabled builds
-> > > rather than unconditionally convert all of the ASSERT() calls into
-> > > actual assert()'s..?
-> > 
-> > Becuase it has to build with both old and new xfsprogs userspace
-> > headers. Hence we cannot use ASSERT reliably in xfsdump at all,
-> > because it's owned by the old xfsprogs headers and it's behaviour is
-> > determined by whatever that xfsprogs installation defined......
-> > 
-> 
-> Then why not try to undef/redef in xfsdump or just rename the #define
-> that's used? I don't care too much either way, I just don't follow why
-> there's a need to change behavior at all to fix a naming conflict.
-> 
-> Are we saying that ASSERT() probably shouldn't exist in userspace (incl.
-> xfsprogs) and we should always use the generic assert() mechanism? Or
-> are we saying ASSERT() can exist in userspace, but it's purely a libxfs
-> thing and should not be exported beyond that (e.g., libxfs can use
-> ASSERT(), actual userspace tools like repair, etc. should eventually use
-> assert())..?
-
-Precisely this. ASSERT is used in the kernel side libxfs code, and
-so only exists in userspace to support the libxfs code in userspace.
-We don't want the libxfs code in userspace aborting on corrupt
-structures or invalid situations, because we need to
-handle/parse/repair such brokenness. IOWS, the ASSERTs in libxfs/ in
-userspace need to be turned off for userspace to work correctly.
-That's what the DEBUG define in libxfs does.
-
-That leads to the xfsprogs userspace still needing an assert
-facility - that comes from using assert() and NDEBUG to turn it off
-and on.
-
-Essentially, ASSERT is internal to libxfs and should not be exported
-anywhere. assert() should used outside libxfs in xfsprogs and other
-XFS code bases.
-
-Cheers,
-
-Dave.
+diff --git a/arch/x86/include/asm/pgtable.h b/arch/x86/include/asm/pgtable.h
+index 867da5b..c548e4c 100644
+--- a/arch/x86/include/asm/pgtable.h
++++ b/arch/x86/include/asm/pgtable.h
+@@ -277,6 +277,11 @@ static inline pmd_t pmd_mkdirty(pmd_t pmd)
+ 	return pmd_set_flags(pmd, _PAGE_DIRTY | _PAGE_SOFT_DIRTY);
+ }
+ 
++static inline pmd_t pmd_mkclean(pmd_t pmd)
++{
++	return pmd_clear_flags(pmd, _PAGE_DIRTY | _PAGE_SOFT_DIRTY);
++}
++
+ static inline pmd_t pmd_mkhuge(pmd_t pmd)
+ {
+ 	return pmd_set_flags(pmd, _PAGE_PSE);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.0
 
 _______________________________________________
 xfs mailing list
