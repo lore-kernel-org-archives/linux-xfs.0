@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 996997F3F
+	by oss.sgi.com (Postfix) with ESMTP id C140B7F4E
 	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 15:12:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A4F78F804C
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 82FA78F804B
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:34 -0700 (PDT)
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id p6hl9FycSJHYkd5x for
-	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:29 -0700 (PDT)
+	cuda.sgi.com with ESMTP id QyrThUPtrPOAD5Pi for
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:32 -0700 (PDT)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [RFC 01/11] pmem: add wb_cache_pmem() to the PMEM API
-Date: Thu, 29 Oct 2015 14:12:05 -0600
-Message-Id: <1446149535-16200-2-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [RFC 04/11] dax: support dirty DAX entries in radix tree
+Date: Thu, 29 Oct 2015 14:12:08 -0600
+Message-Id: <1446149535-16200-5-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,104 +30,148 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Jeff Layton <jlayton@poochiereds.net>, x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-The function __arch_wb_cache_pmem() was already an internal implementation
-detail of the x86 PMEM API, but this functionality needs to be exported as
-part of the general PMEM API to handle the fsync/msync case for DAX mmaps.
+Add support for tracking dirty DAX entries in the struct address_space
+radix tree.  This tree is already used for dirty page writeback, and it
+already supports the use of exceptional (non struct page*) entries.
+
+In order to properly track dirty DAX pages we will insert new exceptional
+entries into the radix tree that represent dirty DAX PTE or PMD pages.
+
+There are currently two types of exceptional entries (shmem and shadow)
+that can be placed into the radix tree, and this adds a third.  There
+shouldn't be any collisions between these various exceptional entries
+because only one type of exceptional entry should be able to be found in a
+radix tree at a time depending on how it is being used.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- arch/x86/include/asm/pmem.h | 11 ++++++-----
- include/linux/pmem.h        | 22 +++++++++++++++++++++-
- 2 files changed, 27 insertions(+), 6 deletions(-)
+ fs/inode.c                 |  1 +
+ include/linux/dax.h        |  5 +++++
+ include/linux/fs.h         |  1 +
+ include/linux/radix-tree.h |  3 +++
+ mm/filemap.c               | 12 ++++++++----
+ mm/truncate.c              |  5 +++--
+ 6 files changed, 21 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/include/asm/pmem.h b/arch/x86/include/asm/pmem.h
-index d8ce3ec..6c7ade0 100644
---- a/arch/x86/include/asm/pmem.h
-+++ b/arch/x86/include/asm/pmem.h
-@@ -67,18 +67,19 @@ static inline void arch_wmb_pmem(void)
- }
- 
- /**
-- * __arch_wb_cache_pmem - write back a cache range with CLWB
-+ * arch_wb_cache_pmem - write back a cache range with CLWB
-  * @vaddr:	virtual start address
-  * @size:	number of bytes to write back
-  *
-  * Write back a cache range using the CLWB (cache line write back)
-  * instruction.  This function requires explicit ordering with an
-- * arch_wmb_pmem() call.  This API is internal to the x86 PMEM implementation.
-+ * arch_wmb_pmem() call.
-  */
--static inline void __arch_wb_cache_pmem(void *vaddr, size_t size)
-+static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
+diff --git a/fs/inode.c b/fs/inode.c
+index 78a17b8..f7c87a6 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -496,6 +496,7 @@ void clear_inode(struct inode *inode)
+ 	spin_lock_irq(&inode->i_data.tree_lock);
+ 	BUG_ON(inode->i_data.nrpages);
+ 	BUG_ON(inode->i_data.nrshadows);
++	BUG_ON(inode->i_data.nrdax);
+ 	spin_unlock_irq(&inode->i_data.tree_lock);
+ 	BUG_ON(!list_empty(&inode->i_data.private_list));
+ 	BUG_ON(!(inode->i_state & I_FREEING));
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index b415e52..e9d57f68 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -36,4 +36,9 @@ static inline bool vma_is_dax(struct vm_area_struct *vma)
  {
- 	u16 x86_clflush_size = boot_cpu_data.x86_clflush_size;
- 	unsigned long clflush_mask = x86_clflush_size - 1;
-+	void *vaddr = (void __force *)addr;
- 	void *vend = vaddr + size;
- 	void *p;
- 
-@@ -115,7 +116,7 @@ static inline size_t arch_copy_from_iter_pmem(void __pmem *addr, size_t bytes,
- 	len = copy_from_iter_nocache(vaddr, bytes, i);
- 
- 	if (__iter_needs_pmem_wb(i))
--		__arch_wb_cache_pmem(vaddr, bytes);
-+		arch_wb_cache_pmem(addr, bytes);
- 
- 	return len;
- }
-@@ -138,7 +139,7 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
- 	else
- 		memset(vaddr, 0, size);
- 
--	__arch_wb_cache_pmem(vaddr, size);
-+	arch_wb_cache_pmem(addr, size);
- }
- 
- static inline bool __arch_has_wmb_pmem(void)
-diff --git a/include/linux/pmem.h b/include/linux/pmem.h
-index 85f810b3..2cd5003 100644
---- a/include/linux/pmem.h
-+++ b/include/linux/pmem.h
-@@ -53,12 +53,18 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
- {
- 	BUG();
+ 	return vma->vm_file && IS_DAX(vma->vm_file->f_mapping->host);
  }
 +
-+static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
++static inline bool dax_mapping(struct address_space *mapping)
 +{
-+	BUG();
++	return mapping->host && IS_DAX(mapping->host);
 +}
  #endif
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 72d8a84..f791698 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -433,6 +433,7 @@ struct address_space {
+ 	/* Protected by tree_lock together with the radix tree */
+ 	unsigned long		nrpages;	/* number of total pages */
+ 	unsigned long		nrshadows;	/* number of shadow entries */
++	unsigned long		nrdax;	        /* number of DAX entries */
+ 	pgoff_t			writeback_index;/* writeback starts here */
+ 	const struct address_space_operations *a_ops;	/* methods */
+ 	unsigned long		flags;		/* error bits/gfp mask */
+diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
+index 33170db..fabec66 100644
+--- a/include/linux/radix-tree.h
++++ b/include/linux/radix-tree.h
+@@ -51,6 +51,9 @@
+ #define RADIX_TREE_EXCEPTIONAL_ENTRY	2
+ #define RADIX_TREE_EXCEPTIONAL_SHIFT	2
  
- /*
-  * Architectures that define ARCH_HAS_PMEM_API must provide
-  * implementations for arch_memcpy_to_pmem(), arch_wmb_pmem(),
-- * arch_copy_from_iter_pmem(), arch_clear_pmem() and arch_has_wmb_pmem().
-+ * arch_copy_from_iter_pmem(), arch_clear_pmem(), arch_wb_cache_pmem()
-+ * and arch_has_wmb_pmem().
-  */
- static inline void memcpy_from_pmem(void *dst, void __pmem const *src, size_t size)
- {
-@@ -202,4 +208,18 @@ static inline void clear_pmem(void __pmem *addr, size_t size)
- 	else
- 		default_clear_pmem(addr, size);
- }
++#define RADIX_TREE_DAX_PTE  ((void *)(0x10 | RADIX_TREE_EXCEPTIONAL_ENTRY))
++#define RADIX_TREE_DAX_PMD  ((void *)(0x20 | RADIX_TREE_EXCEPTIONAL_ENTRY))
 +
-+/**
-+ * wb_cache_pmem - write back processor cache for PMEM memory range
-+ * @addr:	virtual start address
-+ * @size:	number of bytes to write back
-+ *
-+ * Write back the processor cache range starting at 'addr' for 'size' bytes.
-+ * This function requires explicit ordering with a wmb_pmem() call.
-+ */
-+static inline void wb_cache_pmem(void __pmem *addr, size_t size)
-+{
-+	if (arch_has_pmem_api())
-+		arch_wb_cache_pmem(addr, size);
-+}
- #endif /* __PMEM_H__ */
+ static inline int radix_tree_is_indirect_ptr(void *ptr)
+ {
+ 	return (int)((unsigned long)ptr & RADIX_TREE_INDIRECT_PTR);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 327910c..c3a9e4f 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -11,6 +11,7 @@
+  */
+ #include <linux/export.h>
+ #include <linux/compiler.h>
++#include <linux/dax.h>
+ #include <linux/fs.h>
+ #include <linux/uaccess.h>
+ #include <linux/capability.h>
+@@ -440,7 +441,7 @@ int filemap_write_and_wait_range(struct address_space *mapping,
+ {
+ 	int err = 0;
+ 
+-	if (mapping->nrpages) {
++	if (mapping->nrpages || mapping->nrdax) {
+ 		err = __filemap_fdatawrite_range(mapping, lstart, lend,
+ 						 WB_SYNC_ALL);
+ 		/* See comment of filemap_write_and_wait() */
+@@ -538,6 +539,9 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 		p = radix_tree_deref_slot_protected(slot, &mapping->tree_lock);
+ 		if (!radix_tree_exceptional_entry(p))
+ 			return -EEXIST;
++
++		BUG_ON(dax_mapping(mapping));
++
+ 		if (shadowp)
+ 			*shadowp = p;
+ 		mapping->nrshadows--;
+@@ -1201,9 +1205,9 @@ repeat:
+ 			if (radix_tree_deref_retry(page))
+ 				goto restart;
+ 			/*
+-			 * A shadow entry of a recently evicted page,
+-			 * or a swap entry from shmem/tmpfs.  Return
+-			 * it without attempting to raise page count.
++			 * A shadow entry of a recently evicted page, a swap
++			 * entry from shmem/tmpfs or a DAX entry.  Return it
++			 * without attempting to raise page count.
+ 			 */
+ 			goto export;
+ 		}
+diff --git a/mm/truncate.c b/mm/truncate.c
+index 76e35ad..cdf44a0 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -9,6 +9,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/backing-dev.h>
++#include <linux/dax.h>
+ #include <linux/gfp.h>
+ #include <linux/mm.h>
+ #include <linux/swap.h>
+@@ -29,8 +30,8 @@ static void clear_exceptional_entry(struct address_space *mapping,
+ 	struct radix_tree_node *node;
+ 	void **slot;
+ 
+-	/* Handled by shmem itself */
+-	if (shmem_mapping(mapping))
++	/* Handled by shmem or DAX directly */
++	if (shmem_mapping(mapping) || dax_mapping(mapping))
+ 		return;
+ 
+ 	spin_lock_irq(&mapping->tree_lock);
 -- 
 2.1.0
 
