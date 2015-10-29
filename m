@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 06ED07F4E
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 93C6C7F50
 	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 15:12:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C488830404E
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:36 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 39D90AC002
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:34 -0700 (PDT)
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id kZJpRtpbdDDgEWIe for
-	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:35 -0700 (PDT)
+	cuda.sgi.com with ESMTP id ATDmGVXsJN0tIfbS for
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:33 -0700 (PDT)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [RFC 07/11] mm: add find_get_entries_tag()
-Date: Thu, 29 Oct 2015 14:12:11 -0600
-Message-Id: <1446149535-16200-8-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [RFC 05/11] mm: add follow_pte_pmd()
+Date: Thu, 29 Oct 2015 14:12:09 -0600
+Message-Id: <1446149535-16200-6-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,104 +30,97 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Jeff Layton <jlayton@poochiereds.net>, x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Add find_get_entries_tag() to the family of functions that include
-find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
-needed for DAX dirty page handling because we need a list of both page
-offsets and radix tree entries ('indices' and 'entries' in this function)
-that are marked with the PAGECACHE_TAG_TOWRITE tag.
+Similar to follow_pte(), follow_pte_pmd() allows either a PTE leaf or a
+huge page PMD leaf to be found and returned.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- include/linux/pagemap.h |  3 +++
- mm/filemap.c            | 61 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 64 insertions(+)
+ include/linux/mm.h |  2 ++
+ mm/memory.c        | 41 +++++++++++++++++++++++++++++++++--------
+ 2 files changed, 35 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index a6c78e0..6fea3be 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -354,6 +354,9 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t start,
- 			       unsigned int nr_pages, struct page **pages);
- unsigned find_get_pages_tag(struct address_space *mapping, pgoff_t *index,
- 			int tag, unsigned int nr_pages, struct page **pages);
-+unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-+			int tag, unsigned int nr_entries,
-+			struct page **entries, pgoff_t *indices);
- 
- struct page *grab_cache_page_write_begin(struct address_space *mapping,
- 			pgoff_t index, unsigned flags);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c3a9e4f..992cf84 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1454,6 +1454,67 @@ repeat:
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 80001de..393441c 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1166,6 +1166,8 @@ int copy_page_range(struct mm_struct *dst, struct mm_struct *src,
+ 			struct vm_area_struct *vma);
+ void unmap_mapping_range(struct address_space *mapping,
+ 		loff_t const holebegin, loff_t const holelen, int even_cows);
++int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
++			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp);
+ int follow_pfn(struct vm_area_struct *vma, unsigned long address,
+ 	unsigned long *pfn);
+ int follow_phys(struct vm_area_struct *vma, unsigned long address,
+diff --git a/mm/memory.c b/mm/memory.c
+index deb679c..c2b8c0a 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -3512,8 +3512,8 @@ int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
  }
- EXPORT_SYMBOL(find_get_pages_tag);
+ #endif /* __PAGETABLE_PMD_FOLDED */
  
-+/**
-+ * find_get_entries_tag - find and return entries that match @tag
-+ * @mapping:	the address_space to search
-+ * @start:	the starting page cache index
-+ * @tag:	the tag index
-+ * @nr_entries:	the maximum number of entries
-+ * @entries:	where the resulting entries are placed
-+ * @indices:	the cache indices corresponding to the entries in @entries
-+ *
-+ * Like find_get_entries, except we only return entries which are tagged with
-+ * @tag.
-+ */
-+unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-+			int tag, unsigned int nr_entries,
-+			struct page **entries, pgoff_t *indices)
-+{
-+	void **slot;
-+	unsigned int ret = 0;
-+	struct radix_tree_iter iter;
+-static int __follow_pte(struct mm_struct *mm, unsigned long address,
+-		pte_t **ptepp, spinlock_t **ptlp)
++static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
++		pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
+ {
+ 	pgd_t *pgd;
+ 	pud_t *pud;
+@@ -3529,12 +3529,23 @@ static int __follow_pte(struct mm_struct *mm, unsigned long address,
+ 		goto out;
+ 
+ 	pmd = pmd_offset(pud, address);
+-	VM_BUG_ON(pmd_trans_huge(*pmd));
+-	if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
+-		goto out;
+ 
+-	/* We cannot handle huge page PFN maps. Luckily they don't exist. */
+-	if (pmd_huge(*pmd))
++	if (pmd_huge(*pmd)) {
++		if (!pmdpp)
++			goto out;
 +
-+	if (!nr_entries)
-+		return 0;
-+
-+	rcu_read_lock();
-+restart:
-+	radix_tree_for_each_tagged(slot, &mapping->page_tree,
-+				   &iter, start, tag) {
-+		struct page *page;
-+repeat:
-+		page = radix_tree_deref_slot(slot);
-+		if (unlikely(!page))
-+			continue;
-+		if (radix_tree_exception(page)) {
-+			if (radix_tree_deref_retry(page))
-+				goto restart;
-+			/*
-+			 * A shadow entry of a recently evicted page, a swap
-+			 * entry from shmem/tmpfs or a DAX entry.  Return it
-+			 * without attempting to raise page count.
-+			 */
-+			goto export;
++		*ptlp = pmd_lock(mm, pmd);
++		if (pmd_huge(*pmd)) {
++			/* Success, we found a large PTE */
++			*pmdpp = pmd;
++			return 0;
 +		}
-+		if (!page_cache_get_speculative(page))
-+			goto repeat;
-+
-+		/* Has the page moved? */
-+		if (unlikely(page != *slot)) {
-+			page_cache_release(page);
-+			goto repeat;
-+		}
-+export:
-+		indices[ret] = iter.index;
-+		entries[ret] = page;
-+		if (++ret == nr_entries)
-+			break;
++		/* Somebody removed the PMD entry, try it as a pte */
++		spin_unlock(*ptlp);
 +	}
-+	rcu_read_unlock();
-+	return ret;
-+}
-+EXPORT_SYMBOL(find_get_entries_tag);
 +
- /*
-  * CD/DVDs are error prone. When a medium error occurs, the driver may fail
-  * a _large_ part of the i/o request. Imagine the worst scenario:
++	/* FIXME: pmd_bad() is sometimes set for DAX pmds? */
++	if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
+ 		goto out;
+ 
+ 	ptep = pte_offset_map_lock(mm, pmd, address, ptlp);
+@@ -3557,9 +3568,23 @@ static inline int follow_pte(struct mm_struct *mm, unsigned long address,
+ 
+ 	/* (void) is needed to make gcc happy */
+ 	(void) __cond_lock(*ptlp,
+-			   !(res = __follow_pte(mm, address, ptepp, ptlp)));
++			   !(res = __follow_pte_pmd(mm, address, ptepp, NULL,
++					   ptlp)));
++	return res;
++}
++
++int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
++			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
++{
++	int res;
++
++	/* (void) is needed to make gcc happy */
++	(void) __cond_lock(*ptlp,
++			   !(res = __follow_pte_pmd(mm, address, ptepp, pmdpp,
++					   ptlp)));
+ 	return res;
+ }
++EXPORT_SYMBOL(follow_pte_pmd);
+ 
+ /**
+  * follow_pfn - look up PFN at a user virtual address
 -- 
 2.1.0
 
