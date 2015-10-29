@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EBF697CBF
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 15:12:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DBA588F8049
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:31 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DF8907CBF
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 15:12:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CFEC130404E
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:32 -0700 (PDT)
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id dL7R1tmoTZbvxvof for
-	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:30 -0700 (PDT)
+	cuda.sgi.com with ESMTP id 3CAC24cb9E0JNJWp for
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2015 13:12:31 -0700 (PDT)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [RFC 02/11] mm: add pmd_mkclean()
-Date: Thu, 29 Oct 2015 14:12:06 -0600
-Message-Id: <1446149535-16200-3-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [RFC 03/11] pmem: enable REQ_FLUSH handling
+Date: Thu, 29 Oct 2015 14:12:07 -0600
+Message-Id: <1446149535-16200-4-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,32 +30,40 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Jeff Layton <jlayton@poochiereds.net>, x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Currently PMD pages can be dirtied via pmd_mkdirty(), but cannot be
-cleaned.  For DAX mmap dirty page tracking we need to be able to clean PMD
-pages when we flush them to media so that we get a new write fault the next
-time the are written to.
+Currently the PMEM driver doesn't accept REQ_FLUSH bios.  These are sent
+down via blkdev_issue_flush() in response to a fsync() or msync().
+
+When we get an msync() or fsync() it is the responsibility of the DAX code
+to flush all dirty pages to media.  The PMEM driver then just has issue a
+wmb_pmem() in response to the REQ_FLUSH to ensure that before we return all
+the flushed data has been durably stored on the media.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- arch/x86/include/asm/pgtable.h | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/nvdimm/pmem.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/include/asm/pgtable.h b/arch/x86/include/asm/pgtable.h
-index 867da5b..c548e4c 100644
---- a/arch/x86/include/asm/pgtable.h
-+++ b/arch/x86/include/asm/pgtable.h
-@@ -277,6 +277,11 @@ static inline pmd_t pmd_mkdirty(pmd_t pmd)
- 	return pmd_set_flags(pmd, _PAGE_DIRTY | _PAGE_SOFT_DIRTY);
- }
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 0ba6a97..e1e222e 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -80,7 +80,7 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
+ 	if (do_acct)
+ 		nd_iostat_end(bio, start);
  
-+static inline pmd_t pmd_mkclean(pmd_t pmd)
-+{
-+	return pmd_clear_flags(pmd, _PAGE_DIRTY | _PAGE_SOFT_DIRTY);
-+}
-+
- static inline pmd_t pmd_mkhuge(pmd_t pmd)
- {
- 	return pmd_set_flags(pmd, _PAGE_PSE);
+-	if (bio_data_dir(bio))
++	if (bio_data_dir(bio) || (bio->bi_rw & REQ_FLUSH))
+ 		wmb_pmem();
+ 
+ 	bio_endio(bio);
+@@ -189,6 +189,7 @@ static int pmem_attach_disk(struct device *dev,
+ 	blk_queue_physical_block_size(pmem->pmem_queue, PAGE_SIZE);
+ 	blk_queue_max_hw_sectors(pmem->pmem_queue, UINT_MAX);
+ 	blk_queue_bounce_limit(pmem->pmem_queue, BLK_BOUNCE_ANY);
++	blk_queue_flush(pmem->pmem_queue, REQ_FLUSH);
+ 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, pmem->pmem_queue);
+ 
+ 	disk = alloc_disk(0);
 -- 
 2.1.0
 
