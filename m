@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F3A229DF5
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 13:53:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 299A4AC002
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 11:53:05 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pJq5CHtmIVZH9F5f (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2015 11:53:05 -0800 (PST)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 2/2] xfs: invalidate cached acl if set via ioctl
-Date: Mon,  2 Nov 2015 20:52:54 +0100
-Message-Id: <1446493974-24669-3-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1446493974-24669-1-git-send-email-agruenba@redhat.com>
-References: <1446493974-24669-1-git-send-email-agruenba@redhat.com>
-References: <1446217508-22157-1-git-send-email-agruenba@redhat.com>
-	<20151102025352.GY19199@dastard>
-In-Reply-To: <20151102025352.GY19199@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A222C7F3F
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 22:55:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8FD6330406B
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2015 20:55:39 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	ZsQ2KfU35opPERhE for <xfs@oss.sgi.com>;
+	Thu, 29 Oct 2015 20:55:37 -0700 (PDT)
+Date: Fri, 30 Oct 2015 14:55:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC 00/11] DAX fsynx/msync support
+Message-ID: <20151030035533.GU19199@dastard>
+References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,134 +25,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Andreas Gruenbacher <agruenba@redhat.com>, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Setting or removing the "SGI_ACL_[FILE|DEFAULT]" attributes via the
-XFS_IOC_ATTRMULTI_BY_HANDLE ioctl completely bypasses the POSIX ACL
-infrastructure, like setting the "trusted.SGI_ACL_[FILE|DEFAULT]" xattrs
-did until commit 6caa1056.  Similar to that commit, invalidate cached
-acls when setting/removing them via the ioctl as well.
+On Thu, Oct 29, 2015 at 02:12:04PM -0600, Ross Zwisler wrote:
+> This patch series adds support for fsync/msync to DAX.
+> 
+> Patches 1 through 8 add various utilities that the DAX code will eventually
+> need, and the DAX code itself is added by patch 9.  Patches 10 and 11 are
+> filesystem changes that are needed after the DAX code is added, but these
+> patches may change slightly as the filesystem fault handling for DAX is
+> being modified ([1] and [2]).
+> 
+> I've marked this series as RFC because I'm still testing, but I wanted to
+> get this out there so people would see the direction I was going and
+> hopefully comment on any big red flags sooner rather than later.
+> 
+> I realize that we are getting pretty dang close to the v4.4 merge window,
+> but I think that if we can get this reviewed and working it's a much better
+> solution than the "big hammer" approach that blindly flushes entire PMEM
+> namespaces [3].
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/xfs/xfs_acl.h   |  3 +++
- fs/xfs/xfs_ioctl.c | 10 +++++++++-
- fs/xfs/xfs_xattr.c | 38 ++++++++++++++++++++++++--------------
- 3 files changed, 36 insertions(+), 15 deletions(-)
+We need the "big hammer" regardless of fsync. If REQ_FLUSH and
+REQ_FUA don't do the right thing when it comes to ordering journal
+writes against other IO operations, then the filesystems are not
+crash safe. i.e. we need REQ_FLUSH/REQ_FUA to commit all outstanding
+changes back to stable storage, just like they do for existing
+storage....
 
-diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-index 3841b07..75af0a4 100644
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -36,4 +36,7 @@ static inline struct posix_acl *xfs_get_acl(struct inode *inode, int type)
- # define posix_acl_access_exists(inode)			0
- # define posix_acl_default_exists(inode)		0
- #endif /* CONFIG_XFS_POSIX_ACL */
-+
-+extern void xfs_forget_acl(struct inode *inode, const char *name, int xflags);
-+
- #endif	/* __XFS_ACL_H__ */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 66bcfbd..d42738d 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -40,6 +40,7 @@
- #include "xfs_symlink.h"
- #include "xfs_trans.h"
- #include "xfs_pnfs.h"
-+#include "xfs_acl.h"
- 
- #include <linux/capability.h>
- #include <linux/dcache.h>
-@@ -494,6 +495,8 @@ xfs_attrmulti_attr_set(
- 		return PTR_ERR(kbuf);
- 
- 	error = xfs_attr_set(XFS_I(inode), name, kbuf, len, flags);
-+	if (!error)
-+		xfs_forget_acl(inode, name, flags);
- 	kfree(kbuf);
- 	return error;
- }
-@@ -504,9 +507,14 @@ xfs_attrmulti_attr_remove(
- 	unsigned char		*name,
- 	__uint32_t		flags)
- {
-+	int			error;
-+
- 	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
- 		return -EPERM;
--	return xfs_attr_remove(XFS_I(inode), name, flags);
-+	error = xfs_attr_remove(XFS_I(inode), name, flags);
-+	if (!error)
-+		xfs_forget_acl(inode, name, flags);
-+	return error;
- }
- 
- STATIC int
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 1542d64..8294f86 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -53,6 +53,28 @@ xfs_xattr_get(struct dentry *dentry, const char *name,
- 	return asize;
- }
- 
-+void
-+xfs_forget_acl(
-+	struct inode		*inode,
-+	const char		*name,
-+	int			xflags)
-+{
-+	/*
-+	 * Invalidate any cached ACLs if the user has bypassed the ACL
-+	 * interface. We don't validate the content whatsoever so it is caller
-+	 * responsibility to provide data in valid format and ensure i_mode is
-+	 * consistent.
-+	 */
-+	if (xflags & ATTR_ROOT) {
-+#ifdef CONFIG_XFS_POSIX_ACL
-+		if (!strcmp(name, SGI_ACL_FILE))
-+			forget_cached_acl(inode, ACL_TYPE_ACCESS);
-+		else if (!strcmp(name, SGI_ACL_DEFAULT))
-+			forget_cached_acl(inode, ACL_TYPE_DEFAULT);
-+#endif
-+	}
-+}
-+
- static int
- xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
- 		size_t size, int flags, int xflags)
-@@ -73,20 +95,8 @@ xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
- 		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
- 	error = xfs_attr_set(ip, (unsigned char *)name,
- 				(void *)value, size, xflags);
--	/*
--	 * Invalidate any cached ACLs if the user has bypassed the ACL
--	 * interface. We don't validate the content whatsoever so it is caller
--	 * responsibility to provide data in valid format and ensure i_mode is
--	 * consistent.
--	 */
--	if (!error && (xflags & ATTR_ROOT)) {
--#ifdef CONFIG_XFS_POSIX_ACL
--		if (!strcmp(name, SGI_ACL_FILE)
--			forget_cached_acl(VFS_I(ip), ACL_TYPE_ACCESS);
--		else if (!strcmp(name, SGI_ACL_DEFAULT))
--			forget_cached_acl(VFS_I(ip), ACL_TYPE_DEFAULT);
--#endif
--	}
-+	if (!error)
-+		xfs_forget_acl(d_inode(dentry), name, xflags);
- 
- 	return error;
- }
+> [1] http://oss.sgi.com/archives/xfs/2015-10/msg00523.html
+> [2] http://marc.info/?l=linux-ext4&m=144550211312472&w=2
+> [3] https://lists.01.org/pipermail/linux-nvdimm/2015-October/002614.html
+> 
+> Ross Zwisler (11):
+>   pmem: add wb_cache_pmem() to the PMEM API
+>   mm: add pmd_mkclean()
+>   pmem: enable REQ_FLUSH handling
+>   dax: support dirty DAX entries in radix tree
+>   mm: add follow_pte_pmd()
+>   mm: add pgoff_mkclean()
+>   mm: add find_get_entries_tag()
+>   fs: add get_block() to struct inode_operations
+
+I don't think this is the right thing to do - it propagates the use
+of bufferheads as a mapping structure into places where we do not
+want bufferheads. We've recently added a similar block mapping
+interface to the export operations structure for PNFS and that uses
+a "struct iomap" which is far more suited to being an inode
+operation this.
+
+We have plans to move this to the inode operations for various
+reasons. e.g: multipage write, adding interfaces that support proper
+mapping of holes, etc:
+
+https://www.redhat.com/archives/cluster-devel/2014-October/msg00167.html
+
+So after many years of saying no to moving getblocks to the inode
+operations it seems like the wrong thing to do now considering I
+want to convert all the DAX code to use iomaps while only 2/3
+filesystems are supported...
+
+>   dax: add support for fsync/sync
+
+Why put the dax_flush_mapping() in do_writepages()? Why not call it
+directly from the filesystem ->fsync() implementations where a
+getblocks callback could also be provided?
+
+Cheers,
+
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
