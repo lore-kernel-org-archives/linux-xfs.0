@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 35DF87F3F
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 10:05:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1727C304070
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 08:05:14 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E159B7F52
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 10:05:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C3C7B8F8035
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 08:05:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kux8r5db6VO6Ro2c (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 2eczdMDLlGuExLCk (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 30 Oct 2015 08:05:13 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 30 Oct 2015 08:05:16 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v2 0/5] xfs: SGI ACL Fixes
-Date: Fri, 30 Oct 2015 16:05:03 +0100
-Message-Id: <1446217508-22157-1-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v2 1/5] xfs: Validate the length of on-disk ACLs
+Date: Fri, 30 Oct 2015 16:05:04 +0100
+Message-Id: <1446217508-22157-2-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1446217508-22157-1-git-send-email-agruenba@redhat.com>
+References: <1446217508-22157-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +31,73 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Here is a reworked patch queue that also handles setting SGI_ACL_{FILE,DEFAULT}
-via XFS_IOC_ATTRMULTI_BY_HANDLE.  Please review.
+In xfs_acl_from_disk, instead of trusting that xfs_acl.acl_cnt is correct,
+make sure that the length of the attributes is correct as well.  Also, turn
+the aclp parameter into a const pointer.
 
-Thanks,
-Andreas
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/xfs/libxfs/xfs_format.h |  8 ++++++--
+ fs/xfs/xfs_acl.c           | 13 ++++++++-----
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-Andreas Gruenbacher (5):
-  xfs: Validate the length of on-disk ACLs
-  xfs: Plug memory leak in xfs_attrmulti_attr_set
-  xfs: SGI ACLs: Fix caching and mode setting
-  xfs: Add namespace parameter to the xfs kuid/kgid <=> uid/gid wrappers
-  xfs: SGI ACLs: Map uid/gid namespaces
-
- fs/xfs/libxfs/xfs_format.h |   8 ++-
- fs/xfs/xfs_acl.c           | 139 +++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_acl.h           |  13 +++++
- fs/xfs/xfs_inode.c         |  14 ++---
- fs/xfs/xfs_ioctl.c         |  61 +++++++++++++++++++-
- fs/xfs/xfs_iops.c          |  12 ++--
- fs/xfs/xfs_linux.h         |  21 ++++---
- fs/xfs/xfs_symlink.c       |   4 +-
- fs/xfs/xfs_xattr.c         |  20 ++++++-
- 9 files changed, 244 insertions(+), 48 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 9590a06..0e62682 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1487,9 +1487,13 @@ struct xfs_acl {
+ 						sizeof(struct xfs_acl_entry) \
+ 		: 25)
+ 
+-#define XFS_ACL_MAX_SIZE(mp) \
++#define XFS_ACL_SIZE(cnt) \
+ 	(sizeof(struct xfs_acl) + \
+-		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
++		sizeof(struct xfs_acl_entry) * cnt)
++
++#define XFS_ACL_MAX_SIZE(mp) \
++	XFS_ACL_SIZE(XFS_ACL_MAX_ENTRIES((mp)))
++
+ 
+ /* On-disk XFS extended attribute names */
+ #define SGI_ACL_FILE		"SGI_ACL_FILE"
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 4b64167..763e365 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -37,16 +37,19 @@
+ 
+ STATIC struct posix_acl *
+ xfs_acl_from_disk(
+-	struct xfs_acl	*aclp,
+-	int		max_entries)
++	const struct xfs_acl	*aclp,
++	int			len,
++	int			max_entries)
+ {
+ 	struct posix_acl_entry *acl_e;
+ 	struct posix_acl *acl;
+-	struct xfs_acl_entry *ace;
++	const struct xfs_acl_entry *ace;
+ 	unsigned int count, i;
+ 
++	if (len < sizeof(*aclp))
++		return ERR_PTR(-EFSCORRUPTED);
+ 	count = be32_to_cpu(aclp->acl_cnt);
+-	if (count > max_entries)
++	if (count > max_entries || XFS_ACL_SIZE(count) != len)
+ 		return ERR_PTR(-EFSCORRUPTED);
+ 
+ 	acl = posix_acl_alloc(count, GFP_KERNEL);
+@@ -163,7 +166,7 @@ xfs_get_acl(struct inode *inode, int type)
+ 		goto out;
+ 	}
+ 
+-	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
++	acl = xfs_acl_from_disk(xfs_acl, len, XFS_ACL_MAX_ENTRIES(ip->i_mount));
+ 	if (IS_ERR(acl))
+ 		goto out;
+ 
 -- 
 2.5.0
 
