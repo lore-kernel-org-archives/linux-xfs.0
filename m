@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 62B587F3F
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 06:39:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4CC9030404E
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 04:39:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 617F57F3F
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 07:36:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 30856304053
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2015 05:36:14 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Qcnj97NNo1prDJFE (version=TLSv1.2
+	cuda.sgi.com with ESMTP id jQTPOE2khEQerSw1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 30 Oct 2015 04:39:53 -0700 (PDT)
-Date: Fri, 30 Oct 2015 07:39:51 -0400
+	<xfs@oss.sgi.com>; Fri, 30 Oct 2015 05:36:10 -0700 (PDT)
+Date: Fri, 30 Oct 2015 08:36:08 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/8] cleanup: get rid of ASSERT
-Message-ID: <20151030113950.GA54905@bfoster.bfoster>
-References: <1444959901-31319-1-git-send-email-david@fromorbit.com>
-	<1444959901-31319-2-git-send-email-david@fromorbit.com>
-	<20151028115121.GA50552@bfoster.bfoster>
-	<20151028223234.GQ8773@dastard>
-	<20151029121333.GA11663@bfoster.bfoster>
-	<20151029222609.GC10656@dastard>
+Subject: Re: [PATCH 2/6] xfs: introduce BMAPI_ZERO for allocating zeroed
+	extents
+Message-ID: <20151030123608.GB54905@bfoster.bfoster>
+References: <1445225238-30413-1-git-send-email-david@fromorbit.com>
+	<1445225238-30413-3-git-send-email-david@fromorbit.com>
+	<20151029142757.GD11663@bfoster.bfoster>
+	<20151029233548.GR19199@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151029222609.GC10656@dastard>
+In-Reply-To: <20151029233548.GR19199@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,47 +34,82 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Fri, Oct 30, 2015 at 09:26:09AM +1100, Dave Chinner wrote:
-> On Thu, Oct 29, 2015 at 08:13:34AM -0400, Brian Foster wrote:
+On Fri, Oct 30, 2015 at 10:35:48AM +1100, Dave Chinner wrote:
+> On Thu, Oct 29, 2015 at 10:27:58AM -0400, Brian Foster wrote:
+> > On Mon, Oct 19, 2015 at 02:27:14PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
 ...
-> > Then why not try to undef/redef in xfsdump or just rename the #define
-> > that's used? I don't care too much either way, I just don't follow why
-> > there's a need to change behavior at all to fix a naming conflict.
+> 
+> > I suspect there's no use case to pass XFS_BMAPI_ZERO for new unwritten
+> > allocations, but if the flag is passed, doesn't this cause duplicate
+> > block zeroing?
+> 
+> It probably would, but....
+> 
+> > Perhaps we should drop the zero flag from 'flags' after
+> > allocation in xfs_bmapi_write() just to ensure this executes in one
+> > place or the other..?
+> 
+> I think that if we hit this, we're doing something else wrong - why
+> would we allocate unwritten extents and still need to initialise
+> them to zero?
+> 
+
+No idea, really (as noted above). ;) It just looked like it could be
+invoked twice per bmapi call, nothing else I saw prevented it, and it
+looks easily avoidable. Maybe somebody down the road decides to turn on
+block zeroing unconditionally in the block allocator due to hardware
+support or some such. Or maybe we'll never hit the problem. The point is
+that this code will inevitably be modified/enhanced down the road and
+nobody is going to remember that the zeroing is invoked twice in a
+particular prealloc codepath.
+
+If we don't want to mess with the flags, how about an assert somewhere
+so it's explicit the bmapi implementation doesn't expect this
+combination of flags?
+
+> > > +	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
+> > > +	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
+> > > +	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
+> > > +
+> > > +	if (IS_DAX(VFS_I(ip)))
+> > > +		return dax_clear_blocks(VFS_I(ip), block, size);
+> > > +
+> > > +	/*
+> > > +	 * let the block layer decide on the fastest method of
+> > > +	 * implementing the zeroing.
+> > > +	 */
+> > > +	return sb_issue_zeroout(mp->m_super, block, count_fsb, GFP_NOFS);
 > > 
-> > Are we saying that ASSERT() probably shouldn't exist in userspace (incl.
-> > xfsprogs) and we should always use the generic assert() mechanism? Or
-> > are we saying ASSERT() can exist in userspace, but it's purely a libxfs
-> > thing and should not be exported beyond that (e.g., libxfs can use
-> > ASSERT(), actual userspace tools like repair, etc. should eventually use
-> > assert())..?
+> > The count param to sb_issue_zeroout() is a sector_t and we're passing an
+> > FSB.
 > 
-> Precisely this. ASSERT is used in the kernel side libxfs code, and
-> so only exists in userspace to support the libxfs code in userspace.
-> We don't want the libxfs code in userspace aborting on corrupt
-> structures or invalid situations, because we need to
-> handle/parse/repair such brokenness. IOWS, the ASSERTs in libxfs/ in
-> userspace need to be turned off for userspace to work correctly.
-> That's what the DEBUG define in libxfs does.
+> "sector_t" does not mean the function takes parameters in units of
+> sectors. It's the only variable that you can guarantee will be sized
+> correctly to the kernel's configured block device capacity
+> support. Indeed:
 > 
-
-Indeed.
-
-> That leads to the xfsprogs userspace still needing an assert
-> facility - that comes from using assert() and NDEBUG to turn it off
-> and on.
+> static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
+>                 sector_t nr_blocks, gfp_t gfp_mask)
+> {
+>         return blkdev_issue_zeroout(sb->s_bdev,
+>                                     block << (sb->s_blocksize_bits - 9),
+>                                     nr_blocks << (sb->s_blocksize_bits - 9),
+>                                     gfp_mask, true);
+> }
 > 
-> Essentially, ASSERT is internal to libxfs and should not be exported
-> anywhere. assert() should used outside libxfs in xfsprogs and other
-> XFS code bases.
+> sb_issue_zeroout() takes a block device offset and length in
+> filesystem block size units and converts them back to sectors to
+> pass it to the block layer.
 > 
 
-Makes sense to me. Thanks for the explanation. It would be good if the
-commit log description included some of this info. Otherwise, for the
-series:
+Ah, I see. I missed the conversion that was being done there via the sb
+helper.
 
-Acked-by: Brian Foster <bfoster@redhat.com>
+Brian
 
 > Cheers,
 > 
