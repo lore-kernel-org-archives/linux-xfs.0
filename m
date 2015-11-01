@@ -1,29 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D88B37F59
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 02:43:39 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A5E8A7F54
+	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 09:10:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BA1968F8035
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 00:43:39 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OWDviytWGfvuNFZS (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F0B9AC003
+	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 07:10:49 -0800 (PST)
+Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net
+	[217.70.183.194]) by cuda.sgi.com with ESMTP id
+	f7FlQbuUi0bf2u7f (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 16 Nov 2015 00:43:35 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id D4989C001264
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 08:43:34 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tAG8hVmj008258
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 03:43:34 -0500
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2] xfs_io: implement 'inode' command V4
-Date: Mon, 16 Nov 2015 09:43:23 +0100
-Message-Id: <1447663404-7857-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1447663404-7857-1-git-send-email-cmaiolino@redhat.com>
-References: <1447663404-7857-1-git-send-email-cmaiolino@redhat.com>
+	<xfs@oss.sgi.com>; Sun, 01 Nov 2015 07:10:45 -0800 (PST)
+Received: from mfilter27-d.gandi.net (mfilter27-d.gandi.net [217.70.178.155])
+	by relay2-d.mail.gandi.net (Postfix) with ESMTP id 91DBEC5A40
+	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 16:10:44 +0100 (CET)
+Received: from relay2-d.mail.gandi.net ([IPv6:::ffff:217.70.183.194])
+	by mfilter27-d.gandi.net (mfilter27-d.gandi.net [::ffff:10.0.15.180])
+	(amavisd-new, port 10024)
+	with ESMTP id EXzpSEy0YG4p for <xfs@oss.sgi.com>;
+	Sun,  1 Nov 2015 16:10:43 +0100 (CET)
+Received: from [192.168.1.1] (host31-51-17-90.range31-51.btcentralplus.com
+	[31.51.17.90]) (Authenticated sender: jose@calhariz.com)
+	by relay2-d.mail.gandi.net (Postfix) with ESMTPSA id F3D88C5A44
+	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 16:10:42 +0100 (CET)
+Message-ID: <56362B71.4070709@calhariz.com>
+Date: Sun, 01 Nov 2015 15:10:41 +0000
+From: Jose M Calhariz <jose@calhariz.com>
+MIME-Version: 1.0
+Subject: Problems compiling xfsdump on Debian unstable
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,243 +35,237 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9016262192074380431=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Implements a new xfs_io command, named 'inode', which is supposed to be used to
-query information about inode's existence and its physical size in the
-filesystem.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--===============9016262192074380431==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="qVsehd3HWmHQjmB5FRtOvcxXR3p8hVJ7M"
 
-Currently supporting three arguments:
--s       -- return physical size of the largest inode
--l       -- return the largest inode number allocated and used
--n [num] -- Return the next existing inode after [num], even if [num] is not
-            allocated/used
-[num]    -- Return if the inode exists or not.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--qVsehd3HWmHQjmB5FRtOvcxXR3p8hVJ7M
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-I didn't send the man page patch because I'm sure I'll get some points to
-improve, and I'll write the manpage for the next revision.
+I am trying to compile the latest xfsdump from the git repository.
 
-- Changelog
+While I can compile it on Debian stable (jessie) and testing(stretch), I
+have problems compiling it on Debian unstable.=20
+I think the problem is because of new software on Debian unstable.
 
-V3:
-	- Merge all 3 patches from the V2 together in a single patch
-	- Rework of '-n [num]' and 'num' only arguments algorithm
-	- Argument -n now relies on bulkreq.count to check for next inodes, not
-	  on bstat.bs_ino anymore.
-	- for loop in ret_lsize or ret_largest case, now relies on count being 0
-	  to break the loop
+One fragment of the errors that I get when linking the .o files:
 
-V4:
-	- Refactor inode_f function to reduce its size and easier logic
-	- Implement error handlers for invalid command combination (hopefully
-	  all invalid combinations).
-	- use a single xfs_inogrp array for keep track of inodes
-	- Fix missing newline in inode_help()
-	- Rewrite help message in inode_help()
-	- Fix indentation
+cldmgr.o: In function `cldmgr_create':
+/home/cal/source.xfsdump/git-xfsdump/dump/cldmgr.c:82: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/cldmgr.c:101: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/cldmgr.c:86: undefined
+reference to `_'
+content_common.o: In function `Media_prompt_change':
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:65: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:69: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:74: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:80: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:83: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:85: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:86: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:106:
+undefined reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:112:
+undefined reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:117:
+undefined reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:121:
+undefined reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:108:
+undefined reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:109:
+undefined reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:112:
+undefined reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:117:
+undefined reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/content_common.c:121:
+undefined reference to `assert'
+dlog.o: In function `dlog_string_query_print':
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:362: undefined
+reference to `assert'
+dlog.o: In function `promptinput':
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:508: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:486: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:503: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:513: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:499: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:490: undefined
+reference to `_'
+dlog.o: In function `dlog_init':
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:60: undefined reference
+to `assert'
+dlog.o: In function `dlog_multi_query':
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:189: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:221: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:257: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:213: undefined
+reference to `_'
+dlog.o: In function `dlog_string_query':
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:298: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/dlog.c:310: undefined
+reference to `_'
+drive.o: In function `drive_alloc':
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:359: undefined
+reference to `assert'
+drive.o: In function `drive_init1':
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:91: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:145: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:218: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:223: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:172: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:186: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:110: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:155: undefined
+reference to `_'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:132: undefined
+reference to `_'
+drive.o: In function `drive_allochdrs':
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:414: undefined
+reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive.c:400: undefined
+reference to `assert'
+drive_scsitape.o: In function `do_get_align_cnt':
+/home/cal/source.xfsdump/git-xfsdump/dump/drive_scsitape.c:2132:
+undefined reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive_scsitape.c:2133:
+undefined reference to `assert'
+/home/cal/source.xfsdump/git-xfsdump/dump/drive_scsitape.c:2134:
+undefined reference to `assert'
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- io/open.c | 151 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 151 insertions(+)
 
-diff --git a/io/open.c b/io/open.c
-index ac5a5e0..2fc8aab 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -20,6 +20,7 @@
- #include "input.h"
- #include "init.h"
- #include "io.h"
-+#include "libxfs.h"
- 
- #ifndef __O_TMPFILE
- #if defined __alpha__
-@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
- static cmdinfo_t chproj_cmd;
- static cmdinfo_t lsproj_cmd;
- static cmdinfo_t extsize_cmd;
-+static cmdinfo_t inode_cmd;
- static prid_t prid;
- static long extsize;
- 
-@@ -750,6 +752,144 @@ statfs_f(
- 	return 0;
- }
- 
-+static void
-+inode_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Query physical information about the inode"
-+"\n"
-+" -l	-- Returns the largest inode number in the filesystem\n"
-+" -s	-- Returns the physical size (in bits) of the\n"
-+"	   largest inode number in the filesystem\n"
-+" -n	-- Return the next valid inode after [num]\n"
-+"[num]	   Check if the inode [num] is in use\n"
-+"\n"));
-+}
-+
-+static int
-+inode_f(
-+	  int			argc,
-+	  char			**argv)
-+{
-+	__s32			count = 0;
-+	__s32			lastgrp = 0;
-+	__u64			last = 0;
-+	__u64			lastino = 0;
-+	__u64			userino = 0;
-+	char			*p;
-+	int			c;
-+	int			ret_lsize = 0;
-+	int			ret_largest = 0;
-+	int			ret_next = 0;
-+	int			cmd = 0;
-+	struct xfs_inogrp	igroup[1024], igrp_rec;
-+	struct xfs_fsop_bulkreq	bulkreq;
-+	struct xfs_bstat	bstat;
-+
-+
-+	while ((c = getopt(argc, argv, "sln")) != EOF) {
-+		switch (c) {
-+		case 's':
-+			ret_lsize = 1;
-+			break;
-+		case 'l':
-+			ret_largest = 1;
-+			break;
-+		case 'n':
-+			ret_next = 1;
-+			break;
-+		default:
-+			return command_usage(&inode_cmd);
-+		}
-+	}
-+
-+	if (optind < argc) {
-+		if (ret_lsize || ret_largest)
-+			return command_usage(&inode_cmd);
-+
-+		if (ret_next) {
-+			if (argc > 3)
-+				return command_usage(&inode_cmd);
-+			else
-+				cmd = XFS_IOC_FSBULKSTAT;
-+		} else {
-+			if (argc > 2)
-+				return command_usage(&inode_cmd);
-+			else
-+				cmd = XFS_IOC_FSBULKSTAT_SINGLE;
-+		}
-+
-+
-+		userino = strtoull(argv[optind], &p, 10);
-+		if ((*p != '\0')) {
-+			printf(_("[num] must be a numeric value\n"));
-+			exitcode = 1;
-+			return 0;
-+		}
-+
-+		bulkreq.lastip = &userino;
-+		bulkreq.icount = 1;
-+		bulkreq.ubuffer = &bstat;
-+		bulkreq.ocount = &count;
-+
-+		if (xfsctl(file->name, file->fd, cmd, &bulkreq)) {
-+			if (errno == EINVAL)
-+				printf(_("Invalid or unlinked inode\n"));
-+			else
-+				perror("xfsctl");
-+			exitcode = 1;
-+			return 0;
-+		}
-+
-+		if (ret_next) {
-+			printf(_("Next inode: %llu\n"), bstat.bs_ino);
-+			return 0;
-+		} else {
-+			printf(_("Valid inode: %llu\n"), bstat.bs_ino);
-+			return 0;
-+		}
-+	}
-+
-+	if (ret_lsize || ret_largest) {
-+
-+		bulkreq.lastip = &last;
-+		bulkreq.icount = 1024; /* User-defined maybe!? */
-+		bulkreq.ubuffer = &igroup;
-+		bulkreq.ocount = &count;
-+
-+		for (;;) {
-+
-+			if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-+					&bulkreq)) {
-+				perror("XFS_IOC_FSINUMBERS");
-+				exitcode = 1;
-+				return 0;
-+			}
-+
-+			if (count == 0)
-+				break;
-+
-+			lastgrp = count;
-+		}
-+
-+		lastgrp--;
-+		igrp_rec = igroup[lastgrp];
-+		lastino = igrp_rec.xi_startino +
-+			  xfs_highbit64(igrp_rec.xi_allocmask);
-+
-+		if (ret_lsize)
-+			printf (_("Largest inode size: %d\n"),
-+				lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-+		else
-+			printf(_("Largest inode: %llu\n"), lastino);
-+
-+		return 0;
-+	}
-+
-+	return command_usage(&inode_cmd);
-+}
-+
- void
- open_init(void)
- {
-@@ -815,6 +955,16 @@ open_init(void)
- 		_("get/set preferred extent size (in bytes) for the open file");
- 	extsize_cmd.help = extsize_help;
- 
-+	inode_cmd.name = "inode";
-+	inode_cmd.cfunc = inode_f;
-+	inode_cmd.args = _("[-s | -l | -n] [num]");
-+	inode_cmd.argmin = 1;
-+	inode_cmd.argmax = 2;
-+	inode_cmd.flags = CMD_NOMAP_OK;
-+	inode_cmd.oneline =
-+		_("Query inode number usage in the filesystem");
-+	inode_cmd.help = inode_help;
-+
- 	add_command(&open_cmd);
- 	add_command(&stat_cmd);
- 	add_command(&close_cmd);
-@@ -822,4 +972,5 @@ open_init(void)
- 	add_command(&chproj_cmd);
- 	add_command(&lsproj_cmd);
- 	add_command(&extsize_cmd);
-+	add_command(&inode_cmd);
- }
--- 
-2.4.3
+
+Software on testing that may makes a difference:
+
+gcc --version
+gcc (Debian 4.9.3-3) 4.9.3
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is N=
+O
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOS=
+E.
+
+dpkg --status xfslibs-dev
+Package: xfslibs-dev
+Status: install ok installed
+Priority: extra
+Section: libdevel
+Installed-Size: 80
+Maintainer: XFS Development Team <xfs@oss.sgi.com>
+Architecture: amd64
+Source: xfsprogs
+Version: 3.2.1
+Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>=3D 3.0.0)
+Breaks: xfsprogs (<< 3.0.0)
+Description: XFS filesystem-specific static libraries and headers
+
+On Debian unstable:
+gcc --version
+gcc (Debian 5.2.1-23) 5.2.1 20151028
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is N=
+O
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOS=
+E.
+
+0 2  Dom Nov 01 15:02:32 CWD=3D~/source.xfsdump/git-xfsdump
+cal@chr-amd64-sid.mccoy[3895]>dpkg --status xfslibs-dev
+Package: xfslibs-dev
+Status: install ok installed
+Priority: extra
+Section: libdevel
+Installed-Size: 219
+Maintainer: XFS Development Team <xfs@oss.sgi.com>
+Architecture: amd64
+Source: xfsprogs
+Version: 4.2.0
+Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>=3D 3.0.0)
+Breaks: xfsprogs (<< 3.0.0)
+Description: XFS filesystem-specific static libraries and headers
+
+
+
+Why is important to me to compile xfsdump on unstable.  Because it was
+removed from Debian testing and
+because of that the amanda software was removed too.  As the maintainer
+of amanda for Debian I am doing
+my best to fix this problem.
+
+I am not on the list.
+
+Kind regards
+Jose M Calhariz
+
+
+--qVsehd3HWmHQjmB5FRtOvcxXR3p8hVJ7M
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCAAGBQJWNitxAAoJEDSKd41ohe+PQxUP/20XfbhoDU3l55hYQUm39BuW
+FPVg1X1wtuGALY2EVQ+75b46VnzJVr8kOIaZaOBiyYOOS+NMr2ZZsJ1W1CwB/rGo
+k5Pz6VTBijK3b8W9GrX1v3Qm96hEXm4I0uYZum1ZJN7Q0up+aQpuoZZWpOuMXRCt
+7/JS4C254pK2YW2hRW6hK4Uz7YhCUJnYCbTEyI0yKgWsj6g4ulycqilK52062NiA
+vXiSqd8Y/lOQIPfYQKY4C0Zb2n97L47qa1TlfjH4UOfdBEni4Ys7aVehdtnV7KxE
+J8izGqlcWtZy7beuxEKnxXlY8EKZGNa4giabcRmyt57i1lzLwNC0w77naSBJ7Uuc
+J3pvy2Rviz6Q8xOLxHUkYcAPp74RoC/UzAj7lgEp6V3ykpwSFyNcXWZt4M/mb1yB
+SkDHYkDrPkcI9Je2vY+f87XW5bcHyVr0W9Miuub2atnBjlqsJa1V0atJSY/2vKk/
+86gf5DcIqD9wEyhBc1qkyWrIydjwm93kC+3VO1KbyevsBjTyT4RcYLaOj8P9b+ma
+63EYL7qiQM9Y6P1Mj2Lz12lc1aSNynYA3SYfW64zbteFgjBzj1D7ca7Np1UavXX4
+KyzVOTnfot/Pv6hYZjSjmjG70pxi4rDwy5SGUpstFaLZdf8Y3mXnf+oJsK2GB6vy
+v36ye3HtfqAXh3y1Cjpc
+=Slbi
+-----END PGP SIGNATURE-----
+
+--qVsehd3HWmHQjmB5FRtOvcxXR3p8hVJ7M--
+
+
+--===============9016262192074380431==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9016262192074380431==--
