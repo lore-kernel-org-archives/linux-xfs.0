@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 32C397F53
-	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 21:26:11 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 1EF127F5E
+	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 21:41:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0881AC001
-	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 19:26:07 -0800 (PST)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id HarF4HafDwsoZpNJ (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 01 Nov 2015 19:26:05 -0800 (PST)
-Date: Sun, 1 Nov 2015 22:25:58 -0500 (EST)
-From: Nathan Scott <nathans@debian.org>
-Message-ID: <1847596501.219026.1446434758818.JavaMail.zimbra@redhat.com>
-In-Reply-To: <56362B71.4070709@calhariz.com>
-References: <56362B71.4070709@calhariz.com>
-Subject: Re: Problems compiling xfsdump on Debian unstable
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E142AC002
+	for <xfs@oss.sgi.com>; Sun,  1 Nov 2015 19:41:34 -0800 (PST)
+Received: from mail-lf0-f48.google.com (mail-lf0-f48.google.com
+	[209.85.215.48]) by cuda.sgi.com with ESMTP id EKVUbQRPdcEvQMbA
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 01 Nov 2015 19:41:31 -0800 (PST)
+Received: by lfgh9 with SMTP id h9so9431352lfg.1
+	for <xfs@oss.sgi.com>; Sun, 01 Nov 2015 19:41:30 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>
+In-Reply-To: <20151102025352.GY19199@dastard>
+References: <1446217508-22157-1-git-send-email-agruenba@redhat.com>
+	<20151102025352.GY19199@dastard>
+Date: Mon, 2 Nov 2015 04:41:30 +0100
+Message-ID: <CAHc6FU7As8=jA7FMC0N_gDuECxeb15iKn=uXpu2b57LHtcFPaA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/5] xfs: SGI ACL Fixes
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +32,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jose M Calhariz <jose@calhariz.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Hi Jose,
+On Mon, Nov 2, 2015 at 3:53 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Oct 30, 2015 at 04:05:03PM +0100, Andreas Gruenbacher wrote:
+>> Here is a reworked patch queue that also handles setting SGI_ACL_{FILE,DEFAULT}
+>> via XFS_IOC_ATTRMULTI_BY_HANDLE.  Please review.
+>>
+>> Thanks,
+>> Andreas
+>>
+>> Andreas Gruenbacher (5):
+>>   xfs: Validate the length of on-disk ACLs
+>>   xfs: Plug memory leak in xfs_attrmulti_attr_set
+>
+> Ok, I've taken these two patches for the upcoming merge window as
+> they fix bugs, but I've taken Brian's cached ACL invalidation patch
+> instead of these:
+>
+>>   xfs: SGI ACLs: Fix caching and mode setting
+>>   xfs: Add namespace parameter to the xfs kuid/kgid <=> uid/gid wrappers
+>>   xfs: SGI ACLs: Map uid/gid namespaces
+>
+> I'm not yet convinced that these patches are the right way to solve
+> the given issue as they may interact badly with xfsdump/restore.
 
------ Original Message -----
-> I am trying to compile the latest xfsdump from the git repository.
+Well, what else do you need to be convinced? I guess it won't help if
+I try to explain everything all over again?
 
-The underlying problem was related to changes in xfsprogs header files
-which had unanticipated dependencies in xfsdump - Dave has been working
-through all these issues (iow, removing the unanticipated dependencies,
-by updating xfsdump code) and the next release of xfsdump will resolve
-this build failure.  It's not a trivial change though, so our best bet
-(IMO) is to wait on those upstream changes from Dave and then get a new
-package build into unstable & testing.
-
-cheers.
-
---
-Nathan
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
