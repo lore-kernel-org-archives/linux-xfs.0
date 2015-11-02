@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6D31A29DF5
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 06:05:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 58FAA304039
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 04:05:11 -0800 (PST)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id G8m8vQAGUTWNqn7C (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2015 04:05:09 -0800 (PST)
-Date: Mon, 2 Nov 2015 13:05:10 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: hdd + ssd
-Message-ID: <20151102130510.7292dec5@harpe.intellique.com>
-In-Reply-To: <CAAxjCEzE68m66mhdr7KoXG7p515cmrogyT5Yr6S18nUXK9xNnw@mail.gmail.com>
-References: <20151022202324.5f00807f@linux>
-	<20151023134805.3c7998e4@harpe.intellique.com>
-	<CAAxjCEzE68m66mhdr7KoXG7p515cmrogyT5Yr6S18nUXK9xNnw@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2F05329DF5
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 06:20:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C860FAC001
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 04:20:39 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ZUqZkxXxZxHdITUt for <xfs@oss.sgi.com>;
+	Mon, 02 Nov 2015 04:20:32 -0800 (PST)
+Date: Mon, 2 Nov 2015 23:20:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 0/5] xfs: SGI ACL Fixes
+Message-ID: <20151102122018.GH10656@dastard>
+References: <1446217508-22157-1-git-send-email-agruenba@redhat.com>
+	<20151102025352.GY19199@dastard>
+	<CAHc6FU7As8=jA7FMC0N_gDuECxeb15iKn=uXpu2b57LHtcFPaA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU7As8=jA7FMC0N_gDuECxeb15iKn=uXpu2b57LHtcFPaA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,22 +27,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Linux fs XFS <xfs@oss.sgi.com>, "krautus@kr916.org" <krautus@kr916.org>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-TGUgRnJpLCAyMyBPY3QgMjAxNSAyMzozNDowMCArMDIwMApTdGVmYW4gUmluZyA8c3RlZmFucmlu
-QGdtYWlsLmNvbT4gw6ljcml2YWl0OgoKPiBWZXJ5IGdvb2Qgc3VtbWFyeSwgdGhhbmtzISBEbyB5
-b3UgYWxzbyBoYXBwZW4gdG8ga25vdyBpZiBhbGwgb2YgdGhlc2UKPiByZXRhaW4gY2FjaGUgY29u
-dGVudHMgYWNyb3NzIHJlYm9vdHM/CgpZZXMsIHRoZXkgcmV0YWluIGNhY2hlIGNvbnRlbnRzIGFj
-cm9zcyByZWJvb3RzLgoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwg
-ICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUK
-ICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAg
-ICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Mon, Nov 02, 2015 at 04:41:30AM +0100, Andreas Gruenbacher wrote:
+> On Mon, Nov 2, 2015 at 3:53 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Fri, Oct 30, 2015 at 04:05:03PM +0100, Andreas Gruenbacher wrote:
+> >> Here is a reworked patch queue that also handles setting SGI_ACL_{FILE,DEFAULT}
+> >> via XFS_IOC_ATTRMULTI_BY_HANDLE.  Please review.
+> >>
+> >> Thanks,
+> >> Andreas
+> >>
+> >> Andreas Gruenbacher (5):
+> >>   xfs: Validate the length of on-disk ACLs
+> >>   xfs: Plug memory leak in xfs_attrmulti_attr_set
+> >
+> > Ok, I've taken these two patches for the upcoming merge window as
+> > they fix bugs, but I've taken Brian's cached ACL invalidation patch
+> > instead of these:
+> >
+> >>   xfs: SGI ACLs: Fix caching and mode setting
+> >>   xfs: Add namespace parameter to the xfs kuid/kgid <=> uid/gid wrappers
+> >>   xfs: SGI ACLs: Map uid/gid namespaces
+> >
+> > I'm not yet convinced that these patches are the right way to solve
+> > the given issue as they may interact badly with xfsdump/restore.
+> 
+> Well, what else do you need to be convinced? I guess it won't help if
+> I try to explain everything all over again?
+
+No, it won't. There are bigger picture questions and issues that
+need to be sorted out first.
+
+We've basically got zero regression test coverage of the "set the
+ACL in on-disk format directly" code path, so we don't know if we're
+breaking anything. That's a big red flag to me, because I can't
+easily validate that the changes are working as expected..
+
+IOWs, I don't know how the changes will impact dump/restore, apart
+from the fact that dump/restore expects to be able to set the ACL
+directly in the on-disk format without the kernel screwing with the
+mode.  i.e. dump pulls the inode mode and ACLs in disk format from
+the disk via bulkstat and restore expects to be able to recreate
+them exactly without the kernel getting in it's way. Again, we have
+basically no test coverage here, so again there's nothing I can do
+to easily validate that the changes have not broken dump/restore in
+subtle but important ways.
+
+Further, we have no user namespace regression test coverage. I have
+absolutely no idea if xfs_restore will even run in a user namespace,
+let alone run correctly.  We already know that xfsdump cannot be
+made to work in a confined user namespace due to it's use of
+bulkstat, so do we really care whether xfs_restore works in a
+namespace or not?  As such, it's not immediately obvious to me that
+we should even allow setting acls directly in on-disk format in
+user namespaces. And if we don't allow it, then the last two patches
+can simply be dropped and replaced with simple CAP_SYS_ADMIN check.
+
+I don't have time to sit down and write special point tests to
+validate every change that comes through. However, ACLs are a security
+mechanism and so we have to get them right and that means we need
+such tests. If you want to convince me that your changes are
+correct, are needed and don't break anything, then provide the
+regression tests that prove it. Otherwise you're simply going to
+have to wait for me to find the time to do it myself - I've got a
+real long list of stuff I'd prefer to do than write ACL regression
+tests....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
