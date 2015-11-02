@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D40B429DFC
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 08:15:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9B9968F8037
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 06:15:33 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 138DB29E03
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 08:15:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6978EAC001
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2015 06:15:43 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PH0nwoY4njOuqMY9 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id s6H4PaIItnbqTYZA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2015 06:15:32 -0800 (PST)
-Date: Mon, 2 Nov 2015 09:15:30 -0500
+	<xfs@oss.sgi.com>; Mon, 02 Nov 2015 06:15:41 -0800 (PST)
+Date: Mon, 2 Nov 2015 09:15:39 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/7] xfs: Don't use unwritten extents for DAX
-Message-ID: <20151102141530.GC29346@bfoster.bfoster>
+Subject: Re: [PATCH 7/7] xfs: optimise away log forces on timestamp updates
+	for fdatasync
+Message-ID: <20151102141539.GD29346@bfoster.bfoster>
 References: <1446435735-1526-1-git-send-email-david@fromorbit.com>
-	<1446435735-1526-4-git-send-email-david@fromorbit.com>
+	<1446435735-1526-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1446435735-1526-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1446435735-1526-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,174 +34,191 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 02, 2015 at 02:42:11PM +1100, Dave Chinner wrote:
+On Mon, Nov 02, 2015 at 02:42:15PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> DAX has a page fault serialisation problem with block allocation.
-> Because it allows concurrent page faults and does not have a page
-> lock to serialise faults to the same page, it can get two concurrent
-> faults to the page that race.
+> xfs: timestamp updates cause excessive fdatasync log traffic
 > 
-> When two read faults race, this isn't a huge problem as the data
-> underlying the page is not changing and so "detect and drop" works
-> just fine. The issues are to do with write faults.
+> Sage Weil reported that a ceph test workload was writing to the
+> log on every fdatasync during an overwrite workload. Event tracing
+> showed that the only metadata modification being made was the
+> timestamp updates during the write(2) syscall, but fdatasync(2)
+> is supposed to ignore them. The key observation was that the
+> transactions in the log all looked like this:
 > 
-> When two write faults occur, we serialise block allocation in
-> get_blocks() so only one faul will allocate the extent. It will,
-> however, be marked as an unwritten extent, and that is where the
-> problem lies - the DAX fault code cannot differentiate between a
-> block that was just allocated and a block that was preallocated and
-> needs zeroing. The result is that both write faults end up zeroing
-> the block and attempting to convert it back to written.
+> INODE: #regs: 4   ino: 0x8b  flags: 0x45   dsize: 32
 > 
-> The problem is that the first fault can zero and convert before the
-> second fault starts zeroing, resulting in the zeroing for the second
-> fault overwriting the data that the first fault wrote with zeros.
-> The second fault then attempts to convert the unwritten extent,
-> which is then a no-op because it's already written. Data loss occurs
-> as a result of this race.
+> And contained a flags field of 0x45 or 0x85, and had data and
+> attribute forks following the inode core. This means that the
+> timestamp updates were triggering dirty relogging of previously
+> logged parts of the inode that hadn't yet been flushed back to
+> disk.
 > 
-> Because there is no sane locking construct in the page fault code
-> that we can use for serialisation across the page faults, we need to
-> ensure block allocation and zeroing occurs atomically in the
-> filesystem. This means we can still take concurrent page faults and
-> the only time they will serialise is in the filesystem
-> mapping/allocation callback. The page fault code will always see
-> written, initialised extents, so we will be able to remove the
-> unwritten extent handling from the DAX code when all filesystems are
-> converted.
+> There are two parts to this problem. The first is that XFS relogs
+> dirty regions in subsequent transactions, so it carries around the
+> fields that have been dirtied since the last time the inode was
+> written back to disk, not since the last time the inode was forced
+> into the log.
 > 
+> The second part is that on v5 filesystems, the inode change count
+> update during inode dirtying also sets the XFS_ILOG_CORE flag, so
+> on v5 filesystems this makes a timestamp update dirty the entire
+> inode.
+> 
+> As a result when fdatasync is run, it looks at the dirty fields in
+> the inode, and sees more than just the timestamp flag, even though
+> the only metadata change since the last fdatasync was just the
+> timestamps. Hence we force the log on every subsequent fdatasync
+> even though it is not needed.
+> 
+> To fix this, add a new field to the inode log item that tracks
+> changes since the last time fsync/fdatasync forced the log to flush
+> the changes to the journal. This flag is updated when we dirty the
+> inode, but we do it before updating the change count so it does not
+> carry the "core dirty" flag from timestamp updates. The fields are
+> zeroed when the inode is marked clean (due to writeback/freeing) or
+> when an fsync/datasync forces the log. Hence if we only dirty the
+> timestamps on the inode between fsync/fdatasync calls, the fdatasync
+> will not trigger another log force.
+> 
+> Over 100 runs of the test program:
+> 
+> Ext4 baseline:
+> 	runtime: 1.63s +/- 0.24s
+> 	avg lat: 1.59ms +/- 0.24ms
+> 	iops: ~2000
+> 
+> XFS, vanilla kernel:
+>         runtime: 2.45s +/- 0.18s
+> 	avg lat: 2.39ms +/- 0.18ms
+> 	log forces: ~400/s
+> 	iops: ~1000
+> 
+> XFS, patched kernel:
+>         runtime: 1.49s +/- 0.26s
+> 	avg lat: 1.46ms +/- 0.25ms
+> 	log forces: ~30/s
+> 	iops: ~1500
+> 
+> Reported-by: Sage Weil <sage@redhat.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-I'm still not convinced that block zeroing is the right thing to do for
-DAX/dio (re: the discussion on the previous version), but the code looks
-fine to me and we should be able to easily optimize this in a separate
-patch if warranted:
+Looks good:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/dax.c           |  5 +++++
->  fs/xfs/xfs_aops.c  | 13 +++++++++----
->  fs/xfs/xfs_iomap.c | 21 ++++++++++++++++++++-
->  3 files changed, 34 insertions(+), 5 deletions(-)
+>  fs/xfs/xfs_file.c        | 21 ++++++++++++++++-----
+>  fs/xfs/xfs_inode.c       |  2 ++
+>  fs/xfs/xfs_inode_item.c  |  1 +
+>  fs/xfs/xfs_inode_item.h  |  1 +
+>  fs/xfs/xfs_trans_inode.c |  9 +++++++++
+>  5 files changed, 29 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index a86d3cc..131fd35a 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -29,6 +29,11 @@
->  #include <linux/uio.h>
->  #include <linux/vmstat.h>
->  
-> +/*
-> + * dax_clear_blocks() is called from within transaction context from XFS,
-> + * and hence this means the stack from this point must follow GFP_NOFS
-> + * semantics for all operations.
-> + */
->  int dax_clear_blocks(struct inode *inode, sector_t block, long size)
->  {
->  	struct block_device *bdev = inode->i_sb->s_bdev;
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 366e41eb..7b4f849 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1293,15 +1293,12 @@ xfs_map_direct(
->  
->  	trace_xfs_gbmap_direct(XFS_I(inode), offset, size, type, imap);
->  
-> -	/* XXX: preparation for removing unwritten extents in DAX */
-> -#if 0
->  	if (dax_fault) {
->  		ASSERT(type == XFS_IO_OVERWRITE);
->  		trace_xfs_gbmap_direct_none(XFS_I(inode), offset, size, type,
->  					    imap);
->  		return;
->  	}
-> -#endif
->  
->  	if (bh_result->b_private) {
->  		ioend = bh_result->b_private;
-> @@ -1429,10 +1426,12 @@ __xfs_get_blocks(
->  	if (error)
->  		goto out_unlock;
->  
-> +	/* for DAX, we convert unwritten extents directly */
->  	if (create &&
->  	    (!nimaps ||
->  	     (imap.br_startblock == HOLESTARTBLOCK ||
-> -	      imap.br_startblock == DELAYSTARTBLOCK))) {
-> +	      imap.br_startblock == DELAYSTARTBLOCK) ||
-> +	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
->  		if (direct || xfs_get_extsz_hint(ip)) {
->  			/*
->  			 * xfs_iomap_write_direct() expects the shared lock. It
-> @@ -1477,6 +1476,12 @@ __xfs_get_blocks(
->  		goto out_unlock;
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 0045b0a..39743ef 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -242,19 +242,30 @@ xfs_file_fsync(
 >  	}
 >  
-> +	if (IS_DAX(inode) && create) {
-> +		ASSERT(!ISUNWRITTEN(&imap));
-> +		/* zeroing is not needed at a higher layer */
-> +		new = 0;
-> +	}
-> +
->  	/* trim mapping down to size requested */
->  	if (direct || size > (1 << inode->i_blkbits))
->  		xfs_map_trim_size(inode, iblock, bh_result,
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index c3cb5a5..f4f5b43 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -132,6 +132,7 @@ xfs_iomap_write_direct(
->  	int		committed;
->  	int		error;
->  	int		lockmode;
-> +	int		bmapi_flags = XFS_BMAPI_PREALLOC;
->  
->  	rt = XFS_IS_REALTIME_INODE(ip);
->  	extsz = xfs_get_extsz_hint(ip);
-> @@ -195,6 +196,23 @@ xfs_iomap_write_direct(
->  	 * Allocate and setup the transaction
+>  	/*
+> -	 * All metadata updates are logged, which means that we just have
+> -	 * to flush the log up to the latest LSN that touched the inode.
+> +	 * All metadata updates are logged, which means that we just have to
+> +	 * flush the log up to the latest LSN that touched the inode. If we have
+> +	 * concurrent fsync/fdatasync() calls, we need them to all block on the
+> +	 * log force before we clear the ili_fsync_fields field. This ensures
+> +	 * that we don't get a racing sync operation that does not wait for the
+> +	 * metadata to hit the journal before returning. If we race with
+> +	 * clearing the ili_fsync_fields, then all that will happen is the log
+> +	 * force will do nothing as the lsn will already be on disk. We can't
+> +	 * race with setting ili_fsync_fields because that is done under
+> +	 * XFS_ILOCK_EXCL, and that can't happen because we hold the lock shared
+> +	 * until after the ili_fsync_fields is cleared.
 >  	 */
->  	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	if (xfs_ipincount(ip)) {
+>  		if (!datasync ||
+> -		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
+> +		    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+>  			lsn = ip->i_itemp->ili_last_lsn;
+>  	}
+> -	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  
+> -	if (lsn)
+> +	if (lsn) {
+>  		error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
+> +		ip->i_itemp->ili_fsync_fields = 0;
+> +	}
+> +	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  
+>  	/*
+>  	 * If we only have a single device, and the log force about was
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index a0f2bae..8ee3939 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2365,6 +2365,7 @@ retry:
+>  
+>  			iip->ili_last_fields = iip->ili_fields;
+>  			iip->ili_fields = 0;
+> +			iip->ili_fsync_fields = 0;
+>  			iip->ili_logged = 1;
+>  			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
+>  						&iip->ili_item.li_lsn);
+> @@ -3560,6 +3561,7 @@ xfs_iflush_int(
+>  	 */
+>  	iip->ili_last_fields = iip->ili_fields;
+>  	iip->ili_fields = 0;
+> +	iip->ili_fsync_fields = 0;
+>  	iip->ili_logged = 1;
+>  
+>  	xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 62bd80f..d14b12b 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -719,6 +719,7 @@ xfs_iflush_abort(
+>  		 * attempted.
+>  		 */
+>  		iip->ili_fields = 0;
+> +		iip->ili_fsync_fields = 0;
+>  	}
+>  	/*
+>  	 * Release the inode's flush lock since we're done with it.
+> diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+> index 488d812..4c7722e 100644
+> --- a/fs/xfs/xfs_inode_item.h
+> +++ b/fs/xfs/xfs_inode_item.h
+> @@ -34,6 +34,7 @@ typedef struct xfs_inode_log_item {
+>  	unsigned short		ili_logged;	   /* flushed logged data */
+>  	unsigned int		ili_last_fields;   /* fields when flushed */
+>  	unsigned int		ili_fields;	   /* fields to be logged */
+> +	unsigned int		ili_fsync_fields;  /* logged since last fsync */
+>  } xfs_inode_log_item_t;
+>  
+>  static inline int xfs_inode_clean(xfs_inode_t *ip)
+> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> index 17280cd..b97f1df 100644
+> --- a/fs/xfs/xfs_trans_inode.c
+> +++ b/fs/xfs/xfs_trans_inode.c
+> @@ -108,6 +108,15 @@ xfs_trans_log_inode(
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+>  	/*
+> +	 * Record the specific change for fdatasync optimisation. This
+> +	 * allows fdatasync to skip log forces for inodes that are only
+> +	 * timestamp dirty. We do this before the change count so that
+> +	 * the core being logged in this case does not impact on fdatasync
+> +	 * behaviour.
+> +	 */
+> +	ip->i_itemp->ili_fsync_fields |= flags;
 > +
 > +	/*
-> +	 * For DAX, we do not allocate unwritten extents, but instead we zero
-> +	 * the block before we commit the transaction.  Ideally we'd like to do
-> +	 * this outside the transaction context, but if we commit and then crash
-> +	 * we may not have zeroed the blocks and this will be exposed on
-> +	 * recovery of the allocation. Hence we must zero before commit.
-> +	 * Further, if we are mapping unwritten extents here, we need to zero
-> +	 * and convert them to written so that we don't need an unwritten extent
-> +	 * callback for DAX. This also means that we need to be able to dip into
-> +	 * the reserve block pool if there is no space left but we need to do
-> +	 * unwritten extent conversion.
-> +	 */
-> +	if (IS_DAX(VFS_I(ip))) {
-> +		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-> +		tp->t_flags |= XFS_TRANS_RESERVE;
-> +	}
->  	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
->  				  resblks, resrtextents);
->  	/*
-> @@ -221,7 +239,7 @@ xfs_iomap_write_direct(
->  	xfs_bmap_init(&free_list, &firstfsb);
->  	nimaps = 1;
->  	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-> -				XFS_BMAPI_PREALLOC, &firstfsb, resblks, imap,
-> +				bmapi_flags, &firstfsb, resblks, imap,
->  				&nimaps, &free_list);
->  	if (error)
->  		goto out_bmap_cancel;
-> @@ -232,6 +250,7 @@ xfs_iomap_write_direct(
->  	error = xfs_bmap_finish(&tp, &free_list, &committed);
->  	if (error)
->  		goto out_bmap_cancel;
-> +
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		goto out_unlock;
+>  	 * First time we log the inode in a transaction, bump the inode change
+>  	 * counter if it is configured for this to occur. We don't use
+>  	 * inode_inc_version() because there is no need for extra locking around
 > -- 
 > 2.5.0
 > 
