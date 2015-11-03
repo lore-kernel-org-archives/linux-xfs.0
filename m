@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A02A87FCB
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 13:11:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 92215304039
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 11:11:52 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2XU197AnpfKRWE9u for <xfs@oss.sgi.com>;
-	Tue, 03 Nov 2015 11:11:46 -0800 (PST)
-Date: Wed, 4 Nov 2015 06:11:32 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 216A17FCC
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 13:22:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 025E38F8049
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 11:22:44 -0800 (PST)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[194.177.153.153]) by cuda.sgi.com with ESMTP id
+	F5oDVXRiOEcmSVPI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 11:22:38 -0800 (PST)
 Subject: Re: Is it possible to change sunit of log section post-mkfs
-Message-ID: <20151103191132.GD19199@dastard>
 References: <5638A62D.1020802@dermichi.com>
+	<20151103130246.GA24445@bfoster.bfoster>
+From: Michael Weissenbacher <mw@dermichi.com>
+Message-ID: <56390979.2090509@dermichi.com>
+Date: Tue, 3 Nov 2015 20:22:33 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5638A62D.1020802@dermichi.com>
+In-Reply-To: <20151103130246.GA24445@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 03, 2015 at 01:18:53PM +0100, Michael Weissenbacher wrote:
-> Hi!
-> I have a XFS file system which lies on a 10-disk RAID-6 device that was
-> created with Chunk Size = 1MiB.
-> On mkfs.xfs time this was - as far as i know - specified with "-d
-> su=1m,sw=8".
-> 
-> xfs_info shows the following:
-> meta-data=/dev/sdb1              isize=256    agcount=15,
-> agsize=268435200 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=3905945088, imaxpct=5
->          =                       sunit=256    swidth=2048 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=521728, version=2
->          =                       sectsz=512   sunit=8 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> Interestingly, the sunit value of the log seems to be incorrect - as it
-> should be 256 too, like the sunit value of the data. I am pretty sure
-> the reason is that the log sunit cannot be 256 blks (=1024KiB) and
-> because of this mkfs.xfs did fall back to the default of 8 blks
-> (=32KiB). I found evidence of this in the following thread:
-> http://oss.sgi.com/archives/xfs/2012-06/msg00431.html
-> 
-> What i want to achieve is to set the log sunit to the maximum possible
-> of 64 blks (=256KiB).
+Hi Brian!
 
-Why? Is there a performance problem with the default setting?
+On 2015-11-03 14:02, Brian Foster wrote:
+> I don't believe there's any supported way to do this.
+Well, at least i didn't miss anything in the documentation :-)
 
-Cheers,
+On 2015-11-03 14:02, Brian Foster wrote:
+> Out of curiosity,
+> I just tried an experiment to modify the superblock logsunit via xfs_db
+> and run repair to zero the log. That seemed to work in terms of taking
+> effect on the subsequent mount, but that's certainly not something I
+> would suggest to do in production.
+Ok, so it would definitely be too risky for a production system.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On 2015-11-03 14:02, Brian Foster wrote:
+> Note that mkfs aligns the physical
+> log based on the stripe unit as well, so it wouldn't really have the
+> same effect anyways.
+TBH, i didn't quite understand that part :-)
+Are you saying, even if i would modify the log's sunit size using
+xfs_db, it would still not be aligned correctly?
+
+thanks,
+Michael
 
 _______________________________________________
 xfs mailing list
