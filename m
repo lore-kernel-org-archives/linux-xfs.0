@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7CDE77F56
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:44:13 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5C8747F58
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:48:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A2A1304051
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 05:44:10 -0800 (PST)
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10]) by
-	cuda.sgi.com with ESMTP id YIEAh1AN3nFlOAkf (version=TLSv1.2
-	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 05:44:08 -0800 (PST)
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] xfs: only modify ACLs if CONFIG_XFS_POSIX_ACL enabled
-Date: Tue, 03 Nov 2015 14:43:58 +0100
-Message-ID: <4425824.kIWhRaBxBZ@wuerfel>
-MIME-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CC1A5AC002
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 05:48:02 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KROKwXSzHpzNpLph (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 05:48:01 -0800 (PST)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH] xfs: Fix error path in xfs_get_acl
+Date: Tue,  3 Nov 2015 14:47:57 +0100
+Message-Id: <1446558477-21981-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,48 +21,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, linux-arm-kernel@lists.infradead.org
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-A recent bug fix added a call to forget_cached_acl(), but that
-function is not always available, so we can get a build error
-here:
+Here is another bugfix patch, previously discussed here:
 
-fs/xfs/xfs_xattr.c: In function 'xfs_xattr_set':
-fs/xfs/xfs_xattr.c:84:4: error: implicit declaration of function 'forget_cached_acl' [-Werror=implicit-function-declaration]
+  http://oss.sgi.com/archives/xfs/2015-10/msg00295.html
 
-This changes the code to use the same #ifdef that we already
-use to encapsule the existing ACL handling.
+Thanks,
+Andreas
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 6caa105651cb ("xfs: invalidate cached acl if set directly via xattr")
+
+Error codes from xfs_attr_get other than -ENOATTR were not properly
+reported.  Fix that.
+
+In addition, the declaration of struct xfs_inode in xfs_acl.h isn't needed.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
-This started breaking ARM davinci_all_defconfig today in linux-next
+ fs/xfs/xfs_acl.c | 1 +
+ fs/xfs/xfs_acl.h | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 2e1eb80d5374..6229325abdd3 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -73,6 +73,7 @@ xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
- 		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
- 	error = xfs_attr_set(ip, (unsigned char *)name,
- 				(void *)value, size, xflags);
-+#ifdef CONFIG_XFS_POSIX_ACL
- 	/*
- 	 * Invalidate any cached ACLs if the user has bypassed the ACL
- 	 * interface. We don't validate the content whatsoever so it is caller
-@@ -85,6 +86,7 @@ xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
- 		else if (!strncmp(name, SGI_ACL_DEFAULT, strlen(name)))
- 			forget_cached_acl(VFS_I(ip), ACL_TYPE_DEFAULT);
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 763e365..6bb470f 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -163,6 +163,7 @@ xfs_get_acl(struct inode *inode, int type)
+ 		 */
+ 		if (error == -ENOATTR)
+ 			goto out_update_cache;
++		acl = ERR_PTR(error);
+ 		goto out;
  	}
-+#endif
  
- 	return error;
- }
+diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+index 75af0a4..52f8255 100644
+--- a/fs/xfs/xfs_acl.h
++++ b/fs/xfs/xfs_acl.h
+@@ -20,7 +20,6 @@
+ 
+ struct inode;
+ struct posix_acl;
+-struct xfs_inode;
+ 
+ #ifdef CONFIG_XFS_POSIX_ACL
+ extern struct posix_acl *xfs_get_acl(struct inode *inode, int type);
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
