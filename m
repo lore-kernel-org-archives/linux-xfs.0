@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D14F97F83
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:54:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 67570AC009
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:54:36 -0800 (PST)
-Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com
-	[74.125.82.44]) by cuda.sgi.com with ESMTP id Y0otDbu1Xc7Zf3Yf
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 558217CBF
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 10:25:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4481A8F8033
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 08:25:49 -0800 (PST)
+Received: from mail-oi0-f48.google.com (mail-oi0-f48.google.com
+	[209.85.218.48]) by cuda.sgi.com with ESMTP id EbnA4N6TurSdaS1B
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Nov 2015 07:54:34 -0800 (PST)
-Received: by wmec75 with SMTP id c75so90220673wme.1
-	for <xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:54:33 -0800 (PST)
+	Tue, 03 Nov 2015 08:25:46 -0800 (PST)
+Received: by oiad129 with SMTP id d129so11703115oia.0
+	for <xfs@oss.sgi.com>; Tue, 03 Nov 2015 08:25:46 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4425824.kIWhRaBxBZ@wuerfel>
-References: <4425824.kIWhRaBxBZ@wuerfel>
-Date: Tue, 3 Nov 2015 16:54:33 +0100
-Message-ID: <CAHpGcM+zgZbvuMMLT8FNGaBpHqy_u3X-9+yRcQqP0UTpvo1q7w@mail.gmail.com>
-Subject: Re: [PATCH] xfs: only modify ACLs if CONFIG_XFS_POSIX_ACL enabled
-From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+In-Reply-To: <1446563847-14005-46-git-send-email-agruenba@redhat.com>
+References: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
+	<1446563847-14005-46-git-send-email-agruenba@redhat.com>
+Date: Tue, 3 Nov 2015 11:25:46 -0500
+Message-ID: <CAHQdGtScoRb-722ES168O8tkp-Rbvwe6bZ=70WwgiXpCC3vsHw@mail.gmail.com>
+Subject: Re: [PATCH v13 45/51] sunrpc: Allow to demand-allocate pages to
+	encode into
+From: Trond Myklebust <trond.myklebust@primarydata.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,28 +33,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Brian Foster <bfoster@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, linux-arm-kernel@lists.infradead.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API Mailing List <linux-api@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Hi Arnd,
+On Tue, Nov 3, 2015 at 10:17 AM, Andreas Gruenbacher
+<agruenba@redhat.com> wrote:
+> When encoding large, variable-length objects such as acls into xdr_bufs,
+> it is easier to allocate buffer pages on demand rather than precomputing
+> the required buffer size.
+>
 
-2015-11-03 14:43 GMT+01:00 Arnd Bergmann <arnd@arndb.de>:
-> A recent bug fix added a call to forget_cached_acl(), but that
-> function is not always available, so we can get a build error
-> here [...]
+NACK. We're not doing allocations from inside the XDR encoders. This
+can and should be done before calling into the SUNRPC layer.
 
-didn't expect anybody to trip over this anytime soon...
-
-I've sent a fix yesterday,
-
-  http://oss.sgi.com/archives/xfs/2015-11/msg00028.html
-
-and Dave has already fixed it in for-next:
-
-  git//git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-Thanks,
-Andreas
+Trond
 
 _______________________________________________
 xfs mailing list
