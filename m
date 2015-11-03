@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D633229E66
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:23:05 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AEE8B29E66
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:23:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6DADCAC001
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:23:05 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 749B830404E
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:23:12 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id U8xsRZXVrccK4nsR (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Y8s91nOa7lgZ8b4c (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:23:04 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:23:11 -0800 (PST)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v13 47/51] nfs: Fix GETATTR bitmap verification
-Date: Tue,  3 Nov 2015 16:17:23 +0100
-Message-Id: <1446563847-14005-48-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v13 48/51] nfs: Remove unused xdr page offsets in
+	getacl/setacl arguments
+Date: Tue,  3 Nov 2015 16:17:24 +0100
+Message-Id: <1446563847-14005-49-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
 References: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,76 +32,90 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-When decoding GETATTR replies, the client checks the attribute bitmap
-for which attributes the server has sent.  It misses bits at the word
-boundaries, though; fix that.
+The arguments passed around for getacl and setacl xdr encoding, struct
+nfs_setaclargs and struct nfs_getaclargs, both contain an array of
+pages, an offset into the first page, and the length of the page data.
+The offset is unused as it is always zero; remove it.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/nfs/nfs4xdr.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ fs/nfs/nfs4proc.c       | 5 ++---
+ fs/nfs/nfs4xdr.c        | 4 ++--
+ include/linux/nfs_xdr.h | 2 --
+ 3 files changed, 4 insertions(+), 7 deletions(-)
 
+diff --git a/fs/nfs/nfs4proc.c b/fs/nfs/nfs4proc.c
+index 5133bb1..eec5c4c 100644
+--- a/fs/nfs/nfs4proc.c
++++ b/fs/nfs/nfs4proc.c
+@@ -4530,7 +4530,7 @@ static inline int nfs4_server_supports_acls(struct nfs_server *server)
+ #define NFS4ACL_MAXPAGES DIV_ROUND_UP(XATTR_SIZE_MAX, PAGE_SIZE)
+ 
+ static int buf_to_pages_noslab(const void *buf, size_t buflen,
+-		struct page **pages, unsigned int *pgbase)
++		struct page **pages)
+ {
+ 	struct page *newpage, **spages;
+ 	int rc = 0;
+@@ -4674,7 +4674,6 @@ static ssize_t __nfs4_get_acl_uncached(struct inode *inode, void *buf, size_t bu
+ 		goto out_free;
+ 
+ 	args.acl_len = npages * PAGE_SIZE;
+-	args.acl_pgbase = 0;
+ 
+ 	dprintk("%s  buf %p buflen %zu npages %d args.acl_len %zu\n",
+ 		__func__, buf, buflen, npages, args.acl_len);
+@@ -4766,7 +4765,7 @@ static int __nfs4_proc_set_acl(struct inode *inode, const void *buf, size_t bufl
+ 		return -EOPNOTSUPP;
+ 	if (npages > ARRAY_SIZE(pages))
+ 		return -ERANGE;
+-	i = buf_to_pages_noslab(buf, buflen, arg.acl_pages, &arg.acl_pgbase);
++	i = buf_to_pages_noslab(buf, buflen, arg.acl_pages);
+ 	if (i < 0)
+ 		return i;
+ 	nfs4_inode_return_delegation(inode);
 diff --git a/fs/nfs/nfs4xdr.c b/fs/nfs/nfs4xdr.c
-index 788adf3..6f6d921 100644
+index 6f6d921..eefed15 100644
 --- a/fs/nfs/nfs4xdr.c
 +++ b/fs/nfs/nfs4xdr.c
-@@ -4375,6 +4375,11 @@ static int decode_statfs(struct xdr_stream *xdr, struct nfs_fsstat *fsstat)
- 		goto xdr_error;
- 	if ((status = decode_attr_files_total(xdr, bitmap, &fsstat->tfiles)) != 0)
- 		goto xdr_error;
-+
-+	status = -EIO;
-+	if (unlikely(bitmap[0]))
-+		goto xdr_error;
-+
- 	if ((status = decode_attr_space_avail(xdr, bitmap, &fsstat->abytes)) != 0)
- 		goto xdr_error;
- 	if ((status = decode_attr_space_free(xdr, bitmap, &fsstat->fbytes)) != 0)
-@@ -4574,6 +4579,10 @@ static int decode_getfattr_attrs(struct xdr_stream *xdr, uint32_t *bitmap,
- 		goto xdr_error;
- 	fattr->valid |= status;
+@@ -1659,7 +1659,7 @@ encode_setacl(struct xdr_stream *xdr, struct nfs_setaclargs *arg, struct compoun
+ 	*p = cpu_to_be32(FATTR4_WORD0_ACL);
+ 	p = reserve_space(xdr, 4);
+ 	*p = cpu_to_be32(arg->acl_len);
+-	xdr_write_pages(xdr, arg->acl_pages, arg->acl_pgbase, arg->acl_len);
++	xdr_write_pages(xdr, arg->acl_pages, 0, arg->acl_len);
+ }
  
-+	status = -EIO;
-+	if (unlikely(bitmap[0]))
-+		goto xdr_error;
-+
- 	status = decode_attr_mode(xdr, bitmap, &fmode);
- 	if (status < 0)
- 		goto xdr_error;
-@@ -4627,6 +4636,10 @@ static int decode_getfattr_attrs(struct xdr_stream *xdr, uint32_t *bitmap,
- 		goto xdr_error;
- 	fattr->valid |= status;
+ static void
+@@ -2491,7 +2491,7 @@ static void nfs4_xdr_enc_getacl(struct rpc_rqst *req, struct xdr_stream *xdr,
+ 	encode_getattr_two(xdr, FATTR4_WORD0_ACL, 0, &hdr);
  
-+	status = -EIO;
-+	if (unlikely(bitmap[1]))
-+		goto xdr_error;
-+
- 	status = decode_attr_mdsthreshold(xdr, bitmap, fattr->mdsthreshold);
- 	if (status < 0)
- 		goto xdr_error;
-@@ -4789,12 +4802,22 @@ static int decode_fsinfo(struct xdr_stream *xdr, struct nfs_fsinfo *fsinfo)
- 	if ((status = decode_attr_maxwrite(xdr, bitmap, &fsinfo->wtmax)) != 0)
- 		goto xdr_error;
- 	fsinfo->wtpref = fsinfo->wtmax;
-+
-+	status = -EIO;
-+	if (unlikely(bitmap[0]))
-+		goto xdr_error;
-+
- 	status = decode_attr_time_delta(xdr, bitmap, &fsinfo->time_delta);
- 	if (status != 0)
- 		goto xdr_error;
- 	status = decode_attr_pnfstype(xdr, bitmap, &fsinfo->layouttype);
- 	if (status != 0)
- 		goto xdr_error;
-+
-+	status = -EIO;
-+	if (unlikely(bitmap[1]))
-+		goto xdr_error;
-+
- 	status = decode_attr_layout_blksize(xdr, bitmap, &fsinfo->blksize);
- 	if (status)
- 		goto xdr_error;
+ 	xdr_inline_pages(&req->rq_rcv_buf, replen << 2,
+-		args->acl_pages, args->acl_pgbase, args->acl_len);
++		args->acl_pages, 0, args->acl_len);
+ 
+ 	encode_nops(&hdr);
+ }
+diff --git a/include/linux/nfs_xdr.h b/include/linux/nfs_xdr.h
+index 52faf7e..090ade4 100644
+--- a/include/linux/nfs_xdr.h
++++ b/include/linux/nfs_xdr.h
+@@ -685,7 +685,6 @@ struct nfs_setaclargs {
+ 	struct nfs4_sequence_args	seq_args;
+ 	struct nfs_fh *			fh;
+ 	size_t				acl_len;
+-	unsigned int			acl_pgbase;
+ 	struct page **			acl_pages;
+ };
+ 
+@@ -697,7 +696,6 @@ struct nfs_getaclargs {
+ 	struct nfs4_sequence_args 	seq_args;
+ 	struct nfs_fh *			fh;
+ 	size_t				acl_len;
+-	unsigned int			acl_pgbase;
+ 	struct page **			acl_pages;
+ };
+ 
 -- 
 2.5.0
 
