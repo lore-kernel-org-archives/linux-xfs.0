@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B6FD29E66
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:22:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D310BAC001
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:22:10 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5E69429E72
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:22:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E4148F8035
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:22:17 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QplrGERyiFKMcQ8M (version=TLSv1.2
+	cuda.sgi.com with ESMTP id CI1Ca0XphDdVhRZo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:22:09 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:22:15 -0800 (PST)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v13 39/51] nfsd: Add support for the v4.1 dacl attribute
-Date: Tue,  3 Nov 2015 16:17:15 +0100
-Message-Id: <1446563847-14005-40-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v13 40/51] nfsd: Add support for the MAY_CREATE_{FILE,
+	DIR} permissions
+Date: Tue,  3 Nov 2015 16:17:16 +0100
+Message-Id: <1446563847-14005-41-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
 References: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,387 +32,196 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Richacls support the Automatic Inheritance permission propagation
-mechanism as specified in NFSv4.1.  Over NFS, this requires support for
-the dacl attribute: compared to the acl attribute, the dacl attribute
-has an additional flags field which indicates when Automatic Inheritance
-is in use.
+For local file systems, the vfs performs the necessary permission checks
+for operations like creating files and directories.  NFSd duplicates
+several of those checks.  The vfs checks have been extended to check for
+additional permissions like MAY_CREATE_FILE and MY_CREATE_DIR; the nfsd
+checks currently lack those extensions.
 
-The server will only indicate dacl attribute support in protocol version
-4.1 and later, on file systems with richacl support.
-
-This commit also adds support for the NFSv4.1 NFS4_ACE_WRITE_RETENTION
-and NFS4_ACE_WRITE_RETENTION_HOLD ACL permissions.
+Ideally, all duplicate checks should be removed; for now, just fix the
+duplicate checks instead though.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Acked-by: J. Bruce Fields <bfields@redhat.com>
 ---
- fs/nfsd/nfs4proc.c        |   3 +-
- fs/nfsd/nfs4xdr.c         | 219 ++++++++++++++++++++++++++++++----------------
- fs/nfsd/nfsd.h            |   6 +-
- include/linux/nfs4.h      |   1 +
- include/uapi/linux/nfs4.h |   3 +-
- 5 files changed, 155 insertions(+), 77 deletions(-)
+ fs/nfsd/nfs4proc.c |  5 +++--
+ fs/nfsd/nfsfh.c    |  8 ++++----
+ fs/nfsd/vfs.c      | 28 ++++++++++++++++++++--------
+ fs/nfsd/vfs.h      | 17 +++++++++--------
+ 4 files changed, 36 insertions(+), 22 deletions(-)
 
 diff --git a/fs/nfsd/nfs4proc.c b/fs/nfsd/nfs4proc.c
-index 1bcfda2..a053e78 100644
+index a053e78..8d476ff 100644
 --- a/fs/nfsd/nfs4proc.c
 +++ b/fs/nfsd/nfs4proc.c
-@@ -1781,7 +1781,8 @@ static inline u32 nfsd4_getattr_rsize(struct svc_rqst *rqstp,
- 	u32 bmap0 = bmap[0], bmap1 = bmap[1], bmap2 = bmap[2];
- 	u32 ret = 0;
+@@ -599,14 +599,15 @@ static __be32
+ nfsd4_create(struct svc_rqst *rqstp, struct nfsd4_compound_state *cstate,
+ 	     struct nfsd4_create *create)
+ {
++	int access = create->cr_type == NF4DIR ?
++		NFSD_MAY_CREATE_DIR : NFSD_MAY_CREATE_FILE;
+ 	struct svc_fh resfh;
+ 	__be32 status;
+ 	dev_t rdev;
  
--	if (bmap0 & FATTR4_WORD0_ACL)
-+	if (bmap0 & FATTR4_WORD0_ACL ||
-+	    bmap1 & FATTR4_WORD1_DACL)
- 		return svc_max_payload(rqstp);
- 	if (bmap0 & FATTR4_WORD0_FS_LOCATIONS)
- 		return svc_max_payload(rqstp);
-diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
-index 682a7d8..33d028c 100644
---- a/fs/nfsd/nfs4xdr.c
-+++ b/fs/nfsd/nfs4xdr.c
-@@ -301,6 +301,68 @@ nfsd4_decode_bitmap(struct nfsd4_compoundargs *argp, u32 *bmval)
- 	DECODE_TAIL;
- }
+ 	fh_init(&resfh, NFS4_FHSIZE);
  
-+static unsigned int
-+nfsd4_ace_mask(int minorversion)
-+{
-+	return minorversion == 0 ?  NFS40_ACE_MASK_ALL : NFS4_ACE_MASK_ALL;
-+}
-+
-+static __be32
-+nfsd4_decode_acl_entries(struct nfsd4_compoundargs *argp, struct richacl **acl,
-+			 unsigned short flags_mask, unsigned int ace_mask,
-+			 int *plen)
-+{
-+	struct richace *ace;
-+	u32 dummy32;
-+	char *buf;
-+	int len = 0;
-+
-+	DECODE_HEAD;
-+
-+	flags_mask &= RICHACE_VALID_FLAGS & ~RICHACE_SPECIAL_WHO;
-+
-+	READ_BUF(4); len += 4;
-+	dummy32 = be32_to_cpup(p++);
-+
-+	if (dummy32 > NFSD4_ACL_MAX)
-+		return nfserr_fbig;
-+
-+	*acl = svcxdr_alloc_richacl(argp, dummy32);
-+	if (*acl == NULL)
-+		return nfserr_jukebox;
-+
-+	richacl_for_each_entry(ace, *acl) {
-+		READ_BUF(16); len += 16;
-+
-+		dummy32 = be32_to_cpup(p++);
-+		if (dummy32 > RICHACE_ACCESS_DENIED_ACE_TYPE)
-+			return nfserr_inval;
-+		ace->e_type = dummy32;
-+
-+		dummy32 = be32_to_cpup(p++);
-+		if (dummy32 & ~flags_mask)
-+			return nfserr_inval;
-+		ace->e_flags = dummy32;
-+
-+		dummy32 = be32_to_cpup(p++);
-+		if (dummy32 & ~ace_mask)
-+			return nfserr_inval;
-+		ace->e_mask = dummy32;
-+
-+		dummy32 = be32_to_cpup(p++);
-+		READ_BUF(dummy32);
-+		len += XDR_QUADLEN(dummy32) << 2;
-+		READMEM(buf, dummy32);
-+		status = nfsd4_decode_ace_who(ace, argp->rqstp,
-+					      buf, dummy32);
-+		if (status)
-+			return status;
-+	}
-+	*plen += len;
-+
-+	DECODE_TAIL;
-+}
-+
- static __be32
- nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 		   struct iattr *iattr, struct richacl **acl,
-@@ -312,6 +374,7 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 
- 	DECODE_HEAD;
- 	iattr->ia_valid = 0;
-+	*acl = NULL;
- 	if ((status = nfsd4_decode_bitmap(argp, bmval)))
+-	status = fh_verify(rqstp, &cstate->current_fh, S_IFDIR,
+-			   NFSD_MAY_CREATE);
++	status = fh_verify(rqstp, &cstate->current_fh, S_IFDIR, access);
+ 	if (status)
  		return status;
  
-@@ -325,50 +388,18 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 		iattr->ia_valid |= ATTR_SIZE;
+diff --git a/fs/nfsd/nfsfh.c b/fs/nfsd/nfsfh.c
+index 350041a..7159316 100644
+--- a/fs/nfsd/nfsfh.c
++++ b/fs/nfsd/nfsfh.c
+@@ -319,10 +319,10 @@ fh_verify(struct svc_rqst *rqstp, struct svc_fh *fhp, umode_t type, int access)
+ 	/*
+ 	 * We still have to do all these permission checks, even when
+ 	 * fh_dentry is already set:
+-	 * 	- fh_verify may be called multiple times with different
+-	 * 	  "access" arguments (e.g. nfsd_proc_create calls
+-	 * 	  fh_verify(...,NFSD_MAY_EXEC) first, then later (in
+-	 * 	  nfsd_create) calls fh_verify(...,NFSD_MAY_CREATE).
++	 *	- fh_verify may be called multiple times with different
++	 *	  "access" arguments (e.g. nfsd_proc_create calls
++	 *	  fh_verify(...,NFSD_MAY_EXEC) first, then later (in
++	 *	  nfsd_create) calls fh_verify(...,NFSD_MAY_CREATE_FILE).
+ 	 *	- in the NFSv4 case, the filehandle may have been filled
+ 	 *	  in by fh_compose, and given a dentry, but further
+ 	 *	  compound operations performed with that filehandle
+diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
+index 45c0497..fb35775 100644
+--- a/fs/nfsd/vfs.c
++++ b/fs/nfsd/vfs.c
+@@ -1128,6 +1128,8 @@ nfsd_create(struct svc_rqst *rqstp, struct svc_fh *fhp,
+ 	__be32		err;
+ 	__be32		err2;
+ 	int		host_err;
++	int access = (type == S_IFDIR) ?
++		NFSD_MAY_CREATE_DIR : NFSD_MAY_CREATE_FILE;
+ 
+ 	err = nfserr_perm;
+ 	if (!flen)
+@@ -1136,7 +1138,7 @@ nfsd_create(struct svc_rqst *rqstp, struct svc_fh *fhp,
+ 	if (isdotent(fname, flen))
+ 		goto out;
+ 
+-	err = fh_verify(rqstp, fhp, S_IFDIR, NFSD_MAY_CREATE);
++	err = fh_verify(rqstp, fhp, S_IFDIR, access);
+ 	if (err)
+ 		goto out;
+ 
+@@ -1301,7 +1303,7 @@ do_nfsd_create(struct svc_rqst *rqstp, struct svc_fh *fhp,
+ 
+ 	/* If file doesn't exist, check for permissions to create one */
+ 	if (d_really_is_negative(dchild)) {
+-		err = fh_verify(rqstp, fhp, S_IFDIR, NFSD_MAY_CREATE);
++		err = fh_verify(rqstp, fhp, S_IFDIR, NFSD_MAY_CREATE_FILE);
+ 		if (err)
+ 			goto out;
  	}
- 	if (bmval[0] & FATTR4_WORD0_ACL) {
--		u32 nace;
--		struct richace *ace;
--
--		READ_BUF(4); len += 4;
--		nace = be32_to_cpup(p++);
--
--		if (nace > NFSD4_ACL_MAX)
--			return nfserr_fbig;
-+		if (bmval[1] & FATTR4_WORD1_DACL)
-+			return nfserr_inval;
+@@ -1485,7 +1487,7 @@ nfsd_symlink(struct svc_rqst *rqstp, struct svc_fh *fhp,
+ 	if (isdotent(fname, flen))
+ 		goto out;
  
--		*acl = svcxdr_alloc_richacl(argp, nace);
--		if (*acl == NULL)
-+		status = nfsd4_decode_acl_entries(argp, acl,
-+				~NFS4_ACE_INHERITED_ACE,
-+				nfsd4_ace_mask(argp->minorversion),
-+				&len);
-+		if (status)
-+			return status;
-+		else if (*acl == NULL)
- 			return nfserr_jukebox;
--
--		richacl_for_each_entry(ace, *acl) {
--			READ_BUF(16); len += 16;
--
--			dummy32 = be32_to_cpup(p++);
--			if (dummy32 > RICHACE_ACCESS_DENIED_ACE_TYPE)
--				return nfserr_inval;
--			ace->e_type = dummy32;
--
--			dummy32 = be32_to_cpup(p++);
--			if (dummy32 & (~RICHACE_VALID_FLAGS |
--				       RICHACE_INHERITED_ACE |
--				       RICHACE_SPECIAL_WHO))
--				return nfserr_inval;
--			ace->e_flags = dummy32;
--
--			dummy32 = be32_to_cpup(p++);
--			if (dummy32 & ~NFS4_ACE_MASK_ALL)
--				return nfserr_inval;
--			ace->e_mask = dummy32;
--
--			dummy32 = be32_to_cpup(p++);
--			READ_BUF(dummy32);
--			len += XDR_QUADLEN(dummy32) << 2;
--			READMEM(buf, dummy32);
--			status = nfsd4_decode_ace_who(ace, argp->rqstp,
--						      buf, dummy32);
--			if (status)
--				return status;
--		}
--	} else
--		*acl = NULL;
-+	}
- 	if (bmval[1] & FATTR4_WORD1_MODE) {
- 		READ_BUF(4);
- 		len += 4;
-@@ -436,6 +467,22 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 			goto xdr_error;
- 		}
- 	}
-+	if (bmval[1] & FATTR4_WORD1_DACL) {
-+		READ_BUF(4);
-+		len += 4;
-+		dummy32 = be32_to_cpup(p++);
-+		if (dummy32 & (~RICHACL_VALID_FLAGS | RICHACL_MASKED))
-+			return nfserr_inval;
-+		status = nfsd4_decode_acl_entries(argp, acl,
-+				~0,
-+				nfsd4_ace_mask(argp->minorversion),
-+				&len);
-+		if (status)
-+			return status;
-+		else if (*acl == NULL)
-+			return nfserr_jukebox;
-+		(*acl)->a_flags = dummy32;
-+	}
+-	err = fh_verify(rqstp, fhp, S_IFDIR, NFSD_MAY_CREATE);
++	err = fh_verify(rqstp, fhp, S_IFDIR, NFSD_MAY_CREATE_FILE);
+ 	if (err)
+ 		goto out;
  
- 	label->len = 0;
- #ifdef CONFIG_NFSD_V4_SECURITY_LABEL
-@@ -2272,6 +2319,42 @@ out_resource:
- 	return nfserr_resource;
- }
+@@ -1532,7 +1534,7 @@ nfsd_link(struct svc_rqst *rqstp, struct svc_fh *ffhp,
+ 	__be32		err;
+ 	int		host_err;
  
-+static __be32 nfsd4_encode_acl_entries(struct xdr_stream *xdr,
-+		struct richacl *acl, struct svc_rqst *rqstp,
-+		unsigned short flags_mask, unsigned int ace_mask)
-+{
-+	__be32 *p;
+-	err = fh_verify(rqstp, ffhp, S_IFDIR, NFSD_MAY_CREATE);
++	err = fh_verify(rqstp, ffhp, S_IFDIR, NFSD_MAY_CREATE_FILE);
+ 	if (err)
+ 		goto out;
+ 	err = fh_verify(rqstp, tfhp, 0, NFSD_MAY_NOP);
+@@ -1604,11 +1606,12 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
+ 	struct inode	*fdir, *tdir;
+ 	__be32		err;
+ 	int		host_err;
++	int		access;
+ 
+ 	err = fh_verify(rqstp, ffhp, S_IFDIR, NFSD_MAY_REMOVE);
+ 	if (err)
+ 		goto out;
+-	err = fh_verify(rqstp, tfhp, S_IFDIR, NFSD_MAY_CREATE);
++	err = fh_verify(rqstp, tfhp, S_IFDIR, NFSD_MAY_NOP);
+ 	if (err)
+ 		goto out;
+ 
+@@ -1647,6 +1650,13 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
+ 	if (odentry == trap)
+ 		goto out_dput_old;
+ 
++	host_err = 0;
++	access = S_ISDIR(d_inode(odentry)->i_mode) ?
++		NFSD_MAY_CREATE_DIR : NFSD_MAY_CREATE_FILE;
++	err = fh_verify(rqstp, tfhp, S_IFDIR, access);
++	if (err)
++		goto out_dput_old;
 +
-+	flags_mask &= ~RICHACE_SPECIAL_WHO;
-+
-+	p = xdr_reserve_space(xdr, 4);
-+	if (!p)
-+		return nfserr_resource;
-+
-+	if (acl == NULL) {
-+		*p++ = cpu_to_be32(0);
-+	} else {
-+		struct richace *ace;
-+
-+		*p++ = cpu_to_be32(acl->a_count);
-+
-+		richacl_for_each_entry(ace, acl) {
-+			__be32 status;
-+
-+			p = xdr_reserve_space(xdr, 4*3);
-+			if (!p)
-+				return nfserr_resource;
-+			*p++ = cpu_to_be32(ace->e_type);
-+			*p++ = cpu_to_be32(ace->e_flags & flags_mask);
-+			*p++ = cpu_to_be32(ace->e_mask & ace_mask);
-+			status = nfsd4_encode_ace_who(xdr, rqstp, ace);
-+			if (status)
-+				return status;
-+		}
-+	}
-+	return 0;
-+}
-+
+ 	ndentry = lookup_one_len(tname, tdentry, tlen);
+ 	host_err = PTR_ERR(ndentry);
+ 	if (IS_ERR(ndentry))
+@@ -1672,7 +1682,8 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
+  out_dput_old:
+ 	dput(odentry);
+  out_nfserr:
+-	err = nfserrno(host_err);
++	if (host_err)
++		err = nfserrno(host_err);
+ 	/*
+ 	 * We cannot rely on fh_unlock on the two filehandles,
+ 	 * as that would do the wrong thing if the two directories
+@@ -2005,8 +2016,9 @@ nfsd_permission(struct svc_rqst *rqstp, struct svc_export *exp,
+ 	    uid_eq(inode->i_uid, current_fsuid()))
+ 		return 0;
+ 
+-	/* This assumes  NFSD_MAY_{READ,WRITE,EXEC} == MAY_{READ,WRITE,EXEC} */
+-	err = inode_permission(inode, acc & (MAY_READ|MAY_WRITE|MAY_EXEC));
++	/* This assumes NFSD_MAY_{READ,WRITE,EXEC} == MAY_{READ,WRITE,EXEC}. */
++	err = inode_permission(inode, acc & (MAY_READ|MAY_WRITE|MAY_EXEC|
++					     MAY_CREATE_DIR|MAY_CREATE_FILE));
+ 
+ 	/* Allow read access to binaries even when mode 111 */
+ 	if (err == -EACCES && S_ISREG(inode->i_mode) &&
+diff --git a/fs/nfsd/vfs.h b/fs/nfsd/vfs.h
+index fee2451..c849ef2 100644
+--- a/fs/nfsd/vfs.h
++++ b/fs/nfsd/vfs.h
+@@ -19,18 +19,19 @@
+ #define NFSD_MAY_TRUNC			0x010
+ #define NFSD_MAY_LOCK			0x020
+ #define NFSD_MAY_MASK			0x03f
++#define NFSD_MAY_CREATE_FILE		0x103 /* == MAY_{EXEC|WRITE|CREATE_FILE} */
++#define NFSD_MAY_CREATE_DIR		0x203 /* == MAY_{EXEC|WRITE|CREATE_DIR} */
+ 
+ /* extra hints to permission and open routines: */
+-#define NFSD_MAY_OWNER_OVERRIDE		0x040
+-#define NFSD_MAY_LOCAL_ACCESS		0x080 /* for device special files */
+-#define NFSD_MAY_BYPASS_GSS_ON_ROOT	0x100
+-#define NFSD_MAY_NOT_BREAK_LEASE	0x200
+-#define NFSD_MAY_BYPASS_GSS		0x400
+-#define NFSD_MAY_READ_IF_EXEC		0x800
++#define NFSD_MAY_OWNER_OVERRIDE		0x04000
++#define NFSD_MAY_LOCAL_ACCESS		0x08000 /* for device special files */
++#define NFSD_MAY_BYPASS_GSS_ON_ROOT	0x10000
++#define NFSD_MAY_NOT_BREAK_LEASE	0x20000
++#define NFSD_MAY_BYPASS_GSS		0x40000
++#define NFSD_MAY_READ_IF_EXEC		0x80000
+ 
+-#define NFSD_MAY_64BIT_COOKIE		0x1000 /* 64 bit readdir cookies for >= NFSv3 */
++#define NFSD_MAY_64BIT_COOKIE		0x100000 /* 64 bit readdir cookies for >= NFSv3 */
+ 
+-#define NFSD_MAY_CREATE		(NFSD_MAY_EXEC|NFSD_MAY_WRITE)
+ #define NFSD_MAY_REMOVE		(NFSD_MAY_EXEC|NFSD_MAY_WRITE|NFSD_MAY_TRUNC)
+ 
  /*
-  * Note: @fhp can be NULL; in this case, we might have to compose the filehandle
-  * ourselves.
-@@ -2342,15 +2425,16 @@ nfsd4_encode_fattr(struct xdr_stream *xdr, struct svc_fh *fhp,
- 			goto out;
- 		fhp = tempfh;
- 	}
--	if (bmval0 & FATTR4_WORD0_ACL) {
-+	if ((bmval0 & FATTR4_WORD0_ACL) || (bmval1 & FATTR4_WORD1_DACL)) {
- 		acl = nfsd4_get_acl(rqstp, dentry);
- 		if (IS_ERR(acl)) {
- 			err = PTR_ERR(acl);
- 			acl = NULL;
- 		}
--		if (err == -EOPNOTSUPP)
-+		if (err == -EOPNOTSUPP) {
- 			bmval0 &= ~FATTR4_WORD0_ACL;
--		else if (err == -EINVAL) {
-+			bmval1 &= ~FATTR4_WORD1_DACL;
-+		} else if (err == -EINVAL) {
- 			status = nfserr_attrnotsupp;
- 			goto out;
- 		} else if (err != 0)
-@@ -2389,6 +2473,8 @@ nfsd4_encode_fattr(struct xdr_stream *xdr, struct svc_fh *fhp,
- 
- 		if (!IS_ACL(d_inode(dentry)))
- 			word0 &= ~FATTR4_WORD0_ACL;
-+		if (!IS_RICHACL(d_inode(dentry)))
-+			word1 &= ~FATTR4_WORD1_DACL;
- 		if (!contextsupport)
- 			word2 &= ~FATTR4_WORD2_SECURITY_LABEL;
- 		if (!word2) {
-@@ -2502,35 +2588,12 @@ nfsd4_encode_fattr(struct xdr_stream *xdr, struct svc_fh *fhp,
- 		*p++ = cpu_to_be32(rdattr_err);
- 	}
- 	if (bmval0 & FATTR4_WORD0_ACL) {
--		struct richace *ace;
--
--		if (acl == NULL) {
--			p = xdr_reserve_space(xdr, 4);
--			if (!p)
--				goto out_resource;
--
--			*p++ = cpu_to_be32(0);
--			goto out_acl;
--		}
--		p = xdr_reserve_space(xdr, 4);
--		if (!p)
--			goto out_resource;
--		*p++ = cpu_to_be32(acl->a_count);
--
--		richacl_for_each_entry(ace, acl) {
--			p = xdr_reserve_space(xdr, 4*3);
--			if (!p)
--				goto out_resource;
--			*p++ = cpu_to_be32(ace->e_type);
--			*p++ = cpu_to_be32(ace->e_flags &
--				~(RICHACE_SPECIAL_WHO | RICHACE_INHERITED_ACE));
--			*p++ = cpu_to_be32(ace->e_mask & NFS4_ACE_MASK_ALL);
--			status = nfsd4_encode_ace_who(xdr, rqstp, ace);
--			if (status)
--				goto out;
--		}
-+		status = nfsd4_encode_acl_entries(xdr, acl, rqstp,
-+				~NFS4_ACE_INHERITED_ACE,
-+				nfsd4_ace_mask(minorversion));
-+		if (status)
-+			goto out;
- 	}
--out_acl:
- 	if (bmval0 & FATTR4_WORD0_ACLSUPPORT) {
- 		p = xdr_reserve_space(xdr, 4);
- 		if (!p)
-@@ -2746,6 +2809,16 @@ out_acl:
- 		}
- 		p = xdr_encode_hyper(p, ino);
- 	}
-+	if (bmval1 & FATTR4_WORD1_DACL) {
-+		p = xdr_reserve_space(xdr, 4);
-+		if (!p)
-+			goto out_resource;
-+		*p++ = cpu_to_be32(acl->a_flags);
-+		status = nfsd4_encode_acl_entries(xdr, acl, rqstp,
-+				~0, nfsd4_ace_mask(minorversion));
-+		if (status)
-+			goto out;
-+	}
- #ifdef CONFIG_NFSD_PNFS
- 	if (bmval1 & FATTR4_WORD1_FS_LAYOUT_TYPES) {
- 		status = nfsd4_encode_layout_type(xdr, exp->ex_layout_type);
-diff --git a/fs/nfsd/nfsd.h b/fs/nfsd/nfsd.h
-index cf98052..cb5c3ed 100644
---- a/fs/nfsd/nfsd.h
-+++ b/fs/nfsd/nfsd.h
-@@ -339,7 +339,8 @@ void		nfsd_lockd_shutdown(void);
- 	NFSD4_SUPPORTED_ATTRS_WORD0
- 
- #define NFSD4_1_SUPPORTED_ATTRS_WORD1 \
--	(NFSD4_SUPPORTED_ATTRS_WORD1	| PNFSD_SUPPORTED_ATTRS_WORD1)
-+	(NFSD4_SUPPORTED_ATTRS_WORD1	| PNFSD_SUPPORTED_ATTRS_WORD1 | \
-+	 FATTR4_WORD1_DACL)
- 
- #define NFSD4_1_SUPPORTED_ATTRS_WORD2 \
- 	(NFSD4_SUPPORTED_ATTRS_WORD2	| PNFSD_SUPPORTED_ATTRS_WORD2 | \
-@@ -386,7 +387,8 @@ static inline u32 nfsd_suppattrs2(u32 minorversion)
- 	(FATTR4_WORD0_SIZE | FATTR4_WORD0_ACL)
- #define NFSD_WRITEABLE_ATTRS_WORD1 \
- 	(FATTR4_WORD1_MODE | FATTR4_WORD1_OWNER | FATTR4_WORD1_OWNER_GROUP \
--	| FATTR4_WORD1_TIME_ACCESS_SET | FATTR4_WORD1_TIME_MODIFY_SET)
-+	| FATTR4_WORD1_TIME_ACCESS_SET | FATTR4_WORD1_TIME_MODIFY_SET \
-+	| FATTR4_WORD1_DACL)
- #ifdef CONFIG_NFSD_V4_SECURITY_LABEL
- #define NFSD_WRITEABLE_ATTRS_WORD2 FATTR4_WORD2_SECURITY_LABEL
- #else
-diff --git a/include/linux/nfs4.h b/include/linux/nfs4.h
-index 1422fc6..682ced3 100644
---- a/include/linux/nfs4.h
-+++ b/include/linux/nfs4.h
-@@ -394,6 +394,7 @@ enum lock_type4 {
- #define FATTR4_WORD1_TIME_MODIFY        (1UL << 21)
- #define FATTR4_WORD1_TIME_MODIFY_SET    (1UL << 22)
- #define FATTR4_WORD1_MOUNTED_ON_FILEID  (1UL << 23)
-+#define FATTR4_WORD1_DACL               (1UL << 26)
- #define FATTR4_WORD1_FS_LAYOUT_TYPES    (1UL << 30)
- #define FATTR4_WORD2_LAYOUT_TYPES       (1UL << 0)
- #define FATTR4_WORD2_LAYOUT_BLKSIZE     (1UL << 1)
-diff --git a/include/uapi/linux/nfs4.h b/include/uapi/linux/nfs4.h
-index 2b871e0..b850ffd 100644
---- a/include/uapi/linux/nfs4.h
-+++ b/include/uapi/linux/nfs4.h
-@@ -121,7 +121,8 @@
- #define NFS4_ACE_GENERIC_READ                 0x00120081
- #define NFS4_ACE_GENERIC_WRITE                0x00160106
- #define NFS4_ACE_GENERIC_EXECUTE              0x001200A0
--#define NFS4_ACE_MASK_ALL                     0x001F01FF
-+#define NFS40_ACE_MASK_ALL                    0x001F01FF
-+#define NFS4_ACE_MASK_ALL                     0x001F07FF
- 
- #define EXCHGID4_FLAG_SUPP_MOVED_REFER		0x00000001
- #define EXCHGID4_FLAG_SUPP_MOVED_MIGR		0x00000002
 -- 
 2.5.0
 
