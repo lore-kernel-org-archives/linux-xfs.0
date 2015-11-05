@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED2077F61
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 10:46:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 74E76AC001
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 08:46:42 -0800 (PST)
-Received: from zucker2.schokokeks.org (zucker2.schokokeks.org [178.63.68.90])
-	by cuda.sgi.com with ESMTP id eENsDuAbIiFa6hmV (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 Nov 2015 08:46:38 -0800 (PST)
-Date: Thu, 5 Nov 2015 17:47:32 +0100
-From: Hanno =?UTF-8?B?QsO2Y2s=?= <hanno@hboeck.de>
-Subject: Several bugs in xfs-progs when parsing invalid input
-Message-ID: <20151105174732.2378bc35@pc1>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 42C547F86
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 17:48:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 321FA8F804B
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 15:48:30 -0800 (PST)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id oqSjCadGPpgeZL19 for
+	<xfs@oss.sgi.com>; Thu, 05 Nov 2015 15:48:28 -0800 (PST)
+Date: Thu, 5 Nov 2015 16:48:27 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 0/6 V2] xfs: upfront block zeroing for DAX
+Message-ID: <20151105234827.GA5771@linux.intel.com>
+References: <1445225238-30413-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1445225238-30413-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,98 +24,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1645677135700776495=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Mon, Oct 19, 2015 at 02:27:12PM +1100, Dave Chinner wrote:
+> Hi folks,
+> 
+> This is an updated patch set that was first posted here:
+> 
+> http://oss.sgi.com/archives/xfs/2015-10/msg00006.html
+> 
+> I've dropped the DAX locking revert patch from it; that's on it's
+> way to Linus via other channels and is essentially independent to
+> this set of XFS changes.
+> 
+> The only real change in the XFS code between the two versions is the
+> addition of XFS_TRANS_RESERVE in the DAX path in
+> xfs_iomap_write_direct() to allow it to dip into the reserve block
+> pool for unwritten extent conversion rather than reporting ENOSPC.
+> 
+> Patches are against 4.3-rc5 + XFS for-next branch.
+> 
+> -Dave.
 
---===============1645677135700776495==
-Content-Type: multipart/signed; micalg=pgp-sha512; protocol="application/pgp-signature"; boundary="=_zucker.schokokeks.org-22612-1446741996-0001-2"
+Hey Dave,
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+I was going to start testing these, but I'm having trouble finding a baseline
+where they apply cleanly.  It looks like xfs/for-next already contains v1 of
+the series, and they don't seem to apply cleanly to the current
+xfs/xfs-misc-fixes-for-4.4-2 nor to v4.3.  The xfs repo I'm looking at is
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
---=_zucker.schokokeks.org-22612-1446741996-0001-2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+What am I missing?
 
-Hi,
-
-A while ago I reported a couple of bugs into your bugtracker about
-issues in xfs_repair that I found through fuzzing (with the tool
-american fuzzy lop).
-
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=3D1119
-null pointer access
-
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=3D1120
-out of bounds heap read access
-
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=3D1121
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=3D1122
-2x assert
-
-When opening these bugs I got an error message. I then contacted your
-support and almost two months(!) later I got a reply telling me that I
-should not use bugzilla, instead I should report bugs to this mailing
-list.
-
-Your webpage however clearly states that I should use bugzilla:
-http://oss.sgi.com/projects/xfs/
-
-This is all a bit ridiculous. If you don't want people to use your
-bugzilla don't say so on your webpage and preferrably disable the
-creation of new bugs.
-
-Anyway: Please have a look at the bugs I reported (and once they're
-fixed I'll happily re-test the code to see if there are more issues
-that can be found via fuzzing).
-
---=20
-Hanno B=C3=B6ck
-http://hboeck.de/
-
-mail/jabber: hanno@hboeck.de
-GPG: BBB51E42
-
---=_zucker.schokokeks.org-22612-1446741996-0001-2
-Content-Type: application/pgp-signature
-Content-Transfer-Encoding: 7bit
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCgAGBQJWO4gkAAoJEKWIAHK7tR5C+wwP/j1hhfcCHf0mHC2fK5Yldwjq
-nrIdfg2oVHLLno8UUrwiOJTdfsefj0mX4FxTOzqO/WxQDD9Md9me37/YOme5TRgN
-CSTjOrVTN9oie1m2PjOpSrfFrX1IwbkkaX/xN4YiFOs86lBY5enf4KZCfWhRjWgA
-mqJhgTvgKLOR87Cmz6gQijZ1plRloEkEejVqEbC1dBQ1AiiJUc648AzbVStp6LVM
-+9Jr16F1ctHmDbsb6zKlRSFBre1MX/JsTCn+E3H4MiabiRBoigU+/Ie8P0jX9WoT
-ML/0ix85eOQH6S/q4aEnUjNiSC71oovvOZ6wIQeCg2r+wNjtAtVdxD5ADx7kNOxI
-GD6ASU+dAfE4i65tklWXAu6WdCKF5YbHJez/aoLcxYQDPbUSw1hK1V/agQtvRgjk
-LbRwfYeLcykIV2IxidPsjg71opBjqdZrzbu96uiQDdY9xbKL5RFf2Jt8hjF8z6xo
-seLNokg7cHZd2eBEbmOS1WGgjnEWboVDn3zdu9s2mnMgpAaR/JPtpS95qP+uYHWV
-RR2rL865plrReFfUZYpj7dTHKXcgP8KknHyTC1zE+AYoNyoJvH2j/WeCrsBLYkYw
-WfzacmLGrMfhApvi7+wrqpWW6J2wDnZ6KBhgx4KAtGeIJIUr2O/zA12dTm0VrVvZ
-i+DP92wP9RY1VyuV6/vJ
-=c32S
------END PGP SIGNATURE-----
-
---=_zucker.schokokeks.org-22612-1446741996-0001-2--
-
-
---===============1645677135700776495==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+- Ross
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1645677135700776495==--
