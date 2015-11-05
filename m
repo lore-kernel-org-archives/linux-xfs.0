@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 80B967F8D
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 13:49:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CD9B0AC001
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 11:49:29 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3QyEVUC55SHGagLy (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 Nov 2015 11:49:28 -0800 (PST)
-From: Jeff Moyer <jmoyer@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id E92E17F69
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 14:54:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 87CBFAC001
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 12:54:23 -0800 (PST)
+Received: from mail-io0-f171.google.com (mail-io0-f171.google.com
+	[209.85.223.171]) by cuda.sgi.com with ESMTP id
+	1XbSe6GxNEZRJLNk (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Nov 2015 12:54:21 -0800 (PST)
+Received: by iodd200 with SMTP id d200so103536260iod.0
+	for <xfs@oss.sgi.com>; Thu, 05 Nov 2015 12:54:21 -0800 (PST)
 Subject: Re: [RFC 00/11] DAX fsynx/msync support
 References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 	<20151030035533.GU19199@dastard>
@@ -19,11 +21,11 @@ References: <1446149535-16200-1-git-send-email-ross.zwisler@linux.intel.com>
 	<20151102201029.GI10656@dastard>
 	<x49twp4p11j.fsf@segfault.boston.devel.redhat.com>
 	<20151105083309.GJ19199@dastard>
-Date: Thu, 05 Nov 2015 14:49:21 -0500
-In-Reply-To: <20151105083309.GJ19199@dastard> (Dave Chinner's message of "Thu,
-	5 Nov 2015 19:33:09 +1100")
-Message-ID: <x498u6crzum.fsf@segfault.boston.devel.redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <563BC1FB.60004@kernel.dk>
+Date: Thu, 5 Nov 2015 13:54:19 -0700
 MIME-Version: 1.0
+In-Reply-To: <20151105083309.GJ19199@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,39 +34,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-nvdimm@ml01.01.org, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, axboe@kernel.dk, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Dave Chinner <david@fromorbit.com>, Jeff Moyer <jmoyer@redhat.com>
+Cc: Jeff Layton <jlayton@poochiereds.net>, x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@ml01.01.org, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Dave Chinner <david@fromorbit.com> writes:
-
->> But this part is not.  It is up to the I/O scheduler to decide when to
->> dispatch requests.  It can hold on to them for a variety of reasons.
->> Flush requests, however, do not go through the I/O scheduler.  At the
->
-> That's pure REQ_FLUSH bios, right? Aren't data IOs with
-> REQ_FLUSH|REQ_FUA sorted like any other IO?
-
-No, they also go through the flush machinery, and so short-circuit the
-I/O scheduler.
-
+On 11/05/2015 01:33 AM, Dave Chinner wrote:
 >> Des xfs rely on this model for correctness?  If so, I'd say we've got a
 >> problem
 >
 > No, it doesn't. The XFS integrity model doesn't trust the IO layers
 > to tell the truth about IO ordering and completion or for it's
 > developers to fully understand how IO layer ordering works. :P
->
+
+That's good, because the storage developers simplified the model so that 
+fs developers would be able to get and use it.
+
 > i.e. we wait for full completions of all dependent IO before issuing
 > flushes or log writes that use REQ_FLUSH|REQ_FUA semantics to ensure
 > the dependent IOs are fully caught by the cache flushes...
 
-OK, phew!  ;-)
+... which is what you are supposed to do, that's how it works.
 
--Jeff
+-- 
+Jens Axboe
 
 _______________________________________________
 xfs mailing list
