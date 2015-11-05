@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F40C97F4E
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 06:11:08 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E44947F76
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 09:57:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E42568F8035
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 04:11:05 -0800 (PST)
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
-	[67.231.145.42]) by cuda.sgi.com with ESMTP id FoUCEhJQbzDzURNZ
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Nov 2015 04:11:04 -0800 (PST)
-Date: Thu, 5 Nov 2015 07:10:59 -0500
-From: Chris Mason <clm@fb.com>
-Subject: Re: [PATCH RFC] use WQ_MEM_RECLAIM for m_log_workqueue
-Message-ID: <20151105121059.GJ5458@ret.masoncoding.com>
-References: <20151104185103.GC5458@ret.masoncoding.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C39D4304059
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 07:57:09 -0800 (PST)
+Received: from mail-ob0-f170.google.com (mail-ob0-f170.google.com
+	[209.85.214.170]) by cuda.sgi.com with ESMTP id
+	gvGktpjbaQAsttgY (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Nov 2015 07:57:04 -0800 (PST)
+Received: by obbza9 with SMTP id za9so69598082obb.1
+	for <xfs@oss.sgi.com>; Thu, 05 Nov 2015 07:57:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151104185103.GC5458@ret.masoncoding.com>
+In-Reply-To: <CAHc6FU5xkjWJeGFR5mO8+OAEMwwU6yWK7H8CV1fn5dk-LS23-g@mail.gmail.com>
+References: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
+	<1446563847-14005-46-git-send-email-agruenba@redhat.com>
+	<CAHQdGtScoRb-722ES168O8tkp-Rbvwe6bZ=70WwgiXpCC3vsHw@mail.gmail.com>
+	<CAHc6FU5xkjWJeGFR5mO8+OAEMwwU6yWK7H8CV1fn5dk-LS23-g@mail.gmail.com>
+Date: Thu, 5 Nov 2015 10:57:04 -0500
+Message-ID: <CAHQdGtQitLZq9fKHhzZbqS5ESRYNgNpw=M+y715mWMjFi-cgNQ@mail.gmail.com>
+Subject: Re: [PATCH v13 45/51] sunrpc: Allow to demand-allocate pages to
+	encode into
+From: Trond Myklebust <trond.myklebust@primarydata.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +35,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, Tejun Heo <htejun@fb.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API Mailing List <linux-api@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Wed, Nov 04, 2015 at 01:51:03PM -0500, Chris Mason wrote:
-> I think we should be using WQ_MEM_RECLAIM to make sure this thread pool
-> makes progress when we're not able to allocate new workers.
+On Thu, Nov 5, 2015 at 6:07 AM, Andreas Gruenbacher <agruenba@redhat.com> wrote:
+> Trond,
+>
+> On Tue, Nov 3, 2015 at 5:25 PM, Trond Myklebust
+> <trond.myklebust@primarydata.com> wrote:
+>> On Tue, Nov 3, 2015 at 10:17 AM, Andreas Gruenbacher
+>> <agruenba@redhat.com> wrote:
+>>> When encoding large, variable-length objects such as acls into xdr_bufs,
+>>> it is easier to allocate buffer pages on demand rather than precomputing
+>>> the required buffer size.
+>>
+>> NACK. We're not doing allocations from inside the XDR encoders. This
+>> can and should be done before calling into the SUNRPC layer.
+>
+> an XDR-encoded ACL can be up to 64k (16 pages) in size. In practice,
+> large ACLs like that will almost never occur and almost all ACLs will
+> fit into a single page though.
+>
+> The XDR-encoded ACL contains strings for the user and group names
+> which need to be looked up when the idmapper is used. Those lookups
+> are somewhat expensive; in addition, the lookup results can change
+> over time. When precomputing the size, allocating space, and then
+> encoding the ACL, we could run out of space when encoding.
+>
+> So we could always allocate the maximum 16 pages, encode the acl, and
+> free the unused pages. This would be rather wasteful though.
+>
+> Given how simple it is to allocate pages as we go, this seems the
+> better choice here. This doesn't break any existing code either; NULL
+> page pointers would have oopsed in xdr_get_next_encode_buffer before.
+>
+> From the memory management point of view, there is no difference in
+> preallocating GFP_NOFS pages and allocating them on demand; the pages
+> are allocated in the same task and locking context in both cases.
+>
+> So could you please explain why you object to this change?
+>
 
-Thinking harder, it's probably best to just flag them all
-WQ_MEM_RECLAIM.  This is what btrfs does, and it saves you from painful
-discoveries about how different queues depend on each other.
+Allocating memory deep in the bowels of the RPC code with the
+expectation that it will be freed by the caller of the RPC request is
+a layering violation of the ugliest sort. How is anyone who is
+unfamiliar with the code going to be able to understand what is going
+on without tracing through 1000 lines of code to spot where the
+allocation is happening?
 
-Tejun did verify in the dump that progress on m_log_workqueue was stuck
-waiting for more threads.
+Aside from that, we do not want any non-critical blocking while
+holding the RPC socket lock. Your allocation request will block all
+further traffic to the server until it is satisfied. That includes
+blocking page writeback, which might actually free up memory to
+satisfy the allocation.
 
-I'll start testing and send a v2.
-
--chris
+As I said above, there is no reason whatsoever to have to do all this
+inside encode_setacl(). The entire ACL encoding into pages can be done
+before even calling into the RPC layer, just like we do today.
 
 _______________________________________________
 xfs mailing list
