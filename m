@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 08B6829E2C
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:20:26 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 882CE7FC2
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 05:39:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7776BAC004
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:20:25 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CD4D304053
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2015 03:39:55 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gq8LGOGcwQKRJHfp (version=TLSv1.2
+	cuda.sgi.com with ESMTP id hY64vQkQMZLK6UQD (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:20:23 -0800 (PST)
+	<xfs@oss.sgi.com>; Thu, 05 Nov 2015 03:39:51 -0800 (PST)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v13 24/51] xfs: Change how listxattr generates synthetic
-	attributes
-Date: Tue,  3 Nov 2015 16:17:00 +0100
-Message-Id: <1446563847-14005-25-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
-References: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v14 00/22] Richacls (Core and Ext4)
+Date: Thu,  5 Nov 2015 12:39:18 +0100
+Message-Id: <1446723580-3747-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,275 +29,123 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Instead of adding the synthesized POSIX ACL attribute names after listing all
-non-synthesized attributes, generate them immediately when listing the
-non-synthesized attributes.
+Here is another update to the richacl patch queue.  This posting contains
+the patches ready to be merged; the patches later in the queue still need
+some more review.
 
-In addition, merge xfs_xattr_put_listent and xfs_xattr_put_listent_sizes to
-ensure that the list size is computed correctly; the split version was
-overestimating the list size for non-root users.
+Changes since the last posting (http://lwn.net/Articles/662881/):
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/xfs/xfs_acl.c   |  23 ---------
- fs/xfs/xfs_acl.h   |   4 --
- fs/xfs/xfs_xattr.c | 137 +++++++++++++++++++++++------------------------------
- 3 files changed, 59 insertions(+), 105 deletions(-)
+ * Functions {get,put}_base_acl renamed to base_acl_{get,put}. Functions
+   base_acl_init and base_acl_refcount added and used where appropriate.
+   Better document that struct base_acl must be the first member in an ACL.
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 7b03383..778a464 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -231,29 +231,6 @@ __xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- 	return error;
- }
- 
--static int
--xfs_acl_exists(struct inode *inode, unsigned char *name)
--{
--	int len = XFS_ACL_MAX_SIZE(XFS_M(inode->i_sb));
--
--	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
--			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
--}
--
--int
--posix_acl_access_exists(struct inode *inode)
--{
--	return xfs_acl_exists(inode, SGI_ACL_FILE);
--}
--
--int
--posix_acl_default_exists(struct inode *inode)
--{
--	if (!S_ISDIR(inode->i_mode))
--		return 0;
--	return xfs_acl_exists(inode, SGI_ACL_DEFAULT);
--}
--
- int
- xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- {
-diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-index 9ee0a0d..cf973f5 100644
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -24,15 +24,11 @@ struct posix_acl;
- #ifdef CONFIG_XFS_POSIX_ACL
- extern struct posix_acl *xfs_get_acl(struct inode *inode, int type);
- extern int xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
--extern int posix_acl_access_exists(struct inode *inode);
--extern int posix_acl_default_exists(struct inode *inode);
- #else
- static inline struct posix_acl *xfs_get_acl(struct inode *inode, int type)
- {
- 	return NULL;
- }
- # define xfs_set_acl					NULL
--# define posix_acl_access_exists(inode)			0
--# define posix_acl_default_exists(inode)		0
- #endif /* CONFIG_XFS_POSIX_ACL */
- #endif	/* __XFS_ACL_H__ */
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index c0368151..8428aed 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -106,47 +106,19 @@ const struct xattr_handler *xfs_xattr_handlers[] = {
- 	NULL
- };
- 
--static unsigned int xfs_xattr_prefix_len(int flags)
--{
--	if (flags & XFS_ATTR_SECURE)
--		return sizeof("security");
--	else if (flags & XFS_ATTR_ROOT)
--		return sizeof("trusted");
--	else
--		return sizeof("user");
--}
--
--static const char *xfs_xattr_prefix(int flags)
--{
--	if (flags & XFS_ATTR_SECURE)
--		return xfs_xattr_security_handler.prefix;
--	else if (flags & XFS_ATTR_ROOT)
--		return xfs_xattr_trusted_handler.prefix;
--	else
--		return xfs_xattr_user_handler.prefix;
--}
--
- static int
--xfs_xattr_put_listent(
-+__xfs_xattr_put_listent(
- 	struct xfs_attr_list_context *context,
--	int		flags,
--	unsigned char	*name,
--	int		namelen,
--	int		valuelen,
--	unsigned char	*value)
-+	char *prefix,
-+	int prefix_len,
-+	unsigned char *name,
-+	int namelen)
- {
--	unsigned int prefix_len = xfs_xattr_prefix_len(flags);
- 	char *offset;
- 	int arraytop;
- 
--	ASSERT(context->count >= 0);
--
--	/*
--	 * Only show root namespace entries if we are actually allowed to
--	 * see them.
--	 */
--	if ((flags & XFS_ATTR_ROOT) && !capable(CAP_SYS_ADMIN))
--		return 0;
-+	if (!context->alist)
-+		goto compute_size;
- 
- 	arraytop = context->count + prefix_len + namelen + 1;
- 	if (arraytop > context->firstu) {
-@@ -154,17 +126,19 @@ xfs_xattr_put_listent(
- 		return 1;
- 	}
- 	offset = (char *)context->alist + context->count;
--	strncpy(offset, xfs_xattr_prefix(flags), prefix_len);
-+	strncpy(offset, prefix, prefix_len);
- 	offset += prefix_len;
- 	strncpy(offset, (char *)name, namelen);			/* real name */
- 	offset += namelen;
- 	*offset = '\0';
-+
-+compute_size:
- 	context->count += prefix_len + namelen + 1;
- 	return 0;
- }
- 
- static int
--xfs_xattr_put_listent_sizes(
-+xfs_xattr_put_listent(
- 	struct xfs_attr_list_context *context,
- 	int		flags,
- 	unsigned char	*name,
-@@ -172,24 +146,55 @@ xfs_xattr_put_listent_sizes(
- 	int		valuelen,
- 	unsigned char	*value)
- {
--	context->count += xfs_xattr_prefix_len(flags) + namelen + 1;
--	return 0;
--}
-+	char *prefix;
-+	int prefix_len;
- 
--static int
--list_one_attr(const char *name, const size_t len, void *data,
--		size_t size, ssize_t *result)
--{
--	char *p = data + *result;
-+	ASSERT(context->count >= 0);
- 
--	*result += len;
--	if (!size)
--		return 0;
--	if (*result > size)
--		return -ERANGE;
-+	if (flags & XFS_ATTR_ROOT) {
-+#ifdef CONFIG_XFS_POSIX_ACL
-+		if (namelen == SGI_ACL_FILE_SIZE &&
-+		    strncmp(name, SGI_ACL_FILE,
-+			    SGI_ACL_FILE_SIZE) == 0) {
-+			int ret = __xfs_xattr_put_listent(
-+					context, XATTR_SYSTEM_PREFIX,
-+					XATTR_SYSTEM_PREFIX_LEN,
-+					XATTR_POSIX_ACL_ACCESS,
-+					strlen(XATTR_POSIX_ACL_ACCESS));
-+			if (ret)
-+				return ret;
-+		} else if (namelen == SGI_ACL_DEFAULT_SIZE &&
-+			 strncmp(name, SGI_ACL_DEFAULT,
-+				 SGI_ACL_DEFAULT_SIZE) == 0) {
-+			int ret = __xfs_xattr_put_listent(
-+					context, XATTR_SYSTEM_PREFIX,
-+					XATTR_SYSTEM_PREFIX_LEN,
-+					XATTR_POSIX_ACL_DEFAULT,
-+					strlen(XATTR_POSIX_ACL_DEFAULT));
-+			if (ret)
-+				return ret;
-+		}
-+#endif
- 
--	strcpy(p, name);
--	return 0;
-+		/*
-+		 * Only show root namespace entries if we are actually allowed to
-+		 * see them.
-+		 */
-+		if (!capable(CAP_SYS_ADMIN))
-+			return 0;
-+
-+		prefix = XATTR_TRUSTED_PREFIX;
-+		prefix_len = XATTR_TRUSTED_PREFIX_LEN;
-+	} else if (flags & XFS_ATTR_SECURE) {
-+		prefix = XATTR_SECURITY_PREFIX;
-+		prefix_len = XATTR_SECURITY_PREFIX_LEN;
-+	} else {
-+		prefix = XATTR_USER_PREFIX;
-+		prefix_len = XATTR_USER_PREFIX_LEN;
-+	}
-+
-+	return __xfs_xattr_put_listent(context, prefix, prefix_len, name,
-+				       namelen);
- }
- 
- ssize_t
-@@ -198,7 +203,6 @@ xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
- 	struct xfs_attr_list_context context;
- 	struct attrlist_cursor_kern cursor = { 0 };
- 	struct inode		*inode = d_inode(dentry);
--	int			error;
- 
- 	/*
- 	 * First read the regular on-disk attributes.
-@@ -207,37 +211,14 @@ xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
- 	context.dp = XFS_I(inode);
- 	context.cursor = &cursor;
- 	context.resynch = 1;
--	context.alist = data;
-+	context.alist = size ? data : NULL;
- 	context.bufsize = size;
- 	context.firstu = context.bufsize;
--
--	if (size)
--		context.put_listent = xfs_xattr_put_listent;
--	else
--		context.put_listent = xfs_xattr_put_listent_sizes;
-+	context.put_listent = xfs_xattr_put_listent;
- 
- 	xfs_attr_list_int(&context);
- 	if (context.count < 0)
- 		return -ERANGE;
- 
--	/*
--	 * Then add the two synthetic ACL attributes.
--	 */
--	if (posix_acl_access_exists(inode)) {
--		error = list_one_attr(POSIX_ACL_XATTR_ACCESS,
--				strlen(POSIX_ACL_XATTR_ACCESS) + 1,
--				data, size, &context.count);
--		if (error)
--			return error;
--	}
--
--	if (posix_acl_default_exists(inode)) {
--		error = list_one_attr(POSIX_ACL_XATTR_DEFAULT,
--				strlen(POSIX_ACL_XATTR_DEFAULT) + 1,
--				data, size, &context.count);
--		if (error)
--			return error;
--	}
--
- 	return context.count;
- }
+ * Function acl_by_type un-exported and changed to return a struct base_acl
+   pointer.
+
+ * The "Cache base_acl objects in inodes" and "Cache richacl in struct
+   inode" patches were not perfectly split.
+
+ * Fix the commit message of "Add richacl feature flag".
+
+
+The complete patch queue is available in git form here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+	richacl-2015-11-05
+
+
+The richacl user-space utilitites, man pages, and test suite are available
+here:
+
+  https://github.com/andreas-gruenbacher/richacl
+
+
+Changes to other user-space packages for richacl are available here:
+
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
+
+
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (20):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Make the inode passed to inode_change_ok non-const
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Compute maximum file masks from an acl
+  richacl: Permission check algorithm
+  posix_acl: Unexport acl_by_type and make it static
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+ fs/Kconfig                                      |   3 +
+ fs/Makefile                                     |   2 +
+ fs/attr.c                                       |  81 +++-
+ fs/ext4/Kconfig                                 |  11 +
+ fs/ext4/Makefile                                |   1 +
+ fs/ext4/ext4.h                                  |   6 +-
+ fs/ext4/file.c                                  |   3 +
+ fs/ext4/ialloc.c                                |  11 +-
+ fs/ext4/inode.c                                 |  12 +-
+ fs/ext4/namei.c                                 |   5 +
+ fs/ext4/richacl.c                               | 142 ++++++
+ fs/ext4/richacl.h                               |  40 ++
+ fs/ext4/super.c                                 |  49 +-
+ fs/ext4/xattr.c                                 |   7 +
+ fs/f2fs/acl.c                                   |   4 +-
+ fs/inode.c                                      |  15 +-
+ fs/jffs2/acl.c                                  |  10 +-
+ fs/namei.c                                      | 111 +++--
+ fs/posix_acl.c                                  |  50 +--
+ fs/richacl_base.c                               | 564 ++++++++++++++++++++++++
+ fs/richacl_inode.c                              | 333 ++++++++++++++
+ fs/richacl_xattr.c                              | 298 +++++++++++++
+ fs/xattr.c                                      |  34 +-
+ include/linux/fs.h                              |  60 ++-
+ include/linux/posix_acl.h                       |  13 +-
+ include/linux/richacl.h                         | 208 +++++++++
+ include/linux/richacl_xattr.h                   |  44 ++
+ include/uapi/linux/Kbuild                       |   2 +
+ include/uapi/linux/fs.h                         |   3 +-
+ include/uapi/linux/richacl.h                    | 152 +++++++
+ include/uapi/linux/richacl_xattr.h              |  44 ++
+ include/uapi/linux/xattr.h                      |   2 +
+ 33 files changed, 2213 insertions(+), 109 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl_base.c
+ create mode 100644 fs/richacl_inode.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
 -- 
 2.5.0
 
