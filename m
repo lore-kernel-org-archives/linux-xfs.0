@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 558A57F84
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2015 15:26:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 32FF8304039
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2015 13:26:55 -0800 (PST)
-Received: from mail-pa0-f44.google.com (mail-pa0-f44.google.com
-	[209.85.220.44]) by cuda.sgi.com with ESMTP id n3dGgEkcmgmmvbdW
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7E9477F87
+	for <xfs@oss.sgi.com>; Fri,  6 Nov 2015 15:27:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6B6878F8033
+	for <xfs@oss.sgi.com>; Fri,  6 Nov 2015 13:27:27 -0800 (PST)
+Received: from mail-pa0-f42.google.com (mail-pa0-f42.google.com
+	[209.85.220.42]) by cuda.sgi.com with ESMTP id MK3asVQELXuLRjJI
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Nov 2015 13:26:53 -0800 (PST)
-Received: by pabfh17 with SMTP id fh17so133929814pab.0
-	for <xfs@oss.sgi.com>; Fri, 06 Nov 2015 13:26:52 -0800 (PST)
+	Fri, 06 Nov 2015 13:27:25 -0800 (PST)
+Received: by pabfh17 with SMTP id fh17so133940976pab.0
+	for <xfs@oss.sgi.com>; Fri, 06 Nov 2015 13:27:24 -0800 (PST)
 Subject: Re: [PATCH v14 03/22] vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD
 	permission flags
 Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 From: Andreas Dilger <adilger@dilger.ca>
 In-Reply-To: <1446723580-3747-4-git-send-email-agruenba@redhat.com>
 Date: Fri, 6 Nov 2015 14:26:45 -0700
-Message-Id: <8C966D9B-A46D-47EC-BD4B-20E2F9B42555@dilger.ca>
+Message-Id: <88120453-8E06-481C-90C7-5D7E7B279C4E@dilger.ca>
 References: <1446723580-3747-1-git-send-email-agruenba@redhat.com>
 	<1446723580-3747-4-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,18 +29,18 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1117043448866351682=="
+Content-Type: multipart/mixed; boundary="===============1248904952758722363=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Andreas Gruenbacher <agruenba@redhat.com>
 Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
 
---===============1117043448866351682==
-Content-Type: multipart/signed; boundary="Apple-Mail=_686D8F26-4634-4110-89A3-CE8E4878A295"; protocol="application/pgp-signature"; micalg=pgp-sha256
+--===============1248904952758722363==
+Content-Type: multipart/signed; boundary="Apple-Mail=_2915270B-23EA-4C7B-BE26-9213A7A0F9C4"; protocol="application/pgp-signature"; micalg=pgp-sha256
 
 
---Apple-Mail=_686D8F26-4634-4110-89A3-CE8E4878A295
+--Apple-Mail=_2915270B-23EA-4C7B-BE26-9213A7A0F9C4
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain;
 	charset=us-ascii
@@ -182,7 +182,7 @@ Cheers, Andreas
 
 
 
---Apple-Mail=_686D8F26-4634-4110-89A3-CE8E4878A295
+--Apple-Mail=_2915270B-23EA-4C7B-BE26-9213A7A0F9C4
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
 	filename=signature.asc
@@ -208,10 +208,10 @@ rxiI67P1K2g=
 =Vb9Z
 -----END PGP SIGNATURE-----
 
---Apple-Mail=_686D8F26-4634-4110-89A3-CE8E4878A295--
+--Apple-Mail=_2915270B-23EA-4C7B-BE26-9213A7A0F9C4--
 
 
---===============1117043448866351682==
+--===============1248904952758722363==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -222,4 +222,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1117043448866351682==--
+--===============1248904952758722363==--
