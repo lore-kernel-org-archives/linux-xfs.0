@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9A7747F58
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2015 16:32:46 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 974F17F75
+	for <xfs@oss.sgi.com>; Sat,  7 Nov 2015 04:05:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 87E5E304039
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2015 14:32:43 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	srRk4THSzkHowi81 for <xfs@oss.sgi.com>;
-	Fri, 06 Nov 2015 14:32:40 -0800 (PST)
-Date: Sat, 7 Nov 2015 09:32:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6 V2] xfs: upfront block zeroing for DAX
-Message-ID: <20151106223238.GT10656@dastard>
-References: <1445225238-30413-1-git-send-email-david@fromorbit.com>
-	<20151105234827.GA5771@linux.intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 779388F8033
+	for <xfs@oss.sgi.com>; Sat,  7 Nov 2015 02:05:46 -0800 (PST)
+Received: from mail-lf0-f44.google.com (mail-lf0-f44.google.com
+	[209.85.215.44]) by cuda.sgi.com with ESMTP id NvYWR1FnoF3GrAY9
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 07 Nov 2015 02:05:43 -0800 (PST)
+Received: by lfs39 with SMTP id 39so51612614lfs.3
+	for <xfs@oss.sgi.com>; Sat, 07 Nov 2015 02:05:42 -0800 (PST)
+Received: from viper.bobcat.mine.nu (62-78-200-229.bb.dnainternet.fi.
+	[62.78.200.229])
+	by smtp.gmail.com with ESMTPSA id br10sm714794lbb.4.2015.11.07.02.05.41
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Sat, 07 Nov 2015 02:05:41 -0800 (PST)
+From: =?UTF-8?q?Ville=20Skytt=C3=A4?= <ville.skytta@iki.fi>
+Subject: [PATCH 1/2] xfs_db.8: Remove stray backslash near bmap
+Date: Sat,  7 Nov 2015 12:05:39 +0200
+Message-Id: <1446890740-25659-1-git-send-email-ville.skytta@iki.fi>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151105234827.GA5771@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +31,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: jack@suse.cz, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Nov 05, 2015 at 04:48:27PM -0700, Ross Zwisler wrote:
-> On Mon, Oct 19, 2015 at 02:27:12PM +1100, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > This is an updated patch set that was first posted here:
-> > 
-> > http://oss.sgi.com/archives/xfs/2015-10/msg00006.html
-> > 
-> > I've dropped the DAX locking revert patch from it; that's on it's
-> > way to Linus via other channels and is essentially independent to
-> > this set of XFS changes.
-> > 
-> > The only real change in the XFS code between the two versions is the
-> > addition of XFS_TRANS_RESERVE in the DAX path in
-> > xfs_iomap_write_direct() to allow it to dip into the reserve block
-> > pool for unwritten extent conversion rather than reporting ENOSPC.
-> > 
-> > Patches are against 4.3-rc5 + XFS for-next branch.
-> > 
-> > -Dave.
-> 
-> Hey Dave,
-> 
-> I was going to start testing these, but I'm having trouble finding a baseline
-> where they apply cleanly.  It looks like xfs/for-next already contains v1 of
-> the series, and they don't seem to apply cleanly to the current
-> xfs/xfs-misc-fixes-for-4.4-2 nor to v4.3.  The xfs repo I'm looking at is
-> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-The xfs-dax-updates branch of that kernel contains the v3 version of
-the patches I posted a few days ago. i.e. just pull the for-next
-branch of the XFS tree, because that already contains all the
-patches integrated into the rest of the XFS for-next tree...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U2lnbmVkLW9mZi1ieTogVmlsbGUgU2t5dHTDpCA8dmlsbGUuc2t5dHRhQGlraS5maT4KLS0tCiBt
+YW4vbWFuOC94ZnNfZGIuOCB8IDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwg
+MSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL21hbi9tYW44L3hmc19kYi44IGIvbWFuL21hbjgv
+eGZzX2RiLjgKaW5kZXggNjgxZWZjNC4uNTc0NWIyMiAxMDA2NDQKLS0tIGEvbWFuL21hbjgveGZz
+X2RiLjgKKysrIGIvbWFuL21hbjgveGZzX2RiLjgKQEAgLTMxNSw3ICszMTUsNyBAQCBjb21tYW5k
+IG11c3QgaGF2ZSBhbHNvIHNwZWNpZmllZCB0aGUKIG9wdGlvbi4KIC5SRQogLlRQCi0uQkkgImJt
+YXAgW1wtYVxdIFtcLWRdIFsiIGJsb2NrICIgWyIgbGVuIF1dCisuQkkgImJtYXAgW1wtYV0gW1wt
+ZF0gWyIgYmxvY2sgIiBbIiBsZW4gXV0KIFNob3cgdGhlIGJsb2NrIG1hcCBmb3IgdGhlIGN1cnJl
+bnQgaW5vZGUuCiBUaGUgbWFwIGRpc3BsYXkgY2FuIGJlIHJlc3RyaWN0ZWQgdG8gYW4gYXJlYSBv
+ZiB0aGUgZmlsZSB3aXRoIHRoZQogLkkgYmxvY2sKLS0gCjIuNC4zCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
