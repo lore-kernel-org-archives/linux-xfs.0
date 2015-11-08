@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8ECBF7F50
-	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 10:49:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6BF24304032
-	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 08:49:46 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id K03yLopBaX7ss2FI (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 08 Nov 2015 08:49:43 -0800 (PST)
-Date: Sun, 8 Nov 2015 08:49:41 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS freeze (xfsaild blocked) with 4.2.5 (also 4.3)
-Message-ID: <20151108164941.GA26354@infradead.org>
-References: <20151108114917.GA5620@achernar.madore.org>
+	by oss.sgi.com (Postfix) with ESMTP id D924B7F51
+	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 15:16:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CBD21304039
+	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 13:16:54 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	24lbLq8HFyLutt8h for <xfs@oss.sgi.com>;
+	Sun, 08 Nov 2015 13:16:51 -0800 (PST)
+Date: Mon, 9 Nov 2015 08:16:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC] use WQ_MEM_RECLAIM for m_log_workqueue
+Message-ID: <20151108211648.GV10656@dastard>
+References: <20151104185103.GC5458@ret.masoncoding.com>
+	<20151105121059.GJ5458@ret.masoncoding.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151108114917.GA5620@achernar.madore.org>
+In-Reply-To: <20151105121059.GJ5458@ret.masoncoding.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Madore <david+ml@madore.org>
-Cc: Linux Kernel mailing-list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Chris Mason <clm@fb.com>
+Cc: Tejun Heo <htejun@fb.com>, xfs@oss.sgi.com
 
-Hi David,
+On Thu, Nov 05, 2015 at 07:10:59AM -0500, Chris Mason wrote:
+> On Wed, Nov 04, 2015 at 01:51:03PM -0500, Chris Mason wrote:
+> > I think we should be using WQ_MEM_RECLAIM to make sure this thread pool
+> > makes progress when we're not able to allocate new workers.
+> 
+> Thinking harder, it's probably best to just flag them all
+> WQ_MEM_RECLAIM.  This is what btrfs does, and it saves you from painful
+> discoveries about how different queues depend on each other.
 
-can you try the patch at:
+Makes sense, we missed this one because the original use of the
+workqueue was just for a periodic, non-critical function. Then we
+move the log IO completion to it in 3.19 in commit b29c70f ("xfs:
+split metadata and log buffer completion to separate workqueues").
 
-http://article.gmane.org/gmane.comp.file-systems.xfs.general/70984
+> I'll start testing and send a v2.
 
-The symptoms sound surprisingly similar.
+Seems like a no-brainer to me...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
