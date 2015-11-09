@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7EB4C7F5F
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 14:21:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED309AC005
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 12:21:22 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Y9ajW1GL5dx9BJwo (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 Nov 2015 12:21:18 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 86AB2A3259
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 20:21:17 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-67.bos.redhat.com [10.18.41.67])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tA9KLHw7017084
-	for <xfs@oss.sgi.com>; Mon, 9 Nov 2015 15:21:17 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/8] xfs: detect and handle invalid iclog size set by mkfs
-Date: Mon,  9 Nov 2015 15:21:08 -0500
-Message-Id: <1447100475-33465-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1447100475-33465-1-git-send-email-bfoster@redhat.com>
-References: <1447100475-33465-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 078587CBF
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 15:36:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DC24A304051
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 13:36:19 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Rdo213LmUdqwScx2 for <xfs@oss.sgi.com>;
+	Mon, 09 Nov 2015 13:36:14 -0800 (PST)
+Date: Tue, 10 Nov 2015 08:35:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 03/51] xfs_io: support reflink and dedupe of file ranges
+Message-ID: <20151109213520.GB14311@dastard>
+References: <20151007050513.1504.28089.stgit@birch.djwong.org>
+	<20151007050533.1504.66249.stgit@birch.djwong.org>
+	<20151014053656.GJ10397@birch.djwong.org>
+	<20151109075438.GA17974@infradead.org>
+	<20151109183311.GA3255@birch.djwong.org>
+	<20151109185724.GB2224@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20151109185724.GB2224@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,91 +30,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-XFS log records have separate fields for the record size and the iclog
-size used to write the record. mkfs.xfs zeroes the log and writes an
-unmount record to generate a clean log for the subsequent mount. The
-userspace record logging code has a bug where the iclog size (h_size)
-field of the log record is hardcoded to 32k, even if a log stripe unit
-is specified. The log record length is correctly extended to the stripe
-unit. Since the kernel log recovery code uses the h_size field to
-determine the log buffer size, this means that the kernel can attempt to
-read/process records larger than the buffer size and overrun the buffer.
+On Mon, Nov 09, 2015 at 10:57:24AM -0800, Darrick J. Wong wrote:
+> On Mon, Nov 09, 2015 at 10:33:12AM -0800, Darrick J. Wong wrote:
+> > On Sun, Nov 08, 2015 at 11:54:38PM -0800, Christoph Hellwig wrote:
+> > > Any reason why the dedup command is called 'dedupe'?  Is this a revenge
+> > > for the missing 'e' in the creat syscall? :)
+> > 
+> > Heh, sure! :)
+> > 
+> > I stuck on the 'e' because the btrfs tool is 'duperemove', not 'dupremove'.
+> > 
+> > (I have no preference either way.)
+> > 
+> > > Either way it would be good to get this support in ASAP so we can have
+> > > the command ready for xfstests and we can merge the test.  They are
+> > > useful for btrfs and NFS already, so I'd love to fast track them.
+> 
+> Oh. Heh.  I forgot that Dave merged the v1 patch into for-next after I'd posted
+> the v2 patch.  So ... I thought I'd convinced him to revert the v1 patch and
+> stuff in the v2 patch, but that hasn't shown up on kernel.org.
+> 
+> -ETOOMANYPATCHES :(
 
-This has historically not been a problem because the kernel doesn't
-actually run through log recovery in the clean unmount case. Instead,
-the kernel detects that a single unmount record exists between the head
-and tail and pushes the tail forward such that the log is viewed as
-clean (head == tail). Once CRC verification is enabled, however, all
-records at the head of the log are verified for CRC errors and thus we
-are susceptible to overrun problems if the iclog field is not correct.
+Need to push it out - I have an updated branch here, just been
+delayed in testing and pushing out progs-4.3-rc2.
 
-While the core problem must be fixed in userspace, this is historical
-behavior that must be detected in the kernel to avoid severe side
-effects such as memory corruption and crashes. Update the log buffer
-size calculation code to detect this condition, warn the user and resize
-the log buffer based on the log stripe unit. Return a corruption error
-in cases where this does not look like a clean filesystem (i.e., the log
-record header indicates more than one operation).
+Cheers,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 26 +++++++++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index f8f1363..b00c85e 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4245,7 +4245,7 @@ xlog_do_recovery_pass(
- 	xfs_daddr_t		blk_no;
- 	char			*offset;
- 	xfs_buf_t		*hbp, *dbp;
--	int			error = 0, h_size;
-+	int			error = 0, h_size, h_len;
- 	int			bblks, split_bblks;
- 	int			hblks, split_hblks, wrapped_hblks;
- 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
-@@ -4274,7 +4274,31 @@ xlog_do_recovery_pass(
- 		error = xlog_valid_rec_header(log, rhead, tail_blk);
- 		if (error)
- 			goto bread_err1;
-+
-+		/*
-+		 * xfsprogs has a bug where record length is based on lsunit but
-+		 * h_size (iclog size) is hardcoded to 32k. Now that we
-+		 * unconditionally CRC verify the unmount record, this means the
-+		 * log buffer can be too small for the record and cause an
-+		 * overrun.
-+		 *
-+		 * Detect this condition here. Use lsunit for the buffer size as
-+		 * long as this looks like the mkfs case. Otherwise, return an
-+		 * error to avoid a buffer overrun.
-+		 */
- 		h_size = be32_to_cpu(rhead->h_size);
-+		h_len = be32_to_cpu(rhead->h_len);
-+		if (h_len > h_size) {
-+			if (h_len <= log->l_mp->m_logbsize &&
-+			    be32_to_cpu(rhead->h_num_logops) == 1) {
-+				xfs_warn(log->l_mp,
-+		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
-+					 h_size, log->l_mp->m_logbsize);
-+				h_size = log->l_mp->m_logbsize;
-+			} else
-+				return -EFSCORRUPTED;
-+		}
-+
- 		if ((be32_to_cpu(rhead->h_version) & XLOG_VERSION_2) &&
- 		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
- 			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
+Dave.
 -- 
-2.1.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
