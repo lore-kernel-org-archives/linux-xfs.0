@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AAE107F56
-	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 18:03:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A8368F8033
-	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 16:03:15 -0800 (PST)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id hswb3qaUXFjQldzB (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2FA297F37
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 01:54:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8EFB6AC004
+	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 23:54:41 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id AvqCXFfFklREoZtP (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 08 Nov 2015 16:03:08 -0800 (PST)
-Subject: Bug#804255: Please update initramfs in postinst
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.804255.B804255.144702722713128@bugs.debian.org>
-Date: Sun, 8 Nov 2015 19:00:20 -0500 (EST)
-From: Nathan Scott <nathans@debian.org>
-Message-ID: <1822095565.6959319.1447027220334.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20151106161941.15248.86048.reportbug@tack.local>
-References: <20151106161941.15248.86048.reportbug@tack.local>
+	<xfs@oss.sgi.com>; Sun, 08 Nov 2015 23:54:39 -0800 (PST)
+Date: Sun, 8 Nov 2015 23:54:38 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 03/51] xfs_io: support reflink and dedupe of file ranges
+Message-ID: <20151109075438.GA17974@infradead.org>
+References: <20151007050513.1504.28089.stgit@birch.djwong.org>
+	<20151007050533.1504.66249.stgit@birch.djwong.org>
+	<20151014053656.GJ10397@birch.djwong.org>
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>, 804255@bugs.debian.org
+Content-Disposition: inline
+In-Reply-To: <20151014053656.GJ10397@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,36 +31,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steve McIntyre <steve@einval.com>, 804255@bugs.debian.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Hi Steve,
+Any reason why the dedup command is called 'dedupe'?  Is this a revenge
+for the missing 'e' in the creat syscall? :)
 
------ Original Message -----
-> Package: xfsprogs
-> Version: 3.2.1
-> Severity: important
-> Tags: d-i
-> 
-> To make this work well, all filesystem tools packages for filesystems
-> that are likely to be used for / and/or /usr should call
-> "update-initramfs -u" in their postinst. This will
-
-OK.
-
-> I've checked your package and I don't see any update-initramfs
-> calls.
-
-(yep, xfsprogs has no postinst at all IIRC)
-
-> Please add one. If you'd like help doing that postinst work, I
-> can supply a patch - just ask!
-
-That would be great, if you don't mind Steve?  Many thanks!
-
-cheers.
-
---
-Nathan
+Either way it would be good to get this support in ASAP so we can have
+the command ready for xfstests and we can merge the test.  They are
+useful for btrfs and NFS already, so I'd love to fast track them.
 
 _______________________________________________
 xfs mailing list
