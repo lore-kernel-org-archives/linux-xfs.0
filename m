@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2FA297F37
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 01:54:42 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4CD787F37
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 01:59:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8EFB6AC004
-	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 23:54:41 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D6CA8F8033
+	for <xfs@oss.sgi.com>; Sun,  8 Nov 2015 23:59:42 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id AvqCXFfFklREoZtP (version=TLSv1.2
+	ESMTP id AGrnRdgNH3sWJaRj (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 08 Nov 2015 23:54:39 -0800 (PST)
-Date: Sun, 8 Nov 2015 23:54:38 -0800
+	<xfs@oss.sgi.com>; Sun, 08 Nov 2015 23:59:33 -0800 (PST)
+Date: Sun, 8 Nov 2015 23:59:26 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 03/51] xfs_io: support reflink and dedupe of file ranges
-Message-ID: <20151109075438.GA17974@infradead.org>
-References: <20151007050513.1504.28089.stgit@birch.djwong.org>
-	<20151007050533.1504.66249.stgit@birch.djwong.org>
-	<20151014053656.GJ10397@birch.djwong.org>
+Subject: Re: [RFCv3 00/12] xfstests: test the btrfs/xfs reflink/dedupe ioctls
+Message-ID: <20151109075926.GB17974@infradead.org>
+References: <20151007051257.3260.73072.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151014053656.GJ10397@birch.djwong.org>
+In-Reply-To: <20151007051257.3260.73072.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,14 +30,31 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-Any reason why the dedup command is called 'dedupe'?  Is this a revenge
-for the missing 'e' in the creat syscall? :)
+On Tue, Oct 06, 2015 at 10:12:57PM -0700, Darrick J. Wong wrote:
+>  * I don't have any interesting NFS/CIFS setups for test. :(
 
-Either way it would be good to get this support in ASAP so we can have
-the command ready for xfstests and we can merge the test.  They are
-useful for btrfs and NFS already, so I'd love to fast track them.
+I have a banrch with client and server support for NFSv4.2 CLONE
+support:
+
+http://git.infradead.org/users/hch/pnfs.git/shortlog/refs/heads/reflink+clone
+
+For now you want to use btrfs on the server, as using reflinks on XFS
+seems to be a little unstable over NFS.
+
+> If you're going to start using this mess, you probably ought to just
+> pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
+> They should just work with the btrfs that's in 4.3.
+> 
+> Comments and questions are, as always, welcome.
+
+Any reason the groups are called clone?  I don't really have an opinion
+on clone vs reflink but given that the xfs_io command is reflink I'd
+rather be consistent.
+
+Otherwise I'd say get it merged ASAP, we can still fix up various
+details later.
 
 _______________________________________________
 xfs mailing list
