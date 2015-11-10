@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BF58A7F47
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 17:22:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F320304062
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 15:22:00 -0800 (PST)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id nctyzgmBHProZLZA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 15:21:57 -0800 (PST)
-Date: Wed, 11 Nov 2015 10:21:54 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the vfs tree with the xfs tree
-Message-ID: <20151111102154.507e2a67@canb.auug.org.au>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8D44D7F47
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 17:26:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 16F06AC008
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 15:26:30 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	xJLKGrjRvsrJnKSo for <xfs@oss.sgi.com>;
+	Tue, 10 Nov 2015 15:26:28 -0800 (PST)
+Date: Wed, 11 Nov 2015 10:25:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] xfs: Introduce writeback context for writepages
+Message-ID: <20151110232543.GH14311@dastard>
+References: <1440479153-1584-1-git-send-email-david@fromorbit.com>
+	<1440479153-1584-3-git-send-email-david@fromorbit.com>
+	<20150831180221.GA16371@bfoster.bfoster>
+	<20150831185612.GB349@infradead.org>
+	<20150831221743.GI26895@dastard>
+	<20150901074103.GA27231@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150901074103.GA27231@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,76 +34,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>, Ben Myers <bpm@sgi.com>, David Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: Brian Foster <bfoster@redhat.com>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Andreas Gruenbacher <agruenba@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Hi Al,
+[ finally getting back to this :/ ]
 
-Today's linux-next merge of the vfs tree got a conflict in:
+On Tue, Sep 01, 2015 at 12:41:03AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 01, 2015 at 08:17:43AM +1000, Dave Chinner wrote:
+> > The patch changes the bio allocation patterns - it allocates them on
+> > the fly and holds them, so we could potentially exhaust the bio
+> > mempool with this submission technique.
+> 
+> I've spend time to look over the patch again, and still don't see
+> a change. 
 
-  fs/xfs/xfs_xattr.c
+Ah, it's in the next patch that I haven't posted that "goes straight
+to bios". Ignore it for now...
 
-between commit:
+> > The ioend allocation pattern
+> > is different, too, because we only used to have 1 per buffer on a
+> > writepage call and the last one was used for the write clustering.
+> 
+> .. that we now build up way bigger ioend chains.
+> 
+> So back to Brians concern:  we can now have fairly large piles of
+> ioends built up while potentially getting scheduled out, and this
+> does look like a potential real issue to me.  I wonder if we should
+> (ab-)use the blk_plug_cb infrastructure so that we can flush the
+> pending ioends out on a context switch?
 
-  67d8e04e345e ("xfs: invalidate cached acl if set directly via xattr")
+Possibly, but I'm thinking that we should just end up building bios
+directly and submitting them once they are reach size limits of
+boundaries rather than building ioend chains for later submission.
 
-from the xfs tree and commit:
+Did the work for arbitrarily sized bios ever get merged? I can't
+find any evidence that it did....
 
-  64669c648bc0 ("xattr handlers: Pass handler to operations instead of flags")
-
-from the vfs tree.
-
-I fixed it up (see below) and can carry the fix as necessary (no action
-is required).
-
--- 
 Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
 
-diff --cc fs/xfs/xfs_xattr.c
-index 8294f86441bf,b1850e1489ef..000000000000
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@@ -53,34 -54,12 +54,35 @@@ xfs_xattr_get(const struct xattr_handle
-  	return asize;
-  }
-  
- +void
- +xfs_forget_acl(
- +	struct inode		*inode,
- +	const char		*name,
- +	int			xflags)
- +{
- +	/*
- +	 * Invalidate any cached ACLs if the user has bypassed the ACL
- +	 * interface. We don't validate the content whatsoever so it is caller
- +	 * responsibility to provide data in valid format and ensure i_mode is
- +	 * consistent.
- +	 */
- +	if (xflags & ATTR_ROOT) {
- +#ifdef CONFIG_XFS_POSIX_ACL
- +		if (!strcmp(name, SGI_ACL_FILE))
- +			forget_cached_acl(inode, ACL_TYPE_ACCESS);
- +		else if (!strcmp(name, SGI_ACL_DEFAULT))
- +			forget_cached_acl(inode, ACL_TYPE_DEFAULT);
- +#endif
- +	}
- +}
- +
-  static int
-- xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
-- 		size_t size, int flags, int xflags)
-+ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *dentry,
-+ 		const char *name, const void *value, size_t size, int flags)
-  {
- -	int xflags = handler->flags;
- -	struct xfs_inode *ip = XFS_I(d_inode(dentry));
- +	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
- +	int			error;
-++	int			xflags = handler->flags;
-  
-  	if (strcmp(name, "") == 0)
-  		return -EINVAL;
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
