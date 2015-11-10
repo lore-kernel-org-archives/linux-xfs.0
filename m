@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 086597F3F
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 12:45:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CD1878F8035
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 10:45:34 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id jmVeBe4b2KHlwmUe for <xfs@oss.sgi.com>;
-	Tue, 10 Nov 2015 10:45:28 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id DDEFB6372A81
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 12:45:27 -0600 (CST)
-Subject: Re: [PATCH] xfsprogs: fix cut & paste error in xfs_fsr.c
-References: <56423596.3030300@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56423B47.4060306@sandeen.net>
-Date: Tue, 10 Nov 2015 12:45:27 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AC4D47F3F
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 13:17:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D8F0304032
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 11:17:49 -0800 (PST)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id SlYCD3la5JJL1XH6 for <xfs@oss.sgi.com>;
+	Tue, 10 Nov 2015 11:17:46 -0800 (PST)
+Date: Tue, 10 Nov 2015 14:17:45 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH v15 00/22] Richacls (Core and Ext4)
+Message-ID: <20151110191745.GA19379@fieldses.org>
+References: <1447067343-31479-1-git-send-email-agruenba@redhat.com>
+	<20151110112943.GA17038@infradead.org>
+	<CAHc6FU5g7=wd1Wt4+GCaLJjNu7giruZyAON3VcYn-A=ffYMsmw@mail.gmail.com>
+	<CAH2r5ms1ckC59o9sbBEBAWQA0Q3tGOs=YJpk01xg19zThJDt-w@mail.gmail.com>
+	<20151110170703.GB17530@fieldses.org>
+	<CAHc6FU6aWsWO1SOSyNVnbObE0GoE4dr5a3WVTgvX4xn0wum1Fg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <56423596.3030300@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU6aWsWO1SOSyNVnbObE0GoE4dr5a3WVTgvX4xn0wum1Fg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,53 +33,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Steve French <smfrench@gmail.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On 11/10/15 12:21 PM, Eric Sandeen wrote:
-> Commit:
+On Tue, Nov 10, 2015 at 06:58:19PM +0100, Andreas Gruenbacher wrote:
+> On Tue, Nov 10, 2015 at 6:07 PM, J. Bruce Fields <bfields@fieldses.org> wrote:
+> > On Tue, Nov 10, 2015 at 10:43:46AM -0600, Steve French wrote:
+> >> I don't have strong disagreement with using pseudo-xattrs to
+> >> store/retrieve ACLs (we already do this) but retrieving/setting an ACL
+> >> all at once can be awkward  when ACLs are quite large e.g. when it
+> >> encodes to over 1MB
+> >
+> > At least in the NFS case, that's also a limitation of the protocol.
 > 
-> 7141fc xfsprogs: make fsr use mntinfo when there is no mntent
-> 
-> added an inadvertent "break;" to initallfs() after the call
-> to find_mountpoint_check(); this is likely a cut & paste error
-> from the call in find_mountpoint(), where we really *do* want to
-> stop after the first one we find.
-> 
-> Fix that by removing the break, and fix the declaration-after-code.
-> 
-> Addresses-Coverity-Id: 1338431
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> I couldn't find a limit in the NFSv4 specification, but the client and
+> server implementations both define arbitrary ACL size limits. In
+> addition, the xattr syscalls allow attributes to be up to 64k long.
 
-Actually, unless Jan's commit fixes something important for this
-release (and I don't think it does?) I'd just revert it; it's
-pretty chock full of outright errors and other weirdness.
+I don't recall 4.0 specifying any limit, 4.1 does include negotiation of
+maximum rpc calls and replies, and that effectively limits ACL sizes
+since they have to fit in a single rpc.
 
-For example:
+> The bigger problem would be incrementally setting ACLs. To prevent
+> processes from racing with each other, we would need a locking
+> mechanism. In addition, the memory overhead would be prohibitive and
+> access decisions would become extremely slow; we would have to come up
+> with mechanisms to avoid those problems.
 
-initallfs(mtab);
-   struct stat64 sb;
-   mntp = find_mountpoint_check(&sb, mp, &ms);
+Right.  Anyway, not worth the trouble, I think.
 
-and find_mounpoint_check() does:
+(Though what might be worth thinking about at some point is just making
+sure we fail in helpful ways.)
 
-     if (S_ISDIR(sb->st_mode)) {
-
-so "sb" is never initialized on that path.  Weird that Coverity
-didn't see it.
-
-(I'm also not a fan of using "sb" and "mp" for things that aren't
-superblocks and xfs_mount_t's, but that's just style I guess...)
-
-((and every caller passes an ms stat buffer into the function,
-which can be local to the function, as no caller uses it ...))
-
-(((and there's whitespace damage)))
-
-Jan said this patch "fell under the sofa" - I think it might need a
-bit more dusting off before it's ready to go... ;)
-
--Eric
+--b.
 
 _______________________________________________
 xfs mailing list
