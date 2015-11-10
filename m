@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B1BF27CBF
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 18:16:09 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F26447CBF
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 23:14:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B2AC304043
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 16:16:06 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 747E6AC005
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2015 21:14:18 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Ex7njdqqJv3zanON for <xfs@oss.sgi.com>;
-	Mon, 09 Nov 2015 16:16:02 -0800 (PST)
+	qcivuGx5WO6YexbV for <xfs@oss.sgi.com>;
+	Mon, 09 Nov 2015 21:14:13 -0800 (PST)
 Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1ZvwbQ-0006eZ-TC
-	for xfs@oss.sgi.com; Tue, 10 Nov 2015 11:16:00 +1100
-Date: Tue, 10 Nov 2015 11:16:00 +1100
+	(envelope-from <david@fromorbit.com>) id 1Zw1Fj-0007BD-SV
+	for xfs@oss.sgi.com; Tue, 10 Nov 2015 16:13:55 +1100
+Date: Tue, 10 Nov 2015 16:13:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to 4e14e49
-Message-ID: <20151110001600.GC14311@dastard>
+Subject: [ANNOUNCE] xfsprogs: v4.3.0-rc2 released
+Message-ID: <20151110051355.GD14311@dastard>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,91 +25,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5741060594833806902=="
+Content-Type: multipart/mixed; boundary="===============6582499335178262019=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
---===============5741060594833806902==
+--===============6582499335178262019==
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
+	protocol="application/pgp-signature"; boundary="neYutvxvOLaeuPCA"
 Content-Disposition: inline
 
 
---x+6KMIRAuhnl3hBn
-Content-Type: text/plain; charset=us-ascii
+--neYutvxvOLaeuPCA
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
 Hi folks,
 
-The for-next branch of the xfs kernel repository at
+The xfsprogs repository at:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-has just been updated. it contains the couple of outstanding fixes
-for the 4.4 merge window. This is essentially what I'll ask linus to
-pull in the next couple of days.
+has just been updated. This contains the few fixes and cleanups that
+were pending from the 4.3.0-rc1 release as well as a couple of new
+fixes that have been posted since. Please test, I'm planning on a
+4.3.0 release early next week if no problems are reported in the
+next few days...
 
 -Dave.
 
-The new head of the for-next branch is commit:
+The new head of the master branch is commit:
 
-4e14e49 Merge branch 'xfs-misc-fixes-for-4.4-3' into for-next
+af37ed4 xfsprogs: Release v4.3.0-rc2
 
 New Commits:
 
-Andreas Gruenbacher (1):
-      [edfb8eb] xfs: Fix error path in xfs_get_acl
+Darrick J. Wong (2):
+      [a9b61ce] libxcmd: provide a common function to report command runtim=
+es
+      [2afac83] io: update reflink/dedupe ioctl definitions
 
-Brian Foster (1):
-      [848ccfc] xfs: fix log recovery op header validation assert
+Dave Chinner (2):
+      [5cfd2d5] headers: remove definition of ASSERT from xfs.h
+      [af37ed4] xfsprogs: Release v4.3.0-rc2
 
-Chris Mason (1):
-      [7a29ac4] xfs: give all workqueues rescuer threads
+Jan Tulak (1):
+      [7141fc5] xfsprogs: make fsr use mntinfo when there is no mntent
 
-Dave Chinner (1):
-      [4e14e49] Merge branch 'xfs-misc-fixes-for-4.4-3' into for-next
+Ville Skytt=E4 (2):
+      [2e53a4f] xfs_db.8: Remove stray backslash near bmap
+      [6222418] mkfs.xfs.8: Spelling fix
 
 
 Code Diffstat:
 
- fs/xfs/xfs_acl.c         | 1 +
- fs/xfs/xfs_acl.h         | 1 -
- fs/xfs/xfs_log_recover.c | 2 +-
- fs/xfs/xfs_super.c       | 7 ++++---
- 4 files changed, 6 insertions(+), 5 deletions(-)
+ VERSION                    |   2 +-
+ configure.ac               |   2 +-
+ doc/CHANGES                |   8 ++
+ fsr/Makefile               |   8 ++
+ fsr/xfs_fsr.c              | 113 ++++++++++--------
+ include/command.h          |   6 +
+ include/darwin.h           |  62 ++++++++++
+ include/freebsd.h          |  29 +++++
+ include/gnukfreebsd.h      |  28 +++++
+ include/irix.h             |  29 +++++
+ include/linux.h            |  28 +++++
+ include/platform_defs.h.in |   6 +
+ include/xfs.h              |   6 -
+ io/Makefile                |   2 +-
+ io/dedupe.c                | 190 -----------------------------
+ io/init.c                  |   1 -
+ io/io.h                    |   1 -
+ io/pread.c                 |  16 +--
+ io/pwrite.c                |  17 +--
+ io/reflink.c               | 289 ++++++++++++++++++++++++++++++++++-------=
+----
+ io/sendfile.c              |  16 +--
+ libxcmd/command.c          |  27 +++++
+ libxfs/xfs_fs.h            |  25 ++--
+ man/man8/mkfs.xfs.8        |   2 +-
+ man/man8/xfs_db.8          |   2 +-
+ man/man8/xfs_io.8          |  29 ++---
+ 26 files changed, 544 insertions(+), 400 deletions(-)
+ delete mode 100644 io/dedupe.c
 --=20
 Dave Chinner
 david@fromorbit.com
 
---x+6KMIRAuhnl3hBn
+--neYutvxvOLaeuPCA
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBAgAGBQJWQTdAAAoJEK3oKUf0dfod6zIQAIb00jj80mY//9XAIaNi4uJr
-n9O0eyUhdBkR6dNTw8TR/HZRK5Huhf7cCnPfQTT2TWTOtYBDo91rP3EEtgkMwqaB
-vgCqXHREX2lhwqeaNZjqInZYVi3GiKpCSLAsEYHbgfVjzyZMBQhk/ZSkjAAFX53v
-9kAJL7lDOlEtKoSJv2rX71HJNJLzQLpQytHFFsWE9bLR7WOOU5CiuG863hfX/tPW
-IhKa0BglVxBEfT3T9rIlI8Gsl+Nu4CFVF4Hkh9ptT7IY1rZEJ51nvTFus162P4oE
-OX9pHPTSbRqUEwSeg8ZkfDqN8HE4zja0GYckXSJRjCeQYZefQSlAOOo7JMB8VNIk
-vUYC2wh5AGkgChQw4h5ALyrGkWXR5554xqh3R23SQIWnoxswnVHxq/3SaqaZcOD8
-/fLRM8G5j6r481dkjPu8DNt0BhIedympklzZ9C4ku8EzL75iTji0gDexdbKMZCGa
-UiPK3nYDs2Bjn+GNZe4ZtIx1XiH7iUQVMFLjvIyelePZdBjndRBMKBBN/3v7Oo3O
-2gGo/boLgLCsM/leV+eAHne4cFHoOXluFsVB2wBPjghAC8iZpkarHUlR9imdEvZ+
-BqkLguMeHxX2/S+VhADtGeIUFcI6fruxnO6T7sB91KF+0JqZALBRYy1uQEe+HamN
-VFjnM6R4uqkH/xgv4Va0
-=US5V
+iQIcBAEBAgAGBQJWQX0TAAoJEK3oKUf0dfodZiUQAL0kSok4voiuiE1YEqGDIYUC
+5TApAKGHXoHNlHEwr9pEPVM/seVsM8kZH69nKt/Y2tOkDSbmfq3crfLJM2hnuc3Z
+f7kpqBg+Nj31l2+mIKNJHw6cvo4bqE/xHS31d6dbUyPPm4qVxTx3EicXZOs6aHVA
+jWBXKjwVFpGrSQ8vJcI7+98SF/O8QV+csER10tHgk0P8qX+C99q9SGxeaxl2nwju
+RhQ2Db9s/JJ/EPJnRRaozkRAMGBxqhi/m9eE+fFtGhz4Ea0Nk7aiEPRu9RE75qYw
+UMEsFylHwwZIrYsVO+lel1aIl4aoashEy+W190MWS0KQqht9W0WYkmMBokvCpS8V
+2U8OnsNrGH/MIuEROlpwbs+ovhRJxDQ3mtlk8xIrv42kJpHiEaK2PzxlChw2WCji
+2v+VYgipDkn7XxIWaWndF5C8A/ozLGOn1h6VfA+vvl37Ao7ofMl0bvMVVPTZ+v8t
+5U9NjLzaQaFJZQRoeXW0S4Z1NvzBe0UH8XlzO/YWkTkdrBfaLMHqpFx5ZxsVBw/h
+taygi2eyvKzdyV4/Mz0aDZAAZIrqQR7gtuoo7fmCE20gePveyFh7GUG5YCAvQxKv
+M6igJUcrl/SlGHi+x6Ne4EU+Evdtd0fEI3MW6w/pOdqli/qig61v65ewwguzh6Hn
+3Y1cabbfapxfCb7p6gwu
+=pfQn
 -----END PGP SIGNATURE-----
 
---x+6KMIRAuhnl3hBn--
+--neYutvxvOLaeuPCA--
 
 
---===============5741060594833806902==
+--===============6582499335178262019==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -120,4 +150,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5741060594833806902==--
+--===============6582499335178262019==--
