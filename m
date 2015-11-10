@@ -1,21 +1,30 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D46E7F37
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 22:38:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F4DF8F8033
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 20:38:12 -0800 (PST)
-Received: from 114-19.m057.com (114-19.m057.com [216.39.114.19]) by
-	cuda.sgi.com with ESMTP id plhw1W5N011nTc81 for
-	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 20:38:08 -0800 (PST)
-Received: by 114-19.m057.com (PowerMTA(TM) v3.5r15) id h8b33a0qrhgo for
-	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 20:37:57 -0800 (envelope-from
-	<seminars@info.ve10.com>)
-From: The Professional Development Workshop <seminars@info.ve10.com>
-Subject: Communication Skills for Women
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 550C97F37
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 07:45:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E1525AC004
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 05:45:21 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Sn4SmNAyDyavnEqO (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 05:45:20 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 0F385A381D
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 13:45:20 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-67.bos.redhat.com [10.18.41.67])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id tAADjJS5020459
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 08:45:19 -0500
+Date: Tue, 10 Nov 2015 08:45:18 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 7/8] xfs: detect and trim torn writes during log recovery
+Message-ID: <20151110134518.GD21670@bfoster.bfoster>
+References: <1447100475-33465-1-git-send-email-bfoster@redhat.com>
+	<1447100475-33465-8-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Message-ID: <0.0.68.B71.1D11C3ABD0DD9DC.0@114-19.m057.com>
-Date: Tue, 10 Nov 2015 20:37:57 -0800
-Reply-To: The Professional Development Workshop <noreply@info.ve10.com>
+Content-Disposition: inline
+In-Reply-To: <1447100475-33465-8-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,245 +33,256 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5026757010547616856=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============5026757010547616856==
-Content-Type: text/html; charset=us-ascii
+On Mon, Nov 09, 2015 at 03:21:14PM -0500, Brian Foster wrote:
+> Certain types of storage, such as persistent memory, do not provide
+> sector atomicity for writes. This means that if a crash occurs while XFS
+> is writing log records, only part of those records might make it to the
+> storage. This is problematic because log recovery uses the cycle value
+> packed at the top of each log block to locate the head/tail of the log.
+> This can lead to CRC verification failures during log recovery and an
+> unmountable fs for a filesystem that is otherwise consistent.
+> 
+> Update log recovery to incorporate log record CRC verification as part
+> of the head/tail discovery process. Once the head is located via the
+> traditional algorithm, run a CRC-only pass over the records up to the
+> head of the log. If CRC verification fails, assume that the records are
+> torn as a matter of policy and trim the head block back to the start of
+> the first bad record.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_log_recover.c | 298 ++++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 279 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 1b3f8fe..83fd7ca 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+...
+> +STATIC int
+> +xlog_verify_head(
+> +	struct xlog		*log,
+> +	xfs_daddr_t		*head_blk,	/* in/out: unverified head */
+> +	xfs_daddr_t		*tail_blk,	/* out: tail block */
+> +	struct xfs_buf		*bp,
+> +	xfs_daddr_t		*rhead_blk,	/* start blk of last record */
+> +	struct xlog_rec_header	**rhead,	/* ptr to last record */
+> +	bool			*wrapped)	/* last rec. wraps phys. log */
+> +{
+> +	struct xlog_rec_header	*tmp_rhead;
+> +	struct xfs_buf		*tmp_bp;
+> +	xfs_daddr_t		first_bad;
+> +	xfs_daddr_t		tmp_rhead_blk;
+> +	int			found;
+> +	int			error;
+> +	bool			tmp_wrapped;
+> +
+> +	/*
+> +	 * Search backwards through the log looking for the log record header
+> +	 * block. This wraps all the way back around to the head so something is
+> +	 * seriously wrong if we can't find it.
+> +	 */
+> +	found = xlog_rseek_logrec_hdr(log, *head_blk, *head_blk, 1, bp, rhead_blk,
+> +				      rhead, wrapped);
+> +	if (found < 0)
+> +		return found;
+> +	if (!found) {
+> +		xfs_warn(log->l_mp, "%s: couldn't find sync record", __func__);
+> +		return -EIO;
+> +	}
+> +
+> +	*tail_blk = BLOCK_LSN(be64_to_cpu((*rhead)->h_tail_lsn));
+> +
+> +	/*
+> +	 * Now that we have a tail block, check the head of the log for torn
+> +	 * writes. Search again until we hit the tail or the maximum number of
+> +	 * log record I/Os that could have been in flight at one time. Use a
+> +	 * temporary buffer so we don't trash the rhead/bp pointer from the
+> +	 * call above.
+> +	 */
+> +	tmp_bp = xlog_get_bp(log, 1);
+> +	if (!tmp_bp)
+> +		return -ENOMEM;
+> +	error = xlog_rseek_logrec_hdr(log, *head_blk, *tail_blk,
+> +				      XLOG_MAX_ICLOGS, tmp_bp, &tmp_rhead_blk,
+> +				      &tmp_rhead, &tmp_wrapped);
+> +	xlog_put_bp(tmp_bp);
+> +	if (error < 0)
+> +		return error;
+> +
+> +	/*
+> +	 * Now run a CRC verification pass over the records starting at the
+> +	 * block found above to the current head. If a CRC failure occurs, the
+> +	 * log block of the first bad record is saved in first_bad.
+> +	 */
+> +	error = xlog_do_recovery_pass(log, *head_blk, tmp_rhead_blk,
+> +				      XLOG_RECOVER_CRCPASS, &first_bad);
+> +	if (error == -EFSBADCRC && first_bad != *tail_blk) {
 
-<html>
+I started playing around with an alternate error injection mechanism
+that actually writes out an invalid crc record, aborts on log write
+completion and shuts down the fs. With that, I hit an interesting
+problem with the first_bad != *tail_blk check in that we don't fix up
+the head if the first record written after a covered log is torn and
+points to itself as the tail. We end up failing the mount (which is what
+would happen currently, anyways), but this should probably be fixed up.
 
-<head>
-<title>Communication Skills for Women</title>
-<STYLE TYPE="text/css"> a:link {color:blue; text-decoration: none}a:active {color:black; text-decoration: none}a:visited {color:blue; text-decoration: none}a:hover {color:blue; text-decoration: underline}</STYLE>
-</head>
+Unfortunately I didn't sufficiently document why I had that check there.
+I suspect it is a remnant of an old version that didn't update the tail
+when the head was truncated back (before I fully grokked what was
+necessary here), and then ran into issues further along when the head ==
+tail. This version obviously updates and verifies the tail once it finds
+a valid head so I can probably just kill the check. Perhaps I'll replace
+it with a head == tail check after the head/tail update to simply bail
+out and let normal recovery try to run.
 
-<body bgcolor="#fff6d7">
+Brian
 
-<table width="650">
-<tr>
-<td>
-    <table width="650">
-    <tr style="padding:20px 0;">
-    <td align="center" style="font-size:.8em;width:440px;">
-    
-    <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=010&zjxj=01000004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=" target="blank" style="text-decoration:none;">        
-    
-    <span style="border-bottom:1px solid #999999;"><span style="font-family:Georgia, 'Times New Roman', Times, serif; text-decoration:none; color:#000000; font-size:18px;"><span style="font-size:24px;">F</span>RED <span style="font-size:24px;">P</span>RYOR <span style="font-size:24px;">S</span>EMINARS & </span>
-    <span style="text-decoration:none; color:#00698c; font-size:22px;"><span style="font-size:24px;">C</span>AREER<span style="font-size:24px;">T</span>RACK</span></span><br />
-    <span style="font-style:italic; font-size:10px;text-decoration:none; color:#000000; line-height:20px;">divisions of PARK University Enterprises, Inc.</span>
-    </a>
-    
-    </td>
-    <td>
-    <p align="right" style="font-size:10px;">VIP <b style="color:#00698c;">2309822881820</b><br>
-    Special Offer Code <b style="color:#00698c;">467423</b>*<br>
-    Hurry &#8212; offer expires <b style="color:#00698c;">December 11, 2015</b><br>
-    </p>
-    </td>
-    </tr>
-    </table>
-    
-    <table width="650" cellspacing="0">
-    <tr>
-    <td align="center" style="border-top:1px solid #000000; padding:10px 0;" font face="Arial" size="3">
-    A one day seminar from CareerTrack
-    </td>
-    </tr>
-    </table>
-    
-    <table width="650" cellspacing="0" bgcolor="#fff6d7">
-    <tr>
-    <td align="center" valign="middle">
-    <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=011&zjxj=01100004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=" style="font-family:'Lucida Sans Unicode', 'Lucida Grande', sans-serif; color:#005a84; text-decoration:none;"><img src="http://www.pryor.com/images/email/HW_header.gif" width="650" height="225" alt="Communication Skills for Women" border="0" style="color:#7E181A; font-size:30px; font-weight:bold;"/>
-    </a>
-    </td>
-    </tr>
-    </table>
-    
-	<br>
-    <table border="0" cellpadding="5" cellspacing="2" width="650" style="font-family:Arial, Helvetica, sans-serif; font-size:14px;">    
-    
-    <tr>
-    <td colspan="5" style="font-size:14px;">
-    <b>Nearly all work involves interaction and communication with others. Clear, effective communication &mdash; between individuals, within teams and among departments &mdash; is a vital part of any successful organization.</b>
-    </td></tr></table>
-    
-    <br>
-     
-    <table border="0">    
-    	<tr>
-<td>
-            <table border="0" cellpadding="0" cellspacing="0" width="650">
-                <tr>
-                    <td colspan="4" style="width: 100%; text-align: left; font-family: Arial, Arial, Helvetica, sans-serif; font-size: 20px;"><p><a href="http://www.pryor.com/emredirect.asp?c=467423&amp;v=2309822881820&amp;l=440&amp;s=440&amp;z=46268&amp;a=e&amp;utm_source=prospect&utm_medium=email&utm_campaign=467423"><b>Communication Skills for Women</b></a></p></td>
-</tr>   
-        <tr><td colspan="4">&nbsp;</td></tr>
-
-<tr>
-                    <td style="width: 35%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 15px;"><p><b>INDIANAPOLIS, IN</b></p></td>
-                    <td style="width: 20%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 15px;"><p>1/15/2016</p></td>
-                    <td style="width: 20%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 12px; text-indent:10px;"><p>Event # 176959</p></td>
-<td style="width: 25%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 15px; text-indent:10px;"><p><b><a href="http://www.pryor.com/?c=467423&amp;v=2309822881820&amp;l=440&amp;r=176959&amp;s=440&amp;z=46268&amp;a=r&amp;utm_source=prospect&utm_medium=email&utm_campaign=467423"><u>Register Now</u></a></b></p></td>
-</tr>
-            <tr><td colspan="4"><hr /></td></tr>
-
-<tr>
-                    <td style="width: 35%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 15px;"><p><b>CLARKSVILLE, IN</b></p></td>
-                    <td style="width: 20%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 15px;"><p>1/14/2016</p></td>
-                    <td style="width: 20%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 12px; text-indent:10px;"><p>Event # 176958</p></td>
-<td style="width: 25%; text-align: left; font-family: Arial, Helvetica, sans-serif; font-size: 15px; text-indent:10px;"><p><b><a href="http://www.pryor.com/?c=467423&amp;v=2309822881820&amp;l=440&amp;r=176958&amp;s=440&amp;z=46268&amp;a=r&amp;utm_source=prospect&utm_medium=email&utm_campaign=467423"><u>Register Now</u></a></b></p></td>
-</tr>
-            <tr><td colspan="4"><hr /></td></tr>
-
-            </table>
-</td>
-</tr>
-
-    </table> 
-    
-    <table border="0" width="650" cellpadding="0" cellspacing="0" style="font-family:Arial, Helvetica, sans-serif;">  
-    <tr>
-    <td width="60%" style="padding:10px;" valign="top"> <p align="left"><font size="2" face="Arial"><b>The top 10 communication hurdles to overcome</b>
-<br><br>
-Our researchers asked women across the country to describe their toughest communication situations. We analyzed over 800 circumstances and compiled these top 10:</font>
-    <font face="arial" size="2">
-
-        <table width="365" border="0" cellpadding="5" style="font-size:13px; font-family:Arial, Helvetica, sans-serif;">
-        <tr>
-        <td width="6px" valign="top">&bull;</td>
-        <td valign="top">Confronting others, delivering criticism<br></td>
-        <td width="6px" valign="top">&bull;</td>
-        <td valign="top">Controlling emotions<br></td>
-        </tr>
-        <tr>
-        <td valign="top">&bull;</td>
-        <td valign="top">Being more assertive<br></td>
-        <td width="top" valign="top">&bull;</td>
-        <td valign="top">Receiving constructive criticism<br></td>
-        </tr>
-        <tr>
-        <td valign="top">&bull;</td>
-        <td valign="top">Using confidence not uncertainty<br></td>
-        <td valign="top">&bull;</td>
-        <td valign="top">Getting cooperation<br></td>
-        </tr>
-        <tr>
-        <td valign="top">&bull;</td>
-        <td valign="top">Dealing with the anger of others<br></td>
-        <td valign="top">&bull;</td>
-        <td valign="top">Setting limits<br></td>
-        </tr>
-        <tr>
-        <td valign="top">&bull;</td>
-        <td valign="top">Improving presentation skills<br></td>
-        <td valign="top">&bull;</td>
-        <td valign="top">Taking charge<br></td>
-        </tr>
-        <tr>
-        <td valign="top" colspan="4">With this powerful day of training, you'll build the skills needed to handle these situations and turn it into the results you deserve, <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=012&zjxj=01200004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=">and much more. </a></td>
-        </tr>
-        </table>
-
-    </font></td>
-    <td width="40%" style="vertical-align:top;">
-    
-        <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-        <td bgcolor="#c6deec" style="padding:10px;">
-        <p align="center"><font face="arial" size="2"><b>Attend Communication Skills for Women for</b></font></p>
-        <p align="center"><font face="arial" size="7" color="#00698c"><b>Only $49</b></font>
-        <br>
-        
-        <br>Group discounts with 5 or more
-        </p>
-        <p align="center"><font face="arial" size="5"><b>Register Online</b></font>
-        <br>
-        <font face="arial" size="2">with the following special offer code</font></p>
-        <p align="center"><font face="arial" size="2">VIP <b style="color:#00698c;">2309822881820</b><br>
-        Special Offer Code <b style="color:#00698c;">467423</b>*<br>
-        Offer expires <b style="color:#00698c;">December 11, 2015</b><br>
-        </font></p>
-            <table align="center" cellpadding="5" bgcolor="#00698c">
-            <tr><td>
-            <p align="center">
-            <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=013&zjxj=01300004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=" style="color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:18px;">Learn More</a></p>
-            </td>
-            </tr></table> 
-        </td>
-        </tr>
-        </table>
-    </td>
-    </tr>
-    </table>
-	
-    <table border="0" width="650" cellpadding="0" cellspacing="0">                       
-    <tr>
-    <td align="left" width="25%">
-    <b>Your Location</b>
-    </td>
-    <td align="center" width="25%">
-    Your convenience
-    </td>
-    <td align="center">
-    <span style="font-size:10px;">Private team training for groups of 15 or more. Let us come <br>
-    to your location with customized on-site training. <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=014&zjxj=01400004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=" style="color:#36C;text-decoration:underline;"><b>Learn More</b></a></span>
-    </td>
-    </tr>
-    
-    </table>
-        <br>
-        <table border="0" width="650">
-    <tr>
-    <td width="100%" style="border:none" ><font face="arial" size="2" color="#000000"><b>This course qualifies for 0.6 CEU and 6 CPE  Credits.</b></font>
-      <hr width="100%" size="2" color="#000000">
-
-    <table border="0" width="650">
-    <tr>
-    <td width="100%" style="border:none" >
-    <font face="Arial" color="#000000" size="2"><b>*To receive your special $49 ENROLLMENT FEE,</b></font>
-    <font face="Arial" size="1" color="#000000"> you must register for the seminar online at <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=015&zjxj=01500004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=">www.CareerTrack.com</a> and provide your Special Offer Code 467423 during checkout. This offer is available only for online registrations for the seminar, <i>Communication Skills for Women</i>. This offer cannot be combined with any other offer and is valid only on new registrations for 
-    December - January 2015 seminars. Offer expires December 11, 2015. If you have questions, please contact our customer service team 
-    at <b>1-800-780-8469</b>.</font>
-    <hr width="100%" size="2" color="#000000">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-        <tr>
-        <td valign="top" style="padding:0px; line-height:22px; font-family:Arial, sans-serif; font-size:.8em; color:#000000;">
-        VIP#: <b style="color:#00698c;">2309822881820</b><br>
-        ID#: <b style="color:#00698c;">467423</b><br>
-        Hurry &#8212; offer expires <b style="color:#00698c;">December 11, 2015</b><br>
-        Copyright 2015</td>
-        <td align="right" valign="top" style="padding:0px; line-height:22px; font-family:Arial, sans-serif; font-size:.8em; color:#000000;">CareerTrack<br>
-        5700 Broadmoor, Suite 300, Mission, KS 66202<br>
-        1-800-780-8469<br>
-        <a href="http://r2.vidiemi.com/vemail7/IG/hosted/r57.aspx?CampaignID=57&TAGID=016&zjxj=01600004W6948397W57W111&VEEF1=xfs@oss.sgi.com&VEEF2=MARKUS&VEEF3=SCHODER&VEEF4=2309822881820&VEEF5=462681660&VEEF6=PNMG&VEEF7=1RX&VEEF8=DB54C&VEEF9=50982288182&VEEF10=R682&VEEF11=CG&VEEF12=1&VEEF13=3&VEEF14=467423&VEEF15=The Professional Development Workshop&VEEF16=Communication Skills for Women&VEEF17=December 11, 2015&VEEF18=December - January 2015&VEEF19=&VEEF20=&VEEF21=&VEEF22=&VEEF23=&VEEF24=&VEEF25=&VEEF26=&VEEF27=&VEEF28=&VEEF29=&VEEF30=&VEEF31=&VEEF32=&VEEF33=&VEEF34=&VEEF35=&VEEF36=&VEEF37=" style="font-size:1.1em; text-decoration:none; ">www.CareerTrack.com</a></td>
-        </tr>
-        </table>
-    </td>
-    </tr>
-    </table>
-<font size="2" face="Arial, Helvetica, sans-serif">To remove your name from future offers and promotions, please <a href="http://snap.vidiemi.com/IG/optout.aspx?zjxj=01700004W6948397W57W111&email=xfs@oss.sgi.com&fname=xfs@oss.sgi.com">click here</a>.</font>       
-</td>
-</tr>
-</table>
-<img src="http://www.pryor.com/emredirect.asp?c=467423&v=2309822881820&a=e&U=EMLOPEN" height="1" width="1">
-<img src="http://r2.vidiemi.com/vemail7/IG/camp494790101057.aspx" width="2" height="3" border="0">
-<img src="http://r2.vidiemi.com/vemail7/IG/camp494790101057.aspx?zjx=W6948397W57W111" width="2" height="3" border="0">
-</body>
-</html>
-
-
---===============5026757010547616856==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> +		/*
+> +		 * We've hit a potential torn write. Reset the error and warn
+> +		 * about it.
+> +		 */
+> +		error = 0;
+> +		xfs_warn(log->l_mp,
+> +"WARNING: torn write (CRC failure) detected at block 0x%llx, recovery truncated",
+> +			 first_bad);
+> +
+> +		/*
+> +		 * Get the header block and buffer pointer for the last good
+> +		 * record before the bad record.
+> +		 *
+> +		 * Note that xlog_find_tail() clears the blocks at the new head
+> +		 * (i.e., the records with invalid CRC) if the cycle number
+> +		 * matches the the current cycle.
+> +		 */
+> +		found = xlog_rseek_logrec_hdr(log, first_bad, *tail_blk, 1, bp,
+> +					      rhead_blk, rhead, wrapped);
+> +		if (found < 0)
+> +			return found;
+> +		if (found == 0)		/* XXX: right thing to do here? */
+> +			return -EIO;
+> +
+> +		/*
+> +		 * Reset the head block to the starting block of the first bad
+> +		 * log record and set the tail block based on the last good
+> +		 * record.
+> +		 */
+> +		*head_blk = first_bad;
+> +		*tail_blk = BLOCK_LSN(be64_to_cpu((*rhead)->h_tail_lsn));
+> +
+> +		/*
+> +		 * Now verify the tail based on the updated head. This is
+> +		 * required because the torn writes trimmed from the head could
+> +		 * have been written over the tail of a previous record. Return
+> +		 * any errors since recovery cannot proceed if the tail is
+> +		 * corrupt.
+> +		 *
+> +		 * XXX: This leaves a gap in truly robust protection from torn
+> +		 * writes in the log. If the head is behind the tail, the tail
+> +		 * pushes forward to create some space and then a crash occurs
+> +		 * causing the writes into the previous record's tail region to
+> +		 * tear, log recovery isn't able to recover.
+> +		 *
+> +		 * How likely is this to occur? If possible, can we do something
+> +		 * more intelligent here? Is it safe to push the tail forward if
+> +		 * we can determine that the tail is within the range of the
+> +		 * torn write (e.g., the kernel can only overwrite the tail if
+> +		 * it has actually been pushed forward)? Alternatively, could we
+> +		 * somehow prevent this condition at runtime?
+> +		 */
+> +		error = xlog_verify_tail(log, *head_blk, *tail_blk);
+> +	}
+> +
+> +	return error;
+> +}
+> +
+> +/*
+>   * Find the sync block number or the tail of the log.
+>   *
+>   * This will be the block number of the last record to have its
+> @@ -966,9 +1233,10 @@ xlog_find_tail(
+>  	xlog_op_header_t	*op_head;
+>  	char			*offset = NULL;
+>  	xfs_buf_t		*bp;
+> -	int			error, i, found;
+> +	int			error;
+>  	xfs_daddr_t		umount_data_blk;
+>  	xfs_daddr_t		after_umount_blk;
+> +	xfs_daddr_t		rhead_blk;
+>  	xfs_lsn_t		tail_lsn;
+>  	int			hblks;
+>  	bool			wrapped = false;
+> @@ -995,24 +1263,16 @@ xlog_find_tail(
+>  	}
+>  
+>  	/*
+> -	 * Search backwards through the log looking for the log record header
+> -	 * block. This wraps all the way back around to the head so something is
+> -	 * seriously wrong if we can't find it.
+> +	 * Trim the head block back to skip over torn records. We can have
+> +	 * multiple log I/Os in flight at any time, so we assume CRC failures
+> +	 * back through the previous several records are torn writes and skip
+> +	 * them.
+>  	 */
+>  	ASSERT(*head_blk < INT_MAX);
+> -	found = xlog_rseek_logrec_hdr(log, *head_blk, *head_blk, 1, bp, &i,
+> -				      &rhead, &wrapped);
+> -	if (found < 0) {
+> -		error = found;
+> +	error = xlog_verify_head(log, head_blk, tail_blk, bp, &rhead_blk,
+> +				 &rhead, &wrapped);
+> +	if (error)
+>  		goto done;
+> -	}
+> -	if (!found) {
+> -		xfs_warn(log->l_mp, "%s: couldn't find sync record", __func__);
+> -		xlog_put_bp(bp);
+> -		ASSERT(0);
+> -		return -EIO;
+> -	}
+> -	*tail_blk = BLOCK_LSN(be64_to_cpu(rhead->h_tail_lsn));
+>  
+>  	/*
+>  	 * Reset log values according to the state of the log when we
+> @@ -1024,7 +1284,7 @@ xlog_find_tail(
+>  	 * written was complete and ended exactly on the end boundary
+>  	 * of the physical log.
+>  	 */
+> -	log->l_prev_block = i;
+> +	log->l_prev_block = rhead_blk;
+>  	log->l_curr_block = (int)*head_blk;
+>  	log->l_curr_cycle = be32_to_cpu(rhead->h_cycle);
+>  	if (wrapped)
+> @@ -1062,12 +1322,12 @@ xlog_find_tail(
+>  	} else {
+>  		hblks = 1;
+>  	}
+> -	after_umount_blk = (i + hblks + (int)
+> +	after_umount_blk = (rhead_blk + hblks + (int)
+>  		BTOBB(be32_to_cpu(rhead->h_len))) % log->l_logBBsize;
+>  	tail_lsn = atomic64_read(&log->l_tail_lsn);
+>  	if (*head_blk == after_umount_blk &&
+>  	    be32_to_cpu(rhead->h_num_logops) == 1) {
+> -		umount_data_blk = (i + hblks) % log->l_logBBsize;
+> +		umount_data_blk = (rhead_blk + hblks) % log->l_logBBsize;
+>  		error = xlog_bread(log, umount_data_blk, 1, bp, &offset);
+>  		if (error)
+>  			goto done;
+> -- 
+> 2.1.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5026757010547616856==--
