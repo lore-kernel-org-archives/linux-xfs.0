@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D7B987F50
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 14:35:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6A545AC008
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 12:35:32 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OBOzLaGEaXT1yf6d (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 12:35:28 -0800 (PST)
-Subject: Re: [PATCH] xfsprogs: fix cut & paste error in xfs_fsr.c
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A94D77F47
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 14:45:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9C8CA304032
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 12:45:50 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id WTAwerSubci5rbpy for <xfs@oss.sgi.com>;
+	Tue, 10 Nov 2015 12:45:47 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 4327265BD16C
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 14:45:47 -0600 (CST)
+Subject: [PATCH] xfsprogs: tidy up xfs_fsr.c
 References: <56423596.3030300@redhat.com> <20151110202806.GG14311@dastard>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <5642550C.4040603@redhat.com>
-Date: Tue, 10 Nov 2015 14:35:24 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5642577A.8000206@sandeen.net>
+Date: Tue, 10 Nov 2015 14:45:46 -0600
 MIME-Version: 1.0
 In-Reply-To: <20151110202806.GG14311@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,118 +32,146 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jtulak@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> On Tue, Nov 10, 2015 at 12:21:10PM -0600, Eric Sandeen wrote:
->> Commit:
->>
->> 7141fc xfsprogs: make fsr use mntinfo when there is no mntent
->>
->> added an inadvertent "break;" to initallfs() after the call
->> to find_mountpoint_check(); this is likely a cut & paste error
->> from the call in find_mountpoint(), where we really *do* want to
->> stop after the first one we find.
->>
->> Fix that by removing the break, and fix the declaration-after-code.
-> 
-> That's not the right fix - the find_mountpoint_check() shoul dnot be
-> there at all. Patch to clean it all up is below.
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> fsr: clean up mountpoint checks
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Fix up a stray hunk of code from commit 7141fc5 ("xfsprogs: make fsr
-> use mntinfo when there is no mntent") that coverity reported. Also
-> clean up a couple of whitespace issues introduced with that  commit,
-> too.
+Make the mountpoint stat structure "ms" local to
+find_mountpoint_check(), no caller uses it.  And remove 3rd
+"sb2" statbuf in that same function, we can just re-use ms.
 
-Um, ok, well it wasn't your misapplication, it was there in the original patch,
-and I wasn't sure of Jan's intent, having gone so far as to add local vars
-to support that placement.  ;)
+rename "struct mntent *mp" to "struct mntent *mnt" -
+"mp" has its own common meaning in xfsprogs.
 
-This seems fine, I guess I'll send another patch to make *ms local to 
-find_mountpoint_check(), and rename some vars ("sb" and "mp" have their
-own expected meanings in xfsprogs)
+And a couple more minor whitespace removals.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
--Eric
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 2887ceb..d5962f7 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -177,44 +177,41 @@ aborter(int unused)
+  * of that.
+  */
+ static char *
+-find_mountpoint_check(struct stat64 *sb, struct mntent *t, struct stat64 *ms)
++find_mountpoint_check(struct stat64 *sb, struct mntent *t)
+ {
++	struct stat64 ms;
++
+ 	if (S_ISDIR(sb->st_mode)) {		/* mount point */
+-		if (stat64(t->mnt_dir, ms) < 0)
++		if (stat64(t->mnt_dir, &ms) < 0)
+ 			return NULL;
+-		if (sb->st_ino != ms->st_ino)
++		if (sb->st_ino != ms.st_ino)
+ 			return NULL;
+-		if (sb->st_dev != ms->st_dev)
++		if (sb->st_dev != ms.st_dev)
+ 			return NULL;
+ 		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+ 			return NULL;
+ 	} else {				/* device */
+-		struct stat64 sb2;
+-
+-		if (stat64(t->mnt_fsname, ms) < 0)
++		if (stat64(t->mnt_fsname, &ms) < 0)
+ 			return NULL;
+-		if (sb->st_rdev != ms->st_rdev)
++		if (sb->st_rdev != ms.st_rdev)
+ 			return NULL;
+ 		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+ 			return NULL;
+-
+ 		/*
+ 		 * Make sure the mountpoint given by mtab is accessible
+ 		 * before using it.
+ 		 */
+-		if (stat64(t->mnt_dir, &sb2) < 0)
++		if (stat64(t->mnt_dir, &ms) < 0)
+ 			return NULL;
+ 	}
+ 
+ 	return t->mnt_dir;
+-
+ }
+ 
+ static char *
+ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ {
+ 	struct mntent_cursor cursor;
+-	struct stat64 ms;
+ 	struct mntent *t = NULL;
+ 	char *mntp = NULL;
+ 
+@@ -224,7 +221,7 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+ 	}
+ 
+ 	while ((t = platform_mntent_next(&cursor)) != NULL) {
+-		mntp = find_mountpoint_check(sb, t, &ms);
++		mntp = find_mountpoint_check(sb, t);
+ 		if (mntp == NULL)
+ 			continue;
+ 		break;
+@@ -408,7 +405,7 @@ static void
+ initallfs(char *mtab)
+ {
+ 	struct mntent_cursor cursor;
+-	struct mntent *mp = NULL;
++	struct mntent *mnt= NULL;
+ 	int mi;
+ 	char *cp;
+ 	struct stat64 sb;
+@@ -429,15 +426,15 @@ initallfs(char *mtab)
+ 		exit(1);
+ 	}
+ 
+-	while ((mp = platform_mntent_next(&cursor)) != NULL) {
++	while ((mnt = platform_mntent_next(&cursor)) != NULL) {
+ 		int rw = 0;
+ 
+-		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
+-		    stat64(mp->mnt_fsname, &sb) == -1 ||
++		if (strcmp(mnt->mnt_type, MNTTYPE_XFS ) != 0 ||
++		    stat64(mnt->mnt_fsname, &sb) == -1 ||
+ 		    !S_ISBLK(sb.st_mode))
+ 			continue;
+ 
+-		cp = strtok(mp->mnt_opts,",");
++		cp = strtok(mnt->mnt_opts,",");
+ 		do {
+ 			if (strcmp("rw", cp) == 0)
+ 				rw++;
+@@ -445,7 +442,7 @@ initallfs(char *mtab)
+ 		if (rw == 0) {
+ 			if (dflag)
+ 				fsrprintf(_("Skipping %s: not mounted rw\n"),
+-					mp->mnt_fsname);
++					mnt->mnt_fsname);
+ 			continue;
+ 		}
+ 
+@@ -465,15 +462,15 @@ initallfs(char *mtab)
+ 			fs = (fsbase + mi);  /* Needed ? */
+ 		}
+ 
+-		fs->dev = strdup(mp->mnt_fsname);
+-		fs->mnt = strdup(mp->mnt_dir);
++		fs->dev = strdup(mnt->mnt_fsname);
++		fs->mnt = strdup(mnt->mnt_dir);
+ 
+ 		if (fs->dev == NULL) {
+-			fsrprintf(_("strdup(%s) failed\n"), mp->mnt_fsname);
++			fsrprintf(_("strdup(%s) failed\n"), mnt->mnt_fsname);
+ 			exit(1);
+ 		}
+ 		if (fs->mnt == NULL) {
+-			fsrprintf(_("strdup(%s) failed\n"), mp->mnt_dir);
++			fsrprintf(_("strdup(%s) failed\n"), mnt->mnt_dir);
+ 			exit(1);
+ 		}
+ 		mi++;
 
-> Addresses-Coverity-Id: 1338431
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fsr/xfs_fsr.c | 18 +++++-------------
->  1 file changed, 5 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index b902acc..2887ceb 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -176,7 +176,6 @@ aborter(int unused)
->   * here - the code that handles defragmentation of invidual files takes care
->   * of that.
->   */
-> -
->  static char *
->  find_mountpoint_check(struct stat64 *sb, struct mntent *t, struct stat64 *ms)
->  {
-> @@ -200,9 +199,9 @@ find_mountpoint_check(struct stat64 *sb, struct mntent *t, struct stat64 *ms)
->  			return NULL;
->  
->  		/*
-> -			* Make sure the mountpoint given by mtab is accessible
-> -			* before using it.
-> -			*/
-> +		 * Make sure the mountpoint given by mtab is accessible
-> +		 * before using it.
-> +		 */
->  		if (stat64(t->mnt_dir, &sb2) < 0)
->  			return NULL;
->  	}
-> @@ -224,7 +223,7 @@ find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
->  		exit(1);
->  	}
->  
-> -	while ( (t = platform_mntent_next(&cursor)) != NULL) {
-> +	while ((t = platform_mntent_next(&cursor)) != NULL) {
->  		mntp = find_mountpoint_check(sb, t, &ms);
->  		if (mntp == NULL)
->  			continue;
-> @@ -409,12 +408,10 @@ static void
->  initallfs(char *mtab)
->  {
->  	struct mntent_cursor cursor;
-> -	char *mntp = NULL;
->  	struct mntent *mp = NULL;
->  	int mi;
->  	char *cp;
->  	struct stat64 sb;
-> -	struct stat64 ms;
->  
->  	/* malloc a number of descriptors, increased later if needed */
->  	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
-> @@ -432,12 +429,7 @@ initallfs(char *mtab)
->  		exit(1);
->  	}
->  
-> -	while ( (mp = platform_mntent_next(&cursor)) != NULL) {
-> -		mntp = find_mountpoint_check(&sb, mp, &ms);
-> -		if (mntp == NULL)
-> -			continue;
-> -		break;
-> -
-> +	while ((mp = platform_mntent_next(&cursor)) != NULL) {
->  		int rw = 0;
->  
->  		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
-> 
 
 _______________________________________________
 xfs mailing list
