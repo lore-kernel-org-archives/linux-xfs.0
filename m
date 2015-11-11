@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB77729E1F
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:28:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C74DAC001
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:28:05 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 4038729E1F
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:28:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AA424AC001
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:28:14 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id VYAshTYy12EJWDd3 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id vt89k7BugkesWE4O (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:28:02 -0800 (PST)
-Subject: [PATCH 09/11] xfs: test xfs-specific reflink pieces
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:28:11 -0800 (PST)
+Subject: [PATCH 11/11] reflink: test that CoW writes fail when we're out of
+	space
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Nov 2015 11:27:30 -0800
-Message-ID: <20151111192730.15056.19977.stgit@birch.djwong.org>
+Date: Wed, 11 Nov 2015 11:27:44 -0800
+Message-ID: <20151111192744.15056.4781.stgit@birch.djwong.org>
 In-Reply-To: <20151111192628.15056.6451.stgit@birch.djwong.org>
 References: <20151111192628.15056.6451.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,330 +32,57 @@ Sender: xfs-bounces@oss.sgi.com
 To: hch@infradead.org, david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-Check that growfs and xfs_fsr still work properly on reflinked fses.
+Ensure that copy-on-writing a reflinked file when there's no free disk
+space reflects the desired ENOSPC back to userspace during the write
+call.  Tests the buffered IO, direct IO, and mmap write paths.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/800     |   79 ++++++++++++++++++++++++++++
- tests/xfs/800.out |    6 ++
- tests/xfs/801     |  148 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/801.out |   27 ++++++++++
- tests/xfs/802     |   87 +++++++++++++++++++++++++++++++
- tests/xfs/802.out |    6 ++
- tests/xfs/803     |  109 +++++++++++++++++++++++++++++++++++++++
- tests/xfs/803.out |   13 +++++
- tests/xfs/804     |   77 ++++++++++++++++++++++++++++
- tests/xfs/804.out |    0 
- tests/xfs/group   |    5 ++
- 11 files changed, 557 insertions(+)
- create mode 100755 tests/xfs/800
- create mode 100644 tests/xfs/800.out
- create mode 100755 tests/xfs/801
- create mode 100644 tests/xfs/801.out
- create mode 100755 tests/xfs/802
- create mode 100644 tests/xfs/802.out
- create mode 100755 tests/xfs/803
- create mode 100644 tests/xfs/803.out
- create mode 100755 tests/xfs/804
- create mode 100644 tests/xfs/804.out
+ common/rc             |    2 -
+ tests/generic/842     |  107 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/842.out |   10 ++++
+ tests/generic/843     |  107 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/843.out |   10 ++++
+ tests/generic/844     |  109 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/844.out |    8 ++++
+ tests/generic/845     |  107 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/845.out |   10 ++++
+ tests/generic/group   |    4 ++
+ 10 files changed, 473 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/842
+ create mode 100644 tests/generic/842.out
+ create mode 100755 tests/generic/843
+ create mode 100644 tests/generic/843.out
+ create mode 100755 tests/generic/844
+ create mode 100644 tests/generic/844.out
+ create mode 100755 tests/generic/845
+ create mode 100644 tests/generic/845.out
 
 
-diff --git a/tests/xfs/800 b/tests/xfs/800
+diff --git a/common/rc b/common/rc
+index c016673..474fa84 100644
+--- a/common/rc
++++ b/common/rc
+@@ -101,7 +101,7 @@ _mwrite_byte() {
+ 	mmap_len="$4"
+ 	file="$5"
+ 
+-	"$XFS_IO_PROG" -f -c "mmap -rw 0 $mmap_len" -c "pwrite -S $pattern $offset $len" "$file"
++	"$XFS_IO_PROG" -f -c "mmap -rw 0 $mmap_len" -c "mwrite -S $pattern $offset $len" "$file"
+ }
+ 
+ # ls -l w/ selinux sometimes puts a dot at the end:
+diff --git a/tests/generic/842 b/tests/generic/842
 new file mode 100755
-index 0000000..d9fe5b4
+index 0000000..5eda56b
 --- /dev/null
-+++ b/tests/xfs/800
-@@ -0,0 +1,79 @@
++++ b/tests/generic/842
+@@ -0,0 +1,107 @@
 +#! /bin/bash
-+# FS QA Test No. 800
++# FS QA Test No. 842
 +#
-+# Tests xfs_growfs on a reflinked filesystem
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f "$tmp".*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_reflink
-+_require_cp_reflink
-+
-+echo "Format and mount"
-+_scratch_mkfs -d size=$((2 * 4096 * 4096)) -l size=4194304 > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+TESTDIR="$SCRATCH_MNT/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+echo "Create the original file and reflink to copy1, copy2"
-+BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
-+_pwrite_byte 0x61 0 $((BLKSZ * 14 + 71)) "$TESTDIR/original" >> "$seqres.full"
-+_cp_reflink "$TESTDIR/original" "$TESTDIR/copy1"
-+_cp_reflink "$TESTDIR/copy1" "$TESTDIR/copy2"
-+
-+echo "Grow fs"
-+"$XFS_GROWFS_PROG" "$SCRATCH_MNT" 2>&1 |  _filter_growfs >> "$seqres.full"
-+_scratch_remount
-+
-+echo "Create more reflink copies"
-+_cp_reflink "$TESTDIR/original" "$TESTDIR/copy3"
-+
-+xfs_info "$SCRATCH_MNT" >> "$seqres.full"
-+
-+echo "Check scratch fs"
-+umount "$SCRATCH_MNT"
-+_check_scratch_fs
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/800.out b/tests/xfs/800.out
-new file mode 100644
-index 0000000..73d4f71
---- /dev/null
-+++ b/tests/xfs/800.out
-@@ -0,0 +1,6 @@
-+QA output created by 800
-+Format and mount
-+Create the original file and reflink to copy1, copy2
-+Grow fs
-+Create more reflink copies
-+Check scratch fs
-diff --git a/tests/xfs/801 b/tests/xfs/801
-new file mode 100755
-index 0000000..172fb29
---- /dev/null
-+++ b/tests/xfs/801
-@@ -0,0 +1,148 @@
-+#! /bin/bash
-+# FS QA Test No. 801
-+#
-+# Ensure that xfs_fsr un-reflinks files while defragmenting
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f "$tmp".*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_reflink
-+_require_cp_reflink
-+
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+TESTDIR="$SCRATCH_MNT/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
-+
-+echo "Create the original file and reflink to file2, file3"
-+BLKS=2000
-+MARGIN=100
-+BLKSZ=65536
-+REAL_BLKSZ="$(stat -f $TESTDIR -c '%S')"
-+BLKSZ_FACTOR=$((BLKSZ / REAL_BLKSZ))
-+_pwrite_byte 0x61 0 $((BLKS * BLKSZ)) "$TESTDIR/file1" >> "$seqres.full"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
-+_cp_reflink "$TESTDIR/file2" "$TESTDIR/file3"
-+_cp_reflink "$TESTDIR/file3" "$TESTDIR/file4"
-+_test_remount
-+FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
-+
-+md5sum "$TESTDIR/file1" | _filter_scratch
-+md5sum "$TESTDIR/file2" | _filter_scratch
-+md5sum "$TESTDIR/file3" | _filter_scratch
-+md5sum "$TESTDIR/file4" | _filter_scratch
-+
-+C01=$(_md5_checksum "$TESTDIR/file1")
-+C02=$(_md5_checksum "$TESTDIR/file2")
-+C03=$(_md5_checksum "$TESTDIR/file3")
-+C04=$(_md5_checksum "$TESTDIR/file4")
-+
-+echo "CoW the reflink copies"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file2" >> "$seqres.full"
-+_pwrite_byte 0x63 $(( BLKSZ * (BLKS - 1) )) $BLKSZ "$TESTDIR/file3" >> "$seqres.full"
-+_test_remount
-+FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
-+
-+md5sum "$TESTDIR/file1" | _filter_scratch
-+md5sum "$TESTDIR/file2" | _filter_scratch
-+md5sum "$TESTDIR/file3" | _filter_scratch
-+md5sum "$TESTDIR/file4" | _filter_scratch
-+
-+C11=$(_md5_checksum "$TESTDIR/file1")
-+C12=$(_md5_checksum "$TESTDIR/file2")
-+C13=$(_md5_checksum "$TESTDIR/file3")
-+C14=$(_md5_checksum "$TESTDIR/file4")
-+
-+echo "Defragment"
-+lsattr -l "$TESTDIR/" | _filter_scratch
-+xfs_fsr -v -d "$TESTDIR/file1" >> "$seqres.full"
-+xfs_fsr -v -d "$TESTDIR/file2" >> "$seqres.full" # fsr probably breaks the link
-+xfs_fsr -v -d "$TESTDIR/file3" >> "$seqres.full" # fsr probably breaks the link
-+xfs_fsr -v -d "$TESTDIR/file4" >> "$seqres.full" # fsr probably ignores this file
-+_test_remount
-+FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
-+
-+md5sum "$TESTDIR/file1" | _filter_scratch
-+md5sum "$TESTDIR/file2" | _filter_scratch
-+md5sum "$TESTDIR/file3" | _filter_scratch
-+md5sum "$TESTDIR/file4" | _filter_scratch
-+
-+C21=$(_md5_checksum "$TESTDIR/file1")
-+C22=$(_md5_checksum "$TESTDIR/file2")
-+C23=$(_md5_checksum "$TESTDIR/file3")
-+C24=$(_md5_checksum "$TESTDIR/file4")
-+
-+echo "Check files"
-+test $C01 = $C02 || echo "Files 1-2 do not match"
-+test $C01 = $C03 || echo "Files 1-3 do not match"
-+test $C01 = $C04 || echo "Files 1-4 do not match"
-+test $C02 = $C03 || echo "Files 2-3 do not match"
-+test $C02 = $C04 || echo "Files 2-4 do not match"
-+test $C03 = $C04 || echo "Files 3-4 do not match"
-+
-+test $C01 = $C11 || echo "File1 should not be different after CoW"
-+test $C02 != $C12 || echo "File2 should be different after CoW"
-+test $C03 != $C13 || echo "File3 should be different after CoW"
-+test $C04 = $C14 || echo "File4 should not be different after CoW"
-+
-+test $C11 = $C21 || echo "File1 changed by defrag"
-+test $C12 = $C22 || echo "File2 changed by defrag"
-+test $C13 = $C23 || echo "File3 changed by defrag"
-+test $C14 = $C24 || echo "File4 changed by defrag"
-+
-+#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3
-+
-+_within_tolerance "free blocks after creating some reflink copies" $FREE_BLOCKS1 $((FREE_BLOCKS0 - (BLKS * BLKSZ_FACTOR) )) $MARGIN -v
-+_within_tolerance "free blocks after CoW some reflink copies" $FREE_BLOCKS2 $((FREE_BLOCKS1 - 2)) $MARGIN -v
-+_within_tolerance "free blocks after defragging all reflink copies" $FREE_BLOCKS3 $((FREE_BLOCKS2 - (BLKS * 2 * BLKSZ_FACTOR))) $MARGIN -v
-+_within_tolerance "free blocks after all tests" $FREE_BLOCKS3 $((FREE_BLOCKS0 - (BLKS * 3 * BLKSZ_FACTOR))) $MARGIN -v
-+
-+echo "Check scratch fs"
-+umount "$SCRATCH_MNT"
-+_check_scratch_fs
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/801.out b/tests/xfs/801.out
-new file mode 100644
-index 0000000..4733f18
---- /dev/null
-+++ b/tests/xfs/801.out
-@@ -0,0 +1,27 @@
-+QA output created by 801
-+Format and mount
-+Create the original file and reflink to file2, file3
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file1
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file2
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file3
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file4
-+CoW the reflink copies
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file1
-+c650f1cf6c9f07b22e3e21ec7d49ded5  SCRATCH_MNT/test-801/file2
-+56ed2f712c91e035adeeb26ed105a982  SCRATCH_MNT/test-801/file3
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file4
-+Defragment
-+SCRATCH_MNT/test-801/file1          ---
-+SCRATCH_MNT/test-801/file2          ---
-+SCRATCH_MNT/test-801/file3          ---
-+SCRATCH_MNT/test-801/file4          ---
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file1
-+c650f1cf6c9f07b22e3e21ec7d49ded5  SCRATCH_MNT/test-801/file2
-+56ed2f712c91e035adeeb26ed105a982  SCRATCH_MNT/test-801/file3
-+b81534f439aac5c34ce3ed60a03eba70  SCRATCH_MNT/test-801/file4
-+Check files
-+free blocks after creating some reflink copies is in range
-+free blocks after CoW some reflink copies is in range
-+free blocks after defragging all reflink copies is in range
-+free blocks after all tests is in range
-+Check scratch fs
-diff --git a/tests/xfs/802 b/tests/xfs/802
-new file mode 100755
-index 0000000..f63ef14
---- /dev/null
-+++ b/tests/xfs/802
-@@ -0,0 +1,87 @@
-+#! /bin/bash
-+# FS QA Test No. 802
-+#
-+# Ensure that we can create enough distinct reflink entries to force creation
-+# of a multi-level refcount btree, and that metadump will successfully copy
-+# said block.
++# Reflink a file, use up the rest of the space, then try to observe ENOSPC
++# while copy-on-writing the file via the page cache.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -374,7 +102,7 @@ index 0000000..f63ef14
 +#-----------------------------------------------------------------------
 +
 +seq=`basename "$0"`
-+seqres=$RESULT_DIR/$seq
++seqres="$RESULT_DIR/$seq"
 +echo "QA output created by $seq"
 +
 +here=`pwd`
@@ -385,112 +113,7 @@ index 0000000..f63ef14
 +_cleanup()
 +{
 +    cd /
-+    umount "$SCRATCH_MNT" > /dev/null 2>&1
-+    rm -rf "$tmp".* "$TESTDIR" "$METADUMP_FILE"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_reflink
-+
-+rm -f "$seqres.full"
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+TESTDIR="$SCRATCH_MNT/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+METADUMP_FILE="$TEST_DIR/${seq}_metadump"
-+
-+echo "Create the original file blocks"
-+BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
-+NR_BLKS=$((4 * BLKSZ / 12))
-+_pwrite_byte 0x61 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/file1" >> "$seqres.full"
-+
-+echo "Reflink every other block"
-+seq 1 $((NR_BLKS / 2)) | while read nr; do
-+	_reflink_range  "$TESTDIR/file1" $((nr * 2 * BLKSZ)) \
-+			"$TESTDIR/file2" $((nr * 2 * BLKSZ)) $BLKSZ >> "$seqres.full"
-+done
-+
-+echo "Create metadump file"
-+_scratch_unmount
-+_scratch_metadump "$METADUMP_FILE"
-+
-+# Now restore the obfuscated one back and take a look around
-+echo "Restore metadump"
-+xfs_mdrestore "$METADUMP_FILE" "$TEST_DIR/image"
-+_mount -t $FSTYP "$TEST_DIR/image" "$SCRATCH_MNT"
-+umount "$SCRATCH_MNT"
-+
-+echo "Check restored fs"
-+_check_generic_filesystem "$METADUMP_FILE"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/802.out b/tests/xfs/802.out
-new file mode 100644
-index 0000000..ad2ef03
---- /dev/null
-+++ b/tests/xfs/802.out
-@@ -0,0 +1,6 @@
-+QA output created by 802
-+Create the original file blocks
-+Reflink every other block
-+Create metadump file
-+Restore metadump
-+Check restored fs
-diff --git a/tests/xfs/803 b/tests/xfs/803
-new file mode 100755
-index 0000000..4aed2e1
---- /dev/null
-+++ b/tests/xfs/803
-@@ -0,0 +1,109 @@
-+#! /bin/bash
-+# FS QA Test No. 803
-+#
-+# Create and populate an XFS filesystem, corrupt the refcount btree,
-+# then see how the kernel and xfs_repair deal with it.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    #rm -f $tmp.*
++    rm -rf "$tmp".* "$TESTDIR1"
 +}
 +
 +# get standard environment, filters and checks
@@ -501,97 +124,94 @@ index 0000000..4aed2e1
 +
 +# real QA test starts here
 +_supported_os Linux
-+_supported_fs xfs
 +_require_scratch_reflink
 +_require_cp_reflink
-+test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
 +
 +rm -f "$seqres.full"
 +
-+echo "+ create scratch fs"
-+_scratch_mkfs_xfs > /dev/null
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
 +
-+echo "+ mount fs image"
-+_scratch_mount
-+blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+agcount="$(xfs_info "${SCRATCH_MNT}" | grep agcount= | sed -e 's/^.*agcount=\([0-9]*\),.*$/\1/g')"
++TESTDIR="$SCRATCH_MNT/test-$seq"
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
 +
-+echo "+ make some files"
-+_pwrite_byte 0x62 0 $((blksz * 64)) "${SCRATCH_MNT}/file0" >> "$seqres.full"
-+_pwrite_byte 0x61 0 $((blksz * 64)) "${SCRATCH_MNT}/file1" >> "$seqres.full"
-+_cp_reflink "${SCRATCH_MNT}/file0" "${SCRATCH_MNT}/file2"
-+_cp_reflink "${SCRATCH_MNT}/file1" "${SCRATCH_MNT}/file3"
-+umount "${SCRATCH_MNT}"
++echo "Reformat with appropriate size"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++NR_BLKS=10240
++umount "$SCRATCH_MNT"
++SZ_BYTES=$((NR_BLKS * 8 * BLKSZ))
++if [ $SZ_BYTES -lt $((32 * 1048576)) ]; then
++	SZ_BYTES=$((32 * 1048576))
++fi
++_scratch_mkfs_sized $SZ_BYTES >> "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
 +
-+echo "+ check fs"
-+_scratch_xfs_repair -n >> "$seqres.full" 2>&1 || \
-+	_fail "xfs_repair should not fail"
++echo "Create a big file and reflink it"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" >> "$seqres.full" 2>&1
++_cp_reflink "$TESTDIR/bigfile" "$TESTDIR/clonefile"
++sync
 +
-+echo "+ corrupt image"
-+seq 0 $((agcount - 1)) | while read ag; do
-+	$XFS_DB_PROG -x -c "agf ${ag}" -c "agf ${ag}" -c "addr refcntroot" \
-+		-c "stack" -c "blocktrash -x 4096 -y 4096 -z -n 8 -3" \
-+		"${SCRATCH_DEV}" >> "$seqres.full" 2>&1
-+done
++echo "Allocate the rest of the space"
++NR_FREE="$(stat -f -c '%f' "$TESTDIR")"
++touch "$TESTDIR/file0" "$TESTDIR/file1"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_FREE)) "$TESTDIR/eat_my_space" >> "$seqres.full" 2>&1
++sync
 +
-+echo "+ mount image"
-+_scratch_mount
++echo "CoW the big file"
++out="$(_pwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" 2>&1)"
++echo "${out}" | grep -q "No space left on device" || echo "CoW should have failed with ENOSPC"
++echo "${out}" >> "$seqres.full" 2>&1
++echo "${out}"
 +
-+echo "+ reflink more"
-+_cp_reflink "${SCRATCH_MNT}/file1" "${SCRATCH_MNT}/file4" 2> /dev/null && \
-+	_fail "should not be able to reflink with busted refcount btree"
-+umount "${SCRATCH_MNT}"
++echo "Remount and try CoW again"
++_scratch_remount
 +
-+echo "+ repair fs"
-+_scratch_xfs_repair >> "$seqres.full" 2>&1
-+_scratch_xfs_repair >> "$seqres.full" 2>&1
++out="$(_pwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" 2>&1)"
++echo "${out}" | grep -q "No space left on device" || echo "CoW should have failed with ENOSPC"
++echo "${out}" >> "$seqres.full" 2>&1
++echo "${out}"
 +
-+echo "+ mount image (2)"
-+_scratch_mount
++#filefrag -v $TESTDIR/bigfile
++#filefrag -v $TESTDIR/clonefile
 +
-+echo "+ chattr -R -i"
-+chattr -R -f -i "${SCRATCH_MNT}/"
++echo "Check scratch fs"
++umount "$SCRATCH_MNT"
++_check_scratch_fs
 +
-+echo "+ reflink more (2)"
-+_cp_reflink "${SCRATCH_MNT}/file1" "${SCRATCH_MNT}/file5" || \
-+	_fail "modified refcount tree"
-+umount "${SCRATCH_MNT}"
-+
-+echo "+ check fs (2)"
-+_scratch_xfs_repair -n >> "$seqres.full" 2>&1 || \
-+	_fail "xfs_repair should not fail"
-+
++# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/803.out b/tests/xfs/803.out
+diff --git a/tests/generic/842.out b/tests/generic/842.out
 new file mode 100644
-index 0000000..582682d
+index 0000000..df58025
 --- /dev/null
-+++ b/tests/xfs/803.out
-@@ -0,0 +1,13 @@
-+QA output created by 803
-++ create scratch fs
-++ mount fs image
-++ make some files
-++ check fs
-++ corrupt image
-++ mount image
-++ reflink more
-++ repair fs
-++ mount image (2)
-++ chattr -R -i
-++ reflink more (2)
-++ check fs (2)
-diff --git a/tests/xfs/804 b/tests/xfs/804
++++ b/tests/generic/842.out
+@@ -0,0 +1,10 @@
++QA output created by 842
++Format and mount
++Reformat with appropriate size
++Create a big file and reflink it
++Allocate the rest of the space
++CoW the big file
++pwrite64: No space left on device
++Remount and try CoW again
++pwrite64: No space left on device
++Check scratch fs
+diff --git a/tests/generic/843 b/tests/generic/843
 new file mode 100755
-index 0000000..c46a7a0
+index 0000000..03dc570
 --- /dev/null
-+++ b/tests/xfs/804
-@@ -0,0 +1,77 @@
++++ b/tests/generic/843
+@@ -0,0 +1,107 @@
 +#! /bin/bash
-+# FS QA Test No. 804
++# FS QA Test No. 843
 +#
-+# Ensure that we can't reflink realtime files.
++# Reflink a file that uses more than half of the space, then try to observe
++# ENOSPC while copy-on-writing the file via the page cache.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -611,7 +231,7 @@ index 0000000..c46a7a0
 +#-----------------------------------------------------------------------
 +
 +seq=`basename "$0"`
-+seqres=$RESULT_DIR/$seq
++seqres="$RESULT_DIR/$seq"
 +echo "QA output created by $seq"
 +
 +here=`pwd`
@@ -622,65 +242,365 @@ index 0000000..c46a7a0
 +_cleanup()
 +{
 +    cd /
-+    umount "$SCRATCH_MNT" > /dev/null 2>&1
-+    rm -rf "$tmp".* "$TESTDIR" "$METADUMP_FILE"
++    rm -rf "$tmp".* "$TESTDIR1"
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
++. ./common/attr
 +. ./common/reflink
 +
 +# real QA test starts here
 +_supported_os Linux
-+_supported_fs xfs
-+test -b "$TEST_RTDEV" || _notrun "Need TEST_RTDEV to run this test."
 +_require_scratch_reflink
 +_require_cp_reflink
 +
 +rm -f "$seqres.full"
 +
-+_scratch_mkfs -r rtdev=$TEST_RTDEV >/dev/null 2>&1
-+_scratch_mount -o rtdev=$TEST_RTDEV
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
 +
 +TESTDIR="$SCRATCH_MNT/test-$seq"
 +rm -rf "$TESTDIR"
 +mkdir "$TESTDIR"
 +
-+echo "Create the original file blocks"
-+BLKSZ=65536
-+touch "$TESTDIR/file1"
-+$XFS_IO_PROG -c 'chattr +r' "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
++echo "Reformat with appropriate size"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++NR_BLKS=10240
++umount "$SCRATCH_MNT"
++SZ_BYTES=$((NR_BLKS * 3 / 2 * BLKSZ))
++if [ $SZ_BYTES -lt $((32 * 1048576)) ]; then
++	SZ_BYTES=$((32 * 1048576))
++fi
++_scratch_mkfs_sized $SZ_BYTES >> "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
 +
-+echo "Reflink every other block"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
++echo "Create a big file and reflink it"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" >> "$seqres.full" 2>&1
++_cp_reflink "$TESTDIR/bigfile" "$TESTDIR/clonefile"
++sync
 +
-+test -s "$TESTDIR/file2" && _fail "Should not be able to reflink a realtime file."
++echo "Allocate the rest of the space"
++NR_FREE="$(stat -f -c '%f' "$TESTDIR")"
++touch "$TESTDIR/file0" "$TESTDIR/file1"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_FREE)) "$TESTDIR/eat_my_space" >> "$seqres.full" 2>&1
++sync
 +
-+echo "Check restored fs"
++echo "CoW the big file"
++out="$(_pwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" 2>&1)"
++echo "${out}" | grep -q "No space left on device" || echo "CoW should have failed with ENOSPC"
++echo "${out}" >> "$seqres.full" 2>&1
++echo "${out}"
++
++echo "Remount and try CoW again"
++_scratch_remount
++
++out="$(_pwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" 2>&1)"
++echo "${out}" | grep -q "No space left on device" || echo "CoW should have failed with ENOSPC"
++echo "${out}" >> "$seqres.full" 2>&1
++echo "${out}"
++
++#filefrag -v $TESTDIR/bigfile
++#filefrag -v $TESTDIR/clonefile
++
++echo "Check scratch fs"
 +umount "$SCRATCH_MNT"
 +_check_scratch_fs
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/804.out b/tests/xfs/804.out
+diff --git a/tests/generic/843.out b/tests/generic/843.out
 new file mode 100644
-index 0000000..e69de29
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 8261f86..eccfb73 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -220,3 +220,8 @@
- 303 auto quick quota
- 304 auto quick quota
- 305 auto quota
-+800 auto quick clone
-+801 auto quick clone
-+802 auto quick clone
-+803 fuzzers
-+804 auto quick clone
+index 0000000..43c1cf6
+--- /dev/null
++++ b/tests/generic/843.out
+@@ -0,0 +1,10 @@
++QA output created by 843
++Format and mount
++Reformat with appropriate size
++Create a big file and reflink it
++Allocate the rest of the space
++CoW the big file
++pwrite64: No space left on device
++Remount and try CoW again
++pwrite64: No space left on device
++Check scratch fs
+diff --git a/tests/generic/844 b/tests/generic/844
+new file mode 100755
+index 0000000..70bc235
+--- /dev/null
++++ b/tests/generic/844
+@@ -0,0 +1,109 @@
++#! /bin/bash
++# FS QA Test No. 844
++#
++# Reflink a file, use up the rest of the space, then try to observe ENOSPC
++# while copy-on-writing the file via mmap.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf "$tmp".* "$TESTDIR1"
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++
++TESTDIR="$SCRATCH_MNT/test-$seq"
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
++
++echo "Reformat with appropriate size"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++NR_BLKS=10240
++umount "$SCRATCH_MNT"
++SZ_BYTES=$((NR_BLKS * 8 * BLKSZ))
++if [ $SZ_BYTES -lt $((32 * 1048576)) ]; then
++	SZ_BYTES=$((32 * 1048576))
++fi
++_scratch_mkfs_sized $SZ_BYTES >> "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
++
++echo "Create a big file and reflink it"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" >> "$seqres.full" 2>&1
++_cp_reflink "$TESTDIR/bigfile" "$TESTDIR/clonefile"
++sync
++
++echo "Allocate the rest of the space"
++NR_FREE="$(stat -f -c '%f' "$TESTDIR")"
++touch "$TESTDIR/file0" "$TESTDIR/file1"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_FREE)) "$TESTDIR/eat_my_space" >> "$seqres.full" 2>&1
++sync
++
++echo "mmap CoW the big file"
++out="$(_mwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" 2>&1)"
++err="$?"
++if [ "$err" -lt 128 ]; then
++	echo "mmap CoW should have failed with SIGBUS, got SIG$(kill -l $err)"
++fi
++
++echo "Remount and try CoW again"
++_scratch_remount
++
++out="$(_mwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" 2>&1)"
++err="$?"
++if [ "$err" -lt 128 ]; then
++	echo "mmap CoW should have failed with SIGBUS, got SIG$(kill -l $err)"
++fi
++
++#filefrag -v $TESTDIR/bigfile
++#filefrag -v $TESTDIR/clonefile
++
++echo "Check scratch fs"
++umount "$SCRATCH_MNT"
++_check_scratch_fs
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/844.out b/tests/generic/844.out
+new file mode 100644
+index 0000000..130afc1
+--- /dev/null
++++ b/tests/generic/844.out
+@@ -0,0 +1,8 @@
++QA output created by 844
++Format and mount
++Reformat with appropriate size
++Create a big file and reflink it
++Allocate the rest of the space
++mmap CoW the big file
++Remount and try CoW again
++Check scratch fs
+diff --git a/tests/generic/845 b/tests/generic/845
+new file mode 100755
+index 0000000..5efaf38
+--- /dev/null
++++ b/tests/generic/845
+@@ -0,0 +1,107 @@
++#! /bin/bash
++# FS QA Test No. 845
++#
++# Reflink a file, use up the rest of the space, then try to observe ENOSPC
++# while copy-on-writing the file via direct-io.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf "$tmp".* "$TESTDIR1"
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++
++TESTDIR="$SCRATCH_MNT/test-$seq"
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
++
++echo "Reformat with appropriate size"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++NR_BLKS=10240
++umount "$SCRATCH_MNT"
++SZ_BYTES=$((NR_BLKS * 8 * BLKSZ))
++if [ $SZ_BYTES -lt $((32 * 1048576)) ]; then
++	SZ_BYTES=$((32 * 1048576))
++fi
++_scratch_mkfs_sized $SZ_BYTES >> "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
++
++echo "Create a big file and reflink it"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" >> "$seqres.full" 2>&1
++_cp_reflink "$TESTDIR/bigfile" "$TESTDIR/clonefile"
++sync
++
++echo "Allocate the rest of the space"
++NR_FREE="$(stat -f -c '%f' "$TESTDIR")"
++touch "$TESTDIR/file0" "$TESTDIR/file1"
++_pwrite_byte 0x61 0 $((BLKSZ * NR_FREE)) "$TESTDIR/eat_my_space" >> "$seqres.full" 2>&1
++sync
++
++echo "CoW the big file"
++out="$(_pwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" -d 2>&1)"
++echo "${out}" | grep -q "No space left on device" || echo "CoW should have failed with ENOSPC"
++echo "${out}" >> "$seqres.full" 2>&1
++echo "${out}"
++
++echo "Remount and try CoW again"
++_scratch_remount
++
++out="$(_pwrite_byte 0x62 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/bigfile" -d 2>&1)"
++echo "${out}" | grep -q "No space left on device" || echo "CoW should have failed with ENOSPC"
++echo "${out}" >> "$seqres.full" 2>&1
++echo "${out}"
++
++#filefrag -v $TESTDIR/bigfile
++#filefrag -v $TESTDIR/clonefile
++
++echo "Check scratch fs"
++umount "$SCRATCH_MNT"
++_check_scratch_fs
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/845.out b/tests/generic/845.out
+new file mode 100644
+index 0000000..d367a73
+--- /dev/null
++++ b/tests/generic/845.out
+@@ -0,0 +1,10 @@
++QA output created by 845
++Format and mount
++Reformat with appropriate size
++Create a big file and reflink it
++Allocate the rest of the space
++CoW the big file
++pwrite64: No space left on device
++Remount and try CoW again
++pwrite64: No space left on device
++Check scratch fs
+diff --git a/tests/generic/group b/tests/generic/group
+index eef608f..e184473 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -249,4 +249,8 @@
+ 839 auto quick clone
+ 840 clone_stress
+ 841 clone_stress
++842 auto quick clone
++843 auto quick clone
++844 auto quick clone
++845 auto quick clone
+ 846 auto quick clone
 
 _______________________________________________
 xfs mailing list
