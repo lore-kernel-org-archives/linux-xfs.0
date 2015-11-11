@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E0B47FC1
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 16:15:47 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0AC2B7F53
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 16:19:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 88AFC30404E
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 14:15:44 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lKDkHg5bO51nvjel (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 14:15:43 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 72D5446B
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 22:15:42 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tABMFfW1023885
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 17:15:42 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfsprogs: print name of verifier if it fails
-Message-ID: <5643BE0D.5030805@redhat.com>
-Date: Wed, 11 Nov 2015 16:15:41 -0600
-MIME-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E91BD8F8040
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 14:19:25 -0800 (PST)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id Yy8QanXhxcCKOM7z (version=TLSv1
+	cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 14:19:21 -0800 (PST)
+Subject: Re: memory reclaim problems on fs usage
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <201511102313.36685.arekm@maven.pl>
+	<5643658B.9090206@I-love.SAKURA.ne.jp>
+	<201511111719.44035.arekm@maven.pl>
+In-Reply-To: <201511111719.44035.arekm@maven.pl>
+Message-Id: <201511120719.EBF35970.OtSOHOVFJMFQFL@I-love.SAKURA.ne.jp>
+Date: Thu, 12 Nov 2015 07:19:13 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,323 +30,412 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: arekm@maven.pl
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-This adds a name to each buf_ops structure, so that if
-a verifier fails we can print the type of verifier that
-failed it. Should be a slight debugging aid, I hope.
+Arkadiusz Mi?kiewicz wrote:
+> This patch is against which tree? (tried 4.1, 4.2 and 4.3)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Oops. Whitespace-damaged. This patch is for vanilla 4.1.2.
+Reposting with one condition corrected.
+
+  if (!dump_target_pid) => if (dump_target_pid <= 0)
+
 ---
+ fs/xfs/kmem.c          |  10 ++-
+ fs/xfs/xfs_buf.c       |   3 +-
+ include/linux/mmzone.h |   1 +
+ include/linux/vmstat.h |   1 +
+ mm/page_alloc.c        | 217 +++++++++++++++++++++++++++++++++++++++++++++++++
+ mm/vmscan.c            |  22 +++++
+ 6 files changed, 249 insertions(+), 5 deletions(-)
 
-
-
-diff --git a/db/attr.c b/db/attr.c
-index 5e69100..e26ac67 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -570,6 +570,7 @@ xfs_attr3_db_write_verify(
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index a7a3a63..535c136 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -55,8 +55,9 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+-		"possible memory allocation deadlock in %s (mode:0x%x)",
+-					__func__, lflags);
++		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
++				current->comm, current->pid,
++				__func__, lflags);
+ 		congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 	} while (1);
  }
- 
- const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
-+	.name = "xfs_attr3",
- 	.verify_read = xfs_attr3_db_read_verify,
- 	.verify_write = xfs_attr3_db_write_verify,
- };
-diff --git a/db/dir2.c b/db/dir2.c
-index cc76662..533f705 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -1037,6 +1037,7 @@ xfs_dir3_db_write_verify(
+@@ -120,8 +121,9 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+-		"possible memory allocation deadlock in %s (mode:0x%x)",
+-					__func__, lflags);
++		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
++				current->comm, current->pid,
++				__func__, lflags);
+ 		congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 	} while (1);
  }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1790b00..16322cb 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -354,7 +354,8 @@ retry:
+ 			 */
+ 			if (!(++retries % 100))
+ 				xfs_err(NULL,
+-		"possible memory allocation deadlock in %s (mode:0x%x)",
++		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
++					current->comm, current->pid,
+ 					__func__, gfp_mask);
  
- const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
-+	.name = "xfs_dir3",
- 	.verify_read = xfs_dir3_db_read_verify,
- 	.verify_write = xfs_dir3_db_write_verify,
- };
-diff --git a/db/metadump.c b/db/metadump.c
-index e503d6f..8cdcb92 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -221,7 +221,8 @@ write_buf(
- 		bp->b_ops->verify_write(bp);
- 		if (bp->b_error) {
- 			print_warning(
--				"obfuscation corrupted block at bno 0x%llx/0x%x",
-+			    "obfuscation corrupted block at %s bno 0x%llx/0x%x",
-+				bp->b_ops->name,
- 				(long long)bp->b_bn, bp->b_bcount);
- 		}
- 	}
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 38b4c6f..86b18a0 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -52,6 +52,7 @@ struct xfs_buf_map {
- 	struct xfs_buf_map (map) = { .bm_bn = (blkno), .bm_len = (numblk) };
+ 			XFS_STATS_INC(xb_page_retries);
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 54d74f6..932a6d6 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -527,6 +527,7 @@ struct zone {
+ 	ZONE_PADDING(_pad3_)
+ 	/* Zone statistics */
+ 	atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
++	unsigned long stat_last_updated[NR_VM_ZONE_STAT_ITEMS];
+ } ____cacheline_internodealigned_in_smp;
  
- struct xfs_buf_ops {
-+	char *name;
- 	void (*verify_read)(struct xfs_buf *);
- 	void (*verify_write)(struct xfs_buf *);
- };
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index c19070f..0804285 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1075,8 +1075,9 @@ libxfs_writebufr(xfs_buf_t *bp)
- 		bp->b_ops->verify_write(bp);
- 		if (bp->b_error) {
- 			fprintf(stderr,
--	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
--				__func__, (long long)bp->b_bn, bp->b_bcount);
-+	_("%s: write verifer failed on %s bno 0x%llx/0x%x\n"),
-+				__func__, bp->b_ops->name,
-+				(long long)bp->b_bn, bp->b_bcount);
- 			return bp->b_error;
- 		}
- 	}
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 6192e6c..0609ba4 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -725,9 +725,9 @@ void
- xfs_verifier_error(
- 	struct xfs_buf		*bp)
+ enum zone_flags {
+diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
+index 82e7db7..2488925 100644
+--- a/include/linux/vmstat.h
++++ b/include/linux/vmstat.h
+@@ -115,6 +115,7 @@ static inline void zone_page_state_add(long x, struct zone *zone,
  {
--	xfs_alert(NULL, "Metadata %s detected at block 0x%llx/0x%x",
-+	xfs_alert(NULL, "Metadata %s detected at %s block 0x%llx/0x%x",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
--		  bp->b_bn, BBTOB(bp->b_length));
-+		  bp->b_ops->name, bp->b_bn, BBTOB(bp->b_length));
+ 	atomic_long_add(x, &zone->vm_stat[item]);
+ 	atomic_long_add(x, &vm_stat[item]);
++	zone->stat_last_updated[item] = jiffies;
  }
  
+ static inline unsigned long global_page_state(enum zone_stat_item item)
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 18490f3..35a46b4 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -61,6 +61,8 @@
+ #include <linux/hugetlb.h>
+ #include <linux/sched/rt.h>
+ #include <linux/page_owner.h>
++#include <linux/nmi.h>
++#include <linux/kthread.h>
+ 
+ #include <asm/sections.h>
+ #include <asm/tlbflush.h>
+@@ -2496,6 +2498,8 @@ __alloc_pages_direct_compact(gfp_t gfp_mask, unsigned int order,
+ }
+ #endif /* CONFIG_COMPACTION */
+ 
++pid_t dump_target_pid;
++
+ /* Perform direct synchronous page reclaim */
+ static int
+ __perform_reclaim(gfp_t gfp_mask, unsigned int order,
+@@ -2645,6 +2649,208 @@ bool gfp_pfmemalloc_allowed(gfp_t gfp_mask)
+ 	return !!(gfp_to_alloc_flags(gfp_mask) & ALLOC_NO_WATERMARKS);
+ }
+ 
++static unsigned long kmallocwd_timeout = 10 * HZ; /* Scan interval. */
++static u8 memalloc_counter_active_index; /* Either 0 or 1. */
++static int memalloc_counter[2]; /* Number of tasks doing memory allocation. */
++
++struct memalloc {
++	struct list_head list; /* Connected to memalloc_list. */
++	struct task_struct *task; /* Iniatilized to current. */
++	unsigned long start; /* Initialized to jiffies. */
++	unsigned int order;
++	gfp_t gfp;
++	u8 index; /* Initialized to memalloc_counter_active_index. */
++	u8 dumped;
++};
++
++static LIST_HEAD(memalloc_list); /* List of "struct memalloc".*/
++static DEFINE_SPINLOCK(memalloc_list_lock); /* Lock for memalloc_list. */
++
++/*
++ * kmallocwd - A kernel thread for monitoring memory allocation stalls.
++ *
++ * @unused: Not used.
++ *
++ * This kernel thread does not terminate.
++ */
++static int kmallocwd(void *unused)
++{
++	struct memalloc *m;
++	struct task_struct *g, *p;
++	unsigned long now;
++	unsigned int sigkill_pending;
++	unsigned int memdie_pending;
++	unsigned int stalling_tasks;
++	u8 index;
++	pid_t pid;
++
++ not_stalling: /* Healty case. */
++	/* Switch active counter and wait for timeout duration. */
++	index = memalloc_counter_active_index;
++	spin_lock(&memalloc_list_lock);
++	memalloc_counter_active_index ^= 1;
++	spin_unlock(&memalloc_list_lock);
++	schedule_timeout_interruptible(kmallocwd_timeout);
++	/*
++	 * If memory allocations are working, the counter should remain 0
++	 * because tasks will be able to call both start_memalloc_timer()
++	 * and stop_memalloc_timer() within timeout duration.
++	 */
++	if (likely(!memalloc_counter[index]))
++		goto not_stalling;
++ maybe_stalling: /* Maybe something is wrong. Let's check. */
++	now = jiffies;
++	/* Count stalling tasks, dying and victim tasks. */
++	sigkill_pending = 0;
++	memdie_pending = 0;
++	stalling_tasks = 0;
++	pid = 0;
++	spin_lock(&memalloc_list_lock);
++	list_for_each_entry(m, &memalloc_list, list) {
++		if (time_after(now - m->start, kmallocwd_timeout))
++			stalling_tasks++;
++	}
++	spin_unlock(&memalloc_list_lock);
++	preempt_disable();
++	rcu_read_lock();
++	for_each_process_thread(g, p) {
++		if (test_tsk_thread_flag(p, TIF_MEMDIE))
++			memdie_pending++;
++		if (fatal_signal_pending(p))
++			sigkill_pending++;
++	}
++	rcu_read_unlock();
++	preempt_enable();
++	cond_resched();
++	pr_warn("MemAlloc-Info: %u stalling task, %u dying task, %u victim task.\n",
++		stalling_tasks, sigkill_pending, memdie_pending);
++	/* Report stalling tasks, dying and victim tasks. */
++	spin_lock(&memalloc_list_lock);
++	list_for_each_entry(m, &memalloc_list, list) {
++		if (time_before(now - m->start, kmallocwd_timeout))
++			continue;
++		p = m->task;
++		pr_warn("MemAlloc: %s(%u) gfp=0x%x order=%u delay=%lu\n",
++			p->comm, p->pid, m->gfp, m->order, now - m->start);
++	}
++	spin_unlock(&memalloc_list_lock);
++	preempt_disable();
++	rcu_read_lock();
++	for_each_process_thread(g, p) {
++		u8 type = 0;
++
++		if (test_tsk_thread_flag(p, TIF_MEMDIE))
++			type |= 1;
++		if (fatal_signal_pending(p))
++			type |= 2;
++		if (likely(!type))
++			continue;
++		if (p->state & TASK_UNINTERRUPTIBLE)
++			type |= 4;
++		pr_warn("MemAlloc: %s(%u)%s%s%s\n", p->comm, p->pid,
++			(type & 4) ? " uninterruptible" : "",
++			(type & 2) ? " dying" : "",
++			(type & 1) ? " victim" : "");
++	}
++	rcu_read_unlock();
++	preempt_enable();
++	cond_resched();
++	/*
++	 * Show traces of newly reported (or too long) stalling tasks.
++	 *
++	 * Show traces only once per 256 timeouts because their traces
++	 * will likely be the same (e.g. cond_sched() or congestion_wait())
++	 * when they are stalling inside __alloc_pages_slowpath().
++	 */
++	spin_lock(&memalloc_list_lock);
++	list_for_each_entry(m, &memalloc_list, list) {
++		if (time_before(now - m->start, kmallocwd_timeout) ||
++		    m->dumped++)
++			continue;
++		p = m->task;
++		sched_show_task(p);
++		debug_show_held_locks(p);
++		touch_nmi_watchdog();
++		if (!pid)
++			pid = p->pid;
++	}
++	spin_unlock(&memalloc_list_lock);
++	/*
++	 * Show traces of dying tasks (including victim tasks).
++	 *
++	 * Only dying tasks which are in trouble (e.g. blocked at unkillable
++	 * locks held by memory allocating tasks) will be repeatedly shown.
++	 * Therefore, we need to pay attention to tasks repeatedly shown here.
++	 */
++	preempt_disable();
++	rcu_read_lock();
++	for_each_process_thread(g, p) {
++		if (likely(!fatal_signal_pending(p)))
++			continue;
++		sched_show_task(p);
++		debug_show_held_locks(p);
++		touch_nmi_watchdog();
++	}
++	rcu_read_unlock();
++	preempt_enable();
++	show_workqueue_state();
++	if (dump_target_pid <= 0)
++		dump_target_pid = -pid;
++	/* Wait until next timeout duration. */
++	schedule_timeout_interruptible(kmallocwd_timeout);
++	if (memalloc_counter[index])
++		goto maybe_stalling;
++	goto not_stalling;
++	return 0; /* To suppress "no return statement" compiler warning. */
++}
++
++static int __init start_kmallocwd(void)
++{
++	if (kmallocwd_timeout) {
++		struct task_struct *task = kthread_run(kmallocwd, NULL,
++						       "kmallocwd");
++		BUG_ON(IS_ERR(task));
++	}
++	return 0;
++}
++late_initcall(start_kmallocwd);
++
++static int __init kmallocwd_config(char *str)
++{
++	if (kstrtoul(str, 10, &kmallocwd_timeout) == 0)
++		kmallocwd_timeout = min(kmallocwd_timeout * HZ,
++					(unsigned long) LONG_MAX);
++	return 0;
++}
++__setup("kmallocwd=", kmallocwd_config);
++
++static void start_memalloc_timer(struct memalloc *m, const gfp_t gfp_mask,
++				 const int order)
++{
++	if (!kmallocwd_timeout || m->task)
++		return;
++	m->task = current;
++	m->start = jiffies;
++	m->gfp = gfp_mask;
++	m->order = order;
++	m->dumped = 0;
++	spin_lock(&memalloc_list_lock);
++	m->index = memalloc_counter_active_index;
++	memalloc_counter[m->index]++;
++	list_add_tail(&m->list, &memalloc_list);
++	spin_unlock(&memalloc_list_lock);
++}
++
++static void stop_memalloc_timer(struct memalloc *m)
++{
++	if (!m->task)
++		return;
++	spin_lock(&memalloc_list_lock);
++	memalloc_counter[m->index]--;
++	list_del(&m->list);
++	spin_unlock(&memalloc_list_lock);
++}
++
+ static inline struct page *
+ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 						struct alloc_context *ac)
+@@ -2657,6 +2863,7 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 	enum migrate_mode migration_mode = MIGRATE_ASYNC;
+ 	bool deferred_compaction = false;
+ 	int contended_compaction = COMPACT_CONTENDED_NONE;
++	struct memalloc m = { .task = NULL };
+ 
+ 	/*
+ 	 * In the slowpath, we sanity check order to avoid ever trying to
+@@ -2678,6 +2885,9 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 		goto nopage;
+ 
+ retry:
++	if (dump_target_pid == -current->pid)
++		dump_target_pid = -dump_target_pid;
++
+ 	if (!(gfp_mask & __GFP_NO_KSWAPD))
+ 		wake_all_kswapds(order, ac);
+ 
+@@ -2740,6 +2950,8 @@ retry:
+ 	if (test_thread_flag(TIF_MEMDIE) && !(gfp_mask & __GFP_NOFAIL))
+ 		goto nopage;
+ 
++	start_memalloc_timer(&m, gfp_mask, order);
++
+ 	/*
+ 	 * Try direct compaction. The first pass is asynchronous. Subsequent
+ 	 * attempts after direct reclaim are synchronous
+@@ -2798,6 +3010,10 @@ retry:
+ 		goto got_pg;
+ 
+ 	/* Check if we should retry the allocation */
++	if (dump_target_pid == current->pid) {
++		printk(KERN_INFO "did_some_progress=%lu\n", did_some_progress);
++		dump_target_pid = 0;
++	}
+ 	pages_reclaimed += did_some_progress;
+ 	if (should_alloc_retry(gfp_mask, order, did_some_progress,
+ 						pages_reclaimed)) {
+@@ -2834,6 +3050,7 @@ retry:
+ nopage:
+ 	warn_alloc_failed(gfp_mask, order, NULL);
+ got_pg:
++	stop_memalloc_timer(&m);
+ 	return page;
+ }
+ 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 1a17bd7..c449371 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2432,6 +2432,8 @@ static inline bool compaction_ready(struct zone *zone, int order)
+ 	return watermark_ok;
+ }
+ 
++extern pid_t dump_target_pid;
++
  /*
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 95c8d44..b43655c 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -531,6 +531,7 @@ xfs_agfl_write_verify(
- }
+  * This is the direct reclaim path, for page-allocating processes.  We only
+  * try to reclaim pages from zones which will satisfy the caller's allocation
+@@ -2533,7 +2535,27 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
  
- const struct xfs_buf_ops xfs_agfl_buf_ops = {
-+	.name = "xfs_agfl",
- 	.verify_read = xfs_agfl_read_verify,
- 	.verify_write = xfs_agfl_write_verify,
- };
-@@ -2335,6 +2336,7 @@ xfs_agf_write_verify(
- }
+ 		if (global_reclaim(sc) &&
+ 		    !reclaimable && zone_reclaimable(zone))
++		{
++			if (dump_target_pid == current->pid) {
++				unsigned long rec = zone_reclaimable_pages(zone);
++				unsigned long free = zone_page_state(zone, NR_FREE_PAGES);
++				unsigned long min = min_wmark_pages(zone);
++				unsigned long scanned = zone_page_state(zone, NR_PAGES_SCANNED);
++				unsigned long now = jiffies;
++				unsigned long rec2 = zone_page_state_snapshot(zone, NR_ACTIVE_FILE) +
++					zone_page_state_snapshot(zone, NR_INACTIVE_FILE);
++				unsigned long free2 = zone_page_state_snapshot(zone, NR_FREE_PAGES);
++				unsigned long scanned2 = zone_page_state_snapshot(zone, NR_PAGES_SCANNED);
++
++				printk(KERN_INFO "%s zone_reclaimable: reclaim:%lu(%lu,%lu,%ld) free:%lu(%lu,%ld) min:%lu pages_scanned:%lu(%lu,%ld) prio:%d\n",
++				       zone->name, rec, now - zone->stat_last_updated[NR_ACTIVE_FILE],
++				       now - zone->stat_last_updated[NR_INACTIVE_FILE], rec - rec2,
++				       free, now - zone->stat_last_updated[NR_FREE_PAGES], free - free2,
++				       min, scanned, now - zone->stat_last_updated[NR_PAGES_SCANNED],
++				       scanned - scanned2, sc->priority);
++			}
+ 			reclaimable = true;
++		}
+ 	}
  
- const struct xfs_buf_ops xfs_agf_buf_ops = {
-+	.name = "xfs_agf",
- 	.verify_read = xfs_agf_read_verify,
- 	.verify_write = xfs_agf_write_verify,
- };
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index e60538a..f583bd1 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -377,6 +377,7 @@ xfs_allocbt_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_allocbt_buf_ops = {
-+	.name = "xfs_allocbt",
- 	.verify_read = xfs_allocbt_read_verify,
- 	.verify_write = xfs_allocbt_write_verify,
- };
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index bf473eb..1186cac 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -323,6 +323,7 @@ xfs_attr3_leaf_read_verify(
- }
- 
- const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
-+	.name = "xfs_attr3_leaf",
- 	.verify_read = xfs_attr3_leaf_read_verify,
- 	.verify_write = xfs_attr3_leaf_write_verify,
- };
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 39ab350..95383e3 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -196,6 +196,7 @@ xfs_attr3_rmt_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_attr3_rmt_buf_ops = {
-+	.name = "xfs_attr3_rmt",
- 	.verify_read = xfs_attr3_rmt_read_verify,
- 	.verify_write = xfs_attr3_rmt_write_verify,
- };
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index f42bc2d..52c9c75 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -717,6 +717,7 @@ xfs_bmbt_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_bmbt_buf_ops = {
-+	.name = "xfs_bmbt",
- 	.verify_read = xfs_bmbt_read_verify,
- 	.verify_write = xfs_bmbt_write_verify,
- };
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index bdd60a0..bf5fe21 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -240,6 +240,7 @@ xfs_da3_node_read_verify(
- }
- 
- const struct xfs_buf_ops xfs_da3_node_buf_ops = {
-+	.name = "xfs_da3_node",
- 	.verify_read = xfs_da3_node_read_verify,
- 	.verify_write = xfs_da3_node_write_verify,
- };
-diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
-index d7ba0e9..32bde31 100644
---- a/libxfs/xfs_dir2_block.c
-+++ b/libxfs/xfs_dir2_block.c
-@@ -119,6 +119,7 @@ xfs_dir3_block_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
-+	.name = "xfs_dir3_block",
- 	.verify_read = xfs_dir3_block_read_verify,
- 	.verify_write = xfs_dir3_block_write_verify,
- };
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 37b3b68..6ae5cd2 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -302,11 +302,13 @@ xfs_dir3_data_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_dir3_data_buf_ops = {
-+	.name = "xfs_dir3_data",
- 	.verify_read = xfs_dir3_data_read_verify,
- 	.verify_write = xfs_dir3_data_write_verify,
- };
- 
- static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
-+	.name = "xfs_dir3_data_reada",
- 	.verify_read = xfs_dir3_data_reada_verify,
- 	.verify_write = xfs_dir3_data_write_verify,
- };
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 77c2e65..f80d91f 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -242,11 +242,13 @@ xfs_dir3_leafn_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
-+	.name = "xfs_dir3_leaf1",
- 	.verify_read = xfs_dir3_leaf1_read_verify,
- 	.verify_write = xfs_dir3_leaf1_write_verify,
- };
- 
- const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
-+	.name = "xfs_dir3_leafn",
- 	.verify_read = xfs_dir3_leafn_read_verify,
- 	.verify_write = xfs_dir3_leafn_write_verify,
- };
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 689a3fd..224daa6 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -147,6 +147,7 @@ xfs_dir3_free_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
-+	.name = "xfs_dir3_free",
- 	.verify_read = xfs_dir3_free_read_verify,
- 	.verify_write = xfs_dir3_free_write_verify,
- };
-diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
-index 1a2546b..38f9703 100644
---- a/libxfs/xfs_dquot_buf.c
-+++ b/libxfs/xfs_dquot_buf.c
-@@ -290,6 +290,7 @@ xfs_dquot_buf_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_dquot_buf_ops = {
-+	.name = "xfs_dquot",
- 	.verify_read = xfs_dquot_buf_read_verify,
- 	.verify_write = xfs_dquot_buf_write_verify,
- };
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index d39f9b6..5039f4b 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -2566,6 +2566,7 @@ xfs_agi_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_agi_buf_ops = {
-+	.name = "xfs_agi",
- 	.verify_read = xfs_agi_read_verify,
- 	.verify_write = xfs_agi_write_verify,
- };
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 09ffdb4..f592ad1 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -303,6 +303,7 @@ xfs_inobt_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_inobt_buf_ops = {
-+	.name = "xfs_inobt",
- 	.verify_read = xfs_inobt_read_verify,
- 	.verify_write = xfs_inobt_write_verify,
- };
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 747a879..324715e 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -141,11 +141,13 @@ xfs_inode_buf_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_inode_buf_ops = {
-+	.name = "xfs_inode",
- 	.verify_read = xfs_inode_buf_read_verify,
- 	.verify_write = xfs_inode_buf_write_verify,
- };
- 
- const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
-+	.name = "xxfs_inode_ra",
- 	.verify_read = xfs_inode_buf_readahead_verify,
- 	.verify_write = xfs_inode_buf_write_verify,
- };
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index c293d68..78ad889 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -661,11 +661,13 @@ xfs_sb_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_sb_buf_ops = {
-+	.name = "xfs_sb",
- 	.verify_read = xfs_sb_read_verify,
- 	.verify_write = xfs_sb_write_verify,
- };
- 
- const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
-+	.name = "xfs_sb_quiet",
- 	.verify_read = xfs_sb_quiet_read_verify,
- 	.verify_write = xfs_sb_write_verify,
- };
-diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
-index 647444a..fb9ece8 100644
---- a/libxfs/xfs_symlink_remote.c
-+++ b/libxfs/xfs_symlink_remote.c
-@@ -164,6 +164,7 @@ xfs_symlink_write_verify(
- }
- 
- const struct xfs_buf_ops xfs_symlink_buf_ops = {
-+	.name = "xfs_symlink",
- 	.verify_read = xfs_symlink_read_verify,
- 	.verify_write = xfs_symlink_write_verify,
- };
+ 	/*
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
