@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5C83C7F80
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 10:19:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4AA5B304032
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 08:19:55 -0800 (PST)
-Received: from mail-lb0-f177.google.com (mail-lb0-f177.google.com
-	[209.85.217.177]) by cuda.sgi.com with ESMTP id
-	6FMJMRH4tgiRhFjA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 08:19:48 -0800 (PST)
-Received: by lbbkw15 with SMTP id kw15so19645836lbb.0
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 08:19:47 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: memory reclaim problems on fs usage
-Date: Wed, 11 Nov 2015 17:19:42 +0100
-References: <201511102313.36685.arekm@maven.pl>
-	<5643658B.9090206@I-love.SAKURA.ne.jp>
-In-Reply-To: <5643658B.9090206@I-love.SAKURA.ne.jp>
+	by oss.sgi.com (Postfix) with ESMTP id 523DF7F54
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 12:55:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 117CF30404E
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 10:55:44 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id b9NkDQChxnt5UlOf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 10:55:39 -0800 (PST)
+Date: Wed, 11 Nov 2015 10:55:10 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: RFCv3+ WIP rollup of XFS reverse-mapping, reflink, and dedupe support
+Message-ID: <20151111185510.GC2224@birch.djwong.org>
 MIME-Version: 1.0
-Message-Id: <201511111719.44035.arekm@maven.pl>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,33 +23,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: david@fromorbit.com, hch@infradead.org
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
 
-T24gV2VkbmVzZGF5IDExIG9mIE5vdmVtYmVyIDIwMTUsIFRldHN1byBIYW5kYSB3cm90ZToKPiBP
-biAyMDE1LzExLzExIDc6MTMsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+IFRoZSB1
-c3VhbCAocmVwZWF0YWJsZSkgcHJvYmxlbSBpcyBsaWtlIHRoaXM6Cj4gPiAKPiA+IGZ1bGwgZG1l
-c2c6IGh0dHA6Ly9zcHJ1bmdlLnVzL1ZFaUUgKG1vcmUgaW4gaXQgdGhlbiBpbiBwYXJ0aWFsIGxv
-ZyBiZWxvdykKPiAKPiBNYXliZSBzb21lYm9keSBkb2luZyBHRlBfTk9JTyBhbGxvY2F0aW9uIHdo
-aWNoIFhGUyBkcml2ZXIgZG9pbmcgR0ZQX05PRlMKPiBhbGxvY2F0aW9uIGlzIHdhaXRpbmcgZm9y
-IGlzIHN0YWxsaW5nIGluc2lkZSBtZW1vcnkgYWxsb2NhdG9yLiBJIHRoaW5rIHRoYXQKPiBjaGVj
-a2luZyB0YXNrcyB3aGljaCBhcmUgc3RhbGxpbmcgaW5zaWRlIG1lbW9yeSBhbGxvY2F0b3Igd291
-bGQgaGVscC4KPiAKPiBQbGVhc2UgdHJ5IHJlcHJvZHVjaW5nIHRoaXMgcHJvYmxlbSB3aXRoIGEg
-ZGVidWcgcHJpbnRrKCkgcGF0Y2ggc2hvd24gYmVsb3cKPiBhcHBsaWVkLiBUaGlzIGlzIGEgcGF0
-Y2ggd2hpY2ggSSB1c2VkIGZvciBkZWJ1Z2dpbmcgc2lsZW50IGxvY2t1cCBwcm9ibGVtLgo+IFdo
-ZW4gbWVtb3J5IGFsbG9jYXRpb24gZ290IHN0dWNrLCBsaW5lcyB3aXRoIE1lbUFsbG9jIGtleXdv
-cmQgd2lsbCBiZQo+IHByaW50ZWQuCj4gCj4gLS0tCj4gICBmcy94ZnMva21lbS5jICAgICAgICAg
-IHwgIDEwICsrLQo+ICAgZnMveGZzL3hmc19idWYuYyAgICAgICB8ICAgMyArLQo+ICAgaW5jbHVk
-ZS9saW51eC9tbXpvbmUuaCB8ICAgMSArCj4gICBpbmNsdWRlL2xpbnV4L3Ztc3RhdC5oIHwgICAx
-ICsKPiAgIG1tL3BhZ2VfYWxsb2MuYyAgICAgICAgfCAyMTcKPiArKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrIG1tL3Ztc2Nhbi5jICAgICAgICAgICAgfAo+
-ICAyMiArKysrKwo+ICAgNiBmaWxlcyBjaGFuZ2VkLCAyNDkgaW5zZXJ0aW9ucygrKSwgNSBkZWxl
-dGlvbnMoLSkKClRoaXMgcGF0Y2ggaXMgYWdhaW5zdCB3aGljaCB0cmVlPyAodHJpZWQgNC4xLCA0
-LjIgYW5kIDQuMykKCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3osIGFyZWttIC8gKCBtYXZlbi5w
-bCB8IHBsZC1saW51eC5vcmcgKQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
-Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Hi all,
+
+Today I've uploaded the latest WIP patches for XFS reverse mapping,
+reflink, and dedupe support to github:
+
+https://github.com/djwong/linux/tree/for-dave
+https://github.com/djwong/xfsprogs/tree/for-dave
+https://github.com/djwong/xfstests/tree/for-dave
+https://github.com/djwong/xfs-documentation/tree/for-dave
+
+I've cleaned things up so now you can pull the for-dave branch in any
+of the four repositories.
+
+I updated the XFS on-disk format documentation to fix numerous
+omissions in the second edition and to reflect v5 XFS and the
+rmap/reflink additions to the filesystem.
+
+Since RFCv3, I restructured how bmbt updates get reflected in the
+rmapbt -- now they're deferred until xfs_bmap_finish time, so that the
+rmap btree updates obey AG locking order rules to avoid deadlocks.
+I also fixed numerous minor bookkeeping bugs in the rmapbt and
+refcountbt code.  Lastly, I pulled in Anna Schumaker and Peng Tao's
+patches hoisting the reflink ioctls into the VFS, added patches to do
+the same with the dedupe ioctl, and wired up XFS to both of the new
+VFS operations.
+
+The tests have been reworked (I hope) to play more nicely with NFS
+reflink -- now we simply test the xfs_io reflink or dedupe commands on
+the test or scratch FS to decide if we're going to run the test,
+instead of inferring it from FS type.  The fiemap checks are gone,
+replaced with umount, mount, and verifying file contents. 
+
+xfsprogs hasn't changed much, other than porting kernel-side changes.
+
+I will post the xfstests and xfs-documentation patches on the list
+shortly.
+
+I'm holding off on reposting the kernel and xfsprogs patches because
+I'm still working on fixing CoW and don't really want to blast the
+mailing lists again until I'm done with that.
+
+--D
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
