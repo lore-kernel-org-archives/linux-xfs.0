@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0CD387F5F
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:22:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DEBDD304032
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:22:47 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 184277F6A
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:23:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EE3C38F8033
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:22:56 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id LQARVjRN6Ha4YYmv (version=TLSv1.2
+	cuda.sgi.com with ESMTP id gstlzc6Ev3wjzegx (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:22:46 -0800 (PST)
-Subject: [RFCv3.1 00/21] xfs-documentation: massive cleanups and add v5
-	format, reverse-mapping, reflink, and dedupe support
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:22:50 -0800 (PST)
+Subject: [PATCH 01/21] xfsdocs: fix asciidoc confusion w.r.t. include file
+	newline at EOF
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Nov 2015 11:22:19 -0800
-Message-ID: <20151111192218.14235.13928.stgit@birch.djwong.org>
+Date: Wed, 11 Nov 2015 11:22:25 -0800
+Message-ID: <20151111192225.14235.36980.stgit@birch.djwong.org>
+In-Reply-To: <20151111192218.14235.13928.stgit@birch.djwong.org>
+References: <20151111192218.14235.13928.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -30,58 +32,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: hch@infradead.org, david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Hi all,
+Space each include one line apart so that asciidoc knows that each
+section has ended at included file's EOF.  This prevents it from
+spewing horribly confused XML that blows up xmllint if each included
+file doesn't itself end with a blank line.
 
-This is part of the third revision of an RFC for adding support to XFS
-for tracking reverse-mappings of physical blocks to file and metadata;
-and support for mapping multiple file logical blocks to the same
-physical block, more commonly known as reflinking.  This is the first
-time I've posted patches against the documentation, but they fit with
-the pending RFCv3 code patches, so they're now a part of the full
-suite.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ .../xfs_filesystem_structure.asciidoc              |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-This patch set does the following:
 
- * Cleans up leftover artifacts of the XML -> asciidoc conversion.
-
- * Fixes the formatting of quoted text and structure field
-   definitions.
-
- * Fixes a lot of the strange wording in the existing documentation.
-
- * Replaces the screen dump PNGs with (much smaller) text sections.
-   There's a huge 1.2MB patch to remove the image files as well, but
-   I'll probably just send that privately to Dave later on.
-
- * Fills in the missing xfs_db examples and structure field
-   definitions.
-
- * Fills in the missing realtime and journal sections.
-
- * Covers the new header formats for v5 filesystems.
-
- * Adds a magic number index.
-
- * Adds a brief overview of what is XFS, prior to jumping into the
-   disk format.
-
- * Covers sparse inodes, reverse mapping btrees, reference count
-   btrees and reflink.
-
- * Switches the xattr and directory chapters since the directory
-   chapter introduces the btrees that xattrs can use.
-
-The patch set is based on the current master branch.  As specified
-eleswhere, I have git trees for the kernel[1], xfsprogs[2],
-xfstests[3], and xfs-docs[4].  Comments and questions are, as always,
-welcome.
-
---D
-
-[1] https://github.com/djwong/linux/tree/for-dave
-[2] https://github.com/djwong/xfsprogs/tree/for-dave
-[3] https://github.com/djwong/xfstests/tree/for-dave
-[4] https://github.com/djwong/xfs-documentation/tree/for-dave
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 226bb25..560e549 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -36,18 +36,28 @@ Global Structures
+ =================
+ 
+ :leveloffset: 1
++
+ include::allocation_groups.asciidoc[]
++
+ include::journaling_log.asciidoc[]
++
+ include::internal_inodes.asciidoc[]
++
+ :leveloffset: 0
+ 
+ Dynamically Allocated Structures
+ ================================
+ 
+ :leveloffset: 1
++
+ include::ondisk_inode.asciidoc[]
++
+ include::data_extents.asciidoc[]
++
+ include::extended_attributes.asciidoc[]
++
+ include::directories.asciidoc[]
++
+ include::symbolic_links.asciidoc[]
++
+ :leveloffset: 0
 
 _______________________________________________
 xfs mailing list
