@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6FE387F91
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:23:24 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 27D3E7F8B
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:23:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1B0B7AC001
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:23:23 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id HNL60GV0pELdCiuf (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E22A98F8040
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:23:31 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id pG66NlIBsratYcwV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:23:21 -0800 (PST)
-Subject: [PATCH 06/21] xfsdocs: update types
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:23:29 -0800 (PST)
+Subject: [PATCH 07/21] xfsdocs: make example section titles consistent
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Nov 2015 11:22:57 -0800
-Message-ID: <20151111192257.14235.17490.stgit@birch.djwong.org>
+Date: Wed, 11 Nov 2015 11:23:03 -0800
+Message-ID: <20151111192303.14235.77696.stgit@birch.djwong.org>
 In-Reply-To: <20151111192218.14235.13928.stgit@birch.djwong.org>
 References: <20151111192218.14235.13928.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,122 +31,249 @@ Sender: xfs-bounces@oss.sgi.com
 To: hch@infradead.org, david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Update the common data types to reflect modern XFS source.
+Make the section titles of the examples consistently formatted.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../allocation_groups.asciidoc                     |    8 +++----
- .../XFS_Filesystem_Structure/common_types.asciidoc |   23 ++++++++++++++------
- .../XFS_Filesystem_Structure/data_extents.asciidoc |    4 ++-
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    2 +-
- 4 files changed, 23 insertions(+), 14 deletions(-)
+ .../allocation_groups.asciidoc                     |    6 +++---
+ .../XFS_Filesystem_Structure/data_extents.asciidoc |    6 +++---
+ .../XFS_Filesystem_Structure/directories.asciidoc  |   16 ++++++++--------
+ .../extended_attributes.asciidoc                   |   16 ++++++++--------
+ .../symbolic_links.asciidoc                        |    8 ++++----
+ 5 files changed, 26 insertions(+), 26 deletions(-)
 
 
 diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index afbbb67..b511324 100644
+index b511324..a86274c 100644
 --- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
 +++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -47,11 +47,11 @@ struct xfs_sb
- {
- 	__uint32_t		sb_magicnum;
- 	__uint32_t		sb_blocksize;
--	xfs_drfsbno_t		sb_dblocks;
--	xfs_drfsbno_t		sb_rblocks;
--	xfs_drtbno_t		sb_rextents;
-+	xfs_rfsblock_t		sb_dblocks;
-+	xfs_rfsblock_t		sb_rblocks;
-+	xfs_rtblock_t		sb_rextents;
- 	uuid_t			sb_uuid;
--	xfs_dfsbno_t		sb_logstart;
-+	xfs_fsblock_t		sb_logstart;
- 	xfs_ino_t		sb_rootino;
- 	xfs_ino_t		sb_rbmino;
- 	xfs_ino_t		sb_rsumino;
-diff --git a/design/XFS_Filesystem_Structure/common_types.asciidoc b/design/XFS_Filesystem_Structure/common_types.asciidoc
-index ea2d21f..51909be 100644
---- a/design/XFS_Filesystem_Structure/common_types.asciidoc
-+++ b/design/XFS_Filesystem_Structure/common_types.asciidoc
-@@ -10,7 +10,7 @@ Unsigned 64 bit absolute xref:Inode_Numbers[inode number].
- Signed 64 bit file offset.
+@@ -308,7 +308,7 @@ its parent inode. The primary purpose for this information is in backup systems.
+ |=====
  
- *xfs_daddr_t*::
--Signed 64 bit disk address.
-+Signed 64 bit disk address (sectors).
  
- *xfs_agnumber_t*::
- Unsigned 32 bit xref:Allocation_Groups[AG number].
-@@ -22,7 +22,10 @@ Unsigned 32 bit AG relative block number.
- Unsigned 32 bit xref:Data_Extents[extent] length in blocks.
+-=== xfs_db superblock example
++=== xfs_db Superblock Example
  
- *xfs_extnum_t*::
--Signed 32 bit number of extents in a file.
-+Signed 32 bit number of extents in a data fork.
-+
-+*xfs_aextnum_t*::
-+Signed 16 bit number of extents in an attribute fork.
+ A filesystem is made on a single SATA disk with the following command:
  
- *xfs_dablk_t*::
- Unsigned 32 bit block number for xref:Directories[directories] and
-@@ -31,19 +34,25 @@ xref:Extended_Attributes[extended attributes].
- *xfs_dahash_t*::
- Unsigned 32 bit hash of a directory file name or extended attribute name.
+@@ -548,7 +548,7 @@ image::images/16.png[]
+ The presence of these reserved block guarantees that the free space B+trees can
+ be updated if any blocks are freed by extent changes in a full AG.
  
--*xfs_dfsbno_t*::
-+*xfs_fsblock_t*::
- Unsigned 64 bit filesystem block number combining
- xref:Allocation_Groups[AG number] and block offset into the AG.
+-==== xfs_db AGF Examples
++==== xfs_db AGF Example
  
--*xfs_drfsbno_t*::
-+*xfs_rfsblock_t*::
- Unsigned 64 bit raw filesystem block number.
+ These examples are derived from an AG that has been deliberately fragmented.
+ The AGF:
+@@ -772,7 +772,7 @@ And a 2-level inode B+tree:
+ image::images/20b.png[]
  
--*xfs_drtbno_t*::
-+*xfs_rtblock_t*::
- Unsigned 64 bit extent number in the xref:Real-time_Devices[real-time]
- sub-volume.
  
--*xfs_dfiloff_t*::
-+*xfs_fileoff_t*::
- Unsigned 64 bit block offset into a file.
+-==== xfs_db AGI examples
++==== xfs_db AGI Example
+ TODO
  
--*xfs_dfilblks_t*::
-+*xfs_filblks_t*::
- Unsigned 64 bit block count for a file.
-+
-+*uuid_t*::
-+16-byte universally unique identifier (UUID).
-+
-+*xfs_fsize_t*::
-+Signed 64 bit byte size of a file.
+ [[Real-time_Devices]]
 diff --git a/design/XFS_Filesystem_Structure/data_extents.asciidoc b/design/XFS_Filesystem_Structure/data_extents.asciidoc
-index b71bc52..8b09fee 100644
+index 8b09fee..7850165 100644
 --- a/design/XFS_Filesystem_Structure/data_extents.asciidoc
 +++ b/design/XFS_Filesystem_Structure/data_extents.asciidoc
-@@ -217,9 +217,9 @@ struct xfs_bmdr_block {
-      __be16                     bb_numrecs;
- };
- struct xfs_bmbt_key {
--     xfs_dfiloff_t              br_startoff;
-+     xfs_fileoff_t              br_startoff;
- };
--typedef xfs_dfsbno_t xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
-+typedef xfs_fsblock_t xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
+@@ -88,7 +88,7 @@ The number of extents that can fit in the inode depends on the inode size and
+ can up to 19 extents with this format. Beyond this, extents have to use the
+ B+tree format.
+ 
+-=== xfs_db: Inode data fork extents
++=== xfs_db Inode Data Fork Extents Example
+ 
+ An 8MB file with one extent:
+ 
+@@ -268,9 +268,9 @@ bits in size.
+ .Single level extent B+tree
+ image::images/35.png[]
+ 
+-.Multi-level extent B+tree
++.Multiple level extent B+tree
+ image::images/36.png[]
+ 
+-=== BMBT xfs_db Example
++=== xfs_db bmbt Example
+ 
+ TODO
+diff --git a/design/XFS_Filesystem_Structure/directories.asciidoc b/design/XFS_Filesystem_Structure/directories.asciidoc
+index beabe20..7d84117 100644
+--- a/design/XFS_Filesystem_Structure/directories.asciidoc
++++ b/design/XFS_Filesystem_Structure/directories.asciidoc
+@@ -47,7 +47,7 @@ typedef __uint32_t xfs_dir2_dataptr_t;
+ 
+ 
+ [[Shortform_Directories]]
+-== Shortform Directories
++== Short Form Directories
+ 
+ * Directory entries are stored within the inode.
+ 
+@@ -86,7 +86,7 @@ typedef struct xfs_dir2_sf_entry {
+ } xfs_dir2_sf_entry_t;
  ----
  
- * On disk, the B+tree node starts with the +xfs_bmbr_block_t+ header followed by
-diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-index dfdcc32..7262178 100644
---- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-+++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-@@ -88,7 +88,7 @@ struct xfs_dinode_core {
-      xfs_timestamp_t           di_mtime;
-      xfs_timestamp_t           di_ctime;
-      xfs_fsize_t               di_size;
--     xfs_drfsbno_t             di_nblocks;
-+     xfs_rfsblock_t            di_nblocks;
-      xfs_extlen_t              di_extsize;
-      xfs_extnum_t              di_nextents;
-      xfs_aextnum_t             di_anextents;
+-.Shortform Directory layout
++.Short form directory layout
+ image::images/39.png[]
+ 
+ * Inode numbers are stored using 4 or 8 bytes depending on whether all the inode
+@@ -107,7 +107,7 @@ typedef union {
+ } xfs_dir2_inou_t;
+ ----
+ 
+-=== Shortform Directory xfs_db Example
++=== xfs_db Short Form Directory Example
+ 
+ A directory is created with 4 files, all inode numbers fitting within 4 bytes:
+ 
+@@ -325,7 +325,7 @@ lookup speed for large directories. If they were not stored, the hashes have to
+ be calculated for all entries each time a lookup occurs in a directory.
+ 
+ 
+-=== Block Directory xfs_db Example
++=== xfs_db Block Directory Example
+ 
+ A directory is created with 8 entries, directory block size = filesystem block size:
+ 
+@@ -585,7 +585,7 @@ block's +bestfree[0].length+ value.
+ .Leaf directory free entry detail
+ image::images/48.png[]
+ 
+-=== Leaf Directory xfs_db Example
++=== xfs_db Leaf Directory Example
+ 
+ For this example, a directory was created with 256 entries (frame000000.tst to
+ frame000255.tst) and then deleted some files (frame00005*, frame00018* and
+@@ -905,10 +905,10 @@ less than or equal to +hdr.nused. hdr.nused+ should be the same as the index of
+ the last data directory block plus one (i.e. when the last data block is freed,
+ +nused+ and +nvalid+ are decremented).
+ 
+-.Node Directory Layout
++.Node directory layout
+ image::images/54.png[]
+ 
+-=== Node Directory xfs_db Example
++=== xfs_db Node Directory Example
+ 
+ With the node directory examples, we are using a filesystems with 4KB block
+ size, and a 16KB directory size. The directory has over 2000 entries:
+@@ -1111,7 +1111,7 @@ that B+trees can handle:
+ required hundreds of thousand files with quite long file names (or millions with
+ shorter names) to get a second freeindex block.
+ 
+-=== B+tree Directory xfs_db Example
++=== xfs_db B+tree Directory Example
+ 
+ A directory has been created with 200,000 entries with each entry being 100
+ characters long. The filesystem block size and directory block size are 4KB:
+diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+index 51f7ff7..747217c 100644
+--- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
++++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+@@ -41,7 +41,7 @@ The following four sections describe each of the on-disk formats.
+ 
+ 
+ [[Shortform_Attributes]]
+-== Shortform Attributes
++== Short Form Attributes
+ 
+ When the all extended attributes can fit within the inode's attribute fork, the
+ inode's +di_aformat+ is set to "local" and the attributes are stored in the
+@@ -67,7 +67,7 @@ typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
+ typedef struct xfs_attr_sf_entry xfs_attr_sf_entry_t;
+ ----
+ 
+-.Shortform attribute layout
++.Short form attribute layout
+ image::images/64.png[]
+ 
+ 
+@@ -89,7 +89,7 @@ immediately follows the name in the array.
+ | +XFS_ATTR_SECURE+		| The attribute's namespace is "secure".
+ |=====
+ 
+-=== Shortform attribute xfs_db example
++=== xfs_db Short Form Attribute Example
+ 
+ A file is created and two attributes are set:
+ 
+@@ -387,7 +387,7 @@ using the +xfs_attr_leaf_name_local_t+ structure. For large attribute values
+ that cannot be stored within the leaf, separate filesystem blocks are allocated
+ to store the value. They use the +xfs_attr_leaf_name_remote_t+ structure.
+ 
+-.Leaf Attribute layout
++.Leaf attribute layout
+ image::images/69.png[]
+ 
+ Both local and remote entries can be interleaved as they are only addressed by
+@@ -403,7 +403,7 @@ crash during the time that the bit is set. The bit is cleared when attribute
+ has finished being setup. This is done because some large attributes cannot
+ be created inside a single transaction.
+ 
+-=== Leaf Attribute xfs_db Example
++=== xfs_db Leaf Attribute Example
+ 
+ A single 30KB extended attribute is added to an inode:
+ 
+@@ -538,10 +538,10 @@ to lookup, you read the node's btree array and first +hashval+ in the array that
+ exceeds the given hash and it can then be found in the block pointed to by the
+ +before+ value. 
+ 
+-.Node Attribute layout
++.Node attribute layout
+ image::images/72.png[]
+ 
+-=== Node Attribute xfs_db Example
++=== xfs_db Node Attribute Example
+ 
+ An inode with 1000 small attributes with the naming "attribute_n" where 'n' is a
+ number:
+@@ -685,7 +685,7 @@ Attributes.
+ Refer to the previous section on B+tree Data Extents for more information on XFS
+ B+tree extents.
+ 
+-=== B+tree Attribute xfs_db Example
++=== xfs_db B+tree Attribute Example
+ 
+ Added 2000 attributes with 729 byte values to a file:
+ 
+diff --git a/design/XFS_Filesystem_Structure/symbolic_links.asciidoc b/design/XFS_Filesystem_Structure/symbolic_links.asciidoc
+index af88a1c..939c440 100644
+--- a/design/XFS_Filesystem_Structure/symbolic_links.asciidoc
++++ b/design/XFS_Filesystem_Structure/symbolic_links.asciidoc
+@@ -7,16 +7,16 @@ Symbolic links to a file can be stored in one of two formats: "local" and
+ 
+ 
+ [[Shortform_Symbolic_Links]]
+-== Shortform Symbolic Links
++== Short Form Symbolic Links
+ 
+ Symbolic links are stored with the "local" +di_format+ if the symbolic link can
+ fit within the inode's data fork. The link data is an array of characters
+ (+di_symlink+ array in the data fork union).
+ 
+-.Symbolic link shortform layout
++.Symbolic link short form layout
+ image::images/61.png[]
+ 
+-=== Shortform symbolic link xfs_db example
++=== xfs_db Short Form Symbolic Link Example
+ 
+ A short symbolic link to a file is created:
+ 
+@@ -66,7 +66,7 @@ characters.
+ .Symbolic link extent layout
+ image::images/62.png[]
+ 
+-=== Symbolic link extent xfs_db example
++=== xfs_db Symbolic Link Extent Example
+ 
+ A longer link is created (greater than 156 bytes):
+ 
 
 _______________________________________________
 xfs mailing list
