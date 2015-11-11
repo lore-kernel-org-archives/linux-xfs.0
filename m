@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A56587F4E
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 19:16:40 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 55C257F37
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 00:37:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 835C4304059
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 17:16:37 -0800 (PST)
-Received: from mail-lb0-f178.google.com (mail-lb0-f178.google.com
-	[209.85.217.178]) by cuda.sgi.com with ESMTP id
-	4nhfbIM7HhBBVJzg (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 17:16:35 -0800 (PST)
-Received: by lbbkw15 with SMTP id kw15so8750398lbb.0
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 17:16:33 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 36AC0304053
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 22:37:58 -0800 (PST)
+Received: from mail-oi0-f48.google.com (mail-oi0-f48.google.com
+	[209.85.218.48]) by cuda.sgi.com with ESMTP id vmK2vQlu0lj26RAm
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 10 Nov 2015 22:37:53 -0800 (PST)
+Received: by oiad129 with SMTP id d129so11380165oia.0
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 22:37:53 -0800 (PST)
+Subject: Re: [PATCH] libxfs: Optimize the loop for xfs_bitmap_empty
+References: <1447079482-10650-1-git-send-email-hejianet@gmail.com>
+	<20151110125403.GC21670@bfoster.bfoster>
+From: hejianet <hejianet@gmail.com>
+Message-ID: <5642E23F.6050009@gmail.com>
+Date: Wed, 11 Nov 2015 14:37:51 +0800
 MIME-Version: 1.0
-In-Reply-To: <1447067343-31479-20-git-send-email-agruenba@redhat.com>
-References: <1447067343-31479-1-git-send-email-agruenba@redhat.com>
-	<1447067343-31479-20-git-send-email-agruenba@redhat.com>
-Date: Wed, 11 Nov 2015 02:16:33 +0100
-Message-ID: <CAHc6FU7hZdo7aoz2TmhSuw1Gkr=-+YhP2MLz408w8ZDrf-Y_6A@mail.gmail.com>
-Subject: Re: [PATCH v15 19/22] richacl: Add richacl xattr handler
-From: Andreas Gruenbacher <agruenba@redhat.com>
+In-Reply-To: <20151110125403.GC21670@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,140 +28,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 9, 2015 at 12:09 PM, Andreas Gruenbacher
-<agruenba@redhat.com> wrote:
-> Add richacl xattr handler implementing the xattr operations based on the
-> get_richacl and set_richacl inode operations.
->
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> ---
->  fs/richacl_xattr.c            | 78 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/richacl_xattr.h |  2 ++
->  2 files changed, 80 insertions(+)
->
-> diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
-> index 38473b6..767c1f7 100644
-> --- a/fs/richacl_xattr.c
-> +++ b/fs/richacl_xattr.c
-> @@ -18,7 +18,9 @@
->  #include <linux/fs.h>
->  #include <linux/slab.h>
->  #include <linux/module.h>
-> +#include <linux/xattr.h>
->  #include <linux/richacl_xattr.h>
-> +#include <uapi/linux/xattr.h>
->
->  MODULE_LICENSE("GPL");
->
-> @@ -161,6 +163,82 @@ richacl_to_xattr(struct user_namespace *user_ns,
->  }
->  EXPORT_SYMBOL_GPL(richacl_to_xattr);
->
-> +static size_t
-> +richacl_xattr_list(struct dentry *dentry, char *list, size_t list_len,
-> +                  const char *name, size_t name_len, int handler_flags)
-> +{
-> +       const size_t size = sizeof(XATTR_NAME_RICHACL);
-> +
-> +       if (!IS_RICHACL(d_backing_inode(dentry)))
-> +               return 0;
-> +       if (list && size <= list_len)
-> +               memcpy(list, XATTR_NAME_RICHACL, size);
-> +       return size;
-> +}
-> +
-> +static int
-> +richacl_xattr_get(struct dentry *dentry, const char *name, void *buffer,
-> +                 size_t buffer_size, int handler_flags)
-> +{
-> +       struct inode *inode = d_backing_inode(dentry);
-> +       struct richacl *acl;
-> +       int error;
-> +
-> +       if (strcmp(name, "") != 0)
-> +               return -EINVAL;
-> +       if (!IS_RICHACL(inode))
-> +               return EOPNOTSUPP;
-
-This should have been -EOPNOTSUPP instead.
-
-> +       if (S_ISLNK(inode->i_mode))
-> +               return -EOPNOTSUPP;
-> +       acl = get_richacl(inode);
-> +       if (IS_ERR(acl))
-> +               return PTR_ERR(acl);
-> +       if (acl == NULL)
-> +               return -ENODATA;
-> +       error = richacl_to_xattr(&init_user_ns, acl, buffer, buffer_size);
-> +       richacl_put(acl);
-> +       return error;
-> +}
-> +
-> +static int
-> +richacl_xattr_set(struct dentry *dentry, const char *name,
-> +                 const void *value, size_t size, int flags, int handler_flags)
-> +{
-> +       struct inode *inode = d_backing_inode(dentry);
-> +       struct richacl *acl = NULL;
-> +       int ret;
-> +
-> +       if (strcmp(name, "") != 0)
-> +               return -EINVAL;
-> +       if (!IS_RICHACL(inode))
-> +               return -EOPNOTSUPP;
-> +       if (!inode->i_op->set_richacl)
-> +               return -EOPNOTSUPP;
-> +
-> +       if (!uid_eq(current_fsuid(), inode->i_uid) &&
-> +           inode_permission(inode, MAY_CHMOD) &&
-> +           !capable(CAP_FOWNER))
-> +               return -EPERM;
-> +
-> +       if (value) {
-> +               acl = richacl_from_xattr(&init_user_ns, value, size);
-> +               if (IS_ERR(acl))
-> +                       return PTR_ERR(acl);
-> +       }
-> +
-> +       ret = inode->i_op->set_richacl(inode, acl);
-> +       richacl_put(acl);
-> +       return ret;
-> +}
-> +
-> +struct xattr_handler richacl_xattr_handler = {
-> +       .prefix = XATTR_NAME_RICHACL,
-> +       .list = richacl_xattr_list,
-> +       .get = richacl_xattr_get,
-> +       .set = richacl_xattr_set,
-> +};
-> +EXPORT_SYMBOL(richacl_xattr_handler);
-> +
->  /*
->   * Fix up the uids and gids in richacl extended attributes in place.
->   */
-> diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
-> index 7fc5ca8..45ec27a 100644
-> --- a/include/linux/richacl_xattr.h
-> +++ b/include/linux/richacl_xattr.h
-> @@ -39,4 +39,6 @@ static inline void richacl_fix_xattr_to_user(void *value, size_t size)
->  }
->  #endif
->
-> +extern struct xattr_handler richacl_xattr_handler;
-> +
->  #endif /* __RICHACL_XATTR_H */
-> --
-> 2.5.0
->
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkhpIEJyaWFuClRoYW5rcywgSSB3aWxsIHJlc2VuZCB0aGUgcGF0Y2ggVjIKCkIuUi4KSnVzdGlu
+CgrlnKggMTEvMTAvMTUgODo1NCBQTSwgQnJpYW4gRm9zdGVyIOWGmemBkzoKPiBPbiBNb24sIE5v
+diAwOSwgMjAxNSBhdCAxMDozMToyMlBNICswODAwLCBKaWEgSGUgd3JvdGU6Cj4+IElmIHRoZXJl
+IGlzIGFueSBub24gemVybyBiaXQgaW4gYSBsb25nIGJpdG1hcCwgaXQgY2FuIGp1bXAgb3V0IG9m
+IHRoZSBmb3IKPj4gbG9vcCBhbmQgZmluaXNoIHRoZSBmdW5jdGlvbiBhcyBzb29uIGFzIHBvc3Np
+YmxlLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBKaWEgSGUgPGhlamlhbmV0QGdtYWlsLmNvbT4KPj4g
+Q2M6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KPj4gQ2M6IEJyaWFuIEZvc3Rl
+ciA8YmZvc3RlckByZWRoYXQuY29tPgo+PiAtLS0KPj4gICBmcy94ZnMvbGlieGZzL3hmc19iaXQu
+YyB8IDIgKysKPj4gICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspCj4+Cj4+IGRpZmYg
+LS1naXQgYS9mcy94ZnMvbGlieGZzL3hmc19iaXQuYyBiL2ZzL3hmcy9saWJ4ZnMveGZzX2JpdC5j
+Cj4+IGluZGV4IDBlODg4NWEuLjg0NjE0YjAgMTAwNjQ0Cj4+IC0tLSBhL2ZzL3hmcy9saWJ4ZnMv
+eGZzX2JpdC5jCj4+ICsrKyBiL2ZzL3hmcy9saWJ4ZnMveGZzX2JpdC5jCj4+IEBAIC0zNiw2ICsz
+Niw4IEBAIHhmc19iaXRtYXBfZW1wdHkodWludCAqbWFwLCB1aW50IHNpemUpCj4+ICAgCj4+ICAg
+CWZvciAoaSA9IDA7IGkgPCBzaXplOyBpKyspIHsKPj4gICAJCXJldCB8PSBtYXBbaV07Cj4+ICsJ
+CWlmIChyZXQgIT0gMCkKPj4gKwkJCXJldHVybiAwOwo+PiAgIAl9Cj4+ICAgCj4gU2VlbXMgT2sg
+dG8gbWUsIGJ1dCBpZiB3ZSdyZSBnb2luZyB0byBkbyB0aGlzLCB3aHkgbm90IGp1c3Qga2lsbCBy
+ZXQKPiBlbnRpcmVseT8gRm9yIGV4YW1wbGUsIGNoZWNrICdpZiAobWFwW2ldICE9IDApIHJldHVy
+biAwOycgaW4gdGhlIGxvb3AKPiBhbmQgdW5jb25kaXRpb25hbGx5IHJldHVybiAxIGlmIHdlIG1h
+a2UgaXQgdG8gdGhlIGVuZC4KPgo+IEJyaWFuCj4KPj4gICAJcmV0dXJuIChyZXQgPT0gMCk7Cj4+
+IC0tIAo+PiAyLjUuMAo+Pgo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwo+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+PiBodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPiBfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3Nz
+LnNnaS5jb20KPiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPgoKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
+bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
+eGZzCg==
