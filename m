@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 25D137F37
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 00:38:30 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D63697F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 01:49:17 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 088348F8035
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 22:38:26 -0800 (PST)
-Received: from mail-qg0-f67.google.com (mail-qg0-f67.google.com
-	[209.85.192.67]) by cuda.sgi.com with ESMTP id CMcnMja3Mctr1VyS
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Nov 2015 22:38:25 -0800 (PST)
-Received: by qgad10 with SMTP id d10so1912575qga.0
-	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 22:38:24 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 11 Nov 2015 14:38:24 +0800
-Message-ID: <CAFf1yNFYh3C9NR8OadL=wXALT3mj58LTVvnE3fypOBXOP_JzoQ@mail.gmail.com>
-Subject: xfsprogs install
-From: rui li <liruilong0128@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 76871AC007
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 23:49:14 -0800 (PST)
+Received: from mail-ob0-f175.google.com (mail-ob0-f175.google.com
+	[209.85.214.175]) by cuda.sgi.com with ESMTP id
+	wfNn9m5up1SWRMHL (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 Nov 2015 23:49:13 -0800 (PST)
+Received: by obbnk6 with SMTP id nk6so16723901obb.2
+	for <xfs@oss.sgi.com>; Tue, 10 Nov 2015 23:49:12 -0800 (PST)
+From: Jia He <hejianet@gmail.com>
+Subject: [PATCH v2] libxfs: Optimize the loop for xfs_bitmap_empty
+Date: Wed, 11 Nov 2015 15:49:01 +0800
+Message-Id: <1447228141-17408-1-git-send-email-hejianet@gmail.com>
+In-Reply-To: <20151110125403.GC21670@bfoster.bfoster>
+References: <20151110125403.GC21670@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +26,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1812841232086310016=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Jia He <hejianet@gmail.com>, Brian Foster <bfoster@redhat.com>
 
---===============1812841232086310016==
-Content-Type: multipart/alternative; boundary=001a113991eabc52bd05243e125a
+If there is any non zero bit in a long bitmap, it can jump out of the
+loop and finish the function as soon as possible.
 
---001a113991eabc52bd05243e125a
-Content-Type: text/plain; charset=UTF-8
+Signed-off-by: Jia He <hejianet@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com> 
+Cc: Brian Foster <bfoster@redhat.com> 
+---
+ fs/xfs/libxfs/xfs_bit.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-hello
-when i install xfsprogs i hava follwing problems
-
-FATAL ERROR: could not find a valid BLKID header
-Install the Block device ID development package
-
-could you give me some help?
-
-thanks
-
---001a113991eabc52bd05243e125a
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">hello=C2=A0<div>when i install xfsprogs i hava follwing pr=
-oblems</div><div><br></div><div>FATAL ERROR: could not find a valid BLKID h=
-eader</div><div>Install the Block device ID development package</div><div><=
-br></div><div>could you give me some help?</div><div><br></div><div>thanks<=
-/div></div>
-
---001a113991eabc52bd05243e125a--
-
-
---===============1812841232086310016==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/libxfs/xfs_bit.c b/fs/xfs/libxfs/xfs_bit.c
+index 0e8885a..0a94cce 100644
+--- a/fs/xfs/libxfs/xfs_bit.c
++++ b/fs/xfs/libxfs/xfs_bit.c
+@@ -32,13 +32,13 @@ int
+ xfs_bitmap_empty(uint *map, uint size)
+ {
+ 	uint i;
+-	uint ret = 0;
+ 
+ 	for (i = 0; i < size; i++) {
+-		ret |= map[i];
++		if (map[i] != 0)
++			return 0;
+ 	}
+ 
+-	return (ret == 0);
++	return 1;
+ }
+ 
+ /*
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1812841232086310016==--
