@@ -1,39 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9ED0D7F56
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 06:26:02 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E92137F50
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 06:48:39 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 65A3C30404E
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 04:25:59 -0800 (PST)
-Received: from mail-wm0-f49.google.com (mail-wm0-f49.google.com
-	[74.125.82.49]) by cuda.sgi.com with ESMTP id SCuYeDFT365H3GYI
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Nov 2015 04:25:57 -0800 (PST)
-Received: by wmec201 with SMTP id c201so44353379wme.1
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 04:25:55 -0800 (PST)
-Received: from Telcontar.valinor (248.Red-81-36-103.dynamicIP.rima-tde.net.
-	[81.36.103.248]) by smtp.gmail.com with ESMTPSA id
-	an7sm8739044wjc.44.2015.11.11.04.25.54 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Wed, 11 Nov 2015 04:25:54 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 7A3A960ECD
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:25:53 +0100 (CET)
-Received: from Telcontar.valinor ([127.0.0.1])
-	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id CBhHyj5S5Seq for <xfs@oss.sgi.com>;
-	Wed, 11 Nov 2015 13:25:53 +0100 (CET)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 56E86606D8
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:25:53 +0100 (CET)
-Subject: Re: xfsprogs install
-References: <CAFf1yNFYh3C9NR8OadL=wXALT3mj58LTVvnE3fypOBXOP_JzoQ@mail.gmail.com>
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Message-ID: <564333D1.8070900@opensuse.org>
-Date: Wed, 11 Nov 2015 13:25:53 +0100
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CC11D8F8049
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 04:48:36 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id TyWt0zaiq9DVYXgX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 04:48:35 -0800 (PST)
+Date: Wed, 11 Nov 2015 07:48:34 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] libxfs: Optimize the loop for xfs_bitmap_empty
+Message-ID: <20151111124833.GB52153@bfoster.bfoster>
+References: <20151110125403.GC21670@bfoster.bfoster>
+	<1447228141-17408-1-git-send-email-hejianet@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFf1yNFYh3C9NR8OadL=wXALT3mj58LTVvnE3fypOBXOP_JzoQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1447228141-17408-1-git-send-email-hejianet@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,28 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mail list <xfs@oss.sgi.com>
+To: Jia He <hejianet@gmail.com>
+Cc: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Wed, Nov 11, 2015 at 03:49:01PM +0800, Jia He wrote:
+> If there is any non zero bit in a long bitmap, it can jump out of the
+> loop and finish the function as soon as possible.
+> 
+> Signed-off-by: Jia He <hejianet@gmail.com>
+> Cc: Dave Chinner <david@fromorbit.com> 
+> Cc: Brian Foster <bfoster@redhat.com> 
+> ---
 
-On 2015-11-11 07:38, rui li wrote:
-> hello when i install xfsprogs i hava follwing problems
+Looks good to me:
 
-Maybe you have to say what distribution you are using
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-- -- 
-Cheers / Saludos,
-
-		Carlos E. R.
-		(from 13.1 x86_64 "Bottle" at Telcontar)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlZDM88ACgkQtTMYHG2NR9VMNACfak0n0p0Z8t6SQY1gYxgWHdzL
-1/YAoIqUyEHuY8T4QUKMVXTBi7uTpkE3
-=qo1N
------END PGP SIGNATURE-----
+>  fs/xfs/libxfs/xfs_bit.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bit.c b/fs/xfs/libxfs/xfs_bit.c
+> index 0e8885a..0a94cce 100644
+> --- a/fs/xfs/libxfs/xfs_bit.c
+> +++ b/fs/xfs/libxfs/xfs_bit.c
+> @@ -32,13 +32,13 @@ int
+>  xfs_bitmap_empty(uint *map, uint size)
+>  {
+>  	uint i;
+> -	uint ret = 0;
+>  
+>  	for (i = 0; i < size; i++) {
+> -		ret |= map[i];
+> +		if (map[i] != 0)
+> +			return 0;
+>  	}
+>  
+> -	return (ret == 0);
+> +	return 1;
+>  }
+>  
+>  /*
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
