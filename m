@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7D68429DFC
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:24:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FE5D304032
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:24:51 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BB95029DFC
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 13:24:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D2CFAC005
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:24:52 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 3CPGBHEr8btjz7Yt (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3i423aJmiE81xAcB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:24:49 -0800 (PST)
-Subject: [PATCH 18/21] xfsdocs: document the sparse inodes feature
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 11:24:51 -0800 (PST)
+Subject: [PATCH 17/21] xfsdocs: document magic numbers and theoretical limits
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Nov 2015 11:24:28 -0800
-Message-ID: <20151111192428.14235.3249.stgit@birch.djwong.org>
+Date: Wed, 11 Nov 2015 11:24:20 -0800
+Message-ID: <20151111192420.14235.39194.stgit@birch.djwong.org>
 In-Reply-To: <20151111192218.14235.13928.stgit@birch.djwong.org>
 References: <20151111192218.14235.13928.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,209 +31,132 @@ Sender: xfs-bounces@oss.sgi.com
 To: hch@infradead.org, david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Document the new sparse inodes feature and how it affects the inobt records.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../allocation_groups.asciidoc                     |  157 ++++++++++++++++++++
  design/XFS_Filesystem_Structure/docinfo.xml        |    1 
- 2 files changed, 155 insertions(+), 3 deletions(-)
+ design/XFS_Filesystem_Structure/magic.asciidoc     |   86 ++++++++++++++++++++
+ .../xfs_filesystem_structure.asciidoc              |    2 
+ 3 files changed, 89 insertions(+)
+ create mode 100644 design/XFS_Filesystem_Structure/magic.asciidoc
 
 
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index 845b359..ca3210c 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -388,6 +388,18 @@ Directory file type.  Each directory entry tracks the type of the inode to
- which the entry points.  This is a performance optimization to remove the need
- to load every inode into memory to iterate a directory.
- 
-+| +XFS_SB_FEAT_INCOMPAT_SPINODES+ |
-+Sparse inodes.  This feature relaxes the requirement to allocate inodes in
-+chunks of 64.  When the free space is heavily fragmented, there might exist
-+plenty of free space but not enough contiguous free space to allocate a new
-+inode chunk.  With this feature, the user can continue to create files until
-+all free space is exhausted.
-+
-+Unused space in the inode B+tree records are used to track which parts of the
-+inode chunk are not inodes.
-+
-+See the chapter on xref:Sparse_Inodes[Sparse Inodes] for more information.
-+
- | +XFS_SB_FEAT_INCOMPAT_META_UUID+ |
- Metadata UUID.  The UUID stamped into each metadata block must match the value
- in +sb_meta_uuid+.  This enables the administrator to change +sb_uuid+ at will
-@@ -977,9 +989,9 @@ Specifies the number of levels in the free inode B+tree.
- [[Inode_Btrees]]
- == Inode B+trees
- 
--Inodes are allocated in chunks of 64, and a B+tree is used to track these chunks
--of inodes as they are allocated and freed. The block containing root of the
--B+tree is defined by the AGI's +agi_root+ value.  If the
-+Inodes are traditionally allocated in chunks of 64, and a B+tree is used to
-+track these chunks of inodes as they are allocated and freed. The block
-+containing root of the B+tree is defined by the AGI's +agi_root+ value.  If the
- +XFS_SB_FEAT_RO_COMPAT_FINOBT+ feature is enabled, a second B+tree is used to
- track the chunks containing free inodes; this is an optimization to speed up
- inode allocation.
-@@ -1111,6 +1123,145 @@ recs[1] = [startino,freecount,free] 1:[5792,9,0xff80000000000000]
- Observe also that the AGI's +agi_newino+ points to this chunk, which has never
- been fully allocated.
- 
-+[[Sparse_Inodes]]
-+== Sparse Inodes
-+
-+As mentioned in the previous section, XFS allocates inodes in chunks of 64.  If
-+there are no free extents large enough to hold a full chunk of 64 inodes, the
-+inode allocation fails and XFS claims to have run out of space.  On a
-+filesystem with highly fragmented free space, this can lead to out of space
-+errors long before the filesystem runs out of free blocks.
-+
-+The sparse inode feature tracks inode chunks in the inode B+tree as if they
-+were full chunks but uses some previously unused bits in the freecount field to
-+track which parts of the inode chunk are not allocated for use as inodes.  This
-+allows XFS to allocate inodes one block at a time if absolutely necessary.
-+
-+The inode and free inode B+trees operate in the same manner as they do without
-+the sparse inode feature; the B+tree header for the nodes and leaves use the
-++xfs_btree_sblock+ structure which is the same as the header used in the
-+xref:AG_Free_Space_Btrees[AGF B+trees].
-+
-+Leaves contain an array of the following structure:
-+
-+[source,c]
-+----
-+struct xfs_inobt_rec {
-+     __be32                    ir_startino;
-+     __be16                    ir_holemask;
-+     __u8                      ir_count;
-+     __u8                      ir_freecount;
-+     __be64                    ir_free;
-+};
-+----
-+
-+*ir_startino*::
-+The lowest-numbered inode in this chunk, rounded down to the nearest multiple
-+of 64, even if the start of this chunk is sparse.
-+
-+*ir_holemask*::
-+A 16 element bitmap showing which parts of the chunk are not allocated to
-+inodes.  Each bit represents four inodes; if a bit is marked here, the
-+corresponding bits in ir_free must also be marked.
-+
-+*ir_count*::
-+Number of inodes allocated to this chunk.
-+
-+*ir_freecount*::
-+Number of free inodes in this chunk.
-+
-+*ir_free*::
-+A 64 element bitmap showing which inodes in this chunk are not available for
-+allocation.
-+
-+==== xfs_db Sparse Inode AGI Example
-+
-+This example derives from an AG that has been deliberately fragmented.  The
-+inode B+tree:
-+
-+----
-+xfs_db> agi 0
-+xfs_db> p
-+magicnum = 0x58414749
-+versionnum = 1
-+seqno = 0
-+length = 6400
-+count = 10432
-+root = 2381
-+level = 2
-+freecount = 0
-+newino = 14912
-+dirino = null
-+unlinked[0-63] =
-+uuid = b9b4623b-f678-4d48-8ce7-ce08950e3cd6
-+lsn = 0x600000ac4
-+crc = 0xef550dbc (correct)
-+free_root = 4
-+free_level = 1
-+----
-+
-+This AGI was formatted on a v5 filesystem; notice the extra v5 fields.  So far
-+everything else looks much the same as always.
-+
-+----
-+xfs_db> addr root
-+magic = 0x49414233
-+level = 1
-+numrecs = 2
-+leftsib = null
-+rightsib = null
-+bno = 19048
-+lsn = 0x50000192b
-+uuid = b9b4623b-f678-4d48-8ce7-ce08950e3cd6
-+owner = 0
-+crc = 0xd98cd2ca (correct)
-+keys[1-2] = [startino] 1:[128] 2:[35136]
-+ptrs[1-2] = 1:3 2:2380
-+xfs_db> addr ptrs[1]
-+xfs_db> p
-+magic = 0x49414233
-+level = 0
-+numrecs = 159
-+leftsib = null
-+rightsib = 2380
-+bno = 24
-+lsn = 0x600000ac4
-+uuid = b9b4623b-f678-4d48-8ce7-ce08950e3cd6
-+owner = 0
-+crc = 0x836768a6 (correct)
-+recs[1-159] = [startino,holemask,count,freecount,free]
-+        1:[128,0,64,0,0]
-+        2:[14912,0xff,32,0,0xffffffff]
-+        3:[15040,0,64,0,0]
-+        4:[15168,0xff00,32,0,0xffffffff00000000]
-+        5:[15296,0,64,0,0]
-+        6:[15424,0xff,32,0,0xffffffff]
-+        7:[15552,0,64,0,0]
-+        8:[15680,0xff00,32,0,0xffffffff00000000]
-+        9:[15808,0,64,0,0]
-+        10:[15936,0xff,32,0,0xffffffff]
-+----
-+
-+Here we see the difference in the inode B+tree records.  For example, in record
-+2, we see that the holemask has a value of 0xff.  This means that the first
-+sixteen inodes in this chunk record do not actually map to inode blocks; the
-+first inode in this chunk is actually inode 14944:
-+
-+----
-+xfs_db> inode 14912
-+Metadata corruption detected at block 0x3a40/0x2000
-+...
-+Metadata CRC error detected for ino 14912
-+xfs_db> p core.magic
-+core.magic = 0
-+xfs_db> inode 14944
-+xfs_db> p core.magic
-+core.magic = 0x494e
-+----
-+
-+The chunk record also indicates that this chunk has 32 inodes, and that the
-+missing inodes are also ``free''.
-+
- [[Real-time_Devices]]
- == Real-time Devices
- 
 diff --git a/design/XFS_Filesystem_Structure/docinfo.xml b/design/XFS_Filesystem_Structure/docinfo.xml
-index 6189fd6..ba97809 100644
+index 8ed38d9..6189fd6 100644
 --- a/design/XFS_Filesystem_Structure/docinfo.xml
 +++ b/design/XFS_Filesystem_Structure/docinfo.xml
-@@ -104,6 +104,7 @@
+@@ -103,6 +103,7 @@
+ 				<member>Add v5 fields.</member>
  				<member>Discuss metadata integrity.</member>
  				<member>Document the free inode B+tree.</member>
- 				<member>Create an index of magic numbers.</member>
-+				<member>Document sparse inodes.</member>
++				<member>Create an index of magic numbers.</member>
  			</simplelist>
  		</revdescription>
  	</revision>
+diff --git a/design/XFS_Filesystem_Structure/magic.asciidoc b/design/XFS_Filesystem_Structure/magic.asciidoc
+new file mode 100644
+index 0000000..301cfa0
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/magic.asciidoc
+@@ -0,0 +1,86 @@
++= Magic Numbers
++
++These are the magic numbers that are known to XFS, along with links to the
++relevant chapters.  Magic numbers tend to have consistent locations:
++
++* 32-bit magic numbers are always at offset zero in the block.
++* 16-bit magic numbers for the directory and attribute B+tree are at offset eight.
++* The quota magic number is at offset zero.
++* The inode magic is at the beginning of each inode.
++
++[options="header"]
++|=====
++| Flag				| Hexadecimal	| ASCII	| Data structure
++| +XFS_SB_MAGIC+		| 0x58465342	| XFSB	| xref:Superblocks[Superblock]
++| +XFS_AGF_MAGIC+		| 0x58414746	| XAGF	| xref:AG_Free_Space_Block[Free Space]
++| +XFS_AGI_MAGIC+		| 0x58414749	| XAGI	| xref:Inode_Information[Inode Information]
++| +XFS_AGFL_MAGIC+		| 0x5841464c	| XAFL	| xref:AG_Free_List[Free Space List], v5 only
++| +XFS_DINODE_MAGIC+		| 0x494e	| IN	| xref:Inode_Core[Inodes]
++| +XFS_DQUOT_MAGIC+		| 0x4451	| DQ	| xref:Quota_Inodes[Quota Inodes]
++| +XFS_SYMLINK_MAGIC+		| 0x58534c4d	| XSLM	| xref:Extent_Symbolic_Links[Symbolic Links]
++| +XFS_ABTB_MAGIC+		| 0x41425442	| ABTB	| xref:AG_Free_Space_Btrees[Free Space by Block B+tree]
++| +XFS_ABTB_CRC_MAGIC+		| 0x41423342	| AB3B	| xref:AG_Free_Space_Btrees[Free Space by Block B+tree], v5 only
++| +XFS_ABTC_MAGIC+		| 0x41425443	| ABTC	| xref:AG_Free_Space_Btrees[Free Space by Size B+tree]
++| +XFS_ABTC_CRC_MAGIC+		| 0x41423343	| AB3C	| xref:AG_Free_Space_Btrees[Free Space by Size B+tree], v5 only
++| +XFS_IBT_MAGIC+		| 0x49414254	| IABT	| xref:Inode_Btrees[Inode B+tree]
++| +XFS_IBT_CRC_MAGIC+		| 0x49414233	| IAB3	| xref:Inode_Btrees[Inode B+tree], v5 only
++| +XFS_FIBT_MAGIC+		| 0x46494254	| FIBT	| xref:Inode_Btrees[Free Inode B+tree]
++| +XFS_FIBT_CRC_MAGIC+		| 0x46494233	| FIB3	| xref:Inode_Btrees[Free Inode B+tree], v5 only
++| +XFS_BMAP_MAGIC+		| 0x424d4150	| BMAP	| xref:Btree_Extent_List[B+Tree Extent List]
++| +XFS_BMAP_CRC_MAGIC+		| 0x424d4133	| BMA3	| xref:Btree_Extent_List[B+Tree Extent List], v5 only
++| +XLOG_HEADER_MAGIC_NUM+	| 0xfeedbabe	|     	| xref:Log_Records[Log Records]
++| +XFS_DA_NODE_MAGIC+		| 0xfebe	|     	| xref:Directory_Attribute_Internal_Node[Directory/Attribute Node]
++| +XFS_DA3_NODE_MAGIC+		| 0x3ebe	|     	| xref:Directory_Attribute_Internal_Node[Directory/Attribute Node], v5 only
++| +XFS_DIR2_BLOCK_MAGIC+	| 0x58443242	| XD2B	| xref:Block_Directories[Block Directory Data]
++| +XFS_DIR3_BLOCK_MAGIC+	| 0x58444233	| XDB3	| xref:Block_Directories[Block Directory Data], v5 only
++| +XFS_DIR2_DATA_MAGIC+		| 0x58443244	| XD2D	| xref:Leaf_Directories[Leaf Directory Data]
++| +XFS_DIR3_DATA_MAGIC+		| 0x58444433	| XDD3	| xref:Leaf_Directories[Leaf Directory Data], v5 only
++| +XFS_DIR2_LEAF1_MAGIC+	| 0xd2f1	|     	| xref:Leaf_Directories[Leaf Directory]
++| +XFS_DIR3_LEAF1_MAGIC+	| 0x3df1	|     	| xref:Leaf_Directories[Leaf Directory], v5 only
++| +XFS_DIR2_LEAFN_MAGIC+	| 0xd2ff	|     	| xref:Node_Directories[Node Directory]
++| +XFS_DIR3_LEAFN_MAGIC+	| 0x3dff	|     	| xref:Node_Directories[Node Directory], v5 only
++| +XFS_DIR2_FREE_MAGIC+		| 0x58443246	| XD2F	| xref:Node_Directories[Node Directory Free Space]
++| +XFS_DIR3_FREE_MAGIC+		| 0x58444633	| XDF3	| xref:Node_Directories[Node Directory Free Space], v5 only
++| +XFS_ATTR_LEAF_MAGIC+		| 0xfbee	|     	| xref:Leaf_Attributes[Leaf Attribute]
++| +XFS_ATTR3_LEAF_MAGIC+	| 0x3bee	|     	| xref:Leaf_Attributes[Leaf Attribute], v5 only
++| +XFS_ATTR3_RMT_MAGIC+		| 0x5841524d	| XARM	| xref:Remote_Values[Remote Attribute Value], v5 only
++|=====
++
++The magic numbers for log items are at offset zero in each log item, but items
++are not aligned to blocks.
++
++[options="header"]
++|=====
++| Flag				| Hexadecimal	| ASCII	| Data structure
++| +XFS_TRANS_HEADER_MAGIC+	| 0x5452414e	| TRAN	| xref:Log_Transaction_Headers[Log Transactions]
++| +XFS_LI_EFI+			| 0x1236        |       | xref:EFI_Log_Item[Extent Freeing Intent Log Item]
++| +XFS_LI_EFD+			| 0x1237        |       | xref:EFD_Log_Item[Extent Freeing Done Log Item]
++| +XFS_LI_IUNLINK+		| 0x1238        |       |  Unknown?
++| +XFS_LI_INODE+		| 0x123b        |       | xref:Inode_Log_Item[Inode Updates Log Item]
++| +XFS_LI_BUF+			| 0x123c        |       | xref:Buffer_Log_Item[Buffer Writes Log Item]
++| +XFS_LI_DQUOT+		| 0x123d        |       | xref:Quota_Update_Log_Item[Update Quota Log Item]
++| +XFS_LI_QUOTAOFF+		| 0x123e        |       | xref:Quota_Off_Log_Item[Quota Off Log Item]
++| +XFS_LI_ICREATE+		| 0x123f        |       | xref:Inode_Create_Log_Item[Inode Creation Log Item]
++|=====
++
++= Theoretical Limits
++
++XFS can create really big filesystems!
++
++[options="header"]
++|=====
++| Item			| 1KiB blocks | 4KiB blocks | 64KiB blocks
++| Blocks		| 2^52^ | 2^52^ | 2^52^
++| Inodes		| 2^63^ | 2^63^ | 2^64^
++| Allocation Groups	| 2^32^ | 2^32^ | 2^32^
++| File System Size	| 8EiB  | 8EiB | 8EiB
++| Blocks per AG		| 2^31^ | 2^31^ | 2^31^
++| Inodes per AG		| 2^32^ | 2^32^ | 2^32^
++| Max AG Size		| 2TiB  | 8TiB  | 128TiB
++| Blocks Per File	| 2^54^ | 2^54^ | 2^54^
++| File Size		| 8EiB  | 8EiB | 8EiB
++| Max Dir Size          | 32GiB | 32GiB | 32GiB
++|=====
++
++Linux doesn't suppport files or devices larger than 8EiB, so the block
++limitations are largely ignorable.
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 8aacbb7..0ab4906 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -50,6 +50,8 @@ include::metadata_integrity.asciidoc[]
+ 
+ include::common_types.asciidoc[]
+ 
++include::magic.asciidoc[]
++
+ // return titles to normal
+ :leveloffset: 0
+ 
 
 _______________________________________________
 xfs mailing list
