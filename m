@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CCA4B7F6B
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:12:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AC4B430404E
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 05:12:55 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id WF0s8pP15Z9jtWkP (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 05:12:54 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 1D8E1C0D8047
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 13:12:54 +0000 (UTC)
-Date: Thu, 12 Nov 2015 08:12:53 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_repair: print XFS_WANT_CORRUPTED info with -vvv
-Message-ID: <20151112131252.GC5068@bfoster.bfoster>
-References: <5643F4B1.40500@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 157327F62
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:41:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96CDAAC002
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 05:41:26 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id iMuoidaTh1T0OZmj for <xfs@oss.sgi.com>;
+	Thu, 12 Nov 2015 05:41:23 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id A149061451CC
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:41:22 -0600 (CST)
+Subject: Re: [PATCH] xfs: print name of verifier if it fails
+References: <5643BD7D.4000307@redhat.com>
+	<20151112124046.GA5068@bfoster.bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56449702.4010502@sandeen.net>
+Date: Thu, 12 Nov 2015 07:41:22 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5643F4B1.40500@redhat.com>
+In-Reply-To: <20151112124046.GA5068@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,106 +33,296 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Nov 11, 2015 at 08:08:49PM -0600, Eric Sandeen wrote:
-> In the kernel, the XFS_WANT_CORRUPTED_* macros print the
-> caller information via XFS_ERROR_REPORT, but in userspace
-> this is silenced, because i.e. xfs_repair's job is to find
-> and fix corruption, not to complain loudly about it.
-> 
-> However, there are times when we would like to know if
-> we've hit an unexpected corruption point.  To that end,
-> make "xfs_repair -vvv" enable noisiness from these macros,
-> so that they will print the function and line of the caller.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 
+On 11/12/15 6:40 AM, Brian Foster wrote:
+> On Wed, Nov 11, 2015 at 04:13:17PM -0600, Eric Sandeen wrote:
+>> This adds a name to each buf_ops structure, so that if
+>> a verifier fails we can print the type of verifier that
+>> failed it.  Should be a slight debugging aid, I hope.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
 > 
-> diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-> index 5ec6866..67f3b05 100644
-> --- a/include/xfs_mount.h
-> +++ b/include/xfs_mount.h
-> @@ -143,6 +143,7 @@ typedef struct xfs_perag {
->  #define LIBXFS_MOUNT_32BITINOOPT	0x0004
->  #define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
->  #define LIBXFS_MOUNT_ATTR2		0x0010
-> +#define LIBXFS_MOUNT_WANT_CORRUPTED	0x0020
->  
->  #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
->  
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index 9135aac..0f4d3e5 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -147,10 +147,25 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
->  #define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
->  #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
->  #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
-> -#define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)	\
-> -		{ (mp) = (mp); if (!(expr)) { error = -EFSCORRUPTED; goto l; } }
-> -#define XFS_WANT_CORRUPTED_RETURN(mp, expr)	\
-> -		{ (mp) = (mp); if (!(expr)) { return -EFSCORRUPTED; } }
-> +#define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)				\
-> +{									\
-> +	if (!(expr)) {							\
-> +		if ((mp)->m_flags & LIBXFS_MOUNT_WANT_CORRUPTED)	\
-> +			printf("WANT_CORRUPTED_GOTO at %s:%d\n",	\
-> +				__func__, __LINE__);			\
-> +		error = -EFSCORRUPTED;					\
-> +		goto l;							\
-> +	}								\
-> +}
-> +#define XFS_WANT_CORRUPTED_RETURN(mp, expr)				\
-> +{									\
-> +	if (!(expr)) {							\
-> +		if ((mp)->m_flags & LIBXFS_MOUNT_WANT_CORRUPTED)	\
-> +			printf("WANT_CORRUPTED_RETURN at %s:%d\n",	\
-> +				__func__, __LINE__);			\
-> +		return -EFSCORRUPTED;					\
-> +	}								\
-> +}
->  
->  #ifdef __GNUC__
->  #define __return_address	__builtin_return_address(0)
-> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> index 0394c50..1b4d9e3 100644
-> --- a/man/man8/xfs_repair.8
-> +++ b/man/man8/xfs_repair.8
-> @@ -158,7 +158,7 @@ outputs its progress every 15 minutes. Reporting is only activated when
->  ag_stride is enabled.
->  .TP
->  .B \-v
-> -Verbose output.
-> +Verbose output.  May be specified multiple times to increase verbosity.
->  .TP
->  .B \-d
->  Repair dangerously. Allow
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index bed2ff5..1aeac5b 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -695,6 +695,10 @@ main(int argc, char **argv)
->  	}
->  	mp->m_log = &log;
->  
-> +	/* Spit out function & line on these corruption macros */
-> +	if (verbose > 2)
-> +		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
-> +
->  	/*
->  	 * set XFS-independent status vars from the mount/sb structure
->  	 */
+> Seems harmless, but is this really necessary when we dump a stack trace?
+> I suppose that only happens if the error level is set appropriately.
+> Another option might be to use _RET_IP_. It might not be as pretty, but
+> we already use it all over the place for tracepoints and such.
+
+The main motivator for the patch is userspace, where we have no dump_stack,
+error level, etc.  This patch is just to keep things in sync in libxfs.
+
+Thanks,
+-Eric
+
+> Brian
 > 
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+>> index 3479294..e1e7fe3 100644
+>> --- a/fs/xfs/libxfs/xfs_alloc.c
+>> +++ b/fs/xfs/libxfs/xfs_alloc.c
+>> @@ -535,6 +535,7 @@ xfs_agfl_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_agfl_buf_ops = {
+>> +	.name = "xfs_agfl",
+>>  	.verify_read = xfs_agfl_read_verify,
+>>  	.verify_write = xfs_agfl_write_verify,
+>>  };
+>> @@ -2339,6 +2340,7 @@ xfs_agf_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_agf_buf_ops = {
+>> +	.name = "xfs_agf",
+>>  	.verify_read = xfs_agf_read_verify,
+>>  	.verify_write = xfs_agf_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+>> index 90de071..eb8bbfe 100644
+>> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+>> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+>> @@ -379,6 +379,7 @@ xfs_allocbt_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+>> +	.name = "xfs_allocbt",
+>>  	.verify_read = xfs_allocbt_read_verify,
+>>  	.verify_write = xfs_allocbt_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> index aa187f7..01a5ecf 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> @@ -328,6 +328,7 @@ xfs_attr3_leaf_read_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
+>> +	.name = "xfs_attr3_leaf",
+>>  	.verify_read = xfs_attr3_leaf_read_verify,
+>>  	.verify_write = xfs_attr3_leaf_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+>> index 5ab95ff..f3ed9bf 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+>> @@ -201,6 +201,7 @@ xfs_attr3_rmt_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_attr3_rmt_buf_ops = {
+>> +	.name = "xfs_attr3_rmt",
+>>  	.verify_read = xfs_attr3_rmt_read_verify,
+>>  	.verify_write = xfs_attr3_rmt_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+>> index 6b0cf65..1637c37 100644
+>> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+>> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+>> @@ -720,6 +720,7 @@ xfs_bmbt_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_bmbt_buf_ops = {
+>> +	.name = "xfs_bmbt",
+>>  	.verify_read = xfs_bmbt_read_verify,
+>>  	.verify_write = xfs_bmbt_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+>> index e89a0f8..097bf77 100644
+>> --- a/fs/xfs/libxfs/xfs_da_btree.c
+>> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+>> @@ -245,6 +245,7 @@ xfs_da3_node_read_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+>> +	.name = "xfs_da3_node",
+>>  	.verify_read = xfs_da3_node_read_verify,
+>>  	.verify_write = xfs_da3_node_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+>> index 9c10e2b..aa17cb7 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+>> @@ -123,6 +123,7 @@ xfs_dir3_block_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
+>> +	.name = "xfs_dir3_block",
+>>  	.verify_read = xfs_dir3_block_read_verify,
+>>  	.verify_write = xfs_dir3_block_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+>> index af71a84..725fc78 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+>> @@ -305,11 +305,13 @@ xfs_dir3_data_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_dir3_data_buf_ops = {
+>> +	.name = "xfs_dir3_data",
+>>  	.verify_read = xfs_dir3_data_read_verify,
+>>  	.verify_write = xfs_dir3_data_write_verify,
+>>  };
+>>  
+>>  static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
+>> +	.name = "xfs_dir3_data_reada",
+>>  	.verify_read = xfs_dir3_data_reada_verify,
+>>  	.verify_write = xfs_dir3_data_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+>> index 3923e1f..b887fb2 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+>> @@ -245,11 +245,13 @@ xfs_dir3_leafn_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+>> +	.name = "xfs_dir3_leaf1",
+>>  	.verify_read = xfs_dir3_leaf1_read_verify,
+>>  	.verify_write = xfs_dir3_leaf1_write_verify,
+>>  };
+>>  
+>>  const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+>> +	.name = "xfs_dir3_leafn",
+>>  	.verify_read = xfs_dir3_leafn_read_verify,
+>>  	.verify_write = xfs_dir3_leafn_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+>> index 70b0cb2..63ee03d 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+>> @@ -150,6 +150,7 @@ xfs_dir3_free_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+>> +	.name = "xfs_dir3_free",
+>>  	.verify_read = xfs_dir3_free_read_verify,
+>>  	.verify_write = xfs_dir3_free_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+>> index 5331b7f..11cefb2 100644
+>> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+>> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+>> @@ -282,6 +282,7 @@ xfs_dquot_buf_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_dquot_buf_ops = {
+>> +	.name = "xfs_dquot",
+>>  	.verify_read = xfs_dquot_buf_read_verify,
+>>  	.verify_write = xfs_dquot_buf_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+>> index 70c1db9..66d702e 100644
+>> --- a/fs/xfs/libxfs/xfs_ialloc.c
+>> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+>> @@ -2572,6 +2572,7 @@ xfs_agi_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_agi_buf_ops = {
+>> +	.name = "xfs_agi",
+>>  	.verify_read = xfs_agi_read_verify,
+>>  	.verify_write = xfs_agi_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+>> index f39b285..6dd44f9 100644
+>> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+>> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+>> @@ -304,6 +304,7 @@ xfs_inobt_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_inobt_buf_ops = {
+>> +	.name = "xfs_inobt",
+>>  	.verify_read = xfs_inobt_read_verify,
+>>  	.verify_write = xfs_inobt_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+>> index 268c00f..1b8d98a 100644
+>> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+>> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+>> @@ -132,11 +132,13 @@ xfs_inode_buf_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_inode_buf_ops = {
+>> +	.name = "xfs_inode",
+>>  	.verify_read = xfs_inode_buf_read_verify,
+>>  	.verify_write = xfs_inode_buf_write_verify,
+>>  };
+>>  
+>>  const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
+>> +	.name = "xxfs_inode_ra",
+>>  	.verify_read = xfs_inode_buf_readahead_verify,
+>>  	.verify_write = xfs_inode_buf_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+>> index a0b071d..8a53eaa 100644
+>> --- a/fs/xfs/libxfs/xfs_sb.c
+>> +++ b/fs/xfs/libxfs/xfs_sb.c
+>> @@ -679,11 +679,13 @@ xfs_sb_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_sb_buf_ops = {
+>> +	.name = "xfs_sb",
+>>  	.verify_read = xfs_sb_read_verify,
+>>  	.verify_write = xfs_sb_write_verify,
+>>  };
+>>  
+>>  const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
+>> +	.name = "xfs_sb_quiet",
+>>  	.verify_read = xfs_sb_quiet_read_verify,
+>>  	.verify_write = xfs_sb_write_verify,
+>>  };
+>> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+>> index cb6fd20..2e2c671 100644
+>> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+>> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+>> @@ -168,6 +168,7 @@ xfs_symlink_write_verify(
+>>  }
+>>  
+>>  const struct xfs_buf_ops xfs_symlink_buf_ops = {
+>> +	.name = "xfs_symlink",
+>>  	.verify_read = xfs_symlink_read_verify,
+>>  	.verify_write = xfs_symlink_write_verify,
+>>  };
+>> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+>> index c79b717..c75721a 100644
+>> --- a/fs/xfs/xfs_buf.h
+>> +++ b/fs/xfs/xfs_buf.h
+>> @@ -132,6 +132,7 @@ struct xfs_buf_map {
+>>  	struct xfs_buf_map (map) = { .bm_bn = (blkno), .bm_len = (numblk) };
+>>  
+>>  struct xfs_buf_ops {
+>> +	char *name;
+>>  	void (*verify_read)(struct xfs_buf *);
+>>  	void (*verify_write)(struct xfs_buf *);
+>>  };
+>> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+>> index 74d0e59..88693a9 100644
+>> --- a/fs/xfs/xfs_error.c
+>> +++ b/fs/xfs/xfs_error.c
+>> @@ -164,9 +164,9 @@ xfs_verifier_error(
+>>  {
+>>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+>>  
+>> -	xfs_alert(mp, "Metadata %s detected at %pF, block 0x%llx",
+>> +	xfs_alert(mp, "Metadata %s detected at %pF, %s block 0x%llx",
+>>  		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+>> -		  __return_address, bp->b_bn);
+>> +		  __return_address, bp->b_ops->name, bp->b_bn);
+>>  
+>>  	xfs_alert(mp, "Unmount and run xfs_repair");
+>>  
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
