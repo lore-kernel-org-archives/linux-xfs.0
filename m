@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 178767F37
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 18:42:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 13A118F8049
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 16:42:02 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	JeR0pBiFIXqNJklF for <xfs@oss.sgi.com>;
-	Wed, 11 Nov 2015 16:41:41 -0800 (PST)
-Date: Thu, 12 Nov 2015 11:41:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFCv3 00/12] xfstests: test the btrfs/xfs reflink/dedupe ioctls
-Message-ID: <20151112004114.GO19199@dastard>
-References: <20151007051257.3260.73072.stgit@birch.djwong.org>
-	<20151109075926.GB17974@infradead.org>
-	<20151109184913.GB3255@birch.djwong.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4747C7F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 20:09:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BE156AC002
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 18:08:55 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ql00IiG8jmWvamcW (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 Nov 2015 18:08:50 -0800 (PST)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 72EBBC05E140
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 02:08:50 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id tAC28nX1025358
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 11 Nov 2015 21:08:49 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: print XFS_WANT_CORRUPTED info with -vvv
+Message-ID: <5643F4B1.40500@redhat.com>
+Date: Wed, 11 Nov 2015 20:08:49 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151109184913.GB3255@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +36,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Mon, Nov 09, 2015 at 10:49:13AM -0800, Darrick J. Wong wrote:
-> On Sun, Nov 08, 2015 at 11:59:26PM -0800, Christoph Hellwig wrote:
-> > On Tue, Oct 06, 2015 at 10:12:57PM -0700, Darrick J. Wong wrote:
-> > >  * I don't have any interesting NFS/CIFS setups for test. :(
-> > 
-> > I have a banrch with client and server support for NFSv4.2 CLONE
-> > support:
-> > 
-> > http://git.infradead.org/users/hch/pnfs.git/shortlog/refs/heads/reflink+clone
-> > 
-> > For now you want to use btrfs on the server, as using reflinks on XFS
-> > seems to be a little unstable over NFS.
-> 
-> I found a few more bugs in the kernel-side implementation, which might explain
-> that.  I'm about to start working on making CoW less crappy, but I'll push all
-> the patches out to github.  (I wasn't planning on patchbombing again until
-> December.)
-> 
-> > > If you're going to start using this mess, you probably ought to just
-> > > pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-> > > They should just work with the btrfs that's in 4.3.
-> > > 
-> > > Comments and questions are, as always, welcome.
-> > 
-> > Any reason the groups are called clone?  I don't really have an opinion
-> > on clone vs reflink but given that the xfs_io command is reflink I'd
-> > rather be consistent.
-> 
-> The existing btrfs reflink tests were tagged in the 'clone' group prior to my
-> patchset.
-> 
-> > Otherwise I'd say get it merged ASAP, we can still fix up various
-> > details later.
-> 
-> I'll merge your patch and repost the whole pile of tests.  I'm almost ready to
-> send a pile of updates for the XFS on-disk structure document which add stuff
-> about the v5 format, rmapbt, and reflink.
+In the kernel, the XFS_WANT_CORRUPTED_* macros print the
+caller information via XFS_ERROR_REPORT, but in userspace
+this is silenced, because i.e. xfs_repair's job is to find
+and fix corruption, not to complain loudly about it.
 
-Darrick, can you renumber the xfstests against what is currently at
-the head of the repo? If both you an Christoph need them working,
-you may as well both patch against the main xfstests repo...
+However, there are times when we would like to know if
+we've hit an unexpected corruption point.  To that end,
+make "xfs_repair -vvv" enable noisiness from these macros,
+so that they will print the function and line of the caller.
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index 5ec6866..67f3b05 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -143,6 +143,7 @@ typedef struct xfs_perag {
+ #define LIBXFS_MOUNT_32BITINOOPT	0x0004
+ #define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
+ #define LIBXFS_MOUNT_ATTR2		0x0010
++#define LIBXFS_MOUNT_WANT_CORRUPTED	0x0020
+ 
+ #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
+ 
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 9135aac..0f4d3e5 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -147,10 +147,25 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+ #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+ #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
+-#define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)	\
+-		{ (mp) = (mp); if (!(expr)) { error = -EFSCORRUPTED; goto l; } }
+-#define XFS_WANT_CORRUPTED_RETURN(mp, expr)	\
+-		{ (mp) = (mp); if (!(expr)) { return -EFSCORRUPTED; } }
++#define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)				\
++{									\
++	if (!(expr)) {							\
++		if ((mp)->m_flags & LIBXFS_MOUNT_WANT_CORRUPTED)	\
++			printf("WANT_CORRUPTED_GOTO at %s:%d\n",	\
++				__func__, __LINE__);			\
++		error = -EFSCORRUPTED;					\
++		goto l;							\
++	}								\
++}
++#define XFS_WANT_CORRUPTED_RETURN(mp, expr)				\
++{									\
++	if (!(expr)) {							\
++		if ((mp)->m_flags & LIBXFS_MOUNT_WANT_CORRUPTED)	\
++			printf("WANT_CORRUPTED_RETURN at %s:%d\n",	\
++				__func__, __LINE__);			\
++		return -EFSCORRUPTED;					\
++	}								\
++}
+ 
+ #ifdef __GNUC__
+ #define __return_address	__builtin_return_address(0)
+diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+index 0394c50..1b4d9e3 100644
+--- a/man/man8/xfs_repair.8
++++ b/man/man8/xfs_repair.8
+@@ -158,7 +158,7 @@ outputs its progress every 15 minutes. Reporting is only activated when
+ ag_stride is enabled.
+ .TP
+ .B \-v
+-Verbose output.
++Verbose output.  May be specified multiple times to increase verbosity.
+ .TP
+ .B \-d
+ Repair dangerously. Allow
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index bed2ff5..1aeac5b 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -695,6 +695,10 @@ main(int argc, char **argv)
+ 	}
+ 	mp->m_log = &log;
+ 
++	/* Spit out function & line on these corruption macros */
++	if (verbose > 2)
++		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
++
+ 	/*
+ 	 * set XFS-independent status vars from the mount/sb structure
+ 	 */
+
 
 _______________________________________________
 xfs mailing list
