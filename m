@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9031E7F66
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 11:36:46 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id B72EC7F66
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 14:07:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6C1ED8F8035
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:36:43 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Q0Kct2EZqIYzc1TD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:36:42 -0800 (PST)
-Date: Thu, 12 Nov 2015 09:36:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFCv3.1 00/11] xfstests: test the nfs/cifs/btrfs/xfs
-	reflink/dedupe ioctls
-Message-ID: <20151112173635.GA9247@infradead.org>
-References: <20151111192628.15056.6451.stgit@birch.djwong.org>
-	<20151112090756.GA25685@infradead.org>
-	<20151112125115.GA28822@infradead.org>
-	<20151112173427.GC2217@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 995C48F804B
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 12:07:17 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	w845YYowVGfcjD52 for <xfs@oss.sgi.com>;
+	Thu, 12 Nov 2015 12:07:11 -0800 (PST)
+Date: Fri, 13 Nov 2015 07:06:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: memory reclaim problems on fs usage
+Message-ID: <20151112200641.GR19199@dastard>
+References: <201511102313.36685.arekm@maven.pl>
+	<201511111719.44035.arekm@maven.pl>
+	<201511120719.EBF35970.OtSOHOVFJMFQFL@I-love.SAKURA.ne.jp>
+	<201511120706.10739.arekm@maven.pl>
+	<56449E44.7020407@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151112173427.GC2217@birch.djwong.org>
+In-Reply-To: <56449E44.7020407@I-love.SAKURA.ne.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +29,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-On Thu, Nov 12, 2015 at 09:34:27AM -0800, Darrick J. Wong wrote:
-> Bleargh, _require_*_dedupe forgot to check for ENOTTY output, so all the dedupe
-> tests should have _notrun.
-> 
-> Also, generic/806 was calling the wrong _require.
-> 
-> I'll start renumbering tests; Christoph, did you see anything else?
-
-Looks fine so far otherwise.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBOb3YgMTIsIDIwMTUgYXQgMTE6MTI6MjBQTSArMDkwMCwgVGV0c3VvIEhhbmRhIHdy
+b3RlOgo+IE9uIDIwMTUvMTEvMTIgMTU6MDYsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToK
+PiA+T24gV2VkbmVzZGF5IDExIG9mIE5vdmVtYmVyIDIwMTUsIFRldHN1byBIYW5kYSB3cm90ZToK
+PiA+PkFya2FkaXVzeiBNaT9raWV3aWN6IHdyb3RlOgo+ID4+PlRoaXMgcGF0Y2ggaXMgYWdhaW5z
+dCB3aGljaCB0cmVlPyAodHJpZWQgNC4xLCA0LjIgYW5kIDQuMykKPiA+Pgo+ID4+T29wcy4gV2hp
+dGVzcGFjZS1kYW1hZ2VkLiBUaGlzIHBhdGNoIGlzIGZvciB2YW5pbGxhIDQuMS4yLgo+ID4+UmVw
+b3N0aW5nIHdpdGggb25lIGNvbmRpdGlvbiBjb3JyZWN0ZWQuCj4gPgo+ID5IZXJlIGlzIGxvZzoK
+PiA+Cj4gPmh0dHA6Ly9peGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9sb2ctbW0tMS50eHQuZ3oK
+PiA+Cj4gPlVuY29tcHJlc3NlcyBpcyAxLjRNQiwgc28gbm90IHBvc3RpbmcgaGVyZS4KPiA+Cj4g
+VGhhbmsgeW91IGZvciB0aGUgbG9nLiBUaGUgcmVzdWx0IGlzIHVuZXhwZWN0ZWQgZm9yIG1lLgo+
+IAo+IFdoYXQgSSBmZWVsIHN0cmFuZ2UgaXMgdGhhdCBmcmVlOiByZW1haW5lZCBiZWxvdyBtaW46
+IGxldmVsLgo+IFdoaWxlIEdGUF9BVE9NSUMgYWxsb2NhdGlvbnMgY2FuIGFjY2VzcyBtZW1vcnkg
+cmVzZXJ2ZXMsIEkgdGhpbmsgdGhhdAo+IHRoZXNlIGZyZWU6IHZhbHVlcyBhcmUgdG9vIHNtYWxs
+LiBNZW1vcnkgYWxsb2NhdGVkIGJ5IEdGUF9BVE9NSUMgc2hvdWxkCj4gYmUgcmVsZWFzZWQgc2hv
+cnRseSwgb3IgYW55IF9fR0ZQX1dBSVQgYWxsb2NhdGlvbnMgd291bGQgc3RhbGwgZm9yIGxvbmcu
+Cj4gCj4gWyA4NjMzLjc1MzUyOF0gTm9kZSAwIE5vcm1hbCBmcmVlOjEyOGtCIG1pbjo3MTA0a0Ig
+bG93Ojg4ODBrQgo+IGhpZ2g6MTA2NTZrQiBhY3RpdmVfYW5vbjo1OTAwOGtCIGluYWN0aXZlX2Fu
+b246NzUyNDBrQgo+IGFjdGl2ZV9maWxlOjE0NzEya0IgaW5hY3RpdmVfZmlsZTozMjU2OTYwa0Ig
+dW5ldmljdGFibGU6MGtCCi4uLi4KPiBpc29sYXRlZChhbm9uKTowa0IgaXNvbGF0ZWQoZmlsZSk6
+MGtCIHByZXNlbnQ6NTI0Mjg4MGtCCj4gbWFuYWdlZDo1MTA5OTgwa0IgbWxvY2tlZDowa0IgZGly
+dHk6MjBrQiB3cml0ZWJhY2s6MGtCIG1hcHBlZDo3MzY4a0IKLi4uLgo+IHBhZ2VzX3NjYW5uZWQ6
+MTc2IGFsbF91bnJlY2xhaW1hYmxlPyBubwoKU286IHdlIGhhdmUgMy4yR0IgKDgwMCwwMDAgcGFn
+ZXMpIG9mIGltbWVkaWF0ZWx5IHJlY2xhaW1hYmxlIHBhZ2UKY2FjaGUgaW4gdGhpcyB6b25lIChp
+bmFjdGl2ZV9maWxlKSBhbmQgYSBHRlBfQVRPTUlDIGFsbG9jYXRpb24KY29udGV4dCBzbyB3ZSBj
+YW4gb25seSByZWFsbHkgcmVjbGFpbSBjbGVhbiBwYWdlIGNhY2hlIHBhZ2VzCnJlbGlhYmx5LgoK
+U28gd2h5IGhhdmUgd2Ugb25seSBzY2FubmVkICoxNzYqIHBhZ2VzKiBkdXJpbmcgcmVjbGFpbT8g
+IE9uIG90aGVyCk9PTSByZXBvcnRzIGluIHRoaXMgdHJhY2UgaXQncyBhcyBsb3cgYXMgMTIuICBF
+aXRoZXIgdGhhdCBzdGF0IGlzCmNvbXBsZXRlbHkgd3JvbmcsIG9yIHdlJ3JlIG5vdCBkb2luZyBz
+dWZmaWNpZW50IHBhZ2UgTFJVIHJlY2xhaW0Kc2Nhbm5pbmcuLi4uCgo+IFsgOTY2Mi4yMzQ2ODVd
+IE1lbUFsbG9jLUluZm86IDMgc3RhbGxpbmcgdGFzaywgMCBkeWluZyB0YXNrLCAwIHZpY3RpbSB0
+YXNrLgo+IAo+IHZtc3RhdF91cGRhdGUoKSBhbmQgc3VibWl0X2ZsdXNoZXMoKSByZW1haW5lZCBw
+ZW5kaW5nIGZvciBhYm91dCAxMTAgc2Vjb25kcy4KPiBJZiB4bG9nX2NpbF9wdXNoX3dvcmsoKSB3
+ZXJlIHNwaW5uaW5nIGluc2lkZSBHRlBfTk9GUyBhbGxvY2F0aW9uLCBpdCBzaG91bGQgYmUKPiBy
+ZXBvcnRlZCBhcyBNZW1BbGxvYzogdHJhY2VzLCBidXQgbm8gc3VjaCBsaW5lcyBhcmUgcmVjb3Jk
+ZWQuIEkgZG9uJ3Qga25vdyB3aHkKPiB4bG9nX2NpbF9wdXNoX3dvcmsoKSBkaWQgbm90IGNhbGwg
+c2NoZWR1bGUoKSBmb3Igc28gbG9uZy4KCkknZCBzYXkgaXQgaXMgcmVwZWF0ZWRseSB3YWl0aW5n
+IGZvciBJTyBjb21wbGV0aW9uIG9uIGxvZyBidWZmZXJzIHRvCndyaXRlIG91dCB0aGUgY2hlY2tw
+b2ludC4gSXQncyBtYWtpbmcgcHJvZ3Jlc3MsIGp1c3QgaWYgaXQncyB0YWtpbmcKbXVsdGlwbGUg
+c2Vjb25kIHBlciBqb3VybmFsIElPIGl0IHdpbGwgdGFrZSBhIGxvbmcgdGltZSB0byB3cml0ZSBh
+CmNoZWNrcG9pbnQuIEFsbCB0aGUgb3RoZXIgYmxvY2tlZCB0YXNrcyBpbiBYRlMgaW5vZGUgcmVj
+bGFpbSBhcmUKZWl0aGVyIHdhaXRpbmcgZGlyZWN0bHkgb24gSU8gY29tcGxldGlvbiBvciB3YWl0
+aW5nIGZvciB0aGUgbG9nIHRvCmNvbXBsZXRlIGEgZmx1c2gsIHNvIHRoaXMgcmVhbGx5IGp1c3Qg
+bG9va3MgbGlrZSBhbiBvdmVybG9hZGVkIElPCnN1YnN5c3RlbSB0byBtZS4uLi4KCj4gV2VsbCwg
+d2hhdCBzdGVwcyBzaG91bGQgd2UgdHJ5IG5leHQgZm9yIGlzb2xhdGluZyB0aGUgcHJvYmxlbT8K
+CkkgdGhpbmsgdGhlcmUncyBwbGVudHkgdGhhdCBuZWVkcyB0byBiZSBleHBsYWluZWQgZnJvbSB0
+aGlzCmluZm9ybWF0aW9uLiBXZSBkb24ndCBoYXZlIGEgbWVtb3J5IGFsbG9jYXRpb24gbGl2ZWxv
+Y2sgLSBzbG93CnByb2dyZXNzIGlzIGJlaW5nIG1hZGUgb24gcmVjbGFpbWluZyBpbm9kZXMsIGJ1
+dCB3ZQpjbGVhcmx5IGhhdmUgYSB6b25lIGltYmFsYW5jZSBhbmQgZGlyZWN0IHBhZ2UgcmVjbGFp
+bSBpcyBub3QgZnJlZWluZwpjbGVhbiBpbmFjdGl2ZSBwYWdlcyB3aGVuIHRoZXJlIGFyZSBodWdl
+IG51bWJlcnMgb2YgdGhlbSBhdmFpbGFibGUKZm9yIHJlY2xhaW0uIFNvbWVib2R5IHdobyB1bmRl
+cnN0YW5kcyB0aGUgcGFnZSByZWNsYWltIGNvZGUgbmVlZHMgdG8KbG9vayBjbG9zZWx5IGF0IHRo
+ZSBjb2RlIHRvIGV4cGxhaW4gdGhpcyBiZWhhdmlvdXIgbm93LCB0aGVuIHdlJ2xsCmtub3cgd2hh
+dCBpbmZvcm1hdGlvbiBuZWVkcyB0byBiZSBnYXRoZXJlZCBuZXh0Li4uCgpDaGVlcnMsCgpEYXZl
+LgoKCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
+LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
