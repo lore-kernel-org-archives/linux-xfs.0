@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 38C3C7F62
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 06:51:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2873C304039
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 04:51:25 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id CDnPn14F8A2SALEp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 04:51:22 -0800 (PST)
-Date: Thu, 12 Nov 2015 04:51:15 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFCv3.1 00/11] xfstests: test the nfs/cifs/btrfs/xfs
-	reflink/dedupe ioctls
-Message-ID: <20151112125115.GA28822@infradead.org>
-References: <20151111192628.15056.6451.stgit@birch.djwong.org>
-	<20151112090756.GA25685@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 10D827F62
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:00:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F174C8F8040
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 05:00:23 -0800 (PST)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id HtXdMkkUmHgwhMxf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 05:00:21 -0800 (PST)
+Date: Thu, 12 Nov 2015 14:00:22 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfsprogs install
+Message-ID: <20151112140022.7b8d8924@harpe.intellique.com>
+In-Reply-To: <CAFf1yNFwY5uANDbTQhQsmdZj=FzOduUDcGGTNG-EnK0P0a+=7w@mail.gmail.com>
+References: <CAFf1yNFYh3C9NR8OadL=wXALT3mj58LTVvnE3fypOBXOP_JzoQ@mail.gmail.com>
+	<20151111125021.GA28745@redhat.com>
+	<CAFf1yNFwY5uANDbTQhQsmdZj=FzOduUDcGGTNG-EnK0P0a+=7w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151112090756.GA25685@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +26,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: rui li <liruilong0128@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 12, 2015 at 01:07:56AM -0800, Christoph Hellwig wrote:
-> Looks fine:
-> 
-> Acked-by: Christoph Hellwig <hch@lst.de>
-
-Actually I take this back.  I had though this was the existing series
-with my fixes, but this one still incorrectly assumes that if reflink
-works dedup works as well, leading to lots of false failures on nfs.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVGh1LCAxMiBOb3YgMjAxNSAxMDoyMTowOSArMDgwMApydWkgbGkgPGxpcnVpbG9uZzAxMjhA
+Z21haWwuY29tPiDDqWNyaXZhaXQ6Cgo+IHdoZW4gaSBydW4gbWtmcy54ZnMgLWYgL2Rldi9zZGEy
+cDEgLHRoZSBlcnJvciBpcyBubyB0aGF0IGZpbGUgb3IKPiBkaXJlY3RvcnkgYWN0dXJhbGx5IC9k
+ZXYvc2RhMnAxICBleGlzdGVkCj4gY291bGQgeW91IGdpdmUgbWUgc29tZSBoZWxwPwoKV2VsbCwg
+cHJvYmFibHkgaXQgZG9lc24ndCBleGlzdCB0aGVuLiBVc2UgdGhlICJsc2JsayIgY29tbWFuZCBv
+ciAKImNhdCAvcHJvYy9wYXJ0aXRpb25zIiBjb21tYW5kIHRvIHNlZSBhIGxpc3Qgb2YgYWN0dWFs
+IGRldmljZXMgYW5kCnBhcnRpdGlvbnMuCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZs
+b3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAg
+SW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+
+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
+aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCg==
