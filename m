@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 48C807F66
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 14:12:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D06CBAC002
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 12:12:39 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7M3nQHvgp74BGaAz for <xfs@oss.sgi.com>;
-	Thu, 12 Nov 2015 12:12:33 -0800 (PST)
-Date: Fri, 13 Nov 2015 07:12:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs: create helper for bmap finish & trans join in
-	attr code
-Message-ID: <20151112201231.GS19199@dastard>
-References: <56441B8E.6070603@redhat.com> <5644BEF8.6070201@sandeen.net>
-	<20151112165801.GA14854@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 39F027F66
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 15:28:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C2C50AC002
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 13:28:36 -0800 (PST)
+Received: from mail-lf0-f51.google.com (mail-lf0-f51.google.com
+	[209.85.215.51]) by cuda.sgi.com with ESMTP id 6ybEbmZoWCcVWBMC
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 12 Nov 2015 13:28:30 -0800 (PST)
+Received: by lffu14 with SMTP id u14so42009911lff.1
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 13:28:28 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: memory reclaim problems on fs usage
+Date: Thu, 12 Nov 2015 22:28:26 +0100
+References: <201511102313.36685.arekm@maven.pl>
+	<201511120706.10739.arekm@maven.pl>
+	<56449E44.7020407@I-love.SAKURA.ne.jp>
+In-Reply-To: <56449E44.7020407@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151112165801.GA14854@infradead.org>
+Message-Id: <201511122228.26399.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,37 +29,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-On Thu, Nov 12, 2015 at 08:58:01AM -0800, Christoph Hellwig wrote:
-> I think the problem here is simply that our interfaces suck.
-> xfs_trans_roll really needs to rejoin any inode to the new transaction
-> to that was joined to the previous one.  Once we've fixed that we can
-> get rid of the silly committed arguments and everyone will be happy.
-
-xfs_trans_roll is not specifically for rolling transactions with
-locked inodes in them. We could use it for any object that needs
-multiple transactions to modify. e.g. we could roll transactions
-across an AGF (using hold+join) so that it remains locked across
-multiple allocation/free transactions.
-
-So I think pushing the inode joining inside xfs_trans_roll() is not
-the right thing to do, but an "inode specific wrapper" such as
-"xfs_trans_roll_inode()" would handle this just fine...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1cnNkYXkgMTIgb2YgTm92ZW1iZXIgMjAxNSwgVGV0c3VvIEhhbmRhIHdyb3RlOgo+IE9u
+IDIwMTUvMTEvMTIgMTU6MDYsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+IE9uIFdl
+ZG5lc2RheSAxMSBvZiBOb3ZlbWJlciAyMDE1LCBUZXRzdW8gSGFuZGEgd3JvdGU6Cj4gPj4gQXJr
+YWRpdXN6IE1pP2tpZXdpY3ogd3JvdGU6Cj4gPj4+IFRoaXMgcGF0Y2ggaXMgYWdhaW5zdCB3aGlj
+aCB0cmVlPyAodHJpZWQgNC4xLCA0LjIgYW5kIDQuMykKPiA+PiAKPiA+PiBPb3BzLiBXaGl0ZXNw
+YWNlLWRhbWFnZWQuIFRoaXMgcGF0Y2ggaXMgZm9yIHZhbmlsbGEgNC4xLjIuCj4gPj4gUmVwb3N0
+aW5nIHdpdGggb25lIGNvbmRpdGlvbiBjb3JyZWN0ZWQuCj4gPiAKPiA+IEhlcmUgaXMgbG9nOgo+
+ID4gCj4gPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20vbG9nLW1tLTEudHh0Lmd6
+Cj4gPiAKPiA+IFVuY29tcHJlc3NlcyBpcyAxLjRNQiwgc28gbm90IHBvc3RpbmcgaGVyZS4KPiAK
+PiBUaGFuayB5b3UgZm9yIHRoZSBsb2cuIFRoZSByZXN1bHQgaXMgdW5leHBlY3RlZCBmb3IgbWUu
+CgpbLi4uXQoKPiAKPiB2bXN0YXRfdXBkYXRlKCkgYW5kIHN1Ym1pdF9mbHVzaGVzKCkgcmVtYWlu
+ZWQgcGVuZGluZyBmb3IgYWJvdXQgMTEwCj4gc2Vjb25kcy4gSWYgeGxvZ19jaWxfcHVzaF93b3Jr
+KCkgd2VyZSBzcGlubmluZyBpbnNpZGUgR0ZQX05PRlMgYWxsb2NhdGlvbiwKPiBpdCBzaG91bGQg
+YmUgcmVwb3J0ZWQgYXMgTWVtQWxsb2M6IHRyYWNlcywgYnV0IG5vIHN1Y2ggbGluZXMgYXJlIHJl
+Y29yZGVkLgo+IEkgZG9uJ3Qga25vdyB3aHkgeGxvZ19jaWxfcHVzaF93b3JrKCkgZGlkIG5vdCBj
+YWxsIHNjaGVkdWxlKCkgZm9yIHNvIGxvbmcuCj4gQW55d2F5LCBhcHBseWluZwo+IGh0dHA6Ly9s
+a21sLmtlcm5lbC5vcmcvci8yMDE1MTExMTE2MDMzNi5HRDE0MzJAZGhjcDIyLnN1c2UuY3ogc2hv
+dWxkIHNvbHZlCj4gdm1zdGF0X3VwZGF0ZSgpIHBhcnQuCgpUbyBhcHBseSB0aGF0IHBhdGNoIG9u
+IHRvcCBvZiA0LjEuMTMgSSBhbHNvIGhhZCB0byBhcHBseSBwYXRjaGVzIGxpc3RlZCBiZWxvdy4g
+CgpTbyBpbiBzdW1tYXJ5IGFwcGxsaWVkOgpodHRwOi8vc3BydW5nZS51cy9HWUJiCmh0dHA6Ly9z
+cHJ1bmdlLnVzL1hXVVgKaHR0cDovL3NwcnVuZ2UudXMvalpqVgoKKENvdWxkIHRyeSBodHRwOi8v
+bGttbC5rZXJuZWwub3JnL3IvMjAxNTExMTExNjAzMzYuR0QxNDMyQGRoY3AyMi5zdXNlLmN6IG9u
+bHkgCmlmIHRoZXJlIGlzIHZlcnNpb24gZm9yIDQuMSB0cmVlIHNvbWV3aGVyZSkKCmNvbW1pdCAw
+YWFhMjlhNTZlNGZiMGZjOWUyNGVkYjY0OWUyNzMzYTY3MmNhMDk5CkF1dGhvcjogTWVsIEdvcm1h
+biA8bWdvcm1hbkB0ZWNoc2luZ3VsYXJpdHkubmV0PgpEYXRlOiAgIEZyaSBOb3YgNiAxNjoyODoz
+NyAyMDE1IC0wODAwCgogICAgbW0sIHBhZ2VfYWxsb2M6IHJlc2VydmUgcGFnZWJsb2NrcyBmb3Ig
+aGlnaC1vcmRlciBhdG9taWMgYWxsb2NhdGlvbnMgb24gCmRlbWFuZAoKY29tbWl0IDk3NGE3ODZl
+NjNjOTZhMjQwMWE3OGRkYmE5MjZmMzRjMTI4NDc0ZjEKQXV0aG9yOiBNZWwgR29ybWFuIDxtZ29y
+bWFuQHRlY2hzaW5ndWxhcml0eS5uZXQ+CkRhdGU6ICAgRnJpIE5vdiA2IDE2OjI4OjM0IDIwMTUg
+LTA4MDAKCiAgICBtbSwgcGFnZV9hbGxvYzogcmVtb3ZlIE1JR1JBVEVfUkVTRVJWRQoKY29tbWl0
+IGMyZDQyYzE2YWQ4MzAwNmE3MDZkODNlNTFhNzI2OGRiMDRhZjczM2EKQXV0aG9yOiBBbmRyZXcg
+TW9ydG9uIDxha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnPgpEYXRlOiAgIFRodSBOb3YgNSAxODo0
+ODo0MyAyMDE1IC0wODAwCgogICAgbW0vdm1zdGF0LmM6IHVuaW5saW5lIG5vZGVfcGFnZV9zdGF0
+ZSgpCgpjb21taXQgMTc2YmVkMWRlNWJmOTc3OTM4Y2FkMjY1NTE5NjllY2E4ZjA4ODNiMQpBdXRo
+b3I6IExpbnVzIFRvcnZhbGRzIDx0b3J2YWxkc0BsaW51eC1mb3VuZGF0aW9uLm9yZz4KRGF0ZTog
+ICBUaHUgT2N0IDE1IDEzOjAxOjUwIDIwMTUgLTA3MDAKCiAgICB2bXN0YXQ6IGV4cGxpY2l0bHkg
+c2NoZWR1bGUgcGVyLWNwdSB3b3JrIG9uIHRoZSBDUFUgd2UgbmVlZCBpdCB0byBydW4gb24KCgpb
+Li4uXQoKPiAKPiBXZWxsLCB3aGF0IHN0ZXBzIHNob3VsZCB3ZSB0cnkgbmV4dCBmb3IgaXNvbGF0
+aW5nIHRoZSBwcm9ibGVtPwo+IAo+IFN3YXAgaXMgbm90IHVzZWQgYXQgYWxsLiBUdXJuaW5nIG9m
+ZiBzd2FwIG1pZ2h0IGhlbHAuCgpEaXNhYmxlZCBzd2FwLgoKPiAKPiBbIDg2MzMuNzUzNTc0XSBG
+cmVlIHN3YXAgID0gMTE3MjIwODAwa0IKPiBbIDg2MzMuNzUzNTc2XSBUb3RhbCBzd2FwID0gMTE3
+MjIwODIwa0IKPiAKPiBUdXJuaW5nIG9mZiBwZXJmIG1pZ2h0IGFsc28gaGVscC4KPiAKPiBbIDUw
+MDEuMzk0MDg1XSBwZXJmIGludGVycnVwdCB0b29rIHRvbyBsb25nICgyNTA1ID4gMjQ5NSksIGxv
+d2VyaW5nCj4ga2VybmVsLnBlcmZfZXZlbnRfbWF4X3NhbXBsZV9yYXRlIHRvIDUwMTAwCgpEaWRu
+J3QgZmluZCBhIHdheSB0byBkaXNhYmxlIHBlcmYuIGtlcm5lbCAuY29uZmlnIG9wdGlvbiBnZXRz
+IGF1dG9lbmFibGVkIGJ5IApzb21lIGRlcGVuZGVuY3kuIFNvIGxlZnQgdGhpcyB1bnRvdWNoZWQu
+CgoKV2l0aCBtZW50aW9uZWQgcGF0Y2hlcyBJIHdhc24ndCBhYmxlIHRvIHJlcHJvZHVjZSBtZW1v
+cnkgYWxsb2NhdGlvbiBwcm9ibGVtIAooc3RpbGwgdHJ5aW5nIHRob3VnaCkuIAoKQ3VycmVudCBk
+ZWJ1ZyBsb2c6IGh0dHA6Ly9peGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9sb2ctbW0tMi50eHQu
+Z3oKCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3osIGFyZWttIC8gKCBtYXZlbi5wbCB8IHBsZC1s
+aW51eC5vcmcgKQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
