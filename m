@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 95FBF7F67
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:50:29 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6EA887F67
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:51:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 821568F8049
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:50:29 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id h6OxIOxyr0y5coL3 for <xfs@oss.sgi.com>;
-	Thu, 12 Nov 2015 07:50:26 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 2D8A965FC660
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:50:26 -0600 (CST)
-Subject: Re: [PATCH] xfs_fsr: more selinux fixes
-References: <5643B8B7.9030708@sandeen.net>
-	<20151112131242.GB5068@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5644B541.8070207@sandeen.net>
-Date: Thu, 12 Nov 2015 09:50:25 -0600
-MIME-Version: 1.0
-In-Reply-To: <20151112131242.GB5068@bfoster.bfoster>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C7D68F8033
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:51:59 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tj5sNmVWR3zWGVHb (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:51:58 -0800 (PST)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [RFC PATCH] xfs: test XFS torn log write detection
+Date: Thu, 12 Nov 2015 10:51:56 -0500
+Message-Id: <1447343516-41363-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,84 +21,159 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: fstests@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
+XFS torn log write detection includes a mechanism to inject CRC errors
+into log records at runtime and shutdown the fs accordingly. This
+ensures that the CRC verification pass on the subsequent mount discovers
+an invalid record near the head of the log and considers it a torn
+write.
 
+This test runs a workload with error injection enabled and verifies that
+the subsequent mount is successful. The test repeats for several
+iterations using a random frequency factor for the error event each
+time.
 
-On 11/12/15 7:12 AM, Brian Foster wrote:
-> On Wed, Nov 11, 2015 at 03:52:55PM -0600, Eric Sandeen wrote:
->> Commit:
->>
->> 1adfe5c xfs_fsr: fix SWAPEXT failures under selinux
->>
->> attempted to fix up the fork offset under selinux, where
->> the temp file is created with a local attribute, but the
->> target file has remote attributes; this can lead to a smaller
->> data area in the temp inode, without enough room to swap extents
->> from the target inode.  I remedied this by pushing the temp
->> file attribute to remote, but *only* if the target file's attr
->> was also remote.
->>
->> However, I have a case from the field where the parent dir
->> and the target file both have a context of:
->>
->> system_u:object_r:samba_share_t:s0
->>
->> but new files created in the dir have a context of
->>
->> unconfined_u:object_r:samba_share_t:s0
->>
->> This means the temp file has a smaller forkoff, and less space
->> in the inode for data, so we fail to swap the extents between
->> the two, because they don't fit.
->>
->> The following patch fixes this by allowing xfs_fsr to
->> kick the tempfile's attr out of local format even if the target
->> file's attr is local, if this will move the forkoff in the right
->> direction.  This does pass all our fsr xfstests, though I'm not
->> sure we have any real coverage of fsr under selinux...
->>
->> The only functional change is the test at the very end of the
->> patch; the rest is comments, ascii art, and removing the
->> now-extraneous XFS_IOC_FSGETXATTRA ioctl.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
->> index c8ef18f..68b9819 100644
->> --- a/fsr/xfs_fsr.c
->> +++ b/fsr/xfs_fsr.c
-> ...
->>  			/*
->> -			 * If target attr area is less than the temp's (diff < 0)
->> -			 * and the target is not local, write a big attr to
->> -			 * the temp file to knock the attr out of local format,
->> -			 * to match the target.  (This should actually *increase*
->> -			 * the temp file's forkoffset when the attr moves out
->> -			 * of the inode)
->> +			 * If target attr area is less than the temp's
->> +			 * (diff < 0), write a big attr to the temp file to knock
->> +			 * the attr out of local format.
->> +			 * (This should actually *increase* the temp file's
->> +			 * forkoffset when the attr moves out of the inode)
->>  			 */
->> - 			if (diff < 0 && fsx.fsx_nextents > 0) {
->> + 			if (diff < 0) {
-> 
-> Space before tab issue on the line above. Looks fine otherwise, but I
-> wonder if it would also be a good idea to add an informative fsrprintf()
-> here if we proceed when (fsx.fsx_nextents > 0)?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-I can add a debug message, sure - I'm not sure when it would be useful, but
-we have plenty of other fiddly messages in there about what action is taken.
+Hi all,
 
-Thanks,
--Eric
+This test accompanies the torn log write detection series here:
+
+  http://oss.sgi.com/pipermail/xfs/2015-November/044945.html
+
+... and is based on the associated test mechanism. Note that this is
+quick and dirty and subject to change based on review of that series.  I
+also hadn't put too much thought into how many iterations to use, how
+long the test should run in general and what the range of the injection
+param should be. As such, this is RFC for now. Thoughts appreciated.
+
+Brian
+
+ tests/xfs/350     | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/350.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 88 insertions(+)
+ create mode 100755 tests/xfs/350
+ create mode 100644 tests/xfs/350.out
+
+diff --git a/tests/xfs/350 b/tests/xfs/350
+new file mode 100755
+index 0000000..f18637a
+--- /dev/null
++++ b/tests/xfs/350
+@@ -0,0 +1,85 @@
++#! /bin/bash
++# FS QA Test No. 350
++#
++# Use the XFS log record CRC error injection mechanism to test torn writes to
++# the log. The error injection mechanism writes an invalid CRC and shuts down
++# the filesystem. The test verifies that a subsequent remount recovers the log
++# and that the filesystem is consistent.
++#
++# Note that this test requires a DEBUG mode kernel.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	killall -9 fsstress > /dev/null 2>&1
++	wait > /dev/null 2>&1
++}
++
++rm -f $seqres.full
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_sysfs $(_short_dev $SCRATCH_DEV)/log/log_badcrc_factor
++_require_scratch
++
++echo "Silence is golden."
++
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount
++
++sdev=$(_short_dev $SCRATCH_DEV)
++
++for i in $(seq 1 5); do
++	# Enable error injection. Use a random bad crc factor up to 100
++	# (increase this value to run fsstress longer).
++	factor=$((RANDOM % 100))
++	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
++	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
++
++	# Run fsstress until the filesystem shuts down. It will shut down
++	# automatically when error injection triggers.
++	$FSSTRESS_PROG -d $SCRATCH_MNT -p 4 -n 999999 >> $seqres.full 2>&1
++
++	# Verify that we can remount the fs. Log recovery should handle the torn
++	# write.
++	_scratch_unmount
++	_scratch_mount || _fail "failed to mount"
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/350.out b/tests/xfs/350.out
+new file mode 100644
+index 0000000..c725135
+--- /dev/null
++++ b/tests/xfs/350.out
+@@ -0,0 +1,2 @@
++QA output created by 350
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 8261f86..bf66c0f 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -220,3 +220,4 @@
+ 303 auto quick quota
+ 304 auto quick quota
+ 305 auto quota
++350 auto log metadata
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
