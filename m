@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 916B27F74
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:37:33 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C27767F77
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:37:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E3890AC006
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:32 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B0682304039
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:31 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v8WWUH6V1BzpQqo1 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id D3pCuT5eHBL03U8B (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:31 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id EF149935D2
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:29 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 5211D8F4E0
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 15:37:29 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-36.bos.redhat.com [10.18.41.36])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tACFbTTF003341
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id tACFbTln032668
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 10:37:29 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 6/8] xfs: refactor log record start detection into a new
-	helper
-Date: Thu, 12 Nov 2015 10:37:26 -0500
-Message-Id: <1447342648-40012-7-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 2/8] xfs: refactor log record unpack and data processing
+Date: Thu, 12 Nov 2015 10:37:22 -0500
+Message-Id: <1447342648-40012-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
 References: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,184 +38,81 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-As part of the head/tail discovery process, log recovery locates the
-head block and then reverse seeks to find the start of the last active
-record in the log. This is non-trivial as the record itself could have
-wrapped around the end of the physical log. Log recovery torn write
-detection potentially needs to walk further behind the last record in
-the log, as multiple log I/Os can be in-flight at one time during a
-crash event.
+xlog_do_recovery_pass() duplicates a couple function calls related to
+processing log records because the function must handle wrapping around
+the end of the log if the head is behind the tail. This is implemented
+as separate loops. CRC verification pass support will modify how records
+are processed in both of these loops.
 
-Therefore, refactor the reverse log record header search mechanism into
-a new helper that supports the ability to seek past an arbitrary number
-of log records (or until the tail is hit). Update the head/tail search
-mechanism to call the new helper, but otherwise there is no change in
-log recovery behavior.
+Rather than continue to duplicate code, factor the calls that process a
+log record into a new helper and call that helper from both loops. This
+patch contains no functional changes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 118 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 83 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_log_recover.c | 35 +++++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 12 deletions(-)
 
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1be2590..423c36d 100644
+index 4f880d6..236ebaf 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -868,6 +868,79 @@ validate_head:
+@@ -4190,6 +4190,26 @@ xlog_unpack_data(
+ 	return 0;
  }
  
- /*
-+ * Seek backwards in the log for log record headers.
-+ *
-+ * Given a starting log block, walk backwards until we find the provided number
-+ * of records or hit the provided tail block. The return value is the number of
-+ * records encountered or a negative error code. The log block and buffer
-+ * pointer of the last record seen are returned in rblk and rhead respectively.
++/*
++ * Unpack and process a log record.
 + */
 +STATIC int
-+xlog_rseek_logrec_hdr(
++xlog_recover_process(
 +	struct xlog		*log,
-+	xfs_daddr_t		head_blk,
-+	xfs_daddr_t		tail_blk,
-+	int			count,
-+	struct xfs_buf		*bp,
-+	xfs_daddr_t		*rblk,
-+	struct xlog_rec_header	**rhead,
-+	bool			*wrapped)
++	struct hlist_head	rhash[],
++	struct xlog_rec_header	*rhead,
++	char			*dp,
++	int			pass)
 +{
-+	int			i;
 +	int			error;
-+	int			found = 0;
-+	char			*offset = NULL;
-+	xfs_daddr_t		end_blk;
 +
-+	*wrapped = false;
++	error = xlog_unpack_data(rhead, dp, log);
++	if (error)
++		return error;
 +
-+	/*
-+	 * Walk backwards from the head block until we hit the tail or the first
-+	 * block in the log.
-+	 */
-+	end_blk = head_blk > tail_blk ? tail_blk : 0;
-+	for (i = (int) head_blk - 1; i >= end_blk; i--) {
-+		error = xlog_bread(log, i, 1, bp, &offset);
-+		if (error)
-+			goto out_error;
-+
-+		if (*(__be32 *) offset == cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
-+			*rblk = i;
-+			*rhead = (struct xlog_rec_header *) offset;
-+			if (++found == count)
-+				break;
-+		}
-+	}
-+
-+	/*
-+	 * If we haven't hit the tail block or the log record header count,
-+	 * start looking again from the end of the physical log. Note that
-+	 * callers can pass head == tail if the tail is not yet known.
-+	 */
-+	if (tail_blk >= head_blk && found != count) {
-+		for (i = log->l_logBBsize - 1; i >= (int) tail_blk; i--) {
-+			error = xlog_bread(log, i, 1, bp, &offset);
-+			if (error)
-+				goto out_error;
-+
-+			if (*(__be32 *)offset ==
-+			    cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
-+				*wrapped = true;
-+				*rblk = i;
-+				*rhead = (struct xlog_rec_header *) offset;
-+				if (++found == count)
-+					break;
-+			}
-+		}
-+	}
-+
-+	return found;
-+
-+out_error:
-+	return error;
++	return xlog_recover_process_data(log, rhash, rhead, dp, pass);
 +}
 +
-+/*
-  * Find the sync block number or the tail of the log.
-  *
-  * This will be the block number of the last record to have its
-@@ -898,8 +971,7 @@ xlog_find_tail(
- 	xfs_daddr_t		after_umount_blk;
- 	xfs_lsn_t		tail_lsn;
- 	int			hblks;
--
--	found = 0;
-+	bool			wrapped = false;
+ STATIC int
+ xlog_valid_rec_header(
+ 	struct xlog		*log,
+@@ -4432,12 +4452,8 @@ xlog_do_recovery_pass(
+ 					goto bread_err2;
+ 			}
  
- 	/*
- 	 * Find previous log record
-@@ -923,37 +995,16 @@ xlog_find_tail(
- 	}
- 
- 	/*
--	 * Search backwards looking for log record header block
-+	 * Search backwards through the log looking for the log record header
-+	 * block. This wraps all the way back around to the head so something is
-+	 * seriously wrong if we can't find it.
- 	 */
- 	ASSERT(*head_blk < INT_MAX);
--	for (i = (int)(*head_blk) - 1; i >= 0; i--) {
--		error = xlog_bread(log, i, 1, bp, &offset);
--		if (error)
--			goto done;
--
--		if (*(__be32 *)offset == cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
--			found = 1;
--			break;
--		}
--	}
--	/*
--	 * If we haven't found the log record header block, start looking
--	 * again from the end of the physical log.  XXXmiken: There should be
--	 * a check here to make sure we didn't search more than N blocks in
--	 * the previous code.
--	 */
--	if (!found) {
--		for (i = log->l_logBBsize - 1; i >= (int)(*head_blk); i--) {
--			error = xlog_bread(log, i, 1, bp, &offset);
+-			error = xlog_unpack_data(rhead, offset, log);
 -			if (error)
--				goto done;
+-				goto bread_err2;
 -
--			if (*(__be32 *)offset ==
--			    cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
--				found = 2;
--				break;
--			}
--		}
-+	found = xlog_rseek_logrec_hdr(log, *head_blk, *head_blk, 1, bp, &i,
-+				      &rhead, &wrapped);
-+	if (found < 0) {
-+		error = found;
-+		goto done;
- 	}
- 	if (!found) {
- 		xfs_warn(log->l_mp, "%s: couldn't find sync record", __func__);
-@@ -961,9 +1012,6 @@ xlog_find_tail(
- 		ASSERT(0);
- 		return -EIO;
- 	}
--
--	/* find blk_no of tail of log */
--	rhead = (xlog_rec_header_t *)offset;
- 	*tail_blk = BLOCK_LSN(be64_to_cpu(rhead->h_tail_lsn));
+-			error = xlog_recover_process_data(log, rhash,
+-							rhead, offset, pass);
++			error = xlog_recover_process(log, rhash, rhead, offset,
++						     pass);
+ 			if (error)
+ 				goto bread_err2;
+ 			blk_no += bblks;
+@@ -4465,12 +4481,7 @@ xlog_do_recovery_pass(
+ 		if (error)
+ 			goto bread_err2;
  
- 	/*
-@@ -979,7 +1027,7 @@ xlog_find_tail(
- 	log->l_prev_block = i;
- 	log->l_curr_block = (int)*head_blk;
- 	log->l_curr_cycle = be32_to_cpu(rhead->h_cycle);
--	if (found == 2)
-+	if (wrapped)
- 		log->l_curr_cycle++;
- 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
- 	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+-		error = xlog_unpack_data(rhead, offset, log);
+-		if (error)
+-			goto bread_err2;
+-
+-		error = xlog_recover_process_data(log, rhash,
+-						rhead, offset, pass);
++		error = xlog_recover_process(log, rhash, rhead, offset, pass);
+ 		if (error)
+ 			goto bread_err2;
+ 		blk_no += bblks + hblks;
 -- 
 2.1.0
 
