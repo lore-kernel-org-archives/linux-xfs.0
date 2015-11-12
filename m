@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E374E7F6C
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:37:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 916B27F74
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:37:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54E8DAC003
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3890AC006
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:32 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6Mdkc69rTAcyPLxp (version=TLSv1.2
+	cuda.sgi.com with ESMTP id v8WWUH6V1BzpQqo1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:29 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 6E19AC1A1657
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:31 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id EF149935D2
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 15:37:29 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-36.bos.redhat.com [10.18.41.36])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tACFbTWE017072
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id tACFbTTF003341
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 10:37:29 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 3/8] xfs: refactor and open code log record crc check
-Date: Thu, 12 Nov 2015 10:37:23 -0500
-Message-Id: <1447342648-40012-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 6/8] xfs: refactor log record start detection into a new
+	helper
+Date: Thu, 12 Nov 2015 10:37:26 -0500
+Message-Id: <1447342648-40012-7-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
 References: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,127 +39,184 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Log record CRC verification currently occurs during active log recovery,
-immediately before a log record is unpacked. Therefore, the CRC
-calculation code is buried within the data unpack function. CRC
-verification pass support only needs to go so far as check the CRC, but
-this is not easily allowed as the code is currently organized.
+As part of the head/tail discovery process, log recovery locates the
+head block and then reverse seeks to find the start of the last active
+record in the log. This is non-trivial as the record itself could have
+wrapped around the end of the physical log. Log recovery torn write
+detection potentially needs to walk further behind the last record in
+the log, as multiple log I/Os can be in-flight at one time during a
+crash event.
 
-Since we now have a new log record processing helper, pull the record
-CRC verification code out from the unpack helper and open-code it at the
-top of the new process helper. This facilitates the ability to modify
-how records are processed based on the type of the current pass. This
-patch contains no functional changes.
+Therefore, refactor the reverse log record header search mechanism into
+a new helper that supports the ability to seek past an arbitrary number
+of log records (or until the tail is hit). Update the head/tail search
+mechanism to call the new helper, but otherwise there is no change in
+log recovery behavior.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 72 +++++++++++++++++-------------------------------
- 1 file changed, 26 insertions(+), 46 deletions(-)
+ fs/xfs/xfs_log_recover.c | 118 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 83 insertions(+), 35 deletions(-)
 
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 236ebaf..9ec4bbd 100644
+index 1be2590..423c36d 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -4118,46 +4118,6 @@ xlog_recover_process_iunlinks(
- 	mp->m_dmevmask = mp_dmevmask;
- }
- 
--/*
-- * Upack the log buffer data and crc check it. If the check fails, issue a
-- * warning if and only if the CRC in the header is non-zero. This makes the
-- * check an advisory warning, and the zero CRC check will prevent failure
-- * warnings from being emitted when upgrading the kernel from one that does not
-- * add CRCs by default.
-- *
-- * When filesystems are CRC enabled, this CRC mismatch becomes a fatal log
-- * corruption failure
-- */
--STATIC int
--xlog_unpack_data_crc(
--	struct xlog_rec_header	*rhead,
--	char			*dp,
--	struct xlog		*log)
--{
--	__le32			crc;
--
--	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
--	if (crc != rhead->h_crc) {
--		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
--			xfs_alert(log->l_mp,
--		"log record CRC mismatch: found 0x%x, expected 0x%x.",
--					le32_to_cpu(rhead->h_crc),
--					le32_to_cpu(crc));
--			xfs_hex_dump(dp, 32);
--		}
--
--		/*
--		 * If we've detected a log record corruption, then we can't
--		 * recover past this point. Abort recovery if we are enforcing
--		 * CRC protection by punting an error back up the stack.
--		 */
--		if (xfs_sb_version_hascrc(&log->l_mp->m_sb))
--			return -EFSCORRUPTED;
--	}
--
--	return 0;
--}
--
- STATIC int
- xlog_unpack_data(
- 	struct xlog_rec_header	*rhead,
-@@ -4165,11 +4125,6 @@ xlog_unpack_data(
- 	struct xlog		*log)
- {
- 	int			i, j, k;
--	int			error;
--
--	error = xlog_unpack_data_crc(rhead, dp, log);
--	if (error)
--		return error;
- 
- 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
- 		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
-@@ -4191,7 +4146,7 @@ xlog_unpack_data(
+@@ -868,6 +868,79 @@ validate_head:
  }
  
  /*
-- * Unpack and process a log record.
-+ * CRC check, unpack and process a log record.
-  */
- STATIC int
- xlog_recover_process(
-@@ -4202,6 +4157,31 @@ xlog_recover_process(
- 	int			pass)
- {
- 	int			error;
-+	__le32			crc;
++ * Seek backwards in the log for log record headers.
++ *
++ * Given a starting log block, walk backwards until we find the provided number
++ * of records or hit the provided tail block. The return value is the number of
++ * records encountered or a negative error code. The log block and buffer
++ * pointer of the last record seen are returned in rblk and rhead respectively.
++ */
++STATIC int
++xlog_rseek_logrec_hdr(
++	struct xlog		*log,
++	xfs_daddr_t		head_blk,
++	xfs_daddr_t		tail_blk,
++	int			count,
++	struct xfs_buf		*bp,
++	xfs_daddr_t		*rblk,
++	struct xlog_rec_header	**rhead,
++	bool			*wrapped)
++{
++	int			i;
++	int			error;
++	int			found = 0;
++	char			*offset = NULL;
++	xfs_daddr_t		end_blk;
++
++	*wrapped = false;
 +
 +	/*
-+	 * Check the CRC and issue a warning if and only if the CRC in the
-+	 * header is non-zero. This is an advisory warning and the zero CRC
-+	 * check prevents warnings from being emitted when upgrading the kernel
-+	 * from one that does not add CRCs by default.
++	 * Walk backwards from the head block until we hit the tail or the first
++	 * block in the log.
 +	 */
-+	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
-+	if (crc != le32_to_cpu(rhead->h_crc)) {
-+		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
-+			xfs_alert(log->l_mp,
-+		"log record CRC mismatch: found 0x%x, expected 0x%x.",
-+					le32_to_cpu(rhead->h_crc),
-+					le32_to_cpu(crc));
-+			xfs_hex_dump(dp, 32);
-+		}
++	end_blk = head_blk > tail_blk ? tail_blk : 0;
++	for (i = (int) head_blk - 1; i >= end_blk; i--) {
++		error = xlog_bread(log, i, 1, bp, &offset);
++		if (error)
++			goto out_error;
 +
-+		/*
-+		 * If the filesystem is CRC enabled, this mismatch becomes a
-+		 * fatal log corruption failure.
-+		 */
-+		if (xfs_sb_version_hascrc(&log->l_mp->m_sb))
-+			return -EFSCORRUPTED;
++		if (*(__be32 *) offset == cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
++			*rblk = i;
++			*rhead = (struct xlog_rec_header *) offset;
++			if (++found == count)
++				break;
++		}
 +	}
++
++	/*
++	 * If we haven't hit the tail block or the log record header count,
++	 * start looking again from the end of the physical log. Note that
++	 * callers can pass head == tail if the tail is not yet known.
++	 */
++	if (tail_blk >= head_blk && found != count) {
++		for (i = log->l_logBBsize - 1; i >= (int) tail_blk; i--) {
++			error = xlog_bread(log, i, 1, bp, &offset);
++			if (error)
++				goto out_error;
++
++			if (*(__be32 *)offset ==
++			    cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
++				*wrapped = true;
++				*rblk = i;
++				*rhead = (struct xlog_rec_header *) offset;
++				if (++found == count)
++					break;
++			}
++		}
++	}
++
++	return found;
++
++out_error:
++	return error;
++}
++
++/*
+  * Find the sync block number or the tail of the log.
+  *
+  * This will be the block number of the last record to have its
+@@ -898,8 +971,7 @@ xlog_find_tail(
+ 	xfs_daddr_t		after_umount_blk;
+ 	xfs_lsn_t		tail_lsn;
+ 	int			hblks;
+-
+-	found = 0;
++	bool			wrapped = false;
  
- 	error = xlog_unpack_data(rhead, dp, log);
- 	if (error)
+ 	/*
+ 	 * Find previous log record
+@@ -923,37 +995,16 @@ xlog_find_tail(
+ 	}
+ 
+ 	/*
+-	 * Search backwards looking for log record header block
++	 * Search backwards through the log looking for the log record header
++	 * block. This wraps all the way back around to the head so something is
++	 * seriously wrong if we can't find it.
+ 	 */
+ 	ASSERT(*head_blk < INT_MAX);
+-	for (i = (int)(*head_blk) - 1; i >= 0; i--) {
+-		error = xlog_bread(log, i, 1, bp, &offset);
+-		if (error)
+-			goto done;
+-
+-		if (*(__be32 *)offset == cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
+-			found = 1;
+-			break;
+-		}
+-	}
+-	/*
+-	 * If we haven't found the log record header block, start looking
+-	 * again from the end of the physical log.  XXXmiken: There should be
+-	 * a check here to make sure we didn't search more than N blocks in
+-	 * the previous code.
+-	 */
+-	if (!found) {
+-		for (i = log->l_logBBsize - 1; i >= (int)(*head_blk); i--) {
+-			error = xlog_bread(log, i, 1, bp, &offset);
+-			if (error)
+-				goto done;
+-
+-			if (*(__be32 *)offset ==
+-			    cpu_to_be32(XLOG_HEADER_MAGIC_NUM)) {
+-				found = 2;
+-				break;
+-			}
+-		}
++	found = xlog_rseek_logrec_hdr(log, *head_blk, *head_blk, 1, bp, &i,
++				      &rhead, &wrapped);
++	if (found < 0) {
++		error = found;
++		goto done;
+ 	}
+ 	if (!found) {
+ 		xfs_warn(log->l_mp, "%s: couldn't find sync record", __func__);
+@@ -961,9 +1012,6 @@ xlog_find_tail(
+ 		ASSERT(0);
+ 		return -EIO;
+ 	}
+-
+-	/* find blk_no of tail of log */
+-	rhead = (xlog_rec_header_t *)offset;
+ 	*tail_blk = BLOCK_LSN(be64_to_cpu(rhead->h_tail_lsn));
+ 
+ 	/*
+@@ -979,7 +1027,7 @@ xlog_find_tail(
+ 	log->l_prev_block = i;
+ 	log->l_curr_block = (int)*head_blk;
+ 	log->l_curr_cycle = be32_to_cpu(rhead->h_cycle);
+-	if (found == 2)
++	if (wrapped)
+ 		log->l_curr_cycle++;
+ 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
+ 	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
 -- 
 2.1.0
 
