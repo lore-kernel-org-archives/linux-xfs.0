@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D47577F66
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:37:30 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 3E4367F66
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 09:37:31 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B195D8F8035
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EE55A8F8033
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:30 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6S9Sb1jvA87CzrLC (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 577Dsiokw4YUjpgT (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Thu, 12 Nov 2015 07:37:29 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 40C23C0D8028
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 6C429C0B1B4D
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 15:37:29 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-36.bos.redhat.com [10.18.41.36])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tACFbSZq017070
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id tACFbTiA032673
 	for <xfs@oss.sgi.com>; Thu, 12 Nov 2015 10:37:29 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 0/8] xfs: log recovery torn write detection
-Date: Thu, 12 Nov 2015 10:37:20 -0500
-Message-Id: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 4/8] xfs: return start block of first bad log record during
+	recovery
+Date: Thu, 12 Nov 2015 10:37:24 -0500
+Message-Id: <1447342648-40012-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
+References: <1447342648-40012-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,56 +39,112 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+Each log recovery pass walks from the tail block to the head block and
+processes records appropriately based on the associated log pass type.
+There are various failure conditions that can occur through this
+sequence, such as I/O errors, CRC errors, etc. Log torn write detection
+will perform CRC verification near the head of the log to detect torn
+writes and trim torn records from the log appropriately.
 
-Here's v2 of log recovery torn write detection. This fixes a couple bugs
-as noted in the replies to the v1 series and replaces the error
-injection mechanism with an alternate version that actually writes an
-invalid log record CRC to disk. An xfstests test based on this mechanism
-is forthcoming.
+As it is, xlog_do_recovery_pass() only returns an error code in the
+event of CRC failure, which isn't enough information to trim the head of
+the log. Update xlog_do_recovery_pass() to optionally return the start
+block of the associated record when an error occurs. This patch contains
+no functional changes.
 
-This survives xfstests and runs through a significant number of error
-injection iterations without any related problems. I have seen one or
-two assert failures and whatnot that do not appear related to this
-series and so far are not repeatable. Thoughts, reviews, flames
-appreciated.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-Brian
-
-v2:
-- Fixed bug in first bad record detection to return correct block when
-  log wraps.
-- Update torn record handling to truncate back to tail.
-- Fixed up warning messages.
-- Replaced v1 error injection mechanism with log write time CRC error
-  injection.
-v1: http://oss.sgi.com/pipermail/xfs/2015-November/044841.html
-- Added bug fix for mkfs log record header inconsistency.
-- Refactored log recovery code to support a CRC-check-only recovery
-  pass.
-- CRC verify the last 8 records behind the head to account for
-  concurrent log writes.
-- Verify the tail of the log as well when the head is torn.
-- Added (rfc) crc error injection patch for testing purposes.
-rfc: http://oss.sgi.com/pipermail/xfs/2015-July/042415.html
-
-Brian Foster (8):
-  xfs: detect and handle invalid iclog size set by mkfs
-  xfs: refactor log record unpack and data processing
-  xfs: refactor and open code log record crc check
-  xfs: return start block of first bad log record during recovery
-  xfs: support a crc verification only log record pass
-  xfs: refactor log record start detection into a new helper
-  xfs: detect and trim torn writes during log recovery
-  xfs: debug mode log record crc error injection
-
- fs/xfs/libxfs/xfs_log_recover.h |   1 +
- fs/xfs/xfs_log.c                |  45 +++-
- fs/xfs/xfs_log_priv.h           |   3 +
- fs/xfs/xfs_log_recover.c        | 569 ++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_sysfs.c              |  36 +++
- 5 files changed, 541 insertions(+), 113 deletions(-)
-
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 9ec4bbd..e0318e8 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4239,10 +4239,12 @@ xlog_do_recovery_pass(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		head_blk,
+ 	xfs_daddr_t		tail_blk,
+-	int			pass)
++	int			pass,
++	xfs_daddr_t		*first_bad)	/* out: first bad log rec */
+ {
+ 	xlog_rec_header_t	*rhead;
+ 	xfs_daddr_t		blk_no;
++	xfs_daddr_t		rhead_blk;
+ 	char			*offset;
+ 	xfs_buf_t		*hbp, *dbp;
+ 	int			error = 0, h_size, h_len;
+@@ -4251,6 +4253,7 @@ xlog_do_recovery_pass(
+ 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
+ 
+ 	ASSERT(head_blk != tail_blk);
++	rhead_blk = 0;
+ 
+ 	/*
+ 	 * Read the header of the tail block and get the iclog buffer size from
+@@ -4325,7 +4328,7 @@ xlog_do_recovery_pass(
+ 	}
+ 
+ 	memset(rhash, 0, sizeof(rhash));
+-	blk_no = tail_blk;
++	blk_no = rhead_blk = tail_blk;
+ 	if (tail_blk > head_blk) {
+ 		/*
+ 		 * Perform recovery around the end of the physical log.
+@@ -4436,11 +4439,14 @@ xlog_do_recovery_pass(
+ 						     pass);
+ 			if (error)
+ 				goto bread_err2;
++
+ 			blk_no += bblks;
++			rhead_blk = blk_no;
+ 		}
+ 
+ 		ASSERT(blk_no >= log->l_logBBsize);
+ 		blk_no -= log->l_logBBsize;
++		rhead_blk = blk_no;
+ 	}
+ 
+ 	/* read first part of physical log */
+@@ -4464,13 +4470,19 @@ xlog_do_recovery_pass(
+ 		error = xlog_recover_process(log, rhash, rhead, offset, pass);
+ 		if (error)
+ 			goto bread_err2;
++
+ 		blk_no += bblks + hblks;
++		rhead_blk = blk_no;
+ 	}
+ 
+  bread_err2:
+ 	xlog_put_bp(dbp);
+  bread_err1:
+ 	xlog_put_bp(hbp);
++
++	if (error && first_bad)
++		*first_bad = rhead_blk;
++
+ 	return error;
+ }
+ 
+@@ -4508,7 +4520,7 @@ xlog_do_log_recovery(
+ 		INIT_LIST_HEAD(&log->l_buf_cancel_table[i]);
+ 
+ 	error = xlog_do_recovery_pass(log, head_blk, tail_blk,
+-				      XLOG_RECOVER_PASS1);
++				      XLOG_RECOVER_PASS1, NULL);
+ 	if (error != 0) {
+ 		kmem_free(log->l_buf_cancel_table);
+ 		log->l_buf_cancel_table = NULL;
+@@ -4519,7 +4531,7 @@ xlog_do_log_recovery(
+ 	 * When it is complete free the table of buf cancel items.
+ 	 */
+ 	error = xlog_do_recovery_pass(log, head_blk, tail_blk,
+-				      XLOG_RECOVER_PASS2);
++				      XLOG_RECOVER_PASS2, NULL);
+ #ifdef DEBUG
+ 	if (!error) {
+ 		int	i;
 -- 
 2.1.0
 
