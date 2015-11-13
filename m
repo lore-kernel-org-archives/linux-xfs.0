@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5EA47F7C
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 15:37:45 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 276127F82
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 15:37:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A6F0B8F804C
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:45 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 4muQNeN2ljJAe89D (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 074948F8033
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:50 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id x5GBzlRPZT39ZBOS (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:40 -0800 (PST)
-Subject: [PATCH 04/12] reflink: basic tests of the reflink and dedupe ioctls
+	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:46 -0800 (PST)
+Subject: [PATCH 05/12] reflink: test CoW behaviors of reflinked files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 13 Nov 2015 13:37:09 -0800
-Message-ID: <20151113213709.31124.35294.stgit@birch.djwong.org>
+Date: Fri, 13 Nov 2015 13:37:16 -0800
+Message-ID: <20151113213716.31124.72794.stgit@birch.djwong.org>
 In-Reply-To: <20151113213643.31124.80975.stgit@birch.djwong.org>
 References: <20151113213643.31124.80975.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,60 +31,47 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-Test the operation of the btrfs (and now xfs) reflink and dedupe
-ioctls at various file offsets and with matching and nonmatching
-files.
+Ensure that CoW happens correctly with buffered, directio, and mmap writes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/116     |   92 +++++++++++++++++++++++++++
- tests/generic/116.out |    8 ++
- tests/generic/118     |   93 +++++++++++++++++++++++++++
- tests/generic/118.out |   11 +++
- tests/generic/119     |  170 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/119.out |   30 +++++++++
- tests/generic/121     |   92 +++++++++++++++++++++++++++
- tests/generic/121.out |    8 ++
- tests/generic/122     |   92 +++++++++++++++++++++++++++
- tests/generic/122.out |   12 +++
- tests/generic/134     |  128 +++++++++++++++++++++++++++++++++++++
- tests/generic/134.out |   16 +++++
- tests/generic/136     |  128 +++++++++++++++++++++++++++++++++++++
- tests/generic/136.out |   17 +++++
- tests/generic/137     |  131 ++++++++++++++++++++++++++++++++++++++
- tests/generic/137.out |    8 ++
- tests/generic/group   |    8 ++
- 17 files changed, 1044 insertions(+)
- create mode 100755 tests/generic/116
- create mode 100644 tests/generic/116.out
- create mode 100755 tests/generic/118
- create mode 100644 tests/generic/118.out
- create mode 100755 tests/generic/119
- create mode 100644 tests/generic/119.out
- create mode 100755 tests/generic/121
- create mode 100644 tests/generic/121.out
- create mode 100755 tests/generic/122
- create mode 100644 tests/generic/122.out
- create mode 100755 tests/generic/134
- create mode 100644 tests/generic/134.out
- create mode 100755 tests/generic/136
- create mode 100644 tests/generic/136.out
- create mode 100755 tests/generic/137
- create mode 100644 tests/generic/137.out
+ tests/generic/138     |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/138.out |   19 ++++++
+ tests/generic/139     |  151 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/139.out |   19 ++++++
+ tests/generic/140     |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/140.out |   19 ++++++
+ tests/generic/142     |   91 +++++++++++++++++++++++++++++
+ tests/generic/142.out |    8 +++
+ tests/generic/143     |   91 +++++++++++++++++++++++++++++
+ tests/generic/143.out |    8 +++
+ tests/generic/group   |    5 ++
+ 11 files changed, 715 insertions(+)
+ create mode 100755 tests/generic/138
+ create mode 100644 tests/generic/138.out
+ create mode 100755 tests/generic/139
+ create mode 100644 tests/generic/139.out
+ create mode 100755 tests/generic/140
+ create mode 100644 tests/generic/140.out
+ create mode 100755 tests/generic/142
+ create mode 100644 tests/generic/142.out
+ create mode 100755 tests/generic/143
+ create mode 100644 tests/generic/143.out
 
 
-diff --git a/tests/generic/116 b/tests/generic/116
+diff --git a/tests/generic/138 b/tests/generic/138
 new file mode 100755
-index 0000000..2b4b505
+index 0000000..c084679
 --- /dev/null
-+++ b/tests/generic/116
-@@ -0,0 +1,92 @@
++++ b/tests/generic/138
+@@ -0,0 +1,152 @@
 +#! /bin/bash
-+# FS QA Test No. 116
++# FS QA Test No. 138
 +#
-+# Ensure that we can reflink parts of two identical files:
-+#   - Reflink identical parts of two identical files
-+#   - Check that we still have identical contents
++# Ensuring that copy on write through the page cache works:
++#   - Reflink two files together
++#   - Write to the beginning, middle, and end
++#   - Check that the files are now different where we say they're different.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -126,6 +113,7 @@ index 0000000..2b4b505
 +# real QA test starts here
 +_supported_os Linux
 +_require_test_reflink
++_require_cp_reflink
 +
 +rm -f "$seqres.full"
 +
@@ -135,186 +123,138 @@ index 0000000..2b4b505
 +
 +echo "Create the original files"
 +BLKSZ=65536
-+_pwrite_byte 0x61 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x61 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x61 0 $((BLKSZ * 48 - 3)) "$TESTDIR/file1" >> "$seqres.full"
++_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x61 0 $((BLKSZ * 48 - 3)) "$TESTDIR/file3" >> "$seqres.full"
 +_test_remount
 +
++echo "Compare files"
 +md5sum "$TESTDIR/file1" | _filter_test_dir
 +md5sum "$TESTDIR/file2" | _filter_test_dir
++md5sum "$TESTDIR/file3" | _filter_test_dir
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 8)) \
-+       || echo "Files do not match"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "Files 1-2 do not match"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file3" || echo "Files 1-3 do not match"
++cmp -s "$TESTDIR/file2" "$TESTDIR/file3" || echo "Files 2-3 do not match"
 +
-+echo "Reflink the middle blocks together"
-+free_before="$(stat -f -c '%a' "$TESTDIR")"
-+_reflink_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) >> "$seqres.full"
-+_test_remount
-+free_after="$(stat -f -c '%a' "$TESTDIR")"
-+echo "freesp changed by $free_before -> $free_after" >> "$seqres.full"
++echo "pagecache CoW the second file"
++_pwrite_byte 0x62 0 17 "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x62 0 17 "$TESTDIR/file3" >> "$seqres.full"
 +
-+echo "Compare sections"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
++_pwrite_byte 0x62 $((BLKSZ * 16 - 34)) 17 "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x62 $((BLKSZ * 16 - 34)) 17 "$TESTDIR/file3" >> "$seqres.full"
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 4)) \
-+       || echo "Start sections do not match"
-+
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) \
-+       || echo "Middle sections do not match"
-+
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 6)) "$TESTDIR/file2" \
-+		$((BLKSZ * 6)) $((BLKSZ * 2)) \
-+       || echo "End sections do not match"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/116.out b/tests/generic/116.out
-new file mode 100644
-index 0000000..5adfc62
---- /dev/null
-+++ b/tests/generic/116.out
-@@ -0,0 +1,8 @@
-+QA output created by 116
-+Create the original files
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-116/file1
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-116/file2
-+Reflink the middle blocks together
-+Compare sections
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-116/file1
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-116/file2
-diff --git a/tests/generic/118 b/tests/generic/118
-new file mode 100755
-index 0000000..651b72c
---- /dev/null
-+++ b/tests/generic/118
-@@ -0,0 +1,93 @@
-+#! /bin/bash
-+# FS QA Test No. 118
-+#
-+# Ensuring that we can reflink non-matching parts of files:
-+#   - Reflink identical ranges of two different files
-+#   - Check that the non-linked ranges still do not match
-+#   - Check that we end up with identical contents in the linked ranges
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf "$tmp".* "$TESTDIR"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_test_reflink
-+
-+rm -f "$seqres.full"
-+
-+TESTDIR="$TEST_DIR/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x62 $((BLKSZ * 48 - 8)) 17 "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x62 $((BLKSZ * 48 - 8)) 17 "$TESTDIR/file3" >> "$seqres.full"
 +_test_remount
 +
++echo "Compare files"
 +md5sum "$TESTDIR/file1" | _filter_test_dir
 +md5sum "$TESTDIR/file2" | _filter_test_dir
++md5sum "$TESTDIR/file3" | _filter_test_dir
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 8)) \
-+       || echo "Files do not match (intentional)"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "Files 1-2 do not match (intentional)"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file3" || echo "Files 1-3 do not match (intentional)"
++cmp -s "$TESTDIR/file2" "$TESTDIR/file3" || echo "Files 2-3 do not match"
 +
-+echo "Reflink the middle blocks together"
-+free_before="$(stat -f -c '%a' "$TESTDIR")"
-+_reflink_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) >> "$seqres.full"
-+_test_remount
-+free_after="$(stat -f -c '%a' "$TESTDIR")"
-+echo "freesp changed by $free_before -> $free_after" >> "$seqres.full"
-+
-+echo "Compare sections"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 4)) \
++echo "Compare the CoW'd section to the before file"
++_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 17 \
 +       || echo "Start sections do not match (intentional)"
 +
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) \
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16 - 34)) \
++		"$TESTDIR/file2" $((BLKSZ * 16 - 34)) 17 \
++       || echo "Middle sections do not match (intentional)"
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 48 - 8)) \
++		"$TESTDIR/file2" $((BLKSZ * 48 - 8)) 17 \
++       || echo "End sections do not match (intentional)"
++
++echo "Compare the CoW'd section to the after file"
++_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file3" 0 17 \
++       || echo "Start sections do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16 - 34)) \
++		"$TESTDIR/file3" $((BLKSZ * 16 - 34)) 17 \
 +       || echo "Middle sections do not match"
 +
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 6)) "$TESTDIR/file2" \
-+		$((BLKSZ * 6)) $((BLKSZ * 2)) \
-+       || echo "End sections do not match (intentional)"
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 48 - 8)) \
++		"$TESTDIR/file3" $((BLKSZ * 48 - 8)) 17 \
++       || echo "End sections do not match"
++
++echo "Compare the not CoW'd sections"
++_compare_range "$TESTDIR/file1" 18 "$TESTDIR/file2" 18 17 \
++       || echo "Start sections of 1-2 do not match"
++
++_compare_range "$TESTDIR/file2" 18 "$TESTDIR/file3" 18 17 \
++       || echo "Start sections of 2-3 do not match"
++
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16 - 17)) \
++		"$TESTDIR/file2" $((BLKSZ * 16 - 17)) 82 \
++       || echo "Middle sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16 - 17)) \
++		"$TESTDIR/file3" $((BLKSZ * 16 - 17)) 82 \
++       || echo "Middle sections of 2-3 do not match"
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 48 - 108)) \
++		"$TESTDIR/file2" $((BLKSZ * 48 - 108)) 100 \
++       || echo "End sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 48 - 108)) \
++		"$TESTDIR/file3" $((BLKSZ * 48 - 108)) 100 \
++       || echo "End sections of 2-3 do not match"
++
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 14)) \
++		"$TESTDIR/file2" $((BLKSZ * 14)) $BLKSZ \
++       || echo "Untouched sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 14)) \
++		"$TESTDIR/file3" $((BLKSZ * 14)) $BLKSZ \
++       || echo "Untouched sections of 2-3 do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/118.out b/tests/generic/118.out
+diff --git a/tests/generic/138.out b/tests/generic/138.out
 new file mode 100644
-index 0000000..8fdaf59
+index 0000000..b0cafab
 --- /dev/null
-+++ b/tests/generic/118.out
-@@ -0,0 +1,11 @@
-+QA output created by 118
++++ b/tests/generic/138.out
+@@ -0,0 +1,19 @@
++QA output created by 138
 +Create the original files
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-118/file1
-+5e3501f97fd2669babfcbd3e1972e833  TEST_DIR/test-118/file2
-+Files do not match (intentional)
-+Reflink the middle blocks together
-+Compare sections
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-118/file1
-+f7f9e44d37909868014e9151f5293ab0  TEST_DIR/test-118/file2
++Compare files
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-138/file1
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-138/file2
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-138/file3
++pagecache CoW the second file
++Compare files
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-138/file1
++4a879c2f322121f6f4b8ebede1909a7c  TEST_DIR/test-138/file2
++4a879c2f322121f6f4b8ebede1909a7c  TEST_DIR/test-138/file3
++Files 1-2 do not match (intentional)
++Files 1-3 do not match (intentional)
++Compare the CoW'd section to the before file
 +Start sections do not match (intentional)
++Middle sections do not match (intentional)
 +End sections do not match (intentional)
-diff --git a/tests/generic/119 b/tests/generic/119
++Compare the CoW'd section to the after file
++Compare the not CoW'd sections
+diff --git a/tests/generic/139 b/tests/generic/139
 new file mode 100755
-index 0000000..9d57379
+index 0000000..54c68fb
 --- /dev/null
-+++ b/tests/generic/119
-@@ -0,0 +1,170 @@
++++ b/tests/generic/139
+@@ -0,0 +1,151 @@
 +#! /bin/bash
-+# FS QA Test No. 119
++# FS QA Test No. 139
 +#
-+# Reflinking two sets of files together:
-+#   - Reflink identical parts of two identical files
-+#   - Reflink identical parts of two other identical files
-+#   - Reflink identical parts of all four files
-+#   - Check that we end up with identical contents
++# Ensuring that copy on write in direct-io mode works:
++#   - Reflink two files together
++#   - Write to the beginning, middle, and end in direct-io mode
++#   - Check that the files are now different where we say they're different.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -356,6 +296,7 @@ index 0000000..9d57379
 +# real QA test starts here
 +_supported_os Linux
 +_require_test_reflink
++_require_cp_reflink
 +
 +rm -f "$seqres.full"
 +
@@ -365,398 +306,137 @@ index 0000000..9d57379
 +
 +echo "Create the original files"
 +BLKSZ=65536
-+_pwrite_byte 0x61 0 $((BLKSZ * 8)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 0 $((BLKSZ * 8)) "$TESTDIR/file2" >> "$seqres.full"
-+_pwrite_byte 0x63 0 $((BLKSZ * 8)) "$TESTDIR/file3" >> "$seqres.full"
-+_pwrite_byte 0x64 0 $((BLKSZ * 8)) "$TESTDIR/file4" >> "$seqres.full"
++_pwrite_byte 0x61 0 $((BLKSZ * 48 - 3)) "$TESTDIR/file1" >> "$seqres.full"
++_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x61 0 $((BLKSZ * 48 - 3)) "$TESTDIR/file3" >> "$seqres.full"
 +_test_remount
 +
++echo "Compare files"
 +md5sum "$TESTDIR/file1" | _filter_test_dir
 +md5sum "$TESTDIR/file2" | _filter_test_dir
 +md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 8)) \
-+       || echo "Files 1-2 do not match (intentional)"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "Files 1-2 should match"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file3" || echo "Files 1-3 should match"
++cmp -s "$TESTDIR/file2" "$TESTDIR/file3" || echo "Files 2-3 should match"
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file3" 0 $((BLKSZ * 8)) \
-+       || echo "Files 1-3 do not match (intentional)"
++echo "directio CoW the second file"
++_pwrite_byte 0x62 0 $BLKSZ "$TESTDIR/file2" -d >> "$seqres.full"
++_pwrite_byte 0x62 0 $BLKSZ "$TESTDIR/file3" -d >> "$seqres.full"
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file4" 0 $((BLKSZ * 8)) \
-+       || echo "Files 1-4 do not match (intentional)"
++_pwrite_byte 0x62 $((BLKSZ * 16 - 512)) 512 "$TESTDIR/file2" -d >> "$seqres.full"
++_pwrite_byte 0x62 $((BLKSZ * 16 - 512)) 512 "$TESTDIR/file3" -d >> "$seqres.full"
 +
-+echo "Reflink the first four blocks together, 1-2 3-4"
-+free_before="$(stat -f -c '%a' "$TESTDIR")"
-+_reflink_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 4)) >> "$seqres.full"
-+_reflink_range "$TESTDIR/file3" 0 "$TESTDIR/file4" 0 $((BLKSZ * 4)) >> "$seqres.full"
++_pwrite_byte 0x62 $((BLKSZ * 48)) $BLKSZ "$TESTDIR/file2" -d >> "$seqres.full"
++_pwrite_byte 0x62 $((BLKSZ * 48)) $BLKSZ "$TESTDIR/file3" -d >> "$seqres.full"
 +_test_remount
-+free_after="$(stat -f -c '%a' "$TESTDIR")"
-+echo "freesp changed by $free_before -> $free_after" >> "$seqres.full"
 +
-+echo "Compare sections"
++echo "Compare files"
 +md5sum "$TESTDIR/file1" | _filter_test_dir
 +md5sum "$TESTDIR/file2" | _filter_test_dir
 +md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 4)) \
-+       || echo "Sections of file 1-2 do not match"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "Files 1-2 should not match (intentional)"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file3" || echo "Files 1-3 should not match (intentional)"
++cmp -s "$TESTDIR/file2" "$TESTDIR/file3" || echo "Files 2-3 should match"
 +
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file3" 0 $((BLKSZ * 4)) \
-+       || echo "Sections of file 1-3 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file4" 0 $((BLKSZ * 4)) \
-+       || echo "Sections of file 1-4 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file3" 0 $((BLKSZ * 4)) \
-+       || echo "Sections of file 2-3 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file4" 0 $((BLKSZ * 4)) \
-+       || echo "Sections of file 2-4 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file3" 0 "$TESTDIR/file4" 0 $((BLKSZ * 4)) \
-+       || echo "Sections of file 3-4 do not match"
-+
-+echo "Reflink the first two blocks together, 1-3 1-4"
-+free_before="$(stat -f -c '%a' $TESTDIR)"
-+_reflink_range "$TESTDIR/file1" 0 "$TESTDIR/file3" 0 $((BLKSZ * 2)) >> "$seqres.full"
-+_reflink_range "$TESTDIR/file1" 0 "$TESTDIR/file4" 0 $((BLKSZ * 2)) >> "$seqres.full"
-+_test_remount
-+free_after="$(stat -f -c '%a' $TESTDIR)"
-+echo "freesp changed by $free_before -> $free_after" >> "$seqres.full"
-+
-+echo "Compare sections"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 2)) \
-+       || echo "Sections of files 1-2 do not match"
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file3" 0 $((BLKSZ * 2)) \
-+       || echo "Sections of files 1-3 do not match"
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file4" 0 $((BLKSZ * 2)) \
-+       || echo "Sections of files 1-4 do not match"
-+
-+_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file3" 0 $((BLKSZ * 2)) \
-+       || echo "Sections of files 2-3 do not match"
-+
-+_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file4" 0 $((BLKSZ * 2)) \
-+       || echo "Sections of files 2-4 do not match"
-+
-+_compare_range "$TESTDIR/file3" 0 "$TESTDIR/file4" 0 $((BLKSZ * 2)) \
-+       || echo "Sections of files 3-4 do not match"
-+
-+echo "Compare previously reflinked sections"
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 2)) "$TESTDIR/file2" \
-+		$((BLKSZ * 2)) $((BLKSZ * 2)) \
-+       || echo "Sections of file 1-2 do not match"
-+
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 2)) "$TESTDIR/file3" \
-+		$((BLKSZ * 2)) $((BLKSZ * 2)) \
-+       || echo "Sections of file 1-3 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 2)) "$TESTDIR/file4" \
-+		$((BLKSZ * 2)) $((BLKSZ * 2)) \
-+       || echo "Sections of file 1-4 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file2" $((BLKSZ * 2)) "$TESTDIR/file3" \
-+		$((BLKSZ * 2)) $((BLKSZ * 2)) \
-+       || echo "Sections of file 2-3 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file2" $((BLKSZ * 2)) "$TESTDIR/file4" \
-+		$((BLKSZ * 2)) $((BLKSZ * 2)) \
-+       || echo "Sections of file 2-4 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file3" $((BLKSZ * 2)) "$TESTDIR/file4" \
-+		$((BLKSZ * 2)) $((BLKSZ * 2)) \
-+       || echo "Sections of file 3-4 do not match"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/119.out b/tests/generic/119.out
-new file mode 100644
-index 0000000..85893d5
---- /dev/null
-+++ b/tests/generic/119.out
-@@ -0,0 +1,30 @@
-+QA output created by 119
-+Create the original files
-+30c2557e8302a5beb290c71520d87f42  TEST_DIR/test-119/file1
-+efb787f7990e43c7dc30565d8cc344d4  TEST_DIR/test-119/file2
-+c83f38d4622a78b74e3480634194b08f  TEST_DIR/test-119/file3
-+1c11fd3151d2229f5cf43903386aa432  TEST_DIR/test-119/file4
-+Files 1-2 do not match (intentional)
-+Files 1-3 do not match (intentional)
-+Files 1-4 do not match (intentional)
-+Reflink the first four blocks together, 1-2 3-4
-+Compare sections
-+30c2557e8302a5beb290c71520d87f42  TEST_DIR/test-119/file1
-+63bdb182cdf03a8a19e83234d869d00a  TEST_DIR/test-119/file2
-+c83f38d4622a78b74e3480634194b08f  TEST_DIR/test-119/file3
-+dc2ae3db14e97fad93faf939170b085c  TEST_DIR/test-119/file4
-+Sections of file 1-3 do not match (intentional)
-+Sections of file 1-4 do not match (intentional)
-+Sections of file 2-3 do not match (intentional)
-+Sections of file 2-4 do not match (intentional)
-+Reflink the first two blocks together, 1-3 1-4
-+Compare sections
-+30c2557e8302a5beb290c71520d87f42  TEST_DIR/test-119/file1
-+63bdb182cdf03a8a19e83234d869d00a  TEST_DIR/test-119/file2
-+89a444ff9d6af60ba487e9a0ca2161e2  TEST_DIR/test-119/file3
-+0c263058794a54c5e197ece52386f5be  TEST_DIR/test-119/file4
-+Compare previously reflinked sections
-+Sections of file 1-3 do not match (intentional)
-+Sections of file 1-4 do not match (intentional)
-+Sections of file 2-3 do not match (intentional)
-+Sections of file 2-4 do not match (intentional)
-diff --git a/tests/generic/121 b/tests/generic/121
-new file mode 100755
-index 0000000..9a5b383
---- /dev/null
-+++ b/tests/generic/121
-@@ -0,0 +1,92 @@
-+#! /bin/bash
-+# FS QA Test No. 121
-+#
-+# Ensure that we can dedupe parts of two files:
-+#   - Dedupe identical parts of two identical files
-+#   - Check that still have identical contents
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf "$tmp".* "$TESTDIR"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_test_dedupe
-+
-+rm -f "$seqres.full"
-+
-+TESTDIR="$TEST_DIR/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x61 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file2" >> "$seqres.full"
-+_test_remount
-+
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 8)) \
-+       || echo "Files 1-2 do not match (intentional)"
-+
-+echo "Dedupe the middle blocks together"
-+free_before="$(stat -f -c '%a' "$TESTDIR")"
-+_dedupe_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) >> "$seqres.full"
-+_test_remount
-+free_after="$(stat -f -c '%a' "$TESTDIR")"
-+echo "freesp changed by $free_before -> $free_after" >> "$seqres.full"
-+
-+echo "Compare sections"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 4)) \
-+       || echo "Start sections do not match"
-+
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) \
-+       || echo "Middle sections do not match"
-+
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 6)) "$TESTDIR/file2" \
-+		$((BLKSZ * 6)) $((BLKSZ * 2)) \
-+       || echo "End sections do not match"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/121.out b/tests/generic/121.out
-new file mode 100644
-index 0000000..d865c7e
---- /dev/null
-+++ b/tests/generic/121.out
-@@ -0,0 +1,8 @@
-+QA output created by 121
-+Create the original files
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-121/file1
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-121/file2
-+Dedupe the middle blocks together
-+Compare sections
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-121/file1
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-121/file2
-diff --git a/tests/generic/122 b/tests/generic/122
-new file mode 100755
-index 0000000..0edb48d
---- /dev/null
-+++ b/tests/generic/122
-@@ -0,0 +1,92 @@
-+#! /bin/bash
-+# FS QA Test No. 122
-+#
-+# Ensuring that we cannot dedupe non-matching parts of files:
-+#   - Fail to dedupe non-identical parts of two different files
-+#   - Check that nothing changes in either file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf "$tmp".* "$TESTDIR"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_test_dedupe
-+
-+rm -f "$seqres.full"
-+
-+TESTDIR="$TEST_DIR/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $((BLKSZ * 2)) $((BLKSZ * 6)) "$TESTDIR/file2" >> "$seqres.full"
-+_test_remount
-+
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 "$((BLKSZ * 8))" \
-+       || echo "Files 1-2 do not match (intentional)"
-+
-+echo "(Fail to) dedupe the middle blocks together"
-+free_before="$(stat -f -c '%a' "$TESTDIR")"
-+_dedupe_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) >> "$seqres.full"
-+_test_remount
-+free_after="$(stat -f -c '%a' "$TESTDIR")"
-+echo "freesp changed by $free_before -> $free_after" >> "$seqres.full"
-+
-+echo "Compare sections"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $((BLKSZ * 4)) \
++echo "Compare the CoW'd section to the before file"
++_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 $BLKSZ \
 +       || echo "Start sections do not match (intentional)"
 +
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 4)) "$TESTDIR/file2" \
-+		$((BLKSZ * 4)) $((BLKSZ * 2)) \
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16 - 512)) \
++		"$TESTDIR/file2" $((BLKSZ * 16 - 512)) 512 \
 +       || echo "Middle sections do not match (intentional)"
 +
-+_compare_range "$TESTDIR/file1" $((BLKSZ * 6)) "$TESTDIR/file2" \
-+		$((BLKSZ * 6)) $((BLKSZ * 2)) \
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 48 - 512)) \
++		"$TESTDIR/file2" $((BLKSZ * 48 - 512)) $BLKSZ \
 +       || echo "End sections do not match (intentional)"
++
++echo "Compare the CoW'd section to the after file"
++_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file3" 0 $BLKSZ \
++       || echo "Start sections do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16 - 512)) \
++		"$TESTDIR/file3" $((BLKSZ * 16 - 512)) 512 \
++       || echo "Middle sections do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 48 - 512)) \
++		"$TESTDIR/file3" $((BLKSZ * 48 - 512)) $BLKSZ \
++       || echo "End sections do not match"
++
++echo "Compare the not CoW'd sections"
++_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ 512 \
++       || echo "Start sections of 1-2 do not match"
++_compare_range "$TESTDIR/file2" $BLKSZ "$TESTDIR/file3" $BLKSZ 512 \
++       || echo "Start sections of 2-3 do not match"
++
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16 - 1024)) \
++		"$TESTDIR/file2" $((BLKSZ * 16 - 1024)) 512 \
++       || echo "Middle sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16 - 1024)) \
++		"$TESTDIR/file3" $((BLKSZ * 16 - 1024)) 512 \
++       || echo "Middle sections of 2-3 do not match"
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 48 - 1024)) \
++		"$TESTDIR/file2" $((BLKSZ * 48 - 1024)) 512 \
++       || echo "End sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 48 - 1024)) \
++		"$TESTDIR/file3" $((BLKSZ * 48 - 1024)) 512 \
++       || echo "End sections of 2-3 do not match"
++
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16)) \
++		"$TESTDIR/file2" $((BLKSZ * 16)) 512 \
++       || echo "Untouched sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16)) \
++		"$TESTDIR/file3" $((BLKSZ * 16)) 512 \
++       || echo "Untouched sections of 2-3 do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/122.out b/tests/generic/122.out
+diff --git a/tests/generic/139.out b/tests/generic/139.out
 new file mode 100644
-index 0000000..c7cfec2
+index 0000000..28d04f5
 --- /dev/null
-+++ b/tests/generic/122.out
-@@ -0,0 +1,12 @@
-+QA output created by 122
++++ b/tests/generic/139.out
+@@ -0,0 +1,19 @@
++QA output created by 139
 +Create the original files
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-122/file1
-+5e3501f97fd2669babfcbd3e1972e833  TEST_DIR/test-122/file2
-+Files 1-2 do not match (intentional)
-+(Fail to) dedupe the middle blocks together
-+Compare sections
-+35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-122/file1
-+5e3501f97fd2669babfcbd3e1972e833  TEST_DIR/test-122/file2
++Compare files
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-139/file1
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-139/file2
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-139/file3
++directio CoW the second file
++Compare files
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-139/file1
++ff5626fb6c71b242d6b1a43de25c9a85  TEST_DIR/test-139/file2
++ff5626fb6c71b242d6b1a43de25c9a85  TEST_DIR/test-139/file3
++Files 1-2 should not match (intentional)
++Files 1-3 should not match (intentional)
++Compare the CoW'd section to the before file
 +Start sections do not match (intentional)
 +Middle sections do not match (intentional)
 +End sections do not match (intentional)
-diff --git a/tests/generic/134 b/tests/generic/134
++Compare the CoW'd section to the after file
++Compare the not CoW'd sections
+diff --git a/tests/generic/140 b/tests/generic/140
 new file mode 100755
-index 0000000..4dc710c
+index 0000000..6299d8e
 --- /dev/null
-+++ b/tests/generic/134
-@@ -0,0 +1,128 @@
++++ b/tests/generic/140
+@@ -0,0 +1,152 @@
 +#! /bin/bash
-+# FS QA Test No. 134
++# FS QA Test No. 140
 +#
-+# Ensure that we can reflink the last block of a file whose size isn't
-+# block-aligned.
-+#   - Create two 'a' files file whose size isn't block-aligned.
-+#   - Create two 'b' files file whose size isn't block-aligned.
-+#   - Reflink the last block of file1 to the last block in file2 and file3.
-+#   - Check that files 1-2 match, 3-4 don't match, and that nothing matches 3.
-+#   - Check that the ends of 1-3 match, and 1-3 do not match the end of file4.
++# Ensuring that mmap copy on write through the page cache works:
++#   - Reflink two files together
++#   - Write to the beginning, middle, and end
++#   - Check that the files are now different where we say they're different.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -798,6 +478,7 @@ index 0000000..4dc710c
 +# real QA test starts here
 +_supported_os Linux
 +_require_test_reflink
++_require_cp_reflink
 +
 +rm -f "$seqres.full"
 +
@@ -807,269 +488,140 @@ index 0000000..4dc710c
 +
 +echo "Create the original files"
 +BLKSZ=65536
-+_pwrite_byte 0x61 0 $((BLKSZ + 37)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x61 0 $((BLKSZ + 37)) "$TESTDIR/file2" >> "$seqres.full"
-+_pwrite_byte 0x62 0 $((BLKSZ + 37)) "$TESTDIR/file3" >> "$seqres.full"
-+_pwrite_byte 0x62 0 $((BLKSZ + 37)) "$TESTDIR/file4" >> "$seqres.full"
++_pwrite_byte 0x61 0 $((BLKSZ * 48 - 3)) "$TESTDIR/file1" >> "$seqres.full"
++_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x61 0 $((BLKSZ * 48 - 3)) "$TESTDIR/file3" >> "$seqres.full"
 +_test_remount
-+
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+
-+C1="$(_md5_checksum $TESTDIR/file1)"
-+C2="$(_md5_checksum $TESTDIR/file2)"
-+C3="$(_md5_checksum $TESTDIR/file3)"
-+C4="$(_md5_checksum $TESTDIR/file4)"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "Reflink the last blocks together, 1-2 1-3"
-+_reflink_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ 37 >> "$seqres.full"
-+_reflink_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file3" $BLKSZ 37 >> "$seqres.full"
-+_test_remount
-+
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+
-+C1="$(_md5_checksum $TESTDIR/file1)"
-+C2="$(_md5_checksum $TESTDIR/file2)"
-+C3="$(_md5_checksum $TESTDIR/file3)"
-+C4="$(_md5_checksum $TESTDIR/file4)"
 +
 +echo "Compare files"
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" != "${C4}" || echo "file3 and file4 should match"
++md5sum "$TESTDIR/file1" | _filter_test_dir
++md5sum "$TESTDIR/file2" | _filter_test_dir
++md5sum "$TESTDIR/file3" | _filter_test_dir
 +
-+echo "Compare sections"
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ 37 \
-+       || echo "End sections of files 1-2 do not match"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "Files 1-2 do not match"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file3" || echo "Files 1-3 do not match"
++cmp -s "$TESTDIR/file2" "$TESTDIR/file3" || echo "Files 2-3 do not match"
 +
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file3" $BLKSZ 37 \
-+       || echo "End sections of files 1-3 do not match"
++echo "mmap CoW the second file"
++_mwrite_byte 0x62 0 17 $((BLKSZ * 48 - 3)) "$TESTDIR/file2" >> "$seqres.full"
++_mwrite_byte 0x62 0 17 $((BLKSZ * 48 - 3)) "$TESTDIR/file3" >> "$seqres.full"
 +
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file4" $BLKSZ 37 \
-+       || echo "End sections of files 1-4 do not match (intentional)"
++_mwrite_byte 0x62 $((BLKSZ * 16 - 34)) 17 $((BLKSZ * 48 - 3)) "$TESTDIR/file2" >> "$seqres.full"
++_mwrite_byte 0x62 $((BLKSZ * 16 - 34)) 17 $((BLKSZ * 48 - 3)) "$TESTDIR/file3" >> "$seqres.full"
 +
-+_compare_range "$TESTDIR/file2" $BLKSZ "$TESTDIR/file3" $BLKSZ 37 \
-+       || echo "End sections of files 2-3 do not match"
++_mwrite_byte 0x62 $((BLKSZ * 48 - 20)) 17 $((BLKSZ * 48 - 3)) "$TESTDIR/file2" >> "$seqres.full"
++_mwrite_byte 0x62 $((BLKSZ * 48 - 20)) 17 $((BLKSZ * 48 - 3)) "$TESTDIR/file3" >> "$seqres.full"
++_test_remount
 +
-+_compare_range "$TESTDIR/file2" $BLKSZ "$TESTDIR/file4" $BLKSZ 37 \
-+       || echo "End sections of files 2-4 do not match (intentional)"
++echo "Compare files"
++md5sum "$TESTDIR/file1" | _filter_test_dir
++md5sum "$TESTDIR/file2" | _filter_test_dir
++md5sum "$TESTDIR/file3" | _filter_test_dir
 +
-+_compare_range "$TESTDIR/file3" $BLKSZ "$TESTDIR/file4" $BLKSZ 37 \
-+       || echo "End sections of files 3-4 do not match (intentional)"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "Files 1-2 do not match (intentional)"
++cmp -s "$TESTDIR/file1" "$TESTDIR/file3" || echo "Files 1-3 do not match (intentional)"
++cmp -s "$TESTDIR/file2" "$TESTDIR/file3" || echo "Files 2-3 do not match"
++
++echo "Compare the CoW'd section to the before file"
++_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file2" 0 17 \
++       || echo "Start sections do not match (intentional)"
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16 - 34)) \
++		"$TESTDIR/file2" $((BLKSZ * 16 - 34)) 17 \
++       || echo "Middle sections do not match (intentional)"
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 48 - 20)) \
++		"$TESTDIR/file2" $((BLKSZ * 48 - 20)) 17 \
++       || echo "End sections do not match (intentional)"
++
++echo "Compare the CoW'd section to the after file"
++_compare_range "$TESTDIR/file2" 0 "$TESTDIR/file3" 0 17 \
++       || echo "Start sections do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16 - 34)) \
++		"$TESTDIR/file3" $((BLKSZ * 16 - 34)) 17 \
++       || echo "Middle sections do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 48 - 20)) \
++		"$TESTDIR/file3" $((BLKSZ * 48 - 20)) 17 \
++       || echo "End sections do not match"
++
++echo "Compare the not CoW'd sections"
++_compare_range "$TESTDIR/file1" 18 "$TESTDIR/file2" 18 17 \
++       || echo "Start sections of 1-2 do not match"
++
++_compare_range "$TESTDIR/file2" 18 "$TESTDIR/file3" 18 17 \
++       || echo "Start sections of 2-3 do not match"
++
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 16 - 17)) \
++		"$TESTDIR/file2" $((BLKSZ * 16 - 17)) 82 \
++       || echo "Middle sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 16 - 17)) \
++		"$TESTDIR/file3" $((BLKSZ * 16 - 17)) 82 \
++       || echo "Middle sections of 2-3 do not match"
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 48 - 120)) \
++		"$TESTDIR/file2" $((BLKSZ * 48 - 120)) 100 \
++       || echo "End sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 48 - 120)) \
++		"$TESTDIR/file3" $((BLKSZ * 48 - 120)) 100 \
++       || echo "End sections of 2-3 do not match"
++
++
++_compare_range  "$TESTDIR/file1" $((BLKSZ * 14)) \
++		"$TESTDIR/file2" $((BLKSZ * 14)) $BLKSZ \
++       || echo "Untouched sections of 1-2 do not match"
++
++_compare_range  "$TESTDIR/file2" $((BLKSZ * 14)) \
++		"$TESTDIR/file3" $((BLKSZ * 14)) $BLKSZ \
++       || echo "Untouched sections of 2-3 do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/134.out b/tests/generic/134.out
+diff --git a/tests/generic/140.out b/tests/generic/140.out
 new file mode 100644
-index 0000000..b5e0f43
+index 0000000..51a5b85
 --- /dev/null
-+++ b/tests/generic/134.out
-@@ -0,0 +1,16 @@
-+QA output created by 134
++++ b/tests/generic/140.out
+@@ -0,0 +1,19 @@
++QA output created by 140
 +Create the original files
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-134/file1
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-134/file2
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-134/file3
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-134/file4
-+Reflink the last blocks together, 1-2 1-3
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-134/file1
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-134/file2
-+e236f2fe789f0aa34b50e981a2f0243a  TEST_DIR/test-134/file3
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-134/file4
 +Compare files
-+Compare sections
-+End sections of files 1-4 do not match (intentional)
-+End sections of files 2-4 do not match (intentional)
-+End sections of files 3-4 do not match (intentional)
-diff --git a/tests/generic/136 b/tests/generic/136
-new file mode 100755
-index 0000000..89ee751
---- /dev/null
-+++ b/tests/generic/136
-@@ -0,0 +1,128 @@
-+#! /bin/bash
-+# FS QA Test No. 136
-+#
-+# Ensure that we can dedupe the last block of a file whose size isn't
-+# block-aligned.
-+#   - Create two 'a' files file whose size isn't block-aligned.
-+#   - Create two 'b' files file whose size isn't block-aligned.
-+#   - Dedupe the last block of file1 to the last block in file2 and file3.
-+#   - Check that files 1-2 match, and that 3-4 match.
-+#   - Check that the ends of 1-2 and 3-4 match, and that 1-3 don't match.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf "$tmp".* "$TESTDIR"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_test_dedupe
-+
-+rm -f "$seqres.full"
-+
-+TESTDIR="$TEST_DIR/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $((BLKSZ + 37)) "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x61 0 $((BLKSZ + 37)) "$TESTDIR/file2" >> "$seqres.full"
-+_pwrite_byte 0x62 0 $((BLKSZ + 37)) "$TESTDIR/file3" >> "$seqres.full"
-+_pwrite_byte 0x62 0 $((BLKSZ + 37)) "$TESTDIR/file4" >> "$seqres.full"
-+_test_remount
-+
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+
-+C1="$(_md5_checksum $TESTDIR/file1)"
-+C2="$(_md5_checksum $TESTDIR/file2)"
-+C3="$(_md5_checksum $TESTDIR/file3)"
-+C4="$(_md5_checksum $TESTDIR/file4)"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "Dedupe the last blocks together"
-+_dedupe_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ 37 >> "$seqres.full"
-+_dedupe_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file3" $BLKSZ 37 >> "$seqres.full"
-+_test_remount
-+
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+
-+C1="$(_md5_checksum $TESTDIR/file1)"
-+C2="$(_md5_checksum $TESTDIR/file2)"
-+C3="$(_md5_checksum $TESTDIR/file3)"
-+C4="$(_md5_checksum $TESTDIR/file4)"
-+
-+echo "Compare files"
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "Compare sections"
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ 37 \
-+       || echo "End sections of files 1-2 do not match"
-+
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file3" $BLKSZ 37 \
-+       || echo "End sections of files 1-3 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file4" $BLKSZ 37 \
-+       || echo "End sections of files 1-4 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file2" $BLKSZ "$TESTDIR/file3" $BLKSZ 37 \
-+       || echo "End sections of files 2-3 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file2" $BLKSZ "$TESTDIR/file4" $BLKSZ 37 \
-+       || echo "End sections of files 2-4 do not match (intentional)"
-+
-+_compare_range "$TESTDIR/file3" $BLKSZ "$TESTDIR/file4" $BLKSZ 37 \
-+       || echo "End sections of files 3-4 do not match"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/136.out b/tests/generic/136.out
-new file mode 100644
-index 0000000..99a5465
---- /dev/null
-+++ b/tests/generic/136.out
-@@ -0,0 +1,17 @@
-+QA output created by 136
-+Create the original files
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-136/file1
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-136/file2
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-136/file3
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-136/file4
-+Dedupe the last blocks together
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-136/file1
-+c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-136/file2
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-136/file3
-+07ac67bf7f271195442509e79cde4cee  TEST_DIR/test-136/file4
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-140/file1
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-140/file2
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-140/file3
++mmap CoW the second file
 +Compare files
-+Compare sections
-+End sections of files 1-3 do not match (intentional)
-+End sections of files 1-4 do not match (intentional)
-+End sections of files 2-3 do not match (intentional)
-+End sections of files 2-4 do not match (intentional)
-diff --git a/tests/generic/137 b/tests/generic/137
++60ebe700450b6015c17fa15cacb9493b  TEST_DIR/test-140/file1
++795ecfd281dbda4916431376228e4187  TEST_DIR/test-140/file2
++795ecfd281dbda4916431376228e4187  TEST_DIR/test-140/file3
++Files 1-2 do not match (intentional)
++Files 1-3 do not match (intentional)
++Compare the CoW'd section to the before file
++Start sections do not match (intentional)
++Middle sections do not match (intentional)
++End sections do not match (intentional)
++Compare the CoW'd section to the after file
++Compare the not CoW'd sections
+diff --git a/tests/generic/142 b/tests/generic/142
 new file mode 100755
-index 0000000..a640f4f
+index 0000000..cf6d634
 --- /dev/null
-+++ b/tests/generic/137
-@@ -0,0 +1,131 @@
++++ b/tests/generic/142
+@@ -0,0 +1,91 @@
 +#! /bin/bash
-+# FS QA Test No. 137
++# FS QA Test No. 142
 +#
-+# Ensure that we can reflink and dedupe blocks within the same file...
-+#   - Create a file with three distinct blocks ABB
-+#   - Reflink block zero to the multiple-of-three blocks
-+#   - Reflink block one to the multiple-of-five blocks
-+#   - Dedupe block two to the multiple-of-seven blocks
-+#   - Check that we successfully avoid deduping with holes, unwritten
-+#     extents, and non-matches; but actually dedupe real matches.
++# Ensure that reflinking a file N times and CoWing the copies leaves the
++# original intact.
++#   - Create a file and record its hash
++#   - Create some reflink copies
++#   - Rewrite all the reflink copies
++#   - Compare the contents of the original file
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -1111,8 +663,7 @@ index 0000000..a640f4f
 +# real QA test starts here
 +_supported_os Linux
 +_require_test_reflink
-+_require_test_dedupe
-+_require_xfs_io_command "falloc"
++_require_cp_reflink
 +
 +rm -f "$seqres.full"
 +
@@ -1122,118 +673,179 @@ index 0000000..a640f4f
 +
 +echo "Create the original file blocks"
 +BLKSZ=65536
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $((BLKSZ * 2)) "$TESTDIR/file1" >> "$seqres.full"
-+
-+NR_BLKS=1024
-+
-+echo "fallocate half the file"
-+"$XFS_IO_PROG" -f -c "falloc $((NR_BLKS * BLKSZ / 2)) $((NR_BLKS * BLKSZ / 2))" "$TESTDIR/file1" >> "$seqres.full"
-+
-+echo "Reflink block zero to the threes"
-+seq 1 $((NR_BLKS / 3)) | while read nr; do
-+	_reflink_range "$TESTDIR/file1" 0 "$TESTDIR/file1" $((nr * 3 * BLKSZ)) \
-+			$BLKSZ >> "$seqres.full"
-+done
-+
-+echo "Reflink block one to the fives"
-+seq 1 $((NR_BLKS / 5)) | while read nr; do
-+	_reflink_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file1" \
-+			$((nr * 5 * BLKSZ)) $BLKSZ >> "$seqres.full"
-+done
-+
-+echo "Dedupe block two to the sevens"
-+seq 1 $((NR_BLKS / 7)) | while read nr; do
-+	_dedupe_range "$TESTDIR/file1" $((BLKSZ * 2)) "$TESTDIR/file1" \
-+			$((nr * 7 * BLKSZ)) $BLKSZ >> "$seqres.full"
-+done
-+
++NR=9
++_pwrite_byte 0x61 0 $((BLKSZ * 256)) "$TESTDIR/file1" >> "$seqres.full"
 +_test_remount
 +
-+echo "Check block mappings"
 +md5sum "$TESTDIR/file1" | _filter_test_dir
++csum="$(_md5_checksum "$TESTDIR/file1")"
 +
-+crcZ=$(_md5_range_checksum /dev/zero 0 $BLKSZ)
-+crc0=$(_md5_range_checksum "$TESTDIR/file1" 0 $BLKSZ)
-+crc1=$(_md5_range_checksum "$TESTDIR/file1" $BLKSZ $BLKSZ)
-+crc2=$(_md5_range_checksum "$TESTDIR/file1" $((BLKSZ * 2)) $BLKSZ)
-+
-+check_block() {
-+	lblk="$1"
-+	rem7=$((lblk % 7))
-+	rem5=$((lblk % 5))
-+	rem3=$((lblk % 3))
-+
-+	crc=$(_md5_range_checksum "$TESTDIR/file1" $((lblk * BLKSZ)) $BLKSZ)
-+
-+	if [ $rem7 -eq 0 ]; then
-+		if [ $rem5 -eq 0 ]; then
-+			test $crc2 = $crc || echo "lblk $lblk doesn't match block 2"
-+		elif [ $rem3 -eq 0 ]; then
-+			test $crc0 = $crc || echo "lblk $lblk doesn't match block 0"
-+		elif [ $lblk -lt $((NR_BLKS / 2)) ]; then
-+			test $crcZ = $crc || echo "lblk $lblk isn't zeroed"
-+		fi
-+	elif [ $rem5 -eq 0 ]; then
-+		test $crc1 = $crc || echo "lblk $lblk doesn't match block 1"
-+	elif [ $rem3 -eq 0 ]; then
-+		test $crc0 = $crc || echo "lblk $lblk doesn't match block 0"
-+	elif [ $lblk -lt $((NR_BLKS / 2)) ]; then
-+		test $crcZ = $crc || echo "lblk $lblk isn't zeroed"
-+	fi
-+}
-+
-+seq 3 $((NR_BLKS - 1)) | while read lblk; do
-+	err="$(check_block $lblk)"
-+	test -n "$err" && echo "$lblk: $err"
++echo "Create the reflink copies"
++seq 2 $NR | while read i; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
 +done
++_test_remount
++
++echo "Rewrite the copies"
++seq 2 $NR | while read i; do
++	_pwrite_byte 0x62 0 $((BLKSZ * 256)) "$TESTDIR/file$i" >> "$seqres.full"
++done
++_test_remount
++
++echo "Examine original file"
++md5sum "$TESTDIR/file1" | _filter_test_dir
++md5sum "$TESTDIR/file2" | _filter_test_dir
++
++mod_csum="$(_md5_checksum "$TESTDIR/file2")"
++new_csum="$(_md5_checksum "$TESTDIR/file1")"
++test "${csum}" != "${mod_csum}" || echo "checksums do not match"
++test "${csum}" = "${new_csum}" || echo "checksums do not match"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/137.out b/tests/generic/137.out
+diff --git a/tests/generic/142.out b/tests/generic/142.out
 new file mode 100644
-index 0000000..7808988
+index 0000000..b55d0f0
 --- /dev/null
-+++ b/tests/generic/137.out
++++ b/tests/generic/142.out
 @@ -0,0 +1,8 @@
-+QA output created by 137
++QA output created by 142
 +Create the original file blocks
-+fallocate half the file
-+Reflink block zero to the threes
-+Reflink block one to the fives
-+Dedupe block two to the sevens
-+Check block mappings
-+2ea37912bdbd71b9ed4734d3141cbe9c  TEST_DIR/test-137/file1
++f4820540fc0ac02750739896fe028d56  TEST_DIR/test-142/file1
++Create the reflink copies
++Rewrite the copies
++Examine original file
++f4820540fc0ac02750739896fe028d56  TEST_DIR/test-142/file1
++eb34153e9ed1e774db28cbbe4090a449  TEST_DIR/test-142/file2
+diff --git a/tests/generic/143 b/tests/generic/143
+new file mode 100755
+index 0000000..d2ccb94
+--- /dev/null
++++ b/tests/generic/143
+@@ -0,0 +1,91 @@
++#! /bin/bash
++# FS QA Test No. 143
++#
++# Ensure that reflinking a file N times and DIO CoWing the copies leaves the
++# original intact.
++#   - Create a file and record its hash
++#   - Create some reflink copies
++#   - Rewrite all the reflink copies w/ directio
++#   - Compare the contents of the original file
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf "$tmp".* "$TESTDIR"
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_test_reflink
++_require_cp_reflink
++
++rm -f "$seqres.full"
++
++TESTDIR="$TEST_DIR/test-$seq"
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
++
++echo "Create the original file blocks"
++BLKSZ=65536
++NR=9
++_pwrite_byte 0x61 0 $((BLKSZ * 256)) "$TESTDIR/file1" >> "$seqres.full"
++_test_remount
++
++md5sum "$TESTDIR/file1" | _filter_test_dir
++csum="$(_md5_checksum "$TESTDIR/file1")"
++
++echo "Create the reflink copies"
++seq 2 $NR | while read i; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
++done
++_test_remount
++
++echo "Rewrite the copies"
++seq 2 $NR | while read i; do
++	_pwrite_byte 0x62 0 $((BLKSZ * 256)) "$TESTDIR/file$i" -d >> "$seqres.full"
++done
++_test_remount
++
++echo "Examine original file"
++md5sum "$TESTDIR/file1" | _filter_test_dir
++md5sum "$TESTDIR/file2" | _filter_test_dir
++
++mod_csum="$(_md5_checksum "$TESTDIR/file2")"
++new_csum="$(_md5_checksum "$TESTDIR/file1")"
++test "${csum}" != "${mod_csum}" || echo "checksums do not match"
++test "${csum}" = "${new_csum}" || echo "checksums do not match"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/143.out b/tests/generic/143.out
+new file mode 100644
+index 0000000..70a1e71
+--- /dev/null
++++ b/tests/generic/143.out
+@@ -0,0 +1,8 @@
++QA output created by 143
++Create the original file blocks
++f4820540fc0ac02750739896fe028d56  TEST_DIR/test-143/file1
++Create the reflink copies
++Rewrite the copies
++Examine original file
++f4820540fc0ac02750739896fe028d56  TEST_DIR/test-143/file1
++eb34153e9ed1e774db28cbbe4090a449  TEST_DIR/test-143/file2
 diff --git a/tests/generic/group b/tests/generic/group
-index aa31c8b..50cc132 100644
+index 50cc132..7b55707 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -118,8 +118,13 @@
- 113 rw aio auto quick
- 114 rw aio auto quick
- 115 auto quick clone
-+116 auto quick clone
- 117 attr auto quick
-+118 auto quick clone
-+119 auto quick clone
- 120 other auto quick
-+121 auto quick clone
-+122 auto quick clone
- 123 perms auto quick
- 124 pattern auto quick
- 125 other auto
-@@ -131,7 +136,10 @@
- 131 perms auto quick
- 132 pattern auto
- 133 rw auto
-+134 auto quick clone
+@@ -140,7 +140,12 @@
  135 metadata auto quick
-+136 auto quick clone
-+137 auto quick clone
+ 136 auto quick clone
+ 137 auto quick clone
++138 auto quick clone
++139 auto quick clone
++140 auto quick clone
  141 rw auto quick
++142 auto quick clone
++143 auto quick clone
  169 rw metadata auto quick
  184 metadata auto quick
+ 192 atime auto
 
 _______________________________________________
 xfs mailing list
