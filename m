@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B7A727F7B
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 15:37:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6404C8F8035
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:54 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B479F7F78
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 15:38:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 17F3BAC008
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:57 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id RnXv8TR5z17BzZZ5 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id FR3YIzZVlShGgney (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:48 -0800 (PST)
-Subject: [PATCH 06/12] reflink: test the various fallocate modes
+	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:37:53 -0800 (PST)
+Subject: [PATCH 07/12] reflink: test accuracy of free block counts
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 13 Nov 2015 13:37:22 -0800
-Message-ID: <20151113213722.31124.56074.stgit@birch.djwong.org>
+Date: Fri, 13 Nov 2015 13:37:29 -0800
+Message-ID: <20151113213729.31124.57712.stgit@birch.djwong.org>
 In-Reply-To: <20151113213643.31124.80975.stgit@birch.djwong.org>
 References: <20151113213643.31124.80975.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,53 +31,57 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-Check that the variants of fallocate (allocate, punch, zero range,
-collapse range, insert range) do the right thing when they're run
-against a range of reflinked blocks.
+Check that the free block counts seem to be handled correctly in
+the reflink operation and subsequent attempts to rewrite reflinked
+copies.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/144     |  142 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/144.out |   16 ++++++
- tests/generic/145     |  142 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/145.out |   19 +++++++
- tests/generic/146     |  136 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/146.out |   19 +++++++
- tests/generic/147     |  139 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/147.out |   19 +++++++
- tests/generic/148     |  116 ++++++++++++++++++++++++++++++++++++++++
- tests/generic/148.out |   15 +++++
- tests/generic/149     |  136 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/149.out |   19 +++++++
- tests/generic/group   |    6 ++
- 13 files changed, 924 insertions(+)
- create mode 100755 tests/generic/144
- create mode 100644 tests/generic/144.out
- create mode 100755 tests/generic/145
- create mode 100644 tests/generic/145.out
- create mode 100755 tests/generic/146
- create mode 100644 tests/generic/146.out
- create mode 100755 tests/generic/147
- create mode 100644 tests/generic/147.out
- create mode 100755 tests/generic/148
- create mode 100644 tests/generic/148.out
- create mode 100755 tests/generic/149
- create mode 100644 tests/generic/149.out
+ tests/generic/150     |   78 +++++++++++++++++++++++++++++++
+ tests/generic/150.out |    4 ++
+ tests/generic/151     |   98 +++++++++++++++++++++++++++++++++++++++
+ tests/generic/151.out |    8 +++
+ tests/generic/152     |  103 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/152.out |    8 +++
+ tests/generic/153     |  102 ++++++++++++++++++++++++++++++++++++++++
+ tests/generic/153.out |    8 +++
+ tests/generic/154     |  110 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/154.out |   11 ++++
+ tests/generic/155     |  114 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/155.out |   11 ++++
+ tests/generic/156     |  124 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/156.out |   12 +++++
+ tests/generic/group   |    7 +++
+ 15 files changed, 798 insertions(+)
+ create mode 100755 tests/generic/150
+ create mode 100644 tests/generic/150.out
+ create mode 100755 tests/generic/151
+ create mode 100644 tests/generic/151.out
+ create mode 100755 tests/generic/152
+ create mode 100644 tests/generic/152.out
+ create mode 100755 tests/generic/153
+ create mode 100644 tests/generic/153.out
+ create mode 100755 tests/generic/154
+ create mode 100644 tests/generic/154.out
+ create mode 100755 tests/generic/155
+ create mode 100644 tests/generic/155.out
+ create mode 100755 tests/generic/156
+ create mode 100644 tests/generic/156.out
 
 
-diff --git a/tests/generic/144 b/tests/generic/144
+diff --git a/tests/generic/150 b/tests/generic/150
 new file mode 100755
-index 0000000..bee0893
+index 0000000..3046e92
 --- /dev/null
-+++ b/tests/generic/144
-@@ -0,0 +1,142 @@
++++ b/tests/generic/150
+@@ -0,0 +1,78 @@
 +#! /bin/bash
-+# FS QA Test No. 144
++# FS QA Test No. 150
 +#
-+# Ensure that fallocate steps around reflinked ranges:
-+#   - Reflink parts of two files together
-+#   - Fallocate all the other sparse space.
-+#   - Check that the reflinked areas are still there.
++# Ensure that reflinking a file N times doesn't eat a lot of blocks
++#   - Create a file and record fs block usage
++#   - Create some reflink copies
++#   - Compare fs block usage to before
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -120,8 +124,6 @@ index 0000000..bee0893
 +_supported_os Linux
 +_require_test_reflink
 +_require_cp_reflink
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "truncate"
 +
 +rm -f "$seqres.full"
 +
@@ -129,126 +131,55 @@ index 0000000..bee0893
 +rm -rf "$TESTDIR"
 +mkdir "$TESTDIR"
 +
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $((BLKSZ * 5 + 37)) "$TESTDIR/file1" >> "$seqres.full"
++echo "Create the original file blocks"
++BLKSZ="$(stat -f $TESTDIR -c '%S')"
++BLKS=2000
++MARGIN=100
++SZ=$((BLKSZ * BLKS))
++NR=7
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++sync
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
 +
-+_reflink_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ \
-+		$((BLKSZ * 4 + 37)) >> "$seqres.full"
-+
-+"$XFS_IO_PROG" -f -c "truncate $((BLKSZ * 5 + 37))" "$TESTDIR/file3" >> "$seqres.full"
-+_reflink_range "$TESTDIR/file1" 0 "$TESTDIR/file3" 0 $BLKSZ >> "$seqres.full"
-+
-+"$XFS_IO_PROG" -f -c "truncate $((BLKSZ * 5 + 37))" "$TESTDIR/file4" >> "$seqres.full"
-+_reflink_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file4" $BLKSZ $BLKSZ >> "$seqres.full"
-+_reflink_range "$TESTDIR/file1" $((BLKSZ * 3)) "$TESTDIR/file4" $((BLKSZ * 3)) \
-+		$BLKSZ >> "$seqres.full"
-+
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file5"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file.$i"
++done
 +_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
 +
-+echo "Compare sections"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file5" | _filter_test_dir
-+
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file2" $BLKSZ \
-+		$((BLKSZ * 4 + 37)) \
-+	|| echo "shared parts of files 1-2 changed"
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file3" 0 $BLKSZ \
-+	|| echo "shared parts of files 1-3 changed"
-+
-+_compare_range "$TESTDIR/file1" $BLKSZ "$TESTDIR/file4" $BLKSZ $BLKSZ \
-+	|| echo "shared parts of files 1-4 changed"
-+
-+_compare_range "$TESTDIR/file1" 0 "$TESTDIR/file5" 0 $((BLKSZ * 5 + 37)) \
-+	|| echo "shared parts of files 1-5 changed"
-+
-+echo "Compare files"
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
-+C5="$(_md5_checksum "$TESTDIR/file5")"
-+
-+test "${C1}" != "${C2}" || echo "file1 and file2 should not match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C1}"  = "${C5}" || echo "file1 and file5 should match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C2}" != "${C5}" || echo "file2 and file5 should not match"
-+test "${C3}" != "${C4}" || echo "file3 and file4 should not match"
-+test "${C3}" != "${C5}" || echo "file3 and file5 should not match"
-+test "${C4}" != "${C5}" || echo "file4 and file5 should not match"
-+
-+echo "falloc everything"
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 5))" "$TESTDIR/file2" >> "$seqres.full"
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 5))" "$TESTDIR/file3" >> "$seqres.full"
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 5))" "$TESTDIR/file4" >> "$seqres.full"
-+_test_remount
-+
-+echo "Compare files"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file5" | _filter_test_dir
-+
-+D1="$(_md5_checksum "$TESTDIR/file1")"
-+D2="$(_md5_checksum "$TESTDIR/file2")"
-+D3="$(_md5_checksum "$TESTDIR/file3")"
-+D4="$(_md5_checksum "$TESTDIR/file4")"
-+D5="$(_md5_checksum "$TESTDIR/file5")"
-+
-+test "${C1}" = "${D1}" || echo "file1 should not change"
-+test "${C2}" = "${D2}" || echo "file2 should not change"
-+test "${C3}" = "${D3}" || echo "file3 should not change"
-+test "${C4}" = "${D4}" || echo "file4 should not change"
-+test "${C5}" = "${D5}" || echo "file2 should not change"
++_within_tolerance "free blocks after reflink" $FREE_BLOCKS1 $FREE_BLOCKS0 $MARGIN -v
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/144.out b/tests/generic/144.out
+diff --git a/tests/generic/150.out b/tests/generic/150.out
 new file mode 100644
-index 0000000..0bcf4b9
+index 0000000..94580a6
 --- /dev/null
-+++ b/tests/generic/144.out
-@@ -0,0 +1,16 @@
-+QA output created by 144
-+Create the original files
-+Compare sections
-+ee8004e6298fa128477bd4aa1adc69fb  TEST_DIR/test-144/file1
-+a7cb8cb9697d59413e0d10495d226398  TEST_DIR/test-144/file2
-+7d42a0a2865c94f45435a2ce7627da02  TEST_DIR/test-144/file3
-+7f528bc76f4d61ff9cff7bc1906579c6  TEST_DIR/test-144/file4
-+ee8004e6298fa128477bd4aa1adc69fb  TEST_DIR/test-144/file5
-+Compare files
-+falloc everything
-+Compare files
-+ee8004e6298fa128477bd4aa1adc69fb  TEST_DIR/test-144/file1
-+a7cb8cb9697d59413e0d10495d226398  TEST_DIR/test-144/file2
-+7d42a0a2865c94f45435a2ce7627da02  TEST_DIR/test-144/file3
-+7f528bc76f4d61ff9cff7bc1906579c6  TEST_DIR/test-144/file4
-+ee8004e6298fa128477bd4aa1adc69fb  TEST_DIR/test-144/file5
-diff --git a/tests/generic/145 b/tests/generic/145
++++ b/tests/generic/150.out
+@@ -0,0 +1,4 @@
++QA output created by 150
++Create the original file blocks
++Create the reflink copies
++free blocks after reflink is in range
+diff --git a/tests/generic/151 b/tests/generic/151
 new file mode 100755
-index 0000000..8a14f82
+index 0000000..c42ca1d
 --- /dev/null
-+++ b/tests/generic/145
-@@ -0,0 +1,142 @@
++++ b/tests/generic/151
+@@ -0,0 +1,98 @@
 +#! /bin/bash
-+# FS QA Test No. 145
++# FS QA Test No. 151
 +#
-+# Ensure that collapse range steps around reflinked ranges:
-+#   - Create three reflink clones of a file
-+#   - Collapse the start, middle, and end of the reflink range of each
-+#     of the three files, respectively
-+#   - Check that the reflinked areas are still there.
++# Ensure that deleting all copies of a file reflinked N times releases the blocks
++#   - Record fs block usage (0)
++#   - Create a file and some reflink copies
++#   - Record fs block usage (1)
++#   - Delete some copies of the file
++#   - Record fs block usage (2)
++#   - Delete all copies of the file
++#   - Compare fs block usage to (2), (1), and (0)
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -291,8 +222,6 @@ index 0000000..8a14f82
 +_supported_os Linux
 +_require_test_reflink
 +_require_cp_reflink
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fcollapse"
 +
 +rm -f "$seqres.full"
 +
@@ -300,128 +229,75 @@ index 0000000..8a14f82
 +rm -rf "$TESTDIR"
 +mkdir "$TESTDIR"
 +
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
++echo "Create the original file blocks"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++BLKS=2000
++MARGIN=100
++SZ=$((BLKSZ * BLKS))
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
++NR=7
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++sync
 +
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file3"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file4"
-+
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 4))" "$TESTDIR/file1"
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 4))" "$TESTDIR/file2"
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 4))" "$TESTDIR/file3"
-+"$XFS_IO_PROG" -f -c "falloc 0 $((BLKSZ * 4))" "$TESTDIR/file4"
-+
-+_pwrite_byte 0x62 0 $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $BLKSZ $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $BLKSZ $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file.$i"
++done
++_cp_reflink "$TESTDIR/file1" "$TESTDIR/survivor"
 +_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
 +
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
-+
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" = "${C3}" || echo "file1 and file3 should match"
-+test "${C1}" = "${C4}" || echo "file1 and file4 should match"
-+test "${C2}" = "${C3}" || echo "file2 and file3 should match"
-+test "${C2}" = "${C4}" || echo "file2 and file4 should match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "fcollapse files"
-+"$XFS_IO_PROG" -f -c "fcollapse 0 $BLKSZ" "$TESTDIR/file2"
-+"$XFS_IO_PROG" -f -c "fcollapse $BLKSZ $BLKSZ" "$TESTDIR/file3"
-+"$XFS_IO_PROG" -f -c "fcollapse $((BLKSZ * 2)) $BLKSZ" "$TESTDIR/file4"
++echo "Delete most of the files"
++rm -rf "$TESTDIR"/file*
 +_test_remount
++FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
 +
-+echo "Compare files"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
++echo "Delete all the files"
++rm -rf "$TESTDIR"/*
++_test_remount
++FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
++#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3
 +
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
++_within_tolerance "free blocks after reflink" $FREE_BLOCKS1 $((FREE_BLOCKS0 - BLKS)) $MARGIN -v
 +
-+test "${C1}" != "${C2}" || echo "file1 and file2 should not match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" != "${C4}" || echo "file3 and file4 should not match"
++_within_tolerance "free blocks after deleting some reflink copies" $FREE_BLOCKS2 $FREE_BLOCKS1 $MARGIN -v
 +
-+echo "Compare against check files"
-+cmp -s "$TESTDIR/file2" "$TESTDIR/file2.chk" || echo "file2 and file2.chk do not match"
-+cmp -s "$TESTDIR/file3" "$TESTDIR/file3.chk" || echo "file3 and file3.chk do not match"
-+cmp -s "$TESTDIR/file4" "$TESTDIR/file4.chk" || echo "file4 and file4.chk do not match"
++_within_tolerance "free blocks after deleting all copies" $FREE_BLOCKS3 $FREE_BLOCKS0 $MARGIN -v
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/145.out b/tests/generic/145.out
+diff --git a/tests/generic/151.out b/tests/generic/151.out
 new file mode 100644
-index 0000000..e36c61d
+index 0000000..214be54
 --- /dev/null
-+++ b/tests/generic/145.out
-@@ -0,0 +1,19 @@
-+QA output created by 145
-+Create the original files
-+564b34fb4a562f6d864f371248e48540  TEST_DIR/test-145/file1
-+564b34fb4a562f6d864f371248e48540  TEST_DIR/test-145/file2
-+564b34fb4a562f6d864f371248e48540  TEST_DIR/test-145/file3
-+564b34fb4a562f6d864f371248e48540  TEST_DIR/test-145/file4
-+9a239246ce4bee20f2de1b0ba41a41e0  TEST_DIR/test-145/file2.chk
-+859c251680d8bbf0f859f5c6d7a6a2a2  TEST_DIR/test-145/file3.chk
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-145/file4.chk
-+fcollapse files
-+Compare files
-+564b34fb4a562f6d864f371248e48540  TEST_DIR/test-145/file1
-+9a239246ce4bee20f2de1b0ba41a41e0  TEST_DIR/test-145/file2
-+859c251680d8bbf0f859f5c6d7a6a2a2  TEST_DIR/test-145/file3
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-145/file4
-+9a239246ce4bee20f2de1b0ba41a41e0  TEST_DIR/test-145/file2.chk
-+859c251680d8bbf0f859f5c6d7a6a2a2  TEST_DIR/test-145/file3.chk
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-145/file4.chk
-+Compare against check files
-diff --git a/tests/generic/146 b/tests/generic/146
++++ b/tests/generic/151.out
+@@ -0,0 +1,8 @@
++QA output created by 151
++Create the original file blocks
++Create the reflink copies
++Delete most of the files
++Delete all the files
++free blocks after reflink is in range
++free blocks after deleting some reflink copies is in range
++free blocks after deleting all copies is in range
+diff --git a/tests/generic/152 b/tests/generic/152
 new file mode 100755
-index 0000000..9e3eff6
+index 0000000..95ffe40
 --- /dev/null
-+++ b/tests/generic/146
-@@ -0,0 +1,136 @@
++++ b/tests/generic/152
+@@ -0,0 +1,103 @@
 +#! /bin/bash
-+# FS QA Test No. 146
++# FS QA Test No. 152
 +#
-+# Ensure that punch-hole steps around reflinked ranges:
-+#   - Create three reflink clones of a file
-+#   - Punch the start, middle, and end of the reflink range of each
-+#     of the three files, respectively
-+#   - Check that the reflinked areas are still there.
++# Ensure that punching all copies of a file reflinked N times releases the blocks
++#   - Record fs block usage (0)
++#   - Create a file and some reflink copies
++#   - Record fs block usage (1)
++#   - Punch some blocks of the copies
++#   - Record fs block usage (2)
++#   - Punch all blocks of the copies
++#   - Compare fs block usage to (2), (1), and (0)
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -472,123 +348,79 @@ index 0000000..9e3eff6
 +rm -rf "$TESTDIR"
 +mkdir "$TESTDIR"
 +
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
++echo "Create the original file blocks"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++BLKS=2000
++MARGIN=100
++SZ=$((BLKSZ * BLKS))
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
++NR=4
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++sync
 +
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file3"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file4"
-+
-+_pwrite_byte 0x00 0 $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $BLKSZ $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
++done
 +_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
 +
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
-+
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" = "${C3}" || echo "file1 and file3 should match"
-+test "${C1}" = "${C4}" || echo "file1 and file4 should match"
-+test "${C2}" = "${C3}" || echo "file2 and file3 should match"
-+test "${C2}" = "${C4}" || echo "file2 and file4 should match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "fpunch files"
-+"$XFS_IO_PROG" -f -c "fpunch 0 $BLKSZ" "$TESTDIR/file2"
-+"$XFS_IO_PROG" -f -c "fpunch $BLKSZ $BLKSZ" "$TESTDIR/file3"
-+"$XFS_IO_PROG" -f -c "fpunch $((BLKSZ * 2)) $BLKSZ" "$TESTDIR/file4"
++echo "Punch most of the blocks"
++"$XFS_IO_PROG" -f -c "fpunch 0 $SZ" "$TESTDIR/file2"
++"$XFS_IO_PROG" -f -c "fpunch 0 $((SZ / 2))" "$TESTDIR/file3"
++"$XFS_IO_PROG" -f -c "fpunch $((SZ / 2)) $((SZ / 2))" "$TESTDIR/file4"
 +_test_remount
++FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
 +
-+echo "Compare files"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
++echo "Punch all the files"
++for i in `seq 2 $NR`; do
++	"$XFS_IO_PROG" -f -c "fpunch 0 $SZ" "$TESTDIR/file$i"
++done
++"$XFS_IO_PROG" -f -c "fpunch 0 $SZ" "$TESTDIR/file1"
++_test_remount
++FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
++#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3
 +
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
++_within_tolerance "free blocks after reflink" $FREE_BLOCKS1 $((FREE_BLOCKS0 - BLKS)) $MARGIN -v
 +
-+test "${C1}" != "${C2}" || echo "file1 and file2 should not match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" != "${C4}" || echo "file3 and file4 should not match"
++_within_tolerance "free blocks after punching some reflink copies" $FREE_BLOCKS2 $FREE_BLOCKS1 $MARGIN -v
 +
-+echo "Compare against check files"
-+cmp -s "$TESTDIR/file2" "$TESTDIR/file2.chk" || echo "file2 and file2.chk do not match"
-+cmp -s "$TESTDIR/file3" "$TESTDIR/file3.chk" || echo "file3 and file3.chk do not match"
-+cmp -s "$TESTDIR/file4" "$TESTDIR/file4.chk" || echo "file4 and file4.chk do not match"
++_within_tolerance "free blocks after punching all copies" $FREE_BLOCKS3 $FREE_BLOCKS0 $MARGIN -v
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/146.out b/tests/generic/146.out
+diff --git a/tests/generic/152.out b/tests/generic/152.out
 new file mode 100644
-index 0000000..ead7e90
+index 0000000..10b2003
 --- /dev/null
-+++ b/tests/generic/146.out
-@@ -0,0 +1,19 @@
-+QA output created by 146
-+Create the original files
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-146/file1
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-146/file2
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-146/file3
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-146/file4
-+e263fae701bc40c23a3edb20aad5573e  TEST_DIR/test-146/file2.chk
-+91722d7c8baf83f300a8dc35f1ffcce2  TEST_DIR/test-146/file3.chk
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-146/file4.chk
-+fpunch files
-+Compare files
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-146/file1
-+e263fae701bc40c23a3edb20aad5573e  TEST_DIR/test-146/file2
-+91722d7c8baf83f300a8dc35f1ffcce2  TEST_DIR/test-146/file3
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-146/file4
-+e263fae701bc40c23a3edb20aad5573e  TEST_DIR/test-146/file2.chk
-+91722d7c8baf83f300a8dc35f1ffcce2  TEST_DIR/test-146/file3.chk
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-146/file4.chk
-+Compare against check files
-diff --git a/tests/generic/147 b/tests/generic/147
++++ b/tests/generic/152.out
+@@ -0,0 +1,8 @@
++QA output created by 152
++Create the original file blocks
++Create the reflink copies
++Punch most of the blocks
++Punch all the files
++free blocks after reflink is in range
++free blocks after punching some reflink copies is in range
++free blocks after punching all copies is in range
+diff --git a/tests/generic/153 b/tests/generic/153
 new file mode 100755
-index 0000000..c35bdd9
+index 0000000..2deee20
 --- /dev/null
-+++ b/tests/generic/147
-@@ -0,0 +1,139 @@
++++ b/tests/generic/153
+@@ -0,0 +1,102 @@
 +#! /bin/bash
-+# FS QA Test No. 812
++# FS QA Test No. 153
 +#
-+# Ensure that insert range steps around reflinked ranges:
-+#   - Create three reflink clones of a file
-+#   - Insert into the start, middle, and end of the reflink range of each
-+#     of the three files, respectively
-+#   - Check that the reflinked areas are still there.
++# Ensure that collapse-range on all copies of a file reflinked N times releases the blocks
++#   - Record fs block usage (0)
++#   - Create a file and some reflink copies
++#   - Record fs block usage (1)
++#   - Collapse-range some blocks of the copies
++#   - Record fs block usage (2)
++#   - Truncate all blocks of the copies
++#   - Compare fs block usage to (2), (1), and (0)
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -631,7 +463,7 @@ index 0000000..c35bdd9
 +_supported_os Linux
 +_require_test_reflink
 +_require_cp_reflink
-+_require_xfs_io_command "finsert"
++_require_xfs_io_command "fcollapse"
 +
 +rm -f "$seqres.full"
 +
@@ -639,127 +471,78 @@ index 0000000..c35bdd9
 +rm -rf "$TESTDIR"
 +mkdir "$TESTDIR"
 +
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file3"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file4"
-+
-+_pwrite_byte 0x00 0 $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x61 $BLKSZ $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 3)) $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $BLKSZ $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 3)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 3)) $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
++echo "Create the original file blocks"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++BLKS=2000
++MARGIN=100
++SZ=$((BLKSZ * BLKS))
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
++NR=4
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
 +_test_remount
 +
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
-+
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" = "${C3}" || echo "file1 and file3 should match"
-+test "${C1}" = "${C4}" || echo "file1 and file4 should match"
-+test "${C2}" = "${C3}" || echo "file2 and file3 should match"
-+test "${C2}" = "${C4}" || echo "file2 and file4 should match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "finsert files"
-+"$XFS_IO_PROG" -f -c "finsert 0 $BLKSZ" "$TESTDIR/file2"
-+"$XFS_IO_PROG" -f -c "finsert $BLKSZ $BLKSZ" "$TESTDIR/file3"
-+"$XFS_IO_PROG" -f -c "finsert $((BLKSZ * 2)) $BLKSZ" "$TESTDIR/file4"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
++done
 +_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
 +
-+echo "Compare files"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
++echo "Collapse most of the blocks"
++"$XFS_IO_PROG" -f -c "fcollapse 0 $(((BLKS - 1) * BLKSZ))" $TESTDIR/file2
++"$XFS_IO_PROG" -f -c "fcollapse 0 $((SZ / 2))" $TESTDIR/file3
++"$XFS_IO_PROG" -f -c "fcollapse $((SZ / 2)) $(( ((BLKS / 2) - 1) * BLKSZ))" $TESTDIR/file4
++_test_remount
++FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
 +
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
++echo "Collpase nearly all the files"
++"$XFS_IO_PROG" -f -c "fcollapse 0 $(( ((BLKS / 2) - 1) * BLKSZ))" $TESTDIR/file3
++"$XFS_IO_PROG" -f -c "fcollapse 0 $((SZ / 2))" $TESTDIR/file4
++"$XFS_IO_PROG" -f -c "fcollapse 0 $(( (BLKS - 1) * BLKSZ))" $TESTDIR/file1
++_test_remount
++FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
++#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3
 +
-+test "${C1}" != "${C2}" || echo "file1 and file2 should not match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" != "${C4}" || echo "file3 and file4 should not match"
++_within_tolerance "free blocks after reflink" $FREE_BLOCKS1 $((FREE_BLOCKS0 - BLKS)) $MARGIN -v
 +
-+echo "Compare against check files"
-+cmp -s "$TESTDIR/file2" "$TESTDIR/file2.chk" || echo "file2 and file2.chk do not match"
-+cmp -s "$TESTDIR/file3" "$TESTDIR/file3.chk" || echo "file3 and file3.chk do not match"
-+cmp -s "$TESTDIR/file4" "$TESTDIR/file4.chk" || echo "file4 and file4.chk do not match"
++_within_tolerance "free blocks after fcollapsing some reflink copies" $FREE_BLOCKS2 $FREE_BLOCKS1 $MARGIN -v
++
++_within_tolerance "free blocks after fcollapsing all copies" $FREE_BLOCKS3 $FREE_BLOCKS0 $MARGIN -v
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/147.out b/tests/generic/147.out
+diff --git a/tests/generic/153.out b/tests/generic/153.out
 new file mode 100644
-index 0000000..bee79c2
+index 0000000..c9ff37c
 --- /dev/null
-+++ b/tests/generic/147.out
-@@ -0,0 +1,19 @@
-+QA output created by 147
-+Create the original files
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-147/file1
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-147/file2
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-147/file3
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-147/file4
-+2b0921503c9f661b7690ac5b42f01f97  TEST_DIR/test-147/file2.chk
-+c424badbaad621c331a8ef213b78ac2a  TEST_DIR/test-147/file3.chk
-+33b4940294a1d94bee813907d6105ff7  TEST_DIR/test-147/file4.chk
-+finsert files
-+Compare files
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-147/file1
-+2b0921503c9f661b7690ac5b42f01f97  TEST_DIR/test-147/file2
-+c424badbaad621c331a8ef213b78ac2a  TEST_DIR/test-147/file3
-+33b4940294a1d94bee813907d6105ff7  TEST_DIR/test-147/file4
-+2b0921503c9f661b7690ac5b42f01f97  TEST_DIR/test-147/file2.chk
-+c424badbaad621c331a8ef213b78ac2a  TEST_DIR/test-147/file3.chk
-+33b4940294a1d94bee813907d6105ff7  TEST_DIR/test-147/file4.chk
-+Compare against check files
-diff --git a/tests/generic/148 b/tests/generic/148
++++ b/tests/generic/153.out
+@@ -0,0 +1,8 @@
++QA output created by 153
++Create the original file blocks
++Create the reflink copies
++Collapse most of the blocks
++Collpase nearly all the files
++free blocks after reflink is in range
++free blocks after fcollapsing some reflink copies is in range
++free blocks after fcollapsing all copies is in range
+diff --git a/tests/generic/154 b/tests/generic/154
 new file mode 100755
-index 0000000..3d7a762
+index 0000000..173b981
 --- /dev/null
-+++ b/tests/generic/148
-@@ -0,0 +1,116 @@
++++ b/tests/generic/154
+@@ -0,0 +1,110 @@
 +#! /bin/bash
-+# FS QA Test No. 148
++# FS QA Test No. 154
 +#
-+# Ensure that truncating the last block in a reflinked file CoWs appropriately:
-+#   - Create a file that doesn't end on a block boundary
-+#   - Create two reflink clones of the file
-+#   - Shorten one of the clones with truncate
-+#   - Lengthen the other clone with truncate
-+#   - Check that the reflinked areas are still there.
++# Ensure that CoW on all copies of a file reflinked N times increases block count
++#   - Record fs block usage (0)
++#   - Create a file and some reflink copies
++#   - Record fs block usage (1)
++#   - CoW some blocks of the copies
++#   - Record fs block usage (2)
++#   - CoW all the rest of the blocks of the copies
++#   - Compare fs block usage to (2), (1), and (0)
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -778,7 +561,7 @@ index 0000000..3d7a762
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +#-----------------------------------------------------------------------
 +
-+seq=`basename "$0"`
++seq=`basename $0`
 +seqres="$RESULT_DIR/$seq"
 +echo "QA output created by $seq"
 +
@@ -802,7 +585,6 @@ index 0000000..3d7a762
 +_supported_os Linux
 +_require_test_reflink
 +_require_cp_reflink
-+_require_xfs_io_command "truncate"
 +
 +rm -f "$seqres.full"
 +
@@ -810,98 +592,93 @@ index 0000000..3d7a762
 +rm -rf "$TESTDIR"
 +mkdir "$TESTDIR"
 +
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ 37 "$TESTDIR/file1" >> "$seqres.full"
-+
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file3"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ 34 "$TESTDIR/file2.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ 37 "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ + 37)) 3 "$TESTDIR/file3.chk" >> "$seqres.full"
++echo "Create the original file blocks"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++BLKS=2000
++MARGIN=100
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
++NR=4
++SZ=$((BLKS * BLKSZ))
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
 +_test_remount
 +
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" = "${C3}" || echo "file1 and file3 should match"
-+test "${C2}" = "${C3}" || echo "file2 and file3 should match"
-+
-+echo "truncate files"
-+"$XFS_IO_PROG" -f -c "truncate $((BLKSZ + 34))" "$TESTDIR/file2"
-+"$XFS_IO_PROG" -f -c "truncate $((BLKSZ + 40))" "$TESTDIR/file3"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
++done
 +_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
 +
-+echo "Compare files"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
++echo "Rewrite some of the blocks"
++_pwrite_byte 0x62 0 $SZ "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x63 0 $((SZ / 2)) "$TESTDIR/file3" >> "$seqres.full"
++_pwrite_byte 0x64 $((SZ / 2)) $((SZ / 2)) "$TESTDIR/file4" >> "$seqres.full"
++_test_remount
++FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
 +
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
++echo "Rewrite all the files"
++_pwrite_byte 0x62 0 $SZ "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x63 0 $SZ "$TESTDIR/file3" >> "$seqres.full"
++_pwrite_byte 0x64 0 $SZ "$TESTDIR/file4" >> "$seqres.full"
++_test_remount
++FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
 +
-+test "${C1}" != "${C2}" || echo "file1 and file2 should not match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
++echo "Rewrite the original file"
++_pwrite_byte 0x65 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++_test_remount
++FREE_BLOCKS4=$(stat -f "$TESTDIR" -c '%f')
++#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3 $FREE_BLOCKS4
 +
-+echo "Compare against check files"
-+cmp -s "$TESTDIR/file2" "$TESTDIR/file2.chk" || echo "file2 and file2.chk do not match"
-+cmp -s "$TESTDIR/file3" "$TESTDIR/file3.chk" || echo "file3 and file3.chk do not match"
++_within_tolerance "free blocks after reflinking" $FREE_BLOCKS1 $((FREE_BLOCKS0 - BLKS)) $MARGIN -v
++
++_within_tolerance "free blocks after partially CoWing some copies" $FREE_BLOCKS2 $((FREE_BLOCKS1 - (2 * BLKS))) $MARGIN -v
++
++_within_tolerance "free blocks after CoWing all copies" $FREE_BLOCKS3 $((FREE_BLOCKS2 - BLKS)) $MARGIN -v
++
++_within_tolerance "free blocks after overwriting original" $FREE_BLOCKS4 $FREE_BLOCKS3 $MARGIN -v
++
++_within_tolerance "free blocks after all tests" $FREE_BLOCKS4 $((FREE_BLOCKS0 - (4 * BLKS))) $MARGIN -v
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/148.out b/tests/generic/148.out
+diff --git a/tests/generic/154.out b/tests/generic/154.out
 new file mode 100644
-index 0000000..1896d95
+index 0000000..726b819
 --- /dev/null
-+++ b/tests/generic/148.out
-@@ -0,0 +1,15 @@
-+QA output created by 148
-+Create the original files
-+f924bdda449af63913cad4357e39301e  TEST_DIR/test-148/file1
-+f924bdda449af63913cad4357e39301e  TEST_DIR/test-148/file2
-+f924bdda449af63913cad4357e39301e  TEST_DIR/test-148/file3
-+16cb529abe447a9f203a3d5eb3433c8b  TEST_DIR/test-148/file2.chk
-+6f042ad39f6c74f4b73936db89baa2e2  TEST_DIR/test-148/file3.chk
-+truncate files
-+Compare files
-+f924bdda449af63913cad4357e39301e  TEST_DIR/test-148/file1
-+16cb529abe447a9f203a3d5eb3433c8b  TEST_DIR/test-148/file2
-+6f042ad39f6c74f4b73936db89baa2e2  TEST_DIR/test-148/file3
-+16cb529abe447a9f203a3d5eb3433c8b  TEST_DIR/test-148/file2.chk
-+6f042ad39f6c74f4b73936db89baa2e2  TEST_DIR/test-148/file3.chk
-+Compare against check files
-diff --git a/tests/generic/149 b/tests/generic/149
++++ b/tests/generic/154.out
+@@ -0,0 +1,11 @@
++QA output created by 154
++Create the original file blocks
++Create the reflink copies
++Rewrite some of the blocks
++Rewrite all the files
++Rewrite the original file
++free blocks after reflinking is in range
++free blocks after partially CoWing some copies is in range
++free blocks after CoWing all copies is in range
++free blocks after overwriting original is in range
++free blocks after all tests is in range
+diff --git a/tests/generic/155 b/tests/generic/155
 new file mode 100755
-index 0000000..44b5ae4
+index 0000000..2551295
 --- /dev/null
-+++ b/tests/generic/149
-@@ -0,0 +1,136 @@
++++ b/tests/generic/155
+@@ -0,0 +1,114 @@
 +#! /bin/bash
-+# FS QA Test No. 813
++# FS QA Test No. 155
 +#
-+# Ensure that zero-range steps around reflinked ranges:
-+#   - Create three reflink clones of a file
-+#   - Zero-range the start, middle, and end of the reflink range of each
-+#     of the three files, respectively
-+#   - Check that the reflinked areas are still there.
++# Ensure that CoW on all copies of a file reflinked N times increases block count
++#   - Record fs block usage (0)
++#   - Create a file and some reflink copies
++#   - Record fs block usage (1)
++#   - CoW some blocks of the copies
++#   - Record fs block usage (2)
++#   - CoW all the rest of the blocks of the copies
++#   - Compare fs block usage to (2), (1), and (0)
++#
++# The main difference from 834 is that we use zero range, directio, and
++# mmap to mix things up a bit.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
@@ -948,127 +725,240 @@ index 0000000..44b5ae4
 +
 +rm -f "$seqres.full"
 +
-+TESTDIR="$TEST_DIR/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
++TESTDIR=$TEST_DIR/test-$seq
++rm -rf $TESTDIR
++mkdir $TESTDIR
 +
-+echo "Create the original files"
-+BLKSZ=65536
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file3"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file4"
-+
-+_pwrite_byte 0x00 0 $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $BLKSZ $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+_pwrite_byte 0x63 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
-+
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x62 $BLKSZ $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
-+_pwrite_byte 0x00 $((BLKSZ * 2)) $BLKSZ "$TESTDIR/file4.chk" >> "$seqres.full"
++echo "Create the original file blocks"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++BLKS=2000
++MARGIN=100
++SZ=$((BLKSZ * BLKS))
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
++NR=4
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
 +_test_remount
 +
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
-+
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
-+
-+test "${C1}" = "${C2}" || echo "file1 and file2 should match"
-+test "${C1}" = "${C3}" || echo "file1 and file3 should match"
-+test "${C1}" = "${C4}" || echo "file1 and file4 should match"
-+test "${C2}" = "${C3}" || echo "file2 and file3 should match"
-+test "${C2}" = "${C4}" || echo "file2 and file4 should match"
-+test "${C3}" = "${C4}" || echo "file3 and file4 should match"
-+
-+echo "fzero files"
-+"$XFS_IO_PROG" -f -c "fzero 0 $BLKSZ" "$TESTDIR/file2"
-+"$XFS_IO_PROG" -f -c "fzero $BLKSZ $BLKSZ" "$TESTDIR/file3"
-+"$XFS_IO_PROG" -f -c "fzero $((BLKSZ * 2)) $BLKSZ" "$TESTDIR/file4"
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
++done
 +_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
 +
-+echo "Compare files"
-+md5sum "$TESTDIR/file1" | _filter_test_dir
-+md5sum "$TESTDIR/file2" | _filter_test_dir
-+md5sum "$TESTDIR/file3" | _filter_test_dir
-+md5sum "$TESTDIR/file4" | _filter_test_dir
-+md5sum "$TESTDIR/file2.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file3.chk" | _filter_test_dir
-+md5sum "$TESTDIR/file4.chk" | _filter_test_dir
++echo "Rewrite some of the blocks"
++"$XFS_IO_PROG" -f -c "fzero 0 $SZ" "$TESTDIR/file2" >> "$seqres.full"
++_pwrite_byte 0x63 0 $((SZ / 2)) "$TESTDIR/file3" -d >> "$seqres.full"
++_mwrite_byte 0x64 $((SZ / 2)) $((SZ / 2)) $SZ "$TESTDIR/file4" >> "$seqres.full"
++_test_remount
++FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
 +
-+C1="$(_md5_checksum "$TESTDIR/file1")"
-+C2="$(_md5_checksum "$TESTDIR/file2")"
-+C3="$(_md5_checksum "$TESTDIR/file3")"
-+C4="$(_md5_checksum "$TESTDIR/file4")"
++echo "Rewrite all the files"
++_pwrite_byte 0x62 0 $SZ "$TESTDIR/file2" -d >> "$seqres.full"
++_mwrite_byte 0x63 0 $SZ $SZ "$TESTDIR/file3" >> "$seqres.full"
++"$XFS_IO_PROG" -f -c "fzero 0 $SZ" $TESTDIR/file4 >> "$seqres.full"
++_test_remount
++FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
 +
-+test "${C1}" != "${C2}" || echo "file1 and file2 should not match"
-+test "${C1}" != "${C3}" || echo "file1 and file3 should not match"
-+test "${C1}" != "${C4}" || echo "file1 and file4 should not match"
-+test "${C2}" != "${C3}" || echo "file2 and file3 should not match"
-+test "${C2}" != "${C4}" || echo "file2 and file4 should not match"
-+test "${C3}" != "${C4}" || echo "file3 and file4 should not match"
++echo "Rewrite the original file"
++_pwrite_byte 0x65 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++_test_remount
++FREE_BLOCKS4=$(stat -f "$TESTDIR" -c '%f')
++#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3 $FREE_BLOCKS4
 +
-+echo "Compare against check files"
-+cmp -s "$TESTDIR/file2" "$TESTDIR/file2.chk" || echo "file2 and file2.chk do not match"
-+cmp -s "$TESTDIR/file3" "$TESTDIR/file3.chk" || echo "file3 and file3.chk do not match"
-+cmp -s "$TESTDIR/file4" "$TESTDIR/file4.chk" || echo "file4 and file4.chk do not match"
++_within_tolerance "free blocks after reflinking" $FREE_BLOCKS1 $((FREE_BLOCKS0 - BLKS)) $MARGIN -v
++
++_within_tolerance "free blocks after partially CoWing some copies" $FREE_BLOCKS2 $((FREE_BLOCKS1 - (2 * BLKS))) $MARGIN -v
++
++_within_tolerance "free blocks after CoWing all copies" $FREE_BLOCKS3 $((FREE_BLOCKS2 - BLKS)) $MARGIN -v
++
++_within_tolerance "free blocks after overwriting original" $FREE_BLOCKS4 $FREE_BLOCKS3 $MARGIN -v
++
++_within_tolerance "free blocks after all tests" $FREE_BLOCKS4 $((FREE_BLOCKS0 - (4 * BLKS))) $MARGIN -v
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/149.out b/tests/generic/149.out
+diff --git a/tests/generic/155.out b/tests/generic/155.out
 new file mode 100644
-index 0000000..dc3ceda
+index 0000000..efb8faf
 --- /dev/null
-+++ b/tests/generic/149.out
-@@ -0,0 +1,19 @@
-+QA output created by 149
-+Create the original files
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-149/file1
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-149/file2
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-149/file3
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-149/file4
-+e263fae701bc40c23a3edb20aad5573e  TEST_DIR/test-149/file2.chk
-+91722d7c8baf83f300a8dc35f1ffcce2  TEST_DIR/test-149/file3.chk
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-149/file4.chk
-+fzero files
-+Compare files
-+856bb58abaf1ac79aa1aa45b7de7218b  TEST_DIR/test-149/file1
-+e263fae701bc40c23a3edb20aad5573e  TEST_DIR/test-149/file2
-+91722d7c8baf83f300a8dc35f1ffcce2  TEST_DIR/test-149/file3
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-149/file4
-+e263fae701bc40c23a3edb20aad5573e  TEST_DIR/test-149/file2.chk
-+91722d7c8baf83f300a8dc35f1ffcce2  TEST_DIR/test-149/file3.chk
-+c931e8500c1a56a5b7369f7f1b971690  TEST_DIR/test-149/file4.chk
-+Compare against check files
++++ b/tests/generic/155.out
+@@ -0,0 +1,11 @@
++QA output created by 155
++Create the original file blocks
++Create the reflink copies
++Rewrite some of the blocks
++Rewrite all the files
++Rewrite the original file
++free blocks after reflinking is in range
++free blocks after partially CoWing some copies is in range
++free blocks after CoWing all copies is in range
++free blocks after overwriting original is in range
++free blocks after all tests is in range
+diff --git a/tests/generic/156 b/tests/generic/156
+new file mode 100755
+index 0000000..78b7e8c
+--- /dev/null
++++ b/tests/generic/156
+@@ -0,0 +1,124 @@
++#! /bin/bash
++# FS QA Test No. 156
++#
++# Ensure that fallocate on reflinked files actually CoWs the shared blocks.
++#   - Record fs block usage (0)
++#   - Create a file and some reflink copies
++#   - Record fs block usage (1)
++#   - funshare half of one of the copies
++#   - Record fs block usage (2)
++#   - funshare all of the copies
++#   - Record fs block usage (3)
++#   - rewrite the original file
++#   - Record fs block usage (4)
++#   - Compare fs block usage of 0-4 to ensure that block usage behaves as
++#     we expect.
++#
++# "funshare" refers to fallocate copy-on-writing the shared blocks
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf "$tmp".* "$TESTDIR"
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++
++if [ $FSTYP = "btrfs" ]; then
++	_notrun "btrfs doesn't handle unshare on fallocate"
++fi
++
++# real QA test starts here
++_supported_os Linux
++_require_test_reflink
++_require_cp_reflink
++_require_xfs_io_command "falloc"
++
++rm -f "$seqres.full"
++
++TESTDIR="$TEST_DIR/test-$seq"
++rm -rf "$TESTDIR"
++mkdir "$TESTDIR"
++
++echo "Create the original file blocks"
++BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
++BLKS=2000
++MARGIN=100
++SZ=$((BLKSZ * BLKS))
++FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
++NR=4
++_pwrite_byte 0x61 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++_test_remount
++
++echo "Create the reflink copies"
++for i in `seq 2 $NR`; do
++	_cp_reflink "$TESTDIR/file1" "$TESTDIR/file$i"
++done
++_test_remount
++FREE_BLOCKS1=$(stat -f "$TESTDIR" -c '%f')
++
++echo "funshare part of a file"
++"$XFS_IO_PROG" -f -c "falloc 0 $((SZ / 2))" "$TESTDIR/file2"
++_test_remount
++
++echo "funshare some of the copies"
++"$XFS_IO_PROG" -f -c "falloc 0 $SZ" "$TESTDIR/file2"
++"$XFS_IO_PROG" -f -c "falloc 0 $SZ" "$TESTDIR/file3"
++_test_remount
++FREE_BLOCKS2=$(stat -f "$TESTDIR" -c '%f')
++
++echo "funshare the rest of the files"
++"$XFS_IO_PROG" -f -c "falloc 0 $SZ" "$TESTDIR/file4"
++"$XFS_IO_PROG" -f -c "falloc 0 $SZ" "$TESTDIR/file1"
++_test_remount
++FREE_BLOCKS3=$(stat -f "$TESTDIR" -c '%f')
++
++echo "Rewrite the original file"
++_pwrite_byte 0x65 0 $SZ "$TESTDIR/file1" >> "$seqres.full"
++_test_remount
++FREE_BLOCKS4=$(stat -f "$TESTDIR" -c '%f')
++#echo $FREE_BLOCKS0 $FREE_BLOCKS1 $FREE_BLOCKS2 $FREE_BLOCKS3 $FREE_BLOCKS4
++
++_within_tolerance "free blocks after reflinking" $FREE_BLOCKS1 $((FREE_BLOCKS0 - BLKS)) $MARGIN -v
++
++_within_tolerance "free blocks after nocow'ing some copies" $FREE_BLOCKS2 $((FREE_BLOCKS1 - (2 * BLKS))) $MARGIN -v
++
++_within_tolerance "free blocks after nocow'ing all copies" $FREE_BLOCKS3 $((FREE_BLOCKS2 - BLKS)) $MARGIN -v
++
++_within_tolerance "free blocks after overwriting original" $FREE_BLOCKS4 $FREE_BLOCKS3 $MARGIN -v
++
++_within_tolerance "free blocks after all tests" $FREE_BLOCKS4 $((FREE_BLOCKS0 - (4 * BLKS))) $MARGIN -v
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/156.out b/tests/generic/156.out
+new file mode 100644
+index 0000000..d6fdc81
+--- /dev/null
++++ b/tests/generic/156.out
+@@ -0,0 +1,12 @@
++QA output created by 156
++Create the original file blocks
++Create the reflink copies
++funshare part of a file
++funshare some of the copies
++funshare the rest of the files
++Rewrite the original file
++free blocks after reflinking is in range
++free blocks after nocow'ing some copies is in range
++free blocks after nocow'ing all copies is in range
++free blocks after overwriting original is in range
++free blocks after all tests is in range
 diff --git a/tests/generic/group b/tests/generic/group
-index 7b55707..477c52b 100644
+index 477c52b..3141ae5 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -146,6 +146,12 @@
- 141 rw auto quick
- 142 auto quick clone
- 143 auto quick clone
-+144 auto quick clone
-+145 auto quick clone
-+146 auto quick clone
-+147 auto quick clone
-+148 auto quick clone
-+149 auto quick clone
+@@ -152,6 +152,13 @@
+ 147 auto quick clone
+ 148 auto quick clone
+ 149 auto quick clone
++150 auto quick clone
++151 auto quick clone
++152 auto quick clone
++153 auto quick clone
++154 auto quick clone
++155 auto quick clone
++156 auto quick clone
  169 rw metadata auto quick
  184 metadata auto quick
  192 atime auto
