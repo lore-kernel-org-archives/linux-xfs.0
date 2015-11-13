@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 54B7F7F6C
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 03:08:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE1C1AC001
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 01:08:55 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id kMlMoCTw57lyxGwI (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 01:08:54 -0800 (PST)
-Date: Fri, 13 Nov 2015 01:08:22 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFCv3.1 00/11] xfstests: test the nfs/cifs/btrfs/xfs
-	reflink/dedupe ioctls
-Message-ID: <20151113090822.GB2214@birch.djwong.org>
-References: <20151111192628.15056.6451.stgit@birch.djwong.org>
-	<20151112090756.GA25685@infradead.org>
-	<20151112125115.GA28822@infradead.org>
-	<20151112173427.GC2217@birch.djwong.org>
-	<20151112173635.GA9247@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151112173635.GA9247@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 39EFD7F6C
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 06:20:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 29B758F8033
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 04:20:05 -0800 (PST)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id aqDnHVixO5PzyY5E (version=TLSv1
+	cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 04:20:02 -0800 (PST)
+Subject: Re: memory reclaim problems on fs usage
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <201511111719.44035.arekm@maven.pl>
+	<201511120719.EBF35970.OtSOHOVFJMFQFL@I-love.SAKURA.ne.jp>
+	<201511120706.10739.arekm@maven.pl>
+	<56449E44.7020407@I-love.SAKURA.ne.jp>
+	<20151112200641.GR19199@dastard>
+In-Reply-To: <20151112200641.GR19199@dastard>
+Message-Id: <201511132119.BAG65154.QVHStOOFFMOLFJ@I-love.SAKURA.ne.jp>
+Date: Fri, 13 Nov 2015 21:19:46 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,33 +32,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: david@fromorbit.com
+Cc: htejun@gmail.com, xfs@oss.sgi.com, linux-mm@kvack.org, mhocko@suse.com, cl@linux.com
 
-On Thu, Nov 12, 2015 at 09:36:35AM -0800, Christoph Hellwig wrote:
-> On Thu, Nov 12, 2015 at 09:34:27AM -0800, Darrick J. Wong wrote:
-> > Bleargh, _require_*_dedupe forgot to check for ENOTTY output, so all the dedupe
-> > tests should have _notrun.
-> > 
-> > Also, generic/806 was calling the wrong _require.
-> > 
-> > I'll start renumbering tests; Christoph, did you see anything else?
+Dave Chinner wrote:
+> So why have we only scanned *176* pages* during reclaim?  On other
+> OOM reports in this trace it's as low as 12.  Either that stat is
+> completely wrong, or we're not doing sufficient page LRU reclaim
+> scanning....
 > 
-> Looks fine so far otherwise.
+> > [ 9662.234685] MemAlloc-Info: 3 stalling task, 0 dying task, 0 victim task.
+> > 
+> > vmstat_update() and submit_flushes() remained pending for about 110 seconds.
+> > If xlog_cil_push_work() were spinning inside GFP_NOFS allocation, it should be
+> > reported as MemAlloc: traces, but no such lines are recorded. I don't know why
+> > xlog_cil_push_work() did not call schedule() for so long.
+> 
+> I'd say it is repeatedly waiting for IO completion on log buffers to
+> write out the checkpoint. It's making progress, just if it's taking
+> multiple second per journal IO it will take a long time to write a
+> checkpoint. All the other blocked tasks in XFS inode reclaim are
+> either waiting directly on IO completion or waiting for the log to
+> complete a flush, so this really just looks like an overloaded IO
+> subsystem to me....
 
-I think I got all the tests renumbered correctly and fixed all the other bugs.
-I'd like to send the updated patchpile to Dave tomorrow, but if you have a few
-spare cycles would you mind giving this a quick test to make sure I fixed
-everything?
+The vmstat statistics can become wrong when vmstat_update() workqueue item
+cannot be processed due to in-flight workqueue item not calling schedule().
+If in-flight workqueue item (in this case xlog_cil_push_work()) called
+schedule(), the pending vmstat_update() workqueue item will be processed
+and the vmstat becomes up to dated. Like you expect that xlog_cil_push_work()
+was waiting for IO completion on log buffers rather than spinning inside
+GFP_NOFS allocation, what should happened is xlog_cil_push_work() called
+schedule() and vmstat_update() was processed. But vmstat_update() remained
+pending for about 110 seconds. That's strange...
 
-https://github.com/djwong/xfstests/tree/for-dave
+Arkadiusz is trying http://marc.info/?l=linux-mm&m=144725782107096&w=2
+which is for making sure that vmstat_update() workqueue item is processed
+by changing wait_iff_congested() to call schedule(), and we are waiting
+for test results.
 
---D
+Well, one of dependent patches "vmstat: explicitly schedule per-cpu work
+on the CPU we need it to run on" might be relevant to this problem.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If http://sprunge.us/GYBb and http://sprunge.us/XWUX solve the problem
+(for both with swap case and without swap case), the vmstat statistics
+was wrong.
 
 _______________________________________________
 xfs mailing list
