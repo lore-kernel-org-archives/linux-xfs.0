@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CA2FB7F5A
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 18:07:10 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1A3AC7F62
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 18:07:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B5F28304093
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 16:07:10 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6AEF6AC011
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 16:07:12 -0800 (PST)
 Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	cRHxEA4SOIhsgamb for <xfs@oss.sgi.com>;
-	Fri, 13 Nov 2015 16:07:09 -0800 (PST)
+	7ge1G27wmzYCbe0c for <xfs@oss.sgi.com>;
+	Fri, 13 Nov 2015 16:07:10 -0800 (PST)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v2 05/11] mm: add follow_pte_pmd()
-Date: Fri, 13 Nov 2015 17:06:44 -0700
-Message-Id: <1447459610-14259-6-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v2 06/11] mm: add pgoff_mkclean()
+Date: Fri, 13 Nov 2015 17:06:45 -0700
+Message-Id: <1447459610-14259-7-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,95 +30,106 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Similar to follow_pte(), follow_pte_pmd() allows either a PTE leaf or a
-huge page PMD leaf to be found and returned.
+Introduce pgoff_mkclean() which conceptually is similar to page_mkclean()
+except it works in the absence of struct page and it can also be used to
+clean PMDs.  This is needed for DAX's dirty page handling.
+
+pgoff_mkclean() doesn't return an error for a missing PTE/PMD when looping
+through the VMAs because it's not a requirement that each of the
+potentially many VMAs associated with a given struct address_space have a
+mapping set up for our pgoff.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Suggested-by: Dave Hansen <dave.hansen@linux.intel.com>
 ---
- include/linux/mm.h |  2 ++
- mm/memory.c        | 38 ++++++++++++++++++++++++++++++--------
- 2 files changed, 32 insertions(+), 8 deletions(-)
+ include/linux/rmap.h |  5 +++++
+ mm/rmap.c            | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 80001de..393441c 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1166,6 +1166,8 @@ int copy_page_range(struct mm_struct *dst, struct mm_struct *src,
- 			struct vm_area_struct *vma);
- void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows);
-+int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp);
- int follow_pfn(struct vm_area_struct *vma, unsigned long address,
- 	unsigned long *pfn);
- int follow_phys(struct vm_area_struct *vma, unsigned long address,
-diff --git a/mm/memory.c b/mm/memory.c
-index deb679c..7f4090e 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -3512,8 +3512,8 @@ int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
+diff --git a/include/linux/rmap.h b/include/linux/rmap.h
+index 29446ae..171a4ac 100644
+--- a/include/linux/rmap.h
++++ b/include/linux/rmap.h
+@@ -223,6 +223,11 @@ unsigned long page_address_in_vma(struct page *, struct vm_area_struct *);
+ int page_mkclean(struct page *);
+ 
+ /*
++ * Cleans and write protects the PTEs of shared mappings.
++ */
++void pgoff_mkclean(pgoff_t, struct address_space *);
++
++/*
+  * called in munlock()/munmap() path to check for other vmas holding
+  * the page mlocked.
+  */
+diff --git a/mm/rmap.c b/mm/rmap.c
+index f5b5c1f..8114862 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -586,6 +586,16 @@ vma_address(struct page *page, struct vm_area_struct *vma)
+ 	return address;
  }
- #endif /* __PAGETABLE_PMD_FOLDED */
  
--static int __follow_pte(struct mm_struct *mm, unsigned long address,
--		pte_t **ptepp, spinlock_t **ptlp)
-+static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+		pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
- {
- 	pgd_t *pgd;
- 	pud_t *pud;
-@@ -3529,12 +3529,20 @@ static int __follow_pte(struct mm_struct *mm, unsigned long address,
- 		goto out;
- 
- 	pmd = pmd_offset(pud, address);
--	VM_BUG_ON(pmd_trans_huge(*pmd));
--	if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
--		goto out;
- 
--	/* We cannot handle huge page PFN maps. Luckily they don't exist. */
--	if (pmd_huge(*pmd))
-+	if (pmd_huge(*pmd)) {
-+		if (!pmdpp)
-+			goto out;
++static inline unsigned long
++pgoff_address(pgoff_t pgoff, struct vm_area_struct *vma)
++{
++	unsigned long address;
 +
-+		*ptlp = pmd_lock(mm, pmd);
-+		if (pmd_huge(*pmd)) {
-+			*pmdpp = pmd;
-+			return 0;
-+		}
-+		spin_unlock(*ptlp);
-+	}
-+
-+	if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
- 		goto out;
- 
- 	ptep = pte_offset_map_lock(mm, pmd, address, ptlp);
-@@ -3557,9 +3565,23 @@ static inline int follow_pte(struct mm_struct *mm, unsigned long address,
- 
- 	/* (void) is needed to make gcc happy */
- 	(void) __cond_lock(*ptlp,
--			   !(res = __follow_pte(mm, address, ptepp, ptlp)));
-+			   !(res = __follow_pte_pmd(mm, address, ptepp, NULL,
-+					   ptlp)));
-+	return res;
++	address = vma->vm_start + ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
++	VM_BUG_ON_VMA(address < vma->vm_start || address >= vma->vm_end, vma);
++	return address;
 +}
 +
-+int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
-+{
-+	int res;
-+
-+	/* (void) is needed to make gcc happy */
-+	(void) __cond_lock(*ptlp,
-+			   !(res = __follow_pte_pmd(mm, address, ptepp, pmdpp,
-+					   ptlp)));
- 	return res;
+ #ifdef CONFIG_ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH
+ static void percpu_flush_tlb_batch_pages(void *data)
+ {
+@@ -1040,6 +1050,47 @@ int page_mkclean(struct page *page)
  }
-+EXPORT_SYMBOL(follow_pte_pmd);
+ EXPORT_SYMBOL_GPL(page_mkclean);
  
++void pgoff_mkclean(pgoff_t pgoff, struct address_space *mapping)
++{
++	struct vm_area_struct *vma;
++	int ret = 0;
++
++	i_mmap_lock_read(mapping);
++	vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
++		struct mm_struct *mm = vma->vm_mm;
++		pmd_t pmd, *pmdp = NULL;
++		pte_t pte, *ptep = NULL;
++		unsigned long address;
++		spinlock_t *ptl;
++
++		address = pgoff_address(pgoff, vma);
++
++		/* when this returns successfully ptl is locked */
++		ret = follow_pte_pmd(mm, address, &ptep, &pmdp, &ptl);
++		if (ret)
++			continue;
++
++		if (pmdp) {
++			flush_cache_page(vma, address, pmd_pfn(*pmdp));
++			pmd = pmdp_huge_clear_flush(vma, address, pmdp);
++			pmd = pmd_wrprotect(pmd);
++			pmd = pmd_mkclean(pmd);
++			set_pmd_at(mm, address, pmdp, pmd);
++			spin_unlock(ptl);
++		} else {
++			BUG_ON(!ptep);
++			flush_cache_page(vma, address, pte_pfn(*ptep));
++			pte = ptep_clear_flush(vma, address, ptep);
++			pte = pte_wrprotect(pte);
++			pte = pte_mkclean(pte);
++			set_pte_at(mm, address, ptep, pte);
++			pte_unmap_unlock(ptep, ptl);
++		}
++	}
++	i_mmap_unlock_read(mapping);
++}
++EXPORT_SYMBOL_GPL(pgoff_mkclean);
++
  /**
-  * follow_pfn - look up PFN at a user virtual address
+  * page_move_anon_rmap - move a page to our anon_vma
+  * @page:	the page to move to our anon_vma
 -- 
 2.1.0
 
