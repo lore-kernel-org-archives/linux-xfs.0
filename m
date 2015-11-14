@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 555957F91
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 15:38:34 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id E80AA7F4E
+	for <xfs@oss.sgi.com>; Sat, 14 Nov 2015 02:41:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 375B48F8033
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:38:34 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 97CCxvOjdGQxBh8B (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Nov 2015 13:38:32 -0800 (PST)
-Subject: [PATCH 12/12] reflink: test what happens when we hit resource limits
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 13 Nov 2015 13:38:02 -0800
-Message-ID: <20151113213802.31124.74408.stgit@birch.djwong.org>
-In-Reply-To: <20151113213643.31124.80975.stgit@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D1F118F812A
+	for <xfs@oss.sgi.com>; Sat, 14 Nov 2015 00:41:13 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id LxyqJFoW9GtzRlL7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 14 Nov 2015 00:41:11 -0800 (PST)
+Date: Sat, 14 Nov 2015 00:41:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFCv3.2 00/12] xfstests: test the nfs/cifs/btrfs/xfs
+	reflink/dedupe ioctls
+Message-ID: <20151114084103.GA6894@infradead.org>
 References: <20151113213643.31124.80975.stgit@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20151113213643.31124.80975.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,246 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-Add a few horrible opt-in stress tests to see what happens if we try
-to reflink the same block billions of times, and what happens if we
-run out of space while reflinking a file.
+Looks good,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/175     |   99 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/175.out |    0 
- tests/generic/176     |   81 ++++++++++++++++++++++++++++++++++++++++
- tests/generic/176.out |    5 ++
- tests/generic/group   |    2 +
- 5 files changed, 187 insertions(+)
- create mode 100755 tests/generic/175
- create mode 100644 tests/generic/175.out
- create mode 100755 tests/generic/176
- create mode 100644 tests/generic/176.out
-
-
-diff --git a/tests/generic/175 b/tests/generic/175
-new file mode 100755
-index 0000000..a7da533
---- /dev/null
-+++ b/tests/generic/175
-@@ -0,0 +1,99 @@
-+#! /bin/bash
-+# FS QA Test No. 175
-+#
-+# Try to hit the maximum reference count (eek!)
-+#
-+# This test runs extremely slowly, so it's not automatically run anywhere.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf "$tmp".* "$TESTDIR1"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/attr
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scratch_reflink
-+_require_cp_reflink
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+TESTDIR="$SCRATCH_MNT/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+# Well let's hope the maximum reflink count is (less than (ha!)) 2^32...
-+
-+echo "Create a one block file"
-+BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
-+_pwrite_byte 0x61 0 $BLKSZ "$TESTDIR/file1" >> "$seqres.full"
-+_pwrite_byte 0x62 0 $BLKSZ "$TESTDIR/file2" >> "$seqres.full"
-+_cp_reflink "$TESTDIR/file1" "$TESTDIR/file2" >> "$seqres.full"
-+
-+nr=32
-+fnr=32
-+for i in $(seq 0 $fnr); do
-+	echo " ++ Reflink size $i, $(( (2 ** i) * BLKSZ)) bytes" | tee -a "$seqres.full"
-+	n=$(( (2 ** i) * BLKSZ))
-+	_reflink_range "$TESTDIR/file1" 0 "$TESTDIR/file1" $n $n >> "$seqres.full" || break
-+done
-+
-+nrf=$((nr - fnr))
-+echo "Clone $((2 ** nrf)) files"
-+seq 0 $((2 ** nrf)) | while read i; do
-+	_cp-reflink "$TESTDIR/file1" "$TESTDIR/file1-$i"
-+done
-+
-+echo "Check scratch fs"
-+umount "$SCRATCH_MNT"
-+_check_scratch_fs
-+
-+echo "Remove big file and recheck"
-+_scratch_mount >> "$seqres.full" 2>&1
-+umount "$SCRATCH_MNT"
-+_check_scratch_fs
-+
-+echo "Remove all files and recheck"
-+_scratch_mount >> "$seqres.full" 2>&1
-+umount "$SCRATCH_MNT"
-+_check_scratch_fs
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/175.out b/tests/generic/175.out
-new file mode 100644
-index 0000000..e69de29
-diff --git a/tests/generic/176 b/tests/generic/176
-new file mode 100755
-index 0000000..bf930b7
---- /dev/null
-+++ b/tests/generic/176
-@@ -0,0 +1,81 @@
-+#! /bin/bash
-+# FS QA Test No. 176
-+#
-+# Try to run out of space while cloning?
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf "$tmp".* "$TESTDIR1"
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/attr
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scratch_reflink
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+TESTDIR="$SCRATCH_MNT/test-$seq"
-+rm -rf "$TESTDIR"
-+mkdir "$TESTDIR"
-+
-+BLKSZ="$(stat -f "$TESTDIR" -c '%S')"
-+NR_FREE="$(stat -f -c '%f' "$TESTDIR")"
-+echo "Create a big file"
-+touch "$TESTDIR/file0" "$TESTDIR/file1"
-+_pwrite_byte 0x61 0 $((BLKSZ * NR_FREE)) "$TESTDIR/bigfile" >> "$seqres.full" 2>&1
-+_scratch_remount
-+sz="$(stat -c '%s' "$TESTDIR/bigfile")"
-+
-+blks="$((sz / BLKSZ))"
-+echo "Try to reflink"
-+seq 0 $blks | while read lblk; do
-+	fname="$TESTDIR/file$((lblk % 2))"
-+	out="$(_reflink_range "$TESTDIR/bigfile" $((lblk * BLKSZ)) "$fname" $((lblk * BLKSZ)) $BLKSZ 2>&1)"
-+	echo "$fname: $out" >> "$seqres.full"
-+	echo "$out" | grep -q "No space left on device" && break
-+done
-+
-+echo "Check scratch fs"
-+umount "$SCRATCH_MNT"
-+_check_scratch_fs
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/176.out b/tests/generic/176.out
-new file mode 100644
-index 0000000..eec98eb
---- /dev/null
-+++ b/tests/generic/176.out
-@@ -0,0 +1,5 @@
-+QA output created by 176
-+Format and mount
-+Create a big file
-+Try to reflink
-+Check scratch fs
-diff --git a/tests/generic/group b/tests/generic/group
-index 09a7828..8a40797 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -177,6 +177,8 @@
- 172 auto quick clone
- 173 auto quick clone
- 174 auto quick clone
-+175 clone_stress
-+176 clone_stress
- 184 metadata auto quick
- 192 atime auto
- 193 metadata auto quick
+Acked-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
