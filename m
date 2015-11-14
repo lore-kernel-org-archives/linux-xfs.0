@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 51D7C7F5A
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BC9D27F5D
 	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 18:07:08 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A9968F808F
-	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 16:07:07 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D6CAAC011
+	for <xfs@oss.sgi.com>; Fri, 13 Nov 2015 16:07:08 -0800 (PST)
 Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	Jvc6doaZysjApBax for <xfs@oss.sgi.com>;
-	Fri, 13 Nov 2015 16:07:03 -0800 (PST)
+	hTfsQfhoq1yfMYkr for <xfs@oss.sgi.com>;
+	Fri, 13 Nov 2015 16:07:05 -0800 (PST)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v2 01/11] pmem: add wb_cache_pmem() to the PMEM API
-Date: Fri, 13 Nov 2015 17:06:40 -0700
-Message-Id: <1447459610-14259-2-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v2 03/11] pmem: enable REQ_FUA/REQ_FLUSH handling
+Date: Fri, 13 Nov 2015 17:06:42 -0700
+Message-Id: <1447459610-14259-4-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,111 +30,41 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-The function __arch_wb_cache_pmem() was already an internal implementation
-detail of the x86 PMEM API, but this functionality needs to be exported as
-part of the general PMEM API to handle the fsync/msync case for DAX mmaps.
+Currently the PMEM driver doesn't accept REQ_FLUSH or REQ_FUA bios.  These
+are sent down via blkdev_issue_flush() in response to a fsync() or msync()
+and are used by filesystems to order their metadata, among other things.
 
-One thing worth noting is that we really do want this to be part of the
-PMEM API as opposed to a stand-alone function like clflush_cache_range()
-because of ordering restrictions.  By having wb_cache_pmem() as part of the
-PMEM API we can leave it unordered, call it multiple times to write back
-large amounts of memory, and then order the multiple calls with a single
-wmb_pmem().
+When we get an msync() or fsync() it is the responsibility of the DAX code
+to flush all dirty pages to media.  The PMEM driver then just has issue a
+wmb_pmem() in response to the REQ_FLUSH to ensure that before we return all
+the flushed data has been durably stored on the media.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- arch/x86/include/asm/pmem.h | 11 ++++++-----
- include/linux/pmem.h        | 22 +++++++++++++++++++++-
- 2 files changed, 27 insertions(+), 6 deletions(-)
+ drivers/nvdimm/pmem.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/include/asm/pmem.h b/arch/x86/include/asm/pmem.h
-index d8ce3ec..6c7ade0 100644
---- a/arch/x86/include/asm/pmem.h
-+++ b/arch/x86/include/asm/pmem.h
-@@ -67,18 +67,19 @@ static inline void arch_wmb_pmem(void)
- }
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 0ba6a97..b914d66 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -80,7 +80,7 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
+ 	if (do_acct)
+ 		nd_iostat_end(bio, start);
  
- /**
-- * __arch_wb_cache_pmem - write back a cache range with CLWB
-+ * arch_wb_cache_pmem - write back a cache range with CLWB
-  * @vaddr:	virtual start address
-  * @size:	number of bytes to write back
-  *
-  * Write back a cache range using the CLWB (cache line write back)
-  * instruction.  This function requires explicit ordering with an
-- * arch_wmb_pmem() call.  This API is internal to the x86 PMEM implementation.
-+ * arch_wmb_pmem() call.
-  */
--static inline void __arch_wb_cache_pmem(void *vaddr, size_t size)
-+static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
- {
- 	u16 x86_clflush_size = boot_cpu_data.x86_clflush_size;
- 	unsigned long clflush_mask = x86_clflush_size - 1;
-+	void *vaddr = (void __force *)addr;
- 	void *vend = vaddr + size;
- 	void *p;
+-	if (bio_data_dir(bio))
++	if (bio_data_dir(bio) || (bio->bi_rw & (REQ_FLUSH|REQ_FUA)))
+ 		wmb_pmem();
  
-@@ -115,7 +116,7 @@ static inline size_t arch_copy_from_iter_pmem(void __pmem *addr, size_t bytes,
- 	len = copy_from_iter_nocache(vaddr, bytes, i);
+ 	bio_endio(bio);
+@@ -189,6 +189,7 @@ static int pmem_attach_disk(struct device *dev,
+ 	blk_queue_physical_block_size(pmem->pmem_queue, PAGE_SIZE);
+ 	blk_queue_max_hw_sectors(pmem->pmem_queue, UINT_MAX);
+ 	blk_queue_bounce_limit(pmem->pmem_queue, BLK_BOUNCE_ANY);
++	blk_queue_flush(pmem->pmem_queue, REQ_FLUSH|REQ_FUA);
+ 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, pmem->pmem_queue);
  
- 	if (__iter_needs_pmem_wb(i))
--		__arch_wb_cache_pmem(vaddr, bytes);
-+		arch_wb_cache_pmem(addr, bytes);
- 
- 	return len;
- }
-@@ -138,7 +139,7 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
- 	else
- 		memset(vaddr, 0, size);
- 
--	__arch_wb_cache_pmem(vaddr, size);
-+	arch_wb_cache_pmem(addr, size);
- }
- 
- static inline bool __arch_has_wmb_pmem(void)
-diff --git a/include/linux/pmem.h b/include/linux/pmem.h
-index 85f810b3..2cd5003 100644
---- a/include/linux/pmem.h
-+++ b/include/linux/pmem.h
-@@ -53,12 +53,18 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
- {
- 	BUG();
- }
-+
-+static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
-+{
-+	BUG();
-+}
- #endif
- 
- /*
-  * Architectures that define ARCH_HAS_PMEM_API must provide
-  * implementations for arch_memcpy_to_pmem(), arch_wmb_pmem(),
-- * arch_copy_from_iter_pmem(), arch_clear_pmem() and arch_has_wmb_pmem().
-+ * arch_copy_from_iter_pmem(), arch_clear_pmem(), arch_wb_cache_pmem()
-+ * and arch_has_wmb_pmem().
-  */
- static inline void memcpy_from_pmem(void *dst, void __pmem const *src, size_t size)
- {
-@@ -202,4 +208,18 @@ static inline void clear_pmem(void __pmem *addr, size_t size)
- 	else
- 		default_clear_pmem(addr, size);
- }
-+
-+/**
-+ * wb_cache_pmem - write back processor cache for PMEM memory range
-+ * @addr:	virtual start address
-+ * @size:	number of bytes to write back
-+ *
-+ * Write back the processor cache range starting at 'addr' for 'size' bytes.
-+ * This function requires explicit ordering with a wmb_pmem() call.
-+ */
-+static inline void wb_cache_pmem(void __pmem *addr, size_t size)
-+{
-+	if (arch_has_pmem_api())
-+		arch_wb_cache_pmem(addr, size);
-+}
- #endif /* __PMEM_H__ */
+ 	disk = alloc_disk(0);
 -- 
 2.1.0
 
