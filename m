@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E15817F3F
-	for <xfs@oss.sgi.com>; Sun, 15 Nov 2015 05:29:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6BF0304032
-	for <xfs@oss.sgi.com>; Sun, 15 Nov 2015 03:29:32 -0800 (PST)
-Received: from mail-lf0-f46.google.com (mail-lf0-f46.google.com
-	[209.85.215.46]) by cuda.sgi.com with ESMTP id Y6W9SFo87C4pgJlu
+	by oss.sgi.com (Postfix) with ESMTP id B094B7F50
+	for <xfs@oss.sgi.com>; Sun, 15 Nov 2015 07:08:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F309304032
+	for <xfs@oss.sgi.com>; Sun, 15 Nov 2015 05:08:21 -0800 (PST)
+Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id ylMFD4LQE8sLohFD
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 15 Nov 2015 03:29:27 -0800 (PST)
-Received: by lfdo63 with SMTP id o63so72978645lfd.2
-	for <xfs@oss.sgi.com>; Sun, 15 Nov 2015 03:29:26 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: memory reclaim problems on fs usage
-Date: Sun, 15 Nov 2015 12:29:23 +0100
-References: <201511102313.36685.arekm@maven.pl>
-	<201511142140.38245.arekm@maven.pl>
-	<201511151135.JGD81717.OFOOSMFJFQHVtL@I-love.SAKURA.ne.jp>
-In-Reply-To: <201511151135.JGD81717.OFOOSMFJFQHVtL@I-love.SAKURA.ne.jp>
+	Sun, 15 Nov 2015 05:08:15 -0800 (PST)
+Received: by wmww144 with SMTP id w144so85885721wmw.0
+	for <xfs@oss.sgi.com>; Sun, 15 Nov 2015 05:08:15 -0800 (PST)
+From: Avi Kivity <avi@scylladb.com>
+Subject: AIO read returns negative number for bytes read
+Message-ID: <564883BD.8070607@scylladb.com>
+Date: Sun, 15 Nov 2015 15:08:13 +0200
 MIME-Version: 1.0
-Message-Id: <201511151229.23312.arekm@maven.pl>
+Content-Type: multipart/mixed; boundary="------------000802080702020200030301"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +26,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc: linux-mm@kvack.org, cl@linux.com, htejun@gmail.com, mhocko@suse.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-aio@kvack.org
 
-T24gU3VuZGF5IDE1IG9mIE5vdmVtYmVyIDIwMTUsIFRldHN1byBIYW5kYSB3cm90ZToKPiBBcmth
-ZGl1c3ogTWlza2lld2ljeiB3cm90ZToKPiA+ID4gPiB2bXN0YXRfdXBkYXRlKCkgYW5kIHN1Ym1p
-dF9mbHVzaGVzKCkgcmVtYWluZWQgcGVuZGluZyBmb3IgYWJvdXQgMTEwCj4gPiA+ID4gc2Vjb25k
-cy4gSWYgeGxvZ19jaWxfcHVzaF93b3JrKCkgd2VyZSBzcGlubmluZyBpbnNpZGUgR0ZQX05PRlMK
-PiA+ID4gPiBhbGxvY2F0aW9uLCBpdCBzaG91bGQgYmUgcmVwb3J0ZWQgYXMgTWVtQWxsb2M6IHRy
-YWNlcywgYnV0IG5vIHN1Y2gKPiA+ID4gPiBsaW5lcyBhcmUgcmVjb3JkZWQuIEkgZG9uJ3Qga25v
-dyB3aHkgeGxvZ19jaWxfcHVzaF93b3JrKCkgZGlkIG5vdAo+ID4gPiA+IGNhbGwgc2NoZWR1bGUo
-KSBmb3Igc28gbG9uZy4gQW55d2F5LCBhcHBseWluZwo+ID4gPiA+IGh0dHA6Ly9sa21sLmtlcm5l
-bC5vcmcvci8yMDE1MTExMTE2MDMzNi5HRDE0MzJAZGhjcDIyLnN1c2UuY3ogc2hvdWxkCj4gPiA+
-ID4gc29sdmUgdm1zdGF0X3VwZGF0ZSgpIHBhcnQuCj4gPiA+IAo+ID4gPiBUbyBhcHBseSB0aGF0
-IHBhdGNoIG9uIHRvcCBvZiA0LjEuMTMgSSBhbHNvIGhhZCB0byBhcHBseSBwYXRjaGVzIGxpc3Rl
-ZAo+ID4gPiBiZWxvdy4KPiA+ID4gCj4gPiA+IFNvIGluIHN1bW1hcnkgYXBwbGxpZWQ6Cj4gPiA+
-IGh0dHA6Ly9zcHJ1bmdlLnVzL0dZQmIKPiA+ID4gaHR0cDovL3NwcnVuZ2UudXMvWFdVWAo+ID4g
-PiBodHRwOi8vc3BydW5nZS51cy9qWmpWCj4gPiAKPiA+IEkndmUgdHJpZWQgbW9yZSB0byB0cmln
-Z2VyICJwYWdlIGFsbG9jYXRpb24gZmFpbHVyZSIgd2l0aCB1c3VhbCBhY3Rpb25zCj4gPiB0aGF0
-IHRyaWdnZXJlZCBpdCBwcmV2aW91c2x5IGJ1dCBjb3VsZG4ndCByZXByb2R1Y2UuIFdpdGggdGhl
-c2UgcGF0Y2hlcwo+ID4gYXBwbGllZCBpdCBkb2Vzbid0IGhhcHBlbi4KPiA+IAo+ID4gTG9ncyBm
-cm9tIG15IHRlc3RzOgo+ID4gCj4gPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20v
-bG9nLW1tLTMudHh0Lmd6Cj4gPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20vbG9n
-LW1tLTQudHh0Lmd6ICh3aXRoIHN3YXAgYWRkZWQpCj4gCj4gR29vZC4KPiAKPiB2bXN0YXRfdXBk
-YXRlKCkgYW5kIHN1Ym1pdF9mbHVzaGVzKCkgYXJlIG5vIGxvbmdlciBwZW5kaW5nIGZvciBsb25n
-Lgo+IAo+IGxvZy1tbS00LnR4dDpOb3YgMTQgMTY6NDA6MDggc3J2IGtlcm5lbDogWzE2Nzc1My4z
-OTM5NjBdICAgICBwZW5kaW5nOgo+IHZtc3RhdF9zaGVwaGVyZCwgdm1wcmVzc3VyZV93b3JrX2Zu
-IGxvZy1tbS00LnR4dDpOb3YgMTQgMTY6NDA6MDggc3J2Cj4ga2VybmVsOiBbMTY3NzUzLjM5Mzk4
-NF0gICAgIHBlbmRpbmc6IHN1Ym1pdF9mbHVzaGVzIFttZF9tb2RdCj4gbG9nLW1tLTQudHh0Ok5v
-diAxNCAxNjo0MTowOCBzcnYga2VybmVsOiBbMTY3ODEzLjQzOTQwNV0gICAgIHBlbmRpbmc6Cj4g
-c3VibWl0X2ZsdXNoZXMgW21kX21vZF0gbG9nLW1tLTQudHh0Ok5vdiAxNCAxNzoxNzoxOSBzcnYg
-a2VybmVsOgo+IFsxNjk5ODUuMTA0ODA2XSAgICAgcGVuZGluZzogdm1zdGF0X3NoZXBoZXJkCj4g
-Cj4gSSB0aGluayB0aGF0IHRoZSB2bXN0YXQgc3RhdGlzdGljcyBub3cgaGF2ZSBjb3JyZWN0IHZh
-bHVlcy4KPiAKPiA+IEJ1dCBhcmUgdGhlc2UgcGF0Y2hlcyBzb2x2aW5nIHRoZSBwcm9ibGVtIG9y
-IGp1c3QgaGlkaW5nIGl0Pwo+IAo+IEV4Y3VzZSBtZSBidXQgSSBjYW4ndCBqdWRnZS4KPgo+IElm
-IHlvdSBhcmUgaW50ZXJlc3RlZCBpbiBtb25pdG9yaW5nIGhvdyB2bXN0YXQgc3RhdGlzdGljcyBh
-cmUgY2hhbmdpbmcKPiB1bmRlciBzdGFsbGVkIGNvbmRpdGlvbiwgeW91IGNhbiB0cnkgYmVsb3cg
-cGF0Y2guCgoKSGVyZSBpcyBsb2cgd2l0aCB0aGlzIGFuZCBhbGwgcHJldmlvdXMgcGF0Y2hlcyBh
-cHBsaWVkOgpodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20vbG9nLW1tLTUudHh0Lmd6
-CgoKPiAKPiBkaWZmIC0tZ2l0IGEvbW0vcGFnZV9hbGxvYy5jIGIvbW0vcGFnZV9hbGxvYy5jCj4g
-aW5kZXggMzVhNDZiNC4uM2RlM2ExNCAxMDA2NDQKPiAtLS0gYS9tbS9wYWdlX2FsbG9jLmMKPiAr
-KysgYi9tbS9wYWdlX2FsbG9jLmMKPiBAQCAtMjc5NCw4ICsyNzk0LDcgQEAgc3RhdGljIGludCBr
-bWFsbG9jd2Qodm9pZCAqdW51c2VkKQo+ICAJcmN1X3JlYWRfdW5sb2NrKCk7Cj4gIAlwcmVlbXB0
-X2VuYWJsZSgpOwo+ICAJc2hvd193b3JrcXVldWVfc3RhdGUoKTsKPiAtCWlmIChkdW1wX3Rhcmdl
-dF9waWQgPD0gMCkKPiAtCQlkdW1wX3RhcmdldF9waWQgPSAtcGlkOwo+ICsJc2hvd19tZW0oMCk7
-Cj4gIAkvKiBXYWl0IHVudGlsIG5leHQgdGltZW91dCBkdXJhdGlvbi4gKi8KPiAgCXNjaGVkdWxl
-X3RpbWVvdXRfaW50ZXJydXB0aWJsZShrbWFsbG9jd2RfdGltZW91dCk7Cj4gIAlpZiAobWVtYWxs
-b2NfY291bnRlcltpbmRleF0pCgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20gLyAo
-IG1hdmVuLnBsIHwgcGxkLWxpbnV4Lm9yZyApCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+This is a multi-part message in MIME format.
+--------------000802080702020200030301
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Due to a bug in my program, I initiated a read beyond eof. Specifically, 
+the file size is 13002 bytes and the read offset is 13312 (0x3400).
+
+I would expect such a read to return 0 bytes read, but io_getevents 
+returns -310, which is suspiciously equal to (13002 - 13312).
+
+I attach a reproducer.
+
+4.2.5-201.fc22.x86_64
+
+Are my expectations incorrect, or is this a bug in aio or xfs?
+
+--------------000802080702020200030301
+Content-Type: text/plain; charset=UTF-8;
+ name="aio_read_fails.c"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="aio_read_fails.c"
+
+I2RlZmluZSBfR05VX1NPVVJDRQoKI2luY2x1ZGUgPGxpYmFpby5oPgojaW5jbHVkZSA8YXNz
+ZXJ0Lmg+CiNpbmNsdWRlIDxzdGRsaWIuaD4KI2luY2x1ZGUgPHN5cy90eXBlcy5oPgojaW5j
+bHVkZSA8dW5pc3RkLmg+CiNpbmNsdWRlIDxzdGRpby5oPgojaW5jbHVkZSA8c3lzL3N0YXQu
+aD4KI2luY2x1ZGUgPGZjbnRsLmg+CgppbnQgbWFpbihpbnQgYWMsIGNoYXIqKiBhdikgewog
+IGludCBmZDsKICBjaGFyKiBidWY7CiAgaW9fY29udGV4dF90IGlvYyA9IE5VTEw7CiAgaW50
+IHI7CiAgc3RydWN0IGlvY2IgaW9jYjsKICBzdHJ1Y3QgaW9jYiAqaW9jYnBbMV07CiAgc3Ry
+dWN0IGlvX2V2ZW50IGlvZXY7CgogIGJ1ZiA9IGFsaWduZWRfYWxsb2MoNDA5NiwgNDA5Nio0
+KTsKICBhc3NlcnQoYnVmKTsKICByID0gaW9fc2V0dXAoMSwgJmlvYyk7CiAgYXNzZXJ0KHIg
+PT0gMCk7CiAgZmQgPSBvcGVuKCJ0bXAudG1wIiwgT19SRFdSIHwgT19DUkVBVCB8IE9fRElS
+RUNULCAwNjAwKTsKICBhc3NlcnQoZmQgPj0gMCk7CiAgaW9fcHJlcF9wd3JpdGUoJmlvY2Is
+IGZkLCBidWYsIDQwOTYqNCwgMCk7CiAgaW9jYnBbMF0gPSAmaW9jYjsKICByID0gaW9fc3Vi
+bWl0KGlvYywgMSwgaW9jYnApOwogIGFzc2VydChyID09IDEpOwogIHIgPSBpb19nZXRldmVu
+dHMoaW9jLCAxLCAxLCAmaW9ldiwgTlVMTCk7CiAgYXNzZXJ0KHIgPT0gMSk7CiAgYXNzZXJ0
+KGlvZXYucmVzID09IDQqNDA5Nik7CiAgZnRydW5jYXRlKGZkLCAxMzAwMik7CiAgaW9fcHJl
+cF9wcmVhZCgmaW9jYiwgZmQsIGJ1ZiwgODE5MiwgMTMzMTIpOwogIHIgPSBpb19zdWJtaXQo
+aW9jLCAxLCBpb2NicCk7CiAgYXNzZXJ0KHIgPT0gMSk7CiAgciA9IGlvX2dldGV2ZW50cyhp
+b2MsIDEsIDEsICZpb2V2LCBOVUxMKTsKICBhc3NlcnQociA9PSAxKTsKICBwcmludGYoInJl
+YWQgcmVzdWx0OiAlZFxuIiwgKGludClpb2V2LnJlcyk7CiAgcmV0dXJuIDA7Cn0K
+--------------000802080702020200030301
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------000802080702020200030301--
