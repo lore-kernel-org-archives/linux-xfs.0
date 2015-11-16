@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 737377F54
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 16:58:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 61DC28F8035
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 14:58:13 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	TGkCRpTaMhEMCJ97 for <xfs@oss.sgi.com>;
-	Mon, 16 Nov 2015 14:58:09 -0800 (PST)
-Date: Tue, 17 Nov 2015 09:58:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 08/11] dax: add support for fsync/sync
-Message-ID: <20151116225807.GX19199@dastard>
-References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1447459610-14259-9-git-send-email-ross.zwisler@linux.intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F5BC7F4E
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 17:51:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BDCA304039
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 15:51:50 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id OjaGxsxsnk8eQaph (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 16 Nov 2015 15:51:48 -0800 (PST)
+Date: Mon, 16 Nov 2015 15:51:11 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/12] test-scripts: test migration scripts
+Message-ID: <20151116235111.GE2224@birch.djwong.org>
+References: <20151113213643.31124.80975.stgit@birch.djwong.org>
+	<20151113213650.31124.16817.stgit@birch.djwong.org>
+	<20151116205845.GK14311@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1447459610-14259-9-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20151116205845.GK14311@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,210 +31,164 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: x86@kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-On Fri, Nov 13, 2015 at 05:06:47PM -0700, Ross Zwisler wrote:
-> To properly handle fsync/msync in an efficient way DAX needs to track dirty
-> pages so it is able to flush them durably to media on demand.
+On Tue, Nov 17, 2015 at 07:58:45AM +1100, Dave Chinner wrote:
+> On Fri, Nov 13, 2015 at 01:36:50PM -0800, Darrick J. Wong wrote:
+> > Add two scripts: "nextid" finds the next available test ID number in a
+> > group, and "mvtest" relocates a test, fixes the golden output, and
+> > moves the group entry for that test.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  mvtest |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  nextid |   35 +++++++++++++++++++++++++++++++++++
 > 
-> The tracking of dirty pages is done via the radix tree in struct
-> address_space.  This radix tree is already used by the page writeback
-> infrastructure for tracking dirty pages associated with an open file, and
-> it already has support for exceptional (non struct page*) entries.  We
-> build upon these features to add exceptional entries to the radix tree for
-> DAX dirty PMD or PTE pages at fault time.
+> These should be placed in the "tools" directory.
+
+<nod>
+
 > 
-> When called as part of the msync/fsync flush path DAX queries the radix
-> tree for dirty entries, flushing them and then marking the PTE or PMD page
-> table entries as clean.  The step of cleaning the PTE or PMD entries is
-> necessary so that on subsequent writes to the same page we get a new write
-> fault allowing us to once again dirty the DAX tag in the radix tree.
+> >  create mode 100755 mvtest
+> >  create mode 100755 nextid
+> > 
+> > 
+> > diff --git a/mvtest b/mvtest
+> > new file mode 100755
+> > index 0000000..b5406d1
+> > --- /dev/null
+> > +++ b/mvtest
+> > @@ -0,0 +1,58 @@
+> > +#!/bin/sh
+> > +
+> > +# Renumber a test
+> > +
+> > +if [ -z "$1" ] || [ "$1" = "--help" ]; then
+> > +	echo "Usage: $0 path_to_test new_path_to_test"
+> > +	exit 1
+> > +fi
+> > +
+> > +src="$1"
+> > +dest="$2"
+> > +
+> > +die() {
+> > +	echo "$@"
+> > +	exit 1
+> > +}
+> > +
+> > +nsort() {
+> > +	sort -g < "$1" > "$2"
+> > +}
+> > +
+> > +append() {
+> > +	out="$1"
+> > +	shift
+> > +	echo "$@" >> "${out}"
+> > +}
+> > +
+> > +test "${src}" != "${dest}" || die "Test \"${src}\" is the same as dest."
+> > +test -e "tests/${src}" || die "Test \"${src}\" does not exist."
+> > +test ! -e "tests/${dest}" || die "Test \"${src}\" already exists."
+> > +
+> > +sid="$(basename "${src}")"
+> > +did="$(basename "${dest}")"
+> > +
+> > +sgroup="$(basename "$(dirname "tests/${src}")")"
+> > +dgroup="$(basename "$(dirname "tests/${dest}")")"
+> > +
+> > +sgroupfile="tests/${sgroup}/group"
+> > +dgroupfile="tests/${sgroup}/group"
+> > +
+> > +$DBG git mv "tests/${src}" "tests/${dest}"
 > 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  fs/dax.c            | 140 +++++++++++++++++++++++++++++++++++++++++++++++++---
->  include/linux/dax.h |   1 +
->  mm/huge_memory.c    |  14 +++---
->  3 files changed, 141 insertions(+), 14 deletions(-)
+> $DBG?
+
+"DBG=echo ./mvtest foo bar" to see what it would have run, more or less.
+
+(I suppose I could getopt a --dry-run, but I could also just get rid of them.)
+
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 131fd35a..9ce6d1b 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -24,7 +24,9 @@
->  #include <linux/memcontrol.h>
->  #include <linux/mm.h>
->  #include <linux/mutex.h>
-> +#include <linux/pagevec.h>
->  #include <linux/pmem.h>
-> +#include <linux/rmap.h>
->  #include <linux/sched.h>
->  #include <linux/uio.h>
->  #include <linux/vmstat.h>
-> @@ -287,6 +289,53 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
->  	return 0;
->  }
->  
-> +static int dax_dirty_pgoff(struct address_space *mapping, unsigned long pgoff,
-> +		void __pmem *addr, bool pmd_entry)
-> +{
-> +	struct radix_tree_root *page_tree = &mapping->page_tree;
-> +	int error = 0;
-> +	void *entry;
-> +
-> +	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> +
-> +	spin_lock_irq(&mapping->tree_lock);
-> +	entry = radix_tree_lookup(page_tree, pgoff);
-> +	if (addr == NULL) {
-> +		if (entry)
-> +			goto dirty;
-> +		else {
-> +			WARN(1, "DAX pfn_mkwrite failed to find an entry");
-> +			goto out;
-> +		}
-> +	}
-> +
-> +	if (entry) {
-> +		if (pmd_entry && RADIX_DAX_TYPE(entry) == RADIX_DAX_PTE) {
-> +			radix_tree_delete(&mapping->page_tree, pgoff);
-> +			mapping->nrdax--;
-> +		} else
-> +			goto dirty;
-> +	}
+> ....
+> > +$DBG sed -e "/^${sid}.*$/d" -i "${sgroupfile}"
+> > +$DBG cp "${dgroupfile}" "${dgroupfile}.new"
+> > +$DBG append "${dgroupfile}.new" "${newgrpline}"
+> > +$DBG nsort "${dgroupfile}.new" "${dgroupfile}"
+> 
+> What does this do to comments in the group file?
 
-Logic is pretty spagettied here. Perhaps:
+Eats them.  I don't know of a good way to sort just the uncommented lines
+in the file, short of writing a python script to do that.
 
-	entry = radix_tree_lookup(page_tree, pgoff);
-	if (entry) {
-		if (!pmd_entry || RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD))
-			goto dirty;
-		radix_tree_delete(&mapping->page_tree, pgoff);
-		mapping->nrdax--;
-	} else {
-		WARN_ON(!addr);
-		goto out_unlock;
-	}
-....
+I guess it's not that hard; I've sort of needed one here and there over
+the years, but never wrote one, and $google doesn't immediately provide
+any such thing.
 
-> +
-> +	BUG_ON(RADIX_DAX_TYPE(addr));
-> +	if (pmd_entry)
-> +		error = radix_tree_insert(page_tree, pgoff,
-> +				RADIX_DAX_PMD_ENTRY(addr));
-> +	else
-> +		error = radix_tree_insert(page_tree, pgoff,
-> +				RADIX_DAX_PTE_ENTRY(addr));
-> +
-> +	if (error)
-> +		goto out;
-> +
-> +	mapping->nrdax++;
-> + dirty:
-> +	radix_tree_tag_set(page_tree, pgoff, PAGECACHE_TAG_DIRTY);
-> + out:
-> +	spin_unlock_irq(&mapping->tree_lock);
+> 
+> ...
+> 
+> > diff --git a/nextid b/nextid
+> > new file mode 100755
+> > index 0000000..285b549
+> > --- /dev/null
+> > +++ b/nextid
+> > @@ -0,0 +1,35 @@
+> > +#!/bin/sh
+> > +
+> > +# Given a group name, find the next available test number.
+> > +
+> > +if [ -z "$1" ] || [ "$1" = "--help" ]; then
+> > +	echo "Usage: $0 groupname[/start_looking_at_this_number]"
+> > +	exit 1
+> > +fi
+> > +
+> > +die() {
+> > +	echo "$@"
+> > +	exit 1
+> > +}
+> > +
+> > +if [ "$(basename "$1")" != "$1" ]; then
+> > +	group="$(dirname "$1")"
+> > +	id="$(basename "$1")"
+> > +else
+> > +	group="$1"
+> > +	id=1
+> > +fi
+> > +test -e "tests/${group}/group" || die "Unknown group \"${group}\"."
+> > +
+> > +while test "${id}" -lt 1000; do
+> > +	name="$(printf "%.03d" "${id}")"
+> > +	if [ ! -e "tests/${group}/${name}" ]; then
+> > +		echo "${group}/${name}"
+> > +		exit 0
+> > +	fi
+> > +	id=$((id + 1))
+> > +done
+> > +
+> > +echo "No free IDs less than ${id} in group \"${group}\"."
+> 
+> So the "new" script does this differently, by reading the group
+> file and looking for the first non-contiguous ID in the file. It
+> doesn't need scan ID limits because EOF triggers that. Wouldn't it
+> be better to to factor the code out of the "new" script to find the
+> next id, and then have the new script call that?
 
-label should be "out_unlock" rather "out" to indicate in the code
-that we are jumping to the correct spot in the error stack...
+Sure!
 
-> +			goto fallback;
->  	}
->  
->   out:
-> @@ -689,15 +746,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
->   * dax_pfn_mkwrite - handle first write to DAX page
->   * @vma: The virtual memory area where the fault occurred
->   * @vmf: The description of the fault
-> - *
->   */
->  int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
->  {
-> -	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
-> +	struct file *file = vma->vm_file;
->  
-> -	sb_start_pagefault(sb);
-> -	file_update_time(vma->vm_file);
-> -	sb_end_pagefault(sb);
-> +	dax_dirty_pgoff(file->f_mapping, vmf->pgoff, NULL, false);
->  	return VM_FAULT_NOPAGE;
+--D
 
-This seems wrong - it's dropping the freeze protection on fault, and
-now the inode timestamp won't get updated, either.
-
->  }
->  EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
-> @@ -772,3 +826,77 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
->  	return dax_zero_page_range(inode, from, length, get_block);
->  }
->  EXPORT_SYMBOL_GPL(dax_truncate_page);
-> +
-> +static void dax_sync_entry(struct address_space *mapping, pgoff_t pgoff,
-> +		void *entry)
-> +{
-
-dax_writeback_pgoff() seems like a more consistent name (consider
-dax_dirty_pgoff), and that we are actually doing a writeback
-operation, not a "sync" operation.
-
-> +	struct radix_tree_root *page_tree = &mapping->page_tree;
-> +	int type = RADIX_DAX_TYPE(entry);
-> +	size_t size;
-> +
-> +	BUG_ON(type != RADIX_DAX_PTE && type != RADIX_DAX_PMD);
-> +
-> +	spin_lock_irq(&mapping->tree_lock);
-> +	if (!radix_tree_tag_get(page_tree, pgoff, PAGECACHE_TAG_TOWRITE)) {
-> +		/* another fsync thread already wrote back this entry */
-> +		spin_unlock_irq(&mapping->tree_lock);
-> +		return;
-> +	}
-> +	radix_tree_tag_clear(page_tree, pgoff, PAGECACHE_TAG_TOWRITE);
-> +	radix_tree_tag_clear(page_tree, pgoff, PAGECACHE_TAG_DIRTY);
-> +	spin_unlock_irq(&mapping->tree_lock);
-> +
-> +	if (type == RADIX_DAX_PMD)
-> +		size = PMD_SIZE;
-> +	else
-> +		size = PAGE_SIZE;
-> +
-> +	wb_cache_pmem(RADIX_DAX_ADDR(entry), size);
-> +	pgoff_mkclean(pgoff, mapping);
-
-This looks racy w.r.t. another operation setting the radix tree
-dirty tags. i.e. there is no locking to serialise marking the
-vma/pte clean and another operation marking the radix tree dirty.
-
-> +}
-> +
-> +/*
-> + * Flush the mapping to the persistent domain within the byte range of (start,
-> + * end). This is required by data integrity operations to ensure file data is on
-> + * persistent storage prior to completion of the operation. It also requires us
-> + * to clean the mappings (i.e. write -> RO) so that we'll get a new fault when
-> + * the file is written to again so we have an indication that we need to flush
-> + * the mapping if a data integrity operation takes place.
-> + *
-> + * We don't need commits to storage here - the filesystems will issue flushes
-> + * appropriately at the conclusion of the data integrity operation via REQ_FUA
-> + * writes or blkdev_issue_flush() commands.  This requires the DAX block device
-> + * to implement persistent storage domain fencing/commits on receiving a
-> + * REQ_FLUSH or REQ_FUA request so that this works as expected by the higher
-> + * layers.
-> + */
-> +void dax_fsync(struct address_space *mapping, loff_t start, loff_t end)
-> +{
-
-dax_writeback_mapping_range()
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
