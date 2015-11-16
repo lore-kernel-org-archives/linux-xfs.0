@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 190287F5D
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 14:58:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D2D8C8F8050
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 12:58:51 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 263A07F54
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 16:14:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AE7C7AC006
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 14:14:29 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	EXZhZPuCEX1iePAC for <xfs@oss.sgi.com>;
-	Mon, 16 Nov 2015 12:58:48 -0800 (PST)
-Date: Tue, 17 Nov 2015 07:58:45 +1100
+	yXOV58MbKTL0dNVK for <xfs@oss.sgi.com>;
+	Mon, 16 Nov 2015 14:14:26 -0800 (PST)
+Date: Tue, 17 Nov 2015 09:14:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/12] test-scripts: test migration scripts
-Message-ID: <20151116205845.GK14311@dastard>
-References: <20151113213643.31124.80975.stgit@birch.djwong.org>
-	<20151113213650.31124.16817.stgit@birch.djwong.org>
+Subject: Re: [PATCH v2 03/11] pmem: enable REQ_FUA/REQ_FLUSH handling
+Message-ID: <20151116221412.GV19199@dastard>
+References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1447459610-14259-4-git-send-email-ross.zwisler@linux.intel.com>
+	<CAPcyv4j4arHE+iAALn1WPDzSb_QSCDy8udtXU1FV=kYSZDfv8A@mail.gmail.com>
+	<22E0F870-C1FB-431E-BF6C-B395A09A2B0D@dilger.ca>
+	<CAPcyv4jwx3VzyRugcpH7KCOKM64kJ4Bq4wgY=iNJMvLTHrBv-Q@mail.gmail.com>
+	<20151116133714.GB3443@quack.suse.cz>
+	<20151116140526.GA6733@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151113213650.31124.16817.stgit@birch.djwong.org>
+In-Reply-To: <20151116140526.GA6733@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,130 +35,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Fri, Nov 13, 2015 at 01:36:50PM -0800, Darrick J. Wong wrote:
-> Add two scripts: "nextid" finds the next available test ID number in a
-> group, and "mvtest" relocates a test, fixes the golden output, and
-> moves the group entry for that test.
+On Mon, Nov 16, 2015 at 03:05:26PM +0100, Jan Kara wrote:
+> On Mon 16-11-15 14:37:14, Jan Kara wrote:
+> > On Fri 13-11-15 18:32:40, Dan Williams wrote:
+> > > On Fri, Nov 13, 2015 at 4:43 PM, Andreas Dilger <adilger@dilger.ca> wrote:
+> > > > On Nov 13, 2015, at 5:20 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> > > >>
+> > > >> On Fri, Nov 13, 2015 at 4:06 PM, Ross Zwisler
+> > > >> <ross.zwisler@linux.intel.com> wrote:
+> > > >>> Currently the PMEM driver doesn't accept REQ_FLUSH or REQ_FUA bios.  These
+> > > >>> are sent down via blkdev_issue_flush() in response to a fsync() or msync()
+> > > >>> and are used by filesystems to order their metadata, among other things.
+> > > >>>
+> > > >>> When we get an msync() or fsync() it is the responsibility of the DAX code
+> > > >>> to flush all dirty pages to media.  The PMEM driver then just has issue a
+> > > >>> wmb_pmem() in response to the REQ_FLUSH to ensure that before we return all
+> > > >>> the flushed data has been durably stored on the media.
+> > > >>>
+> > > >>> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > >>
+> > > >> Hmm, I'm not seeing why we need this patch.  If the actual flushing of
+> > > >> the cache is done by the core why does the driver need support
+> > > >> REQ_FLUSH?  Especially since it's just a couple instructions.  REQ_FUA
+> > > >> only makes sense if individual writes can bypass the "drive" cache,
+> > > >> but no I/O submitted to the driver proper is ever cached we always
+> > > >> flush it through to media.
+> > > >
+> > > > If the upper level filesystem gets an error when submitting a flush
+> > > > request, then it assumes the underlying hardware is broken and cannot
+> > > > be as aggressive in IO submission, but instead has to wait for in-flight
+> > > > IO to complete.
+> > > 
+> > > Upper level filesystems won't get errors when the driver does not
+> > > support flush.  Those requests are ended cleanly in
+> > > generic_make_request_checks().  Yes, the fs still needs to wait for
+> > > outstanding I/O to complete but in the case of pmem all I/O is
+> > > synchronous.  There's never anything to await when flushing at the
+> > > pmem driver level.
+> > > 
+> > > > Since FUA/FLUSH is basically a no-op for pmem devices,
+> > > > it doesn't make sense _not_ to support this functionality.
+> > > 
+> > > Seems to be a nop either way.  Given that DAX may lead to dirty data
+> > > pending to the device in the cpu cache that a REQ_FLUSH request will
+> > > not touch, its better to leave it all to the mm core to handle.  I.e.
+> > > it doesn't make sense to call the driver just for two instructions
+> > > (sfence + pcommit) when the mm core is taking on the cache flushing.
+> > > Either handle it all in the mm or the driver, not a mixture.
+> > 
+> > So I think REQ_FLUSH requests *must* end up doing sfence + pcommit because
+> > e.g. journal writes going through block layer or writes done through
+> > dax_do_io() must be on permanent storage once REQ_FLUSH request finishes
+> > and the way driver does IO doesn't guarantee this, does it?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mvtest |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  nextid |   35 +++++++++++++++++++++++++++++++++++
+> Hum, and looking into how dax_do_io() works and what drivers/nvdimm/pmem.c
+> does, I'm indeed wrong because they both do wmb_pmem() after each write
+> which seems to include sfence + pcommit. Sorry for confusion.
 
-These should be placed in the "tools" directory.
+Which I want to remove, because it makes DAX IO 3x slower than
+buffered IO on ramdisk based testing.
 
->  create mode 100755 mvtest
->  create mode 100755 nextid
-> 
-> 
-> diff --git a/mvtest b/mvtest
-> new file mode 100755
-> index 0000000..b5406d1
-> --- /dev/null
-> +++ b/mvtest
-> @@ -0,0 +1,58 @@
-> +#!/bin/sh
-> +
-> +# Renumber a test
-> +
-> +if [ -z "$1" ] || [ "$1" = "--help" ]; then
-> +	echo "Usage: $0 path_to_test new_path_to_test"
-> +	exit 1
-> +fi
-> +
-> +src="$1"
-> +dest="$2"
-> +
-> +die() {
-> +	echo "$@"
-> +	exit 1
-> +}
-> +
-> +nsort() {
-> +	sort -g < "$1" > "$2"
-> +}
-> +
-> +append() {
-> +	out="$1"
-> +	shift
-> +	echo "$@" >> "${out}"
-> +}
-> +
-> +test "${src}" != "${dest}" || die "Test \"${src}\" is the same as dest."
-> +test -e "tests/${src}" || die "Test \"${src}\" does not exist."
-> +test ! -e "tests/${dest}" || die "Test \"${src}\" already exists."
-> +
-> +sid="$(basename "${src}")"
-> +did="$(basename "${dest}")"
-> +
-> +sgroup="$(basename "$(dirname "tests/${src}")")"
-> +dgroup="$(basename "$(dirname "tests/${dest}")")"
-> +
-> +sgroupfile="tests/${sgroup}/group"
-> +dgroupfile="tests/${sgroup}/group"
-> +
-> +$DBG git mv "tests/${src}" "tests/${dest}"
+> But a question: Won't it be better to do sfence + pcommit only in response
+> to REQ_FLUSH request and don't do it after each write? I'm not sure how
+> expensive these instructions are but in theory it could be a performance
+> win, couldn't it? For filesystems this is enough wrt persistency
+> guarantees...
 
-$DBG?
-
-....
-> +$DBG sed -e "/^${sid}.*$/d" -i "${sgroupfile}"
-> +$DBG cp "${dgroupfile}" "${dgroupfile}.new"
-> +$DBG append "${dgroupfile}.new" "${newgrpline}"
-> +$DBG nsort "${dgroupfile}.new" "${dgroupfile}"
-
-What does this do to comments in the group file?
-
-...
-
-> diff --git a/nextid b/nextid
-> new file mode 100755
-> index 0000000..285b549
-> --- /dev/null
-> +++ b/nextid
-> @@ -0,0 +1,35 @@
-> +#!/bin/sh
-> +
-> +# Given a group name, find the next available test number.
-> +
-> +if [ -z "$1" ] || [ "$1" = "--help" ]; then
-> +	echo "Usage: $0 groupname[/start_looking_at_this_number]"
-> +	exit 1
-> +fi
-> +
-> +die() {
-> +	echo "$@"
-> +	exit 1
-> +}
-> +
-> +if [ "$(basename "$1")" != "$1" ]; then
-> +	group="$(dirname "$1")"
-> +	id="$(basename "$1")"
-> +else
-> +	group="$1"
-> +	id=1
-> +fi
-> +test -e "tests/${group}/group" || die "Unknown group \"${group}\"."
-> +
-> +while test "${id}" -lt 1000; do
-> +	name="$(printf "%.03d" "${id}")"
-> +	if [ ! -e "tests/${group}/${name}" ]; then
-> +		echo "${group}/${name}"
-> +		exit 0
-> +	fi
-> +	id=$((id + 1))
-> +done
-> +
-> +echo "No free IDs less than ${id} in group \"${group}\"."
-
-So the "new" script does this differently, by reading the group
-file and looking for the first non-contiguous ID in the file. It
-doesn't need scan ID limits because EOF triggers that. Wouldn't it
-be better to to factor the code out of the "new" script to find the
-next id, and then have the new script call that?
+I'm pretty sure it would be, because all of the overhead (and
+therefore latency) I measured is in the cache flushing instructions.
+But before we can remove the wmb_pmem() from  dax_do_io(), we need
+the underlying device to support REQ_FLUSH correctly...
 
 Cheers,
 
