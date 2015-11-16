@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2953C7F5A
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 02:43:40 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7F7E97CBF
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 06:04:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 198548F8035
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 00:43:40 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LlzzcfyibMLBmW4a (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 16 Nov 2015 00:43:39 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id CF157754
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 08:43:38 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tAG8hVmk008258
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 03:43:38 -0500
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/2] xfs_io: inode command manpage V1
-Date: Mon, 16 Nov 2015 09:43:24 +0100
-Message-Id: <1447663404-7857-3-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1447663404-7857-1-git-send-email-cmaiolino@redhat.com>
-References: <1447663404-7857-1-git-send-email-cmaiolino@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6006030404E
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 04:04:34 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id JM7lIGFUKHce9SjX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 16 Nov 2015 04:04:31 -0800 (PST)
+Date: Mon, 16 Nov 2015 04:04:31 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: clone ioctl return values
+Message-ID: <20151116120431.GA2860@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,61 +23,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: darrick.wong@oracle.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-This is the first try to update xfs_io manpage to include information about
-'inode' command usage.
+Hi Darrick,
 
-Improvements and grammar corrections are welcome :-)
+your new generic/157 xfs test brings up an interesting issue:  error
+returns forthe various clone failure cases.  It seems like this case
+was written fo the XFS case which differs a lot from the error chosen
+by btrfs and mostly followed by NFS.  I'd say it might be a better idea
+to follow the btrfs example as the btrfs ioctls have been in use for
+a while.  The only shortcoming I see in btrfs is that id doesn't
+explicitly check for non-directory, non-regular file items as the
+source.  I have to admit I'm kinda surprised that it doesn't blow up,
+given that NFS instantly did when I removed those checks.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- man/man8/xfs_io.8 | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+FYI, output from the test on btrfs below:
 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 416206f..457f0eb 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -490,7 +490,31 @@ Recursively display all the specified segments starting at the specified
- .B \-s
- Display the starting lseek(2) offset. This offset will be a calculated value when
- both data and holes are displayed together or performing a recusively display.
-+.RE
-+.PD
-+.TP
-+.TP
-+.BI "inode  \-s | \-l | \-n [num] | [num]"
-+Query physical inode information from a xfs filesystem.
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.B \-s
-+Display the physical size of the largest inode existing in the filesystem (32 or
-+64 bit).
-+.TP
-+.B -l
-+Display the largest allocated and used inode (inodes can be allocated in the
-+filesystem, but not used by any file). See
-+.B ikeep
-+xfs mount option).
-+.TP
-+.B -n [num]
-+Return the next existing inode after [num], even if [num] is not allocated in
-+the filesystem.
- .TP
-+.B [num]
-+Check if the inode [num] exists or not.
- 
- .SH MEMORY MAPPED I/O COMMANDS
- .TP
--- 
-2.4.3
+
+--- tests/generic/157.out	2015-11-14 07:56:31.000000000 +0000
++++ /root/xfstests/results//generic/157.out.bad	2015-11-16 11:58:52.879078894 +0000
+@@ -2,24 +2,24 @@
+ Format and mount
+ Create the original files
+ Try cross-device reflink
+-XFS_IOC_CLONE_RANGE: Invalid cross-device link
++reflink: Invalid cross-device link
+ Try unaligned reflink
+-XFS_IOC_CLONE_RANGE: Invalid argument
++reflink: Invalid argument
+ Try overlapping reflink
+-XFS_IOC_CLONE_RANGE: Invalid argument
++reflink: Invalid argument
+ Try reflink past EOF
+-XFS_IOC_CLONE_RANGE: Invalid argument
++reflink: Invalid argument
+ Try to reflink a dir
+-XFS_IOC_CLONE_RANGE: Is a directory
++reflink: Is a directory
+ Try to reflink a device
+-XFS_IOC_CLONE_RANGE: Invalid argument
++/mnt/test/test-157/dev1: No such device or address
+ Try to reflink to a dir
+-/mnt/test-157/dir1: Is a directory
++/mnt/test/test-157/dir1: Is a directory
+ Try to reflink to a device
+-XFS_IOC_CLONE_RANGE: Operation not supported
++/mnt/test/test-157/dev1: No such device or address
+ Try to reflink to a fifo
+-XFS_IOC_CLONE_RANGE: Operation not supported
++reflink: Inappropriate ioctl for device
+ Try to reflink an append-only file
+-XFS_IOC_CLONE_RANGE: Bad file descriptor
++reflink: Invalid argument
+ Reflink two files
+ Check scratch fs
 
 _______________________________________________
 xfs mailing list
