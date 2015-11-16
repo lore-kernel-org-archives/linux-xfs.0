@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 84E3A7CBF
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 11:32:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C465304043
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 09:32:40 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1823F7CBF
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 13:27:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C388AC00B
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 11:27:47 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cvXuy1HERrurIqff (version=TLSv1.2
+	cuda.sgi.com with ESMTP id csbLB3JcoBQk84rB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 16 Nov 2015 09:32:39 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 2E0D78F29C
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2015 17:32:39 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: get mp from bma->ip in xfs_bmap code
-Message-ID: <564A1335.6080304@redhat.com>
-Date: Mon, 16 Nov 2015 11:32:37 -0600
+	<xfs@oss.sgi.com>; Mon, 16 Nov 2015 11:27:46 -0800 (PST)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: AIO read returns negative number for bytes read
+References: <564883BD.8070607@scylladb.com>
+Date: Mon, 16 Nov 2015 14:27:43 -0500
+In-Reply-To: <564883BD.8070607@scylladb.com> (Avi Kivity's message of "Sun, 15
+	Nov 2015 15:08:13 +0200")
+Message-ID: <x497flhsq1c.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -30,53 +29,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Bill O'Donnell <billodo@redhat.com>
+To: Avi Kivity <avi@scylladb.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
 
-In my earlier commit
+Hi Avi,
 
-  c29aad4 xfs: pass mp to XFS_WANT_CORRUPTED_GOTO
+Avi Kivity <avi@scylladb.com> writes:
 
-I added some local mp variables with code which indicates that
-mp might be NULL.  Coverity doesn't like this now, because the
-updated per-fs XFS_STATS macros dereference mp.
+> Due to a bug in my program, I initiated a read beyond
+> eof. Specifically, the file size is 13002 bytes and the read offset is
+> 13312 (0x3400).
+>
+> I would expect such a read to return 0 bytes read, but io_getevents
+> returns -310, which is suspiciously equal to (13002 - 13312).
+>
+> I attach a reproducer.
+>
+> 4.2.5-201.fc22.x86_64
+>
+> Are my expectations incorrect, or is this a bug in aio or xfs?
 
-I don't think this is actually a problem; from what I can tell,
-we cannot get to these functions with a null bma->tp, so my NULL
-check was probably pointless.  Still, it's not super obvious.
+Your expectations are correct.  The bug was introduced by commit
+9fe55eea7e4b4 (Fix race when checking i_size on direct i/o read).  I've
+CC'd the patch author and linux-fsdevel.  I'm not sure what the right
+fix is, given that the size checks were removed from the vfs to fix some
+race condition.  Unfortunately, the commit message doesn't really do a
+good job of explaining the race.  In order to save others time, here is
+a good explanation of the problem that commit is meant to fix, along
+with a reproducer:
+  http://marc.info/?l=linux-fsdevel&m=138641356614458&w=2
 
-So switch this code to get mp from the inode on the xfs_bmalloca
-structure, with no conditional, because the functions are already
-using bmap->ip directly.
+Thanks for the great bug report, and sorry I have no solution to
+proffer.
 
-Addresses-Coverity-Id: 1339552
-Addresses-Coverity-Id: 1339553
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 119c242..bb3c659 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1725,7 +1725,7 @@ xfs_bmap_add_extent_delay_real(
- 	int			tmp_rval;	/* partial logging flags */
- 	struct xfs_mount	*mp;
- 
--	mp  = bma->tp ? bma->tp->t_mountp : NULL;
-+	mp = bma->ip->i_mount;
- 	ifp = XFS_IFORK_PTR(bma->ip, XFS_DATA_FORK);
- 
- 	ASSERT(bma->idx >= 0);
-@@ -2939,7 +2939,7 @@ xfs_bmap_add_extent_hole_real(
- 	int			state;	/* state bits, accessed thru macros */
- 	struct xfs_mount	*mp;
- 
--	mp = bma->tp ? bma->tp->t_mountp : NULL;
-+	mp = bma->ip->i_mount;
- 	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
- 
- 	ASSERT(bma->idx >= 0);
-
+Cheers,
+Jeff
 
 _______________________________________________
 xfs mailing list
