@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0C2367F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:35:02 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A77FA7F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 15:17:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF50F304059
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 12:34:58 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UCmSgxWN8N3G9vie (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A1CD8F8050
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:17:48 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id o85968mC2tz5Xmol (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 12:34:57 -0800 (PST)
-Date: Tue, 17 Nov 2015 15:34:55 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Disk error, then endless loop
-Message-ID: <20151117203455.GB43800@bfoster.bfoster>
-References: <20151117080332.GA28936@onthe.net.au>
-	<20151117124148.GA20118@bfoster.bfoster>
-	<20151117162802.GA28374@onthe.net.au>
-	<20151117173724.GA18963@bfoster.bfoster>
-	<20151117193534.GA1514@onthe.net.au>
-	<20151117202131.GA43800@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:17:46 -0800 (PST)
+Date: Tue, 17 Nov 2015 13:16:43 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/12] test-scripts: test migration scripts
+Message-ID: <20151117211643.GF2217@birch.djwong.org>
+References: <20151113213643.31124.80975.stgit@birch.djwong.org>
+	<20151113213650.31124.16817.stgit@birch.djwong.org>
+	<20151116205845.GK14311@dastard>
+	<20151116235111.GE2224@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151117202131.GA43800@bfoster.bfoster>
+In-Reply-To: <20151116235111.GE2224@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,212 +32,178 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Dunlop <chris@onthe.net.au>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-On Tue, Nov 17, 2015 at 03:21:31PM -0500, Brian Foster wrote:
-> On Wed, Nov 18, 2015 at 06:35:34AM +1100, Chris Dunlop wrote:
-> > On Tue, Nov 17, 2015 at 12:37:24PM -0500, Brian Foster wrote:
-> > > On Wed, Nov 18, 2015 at 03:28:02AM +1100, Chris Dunlop wrote:
-> > >> On Tue, Nov 17, 2015 at 07:41:48AM -0500, Brian Foster wrote:
-> > >>> On Tue, Nov 17, 2015 at 07:03:33PM +1100, Chris Dunlop wrote:
-> > >>>> I tried to umount the filesystem but the umount is now hung and unkillable:
-> > >>>> 
-> > >>>> # ps -ostat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
-> > >>>> STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
-> > >>>> D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
-> > >>> 
-> > >>> ... but it appears you still have something pending in the AIL which is
-> > >>> holding everything up. The most likely case is an EFI/EFD item hanging
-> > >>> around from an extent free operation, as this was a known issue,
-> > >>> particularly on fs shutdowns. Fixes for this went into the v4.3 kernel.
-> > >> 
-> > >> Any chance of these fixes getting into -stable, or are they too intrusive
-> > >> and/or depend on other intrusive changes?
+On Mon, Nov 16, 2015 at 03:51:11PM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 17, 2015 at 07:58:45AM +1100, Dave Chinner wrote:
+> > On Fri, Nov 13, 2015 at 01:36:50PM -0800, Darrick J. Wong wrote:
+> > > Add two scripts: "nextid" finds the next available test ID number in a
+> > > group, and "mvtest" relocates a test, fixes the golden output, and
+> > > moves the group entry for that test.
 > > > 
-> > > I don't think so... it was a multi-patch series and a rework of the
-> > > EFI/EFD reference counting as opposed to an isolated bug fix. For
-> > > reference, it was commits 5e4b538 through f0b2efa or so.
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  mvtest |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  nextid |   35 +++++++++++++++++++++++++++++++++++
+> > 
+> > These should be placed in the "tools" directory.
+> 
+> <nod>
+> 
+> > 
+> > >  create mode 100755 mvtest
+> > >  create mode 100755 nextid
+> > > 
+> > > 
+> > > diff --git a/mvtest b/mvtest
+> > > new file mode 100755
+> > > index 0000000..b5406d1
+> > > --- /dev/null
+> > > +++ b/mvtest
+> > > @@ -0,0 +1,58 @@
+> > > +#!/bin/sh
+> > > +
+> > > +# Renumber a test
+> > > +
+> > > +if [ -z "$1" ] || [ "$1" = "--help" ]; then
+> > > +	echo "Usage: $0 path_to_test new_path_to_test"
+> > > +	exit 1
+> > > +fi
+> > > +
+> > > +src="$1"
+> > > +dest="$2"
+> > > +
+> > > +die() {
+> > > +	echo "$@"
+> > > +	exit 1
+> > > +}
+> > > +
+> > > +nsort() {
+> > > +	sort -g < "$1" > "$2"
+> > > +}
+> > > +
+> > > +append() {
+> > > +	out="$1"
+> > > +	shift
+> > > +	echo "$@" >> "${out}"
+> > > +}
+> > > +
+> > > +test "${src}" != "${dest}" || die "Test \"${src}\" is the same as dest."
+> > > +test -e "tests/${src}" || die "Test \"${src}\" does not exist."
+> > > +test ! -e "tests/${dest}" || die "Test \"${src}\" already exists."
+> > > +
+> > > +sid="$(basename "${src}")"
+> > > +did="$(basename "${dest}")"
+> > > +
+> > > +sgroup="$(basename "$(dirname "tests/${src}")")"
+> > > +dgroup="$(basename "$(dirname "tests/${dest}")")"
+> > > +
+> > > +sgroupfile="tests/${sgroup}/group"
+> > > +dgroupfile="tests/${sgroup}/group"
+> > > +
+> > > +$DBG git mv "tests/${src}" "tests/${dest}"
+> > 
+> > $DBG?
+> 
+> "DBG=echo ./mvtest foo bar" to see what it would have run, more or less.
+> 
+> (I suppose I could getopt a --dry-run, but I could also just get rid of them.)
+> 
+> > 
+> > ....
+> > > +$DBG sed -e "/^${sid}.*$/d" -i "${sgroupfile}"
+> > > +$DBG cp "${dgroupfile}" "${dgroupfile}.new"
+> > > +$DBG append "${dgroupfile}.new" "${newgrpline}"
+> > > +$DBG nsort "${dgroupfile}.new" "${dgroupfile}"
+> > 
+> > What does this do to comments in the group file?
+> 
+> Eats them.  I don't know of a good way to sort just the uncommented lines
+> in the file, short of writing a python script to do that.
+> 
+> I guess it's not that hard; I've sort of needed one here and there over
+> the years, but never wrote one, and $google doesn't immediately provide
+> any such thing.
+> 
 > > 
 > > ...
 > > 
-> > >>> Does the umount process actually appear to be doing anything? E.g., are
-> > >>> you seeing noticeable CPU load or I/O errors continue to the logs, or
-> > >>> has everything pretty much locked up? You could also enable tracepoints
-> > >>> (trace-cmd start -e "xfs:*"; cat /sys/kernel/debug/tracing/trace_pipe)
-> > >>> to get a quick idea of what's going on.
-> > >> 
-> > >> No, the umount hasn't done anything noticable in the past 6.5 hours:
-> > >> 
-> > >> b2# date; ps -opid,lstart,time,stat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
-> > >> Wed Nov 18 03:08:30 AEDT 2015
-> > >>   PID                  STARTED     TIME STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
-> > >> 23946 Tue Nov 17 17:30:41 2015 00:00:00 D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
-> > >> 
-> > >> I don't know how to interpret the tracepoints, but there are other busy
-> > >> XFS filesystems on the box so that's cluttering things up. For what it's
-> > >> worth, it appears the original device (/dev/sdu1) was previously dev
-> > >> 65:65:
-> > >> 
-> > >> b2# ls -l /dev/sd[tuv]{,1}
-> > >> brw-rw---T 1 root disk 65, 48 Sep 16 17:11 /dev/sdt
-> > >> brw-rw---T 1 root disk 65, 49 Sep 16 17:11 /dev/sdt1
-> > >> brw-rw---T 1 root disk 65, 80 Oct 30 15:38 /dev/sdv
-> > >> brw-rw---T 1 root disk 65, 81 Oct 30 15:40 /dev/sdv1
-> > >> 
-> > >> ..and in 10 seconds of /sys/kernel/debug/tracing/trace_pipe we have:
-> > >> 
-> > >> # grep 'dev 65:65' /sys/kernel/debug/tracing/trace_pipe > /tmp/x1 & sleep 10; kill $!
-> > >> # wc -l /tmp/x1
-> > >> 181953 /tmp/x1
-> > >> # head /tmp/x1
-> > >>            <...>-7702  [012] .... 5392362.786946: xfs_buf_item_iodone_async: dev 65:65 bno 0x1828eed18 nblks 0x8 hold 2 pincount 0 lock 0 flags ASYNC|DONE|PAGES caller xfs_buf_ioend [xfs]
-> > >>            <...>-7702  [012] .... 5392362.786946: xfs_buf_ioerror: dev 65:65 bno 0x1828eed18 len 0x1000 hold 2 pincount 0 lock 0 error 0 flags ASYNC|DONE|PAGES caller xfs_buf_iodone_callbacks [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647059: xfs_buf_submit: dev 65:65 bno 0x27ffffff8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller __xfs_buf_delwri_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647059: xfs_buf_hold: dev 65:65 bno 0x27ffffff8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647061: xfs_buf_rele: dev 65:65 bno 0x27ffffff8 nblks 0x8 hold 3 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647061: xfs_buf_submit: dev 65:65 bno 0x280006398 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller __xfs_buf_delwri_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647061: xfs_buf_hold: dev 65:65 bno 0x280006398 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647063: xfs_buf_rele: dev 65:65 bno 0x280006398 nblks 0x8 hold 3 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647063: xfs_buf_submit: dev 65:65 bno 0x2800063f8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller __xfs_buf_delwri_submit [xfs]
-> > >>     xfsaild/sdu1-7991  [005] .N.. 5392363.647064: xfs_buf_hold: dev 65:65 bno 0x2800063f8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
-> > >> 
-> > > 
-> > > Hmm, that is notably more activity than I recall when reproducing the
-> > > original AIL issue. Do we know whether the filesystem had actually shut
-> > > down or is in some intermediate state looping on errors? The fact that
-> > > it continues to try and submit I/O suggests that perhaps it hasn't shut
-> > > down for whatever reason.
-> > > 
-> > > If the device has already dropped and reconnected as a new dev node,
-> > > it's probably harmless at this point to just try to forcibly shut down
-> > > the fs on the old one. Could you try the following?
-> > > 
-> > >   xfs_io -x -c shutdown <mnt>
+> > > diff --git a/nextid b/nextid
+> > > new file mode 100755
+> > > index 0000000..285b549
+> > > --- /dev/null
+> > > +++ b/nextid
+> > > @@ -0,0 +1,35 @@
+> > > +#!/bin/sh
+> > > +
+> > > +# Given a group name, find the next available test number.
+> > > +
+> > > +if [ -z "$1" ] || [ "$1" = "--help" ]; then
+> > > +	echo "Usage: $0 groupname[/start_looking_at_this_number]"
+> > > +	exit 1
+> > > +fi
+> > > +
+> > > +die() {
+> > > +	echo "$@"
+> > > +	exit 1
+> > > +}
+> > > +
+> > > +if [ "$(basename "$1")" != "$1" ]; then
+> > > +	group="$(dirname "$1")"
+> > > +	id="$(basename "$1")"
+> > > +else
+> > > +	group="$1"
+> > > +	id=1
+> > > +fi
+> > > +test -e "tests/${group}/group" || die "Unknown group \"${group}\"."
+> > > +
+> > > +while test "${id}" -lt 1000; do
+> > > +	name="$(printf "%.03d" "${id}")"
+> > > +	if [ ! -e "tests/${group}/${name}" ]; then
+> > > +		echo "${group}/${name}"
+> > > +		exit 0
+> > > +	fi
+> > > +	id=$((id + 1))
+> > > +done
+> > > +
+> > > +echo "No free IDs less than ${id} in group \"${group}\"."
 > > 
-> > # xfs_io -x -c shutdown /var/lib/ceph/osd/ceph-18
-> > foreign file active, shutdown command is for XFS filesystems only
-> > 
-> > # grep ceph-18 /etc/mtab
-> >   <<< crickets >>>
-> > 
-> > I don't know when the fs disappeared from mtab, it could have been when I
-> > first did the umount I guess, I didn't think to check at the time. But the
-> > umount is still there:
-> > 
-> > # date; ps -opid,lstart,time,stat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
-> > Wed Nov 18 06:23:21 AEDT 2015
-> >   PID                  STARTED     TIME STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
-> > 23946 Tue Nov 17 17:30:41 2015 00:00:00 D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
-> > 
+> > So the "new" script does this differently, by reading the group
+> > file and looking for the first non-contiguous ID in the file. It
+> > doesn't need scan ID limits because EOF triggers that. Wouldn't it
+> > be better to to factor the code out of the "new" script to find the
+> > next id, and then have the new script call that?
 > 
-> Ah, so it's already been removed from the namespace. Apparently it's
-> stuck at some point after the mount is made inaccessible and before it
-> actually finishes with I/O. I'm not sure we have any other option other
-> than a reset at this point, unfortunately. :/
+> Sure!
+
+In the end I wrote a short Python program to sort group files and it wasn't
+much harder to reuse the code to implement nextid, so I did that instead.
+
+I'll probably post this and a patch to fix the error codes in generic/157
+later this week.
+
+--D
+
 > 
-> Brian
+> --D
 > 
-
-One last thought... it occurred to me that scsi devs have a delete
-option under the /sysfs fs. Does the old/stale device still exist under
-/sys/block/<dev>? If so, perhaps an 'echo 1 >
-/sys/block/<dev>/device/delete' would move things along..?
-
-Note that I have no idea what effect that will have beyond removing the
-device node (so if it is still accessible now, it probably won't be
-after that command). I just tried it while doing I/O to a test device
-and it looked like it caused an fs shutdown, so it could be worth a try
-as a last resort before a system restart.
-
-Brian
-
-> > > Can you unmount the fs after that? If not, is there still any tracepoint
-> > > activity on the old device?
-> > > 
-> > > Brian
 > > 
-> > The activity is still ongoing on the old device:
+> > Cheers,
 > > 
-> > # trace-cmd start -e "xfs:*"
-> > /sys/kernel/debug/tracing/events/xfs/*/filter
-> > # grep 'dev 65:65' /sys/kernel/debug/tracing/trace_pipe > /tmp/y1 & sleep 10; kill $!; wc -l /tmp/y1
-> > 129573 /tmp/y1
-> > 
-> > Doing my little sed and perl dance shows it's still the same set of 188
-> > blocks as mentioned before.
-> > 
-> > Chris
-> > 
-> > >> In the 181953 lines there's a set of 188 different block numbers
-> > >> appearing, ranging from 0x8 to 0x2900ffbd8:
-> > >> 
-> > >> # sed -rn 's/.*bno (0x[[:xdigit:]]+).*/\1/p' /tmp/x1 | sort -u > /tmp/x2
-> > >> # wc -l /tmp/x2
-> > >> 188 /tmp/x2
-> > >> # perl -pe 's/(.*)/hex($1)/e' /tmp/x2 | sort -n | perl -ne 'printf "0x%x\n",$_' > /tmp/x3
-> > >> # head /tmp/x3
-> > >> 0x8
-> > >> 0x10
-> > >> 0x20
-> > >> 0x28
-> > >> 0x3188
-> > >> 0x4a40
-> > >> 0x4a68
-> > >> 0x2b163a0
-> > >> 0x31fecd0
-> > >> 0x426e8f8
-> > >> b2# tail /tmp/x3
-> > >> 0x2900ffb78
-> > >> 0x2900ffb88
-> > >> 0x2900ffb98
-> > >> 0x2900ffba8
-> > >> 0x2900ffbb0
-> > >> 0x2900ffbb8
-> > >> 0x2900ffbc0
-> > >> 0x2900ffbc8
-> > >> 0x2900ffbd0
-> > >> 0x2900ffbd8
-> > >> 
-> > >>>> As previously mentioned, the disk has actually reappeared under a different
-> > >>>> /dev/sdXX name (it was sdu, now sdbh). Trying to mount the disk (read only)
-> > >>>> results in:
-> > >>>> 
-> > >>>> # mkdir /mnt/xfs && mount -ologdev=/dev/md8p5,ro /dev/sdbh1 /mnt/xfs
-> > >>>> mount: /dev/sdbh1 already mounted or /mnt/xfs busy
-> > >>> 
-> > >>> Probably due to either a uuid check or blocking on access to the
-> > >>> external log device. You'll probably need to clean up the stale mount
-> > >>> before this will work.
-> > >>> 
-> > >>> As it is, something is clearly wrong with the drive. I can't really
-> > >>> interpret the I/O errors and whatnot (linux-scsi?), but you probably
-> > >>> want to look into health assessment tools (e.g., smart) to get an idea
-> > >>> of what's wrong and/or replace the device and restore from backups (or
-> > >>> perhaps heal via the ceph cluster, in your case).
-> > >> 
-> > >> Sure. It's not the disk that's concerning me, they're expected to die,
-> > >> but it looks like the disk error has put XFS in a state where the only
-> > >> solution is a hard power cycle (after quiescing and cleaning up what I
-> > >> can): I haven't tried it yet, but I expect I won't be able reboot
-> > >> cleanly.
-> > >> 
-> > >>> 
-> > >>> Brian
-> > >> 
-> > >> Cheers,
-> > >> 
-> > >> Chris
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
 > > 
 > > _______________________________________________
 > > xfs mailing list
 > > xfs@oss.sgi.com
 > > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
