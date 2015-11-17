@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 81B547F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 12:30:21 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9F6197F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 12:43:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5140930404E
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 10:30:21 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	qUw8yApPdfdoD34j for <xfs@oss.sgi.com>;
-	Tue, 17 Nov 2015 10:30:18 -0800 (PST)
-Date: Tue, 17 Nov 2015 11:30:16 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 08/11] dax: add support for fsync/sync
-Message-ID: <20151117183016.GC28024@linux.intel.com>
-References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1447459610-14259-9-git-send-email-ross.zwisler@linux.intel.com>
-	<20151116225807.GX19199@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 822E58F8035
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 10:43:21 -0800 (PST)
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
+	[67.231.145.42]) by cuda.sgi.com with ESMTP id 2Kp85vMFm2iqruGd
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Nov 2015 10:43:20 -0800 (PST)
+Date: Tue, 17 Nov 2015 13:42:28 -0500
+From: Chris Mason <clm@fb.com>
+Subject: Re: clone ioctl return values
+Message-ID: <20151117184228.GG17545@ret.masoncoding.com>
+References: <20151116120431.GA2860@infradead.org>
+	<20151117002822.GA32467@birch.djwong.org>
+	<20151117105433.GA18093@infradead.org>
+	<20151117135745.GF17545@ret.masoncoding.com>
+	<20151117152251.GA5392@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151116225807.GX19199@dastard>
+In-Reply-To: <20151117152251.GA5392@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,226 +34,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, Nov 17, 2015 at 09:58:07AM +1100, Dave Chinner wrote:
-> On Fri, Nov 13, 2015 at 05:06:47PM -0700, Ross Zwisler wrote:
-> > To properly handle fsync/msync in an efficient way DAX needs to track dirty
-> > pages so it is able to flush them durably to media on demand.
+On Tue, Nov 17, 2015 at 07:22:52AM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 17, 2015 at 08:57:45AM -0500, Chris Mason wrote:
+> > > > Errrgh, the golden output of this test reflects the changes to the input
+> > > > checking in Anna/Peng's copy_file_range/clone_file_range patches.
+> > > > 
+> > > > So, I guess the question is, should I reset the golden output to whatever
+> > > > btrfs spits out before that patchset, and we'll consider the alterations
+> > > > to be bugs/regressions/whatever that ought to be fixed in their patches?
+> > > 
+> > > Some bits in btrfs don't seem kosher.  But it would be good to
+> > > explicitly send patches for btrfs to adopt to what might make more
+> > > sense, and then follow it in the other implementations.
 > > 
-> > The tracking of dirty pages is done via the radix tree in struct
-> > address_space.  This radix tree is already used by the page writeback
-> > infrastructure for tracking dirty pages associated with an open file, and
-> > it already has support for exceptional (non struct page*) entries.  We
-> > build upon these features to add exceptional entries to the radix tree for
-> > DAX dirty PMD or PTE pages at fault time.
-> > 
-> > When called as part of the msync/fsync flush path DAX queries the radix
-> > tree for dirty entries, flushing them and then marking the PTE or PMD page
-> > table entries as clean.  The step of cleaning the PTE or PMD entries is
-> > necessary so that on subsequent writes to the same page we get a new write
-> > fault allowing us to once again dirty the DAX tag in the radix tree.
-> > 
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > ---
-> >  fs/dax.c            | 140 +++++++++++++++++++++++++++++++++++++++++++++++++---
-> >  include/linux/dax.h |   1 +
-> >  mm/huge_memory.c    |  14 +++---
-> >  3 files changed, 141 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index 131fd35a..9ce6d1b 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -24,7 +24,9 @@
-> >  #include <linux/memcontrol.h>
-> >  #include <linux/mm.h>
-> >  #include <linux/mutex.h>
-> > +#include <linux/pagevec.h>
-> >  #include <linux/pmem.h>
-> > +#include <linux/rmap.h>
-> >  #include <linux/sched.h>
-> >  #include <linux/uio.h>
-> >  #include <linux/vmstat.h>
-> > @@ -287,6 +289,53 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
-> >  	return 0;
-> >  }
-> >  
-> > +static int dax_dirty_pgoff(struct address_space *mapping, unsigned long pgoff,
-> > +		void __pmem *addr, bool pmd_entry)
-> > +{
-> > +	struct radix_tree_root *page_tree = &mapping->page_tree;
-> > +	int error = 0;
-> > +	void *entry;
-> > +
-> > +	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> > +
-> > +	spin_lock_irq(&mapping->tree_lock);
-> > +	entry = radix_tree_lookup(page_tree, pgoff);
-> > +	if (addr == NULL) {
-> > +		if (entry)
-> > +			goto dirty;
-> > +		else {
-> > +			WARN(1, "DAX pfn_mkwrite failed to find an entry");
-> > +			goto out;
-> > +		}
-> > +	}
-> > +
-> > +	if (entry) {
-> > +		if (pmd_entry && RADIX_DAX_TYPE(entry) == RADIX_DAX_PTE) {
-> > +			radix_tree_delete(&mapping->page_tree, pgoff);
-> > +			mapping->nrdax--;
-> > +		} else
-> > +			goto dirty;
-> > +	}
+> > Btrfs does check for directories, but we should really be checking for
+> > regular files too.  In the end, we only copy extents that would
+> > correspond with regular files, so we're sneaking by.
 > 
-> Logic is pretty spagettied here. Perhaps:
+> Yes, I saw that.  So so far I'd suggest something like the following
+> for btrfs:
 > 
-> 	entry = radix_tree_lookup(page_tree, pgoff);
-> 	if (entry) {
-> 		if (!pmd_entry || RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD))
-> 			goto dirty;
-> 		radix_tree_delete(&mapping->page_tree, pgoff);
-> 		mapping->nrdax--;
-> 	} else {
-> 		WARN_ON(!addr);
-> 		goto out_unlock;
-> 	}
-> ....
+>  - return EBADFD for missing read/wite permissions
 
-I don't think that this works because now if !entry we unconditionally goto
-out_unlock without inserting a new entry.  I'll try and simplify the logic and
-add some comments.
+Why not -EPERM?  I don't have strong feelings about picking errnos, as
+long as we're consistent, I'm not worried.
 
-> > +
-> > +	BUG_ON(RADIX_DAX_TYPE(addr));
-> > +	if (pmd_entry)
-> > +		error = radix_tree_insert(page_tree, pgoff,
-> > +				RADIX_DAX_PMD_ENTRY(addr));
-> > +	else
-> > +		error = radix_tree_insert(page_tree, pgoff,
-> > +				RADIX_DAX_PTE_ENTRY(addr));
-> > +
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	mapping->nrdax++;
-> > + dirty:
-> > +	radix_tree_tag_set(page_tree, pgoff, PAGECACHE_TAG_DIRTY);
-> > + out:
-> > +	spin_unlock_irq(&mapping->tree_lock);
-> 
-> label should be "out_unlock" rather "out" to indicate in the code
-> that we are jumping to the correct spot in the error stack...
+>  - return EINVAL for wrong non-directory file types as the
+>    source fd
 
-Sure, will do.
+Ack.
 
-> > +			goto fallback;
-> >  	}
-> >  
-> >   out:
-> > @@ -689,15 +746,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
-> >   * dax_pfn_mkwrite - handle first write to DAX page
-> >   * @vma: The virtual memory area where the fault occurred
-> >   * @vmf: The description of the fault
-> > - *
-> >   */
-> >  int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
-> >  {
-> > -	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
-> > +	struct file *file = vma->vm_file;
-> >  
-> > -	sb_start_pagefault(sb);
-> > -	file_update_time(vma->vm_file);
-> > -	sb_end_pagefault(sb);
-> > +	dax_dirty_pgoff(file->f_mapping, vmf->pgoff, NULL, false);
-> >  	return VM_FAULT_NOPAGE;
-> 
-> This seems wrong - it's dropping the freeze protection on fault, and
-> now the inode timestamp won't get updated, either.
-
-Oh, that all still happens in the filesystem pfn_mkwrite code
-(xfs_filemap_pfn_mkwrite() for XFS).  It needs to happen there, I think,
-because we wanted to order it so that the filesystem freeze happens outside of
-the XFS_MMAPLOCK_SHARED locking, as it does with the regular PMD and PTE fault
-paths.
-
-Prior to this patch set dax_pfn_mkwrite() was completely unused an was ready
-to be removed as dead code - it's now being used by all filesystems just to
-make sure we re-add the newly dirtied page to the radix tree dirty list.
-
-> >  }
-> >  EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
-> > @@ -772,3 +826,77 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
-> >  	return dax_zero_page_range(inode, from, length, get_block);
-> >  }
-> >  EXPORT_SYMBOL_GPL(dax_truncate_page);
-> > +
-> > +static void dax_sync_entry(struct address_space *mapping, pgoff_t pgoff,
-> > +		void *entry)
-> > +{
-> 
-> dax_writeback_pgoff() seems like a more consistent name (consider
-> dax_dirty_pgoff), and that we are actually doing a writeback
-> operation, not a "sync" operation.
-
-Sure, I'm fine with that change.
-
-> > +	struct radix_tree_root *page_tree = &mapping->page_tree;
-> > +	int type = RADIX_DAX_TYPE(entry);
-> > +	size_t size;
-> > +
-> > +	BUG_ON(type != RADIX_DAX_PTE && type != RADIX_DAX_PMD);
-> > +
-> > +	spin_lock_irq(&mapping->tree_lock);
-> > +	if (!radix_tree_tag_get(page_tree, pgoff, PAGECACHE_TAG_TOWRITE)) {
-> > +		/* another fsync thread already wrote back this entry */
-> > +		spin_unlock_irq(&mapping->tree_lock);
-> > +		return;
-> > +	}
-> > +	radix_tree_tag_clear(page_tree, pgoff, PAGECACHE_TAG_TOWRITE);
-> > +	radix_tree_tag_clear(page_tree, pgoff, PAGECACHE_TAG_DIRTY);
-> > +	spin_unlock_irq(&mapping->tree_lock);
-> > +
-> > +	if (type == RADIX_DAX_PMD)
-> > +		size = PMD_SIZE;
-> > +	else
-> > +		size = PAGE_SIZE;
-> > +
-> > +	wb_cache_pmem(RADIX_DAX_ADDR(entry), size);
-> > +	pgoff_mkclean(pgoff, mapping);
-> 
-> This looks racy w.r.t. another operation setting the radix tree
-> dirty tags. i.e. there is no locking to serialise marking the
-> vma/pte clean and another operation marking the radix tree dirty.
-
-I think you're right - I'll look into how to protect us from this race.  Thank
-you for catching this.
-
-> > +}
-> > +
-> > +/*
-> > + * Flush the mapping to the persistent domain within the byte range of (start,
-> > + * end). This is required by data integrity operations to ensure file data is on
-> > + * persistent storage prior to completion of the operation. It also requires us
-> > + * to clean the mappings (i.e. write -> RO) so that we'll get a new fault when
-> > + * the file is written to again so we have an indication that we need to flush
-> > + * the mapping if a data integrity operation takes place.
-> > + *
-> > + * We don't need commits to storage here - the filesystems will issue flushes
-> > + * appropriately at the conclusion of the data integrity operation via REQ_FUA
-> > + * writes or blkdev_issue_flush() commands.  This requires the DAX block device
-> > + * to implement persistent storage domain fencing/commits on receiving a
-> > + * REQ_FLUSH or REQ_FUA request so that this works as expected by the higher
-> > + * layers.
-> > + */
-> > +void dax_fsync(struct address_space *mapping, loff_t start, loff_t end)
-> > +{
-> 
-> dax_writeback_mapping_range()
-
-Sure, I'm fine with that change.
+-chris
 
 _______________________________________________
 xfs mailing list
