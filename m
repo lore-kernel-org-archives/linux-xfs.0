@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ECCEF7F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 06:52:24 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F19D37F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 07:58:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AE17E8F8040
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 04:52:24 -0800 (PST)
-Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
-	[74.125.82.47]) by cuda.sgi.com with ESMTP id X0S0TW1ShWEf7n7I
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8FC35AC002
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 05:58:29 -0800 (PST)
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
+	[67.231.153.30]) by cuda.sgi.com with ESMTP id No66PCnHDiWBdj7S
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Nov 2015 04:52:23 -0800 (PST)
-Received: by wmec201 with SMTP id c201so225855374wme.0
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 04:52:22 -0800 (PST)
-Subject: Re: AIO read returns negative number for bytes read
-References: <564883BD.8070607@scylladb.com>
-	<x497flhsq1c.fsf@segfault.boston.devel.redhat.com>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <564B2303.7000902@scylladb.com>
-Date: Tue, 17 Nov 2015 14:52:19 +0200
+	Tue, 17 Nov 2015 05:58:25 -0800 (PST)
+Date: Tue, 17 Nov 2015 08:57:45 -0500
+From: Chris Mason <clm@fb.com>
+Subject: Re: clone ioctl return values
+Message-ID: <20151117135745.GF17545@ret.masoncoding.com>
+References: <20151116120431.GA2860@infradead.org>
+	<20151117002822.GA32467@birch.djwong.org>
+	<20151117105433.GA18093@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <x497flhsq1c.fsf@segfault.boston.devel.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20151117105433.GA18093@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +28,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
 
+On Tue, Nov 17, 2015 at 02:54:33AM -0800, Christoph Hellwig wrote:
+> On Mon, Nov 16, 2015 at 04:28:22PM -0800, Darrick J. Wong wrote:
+> > >  Try to reflink a device
+> > > -XFS_IOC_CLONE_RANGE: Invalid argument
+> > > +/mnt/test/test-157/dev1: No such device or address
+> > 
+> > Huh.  How did you get -ENODEV here?  I ran this on 4.3 and got -EINVAL.
+> 
+> This is current 4.4-rc.  The error seems accidental I think.
+> 
+> > Errrgh, the golden output of this test reflects the changes to the input
+> > checking in Anna/Peng's copy_file_range/clone_file_range patches.
+> > 
+> > So, I guess the question is, should I reset the golden output to whatever
+> > btrfs spits out before that patchset, and we'll consider the alterations
+> > to be bugs/regressions/whatever that ought to be fixed in their patches?
+> 
+> Some bits in btrfs don't seem kosher.  But it would be good to
+> explicitly send patches for btrfs to adopt to what might make more
+> sense, and then follow it in the other implementations.
 
+Btrfs does check for directories, but we should really be checking for
+regular files too.  In the end, we only copy extents that would
+correspond with regular files, so we're sneaking by.
 
-On 11/16/2015 09:27 PM, Jeff Moyer wrote:
-> Hi Avi,
->
-> Avi Kivity <avi@scylladb.com> writes:
->
->> Due to a bug in my program, I initiated a read beyond
->> eof. Specifically, the file size is 13002 bytes and the read offset is
->> 13312 (0x3400).
->>
->> I would expect such a read to return 0 bytes read, but io_getevents
->> returns -310, which is suspiciously equal to (13002 - 13312).
->>
->> I attach a reproducer.
->>
->> 4.2.5-201.fc22.x86_64
->>
->> Are my expectations incorrect, or is this a bug in aio or xfs?
-> Your expectations are correct.  The bug was introduced by commit
-> 9fe55eea7e4b4 (Fix race when checking i_size on direct i/o read).  I've
-> CC'd the patch author and linux-fsdevel.  I'm not sure what the right
-> fix is, given that the size checks were removed from the vfs to fix some
-> race condition.  Unfortunately, the commit message doesn't really do a
-> good job of explaining the race.  In order to save others time, here is
-> a good explanation of the problem that commit is meant to fix, along
-> with a reproducer:
->    http://marc.info/?l=linux-fsdevel&m=138641356614458&w=2
->
-> Thanks for the great bug report, and sorry I have no solution to
-> proffer.
->
-
-Thanks.  I will await a fix with interest.
-
+-chris
 
 _______________________________________________
 xfs mailing list
