@@ -1,27 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 068E87F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 16:16:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EA0D98F8050
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:16:15 -0800 (PST)
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249]) by
-	cuda.sgi.com with ESMTP id YoO2uY1RAK7T1LLv for
-	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:16:13 -0800 (PST)
-Date: Wed, 18 Nov 2015 09:16:09 +1100
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: Disk error, then endless loop
-Message-ID: <20151117221609.GA3563@onthe.net.au>
-References: <20151117080332.GA28936@onthe.net.au>
-	<20151117124148.GA20118@bfoster.bfoster>
-	<20151117162802.GA28374@onthe.net.au>
-	<20151117173724.GA18963@bfoster.bfoster>
-	<20151117193534.GA1514@onthe.net.au>
-	<20151117202131.GA43800@bfoster.bfoster>
-	<20151117203455.GB43800@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151117203455.GB43800@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id D55377F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 16:46:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7684F8F8040
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:46:54 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id P3xu5pwiSdtG9lgf for
+	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:46:52 -0800 (PST)
+From: Octavian Purdila <octavian.purdila@intel.com>
+Subject: [RFC PATCH] xfs: support for non-mmu architectures
+Date: Wed, 18 Nov 2015 00:46:21 +0200
+Message-Id: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,63 +20,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, Octavian Purdila <octavian.purdila@intel.com>, linux-kernel@vger.kernel.org
 
-On Tue, Nov 17, 2015 at 03:34:55PM -0500, Brian Foster wrote:
-> On Tue, Nov 17, 2015 at 03:21:31PM -0500, Brian Foster wrote:
->> On Wed, Nov 18, 2015 at 06:35:34AM +1100, Chris Dunlop wrote:
->>> On Tue, Nov 17, 2015 at 12:37:24PM -0500, Brian Foster wrote:
->>>> If the device has already dropped and reconnected as a new dev node,
->>>> it's probably harmless at this point to just try to forcibly shut down
->>>> the fs on the old one. Could you try the following?
->>>> 
->>>>   xfs_io -x -c shutdown <mnt>
->>> 
->>> # xfs_io -x -c shutdown /var/lib/ceph/osd/ceph-18
->>> foreign file active, shutdown command is for XFS filesystems only
->>> 
->>> # grep ceph-18 /etc/mtab
->>>   <<< crickets >>>
->>> 
->>> I don't know when the fs disappeared from mtab, it could have been when I
->>> first did the umount I guess, I didn't think to check at the time. But the
->>> umount is still there:
->>> 
->>> # date; ps -opid,lstart,time,stat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
->>> Wed Nov 18 06:23:21 AEDT 2015
->>>   PID                  STARTED     TIME STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
->>> 23946 Tue Nov 17 17:30:41 2015 00:00:00 D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
->> 
->> Ah, so it's already been removed from the namespace. Apparently it's
->> stuck at some point after the mount is made inaccessible and before it
->> actually finishes with I/O. I'm not sure we have any other option other
->> than a reset at this point, unfortunately. :/
+Naive implementation for non-mmu architectures: allocate physically
+contiguous xfs buffers with alloc_pages. Terribly inefficient with
+memory and fragmentation on high I/O loads but it may be good enough
+for basic usage (which most non-mmu architectures will need).
 
-Yes, I thought this would likely be the case.
+This patch was tested with lklfuse [1] and basic operations seems to
+work even with 16MB allocated for LKL.
 
-> One last thought... it occurred to me that scsi devs have a delete
-> option under the /sysfs fs. Does the old/stale device still exist under
-> /sys/block/<dev>? If so, perhaps an 'echo 1 >
-> /sys/block/<dev>/device/delete' would move things along..?
+[1] https://github.com/lkl/linux
 
-Unfortunately, no, it's not there.
+Signed-off-by: Octavian Purdila <octavian.purdila@intel.com>
+---
+ fs/xfs/xfs_buf.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-> Note that I have no idea what effect that will have beyond removing the
-> device node (so if it is still accessible now, it probably won't be
-> after that command). I just tried it while doing I/O to a test device
-> and it looked like it caused an fs shutdown, so it could be worth a try
-> as a last resort before a system restart.
-> 
-> Brian
-
-Thanks again,
-
-Chris
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 8ecffb3..50b5246 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -261,6 +261,7 @@ xfs_buf_free(
+ 	ASSERT(list_empty(&bp->b_lru));
+ 
+ 	if (bp->b_flags & _XBF_PAGES) {
++#ifdef CONFIG_MMU
+ 		uint		i;
+ 
+ 		if (xfs_buf_is_vmapped(bp))
+@@ -272,6 +273,10 @@ xfs_buf_free(
+ 
+ 			__free_page(page);
+ 		}
++#else
++		free_pages((unsigned long)page_to_virt(bp->b_pages[0]),
++			   order_base_2(bp->b_page_count));
++#endif
+ 	} else if (bp->b_flags & _XBF_KMEM)
+ 		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+@@ -338,7 +343,14 @@ use_alloc_page:
+ 		struct page	*page;
+ 		uint		retries = 0;
+ retry:
++#ifdef CONFIG_MMU
+ 		page = alloc_page(gfp_mask);
++#else
++		if (i == 0)
++			page = alloc_pages(gfp_mask, order_base_2(page_count));
++		else
++			page = bp->b_pages[0] + i;
++#endif
+ 		if (unlikely(page == NULL)) {
+ 			if (flags & XBF_READ_AHEAD) {
+ 				bp->b_page_count = i;
+@@ -372,8 +384,11 @@ retry:
+ 	return 0;
+ 
+ out_free_pages:
++#ifdef CONFIG_MMU
+ 	for (i = 0; i < bp->b_page_count; i++)
+ 		__free_page(bp->b_pages[i]);
++#endif
++
+ 	return error;
+ }
+ 
+@@ -392,6 +407,7 @@ _xfs_buf_map_pages(
+ 	} else if (flags & XBF_UNMAPPED) {
+ 		bp->b_addr = NULL;
+ 	} else {
++#ifdef CONFIG_MMU
+ 		int retried = 0;
+ 		unsigned noio_flag;
+ 
+@@ -412,6 +428,9 @@ _xfs_buf_map_pages(
+ 			vm_unmap_aliases();
+ 		} while (retried++ <= 1);
+ 		memalloc_noio_restore(noio_flag);
++#else
++		bp->b_addr = page_to_virt(bp->b_pages[0]);
++#endif
+ 
+ 		if (!bp->b_addr)
+ 			return -ENOMEM;
+@@ -816,11 +835,19 @@ xfs_buf_get_uncached(
+ 	if (error)
+ 		goto fail_free_buf;
+ 
++#ifdef CONFIG_MMU
+ 	for (i = 0; i < page_count; i++) {
+ 		bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
+ 		if (!bp->b_pages[i])
+ 			goto fail_free_mem;
+ 	}
++#else
++	bp->b_pages[0] = alloc_pages(flags, order_base_2(page_count));
++	if (!bp->b_pages[0])
++		goto fail_free_buf;
++	for (i = 1; i < page_count; i++)
++		bp->b_pages[i] = bp->b_pages[i-1] + 1;
++#endif
+ 	bp->b_flags |= _XBF_PAGES;
+ 
+ 	error = _xfs_buf_map_pages(bp, 0);
+-- 
+1.9.1
 
 _______________________________________________
 xfs mailing list
