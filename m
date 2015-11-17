@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 886F67F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:10:50 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0E2297F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:35:44 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 79EFF8F8035
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 11:10:47 -0800 (PST)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id n265KKcbW5Xf5sF5 for
-	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 11:10:42 -0800 (PST)
-Date: Tue, 17 Nov 2015 12:03:41 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 11/11] xfs: add support for DAX fsync/msync
-Message-ID: <20151117190341.GD28024@linux.intel.com>
-References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1447459610-14259-12-git-send-email-ross.zwisler@linux.intel.com>
-	<20151116231222.GY19199@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F0662304067
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 11:35:40 -0800 (PST)
+Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249]) by
+	cuda.sgi.com with ESMTP id y0MTVNBTFKQHIunS for
+	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 11:35:37 -0800 (PST)
+Date: Wed, 18 Nov 2015 06:35:34 +1100
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: Re: Disk error, then endless loop
+Message-ID: <20151117193534.GA1514@onthe.net.au>
+References: <20151117080332.GA28936@onthe.net.au>
+	<20151117124148.GA20118@bfoster.bfoster>
+	<20151117162802.GA28374@onthe.net.au>
+	<20151117173724.GA18963@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151116231222.GY19199@dastard>
+In-Reply-To: <20151117173724.GA18963@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,103 +31,178 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 17, 2015 at 10:12:22AM +1100, Dave Chinner wrote:
-> On Fri, Nov 13, 2015 at 05:06:50PM -0700, Ross Zwisler wrote:
-> > To properly support the new DAX fsync/msync infrastructure filesystems
-> > need to call dax_pfn_mkwrite() so that DAX can properly track when a user
-> > write faults on a previously cleaned address.  They also need to call
-> > dax_fsync() in the filesystem fsync() path.  This dax_fsync() call uses
-> > addresses retrieved from get_block() so it needs to be ordered with
-> > respect to truncate.  This is accomplished by using the same locking that
-> > was set up for DAX page faults.
-> > 
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > ---
-> >  fs/xfs/xfs_file.c | 18 +++++++++++++-----
-> >  1 file changed, 13 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index 39743ef..2b490a1 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -209,7 +209,8 @@ xfs_file_fsync(
-> >  	loff_t			end,
-> >  	int			datasync)
-> >  {
-> > -	struct inode		*inode = file->f_mapping->host;
-> > +	struct address_space	*mapping = file->f_mapping;
-> > +	struct inode		*inode = mapping->host;
-> >  	struct xfs_inode	*ip = XFS_I(inode);
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	int			error = 0;
-> > @@ -218,7 +219,13 @@ xfs_file_fsync(
-> >  
-> >  	trace_xfs_file_fsync(ip);
-> >  
-> > -	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
-> > +	if (dax_mapping(mapping)) {
-> > +		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> > +		dax_fsync(mapping, start, end);
-> > +		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> > +	}
-> > +
-> > +	error = filemap_write_and_wait_range(mapping, start, end);
+On Tue, Nov 17, 2015 at 12:37:24PM -0500, Brian Foster wrote:
+> On Wed, Nov 18, 2015 at 03:28:02AM +1100, Chris Dunlop wrote:
+>> On Tue, Nov 17, 2015 at 07:41:48AM -0500, Brian Foster wrote:
+>>> On Tue, Nov 17, 2015 at 07:03:33PM +1100, Chris Dunlop wrote:
+>>>> I tried to umount the filesystem but the umount is now hung and unkillable:
+>>>> 
+>>>> # ps -ostat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
+>>>> STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
+>>>> D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
+>>> 
+>>> ... but it appears you still have something pending in the AIL which is
+>>> holding everything up. The most likely case is an EFI/EFD item hanging
+>>> around from an extent free operation, as this was a known issue,
+>>> particularly on fs shutdowns. Fixes for this went into the v4.3 kernel.
+>> 
+>> Any chance of these fixes getting into -stable, or are they too intrusive
+>> and/or depend on other intrusive changes?
 > 
-> Ok, I don't understand a couple of things here.
+> I don't think so... it was a multi-patch series and a rework of the
+> EFI/EFD reference counting as opposed to an isolated bug fix. For
+> reference, it was commits 5e4b538 through f0b2efa or so.
+
+...
+
+>>> Does the umount process actually appear to be doing anything? E.g., are
+>>> you seeing noticeable CPU load or I/O errors continue to the logs, or
+>>> has everything pretty much locked up? You could also enable tracepoints
+>>> (trace-cmd start -e "xfs:*"; cat /sys/kernel/debug/tracing/trace_pipe)
+>>> to get a quick idea of what's going on.
+>> 
+>> No, the umount hasn't done anything noticable in the past 6.5 hours:
+>> 
+>> b2# date; ps -opid,lstart,time,stat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
+>> Wed Nov 18 03:08:30 AEDT 2015
+>>   PID                  STARTED     TIME STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
+>> 23946 Tue Nov 17 17:30:41 2015 00:00:00 D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
+>> 
+>> I don't know how to interpret the tracepoints, but there are other busy
+>> XFS filesystems on the box so that's cluttering things up. For what it's
+>> worth, it appears the original device (/dev/sdu1) was previously dev
+>> 65:65:
+>> 
+>> b2# ls -l /dev/sd[tuv]{,1}
+>> brw-rw---T 1 root disk 65, 48 Sep 16 17:11 /dev/sdt
+>> brw-rw---T 1 root disk 65, 49 Sep 16 17:11 /dev/sdt1
+>> brw-rw---T 1 root disk 65, 80 Oct 30 15:38 /dev/sdv
+>> brw-rw---T 1 root disk 65, 81 Oct 30 15:40 /dev/sdv1
+>> 
+>> ..and in 10 seconds of /sys/kernel/debug/tracing/trace_pipe we have:
+>> 
+>> # grep 'dev 65:65' /sys/kernel/debug/tracing/trace_pipe > /tmp/x1 & sleep 10; kill $!
+>> # wc -l /tmp/x1
+>> 181953 /tmp/x1
+>> # head /tmp/x1
+>>            <...>-7702  [012] .... 5392362.786946: xfs_buf_item_iodone_async: dev 65:65 bno 0x1828eed18 nblks 0x8 hold 2 pincount 0 lock 0 flags ASYNC|DONE|PAGES caller xfs_buf_ioend [xfs]
+>>            <...>-7702  [012] .... 5392362.786946: xfs_buf_ioerror: dev 65:65 bno 0x1828eed18 len 0x1000 hold 2 pincount 0 lock 0 error 0 flags ASYNC|DONE|PAGES caller xfs_buf_iodone_callbacks [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647059: xfs_buf_submit: dev 65:65 bno 0x27ffffff8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller __xfs_buf_delwri_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647059: xfs_buf_hold: dev 65:65 bno 0x27ffffff8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647061: xfs_buf_rele: dev 65:65 bno 0x27ffffff8 nblks 0x8 hold 3 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647061: xfs_buf_submit: dev 65:65 bno 0x280006398 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller __xfs_buf_delwri_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647061: xfs_buf_hold: dev 65:65 bno 0x280006398 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647063: xfs_buf_rele: dev 65:65 bno 0x280006398 nblks 0x8 hold 3 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647063: xfs_buf_submit: dev 65:65 bno 0x2800063f8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller __xfs_buf_delwri_submit [xfs]
+>>     xfsaild/sdu1-7991  [005] .N.. 5392363.647064: xfs_buf_hold: dev 65:65 bno 0x2800063f8 nblks 0x8 hold 2 pincount 0 lock 0 flags WRITE|ASYNC|DONE|PAGES caller xfs_buf_submit [xfs]
+>> 
 > 
-> Firstly, if it's a DAX mapping, why are we still calling
-> filemap_write_and_wait_range() after the dax_fsync() call that has
-> already written back all the dirty cachelines?
+> Hmm, that is notably more activity than I recall when reproducing the
+> original AIL issue. Do we know whether the filesystem had actually shut
+> down or is in some intermediate state looping on errors? The fact that
+> it continues to try and submit I/O suggests that perhaps it hasn't shut
+> down for whatever reason.
 > 
-> Secondly, exactly what is the XFS_MMAPLOCK_SHARED lock supposed to
-> be doing here? I don't see where dax_fsync() has any callouts to
-> get_block(), so the comment "needs to be ordered with respect to
-> truncate" doesn't make any obvious sense. If we have a racing
-> truncate removing entries from the radix tree, then thanks to the
-> mapping tree lock we'll either find an entry we need to write back,
-> or we won't find any entry at all, right?
+> If the device has already dropped and reconnected as a new dev node,
+> it's probably harmless at this point to just try to forcibly shut down
+> the fs on the old one. Could you try the following?
+> 
+>   xfs_io -x -c shutdown <mnt>
 
-You're right, dax_fsync() doesn't call out to get_block() any more.  It does
-save the results of get_block() calls from the page faults, though, and I was
-concerned about the following race:
+# xfs_io -x -c shutdown /var/lib/ceph/osd/ceph-18
+foreign file active, shutdown command is for XFS filesystems only
 
-fsync thread				truncate thread
-------------				---------------
-dax_fsync()
-save tagged entries in pvec
+# grep ceph-18 /etc/mtab
+  <<< crickets >>>
 
-					change block mapping for inode so that
-					entries saved in pvec are no longer
-					owned by this inode
+I don't know when the fs disappeared from mtab, it could have been when I
+first did the umount I guess, I didn't think to check at the time. But the
+umount is still there:
 
-loop through pvec using stale results
-from get_block(), flushing and cleaning
-entries we no longer own
+# date; ps -opid,lstart,time,stat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
+Wed Nov 18 06:23:21 AEDT 2015
+  PID                  STARTED     TIME STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
+23946 Tue Nov 17 17:30:41 2015 00:00:00 D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
 
-In looking at the xfs_file_fsync() code, though, it seems like if this race
-existed it would also exist for page cache entries that were being put into a
-pvec in write_cache_pages(), and that we would similarly be writing back
-cached pages that no longer belong to this inode.
+> Can you unmount the fs after that? If not, is there still any tracepoint
+> activity on the old device?
+> 
+> Brian
 
-Is this race non-existent?
+The activity is still ongoing on the old device:
 
-> Lastly, this flushing really needs to be inside
-> filemap_write_and_wait_range(), because we call the writeback code
-> from many more places than just fsync to ensure ordering of various
-> operations such that files are in known state before proceeding
-> (e.g. hole punch).
+# trace-cmd start -e "xfs:*"
+/sys/kernel/debug/tracing/events/xfs/*/filter
+# grep 'dev 65:65' /sys/kernel/debug/tracing/trace_pipe > /tmp/y1 & sleep 10; kill $!; wc -l /tmp/y1
+129573 /tmp/y1
 
-The call to dax_fsync() (soon to be dax_writeback_mapping_range()) first lived
-in do_writepages() in the RFC version, but was moved into the filesystem so we
-could have access to get_block(), which is no longer needed, and so we could
-use the FS level locking.  If the race described above isn't an issue then I
-agree moving this call out of the filesystems and down into the generic page
-writeback code is probably the right thing to do.
+Doing my little sed and perl dance shows it's still the same set of 188
+blocks as mentioned before.
 
-Thanks for the feedback.
+Chris
+
+>> In the 181953 lines there's a set of 188 different block numbers
+>> appearing, ranging from 0x8 to 0x2900ffbd8:
+>> 
+>> # sed -rn 's/.*bno (0x[[:xdigit:]]+).*/\1/p' /tmp/x1 | sort -u > /tmp/x2
+>> # wc -l /tmp/x2
+>> 188 /tmp/x2
+>> # perl -pe 's/(.*)/hex($1)/e' /tmp/x2 | sort -n | perl -ne 'printf "0x%x\n",$_' > /tmp/x3
+>> # head /tmp/x3
+>> 0x8
+>> 0x10
+>> 0x20
+>> 0x28
+>> 0x3188
+>> 0x4a40
+>> 0x4a68
+>> 0x2b163a0
+>> 0x31fecd0
+>> 0x426e8f8
+>> b2# tail /tmp/x3
+>> 0x2900ffb78
+>> 0x2900ffb88
+>> 0x2900ffb98
+>> 0x2900ffba8
+>> 0x2900ffbb0
+>> 0x2900ffbb8
+>> 0x2900ffbc0
+>> 0x2900ffbc8
+>> 0x2900ffbd0
+>> 0x2900ffbd8
+>> 
+>>>> As previously mentioned, the disk has actually reappeared under a different
+>>>> /dev/sdXX name (it was sdu, now sdbh). Trying to mount the disk (read only)
+>>>> results in:
+>>>> 
+>>>> # mkdir /mnt/xfs && mount -ologdev=/dev/md8p5,ro /dev/sdbh1 /mnt/xfs
+>>>> mount: /dev/sdbh1 already mounted or /mnt/xfs busy
+>>> 
+>>> Probably due to either a uuid check or blocking on access to the
+>>> external log device. You'll probably need to clean up the stale mount
+>>> before this will work.
+>>> 
+>>> As it is, something is clearly wrong with the drive. I can't really
+>>> interpret the I/O errors and whatnot (linux-scsi?), but you probably
+>>> want to look into health assessment tools (e.g., smart) to get an idea
+>>> of what's wrong and/or replace the device and restore from backups (or
+>>> perhaps heal via the ceph cluster, in your case).
+>> 
+>> Sure. It's not the disk that's concerning me, they're expected to die,
+>> but it looks like the disk error has put XFS in a state where the only
+>> solution is a hard power cycle (after quiescing and cleaning up what I
+>> can): I haven't tried it yet, but I expect I won't be able reboot
+>> cleanly.
+>> 
+>>> 
+>>> Brian
+>> 
+>> Cheers,
+>> 
+>> Chris
 
 _______________________________________________
 xfs mailing list
