@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9F6197F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 12:43:24 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 886F67F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:10:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 822E58F8035
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 10:43:21 -0800 (PST)
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
-	[67.231.145.42]) by cuda.sgi.com with ESMTP id 2Kp85vMFm2iqruGd
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Nov 2015 10:43:20 -0800 (PST)
-Date: Tue, 17 Nov 2015 13:42:28 -0500
-From: Chris Mason <clm@fb.com>
-Subject: Re: clone ioctl return values
-Message-ID: <20151117184228.GG17545@ret.masoncoding.com>
-References: <20151116120431.GA2860@infradead.org>
-	<20151117002822.GA32467@birch.djwong.org>
-	<20151117105433.GA18093@infradead.org>
-	<20151117135745.GF17545@ret.masoncoding.com>
-	<20151117152251.GA5392@infradead.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 79EFF8F8035
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 11:10:47 -0800 (PST)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id n265KKcbW5Xf5sF5 for
+	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 11:10:42 -0800 (PST)
+Date: Tue, 17 Nov 2015 12:03:41 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v2 11/11] xfs: add support for DAX fsync/msync
+Message-ID: <20151117190341.GD28024@linux.intel.com>
+References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1447459610-14259-12-git-send-email-ross.zwisler@linux.intel.com>
+	<20151116231222.GY19199@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151117152251.GA5392@infradead.org>
+In-Reply-To: <20151116231222.GY19199@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,40 +30,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Tue, Nov 17, 2015 at 07:22:52AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 17, 2015 at 08:57:45AM -0500, Chris Mason wrote:
-> > > > Errrgh, the golden output of this test reflects the changes to the input
-> > > > checking in Anna/Peng's copy_file_range/clone_file_range patches.
-> > > > 
-> > > > So, I guess the question is, should I reset the golden output to whatever
-> > > > btrfs spits out before that patchset, and we'll consider the alterations
-> > > > to be bugs/regressions/whatever that ought to be fixed in their patches?
-> > > 
-> > > Some bits in btrfs don't seem kosher.  But it would be good to
-> > > explicitly send patches for btrfs to adopt to what might make more
-> > > sense, and then follow it in the other implementations.
+On Tue, Nov 17, 2015 at 10:12:22AM +1100, Dave Chinner wrote:
+> On Fri, Nov 13, 2015 at 05:06:50PM -0700, Ross Zwisler wrote:
+> > To properly support the new DAX fsync/msync infrastructure filesystems
+> > need to call dax_pfn_mkwrite() so that DAX can properly track when a user
+> > write faults on a previously cleaned address.  They also need to call
+> > dax_fsync() in the filesystem fsync() path.  This dax_fsync() call uses
+> > addresses retrieved from get_block() so it needs to be ordered with
+> > respect to truncate.  This is accomplished by using the same locking that
+> > was set up for DAX page faults.
 > > 
-> > Btrfs does check for directories, but we should really be checking for
-> > regular files too.  In the end, we only copy extents that would
-> > correspond with regular files, so we're sneaking by.
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > ---
+> >  fs/xfs/xfs_file.c | 18 +++++++++++++-----
+> >  1 file changed, 13 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 39743ef..2b490a1 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -209,7 +209,8 @@ xfs_file_fsync(
+> >  	loff_t			end,
+> >  	int			datasync)
+> >  {
+> > -	struct inode		*inode = file->f_mapping->host;
+> > +	struct address_space	*mapping = file->f_mapping;
+> > +	struct inode		*inode = mapping->host;
+> >  	struct xfs_inode	*ip = XFS_I(inode);
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	int			error = 0;
+> > @@ -218,7 +219,13 @@ xfs_file_fsync(
+> >  
+> >  	trace_xfs_file_fsync(ip);
+> >  
+> > -	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+> > +	if (dax_mapping(mapping)) {
+> > +		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > +		dax_fsync(mapping, start, end);
+> > +		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > +	}
+> > +
+> > +	error = filemap_write_and_wait_range(mapping, start, end);
 > 
-> Yes, I saw that.  So so far I'd suggest something like the following
-> for btrfs:
+> Ok, I don't understand a couple of things here.
 > 
->  - return EBADFD for missing read/wite permissions
+> Firstly, if it's a DAX mapping, why are we still calling
+> filemap_write_and_wait_range() after the dax_fsync() call that has
+> already written back all the dirty cachelines?
+> 
+> Secondly, exactly what is the XFS_MMAPLOCK_SHARED lock supposed to
+> be doing here? I don't see where dax_fsync() has any callouts to
+> get_block(), so the comment "needs to be ordered with respect to
+> truncate" doesn't make any obvious sense. If we have a racing
+> truncate removing entries from the radix tree, then thanks to the
+> mapping tree lock we'll either find an entry we need to write back,
+> or we won't find any entry at all, right?
 
-Why not -EPERM?  I don't have strong feelings about picking errnos, as
-long as we're consistent, I'm not worried.
+You're right, dax_fsync() doesn't call out to get_block() any more.  It does
+save the results of get_block() calls from the page faults, though, and I was
+concerned about the following race:
 
->  - return EINVAL for wrong non-directory file types as the
->    source fd
+fsync thread				truncate thread
+------------				---------------
+dax_fsync()
+save tagged entries in pvec
 
-Ack.
+					change block mapping for inode so that
+					entries saved in pvec are no longer
+					owned by this inode
 
--chris
+loop through pvec using stale results
+from get_block(), flushing and cleaning
+entries we no longer own
+
+In looking at the xfs_file_fsync() code, though, it seems like if this race
+existed it would also exist for page cache entries that were being put into a
+pvec in write_cache_pages(), and that we would similarly be writing back
+cached pages that no longer belong to this inode.
+
+Is this race non-existent?
+
+> Lastly, this flushing really needs to be inside
+> filemap_write_and_wait_range(), because we call the writeback code
+> from many more places than just fsync to ensure ordering of various
+> operations such that files are in known state before proceeding
+> (e.g. hole punch).
+
+The call to dax_fsync() (soon to be dax_writeback_mapping_range()) first lived
+in do_writepages() in the RFC version, but was moved into the filesystem so we
+could have access to get_block(), which is no longer needed, and so we could
+use the FS level locking.  If the race described above isn't an issue then I
+agree moving this call out of the filesystems and down into the generic page
+writeback code is probably the right thing to do.
+
+Thanks for the feedback.
 
 _______________________________________________
 xfs mailing list
