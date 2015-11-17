@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CD6E77F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 09:23:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F58E304032
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 07:22:59 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id weXGLmBBNcU5YsPz (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 07:22:54 -0800 (PST)
-Date: Tue, 17 Nov 2015 07:22:52 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 9AAF77F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 09:33:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 87050304032
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 07:33:31 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id Pu8FVDFUfkhnoDBO (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 07:33:30 -0800 (PST)
+Date: Tue, 17 Nov 2015 15:33:20 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: clone ioctl return values
-Message-ID: <20151117152251.GA5392@infradead.org>
+Message-ID: <20151117153320.GU22011@ZenIV.linux.org.uk>
 References: <20151116120431.GA2860@infradead.org>
 	<20151117002822.GA32467@birch.djwong.org>
 	<20151117105433.GA18093@infradead.org>
 	<20151117135745.GF17545@ret.masoncoding.com>
+	<20151117152251.GA5392@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151117135745.GF17545@ret.masoncoding.com>
+In-Reply-To: <20151117152251.GA5392@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +33,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, Chris Mason <clm@fb.com>, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, Nov 17, 2015 at 08:57:45AM -0500, Chris Mason wrote:
-> > > Errrgh, the golden output of this test reflects the changes to the input
-> > > checking in Anna/Peng's copy_file_range/clone_file_range patches.
-> > > 
-> > > So, I guess the question is, should I reset the golden output to whatever
-> > > btrfs spits out before that patchset, and we'll consider the alterations
-> > > to be bugs/regressions/whatever that ought to be fixed in their patches?
-> > 
-> > Some bits in btrfs don't seem kosher.  But it would be good to
-> > explicitly send patches for btrfs to adopt to what might make more
-> > sense, and then follow it in the other implementations.
+On Tue, Nov 17, 2015 at 07:22:52AM -0800, Christoph Hellwig wrote:
+
+> Yes, I saw that.  So so far I'd suggest something like the following
+> for btrfs:
 > 
-> Btrfs does check for directories, but we should really be checking for
-> regular files too.  In the end, we only copy extents that would
-> correspond with regular files, so we're sneaking by.
+>  - return EBADFD for missing read/wite permissions
 
-Yes, I saw that.  So so far I'd suggest something like the following
-for btrfs:
+Yowwwch...  What the hell does that have to do with STREAMS?  Or are you
+using EBADFD as "nobody uses that error value anyway, let's assign it
+whatever meaning we need"?
 
- - return EBADFD for missing read/wite permissions
- - return EINVAL for wrong non-directory file types as the
-   source fd
-
-And then make the test case and other implementations match this.
-
-Does this sound like a plan?
+Besides, that'll be confused with EBADF all the time.  I strongly
+recommend against that.
 
 _______________________________________________
 xfs mailing list
