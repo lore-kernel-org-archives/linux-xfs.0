@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A77FA7F37
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 15:17:51 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 068E87F37
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 16:16:19 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A1CD8F8050
-	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:17:48 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id o85968mC2tz5Xmol (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 13:17:46 -0800 (PST)
-Date: Tue, 17 Nov 2015 13:16:43 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/12] test-scripts: test migration scripts
-Message-ID: <20151117211643.GF2217@birch.djwong.org>
-References: <20151113213643.31124.80975.stgit@birch.djwong.org>
-	<20151113213650.31124.16817.stgit@birch.djwong.org>
-	<20151116205845.GK14311@dastard>
-	<20151116235111.GE2224@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EA0D98F8050
+	for <xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:16:15 -0800 (PST)
+Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249]) by
+	cuda.sgi.com with ESMTP id YoO2uY1RAK7T1LLv for
+	<xfs@oss.sgi.com>; Tue, 17 Nov 2015 14:16:13 -0800 (PST)
+Date: Wed, 18 Nov 2015 09:16:09 +1100
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: Re: Disk error, then endless loop
+Message-ID: <20151117221609.GA3563@onthe.net.au>
+References: <20151117080332.GA28936@onthe.net.au>
+	<20151117124148.GA20118@bfoster.bfoster>
+	<20151117162802.GA28374@onthe.net.au>
+	<20151117173724.GA18963@bfoster.bfoster>
+	<20151117193534.GA1514@onthe.net.au>
+	<20151117202131.GA43800@bfoster.bfoster>
+	<20151117203455.GB43800@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151116235111.GE2224@birch.djwong.org>
+In-Reply-To: <20151117203455.GB43800@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,178 +34,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 16, 2015 at 03:51:11PM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 17, 2015 at 07:58:45AM +1100, Dave Chinner wrote:
-> > On Fri, Nov 13, 2015 at 01:36:50PM -0800, Darrick J. Wong wrote:
-> > > Add two scripts: "nextid" finds the next available test ID number in a
-> > > group, and "mvtest" relocates a test, fixes the golden output, and
-> > > moves the group entry for that test.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  mvtest |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  nextid |   35 +++++++++++++++++++++++++++++++++++
-> > 
-> > These should be placed in the "tools" directory.
-> 
-> <nod>
-> 
-> > 
-> > >  create mode 100755 mvtest
-> > >  create mode 100755 nextid
-> > > 
-> > > 
-> > > diff --git a/mvtest b/mvtest
-> > > new file mode 100755
-> > > index 0000000..b5406d1
-> > > --- /dev/null
-> > > +++ b/mvtest
-> > > @@ -0,0 +1,58 @@
-> > > +#!/bin/sh
-> > > +
-> > > +# Renumber a test
-> > > +
-> > > +if [ -z "$1" ] || [ "$1" = "--help" ]; then
-> > > +	echo "Usage: $0 path_to_test new_path_to_test"
-> > > +	exit 1
-> > > +fi
-> > > +
-> > > +src="$1"
-> > > +dest="$2"
-> > > +
-> > > +die() {
-> > > +	echo "$@"
-> > > +	exit 1
-> > > +}
-> > > +
-> > > +nsort() {
-> > > +	sort -g < "$1" > "$2"
-> > > +}
-> > > +
-> > > +append() {
-> > > +	out="$1"
-> > > +	shift
-> > > +	echo "$@" >> "${out}"
-> > > +}
-> > > +
-> > > +test "${src}" != "${dest}" || die "Test \"${src}\" is the same as dest."
-> > > +test -e "tests/${src}" || die "Test \"${src}\" does not exist."
-> > > +test ! -e "tests/${dest}" || die "Test \"${src}\" already exists."
-> > > +
-> > > +sid="$(basename "${src}")"
-> > > +did="$(basename "${dest}")"
-> > > +
-> > > +sgroup="$(basename "$(dirname "tests/${src}")")"
-> > > +dgroup="$(basename "$(dirname "tests/${dest}")")"
-> > > +
-> > > +sgroupfile="tests/${sgroup}/group"
-> > > +dgroupfile="tests/${sgroup}/group"
-> > > +
-> > > +$DBG git mv "tests/${src}" "tests/${dest}"
-> > 
-> > $DBG?
-> 
-> "DBG=echo ./mvtest foo bar" to see what it would have run, more or less.
-> 
-> (I suppose I could getopt a --dry-run, but I could also just get rid of them.)
-> 
-> > 
-> > ....
-> > > +$DBG sed -e "/^${sid}.*$/d" -i "${sgroupfile}"
-> > > +$DBG cp "${dgroupfile}" "${dgroupfile}.new"
-> > > +$DBG append "${dgroupfile}.new" "${newgrpline}"
-> > > +$DBG nsort "${dgroupfile}.new" "${dgroupfile}"
-> > 
-> > What does this do to comments in the group file?
-> 
-> Eats them.  I don't know of a good way to sort just the uncommented lines
-> in the file, short of writing a python script to do that.
-> 
-> I guess it's not that hard; I've sort of needed one here and there over
-> the years, but never wrote one, and $google doesn't immediately provide
-> any such thing.
-> 
-> > 
-> > ...
-> > 
-> > > diff --git a/nextid b/nextid
-> > > new file mode 100755
-> > > index 0000000..285b549
-> > > --- /dev/null
-> > > +++ b/nextid
-> > > @@ -0,0 +1,35 @@
-> > > +#!/bin/sh
-> > > +
-> > > +# Given a group name, find the next available test number.
-> > > +
-> > > +if [ -z "$1" ] || [ "$1" = "--help" ]; then
-> > > +	echo "Usage: $0 groupname[/start_looking_at_this_number]"
-> > > +	exit 1
-> > > +fi
-> > > +
-> > > +die() {
-> > > +	echo "$@"
-> > > +	exit 1
-> > > +}
-> > > +
-> > > +if [ "$(basename "$1")" != "$1" ]; then
-> > > +	group="$(dirname "$1")"
-> > > +	id="$(basename "$1")"
-> > > +else
-> > > +	group="$1"
-> > > +	id=1
-> > > +fi
-> > > +test -e "tests/${group}/group" || die "Unknown group \"${group}\"."
-> > > +
-> > > +while test "${id}" -lt 1000; do
-> > > +	name="$(printf "%.03d" "${id}")"
-> > > +	if [ ! -e "tests/${group}/${name}" ]; then
-> > > +		echo "${group}/${name}"
-> > > +		exit 0
-> > > +	fi
-> > > +	id=$((id + 1))
-> > > +done
-> > > +
-> > > +echo "No free IDs less than ${id} in group \"${group}\"."
-> > 
-> > So the "new" script does this differently, by reading the group
-> > file and looking for the first non-contiguous ID in the file. It
-> > doesn't need scan ID limits because EOF triggers that. Wouldn't it
-> > be better to to factor the code out of the "new" script to find the
-> > next id, and then have the new script call that?
-> 
-> Sure!
+On Tue, Nov 17, 2015 at 03:34:55PM -0500, Brian Foster wrote:
+> On Tue, Nov 17, 2015 at 03:21:31PM -0500, Brian Foster wrote:
+>> On Wed, Nov 18, 2015 at 06:35:34AM +1100, Chris Dunlop wrote:
+>>> On Tue, Nov 17, 2015 at 12:37:24PM -0500, Brian Foster wrote:
+>>>> If the device has already dropped and reconnected as a new dev node,
+>>>> it's probably harmless at this point to just try to forcibly shut down
+>>>> the fs on the old one. Could you try the following?
+>>>> 
+>>>>   xfs_io -x -c shutdown <mnt>
+>>> 
+>>> # xfs_io -x -c shutdown /var/lib/ceph/osd/ceph-18
+>>> foreign file active, shutdown command is for XFS filesystems only
+>>> 
+>>> # grep ceph-18 /etc/mtab
+>>>   <<< crickets >>>
+>>> 
+>>> I don't know when the fs disappeared from mtab, it could have been when I
+>>> first did the umount I guess, I didn't think to check at the time. But the
+>>> umount is still there:
+>>> 
+>>> # date; ps -opid,lstart,time,stat,wchan='WCHAN-xxxxxxxxxxxxxxxxxx',cmd -C umount
+>>> Wed Nov 18 06:23:21 AEDT 2015
+>>>   PID                  STARTED     TIME STAT WCHAN-xxxxxxxxxxxxxxxxxx CMD
+>>> 23946 Tue Nov 17 17:30:41 2015 00:00:00 D+   xfs_ail_push_all_sync    umount /var/lib/ceph/osd/ceph-18
+>> 
+>> Ah, so it's already been removed from the namespace. Apparently it's
+>> stuck at some point after the mount is made inaccessible and before it
+>> actually finishes with I/O. I'm not sure we have any other option other
+>> than a reset at this point, unfortunately. :/
 
-In the end I wrote a short Python program to sort group files and it wasn't
-much harder to reuse the code to implement nextid, so I did that instead.
+Yes, I thought this would likely be the case.
 
-I'll probably post this and a patch to fix the error codes in generic/157
-later this week.
+> One last thought... it occurred to me that scsi devs have a delete
+> option under the /sysfs fs. Does the old/stale device still exist under
+> /sys/block/<dev>? If so, perhaps an 'echo 1 >
+> /sys/block/<dev>/device/delete' would move things along..?
 
---D
+Unfortunately, no, it's not there.
 
+> Note that I have no idea what effect that will have beyond removing the
+> device node (so if it is still accessible now, it probably won't be
+> after that command). I just tried it while doing I/O to a test device
+> and it looked like it caused an fs shutdown, so it could be worth a try
+> as a last resort before a system restart.
 > 
-> --D
-> 
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Brian
+
+Thanks again,
+
+Chris
 
 _______________________________________________
 xfs mailing list
