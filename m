@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3375A7F37
-	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 10:18:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EB777304032
-	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 08:18:08 -0800 (PST)
-Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
-	8kvLs6rGbQLIEUA9 for <xfs@oss.sgi.com>;
-	Wed, 18 Nov 2015 08:18:04 -0800 (PST)
-Date: Wed, 18 Nov 2015 09:16:08 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 03/11] pmem: enable REQ_FUA/REQ_FLUSH handling
-Message-ID: <20151118161608.GA10656@linux.intel.com>
-References: <1447459610-14259-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1447459610-14259-4-git-send-email-ross.zwisler@linux.intel.com>
-	<CAPcyv4j4arHE+iAALn1WPDzSb_QSCDy8udtXU1FV=kYSZDfv8A@mail.gmail.com>
-	<22E0F870-C1FB-431E-BF6C-B395A09A2B0D@dilger.ca>
-	<CAPcyv4jwx3VzyRugcpH7KCOKM64kJ4Bq4wgY=iNJMvLTHrBv-Q@mail.gmail.com>
-	<20151116200950.GB9737@linux.intel.com>
-	<20151118104055.GA6097@quack.suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id AFD427F37
+	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 16:36:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A1775304039
+	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 14:36:27 -0800 (PST)
+Received: from mail-lf0-f51.google.com (mail-lf0-f51.google.com
+	[209.85.215.51]) by cuda.sgi.com with ESMTP id bqBaEE04NzSdzgLy
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Nov 2015 14:36:22 -0800 (PST)
+Received: by lfdo63 with SMTP id o63so36488798lfd.2
+	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 14:36:20 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: memory reclaim problems on fs usage
+Date: Wed, 18 Nov 2015 23:36:18 +0100
+References: <201511102313.36685.arekm@maven.pl>
+	<201511151549.35299.arekm@maven.pl>
+	<20151116161518.GI14116@dhcp22.suse.cz>
+In-Reply-To: <20151116161518.GI14116@dhcp22.suse.cz>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151118104055.GA6097@quack.suse.cz>
+Message-Id: <201511182336.18231.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,82 +29,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, linux-mm@kvack.org, cl@linux.com, htejun@gmail.com, xfs@oss.sgi.com
 
-On Wed, Nov 18, 2015 at 11:40:55AM +0100, Jan Kara wrote:
-> On Mon 16-11-15 13:09:50, Ross Zwisler wrote:
-> > On Fri, Nov 13, 2015 at 06:32:40PM -0800, Dan Williams wrote:
-> > > On Fri, Nov 13, 2015 at 4:43 PM, Andreas Dilger <adilger@dilger.ca> wrote:
-> > > > On Nov 13, 2015, at 5:20 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> > > >>
-> > > >> On Fri, Nov 13, 2015 at 4:06 PM, Ross Zwisler
-> > > >> <ross.zwisler@linux.intel.com> wrote:
-> > > >>> Currently the PMEM driver doesn't accept REQ_FLUSH or REQ_FUA bios.  These
-> > > >>> are sent down via blkdev_issue_flush() in response to a fsync() or msync()
-> > > >>> and are used by filesystems to order their metadata, among other things.
-> > > >>>
-> > > >>> When we get an msync() or fsync() it is the responsibility of the DAX code
-> > > >>> to flush all dirty pages to media.  The PMEM driver then just has issue a
-> > > >>> wmb_pmem() in response to the REQ_FLUSH to ensure that before we return all
-> > > >>> the flushed data has been durably stored on the media.
-> > > >>>
-> > > >>> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > >>
-> > > >> Hmm, I'm not seeing why we need this patch.  If the actual flushing of
-> > > >> the cache is done by the core why does the driver need support
-> > > >> REQ_FLUSH?  Especially since it's just a couple instructions.  REQ_FUA
-> > > >> only makes sense if individual writes can bypass the "drive" cache,
-> > > >> but no I/O submitted to the driver proper is ever cached we always
-> > > >> flush it through to media.
-> > > >
-> > > > If the upper level filesystem gets an error when submitting a flush
-> > > > request, then it assumes the underlying hardware is broken and cannot
-> > > > be as aggressive in IO submission, but instead has to wait for in-flight
-> > > > IO to complete.
-> > > 
-> > > Upper level filesystems won't get errors when the driver does not
-> > > support flush.  Those requests are ended cleanly in
-> > > generic_make_request_checks().  Yes, the fs still needs to wait for
-> > > outstanding I/O to complete but in the case of pmem all I/O is
-> > > synchronous.  There's never anything to await when flushing at the
-> > > pmem driver level.
-> > > 
-> > > > Since FUA/FLUSH is basically a no-op for pmem devices,
-> > > > it doesn't make sense _not_ to support this functionality.
-> > > 
-> > > Seems to be a nop either way.  Given that DAX may lead to dirty data
-> > > pending to the device in the cpu cache that a REQ_FLUSH request will
-> > > not touch, its better to leave it all to the mm core to handle.  I.e.
-> > > it doesn't make sense to call the driver just for two instructions
-> > > (sfence + pcommit) when the mm core is taking on the cache flushing.
-> > > Either handle it all in the mm or the driver, not a mixture.
-> > 
-> > Does anyone know if ext4 and/or XFS alter their algorithms based on whether
-> > the driver supports REQ_FLUSH/REQ_FUA?  Will the filesystem behave more
-> > efficiently with respect to their internal I/O ordering, etc., if PMEM
-> > advertises REQ_FLUSH/REQ_FUA support, even though we could do the same thing
-> > at the DAX layer?
-> 
-> So the information whether the driver supports FLUSH / FUA is generally
-> ignored by filesystems. We issue REQ_FLUSH / REQ_FUA requests to achieve
-> required ordering for fs consistency and expect that block layer does the
-> right thing - i.e., if the device has volatile write cache, it will be
-> flushed, if it doesn't have it, the request will be ignored. So the
-> difference between supporting and not supporting REQ_FLUSH / REQ_FUA is
-> only in how block layer handles such requests.
-
-Cool, thank you for the info.  Based on this I'll pull out the
-REQ_FLUSH/REQ_FUA patch for v3 of this series and move the wmb_pmem() call up
-to DAX as Dan suggests.  If performance data shows that we can get a benefit
-from centralizing wmb_pmem() behind REQ_FUA/REQ_FLUSH, I'll add it back in
-later as part of that series.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uZGF5IDE2IG9mIE5vdmVtYmVyIDIwMTUsIE1pY2hhbCBIb2NrbyB3cm90ZToKPiBPbiBT
+dW4gMTUtMTEtMTUgMTU6NDk6MzUsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+IE9u
+IFN1bmRheSAxNSBvZiBOb3ZlbWJlciAyMDE1LCBUZXRzdW8gSGFuZGEgd3JvdGU6Cj4gPiA+IEFy
+a2FkaXVzeiBNaXNraWV3aWN6IHdyb3RlOgo+ID4gPiA+IE9uIFN1bmRheSAxNSBvZiBOb3ZlbWJl
+ciAyMDE1LCBUZXRzdW8gSGFuZGEgd3JvdGU6Cj4gPiA+ID4gPiBJIHRoaW5rIHRoYXQgdGhlIHZt
+c3RhdCBzdGF0aXN0aWNzIG5vdyBoYXZlIGNvcnJlY3QgdmFsdWVzLgo+ID4gPiA+ID4gCj4gPiA+
+ID4gPiA+IEJ1dCBhcmUgdGhlc2UgcGF0Y2hlcyBzb2x2aW5nIHRoZSBwcm9ibGVtIG9yIGp1c3Qg
+aGlkaW5nIGl0Pwo+ID4gPiA+ID4gCj4gPiA+ID4gPiBFeGN1c2UgbWUgYnV0IEkgY2FuJ3QganVk
+Z2UuCj4gPiA+ID4gPiAKPiA+ID4gPiA+IElmIHlvdSBhcmUgaW50ZXJlc3RlZCBpbiBtb25pdG9y
+aW5nIGhvdyB2bXN0YXQgc3RhdGlzdGljcyBhcmUKPiA+ID4gPiA+IGNoYW5naW5nIHVuZGVyIHN0
+YWxsZWQgY29uZGl0aW9uLCB5b3UgY2FuIHRyeSBiZWxvdyBwYXRjaC4KPiA+ID4gPiAKPiA+ID4g
+PiBIZXJlIGlzIGxvZyB3aXRoIHRoaXMgYW5kIGFsbCBwcmV2aW91cyBwYXRjaGVzIGFwcGxpZWQ6
+Cj4gPiA+ID4gaHR0cDovL2l4aW9uLnBsZC1saW51eC5vcmcvfmFyZWttL2xvZy1tbS01LnR4dC5n
+ego+ID4gPiAKPiA+ID4gUmVnYXJkaW5nICJOb2RlIDAgTm9ybWFsIiAobWluOjcxMDRrQiBsb3c6
+ODg4MGtCIGhpZ2g6MTA2NTZrQiksCj4gPiA+IGFsbCBmcmVlOiB2YWx1ZXMgbG9vayBzYW5lIHRv
+IG1lLiBJIHRoaW5rIHRoYXQgeW91ciBwcm9ibGVtIHdhcyBzb2x2ZWQuCj4gPiAKPiA+IEdyZWF0
+LCB0aGFua3MhCj4gPiAKPiA+IFdpbGwgYWxsIChvciBwYXJ0KSBvZiB0aGVzZSBwYXRjaGVzCj4g
+PiAKPiA+IGh0dHA6Ly9zcHJ1bmdlLnVzL0dZQmIKPiAKPiBNaWdyYXRlIHJlc2VydmVzIGFyZSBu
+b3QgYSBzdGFibGUgbWF0ZXJpYWwgSSBhbSBhZnJhaWQuICJ2bXN0YXQ6Cj4gZXhwbGljaXRseSBz
+Y2hlZHVsZSBwZXItY3B1IHdvcmsgb24gdGhlIENQVSB3ZSBuZWVkIGl0IHRvIHJ1biBvbiIKPiB3
+YXMgbm90IG1hcmtlZCBmb3Igc3RhYmxlIGVpdGhlciBidXQgSSBhbSBub3Qgc3VyZSB3aHkgaXQg
+c2hvdWxkIG1ha2UKPiBhbnkgZGlmZmVyZW5jZSBmb3IgeW91ciBsb2FkLiBJIHVuZGVyc3RhbmQg
+dGhhdCB0ZXN0aW5nIHRoaXMgaXMgcmVhbGx5Cj4gdGVkaW91cyBidXQgaXQgd291bGQgYmUgYmV0
+dGVyIHRvIGtub3cgd2hpY2ggb2YgdGhlIHBhdGNoZXMgYWN0dWFsbHkKPiBtYWRlIGEgZGlmZmVy
+ZW5jZS4KCk9rLiBJbiBtZWFuIHRpbWUgSSd2ZSB0cmllZCA0LjMuMCBrZXJuZWwgKyBwYXRjaGVz
+ICh0aGUgc2FtZSBhcyBiZWZvcmUgKyBvbmUgCm1vcmUpIG9uIHNlY29uZCBzZXJ2ZXIgd2hpY2gg
+cnVucyBldmVuIG1vcmUgcnNuYXBzaG90IHByb2Nlc3NlcyBhbmQgYWxzbyB1c2VzIAp4ZnMgb24g
+bWQgcmFpZCA2LgoKUGF0Y2hlczoKaHR0cDovL3NwcnVuZ2UudXMvRGZJUSAoZGVidWcgcGF0Y2gg
+ZnJvbSBUZXRzdW8pCmh0dHA6Ly9zcHJ1bmdlLnVzL0xRUEYgKGJhY2twb3J0IG9mIHRoaW5ncyBm
+cm9tIGdpdCArIG9uZSBmcm9tIG1sKQoKVGhlIHByb2JsZW0gaXMgbm93IHdpdGggaGlnaCBvcmRl
+ciBhbGxvY2F0aW9ucyBwcm9iYWJseToKaHR0cDovL2l4aW9uLnBsZC1saW51eC5vcmcvfmFyZWtt
+L2xvZy1tbS0yc3J2LTEudHh0Lmd6CgpTeXN0ZW0gaXMgZG9pbmcgdmVyeSBzbG93IHByb2dyZXNz
+IGFuZCBmb3IgZXhhbXBsZSBkZXBtb2QgcnVuIHRvb2sgMiBob3VycwpodHRwOi8vc3BydW5nZS51
+cy9IR2JFClNvbWV0aW1lcyBJIHdhcyBhYmxlIHRvIHNzaC1pbiwgZG1lc2cgdG9vayAxMC0xNSBt
+aW51dGVzIGJ1dCBzb21ldGltZXMgaXQgCndvcmtlZCBmYXN0IGZvciBzaG9ydCBwZXJpb2QuCgpJ
+ZGVhcz8KCnBzLiBJIGFsc28gaGFkIG9uZSBwcm9ibGVtIHdpdGggbG93IG9yZGVyIGFsbG9jYXRp
+b24gYnV0IG9ubHkgb25jZSBhbmQgd2Fzbid0IAphYmxlIHRvIHJlcHJvZHVjZSBzbyBmYXIuIEkg
+d2FzIHJ1bm5pbmcga2VybmVsIHdpdGggYmFja3BvcnQgcGF0Y2hlcyBidXQgbm8gCmRlYnVnIHBh
+dGNoLCBzbyBnb3Qgb25seSB0aGlzIGluIGxvZ3M6Cmh0dHA6Ly9zcHJ1bmdlLnVzL1dQWGkKCi0t
+IApBcmthZGl1c3ogTWnFm2tpZXdpY3osIGFyZWttIC8gKCBtYXZlbi5wbCB8IHBsZC1saW51eC5v
+cmcgKQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
