@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B1E7B7F55
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 833467F54
 	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 08:18:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54359AC003
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 37CE8304043
 	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 06:18:02 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hthQdt1RDMBqmLay (version=TLSv1.2
+	cuda.sgi.com with ESMTP id EtwCeUC55ZGxC8EA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 18 Nov 2015 06:18:01 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 18 Nov 2015 06:17:59 -0800 (PST)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 2A81DF806C
-	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 14:18:01 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 157D38E226
+	for <xfs@oss.sgi.com>; Wed, 18 Nov 2015 14:17:59 +0000 (UTC)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [XFSTESTS 4/6] check: Add support for tests without *.out files
-Date: Wed, 18 Nov 2015 15:17:47 +0100
-Message-Id: <1447856269-7872-5-git-send-email-agruenba@redhat.com>
+Subject: [XFSTESTS 3/6] Rename output file templates to match TEST.out*
+Date: Wed, 18 Nov 2015 15:17:46 +0100
+Message-Id: <1447856269-7872-4-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1447856269-7872-1-git-send-email-agruenba@redhat.com>
 References: <1447856269-7872-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,127 +35,716 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Add support for tests which report their status through their exit code
-instead of producing output that is compared with the expected output.
+Rename the expected output files so that they all match "$TEST_NAME.out*".
+That way, we can statically check if a test has any .out* files.
 
-When such a test returns with exit code 77, it is assumed to have been
-skipped; all other non-zero exit codes are treated as test failures.
+Tests with multiple output file variants symlink $TEST_NAME.out to one
+of those variants.  For those tests, add $TEST_NAME.out to .gitignore.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- check | 77 +++++++++++++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 50 insertions(+), 27 deletions(-)
+ .gitignore                  |  16 ++++
+ tests/xfs/033               |   2 +-
+ tests/xfs/033.crc.out.linux | 197 --------------------------------------------
+ tests/xfs/033.out.crc.linux | 197 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/096               |   4 +-
+ tests/xfs/096.external      |  50 -----------
+ tests/xfs/096.internal      |  51 ------------
+ tests/xfs/096.out.external  |  50 +++++++++++
+ tests/xfs/096.out.internal  |  51 ++++++++++++
+ 9 files changed, 317 insertions(+), 301 deletions(-)
+ delete mode 100644 tests/xfs/033.crc.out.linux
+ create mode 100644 tests/xfs/033.out.crc.linux
+ delete mode 100644 tests/xfs/096.external
+ delete mode 100644 tests/xfs/096.internal
+ create mode 100644 tests/xfs/096.out.external
+ create mode 100644 tests/xfs/096.out.internal
 
-diff --git a/check b/check
-index 4a9b332..5ecc12b 100755
---- a/check
-+++ b/check
-@@ -204,6 +204,13 @@ _prepare_test_list()
- 	fi
- }
+diff --git a/.gitignore b/.gitignore
+index 5dc4f69..7c25c41 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -195,3 +195,19 @@
+ /dmapi/src/suite2/src/test_invis
+ /dmapi/src/suite2/src/test_region
+ /dmapi/src/suite2/src/test_rights
++
++# Symlinked .out files
++/tests/generic/088.out
++/tests/generic/097.out
++/tests/xfs/022.out
++/tests/xfs/023.out
++/tests/xfs/031.out
++/tests/xfs/033.out
++/tests/xfs/035.out
++/tests/xfs/036.out
++/tests/xfs/039.out
++/tests/xfs/043.out
++/tests/xfs/055.out
++/tests/xfs/071.out
++/tests/xfs/096.out
++/tests/xfs/146.out
+diff --git a/tests/xfs/033 b/tests/xfs/033
+index 576d437..4163964 100755
+--- a/tests/xfs/033
++++ b/tests/xfs/033
+@@ -85,7 +85,7 @@ _scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
  
-+# Check if a test has any .out* files
-+has_out_files()
-+{
-+    set -- "$1".out*
-+    [ $# -gt 0 -a -e "$1" ]
-+}
-+
- # Process command arguments first.
- while [ $# -gt 0 ]; do
- 	case "$1" in
-@@ -612,6 +619,13 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 		    err=true
- 		fi
+ # link correct .out file
+ if [ $_fs_has_crcs -eq 1 ]; then
+-	_link_out_file $seq.crc.out $seqfull.out
++	_link_out_file $seq.out.crc $seqfull.out
+ else
+ 	_link_out_file $seq.out $seqfull.out
+ fi
+diff --git a/tests/xfs/033.crc.out.linux b/tests/xfs/033.crc.out.linux
+deleted file mode 100644
+index a6e86b9..0000000
+--- a/tests/xfs/033.crc.out.linux
++++ /dev/null
+@@ -1,197 +0,0 @@
+-QA output created by 033
+-meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
+-data     = bsize=XXX blocks=XXX, imaxpct=PCT
+-         = sunit=XXX swidth=XXX, unwritten=X
+-naming   =VERN bsize=XXX
+-log      =LDEV bsize=XXX blocks=XXX
+-realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+-Corrupting root inode - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-bad magic number 0x0 on inode INO
+-bad version number 0x0 on inode INO
+-inode identifier 0 mismatch on inode INO
+-bad magic number 0x0 on inode INO, resetting magic number
+-bad version number 0x0 on inode INO, resetting version number
+-inode identifier 0 mismatch on inode INO
+-cleared root inode INO
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-root inode lost
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-reinitializing root directory
+-        - resetting contents of realtime bitmap and summary inodes
+-        - traversing filesystem ...
+-        - traversal finished ...
+-        - moving disconnected inodes to lost+found ...
+-Phase 7 - verify and correct link counts...
+-resetting inode INO nlinks from 1 to 2
+-done
+-Corrupting rt bitmap inode - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-bad magic number 0x0 on inode INO
+-bad version number 0x0 on inode INO
+-inode identifier 0 mismatch on inode INO
+-bad magic number 0x0 on inode INO, resetting magic number
+-bad version number 0x0 on inode INO, resetting version number
+-inode identifier 0 mismatch on inode INO
+-cleared realtime bitmap inode INO
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-reinitializing realtime bitmap inode
+-        - resetting contents of realtime bitmap and summary inodes
+-        - traversing filesystem ...
+-        - traversal finished ...
+-        - moving disconnected inodes to lost+found ...
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting rt summary inode - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-bad magic number 0x0 on inode INO
+-bad version number 0x0 on inode INO
+-inode identifier 0 mismatch on inode INO
+-bad magic number 0x0 on inode INO, resetting magic number
+-bad version number 0x0 on inode INO, resetting version number
+-inode identifier 0 mismatch on inode INO
+-cleared realtime summary inode INO
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-reinitializing realtime summary inode
+-        - resetting contents of realtime bitmap and summary inodes
+-        - traversing filesystem ...
+-        - traversal finished ...
+-        - moving disconnected inodes to lost+found ...
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting root inode - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-bad magic number 0xffff on inode INO
+-bad version number 0xffffffff on inode INO
+-inode identifier 18446744073709551615 mismatch on inode INO
+-bad magic number 0xffff on inode INO, resetting magic number
+-bad version number 0xffffffff on inode INO, resetting version number
+-inode identifier 18446744073709551615 mismatch on inode INO
+-cleared root inode INO
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-root inode lost
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-reinitializing root directory
+-        - resetting contents of realtime bitmap and summary inodes
+-        - traversing filesystem ...
+-        - traversal finished ...
+-        - moving disconnected inodes to lost+found ...
+-Phase 7 - verify and correct link counts...
+-resetting inode INO nlinks from 1 to 2
+-done
+-Corrupting rt bitmap inode - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-bad magic number 0xffff on inode INO
+-bad version number 0xffffffff on inode INO
+-inode identifier 18446744073709551615 mismatch on inode INO
+-bad magic number 0xffff on inode INO, resetting magic number
+-bad version number 0xffffffff on inode INO, resetting version number
+-inode identifier 18446744073709551615 mismatch on inode INO
+-cleared realtime bitmap inode INO
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-reinitializing realtime bitmap inode
+-        - resetting contents of realtime bitmap and summary inodes
+-        - traversing filesystem ...
+-        - traversal finished ...
+-        - moving disconnected inodes to lost+found ...
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting rt summary inode - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-bad magic number 0xffff on inode INO
+-bad version number 0xffffffff on inode INO
+-inode identifier 18446744073709551615 mismatch on inode INO
+-bad magic number 0xffff on inode INO, resetting magic number
+-bad version number 0xffffffff on inode INO, resetting version number
+-inode identifier 18446744073709551615 mismatch on inode INO
+-cleared realtime summary inode INO
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-reinitializing realtime summary inode
+-        - resetting contents of realtime bitmap and summary inodes
+-        - traversing filesystem ...
+-        - traversal finished ...
+-        - moving disconnected inodes to lost+found ...
+-Phase 7 - verify and correct link counts...
+-done
+diff --git a/tests/xfs/033.out.crc.linux b/tests/xfs/033.out.crc.linux
+new file mode 100644
+index 0000000..a6e86b9
+--- /dev/null
++++ b/tests/xfs/033.out.crc.linux
+@@ -0,0 +1,197 @@
++QA output created by 033
++meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
++data     = bsize=XXX blocks=XXX, imaxpct=PCT
++         = sunit=XXX swidth=XXX, unwritten=X
++naming   =VERN bsize=XXX
++log      =LDEV bsize=XXX blocks=XXX
++realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
++Corrupting root inode - setting bits to 0
++Wrote X.XXKb (value 0x0)
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++bad magic number 0x0 on inode INO
++bad version number 0x0 on inode INO
++inode identifier 0 mismatch on inode INO
++bad magic number 0x0 on inode INO, resetting magic number
++bad version number 0x0 on inode INO, resetting version number
++inode identifier 0 mismatch on inode INO
++cleared root inode INO
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++root inode lost
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++reinitializing root directory
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++resetting inode INO nlinks from 1 to 2
++done
++Corrupting rt bitmap inode - setting bits to 0
++Wrote X.XXKb (value 0x0)
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++bad magic number 0x0 on inode INO
++bad version number 0x0 on inode INO
++inode identifier 0 mismatch on inode INO
++bad magic number 0x0 on inode INO, resetting magic number
++bad version number 0x0 on inode INO, resetting version number
++inode identifier 0 mismatch on inode INO
++cleared realtime bitmap inode INO
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++reinitializing realtime bitmap inode
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++done
++Corrupting rt summary inode - setting bits to 0
++Wrote X.XXKb (value 0x0)
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++bad magic number 0x0 on inode INO
++bad version number 0x0 on inode INO
++inode identifier 0 mismatch on inode INO
++bad magic number 0x0 on inode INO, resetting magic number
++bad version number 0x0 on inode INO, resetting version number
++inode identifier 0 mismatch on inode INO
++cleared realtime summary inode INO
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++reinitializing realtime summary inode
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++done
++Corrupting root inode - setting bits to -1
++Wrote X.XXKb (value 0xffffffff)
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++bad magic number 0xffff on inode INO
++bad version number 0xffffffff on inode INO
++inode identifier 18446744073709551615 mismatch on inode INO
++bad magic number 0xffff on inode INO, resetting magic number
++bad version number 0xffffffff on inode INO, resetting version number
++inode identifier 18446744073709551615 mismatch on inode INO
++cleared root inode INO
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++root inode lost
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++reinitializing root directory
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++resetting inode INO nlinks from 1 to 2
++done
++Corrupting rt bitmap inode - setting bits to -1
++Wrote X.XXKb (value 0xffffffff)
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++bad magic number 0xffff on inode INO
++bad version number 0xffffffff on inode INO
++inode identifier 18446744073709551615 mismatch on inode INO
++bad magic number 0xffff on inode INO, resetting magic number
++bad version number 0xffffffff on inode INO, resetting version number
++inode identifier 18446744073709551615 mismatch on inode INO
++cleared realtime bitmap inode INO
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++reinitializing realtime bitmap inode
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++done
++Corrupting rt summary inode - setting bits to -1
++Wrote X.XXKb (value 0xffffffff)
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++bad magic number 0xffff on inode INO
++bad version number 0xffffffff on inode INO
++inode identifier 18446744073709551615 mismatch on inode INO
++bad magic number 0xffff on inode INO, resetting magic number
++bad version number 0xffffffff on inode INO, resetting version number
++inode identifier 18446744073709551615 mismatch on inode INO
++cleared realtime summary inode INO
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++reinitializing realtime summary inode
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++done
+diff --git a/tests/xfs/096 b/tests/xfs/096
+index c289c10..f949e83 100755
+--- a/tests/xfs/096
++++ b/tests/xfs/096
+@@ -109,9 +109,9 @@ _require_v2log
+ # choose .out file based on internal/external log
+ rm -f $seqfull.out
+ if [ "$USE_EXTERNAL" = yes ]; then
+-	ln -s $seq.external $seqfull.out
++	ln -s $seq.out.external $seqfull.out
+ else
+-	ln -s $seq.internal $seqfull.out
++	ln -s $seq.out.internal $seqfull.out
+ fi
  
-+		if ! has_out_files $seq; then
-+		    if [ $sts -eq 77 ]; then
-+			cat $tmp.out > $seqres.notrun
-+			sts=0
-+		    fi
-+		fi
+ # maximum log record size
+diff --git a/tests/xfs/096.external b/tests/xfs/096.external
+deleted file mode 100644
+index 3122330..0000000
+--- a/tests/xfs/096.external
++++ /dev/null
+@@ -1,50 +0,0 @@
+-QA output created by 096
+-
+-# su too big but must be a multiple of fs block size too
+---- mkfs=-l version=2,su=262656 ---
+-log stripe unit (262656) must be a multiple of the block size (4096)
+-
+-
+-# test log stripe greater than LR size
+---- mkfs=-l version=2,su=266240 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=0      swidth=0 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# same test but get log stripe from data stripe
+---- mkfs=-l version=2 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe
+---- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe the same but using sunit & swidth
+---- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+diff --git a/tests/xfs/096.internal b/tests/xfs/096.internal
+deleted file mode 100644
+index 80201d2..0000000
+--- a/tests/xfs/096.internal
++++ /dev/null
+@@ -1,51 +0,0 @@
+-QA output created by 096
+-
+-# su too big but must be a multiple of fs block size too
+---- mkfs=-l version=2,su=262656 ---
+-log stripe unit (262656) must be a multiple of the block size (4096)
+-
+-
+-# test log stripe greater than LR size
+---- mkfs=-l version=2,su=266240 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=0      swidth=0 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# same test but get log stripe from data stripe
+---- mkfs=-l version=2 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe
+---- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe the same but using sunit & swidth
+---- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+diff --git a/tests/xfs/096.out.external b/tests/xfs/096.out.external
+new file mode 100644
+index 0000000..3122330
+--- /dev/null
++++ b/tests/xfs/096.out.external
+@@ -0,0 +1,50 @@
++QA output created by 096
 +
- 		if [ -f $seqres.notrun ]
- 		then
- 		    $timestamp || echo -n " [not run] "
-@@ -624,41 +638,50 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 			echo -n " [failed, exit status $sts]"
- 			err=true
- 		    fi
--		    if [ ! -f $seq.out ]
--		    then
--			echo " - no qualified output"
--			err=true
--		    else
- 
--			# coreutils 8.16+ changed quote formats in error messages from
--			# `foo' to 'foo'. Filter old versions to match the new version.
--			sed -i "s/\`/\'/g" $tmp.out
--			if diff $seq.out $tmp.out >/dev/null 2>&1
-+		    if has_out_files $seq; then
-+			if [ ! -f $seq.out ]
- 			then
--			    if $err
-+			    echo " - no qualified output"
-+			    err=true
-+			else
-+			    # coreutils 8.16+ changed quote formats in error messages from
-+			    # `foo' to 'foo'. Filter old versions to match the new version.
-+			    sed -i "s/\`/\'/g" $tmp.out
++# su too big but must be a multiple of fs block size too
++--- mkfs=-l version=2,su=262656 ---
++log stripe unit (262656) must be a multiple of the block size (4096)
 +
-+			    if ! diff $seq.out $tmp.out >/dev/null 2>&1
- 			    then
--				:
--			    else
--				echo "$seqnum `expr $stop - $start`" >>$tmp.time
--				echo -n " `expr $stop - $start`s"
-+				echo " - output mismatch (see $seqres.out.bad)"
-+				mv $tmp.out $seqres.out.bad
-+				$diff $seq.out $seqres.out.bad | {
-+				    if test "$DIFF_LENGTH" -le 0; then
-+					    cat
-+				    else
-+					    head -n "$DIFF_LENGTH"
-+					    echo "..."
-+					    echo "(Run '$diff $seq.out $seqres.out.bad'" \
-+						    " to see the entire diff)"
-+				    fi; } | \
-+				    sed -e 's/^\(.\)/    \1/'
-+				err=true
- 			    fi
--			    echo ""
-+			fi
-+		    else
-+			if ! $err; then
-+			    mv $tmp.out $seqres.out.good
- 			else
--			    echo " - output mismatch (see $seqres.out.bad)"
- 			    mv $tmp.out $seqres.out.bad
--			    $diff $seq.out $seqres.out.bad | {
--				if test "$DIFF_LENGTH" -le 0; then
--					cat
--				else
--					head -n "$DIFF_LENGTH"
--					echo "..."
--					echo "(Run '$diff $seq.out $seqres.out.bad'" \
--						" to see the entire diff)"
--				fi; } | \
--				sed -e 's/^\(.\)/    \1/'
--			    err=true
-+			    echo " - output (see $seqres.out.bad)"
-+			    cat $seqres.out.bad
- 			fi
- 		    fi
 +
-+		    if ! $err; then
-+			echo "$seqnum `expr $stop - $start`" >>$tmp.time
-+			echo -n " `expr $stop - $start`s"
-+			echo ""
-+		    fi
++# test log stripe greater than LR size
++--- mkfs=-l version=2,su=266240 ---
++meta-data=DEV isize=N      agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=0      swidth=0 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
 +
- 		    try="$try $seqnum"
- 		    n_try=`expr $n_try + 1`
- 		    _check_filesystems
++
++# same test but get log stripe from data stripe
++--- mkfs=-l version=2 -d su=266240,sw=1 ---
++meta-data=DEV isize=N      agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=65     swidth=65 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
++# test out data stripe
++--- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
++meta-data=DEV isize=N      agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=65     swidth=65 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
++# test out data stripe the same but using sunit & swidth
++--- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
++meta-data=DEV isize=N      agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=65     swidth=65 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
+diff --git a/tests/xfs/096.out.internal b/tests/xfs/096.out.internal
+new file mode 100644
+index 0000000..80201d2
+--- /dev/null
++++ b/tests/xfs/096.out.internal
+@@ -0,0 +1,51 @@
++QA output created by 096
++
++# su too big but must be a multiple of fs block size too
++--- mkfs=-l version=2,su=262656 ---
++log stripe unit (262656) must be a multiple of the block size (4096)
++
++
++# test log stripe greater than LR size
++--- mkfs=-l version=2,su=266240 ---
++meta-data=DEV isize=N    agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=0      swidth=0 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
++# same test but get log stripe from data stripe
++--- mkfs=-l version=2 -d su=266240,sw=1 ---
++meta-data=DEV isize=N    agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=65     swidth=65 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
++# test out data stripe
++--- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
++meta-data=DEV isize=N    agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=65     swidth=65 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
++# test out data stripe the same but using sunit & swidth
++--- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
++meta-data=DEV isize=N    agcount=N, agsize=N blks
++data     =                       bsize=4096   blocks=N, imaxpct=N
++         =                       sunit=65     swidth=65 blks, unwritten=1
++naming   =version 2              bsize=4096
++log      =LOG                    bsize=4096   blocks=N, version=N
++         =                       sunit=N blks
++realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++
++
 -- 
 2.5.0
 
