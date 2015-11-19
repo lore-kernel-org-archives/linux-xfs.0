@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A565F29DF5
-	for <xfs@oss.sgi.com>; Thu, 19 Nov 2015 09:33:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80855304032
-	for <xfs@oss.sgi.com>; Thu, 19 Nov 2015 07:33:03 -0800 (PST)
-Received: from mail-wm0-f48.google.com (mail-wm0-f48.google.com
-	[74.125.82.48]) by cuda.sgi.com with ESMTP id hLg0XEYEgZx5C56w
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Nov 2015 07:33:02 -0800 (PST)
-Received: by wmec201 with SMTP id c201so122982968wme.1
-	for <xfs@oss.sgi.com>; Thu, 19 Nov 2015 07:33:01 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9923629DFE
+	for <xfs@oss.sgi.com>; Thu, 19 Nov 2015 09:33:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7997D8F8059
+	for <xfs@oss.sgi.com>; Thu, 19 Nov 2015 07:33:06 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ca9YxWQRUoXANngj (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 19 Nov 2015 07:33:05 -0800 (PST)
+From: Jeff Moyer <jmoyer@redhat.com>
 Subject: Re: AIO read returns negative number for bytes read
 References: <564883BD.8070607@scylladb.com>
 	<x497flhsq1c.fsf@segfault.boston.devel.redhat.com>
 	<564B2303.7000902@scylladb.com> <20151119153004.GB25804@quack.suse.cz>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <564DEBAA.1080700@scylladb.com>
-Date: Thu, 19 Nov 2015 17:32:58 +0200
+Date: Thu, 19 Nov 2015 10:33:03 -0500
+In-Reply-To: <20151119153004.GB25804@quack.suse.cz> (Jan Kara's message of
+	"Thu, 19 Nov 2015 16:30:04 +0100")
+Message-ID: <x49k2perols.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20151119153004.GB25804@quack.suse.cz>
-Content-Type: multipart/mixed; boundary="------------020709070705040807030305"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,67 +27,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
+Cc: linux-aio@kvack.org, Avi Kivity <avi@scylladb.com>, linux-fsdevel@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------020709070705040807030305
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Jan Kara <jack@suse.cz> writes:
 
-On 11/19/2015 05:30 PM, Jan Kara wrote:
-> On Tue 17-11-15 14:52:19, Avi Kivity wrote:
->>
->> On 11/16/2015 09:27 PM, Jeff Moyer wrote:
->>> Hi Avi,
->>>
->>> Avi Kivity <avi@scylladb.com> writes:
->>>
->>>> Due to a bug in my program, I initiated a read beyond
->>>> eof. Specifically, the file size is 13002 bytes and the read offset is
->>>> 13312 (0x3400).
->>>>
->>>> I would expect such a read to return 0 bytes read, but io_getevents
->>>> returns -310, which is suspiciously equal to (13002 - 13312).
->>>>
->>>> I attach a reproducer.
->>>>
->>>> 4.2.5-201.fc22.x86_64
->>>>
->>>> Are my expectations incorrect, or is this a bug in aio or xfs?
->>> Your expectations are correct.  The bug was introduced by commit
->>> 9fe55eea7e4b4 (Fix race when checking i_size on direct i/o read).  I've
->>> CC'd the patch author and linux-fsdevel.  I'm not sure what the right
->>> fix is, given that the size checks were removed from the vfs to fix some
->>> race condition.  Unfortunately, the commit message doesn't really do a
->>> good job of explaining the race.  In order to save others time, here is
->>> a good explanation of the problem that commit is meant to fix, along
->>> with a reproducer:
->>>    http://marc.info/?l=linux-fsdevel&m=138641356614458&w=2
->>>
->>> Thanks for the great bug report, and sorry I have no solution to
->>> proffer.
->>>
->> Thanks.  I will await a fix with interest.
 > Can you please post the reproduce here as well? I couldn't easily find it
 > with google.
->
->
 
-Attached.
+Here it is, Jan.
 
-I am told that a simple synchronous O_DIRECT read beyond unaligned eof 
-suffices as well.
-
-
---------------020709070705040807030305
-Content-Type: text/plain; charset=UTF-8;
- name="aio_read_fails.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="aio_read_fails.c"
+-Jeff
 
 #define _GNU_SOURCE
 
@@ -135,15 +86,7 @@ int main(int ac, char** av) {
   return 0;
 }
 
---------------020709070705040807030305
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---------------020709070705040807030305--
