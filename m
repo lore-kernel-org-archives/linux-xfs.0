@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C881D7F37
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 09:32:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9558E30405F
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 07:32:03 -0800 (PST)
-Received: from mail-wm0-f49.google.com (mail-wm0-f49.google.com
-	[74.125.82.49]) by cuda.sgi.com with ESMTP id f5FOfFwgwEHucGRe
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 171AE7F37
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 09:35:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E97098F804B
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 07:35:58 -0800 (PST)
+Received: from mail-wm0-f52.google.com (mail-wm0-f52.google.com
+	[74.125.82.52]) by cuda.sgi.com with ESMTP id zr6W9INDS1XoAmFH
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Nov 2015 07:32:01 -0800 (PST)
-Received: by wmww144 with SMTP id w144so25669738wmw.0
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 07:32:00 -0800 (PST)
+	Fri, 20 Nov 2015 07:35:57 -0800 (PST)
+Received: by wmec201 with SMTP id c201so77295523wme.0
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 07:35:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20151120152412.GC60886@bfoster.bfoster>
+In-Reply-To: <20151120151118.GB60886@bfoster.bfoster>
 References: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
-	<20151119232455.GM14311@dastard>
-	<CAFLxGvx9x-4gnCQh7203G72Jy+EULbMnGTK=2r3ko=Yy9FB7Wg@mail.gmail.com>
-	<20151120005843.GP14311@dastard>
-	<CAE1zotLw-vCz2qF4JmXEYFF_yPbkhQ2HEEYxMwvdRbhKRCaxTw@mail.gmail.com>
-	<20151120152412.GC60886@bfoster.bfoster>
-Date: Fri, 20 Nov 2015 17:31:59 +0200
-Message-ID: <CAE1zotK1Gjb_gzDjU_dnQoYQnP4azvsDtzi6f=RANH-wDOKhSA@mail.gmail.com>
+	<20151119155525.GB13055@bfoster.bfoster>
+	<20151119233547.GN14311@dastard>
+	<20151120151118.GB60886@bfoster.bfoster>
+Date: Fri, 20 Nov 2015 17:35:55 +0200
+Message-ID: <CAE1zot+t6mVovxHy-ohEjCOLcs87_OPPA8Drc-0ubsTvhQVo_w@mail.gmail.com>
 Subject: Re: [RFC PATCH] xfs: support for non-mmu architectures
 From: Octavian Purdila <octavian.purdila@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,61 +35,100 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
 
-On Fri, Nov 20, 2015 at 5:24 PM, Brian Foster <bfoster@redhat.com> wrote:
-> On Fri, Nov 20, 2015 at 04:26:28PM +0200, Octavian Purdila wrote:
->> On Fri, Nov 20, 2015 at 2:58 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Fri, Nov 20, 2015 at 12:54:02AM +0100, Richard Weinberger wrote:
->> >> On Fri, Nov 20, 2015 at 12:24 AM, Dave Chinner <david@fromorbit.com> wrote:
->> >> > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
->> >> >> Naive implementation for non-mmu architectures: allocate physically
->> >> >> contiguous xfs buffers with alloc_pages. Terribly inefficient with
->> >> >> memory and fragmentation on high I/O loads but it may be good enough
->> >> >> for basic usage (which most non-mmu architectures will need).
->> >> >
->> >> > Can you please explain why you want to use XFS on low end, basic
->> >> > non-MMU devices? XFS is a high performance, enterprise/HPC level
->> >> > filesystem - it's not a filesystem designed for small IoT level
->> >> > devices - so I'm struggling to see why we'd want to expend any
->> >> > effort to make XFS work on such devices....
->> >>
->> >> The use case is the Linux Kernel Library:
->> >> https://lkml.org/lkml/2015/11/3/706
->> >>
->> >> Using LKL and fuse you can mount any kernel filesystem using fuse
->> >> as non-root.
+On Fri, Nov 20, 2015 at 5:11 PM, Brian Foster <bfoster@redhat.com> wrote:
+> On Fri, Nov 20, 2015 at 10:35:47AM +1100, Dave Chinner wrote:
+>> On Thu, Nov 19, 2015 at 10:55:25AM -0500, Brian Foster wrote:
+>> > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
+>> > > Naive implementation for non-mmu architectures: allocate physically
+>> > > contiguous xfs buffers with alloc_pages. Terribly inefficient with
+>> > > memory and fragmentation on high I/O loads but it may be good enough
+>> > > for basic usage (which most non-mmu architectures will need).
+>> > >
+>> > > This patch was tested with lklfuse [1] and basic operations seems to
+>> > > work even with 16MB allocated for LKL.
+>> > >
+>> > > [1] https://github.com/lkl/linux
+>> > >
+>> > > Signed-off-by: Octavian Purdila <octavian.purdila@intel.com>
+>> > > ---
 >> >
->> > IOWs, because we said no to unprivileged mounts, instead the
->> > proposal is to linking all the kernel code into userspace so you can
->> > do unprivielged mounts that way?
->> >
+>> > Interesting, though this makes me wonder why we couldn't have a new
+>> > _XBF_VMEM (for example) buffer type that uses vmalloc(). I'm not
+>> > familiar with mmu-less context, but I see that mm/nommu.c has a
+>> > __vmalloc() interface that looks like it ultimately translates into an
+>> > alloc_pages() call. Would that accomplish what this patch is currently
+>> > trying to do?
 >>
->> LKL's goal is to make it easy for various applications to reuse Linux
->> kernel code instead of re-implementing it. Mounting filesystem images
->> is just one of the applications.
->>
->> > IOWs, you get to say "it secure because it's in userspace" and leave
->> > us filesystem people with all the shit that comes with allowing
->> > users to mount random untrusted filesystem images using code that
->> > was never designed to allow that to happen?
->> >
->>
->> It is already possible to mount arbitrary filesystem images in
->> userspace using VMs . LKL doesn't change that, it just reduces the
->> amount of dependencies you need to do so.
+>> vmalloc is always a last resort.  vmalloc space on 32 bit systems is
+>> extremely limited and it is easy to exhaust with XFS.
 >>
 >
-> Perhaps a dumb question, but I'm not quite putting 2+2 together here.
-> When I see nommu, I'm generally thinking hardware characteristics, but
-> we're talking about a userspace kernel library here. So can you
-> elaborate on how this relates to nommu? Does this library emulate kernel
-> mechanisms in userspace via nommu mode or something of that nature?
+> Sure, but my impression is that a vmalloc() buffer is roughly equivalent
+> in this regard to a current !XBF_UNMAPPED && size > PAGE_SIZE buffer. We
+> just do the allocation and mapping separately (presumably for other
+> reasons).
+>
+>> Also, vmalloc limits the control we have over allocation context
+>> (e.g. the hoops we jump through in kmem_alloc_large() to maintain
+>> GFP_NOFS contexts), so just using vmalloc doesn't make things much
+>> simpler from an XFS perspective.
+>>
+>
+> The comment in kmem_zalloc_large() calls out some apparent hardcoded
+> allocation flags down in the depths of vmalloc(). It looks to me that
+> page allocation (__vmalloc_area_node()) actually uses the provided
+> flags, so I'm not following the "data page" part of that comment.
+> Indeed, I do see that this is not the case down in calls like
+> pmd_alloc_one(), pte_alloc_one_kernel(), etc., associated with page
+> table management.
+>
+> Those latter calls are all from following down through the
+> map_vm_area()->vmap_page_range() codepath from __vmalloc_area_node(). We
+> call vm_map_ram() directly from _xfs_buf_map_pages(), which itself calls
+> down into the same code. Indeed, we already protect ourselves here via
+> the same memalloc_noio_save() mechanism that kmem_zalloc_large() uses.
+>
+> I suspect there's more to it than that because it does look like
+> vm_map_ram() has a different mechanism for managing vmalloc space for
+> certain (smaller) allocations, either of which I'm not really familiar
+> with. That aside, I don't see how vmalloc() introduces any new
+> allocation context issues for those buffers where we already set up a
+> multi-page mapping.
+>
+> We still have the somewhat customized page allocation code in
+> xfs_buf_allocate_memory() to contend with. I actually think it would be
+> useful to have a DEBUG sysfs tunable to turn on vmalloc() buffers and
+> actually test how effective some of this code is.
+>
+>> > I ask because it seems like that would help clean up the code a bit, for
+>> > one. It might also facilitate some degree of testing of the XFS bits
+>> > (even if utilized sparingly in DEBUG mode if it weren't suitable enough
+>> > for generic/mmu use). We currently allocate and map the buffer pages
+>> > separately and I'm not sure if there's any particular reasons for doing
+>> > that outside of some congestion handling in the allocation code and
+>> > XBF_UNMAPPED buffers, the latter probably being irrelevant for nommu.
+>> > Any other thoughts on that?
+>>
+>> We could probably clean the code up more (the allocation logic
+>> is now largely a historic relic) but I'm not convinced yet that we
+>> should be spending any time trying to specifically support mmu-less
+>> hardware.
+>>
+>
+> Fair point, we'll see where the use case discussion goes. That said, I
+> was a little surprised that this is all that was required to enable
+> nommu support. If that is indeed the case and we aren't in for a series
+> of subsequent nommu specific changes (Octavian?) by letting this
+> through, what's the big deal? This seems fairly harmless to me as is,
+> particularly if it can be semi-tested via DEBUG mode and has potential
+> generic use down the road.
 >
 
-LKL is currently implemented as a virtual non-mmu architecture. That
-makes it simpler and it will also allow us to support environments
-where it is not possible to emulate paging (e.g.  bootloaders).
+I don't foresee additional patches. I was able to use lklfuse to mount
+an XFS image and perform basic operations. Are there any xfs specific
+tests coverage tools I can use to make sure I am not missing anything?
 
 _______________________________________________
 xfs mailing list
