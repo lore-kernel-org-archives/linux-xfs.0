@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 03D7A7F37
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 14:07:49 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BADB97F37
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 14:36:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8015304062
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 12:07:45 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id 3nxZMCRVwYlNVTh3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 20 Nov 2015 12:07:42 -0800 (PST)
-Date: Fri, 20 Nov 2015 15:07:33 -0500
-From: Theodore Ts'o <tytso@mit.edu>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 29557AC004
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 12:36:22 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	D4ZJVna6Ea8R07MZ for <xfs@oss.sgi.com>;
+	Fri, 20 Nov 2015 12:36:19 -0800 (PST)
+Date: Sat, 21 Nov 2015 07:36:02 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [RFC PATCH] xfs: support for non-mmu architectures
-Message-ID: <20151120200733.GA350@thunk.org>
+Message-ID: <20151120203602.GA26718@dastard>
 References: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
-	<20151119232455.GM14311@dastard>
-	<CAFLxGvx9x-4gnCQh7203G72Jy+EULbMnGTK=2r3ko=Yy9FB7Wg@mail.gmail.com>
-	<20151120005843.GP14311@dastard>
-	<CAE1zotLw-vCz2qF4JmXEYFF_yPbkhQ2HEEYxMwvdRbhKRCaxTw@mail.gmail.com>
+	<20151119155525.GB13055@bfoster.bfoster>
+	<20151119233547.GN14311@dastard>
+	<20151120151118.GB60886@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAE1zotLw-vCz2qF4JmXEYFF_yPbkhQ2HEEYxMwvdRbhKRCaxTw@mail.gmail.com>
+In-Reply-To: <20151120151118.GB60886@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,49 +32,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Octavian Purdila <octavian.purdila@intel.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, Octavian Purdila <octavian.purdila@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Nov 20, 2015 at 04:26:28PM +0200, Octavian Purdila wrote:
-> It is already possible to mount arbitrary filesystem images in
-> userspace using VMs . LKL doesn't change that, it just reduces the
-> amount of dependencies you need to do so.
+On Fri, Nov 20, 2015 at 10:11:19AM -0500, Brian Foster wrote:
+> On Fri, Nov 20, 2015 at 10:35:47AM +1100, Dave Chinner wrote:
+> > On Thu, Nov 19, 2015 at 10:55:25AM -0500, Brian Foster wrote:
+> > > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
+> > > > Naive implementation for non-mmu architectures: allocate physically
+> > > > contiguous xfs buffers with alloc_pages. Terribly inefficient with
+> > > > memory and fragmentation on high I/O loads but it may be good enough
+> > > > for basic usage (which most non-mmu architectures will need).
+> > > > 
+> > > > This patch was tested with lklfuse [1] and basic operations seems to
+> > > > work even with 16MB allocated for LKL.
+> > > > 
+> > > > [1] https://github.com/lkl/linux
+> > > > 
+> > > > Signed-off-by: Octavian Purdila <octavian.purdila@intel.com>
+> > > > ---
+> > > 
+> > > Interesting, though this makes me wonder why we couldn't have a new
+> > > _XBF_VMEM (for example) buffer type that uses vmalloc(). I'm not
+> > > familiar with mmu-less context, but I see that mm/nommu.c has a
+> > > __vmalloc() interface that looks like it ultimately translates into an
+> > > alloc_pages() call. Would that accomplish what this patch is currently
+> > > trying to do?
+> > 
+> > vmalloc is always a last resort.  vmalloc space on 32 bit systems is
+> > extremely limited and it is easy to exhaust with XFS.
+> > 
+> 
+> Sure, but my impression is that a vmalloc() buffer is roughly equivalent
+> in this regard to a current !XBF_UNMAPPED && size > PAGE_SIZE buffer. We
+> just do the allocation and mapping separately (presumably for other
+> reasons).
 
-It is true that you can mount arbitrary file systems in userspace
-using VM's.  But those the kvm binary is typically not run with root
-privileges in the host OS --- at least, not if the system
-administrator is smart.  So a root compromise does not cause a
-catastrophic security vulnerability, and if the guest OS crashes ---
-again, not a real problem.
+Yes, it'a always a last resort. We don't use vmap'd buffers very
+much on block size <= page size filesystems (e.g. iclog buffers are
+the main user in such cases, IIRC), so the typical 32 bit
+system doesn't have major problems with vmalloc space. However, the
+moment you increase the directory block size > block size, that all
+goes out the window...
 
-In the caase where people are trying to claim that containers are just
-as secure as VM's, and plan to give container "guest" system
-administrators root-like powers, the question which immediately comes
-to mind is whether the LKML/fuse daemon is running inside or outside
-the container.  If it is outside the container, the a potential
-security compromise of the binary running binary will be catastrophic
-to the overall security of the host system and all of its containers.
-If it is inside the container, you will be partially breaking the
-illusion that the container works just like a VM (since a user runinng
-"ps" will see all of these mysterious userspace processes that could
-be killed, etc.), but it significantly reduces the security problems
-if a maliciously crafted (or maliciously modulated) block device is
-mounted.
+> > Also, vmalloc limits the control we have over allocation context
+> > (e.g. the hoops we jump through in kmem_alloc_large() to maintain
+> > GFP_NOFS contexts), so just using vmalloc doesn't make things much
+> > simpler from an XFS perspective.
+> > 
+> 
+> The comment in kmem_zalloc_large() calls out some apparent hardcoded
+> allocation flags down in the depths of vmalloc(). It looks to me that
+> page allocation (__vmalloc_area_node()) actually uses the provided
+> flags, so I'm not following the "data page" part of that comment.
 
-> Could you expand of what burden does this use-case put on fs
-> developers? I am sure that, if needed, we can put restrictions in LKL
-> to avoid that.
+You can pass gfp flags for the page allocation part of vmalloc, but
+not the pte allocation part of it. That's what the hacks in
+kmem_zalloc_large() are doing.
 
-The bottom line is who is going to get all of the support calls and
-nasty e-mails explaining how our "crappy" code has caused some silly
-container VM system administrator's customers $$$ worth of losses.  As
-long as we can make sure that it's been underlined that the code is
-being used well outside of its intended scope, and if it breaks, the
-user gets to keep both pieces, and all complaints, threatened
-lawsuits, etc. should go to the LKL maintainers or the purveyors of
-said container-based products, I suppose that should be OK.  :-)
+> Indeed, I do see that this is not the case down in calls like
+> pmd_alloc_one(), pte_alloc_one_kernel(), etc., associated with page
+> table management.
 
-						- Ted
+Right.
+
+> Those latter calls are all from following down through the
+> map_vm_area()->vmap_page_range() codepath from __vmalloc_area_node(). We
+> call vm_map_ram() directly from _xfs_buf_map_pages(), which itself calls
+> down into the same code. Indeed, we already protect ourselves here via
+> the same memalloc_noio_save() mechanism that kmem_zalloc_large() uses.
+
+Yes, we do, but that is separately handled to the allocation of the
+pages, which we have to do for all types of buffers, mapped or
+unmapped, because xfs_buf_ioapply_map() requires direct access to
+the underlying pages to build the bio for IO.  If we delegate the
+allocation of pages to vmalloc, we don't have direct reference to
+the underlying pages and so we have to do something completely
+diffferent to build the bios for the buffer....
+
+> I suspect there's more to it than that because it does look like
+> vm_map_ram() has a different mechanism for managing vmalloc space for
+> certain (smaller) allocations, either of which I'm not really familiar
+> with.
+
+Yes, it manages vmalloc space quite differently, and there are
+different scalability aspects to consider as well - vm_map_ram was
+pretty much written for the use XFS has in xfs_buf.c...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
