@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 625207F37
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 08:26:32 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8394D7F37
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 09:11:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EC146AC001
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 06:26:31 -0800 (PST)
-Received: from mail-wm0-f50.google.com (mail-wm0-f50.google.com
-	[74.125.82.50]) by cuda.sgi.com with ESMTP id 1fX7Ef6DtWMFHLez
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Nov 2015 06:26:30 -0800 (PST)
-Received: by wmec201 with SMTP id c201so23242579wme.1
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 06:26:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20151120005843.GP14311@dastard>
-References: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
-	<20151119232455.GM14311@dastard>
-	<CAFLxGvx9x-4gnCQh7203G72Jy+EULbMnGTK=2r3ko=Yy9FB7Wg@mail.gmail.com>
-	<20151120005843.GP14311@dastard>
-Date: Fri, 20 Nov 2015 16:26:28 +0200
-Message-ID: <CAE1zotLw-vCz2qF4JmXEYFF_yPbkhQ2HEEYxMwvdRbhKRCaxTw@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E706304066
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 07:11:09 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Clx8FFu6wtYKJ7NU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 20 Nov 2015 07:11:07 -0800 (PST)
+Date: Fri, 20 Nov 2015 10:11:05 -0500
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [RFC PATCH] xfs: support for non-mmu architectures
-From: Octavian Purdila <octavian.purdila@intel.com>
+Message-ID: <20151120151104.GA60886@bfoster.bfoster>
+References: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
+	<20151119155525.GB13055@bfoster.bfoster>
+	<CAE1zotK1hFN4MUQu-93PQNU0pZq3cNdXCi-F4CWup0Li3pq+KQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAE1zotK1hFN4MUQu-93PQNU0pZq3cNdXCi-F4CWup0Li3pq+KQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,52 +31,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: Octavian Purdila <octavian.purdila@intel.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Nov 20, 2015 at 2:58 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Fri, Nov 20, 2015 at 12:54:02AM +0100, Richard Weinberger wrote:
->> On Fri, Nov 20, 2015 at 12:24 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
->> >> Naive implementation for non-mmu architectures: allocate physically
->> >> contiguous xfs buffers with alloc_pages. Terribly inefficient with
->> >> memory and fragmentation on high I/O loads but it may be good enough
->> >> for basic usage (which most non-mmu architectures will need).
->> >
->> > Can you please explain why you want to use XFS on low end, basic
->> > non-MMU devices? XFS is a high performance, enterprise/HPC level
->> > filesystem - it's not a filesystem designed for small IoT level
->> > devices - so I'm struggling to see why we'd want to expend any
->> > effort to make XFS work on such devices....
->>
->> The use case is the Linux Kernel Library:
->> https://lkml.org/lkml/2015/11/3/706
->>
->> Using LKL and fuse you can mount any kernel filesystem using fuse
->> as non-root.
->
-> IOWs, because we said no to unprivileged mounts, instead the
-> proposal is to linking all the kernel code into userspace so you can
-> do unprivielged mounts that way?
->
+On Thu, Nov 19, 2015 at 10:54:34PM +0200, Octavian Purdila wrote:
+> On Thu, Nov 19, 2015 at 5:55 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
+> >> Naive implementation for non-mmu architectures: allocate physically
+> >> contiguous xfs buffers with alloc_pages. Terribly inefficient with
+> >> memory and fragmentation on high I/O loads but it may be good enough
+> >> for basic usage (which most non-mmu architectures will need).
+> >>
+> >> This patch was tested with lklfuse [1] and basic operations seems to
+> >> work even with 16MB allocated for LKL.
+> >>
+> >> [1] https://github.com/lkl/linux
+> >>
+> >> Signed-off-by: Octavian Purdila <octavian.purdila@intel.com>
+> >> ---
+> >
+> > Interesting, though this makes me wonder why we couldn't have a new
+> > _XBF_VMEM (for example) buffer type that uses vmalloc(). I'm not
+> > familiar with mmu-less context, but I see that mm/nommu.c has a
+> > __vmalloc() interface that looks like it ultimately translates into an
+> > alloc_pages() call. Would that accomplish what this patch is currently
+> > trying to do?
+> >
+> 
+> Hi Brian,
+> 
+> Ah, that sounds nice! We could get rid of the #ifdefs and use a common
+> path in that case. vmalloc should work on non-mmu and it seems that
+> there is a vmalloc_to_page() we can use to get the physical pages.
+> I'll give it a try.
+> 
+> Is there a central place where we could enable the new _XBF_VMEM to be
+> the default for non-mmu arches?
+> 
 
-LKL's goal is to make it easy for various applications to reuse Linux
-kernel code instead of re-implementing it. Mounting filesystem images
-is just one of the applications.
+I think a generic mechanism is the appropriate short term goal as
+opposed to a common codepath. IOWs, add the ability to support a new
+XBF_VMEM buffer type and enforce use of that type when !CONFIG_MMU. So
+you'd still have an ifdef somewhere, but it wouldn't be shoehorned into
+the current separate alloc/map implementation.
 
-> IOWs, you get to say "it secure because it's in userspace" and leave
-> us filesystem people with all the shit that comes with allowing
-> users to mount random untrusted filesystem images using code that
-> was never designed to allow that to happen?
->
+I don't think we want to change the existing buffer mechanism straight
+away to use this based on some of the things Dave calls out. My hope is
+more that we can do the following for the generic (CONFIG_MMU) case:
 
-It is already possible to mount arbitrary filesystem images in
-userspace using VMs . LKL doesn't change that, it just reduces the
-amount of dependencies you need to do so.
+1.) Enable this selectively/randomly when CONFIG_XFS_DEBUG is enabled to
+provide some test coverage of the XFS buffer type without the need for a
+nommu setup (not a replacement for nommu testing, of course).
 
-Could you expand of what burden does this use-case put on fs
-developers? I am sure that, if needed, we can put restrictions in LKL
-to avoid that.
+2.) Over time, move the current buffer mechanism over to this type if we
+can eventually clean up some of the warts that pin us to our current
+implementation.
+
+I'd suggest to let some of the parallel discussions play out before
+going too far down this path, however...
+
+Brian
+
+> > I ask because it seems like that would help clean up the code a bit, for
+> > one. It might also facilitate some degree of testing of the XFS bits
+> > (even if utilized sparingly in DEBUG mode if it weren't suitable enough
+> > for generic/mmu use). We currently allocate and map the buffer pages
+> > separately and I'm not sure if there's any particular reasons for doing
+> > that outside of some congestion handling in the allocation code and
+> > XBF_UNMAPPED buffers, the latter probably being irrelevant for nommu.
+> > Any other thoughts on that?
+> >
+> >>  fs/xfs/xfs_buf.c | 27 +++++++++++++++++++++++++++
+> >>  1 file changed, 27 insertions(+)
+> >>
+> >> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> >> index 8ecffb3..50b5246 100644
+> >> --- a/fs/xfs/xfs_buf.c
+> >> +++ b/fs/xfs/xfs_buf.c
+> > ...
+> >> @@ -816,11 +835,19 @@ xfs_buf_get_uncached(
+> >>       if (error)
+> >>               goto fail_free_buf;
+> >>
+> >> +#ifdef CONFIG_MMU
+> >>       for (i = 0; i < page_count; i++) {
+> >>               bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
+> >>               if (!bp->b_pages[i])
+> >>                       goto fail_free_mem;
+> >>       }
+> >> +#else
+> >> +     bp->b_pages[0] = alloc_pages(flags, order_base_2(page_count));
+> >> +     if (!bp->b_pages[0])
+> >> +             goto fail_free_buf;
+> >> +     for (i = 1; i < page_count; i++)
+> >> +             bp->b_pages[i] = bp->b_pages[i-1] + 1;
+> >> +#endif
+> >
+> > We still have a path into __free_page() further down in this function if
+> > _xfs_buf_map_pages() fails. Granted, _xfs_buf_map_pages() should
+> > probably never fail in this case, but it still looks like a land mine at
+> > the very least.
+> >
+> 
+> OK. Adding a i = 1; right before the #endif should take care of that,
+> if the vmalloc approach does not work.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
