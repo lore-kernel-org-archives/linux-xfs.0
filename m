@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3CBB27F37
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 16:47:42 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 367DF7F37
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 18:50:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1F8D68F8039
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 14:47:38 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SpnNV87k1GtS6ekv (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 27E398F8040
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2015 16:50:42 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id TTrKSXZmCW90s4SH (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 20 Nov 2015 14:47:37 -0800 (PST)
-Date: Fri, 20 Nov 2015 17:47:34 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH] xfs: support for non-mmu architectures
-Message-ID: <20151120224734.GA28795@bfoster.bfoster>
-References: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
-	<20151119155525.GB13055@bfoster.bfoster>
-	<20151119233547.GN14311@dastard>
-	<20151120151118.GB60886@bfoster.bfoster>
-	<20151120203602.GA26718@dastard>
+	<xfs@oss.sgi.com>; Fri, 20 Nov 2015 16:50:39 -0800 (PST)
+Subject: [PATCH 1/2] test-scripts: test migration scripts
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 20 Nov 2015 16:50:08 -0800
+Message-ID: <20151121005008.20398.37255.stgit@birch.djwong.org>
+In-Reply-To: <20151121005001.20398.92856.stgit@birch.djwong.org>
+References: <20151121005001.20398.92856.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151120203602.GA26718@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,131 +28,214 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, Octavian Purdila <octavian.purdila@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-On Sat, Nov 21, 2015 at 07:36:02AM +1100, Dave Chinner wrote:
-> On Fri, Nov 20, 2015 at 10:11:19AM -0500, Brian Foster wrote:
-> > On Fri, Nov 20, 2015 at 10:35:47AM +1100, Dave Chinner wrote:
-> > > On Thu, Nov 19, 2015 at 10:55:25AM -0500, Brian Foster wrote:
-> > > > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
-> > > > > Naive implementation for non-mmu architectures: allocate physically
-> > > > > contiguous xfs buffers with alloc_pages. Terribly inefficient with
-> > > > > memory and fragmentation on high I/O loads but it may be good enough
-> > > > > for basic usage (which most non-mmu architectures will need).
-> > > > > 
-> > > > > This patch was tested with lklfuse [1] and basic operations seems to
-> > > > > work even with 16MB allocated for LKL.
-> > > > > 
-> > > > > [1] https://github.com/lkl/linux
-> > > > > 
-> > > > > Signed-off-by: Octavian Purdila <octavian.purdila@intel.com>
-> > > > > ---
-> > > > 
-> > > > Interesting, though this makes me wonder why we couldn't have a new
-> > > > _XBF_VMEM (for example) buffer type that uses vmalloc(). I'm not
-> > > > familiar with mmu-less context, but I see that mm/nommu.c has a
-> > > > __vmalloc() interface that looks like it ultimately translates into an
-> > > > alloc_pages() call. Would that accomplish what this patch is currently
-> > > > trying to do?
-> > > 
-> > > vmalloc is always a last resort.  vmalloc space on 32 bit systems is
-> > > extremely limited and it is easy to exhaust with XFS.
-> > > 
-> > 
-> > Sure, but my impression is that a vmalloc() buffer is roughly equivalent
-> > in this regard to a current !XBF_UNMAPPED && size > PAGE_SIZE buffer. We
-> > just do the allocation and mapping separately (presumably for other
-> > reasons).
-> 
-> Yes, it'a always a last resort. We don't use vmap'd buffers very
-> much on block size <= page size filesystems (e.g. iclog buffers are
-> the main user in such cases, IIRC), so the typical 32 bit
-> system doesn't have major problems with vmalloc space. However, the
-> moment you increase the directory block size > block size, that all
-> goes out the window...
-> 
+Add two scripts: "nextid" finds the next available test ID number in a
+group, and "mvtest" relocates a test, fixes the golden output, and
+moves the group entry for that test.
 
-Ok. It's really only the pre-existing mapped buffer cases we care about
-here.
+v2: sorting group files should preserve group order; nextid should use
+the same algorithm as new; move both tools to tools/.
 
-> > > Also, vmalloc limits the control we have over allocation context
-> > > (e.g. the hoops we jump through in kmem_alloc_large() to maintain
-> > > GFP_NOFS contexts), so just using vmalloc doesn't make things much
-> > > simpler from an XFS perspective.
-> > > 
-> > 
-> > The comment in kmem_zalloc_large() calls out some apparent hardcoded
-> > allocation flags down in the depths of vmalloc(). It looks to me that
-> > page allocation (__vmalloc_area_node()) actually uses the provided
-> > flags, so I'm not following the "data page" part of that comment.
-> 
-> You can pass gfp flags for the page allocation part of vmalloc, but
-> not the pte allocation part of it. That's what the hacks in
-> kmem_zalloc_large() are doing.
-> 
-> > Indeed, I do see that this is not the case down in calls like
-> > pmd_alloc_one(), pte_alloc_one_kernel(), etc., associated with page
-> > table management.
-> 
-> Right.
-> 
-> > Those latter calls are all from following down through the
-> > map_vm_area()->vmap_page_range() codepath from __vmalloc_area_node(). We
-> > call vm_map_ram() directly from _xfs_buf_map_pages(), which itself calls
-> > down into the same code. Indeed, we already protect ourselves here via
-> > the same memalloc_noio_save() mechanism that kmem_zalloc_large() uses.
-> 
-> Yes, we do, but that is separately handled to the allocation of the
-> pages, which we have to do for all types of buffers, mapped or
-> unmapped, because xfs_buf_ioapply_map() requires direct access to
-> the underlying pages to build the bio for IO.  If we delegate the
-> allocation of pages to vmalloc, we don't have direct reference to
-> the underlying pages and so we have to do something completely
-> diffferent to build the bios for the buffer....
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tools/mvtest     |   55 +++++++++++++++++++++++++++
+ tools/nextid     |    1 
+ tools/sort-group |  112 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 168 insertions(+)
+ create mode 100755 tools/mvtest
+ create mode 120000 tools/nextid
+ create mode 100755 tools/sort-group
 
-Octavian points out virt_to_page() in a previous mail. I'm not sure
-that's the right interface solely based on looking at some current
-callers, but there is vmalloc_to_page() so I'd expect we can gain access
-to the pages one way or another. Given that, the buffer allocation code
-would fully populate the xfs_buf as it is today. The buffer I/O
-submission code wouldn't really know the difference and shouldn't have
-to change at all.
 
-> > I suspect there's more to it than that because it does look like
-> > vm_map_ram() has a different mechanism for managing vmalloc space for
-> > certain (smaller) allocations, either of which I'm not really familiar
-> > with.
-> 
-> Yes, it manages vmalloc space quite differently, and there are
-> different scalability aspects to consider as well - vm_map_ram was
-> pretty much written for the use XFS has in xfs_buf.c...
-> 
-
-Indeed. Looking closer, it appears to have a percpu vmalloc space
-allocation strategy for smaller allocations. We clearly can't just
-switch mapped buffer cases over and expect it to work/perform just the
-same.
-
-That said, the vm_map_ram() comment does call out fragmentation concerns
-for objects with mixed lifetimes. I'd be curious whether our buffer
-caching can trigger any badness there. OTOH, it's also not clear that
-this mechanism couldn't extend to vmalloc (or some variant thereof) in
-the future.
-
-Either way, it would require significantly more investigation/testing to
-enable generic usage. The core point was really just to abstract the
-nommu changes into something that potentially has generic use.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/tools/mvtest b/tools/mvtest
+new file mode 100755
+index 0000000..af601d6
+--- /dev/null
++++ b/tools/mvtest
+@@ -0,0 +1,55 @@
++#!/bin/sh
++
++# Renumber a test
++dir="$(dirname "$0")"
++
++if [ -z "$1" ] || [ "$1" = "--help" ]; then
++	echo "Usage: $0 path_to_test new_path_to_test"
++	exit 1
++fi
++
++src="$1"
++dest="$2"
++
++die() {
++	echo "$@"
++	exit 1
++}
++
++append() {
++	out="$1"
++	shift
++	echo "$@" >> "${out}"
++}
++
++test "${src}" != "${dest}" || die "Test \"${src}\" is the same as dest."
++test -e "tests/${src}" || die "Test \"${src}\" does not exist."
++test ! -e "tests/${dest}" || die "Test \"${src}\" already exists."
++
++sid="$(basename "${src}")"
++did="$(basename "${dest}")"
++
++sgroup="$(basename "$(dirname "tests/${src}")")"
++dgroup="$(basename "$(dirname "tests/${dest}")")"
++
++sgroupfile="tests/${sgroup}/group"
++dgroupfile="tests/${sgroup}/group"
++
++git mv "tests/${src}" "tests/${dest}"
++git mv "tests/${src}.out" "tests/${dest}.out"
++sed -e "s/^# FS QA Test No. ${sid}$/# FS QA Test No. ${did}/g" -i "tests/${dest}"
++sed -e "s/^QA output created by ${sid}$/QA output created by ${did}/g" -i "tests/${dest}.out"
++sed -e "s/test-${sid}/test-${did}/g" -i "tests/${dest}.out"
++
++grpline="$(grep "^${sid} " "${sgroupfile}")"
++newgrpline="$(echo "${grpline}" | sed -e "s/^${sid} /${did} /g")"
++
++sed -e "/^${sid}.*$/d" -i "${sgroupfile}"
++cp "${dgroupfile}" "${dgroupfile}.new"
++append "${dgroupfile}.new" "${newgrpline}"
++"${dir}/sort-group.py" "${dgroupfile}.new"
++mv "${dgroupfile}.new" "${dgroupfile}"
++
++echo "Moved \"${src}\" to \"${dest}\"."
++
++exit 0
+diff --git a/tools/nextid b/tools/nextid
+new file mode 120000
+index 0000000..5c31d60
+--- /dev/null
++++ b/tools/nextid
+@@ -0,0 +1 @@
++sort-group
+\ No newline at end of file
+diff --git a/tools/sort-group b/tools/sort-group
+new file mode 100755
+index 0000000..84944ed
+--- /dev/null
++++ b/tools/sort-group
+@@ -0,0 +1,112 @@
++#!/usr/bin/env python
++import sys
++
++# Sort a group list, carefully preserving comments.
++
++def xfstest_key(key):
++	'''Extract the numeric part of a test name if possible.'''
++	k = 0
++
++	assert type(key) == str
++
++	# No test number at all...
++	if not key[0].isdigit():
++		return key
++
++	# ...otherwise extract as much number as we can.
++	for digit in key:
++		if digit.isdigit():
++			k = k * 10 + int(digit)
++		else:
++			return k
++	return k
++
++def read_group(fd):
++	'''Read the group list, carefully attaching comments to the next test.'''
++	tests = {}
++	comments = None
++
++	for line in fd:
++		sline = line.strip()
++		tokens = sline.split()
++		if len(tokens) == 0 or tokens[0] == '#':
++			if comments == None:
++				comments = []
++			comments.append(sline)
++		else:
++			tests[tokens[0]] = (comments, tokens[1:])
++			comments = None
++	return tests
++
++def sort_keys(keys):
++	'''Separate keys into integer and non-integer tests.'''
++	int_keys = []
++	int_xkeys = []
++	str_keys = []
++
++	# Sort keys into integer(ish) tests and other
++	for key in keys:
++		xkey = xfstest_key(key)
++		if type(xkey) == int:
++			int_keys.append(key)
++			int_xkeys.append(xkey)
++		else:
++			str_keys.append(key)
++	return (int_keys, int_xkeys, str_keys)
++
++def write_sorted(tests, fd):
++	def dump_xkey(xkey):
++		(comments, tokens) = tests[key]
++		if comments:
++			for c in comments:
++				fd.write('%s\n' % c)
++		fd.write('%s %s\n' % (key, ' '.join(tokens)))
++	'''Print tests (and comments) in number order.'''
++
++	(int_keys, ignored, str_keys) = sort_keys(tests.keys())
++	for key in sorted(int_keys, key = xfstest_key):
++		dump_xkey(key)
++	for key in sorted(str_keys):
++		dump_xkey(key)
++
++def sort_main():
++	if '--help' in sys.argv[1:]:
++		print('Usage: %s groupfiles' % sys.argv[0])
++		sys.exit(0)
++
++	for arg in sys.argv[1:]:
++		with open(arg, 'r+') as fd:
++			x = read_group(fd)
++			fd.seek(0, 0)
++			write_sorted(x, fd)
++
++def nextid_main():
++	if '--help' in sys.argv[1:]:
++		print('Usage: %s group[/startid] ' % sys.argv[0])
++		sys.exit(0)
++
++	if len(sys.argv) != 2:
++		print('Specify exactly one group name.')
++		sys.exit(1)
++
++	c = sys.argv[1].split('/')
++	if len(c) > 1:
++		startid = int(c[1])
++	else:
++		startid = 1
++	group = c[0]
++
++	with open('tests/%s/group' % group, 'r') as fd:
++		x = read_group(fd)
++		xkeys = {int(x) for x in sort_keys(x.keys())[1]}
++
++		xid = startid
++		while xid in xkeys:
++			xid += 1
++		print('%s/%d' % (group, xid))
++
++if __name__ == '__main__':
++	if 'nextid' in sys.argv[0]:
++		nextid_main()
++	else:
++		sort_main()
 
 _______________________________________________
 xfs mailing list
