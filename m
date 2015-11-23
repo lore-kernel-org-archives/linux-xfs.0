@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A5EFB7F37
-	for <xfs@oss.sgi.com>; Sun, 22 Nov 2015 19:41:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1EC10AC005
-	for <xfs@oss.sgi.com>; Sun, 22 Nov 2015 17:41:56 -0800 (PST)
-Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
-	[74.125.82.53]) by cuda.sgi.com with ESMTP id DdkSa6rRSmi39dUp
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Nov 2015 17:41:50 -0800 (PST)
-Received: by wmec201 with SMTP id c201so140279315wme.0
-	for <xfs@oss.sgi.com>; Sun, 22 Nov 2015 17:41:49 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4200C7F37
+	for <xfs@oss.sgi.com>; Sun, 22 Nov 2015 22:45:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A5E48F8039
+	for <xfs@oss.sgi.com>; Sun, 22 Nov 2015 20:45:09 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	128A51nZ99BDDkBw for <xfs@oss.sgi.com>;
+	Sun, 22 Nov 2015 20:45:01 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1a0ize-0004qg-Ti
+	for xfs@oss.sgi.com; Mon, 23 Nov 2015 15:44:46 +1100
+Date: Mon, 23 Nov 2015 15:44:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: v4.3.0 released
+Message-ID: <20151123044446.GL19199@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20151122224450.GD26718@dastard>
-References: <1447800381-20167-1-git-send-email-octavian.purdila@intel.com>
-	<20151119232455.GM14311@dastard>
-	<CAE1zot+sqVnrothFX9e9y95RV435EnK5J4P40Rk+MQEwg4RJ=Q@mail.gmail.com>
-	<20151120210833.GB26718@dastard>
-	<CAE1zotKF8nqhuC70ERBWb_h58JWTJmz+YBXxeu9zhjhe61fNiA@mail.gmail.com>
-	<20151122224450.GD26718@dastard>
-Date: Mon, 23 Nov 2015 03:41:49 +0200
-Message-ID: <CAE1zotLy5xEdjeoJaEZWtNYdehfXV+Mb2mQjMh2k5VdNd6B1GA@mail.gmail.com>
-Subject: Re: [RFC PATCH] xfs: support for non-mmu architectures
-From: Octavian Purdila <octavian.purdila@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,199 +25,167 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6337012905939582332=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Nov 23, 2015 at 12:44 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sat, Nov 21, 2015 at 12:26:47AM +0200, Octavian Purdila wrote:
->> On Fri, Nov 20, 2015 at 11:08 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Fri, Nov 20, 2015 at 03:43:20PM +0200, Octavian Purdila wrote:
->> >> On Fri, Nov 20, 2015 at 1:24 AM, Dave Chinner <david@fromorbit.com> wrote:
->> >> > On Wed, Nov 18, 2015 at 12:46:21AM +0200, Octavian Purdila wrote:
->> >> >> Naive implementation for non-mmu architectures: allocate physically
->> >> >> contiguous xfs buffers with alloc_pages. Terribly inefficient with
->> >> >> memory and fragmentation on high I/O loads but it may be good enough
->> >> >> for basic usage (which most non-mmu architectures will need).
->> >> >
->> >> > Can you please explain why you want to use XFS on low end, basic
->> >> > non-MMU devices? XFS is a high performance, enterprise/HPC level
->> >> > filesystem - it's not a filesystem designed for small IoT level
->> >> > devices - so I'm struggling to see why we'd want to expend any
->> >> > effort to make XFS work on such devices....
->> >> >
->> >>
->> >> Hi David,
->> >>
->> >> Yes XFS as the main fs on this type of devices does not make sense,
->> >> but does it hurt to be able to perform basic operation on XFS from
->> >> these devices? Perhaps accessing an external medium formatted with
->> >> XFS?
->> >>
->> >> Another example is accessing VM images that are formatted with XFS.
->> >> Currently we can do that with tools like libguestfs that use a VM in
->> >> the background. I am working on a lighter solution for that where we
->> >> compile the Linux kernel as a library [1]. This allows access to the
->> >> filesystem without the need to use a full VM.
->> >
->> > That's hardly a "lighter solution"
->> >
->> > I'm kinda tired of the ongoing "hack random shit" approach to
->> > container development.
->>
->> Since apparently there is a container devs hunting party going on
->> right now, let me quickly confess that LKL has nothing to do with
->> (them be damned) containers :)
->>
->> On a more serious note, LKL was not developed for containers or to try
->> to circumvent privileged mounts. It was developed to allow the Linux
->> kernel code to be reused in things like simple tools that allows one
->> to modify a filesystem image.
->
-> Anything tool that modifies an XFS filesystem that is not directly
-> maintained by the XFS developers voids any kind of support we can
-> supply. Just like the fact we don't support tainted kernels because
-> the 3rd party binary code is unknowable (and usually crap), having
-> the kernel code linked with random 3rd party userspace application
-> code is completely unsupportable by us.
->
 
-Perhaps tainting the kernel is a solution when running unknown
-applications linked with LKL.
+--===============6337012905939582332==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jTMWTj4UTAEmbWeb"
+Content-Disposition: inline
 
-I would argue that applications that are maintained together with LKL
-(e.g. lklfuse in tools/lkl) should not taint the kernel because those
-applications will be under the control of kernel developers. I would
-also argue that mounting a filesystem read-only should not taint the
-kernel either.
 
-> Remember that with most kernel code a bug just results in a panic
-> and reboot, and everything just continues on again after the system
-> comes up again. In contrast, a bug in the storage code can cause
-> *persistent damage* that can cause data loss or corruption that
-> cannot be fixed without data loss of some kind.
->
-> Ultimately, as the maintainer I'm responsible for XFS not eating our
-> users' data, and part of that responsibility involves telling people
-> who want to do daft things that "no, that's a *bad idea*".
->
+--jTMWTj4UTAEmbWeb
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I understand how critical filesystem issues are and I appreciate your
-feedback. Sorry to drag you deeper into this but as you know, no good
-deed goes unpunished :)
+Hi folks,
 
->> > If you need a XFS-FUSE module to allow safe
->> > userspace access to XFS fielsystems then maybe, just maybe, it makes
->> > sense to ask the XFS developers how to best go about providing a
->> > reliable, up-to-date, tested, maintained and supported XFS-FUSE
->> > module?
->> >
->> > IOWs, a "lighter solution" is to use the libxfs code base that we
->> > already maintain across kernel and userspace in the xfsprogs package
->> > and write a FUSE wrapper around that. That, immediately, will give
->> > you full read-only access to XFS filesystem images via FUSE. Then we
->> > (the XFS developers) can test the XFS-FUSE module under normal
->> > development conditions as we modify the xfsprogs code base (e.g. via
->> > xfstests) and ensure we always release a working, up-to-date FUSE
->> > wrapper with each xfsprogs release.
->> >
->> > And then once a proper read-only FUSE wrapper has been written, then
->> > we can discuss what is necessary to enable write access via porting
->> > the necessary parts of the kernel code across to the userspace
->> > libxfs codebase and hooking them up to the FUSE API...
->> >
->> > Hmmm?
->> >
->>
->> What about ext4, vfat, btrfs and other filesystems?
->
-> Ted has also raised exactly the same issues w.r.t. ext4.
->
->> Also why duplicate
->> the whole thing if you could reuse it?
->
-> Do you use a hammer when you need to tighten a screw? Yes, you can
-> "reuse a hammer" for this purpose, but there's going to be
-> collateral damage because using the screw outside it's original
-> design and architecture constraints presents a high risk of things
-> going wrong.
->
+The xfsprogs repositories have just been updated and tagged with the
+v4.3.0 release tag. It can be found here:
 
-First, lets try to discuss the potential collateral damage before
-calling it a hammer. It may just be just an unfamiliar screw-driver :)
+git://oss.sgi.com/xfs/cmds/xfsprogs.git v4.3.0
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.3.0
 
->> >> And a final example is linking the bootloader code with LKL to access
->> >> the filesystem. This has a hard requirement on non-mmu.
->> >
->> > No way. We *can't* support filesystems that have had bootloaders
->> > make arbitrary changes to the filesystem without the knowlege of the
->> > OS that *owns the filesystem*. Similarly, we cannot support random
->> > applications that internally mount and modify filesystem images in
->> > ways we can't see, control, test or simulate.  Sure, they use the
->> > kernel code, but that doesn't stop them from doing stupid shit that
->> > could corrupt the filesystem image. So, no, we are not going to
->> > support giving random applications direct access to XFS filesystem
->> > images, even via LKL.
->> >
->>
->> LKL only exports the Linux kernel system calls and nothing else to
->> applications. Because of that, there should not be any loss of control
->> or visibility to the XFS fs driver.
->
-> It runs in the same address space as the user application, yes? And
-> hence application bugs can cause the kernel code to malfunction,
-> yes?
->
+A signed gzipped-tar archive of the source code is available
+here:
 
-Most non-mmu architecture have the same issue and nevertheless non-mmu
-is still supported in Linux (including most filesystems).
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.3.0.tar.gz
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.3.0.tar.gz.sign
 
-Also, filesystem code runs in the same address space with other kernel
-code and drivers and a bug anywhere in the kernel can cause filesystem
-code to malfunction. Applications maintained together with LKL and in
-the kernel tree will be as safe as drivers and other kernel code with
-regard to filesystem malfunctions. We can taint the kernel when LKL is
-linked with unknown applications.
+The archive is signed with my gpg key (the same one that this
+release announcement is signed with).
 
->> > I really don't see how using LKL to give userspace access to XFS
->> > filesystems is a better solution than actually writing a proper,
->> > supported XFS-FUSE module. LKL is so full of compromises that it's
->> > going to be unworkable and unsupportable in practice...
->>
->> Could you elaborate on some of these issues?
->
-> Start with "is a no-mmu architecture" and all the compromises that
-> means the kernel code needs to make,
+Many thanks go to all the contributors to this release. The sumary
+of changes since v4.2.0 can be found listed in doc/CHANGES, which I
+have reproduced in part below.
 
-I don't see non-mmu as a compromise. It is supported by Linux and most
-filesystems work fine on non-mmu architectures. LKL can be implemented
-as a mmu architecture. Having it as a non-mmu architecture has the
-advantages of allowing it to run in more constrained environments like
-bootloaders.
+-Dave.
 
-> add a topping of "runs in the
-> same address space as the application",
+xfsprogs-4.3.0 (23 Nov 2015)
+        - xfs_fsr: cleanups to recent changes (Eric Sandeen)
+        - xfs_fsr: improved temp file attr fork handling (Eric Sandeen)
+        - libxfs: output verifier names in warnings (Eric Sandeen)
+        - xfs_repair: enable verifier corruption warnings on very verbose
+          output settings (Eric Sandeen)
+        - debian: update initramfs in postinst script (Steve McIntyre)
 
-I've addressed this concern above.
+xfsprogs-4.3.0-rc2 (10 Nov 2015)
+        - xfs_fsr: abstract mntinfo/mntent differences (Jan Tulak)
+        - xfs_io: update reflink/dedupe ioctl definitions and implementation
+          (Darrick Wong)
+        - libxcmd: factoring of runtime reporting (Darrick Wong)
+        - man page fixes (Ville Skytt=E4)
+        - removal of ASSERT from exported headers
 
-> add a new flavour of kernel
-> binary taint
+xfsprogs-4.3.0-rc1 (14 Oct 2015)
+        - xfs_io: reflink and dedupe operation support (Darrick Wong)
+        - xfs_db: blockget/blocktrash support for v5 filesystems
+          (Darrick Wong)
+        - xfs_repair: many directory/attr cleanups and fixes (Eric Sandeen)
+        - More OS X build improvements (Jan Tulak)
+        - Log zeroing rework for v5 filesystems to prevent log sequence
+          numbers from going backwards (Brain Foster)
 
-I am not sure I understand, are you saying that it is an issue to add
-a new taint flavor?
 
-> and finish it off with "LKL linked applications will
-> never be tested by their developers over the full functionality the
-> LKL provides them with".
->
+The new head of the master branch is commit:
 
-You lost me here. Why does an application developer have to test the
-full functionality of a library it is linked with?
+2c909e1 xfsprogs: Release v4.3.0
+
+New Commits since 4.3.0-rc2:
+
+Dave Chinner (2):
+      [a32546b] fsr: clean up mountpoint checks
+      [2c909e1] xfsprogs: Release v4.3.0
+
+Eric Sandeen (4):
+      [7849d55] fsr: more tidy up work
+      [e7e3152] fsr: more selinux fixes
+      [a3fac93] libxfs: print name of verifier if it fails
+      [23639f7] repair: print XFS_WANT_CORRUPTED info with -vvv
+
+Steve McIntyre (1):
+      [c8b04a6] debian: update initramfs in postinst
+
+
+Code Diffstat:
+
+ VERSION                     |  2 +-
+ configure.ac                |  2 +-
+ db/attr.c                   |  1 +
+ db/dir2.c                   |  1 +
+ db/metadump.c               |  3 +-
+ debian/changelog            |  8 +++++
+ debian/postinst             | 25 +++++++++++++
+ doc/CHANGES                 | 10 +++++-
+ fsr/xfs_fsr.c               | 87 +++++++++++++++++------------------------=
+----
+ include/xfs_mount.h         |  1 +
+ libxfs/libxfs_io.h          |  1 +
+ libxfs/libxfs_priv.h        | 23 +++++++++---
+ libxfs/rdwr.c               |  5 +--
+ libxfs/util.c               |  4 +--
+ libxfs/xfs_alloc.c          |  2 ++
+ libxfs/xfs_alloc_btree.c    |  1 +
+ libxfs/xfs_attr_leaf.c      |  1 +
+ libxfs/xfs_attr_remote.c    |  1 +
+ libxfs/xfs_bmap_btree.c     |  1 +
+ libxfs/xfs_da_btree.c       |  1 +
+ libxfs/xfs_dir2_block.c     |  1 +
+ libxfs/xfs_dir2_data.c      |  2 ++
+ libxfs/xfs_dir2_leaf.c      |  2 ++
+ libxfs/xfs_dir2_node.c      |  1 +
+ libxfs/xfs_dquot_buf.c      |  1 +
+ libxfs/xfs_ialloc.c         |  1 +
+ libxfs/xfs_ialloc_btree.c   |  1 +
+ libxfs/xfs_inode_buf.c      |  2 ++
+ libxfs/xfs_sb.c             |  2 ++
+ libxfs/xfs_symlink_remote.c |  1 +
+ man/man8/xfs_repair.8       |  2 +-
+ repair/xfs_repair.c         |  4 +++
+ 32 files changed, 132 insertions(+), 68 deletions(-)
+ create mode 100644 debian/postinst
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--jTMWTj4UTAEmbWeb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJWUpm+AAoJEK3oKUf0dfodmA0P/1s9CgE2RDuZFAtUuc41AY3E
+s4/7vc4y8vdNccEz/Jbz9kkTYJdEjon0wKcLo+pvYKXeaLcPqa5Y0VH/ywCoYxMz
+WHgjL+IHXBFoQCi6agwXgdmD6hXe0NAyIUX376eh7HezDph5rvUK34gYHZG5zoCZ
+s78gw7GnIFvw+F9YnOWgpNAkXaI074YhtkC5uJn7K7r7ufyMtEoEZGLhq+yO8y26
+CLtkKqaQO2b1e7TiZHfw8O+yF344iPegYnEQicBL03u6LfTlW48mkOkIoo9L+Txc
+EJ2XGgnMMwcIc/SSTQXsDCvOQN3H/zUGn1QNZ/yzwGEl71OndaswobZKaCNKMg2E
+iWNFMOWYUBPTfwieCLHQTBWKWmPHpMUXyL0xSzb7fiCmlHyN+bxJKR2YI7Upezpp
+F+YmLshs6ReYvl96l/KglNF4MHKMhdvKj73fRIW25VEW96N144hfYZECwVoi8vTq
+w/l3NA50LunUBwAh0ch6QQNxQxTyHsu3jYssHnHo7BOPIsBBEph3yVinCQ6taCTv
+YNqJAXQRv5bkfuxv6g1TVsd06G7Tom6LMUjcCoUwGDd5J6b0gfjz05iXRf6+vlFo
+NYsjViLw1EZBS25zlNJKu7LZKs45bk3xcoLZvHbc/VUjjLv8Gm8chy9M8GCiN4dY
+3UEZqD2l+vgsBf2f5PsU
+=f5Af
+-----END PGP SIGNATURE-----
+
+--jTMWTj4UTAEmbWeb--
+
+
+--===============6337012905939582332==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6337012905939582332==--
