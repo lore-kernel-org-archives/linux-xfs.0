@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 777FB7F52
+	by oss.sgi.com (Postfix) with ESMTP id 72DCC7F51
 	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 14:19:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 663F4304059
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62D51304048
 	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 12:19:54 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wB7CrzuzvdlMGeLz (version=TLSv1.2
+	cuda.sgi.com with ESMTP id aSm0Le92wzluBlZ8 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 12:19:53 -0800 (PST)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/2] tests/xfs: test xfsprogs log formatting infrastructure
-Date: Wed, 25 Nov 2015 15:19:49 -0500
-Message-Id: <1448482790-44469-2-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/2] tests/xfs: verify invalid metadata LSN detection
+Date: Wed, 25 Nov 2015 15:19:50 -0500
+Message-Id: <1448482790-44469-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1448482790-44469-1-git-send-email-bfoster@redhat.com>
 References: <1448482790-44469-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,60 +31,43 @@ Sender: xfs-bounces@oss.sgi.com
 To: fstests@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-The xfsprogs libxfs layer implements its own log formatting code to
-support utilities that might need to format the log, such as mkfs,
-repair, metadump, etc. This code is fairly independent from kernel log
-writing code. Therefore, add a test that reformats the log from
-userspace with various supported log stripe unit alignments and verifies
-that the end result is a correctly formatted log.
+XFS v5 superblock fs' use metadata LSN tracking to determine when an
+on-disk structure was last written to disk. This is used to ensure log
+recovery operates correctly after an unclean shutdown. To work
+correctly, the on-disk metadata LSNs must always remain behind the
+current LSN with respect to the log.
+
+Historically, xfs_repair had a problem where it incorrectly formats the
+log to an LSN that is potentially behind existing metadata LSNs. As
+such, xfs_repair and the kernel have been updated to prevent, detect and
+recover from the problem. Add a test that intentionally formats the log
+incorrectly and verifies that the fs fails to mount and that xfs_repair
+detects the invalid metadata LSNs.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- common/rc         | 14 +++++++++++
- tests/xfs/376     | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/376.out |  6 +++++
+ tests/xfs/377     | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/377.out |  3 ++
  tests/xfs/group   |  1 +
- 4 files changed, 92 insertions(+)
- create mode 100755 tests/xfs/376
- create mode 100644 tests/xfs/376.out
+ 3 files changed, 94 insertions(+)
+ create mode 100755 tests/xfs/377
+ create mode 100644 tests/xfs/377.out
 
-diff --git a/common/rc b/common/rc
-index 4c2f42c..a2628d7 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1654,6 +1654,20 @@ _require_xfs_io_command()
- 		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
- }
- 
-+# check that xfs_db supports a specific command
-+_require_xfs_db_command()
-+{
-+	if [ $# -ne 1 ]
-+	then
-+		echo "Usage: _require_xfs_db_command command" 1>&2
-+		exit 1
-+	fi
-+	command=$1
-+
-+	$XFS_DB_PROG -x -c "help" $SCRATCH_DEV | grep $command > /dev/null || \
-+		_notrun "xfs_db $command support is missing"
-+}
-+
- # check that kernel and filesystem support direct I/O
- _require_odirect()
- {
-diff --git a/tests/xfs/376 b/tests/xfs/376
+diff --git a/tests/xfs/377 b/tests/xfs/377
 new file mode 100755
-index 0000000..e8cc15d
+index 0000000..c8211b8
 --- /dev/null
-+++ b/tests/xfs/376
-@@ -0,0 +1,71 @@
++++ b/tests/xfs/377
+@@ -0,0 +1,90 @@
 +#! /bin/bash
-+# FS QA Test No. 376
++# FS QA Test No. 377
 +#
-+# This test verifies that the xfsprogs log formatting infrastructure works
-+# correctly for various log stripe unit values. The log is formatted with xfs_db
-+# and verified with xfs_logprint.
++# XFS v5 supers carry an LSN in various on-disk structures to track when
++# associated metadata was last written to disk. These metadata LSNs must always
++# be behind the current LSN as dictated by the log to ensure log recovery
++# correctness after a potential crash. This test uses xfs_db to intentionally
++# put the current LSN behind metadata LSNs and verifies that the kernel and
++# xfs_repair detect the problem.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2015 Red Hat, Inc. All Rights Reserved.
@@ -123,7 +106,6 @@ index 0000000..e8cc15d
 +
 +# get standard environment, filters and checks
 +. ./common/rc
-+. ./common/log
 +
 +# real QA test starts here
 +
@@ -131,46 +113,60 @@ index 0000000..e8cc15d
 +_supported_fs xfs
 +_supported_os Linux
 +_require_scratch
-+_require_v2log
++_require_xfs_crc
 +_require_xfs_db_command "logformat"
 +
 +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
 +
-+# Reformat the log with various log stripe unit sizes and see if logprint dumps
-+# any errors. Use a cycle value larger than 1 so the log is actually written
-+# (the log is zeroed when cycle == 1).
-+for i in 16 32 64 128 256; do
-+	lsunit=$((i * 1024))
-+	$XFS_DB_PROG -x -c "logformat -c 3 -s $lsunit" $SCRATCH_DEV | \
-+		tee -a $seqres.full
-+	# don't redirect error output so it causes test failure
-+	$XFS_LOGPRINT_PROG $SCRATCH_DEV >> $seqres.full
-+done
++# push the log cycle ahead so we have room to move it backwards later
++$XFS_DB_PROG -x -c "logformat -c 3" $SCRATCH_DEV >> $seqres.full 2>&1
++
++# do some work on the fs to update metadata LSNs
++_scratch_mount
++$FSSTRESS_PROG -d $SCRATCH_MNT -n 999 -p 4 -w >> $seqres.full 2>&1
++_scratch_unmount
++
++# Reformat to the current cycle and try to mount. This fails in most cases
++# because the sb LSN is ahead of the current LSN. If it doesn't fail, push the
++# cycle back further and try again.
++$XFS_DB_PROG -x -c "logformat" $SCRATCH_DEV >> $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++if [ $? != 0 ]; then
++	echo mount failure detected
++else
++	_scratch_unmount
++	$XFS_DB_PROG -x -c "logformat -c 2" $SCRATCH_DEV >> $seqres.full 2>&1
++	_scratch_mount >> $seqres.full 2>&1 || echo mount failure detected
++fi
++
++# verify that repair detects invalid LSNs as well
++$XFS_REPAIR_PROG -n $SCRATCH_DEV >> $seqres.full 2>&1 || \
++	echo repair failure detected
++
++# repair for real so the post-test check can verify repair fixed things up
++$XFS_REPAIR_PROG $SCRATCH_DEV >> $seqres.full 2>&1
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/376.out b/tests/xfs/376.out
+diff --git a/tests/xfs/377.out b/tests/xfs/377.out
 new file mode 100644
-index 0000000..b13a150
+index 0000000..d49b5f2
 --- /dev/null
-+++ b/tests/xfs/376.out
-@@ -0,0 +1,6 @@
-+QA output created by 376
-+Formatting the log to cycle 3, stripe unit 16384 bytes.
-+Formatting the log to cycle 3, stripe unit 32768 bytes.
-+Formatting the log to cycle 3, stripe unit 65536 bytes.
-+Formatting the log to cycle 3, stripe unit 131072 bytes.
-+Formatting the log to cycle 3, stripe unit 262144 bytes.
++++ b/tests/xfs/377.out
+@@ -0,0 +1,3 @@
++QA output created by 377
++mount failure detected
++repair failure detected
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 9884329..77b9994 100644
+index 77b9994..d8c32c7 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -226,3 +226,4 @@
- 303 auto quick quota
+@@ -227,3 +227,4 @@
  304 auto quick quota
  305 auto quota
-+376 auto logprint quick v2log
+ 376 auto logprint quick v2log
++377 auto metadata v2log
 -- 
 2.1.0
 
