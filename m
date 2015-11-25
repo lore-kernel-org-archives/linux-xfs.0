@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE2DA7F37
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 12:28:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 81AA930405F
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 10:28:49 -0800 (PST)
-Received: from app1b.xlhost.de (mailout173.xlhost.de [84.200.252.173]) by
-	cuda.sgi.com with ESMTP id jCHXIsHMqMKxkUDC for
-	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 10:28:45 -0800 (PST)
-Message-ID: <5655FDDA.9050502@5t9.de>
-Date: Wed, 25 Nov 2015 19:28:42 +0100
-From: Lutz Vieweg <lvml@5t9.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 920837F37
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 12:54:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 25B86AC002
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 10:54:23 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id G8qtfWOq48SH0zhx (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 10:54:22 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id D01E3130A
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:54:21 +0000 (UTC)
+Date: Wed, 25 Nov 2015 13:54:19 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: send warning of project quota to userspace via
+	netlink
+Message-ID: <20151125185419.GA18719@bfoster.bfoster>
+References: <1448441561-31849-1-git-send-email-yamato@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Does XFS support cgroup writeback limiting?
-References: <5652F311.7000406@5t9.de> <20151123202619.GE26718@dastard>
-	<56538E6A.6030203@5t9.de> <20151123232052.GI26718@dastard>
-In-Reply-To: <20151123232052.GI26718@dastard>
+Content-Disposition: inline
+In-Reply-To: <1448441561-31849-1-git-send-email-yamato@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,107 +30,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Masatake YAMATO <yamato@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 11/24/2015 12:20 AM, Dave Chinner wrote:
-> Just make the same mods to XFS as the ext4 patch here:
->
-> http://www.spinics.net/lists/kernel/msg2014816.html
+On Wed, Nov 25, 2015 at 05:52:41PM +0900, Masatake YAMATO wrote:
+> Linux's quota subsystem has an ability to handle
+> project quota. This commit just utilizes the ability
+> from xfs side.
+> 
+> Signed-off-by: Masatake YAMATO <yamato@redhat.com>
+> ---
 
-I read at http://www.spinics.net/lists/kernel/msg2014819.html
-about this patch:
+Seems reasonable to me. A couple questions... how has this been tested?
+The original commit a210c1aa7 ("xfs: implement quota warnings via
+netlink") mentions that the xfstests quota tests with something
+listening for events was sufficient.
 
-> Journal data which is written by jbd2 worker is left alone by
-> this patch and will always be written out from the root cgroup.
+Also, is the userspace support for this new? If so, what is the behavior
+if somebody runs a new kernel with this event and an old userspace?
 
-If the same was done for XFS, wouldn't this mean a malicious
-process could still stall other processes' attempts to write
-to the filesystem by performing arbitrary amounts of meta-data
-modifications in a tight loop?
+Other than that, just a couple aesthetic things..
 
->> After all, this functionality is the last piece of the
->> "isolation"-puzzle that is missing from Linux to actually
->> allow fencing off virtual machines or containers from DOSing
->> each other by using up all I/O bandwidth...
->
-> Yes, I know, but no-one seems to care enough about it to provide
-> regression tests for it.
+>  fs/xfs/xfs_trans_dquot.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index ce78534..1a46544 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -572,12 +572,17 @@ xfs_quota_warn(
+>  	struct xfs_dquot	*dqp,
+>  	int			type)
+>  {
+> -	/* no warnings for project quotas - we just return ENOSPC later */
+> +	enum quota_type t;
+> +
 
-Well, I could give it a try, if a shell script tinkering with
-control groups parameters (which requires root privileges and
-could easily stall the machine) would be considered adequate for
-the purpose.
+The variable name should be lined up with the function parameter names.
+I'd prefer a more descriptive variable name as well (e.g., 'qtype'?).
 
-I would propose a test to be performed like this:
+>  	if (dqp->dq_flags & XFS_DQ_PROJ)
+> -		return;
+> +		t = PRJQUOTA;
+> +	else if (dqp->dq_flags & XFS_DQ_USER)
+> +		t = USRQUOTA;
+> +	else
+> +		t = GRPQUOTA;
+> +
+>  	quota_send_warning(make_kqid(&init_user_ns,
+> -				     (dqp->dq_flags & XFS_DQ_USER) ?
+> -				     USRQUOTA : GRPQUOTA,
+> +				     t,
 
-0) Identify a block device to test on. I guess some artificially
-    speed-limited DM device would be best?
-    Set the speed limit to X/100 MB per second, with X configurable.
+This could probably get moved to the end of the previous line rather
+than it's own separate line now that the conditional is removed. We
+generally just want to keep lines within 80 columns.
 
-1) Start 4 "good" plus 4 "evil" subprocesses competing for
-    write-bandwidth on the block device.
-    Assign the 4 "good" processes to two different control groups ("g1", "g2"),
-    assign the 4 "evil" processes to further two different control
-    groups ("e1", "e2"), so 4 control groups in total, with 2 tasks each.
+Brian
 
-2) Create 3 different XFS filesystem instances on the block
-    device, one for access by only the "good" processes,
-    on for access by only the "evil" processes, one for
-    shared access by at least two "good" and two "evil"
-    processes.
-
-3) Behaviour of the processes:
-
-    "Good" processes will attempt to write a configured amount
-    of data (X MB) at 20% of the speed limit of the block device, modifying
-    meta-data at a moderate rate (like creating/renaming/deleting files
-    every few megabytes written).
-    Half of the "good" processes write to their "good-only" filesystem,
-    the other half writes to the "shared access" filesystem.
-
-    Half of the "evil" processes will attempt to write as much data
-    as possible into open files in a tight endless loop.
-    The other half of the "evil" processes will permanently
-    modify meta-data as quickly as possible, creating/renaming/deleting
-    lots of files, also in a tight endless loop.
-    Half of the "evil" processes writes to the "evil-only" filesystem,
-    the other half writes to the "shared access" filesystem.
-
-
-4) Test 1: Configure all 4 control groups to allow for the same
-    buffered write rate percentage.
-
-    The test is successful if all "good processes" terminate successfully
-    after a time not longer than it would take to write 10 times X MB to the
-    rate-limited block device.
-
-    All processes to be killed after termination of all good processes or
-    some timeout. If the timeout is reached, the test is failed.
-
-
-5) Test 2: Configure "e1" and "e2" to allow for "zero" buffered write rate.
-
-    The test is successful if the "good processes" terminate successfully
-    after a time not longer than it would take to write 5 times X MB to the
-    rate-limited block device.
-
-    All processes to be killed after termination of all good processes or
-    some timeout. If the timeout is reached, the test is failed.
-
-6) Cleanup: unmount test filesystems, remove rate-limited DM device, remove
-    control groups.
-
-What do you think, could this be a reasonable plan?
-
-Regards,
-
-Lutz Vieweg
-
+>  				     be32_to_cpu(dqp->q_core.d_id)),
+>  			   mp->m_super->s_dev, type);
+>  }
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
