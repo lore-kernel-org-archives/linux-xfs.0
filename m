@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DC347F37
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 03:19:23 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C2EC17F37
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 04:25:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F0908AC002
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 01:19:22 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AAF4C304032
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 02:25:06 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id cEOYkEsTU84NiY4A (version=TLSv1
+	ESMTP id Fd7rXQQPTLyGEe5R (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 01:19:20 -0800 (PST)
-Date: Wed, 25 Nov 2015 10:19:16 +0100
+	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 02:25:03 -0800 (PST)
+Date: Wed, 25 Nov 2015 11:25:00 +0100
 From: Jan Kara <jack@suse.cz>
 Subject: Re: [PATCH] ext4: fix race aio-dio vs freeze_fs
-Message-ID: <20151125091916.GL25232@quack.suse.cz>
+Message-ID: <20151125102500.GM25232@quack.suse.cz>
 References: <1448294568-20892-1-git-send-email-dmonakhov@openvz.org>
 	<20151124132421.GG25232@quack.suse.cz>
-	<CAF5pi0HpbN=kKQQUA5V1QaBzZMGQDcwuDs4bvuRYifnOHiJ8Bw@mail.gmail.com>
+	<20151124160723.GA17466@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAF5pi0HpbN=kKQQUA5V1QaBzZMGQDcwuDs4bvuRYifnOHiJ8Bw@mail.gmail.com>
+In-Reply-To: <20151124160723.GA17466@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +31,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhovopenvz@gmail.com>
-Cc: tytso@mit.edu, xfs@oss.sgi.com, Dmitriy Monakhov <dmonakhov@openvz.org>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, Dmitry Monakhov <dmonakhov@openvz.org>, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
 
-On Tue 24-11-15 20:55:40, Dmitry Monakhov wrote:
-> On Nov 24, 2015 16:25, "Jan Kara" <jack@suse.cz> wrote:
-> > On Mon 23-11-15 20:02:48, Dmitry Monakhov wrote:
-> > > After freeze_fs was revoked (from Jan Kara) pages's write-back
-> completion
-> > > is deffered before unwritten conversion, so explicit
-> flush_unwritten_io()
-> > > was removed here: c724585b62411
-> > > But we still may face deferred conversion for aio-dio case
-> > > # Trivial testcase
-> > > for ((i=0;i<60;i++));do fsfreeze -f /mnt ;sleep 1;fsfreeze -u /mnt;done
-> &
-> > > fio --bs=4k --ioengine=libaio --iodepth=128 --size=1g --direct=1 \
-> > >     --runtime=60 --filename=/mnt/file --name=rand-write --rw=randwrite
-> > > NOTE: Sane testcase should be integrated to xfstests, but it requires
-> > > changes in common/* code, so let's use this this test at the moment.
-> > >
-> > > In order to fix this race we have to guard journal transaction with
-> explicit
-> > > sb_{start,end}_intwrite()  as we do with ext4_evict_inode here:8e8ad8a5
-> >
+On Tue 24-11-15 08:07:23, Christoph Hellwig wrote:
+> On Tue, Nov 24, 2015 at 02:24:21PM +0100, Jan Kara wrote:
 > > Well, this problem seems to suggest that we have the freeze protection for
 > > AIO writes wrong. We should call file_end_write() from aio_complete() and
-> > not from aio_run_iocb()...
-> Yep. It was my first attempt to fix that issue, but  unfortunately this
-> trick will break lockdep. Caller will do file_start_write and exit to
-> userspace. Lockdep treats such behaviour as bug (return to userspace with a
-> lock held)
+> > not from aio_run_iocb()... I believe XFS and other filesystems may have
+> > problems with this as well (CCed). Attached patch (so far only compile
+> > tested since my test machine is pondering on something else) should fix
+> > this.
 > 
-> There are two way to fix that
-> 1) add specific 'long' lock primitive to lockdep
+> Sounds like one way to do it, but we'd really want a vfs_* helper for
+> this so that it doesn't have to duplicated in other write_iter users
+> like the loop driver, which seems to be missing file
+> file_start_write/file_end_write entirely.
 
-The way we tell lockdep about transfer of context is that we just lie to
-lockdep and tell it that the lock got unlocked at appropriate place and
-then tell it we locked it again at another place. It is somewhat ugly but
-not that hard to do... Generally lockdep is a tool that should help but by
-no means it should be a reason for poor locking decisions just because
-lockdep cannot handle them.
+That is mostly a separate issue, isn't it? I guess you mean a helper like
+vfs_write_iter() that would get freeze protection and call ->write_iter()?
+And what about files which have ->write (or ->splice_write()) and don't end
+up calling ->write_iter? Also there is stuff like __kernel_write() which
+ends up calling ->write_iter() but e.g. kernel/acct.c: do_acct_process()
+wants to do it's own thing...
+
+So the current status is not ideal but I don't see how to make it
+substantially better...
 
 								Honza
---
+-- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
 
