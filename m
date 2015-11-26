@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 079D87F37
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 06:26:46 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 38F537F37
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:19:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DFDBA304032
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 04:26:42 -0800 (PST)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id cl8pRkpmgjcLUVcm (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1ACB230405F
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 05:19:05 -0800 (PST)
+Received: from smtpo64.poczta.onet.pl (smtpo64.poczta.onet.pl [141.105.16.14])
+	by cuda.sgi.com with ESMTP id VQHiXMKenXOlsyv4 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 04:26:37 -0800 (PST)
-Date: Thu, 26 Nov 2015 13:26:38 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 05:19:03 -0800 (PST)
 Subject: Re: Which xfsprogs version to which kernel version
-Message-ID: <20151126132638.53ed9fc7@harpe.intellique.com>
-In-Reply-To: <5656DD39.8060403@poczta.onet.pl>
 References: <5656DD39.8060403@poczta.onet.pl>
+	<20151126132638.53ed9fc7@harpe.intellique.com>
+From: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
+Message-ID: <565706BB.3030006@poczta.onet.pl>
+Date: Thu, 26 Nov 2015 14:18:51 +0100
 MIME-Version: 1.0
+In-Reply-To: <20151126132638.53ed9fc7@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,21 +29,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
+To: Emmanuel Florac <eflorac@intellique.com>
 Cc: xfs@oss.sgi.com
 
-TGUgVGh1LCAyNiBOb3YgMjAxNSAxMToyMTo0NSArMDEwMAoiYWx1bm8zQHBvY3p0YS5vbmV0LnBs
-IiA8YWx1bm8zQHBvY3p0YS5vbmV0LnBsPiDDqWNyaXZhaXQ6Cgo+IG1rZnMueGZzIC1tIGNyYz0w
-LGZpbm9idD0wCj4gCj4gYnV0IGl0IGRvZXMgbm90IHdvcmsgd2l0aCA0LlggdmVyc2lvbiBvZiB4
-ZnNwcm9ncy4gQ2FsbCB0cmFjZSBhbHNvCj4gb2NjdXJyZWQgc28gSSB0cmllZCB0byB1c2UgMy4y
-LjQgZmFtaWx5IHdpdGggY3JjPTAsZmlub2J0PTAgYW5kIHZvbHVtZQo+IG1vdW50ZWQgc3VjY2Vz
-c2Z1bGx5Lgo+IAoKRGlkIHlvdSB1c2UgLWY/IGVsc2UgbWtmcy54ZnMgd29uJ3QgZG8gYW55dGhp
-bmcgYXMgaXQnbGwgZGV0ZWN0IGFuCmV4aXN0aW5nIGZpbGVzeXN0ZW0uCgotLSAKLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAg
-ICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9y
-YWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0
-IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
-Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+WWVzIEkgdXNlZCAtZiBvcHRpb24gd2l0aCA0LlggdmVyc2lvbiBvZiB4ZnNwcm9ncyBidXQgbW91
+bnRpbmcgdGhlCnZvbHVtZSB3YXMgbm90IHBvc3NpYmxlIC0gYmVmb3JlIG1rZnMueGZzIGZpbmlz
+aGVkIHN1Y2Nlc3NmdWxseQoobWtmcy54ZnMgLWYgLW0gY3JjPTAsZmlub2J0PTApLgoKU2hvdWxk
+IEkgc3RheSBpbiAzLjEuWCBmYW1pbHkgb2YgeGZzcHJvZ3Mgb3IgaXMgaXQgcmVjb21tZW5kZWQg
+dG8gdXNlIGF0CmxlYXN0IDMuMi54IHZlcnNpb24gd2l0aCBrZXJuZWwgMy4xMD8KClRoZSBtb3N0
+IEkgY2FyZSBhYm91dCB4ZnNfcmVwYWlyLgoKT24gMTEvMjYvMTUgMTM6MjYsIEVtbWFudWVsIEZs
+b3JhYyB3cm90ZToKPiBMZSBUaHUsIDI2IE5vdiAyMDE1IDExOjIxOjQ1ICswMTAwCj4gImFsdW5v
+M0Bwb2N6dGEub25ldC5wbCIgPGFsdW5vM0Bwb2N6dGEub25ldC5wbD4gw6ljcml2YWl0Ogo+IAo+
+PiBta2ZzLnhmcyAtbSBjcmM9MCxmaW5vYnQ9MAo+Pgo+PiBidXQgaXQgZG9lcyBub3Qgd29yayB3
+aXRoIDQuWCB2ZXJzaW9uIG9mIHhmc3Byb2dzLiBDYWxsIHRyYWNlIGFsc28KPj4gb2NjdXJyZWQg
+c28gSSB0cmllZCB0byB1c2UgMy4yLjQgZmFtaWx5IHdpdGggY3JjPTAsZmlub2J0PTAgYW5kIHZv
+bHVtZQo+PiBtb3VudGVkIHN1Y2Nlc3NmdWxseS4KPj4KPiAKPiBEaWQgeW91IHVzZSAtZj8gZWxz
+ZSBta2ZzLnhmcyB3b24ndCBkbyBhbnl0aGluZyBhcyBpdCdsbCBkZXRlY3QgYW4KPiBleGlzdGlu
+ZyBmaWxlc3lzdGVtLgo+IAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
