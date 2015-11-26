@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8B2C97F37
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 20:22:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EE5E30405F
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:22:55 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A1F4C7F37
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 20:34:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E2218F8050
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:34:14 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gxtc4lAxwzHytJ5W (version=TLSv1.2
+	cuda.sgi.com with ESMTP id QAebinnh7GNhY8sV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:22:50 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:34:13 -0800 (PST)
 From: Masatake YAMATO <yamato@redhat.com>
 Subject: [PATCH v2] xfs: send warning of project quota to userspace via netlink
-Date: Thu, 26 Nov 2015 11:22:39 +0900
-Message-Id: <1448504560-25151-1-git-send-email-yamato@redhat.com>
+Date: Thu, 26 Nov 2015 11:34:07 +0900
+Message-Id: <1448505248-25481-1-git-send-email-yamato@redhat.com>
 In-Reply-To: <20151125185419.GA18719@bfoster.bfoster>
 References: <20151125185419.GA18719@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
