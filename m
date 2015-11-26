@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3FEB97F37
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 04:22:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2EE5C30405F
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 02:22:08 -0800 (PST)
-Received: from smtpo65.poczta.onet.pl (smtpo33.poczta.onet.pl
-	[213.180.142.164]) by cuda.sgi.com with ESMTP id
-	N9tBRlMXodoVdHgR (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id ED3167F37
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 09:46:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB8E9304066
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:46:43 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DvE76R64haXWBkr3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 02:22:02 -0800 (PST)
-Received: from [192.168.176.22] (host8514118246.static.open-e.3s.pl
-	[85.14.118.246]) (Authenticated sender: aluno3@poczta.onet.pl)
-	by smtp.poczta.onet.pl (Onet) with ESMTPA id 3p5w9y1ZvFzT1pb5r
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 11:21:57 +0100 (CET)
-From: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
-Subject: Which xfsprogs version to which kernel version
-Message-ID: <5656DD39.8060403@poczta.onet.pl>
-Date: Thu, 26 Nov 2015 11:21:45 +0100
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:46:42 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 817758E22B
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 15:46:41 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id tAQFke6V022027
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 10:46:40 -0500
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfs_io: implement 'inode' command V5
+Date: Thu, 26 Nov 2015 16:46:35 +0100
+Message-Id: <1448552795-8794-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,78 +30,242 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
+Implements a new xfs_io command, named 'inode', which is supposed to be
+used to query information about inode's existence and its physical size
+in the filesystem.
 
-I am using kernel 3.10 and would like to update xfsprogs (currently I
-have 3.1.5).
+Supported options:
 
-When I tried to use the newest version of xfsprogs 4.3.0 I get the call
-trace about detected version 5 of superblock when mounting volume which
-was formatted using mkfs.xfs from 4.3.0.
+Default:     -- Return true(1) or false(0) if any inode greater than
+                32bits has been found in the filesystem
+-v           -- verbose mode
+                Display the number and the physical size (in bits)
+                of the largest inode in the filesystem
+[num]        -- Return true(1) or false(0) if the inode [num] is in use
+-n [num]     -- Return the next valid inode after [num]
 
-[ 606.853643] XFS (zd32): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
-Use of these features in this kernel is at your own risk!
-[ 606.853649] XFS (zd32): Superblock has unknown read-only compatible features (0x1) enabled.
-[ 606.853651] XFS (zd32): Attempted to mount read-only compatible filesystem read-write.
-Filesystem can only be safely mounted read only.
-[ 606.853654] ffff880067a71000: 58 46 53 42 00 00 10 00 00 00 00 00 01 90 00 00 XFSB............
-[ 606.853657] ffff880067a71010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-[ 606.853658] ffff880067a71020: 63 d1 24 9f 21 3d 44 a0 8c 51 5b 4e 31 1a 70 1e c.$.!=D..Q[N1.p.
-[ 606.853660] ffff880067a71030: 00 00 00 00 01 00 00 05 00 00 00 00 00 00 00 60 ...............`
-[ 606.853663] XFS (zd32): Internal error xfs_sb_read_verify at line 730 of file fs/xfs/xfs_mount.c. Caller 0xffffffff81256c7d
+No manpage sent because there were changes in the supported options and its
+descriptions.
+I'll send the manpage after the options and descriptions are reviewed.
 
-[ 606.853667] CPU: 0 PID: 200 Comm: kworker/0:1H Tainted: P O 3.10.92-oe64-ge331686 #15
-[ 606.853668] Hardware name: System manufacturer System Product Name/P5WDG2 WS Pro, BIOS 0905 03/06/2008
-[ 606.853675] Workqueue: xfslogd xfs_buf_iodone_work
-[ 606.853677] ffffffff81692f75 ffffffff81258c5d ffffffff81256c7d ffffffff818a39e3
-[ 606.853680] ffff88005dcab200 0000000000000016 ffff880052c11800 0000000000000200
-[ 606.853683] ffff88007ea17800 ffffffff812a32ac ffffffff81256c7d 000000007ea11a40
-[ 606.853686] Call Trace:
-[ 606.853692] [<ffffffff81692f75>] ? dump_stack+0xc/0x15
-[ 606.853695] [<ffffffff81258c5d>] ? xfs_corruption_error+0x8d/0x90
-[ 606.853698] [<ffffffff81256c7d>] ? xfs_buf_iodone_work+0x6d/0x90
-[ 606.853703] [<ffffffff812a32ac>] ? xfs_sb_read_verify+0xfc/0x120
-[ 606.853705] [<ffffffff81256c7d>] ? xfs_buf_iodone_work+0x6d/0x90
-[ 606.853708] [<ffffffff81256c7d>] ? xfs_buf_iodone_work+0x6d/0x90
-[ 606.853712] [<ffffffff8105ce4d>] ? process_one_work+0x13d/0x3b0
-[ 606.853715] [<ffffffff8105d7b1>] ? worker_thread+0x121/0x3d0
-[ 606.853717] [<ffffffff8105d690>] ? manage_workers.isra.26+0x280/0x280
-[ 606.853721] [<ffffffff81062e92>] ? kthread+0xc2/0xd0
-[ 606.853725] [<ffffffff81070000>] ? sched_clock_cpu+0x30/0x100
-[ 606.853728] [<ffffffff81062dd0>] ? kthread_create_on_node+0x110/0x110
-[ 606.853731] [<ffffffff8169db98>] ? ret_from_fork+0x58/0x90
-[ 606.853734] [<ffffffff81062dd0>] ? kthread_create_on_node+0x110/0x110
-[ 606.853736] XFS (zd32): Corruption detected. Unmount and run xfs_repair
-[ 606.853742] XFS (zd32): SB validate failed with error 22.
+- Changelog
 
-Dave in thread http://oss.sgi.com/archives/xfs/2015-08/msg00528.html
-advises to disable crc and finobt:
+V3:
+	- Merge all 3 patches from the V2 together in a single patch
+	- Rework of '-n [num]' and 'num' only arguments algorithm
+	- Argument -n now relies on bulkreq.count to check for next inodes, not
+	  on bstat.bs_ino anymore.
+	- for loop in ret_lsize or ret_largest case, now relies on count being 0
+	  to break the loop
 
-mkfs.xfs -m crc=0,finobt=0
+V4:
+	- Refactor inode_f function to reduce its size and easier logic
+	- Implement error handlers for invalid command combination (hopefully
+	  all invalid combinations).
+	- use a single xfs_inogrp array for keep track of inodes
+	- Fix missing newline in inode_help()
+	- Rewrite help message in inode_help()
+	- Fix indentation
 
-but it does not work with 4.X version of xfsprogs. Call trace also
-occurred so I tried to use 3.2.4 family with crc=0,finobt=0 and volume
-mounted successfully.
+V5:
+	- Reduce the amount of options
+	- remove igrp_rec variable, and use igroup[lastgrp] directly to get
+	  information from the last inode groups returned by ioctl
 
-Dave also noticed:
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ io/open.c | 143 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 143 insertions(+)
 
-i.e. if Gentoo are shipping xfsprogs 3.2.4 w/ kernel 3.14.51, then
-Gentoo has a quality control problem - they have failed to verify
-that the packages they are shipping work correctly before shipping
-them to users...
-
-
-that using 3.2.4 with kernel 3.14.51 is not good idea so are you able to
-advise which version of xfsprogs is the best for kernel 3.10? Please
-note that update the kernel in my environment is not possible in easy
-way so I need to stay with 3.10.
-
+diff --git a/io/open.c b/io/open.c
+index ac5a5e0..1e38ea8 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -20,6 +20,7 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "libxfs.h"
+ 
+ #ifndef __O_TMPFILE
+ #if defined __alpha__
+@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
+ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+ static cmdinfo_t extsize_cmd;
++static cmdinfo_t inode_cmd;
+ static prid_t prid;
+ static long extsize;
+ 
+@@ -750,6 +752,136 @@ statfs_f(
+ 	return 0;
+ }
+ 
++static void
++inode_help(void)
++{
++	printf(_(
++"\n"
++"Query physical information about the inode"
++"\n"
++" Default:	-- Return true(1) or false(0) if any inode greater than\n"
++"		   32bits has been found in the filesystem\n"
++" -v		-- verbose mode\n"
++"		   Display the number and the physical size (in bits)\n"
++"		   of the largest inode in the filesystem\n"
++"[num]		-- Return true(1) or false(0) if the inode [num] is in use\n"
++" -n [num]	-- Return the next valid inode after [num]\n"
++"\n"));
++}
++
++static int
++inode_f(
++	  int			argc,
++	  char			**argv)
++{
++	__s32			count = 0;
++	__s32			lastgrp = 0;
++	__u64			last = 0;
++	__u64			lastino = 0;
++	__u64			userino = 0;
++	char			*p;
++	int			c;
++	int			verbose = 0;
++	int			ret_next = 0;
++	int			cmd = 0;
++	struct xfs_inogrp	igroup[1024];
++	struct xfs_fsop_bulkreq	bulkreq;
++	struct xfs_bstat	bstat;
++
++	while ((c = getopt(argc, argv, "nv")) != EOF) {
++		switch (c) {
++		case 'v':
++			verbose = 1;
++			break;
++		case 'n':
++			ret_next = 1;
++			break;
++		default:
++			return command_usage(&inode_cmd);
++		}
++	}
++
++	if (ret_next && verbose)
++		return command_usage(&inode_cmd);
++
++	if (optind < argc) {
++		if (verbose)
++			return command_usage(&inode_cmd);
++
++		if (ret_next) {
++			cmd = XFS_IOC_FSBULKSTAT;
++		} else {
++			if (argc > 2)
++				return command_usage(&inode_cmd);
++			else
++				cmd = XFS_IOC_FSBULKSTAT_SINGLE;
++		}
++
++		userino = strtoull(argv[optind], &p, 10);
++		if ((*p != '\0')) {
++			printf(_("[num] must be a numeric value\n"));
++			exitcode = 1;
++			return 0;
++		}
++
++		bulkreq.lastip = &userino;
++		bulkreq.icount = 1;
++		bulkreq.ubuffer = &bstat;
++		bulkreq.ocount = &count;
++
++		if (xfsctl(file->name, file->fd, cmd, &bulkreq)) {
++			if (errno == EINVAL) {
++				if (!ret_next)
++					printf("0\n");
++			} else {
++				perror("xfsctl");
++			}
++			exitcode = 1;
++			return 0;
++		}
++
++		if (ret_next) {
++			printf("%llu\n", bstat.bs_ino);
++			return 0;
++		} else {
++			/* Inode number used*/
++			printf("1\n");
++			return 0;
++		}
++	}
++
++	bulkreq.lastip = &last;
++	bulkreq.icount = 1024; /* User-defined maybe!? */
++	bulkreq.ubuffer = &igroup;
++	bulkreq.ocount = &count;
++
++	for (;;) {
++		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
++				&bulkreq)) {
++			perror("XFS_IOC_FSINUMBERS");
++			exitcode = 1;
++			return 0;
++		}
++
++		if (count == 0)
++			break;
++
++		lastgrp = count;
++	}
++
++	lastgrp--;
++	lastino = igroup[lastgrp].xi_startino +
++		  xfs_highbit64(igroup[lastgrp].xi_allocmask);
++
++	if (verbose)
++		printf("%llu:%d\n", lastino,
++			lastino > XFS_MAXINUMBER_32 ? 64 : 32);
++	else
++		printf("%d\n", lastino > XFS_MAXINUMBER_32 ? 1 : 0);
++
++	return 0;
++}
++
+ void
+ open_init(void)
+ {
+@@ -815,6 +947,16 @@ open_init(void)
+ 		_("get/set preferred extent size (in bytes) for the open file");
+ 	extsize_cmd.help = extsize_help;
+ 
++	inode_cmd.name = "inode";
++	inode_cmd.cfunc = inode_f;
++	inode_cmd.args = _("[-n | -v] [num]");
++	inode_cmd.argmin = 0;
++	inode_cmd.argmax = 2;
++	inode_cmd.flags = CMD_NOMAP_OK;
++	inode_cmd.oneline =
++		_("Query inode number usage in the filesystem");
++	inode_cmd.help = inode_help;
++
+ 	add_command(&open_cmd);
+ 	add_command(&stat_cmd);
+ 	add_command(&close_cmd);
+@@ -822,4 +964,5 @@ open_init(void)
+ 	add_command(&chproj_cmd);
+ 	add_command(&lsproj_cmd);
+ 	add_command(&extsize_cmd);
++	add_command(&inode_cmd);
+ }
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
