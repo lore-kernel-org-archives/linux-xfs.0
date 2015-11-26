@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 795087F37
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 15:35:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 668708F8033
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 13:35:22 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	wxugJnnlEpkQ5zdj for <xfs@oss.sgi.com>;
-	Wed, 25 Nov 2015 13:35:14 -0800 (PST)
-Date: Thu, 26 Nov 2015 08:35:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Does XFS support cgroup writeback limiting?
-Message-ID: <20151125213500.GK26718@dastard>
-References: <5652F311.7000406@5t9.de> <20151123202619.GE26718@dastard>
-	<56538E6A.6030203@5t9.de> <20151123232052.GI26718@dastard>
-	<5655FDDA.9050502@5t9.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5655FDDA.9050502@5t9.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8B2C97F37
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 20:22:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EE5E30405F
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:22:55 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gxtc4lAxwzHytJ5W (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 25 Nov 2015 18:22:50 -0800 (PST)
+From: Masatake YAMATO <yamato@redhat.com>
+Subject: [PATCH v2] xfs: send warning of project quota to userspace via netlink
+Date: Thu, 26 Nov 2015 11:22:39 +0900
+Message-Id: <1448504560-25151-1-git-send-email-yamato@redhat.com>
+In-Reply-To: <20151125185419.GA18719@bfoster.bfoster>
+References: <20151125185419.GA18719@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,164 +23,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lutz Vieweg <lvml@5t9.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: yamato@redhat.com
 
-On Wed, Nov 25, 2015 at 07:28:42PM +0100, Lutz Vieweg wrote:
-> On 11/24/2015 12:20 AM, Dave Chinner wrote:
-> >Just make the same mods to XFS as the ext4 patch here:
-> >
-> >http://www.spinics.net/lists/kernel/msg2014816.html
-> 
-> I read at http://www.spinics.net/lists/kernel/msg2014819.html
-> about this patch:
-> 
-> >Journal data which is written by jbd2 worker is left alone by
-> >this patch and will always be written out from the root cgroup.
-> 
-> If the same was done for XFS, wouldn't this mean a malicious
-> process could still stall other processes' attempts to write
-> to the filesystem by performing arbitrary amounts of meta-data
-> modifications in a tight loop?
+Linux's quota subsystem has an ability to handle
+project quota. This commit just utilizes the ability
+from xfs side.
 
-XFS doesn't have journal driver writeback, so no.
+dbus-monitor and quota_nld shipped as part of quota-tools can
+be used for testing.
 
-> >>After all, this functionality is the last piece of the
-> >>"isolation"-puzzle that is missing from Linux to actually
-> >>allow fencing off virtual machines or containers from DOSing
-> >>each other by using up all I/O bandwidth...
-> >
-> >Yes, I know, but no-one seems to care enough about it to provide
-> >regression tests for it.
-> 
-> Well, I could give it a try, if a shell script tinkering with
-> control groups parameters (which requires root privileges and
-> could easily stall the machine) would be considered adequate for
-> the purpose.
+The testing environment and condition:
 
-xfstests is where such tests need to live. It would need
-infrastructure to set up control groups and bandwidth limits...
+    # cat /etc/projects
+    10:/root/Q/a
+    # grep Q /proc/mounts
+    /dev/loop0 /root/Q xfs rw,relatime,attr2,inode64,prjquota 0 0
+    # ls -l /dev/loop0
+    brw-rw---- 1 root disk 7, 0 Nov 26 10:46 /dev/loop0
 
-> I would propose a test to be performed like this:
-> 
-> 0) Identify a block device to test on. I guess some artificially
->    speed-limited DM device would be best?
->    Set the speed limit to X/100 MB per second, with X configurable.
+3 terminals are used for each commands: dd, quota_nld, and dbus-monitor.
 
-xfstests provides a scratch device that can be used for this.
+Start quota_nld with terminal 1:
 
-> 
-> 1) Start 4 "good" plus 4 "evil" subprocesses competing for
->    write-bandwidth on the block device.
->    Assign the 4 "good" processes to two different control groups ("g1", "g2"),
->    assign the 4 "evil" processes to further two different control
->    groups ("e1", "e2"), so 4 control groups in total, with 2 tasks each.
-> 
-> 2) Create 3 different XFS filesystem instances on the block
->    device, one for access by only the "good" processes,
->    on for access by only the "evil" processes, one for
->    shared access by at least two "good" and two "evil"
->    processes.
+	[1]# quota_nld -F
 
-Why do you need multiple filesystems? The writeback throttling is
-designed to work within a single filesystem...
+Start dbus-monitor with terminal 2:
 
-I was thinking of something similar, but quite simple, using "bound"
-and "unbound" (i.e. limited and unlimited) processes. e.g:
+        [2]# dbus-monitor --system
 
-process 1 is unbound, does large sequential IO
-process 2-N are bound to 1MB/s, do large sequential IO
+Start dd to generate a large file for hitting the quota limit:
 
-Run for several minutes to reach a stable steady state behaviour.
+        [3]# dd if=/dev/sda of=/root/Q/a/X
 
-if process 2-N do not receive 1MB/s throughput each, then throttling
-of the unbound writeback processes is not working. Combinations
-of this test using different read/write streams on each process
-gives  multiple tests, verifies that block IO control works for both
-read and write IO, not just writeback throttling.
+At the terminal 1, you will see warning messages like:
 
-And then other combinations of this sort of test, such as also
-binding process 1 is bound to, say, 20MB/s. Repeating the tests can
-then tell us if fast and slow bindings are working correctly.  i.e.
-checking to ensure that process 1 doesn't exceed it's limits and all
-the other streams stay within bounds, too.
+   quota_nld: Failed to open tty /dev/tty1 of user 0 to report warning.
 
-> 3) Behaviour of the processes:
-> 
->    "Good" processes will attempt to write a configured amount
->    of data (X MB) at 20% of the speed limit of the block device, modifying
->    meta-data at a moderate rate (like creating/renaming/deleting files
->    every few megabytes written).
->    Half of the "good" processes write to their "good-only" filesystem,
->    the other half writes to the "shared access" filesystem.
-> 
->    Half of the "evil" processes will attempt to write as much data
->    as possible into open files in a tight endless loop.
->    The other half of the "evil" processes will permanently
->    modify meta-data as quickly as possible, creating/renaming/deleting
->    lots of files, also in a tight endless loop.
->    Half of the "evil" processes writes to the "evil-only" filesystem,
->    the other half writes to the "shared access" filesystem.
+Let's ignore them.  These meaningless messages
+are suppressed by a patch available at
+https://sourceforge.net/p/linuxquota/patches/43/.
 
-Metadata IO not throttled - it is owned by the filesystem and hence
-root cgroup. There is no point in running tests that do large
-amounts of journal/metadata IO as it is this will result in
-uncontrollable and unpredictabe IO patterns and hence will give
-unreliable test results.
+At the terminal 2, you will see following traffic about disk quota
+(newlines are inserted):
 
-We want to test the data bandwidth control algorithms work
-appropriately in a controlled, repeatable environment.  Throwing all
-sorts of uncontrollable IO at the device is a good /stress/ test, but
-it is not going to tell us anything useful in terms of correctness
-or reliably detect functional regressions.
+    signal time=1448502680.741715 sender=:1.35 -> \
+	   destination=(null destination) serial=4 path=/; \
+	   interface=com.system.quota.warning; member=warning
+       uint32 2
+       uint64 10
+       uint32 6
+       uint32 7
+       uint32 0
+       uint64 0
+    signal time=1448502680.742518 sender=:1.35 -> \
+	   destination=(null destination) serial=5 path=/; \
+	   interface=com.system.quota.warning; member=warning
+       uint32 2
+       uint64 10
+       uint32 4
+       uint32 7
+       uint32 0
+       uint64 0
 
-> 4) Test 1: Configure all 4 control groups to allow for the same
->    buffered write rate percentage.
-> 
->    The test is successful if all "good processes" terminate successfully
->    after a time not longer than it would take to write 10 times X MB to the
->    rate-limited block device.
+The 1st "2" means the type of quota: project quota.
+The 2nd "10" means the project id.
+The 3rd "4" and "6" mean "Block hardlimit reached" and
+"Block softlimit reached".
+The 4th "7" means the major number of loop0.
+The 5th "0" means the minor number of loop0.
 
-if we are rate limiting to 1MB/s, then a 10s test is not long enough
-to reach steady state. Indeed, it's going to take at least 30s worth
-of IO to guarantee that we getting writeback occurring for low
-bandwidth streams....
+Changes in v2:
 
-i.e. the test needs to run for a period of time and then measure
-the throughput of each stream, comparing it against the expected
-throughput for the stream, rather than trying to write a fixed
-bandwidth....
+	a couple aesthetic things suggested by Brian Foster <bfoster@redhat.com>.
+	* rename local vairable for aligning the parameter names,
+	* move a short line to the end of its previous line.
 
-> 5) Test 2: Configure "e1" and "e2" to allow for "zero" buffered write rate.
-> 
->    The test is successful if the "good processes" terminate successfully
->    after a time not longer than it would take to write 5 times X MB to the
->    rate-limited block device.
-> 
->    All processes to be killed after termination of all good processes or
->    some timeout. If the timeout is reached, the test is failed.
-> 
-> 6) Cleanup: unmount test filesystems, remove rate-limited DM device, remove
->    control groups.
+Signed-off-by: Masatake YAMATO <yamato@redhat.com>
+---
+ fs/xfs/xfs_trans_dquot.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-control group cleanup will need to be added to the xfstests
-infrastructure, but it handles everything else...
-
-> What do you think, could this be a reasonable plan?
-
-Yes, I think we can pull a reasonable set of baseline tests from an
-approach like this.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index ce78534..9951701 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -572,12 +572,16 @@ xfs_quota_warn(
+ 	struct xfs_dquot	*dqp,
+ 	int			type)
+ {
+-	/* no warnings for project quotas - we just return ENOSPC later */
++	enum quota_type qtype;
++
+ 	if (dqp->dq_flags & XFS_DQ_PROJ)
+-		return;
+-	quota_send_warning(make_kqid(&init_user_ns,
+-				     (dqp->dq_flags & XFS_DQ_USER) ?
+-				     USRQUOTA : GRPQUOTA,
++		qtype = PRJQUOTA;
++	else if (dqp->dq_flags & XFS_DQ_USER)
++		qtype = USRQUOTA;
++	else
++		qtype = GRPQUOTA;
++
++	quota_send_warning(make_kqid(&init_user_ns, qtype,
+ 				     be32_to_cpu(dqp->q_core.d_id)),
+ 			   mp->m_super->s_dev, type);
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.0
 
 _______________________________________________
 xfs mailing list
