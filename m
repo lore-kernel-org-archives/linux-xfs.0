@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 81EA77F37
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:49:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 60C65304048
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 05:49:36 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id F1E477F37
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:50:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D3EF4304051
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 05:50:56 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AbxhYqGHJ3UQtS6F (version=TLSv1.2
+	cuda.sgi.com with ESMTP id b6FpzTuJnoLEnq5S (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 05:49:35 -0800 (PST)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id A71D4461C7
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 13:49:34 +0000 (UTC)
-Date: Thu, 26 Nov 2015 08:49:33 -0500
+	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 05:50:55 -0800 (PST)
+Date: Thu, 26 Nov 2015 08:50:53 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: send warning of project quota to userspace via
-	netlink
-Message-ID: <20151126134933.GA39911@bfoster.bfoster>
-References: <20151125185419.GA18719@bfoster.bfoster>
-	<1448504560-25151-1-git-send-email-yamato@redhat.com>
+Subject: Re: Which xfsprogs version to which kernel version
+Message-ID: <20151126135053.GB39911@bfoster.bfoster>
+References: <5656DD39.8060403@poczta.onet.pl>
+	<20151126132638.53ed9fc7@harpe.intellique.com>
+	<565706BB.3030006@poczta.onet.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1448504560-25151-1-git-send-email-yamato@redhat.com>
+In-Reply-To: <565706BB.3030006@poczta.onet.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,66 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Masatake YAMATO <yamato@redhat.com>
+To: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 26, 2015 at 11:22:39AM +0900, Masatake YAMATO wrote:
-> Linux's quota subsystem has an ability to handle
-> project quota. This commit just utilizes the ability
-> from xfs side.
-> 
-...
-> Changes in v2:
-> 
-> 	a couple aesthetic things suggested by Brian Foster <bfoster@redhat.com>.
-> 	* rename local vairable for aligning the parameter names,
-> 	* move a short line to the end of its previous line.
-> 
-> Signed-off-by: Masatake YAMATO <yamato@redhat.com>
-> ---
+On Thu, Nov 26, 2015 at 02:18:51PM +0100, aluno3@poczta.onet.pl wrote:
+> Yes I used -f option with 4.X version of xfsprogs but mounting the
+> volume was not possible - before mkfs.xfs finished successfully
+> (mkfs.xfs -f -m crc=3D0,finobt=3D0).
+> =
 
-Thanks for all of the test information. Now you have a really long
-commit log description rather than a short one. ;) Maybe Dave can
-truncate it. Regardless, looks fine to me:
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+You posted the output associated with the crc=3D1 fs mount failure, what
+happens when you try to mount after formatting with crc=3D0?
 
->  fs/xfs/xfs_trans_dquot.c | 14 +++++++++-----
->  1 file changed, 9 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index ce78534..9951701 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -572,12 +572,16 @@ xfs_quota_warn(
->  	struct xfs_dquot	*dqp,
->  	int			type)
->  {
-> -	/* no warnings for project quotas - we just return ENOSPC later */
-> +	enum quota_type qtype;
-> +
->  	if (dqp->dq_flags & XFS_DQ_PROJ)
-> -		return;
-> -	quota_send_warning(make_kqid(&init_user_ns,
-> -				     (dqp->dq_flags & XFS_DQ_USER) ?
-> -				     USRQUOTA : GRPQUOTA,
-> +		qtype = PRJQUOTA;
-> +	else if (dqp->dq_flags & XFS_DQ_USER)
-> +		qtype = USRQUOTA;
-> +	else
-> +		qtype = GRPQUOTA;
-> +
-> +	quota_send_warning(make_kqid(&init_user_ns, qtype,
->  				     be32_to_cpu(dqp->q_core.d_id)),
->  			   mp->m_super->s_dev, type);
->  }
-> -- 
-> 2.5.0
-> 
+Brian
+
+> Should I stay in 3.1.X family of xfsprogs or is it recommended to use at
+> least 3.2.x version with kernel 3.10?
+> =
+
+> The most I care about xfs_repair.
+> =
+
+> On 11/26/15 13:26, Emmanuel Florac wrote:
+> > Le Thu, 26 Nov 2015 11:21:45 +0100
+> > "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl> =E9crivait:
+> > =
+
+> >> mkfs.xfs -m crc=3D0,finobt=3D0
+> >>
+> >> but it does not work with 4.X version of xfsprogs. Call trace also
+> >> occurred so I tried to use 3.2.4 family with crc=3D0,finobt=3D0 and vo=
+lume
+> >> mounted successfully.
+> >>
+> > =
+
+> > Did you use -f? else mkfs.xfs won't do anything as it'll detect an
+> > existing filesystem.
+> > =
+
+> =
+
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
