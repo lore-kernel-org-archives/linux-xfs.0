@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ED3167F37
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 09:46:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB8E9304066
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:46:43 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DvE76R64haXWBkr3 (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 079D87F37
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 06:26:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DFDBA304032
+	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 04:26:42 -0800 (PST)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id cl8pRkpmgjcLUVcm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 07:46:42 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 817758E22B
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 15:46:41 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id tAQFke6V022027
-	for <xfs@oss.sgi.com>; Thu, 26 Nov 2015 10:46:40 -0500
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs_io: implement 'inode' command V5
-Date: Thu, 26 Nov 2015 16:46:35 +0100
-Message-Id: <1448552795-8794-1-git-send-email-cmaiolino@redhat.com>
+	<xfs@oss.sgi.com>; Thu, 26 Nov 2015 04:26:37 -0800 (PST)
+Date: Thu, 26 Nov 2015 13:26:38 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Which xfsprogs version to which kernel version
+Message-ID: <20151126132638.53ed9fc7@harpe.intellique.com>
+In-Reply-To: <5656DD39.8060403@poczta.onet.pl>
+References: <5656DD39.8060403@poczta.onet.pl>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,244 +24,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
+Cc: xfs@oss.sgi.com
 
-Implements a new xfs_io command, named 'inode', which is supposed to be
-used to query information about inode's existence and its physical size
-in the filesystem.
-
-Supported options:
-
-Default:     -- Return true(1) or false(0) if any inode greater than
-                32bits has been found in the filesystem
--v           -- verbose mode
-                Display the number and the physical size (in bits)
-                of the largest inode in the filesystem
-[num]        -- Return true(1) or false(0) if the inode [num] is in use
--n [num]     -- Return the next valid inode after [num]
-
-No manpage sent because there were changes in the supported options and its
-descriptions.
-I'll send the manpage after the options and descriptions are reviewed.
-
-- Changelog
-
-V3:
-	- Merge all 3 patches from the V2 together in a single patch
-	- Rework of '-n [num]' and 'num' only arguments algorithm
-	- Argument -n now relies on bulkreq.count to check for next inodes, not
-	  on bstat.bs_ino anymore.
-	- for loop in ret_lsize or ret_largest case, now relies on count being 0
-	  to break the loop
-
-V4:
-	- Refactor inode_f function to reduce its size and easier logic
-	- Implement error handlers for invalid command combination (hopefully
-	  all invalid combinations).
-	- use a single xfs_inogrp array for keep track of inodes
-	- Fix missing newline in inode_help()
-	- Rewrite help message in inode_help()
-	- Fix indentation
-
-V5:
-	- Reduce the amount of options
-	- remove igrp_rec variable, and use igroup[lastgrp] directly to get
-	  information from the last inode groups returned by ioctl
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- io/open.c | 143 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 143 insertions(+)
-
-diff --git a/io/open.c b/io/open.c
-index ac5a5e0..1e38ea8 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -20,6 +20,7 @@
- #include "input.h"
- #include "init.h"
- #include "io.h"
-+#include "libxfs.h"
- 
- #ifndef __O_TMPFILE
- #if defined __alpha__
-@@ -44,6 +45,7 @@ static cmdinfo_t statfs_cmd;
- static cmdinfo_t chproj_cmd;
- static cmdinfo_t lsproj_cmd;
- static cmdinfo_t extsize_cmd;
-+static cmdinfo_t inode_cmd;
- static prid_t prid;
- static long extsize;
- 
-@@ -750,6 +752,136 @@ statfs_f(
- 	return 0;
- }
- 
-+static void
-+inode_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Query physical information about the inode"
-+"\n"
-+" Default:	-- Return true(1) or false(0) if any inode greater than\n"
-+"		   32bits has been found in the filesystem\n"
-+" -v		-- verbose mode\n"
-+"		   Display the number and the physical size (in bits)\n"
-+"		   of the largest inode in the filesystem\n"
-+"[num]		-- Return true(1) or false(0) if the inode [num] is in use\n"
-+" -n [num]	-- Return the next valid inode after [num]\n"
-+"\n"));
-+}
-+
-+static int
-+inode_f(
-+	  int			argc,
-+	  char			**argv)
-+{
-+	__s32			count = 0;
-+	__s32			lastgrp = 0;
-+	__u64			last = 0;
-+	__u64			lastino = 0;
-+	__u64			userino = 0;
-+	char			*p;
-+	int			c;
-+	int			verbose = 0;
-+	int			ret_next = 0;
-+	int			cmd = 0;
-+	struct xfs_inogrp	igroup[1024];
-+	struct xfs_fsop_bulkreq	bulkreq;
-+	struct xfs_bstat	bstat;
-+
-+	while ((c = getopt(argc, argv, "nv")) != EOF) {
-+		switch (c) {
-+		case 'v':
-+			verbose = 1;
-+			break;
-+		case 'n':
-+			ret_next = 1;
-+			break;
-+		default:
-+			return command_usage(&inode_cmd);
-+		}
-+	}
-+
-+	if (ret_next && verbose)
-+		return command_usage(&inode_cmd);
-+
-+	if (optind < argc) {
-+		if (verbose)
-+			return command_usage(&inode_cmd);
-+
-+		if (ret_next) {
-+			cmd = XFS_IOC_FSBULKSTAT;
-+		} else {
-+			if (argc > 2)
-+				return command_usage(&inode_cmd);
-+			else
-+				cmd = XFS_IOC_FSBULKSTAT_SINGLE;
-+		}
-+
-+		userino = strtoull(argv[optind], &p, 10);
-+		if ((*p != '\0')) {
-+			printf(_("[num] must be a numeric value\n"));
-+			exitcode = 1;
-+			return 0;
-+		}
-+
-+		bulkreq.lastip = &userino;
-+		bulkreq.icount = 1;
-+		bulkreq.ubuffer = &bstat;
-+		bulkreq.ocount = &count;
-+
-+		if (xfsctl(file->name, file->fd, cmd, &bulkreq)) {
-+			if (errno == EINVAL) {
-+				if (!ret_next)
-+					printf("0\n");
-+			} else {
-+				perror("xfsctl");
-+			}
-+			exitcode = 1;
-+			return 0;
-+		}
-+
-+		if (ret_next) {
-+			printf("%llu\n", bstat.bs_ino);
-+			return 0;
-+		} else {
-+			/* Inode number used*/
-+			printf("1\n");
-+			return 0;
-+		}
-+	}
-+
-+	bulkreq.lastip = &last;
-+	bulkreq.icount = 1024; /* User-defined maybe!? */
-+	bulkreq.ubuffer = &igroup;
-+	bulkreq.ocount = &count;
-+
-+	for (;;) {
-+		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-+				&bulkreq)) {
-+			perror("XFS_IOC_FSINUMBERS");
-+			exitcode = 1;
-+			return 0;
-+		}
-+
-+		if (count == 0)
-+			break;
-+
-+		lastgrp = count;
-+	}
-+
-+	lastgrp--;
-+	lastino = igroup[lastgrp].xi_startino +
-+		  xfs_highbit64(igroup[lastgrp].xi_allocmask);
-+
-+	if (verbose)
-+		printf("%llu:%d\n", lastino,
-+			lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-+	else
-+		printf("%d\n", lastino > XFS_MAXINUMBER_32 ? 1 : 0);
-+
-+	return 0;
-+}
-+
- void
- open_init(void)
- {
-@@ -815,6 +947,16 @@ open_init(void)
- 		_("get/set preferred extent size (in bytes) for the open file");
- 	extsize_cmd.help = extsize_help;
- 
-+	inode_cmd.name = "inode";
-+	inode_cmd.cfunc = inode_f;
-+	inode_cmd.args = _("[-n | -v] [num]");
-+	inode_cmd.argmin = 0;
-+	inode_cmd.argmax = 2;
-+	inode_cmd.flags = CMD_NOMAP_OK;
-+	inode_cmd.oneline =
-+		_("Query inode number usage in the filesystem");
-+	inode_cmd.help = inode_help;
-+
- 	add_command(&open_cmd);
- 	add_command(&stat_cmd);
- 	add_command(&close_cmd);
-@@ -822,4 +964,5 @@ open_init(void)
- 	add_command(&chproj_cmd);
- 	add_command(&lsproj_cmd);
- 	add_command(&extsize_cmd);
-+	add_command(&inode_cmd);
- }
--- 
-2.4.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVGh1LCAyNiBOb3YgMjAxNSAxMToyMTo0NSArMDEwMAoiYWx1bm8zQHBvY3p0YS5vbmV0LnBs
+IiA8YWx1bm8zQHBvY3p0YS5vbmV0LnBsPiDDqWNyaXZhaXQ6Cgo+IG1rZnMueGZzIC1tIGNyYz0w
+LGZpbm9idD0wCj4gCj4gYnV0IGl0IGRvZXMgbm90IHdvcmsgd2l0aCA0LlggdmVyc2lvbiBvZiB4
+ZnNwcm9ncy4gQ2FsbCB0cmFjZSBhbHNvCj4gb2NjdXJyZWQgc28gSSB0cmllZCB0byB1c2UgMy4y
+LjQgZmFtaWx5IHdpdGggY3JjPTAsZmlub2J0PTAgYW5kIHZvbHVtZQo+IG1vdW50ZWQgc3VjY2Vz
+c2Z1bGx5Lgo+IAoKRGlkIHlvdSB1c2UgLWY/IGVsc2UgbWtmcy54ZnMgd29uJ3QgZG8gYW55dGhp
+bmcgYXMgaXQnbGwgZGV0ZWN0IGFuCmV4aXN0aW5nIGZpbGVzeXN0ZW0uCgotLSAKLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAg
+ICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9y
+YWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0
+IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
