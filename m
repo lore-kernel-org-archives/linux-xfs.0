@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 762EC7F50
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 07:22:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 23655AC003
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 05:22:26 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Oo7YzPUWnwIu44wA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 30 Nov 2015 05:22:25 -0800 (PST)
-Date: Mon, 30 Nov 2015 08:22:24 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs/xfs_buf: make xfs_buf_ioend_async() static
-Message-ID: <20151130132223.GB24765@bfoster.bfoster>
-References: <1448646749-18978-1-git-send-email-kuleshovmail@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 592C97F37
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 07:25:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 48E908F8035
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 05:25:40 -0800 (PST)
+Received: from mailapp01.imgtec.com (mailapp01.imgtec.com [195.59.15.196]) by
+	cuda.sgi.com with ESMTP id ZzJkRj2sxlx7FkjA for
+	<xfs@oss.sgi.com>; Mon, 30 Nov 2015 05:25:37 -0800 (PST)
+Received: from HHMAIL01.hh.imgtec.org (unknown [10.100.10.19])
+	by Websense Email Security Gateway with ESMTPS id 7F1904579DFE0
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 13:25:34 +0000 (GMT)
+Subject: Re: [PATCH xfsprogs] mdrestore: do not do dynamic linking of libtool
+	libraries
+References: <1448449838-47261-1-git-send-email-Vincent.Riera@imgtec.com>
+From: Vicente Olivert Riera <Vincent.Riera@imgtec.com>
+Message-ID: <565C4E4F.4060303@imgtec.com>
+Date: Mon, 30 Nov 2015 13:25:35 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1448646749-18978-1-git-send-email-kuleshovmail@gmail.com>
+In-Reply-To: <1448449838-47261-1-git-send-email-Vincent.Riera@imgtec.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +31,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Kuleshov <kuleshovmail@gmail.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Nov 27, 2015 at 11:52:29PM +0600, Alexander Kuleshov wrote:
-> There are no callers of the xfs_buf_ioend_async() function outside
-> of the fs/xfs/xfs_buf.c. So, let's make it static.
+ping
+
+On 25/11/15 11:10, Vicente Olivert Riera wrote:
+> As explained in commit ece49daeff1a3cad765e106d678c608925c9d768, use
+> -static-libtool-libs instead of -static to allow fallback to the dynamic
+> linking for libuuid only. Otherwise the build will fail like this:
 > 
-> Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
+> ld: attempted static link of dynamic object `/usr/lib/libuuid.so'
+> 
+> Signed-off-by: Vicente Olivert Riera <Vincent.Riera@imgtec.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_buf.c | 2 +-
+>  mdrestore/Makefile | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 3243cdf..45a8ea7 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1045,7 +1045,7 @@ xfs_buf_ioend_work(
->  	xfs_buf_ioend(bp);
->  }
+> diff --git a/mdrestore/Makefile b/mdrestore/Makefile
+> index 5171306..1b34a0e 100644
+> --- a/mdrestore/Makefile
+> +++ b/mdrestore/Makefile
+> @@ -10,7 +10,7 @@ CFILES = xfs_mdrestore.c
 >  
-> -void
-> +static void
->  xfs_buf_ioend_async(
->  	struct xfs_buf	*bp)
->  {
-> -- 
-> 2.5.0
+>  LLDLIBS = $(LIBXFS) $(LIBRT) $(LIBPTHREAD) $(LIBUUID)
+>  LTDEPENDENCIES = $(LIBXFS)
+> -LLDFLAGS = -static
+> +LLDFLAGS = -static-libtool-libs
+>  
+>  default: depend $(LTCOMMAND)
+>  
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
