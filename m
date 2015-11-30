@@ -1,20 +1,19 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A72129E2C
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 09:20:33 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D15397F37
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 07:53:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 37CC38F8033
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2015 07:20:33 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id WHlYGfiwgBp3Dy4Q (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Nov 2015 07:20:30 -0800 (PST)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v13 25/51] xfs: Add richacl support
-Date: Tue,  3 Nov 2015 16:17:01 +0100
-Message-Id: <1446563847-14005-26-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
-References: <1446563847-14005-1-git-send-email-agruenba@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C07EE304051
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 05:53:27 -0800 (PST)
+Received: from smtp2.qualitynet.net (dbncl-asg-40g-s02.onyx.net
+	[213.131.112.183]) by cuda.sgi.com with ESMTP id
+	fFJwDVaYWw24imX0 for <xfs@oss.sgi.com>;
+	Mon, 30 Nov 2015 05:53:22 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 30 Nov 2015 16:53:24 +0300
+Message-ID: <557719897.20151130165324@WVUIIWQIMZD>
+Subject: =?utf-8?B?0J7RhtC10L3QutCwINGA0LDQsdC+0YLRiyDQutC+0LzQv9Cw0L3QuNC4INC4INGB0L7RgtGA0YPQtNC90LjQutC+0LIg0L/QviDQnNCS0J4sIEtQSSDQuCBCU0M=?=
+From: "=?utf-8?B?0J7RgtC00LXQuyDRgNCw0LfQstC40YLQuNGPINC/0LXRgNGB0L7QvdCw0LvQsA==?="
+	<fxurdcbbsygrm@qualitynet.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,499 +22,231 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8846978004610595838=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>
+To: xfs@oss.sgi.com
 
-The richacl feature flag (mkfs.xfs -m richacl=1) determines whether an xfs
-filesystem supports posix acls or richacls.  Richacls are stored in
-"system.richacl" xattrs.
+--===============8846978004610595838==
+Content-Type: multipart/alternative; boundary=----------716D51D3798C78C9
 
-On the grounds that richacls add relatively little overhead compared to the
-size of xfs itself, to keep the testing matrix small, and because xfs users
-are highly likely to enable richacls anyway, richacl support cannot be
-compiled out in xfs.
+------------716D51D3798C78C9
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/xfs/Kconfig             |   1 +
- fs/xfs/Makefile            |   1 +
- fs/xfs/libxfs/xfs_format.h |  11 ++++-
- fs/xfs/xfs_iops.c          |  44 +++++++++++++++----
- fs/xfs/xfs_richacl.c       | 103 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_richacl.h       |  23 ++++++++++
- fs/xfs/xfs_super.c         |   6 ++-
- fs/xfs/xfs_super.h         |   4 ++
- fs/xfs/xfs_xattr.c         |  43 ++++++++++++++++---
- 9 files changed, 218 insertions(+), 18 deletions(-)
- create mode 100644 fs/xfs/xfs_richacl.c
- create mode 100644 fs/xfs/xfs_richacl.h
+0KPRh9C10LHQvdGL0Lkg0YbQtdC90YLRgCDQv9GA0LjQs9C70LDRiNCw0LXRgiDQvdCwINC+0LHR
+g9GH0LXQvdC40LUgKCrQv9GA0L7QvNC+0LrQvtC0OjI2MiopINC/0L4g0YLQtdC80LU6DQoNCirQ
+oNCw0LfRgNCw0LHQvtGC0LrQsCDQuCDQstC90LXQtNGA0LXQvdC40LUg0L/QvtC60LDQt9Cw0YLQ
+tdC70LXQuSBLUEksINCc0JLQniDQuCBCU0MuICoNCg0KKtCU0LvRjzoqINGA0YPQutC+0LLQvtC0
+0LjRgtC10LvQtdC5INC4INGB0L/QtdGG0LjQsNC70LjRgdGC0L7Qsiwg0L7RgtCy0LXRh9Cw0Y7R
+idC40YUg0LfQsCDQvtGA0LPQsNC90LjQt9Cw0YbQuNC+0L3QvdC+0LUg0YDQsNC30LLQuNGC0LjQ
+tSwNCtGA0YPQutC+0LLQvtC00LjRgtC10LvQtdC5INC4INGB0L/QtdGG0LjQsNC70LjRgdGC0L7Q
+siDQsiDQvtCx0LvQsNGB0YLQuCDRg9C/0YDQsNCy0LvQtdC90LjRjyDQv9C10YDRgdC+0L3QsNC7
+0L7QvCwg0YDRg9C60L7QstC+0LTQuNGC0LXQu9C10LkNCtC60L7QvNC/0LDQvdC40Lkg0Lgg0YHQ
+vtCx0YHRgtCy0LXQvdC90LjQutC+0LIg0LHQuNC30L3QtdGB0LAuDQoNCg0KDQoNCg0KKjE3IH4g
+MTgg0LTQtdC60LDQsdGA0Y8g0LPQvtGA0L7QtCDQnNC+0YHQutCy0LAqDQrQl9Cw0L3Rj9GC0LjR
+jyDQv9GA0L7QstC+0LTRj9GC0YHRjyDRgSAxMDowMCDQtNC+IDE3OjMwDQoNCtCc0LXRgNC+0L/R
+gNC40Y/RgtC40LUg0YHQvtGB0YLQvtC40YLRgdGPOiDQvC4g0JHQsNGD0LzQsNC90YHQutCw0Y8s
+INGD0LsuINCR0LDRg9C80LDQvdGB0LrQsNGPLCDQtC42LCDQkS7Qpi4gItCS0LjQutGC0L7RgNC4
+0Y8NCtCf0LvQsNC30LAiLg0KDQrQo9C30L3QsNGC0Ywg0LLRgdGOINC/0L7QtNGA0L7QsdC90YPR
+jiDQuNC90YTQvtGA0LzQsNGG0LjRjiDQuCDQv9C+0LTQsNGC0Ywg0LfQsNGP0LLQutGDINC90LAg
+0YPRh9Cw0YHRgtC40LUg0LIg0L7QsdGD0YfQtdC90LjQuCDQvNC+0LbQvdC+DQrQv9C+INGC0LXQ
+uy46DQoNCjggINC60L7QtCDQs9C+0YDQvtC00LAgICggNCA5IDUgKSAg0L3QvtC80LXRgCAgNyAy
+IDUgIC0gIDAgNCAgLSAgNCA4ICAo0LzQvdC+0LPQvtC60LDQvdCw0LvRjNC90YvQuSkNCg0KDQoq
+0JTQsNC90L3QvtC1INC+0LHRg9GH0LXQvdC40LUg0L/QvtC30LLQvtC70Y/QtdGCOiAqDQogKiDQ
+v9C+0LvRg9GH0LjRgtGMINCz0L7RgtC+0LLRi9C1INC90LDRgNCw0LHQvtGC0LrQuCDQuCDRgNC1
+0YjQtdC90LjRjyDQuNC3INC/0YDQsNC60YLQuNC60Lgg0YDQvtGB0YHQuNC50YHQutC40YUg0Lgg
+0LfQsNC/0LDQtNC90YvRhQ0K0LrQvtC80L/QsNC90LjQuSwNCiAqINGD0LfQvdCw0YLRjCDQsNC7
+0LPQvtGA0LjRgtC8INGA0LDQt9GA0LDQsdC+0YLQutC4INGB0LHQsNC70LDQvdGB0LjRgNC+0LLQ
+sNC90L3QvtC5INGB0LjRgdGC0LXQvNGLINC/0L7QutCw0LfQsNGC0LXQu9C10LkgKNCh0KHQnyks
+DQogKiDQvtGC0YDQsNCx0L7RgtCw0YLRjCDQvdCw0LLRi9C6INC40L3RgtC10LPRgNCw0YbQuNC4
+INGB0YLRgNCw0YLQtdCz0LjRh9C10YHQutC40YUg0YbQtdC70LXQuSDQuCDQv9C+0LrQsNC30LDR
+gtC10LvQtdC5DQrRgNC10LfRg9C70YzRgtCw0YLQuNCy0L3QvtGB0YLQuCwNCiAqINC/0L7Qu9GD
+0YfQuNGC0Ywg0L/RgNCw0LrRgtC40YfQtdGB0LrQuNC1INC40L3RgdGC0YDRg9C80LXQvdGC0Ysg
+0LTQtdC60L7QvNC/0L7Qt9C40YbQuNC4INGG0LXQu9C10Lkg0Lgg0L/QvtC60LDQt9Cw0YLQtdC7
+0LXQuSwNCiAqINC+0YHQstC+0LjRgtGMINC80LXRhdCw0L3QuNC30Lwg0L/RgNC40LLRj9C30LrQ
+uCDQv9GA0LXQvNC40Lgg0Log0LLRi9C/0L7Qu9C90LXQvdC40Y4g0YbQtdC70LXQuSwNCiAqINGD
+0LfQvdCw0YLRjCDQv9GA0LDQutGC0LjRh9C10YHQutC40LUg0L/QvtC00YXQvtC00Ysg0Log0LLQ
+vdC10LTRgNC10L3QuNGOINGB0LjRgdGC0LXQvNGLINGD0L/RgNCw0LLQu9C10L3QuNGPINC/0L4N
+CtGA0LXQt9GD0LvRjNGC0LDRgtCw0Lwg0L3QsCDQvtGB0L3QvtCy0LUNCiAgINCh0KHQny4NCg0K
+ICAgICAgICAq0J7Qv9C40YHQsNC90LjQtSDQv9GA0L7Qs9GA0LDQvNC80Ys6Kg0KKjEuINCg0LDQ
+t9GA0LDQsdC+0YLQutCwINGB0LHQsNC70LDQvdGB0LjRgNC+0LLQsNC90L3QvtC5INGB0LjRgdGC
+0LXQvNGLINC/0L7QutCw0LfQsNGC0LXQu9C10LkgKEJTQyk6Kg0KLdCY0YHRgtC+0YDQuNGPINC4
+INC/0YDQuNC90YbQuNC/0Ysg0YDQsNCx0L7RgtGLIEJTQy4NCi3QodGG0LXQvdCw0YDQuNC5INGB
+0YLRgNCw0YLQtdCz0LjRh9C10YHQutC+0Lkg0YHQtdGB0YHQuNC4INC/0L4g0YDQsNC30YDQsNCx
+0L7RgtC60LUgQlNDLg0KLdCQ0LvQs9C+0YDQuNGC0Lwg0YHQvtC30LTQsNC90LjRjyDRgdGC0YDQ
+sNGC0LXQs9C40YfQtdGB0LrQvtC5INC60LDRgNGC0YsuDQot0J/RgNC40LzQtdGA0YsgQlNDINC0
+0LvRjyDRgNCw0LfQu9C40YfQvdGL0YUg0L7RgtGA0LDRgdC70LXQuSDQuCDRhNGD0L3QutGG0LjQ
+vtC90LDQu9GM0L3Ri9GFINC/0L7QtNGA0LDQt9C00LXQu9C10L3QuNC5Lg0KKjIuINCU0LXQutC+
+0LzQv9C+0LfQuNGG0LjRjyDRgdGC0YDQsNGC0LXQs9C40YfQtdGB0LrQuNGFINGG0LXQu9C10Lkg
+0L7RgNCz0LDQvdC40LfQsNGG0LjQuDoqDQot0J7RgdC90L7QstGLINGG0LXQu9C10LLQvtCz0L4g
+0YPQv9GA0LDQstC70LXQvdC40Y8gKE1CTykuDQot0JTQtdGA0LXQstC+INGG0LXQu9C10Lkg0LrQ
+vtC80L/QsNC90LjQuC4NCi3Ql9Cw0LrRgNC10L/Qu9C10L3QuNC1INGG0LXQu9C10Lkg0LfQsCDR
+hNGD0L3QutGG0LjRj9C80Lgg0Lgg0LjRgdC/0L7Qu9C90LjRgtC10LvRj9C80LgsINC80LDRgtGA
+0LjRhtCwINGG0LXQu9C10LkuDQot0J/RgNC40L3RhtC40L/RiyDQtNC10LrQvtC80L/QvtC30LjR
+htC40Lgg0YbQtdC70LXQuS4NCi3QoNCw0LfRgNCw0LHQvtGC0LrQsCDQvNC10YDQvtC/0YDQuNGP
+0YLQuNC5INC/0L4g0LTQvtGB0YLQuNC20LXQvdC40Y4g0YbQtdC70LXQuSDQuCDQv9C70LDQvdCw
+INC00LXQudGB0YLQstC40LkuDQoqMy4g0J/QvtGB0YLQsNC90L7QstC60LAg0LrQu9GO0YfQtdCy
+0YvRhSDQv9C+0LrQsNC30LDRgtC10LvQtdC5INGN0YTRhNC10LrRgtC40LLQvdC+0YHRgtC4IChL
+UEkpOioNCi3QotC10YXQvdC+0LvQvtCz0LjRjyDQstGL0LHQvtGA0LAg0L/QvtC60LDQt9Cw0YLQ
+tdC70LXQuSDQuCDRg9GB0YLQsNC90L7QstC70LXQvdC40LUg0LLQtdGB0L7QsiBLUEkuDQot0KDQ
+sNC30YDQsNCx0L7RgtC60LAg0LrQsNGA0YLRiyBLUEkuDQot0KPRgNC+0LLQvdC4INC00L7RgdGC
+0LjQttC10L3QuNGPIEtQSS4NCi3Qn9GA0LjQvNC10YDRiyDQutCw0YDRgiDQv9C+0LrQsNC30LDR
+gtC10LvQtdC5INC00LvRjyDRgNCw0LfQu9C40YfQvdGL0YUg0L/QvtC00YDQsNC30LTQtdC70LXQ
+vdC40Lkg0Lgg0LTQvtC70LbQvdC+0YHRgtC10LkuDQot0J/RgNC40LHQvtGA0L3Ri9C1INC/0LDQ
+vdC10LvQuCDQtNC70Y8g0LzQvtC90LjRgtC+0YDQuNC90LPQsCDQv9C+0LrQsNC30LDRgtC10LvQ
+tdC5IChkYXNoYm9hcmRzKS4NCio0LiDQn9GA0LXQvNC40YDQvtCy0LDQvdC40LUg0L3QsCDQvtGB
+0L3QvtCy0LUgS1BJOioNCi3QktGL0LHQvtGAINC/0LXRgNC40L7QtNC40YfQvdC+0YHRgtC4INC/
+0YDQtdC80LjRgNC+0LLQsNC90LjRjy4NCi3Qn9GA0LjQvNC10YDRiyDQv9GA0LXQvNC40LDQu9GM
+0L3Ri9GFINC/0LvQsNC90L7QsiDQvdCwINC+0YHQvdC+0LLQtSBLUEkuDQot0KDQsNGB0YfQtdGC
+INC4INC/0LvQsNC90LjRgNC+0LLQsNC90LjQtSDRhNC+0L3QtNCwINC/0YDQtdC80LjRgNC+0LLQ
+sNC90LjRjy4NCi3Qn9GA0LjQstGP0LfQutCwINC/0YDQtdC80LjQuCDQuiBLUEk6INGD0YDQvtCy
+0L3QuCDQuCDRgNC10LrQvtC80LXQvdC00YPQtdC80YvQuSDQv9GA0L7RhtC10L3RgiDQv9GA0LXQ
+vNC40LgsINGF0LDRgNCw0LrRgtC10YANCtC30LDQstC40YHQuNC80L7RgdGC0LgNCiAg0L/RgNC1
+0LzQuNC4INC+0YIg0L/QvtC60LDQt9Cw0YLQtdC70Y8uDQoqNS4g0KDQtdC60L7QvNC10L3QtNCw
+0YbQuNC4INC/0L4g0LLQvdC10LTRgNC10L3QuNGOLioNCi3Qn9C+0LTQstC+0LTQvdGL0LUg0LrQ
+sNC80L3QuCDQv9GA0Lgg0LLQvdC10LTRgNC10L3QuNC4INGB0LjRgdGC0LXQvNGLINGD0L/RgNCw
+0LLQu9C10L3QuNGPINGN0YTRhNC10LrRgtC40LLQvdC+0YHRgtGM0Y4uDQot0JvRg9GH0YjQuNC1
+INC/0YDQsNC60YLQuNC60Lgg0LLQvdC10LTRgNC10L3QuNGPLg0KLdCS0L3Rg9GC0YDQtdC90L3Q
+uNC1INC60L7QvNC80YPQvdC40LrQsNGG0LjQuCDRgSDRgdC+0YLRgNGD0LTQvdC40LrQsNC80Lgu
+DQoNCg0K0KPRh9Cw0YHRgtC40LU6IDIyIDjQvtC+INGA0YPQsdC70LXQuS4NCtCh0Lp10LTQunUg
+KNC+0YIgMi3RhSDRh9C10LvQvtCy0LXQuiDigJMgMTAlLCDQvtGCIDMt0YUg0Lgg0LHQvtC70LXQ
+tSDigJMgMTUlKS4NCtCS0YXQvtC00LjRgiDQvNC10YLQvtC00LjRh9C10YHQutC40Lkg0LzQsNGC
+0LXRgNC40LDQuywg0L7QsdC10LTRiywg0LrQvtGE0LUt0L/QsNGD0LfRiy4NCtCf0L4g0L7QutC+
+0L3Rh9Cw0L3QuNGOINC30LDQvdGP0YLQuNC5INCS0LDQvCDQv9GA0LXQtNC+0YHRgtCw0LLQu9GP
+0LXRgtGB0Y8g0YHQtdGA0YLQuNGE0LjQutCw0YIuDQo=
+------------716D51D3798C78C9
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 5d47b4d..3fd00f8 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -4,6 +4,7 @@ config XFS_FS
- 	depends on (64BIT || LBDAF)
- 	select EXPORTFS
- 	select LIBCRC32C
-+	select FS_RICHACL
- 	help
- 	  XFS is a high performance journaling filesystem which originated
- 	  on the SGI IRIX platform.  It is completely multi-threaded, can
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index a096841..1e6b984 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -84,6 +84,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_message.o \
- 				   xfs_mount.o \
- 				   xfs_mru_cache.o \
-+				   xfs_richacl.o \
- 				   xfs_super.o \
- 				   xfs_symlink.o \
- 				   xfs_sysfs.o \
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 9590a06..923247c 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -461,10 +461,13 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
- #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
- #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
-+#define XFS_SB_FEAT_INCOMPAT_RICHACL	(1 << 3)	/* richacls */
-+
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
--		 XFS_SB_FEAT_INCOMPAT_META_UUID)
-+		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
-+		 XFS_SB_FEAT_INCOMPAT_RICHACL)
- 
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
-@@ -530,6 +533,12 @@ static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
- 		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
- }
- 
-+static inline bool xfs_sb_version_hasrichacl(struct xfs_sb *sbp)
-+{
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
-+		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RICHACL);
-+}
-+
- /*
-  * end of superblock version macros
-  */
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 8294132..9e4103b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -27,6 +27,7 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_acl.h"
-+#include "xfs_richacl.h"
- #include "xfs_quota.h"
- #include "xfs_error.h"
- #include "xfs_attr.h"
-@@ -42,6 +43,7 @@
- #include <linux/capability.h>
- #include <linux/xattr.h>
- #include <linux/posix_acl.h>
-+#include <linux/richacl.h>
- #include <linux/security.h>
- #include <linux/fiemap.h>
- #include <linux/slab.h>
-@@ -133,7 +135,8 @@ xfs_generic_create(
- {
- 	struct inode	*inode;
- 	struct xfs_inode *ip = NULL;
--	struct posix_acl *default_acl, *acl;
-+	struct posix_acl *default_acl = NULL, *acl = NULL;
-+	struct richacl *richacl = NULL;
- 	struct xfs_name	name;
- 	int		error;
- 
-@@ -149,9 +152,15 @@ xfs_generic_create(
- 		rdev = 0;
- 	}
- 
--	error = posix_acl_create(dir, &mode, &default_acl, &acl);
--	if (error)
--		return error;
-+	if (IS_RICHACL(dir)) {
-+		richacl = richacl_create(&mode, dir);
-+		if (IS_ERR(richacl))
-+			return PTR_ERR(richacl);
-+	} else {
-+		error = posix_acl_create(dir, &mode, &default_acl, &acl);
-+		if (error)
-+			return error;
-+	}
- 
- 	if (!tmpfile) {
- 		xfs_dentry_to_name(&name, dentry, mode);
-@@ -180,6 +189,11 @@ xfs_generic_create(
- 			goto out_cleanup_inode;
- 	}
- #endif
-+	if (richacl) {
-+		error = xfs_set_richacl(inode, richacl);
-+		if (error)
-+			goto out_cleanup_inode;
-+	}
- 
- 	if (tmpfile)
- 		d_tmpfile(dentry, inode);
-@@ -189,10 +203,9 @@ xfs_generic_create(
- 	xfs_finish_inode_setup(ip);
- 
-  out_free_acl:
--	if (default_acl)
--		posix_acl_release(default_acl);
--	if (acl)
--		posix_acl_release(acl);
-+	posix_acl_release(default_acl);
-+	posix_acl_release(acl);
-+	richacl_put(richacl);
- 	return error;
- 
-  out_cleanup_inode:
-@@ -534,6 +547,13 @@ xfs_setattr_time(
- 	}
- }
- 
-+static inline int
-+xfs_acl_chmod(struct inode *inode, umode_t mode)
-+{
-+	if (IS_RICHACL(inode))
-+		return richacl_chmod(inode, inode->i_mode);
-+	return posix_acl_chmod(inode, inode->i_mode);
-+}
- int
- xfs_setattr_nonsize(
- 	struct xfs_inode	*ip,
-@@ -722,7 +742,7 @@ xfs_setattr_nonsize(
- 	 * 	     Posix ACL code seems to care about this issue either.
- 	 */
- 	if ((mask & ATTR_MODE) && !(flags & XFS_ATTR_NOACL)) {
--		error = posix_acl_chmod(inode, inode->i_mode);
-+		error = xfs_acl_chmod(inode, inode->i_mode);
- 		if (error)
- 			return error;
- 	}
-@@ -1104,6 +1124,8 @@ xfs_vn_tmpfile(
- static const struct inode_operations xfs_inode_operations = {
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
-+	.get_richacl		= xfs_get_richacl,
-+	.set_richacl		= xfs_set_richacl,
- 	.getattr		= xfs_vn_getattr,
- 	.setattr		= xfs_vn_setattr,
- 	.setxattr		= generic_setxattr,
-@@ -1132,6 +1154,8 @@ static const struct inode_operations xfs_dir_inode_operations = {
- 	.rename2		= xfs_vn_rename,
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
-+	.get_richacl		= xfs_get_richacl,
-+	.set_richacl		= xfs_set_richacl,
- 	.getattr		= xfs_vn_getattr,
- 	.setattr		= xfs_vn_setattr,
- 	.setxattr		= generic_setxattr,
-@@ -1160,6 +1184,8 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
- 	.rename2		= xfs_vn_rename,
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
-+	.get_richacl		= xfs_get_richacl,
-+	.set_richacl		= xfs_set_richacl,
- 	.getattr		= xfs_vn_getattr,
- 	.setattr		= xfs_vn_setattr,
- 	.setxattr		= generic_setxattr,
-diff --git a/fs/xfs/xfs_richacl.c b/fs/xfs/xfs_richacl.c
-new file mode 100644
-index 0000000..92a036e
---- /dev/null
-+++ b/fs/xfs/xfs_richacl.c
-@@ -0,0 +1,103 @@
-+/*
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Author: Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2.1 of the GNU Lesser General Public License
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-+ */
-+
-+#include "xfs.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_inode.h"
-+#include "xfs_attr.h"
-+
-+#include <linux/xattr.h>
-+#include <linux/richacl_xattr.h>
-+
-+struct richacl *
-+xfs_get_richacl(struct inode *inode)
-+{
-+	struct xfs_inode *ip = XFS_I(inode);
-+	struct richacl *acl = NULL;
-+	int size = XATTR_SIZE_MAX;
-+	void *value;
-+	int error;
-+
-+	value = kmem_zalloc_large(size, KM_SLEEP);
-+	if (!value)
-+		return ERR_PTR(-ENOMEM);
-+
-+	error = xfs_attr_get(ip, XATTR_RICHACL, value, &size, ATTR_ROOT);
-+	if (error) {
-+		/*
-+		 * If the attribute doesn't exist make sure we have a negative
-+		 * cache entry, for any other error assume it is transient and
-+		 * leave the cache entry as ACL_NOT_CACHED.
-+		 */
-+		if (error != -ENOATTR)
-+			acl = ERR_PTR(error);
-+	} else
-+		acl = richacl_from_xattr(&init_user_ns, value, size);
-+
-+	if (!IS_ERR(acl))
-+		set_cached_richacl(inode, acl);
-+	kfree(value);
-+
-+	return acl;
-+}
-+
-+static int
-+xfs_remove_richacl(struct inode *inode)
-+{
-+	struct xfs_inode *ip = XFS_I(inode);
-+	int error;
-+
-+	error = xfs_attr_remove(ip, XATTR_RICHACL, ATTR_ROOT);
-+	if (error == -ENOATTR)
-+		error = 0;
-+	if (!error)
-+		set_cached_richacl(inode, NULL);
-+	return error;
-+}
-+
-+int
-+xfs_set_richacl(struct inode *inode, struct richacl *acl)
-+{
-+	struct xfs_inode *ip = XFS_I(inode);
-+	umode_t mode = inode->i_mode;
-+	int error, size;
-+	void *value;
-+
-+	if (!acl)
-+		return xfs_remove_richacl(inode);
-+
-+	if (richacl_equiv_mode(acl, &mode) == 0) {
-+		xfs_set_mode(inode, mode);
-+		return xfs_remove_richacl(inode);
-+	}
-+
-+	size = richacl_xattr_size(acl);
-+	value = kmem_zalloc_large(size, KM_SLEEP);
-+	if (!value)
-+		return -ENOMEM;
-+	richacl_to_xattr(&init_user_ns, acl, value, size);
-+	error = xfs_attr_set(ip, XATTR_RICHACL, value, size,
-+			     ATTR_ROOT);
-+	kfree(value);
-+	if (error)
-+		return error;
-+
-+	mode &= ~S_IRWXUGO;
-+	mode |= richacl_masks_to_mode(acl);
-+	xfs_set_mode(inode, mode);
-+	set_cached_richacl(inode, acl);
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/xfs_richacl.h b/fs/xfs/xfs_richacl.h
-new file mode 100644
-index 0000000..431aa25
---- /dev/null
-+++ b/fs/xfs/xfs_richacl.h
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C)  2015 Red Hat, Inc.
-+ * Author: Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2.1 of the GNU Lesser General Public License
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-+ */
-+
-+#ifndef __FS_XFS_RICHACL_H
-+#define __FS_XFS_RICHACL_H
-+
-+struct richacl;
-+
-+extern struct richacl *xfs_get_richacl(struct inode *);
-+extern int xfs_set_richacl(struct inode *, struct richacl *);
-+
-+#endif  /* __FS_XFS_RICHACL_H */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 904f637..f82ce1a 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1500,7 +1500,11 @@ xfs_fs_fill_super(
- 	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
- 	sb->s_max_links = XFS_MAXLINK;
- 	sb->s_time_gran = 1;
--	set_posix_acl_flag(sb);
-+
-+	if (xfs_sb_version_hasrichacl(&mp->m_sb))
-+		set_richacl_flag(sb);
-+	else
-+		set_posix_acl_flag(sb);
- 
- 	/* version 5 superblocks support inode version counters. */
- 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 499058f..7ae21d9 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -36,6 +36,9 @@ extern void xfs_qm_exit(void);
- # define set_posix_acl_flag(sb)	do { } while (0)
- #endif
- 
-+# define XFS_RICHACL_STRING	"Richacls, "
-+# define set_richacl_flag(sb)	((sb)->s_flags |= MS_RICHACL)
-+
- #define XFS_SECURITY_STRING	"security attributes, "
- 
- #ifdef CONFIG_XFS_RT
-@@ -52,6 +55,7 @@ extern void xfs_qm_exit(void);
- 
- #define XFS_VERSION_STRING	"SGI XFS"
- #define XFS_BUILD_OPTIONS	XFS_ACL_STRING \
-+				XFS_RICHACL_STRING \
- 				XFS_SECURITY_STRING \
- 				XFS_REALTIME_STRING \
- 				XFS_DBG_STRING /* DBG must be last */
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 8428aed..64aac05 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -28,6 +28,7 @@
- #include "xfs_acl.h"
- 
- #include <linux/posix_acl_xattr.h>
-+#include <linux/richacl_xattr.h>
- #include <linux/xattr.h>
- 
- 
-@@ -74,6 +75,24 @@ xfs_xattr_set(struct dentry *dentry, const char *name, const void *value,
- 				(void *)value, size, xflags);
- }
- 
-+static int
-+xfs_xattr_get_trusted(struct dentry *dentry, const char *name,
-+		      void *value, size_t size, int xflags)
-+{
-+	if (strcmp(name, XATTR_RICHACL) == 0)
-+		return -EOPNOTSUPP;
-+	return xfs_xattr_get(dentry, name, value, size, xflags);
-+}
-+
-+static int
-+xfs_xattr_set_trusted(struct dentry *dentry, const char *name,
-+		      const void *value, size_t size, int flags, int xflags)
-+{
-+	if (strcmp(name, XATTR_RICHACL) == 0)
-+		return -EOPNOTSUPP;
-+	return xfs_xattr_set(dentry, name, value, size, flags, xflags);
-+}
-+
- static const struct xattr_handler xfs_xattr_user_handler = {
- 	.prefix	= XATTR_USER_PREFIX,
- 	.flags	= 0, /* no flags implies user namespace */
-@@ -84,8 +103,8 @@ static const struct xattr_handler xfs_xattr_user_handler = {
- static const struct xattr_handler xfs_xattr_trusted_handler = {
- 	.prefix	= XATTR_TRUSTED_PREFIX,
- 	.flags	= ATTR_ROOT,
--	.get	= xfs_xattr_get,
--	.set	= xfs_xattr_set,
-+	.get	= xfs_xattr_get_trusted,
-+	.set	= xfs_xattr_set_trusted,
- };
- 
- static const struct xattr_handler xfs_xattr_security_handler = {
-@@ -103,6 +122,7 @@ const struct xattr_handler *xfs_xattr_handlers[] = {
- 	&posix_acl_access_xattr_handler,
- 	&posix_acl_default_xattr_handler,
- #endif
-+	&richacl_xattr_handler,
- 	NULL
- };
- 
-@@ -152,10 +172,10 @@ xfs_xattr_put_listent(
- 	ASSERT(context->count >= 0);
- 
- 	if (flags & XFS_ATTR_ROOT) {
--#ifdef CONFIG_XFS_POSIX_ACL
- 		if (namelen == SGI_ACL_FILE_SIZE &&
- 		    strncmp(name, SGI_ACL_FILE,
--			    SGI_ACL_FILE_SIZE) == 0) {
-+			    SGI_ACL_FILE_SIZE) == 0 &&
-+		    IS_POSIXACL(&context->dp->i_vnode)) {
- 			int ret = __xfs_xattr_put_listent(
- 					context, XATTR_SYSTEM_PREFIX,
- 					XATTR_SYSTEM_PREFIX_LEN,
-@@ -164,8 +184,9 @@ xfs_xattr_put_listent(
- 			if (ret)
- 				return ret;
- 		} else if (namelen == SGI_ACL_DEFAULT_SIZE &&
--			 strncmp(name, SGI_ACL_DEFAULT,
--				 SGI_ACL_DEFAULT_SIZE) == 0) {
-+			   strncmp(name, SGI_ACL_DEFAULT,
-+				   SGI_ACL_DEFAULT_SIZE) == 0 &&
-+			   IS_POSIXACL(&context->dp->i_vnode)) {
- 			int ret = __xfs_xattr_put_listent(
- 					context, XATTR_SYSTEM_PREFIX,
- 					XATTR_SYSTEM_PREFIX_LEN,
-@@ -173,8 +194,16 @@ xfs_xattr_put_listent(
- 					strlen(XATTR_POSIX_ACL_DEFAULT));
- 			if (ret)
- 				return ret;
-+		} else if (namelen == strlen(XATTR_RICHACL) &&
-+			   strncmp(name, XATTR_RICHACL,
-+				   strlen(XATTR_RICHACL)) == 0 &&
-+			   IS_RICHACL(&context->dp->i_vnode)) {
-+			return __xfs_xattr_put_listent(
-+					context, XATTR_SYSTEM_PREFIX,
-+					XATTR_SYSTEM_PREFIX_LEN,
-+					XATTR_RICHACL,
-+					strlen(XATTR_RICHACL));
- 		}
--#endif
- 
- 		/*
- 		 * Only show root namespace entries if we are actually allowed to
--- 
-2.5.0
+PGRpdiBkaXI9Imx0ciI+PGRpdiBhbGlnbj0iY2VudGVyIj48dGFibGUgYmdjb2xvcj0iI2Y0ZTNk
+YiIgYm9yZGVyPSIwIiBjZWxsc3BhY2luZz0iMCI+PHRib2R5Pjx0cj48dGQgYmdjb2xvcj0iIzY2
+MDA2NiI+wqA8L3RkPjx0ZCBiZ2NvbG9yPSIjNjYwMDY2Ij7CoDwvdGQ+PHRkIGJnY29sb3I9IiM2
+NjAwNjYiPsKgPC90ZD48dGQgYmdjb2xvcj0iIzY2MDA2NiI+wqA8L3RkPjx0ZCBiZ2NvbG9yPSIj
+NjYwMDY2Ij7CoDwvdGQ+PC90cj48dHI+PHRkIGJnY29sb3I9IiM2NjAwNjYiPsKgPC90ZD48dGQg
+Ymdjb2xvcj0iI2ZkZjlmNyI+wqA8L3RkPjx0ZCBiZ2NvbG9yPSIjZmRmOWY3Ij48cCBhbGlnbj0i
+Y2VudGVyIj7Qo9GH0LXQsdC90YvQuSDRhtC10L3RgtGAINC/0YDQuNCz0LvQsNGI0LDQtdGCINC9
+0LAg0L7QsdGD0YfQtdC90LjQtSAoPGI+0L/RgNC+0LzQvtC60L7QtDoyNjI8L2I+KSAJCQkg0L/Q
+viDRgtC10LzQtTo8YnI+PGJyPjxmb250IGNvbG9yPSIjMDAwMGZmIj48Yj48Zm9udCBzaXplPSI1
+Ij7QoNCw0LfRgNCw0LHQvtGC0LrQsCDQuCDQstC90LXQtNGA0LXQvdC40LUgCQkJ0L/QvtC60LDQ
+t9Cw0YLQtdC70LXQuSBLUEksINCc0JLQniDQuCBCU0MuIDwvZm9udD48L2I+PGJyPjwvZm9udD48
+YnI+PGZvbnQgY29sb3I9IiNjYzAwNjYiPjxiPtCU0LvRjzo8L2I+PC9mb250PiDRgNGD0LrQvtCy
+0L7QtNC40YLQtdC70LXQuSDQuCAJCQnRgdC/0LXRhtC40LDQu9C40YHRgtC+0LIsINC+0YLQstC1
+0YfQsNGO0YnQuNGFINC30LAg0L7RgNCz0LDQvdC40LfQsNGG0LjQvtC90L3QvtC1INGA0LDQt9Cy
+0LjRgtC40LUsPGJyPtGA0YPQutC+0LLQvtC00LjRgtC10LvQtdC5INC4INGB0L/QtdGG0LjQsNC7
+0LjRgdGC0L7QsiDQsiDQvtCx0LvQsNGB0YLQuCDRg9C/0YDQsNCy0LvQtdC90LjRjyDQv9C10YDR
+gdC+0L3QsNC70L7QvCwgCQkJINGA0YPQutC+0LLQvtC00LjRgtC10LvQtdC5PGJyPgkJCdC60L7Q
+vNC/0LDQvdC40Lkg0Lgg0YHQvtCx0YHRgtCy0LXQvdC90LjQutC+0LIg0LHQuNC30L3QtdGB0LAu
+PGJyPiDCoDwvcD48cCBhbGlnbj0iY2VudGVyIj48YnI+PGI+PGZvbnQgY29sb3I9IiNjYzAwNjYi
+IHNpemU9IjQiPjE3IDxzcGFuIGxhbmc9ImVuLXVzIj5+PC9zcGFuPiAxOCAJCQkg0LTQtdC60LDQ
+sdGA0Y8gPGJyPjwvZm9udD7Qs9C+0YDQvtC0INCc0L7RgdC60LLQsDxicj48L2I+PGJyPgkJCdCX
+0LDQvdGP0YLQuNGPINC/0YDQvtCy0L7QtNGP0YLRgdGPINGBIDEwPHNwYW4gbGFuZz0iZW4tdXMi
+Pjo8L3NwYW4+MDAg0LTQviAxNzxzcGFuIGxhbmc9ImVuLXVzIj46PC9zcGFuPjMwPGJyPjxicj7Q
+nNC10YDQvtC/0YDQuNGP0YLQuNC1INGB0L7RgdGC0L7QuNGC0YHRjzog0LwuINCR0LDRg9C80LDQ
+vdGB0LrQsNGPLCDRg9C7LiDQkdCw0YPQvNCw0L3RgdC60LDRjywg0LQuNiwg0JEu0KYuIAkJCSZx
+dW90O9CS0LjQutGC0L7RgNC40Y8g0J/Qu9Cw0LfQsCZxdW90Oy48YnI+PGJyPtCj0LfQvdCw0YLR
+jCDQstGB0Y4g0L/QvtC00YDQvtCx0L3Rg9GOINC40L3RhNC+0YDQvNCw0YbQuNGOINC4INC/0L7Q
+tNCw0YLRjCDQt9Cw0Y/QstC60YMg0L3QsCDRg9GH0LDRgdGC0LjQtSDQsiAJCQnQvtCx0YPRh9C1
+0L3QuNC4INC80L7QttC90L4g0L/QviDRgtC10LsuOjxicj48YnI+PGZvbnQgc2l6ZT0iNCI+ODwv
+Zm9udD4gwqA8Zm9udCBzaXplPSIyIj7QutC+0LQg0LPQvtGA0L7QtNCwPC9mb250PsKgIAkJCTxm
+b250IHNpemU9IjQiPiggNCA5IDUgKTwvZm9udD7CoCA8Zm9udCBzaXplPSIyIj7QvdC+0LzQtdGA
+PC9mb250PsKgIDxmb250IHNpemU9IjQiPjcgMiA1wqAgLcKgIAkJCTAgNMKgIC3CoCA0IDg8L2Zv
+bnQ+wqAgPGZvbnQgc2l6ZT0iMiI+KNC80L3QvtCz0L7QutCw0L3QsNC70YzQvdGL0LkpPC9mb250
+Pjxicj4gwqA8L3A+PC90ZD48dGQgYmdjb2xvcj0iI2ZkZjlmNyI+wqA8L3RkPjx0ZCBiZ2NvbG9y
+PSIjNjYwMDY2Ij7CoDwvdGQ+PC90cj48dHI+PHRkIGJnY29sb3I9IiM2NjAwNjYiPsKgPC90ZD48
+dGQgYmdjb2xvcj0iI2Y4ZjdmNSI+wqA8L3RkPjx0ZCBiZ2NvbG9yPSIjZjhmN2Y1Ij48YnI+PGZv
+bnQgY29sb3I9IiMwMDAwY2MiPjxiPtCU0LDQvdC90L7QtSDQvtCx0YPRh9C10L3QuNC1INC/0L7Q
+t9Cy0L7Qu9GP0LXRgjogPC9iPjwvZm9udD48YnI+PHNwYW4gbGFuZz0iZW4tdXMiPsKgKiA8L3Nw
+YW4+0L/QvtC70YPRh9C40YLRjCDQs9C+0YLQvtCy0YvQtSDQvdCw0YDQsNCx0L7RgtC60Lgg0Lgg
+CQkJ0YDQtdGI0LXQvdC40Y8g0LjQtyDQv9GA0LDQutGC0LjQutC4INGA0L7RgdGB0LjQudGB0LrQ
+uNGFINC4INC30LDQv9Cw0LTQvdGL0YUg0LrQvtC80L/QsNC90LjQuSwgPGJyPjxzcGFuIGxhbmc9
+ImVuLXVzIj7CoCogPC9zcGFuPtGD0LfQvdCw0YLRjCDQsNC70LPQvtGA0LjRgtC8INGA0LDQt9GA
+0LDQsdC+0YLQutC4IAkJCdGB0LHQsNC70LDQvdGB0LjRgNC+0LLQsNC90L3QvtC5INGB0LjRgdGC
+0LXQvNGLINC/0L7QutCw0LfQsNGC0LXQu9C10LkgKNCh0KHQnyksPGJyPjxzcGFuIGxhbmc9ImVu
+LXVzIj7CoCogPC9zcGFuPtC+0YLRgNCw0LHQvtGC0LDRgtGMINC90LDQstGL0Log0LjQvdGC0LXQ
+s9GA0LDRhtC40LggCQkJ0YHRgtGA0LDRgtC10LPQuNGH0LXRgdC60LjRhSDRhtC10LvQtdC5INC4
+INC/0L7QutCw0LfQsNGC0LXQu9C10Lkg0YDQtdC30YPQu9GM0YLQsNGC0LjQstC90L7RgdGC0Lgs
+PGJyPjxzcGFuIGxhbmc9ImVuLXVzIj7CoCogPC9zcGFuPtC/0L7Qu9GD0YfQuNGC0Ywg0L/RgNCw
+0LrRgtC40YfQtdGB0LrQuNC1INC40L3RgdGC0YDRg9C80LXQvdGC0YsgCQkJ0LTQtdC60L7QvNC/
+0L7Qt9C40YbQuNC4INGG0LXQu9C10Lkg0Lgg0L/QvtC60LDQt9Cw0YLQtdC70LXQuSw8YnI+PHNw
+YW4gbGFuZz0iZW4tdXMiPsKgKiA8L3NwYW4+0L7RgdCy0L7QuNGC0Ywg0LzQtdGF0LDQvdC40LfQ
+vCDQv9GA0LjQstGP0LfQutC4INC/0YDQtdC80LjQuCDQuiAJCQnQstGL0L/QvtC70L3QtdC90LjR
+jiDRhtC10LvQtdC5LDxicj48c3BhbiBsYW5nPSJlbi11cyI+wqAqIDwvc3Bhbj7Rg9C30L3QsNGC
+0Ywg0L/RgNCw0LrRgtC40YfQtdGB0LrQuNC1INC/0L7QtNGF0L7QtNGLINC6IAkJCdCy0L3QtdC0
+0YDQtdC90LjRjiDRgdC40YHRgtC10LzRiyDRg9C/0YDQsNCy0LvQtdC90LjRjyDQv9C+INGA0LXQ
+t9GD0LvRjNGC0LDRgtCw0Lwg0L3QsCDQvtGB0L3QvtCy0LU8YnI+PHNwYW4gbGFuZz0iZW4tdXMi
+PsKgwqAgPC9zcGFuPtCh0KHQny48YnI+PGJyPjxzcGFuIGxhbmc9ImVuLXVzIj7CoMKgwqDCoMKg
+wqAJCQkgPGZvbnQgY29sb3I9IiMwMDAwY2MiPsKgPC9mb250Pjwvc3Bhbj48Zm9udCBjb2xvcj0i
+IzAwMDBjYyI+PGI+PGZvbnQgc2l6ZT0iNCI+0J7Qv9C40YHQsNC90LjQtSAJCQnQv9GA0L7Qs9GA
+0LDQvNC80Ys6PC9mb250PjwvYj48L2ZvbnQ+PGJyPjxiPjxmb250IHNpemU9IjUiPjEuIDwvZm9u
+dD7QoNCw0LfRgNCw0LHQvtGC0LrQsCDRgdCx0LDQu9Cw0L3RgdC40YDQvtCy0LDQvdC90L7QuSDR
+gdC40YHRgtC10LzRiyAJCQnQv9C+0LrQsNC30LDRgtC10LvQtdC5IChCU0MpOjwvYj48YnI+LdCY
+0YHRgtC+0YDQuNGPINC4INC/0YDQuNC90YbQuNC/0Ysg0YDQsNCx0L7RgtGLIEJTQy48YnI+LdCh
+0YbQtdC90LDRgNC40Lkg0YHRgtGA0LDRgtC10LPQuNGH0LXRgdC60L7QuSDRgdC10YHRgdC40Lgg
+0L/QviDRgNCw0LfRgNCw0LHQvtGC0LrQtSBCU0MuPGJyPi3QkNC70LPQvtGA0LjRgtC8INGB0L7Q
+t9C00LDQvdC40Y8g0YHRgtGA0LDRgtC10LPQuNGH0LXRgdC60L7QuSDQutCw0YDRgtGLLjxicj4t
+0J/RgNC40LzQtdGA0YsgQlNDINC00LvRjyDRgNCw0LfQu9C40YfQvdGL0YUg0L7RgtGA0LDRgdC7
+0LXQuSDQuCDRhNGD0L3QutGG0LjQvtC90LDQu9GM0L3Ri9GFINC/0L7QtNGA0LDQt9C00LXQu9C1
+0L3QuNC5Ljxicj48Yj48Zm9udCBzaXplPSI1Ij4yLiA8L2ZvbnQ+0JTQtdC60L7QvNC/0L7Qt9C4
+0YbQuNGPINGB0YLRgNCw0YLQtdCz0LjRh9C10YHQutC40YUg0YbQtdC70LXQuSAJCQnQvtGA0LPQ
+sNC90LjQt9Cw0YbQuNC4OjwvYj48YnI+LdCe0YHQvdC+0LLRiyDRhtC10LvQtdCy0L7Qs9C+INGD
+0L/RgNCw0LLQu9C10L3QuNGPIChNQk8pLjxicj4t0JTQtdGA0LXQstC+INGG0LXQu9C10Lkg0LrQ
+vtC80L/QsNC90LjQuC48YnI+LdCX0LDQutGA0LXQv9C70LXQvdC40LUg0YbQtdC70LXQuSDQt9Cw
+INGE0YPQvdC60YbQuNGP0LzQuCDQuCDQuNGB0L/QvtC70L3QuNGC0LXQu9GP0LzQuCwg0LzQsNGC
+0YDQuNGG0LAg0YbQtdC70LXQuS48YnI+LdCf0YDQuNC90YbQuNC/0Ysg0LTQtdC60L7QvNC/0L7Q
+t9C40YbQuNC4INGG0LXQu9C10LkuPGJyPi3QoNCw0LfRgNCw0LHQvtGC0LrQsCDQvNC10YDQvtC/
+0YDQuNGP0YLQuNC5INC/0L4g0LTQvtGB0YLQuNC20LXQvdC40Y4g0YbQtdC70LXQuSDQuCDQv9C7
+0LDQvdCwINC00LXQudGB0YLQstC40LkuPGJyPjxiPjxmb250IHNpemU9IjUiPjMuIDwvZm9udD7Q
+n9C+0YHRgtCw0L3QvtCy0LrQsCDQutC70Y7Rh9C10LLRi9GFINC/0L7QutCw0LfQsNGC0LXQu9C1
+0LkgCQkJ0Y3RhNGE0LXQutGC0LjQstC90L7RgdGC0LggKEtQSSk6PC9iPjxicj4t0KLQtdGF0L3Q
+vtC70L7Qs9C40Y8g0LLRi9Cx0L7RgNCwINC/0L7QutCw0LfQsNGC0LXQu9C10Lkg0Lgg0YPRgdGC
+0LDQvdC+0LLQu9C10L3QuNC1INCy0LXRgdC+0LIgS1BJLjxicj4t0KDQsNC30YDQsNCx0L7RgtC6
+0LAg0LrQsNGA0YLRiyBLUEkuPGJyPi3Qo9GA0L7QstC90Lgg0LTQvtGB0YLQuNC20LXQvdC40Y8g
+S1BJLjxicj4t0J/RgNC40LzQtdGA0Ysg0LrQsNGA0YIg0L/QvtC60LDQt9Cw0YLQtdC70LXQuSDQ
+tNC70Y8g0YDQsNC30LvQuNGH0L3Ri9GFINC/0L7QtNGA0LDQt9C00LXQu9C10L3QuNC5INC4INC0
+0L7Qu9C20L3QvtGB0YLQtdC5Ljxicj4t0J/RgNC40LHQvtGA0L3Ri9C1INC/0LDQvdC10LvQuCDQ
+tNC70Y8g0LzQvtC90LjRgtC+0YDQuNC90LPQsCDQv9C+0LrQsNC30LDRgtC10LvQtdC5IChkYXNo
+Ym9hcmRzKS48YnI+PGI+PGZvbnQgc2l6ZT0iNSI+NC4gPC9mb250PtCf0YDQtdC80LjRgNC+0LLQ
+sNC90LjQtSDQvdCwINC+0YHQvdC+0LLQtSBLUEk6PC9iPjxicj4t0JLRi9Cx0L7RgCDQv9C10YDQ
+uNC+0LTQuNGH0L3QvtGB0YLQuCDQv9GA0LXQvNC40YDQvtCy0LDQvdC40Y8uPGJyPi3Qn9GA0LjQ
+vNC10YDRiyDQv9GA0LXQvNC40LDQu9GM0L3Ri9GFINC/0LvQsNC90L7QsiDQvdCwINC+0YHQvdC+
+0LLQtSBLUEkuPGJyPi3QoNCw0YHRh9C10YIg0Lgg0L/Qu9Cw0L3QuNGA0L7QstCw0L3QuNC1INGE
+0L7QvdC00LAg0L/RgNC10LzQuNGA0L7QstCw0L3QuNGPLjxicj4t0J/RgNC40LLRj9C30LrQsCDQ
+v9GA0LXQvNC40Lgg0LogS1BJOiDRg9GA0L7QstC90Lgg0Lgg0YDQtdC60L7QvNC10L3QtNGD0LXQ
+vNGL0Lkg0L/RgNC+0YbQtdC90YIg0L/RgNC10LzQuNC4LCAJCQkg0YXQsNGA0LDQutGC0LXRgCDQ
+t9Cw0LLQuNGB0LjQvNC+0YHRgtC4PGJyPjxzcGFuIGxhbmc9ImVuLXVzIj7CoCA8L3NwYW4+0L/R
+gNC10LzQuNC4INC+0YIg0L/QvtC60LDQt9Cw0YLQtdC70Y8uPGJyPjxiPjxmb250IHNpemU9IjUi
+PjUuIDwvZm9udD7QoNC10LrQvtC80LXQvdC00LDRhtC40Lgg0L/QviDQstC90LXQtNGA0LXQvdC4
+0Y4uPC9iPjxicj4t0J/QvtC00LLQvtC00L3Ri9C1INC60LDQvNC90Lgg0L/RgNC4INCy0L3QtdC0
+0YDQtdC90LjQuCDRgdC40YHRgtC10LzRiyDRg9C/0YDQsNCy0LvQtdC90LjRjyDRjdGE0YTQtdC6
+0YLQuNCy0L3QvtGB0YLRjNGOLjxicj4t0JvRg9GH0YjQuNC1INC/0YDQsNC60YLQuNC60Lgg0LLQ
+vdC10LTRgNC10L3QuNGPLjxicj4t0JLQvdGD0YLRgNC10L3QvdC40LUg0LrQvtC80LzRg9C90LjQ
+utCw0YbQuNC4INGBINGB0L7RgtGA0YPQtNC90LjQutCw0LzQuC48YnI+PGJyPjxicj48Zm9udCBm
+YWNlPSJ2ZXJkYW5hLCBzYW5zLXNlcmlmIj7Qo9GH0LDRgdGC0LjQtTogMjIgONC+0L4g0YDRg9Cx
+0LvQtdC5Ljxicj7QodC6PHNwYW4gbGFuZz0iZW4tdXMiPnU8L3NwYW4+0LTQujxzcGFuIGxhbmc9
+ImVuLXVzIj51PC9zcGFuPiAo0L7RgiAyPHNwYW4gbGFuZz0iZW4tdXMiPi08L3NwYW4+0YUgCQkJ
+0YfQtdC70L7QstC10Log4oCTIDEwJSwg0L7RgiAzLdGFINC4INCx0L7Qu9C10LUg4oCTIDE1JSku
+PGJyPtCS0YXQvtC00LjRgiDQvNC10YLQvtC00LjRh9C10YHQutC40Lkg0LzQsNGC0LXRgNC40LDQ
+uywg0L7QsdC10LTRiywg0LrQvtGE0LUt0L/QsNGD0LfRiy48YnI+0J/QviDQvtC60L7QvdGH0LDQ
+vdC40Y4g0LfQsNC90Y/RgtC40Lkg0JLQsNC8INC/0YDQtdC00L7RgdGC0LDQstC70Y/QtdGC0YHR
+jyDRgdC10YDRgtC40YTQuNC60LDRgi48L2ZvbnQ+PGJyPiDCoDwvdGQ+PHRkIGJnY29sb3I9IiNm
+OGY3ZjUiPsKgPC90ZD48dGQgYmdjb2xvcj0iIzY2MDA2NiI+wqA8L3RkPjwvdHI+PHRyPjx0ZCBi
+Z2NvbG9yPSIjNjYwMDY2Ij7CoDwvdGQ+PHRkIGJnY29sb3I9IiM2NjAwNjYiPsKgPC90ZD48dGQg
+Ymdjb2xvcj0iIzY2MDA2NiI+wqA8L3RkPjx0ZCBiZ2NvbG9yPSIjNjYwMDY2Ij7CoDwvdGQ+PHRk
+IGJnY29sb3I9IiM2NjAwNjYiPsKgPC90ZD48L3RyPjwvdGJvZHk+PC90YWJsZT48L2Rpdj48L2Rp
+dj4NCg==
+------------716D51D3798C78C9--
+
+
+--===============8846978004610595838==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8846978004610595838==--
