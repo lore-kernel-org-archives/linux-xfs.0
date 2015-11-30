@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CEAD77F37
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 10:14:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6CBB6AC004
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 08:14:41 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id U9ZYeuhUCuuXsmnB (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 98BE17F37
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 10:52:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8355E304067
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 08:52:03 -0800 (PST)
+Received: from mail1.bemta14.messagelabs.com (mail1.bemta14.messagelabs.com
+	[193.109.254.107]) by cuda.sgi.com with ESMTP id
+	ogtnXQmoFHGx6XE5 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 30 Nov 2015 08:14:40 -0800 (PST)
-Date: Mon, 30 Nov 2015 11:14:38 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151130161438.GD24765@bfoster.bfoster>
-References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
-	<20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
+	<xfs@oss.sgi.com>; Mon, 30 Nov 2015 08:52:00 -0800 (PST)
+From: Sandeep Patel <spatel@omnifone.com>
+Subject: XFS corruptions
+Date: Mon, 30 Nov 2015 16:51:57 +0000
+Message-ID: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <565C5D39.8080300@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +24,249 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8492985413460499157=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Avi Kivity <avi@scylladb.com>
-Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
-> 
-> 
-> On 11/30/2015 04:10 PM, Brian Foster wrote:
-> >>2) xfs_buf_lock -> down
-> >>This is one I truly don't understand. What can be causing contention
-> >>in this lock? We never have two different cores writing to the same
-> >>buffer, nor should we have the same core doingCAP_FOWNER so.
-> >>
-> >This is not one single lock. An XFS buffer is the data structure used to
-> >modify/log/read-write metadata on-disk and each buffer has its own lock
-> >to prevent corruption. Buffer lock contention is possible because the
-> >filesystem has bits of "global" metadata that has to be updated via
-> >buffers.
-> >
-> >For example, usually one has multiple allocation groups to maximize
-> >parallelism, but we still have per-ag metadata that has to be tracked
-> >globally with respect to each AG (e.g., free space trees, inode
-> >allocation trees, etc.). Any operation that affects this metadata (e.g.,
-> >block/inode allocation) has to lock the agi/agf buffers along with any
-> >buffers associated with the modified btree leaf/node blocks, etc.
-> >
-> >One example in your attached perf traces has several threads looking to
-> >acquire the AGF, which is a per-AG data structure for tracking free
-> >space in the AG. One thread looks like the inode eviction case noted
-> >above (freeing blocks), another looks like a file truncate (also freeing
-> >blocks), and yet another is a block allocation due to a direct I/O
-> >write. Were any of these operations directed to an inode in a separate
-> >AG, they would be able to proceed in parallel (but I believe they would
-> >still hit the same codepaths as far as perf can tell).
-> 
-> I guess we can mitigate (but not eliminate) this by creating more allocation
-> groups.  What is the default value for agsize?  Are there any downsides to
-> decreasing it, besides consuming more memory?
-> 
+--===============8492985413460499157==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_558408F298C8CE4C89D93BD56AB474E8018617B2B3EXBE1IS02omni_"
 
-I suppose so, but I would be careful to check that you actually see
-contention and test that increasing agcount actually helps. As
-mentioned, I'm not sure off hand if the perf trace alone would look any
-different if you have multiple metadata operations in progress on
-separate AGs.
+--_000_558408F298C8CE4C89D93BD56AB474E8018617B2B3EXBE1IS02omni_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-My understanding is that there are diminishing returns to high AG counts
-and usually 32-64 is sufficient for most storage. Dave might be able to
-elaborate more on that... (I think this would make a good FAQ entry,
-actually).
+Hi,
 
-The agsize/agcount mkfs-time heuristics change depending on the type of
-storage. A single AG can be up to 1TB and if the fs is not considered
-"multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
-default up to 4TB. If a stripe unit is set, the agsize/agcount is
-adjusted depending on the size of the overall volume (see
-xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
+We have multiple 22 disk raid 6 arrays using LSI 9280-24i4e raid cards, al=
+l using enterprise grade drives. The array is setup with physical drive ca=
+che disabled and mounted using inode64 with nobarriers option in Oracle Li=
+nux Server release 6.6, kernel version 3.8.13-55.1.5.el6uek.x86_64. We are=
+ suffering from corruptions with xfs_repair unable to permanently fix the =
+the issues. Output of dmesg from the latest corruption.
 
-> Are those locks held around I/O, or just CPU operations, or a mix?
+Pid: 5319, comm: glusterfsd Not tainted 3.8.13-55.1.5.el6uek.x86_64 #2
+Call Trace:
+[<ffffffffa02a3a9f>] xfs_error_report+0x3f/0x50 [xfs]
+[<ffffffffa02ed416>] ? xfs_iread_extents+0x86/0x110 [xfs]
+[<ffffffffa02a3b0e>] xfs_corruption_error+0x5e/0x90 [xfs]
+[<ffffffffa02c7ac8>] xfs_bmap_read_extents+0x3f8/0x450 [xfs]
+[<ffffffffa02ed416>] ? xfs_iread_extents+0x86/0x110 [xfs]
+[<ffffffffa02eb94e>] ? xfs_iext_realloc_direct+0xae/0x160 [xfs]
+[<ffffffffa02ed416>] xfs_iread_extents+0x86/0x110 [xfs]
+[<ffffffffa02fb0cc>] ? xfs_trans_free_item_desc+0x3c/0x50 [xfs]
+[<ffffffffa02c5df5>] xfs_bmap_last_extent+0x95/0xb0 [xfs]
+[<ffffffffa02c5ef6>] xfs_bmap_last_offset+0x66/0xc0 [xfs]
+[<ffffffffa02dc123>] ? xfs_dir_lookup+0xc3/0x170 [xfs]
+[<ffffffffa02dbc96>] xfs_dir2_isblock+0x26/0x60 [xfs]
+[<ffffffffa02dc123>] xfs_dir_lookup+0xc3/0x170 [xfs]
+[<ffffffffa02b6497>] xfs_lookup+0x87/0x110 [xfs]
+[<ffffffff811a92ed>] ? __d_alloc+0x14d/0x180
+[<ffffffffa02aea84>] xfs_vn_lookup+0x54/0xa0 [xfs]
+[<ffffffff8119db43>] ? lookup_dcache+0xa3/0xd0
+[<ffffffff8119d3ad>] lookup_real+0x1d/0x60
+[<ffffffff8119dba8>] __lookup_hash+0x38/0x50
+[<ffffffff8119dc0e>] lookup_slow+0x4e/0xc0
+[<ffffffff811a1d41>] path_lookupat+0x201/0x780
+[<ffffffff811a22f4>] filename_lookup+0x34/0xc0
+[<ffffffff811a35b9>] user_path_at_empty+0x59/0xa0
+[<ffffffff811a3611>] ? user_path_at+0x11/0x20
+[<ffffffff811986c0>] ? vfs_fstatat+0x50/0xb0
+[<ffffffff811a3611>] user_path_at+0x11/0x20
+[<ffffffff811a3698>] sys_linkat+0x78/0x250
+[<ffffffff810e37e6>] ? __audit_syscall_exit+0x216/0x2c0
+[<ffffffff815a25d9>] system_call_fastpath+0x16/0x1b
+XFS (sdb): Corruption detected. Unmount and run xfs_repair
+XFS (sdb): corrupt dinode 6442451040, (btree extents).
+ffff88042615d000: 42 4d 41 50 00 00 00 fe ff ff ff ff ff ff ff ff BMAP....=
+........
+XFS (sdb): Internal error xfs_bmap_read_extents(1) at line 1610 of file fs=
+/xfs/xfs_bmap.c. Caller 0xffffffffa02ed416
 
-I believe it's a mix of modifications and I/O, though it looks like some
-of the I/O cases don't necessarily wait on the lock. E.g., the AIL
-pushing case will trylock and defer to the next list iteration if the
-buffer is busy.
+What could be causing these issues?
 
-Brian
+Thanks for your help in advanced.
+
+______________________________________________________________________
+This email has been scanned by the Symantec Email Security.cloud service.
+For more information please visit http://www.symanteccloud.com
+______________________________________________________________________
+--_000_558408F298C8CE4C89D93BD56AB474E8018617B2B3EXBE1IS02omni_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-mic=
+rosoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word=
+" xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"ht=
+tp://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii=
+">
+<meta name=3D"Generator" content=3D"Microsoft Word 14 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+=09{font-family:Calibri;
+=09panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+=09{font-family:Verdana;
+=09panose-1:2 11 6 4 3 5 4 4 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+=09{margin:0cm;
+=09margin-bottom:.0001pt;
+=09font-size:11.0pt;
+=09font-family:"Calibri","sans-serif";
+=09mso-fareast-language:EN-US;}
+a:link, span.MsoHyperlink
+=09{mso-style-priority:99;
+=09color:blue;
+=09text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+=09{mso-style-priority:99;
+=09color:purple;
+=09text-decoration:underline;}
+span.EmailStyle17
+=09{mso-style-type:personal-compose;
+=09font-family:"Calibri","sans-serif";
+=09color:windowtext;}
+.MsoChpDefault
+=09{mso-style-type:export-only;
+=09font-family:"Calibri","sans-serif";
+=09mso-fareast-language:EN-US;}
+@page WordSection1
+=09{size:612.0pt 792.0pt;
+=09margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+=09{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-GB" link=3D"blue" vlink=3D"purple">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt;font-family:&quot;Ve=
+rdana&quot;,&quot;sans-serif&quot;;color:black;background:#FBF9F7">Hi,<o:p=
+></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt;font-family:&quot;Ve=
+rdana&quot;,&quot;sans-serif&quot;;color:black;background:#FBF9F7"><o:p>&n=
+bsp;</o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt;font-family:&quot;Ve=
+rdana&quot;,&quot;sans-serif&quot;;color:black;background:#FBF9F7">We have=
+ multiple 22 disk raid 6 arrays using LSI 9280-24i4e raid cards, all using=
+ enterprise grade drives. The array is setup with physical
+ drive cache disabled and mounted using inode64 with nobarriers option in =
+Oracle Linux Server release 6.6, kernel version 3.8.13-55.1.5.el6uek.x86_6=
+4. We are suffering from corruptions with xfs_repair unable to permanently=
+ fix the the issues. Output of dmesg
+ from the latest corruption.</span><span style=3D"font-size:9.0pt;font-fam=
+ily:&quot;Verdana&quot;,&quot;sans-serif&quot;;color:black"><br>
+<br>
+<span style=3D"background:#FBF9F7">Pid: 5319, comm: glusterfsd Not tainted=
+ 3.8.13-55.1.5.el6uek.x86_64 #2</span><br>
+<span style=3D"background:#FBF9F7">Call Trace:</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02a3a9f&gt;] xfs_error_re=
+port&#43;0x3f/0x50 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02ed416&gt;] ? xfs_iread_=
+extents&#43;0x86/0x110 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02a3b0e&gt;] xfs_corrupti=
+on_error&#43;0x5e/0x90 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02c7ac8&gt;] xfs_bmap_rea=
+d_extents&#43;0x3f8/0x450 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02ed416&gt;] ? xfs_iread_=
+extents&#43;0x86/0x110 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02eb94e&gt;] ? xfs_iext_r=
+ealloc_direct&#43;0xae/0x160 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02ed416&gt;] xfs_iread_ex=
+tents&#43;0x86/0x110 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02fb0cc&gt;] ? xfs_trans_=
+free_item_desc&#43;0x3c/0x50 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02c5df5&gt;] xfs_bmap_las=
+t_extent&#43;0x95/0xb0 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02c5ef6&gt;] xfs_bmap_las=
+t_offset&#43;0x66/0xc0 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02dc123&gt;] ? xfs_dir_lo=
+okup&#43;0xc3/0x170 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02dbc96&gt;] xfs_dir2_isb=
+lock&#43;0x26/0x60 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02dc123&gt;] xfs_dir_look=
+up&#43;0xc3/0x170 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02b6497&gt;] xfs_lookup&#=
+43;0x87/0x110 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a92ed&gt;] ? __d_alloc&=
+#43;0x14d/0x180</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffffa02aea84&gt;] xfs_vn_looku=
+p&#43;0x54/0xa0 [xfs]</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff8119db43&gt;] ? lookup_dca=
+che&#43;0xa3/0xd0</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff8119d3ad&gt;] lookup_real&=
+#43;0x1d/0x60</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff8119dba8&gt;] __lookup_has=
+h&#43;0x38/0x50</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff8119dc0e&gt;] lookup_slow&=
+#43;0x4e/0xc0</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a1d41&gt;] path_lookupa=
+t&#43;0x201/0x780</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a22f4&gt;] filename_loo=
+kup&#43;0x34/0xc0</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a35b9&gt;] user_path_at=
+_empty&#43;0x59/0xa0</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a3611&gt;] ? user_path_=
+at&#43;0x11/0x20</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811986c0&gt;] ? vfs_fstata=
+t&#43;0x50/0xb0</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a3611&gt;] user_path_at=
+&#43;0x11/0x20</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff811a3698&gt;] sys_linkat&#=
+43;0x78/0x250</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff810e37e6&gt;] ? __audit_sy=
+scall_exit&#43;0x216/0x2c0</span><br>
+<span style=3D"background:#FBF9F7">[&lt;ffffffff815a25d9&gt;] system_call_=
+fastpath&#43;0x16/0x1b</span><br>
+<span style=3D"background:#FBF9F7">XFS (sdb): Corruption detected. Unmount=
+ and run xfs_repair</span><br>
+<span style=3D"background:#FBF9F7">XFS (sdb): corrupt dinode 6442451040, (=
+btree extents).</span><br>
+<span style=3D"background:#FBF9F7">ffff88042615d000: 42 4d 41 50 00 00 00 =
+fe ff ff ff ff ff=20ff ff ff BMAP............</span><br>
+<span style=3D"background:#FBF9F7">XFS (sdb): Internal error xfs_bmap_read=
+_extents(1) at line 1610 of file fs/xfs/xfs_bmap.c. Caller 0xffffffffa02ed=
+416</span><br>
+<br>
+<span style=3D"background:#FBF9F7">What could be causing these issues?</sp=
+an><br>
+<br>
+<span style=3D"background:#FBF9F7">Thanks for your help in advanced.<o:p><=
+/o:p></span></span></p>
+</div>
+<br clear=3D"both">
+______________________________________________________________________<BR>=
+
+This email has been scanned by the Symantec Email Security.cloud service.<=
+BR>
+For more information please visit http://www.symanteccloud.com<BR>
+______________________________________________________________________<BR>=
+
+</body>
+</html>
+
+--_000_558408F298C8CE4C89D93BD56AB474E8018617B2B3EXBE1IS02omni_--
+
+
+--===============8492985413460499157==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8492985413460499157==--
