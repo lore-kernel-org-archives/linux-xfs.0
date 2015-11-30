@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E6F37F37
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 11:40:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E2E58F8039
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 09:40:50 -0800 (PST)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id jbhQtI7LAW0vmHlU (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 19DF329DF5
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 12:07:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 09BF0304062
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2015 10:07:00 -0800 (PST)
+Received: from mail1.bemta5.messagelabs.com (mail1.bemta5.messagelabs.com
+	[195.245.231.143]) by cuda.sgi.com with ESMTP id
+	nL3uBXGXBUiLnmur (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 30 Nov 2015 09:40:44 -0800 (PST)
-Date: Mon, 30 Nov 2015 18:40:48 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: XFS corruptions
-Message-ID: <20151130184048.3fa123e0@harpe.intellique.com>
-In-Reply-To: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+	<xfs@oss.sgi.com>; Mon, 30 Nov 2015 10:06:58 -0800 (PST)
+From: Sandeep Patel <spatel@omnifone.com>
+Subject: RE: XFS corruptions
+Date: Mon, 30 Nov 2015 18:06:55 +0000
+Message-ID: <558408F298C8CE4C89D93BD56AB474E8018617B3A6@EXBE1IS02.omnifone.com>
 References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+	<20151130184048.3fa123e0@harpe.intellique.com>
+In-Reply-To: <20151130184048.3fa123e0@harpe.intellique.com>
+Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,22 +31,52 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sandeep Patel <spatel@omnifone.com>
+To: Emmanuel Florac <eflorac@intellique.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-TGUgTW9uLCAzMCBOb3YgMjAxNSAxNjo1MTo1NyArMDAwMApTYW5kZWVwIFBhdGVsIDxzcGF0ZWxA
-b21uaWZvbmUuY29tPiDDqWNyaXZhaXQ6Cgo+IAo+IFdoYXQgY291bGQgYmUgY2F1c2luZyB0aGVz
-ZSBpc3N1ZXM/Cj4gCj4gVGhhbmtzIGZvciB5b3VyIGhlbHAgaW4gYWR2YW5jZWQuCgpIYXJkIHRv
-IHNheSwgd2hhdCBkb2VzIHhmc19pbmZvIC9tb3VudHBvaW50IHNheXM/CgpBcmUgdGhlIGNvcnJ1
-cHRpb24gb2NjdXJpbmcgb24gYWxsIG1hY2hpbmVzIG9yIGRvIHRoZXkgdGFyZ2V0IHNvbWUKc3lz
-dGVtcyBtb3JlPwoKRGlkIHlvdSB0cnkgcmVwYWlyaW5nIHVzaW5nIHRoZSBsYXRlc3QgKDQuMiBv
-ciA0LjMpIHZlcnNpb24gb2YKeGZzX3JlcGFpcj8gVGhlIE9yYWNsZSBMaW51eCB2ZXJzaW9uIGlz
-IHByb2JhYmx5IHNlcmlvdXNseSBvdXQgb2YgZGF0ZS4KCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVt
-bWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAg
-ICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxs
-aXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0t
+SGkgRW1tYW51ZWwsCgpUaGFua3MgZm9yIHRoZSByZXNwb25zZS4KCiBbcm9vdEBnYzAwM2Igfl0j
+IHhmc19pbmZvIC9kZXYvc2RiCm1ldGEtZGF0YT0vZGV2L3NkYiAgICAgICAgICAgICAgIGlzaXpl
+PTUxMiAgICBhZ2NvdW50PTUyLCBhZ3NpemU9MjY4NDM1NDU1IGJsa3MKICAgICAgICAgPSAgICAg
+ICAgICAgICAgICAgICAgICAgc2VjdHN6PTQwOTYgIGF0dHI9MiwgcHJvamlkMzJiaXQ9MQogICAg
+ICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBjcmM9MApkYXRhICAgICA9ICAgICAgICAgICAg
+ICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTEzOTE2MTc2Mzg0LCBpbWF4cGN0PTEKICAg
+ICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3aWR0aD0wIGJsa3MK
+bmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGFzY2lpLWNpPTAK
+bG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz01MjE3
+MjgsIHZlcnNpb249MgogICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0c3o9NDA5
+NiAgc3VuaXQ9MSBibGtzLCBsYXp5LWNvdW50PTEKcmVhbHRpbWUgPW5vbmUgICAgICAgICAgICAg
+ICAgICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBydGV4dGVudHM9MAoKV2UgaGF2ZSAxOCBub2Rl
+cyBlYWNoIHdpdGggMiBvZiB0aGVzZSBhcnJheXMgYW5kIHdlIGFyZSBzZWVpbmcgdGhpcyBhY3Jv
+c3MgdGhlIGJvYXJkLgoKSSBoYXZlIHVwZGF0ZWQgdGhlIHhmc3Byb2dzIHRvIDMuMS4xMS0xLjAu
+Ni5lbDYueDg2XzY0IHdoaWNoIGlzIHRoZSBsYXRlc3QgdmVyc2lvbiBhdmFpbGFibGUgb24gb3Vy
+IHl1bSByZXBvLgoKVGhpcyBpcyBhIHByb2R1Y3Rpb24gc3lzdGVtIHNvIHVwZ3JhZGluZyB0byB0
+aGUgbGF0ZXN0IHZlcnNpb24gaXMgbm90IHZlcnkgZWFzeS4gCgpUaGFua3MKU2FuZGVlcAoKLS0t
+LS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KRnJvbTogRW1tYW51ZWwgRmxvcmFjIFttYWlsdG86ZWZs
+b3JhY0BpbnRlbGxpcXVlLmNvbV0gClNlbnQ6IDMwIE5vdmVtYmVyIDIwMTUgMTc6NDEKVG86IFNh
+bmRlZXAgUGF0ZWwKQ2M6IHhmc0Bvc3Muc2dpLmNvbQpTdWJqZWN0OiBSZTogWEZTIGNvcnJ1cHRp
+b25zCgpMZSBNb24sIDMwIE5vdiAyMDE1IDE2OjUxOjU3ICswMDAwClNhbmRlZXAgUGF0ZWwgPHNw
+YXRlbEBvbW5pZm9uZS5jb20+IMOpY3JpdmFpdDoKCj4gCj4gV2hhdCBjb3VsZCBiZSBjYXVzaW5n
+IHRoZXNlIGlzc3Vlcz8KPiAKPiBUaGFua3MgZm9yIHlvdXIgaGVscCBpbiBhZHZhbmNlZC4KCkhh
+cmQgdG8gc2F5LCB3aGF0IGRvZXMgeGZzX2luZm8gL21vdW50cG9pbnQgc2F5cz8KCkFyZSB0aGUg
+Y29ycnVwdGlvbiBvY2N1cmluZyBvbiBhbGwgbWFjaGluZXMgb3IgZG8gdGhleSB0YXJnZXQgc29t
+ZSBzeXN0ZW1zIG1vcmU/CgpEaWQgeW91IHRyeSByZXBhaXJpbmcgdXNpbmcgdGhlIGxhdGVzdCAo
+NC4yIG9yIDQuMykgdmVyc2lvbiBvZiB4ZnNfcmVwYWlyPyBUaGUgT3JhY2xlIExpbnV4IHZlcnNp
+b24gaXMgcHJvYmFibHkgc2VyaW91c2x5IG91dCBvZiBkYXRlLgoKCi0tCi0tLS0tLS0tLS0tLS0t
 LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+LQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAg
+ICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGlu
+dGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KVGhpcyBlbWFpbCBoYXMgYmVlbiBzY2FubmVk
+IGJ5IHRoZSBTeW1hbnRlYyBFbWFpbCBTZWN1cml0eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9yZSBp
+bmZvcm1hdGlvbiBwbGVhc2UgdmlzaXQgaHR0cDovL3d3dy5zeW1hbnRlY2Nsb3VkLmNvbSBfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fClRoaXMgZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0
+aGUgU3ltYW50ZWMgRW1haWwgU2VjdXJpdHkuY2xvdWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3Jt
+YXRpb24gcGxlYXNlIHZpc2l0IGh0dHA6Ly93d3cuc3ltYW50ZWNjbG91ZC5jb20KX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
