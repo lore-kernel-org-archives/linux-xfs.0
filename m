@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 821167F37
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 02:30:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 53A0C8F8033
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 00:30:05 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 396FB7F37
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 02:38:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 273868F804C
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 00:38:06 -0800 (PST)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id kGm1YBNbsldhWMeW for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 00:30:02 -0800 (PST)
+	cuda.sgi.com with ESMTP id PVViV5XMaQjfzh5N for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 00:38:04 -0800 (PST)
 From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: Re: Which xfsprogs version to which kernel version
-Date: Tue, 01 Dec 2015 09:30:00 +0100
-Message-ID: <2952345.NUOFtjxqgC@merkaba>
-In-Reply-To: <20151130214104.GL26718@dastard>
-References: <5656DD39.8060403@poczta.onet.pl> <20151130214104.GL26718@dastard>
+Subject: automatic testing of cgroup writeback limiting (was: Re: Does XFS
+	support cgroup writeback limiting?)
+Date: Tue, 01 Dec 2015 09:38:03 +0100
+Message-ID: <1711940.cDn6AztRgi@merkaba>
+In-Reply-To: <565B70F9.8060707@5t9.de>
+References: <5652F311.7000406@5t9.de> <20151125213500.GK26718@dastard>
+	<565B70F9.8060707@5t9.de>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -23,85 +25,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
+To: xfs@oss.sgi.com, Tejun Heo <tj@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Lutz Vieweg <lvml@5t9.de>
 
-Am Dienstag, 1. Dezember 2015, 08:41:04 CET schrieb Dave Chinner:
-> On Thu, Nov 26, 2015 at 11:21:45AM +0100, aluno3@poczta.onet.pl wrote:
-> > Hello,
-> > =
+I think it makes sense to include those that wrote the cgroup writeback 
+limiting into the discussion on how to automatically test this feature. Thus 
+add fsdevel and Tejun to CC.
 
-> > I am using kernel 3.10 and would like to update xfsprogs (currently I
-> > have 3.1.5).
-> > =
+Am Sonntag, 29. November 2015, 22:41:13 CET schrieb Lutz Vieweg:
+> On 11/25/2015 10:35 PM, Dave Chinner wrote:
+> >> 2) Create 3 different XFS filesystem instances on the block
+> >> 
+> >>     device, one for access by only the "good" processes,
+> >>     on for access by only the "evil" processes, one for
+> >>     shared access by at least two "good" and two "evil"
+> >>     processes.
+> > 
+> > Why do you need multiple filesystems? The writeback throttling is
+> > designed to work within a single filesystem...
+> 
+> Hmm. Previously, I thought that the limiting of buffered writes
+> was realized by keeping track of the owners of dirty pages, and
+> that filesystem support was just required to make sure that writing
+> via a filesystem did not "anonymize" the dirty data. From what
+> I had read in blkio-controller.txt it seemed evident that limitations
+> would be accounted for "per block device", not "per filesystem", and
+> options like
+> 
+> > echo "<major>:<minor>  <rate_bytes_per_second>" >
+> > /cgrp/blkio.throttle.read_bps_device
+> document how to configure limits per block device.
+> 
+> Now after reading through the new Writeback section of blkio-controller.txt
+> again I am somewhat confused - the text states
+> 
+> > writeback operates on inode basis
+> 
+> and if that means inodes as in "file system inodes", this would
+> indeed mean limits would be enforced "per filesystem" - and yet
+> there are no options documented to specify limits for any specific
+> filesystem.
+> 
+> Does this mean some process writing to a block device (not via filesystem)
+> without "O_DIRECT" will dirty buffer pages, but those will not be limited
+> (as they are neither synchronous nor via-filesystem writes)?
+> That would mean VMs sharing some (physical or abstract) block device could
+> not really be isolated regarding their asynchronous write I/O...
+> 
+> > Metadata IO not throttled - it is owned by the filesystem and hence
+> > root cgroup.
+> 
+> Ouch. That kind of defeats the purpose of limiting evil processes'
+> ability to DOS other processes.
+> Wouldn't it be possible to assign some arbitrary cost to meta-data
+> operations - like "account one page write for each meta-data change
+> to the originating process of that change"? While certainly not
+> allowing for limiting to byte-precise limits of write bandwidth,
+> this would regain the ability to defend against DOS situations,
+> and for well-behaved processes, the "cost" accounted for their
+> not-so-frequent meta-data operations would probably not really hurt their
+> writing
+> speed.
+> 
+> >>  The test is successful if all "good processes" terminate successfully
+> >>  
+> >>    after a time not longer than it would take to write 10 times X MB to
+> >>    the
+> >>    rate-limited block device.
+> > 
+> > if we are rate limiting to 1MB/s, then a 10s test is not long enough
+> > to reach steady state. Indeed, it's going to take at least 30s worth
+> > of IO to guarantee that we getting writeback occurring for low
+> > bandwidth streams....
+> 
+> Sure, the "X/100 MB per second" throttle to the scratch device
+> was meant to result in a minimal test time of > 100s.
+> 
+> > i.e. the test needs to run for a period of time and then measure
+> > the throughput of each stream, comparing it against the expected
+> > throughput for the stream, rather than trying to write a fixed
+> > bandwidth....
+> 
+> The reason why I thought it to be a good idea to have the "good" processes
+> use only a limited write rate was to make sure that the actual write
+> activity of those processes is spread out over enough time to make sure
+> that they could, after all, feel some "pressure back" from the operating
+> system that is applied only after the "bad" processes have filled up
+> all RAM dedicated to dirty buffer cache.
+> 
+> Assume the test instance has lots of memory and would be willing to
+> spend many Gigabytes of RAM for dirty buffer caches. Chances are that
+> in such a situation the "good" processes might be done writing their
+> limited amount of data almost instantaneously, because the data just
+> went to RAM.
+> 
+> (I understand that if one used the absolute "blkio.throttle.write*" options
+> pressure back could apply before the dirty buffer cache was maxed out,
+> but in real-world scenarios people will almost always use the relative
+> "blkio.weight" based limiting, after all, you usually don't want to throttle
+> processes if there is plenty of bandwidth left no other process wants at
+> the same time.)
+> 
+> 
+> Regards,
+> 
+> Lutz Vieweg
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-> > When I tried to use the newest version of xfsprogs 4.3.0 I get the call
-> > trace about detected version 5 of superblock when mounting volume which
-> > was formatted using mkfs.xfs from 4.3.0.
-> =
-
-> More recent xfsprogs versions enable features that are only
-> supported by recent kernels. We tend to wait at least a year before
-> enabling new features by default in xfsprogs so that kernel support
-> is usually picke dup by distros before they update xfsprogs....
-> =
-
-> If you have an old kernel, then you need to turn off the newer
-> features that your kernel does not support. This has always been the
-> case - if you update the xfsprogs yourself, then you need to use the
-> correct options for your kernel. In general, this:
-> =
-
-> # mkfs.xfs -f -m crc=3D0 -n ftype=3D0 <dev>
-> =
-
-> will make a filesystem that can be mounted on old kernels. If
-> distros are shipping old kernels with new xfsprogs and are not
-> changing the default behaviour to suit their kernel, then that is a
-> distro problem.
-
-How about just checking running kernel version before enabling this by =
-
-default? Of course this doesn=B4t cover the case where one does mkfs.xfs fr=
-om a =
-
-newer live distro and wants to mount with an older installed distro then. I=
-t =
-
-also makes sense to make it possible to override the default choice as it i=
-s =
-
-implemented right now.
-
-Alternatively it would be an option to display a warning if by default a =
-
-feature is enabled that is not supported by the running kernel.
-
-While this is some implementation effort, it may help to reduce questions o=
-n =
-
-this mailing list. And as you see distro problem or not: People still ask =
-
-here. :)
-
-> As it is, in future the version of xfsprogs will tell you what
-> kernel has the same feature support. i.e. xfsprogs 4.2.0 has exactly
-> the same code/feature support as kernel 4.2.0. Similarly for
-> xfsprogs/kernel 4.3.0. However, this won't prevent the fact that
-> xfsprogs 4.8.0 might enable features that kernel 4.3.0 does not know
-> about - the only way to prevent that sort of problem is to never
-> enable new features in mkfs.xfs, and that's not a viable solution.
-
-Nice to know. That is how btrfs-tools is versioned as well meanwhile.
-
-Thanks,
--- =
-
-Martin
 
 _______________________________________________
 xfs mailing list
