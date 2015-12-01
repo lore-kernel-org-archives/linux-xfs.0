@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 434177F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 13:41:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 25BEE8F8033
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 11:41:44 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id heD42n2SAHbLgBN1 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 11:41:41 -0800 (PST)
-Date: Tue, 1 Dec 2015 11:41:39 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AD6D07F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 13:45:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 30B0AAC002
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 11:45:56 -0800 (PST)
+Received: from mail-wm0-f52.google.com (mail-wm0-f52.google.com
+	[74.125.82.52]) by cuda.sgi.com with ESMTP id KUq7X8hU2BMkRtuW
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 11:45:54 -0800 (PST)
+Received: by wmec201 with SMTP id c201so28894765wme.1
+	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 11:45:53 -0800 (PST)
 Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151201194139.GA19035@infradead.org>
 References: <20151201131114.GA26129@bfoster.bfoster>
 	<565DA784.5080003@scylladb.com>
 	<20151201145631.GD26129@bfoster.bfoster>
@@ -22,10 +22,13 @@ References: <20151201131114.GA26129@bfoster.bfoster>
 	<20151201162958.GF26129@bfoster.bfoster>
 	<565DD449.5090101@scylladb.com>
 	<20151201185113.GG26129@bfoster.bfoster>
-	<565DF472.8080101@scylladb.com>
+	<CAD-J=zZKD_JHV=1C==Kpz_=paaR9MNM_mBNF7VkahvL=19+uwA@mail.gmail.com>
+	<20151201193508.GH26129@bfoster.bfoster>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <565DF8EF.8000303@scylladb.com>
+Date: Tue, 1 Dec 2015 21:45:51 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <565DF472.8080101@scylladb.com>
+In-Reply-To: <20151201193508.GH26129@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,28 +37,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Avi Kivity <avi@scylladb.com>
-Cc: Brian Foster <bfoster@redhat.com>, Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, Glauber Costa <glauber@scylladb.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 01, 2015 at 09:26:42PM +0200, Avi Kivity wrote:
-> It's basically the same thing.  To to this, we'd have get_block either
-> return the block's address (if it was in some metadata cache), or, if it was
-> not, issue an I/O that fills (part of) that cache, and as its completion
-> function, a continuation that reruns __blockdev_direct_IO from the point it
-> was stopped so it can submit the data I/O (if the metadata cache was
-> completely updated) or issue the next I/O aiming to fill that metadata
-> cache, if it was not.
+On 12/01/2015 09:35 PM, Brian Foster wrote:
+> On Tue, Dec 01, 2015 at 02:07:41PM -0500, Glauber Costa wrote:
+>> Hi Brian,
+>>
+>>
+>>> Either way, the extents have to be read in at some point and I'd expect
+>>> that cpu to schedule onto some other task while that thread waits on I/O
+>>> to complete (read-ahead could also be a factor here, but I haven't
+>>> really dug into how that is triggered for buffers).
+>>>
+>>
+>> Being a datastore, we expect to run practically alone in any box we're
+>> at. That means that there is no other task to run. If io_submit
+>> blocks, the system blocks. The assumption that blocking will just
+>> yield the processor for another thread makes sense in the general case
+>> where you assume more than one application running and/or more than
+>> one thread within the same application.
+>>
+> Hmm, well that helps me understand the concern a bit more. That said, I
+> still question how likely this condition is. Even if this is a
+> completely stripped down userspace with no other applications running,
+> the kernel (or even XFS) alone might have plenty of threads/work items
+> to execute to take care of "background" tasks for various subsystems.
 
-We did something this for blocking reads with great results, and it could be
-done similarly for direct I/O I think:
+There are not.  We grab almost all of memory.  All our I/O is O_DIRECT 
+so there is no page cache to write back.  There may be softirq work from 
+networking, but in one mode we have (not yet in production), we use a 
+userspace networking stack, so no softirq at all.
 
-	https://lwn.net/Articles/612483/
+That said, I doubt this is a problem now.  Because the files are large 
+and well laid out, the amount of metadata is small and can easily be cached.
 
-Unfortunately Andrew shut it down for odd reasons so it didn't get in.
+We might prime the metadata cache before launching the application, or 
+just ignore the whole problem.  It would be much worse with small files, 
+but that isn't the case for us.
+
+>
+> Of course, we don't have all of the details of your environment so
+> perhaps this is not the case. Perhaps a more productive approach here
+> might be to find a way to detect this particular case (once you've
+> worked out the other AG count tunings and whatnot that you want to use)
+> where a thread into the fs is blocked and actually has nothing else to
+> do and work from there. I _think_ there is such a thing as an idle task
+> somewhere that might be useful to help quantify this, but I'd have to
+> dig around to understand it better.
+
+We simply observe the idle cpu counter going above zero.
+
+Once we resolve the other issues, we'll instrument the kernel with 
+systemtap and see where the other blockages come from.
+
+> That actually gives us a concrete scenario to work with, try to
+> reproduce and improve on. It also facilitates improvements that might be
+> beneficial to the general use case as opposed to tailored for this
+> particular use case and highly specific environment. For example, if we
+> find a particular sustained workload that repetitively blocks with
+> nothing else to do, document and characterize it for the list and I'm
+> sure people will come up with a variety of ideas to try and address it.
+> Otherwise, we're kind of just looking around for context switch points
+> and assuming that they will all just block with nothing else to do. For
+> one, I don't think that's really accurate. It's also not very productive
+> an approach and doesn't have any measurable benefit if it doesn't come
+> along with a test case or reproducible condition.
+
+I agree completely.  We'll try to find better probe points than 
+schedule().  We'll also be able to come up with reproducers, this should 
+not be too hard once we have good instrumentation.
+
+
+> Brian
+>
+>>  From our user's perspective, however, every time that happens we can't
+>> make progress. It doesn't really matter where it blocks.
+>>
+>> If io_submit returns without blocking, we can still push more work,
+>> even though the kernel is still not ready to proceed. If it blocks,
+>> we're dead.
+>>
+>>> Brian
+>>>
+>>>>> Brian
+>>>>>
+>>>>>>>> Seastar (the async user framework which we use to drive xfs) makes writing
+>>>>>>>> code like this easy, using continuations; but of course from ordinary
+>>>>>>>> threaded code it can be quite hard.
+>>>>>>>>
+>>>>>>>> btw, there was an attempt to make ext[34] async using this method, but I
+>>>>>>>> think it was ripped out.  Yes, the mortal remains can still be seen with
+>>>>>>>> 'git grep EIOCBQUEUED'.
+>>>>>>>>
+>>>>>>>>>>> It sounds to me that first and foremost you want to make sure you don't
+>>>>>>>>>>> have however many parallel operations you typically have running
+>>>>>>>>>>> contending on the same inodes or AGs. Hint: creating files under
+>>>>>>>>>>> separate subdirectories is a quick and easy way to allocate inodes under
+>>>>>>>>>>> separate AGs (the agno is encoded into the upper bits of the inode
+>>>>>>>>>>> number).
+>>>>>>>>>> Unfortunately our directory layout cannot be changed.  And doesn't this
+>>>>>>>>>> require having agcount == O(number of active files)?  That is easily in the
+>>>>>>>>>> thousands.
+>>>>>>>>>>
+>>>>>>>>> I think Glauber's O(nr_cpus) comment is probably the more likely
+>>>>>>>>> ballpark, but really it's something you'll probably just need to test to
+>>>>>>>>> see how far you need to go to avoid AG contention.
+>>>>>>>>>
+>>>>>>>>> I'm primarily throwing the subdir thing out there for testing purposes.
+>>>>>>>>> It's just an easy way to create inodes in a bunch of separate AGs so you
+>>>>>>>>> can determine whether/how much it really helps with modified AG counts.
+>>>>>>>>> I don't know enough about your application design to really comment on
+>>>>>>>>> that...
+>>>>>>>> We have O(cpus) shards that operate independently.  Each shard writes 32MB
+>>>>>>>> commitlog files (that are pre-truncated to 32MB to allow concurrent writes
+>>>>>>>> without blocking); the files are then flushed and closed, and later removed.
+>>>>>>>> In parallel there are sequential writes and reads of large files using 128kB
+>>>>>>>> buffers), as well as random reads.  Files are immutable (append-only), and
+>>>>>>>> if a file is being written, it is not concurrently read.  In general files
+>>>>>>>> are not shared across shards.  All I/O is async and O_DIRECT.  open(),
+>>>>>>>> truncate(), fdatasync(), and friends are called from a helper thread.
+>>>>>>>>
+>>>>>>>> As far as I can tell it should a very friendly load for XFS and SSDs.
+>>>>>>>>
+>>>>>>>>>>>   Reducing the frequency of block allocation/frees might also be
+>>>>>>>>>>> another help (e.g., preallocate and reuse files,
+>>>>>>>>>> Isn't that discouraged for SSDs?
+>>>>>>>>>>
+>>>>>>>>> Perhaps, if you're referring to the fact that the blocks are never freed
+>>>>>>>>> and thus never discarded..? Are you running fstrim?
+>>>>>>>> mount -o discard.  And yes, overwrites are supposedly more expensive than
+>>>>>>>> trim old data + allocate new data, but maybe if you compare it with the work
+>>>>>>>> XFS has to do, perhaps the tradeoff is bad.
+>>>>>>>>
+>>>>>>> Ok, my understanding is that '-o discard' is not recommended in favor of
+>>>>>>> periodic fstrim for performance reasons, but that may or may not still
+>>>>>>> be the case.
+>>>>>> I understand that most SSDs have queued trim these days, but maybe I'm
+>>>>>> optimistic.
+>>>>>>
 
 _______________________________________________
 xfs mailing list
