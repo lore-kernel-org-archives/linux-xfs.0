@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 42EE47F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 11:09:40 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 948427F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 11:28:44 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D5CF5AC002
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 09:09:36 -0800 (PST)
-Received: from mail-wm0-f45.google.com (mail-wm0-f45.google.com
-	[74.125.82.45]) by cuda.sgi.com with ESMTP id a6enpyDsGOMXpTpP
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 09:09:32 -0800 (PST)
-Received: by wmww144 with SMTP id w144so22314877wmw.0
-	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 09:09:31 -0800 (PST)
-Subject: Re: sleeps and waits during io_submit
-References: <20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
-	<20151130161438.GD24765@bfoster.bfoster>
-	<565D639F.8070403@scylladb.com>
-	<20151201131114.GA26129@bfoster.bfoster>
-	<565DA784.5080003@scylladb.com>
-	<20151201145631.GD26129@bfoster.bfoster>
-	<565DBB3E.2010308@scylladb.com>
-	<20151201160133.GE26129@bfoster.bfoster>
-	<565DC613.4090608@scylladb.com>
-	<20151201162958.GF26129@bfoster.bfoster>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <565DD449.5090101@scylladb.com>
-Date: Tue, 1 Dec 2015 19:09:29 +0200
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68FFC304032
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 09:28:41 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id a9YcC9IarOuNoCxG (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 09:28:39 -0800 (PST)
+Date: Tue, 1 Dec 2015 11:28:36 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: Question on how to submit changed code
+Message-ID: <20151201172836.GA14931@redhat.com>
+References: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
+	<20151201163335.GA2477@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20151201162958.GF26129@bfoster.bfoster>
+Content-Disposition: inline
+In-Reply-To: <20151201163335.GA2477@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,196 +26,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: "Epp, Mike" <MEpp@KrollOntrack.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-
-
-On 12/01/2015 06:29 PM, Brian Foster wrote:
-> On Tue, Dec 01, 2015 at 06:08:51PM +0200, Avi Kivity wrote:
->>
->> On 12/01/2015 06:01 PM, Brian Foster wrote:
->>> On Tue, Dec 01, 2015 at 05:22:38PM +0200, Avi Kivity wrote:
->>>> On 12/01/2015 04:56 PM, Brian Foster wrote:
->>>>> On Tue, Dec 01, 2015 at 03:58:28PM +0200, Avi Kivity wrote:
->>>>>> On 12/01/2015 03:11 PM, Brian Foster wrote:
->>>>>>> On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
->>>>>>>> On 11/30/2015 06:14 PM, Brian Foster wrote:
->>>>>>>>> On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
->>>>>>>>>> On 11/30/2015 04:10 PM, Brian Foster wrote:
->>>>>>> ...
->>>>>>>>> The agsize/agcount mkfs-time heuristics change depending on the type of
->>>>>>>>> storage. A single AG can be up to 1TB and if the fs is not considered
->>>>>>>>> "multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
->>>>>>>>> default up to 4TB. If a stripe unit is set, the agsize/agcount is
->>>>>>>>> adjusted depending on the size of the overall volume (see
->>>>>>>>> xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
->>>>>>>> We'll experiment with this.  Surely it depends on more than the amount of
->>>>>>>> storage?  If you have a high op rate you'll be more likely to excite
->>>>>>>> contention, no?
->>>>>>>>
->>>>>>> Sure. The absolute optimal configuration for your workload probably
->>>>>>> depends on more than storage size, but mkfs doesn't have that
->>>>>>> information. In general, it tries to use the most reasonable
->>>>>>> configuration based on the storage and expected workload. If you want to
->>>>>>> tweak it beyond that, indeed, the best bet is to experiment with what
->>>>>>> works.
->>>>>> We will do that.
->>>>>>
->>>>>>>>>> Are those locks held around I/O, or just CPU operations, or a mix?
->>>>>>>>> I believe it's a mix of modifications and I/O, though it looks like some
->>>>>>>>> of the I/O cases don't necessarily wait on the lock. E.g., the AIL
->>>>>>>>> pushing case will trylock and defer to the next list iteration if the
->>>>>>>>> buffer is busy.
->>>>>>>>>
->>>>>>>> Ok.  For us sleeping in io_submit() is death because we have no other thread
->>>>>>>> on that core to take its place.
->>>>>>>>
->>>>>>> The above is with regard to metadata I/O, whereas io_submit() is
->>>>>>> obviously for user I/O.
->>>>>> Won't io_submit() also trigger metadata I/O?  Or is that all deferred to
->>>>>> async tasks?  I don't mind them blocking each other as long as they let my
->>>>>> io_submit alone.
->>>>>>
->>>>> Yeah, it can trigger metadata reads, force the log (the stale buffer
->>>>> example) or push the AIL (wait on log space). Metadata changes made
->>>>> directly via your I/O request are logged/committed via transactions,
->>>>> which are generally processed asynchronously from that point on.
->>>>>
->>>>>>>   io_submit() can probably block in a variety of
->>>>>>> places afaict... it might have to read in the inode extent map, allocate
->>>>>>> blocks, take inode/ag locks, reserve log space for transactions, etc.
->>>>>> Any chance of changing all that to be asynchronous?  Doesn't sound too hard,
->>>>>> if somebody else has to do it.
->>>>>>
->>>>> I'm not following... if the fs needs to read in the inode extent map to
->>>>> prepare for an allocation, what else can the thread do but wait? Are you
->>>>> suggesting the request kick off whatever the blocking action happens to
->>>>> be asynchronously and return with an error such that the request can be
->>>>> retried later?
->>>> Not quite, it should be invisible to the caller.
->>>>
->>>> That is, the code called by io_submit() (file_operations::write_iter, it
->>>> seems to be called today) can kick off this operation and have it continue
->>> >from where it left off.
->>> Isn't that generally what happens today?
->> You tell me.  According to $subject, apparently not enough.  Maybe we're
->> triggering it more often, or we suffer more when it does trigger (the latter
->> probably more likely).
->>
-> The original mail describes looking at the sched:sched_switch tracepoint
-> which on a quick look, appears to fire whenever a cpu context switch
-> occurs. This likely triggers any time we wait on an I/O or a contended
-> lock (among other situations I'm sure), and it signifies that something
-> else is going to execute in our place until this thread can make
-> progress.
-
-For us, nothing else can execute in our place, we usually have exactly 
-one thread per logical core.  So we are heavily dependent on io_submit 
-not sleeping.
-
-The case of a contended lock is, to me, less worrying.  It can be 
-reduced by using more allocation groups, which is apparently the shared 
-resource under contention.
-
-The case of waiting for I/O is much more worrying, because I/O latency 
-are much higher.  But it seems like most of the DIO path does not 
-trigger locking around I/O (and we are careful to avoid the ones that 
-do, like writing beyond eof).
-
-(sorry for repeating myself, I have the feeling we are talking past each 
-other and want to be on the same page)
-
->
->>>   We submit an I/O which is
->>> asynchronous in nature and wait on a completion, which causes the cpu to
->>> schedule and execute another task until the completion is set by I/O
->>> completion (via an async callback). At that point, the issuing thread
->>> continues where it left off. I suspect I'm missing something... can you
->>> elaborate on what you'd do differently here (and how it helps)?
->> Just apply the same technique everywhere: convert locks to trylock +
->> schedule a continuation on failure.
->>
-> I'm certainly not an expert on the kernel scheduling, locking and
-> serialization mechanisms, but my understanding is that most things
-> outside of spin locks are reschedule points. For example, the
-> wait_for_completion() calls XFS uses to wait on I/O boil down to
-> schedule_timeout() calls. Buffer locks are implemented as semaphores and
-> down() can end up in the same place.
-
-But, for the most part, XFS seems to be able to avoid sleeping.  The 
-call to __blockdev_direct_IO only launches the I/O, so any locking is 
-only around cpu operations and, unless there is contention, won't cause 
-us to sleep in io_submit().
-
-Trying to follow the code, it looks like xfs_get_blocks_direct (and 
-__blockdev_direct_IO's get_block parameter in general) is synchronous, 
-so we're just lucky to have everything in cache.  If it isn't, we block 
-right there.  I really hope I'm misreading this and some other magic is 
-happening elsewhere instead of this.
-
-> Brian
->
->>>> Seastar (the async user framework which we use to drive xfs) makes writing
->>>> code like this easy, using continuations; but of course from ordinary
->>>> threaded code it can be quite hard.
->>>>
->>>> btw, there was an attempt to make ext[34] async using this method, but I
->>>> think it was ripped out.  Yes, the mortal remains can still be seen with
->>>> 'git grep EIOCBQUEUED'.
->>>>
->>>>>>> It sounds to me that first and foremost you want to make sure you don't
->>>>>>> have however many parallel operations you typically have running
->>>>>>> contending on the same inodes or AGs. Hint: creating files under
->>>>>>> separate subdirectories is a quick and easy way to allocate inodes under
->>>>>>> separate AGs (the agno is encoded into the upper bits of the inode
->>>>>>> number).
->>>>>> Unfortunately our directory layout cannot be changed.  And doesn't this
->>>>>> require having agcount == O(number of active files)?  That is easily in the
->>>>>> thousands.
->>>>>>
->>>>> I think Glauber's O(nr_cpus) comment is probably the more likely
->>>>> ballpark, but really it's something you'll probably just need to test to
->>>>> see how far you need to go to avoid AG contention.
->>>>>
->>>>> I'm primarily throwing the subdir thing out there for testing purposes.
->>>>> It's just an easy way to create inodes in a bunch of separate AGs so you
->>>>> can determine whether/how much it really helps with modified AG counts.
->>>>> I don't know enough about your application design to really comment on
->>>>> that...
->>>> We have O(cpus) shards that operate independently.  Each shard writes 32MB
->>>> commitlog files (that are pre-truncated to 32MB to allow concurrent writes
->>>> without blocking); the files are then flushed and closed, and later removed.
->>>> In parallel there are sequential writes and reads of large files using 128kB
->>>> buffers), as well as random reads.  Files are immutable (append-only), and
->>>> if a file is being written, it is not concurrently read.  In general files
->>>> are not shared across shards.  All I/O is async and O_DIRECT.  open(),
->>>> truncate(), fdatasync(), and friends are called from a helper thread.
->>>>
->>>> As far as I can tell it should a very friendly load for XFS and SSDs.
->>>>
->>>>>>>   Reducing the frequency of block allocation/frees might also be
->>>>>>> another help (e.g., preallocate and reuse files,
->>>>>> Isn't that discouraged for SSDs?
->>>>>>
->>>>> Perhaps, if you're referring to the fact that the blocks are never freed
->>>>> and thus never discarded..? Are you running fstrim?
->>>> mount -o discard.  And yes, overwrites are supposedly more expensive than
->>>> trim old data + allocate new data, but maybe if you compare it with the work
->>>> XFS has to do, perhaps the tradeoff is bad.
->>>>
->>> Ok, my understanding is that '-o discard' is not recommended in favor of
->>> periodic fstrim for performance reasons, but that may or may not still
->>> be the case.
->> I understand that most SSDs have queued trim these days, but maybe I'm
->> optimistic.
->>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBEZWMgMDEsIDIwMTUgYXQgMDU6MzM6MzVQTSArMDEwMCwgQ2FybG9zIE1haW9saW5v
+IHdyb3RlOgo+IEknbSBub3QgYW4gYXR0b3JuZXksIHNvIHRha2UgbXkgc3VnZ2VzdGlvbnMgd2l0
+aCBzb21lIGNhdXRpb24uCj4gCj4gSWYgeW91IHdhbnQgdG8gcHVibGlzaCB0aGUgY29kZSBmb3Ig
+YmUgY29tcGxpYW50IHdpdGggR1BMLCB5b3UgbWlnaHQgd2FudCB0byB1c2UKPiBzb21lIHB1Ymxp
+YyByZXBvc2l0b3J5IGxpa2UgZ2l0aHViLCBzb3VyY2Vmb3JnZSwgZXRjLiBidXQgSSB0aGluayB0
+aGF0IGV2ZW4KPiBzZW5kaW5nIHRoZSBwYXRjaCB0byB0aGUgbGlzdCB3b3VsZCBiZSBlbm91Z2gu
+Cj4gCj4gQWx0aG91Z2gsIEkgdGhpbmsgeW91IG9ubHkgdmlvbGF0ZSBHUEwgaWYgeW91J3JlIGRp
+c3RyaWJ1dGluZyB0aGUgZXhlY3V0YWJsZXMKPiB3aXRob3V0IHRoZSBzb3VyY2UgY29kZS4KClRo
+YXQncyBteSB1bmRlcnN0YW5kaW5nIGFzIHdlbGwuIEknZCByZWNvbW1lbmQgc3VibWl0dGluZyB0
+aGUgcGF0Y2hlcyB0byB0aGUgbGlzdC4KRXZlbiBpZiB0aGV5J3JlIE5BQ0tlZCwgdGhleSdyZSBl
+c3NlbnRpYWxseSAicHVibGlzaGVkIi4gVGhhdCBzYWlkLCBpZiB5b3UgaGF2ZQpvdGhlciBleGVj
+dXRhYmxlcyB0aGF0IGFyZSBwYXJ0IG9mIHRoZSBvZmZlcmluZywgYnV0IGFyZSBub3QgcHVibGlj
+LCB5b3UnZCBuZWVkCnRvIG1ha2UgdGhhdCBzb3VyY2UgY29kZSBwdWJsaWMgdG9vLgoKPiAKPiBC
+dXQsIEknbSBub3QgdGhlIGJlc3QgR1BMIGdlZWssIHNvIEkgbWlnaHQgYmUgd3JvbmcKPiAKZGl0
+dG8uIFlNTVYsIHNvIEknZCBjb25zdWx0IGEgbGVnYWwgZWFnbGUuICA6UC4KCkJpbGwKPiAKPiAK
+PiBPbiBUdWUsIERlYyAwMSwgMjAxNSBhdCAwMzoxNjoxMVBNICswMDAwLCBFcHAsIE1pa2Ugd3Jv
+dGU6Cj4gPiAgICBJIGhhdmUgY2hhbmdlZCBjb2RlIGluIGxpYnhmcyBhbmQgcmVwYWlyIHByb2pl
+Y3RzIGZvciB4ZnNwcm9ncy4gIEkKPiA+ICAgIGRvbuKAmXQgdmlldyB0aGUgY2hhbmdlcyBhcyBk
+ZXNpcmVkIGZvciBvbmdvaW5nIGRlcGxveW1lbnQsIGFzIHRoZXkKPiA+ICAgIGFsbG93ZWQgc2Nh
+bm5pbmcgb2YgYWN0aXZlIHZvbHVtZXMgYW5kIGJyaW5nIHRoZSBjaGFuY2Ugb2YgZmFsc2UKPiA+
+ICAgIGVycm9ycy4gIFRvIHN0YXkgY29tcGxpYW50IHdpdGggR05VIEdQTCB0aG91Z2ggd2UgbXVz
+dCBwdWJsaXNoIHRoZQo+ID4gICAgY29kZS4gIFdoYXQgYXJlIHRoZSBzdGVwcyBJIG5lZWQgdG8g
+Zm9sbG93IHRvIHB1Ymxpc2ggdGhlIGNoYW5nZXM/ICBEbwo+ID4gICAgSSBuZWVkIHRvIHB1Ymxp
+c2gganVzdCB0aGUgc291cmNlIGZpbGVzIEkgY2hhbmdlZCwgdGhlIGVudGlyZSBwcm9qZWN0cwo+
+ID4gICAgSSBjaGFuZ2VzLCBvciBhbGwgb2YgeGZzcHJvZ3M/Cj4gPiAKPiA+IAo+ID4gICAgTWlr
+ZSBFcHAsIFNlbmlvciBTb2Z0d2FyZSBFbmdpbmVlcgo+ID4gCj4gPiAgICBLcm9sbCBPbnRyYWNr
+IHwgIDkwMjMgQ29sdW1iaW5lIFJvYWQsIEVkZW4gUHJhaXJpZSwgTU4gNTUzNDcKPiA+ICAgIFsx
+XW1lcHBAa3JvbGxvbnRyYWNrLmNvbQo+ID4gICAgWzJdd3d3Lmtyb2xsb250cmFjay5jb20KPiA+
+IAo+ID4gICAgVGhpcyBjb21tdW5pY2F0aW9uIGNvbnRhaW5zIGluZm9ybWF0aW9uIHRoYXQgaXMg
+Y29uZmlkZW50aWFsLAo+ID4gICAgcHJvcHJpZXRhcnkgaW4gbmF0dXJlLCBhbmQgbWF5IGFsc28g
+YmUgYXR0b3JuZXktY2xpZW50IHByaXZpbGVnZWQKPiA+ICAgIGFuZC9vciB3b3JrIHByb2R1Y3Qg
+cHJpdmlsZWdlZC4gSXQgaXMgZm9yIHRoZSBleGNsdXNpdmUgdXNlIG9mIHRoZQo+ID4gICAgaW50
+ZW5kZWQgcmVjaXBpZW50KHMpLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50
+KHMpIG9yIHRoZQo+ID4gICAgcGVyc29uIHJlc3BvbnNpYmxlIGZvciBkZWxpdmVyaW5nIGl0IHRv
+IHRoZSBpbnRlbmRlZCByZWNpcGllbnQocyksCj4gPiAgICBwbGVhc2Ugbm90ZSB0aGF0IGFueSBm
+b3JtIG9mIGRpc3NlbWluYXRpb24sIGRpc3RyaWJ1dGlvbiBvciBjb3B5aW5nIG9mCj4gPiAgICB0
+aGlzIGNvbW11bmljYXRpb24gaXMgc3RyaWN0bHkgcHJvaGliaXRlZCBhbmQgbWF5IGJlIHVubGF3
+ZnVsLiBJZiB5b3UKPiA+ICAgIGhhdmUgcmVjZWl2ZWQgdGhpcyBjb21tdW5pY2F0aW9uIGluIGVy
+cm9yLCBwbGVhc2UgaW1tZWRpYXRlbHkgbm90aWZ5Cj4gPiAgICB0aGUgc2VuZGVyIGFuZCBkZWxl
+dGUgdGhlIG9yaWdpbmFsIGNvbW11bmljYXRpb24uIFRoYW5rIHlvdSBmb3IgeW91cgo+ID4gICAg
+Y29vcGVyYXRpb24uCj4gPiAKPiA+ICAgIFBsZWFzZSBiZSBhZHZpc2VkIHRoYXQgbmVpdGhlciBL
+cm9sbCwgaXRzIGFmZmlsaWF0ZXMsIGl0cyBlbXBsb3llZXMgb3IKPiA+ICAgIGFnZW50cyBhY2Nl
+cHQgbGlhYmlsaXR5IGZvciBhbnkgZXJyb3JzLCBvbWlzc2lvbnMgb3IgZGFtYWdlcyBjYXVzZWQg
+YnkKPiA+ICAgIGRlbGF5cyBvZiByZWNlaXB0IG9yIGJ5IGFueSB2aXJ1cyBpbmZlY3Rpb24gaW4g
+dGhpcyBtZXNzYWdlIG9yIGl0cwo+ID4gICAgYXR0YWNobWVudHMsIG9yIHdoaWNoIG1heSBvdGhl
+cndpc2UgYXJpc2UgYXMgYSByZXN1bHQgb2YgdGhpcyBlLW1haWwKPiA+ICAgIHRyYW5zbWlzc2lv
+bi4KPiA+IAo+ID4gUmVmZXJlbmNlcwo+ID4gCj4gPiAgICAxLiBtYWlsdG86bWVwcEBrcm9sbG9u
+dHJhY2suY29tCj4gPiAgICAyLiBodHRwOi8vd3d3Lmtyb2xsb250cmFjay5jb20vb2h0dHA6L3d3
+dy5rcm9sbG9udHJhY2suY29tLwo+IAo+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KPiA+IHhmcyBtYWlsaW5nIGxpc3QKPiA+IHhmc0Bvc3Muc2dpLmNv
+bQo+ID4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gCj4gCj4gLS0g
+Cj4gQ2FybG9zCj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
