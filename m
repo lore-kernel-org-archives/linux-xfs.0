@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 821757F37
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 03:08:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 71B788F8033
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 01:08:53 -0800 (PST)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id Bye6G0eaNvDwP4lx
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 01:08:49 -0800 (PST)
-Received: by wmec201 with SMTP id c201so194840123wme.0
-	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 01:08:49 -0800 (PST)
-Subject: Re: sleeps and waits during io_submit
-References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
-	<20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
-	<20151130161438.GD24765@bfoster.bfoster>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <565D639F.8070403@scylladb.com>
-Date: Tue, 1 Dec 2015 11:08:47 +0200
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A09A57F58
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 05:01:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 736C0304053
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 03:01:29 -0800 (PST)
+Received: from Ishtar.hs.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id dhWt9L1nn4x2WWhM (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 03:01:27 -0800 (PST)
+Message-ID: <565D7E03.20008@tlinx.org>
+Date: Tue, 01 Dec 2015 03:01:23 -0800
+From: "L.A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-In-Reply-To: <20151130161438.GD24765@bfoster.bfoster>
+Subject: I/O 'owner' DoS probs (was Re: Does XFS support cgroup writeback
+	limiting?)
+References: <5652F311.7000406@5t9.de>
+	<20151123202619.GE26718@dastard>	<56538E6A.6030203@5t9.de>
+	<20151123232052.GI26718@dastard>	<5655FDDA.9050502@5t9.de>
+	<20151125213500.GK26718@dastard>
+In-Reply-To: <20151125213500.GK26718@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,75 +32,55 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On 11/30/2015 06:14 PM, Brian Foster wrote:
-> On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
->>
->> On 11/30/2015 04:10 PM, Brian Foster wrote:
->>>> 2) xfs_buf_lock -> down
->>>> This is one I truly don't understand. What can be causing contention
->>>> in this lock? We never have two different cores writing to the same
->>>> buffer, nor should we have the same core doingCAP_FOWNER so.
->>>>
->>> This is not one single lock. An XFS buffer is the data structure used to
->>> modify/log/read-write metadata on-disk and each buffer has its own lock
->>> to prevent corruption. Buffer lock contention is possible because the
->>> filesystem has bits of "global" metadata that has to be updated via
->>> buffers.
->>>
->>> For example, usually one has multiple allocation groups to maximize
->>> parallelism, but we still have per-ag metadata that has to be tracked
->>> globally with respect to each AG (e.g., free space trees, inode
->>> allocation trees, etc.). Any operation that affects this metadata (e.g.,
->>> block/inode allocation) has to lock the agi/agf buffers along with any
->>> buffers associated with the modified btree leaf/node blocks, etc.
->>>
->>> One example in your attached perf traces has several threads looking to
->>> acquire the AGF, which is a per-AG data structure for tracking free
->>> space in the AG. One thread looks like the inode eviction case noted
->>> above (freeing blocks), another looks like a file truncate (also freeing
->>> blocks), and yet another is a block allocation due to a direct I/O
->>> write. Were any of these operations directed to an inode in a separate
->>> AG, they would be able to proceed in parallel (but I believe they would
->>> still hit the same codepaths as far as perf can tell).
->> I guess we can mitigate (but not eliminate) this by creating more allocation
->> groups.  What is the default value for agsize?  Are there any downsides to
->> decreasing it, besides consuming more memory?
->>
-> I suppose so, but I would be careful to check that you actually see
-> contention and test that increasing agcount actually helps. As
-> mentioned, I'm not sure off hand if the perf trace alone would look any
-> different if you have multiple metadata operations in progress on
-> separate AGs.
->
-> My understanding is that there are diminishing returns to high AG counts
-> and usually 32-64 is sufficient for most storage. Dave might be able to
-> elaborate more on that... (I think this would make a good FAQ entry,
-> actually).
->
-> The agsize/agcount mkfs-time heuristics change depending on the type of
-> storage. A single AG can be up to 1TB and if the fs is not considered
-> "multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
-> default up to 4TB. If a stripe unit is set, the agsize/agcount is
-> adjusted depending on the size of the overall volume (see
-> xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
 
-We'll experiment with this.  Surely it depends on more than the amount 
-of storage?  If you have a high op rate you'll be more likely to excite 
-contention, no?
 
->
->> Are those locks held around I/O, or just CPU operations, or a mix?
-> I believe it's a mix of modifications and I/O, though it looks like some
-> of the I/O cases don't necessarily wait on the lock. E.g., the AIL
-> pushing case will trylock and defer to the next list iteration if the
-> buffer is busy.
->
+Dave Chinner wrote:
+> Metadata IO not throttled - it is owned by the filesystem and hence
+> root cgroup. 
+----
+	Please forgive me if this is "obvious"....
 
-Ok.  For us sleeping in io_submit() is death because we have no other 
-thread on that core to take its place.
+	If it is owned by the file system, then logically, such meta
+data wouldn't count against the user's quota limits?   That 'could'
+be justified on the basis that the format of the metadata is outside
+the control of file owner and depending on what's supported, included
+or logged in metadata, the size could vary greatly -- all outside of the
+direct control of the user.  However, by adding extended attributes,
+the user can, likely, affect the disk space used by the metadata 
+regardless of how it implemented and stored on disk -- so in that respect
+it is user data.  Similarly, system CPU time is attributed to the user
+causing the CPU time to be spent, and so on.  
+
+	To highlight the type of problems this can cause: starting after
+Windows XP, MS decided to combine network file I/O requests over 64K to
+be dispatched to the 'System' daemon to optimize network I/O from
+multiple processes using bigger windows to try to keep the network pipe
+as full as possible (competing, of course, with QOS for conforming
+apps).  
+
+	This created a problem -- applications that flood the network
+sit mostly idle waiting for their rpc call to finish and all their 
+BW is attributed to System.   
+
+	FWIW -- you cannot change any of the priorities for System
+without it going all blue screen on you telling you that it's crashing
+to protect you -- because something changed one of it's priority number
+(IO/cpu/memory...etc).  
+
+	Problem is that any intensive prioritizing slows everything down
+and the entire computer becomes unresponsive (10Gb link) as network
+requests are reduced in size. Usually it is possible to restore
+normality by restarting Explorer (assuming you have enough cpu time to
+do so).  About 10% of the time, pulling the network cord is required to
+stop the storm, and VERY rarely, <.01% of the time power-cycling is
+required.
+
+	Attributing user-generated I/O to system processes that are "unaccountable"  *can* and does cause DoS  "opportunities"....
+
+	Is this metadata really I/O that is completely disconnected from
+a user that they cannot affect?
 
 _______________________________________________
 xfs mailing list
