@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C65767F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:44:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B5FE18F8035
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 04:44:06 -0800 (PST)
-Received: from CRMSrv.DC05.loc ([23.29.99.117]) by cuda.sgi.com with ESMTP id
-	HVheB6isnSZ1vZRt for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 04:44:03 -0800 (PST)
-Date: Tue, 1 Dec 2015 04:26:47 -0800
-Mime-version: 1.0
-Subject: PayPal : Your Account Has Been Limited Until We Hear From You
-From: PayPal <PayPal@support.com>
-Message-Id: <20151201042647.OHOEIFVWEDYRCH@support.com>
-Reply-To: PayPal@support.com
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E05BC7F58
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 07:11:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 87800AC003
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 05:11:19 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id IBCbq6mpfkwbry7D (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 05:11:18 -0800 (PST)
+Date: Tue, 1 Dec 2015 08:11:16 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: sleeps and waits during io_submit
+Message-ID: <20151201131114.GA26129@bfoster.bfoster>
+References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
+	<20151130141000.GC24765@bfoster.bfoster>
+	<565C5D39.8080300@scylladb.com>
+	<20151130161438.GD24765@bfoster.bfoster>
+	<565D639F.8070403@scylladb.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <565D639F.8070403@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,236 +29,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6894491009636181973=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: Avi Kivity <avi@scylladb.com>
+Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
+> On 11/30/2015 06:14 PM, Brian Foster wrote:
+> >On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
+> >>
+> >>On 11/30/2015 04:10 PM, Brian Foster wrote:
+...
+> >The agsize/agcount mkfs-time heuristics change depending on the type of
+> >storage. A single AG can be up to 1TB and if the fs is not considered
+> >"multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
+> >default up to 4TB. If a stripe unit is set, the agsize/agcount is
+> >adjusted depending on the size of the overall volume (see
+> >xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
+> 
+> We'll experiment with this.  Surely it depends on more than the amount of
+> storage?  If you have a high op rate you'll be more likely to excite
+> contention, no?
+> 
 
---===============6894491009636181973==
-Content-Type: multipart/alternative; Boundary="--=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF"
+Sure. The absolute optimal configuration for your workload probably
+depends on more than storage size, but mkfs doesn't have that
+information. In general, it tries to use the most reasonable
+configuration based on the storage and expected workload. If you want to
+tweak it beyond that, indeed, the best bet is to experiment with what
+works.
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+> >
+> >>Are those locks held around I/O, or just CPU operations, or a mix?
+> >I believe it's a mix of modifications and I/O, though it looks like some
+> >of the I/O cases don't necessarily wait on the lock. E.g., the AIL
+> >pushing case will trylock and defer to the next list iteration if the
+> >buffer is busy.
+> >
+> 
+> Ok.  For us sleeping in io_submit() is death because we have no other thread
+> on that core to take its place.
+> 
 
-----=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-transfer-encoding: quoted-printable
+The above is with regard to metadata I/O, whereas io_submit() is
+obviously for user I/O. io_submit() can probably block in a variety of
+places afaict... it might have to read in the inode extent map, allocate
+blocks, take inode/ag locks, reserve log space for transactions, etc.
 
+It sounds to me that first and foremost you want to make sure you don't
+have however many parallel operations you typically have running
+contending on the same inodes or AGs. Hint: creating files under
+separate subdirectories is a quick and easy way to allocate inodes under
+separate AGs (the agno is encoded into the upper bits of the inode
+number). Reducing the frequency of block allocation/frees might also be
+another help (e.g., preallocate and reuse files, 'mount -o ikeep,'
+etc.). Beyond that, you probably want to make sure the log is large
+enough to support all concurrent operations. See the xfs_log_grant_*
+tracepoints for a window into if/how long transaction reservations might
+be waiting on the log.
 
+Brian
 
-
-
-----=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF
-Content-Type: text/html; charset="ISO-8859-1"
-Content-transfer-encoding: quoted-printable
-
-<!DOCTYPE html>
-
-<!--
-______   ______    _______   _______  _______     .______   ____    ____   =
-      ___      .__   __.   ______   .__   __.  __       _______..___  ___. =
-     ___
-/      | /  __  \  |       \ |   ____||       \    |   _  \  \   \  /   /  =
-      /   \     |  \ |  |  /  __  \  |  \ |  | |  |     /       ||   \/   |=
-     /   \
-|  ,----'|  |  |  | |  .--.  ||  |__   |  .--.  |   |  |_)  |  \   \/   /  =
-      /  ^  \    |   \|  | |  |  |  | |   \|  | |  |    |   (----`|  \  /  =
-|    /  ^  \
-|  |     |  |  |  | |  |  |  ||   __|  |  |  |  |   |   _  <    \_    _/   =
-     /  /_\  \   |  . `  | |  |  |  | |  . `  | |  |     \   \    |  |\/|  =
-|   /  /_\  \
-|  `----.|  `--'  | |  '--'  ||  |____ |  '--'  |   |  |_)  |     |  |     =
-    /  _____  \  |  |\   | |  `--'  | |  |\   | |  | .----)   |   |  |  |  =
-|  /  _____  \
-\______| \______/  |_______/ |_______||_______/    |______/      |__|      =
-  /__/     \__\ |__| \__|  \______/  |__| \__| |__| |_______/    |__|  |__|=
- /__/     \__\
-
--->
-
-
-
-
-
-<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
-=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width; initial-=
-scale=3D1.0; maximum-scale=3D1.0; user-scalable=3D0;">
-<style type=3D"text/css">body { width: 100% !important;}</style>
-</head>
-<body  style=3D"PADDING-BOTTOM: 0px; PADDING-TOP: 40px; PADDING-LEFT: 0px; =
-MARGIN: 0px; PADDING-RIGHT: 0px; BACKGROUND-COLOR: #e9e9e9">
-<table style=3D"WIDTH: 100%"> <tbody><tr>
-<td style=3D" BACKGROUND-COLOR: #e9e9e9" align=3D"center">
-<table width=3D"600" border=3D"0">
-<tbody><tr>
-<td> <div>
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=3D"0">
-<tbody>
-<tr>
-<td  style=3D" BACKGROUND: #ffffff;  LINE-HEIGHT: 22px;border-radius: 10px =
-10px 0px 0px">
-
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" align=3D"left" bor=
-der=3D"0">
-<tbody>
-<tr>
-<td>
-<div style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial; COLOR: #747474;margin-le=
-ft:30px">
-<p align=3D"left" >
-
-<div  style=3D"FONT-SIZE: 10px; FONT-FAMILY: Arial black; COLOR: #919191">
-<p style=3D"FONT-SIZE: 22px"><strong><em><font color=3D"#253b80">Pay</font>=
-<font color=3D"#179bd7">Pal</font></em></strong><font size=3D"1"><sub> Secu=
-re
-</sub></font></p></div></p>
-
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div><table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=
-=3D"0">
-<tbody>
-<tr>
-<td style=3D" BACKGROUND: #F3F3FF; ; LINE-HEIGHT: 22px">
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" align=3D"left" bor=
-der=3D"0">
-<tbody>
-<tr>
-<td>
-<div>
-<p align=3D"justify" style=3D"PADDING-LEFT: 30px; PADDING-RIGHT: 30px ;FONT=
--FAMILY: Arial; COLOR: #747474 ;FONT-SIZE: 15px"><strong>Dear Client,</stro=
-ng><br>
-We have noticed that some data from your account information seems inaccura=
-te or unverified. You have to check your information in order to continue u=
-sing our service smoothly, please check your account information by clickin=
-g the link below.
-</p> </div>
-</td>
-</tr>
-</tbody>
-</table>
-</td>
-</tr>
-</tbody>
-</table>
-</div><div>
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=3D"0">
-<tbody>
-<tr>
-<td style=3D" BACKGROUND: #ffffff;  LINE-HEIGHT: 27px">
-
-<table width=3D"600" align=3D"left" border=3D"0">
-<tbody>
-<tr>
-<td>
-<div><p style=3D"margin-left:30px"><a onclick=3D"return true" href=3D"http:=
-//update-your-information-account-and-login.com.update-you-information-and-=
-login-rapmusic.co/update-your-information-account/confirm/security/8631c3f5=
-bf8c90b25853ddf4f51236f9/?dispatch=3DDz2b69GNUPhlA222iccVYP8GugOo7D9LccWjlD=
-6gsoB3qE5JQi&email=3D" ><span style=3D"FONT-SIZE: 14px;   FONT-FAMILY: Aria=
-l;  WIDTH: 200px;   COLOR: #fff; TEXT-ALIGN: center;   DISPLAY: inline-bloc=
-k; BACKGROUND-COLOR: #16AEFF;border-radius:7px"><strong>Check My Account</s=
-trong></span> </a></p> </div>
-</td>
-</tr>
-</tbody>
-</table></td>
-</tr>
-</tbody>
-</table>
-</div><div>
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" border=3D"0">
-<tbody>
-<tr>
-<td  style=3D" BACKGROUND: #ffffff;  LINE-HEIGHT: 22px;border-radius:0px 0p=
-x 10px 10px">
-
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"600" align=3D"left" bor=
-der=3D"0">
-<tbody>
-<tr>
-<td>
-<div style=3D"FONT-SIZE: 11px; FONT-FAMILY: Arial; COLOR: #747474;margin-le=
-ft:30px;margin-right:30px"><hr size=3D"2" color=3D"#F0F0F0" width=3D"100%">=
-
-<p align=3D"center" >
-|
-Help
-|
-Contact
-|
-Fees
-|
-Security
-|
-Apps
-|
-Shop
-|
-Ebay
-|
-Secure
-</p>
-<hr size=3D"2" color=3D"#F0F0F0" width=3D"100%"></td>
-</tr>
-</tbody>
-</table>
-
-</td>
-</tr>
-</tbody>
-</table>
-</div></td>
-</tr> <tr>
-<td style=3D" PADDING-TOP: 10px; " align=3D"center">
-<div style=3D"FONT-SIZE: 9px; FONT-FAMILY: Arial; COLOR: #959595;margin-lef=
-t:30px;margin-right:30px">
-
-
-<p>
-
-
-If you need help or have any questions, call us at 65-6510-4584, 7:00 WIB t=
-o 21:00 WIB from Monday to Friday, 8:00 WIB to 17:00 WIB from Saturday to S=
-unday
-</p>
-</div>
-</td>
-</tr> </tbody>
-</table>
-</td>
-</tr>
-
-</tbody></table>
-
-</body></html>
-
-----=BOUNDARY_121426_IXXO_WOON_OWWS_TYWF--
-
-
-
---===============6894491009636181973==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6894491009636181973==--
