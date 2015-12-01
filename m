@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 821297F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 14:56:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 612CA8F8039
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 12:56:08 -0800 (PST)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id lUIzqGlh4FInayCy
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 12:56:05 -0800 (PST)
-Received: by wmvv187 with SMTP id v187so225979720wmv.1
-	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 12:56:04 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 872D07F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 15:04:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 77268304062
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 13:04:34 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	axYXCpqeq5B6Fbnv for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 13:04:31 -0800 (PST)
+Date: Wed, 2 Dec 2015 08:04:17 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: sleeps and waits during io_submit
+Message-ID: <20151201210417.GY19199@dastard>
 References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
 	<20151130141000.GC24765@bfoster.bfoster>
 	<565C5D39.8080300@scylladb.com>
@@ -20,13 +20,11 @@ References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
 	<565D639F.8070403@scylladb.com>
 	<20151201131114.GA26129@bfoster.bfoster>
 	<565DA784.5080003@scylladb.com>
-	<CAD-J=zY=A8MQLzykox276cHiH7ddXHFVp0w0B4XRBskv6YK_WQ@mail.gmail.com>
-	<20151201204535.GX19199@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <565E0961.4060603@scylladb.com>
-Date: Tue, 1 Dec 2015 22:56:01 +0200
+	<20151201145631.GD26129@bfoster.bfoster>
+	<565DBB3E.2010308@scylladb.com>
 MIME-Version: 1.0
-In-Reply-To: <20151201204535.GX19199@dastard>
+Content-Disposition: inline
+In-Reply-To: <565DBB3E.2010308@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,71 +33,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Glauber Costa <glauber@scylladb.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Avi Kivity <avi@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
 
-On 12/01/2015 10:45 PM, Dave Chinner wrote:
-> On Tue, Dec 01, 2015 at 09:01:13AM -0500, Glauber Costa wrote:
->> On Tue, Dec 1, 2015 at 8:58 AM, Avi Kivity <avi@scylladb.com> wrote:
->>> On 12/01/2015 03:11 PM, Brian Foster wrote:
->>>> It sounds to me that first and foremost you want to make sure you don't
->>>> have however many parallel operations you typically have running
->>>> contending on the same inodes or AGs. Hint: creating files under
->>>> separate subdirectories is a quick and easy way to allocate inodes under
->>>> separate AGs (the agno is encoded into the upper bits of the inode
->>>> number).
->>>
->>> Unfortunately our directory layout cannot be changed.  And doesn't this
->>> require having agcount == O(number of active files)?  That is easily in the
->>> thousands.
->> Actually, wouldn't agcount == O(nr_cpus) be good enough?
-> Not quite. What you need is agcount ~= O(nr_active_allocations).
+On Tue, Dec 01, 2015 at 05:22:38PM +0200, Avi Kivity wrote:
+> On 12/01/2015 04:56 PM, Brian Foster wrote:
+> >On Tue, Dec 01, 2015 at 03:58:28PM +0200, Avi Kivity wrote:
+> >>>  io_submit() can probably block in a variety of
+> >>>places afaict... it might have to read in the inode extent map, allocate
+> >>>blocks, take inode/ag locks, reserve log space for transactions, etc.
+> >>Any chance of changing all that to be asynchronous?  Doesn't sound too hard,
+> >>if somebody else has to do it.
+> >>
+> >I'm not following... if the fs needs to read in the inode extent map to
+> >prepare for an allocation, what else can the thread do but wait? Are you
+> >suggesting the request kick off whatever the blocking action happens to
+> >be asynchronously and return with an error such that the request can be
+> >retried later?
+> 
+> Not quite, it should be invisible to the caller.
 
-Yes, this is what I mean by "active files".
+I have a pony I can sell you.
 
->
-> The difference is an allocation can block waiting on IO, and the
-> CPU can then go off and run another process, which then tries to do
-> an allocation. So you might only have 4 CPUs, but a workload that
-> can have a hundred active allocations at once (not uncommon in
-> file server workloads).
+> That is, the code called by io_submit()
+> (file_operations::write_iter, it seems to be called today) can kick
+> off this operation and have it continue from where it left off.
 
-But for us, probably not much more.  We try to restrict active I/Os to 
-the effective disk queue depth (more than that and they just turn sour 
-waiting in the disk queue).
+This is a problem that people have tried to solve in the past (e.g.
+syslets, etc) where the thread executes until it has to block, and
+then it's handled off to a worker thread/syslet to block and the
+main process returns with EIOCBQUEUED.
 
+Basically, you're asking for a real AIO infrastructure to
+beintroduced into the kernel, and I think that's beyond what us XFS
+guys can do...
 
-> On worklaods that are roughly 1 process per CPU, it's typical that
-> agcount = 2 * N cpus gives pretty good results on large filesystems.
+> >>>  Reducing the frequency of block allocation/frees might also be
+> >>>another help (e.g., preallocate and reuse files,
+> >>Isn't that discouraged for SSDs?
+> >>
+> >Perhaps, if you're referring to the fact that the blocks are never freed
+> >and thus never discarded..? Are you running fstrim?
+> 
+> mount -o discard.  And yes, overwrites are supposedly more expensive
+> than trim old data + allocate new data, but maybe if you compare it
+> with the work XFS has to do, perhaps the tradeoff is bad.
 
-This is probably using sync calls.  Using async calls you can have many 
-more I/Os in progress (but still limited by effective disk queue depth).
+Oh, you do realise that using "-o discard" causes significant delays
+in journal commit processing? i.e. the journal commit completion
+blocks until all the discards have been submitted and waited on
+*synchronously*. This is a problem with the linux block layer in
+that blkdev_issue_discard() is a synchronous operation.....
 
-> If you've got 400GB filesystems or you are using spinning disks,
-> then you probably don't want to go above 16 AGs, because then you
-> have problems with maintaining continugous free space and you'll
-> seek the spinning disks to death....
+Hence if you are seeing delays in transactions (e.g. timestamp updates)
+it's entirely possible that things will get much better if you
+remove the discard mount option. It's much better from a performance
+perspective to use the fstrim command every so often - fstrim issues
+discard operations in the context of the fstrim process - it does
+not interact with the transaction subsystem at all.
 
-We're concentrating on SSDs for now.
+Cheers,
 
->
->>>> 'mount -o ikeep,'
->>>
->>> Interesting.  Our files are large so we could try this.
-> Keep in mind that ikeep means that inode allocation permanently
-> fragments free space, which can affect how large files are allocated
-> once you truncate/rm the original files.
->
->
-
-We can try to prime this by allocating a lot of inodes up front, then 
-removing them, so that this doesn't happen.
-
-Hurray ext2.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
