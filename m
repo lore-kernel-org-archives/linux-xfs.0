@@ -1,26 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1753F7F59
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 08:02:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AA742AC003
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:02:09 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5jw3J8HqBEBeqEla (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 06:02:08 -0800 (PST)
-Date: Tue, 1 Dec 2015 09:02:07 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 51E717F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 08:37:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 301788F8039
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:37:47 -0800 (PST)
+Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com
+	[74.125.82.44]) by cuda.sgi.com with ESMTP id AuGfzoBBpeNzmPgz
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 06:37:44 -0800 (PST)
+Received: by wmww144 with SMTP id w144so16037465wmw.0
+	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 06:37:43 -0800 (PST)
 Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151201140206.GC26129@bfoster.bfoster>
 References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
 	<20151130141000.GC24765@bfoster.bfoster>
-	<CAD-J=zZrKbOAUzj5dJYOPkukPQV4V7YMr_c+W6_SXHNzGgOxdQ@mail.gmail.com>
-	<20151201131128.GB26129@bfoster.bfoster>
-	<CAD-J=zYpXui+HarW9RTGyygE9vQn=0FXs__kmVGF3nHN3AfsYA@mail.gmail.com>
+	<565C5D39.8080300@scylladb.com>
+	<20151130161438.GD24765@bfoster.bfoster>
+	<565D639F.8070403@scylladb.com>
+	<20151201131114.GA26129@bfoster.bfoster>
+	<565DA784.5080003@scylladb.com>
+	<CAD-J=zY=A8MQLzykox276cHiH7ddXHFVp0w0B4XRBskv6YK_WQ@mail.gmail.com>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <565DB0B5.40202@scylladb.com>
+Date: Tue, 1 Dec 2015 16:37:41 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAD-J=zYpXui+HarW9RTGyygE9vQn=0FXs__kmVGF3nHN3AfsYA@mail.gmail.com>
+In-Reply-To: <CAD-J=zY=A8MQLzykox276cHiH7ddXHFVp0w0B4XRBskv6YK_WQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,77 +34,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Glauber Costa <glauber@scylladb.com>
-Cc: Avi Kivity <avi@scylladb.com>, xfs@oss.sgi.com
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Dec 01, 2015 at 08:39:06AM -0500, Glauber Costa wrote:
-> >
-> > The truncate will free blocks and require block allocation on subsequent
-> > writes. That might be something you could look into trying to avoid
-> > (e.g., keeping files around and reusing space), but that depends on your
-> > application design.
-> 
-> 
-> This one is a bit hard. We have a journal-like structure for the
-> modifications issued to the data store, which dominates most of our
-> write workloads (including this one that I am discussing here). We
-> could keep they around by renaming them outside of user visibility and
-> then renaming them back, but that would mean that we are now using
-> twice as much space. Perhaps we could use a pool that can at least
-> guarantee one or two allocations from a pre-existing file. I am
-> assuming here that renaming the file won't block. If it does, we are
-> better off not doing so.
-> 
-> > Inodes chunks are allocated and freed dynamically by
-> > default as well. The 'ikeep' mount option keeps inode chunks around
-> > indefinitely (even if individual inodes are all freed) if you wanted to
-> > avoid inode chunk reallocation and know you have a fairly stable working
-> > set of inodes.
-> 
-> I believe we do have a fairly stable inode working set, even though
-> that depends a bit on what's considered stable. For our journal-like
-> structure, we will keep them around until we are sure the information
-> is safe and them delete them - creating new ones as we receive more
-> data. But that's always bounded in size.
-> 
-> Am I correct to understand that ikeep being passed, new allocations
-> would just reuse space from the empty chunks on disk?
-> 
 
-Yes.. current behavior is that inodes are allocated and freed in chunks
-of 64. When the entire chunk of inodes is freed from the namespace, the
-chunk is freed (i.e., it is now free space). With ikeep, inode chunks
-are never freed. When an individual inode allocation request is made,
-the inode is allocated from one of the existing inode chunks before a
-new chunk is allocated.
 
-The tradeoff is that you could consume a significant amount of space
-with inodes, free a bunch of them and that space is not freed. So that
-is something to be aware of for your use case, particularly if the fs
-has other uses from your journaling mechanism described above because it
-affects the entire fs.
+On 12/01/2015 04:01 PM, Glauber Costa wrote:
+> On Tue, Dec 1, 2015 at 8:58 AM, Avi Kivity <avi@scylladb.com> wrote:
+>>
+>> On 12/01/2015 03:11 PM, Brian Foster wrote:
+>>> On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
+>>>> On 11/30/2015 06:14 PM, Brian Foster wrote:
+>>>>> On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
+>>>>>> On 11/30/2015 04:10 PM, Brian Foster wrote:
+>>> ...
+>>>>> The agsize/agcount mkfs-time heuristics change depending on the type of
+>>>>> storage. A single AG can be up to 1TB and if the fs is not considered
+>>>>> "multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
+>>>>> default up to 4TB. If a stripe unit is set, the agsize/agcount is
+>>>>> adjusted depending on the size of the overall volume (see
+>>>>> xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
+>>>> We'll experiment with this.  Surely it depends on more than the amount of
+>>>> storage?  If you have a high op rate you'll be more likely to excite
+>>>> contention, no?
+>>>>
+>>> Sure. The absolute optimal configuration for your workload probably
+>>> depends on more than storage size, but mkfs doesn't have that
+>>> information. In general, it tries to use the most reasonable
+>>> configuration based on the storage and expected workload. If you want to
+>>> tweak it beyond that, indeed, the best bet is to experiment with what
+>>> works.
+>>
+>> We will do that.
+>>
+>>>>>> Are those locks held around I/O, or just CPU operations, or a mix?
+>>>>> I believe it's a mix of modifications and I/O, though it looks like some
+>>>>> of the I/O cases don't necessarily wait on the lock. E.g., the AIL
+>>>>> pushing case will trylock and defer to the next list iteration if the
+>>>>> buffer is busy.
+>>>>>
+>>>> Ok.  For us sleeping in io_submit() is death because we have no other
+>>>> thread
+>>>> on that core to take its place.
+>>>>
+>>> The above is with regard to metadata I/O, whereas io_submit() is
+>>> obviously for user I/O.
+>>
+>> Won't io_submit() also trigger metadata I/O?  Or is that all deferred to
+>> async tasks?  I don't mind them blocking each other as long as they let my
+>> io_submit alone.
+>>
+>>>    io_submit() can probably block in a variety of
+>>> places afaict... it might have to read in the inode extent map, allocate
+>>> blocks, take inode/ag locks, reserve log space for transactions, etc.
+>>
+>> Any chance of changing all that to be asynchronous?  Doesn't sound too hard,
+>> if somebody else has to do it.
+>>
+>>> It sounds to me that first and foremost you want to make sure you don't
+>>> have however many parallel operations you typically have running
+>>> contending on the same inodes or AGs. Hint: creating files under
+>>> separate subdirectories is a quick and easy way to allocate inodes under
+>>> separate AGs (the agno is encoded into the upper bits of the inode
+>>> number).
+>>
+>> Unfortunately our directory layout cannot be changed.  And doesn't this
+>> require having agcount == O(number of active files)?  That is easily in the
+>> thousands.
+> Actually, wouldn't agcount == O(nr_cpus) be good enough?
 
-> 
-> > Per-inode extent size hints might be another option to
-> > increase the size of allocations and perhaps reduce the number of them.
-> >
-> 
-> That's absolutely greatastic. Our files for that journal are all more
-> or less the same size. That's a great candidate for a hint.
-> 
-
-You could consider preallocation (fallocate()) as well if you know the
-full size in advance.
-
-Brian
-
-> > Brian
-> 
-> Thanks again, Brian
+Depends on whether the locks are around I/O or cpu access only.
 
 _______________________________________________
 xfs mailing list
