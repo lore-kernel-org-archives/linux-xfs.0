@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A28857F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 10:33:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D1DC8F8035
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 08:33:45 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rcTR3weQoqDqS5HL (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 08:33:41 -0800 (PST)
-Date: Tue, 1 Dec 2015 17:33:35 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Question on how to submit changed code
-Message-ID: <20151201163335.GA2477@redhat.com>
-References: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
+	by oss.sgi.com (Postfix) with ESMTP id B6DD47F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 10:38:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 92B948F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 08:38:19 -0800 (PST)
+Received: from mail-yk0-f182.google.com (mail-yk0-f182.google.com
+	[209.85.160.182]) by cuda.sgi.com with ESMTP id
+	PwtWgsdDaaXH1IS7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 08:38:18 -0800 (PST)
+Received: by ykdv3 with SMTP id v3so13729169ykd.0
+	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 08:38:17 -0800 (PST)
+Date: Tue, 1 Dec 2015 11:38:15 -0500
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: automatic testing of cgroup writeback limiting (was: Re: Does
+	XFS support cgroup writeback limiting?)
+Message-ID: <20151201163815.GB12922@mtj.duckdns.org>
+References: <5652F311.7000406@5t9.de> <20151125213500.GK26718@dastard>
+	<565B70F9.8060707@5t9.de> <1711940.cDn6AztRgi@merkaba>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
+In-Reply-To: <1711940.cDn6AztRgi@merkaba>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,55 +30,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Epp, Mike" <MEpp@KrollOntrack.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Martin Steigerwald <martin@lichtvoll.de>
+Cc: linux-fsdevel@vger.kernel.org, Lutz Vieweg <lvml@5t9.de>, xfs@oss.sgi.com
 
-SSdtIG5vdCBhbiBhdHRvcm5leSwgc28gdGFrZSBteSBzdWdnZXN0aW9ucyB3aXRoIHNvbWUgY2F1
-dGlvbi4KCklmIHlvdSB3YW50IHRvIHB1Ymxpc2ggdGhlIGNvZGUgZm9yIGJlIGNvbXBsaWFudCB3
-aXRoIEdQTCwgeW91IG1pZ2h0IHdhbnQgdG8gdXNlCnNvbWUgcHVibGljIHJlcG9zaXRvcnkgbGlr
-ZSBnaXRodWIsIHNvdXJjZWZvcmdlLCBldGMuIGJ1dCBJIHRoaW5rIHRoYXQgZXZlbgpzZW5kaW5n
-IHRoZSBwYXRjaCB0byB0aGUgbGlzdCB3b3VsZCBiZSBlbm91Z2guCgpBbHRob3VnaCwgSSB0aGlu
-ayB5b3Ugb25seSB2aW9sYXRlIEdQTCBpZiB5b3UncmUgZGlzdHJpYnV0aW5nIHRoZSBleGVjdXRh
-Ymxlcwp3aXRob3V0IHRoZSBzb3VyY2UgY29kZS4KCkJ1dCwgSSdtIG5vdCB0aGUgYmVzdCBHUEwg
-Z2Vlaywgc28gSSBtaWdodCBiZSB3cm9uZwoKCgoKT24gVHVlLCBEZWMgMDEsIDIwMTUgYXQgMDM6
-MTY6MTFQTSArMDAwMCwgRXBwLCBNaWtlIHdyb3RlOgo+ICAgIEkgaGF2ZSBjaGFuZ2VkIGNvZGUg
-aW4gbGlieGZzIGFuZCByZXBhaXIgcHJvamVjdHMgZm9yIHhmc3Byb2dzLiAgSQo+ICAgIGRvbuKA
-mXQgdmlldyB0aGUgY2hhbmdlcyBhcyBkZXNpcmVkIGZvciBvbmdvaW5nIGRlcGxveW1lbnQsIGFz
-IHRoZXkKPiAgICBhbGxvd2VkIHNjYW5uaW5nIG9mIGFjdGl2ZSB2b2x1bWVzIGFuZCBicmluZyB0
-aGUgY2hhbmNlIG9mIGZhbHNlCj4gICAgZXJyb3JzLiAgVG8gc3RheSBjb21wbGlhbnQgd2l0aCBH
-TlUgR1BMIHRob3VnaCB3ZSBtdXN0IHB1Ymxpc2ggdGhlCj4gICAgY29kZS4gIFdoYXQgYXJlIHRo
-ZSBzdGVwcyBJIG5lZWQgdG8gZm9sbG93IHRvIHB1Ymxpc2ggdGhlIGNoYW5nZXM/ICBEbwo+ICAg
-IEkgbmVlZCB0byBwdWJsaXNoIGp1c3QgdGhlIHNvdXJjZSBmaWxlcyBJIGNoYW5nZWQsIHRoZSBl
-bnRpcmUgcHJvamVjdHMKPiAgICBJIGNoYW5nZXMsIG9yIGFsbCBvZiB4ZnNwcm9ncz8KPiAKPiAK
-PiAgICBNaWtlIEVwcCwgU2VuaW9yIFNvZnR3YXJlIEVuZ2luZWVyCj4gCj4gICAgS3JvbGwgT250
-cmFjayB8ICA5MDIzIENvbHVtYmluZSBSb2FkLCBFZGVuIFByYWlyaWUsIE1OIDU1MzQ3Cj4gICAg
-WzFdbWVwcEBrcm9sbG9udHJhY2suY29tCj4gICAgWzJdd3d3Lmtyb2xsb250cmFjay5jb20KPiAK
-PiAgICBUaGlzIGNvbW11bmljYXRpb24gY29udGFpbnMgaW5mb3JtYXRpb24gdGhhdCBpcyBjb25m
-aWRlbnRpYWwsCj4gICAgcHJvcHJpZXRhcnkgaW4gbmF0dXJlLCBhbmQgbWF5IGFsc28gYmUgYXR0
-b3JuZXktY2xpZW50IHByaXZpbGVnZWQKPiAgICBhbmQvb3Igd29yayBwcm9kdWN0IHByaXZpbGVn
-ZWQuIEl0IGlzIGZvciB0aGUgZXhjbHVzaXZlIHVzZSBvZiB0aGUKPiAgICBpbnRlbmRlZCByZWNp
-cGllbnQocykuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykgb3IgdGhl
-Cj4gICAgcGVyc29uIHJlc3BvbnNpYmxlIGZvciBkZWxpdmVyaW5nIGl0IHRvIHRoZSBpbnRlbmRl
-ZCByZWNpcGllbnQocyksCj4gICAgcGxlYXNlIG5vdGUgdGhhdCBhbnkgZm9ybSBvZiBkaXNzZW1p
-bmF0aW9uLCBkaXN0cmlidXRpb24gb3IgY29weWluZyBvZgo+ICAgIHRoaXMgY29tbXVuaWNhdGlv
-biBpcyBzdHJpY3RseSBwcm9oaWJpdGVkIGFuZCBtYXkgYmUgdW5sYXdmdWwuIElmIHlvdQo+ICAg
-IGhhdmUgcmVjZWl2ZWQgdGhpcyBjb21tdW5pY2F0aW9uIGluIGVycm9yLCBwbGVhc2UgaW1tZWRp
-YXRlbHkgbm90aWZ5Cj4gICAgdGhlIHNlbmRlciBhbmQgZGVsZXRlIHRoZSBvcmlnaW5hbCBjb21t
-dW5pY2F0aW9uLiBUaGFuayB5b3UgZm9yIHlvdXIKPiAgICBjb29wZXJhdGlvbi4KPiAKPiAgICBQ
-bGVhc2UgYmUgYWR2aXNlZCB0aGF0IG5laXRoZXIgS3JvbGwsIGl0cyBhZmZpbGlhdGVzLCBpdHMg
-ZW1wbG95ZWVzIG9yCj4gICAgYWdlbnRzIGFjY2VwdCBsaWFiaWxpdHkgZm9yIGFueSBlcnJvcnMs
-IG9taXNzaW9ucyBvciBkYW1hZ2VzIGNhdXNlZCBieQo+ICAgIGRlbGF5cyBvZiByZWNlaXB0IG9y
-IGJ5IGFueSB2aXJ1cyBpbmZlY3Rpb24gaW4gdGhpcyBtZXNzYWdlIG9yIGl0cwo+ICAgIGF0dGFj
-aG1lbnRzLCBvciB3aGljaCBtYXkgb3RoZXJ3aXNlIGFyaXNlIGFzIGEgcmVzdWx0IG9mIHRoaXMg
-ZS1tYWlsCj4gICAgdHJhbnNtaXNzaW9uLgo+IAo+IFJlZmVyZW5jZXMKPiAKPiAgICAxLiBtYWls
-dG86bWVwcEBrcm9sbG9udHJhY2suY29tCj4gICAgMi4gaHR0cDovL3d3dy5rcm9sbG9udHJhY2su
-Y29tL29odHRwOi93d3cua3JvbGxvbnRyYWNrLmNvbS8KCj4gX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5z
-Z2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgoKLS0gCkNh
-cmxvcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
-IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCg==
+Hello,
+
+On Tue, Dec 01, 2015 at 09:38:03AM +0100, Martin Steigerwald wrote:
+> > > echo "<major>:<minor>  <rate_bytes_per_second>" >
+> > > /cgrp/blkio.throttle.read_bps_device
+> > document how to configure limits per block device.
+> > 
+> > Now after reading through the new Writeback section of blkio-controller.txt
+> > again I am somewhat confused - the text states
+> > 
+> > > writeback operates on inode basis
+
+As opposed to pages.  cgroup ownership is tracked per inode, not per
+page, so if multiple cgroups write to the same inode at the same time,
+some IOs will be incorrectly attributed.
+
+> > and if that means inodes as in "file system inodes", this would
+> > indeed mean limits would be enforced "per filesystem" - and yet
+> > there are no options documented to specify limits for any specific
+> > filesystem.
+
+cgroup ownership is per-inode.  IO throttling is per-device, so as
+long as multiple filesystems map to the same device, they fall under
+the same limit.
+
+> > > Metadata IO not throttled - it is owned by the filesystem and hence
+> > > root cgroup.
+> > 
+> > Ouch. That kind of defeats the purpose of limiting evil processes'
+> > ability to DOS other processes.
+
+cgroup isn't a security mechanism and has to make active tradeoffs
+between isolation and overhead.  It doesn't provide protection against
+malicious users and in general it's a pretty bad idea to depend on
+cgroup for protection against hostile entities.  Although some
+controller do better isolation than others, given how filesystems are
+implemented, filesystem io control getting there will likely take a
+while.
+
+> > Wouldn't it be possible to assign some arbitrary cost to meta-data
+> > operations - like "account one page write for each meta-data change
+> > to the originating process of that change"? While certainly not
+> > allowing for limiting to byte-precise limits of write bandwidth,
+> > this would regain the ability to defend against DOS situations,
+> > and for well-behaved processes, the "cost" accounted for their
+> > not-so-frequent meta-data operations would probably not really hurt their
+> > writing
+> > speed.
+
+For aggregate consumers, this sort of approaches does make sense -
+measure total consumption by common operations and distribute the
+charges afterwards; however, this will require quite a bit of work on
+both io controller and filesystem sides.
+
+> > (I understand that if one used the absolute "blkio.throttle.write*" options
+> > pressure back could apply before the dirty buffer cache was maxed out,
+> > but in real-world scenarios people will almost always use the relative
+> > "blkio.weight" based limiting, after all, you usually don't want to throttle
+> > processes if there is plenty of bandwidth left no other process wants at
+> > the same time.)
+
+I'd recommend configuring both memory.high and io.weight so that the
+buffer area isn't crazy high compared to io bandwidth.  It should be
+able to reach the configured ratio that way and also avoids two io
+domains competing in the same io domain which can skew the results.
+
+Thanks.
+
+-- 
+tejun
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
