@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD7107F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 17:07:09 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5E2BD7F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 17:41:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CD7928F8039
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 15:07:06 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D7B2AAC005
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 15:41:55 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	rq9YULdWAZiFq483 for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 15:06:59 -0800 (PST)
-Date: Wed, 2 Dec 2015 10:06:44 +1100
+	IdRWWtD0bRrb3Ns0 for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 15:41:53 -0800 (PST)
+Date: Wed, 2 Dec 2015 10:41:39 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151201230644.GD19199@dastard>
-References: <20151201145631.GD26129@bfoster.bfoster>
-	<565DBB3E.2010308@scylladb.com>
-	<20151201160133.GE26129@bfoster.bfoster>
-	<565DC613.4090608@scylladb.com>
-	<20151201162958.GF26129@bfoster.bfoster>
-	<565DD449.5090101@scylladb.com> <20151201180321.GA4762@redhat.com>
-	<565DEFE2.2000308@scylladb.com> <20151201211914.GZ19199@dastard>
-	<565E1355.4020900@scylladb.com>
+Message-ID: <20151201234139.GE19199@dastard>
+References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
+	<20151130141000.GC24765@bfoster.bfoster>
+	<565C5D39.8080300@scylladb.com>
+	<20151130161438.GD24765@bfoster.bfoster>
+	<565D639F.8070403@scylladb.com>
+	<20151201131114.GA26129@bfoster.bfoster>
+	<565DA784.5080003@scylladb.com>
+	<CAD-J=zY=A8MQLzykox276cHiH7ddXHFVp0w0B4XRBskv6YK_WQ@mail.gmail.com>
+	<20151201204535.GX19199@dastard> <565E0961.4060603@scylladb.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <565E1355.4020900@scylladb.com>
+In-Reply-To: <565E0961.4060603@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,126 +38,64 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Avi Kivity <avi@scylladb.com>
-Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+Cc: Brian Foster <bfoster@redhat.com>, Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
 
-On Tue, Dec 01, 2015 at 11:38:29PM +0200, Avi Kivity wrote:
-> On 12/01/2015 11:19 PM, Dave Chinner wrote:
-> >On Tue, Dec 01, 2015 at 09:07:14PM +0200, Avi Kivity wrote:
-> >>On 12/01/2015 08:03 PM, Carlos Maiolino wrote:
-> >>>Hi Avi,
+On Tue, Dec 01, 2015 at 10:56:01PM +0200, Avi Kivity wrote:
+> On 12/01/2015 10:45 PM, Dave Chinner wrote:
+> >On Tue, Dec 01, 2015 at 09:01:13AM -0500, Glauber Costa wrote:
+> >The difference is an allocation can block waiting on IO, and the
+> >CPU can then go off and run another process, which then tries to do
+> >an allocation. So you might only have 4 CPUs, but a workload that
+> >can have a hundred active allocations at once (not uncommon in
+> >file server workloads).
+> 
+> But for us, probably not much more.  We try to restrict active I/Os
+> to the effective disk queue depth (more than that and they just turn
+> sour waiting in the disk queue).
+> 
+> 
+> >On worklaods that are roughly 1 process per CPU, it's typical that
+> >agcount = 2 * N cpus gives pretty good results on large filesystems.
+> 
+> This is probably using sync calls.  Using async calls you can have
+> many more I/Os in progress (but still limited by effective disk
+> queue depth).
+
+Ah, no. Even with async IO you don't want unbound allocation
+concurrency. The allocation algorithms rely on having contiguous
+free space extents that are much larger than the allocations being
+done to work effeectively and minimise file fragmentation. If you
+chop the filesystem up into lots of small AGs, then it accelerates
+the rate at which the free space gets chopped up into smaller
+extents and performance then suffers. It's the same problem as
+running a large filesystem near ENOSPC for an extended period of
+time, which again is something we most definitely don't recommend
+you do in production systems.
+
+> >If you've got 400GB filesystems or you are using spinning disks,
+> >then you probably don't want to go above 16 AGs, because then you
+> >have problems with maintaining continugous free space and you'll
+> >seek the spinning disks to death....
+> 
+> We're concentrating on SSDs for now.
+
+Sure, so "problems with maintaining continugous free space" is what
+you need to be concerned about.
+
+> >>>>'mount -o ikeep,'
 > >>>
-> >>>>>else is going to execute in our place until this thread can make
-> >>>>>progress.
-> >>>>For us, nothing else can execute in our place, we usually have exactly one
-> >>>>thread per logical core.  So we are heavily dependent on io_submit not
-> >>>>sleeping.
-> >>>>
-> >>>>The case of a contended lock is, to me, less worrying.  It can be reduced by
-> >>>>using more allocation groups, which is apparently the shared resource under
-> >>>>contention.
-> >>>>
-> >>>I apologize if I misread your previous comments, but, IIRC you said you can't
-> >>>change the directory structure your application is using, and IIRC your
-> >>>application does not spread files across several directories.
-> >>I miswrote somewhat: the application writes data files and commitlog
-> >>files.  The data file directory structure is fixed due to
-> >>compatibility concerns (it is not a single directory, but some
-> >>workloads will see most access on files in a single directory.  The
-> >>commitlog directory structure is more relaxed, and we can split it
-> >>to a directory per shard (=cpu) or something else.
-> >>
-> >>If worst comes to worst, we'll hack around this and distribute the
-> >>data files into more directories, and provide some hack for
-> >>compatibility.
-> >>
-> >>>XFS spread files across the allocation groups, based on the directory these
-> >>>files are created,
-> >>Idea: create the files in some subdirectory, and immediately move
-> >>them to their required location.
-> >See xfs_fsr.
+> >>>Interesting.  Our files are large so we could try this.
+> >Keep in mind that ikeep means that inode allocation permanently
+> >fragments free space, which can affect how large files are allocated
+> >once you truncate/rm the original files.
 > 
-> Can you elaborate?  I don't see how it is applicable.
+> We can try to prime this by allocating a lot of inodes up front,
+> then removing them, so that this doesn't happen.
 
-Just pointing out that this is what xfs_fsr does to control locality
-of allocation for files it is defragmenting. Except that rather than
-moving files, it uses XFS_IOC_SWAPEXT to switch the data between two
-inodes atomically...
-
-> My hack involves creating the file in a random directory, and while
-> it is still zero sized, move it to its final directory.  This is
-> simply to defeat the ag selection heuristic. 
-
-Which you really don't want to do.
-
-> >>>  trying to keep files as close as possible from their
-> >>>metadata.
-> >>This is pointless for an SSD. Perhaps XFS should randomize the ag on
-> >>nonrotational media instead.
-> >Actually, no, it is not pointless. SSDs do not require optimisation
-> >for minimal seek time, but data locality is still just as important
-> >as spinning disks, if not moreso. Why? Because the garbage
-> >collection routines in the SSDs are all about locality and we can't
-> >drive garbage collection effectively via discard operations if the
-> >filesystem is not keeping temporally related files close together in
-> >it's block address space.
-> 
-> In my case, files in the same directory are not temporally related.
-> But I understand where the heuristic comes from.
-> 
-> Maybe an ioctl to set a directory attribute "the files in this
-> directory are not temporally related"?
-
-And exactly what does that gain us? Exactly what problem are you
-trying to solve by manipulating file locality that can't be solved
-by existing knobs and config options?
-
-Perhaps you'd like to read up on how the inode32 allocator behaves?
-
-> >e.g. If the files in a directory are all close together, and the
-> >directory is removed, we then leave a big empty contiguous region in
-> >the filesystem free space map, and when we send discards over that
-> >we end up with a single big trim and the drive handles that far more
-> 
-> Would this not be defeated if a directory that happens to share the
-> allocation group gets populated simultaneously?
-
-Sure. But this sort of thing is rare in the real world, and when
-they do occur, it generally only takes small tweaks to algorithms
-and layouts make them go away.  I don't care to bikeshed about
-theoretical problems - I'm in the business of finding the root cause
-of the problems users are having and solving those problems. So far
-what you've given us is a ball of "there's blocking in AIO
-submission", and the only one that is clear cut is the timestamp
-update.
-
-Go back and categorise the types of blocking that you are seeing -
-whether it be on the AGIs during inode manipulation, one the AGFs
-becuse of concurrent extent allocation, on log forces because of
-slow discards in the transcation completion, on the transaction
-subsystem because of a lack of log space for concurrent
-reservations, etc. And then determine if changing the layout of the
-filesystem (e.g. number of AGs, size of log, etc) and different
-mount options (e.g. turning off discard, using inode32 allocator,
-etc) make any difference to the blocking issues you are seeing.
-
-Once we know which of the different algorithms is causing the
-blocking issues, we'll know a lot more about why we're having
-problems and a better idea of what problems we actually need to
-solve. 
-
-> >effectively than lots of little trims (i.e. one per file) that the
-> >drive cannot do anything useful with because they are all smaller
-> >than the internal SSD page/block sizes and so get ignored.  This is
-> >one of the reasons fstrim is so much more efficient and effective
-> >than using the discard mount option.
-> 
-> In my use case, the files are fairly large, and there is constant
-> rewriting (not in-place: files are read, merged, and written back).
-> So I'm worried an fstrim can happen too late.
-
-Have you measured the SSD performance degradation over time due to
-large overwrites? If not, then again it is a good chance you are
-trying to solve a theoretical problem rather than a real problem....
+Again - what problem have you measured that inode preallocation will
+solves in your application? Don't make changes just because you
+*think* it will fix what you *think* is a problem. Measure, analyse,
+solve, in that order.
 
 Cheers,
 
