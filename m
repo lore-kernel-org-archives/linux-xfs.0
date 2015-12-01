@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E146B7F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 14:18:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D247F304059
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 12:18:29 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 2F7617F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 14:27:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 132C7304053
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 12:27:24 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	9AhPvlNoHXB1a4uM for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 12:18:23 -0800 (PST)
-Date: Wed, 2 Dec 2015 07:18:08 +1100
+	fjG0OGYhrqsKGbOb for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 12:27:21 -0800 (PST)
+Date: Wed, 2 Dec 2015 07:26:39 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: I/O 'owner' DoS probs (was Re: Does XFS support cgroup writeback
-	limiting?)
-Message-ID: <20151201201808.GU19199@dastard>
-References: <5652F311.7000406@5t9.de> <20151123202619.GE26718@dastard>
-	<56538E6A.6030203@5t9.de> <20151123232052.GI26718@dastard>
-	<5655FDDA.9050502@5t9.de> <20151125213500.GK26718@dastard>
-	<565D7E03.20008@tlinx.org>
+Subject: Re: Which xfsprogs version to which kernel version
+Message-ID: <20151201202639.GV19199@dastard>
+References: <5656DD39.8060403@poczta.onet.pl> <20151130214104.GL26718@dastard>
+	<2952345.NUOFtjxqgC@merkaba>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <565D7E03.20008@tlinx.org>
+In-Reply-To: <2952345.NUOFtjxqgC@merkaba>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,49 +30,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "L.A. Walsh" <xfs@tlinx.org>
-Cc: xfs@oss.sgi.com
+To: Martin Steigerwald <martin@lichtvoll.de>
+Cc: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>, xfs@oss.sgi.com
 
-On Tue, Dec 01, 2015 at 03:01:23AM -0800, L.A. Walsh wrote:
+On Tue, Dec 01, 2015 at 09:30:00AM +0100, Martin Steigerwald wrote:
+> Am Dienstag, 1. Dezember 2015, 08:41:04 CET schrieb Dave Chinner:
+> > On Thu, Nov 26, 2015 at 11:21:45AM +0100, aluno3@poczta.onet.pl wrote:
+> > > Hello,
+> > > 
+> > > I am using kernel 3.10 and would like to update xfsprogs (currently I
+> > > have 3.1.5).
+> > > 
+> > > When I tried to use the newest version of xfsprogs 4.3.0 I get the call
+> > > trace about detected version 5 of superblock when mounting volume which
+> > > was formatted using mkfs.xfs from 4.3.0.
+> > 
+> > More recent xfsprogs versions enable features that are only
+> > supported by recent kernels. We tend to wait at least a year before
+> > enabling new features by default in xfsprogs so that kernel support
+> > is usually picke dup by distros before they update xfsprogs....
+> > 
+> > If you have an old kernel, then you need to turn off the newer
+> > features that your kernel does not support. This has always been the
+> > case - if you update the xfsprogs yourself, then you need to use the
+> > correct options for your kernel. In general, this:
+> > 
+> > # mkfs.xfs -f -m crc=0 -n ftype=0 <dev>
+> > 
+> > will make a filesystem that can be mounted on old kernels. If
+> > distros are shipping old kernels with new xfsprogs and are not
+> > changing the default behaviour to suit their kernel, then that is a
+> > distro problem.
 > 
-> 
-> Dave Chinner wrote:
-> >Metadata IO not throttled - it is owned by the filesystem and hence
-> >root cgroup.
-> ----
-> 	Please forgive me if this is "obvious"....
-> 
-> 	If it is owned by the file system, then logically, such meta
-> data wouldn't count against the user's quota limits?
+> How about just checking running kernel version before enabling this by 
+> default?
 
-Filesystem space usage accounting is not the same thing. It's just
-accounting, and has nothign to do with how the metadata is dependent
-on the transaction subsystem, caching, locking, parent/child
-relationships with other metadata in the filesystem, etc.
+The btrfs solution? No thanks.
 
-> 	Is this metadata really I/O that is completely disconnected from
-> a user that they cannot affect?
+Apart from the fact I make filesystems that the kernel does not
+support all the time, xfstests does the same thing so that we can
+test that the kernel correctly rejects mounts of filesystems with
+features it doesn't support. And this fails when a distro installer
+or rescue distro has a different kernel to the one the distro
+actually uses, too...
 
-throttling metadata IO - read or write - can lead to entire
-filesystem stalls/deadlocks. e.g. transaction reservation cannot
-complete because the inode that pins the tail of the log is blocked
-from being written due to the process that needs to write it being
-throttled by the IO controller. Hence every transaction in the
-filesytem stalls until the IO controller allows the critical
-metadata IO to be dispatched and completed...
+And, really, where does this slipperly slope end? Suddenly we have
+to maintain a map of every feature in every mainline kernel, then
+every distro kernel that does backports (e.g. sles, rhel, etc) and
+we end up with something nobody can maintain or test.
 
-Or, alternatively, a process is trying to allocate a block, and
-holds an AG locked. It then tries to read a btree block, which is
-throttled and blocked for some time. Any other allocation that needs
-to take place in that AG is now blocked until the first allocation
-is completed.
+> While this is some implementation effort, it may help to reduce questions on 
+> this mailing list. And as you see distro problem or not: People still ask 
+> here. :)
 
-i.e. the moment we start throttling global metadata IO based on
-per-process/cgroup limits, we end up with priority inversions and
-partial/complete fs stalls all over the place. You can educate/ban
-stupid users, but we can't easily iprevent stalls due to
-IO level priority inversions we have no control over at the
-filesystem level...
+The majority of distro's get it right the majority of the time -
+there's no point in turning everything upside down just to silence a
+very small vocal minority. i.e. It's only when users do their own
+package upgrades, or a distro screws up (like gentoo with shipping
+3.2.4 on an old kernel) that users end up with a problem.
 
 Cheers,
 
