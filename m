@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A09A57F58
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 05:01:32 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D6F767F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:18:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 736C0304053
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 03:01:29 -0800 (PST)
-Received: from Ishtar.hs.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id dhWt9L1nn4x2WWhM (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A97258F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 04:18:42 -0800 (PST)
+Received: from mail1.bemta14.messagelabs.com (mail1.bemta14.messagelabs.com
+	[193.109.254.110]) by cuda.sgi.com with ESMTP id
+	1aOsMsAFXJb62V2W (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 03:01:27 -0800 (PST)
-Message-ID: <565D7E03.20008@tlinx.org>
-Date: Tue, 01 Dec 2015 03:01:23 -0800
-From: "L.A. Walsh" <xfs@tlinx.org>
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 04:18:39 -0800 (PST)
+From: Sandeep Patel <spatel@omnifone.com>
+Subject: RE: XFS corruptions
+Date: Tue, 1 Dec 2015 12:18:21 +0000
+Message-ID: <558408F298C8CE4C89D93BD56AB474E8018617C636@EXBE1IS02.omnifone.com>
+References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+	<20151130184048.3fa123e0@harpe.intellique.com>
+	<558408F298C8CE4C89D93BD56AB474E8018617B3A6@EXBE1IS02.omnifone.com>
+	<20151130194554.6140bf30@harpe.intellique.com>
+In-Reply-To: <20151130194554.6140bf30@harpe.intellique.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: I/O 'owner' DoS probs (was Re: Does XFS support cgroup writeback
-	limiting?)
-References: <5652F311.7000406@5t9.de>
-	<20151123202619.GE26718@dastard>	<56538E6A.6030203@5t9.de>
-	<20151123232052.GI26718@dastard>	<5655FDDA.9050502@5t9.de>
-	<20151125213500.GK26718@dastard>
-In-Reply-To: <20151125213500.GK26718@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,61 +29,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-
-
-Dave Chinner wrote:
-> Metadata IO not throttled - it is owned by the filesystem and hence
-> root cgroup. 
-----
-	Please forgive me if this is "obvious"....
-
-	If it is owned by the file system, then logically, such meta
-data wouldn't count against the user's quota limits?   That 'could'
-be justified on the basis that the format of the metadata is outside
-the control of file owner and depending on what's supported, included
-or logged in metadata, the size could vary greatly -- all outside of the
-direct control of the user.  However, by adding extended attributes,
-the user can, likely, affect the disk space used by the metadata 
-regardless of how it implemented and stored on disk -- so in that respect
-it is user data.  Similarly, system CPU time is attributed to the user
-causing the CPU time to be spent, and so on.  
-
-	To highlight the type of problems this can cause: starting after
-Windows XP, MS decided to combine network file I/O requests over 64K to
-be dispatched to the 'System' daemon to optimize network I/O from
-multiple processes using bigger windows to try to keep the network pipe
-as full as possible (competing, of course, with QOS for conforming
-apps).  
-
-	This created a problem -- applications that flood the network
-sit mostly idle waiting for their rpc call to finish and all their 
-BW is attributed to System.   
-
-	FWIW -- you cannot change any of the priorities for System
-without it going all blue screen on you telling you that it's crashing
-to protect you -- because something changed one of it's priority number
-(IO/cpu/memory...etc).  
-
-	Problem is that any intensive prioritizing slows everything down
-and the entire computer becomes unresponsive (10Gb link) as network
-requests are reduced in size. Usually it is possible to restore
-normality by restarting Explorer (assuming you have enough cpu time to
-do so).  About 10% of the time, pulling the network cord is required to
-stop the storm, and VERY rarely, <.01% of the time power-cycling is
-required.
-
-	Attributing user-generated I/O to system processes that are "unaccountable"  *can* and does cause DoS  "opportunities"....
-
-	Is this metadata really I/O that is completely disconnected from
-a user that they cannot affect?
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+WWVzLCB0aGV5IG9ubHkgdGhpbmcgd2UgY2hhbmdlZCBmcm9tIGRlZmF1bHQgaXMgdGhlIGlzaXpl
+LgoKV2UgYXJlIHJ1bm5pbmcgdGhlIGxhdGVzdCB2ZXJzaW9uIG9uIHRoZSBmaXJtd2FyZS4gV2Ug
+cHJldmlvdXNseSB1cGdyYWRlZCB0aGUgZmlybXdhcmUgb24gdGhlc2UgdGhpbmtpbmcgaXQgd291
+bGQgc29sdmUgdGhlIHByb2JsZW0uCgpUaGUgcHJvYmxlbXMgc2VlbSB0byBvY2N1ciBhdCByYW5k
+b20uIFRoZSBsb2FkIHRvIHRoZXNlIHVuaXRzIGFyZSBxdWl0ZSBtaW5pbWFsIGF0IHRoZSBtb21l
+bnQgYW5kIHdlIGFyZSBzdGlsbCBoYXZpbmcgaXNzdWVzLiAKClRoYW5rcwpTYW5kZWVwCgotLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQpGcm9tOiBFbW1hbnVlbCBGbG9yYWMgW21haWx0bzplZmxv
+cmFjQGludGVsbGlxdWUuY29tXSAKU2VudDogMzAgTm92ZW1iZXIgMjAxNSAxODo0NgpUbzogU2Fu
+ZGVlcCBQYXRlbApDYzogeGZzQG9zcy5zZ2kuY29tClN1YmplY3Q6IFJlOiBYRlMgY29ycnVwdGlv
+bnMKCkxlIE1vbiwgMzAgTm92IDIwMTUgMTg6MDY6NTUgKzAwMDAKU2FuZGVlcCBQYXRlbCA8c3Bh
+dGVsQG9tbmlmb25lLmNvbT4gw6ljcml2YWl0OgoKPiBIaSBFbW1hbnVlbCwKPiAKPiBUaGFua3Mg
+Zm9yIHRoZSByZXNwb25zZS4KPiAKPiAgW3Jvb3RAZ2MwMDNiIH5dIyB4ZnNfaW5mbyAvZGV2L3Nk
+Ygo+IG1ldGEtZGF0YT0vZGV2L3NkYiAgICAgICAgICAgICAgIGlzaXplPTUxMiAgICBhZ2NvdW50
+PTUyLAo+IGFnc2l6ZT0yNjg0MzU0NTUgYmxrcyA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0
+c3o9NDA5NiAgYXR0cj0yLAo+IHByb2ppZDMyYml0PTEgPSAgICAgICAgICAgICAgICAgICAgICAg
+Y3JjPTAKPiBkYXRhICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxv
+Y2tzPTEzOTE2MTc2Mzg0LAo+IGltYXhwY3Q9MSA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5p
+dD0wICAgICAgc3dpZHRoPTAgYmxrcwo+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAg
+IGJzaXplPTQwOTYgICBhc2NpaS1jaT0wCj4gbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAg
+ICAgYnNpemU9NDA5NiAgIGJsb2Nrcz01MjE3MjgsIHZlcnNpb249Mgo+ICAgICAgICAgID0gICAg
+ICAgICAgICAgICAgICAgICAgIHNlY3Rzej00MDk2ICBzdW5pdD0xIGJsa3MsCj4gbGF6eS1jb3Vu
+dD0xIHJlYWx0aW1lID1ub25lICAgICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9
+MCwKPiBydGV4dGVudHM9MAoKTG9va3MgcGxhaW4gZGVmYXVsdHMuLi4geW91IGRpZG4ndCBhcHBs
+eSBhbnkgY3VzdG9taXphdGlvbiwgZGlkIHlvdT8KCj4gCj4gV2UgaGF2ZSAxOCBub2RlcyBlYWNo
+IHdpdGggMiBvZiB0aGVzZSBhcnJheXMgYW5kIHdlIGFyZSBzZWVpbmcgdGhpcyAKPiBhY3Jvc3Mg
+dGhlIGJvYXJkLgoKSHVtLCBzdHJhbmdlLCBhcmUgeW91IHJ1bm5pbmcgdGhlIGxhdGVzdCBSQUlE
+IGZpcm13YXJlIG9uIHRoZSBjb250cm9sbGVycz8KCkRvZXMgdGhpcyBoYXBwZW4gbW9yZSBvZnRl
+biB3aGVuIHRoZSBhcnJheSBpcyByZWJ1aWxkaW5nLCBvciB2ZXJpZnlpbmcsIG9yIHdoZW4gdGhl
+IHN5c3RlbSBpcyB1bmRlciBoZWF2eSBJTz8gT3IgZG9lcyBpdCBoYXBwZW4ganVzdCBjb21wbGV0
+ZWx5IGF0IHJhbmRvbT8KIAo+IEkgaGF2ZSB1cGRhdGVkIHRoZSB4ZnNwcm9ncyB0byAzLjEuMTEt
+MS4wLjYuZWw2Lng4Nl82NCB3aGljaCBpcyB0aGUgCj4gbGF0ZXN0IHZlcnNpb24gYXZhaWxhYmxl
+IG9uIG91ciB5dW0gcmVwby4KCklmIHlvdSdyZSBub3QgYWZyYWlkIG9mIHJ1bm5pbmcgYmluYXJp
+ZXMgZnJvbSB1bmtub3duIHNvdXJjZSwgaGVyZSdzIGEKNC4yLjAgdmVyc2lvbiBJJ3ZlIGJ1aWx0
+IHJlY2VudGx5OgpodHRwOi8vdXBkYXRlLmludGVsbGlxdWUuY29tL3B1Yi94ZnNfcmVwYWlyLTQu
+Mi4wLmd6CiAKCi0tCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJl
+Y3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAg
+ICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAg
+ICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+VGhpcyBlbWFpbCBoYXMgYmVlbiBzY2FubmVkIGJ5IHRoZSBTeW1hbnRlYyBFbWFpbCBTZWN1cml0
+eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9yZSBpbmZvcm1hdGlvbiBwbGVhc2UgdmlzaXQgaHR0cDov
+L3d3dy5zeW1hbnRlY2Nsb3VkLmNvbSBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClRoaXMg
+ZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0aGUgU3ltYW50ZWMgRW1haWwgU2VjdXJpdHkuY2xv
+dWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHZpc2l0IGh0dHA6Ly93d3cu
+c3ltYW50ZWNjbG91ZC5jb20KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
