@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E05BC7F58
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 07:11:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 87800AC003
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 05:11:19 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C914E7F58
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 07:11:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9AA930405F
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 05:11:31 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IBCbq6mpfkwbry7D (version=TLSv1.2
+	cuda.sgi.com with ESMTP id vKOFcfTRYacmVOU9 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 05:11:18 -0800 (PST)
-Date: Tue, 1 Dec 2015 08:11:16 -0500
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 05:11:30 -0800 (PST)
+Date: Tue, 1 Dec 2015 08:11:28 -0500
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151201131114.GA26129@bfoster.bfoster>
+Message-ID: <20151201131128.GB26129@bfoster.bfoster>
 References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
 	<20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
-	<20151130161438.GD24765@bfoster.bfoster>
-	<565D639F.8070403@scylladb.com>
+	<CAD-J=zZrKbOAUzj5dJYOPkukPQV4V7YMr_c+W6_SXHNzGgOxdQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <565D639F.8070403@scylladb.com>
+In-Reply-To: <CAD-J=zZrKbOAUzj5dJYOPkukPQV4V7YMr_c+W6_SXHNzGgOxdQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,65 +31,172 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Avi Kivity <avi@scylladb.com>
-Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: Glauber Costa <glauber@scylladb.com>
+Cc: Avi Kivity <avi@scylladb.com>, xfs@oss.sgi.com
 
-On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
-> On 11/30/2015 06:14 PM, Brian Foster wrote:
-> >On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
+On Mon, Nov 30, 2015 at 10:49:27AM -0500, Glauber Costa wrote:
+> Hi Brian
+> 
+> >> 1) xfs_buf_lock -> xfs_log_force.
 > >>
-> >>On 11/30/2015 04:10 PM, Brian Foster wrote:
-...
-> >The agsize/agcount mkfs-time heuristics change depending on the type of
-> >storage. A single AG can be up to 1TB and if the fs is not considered
-> >"multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
-> >default up to 4TB. If a stripe unit is set, the agsize/agcount is
-> >adjusted depending on the size of the overall volume (see
-> >xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
+> >> I've started wondering what would make xfs_log_force sleep. But then I
+> >> have noticed that xfs_log_force will only be called when a buffer is
+> >> marked stale. Most of the times a buffer is marked stale seems to be
+> >> due to errors. Although that is not my case (more on that), it got me
+> >> thinking that maybe the right thing to do would be to avoid hitting
+> >> this case altogether?
+> >>
+> >
+> > I'm not following where you get the "only if marked stale" part..? It
+> > certainly looks like that's one potential purpose for the call, but this
+> > is called in a variety of other places as well. E.g., forcing the log
+> > via pushing on the ail when it has pinned items is another case. The ail
+> > push itself can originate from transaction reservation, etc., when log
+> > space is needed. In other words, I'm not sure this is something that's
+> > easily controlled from userspace, if at all. Rather, it's a significant
+> > part of the wider state machine the fs uses to manage logging.
 > 
-> We'll experiment with this.  Surely it depends on more than the amount of
-> storage?  If you have a high op rate you'll be more likely to excite
-> contention, no?
+> I understand that in general xfs_log_force can be called from many
+> places. But in our traces the ones we see sleeping are coming from
+> xfs_buf_lock. The code for xfs_buf_lock reads:
+> 
+>     if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+>         xfs_log_force(bp->b_target->bt_mount, 0);
+> 
+> 
+> which if I read correctly, will be called only for stale buffers. True
+> thing they happen to be pinned as well, but somehow the stale part
+> caught my attention. It seemed to me from briefly looking that the
+> stale condition was a more "avoidable" one. (keep in mind I am not an
+> awesome XFSer, may be missing something)
 > 
 
-Sure. The absolute optimal configuration for your workload probably
-depends on more than storage size, but mkfs doesn't have that
-information. In general, it tries to use the most reasonable
-configuration based on the storage and expected workload. If you want to
-tweak it beyond that, indeed, the best bet is to experiment with what
-works.
+It's not really avoidable. It's an expected buffer state when metadata
+blocks/buffers are freed as actions must be taken if they are reused.
+Dave's breakdown describes how you might be hitting this based on your
+traces.
 
 > >
-> >>Are those locks held around I/O, or just CPU operations, or a mix?
-> >I believe it's a mix of modifications and I/O, though it looks like some
-> >of the I/O cases don't necessarily wait on the lock. E.g., the AIL
-> >pushing case will trylock and defer to the next list iteration if the
-> >buffer is busy.
+> >> The file example-stale.txt contains a backtrace of the case where we
+> >> are being marked as stale. It seems to be happening when we convert
+> >> the the inode's extents from unwritten to real. Can this case be
+> >> avoided? I won't pretend I know the intricacies of this, but couldn't
+> >> we be keeping extents from the very beginning to avoid creating stale
+> >> buffers?
+> >>
+> >
+> > This is down in xfs_fs_evict_inode()->xfs_inactive(), which is generally
+> > when an inode is evicted from cache. In this case, it looks like the
+> > inode is unlinked (permanently removed), the extents are being removed
+> > and a bmap btree block is being invalidated as part of that overall
+> > process. I don't think this has anything to do with unwritten extents.
 > >
 > 
-> Ok.  For us sleeping in io_submit() is death because we have no other thread
-> on that core to take its place.
+> Cool. If the inode is indeed unliked, could that sill be triggering
+> that condition in xfs_buf_lock? I am not even close to fully
+> understanding how XFS manages and/or recycles buffers, but it seems to
+> me that if an inode is going away, there isn't really any reason to
+> contend for its buffers.
 > 
 
-The above is with regard to metadata I/O, whereas io_submit() is
-obviously for user I/O. io_submit() can probably block in a variety of
-places afaict... it might have to read in the inode extent map, allocate
-blocks, take inode/ag locks, reserve log space for transactions, etc.
+I think so.. the inode removal will free various metadata blocks and
+they could still be in the stale state by the time something else comes
+along and allocates them (re: Dave's example covers this).
 
-It sounds to me that first and foremost you want to make sure you don't
-have however many parallel operations you typically have running
-contending on the same inodes or AGs. Hint: creating files under
-separate subdirectories is a quick and easy way to allocate inodes under
-separate AGs (the agno is encoded into the upper bits of the inode
-number). Reducing the frequency of block allocation/frees might also be
-another help (e.g., preallocate and reuse files, 'mount -o ikeep,'
-etc.). Beyond that, you probably want to make sure the log is large
-enough to support all concurrent operations. See the xfs_log_grant_*
-tracepoints for a window into if/how long transaction reservations might
-be waiting on the log.
+> >> 2) xfs_buf_lock -> down
+> >> This is one I truly don't understand. What can be causing contention
+> >> in this lock? We never have two different cores writing to the same
+> >> buffer, nor should we have the same core doingCAP_FOWNER so.
+> >>
+> >
+> > This is not one single lock. An XFS buffer is the data structure used to
+> > modify/log/read-write metadata on-disk and each buffer has its own lock
+> > to prevent corruption. Buffer lock contention is possible because the
+> > filesystem has bits of "global" metadata that has to be updated via
+> > buffers.
+> 
+> I see. Since I hate guessing, is there any way you would recommend for
+> us to probe the system to determine if this contention scenario is
+> indeed the one we are seeing?
+> 
+
+I'd probably use perf as you are, I'm just not sure if there's any real
+way to tell which threads are contending on which AGs. I'm not terribly
+experienced with perf. I suppose that if the AGF/AGI read/lock traces
+are high up on the list, the chances are higher you're spending a lot of
+time waiting on AGs. It's relatively easy to increase the AG count and
+allocate inodes under separate AGs (see my previous mail) as an
+experiment to see if such contention is reduced.
+
+> We usually open a file, write to it from a single core only,
+> sequentially, direct IO only, as well behavedly as we can, with all
+> the effort in the world to be good kids to the extent Santa will bring
+> us presents without us even asking.
+> 
+> So we were very puzzled to see contention. Contention for global
+> metadata updates is the best explanation we've had so far, and would
+> be great if we could verify it is indeed the case.
+> 
+> >
+> > For example, usually one has multiple allocation groups to maximize
+> > parallelism, but we still have per-ag metadata that has to be tracked
+> > globally with respect to each AG (e.g., free space trees, inode
+> > allocation trees, etc.). Any operation that affects this metadata (e.g.,
+> > block/inode allocation) has to lock the agi/agf buffers along with any
+> > buffers associated with the modified btree leaf/node blocks, etc.
+> >
+> > One example in your attached perf traces has several threads looking to
+> > acquire the AGF, which is a per-AG data structure for tracking free
+> > space in the AG. One thread looks like the inode eviction case noted
+> > above (freeing blocks), another looks like a file truncate (also freeing
+> > blocks), and yet another is a block allocation due to a direct I/O
+> > write. Were any of these operations directed to an inode in a separate
+> > AG, they would be able to proceed in parallel (but I believe they would
+> > still hit the same codepaths as far as perf can tell).
+> 
+> This is great, great, awesome info Brian. Thanks. We are so far
+> allocating inodes and truncating them when we need a new one, but
+> maybe there is some allocation pattern that is friendlier to the AG? I
+> understand that with such a data structure it may very well be
+> impossible to get rid of all waiting, but we will certainly do all we
+> can to mitigate it.
+> 
+
+The truncate will free blocks and require block allocation on subsequent
+writes. That might be something you could look into trying to avoid
+(e.g., keeping files around and reusing space), but that depends on your
+application design. Inodes chunks are allocated and freed dynamically by
+default as well. The 'ikeep' mount option keeps inode chunks around
+indefinitely (even if individual inodes are all freed) if you wanted to
+avoid inode chunk reallocation and know you have a fairly stable working
+set of inodes. Per-inode extent size hints might be another option to
+increase the size of allocations and perhaps reduce the number of them.
 
 Brian
 
+> >
+> >> 3) xfs_file_aio_write_checks -> file_update_time -> xfs_vn_update_time
+> >>
+> >> You guys seem to have an interface to avoid that, by setting the
+> >> FMODE_NOCMTIME flag. This is done by issuing the open by handle ioctl,
+> >> which will set this flag for all regular files. That's great, but that
+> >> ioctl required CAP_SYS_ADMIN, which is a big no for us, since we run
+> >> our server as an unprivileged user. I don't understand, however, why
+> >> such an strict check is needed. If we have full rights on the
+> >> filesystem, why can't we issue this operation? In my view, CAP_FOWNER
+> >> should already be enough.I do understand the handles have to be stable
+> >> and a file can have its ownership changed, in which case the previous
+> >> owner would keep the handle valid. Is that the reason you went with
+> >> the most restrictive capability ?
+> >
+> > I'm not familiar enough with the open-by-handle stuff to comment on the
+> > permission constraints. Perhaps Dave or others can comment further on
+> > this bit...
+> >
+> > Brian
+> 
+> Thanks again Brian. The pointer to the AG stuff was really helpful.
+> 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
