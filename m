@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BCDEC7F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 15:39:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5138EAC005
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 13:39:52 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 775017F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 16:28:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5834230406A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 14:28:09 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FDxTcHpvPsq4TMmN for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 13:39:50 -0800 (PST)
-Date: Wed, 2 Dec 2015 08:39:36 +1100
+	jKLR4XWnDTklJC0s for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 14:28:05 -0800 (PST)
+Date: Wed, 2 Dec 2015 09:27:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151201213936.GA19199@dastard>
-References: <20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
-	<20151130161438.GD24765@bfoster.bfoster>
-	<565D639F.8070403@scylladb.com>
-	<20151201131114.GA26129@bfoster.bfoster>
-	<565DA784.5080003@scylladb.com>
-	<20151201145631.GD26129@bfoster.bfoster>
-	<565DBB3E.2010308@scylladb.com> <20151201210417.GY19199@dastard>
-	<CAD-J=zbZdWkJ8sfJHyKmQTZYVvLFbqbbEbWo2HV25jnZyrfTaA@mail.gmail.com>
+Subject: Re: Question on how to submit changed code
+Message-ID: <20151201222723.GB19199@dastard>
+References: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
+	<1448991660.16687.159.camel@montana.filmlight.ltd.uk>
+	<20151201174437.GA4037@redhat.com>
+	<1448993003.16687.171.camel@montana.filmlight.ltd.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAD-J=zbZdWkJ8sfJHyKmQTZYVvLFbqbbEbWo2HV25jnZyrfTaA@mail.gmail.com>
+In-Reply-To: <1448993003.16687.171.camel@montana.filmlight.ltd.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,72 +28,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Glauber Costa <glauber@scylladb.com>
-Cc: Avi Kivity <avi@scylladb.com>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Roger Willcocks <roger@filmlight.ltd.uk>
+Cc: "Epp, Mike" <MEpp@KrollOntrack.com>, Carlos Maiolino <cmaiolino@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Dec 01, 2015 at 04:10:45PM -0500, Glauber Costa wrote:
-> On Tue, Dec 1, 2015 at 4:04 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, Dec 01, 2015 at 05:22:38PM +0200, Avi Kivity wrote:
-> >> On 12/01/2015 04:56 PM, Brian Foster wrote:
-> >> mount -o discard.  And yes, overwrites are supposedly more expensive
-> >> than trim old data + allocate new data, but maybe if you compare it
-> >> with the work XFS has to do, perhaps the tradeoff is bad.
-> >
-> > Oh, you do realise that using "-o discard" causes significant delays
-> > in journal commit processing? i.e. the journal commit completion
-> > blocks until all the discards have been submitted and waited on
-> > *synchronously*. This is a problem with the linux block layer in
-> > that blkdev_issue_discard() is a synchronous operation.....
-> >
-> > Hence if you are seeing delays in transactions (e.g. timestamp updates)
-> > it's entirely possible that things will get much better if you
-> > remove the discard mount option. It's much better from a performance
-> > perspective to use the fstrim command every so often - fstrim issues
-> > discard operations in the context of the fstrim process - it does
-> > not interact with the transaction subsystem at all.
-> 
-> Hi Dave,
-> 
-> This is news to me.
-> 
-> However, in the disk that we have used during the acquisition of this
-> trace, discard doesn't seem to be supported:
-> $ sudo fstrim /data/
-> fstrim: /data/: the discard operation is not supported
-> 
-> In that case, if I understand correctly the discard mount option
-> should be a noop, no?
-
-XFS still makes the blkdev_issue_discard() calls, though, because
-the block device can turn discard support on and off dynamically.
-e.g. raid devices where a faulty drive is replaced temporarily with
-a drive that doesn't have discard support. The block device suddenly
-starts returning -EOPNOTSUPP to the filesystem from
-blkdev_issue_discard() calls. However, the admin then replaces that
-drive with a new one that des have discard support, and now
-blkdev_issue_discard() works as exepected.
-
-IOWs, if you set the mount option, XFS will always attempt to issue
-discards...
-
-> That recommendation is great for our general case, though.
-
-For the moment. Given lots of time, reworking this code could
-greatly reduce the impact/overhead of it and so make it practical to
-enable. There's a lot of work to get to that point, though...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBEZWMgMDEsIDIwMTUgYXQgMDY6MDM6MjNQTSArMDAwMCwgUm9nZXIgV2lsbGNvY2tz
+IHdyb3RlOgo+IAo+IE9uIFR1ZSwgMjAxNS0xMi0wMSBhdCAxODo0NCArMDEwMCwgQ2FybG9zIE1h
+aW9saW5vIHdyb3RlOgo+ID4gT24gVHVlLCBEZWMgMDEsIDIwMTUgYXQgMDU6NDE6MDBQTSArMDAw
+MCwgUm9nZXIgV2lsbGNvY2tzIHdyb3RlOgo+ID4gPiAKPiA+ID4gT24gVHVlLCAyMDE1LTEyLTAx
+IGF0IDE1OjE2ICswMDAwLCBFcHAsIE1pa2Ugd3JvdGU6Cj4gPiA+ID4gSSBoYXZlIGNoYW5nZWQg
+Y29kZSBpbiBsaWJ4ZnMgYW5kIHJlcGFpciBwcm9qZWN0cyBmb3IgeGZzcHJvZ3MuICBJCj4gPiA+
+ID4gZG9u4oCZdCB2aWV3IHRoZSBjaGFuZ2VzIGFzIGRlc2lyZWQgZm9yIG9uZ29pbmcgZGVwbG95
+bWVudCwgYXMgdGhleQo+ID4gPiA+IGFsbG93ZWQgc2Nhbm5pbmcgb2YgYWN0aXZlIHZvbHVtZXMg
+YW5kIGJyaW5nIHRoZSBjaGFuY2Ugb2YgZmFsc2UKPiA+ID4gPiBlcnJvcnMuICBUbyBzdGF5IGNv
+bXBsaWFudCB3aXRoIEdOVSBHUEwgdGhvdWdoIHdlIG11c3QgcHVibGlzaCB0aGUKPiA+ID4gPiBj
+b2RlLiAgV2hhdCBhcmUgdGhlIHN0ZXBzIEkgbmVlZCB0byBmb2xsb3cgdG8gcHVibGlzaCB0aGUg
+Y2hhbmdlcz8gIERvCj4gPiA+ID4gSSBuZWVkIHRvIHB1Ymxpc2gganVzdCB0aGUgc291cmNlIGZp
+bGVzIEkgY2hhbmdlZCwgdGhlIGVudGlyZSBwcm9qZWN0cwo+ID4gPiA+IEkgY2hhbmdlcywgb3Ig
+YWxsIG9mIHhmc3Byb2dzPwo+ID4gPiA+IAo+ID4gPiAKPiA+ID4gWW91IGRvbid0IG5lZWQgdG8g
+cHVibGlzaCB0aGUgY29kZSBidXQgeW91IGRvIG5lZWQgdG8gbWFrZSBhIGZ1bGwgY29weQo+ID4g
+PiBvZiB0aGUgY29kZSwgaW5jbHVkaW5nIHlvdXIgY2xlYXJseSBtYXJrZWQgY2hhbmdlcywgYXZh
+aWxhYmxlIHRvIHlvdXIKPiA+ID4gY3VzdG9tZXJzLgo+ID4gPiAKPiA+ID4gU2VlIEdQTCBzZWN0
+aW9uIDMuCj4gPiAKPiA+IEp1c3QgRllJLCB4ZnNwcm9ncyBpcyBsaWNlbnNlZCB1bmRlciBHUEwg
+VjIsIG5vdCBWMywgdGhleSBhcmUgZGlmZmVyZW50IGluIG1hbnkKPiA+IGFzcGVjdHMuCj4gPiAK
+PiAKPiB4ZnNwcm9ncyBzb3VyY2UgY29kZSAoZS5nLiB4ZnNfZGlyMl9ub2RlLmMpIHNheXM6Cj4g
+Cj4gICogVGhpcyBwcm9ncmFtIGlzIGZyZWUgc29mdHdhcmU7IHlvdSBjYW4gcmVkaXN0cmlidXRl
+IGl0IGFuZC9vcgo+ICAqIG1vZGlmeSBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5l
+cmFsIFB1YmxpYyBMaWNlbnNlIGFzCj4gICogcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3YXJl
+IEZvdW5kYXRpb24uCj4gCj4gd2hpY2ggcHJvYmFibHkgbWFrZXMgaXQgVjEuCgpQbGVhc2UgZG8g
+bm90IG1ha2UgZ3Vlc3NlcyB3aGVuIGl0IGNvbWVzIHRvIHRoZSBjb2RlIGxpY2Vuc2VzCmJlY2F1
+c2UgdGhleSBhcmUgcHJvYmFibHkgd3JvbmcuICBUaGF0IGZpbGUgaXMgbW9zdCBkZWZpbml0ZWx5
+IEdQTAp2MiwgYmVjYXVzZSBpdCBpcyBhIGRpcmVjdCBjb3B5IG9mIHRoZSBrZXJuZWwgY29kZS4u
+LgoKPiBodHRwOi8vbGludXgteGZzLm9zcy5zZ2kubmFya2l2ZS5jb20vZHJKUlVzSW4veGZzcHJv
+Z3MteGZzZHVtcC13aGF0LWZsYXZvci1vZi1ncGwKCkp1c3QgdG8gY2xhcmlmeSB4ZnNwcm9ncyBm
+cm9tIHZhcmlvdXMgbGljZW5zZSBzdGF0ZW1lbnRzIGFuZApyZXF1aXJlbWVudHMuIEZyb20gZG9j
+L1ZFUlNJT05TIGFuZCBkZWJpYW4vY29weXJpZ2h0OgoKCVRoZSBsaWJyYXJ5IG5hbWVkICJsaWJo
+YW5kbGUiIGFuZCB0aGUgaGVhZGVycyBpbiAieGZzbGlicy1kZXYiIGFyZQoJbGljZW5zZWQgdW5k
+ZXIgVmVyc2lvbiAyLjEgb2YgdGhlIEdOVSBMZXNzZXIgR2VuZXJhbCBQdWJsaWMgTGljZW5zZS4K
+CkZyb20gb3RoZXIgZmlsZXM6CgpsaWJ4ZnMvcmFkaXhfdHJlZS5jLCBpbmNsdWRlL3JhZGl4X3Ry
+ZWUuaCBhcmUgR1BMIHYyKwoKbGlieGZzLyogY29udGFpbnMgZGlyZWN0IGNvcGllcyBvZiBrZXJu
+ZWwgY29kZSBhbmQgY29kZSBmbG93cyBpbgpib3RoIGRpcmVjdGlvbnMsIHNvIHRoZXNlIG11c3Qg
+YmUgbXVzdCBiZSBHUEwgdjIgbGljZW5zZWQgY29kZSBhcwp0aGlzIGlzIHdoYXQgaHRlIGtlcm5l
+bCBpcyBsaWNlbnNlZCB1bmRlci4gVGhlIGV4Y2VwdGlvbiBoZXJlIGlzIHRoZQpoZWFkZXIgZmls
+ZXMgdGhhdCBhcmUgaW5zdGFsbGVkIHZpYSB4ZnNsaWJzLWRldiwgd2hpY2ggbWVhbnMgdGhvc2UK
+ZmlsZXMgYXJlIGR1YWwgbGljZW5zZWQgR1BMdjIvTEdQTHYyLjEuCgpBbmQgc2luY2UgZXZlcnl0
+aGluZyBlbHNlIGluIHhmc3Byb2dzIGlzIHN0YXRpY2FsbHkgbGlua2VkIHRvIGxpYnhmcwp0aGUg
+cmVzdCBvZiB0aGUgY29kZSBpbmhlcml0cyB0aGUgR1BMdjIgbGljZW5zZSBvZiBsaWJ4ZnMsIGFu
+ZCBoZW5jZQphbHNvIGNhcnJ5IGEgR1BMIHYyIGxpY2Vuc2UuCgpIZW5jZSB0aGUgYmVzdCBhc3N1
+bXB0aW9uIHRvIG1ha2UgaXMgdGhhdCB0aGUgeGZzcHJvZ3Mgc291cmNlIGNvZGUKY29kZSBpcyBH
+UEx2MiwgZXhjZXB0IHdoZXJlIGV4cHJlc3NseSBzdGF0ZWQgdG8gYmUgTEdQTHYyLjEgb3IKR1BM
+djIrLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQu
+Y29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
