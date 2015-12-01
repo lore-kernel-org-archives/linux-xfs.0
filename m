@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA38D7F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 08:56:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C819D304051
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 06:56:34 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nhfgVHZjfwIznDEf (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 06:56:33 -0800 (PST)
-Date: Tue, 1 Dec 2015 09:56:31 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: sleeps and waits during io_submit
-Message-ID: <20151201145631.GD26129@bfoster.bfoster>
-References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
-	<20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
-	<20151130161438.GD24765@bfoster.bfoster>
-	<565D639F.8070403@scylladb.com>
-	<20151201131114.GA26129@bfoster.bfoster>
-	<565DA784.5080003@scylladb.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0C5A37F53
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 09:16:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 97FC4AC004
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 07:16:17 -0800 (PST)
+Received: from smtp1.mail.krollworldwide.com (smtp1.mail.krollworldwide.com
+	[208.71.237.35]) by cuda.sgi.com with ESMTP id jbbJ5JLkS5abkDm7
+	(version=TLSv1 cipher=DHE-RSA-CAMELLIA256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 07:16:13 -0800 (PST)
+From: "Epp, Mike" <MEpp@KrollOntrack.com>
+Subject: Question on how to submit changed code
+Date: Tue, 1 Dec 2015 15:16:11 +0000
+Message-ID: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <565DA784.5080003@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,161 +24,167 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7460478712308284972=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Avi Kivity <avi@scylladb.com>
-Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Dec 01, 2015 at 03:58:28PM +0200, Avi Kivity wrote:
-> 
-> 
-> On 12/01/2015 03:11 PM, Brian Foster wrote:
-> >On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
-> >>On 11/30/2015 06:14 PM, Brian Foster wrote:
-> >>>On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
-> >>>>On 11/30/2015 04:10 PM, Brian Foster wrote:
-> >...
-> >>>The agsize/agcount mkfs-time heuristics change depending on the type of
-> >>>storage. A single AG can be up to 1TB and if the fs is not considered
-> >>>"multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
-> >>>default up to 4TB. If a stripe unit is set, the agsize/agcount is
-> >>>adjusted depending on the size of the overall volume (see
-> >>>xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
-> >>We'll experiment with this.  Surely it depends on more than the amount of
-> >>storage?  If you have a high op rate you'll be more likely to excite
-> >>contention, no?
-> >>
-> >Sure. The absolute optimal configuration for your workload probably
-> >depends on more than storage size, but mkfs doesn't have that
-> >information. In general, it tries to use the most reasonable
-> >configuration based on the storage and expected workload. If you want to
-> >tweak it beyond that, indeed, the best bet is to experiment with what
-> >works.
-> 
-> We will do that.
-> 
-> >>>>Are those locks held around I/O, or just CPU operations, or a mix?
-> >>>I believe it's a mix of modifications and I/O, though it looks like some
-> >>>of the I/O cases don't necessarily wait on the lock. E.g., the AIL
-> >>>pushing case will trylock and defer to the next list iteration if the
-> >>>buffer is busy.
-> >>>
-> >>Ok.  For us sleeping in io_submit() is death because we have no other thread
-> >>on that core to take its place.
-> >>
-> >The above is with regard to metadata I/O, whereas io_submit() is
-> >obviously for user I/O.
-> 
-> Won't io_submit() also trigger metadata I/O?  Or is that all deferred to
-> async tasks?  I don't mind them blocking each other as long as they let my
-> io_submit alone.
-> 
+--===============7460478712308284972==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_105716A9A63E8A4C9CB26A0F29E203DCF40BE069usbpx2pmxmbx12_"
 
-Yeah, it can trigger metadata reads, force the log (the stale buffer
-example) or push the AIL (wait on log space). Metadata changes made
-directly via your I/O request are logged/committed via transactions,
-which are generally processed asynchronously from that point on.
+--_000_105716A9A63E8A4C9CB26A0F29E203DCF40BE069usbpx2pmxmbx12_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> >  io_submit() can probably block in a variety of
-> >places afaict... it might have to read in the inode extent map, allocate
-> >blocks, take inode/ag locks, reserve log space for transactions, etc.
-> 
-> Any chance of changing all that to be asynchronous?  Doesn't sound too hard,
-> if somebody else has to do it.
-> 
+I have changed code in libxfs and repair projects for xfsprogs.  I don't vi=
+ew the changes as desired for ongoing deployment, as they allowed scanning =
+of active volumes and bring the chance of false errors.  To stay compliant =
+with GNU GPL though we must publish the code.  What are the steps I need to=
+ follow to publish the changes?  Do I need to publish just the source files=
+ I changed, the entire projects I changes, or all of xfsprogs?
 
-I'm not following... if the fs needs to read in the inode extent map to
-prepare for an allocation, what else can the thread do but wait? Are you
-suggesting the request kick off whatever the blocking action happens to
-be asynchronously and return with an error such that the request can be
-retried later?
+Mike Epp, Senior Software Engineer
+Kroll Ontrack |  9023 Columbine Road, Eden Prairie, MN 55347
+mepp@krollontrack.com<mailto:mepp@krollontrack.com>
+www.krollontrack.com<http://www.krollontrack.com/ohttp:/www.krollontrack.co=
+m/>
+This communication contains information that is confidential, proprietary i=
+n nature, and may also be attorney-client privileged and/or work product pr=
+ivileged. It is for the exclusive use of the intended recipient(s). If you =
+are not the intended recipient(s) or the person responsible for delivering =
+it to the intended recipient(s), please note that any form of dissemination=
+, distribution or copying of this communication is strictly prohibited and =
+may be unlawful. If you have received this communication in error, please i=
+mmediately notify the sender and delete the original communication. Thank y=
+ou for your cooperation.
+Please be advised that neither Kroll, its affiliates, its employees or agen=
+ts accept liability for any errors, omissions or damages caused by delays o=
+f receipt or by any virus infection in this message or its attachments, or =
+which may otherwise arise as a result of this e-mail transmission.
 
-> >
-> >It sounds to me that first and foremost you want to make sure you don't
-> >have however many parallel operations you typically have running
-> >contending on the same inodes or AGs. Hint: creating files under
-> >separate subdirectories is a quick and easy way to allocate inodes under
-> >separate AGs (the agno is encoded into the upper bits of the inode
-> >number).
-> 
-> Unfortunately our directory layout cannot be changed.  And doesn't this
-> require having agcount == O(number of active files)?  That is easily in the
-> thousands.
-> 
 
-I think Glauber's O(nr_cpus) comment is probably the more likely
-ballpark, but really it's something you'll probably just need to test to
-see how far you need to go to avoid AG contention.
+--_000_105716A9A63E8A4C9CB26A0F29E203DCF40BE069usbpx2pmxmbx12_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I'm primarily throwing the subdir thing out there for testing purposes.
-It's just an easy way to create inodes in a bunch of separate AGs so you
-can determine whether/how much it really helps with modified AG counts.
-I don't know enough about your application design to really comment on
-that...
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 14 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"blue" vlink=3D"purple">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal">I have changed code in libxfs and repair projects fo=
+r xfsprogs.&nbsp; I don&#8217;t view the changes as desired for ongoing dep=
+loyment, as they allowed scanning of active volumes and bring the chance of=
+ false errors.&nbsp; To stay compliant with GNU GPL
+ though we must publish the code.&nbsp; What are the steps I need to follow=
+ to publish the changes?&nbsp; Do I need to publish just the source files I=
+ changed, the entire projects I changes, or all of xfsprogs?<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal"><b><span style=3D"font-size:10.0pt;font-family:&quot=
+;Tahoma&quot;,&quot;sans-serif&quot;;color:black">Mike Epp</span></b><span =
+style=3D"font-size:10.0pt;font-family:&quot;Tahoma&quot;,&quot;sans-serif&q=
+uot;;color:black">, Senior Software Engineer</span><span style=3D"font-size=
+:12.0pt;font-family:&quot;Times New Roman&quot;,&quot;serif&quot;"><o:p></o=
+:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:10.0pt;font-family:&quot;Ta=
+homa&quot;,&quot;sans-serif&quot;;color:gray">Kroll Ontrack |&nbsp;&nbsp;90=
+23 Columbine Road, Eden Prairie, MN 55347<br>
+</span><a href=3D"mailto:mepp@krollontrack.com"><span style=3D"font-size:10=
+.0pt;font-family:&quot;Tahoma&quot;,&quot;sans-serif&quot;;color:blue">mepp=
+@krollontrack.com</span></a><span style=3D"font-size:10.0pt;font-family:&qu=
+ot;Tahoma&quot;,&quot;sans-serif&quot;;color:gray">
+<br>
+</span><a href=3D"http://www.krollontrack.com/ohttp:/www.krollontrack.com/"=
+ title=3D"blocked::http://www.krollontrack.com/ohttp:/www.krollontrack.com/=
+"><span style=3D"font-size:10.0pt;font-family:&quot;Tahoma&quot;,&quot;sans=
+-serif&quot;;color:gray">www.krollontrack.com</span></a><span style=3D"font=
+-size:12.0pt;font-family:&quot;Times New Roman&quot;,&quot;serif&quot;"><o:=
+p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"mso-margin-top-alt:auto;mso-margin-bottom-a=
+lt:auto"><span style=3D"font-size:7.5pt;font-family:&quot;Times New Roman&q=
+uot;,&quot;serif&quot;;color:gray">This communication contains information =
+that is confidential, proprietary in nature, and may also
+ be attorney-client privileged and/or work product privileged. It is for th=
+e exclusive use of the intended recipient(s). If you are not the intended r=
+ecipient(s) or the person responsible for delivering it to the intended rec=
+ipient(s), please note that any
+ form of dissemination, distribution or copying of this communication is st=
+rictly prohibited and may be unlawful. If you have received this communicat=
+ion in error, please immediately notify the sender and delete the original =
+communication. Thank you for your
+ cooperation.<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:7.5pt;font-family:&quot;Tim=
+es New Roman&quot;,&quot;serif&quot;;color:gray">Please be advised that nei=
+ther Kroll, its affiliates, its employees or agents accept liability for an=
+y errors, omissions or damages caused by delays of receipt
+ or by any virus infection in this message or its attachments, or which may=
+ otherwise arise as a result of this e-mail transmission.</span><o:p></o:p>=
+</p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+</div>
+</body>
+</html>
 
-> >  Reducing the frequency of block allocation/frees might also be
-> >another help (e.g., preallocate and reuse files,
-> 
-> Isn't that discouraged for SSDs?
-> 
+--_000_105716A9A63E8A4C9CB26A0F29E203DCF40BE069usbpx2pmxmbx12_--
 
-Perhaps, if you're referring to the fact that the blocks are never freed
-and thus never discarded..? Are you running fstrim?
 
-If so, it would certainly impact that by holding blocks as allocated to
-inodes as opposed to putting them in free space trees where they can be
-discarded. If not, I don't see how it would make a difference, but
-perhaps I misunderstand the point. That said, there's probably others on
-the list who can more definitively discuss SSD characteristics than I...
-
-> We can do that for a subset of our files.
-> 
-> We do use XFS_IOC_FSSETXATTR though.
-> 
-> >'mount -o ikeep,'
-> 
-> Interesting.  Our files are large so we could try this.
-> 
-
-Just to be clear... this behavior change is more directly associated
-with file count than file size (though indirectly larger files might
-mean you have less of them, if that's your point).
-
-To generalize a bit, I'd be more weary of using this option if your
-filesystem can be used in an unstructured manner in any way. For
-example, if the file count can balloon up and back down temporarily,
-that's going to allocate a bunch of metadata space for inodes that won't
-ever be reclaimed or reused for anything other than inodes.
-
-> >etc.). Beyond that, you probably want to make sure the log is large
-> >enough to support all concurrent operations. See the xfs_log_grant_*
-> >tracepoints for a window into if/how long transaction reservations might
-> >be waiting on the log.
-> 
-> I see that on an 400G fs, the log is 180MB.  Seems plenty large for write
-> operations that are mostly large sequential, though I've no real feel for
-> the numbers.  Will keep an eye on this.
-> 
-
-FWIW, XFS on recent kernels has grown some sysfs entries that might help
-give an idea of log reservation state at runtime. See the entries under
-/sys/fs/xfs/<dev>/log for details.
-
-Brian
-
-> Thanks for all the info.
-> 
-> >Brian
-> >
-> >>_______________________________________________
-> >>xfs mailing list
-> >>xfs@oss.sgi.com
-> >>http://oss.sgi.com/mailman/listinfo/xfs
-> 
+--===============7460478712308284972==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7460478712308284972==--
