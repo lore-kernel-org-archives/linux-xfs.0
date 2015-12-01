@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 396FB7F37
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 02:38:07 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 821757F37
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 03:08:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 273868F804C
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 00:38:06 -0800 (PST)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id PVViV5XMaQjfzh5N for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 00:38:04 -0800 (PST)
-From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: automatic testing of cgroup writeback limiting (was: Re: Does XFS
-	support cgroup writeback limiting?)
-Date: Tue, 01 Dec 2015 09:38:03 +0100
-Message-ID: <1711940.cDn6AztRgi@merkaba>
-In-Reply-To: <565B70F9.8060707@5t9.de>
-References: <5652F311.7000406@5t9.de> <20151125213500.GK26718@dastard>
-	<565B70F9.8060707@5t9.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71B788F8033
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 01:08:53 -0800 (PST)
+Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
+	[74.125.82.46]) by cuda.sgi.com with ESMTP id Bye6G0eaNvDwP4lx
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 01:08:49 -0800 (PST)
+Received: by wmec201 with SMTP id c201so194840123wme.0
+	for <xfs@oss.sgi.com>; Tue, 01 Dec 2015 01:08:49 -0800 (PST)
+Subject: Re: sleeps and waits during io_submit
+References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
+	<20151130141000.GC24765@bfoster.bfoster>
+	<565C5D39.8080300@scylladb.com>
+	<20151130161438.GD24765@bfoster.bfoster>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <565D639F.8070403@scylladb.com>
+Date: Tue, 1 Dec 2015 11:08:47 +0200
 MIME-Version: 1.0
+In-Reply-To: <20151130161438.GD24765@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,121 +30,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Tejun Heo <tj@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Lutz Vieweg <lvml@5t9.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
 
-I think it makes sense to include those that wrote the cgroup writeback 
-limiting into the discussion on how to automatically test this feature. Thus 
-add fsdevel and Tejun to CC.
+On 11/30/2015 06:14 PM, Brian Foster wrote:
+> On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
+>>
+>> On 11/30/2015 04:10 PM, Brian Foster wrote:
+>>>> 2) xfs_buf_lock -> down
+>>>> This is one I truly don't understand. What can be causing contention
+>>>> in this lock? We never have two different cores writing to the same
+>>>> buffer, nor should we have the same core doingCAP_FOWNER so.
+>>>>
+>>> This is not one single lock. An XFS buffer is the data structure used to
+>>> modify/log/read-write metadata on-disk and each buffer has its own lock
+>>> to prevent corruption. Buffer lock contention is possible because the
+>>> filesystem has bits of "global" metadata that has to be updated via
+>>> buffers.
+>>>
+>>> For example, usually one has multiple allocation groups to maximize
+>>> parallelism, but we still have per-ag metadata that has to be tracked
+>>> globally with respect to each AG (e.g., free space trees, inode
+>>> allocation trees, etc.). Any operation that affects this metadata (e.g.,
+>>> block/inode allocation) has to lock the agi/agf buffers along with any
+>>> buffers associated with the modified btree leaf/node blocks, etc.
+>>>
+>>> One example in your attached perf traces has several threads looking to
+>>> acquire the AGF, which is a per-AG data structure for tracking free
+>>> space in the AG. One thread looks like the inode eviction case noted
+>>> above (freeing blocks), another looks like a file truncate (also freeing
+>>> blocks), and yet another is a block allocation due to a direct I/O
+>>> write. Were any of these operations directed to an inode in a separate
+>>> AG, they would be able to proceed in parallel (but I believe they would
+>>> still hit the same codepaths as far as perf can tell).
+>> I guess we can mitigate (but not eliminate) this by creating more allocation
+>> groups.  What is the default value for agsize?  Are there any downsides to
+>> decreasing it, besides consuming more memory?
+>>
+> I suppose so, but I would be careful to check that you actually see
+> contention and test that increasing agcount actually helps. As
+> mentioned, I'm not sure off hand if the perf trace alone would look any
+> different if you have multiple metadata operations in progress on
+> separate AGs.
+>
+> My understanding is that there are diminishing returns to high AG counts
+> and usually 32-64 is sufficient for most storage. Dave might be able to
+> elaborate more on that... (I think this would make a good FAQ entry,
+> actually).
+>
+> The agsize/agcount mkfs-time heuristics change depending on the type of
+> storage. A single AG can be up to 1TB and if the fs is not considered
+> "multidisk" (e.g., no stripe unit/width is defined), 4 AGs is the
+> default up to 4TB. If a stripe unit is set, the agsize/agcount is
+> adjusted depending on the size of the overall volume (see
+> xfsprogs-dev/mkfs/xfs_mkfs.c:calc_default_ag_geometry() for details).
 
-Am Sonntag, 29. November 2015, 22:41:13 CET schrieb Lutz Vieweg:
-> On 11/25/2015 10:35 PM, Dave Chinner wrote:
-> >> 2) Create 3 different XFS filesystem instances on the block
-> >> 
-> >>     device, one for access by only the "good" processes,
-> >>     on for access by only the "evil" processes, one for
-> >>     shared access by at least two "good" and two "evil"
-> >>     processes.
-> > 
-> > Why do you need multiple filesystems? The writeback throttling is
-> > designed to work within a single filesystem...
-> 
-> Hmm. Previously, I thought that the limiting of buffered writes
-> was realized by keeping track of the owners of dirty pages, and
-> that filesystem support was just required to make sure that writing
-> via a filesystem did not "anonymize" the dirty data. From what
-> I had read in blkio-controller.txt it seemed evident that limitations
-> would be accounted for "per block device", not "per filesystem", and
-> options like
-> 
-> > echo "<major>:<minor>  <rate_bytes_per_second>" >
-> > /cgrp/blkio.throttle.read_bps_device
-> document how to configure limits per block device.
-> 
-> Now after reading through the new Writeback section of blkio-controller.txt
-> again I am somewhat confused - the text states
-> 
-> > writeback operates on inode basis
-> 
-> and if that means inodes as in "file system inodes", this would
-> indeed mean limits would be enforced "per filesystem" - and yet
-> there are no options documented to specify limits for any specific
-> filesystem.
-> 
-> Does this mean some process writing to a block device (not via filesystem)
-> without "O_DIRECT" will dirty buffer pages, but those will not be limited
-> (as they are neither synchronous nor via-filesystem writes)?
-> That would mean VMs sharing some (physical or abstract) block device could
-> not really be isolated regarding their asynchronous write I/O...
-> 
-> > Metadata IO not throttled - it is owned by the filesystem and hence
-> > root cgroup.
-> 
-> Ouch. That kind of defeats the purpose of limiting evil processes'
-> ability to DOS other processes.
-> Wouldn't it be possible to assign some arbitrary cost to meta-data
-> operations - like "account one page write for each meta-data change
-> to the originating process of that change"? While certainly not
-> allowing for limiting to byte-precise limits of write bandwidth,
-> this would regain the ability to defend against DOS situations,
-> and for well-behaved processes, the "cost" accounted for their
-> not-so-frequent meta-data operations would probably not really hurt their
-> writing
-> speed.
-> 
-> >>  The test is successful if all "good processes" terminate successfully
-> >>  
-> >>    after a time not longer than it would take to write 10 times X MB to
-> >>    the
-> >>    rate-limited block device.
-> > 
-> > if we are rate limiting to 1MB/s, then a 10s test is not long enough
-> > to reach steady state. Indeed, it's going to take at least 30s worth
-> > of IO to guarantee that we getting writeback occurring for low
-> > bandwidth streams....
-> 
-> Sure, the "X/100 MB per second" throttle to the scratch device
-> was meant to result in a minimal test time of > 100s.
-> 
-> > i.e. the test needs to run for a period of time and then measure
-> > the throughput of each stream, comparing it against the expected
-> > throughput for the stream, rather than trying to write a fixed
-> > bandwidth....
-> 
-> The reason why I thought it to be a good idea to have the "good" processes
-> use only a limited write rate was to make sure that the actual write
-> activity of those processes is spread out over enough time to make sure
-> that they could, after all, feel some "pressure back" from the operating
-> system that is applied only after the "bad" processes have filled up
-> all RAM dedicated to dirty buffer cache.
-> 
-> Assume the test instance has lots of memory and would be willing to
-> spend many Gigabytes of RAM for dirty buffer caches. Chances are that
-> in such a situation the "good" processes might be done writing their
-> limited amount of data almost instantaneously, because the data just
-> went to RAM.
-> 
-> (I understand that if one used the absolute "blkio.throttle.write*" options
-> pressure back could apply before the dirty buffer cache was maxed out,
-> but in real-world scenarios people will almost always use the relative
-> "blkio.weight" based limiting, after all, you usually don't want to throttle
-> processes if there is plenty of bandwidth left no other process wants at
-> the same time.)
-> 
-> 
-> Regards,
-> 
-> Lutz Vieweg
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+We'll experiment with this.  Surely it depends on more than the amount 
+of storage?  If you have a high op rate you'll be more likely to excite 
+contention, no?
 
+>
+>> Are those locks held around I/O, or just CPU operations, or a mix?
+> I believe it's a mix of modifications and I/O, though it looks like some
+> of the I/O cases don't necessarily wait on the lock. E.g., the AIL
+> pushing case will trylock and defer to the next list iteration if the
+> buffer is busy.
+>
+
+Ok.  For us sleeping in io_submit() is death because we have no other 
+thread on that core to take its place.
 
 _______________________________________________
 xfs mailing list
