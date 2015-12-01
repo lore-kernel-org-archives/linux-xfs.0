@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 775017F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 16:28:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5834230406A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 14:28:09 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 808117F5A
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 16:39:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 719F98F8040
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 14:39:46 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	jKLR4XWnDTklJC0s for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2015 14:28:05 -0800 (PST)
-Date: Wed, 2 Dec 2015 09:27:23 +1100
+	2SN3gKPQgDpH6T8g for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2015 14:39:43 -0800 (PST)
+Date: Wed, 2 Dec 2015 09:39:29 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Question on how to submit changed code
-Message-ID: <20151201222723.GB19199@dastard>
+Message-ID: <20151201223929.GC19199@dastard>
 References: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
-	<1448991660.16687.159.camel@montana.filmlight.ltd.uk>
-	<20151201174437.GA4037@redhat.com>
-	<1448993003.16687.171.camel@montana.filmlight.ltd.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1448993003.16687.171.camel@montana.filmlight.ltd.uk>
+In-Reply-To: <105716A9A63E8A4C9CB26A0F29E203DCF40BE069@usbpx2pmxmbx12>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,59 +25,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: "Epp, Mike" <MEpp@KrollOntrack.com>, Carlos Maiolino <cmaiolino@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "Epp, Mike" <MEpp@KrollOntrack.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gVHVlLCBEZWMgMDEsIDIwMTUgYXQgMDY6MDM6MjNQTSArMDAwMCwgUm9nZXIgV2lsbGNvY2tz
-IHdyb3RlOgo+IAo+IE9uIFR1ZSwgMjAxNS0xMi0wMSBhdCAxODo0NCArMDEwMCwgQ2FybG9zIE1h
-aW9saW5vIHdyb3RlOgo+ID4gT24gVHVlLCBEZWMgMDEsIDIwMTUgYXQgMDU6NDE6MDBQTSArMDAw
-MCwgUm9nZXIgV2lsbGNvY2tzIHdyb3RlOgo+ID4gPiAKPiA+ID4gT24gVHVlLCAyMDE1LTEyLTAx
-IGF0IDE1OjE2ICswMDAwLCBFcHAsIE1pa2Ugd3JvdGU6Cj4gPiA+ID4gSSBoYXZlIGNoYW5nZWQg
-Y29kZSBpbiBsaWJ4ZnMgYW5kIHJlcGFpciBwcm9qZWN0cyBmb3IgeGZzcHJvZ3MuICBJCj4gPiA+
-ID4gZG9u4oCZdCB2aWV3IHRoZSBjaGFuZ2VzIGFzIGRlc2lyZWQgZm9yIG9uZ29pbmcgZGVwbG95
-bWVudCwgYXMgdGhleQo+ID4gPiA+IGFsbG93ZWQgc2Nhbm5pbmcgb2YgYWN0aXZlIHZvbHVtZXMg
-YW5kIGJyaW5nIHRoZSBjaGFuY2Ugb2YgZmFsc2UKPiA+ID4gPiBlcnJvcnMuICBUbyBzdGF5IGNv
-bXBsaWFudCB3aXRoIEdOVSBHUEwgdGhvdWdoIHdlIG11c3QgcHVibGlzaCB0aGUKPiA+ID4gPiBj
-b2RlLiAgV2hhdCBhcmUgdGhlIHN0ZXBzIEkgbmVlZCB0byBmb2xsb3cgdG8gcHVibGlzaCB0aGUg
-Y2hhbmdlcz8gIERvCj4gPiA+ID4gSSBuZWVkIHRvIHB1Ymxpc2gganVzdCB0aGUgc291cmNlIGZp
-bGVzIEkgY2hhbmdlZCwgdGhlIGVudGlyZSBwcm9qZWN0cwo+ID4gPiA+IEkgY2hhbmdlcywgb3Ig
-YWxsIG9mIHhmc3Byb2dzPwo+ID4gPiA+IAo+ID4gPiAKPiA+ID4gWW91IGRvbid0IG5lZWQgdG8g
-cHVibGlzaCB0aGUgY29kZSBidXQgeW91IGRvIG5lZWQgdG8gbWFrZSBhIGZ1bGwgY29weQo+ID4g
-PiBvZiB0aGUgY29kZSwgaW5jbHVkaW5nIHlvdXIgY2xlYXJseSBtYXJrZWQgY2hhbmdlcywgYXZh
-aWxhYmxlIHRvIHlvdXIKPiA+ID4gY3VzdG9tZXJzLgo+ID4gPiAKPiA+ID4gU2VlIEdQTCBzZWN0
-aW9uIDMuCj4gPiAKPiA+IEp1c3QgRllJLCB4ZnNwcm9ncyBpcyBsaWNlbnNlZCB1bmRlciBHUEwg
-VjIsIG5vdCBWMywgdGhleSBhcmUgZGlmZmVyZW50IGluIG1hbnkKPiA+IGFzcGVjdHMuCj4gPiAK
-PiAKPiB4ZnNwcm9ncyBzb3VyY2UgY29kZSAoZS5nLiB4ZnNfZGlyMl9ub2RlLmMpIHNheXM6Cj4g
-Cj4gICogVGhpcyBwcm9ncmFtIGlzIGZyZWUgc29mdHdhcmU7IHlvdSBjYW4gcmVkaXN0cmlidXRl
-IGl0IGFuZC9vcgo+ICAqIG1vZGlmeSBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5l
-cmFsIFB1YmxpYyBMaWNlbnNlIGFzCj4gICogcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3YXJl
-IEZvdW5kYXRpb24uCj4gCj4gd2hpY2ggcHJvYmFibHkgbWFrZXMgaXQgVjEuCgpQbGVhc2UgZG8g
-bm90IG1ha2UgZ3Vlc3NlcyB3aGVuIGl0IGNvbWVzIHRvIHRoZSBjb2RlIGxpY2Vuc2VzCmJlY2F1
-c2UgdGhleSBhcmUgcHJvYmFibHkgd3JvbmcuICBUaGF0IGZpbGUgaXMgbW9zdCBkZWZpbml0ZWx5
-IEdQTAp2MiwgYmVjYXVzZSBpdCBpcyBhIGRpcmVjdCBjb3B5IG9mIHRoZSBrZXJuZWwgY29kZS4u
-LgoKPiBodHRwOi8vbGludXgteGZzLm9zcy5zZ2kubmFya2l2ZS5jb20vZHJKUlVzSW4veGZzcHJv
-Z3MteGZzZHVtcC13aGF0LWZsYXZvci1vZi1ncGwKCkp1c3QgdG8gY2xhcmlmeSB4ZnNwcm9ncyBm
-cm9tIHZhcmlvdXMgbGljZW5zZSBzdGF0ZW1lbnRzIGFuZApyZXF1aXJlbWVudHMuIEZyb20gZG9j
-L1ZFUlNJT05TIGFuZCBkZWJpYW4vY29weXJpZ2h0OgoKCVRoZSBsaWJyYXJ5IG5hbWVkICJsaWJo
-YW5kbGUiIGFuZCB0aGUgaGVhZGVycyBpbiAieGZzbGlicy1kZXYiIGFyZQoJbGljZW5zZWQgdW5k
-ZXIgVmVyc2lvbiAyLjEgb2YgdGhlIEdOVSBMZXNzZXIgR2VuZXJhbCBQdWJsaWMgTGljZW5zZS4K
-CkZyb20gb3RoZXIgZmlsZXM6CgpsaWJ4ZnMvcmFkaXhfdHJlZS5jLCBpbmNsdWRlL3JhZGl4X3Ry
-ZWUuaCBhcmUgR1BMIHYyKwoKbGlieGZzLyogY29udGFpbnMgZGlyZWN0IGNvcGllcyBvZiBrZXJu
-ZWwgY29kZSBhbmQgY29kZSBmbG93cyBpbgpib3RoIGRpcmVjdGlvbnMsIHNvIHRoZXNlIG11c3Qg
-YmUgbXVzdCBiZSBHUEwgdjIgbGljZW5zZWQgY29kZSBhcwp0aGlzIGlzIHdoYXQgaHRlIGtlcm5l
-bCBpcyBsaWNlbnNlZCB1bmRlci4gVGhlIGV4Y2VwdGlvbiBoZXJlIGlzIHRoZQpoZWFkZXIgZmls
-ZXMgdGhhdCBhcmUgaW5zdGFsbGVkIHZpYSB4ZnNsaWJzLWRldiwgd2hpY2ggbWVhbnMgdGhvc2UK
-ZmlsZXMgYXJlIGR1YWwgbGljZW5zZWQgR1BMdjIvTEdQTHYyLjEuCgpBbmQgc2luY2UgZXZlcnl0
-aGluZyBlbHNlIGluIHhmc3Byb2dzIGlzIHN0YXRpY2FsbHkgbGlua2VkIHRvIGxpYnhmcwp0aGUg
-cmVzdCBvZiB0aGUgY29kZSBpbmhlcml0cyB0aGUgR1BMdjIgbGljZW5zZSBvZiBsaWJ4ZnMsIGFu
-ZCBoZW5jZQphbHNvIGNhcnJ5IGEgR1BMIHYyIGxpY2Vuc2UuCgpIZW5jZSB0aGUgYmVzdCBhc3N1
-bXB0aW9uIHRvIG1ha2UgaXMgdGhhdCB0aGUgeGZzcHJvZ3Mgc291cmNlIGNvZGUKY29kZSBpcyBH
-UEx2MiwgZXhjZXB0IHdoZXJlIGV4cHJlc3NseSBzdGF0ZWQgdG8gYmUgTEdQTHYyLjEgb3IKR1BM
-djIrLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQu
-Y29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+On Tue, Dec 01, 2015 at 03:16:11PM +0000, Epp, Mike wrote:
+> I have changed code in libxfs and repair projects for xfsprogs.  I
+> don't view the changes as desired for ongoing deployment, as they
+> allowed scanning of active volumes and bring the chance of false
+> errors.  To stay compliant with GNU GPL though we must publish the
+> code.  What are the steps I need to follow to publish the changes?
+
+Many options, but you should really be asking you company's legal
+counsel this question.
+
+>From my perspective, either of these would work:
+
+	- add a page to your company's website with a link from the
+	  home page that contains the tarballs of modified packages.
+	- put the modified source code up in a repository on github
+	  (or similar) and include a link from the website
+	- send patches to an archived mailing list whenever you
+	  change the code, and place a link to the archive on your
+	  website home page.
+
+> Do I need to publish just the source files I changed, the entire
+> projects I changes, or all of xfsprogs?
+
+-> legal counsel
+
+The license spells out what is necessary. All of the above are valid
+interpretations....
+
+> Mike Epp, Senior Software Engineer Kroll Ontrack |  9023 Columbine
+> Road, Eden Prairie, MN 55347
+> mepp@krollontrack.com<mailto:mepp@krollontrack.com>
+> www.krollontrack.com<http://www.krollontrack.com/ohttp:/www.krollontrack.com/>
+> This communication contains information that is confidential,
+> proprietary in nature, and may also be attorney-client privileged
+> and/or work product privileged. It is for the exclusive use of the
+> intended recipient(s).
+
+[snip]
+
+And any code you send to the mailing list must have a valid
+signed-off-by and not have a bunch of restrictive legal mumbo jumbo
+on the end of it....
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
