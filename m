@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4252A29E0C
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 07:45:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F3F9C8F80E7
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 05:45:15 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id moqHcPc2A9g43t9X (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 05:45:14 -0800 (PST)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v2 08/11] xfs: Change how listxattr generates synthetic
-	attributes
-Date: Wed,  2 Dec 2015 14:44:40 +0100
-Message-Id: <1449063883-22097-9-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1449063883-22097-1-git-send-email-agruenba@redhat.com>
-References: <1449063883-22097-1-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D59E7F75
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:10:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 86370AC005
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 07:10:48 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 6rwgS8DebTZ5db3c for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2015 07:10:43 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 15F9263C3BC5
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:10:43 -0600 (CST)
+Subject: Re: [PATCH 00/11] xfsprogs misc fixes
+References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <565F09F2.9090709@sandeen.net>
+Date: Wed, 2 Dec 2015 09:10:42 -0600
+MIME-Version: 1.0
+In-Reply-To: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,288 +28,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Instead of adding the synthesized POSIX ACL attribute names after listing all
-non-synthesized attributes, generate them immediately when listing the
-non-synthesized attributes.
+Thanks, I'll help look over these.
 
-In addition, merge xfs_xattr_put_listent and xfs_xattr_put_listent_sizes to
-ensure that the list size is computed correctly; the split version was
-overestimating the list size for non-root users.
+Could you please map the coverity CIDs to these fixes?
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
----
- fs/xfs/xfs_acl.c   |  23 ---------
- fs/xfs/xfs_acl.h   |   4 --
- fs/xfs/xfs_xattr.c | 137 +++++++++++++++++++++++------------------------------
- 3 files changed, 59 insertions(+), 105 deletions(-)
+We like to include that in the commit metadata.
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 6bb470f..2d5df1f 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -252,29 +252,6 @@ xfs_set_mode(struct inode *inode, umode_t mode)
- 	return error;
- }
- 
--static int
--xfs_acl_exists(struct inode *inode, unsigned char *name)
--{
--	int len = XFS_ACL_MAX_SIZE(XFS_M(inode->i_sb));
--
--	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
--			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
--}
--
--int
--posix_acl_access_exists(struct inode *inode)
--{
--	return xfs_acl_exists(inode, SGI_ACL_FILE);
--}
--
--int
--posix_acl_default_exists(struct inode *inode)
--{
--	if (!S_ISDIR(inode->i_mode))
--		return 0;
--	return xfs_acl_exists(inode, SGI_ACL_DEFAULT);
--}
--
- int
- xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- {
-diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-index 52f8255..286fa89 100644
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -24,16 +24,12 @@ struct posix_acl;
- #ifdef CONFIG_XFS_POSIX_ACL
- extern struct posix_acl *xfs_get_acl(struct inode *inode, int type);
- extern int xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
--extern int posix_acl_access_exists(struct inode *inode);
--extern int posix_acl_default_exists(struct inode *inode);
- #else
- static inline struct posix_acl *xfs_get_acl(struct inode *inode, int type)
- {
- 	return NULL;
- }
- # define xfs_set_acl					NULL
--# define posix_acl_access_exists(inode)			0
--# define posix_acl_default_exists(inode)		0
- #endif /* CONFIG_XFS_POSIX_ACL */
- 
- extern void xfs_forget_acl(struct inode *inode, const char *name, int xflags);
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 36a4385..110f1d7 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -129,47 +129,19 @@ const struct xattr_handler *xfs_xattr_handlers[] = {
- 	NULL
- };
- 
--static unsigned int xfs_xattr_prefix_len(int flags)
--{
--	if (flags & XFS_ATTR_SECURE)
--		return sizeof("security");
--	else if (flags & XFS_ATTR_ROOT)
--		return sizeof("trusted");
--	else
--		return sizeof("user");
--}
--
--static const char *xfs_xattr_prefix(int flags)
--{
--	if (flags & XFS_ATTR_SECURE)
--		return xfs_xattr_security_handler.prefix;
--	else if (flags & XFS_ATTR_ROOT)
--		return xfs_xattr_trusted_handler.prefix;
--	else
--		return xfs_xattr_user_handler.prefix;
--}
--
- static int
--xfs_xattr_put_listent(
-+__xfs_xattr_put_listent(
- 	struct xfs_attr_list_context *context,
--	int		flags,
--	unsigned char	*name,
--	int		namelen,
--	int		valuelen,
--	unsigned char	*value)
-+	char *prefix,
-+	int prefix_len,
-+	unsigned char *name,
-+	int namelen)
- {
--	unsigned int prefix_len = xfs_xattr_prefix_len(flags);
- 	char *offset;
- 	int arraytop;
- 
--	ASSERT(context->count >= 0);
--
--	/*
--	 * Only show root namespace entries if we are actually allowed to
--	 * see them.
--	 */
--	if ((flags & XFS_ATTR_ROOT) && !capable(CAP_SYS_ADMIN))
--		return 0;
-+	if (!context->alist)
-+		goto compute_size;
- 
- 	arraytop = context->count + prefix_len + namelen + 1;
- 	if (arraytop > context->firstu) {
-@@ -177,17 +149,19 @@ xfs_xattr_put_listent(
- 		return 1;
- 	}
- 	offset = (char *)context->alist + context->count;
--	strncpy(offset, xfs_xattr_prefix(flags), prefix_len);
-+	strncpy(offset, prefix, prefix_len);
- 	offset += prefix_len;
- 	strncpy(offset, (char *)name, namelen);			/* real name */
- 	offset += namelen;
- 	*offset = '\0';
-+
-+compute_size:
- 	context->count += prefix_len + namelen + 1;
- 	return 0;
- }
- 
- static int
--xfs_xattr_put_listent_sizes(
-+xfs_xattr_put_listent(
- 	struct xfs_attr_list_context *context,
- 	int		flags,
- 	unsigned char	*name,
-@@ -195,24 +169,55 @@ xfs_xattr_put_listent_sizes(
- 	int		valuelen,
- 	unsigned char	*value)
- {
--	context->count += xfs_xattr_prefix_len(flags) + namelen + 1;
--	return 0;
--}
-+	char *prefix;
-+	int prefix_len;
- 
--static int
--list_one_attr(const char *name, const size_t len, void *data,
--		size_t size, ssize_t *result)
--{
--	char *p = data + *result;
-+	ASSERT(context->count >= 0);
- 
--	*result += len;
--	if (!size)
--		return 0;
--	if (*result > size)
--		return -ERANGE;
-+	if (flags & XFS_ATTR_ROOT) {
-+#ifdef CONFIG_XFS_POSIX_ACL
-+		if (namelen == SGI_ACL_FILE_SIZE &&
-+		    strncmp(name, SGI_ACL_FILE,
-+			    SGI_ACL_FILE_SIZE) == 0) {
-+			int ret = __xfs_xattr_put_listent(
-+					context, XATTR_SYSTEM_PREFIX,
-+					XATTR_SYSTEM_PREFIX_LEN,
-+					XATTR_POSIX_ACL_ACCESS,
-+					strlen(XATTR_POSIX_ACL_ACCESS));
-+			if (ret)
-+				return ret;
-+		} else if (namelen == SGI_ACL_DEFAULT_SIZE &&
-+			 strncmp(name, SGI_ACL_DEFAULT,
-+				 SGI_ACL_DEFAULT_SIZE) == 0) {
-+			int ret = __xfs_xattr_put_listent(
-+					context, XATTR_SYSTEM_PREFIX,
-+					XATTR_SYSTEM_PREFIX_LEN,
-+					XATTR_POSIX_ACL_DEFAULT,
-+					strlen(XATTR_POSIX_ACL_DEFAULT));
-+			if (ret)
-+				return ret;
-+		}
-+#endif
- 
--	strcpy(p, name);
--	return 0;
-+		/*
-+		 * Only show root namespace entries if we are actually allowed to
-+		 * see them.
-+		 */
-+		if (!capable(CAP_SYS_ADMIN))
-+			return 0;
-+
-+		prefix = XATTR_TRUSTED_PREFIX;
-+		prefix_len = XATTR_TRUSTED_PREFIX_LEN;
-+	} else if (flags & XFS_ATTR_SECURE) {
-+		prefix = XATTR_SECURITY_PREFIX;
-+		prefix_len = XATTR_SECURITY_PREFIX_LEN;
-+	} else {
-+		prefix = XATTR_USER_PREFIX;
-+		prefix_len = XATTR_USER_PREFIX_LEN;
-+	}
-+
-+	return __xfs_xattr_put_listent(context, prefix, prefix_len, name,
-+				       namelen);
- }
- 
- ssize_t
-@@ -221,7 +226,6 @@ xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
- 	struct xfs_attr_list_context context;
- 	struct attrlist_cursor_kern cursor = { 0 };
- 	struct inode		*inode = d_inode(dentry);
--	int			error;
- 
- 	/*
- 	 * First read the regular on-disk attributes.
-@@ -230,37 +234,14 @@ xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
- 	context.dp = XFS_I(inode);
- 	context.cursor = &cursor;
- 	context.resynch = 1;
--	context.alist = data;
-+	context.alist = size ? data : NULL;
- 	context.bufsize = size;
- 	context.firstu = context.bufsize;
--
--	if (size)
--		context.put_listent = xfs_xattr_put_listent;
--	else
--		context.put_listent = xfs_xattr_put_listent_sizes;
-+	context.put_listent = xfs_xattr_put_listent;
- 
- 	xfs_attr_list_int(&context);
- 	if (context.count < 0)
- 		return -ERANGE;
- 
--	/*
--	 * Then add the two synthetic ACL attributes.
--	 */
--	if (posix_acl_access_exists(inode)) {
--		error = list_one_attr(XATTR_NAME_POSIX_ACL_ACCESS,
--				strlen(XATTR_NAME_POSIX_ACL_ACCESS) + 1,
--				data, size, &context.count);
--		if (error)
--			return error;
--	}
--
--	if (posix_acl_default_exists(inode)) {
--		error = list_one_attr(XATTR_NAME_POSIX_ACL_DEFAULT,
--				strlen(XATTR_NAME_POSIX_ACL_DEFAULT) + 1,
--				data, size, &context.count);
--		if (error)
--			return error;
--	}
--
- 	return context.count;
- }
--- 
-2.5.0
+Thanks,
+-Eric
+
+On 12/2/15 5:19 AM, Vivek Trivedi wrote:
+> minor fixes in xfsprogs, mostly coverity reported fixes.
+> 
+> Vivek Trivedi (11):
+>   xfsprogs: xfs_io: fix a memory leak in imap_f
+>   xfsprogs: fix integer overflow in xlog_find_verify_cycle
+>   xfsprogs: mkfs: fix unintentional integer overflow
+>   xfsprogs: xfsdb: remove unnessary checks in
+>     process_leaf_node_dir_v2_free
+>   xfsprogs: xfs_mdrestore: check bad read count in perform_restore
+>   xfsprogs: xfs_db: check null derefernce after block_to_bt
+>   xfsprogs: xfs_fsr: replace sprintf with snprintf to avoid buffer
+>     overflow
+>   xfsprogs: xfs_repair: fix possible null dereference in build_ino_tree
+>   xfsprogs: xfs_repair: fix possible null dereference in
+>     traverse_int_dir2block
+>   xfsprogs: fix possible null pointer dereference in
+>     xfs_iformat_extents
+>   xfsprogs: xfs_repair: fix possible null pointer dereference in
+>     mark_standalone_inodes
+> 
+>  db/btblock.c              |    3 +++
+>  db/check.c                |    2 --
+>  fsr/xfs_fsr.c             |    4 ++--
+>  io/imap.c                 |    7 ++++++-
+>  libxfs/xfs_inode_fork.c   |    4 ++++
+>  libxlog/xfs_log_recover.c |    2 +-
+>  mdrestore/xfs_mdrestore.c |    4 ++++
+>  mkfs/xfs_mkfs.c           |    2 +-
+>  repair/dir2.c             |    2 +-
+>  repair/phase5.c           |    2 +-
+>  repair/phase6.c           |    7 +++++--
+>  11 files changed, 28 insertions(+), 11 deletions(-)
+> 
 
 _______________________________________________
 xfs mailing list
