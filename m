@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 013B97F62
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 15:14:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 03A0C304032
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 13:14:58 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	TjRVhOPoKCfa017Y for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 13:14:56 -0800 (PST)
-Date: Thu, 3 Dec 2015 08:14:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Which xfsprogs version to which kernel version
-Message-ID: <20151202211443.GK19199@dastard>
-References: <5656DD39.8060403@poczta.onet.pl> <20151201202639.GV19199@dastard>
-	<565E826D.6040301@sandeen.net> <201512021807.47703.arekm@maven.pl>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 867447F69
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 15:39:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F10F8F8054
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 13:39:35 -0800 (PST)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id c4UPXZQ0MbVp42V0 for
+	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 13:39:33 -0800 (PST)
+Date: Wed, 2 Dec 2015 14:39:32 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: xfstests failures with xfs, dax and v4.4-rc3
+Message-ID: <20151202213932.GA7652@linux.intel.com>
+References: <20151202183438.GA1319@linux.intel.com>
+	<20151202202910.GH19199@dastard> <20151202204502.GI19199@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201512021807.47703.arekm@maven.pl>
+In-Reply-To: <20151202204502.GI19199@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,30 +25,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-T24gV2VkLCBEZWMgMDIsIDIwMTUgYXQgMDY6MDc6NDdQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIFdlZG5lc2RheSAwMiBvZiBEZWNlbWJlciAyMDE1LCBFcmljIFNh
-bmRlZW4gd3JvdGU6Cj4gIAo+ID4gPj4gSG93IGFib3V0IGp1c3QgY2hlY2tpbmcgcnVubmluZyBr
-ZXJuZWwgdmVyc2lvbiBiZWZvcmUgZW5hYmxpbmcgdGhpcyBieQo+ID4gPj4gZGVmYXVsdD8KPiA+
-ID4gCj4gPiA+IFRoZSBidHJmcyBzb2x1dGlvbj8gTm8gdGhhbmtzLgo+ID4gCj4gPiBBbm90aGVy
-IG9wdGlvbiBpcyB0byBleHBvcnQgZmVhdHVyZXMgdGhlIHJ1bm5pbmcga2VybmVsIGNhbiBoYW5k
-bGUgaW4KPiA+IHN5c2ZzICYgbWtmcyBhY2NvcmRpbmdseSAtIGJ1dCB0aGVuIHNvbWVib2R5IG1r
-ZnMncyB1bmRlciBvbmUga2VybmVsLAo+ID4gYm9vdHMgYW5vdGhlciBrZXJuZWwsIGFuZCBnZXRz
-IGRpZmZlcmVudCBta2ZzJ3MsIHBvc3NpYmx5IGZhaWxzIHRvIG1vdW50LAo+ID4gZXRjLi4uIG1h
-Z2ljYWxseSBjaGFuZ2luZyBkZWZhdWx0cyBpcyBhIG5pZ2h0bWFyZS4gIHllYWgsIGF0IHNvbWUg
-cG9pbnQKPiA+IHlvdSBoYXZlIHRvIHJlYWxpemUgdGhhdCB5b3UgY2Fubm90IHNhdmUgZXZlcnlv
-bmUgZnJvbSB0aGVtc2VsdmVzLiAgOykKPiAKPiBEb24ndCBjaGFuZ2UgZGVmYXVsdC4gV2FybiBp
-bnN0ZWFkIGFib3V0IG1rZnMgdXNpbmcgZmVhdHVyZSBub3Qgc3VwcG9ydGVkIGJ5IAo+IGN1cnJl
-bnQga2VybmVsLgoKVGhhdCdzIGp1c3QgYXMgYmFkIC0gd2UnbGwgZ2V0IHBlb3BsZSBjb21wbGFp
-bmluZyBhYm91dCBta2ZzCndhcm5pbmdzIHRoZXkgZG9uJ3QgY2FyZSBhYm91dC4gQW5kIHdlIHdp
-bGwgYWxzbyBlbmQgdXAgd2l0aCBwZW9wbGUKbm90IHR1cm5pbmcgb24gb3B0aW9ucyB0aGV5IHJl
-YWxseSBzaG91bGQgYmUgdXNpbmcsIGxpa2UgbWV0YWRhdGEKQ1JDcy4uLi4KCkNoZWVycywKCkRh
-dmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
-LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Dec 03, 2015 at 07:45:02AM +1100, Dave Chinner wrote:
+> On Thu, Dec 03, 2015 at 07:29:10AM +1100, Dave Chinner wrote:
+> > On Wed, Dec 02, 2015 at 11:34:38AM -0700, Ross Zwisler wrote:
+> > > I'm hitting a few more test failures in my testing setup with v4.4-rc3, xfs
+> > > and DAX.  My test setup is a pair of 4GiB PMEM partitions in a KVM virtual
+> > > machine.  Here are the failures:
+> > 
+> > Which are caused by commit 1ca1915 ("xfs: Don't use unwritten extents
+> > for DAX") because of this code for unwritten extent conversion in
+> > get_blocks:
+> > 
+> > 	tp->t_flags |= XFS_TRANS_RESERVE;
+> > 
+> > It's a minor problem compared to all the other issues DAX has right
+> > now, so I ignored it to get the bigger problem solved first.
+> 
+> Patch to fix the problem below.
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: Don't use reserved blocks for data blocks with DAX
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Commit 1ca1915 ("xfs: Don't use unwritten extents for DAX") enabled
+> the DAX allocation call to dip into the reserve pool in case it was
+> converting unwritten extents rather than allocating blocks. This was
+> a direct copy of the unwritten extent conversion code, but had an
+> unintended side effect of allowing normal data block allocation to
+> use the reserve pool. Hence normal block allocation could deplete
+> the reserve pool and prevent unwritten extent conversion at ENOSPC,
+> hence violating fallocate guarantees on preallocated space.
+> 
+> Fix it by checking whether the incoming map from __xfs_get_blocks()
+> spans an unwritten extent and only use the reserve pool if the
+> allocation covers an unwritten extent.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
+I've verified that this fixes all three failing xfstests reported in this mail.
+Thanks!
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
