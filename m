@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 296AF805D
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 05:24:28 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 089CE8084
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 05:25:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E79368F80D0
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 03:24:27 -0800 (PST)
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
-	cuda.sgi.com with ESMTP id QAmbPG5Z3bGn1cH3 (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CF39C30411A
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 03:25:03 -0800 (PST)
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24]) by
+	cuda.sgi.com with ESMTP id UEZ0xeFGCmnA9v5W (version=TLSv1
 	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 03:24:25 -0800 (PST)
-Received: from epcpsbgr4.samsung.com
-	(u144.gpu120.samsung.co.kr [203.254.230.144])
-	by mailout3.samsung.com (Oracle Communications Messaging Server
+	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 03:25:01 -0800 (PST)
+Received: from epcpsbgr2.samsung.com
+	(u142.gpu120.samsung.co.kr [203.254.230.142])
+	by mailout1.samsung.com (Oracle Communications Messaging Server
 	7.0.5.31.0 64bit (built May  5 2014))
-	with ESMTP id <0NYQ02UMQACO8PD0@mailout3.samsung.com> for
-	xfs@oss.sgi.com; Wed, 02 Dec 2015 20:24:24 +0900 (KST)
+	with ESMTP id <0NYQ02V8JABXFKD0@mailout1.samsung.com> for
+	xfs@oss.sgi.com; Wed, 02 Dec 2015 20:23:57 +0900 (KST)
 From: Vivek Trivedi <t.vivek@samsung.com>
-Subject: [PATCH 08/11] xfsprogs: xfs_repair: fix possible null dereference in
-	build_ino_tree
-Date: Wed, 02 Dec 2015 16:49:24 +0530
-Message-id: <1449055167-19936-9-git-send-email-t.vivek@samsung.com>
+Subject: [PATCH 07/11] xfsprogs: xfs_fsr: replace sprintf with snprintf to
+	avoid buffer overflow
+Date: Wed, 02 Dec 2015 16:49:23 +0530
+Message-id: <1449055167-19936-8-git-send-email-t.vivek@samsung.com>
 In-reply-to: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
 References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,27 +38,37 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Vivek Trivedi <t.vivek@samsung.com>, a.sahrawat@samsung.com, pankaj.m@samsung.com
 
-Fix possible null dereference in build_ino_tree if ino_rec is NULL.
+Fix possible buffer overflow by replacing sprintf with snprintf in tmp_next
+and tmp_close.
 Reported by coverity.
 
 Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
 ---
- repair/phase5.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fsr/xfs_fsr.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 109e37b..5d95e22 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1235,7 +1235,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		if (lptr->modulo > 0)
- 			lptr->modulo--;
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 424fbce..bd459b6 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -1804,7 +1804,7 @@ tmp_next(char *mnt)
+ {
+ 	static char	buf[SMBUFSZ];
  
--		if (lptr->num_recs_pb > 0)
-+		if (lptr->num_recs_pb > 0 && ino_rec)
- 			prop_ino_cursor(mp, agno, btree_curs,
- 					ino_rec->ino_startnum, 0);
+-	sprintf(buf, "%s/.fsr/ag%d/tmp%d",
++	snprintf(buf, SMBUFSZ, "%s/.fsr/ag%d/tmp%d",
+ 	        ( (strcmp(mnt, "/") == 0) ? "" : mnt),
+ 	        tmp_agi,
+ 	        getpid());
+@@ -1823,7 +1823,7 @@ tmp_close(char *mnt)
  
+ 	/* No data is ever actually written so we can just do rmdir's */
+ 	for (i=0; i < fsgeom.agcount; i++) {
+-		sprintf(buf, "%s/.fsr/ag%d", mnt, i);
++		snprintf(buf, SMBUFSZ, "%s/.fsr/ag%d", mnt, i);
+ 		if (rmdir(buf) < 0) {
+ 			if (errno != ENOENT) {
+ 				fsrprintf(
 -- 
 1.7.9.5
 
