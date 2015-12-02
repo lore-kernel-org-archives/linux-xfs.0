@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0D59E7F75
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:10:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 86370AC005
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 07:10:48 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 6rwgS8DebTZ5db3c for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 07:10:43 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 15F9263C3BC5
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:10:43 -0600 (CST)
-Subject: Re: [PATCH 00/11] xfsprogs misc fixes
-References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <565F09F2.9090709@sandeen.net>
-Date: Wed, 2 Dec 2015 09:10:42 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 109727F81
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:12:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E1CD330405F
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 07:12:33 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ed1l707DEwAz9pwg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 07:12:32 -0800 (PST)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: xfstest failure with xfs, dax and v4.4-rc3
+References: <20151201224346.GA15684@linux.intel.com>
+	<20151201235158.GF19199@dastard>
+Date: Wed, 02 Dec 2015 10:12:29 -0500
+In-Reply-To: <20151201235158.GF19199@dastard> (Dave Chinner's message of "Wed,
+	2 Dec 2015 10:51:58 +1100")
+Message-ID: <x49k2owq3z6.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,51 +30,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Thanks, I'll help look over these.
+Dave Chinner <david@fromorbit.com> writes:
 
-Could you please map the coverity CIDs to these fixes?
+> On Tue, Dec 01, 2015 at 03:43:46PM -0700, Ross Zwisler wrote:
+>> I'm seeing a new intermittent xfstests failure with v4.4-rc3 using XFS and
+>> DAX.  The test that is failing is generic/083, and it fails about 50% of the
+>> time in my setup.  Here's the output:
+>> 
+>> FSTYP         -- xfs (debug)
+>> PLATFORM      -- Linux/x86_64 lorwyn 4.4.0-rc3
+>> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
+>> MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2
+>> /mnt/xfstests_scratch
+>> 
+>> generic/083 2s ... 2s
+   ^^^^^^^
+>> _check_xfs_filesystem: filesystem on /dev/pmem0p2 is inconsistent (r) (see
+>> /root/xfstests/results//generic/083.full)
+>> Ran: generic/083
+>> Failures: generic/083
+>> Failed 1 of 1 tests
+>
+> $ grep 083  tests/xfs/group
+> 083 dangerous_fuzzers
+> $
 
-We like to include that in the commit metadata.
+That's great, but Ross reported an issues with *generic*/083.  ;-)
 
-Thanks,
--Eric
+/me hands Dave more coffee.
 
-On 12/2/15 5:19 AM, Vivek Trivedi wrote:
-> minor fixes in xfsprogs, mostly coverity reported fixes.
-> 
-> Vivek Trivedi (11):
->   xfsprogs: xfs_io: fix a memory leak in imap_f
->   xfsprogs: fix integer overflow in xlog_find_verify_cycle
->   xfsprogs: mkfs: fix unintentional integer overflow
->   xfsprogs: xfsdb: remove unnessary checks in
->     process_leaf_node_dir_v2_free
->   xfsprogs: xfs_mdrestore: check bad read count in perform_restore
->   xfsprogs: xfs_db: check null derefernce after block_to_bt
->   xfsprogs: xfs_fsr: replace sprintf with snprintf to avoid buffer
->     overflow
->   xfsprogs: xfs_repair: fix possible null dereference in build_ino_tree
->   xfsprogs: xfs_repair: fix possible null dereference in
->     traverse_int_dir2block
->   xfsprogs: fix possible null pointer dereference in
->     xfs_iformat_extents
->   xfsprogs: xfs_repair: fix possible null pointer dereference in
->     mark_standalone_inodes
-> 
->  db/btblock.c              |    3 +++
->  db/check.c                |    2 --
->  fsr/xfs_fsr.c             |    4 ++--
->  io/imap.c                 |    7 ++++++-
->  libxfs/xfs_inode_fork.c   |    4 ++++
->  libxlog/xfs_log_recover.c |    2 +-
->  mdrestore/xfs_mdrestore.c |    4 ++++
->  mkfs/xfs_mkfs.c           |    2 +-
->  repair/dir2.c             |    2 +-
->  repair/phase5.c           |    2 +-
->  repair/phase6.c           |    7 +++++--
->  11 files changed, 28 insertions(+), 11 deletions(-)
-> 
+-Jeff
 
 _______________________________________________
 xfs mailing list
