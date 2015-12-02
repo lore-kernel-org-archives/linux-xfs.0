@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1AF3B7F76
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:55:11 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 50A227F77
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:58:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 99561AC001
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:55:10 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2E893304048
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:58:35 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id VRCmM4s9ZBFaxBhy for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 09:55:07 -0800 (PST)
+	ESMTP id h7jWECesrclsl6aK for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2015 09:58:29 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 8395B60006DA
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:55:07 -0600 (CST)
-Subject: Re: [PATCH 01/11] xfsprogs: xfs_io: fix a memory leak in imap_f
+	by sandeen.net (Postfix) with ESMTPSA id BFC8763C3BC5
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:58:29 -0600 (CST)
+Subject: Re: [PATCH 02/11] xfsprogs: fix integer overflow in
+	xlog_find_verify_cycle
 References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
-	<1449055167-19936-2-git-send-email-t.vivek@samsung.com>
+	<1449055167-19936-3-git-send-email-t.vivek@samsung.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <565F307A.1040402@sandeen.net>
-Date: Wed, 2 Dec 2015 11:55:06 -0600
+Message-ID: <565F3145.4090909@sandeen.net>
+Date: Wed, 2 Dec 2015 11:58:29 -0600
 MIME-Version: 1.0
-In-Reply-To: <1449055167-19936-2-git-send-email-t.vivek@samsung.com>
+In-Reply-To: <1449055167-19936-3-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,50 +39,31 @@ To: xfs@oss.sgi.com
 
 
 On 12/2/15 5:19 AM, Vivek Trivedi wrote:
-> add NULL check for malloc return and free allocated memory in
-> return path in imap_f
+> Fix unintentional integer overflow in xlog_find_verify_cycle.
+> Reported by coverity.
 > 
 > Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
 
+Coverity-Id: 200684
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  io/imap.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  libxlog/xfs_log_recover.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/io/imap.c b/io/imap.c
-> index 34901cb..6ed98eb 100644
-> --- a/io/imap.c
-> +++ b/io/imap.c
-> @@ -39,6 +39,8 @@ imap_f(int argc, char **argv)
->  		nent = atoi(argv[1]);
->  
->  	t = malloc(nent * sizeof(*t));
-> +	if (!t)
-> +		return 0;
->  
->  	bulkreq.lastip  = &last;
->  	bulkreq.icount  = nent;
-> @@ -46,8 +48,10 @@ imap_f(int argc, char **argv)
->  	bulkreq.ocount  = &count;
->  
->  	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
-> -		if (count == 0)
-> +		if (count == 0) {
-> +			free(t);
->  			return 0;
-> +		}
->  		for (i = 0; i < count; i++) {
->  			printf(_("ino %10llu count %2d mask %016llx\n"),
->  				(unsigned long long)t[i].xi_startino,
-> @@ -55,6 +59,7 @@ imap_f(int argc, char **argv)
->  				(unsigned long long)t[i].xi_allocmask);
->  		}
->  	}
-> +	free(t);
->  	perror("xfsctl(XFS_IOC_FSINUMBERS)");
->  	exitcode = 1;
->  	return 0;
+> diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+> index ef7cf68..73f4d36 100644
+> --- a/libxlog/xfs_log_recover.c
+> +++ b/libxlog/xfs_log_recover.c
+> @@ -254,7 +254,7 @@ xlog_find_verify_cycle(
+>  	 * try a smaller size.  We need to be able to read at least
+>  	 * a log sector, or we're out of luck.
+>  	 */
+> -	bufblks = 1 << ffs(nbblks);
+> +	bufblks = (xfs_daddr_t)1 << ffs(nbblks);
+>  	while (bufblks > log->l_logBBsize)
+>  		bufblks >>= 1;
+>  	while (!(bp = xlog_get_bp(log, bufblks))) {
 > 
 
 _______________________________________________
