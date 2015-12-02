@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3AF5B7F6C
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:07:58 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1AF3B7F76
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:55:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 26E38304039
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:07:54 -0800 (PST)
-Received: from mail-lf0-f46.google.com (mail-lf0-f46.google.com
-	[209.85.215.46]) by cuda.sgi.com with ESMTP id sbAqQCDCTUMVzVwN
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 09:07:50 -0800 (PST)
-Received: by lfdl133 with SMTP id l133so58991161lfd.2
-	for <xfs@oss.sgi.com>; Wed, 02 Dec 2015 09:07:49 -0800 (PST)
-Received: from xps.localnet (85-222-71-204.dynamic.chello.pl. [85.222.71.204])
-	by smtp.gmail.com with ESMTPSA id
-	r2sm641434lfe.28.2015.12.02.09.07.48 for <xfs@oss.sgi.com>
-	(version=TLSv1/SSLv3 cipher=OTHER);
-	Wed, 02 Dec 2015 09:07:48 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: Which xfsprogs version to which kernel version
-Date: Wed, 2 Dec 2015 18:07:47 +0100
-References: <5656DD39.8060403@poczta.onet.pl> <20151201202639.GV19199@dastard>
-	<565E826D.6040301@sandeen.net>
-In-Reply-To: <565E826D.6040301@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 99561AC001
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 09:55:10 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id VRCmM4s9ZBFaxBhy for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2015 09:55:07 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 8395B60006DA
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 11:55:07 -0600 (CST)
+Subject: Re: [PATCH 01/11] xfsprogs: xfs_io: fix a memory leak in imap_f
+References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
+	<1449055167-19936-2-git-send-email-t.vivek@samsung.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <565F307A.1040402@sandeen.net>
+Date: Wed, 2 Dec 2015 11:55:06 -0600
 MIME-Version: 1.0
-Message-Id: <201512021807.47703.arekm@maven.pl>
+In-Reply-To: <1449055167-19936-2-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +29,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-T24gV2VkbmVzZGF5IDAyIG9mIERlY2VtYmVyIDIwMTUsIEVyaWMgU2FuZGVlbiB3cm90ZToKIAo+
-ID4+IEhvdyBhYm91dCBqdXN0IGNoZWNraW5nIHJ1bm5pbmcga2VybmVsIHZlcnNpb24gYmVmb3Jl
-IGVuYWJsaW5nIHRoaXMgYnkKPiA+PiBkZWZhdWx0Pwo+ID4gCj4gPiBUaGUgYnRyZnMgc29sdXRp
-b24/IE5vIHRoYW5rcy4KPiAKPiBBbm90aGVyIG9wdGlvbiBpcyB0byBleHBvcnQgZmVhdHVyZXMg
-dGhlIHJ1bm5pbmcga2VybmVsIGNhbiBoYW5kbGUgaW4KPiBzeXNmcyAmIG1rZnMgYWNjb3JkaW5n
-bHkgLSBidXQgdGhlbiBzb21lYm9keSBta2ZzJ3MgdW5kZXIgb25lIGtlcm5lbCwKPiBib290cyBh
-bm90aGVyIGtlcm5lbCwgYW5kIGdldHMgZGlmZmVyZW50IG1rZnMncywgcG9zc2libHkgZmFpbHMg
-dG8gbW91bnQsCj4gZXRjLi4uIG1hZ2ljYWxseSBjaGFuZ2luZyBkZWZhdWx0cyBpcyBhIG5pZ2h0
-bWFyZS4gIHllYWgsIGF0IHNvbWUgcG9pbnQKPiB5b3UgaGF2ZSB0byByZWFsaXplIHRoYXQgeW91
-IGNhbm5vdCBzYXZlIGV2ZXJ5b25lIGZyb20gdGhlbXNlbHZlcy4gIDspCgpEb24ndCBjaGFuZ2Ug
-ZGVmYXVsdC4gV2FybiBpbnN0ZWFkIGFib3V0IG1rZnMgdXNpbmcgZmVhdHVyZSBub3Qgc3VwcG9y
-dGVkIGJ5IApjdXJyZW50IGtlcm5lbC4KCj4gPj4gV2hpbGUgdGhpcyBpcyBzb21lIGltcGxlbWVu
-dGF0aW9uIGVmZm9ydCwgaXQgbWF5IGhlbHAgdG8gcmVkdWNlCj4gPj4gcXVlc3Rpb25zIG9uIHRo
-aXMgbWFpbGluZyBsaXN0LiBBbmQgYXMgeW91IHNlZSBkaXN0cm8gcHJvYmxlbSBvciBub3Q6Cj4g
-Pj4gUGVvcGxlIHN0aWxsIGFzayBoZXJlLiA6KQo+IAo+IExpa2UgRGF2ZSBzYWlkIC0gbm90IHZl
-cnkgb2Z0ZW4gYXQgYWxsLgoKSGFkIG9uZSBjb21wbGFpbiBhYm91dCB0aGUgcHJvYmxlbSBvbiBw
-bGQgbGlzdHMuCgo+IC1FcmljCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6LCBhcmVrbSAvICgg
-bWF2ZW4ucGwgfCBwbGQtbGludXgub3JnICkKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
-Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+
+
+On 12/2/15 5:19 AM, Vivek Trivedi wrote:
+> add NULL check for malloc return and free allocated memory in
+> return path in imap_f
+> 
+> Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  io/imap.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/io/imap.c b/io/imap.c
+> index 34901cb..6ed98eb 100644
+> --- a/io/imap.c
+> +++ b/io/imap.c
+> @@ -39,6 +39,8 @@ imap_f(int argc, char **argv)
+>  		nent = atoi(argv[1]);
+>  
+>  	t = malloc(nent * sizeof(*t));
+> +	if (!t)
+> +		return 0;
+>  
+>  	bulkreq.lastip  = &last;
+>  	bulkreq.icount  = nent;
+> @@ -46,8 +48,10 @@ imap_f(int argc, char **argv)
+>  	bulkreq.ocount  = &count;
+>  
+>  	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+> -		if (count == 0)
+> +		if (count == 0) {
+> +			free(t);
+>  			return 0;
+> +		}
+>  		for (i = 0; i < count; i++) {
+>  			printf(_("ino %10llu count %2d mask %016llx\n"),
+>  				(unsigned long long)t[i].xi_startino,
+> @@ -55,6 +59,7 @@ imap_f(int argc, char **argv)
+>  				(unsigned long long)t[i].xi_allocmask);
+>  		}
+>  	}
+> +	free(t);
+>  	perror("xfsctl(XFS_IOC_FSINUMBERS)");
+>  	exitcode = 1;
+>  	return 0;
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
