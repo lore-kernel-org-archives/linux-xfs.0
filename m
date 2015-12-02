@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4FBB97F5A
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 17:59:16 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 84A107F5E
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 18:13:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F1C76AC005
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 15:59:15 -0800 (PST)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id BQeW4h50lQtrqTmY for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 15:59:14 -0800 (PST)
-Subject: [PATCH 2/3] xfs: handle shutdown notifications
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 01 Dec 2015 15:58:46 -0800
-Message-ID: <20151201235846.36836.1476.stgit@dwillia2-desk3.jf.intel.com>
-In-Reply-To: <20151201235836.36836.90416.stgit@dwillia2-desk3.jf.intel.com>
-References: <20151201235836.36836.90416.stgit@dwillia2-desk3.jf.intel.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 59064304032
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2015 16:13:33 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EbLhYIQEgFtP9wMf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2015 16:13:32 -0800 (PST)
+Date: Tue, 1 Dec 2015 19:13:29 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: sleeps and waits during io_submit
+Message-ID: <20151202001329.GA9633@bfoster.bfoster>
+References: <20151201131114.GA26129@bfoster.bfoster>
+	<565DA784.5080003@scylladb.com>
+	<20151201145631.GD26129@bfoster.bfoster>
+	<565DBB3E.2010308@scylladb.com>
+	<20151201160133.GE26129@bfoster.bfoster>
+	<565DC613.4090608@scylladb.com>
+	<20151201162958.GF26129@bfoster.bfoster>
+	<565DD449.5090101@scylladb.com>
+	<20151201185113.GG26129@bfoster.bfoster>
+	<565DF472.8080101@scylladb.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <565DF472.8080101@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,89 +38,139 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, xfs@oss.sgi.com, linux-nvdimm@lists.01.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
 
-Force a filesystem shutdown when the backing device is known to be dead.
-I.e. blk_queue_enter() permanently returns -ENODEV.
+On Tue, Dec 01, 2015 at 09:26:42PM +0200, Avi Kivity wrote:
+> On 12/01/2015 08:51 PM, Brian Foster wrote:
+> >On Tue, Dec 01, 2015 at 07:09:29PM +0200, Avi Kivity wrote:
+> >>
+> >>On 12/01/2015 06:29 PM, Brian Foster wrote:
+> >>>On Tue, Dec 01, 2015 at 06:08:51PM +0200, Avi Kivity wrote:
+> >>>>On 12/01/2015 06:01 PM, Brian Foster wrote:
+> >>>>>On Tue, Dec 01, 2015 at 05:22:38PM +0200, Avi Kivity wrote:
+> >>>>>>On 12/01/2015 04:56 PM, Brian Foster wrote:
+> >>>>>>>On Tue, Dec 01, 2015 at 03:58:28PM +0200, Avi Kivity wrote:
+> >>>>>>>>On 12/01/2015 03:11 PM, Brian Foster wrote:
+> >>>>>>>>>On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
+> >>>>>>>>>>On 11/30/2015 06:14 PM, Brian Foster wrote:
+> >>>>>>>>>>>On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
+> >>>>>>>>>>>>On 11/30/2015 04:10 PM, Brian Foster wrote:
+...
+> >>The case of waiting for I/O is much more worrying, because I/O latency are
+> >>much higher.  But it seems like most of the DIO path does not trigger
+> >>locking around I/O (and we are careful to avoid the ones that do, like
+> >>writing beyond eof).
+> >>
+> >>(sorry for repeating myself, I have the feeling we are talking past each
+> >>other and want to be on the same page)
+> >>
+> >Yeah, my point is just that just because the thread blocked on I/O,
+> >doesn't mean the cpu can't carry on with some useful work for another
+> >task.
+> 
+> In our case, there is no other task.  We run one thread per logical core, so
+> if that thread gets blocked, the cpu idles.
+> 
+> The whole point of io_submit() is to issue an I/O and let the caller
+> continue processing immediately.  It is the equivalent of O_NONBLOCK for
+> networking code.  If O_NONBLOCK did block from time to time, practically all
+> modern network applications would see a huge performance drop.
+> 
 
-Cc: xfs@oss.sgi.com
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/block_dev.c     |    3 ++-
- fs/xfs/xfs_super.c |    9 +++++++++
- include/linux/fs.h |    2 ++
- 3 files changed, 13 insertions(+), 1 deletion(-)
+Ok, but my understanding is that O_NONBLOCK would return an error code
+in the blocking case such that userspace can do something else or retry
+from a blockable context. I think this is similar to what hch posted wrt
+to the pwrite2() bits for nonblocking buffered I/O or what I was asking
+about earlier on with regard to returning an error if some blocking
+would otherwise occur.
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 39989e990df9..dfe9a53a7c53 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1802,7 +1802,7 @@ int __invalidate_device(struct block_device *bdev, bool kill_dirty)
- }
- EXPORT_SYMBOL(__invalidate_device);
- 
--static void generic_bdi_gone(struct super_block *sb)
-+void generic_bdi_gone(struct super_block *sb)
- {
- 	struct inode *inode, *_inode = NULL;
- 
-@@ -1828,6 +1828,7 @@ static void generic_bdi_gone(struct super_block *sb)
- 	spin_unlock(&sb->s_inode_list_lock);
- 	iput(_inode);
- }
-+EXPORT_SYMBOL(generic_bdi_gone);
- 
- void shutdown_partition(struct gendisk *disk, int partno)
- {
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 36bd8825bfb0..63c36508e9db 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1618,6 +1618,14 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
- 
-+static void
-+xfs_fs_bdi_gone(
-+	struct super_block *sb)
-+{
-+	xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REQ);
-+	generic_bdi_gone(sb);
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1632,6 +1640,7 @@ static const struct super_operations xfs_super_operations = {
- 	.show_options		= xfs_fs_show_options,
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
-+	.bdi_gone		= xfs_fs_bdi_gone,
- };
- 
- static struct file_system_type xfs_fs_type = {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0e201ed38045..b1e8e049e4b8 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2265,6 +2265,7 @@ extern struct super_block *freeze_bdev(struct block_device *);
- extern void emergency_thaw_all(void);
- extern int thaw_bdev(struct block_device *bdev, struct super_block *sb);
- extern int fsync_bdev(struct block_device *);
-+extern void generic_bdi_gone(struct super_block *sb);
- 
- extern struct super_block *blockdev_superblock;
- 
-@@ -2277,6 +2278,7 @@ static inline void bd_forget(struct inode *inode) {}
- static inline int sync_blockdev(struct block_device *bdev) { return 0; }
- static inline void kill_bdev(struct block_device *bdev) {}
- static inline void invalidate_bdev(struct block_device *bdev) {}
-+static inline void generic_bdi_gone(struct super_block *sb) {}
- 
- static inline struct super_block *freeze_bdev(struct block_device *sb)
- {
+> >
+> >>>>>  We submit an I/O which is
+> >>>>>asynchronous in nature and wait on a completion, which causes the cpu to
+> >>>>>schedule and execute another task until the completion is set by I/O
+> >>>>>completion (via an async callback). At that point, the issuing thread
+> >>>>>continues where it left off. I suspect I'm missing something... can you
+> >>>>>elaborate on what you'd do differently here (and how it helps)?
+> >>>>Just apply the same technique everywhere: convert locks to trylock +
+> >>>>schedule a continuation on failure.
+> >>>>
+> >>>I'm certainly not an expert on the kernel scheduling, locking and
+> >>>serialization mechanisms, but my understanding is that most things
+> >>>outside of spin locks are reschedule points. For example, the
+> >>>wait_for_completion() calls XFS uses to wait on I/O boil down to
+> >>>schedule_timeout() calls. Buffer locks are implemented as semaphores and
+> >>>down() can end up in the same place.
+> >>But, for the most part, XFS seems to be able to avoid sleeping.  The call to
+> >>__blockdev_direct_IO only launches the I/O, so any locking is only around
+> >>cpu operations and, unless there is contention, won't cause us to sleep in
+> >>io_submit().
+> >>
+> >>Trying to follow the code, it looks like xfs_get_blocks_direct (and
+> >>__blockdev_direct_IO's get_block parameter in general) is synchronous, so
+> >>we're just lucky to have everything in cache.  If it isn't, we block right
+> >>there.  I really hope I'm misreading this and some other magic is happening
+> >>elsewhere instead of this.
+> >>
+> >Nope, it's synchronous from a code perspective. The
+> >xfs_bmapi_read()->xfs_iread_extents() path could have to read in the
+> >inode bmap metadata if it hasn't been done already. Note that this
+> >should only happen once as everything is stored in-core, so in most
+> >cases this is skipped. It's also possible extents are read in via some
+> >other path/operation on the inode before an async I/O happens to be
+> >submitted (e.g., see some of the other xfs_bmapi_read() callers).
+> 
+> Is there (could we add) some ioctl to prime this cache?  We could call it
+> from a worker thread where we don't mind blocking during open.
+> 
+
+I suppose that's possible, or the worker thread could perform some
+existing operation known to prime the cache. I don't think it's worth
+getting into without a concrete example, however. The extent read
+example we're batting around might not ever be a problem (as you've
+noted due to file size), if files are truncated and recycled, for
+example.
+
+> What is the eviction policy for this cache?   Is it simply the block
+> device's page cache?
+> 
+
+IIUC the extent list stays around until the inode is reclaimed. There's
+a separate buffer cache for metadata buffers. Both types of objects
+would be reclaimed based on memory pressure.
+
+> What about the write path, will we see the same problems there?  I would
+> guess the problem is less severe there if the metadata is written with
+> writeback policy.
+> 
+
+Metadata is modified in-core and handed off to the logging
+infrastructure via a transaction. The log is flushed to disk some time
+later and metadata writeback occurs asynchronously via the xfsaild
+thread.
+
+Brian
+
+> >
+> >Either way, the extents have to be read in at some point and I'd expect
+> >that cpu to schedule onto some other task while that thread waits on I/O
+> >to complete (read-ahead could also be a factor here, but I haven't
+> >really dug into how that is triggered for buffers).
+> 
+> To provide an example, our application, which is a database, faces this
+> problem exact at a higher level.  Data is stored in data files, and data
+> items' locations are stored in index files. When we read a bit of data, we
+> issue an index read, and pass it a continuation to be executed when the read
+> completes.  This latter continuation parses the data and passes it to the
+> code that prepares it for merging with data from other data files, and an
+> eventual return to the user.
+> 
+> Having written code for over a year in this style, I've come to expect it to
+> be used everywhere asynchronous I/O is used, but I realize it is fairly hard
+> without good support from a framework that allows continuations to be
+> composed in a natural way.
+> 
+> 
 
 _______________________________________________
 xfs mailing list
