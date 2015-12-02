@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F03898049
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 05:20:44 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 61A177FAE
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 05:22:39 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B705A30411F
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 03:20:44 -0800 (PST)
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
-	cuda.sgi.com with ESMTP id Nbh85SnDaW5owv60 (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EABF8AC004
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 03:22:38 -0800 (PST)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id 0bpIh1dLzXQWZOPf (version=TLSv1
 	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 03:20:42 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 03:22:35 -0800 (PST)
 Received: from epcpsbgr4.samsung.com
 	(u144.gpu120.samsung.co.kr [203.254.230.144])
-	by mailout3.samsung.com (Oracle Communications Messaging Server
+	by mailout4.samsung.com (Oracle Communications Messaging Server
 	7.0.5.31.0 64bit (built May  5 2014))
-	with ESMTP id <0NYQ02UHTA6F8PD0@mailout3.samsung.com> for
-	xfs@oss.sgi.com; Wed, 02 Dec 2015 20:20:39 +0900 (KST)
+	with ESMTP id <0NYQ02S98A9GF5C0@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Wed, 02 Dec 2015 20:22:28 +0900 (KST)
 From: Vivek Trivedi <t.vivek@samsung.com>
-Subject: [PATCH 00/11] xfsprogs misc fixes
-Date: Wed, 02 Dec 2015 16:49:16 +0530
-Message-id: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
+Subject: [PATCH 04/11] xfsprogs: xfsdb: remove unnessary checks in
+	process_leaf_node_dir_v2_free
+Date: Wed, 02 Dec 2015 16:49:20 +0530
+Message-id: <1449055167-19936-5-git-send-email-t.vivek@samsung.com>
+In-reply-to: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
+References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,39 +38,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Vivek Trivedi <t.vivek@samsung.com>, a.sahrawat@samsung.com, pankaj.m@samsung.com
 
-minor fixes in xfsprogs, mostly coverity reported fixes.
+xfs_dir2_free_hdr_t entries are unsigned, so they can't be negative.
+remove these unnessary checks in process_leaf_node_dir_v2_free.
+Reported by coverity.
 
-Vivek Trivedi (11):
-  xfsprogs: xfs_io: fix a memory leak in imap_f
-  xfsprogs: fix integer overflow in xlog_find_verify_cycle
-  xfsprogs: mkfs: fix unintentional integer overflow
-  xfsprogs: xfsdb: remove unnessary checks in
-    process_leaf_node_dir_v2_free
-  xfsprogs: xfs_mdrestore: check bad read count in perform_restore
-  xfsprogs: xfs_db: check null derefernce after block_to_bt
-  xfsprogs: xfs_fsr: replace sprintf with snprintf to avoid buffer
-    overflow
-  xfsprogs: xfs_repair: fix possible null dereference in build_ino_tree
-  xfsprogs: xfs_repair: fix possible null dereference in
-    traverse_int_dir2block
-  xfsprogs: fix possible null pointer dereference in
-    xfs_iformat_extents
-  xfsprogs: xfs_repair: fix possible null pointer dereference in
-    mark_standalone_inodes
+Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
+---
+ db/check.c |    2 --
+ 1 file changed, 2 deletions(-)
 
- db/btblock.c              |    3 +++
- db/check.c                |    2 --
- fsr/xfs_fsr.c             |    4 ++--
- io/imap.c                 |    7 ++++++-
- libxfs/xfs_inode_fork.c   |    4 ++++
- libxlog/xfs_log_recover.c |    2 +-
- mdrestore/xfs_mdrestore.c |    4 ++++
- mkfs/xfs_mkfs.c           |    2 +-
- repair/dir2.c             |    2 +-
- repair/phase5.c           |    2 +-
- repair/phase6.c           |    7 +++++--
- 11 files changed, 28 insertions(+), 11 deletions(-)
-
+diff --git a/db/check.c b/db/check.c
+index 9c1541d..9d986b9 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3073,9 +3073,7 @@ process_leaf_node_dir_v3_free(
+ 		return;
+ 	}
+ 	if (be32_to_cpu(free->hdr.nvalid) > maxent || 
+-				be32_to_cpu(free->hdr.nvalid) < 0 ||
+ 				be32_to_cpu(free->hdr.nused) > maxent || 
+-				be32_to_cpu(free->hdr.nused) < 0 ||
+ 				be32_to_cpu(free->hdr.nused) > 
+ 					be32_to_cpu(free->hdr.nvalid)) {
+ 		if (!sflag || v)
 -- 
 1.7.9.5
 
