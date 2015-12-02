@@ -1,23 +1,18 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B802B8033
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 04:31:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E897304071
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 02:31:14 -0800 (PST)
-Received: from server319.xenserve.com (ns1.319.xenserve.com [80.82.122.236])
-	by cuda.sgi.com with ESMTP id 0x7gDlEj7Karooj6 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Dec 2015 02:31:12 -0800 (PST)
-Received: from [104.255.67.172] (unknown [104.255.67.172])
-	by server319.xenserve.com (Postfix) with ESMTPA id 8DCC22AC244
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 10:30:29 +0000 (GMT)
+	by oss.sgi.com (Postfix) with ESMTP id 7539129E03
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 04:35:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 58470304106
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 02:35:09 -0800 (PST)
+Received: from 142-4-46-243.static.webnx.com (142-4-46-243.static.webnx.com
+	[142.4.46.243]) by cuda.sgi.com with ESMTP id 9B7msHO1ejG57Euq
+	for <xfs@oss.sgi.com>; Wed, 02 Dec 2015 02:35:07 -0800 (PST)
+Subject: Our LED Lighting and LED Signage products
+Message-ID: <35f5da5c32536e3b29e0044193cab34c@levisstadium.com>
+Date: Wed, 02 Dec 2015 11:13:22 +0100
+From: "Alex Williams" <aomslong@mail.com>
 MIME-Version: 1.0
-Content-Description: Mail message body
-Subject: Loan Offer
-From: "Mr.WESLEY" <iain@imuir.com>
-Date: Wed, 02 Dec 2015 05:30:28 -0800
-Message-Id: <20151202103114.33770A420A9@cuda.sgi.com>
-Reply-To: musolinowesley@gmail.com
+Reply-To: alverylee@sina.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,33 +21,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Hi,
 
-Tarvitsetko henkil=F6kohtaisen ja liike tai Investment rahoitusta, ilman st=
-ressi=E4
-ja nopea hyv=E4ksyminen? Jos kyll=E4, ota yhteytt=E4 jo t=E4n=E4=E4n kuin m=
-e t=E4ll=E4 hetkell=E4 tarjoaa
-lainoja loistava korko 3%. Rahoitustiimimme on turvattu ja turvallinen. Mei=
-d=E4n
-asiakkaat onnellisuus on vahvuutemme. lainoja viritt=E4=E4 $ 5,000
-- $ 1,000,000.00 USD euro ja punta, nyt saatavilla ovat Business, Personal,
-Talo, Matkailu ja opintolainoja jne lis=E4tietoa L=E4het=E4 yksityiskohtais=
-issa laina
-ehdotus
-Loan Officer.
-Do you need a personal & business or Investment funding, without stress
-and quick approval? If yes, contact us today as we are currently offering
-loans at superb interest rate at 3%. Our finance is secured and safe. Our
-customers happiness is our strength. loans from the tune of $5,000
--$1,000,000.00 USD Euro and Pounds, available now are Business, Personal,
-House, Travel and Student Loans Etc. For more info Send in detailed loan
-proposal
-Loan Officer.
+Our company is a manufactures/assembles/distributor of LED Lighting, as
+will as LED Signage products..
+I myself have over 30 years in lighting and signage field and over 15 years
+in LED products.
+We are running a 40% off Holiday sales on all of our LED products, with
+free energy audits as well as no money down deals.
+
+If it was simply because you are not the right person in charge of saving
+your company money on your electric bill,
+then please let me know the right contact person in your company, that does
+pay your electric bill, we can help them save money!
+
+If you are interested in LED Lighting products, we can help you by
+preforming and energy audit on your property to
+figure the true savings of switch from the old outdated lighting to the new
+modern LED Lighting Systems.
+Sometimes is better to just retrofit the excessing lighting systems and
+sometimes it is best to just replace the whole lighting system,
+we can help to understand the 2 possible choices.
+
+Perks, in which we offer you!
+
+1. Free Energy Audit
+2. Turn Key Solution
+3. No Money Down
+4. Interest Free Loans
+5. Free Installation
+6. 10 Year Limited Warranty
+7. Bonded and Insured Project Protection Plan
+8. 10% Referral Pay-Back
+9. 3% You help us
+10. You Refer 10 customers with an equal value of your lighting project and
+get your lighting project for free!
+
+Thanks!
+
+Alex Williams
+LED Lighting & Signage Specialist
+Contact: rearies@sina.com
 
 _______________________________________________
 xfs mailing list
