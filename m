@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D58BC7F83
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 12:34:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C1DF2304051
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 10:34:44 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	byENiwdKinZTDTs8 for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 10:34:41 -0800 (PST)
-Date: Wed, 2 Dec 2015 11:34:38 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: xfstests failures with xfs, dax and v4.4-rc3
-Message-ID: <20151202183438.GA1319@linux.intel.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5120D7F5A
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 14:02:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CA129AC001
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 12:02:15 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id WbLoRo74llO4rK91 for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2015 12:02:13 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 5288963C3BC5
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 14:02:13 -0600 (CST)
+Subject: Re: xfstests failures with xfs, dax and v4.4-rc3
+References: <20151202183438.GA1319@linux.intel.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <565F4E44.8090200@sandeen.net>
+Date: Wed, 2 Dec 2015 14:02:12 -0600
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="rwEMma7ioTxnRzrJ"
-Content-Disposition: inline
+In-Reply-To: <20151202183438.GA1319@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,623 +28,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Jeff Moyer <jmoyer@redhat.com>
+To: xfs@oss.sgi.com
 
 
---rwEMma7ioTxnRzrJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-I'm hitting a few more test failures in my testing setup with v4.4-rc3, xfs
-and DAX.  My test setup is a pair of 4GiB PMEM partitions in a KVM virtual
-machine.  Here are the failures:
+On 12/2/15 12:34 PM, Ross Zwisler wrote:
+> I'm hitting a few more test failures in my testing setup with v4.4-rc3, xfs
+> and DAX.  My test setup is a pair of 4GiB PMEM partitions in a KVM virtual
+> machine.  Here are the failures:
 
-# ./check generic/256 generic/274 xfs/041
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 alara 4.4.0-rc3
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
-MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
+...
 
-generic/256 43s ... - output mismatch (see /root/xfstests/results//generic/256.out.bad)
-    --- tests/generic/256.out	2015-10-02 10:19:36.807795900 -0600
-    +++ /root/xfstests/results//generic/256.out.bad	2015-12-02 11:22:34.838845475 -0700
-    @@ -1 +1,500 @@
-     QA output created by 256
-    +fallocate: No space left on device
-    +fallocate: No space left on device
-    +fallocate: No space left on device
-    +fallocate: No space left on device
-    +fallocate: No space left on device
-    +fallocate: No space left on device
-    ...
-    (Run 'diff -u tests/generic/256.out /root/xfstests/results//generic/256.out.bad'  to see the entire diff)
-generic/274 7s ... [failed, exit status 1] - output mismatch (see /root/xfstests/results//generic/274.out.bad)
-    --- tests/generic/274.out	2015-10-02 10:19:36.808795907 -0600
-    +++ /root/xfstests/results//generic/274.out.bad	2015-12-02 11:22:37.656868990 -0700
-    @@ -2,4 +2,5 @@
-     ------------------------------
-     preallocation test
-     ------------------------------
-    -done
-    +failed to write to test file
-    +(see /root/xfstests/results//generic/274.full for details)
-    ...
-    (Run 'diff -u tests/generic/274.out /root/xfstests/results//generic/274.out.bad'  to see the entire diff)
-xfs/041 14s ... [failed, exit status 1] - output mismatch (see /root/xfstests/results//xfs/041.out.bad)
-    --- tests/xfs/041.out	2015-10-02 10:19:36.818795975 -0600
-    +++ /root/xfstests/results//xfs/041.out.bad	2015-12-02 11:22:42.553909854 -0700
-    @@ -4,16 +4,5 @@
-     Grow filesystem to 33m... done
-     Flush filesystem... done
-     Check files... done
-    -Fill filesystem... done
-    -Grow filesystem to 67m... done
-    -Flush filesystem... done
-    -Check files... done
-    ...
-    (Run 'diff -u tests/xfs/041.out /root/xfstests/results//xfs/041.out.bad'  to see the entire diff)
-Ran: generic/256 generic/274 xfs/041
-Failures: generic/256 generic/274 xfs/041
-Failed 3 of 3 tests
+> generic/274 7s ... [failed, exit status 1] - output mismatch (see /root/xfstests/results//generic/274.out.bad)
+>     --- tests/generic/274.out	2015-10-02 10:19:36.808795907 -0600
+>     +++ /root/xfstests/results//generic/274.out.bad	2015-12-02 11:22:37.656868990 -0700
+>     @@ -2,4 +2,5 @@
+>      ------------------------------
+>      preallocation test
+>      ------------------------------
+>     -done
+>     +failed to write to test file
+>     +(see /root/xfstests/results//generic/274.full for details)
+>     ...
+>     (Run 'diff -u tests/generic/274.out /root/xfstests/results//generic/274.out.bad'  to see the entire diff)
 
-The .bad files are attached to this mail.
+I looked at this one a bit last night, and talked to Dave about it; its' different
+handling with DAX w.r.t. preallocation; we go down a path which actually tries to
+re-reserve the disk blocks it'll be writing to, even though they're already allocated.
 
-These three tests pass 100% of the time with and without DAX using v4.3, pass
-100% of the time with v4.4-rc3 without DAX, and fail 100% of the time with
-v4.4-rc3 with DAX enabled.
+If the disk isn't full, I guess it doesn't matter, but this test explicitly tests ENOSPC.
 
-I did try doubling the size of my ramdisk partition to see if that made any
-difference, and the failure was still present.
+Working on better understanding this path to see if I can fix it (unless Dave beats me
+to it ...)
 
-I'm using xfsprogs v4.3.0.
-
-Please let me know if you have any other questions about how to reproduce the
-failure.  I'm also happy to test patches.
-
-Thanks,
-- Ross
-
---rwEMma7ioTxnRzrJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="041.out.bad"
-
-QA output created by 041
-Make 32 megabyte filesystem on SCRATCH_DEV and mount... done
-Fill filesystem... done
-Grow filesystem to 33m... done
-Flush filesystem... done
-Check files... done
-Fill filesystem... fail
-src/fill2fs --verbose --dir=/mnt/xfstests_scratch/fill_67 --seed=0 --filesize=65536 --stddev=32768 --list=- >>/tmp/32491.manifest failed (returned 1): see /root/xfstests/results//xfs/041.full
-
---rwEMma7ioTxnRzrJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="256.out.bad"
-
-QA output created by 256
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-fallocate: No space left on device
-
---rwEMma7ioTxnRzrJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="274.out.bad"
-
-QA output created by 274
-------------------------------
-preallocation test
-------------------------------
-failed to write to test file
-(see /root/xfstests/results//generic/274.full for details)
-
---rwEMma7ioTxnRzrJ
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---rwEMma7ioTxnRzrJ--
