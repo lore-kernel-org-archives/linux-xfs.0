@@ -1,33 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 87BE67FB7
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 02:23:15 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2FDAB7FC5
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 02:34:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5228130408D
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 00:23:12 -0800 (PST)
-Received: from mail-wm0-f41.google.com (mail-wm0-f41.google.com
-	[74.125.82.41]) by cuda.sgi.com with ESMTP id GLMa7Yposh8MK85F
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C84A6AC003
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 00:34:19 -0800 (PST)
+Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
+	[74.125.82.47]) by cuda.sgi.com with ESMTP id B5ZqGkKWrFI0fcD3
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 00:23:09 -0800 (PST)
-Received: by wmec201 with SMTP id c201so241222550wme.0
-	for <xfs@oss.sgi.com>; Wed, 02 Dec 2015 00:23:07 -0800 (PST)
+	Wed, 02 Dec 2015 00:34:17 -0800 (PST)
+Received: by wmec201 with SMTP id c201so241620006wme.0
+	for <xfs@oss.sgi.com>; Wed, 02 Dec 2015 00:34:16 -0800 (PST)
 Subject: Re: sleeps and waits during io_submit
-References: <CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com>
-	<20151130141000.GC24765@bfoster.bfoster>
-	<565C5D39.8080300@scylladb.com>
-	<20151130161438.GD24765@bfoster.bfoster>
-	<565D639F.8070403@scylladb.com>
-	<20151201131114.GA26129@bfoster.bfoster>
+References: <20151201131114.GA26129@bfoster.bfoster>
 	<565DA784.5080003@scylladb.com>
-	<CAD-J=zY=A8MQLzykox276cHiH7ddXHFVp0w0B4XRBskv6YK_WQ@mail.gmail.com>
-	<20151201204535.GX19199@dastard> <565E0961.4060603@scylladb.com>
-	<20151201234139.GE19199@dastard>
+	<20151201145631.GD26129@bfoster.bfoster>
+	<565DBB3E.2010308@scylladb.com>
+	<20151201160133.GE26129@bfoster.bfoster>
+	<565DC613.4090608@scylladb.com>
+	<20151201162958.GF26129@bfoster.bfoster>
+	<565DD449.5090101@scylladb.com>
+	<20151201185113.GG26129@bfoster.bfoster>
+	<565DF472.8080101@scylladb.com> <20151202001329.GA9633@bfoster.bfoster>
 From: Avi Kivity <avi@scylladb.com>
-Message-ID: <565EAA69.80003@scylladb.com>
-Date: Wed, 2 Dec 2015 10:23:05 +0200
+Message-ID: <565EAD06.5060403@scylladb.com>
+Date: Wed, 2 Dec 2015 10:34:14 +0200
 MIME-Version: 1.0
-In-Reply-To: <20151201234139.GE19199@dastard>
+In-Reply-To: <20151202001329.GA9633@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,96 +40,163 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
 
-On 12/02/2015 01:41 AM, Dave Chinner wrote:
-> On Tue, Dec 01, 2015 at 10:56:01PM +0200, Avi Kivity wrote:
->> On 12/01/2015 10:45 PM, Dave Chinner wrote:
->>> On Tue, Dec 01, 2015 at 09:01:13AM -0500, Glauber Costa wrote:
->>> The difference is an allocation can block waiting on IO, and the
->>> CPU can then go off and run another process, which then tries to do
->>> an allocation. So you might only have 4 CPUs, but a workload that
->>> can have a hundred active allocations at once (not uncommon in
->>> file server workloads).
->> But for us, probably not much more.  We try to restrict active I/Os
->> to the effective disk queue depth (more than that and they just turn
->> sour waiting in the disk queue).
+
+
+On 12/02/2015 02:13 AM, Brian Foster wrote:
+> On Tue, Dec 01, 2015 at 09:26:42PM +0200, Avi Kivity wrote:
+>> On 12/01/2015 08:51 PM, Brian Foster wrote:
+>>> On Tue, Dec 01, 2015 at 07:09:29PM +0200, Avi Kivity wrote:
+>>>> On 12/01/2015 06:29 PM, Brian Foster wrote:
+>>>>> On Tue, Dec 01, 2015 at 06:08:51PM +0200, Avi Kivity wrote:
+>>>>>> On 12/01/2015 06:01 PM, Brian Foster wrote:
+>>>>>>> On Tue, Dec 01, 2015 at 05:22:38PM +0200, Avi Kivity wrote:
+>>>>>>>> On 12/01/2015 04:56 PM, Brian Foster wrote:
+>>>>>>>>> On Tue, Dec 01, 2015 at 03:58:28PM +0200, Avi Kivity wrote:
+>>>>>>>>>> On 12/01/2015 03:11 PM, Brian Foster wrote:
+>>>>>>>>>>> On Tue, Dec 01, 2015 at 11:08:47AM +0200, Avi Kivity wrote:
+>>>>>>>>>>>> On 11/30/2015 06:14 PM, Brian Foster wrote:
+>>>>>>>>>>>>> On Mon, Nov 30, 2015 at 04:29:13PM +0200, Avi Kivity wrote:
+>>>>>>>>>>>>>> On 11/30/2015 04:10 PM, Brian Foster wrote:
+> ...
+>>>> The case of waiting for I/O is much more worrying, because I/O latency are
+>>>> much higher.  But it seems like most of the DIO path does not trigger
+>>>> locking around I/O (and we are careful to avoid the ones that do, like
+>>>> writing beyond eof).
+>>>>
+>>>> (sorry for repeating myself, I have the feeling we are talking past each
+>>>> other and want to be on the same page)
+>>>>
+>>> Yeah, my point is just that just because the thread blocked on I/O,
+>>> doesn't mean the cpu can't carry on with some useful work for another
+>>> task.
+>> In our case, there is no other task.  We run one thread per logical core, so
+>> if that thread gets blocked, the cpu idles.
 >>
+>> The whole point of io_submit() is to issue an I/O and let the caller
+>> continue processing immediately.  It is the equivalent of O_NONBLOCK for
+>> networking code.  If O_NONBLOCK did block from time to time, practically all
+>> modern network applications would see a huge performance drop.
 >>
->>> On worklaods that are roughly 1 process per CPU, it's typical that
->>> agcount = 2 * N cpus gives pretty good results on large filesystems.
->> This is probably using sync calls.  Using async calls you can have
->> many more I/Os in progress (but still limited by effective disk
->> queue depth).
-> Ah, no. Even with async IO you don't want unbound allocation
-> concurrency.
+> Ok, but my understanding is that O_NONBLOCK would return an error code
+> in the blocking case such that userspace can do something else or retry
+> from a blockable context.
 
-Unbound, certainly not.
+I did not mean the exact equivalent, but in the spirit of allowing a 
+thread to perform an I/O task (networking or file I/O) in parallel with 
+computation.
 
-But if my disk want 100 concurrent operations to deliver maximum 
-bandwidth, and XFS wants fewer concurrent allocations to satisfy some 
-internal constraint, then I can't satisfy both.
+For networking, returning an error is fine because there exists a 
+notification (epoll) to tell userspace when a retry would succeed. For 
+file I/O, there isn't one.  Still, returning an error is better than 
+nothing because then, as you say, you can retry in a blockable context.
 
-To be fair, the number 100 was measured for 4k reads.  It's sure to be 
-much lower for 128k writes, and since we set an extent size hint of 1MB, 
-only 1/8th of those will be allocating.  So I expect things to work in 
-practice, at least with the current generation of disks. Unfortunately 
-disk bandwidth is growing faster than latency is improving, which means 
-that the effective concurrency is increasing.
+>   I think this is similar to what hch posted wrt
+> to the pwrite2() bits for nonblocking buffered I/O or what I was asking
+> about earlier on with regard to returning an error if some blocking
+> would otherwise occur.
 
->   The allocation algorithms rely on having contiguous
-> free space extents that are much larger than the allocations being
-> done to work effeectively and minimise file fragmentation. If you
-> chop the filesystem up into lots of small AGs, then it accelerates
-> the rate at which the free space gets chopped up into smaller
-> extents and performance then suffers. It's the same problem as
-> running a large filesystem near ENOSPC for an extended period of
-> time, which again is something we most definitely don't recommend
-> you do in production systems.
-
-I understand.  I guess it makes ag randomization even more important, 
-for our use case.
-
-What happens when an ag fills up?  Can a file overflow to another ag?
+Yes.  Anything except silently blocking!
 
 >
->>> If you've got 400GB filesystems or you are using spinning disks,
->>> then you probably don't want to go above 16 AGs, because then you
->>> have problems with maintaining continugous free space and you'll
->>> seek the spinning disks to death....
->> We're concentrating on SSDs for now.
-> Sure, so "problems with maintaining continugous free space" is what
-> you need to be concerned about.
+>>>>>>>   We submit an I/O which is
+>>>>>>> asynchronous in nature and wait on a completion, which causes the cpu to
+>>>>>>> schedule and execute another task until the completion is set by I/O
+>>>>>>> completion (via an async callback). At that point, the issuing thread
+>>>>>>> continues where it left off. I suspect I'm missing something... can you
+>>>>>>> elaborate on what you'd do differently here (and how it helps)?
+>>>>>> Just apply the same technique everywhere: convert locks to trylock +
+>>>>>> schedule a continuation on failure.
+>>>>>>
+>>>>> I'm certainly not an expert on the kernel scheduling, locking and
+>>>>> serialization mechanisms, but my understanding is that most things
+>>>>> outside of spin locks are reschedule points. For example, the
+>>>>> wait_for_completion() calls XFS uses to wait on I/O boil down to
+>>>>> schedule_timeout() calls. Buffer locks are implemented as semaphores and
+>>>>> down() can end up in the same place.
+>>>> But, for the most part, XFS seems to be able to avoid sleeping.  The call to
+>>>> __blockdev_direct_IO only launches the I/O, so any locking is only around
+>>>> cpu operations and, unless there is contention, won't cause us to sleep in
+>>>> io_submit().
+>>>>
+>>>> Trying to follow the code, it looks like xfs_get_blocks_direct (and
+>>>> __blockdev_direct_IO's get_block parameter in general) is synchronous, so
+>>>> we're just lucky to have everything in cache.  If it isn't, we block right
+>>>> there.  I really hope I'm misreading this and some other magic is happening
+>>>> elsewhere instead of this.
+>>>>
+>>> Nope, it's synchronous from a code perspective. The
+>>> xfs_bmapi_read()->xfs_iread_extents() path could have to read in the
+>>> inode bmap metadata if it hasn't been done already. Note that this
+>>> should only happen once as everything is stored in-core, so in most
+>>> cases this is skipped. It's also possible extents are read in via some
+>>> other path/operation on the inode before an async I/O happens to be
+>>> submitted (e.g., see some of the other xfs_bmapi_read() callers).
+>> Is there (could we add) some ioctl to prime this cache?  We could call it
+>> from a worker thread where we don't mind blocking during open.
+>>
+> I suppose that's possible, or the worker thread could perform some
+> existing operation known to prime the cache. I don't think it's worth
+> getting into without a concrete example, however. The extent read
+> example we're batting around might not ever be a problem (as you've
+> noted due to file size), if files are truncated and recycled, for
+> example.
+>
+>> What is the eviction policy for this cache?   Is it simply the block
+>> device's page cache?
+>>
+> IIUC the extent list stays around until the inode is reclaimed. There's
+> a separate buffer cache for metadata buffers. Both types of objects
+> would be reclaimed based on memory pressure.
 
-Right.  Luckily our allocation patterns are very friendly towards that.  
-We have append-only files that grow rapidly, then are immutable for a 
-time, then are deleted. (It is a log-structured database so a natual fit 
-for SSDs).
-
-We can increase our extent size hint if it will help the SSD any.
+It comes down to size of disk, size of memory, and average file size.  I 
+expect that with current disk and memory sizes the metadata is quite 
+small, so this might not be a problem, and even a cold start would 
+self-prime in a reasonably short time.
 
 >
->>>>>> 'mount -o ikeep,'
->>>>> Interesting.  Our files are large so we could try this.
->>> Keep in mind that ikeep means that inode allocation permanently
->>> fragments free space, which can affect how large files are allocated
->>> once you truncate/rm the original files.
->> We can try to prime this by allocating a lot of inodes up front,
->> then removing them, so that this doesn't happen.
-> Again - what problem have you measured that inode preallocation will
-> solves in your application? Don't make changes just because you
-> *think* it will fix what you *think* is a problem. Measure, analyse,
-> solve, in that order.
+>> What about the write path, will we see the same problems there?  I would
+>> guess the problem is less severe there if the metadata is written with
+>> writeback policy.
+>>
+> Metadata is modified in-core and handed off to the logging
+> infrastructure via a transaction. The log is flushed to disk some time
+> later and metadata writeback occurs asynchronously via the xfsaild
+> thread.
 
-We are now investigating what we can do to fix the problem, we aren't 
-committing to any solution yet.  Certainly we plan to be certain of what 
-the problem is before we fix it.
+Unless, I expect, if the log is full.  Since we're hammering on the disk 
+quite heavily, the log would be fighting with user I/O and possibly losing.
 
-Up until a few days ago we never saw any blocks with XFS, and were very 
-happy -- but that was with 90us, 450k IOPS disks.  With the slower 
-disks, accessed through a certain hypervisor, we do see XFS block, and 
-it is very worrying.
+Does XFS throttle user I/O in order to get the log buffers recycled faster?
+
+Is there any way for us to keep track of it, and reduce disk pressure 
+when it gets full?
+
+Oh you answered that already, /sys/fs/xfs/device/log/*.
+
+>
+> Brian
+>
+>>> Either way, the extents have to be read in at some point and I'd expect
+>>> that cpu to schedule onto some other task while that thread waits on I/O
+>>> to complete (read-ahead could also be a factor here, but I haven't
+>>> really dug into how that is triggered for buffers).
+>> To provide an example, our application, which is a database, faces this
+>> problem exact at a higher level.  Data is stored in data files, and data
+>> items' locations are stored in index files. When we read a bit of data, we
+>> issue an index read, and pass it a continuation to be executed when the read
+>> completes.  This latter continuation parses the data and passes it to the
+>> code that prepares it for merging with data from other data files, and an
+>> eventual return to the user.
+>>
+>> Having written code for over a year in this style, I've come to expect it to
+>> be used everywhere asynchronous I/O is used, but I realize it is fairly hard
+>> without good support from a framework that allows continuations to be
+>> composed in a natural way.
+>>
+>>
 
 _______________________________________________
 xfs mailing list
