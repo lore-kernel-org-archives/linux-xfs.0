@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 687E07F37
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 10:29:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4BF47304067
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 08:29:54 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TYLStJ7HSYCEkrdQ for <xfs@oss.sgi.com>;
-	Thu, 03 Dec 2015 08:29:52 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 3D10663C5A9F
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 10:29:52 -0600 (CST)
-Subject: Re: Which xfsprogs version to which kernel version
-References: <5656DD39.8060403@poczta.onet.pl> <20151201202639.GV19199@dastard>
-	<565E826D.6040301@sandeen.net> <201512021807.47703.arekm@maven.pl>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56606DFF.7090400@sandeen.net>
-Date: Thu, 3 Dec 2015 10:29:51 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7B6BA7F37
+	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 10:44:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F380AAC002
+	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 08:44:22 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id hyqOxImjO4CDvcQI for
+	<xfs@oss.sgi.com>; Thu, 03 Dec 2015 08:44:21 -0800 (PST)
+Date: Thu, 3 Dec 2015 09:43:42 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: xfstest failure with xfs, dax and v4.4-rc3
+Message-ID: <20151203164342.GA14849@linux.intel.com>
+References: <20151201224346.GA15684@linux.intel.com>
+	<20151201235158.GF19199@dastard>
+	<x49k2owq3z6.fsf@segfault.boston.devel.redhat.com>
+	<20151203065127.GB26718@dastard>
 MIME-Version: 1.0
-In-Reply-To: <201512021807.47703.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <20151203065127.GB26718@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,20 +27,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-T24gMTIvMi8xNSAxMTowNyBBTSwgQXJrYWRpdXN6IE1pxZtraWV3aWN6IHdyb3RlOgo+Pj4+IFdo
-aWxlIHRoaXMgaXMgc29tZSBpbXBsZW1lbnRhdGlvbiBlZmZvcnQsIGl0IG1heSBoZWxwIHRvIHJl
-ZHVjZQo+Pj4+ID4gPj4gcXVlc3Rpb25zIG9uIHRoaXMgbWFpbGluZyBsaXN0LiBBbmQgYXMgeW91
-IHNlZSBkaXN0cm8gcHJvYmxlbSBvciBub3Q6Cj4+Pj4gPiA+PiBQZW9wbGUgc3RpbGwgYXNrIGhl
-cmUuIDopCj4+ID4gCj4+ID4gTGlrZSBEYXZlIHNhaWQgLSBub3QgdmVyeSBvZnRlbiBhdCBhbGwu
-Cj4gSGFkIG9uZSBjb21wbGFpbiBhYm91dCB0aGUgcHJvYmxlbSBvbiBwbGQgbGlzdHMuCgpkb2Vz
-IHBsZCBzaGlwIGFuIHhmc3Byb2dzIHdoaWNoIGlzIGFoZWFkIG9mIHRoZWlyIGtlcm5lbD8KCk9y
-IGRpZCB0aGUgdXNlciBnbyBvZmYgYW5kIGdyYWIgc29tZXRoaW5nIG5ld2VyIG9uIHRoZWlyIG93
-biwgYW5kCnJ1biBpbnRvIHRoaXM/CgotRXJpYwoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Dec 03, 2015 at 05:51:27PM +1100, Dave Chinner wrote:
+> As it is, that test does not fail on my DAX testing on RAM disks.
+> ISTR it failing up until recently, though. Yeah:
+> 
+> Last login: Tue Nov 17 08:45:55 2015 from 192.168.1.103
+> $ cd ~/src/xfstests-dev; sudo mkfs.xfs -f /dev/ram0 ; sudo xfs_admin -U generate /dev/ram0 ; sudo MOUNT_OPTIONS="-o dax" ./check -g auto
+> SECTION       -- xfs
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test4 4.3.0-dgc+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/ram1
+> MOUNT_OPTIONS -- -o dax /dev/ram1 /mnt/scratch
+> ....
+> generic/083 2s ... 1s
+> _check_xfs_filesystem: filesystem on /dev/ram1 is inconsistent (c) (see /home/dave/src/xfstests-dev/results//xfs/generic/083.full)
+> _check_xfs_filesystem: filesystem on /dev/ram1 is inconsistent (r) (see /home/dave/src/xfstests-dev/results//xfs/generic/083.full)
+> ....
+> 
+> But as I ran earlier today when testing the ENOSPC fix:
+> 
+> PLATFORM      -- Linux/x86_64 test4 4.4.0-rc2-dgc+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/ram1
+> MOUNT_OPTIONS -- -o dax /dev/ram1 /mnt/scratch
+> ....
+> generic/083 1s ... 2s
+> ....
+> 
+> So I'm seeing that the current 4.4-rc2 + my local dev tree patches
+> appear to have fixed whatever was causing generic/083 to fail
+> here...
+
+Yea, interesting, the patch you sent out yesterday:
+
+xfs: Don't use reserved blocks for data blocks with DAX
+
+Makes this issue disappear in my system as well.  Testing with v4.4-rc3
+generic/083 fails 50% of the time or so in my setup, but with just that patch
+added to v4.4-rc3 I can't make it fail.
+
+> What version of xfsprogs are you using, Ross?
+
+I'm currently using xfsprogs v4.3.0, but the failure occurred when I was using
+v4.2.0 as well.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
