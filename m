@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7B6BA7F37
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 10:44:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F380AAC002
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 08:44:22 -0800 (PST)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id hyqOxImjO4CDvcQI for
-	<xfs@oss.sgi.com>; Thu, 03 Dec 2015 08:44:21 -0800 (PST)
-Date: Thu, 3 Dec 2015 09:43:42 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: xfstest failure with xfs, dax and v4.4-rc3
-Message-ID: <20151203164342.GA14849@linux.intel.com>
-References: <20151201224346.GA15684@linux.intel.com>
-	<20151201235158.GF19199@dastard>
-	<x49k2owq3z6.fsf@segfault.boston.devel.redhat.com>
-	<20151203065127.GB26718@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5BC4C7F37
+	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 12:49:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 46A08304077
+	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 10:49:00 -0800 (PST)
+Received: from mail-vk0-f46.google.com (mail-vk0-f46.google.com
+	[209.85.213.46]) by cuda.sgi.com with ESMTP id 30wVFWx2CErefqEG
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 Dec 2015 10:48:58 -0800 (PST)
+Received: by vkay187 with SMTP id y187so51204268vka.3
+	for <xfs@oss.sgi.com>; Thu, 03 Dec 2015 10:48:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151203065127.GB26718@dastard>
+Date: Thu, 3 Dec 2015 11:48:57 -0700
+Message-ID: <CAAA5faH3yC7Jx_y9_UHWpNWxzBEBA1-xrO37xRxH4so9_Q-+gw@mail.gmail.com>
+Subject: Issues with xfs on SSD?
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +29,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: xfs@oss.sgi.com
 
-On Thu, Dec 03, 2015 at 05:51:27PM +1100, Dave Chinner wrote:
-> As it is, that test does not fail on my DAX testing on RAM disks.
-> ISTR it failing up until recently, though. Yeah:
-> 
-> Last login: Tue Nov 17 08:45:55 2015 from 192.168.1.103
-> $ cd ~/src/xfstests-dev; sudo mkfs.xfs -f /dev/ram0 ; sudo xfs_admin -U generate /dev/ram0 ; sudo MOUNT_OPTIONS="-o dax" ./check -g auto
-> SECTION       -- xfs
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 test4 4.3.0-dgc+
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/ram1
-> MOUNT_OPTIONS -- -o dax /dev/ram1 /mnt/scratch
-> ....
-> generic/083 2s ... 1s
-> _check_xfs_filesystem: filesystem on /dev/ram1 is inconsistent (c) (see /home/dave/src/xfstests-dev/results//xfs/generic/083.full)
-> _check_xfs_filesystem: filesystem on /dev/ram1 is inconsistent (r) (see /home/dave/src/xfstests-dev/results//xfs/generic/083.full)
-> ....
-> 
-> But as I ran earlier today when testing the ENOSPC fix:
-> 
-> PLATFORM      -- Linux/x86_64 test4 4.4.0-rc2-dgc+
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/ram1
-> MOUNT_OPTIONS -- -o dax /dev/ram1 /mnt/scratch
-> ....
-> generic/083 1s ... 2s
-> ....
-> 
-> So I'm seeing that the current 4.4-rc2 + my local dev tree patches
-> appear to have fixed whatever was causing generic/083 to fail
-> here...
+Hi Everyone,
 
-Yea, interesting, the patch you sent out yesterday:
+Periodically I seem to have some issues with xfs on my SSD.
+smartd reports this:
 
-xfs: Don't use reserved blocks for data blocks with DAX
+Device: /dev/sdb [SAT], Crucial_CT256M550SSD3, S/N:15020ED48DF8,
+WWN:5-00a075-10ed48df8, FW:MU02, 256 GB
 
-Makes this issue disappear in my system as well.  Testing with v4.4-rc3
-generic/083 fails 50% of the time or so in my setup, but with just that patch
-added to v4.4-rc3 I can't make it fail.
+reinoud@Mipam:~$ uname -a
+Linux Mipam 4.1.10-custom #1 SMP Tue Oct 20 11:20:40 MDT 2015 x86_64
+x86_64 x86_64 GNU/Linux
 
-> What version of xfsprogs are you using, Ross?
+The distro is ubuntu 14.04
+reinoud@Mipam:~$ xfs_repair -V
+xfs_repair version 3.2.3
 
-I'm currently using xfsprogs v4.3.0, but the failure occurred when I was using
-v4.2.0 as well.
+I am not sure if I have any errors, but I did get problems building
+some stuff after a simple hg clone or git clone that others aren't
+seeing.
+Earlier I did disable the write cache back.
+I just did run an xfs_repair:
+
+reinoud@Mipam:~$ sudo xfs_repair -v /dev/sdb1
+Phase 1 - find and verify superblock...
+        - block cache size set to 1515280 entries
+Phase 2 - using internal log
+        - zero log...
+zero_log: head block 26744 tail block 26744
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+Phase 5 - rebuild AG headers and trees...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+
+        XFS_REPAIR Summary    Thu Dec  3 11:37:01 2015
+
+Phase           Start           End             Duration
+Phase 1:        12/03 11:36:21  12/03 11:36:21
+Phase 2:        12/03 11:36:21  12/03 11:36:27  6 seconds
+Phase 3:        12/03 11:36:27  12/03 11:36:55  28 seconds
+Phase 4:        12/03 11:36:55  12/03 11:36:58  3 seconds
+Phase 5:        12/03 11:36:58  12/03 11:36:58
+Phase 6:        12/03 11:36:58  12/03 11:37:01  3 seconds
+Phase 7:        12/03 11:37:01  12/03 11:37:01
+
+Total run time: 40 seconds
+done
+Did I have errors? I saw disconnected inodes, but other than that.....
+Thanks,
+
+Reinoud.
 
 _______________________________________________
 xfs mailing list
