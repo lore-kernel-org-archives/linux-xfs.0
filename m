@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EA6647F5A
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 23:58:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 934FCAC003
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 21:58:09 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 333C57F5A
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 23:59:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BD80BAC001
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 21:59:50 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	5e4gEt17MRelZmkC for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 21:58:05 -0800 (PST)
-Date: Thu, 3 Dec 2015 16:57:52 +1100
+	tGEGbRhY4Qp2NtmT for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2015 21:59:48 -0800 (PST)
+Date: Thu, 3 Dec 2015 16:59:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 04/11] xfsprogs: xfsdb: remove unnessary checks in
-	process_leaf_node_dir_v2_free
-Message-ID: <20151203055752.GU26718@dastard>
+Subject: Re: [PATCH 05/11] xfsprogs: xfs_mdrestore: check bad read count in
+	perform_restore
+Message-ID: <20151203055934.GV26718@dastard>
 References: <1449055167-19936-1-git-send-email-t.vivek@samsung.com>
-	<1449055167-19936-5-git-send-email-t.vivek@samsung.com>
+	<1449055167-19936-6-git-send-email-t.vivek@samsung.com>
+	<565FCAFB.5020502@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1449055167-19936-5-git-send-email-t.vivek@samsung.com>
+In-Reply-To: <565FCAFB.5020502@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,36 +32,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vivek Trivedi <t.vivek@samsung.com>
-Cc: a.sahrawat@samsung.com, pankaj.m@samsung.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 02, 2015 at 04:49:20PM +0530, Vivek Trivedi wrote:
-> xfs_dir2_free_hdr_t entries are unsigned, so they can't be negative.
-> remove these unnessary checks in process_leaf_node_dir_v2_free.
-> Reported by coverity.
+On Wed, Dec 02, 2015 at 10:54:19PM -0600, Eric Sandeen wrote:
+> On 12/2/15 5:19 AM, Vivek Trivedi wrote:
+> > fix error reported by coverity - Integer overflowed argument
+> > 
+> > also, add print incase of invalid read count to get more debug
+> > information.
+> > 
+> > Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
+> > ---
+> >  mdrestore/xfs_mdrestore.c |    4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+> > index 5764616..a87a091 100644
+> > --- a/mdrestore/xfs_mdrestore.c
+> > +++ b/mdrestore/xfs_mdrestore.c
+> > @@ -93,6 +93,10 @@ perform_restore(
+> >  	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
+> >  	block_buffer = (char *)metablock + block_size;
+> >  
+> > +	if (block_size < sizeof(tmb))
+> > +		fatal("bad read count, block_size: %d, tmb size %d\n",
+> > +				block_size, sizeof(tmb));
+> > +
 > 
-> Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
-> ---
->  db/check.c |    2 --
->  1 file changed, 2 deletions(-)
+> block_size is block_size = 1 << tmb.mb_blocklog; where mb_blocklog is
+> always metablock->mb_blocklog = BBSHIFT;, so block_size is always 512.
 > 
-> diff --git a/db/check.c b/db/check.c
-> index 9c1541d..9d986b9 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -3073,9 +3073,7 @@ process_leaf_node_dir_v3_free(
->  		return;
->  	}
->  	if (be32_to_cpu(free->hdr.nvalid) > maxent || 
-> -				be32_to_cpu(free->hdr.nvalid) < 0 ||
->  				be32_to_cpu(free->hdr.nused) > maxent || 
-> -				be32_to_cpu(free->hdr.nused) < 0 ||
->  				be32_to_cpu(free->hdr.nused) > 
->  					be32_to_cpu(free->hdr.nvalid)) {
->  		if (!sflag || v)
+> On the other hand, sizeof(tmb) is simply 8.
+> 
+> There seems to be no possible path for this to be a problem, so it hardly
+> seems worth the printf.
+> 
+> Would an ASSERT(block_size >= sizeof(tmb)) make coverity happy?
 
-Pretty meaningless, but I think we made this change libxfs code some
-time ago, so we may as well change it here....
+Just ignoring this coverity warning would be more appropriate, i
+think.
 
 Cheers,
 
