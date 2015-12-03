@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 30F077F5A
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 20:56:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 09DA58F804B
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 18:56:24 -0800 (PST)
-Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
-	[74.125.82.53]) by cuda.sgi.com with ESMTP id RzYuUqJl4Q3xItFh
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2015 18:56:23 -0800 (PST)
-Received: by wmww144 with SMTP id w144so3719024wmw.1
-	for <xfs@oss.sgi.com>; Wed, 02 Dec 2015 18:56:22 -0800 (PST)
-Date: Thu, 3 Dec 2015 03:56:20 +0100
-From: Iustin Pop <iustin@k1024.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 24F057F5A
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 21:30:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C981AC002
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 19:30:01 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id DUEDbIjXyHyGX7MT for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2015 19:29:51 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id B966E63C5A9F
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2015 21:29:50 -0600 (CST)
 Subject: Re: xfs_growfs can expand capacity, then how to reduce xfs filesystem
 	capacity?
-Message-ID: <20151203025620.GA1636@teal.hq.k1024.org>
 References: <1CB94550540AE44E9CAAE8CD5AF40BF846D19CCC@H3CMLB12-EX.srv.huawei-3com.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <565FB72E.8070004@sandeen.net>
+Date: Wed, 2 Dec 2015 21:29:50 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
 In-Reply-To: <1CB94550540AE44E9CAAE8CD5AF40BF846D19CCC@H3CMLB12-EX.srv.huawei-3com.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,19 +33,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "zhao.mingyue@h3c.com" <zhao.mingyue@h3c.com>
-Cc: "xfs-request@oss.sgi.com" <xfs-request@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 2015-12-03 02:33:47, zhao.mingyue@h3c.com wrote:
+
+
+On 12/2/15 8:33 PM, zhao.mingyue@h3c.com wrote:
 > hi,
 >   I know that xfs_growfs can expand xfs capacity,now I want to reduce the capacity,but I don't know the command.can someone help me ?
 
-xfsdump + mkfs.xfs + xfsrestore.
+http://xfs.org/index.php/XFS_FAQ#Q:_Is_there_a_way_to_make_a_XFS_filesystem_larger_or_smaller.3F
 
-Search the list archives for more information.
-
-regards,
-iustin
+-Eric
 
 _______________________________________________
 xfs mailing list
