@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5BC4C7F37
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 12:49:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 46A08304077
-	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 10:49:00 -0800 (PST)
-Received: from mail-vk0-f46.google.com (mail-vk0-f46.google.com
-	[209.85.213.46]) by cuda.sgi.com with ESMTP id 30wVFWx2CErefqEG
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 Dec 2015 10:48:58 -0800 (PST)
-Received: by vkay187 with SMTP id y187so51204268vka.3
-	for <xfs@oss.sgi.com>; Thu, 03 Dec 2015 10:48:58 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 11EE77F37
+	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 16:17:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E71BE8F8054
+	for <xfs@oss.sgi.com>; Thu,  3 Dec 2015 14:17:45 -0800 (PST)
+Received: from mail-lb0-f180.google.com (mail-lb0-f180.google.com
+	[209.85.217.180]) by cuda.sgi.com with ESMTP id
+	SSUv6v5C6OpKvMuO (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 03 Dec 2015 14:17:15 -0800 (PST)
+Received: by lbbcs9 with SMTP id cs9so10217937lbb.1
+	for <xfs@oss.sgi.com>; Thu, 03 Dec 2015 14:17:13 -0800 (PST)
 MIME-Version: 1.0
-Date: Thu, 3 Dec 2015 11:48:57 -0700
-Message-ID: <CAAA5faH3yC7Jx_y9_UHWpNWxzBEBA1-xrO37xRxH4so9_Q-+gw@mail.gmail.com>
-Subject: Issues with xfs on SSD?
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+In-Reply-To: <1449090088-9281-1-git-send-email-agruenba@redhat.com>
+References: <1449090088-9281-1-git-send-email-agruenba@redhat.com>
+Date: Thu, 3 Dec 2015 23:17:13 +0100
+Message-ID: <CAHc6FU6U3TXfacHWNeY=ihw_EwEVRWU-hAmR7rYNN+duqfa_Ww@mail.gmail.com>
+Subject: Re: [PATCH v16 00/22] Richacls (Core and Ext4)
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,87 +31,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Hi Everyone,
+On Wed, Dec 2, 2015 at 10:01 PM, Andreas Gruenbacher
+<agruenba@redhat.com> wrote:
+> The complete patch queue is available in git form here:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+>         richacl-2015-11-09
 
-Periodically I seem to have some issues with xfs on my SSD.
-smartd reports this:
+This should have been richacl-2015-12-02, sorry.
 
-Device: /dev/sdb [SAT], Crucial_CT256M550SSD3, S/N:15020ED48DF8,
-WWN:5-00a075-10ed48df8, FW:MU02, 256 GB
-
-reinoud@Mipam:~$ uname -a
-Linux Mipam 4.1.10-custom #1 SMP Tue Oct 20 11:20:40 MDT 2015 x86_64
-x86_64 x86_64 GNU/Linux
-
-The distro is ubuntu 14.04
-reinoud@Mipam:~$ xfs_repair -V
-xfs_repair version 3.2.3
-
-I am not sure if I have any errors, but I did get problems building
-some stuff after a simple hg clone or git clone that others aren't
-seeing.
-Earlier I did disable the write cache back.
-I just did run an xfs_repair:
-
-reinoud@Mipam:~$ sudo xfs_repair -v /dev/sdb1
-Phase 1 - find and verify superblock...
-        - block cache size set to 1515280 entries
-Phase 2 - using internal log
-        - zero log...
-zero_log: head block 26744 tail block 26744
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-Phase 5 - rebuild AG headers and trees...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify and correct link counts...
-
-        XFS_REPAIR Summary    Thu Dec  3 11:37:01 2015
-
-Phase           Start           End             Duration
-Phase 1:        12/03 11:36:21  12/03 11:36:21
-Phase 2:        12/03 11:36:21  12/03 11:36:27  6 seconds
-Phase 3:        12/03 11:36:27  12/03 11:36:55  28 seconds
-Phase 4:        12/03 11:36:55  12/03 11:36:58  3 seconds
-Phase 5:        12/03 11:36:58  12/03 11:36:58
-Phase 6:        12/03 11:36:58  12/03 11:37:01  3 seconds
-Phase 7:        12/03 11:37:01  12/03 11:37:01
-
-Total run time: 40 seconds
-done
-Did I have errors? I saw disconnected inodes, but other than that.....
-Thanks,
-
-Reinoud.
+Andreas
 
 _______________________________________________
 xfs mailing list
