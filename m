@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 853457F37
-	for <xfs@oss.sgi.com>; Fri,  4 Dec 2015 06:20:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 75362304048
-	for <xfs@oss.sgi.com>; Fri,  4 Dec 2015 04:20:47 -0800 (PST)
-Received: from mail-ig0-f181.google.com (mail-ig0-f181.google.com
-	[209.85.213.181]) by cuda.sgi.com with ESMTP id
-	VhtzG15y46jvgC9s (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 04 Dec 2015 04:20:46 -0800 (PST)
-Received: by igcto18 with SMTP id to18so34534676igc.0
-	for <xfs@oss.sgi.com>; Fri, 04 Dec 2015 04:20:46 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 245887F51
+	for <xfs@oss.sgi.com>; Fri,  4 Dec 2015 07:00:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E56718F8035
+	for <xfs@oss.sgi.com>; Fri,  4 Dec 2015 05:00:03 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id fBLfXp538CiE2JwJ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 04 Dec 2015 05:00:02 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 9E2EE91353
+	for <xfs@oss.sgi.com>; Fri,  4 Dec 2015 13:00:02 +0000 (UTC)
+Date: Fri, 4 Dec 2015 08:00:01 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Is test xfs/096 correct?
+Message-ID: <20151204130000.GA47882@bfoster.bfoster>
+References: <CACj3i71kgpqNvg0ru=-4x6gtJ8faOVn-P=y_AM+xwoKbm-55tQ@mail.gmail.com>
 MIME-Version: 1.0
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 4 Dec 2015 13:20:26 +0100
-Message-ID: <CACj3i71kgpqNvg0ru=-4x6gtJ8faOVn-P=y_AM+xwoKbm-55tQ@mail.gmail.com>
-Subject: Is test xfs/096 correct?
+Content-Disposition: inline
+In-Reply-To: <CACj3i71kgpqNvg0ru=-4x6gtJ8faOVn-P=y_AM+xwoKbm-55tQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,88 +29,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7674721886286249985=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---===============7674721886286249985==
-Content-Type: multipart/alternative; boundary=047d7b10cd6b73156b0526118920
-
---047d7b10cd6b73156b0526118920
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Hi.
-
-I'm looking on test xfs/096 and I'm not sure if I got it right:
-
-"test out mkfs_xfs output on IRIX/Linux and some of its error handling,
-ensure pv#920679 is addressed" - this, and things like "$max_lr_size +
-4096" all looks like mkfs should be catching invalid input. Yet the .out
-file instead looks like it should create the FS correctly (it contains the
-created fs stats instead of mkfs's usage and some error).
-
-So either I'm reading the test wrong, or the patch approves invalid
-behaviour. I hit this test because when I added a stricter input
-validation, this patch started to fail as mkfs is now refusing to create
-the fs with these arguments.
-
-BTW: I tried to look for the mentioned pv number, but didn't found it -
-where should I look further?
-=E2=80=8BCheers
-Jan=E2=80=8B
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---047d7b10cd6b73156b0526118920
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif">
-
-
-
-
-
-
-
-<p class=3D"">Hi.</p><p class=3D"">I&#39;m looking on test xfs/096 and I&#3=
-9;m not sure if I got it right:</p><p class=3D"">&quot;test out mkfs_xfs ou=
-tput on IRIX/Linux and some of its error handling, ensure pv#920679 is addr=
-essed&quot; - this, and things like &quot;$max_lr_size + 4096&quot; all loo=
-ks like mkfs should be catching invalid input. Yet the .out file instead lo=
-oks like it should create the FS correctly (it contains the created fs stat=
-s instead of mkfs&#39;s usage and some error).</p>
-<p class=3D"">So either I&#39;m reading the test wrong, or the patch approv=
-es invalid behaviour. I hit this test because when I added a stricter input=
- validation, this patch started to fail as mkfs is now refusing to create t=
-he fs with these arguments.</p><p class=3D"">BTW: I tried to look for the m=
-entioned pv number, but didn&#39;t found it - where should I look further?<=
-/p></div><div><div class=3D"gmail_default" style=3D"font-family:arial,helve=
-tica,sans-serif">=E2=80=8BCheers</div><div class=3D"gmail_default" style=3D=
-"font-family:arial,helvetica,sans-serif">Jan=E2=80=8B</div><br></div>-- <br=
-><div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div=
->Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">=
-jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_bla=
-nk">jan@tulak.me</a></div></div></div></div>
-</div>
-
---047d7b10cd6b73156b0526118920--
-
-
---===============7674721886286249985==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7674721886286249985==--
+T24gRnJpLCBEZWMgMDQsIDIwMTUgYXQgMDE6MjA6MjZQTSArMDEwMCwgSmFuIFR1bGFrIHdyb3Rl
+Ogo+IEhpLgo+IAo+IEknbSBsb29raW5nIG9uIHRlc3QgeGZzLzA5NiBhbmQgSSdtIG5vdCBzdXJl
+IGlmIEkgZ290IGl0IHJpZ2h0Ogo+IAo+ICJ0ZXN0IG91dCBta2ZzX3hmcyBvdXRwdXQgb24gSVJJ
+WC9MaW51eCBhbmQgc29tZSBvZiBpdHMgZXJyb3IgaGFuZGxpbmcsCj4gZW5zdXJlIHB2IzkyMDY3
+OSBpcyBhZGRyZXNzZWQiIC0gdGhpcywgYW5kIHRoaW5ncyBsaWtlICIkbWF4X2xyX3NpemUgKwo+
+IDQwOTYiIGFsbCBsb29rcyBsaWtlIG1rZnMgc2hvdWxkIGJlIGNhdGNoaW5nIGludmFsaWQgaW5w
+dXQuIFlldCB0aGUgLm91dAo+IGZpbGUgaW5zdGVhZCBsb29rcyBsaWtlIGl0IHNob3VsZCBjcmVh
+dGUgdGhlIEZTIGNvcnJlY3RseSAoaXQgY29udGFpbnMgdGhlCj4gY3JlYXRlZCBmcyBzdGF0cyBp
+bnN0ZWFkIG9mIG1rZnMncyB1c2FnZSBhbmQgc29tZSBlcnJvcikuCj4gCgptYXhfbHJfc2l6ZSBy
+ZWZlcnMgdG8gdGhlIG1heGltdW0gbG9nIHJlY29yZCBzaXplICgyNTZrKS4gV2hlbiBhIGxhcmdl
+cgpsb2cgc3RyaXBlIHVuaXQgaXMgcGFzc2VkLCBta2ZzIHdhcm5zIGFib3V0IGl0IGFuZCBhZGp1
+c3RzIHRvIHRoZQpkZWZhdWx0OgoKJCBta2ZzLnhmcyAtZiAtbCBzdT0yNjYyNDAgLi90bXAKbG9n
+IHN0cmlwZSB1bml0ICgyNjYyNDAgYnl0ZXMpIGlzIHRvbyBsYXJnZSAobWF4aW11bSBpcyAyNTZL
+aUIpCmxvZyBzdHJpcGUgdW5pdCBhZGp1c3RlZCB0byAzMktpQgptZXRhLWRhdGE9Li90bXAgICAg
+ICAgICAgICAgICAgICBpc2l6ZT0yNTYgICAgYWdjb3VudD00LCBhZ3NpemU9NjU1MzYwCmJsa3MK
+ICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUxMiAgIGF0dHI9MiwgcHJv
+amlkMzJiaXQ9MQogICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBjcmM9MCAgICAgICAg
+Zmlub2J0PTAKZGF0YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJs
+b2Nrcz0yNjIxNDQwLCBpbWF4cGN0PTI1CiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAg
+IHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCm5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAg
+ICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wIGZ0eXBlPTAKbG9nICAgICAgPWludGVybmFsIGxv
+ZyAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNTYwLCB2ZXJzaW9uPTIKICAgICAgICAg
+PSAgICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUxMiAgIHN1bml0PTggYmxrcywgbGF6eS1j
+b3VudD0xCnJlYWx0aW1lID1ub25lICAgICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9j
+a3M9MCwgcnRleHRlbnRzPTAKClRoZSBta2ZzX2ZpbHRlcigpIGZ1bmN0aW9uIGluIHhmcy8wOTYg
+ZmlsdGVycyBvdXQgdGhlIHdhcm5pbmcgbWVzc2FnZXMKKGlpcmMsIHRoZSB3YXJuaW5nIGlzIGEg
+cmVsYXRpdmVseSByZWNlbnQgYWRkaXRpb24pLCBzbyB0aGUgdGVzdCBvdXRwdXQKZmlsZSBleHBl
+Y3RzIHRoZSB0eXBpY2FsIChmaWx0ZXJlZCkgbWtmcyBvdXRwdXQuCgpCcmlhbgoKPiBTbyBlaXRo
+ZXIgSSdtIHJlYWRpbmcgdGhlIHRlc3Qgd3JvbmcsIG9yIHRoZSBwYXRjaCBhcHByb3ZlcyBpbnZh
+bGlkCj4gYmVoYXZpb3VyLiBJIGhpdCB0aGlzIHRlc3QgYmVjYXVzZSB3aGVuIEkgYWRkZWQgYSBz
+dHJpY3RlciBpbnB1dAo+IHZhbGlkYXRpb24sIHRoaXMgcGF0Y2ggc3RhcnRlZCB0byBmYWlsIGFz
+IG1rZnMgaXMgbm93IHJlZnVzaW5nIHRvIGNyZWF0ZQo+IHRoZSBmcyB3aXRoIHRoZXNlIGFyZ3Vt
+ZW50cy4KPiAKPiBCVFc6IEkgdHJpZWQgdG8gbG9vayBmb3IgdGhlIG1lbnRpb25lZCBwdiBudW1i
+ZXIsIGJ1dCBkaWRuJ3QgZm91bmQgaXQgLQo+IHdoZXJlIHNob3VsZCBJIGxvb2sgZnVydGhlcj8K
+PiDigItDaGVlcnMKPiBKYW7igIsKPiAKPiAtLSAKPiBKYW4gVHVsYWsKPiBqdHVsYWtAcmVkaGF0
+LmNvbSAvIGphbkB0dWxhay5tZQoKPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3NzLnNnaS5jb20KPiBodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
