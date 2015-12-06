@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 81C6F7F37
-	for <xfs@oss.sgi.com>; Sun,  6 Dec 2015 11:37:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F06EAC001
-	for <xfs@oss.sgi.com>; Sun,  6 Dec 2015 09:37:39 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 237D27F50
+	for <xfs@oss.sgi.com>; Sun,  6 Dec 2015 11:37:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DF15E304032
+	for <xfs@oss.sgi.com>; Sun,  6 Dec 2015 09:37:43 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YryMqVY4WS7sChUo (version=TLSv1.2
+	cuda.sgi.com with ESMTP id XWUkQ2is9LaunyNK (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 06 Dec 2015 09:37:38 -0800 (PST)
+	<xfs@oss.sgi.com>; Sun, 06 Dec 2015 09:37:36 -0800 (PST)
 Received: from int-mx14.intmail.prod.int.phx2.redhat.com
 	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 2133AC0B7A0E
-	for <xfs@oss.sgi.com>; Sun,  6 Dec 2015 17:37:38 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id A04953B70F
+	for <xfs@oss.sgi.com>; Sun,  6 Dec 2015 17:37:35 +0000 (UTC)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [XFSTESTS v2 1/6] check: Don't complain about missing
-	tests/$FSTYP/group
-Date: Sun,  6 Dec 2015 18:37:26 +0100
-Message-Id: <1449423451-29845-2-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1449423451-29845-1-git-send-email-agruenba@redhat.com>
-References: <1449423451-29845-1-git-send-email-agruenba@redhat.com>
+Subject: [XFSTESTS v2 0/6] Richacl Tests
+Date: Sun,  6 Dec 2015 18:37:25 +0100
+Message-Id: <1449423451-29845-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,27 +33,120 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-When filesystems don't have filesystem specific tests, those nonexistent
-tests also won't have a group file.
+Here is an updated version that mainly removes the -richacl option from the
+check script and leaves that to users.  The richacl tests will be skipped
+on non-richacl filesystems.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- check | 2 ++
- 1 file changed, 2 insertions(+)
+The richacl tests are "self verifying": they report success or failure
+through their exit code and don't have "golden" output files (*.out).
 
-diff --git a/check b/check
-index 8281322..4a9b332 100755
---- a/check
-+++ b/check
-@@ -95,6 +95,8 @@ get_group_list()
- 	grp=$1
- 
- 	for d in $SRC_GROUPS $FSTYP; do
-+		[ -e "$SRC_DIR/$d/group" ] || continue
-+
- 		l=$(sed -n < $SRC_DIR/$d/group \
- 			-e 's/#.*//' \
- 			-e 's/$/ /' \
+Previous posting: http://comments.gmane.org/gmane.comp.file-systems.xfs.general/71302
+
+Andreas Gruenbacher (6):
+  check: Don't complain about missing tests/$FSTYP/group
+  check: Enforce xfs filesystem recreation on $TEST_DEV
+  Rename output file templates to match TEST.out*
+  check: Add support for tests without *.out files
+  Add richacl tests
+  Remove the obsolete nfs4acl tests
+
+ .gitignore                          |  17 ++
+ check                               |  81 +++++----
+ common/rc                           |   3 +
+ nfs4acl/Makefile                    |  29 ----
+ nfs4acl/apply-mask.test             | 143 ----------------
+ nfs4acl/basic.test                  |  70 --------
+ nfs4acl/chmod.test                  |  31 ----
+ nfs4acl/chown.test                  |  63 -------
+ nfs4acl/computed-mode.test          |  62 -------
+ nfs4acl/create.test                 |  35 ----
+ nfs4acl/ctime.test                  |  36 ----
+ nfs4acl/delete.test                 |  77 ---------
+ nfs4acl/run                         | 298 ---------------------------------
+ nfs4acl/unrepresentable.test        |  20 ---
+ nfs4acl/write-vs-append.test        |  46 -----
+ src/Makefile                        |   2 +-
+ src/require-richacls.c              |  35 ++++
+ tests/richacl/001-apply-masks       |   1 +
+ tests/richacl/002-auto-inheritance  |   1 +
+ tests/richacl/003-basic             |   1 +
+ tests/richacl/004-chmod             |   1 +
+ tests/richacl/005-chown             |   1 +
+ tests/richacl/006-create            |   1 +
+ tests/richacl/007-ctime             |   1 +
+ tests/richacl/008-delete            |   1 +
+ tests/richacl/009-setrichacl-modify |   1 +
+ tests/richacl/010-write-vs-append   |   1 +
+ tests/richacl/Makefile              |  23 +++
+ tests/richacl/apply-masks           | 163 ++++++++++++++++++
+ tests/richacl/auto-inheritance      | 191 +++++++++++++++++++++
+ tests/richacl/basic                 |  97 +++++++++++
+ tests/richacl/chmod                 |  40 +++++
+ tests/richacl/chown                 |  42 +++++
+ tests/richacl/create                |  36 ++++
+ tests/richacl/ctime                 |  35 ++++
+ tests/richacl/delete                |  89 ++++++++++
+ tests/richacl/group                 |  10 ++
+ tests/richacl/setrichacl-modify     |  57 +++++++
+ tests/richacl/test-lib.sh           | 149 +++++++++++++++++
+ tests/richacl/write-vs-append       |  54 ++++++
+ tests/xfs/033                       |   2 +-
+ tests/xfs/033.crc.out.linux         | 197 ----------------------
+ tests/xfs/033.out.crc.linux         | 197 ++++++++++++++++++++++
+ tests/xfs/096                       |   4 +-
+ tests/xfs/096.external              |  50 ------
+ tests/xfs/096.internal              |  51 ------
+ tests/xfs/096.out.external          |  50 ++++++
+ tests/xfs/096.out.internal          |  51 ++++++
+ tests/xfs/191                       |  75 ---------
+ tests/xfs/191.out                   | 324 ------------------------------------
+ tests/xfs/group                     |   1 -
+ 51 files changed, 1406 insertions(+), 1640 deletions(-)
+ delete mode 100644 nfs4acl/Makefile
+ delete mode 100644 nfs4acl/apply-mask.test
+ delete mode 100644 nfs4acl/basic.test
+ delete mode 100644 nfs4acl/chmod.test
+ delete mode 100644 nfs4acl/chown.test
+ delete mode 100644 nfs4acl/computed-mode.test
+ delete mode 100644 nfs4acl/create.test
+ delete mode 100644 nfs4acl/ctime.test
+ delete mode 100644 nfs4acl/delete.test
+ delete mode 100755 nfs4acl/run
+ delete mode 100644 nfs4acl/unrepresentable.test
+ delete mode 100644 nfs4acl/write-vs-append.test
+ create mode 100644 src/require-richacls.c
+ create mode 120000 tests/richacl/001-apply-masks
+ create mode 120000 tests/richacl/002-auto-inheritance
+ create mode 120000 tests/richacl/003-basic
+ create mode 120000 tests/richacl/004-chmod
+ create mode 120000 tests/richacl/005-chown
+ create mode 120000 tests/richacl/006-create
+ create mode 120000 tests/richacl/007-ctime
+ create mode 120000 tests/richacl/008-delete
+ create mode 120000 tests/richacl/009-setrichacl-modify
+ create mode 120000 tests/richacl/010-write-vs-append
+ create mode 100644 tests/richacl/Makefile
+ create mode 100755 tests/richacl/apply-masks
+ create mode 100755 tests/richacl/auto-inheritance
+ create mode 100755 tests/richacl/basic
+ create mode 100755 tests/richacl/chmod
+ create mode 100755 tests/richacl/chown
+ create mode 100755 tests/richacl/create
+ create mode 100755 tests/richacl/ctime
+ create mode 100755 tests/richacl/delete
+ create mode 100644 tests/richacl/group
+ create mode 100755 tests/richacl/setrichacl-modify
+ create mode 100644 tests/richacl/test-lib.sh
+ create mode 100755 tests/richacl/write-vs-append
+ delete mode 100644 tests/xfs/033.crc.out.linux
+ create mode 100644 tests/xfs/033.out.crc.linux
+ delete mode 100644 tests/xfs/096.external
+ delete mode 100644 tests/xfs/096.internal
+ create mode 100644 tests/xfs/096.out.external
+ create mode 100644 tests/xfs/096.out.internal
+ delete mode 100755 tests/xfs/191
+ delete mode 100644 tests/xfs/191.out
+
 -- 
 2.5.0
 
