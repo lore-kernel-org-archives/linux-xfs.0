@@ -1,15 +1,15 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 488A07F37
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 06:27:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DFB48AC001
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 04:27:06 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DB8687F59
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 05:39:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BDE33304053
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 03:39:15 -0800 (PST)
 Received: from nanjing.hehope.cn (nanjing.hehope.cn [23.228.67.79]) by
-	cuda.sgi.com with ESMTP id E6GIDZ99o1lRexBQ for
-	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 04:27:05 -0800 (PST)
+	cuda.sgi.com with ESMTP id pDDF1wBcLhKGvEoP for
+	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 03:39:14 -0800 (PST)
 Subject: Mobile Apps Development- Native, Hybrid & Web Apps
-Message-ID: <5c99c79a2eee6839d488a4d0f7cdd748@ducksters.com>
-Date: Mon, 07 Dec 2015 13:45:58 +0100
+Message-ID: <686f091c49047dbf875d1e6837570f5d@rocketroberts.com>
+Date: Mon, 07 Dec 2015 12:37:21 +0100
 From: "Scott Wilson" <skoajos@yahoo.com>
 MIME-Version: 1.0
 Reply-To: bonieyt@aliyun.com
