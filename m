@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 89C417F37
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 15:36:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BA5B304064
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 13:36:16 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xdjMihDhyQAfSjeD for <xfs@oss.sgi.com>;
-	Mon, 07 Dec 2015 13:36:13 -0800 (PST)
-Date: Tue, 8 Dec 2015 08:36:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFSTESTS 5/6] Add richacl tests
-Message-ID: <20151207213611.GE26718@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 9876F7F37
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 17:45:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 867A1304048
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 15:45:09 -0800 (PST)
+Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
+	[209.85.217.181]) by cuda.sgi.com with ESMTP id
+	tSi8I65EEDNPfhgh (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 15:45:07 -0800 (PST)
+Received: by lbbcs9 with SMTP id cs9so1726879lbb.1
+	for <xfs@oss.sgi.com>; Mon, 07 Dec 2015 15:45:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20151207211156.GD26718@dastard>
 References: <1447856269-7872-1-git-send-email-agruenba@redhat.com>
 	<1447856269-7872-6-git-send-email-agruenba@redhat.com>
 	<20151123230847.GH26718@dastard>
-	<CAHc6FU60ALpg6xE4md9B1JG1H9KwgCkdOTHmuHZYQ+NjNemhjw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAHc6FU60ALpg6xE4md9B1JG1H9KwgCkdOTHmuHZYQ+NjNemhjw@mail.gmail.com>
+	<CAHc6FU4BDRqTM6dMONtyb98YqHSVp5M=GYnJ+k7EQRVNPvrQNA@mail.gmail.com>
+	<20151207211156.GD26718@dastard>
+Date: Tue, 8 Dec 2015 00:45:05 +0100
+Message-ID: <CAHc6FU4X+7rPtR8LE9W4HZv2UGsZ-+1zHSq5X5sFgVQmL5mCqQ@mail.gmail.com>
+Subject: Re: [XFSTESTS 5/6] Add richacl tests
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,163 +35,168 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: XFS Developers <xfs@oss.sgi.com>
 
-On Fri, Dec 04, 2015 at 12:10:27AM +0100, Andreas Gruenbacher wrote:
-> Dave,
-> 
-> On Tue, Nov 24, 2015 at 12:08 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Nov 18, 2015 at 03:17:48PM +0100, Andreas Gruenbacher wrote:
-> [...]
-> >> +ncheck "touch x"
-> >> +ncheck "setrichacl --set 'owner@:rwp::allow group@:rwp::allow everyone@:r::allow' x"
-> >> +check "getrichacl x" <<EOF
-> >> +x:
-> >> +    owner@:rwp----------::allow
-> >> +    group@:rwp----------::allow
-> >> + everyone@:r------------::allow
-> >> +EOF
-> >
-> > Ok, let's break this down, because most of the tests are similar.
-> >
-> > ncheck is not needed, as golden output matching will catch an
-> > unexpected error.
-> >
-> > check is not needed, because the output of the command should
-> > match what is in the golden output file. i.e, this test should be
-> > simply:
-> >
-> > touch x
-> > setrichacl --set 'owner@:rwp::allow group@:rwp::allow everyone@:r::allow' x
-> > getrichacl x
-> >
-> > And the golden output file should contain:
-> >
-> > x:
-> >     owner@:rwp----------::allow
-> >     group@:rwp----------::allow
-> >  everyone@:r------------::allow
-> >
-> > The fact that you do golden output matching directly in the script
-> > to calculate "checks_succeeded" and "checks_failed" and then check
-> > those at the end of the test to set the exit status is completely
-> > unnecessary. The xfstests tsts harness does all this pattern
-> > matching for you via the golden output file. Using output files
-> > correctly make patches 3 and 4 in this series go away.
-> 
-> This is really not where I want to go with those tests. I'm not using
-> golden output files on full purpose; I really do want the output and
-> exit status of each command under test to be checked individually.
+On Mon, Dec 7, 2015 at 10:11 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Dec 06, 2015 at 06:31:20PM +0100, Andreas Gruenbacher wrote:
+>> Dave,
+>>
+>> On Tue, Nov 24, 2015 at 12:08 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Wed, Nov 18, 2015 at 03:17:48PM +0100, Andreas Gruenbacher wrote:
+>> >> Add the Rich Access Control List tests from the richacl package.  The
+>> >> new tests require TEST_DEV and TEST_DIR to be set.
+>> >>
+>> >> When the check script is run, it first makes sure that the test
+>> >> filesystem has richacls enabled or disabled as appropriate: with the
+>> >> -richacl option, richacls must be enabled; without the -richacl option,
+>> >> richacls must be disabled.  If TEST_DEV has incorrect richacl support,
+>> >> the TEST_DEV filesystem is recreated.
+>> >
+>> > No, we don't recreate the testdev like this with the test harness.
+>> > The test device is intended to remain unchanged from run to run, so
+>> > give us long term aging of the test filesystem over months of
+>> > regression test running.
+>> >
+>> > If you want to test the testdev with richacls enabled, then you need
+>> > to manually create the testdev with richacls.  Any test that
+>> > specifically needs to enable richacls should use the scratch device
+>> > and use a _requires_scratch_richacls() test to check that the
+>> > scratch device can be created with richacl support.
+>>
+>> well, let's leave it to users to create their TEST_DEV with richacl
+>> support if they want the richacl tests to be run then. Those tests
+>> will already be skipped on unsuitable filesystems anyway.
+>
+> No, that's not the way xfstests works, or how developers really
+> expect it to run. If you have new functionality that requires
+> specific on-disk format requirements that are different to the
+> defaults that the developers userspace progs are using then you
+> should be using the scratch device for those tests after probing that
 
-Which you get from golden output matching. If the test succeeds, it
-is silent, if a command fails, then it should be outputting an error
-message to the user. That will be captured by the test harness.
-Silent errors (i.e. error by return code only) indicate a broken
-user interface....
+That should be possible. Those tests would then only be using
+SCRATCH_DEV / SCRATCH_MNT and not TEST_DEV / TEST_DIR at all. Any
+ideas how xfstests could be made to not always require TEST_DEV /
+TEST_DIR to be set?
 
-> I
-> also do want proper logging and error reporting --- Which commands
-> from where in the test script were executed with which parameters?
+>> >> The -richacl option currently selects the tests in the richacl group to
+>> >> be run.  Additional test groups or tests can be specified on the command
+>> >> line, e.g.,
+>> >>
+>> >>>   ./check -richacl -g quick
+>> >> (Eventually, the -richacl option will be changed to only skip tests
+>> >> which are incompatible with richacls.)
+>> >
+>> > No, this is wrong. If you want to check richacls, it should be via a
+>> > test group, not a specific command line option
+>> >
+>> >    ./check -g richacl
+>>
+>> The richacl tests were in a separate group already ...
+>
+> No, they aren't - you've set them up as a /filesystem/ group, not a
+> test group.
 
-logging goes to $seqres.full, and logging of commands executed to
-$seqres.full can be done via the _do() wrapper, though we tend not
-to do that because it's easier to debug tests when there aren't
-wrappers like this in use. And, funnily enough, _do() also can be
-used to check the return value of the command that is run, emit an
-error message iand potentially fail the test if that happens.
+Not true. Both versions of the patches I've posted did add a group
+file in tests/rchacl with entries like:
 
-Essentially you're arguing that you need functionality that xfstests
-already provides you with.
+  001-apply-masks [...] richacl
 
-> Were they successful and did they produce the expected output? If not,
-> what's the difference between the expected and actual output?
-> 
-> With xfstest output matching, I get none of that reliably. I don't
+which did define a richacl group. Running "./check -g richacl" did
+select the appropriate test cases based on that definition.
 
-This is an argument I hear all the time from people who aren't
-familiar with xfstests. It's wrong....
+There already are directories in tests/ which don't classify test
+cases by filesystem (generic/ and shared/), so adding another for
+keeping related things together is not a new concept.
 
-> even get to know which exact commands are executed;
+>> > That makes the first 2 patches in the series go away.
+>> >
+>> >> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>> >> ---
+>> >>  .gitignore                          |   1 +
+>> >>  check                               |  39 +++++++-
+>> >>  common/rc                           |  23 ++++-
+>> >>  src/Makefile                        |   2 +-
+>> >>  src/require-richacls.c              |  35 +++++++
+>> >
+>> > That's a red flag.
+>>
+>> What is, any why?
+>
+> That you are using C code to detect whether an on-disk feature is
+> supported or not. This is done through running the userspace tools
+> to check they support the on-disk feature, then creating a
+> filesystem with those tools and mounting it to determine whether the
+> kernel supports the feature correctly as well.
 
-see above.
+Someone might run "check -g richacl" on a filesystem that doesn't
+support richacls. In that case, I want the richacl test cases to be
+skipped, with an explanation why; I don't want the test cases to just
+explode. That's the same as what the POSIX ACL related test cases do
+in common/attr:_require_acls().
 
-> parameters which
-> differ from run to run are masked on purpose (grepping for "sed" in
-> xfstests shows some examples).
+_require_acls() uses the chacl utility for probing for POSIX ACL
+support. The require-richacls program serves the same purpose. I could
+probe using getfattr instead, but getfattr isn't necessarily
+installed, and I won't want to create an unnecessary dependency.
 
-And, sure, we *filter* the output to mask things that change that
-are irrelevant to what we are testing. That means the tests canbe
-made generic and independent of filesystem and platform
-configurations. That's not something you need to care about, because
-all of the richacl tests have the same output regardless of
-filesystem/platform configurations.
+>> > i.e. only the numbered version of the test should exist,
+>> > and all the other files be moved into them. They shouldn't be in
+>> > tests/richacl, either - these are generic tests and so should
+>> > be in tests/generic, using whatever the next unused test numbers
+>> > are. And then, in the tests/generic/group file, there will be
+>> > entries like:
+>> >
+>> > 178-apply-masks auto quick richacl
+>> > 179-auto-inheritance auto quick richacl
+>> > ....
+>>
+>> The richacl tests started out in the richacl package, they were not
+>> written for xfstests form scratch. I want to keep them working there
+>> as well, and integrate them into xfstests with as little friction on
+>> either side as necessary.
+>
+> There is no point in maintaining two test suites - you'll change
+> stuff in your richacl package test suite, and the xfstests stuff
+> will be ignored, because *you won't be using xfstests*.
+> The whole point of getting this stuff into xfstests is so that
+> there's one place to both run and maintain the tests.
 
-Yes, the test harness provides capabilities and infrastructure you
-don't need, but that's not a valid reason for being unable to
-integrate a *set of pattern matching tests* into a test harness
-whose error detection architecture is based around *pattern
-matching*....
+I don't want to maintain two test suites, I want the same tests to
+work in both contexts.
 
-> When a test fails, I have to start
-> guessing which command might have caused the failure; the tests are
-> peppered with echo "Here I am" statements to make that possible at
-> all.
+>> The symlinks avoid having to rename files on every update of those tests.
+>>
+>> > These tests need to use the common xfstests structure (i.e. the
+>> > setup code from the "new" script).
+>>
+>> Why does the new script require TEST_DEV and TEST_DIR to be set when
+>> it doesn't run tests? I'm not running the tests on the same host on
+>> which I build the test suite.
+>
+> Because it simply sources common code. Nobody has raised this as a
+> problem before, so if it bugs you, send patches to fix it.
+>
+>> > The file that has all the common functionality in it (test-lib.sh)
+>> > needs to be moved to common/richacl and included along with the
+>> > necessary common files. At this point, the makefile can also go
+>> > away.
+>>
+>> What's the benefit? The tests don't need anything from common/, I want
+>> to keep them well separated so that updating them will remain easy.
+>
+> What's the benefit? That the tests all follow the same patterns, and
+> that means any xfstests user can modify and update the tests without
+> having to learn some new, weird frankenstein test infrastructure.
 
-Those statements are good for documentation purposes, not just
-debugging. But you don't need to add them - you can use comments
-just as well - or you can use other logging infrastructure (as I've
-mentioned) to capture everything in the full logging file that is
-provided *expressly for debugging purposes*.
+>From the point of view of the xfstests infrastructure, all you really
+have to know about the richacl tests is that they are scripts that
+signal with their exit status whether a test has succeeded, failed, or
+has been skipped. (That's actually how simple autoconf tests work as
+well.)
 
-> For example, the above test produces the following log:
-> 
->     [8] touch x -- ok
->     [9] setrichacl --set 'owner@:rwp::allow group@:rwp::allow
-> everyone@:r::allow' x -- ok
->     [10] getrichacl x -- ok
->   [...]
->     46 tests (46 passed, 0 failed)
-> 
-> A failure would come out as follows (with exit status 1):
-> 
->     [8] touch x -- ok
->     [9] setrichacl --set 'owner@:rwp::allow group@:rwp::allow
-> everyone@:r::allow' x -- ok
->     [10] getrichacl x -- FAILED
->     --- expected
->     +++ got
->     @@ -1,4 +1,4 @@
->     x:
->     -    owner@:rwp----------::allow
->     -    group@:rwp----------::allow
->     +    owner@:r------------::allow
->     +    group@:r------------::allow
->      everyone@:r------------::allow
-
-I don't understand your problem - that's exactly the output that
-xfstests will give you through golden output matching.
-
-> I also do want these tests to remain functional inside the richacl
-> package, where they are coming from.
-
-While that may be important to you because that's where you do all
-your development, it's irrelevant to all the filesystem developers
-using xfstests.
-
-It's the filesystem developers that are going to inadvertantly break
-the xattr/richacl code as they make future changes to the filesystem
-code - they are also the people that need to find out about such
-breakages immediately, and that means having regression test
-coverage in xfstests is far more important than having it in the
-richacl package where it is only used by one person....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
