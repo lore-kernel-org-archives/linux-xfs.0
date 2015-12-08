@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6A3F07F52
-	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 07:56:58 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 84F7C7F37
+	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 08:40:43 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E8744AC006
-	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 05:56:57 -0800 (PST)
-Received: from mail-wm0-f54.google.com (mail-wm0-f54.google.com
-	[74.125.82.54]) by cuda.sgi.com with ESMTP id f7eGa2EODNuwYBIG
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 08 Dec 2015 05:56:56 -0800 (PST)
-Received: by wmec201 with SMTP id c201so213519299wme.0
-	for <xfs@oss.sgi.com>; Tue, 08 Dec 2015 05:56:55 -0800 (PST)
-Subject: Re: sleeps and waits during io_submit
-References: <20151201145631.GD26129@bfoster.bfoster>
-	<565DBB3E.2010308@scylladb.com>
-	<20151201160133.GE26129@bfoster.bfoster>
-	<565DC613.4090608@scylladb.com>
-	<20151201162958.GF26129@bfoster.bfoster>
-	<565DD449.5090101@scylladb.com>
-	<20151201185113.GG26129@bfoster.bfoster>
-	<565DF472.8080101@scylladb.com> <20151202001329.GA9633@bfoster.bfoster>
-	<565EAD06.5060403@scylladb.com> <20151208060343.GC19802@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <5666E1A4.4070805@scylladb.com>
-Date: Tue, 8 Dec 2015 15:56:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <20151208060343.GC19802@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 671E28F8035
+	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 06:40:40 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GG1J5DCRZzFeTzA1 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 08 Dec 2015 06:40:39 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 815D7C0B020F
+	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 14:40:38 +0000 (UTC)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH] fsx: Small improvements and fixes
+Date: Tue,  8 Dec 2015 15:40:35 +0100
+Message-Id: <1449585635-25123-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,55 +25,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Glauber Costa <glauber@scylladb.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
+Move the run_fsx shell function into common/rc.  Fix it to avoid
+duplicate output on errors.  Write the actual fsx parameters used into
+$seqres.full instead of the BSIZE and PSIZE placeholders.
 
+Include the symbolic fallocate mode in fsx error messages instead of the
+numeric value.  Use fprintf(stderr, ...) instead of warn() when
+including strerror(errno) doesn't make sense.
 
-On 12/08/2015 08:03 AM, Dave Chinner wrote:
-> On Wed, Dec 02, 2015 at 10:34:14AM +0200, Avi Kivity wrote:
->> On 12/02/2015 02:13 AM, Brian Foster wrote:
->>> Metadata is modified in-core and handed off to the logging
->>> infrastructure via a transaction. The log is flushed to disk some time
->>> later and metadata writeback occurs asynchronously via the xfsaild
->>> thread.
->> Unless, I expect, if the log is full.  Since we're hammering on the
->> disk quite heavily, the log would be fighting with user I/O and
->> possibly losing.
->>
->> Does XFS throttle user I/O in order to get the log buffers recycled faster?
-> No. XFS tags the metadata IO with REQ_META that the IO schedulers
-> can tell the difference between metadata and data IO, and schedule
-> them appropriately. Further. log buffers are also tagged with
-> REQ_SYNC to indicate they are latency sensitive IOs, whcih the IO
-> schedulers again treat differently to minimise latency in the face
-> of bulk async IO which is not latency sensitive.
->
-> IOWs, IO prioritisation and dispatch scheduling is the job of the IO
-> scheduler, not the filesystem. The filesystem just tells the
-> scheduler how to treat the different types of IO...
->
->> Is there any way for us to keep track of it, and reduce disk
->> pressure when it gets full?
-> Only if you want to make more problems for yourself - second
-> guessing what the filesystem is going to do will only lead you to
-> dancing the Charlie Foxtrot on a regular basis. :/
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ common/rc         | 14 ++++++++++++++
+ ltp/fsx.c         | 13 ++++++++-----
+ tests/generic/091 | 12 ------------
+ tests/generic/263 | 12 ------------
+ 4 files changed, 22 insertions(+), 29 deletions(-)
 
-So far the best approach I found that doesn't conflict with this is to 
-limit io_submit iodepth to the natural disk iodepth (or a small multiple 
-thereof).  This seems to keep XFS in its comfort zone, and is good for 
-latency anyway.
-
-The only issue is that the only way to obtain this parameter is to 
-measure it.
-
-I wrote a small tool to do this [1], but it's a hassle for users.
-
-[1] https://github.com/avikivity/diskplorer
+diff --git a/common/rc b/common/rc
+index 4c2f42c..702ef47 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3151,6 +3151,20 @@ get_block_size()
+ 	echo `stat -f -c %S $1`
+ }
+ 
++run_fsx()
++{
++	echo fsx $@
++	args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
++	set -- $here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk
++	echo "$@" >>$seqres.full
++	rm -f $TEST_DIR/junk
++	"$@" 2>&1 | tee -a $seqres.full >$tmp.fsx
++	if [ ${PIPESTATUS[0]} -ne 0 ]; then
++		cat $tmp.fsx
++		exit 1
++	fi
++}
++
+ init_rc
+ 
+ ################################################################################
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 6da51e9..805fdfb 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -1557,16 +1557,20 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
+ 
+ #endif
+ 
++#define test_fallocate(mode) __test_fallocate(mode, #mode)
++
+ int
+-test_fallocate(int mode)
++__test_fallocate(int mode, const char *mode_str)
+ {
+ #ifdef HAVE_LINUX_FALLOC_H
+ 	int ret = 0;
+ 	if (!lite) {
+ 		if (fallocate(fd, mode, 0, 1) && errno == EOPNOTSUPP) {
+ 			if(!quiet)
+-				warn("main: filesystem does not support "
+-				     "fallocate mode 0x%x, disabling!\n", mode);
++				fprintf(stderr,
++					"main: filesystem does not support "
++					"fallocate mode %s, disabling!\n",
++					mode_str);
+ 		} else {
+ 			ret = 1;
+ 			ftruncate(fd, 0);
+@@ -1862,8 +1866,7 @@ main(int argc, char **argv)
+ 	if (keep_size_calls)
+ 		keep_size_calls = test_fallocate(FALLOC_FL_KEEP_SIZE);
+ 	if (punch_hole_calls)
+-		punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE |
+-						  FALLOC_FL_KEEP_SIZE);
++		punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE);
+ 	if (zero_range_calls)
+ 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
+ 	if (collapse_range_calls)
+diff --git a/tests/generic/091 b/tests/generic/091
+index 30491bf..da54397 100755
+--- a/tests/generic/091
++++ b/tests/generic/091
+@@ -43,18 +43,6 @@ _require_odirect
+ 
+ rm -f $seqres.full
+ 
+-run_fsx()
+-{
+-	echo fsx $@ | tee -a $seqres.full
+-	args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+-	rm -f $TEST_DIR/junk
+-	$here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk >>$seqres.full 2>&1
+-	if [ $? -ne 0 ]; then
+-		cat $seqres.full
+-		exit 1
+-	fi
+-}
+-
+ psize=`$here/src/feature -s`
+ bsize=`_min_dio_alignment $TEST_DEV`
+ 
+diff --git a/tests/generic/263 b/tests/generic/263
+index 7584bc7..b460c82 100755
+--- a/tests/generic/263
++++ b/tests/generic/263
+@@ -43,18 +43,6 @@ _require_odirect
+ 
+ rm -f $seqres.full
+ 
+-run_fsx()
+-{
+-	echo fsx $@ | tee -a $seqres.full
+-	args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+-	rm -f $TEST_DIR/junk
+-	$here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk >>$seqres.full 2>&1
+-	if [ $? -ne 0 ]; then
+-		cat $seqres.full
+-		exit 1
+-	fi
+-}
+-
+ psize=`$here/src/feature -s`
+ bsize=`_min_dio_alignment $TEST_DEV`
+ 
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
