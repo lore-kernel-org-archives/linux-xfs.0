@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D562E7F37
-	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 00:29:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 58E04AC001
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 22:29:22 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6859F7F53
+	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 00:29:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 376C7304059
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 22:29:25 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 0M0t65GByieulsvP (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kzXKBvP0RnHuL80r (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 22:29:19 -0800 (PST)
-Subject: [PATCH 1/3] test-scripts: test migration scripts
+	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 22:29:22 -0800 (PST)
+Subject: [PATCH 2/3] generic/15[78]: fix error messages in the golden output
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 07 Dec 2015 22:28:51 -0800
-Message-ID: <20151208062851.21871.41799.stgit@birch.djwong.org>
+Date: Mon, 07 Dec 2015 22:28:58 -0800
+Message-ID: <20151208062858.21871.84165.stgit@birch.djwong.org>
 In-Reply-To: <20151208062844.21871.23644.stgit@birch.djwong.org>
 References: <20151208062844.21871.23644.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,211 +31,150 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
 
-Add two scripts: "nextid" finds the next available test ID number in a
-group, and "mvtest" relocates a test, fixes the golden output, and
-moves the group entry for that test.
-
-v2: sorting group files should preserve group order; nextid should use
-the same algorithm as new; move both tools to tools/.
+Fix the error messages in the golden output for generic/15[78], which
+examine the responses to invalid inputs as returned by the
+clone/clone_range/extent_same ioctls.  Also fix a filtering omission.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tools/mvtest     |   55 +++++++++++++++++++++++++++
- tools/nextid     |    1 
- tools/sort-group |  112 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 168 insertions(+)
- create mode 100755 tools/mvtest
- create mode 120000 tools/nextid
- create mode 100755 tools/sort-group
+ tests/generic/157     |   18 +++++++++++++-----
+ tests/generic/157.out |    6 +++---
+ tests/generic/158     |   18 +++++++++++++-----
+ tests/generic/158.out |    8 ++++----
+ 4 files changed, 33 insertions(+), 17 deletions(-)
 
 
-diff --git a/tools/mvtest b/tools/mvtest
-new file mode 100755
-index 0000000..af601d6
---- /dev/null
-+++ b/tools/mvtest
-@@ -0,0 +1,55 @@
-+#!/bin/sh
-+
-+# Renumber a test
-+dir="$(dirname "$0")"
-+
-+if [ -z "$1" ] || [ "$1" = "--help" ]; then
-+	echo "Usage: $0 path_to_test new_path_to_test"
-+	exit 1
-+fi
-+
-+src="$1"
-+dest="$2"
-+
-+die() {
-+	echo "$@"
-+	exit 1
+diff --git a/tests/generic/157 b/tests/generic/157
+index a43fb0d..f68ff52 100755
+--- a/tests/generic/157
++++ b/tests/generic/157
+@@ -75,10 +75,18 @@ mkdir "$TESTDIR1/dir1"
+ seq 1 $((2 * BLKSZ / 250)) | while read f; do
+ 	touch "$TESTDIR1/dir1/$f"
+ done
+-mknod "$TESTDIR1/dev1" b 8 0
++mknod "$TESTDIR1/dev1" c 1 3
+ mkfifo "$TESTDIR1/fifo1"
+ sync
+ 
++_filter_enotty() {
++	sed -e 's/Inappropriate ioctl for device/Invalid argument/g'
 +}
 +
-+append() {
-+	out="$1"
-+	shift
-+	echo "$@" >> "${out}"
++_filter_einval() {
++	sed -e 's/Invalid argument/Bad file descriptor/g'
 +}
 +
-+test "${src}" != "${dest}" || die "Test \"${src}\" is the same as dest."
-+test -e "tests/${src}" || die "Test \"${src}\" does not exist."
-+test ! -e "tests/${dest}" || die "Test \"${src}\" already exists."
+ echo "Try cross-device reflink"
+ _reflink_range "$TESTDIR1/file1" 0 "$TESTDIR2/file1" 0 $BLKSZ
+ 
+@@ -98,16 +106,16 @@ echo "Try to reflink a device"
+ _reflink_range "$TESTDIR1/dev1" 0 "$TESTDIR1/file2" 0 $BLKSZ
+ 
+ echo "Try to reflink to a dir"
+-_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ
++_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ 2>&1 | _filter_test_dir
+ 
+ echo "Try to reflink to a device"
+-_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ
++_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ 2>&1 | _filter_enotty
+ 
+ echo "Try to reflink to a fifo"
+-_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n
++_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n 2>&1 | _filter_enotty
+ 
+ echo "Try to reflink an append-only file"
+-_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/file3" 0 $BLKSZ -a
++_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/file3" 0 $BLKSZ -a 2>&1 | _filter_einval
+ 
+ echo "Reflink two files"
+ _reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/file2" 0 $BLKSZ >> "$seqres.full"
+diff --git a/tests/generic/157.out b/tests/generic/157.out
+index 177e7f8..ac3c440 100644
+--- a/tests/generic/157.out
++++ b/tests/generic/157.out
+@@ -14,11 +14,11 @@ XFS_IOC_CLONE_RANGE: Is a directory
+ Try to reflink a device
+ XFS_IOC_CLONE_RANGE: Invalid argument
+ Try to reflink to a dir
+-/mnt/test-157/dir1: Is a directory
++TEST_DIR/test-157/dir1: Is a directory
+ Try to reflink to a device
+-XFS_IOC_CLONE_RANGE: Operation not supported
++XFS_IOC_CLONE_RANGE: Invalid argument
+ Try to reflink to a fifo
+-XFS_IOC_CLONE_RANGE: Operation not supported
++XFS_IOC_CLONE_RANGE: Invalid argument
+ Try to reflink an append-only file
+ XFS_IOC_CLONE_RANGE: Bad file descriptor
+ Reflink two files
+diff --git a/tests/generic/158 b/tests/generic/158
+index a499b21..749b186 100755
+--- a/tests/generic/158
++++ b/tests/generic/158
+@@ -76,10 +76,18 @@ mkdir "$TESTDIR1/dir1"
+ seq 1 $((2 * BLKSZ / 250)) | while read f; do
+ 	touch "$TESTDIR1/dir1/$f"
+ done
+-mknod "$TESTDIR1/dev1" b 8 0
++mknod "$TESTDIR1/dev1" c 1 3
+ mkfifo "$TESTDIR1/fifo1"
+ sync
+ 
++_filter_enotty() {
++	sed -e 's/Inappropriate ioctl for device/Invalid argument/g'
++}
 +
-+sid="$(basename "${src}")"
-+did="$(basename "${dest}")"
++_filter_eperm() {
++	sed -e 's/Permission denied/Invalid argument/g'
++}
 +
-+sgroup="$(basename "$(dirname "tests/${src}")")"
-+dgroup="$(basename "$(dirname "tests/${dest}")")"
-+
-+sgroupfile="tests/${sgroup}/group"
-+dgroupfile="tests/${sgroup}/group"
-+
-+git mv "tests/${src}" "tests/${dest}"
-+git mv "tests/${src}.out" "tests/${dest}.out"
-+sed -e "s/^# FS QA Test No. ${sid}$/# FS QA Test No. ${did}/g" -i "tests/${dest}"
-+sed -e "s/^QA output created by ${sid}$/QA output created by ${did}/g" -i "tests/${dest}.out"
-+sed -e "s/test-${sid}/test-${did}/g" -i "tests/${dest}.out"
-+
-+grpline="$(grep "^${sid} " "${sgroupfile}")"
-+newgrpline="$(echo "${grpline}" | sed -e "s/^${sid} /${did} /g")"
-+
-+sed -e "/^${sid}.*$/d" -i "${sgroupfile}"
-+cp "${dgroupfile}" "${dgroupfile}.new"
-+append "${dgroupfile}.new" "${newgrpline}"
-+"${dir}/sort-group.py" "${dgroupfile}.new"
-+mv "${dgroupfile}.new" "${dgroupfile}"
-+
-+echo "Moved \"${src}\" to \"${dest}\"."
-+
-+exit 0
-diff --git a/tools/nextid b/tools/nextid
-new file mode 120000
-index 0000000..5c31d60
---- /dev/null
-+++ b/tools/nextid
-@@ -0,0 +1 @@
-+sort-group
-\ No newline at end of file
-diff --git a/tools/sort-group b/tools/sort-group
-new file mode 100755
-index 0000000..84944ed
---- /dev/null
-+++ b/tools/sort-group
-@@ -0,0 +1,112 @@
-+#!/usr/bin/env python
-+import sys
-+
-+# Sort a group list, carefully preserving comments.
-+
-+def xfstest_key(key):
-+	'''Extract the numeric part of a test name if possible.'''
-+	k = 0
-+
-+	assert type(key) == str
-+
-+	# No test number at all...
-+	if not key[0].isdigit():
-+		return key
-+
-+	# ...otherwise extract as much number as we can.
-+	for digit in key:
-+		if digit.isdigit():
-+			k = k * 10 + int(digit)
-+		else:
-+			return k
-+	return k
-+
-+def read_group(fd):
-+	'''Read the group list, carefully attaching comments to the next test.'''
-+	tests = {}
-+	comments = None
-+
-+	for line in fd:
-+		sline = line.strip()
-+		tokens = sline.split()
-+		if len(tokens) == 0 or tokens[0] == '#':
-+			if comments == None:
-+				comments = []
-+			comments.append(sline)
-+		else:
-+			tests[tokens[0]] = (comments, tokens[1:])
-+			comments = None
-+	return tests
-+
-+def sort_keys(keys):
-+	'''Separate keys into integer and non-integer tests.'''
-+	int_keys = []
-+	int_xkeys = []
-+	str_keys = []
-+
-+	# Sort keys into integer(ish) tests and other
-+	for key in keys:
-+		xkey = xfstest_key(key)
-+		if type(xkey) == int:
-+			int_keys.append(key)
-+			int_xkeys.append(xkey)
-+		else:
-+			str_keys.append(key)
-+	return (int_keys, int_xkeys, str_keys)
-+
-+def write_sorted(tests, fd):
-+	def dump_xkey(xkey):
-+		(comments, tokens) = tests[key]
-+		if comments:
-+			for c in comments:
-+				fd.write('%s\n' % c)
-+		fd.write('%s %s\n' % (key, ' '.join(tokens)))
-+	'''Print tests (and comments) in number order.'''
-+
-+	(int_keys, ignored, str_keys) = sort_keys(tests.keys())
-+	for key in sorted(int_keys, key = xfstest_key):
-+		dump_xkey(key)
-+	for key in sorted(str_keys):
-+		dump_xkey(key)
-+
-+def sort_main():
-+	if '--help' in sys.argv[1:]:
-+		print('Usage: %s groupfiles' % sys.argv[0])
-+		sys.exit(0)
-+
-+	for arg in sys.argv[1:]:
-+		with open(arg, 'r+') as fd:
-+			x = read_group(fd)
-+			fd.seek(0, 0)
-+			write_sorted(x, fd)
-+
-+def nextid_main():
-+	if '--help' in sys.argv[1:]:
-+		print('Usage: %s group[/startid] ' % sys.argv[0])
-+		sys.exit(0)
-+
-+	if len(sys.argv) != 2:
-+		print('Specify exactly one group name.')
-+		sys.exit(1)
-+
-+	c = sys.argv[1].split('/')
-+	if len(c) > 1:
-+		startid = int(c[1])
-+	else:
-+		startid = 1
-+	group = c[0]
-+
-+	with open('tests/%s/group' % group, 'r') as fd:
-+		x = read_group(fd)
-+		xkeys = {int(x) for x in sort_keys(x.keys())[1]}
-+
-+		xid = startid
-+		while xid in xkeys:
-+			xid += 1
-+		print('%s/%d' % (group, xid))
-+
-+if __name__ == '__main__':
-+	if 'nextid' in sys.argv[0]:
-+		nextid_main()
-+	else:
-+		sort_main()
+ echo "Try cross-device dedupe"
+ _dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR2/file1" 0 $BLKSZ
+ 
+@@ -96,16 +104,16 @@ echo "Try to dedupe a dir"
+ _dedupe_range "$TESTDIR1/dir1" 0 "$TESTDIR1/file2" 0 $BLKSZ
+ 
+ echo "Try to dedupe a device"
+-_dedupe_range "$TESTDIR1/dev1" 0 "$TESTDIR1/file2" 0 $BLKSZ
++_dedupe_range "$TESTDIR1/dev1" 0 "$TESTDIR1/file2" 0 $BLKSZ 2>&1 | _filter_enotty
+ 
+ echo "Try to dedupe to a dir"
+-_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ
++_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ 2>&1 | _filter_test_dir
+ 
+ echo "Try to dedupe to a device"
+-_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ
++_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ 2>&1 | _filter_eperm
+ 
+ echo "Try to dedupe to a fifo"
+-_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n
++_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n 2>&1 | _filter_eperm
+ 
+ echo "Try to dedupe an append-only file"
+ _dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/file3" 0 $BLKSZ -a >> "$seqres.full"
+diff --git a/tests/generic/158.out b/tests/generic/158.out
+index 36a3f1f..dff3692 100644
+--- a/tests/generic/158.out
++++ b/tests/generic/158.out
+@@ -12,13 +12,13 @@ dedupe: Invalid argument
+ Try to dedupe a dir
+ XFS_IOC_FILE_EXTENT_SAME: Is a directory
+ Try to dedupe a device
+-XFS_IOC_FILE_EXTENT_SAME: Permission denied
++XFS_IOC_FILE_EXTENT_SAME: Invalid argument
+ Try to dedupe to a dir
+-/mnt/test-158/dir1: Is a directory
++TEST_DIR/test-158/dir1: Is a directory
+ Try to dedupe to a device
+-dedupe: Permission denied
++dedupe: Invalid argument
+ Try to dedupe to a fifo
+-dedupe: Permission denied
++dedupe: Invalid argument
+ Try to dedupe an append-only file
+ Dedupe two files
+ Check scratch fs
 
 _______________________________________________
 xfs mailing list
