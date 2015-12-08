@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E76037F59
-	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 13:18:59 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 98A577F63
+	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 13:19:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D7739304062
-	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 11:18:59 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 23F95AC005
+	for <xfs@oss.sgi.com>; Tue,  8 Dec 2015 11:19:03 -0800 (PST)
 Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
-	TYyQtSEqt0hOBhIX for <xfs@oss.sgi.com>;
-	Tue, 08 Dec 2015 11:18:58 -0800 (PST)
+	epnmoUYY2HBLbd3f for <xfs@oss.sgi.com>;
+	Tue, 08 Dec 2015 11:19:01 -0800 (PST)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v3 3/7] mm: add find_get_entries_tag()
-Date: Tue,  8 Dec 2015 12:18:41 -0700
-Message-Id: <1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 5/7] ext2: call dax_pfn_mkwrite() for DAX fsync/msync
+Date: Tue,  8 Dec 2015 12:18:43 -0700
+Message-Id: <1449602325-20572-6-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1449602325-20572-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1449602325-20572-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,111 +30,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Add find_get_entries_tag() to the family of functions that include
-find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
-needed for DAX dirty page handling because we need a list of both page
-offsets and radix tree entries ('indices' and 'entries' in this function)
-that are marked with the PAGECACHE_TAG_TOWRITE tag.
+To properly support the new DAX fsync/msync infrastructure filesystems
+need to call dax_pfn_mkwrite() so that DAX can track when user pages are
+dirtied.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- include/linux/pagemap.h |  3 +++
- mm/filemap.c            | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 71 insertions(+)
+ fs/ext2/file.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 26eabf5..4db0425 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -361,6 +361,9 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t start,
- 			       unsigned int nr_pages, struct page **pages);
- unsigned find_get_pages_tag(struct address_space *mapping, pgoff_t *index,
- 			int tag, unsigned int nr_pages, struct page **pages);
-+unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-+			int tag, unsigned int nr_entries,
-+			struct page **entries, pgoff_t *indices);
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index 11a42c5..2c88d68 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -102,8 +102,8 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ {
+ 	struct inode *inode = file_inode(vma->vm_file);
+ 	struct ext2_inode_info *ei = EXT2_I(inode);
+-	int ret = VM_FAULT_NOPAGE;
+ 	loff_t size;
++	int ret;
  
- struct page *grab_cache_page_write_begin(struct address_space *mapping,
- 			pgoff_t index, unsigned flags);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 167a4d9..99dfbc9 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1498,6 +1498,74 @@ repeat:
- }
- EXPORT_SYMBOL(find_get_pages_tag);
+ 	sb_start_pagefault(inode->i_sb);
+ 	file_update_time(vma->vm_file);
+@@ -113,6 +113,8 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	if (vmf->pgoff >= size)
+ 		ret = VM_FAULT_SIGBUS;
++	else
++		ret = dax_pfn_mkwrite(vma, vmf);
  
-+/**
-+ * find_get_entries_tag - find and return entries that match @tag
-+ * @mapping:	the address_space to search
-+ * @start:	the starting page cache index
-+ * @tag:	the tag index
-+ * @nr_entries:	the maximum number of entries
-+ * @entries:	where the resulting entries are placed
-+ * @indices:	the cache indices corresponding to the entries in @entries
-+ *
-+ * Like find_get_entries, except we only return entries which are tagged with
-+ * @tag.
-+ */
-+unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-+			int tag, unsigned int nr_entries,
-+			struct page **entries, pgoff_t *indices)
-+{
-+	void **slot;
-+	unsigned int ret = 0;
-+	struct radix_tree_iter iter;
-+
-+	if (!nr_entries)
-+		return 0;
-+
-+	rcu_read_lock();
-+restart:
-+	radix_tree_for_each_tagged(slot, &mapping->page_tree,
-+				   &iter, start, tag) {
-+		struct page *page;
-+repeat:
-+		page = radix_tree_deref_slot(slot);
-+		if (unlikely(!page))
-+			continue;
-+		if (radix_tree_exception(page)) {
-+			if (radix_tree_deref_retry(page)) {
-+				/*
-+				 * Transient condition which can only trigger
-+				 * when entry at index 0 moves out of or back
-+				 * to root: none yet gotten, safe to restart.
-+				 */
-+				goto restart;
-+			}
-+
-+			/*
-+			 * A shadow entry of a recently evicted page, a swap
-+			 * entry from shmem/tmpfs or a DAX entry.  Return it
-+			 * without attempting to raise page count.
-+			 */
-+			goto export;
-+		}
-+		if (!page_cache_get_speculative(page))
-+			goto repeat;
-+
-+		/* Has the page moved? */
-+		if (unlikely(page != *slot)) {
-+			page_cache_release(page);
-+			goto repeat;
-+		}
-+export:
-+		indices[ret] = iter.index;
-+		entries[ret] = page;
-+		if (++ret == nr_entries)
-+			break;
-+	}
-+	rcu_read_unlock();
-+	return ret;
-+}
-+EXPORT_SYMBOL(find_get_entries_tag);
-+
- /*
-  * CD/DVDs are error prone. When a medium error occurs, the driver may fail
-  * a _large_ part of the i/o request. Imagine the worst scenario:
+ 	up_read(&ei->dax_sem);
+ 	sb_end_pagefault(inode->i_sb);
 -- 
 2.5.0
 
