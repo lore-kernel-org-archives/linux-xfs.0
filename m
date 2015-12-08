@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 476DF7F37
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 20:01:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 26F0B8F8037
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 18:01:33 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DCE6F7F37
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 20:07:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A05DB304048
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 18:07:40 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id lTvyvNZBN350oox4 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yppxJZuiNFqY6Z0W (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 18:01:27 -0800 (PST)
-Date: Mon, 7 Dec 2015 18:01:17 -0800
+	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 18:07:34 -0800 (PST)
+Date: Mon, 7 Dec 2015 18:07:27 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: make check work for sparse inodes
-Message-ID: <20151208020117.GE28038@birch.djwong.org>
-References: <20151204202606.GB16277@birch.djwong.org>
-	<20151207142123.GA4071@bfoster.bfoster>
+Subject: [PATCH v2] xfs_db: make check work for sparse inodes
+Message-ID: <20151208020727.GC16277@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151207142123.GA4071@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,255 +27,331 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: sandeen@redhat.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-On Mon, Dec 07, 2015 at 09:21:23AM -0500, Brian Foster wrote:
-> On Fri, Dec 04, 2015 at 12:26:06PM -0800, Darrick J. Wong wrote:
-> > Teach the inobt/finobt scanning functions how to deal with sparse
-> > inode chunks well enough that we can pass the spot-check.  Should
-> > fix the xfs/076 failures.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> Hi Darrick,
-> 
-> Thanks for the patch...
-> 
-> >  db/check.c |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++----------
-> >  1 file changed, 75 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/db/check.c b/db/check.c
-> > index 9c1541d..14c7de5 100644
-> > --- a/db/check.c
-> > +++ b/db/check.c
-> > @@ -4319,6 +4319,30 @@ scanfunc_cnt(
-> >  		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_cnt, TYP_CNTBT);
-> >  }
-> >  
-> > +static bool
-> > +ino_issparse(
-> > +	struct xfs_inobt_rec	*rp,
-> > +	int			offset)
-> > +{
-> > +	if (!xfs_sb_version_hassparseinodes(&mp->m_sb))
-> > +		return false;
-> > +
-> > +	return xfs_inobt_is_sparse_disk(rp, offset);
-> > +}
-> > +
-> > +static int
-> > +find_first_zero_bit(
-> > +	unsigned long	mask)
-> > +{
-> > +	int		n;
-> > +	int		b = 0;
-> > +
-> > +	for (n = 0; n < sizeof(mask) * NBBY && (mask & 1); n++, mask >>= 1)
-> > +		b++;
-> > +
-> > +	return b;
-> > +}
-> > +
-> >  static void
-> >  scanfunc_ino(
-> >  	struct xfs_btree_block	*block,
-> > @@ -4336,6 +4360,10 @@ scanfunc_ino(
-> >  	int			off;
-> >  	xfs_inobt_ptr_t		*pp;
-> >  	xfs_inobt_rec_t		*rp;
-> > +	bool			sparse;
-> > +	int			inodes_per_chunk;
-> > +	int			freecount;
-> > +	int			startidx;
-> >  
-> >  	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
-> >  	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
-> > @@ -4364,29 +4392,44 @@ scanfunc_ino(
-> >  		}
-> >  		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
-> >  		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
-> > -			agino = be32_to_cpu(rp[i].ir_startino);
-> > +			sparse = xfs_sb_version_hassparseinodes(&mp->m_sb);
-> > +			if (sparse) {
-> > +				unsigned long	holemask;
-> > +
-> > +				inodes_per_chunk = rp[i].ir_u.sp.ir_count;
-> > +				freecount = rp[i].ir_u.sp.ir_freecount;
-> > +				holemask = be16_to_cpu(rp[i].ir_u.sp.ir_holemask);
-> > +				startidx = find_first_zero_bit(holemask) * XFS_INODES_PER_HOLEMASK_BIT;
-> > +			} else {
-> > +				inodes_per_chunk = XFS_INODES_PER_CHUNK;
-> > +				freecount = be32_to_cpu(rp[i].ir_u.f.ir_freecount);
-> > +				startidx = 0;
-> > +			}
-> 
-> This looks Ok...
-> 
-> > +			agino = be32_to_cpu(rp[i].ir_startino) + startidx;
-> >  			off = XFS_INO_TO_OFFSET(mp, agino);
-> >  			if (off == 0) {
-> > -				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
-> > +				if (!sparse &&
-> > +				    (sbversion & XFS_SB_VERSION_ALIGNBIT) &&
-> 
-> Here we're not checking the record alignment solely based on whether the
-> fs has the sparse inodes feature, which I don't think is what we want.
-> The sparse inodes feature tweaks sb_inoalignmt to the record size and
-> sets sb_spino_align (to the cluster size) to dictate the sparse chunk
-> allocation requirements. IOW, we probably want to check startino
-> alignment against sb_inoalignmt even if startino is not actually a
-> physical inode, because the record must still be correctly aligned.
+Teach the inobt/finobt scanning functions how to deal with sparse
+inode chunks well enough that we can pass the spot-check.  Should
+fix the xfs/076 failures.
 
-<nod>
+v2: Put the alignment checks back in, and for each individual chunk
+of inodes hanging off an inobt record, parse each chunk separately.
+There is no (future) guarantee that all the inodes in a sparse inobt
+record will be contiguous.
 
-> >  				    mp->m_sb.sb_inoalignmt &&
-> >  				    (XFS_INO_TO_AGBNO(mp, agino) %
-> >  				     mp->m_sb.sb_inoalignmt))
-> >  					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
-> >  				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
-> >  					(xfs_extlen_t)MAX(1,
-> > -						XFS_INODES_PER_CHUNK >>
-> > +						inodes_per_chunk >>
-> 
-> While I think this might be practically correct in that with the current
-> supported alignments, the chunk of the record that is physically
-> allocated is typically contiguous, this might not always be the case.
-> E.g., if the cluster size is reduced due to some future mkfs change, the
-> allocated regions of the sparse record could be discontiguous.
+Cc: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/check.c |  249 ++++++++++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 200 insertions(+), 49 deletions(-)
 
-Aha, I hadn't realized that this could be a future possibility.  It's not
-difficult to make it examine each chunk individually.
-
-> 
-> >  						mp->m_sb.sb_inopblog),
-> >  					DBM_INODE, seqno, bno);
-> >  			}
-> > -			icount += XFS_INODES_PER_CHUNK;
-> > -			agicount += XFS_INODES_PER_CHUNK;
-> > -			ifree += be32_to_cpu(rp[i].ir_u.f.ir_freecount);
-> > -			agifreecount += be32_to_cpu(rp[i].ir_u.f.ir_freecount);
-> > +			icount += inodes_per_chunk;
-> > +			agicount += inodes_per_chunk;
-> > +			ifree += freecount;
-> > +			agifreecount += freecount;
-> >  			push_cur();
-> >  			set_cur(&typtab[TYP_INODE],
-> >  				XFS_AGB_TO_DADDR(mp, seqno,
-> >  						 XFS_AGINO_TO_AGBNO(mp, agino)),
-> > -				(int)XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
-> > +				(int)XFS_FSB_TO_BB(mp, inodes_per_chunk >>
-> > +						   mp->m_sb.sb_inopblog),
-> 
-> The same general contiguity issue applies here (and to the finobt
-> equivalent scan function)...
-> 
-> I think what we need to do here is rather than try to tweak the
-> set_dbmap()/set_cur() call params to try and cover the allocated range
-> in one shot, refactor the part of the code that processes the actual
-> inodes to walk the the record a cluster buffer at a time. E.g., after
-> we've grabbed the record data, checked the startino alignment, etc., add
-> a new loop that iterates the associated inode chunk a cluster buffer at
-> a time. If the starting inode of that cluster buffer is sparse, just
-> skip to the next cluster. Otherwise, carry on with the process_inode(),
-> set_dbmap() bits, etc., for each inode in the buffer.
-
-Ok, so it'll be easy to iterate through holemask to figure out where the chunks
-live and then do the set_cur/process_inode parts on just those parts.
-
-Now that I think about it, there's no check for sb_spino_align either, so
-that'll get added in too.
-
-> FWIW, xfsprogs commit 04b21e41 ("metadump: support sparse inode
-> records") should provide a pretty close example of the same change
-> required here (db/metadump.c:copy_inode_chunk()).
-
-<nod>  Thanks for the input!
-
---D
-
-> 
-> Brian
-> 
-> >  				DB_RING_IGN, NULL);
-> >  			if (iocur_top->data == NULL) {
-> >  				if (!sflag)
-> > @@ -4399,20 +4442,22 @@ scanfunc_ino(
-> >  				continue;
-> >  			}
-> >  			for (j = 0, nfree = 0; j < XFS_INODES_PER_CHUNK; j++) {
-> > +				if (ino_issparse(&rp[i], j))
-> > +					continue;
-> >  				isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
-> >  				if (isfree)
-> >  					nfree++;
-> > -				process_inode(agf, agino + j,
-> > -					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)),
-> > +				process_inode(agf, agino - startidx + j,
-> > +					(xfs_dinode_t *)((char *)iocur_top->data + ((off - startidx + j) << mp->m_sb.sb_inodelog)),
-> >  						isfree);
-> >  			}
-> > -			if (nfree != be32_to_cpu(rp[i].ir_u.f.ir_freecount)) {
-> > +			if (nfree != freecount) {
-> >  				if (!sflag)
-> >  					dbprintf(_("ir_freecount/free mismatch, "
-> >  						 "inode chunk %u/%u, freecount "
-> >  						 "%d nfree %d\n"),
-> >  						seqno, agino,
-> > -						be32_to_cpu(rp[i].ir_u.f.ir_freecount), nfree);
-> > +						freecount, nfree);
-> >  				error++;
-> >  			}
-> >  			pop_cur();
-> > @@ -4447,6 +4492,9 @@ scanfunc_fino(
-> >  	int			off;
-> >  	xfs_inobt_ptr_t		*pp;
-> >  	struct xfs_inobt_rec	*rp;
-> > +	bool			sparse;
-> > +	int			inodes_per_chunk;
-> > +	int			startidx;
-> >  
-> >  	if (be32_to_cpu(block->bb_magic) != XFS_FIBT_MAGIC &&
-> >  	    be32_to_cpu(block->bb_magic) != XFS_FIBT_CRC_MAGIC) {
-> > @@ -4475,17 +4523,29 @@ scanfunc_fino(
-> >  		}
-> >  		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
-> >  		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
-> > -			agino = be32_to_cpu(rp[i].ir_startino);
-> > +			sparse = xfs_sb_version_hassparseinodes(&mp->m_sb);
-> > +			if (sparse) {
-> > +				unsigned long	holemask;
-> > +
-> > +				inodes_per_chunk = rp[i].ir_u.sp.ir_count;
-> > +				holemask = be16_to_cpu(rp[i].ir_u.sp.ir_holemask);
-> > +				startidx = find_first_zero_bit(holemask) * XFS_INODES_PER_HOLEMASK_BIT;
-> > +			} else {
-> > +				inodes_per_chunk = XFS_INODES_PER_CHUNK;
-> > +				startidx = 0;
-> > +			}
-> > +			agino = be32_to_cpu(rp[i].ir_startino) + startidx;
-> >  			off = XFS_INO_TO_OFFSET(mp, agino);
-> >  			if (off == 0) {
-> > -				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
-> > +				if (!sparse &&
-> > +				    (sbversion & XFS_SB_VERSION_ALIGNBIT) &&
-> >  				    mp->m_sb.sb_inoalignmt &&
-> >  				    (XFS_INO_TO_AGBNO(mp, agino) %
-> >  				     mp->m_sb.sb_inoalignmt))
-> >  					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
-> >  				check_set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
-> >  					(xfs_extlen_t)MAX(1,
-> > -						XFS_INODES_PER_CHUNK >>
-> > +						inodes_per_chunk >>
-> >  						mp->m_sb.sb_inopblog),
-> >  					DBM_INODE, DBM_INODE, seqno, bno);
-> >  			}
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/db/check.c b/db/check.c
+index 9c1541d..f1620f8 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -4319,6 +4319,51 @@ scanfunc_cnt(
+ 		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_cnt, TYP_CNTBT);
+ }
+ 
++static bool
++ino_issparse(
++	struct xfs_inobt_rec	*rp,
++	int			offset)
++{
++	if (!xfs_sb_version_hassparseinodes(&mp->m_sb))
++		return false;
++
++	return xfs_inobt_is_sparse_disk(rp, offset);
++}
++
++static int
++find_one_ino_bit(
++	__u16		mask,
++	int		startino)
++{
++	int		n;
++	int		b;
++
++	startino /= XFS_INODES_PER_HOLEMASK_BIT;
++	b = startino;
++	mask >>= startino;
++	for (n = startino; n < sizeof(mask) * NBBY && !(mask & 1); n++, mask >>= 1)
++		b++;
++
++	return b * XFS_INODES_PER_HOLEMASK_BIT;
++}
++
++static int
++find_zero_ino_bit(
++	__u16		mask,
++	int		startino)
++{
++	int		n;
++	int		b;
++
++	startino /= XFS_INODES_PER_HOLEMASK_BIT;
++	b = startino;
++	mask >>= startino;
++	for (n = startino; n < sizeof(mask) * NBBY && (mask & 1); n++, mask >>= 1)
++		b++;
++
++	return b * XFS_INODES_PER_HOLEMASK_BIT;
++}
++
+ static void
+ scanfunc_ino(
+ 	struct xfs_btree_block	*block,
+@@ -4336,6 +4381,13 @@ scanfunc_ino(
+ 	int			off;
+ 	xfs_inobt_ptr_t		*pp;
+ 	xfs_inobt_rec_t		*rp;
++	bool			sparse, crc;
++	int			inodes_per_chunk;
++	int			freecount;
++	int			startidx, endidx;
++	__u16			holemask;
++	xfs_agino_t		rino;
++	xfs_extlen_t		cblocks;
+ 
+ 	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
+ 	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
+@@ -4363,59 +4415,111 @@ scanfunc_ino(
+ 			return;
+ 		}
+ 		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
++		sparse = xfs_sb_version_hassparseinodes(&mp->m_sb);
++		crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
++			nfree = 0;
++
++			/* First let's look at the inode chunk alignment */
+ 			agino = be32_to_cpu(rp[i].ir_startino);
+ 			off = XFS_INO_TO_OFFSET(mp, agino);
+-			if (off == 0) {
+-				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+-				    mp->m_sb.sb_inoalignmt &&
+-				    (XFS_INO_TO_AGBNO(mp, agino) %
+-				     mp->m_sb.sb_inoalignmt))
++			if (off == 0 &&
++			    (sbversion & XFS_SB_VERSION_ALIGNBIT) &&
++			    mp->m_sb.sb_inoalignmt &&
++			    (XFS_INO_TO_AGBNO(mp, agino) %
++			     mp->m_sb.sb_inoalignmt)) {
++				if (sparse || crc) {
++					dbprintf(_("incorrect record %u/%u "
++						 "alignment in inobt block "
++						 "%u/%u\n"),
++						 seqno, agino, seqno, bno);
++					error++;
++				} else
+ 					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
+-				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
+-					(xfs_extlen_t)MAX(1,
+-						XFS_INODES_PER_CHUNK >>
+-						mp->m_sb.sb_inopblog),
+-					DBM_INODE, seqno, bno);
+ 			}
+-			icount += XFS_INODES_PER_CHUNK;
+-			agicount += XFS_INODES_PER_CHUNK;
+-			ifree += be32_to_cpu(rp[i].ir_u.f.ir_freecount);
+-			agifreecount += be32_to_cpu(rp[i].ir_u.f.ir_freecount);
+-			push_cur();
+-			set_cur(&typtab[TYP_INODE],
+-				XFS_AGB_TO_DADDR(mp, seqno,
+-						 XFS_AGINO_TO_AGBNO(mp, agino)),
+-				(int)XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
+-				DB_RING_IGN, NULL);
+-			if (iocur_top->data == NULL) {
+-				if (!sflag)
+-					dbprintf(_("can't read inode block "
++
++			/* Move on to examining the inode chunks */
++			if (sparse) {
++				inodes_per_chunk = rp[i].ir_u.sp.ir_count;
++				freecount = rp[i].ir_u.sp.ir_freecount;
++				holemask = be16_to_cpu(rp[i].ir_u.sp.ir_holemask);
++				startidx = find_zero_ino_bit(holemask, 0);
++			} else {
++				inodes_per_chunk = XFS_INODES_PER_CHUNK;
++				freecount = be32_to_cpu(rp[i].ir_u.f.ir_freecount);
++				holemask = 0;
++				startidx = 0;
++			}
++
++			/* For each allocated chunk, look at each inode. */
++			endidx = find_one_ino_bit(holemask, startidx);
++			do {
++				rino = agino + startidx;
++				cblocks = (endidx - startidx) >>
++						mp->m_sb.sb_inopblog;
++
++				/* Check the sparse chunk alignment */
++				if (sparse &&
++				    (XFS_INO_TO_AGBNO(mp, rino) %
++				     mp->m_sb.sb_spino_align)) {
++					dbprintf(_("incorrect chunk %u/%u "
++						 "alignment in inobt block "
+ 						 "%u/%u\n"),
+-						seqno,
+-						XFS_AGINO_TO_AGBNO(mp, agino));
+-				error++;
++						 seqno, rino, seqno, bno);
++					error++;
++				}
++
++				/* Check the block map */
++				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
++					cblocks, DBM_INODE, seqno, bno);
++
++				push_cur();
++				set_cur(&typtab[TYP_INODE],
++					XFS_AGB_TO_DADDR(mp, seqno,
++							 XFS_AGINO_TO_AGBNO(mp, rino)),
++					(int)XFS_FSB_TO_BB(mp, cblocks),
++					DB_RING_IGN, NULL);
++				if (iocur_top->data == NULL) {
++					if (!sflag)
++						dbprintf(_("can't read inode block "
++							 "%u/%u\n"),
++							seqno,
++							XFS_AGINO_TO_AGBNO(mp, agino));
++					error++;
++					pop_cur();
++					continue;
++				}
++
++				/* Examine each inode in this chunk */
++				for (j = startidx; j < endidx; j++) {
++					if (ino_issparse(&rp[i], j))
++						continue;
++					isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
++					if (isfree)
++						nfree++;
++					process_inode(agf, agino + j,
++						(xfs_dinode_t *)((char *)iocur_top->data + ((j - startidx) << mp->m_sb.sb_inodelog)),
++							isfree);
++				}
+ 				pop_cur();
+-				continue;
+-			}
+-			for (j = 0, nfree = 0; j < XFS_INODES_PER_CHUNK; j++) {
+-				isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
+-				if (isfree)
+-					nfree++;
+-				process_inode(agf, agino + j,
+-					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)),
+-						isfree);
+-			}
+-			if (nfree != be32_to_cpu(rp[i].ir_u.f.ir_freecount)) {
++
++				startidx = find_zero_ino_bit(holemask, endidx);
++				endidx = find_one_ino_bit(holemask, startidx);
++			} while (endidx < XFS_INODES_PER_CHUNK);
++			icount += inodes_per_chunk;
++			agicount += inodes_per_chunk;
++			ifree += freecount;
++			agifreecount += freecount;
++
++			if (nfree != freecount) {
+ 				if (!sflag)
+ 					dbprintf(_("ir_freecount/free mismatch, "
+ 						 "inode chunk %u/%u, freecount "
+ 						 "%d nfree %d\n"),
+ 						seqno, agino,
+-						be32_to_cpu(rp[i].ir_u.f.ir_freecount), nfree);
++						freecount, nfree);
+ 				error++;
+ 			}
+-			pop_cur();
+ 		}
+ 		return;
+ 	}
+@@ -4447,6 +4551,11 @@ scanfunc_fino(
+ 	int			off;
+ 	xfs_inobt_ptr_t		*pp;
+ 	struct xfs_inobt_rec	*rp;
++	bool			sparse, crc;
++	int			startidx, endidx;
++	__u16			holemask;
++	xfs_agino_t		rino;
++	xfs_extlen_t		cblocks;
+ 
+ 	if (be32_to_cpu(block->bb_magic) != XFS_FIBT_MAGIC &&
+ 	    be32_to_cpu(block->bb_magic) != XFS_FIBT_CRC_MAGIC) {
+@@ -4474,21 +4583,63 @@ scanfunc_fino(
+ 			return;
+ 		}
+ 		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
++		sparse = xfs_sb_version_hassparseinodes(&mp->m_sb);
++		crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
++			/* First let's look at the inode chunk alignment */
+ 			agino = be32_to_cpu(rp[i].ir_startino);
+ 			off = XFS_INO_TO_OFFSET(mp, agino);
+-			if (off == 0) {
+-				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+-				    mp->m_sb.sb_inoalignmt &&
+-				    (XFS_INO_TO_AGBNO(mp, agino) %
+-				     mp->m_sb.sb_inoalignmt))
++			if (off == 0 &&
++			    (sbversion & XFS_SB_VERSION_ALIGNBIT) &&
++			    mp->m_sb.sb_inoalignmt &&
++			    (XFS_INO_TO_AGBNO(mp, agino) %
++			     mp->m_sb.sb_inoalignmt)) {
++				if (sparse || crc) {
++					dbprintf(_("incorrect record %u/%u "
++						 "alignment in finobt block "
++						 "%u/%u\n"),
++						 seqno, agino, seqno, bno);
++					error++;
++				} else
+ 					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
+-				check_set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
+-					(xfs_extlen_t)MAX(1,
+-						XFS_INODES_PER_CHUNK >>
+-						mp->m_sb.sb_inopblog),
+-					DBM_INODE, DBM_INODE, seqno, bno);
+ 			}
++
++			/* Move on to examining the inode chunks */
++			if (sparse) {
++				holemask = be16_to_cpu(rp[i].ir_u.sp.ir_holemask);
++				startidx = find_zero_ino_bit(holemask, 0);
++			} else {
++				holemask = 0;
++				startidx = 0;
++			}
++
++			/* For each allocated chunk... */
++			endidx = find_one_ino_bit(holemask, startidx);
++			do {
++				rino = agino + startidx;
++				cblocks = (endidx - startidx) >>
++						mp->m_sb.sb_inopblog;
++
++				/* Check the sparse chunk alignment */
++				if (sparse &&
++				    (XFS_INO_TO_AGBNO(mp, rino) %
++				     mp->m_sb.sb_spino_align)) {
++					dbprintf(_("incorrect chunk %u/%u "
++						 "alignment in finobt block "
++						 "%u/%u\n"),
++						 seqno, rino, seqno, bno);
++					error++;
++				}
++
++				/* Check the block map */
++				check_set_dbmap(seqno,
++					XFS_AGINO_TO_AGBNO(mp, rino),
++					cblocks, DBM_INODE, DBM_INODE,
++					seqno, bno);
++
++				startidx = find_zero_ino_bit(holemask, endidx);
++				endidx = find_one_ino_bit(holemask, startidx);
++			} while (endidx < XFS_INODES_PER_CHUNK);
+ 		}
+ 		return;
+ 	}
 
 _______________________________________________
 xfs mailing list
