@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9876F7F37
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 17:45:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 867A1304048
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 15:45:09 -0800 (PST)
-Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
-	[209.85.217.181]) by cuda.sgi.com with ESMTP id
-	tSi8I65EEDNPfhgh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 15:45:07 -0800 (PST)
-Received: by lbbcs9 with SMTP id cs9so1726879lbb.1
-	for <xfs@oss.sgi.com>; Mon, 07 Dec 2015 15:45:05 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 476DF7F37
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 20:01:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 26F0B8F8037
+	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 18:01:33 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id lTvyvNZBN350oox4 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 18:01:27 -0800 (PST)
+Date: Mon, 7 Dec 2015 18:01:17 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_db: make check work for sparse inodes
+Message-ID: <20151208020117.GE28038@birch.djwong.org>
+References: <20151204202606.GB16277@birch.djwong.org>
+	<20151207142123.GA4071@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20151207211156.GD26718@dastard>
-References: <1447856269-7872-1-git-send-email-agruenba@redhat.com>
-	<1447856269-7872-6-git-send-email-agruenba@redhat.com>
-	<20151123230847.GH26718@dastard>
-	<CAHc6FU4BDRqTM6dMONtyb98YqHSVp5M=GYnJ+k7EQRVNPvrQNA@mail.gmail.com>
-	<20151207211156.GD26718@dastard>
-Date: Tue, 8 Dec 2015 00:45:05 +0100
-Message-ID: <CAHc6FU4X+7rPtR8LE9W4HZv2UGsZ-+1zHSq5X5sFgVQmL5mCqQ@mail.gmail.com>
-Subject: Re: [XFSTESTS 5/6] Add richacl tests
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20151207142123.GA4071@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,168 +30,255 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: XFS Developers <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: sandeen@redhat.com, xfs@oss.sgi.com
 
-On Mon, Dec 7, 2015 at 10:11 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sun, Dec 06, 2015 at 06:31:20PM +0100, Andreas Gruenbacher wrote:
->> Dave,
->>
->> On Tue, Nov 24, 2015 at 12:08 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Wed, Nov 18, 2015 at 03:17:48PM +0100, Andreas Gruenbacher wrote:
->> >> Add the Rich Access Control List tests from the richacl package.  The
->> >> new tests require TEST_DEV and TEST_DIR to be set.
->> >>
->> >> When the check script is run, it first makes sure that the test
->> >> filesystem has richacls enabled or disabled as appropriate: with the
->> >> -richacl option, richacls must be enabled; without the -richacl option,
->> >> richacls must be disabled.  If TEST_DEV has incorrect richacl support,
->> >> the TEST_DEV filesystem is recreated.
->> >
->> > No, we don't recreate the testdev like this with the test harness.
->> > The test device is intended to remain unchanged from run to run, so
->> > give us long term aging of the test filesystem over months of
->> > regression test running.
->> >
->> > If you want to test the testdev with richacls enabled, then you need
->> > to manually create the testdev with richacls.  Any test that
->> > specifically needs to enable richacls should use the scratch device
->> > and use a _requires_scratch_richacls() test to check that the
->> > scratch device can be created with richacl support.
->>
->> well, let's leave it to users to create their TEST_DEV with richacl
->> support if they want the richacl tests to be run then. Those tests
->> will already be skipped on unsuitable filesystems anyway.
->
-> No, that's not the way xfstests works, or how developers really
-> expect it to run. If you have new functionality that requires
-> specific on-disk format requirements that are different to the
-> defaults that the developers userspace progs are using then you
-> should be using the scratch device for those tests after probing that
+On Mon, Dec 07, 2015 at 09:21:23AM -0500, Brian Foster wrote:
+> On Fri, Dec 04, 2015 at 12:26:06PM -0800, Darrick J. Wong wrote:
+> > Teach the inobt/finobt scanning functions how to deal with sparse
+> > inode chunks well enough that we can pass the spot-check.  Should
+> > fix the xfs/076 failures.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Hi Darrick,
+> 
+> Thanks for the patch...
+> 
+> >  db/check.c |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++----------
+> >  1 file changed, 75 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/db/check.c b/db/check.c
+> > index 9c1541d..14c7de5 100644
+> > --- a/db/check.c
+> > +++ b/db/check.c
+> > @@ -4319,6 +4319,30 @@ scanfunc_cnt(
+> >  		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_cnt, TYP_CNTBT);
+> >  }
+> >  
+> > +static bool
+> > +ino_issparse(
+> > +	struct xfs_inobt_rec	*rp,
+> > +	int			offset)
+> > +{
+> > +	if (!xfs_sb_version_hassparseinodes(&mp->m_sb))
+> > +		return false;
+> > +
+> > +	return xfs_inobt_is_sparse_disk(rp, offset);
+> > +}
+> > +
+> > +static int
+> > +find_first_zero_bit(
+> > +	unsigned long	mask)
+> > +{
+> > +	int		n;
+> > +	int		b = 0;
+> > +
+> > +	for (n = 0; n < sizeof(mask) * NBBY && (mask & 1); n++, mask >>= 1)
+> > +		b++;
+> > +
+> > +	return b;
+> > +}
+> > +
+> >  static void
+> >  scanfunc_ino(
+> >  	struct xfs_btree_block	*block,
+> > @@ -4336,6 +4360,10 @@ scanfunc_ino(
+> >  	int			off;
+> >  	xfs_inobt_ptr_t		*pp;
+> >  	xfs_inobt_rec_t		*rp;
+> > +	bool			sparse;
+> > +	int			inodes_per_chunk;
+> > +	int			freecount;
+> > +	int			startidx;
+> >  
+> >  	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
+> >  	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
+> > @@ -4364,29 +4392,44 @@ scanfunc_ino(
+> >  		}
+> >  		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
+> >  		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
+> > -			agino = be32_to_cpu(rp[i].ir_startino);
+> > +			sparse = xfs_sb_version_hassparseinodes(&mp->m_sb);
+> > +			if (sparse) {
+> > +				unsigned long	holemask;
+> > +
+> > +				inodes_per_chunk = rp[i].ir_u.sp.ir_count;
+> > +				freecount = rp[i].ir_u.sp.ir_freecount;
+> > +				holemask = be16_to_cpu(rp[i].ir_u.sp.ir_holemask);
+> > +				startidx = find_first_zero_bit(holemask) * XFS_INODES_PER_HOLEMASK_BIT;
+> > +			} else {
+> > +				inodes_per_chunk = XFS_INODES_PER_CHUNK;
+> > +				freecount = be32_to_cpu(rp[i].ir_u.f.ir_freecount);
+> > +				startidx = 0;
+> > +			}
+> 
+> This looks Ok...
+> 
+> > +			agino = be32_to_cpu(rp[i].ir_startino) + startidx;
+> >  			off = XFS_INO_TO_OFFSET(mp, agino);
+> >  			if (off == 0) {
+> > -				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+> > +				if (!sparse &&
+> > +				    (sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+> 
+> Here we're not checking the record alignment solely based on whether the
+> fs has the sparse inodes feature, which I don't think is what we want.
+> The sparse inodes feature tweaks sb_inoalignmt to the record size and
+> sets sb_spino_align (to the cluster size) to dictate the sparse chunk
+> allocation requirements. IOW, we probably want to check startino
+> alignment against sb_inoalignmt even if startino is not actually a
+> physical inode, because the record must still be correctly aligned.
 
-That should be possible. Those tests would then only be using
-SCRATCH_DEV / SCRATCH_MNT and not TEST_DEV / TEST_DIR at all. Any
-ideas how xfstests could be made to not always require TEST_DEV /
-TEST_DIR to be set?
+<nod>
 
->> >> The -richacl option currently selects the tests in the richacl group to
->> >> be run.  Additional test groups or tests can be specified on the command
->> >> line, e.g.,
->> >>
->> >>>   ./check -richacl -g quick
->> >> (Eventually, the -richacl option will be changed to only skip tests
->> >> which are incompatible with richacls.)
->> >
->> > No, this is wrong. If you want to check richacls, it should be via a
->> > test group, not a specific command line option
->> >
->> >    ./check -g richacl
->>
->> The richacl tests were in a separate group already ...
->
-> No, they aren't - you've set them up as a /filesystem/ group, not a
-> test group.
+> >  				    mp->m_sb.sb_inoalignmt &&
+> >  				    (XFS_INO_TO_AGBNO(mp, agino) %
+> >  				     mp->m_sb.sb_inoalignmt))
+> >  					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
+> >  				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
+> >  					(xfs_extlen_t)MAX(1,
+> > -						XFS_INODES_PER_CHUNK >>
+> > +						inodes_per_chunk >>
+> 
+> While I think this might be practically correct in that with the current
+> supported alignments, the chunk of the record that is physically
+> allocated is typically contiguous, this might not always be the case.
+> E.g., if the cluster size is reduced due to some future mkfs change, the
+> allocated regions of the sparse record could be discontiguous.
 
-Not true. Both versions of the patches I've posted did add a group
-file in tests/rchacl with entries like:
+Aha, I hadn't realized that this could be a future possibility.  It's not
+difficult to make it examine each chunk individually.
 
-  001-apply-masks [...] richacl
+> 
+> >  						mp->m_sb.sb_inopblog),
+> >  					DBM_INODE, seqno, bno);
+> >  			}
+> > -			icount += XFS_INODES_PER_CHUNK;
+> > -			agicount += XFS_INODES_PER_CHUNK;
+> > -			ifree += be32_to_cpu(rp[i].ir_u.f.ir_freecount);
+> > -			agifreecount += be32_to_cpu(rp[i].ir_u.f.ir_freecount);
+> > +			icount += inodes_per_chunk;
+> > +			agicount += inodes_per_chunk;
+> > +			ifree += freecount;
+> > +			agifreecount += freecount;
+> >  			push_cur();
+> >  			set_cur(&typtab[TYP_INODE],
+> >  				XFS_AGB_TO_DADDR(mp, seqno,
+> >  						 XFS_AGINO_TO_AGBNO(mp, agino)),
+> > -				(int)XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
+> > +				(int)XFS_FSB_TO_BB(mp, inodes_per_chunk >>
+> > +						   mp->m_sb.sb_inopblog),
+> 
+> The same general contiguity issue applies here (and to the finobt
+> equivalent scan function)...
+> 
+> I think what we need to do here is rather than try to tweak the
+> set_dbmap()/set_cur() call params to try and cover the allocated range
+> in one shot, refactor the part of the code that processes the actual
+> inodes to walk the the record a cluster buffer at a time. E.g., after
+> we've grabbed the record data, checked the startino alignment, etc., add
+> a new loop that iterates the associated inode chunk a cluster buffer at
+> a time. If the starting inode of that cluster buffer is sparse, just
+> skip to the next cluster. Otherwise, carry on with the process_inode(),
+> set_dbmap() bits, etc., for each inode in the buffer.
 
-which did define a richacl group. Running "./check -g richacl" did
-select the appropriate test cases based on that definition.
+Ok, so it'll be easy to iterate through holemask to figure out where the chunks
+live and then do the set_cur/process_inode parts on just those parts.
 
-There already are directories in tests/ which don't classify test
-cases by filesystem (generic/ and shared/), so adding another for
-keeping related things together is not a new concept.
+Now that I think about it, there's no check for sb_spino_align either, so
+that'll get added in too.
 
->> > That makes the first 2 patches in the series go away.
->> >
->> >> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
->> >> ---
->> >>  .gitignore                          |   1 +
->> >>  check                               |  39 +++++++-
->> >>  common/rc                           |  23 ++++-
->> >>  src/Makefile                        |   2 +-
->> >>  src/require-richacls.c              |  35 +++++++
->> >
->> > That's a red flag.
->>
->> What is, any why?
->
-> That you are using C code to detect whether an on-disk feature is
-> supported or not. This is done through running the userspace tools
-> to check they support the on-disk feature, then creating a
-> filesystem with those tools and mounting it to determine whether the
-> kernel supports the feature correctly as well.
+> FWIW, xfsprogs commit 04b21e41 ("metadump: support sparse inode
+> records") should provide a pretty close example of the same change
+> required here (db/metadump.c:copy_inode_chunk()).
 
-Someone might run "check -g richacl" on a filesystem that doesn't
-support richacls. In that case, I want the richacl test cases to be
-skipped, with an explanation why; I don't want the test cases to just
-explode. That's the same as what the POSIX ACL related test cases do
-in common/attr:_require_acls().
+<nod>  Thanks for the input!
 
-_require_acls() uses the chacl utility for probing for POSIX ACL
-support. The require-richacls program serves the same purpose. I could
-probe using getfattr instead, but getfattr isn't necessarily
-installed, and I won't want to create an unnecessary dependency.
+--D
 
->> > i.e. only the numbered version of the test should exist,
->> > and all the other files be moved into them. They shouldn't be in
->> > tests/richacl, either - these are generic tests and so should
->> > be in tests/generic, using whatever the next unused test numbers
->> > are. And then, in the tests/generic/group file, there will be
->> > entries like:
->> >
->> > 178-apply-masks auto quick richacl
->> > 179-auto-inheritance auto quick richacl
->> > ....
->>
->> The richacl tests started out in the richacl package, they were not
->> written for xfstests form scratch. I want to keep them working there
->> as well, and integrate them into xfstests with as little friction on
->> either side as necessary.
->
-> There is no point in maintaining two test suites - you'll change
-> stuff in your richacl package test suite, and the xfstests stuff
-> will be ignored, because *you won't be using xfstests*.
-> The whole point of getting this stuff into xfstests is so that
-> there's one place to both run and maintain the tests.
-
-I don't want to maintain two test suites, I want the same tests to
-work in both contexts.
-
->> The symlinks avoid having to rename files on every update of those tests.
->>
->> > These tests need to use the common xfstests structure (i.e. the
->> > setup code from the "new" script).
->>
->> Why does the new script require TEST_DEV and TEST_DIR to be set when
->> it doesn't run tests? I'm not running the tests on the same host on
->> which I build the test suite.
->
-> Because it simply sources common code. Nobody has raised this as a
-> problem before, so if it bugs you, send patches to fix it.
->
->> > The file that has all the common functionality in it (test-lib.sh)
->> > needs to be moved to common/richacl and included along with the
->> > necessary common files. At this point, the makefile can also go
->> > away.
->>
->> What's the benefit? The tests don't need anything from common/, I want
->> to keep them well separated so that updating them will remain easy.
->
-> What's the benefit? That the tests all follow the same patterns, and
-> that means any xfstests user can modify and update the tests without
-> having to learn some new, weird frankenstein test infrastructure.
-
->From the point of view of the xfstests infrastructure, all you really
-have to know about the richacl tests is that they are scripts that
-signal with their exit status whether a test has succeeded, failed, or
-has been skipped. (That's actually how simple autoconf tests work as
-well.)
-
-Thanks,
-Andreas
+> 
+> Brian
+> 
+> >  				DB_RING_IGN, NULL);
+> >  			if (iocur_top->data == NULL) {
+> >  				if (!sflag)
+> > @@ -4399,20 +4442,22 @@ scanfunc_ino(
+> >  				continue;
+> >  			}
+> >  			for (j = 0, nfree = 0; j < XFS_INODES_PER_CHUNK; j++) {
+> > +				if (ino_issparse(&rp[i], j))
+> > +					continue;
+> >  				isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
+> >  				if (isfree)
+> >  					nfree++;
+> > -				process_inode(agf, agino + j,
+> > -					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)),
+> > +				process_inode(agf, agino - startidx + j,
+> > +					(xfs_dinode_t *)((char *)iocur_top->data + ((off - startidx + j) << mp->m_sb.sb_inodelog)),
+> >  						isfree);
+> >  			}
+> > -			if (nfree != be32_to_cpu(rp[i].ir_u.f.ir_freecount)) {
+> > +			if (nfree != freecount) {
+> >  				if (!sflag)
+> >  					dbprintf(_("ir_freecount/free mismatch, "
+> >  						 "inode chunk %u/%u, freecount "
+> >  						 "%d nfree %d\n"),
+> >  						seqno, agino,
+> > -						be32_to_cpu(rp[i].ir_u.f.ir_freecount), nfree);
+> > +						freecount, nfree);
+> >  				error++;
+> >  			}
+> >  			pop_cur();
+> > @@ -4447,6 +4492,9 @@ scanfunc_fino(
+> >  	int			off;
+> >  	xfs_inobt_ptr_t		*pp;
+> >  	struct xfs_inobt_rec	*rp;
+> > +	bool			sparse;
+> > +	int			inodes_per_chunk;
+> > +	int			startidx;
+> >  
+> >  	if (be32_to_cpu(block->bb_magic) != XFS_FIBT_MAGIC &&
+> >  	    be32_to_cpu(block->bb_magic) != XFS_FIBT_CRC_MAGIC) {
+> > @@ -4475,17 +4523,29 @@ scanfunc_fino(
+> >  		}
+> >  		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
+> >  		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
+> > -			agino = be32_to_cpu(rp[i].ir_startino);
+> > +			sparse = xfs_sb_version_hassparseinodes(&mp->m_sb);
+> > +			if (sparse) {
+> > +				unsigned long	holemask;
+> > +
+> > +				inodes_per_chunk = rp[i].ir_u.sp.ir_count;
+> > +				holemask = be16_to_cpu(rp[i].ir_u.sp.ir_holemask);
+> > +				startidx = find_first_zero_bit(holemask) * XFS_INODES_PER_HOLEMASK_BIT;
+> > +			} else {
+> > +				inodes_per_chunk = XFS_INODES_PER_CHUNK;
+> > +				startidx = 0;
+> > +			}
+> > +			agino = be32_to_cpu(rp[i].ir_startino) + startidx;
+> >  			off = XFS_INO_TO_OFFSET(mp, agino);
+> >  			if (off == 0) {
+> > -				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+> > +				if (!sparse &&
+> > +				    (sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+> >  				    mp->m_sb.sb_inoalignmt &&
+> >  				    (XFS_INO_TO_AGBNO(mp, agino) %
+> >  				     mp->m_sb.sb_inoalignmt))
+> >  					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
+> >  				check_set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
+> >  					(xfs_extlen_t)MAX(1,
+> > -						XFS_INODES_PER_CHUNK >>
+> > +						inodes_per_chunk >>
+> >  						mp->m_sb.sb_inopblog),
+> >  					DBM_INODE, DBM_INODE, seqno, bno);
+> >  			}
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
