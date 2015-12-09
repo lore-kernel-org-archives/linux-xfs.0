@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 653AE7F50
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 06:07:39 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8CB307F50
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 13:44:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED396AC007
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 04:07:35 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id wybazT70TcMyorFA (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Dec 2015 04:07:32 -0800 (PST)
-Date: Wed, 9 Dec 2015 12:49:02 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: v4.4-rc4 regression with direct-io
-Message-ID: <20151209114902.GD3137@quack.suse.cz>
-References: <20151208213902.GA4212@linux.intel.com>
-	<20151208215109.GR20997@ZenIV.linux.org.uk>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 514918F8039
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 11:44:23 -0800 (PST)
+Received: from mail-qg0-f49.google.com (mail-qg0-f49.google.com
+	[209.85.192.49]) by cuda.sgi.com with ESMTP id INrp5JJzKERhTKQv
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 09 Dec 2015 11:44:18 -0800 (PST)
+Received: by qgeb1 with SMTP id b1so97160961qge.1
+	for <xfs@oss.sgi.com>; Wed, 09 Dec 2015 11:44:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151208215109.GR20997@ZenIV.linux.org.uk>
+In-Reply-To: <1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
+References: <1449602325-20572-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
+Date: Wed, 9 Dec 2015 11:44:16 -0800
+Message-ID: <CAA9_cmeVYinm4mMiDU4oz8fW4HQ3n1RqEbPHBW7A3OGmi9eXtw@mail.gmail.com>
+Subject: Re: [PATCH v3 3/7] mm: add find_get_entries_tag()
+From: Dan Williams <dan.j.williams@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +32,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Avi Kivity <avi@scylladb.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, xfs@oss.sgi.com, Jens Axboe <axboe@fb.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, torvalds@linux-foundation.org, Steven Whitehouse <swhiteho@redhat.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: the arch/x86 maintainers <x86@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, ext4 hackers <linux-ext4@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Jan Kara <jack@suse.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Tue 08-12-15 21:51:09, Al Viro wrote:
-> On Tue, Dec 08, 2015 at 02:39:02PM -0700, Ross Zwisler wrote:
-> > Hey Jan,
-> > 
-> > In my test setup this commit:
-> > 
-> > 74cedf9b6c60 ("direct-io: Fix negative return from dio read beyond eof")
-> > 
-> > causes a regression with XFS and the test generic/113.  The test used to
-> > pass, but with the above mentioned commit it just hangs indefinitely.
-> > 
-> > This commit went in between v4.4-rc3 and v4.4-rc4, and it looks like it was
-> > marked for stable?
-> 
-> See the tip of vfs.git#for-linus for fix...
+On Tue, Dec 8, 2015 at 11:18 AM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> Add find_get_entries_tag() to the family of functions that include
+> find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
+> needed for DAX dirty page handling because we need a list of both page
+> offsets and radix tree entries ('indices' and 'entries' in this function)
+> that are marked with the PAGECACHE_TAG_TOWRITE tag.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  include/linux/pagemap.h |  3 +++
+>  mm/filemap.c            | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 71 insertions(+)
+>
+> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+> index 26eabf5..4db0425 100644
+> --- a/include/linux/pagemap.h
+> +++ b/include/linux/pagemap.h
+> @@ -361,6 +361,9 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t start,
+>                                unsigned int nr_pages, struct page **pages);
+>  unsigned find_get_pages_tag(struct address_space *mapping, pgoff_t *index,
+>                         int tag, unsigned int nr_pages, struct page **pages);
+> +unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
+> +                       int tag, unsigned int nr_entries,
+> +                       struct page **entries, pgoff_t *indices);
+>
+>  struct page *grab_cache_page_write_begin(struct address_space *mapping,
+>                         pgoff_t index, unsigned flags);
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 167a4d9..99dfbc9 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -1498,6 +1498,74 @@ repeat:
+>  }
+>  EXPORT_SYMBOL(find_get_pages_tag);
+>
+> +/**
+> + * find_get_entries_tag - find and return entries that match @tag
+> + * @mapping:   the address_space to search
+> + * @start:     the starting page cache index
+> + * @tag:       the tag index
+> + * @nr_entries:        the maximum number of entries
+> + * @entries:   where the resulting entries are placed
+> + * @indices:   the cache indices corresponding to the entries in @entries
+> + *
+> + * Like find_get_entries, except we only return entries which are tagged with
+> + * @tag.
+> + */
+> +unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
+> +                       int tag, unsigned int nr_entries,
+> +                       struct page **entries, pgoff_t *indices)
+> +{
+> +       void **slot;
+> +       unsigned int ret = 0;
+> +       struct radix_tree_iter iter;
+> +
+> +       if (!nr_entries)
+> +               return 0;
+> +
+> +       rcu_read_lock();
+> +restart:
+> +       radix_tree_for_each_tagged(slot, &mapping->page_tree,
+> +                                  &iter, start, tag) {
+> +               struct page *page;
+> +repeat:
+> +               page = radix_tree_deref_slot(slot);
+> +               if (unlikely(!page))
+> +                       continue;
+> +               if (radix_tree_exception(page)) {
+> +                       if (radix_tree_deref_retry(page)) {
+> +                               /*
+> +                                * Transient condition which can only trigger
+> +                                * when entry at index 0 moves out of or back
+> +                                * to root: none yet gotten, safe to restart.
+> +                                */
+> +                               goto restart;
+> +                       }
+> +
+> +                       /*
+> +                        * A shadow entry of a recently evicted page, a swap
+> +                        * entry from shmem/tmpfs or a DAX entry.  Return it
+> +                        * without attempting to raise page count.
+> +                        */
+> +                       goto export;
+> +               }
+> +               if (!page_cache_get_speculative(page))
+> +                       goto repeat;
+> +
+> +               /* Has the page moved? */
+> +               if (unlikely(page != *slot)) {
+> +                       page_cache_release(page);
+> +                       goto repeat;
+> +               }
+> +export:
+> +               indices[ret] = iter.index;
+> +               entries[ret] = page;
+> +               if (++ret == nr_entries)
+> +                       break;
+> +       }
+> +       rcu_read_unlock();
+> +       return ret;
+> +}
+> +EXPORT_SYMBOL(find_get_entries_tag);
+> +
 
-Ah, thanks for fixing this up! I'm just wondering how the test program I
-was using could have passed because pread() I'm doing there must have
-returned ENOMEM... Argh, I see. I have tested the problem with ext4 which
-uses DIO_LOCKING mode and in that case 'retval' gets overwritten to 0 by
-filemap_write_and_wait() call :-|.
+Why does this mostly duplicate find_get_entries()?
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Surely find_get_entries() can be implemented as a special case of
+find_get_entries_tag().
 
 _______________________________________________
 xfs mailing list
