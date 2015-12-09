@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E3B367F50
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 05:59:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D001C30404E
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 03:59:03 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LEsoz7uIwTgqDtPs (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Dec 2015 03:59:02 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id E1A6D8F013
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 11:59:01 +0000 (UTC)
-Date: Wed, 9 Dec 2015 06:59:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfsprogs: Removal of trailing whitespaces
-Message-ID: <20151209115900.GA45171@bfoster.bfoster>
-References: <CACj3i73f4_KZ8qUN4Gqz_bg3TCTbgdsg9PZ6UvMSRm+9JHN0JA@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 653AE7F50
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 06:07:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ED396AC007
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 04:07:35 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id wybazT70TcMyorFA (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 09 Dec 2015 04:07:32 -0800 (PST)
+Date: Wed, 9 Dec 2015 12:49:02 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: v4.4-rc4 regression with direct-io
+Message-ID: <20151209114902.GD3137@quack.suse.cz>
+References: <20151208213902.GA4212@linux.intel.com>
+	<20151208215109.GR20997@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CACj3i73f4_KZ8qUN4Gqz_bg3TCTbgdsg9PZ6UvMSRm+9JHN0JA@mail.gmail.com>
+In-Reply-To: <20151208215109.GR20997@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,45 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Avi Kivity <avi@scylladb.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, xfs@oss.sgi.com, Jens Axboe <axboe@fb.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, torvalds@linux-foundation.org, Steven Whitehouse <swhiteho@redhat.com>
 
-On Tue, Dec 08, 2015 at 07:48:31PM +0100, Jan Tulak wrote:
-> Hi,
+On Tue 08-12-15 21:51:09, Al Viro wrote:
+> On Tue, Dec 08, 2015 at 02:39:02PM -0700, Ross Zwisler wrote:
+> > Hey Jan,
+> > 
+> > In my test setup this commit:
+> > 
+> > 74cedf9b6c60 ("direct-io: Fix negative return from dio read beyond eof")
+> > 
+> > causes a regression with XFS and the test generic/113.  The test used to
+> > pass, but with the above mentioned commit it just hangs indefinitely.
+> > 
+> > This commit went in between v4.4-rc3 and v4.4-rc4, and it looks like it was
+> > marked for stable?
 > 
-> I decided to remove trailing whitespaces on various locations in the code
-> of xfsprogs, mainly because I have enabled highlighting of these, and they
-> were flashing into my eyes whenever I scrolled around. :-)
-> 
-> I looked for the last commit touching some of the lines with trailing
-> blanks and in all cases I found that the lines were last changed in 2011 or
-> earlier. Maybe there can be something newer, I didn't checked the story of
-> every one, but it seems that they are here for a long time, and will be
-> still if I don't remove them.
-> 
-> Right now, I have 14 patches, one for every tool/directory, where some
-> change occurred. About 140 lines changed in 52 files in total. I thought
-> that separating it this way makes for easier fix if it causes a conflict
-> with some other patch, however I can merge them into a single patch.
-> 
-> Should I send it separated as it is, or merge it into a single patch?
-> 
+> See the tip of vfs.git#for-linus for fix...
 
-A single patch makes for less noise in the commit log, IMO.
+Ah, thanks for fixing this up! I'm just wondering how the test program I
+was using could have passed because pread() I'm doing there must have
+returned ENOMEM... Argh, I see. I have tested the problem with ext4 which
+uses DIO_LOCKING mode and in that case 'retval' gets overwritten to 0 by
+filemap_write_and_wait() call :-|.
 
-Brian
-
-> Cheers,
-> Jan
-> 
-> -- 
-> Jan Tulak
-> jtulak@redhat.com / jan@tulak.me
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
