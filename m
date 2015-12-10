@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 282137F3F
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 14:33:01 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 23CC27F3F
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 16:34:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 181CD304039
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 12:32:58 -0800 (PST)
-Received: from mail-vk0-f44.google.com (mail-vk0-f44.google.com
-	[209.85.213.44]) by cuda.sgi.com with ESMTP id 2GshVwmJcopFoB4u
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 10 Dec 2015 12:32:55 -0800 (PST)
-Received: by vkgj66 with SMTP id j66so4175404vkg.1
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 12:32:55 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 00E1F304032
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 14:34:17 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	i41LTRC2HeWSB7F7 for <xfs@oss.sgi.com>;
+	Thu, 10 Dec 2015 14:34:15 -0800 (PST)
+Date: Fri, 11 Dec 2015 09:33:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstests failures with xfs, dax and v4.4-rc3
+Message-ID: <20151210223333.GH26718@dastard>
+References: <20151202183438.GA1319@linux.intel.com>
+	<20151202202910.GH19199@dastard> <20151202204502.GI19199@dastard>
+	<20151202213932.GA7652@linux.intel.com>
+	<20151210165458.GA13603@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151210202438.GA6590@linux.intel.com>
-References: <1449602325-20572-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
-	<CAA9_cmeVYinm4mMiDU4oz8fW4HQ3n1RqEbPHBW7A3OGmi9eXtw@mail.gmail.com>
-	<20151210202438.GA6590@linux.intel.com>
-Date: Thu, 10 Dec 2015 12:31:53 -0800
-Message-ID: <CAPcyv4g6ieXDUSGUCpevmQfvGWZUqfW-2NTNC9TsVUxF0aoTNQ@mail.gmail.com>
-Subject: Re: [PATCH v3 3/7] mm: add find_get_entries_tag()
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
+In-Reply-To: <20151210165458.GA13603@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,48 +32,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, the arch/x86 maintainers <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, ext4 hackers <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>
 
-On Thu, Dec 10, 2015 at 12:24 PM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> On Wed, Dec 09, 2015 at 11:44:16AM -0800, Dan Williams wrote:
->> On Tue, Dec 8, 2015 at 11:18 AM, Ross Zwisler
->> <ross.zwisler@linux.intel.com> wrote:
->> > Add find_get_entries_tag() to the family of functions that include
->> > find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
->> > needed for DAX dirty page handling because we need a list of both page
->> > offsets and radix tree entries ('indices' and 'entries' in this function)
->> > that are marked with the PAGECACHE_TAG_TOWRITE tag.
->> >
->> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> <>
->> Why does this mostly duplicate find_get_entries()?
->>
->> Surely find_get_entries() can be implemented as a special case of
->> find_get_entries_tag().
->
-> I'm adding find_get_entries_tag() to the family of functions that already
-> exist and include find_get_entries(), find_get_pages(),
-> find_get_pages_contig() and find_get_pages_tag().
->
-> These functions all contain very similar code with small changes to the
-> internal looping based on whether you're looking through all radix slots or
-> only the ones that match a certain tag (radix_tree_for_each_slot() vs
-> radix_tree_for_each_tagged()).
->
-> We already have find_get_page() to get all pages in a range and
-> find_get_pages_tag() to get all pages in the range with a certain tag.  We
-> have find_get_entries() to get all pages and indices for a given range, but we
-> are currently missing find_get_entries_tag() to do that same search based on a
-> tag, which is what I'm adding.
->
-> I agree that we could probably figure out a way to combine the code for
-> find_get_entries() with find_get_entries_tag(), as we could do for the
-> existing functions find_get_pages() and find_get_pages_tag().  I think we
-> should probably add find_get_entries_tag() per this patch, though, and then
-> decide whether to do any combining later as a separate step.
+On Thu, Dec 10, 2015 at 09:54:58AM -0700, Ross Zwisler wrote:
+> On Wed, Dec 02, 2015 at 02:39:32PM -0700, Ross Zwisler wrote:
+> > On Thu, Dec 03, 2015 at 07:45:02AM +1100, Dave Chinner wrote:
+> > > On Thu, Dec 03, 2015 at 07:29:10AM +1100, Dave Chinner wrote:
+> > > > On Wed, Dec 02, 2015 at 11:34:38AM -0700, Ross Zwisler wrote:
+> > > > > I'm hitting a few more test failures in my testing setup with v4.4-rc3, xfs
+> > > > > and DAX.  My test setup is a pair of 4GiB PMEM partitions in a KVM virtual
+> > > > > machine.  Here are the failures:
+> > > > 
+> > > > Which are caused by commit 1ca1915 ("xfs: Don't use unwritten extents
+> > > > for DAX") because of this code for unwritten extent conversion in
+> > > > get_blocks:
+> > > > 
+> > > > 	tp->t_flags |= XFS_TRANS_RESERVE;
+> > > > 
+> > > > It's a minor problem compared to all the other issues DAX has right
+> > > > now, so I ignored it to get the bigger problem solved first.
+> > > 
+> > > Patch to fix the problem below.
+> > > 
+> > > -Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > > 
+> > > xfs: Don't use reserved blocks for data blocks with DAX
+> > > 
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Commit 1ca1915 ("xfs: Don't use unwritten extents for DAX") enabled
+> > > the DAX allocation call to dip into the reserve pool in case it was
+> > > converting unwritten extents rather than allocating blocks. This was
+> > > a direct copy of the unwritten extent conversion code, but had an
+> > > unintended side effect of allowing normal data block allocation to
+> > > use the reserve pool. Hence normal block allocation could deplete
+> > > the reserve pool and prevent unwritten extent conversion at ENOSPC,
+> > > hence violating fallocate guarantees on preallocated space.
+> > > 
+> > > Fix it by checking whether the incoming map from __xfs_get_blocks()
+> > > spans an unwritten extent and only use the reserve pool if the
+> > > allocation covers an unwritten extent.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > 
+> > I've verified that this fixes all three failing xfstests reported in this mail.
+> > Thanks!
+> 
+> Hey Dave,
+> 
+> Are you planning on pushing this fix for v4.4?
 
-Ok, sounds good to me.
+No plans to right now - ENOSPC is a corner case that most users
+won't be anywhere near, especially for experimental functionality on
+hardware nobody actually has....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
