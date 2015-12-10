@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E77357F50
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 01:58:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D9323304032
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 23:58:45 -0800 (PST)
-Received: from mail-qg0-f53.google.com (mail-qg0-f53.google.com
-	[209.85.192.53]) by cuda.sgi.com with ESMTP id LTt1S6jGsM2gpN3Y
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 09 Dec 2015 23:58:42 -0800 (PST)
-Received: by qgcc31 with SMTP id c31so127981975qgc.3
-	for <xfs@oss.sgi.com>; Wed, 09 Dec 2015 23:58:42 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 91FFE7F51
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 09:07:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7EDF18F804C
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 07:07:42 -0800 (PST)
+Received: from mail1.bemta5.messagelabs.com (mail1.bemta5.messagelabs.com
+	[195.245.231.145]) by cuda.sgi.com with ESMTP id
+	7lEmk16U1dbBSeCw (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 07:07:36 -0800 (PST)
+From: Sandeep Patel <spatel@omnifone.com>
+Subject: RE: XFS corruptions
+Date: Thu, 10 Dec 2015 15:07:32 +0000
+Message-ID: <558408F298C8CE4C89D93BD56AB474E8018618503B@EXBE1IS02.omnifone.com>
+References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+	<20151130184048.3fa123e0@harpe.intellique.com>
+	<558408F298C8CE4C89D93BD56AB474E8018617B3A6@EXBE1IS02.omnifone.com>
+	<20151130194554.6140bf30@harpe.intellique.com>
+	<558408F298C8CE4C89D93BD56AB474E8018617C636@EXBE1IS02.omnifone.com>
+	<20151201145011.6df02063@harpe.intellique.com>
+Content-Language: en-US
 MIME-Version: 1.0
-In-Reply-To: <20151210021343.GI19802@dastard>
-References: <CACQ+YcuwWv8g5zHk2sMfN_uRPGnW8Xb8WT6NGOLGigN2+0Toag@mail.gmail.com>
-	<20151210021343.GI19802@dastard>
-Date: Wed, 9 Dec 2015 23:58:41 -0800
-Message-ID: <CACQ+Yct8ics=YebWFU=h4VHSdVEW3jcpdbZ8=niov9A+fL-HqQ@mail.gmail.com>
-Subject: Re: handling device or resource busy errors.
-From: Ed Peschko <horos22@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,66 +30,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3499329523717998579=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============3499329523717998579==
-Content-Type: multipart/alternative; boundary=001a11c1641a447a4805268693c3
-
---001a11c1641a447a4805268693c3
-Content-Type: text/plain; charset=UTF-8
-
-Dave,
-
-futex comes from doing a simple strace, which showed the futex as the call
-that was being blocked. My fear is that it is a holdover from an old, dead
-process; we went through each process on the system and lsof -p'd it,
-didn't see anything.
-
-Thanks for the suggestion of sysrq btw, I'll try that the next time I have
-access to the box, but waiting doesn't help.Also,  I don't see in sysrq the
-actual ability to *kill* wayward locks however; but it will a great help us
-track down the underlying issue.
-
-Thanks,
-
-Ed
-
-The one thing I don't see in sysrq is a way to
-As for sys
-
---001a11c1641a447a4805268693c3
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Dave,<br><br>futex comes from doing a simple strace, which=
- showed the futex as the call that was being blocked. My fear is that it is=
- a holdover from an old, dead process; we went through each=C2=A0process on=
- the system and lsof -p&#39;d it, didn&#39;t see anything.<br><br>Thanks fo=
-r the suggestion of sysrq btw, I&#39;ll try that the next time I have acces=
-s to the box, but waiting doesn&#39;t help.Also, =C2=A0I don&#39;t see in s=
-ysrq the actual ability to *kill* wayward locks however; but it will a grea=
-t help us track down the underlying issue.<div><br></div><div>Thanks,<br><b=
-r>Ed<br><div><font color=3D"#500050"><span style=3D"line-height:21px"><br><=
-/span></font></div><div><font color=3D"#500050"><span style=3D"line-height:=
-21px">The one thing I don&#39;t see in sysrq is a way to=C2=A0</span></font=
-></div><div>As for sys</div></div></div>
-
---001a11c1641a447a4805268693c3--
-
-
---===============3499329523717998579==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3499329523717998579==--
+SGkgRW1tYW51ZWwsCgpBbnkgbHVjayB3aXRoIHRoZSB0ZXN0aW5nLiBJIGFtIGF0dGFjaGluZyBh
+IGNvcHkgb2YgbXkgZG1lc2cgb3V0cHV0IHdoaWNoIGtlZXBzIG9uIHJlcGVhdGluZy4gSW4gdGhp
+cyBjYXNlLCB0aGUgZXJyb3Igc2VlbXMgdG8gYmUgd2l0aCBvbmUgZGlub2RlLgoKUGlkOiA1MzIx
+LCBjb21tOiBnbHVzdGVyZnNkIE5vdCB0YWludGVkIDMuOC4xMy01NS4xLjUuZWw2dWVrLng4Nl82
+NCAjMgpDYWxsIFRyYWNlOgogWzxmZmZmZmZmZmEwMmEzYTlmPl0geGZzX2Vycm9yX3JlcG9ydCsw
+eDNmLzB4NTAgW3hmc10KIFs8ZmZmZmZmZmZhMDJlZDQxNj5dID8geGZzX2lyZWFkX2V4dGVudHMr
+MHg4Ni8weDExMCBbeGZzXQogWzxmZmZmZmZmZmEwMmEzYjBlPl0geGZzX2NvcnJ1cHRpb25fZXJy
+b3IrMHg1ZS8weDkwIFt4ZnNdCiBbPGZmZmZmZmZmYTAyYzdhYzg+XSB4ZnNfYm1hcF9yZWFkX2V4
+dGVudHMrMHgzZjgvMHg0NTAgW3hmc10KIFs8ZmZmZmZmZmZhMDJlZDQxNj5dID8geGZzX2lyZWFk
+X2V4dGVudHMrMHg4Ni8weDExMCBbeGZzXQogWzxmZmZmZmZmZmEwMmViOTRlPl0gPyB4ZnNfaWV4
+dF9yZWFsbG9jX2RpcmVjdCsweGFlLzB4MTYwIFt4ZnNdCiBbPGZmZmZmZmZmYTAyZWQ0MTY+XSB4
+ZnNfaXJlYWRfZXh0ZW50cysweDg2LzB4MTEwIFt4ZnNdCiBbPGZmZmZmZmZmYTAyZmIwY2M+XSA/
+IHhmc190cmFuc19mcmVlX2l0ZW1fZGVzYysweDNjLzB4NTAgW3hmc10KIFs8ZmZmZmZmZmZhMDJj
+NWRmNT5dIHhmc19ibWFwX2xhc3RfZXh0ZW50KzB4OTUvMHhiMCBbeGZzXQogWzxmZmZmZmZmZmEw
+MmM1ZWY2Pl0geGZzX2JtYXBfbGFzdF9vZmZzZXQrMHg2Ni8weGMwIFt4ZnNdCiBbPGZmZmZmZmZm
+YTAyZGMxMjM+XSA/IHhmc19kaXJfbG9va3VwKzB4YzMvMHgxNzAgW3hmc10KIFs8ZmZmZmZmZmZh
+MDJkYmM5Nj5dIHhmc19kaXIyX2lzYmxvY2srMHgyNi8weDYwIFt4ZnNdCiBbPGZmZmZmZmZmYTAy
+ZGMxMjM+XSB4ZnNfZGlyX2xvb2t1cCsweGMzLzB4MTcwIFt4ZnNdCiBbPGZmZmZmZmZmYTAyYjY0
+OTc+XSB4ZnNfbG9va3VwKzB4ODcvMHgxMTAgW3hmc10KIFs8ZmZmZmZmZmY4MTFhOTJlZD5dID8g
+X19kX2FsbG9jKzB4MTRkLzB4MTgwCiBbPGZmZmZmZmZmYTAyYWVhODQ+XSB4ZnNfdm5fbG9va3Vw
+KzB4NTQvMHhhMCBbeGZzXQogWzxmZmZmZmZmZjgxMTlkYjQzPl0gPyBsb29rdXBfZGNhY2hlKzB4
+YTMvMHhkMAogWzxmZmZmZmZmZjgxMTlkM2FkPl0gbG9va3VwX3JlYWwrMHgxZC8weDYwCiBbPGZm
+ZmZmZmZmODExOWRiYTg+XSBfX2xvb2t1cF9oYXNoKzB4MzgvMHg1MAogWzxmZmZmZmZmZjgxMTlk
+YzBlPl0gbG9va3VwX3Nsb3crMHg0ZS8weGMwCiBbPGZmZmZmZmZmODExYTFkNDE+XSBwYXRoX2xv
+b2t1cGF0KzB4MjAxLzB4NzgwCiBbPGZmZmZmZmZmODExYTIyZjQ+XSBmaWxlbmFtZV9sb29rdXAr
+MHgzNC8weGMwCiBbPGZmZmZmZmZmODExYTM1Yjk+XSB1c2VyX3BhdGhfYXRfZW1wdHkrMHg1OS8w
+eGEwCiBbPGZmZmZmZmZmODExYTM2MTE+XSA/IHVzZXJfcGF0aF9hdCsweDExLzB4MjAKIFs8ZmZm
+ZmZmZmY4MTE5ODZjMD5dID8gdmZzX2ZzdGF0YXQrMHg1MC8weGIwCiBbPGZmZmZmZmZmODExYTM2
+MTE+XSB1c2VyX3BhdGhfYXQrMHgxMS8weDIwCiBbPGZmZmZmZmZmODExYTM2OTg+XSBzeXNfbGlu
+a2F0KzB4NzgvMHgyNTAKIFs8ZmZmZmZmZmY4MTBlMzdlNj5dID8gX19hdWRpdF9zeXNjYWxsX2V4
+aXQrMHgyMTYvMHgyYzAKIFs8ZmZmZmZmZmY4MTVhMjVkOT5dIHN5c3RlbV9jYWxsX2Zhc3RwYXRo
+KzB4MTYvMHgxYgpYRlMgKHNkYik6IENvcnJ1cHRpb24gZGV0ZWN0ZWQuIFVubW91bnQgYW5kIHJ1
+biB4ZnNfcmVwYWlyClhGUyAoc2RiKTogY29ycnVwdCBkaW5vZGUgNjQ0MjQ1MTA0MCwgKGJ0cmVl
+IGV4dGVudHMpLgpmZmZmODgwNDI1MTgyMDAwOiA0MiA0ZCA0MSA1MCAwMCAwMCAwMCBmZSBmZiBm
+ZiBmZiBmZiBmZiBmZiBmZiBmZiAgQk1BUC4uLi4uLi4uLi4uLgpYRlMgKHNkYik6IEludGVybmFs
+IGVycm9yIHhmc19ibWFwX3JlYWRfZXh0ZW50cygxKSBhdCBsaW5lIDE2MTAgb2YgZmlsZSBmcy94
+ZnMveGZzX2JtYXAuYy4gIENhbGxlciAweGZmZmZmZmZmYTAyZWQ0MTYKCkxldCBtZSBrbm93IGlm
+IHlvdSBwcm9ncmVzcyB0aGlzIGFueSBmdXJ0aGVyLiBPbiBhbm90aGVyIG5vdGUsIHdlIGFyZSBs
+b29raW5nIHRvIHVwZ3JhZGUgdGhlIGZpcm13YXJlIG9mIG91ciBMU0kgcmFpZCBjYXJkcyB0aGUg
+bGF0ZXN0IHZlcnNpb24uIFNlZW1zIGxpa2UgTFNJIGhhdmUgcmVsZWFzZWQgYSBuZXcgRlcgbm90
+IHRvbyBsb25nIGFnby4KClRoYW5rcwpTYW5kZWVwCgotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
+LQpGcm9tOiBTYW5kZWVwIFBhdGVsIApTZW50OiAwMSBEZWNlbWJlciAyMDE1IDE0OjAwClRvOiAn
+RW1tYW51ZWwgRmxvcmFjJwpDYzogeGZzQG9zcy5zZ2kuY29tClN1YmplY3Q6IFJFOiBYRlMgY29y
+cnVwdGlvbnMKClRoZSBmaXJtd2FyZSBmb3IgdGhlIHJhaWQgY2FyZCBpcyAxMi4xNS4wLTAyMDUK
+ClRoYW5rcyBmb3IgdGhpcy4gTGV0IG1lIGtub3cgaWYgeW91IG5lZWQgYW55IG1vcmUgZGV0YWls
+cy4KClNhbmRlZXAKCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCkZyb206IEVtbWFudWVsIEZs
+b3JhYyBbbWFpbHRvOmVmbG9yYWNAaW50ZWxsaXF1ZS5jb21dClNlbnQ6IDAxIERlY2VtYmVyIDIw
+MTUgMTM6NTAKVG86IFNhbmRlZXAgUGF0ZWwKQ2M6IHhmc0Bvc3Muc2dpLmNvbQpTdWJqZWN0OiBS
+ZTogWEZTIGNvcnJ1cHRpb25zCgpMZSBUdWUsIDEgRGVjIDIwMTUgMTI6MTg6MjEgKzAwMDAKU2Fu
+ZGVlcCBQYXRlbCA8c3BhdGVsQG9tbmlmb25lLmNvbT4gw6ljcml2YWl0OgoKPiBZZXMsIHRoZXkg
+b25seSB0aGluZyB3ZSBjaGFuZ2VkIGZyb20gZGVmYXVsdCBpcyB0aGUgaXNpemUuCj4gCj4gV2Ug
+YXJlIHJ1bm5pbmcgdGhlIGxhdGVzdCB2ZXJzaW9uIG9uIHRoZSBmaXJtd2FyZS4gV2UgcHJldmlv
+dXNseSAKPiB1cGdyYWRlZCB0aGUgZmlybXdhcmUgb24gdGhlc2UgdGhpbmtpbmcgaXQgd291bGQg
+c29sdmUgdGhlIHByb2JsZW0uCj4gCj4gVGhlIHByb2JsZW1zIHNlZW0gdG8gb2NjdXIgYXQgcmFu
+ZG9tLiBUaGUgbG9hZCB0byB0aGVzZSB1bml0cyBhcmUgCj4gcXVpdGUgbWluaW1hbCBhdCB0aGUg
+bW9tZW50IGFuZCB3ZSBhcmUgc3RpbGwgaGF2aW5nIGlzc3Vlcy4KPiAKCkkganVzdCByZWNlaXZl
+ZCBhIG5ldyBzZXJ2ZXIgd2l0aCBhbiBMU0kgY29udHJvbGxlciBzaW1pbGFyIHRvIHlvdXJzLCBJ
+J2xsIHJ1biBzb21lIHRlc3RzIGJ1dCBJJ2Qgc3VzcGVjdCB0aGUga2VybmVsIG1heSBiZSBhdCBm
+YXVsdC4gV2hhdCBpcyB5b3VyIGZpcm13YXJlIHZlcnNpb24gZXhhY3RseT8KCgoKLS0KLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAg
+ICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVm
+bG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0
+IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpUaGlzIGVtYWlsIGhhcyBiZWVu
+IHNjYW5uZWQgYnkgdGhlIFN5bWFudGVjIEVtYWlsIFNlY3VyaXR5LmNsb3VkIHNlcnZpY2UuCkZv
+ciBtb3JlIGluZm9ybWF0aW9uIHBsZWFzZSB2aXNpdCBodHRwOi8vd3d3LnN5bWFudGVjY2xvdWQu
+Y29tIF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KVGhpcyBlbWFpbCBoYXMgYmVlbiBzY2Fu
+bmVkIGJ5IHRoZSBTeW1hbnRlYyBFbWFpbCBTZWN1cml0eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9y
+ZSBpbmZvcm1hdGlvbiBwbGVhc2UgdmlzaXQgaHR0cDovL3d3dy5zeW1hbnRlY2Nsb3VkLmNvbQpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
