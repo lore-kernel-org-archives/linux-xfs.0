@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 876547F50
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 20:14:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6BB8B304032
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 18:14:07 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 048BB7F50
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 20:19:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81C2EAC003
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 18:19:25 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	CVmjrKwVn1VOL0h0 for <xfs@oss.sgi.com>;
-	Wed, 09 Dec 2015 18:14:03 -0800 (PST)
-Date: Thu, 10 Dec 2015 13:13:43 +1100
+	wbbBc4tzLOSSJEF5 for <xfs@oss.sgi.com>;
+	Wed, 09 Dec 2015 18:19:22 -0800 (PST)
+Date: Thu, 10 Dec 2015 13:18:31 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: handling device or resource busy errors.
-Message-ID: <20151210021343.GI19802@dastard>
+Message-ID: <20151210021831.GJ19802@dastard>
 References: <CACQ+YcuwWv8g5zHk2sMfN_uRPGnW8Xb8WT6NGOLGigN2+0Toag@mail.gmail.com>
+	<5668DDE0.7050203@opensuse.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CACQ+YcuwWv8g5zHk2sMfN_uRPGnW8Xb8WT6NGOLGigN2+0Toag@mail.gmail.com>
+In-Reply-To: <5668DDE0.7050203@opensuse.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ed Peschko <horos22@gmail.com>
-Cc: xfs@oss.sgi.com
+To: "Carlos E. R." <carlos.e.r@opensuse.org>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Wed, Dec 09, 2015 at 04:25:06PM -0800, Ed Peschko wrote:
-> All,
+On Thu, Dec 10, 2015 at 03:05:20AM +0100, Carlos E. R. wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
 > 
-> we are 'getting device or resource busy' errors which we *know* are
-> spurious (lsof shows nothing, no multipath daemon, the partition that we
-> are trying to access was just created).
-
-Please show your working - it saves us having to guess at how you
-came to that conclusion.
-
-> So the working theory is that the futex in question is spurious, that
-> something didn't clean up after itself and we are stuck waiting for an
-> non-existent process to fix it.
-
-Sorry, what futex has anything to do with whether a block device can
-be opened or not?
-
-> And the force option doesn't work for some reason. So a couple of questions.
+> On 2015-12-10 01:25, Ed Peschko wrote:
+> > All,
+> > 
+> > we are 'getting device or resource busy' errors which we *know*
+> > are spurious (lsof shows nothing, no multipath daemon, the
+> > partition that we are trying to access was just created).
 > 
->     1. Why doesn't force work in this case? With parted and partx it does -
-> in the case of mkfs.xfs it is a fatal error.
+> I don't know if this is the case, but sometimes, when creating
+> filesystems under a graphical desktop (like gnome or kde) automatic
+> systems on those desktops would probe the new partition and try to
+> find its type and mount it, without action on my part. Even in the
+> middle of formatting!
 
-Because mkfs.xfs uses O_EXCL in it's open() call. If there are other
-active references to the block device, then we sure aren't going to
-overwrite anything on it.
-
->     2. could an 'extra force' option - one which ignored the futex - be
-> added in cases of backwards compatibility?
-
-What futex?
-
->     3. is there any way to list out what holds mutexes in the linux kernel
-> so we could try to root out the ultimate cause of the issue? lsof is
-> useless, as is dmesg and /var/log/messages.
-
-sysrq-l
-
-Does waiting a few seconds make the problem go away, what about
-running 'udevadm settle' before mkfs?
+Yup, mounts/probing triggered by udev and/or i/d/fanotify events are
+a PITA to discover, especially when they are only active for a
+short period (like blkid scanning). In general that is enoughtime
+to make the command in the script after partitioning fail, but not
+enough time to run any diagnostics that will capture the cause...
 
 Cheers,
 
