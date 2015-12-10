@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C15D7F37
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 13:52:09 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C52237F37
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 14:24:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C7A9AC006
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 11:52:08 -0800 (PST)
-Received: from mail1.bemta5.messagelabs.com (mail1.bemta5.messagelabs.com
-	[195.245.231.137]) by cuda.sgi.com with ESMTP id
-	MLT49roFxHsH7HKH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 11:52:06 -0800 (PST)
-From: Sandeep Patel <spatel@omnifone.com>
-Subject: RE: XFS corruptions
-Date: Thu, 10 Dec 2015 19:51:58 +0000
-Message-ID: <558408F298C8CE4C89D93BD56AB474E801861855CC@EXBE1IS02.omnifone.com>
-References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
-	<20151130184048.3fa123e0@harpe.intellique.com>
-	<558408F298C8CE4C89D93BD56AB474E8018617B3A6@EXBE1IS02.omnifone.com>
-	<20151130194554.6140bf30@harpe.intellique.com>
-	<558408F298C8CE4C89D93BD56AB474E8018617C636@EXBE1IS02.omnifone.com>
-	<20151201145011.6df02063@harpe.intellique.com>
-	<558408F298C8CE4C89D93BD56AB474E8018618503B@EXBE1IS02.omnifone.com>
-	<20151210164640.78a13865@harpe.intellique.com>
-In-Reply-To: <20151210164640.78a13865@harpe.intellique.com>
-Content-Language: en-US
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B36E88F8040
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 12:24:56 -0800 (PST)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id JafhtYyXFGgBDlQK for
+	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 12:24:55 -0800 (PST)
+Date: Thu, 10 Dec 2015 13:24:38 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v3 3/7] mm: add find_get_entries_tag()
+Message-ID: <20151210202438.GA6590@linux.intel.com>
+References: <1449602325-20572-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
+	<CAA9_cmeVYinm4mMiDU4oz8fW4HQ3n1RqEbPHBW7A3OGmi9eXtw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAA9_cmeVYinm4mMiDU4oz8fW4HQ3n1RqEbPHBW7A3OGmi9eXtw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,46 +26,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: the arch/x86 maintainers <x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Andrew Morton <akpm@linux-foundation.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Ross Zwisler <ross.zwisler@linux.intel.com>, ext4 hackers <linux-ext4@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-SGkgRW1tYW51ZWwsCgpTb21lIGV4dHJhIGluZm9ybWF0aW9uIGZvciB0aGUgdm9sdW1lIHdoaWNo
-IG1heSBiZSByZWxhdGVkLiBXZSBkbyBub3QgcGFydGl0aW9uIG9yIGFsaWduIHRoZSB4ZnMgZm9y
-bWF0dGVkIHZvbHVtZS4gV2UgbW91bnQgaXQgZGlyZWN0bHkgdXNpbmcgL2Rldi9zZGEuIFRoZSBm
-c3RhYiBpbmZvIGJlbG93LgoKTEFCRUw9YnJpY2sxICAgICAgICAgICAgL2V4cG9ydC9icmljazEg
-ICAgICAgICAgeGZzICAgICBub2JhcnJpZXIsaW5vZGU2NCAxIDIKTEFCRUw9YnJpY2syICAgICAg
-ICAgICAgL2V4cG9ydC9icmljazIgICAgICAgICAgeGZzICAgICBub2JhcnJpZXIsaW5vZGU2NCAx
-IDIKClRoYW5rcwpTYW5kZWVwCgotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQpGcm9tOiBFbW1h
-bnVlbCBGbG9yYWMgW21haWx0bzplZmxvcmFjQGludGVsbGlxdWUuY29tXSAKU2VudDogMTAgRGVj
-ZW1iZXIgMjAxNSAxNTo0NwpUbzogU2FuZGVlcCBQYXRlbApDYzogeGZzQG9zcy5zZ2kuY29tClN1
-YmplY3Q6IFJlOiBYRlMgY29ycnVwdGlvbnMKCkxlIFRodSwgMTAgRGVjIDIwMTUgMTU6MDc6MzIg
-KzAwMDAKU2FuZGVlcCBQYXRlbCA8c3BhdGVsQG9tbmlmb25lLmNvbT4gw6ljcml2YWl0OgoKPiBB
-bnkgbHVjayB3aXRoIHRoZSB0ZXN0aW5nLiBJIGFtIGF0dGFjaGluZyBhIGNvcHkgb2YgbXkgZG1l
-c2cgb3V0cHV0IAo+IHdoaWNoIGtlZXBzIG9uIHJlcGVhdGluZy4gSW4gdGhpcyBjYXNlLCB0aGUg
-ZXJyb3Igc2VlbXMgdG8gYmUgd2l0aCBvbmUgCj4gZGlub2RlLgo+IAoKSSd2ZSBydW4gc29tZSB0
-ZXN0cyBvbiBhIDE4eDYgVEIgYXJyYXksIGFuZCBubyBlcnJvciBvY2N1cnJlZC4gSG93ZXZlciBJ
-J20gcnVubmluZyBhIG11Y2ggbmV3ZXIga2VybmVsLCAzLjE4LjI0LgoKQ291bGQgeW91IG1heWJl
-IHRyeSBpbnN0YWxsaW5nIGEgZGlmZmVyZW50IGtlcm5lbCBvbiBzb21lIG1hY2hpbmVzIGFuZCBz
-ZWUgaWYgaXQgcGVyZm9ybXMgZGlmZmVyZW50bHk/CgotLQotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51
-ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAg
-IHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVl
-LmNvbT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fClRoaXMgZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0aGUg
-U3ltYW50ZWMgRW1haWwgU2VjdXJpdHkuY2xvdWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3JtYXRp
-b24gcGxlYXNlIHZpc2l0IGh0dHA6Ly93d3cuc3ltYW50ZWNjbG91ZC5jb20gX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-XwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwpUaGlzIGVtYWlsIGhhcyBiZWVuIHNjYW5uZWQgYnkgdGhlIFN5bWFu
-dGVjIEVtYWlsIFNlY3VyaXR5LmNsb3VkIHNlcnZpY2UuCkZvciBtb3JlIGluZm9ybWF0aW9uIHBs
-ZWFzZSB2aXNpdCBodHRwOi8vd3d3LnN5bWFudGVjY2xvdWQuY29tCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On Wed, Dec 09, 2015 at 11:44:16AM -0800, Dan Williams wrote:
+> On Tue, Dec 8, 2015 at 11:18 AM, Ross Zwisler
+> <ross.zwisler@linux.intel.com> wrote:
+> > Add find_get_entries_tag() to the family of functions that include
+> > find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
+> > needed for DAX dirty page handling because we need a list of both page
+> > offsets and radix tree entries ('indices' and 'entries' in this function)
+> > that are marked with the PAGECACHE_TAG_TOWRITE tag.
+> >
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+<> 
+> Why does this mostly duplicate find_get_entries()?
+> 
+> Surely find_get_entries() can be implemented as a special case of
+> find_get_entries_tag().
+
+I'm adding find_get_entries_tag() to the family of functions that already
+exist and include find_get_entries(), find_get_pages(),
+find_get_pages_contig() and find_get_pages_tag().
+
+These functions all contain very similar code with small changes to the
+internal looping based on whether you're looking through all radix slots or
+only the ones that match a certain tag (radix_tree_for_each_slot() vs
+radix_tree_for_each_tagged()).
+
+We already have find_get_page() to get all pages in a range and
+find_get_pages_tag() to get all pages in the range with a certain tag.  We
+have find_get_entries() to get all pages and indices for a given range, but we
+are currently missing find_get_entries_tag() to do that same search based on a
+tag, which is what I'm adding.
+
+I agree that we could probably figure out a way to combine the code for
+find_get_entries() with find_get_entries_tag(), as we could do for the
+existing functions find_get_pages() and find_get_pages_tag().  I think we
+should probably add find_get_entries_tag() per this patch, though, and then
+decide whether to do any combining later as a separate step.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
