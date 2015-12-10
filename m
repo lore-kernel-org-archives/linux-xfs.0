@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D433B7F51
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:34:53 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 818717F51
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:46:31 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B24BB30404E
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:34:53 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 9O34LbqvXNDhZoHa (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:34:52 -0800 (PST)
-Date: Thu, 10 Dec 2015 08:34:49 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] reflink: more tests
-Message-ID: <20151210163449.GA15774@infradead.org>
-References: <20151208062844.21871.23644.stgit@birch.djwong.org>
-	<20151208062904.21871.30589.stgit@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 64F6A8F8037
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:46:28 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id tGbhA1qsV07Pknik for <xfs@oss.sgi.com>;
+	Thu, 10 Dec 2015 08:46:25 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id A5ED165D6BBC
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:46:24 -0600 (CST)
+Subject: Re: XFS corruptions
+References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5669AC60.1070709@sandeen.net>
+Date: Thu, 10 Dec 2015 10:46:24 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151208062904.21871.30589.stgit@birch.djwong.org>
+In-Reply-To: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,13 +32,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
 
-The new 849 fails reliably on btrfs, which makes me wonder if either
-the test is doing something wrong, or the btrfs whole file clone
-behavior is broken, which wouldn't be very reasuring.  I didn't have
-time to look into why it's failing yet.
+On 11/30/15 10:51 AM, Sandeep Patel wrote:
+> Hi,
+
+> We have multiple 22 disk raid 6 arrays using LSI 9280-24i4e raid
+> cards, all using enterprise grade drives. The array is setup with
+> physical drive cache disabled and mounted using inode64 with
+> nobarriers option in Oracle Linux Server release 6.6, kernel version
+> 3.8.13-55.1.5.el6uek.x86_64. We are suffering from corruptions with
+> xfs_repair unable to permanently fix the the issues.
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Does that mean it finds and fixes something "temporarily?"  If so, what?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
