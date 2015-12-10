@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9F9187F51
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:55:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 30BBBAC003
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:55:02 -0800 (PST)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id LGg2YIRwamrhGwtW for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:55:00 -0800 (PST)
-Date: Thu, 10 Dec 2015 09:54:58 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: xfstests failures with xfs, dax and v4.4-rc3
-Message-ID: <20151210165458.GA13603@linux.intel.com>
-References: <20151202183438.GA1319@linux.intel.com>
-	<20151202202910.GH19199@dastard> <20151202204502.GI19199@dastard>
-	<20151202213932.GA7652@linux.intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7F09F7F51
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 12:08:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 203B4AC004
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:08:42 -0800 (PST)
+Received: from mail-qg0-f41.google.com (mail-qg0-f41.google.com
+	[209.85.192.41]) by cuda.sgi.com with ESMTP id KVwCl1i7hkoW9UDS
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 10 Dec 2015 10:08:40 -0800 (PST)
+Received: by qgeb1 with SMTP id b1so155238531qge.1
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:08:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151202213932.GA7652@linux.intel.com>
+Date: Thu, 10 Dec 2015 10:08:39 -0800
+Message-ID: <CACQ+YcstiCVsVj-pLn0WP8Qkr8XRA9A8d9cwH5wb0Zm4=doPvA@mail.gmail.com>
+Subject: using system tap or dtrace to diagnose xfs problems
+From: Ed Peschko <horos22@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,67 +25,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8290675769947903416=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>
+To: xfs@oss.sgi.com
 
-On Wed, Dec 02, 2015 at 02:39:32PM -0700, Ross Zwisler wrote:
-> On Thu, Dec 03, 2015 at 07:45:02AM +1100, Dave Chinner wrote:
-> > On Thu, Dec 03, 2015 at 07:29:10AM +1100, Dave Chinner wrote:
-> > > On Wed, Dec 02, 2015 at 11:34:38AM -0700, Ross Zwisler wrote:
-> > > > I'm hitting a few more test failures in my testing setup with v4.4-rc3, xfs
-> > > > and DAX.  My test setup is a pair of 4GiB PMEM partitions in a KVM virtual
-> > > > machine.  Here are the failures:
-> > > 
-> > > Which are caused by commit 1ca1915 ("xfs: Don't use unwritten extents
-> > > for DAX") because of this code for unwritten extent conversion in
-> > > get_blocks:
-> > > 
-> > > 	tp->t_flags |= XFS_TRANS_RESERVE;
-> > > 
-> > > It's a minor problem compared to all the other issues DAX has right
-> > > now, so I ignored it to get the bigger problem solved first.
-> > 
-> > Patch to fix the problem below.
-> > 
-> > -Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> > xfs: Don't use reserved blocks for data blocks with DAX
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Commit 1ca1915 ("xfs: Don't use unwritten extents for DAX") enabled
-> > the DAX allocation call to dip into the reserve pool in case it was
-> > converting unwritten extents rather than allocating blocks. This was
-> > a direct copy of the unwritten extent conversion code, but had an
-> > unintended side effect of allowing normal data block allocation to
-> > use the reserve pool. Hence normal block allocation could deplete
-> > the reserve pool and prevent unwritten extent conversion at ENOSPC,
-> > hence violating fallocate guarantees on preallocated space.
-> > 
-> > Fix it by checking whether the incoming map from __xfs_get_blocks()
-> > spans an unwritten extent and only use the reserve pool if the
-> > allocation covers an unwritten extent.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> 
-> I've verified that this fixes all three failing xfstests reported in this mail.
-> Thanks!
+--===============8290675769947903416==
+Content-Type: multipart/alternative; boundary=001a1134f63aa8ec1605268f18af
 
-Hey Dave,
+--001a1134f63aa8ec1605268f18af
+Content-Type: text/plain; charset=UTF-8
 
-Are you planning on pushing this fix for v4.4?
+All,
 
-- Ross
+I was wondering; has anyone used system tap or dtrace to diagnose xfs
+issues on linux systems (esp centos)?
+
+I was thinking about our experience with busy resources, and that seemed an
+ideal way to get round the problem, or at least get a handle on it.
+
+But it'd be great if I could get some first hand tips on using these tools
+here. I'm more familiar with dtrace - and it is supposed to be AFAICT more
+stable - but I'm not sure how great the port is on linux.
+
+Thanks much for any info..
+
+--001a1134f63aa8ec1605268f18af
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">All,=C2=A0<div><br></div><div>I was wondering; has anyone =
+used system tap or dtrace to diagnose xfs issues on linux systems (esp cent=
+os)?</div><div><br></div><div>I was thinking about our experience with busy=
+ resources, and that seemed an ideal way to get round the problem, or at le=
+ast get a handle on it.=C2=A0</div><div><br></div><div>But it&#39;d be grea=
+t if I could get some first hand tips on using these tools here. I&#39;m mo=
+re familiar with dtrace - and it is supposed to be AFAICT more stable - but=
+ I&#39;m not sure how great the port is on linux.</div><div><br></div><div>=
+Thanks much for any info..</div></div>
+
+--001a1134f63aa8ec1605268f18af--
+
+
+--===============8290675769947903416==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8290675769947903416==--
