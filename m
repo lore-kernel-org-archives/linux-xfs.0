@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 818717F51
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:46:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64F6A8F8037
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:46:28 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id tGbhA1qsV07Pknik for <xfs@oss.sgi.com>;
-	Thu, 10 Dec 2015 08:46:25 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id A5ED165D6BBC
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:46:24 -0600 (CST)
-Subject: Re: XFS corruptions
-References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5669AC60.1070709@sandeen.net>
-Date: Thu, 10 Dec 2015 10:46:24 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9F9187F51
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 10:55:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 30BBBAC003
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:55:02 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id LGg2YIRwamrhGwtW for
+	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 08:55:00 -0800 (PST)
+Date: Thu, 10 Dec 2015 09:54:58 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: xfstests failures with xfs, dax and v4.4-rc3
+Message-ID: <20151210165458.GA13603@linux.intel.com>
+References: <20151202183438.GA1319@linux.intel.com>
+	<20151202202910.GH19199@dastard> <20151202204502.GI19199@dastard>
+	<20151202213932.GA7652@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+Content-Disposition: inline
+In-Reply-To: <20151202213932.GA7652@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +30,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>
 
-On 11/30/15 10:51 AM, Sandeep Patel wrote:
-> Hi,
+On Wed, Dec 02, 2015 at 02:39:32PM -0700, Ross Zwisler wrote:
+> On Thu, Dec 03, 2015 at 07:45:02AM +1100, Dave Chinner wrote:
+> > On Thu, Dec 03, 2015 at 07:29:10AM +1100, Dave Chinner wrote:
+> > > On Wed, Dec 02, 2015 at 11:34:38AM -0700, Ross Zwisler wrote:
+> > > > I'm hitting a few more test failures in my testing setup with v4.4-rc3, xfs
+> > > > and DAX.  My test setup is a pair of 4GiB PMEM partitions in a KVM virtual
+> > > > machine.  Here are the failures:
+> > > 
+> > > Which are caused by commit 1ca1915 ("xfs: Don't use unwritten extents
+> > > for DAX") because of this code for unwritten extent conversion in
+> > > get_blocks:
+> > > 
+> > > 	tp->t_flags |= XFS_TRANS_RESERVE;
+> > > 
+> > > It's a minor problem compared to all the other issues DAX has right
+> > > now, so I ignored it to get the bigger problem solved first.
+> > 
+> > Patch to fix the problem below.
+> > 
+> > -Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
+> > xfs: Don't use reserved blocks for data blocks with DAX
+> > 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Commit 1ca1915 ("xfs: Don't use unwritten extents for DAX") enabled
+> > the DAX allocation call to dip into the reserve pool in case it was
+> > converting unwritten extents rather than allocating blocks. This was
+> > a direct copy of the unwritten extent conversion code, but had an
+> > unintended side effect of allowing normal data block allocation to
+> > use the reserve pool. Hence normal block allocation could deplete
+> > the reserve pool and prevent unwritten extent conversion at ENOSPC,
+> > hence violating fallocate guarantees on preallocated space.
+> > 
+> > Fix it by checking whether the incoming map from __xfs_get_blocks()
+> > spans an unwritten extent and only use the reserve pool if the
+> > allocation covers an unwritten extent.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> 
+> I've verified that this fixes all three failing xfstests reported in this mail.
+> Thanks!
 
-> We have multiple 22 disk raid 6 arrays using LSI 9280-24i4e raid
-> cards, all using enterprise grade drives. The array is setup with
-> physical drive cache disabled and mounted using inode64 with
-> nobarriers option in Oracle Linux Server release 6.6, kernel version
-> 3.8.13-55.1.5.el6uek.x86_64. We are suffering from corruptions with
-> xfs_repair unable to permanently fix the the issues.
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Hey Dave,
 
-Does that mean it finds and fixes something "temporarily?"  If so, what?
+Are you planning on pushing this fix for v4.4?
 
--Eric
+- Ross
 
 _______________________________________________
 xfs mailing list
