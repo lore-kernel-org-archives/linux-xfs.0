@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8CB307F50
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 13:44:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 514918F8039
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 11:44:23 -0800 (PST)
-Received: from mail-qg0-f49.google.com (mail-qg0-f49.google.com
-	[209.85.192.49]) by cuda.sgi.com with ESMTP id INrp5JJzKERhTKQv
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 781077F50
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 18:25:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3CF5AC004
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2015 16:25:08 -0800 (PST)
+Received: from mail-qg0-f53.google.com (mail-qg0-f53.google.com
+	[209.85.192.53]) by cuda.sgi.com with ESMTP id ubtnSRntLJa8OiaO
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 09 Dec 2015 11:44:18 -0800 (PST)
-Received: by qgeb1 with SMTP id b1so97160961qge.1
-	for <xfs@oss.sgi.com>; Wed, 09 Dec 2015 11:44:16 -0800 (PST)
+	Wed, 09 Dec 2015 16:25:07 -0800 (PST)
+Received: by qgcc31 with SMTP id c31so110240841qgc.3
+	for <xfs@oss.sgi.com>; Wed, 09 Dec 2015 16:25:06 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
-References: <1449602325-20572-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1449602325-20572-4-git-send-email-ross.zwisler@linux.intel.com>
-Date: Wed, 9 Dec 2015 11:44:16 -0800
-Message-ID: <CAA9_cmeVYinm4mMiDU4oz8fW4HQ3n1RqEbPHBW7A3OGmi9eXtw@mail.gmail.com>
-Subject: Re: [PATCH v3 3/7] mm: add find_get_entries_tag()
-From: Dan Williams <dan.j.williams@gmail.com>
+Date: Wed, 9 Dec 2015 16:25:06 -0800
+Message-ID: <CACQ+YcuwWv8g5zHk2sMfN_uRPGnW8Xb8WT6NGOLGigN2+0Toag@mail.gmail.com>
+Subject: handling device or resource busy errors.
+From: Ed Peschko <horos22@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,124 +25,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7364884777707555637=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: the arch/x86 maintainers <x86@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, ext4 hackers <linux-ext4@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Jan Kara <jack@suse.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: xfs@oss.sgi.com
 
-On Tue, Dec 8, 2015 at 11:18 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> Add find_get_entries_tag() to the family of functions that include
-> find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
-> needed for DAX dirty page handling because we need a list of both page
-> offsets and radix tree entries ('indices' and 'entries' in this function)
-> that are marked with the PAGECACHE_TAG_TOWRITE tag.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  include/linux/pagemap.h |  3 +++
->  mm/filemap.c            | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 71 insertions(+)
->
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index 26eabf5..4db0425 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -361,6 +361,9 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t start,
->                                unsigned int nr_pages, struct page **pages);
->  unsigned find_get_pages_tag(struct address_space *mapping, pgoff_t *index,
->                         int tag, unsigned int nr_pages, struct page **pages);
-> +unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-> +                       int tag, unsigned int nr_entries,
-> +                       struct page **entries, pgoff_t *indices);
->
->  struct page *grab_cache_page_write_begin(struct address_space *mapping,
->                         pgoff_t index, unsigned flags);
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 167a4d9..99dfbc9 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -1498,6 +1498,74 @@ repeat:
->  }
->  EXPORT_SYMBOL(find_get_pages_tag);
->
-> +/**
-> + * find_get_entries_tag - find and return entries that match @tag
-> + * @mapping:   the address_space to search
-> + * @start:     the starting page cache index
-> + * @tag:       the tag index
-> + * @nr_entries:        the maximum number of entries
-> + * @entries:   where the resulting entries are placed
-> + * @indices:   the cache indices corresponding to the entries in @entries
-> + *
-> + * Like find_get_entries, except we only return entries which are tagged with
-> + * @tag.
-> + */
-> +unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-> +                       int tag, unsigned int nr_entries,
-> +                       struct page **entries, pgoff_t *indices)
-> +{
-> +       void **slot;
-> +       unsigned int ret = 0;
-> +       struct radix_tree_iter iter;
-> +
-> +       if (!nr_entries)
-> +               return 0;
-> +
-> +       rcu_read_lock();
-> +restart:
-> +       radix_tree_for_each_tagged(slot, &mapping->page_tree,
-> +                                  &iter, start, tag) {
-> +               struct page *page;
-> +repeat:
-> +               page = radix_tree_deref_slot(slot);
-> +               if (unlikely(!page))
-> +                       continue;
-> +               if (radix_tree_exception(page)) {
-> +                       if (radix_tree_deref_retry(page)) {
-> +                               /*
-> +                                * Transient condition which can only trigger
-> +                                * when entry at index 0 moves out of or back
-> +                                * to root: none yet gotten, safe to restart.
-> +                                */
-> +                               goto restart;
-> +                       }
-> +
-> +                       /*
-> +                        * A shadow entry of a recently evicted page, a swap
-> +                        * entry from shmem/tmpfs or a DAX entry.  Return it
-> +                        * without attempting to raise page count.
-> +                        */
-> +                       goto export;
-> +               }
-> +               if (!page_cache_get_speculative(page))
-> +                       goto repeat;
-> +
-> +               /* Has the page moved? */
-> +               if (unlikely(page != *slot)) {
-> +                       page_cache_release(page);
-> +                       goto repeat;
-> +               }
-> +export:
-> +               indices[ret] = iter.index;
-> +               entries[ret] = page;
-> +               if (++ret == nr_entries)
-> +                       break;
-> +       }
-> +       rcu_read_unlock();
-> +       return ret;
-> +}
-> +EXPORT_SYMBOL(find_get_entries_tag);
-> +
+--===============7364884777707555637==
+Content-Type: multipart/alternative; boundary=001a114798b81fa2c00526803db3
 
-Why does this mostly duplicate find_get_entries()?
+--001a114798b81fa2c00526803db3
+Content-Type: text/plain; charset=UTF-8
 
-Surely find_get_entries() can be implemented as a special case of
-find_get_entries_tag().
+All,
+
+we are 'getting device or resource busy' errors which we *know* are
+spurious (lsof shows nothing, no multipath daemon, the partition that we
+are trying to access was just created).
+
+So the working theory is that the futex in question is spurious, that
+something didn't clean up after itself and we are stuck waiting for an
+non-existent process to fix it.
+
+And the force option doesn't work for some reason. So a couple of questions.
+
+    1. Why doesn't force work in this case? With parted and partx it does -
+in the case of mkfs.xfs it is a fatal error.
+    2. could an 'extra force' option - one which ignored the futex - be
+added in cases of backwards compatibility?
+    3. is there any way to list out what holds mutexes in the linux kernel
+so we could try to root out the ultimate cause of the issue? lsof is
+useless, as is dmesg and /var/log/messages.
+    4. in the case of #2 how easy would it be? Where is the source code
+that centos' version of mkfs.xfs uses on the web? And which check would you
+remove?
+
+Thanks for any assistance, this is driving me nuts.
+
+greg
+
+--001a114798b81fa2c00526803db3
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div><div><div><div><div><div><div>All, <br><br></div=
+>we are &#39;getting device or resource busy&#39; errors which we *know* ar=
+e spurious (lsof shows nothing, no multipath daemon, the partition that we =
+are trying to access was just created).<br><br></div><div>So the working th=
+eory is that the futex in question is spurious, that something didn&#39;t c=
+lean up after itself and we are stuck waiting for an non-existent process t=
+o fix it.<br><br></div>And the force option doesn&#39;t work for some reaso=
+n. So a couple of questions.<br><br></div>=C2=A0=C2=A0=C2=A0 1. Why doesn&#=
+39;t force work in this case? With parted and partx it does - in the case o=
+f mkfs.xfs it is a fatal error.<br></div>=C2=A0=C2=A0=C2=A0 2. could an &#3=
+9;extra force&#39; option - one which ignored the futex - be added in cases=
+ of backwards compatibility? <br></div>=C2=A0=C2=A0=C2=A0 3. is there any w=
+ay to list out what holds mutexes in the linux kernel so we could try to ro=
+ot out the ultimate cause of the issue? lsof is useless, as is dmesg and /v=
+ar/log/messages.<br></div>=C2=A0=C2=A0=C2=A0 4. in the case of #2 how easy =
+would it be? Where is the source code that centos&#39; version of mkfs.xfs =
+uses on the web? And which check would you remove?<br><br></div>Thanks for =
+any assistance, this is driving me nuts.<br><br></div>greg<br><div><div><br=
+><br></div></div></div>
+
+--001a114798b81fa2c00526803db3--
+
+
+--===============7364884777707555637==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7364884777707555637==--
