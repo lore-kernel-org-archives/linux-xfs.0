@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 65E187F56
-	for <xfs@oss.sgi.com>; Fri, 11 Dec 2015 05:11:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DA188AC004
-	for <xfs@oss.sgi.com>; Fri, 11 Dec 2015 03:11:19 -0800 (PST)
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
-	cuda.sgi.com with ESMTP id IV7qyFC83vXeeeiJ (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B90027F56
+	for <xfs@oss.sgi.com>; Fri, 11 Dec 2015 05:11:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB25F304032
+	for <xfs@oss.sgi.com>; Fri, 11 Dec 2015 03:11:36 -0800 (PST)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id LtGN1GJABQAkZWhM (version=TLSv1
 	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Dec 2015 03:11:17 -0800 (PST)
-Received: from epcpsbgr4.samsung.com
-	(u144.gpu120.samsung.co.kr [203.254.230.144])
-	by mailout3.samsung.com (Oracle Communications Messaging Server
+	<xfs@oss.sgi.com>; Fri, 11 Dec 2015 03:11:34 -0800 (PST)
+Received: from epcpsbgr3.samsung.com
+	(u143.gpu120.samsung.co.kr [203.254.230.143])
+	by mailout4.samsung.com (Oracle Communications Messaging Server
 	7.0.5.31.0 64bit (built May  5 2014))
-	with ESMTP id <0NZ6014BAXQRFJA0@mailout3.samsung.com> for
-	xfs@oss.sgi.com; Fri, 11 Dec 2015 20:11:15 +0900 (KST)
+	with ESMTP id <0NZ600LX4XR89880@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Fri, 11 Dec 2015 20:11:32 +0900 (KST)
 From: Vivek Trivedi <t.vivek@samsung.com>
-Subject: [PATCH v2 3/4] xfsprogs: mkfs: fix unintentional integer overflow
-Date: Fri, 11 Dec 2015 16:39:02 +0530
-Message-id: <1449832143-26356-4-git-send-email-t.vivek@samsung.com>
+Subject: [PATCH v2 4/4] xfsprogs: xfsdb: remove unnessary checks in
+	process_leaf_node_dir_v2_free
+Date: Fri, 11 Dec 2015 16:39:03 +0530
+Message-id: <1449832143-26356-5-git-send-email-t.vivek@samsung.com>
 In-reply-to: <1449832143-26356-1-git-send-email-t.vivek@samsung.com>
 References: <1449832143-26356-1-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,27 +38,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Vivek Trivedi <t.vivek@samsung.com>, a.sahrawat@samsung.com, pankaj.m@samsung.com
 
-Fix unintentional integer overflow  in mkfs.
-reported by coverity.
+xfs_dir2_free_hdr_t entries are unsigned, so they can't be negative.
+remove these unnessary checks in process_leaf_node_dir_v2_free.
+Reported by coverity.
 
 Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
 ---
- mkfs/xfs_mkfs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ db/check.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 7cba41a..35dafb4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2022,7 +2022,7 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
- 		 * and the underlying volume is striped, then set rtextblocks
- 		 * to the stripe width.
- 		 */
--		int		rswidth;
-+		__uint64_t	rswidth;
- 		__uint64_t	rtextbytes;
- 
- 		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
+diff --git a/db/check.c b/db/check.c
+index 9c1541d..9d986b9 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3073,9 +3073,7 @@ process_leaf_node_dir_v3_free(
+ 		return;
+ 	}
+ 	if (be32_to_cpu(free->hdr.nvalid) > maxent || 
+-				be32_to_cpu(free->hdr.nvalid) < 0 ||
+ 				be32_to_cpu(free->hdr.nused) > maxent || 
+-				be32_to_cpu(free->hdr.nused) < 0 ||
+ 				be32_to_cpu(free->hdr.nused) > 
+ 					be32_to_cpu(free->hdr.nvalid)) {
+ 		if (!sflag || v)
 -- 
 1.7.9.5
 
