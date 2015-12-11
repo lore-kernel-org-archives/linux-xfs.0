@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 555C27F3F
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 18:08:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D6119AC002
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 16:08:05 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 4zQfNFR3k6OBnXbC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2015 16:08:03 -0800 (PST)
-Date: Thu, 10 Dec 2015 16:07:57 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] reflink: more tests
-Message-ID: <20151211000757.GA7499@infradead.org>
-References: <20151208062844.21871.23644.stgit@birch.djwong.org>
-	<20151208062904.21871.30589.stgit@birch.djwong.org>
-	<20151210163449.GA15774@infradead.org>
-	<20151210191429.GN10580@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6EA5E7F3F
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 22:26:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 508088F8033
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2015 20:26:12 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	9hFoCPDQpMlwpRVv for <xfs@oss.sgi.com>;
+	Thu, 10 Dec 2015 20:26:10 -0800 (PST)
+Date: Thu, 10 Dec 2015 21:26:09 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: xfstests failures with xfs, dax and v4.4-rc3
+Message-ID: <20151211042609.GA5360@linux.intel.com>
+References: <20151202183438.GA1319@linux.intel.com>
+	<20151202202910.GH19199@dastard> <20151202204502.GI19199@dastard>
+	<20151202213932.GA7652@linux.intel.com>
+	<20151210165458.GA13603@linux.intel.com>
+	<20151210223333.GH26718@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151210191429.GN10580@birch.djwong.org>
+In-Reply-To: <20151210223333.GH26718@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +32,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, tao.peng@primarydata.com, linux-ext4@vger.kernel.org, Anna.Schumaker@netapp.com, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Thu, Dec 10, 2015 at 11:14:29AM -0800, Darrick J. Wong wrote:
-> On Thu, Dec 10, 2015 at 08:34:49AM -0800, Christoph Hellwig wrote:
-> > The new 849 fails reliably on btrfs, which makes me wonder if either
-> > the test is doing something wrong, or the btrfs whole file clone
-> > behavior is broken, which wouldn't be very reasuring.  I didn't have
-> > time to look into why it's failing yet.
+On Fri, Dec 11, 2015 at 09:33:33AM +1100, Dave Chinner wrote:
+> On Thu, Dec 10, 2015 at 09:54:58AM -0700, Ross Zwisler wrote:
+> > On Wed, Dec 02, 2015 at 02:39:32PM -0700, Ross Zwisler wrote:
+> > > I've verified that this fixes all three failing xfstests reported in this mail.
+> > > Thanks!
+> > 
+> > Hey Dave,
+> > 
+> > Are you planning on pushing this fix for v4.4?
 > 
-> Huh.  Works reliably for /me; could you send me the output from 849?
+> No plans to right now - ENOSPC is a corner case that most users
+> won't be anywhere near, especially for experimental functionality on
+> hardware nobody actually has....
 
---- tests/generic/849.out	2015-12-09 15:31:50.492879152 +0000
-+++ /root/xfstests/results//generic/849.out.bad	2015-12-11
-00:02:25.154347175 +0000
-@@ -1,6 +1,7 @@
- QA output created by 849
- Create the original files
- f4820540fc0ac02750739896fe028d56  TEST_DIR/test-849/file1
--dc881c004745c49f7f4e9cc766f57bc8  TEST_DIR/test-849/file2
-+eb34153e9ed1e774db28cbbe4090a449  TEST_DIR/test-849/file2
- dc881c004745c49f7f4e9cc766f57bc8  TEST_DIR/test-849/file2.chk
- Compare against check files
-+file2 and file2.chk do not match
+Really?  I realize that it may be a case that most users won't actually hit,
+but it is a 5 line change that fixes four xfstests regressions between v4.3 and
+v4.4 for my DAX testing...
+
+Is there a strong reason *not* to push it in the v4.4 cycle?  I'm trying to
+clear up all xfstests differences between DAX and non-DAX, and this would help
+quite a bit.
 
 _______________________________________________
 xfs mailing list
