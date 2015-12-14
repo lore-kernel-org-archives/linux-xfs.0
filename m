@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B1277F3F
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 00:44:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2BC518F8033
-	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 22:43:57 -0800 (PST)
-Received: from mail1.xortex.at (mail1.xortex.at [95.130.251.167]) by
-	cuda.sgi.com with ESMTP id Kx8TSzNj3vhHxalq for
-	<xfs@oss.sgi.com>; Sun, 13 Dec 2015 22:43:53 -0800 (PST)
-From: =?Windows-1252?Q?Georg_Sch=F6nberger?= <g.schoenberger@xortex.com>
+	by oss.sgi.com (Postfix) with ESMTP id 562A47F37
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 02:39:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2853E8F804B
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 00:39:02 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id cnYIJ5vImAqBvDJX for
+	<xfs@oss.sgi.com>; Mon, 14 Dec 2015 00:38:58 -0800 (PST)
+From: Martin Steigerwald <martin@lichtvoll.de>
 Subject: Re: XFS and nobarrier with SSDs
-Date: Mon, 14 Dec 2015 06:43:48 +0000
-Message-ID: <566E6524.6070401@xortex.com>
+Date: Mon, 14 Dec 2015 09:38:56 +0100
+Message-ID: <3911767.qVqsL1TcMv@merkaba>
+In-Reply-To: <566E6524.6070401@xortex.com>
 References: <E127700EFE58FD45BD6298EAC813FA42020D8173@TIGER2010.xortex.local>
-	<3496214.YTSKClH6pV@merkaba>
-In-Reply-To: <3496214.YTSKClH6pV@merkaba>
-Content-Language: de-DE
-Content-ID: <f06239cb-8906-46d4-8045-fadd4060f914>
+	<3496214.YTSKClH6pV@merkaba> <566E6524.6070401@xortex.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,96 +24,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <martin@lichtvoll.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Georg =?ISO-8859-1?Q?Sch=F6nberger?= <g.schoenberger@xortex.com>, Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, Linux FS-Devel <linux-fsdevel@vger.kernel.org>, Linux Block mailing list <linux-block@vger.kernel.org>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-
-On 2015-12-12 13:26, Martin Steigerwald wrote:
-> Am Samstag, 12. Dezember 2015, 10:24:25 CET schrieb Georg Sch=F6nberger:
->> We are using a lot of SSDs in our Ceph clusters with XFS. Our SSDs have
->> Power Loss Protection via capacitors, so is it safe in all cases to run =
-XFS
->> with nobarrier on them? Or is there indeed a need for a specific I/O
->> scheduler?
-> I do think that using nobarrier would be safe with those SSDs as long as =
-there
-> is no other caching happening on the hardware side, for example inside the
-> controller that talks to the SSDs.
-Hi Martin, thanks for your response!
-
-We are using HBAs and no RAID controller, therefore there is no other =
-
-cache in the I/O stack.
-
->
-> I always thought barrier/nobarrier acts independently of the I/O scheduler
-> thing, but I can understand the thought from the bug report you linked to
-> below. As for I/O schedulers, with recent kernels and block multiqueue I =
-see
-> it being set to "none".
-What do you mean by "none" near? Do you think I will be more on the safe =
-
-side with noop scheduler?
-
->
->> I have found a recent discussion on the Ceph mailing list, anyone from X=
-FS
->> that can help us?
->>
->> *http://www.spinics.net/lists/ceph-users/msg22053.html
-> Also see:
->
-> http://xfs.org/index.php/
-> XFS_FAQ#Q._Should_barriers_be_enabled_with_storage_which_has_a_persistent=
-_write_cache.
-> 3F
-I've already read that XFS wiki entry before and also found some Intel =
-
-presentations where they suggest to use nobarrier with
-there enterprise SSDs. But a confirmation from any block layer =
-
-specialist would be a good thing!
-
->
->> *https://bugzilla.redhat.com/show_bug.cgi?id=3D1104380
-> Interesting. Never thought of that one.
->
-> So would it be safe to interrupt the flow of data towards the SSD at any =
-point
-> if time with reordering I/O schedulers in place? And how about blk-mq whi=
-ch
-> has mutiple software queus?
-Maybe we should ask the block layer mailing list about that?
-
->
-> I like to think that they are still independent of the barrier thing and =
-the
-> last bug comment by Eric, where he quoted from Jeff, supports this:
->
->> Eric Sandeen 2014-06-24 10:32:06 EDT
->>
->> As Jeff Moyer says:
->>> The file system will manually order dependent I/O.
->>> What I mean by that is the file system will send down any I/O for the
->>> transaction log, wait for that to complete, issue a barrier (which will
->>> be a noop in the case of a battery-backed write cache), and then send
->>> down the commit block along with another barrier.  As such, you cannot
->>> have the I/O scheduler reorder the commit block and the log entry with
->>> which it is associated.
-If it is truly that way then I do not see any problems using nobarrier =
-
-with the SSDs an power loss protection.
-I have already find some people say that enterprise SSDs with PLP simply =
-
-ignore the sync call. If that's the case
-then using nobarrier would have no performance improvement...
-
-Cheers, Georg
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGVsbG8gR2VvcmcuCgpJIGFtIGFkZGluZyBpbiBzb21lIENjcyBvZiBrZXJuZWwgZGV2cyBhbmQg
+bWFpbGluZyBsaXN0cywgYXMgSSB0aGluayB0aGlzIGlzIGEgCm1vcmUgZ2VuZXJpYyBxdWVzdGlv
+bi4gU3RpbGwgb2YgY291cnNlIHdvdWxkIGJlIG5pY2UgdG8gaGVhciBzb21ldGhpbmcgZnJvbSAK
+WEZTIGRldmVsb3BlcnMgYXMgd2VsbC4KCkZvciB0aGUgYnJvYWRlciBhdWRpZW5jZSB0aGUgcXVl
+c3Rpb24gaXM6CgpJcyBpdCBzYWZlIHRvIHVzZSBYRlMgKG9yIGFueSBvdGhlciBmaWxlc3lzdGVt
+KSBvbiBlbnRlcnByaXNlIFNTRHMgd2l0aCBQb3dlciAKTG9zcyBQcm90ZWN0aW9uIChQTFApLCBp
+LmUuIHNvbWUgY2FwYWNpdG9yIHRvIHByb3ZpZGUgZm9yIGVub3VnaCBlbGVjdHJpY2l0eSAKdG8g
+d3JpdGUgb3V0IGFsbCBkYXRhIGluIERSQU0gdG8gZmxhc2ggYWZ0ZXIgYSBwb3dlciBsb3NzLCB3
+aXRoIGEgcmVvcmRlcmluZyAKSS9PIHNjaGVkdWxlciBsaWtlIENGUT8KCkFjY29yZGluZyB0byB0
+aGlzIGNvbW1lbnQgb2YgSmVmZiBNb3llciBvbiBhIHJlcG9ydCBvbiBSZWRIYXTCtHMgYnVnemls
+bGEgdGhlIApJL08gc2NoZWR1bGVyIGNhbm5vdCByZW9yZGVyIGNvbW1pdCBibG9jayBhbmQgbG9n
+IGVudHJ5LCBzbyBpdCB3b3VsZCBiZSBzYWZlLCAKSSB0aGluayAoc2VlIGJlbG93KS4KCkFtIE1v
+bnRhZywgMTQuIERlemVtYmVyIDIwMTUsIDA2OjQzOjQ4IENFVCBzY2hyaWViIEdlb3JnIFNjaMO2
+bmJlcmdlcjoKPiBPbiAyMDE1LTEyLTEyIDEzOjI2LCBNYXJ0aW4gU3RlaWdlcndhbGQgd3JvdGU6
+Cj4gPiBBbSBTYW1zdGFnLCAxMi4gRGV6ZW1iZXIgMjAxNSwgMTA6MjQ6MjUgQ0VUIHNjaHJpZWIg
+R2VvcmcgU2Now7ZuYmVyZ2VyOgo+ID4+IFdlIGFyZSB1c2luZyBhIGxvdCBvZiBTU0RzIGluIG91
+ciBDZXBoIGNsdXN0ZXJzIHdpdGggWEZTLiBPdXIgU1NEcyBoYXZlCj4gPj4gUG93ZXIgTG9zcyBQ
+cm90ZWN0aW9uIHZpYSBjYXBhY2l0b3JzLCBzbyBpcyBpdCBzYWZlIGluIGFsbCBjYXNlcyB0byBy
+dW4KPiA+PiBYRlMKPiA+PiB3aXRoIG5vYmFycmllciBvbiB0aGVtPyBPciBpcyB0aGVyZSBpbmRl
+ZWQgYSBuZWVkIGZvciBhIHNwZWNpZmljIEkvTwo+ID4+IHNjaGVkdWxlcj8KPiA+IAo+ID4gSSBk
+byB0aGluayB0aGF0IHVzaW5nIG5vYmFycmllciB3b3VsZCBiZSBzYWZlIHdpdGggdGhvc2UgU1NE
+cyBhcyBsb25nIGFzCj4gPiB0aGVyZSBpcyBubyBvdGhlciBjYWNoaW5nIGhhcHBlbmluZyBvbiB0
+aGUgaGFyZHdhcmUgc2lkZSwgZm9yIGV4YW1wbGUKPiA+IGluc2lkZSB0aGUgY29udHJvbGxlciB0
+aGF0IHRhbGtzIHRvIHRoZSBTU0RzLgpb4oCmXQo+IFdlIGFyZSB1c2luZyBIQkFzIGFuZCBubyBS
+QUlEIGNvbnRyb2xsZXIsIHRoZXJlZm9yZSB0aGVyZSBpcyBubyBvdGhlcgo+IGNhY2hlIGluIHRo
+ZSBJL08gc3RhY2suCj4gCj4gPiBJIGFsd2F5cyB0aG91Z2h0IGJhcnJpZXIvbm9iYXJyaWVyIGFj
+dHMgaW5kZXBlbmRlbnRseSBvZiB0aGUgSS9PIHNjaGVkdWxlcgo+ID4gdGhpbmcsIGJ1dCBJIGNh
+biB1bmRlcnN0YW5kIHRoZSB0aG91Z2h0IGZyb20gdGhlIGJ1ZyByZXBvcnQgeW91IGxpbmtlZCB0
+bwo+ID4gYmVsb3cuIEFzIGZvciBJL08gc2NoZWR1bGVycywgd2l0aCByZWNlbnQga2VybmVscyBh
+bmQgYmxvY2sgbXVsdGlxdWV1ZSBJCj4gPiBzZWUgaXQgYmVpbmcgc2V0IHRvICJub25lIi4KPiAK
+PiBXaGF0IGRvIHlvdSBtZWFuIGJ5ICJub25lIiBuZWFyPyBEbyB5b3UgdGhpbmsgSSB3aWxsIGJl
+IG1vcmUgb24gdGhlIHNhZmUKPiBzaWRlIHdpdGggbm9vcCBzY2hlZHVsZXI/CgpJIG1lYW4gdGhh
+dCBJIGdldCB0aGlzIG9uIGEgNC4zIGtlcm5lbCB3aXRoIGJsay1tcSBlbmFibGVkOgoKbWVya2Fi
+YTovc3lzL2Jsb2NrL3NkYS9xdWV1ZT4gZ3JlcCAuIHJvdGF0aW9uYWwgc2NoZWR1bGVyIApyb3Rh
+dGlvbmFsOjAKc2NoZWR1bGVyOm5vbmUKCm1lcmthYmE6L3N5cy9ibG9jay9zZGEvcXVldWU+IGVj
+aG8gImNmcSIgPiBzY2hlZHVsZXIgCm1lcmthYmE6L3N5cy9ibG9jay9zZGEvcXVldWU+IGNhdCBz
+Y2hlZHVsZXIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKbm9uZQptZXJrYWJhOi9zeXMv
+YmxvY2svc2RhL3F1ZXVlPiBlY2hvICJub29wIiA+IHNjaGVkdWxlcgptZXJrYWJhOi9zeXMvYmxv
+Y2svc2RhL3F1ZXVlPiBjYXQgc2NoZWR1bGVyICAgICAgICAgIApub25lCgpTbyB3aXRoIGJsay1t
+cSBJIGRvIG5vdCBnZXQgYSBjaG9pY2Ugd2hpY2ggc2NoZWR1bGVyIHRvIHVzZSBhbnl3YXkuIFdo
+aWNoIGlzIAp3aGF0IEkgZXhwZWN0LiBUaGF0cyB3aHkgdGhlcmUgaGFzIGJlZW4gYSBkaXNjdXNz
+aW9uIGFib3V0IGJsay1tcSBvbiAKcm90YXRpb25hbCBkZXZpY2VzIHJlY2VudGx5LgoKPiA+PiBJ
+IGhhdmUgZm91bmQgYSByZWNlbnQgZGlzY3Vzc2lvbiBvbiB0aGUgQ2VwaCBtYWlsaW5nIGxpc3Qs
+IGFueW9uZSBmcm9tCj4gPj4gWEZTCj4gPj4gdGhhdCBjYW4gaGVscCB1cz8KPiA+PiAKPiA+PiAq
+aHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9jZXBoLXVzZXJzL21zZzIyMDUzLmh0bWwKPiA+
+IAo+ID4gQWxzbyBzZWU6Cj4gPiAKPiA+IGh0dHA6Ly94ZnMub3JnL2luZGV4LnBocC8KPiA+IFhG
+U19GQVEjUS5fU2hvdWxkX2JhcnJpZXJzX2JlX2VuYWJsZWRfd2l0aF9zdG9yYWdlX3doaWNoX2hh
+c19hX3BlcnNpc3RlbnRfCj4gPiB3cml0ZV9jYWNoZS4gM0YKPiAKPiBJJ3ZlIGFscmVhZHkgcmVh
+ZCB0aGF0IFhGUyB3aWtpIGVudHJ5IGJlZm9yZSBhbmQgYWxzbyBmb3VuZCBzb21lIEludGVsCj4g
+cHJlc2VudGF0aW9ucyB3aGVyZSB0aGV5IHN1Z2dlc3QgdG8gdXNlIG5vYmFycmllciB3aXRoCj4g
+dGhlcmUgZW50ZXJwcmlzZSBTU0RzLiBCdXQgYSBjb25maXJtYXRpb24gZnJvbSBhbnkgYmxvY2sg
+bGF5ZXIKPiBzcGVjaWFsaXN0IHdvdWxkIGJlIGEgZ29vZCB0aGluZyEKCkkgdGhpbmsgSmVucyBB
+eGJvZSB3b3VsZCBiZSBnb29kIHRvIGFzaz8gQnV0IGFzIEplZmYgTW95ZXIgYWxyZWFkeSByZXBs
+aWVkIHRvIAp0aGUgYnVnIHJlcG9ydD8KCj4gPj4gKmh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNv
+bS9zaG93X2J1Zy5jZ2k/aWQ9MTEwNDM4MAo+ID4gCj4gPiBJbnRlcmVzdGluZy4gTmV2ZXIgdGhv
+dWdodCBvZiB0aGF0IG9uZS4KPiA+IAo+ID4gU28gd291bGQgaXQgYmUgc2FmZSB0byBpbnRlcnJ1
+cHQgdGhlIGZsb3cgb2YgZGF0YSB0b3dhcmRzIHRoZSBTU0QgYXQgYW55Cj4gPiBwb2ludCBpZiB0
+aW1lIHdpdGggcmVvcmRlcmluZyBJL08gc2NoZWR1bGVycyBpbiBwbGFjZT8gQW5kIGhvdyBhYm91
+dAo+ID4gYmxrLW1xIHdoaWNoIGhhcyBtdXRpcGxlIHNvZnR3YXJlIHF1ZXVzPwo+IAo+IE1heWJl
+IHdlIHNob3VsZCBhc2sgdGhlIGJsb2NrIGxheWVyIG1haWxpbmcgbGlzdCBhYm91dCB0aGF0Pwo+
+IAo+ID4gSSBsaWtlIHRvIHRoaW5rIHRoYXQgdGhleSBhcmUgc3RpbGwgaW5kZXBlbmRlbnQgb2Yg
+dGhlIGJhcnJpZXIgdGhpbmcgYW5kCj4gPiB0aGU+IAo+ID4gbGFzdCBidWcgY29tbWVudCBieSBF
+cmljLCB3aGVyZSBoZSBxdW90ZWQgZnJvbSBKZWZmLCBzdXBwb3J0cyB0aGlzOgo+ID4+IEVyaWMg
+U2FuZGVlbiAyMDE0LTA2LTI0IDEwOjMyOjA2IEVEVAo+ID4+IAo+ID4+IEFzIEplZmYgTW95ZXIg
+c2F5czoKPiA+Pj4gVGhlIGZpbGUgc3lzdGVtIHdpbGwgbWFudWFsbHkgb3JkZXIgZGVwZW5kZW50
+IEkvTy4KPiA+Pj4gV2hhdCBJIG1lYW4gYnkgdGhhdCBpcyB0aGUgZmlsZSBzeXN0ZW0gd2lsbCBz
+ZW5kIGRvd24gYW55IEkvTyBmb3IgdGhlCj4gPj4+IHRyYW5zYWN0aW9uIGxvZywgd2FpdCBmb3Ig
+dGhhdCB0byBjb21wbGV0ZSwgaXNzdWUgYSBiYXJyaWVyICh3aGljaCB3aWxsCj4gPj4+IGJlIGEg
+bm9vcCBpbiB0aGUgY2FzZSBvZiBhIGJhdHRlcnktYmFja2VkIHdyaXRlIGNhY2hlKSwgYW5kIHRo
+ZW4gc2VuZAo+ID4+PiBkb3duIHRoZSBjb21taXQgYmxvY2sgYWxvbmcgd2l0aCBhbm90aGVyIGJh
+cnJpZXIuICBBcyBzdWNoLCB5b3UgY2Fubm90Cj4gPj4+IGhhdmUgdGhlIEkvTyBzY2hlZHVsZXIg
+cmVvcmRlciB0aGUgY29tbWl0IGJsb2NrIGFuZCB0aGUgbG9nIGVudHJ5IHdpdGgKPiA+Pj4gd2hp
+Y2ggaXQgaXMgYXNzb2NpYXRlZC4KPiAKPiBJZiBpdCBpcyB0cnVseSB0aGF0IHdheSB0aGVuIEkg
+ZG8gbm90IHNlZSBhbnkgcHJvYmxlbXMgdXNpbmcgbm9iYXJyaWVyCj4gd2l0aCB0aGUgU1NEcyBh
+biBwb3dlciBsb3NzIHByb3RlY3Rpb24uCj4gSSBoYXZlIGFscmVhZHkgZmluZCBzb21lIHBlb3Bs
+ZSBzYXkgdGhhdCBlbnRlcnByaXNlIFNTRHMgd2l0aCBQTFAgc2ltcGx5Cj4gaWdub3JlIHRoZSBz
+eW5jIGNhbGwuIElmIHRoYXQncyB0aGUgY2FzZQo+IHRoZW4gdXNpbmcgbm9iYXJyaWVyIHdvdWxk
+IGhhdmUgbm8gcGVyZm9ybWFuY2UgaW1wcm92ZW1lbnQuLi4KCkludGVyZXN0aW5nLiBJIHRoaW5r
+IGlmIHRoZXkgaWdub3JlIGl0IHRvdWdoIHRoZXkgcmlzayBkYXRhIGxvc3MuIENhdXNlIEkgCmlt
+YWdpbmUgdGhlcmUgbWlnaHQgYmUgYSBzbGlnaHQgY2hhbmNlIHdoZXJlIHRoZSBkYXRhIGhhcyBi
+ZWVuIHNlbnQgYnkgdGhlIApjb250cm9sbGVyLCBidXQgbm90IHlldCBmdWxseSBzdG9yZWQgaW4g
+U1NEIERSQU0uIE9yIGlzIHRoaXMgb3BlcmF0aW9uIGF0b21pYz8KClRoYW5rcywKLS0gCk1hcnRp
+bgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
+aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCg==
