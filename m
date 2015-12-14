@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3B8B87CBF
-	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 20:00:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C42D1AC003
-	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 18:00:11 -0800 (PST)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id J7TDzgYbuBdfxc1l (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 13 Dec 2015 18:00:08 -0800 (PST)
-Subject: Bug#807879: xfsprogs: Cannot mount XFS filesystem formated with
-	mkfs.xfs newer than 3.2.1
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.807879.B.145005819820282@bugs.debian.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3B1277F3F
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 00:44:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2BC518F8033
+	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 22:43:57 -0800 (PST)
+Received: from mail1.xortex.at (mail1.xortex.at [95.130.251.167]) by
+	cuda.sgi.com with ESMTP id Kx8TSzNj3vhHxalq for
+	<xfs@oss.sgi.com>; Sun, 13 Dec 2015 22:43:53 -0800 (PST)
+From: =?Windows-1252?Q?Georg_Sch=F6nberger?= <g.schoenberger@xortex.com>
+Subject: Re: XFS and nobarrier with SSDs
+Date: Mon, 14 Dec 2015 06:43:48 +0000
+Message-ID: <566E6524.6070401@xortex.com>
+References: <E127700EFE58FD45BD6298EAC813FA42020D8173@TIGER2010.xortex.local>
+	<3496214.YTSKClH6pV@merkaba>
+In-Reply-To: <3496214.YTSKClH6pV@merkaba>
+Content-Language: de-DE
+Content-ID: <f06239cb-8906-46d4-8045-fadd4060f914>
 MIME-Version: 1.0
-From: Emil <ee@la.mine.nu>
-Message-ID: <145005783346.24095.10578707004408280277.reportbug@flop>
-Date: Mon, 14 Dec 2015 01:50:33 +0000
-Reply-To: Emil <ee@la.mine.nu>, 807879@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,79 +26,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Debian Bug Tracking System <submit@bugs.debian.org>
+To: Martin Steigerwald <martin@lichtvoll.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Package: xfsprogs
-Version: 4.3.0
-Severity: normal
 
-For any version of xfsprogs after v3.2.1 formating with default options:
+On 2015-12-12 13:26, Martin Steigerwald wrote:
+> Am Samstag, 12. Dezember 2015, 10:24:25 CET schrieb Georg Sch=F6nberger:
+>> We are using a lot of SSDs in our Ceph clusters with XFS. Our SSDs have
+>> Power Loss Protection via capacitors, so is it safe in all cases to run =
+XFS
+>> with nobarrier on them? Or is there indeed a need for a specific I/O
+>> scheduler?
+> I do think that using nobarrier would be safe with those SSDs as long as =
+there
+> is no other caching happening on the hardware side, for example inside the
+> controller that talks to the SSDs.
+Hi Martin, thanks for your response!
 
-# dpkg -l mount
-ii  mount            2.27.1-1      i386          Tools for mounting and manipulating
+We are using HBAs and no RAID controller, therefore there is no other =
 
-# mkfs.xfs -f /dev/sde1
-meta-data=/dev/sde1              isize=512    agcount=4, agsize=61047598 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0
-data     =                       bsize=4096   blocks=244190390, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=119233, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+cache in the I/O stack.
 
-# mount /dev/sde1 /mnt/e
-mount: wrong fs type, bad option, bad superblock on /dev/sde1
-# dmesg
-[    0.000000] XFS (sde1): bad version
-[    0.000000] XFS (sde1): SB validate failed
+>
+> I always thought barrier/nobarrier acts independently of the I/O scheduler
+> thing, but I can understand the thought from the bug report you linked to
+> below. As for I/O schedulers, with recent kernels and block multiqueue I =
+see
+> it being set to "none".
+What do you mean by "none" near? Do you think I will be more on the safe =
 
-# dpkg -i xfsprogs_3.2.1_i386.deb
-# mkfs.xfs -f /dev/sde1
-meta-data=/dev/sde1              isize=256    agcount=4, agsize=61047598 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=0        finobt=0
-data     =                       bsize=4096   blocks=244190390, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal log           bsize=4096   blocks=119233, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+side with noop scheduler?
 
-# mount /dev/sde1 /mnt/e
-No errors after mount.
+>
+>> I have found a recent discussion on the Ceph mailing list, anyone from X=
+FS
+>> that can help us?
+>>
+>> *http://www.spinics.net/lists/ceph-users/msg22053.html
+> Also see:
+>
+> http://xfs.org/index.php/
+> XFS_FAQ#Q._Should_barriers_be_enabled_with_storage_which_has_a_persistent=
+_write_cache.
+> 3F
+I've already read that XFS wiki entry before and also found some Intel =
 
--- System Information:
-Debian Release: stretch/sid
-  APT prefers unstable
-  APT policy: (900, 'unstable'), (300, 'stable')
-Architecture: i386 (i686)
+presentations where they suggest to use nobarrier with
+there enterprise SSDs. But a confirmation from any block layer =
 
-Kernel: Linux 3.4.110 (SMP w/4 CPU cores)
-Locale: LANG=C
-Shell: /bin/sh linked to /bin/dash
-Init: sysvinit (via /sbin/init)
+specialist would be a good thing!
 
-Versions of packages xfsprogs depends on:
-ii  libblkid1     2.27.1-1
-ii  libc6         2.21-3
-ii  libreadline5  5.2+dfsg-3+b1
-ii  libuuid1      2.27.1-1
+>
+>> *https://bugzilla.redhat.com/show_bug.cgi?id=3D1104380
+> Interesting. Never thought of that one.
+>
+> So would it be safe to interrupt the flow of data towards the SSD at any =
+point
+> if time with reordering I/O schedulers in place? And how about blk-mq whi=
+ch
+> has mutiple software queus?
+Maybe we should ask the block layer mailing list about that?
 
-xfsprogs recommends no packages.
+>
+> I like to think that they are still independent of the barrier thing and =
+the
+> last bug comment by Eric, where he quoted from Jeff, supports this:
+>
+>> Eric Sandeen 2014-06-24 10:32:06 EDT
+>>
+>> As Jeff Moyer says:
+>>> The file system will manually order dependent I/O.
+>>> What I mean by that is the file system will send down any I/O for the
+>>> transaction log, wait for that to complete, issue a barrier (which will
+>>> be a noop in the case of a battery-backed write cache), and then send
+>>> down the commit block along with another barrier.  As such, you cannot
+>>> have the I/O scheduler reorder the commit block and the log entry with
+>>> which it is associated.
+If it is truly that way then I do not see any problems using nobarrier =
 
-Versions of packages xfsprogs suggests:
-ii  acl      2.2.52-2
-ii  attr     1:2.4.47-2
-pn  quota    <none>
-pn  xfsdump  <none>
+with the SSDs an power loss protection.
+I have already find some people say that enterprise SSDs with PLP simply =
 
--- no debconf information
+ignore the sync call. If that's the case
+then using nobarrier would have no performance improvement...
+
+Cheers, Georg
 
 _______________________________________________
 xfs mailing list
