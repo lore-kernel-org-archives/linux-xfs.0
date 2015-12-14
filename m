@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7B9357CBF
-	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 19:27:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F3C06AC005
-	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 17:27:28 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	5LFJGoaBpjBErm0g for <xfs@oss.sgi.com>;
-	Sun, 13 Dec 2015 17:27:26 -0800 (PST)
-Date: Mon, 14 Dec 2015 12:27:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] mkfs: get sector size from host fs dev when
-	mkfs'ing file
-Message-ID: <20151214012712.GL26718@dastard>
-References: <5660CD5E.2040209@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3B8B87CBF
+	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 20:00:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C42D1AC003
+	for <xfs@oss.sgi.com>; Sun, 13 Dec 2015 18:00:11 -0800 (PST)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id J7TDzgYbuBdfxc1l (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 13 Dec 2015 18:00:08 -0800 (PST)
+Subject: Bug#807879: xfsprogs: Cannot mount XFS filesystem formated with
+	mkfs.xfs newer than 3.2.1
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.807879.B.145005819820282@bugs.debian.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5660CD5E.2040209@redhat.com>
+From: Emil <ee@la.mine.nu>
+Message-ID: <145005783346.24095.10578707004408280277.reportbug@flop>
+Date: Mon, 14 Dec 2015 01:50:33 +0000
+Reply-To: Emil <ee@la.mine.nu>, 807879@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,129 +30,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Debian Bug Tracking System <submit@bugs.debian.org>
 
-On Thu, Dec 03, 2015 at 05:16:46PM -0600, Eric Sandeen wrote:
-> Now that we allow logical-sector-sized DIOs even if our xfs
-> filesystem is set to physical-sector-sized "sectors," we can
-> allow the creation of filesystem images with block and sector
-> sizes down to the host device's logical sector size, rather
-> than the filesystem's sector size.
-> 
-> So in platform_findsizes(), change our query of the filesystem
-> to a query of the device, and use that for sector size in the
-> S_IFREG case.
-> 
-> This allows the creation of i.e. a 2k block sized image on
-> an xfs filesystem w/ 4k sector size created on a 4k/512
-> block device, which would otherwise fail today.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> This feels like about my 5th stab at this; it seems like
-> the correct thing to do but by now my brain is full.
-> Seem sane?
+Package: xfsprogs
+Version: 4.3.0
+Severity: normal
 
-I'm not sure I like the idea of encoding blkid functionality
-into libxfs, especially as blkid support is optional:
+For any version of xfsprogs after v3.2.1 formating with default options:
 
-commit 6635d6ab510c58996f5ed3f212148db5e3c299ba
-Author: Jan Tulak <jtulak@redhat.com>
-Date:   Wed Oct 14 10:57:39 2015 +1100
+# dpkg -l mount
+ii  mount            2.27.1-1      i386          Tools for mounting and manipulating
 
-    build: make libblkid usage optional
+# mkfs.xfs -f /dev/sde1
+meta-data=/dev/sde1              isize=512    agcount=4, agsize=61047598 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0
+data     =                       bsize=4096   blocks=244190390, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=119233, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
+# mount /dev/sde1 /mnt/e
+mount: wrong fs type, bad option, bad superblock on /dev/sde1
+# dmesg
+[    0.000000] XFS (sde1): bad version
+[    0.000000] XFS (sde1): SB validate failed
 
-> Still needs a run through xfstests but wanted to see if this
-> was obviously bonkers or not...?
-> 
-> (I don't know why copy/Makefile needs a $(LIBBLKID), either...)
+# dpkg -i xfsprogs_3.2.1_i386.deb
+# mkfs.xfs -f /dev/sde1
+meta-data=/dev/sde1              isize=256    agcount=4, agsize=61047598 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=244190390, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=119233, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Because libxfs now has a dependency on libblkid, and libxfs is a
-static library so it doesn't resolve undefined extern objects as the
-library is built. That is only done when linking binaries....
+# mount /dev/sde1 /mnt/e
+No errors after mount.
 
-> index 885016a..3a8dc12 100644
-> --- a/libxfs/linux.c
-> +++ b/libxfs/linux.c
-> @@ -24,6 +24,7 @@
->  #include <sys/mount.h>
->  #include <sys/ioctl.h>
->  #include <sys/sysinfo.h>
-> +#include <blkid/blkid.h>
->  
->  #include "libxfs_priv.h"
->  #include "xfs_fs.h"
-> @@ -142,18 +143,29 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
->  			progname, path, strerror(errno));
->  		exit(1);
->  	}
-> +
->  	if ((st.st_mode & S_IFMT) == S_IFREG) {
-> -		struct xfs_fsop_geom_v1 geom = { 0 };
-> +		int	fd;
-> +		char	*hostfs_dev_path;	/* path to host fs device */
->  
->  		*sz = (long long)(st.st_size >> 9);
-> -		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
-> -			/*
-> -			 * fall back to BBSIZE; mkfs might fail if there's a
-> -			 * size mismatch between the image & the host fs...
-> -			 */
-> -			*bsz = BBSIZE;
-> -		} else
-> -			*bsz = geom.sectsize;
-> +
-> +		/*
-> +		 * Default to BBSIZE; mkfs might fail if there's a
-> +		 * size mismatch between the image & the host fs...
-> +		 */
-> +		*bsz = BBSIZE;
-> +
-> +		/* Get logical sector size of host device */
-> +		hostfs_dev_path = blkid_devno_to_devname(st.st_dev);
-> +		if (hostfs_dev_path) {
-> +			fd = open(hostfs_dev_path, O_RDONLY);
-> +			if (fd >= 0)
-> +				if (ioctl(fd, BLKSSZGET, bsz) < 0)
-> +					*bsz = BBSIZE;
-> +			close(fd);
-> +			free(hostfs_dev_path);
-> +		}
+-- System Information:
+Debian Release: stretch/sid
+  APT prefers unstable
+  APT policy: (900, 'unstable'), (300, 'stable')
+Architecture: i386 (i686)
 
-So the current behaviour is to use the underlying filesystem
-sector size, but we might have a 4k fs sector on a 512 physical
-sector device, and you want to detect this, right? The logical
-sector size is exposed by the filesystem in the XFS_IOC_DIOINFO
-information. i.e:
+Kernel: Linux 3.4.110 (SMP w/4 CPU cores)
+Locale: LANG=C
+Shell: /bin/sh linked to /bin/dash
+Init: sysvinit (via /sbin/init)
 
-        case XFS_IOC_DIOINFO: {
-                struct dioattr  da;
-                xfs_buftarg_t   *target =
-                        XFS_IS_REALTIME_INODE(ip) ?
-                        mp->m_rtdev_targp : mp->m_ddev_targp;
+Versions of packages xfsprogs depends on:
+ii  libblkid1     2.27.1-1
+ii  libc6         2.21-3
+ii  libreadline5  5.2+dfsg-3+b1
+ii  libuuid1      2.27.1-1
 
-                da.d_mem =  da.d_miniosz = target->bt_logical_sectorsize;
-                da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
+xfsprogs recommends no packages.
 
-                if (copy_to_user(arg, &da, sizeof(da)))
-                        return -EFAULT;
-                return 0;
-        }
+Versions of packages xfsprogs suggests:
+ii  acl      2.2.52-2
+ii  attr     1:2.4.47-2
+pn  quota    <none>
+pn  xfsdump  <none>
 
-Isn't this exactly what XFS_IOC_DIOINFO is for?
-
-(Oh, and "old kernels don't support...." simply means the distros
-will have a kernel patch to backport, too....)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-- no debconf information
 
 _______________________________________________
 xfs mailing list
