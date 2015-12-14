@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D9AD7F37
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 04:19:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 31D08AC002
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 02:19:08 -0800 (PST)
-Received: from mail1.xortex.at (mail1.xortex.at [95.130.251.167]) by
-	cuda.sgi.com with ESMTP id 6REeVSGzJmkl7xIf for
-	<xfs@oss.sgi.com>; Mon, 14 Dec 2015 02:19:05 -0800 (PST)
-From: =?Windows-1252?Q?Georg_Sch=F6nberger?= <g.schoenberger@xortex.com>
-Subject: Re: XFS and nobarrier with SSDs
-Date: Mon, 14 Dec 2015 10:18:54 +0000
-Message-ID: <566E978E.2070502@xortex.com>
-References: <E127700EFE58FD45BD6298EAC813FA42020D8173@TIGER2010.xortex.local>
-	<3496214.YTSKClH6pV@merkaba> <566E6524.6070401@xortex.com>
-	<3911767.qVqsL1TcMv@merkaba> <20151214095823.GA30662@infradead.org>
-In-Reply-To: <20151214095823.GA30662@infradead.org>
-Content-Language: de-DE
-Content-ID: <42159881-d2be-49c1-b0a6-14e54e2c0cfd>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 98FE57F37
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 04:22:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8937E8F8033
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 02:22:29 -0800 (PST)
+Received: from youngberry.canonical.com (youngberry.canonical.com
+	[91.189.89.112]) by cuda.sgi.com with ESMTP id sLCeNEJcN3wJMIAU
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 02:22:22 -0800 (PST)
+Date: Mon, 14 Dec 2015 10:22:13 +0000
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: [3.16] xfs: allow inode allocations in post-growfs disk space
+Message-ID: <20151214102213.GB3120@ares>
+References: <1449966459.3836.46.camel@decadent.org.uk>
+	<20151214004226.GK26718@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20151214004226.GK26718@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Martin Steigerwald <martin@lichtvoll.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Linux FS-Devel <linux-fsdevel@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>, Linux Block mailing list <linux-block@vger.kernel.org>, XFS mailing list <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, 802885@bugs.debian.org, Ben Hutchings <ben@decadent.org.uk>, stable <stable@vger.kernel.org>, xfs@oss.sgi.com
 
-On 2015-12-14 10:58, Christoph Hellwig wrote:
-> On Mon, Dec 14, 2015 at 09:38:56AM +0100, Martin Steigerwald wrote:
->> Is it safe to use XFS (or any other filesystem) on enterprise SSDs with Power
->> Loss Protection (PLP), i.e. some capacitor to provide for enough electricity
->> to write out all data in DRAM to flash after a power loss, with a reordering
->> I/O scheduler like CFQ?
-> If the device does not need cache flushes it should not report requiring
-> flushes, in which case nobarrier will be a noop.
-OK - that would also mean that mounting with nobarrier should not make a 
-performance difference.
+On Mon, Dec 14, 2015 at 11:42:26AM +1100, Dave Chinner wrote:
+> On Sun, Dec 13, 2015 at 12:27:39AM +0000, Ben Hutchings wrote:
+> > Per the FAQ at
+> > <http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_receive_No_space_left_on_=
+device_after_xfs_growfs.3F>,
+> > I think the following commit should be cherry-picked for 3.16-ckt:
+> > =
 
-> Or to phrase it
-> differently:  If nobarrier makes a difference skipping it is not safe.
-I do not fully understand that sentence, what do you mean by "makes a 
-difference" and "skipping is not safe"?
+> > commit 9de67c3ba9ea961ba420573d56479d09d33a7587
+> > Author: Eric Sandeen <sandeen@redhat.com>
+> > Date:=A0=A0=A0Thu Jul 24 20:51:54 2014 +1000
+> > =
 
--Georg
+> > =A0=A0=A0=A0xfs: allow inode allocations in post-growfs disk space
+> =
+
+> Acked-by: Dave Chinner <david@fromorbit.com>
+> =
+
+
+Thanks, I'm queuing this for the next 3.16 release.
+
+Cheers,
+--
+Lu=EDs
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
