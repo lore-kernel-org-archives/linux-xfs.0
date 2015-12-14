@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D08A97F58
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 17:41:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BCB6E304066
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 15:41:12 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4A7B77F53
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 17:41:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 025258F8040
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 15:41:17 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7XJvgLyaKsHZF63t (version=TLSv1.2
+	cuda.sgi.com with ESMTP id r34rdvHrTkW2f7QZ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Dec 2015 15:41:11 -0800 (PST)
+	<xfs@oss.sgi.com>; Mon, 14 Dec 2015 15:41:15 -0800 (PST)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 051EB8F511
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 23:41:11 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id B033E6567B
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 23:41:15 +0000 (UTC)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [XFSTESTS v3 2/6] check: Enforce xfs filesystem recreation on
-	$TEST_DEV
-Date: Tue, 15 Dec 2015 00:40:58 +0100
-Message-Id: <1450136462-11521-3-git-send-email-agruenba@redhat.com>
+Subject: [XFSTESTS v3 4/6] check: Add support for tests without *.out files
+Date: Tue, 15 Dec 2015 00:41:00 +0100
+Message-Id: <1450136462-11521-5-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1450136462-11521-1-git-send-email-agruenba@redhat.com>
 References: <1450136462-11521-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +35,127 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-When recreating xfs filesystems on $TEST_DEV, pass option -f to enforce
-the filesystem creation instead of refusing to overwrite existing xfs
-filesystems.  We already do that for ext2/ext3/ext4 filesystems.
+Add support for tests which report their status through their exit code
+instead of producing output that is compared with the expected output.
+
+When such a test returns with exit code 77, it is assumed to have been
+skipped; all other non-zero exit codes are treated as test failures.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- common/rc | 3 +++
- 1 file changed, 3 insertions(+)
+ check | 77 +++++++++++++++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 50 insertions(+), 27 deletions(-)
 
-diff --git a/common/rc b/common/rc
-index 4c2f42c..ce6ae3d 100644
---- a/common/rc
-+++ b/common/rc
-@@ -572,6 +572,9 @@ _test_mkfs()
-     btrfs)
-         $MKFS_BTRFS_PROG $MKFS_OPTIONS $* $TEST_DEV > /dev/null
- 	;;
-+    xfs)
-+	$MKFS_PROG -t $FSTYP -- -f $MKFS_OPTIONS $* $TEST_DEV
-+	;;
-     ext2|ext3|ext4)
- 	$MKFS_PROG -t $FSTYP -- -F $MKFS_OPTIONS $* $TEST_DEV
- 	;;
+diff --git a/check b/check
+index 4a9b332..5ecc12b 100755
+--- a/check
++++ b/check
+@@ -204,6 +204,13 @@ _prepare_test_list()
+ 	fi
+ }
+ 
++# Check if a test has any .out* files
++has_out_files()
++{
++    set -- "$1".out*
++    [ $# -gt 0 -a -e "$1" ]
++}
++
+ # Process command arguments first.
+ while [ $# -gt 0 ]; do
+ 	case "$1" in
+@@ -612,6 +619,13 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 		    err=true
+ 		fi
+ 
++		if ! has_out_files $seq; then
++		    if [ $sts -eq 77 ]; then
++			cat $tmp.out > $seqres.notrun
++			sts=0
++		    fi
++		fi
++
+ 		if [ -f $seqres.notrun ]
+ 		then
+ 		    $timestamp || echo -n " [not run] "
+@@ -624,41 +638,50 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 			echo -n " [failed, exit status $sts]"
+ 			err=true
+ 		    fi
+-		    if [ ! -f $seq.out ]
+-		    then
+-			echo " - no qualified output"
+-			err=true
+-		    else
+ 
+-			# coreutils 8.16+ changed quote formats in error messages from
+-			# `foo' to 'foo'. Filter old versions to match the new version.
+-			sed -i "s/\`/\'/g" $tmp.out
+-			if diff $seq.out $tmp.out >/dev/null 2>&1
++		    if has_out_files $seq; then
++			if [ ! -f $seq.out ]
+ 			then
+-			    if $err
++			    echo " - no qualified output"
++			    err=true
++			else
++			    # coreutils 8.16+ changed quote formats in error messages from
++			    # `foo' to 'foo'. Filter old versions to match the new version.
++			    sed -i "s/\`/\'/g" $tmp.out
++
++			    if ! diff $seq.out $tmp.out >/dev/null 2>&1
+ 			    then
+-				:
+-			    else
+-				echo "$seqnum `expr $stop - $start`" >>$tmp.time
+-				echo -n " `expr $stop - $start`s"
++				echo " - output mismatch (see $seqres.out.bad)"
++				mv $tmp.out $seqres.out.bad
++				$diff $seq.out $seqres.out.bad | {
++				    if test "$DIFF_LENGTH" -le 0; then
++					    cat
++				    else
++					    head -n "$DIFF_LENGTH"
++					    echo "..."
++					    echo "(Run '$diff $seq.out $seqres.out.bad'" \
++						    " to see the entire diff)"
++				    fi; } | \
++				    sed -e 's/^\(.\)/    \1/'
++				err=true
+ 			    fi
+-			    echo ""
++			fi
++		    else
++			if ! $err; then
++			    mv $tmp.out $seqres.out.good
+ 			else
+-			    echo " - output mismatch (see $seqres.out.bad)"
+ 			    mv $tmp.out $seqres.out.bad
+-			    $diff $seq.out $seqres.out.bad | {
+-				if test "$DIFF_LENGTH" -le 0; then
+-					cat
+-				else
+-					head -n "$DIFF_LENGTH"
+-					echo "..."
+-					echo "(Run '$diff $seq.out $seqres.out.bad'" \
+-						" to see the entire diff)"
+-				fi; } | \
+-				sed -e 's/^\(.\)/    \1/'
+-			    err=true
++			    echo " - output (see $seqres.out.bad)"
++			    cat $seqres.out.bad
+ 			fi
+ 		    fi
++
++		    if ! $err; then
++			echo "$seqnum `expr $stop - $start`" >>$tmp.time
++			echo -n " `expr $stop - $start`s"
++			echo ""
++		    fi
++
+ 		    try="$try $seqnum"
+ 		    n_try=`expr $n_try + 1`
+ 		    _check_filesystems
 -- 
 2.5.0
 
