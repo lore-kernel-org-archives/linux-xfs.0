@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8F4757F37
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 15:22:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CE9A304048
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 13:22:37 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	L0kIFbP4AzEN4nQZ for <xfs@oss.sgi.com>;
-	Mon, 14 Dec 2015 13:22:35 -0800 (PST)
-Date: Tue, 15 Dec 2015 08:22:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: BUG: KASAN: use-after-free in xfs_iflush_cluster+0x9d7/0xaf0
-Message-ID: <20151214212220.GO26718@dastard>
-References: <20151214180048.GA15690@glen> <20151214195422.GM26718@dastard>
-	<20151214201526.GA25152@glen>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151214201526.GA25152@glen>
+	by oss.sgi.com (Postfix) with ESMTP id 892B729DF6
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 17:31:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 760A1304048
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2015 15:31:51 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	PHJ4LysGBLkh05Ec for <xfs@oss.sgi.com>;
+	Mon, 14 Dec 2015 15:31:49 -0800 (PST)
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v4 4/7] dax: add support for fsync/sync
+Date: Mon, 14 Dec 2015 16:31:43 -0700
+Message-Id: <1450135903-20313-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +20,290 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrea Gelmini <andrea.gelmini@gelma.net>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Jeff Moyer <jmoyer@redhat.com>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Mon, Dec 14, 2015 at 09:15:26PM +0100, Andrea Gelmini wrote:
-> On Tue, Dec 15, 2015 at 06:54:22AM +1100, Dave Chinner wrote:
-> > What line of code does this address correspond to in your kernel?
-> > 
-> > 	xfs_iflush_cluster+0x9d7
-> 
-> gelma@glen:~/dev/kernel/v4.4.x$ git grep -Iin xfs_iflush_cluster
-> fs/xfs/xfs_inode.c:3179:xfs_iflush_cluster(
-> fs/xfs/xfs_inode.c:3414:	error = xfs_iflush_cluster(ip, bp);
+To properly handle fsync/msync in an efficient way DAX needs to track dirty
+pages so it is able to flush them durably to media on demand.
 
-If that was what I needed, I wouldn't have needed to ask. :/
+The tracking of dirty pages is done via the radix tree in struct
+address_space.  This radix tree is already used by the page writeback
+infrastructure for tracking dirty pages associated with an open file, and
+it already has support for exceptional (non struct page*) entries.  We
+build upon these features to add exceptional entries to the radix tree for
+DAX dirty PMD or PTE pages at fault time.
 
-I need the translation of the memory address to line number, not the
-line number of function call. This requires translation from your
-built kernel object file. e.g. on a kernel I just built:
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
 
-$ gdb vmlinux
-....
-(gdb) l *(xfs_iflush_cluster+0x9d7)
-0xffffffff814df647 is in xfs_bulkstat_one_int (fs/xfs/xfs_itable.c:110).
-105             buf->bs_dmevmask = dic->di_dmevmask;
-106             buf->bs_dmstate = dic->di_dmstate;
-107             buf->bs_aextents = dic->di_anextents;
-108             buf->bs_forkoff = XFS_IFORK_BOFF(ip);
-109
-110             switch (dic->di_format) {
-111             case XFS_DINODE_FMT_DEV:
-112                     buf->bs_rdev = ip->i_df.if_u2.if_rdev;
-113                     buf->bs_blksize = BLKDEV_IOSIZE;
-114                     buf->bs_blocks = 0;
+For v4 I'm just sending out this one changed patch in an effort to not spam
+everyone.
 
-That's clearly not code in xfs_iflush_cluster() or any function that
-xfs_iflush_cluster() calls. Indeed, xfs_iflush_cluster() is only
-0x411 bytes long on that kernel, so there's more than 2x the amount
-of code in that function in your instrumented kernel than mine.
+Changes since v3:
 
-Hence I need the address-to-line number translation from your kernel
-to tell me what line of code is being tripped over.
+- Rebased on top of ext4/master which provides the patches from Jan which I'm
+  building upon.  The rebased tree can be found here: 
 
-Cheers,
+https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=fsync_v4
 
-Dave.
+- Removed a WARN_ONCE() and added a comment for the case where we can get a
+  dax_pfn_mkwrite() call that has lost a race with a hole punch operation.  
+
+---
+ fs/dax.c            | 159 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ include/linux/dax.h |   2 +
+ mm/filemap.c        |   3 +
+ 3 files changed, 158 insertions(+), 6 deletions(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 43671b6..19347cf 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -24,6 +24,7 @@
+ #include <linux/memcontrol.h>
+ #include <linux/mm.h>
+ #include <linux/mutex.h>
++#include <linux/pagevec.h>
+ #include <linux/pmem.h>
+ #include <linux/sched.h>
+ #include <linux/uio.h>
+@@ -289,6 +290,143 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
+ 	return 0;
+ }
+ 
++static int dax_radix_entry(struct address_space *mapping, pgoff_t index,
++		void __pmem *addr, bool pmd_entry, bool dirty)
++{
++	struct radix_tree_root *page_tree = &mapping->page_tree;
++	int error = 0;
++	void *entry;
++
++	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
++
++	spin_lock_irq(&mapping->tree_lock);
++	entry = radix_tree_lookup(page_tree, index);
++
++	if (entry) {
++		if (!pmd_entry || RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
++			goto dirty;
++		radix_tree_delete(&mapping->page_tree, index);
++		mapping->nrdax--;
++	}
++
++	if (!addr) {
++		/*
++		 * This can happen during correct operation if our pfn_mkwrite
++		 * fault raced against a hole punch operation.  If this
++		 * happens the pte that was hole punched will have been
++		 * unmapped and the radix tree entry will have been removed by
++		 * the time we are called, but the call will still happen.  We
++		 * will return all the way up to wp_pfn_shared(), where the
++		 * pte_same() check will fail, eventually causing page fault
++		 * to be retried by the CPU.
++		 */
++		goto unlock;
++	} else if (RADIX_DAX_TYPE(addr)) {
++		WARN_ONCE(1, "%s: invalid address %p\n", __func__, addr);
++		goto unlock;
++	}
++
++	error = radix_tree_insert(page_tree, index,
++			RADIX_DAX_ENTRY(addr, pmd_entry));
++	if (error)
++		goto unlock;
++
++	mapping->nrdax++;
++ dirty:
++	if (dirty)
++		radix_tree_tag_set(page_tree, index, PAGECACHE_TAG_DIRTY);
++ unlock:
++	spin_unlock_irq(&mapping->tree_lock);
++	return error;
++}
++
++static void dax_writeback_one(struct address_space *mapping, pgoff_t index,
++		void *entry)
++{
++	struct radix_tree_root *page_tree = &mapping->page_tree;
++	int type = RADIX_DAX_TYPE(entry);
++	struct radix_tree_node *node;
++	void **slot;
++
++	if (type != RADIX_DAX_PTE && type != RADIX_DAX_PMD) {
++		WARN_ON_ONCE(1);
++		return;
++	}
++
++	spin_lock_irq(&mapping->tree_lock);
++	/*
++	 * Regular page slots are stabilized by the page lock even
++	 * without the tree itself locked.  These unlocked entries
++	 * need verification under the tree lock.
++	 */
++	if (!__radix_tree_lookup(page_tree, index, &node, &slot))
++		goto unlock;
++	if (*slot != entry)
++		goto unlock;
++
++	/* another fsync thread may have already written back this entry */
++	if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
++		goto unlock;
++
++	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_TOWRITE);
++
++	if (type == RADIX_DAX_PMD)
++		wb_cache_pmem(RADIX_DAX_ADDR(entry), PMD_SIZE);
++	else
++		wb_cache_pmem(RADIX_DAX_ADDR(entry), PAGE_SIZE);
++ unlock:
++	spin_unlock_irq(&mapping->tree_lock);
++}
++
++/*
++ * Flush the mapping to the persistent domain within the byte range of [start,
++ * end]. This is required by data integrity operations to ensure file data is
++ * on persistent storage prior to completion of the operation.
++ */
++void dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
++		loff_t end)
++{
++	struct inode *inode = mapping->host;
++	pgoff_t indices[PAGEVEC_SIZE];
++	pgoff_t start_page, end_page;
++	struct pagevec pvec;
++	void *entry;
++	int i;
++
++	if (inode->i_blkbits != PAGE_SHIFT) {
++		WARN_ON_ONCE(1);
++		return;
++	}
++
++	rcu_read_lock();
++	entry = radix_tree_lookup(&mapping->page_tree, start & PMD_MASK);
++	rcu_read_unlock();
++
++	/* see if the start of our range is covered by a PMD entry */
++	if (entry && RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
++		start &= PMD_MASK;
++
++	start_page = start >> PAGE_CACHE_SHIFT;
++	end_page = end >> PAGE_CACHE_SHIFT;
++
++	tag_pages_for_writeback(mapping, start_page, end_page);
++
++	pagevec_init(&pvec, 0);
++	while (1) {
++		pvec.nr = find_get_entries_tag(mapping, start_page,
++				PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
++				pvec.pages, indices);
++
++		if (pvec.nr == 0)
++			break;
++
++		for (i = 0; i < pvec.nr; i++)
++			dax_writeback_one(mapping, indices[i], pvec.pages[i]);
++	}
++	wmb_pmem();
++}
++EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
++
+ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+ 			struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+@@ -329,7 +467,11 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+ 	}
+ 
+ 	error = vm_insert_mixed(vma, vaddr, pfn);
++	if (error)
++		goto out;
+ 
++	error = dax_radix_entry(mapping, vmf->pgoff, addr, false,
++			vmf->flags & FAULT_FLAG_WRITE);
+  out:
+ 	i_mmap_unlock_read(mapping);
+ 
+@@ -452,6 +594,7 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		delete_from_page_cache(page);
+ 		unlock_page(page);
+ 		page_cache_release(page);
++		page = NULL;
+ 	}
+ 
+ 	/*
+@@ -539,7 +682,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 	pgoff_t size, pgoff;
+ 	sector_t block, sector;
+ 	unsigned long pfn;
+-	int result = 0;
++	int error, result = 0;
+ 
+ 	/* dax pmd mappings are broken wrt gup and fork */
+ 	if (!IS_ENABLED(CONFIG_FS_DAX_PMD))
+@@ -651,6 +794,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 		}
+ 
+ 		result |= vmf_insert_pfn_pmd(vma, address, pmd, pfn, write);
++
++		if (write) {
++			error = dax_radix_entry(mapping, pgoff, kaddr, true,
++					true);
++			if (error)
++				goto fallback;
++		}
+ 	}
+ 
+  out:
+@@ -702,15 +852,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
+  * dax_pfn_mkwrite - handle first write to DAX page
+  * @vma: The virtual memory area where the fault occurred
+  * @vmf: The description of the fault
+- *
+  */
+ int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
++	struct file *file = vma->vm_file;
+ 
+-	sb_start_pagefault(sb);
+-	file_update_time(vma->vm_file);
+-	sb_end_pagefault(sb);
++	dax_radix_entry(file->f_mapping, vmf->pgoff, NULL, false, true);
+ 	return VM_FAULT_NOPAGE;
+ }
+ EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index e9d57f68..11eb183 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -41,4 +41,6 @@ static inline bool dax_mapping(struct address_space *mapping)
+ {
+ 	return mapping->host && IS_DAX(mapping->host);
+ }
++void dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
++		loff_t end);
+ #endif
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 99dfbc9..9577783 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -482,6 +482,9 @@ int filemap_write_and_wait_range(struct address_space *mapping,
+ {
+ 	int err = 0;
+ 
++	if (dax_mapping(mapping) && mapping->nrdax)
++		dax_writeback_mapping_range(mapping, lstart, lend);
++
+ 	if (mapping->nrpages) {
+ 		err = __filemap_fdatawrite_range(mapping, lstart, lend,
+ 						 WB_SYNC_ALL);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.0
 
 _______________________________________________
 xfs mailing list
