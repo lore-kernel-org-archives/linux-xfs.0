@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 65ED97F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Dec 2015 20:41:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5339A8F8035
-	for <xfs@oss.sgi.com>; Tue, 15 Dec 2015 18:41:53 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KkoZmK39CHnV1MlS for <xfs@oss.sgi.com>;
-	Tue, 15 Dec 2015 18:41:52 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 03AAB65EBB81
-	for <xfs@oss.sgi.com>; Tue, 15 Dec 2015 20:41:51 -0600 (CST)
-Subject: [PATCH 2/2] xfs_quota: allow name lookup when reporting from ID range
-References: <5670CD2F.9020009@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5670CF6F.4070005@sandeen.net>
-Date: Tue, 15 Dec 2015 20:41:51 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7C7D97F47
+	for <xfs@oss.sgi.com>; Tue, 15 Dec 2015 21:05:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 50EA9304048
+	for <xfs@oss.sgi.com>; Tue, 15 Dec 2015 19:05:03 -0800 (PST)
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	NlrF1pwC7PDvABpq (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 15 Dec 2015 19:05:01 -0800 (PST)
+Received: by mail-ob0-f181.google.com with SMTP id sd4so23260186obb.0
+	for <xfs@oss.sgi.com>; Tue, 15 Dec 2015 19:05:01 -0800 (PST)
+Subject: Re: [PATCH v2] libxfs: Optimize the loop for xfs_bitmap_empty
+References: <20151110125403.GC21670@bfoster.bfoster>
+	<1447228141-17408-1-git-send-email-hejianet@gmail.com>
+	<20151111124833.GB52153@bfoster.bfoster>
+From: hejianet <hejianet@gmail.com>
+Message-ID: <5670D4D8.9090500@gmail.com>
+Date: Wed, 16 Dec 2015 11:04:56 +0800
 MIME-Version: 1.0
-In-Reply-To: <5670CD2F.9020009@redhat.com>
+In-Reply-To: <20151111124833.GB52153@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,135 +29,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, david@fromorbit.com
+Cc: Brian Foster <bfoster@redhat.com>
 
-Add a new "-l" (lookup) argument to the "report" command, to
-enable id->name lookups when doing a report across a lower/upper
-ID range as specified by the -L / -U report options.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-index 9b555e9..3bee145 100644
---- a/man/man8/xfs_quota.8
-+++ b/man/man8/xfs_quota.8
-@@ -335,7 +335,7 @@ file.
- ] [
- .B \-bir
- ] [
--.B \-ahntLNU
-+.B \-ahntlLNU
- ] [
- .B \-f
- .I file
-@@ -363,7 +363,11 @@ option outputs the numeric ID instead of the name. The
- .B \-L
- and
- .B \-U
--options specify lower and upper ID bounds to report on. The
-+options specify lower and upper ID bounds to report on.  If upper/lower
-+bounds are specified, then by default only the IDs will be displayed
-+in output; with the
-+.B \-l
-+option, a lookup will be performed to translate these IDs to names. The
- .B \-N
- option reports information without the header line. The
- .B \-t
-diff --git a/quota/report.c b/quota/report.c
-index 55e44c5..c77b24f 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -45,7 +45,7 @@ dump_help(void)
- static void
- report_help(void)
- {
--	report_cmd.args = _("[-bir] [-gpu] [-ahntLNU] [-f file]");
-+	report_cmd.args = _("[-bir] [-gpu] [-ahntlLNU] [-f file]");
- 	report_cmd.oneline = _("report filesystem quota information");
- 	printf(_(
- "\n"
-@@ -63,6 +63,7 @@ report_help(void)
- " -t -- terse output format, hides rows which are all zero\n"
- " -L -- lower ID bound to report on\n"
- " -U -- upper ID bound to report on\n"
-+" -l -- look up names for IDs in lower-upper range\n"
- " -g -- report group usage and quota information\n"
- " -p -- report project usage and quota information\n"
- " -u -- report user usage and quota information\n"
-@@ -322,10 +323,26 @@ report_mount(
- 	if (!(flags & NO_HEADER_FLAG))
- 		report_header(fp, form, type, mount, flags);
- 
--	if ((name == NULL) || (flags & NO_LOOKUP_FLAG))
-+	if (flags & NO_LOOKUP_FLAG) {
- 		fprintf(fp, "#%-10u", id);
--	else
-+	} else {
-+		if (name == NULL) {
-+			if (type == XFS_USER_QUOTA) {
-+				struct passwd	*u = getpwuid(id);
-+				if (u)
-+					name = u->pw_name;
-+			} else if (type == XFS_GROUP_QUOTA) {
-+				struct group	*g = getgrgid(id);
-+				if (g)
-+					name = g->gr_name;
-+			} else if (type == XFS_PROJ_QUOTA) {
-+				fs_project_t	*p = getprprid(id);
-+				if (p)
-+					name = p->pr_name;
-+			}
-+		}
- 		fprintf(fp, "%-10s", name);
-+	}
- 
- 	if (form & XFS_BLOCK_QUOTA) {
- 		qflags = (flags & HUMAN_FLAG);
-@@ -545,9 +562,10 @@ report_f(
- 	FILE		*fp = NULL;
- 	char		*fname = NULL;
- 	uint		lower = 0, upper = 0;
-+	bool		lookup = false;
- 	int		c, flags = 0, type = 0, form = 0;
- 
--	while ((c = getopt(argc, argv, "abf:ghiL:NnprtuU:")) != EOF) {
-+	while ((c = getopt(argc, argv, "abdf:ghilL:NnprtuU:")) != EOF) {
- 		switch (c) {
- 		case 'f':
- 			fname = optarg;
-@@ -587,9 +605,14 @@ report_f(
- 			break;
- 		case 'L':
- 			lower = (uint)atoi(optarg);
-+			flags |= NO_LOOKUP_FLAG;
- 			break;
- 		case 'U':
- 			upper = (uint)atoi(optarg);
-+			flags |= NO_LOOKUP_FLAG;
-+			break;
-+		case 'l':
-+			lookup = true;
- 			break;
- 		default:
- 			return command_usage(&report_cmd);
-@@ -602,6 +625,9 @@ report_f(
- 	if (!type)
- 		type = XFS_USER_QUOTA | XFS_GROUP_QUOTA | XFS_PROJ_QUOTA;
- 
-+	if (lookup)
-+		flags &= ~NO_LOOKUP_FLAG;
-+
- 	if ((fp = fopen_write_secure(fname)) == NULL)
- 		return 0;
- 
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgRGF2aWQKCkRvIHlvdSBoYXZlIGFueSBjb21tZW50cyBmcm9tIHlvdXIgcG9pbnQgb2Ygdmll
+dz8gVGhhbmtzIDspCgpCLlIuCkp1c3RpbgoK5ZyoIDExLzExLzE1IDg6NDggUE0sIEJyaWFuIEZv
+c3RlciDlhpnpgZM6Cj4gT24gV2VkLCBOb3YgMTEsIDIwMTUgYXQgMDM6NDk6MDFQTSArMDgwMCwg
+SmlhIEhlIHdyb3RlOgo+PiBJZiB0aGVyZSBpcyBhbnkgbm9uIHplcm8gYml0IGluIGEgbG9uZyBi
+aXRtYXAsIGl0IGNhbiBqdW1wIG91dCBvZiB0aGUKPj4gbG9vcCBhbmQgZmluaXNoIHRoZSBmdW5j
+dGlvbiBhcyBzb29uIGFzIHBvc3NpYmxlLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBKaWEgSGUgPGhl
+amlhbmV0QGdtYWlsLmNvbT4KPj4gQ2M6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNv
+bT4KPj4gQ2M6IEJyaWFuIEZvc3RlciA8YmZvc3RlckByZWRoYXQuY29tPgo+PiAtLS0KPiBMb29r
+cyBnb29kIHRvIG1lOgo+Cj4gUmV2aWV3ZWQtYnk6IEJyaWFuIEZvc3RlciA8YmZvc3RlckByZWRo
+YXQuY29tPgo+Cj4+ICAgZnMveGZzL2xpYnhmcy94ZnNfYml0LmMgfCA2ICsrKy0tLQo+PiAgIDEg
+ZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCj4+Cj4+IGRpZmYg
+LS1naXQgYS9mcy94ZnMvbGlieGZzL3hmc19iaXQuYyBiL2ZzL3hmcy9saWJ4ZnMveGZzX2JpdC5j
+Cj4+IGluZGV4IDBlODg4NWEuLjBhOTRjY2UgMTAwNjQ0Cj4+IC0tLSBhL2ZzL3hmcy9saWJ4ZnMv
+eGZzX2JpdC5jCj4+ICsrKyBiL2ZzL3hmcy9saWJ4ZnMveGZzX2JpdC5jCj4+IEBAIC0zMiwxMyAr
+MzIsMTMgQEAgaW50Cj4+ICAgeGZzX2JpdG1hcF9lbXB0eSh1aW50ICptYXAsIHVpbnQgc2l6ZSkK
+Pj4gICB7Cj4+ICAgCXVpbnQgaTsKPj4gLQl1aW50IHJldCA9IDA7Cj4+ICAgCj4+ICAgCWZvciAo
+aSA9IDA7IGkgPCBzaXplOyBpKyspIHsKPj4gLQkJcmV0IHw9IG1hcFtpXTsKPj4gKwkJaWYgKG1h
+cFtpXSAhPSAwKQo+PiArCQkJcmV0dXJuIDA7Cj4+ICAgCX0KPj4gICAKPj4gLQlyZXR1cm4gKHJl
+dCA9PSAwKTsKPj4gKwlyZXR1cm4gMTsKPj4gICB9Cj4+ICAgCj4+ICAgLyoKPj4gLS0gCj4+IDIu
+NS4wCj4+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Cj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5zZ2kuY29tCj4+IGh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+
+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+CgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
