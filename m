@@ -1,27 +1,51 @@
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A098E7F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Dec 2015 03:16:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71A768F8039
+	for <xfs@oss.sgi.com>; Thu, 17 Dec 2015 01:16:14 -0800 (PST)
+Received: from mogu.zibp.cc (mogu.zibp.cc [188.122.88.26]) by cuda.sgi.com
+	with ESMTP id IQzjrOMuRAVXvGXp for <xfs@oss.sgi.com>;
+	Thu, 17 Dec 2015 01:16:09 -0800 (PST)
+Subject: Exclusive Distributors Needed - Urgent
+Message-ID: <c38a137b1f60cbe5cf0cef31f4870a66@rosettastonebrasil.com>
+Date: Thu, 17 Dec 2015 10:15:04 +0100
+From: "Jason Williams" <qonshon@yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Subject: Your message to xfs awaits moderator approval
-From: xfs-bounces@oss.sgi.com
-Message-ID: <mailman.217.1450516465.4232.xfs@oss.sgi.com>
-Date: Sat, 19 Dec 2015 03:14:25 -0600
+Reply-To: incine@aliyun.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: darrick.wong@oracle.com
+To: xfs@oss.sgi.com
 
-Your mail to 'xfs' with the subject
+U.S. Manufacturer of Floor Safety Product Needs Exclusive Distributors
+Worldwide.
 
-    [PATCH 06/22] xfsdocs: delete images of hex dumps
+Floor Safety Product used by Sheraton, Holiday Inn, Mercedes, McDonalds,
+Burger King, KFC, Hilton,
+, BMW, Toyota, Pfizer, etc.
 
-Is being held until the list moderator can review it for approval.
+$5,000 USD - $15,000 USD
+Inventory Investment Required
 
-The reason it is being held:
+Send for Website Address.
 
-    Message body is too big: 1190739 bytes with a limit of 500 KB
+Please include your name and country of residence.
 
-Either the message will get posted to the list, or you will receive
-notification of the moderator's decision.  If you would like to cancel
-this posting, please visit the following URL:
+Best Regards,
+Jason Williams
+Contact: asyiun@sina.com
 
-    http://oss.sgi.com/mailman/confirm/xfs/878cae35494e4c044b502310dc44f18ba97b78f2
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
