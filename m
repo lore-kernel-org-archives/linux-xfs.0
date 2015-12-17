@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CC70229DF9
-	for <xfs@oss.sgi.com>; Wed, 16 Dec 2015 20:09:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BCD8F304062
-	for <xfs@oss.sgi.com>; Wed, 16 Dec 2015 18:09:27 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3AB897CBF
+	for <xfs@oss.sgi.com>; Wed, 16 Dec 2015 21:16:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B28EEAC004
+	for <xfs@oss.sgi.com>; Wed, 16 Dec 2015 19:16:02 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id d2dAgUPwFq0kv2SB (version=TLSv1.2
+	cuda.sgi.com with ESMTP id r4N084b1MR95soPd (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Dec 2015 18:09:26 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 0D75B3407F4
-	for <xfs@oss.sgi.com>; Thu, 17 Dec 2015 02:09:26 +0000 (UTC)
-Date: Thu, 17 Dec 2015 11:09:24 +0900 (JST)
-Message-Id: <20151217.110924.1601408601476764974.yamato@redhat.com>
-Subject: Re: [PATCH v2] xfs: send warning of project quota to userspace via
-	netlink
-From: Masatake YAMATO <yamato@redhat.com>
-In-Reply-To: <20151126134933.GA39911@bfoster.bfoster>
-References: <20151125185419.GA18719@bfoster.bfoster>
-	<1448504560-25151-1-git-send-email-yamato@redhat.com>
-	<20151126134933.GA39911@bfoster.bfoster>
-Mime-Version: 1.0
+	<xfs@oss.sgi.com>; Wed, 16 Dec 2015 19:16:01 -0800 (PST)
+Subject: Re: Ideas on unified real-ro mount option across all filesystems
+References: <567212DA.8050808@cn.fujitsu.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <567228EF.80007@redhat.com>
+Date: Wed, 16 Dec 2015 21:15:59 -0600
+MIME-Version: 1.0
+In-Reply-To: <567212DA.8050808@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,37 +28,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bfoster@redhat.com
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>, fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-ext4@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, 26 Nov 2015 08:49:33 -0500, Brian Foster <bfoster@redhat.com> wrote:
-> On Thu, Nov 26, 2015 at 11:22:39AM +0900, Masatake YAMATO wrote:
->> Linux's quota subsystem has an ability to handle
->> project quota. This commit just utilizes the ability
->> from xfs side.
->> 
-> ...
->> Changes in v2:
->> 
->> 	a couple aesthetic things suggested by Brian Foster <bfoster@redhat.com>.
->> 	* rename local vairable for aligning the parameter names,
->> 	* move a short line to the end of its previous line.
->> 
->> Signed-off-by: Masatake YAMATO <yamato@redhat.com>
->> ---
+<xfs list address fixed>
+
+On 12/16/15 7:41 PM, Qu Wenruo wrote:
+> Hi,
 > 
-> Thanks for all of the test information. Now you have a really long
-> commit log description rather than a short one. ;) Maybe Dave can
-> truncate it. Regardless, looks fine to me:
+> In a recent btrfs patch, it is going to add a mount option to disable
+> log replay for btrfs, just like "norecovery" for ext4/xfs.
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> But in the discussion on the mount option name and use case, it seems
+> better to have an unified and fs independent mount option alias for
+> real RO mount
+> 
+> Reasons:
+> 1) Some file system may have already used [no]"recovery" mount option
+>    In fact, btrfs has already used "recovery" mount option.
+>    Using "norecovery" mount option will be quite confusing for btrfs.
 
-Any progress?
+Too bad btrfs picked those semantics when "norecovery" has existed on
+other filesystems for quite some time with a different meaning... :(
 
-The patch for userland is merged today:
-https://sourceforge.net/p/linuxquota/patches/43/
+> 2) More straight forward mount option
+>    Currently, to get real RO mount, for ext4/xfs, user must use -o
+>    ro,norecovery.
+>    Just ro won't ensure real RO, and norecovery can't be used alone.
+>    If we have a simple alias, it would be much better for user to use.
+>    (it maybe done just in user space mount)
 
-Masatake YAMATO
+mount(8) simply says:
+
+       ro     Mount the filesystem read-only.
+
+and mount(2) is no more illustrative:
+
+       MS_RDONLY
+              Mount file system read-only.
+
+kernel code is no help, either:
+
+#define MS_RDONLY        1      /* Mount read-only */
+
+They say nothing about what, exactly, "read-only" means.  But since at least
+the early ext3 days, it means that you cannot write through the filesystem, not
+that the filesystem will leave the block device unmodified when it mounts.
+
+I have always interpreted it as simply "no user changes to the filesystem,"
+and that is clearly what the vfs does with the flag...
+
+>    Not to mention some fs (yeah, btrfs again) doesn't have "norecovery"
+>    but "nologreplay".
+
+well, again, btrfs picked unfortunate semantics, given the precedent set
+by other filesystems.
+
+f2fs, ext4, gfs2, nilfs2, and xfs all support "norecovery" - xfs since
+forever, ext4 & f2fs since 2009, etc.
+
+> 3) A lot of user even don't now mount ro can still modify device
+>    Yes, I didn't know this point until I checked the log replay code of
+>    btrfs.
+>    Adding such mount option alias may raise some attention of users.
+
+Given that nothing in the documentation implies that the block device itself
+must remain unchanged on a read-only mount, I don't see any problem which
+needs fixing.  MS_RDONLY rejects user IO; that's all.
+
+If you want to be sure your block device rejects all IO for forensics or
+what have you, I'd suggest # blockdev --setro /dev/whatever prior to mount,
+and take it out of the filesystem's control.  Or better yet, making an
+image and not touching the original.
+
+-Eric
+
+> Any ideas about this?
+
+
 
 _______________________________________________
 xfs mailing list
