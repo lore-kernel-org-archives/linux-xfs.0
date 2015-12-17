@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 904537CBF
-	for <xfs@oss.sgi.com>; Wed, 16 Dec 2015 21:27:10 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 98D337F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Dec 2015 08:09:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04F12AC005
-	for <xfs@oss.sgi.com>; Wed, 16 Dec 2015 19:27:09 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id fYjK3Pu7hYABZk8g (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 87F17304048
+	for <xfs@oss.sgi.com>; Thu, 17 Dec 2015 06:09:01 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Owpx0q1UyJcfKzwr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Dec 2015 19:27:07 -0800 (PST)
-Date: Wed, 16 Dec 2015 19:26:52 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+	<xfs@oss.sgi.com>; Thu, 17 Dec 2015 06:09:00 -0800 (PST)
+Date: Thu, 17 Dec 2015 15:08:58 +0100
+From: Karel Zak <kzak@redhat.com>
 Subject: Re: Ideas on unified real-ro mount option across all filesystems
-Message-ID: <20151217032652.GD10582@birch.djwong.org>
+Message-ID: <20151217140858.GD13224@ws.net.home>
 References: <567212DA.8050808@cn.fujitsu.com>
  <567228EF.80007@redhat.com>
 MIME-Version: 1.0
@@ -34,93 +34,54 @@ To: Eric Sandeen <sandeen@redhat.com>
 Cc: fsdevel <linux-fsdevel@vger.kernel.org>, Qu Wenruo <quwenruo@cn.fujitsu.com>, linux-ext4@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
 On Wed, Dec 16, 2015 at 09:15:59PM -0600, Eric Sandeen wrote:
-> <xfs list address fixed>
-> 
-> On 12/16/15 7:41 PM, Qu Wenruo wrote:
-> > Hi,
-> > 
-> > In a recent btrfs patch, it is going to add a mount option to disable
-> > log replay for btrfs, just like "norecovery" for ext4/xfs.
-> > 
-> > But in the discussion on the mount option name and use case, it seems
-> > better to have an unified and fs independent mount option alias for
-> > real RO mount
-> > 
-> > Reasons:
-> > 1) Some file system may have already used [no]"recovery" mount option
-> >    In fact, btrfs has already used "recovery" mount option.
-> >    Using "norecovery" mount option will be quite confusing for btrfs.
-> 
-> Too bad btrfs picked those semantics when "norecovery" has existed on
-> other filesystems for quite some time with a different meaning... :(
-> 
-> > 2) More straight forward mount option
-> >    Currently, to get real RO mount, for ext4/xfs, user must use -o
-> >    ro,norecovery.
-> >    Just ro won't ensure real RO, and norecovery can't be used alone.
-> >    If we have a simple alias, it would be much better for user to use.
-> >    (it maybe done just in user space mount)
-> 
-> mount(8) simply says:
-> 
->        ro     Mount the filesystem read-only.
-> 
-> and mount(2) is no more illustrative:
-> 
->        MS_RDONLY
->               Mount file system read-only.
-> 
-> kernel code is no help, either:
-> 
-> #define MS_RDONLY        1      /* Mount read-only */
-> 
-> They say nothing about what, exactly, "read-only" means.  But since at least
-> the early ext3 days, it means that you cannot write through the filesystem, not
-> that the filesystem will leave the block device unmodified when it mounts.
-> 
 > I have always interpreted it as simply "no user changes to the filesystem,"
 > and that is clearly what the vfs does with the flag...
 
-That ("-o ro means no user changes") has always been my understanding too.  You
-/want/ the FS to replay the journal on an RO mount so that regular FS operation
-picks up the committed transactions.
+Yep,
 
---D
-
-> 
-> >    Not to mention some fs (yeah, btrfs again) doesn't have "norecovery"
-> >    but "nologreplay".
-> 
-> well, again, btrfs picked unfortunate semantics, given the precedent set
-> by other filesystems.
-> 
-> f2fs, ext4, gfs2, nilfs2, and xfs all support "norecovery" - xfs since
-> forever, ext4 & f2fs since 2009, etc.
-> 
-> > 3) A lot of user even don't now mount ro can still modify device
-> >    Yes, I didn't know this point until I checked the log replay code of
-> >    btrfs.
-> >    Adding such mount option alias may raise some attention of users.
-> 
 > Given that nothing in the documentation implies that the block device itself
 > must remain unchanged on a read-only mount, I don't see any problem which
 > needs fixing.  MS_RDONLY rejects user IO; that's all.
-> 
-> If you want to be sure your block device rejects all IO for forensics or
-> what have you, I'd suggest # blockdev --setro /dev/whatever prior to mount,
-> and take it out of the filesystem's control.  Or better yet, making an
-> image and not touching the original.
-> 
-> -Eric
-> 
-> > Any ideas about this?
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I agree, it's FS specific business to interpret the 'ro'.
+
+And it's already enough complicated, we have three levels of "read-only":
+
+ - read-only device (blockdev --setro ioctl)
+ - read-only filesystem (mount -o ro)
+ - read-only VFS node (mount -o remount,ro,bind /src /dst)
+
+and for example in /proc/self/mountinfo we distinguish between FS "ro"
+and VFS "ro" flag:
+
+# grep test /proc/self/mountinfo
+185 59 8:5 / /mnt/test ro,relatime shared:32 - ext4 /dev/sda5 rw,data=ordered
+                       ^^                                     ^^
+
+
+BTW, util-linux 2.27 mount(8) man page:
+
+   -r, --read-only
+       Mount the filesystem read-only.  A synonym is -o ro.
+
+       Note  that,  depending  on the filesystem type, state and
+       kernel behavior, the system may still write to the device.  For
+       example, ext3 and ext4 will replay the journal if the
+       filesystem is dirty.  To prevent this kind of write access, you
+       may want to mount an ext3 or ext4 filesystem with the ro,noload
+       mount options or set the  block  device itself to read-only
+       mode, see the blockdev(8) command.
+
+
+ (maybe we need to copy this note to "ro" description too and add hint
+ about btrfs too :-)
+
+     Karel
+
+
+-- 
+ Karel Zak  <kzak@redhat.com>
+ http://karelzak.blogspot.com
 
 _______________________________________________
 xfs mailing list
