@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 178DC29E95
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:11:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D39628F8052
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:17 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id B4BDE29E9A
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:11:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 98C408F8039
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:23 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id kziIraau8ntMyM8n (version=TLSv1.2
+	cuda.sgi.com with ESMTP id IRIT2IUBCAhlkW8I (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:15 -0800 (PST)
-Subject: [PATCH 03/11] generic/15[78]: fix error messages in the golden output
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:22 -0800 (PST)
+Subject: [PATCH 04/11] xfs/128: allow larger margin for disk space usage
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:11:12 -0800
-Message-ID: <20151219091112.15320.45890.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:11:18 -0800
+Message-ID: <20151219091118.15320.82351.stgit@birch.djwong.org>
 In-Reply-To: <20151219091052.15320.94973.stgit@birch.djwong.org>
 References: <20151219091052.15320.94973.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,150 +31,28 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Fix the error messages in the golden output for generic/15[78], which
-examine the responses to invalid inputs as returned by the
-clone/clone_range/extent_same ioctls.  Also fix a filtering omission.
+The free blocks count can vary from our calculations by up to 8% on a
+1k-block filesystem, so permit that.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/157     |   18 +++++++++++++-----
- tests/generic/157.out |    6 +++---
- tests/generic/158     |   18 +++++++++++++-----
- tests/generic/158.out |    8 ++++----
- 4 files changed, 33 insertions(+), 17 deletions(-)
+ tests/xfs/128 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/157 b/tests/generic/157
-index a43fb0d..f68ff52 100755
---- a/tests/generic/157
-+++ b/tests/generic/157
-@@ -75,10 +75,18 @@ mkdir "$TESTDIR1/dir1"
- seq 1 $((2 * BLKSZ / 250)) | while read f; do
- 	touch "$TESTDIR1/dir1/$f"
- done
--mknod "$TESTDIR1/dev1" b 8 0
-+mknod "$TESTDIR1/dev1" c 1 3
- mkfifo "$TESTDIR1/fifo1"
- sync
+diff --git a/tests/xfs/128 b/tests/xfs/128
+index 49652cb..f461c1a 100755
+--- a/tests/xfs/128
++++ b/tests/xfs/128
+@@ -59,7 +59,7 @@ FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
  
-+_filter_enotty() {
-+	sed -e 's/Inappropriate ioctl for device/Invalid argument/g'
-+}
-+
-+_filter_einval() {
-+	sed -e 's/Invalid argument/Bad file descriptor/g'
-+}
-+
- echo "Try cross-device reflink"
- _reflink_range "$TESTDIR1/file1" 0 "$TESTDIR2/file1" 0 $BLKSZ
- 
-@@ -98,16 +106,16 @@ echo "Try to reflink a device"
- _reflink_range "$TESTDIR1/dev1" 0 "$TESTDIR1/file2" 0 $BLKSZ
- 
- echo "Try to reflink to a dir"
--_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ
-+_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ 2>&1 | _filter_test_dir
- 
- echo "Try to reflink to a device"
--_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ
-+_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ 2>&1 | _filter_enotty
- 
- echo "Try to reflink to a fifo"
--_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n
-+_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n 2>&1 | _filter_enotty
- 
- echo "Try to reflink an append-only file"
--_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/file3" 0 $BLKSZ -a
-+_reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/file3" 0 $BLKSZ -a 2>&1 | _filter_einval
- 
- echo "Reflink two files"
- _reflink_range "$TESTDIR1/file1" 0 "$TESTDIR1/file2" 0 $BLKSZ >> "$seqres.full"
-diff --git a/tests/generic/157.out b/tests/generic/157.out
-index 177e7f8..ac3c440 100644
---- a/tests/generic/157.out
-+++ b/tests/generic/157.out
-@@ -14,11 +14,11 @@ XFS_IOC_CLONE_RANGE: Is a directory
- Try to reflink a device
- XFS_IOC_CLONE_RANGE: Invalid argument
- Try to reflink to a dir
--/mnt/test-157/dir1: Is a directory
-+TEST_DIR/test-157/dir1: Is a directory
- Try to reflink to a device
--XFS_IOC_CLONE_RANGE: Operation not supported
-+XFS_IOC_CLONE_RANGE: Invalid argument
- Try to reflink to a fifo
--XFS_IOC_CLONE_RANGE: Operation not supported
-+XFS_IOC_CLONE_RANGE: Invalid argument
- Try to reflink an append-only file
- XFS_IOC_CLONE_RANGE: Bad file descriptor
- Reflink two files
-diff --git a/tests/generic/158 b/tests/generic/158
-index a499b21..749b186 100755
---- a/tests/generic/158
-+++ b/tests/generic/158
-@@ -76,10 +76,18 @@ mkdir "$TESTDIR1/dir1"
- seq 1 $((2 * BLKSZ / 250)) | while read f; do
- 	touch "$TESTDIR1/dir1/$f"
- done
--mknod "$TESTDIR1/dev1" b 8 0
-+mknod "$TESTDIR1/dev1" c 1 3
- mkfifo "$TESTDIR1/fifo1"
- sync
- 
-+_filter_enotty() {
-+	sed -e 's/Inappropriate ioctl for device/Invalid argument/g'
-+}
-+
-+_filter_eperm() {
-+	sed -e 's/Permission denied/Invalid argument/g'
-+}
-+
- echo "Try cross-device dedupe"
- _dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR2/file1" 0 $BLKSZ
- 
-@@ -96,16 +104,16 @@ echo "Try to dedupe a dir"
- _dedupe_range "$TESTDIR1/dir1" 0 "$TESTDIR1/file2" 0 $BLKSZ
- 
- echo "Try to dedupe a device"
--_dedupe_range "$TESTDIR1/dev1" 0 "$TESTDIR1/file2" 0 $BLKSZ
-+_dedupe_range "$TESTDIR1/dev1" 0 "$TESTDIR1/file2" 0 $BLKSZ 2>&1 | _filter_enotty
- 
- echo "Try to dedupe to a dir"
--_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ
-+_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dir1" 0 $BLKSZ 2>&1 | _filter_test_dir
- 
- echo "Try to dedupe to a device"
--_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ
-+_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/dev1" 0 $BLKSZ 2>&1 | _filter_eperm
- 
- echo "Try to dedupe to a fifo"
--_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n
-+_dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/fifo1" 0 $BLKSZ -n 2>&1 | _filter_eperm
- 
- echo "Try to dedupe an append-only file"
- _dedupe_range "$TESTDIR1/file1" 0 "$TESTDIR1/file3" 0 $BLKSZ -a >> "$seqres.full"
-diff --git a/tests/generic/158.out b/tests/generic/158.out
-index 36a3f1f..dff3692 100644
---- a/tests/generic/158.out
-+++ b/tests/generic/158.out
-@@ -12,13 +12,13 @@ dedupe: Invalid argument
- Try to dedupe a dir
- XFS_IOC_FILE_EXTENT_SAME: Is a directory
- Try to dedupe a device
--XFS_IOC_FILE_EXTENT_SAME: Permission denied
-+XFS_IOC_FILE_EXTENT_SAME: Invalid argument
- Try to dedupe to a dir
--/mnt/test-158/dir1: Is a directory
-+TEST_DIR/test-158/dir1: Is a directory
- Try to dedupe to a device
--dedupe: Permission denied
-+dedupe: Invalid argument
- Try to dedupe to a fifo
--dedupe: Permission denied
-+dedupe: Invalid argument
- Try to dedupe an append-only file
- Dedupe two files
- Check scratch fs
+ echo "Create the original file and reflink to file2, file3"
+ BLKS=2000
+-MARGIN=100
++MARGIN=160
+ BLKSZ=65536
+ REAL_BLKSZ="$(stat -f $TESTDIR -c '%S')"
+ BLKSZ_FACTOR=$((BLKSZ / REAL_BLKSZ))
 
 _______________________________________________
 xfs mailing list
