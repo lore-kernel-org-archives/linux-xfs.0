@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2CC9829E08
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:07:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0416D30405F
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:02 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id BEBFA29E08
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:07:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B0454304059
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:10 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 2BMcCaDCYipMZyN7 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mMfLIobwDWES9mtw (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:01 -0800 (PST)
-Subject: [PATCH 19/53] libxfs: implement XFS_IOC_SWAPEXT when rmap btree is
-	enabled
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:08 -0800 (PST)
+Subject: [PATCH 20/53] xfs_db: display rmap btree contents
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:06:59 -0800
-Message-ID: <20151219090659.14255.44463.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:07:05 -0800
+Message-ID: <20151219090705.14255.90435.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -30,177 +29,198 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-Synchronize the libxfs components of the kernel patch.  No code
-in xfsprogs actually calls this.
+>From : Dave Chinner <david@fromorbit.com>
 
+Teach the debugger how to dump the reverse-mapping btree contents.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[split patch, add commit message]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_btree.c      |   17 +++++++++
- libxfs/xfs_rmap.c       |   90 +++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rmap_btree.h |    9 +++++
- 3 files changed, 116 insertions(+)
+ db/agf.c     |    6 ++++++
+ db/btblock.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/btblock.h |    5 +++++
+ db/field.c   |    9 +++++++++
+ db/field.h   |    4 ++++
+ db/type.c    |    3 +++
+ db/type.h    |    2 +-
+ 7 files changed, 78 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 9b918d2..1622ddd 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -29,6 +29,7 @@
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
- #include "xfs_alloc.h"
-+#include "xfs_rmap_btree.h"
+diff --git a/db/agf.c b/db/agf.c
+index e10526d..ffdd550 100644
+--- a/db/agf.c
++++ b/db/agf.c
+@@ -55,6 +55,9 @@ const field_t	agf_flds[] = {
+ 	{ "cntroot", FLDT_AGBLOCK,
+ 	  OI(OFF(roots) + XFS_BTNUM_CNT * SZ(roots[XFS_BTNUM_CNT])), C1, 0,
+ 	  TYP_CNTBT },
++	{ "rmaproot", FLDT_AGBLOCK,
++	  OI(OFF(roots) + XFS_BTNUM_RMAP * SZ(roots[XFS_BTNUM_RMAP])), C1, 0,
++	  TYP_RMAPBT },
+ 	{ "levels", FLDT_UINT32D, OI(OFF(levels)), CI(XFS_BTNUM_AGF),
+ 	  FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
+ 	{ "bnolevel", FLDT_UINT32D,
+@@ -63,6 +66,9 @@ const field_t	agf_flds[] = {
+ 	{ "cntlevel", FLDT_UINT32D,
+ 	  OI(OFF(levels) + XFS_BTNUM_CNT * SZ(levels[XFS_BTNUM_CNT])), C1, 0,
+ 	  TYP_NONE },
++	{ "rmaplevel", FLDT_UINT32D,
++	  OI(OFF(levels) + XFS_BTNUM_RMAP * SZ(levels[XFS_BTNUM_RMAP])), C1, 0,
++	  TYP_NONE },
+ 	{ "flfirst", FLDT_UINT32D, OI(OFF(flfirst)), C1, 0, TYP_NONE },
+ 	{ "fllast", FLDT_UINT32D, OI(OFF(fllast)), C1, 0, TYP_NONE },
+ 	{ "flcount", FLDT_UINT32D, OI(OFF(flcount)), C1, 0, TYP_NONE },
+diff --git a/db/btblock.c b/db/btblock.c
+index 46140fc..e45ee03 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -96,6 +96,12 @@ struct xfs_db_btree {
+ 		sizeof(xfs_inobt_rec_t),
+ 		sizeof(__be32),
+ 	},
++	{	XFS_RMAP_CRC_MAGIC,
++		XFS_BTREE_SBLOCK_CRC_LEN,
++		sizeof(struct xfs_rmap_key),
++		sizeof(struct xfs_rmap_rec),
++		sizeof(__be32),
++	},
+ 	{	0,
+ 	},
+ };
+@@ -607,3 +613,47 @@ const field_t	cntbt_rec_flds[] = {
+ 	{ NULL }
+ };
+ #undef ROFF
++
++/* RMAP btree blocks */
++const field_t	rmapbt_crc_hfld[] = {
++	{ "", FLDT_RMAPBT_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++#define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
++const field_t	rmapbt_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
++	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
++	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_RMAPBT },
++	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_RMAPBT },
++	{ "bno", FLDT_DFSBNO, OI(OFF(u.s.bb_blkno)), C1, 0, TYP_CNTBT },
++	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "recs", FLDT_RMAPBTREC, btblock_rec_offset, btblock_rec_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "keys", FLDT_RMAPBTKEY, btblock_key_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "ptrs", FLDT_RMAPBTPTR, btblock_ptr_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_RMAPBT },
++	{ NULL }
++};
++#undef OFF
++
++#define	KOFF(f)	bitize(offsetof(struct xfs_rmap_key, rm_ ## f))
++const field_t	rmapbt_key_flds[] = {
++	{ "startblock", FLDT_AGBLOCK, OI(KOFF(startblock)), C1, 0, TYP_DATA },
++	{ NULL }
++};
++#undef KOFF
++
++#define	ROFF(f)	bitize(offsetof(struct xfs_rmap_rec, rm_ ## f))
++const field_t	rmapbt_rec_flds[] = {
++	{ "startblock", FLDT_AGBLOCK, OI(ROFF(startblock)), C1, 0, TYP_DATA },
++	{ "blockcount", FLDT_EXTLEN, OI(ROFF(blockcount)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_UINT64X, OI(ROFF(owner)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++#undef ROFF
+diff --git a/db/btblock.h b/db/btblock.h
+index 228eb36..35299b4 100644
+--- a/db/btblock.h
++++ b/db/btblock.h
+@@ -54,4 +54,9 @@ extern const struct field	cntbt_crc_hfld[];
+ extern const struct field	cntbt_key_flds[];
+ extern const struct field	cntbt_rec_flds[];
  
- /*
-  * Cursor allocation zone.
-@@ -4001,6 +4002,8 @@ xfs_btree_block_change_owner(
- 	struct xfs_btree_block	*block;
- 	struct xfs_buf		*bp;
- 	union xfs_btree_ptr     rptr;
-+	struct xfs_owner_info	old_oinfo, new_oinfo;
-+	int			error;
++extern const struct field	rmapbt_crc_flds[];
++extern const struct field	rmapbt_crc_hfld[];
++extern const struct field	rmapbt_key_flds[];
++extern const struct field	rmapbt_rec_flds[];
++
+ extern int	btblock_size(void *obj, int startoff, int idx);
+diff --git a/db/field.c b/db/field.c
+index 843c385..8298f29 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -164,6 +164,15 @@ const ftattr_t	ftattrtab[] = {
+ 	{ FLDT_CNTBTREC, "cntbtrec", fp_sarray, (char *)cntbt_rec_flds,
+ 	  SI(bitsz(xfs_alloc_rec_t)), 0, NULL, cntbt_rec_flds },
  
- 	/* do right sibling readahead */
- 	xfs_btree_readahead(cur, level, XFS_BTCUR_RIGHTRA);
-@@ -4012,6 +4015,20 @@ xfs_btree_block_change_owner(
- 	else
- 		block->bb_u.s.bb_owner = cpu_to_be32(new_owner);
++	{ FLDT_RMAPBT_CRC, "rmapbt", NULL, (char *)rmapbt_crc_flds, btblock_size,
++	  FTARG_SIZE, NULL, rmapbt_crc_flds },
++	{ FLDT_RMAPBTKEY, "rmapbtkey", fp_sarray, (char *)rmapbt_key_flds,
++	  SI(bitsz(struct xfs_rmap_key)), 0, NULL, rmapbt_key_flds },
++	{ FLDT_RMAPBTPTR, "rmapbtptr", fp_num, "%u",
++	  SI(bitsz(xfs_rmap_ptr_t)), 0, fa_agblock, NULL },
++	{ FLDT_RMAPBTREC, "rmapbtrec", fp_sarray, (char *)rmapbt_rec_flds,
++	  SI(bitsz(struct xfs_rmap_rec)), 0, NULL, rmapbt_rec_flds },
++
+ /* CRC field */
+ 	{ FLDT_CRC, "crc", fp_crc, "%#x (%s)", SI(bitsz(__uint32_t)),
+ 	  0, NULL, NULL },
+diff --git a/db/field.h b/db/field.h
+index 11aebc3..82701bb 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -80,6 +80,10 @@ typedef enum fldt	{
+ 	FLDT_CNTBTKEY,
+ 	FLDT_CNTBTPTR,
+ 	FLDT_CNTBTREC,
++	FLDT_RMAPBT_CRC,
++	FLDT_RMAPBTKEY,
++	FLDT_RMAPBTPTR,
++	FLDT_RMAPBTREC,
  
-+	/* change rmap owners (bmbt blocks only) */
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		XFS_RMAP_INO_BMBT_OWNER(&old_oinfo,
-+				cur->bc_private.b.ip->i_ino,
-+				cur->bc_private.b.whichfork);
-+		XFS_RMAP_INO_BMBT_OWNER(&new_oinfo,
-+				new_owner,
-+				cur->bc_private.b.whichfork);
-+		error = xfs_rmap_change_bmbt_owner(cur, bp, &old_oinfo,
-+				&new_oinfo);
-+		if (error)
-+			return error;
-+	}
-+
- 	/*
- 	 * If the block is a root block hosted in an inode, we might not have a
- 	 * buffer pointer here and we shouldn't attempt to log the change as the
-diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-index 43354b9..5ae4c1e 100644
---- a/libxfs/xfs_rmap.c
-+++ b/libxfs/xfs_rmap.c
-@@ -1260,3 +1260,93 @@ xfs_rmap_resize(
- 
- 	return __xfs_rmap_add(mp, rlist, &ri);
- }
-+
-+/**
-+ * Change ownership of a file's BMBT block reverse-mappings.
-+ */
-+int
-+xfs_rmap_change_bmbt_owner(
-+	struct xfs_btree_cur	*bcur,
-+	struct xfs_buf		*bp,
-+	struct xfs_owner_info	*old_owner,
-+	struct xfs_owner_info	*new_owner)
-+{
-+	struct xfs_buf		*agfbp;
-+	xfs_fsblock_t		fsbno;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	int			error;
-+
-+	if (!xfs_sb_version_hasrmapbt(&bcur->bc_mp->m_sb) || !bp)
-+		return 0;
-+
-+	fsbno = XFS_DADDR_TO_FSB(bcur->bc_mp, XFS_BUF_ADDR(bp));
-+	agno = XFS_FSB_TO_AGNO(bcur->bc_mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(bcur->bc_mp, fsbno);
-+
-+	error = xfs_read_agf(bcur->bc_mp, bcur->bc_tp, agno, 0, &agfbp);
-+
-+	error = xfs_rmap_free(bcur->bc_tp, agfbp, agno, agbno, 1, old_owner);
-+	if (error)
-+		goto err;
-+
-+	error = xfs_rmap_alloc(bcur->bc_tp, agfbp, agno, agbno, 1, new_owner);
-+	if (error)
-+		goto err;
-+
-+err:
-+	xfs_trans_brelse(bcur->bc_tp, agfbp);
-+	return error;
-+}
-+
-+/**
-+ * Change the ownership on a file's extent's reverse-mappings.
-+ */
-+int
-+xfs_rmap_change_extent_owner(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*ip,
-+	xfs_ino_t		ino,
-+	xfs_fileoff_t		isize,
-+	struct xfs_trans	*tp,
-+	int			whichfork,
-+	xfs_ino_t		new_owner,
-+	struct xfs_rmap_list	*rlist)
-+{
-+	struct xfs_bmbt_irec	imap;
-+	int			nimaps;
-+	xfs_fileoff_t		offset;
-+	xfs_filblks_t		len;
-+	int			flags = 0;
-+	int			error;
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return 0;
-+
-+	if (whichfork == XFS_ATTR_FORK)
-+		flags |= XFS_BMAPI_ATTRFORK;
-+
-+	offset = 0;
-+	len = XFS_B_TO_FSB(mp, isize);
-+	nimaps = 1;
-+	error = xfs_bmapi_read(ip, offset, len, &imap, &nimaps, flags);
-+	while (error == 0 && nimaps > 0) {
-+		if (imap.br_startblock == HOLESTARTBLOCK ||
-+		    imap.br_startblock == DELAYSTARTBLOCK)
-+			goto advloop;
-+
-+		error = xfs_rmap_delete(mp, rlist, ino, whichfork, &imap);
-+		if (error)
-+			break;
-+		error = xfs_rmap_insert(mp, rlist, new_owner, whichfork, &imap);
-+		if (error)
-+			break;
-+advloop:
-+		offset += imap.br_blockcount;
-+		len -= imap.br_blockcount;
-+		nimaps = 1;
-+		error = xfs_bmapi_read(ip, offset, len, &imap, &nimaps, flags);
-+	}
-+
-+	return error;
-+}
-diff --git a/libxfs/xfs_rmap_btree.h b/libxfs/xfs_rmap_btree.h
-index 4fe13f3..b4e085c 100644
---- a/libxfs/xfs_rmap_btree.h
-+++ b/libxfs/xfs_rmap_btree.h
-@@ -128,4 +128,13 @@ int	xfs_rmap_finish(struct xfs_mount *mp, struct xfs_trans **tpp,
- 			struct xfs_inode *ip, struct xfs_rmap_list *rlist,
- 			int *committed);
- 
-+/* functions for changing rmap ownership */
-+int xfs_rmap_change_extent_owner(struct xfs_mount *mp, struct xfs_inode *ip,
-+		xfs_ino_t ino, xfs_fileoff_t isize, struct xfs_trans *tp,
-+		int whichfork, xfs_ino_t new_owner,
-+		struct xfs_rmap_list *rlist);
-+int xfs_rmap_change_bmbt_owner(struct xfs_btree_cur *bcur, struct xfs_buf *bp,
-+		struct xfs_owner_info *old_owner,
-+		struct xfs_owner_info *new_owner);
-+
- #endif	/* __XFS_RMAP_BTREE_H__ */
+ 	/* CRC field type */
+ 	FLDT_CRC,
+diff --git a/db/type.c b/db/type.c
+index 1da7ee1..38372b8 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -58,6 +58,7 @@ static const typ_t	__typtab[] = {
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld, NULL },
+ 	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld, NULL },
+ 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld, NULL },
++	{ TYP_RMAPBT, NULL },
+ 	{ TYP_DATA, "data", handle_block, NULL, NULL },
+ 	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld, NULL },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld, NULL },
+@@ -88,6 +89,8 @@ static const typ_t	__typtab_crc[] = {
+ 		&xfs_allocbt_buf_ops },
+ 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
+ 		&xfs_allocbt_buf_ops },
++	{ TYP_RMAPBT, "rmapbt", handle_struct, rmapbt_crc_hfld, 
++		&xfs_rmapbt_buf_ops },
+ 	{ TYP_DATA, "data", handle_block, NULL, NULL },
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+ 		&xfs_dir3_db_buf_ops },
+diff --git a/db/type.h b/db/type.h
+index d9583e5..1bef8e6 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -24,7 +24,7 @@ struct field;
+ typedef enum typnm
+ {
+ 	TYP_AGF, TYP_AGFL, TYP_AGI, TYP_ATTR, TYP_BMAPBTA,
+-	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_DATA,
++	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_RMAPBT, TYP_DATA,
+ 	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
+ 	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
+ 	TYP_TEXT, TYP_FINOBT, TYP_NONE
 
 _______________________________________________
 xfs mailing list
