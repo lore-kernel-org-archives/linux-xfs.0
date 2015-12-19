@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B76677FFF
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CCC2F800E
 	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 02:58:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A96DA30404E
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BC8198F8039
 	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:58:57 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id cLE2SqaCWofKzJCe (version=TLSv1.2
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id rf2IOW8kl1gUboxT (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:58:50 -0800 (PST)
-Subject: [PATCH 22/76] xfs: add an extent to the rmap btree
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:58:43 -0800 (PST)
+Subject: [PATCH 21/76] xfs: enhance rmap btree operations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 00:58:47 -0800
-Message-ID: <20151219085847.12713.35542.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 00:58:40 -0800
+Message-ID: <20151219085840.12713.88949.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,189 +29,245 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
->From : Dave Chinner <dchinner@redhat.com>
+Adapt the rmap btree to store owner offsets within each rmap record,
+and to handle the primary key being extended to [agblk, owner, offset].
+The expansion of the primary key is crucial to allowing multiple owners
+per extent.  Unfortunately, doing so adds the requirement that all rmap
+records for file extents (metadata always has one owner) correspond to
+some bmbt entry somewhere.
 
-Now all the btree, free space and transaction infrastructure is in
-place, we can finally add the code to insert reverse mappings to the
-rmap btree. Freeing will be done in a spearate patch, so just the
-addition operation can be focussed on here.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rmap.c |  139 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 138 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_rmap.c       |   32 +++++++++++++++++---
+ fs/xfs/libxfs/xfs_rmap_btree.c |   65 ++++++++++++++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_rmap_btree.h |    7 ++++
+ 3 files changed, 84 insertions(+), 20 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index f6fe742..d1b6c82 100644
+index 64b2525..f6fe742 100644
 --- a/fs/xfs/libxfs/xfs_rmap.c
 +++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -144,6 +144,18 @@ out_error:
- 	return error;
- }
+@@ -37,26 +37,48 @@
+ #include "xfs_extent_busy.h"
  
-+/*
-+ * When we allocate a new block, the first thing we do is add a reference to the
-+ * extent in the rmap btree. This takes the form of a [agbno, length, owner]
-+ * record.  Newly inserted extents should never overlap with an existing extent
-+ * in the rmap btree. Hence the insertion is a relatively trivial exercise,
-+ * involving checking for adjacent records and merging if the new extent is
-+ * contiguous and has the same owner.
-+ *
-+ * Note that we have no MAXEXTLEN limits here when merging as the length in the
-+ * record has the full 32 bits available and hence a single record can track the
-+ * entire space in the AG.
-+ */
- int
- xfs_rmap_alloc(
- 	struct xfs_trans	*tp,
-@@ -154,18 +166,143 @@ xfs_rmap_alloc(
- 	struct xfs_owner_info	*oinfo)
+ /*
+- * Lookup the first record less than or equal to [bno, len]
++ * Lookup the first record less than or equal to [bno, len, owner, offset]
+  * in the btree given by cur.
+  */
+-STATIC int
++int
+ xfs_rmap_lookup_le(
+ 	struct xfs_btree_cur	*cur,
+ 	xfs_agblock_t		bno,
+ 	xfs_extlen_t		len,
+ 	uint64_t		owner,
++	uint64_t		offset,
+ 	int			*stat)
  {
- 	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_btree_cur	*cur;
-+	struct xfs_rmap_irec	ltrec;
-+	struct xfs_rmap_irec	gtrec;
-+	int			have_gt;
- 	int			error = 0;
-+	int			i;
- 
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return 0;
- 
- 	trace_xfs_rmap_alloc_extent(mp, agno, bno, len, oinfo);
--	if (1)
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
-+
-+	/*
-+	 * For the initial lookup, look for and exact match or the left-adjacent
-+	 * record for our insertion point. This will also give us the record for
-+	 * start block contiguity tests.
-+	 */
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, &i);
-+	if (error)
-+		goto out_error;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+
-+	error = xfs_rmap_get_rec(cur, &ltrec, &i);
-+	if (error)
- 		goto out_error;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	//printk("rmalloc ag %d bno 0x%x/0x%x/0x%llx, ltrec 0x%x/0x%x/0x%llx\n",
-+	//		agno, bno, len, owner, ltrec.rm_startblock,
-+	//		ltrec.rm_blockcount, ltrec.rm_owner);
-+
-+	XFS_WANT_CORRUPTED_GOTO(mp,
-+		ltrec.rm_startblock + ltrec.rm_blockcount <= bno, out_error);
-+
-+	/*
-+	 * Increment the cursor to see if we have a right-adjacent record to our
-+	 * insertion point. This will give us the record for end block
-+	 * contiguity tests.
-+	 */
-+	error = xfs_btree_increment(cur, 0, &have_gt);
-+	if (error)
-+		goto out_error;
-+	if (have_gt) {
-+		error = xfs_rmap_get_rec(cur, &gtrec, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	//printk("rmalloc ag %d bno 0x%x/0x%x/0x%llx, gtrec 0x%x/0x%x/0x%llx\n",
-+	//		agno, bno, len, owner, gtrec.rm_startblock,
-+	//		gtrec.rm_blockcount, gtrec.rm_owner);
-+		XFS_WANT_CORRUPTED_GOTO(mp, bno + len <= gtrec.rm_startblock,
-+					out_error);
-+	} else {
-+		gtrec.rm_owner = XFS_RMAP_OWN_NULL;
-+	}
-+
-+	/*
-+	 * Note: cursor currently points one record to the right of ltrec, even
-+	 * if there is no record in the tree to the right.
-+	 */
-+	if (ltrec.rm_owner == owner &&
-+	    ltrec.rm_startblock + ltrec.rm_blockcount == bno) {
-+		/*
-+		 * left edge contiguous, merge into left record.
-+		 *
-+		 *       ltbno     ltlen
-+		 * orig:   |ooooooooo|
-+		 * adding:           |aaaaaaaaa|
-+		 * result: |rrrrrrrrrrrrrrrrrrr|
-+		 *                  bno       len
-+		 */
-+		//printk("add left\n");
-+		ltrec.rm_blockcount += len;
-+		if (gtrec.rm_owner == owner &&
-+		    bno + len == gtrec.rm_startblock) {
-+			//printk("add middle\n");
-+			/*
-+			 * right edge also contiguous, delete right record
-+			 * and merge into left record.
-+			 *
-+			 *       ltbno     ltlen    gtbno     gtlen
-+			 * orig:   |ooooooooo|         |ooooooooo|
-+			 * adding:           |aaaaaaaaa|
-+			 * result: |rrrrrrrrrrrrrrrrrrrrrrrrrrrrr|
-+			 */
-+			ltrec.rm_blockcount += gtrec.rm_blockcount;
-+			error = xfs_btree_delete(cur, &i);
-+			if (error)
-+				goto out_error;
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+		}
-+
-+		/* point the cursor back to the left record and update */
-+		error = xfs_btree_decrement(cur, 0, &have_gt);
-+		if (error)
-+			goto out_error;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+	} else if (gtrec.rm_owner == owner &&
-+		   bno + len == gtrec.rm_startblock) {
-+		/*
-+		 * right edge contiguous, merge into right record.
-+		 *
-+		 *                 gtbno     gtlen
-+		 * Orig:             |ooooooooo|
-+		 * adding: |aaaaaaaaa|
-+		 * Result: |rrrrrrrrrrrrrrrrrrr|
-+		 *        bno       len
-+		 */
-+		//printk("add right\n");
-+		gtrec.rm_startblock = bno;
-+		gtrec.rm_blockcount += len;
-+		error = xfs_rmap_update(cur, &gtrec);
-+		if (error)
-+			goto out_error;
-+	} else {
-+		//printk("add no match\n");
-+		/*
-+		 * no contiguous edge with identical owner, insert
-+		 * new record at current cursor position.
-+		 */
-+		cur->bc_rec.r.rm_startblock = bno;
-+		cur->bc_rec.r.rm_blockcount = len;
-+		cur->bc_rec.r.rm_owner = owner;
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	}
-+
- 	trace_xfs_rmap_alloc_extent_done(mp, agno, bno, len, oinfo);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	return 0;
- 
- out_error:
- 	trace_xfs_rmap_alloc_extent_error(mp, agno, bno, len, oinfo);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
- 	return error;
+ 	cur->bc_rec.r.rm_startblock = bno;
+ 	cur->bc_rec.r.rm_blockcount = len;
+ 	cur->bc_rec.r.rm_owner = owner;
++	cur->bc_rec.r.rm_offset = offset;
+ 	return xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
  }
+ 
+ /*
++ * Lookup the record exactly matching [bno, len, owner, offset]
++ * in the btree given by cur.
++ */
++int
++xfs_rmap_lookup_eq(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	uint64_t		owner,
++	uint64_t		offset,
++	int			*stat)
++{
++	cur->bc_rec.r.rm_startblock = bno;
++	cur->bc_rec.r.rm_blockcount = len;
++	cur->bc_rec.r.rm_owner = owner;
++	cur->bc_rec.r.rm_offset = offset;
++	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
++}
++
++/*
+  * Update the record referred to by cur to the value given
+- * by [bno, len, ref].
++ * by [bno, len, owner, offset].
+  * This either works (return 0) or gets an EFSCORRUPTED error.
+  */
+ STATIC int
+@@ -69,13 +91,14 @@ xfs_rmap_update(
+ 	rec.rmap.rm_startblock = cpu_to_be32(irec->rm_startblock);
+ 	rec.rmap.rm_blockcount = cpu_to_be32(irec->rm_blockcount);
+ 	rec.rmap.rm_owner = cpu_to_be64(irec->rm_owner);
++	rec.rmap.rm_offset = cpu_to_be64(irec->rm_offset);
+ 	return xfs_btree_update(cur, &rec);
+ }
+ 
+ /*
+  * Get the data from the pointed-to record.
+  */
+-STATIC int
++int
+ xfs_rmap_get_rec(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_rmap_irec	*irec,
+@@ -91,6 +114,7 @@ xfs_rmap_get_rec(
+ 	irec->rm_startblock = be32_to_cpu(rec->rmap.rm_startblock);
+ 	irec->rm_blockcount = be32_to_cpu(rec->rmap.rm_blockcount);
+ 	irec->rm_owner = be64_to_cpu(rec->rmap.rm_owner);
++	irec->rm_offset = be64_to_cpu(rec->rmap.rm_offset);
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 58bdac3..5fe717b 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -37,21 +37,26 @@
+ /*
+  * Reverse map btree.
+  *
+- * This is a per-ag tree used to track the owner of a given extent. Owner
+- * records are inserted when an extent is allocated, and removed when an extent
+- * is freed. There can only be one owner of an extent, usually an inode or some
+- * other metadata structure like a AG btree.
++ * This is a per-ag tree used to track the owner(s) of a given extent. With
++ * reflink it is possible for there to be multiple owners, which is a departure
++ * from classic XFS. Owner records for data extents are inserted when the
++ * extent is mapped and removed when an extent is unmapped.  Owner records for
++ * all other block types (i.e. metadata) are inserted when an extent is
++ * allocated and removed when an extent is freed. There can only be one owner
++ * of a metadata extent, usually an inode or some other metadata structure like
++ * an AG btree.
+  *
+  * The rmap btree is part of the free space management, so blocks for the tree
+  * are sourced from the agfl. Hence we need transaction reservation support for
+  * this tree so that the freelist is always large enough. This also impacts on
+  * the minimum space we need to leave free in the AG.
+  *
+- * The tree is ordered by block number - there's no need to order/search by
+- * extent size for online updating/management of the tree, and the reverse
+- * lookups are going to be "who owns this block" and so are by-block ordering is
+- * perfect for this.
+- *
++ * The tree is ordered by [ag block, owner, offset]. This is a large key size,
++ * but it is the only way to enforce unique keys when a block can be owned by
++ * multiple files at any offset. There's no need to order/search by extent
++ * size for online updating/management of the tree. It is intended that most
++ * reverse lookups will be to find the owner(s) of a particular block, or to
++ * try to recover tree and file data from corrupt primary metadata.
+  */
+ 
+ static struct xfs_btree_cur *
+@@ -165,6 +170,8 @@ xfs_rmapbt_init_key_from_rec(
+ 	union xfs_btree_rec	*rec)
+ {
+ 	key->rmap.rm_startblock = rec->rmap.rm_startblock;
++	key->rmap.rm_owner = rec->rmap.rm_owner;
++	key->rmap.rm_offset = rec->rmap.rm_offset;
+ }
+ 
+ STATIC void
+@@ -173,6 +180,8 @@ xfs_rmapbt_init_rec_from_key(
+ 	union xfs_btree_rec	*rec)
+ {
+ 	rec->rmap.rm_startblock = key->rmap.rm_startblock;
++	rec->rmap.rm_owner = key->rmap.rm_owner;
++	rec->rmap.rm_offset = key->rmap.rm_offset;
+ }
+ 
+ STATIC void
+@@ -183,6 +192,7 @@ xfs_rmapbt_init_rec_from_cur(
+ 	rec->rmap.rm_startblock = cpu_to_be32(cur->bc_rec.r.rm_startblock);
+ 	rec->rmap.rm_blockcount = cpu_to_be32(cur->bc_rec.r.rm_blockcount);
+ 	rec->rmap.rm_owner = cpu_to_be64(cur->bc_rec.r.rm_owner);
++	rec->rmap.rm_offset = cpu_to_be64(cur->bc_rec.r.rm_offset);
+ }
+ 
+ STATIC void
+@@ -205,8 +215,16 @@ xfs_rmapbt_key_diff(
+ {
+ 	struct xfs_rmap_irec	*rec = &cur->bc_rec.r;
+ 	struct xfs_rmap_key	*kp = &key->rmap;
+-
+-	return (__int64_t)be32_to_cpu(kp->rm_startblock) - rec->rm_startblock;
++	__int64_t		d;
++
++	d = (__int64_t)be32_to_cpu(kp->rm_startblock) - rec->rm_startblock;
++	if (d)
++		return d;
++	d = (__int64_t)be64_to_cpu(kp->rm_owner) - rec->rm_owner;
++	if (d)
++		return d;
++	d = (__int64_t)be64_to_cpu(kp->rm_offset) - rec->rm_offset;
++	return d;
+ }
+ 
+ static bool
+@@ -307,8 +325,16 @@ xfs_rmapbt_keys_inorder(
+ 	union xfs_btree_key	*k1,
+ 	union xfs_btree_key	*k2)
+ {
+-	return be32_to_cpu(k1->rmap.rm_startblock) <
+-	       be32_to_cpu(k2->rmap.rm_startblock);
++	if (be32_to_cpu(k1->rmap.rm_startblock) <
++	    be32_to_cpu(k2->rmap.rm_startblock))
++		return 1;
++	if (be64_to_cpu(k1->rmap.rm_owner) <
++	    be64_to_cpu(k2->rmap.rm_owner))
++		return 1;
++	if (be64_to_cpu(k1->rmap.rm_offset) <=
++	    be64_to_cpu(k2->rmap.rm_offset))
++		return 1;
++	return 0;
+ }
+ 
+ STATIC int
+@@ -317,9 +343,16 @@ xfs_rmapbt_recs_inorder(
+ 	union xfs_btree_rec	*r1,
+ 	union xfs_btree_rec	*r2)
+ {
+-	return be32_to_cpu(r1->rmap.rm_startblock) +
+-		be32_to_cpu(r1->rmap.rm_blockcount) <=
+-		be32_to_cpu(r2->rmap.rm_startblock);
++	if (be32_to_cpu(r1->rmap.rm_startblock) <
++	    be32_to_cpu(r2->rmap.rm_startblock))
++		return 1;
++	if (be64_to_cpu(r1->rmap.rm_offset) <
++	    be64_to_cpu(r2->rmap.rm_offset))
++		return 1;
++	if (be64_to_cpu(r1->rmap.rm_owner) <=
++	    be64_to_cpu(r2->rmap.rm_owner))
++		return 1;
++	return 0;
+ }
+ #endif	/* DEBUG */
+ 
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index 2e02362..a5c97f8 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -51,6 +51,13 @@ struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
+ 				xfs_agnumber_t agno);
+ int xfs_rmapbt_maxrecs(struct xfs_mount *mp, int blocklen, int leaf);
+ 
++int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t	bno,
++		xfs_extlen_t len, uint64_t owner, uint64_t offset, int *stat);
++int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t	bno,
++		xfs_extlen_t len, uint64_t owner, uint64_t offset, int *stat);
++int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
++		int *stat);
++
+ int xfs_rmap_alloc(struct xfs_trans *tp, struct xfs_buf *agbp,
+ 		   xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
+ 		   struct xfs_owner_info *oinfo);
 
 _______________________________________________
 xfs mailing list
