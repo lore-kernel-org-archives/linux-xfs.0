@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1480E8191
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:05:21 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6991580D6
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:05:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02E2F304064
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:20 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id pQZKR3gL4pwYy8b9 (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5AFE0304059
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:27 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id C8v8VYQDPacZF9b8 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:19 -0800 (PST)
-Subject: [PATCH 04/53] libxfs: reorder xfs_bmap_add_free args
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:26 -0800 (PST)
+Subject: [PATCH 05/53] libxfs: use a convenience variable instead of
+	open-coding the fork
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:05:16 -0800
-Message-ID: <20151219090516.14255.60823.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:05:22 -0800
+Message-ID: <20151219090522.14255.54101.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,112 +32,105 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Move the mount & transaction arguments to the start of xfs_bmap_add_free,
-like most API calls.  The kernel version of rmap makes this change, so
-porting it to xfsprogs will make maintenance easier.
+Use a convenience variable instead of open-coding the inode fork.
+This isn't really needed for now, but will become important when we
+add the copy-on-write fork later.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_bmap.c       |   12 ++++++------
- libxfs/xfs_bmap.h       |    4 ++--
- libxfs/xfs_bmap_btree.c |    2 +-
- libxfs/xfs_ialloc.c     |    8 ++++----
- 4 files changed, 13 insertions(+), 13 deletions(-)
+ libxfs/xfs_bmap.c |   23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
 
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 68869f6..46f8469 100644
+index 46f8469..aef7cf3 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -559,10 +559,10 @@ xfs_bmap_validate_ret(
-  */
- void
- xfs_bmap_add_free(
-+	struct xfs_mount	*mp,		/* mount point structure */
-+	struct xfs_bmap_free	*flist,		/* list of extents */
- 	xfs_fsblock_t		bno,		/* fs block number of extent */
--	xfs_filblks_t		len,		/* length of extent */
--	xfs_bmap_free_t		*flist,		/* list of extents */
--	xfs_mount_t		*mp)		/* mount point structure */
-+	xfs_filblks_t		len)		/* length of extent */
- {
- 	xfs_bmap_free_item_t	*cur;		/* current (next) element */
- 	xfs_bmap_free_item_t	*new;		/* new element */
-@@ -688,7 +688,7 @@ xfs_bmap_btree_to_extents(
- 	cblock = XFS_BUF_TO_BLOCK(cbp);
- 	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
- 		return error;
--	xfs_bmap_add_free(cbno, 1, cur->bc_private.b.flist, mp);
-+	xfs_bmap_add_free(mp, cur->bc_private.b.flist, cbno, 1);
- 	ip->i_d.di_nblocks--;
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
- 	xfs_trans_binval(tp, cbp);
-@@ -4969,8 +4969,8 @@ xfs_bmap_del_extent(
- 	 * If we need to, add to list of extents to delete.
+@@ -1714,9 +1714,10 @@ xfs_bmap_add_extent_delay_real(
+ 	xfs_filblks_t		temp2=0;/* value for da_new calculations */
+ 	int			tmp_rval;	/* partial logging flags */
+ 	struct xfs_mount	*mp;
++	int			whichfork = XFS_DATA_FORK;
+ 
+ 	mp  = bma->tp ? bma->tp->t_mountp : NULL;
+-	ifp = XFS_IFORK_PTR(bma->ip, XFS_DATA_FORK);
++	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 
+ 	ASSERT(bma->idx >= 0);
+ 	ASSERT(bma->idx <= ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
+@@ -1775,7 +1776,7 @@ xfs_bmap_add_extent_delay_real(
+ 	 * Don't set contiguous if the combined extent would be too large.
+ 	 * Also check for all-three-contiguous being too large.
  	 */
- 	if (do_fx)
--		xfs_bmap_add_free(del->br_startblock, del->br_blockcount, flist,
--			mp);
-+		xfs_bmap_add_free(mp, flist, del->br_startblock,
-+			del->br_blockcount);
- 	/*
- 	 * Adjust inode # blocks in the file.
- 	 */
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 85143e5..d3daf6d 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -182,8 +182,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+-	if (bma->idx < bma->ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t) - 1) {
++	if (bma->idx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx + 1), &RIGHT);
  
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
--void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
--		struct xfs_bmap_free *flist, struct xfs_mount *mp);
-+void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_bmap_free *flist,
-+			  xfs_fsblock_t bno, xfs_filblks_t len);
- void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
- int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
- 			int *committed);
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 52c9c75..2ef1836 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -523,7 +523,7 @@ xfs_bmbt_free_block(
- 	struct xfs_trans	*tp = cur->bc_tp;
- 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+@@ -2006,10 +2007,10 @@ xfs_bmap_add_extent_delay_real(
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		}
  
--	xfs_bmap_add_free(fsbno, 1, cur->bc_private.b.flist, mp);
-+	xfs_bmap_add_free(mp, cur->bc_private.b.flist, fsbno, 1);
- 	ip->i_d.di_nblocks--;
+-		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
++		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+ 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 					bma->firstblock, bma->flist,
+-					&bma->cur, 1, &tmp_rval, XFS_DATA_FORK);
++					&bma->cur, 1, &tmp_rval, whichfork);
+ 			rval |= tmp_rval;
+ 			if (error)
+ 				goto done;
+@@ -2090,10 +2091,10 @@ xfs_bmap_add_extent_delay_real(
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		}
  
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 5039f4b..af670a8 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1822,9 +1822,9 @@ xfs_difree_inode_chunk(
+-		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
++		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+ 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 				bma->firstblock, bma->flist, &bma->cur, 1,
+-				&tmp_rval, XFS_DATA_FORK);
++				&tmp_rval, whichfork);
+ 			rval |= tmp_rval;
+ 			if (error)
+ 				goto done;
+@@ -2159,10 +2160,10 @@ xfs_bmap_add_extent_delay_real(
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		}
  
- 	if (!xfs_inobt_issparse(rec->ir_holemask)) {
- 		/* not sparse, calculate extent info directly */
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
-+		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno,
- 				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
--				  mp->m_ialloc_blks, flist, mp);
-+				  mp->m_ialloc_blks);
- 		return;
+-		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
++		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+ 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 					bma->firstblock, bma->flist, &bma->cur,
+-					1, &tmp_rval, XFS_DATA_FORK);
++					1, &tmp_rval, whichfork);
+ 			rval |= tmp_rval;
+ 			if (error)
+ 				goto done;
+@@ -2205,13 +2206,13 @@ xfs_bmap_add_extent_delay_real(
  	}
  
-@@ -1867,8 +1867,8 @@ xfs_difree_inode_chunk(
+ 	/* convert to a btree if necessary */
+-	if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
++	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+ 		int	tmp_logflags;	/* partial log flag return val */
  
- 		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
- 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
--				  flist, mp);
-+		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, agbno),
-+				  contigblk);
+ 		ASSERT(bma->cur == NULL);
+ 		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 				bma->firstblock, bma->flist, &bma->cur,
+-				da_old > 0, &tmp_logflags, XFS_DATA_FORK);
++				da_old > 0, &tmp_logflags, whichfork);
+ 		bma->logflags |= tmp_logflags;
+ 		if (error)
+ 			goto done;
+@@ -2232,7 +2233,7 @@ xfs_bmap_add_extent_delay_real(
+ 	if (bma->cur)
+ 		bma->cur->bc_private.b.allocated = 0;
  
- 		/* reset range to current bit and carry on... */
- 		startidx = endidx = nextbit;
+-	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, XFS_DATA_FORK);
++	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
+ done:
+ 	bma->logflags |= rval;
+ 	return error;
 
 _______________________________________________
 xfs mailing list
