@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E36880D6
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:05:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 74D8C304053
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:33 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9161F819D
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:05:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 823118F8052
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:39 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 1wypIpICICrgOr4r (version=TLSv1.2
+	cuda.sgi.com with ESMTP id TwTcSVSgBGyJ06cf (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:31 -0800 (PST)
-Subject: [PATCH 06/53] libxfs: refactor the btree size calculator code
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:38 -0800 (PST)
+Subject: [PATCH 07/53] libxfs: pack the agfl header structure so
+	XFS_AGFL_SIZE is correct
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:05:29 -0800
-Message-ID: <20151219090529.14255.35149.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:05:35 -0800
+Message-ID: <20151219090535.14255.81041.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,122 +32,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Create a macro to generate btree height calculator functions.
-This will be used (much) later when we get to the refcount
-btree.
+Because struct xfs_agfl is 36 bytes long and has a 64-bit integer
+inside it, gcc will quietly round the structure size up to the nearest
+64 bits -- in this case, 40 bytes.  This results in the XFS_AGFL_SIZE
+macro returning incorrect results for v5 filesystems on 64-bit
+machines (118 items instead of 119).  As a result, a 32-bit xfs_repair
+will see garbage in AGFL item 119 and complain.
+
+Therefore, tell gcc not to pad the structure so that the AGFL size
+calculation is correct.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_bmap.c       |   18 +-----------------
- libxfs/xfs_bmap_btree.c |    2 ++
- libxfs/xfs_bmap_btree.h |    2 ++
- libxfs/xfs_inode_fork.c |    1 +
- libxfs/xfs_shared.h     |   29 +++++++++++++++++++++++++++++
- 5 files changed, 35 insertions(+), 17 deletions(-)
+ libxfs/xfs_format.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index aef7cf3..ad383b4 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -172,25 +172,9 @@ xfs_bmap_worst_indlen(
- 	xfs_inode_t	*ip,		/* incore inode pointer */
- 	xfs_filblks_t	len)		/* delayed extent length */
- {
--	int		level;		/* btree level number */
--	int		maxrecs;	/* maximum record count at this level */
--	xfs_mount_t	*mp;		/* mount structure */
- 	xfs_filblks_t	rval;		/* return value */
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 946bcd1..f6100be 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -787,7 +787,7 @@ typedef struct xfs_agfl {
+ 	__be64		agfl_lsn;
+ 	__be32		agfl_crc;
+ 	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
+-} xfs_agfl_t;
++} __attribute__((packed)) xfs_agfl_t;
  
--	mp = ip->i_mount;
--	maxrecs = mp->m_bmap_dmxr[0];
--	for (level = 0, rval = 0;
--	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
--	     level++) {
--		len += maxrecs - 1;
--		do_div(len, maxrecs);
--		rval += len;
--		if (len == 1)
--			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
--				level - 1;
--		if (level == 0)
--			maxrecs = mp->m_bmap_dmxr[1];
--	}
-+	rval = xfs_bmbt_calc_btree_size(ip->i_mount, len);
- 	return rval;
- }
+ #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
  
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 2ef1836..a21f774 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -880,3 +880,5 @@ xfs_bmbt_change_owner(
- 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
- 	return error;
- }
-+
-+DEFINE_BTREE_SIZE_FN(bmbt, m_bmap_dmxr, XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK))
-diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
-index 819a8a4..7165a1b 100644
---- a/libxfs/xfs_bmap_btree.h
-+++ b/libxfs/xfs_bmap_btree.h
-@@ -140,4 +140,6 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
- 
-+DECLARE_BTREE_SIZE_FN(bmbt);
-+
- #endif	/* __XFS_BMAP_BTREE_H__ */
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index e1968b4..96a633e 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -17,6 +17,7 @@
-  */
- #include "libxfs_priv.h"
- #include "xfs_fs.h"
-+#include "xfs_shared.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 5be5297..544d0e9 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -234,4 +234,33 @@ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
- void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
- 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
- 
-+/* btree size calculator templates */
-+#define DECLARE_BTREE_SIZE_FN(btree) \
-+xfs_filblks_t xfs_##btree##_calc_btree_size(struct xfs_mount *mp, \
-+		unsigned long len);
-+
-+#define DEFINE_BTREE_SIZE_FN(btree, limitfield, maxlevels) \
-+xfs_filblks_t \
-+xfs_##btree##_calc_btree_size( \
-+	struct xfs_mount	*mp, \
-+	unsigned long		len) \
-+{ \
-+	int			level; \
-+	int			maxrecs; \
-+	xfs_filblks_t		rval; \
-+\
-+	maxrecs = mp->limitfield[0]; \
-+	for (level = 0, rval = 0; level < maxlevels; level++) { \
-+		len += maxrecs - 1; \
-+		do_div(len, maxrecs); \
-+		rval += len; \
-+		if (len == 1) \
-+			return rval + maxlevels - \
-+				level - 1; \
-+		if (level == 0) \
-+			maxrecs = mp->limitfield[1]; \
-+	} \
-+	return rval; \
-+}
-+
- #endif /* __XFS_SHARED_H__ */
 
 _______________________________________________
 xfs mailing list
