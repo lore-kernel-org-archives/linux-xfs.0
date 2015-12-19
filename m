@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 387EE7FFF
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 02:59:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BFB230404E
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:59:54 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5B9EC8059
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:00:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C9D78F8039
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:00 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id gYQdekBEZxjZMe8W (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Rqg2nVYRm44pntqR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:59:52 -0800 (PST)
-Subject: [PATCH 31/76] xfs: add rmap btree block detection to log recovery
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:59:59 -0800 (PST)
+Subject: [PATCH 32/76] xfs: enable the rmap btree functionality
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 00:59:45 -0800
-Message-ID: <20151219085945.12713.25901.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 00:59:55 -0800
+Message-ID: <20151219085955.12713.69171.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -33,38 +33,46 @@ Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
 >From : Dave Chinner <dchinner@redhat.com>
 
-So such blocks can be correctly identified and have their operations
-structutes attached to validate recovery has not resulted in a
-correct block.
+Add the feature flag to the supported matrix so that the kernel can
+mount and use rmap btree enabled filesystems
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ fs/xfs/libxfs/xfs_sb.c     |    5 +++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index c3abf50..c8f056e 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1847,6 +1847,7 @@ xlog_recover_get_buf_lsn(
- 	case XFS_ABTC_CRC_MAGIC:
- 	case XFS_ABTB_MAGIC:
- 	case XFS_ABTC_MAGIC:
-+	case XFS_RMAP_CRC_MAGIC:
- 	case XFS_IBT_CRC_MAGIC:
- 	case XFS_IBT_MAGIC: {
- 		struct xfs_btree_block *btb = blk;
-@@ -2015,6 +2016,9 @@ xlog_recover_validate_buf_type(
- 		case XFS_BMAP_MAGIC:
- 			bp->b_ops = &xfs_bmbt_buf_ops;
- 			break;
-+		case XFS_RMAP_CRC_MAGIC:
-+			bp->b_ops = &xfs_rmapbt_buf_ops;
-+			break;
- 		default:
- 			xfs_warn(mp, "Bad btree block magic!");
- 			ASSERT(0);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 2799746..4678831 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -457,7 +457,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+-		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
++		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index c9114b7..2590c89 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -223,6 +223,11 @@ xfs_mount_validate_sb(
+ 		return -EINVAL;
+ 	}
+ 
++	if (xfs_sb_version_hasrmapbt(sbp)) {
++		xfs_alert(mp,
++"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
++	}
++
+ 	/*
+ 	 * More sanity checking.  Most of these were stolen directly from
+ 	 * xfs_repair.
 
 _______________________________________________
 xfs mailing list
