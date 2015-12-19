@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B4BDE29E9A
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:11:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 98C408F8039
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:23 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id IRIT2IUBCAhlkW8I (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9931F29EA1
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:11:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7BDC6304059
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:33 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 8EVaZ3205hV0kVl5 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:22 -0800 (PST)
-Subject: [PATCH 04/11] xfs/128: allow larger margin for disk space usage
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:11:31 -0800 (PST)
+Subject: [PATCH 05/11] xfs/129: require loop
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:11:18 -0800
-Message-ID: <20151219091118.15320.82351.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:11:25 -0800
+Message-ID: <20151219091125.15320.31598.stgit@birch.djwong.org>
 In-Reply-To: <20151219091052.15320.94973.stgit@birch.djwong.org>
 References: <20151219091052.15320.94973.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,28 +31,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-The free blocks count can vary from our calculations by up to 8% on a
-1k-block filesystem, so permit that.
+Missed a _require_loop for xfs/129.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/128 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/xfs/129 |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/tests/xfs/128 b/tests/xfs/128
-index 49652cb..f461c1a 100755
---- a/tests/xfs/128
-+++ b/tests/xfs/128
-@@ -59,7 +59,7 @@ FREE_BLOCKS0=$(stat -f "$TESTDIR" -c '%f')
+diff --git a/tests/xfs/129 b/tests/xfs/129
+index 6fb9bac..c8c47a2 100755
+--- a/tests/xfs/129
++++ b/tests/xfs/129
+@@ -46,6 +46,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _supported_fs xfs
++_require_loop
+ _require_scratch_reflink
  
- echo "Create the original file and reflink to file2, file3"
- BLKS=2000
--MARGIN=100
-+MARGIN=160
- BLKSZ=65536
- REAL_BLKSZ="$(stat -f $TESTDIR -c '%S')"
- BLKSZ_FACTOR=$((BLKSZ / REAL_BLKSZ))
+ rm -f "$seqres.full"
 
 _______________________________________________
 xfs mailing list
