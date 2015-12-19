@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 182E629E2A
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:09:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 08EF08F8039
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:09:58 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EDE6B29E2A
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:10:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 712BAAC005
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:10:04 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id uMvnTO1cY4uTlqDM (version=TLSv1.2
+	cuda.sgi.com with ESMTP id AXpfSH6ULqaXAFWZ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:09:56 -0800 (PST)
-Subject: [PATCH 44/53] xfs_repair: check the existing refcount btree
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:10:02 -0800 (PST)
+Subject: [PATCH 45/53] xfs_repair: handle multiple owners of data blocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:09:49 -0800
-Message-ID: <20151219090948.14255.73918.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:09:55 -0800
+Message-ID: <20151219090955.14255.58791.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,261 +31,167 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Spot-check the refcount btree for obvious errors, and mark the
-refcount btree blocks as such.
+If reflink is enabled, don't freak out if there are multiple owners of
+a given block; that's just a sign that each of those owners are
+reflink files.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/incore.h     |    3 +
- repair/scan.c       |  185 +++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/xfs_repair.c |    2 +
- 3 files changed, 189 insertions(+), 1 deletion(-)
+ repair/dinode.c |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/scan.c   |   40 ++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 91 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/incore.h b/repair/incore.h
-index bc0810b..b6c4b4f 100644
---- a/repair/incore.h
-+++ b/repair/incore.h
-@@ -106,7 +106,8 @@ typedef struct rt_extent_tree_node  {
- #define XR_E_INUSE_FS1	9	/* used by fs ag header or log (rmap btree) */
- #define XR_E_INO1	10	/* used by inodes (marked by rmap btree) */
- #define XR_E_FS_MAP1	11	/* used by fs space/inode maps (rmap btree) */
--#define XR_E_BAD_STATE	12
-+#define XR_E_REFC	12	/* used by fs ag reference count btree */
-+#define XR_E_BAD_STATE	13
- 
- /* separate state bit, OR'ed into high (4th) bit of ex_state field */
- 
-diff --git a/repair/scan.c b/repair/scan.c
-index 823401b..4be02a6 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -935,6 +935,9 @@ advance:
- 					case XFS_RMAP_OWN_INODES:
- 						set_bmap(agno, b, XR_E_INO1);
- 						break;
-+					case XFS_RMAP_OWN_REFC:
-+						set_bmap(agno, b, XR_E_REFC);
-+						break;
- 					case XFS_RMAP_OWN_NULL:
- 						/* still unknown */
- 						break;
-@@ -970,6 +973,14 @@ _("inode block (%d,%d-%d) mismatch in %s tree, state - %d,%" PRIx64 "\n"),
- 						agno, b, b + blen - 1,
- 						name, state, owner);
- 					break;
-+				case XR_E_REFC:
-+					if (owner == XFS_RMAP_OWN_REFC)
-+						break;
-+					do_warn(
-+_("AG refcount block (%d,%d-%d) mismatch in %s tree, state - %d,%" PRIx64 "\n"),
-+						agno, b, b + blen - 1,
-+						name, state, owner);
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 7766dea..2ff1476 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -722,6 +722,9 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
+ 			 * checking each entry without setting the
+ 			 * block bitmap
+ 			 */
++			if (type == XR_INO_DATA &&
++			    xfs_sb_version_hasreflink(&mp->m_sb))
++				goto skip_dup;
+ 			if (search_dup_extent(agno, agbno, ebno)) {
+ 				do_warn(
+ _("%s fork in ino %" PRIu64 " claims dup extent, "
+@@ -731,6 +734,7 @@ _("%s fork in ino %" PRIu64 " claims dup extent, "
+ 					irec.br_blockcount);
+ 				goto done;
+ 			}
++skip_dup:
+ 			*tot += irec.br_blockcount;
+ 			continue;
+ 		}
+@@ -770,6 +774,9 @@ _("%s fork in inode %" PRIu64 " claims metadata block %" PRIu64 "\n"),
+ 			case XR_E_INUSE:
+ 			case XR_E_MULT:
+ 				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
++				if (type == XR_INO_DATA &&
++				    xfs_sb_version_hasreflink(&mp->m_sb))
 +					break;
- 				case XR_E_INUSE:
- 					if (owner >= 0 &&
- 					    owner < mp->m_sb.sb_dblocks)
-@@ -1052,6 +1063,167 @@ out:
- 		rmap_avoid_check();
- }
- 
-+static void
-+scan_refcbt(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	xfs_agblock_t		bno,
-+	xfs_agnumber_t		agno,
-+	int			suspect,
-+	int			isroot,
-+	__uint32_t		magic,
-+	void			*priv)
-+{
-+	const char		*name = "refcount";
-+	int			i;
-+	xfs_refcount_ptr_t	*pp;
-+	struct xfs_refcount_rec	*rp;
-+	int			hdr_errors = 0;
-+	int			numrecs;
-+	int			state;
-+	xfs_agblock_t		lastblock = 0;
-+
-+	if (magic != XFS_REFC_CRC_MAGIC) {
-+		name = "(unknown)";
-+		hdr_errors++;
-+		suspect++;
-+		goto out;
-+	}
-+
-+	if (be32_to_cpu(block->bb_magic) != magic) {
-+		do_warn(_("bad magic # %#x in %s btree block %d/%d\n"),
-+			be32_to_cpu(block->bb_magic), name, agno, bno);
-+		hdr_errors++;
-+		if (suspect)
-+			goto out;
-+	}
-+
-+	if (be16_to_cpu(block->bb_level) != level) {
-+		do_warn(_("expected level %d got %d in %s btree block %d/%d\n"),
-+			level, be16_to_cpu(block->bb_level), name, agno, bno);
-+		hdr_errors++;
-+		if (suspect)
-+			goto out;
-+	}
-+
-+	/* check for btree blocks multiply claimed */
-+	state = get_bmap(agno, bno);
-+	if (!(state == XR_E_UNKNOWN || state == XR_E_REFC))  {
-+		set_bmap(agno, bno, XR_E_MULT);
-+		do_warn(
-+_("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
-+				name, state, agno, bno, suspect);
-+		goto out;
-+	}
-+	set_bmap(agno, bno, XR_E_FS_MAP);
-+
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (level == 0) {
-+		if (numrecs > mp->m_refc_mxr[0])  {
-+			numrecs = mp->m_refc_mxr[0];
-+			hdr_errors++;
-+		}
-+		if (isroot == 0 && numrecs < mp->m_refc_mnr[0])  {
-+			numrecs = mp->m_refc_mnr[0];
-+			hdr_errors++;
-+		}
-+
-+		if (hdr_errors) {
-+			do_warn(
-+	_("bad btree nrecs (%u, min=%u, max=%u) in %s btree block %u/%u\n"),
-+				be16_to_cpu(block->bb_numrecs),
-+				mp->m_refc_mnr[0], mp->m_refc_mxr[0],
-+				name, agno, bno);
-+			suspect++;
-+		}
-+
-+		rp = XFS_REFCOUNT_REC_ADDR(block, 1);
-+		for (i = 0; i < numrecs; i++) {
-+			xfs_agblock_t		b, end;
-+			xfs_extlen_t		len;
-+			xfs_nlink_t		nr;
-+
-+			b = be32_to_cpu(rp[i].rc_startblock);
-+			len = be32_to_cpu(rp[i].rc_blockcount);
-+			nr = be32_to_cpu(rp[i].rc_refcount);
-+			end = b + len;
-+
-+			if (!verify_agbno(mp, agno, b)) {
-+				do_warn(
-+	_("invalid start block %u in record %u of %s btree block %u/%u\n"),
-+					b, i, name, agno, bno);
-+				continue;
-+			}
-+			if (len == 0 || !verify_agbno(mp, agno, end - 1)) {
-+				do_warn(
-+	_("invalid length %u in record %u of %s btree block %u/%u\n"),
-+					len, i, name, agno, bno);
-+				continue;
-+			}
-+
-+			if (nr < 2 || nr > MAXREFCOUNT) {
-+				do_warn(
-+	_("invalid reference count %u in record %u of %s btree block %u/%u\n"),
-+					nr, i, name, agno, bno);
-+				continue;
-+			}
-+
-+			if (b && b <= lastblock) {
-+				do_warn(_(
-+	"out-of-order %s btree record %d (%u %u) block %u/%u\n"),
-+					name, i, b, len, agno, bno);
-+			} else {
-+				lastblock = b;
-+			}
-+
-+			/* XXX: probably want to mark the reflinked areas? */
-+		}
-+		goto out;
-+	}
-+
-+	/*
-+	 * interior record
-+	 */
-+	pp = XFS_REFCOUNT_PTR_ADDR(block, 1, mp->m_refc_mxr[1]);
-+
-+	if (numrecs > mp->m_refc_mxr[1])  {
-+		numrecs = mp->m_refc_mxr[1];
-+		hdr_errors++;
-+	}
-+	if (isroot == 0 && numrecs < mp->m_refc_mnr[1])  {
-+		numrecs = mp->m_refc_mnr[1];
-+		hdr_errors++;
-+	}
-+
-+	/*
-+	 * don't pass bogus tree flag down further if this block
-+	 * looked ok.  bail out if two levels in a row look bad.
-+	 */
-+	if (hdr_errors)  {
-+		do_warn(
-+	_("bad btree nrecs (%u, min=%u, max=%u) in %s btree block %u/%u\n"),
-+			be16_to_cpu(block->bb_numrecs),
-+			mp->m_refc_mnr[1], mp->m_refc_mxr[1],
-+			name, agno, bno);
-+		if (suspect)
-+			goto out;
-+		suspect++;
-+	} else if (suspect) {
-+		suspect = 0;
-+	}
-+
-+	for (i = 0; i < numrecs; i++)  {
-+		xfs_agblock_t		bno = be32_to_cpu(pp[i]);
-+
-+		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+			scan_sbtree(bno, level, agno, suspect, scan_refcbt, 0,
-+				    magic, priv, &xfs_refcountbt_buf_ops);
-+		}
-+	}
-+out:
-+	return;
-+}
-+
- /*
-  * The following helpers are to help process and validate individual on-disk
-  * inode btree records. We have two possible inode btrees with slightly
-@@ -1830,6 +2002,19 @@ validate_agf(
+ 				do_warn(
+ _("%s fork in %s inode %" PRIu64 " claims used block %" PRIu64 "\n"),
+ 					forkname, ftype, ino, b);
+@@ -2460,6 +2467,52 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
  		}
  	}
  
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		bno = be32_to_cpu(agf->agf_refcount_root);
-+		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+			scan_sbtree(bno,
-+				    be32_to_cpu(agf->agf_refcount_level),
-+				    agno, 0, scan_refcbt, 1, XFS_REFC_CRC_MAGIC,
-+				    agcnts, &xfs_refcountbt_buf_ops);
-+		} else  {
-+			do_warn(_("bad agbno %u for refcntbt root, agno %d\n"),
-+				bno, agno);
++	/*
++	 * check that we only have valid flags2 set, and those that are set make
++	 * sense.
++	 */
++	if (dino->di_version >= 3) {
++		uint16_t flags = be16_to_cpu(dino->di_flags);
++		uint64_t flags2 = be64_to_cpu(dino->di_flags2);
++
++		if (flags2 & ~XFS_DIFLAG2_ANY) {
++			if (!uncertain) {
++				do_warn(
++	_("Bad flags2 set in inode %" PRIu64 "\n"),
++					lino);
++			}
++			flags2 &= XFS_DIFLAG2_ANY;
++		}
++
++		if ((flags2 & XFS_DIFLAG2_REFLINK) &&
++		    (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT))) {
++			if (!uncertain) {
++				do_warn(
++	_("Cannot have a reflinked realtime inode %" PRIu64 "\n"),
++					lino);
++			}
++			goto clear_bad_out;
++		}
++
++		if ((flags2 & XFS_DIFLAG2_REFLINK) &&
++		    !xfs_sb_version_hasreflink(&mp->m_sb)) {
++			if (!uncertain) {
++				do_warn(
++	_("inode %" PRIu64 " is marked reflinked but file system does not support reflink\n"),
++					lino);
++			}
++			goto clear_bad_out;
++		}
++		if (!verify_mode && flags2 != be64_to_cpu(dino->di_flags2)) {
++			if (!no_modify) {
++				do_warn(_("fixing bad flags2.\n"));
++				dino->di_flags2 = cpu_to_be64(flags2);
++				*dirty = 1;
++			} else
++				do_warn(_("would fix bad flags2.\n"));
 +		}
 +	}
 +
- 	if (be32_to_cpu(agf->agf_freeblks) != agcnts->agffreeblks) {
- 		do_warn(_("agf_freeblks %u, counted %u in ag %u\n"),
- 			be32_to_cpu(agf->agf_freeblks), agcnts->agffreeblks, agno);
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 8fc6fd5..1d402a5 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -422,6 +422,8 @@ calc_mkfs(xfs_mount_t *mp)
- 		fino_bno += min(2, mp->m_ag_maxlevels);
- 		fino_bno++;
- 	}
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		fino_bno++;
+ 	if (verify_mode)
+ 		return retval;
  
- 	/*
- 	 * If the log is allocated in the first allocation group we need to
+diff --git a/repair/scan.c b/repair/scan.c
+index 4be02a6..54b9b68 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -783,7 +783,29 @@ ino_issparse(
+ 
+ 	return xfs_inobt_is_sparse_disk(rp, offset);
+ }
+- 
++
++static bool
++rmap_in_order(
++	xfs_agblock_t	b,
++	xfs_agblock_t	lastblock,
++	int64_t		owner,
++	int64_t		lastowner,
++	int64_t		offset,
++	int64_t		lastoffset)
++{
++	if (b > lastblock)
++		return true;
++	else if (b < lastblock)
++		return false;
++
++	if (owner > lastowner)
++		return true;
++	else if (owner < lastowner)
++		return false;
++
++	return offset > lastoffset;
++}
++
+ static void
+ scan_rmapbt(
+ 	struct xfs_btree_block	*block,
+@@ -910,7 +932,12 @@ advance:
+ 			} else {
+ 				bool bad;
+ 
+-				bad = b <= lastblock;
++				if (xfs_sb_version_hasreflink(&mp->m_sb))
++					bad = !rmap_in_order(b, lastblock,
++							owner, lastowner,
++							offset, lastoffset);
++				else
++					bad = b <= lastblock;
+ 				if (bad)
+ 					do_warn(
+ 	_("out-of-order rmap btree record %d (%u %"PRId64" %"PRIx64" %u) block %u/%u\n"),
+@@ -997,6 +1024,15 @@ _("in use block (%d,%d-%d) mismatch in %s tree, state - %d,%" PRIx64 "\n"),
+ 					 * be caught later.
+ 					 */
+ 					break;
++				case XR_E_INUSE1:
++					/*
++					 * multiple inode owners are ok with
++					 * reflink enabled
++					 */
++					if (xfs_sb_version_hasreflink(&mp->m_sb) &&
++					    !XFS_RMAP_NON_INODE_OWNER(owner))
++						break;
++					/* fall through */
+ 				default:
+ 					do_warn(
+ _("unknown block (%d,%d-%d) mismatch on %s tree, state - %d,%" PRIx64 "\n"),
 
 _______________________________________________
 xfs mailing list
