@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9161F819D
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:05:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 823118F8052
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:39 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 5F5D681AB
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:05:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 47A748F8066
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:52 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id TwTcSVSgBGyJ06cf (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yB0qvm8Q5Iwzzb9U (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:38 -0800 (PST)
-Subject: [PATCH 07/53] libxfs: pack the agfl header structure so
-	XFS_AGFL_SIZE is correct
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:05:51 -0800 (PST)
+Subject: [PATCH 09/53] libxfs: resync xfs_prealloc_blocks with the kernel
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:05:35 -0800
-Message-ID: <20151219090535.14255.81041.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:05:48 -0800
+Message-ID: <20151219090548.14255.15706.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,35 +31,72 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Because struct xfs_agfl is 36 bytes long and has a 64-bit integer
-inside it, gcc will quietly round the structure size up to the nearest
-64 bits -- in this case, 40 bytes.  This results in the XFS_AGFL_SIZE
-macro returning incorrect results for v5 filesystems on 64-bit
-machines (118 items instead of 119).  As a result, a 32-bit xfs_repair
-will see garbage in AGFL item 119 and complain.
-
-Therefore, tell gcc not to pad the structure so that the AGFL size
-calculation is correct.
+Move xfs_prealloc_blocks() to the same line as in the kernel code.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_format.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ libxfs/xfs_alloc.c |   22 +++++++++++-----------
+ libxfs/xfs_alloc.h |    4 ++--
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 946bcd1..f6100be 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -787,7 +787,7 @@ typedef struct xfs_agfl {
- 	__be64		agfl_lsn;
- 	__be32		agfl_crc;
- 	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
--} xfs_agfl_t;
-+} __attribute__((packed)) xfs_agfl_t;
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index fb6c705..fea94c8 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -46,6 +46,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
  
- #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
++xfs_extlen_t
++xfs_prealloc_blocks(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
++
+ /*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
+  */
+@@ -2715,14 +2726,3 @@ error0:
+ 	xfs_perag_put(args.pag);
+ 	return error;
+ }
+-
+-xfs_extlen_t
+-xfs_prealloc_blocks(
+-	struct xfs_mount	*mp)
+-{
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		return XFS_RMAP_BLOCK(mp) + 1;
+-	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+-		return XFS_FIBT_BLOCK(mp) + 1;
+-	return XFS_IBT_BLOCK(mp) + 1;
+-}
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index a9d8e97..35b60ae 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -94,8 +94,6 @@ typedef unsigned int xfs_alloctype_t;
+ #define XFS_ALLOC_AG_MAX_USABLE(mp)	\
+ 	((mp)->m_sb.sb_agblocks - XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)) - 7)
  
+-xfs_extlen_t	xfs_prealloc_blocks(struct xfs_mount *mp);
+-
+ /*
+  * Argument structure for xfs_alloc routines.
+  * This is turned into a structure to avoid having 20 arguments passed
+@@ -241,4 +239,6 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ 
++xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
++
+ #endif	/* __XFS_ALLOC_H__ */
 
 _______________________________________________
 xfs mailing list
