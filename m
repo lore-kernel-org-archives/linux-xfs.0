@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EB5897F50
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:01:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9AAB5AC005
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:56 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AEA02809B
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:02:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A0AF08F8052
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:02:01 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id LFxc8E3tAuyeDBHm (version=TLSv1.2
+	cuda.sgi.com with ESMTP id PU8pO7sQZOqxqUqE (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:54 -0800 (PST)
-Subject: [PATCH 49/76] xfs: define tracepoints for reflink activities
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:02:00 -0800 (PST)
+Subject: [PATCH 50/76] xfs: map an inode's offset to an exact physical block
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:01:50 -0800
-Message-ID: <20151219090150.12713.95988.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:01:56 -0800
+Message-ID: <20151219090156.12713.39662.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,411 +31,140 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Define all the tracepoints we need to inspect the runtime operation
-of reflink/dedupe/copy-on-write.
+Teach the bmap routine to know how to map a range of file blocks to a
+specific range of physical blocks, instead of simply allocating fresh
+blocks.  This enables reflink to map a file to blocks that are already
+in use.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_trace.h |  385 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 385 insertions(+)
+ fs/xfs/libxfs/xfs_bmap.c |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.h |   10 +++++++
+ 2 files changed, 71 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 11b159a..9e3a107 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2775,6 +2775,391 @@ DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared);
- DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared_result);
- DEFINE_AG_ERROR_EVENT(xfs_refcount_find_shared_error);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6cc4aeb..ac669d58 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4003,6 +4003,54 @@ xfs_bmap_btalloc(
+ }
  
-+/* reflink tracepoint classes */
+ /*
++ * For a remap operation, just "allocate" an extent at the address that the
++ * caller passed in, and ensure that the AGFL is the right size.  The caller
++ * will then map the "allocated" extent into the file somewhere.
++ */
++STATIC int
++xfs_bmap_remap_alloc(
++	struct xfs_bmalloca	*ap)
++{
++	struct xfs_trans	*tp = ap->tp;
++	struct xfs_mount	*mp = tp->t_mountp;
++	xfs_agblock_t		bno;
++	struct xfs_alloc_arg	args;
++	int			error;
 +
-+/* two-file io tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_double_io_class,
-+	TP_PROTO(struct xfs_inode *src, xfs_off_t soffset, xfs_off_t len,
-+		 struct xfs_inode *dest, xfs_off_t doffset),
-+	TP_ARGS(src, soffset, len, dest, doffset),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, src_ino)
-+		__field(loff_t, src_isize)
-+		__field(loff_t, src_disize)
-+		__field(loff_t, src_offset)
-+		__field(size_t, len)
-+		__field(xfs_ino_t, dest_ino)
-+		__field(loff_t, dest_isize)
-+		__field(loff_t, dest_disize)
-+		__field(loff_t, dest_offset)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(src)->i_sb->s_dev;
-+		__entry->src_ino = src->i_ino;
-+		__entry->src_isize = VFS_I(src)->i_size;
-+		__entry->src_disize = src->i_d.di_size;
-+		__entry->src_offset = soffset;
-+		__entry->len = len;
-+		__entry->dest_ino = dest->i_ino;
-+		__entry->dest_isize = VFS_I(dest)->i_size;
-+		__entry->dest_disize = dest->i_d.di_size;
-+		__entry->dest_offset = doffset;
-+	),
-+	TP_printk("dev %d:%d count %zd "
-+		  "ino 0x%llx isize 0x%llx disize 0x%llx offset 0x%llx -> "
-+		  "ino 0x%llx isize 0x%llx disize 0x%llx offset 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->len,
-+		  __entry->src_ino,
-+		  __entry->src_isize,
-+		  __entry->src_disize,
-+		  __entry->src_offset,
-+		  __entry->dest_ino,
-+		  __entry->dest_isize,
-+		  __entry->dest_disize,
-+		  __entry->dest_offset)
-+)
++	/*
++	 * validate that the block number is legal - the enables us to detect
++	 * and handle a silent filesystem corruption rather than crashing.
++	 */
++	memset(&args, 0, sizeof(struct xfs_alloc_arg));
++	args.tp = ap->tp;
++	args.mp = ap->tp->t_mountp;
++	bno = *ap->firstblock;
++	args.agno = XFS_FSB_TO_AGNO(mp, bno);
++	ASSERT(args.agno < mp->m_sb.sb_agcount);
++	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
++	ASSERT(args.agbno < mp->m_sb.sb_agblocks);
 +
-+#define DEFINE_DOUBLE_IO_EVENT(name)	\
-+DEFINE_EVENT(xfs_double_io_class, name,	\
-+	TP_PROTO(struct xfs_inode *src, xfs_off_t soffset, xfs_off_t len, \
-+		 struct xfs_inode *dest, xfs_off_t doffset), \
-+	TP_ARGS(src, soffset, len, dest, doffset))
++	/* "Allocate" the extent from the range we passed in. */
++	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
++	ap->blkno = bno;
++	ap->ip->i_d.di_nblocks += ap->length;
++	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
 +
-+/* two-file vfs io tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_double_vfs_io_class,
-+	TP_PROTO(struct inode *src, u64 soffset, u64 len,
-+		 struct inode *dest, u64 doffset),
-+	TP_ARGS(src, soffset, len, dest, doffset),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(unsigned long, src_ino)
-+		__field(loff_t, src_isize)
-+		__field(loff_t, src_offset)
-+		__field(size_t, len)
-+		__field(unsigned long, dest_ino)
-+		__field(loff_t, dest_isize)
-+		__field(loff_t, dest_offset)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = src->i_sb->s_dev;
-+		__entry->src_ino = src->i_ino;
-+		__entry->src_isize = i_size_read(src);
-+		__entry->src_offset = soffset;
-+		__entry->len = len;
-+		__entry->dest_ino = dest->i_ino;
-+		__entry->dest_isize = i_size_read(dest);
-+		__entry->dest_offset = doffset;
-+	),
-+	TP_printk("dev %d:%d count %zd "
-+		  "ino 0x%lx isize 0x%llx offset 0x%llx -> "
-+		  "ino 0x%lx isize 0x%llx offset 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->len,
-+		  __entry->src_ino,
-+		  __entry->src_isize,
-+		  __entry->src_offset,
-+		  __entry->dest_ino,
-+		  __entry->dest_isize,
-+		  __entry->dest_offset)
-+)
++	/* Fix the freelist, like a real allocator does. */
++	args.pag = xfs_perag_get(args.mp, args.agno);
++	ASSERT(args.pag);
 +
-+#define DEFINE_DOUBLE_VFS_IO_EVENT(name)	\
-+DEFINE_EVENT(xfs_double_vfs_io_class, name,	\
-+	TP_PROTO(struct inode *src, u64 soffset, u64 len, \
-+		 struct inode *dest, u64 doffset), \
-+	TP_ARGS(src, soffset, len, dest, doffset))
++	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
++	if (error)
++		goto error0;
++error0:
++	xfs_perag_put(args.pag);
++	if (error)
++		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
++	return error;
++}
 +
-+/* CoW write tracepoint */
-+DECLARE_EVENT_CLASS(xfs_copy_on_write_class,
-+	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk, xfs_fsblock_t pblk,
-+		 xfs_extlen_t len, xfs_fsblock_t new_pblk),
-+	TP_ARGS(ip, lblk, pblk, len, new_pblk),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_fileoff_t, lblk)
-+		__field(xfs_fsblock_t, pblk)
-+		__field(xfs_extlen_t, len)
-+		__field(xfs_fsblock_t, new_pblk)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->lblk = lblk;
-+		__entry->pblk = pblk;
-+		__entry->len = len;
-+		__entry->new_pblk = new_pblk;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx pblk 0x%llx "
-+		  "len 0x%x new_pblk %llu",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->lblk,
-+		  __entry->pblk,
-+		  __entry->len,
-+		  __entry->new_pblk)
-+)
-+
-+#define DEFINE_COW_EVENT(name)	\
-+DEFINE_EVENT(xfs_copy_on_write_class, name,	\
-+	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk, xfs_fsblock_t pblk, \
-+		 xfs_extlen_t len, xfs_fsblock_t new_pblk), \
-+	TP_ARGS(ip, lblk, pblk, len, new_pblk))
-+
-+/* inode/irec events */
-+DECLARE_EVENT_CLASS(xfs_inode_irec_class,
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_bmbt_irec *irec),
-+	TP_ARGS(ip, irec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_fileoff_t, lblk)
-+		__field(xfs_extlen_t, len)
-+		__field(xfs_fsblock_t, pblk)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->lblk = irec->br_startoff;
-+		__entry->len = irec->br_blockcount;
-+		__entry->pblk = irec->br_startblock;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x pblk %llu",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->lblk,
-+		  __entry->len,
-+		  __entry->pblk)
-+);
-+#define DEFINE_INODE_IREC_EVENT(name) \
-+DEFINE_EVENT(xfs_inode_irec_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_bmbt_irec *irec), \
-+	TP_ARGS(ip, irec))
-+
-+/* simple inode-based error/%ip tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_inode_error_class,
-+	TP_PROTO(struct xfs_inode *ip, int error, unsigned long caller_ip),
-+	TP_ARGS(ip, error, caller_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(int, error)
-+		__field(unsigned long, caller_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->error = error;
-+		__entry->caller_ip = caller_ip;
-+	),
-+	TP_printk("dev %d:%d ino %llx error %d caller %ps",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->error,
-+		  (char *)__entry->caller_ip)
-+);
-+
-+#define DEFINE_INODE_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_inode_error_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, int error, \
-+		 unsigned long caller_ip), \
-+	TP_ARGS(ip, error, caller_ip))
-+
-+/* refcount/reflink tracepoint definitions */
-+
-+/* reflink allocator */
-+TRACE_EVENT(xfs_bmap_remap_alloc,
-+	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
-+		 xfs_extlen_t len),
-+	TP_ARGS(ip, fsbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_fsblock_t, fsbno)
-+		__field(xfs_extlen_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->fsbno = fsbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->fsbno,
-+		  __entry->len)
-+);
-+DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
-+
-+/* reflink tracepoints */
-+DEFINE_INODE_EVENT(xfs_reflink_set_inode_flag);
-+DEFINE_INODE_EVENT(xfs_reflink_unset_inode_flag);
-+DEFINE_ITRUNC_EVENT(xfs_reflink_update_inode_size);
-+DEFINE_IOMAP_EVENT(xfs_reflink_remap_imap);
-+TRACE_EVENT(xfs_reflink_remap_blocks_loop,
-+	TP_PROTO(struct xfs_inode *src, xfs_fileoff_t soffset,
-+		 xfs_filblks_t len, struct xfs_inode *dest,
-+		 xfs_fileoff_t doffset),
-+	TP_ARGS(src, soffset, len, dest, doffset),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, src_ino)
-+		__field(xfs_fileoff_t, src_lblk)
-+		__field(xfs_filblks_t, len)
-+		__field(xfs_ino_t, dest_ino)
-+		__field(xfs_fileoff_t, dest_lblk)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(src)->i_sb->s_dev;
-+		__entry->src_ino = src->i_ino;
-+		__entry->src_lblk = soffset;
-+		__entry->len = len;
-+		__entry->dest_ino = dest->i_ino;
-+		__entry->dest_lblk = doffset;
-+	),
-+	TP_printk("dev %d:%d len 0x%llx "
-+		  "ino 0x%llx offset 0x%llx blocks -> "
-+		  "ino 0x%llx offset 0x%llx blocks",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->len,
-+		  __entry->src_ino,
-+		  __entry->src_lblk,
-+		  __entry->dest_ino,
-+		  __entry->dest_lblk)
-+);
-+TRACE_EVENT(xfs_reflink_punch_range,
-+	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk,
-+		 xfs_extlen_t len),
-+	TP_ARGS(ip, lblk, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_fileoff_t, lblk)
-+		__field(xfs_extlen_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->lblk = lblk;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->lblk,
-+		  __entry->len)
-+);
-+TRACE_EVENT(xfs_reflink_remap,
-+	TP_PROTO(struct xfs_inode *ip, xfs_fileoff_t lblk,
-+		 xfs_extlen_t len, xfs_fsblock_t new_pblk),
-+	TP_ARGS(ip, lblk, len, new_pblk),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_fileoff_t, lblk)
-+		__field(xfs_extlen_t, len)
-+		__field(xfs_fsblock_t, new_pblk)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->lblk = lblk;
-+		__entry->len = len;
-+		__entry->new_pblk = new_pblk;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x new_pblk %llu",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->lblk,
-+		  __entry->len,
-+		  __entry->new_pblk)
-+);
-+DEFINE_DOUBLE_IO_EVENT(xfs_reflink_remap_range);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_remap_range_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_set_inode_flag_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_update_inode_size_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_reflink_main_loop_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_read_iomap_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_remap_blocks_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_remap_extent_error);
-+
-+/* dedupe tracepoints */
-+DEFINE_DOUBLE_IO_EVENT(xfs_reflink_compare_extents);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_compare_extents_error);
-+
-+/* ioctl tracepoints */
-+DEFINE_DOUBLE_VFS_IO_EVENT(xfs_ioctl_reflink);
-+DEFINE_DOUBLE_VFS_IO_EVENT(xfs_ioctl_clone_range);
-+DEFINE_DOUBLE_VFS_IO_EVENT(xfs_ioctl_file_extent_same);
-+TRACE_EVENT(xfs_ioctl_clone,
-+	TP_PROTO(struct inode *src, struct inode *dest),
-+	TP_ARGS(src, dest),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(unsigned long, src_ino)
-+		__field(loff_t, src_isize)
-+		__field(unsigned long, dest_ino)
-+		__field(loff_t, dest_isize)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = src->i_sb->s_dev;
-+		__entry->src_ino = src->i_ino;
-+		__entry->src_isize = i_size_read(src);
-+		__entry->dest_ino = dest->i_ino;
-+		__entry->dest_isize = i_size_read(dest);
-+	),
-+	TP_printk("dev %d:%d "
-+		  "ino 0x%lx isize 0x%llx -> "
-+		  "ino 0x%lx isize 0x%llx\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->src_ino,
-+		  __entry->src_isize,
-+		  __entry->dest_ino,
-+		  __entry->dest_isize)
-+);
-+
-+/* unshare tracepoints */
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_unshare);
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_truncate);
-+DEFINE_PAGE_EVENT(xfs_reflink_unshare_page);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_unshare_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_truncate_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_dirty_page_error);
-+
-+/* copy on write */
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_irec_is_shared);
-+
-+DEFINE_RW_EVENT(xfs_reflink_reserve_cow_range);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_reserve_cow_extent);
-+DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_allocate_cow_extent);
-+
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
-+DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
-+DEFINE_SIMPLE_IO_EVENT(xfs_iomap_cow_delay);
-+
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow_failed);
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
-+
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_reserve_cow_range_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_reserve_cow_extent_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_allocate_cow_range_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_failed_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_error);
-+
-+DEFINE_COW_EVENT(xfs_reflink_fork_buf);
-+DEFINE_COW_EVENT(xfs_reflink_finish_fork_buf);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_fork_buf_error);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_finish_fork_buf_error);
-+
-+DEFINE_INODE_EVENT(xfs_reflink_cancel_pending_cow);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cancel_cow);
-+DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_pending_cow_error);
-+
- #endif /* _TRACE_XFS_H */
++/*
+  * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
+  * It figures out where to ask the underlying allocator to put the new extent.
+  */
+@@ -4010,6 +4058,8 @@ STATIC int
+ xfs_bmap_alloc(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
++	if (ap->flags & XFS_BMAPI_REMAP)
++		return xfs_bmap_remap_alloc(ap);
+ 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
+ 		return xfs_bmap_rtalloc(ap);
+ 	return xfs_bmap_btalloc(ap);
+@@ -4645,6 +4695,12 @@ xfs_bmapi_write(
+ 	ASSERT(len > 0);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	if (whichfork == XFS_ATTR_FORK)
++		ASSERT(!(flags & XFS_BMAPI_REMAP));
++	if (flags & XFS_BMAPI_REMAP) {
++		ASSERT(!(flags & XFS_BMAPI_PREALLOC));
++		ASSERT(!(flags & XFS_BMAPI_CONVERT));
++	}
  
- #undef TRACE_INCLUDE_PATH
+ 	/* zeroing is for currently only for data extents, not metadata */
+ 	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
+@@ -4707,6 +4763,12 @@ xfs_bmapi_write(
+ 		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
+ 
+ 		/*
++		 * Make sure we only reflink into a hole.
++		 */
++		if (flags & XFS_BMAPI_REMAP)
++			ASSERT(inhole);
++
++		/*
+ 		 * First, deal with the hole before the allocated space
+ 		 * that we found, if any.
+ 		 */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index fcea496..7b78fb8 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -127,6 +127,13 @@ typedef	struct xfs_bmap_free
+  */
+ #define XFS_BMAPI_ZERO		0x080
+ 
++/*
++ * Map the inode offset to the block given in ap->firstblock.  Primarily
++ * used for reflink.  The range must be in a hole, and this flag cannot be
++ * turned on with PREALLOC or CONVERT, and cannot be used on the attr fork.
++ */
++#define XFS_BMAPI_REMAP		0x100
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -135,7 +142,8 @@ typedef	struct xfs_bmap_free
+ 	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
+ 	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
+ 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+-	{ XFS_BMAPI_ZERO,	"ZERO" }
++	{ XFS_BMAPI_ZERO,	"ZERO" }, \
++	{ XFS_BMAPI_REMAP,	"REMAP" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
 
 _______________________________________________
 xfs mailing list
