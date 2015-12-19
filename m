@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 09BB480AF
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:01:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D4ADC8F8052
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:22 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7052A7F50
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:01:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 03903AC003
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:35 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id nvEdcppQQ90t7HDu (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yXddfG0Yfhhr0JT3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:21 -0800 (PST)
-Subject: [PATCH 45/76] libxfs: adjust refcount when unmapping file blocks
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:34 -0800 (PST)
+Subject: [PATCH 46/76] xfs: add refcount btree block detection to log recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:01:18 -0800
-Message-ID: <20151219090118.12713.37936.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:01:25 -0800
+Message-ID: <20151219090125.12713.8790.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,115 +31,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-When we're unmapping blocks from a reflinked file, decrease the
-refcount of the affected blocks and free the extents that are no
-longer in use.
+Teach log recovery how to deal with refcount btree blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c     |   16 +++++++++++++---
- fs/xfs/libxfs/xfs_refcount.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_refcount.h |    4 ++++
- 3 files changed, 59 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log_recover.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5d1290e..6cc4aeb 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -46,6 +46,7 @@
- #include "xfs_attr_leaf.h"
- #include "xfs_filestream.h"
- #include "xfs_rmap_btree.h"
-+#include "xfs_refcount.h"
- 
- 
- kmem_zone_t		*xfs_bmap_free_item_zone;
-@@ -5144,9 +5145,18 @@ xfs_bmap_del_extent(
- 	/*
- 	 * If we need to, add to list of extents to delete.
- 	 */
--	if (do_fx)
--		xfs_bmap_add_free(mp, flist, del->br_startblock,
--				  del->br_blockcount, NULL);
-+	if (do_fx) {
-+		if (xfs_is_reflink_inode(ip)) {
-+			error = xfs_refcount_put_extent(mp, tp, flist,
-+						del->br_startblock,
-+						del->br_blockcount, NULL);
-+			if (error)
-+				goto done;
-+		} else
-+			xfs_bmap_add_free(mp, flist, del->br_startblock,
-+					  del->br_blockcount, NULL);
-+	}
-+
- 	/*
- 	 * Adjust inode # blocks in the file.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index dae6453..c9d6e5d 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -970,3 +970,45 @@ xfs_refcount_decrease(
- 	return xfs_refcountbt_adjust_refcount(mp, tp, agbp, agno, agbno,
- 			aglen, -1, flist, oinfo);
- }
-+
-+/**
-+ * xfs_refcount_put_extent() - release a range of blocks
-+ *
-+ * @mp: XFS mount object
-+ * @tp: transaction that goes with the free operation
-+ * @flist: List of blocks to be freed at the end of the transaction
-+ * @fsbno: First fs block of the range to release
-+ * @len: Length of range
-+ * @owner: owner of the extent
-+ */
-+int
-+xfs_refcount_put_extent(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_bmap_free	*flist,
-+	xfs_fsblock_t		fsbno,
-+	xfs_filblks_t		fslen,
-+	struct xfs_owner_info	*oinfo)
-+{
-+	int			error;
-+	struct xfs_buf		*agbp;
-+	xfs_agnumber_t		agno;		/* allocation group number */
-+	xfs_agblock_t		agbno;		/* ag start of range to free */
-+	xfs_extlen_t		aglen;		/* ag length of range to free */
-+
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	aglen = fslen;
-+
-+	/*
-+	 * Drop reference counts in the refcount tree.
-+	 */
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_refcount_decrease(mp, tp, agbp, agno, agbno, aglen, flist,
-+			oinfo);
-+	xfs_trans_brelse(tp, agbp);
-+	return error;
-+}
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 6640e3d..074d620 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -34,4 +34,8 @@ extern int xfs_refcount_decrease(struct xfs_mount *mp, struct xfs_trans *tp,
- 		xfs_extlen_t aglen, struct xfs_bmap_free *flist,
- 		struct xfs_owner_info *oinfo);
- 
-+extern int xfs_refcount_put_extent(struct xfs_mount *mp, struct xfs_trans *tp,
-+		struct xfs_bmap_free *flist, xfs_fsblock_t fsbno,
-+		xfs_filblks_t len, struct xfs_owner_info *oinfo);
-+
- #endif	/* __XFS_REFCOUNT_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index c8f056e..15bf5ed 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1848,6 +1848,7 @@ xlog_recover_get_buf_lsn(
+ 	case XFS_ABTB_MAGIC:
+ 	case XFS_ABTC_MAGIC:
+ 	case XFS_RMAP_CRC_MAGIC:
++	case XFS_REFC_CRC_MAGIC:
+ 	case XFS_IBT_CRC_MAGIC:
+ 	case XFS_IBT_MAGIC: {
+ 		struct xfs_btree_block *btb = blk;
+@@ -2019,6 +2020,9 @@ xlog_recover_validate_buf_type(
+ 		case XFS_RMAP_CRC_MAGIC:
+ 			bp->b_ops = &xfs_rmapbt_buf_ops;
+ 			break;
++		case XFS_REFC_CRC_MAGIC:
++			bp->b_ops = &xfs_refcountbt_buf_ops;
++			break;
+ 		default:
+ 			xfs_warn(mp, "Bad btree block magic!");
+ 			ASSERT(0);
 
 _______________________________________________
 xfs mailing list
