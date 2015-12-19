@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1799529E7C
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:10:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9D596AC004
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:10:31 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 59AAD29E80
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:10:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AEC48F8039
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:10:37 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id w0CoXJAtAHK0TEa5 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id z0NnQ8I8X1SFHDLU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:10:29 -0800 (PST)
-Subject: [PATCH 49/53] xfs_repair: check the refcount btree against our
-	observed reference counts when -n
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:10:34 -0800 (PST)
+Subject: [PATCH 50/53] xfs_repair: rebuild the refcount btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:10:25 -0800
-Message-ID: <20151219091025.14255.77057.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:10:32 -0800
+Message-ID: <20151219091032.14255.16914.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,237 +31,389 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Check the observed reference counts against whatever's in the refcount
-btree for discrepancies.
+Rebuild the refcount btree with the reference count data we assembled
+during phase 4.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase4.c |   20 ++++++++
- repair/rmap.c   |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/rmap.h   |    4 ++
- repair/scan.c   |    2 +
- 4 files changed, 161 insertions(+)
+ repair/phase5.c |  309 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 307 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/phase4.c b/repair/phase4.c
-index caa4221..dd03ca4 100644
---- a/repair/phase4.c
-+++ b/repair/phase4.c
-@@ -213,6 +213,21 @@ _("%s while fixing inode reflink flags.\n"),
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 734291a..8a4ec43 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -1624,6 +1624,290 @@ _("Insufficient memory to construct reverse-map cursor."));
+ 	free_slab_cursor(&rmap_cur);
  }
  
- static void
-+check_refcount_btrees(
-+	work_queue_t	*wq,
-+	xfs_agnumber_t	agno,
-+	void		*arg)
-+{
-+	int		error;
++/* rebuild the refcount tree */
 +
-+	error = check_refcounts(wq->mp, agno);
-+	if (error)
-+		do_error(
-+_("%s while checking reference counts"),
-+			 strerror(-error));
++#define XR_REFCOUNTBT_BLOCK_MAXRECS(mp, level) \
++			((mp)->m_refc_mxr[(level) != 0])
++
++/*
++ * we don't have to worry here about how chewing up free extents
++ * may perturb things because reflink tree building happens before
++ * freespace tree building.
++ */
++static void
++init_refc_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs)
++{
++	size_t			num_recs;
++	int			level;
++	bt_stat_level_t		*lptr;
++	bt_stat_level_t		*p_lptr;
++	xfs_extlen_t		blocks_allocated;
++
++	if (!xfs_sb_version_hasreflink(&mp->m_sb)) {
++		memset(btree_curs, 0, sizeof(bt_status_t));
++		return;
++	}
++
++	lptr = &btree_curs->level[0];
++	btree_curs->init = 1;
++	btree_curs->owner = XFS_RMAP_OWN_REFC;
++
++	/*
++	 * build up statistics
++	 */
++	num_recs = refcount_record_count(mp, agno);
++	if (num_recs == 0) {
++		/*
++		 * easy corner-case -- no refcount records
++		 */
++		lptr->num_blocks = 1;
++		lptr->modulo = 0;
++		lptr->num_recs_pb = 0;
++		lptr->num_recs_tot = 0;
++
++		btree_curs->num_levels = 1;
++		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
++
++		setup_cursor(mp, agno, btree_curs);
++
++		return;
++	}
++
++	blocks_allocated = lptr->num_blocks = howmany(num_recs,
++					XR_REFCOUNTBT_BLOCK_MAXRECS(mp, 0));
++
++	lptr->modulo = num_recs % lptr->num_blocks;
++	lptr->num_recs_pb = num_recs / lptr->num_blocks;
++	lptr->num_recs_tot = num_recs;
++	level = 1;
++
++	if (lptr->num_blocks > 1)  {
++		for (; btree_curs->level[level-1].num_blocks > 1
++				&& level < XFS_BTREE_MAXLEVELS;
++				level++)  {
++			lptr = &btree_curs->level[level];
++			p_lptr = &btree_curs->level[level - 1];
++			lptr->num_blocks = howmany(p_lptr->num_blocks,
++				XR_REFCOUNTBT_BLOCK_MAXRECS(mp, level));
++			lptr->modulo = p_lptr->num_blocks % lptr->num_blocks;
++			lptr->num_recs_pb = p_lptr->num_blocks
++					/ lptr->num_blocks;
++			lptr->num_recs_tot = p_lptr->num_blocks;
++
++			blocks_allocated += lptr->num_blocks;
++		}
++	}
++	ASSERT(lptr->num_blocks == 1);
++	btree_curs->num_levels = level;
++
++	btree_curs->num_tot_blocks = btree_curs->num_free_blocks
++			= blocks_allocated;
++
++	setup_cursor(mp, agno, btree_curs);
 +}
 +
 +static void
- process_rmap_data(
- 	struct xfs_mount	*mp)
- {
-@@ -239,6 +254,11 @@ process_rmap_data(
- 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
- 		queue_work(&wq, process_inode_reflink_flags, i, NULL);
- 	destroy_work_queue(&wq);
-+
-+	create_work_queue(&wq, mp, libxfs_nproc());
-+	for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+		queue_work(&wq, check_refcount_btrees, i, NULL);
-+	destroy_work_queue(&wq);
- }
- 
- void
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 05e3c98..0fa2c33 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -45,6 +45,7 @@ struct xfs_ag_rmap {
- 
- static struct xfs_ag_rmap *ag_rmaps;
- static bool rmapbt_suspect;
-+static bool refcbt_suspect;
- 
- /*
-  * Compare rmap observations for array sorting.
-@@ -1170,6 +1171,140 @@ _("Unable to fix reflink flag on inode %"PRIu64".\n"),
- }
- 
- /**
-+ * refcount_record_count() -- Return the number of refcount objects for an AG.
-+ *
-+ * @mp: XFS mount object
-+ * @agno: AG number
-+ */
-+size_t
-+refcount_record_count(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t		agno)
++prop_refc_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
++	xfs_agblock_t startbno, int level)
 +{
-+	return slab_count(ag_rmaps[agno].ar_refcount_items);
++	struct xfs_btree_block	*bt_hdr;
++	struct xfs_refcount_key	*bt_key;
++	xfs_refcount_ptr_t	*bt_ptr;
++	xfs_agblock_t		agbno;
++	bt_stat_level_t		*lptr;
++
++	level++;
++
++	if (level >= btree_curs->num_levels)
++		return;
++
++	lptr = &btree_curs->level[level];
++	bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
++
++	if (be16_to_cpu(bt_hdr->bb_numrecs) == 0)  {
++		/*
++		 * this only happens once to initialize the
++		 * first path up the left side of the tree
++		 * where the agbno's are already set up
++		 */
++		prop_refc_cursor(mp, agno, btree_curs, startbno, level);
++	}
++
++	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
++				lptr->num_recs_pb + (lptr->modulo > 0))  {
++		/*
++		 * write out current prev block, grab us a new block,
++		 * and set the rightsib pointer of current block
++		 */
++#ifdef XR_BLD_INO_TRACE
++		fprintf(stderr, " ino prop agbno %d ", lptr->prev_agbno);
++#endif
++		if (lptr->prev_agbno != NULLAGBLOCK)  {
++			ASSERT(lptr->prev_buf_p != NULL);
++			libxfs_writebuf(lptr->prev_buf_p, 0);
++		}
++		lptr->prev_agbno = lptr->agbno;
++		lptr->prev_buf_p = lptr->buf_p;
++		agbno = get_next_blockaddr(agno, level, btree_curs);
++
++		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(agbno);
++
++		lptr->buf_p = libxfs_getbuf(mp->m_dev,
++					XFS_AGB_TO_DADDR(mp, agno, agbno),
++					XFS_FSB_TO_BB(mp, 1));
++		lptr->agbno = agbno;
++
++		if (lptr->modulo)
++			lptr->modulo--;
++
++		/*
++		 * initialize block header
++		 */
++		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
++		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
++		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
++		xfs_btree_init_block(mp, lptr->buf_p, XFS_REFC_CRC_MAGIC,
++					level, 0, agno,
++					XFS_BTREE_CRC_BLOCKS);
++
++		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
++
++		/*
++		 * propagate extent record for first extent in new block up
++		 */
++		prop_refc_cursor(mp, agno, btree_curs, startbno, level);
++	}
++	/*
++	 * add inode info to current block
++	 */
++	be16_add_cpu(&bt_hdr->bb_numrecs, 1);
++
++	bt_key = XFS_REFCOUNT_KEY_ADDR(bt_hdr,
++				    be16_to_cpu(bt_hdr->bb_numrecs));
++	bt_ptr = XFS_REFCOUNT_PTR_ADDR(bt_hdr,
++				    be16_to_cpu(bt_hdr->bb_numrecs),
++				    mp->m_refc_mxr[1]);
++
++	bt_key->rc_startblock = cpu_to_be32(startbno);
++	*bt_ptr = cpu_to_be32(btree_curs->level[level-1].agbno);
 +}
 +
-+/**
-+ * init_refcount_cursor() -- Return a slab cursor that will return refcount
-+ *                           objects in order.
-+ * @agno: AG number.
-+ * @cur: The new cursor.
++/*
++ * rebuilds a refcount btree given a cursor.
 + */
-+int
-+init_refcount_cursor(
-+	xfs_agnumber_t		agno,
-+	struct xfs_slab_cursor	**cur)
++static void
++build_refcount_tree(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs)
 +{
-+	return init_slab_cursor(ag_rmaps[agno].ar_refcount_items, NULL, cur);
-+}
-+
-+/**
-+ * refcount_avoid_check() -- Disable the refcount btree check.
-+ */
-+void
-+refcount_avoid_check(void)
-+{
-+	refcbt_suspect = true;
-+}
-+
-+/**
-+ * check_refcounts() -- Compare the observed reference counts against
-+ *			what's in the ag btree.
-+ * @mp: XFS mount object
-+ * @agno: AG number
-+ */
-+int
-+check_refcounts(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
-+{
-+	struct xfs_slab_cursor	*rl_cur;
-+	struct xfs_btree_cur	*bt_cur = NULL;
++	xfs_agnumber_t		i;
++	xfs_agblock_t		j;
++	xfs_agblock_t		agbno;
++	struct xfs_btree_block	*bt_hdr;
++	struct xfs_refcount_irec	*refc_rec;
++	struct xfs_slab_cursor	*refc_cur;
++	struct xfs_refcount_rec	*bt_rec;
++	struct bt_stat_level	*lptr;
++	int			level = btree_curs->num_levels;
 +	int			error;
-+	int			have;
-+	int			i;
-+	struct xfs_buf		*agbp = NULL;
-+	struct xfs_refcount_irec	*rl_rec;
-+	struct xfs_refcount_irec	tmp;
-+	struct xfs_perag	*pag;		/* per allocation group data */
 +
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return 0;
-+	if (refcbt_suspect) {
-+		if (no_modify && agno == 0)
-+			do_warn(_("would rebuild corrupt refcount btrees.\n"));
-+		return 0;
++	for (i = 0; i < level; i++)  {
++		lptr = &btree_curs->level[i];
++
++		agbno = get_next_blockaddr(agno, i, btree_curs);
++		lptr->buf_p = libxfs_getbuf(mp->m_dev,
++					XFS_AGB_TO_DADDR(mp, agno, agbno),
++					XFS_FSB_TO_BB(mp, 1));
++
++		if (i == btree_curs->num_levels - 1)
++			btree_curs->root = agbno;
++
++		lptr->agbno = agbno;
++		lptr->prev_agbno = NULLAGBLOCK;
++		lptr->prev_buf_p = NULL;
++		/*
++		 * initialize block header
++		 */
++
++		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
++		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
++		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
++		xfs_btree_init_block(mp, lptr->buf_p, XFS_REFC_CRC_MAGIC,
++					i, 0, agno,
++					XFS_BTREE_CRC_BLOCKS);
 +	}
 +
-+	/* Create cursors to refcount structures */
-+	error = init_refcount_cursor(agno, &rl_cur);
++	/*
++	 * run along leaf, setting up records.  as we have to switch
++	 * blocks, call the prop_refc_cursor routine to set up the new
++	 * pointers for the parent.  that can recurse up to the root
++	 * if required.  set the sibling pointers for leaf level here.
++	 */
++	error = init_refcount_cursor(agno, &refc_cur);
 +	if (error)
-+		return error;
++		do_error(
++_("Insufficient memory to construct refcount cursor."));
++	refc_rec = pop_slab_cursor(refc_cur);
++	lptr = &btree_curs->level[0];
 +
-+	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-+	if (error)
-+		goto err;
++	for (i = 0; i < lptr->num_blocks; i++)  {
++		/*
++		 * block initialization, lay in block header
++		 */
++		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
++		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
++		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
++		xfs_btree_init_block(mp, lptr->buf_p, XFS_REFC_CRC_MAGIC,
++					0, 0, agno,
++					XFS_BTREE_CRC_BLOCKS);
 +
-+	/* Leave the per-ag data "uninitialized" since we rewrite it later */
-+	pag = xfs_perag_get(mp, agno);
-+	pag->pagf_init = 0;
-+	xfs_perag_put(pag);
++		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
++		bt_hdr->bb_numrecs = cpu_to_be16(lptr->num_recs_pb +
++							(lptr->modulo > 0));
 +
-+	bt_cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-+	if (!bt_cur) {
-+		error = -ENOMEM;
-+		goto err;
-+	}
++		if (lptr->modulo > 0)
++			lptr->modulo--;
 +
-+	rl_rec = pop_slab_cursor(rl_cur);
-+	while (rl_rec) {
-+		/* Look for a refcount record in the btree */
-+		error = xfs_refcountbt_lookup_le(bt_cur,
-+				rl_rec->rc_startblock, &have);
-+		if (error)
-+			goto err;
-+		if (!have) {
-+			do_warn(
-+_("Missing reference count record for (%u/%u) len %u count %u\n"),
-+				agno, rl_rec->rc_startblock,
-+				rl_rec->rc_blockcount, rl_rec->rc_refcount);
-+			goto next_loop;
++		if (lptr->num_recs_pb > 0)
++			prop_refc_cursor(mp, agno, btree_curs,
++					refc_rec->rc_startblock, 0);
++
++		bt_rec = (struct xfs_refcount_rec *)
++			  ((char *)bt_hdr + XFS_REFCOUNT_BLOCK_LEN);
++		for (j = 0; j < be16_to_cpu(bt_hdr->bb_numrecs); j++) {
++			ASSERT(refc_rec != NULL);
++			bt_rec[j].rc_startblock =
++					cpu_to_be32(refc_rec->rc_startblock);
++			bt_rec[j].rc_blockcount =
++					cpu_to_be32(refc_rec->rc_blockcount);
++			bt_rec[j].rc_refcount = cpu_to_be32(refc_rec->rc_refcount);
++
++			refc_rec = pop_slab_cursor(refc_cur);
 +		}
 +
-+		error = xfs_refcountbt_get_rec(bt_cur, &tmp, &i);
-+		if (error)
-+			goto err;
-+		if (!i) {
-+			do_warn(
-+_("Missing reference count record for (%u/%u) len %u count %u\n"),
-+				agno, rl_rec->rc_startblock,
-+				rl_rec->rc_blockcount, rl_rec->rc_refcount);
-+			goto next_loop;
++		if (refc_rec != NULL)  {
++			/*
++			 * get next leaf level block
++			 */
++			if (lptr->prev_buf_p != NULL)  {
++#ifdef XR_BLD_RL_TRACE
++				fprintf(stderr, "writing refcntbt agbno %u\n",
++					lptr->prev_agbno);
++#endif
++				ASSERT(lptr->prev_agbno != NULLAGBLOCK);
++				libxfs_writebuf(lptr->prev_buf_p, 0);
++			}
++			lptr->prev_buf_p = lptr->buf_p;
++			lptr->prev_agbno = lptr->agbno;
++			lptr->agbno = get_next_blockaddr(agno, 0, btree_curs);
++			bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(lptr->agbno);
++
++			lptr->buf_p = libxfs_getbuf(mp->m_dev,
++					XFS_AGB_TO_DADDR(mp, agno, lptr->agbno),
++					XFS_FSB_TO_BB(mp, 1));
 +		}
-+
-+		/* Compare each refcount observation against the btree's */
-+		if (tmp.rc_startblock != rl_rec->rc_startblock ||
-+		    tmp.rc_blockcount < rl_rec->rc_blockcount ||
-+		    tmp.rc_refcount < rl_rec->rc_refcount)
-+			do_warn(
-+_("Incorrect reference count: saw (%u/%u) len %u nlinks %u; should be (%u/%u) len %u nlinks %u\n"),
-+				agno, tmp.rc_startblock, tmp.rc_blockcount,
-+				tmp.rc_refcount, agno, rl_rec->rc_startblock,
-+				rl_rec->rc_blockcount, rl_rec->rc_refcount);
-+next_loop:
-+		rl_rec = pop_slab_cursor(rl_cur);
 +	}
-+
-+err:
-+	if (bt_cur)
-+		xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+	if (agbp)
-+		libxfs_putbuf(agbp);
-+	free_slab_cursor(&rl_cur);
-+	return 0;
++	free_slab_cursor(&refc_cur);
 +}
 +
-+/**
-  * fix_freelist() - Regenerate the AGFL, so that we don't run out of it while
-  *		    rebuilding the rmapbt.
-  * @mp: XFS mount object
-diff --git a/repair/rmap.h b/repair/rmap.h
-index d0bcde1..df7d489 100644
---- a/repair/rmap.h
-+++ b/repair/rmap.h
-@@ -40,6 +40,10 @@ extern void rmap_avoid_check(void);
- extern int check_rmaps(struct xfs_mount *, xfs_agnumber_t);
+ /*
+  * build both the agf and the agfl for an agno given both
+  * btree cursors.
+@@ -1637,7 +1921,8 @@ build_agf_agfl(xfs_mount_t	*mp,
+ 		bt_status_t	*bcnt_bt,
+ 		xfs_extlen_t	freeblks,	/* # free blocks in tree */
+ 		int		lostblocks,	/* # blocks that will be lost */
+-		bt_status_t	*rmap_bt)
++		bt_status_t	*rmap_bt,
++		bt_status_t	*refcnt_bt)
+ {
+ 	extent_tree_node_t	*ext_ptr;
+ 	xfs_buf_t		*agf_buf, *agfl_buf;
+@@ -1679,6 +1964,8 @@ build_agf_agfl(xfs_mount_t	*mp,
+ 	agf->agf_roots[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->root);
+ 	agf->agf_levels[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->num_levels);
+ 	agf->agf_freeblks = cpu_to_be32(freeblks);
++	agf->agf_refcount_root = cpu_to_be32(refcnt_bt->root);
++	agf->agf_refcount_level = cpu_to_be32(refcnt_bt->num_levels);
  
- extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
-+extern size_t refcount_record_count(struct xfs_mount *, xfs_agnumber_t);
-+extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
-+extern void refcount_avoid_check(void);
-+extern int check_refcounts(struct xfs_mount *, xfs_agnumber_t);
+ 	/*
+ 	 * Count and record the number of btree blocks consumed if required.
+@@ -1796,6 +2083,10 @@ build_agf_agfl(xfs_mount_t	*mp,
  
- extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
- 	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
-diff --git a/repair/scan.c b/repair/scan.c
-index 54b9b68..3e8633c 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1257,6 +1257,8 @@ _("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 	ASSERT(be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]) !=
+ 		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
++	ASSERT(be32_to_cpu(agf->agf_refcount_root) !=
++		be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]));
++	ASSERT(be32_to_cpu(agf->agf_refcount_root) !=
++		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
+ 
+ 	libxfs_writebuf(agf_buf, 0);
+ 
+@@ -1865,6 +2156,7 @@ phase5_func(
+ 	bt_status_t	ino_btree_curs;
+ 	bt_status_t	fino_btree_curs;
+ 	bt_status_t	rmap_btree_curs;
++	bt_status_t	refcnt_btree_curs;
+ 	int		extra_blocks = 0;
+ 	uint		num_freeblocks;
+ 	xfs_extlen_t	freeblks1;
+@@ -1927,6 +2219,12 @@ phase5_func(
+ 		 */
+ 		init_rmapbt_cursor(mp, agno, &rmap_btree_curs);
+ 
++		/*
++		 * Set up the btree cursors for the on-disk refcount btrees,
++		 * which includes pre-allocating all required blocks.
++		 */
++		init_refc_cursor(mp, agno, &refcnt_btree_curs);
++
+ 		num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
+ 		/*
+ 		 * lose two blocks per AG -- the space tree roots
+@@ -2020,12 +2318,17 @@ phase5_func(
+ 					rmap_btree_curs.num_free_blocks) - 1;
  		}
- 	}
- out:
-+	if (suspect)
-+		refcount_avoid_check();
- 	return;
- }
  
++		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++			build_refcount_tree(mp, agno, &refcnt_btree_curs);
++			write_cursor(&refcnt_btree_curs);
++		}
++
+ 		/*
+ 		 * set up agf and agfl
+ 		 */
+ 		build_agf_agfl(mp, agno, &bno_btree_curs,
+ 				&bcnt_btree_curs, freeblks1, extra_blocks,
+-				&rmap_btree_curs);
++				&rmap_btree_curs, &refcnt_btree_curs);
+ 		/*
+ 		 * build inode allocation tree.
+ 		 */
+@@ -2056,6 +2359,8 @@ phase5_func(
+ 		finish_cursor(&ino_btree_curs);
+ 		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 			finish_cursor(&rmap_btree_curs);
++		if (xfs_sb_version_hasreflink(&mp->m_sb))
++			finish_cursor(&refcnt_btree_curs);
+ 		if (xfs_sb_version_hasfinobt(&mp->m_sb))
+ 			finish_cursor(&fino_btree_curs);
+ 		finish_cursor(&bcnt_btree_curs);
 
 _______________________________________________
 xfs mailing list
