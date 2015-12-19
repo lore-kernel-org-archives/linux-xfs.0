@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DBA8A7F51
-	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 23:22:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7CAE6AC003
-	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:30 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C241D7F53
+	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 23:22:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B26B18F806F
+	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:34 -0800 (PST)
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id GKFOAF5gCHHUSIRH for
-	<xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:28 -0800 (PST)
+	cuda.sgi.com with ESMTP id SrO5jZyBpxDxIK1p for
+	<xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:33 -0800 (PST)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 0/7] DAX fsync/msync support
-Date: Fri, 18 Dec 2015 22:22:13 -0700
-Message-Id: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 3/7] mm: add find_get_entries_tag()
+Date: Fri, 18 Dec 2015 22:22:16 -0700
+Message-Id: <1450502540-8744-4-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +30,112 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Changes from v4:
- - Explicity prevent shadow entries from being added to radix trees for DAX
-   mappings in patch 2.  The only shadow entries that would be generated
-   for DAX radix trees would be to track zero page mappings that were
-   created for holes.  These pages would receive minimal benefit from
-   having shadow entries, and the choice to have only one type of
-   exceptional entry in a given radix tree makes the logic simpler both in
-   clear_exceptional_entry() and in the rest of DAX.  (Jan)
+Add find_get_entries_tag() to the family of functions that include
+find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
+needed for DAX dirty page handling because we need a list of both page
+offsets and radix tree entries ('indices' and 'entries' in this function)
+that are marked with the PAGECACHE_TAG_TOWRITE tag.
 
- - Added Reviewed-by from Jan to patch 3.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ include/linux/pagemap.h |  3 +++
+ mm/filemap.c            | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 71 insertions(+)
 
-This series is built upon ext4/master.  A working tree with this series
-applied can be found here:
-
-https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=fsync_v5
-
-Ross Zwisler (7):
-  pmem: add wb_cache_pmem() to the PMEM API
-  dax: support dirty DAX entries in radix tree
-  mm: add find_get_entries_tag()
-  dax: add support for fsync/sync
-  ext2: call dax_pfn_mkwrite() for DAX fsync/msync
-  ext4: call dax_pfn_mkwrite() for DAX fsync/msync
-  xfs: call dax_pfn_mkwrite() for DAX fsync/msync
-
- arch/x86/include/asm/pmem.h |  11 +--
- fs/block_dev.c              |   3 +-
- fs/dax.c                    | 159 ++++++++++++++++++++++++++++++++++++++++++--
- fs/ext2/file.c              |   4 +-
- fs/ext4/file.c              |   4 +-
- fs/inode.c                  |   1 +
- fs/xfs/xfs_file.c           |   7 +-
- include/linux/dax.h         |   7 ++
- include/linux/fs.h          |   1 +
- include/linux/pagemap.h     |   3 +
- include/linux/pmem.h        |  22 +++++-
- include/linux/radix-tree.h  |   9 +++
- mm/filemap.c                |  84 ++++++++++++++++++++++-
- mm/truncate.c               |  64 ++++++++++--------
- mm/vmscan.c                 |   9 ++-
- 15 files changed, 339 insertions(+), 49 deletions(-)
-
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 26eabf5..4db0425 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -361,6 +361,9 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t start,
+ 			       unsigned int nr_pages, struct page **pages);
+ unsigned find_get_pages_tag(struct address_space *mapping, pgoff_t *index,
+ 			int tag, unsigned int nr_pages, struct page **pages);
++unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
++			int tag, unsigned int nr_entries,
++			struct page **entries, pgoff_t *indices);
+ 
+ struct page *grab_cache_page_write_begin(struct address_space *mapping,
+ 			pgoff_t index, unsigned flags);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 167a4d9..99dfbc9 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1498,6 +1498,74 @@ repeat:
+ }
+ EXPORT_SYMBOL(find_get_pages_tag);
+ 
++/**
++ * find_get_entries_tag - find and return entries that match @tag
++ * @mapping:	the address_space to search
++ * @start:	the starting page cache index
++ * @tag:	the tag index
++ * @nr_entries:	the maximum number of entries
++ * @entries:	where the resulting entries are placed
++ * @indices:	the cache indices corresponding to the entries in @entries
++ *
++ * Like find_get_entries, except we only return entries which are tagged with
++ * @tag.
++ */
++unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
++			int tag, unsigned int nr_entries,
++			struct page **entries, pgoff_t *indices)
++{
++	void **slot;
++	unsigned int ret = 0;
++	struct radix_tree_iter iter;
++
++	if (!nr_entries)
++		return 0;
++
++	rcu_read_lock();
++restart:
++	radix_tree_for_each_tagged(slot, &mapping->page_tree,
++				   &iter, start, tag) {
++		struct page *page;
++repeat:
++		page = radix_tree_deref_slot(slot);
++		if (unlikely(!page))
++			continue;
++		if (radix_tree_exception(page)) {
++			if (radix_tree_deref_retry(page)) {
++				/*
++				 * Transient condition which can only trigger
++				 * when entry at index 0 moves out of or back
++				 * to root: none yet gotten, safe to restart.
++				 */
++				goto restart;
++			}
++
++			/*
++			 * A shadow entry of a recently evicted page, a swap
++			 * entry from shmem/tmpfs or a DAX entry.  Return it
++			 * without attempting to raise page count.
++			 */
++			goto export;
++		}
++		if (!page_cache_get_speculative(page))
++			goto repeat;
++
++		/* Has the page moved? */
++		if (unlikely(page != *slot)) {
++			page_cache_release(page);
++			goto repeat;
++		}
++export:
++		indices[ret] = iter.index;
++		entries[ret] = page;
++		if (++ret == nr_entries)
++			break;
++	}
++	rcu_read_unlock();
++	return ret;
++}
++EXPORT_SYMBOL(find_get_entries_tag);
++
+ /*
+  * CD/DVDs are error prone. When a medium error occurs, the driver may fail
+  * a _large_ part of the i/o request. Imagine the worst scenario:
 -- 
 2.5.0
 
