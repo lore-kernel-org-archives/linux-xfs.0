@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5B9EC8059
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:00:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C9D78F8039
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:00 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Rqg2nVYRm44pntqR (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 28901805F
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:00:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A6D130404E
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:06 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id vjimqiGqiuCUhpx6 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 00:59:59 -0800 (PST)
-Subject: [PATCH 32/76] xfs: enable the rmap btree functionality
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:04 -0800 (PST)
+Subject: [PATCH 33/76] xfs: disable XFS_IOC_SWAPEXT when rmap btree is enabled
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 00:59:55 -0800
-Message-ID: <20151219085955.12713.69171.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:00:02 -0800
+Message-ID: <20151219090002.12713.87113.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -33,46 +33,42 @@ Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
 >From : Dave Chinner <dchinner@redhat.com>
 
-Add the feature flag to the supported matrix so that the kernel can
-mount and use rmap btree enabled filesystems
+Swapping extents between two inodes requires the owner to be updated
+in the rmap tree for all the extents that are swapped. This code
+does not yet exist, so switch off the XFS_IOC_SWAPEXT ioctl until
+support has been implemented. This will nee dto be done before the
+rmap btree code can have the experimental tag removed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- fs/xfs/libxfs/xfs_sb.c     |    5 +++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_bmap_util.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 2799746..4678831 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -457,7 +457,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
--		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
-+		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
-+		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index c9114b7..2590c89 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -223,6 +223,11 @@ xfs_mount_validate_sb(
- 		return -EINVAL;
- 	}
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index d844997..677e3aa6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1729,6 +1729,19 @@ xfs_swap_extents(
+ 	__uint64_t	tmp;
+ 	int		lock_flags;
  
-+	if (xfs_sb_version_hasrmapbt(sbp)) {
-+		xfs_alert(mp,
-+"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
++	/*
++	 * We can't swap extents on rmap btree enabled filesystems yet
++	 * as there is no mechanism to update the owner of extents in
++	 * the rmap tree yet. Hence, for the moment, just reject attempts
++	 * to swap extents with EINVAL after emitting a warning once to remind
++	 * us this needs fixing.
++	 */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		WARN_ONCE(1,
++	"XFS: XFS_IOC_SWAPEXT not supported on RMAP enabled filesystems\n");
++		return -EINVAL;
 +	}
 +
- 	/*
- 	 * More sanity checking.  Most of these were stolen directly from
- 	 * xfs_repair.
+ 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
+ 	if (!tempifp) {
+ 		error = -ENOMEM;
 
 _______________________________________________
 xfs mailing list
