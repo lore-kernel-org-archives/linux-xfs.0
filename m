@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B0FD729E40
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:08:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 33BF68F8039
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:08:53 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id bZoFpEIGoeUsxTyG (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 22F3529E2A
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:08:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94C5AAC005
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:08:56 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id aK2D8qDVUfkuizdh (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:08:50 -0800 (PST)
-Subject: [PATCH 34/53] xfs_repair: rebuild reverse-mapping btree
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:08:53 -0800 (PST)
+Subject: [PATCH 35/53] xfs_repair: add per-AG btree blocks to rmap data and
+	add to rmapbt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:08:43 -0800
-Message-ID: <20151219090843.14255.66422.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:08:50 -0800
+Message-ID: <20151219090850.14255.87690.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,412 +32,406 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Rebuild the reverse-mapping btree with the rmap observations
-corresponding to file extents, bmbt blocks, and fixed per-AG
-metadata.
+Since we can't know the location of the new per-AG btree blocks prior
+to constructing the rmapbt, we must record raw reverse-mapping data for
+btree blocks while the new btrees are under construction.  After the
+rmapbt has been rebuilt, merge the btree rmap entries into the rmapbt
+with the libxfs code.
+
+Also refactor the freelist fixing code since we need it to tidy up
+the AGFL after each rmapbt allocation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase5.c |  321 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 316 insertions(+), 5 deletions(-)
+ repair/phase5.c |   47 ++++++------
+ repair/rmap.c   |  220 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h   |    4 +
+ 3 files changed, 248 insertions(+), 23 deletions(-)
 
 
 diff --git a/repair/phase5.c b/repair/phase5.c
-index 109e37b..f37ce6b 100644
+index f37ce6b..734291a 100644
 --- a/repair/phase5.c
 +++ b/repair/phase5.c
-@@ -28,6 +28,8 @@
- #include "versions.h"
- #include "threads.h"
- #include "progress.h"
-+#include "slab.h"
-+#include "rmap.h"
+@@ -74,6 +74,7 @@ typedef struct bt_status  {
+ 	 * per-level status info
+ 	 */
+ 	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
++	uint64_t		owner;		/* owner */
+ } bt_status_t;
  
  /*
-  * we maintain the current slice (path from root to leaf)
-@@ -1326,6 +1328,292 @@ nextrec:
- 	}
- }
- 
-+/* rebuild the rmap tree */
-+
-+#define XR_RMAPBT_BLOCK_MAXRECS(mp, level) \
-+			((mp)->m_rmap_mxr[(level) != 0])
-+
-+/*
-+ * we don't have to worry here about how chewing up free extents
-+ * may perturb things because rmap tree building happens before
-+ * freespace tree building.
-+ */
-+static void
-+init_rmapbt_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs)
-+{
-+	size_t			num_recs;
-+	int			level;
-+	bt_stat_level_t		*lptr;
-+	bt_stat_level_t		*p_lptr;
-+	xfs_extlen_t		blocks_allocated;
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		memset(btree_curs, 0, sizeof(bt_status_t));
-+		return;
-+	}
-+
-+	lptr = &btree_curs->level[0];
-+	btree_curs->init = 1;
-+
-+	/*
-+	 * build up statistics
-+	 */
-+	num_recs = rmap_record_count(mp, agno);
-+	if (num_recs == 0) {
-+		/*
-+		 * easy corner-case -- no refcount records
-+		 */
-+		lptr->num_blocks = 1;
-+		lptr->modulo = 0;
-+		lptr->num_recs_pb = 0;
-+		lptr->num_recs_tot = 0;
-+
-+		btree_curs->num_levels = 1;
-+		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
-+
-+		setup_cursor(mp, agno, btree_curs);
-+
-+		return;
-+	}
-+
-+	blocks_allocated = lptr->num_blocks = howmany(num_recs,
-+					XR_RMAPBT_BLOCK_MAXRECS(mp, 0));
-+
-+	lptr->modulo = num_recs % lptr->num_blocks;
-+	lptr->num_recs_pb = num_recs / lptr->num_blocks;
-+	lptr->num_recs_tot = num_recs;
-+	level = 1;
-+
-+	if (lptr->num_blocks > 1)  {
-+		for (; btree_curs->level[level-1].num_blocks > 1
-+				&& level < XFS_BTREE_MAXLEVELS;
-+				level++)  {
-+			lptr = &btree_curs->level[level];
-+			p_lptr = &btree_curs->level[level - 1];
-+			lptr->num_blocks = howmany(p_lptr->num_blocks,
-+				XR_RMAPBT_BLOCK_MAXRECS(mp, level));
-+			lptr->modulo = p_lptr->num_blocks % lptr->num_blocks;
-+			lptr->num_recs_pb = p_lptr->num_blocks
-+					/ lptr->num_blocks;
-+			lptr->num_recs_tot = p_lptr->num_blocks;
-+
-+			blocks_allocated += lptr->num_blocks;
-+		}
-+	}
-+	ASSERT(lptr->num_blocks == 1);
-+	btree_curs->num_levels = level;
-+
-+	btree_curs->num_tot_blocks = btree_curs->num_free_blocks
-+			= blocks_allocated;
-+
-+	setup_cursor(mp, agno, btree_curs);
-+}
-+
-+static void
-+prop_rmap_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-+	struct xfs_rmap_irec *rm_rec, int level)
-+{
-+	struct xfs_btree_block	*bt_hdr;
-+	struct xfs_rmap_key	*bt_key;
-+	xfs_rmap_ptr_t		*bt_ptr;
-+	xfs_agblock_t		agbno;
-+	bt_stat_level_t		*lptr;
-+
-+	level++;
-+
-+	if (level >= btree_curs->num_levels)
-+		return;
-+
-+	lptr = &btree_curs->level[level];
-+	bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+
-+	if (be16_to_cpu(bt_hdr->bb_numrecs) == 0)  {
-+		/*
-+		 * this only happens once to initialize the
-+		 * first path up the left side of the tree
-+		 * where the agbno's are already set up
-+		 */
-+		prop_rmap_cursor(mp, agno, btree_curs, rm_rec, level);
-+	}
-+
-+	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
-+				lptr->num_recs_pb + (lptr->modulo > 0))  {
-+		/*
-+		 * write out current prev block, grab us a new block,
-+		 * and set the rightsib pointer of current block
-+		 */
-+#ifdef XR_BLD_INO_TRACE
-+		fprintf(stderr, " ino prop agbno %d ", lptr->prev_agbno);
-+#endif
-+		if (lptr->prev_agbno != NULLAGBLOCK)  {
-+			ASSERT(lptr->prev_buf_p != NULL);
-+			libxfs_writebuf(lptr->prev_buf_p, 0);
-+		}
-+		lptr->prev_agbno = lptr->agbno;
-+		lptr->prev_buf_p = lptr->buf_p;
-+		agbno = get_next_blockaddr(agno, level, btree_curs);
-+
-+		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(agbno);
-+
-+		lptr->buf_p = libxfs_getbuf(mp->m_dev,
-+					XFS_AGB_TO_DADDR(mp, agno, agbno),
-+					XFS_FSB_TO_BB(mp, 1));
-+		lptr->agbno = agbno;
-+
-+		if (lptr->modulo)
-+			lptr->modulo--;
-+
-+		/*
-+		 * initialize block header
-+		 */
-+		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
-+		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-+		xfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
-+					level, 0, agno,
-+					XFS_BTREE_CRC_BLOCKS);
-+
-+		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-+
-+		/*
-+		 * propagate extent record for first extent in new block up
-+		 */
-+		prop_rmap_cursor(mp, agno, btree_curs, rm_rec, level);
-+	}
-+	/*
-+	 * add inode info to current block
-+	 */
-+	be16_add_cpu(&bt_hdr->bb_numrecs, 1);
-+
-+	bt_key = XFS_RMAP_KEY_ADDR(bt_hdr,
-+				    be16_to_cpu(bt_hdr->bb_numrecs));
-+	bt_ptr = XFS_RMAP_PTR_ADDR(bt_hdr,
-+				    be16_to_cpu(bt_hdr->bb_numrecs),
-+				    mp->m_rmap_mxr[1]);
-+
-+	bt_key->rm_startblock = cpu_to_be32(rm_rec->rm_startblock);
-+	bt_key->rm_owner = cpu_to_be64(rm_rec->rm_owner);
-+	bt_key->rm_offset = cpu_to_be64(rm_rec->rm_offset);
-+
-+	*bt_ptr = cpu_to_be32(btree_curs->level[level-1].agbno);
-+}
-+
-+/*
-+ * rebuilds a rmap btree given a cursor.
-+ */
-+static void
-+build_rmap_tree(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs)
-+{
-+	xfs_agnumber_t		i;
-+	xfs_agblock_t		j;
-+	xfs_agblock_t		agbno;
-+	struct xfs_btree_block	*bt_hdr;
-+	struct xfs_rmap_irec	*rm_rec;
-+	struct xfs_slab_cursor	*rmap_cur;
-+	struct xfs_rmap_rec	*bt_rec;
-+	struct bt_stat_level	*lptr;
-+	int			level = btree_curs->num_levels;
+@@ -205,6 +206,7 @@ setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
+ 	extent_tree_node_t	*bno_ext_ptr;
+ 	xfs_extlen_t		blocks_allocated;
+ 	xfs_agblock_t		*agb_ptr;
 +	int			error;
-+
-+	for (i = 0; i < level; i++)  {
-+		lptr = &btree_curs->level[i];
-+
-+		agbno = get_next_blockaddr(agno, i, btree_curs);
-+		lptr->buf_p = libxfs_getbuf(mp->m_dev,
-+					XFS_AGB_TO_DADDR(mp, agno, agbno),
-+					XFS_FSB_TO_BB(mp, 1));
-+
-+		if (i == btree_curs->num_levels - 1)
-+			btree_curs->root = agbno;
-+
-+		lptr->agbno = agbno;
-+		lptr->prev_agbno = NULLAGBLOCK;
-+		lptr->prev_buf_p = NULL;
-+		/*
-+		 * initialize block header
-+		 */
-+
-+		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
-+		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-+		xfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
-+					i, 0, agno,
-+					XFS_BTREE_CRC_BLOCKS);
-+	}
-+
-+	/*
-+	 * run along leaf, setting up records.  as we have to switch
-+	 * blocks, call the prop_rmap_cursor routine to set up the new
-+	 * pointers for the parent.  that can recurse up to the root
-+	 * if required.  set the sibling pointers for leaf level here.
-+	 */
-+	error = init_rmap_cursor(agno, &rmap_cur);
-+	if (error)
-+		do_error(
-+_("Insufficient memory to construct reverse-map cursor."));
-+	rm_rec = pop_slab_cursor(rmap_cur);
-+	lptr = &btree_curs->level[0];
-+
-+	for (i = 0; i < lptr->num_blocks; i++)  {
-+		/*
-+		 * block initialization, lay in block header
-+		 */
-+		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
-+		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-+		xfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
-+					0, 0, agno,
-+					XFS_BTREE_CRC_BLOCKS);
-+
-+		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-+		bt_hdr->bb_numrecs = cpu_to_be16(lptr->num_recs_pb +
-+							(lptr->modulo > 0));
-+
-+		if (lptr->modulo > 0)
-+			lptr->modulo--;
-+
-+		if (lptr->num_recs_pb > 0)
-+			prop_rmap_cursor(mp, agno, btree_curs, rm_rec, 0);
-+
-+		bt_rec = (struct xfs_rmap_rec *)
-+			  ((char *)bt_hdr + XFS_RMAP_BLOCK_LEN);
-+		for (j = 0; j < be16_to_cpu(bt_hdr->bb_numrecs); j++) {
-+			ASSERT(rm_rec != NULL);
-+			bt_rec[j].rm_startblock =
-+					cpu_to_be32(rm_rec->rm_startblock);
-+			bt_rec[j].rm_blockcount =
-+					cpu_to_be32(rm_rec->rm_blockcount);
-+			bt_rec[j].rm_owner = cpu_to_be64(rm_rec->rm_owner);
-+			bt_rec[j].rm_offset = cpu_to_be64(rm_rec->rm_offset);
-+
-+			rm_rec = pop_slab_cursor(rmap_cur);
-+		}
-+
-+		if (rm_rec != NULL)  {
-+			/*
-+			 * get next leaf level block
-+			 */
-+			if (lptr->prev_buf_p != NULL)  {
-+#ifdef XR_BLD_RL_TRACE
-+				fprintf(stderr, "writing rmapbt agbno %u\n",
-+					lptr->prev_agbno);
-+#endif
-+				ASSERT(lptr->prev_agbno != NULLAGBLOCK);
-+				libxfs_writebuf(lptr->prev_buf_p, 0);
-+			}
-+			lptr->prev_buf_p = lptr->buf_p;
-+			lptr->prev_agbno = lptr->agbno;
-+			lptr->agbno = get_next_blockaddr(agno, 0, btree_curs);
-+			bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(lptr->agbno);
-+
-+			lptr->buf_p = libxfs_getbuf(mp->m_dev,
-+					XFS_AGB_TO_DADDR(mp, agno, lptr->agbno),
-+					XFS_FSB_TO_BB(mp, 1));
-+		}
-+	}
-+	free_slab_cursor(&rmap_cur);
-+}
-+
- /*
-  * build both the agf and the agfl for an agno given both
-  * btree cursors.
-@@ -1338,7 +1626,8 @@ build_agf_agfl(xfs_mount_t	*mp,
- 		bt_status_t	*bno_bt,
- 		bt_status_t	*bcnt_bt,
- 		xfs_extlen_t	freeblks,	/* # free blocks in tree */
--		int		lostblocks)	/* # blocks that will be lost */
-+		int		lostblocks,	/* # blocks that will be lost */
-+		bt_status_t	*rmap_bt)
- {
- 	extent_tree_node_t	*ext_ptr;
- 	xfs_buf_t		*agf_buf, *agfl_buf;
-@@ -1377,20 +1666,25 @@ build_agf_agfl(xfs_mount_t	*mp,
- 	agf->agf_levels[XFS_BTNUM_BNO] = cpu_to_be32(bno_bt->num_levels);
- 	agf->agf_roots[XFS_BTNUM_CNT] = cpu_to_be32(bcnt_bt->root);
- 	agf->agf_levels[XFS_BTNUM_CNT] = cpu_to_be32(bcnt_bt->num_levels);
-+	agf->agf_roots[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->root);
-+	agf->agf_levels[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->num_levels);
- 	agf->agf_freeblks = cpu_to_be32(freeblks);
  
  	/*
- 	 * Count and record the number of btree blocks consumed if required.
- 	 */
- 	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-+		unsigned int blks;
+ 	 * get the number of blocks we need to allocate, then
+@@ -249,6 +251,12 @@ setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
+ 			blocks_allocated++;
+ 		}
+ 
++		error = add_ag_rmap(mp, agno, ext_ptr->ex_startblock, u,
++				curs->owner);
++		if (error)
++			do_error(_("could not set up btree rmaps: %s\n"),
++				strerror(-error));
++
  		/*
- 		 * Don't count the root blocks as they are already
- 		 * accounted for.
- 		 */
--		agf->agf_btreeblks = cpu_to_be32(
--			(bno_bt->num_tot_blocks - bno_bt->num_free_blocks) +
-+		blks = (bno_bt->num_tot_blocks - bno_bt->num_free_blocks) +
- 			(bcnt_bt->num_tot_blocks - bcnt_bt->num_free_blocks) -
--			2);
-+			2;
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+			blks += rmap_bt->num_tot_blocks - rmap_bt->num_free_blocks - 1;
-+		agf->agf_btreeblks = cpu_to_be32(blks);
+ 		 * if we only used part of this last extent, then we
+ 		 * need only to reset the extent in the extent
+@@ -916,6 +924,7 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 
+ 	lptr = &btree_curs->level[0];
+ 	btree_curs->init = 1;
++	btree_curs->owner = XFS_RMAP_OWN_INOBT;
+ 
+ 	/*
+ 	 * build up statistics
+@@ -1354,6 +1363,7 @@ init_rmapbt_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs
+ 
+ 	lptr = &btree_curs->level[0];
+ 	btree_curs->init = 1;
++	btree_curs->owner = XFS_RMAP_OWN_AG;
+ 
+ 	/*
+ 	 * build up statistics
+@@ -1766,6 +1776,7 @@ build_agf_agfl(xfs_mount_t	*mp,
+ 		agf->agf_flfirst = 0;
+ 		agf->agf_fllast = cpu_to_be32(i - 1);
+ 		agf->agf_flcount = cpu_to_be32(i);
++		rmap_store_agflcount(mp, agno, i);
+ 
  #ifdef XR_BLD_FREE_TRACE
- 		fprintf(stderr, "agf->agf_btreeblks = %u\n",
- 				be32_to_cpu(agf->agf_btreeblks));
-@@ -1581,6 +1875,7 @@ phase5_func(
- 	bt_status_t	bcnt_btree_curs;
- 	bt_status_t	ino_btree_curs;
- 	bt_status_t	fino_btree_curs;
-+	bt_status_t	rmap_btree_curs;
- 	int		extra_blocks = 0;
- 	uint		num_freeblocks;
- 	xfs_extlen_t	freeblks1;
-@@ -1636,6 +1931,12 @@ phase5_func(
- 		sb_icount_ag[agno] += num_inos;
- 		sb_ifree_ag[agno] += num_free_inos;
+ 		fprintf(stderr, "writing agfl for ag %u\n", agno);
+@@ -1790,30 +1801,8 @@ build_agf_agfl(xfs_mount_t	*mp,
  
-+		/*
-+		 * Set up the btree cursors for the on-disk rmap btrees,
-+		 * which includes pre-allocating all required blocks.
-+		 */
-+		init_rmapbt_cursor(mp, agno, &rmap_btree_curs);
-+
- 		num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
- 		/*
- 		 * lose two blocks per AG -- the space tree roots
-@@ -1720,11 +2021,19 @@ phase5_func(
+ 	/*
+ 	 * now fix up the free list appropriately
+-	 * XXX: code lifted from mkfs, should be shared.
+ 	 */
+-	{
+-		xfs_alloc_arg_t	args;
+-		xfs_trans_t	*tp;
+-		struct xfs_trans_res tres = {0};
+-		int		error;
+-
+-		memset(&args, 0, sizeof(args));
+-		args.tp = tp = libxfs_trans_alloc(mp, 0);
+-		args.mp = mp;
+-		args.agno = agno;
+-		args.alignment = 1;
+-		args.pag = xfs_perag_get(mp,agno);
+-		libxfs_trans_reserve(tp, &tres,
+-				     xfs_alloc_min_freelist(mp, args.pag), 0);
+-		error = libxfs_alloc_fix_freelist(&args, 0);
+-		xfs_perag_put(args.pag);
+-		if (error) {
+-			do_error(_("failed to fix AGFL on AG %d, error %d\n"),
+-					agno, error);
+-		}
+-		libxfs_trans_commit(tp);
+-	}
++	fix_freelist(mp, agno, true);
  
- 		ASSERT(freeblks1 == freeblks2);
+ #ifdef XR_BLD_FREE_TRACE
+ 	fprintf(stderr, "wrote agf for ag %u\n", agno);
+@@ -1885,6 +1874,7 @@ phase5_func(
+ 	xfs_agblock_t	num_extents;
+ 	__uint32_t	magic;
+ 	struct agi_stat	agi_stat = {0,};
++	int		error;
  
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+			build_rmap_tree(mp, agno, &rmap_btree_curs);
-+			write_cursor(&rmap_btree_curs);
-+			sb_fdblocks_ag[agno] += (rmap_btree_curs.num_tot_blocks -
-+					rmap_btree_curs.num_free_blocks) - 1;
-+		}
-+
- 		/*
- 		 * set up agf and agfl
- 		 */
- 		build_agf_agfl(mp, agno, &bno_btree_curs,
--				&bcnt_btree_curs, freeblks1, extra_blocks);
-+				&bcnt_btree_curs, freeblks1, extra_blocks,
-+				&rmap_btree_curs);
- 		/*
- 		 * build inode allocation tree.
- 		 */
-@@ -1753,6 +2062,8 @@ phase5_func(
- 		 */
- 		finish_cursor(&bno_btree_curs);
- 		finish_cursor(&ino_btree_curs);
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+			finish_cursor(&rmap_btree_curs);
+ 	if (verbose)
+ 		do_log(_("        - agno = %d\n"), agno);
+@@ -1990,6 +1980,8 @@ phase5_func(
+ 
+ 		bcnt_btree_curs = bno_btree_curs;
+ 
++		bno_btree_curs.owner = XFS_RMAP_OWN_AG;
++		bcnt_btree_curs.owner = XFS_RMAP_OWN_AG;
+ 		setup_cursor(mp, agno, &bno_btree_curs);
+ 		setup_cursor(mp, agno, &bcnt_btree_curs);
+ 
+@@ -2067,6 +2059,15 @@ phase5_func(
  		if (xfs_sb_version_hasfinobt(&mp->m_sb))
  			finish_cursor(&fino_btree_curs);
  		finish_cursor(&bcnt_btree_curs);
++
++		/*
++		 * Put the per-AG btree rmap data into the rmapbt
++		 */
++		error = store_ag_btree_rmap_data(mp, agno);
++		if (error)
++			do_error(
++_("unable to add AG %u reverse-mapping data to btree.\n"), agno);
++
+ 		/*
+ 		 * release the incore per-AG bno/bcnt trees so
+ 		 * the extent nodes can be recycled
+diff --git a/repair/rmap.c b/repair/rmap.c
+index bb1206e..5d49eef 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -38,6 +38,8 @@
+ struct xfs_ag_rmap {
+ 	struct xfs_slab	*ar_rmaps;		/* rmap observations, p4 */
+ 	struct xfs_slab	*ar_raw_rmaps;		/* unmerged rmaps */
++	int		ar_flcount;		/* agfl entries from leftover */
++						/* agbt allocations */
+ };
+ 
+ static struct xfs_ag_rmap *ag_rmaps;
+@@ -436,6 +438,144 @@ out:
+ 	return error;
+ }
+ 
++/**
++ * store_ag_btree_rmap_data() - Copy the per-AG btree reverse-mapping data
++ *				into the rmapbt.
++ *
++ * At rmapbt reconstruction time, the rmapbt will be populated _only_ with
++ * rmaps for file extents, inode chunks, AG headers, and bmbt blocks.  While
++ * building the AG btrees we can record all the blocks allocated for each
++ * btree, but we cannot resolve the conflict between the fact that one has to
++ * finish allocating the space for the rmapbt before building the bnobt and the
++ * fact that allocating blocks for the bnobt requires adding rmapbt entries.
++ * Therefore we record in-core the rmaps for each btree and here use the
++ * libxfs rmap functions to finish building the rmap btree.
++ *
++ * During AGF/AGFL reconstruction in phase 5, rmaps for the AG btrees are
++ * recorded in memory.  The rmapbt has not been set up yet, so we need to be
++ * able to "expand" the AGFL without updating the rmapbt.  After we've written
++ * out the new AGF header the new rmapbt is available, so this function reads
++ * each AGFL to generate rmap entries.  These entries are merged with the AG
++ * btree rmap entries, and then we use libxfs' rmap functions to add them to
++ * the rmapbt, after which it is fully regenerated.
++ *
++ * @mp: XFS mount.
++ * @agno: AG number.
++ */
++int
++store_ag_btree_rmap_data(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_slab_cursor	*rm_cur;
++	struct xfs_rmap_irec	*rm_rec = NULL;
++	struct xfs_btree_cur	*bt_cur = NULL;
++	struct xfs_buf		*agbp = NULL;
++	struct xfs_buf		*agflbp = NULL;
++	struct xfs_trans	*tp;
++	struct xfs_trans_res tres = {0};
++	__be32			*agfl_bno, *b;
++	int			error = 0;
++
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return 0;
++
++	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
++	free_slab(&ag_rmaps[agno].ar_rmaps);
++	error = init_slab(&ag_rmaps[agno].ar_rmaps,
++				  sizeof(struct xfs_rmap_irec));
++	if (error)
++		goto err;
++
++	/* Add the AGFL blocks to the rmap list */
++	error = xfs_trans_read_buf(
++			mp, NULL, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agflbp, &xfs_agfl_buf_ops);
++	if (error)
++		goto err;
++
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
++	agfl_bno += ag_rmaps[agno].ar_flcount;
++	b = agfl_bno;
++	while (*b != NULLAGBLOCK && b - agfl_bno <= XFS_AGFL_SIZE(mp)) {
++		error = add_ag_rmap(mp, agno, be32_to_cpu(*b), 1,
++				XFS_RMAP_OWN_AG);
++		if (error)
++			goto err;
++		b++;
++	}
++	libxfs_putbuf(agflbp);
++	agflbp = NULL;
++
++	/* Merge all the raw rmaps into the main list */
++	error = fold_raw_rmaps(mp, agno);
++	if (error)
++		goto err;
++
++	/* Create cursors to refcount structures */
++	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
++			&rm_cur);
++	if (error)
++		goto err;
++
++	/* Insert rmaps into the btree one at a time */
++	rm_rec = pop_slab_cursor(rm_cur);
++	while (rm_rec) {
++		tp = libxfs_trans_alloc(mp, 0);
++		if (!tp) {
++			error = -ENOMEM;
++			goto err_slab;
++		}
++
++		error = -libxfs_trans_reserve(tp, &tres, 16, 0);
++		if (error)
++			goto err_trans;
++
++		error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++		if (error)
++			goto err_trans;
++
++		bt_cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
++		if (!bt_cur) {
++			error = -ENOMEM;
++			goto err_agbp;
++		}
++
++		error = xfs_rmapbt_insert(bt_cur, rm_rec->rm_startblock,
++				rm_rec->rm_blockcount, rm_rec->rm_owner,
++				rm_rec->rm_offset);
++		if (error)
++			goto err_rmapcur;
++
++		xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++		error = -libxfs_trans_commit(tp);
++		if (error)
++			goto err_slab;
++
++		fix_freelist(mp, agno, false);
++
++		rm_rec = pop_slab_cursor(rm_cur);
++	}
++
++	free_slab_cursor(&rm_cur);
++	return 0;
++
++err_rmapcur:
++	xfs_btree_del_cursor(bt_cur, XFS_BTREE_ERROR);
++err_agbp:
++	libxfs_putbuf(agbp);
++err_trans:
++	libxfs_trans_cancel(tp);
++err_slab:
++	free_slab_cursor(&rm_cur);
++err:
++	if (agflbp)
++		libxfs_putbuf(agflbp);
++	printf("FAIL err %d\n", error);
++	return error;
++}
++
+ #ifdef RMAP_DEBUG
+ static void
+ dump_rmap(
+@@ -626,3 +766,83 @@ err:
+ 	free_slab_cursor(&rm_cur);
+ 	return 0;
+ }
++
++/**
++ * fix_freelist() - Regenerate the AGFL, so that we don't run out of it while
++ *		    rebuilding the rmapbt.
++ * @mp: XFS mount object
++ * @agno: AG number
++ * @skip_rmapbt: Don't fix the rmapbt
++ */
++void
++fix_freelist(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	bool			skip_rmapbt)
++{
++	xfs_alloc_arg_t		args;
++	xfs_trans_t		*tp;
++	struct xfs_trans_res	tres = {0};
++	int			flags;
++	int			error;
++
++	memset(&args, 0, sizeof(args));
++	args.tp = tp = libxfs_trans_alloc(mp, 0);
++	args.mp = mp;
++	args.agno = agno;
++	args.alignment = 1;
++	args.pag = xfs_perag_get(mp, agno);
++	libxfs_trans_reserve(tp, &tres,
++			     xfs_alloc_min_freelist(mp, args.pag), 0);
++	/*
++	 * Prior to rmapbt, all we had to do to fix the freelist is "expand"
++	 * the fresh AGFL header from empty to full.  That hasn't changed.  For
++	 * rmapbt, however, things change a bit.
++	 *
++	 * When we're stuffing the rmapbt with the AG btree rmaps the tree can
++	 * expand, so we need to keep the AGFL well-stocked for the expansion.
++	 * However, this expansion can cause the bnobt/cntbt to shrink, which
++	 * can make the AGFL eligible for shrinking.  Shrinking involves
++	 * freeing rmapbt entries, but since we haven't finished loading the
++	 * rmapbt with the btree rmaps it's possible for the remove operation
++	 * to fail.  The AGFL block is large enough at this point to absorb any
++	 * blocks freed from the bnobt/cntbt, so we can disable shrinking.
++	 *
++	 * During the initial AGFL regeneration during AGF generation in phase5
++	 * we must also disable rmapbt modifications because the AGF that
++	 * libxfs reads does not yet point to the new rmapbt.  These initial
++	 * AGFL entries are added just prior to adding the AG btree block rmaps
++	 * to the rmapbt.  It's ok to pass NOSHRINK here too, since the AGFL is
++	 * empty and cannot shrink.
++	 */
++	flags = XFS_ALLOC_FLAG_NOSHRINK;
++	if (skip_rmapbt)
++		flags |= XFS_ALLOC_FLAG_NORMAP;
++	error = libxfs_alloc_fix_freelist(&args, flags);
++	xfs_perag_put(args.pag);
++	if (error) {
++		do_error(_("failed to fix AGFL on AG %d, error %d\n"),
++				agno, error);
++	}
++	libxfs_trans_commit(tp);
++}
++
++/**
++ * rmap_store_agflcount() - Remember how many AGFL entries came from excess
++ *			    AG btree allocations and therefore already have
++ *			    rmap entries.
++ * @mp: XFS mount object.
++ * @agno: AG number.
++ * @count: Number of AGFL entries.
++ */
++void
++rmap_store_agflcount(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t	agno,
++	int 		count)
++{
++	if (!needs_rmap_work(mp))
++		return;
++
++	ag_rmaps[agno].ar_flcount = count;
++}
+diff --git a/repair/rmap.h b/repair/rmap.h
+index f3f3331..0b4e73b 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -32,10 +32,14 @@ extern int add_bmbt_rmap(struct xfs_mount *, xfs_ino_t, int, xfs_fsblock_t);
+ extern int fold_raw_rmaps(struct xfs_mount *mp, xfs_agnumber_t agno);
+ 
+ extern int add_fixed_ag_rmap_data(struct xfs_mount *, xfs_agnumber_t);
++extern int store_ag_btree_rmap_data(struct xfs_mount *, xfs_agnumber_t);
+ 
+ extern size_t rmap_record_count(struct xfs_mount *, xfs_agnumber_t);
+ extern int init_rmap_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
+ extern void rmap_avoid_check(void);
+ extern int check_rmaps(struct xfs_mount *, xfs_agnumber_t);
+ 
++extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
++extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
++
+ #endif /* RMAP_H_ */
 
 _______________________________________________
 xfs mailing list
