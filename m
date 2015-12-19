@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B490B80D6
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:02:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 98513304059
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:02:59 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JDi4DTliopA8v1rZ (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A45D080E0
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:03:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7A4388F8039
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:03:08 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id HL4ty98Y82xZMrNW (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:02:57 -0800 (PST)
-Subject: [PATCH 58/76] xfs: support removing extents from CoW fork
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:03:04 -0800 (PST)
+Subject: [PATCH 59/76] xfs: move mappings from cow fork to data fork after
+	copy-write
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:02:54 -0800
-Message-ID: <20151219090254.12713.82017.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:03:00 -0800
+Message-ID: <20151219090300.12713.13025.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,215 +32,320 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Create a helper method to remove extents from the CoW fork without
-any of the side effects (rmapbt/bmbt updates) of the regular extent
-deletion routine.  We'll eventually use this to clear out the CoW fork
-during ioend processing.
+After the write component of a copy-write operation finishes, clean up
+the bookkeeping left behind.  On error, we simply free the new blocks
+and pass the error up.  If we succeed, however, then we must remove
+the old data fork mapping and move the cow fork mapping to the data
+fork.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |  173 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h |    2 +
- 2 files changed, 175 insertions(+)
+ fs/xfs/xfs_aops.c    |   23 +++++
+ fs/xfs/xfs_reflink.c |  223 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_reflink.h |    4 +
+ 3 files changed, 248 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index de0ac37..21548b9 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5272,6 +5272,179 @@ done:
- }
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 7179b25..8101d6a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -195,7 +195,8 @@ xfs_finish_ioend(
+ 	if (atomic_dec_and_test(&ioend->io_remaining)) {
+ 		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
  
- /*
-+ * xfs_bunmapi_cow() -- Remove the relevant parts of the CoW fork.
-+ *			See xfs_bmap_del_extent.
-+ * @ip: XFS inode.
-+ * @idx: Extent number to delete.
-+ * @del: Extent to remove.
+-		if (ioend->io_type == XFS_IO_UNWRITTEN)
++		if (ioend->io_type == XFS_IO_UNWRITTEN ||
++		    xfs_ioend_is_cow(ioend))
+ 			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
+ 		else if (ioend->io_append_trans)
+ 			queue_work(mp->m_data_workqueue, &ioend->io_work);
+@@ -221,6 +222,23 @@ xfs_end_io(
+ 	}
+ 
+ 	/*
++	 * For a CoW extent, we need to move the mapping from the CoW fork
++	 * to the data fork.  If instead an error happened, just dump the
++	 * new blocks.
++	 */
++	if (xfs_ioend_is_cow(ioend)) {
++		if (ioend->io_error) {
++			error = xfs_reflink_end_cow_failed(ip, ioend->io_offset,
++					ioend->io_size);
++			goto done;
++		}
++		error = xfs_reflink_end_cow(ip, ioend->io_offset,
++				ioend->io_size);
++		if (error)
++			goto done;
++	}
++
++	/*
+ 	 * For unwritten extents we need to issue transactions to convert a
+ 	 * range to normal written extens after the data I/O has finished.
+ 	 * Detecting and handling completion IO errors is done individually
+@@ -235,7 +253,7 @@ xfs_end_io(
+ 	} else if (ioend->io_append_trans) {
+ 		error = xfs_setfilesize_ioend(ioend);
+ 	} else {
+-		ASSERT(!xfs_ioend_is_append(ioend));
++		ASSERT(!xfs_ioend_is_append(ioend) || xfs_ioend_is_cow(ioend));
+ 	}
+ 
+ done:
+@@ -274,6 +292,7 @@ xfs_alloc_ioend(
+ 	ioend->io_offset = 0;
+ 	ioend->io_size = 0;
+ 	ioend->io_append_trans = NULL;
++	ioend->io_flags = 0;
+ 
+ 	INIT_WORK(&ioend->io_work, xfs_end_io);
+ 	return ioend;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 65d4c2d..9c1c262 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -321,3 +321,226 @@ xfs_reflink_find_cow_mapping(
+ 
+ 	return 0;
+ }
++
++/**
++ * xfs_reflink_end_cow_failed() -- Throw out a CoW mapping if there was an I/O
++ *				   error while writing the new block.
++ * @ip: The XFS inode.
++ * @offset: File offset, in bytes.
++ * @count: Number of bytes.
 + */
 +int
-+xfs_bunmapi_cow(
-+	xfs_inode_t		*ip,
-+	xfs_extnum_t		*idx,
-+	xfs_bmbt_irec_t		*del)
++xfs_reflink_end_cow_failed(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	size_t			count)
 +{
-+	xfs_filblks_t		da_new;	/* new delay-alloc indirect blocks */
-+	xfs_filblks_t		da_old;	/* old delay-alloc indirect blocks */
-+	xfs_fsblock_t		del_endblock = 0;/* first block past del */
-+	xfs_fileoff_t		del_endoff;	/* first offset past del */
-+	int			delay;	/* current block is delayed allocated */
-+	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
-+	int			error;	/* error return value */
-+	xfs_bmbt_irec_t		got;	/* current extent entry */
-+	xfs_fileoff_t		got_endoff;	/* first offset past got */
-+	xfs_ifork_t		*ifp;	/* inode fork pointer */
-+	xfs_mount_t		*mp;	/* mount structure */
-+	xfs_filblks_t		nblks;	/* quota/sb block count */
-+	xfs_bmbt_irec_t		new;	/* new record to be inserted */
-+	/* REFERENCED */
-+	uint			qfield;	/* quota field to update */
-+	xfs_filblks_t		temp;	/* for indirect length calculations */
-+	xfs_filblks_t		temp2;	/* for indirect length calculations */
-+	int			state = BMAP_COWFORK;
++	struct xfs_bmbt_irec	irec;
++	struct xfs_trans	*tp;
++	struct xfs_ifork	*ifp;
++	xfs_fileoff_t		offset_fsb;
++	xfs_fileoff_t		end_fsb;
++	xfs_filblks_t		count_fsb;
++	xfs_fsblock_t		firstfsb;
++	xfs_extnum_t		idx;
++	struct xfs_bmap_free	free_list;
++	int			committed;
++	int			error;
++	struct xfs_bmbt_rec_host	*gotp;
 +
-+	mp = ip->i_mount;
-+	XFS_STATS_INC(mp, xs_del_exlist);
++	trace_xfs_reflink_end_cow_failed(ip, offset, count);
 +
++	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
++	end_fsb = XFS_B_TO_FSB(ip->i_mount, (xfs_ufsize_t)offset + count);
++	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
++
++	/* Start a rolling transaction to switch the mappings */
++	tp = xfs_trans_alloc(ip->i_mount, XFS_TRANS_STRAT_WRITE);
++	error = xfs_trans_reserve(tp, &M_RES(ip->i_mount)->tr_write, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp);
++		goto out;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++	xfs_bmap_init(&free_list, &firstfsb);
++
++	/* Go find the old extent in the CoW fork. */
 +	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+	ASSERT((*idx >= 0) && (*idx < ifp->if_bytes /
-+		(uint)sizeof(xfs_bmbt_rec_t)));
-+	ASSERT(del->br_blockcount > 0);
-+	ep = xfs_iext_get_ext(ifp, *idx);
-+	xfs_bmbt_get_all(ep, &got);
-+	ASSERT(got.br_startoff <= del->br_startoff);
-+	del_endoff = del->br_startoff + del->br_blockcount;
-+	got_endoff = got.br_startoff + got.br_blockcount;
-+	ASSERT(got_endoff >= del_endoff);
-+	delay = isnullstartblock(got.br_startblock);
-+	ASSERT(isnullstartblock(del->br_startblock) == delay);
-+	qfield = 0;
-+	error = 0;
-+	/*
-+	 * If deleting a real allocation, must free up the disk space.
-+	 */
-+	if (!delay) {
-+		nblks = del->br_blockcount;
-+		qfield = XFS_TRANS_DQ_BCOUNT;
-+		/*
-+		 * Set up del_endblock and cur for later.
-+		 */
-+		del_endblock = del->br_startblock + del->br_blockcount;
-+		da_old = da_new = 0;
-+	} else {
-+		da_old = startblockval(got.br_startblock);
-+		da_new = 0;
-+		nblks = 0;
-+	}
-+	qfield = qfield;
-+	nblks = nblks;
++	gotp = xfs_iext_bno_to_ext(ifp, offset_fsb, &idx);
++	while (gotp) {
++		xfs_bmbt_get_all(gotp, &irec);
 +
-+	/*
-+	 * Set flag value to use in switch statement.
-+	 * Left-contig is 2, right-contig is 1.
-+	 */
-+	switch (((got.br_startoff == del->br_startoff) << 1) |
-+		(got_endoff == del_endoff)) {
-+	case 3:
-+		/*
-+		 * Matches the whole extent.  Delete the entry.
-+		 */
-+		xfs_iext_remove(ip, *idx, 1, BMAP_COWFORK);
-+		--*idx;
-+		break;
-+
-+	case 2:
-+		/*
-+		 * Deleting the first part of the extent.
-+		 */
-+		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-+		xfs_bmbt_set_startoff(ep, del_endoff);
-+		temp = got.br_blockcount - del->br_blockcount;
-+		xfs_bmbt_set_blockcount(ep, temp);
-+		if (delay) {
-+			temp = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+				da_old);
-+			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
-+			trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-+			da_new = temp;
++		if (irec.br_startoff >= end_fsb)
 +			break;
-+		}
-+		xfs_bmbt_set_startblock(ep, del_endblock);
-+		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-+		break;
 +
-+	case 1:
-+		/*
-+		 * Deleting the last part of the extent.
-+		 */
-+		temp = got.br_blockcount - del->br_blockcount;
-+		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-+		xfs_bmbt_set_blockcount(ep, temp);
-+		if (delay) {
-+			temp = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+				da_old);
-+			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
-+			trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-+			da_new = temp;
++		ASSERT(!isnullstartblock(irec.br_startblock));
++		xfs_trim_extent(&irec, offset_fsb, count_fsb);
++		trace_xfs_reflink_cow_remap(ip, &irec);
++
++		/* Remove the EFD. */
++#if 0
++		efd = xfs_trans_get_efd(tp, eio->rlei_efi, 1);
++		xfs_trans_undelete_extent(tp, efd, imap->br_startblock,
++					 imap->br_blockcount);
++#endif
++
++		xfs_bmap_add_free(ip->i_mount, &free_list, irec.br_startblock,
++				irec.br_blockcount, NULL);
++
++		/* Roll on... */
++		idx++;
++		if (idx >= ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
 +			break;
-+		}
-+		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-+		break;
-+
-+	case 0:
-+		/*
-+		 * Deleting the middle of the extent.
-+		 */
-+		temp = del->br_startoff - got.br_startoff;
-+		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-+		xfs_bmbt_set_blockcount(ep, temp);
-+		new.br_startoff = del_endoff;
-+		temp2 = got_endoff - del_endoff;
-+		new.br_blockcount = temp2;
-+		new.br_state = got.br_state;
-+		if (!delay) {
-+			new.br_startblock = del_endblock;
-+		} else {
-+			temp = xfs_bmap_worst_indlen(ip, temp);
-+			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
-+			temp2 = xfs_bmap_worst_indlen(ip, temp2);
-+			new.br_startblock = nullstartblock((int)temp2);
-+			da_new = temp + temp2;
-+			while (da_new > da_old) {
-+				if (temp) {
-+					temp--;
-+					da_new--;
-+					xfs_bmbt_set_startblock(ep,
-+						nullstartblock((int)temp));
-+				}
-+				if (da_new == da_old)
-+					break;
-+				if (temp2) {
-+					temp2--;
-+					da_new--;
-+					new.br_startblock =
-+						nullstartblock((int)temp2);
-+				}
-+			}
-+		}
-+		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-+		xfs_iext_insert(ip, *idx + 1, 1, &new, state);
-+		++*idx;
-+		break;
++		gotp = xfs_iext_get_ext(ifp, idx);
 +	}
 +
-+	/*
-+	 * Account for change in delayed indirect blocks.
-+	 * Nothing to do for disk quota accounting here.
-+	 */
-+	ASSERT(da_old >= da_new);
-+	if (da_old > da_new)
-+		xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new), false);
++	/* Process all the deferred stuff. */
++	error = xfs_bmap_finish(&tp, &free_list, &committed, NULL);
++	if (error)
++		goto out_cancel;
 +
++	error = xfs_trans_commit(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	if (error)
++		goto out;
++	return 0;
++
++out_cancel:
++	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++out:
++	trace_xfs_reflink_end_cow_failed_error(ip, error, _RET_IP_);
 +	return error;
 +}
 +
-+/*
-  * Unmap (remove) blocks from a file.
-  * If nexts is nonzero then the number of extents to remove is limited to
-  * that value.  If not all extents in the block range can be removed then
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index fb68ac4..bfa0294 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -253,6 +253,8 @@ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fsblock_t *firstblock, xfs_extlen_t total,
- 		struct xfs_bmbt_irec *mval, int *nmap,
- 		struct xfs_bmap_free *flist);
-+int	xfs_bunmapi_cow(struct xfs_inode *ip, xfs_extnum_t *idx,
-+		struct xfs_bmbt_irec *del);
- int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
- 		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
++/**
++ * xfs_reflink_end_cow() -- Remap the data fork after a successful CoW.
++ * @ip: The XFS inode.
++ * @offset: File offset, in bytes.
++ * @count: Number of bytes.
++ */
++int
++xfs_reflink_end_cow(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	size_t			count)
++{
++	struct xfs_bmbt_irec	irec;
++	struct xfs_bmbt_irec	imap;
++	int			nimaps = 1;
++	struct xfs_trans	*tp;
++	struct xfs_ifork	*ifp;
++	xfs_fileoff_t		offset_fsb;
++	xfs_fileoff_t		end_fsb;
++	xfs_filblks_t		count_fsb;
++	xfs_fsblock_t		firstfsb;
++	xfs_extnum_t		idx;
++	struct xfs_bmap_free	free_list;
++	int			committed;
++	int			done;
++	int			error;
++	unsigned int		resblks;
++	struct xfs_bmbt_rec_host	*gotp;
++
++	trace_xfs_reflink_end_cow(ip, offset, count);
++
++	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
++	end_fsb = XFS_B_TO_FSB(ip->i_mount, (xfs_ufsize_t)offset + count);
++	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
++
++	/* Start a rolling transaction to switch the mappings */
++	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
++	tp = xfs_trans_alloc(ip->i_mount, XFS_TRANS_STRAT_WRITE);
++	error = xfs_trans_reserve(tp, &M_RES(ip->i_mount)->tr_write,
++			resblks, 0);
++	if (error) {
++		xfs_trans_cancel(tp);
++		goto out;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++	xfs_bmap_init(&free_list, &firstfsb);
++
++	/* Go find the old extent in the CoW fork. */
++	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	gotp = xfs_iext_bno_to_ext(ifp, offset_fsb, &idx);
++	while (gotp) {
++		xfs_bmbt_get_all(gotp, &irec);
++
++		if (irec.br_startoff >= end_fsb)
++			break;
++
++		ASSERT(!isnullstartblock(irec.br_startblock));
++		xfs_trim_extent(&irec, offset_fsb, count_fsb);
++		trace_xfs_reflink_cow_remap(ip, &irec);
++
++		/* Unmap the old blocks in the data fork. */
++		done = false;
++		while (!done) {
++			error = xfs_bunmapi(tp, ip, irec.br_startoff,
++					irec.br_blockcount, 0, 1,
++					&firstfsb, &free_list, &done);
++			if (error)
++				goto out_freelist;
++
++			error = xfs_trans_roll(&tp, ip);
++			if (error)
++				goto out_freelist;
++		}
++
++		/* Remove the EFD. */
++#if 0
++		efd = xfs_trans_get_efd(tp, eio->rlei_efi, 1);
++		xfs_trans_undelete_extent(tp, efd, imap->br_startblock,
++					 imap->br_blockcount);
++#endif
++
++		/* Map the new blocks into the data fork. */
++		firstfsb = irec.br_startblock;
++		error = xfs_bmapi_write(tp, ip, irec.br_startoff,
++					irec.br_blockcount,
++					XFS_BMAPI_REMAP, &firstfsb,
++					irec.br_blockcount, &imap, &nimaps,
++					&free_list);
++		if (error)
++			goto out_freelist;
++
++		/* Remove the mapping from the CoW fork. */
++		error = xfs_bunmapi_cow(ip, &idx, &irec);
++		if (error)
++			goto out_freelist;
++
++		error = xfs_trans_roll(&tp, ip);
++		if (error)
++			goto out_freelist;
++
++		/* Roll on... */
++		idx++;
++		if (idx >= ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
++			break;
++		gotp = xfs_iext_get_ext(ifp, idx);
++	}
++
++	/* Process all the deferred stuff. */
++	error = xfs_bmap_finish(&tp, &free_list, &committed, NULL);
++	if (error)
++		goto out_cancel;
++
++	error = xfs_trans_commit(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	if (error)
++		goto out;
++	return 0;
++
++out_freelist:
++	xfs_bmap_cancel(&free_list);
++out_cancel:
++	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++out:
++	trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
++	return error;
++}
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 1018ac9..8ec1ebb 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -23,5 +23,9 @@ extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip, xfs_off_t pos,
+ extern bool xfs_reflink_is_cow_pending(struct xfs_inode *ip, xfs_off_t offset);
+ extern int xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+ 		struct xfs_bmbt_irec *imap, bool *need_alloc);
++extern int xfs_reflink_end_cow_failed(struct xfs_inode *ip, xfs_off_t offset,
++		size_t count);
++extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
++		size_t count);
+ 
+ #endif /* __XFS_REFLINK_H */
 
 _______________________________________________
 xfs mailing list
