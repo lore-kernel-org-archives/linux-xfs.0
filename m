@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 04CCC29E2E
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:07:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DCA208F8039
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:46 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id hQcAMDvGwSXCKzWq (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DC01729E08
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:07:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B25CAC006
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:58 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id YddBwqDfmcrKhygf (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:45 -0800 (PST)
-Subject: [PATCH 26/53] xfs_repair: mask off length appropriately
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:07:57 -0800 (PST)
+Subject: [PATCH 27/53] xfs_repair: fix fino_bno calculation when rmapbt is
+	enabled
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:07:43 -0800
-Message-ID: <20151219090743.14255.24725.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:07:49 -0800
+Message-ID: <20151219090749.14255.87703.stgit@birch.djwong.org>
 In-Reply-To: <20151219090450.14255.48364.stgit@birch.djwong.org>
 References: <20151219090450.14255.48364.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,77 +32,34 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Ensure that we remove the flag bits from blockcount before using the
-length field.
+In xfs_repair, we calculate where we think mkfs put the root inode
+block.  However, the rmapbt component doesn't account for the fact
+that mkfs reserved 2 AGFL blocks for the rmapbt, so its calculation
+is off by a bit.  This leads to it complaining (incorrectly) about the
+root inode block being in the wrong place and blowing up.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/scan.c |   32 ++++++++++++++++++++++++--------
- 1 file changed, 24 insertions(+), 8 deletions(-)
+ repair/xfs_repair.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/scan.c b/repair/scan.c
-index c1ab6df..1ade344 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -792,6 +792,8 @@ scan_rmapbt(
- 	int			numrecs;
- 	int			state;
- 	xfs_agblock_t		lastblock = 0;
-+	int64_t			lastowner = 0;
-+	int64_t			lastoffset = 0;
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 2fe2e4e..3710636 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -416,8 +416,10 @@ calc_mkfs(xfs_mount_t *mp)
+ 	fino_bno = inobt_root + (2 * min(2, mp->m_ag_maxlevels)) + 1;
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+ 		fino_bno++;
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		fino_bno += min(2, mp->m_ag_maxlevels);
+ 		fino_bno++;
++	}
  
- 	if (magic != XFS_RMAP_CRC_MAGIC) {
- 		name = "(unknown)";
-@@ -859,11 +861,12 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 		for (i = 0; i < numrecs; i++) {
- 			xfs_agblock_t		b, end;
- 			xfs_extlen_t		len, blen;
--			int64_t			owner;
-+			int64_t			owner, offset;
- 
- 			b = be32_to_cpu(rp[i].rm_startblock);
--			len = be32_to_cpu(rp[i].rm_blockcount);
-+			len = XFS_RMAP_LEN(be32_to_cpu(rp[i].rm_blockcount));
- 			owner = be64_to_cpu(rp[i].rm_owner);
-+			offset = be64_to_cpu(rp[i].rm_offset);
- 			end = b + len;
- 
- 			if (!verify_agbno(mp, agno, b)) {
-@@ -879,14 +882,27 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 				continue;
- 			}
- 
--			/* XXX: range check owner */
-+			if (!(owner > 0 || (owner > XFS_RMAP_OWN_MIN &&
-+					    owner <= XFS_RMAP_OWN_FS)))
-+				do_warn(
-+	_("invalid owner in rmap btree record %d (%"PRId64" %u) block %u/%u\n"),
-+						i, owner, len, agno, bno);
- 
--			if (b && b <= lastblock) {
--				do_warn(_(
--	"out-of-order rmap btree record %d (%u %u) block %u/%u\n"),
--					i, b, len, agno, bno);
--			} else {
-+			if (i == 0) {
-+advance:
- 				lastblock = b;
-+				lastowner = owner;
-+				lastoffset = offset;
-+			} else {
-+				bool bad;
-+
-+				bad = b <= lastblock;
-+				if (bad)
-+					do_warn(
-+	_("out-of-order rmap btree record %d (%u %"PRId64" %"PRIx64" %u) block %u/%u\n"),
-+					i, b, owner, offset, len, agno, bno);
-+				else
-+					goto advance;
- 			}
- 
- 			for ( ; b < end; b += blen)  {
+ 	/*
+ 	 * If the log is allocated in the first allocation group we need to
 
 _______________________________________________
 xfs mailing list
