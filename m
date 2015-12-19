@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 680B680D6
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:03:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 599E28F8039
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:03:38 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id YoXb3R59e3BFoKQE (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 88D0D8129
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:03:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5D5AB8F8052
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:03:44 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id LV5VvsprH5PPqg8N (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:03:35 -0800 (PST)
-Subject: [PATCH 64/76] xfs: reflink extents from one file to another
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:03:42 -0800 (PST)
+Subject: [PATCH 65/76] xfs: add clone file and clone range ioctls
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:03:32 -0800
-Message-ID: <20151219090332.12713.41005.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:03:39 -0800
+Message-ID: <20151219090339.12713.7542.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,483 +31,300 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Reflink extents from one file to another; that is to say, iteratively
-remove the mappings from the destination file, copy the mappings from
-the source file to the destination file, and increment the reference
-count of all the blocks that got remapped.
+Define two ioctls which allow userspace to reflink a range of blocks
+between two files or to reflink one file's contents to another.
+These ioctls must have the same ABI as the btrfs ioctls with similar
+names.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_reflink.c |  445 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_reflink.h |    3 
- 2 files changed, 448 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h |   11 +++++
+ fs/xfs/xfs_file.c      |  115 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_ioctl.c     |   87 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_ioctl32.c   |    2 +
+ 4 files changed, 215 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index dcc71b9..3de3c9a 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -722,3 +722,448 @@ advloop:
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 22a8fd9..a3cd93e 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -571,6 +571,17 @@ typedef struct xfs_swapext
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
- 	return 0;
++/* reflink ioctls; these MUST match the btrfs ioctl definitions */
++/* from struct btrfs_ioctl_clone_range_args */
++struct xfs_clone_args {
++	__s64 src_fd;
++	__u64 src_offset;
++	__u64 src_length;
++	__u64 dest_offset;
++};
++
++#define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
++#define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_clone_args)
+ 
+ #ifndef HAVE_BBMACROS
+ /*
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 31b002e..44d89ea 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1050,6 +1050,121 @@ out_unlock:
+ 	return error;
  }
-+
+ 
 +/*
-+ * Reflinking (Block) Ranges of Two Files Together
-+ *
-+ * First, ensure that the reflink flag is set on both inodes.  The flag is an
-+ * optimization to avoid unnecessary refcount btree lookups in the write path.
-+ *
-+ * Now we can iteratively remap the range of extents (and holes) in src to the
-+ * corresponding ranges in dest.  Let drange and srange denote the ranges of
-+ * logical blocks in dest and src touched by the reflink operation.
-+ *
-+ * While the length of drange is greater than zero,
-+ *    - Read src's bmbt at the start of srange ("imap")
-+ *    - If imap doesn't exist, make imap appear to start at the end of srange
-+ *      with zero length.
-+ *    - If imap starts before srange, advance imap to start at srange.
-+ *    - If imap goes beyond srange, truncate imap to end at the end of srange.
-+ *    - Punch (imap start - srange start + imap len) blocks from dest at
-+ *      offset (drange start).
-+ *    - If imap points to a real range of pblks,
-+ *         > Increase the refcount of the imap's pblks
-+ *         > Map imap's pblks into dest at the offset
-+ *           (drange start + imap start - srange start)
-+ *    - Advance drange and srange by (imap start - srange start + imap len)
-+ *
-+ * Finally, if the reflink made dest longer, update both the in-core and
-+ * on-disk file sizes.
-+ *
-+ * ASCII Art Demonstration:
-+ *
-+ * Let's say we want to reflink this source file:
-+ *
-+ * ----SSSSSSS-SSSSS----SSSSSS (src file)
-+ *   <-------------------->
-+ *
-+ * into this destination file:
-+ *
-+ * --DDDDDDDDDDDDDDDDDDD--DDD (dest file)
-+ *        <-------------------->
-+ * '-' means a hole, and 'S' and 'D' are written blocks in the src and dest.
-+ * Observe that the range has different logical offsets in either file.
-+ *
-+ * Consider that the first extent in the source file doesn't line up with our
-+ * reflink range.  Unmapping  and remapping are separate operations, so we can
-+ * unmap more blocks from the destination file than we remap.
-+ *
-+ * ----SSSSSSS-SSSSS----SSSSSS
-+ *   <------->
-+ * --DDDDD---------DDDDD--DDD
-+ *        <------->
-+ *
-+ * Now remap the source extent into the destination file:
-+ *
-+ * ----SSSSSSS-SSSSS----SSSSSS
-+ *   <------->
-+ * --DDDDD--SSSSSSSDDDDD--DDD
-+ *        <------->
-+ *
-+ * Do likewise with the second hole and extent in our range.  Holes in the
-+ * unmap range don't affect our operation.
-+ *
-+ * ----SSSSSSS-SSSSS----SSSSSS
-+ *            <---->
-+ * --DDDDD--SSSSSSS-SSSSS-DDD
-+ *                 <---->
-+ *
-+ * Finally, unmap and remap part of the third extent.  This will increase the
-+ * size of the destination file.
-+ *
-+ * ----SSSSSSS-SSSSS----SSSSSS
-+ *                  <----->
-+ * --DDDDD--SSSSSSS-SSSSS----SSS
-+ *                       <----->
-+ *
-+ * Once we update the destination file's i_size, we're done.
-+ */
-+
-+/*
-+ * Ensure the reflink bit is set in both inodes.
++ * Flush all file writes out to disk.
 + */
 +static int
-+xfs_reflink_set_inode_flag(
-+	struct xfs_inode	*src,
-+	struct xfs_inode	*dest)
++xfs_file_wait_for_io(
++	struct inode	*inode,
++	loff_t		offset,
++	size_t		len)
 +{
-+	struct xfs_mount	*mp = src->i_mount;
-+	int			error;
-+	struct xfs_trans	*tp;
++	loff_t		rounding;
++	loff_t		ioffset;
++	loff_t		iendoffset;
++	loff_t		bs;
++	int		ret;
 +
-+	if (xfs_is_reflink_inode(src) && xfs_is_reflink_inode(dest))
-+		return 0;
++	bs = inode->i_sb->s_blocksize;
++	inode_dio_wait(inode);
 +
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
-+
-+	/*
-+	 * check for running out of space
-+	 */
-+	if (error) {
-+		/*
-+		 * Free the transaction structure.
-+		 */
-+		ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
-+		goto out_cancel;
-+	}
-+
-+	/* Lock both files against IO */
-+	if (src->i_ino == dest->i_ino)
-+		xfs_ilock(src, XFS_ILOCK_EXCL);
-+	else
-+		xfs_lock_two_inodes(src, dest, XFS_ILOCK_EXCL);
-+
-+	if (!xfs_is_reflink_inode(src)) {
-+		trace_xfs_reflink_set_inode_flag(src);
-+		xfs_trans_ijoin(tp, src, XFS_ILOCK_EXCL);
-+		src->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
-+		xfs_trans_log_inode(tp, src, XFS_ILOG_CORE);
-+		xfs_ifork_init_cow(src);
-+	} else
-+		xfs_iunlock(src, XFS_ILOCK_EXCL);
-+
-+	if (src->i_ino == dest->i_ino)
-+		goto commit_flags;
-+
-+	if (!xfs_is_reflink_inode(dest)) {
-+		trace_xfs_reflink_set_inode_flag(dest);
-+		xfs_trans_ijoin(tp, dest, XFS_ILOCK_EXCL);
-+		dest->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
-+		xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
-+		xfs_ifork_init_cow(dest);
-+	} else
-+		xfs_iunlock(dest, XFS_ILOCK_EXCL);
-+
-+commit_flags:
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		goto out_error;
-+	return error;
-+
-+out_cancel:
-+	xfs_trans_cancel(tp);
-+out_error:
-+	trace_xfs_reflink_set_inode_flag_error(dest, error, _RET_IP_);
-+	return error;
++	rounding = max_t(xfs_off_t, bs, PAGE_CACHE_SIZE);
++	ioffset = round_down(offset, rounding);
++	iendoffset = round_up(offset + len, rounding) - 1;
++	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
++					   iendoffset);
++	return ret;
 +}
 +
-+/*
-+ * Update destination inode size, if necessary.
-+ */
-+static int
-+xfs_reflink_update_dest_isize(
-+	struct xfs_inode	*dest,
-+	xfs_off_t		newlen)
-+{
-+	struct xfs_mount	*mp = dest->i_mount;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	if (newlen <= i_size_read(VFS_I(dest)))
-+		return 0;
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_SIZE);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
-+
-+	/*
-+	 * check for running out of space
-+	 */
-+	if (error) {
-+		/*
-+		 * Free the transaction structure.
-+		 */
-+		ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
-+		goto out_cancel;
-+	}
-+
-+	xfs_ilock(dest, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, dest, XFS_ILOCK_EXCL);
-+
-+	trace_xfs_reflink_update_inode_size(dest, newlen);
-+	i_size_write(VFS_I(dest), newlen);
-+	dest->i_d.di_size = newlen;
-+	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
-+
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		goto out_error;
-+	return error;
-+
-+out_cancel:
-+	xfs_trans_cancel(tp);
-+out_error:
-+	trace_xfs_reflink_update_inode_size_error(dest, error, _RET_IP_);
-+	return error;
-+}
-+
-+/**
-+ * xfs_reflink_remap_extent() -- Unmap a range of blocks from a file, then
-+ *				 map other blocks into the hole.  The range
-+ *				 to unmap is:
-+ *				 (@destoff:@destoff+@srcioff+@irec.blockcount).
-+ *				 The extent @irec is mapped at
-+ *				 @destoff+@srcioff.
-+ * @ip: XFS inode.
-+ * @irec: The mapping to put into the file.
-+ * @destoff: How far into the the file to start unmapping.
-+ * @srcioff: How far past @destoff to start mapping.
-+ */
-+static int
-+xfs_reflink_remap_extent(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*irec,
-+	xfs_fileoff_t		destoff,
-+	xfs_fileoff_t		srcioff)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	xfs_fsblock_t		firstfsb;
-+	unsigned int		resblks;
-+	struct xfs_bmap_free	free_list;
-+	struct xfs_bmbt_irec	imap;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	struct xfs_buf		*agbp;
-+	int			nimaps;
-+	int			done;
-+	int			committed;
-+	int			error;
-+
-+	trace_xfs_reflink_punch_range(ip, destoff,
-+			srcioff + irec->br_blockcount);
-+
-+	/* Start a rolling transaction to switch the mappings */
-+	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-+	tp = xfs_trans_alloc(ip->i_mount, XFS_TRANS_STRAT_WRITE);
-+	error = xfs_trans_reserve(tp, &M_RES(ip->i_mount)->tr_write,
-+			resblks, 0);
-+	if (error) {
-+		xfs_trans_cancel(tp);
-+		goto out;
-+	}
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
-+	xfs_bmap_init(&free_list, &firstfsb);
-+
-+	/* Unmap the old blocks in the data fork. */
-+	done = false;
-+	while (!done) {
-+		error = xfs_bunmapi(tp, ip, destoff,
-+				srcioff + irec->br_blockcount, 0, 1,
-+				&firstfsb, &free_list, &done);
-+		if (error)
-+			goto out_freelist;
-+
-+		error = xfs_trans_roll(&tp, ip);
-+		if (error)
-+			goto out_freelist;
-+	}
-+
-+	/* If this isn't a real mapping, we're done. */
-+	if (irec->br_startblock == HOLESTARTBLOCK ||
-+	    irec->br_startblock == DELAYSTARTBLOCK ||
-+	    ISUNWRITTEN(irec))
-+		goto done;
-+
-+	trace_xfs_reflink_remap(ip, destoff + srcioff,
-+			irec->br_blockcount, irec->br_startblock);
-+
-+	/* Update the refcount tree */
-+	agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
-+	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-+	if (error)
-+		goto out_freelist;
-+	error = xfs_refcount_increase(mp, tp, agbp, agno, agbno,
-+				      irec->br_blockcount, &free_list);
-+	xfs_trans_brelse(tp, agbp);
-+	if (error)
-+		goto out_freelist;
-+
-+	error = xfs_trans_roll(&tp, ip);
-+	if (error)
-+		goto out_freelist;
-+
-+	/* Map the new blocks into the data fork. */
-+	firstfsb = irec->br_startblock;
-+	nimaps = 1;
-+	error = xfs_bmapi_write(tp, ip, destoff + srcioff,
-+				irec->br_blockcount,
-+				XFS_BMAPI_REMAP, &firstfsb,
-+				irec->br_blockcount, &imap, &nimaps,
-+				&free_list);
-+	if (error)
-+		goto out_freelist;
-+
-+	/* Process all the deferred stuff. */
-+done:
-+	error = xfs_bmap_finish(&tp, &free_list, &committed, NULL);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = xfs_trans_commit(tp);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (error)
-+		goto out;
-+	return 0;
-+
-+out_freelist:
-+	xfs_bmap_cancel(&free_list);
-+out_cancel:
-+	xfs_trans_cancel(tp);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+out:
-+	trace_xfs_reflink_remap_extent_error(ip, error, _RET_IP_);
-+	return error;
-+}
-+
-+/**
-+ * Iteratively remap one file's extents (and holes) to another's.
-+ */
-+static int
-+xfs_reflink_remap_blocks(
-+	struct xfs_inode	*src,
-+	xfs_fileoff_t		srcoff,
-+	struct xfs_inode	*dest,
-+	xfs_fileoff_t		destoff,
-+	xfs_filblks_t		len)
-+{
-+	struct xfs_bmbt_irec	imap;
-+	int			nimaps;
-+	int			error = 0;
-+	xfs_fileoff_t		srcioff;
-+
-+	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
-+	while (len) {
-+		trace_xfs_reflink_remap_blocks_loop(src, srcoff, len,
-+				dest, destoff);
-+		/* Read extent from the source file */
-+		nimaps = 1;
-+		xfs_ilock(src, XFS_ILOCK_EXCL);
-+		error = xfs_bmapi_read(src, srcoff, len, &imap, &nimaps, 0);
-+		xfs_iunlock(src, XFS_ILOCK_EXCL);
-+		if (error)
-+			goto err;
-+
-+		/*
-+		 * If imap doesn't exist, pretend that it does just past
-+		 * srange.
-+		 */
-+		if (nimaps == 0) {
-+			imap.br_startoff = srcoff + len;
-+			imap.br_startblock = HOLESTARTBLOCK;
-+			imap.br_blockcount = 0;
-+			imap.br_state = XFS_EXT_INVALID;
-+		} else
-+			xfs_trim_extent(&imap, srcoff, len);
-+
-+		trace_xfs_reflink_remap_imap(src, srcoff, len, XFS_IO_OVERWRITE,
-+				&imap);
-+
-+		srcioff = imap.br_startoff - srcoff;
-+		error = xfs_reflink_remap_extent(dest, &imap, destoff, srcioff);
-+		if (error)
-+			goto err;
-+
-+		/* Advance drange/srange */
-+		srcoff += srcioff + imap.br_blockcount;
-+		destoff += srcioff + imap.br_blockcount;
-+		len -= srcioff + imap.br_blockcount;
-+	}
-+
-+	return 0;
-+
-+err:
-+	trace_xfs_reflink_remap_blocks_error(dest, error, _RET_IP_);
-+	return error;
-+}
-+
-+/**
-+ * xfs_reflink_remap_range() -- Link a range of blocks from one file to another.
-+ *
-+ * @src: Inode to clone from
-+ * @srcoff: Offset within source to start clone from
-+ * @dest: Inode to clone to
-+ * @destoff: Offset within @inode to start clone
-+ * @len: Original length, passed by user, of range to clone
-+ */
++/* Hook up to the VFS reflink function */
 +int
-+xfs_reflink_remap_range(
-+	struct xfs_inode	*src,
-+	xfs_off_t		srcoff,
-+	struct xfs_inode	*dest,
-+	xfs_off_t		destoff,
-+	xfs_off_t		len)
++xfs_file_share_range(
++	struct file	*file_in,
++	loff_t		pos_in,
++	struct file	*file_out,
++	loff_t		pos_out,
++	u64		len)
 +{
-+	struct xfs_mount	*mp = src->i_mount;
-+	xfs_fileoff_t		sfsbno, dfsbno;
-+	xfs_filblks_t		fsblen;
-+	int			error;
++	struct inode	*inode_in;
++	struct inode	*inode_out;
++	ssize_t		ret;
++	loff_t		bs;
++	loff_t		isize;
++	int		same_inode;
++	loff_t		blen;
 +
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return -EOPNOTSUPP;
++	inode_in = file_inode(file_in);
++	inode_out = file_inode(file_out);
++	bs = inode_out->i_sb->s_blocksize;
 +
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
++	/* Don't touch certain kinds of inodes */
++	if (IS_IMMUTABLE(inode_out))
++		return -EPERM;
++	if (IS_SWAPFILE(inode_in) ||
++	    IS_SWAPFILE(inode_out))
++		return -ETXTBSY;
 +
-+	/* Don't reflink realtime inodes */
-+	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
++	/* Reflink only works within this filesystem. */
++	if (inode_in->i_sb != inode_out->i_sb ||
++	    file_in->f_path.mnt != file_out->f_path.mnt)
++		return -EXDEV;
++	same_inode = (inode_in->i_ino == inode_out->i_ino);
++
++	/* Don't reflink dirs, pipes, sockets... */
++	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
++		return -EISDIR;
++	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
++		return -EINVAL;
++	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
 +		return -EINVAL;
 +
-+	trace_xfs_reflink_remap_range(src, srcoff, len, dest, destoff);
++	/* Are we going all the way to the end? */
++	isize = i_size_read(inode_in);
++	if (isize == 0)
++		return 0;
++	if (len == 0)
++		len = isize - pos_in;
 +
-+	/* Lock both files against IO */
-+	if (src->i_ino == dest->i_ino) {
-+		xfs_ilock(src, XFS_IOLOCK_EXCL);
-+		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
-+	} else {
-+		xfs_lock_two_inodes(src, dest, XFS_IOLOCK_EXCL);
-+		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
-+	}
++	/* Ensure offsets don't wrap and the input is inside i_size */
++	if (pos_in + len < pos_in || pos_out + len < pos_out ||
++	    pos_in + len > isize)
++		return -EINVAL;
 +
-+	error = xfs_reflink_set_inode_flag(src, dest);
++	/* If we're linking to EOF, continue to the block boundary. */
++	if (pos_in + len == isize)
++		blen = ALIGN(isize, bs) - pos_in;
++	else
++		blen = len;
++
++	/* Only reflink if we're aligned to block boundaries */
++	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
++	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
++		return -EINVAL;
++
++	/* Don't allow overlapped reflink within the same file */
++	if (same_inode && pos_out + blen > pos_in && pos_out < pos_in + blen)
++		return -EINVAL;
++
++	/* Wait for the completion of any pending IOs on srcfile */
++	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
++	if (ret)
++		goto out_unlock;
++	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
++	if (ret)
++		goto out_unlock;
++
++	ret = xfs_reflink_remap_range(XFS_I(inode_in), pos_in, XFS_I(inode_out),
++			pos_out, len);
++	if (ret < 0)
++		goto out_unlock;
++
++	/* Truncate the page cache so we don't see stale data */
++	truncate_inode_pages_range(&inode_out->i_data, pos_out,
++				   PAGE_CACHE_ALIGN(pos_out + len) - 1);
++
++out_unlock:
++	return ret;
++}
+ 
+ STATIC int
+ xfs_file_open(
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d42738d..1d836dc 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -41,6 +41,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_pnfs.h"
+ #include "xfs_acl.h"
++#include "xfs_reflink.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/dcache.h>
+@@ -49,6 +50,7 @@
+ #include <linux/pagemap.h>
+ #include <linux/slab.h>
+ #include <linux/exportfs.h>
++#include <linux/fsnotify.h>
+ 
+ /*
+  * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
+@@ -1513,6 +1515,49 @@ xfs_ioc_swapext(
+ 	return error;
+ }
+ 
++extern int xfs_file_share_range(struct file *file_in, loff_t pos_in,
++		struct file *file_out, loff_t pos_out, size_t len);
++
++/*
++ * For reflink, validate the VFS parameters, convert them into the XFS
++ * equivalents, and then call the internal reflink function.
++ */
++STATIC int
++xfs_ioctl_reflink(
++	struct file	*file_in,
++	loff_t		pos_in,
++	struct file	*file_out,
++	loff_t		pos_out,
++	size_t		len)
++{
++	int		error;
++
++	/* Do we have the correct permissions? */
++	if (!(file_in->f_mode & FMODE_READ) ||
++	    !(file_out->f_mode & FMODE_WRITE) ||
++	    (file_out->f_flags & O_APPEND))
++		return -EBADF;
++
++	error = mnt_want_write_file(file_out);
 +	if (error)
-+		goto out_error;
++		return error;
 +
-+	dfsbno = XFS_B_TO_FSBT(mp, destoff);
-+	sfsbno = XFS_B_TO_FSBT(mp, srcoff);
-+	fsblen = XFS_B_TO_FSB(mp, len);
-+	error = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen);
++	error = xfs_file_share_range(file_in, pos_in, file_out, pos_out, len);
 +	if (error)
-+		goto out_error;
++		goto out_drop;
 +
-+	error = xfs_reflink_update_dest_isize(dest, destoff + len);
++	fsnotify_access(file_in);
++	add_rchar(current, len);
++	fsnotify_modify(file_out);
++	add_wchar(current, len);
++	inc_syscr(current);
++	inc_syscw(current);
 +
-+out_error:
-+	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
-+	xfs_iunlock(src, XFS_IOLOCK_EXCL);
-+	if (src->i_ino != dest->i_ino) {
-+		xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-+		xfs_iunlock(dest, XFS_IOLOCK_EXCL);
-+	}
-+	if (error)
-+		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
++out_drop:
++	mnt_drop_write_file(file_out);
 +	return error;
 +}
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index cf4b43b..df33044 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -37,4 +37,7 @@ extern int xfs_reflink_cancel_pending_cow(struct xfs_inode *ip);
- int	xfs_map_cow_blocks(struct inode *inode, xfs_off_t offset,
- 			   struct xfs_bmbt_irec	*imap);
- 
-+extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
-+		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len);
 +
- #endif /* __XFS_REFLINK_H */
+ /*
+  * Note: some of the ioctl's return positive numbers as a
+  * byte count indicating success, such as readlink_by_handle.
+@@ -1811,6 +1856,48 @@ xfs_file_ioctl(
+ 		return xfs_icache_free_eofblocks(mp, &keofb);
+ 	}
+ 
++	case XFS_IOC_CLONE: {
++		struct fd src;
++
++		src = fdget(p);
++		if (!src.file)
++			return -EBADF;
++
++		trace_xfs_ioctl_clone(file_inode(src.file), file_inode(filp));
++
++		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL);
++		fdput(src);
++		if (error > 0)
++			error = 0;
++
++		return error;
++	}
++
++	case XFS_IOC_CLONE_RANGE: {
++		struct fd src;
++		struct xfs_clone_args args;
++
++		if (copy_from_user(&args, arg, sizeof(args)))
++			return -EFAULT;
++		src = fdget(args.src_fd);
++		if (!src.file)
++			return -EBADF;
++		if (args.src_length == 0)
++			args.src_length = ~0ULL;
++
++		trace_xfs_ioctl_clone_range(file_inode(src.file),
++				args.src_offset, args.src_length,
++				file_inode(filp), args.dest_offset);
++
++		error = xfs_ioctl_reflink(src.file, args.src_offset, filp,
++					  args.dest_offset, args.src_length);
++		fdput(src);
++		if (error > 0)
++			error = 0;
++
++		return error;
++	}
++
+ 	default:
+ 		return -ENOTTY;
+ 	}
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 1a05d8a..dde2c7b 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -558,6 +558,8 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_GOINGDOWN:
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
++	case XFS_IOC_CLONE:
++	case XFS_IOC_CLONE_RANGE:
+ 		return xfs_file_ioctl(filp, cmd, p);
+ #ifndef BROKEN_X86_ALIGNMENT
+ 	/* These are handled fine if no alignment issues */
 
 _______________________________________________
 xfs mailing list
