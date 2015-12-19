@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5BAD27F51
-	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 23:22:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B3D6304059
-	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:36 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5489D7F52
+	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 23:22:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3729E8F806F
+	for <xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:31 -0800 (PST)
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id hk2YhpVXQvAlicxM for
-	<xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:34 -0800 (PST)
+	cuda.sgi.com with ESMTP id VRTukCxGukWGwbKn for
+	<xfs@oss.sgi.com>; Fri, 18 Dec 2015 21:22:29 -0800 (PST)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 4/7] dax: add support for fsync/sync
-Date: Fri, 18 Dec 2015 22:22:17 -0700
-Message-Id: <1450502540-8744-5-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 1/7] pmem: add wb_cache_pmem() to the PMEM API
+Date: Fri, 18 Dec 2015 22:22:14 -0700
+Message-Id: <1450502540-8744-2-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,265 +30,111 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-To properly handle fsync/msync in an efficient way DAX needs to track dirty
-pages so it is able to flush them durably to media on demand.
+The function __arch_wb_cache_pmem() was already an internal implementation
+detail of the x86 PMEM API, but this functionality needs to be exported as
+part of the general PMEM API to handle the fsync/msync case for DAX mmaps.
 
-The tracking of dirty pages is done via the radix tree in struct
-address_space.  This radix tree is already used by the page writeback
-infrastructure for tracking dirty pages associated with an open file, and
-it already has support for exceptional (non struct page*) entries.  We
-build upon these features to add exceptional entries to the radix tree for
-DAX dirty PMD or PTE pages at fault time.
+One thing worth noting is that we really do want this to be part of the
+PMEM API as opposed to a stand-alone function like clflush_cache_range()
+because of ordering restrictions.  By having wb_cache_pmem() as part of the
+PMEM API we can leave it unordered, call it multiple times to write back
+large amounts of memory, and then order the multiple calls with a single
+wmb_pmem().
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- fs/dax.c            | 159 ++++++++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/dax.h |   2 +
- mm/filemap.c        |   3 +
- 3 files changed, 158 insertions(+), 6 deletions(-)
+ arch/x86/include/asm/pmem.h | 11 ++++++-----
+ include/linux/pmem.h        | 22 +++++++++++++++++++++-
+ 2 files changed, 27 insertions(+), 6 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 43671b6..19347cf 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -24,6 +24,7 @@
- #include <linux/memcontrol.h>
- #include <linux/mm.h>
- #include <linux/mutex.h>
-+#include <linux/pagevec.h>
- #include <linux/pmem.h>
- #include <linux/sched.h>
- #include <linux/uio.h>
-@@ -289,6 +290,143 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
- 	return 0;
+diff --git a/arch/x86/include/asm/pmem.h b/arch/x86/include/asm/pmem.h
+index d8ce3ec..6c7ade0 100644
+--- a/arch/x86/include/asm/pmem.h
++++ b/arch/x86/include/asm/pmem.h
+@@ -67,18 +67,19 @@ static inline void arch_wmb_pmem(void)
  }
  
-+static int dax_radix_entry(struct address_space *mapping, pgoff_t index,
-+		void __pmem *addr, bool pmd_entry, bool dirty)
-+{
-+	struct radix_tree_root *page_tree = &mapping->page_tree;
-+	int error = 0;
-+	void *entry;
-+
-+	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-+
-+	spin_lock_irq(&mapping->tree_lock);
-+	entry = radix_tree_lookup(page_tree, index);
-+
-+	if (entry) {
-+		if (!pmd_entry || RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
-+			goto dirty;
-+		radix_tree_delete(&mapping->page_tree, index);
-+		mapping->nrdax--;
-+	}
-+
-+	if (!addr) {
-+		/*
-+		 * This can happen during correct operation if our pfn_mkwrite
-+		 * fault raced against a hole punch operation.  If this
-+		 * happens the pte that was hole punched will have been
-+		 * unmapped and the radix tree entry will have been removed by
-+		 * the time we are called, but the call will still happen.  We
-+		 * will return all the way up to wp_pfn_shared(), where the
-+		 * pte_same() check will fail, eventually causing page fault
-+		 * to be retried by the CPU.
-+		 */
-+		goto unlock;
-+	} else if (RADIX_DAX_TYPE(addr)) {
-+		WARN_ONCE(1, "%s: invalid address %p\n", __func__, addr);
-+		goto unlock;
-+	}
-+
-+	error = radix_tree_insert(page_tree, index,
-+			RADIX_DAX_ENTRY(addr, pmd_entry));
-+	if (error)
-+		goto unlock;
-+
-+	mapping->nrdax++;
-+ dirty:
-+	if (dirty)
-+		radix_tree_tag_set(page_tree, index, PAGECACHE_TAG_DIRTY);
-+ unlock:
-+	spin_unlock_irq(&mapping->tree_lock);
-+	return error;
-+}
-+
-+static void dax_writeback_one(struct address_space *mapping, pgoff_t index,
-+		void *entry)
-+{
-+	struct radix_tree_root *page_tree = &mapping->page_tree;
-+	int type = RADIX_DAX_TYPE(entry);
-+	struct radix_tree_node *node;
-+	void **slot;
-+
-+	if (type != RADIX_DAX_PTE && type != RADIX_DAX_PMD) {
-+		WARN_ON_ONCE(1);
-+		return;
-+	}
-+
-+	spin_lock_irq(&mapping->tree_lock);
-+	/*
-+	 * Regular page slots are stabilized by the page lock even
-+	 * without the tree itself locked.  These unlocked entries
-+	 * need verification under the tree lock.
-+	 */
-+	if (!__radix_tree_lookup(page_tree, index, &node, &slot))
-+		goto unlock;
-+	if (*slot != entry)
-+		goto unlock;
-+
-+	/* another fsync thread may have already written back this entry */
-+	if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
-+		goto unlock;
-+
-+	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_TOWRITE);
-+
-+	if (type == RADIX_DAX_PMD)
-+		wb_cache_pmem(RADIX_DAX_ADDR(entry), PMD_SIZE);
-+	else
-+		wb_cache_pmem(RADIX_DAX_ADDR(entry), PAGE_SIZE);
-+ unlock:
-+	spin_unlock_irq(&mapping->tree_lock);
-+}
-+
-+/*
-+ * Flush the mapping to the persistent domain within the byte range of [start,
-+ * end]. This is required by data integrity operations to ensure file data is
-+ * on persistent storage prior to completion of the operation.
-+ */
-+void dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
-+		loff_t end)
-+{
-+	struct inode *inode = mapping->host;
-+	pgoff_t indices[PAGEVEC_SIZE];
-+	pgoff_t start_page, end_page;
-+	struct pagevec pvec;
-+	void *entry;
-+	int i;
-+
-+	if (inode->i_blkbits != PAGE_SHIFT) {
-+		WARN_ON_ONCE(1);
-+		return;
-+	}
-+
-+	rcu_read_lock();
-+	entry = radix_tree_lookup(&mapping->page_tree, start & PMD_MASK);
-+	rcu_read_unlock();
-+
-+	/* see if the start of our range is covered by a PMD entry */
-+	if (entry && RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
-+		start &= PMD_MASK;
-+
-+	start_page = start >> PAGE_CACHE_SHIFT;
-+	end_page = end >> PAGE_CACHE_SHIFT;
-+
-+	tag_pages_for_writeback(mapping, start_page, end_page);
-+
-+	pagevec_init(&pvec, 0);
-+	while (1) {
-+		pvec.nr = find_get_entries_tag(mapping, start_page,
-+				PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
-+				pvec.pages, indices);
-+
-+		if (pvec.nr == 0)
-+			break;
-+
-+		for (i = 0; i < pvec.nr; i++)
-+			dax_writeback_one(mapping, indices[i], pvec.pages[i]);
-+	}
-+	wmb_pmem();
-+}
-+EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
-+
- static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
- 			struct vm_area_struct *vma, struct vm_fault *vmf)
- {
-@@ -329,7 +467,11 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
- 	}
- 
- 	error = vm_insert_mixed(vma, vaddr, pfn);
-+	if (error)
-+		goto out;
- 
-+	error = dax_radix_entry(mapping, vmf->pgoff, addr, false,
-+			vmf->flags & FAULT_FLAG_WRITE);
-  out:
- 	i_mmap_unlock_read(mapping);
- 
-@@ -452,6 +594,7 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		delete_from_page_cache(page);
- 		unlock_page(page);
- 		page_cache_release(page);
-+		page = NULL;
- 	}
- 
- 	/*
-@@ -539,7 +682,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 	pgoff_t size, pgoff;
- 	sector_t block, sector;
- 	unsigned long pfn;
--	int result = 0;
-+	int error, result = 0;
- 
- 	/* dax pmd mappings are broken wrt gup and fork */
- 	if (!IS_ENABLED(CONFIG_FS_DAX_PMD))
-@@ -651,6 +794,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		}
- 
- 		result |= vmf_insert_pfn_pmd(vma, address, pmd, pfn, write);
-+
-+		if (write) {
-+			error = dax_radix_entry(mapping, pgoff, kaddr, true,
-+					true);
-+			if (error)
-+				goto fallback;
-+		}
- 	}
- 
-  out:
-@@ -702,15 +852,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
-  * dax_pfn_mkwrite - handle first write to DAX page
-  * @vma: The virtual memory area where the fault occurred
-  * @vmf: The description of the fault
-- *
+ /**
+- * __arch_wb_cache_pmem - write back a cache range with CLWB
++ * arch_wb_cache_pmem - write back a cache range with CLWB
+  * @vaddr:	virtual start address
+  * @size:	number of bytes to write back
+  *
+  * Write back a cache range using the CLWB (cache line write back)
+  * instruction.  This function requires explicit ordering with an
+- * arch_wmb_pmem() call.  This API is internal to the x86 PMEM implementation.
++ * arch_wmb_pmem() call.
   */
- int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+-static inline void __arch_wb_cache_pmem(void *vaddr, size_t size)
++static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
  {
--	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
-+	struct file *file = vma->vm_file;
+ 	u16 x86_clflush_size = boot_cpu_data.x86_clflush_size;
+ 	unsigned long clflush_mask = x86_clflush_size - 1;
++	void *vaddr = (void __force *)addr;
+ 	void *vend = vaddr + size;
+ 	void *p;
  
--	sb_start_pagefault(sb);
--	file_update_time(vma->vm_file);
--	sb_end_pagefault(sb);
-+	dax_radix_entry(file->f_mapping, vmf->pgoff, NULL, false, true);
- 	return VM_FAULT_NOPAGE;
- }
- EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index e9d57f68..11eb183 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -41,4 +41,6 @@ static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
- }
-+void dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
-+		loff_t end);
- #endif
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 99dfbc9..9577783 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -482,6 +482,9 @@ int filemap_write_and_wait_range(struct address_space *mapping,
- {
- 	int err = 0;
+@@ -115,7 +116,7 @@ static inline size_t arch_copy_from_iter_pmem(void __pmem *addr, size_t bytes,
+ 	len = copy_from_iter_nocache(vaddr, bytes, i);
  
-+	if (dax_mapping(mapping) && mapping->nrdax)
-+		dax_writeback_mapping_range(mapping, lstart, lend);
+ 	if (__iter_needs_pmem_wb(i))
+-		__arch_wb_cache_pmem(vaddr, bytes);
++		arch_wb_cache_pmem(addr, bytes);
+ 
+ 	return len;
+ }
+@@ -138,7 +139,7 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
+ 	else
+ 		memset(vaddr, 0, size);
+ 
+-	__arch_wb_cache_pmem(vaddr, size);
++	arch_wb_cache_pmem(addr, size);
+ }
+ 
+ static inline bool __arch_has_wmb_pmem(void)
+diff --git a/include/linux/pmem.h b/include/linux/pmem.h
+index acfea8c..7c3d11a 100644
+--- a/include/linux/pmem.h
++++ b/include/linux/pmem.h
+@@ -53,12 +53,18 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
+ {
+ 	BUG();
+ }
 +
- 	if (mapping->nrpages) {
- 		err = __filemap_fdatawrite_range(mapping, lstart, lend,
- 						 WB_SYNC_ALL);
++static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
++{
++	BUG();
++}
+ #endif
+ 
+ /*
+  * Architectures that define ARCH_HAS_PMEM_API must provide
+  * implementations for arch_memcpy_to_pmem(), arch_wmb_pmem(),
+- * arch_copy_from_iter_pmem(), arch_clear_pmem() and arch_has_wmb_pmem().
++ * arch_copy_from_iter_pmem(), arch_clear_pmem(), arch_wb_cache_pmem()
++ * and arch_has_wmb_pmem().
+  */
+ static inline void memcpy_from_pmem(void *dst, void __pmem const *src, size_t size)
+ {
+@@ -178,4 +184,18 @@ static inline void clear_pmem(void __pmem *addr, size_t size)
+ 	else
+ 		default_clear_pmem(addr, size);
+ }
++
++/**
++ * wb_cache_pmem - write back processor cache for PMEM memory range
++ * @addr:	virtual start address
++ * @size:	number of bytes to write back
++ *
++ * Write back the processor cache range starting at 'addr' for 'size' bytes.
++ * This function requires explicit ordering with a wmb_pmem() call.
++ */
++static inline void wb_cache_pmem(void __pmem *addr, size_t size)
++{
++	if (arch_has_pmem_api())
++		arch_wb_cache_pmem(addr, size);
++}
+ #endif /* __PMEM_H__ */
 -- 
 2.5.0
 
