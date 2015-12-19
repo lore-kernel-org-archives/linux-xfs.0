@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3694806C
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:00:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9728B8F8052
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:26 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 094077FFF
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:00:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C2291304059
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:33 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id UIhZpaaCLbZp7zA0 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id At8UUcbhIeAPvZ4f (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:25 -0800 (PST)
-Subject: [PATCH 36/76] xfs: don't update rmapbt when fixing agfl
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:30 -0800 (PST)
+Subject: [PATCH 37/76] xfs: define tracepoints for refcount btree activities
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:00:21 -0800
-Message-ID: <20151219090021.12713.2792.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:00:27 -0800
+Message-ID: <20151219090027.12713.53055.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,99 +31,362 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Allow a caller of xfs_alloc_fix_freelist to disable rmapbt updates
-when fixing the AG freelist.  xfs_repair needs this during phase 5
-to be able to adjust the freelist while it's reconstructing the rmap
-btree; the missing entries will be added back at the very end of
-phase 5 once the AGFL contents settle down.
+Define all the tracepoints we need to inspect the refcount btree
+runtime operation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   40 ++++++++++++++++++++++++++--------------
- fs/xfs/libxfs/xfs_alloc.h |    5 ++++-
- 2 files changed, 30 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_trace.h |  329 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 329 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index aa3cc24..cc23a30 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2101,26 +2101,38 @@ xfs_alloc_fix_freelist(
- 	 * anything other than extra overhead when we need to put more blocks
- 	 * back on the free list? Maybe we should only do this when space is
- 	 * getting low or the AGFL is more than half full?
-+	 *
-+	 * The NOSHRINK flag prevents the AGFL from being shrunk if it's too
-+	 * big; the NORMAP flag prevents AGFL expand/shrink operations from
-+	 * updating the rmapbt.  Both flags are used in xfs_repair while we're
-+	 * rebuilding the rmapbt, and neither are used by the kernel.  They're
-+	 * both required to ensure that rmaps are correctly recorded for the
-+	 * regenerated AGFL, bnobt, and cntbt.  See repair/phase5.c and
-+	 * repair/rmap.c in xfsprogs for details.
- 	 */
--	XFS_RMAP_AG_OWNER(&targs.oinfo, XFS_RMAP_OWN_AG);
--	while (pag->pagf_flcount > need) {
--		struct xfs_buf	*bp;
-+	memset(&targs, 0, sizeof(targs));
-+	if (!(flags & XFS_ALLOC_FLAG_NOSHRINK)) {
-+		if (!(flags & XFS_ALLOC_FLAG_NORMAP))
-+			XFS_RMAP_AG_OWNER(&targs.oinfo, XFS_RMAP_OWN_AG);
-+		while (pag->pagf_flcount > need) {
-+			struct xfs_buf	*bp;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bdd6b18..1c91439 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -39,6 +39,16 @@ struct xfs_buf_log_format;
+ struct xfs_inode_log_format;
+ struct xfs_bmbt_irec;
  
--		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
--		if (error)
--			goto out_agbp_relse;
--		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
--					   &targs.oinfo, 1);
--		if (error)
--			goto out_agbp_relse;
--		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
--		xfs_trans_binval(tp, bp);
-+			error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
-+			if (error)
-+				goto out_agbp_relse;
-+			error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
-+						   &targs.oinfo, 1);
-+			if (error)
-+				goto out_agbp_relse;
-+			bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-+			xfs_trans_binval(tp, bp);
-+		}
- 	}
- 
--	memset(&targs, 0, sizeof(targs));
- 	targs.tp = tp;
- 	targs.mp = mp;
--	XFS_RMAP_AG_OWNER(&targs.oinfo, XFS_RMAP_OWN_AG);
-+	if (!(flags & XFS_ALLOC_FLAG_NORMAP))
-+		XFS_RMAP_AG_OWNER(&targs.oinfo, XFS_RMAP_OWN_AG);
- 	targs.agbp = agbp;
- 	targs.agno = args->agno;
- 	targs.alignment = targs.minlen = targs.prod = targs.isfl = 1;
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index ea2868d..f21ec2b 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -54,6 +54,9 @@ typedef unsigned int xfs_alloctype_t;
-  */
- #define	XFS_ALLOC_FLAG_TRYLOCK	0x00000001  /* use trylock for buffer locking */
- #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
-+#define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
-+#define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
++#ifndef XFS_REFCOUNT_IREC_PLACEHOLDER
++#define XFS_REFCOUNT_IREC_PLACEHOLDER
++/* Placeholder definition to avoid breaking bisectability. */
++struct xfs_refcount_irec {
++	xfs_agblock_t	rc_startblock;	/* starting block number */
++	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
++	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
++};
++#endif
 +
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
+ 	TP_ARGS(ctx),
+@@ -2455,6 +2465,325 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
+ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
+ DEFINE_DISCARD_EVENT(xfs_discard_busy);
  
- /*
-  * Argument structure for xfs_alloc routines.
-@@ -87,7 +90,7 @@ typedef struct xfs_alloc_arg {
- 	char		isfl;		/* set if is freelist blocks - !acctg */
- 	char		userdata;	/* mask defining userdata treatment */
- 	xfs_fsblock_t	firstblock;	/* io first block allocated */
--	struct xfs_owner_info	oinfo;		/* owner of blocks being allocated */
-+	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
- } xfs_alloc_arg_t;
++/* refcount tracepoint classes */
++
++/* reuse the discard trace class for agbno/aglen-based traces */
++#define DEFINE_AG_EXTENT_EVENT(name) DEFINE_DISCARD_EVENT(name)
++
++/* ag btree lookup tracepoint class */
++#define XFS_AG_BTREE_CMP_FORMAT_STR \
++	{ XFS_LOOKUP_EQ,	"eq" }, \
++	{ XFS_LOOKUP_LE,	"le" }, \
++	{ XFS_LOOKUP_GE,	"ge" }
++DECLARE_EVENT_CLASS(xfs_ag_btree_lookup_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_lookup_t dir),
++	TP_ARGS(mp, agno, agbno, dir),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_lookup_t, dir)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->dir = dir;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u cmp %s(%d)\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __print_symbolic(__entry->dir, XFS_AG_BTREE_CMP_FORMAT_STR),
++		  __entry->dir)
++)
++
++#define DEFINE_AG_BTREE_LOOKUP_EVENT(name) \
++DEFINE_EVENT(xfs_ag_btree_lookup_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_lookup_t dir), \
++	TP_ARGS(mp, agno, agbno, dir))
++
++/* single-rcext tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec),
++	TP_ARGS(mp, agno, irec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount)
++)
++
++#define DEFINE_REFCOUNT_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *irec), \
++	TP_ARGS(mp, agno, irec))
++
++/* single-rcext and an agbno tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec, xfs_agblock_t agbno),
++	TP_ARGS(mp, agno, irec, agbno),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++		__field(xfs_agblock_t, agbno)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++		__entry->agbno = agbno;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u @ agbno %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount,
++		  __entry->agbno)
++)
++
++#define DEFINE_REFCOUNT_EXTENT_AT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_extent_at_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *irec, xfs_agblock_t agbno), \
++	TP_ARGS(mp, agno, irec, agbno))
++
++/* double-rcext tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2),
++	TP_ARGS(mp, agno, i1, i2),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, i1_startblock)
++		__field(xfs_extlen_t, i1_blockcount)
++		__field(xfs_nlink_t, i1_refcount)
++		__field(xfs_agblock_t, i2_startblock)
++		__field(xfs_extlen_t, i2_blockcount)
++		__field(xfs_nlink_t, i2_refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->i1_startblock = i1->rc_startblock;
++		__entry->i1_blockcount = i1->rc_blockcount;
++		__entry->i1_refcount = i1->rc_refcount;
++		__entry->i2_startblock = i2->rc_startblock;
++		__entry->i2_blockcount = i2->rc_blockcount;
++		__entry->i2_refcount = i2->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->i1_startblock,
++		  __entry->i1_blockcount,
++		  __entry->i1_refcount,
++		  __entry->i2_startblock,
++		  __entry->i2_blockcount,
++		  __entry->i2_refcount)
++)
++
++#define DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_double_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2), \
++	TP_ARGS(mp, agno, i1, i2))
++
++/* double-rcext and an agbno tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2,
++		 xfs_agblock_t agbno),
++	TP_ARGS(mp, agno, i1, i2, agbno),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, i1_startblock)
++		__field(xfs_extlen_t, i1_blockcount)
++		__field(xfs_nlink_t, i1_refcount)
++		__field(xfs_agblock_t, i2_startblock)
++		__field(xfs_extlen_t, i2_blockcount)
++		__field(xfs_nlink_t, i2_refcount)
++		__field(xfs_agblock_t, agbno)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->i1_startblock = i1->rc_startblock;
++		__entry->i1_blockcount = i1->rc_blockcount;
++		__entry->i1_refcount = i1->rc_refcount;
++		__entry->i2_startblock = i2->rc_startblock;
++		__entry->i2_blockcount = i2->rc_blockcount;
++		__entry->i2_refcount = i2->rc_refcount;
++		__entry->agbno = agbno;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u @ agbno %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->i1_startblock,
++		  __entry->i1_blockcount,
++		  __entry->i1_refcount,
++		  __entry->i2_startblock,
++		  __entry->i2_blockcount,
++		  __entry->i2_refcount,
++		  __entry->agbno)
++)
++
++#define DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_double_extent_at_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2, \
++		 xfs_agblock_t agbno), \
++	TP_ARGS(mp, agno, i1, i2, agbno))
++
++/* triple-rcext tracepoint class */
++DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2,
++		 struct xfs_refcount_irec *i3),
++	TP_ARGS(mp, agno, i1, i2, i3),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, i1_startblock)
++		__field(xfs_extlen_t, i1_blockcount)
++		__field(xfs_nlink_t, i1_refcount)
++		__field(xfs_agblock_t, i2_startblock)
++		__field(xfs_extlen_t, i2_blockcount)
++		__field(xfs_nlink_t, i2_refcount)
++		__field(xfs_agblock_t, i3_startblock)
++		__field(xfs_extlen_t, i3_blockcount)
++		__field(xfs_nlink_t, i3_refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->i1_startblock = i1->rc_startblock;
++		__entry->i1_blockcount = i1->rc_blockcount;
++		__entry->i1_refcount = i1->rc_refcount;
++		__entry->i2_startblock = i2->rc_startblock;
++		__entry->i2_blockcount = i2->rc_blockcount;
++		__entry->i2_refcount = i2->rc_refcount;
++		__entry->i3_startblock = i3->rc_startblock;
++		__entry->i3_blockcount = i3->rc_blockcount;
++		__entry->i3_refcount = i3->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u -- "
++		  "agbno %u len %u refcount %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->i1_startblock,
++		  __entry->i1_blockcount,
++		  __entry->i1_refcount,
++		  __entry->i2_startblock,
++		  __entry->i2_blockcount,
++		  __entry->i2_refcount,
++		  __entry->i3_startblock,
++		  __entry->i3_blockcount,
++		  __entry->i3_refcount)
++);
++
++#define DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_triple_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2, \
++		 struct xfs_refcount_irec *i3), \
++	TP_ARGS(mp, agno, i1, i2, i3))
++
++/* simple AG-based error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_ag_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, agno, error, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, error)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->error = error;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d agno %u error %d caller %ps",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->error,
++		  (char *)__entry->caller_ip)
++);
++
++#define DEFINE_AG_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_ag_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, agno, error, caller_ip))
++
++/* refcount btree tracepoints */
++DEFINE_AG_BTREE_LOOKUP_EVENT(xfs_refcountbt_lookup);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_get);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_update);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_insert);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcountbt_delete);
++
++/* refcount adjustment tracepoints */
++DEFINE_AG_EXTENT_EVENT(xfs_refcount_increase);
++DEFINE_AG_EXTENT_EVENT(xfs_refcount_decrease);
++DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(xfs_refcount_merge_center_extents);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_modify_extent);
++DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_left_extent);
++DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_right_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_left_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_right_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_left_extent);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_right_extent);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_center_extents_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_modify_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_split_left_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_split_right_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_left_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_right_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_find_left_extent_error);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_find_right_extent_error);
++DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_rec_order_error);
++
++/* reflink helpers */
++DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared);
++DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared_result);
++DEFINE_AG_ERROR_EVENT(xfs_refcount_find_shared_error);
++
+ #endif /* _TRACE_XFS_H */
  
- /*
+ #undef TRACE_INCLUDE_PATH
 
 _______________________________________________
 xfs mailing list
