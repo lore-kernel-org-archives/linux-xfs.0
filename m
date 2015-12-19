@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5654E80D6
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:04:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C99DEAC003
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:04:38 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B23F08164
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:04:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 783418F8039
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:04:42 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 7HrI5Y1iGeCKjV5Z (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kEVIp3w2gfCuz74E (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:04:36 -0800 (PST)
-Subject: [PATCH 73/76] xfs: use new vfs reflink and dedup function pointers
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:04:39 -0800 (PST)
+Subject: [PATCH 74/76] xfs: set up per-AG preallocated block pools
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:04:29 -0800
-Message-ID: <20151219090429.12713.55302.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:04:36 -0800
+Message-ID: <20151219090436.12713.63259.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,318 +31,502 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Use the new VFS function pointers for copy_file_range and dedupe_data.
+One unfortunate quirk of the reference count btree -- it can expand in
+size when blocks are written to *other* allocation groups if, say, one
+large extent becomes a lot of tiny extents.  Since we don't want to
+start throwing errors in the middle of CoWing, establish a pool of
+reserved blocks in each AG to feed such an expansion.  Reserved pools
+can be large enough to obviate the need for external allocations and
+use EFI/EFDs so that the the reserved blocks will be freed if the
+system crashes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_file.c  |   61 ++++++++++++++++
- fs/xfs/xfs_ioctl.c |  199 ----------------------------------------------------
- 2 files changed, 60 insertions(+), 200 deletions(-)
+ fs/xfs/Makefile                |    1 
+ fs/xfs/libxfs/xfs_perag_pool.c |  379 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_perag_pool.h |   47 +++++
+ fs/xfs/xfs_trace.h             |   15 ++
+ 4 files changed, 442 insertions(+)
+ create mode 100644 fs/xfs/libxfs/xfs_perag_pool.c
+ create mode 100644 fs/xfs/libxfs/xfs_perag_pool.h
 
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e6bc6ab..0d96a37 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1081,7 +1081,7 @@ xfs_file_wait_for_io(
- }
- 
- /* Hook up to the VFS reflink function */
--int
-+STATIC int
- xfs_file_share_range(
- 	struct file	*file_in,
- 	loff_t		pos_in,
-@@ -1175,6 +1175,62 @@ out_unlock:
- 	return ret;
- }
- 
-+STATIC ssize_t
-+xfs_file_copy_range(
-+	struct file	*file_in,
-+	loff_t		pos_in,
-+	struct file	*file_out,
-+	loff_t		pos_out,
-+	size_t		len,
-+	unsigned int	flags)
-+{
-+	int		error;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 798e2b0..d2ab008 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -51,6 +51,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ 				   xfs_inode_fork.o \
+ 				   xfs_inode_buf.o \
+ 				   xfs_log_rlimit.o \
++				   xfs_perag_pool.o \
+ 				   xfs_rmap.o \
+ 				   xfs_rmap_btree.o \
+ 				   xfs_refcount.o \
+diff --git a/fs/xfs/libxfs/xfs_perag_pool.c b/fs/xfs/libxfs/xfs_perag_pool.c
+new file mode 100644
+index 0000000..b49ffd2
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_perag_pool.c
+@@ -0,0 +1,379 @@
++/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
++ * Copyright (c) 2015 Oracle.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_alloc.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_cksum.h"
++#include "xfs_trans.h"
++#include "xfs_bit.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_perag_pool.h"
++#include "xfs_trans_space.h"
 +
-+	error = xfs_file_share_range(file_in, pos_in, file_out, pos_out,
-+				     len, false);
++/**
++ * xfs_perag_pool_free() -- Free a per-AG reserved block pool.
++ */
++int
++xfs_perag_pool_free(
++	struct xfs_perag_pool		*p)
++{
++	struct xfs_mount		*mp;
++	struct xfs_perag_pool_entry	*ppe, *n;
++	struct xfs_trans		*tp;
++	xfs_fsblock_t			fsb;
++	struct xfs_bmap_free		freelist;
++	int				committed;
++	int				error = 0, err;
++
++	if (!p)
++		return 0;
++
++	mp = p->pp_mount;
++	list_for_each_entry_safe(ppe, n, &p->pp_entries, ppe_list) {
++		list_del(&ppe->ppe_list);
++		if (XFS_FORCED_SHUTDOWN(mp)) {
++			kmem_free(ppe);
++			continue;
++		}
++
++		/* Set up transaction. */
++		tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
++		tp->t_flags |= XFS_TRANS_RESERVE;
++		err = xfs_trans_reserve(tp, &M_RES(mp)->tr_write, 0, 0);
++		if (err)
++			goto loop_cancel;
++		xfs_bmap_init(&freelist, &fsb);
++		fsb = XFS_AGB_TO_FSB(p->pp_mount, p->pp_agno, ppe->ppe_bno);
++
++		trace_xfs_perag_pool_free_extent(mp, p->pp_agno, ppe->ppe_bno,
++				ppe->ppe_len, &p->pp_oinfo);
++
++		/* Free the block. */
++		xfs_bmap_add_free(mp, &freelist, fsb, ppe->ppe_len,
++				&p->pp_oinfo);
++
++		err = xfs_bmap_finish(&tp, &freelist, &committed, NULL);
++		if (err)
++			goto loop_cancel;
++
++		err = xfs_trans_commit(tp);
++		if (!error)
++			error = err;
++		kmem_free(ppe);
++		continue;
++loop_cancel:
++		if (!error)
++			error = err;
++		xfs_trans_cancel(tp);
++		kmem_free(ppe);
++	}
++
++	kmem_free(p);
 +	if (error)
-+		return error;
-+	return len;
++		trace_xfs_perag_pool_free_error(mp, p->pp_agno, error,
++				_RET_IP_);
++	return error;
 +}
 +
-+STATIC int
-+xfs_file_clone_range(
-+	struct file	*file_in,
-+	loff_t		pos_in,
-+	struct file	*file_out,
-+	loff_t		pos_out,
-+	u64		len)
++/* Allocate a block for the pool. */
++static int
++xfs_perag_pool_grab_block(
++	struct xfs_perag_pool		*p,
++	struct xfs_trans		*tp,
++	xfs_extlen_t			*len)
 +{
-+	return xfs_file_share_range(file_in, pos_in, file_out, pos_out,
-+				     len, false);
-+}
++	struct xfs_mount		*mp;
++	struct xfs_perag_pool_entry	*ppe;
++	struct xfs_alloc_arg		args;
++	int				error;
 +
-+#define XFS_MAX_DEDUPE_LEN	(16 * 1024 * 1024)
-+STATIC ssize_t
-+xfs_file_dedupe_range(
-+	struct file	*src_file,
-+	u64		loff,
-+	u64		len,
-+	struct file	*dst_file,
-+	u64		dst_loff)
-+{
-+	int		error;
++	mp = p->pp_mount;
 +
-+	/*
-+	 * Limit the total length we will dedupe for each operation.
-+	 * This is intended to bound the total time spent in this
-+	 * ioctl to something sane.
-+	 */
-+	if (len > XFS_MAX_DEDUPE_LEN)
-+		len = XFS_MAX_DEDUPE_LEN;
++	/* Set up the allocation. */
++	memset(&args, 0, sizeof(args));
++	args.mp = mp;
++	args.type = XFS_ALLOCTYPE_NEAR_BNO;
++	args.fsbno = XFS_AGB_TO_FSB(mp, p->pp_agno, p->pp_agbno);
++	args.firstblock = args.fsbno;
++	args.oinfo = p->pp_oinfo;
++	args.minlen = 1;
 +
-+	error = xfs_file_share_range(src_file, loff, dst_file, dst_loff,
-+				     len, true);
++	/* Allocate blocks. */
++	args.tp = tp;
++	args.maxlen = args.prod = *len;
++	p->pp_allocating = true;
++	error = xfs_alloc_vextent(&args);
++	p->pp_allocating = false;
 +	if (error)
-+		return error;
-+	return len;
++		goto out_error;
++	if (args.fsbno == NULLFSBLOCK) {
++		/* oh well, we're headed towards failure. */
++		error = -ENOSPC;
++		goto out_error;
++	}
++	*len = args.len;
++
++	trace_xfs_perag_pool_grab_block(mp, p->pp_agno, args.agbno, args.len,
++			&p->pp_oinfo);
++
++	/* Add to our list. */
++	ASSERT(args.agno == p->pp_agno);
++	ppe = kmem_alloc(sizeof(struct xfs_perag_pool_entry), KM_SLEEP);
++	ppe->ppe_bno = args.agbno;
++	ppe->ppe_len = args.len;
++	list_add_tail(&ppe->ppe_list, &p->pp_entries);
++	return 0;
++
++out_error:
++	trace_xfs_perag_pool_grab_block_error(mp, p->pp_agno, error, _RET_IP_);
++	return error;
 +}
 +
- STATIC int
- xfs_file_open(
- 	struct inode	*inode,
-@@ -1811,6 +1867,9 @@ const struct file_operations xfs_file_operations = {
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
- 	.fallocate	= xfs_file_fallocate,
-+	.copy_file_range = xfs_file_copy_range,
-+	.clone_file_range = xfs_file_clone_range,
-+	.dedupe_file_range = xfs_file_dedupe_range,
- };
++/* Ensure the pool has some capacity. */
++static int
++__xfs_perag_pool_ensure_capacity(
++	struct xfs_perag_pool		*p,
++	xfs_extlen_t			sz,
++	bool				force)
++{
++	struct xfs_mount		*mp = p->pp_mount;
++	struct xfs_trans		*tp;
++	struct xfs_perag		*pag;
++	uint				resblks;
++	xfs_extlen_t			alloc_len;
++	int				error;
++
++	if (sz <= p->pp_len - p->pp_inuse)
++		return 0;
++	sz -= p->pp_len - p->pp_inuse;
++
++	trace_xfs_perag_pool_ensure_capacity(mp, p->pp_agno,
++			p->pp_len - p->pp_inuse, sz, &p->pp_oinfo);
++
++	/* Do we even have enough free blocks? */
++	pag = xfs_perag_get(mp, p->pp_agno);
++	resblks = pag->pagf_freeblks;
++	xfs_perag_put(pag);
++	if (force && resblks < sz)
++		sz = resblks;
++	if (resblks < sz) {
++		error = -ENOSPC;
++		goto out_error;
++	}
++
++	while (sz) {
++		/* Set up a transaction */
++		resblks = XFS_DIOSTRAT_SPACE_RES(mp, sz);
++		tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
++		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write, resblks, 0);
++		if (error)
++			goto out_cancel;
++
++		/* Allocate the blocks */
++		alloc_len = sz;
++		error = xfs_perag_pool_grab_block(p, tp, &alloc_len);
++		if (error)
++			goto out_cancel;
++
++		/* Commit the transaction */
++		error = xfs_trans_commit(tp);
++		if (error)
++			goto out_error;
++
++		p->pp_len += alloc_len;
++		sz -= alloc_len;
++	}
++	return 0;
++
++out_cancel:
++	xfs_trans_cancel(tp);
++out_error:
++	trace_xfs_perag_pool_ensure_capacity_error(mp, p->pp_agno, error,
++			_RET_IP_);
++	return error;
++}
++
++/**
++ * xfs_perag_pool_ensure_capacity() -- Ensure the pool has some capacity.
++ *
++ * @p: per-AG reserved blocks pool.
++ * @sz: Ensure that there are at least this many free blocks.
++ */
++int
++xfs_perag_pool_ensure_capacity(
++	struct xfs_perag_pool		*p,
++	xfs_extlen_t			sz)
++{
++	if (!p)
++		return 0;
++	return __xfs_perag_pool_ensure_capacity(p, sz, false);
++}
++
++/**
++ * xfs_perag_pool_init() -- Initialize a per-AG reserved block pool.
++ */
++int
++xfs_perag_pool_init(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	xfs_agblock_t			agbno,
++	xfs_extlen_t			len,
++	xfs_extlen_t			inuse,
++	uint64_t			owner,
++	struct xfs_perag_pool		**pp)
++{
++	struct xfs_perag_pool		*p;
++	struct xfs_owner_info		oinfo;
++	int				error;
++
++	XFS_RMAP_AG_OWNER(&oinfo, owner);
++	trace_xfs_perag_pool_init(mp, agno, agbno, len, &oinfo);
++	trace_xfs_perag_pool_init(mp, agno, agbno, inuse, &oinfo);
++
++	p = kmem_alloc(sizeof(struct xfs_perag_pool), KM_SLEEP);
++	p->pp_mount = mp;
++	p->pp_agno = agno;
++	p->pp_agbno = agbno;
++	p->pp_inuse = p->pp_len = inuse;
++	p->pp_oinfo = oinfo;
++	p->pp_allocating = false;
++	INIT_LIST_HEAD(&p->pp_entries);
++	*pp = p;
++
++	/* Try to reserve some blocks. */
++	error = __xfs_perag_pool_ensure_capacity(p, len - inuse, true);
++	if (error == -ENOSPC)
++		error = 0;
++
++	if (error)
++		trace_xfs_perag_pool_init_error(mp, agno, error, _RET_IP_);
++	return error;
++}
++
++/**
++ * xfs_perag_pool_alloc_block() -- Allocate a block from the pool.
++ *
++ * @p: Reserved block pool.
++ * @tp: Transaction to record the allocation.
++ * @bno: (out) The allocated block number.
++ */
++int
++xfs_perag_pool_alloc_block(
++	struct xfs_perag_pool		*p,
++	struct xfs_trans		*tp,
++	xfs_agblock_t			*bno)
++{
++	struct xfs_mount		*mp;
++	struct xfs_perag_pool_entry	*ppe;
++	xfs_extlen_t			len;
++	int				error;
++
++	if (p == NULL || p->pp_allocating)
++		return -EINVAL;
++
++	mp = p->pp_mount;
++	mp = mp;
++	/* Empty pool?  Grab another block. */
++	if (list_empty(&p->pp_entries)) {
++		len = 1;
++		error = xfs_perag_pool_grab_block(p, tp, &len);
++		if (error)
++			goto err;
++		ASSERT(len == 1);
++		if (list_empty(&p->pp_entries)) {
++			error = -ENOSPC;
++			goto err;
++		}
++	}
++
++	/* Find an available block. */
++	ppe = list_first_entry(&p->pp_entries, struct xfs_perag_pool_entry,
++			ppe_list);
++	*bno = ppe->ppe_bno;
++
++	trace_xfs_perag_pool_alloc_block(mp, p->pp_agno, *bno, 1, &p->pp_oinfo);
++
++	/* Update the accounting. */
++	ppe->ppe_len--;
++	ppe->ppe_bno++;
++	if (ppe->ppe_len == 0)
++		list_del(&ppe->ppe_list);
++	p->pp_inuse++;
++
++	return 0;
++err:
++	trace_xfs_perag_pool_alloc_block_error(mp, p->pp_agno, error, _RET_IP_);
++	return error;
++}
++
++/**
++ * xfs_perag_pool_free_block() -- Put a block back in the pool.
++ *
++ * @p: Reserved block pool.
++ * @tp: Transaction to record the free operation.
++ * @bno: Block to put back.
++ */
++int
++xfs_perag_pool_free_block(
++	struct xfs_perag_pool		*p,
++	struct xfs_trans		*tp,
++	xfs_agblock_t			bno)
++{
++	struct xfs_mount		*mp;
++	struct xfs_perag_pool_entry	*ppe;
++
++	if (p == NULL)
++		return -EINVAL;
++
++	mp = p->pp_mount;
++	mp = mp;
++	trace_xfs_perag_pool_free_block(mp, p->pp_agno, bno, 1, &p->pp_oinfo);
++
++	list_for_each_entry(ppe, &p->pp_entries, ppe_list) {
++		if (ppe->ppe_bno - 1 == bno) {
++
++			/* Adjust bookkeeping. */
++			p->pp_inuse--;
++			ppe->ppe_bno--;
++			ppe->ppe_len++;
++			return 0;
++		}
++		if (ppe->ppe_bno + ppe->ppe_len == bno) {
++			p->pp_inuse--;
++			ppe->ppe_len++;
++			return 0;
++		}
++	}
++	ppe = kmem_alloc(sizeof(struct xfs_perag_pool_entry), KM_SLEEP);
++	ppe->ppe_bno = bno;
++	ppe->ppe_len = 1;
++	p->pp_inuse--;
++
++	list_add_tail(&ppe->ppe_list, &p->pp_entries);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_perag_pool.h b/fs/xfs/libxfs/xfs_perag_pool.h
+new file mode 100644
+index 0000000..ecdcd2a
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_perag_pool.h
+@@ -0,0 +1,47 @@
++/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
++ * Copyright (c) 2015 Oracle.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++struct xfs_perag_pool_entry {
++	struct list_head	ppe_list;	/* pool list */
++	xfs_agblock_t		ppe_bno;	/* AG block number */
++	xfs_extlen_t		ppe_len;	/* length */
++};
++
++struct xfs_perag_pool {
++	struct xfs_mount	*pp_mount;	/* XFS mount */
++	xfs_agnumber_t		pp_agno;	/* AG number */
++	xfs_agblock_t		pp_agbno;	/* suggested AG block number */
++	xfs_extlen_t		pp_len;		/* blocks in pool */
++	xfs_extlen_t		pp_inuse;	/* blocks in use */
++	struct xfs_owner_info	pp_oinfo;	/* owner */
++	struct list_head	pp_entries;	/* pool entries */
++	bool			pp_allocating;	/* are we allocating? */
++};
++
++int xfs_perag_pool_free(struct xfs_perag_pool *p);
++int xfs_perag_pool_init(struct xfs_mount *mp, xfs_agnumber_t agno,
++		xfs_agblock_t agbno, xfs_extlen_t len, xfs_extlen_t inuse,
++		uint64_t owner, struct xfs_perag_pool **pp);
++
++int xfs_perag_pool_ensure_capacity(struct xfs_perag_pool *p, xfs_extlen_t sz);
++
++int xfs_perag_pool_alloc_block(struct xfs_perag_pool *p, struct xfs_trans *tp,
++		xfs_agblock_t *bno);
++int xfs_perag_pool_free_block(struct xfs_perag_pool *p, struct xfs_trans *tp,
++		xfs_agblock_t bno);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 0773938..dad57dc 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3160,6 +3160,21 @@ DEFINE_INODE_EVENT(xfs_reflink_cancel_pending_cow);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_cancel_cow);
+ DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_pending_cow_error);
  
- const struct file_operations xfs_dir_file_operations = {
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 29dc36c..7562f14 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1536,159 +1536,6 @@ xfs_ioc_swapext(
- 	return error;
- }
++/* perag pool tracepoints */
++#define DEFINE_PERAG_POOL_EVENT	DEFINE_RMAP_EVENT
++DEFINE_PERAG_POOL_EVENT(xfs_perag_pool_free_extent);
++DEFINE_PERAG_POOL_EVENT(xfs_perag_pool_grab_block);
++DEFINE_PERAG_POOL_EVENT(xfs_perag_pool_init);
++DEFINE_PERAG_POOL_EVENT(xfs_perag_pool_ensure_capacity);
++DEFINE_PERAG_POOL_EVENT(xfs_perag_pool_alloc_block);
++DEFINE_PERAG_POOL_EVENT(xfs_perag_pool_free_block);
++
++DEFINE_AG_ERROR_EVENT(xfs_perag_pool_free_error);
++DEFINE_AG_ERROR_EVENT(xfs_perag_pool_grab_block_error);
++DEFINE_AG_ERROR_EVENT(xfs_perag_pool_init_error);
++DEFINE_AG_ERROR_EVENT(xfs_perag_pool_ensure_capacity_error);
++DEFINE_AG_ERROR_EVENT(xfs_perag_pool_alloc_block_error);
++
+ #endif /* _TRACE_XFS_H */
  
--extern int xfs_file_share_range(struct file *file_in, loff_t pos_in,
--		struct file *file_out, loff_t pos_out, size_t len,
--		bool is_dedupe);
--
--/*
-- * For reflink, validate the VFS parameters, convert them into the XFS
-- * equivalents, and then call the internal reflink function.
-- */
--STATIC int
--xfs_ioctl_reflink(
--	struct file	*file_in,
--	loff_t		pos_in,
--	struct file	*file_out,
--	loff_t		pos_out,
--	size_t		len,
--	bool		is_dedupe)
--{
--	int		error;
--
--	/* Do we have the correct permissions? */
--	if (!(file_in->f_mode & FMODE_READ) ||
--	    !(file_out->f_mode & FMODE_WRITE) ||
--	    (file_out->f_flags & O_APPEND))
--		return -EBADF;
--
--	error = mnt_want_write_file(file_out);
--	if (error)
--		return error;
--
--	error = xfs_file_share_range(file_in, pos_in, file_out, pos_out, len,
--			is_dedupe);
--	if (error)
--		goto out_drop;
--
--	fsnotify_access(file_in);
--	add_rchar(current, len);
--	fsnotify_modify(file_out);
--	add_wchar(current, len);
--	inc_syscr(current);
--	inc_syscw(current);
--
--out_drop:
--	mnt_drop_write_file(file_out);
--	return error;
--}
--
--#define XFS_MAX_DEDUPE_LEN	(16 * 1024 * 1024)
--
--static long
--xfs_ioctl_file_extent_same(
--	struct file			*file,
--	struct xfs_extent_data __user	*argp)
--{
--	struct xfs_extent_data		*same = NULL;
--	struct xfs_extent_data_info	*info;
--	struct inode			*src;
--	u64				off;
--	u64				len;
--	int				i;
--	int				ret;
--	unsigned long			size;
--	bool				is_admin;
--	u16				count;
--
--	is_admin = capable(CAP_SYS_ADMIN);
--	src = file_inode(file);
--	if (!(file->f_mode & FMODE_READ))
--		return -EINVAL;
--
--	if (get_user(count, &argp->dest_count)) {
--		ret = -EFAULT;
--		goto out;
--	}
--
--	size = offsetof(struct xfs_extent_data __user,
--			info[count]);
--
--	same = memdup_user(argp, size);
--
--	if (IS_ERR(same)) {
--		ret = PTR_ERR(same);
--		goto out;
--	}
--
--	off = same->logical_offset;
--	len = same->length;
--
--	/*
--	 * Limit the total length we will dedupe for each operation.
--	 * This is intended to bound the total time spent in this
--	 * ioctl to something sane.
--	 */
--	if (len > XFS_MAX_DEDUPE_LEN)
--		len = XFS_MAX_DEDUPE_LEN;
--
--	ret = -EISDIR;
--	if (S_ISDIR(src->i_mode))
--		goto out;
--
--	ret = -EACCES;
--	if (!S_ISREG(src->i_mode))
--		goto out;
--
--	/* pre-format output fields to sane values */
--	for (i = 0; i < count; i++) {
--		same->info[i].bytes_deduped = 0ULL;
--		same->info[i].status = 0;
--	}
--
--	for (i = 0, info = same->info; i < count; i++, info++) {
--		struct inode *dst;
--		struct fd dst_file = fdget(info->fd);
--
--		if (!dst_file.file) {
--			info->status = -EBADF;
--			continue;
--		}
--		dst = file_inode(dst_file.file);
--
--		trace_xfs_ioctl_file_extent_same(file_inode(file), off, len,
--				dst, info->logical_offset);
--
--		info->bytes_deduped = 0;
--		if (!(is_admin || (dst_file.file->f_mode & FMODE_WRITE))) {
--			info->status = -EINVAL;
--		} else if (file->f_path.mnt != dst_file.file->f_path.mnt) {
--			info->status = -EXDEV;
--		} else if (S_ISDIR(dst->i_mode)) {
--			info->status = -EISDIR;
--		} else if (!S_ISREG(dst->i_mode)) {
--			info->status = -EOPNOTSUPP;
--		} else {
--			ret = xfs_ioctl_reflink(file, off, dst_file.file,
--					info->logical_offset, len, true);
--			if (ret == -EBADE)
--				info->status = XFS_EXTENT_DATA_DIFFERS;
--			else if (ret == 0)
--				info->bytes_deduped = len;
--			else
--				info->status = ret;
--		}
--		fdput(dst_file);
--	}
--
--	ret = copy_to_user(argp, same, size);
--	if (ret)
--		ret = -EFAULT;
--
--out:
--	kfree(same);
--	return ret;
--}
--
- /*
-  * Note: some of the ioctl's return positive numbers as a
-  * byte count indicating success, such as readlink_by_handle.
-@@ -1987,52 +1834,6 @@ xfs_file_ioctl(
- 		return xfs_icache_free_eofblocks(mp, &keofb);
- 	}
- 
--	case XFS_IOC_CLONE: {
--		struct fd src;
--
--		src = fdget(p);
--		if (!src.file)
--			return -EBADF;
--
--		trace_xfs_ioctl_clone(file_inode(src.file), file_inode(filp));
--
--		error = xfs_ioctl_reflink(src.file, 0, filp, 0, ~0ULL, false);
--		fdput(src);
--		if (error > 0)
--			error = 0;
--
--		return error;
--	}
--
--	case XFS_IOC_CLONE_RANGE: {
--		struct fd src;
--		struct xfs_clone_args args;
--
--		if (copy_from_user(&args, arg, sizeof(args)))
--			return -EFAULT;
--		src = fdget(args.src_fd);
--		if (!src.file)
--			return -EBADF;
--		if (args.src_length == 0)
--			args.src_length = ~0ULL;
--
--		trace_xfs_ioctl_clone_range(file_inode(src.file),
--				args.src_offset, args.src_length,
--				file_inode(filp), args.dest_offset);
--
--		error = xfs_ioctl_reflink(src.file, args.src_offset, filp,
--					  args.dest_offset, args.src_length,
--					  false);
--		fdput(src);
--		if (error > 0)
--			error = 0;
--
--		return error;
--	}
--
--	case XFS_IOC_FILE_EXTENT_SAME:
--		return xfs_ioctl_file_extent_same(filp, arg);
--
- 	default:
- 		return -ENOTTY;
- 	}
+ #undef TRACE_INCLUDE_PATH
 
 _______________________________________________
 xfs mailing list
