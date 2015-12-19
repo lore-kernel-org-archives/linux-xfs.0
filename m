@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 09F187FFF
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:00:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EFA8F30405F
-	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:52 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 9zXiadI7XTOWgXaG (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 67A298094
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 03:01:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5970C304062
+	for <xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:05 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Z8TVq8bosswpKFuF (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:00:50 -0800 (PST)
-Subject: [PATCH 40/76] xfs: refcount btree add more reserved blocks
+	<xfs@oss.sgi.com>; Sat, 19 Dec 2015 01:01:03 -0800 (PST)
+Subject: [PATCH 42/76] xfs: add refcount btree support to growfs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 19 Dec 2015 01:00:46 -0800
-Message-ID: <20151219090046.12713.84759.stgit@birch.djwong.org>
+Date: Sat, 19 Dec 2015 01:00:59 -0800
+Message-ID: <20151219090059.12713.66191.stgit@birch.djwong.org>
 In-Reply-To: <20151219085622.12713.88678.stgit@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,58 +31,77 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Since XFS reserves a small amount of space in each AG as the minimum
-free space needed for an operation, save some more space in case we
-touch the refcount btree.
+Modify the growfs code to initialize new refcount btree blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  |   13 +++++++++++++
- fs/xfs/libxfs/xfs_format.h |    2 ++
- 2 files changed, 15 insertions(+)
+ fs/xfs/xfs_fsops.c |   38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index b69993d..71dac69 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -50,10 +50,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 64bb02b..7c37c22 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -260,6 +260,11 @@ xfs_growfs_data_private(
+ 		agf->agf_longest = cpu_to_be32(tmpsize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+ 			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
++		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++			agf->agf_refcount_root = cpu_to_be32(
++					xfs_refc_block(mp));
++			agf->agf_refcount_level = cpu_to_be32(1);
++		}
  
-+unsigned int
-+xfs_refc_block(
-+	struct xfs_mount	*mp)
-+{
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return XFS_RMAP_BLOCK(mp) + 1;
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return XFS_FIBT_BLOCK(mp) + 1;
-+	return XFS_IBT_BLOCK(mp) + 1;
-+}
+ 		error = xfs_bwrite(bp);
+ 		xfs_buf_relse(bp);
+@@ -451,6 +456,17 @@ xfs_growfs_data_private(
+ 			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
++			/* account for refc btree root */
++			if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++				rrec = XFS_RMAP_REC_ADDR(block, 5);
++				rrec->rm_startblock = cpu_to_be32(
++						xfs_refc_block(mp));
++				rrec->rm_blockcount = cpu_to_be32(1);
++				rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
++				rrec->rm_offset = 0;
++				be16_add_cpu(&block->bb_numrecs, 1);
++			}
 +
- xfs_extlen_t
- xfs_prealloc_blocks(
- 	struct xfs_mount	*mp)
- {
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		return xfs_refc_block(mp) + 1;
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return XFS_RMAP_BLOCK(mp) + 1;
- 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 4e5c918..611083e 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1507,6 +1507,8 @@ xfs_owner_info_pack(
-  */
- #define	XFS_REFC_CRC_MAGIC	0x52334643	/* 'R3FC' */
+ 			error = xfs_bwrite(bp);
+ 			xfs_buf_relse(bp);
+ 			if (error)
+@@ -508,6 +524,28 @@ xfs_growfs_data_private(
+ 				goto error0;
+ 		}
  
-+unsigned int xfs_refc_block(struct xfs_mount *mp);
++		/*
++		 * refcount btree root block
++		 */
++		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++			bp = xfs_growfs_get_hdr_buf(mp,
++				XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
++				BTOBB(mp->m_sb.sb_blocksize), 0,
++				&xfs_refcountbt_buf_ops);
++			if (!bp) {
++				error = -ENOMEM;
++				goto error0;
++			}
 +
- 
- /*
-  * BMAP Btree format definitions
++			xfs_btree_init_block(mp, bp, XFS_REFC_CRC_MAGIC,
++					     0, 0, agno,
++					     XFS_BTREE_CRC_BLOCKS);
++
++			error = xfs_bwrite(bp);
++			xfs_buf_relse(bp);
++			if (error)
++				goto error0;
++		}
+ 	}
+ 	xfs_trans_agblocks_delta(tp, nfree);
+ 	/*
 
 _______________________________________________
 xfs mailing list
