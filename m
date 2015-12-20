@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4F8F67F62
-	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 09:33:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D1B58F8033
-	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 07:33:59 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E6F717F62
+	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 09:35:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA012304032
+	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 07:35:15 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 8TMlg1gK3xTf4yga (version=TLSv1.2
+	ESMTP id oET2M7O4tqecQ2eQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 20 Dec 2015 07:33:58 -0800 (PST)
-Date: Sun, 20 Dec 2015 07:33:57 -0800
+	<xfs@oss.sgi.com>; Sun, 20 Dec 2015 07:35:13 -0800 (PST)
+Date: Sun, 20 Dec 2015 07:35:13 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/4] xfsprogs: xfs_io: fix a memory leak in imap_f
-Message-ID: <20151220153357.GC20135@infradead.org>
+Subject: Re: [PATCH v2 2/4] xfsprogs: fix integer overflow in
+	xlog_find_verify_cycle
+Message-ID: <20151220153513.GD20135@infradead.org>
 References: <1449832143-26356-1-git-send-email-t.vivek@samsung.com>
-	<1449832143-26356-2-git-send-email-t.vivek@samsung.com>
+	<1449832143-26356-3-git-send-email-t.vivek@samsung.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1449832143-26356-2-git-send-email-t.vivek@samsung.com>
+In-Reply-To: <1449832143-26356-3-git-send-email-t.vivek@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +34,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Vivek Trivedi <t.vivek@samsung.com>
 Cc: a.sahrawat@samsung.com, pankaj.m@samsung.com, xfs@oss.sgi.com
 
-> @@ -39,6 +39,8 @@ imap_f(int argc, char **argv)
-> -		if (count == 0)
-> +		if (count == 0) {
-> +			free(t);
->  			return 0;
-> +		}
+On Fri, Dec 11, 2015 at 04:39:01PM +0530, Vivek Trivedi wrote:
+> Fix unintentional integer overflow in xlog_find_verify_cycle.
+> Reported by coverity.
 
-please use a goto out_free; here
+xfs_daddr_t is a 64-bit integer.  How does replacing it with an int fix
+overlows?
 
->
->  		for (i = 0; i < count; i++) {
->  			printf(_("ino %10llu count %2d mask %016llx\n"),
->  				(unsigned long long)t[i].xi_startino,
-> @@ -55,6 +59,7 @@ imap_f(int argc, char **argv)
->  				(unsigned long long)t[i].xi_allocmask);
->  		}
->  	}
-> +	free(t);
->  	perror("xfsctl(XFS_IOC_FSINUMBERS)");
->  	exitcode = 1;
->  	return 0;
-
-and place the free just before the return here so that we have a single
-uwinding exit.
-
-Otherwise this looks good to me.
+xlog_find_verify_cycle originates in the kernel code, so any fix
+should probably be done there first.
 
 _______________________________________________
 xfs mailing list
