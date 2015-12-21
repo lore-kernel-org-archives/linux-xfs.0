@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3DCA57F37
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 01:15:39 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7CCF47F37
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 11:05:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D0B48F8039
-	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 23:15:36 -0800 (PST)
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [119.145.14.66])
-	by cuda.sgi.com with ESMTP id 3s4RqVufvV0ZRMX3 (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 20 Dec 2015 23:15:32 -0800 (PST)
-From: Linpeimin <linpeimin@hisilicon.com>
-Subject: xfs within one hour after power-on reset , nginx performance is
-	poor and do not have this phenomenon on ext4
-Date: Mon, 21 Dec 2015 07:09:58 +0000
-Message-ID: <11FA37A582DFC847A21131D4B69D8B495AA49849@szxema505-mbs.china.huawei.com>
-Content-Language: zh-CN
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C4F9304059
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 09:05:48 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	oFyGSkr2RbfYVSvA for <xfs@oss.sgi.com>;
+	Mon, 21 Dec 2015 09:05:46 -0800 (PST)
+Date: Mon, 21 Dec 2015 10:05:45 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v5 4/7] dax: add support for fsync/sync
+Message-ID: <20151221170545.GA13494@linux.intel.com>
+References: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1450502540-8744-5-git-send-email-ross.zwisler@linux.intel.com>
+	<CAPcyv4irspQEPVdYfLK+QfW4t-1_y1gFFVuBm00=i03PFQwEYw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4irspQEPVdYfLK+QfW4t-1_y1gFFVuBm00=i03PFQwEYw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,203 +26,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3296450135308955536=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-Cc: Linpeimin <linpeimin@hisilicon.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
---===============3296450135308955536==
-Content-Language: zh-CN
-Content-Type: multipart/alternative;
-	boundary="_000_11FA37A582DFC847A21131D4B69D8B495AA49849szxema505mbschi_"
+On Sat, Dec 19, 2015 at 10:37:46AM -0800, Dan Williams wrote:
+> On Fri, Dec 18, 2015 at 9:22 PM, Ross Zwisler
+> <ross.zwisler@linux.intel.com> wrote:
+> > To properly handle fsync/msync in an efficient way DAX needs to track dirty
+> > pages so it is able to flush them durably to media on demand.
+> >
+> > The tracking of dirty pages is done via the radix tree in struct
+> > address_space.  This radix tree is already used by the page writeback
+> > infrastructure for tracking dirty pages associated with an open file, and
+> > it already has support for exceptional (non struct page*) entries.  We
+> > build upon these features to add exceptional entries to the radix tree for
+> > DAX dirty PMD or PTE pages at fault time.
+> >
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> [..]
+> > +static void dax_writeback_one(struct address_space *mapping, pgoff_t index,
+> > +               void *entry)
+> > +{
+> > +       struct radix_tree_root *page_tree = &mapping->page_tree;
+> > +       int type = RADIX_DAX_TYPE(entry);
+> > +       struct radix_tree_node *node;
+> > +       void **slot;
+> > +
+> > +       if (type != RADIX_DAX_PTE && type != RADIX_DAX_PMD) {
+> > +               WARN_ON_ONCE(1);
+> > +               return;
+> > +       }
+> > +
+> > +       spin_lock_irq(&mapping->tree_lock);
+> > +       /*
+> > +        * Regular page slots are stabilized by the page lock even
+> > +        * without the tree itself locked.  These unlocked entries
+> > +        * need verification under the tree lock.
+> > +        */
+> > +       if (!__radix_tree_lookup(page_tree, index, &node, &slot))
+> > +               goto unlock;
+> > +       if (*slot != entry)
+> > +               goto unlock;
+> > +
+> > +       /* another fsync thread may have already written back this entry */
+> > +       if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
+> > +               goto unlock;
+> > +
+> > +       radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_TOWRITE);
+> > +
+> > +       if (type == RADIX_DAX_PMD)
+> > +               wb_cache_pmem(RADIX_DAX_ADDR(entry), PMD_SIZE);
+> > +       else
+> > +               wb_cache_pmem(RADIX_DAX_ADDR(entry), PAGE_SIZE);
+> 
+> Hi Ross, I should have realized this sooner, but what guarantees that
+> the address returned by RADIX_DAX_ADDR(entry) is still valid at this
+> point?  I think we need to store the sector in the radix tree and then
+> perform a new dax_map_atomic() operation to either lookup a valid
+> address or fail the sync request.  Otherwise, if the device is gone
+> we'll crash, or write into some other random vmalloc address space.
 
---_000_11FA37A582DFC847A21131D4B69D8B495AA49849szxema505mbschi_
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Ah, good point, thank you.  v4 of this series is based on a version of
+DAX where we aren't properly dealing with PMEM device removal.  I've got an
+updated version that merges with your dax_map_atomic() changes, and I'll add
+this change into v5 which I will send out today.  Thank you for the
+suggestion.
 
-SGVsbG8gLCB3ZSB1c2UgeGZzIGZpbGUgc3lzdGVtIHRvIHRlc3QgbmdpbnggLCBJIGZvdW5kIHRo
-ZSBwb3dlci1vbiByZXNldCAsIHdpdGhpbiB0aGUgZmlyc3Qgb25lIGhvdXIgbmdpbnggcmVsYXRp
-dmVseSBwb29yIHBlcmZvcm1hbmNlLCBhbmQgYWZ0ZXIgb25lIGhvdXIgLCByZS0gdGVzdCAsIHBl
-cmZvcm1hbmNlIHJlc3VsdCggUlBTKSBvZiBkeW5hbWljIHBhZ2VzIGhhcyBpbXByb3ZlZC5JZiB3
-ZSBjaGFuZ2UgdGhlIGZpbGUgc3lzdGVtIGludG8gZXh0NCwgeW91IGRvIG5vdCBoYXZlIHRoaXMg
-cGhlbm9tZW5vbiAsIGFmdGVyIHRoZSBzdGFydCxSUFMgcGVyZm9ybWFuY2UgaGFzIHJlbWFpbmVk
-IHN0YWJsZS4NCkF0IHByZXNlbnQgaXQgaXMgZGlmZmljdWx0IGZvciB1cyB0byBleHBsYWluIHRo
-aXMgcGhlbm9tZW5vbi5JIGhvcGUgSSBjYW4gZ2V0IHlvdXIgc3VwcG9ydCBhbmQgYW5zd2VycyAs
-IHZlcnkgZ3JhdGVmdWwgIQ0KDQoNCg0KDQoNCg0KX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18NCrG+08q8/rywxuS4vbz+uqzT0Luqzqq5q8u+tcSxo8Pc0MXPoqOsvfbP3tPat6LLzbj4
-yc/D5rXY1rfW0MHQs/a1xLj2yMu78si61+mho737DQrWucjOus7G5Mv7yMvS1MjOus7Qzsq9yrnT
-w6OosPzAqLWrsrvP3tPayKuyv7vysr+31rXY0LnCtqGiuLTWxqGiu/LJoreio6mxvtPKvP7W0A0K
-tcTQxc+ioaPI57n7xPq07crVwcuxvtPKvP6jrMfrxPrBory0tee7sLvy08q8/s2o1qq3orz+yMuy
-osm+s/2xvtPKvP6joQ0KVGhpcyBlLW1haWwgYW5kIGl0cyBhdHRhY2htZW50cyBjb250YWluIGNv
-bmZpZGVudGlhbCBpbmZvcm1hdGlvbiBmcm9tIEhVQVdFSSwgd2hpY2gNCmlzIGludGVuZGVkIG9u
-bHkgZm9yIHRoZSBwZXJzb24gb3IgZW50aXR5IHdob3NlIGFkZHJlc3MgaXMgbGlzdGVkIGFib3Zl
-LiBBbnkgdXNlIG9mIHRoZQ0KaW5mb3JtYXRpb24gY29udGFpbmVkIGhlcmVpbiBpbiBhbnkgd2F5
-IChpbmNsdWRpbmcsIGJ1dCBub3QgbGltaXRlZCB0bywgdG90YWwgb3IgcGFydGlhbA0KZGlzY2xv
-c3VyZSwgcmVwcm9kdWN0aW9uLCBvciBkaXNzZW1pbmF0aW9uKSBieSBwZXJzb25zIG90aGVyIHRo
-YW4gdGhlIGludGVuZGVkDQpyZWNpcGllbnQocykgaXMgcHJvaGliaXRlZC4gSWYgeW91IHJlY2Vp
-dmUgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBieQ0KcGhv
-bmUgb3IgZW1haWwgaW1tZWRpYXRlbHkgYW5kIGRlbGV0ZSBpdCENCg==
+One clarification, with the code as it is in v4 we are only doing
+clflush/clflushopt/clwb instructions on the kaddr we've stored in the radix
+tree, so I don't think that there is actually a risk of us doing a "write into
+some other random vmalloc address space"?  I think at worse we will end up
+clflushing an address that either isn't mapped or has been remapped by someone
+else.  Or are you worried that the clflush would trigger a cache writeback to
+a memory address where writes have side effects, thus triggering the side
+effect?
 
---_000_11FA37A582DFC847A21131D4B69D8B495AA49849szxema505mbschi_
-Content-Type: text/html; charset="gb2312"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:x=3D"urn:schemas-microsoft-com:office:excel" xmlns:m=3D"http://schema=
-s.microsoft.com/office/2004/12/omml" xmlns=3D"http://www.w3.org/TR/REC-html=
-40">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dgb2312">
-<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
-<!--[if !mso]><style>v\:* {behavior:url(#default#VML);}
-o\:* {behavior:url(#default#VML);}
-w\:* {behavior:url(#default#VML);}
-.shape {behavior:url(#default#VML);}
-</style><![endif]--><style><!--
-/* Font Definitions */
-@font-face
-	{font-family:=CB=CE=CC=E5;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:=BB=AA=CE=C4=CF=B8=BA=DA;
-	panose-1:2 1 6 0 4 1 1 1 1 1;}
-@font-face
-	{font-family:"\@=CB=CE=CC=E5";
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:"\@=BB=AA=CE=C4=CF=B8=BA=DA";
-	panose-1:2 1 6 0 4 1 1 1 1 1;}
-@font-face
-	{font-family:inherit;
-	panose-1:0 0 0 0 0 0 0 0 0 0;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	text-justify:inter-ideograph;
-	font-size:10.5pt;
-	font-family:"Calibri",sans-serif;}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:#0563C1;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:#954F72;
-	text-decoration:underline;}
-pre
-	{mso-style-priority:99;
-	mso-style-link:"HTML =D4=A4=C9=E8=B8=F1=CA=BD Char";
-	margin:0cm;
-	margin-bottom:.0001pt;
-	font-size:12.0pt;
-	font-family:=CB=CE=CC=E5;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-span.HTMLChar
-	{mso-style-name:"HTML =D4=A4=C9=E8=B8=F1=CA=BD Char";
-	mso-style-priority:99;
-	mso-style-link:"HTML =D4=A4=C9=E8=B8=F1=CA=BD";
-	font-family:=CB=CE=CC=E5;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri",sans-serif;}
-/* Page Definitions */
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:72.0pt 90.0pt 72.0pt 90.0pt;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body lang=3D"ZH-CN" link=3D"#0563C1" vlink=3D"#954F72" style=3D"text-justi=
-fy-trim:punctuation">
-<div class=3D"WordSection1">
-<pre style=3D"background:white"><span lang=3D"EN" style=3D"font-family:&quo=
-t;inherit&quot;,serif;color:#212121">Hello , we use xfs file system to test=
- nginx , I found the power-on reset , within the first one hour nginx relat=
-ively poor performance, and after one hour , re- test , performance result(=
- RPS) of dynamic pages has improved.If we change the file system into ext4,=
- you do not have this phenomenon , after the start,RPS performance has rema=
-ined stable.<o:p></o:p></span></pre>
-<p class=3D"MsoNormal" align=3D"left" style=3D"text-align:left;background:w=
-hite"><span lang=3D"EN" style=3D"font-size:12.0pt;font-family:&quot;inherit=
-&quot;,serif;color:#212121">At present it is difficult for us to explain th=
-is phenomenon.I hope I can get your support and answers
- , very grateful !</span><span lang=3D"EN-US" style=3D"font-size:12.0pt;fon=
-t-family:&quot;inherit&quot;,serif;color:#212121"><o:p></o:p></span></p>
-<p class=3D"MsoNormal" align=3D"left" style=3D"text-align:left;background:w=
-hite"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<pre style=3D"background:white"><span lang=3D"EN-US" style=3D"font-family:&=
-quot;inherit&quot;,serif;color:#212121"><o:p>&nbsp;</o:p></span></pre>
-<pre style=3D"background:white"><span lang=3D"EN" style=3D"font-family:&quo=
-t;inherit&quot;,serif;color:#212121"><o:p>&nbsp;</o:p></span></pre>
-<div class=3D"MsoNormal" align=3D"center" style=3D"text-align:center"><span=
- lang=3D"EN-US" style=3D"font-size:12.0pt;font-family:=CB=CE=CC=E5">
-<hr size=3D"2" width=3D"100%" align=3D"center">
-</span></div>
-<p class=3D"MsoNormal"><span style=3D"font-size:7.5pt;font-family:=BB=AA=CE=
-=C4=CF=B8=BA=DA;color:gray">=B1=BE=D3=CA=BC=FE=BC=B0=C6=E4=B8=BD=BC=FE=BA=
-=AC=D3=D0=BB=AA=CE=AA=B9=AB=CB=BE=B5=C4=B1=A3=C3=DC=D0=C5=CF=A2=A3=AC=BD=F6=
-=CF=DE=D3=DA=B7=A2=CB=CD=B8=F8=C9=CF=C3=E6=B5=D8=D6=B7=D6=D0=C1=D0=B3=F6=B5=
-=C4=B8=F6=C8=CB=BB=F2=C8=BA=D7=E9=A1=A3=BD=FB<span lang=3D"EN-US"><br>
-</span>=D6=B9=C8=CE=BA=CE=C6=E4=CB=FB=C8=CB=D2=D4=C8=CE=BA=CE=D0=CE=CA=BD=
-=CA=B9=D3=C3=A3=A8=B0=FC=C0=A8=B5=AB=B2=BB=CF=DE=D3=DA=C8=AB=B2=BF=BB=F2=B2=
-=BF=B7=D6=B5=D8=D0=B9=C2=B6=A1=A2=B8=B4=D6=C6=A1=A2=BB=F2=C9=A2=B7=A2=A3=A9=
-=B1=BE=D3=CA=BC=FE=D6=D0<span lang=3D"EN-US"><br>
-</span>=B5=C4=D0=C5=CF=A2=A1=A3=C8=E7=B9=FB=C4=FA=B4=ED=CA=D5=C1=CB=B1=BE=
-=D3=CA=BC=FE=A3=AC=C7=EB=C4=FA=C1=A2=BC=B4=B5=E7=BB=B0=BB=F2=D3=CA=BC=FE=CD=
-=A8=D6=AA=B7=A2=BC=FE=C8=CB=B2=A2=C9=BE=B3=FD=B1=BE=D3=CA=BC=FE=A3=A1<span =
-lang=3D"EN-US"><br>
-</span></span><span lang=3D"EN-US" style=3D"font-size:7.5pt;font-family:&qu=
-ot;Arial&quot;,sans-serif;color:gray">This e-mail and its attachments conta=
-in confidential information from HUAWEI, which
-<br>
-is intended only for the person or entity whose address is listed above. An=
-y use of the
-<br>
-information contained herein in any way (including, but not limited to, tot=
-al or partial
-<br>
-disclosure, reproduction, or dissemination) by persons other than the inten=
-ded <br>
-recipient(s) is prohibited. If you receive this e-mail in error, please not=
-ify the sender by
-<br>
-phone or email immediately and delete it!</span><span lang=3D"EN-US"><o:p><=
-/o:p></span></p>
-</div>
-</body>
-</html>
-
---_000_11FA37A582DFC847A21131D4B69D8B495AA49849szxema505mbschi_--
-
-
---===============3296450135308955536==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+I definitely think it needs to be fixed, I'm just trying to make sure I
+understood your comment.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3296450135308955536==--
