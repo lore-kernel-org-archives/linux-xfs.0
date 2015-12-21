@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AACBC29DFE
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:34 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1E59B29DFA
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5593CAC004
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:34 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E1C268F8033
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:31 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	TbCC22T7X4BmjFyz for <xfs@oss.sgi.com>;
-	Mon, 21 Dec 2015 13:37:32 -0800 (PST)
+	Fhel51k7cTLaN2Vh for <xfs@oss.sgi.com>;
+	Mon, 21 Dec 2015 13:37:29 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hx-FP
+	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hw-Ew
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002li-EZ
+	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002ld-EC
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 9/9] libxfs: keep unflushable buffers off the cache MRUs
-Date: Tue, 22 Dec 2015 08:37:09 +1100
-Message-Id: <1450733829-9319-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/9] libxfs: don't repeatedly shake unwritable buffers
+Date: Tue, 22 Dec 2015 08:37:08 +1100
+Message-Id: <1450733829-9319-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,124 +39,103 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There's no point trying to free buffers that are dirty and return
-errors on flush as we have to keep them around until the corruption
-is fixed. Hence if we fail to flush an inode during a cache shake,
-move the buffer to a special dirty MRU list that the cache does not
-shake. This prevents memory pressure from seeing these buffers, but
-allows subsequent cache lookups to still find them through the hash.
-This ensures we don't waste huge amounts of CPU trying to flush and
-reclaim buffers that canot be flushed or reclaimed.
+now that we try to write dirty buffers before we release them, we
+can get buildup of unwritable dirty buffers on the LRU lists, This
+results in the cache shaker repeatedly trying to write out these
+buffers every time the cache fills up. This results in more
+corruption warnings, and takes up a lot of time doing reclaiming
+nothing. This can effectively livelock the processing parts of phase
+4.
+
+Fix this by not trying to write buffers with corruption errors on
+them. These errors will get cleared when the buffer is re-read and
+fixed and them marked dirty again. At which point, we'll be able to
+write them and so the cache can reclaim them successfully.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/cache.h |  3 ++-
- libxfs/cache.c  | 34 +++++++++++++++++++++++++++++-----
- 2 files changed, 31 insertions(+), 6 deletions(-)
+ libxfs/rdwr.c | 27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
 
-diff --git a/include/cache.h b/include/cache.h
-index 87826be..55761d3 100644
---- a/include/cache.h
-+++ b/include/cache.h
-@@ -51,6 +51,7 @@ enum {
- #define CACHE_BASE_PRIORITY	0
- #define CACHE_PREFETCH_PRIORITY	8
- #define CACHE_MAX_PRIORITY	15
-+#define CACHE_DIRTY_PRIORITY	(CACHE_MAX_PRIORITY + 1)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 0337a21..a1f0029 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1103,7 +1103,6 @@ int
+ libxfs_writebufr(xfs_buf_t *bp)
+ {
+ 	int	fd = libxfs_device_to_fd(bp->b_target->dev);
+-	int	error = 0;
  
- /*
-  * Simple, generic implementation of a cache (arbitrary data).
-@@ -115,7 +116,7 @@ struct cache {
- 	unsigned int		c_hashsize;	/* hash bucket count */
- 	unsigned int		c_hashshift;	/* hash key shift */
- 	struct cache_hash	*c_hash;	/* hash table buckets */
--	struct cache_mru	c_mrus[CACHE_MAX_PRIORITY + 1];
-+	struct cache_mru	c_mrus[CACHE_DIRTY_PRIORITY + 1];
- 	unsigned long long	c_misses;	/* cache misses */
- 	unsigned long long	c_hits;		/* cache hits */
- 	unsigned int 		c_max;		/* max nodes ever used */
-diff --git a/libxfs/cache.c b/libxfs/cache.c
-index a48ebd9..d5ea461 100644
---- a/libxfs/cache.c
-+++ b/libxfs/cache.c
-@@ -81,7 +81,7 @@ cache_init(
- 		pthread_mutex_init(&cache->c_hash[i].ch_mutex, NULL);
+ 	/*
+ 	 * we never write buffers that are marked stale. This indicates they
+@@ -1134,7 +1133,7 @@ libxfs_writebufr(xfs_buf_t *bp)
  	}
  
--	for (i = 0; i <= CACHE_MAX_PRIORITY; i++) {
-+	for (i = 0; i <= CACHE_DIRTY_PRIORITY; i++) {
- 		list_head_init(&cache->c_mrus[i].cm_list);
- 		cache->c_mrus[i].cm_count = 0;
- 		pthread_mutex_init(&cache->c_mrus[i].cm_mutex, NULL);
-@@ -154,7 +154,7 @@ cache_destroy(
- 		list_head_destroy(&cache->c_hash[i].ch_list);
- 		pthread_mutex_destroy(&cache->c_hash[i].ch_mutex);
+ 	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
+-		error = __write_buf(fd, bp->b_addr, bp->b_bcount,
++		bp->b_error = __write_buf(fd, bp->b_addr, bp->b_bcount,
+ 				    LIBXFS_BBTOOFF64(bp->b_bn), bp->b_flags);
+ 	} else {
+ 		int	i;
+@@ -1144,11 +1143,10 @@ libxfs_writebufr(xfs_buf_t *bp)
+ 			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_map[i].bm_bn);
+ 			int len = BBTOB(bp->b_map[i].bm_len);
+ 
+-			error = __write_buf(fd, buf, len, offset, bp->b_flags);
+-			if (error) {
+-				bp->b_error = error;
++			bp->b_error = __write_buf(fd, buf, len, offset,
++						  bp->b_flags);
++			if (bp->b_error)
+ 				break;
+-			}
+ 			buf += len;
+ 		}
  	}
--	for (i = 0; i <= CACHE_MAX_PRIORITY; i++) {
-+	for (i = 0; i <= CACHE_DIRTY_PRIORITY; i++) {
- 		list_head_destroy(&cache->c_mrus[i].cm_list);
- 		pthread_mutex_destroy(&cache->c_mrus[i].cm_mutex);
+@@ -1157,14 +1155,14 @@ libxfs_writebufr(xfs_buf_t *bp)
+ 	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p, error %d\n",
+ 			pthread_self(), __FUNCTION__, bp->b_bcount,
+ 			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
+-			(long long)bp->b_bn, bp, error);
++			(long long)bp->b_bn, bp, bp->b_error);
+ #endif
+-	if (!error) {
++	if (!bp->b_error) {
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+ 		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
+ 				 LIBXFS_B_UNCHECKED);
  	}
-@@ -183,6 +183,27 @@ cache_generic_bulkrelse(
+-	return error;
++	return bp->b_error;
  }
  
- /*
-+ * Park unflushable nodes on their own special MRU so that cache_shake() doesn't
-+ * end up repeatedly scanning them in the futile attempt to clean them before
-+ * reclaim.
-+ */
-+static void
-+cache_move_to_dirty_mru(
-+	struct cache		*cache,
-+	struct cache_node	*node)
-+{
-+	struct cache_mru	*mru;
-+
-+	mru = &cache->c_mrus[CACHE_DIRTY_PRIORITY];
-+
-+	pthread_mutex_lock(&mru->cm_mutex);
-+	node->cn_priority = CACHE_DIRTY_PRIORITY;
-+	list_move(&node->cn_mru, &mru->cm_list);
-+	mru->cm_count++;
-+	pthread_mutex_unlock(&mru->cm_mutex);
-+}
-+
+ int
+@@ -1266,15 +1264,22 @@ libxfs_bulkrelse(
+ 	return count;
+ }
+ 
 +/*
-  * We've hit the limit on cache size, so we need to start reclaiming
-  * nodes we've used. The MRU specified by the priority is shaken.
-  * Returns new priority at end of the call (in case we call again).
-@@ -202,10 +223,11 @@ cache_shake(
- 	struct cache_node *	node;
- 	unsigned int		count;
- 
--	ASSERT(priority <= CACHE_MAX_PRIORITY);
--	if (priority > CACHE_MAX_PRIORITY)
-+	ASSERT(priority <= CACHE_DIRTY_PRIORITY);
-+	if (priority > CACHE_MAX_PRIORITY && !all)
- 		priority = 0;
- 
-+
- 	mru = &cache->c_mrus[priority];
- 	count = 0;
- 	list_head_init(&temp);
-@@ -221,6 +243,8 @@ cache_shake(
- 
- 		/* can't release dirty objects */
- 		if (cache->flush(node)) {
-+			cache_move_to_dirty_mru(cache, node);
-+			mru->cm_count--;
- 			pthread_mutex_unlock(&node->cn_mutex);
- 			continue;
- 		}
-@@ -578,7 +602,7 @@ cache_purge(
++ * When a buffer is marked dirty, the error is cleared. Hence if we are trying
++ * to flush a buffer prior to cache reclaim that has an error on it it means
++ * we've already tried to flush it and it failed. Prevent repeated corruption
++ * errors from being reported by skipping such buffers - when the corruption is
++ * fixed the buffer will be marked dirty again and we can write it again.
++ */
+ static int
+ libxfs_bflush(
+ 	struct cache_node	*node)
  {
- 	int			i;
+ 	struct xfs_buf		*bp = (struct xfs_buf *)node;
  
--	for (i = 0; i <= CACHE_MAX_PRIORITY; i++)
-+	for (i = 0; i <= CACHE_DIRTY_PRIORITY; i++)
- 		cache_shake(cache, i, 1);
+-	if (bp->b_flags & LIBXFS_B_DIRTY)
++	if (!bp->b_error && bp->b_flags & LIBXFS_B_DIRTY)
+ 		return libxfs_writebufr(bp);
+-	return 0;
++	return bp->b_error;
+ }
  
- #ifdef CACHE_DEBUG
+ void
 -- 
 2.5.0
 
