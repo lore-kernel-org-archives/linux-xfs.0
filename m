@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F217E29DF5
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:31 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 1514929DF9
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9FDEDAC002
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A30B6AC004
 	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:31 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	OOXccu4dxM27zz6L for <xfs@oss.sgi.com>;
-	Mon, 21 Dec 2015 13:37:27 -0800 (PST)
+	GyZHAaN4VLdyn7fz for <xfs@oss.sgi.com>;
+	Mon, 21 Dec 2015 13:37:28 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000ho-B5
+	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hp-Bb
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002l1-A4
+	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002l4-An
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/9] xfsprogs: big, broken filesystems cause pain
-Date: Tue, 22 Dec 2015 08:37:00 +1100
-Message-Id: <1450733829-9319-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] metadump: clean up btree block region zeroing
+Date: Tue, 22 Dec 2015 08:37:01 +1100
+Message-Id: <1450733829-9319-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1450733829-9319-1-git-send-email-david@fromorbit.com>
+References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,64 +37,139 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is a work-in-progress patchset that I"ve been spending the last
-week on trying to get xfs_repair to run cleanly through a busted
-30TB filesystem image. The first 2 patches were needed just to get
-metadump to create the filesystem image, the third is helpful in
-tellingme exactly how much of the 38GB of metadata has been
-restored.
+Abstract out all the common operations in the btree block zeroing
+so that we only have one copy of offset/len calculations and don't
+require lots of casts for the pointer arithmetic.
 
-The next two patches parallelise parts of the repair process;
-uncertain inode processing in phase 3 was taking more than 20
-minutes, and phase 7 was taking almost 2 hours. Both are trivially
-parallelisable - the phase 3 is now down under 5 minutes, but I
-haven't fully tested the phase 7 code because I haven't managed to
-get a full repair of the original image past phase 6 since I wrote
-this patch. I have run it through xfstests many times, but that's
-not the same as having it process and correct the link counts on
-several million inodes....
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ db/metadump.c | 61 +++++++++++++++++++++++------------------------------------
+ 1 file changed, 24 insertions(+), 37 deletions(-)
 
-Patch 6 was the first crash problem I fixed - this is 17 year old
-bug in the directory code, and will also need to be fixed in the
-kernel.
-
-Patch 7-9 fix the major problem that was causing issues - the
-cache's handling of buffers that were dirty but still corrupt.
-xfs_repair doesn't fix all the problems in a buffer in a single pass
-- it may make modifications in early phases and then use those
-modifications to trigger specific repairs in later phases. However,
-when you have 38GB of metadata to check and correct, the buffer
-cache is not going to hold all these buffers, and so the reclaim
-algorithms are going to have an impact.
-
-That impact was pretty bad - the partially correct buffers were
-being tossed away because their write verifiers were failing and
-hence never making it to disk.  Hence when the later phase re-read
-the buffer, it pull the original uncorrected, corrupt blocks back in
-from disk, and so phases 5, 6 and 7 were tripping over corruptions
-that were assumed to be fixed and that was causing random memory
-corruptions, use after free, etc.
-
-These three patches are a pretty nasty hack to keep the dirty
-buffers around until they are fully repaired. The whole userspace
-libxfs buffer cache is really showing it's limitations here; it
-doesn't scale effectively, it doesn't isolate operations between
-independent threads (i.e. per-ag threads), it doesn't handle dirty
-objects or writeback failures sanely and it has an overly
-complex cache abstraction that has only one user. Ultimately, we need
-to rewrite it from scratch, but in the mean time we need to make
-repair actually complete properly and hence these patches to hack
-the necessary fixes into it.
-
-With these, repair is getting deep into phase 6 on the original
-image, before failing moving an inode to lost+found because the
-inode has a mismatch between the bmbt size and the number of records
-supposedly in the bmbt. That's a new failure I haven't seen before,
-so there's still more fixes to come....
-
--Dave.
+diff --git a/db/metadump.c b/db/metadump.c
+index 8455fdd..a185da5 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -258,8 +258,8 @@ zero_btree_node(
+ 	xfs_inobt_key_t		*ikp;
+ 	xfs_alloc_ptr_t		*app;
+ 	xfs_alloc_key_t		*akp;
+-	void			*zp1, *zp2;
+-	int			zlen1, zlen2;
++	char			*zp1, *zp2;
++	char			*key_end;
+ 
+ 	nrecs = be16_to_cpu(block->bb_numrecs);
+ 
+@@ -268,43 +268,36 @@ zero_btree_node(
+ 	case TYP_BMAPBTD:
+ 		bkp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+ 		bpp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+-		zp1 = &bkp[nrecs];
+-		zlen1 = (char *)&bpp[0] - (char *)&bkp[nrecs];
+-		zp2 = &bpp[nrecs];
+-		zlen2 = (char *)block + mp->m_sb.sb_blocksize -
+-							(char *)&bpp[nrecs];
++		zp1 = (char *)&bkp[nrecs];
++		zp2 = (char *)&bpp[nrecs];
++		key_end = (char *)bpp;
+ 		break;
+ 	case TYP_INOBT:
+ 	case TYP_FINOBT:
+ 		ikp = XFS_INOBT_KEY_ADDR(mp, block, 1);
+ 		ipp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
+-		zp1 = &ikp[nrecs];
+-		zlen1 = (char *)&ipp[0] - (char *)&ikp[nrecs];
+-		zp2 = &ipp[nrecs];
+-		zlen2 = (char *)block + mp->m_sb.sb_blocksize -
+-							(char *)&ipp[nrecs];
++		zp1 = (char *)&ikp[nrecs];
++		zp2 = (char *)&ipp[nrecs];
++		key_end = (char *)ipp;
+ 		break;
+ 	case TYP_BNOBT:
+ 	case TYP_CNTBT:
+ 		akp = XFS_ALLOC_KEY_ADDR(mp, block, 1);
+ 		app = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
+-		zp1 = &akp[nrecs];
+-		zlen1 = (char *)&app[0] - (char *)&akp[nrecs];
+-		zp2 = &app[nrecs];
+-		zlen2 = (char *)block + mp->m_sb.sb_blocksize -
+-							(char *)&app[nrecs];
++		zp1 = (char *)&akp[nrecs];
++		zp2 = (char *)&app[nrecs];
++		key_end = (char *)app;
+ 		break;
+ 	default:
+-		zp1 = NULL;
+-		break;
++		return;
+ 	}
+ 
+-	if (zp1 && zp2) {
+-		/* Zero from end of keys to beginning of pointers */
+-		memset(zp1, 0, zlen1);
+-		/* Zero from end of pointers to end of block */
+-		memset(zp2, 0, zlen2);
+-	}
++
++	/* Zero from end of keys to beginning of pointers */
++	memset(zp1, 0, key_end - zp1);
++
++	/* Zero from end of pointers to end of block */
++	memset(zp2, 0, (char *)block + mp->m_sb.sb_blocksize - zp2);
+ }
+ 
+ static void
+@@ -316,8 +309,7 @@ zero_btree_leaf(
+ 	struct xfs_bmbt_rec	*brp;
+ 	struct xfs_inobt_rec	*irp;
+ 	struct xfs_alloc_rec	*arp;
+-	void			*zp;
+-	int			zlen;
++	char			*zp;
+ 
+ 	nrecs = be16_to_cpu(block->bb_numrecs);
+ 
+@@ -325,29 +317,24 @@ zero_btree_leaf(
+ 	case TYP_BMAPBTA:
+ 	case TYP_BMAPBTD:
+ 		brp = XFS_BMBT_REC_ADDR(mp, block, 1);
+-		zp = &brp[nrecs];
+-		zlen = (char *)block + mp->m_sb.sb_blocksize - (char *)&brp[nrecs];
++		zp = (char *)&brp[nrecs];
+ 		break;
+ 	case TYP_INOBT:
+ 	case TYP_FINOBT:
+ 		irp = XFS_INOBT_REC_ADDR(mp, block, 1);
+-		zp = &irp[nrecs];
+-		zlen = (char *)block + mp->m_sb.sb_blocksize - (char *)&irp[nrecs];
++		zp = (char *)&irp[nrecs];
+ 		break;
+ 	case TYP_BNOBT:
+ 	case TYP_CNTBT:
+ 		arp = XFS_ALLOC_REC_ADDR(mp, block, 1);
+-		zp = &arp[nrecs];
+-		zlen = (char *)block + mp->m_sb.sb_blocksize - (char *)&arp[nrecs];
++		zp = (char *)&arp[nrecs];
+ 		break;
+ 	default:
+-		zp = NULL;
+-		break;
++		return;
+ 	}
+ 
+ 	/* Zero from end of records to end of block */
+-	if (zp && zlen < mp->m_sb.sb_blocksize)
+-		memset(zp, 0, zlen);
++	memset(zp, 0, (char *)block + mp->m_sb.sb_blocksize - zp);
+ }
+ 
+ static void
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
