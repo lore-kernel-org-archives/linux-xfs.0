@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 99A527F3F
-	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 17:51:06 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C06847CBF
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 00:31:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 77B008F8033
-	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 15:51:06 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80D00304048
+	for <xfs@oss.sgi.com>; Sun, 20 Dec 2015 22:31:20 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lhgNxrwmdDxOOuoW for <xfs@oss.sgi.com>;
-	Sun, 20 Dec 2015 15:51:03 -0800 (PST)
-Date: Mon, 21 Dec 2015 10:51:01 +1100
+	OLN3TZAeSP9yT9rv for <xfs@oss.sgi.com>;
+	Sun, 20 Dec 2015 22:31:13 -0800 (PST)
+Date: Mon, 21 Dec 2015 17:31:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 3/4] xfsprogs: mkfs: fix unintentional integer overflow
-Message-ID: <20151220235101.GW26718@dastard>
-References: <1449832143-26356-1-git-send-email-t.vivek@samsung.com>
-	<1449832143-26356-4-git-send-email-t.vivek@samsung.com>
-	<20151220153649.GE20135@infradead.org>
+Subject: Re: [PATCH 06/11] reflink: more tests
+Message-ID: <20151221063111.GO19802@dastard>
+References: <20151219091052.15320.94973.stgit@birch.djwong.org>
+	<20151219091131.15320.12391.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151220153649.GE20135@infradead.org>
+In-Reply-To: <20151219091131.15320.12391.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,31 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: a.sahrawat@samsung.com, xfs@oss.sgi.com, Vivek Trivedi <t.vivek@samsung.com>, pankaj.m@samsung.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Dec 20, 2015 at 07:36:49AM -0800, Christoph Hellwig wrote:
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -2022,7 +2022,7 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
-> >  		 * and the underlying volume is striped, then set rtextblocks
-> >  		 * to the stripe width.
-> >  		 */
-> > -		int		rswidth;
-> > +		__uint64_t	rswidth;
-> >  		__uint64_t	rtextbytes;
+On Sat, Dec 19, 2015 at 01:11:31AM -0800, Darrick J. Wong wrote:
+> Add more tests for unaligned copy-on-write things, and explicitly
+> test the ability to pass "len == 0" to mean reflink/dedupe all
+> the way to the end of the file".
 > 
-> This looks odd.  We initiallize assigned ft.rtswidth (which is an int)
-> or 0 to it.  I think you want a separate variable for the result of
-> the  DTOBT(rswidth) statement to make this clear.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+.....
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -rf "$tmp".* "$TESTDIR"
+> +}
+.....
+> +
+> +TESTDIR="$TEST_DIR/test-$seq"
+> +rm -rf "$TESTDIR"
+> +mkdir "$TESTDIR"
 
-I don't see any point in doing that. It really doesn't matter that
-the variable it is initialised from is only a 32 bit int, and having
-yet another variable in mkfs is not going to make the code easier to
-understand...
+This use of TESTDIR is highly confusing. When I see TESTDIR I think
+that it's the mount point of the test device, not potentially some
+directory on the scratch device.
+
+I see that this occurs through lots of tests, not just these new
+ones. Can you do a pass across the tests with, say, sed and rename
+all these to something less confusing? e.g. "testdir", in lower
+case, makes it clear that it's a local variable, not the global test
+device mount point.... (i.e. test local variables are lower case,
+exported test harnes variables are upper case ;)
+
+Separate patch/pull req is fine.
 
 Cheers,
 
-Dave.
+dave.
 -- 
 Dave Chinner
 david@fromorbit.com
