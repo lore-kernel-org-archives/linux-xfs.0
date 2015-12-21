@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 67D8B29DFA
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:33 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 97DC829DFC
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 02E31AC001
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:32 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5CC9C8F8039
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:34 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	IoDtzdTuDFxPf4JG for <xfs@oss.sgi.com>;
-	Mon, 21 Dec 2015 13:37:31 -0800 (PST)
+	HqRrGTaURILybIRN for <xfs@oss.sgi.com>;
+	Mon, 21 Dec 2015 13:37:32 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hq-Bz
+	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hv-EV
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002l9-BG
+	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002lY-Dl
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] metadump: bounds check btree block regions being zeroed
-Date: Tue, 22 Dec 2015 08:37:02 +1100
-Message-Id: <1450733829-9319-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/9] libxfs: don't discard dirty buffers
+Date: Tue, 22 Dec 2015 08:37:07 +1100
+Message-Id: <1450733829-9319-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,115 +39,173 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Arkadiusz Miskiewicz reported that metadump was crashing on one of
-his corrupted filesystems, and the trace indicated that it was
-zeroing unused regions in inode btree blocks when it failed. The
-btree block had a corrupt nrecs field, which was resulting in an out
-of bounds memset() occurring.  Ensure that the region being
-generated for zeroing is within bounds before executing the zeroing.
+When we release a buffer from the cache, if it is dirty we wite it
+to disk then put the buffer on the free list for recycling. However,
+if the write fails (e.g. verifier failure due unfixed corruption) we
+effectively throw the buffer and it contents away. This causes all
+sorts of problems for xfs_repair as it then re-reads the buffer from
+disk on the next access and hence loses all the corrections that had
+previously been made, resulting in tripping over corruptions in code
+that assumes the corruptions have already been fixed/flagged in the
+buffer it receives.
 
-Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+TO fix this, we have to make the cache aware that writes can fail,
+and keep the buffer in cache when writes fail. Hence we have to add
+an explicit error notification to the flush operation, and we need
+to do that before we release the buffer to the free list. This also
+means that we need to remove the writeback code from the release
+mechanisms, instead replacing them with assertions that the buffers
+are already clean.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/metadump.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ include/cache.h |  2 +-
+ libxfs/cache.c  | 15 ++++++++++++++-
+ libxfs/rdwr.c   | 44 +++++++++++++++++++++++++++-----------------
+ 3 files changed, 42 insertions(+), 19 deletions(-)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index a185da5..1769fdf 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -246,6 +246,11 @@ write_buf(
- 	return seenint() ? -EINTR : 0;
+diff --git a/include/cache.h b/include/cache.h
+index 0a84c69..87826be 100644
+--- a/include/cache.h
++++ b/include/cache.h
+@@ -64,7 +64,7 @@ typedef void *cache_key_t;
+ 
+ typedef void (*cache_walk_t)(struct cache_node *);
+ typedef struct cache_node * (*cache_node_alloc_t)(cache_key_t);
+-typedef void (*cache_node_flush_t)(struct cache_node *);
++typedef int (*cache_node_flush_t)(struct cache_node *);
+ typedef void (*cache_node_relse_t)(struct cache_node *);
+ typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int,
+ 					  unsigned int);
+diff --git a/libxfs/cache.c b/libxfs/cache.c
+index 4753a1d..a48ebd9 100644
+--- a/libxfs/cache.c
++++ b/libxfs/cache.c
+@@ -219,6 +219,12 @@ cache_shake(
+ 		if (pthread_mutex_trylock(&node->cn_mutex) != 0)
+ 			continue;
+ 
++		/* can't release dirty objects */
++		if (cache->flush(node)) {
++			pthread_mutex_unlock(&node->cn_mutex);
++			continue;
++		}
++
+ 		hash = cache->c_hash + node->cn_hashidx;
+ 		if (pthread_mutex_trylock(&hash->ch_mutex) != 0) {
+ 			pthread_mutex_unlock(&node->cn_mutex);
+@@ -311,6 +317,13 @@ __cache_node_purge(
+ 		pthread_mutex_unlock(&node->cn_mutex);
+ 		return count;
+ 	}
++
++	/* can't purge dirty objects */
++	if (cache->flush(node)) {
++		pthread_mutex_unlock(&node->cn_mutex);
++		return 1;
++	}
++
+ 	mru = &cache->c_mrus[node->cn_priority];
+ 	pthread_mutex_lock(&mru->cm_mutex);
+ 	list_del_init(&node->cn_mru);
+@@ -321,7 +334,7 @@ __cache_node_purge(
+ 	pthread_mutex_destroy(&node->cn_mutex);
+ 	list_del_init(&node->cn_hash);
+ 	cache->relse(node);
+-	return count;
++	return 0;
  }
  
-+/*
-+ * We could be processing a corrupt block, so we can't trust any of
-+ * the offsets or lengths to be within the buffer range. Hence check
-+ * carefully!
-+ */
- static void
- zero_btree_node(
- 	struct xfs_btree_block	*block,
-@@ -262,10 +267,15 @@ zero_btree_node(
- 	char			*key_end;
+ /*
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 7a04985..0337a21 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -659,6 +659,8 @@ __libxfs_getbufr(int blen)
+ 		bp = kmem_zone_zalloc(xfs_buf_zone, 0);
+ 	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+ 	bp->b_ops = NULL;
++	if (bp->b_flags & LIBXFS_B_DIRTY)
++		fprintf(stderr, "found dirty buffer (bulk) on free list!");
  
- 	nrecs = be16_to_cpu(block->bb_numrecs);
-+	if (nrecs < 0)
-+		return;
- 
- 	switch (btype) {
- 	case TYP_BMAPBTA:
- 	case TYP_BMAPBTD:
-+		if (nrecs > mp->m_bmap_dmxr[1])
-+			return;
-+
- 		bkp = XFS_BMBT_KEY_ADDR(mp, block, 1);
- 		bpp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
- 		zp1 = (char *)&bkp[nrecs];
-@@ -274,6 +284,9 @@ zero_btree_node(
- 		break;
- 	case TYP_INOBT:
- 	case TYP_FINOBT:
-+		if (nrecs > mp->m_inobt_mxr[1])
-+			return;
-+
- 		ikp = XFS_INOBT_KEY_ADDR(mp, block, 1);
- 		ipp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
- 		zp1 = (char *)&ikp[nrecs];
-@@ -282,6 +295,9 @@ zero_btree_node(
- 		break;
- 	case TYP_BNOBT:
- 	case TYP_CNTBT:
-+		if (nrecs > mp->m_alloc_mxr[1])
-+			return;
-+
- 		akp = XFS_ALLOC_KEY_ADDR(mp, block, 1);
- 		app = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
- 		zp1 = (char *)&akp[nrecs];
-@@ -300,6 +316,11 @@ zero_btree_node(
- 	memset(zp2, 0, (char *)block + mp->m_sb.sb_blocksize - zp2);
+ 	return bp;
+ }
+@@ -1223,23 +1225,26 @@ libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
  }
  
-+/*
-+ * We could be processing a corrupt block, so we can't trust any of
-+ * the offsets or lengths to be within the buffer range. Hence check
-+ * carefully!
-+ */
  static void
- zero_btree_leaf(
- 	struct xfs_btree_block	*block,
-@@ -312,20 +333,31 @@ zero_btree_leaf(
- 	char			*zp;
+-libxfs_brelse(struct cache_node *node)
++libxfs_brelse(
++	struct cache_node	*node)
+ {
+-	xfs_buf_t		*bp = (xfs_buf_t *)node;
++	struct xfs_buf		*bp = (struct xfs_buf *)node;
  
- 	nrecs = be16_to_cpu(block->bb_numrecs);
-+	if (nrecs < 0)
+-	if (bp != NULL) {
+-		if (bp->b_flags & LIBXFS_B_DIRTY)
+-			libxfs_writebufr(bp);
+-		pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+-		list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
+-		pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+-	}
++	if (!bp)
 +		return;
++	if (bp->b_flags & LIBXFS_B_DIRTY)
++		fprintf(stderr,
++			"releasing dirty buffer to free list!");
++
++	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
++	list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
++	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+ }
  
- 	switch (btype) {
- 	case TYP_BMAPBTA:
- 	case TYP_BMAPBTD:
-+		if (nrecs > mp->m_bmap_dmxr[1])
-+			return;
-+
- 		brp = XFS_BMBT_REC_ADDR(mp, block, 1);
- 		zp = (char *)&brp[nrecs];
- 		break;
- 	case TYP_INOBT:
- 	case TYP_FINOBT:
-+		if (nrecs > mp->m_inobt_mxr[1])
-+			return;
-+
- 		irp = XFS_INOBT_REC_ADDR(mp, block, 1);
- 		zp = (char *)&irp[nrecs];
- 		break;
- 	case TYP_BNOBT:
- 	case TYP_CNTBT:
-+		if (nrecs > mp->m_alloc_mxr[1])
-+			return;
-+
- 		arp = XFS_ALLOC_REC_ADDR(mp, block, 1);
- 		zp = (char *)&arp[nrecs];
- 		break;
+ static unsigned int
+ libxfs_bulkrelse(
+-	struct cache 		*cache,
+-	struct list_head 	*list)
++	struct cache		*cache,
++	struct list_head	*list)
+ {
+ 	xfs_buf_t		*bp;
+ 	int			count = 0;
+@@ -1249,7 +1254,8 @@ libxfs_bulkrelse(
+ 
+ 	list_for_each_entry(bp, list, b_node.cn_mru) {
+ 		if (bp->b_flags & LIBXFS_B_DIRTY)
+-			libxfs_writebufr(bp);
++			fprintf(stderr,
++				"releasing dirty buffer (bulk) to free list!");
+ 		count++;
+ 	}
+ 
+@@ -1260,18 +1266,22 @@ libxfs_bulkrelse(
+ 	return count;
+ }
+ 
+-static void
+-libxfs_bflush(struct cache_node *node)
++static int
++libxfs_bflush(
++	struct cache_node	*node)
+ {
+-	xfs_buf_t		*bp = (xfs_buf_t *)node;
++	struct xfs_buf		*bp = (struct xfs_buf *)node;
+ 
+-	if ((bp != NULL) && (bp->b_flags & LIBXFS_B_DIRTY))
+-		libxfs_writebufr(bp);
++	if (bp->b_flags & LIBXFS_B_DIRTY)
++		return libxfs_writebufr(bp);
++	return 0;
+ }
+ 
+ void
+ libxfs_putbufr(xfs_buf_t *bp)
+ {
++	if (bp->b_flags & LIBXFS_B_DIRTY)
++		libxfs_writebufr(bp);
+ 	libxfs_brelse((struct cache_node *)bp);
+ }
+ 
 -- 
 2.5.0
 
