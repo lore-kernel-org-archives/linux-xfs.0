@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1E59B29DFA
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:35 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D17B29DF6
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E1C268F8033
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 90C55AC001
 	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:31 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Fhel51k7cTLaN2Vh for <xfs@oss.sgi.com>;
+	RaRkm6sALF2yAxMr for <xfs@oss.sgi.com>;
 	Mon, 21 Dec 2015 13:37:29 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hw-Ew
+	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hr-Ck
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002ld-EC
+	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002lE-Bh
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/9] libxfs: don't repeatedly shake unwritable buffers
-Date: Tue, 22 Dec 2015 08:37:08 +1100
-Message-Id: <1450733829-9319-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/9] xfs_mdrestore: correctly account bytes read
+Date: Tue, 22 Dec 2015 08:37:03 +1100
+Message-Id: <1450733829-9319-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,103 +39,43 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-now that we try to write dirty buffers before we release them, we
-can get buildup of unwritable dirty buffers on the LRU lists, This
-results in the cache shaker repeatedly trying to write out these
-buffers every time the cache fills up. This results in more
-corruption warnings, and takes up a lot of time doing reclaiming
-nothing. This can effectively livelock the processing parts of phase
-4.
+Progess indication comes in the form of a "X MB read" output. This
+doesn't match up with the actual number of bytes read from the
+metadump file because it only accounts header blocks in the file,
+not actual metadata blocks that are restored, Hence the number
+reported is usually much lower than the size of the metadump file,
+hence it's impossible to use to guage progress of the restore.
 
-Fix this by not trying to write buffers with corruption errors on
-them. These errors will get cleared when the buffer is re-read and
-fixed and them marked dirty again. At which point, we'll be able to
-write them and so the cache can reclaim them successfully.
+While there, fix the progress output so that it overwrites the
+previous progress output line correctly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/rdwr.c | 27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
+ mdrestore/xfs_mdrestore.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 0337a21..a1f0029 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1103,7 +1103,6 @@ int
- libxfs_writebufr(xfs_buf_t *bp)
- {
- 	int	fd = libxfs_device_to_fd(bp->b_target->dev);
--	int	error = 0;
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index ebc5e54..70a160c 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -133,7 +133,7 @@ perform_restore(
  
- 	/*
- 	 * we never write buffers that are marked stale. This indicates they
-@@ -1134,7 +1133,7 @@ libxfs_writebufr(xfs_buf_t *bp)
+ 	for (;;) {
+ 		if (show_progress && (bytes_read & ((1 << 20) - 1)) == 0)
+-			print_progress("%lld MB read\n", bytes_read >> 20);
++			print_progress("%lld MB read", bytes_read >> 20);
+ 
+ 		for (cur_index = 0; cur_index < mb_count; cur_index++) {
+ 			if (pwrite64(dst_fd, &block_buffer[cur_index <<
+@@ -160,7 +160,7 @@ perform_restore(
+ 								1, src_f) != 1)
+ 			fatal("error reading from file: %s\n", strerror(errno));
+ 
+-		bytes_read += block_size;
++		bytes_read += block_size + (mb_count << tmb.mb_blocklog);
  	}
  
- 	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
--		error = __write_buf(fd, bp->b_addr, bp->b_bcount,
-+		bp->b_error = __write_buf(fd, bp->b_addr, bp->b_bcount,
- 				    LIBXFS_BBTOOFF64(bp->b_bn), bp->b_flags);
- 	} else {
- 		int	i;
-@@ -1144,11 +1143,10 @@ libxfs_writebufr(xfs_buf_t *bp)
- 			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_map[i].bm_bn);
- 			int len = BBTOB(bp->b_map[i].bm_len);
- 
--			error = __write_buf(fd, buf, len, offset, bp->b_flags);
--			if (error) {
--				bp->b_error = error;
-+			bp->b_error = __write_buf(fd, buf, len, offset,
-+						  bp->b_flags);
-+			if (bp->b_error)
- 				break;
--			}
- 			buf += len;
- 		}
- 	}
-@@ -1157,14 +1155,14 @@ libxfs_writebufr(xfs_buf_t *bp)
- 	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p, error %d\n",
- 			pthread_self(), __FUNCTION__, bp->b_bcount,
- 			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
--			(long long)bp->b_bn, bp, error);
-+			(long long)bp->b_bn, bp, bp->b_error);
- #endif
--	if (!error) {
-+	if (!bp->b_error) {
- 		bp->b_flags |= LIBXFS_B_UPTODATE;
- 		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
- 				 LIBXFS_B_UNCHECKED);
- 	}
--	return error;
-+	return bp->b_error;
- }
- 
- int
-@@ -1266,15 +1264,22 @@ libxfs_bulkrelse(
- 	return count;
- }
- 
-+/*
-+ * When a buffer is marked dirty, the error is cleared. Hence if we are trying
-+ * to flush a buffer prior to cache reclaim that has an error on it it means
-+ * we've already tried to flush it and it failed. Prevent repeated corruption
-+ * errors from being reported by skipping such buffers - when the corruption is
-+ * fixed the buffer will be marked dirty again and we can write it again.
-+ */
- static int
- libxfs_bflush(
- 	struct cache_node	*node)
- {
- 	struct xfs_buf		*bp = (struct xfs_buf *)node;
- 
--	if (bp->b_flags & LIBXFS_B_DIRTY)
-+	if (!bp->b_error && bp->b_flags & LIBXFS_B_DIRTY)
- 		return libxfs_writebufr(bp);
--	return 0;
-+	return bp->b_error;
- }
- 
- void
+ 	if (progress_since_warning)
 -- 
 2.5.0
 
