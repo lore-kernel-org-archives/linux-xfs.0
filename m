@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 082FB29E09
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C1EDB304032
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:32 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4EC3629E04
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 15:37:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E9088F8033
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2015 13:37:35 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	isJSGh06Bi5DqMBe for <xfs@oss.sgi.com>;
-	Mon, 21 Dec 2015 13:37:31 -0800 (PST)
+	4UerWLJubMpk0ZES for <xfs@oss.sgi.com>;
+	Mon, 21 Dec 2015 13:37:32 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000ht-DS
+	(envelope-from <dave@fromorbit.com>) id 1aB88m-0000hu-E9
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002lO-Ci
+	(envelope-from <dave@disappointment.disaster>) id 1aB88m-0002lT-D8
 	for xfs@oss.sgi.com; Tue, 22 Dec 2015 08:37:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] repair: parallelise uncertin inode processing in phase 3
-Date: Tue, 22 Dec 2015 08:37:05 +1100
-Message-Id: <1450733829-9319-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/9] libxfs: directory node splitting does not have an extra
+	block
+Date: Tue, 22 Dec 2015 08:37:06 +1100
+Message-Id: <1450733829-9319-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,137 +40,135 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This can take a long time when there are millions of uncertain inodes in badly
-broken filesystems. THe processing is per-ag, the data structures are all
-per-ag, and the load is mostly CPU time spent checking CRCs on each
-uncertaini inode. Parallelising reduced the runtime of this phase on a badly
-broken filesytem from ~30 minutes to under 5 miniutes.
+xfs_da3_split() has to handle all thre versions of the
+directory/attribute btree structure. The attr tree is v1, the dir
+tre is v2 or v3. The main difference between the v1 and v2/3 trees
+is the way tree nodes are split - in the v1 tree we can require a
+double split to occur because the object to be inserted may be
+larger than the space made by splitting a leaf. In this case we need
+to do a double split - one to split the full leaf, then another to
+allocate an empty leaf block in the correct location for the new
+entry.  This does not happen with dir (v2/v3) formats as the objects
+being inserted are always guaranteed to fit into the new space in
+the split blocks.
+
+The problem is that when we are doing the first root split, there
+can be three leaf blocks that need to be updated for an attr tree,
+but there will ony ever be two blocks for the dir tree. The code,
+however, expects that there will always be an extra block (i.e.
+three blocks) that needs updating. When rebuilding broken
+directories, xfs_repair trips over this condition in the directroy
+code and SEGVs because state->extrablk.bp == NULL. i.e. there is no
+extra block.
+
+Indeed, for directories they *may* be an extra block on this buffer
+pointer. However, it's guaranteed not to be a leaf block (i.e. a
+directory data block) - the directory code only ever places hash
+index or free space blocks in this pointer (as a cursor of
+sorts), and so to use it as a directory data block will immediately
+corrupt the directory. This manifests itself in repair as a
+directory corruption in a repaired directory, leaving the directory
+rebuild incomplete.
+
+This is a dir v2 zero-day bug - it was in the initial dir v2 commit
+that was made back in February 1998.
+
+Fix this by making the update code aware of whether the extra block
+is a valid node for linking into the tree, rather than asserting
+(incorrectly) that the extra block must be valid. This brings the
+code in line with xfs_da3_node_split() which, from the first dir v2
+commit, handled the conditional extra block case correctly....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/phase3.c     | 59 ++++++++++++++++++++++++++++++++++++++++++++---------
- repair/protos.h     |  2 +-
- repair/xfs_repair.c |  2 +-
- 3 files changed, 51 insertions(+), 12 deletions(-)
+ libxfs/xfs_da_btree.c | 39 ++++++++++++++++++++++++++-------------
+ 1 file changed, 26 insertions(+), 13 deletions(-)
 
-diff --git a/repair/phase3.c b/repair/phase3.c
-index 76c9440..0890a27 100644
---- a/repair/phase3.c
-+++ b/repair/phase3.c
-@@ -28,6 +28,7 @@
- #include "dinode.h"
- #include "progress.h"
- #include "bmap.h"
-+#include "threads.h"
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index bf5fe21..58a0361 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -356,6 +356,7 @@ xfs_da3_split(
+ 	int			action = 0;
+ 	int			error;
+ 	int			i;
++	bool			use_extra = false;
  
- static void
- process_agi_unlinked(
-@@ -87,10 +88,33 @@ process_ags(
- 	do_inode_prefetch(mp, ag_stride, process_ag_func, false, false);
- }
+ 	trace_xfs_da_split(state->args);
  
-+static void
-+do_uncertain_aginodes(
-+	work_queue_t	*wq,
-+	xfs_agnumber_t	agno,
-+	void		*arg)
-+{
-+	int		*count = arg;
-+
-+	*count = process_uncertain_aginodes(wq->mp, agno);
-+
-+#ifdef XR_INODE_TRACE
-+	fprintf(stderr,
-+		"\t\t phase 3 - ag %d process_uncertain_inodes returns %d\n",
-+		*count, j);
-+#endif
-+
-+	PROG_RPT_INC(prog_rpt_done[agno], 1);
-+}
-+
- void
--phase3(xfs_mount_t *mp)
-+phase3(
-+	struct xfs_mount *mp,
-+	int		scan_threads)
- {
--	int 			i, j;
-+	int			i, j;
-+	int			*counts;
-+	work_queue_t		wq;
- 
- 	do_log(_("Phase 3 - for each AG...\n"));
- 	if (!no_modify)
-@@ -129,20 +153,35 @@ phase3(xfs_mount_t *mp)
+@@ -395,6 +396,7 @@ xfs_da3_split(
+ 			 * Entry wouldn't fit, split the leaf again.
+ 			 */
+ 			state->extravalid = 1;
++			use_extra = true;
+ 			if (state->inleaf) {
+ 				state->extraafter = 0;	/* before newblk */
+ 				trace_xfs_attr_leaf_split_before(state->args);
+@@ -454,8 +456,13 @@ xfs_da3_split(
+ 	/*
+ 	 * Update pointers to the node which used to be block 0 and
+ 	 * just got bumped because of the addition of a new root node.
+-	 * There might be three blocks involved if a double split occurred,
+-	 * and the original block 0 could be at any position in the list.
++	 * There might be three blocks involved if a double split occurred and
++	 * in this case use_extra will be set. This can only happen for attr
++	 * trees, as extrablk for dir trees can only contain data or free space
++	 * blocks, never leaf/node blocks.
++	 *
++	 * Note that the original block 0 could be at any position in the list
++	 * of blocks in the tree.
+ 	 *
+ 	 * Note: the magic numbers and sibling pointers are in the same
+ 	 * physical place for both v2 and v3 headers (by design). Hence it
+@@ -464,31 +471,37 @@ xfs_da3_split(
  	 */
- 	do_log(_("        - process newly discovered inodes...\n"));
- 	set_progress_msg(PROG_FMT_NEW_INODES, (__uint64_t) glob_agcount);
-+
-+	counts = calloc(sizeof(*counts), mp->m_sb.sb_agcount);
-+	if (!counts) {
-+		do_abort(_("no memory for uncertain inode counts\n"));
-+		return;
-+	}
-+
- 	do  {
- 		/*
- 		 * have to loop until no ag has any uncertain
- 		 * inodes
- 		 */
- 		j = 0;
--		for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
--			j += process_uncertain_aginodes(mp, i);
--#ifdef XR_INODE_TRACE
--			fprintf(stderr,
--				"\t\t phase 3 - process_uncertain_inodes returns %d\n", j);
--#endif
--			PROG_RPT_INC(prog_rpt_done[i], 1);
--		}
-+		memset(counts, 0, mp->m_sb.sb_agcount * sizeof(*counts));
-+
-+		create_work_queue(&wq, mp, scan_threads);
-+
-+		for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+			queue_work(&wq, do_uncertain_aginodes, i, &counts[i]);
-+
-+		destroy_work_queue(&wq);
-+
-+		/* tally up the counts */
-+		for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+			j += counts[i];
-+
- 	} while (j != 0);
-+
-+	free(counts);
-+
- 	print_final_rpt();
- }
-diff --git a/repair/protos.h b/repair/protos.h
-index b113aca..0290420 100644
---- a/repair/protos.h
-+++ b/repair/protos.h
-@@ -46,7 +46,7 @@ void	thread_init(void);
- 
- void	phase1(struct xfs_mount *);
- void	phase2(struct xfs_mount *, int);
--void	phase3(struct xfs_mount *);
-+void	phase3(struct xfs_mount *, int);
- void	phase4(struct xfs_mount *);
- void	phase5(struct xfs_mount *);
- void	phase6(struct xfs_mount *);
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index fcdb212..5d5f3aa 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -871,7 +871,7 @@ main(int argc, char **argv)
- 	if (do_prefetch)
- 		init_prefetch(mp);
- 
--	phase3(mp);
-+	phase3(mp, phase2_threads);
- 	timestamp(PHASE_END, 3, NULL);
- 
- 	phase4(mp);
+ 	node = oldblk->bp->b_addr;
+ 	if (node->hdr.info.forw) {
++		bp = NULL;
+ 		if (be32_to_cpu(node->hdr.info.forw) == addblk->blkno) {
+ 			bp = addblk->bp;
+-		} else {
++		} else if (use_extra) {
+ 			ASSERT(state->extravalid);
+ 			bp = state->extrablk.bp;
+ 		}
+-		node = bp->b_addr;
+-		node->hdr.info.back = cpu_to_be32(oldblk->blkno);
+-		xfs_trans_log_buf(state->args->trans, bp,
+-		    XFS_DA_LOGRANGE(node, &node->hdr.info,
+-		    sizeof(node->hdr.info)));
++		if (bp) {
++			node = bp->b_addr;
++			node->hdr.info.back = cpu_to_be32(oldblk->blkno);
++			xfs_trans_log_buf(state->args->trans, bp,
++					  XFS_DA_LOGRANGE(node, &node->hdr.info,
++					  sizeof(node->hdr.info)));
++		}
+ 	}
+ 	node = oldblk->bp->b_addr;
+ 	if (node->hdr.info.back) {
++		bp = NULL;
+ 		if (be32_to_cpu(node->hdr.info.back) == addblk->blkno) {
+ 			bp = addblk->bp;
+ 		} else {
+ 			ASSERT(state->extravalid);
+ 			bp = state->extrablk.bp;
+ 		}
+-		node = bp->b_addr;
+-		node->hdr.info.forw = cpu_to_be32(oldblk->blkno);
+-		xfs_trans_log_buf(state->args->trans, bp,
+-		    XFS_DA_LOGRANGE(node, &node->hdr.info,
+-		    sizeof(node->hdr.info)));
++		if (bp) {
++			node = bp->b_addr;
++			node->hdr.info.forw = cpu_to_be32(oldblk->blkno);
++			xfs_trans_log_buf(state->args->trans, bp,
++					  XFS_DA_LOGRANGE(node, &node->hdr.info,
++					  sizeof(node->hdr.info)));
++		}
+ 	}
+ 	addblk->bp = NULL;
+ 	return 0;
 -- 
 2.5.0
 
