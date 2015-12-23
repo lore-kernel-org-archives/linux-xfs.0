@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C008C7F37
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 20:39:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 948C2304039
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:39:34 -0800 (PST)
-Received: from mail-yk0-f173.google.com (mail-yk0-f173.google.com
-	[209.85.160.173]) by cuda.sgi.com with ESMTP id
-	LoFZV159k1JbK9j7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:39:31 -0800 (PST)
-Received: by mail-yk0-f173.google.com with SMTP id 140so182532028ykp.0
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:39:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20151201235846.36836.1476.stgit@dwillia2-desk3.jf.intel.com>
-References: <20151201235836.36836.90416.stgit@dwillia2-desk3.jf.intel.com>
-	<20151201235846.36836.1476.stgit@dwillia2-desk3.jf.intel.com>
-Date: Tue, 22 Dec 2015 18:39:31 -0800
-Message-ID: <CAPcyv4jCECQ55ZCXU1fmo52zHgv+1+pr0-UKUXmgMiRa0oovRQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] xfs: handle shutdown notifications
-From: Dan Williams <dan.j.williams@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id C0D107F37
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 13:39:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B0FAD30404E
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 11:39:32 -0800 (PST)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	z48geBbiM1zVXcxX for <xfs@oss.sgi.com>;
+	Wed, 23 Dec 2015 11:39:30 -0800 (PST)
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v6 1/7] pmem: add wb_cache_pmem() to the PMEM API
+Date: Wed, 23 Dec 2015 12:39:14 -0700
+Message-Id: <1450899560-26708-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,101 +22,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: linux-block@vger.kernel.org, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>
+To: linux-kernel@vger.kernel.org
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-Dave, I'm looking to push out a branch with this patch included.  Any concerns?
+The function __arch_wb_cache_pmem() was already an internal implementation
+detail of the x86 PMEM API, but this functionality needs to be exported as
+part of the general PMEM API to handle the fsync/msync case for DAX mmaps.
 
-On Tue, Dec 1, 2015 at 3:58 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> Force a filesystem shutdown when the backing device is known to be dead.
-> I.e. blk_queue_enter() permanently returns -ENODEV.
->
-> Cc: xfs@oss.sgi.com
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  fs/block_dev.c     |    3 ++-
->  fs/xfs/xfs_super.c |    9 +++++++++
->  include/linux/fs.h |    2 ++
->  3 files changed, 13 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 39989e990df9..dfe9a53a7c53 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -1802,7 +1802,7 @@ int __invalidate_device(struct block_device *bdev, bool kill_dirty)
->  }
->  EXPORT_SYMBOL(__invalidate_device);
->
-> -static void generic_bdi_gone(struct super_block *sb)
-> +void generic_bdi_gone(struct super_block *sb)
->  {
->         struct inode *inode, *_inode = NULL;
->
-> @@ -1828,6 +1828,7 @@ static void generic_bdi_gone(struct super_block *sb)
->         spin_unlock(&sb->s_inode_list_lock);
->         iput(_inode);
->  }
-> +EXPORT_SYMBOL(generic_bdi_gone);
->
->  void shutdown_partition(struct gendisk *disk, int partno)
->  {
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 36bd8825bfb0..63c36508e9db 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1618,6 +1618,14 @@ xfs_fs_free_cached_objects(
->         return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
->  }
->
-> +static void
-> +xfs_fs_bdi_gone(
-> +       struct super_block *sb)
-> +{
-> +       xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REQ);
-> +       generic_bdi_gone(sb);
-> +}
-> +
->  static const struct super_operations xfs_super_operations = {
->         .alloc_inode            = xfs_fs_alloc_inode,
->         .destroy_inode          = xfs_fs_destroy_inode,
-> @@ -1632,6 +1640,7 @@ static const struct super_operations xfs_super_operations = {
->         .show_options           = xfs_fs_show_options,
->         .nr_cached_objects      = xfs_fs_nr_cached_objects,
->         .free_cached_objects    = xfs_fs_free_cached_objects,
-> +       .bdi_gone               = xfs_fs_bdi_gone,
->  };
->
->  static struct file_system_type xfs_fs_type = {
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 0e201ed38045..b1e8e049e4b8 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2265,6 +2265,7 @@ extern struct super_block *freeze_bdev(struct block_device *);
->  extern void emergency_thaw_all(void);
->  extern int thaw_bdev(struct block_device *bdev, struct super_block *sb);
->  extern int fsync_bdev(struct block_device *);
-> +extern void generic_bdi_gone(struct super_block *sb);
->
->  extern struct super_block *blockdev_superblock;
->
-> @@ -2277,6 +2278,7 @@ static inline void bd_forget(struct inode *inode) {}
->  static inline int sync_blockdev(struct block_device *bdev) { return 0; }
->  static inline void kill_bdev(struct block_device *bdev) {}
->  static inline void invalidate_bdev(struct block_device *bdev) {}
-> +static inline void generic_bdi_gone(struct super_block *sb) {}
->
->  static inline struct super_block *freeze_bdev(struct block_device *sb)
->  {
->
-> _______________________________________________
-> Linux-nvdimm mailing list
-> Linux-nvdimm@lists.01.org
-> https://lists.01.org/mailman/listinfo/linux-nvdimm
+One thing worth noting is that we really do want this to be part of the
+PMEM API as opposed to a stand-alone function like clflush_cache_range()
+because of ordering restrictions.  By having wb_cache_pmem() as part of the
+PMEM API we can leave it unordered, call it multiple times to write back
+large amounts of memory, and then order the multiple calls with a single
+wmb_pmem().
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ arch/x86/include/asm/pmem.h | 11 ++++++-----
+ include/linux/pmem.h        | 22 +++++++++++++++++++++-
+ 2 files changed, 27 insertions(+), 6 deletions(-)
+
+diff --git a/arch/x86/include/asm/pmem.h b/arch/x86/include/asm/pmem.h
+index 1544fab..c57fd1e 100644
+--- a/arch/x86/include/asm/pmem.h
++++ b/arch/x86/include/asm/pmem.h
+@@ -67,18 +67,19 @@ static inline void arch_wmb_pmem(void)
+ }
+ 
+ /**
+- * __arch_wb_cache_pmem - write back a cache range with CLWB
++ * arch_wb_cache_pmem - write back a cache range with CLWB
+  * @vaddr:	virtual start address
+  * @size:	number of bytes to write back
+  *
+  * Write back a cache range using the CLWB (cache line write back)
+  * instruction.  This function requires explicit ordering with an
+- * arch_wmb_pmem() call.  This API is internal to the x86 PMEM implementation.
++ * arch_wmb_pmem() call.
+  */
+-static inline void __arch_wb_cache_pmem(void *vaddr, size_t size)
++static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
+ {
+ 	u16 x86_clflush_size = boot_cpu_data.x86_clflush_size;
+ 	unsigned long clflush_mask = x86_clflush_size - 1;
++	void *vaddr = (void __force *)addr;
+ 	void *vend = vaddr + size;
+ 	void *p;
+ 
+@@ -115,7 +116,7 @@ static inline size_t arch_copy_from_iter_pmem(void __pmem *addr, size_t bytes,
+ 	len = copy_from_iter_nocache(vaddr, bytes, i);
+ 
+ 	if (__iter_needs_pmem_wb(i))
+-		__arch_wb_cache_pmem(vaddr, bytes);
++		arch_wb_cache_pmem(addr, bytes);
+ 
+ 	return len;
+ }
+@@ -133,7 +134,7 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
+ 	void *vaddr = (void __force *)addr;
+ 
+ 	memset(vaddr, 0, size);
+-	__arch_wb_cache_pmem(vaddr, size);
++	arch_wb_cache_pmem(addr, size);
+ }
+ 
+ static inline bool __arch_has_wmb_pmem(void)
+diff --git a/include/linux/pmem.h b/include/linux/pmem.h
+index acfea8c..7c3d11a 100644
+--- a/include/linux/pmem.h
++++ b/include/linux/pmem.h
+@@ -53,12 +53,18 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
+ {
+ 	BUG();
+ }
++
++static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
++{
++	BUG();
++}
+ #endif
+ 
+ /*
+  * Architectures that define ARCH_HAS_PMEM_API must provide
+  * implementations for arch_memcpy_to_pmem(), arch_wmb_pmem(),
+- * arch_copy_from_iter_pmem(), arch_clear_pmem() and arch_has_wmb_pmem().
++ * arch_copy_from_iter_pmem(), arch_clear_pmem(), arch_wb_cache_pmem()
++ * and arch_has_wmb_pmem().
+  */
+ static inline void memcpy_from_pmem(void *dst, void __pmem const *src, size_t size)
+ {
+@@ -178,4 +184,18 @@ static inline void clear_pmem(void __pmem *addr, size_t size)
+ 	else
+ 		default_clear_pmem(addr, size);
+ }
++
++/**
++ * wb_cache_pmem - write back processor cache for PMEM memory range
++ * @addr:	virtual start address
++ * @size:	number of bytes to write back
++ *
++ * Write back the processor cache range starting at 'addr' for 'size' bytes.
++ * This function requires explicit ordering with a wmb_pmem() call.
++ */
++static inline void wb_cache_pmem(void __pmem *addr, size_t size)
++{
++	if (arch_has_pmem_api())
++		arch_wb_cache_pmem(addr, size);
++}
+ #endif /* __PMEM_H__ */
+-- 
+2.6.3
 
 _______________________________________________
 xfs mailing list
