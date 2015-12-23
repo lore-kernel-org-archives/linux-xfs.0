@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A0387F37
-	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 15:19:06 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3043029DF5
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 17:22:43 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C1D44AC001
-	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 13:18:59 -0800 (PST)
-Received: from g9t5008.houston.hp.com (g9t5008.houston.hp.com [15.240.92.66])
-	by cuda.sgi.com with ESMTP id FEGoPAPBil4la4pI (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 23 Dec 2015 13:18:57 -0800 (PST)
-From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Subject: RE: A blocksize problem about dax and ext4
-Date: Wed, 23 Dec 2015 21:18:05 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295BEC985F@G9W0745.americas.hpqcorp.net>
-References: <CAM=YXF-aXxp19=uFDExUswpEfKXNN6LJScxAB-7-u-AgRiXJ2g@mail.gmail.com>
-	<CAPcyv4gYHuSWuugnELSO6B1rye+b89io3zJVUXwRt0wE1ZfPrA@mail.gmail.com>
-In-Reply-To: <CAPcyv4gYHuSWuugnELSO6B1rye+b89io3zJVUXwRt0wE1ZfPrA@mail.gmail.com>
-Content-Language: en-US
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1D375304032
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 15:22:40 -0800 (PST)
+Received: from kaylee.flamingspork.com (kaylee.flamingspork.com
+	[74.207.245.61]) by cuda.sgi.com with ESMTP id CHgFnPuen4UiWTEk
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 15:22:38 -0800 (PST)
+From: Stewart Smith <stewart@flamingspork.com>
+Subject: Re: Ideas on unified real-ro mount option across all filesystems
+In-Reply-To: <567228EF.80007@redhat.com>
+References: <567212DA.8050808@cn.fujitsu.com> <567228EF.80007@redhat.com>
+Date: Thu, 24 Dec 2015 10:22:31 +1100
+Message-ID: <87twn8vjgo.fsf@flamingspork.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,120 +23,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3580726080490554185=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>, Cholerae Hu <choleraehyq@gmail.com>, Ted Tso <tytso@mit.edu>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "david@fromorbit.com" <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: Eric Sandeen <sandeen@redhat.com>, Qu Wenruo <quwenruo@cn.fujitsu.com>, fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-ext4@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+
+--===============3580726080490554185==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
+
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Eric Sandeen <sandeen@redhat.com> writes:
+>> 3) A lot of user even don't now mount ro can still modify device
+>>    Yes, I didn't know this point until I checked the log replay code of
+>>    btrfs.
+>>    Adding such mount option alias may raise some attention of users.
+>
+> Given that nothing in the documentation implies that the block device its=
+elf
+> must remain unchanged on a read-only mount, I don't see any problem which
+> needs fixing.  MS_RDONLY rejects user IO; that's all.
+>
+> If you want to be sure your block device rejects all IO for forensics or
+> what have you, I'd suggest # blockdev --setro /dev/whatever prior to moun=
+t,
+> and take it out of the filesystem's control.  Or better yet, making an
+> image and not touching the original.
+
+What we do for the petitboot bootloader in POWER and OpenPower firmware
+(a linux+initramfs that does kexec to boot) is that we use device mapper
+to make a snapshot in memory where we run recovery (for some
+filesystems, notably XFS is different due to journal not being endian
+safe). We also have to have an option *not* to do that, just in case
+there's a bug in journal replay... and we're lucky in the fact that we
+probably do have enough memory to complete replay, this solution could
+be completely impossible on lower memory machines.
+
+As such, I believe we're the only bit of firmware/bootloader ever that
+has correctly parsed a journalling filesystem.
+
+=2D-=20
+Stewart Smith
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJWeyy3AAoJEOeWNk/DvaDuf9MQANVmyHm1559u++pZu4e+EXv5
+q+NolT7SBz/Pub4hMuo7DkS+NGt6zm/2tWAhQ4X5/6449LQpJAhGVyOkb9/RMHXU
+NYaWs9mXMw3SpB8AwTLf6f9UBAaVYj5ayvlS2xKBICxtm0rXSTHy2MerhCLsMGrl
+CO87v/qYddhZIJAFzUzn5s25n7y3H8MZKU+rIcirTyVI9UuQbC1lcTSE/Khrggbp
+S/8wpLPlM8f6fJ9pXlEoJRLszdTTx8EA0JpQSp5LfA9WEr6Vp4/l+/92DY5C6V7Q
+DZtFiv6FxU1rsnP4D0QF/v6ku8As0cLmiV/F8TwlfTuNEYPbvPiO+x/AVzDBWTER
+UKiCstDo7HinSWnWbqYNlzskqdff20+pMY92CJ8AaFZdNQGMLWd0HO48DTz+EV2i
+0HjU0ax4Fzg9AkcbMBaZxS8s7+W9a5g6O3+foh9dOOnYx8S5Dt7xq9HYjeTlMBkC
+/+/WfkEceqrCOoKGkdH+KQhs4I5BWo0ytOO2DeXuuLm36qzI7HYwI3Dq2XgHF+1V
+5HBi2hlXO+VyeglMCia4vJSj5U0zzR37+1EdFEE5LocsKAFfxghVqoFMUeZMsqci
+5WUgP/exreGaULOrXpC0abknqB5d4nsoHiywXRrb2G8bsrTad7qY6sbNxuTE4kST
+z4Bn86ecWWhZIOHPsDrR
+=dU/8
+-----END PGP SIGNATURE-----
+--=-=-=--
 
 
-> -----Original Message-----
-> From: Linux-nvdimm [mailto:linux-nvdimm-bounces@lists.01.org] On Behalf Of
-> Dan Williams
-> Sent: Wednesday, December 23, 2015 11:16 AM
-> To: Cholerae Hu <choleraehyq@gmail.com>
-> Cc: linux-nvdimm@lists.01.org
-> Subject: Re: A blocksize problem about dax and ext4
-> 
-> On Wed, Dec 23, 2015 at 4:03 AM, Cholerae Hu <choleraehyq@gmail.com>
-> wrote:
-...
-> > [root@localhost cholerae]# mount -o dax /dev/pmem0 /mnt/mem
-> > mount: wrong fs type, bad option, bad superblock on /dev/pmem0,
-> >        missing codepage or helper program, or other error
-> >
-> >        In some cases useful info is found in syslog - try
-> >        dmesg | tail or so.
-> > [root@localhost cholerae]# dmesg | tail
-...
-> > [   81.779582] EXT4-fs (pmem0): error: unsupported blocksize for dax
-...
-
-> What's the fs block size?  For example:
-> # dumpe2fs -h /dev/pmem0  | grep "Block size"
-> dumpe2fs 1.42.9 (28-Dec-2013)
-> Block size:               4096
-> Depending on the size of /dev/pmem0 it may have automatically set it
-> to a block size less than 4 KiB which is incompatible with "-o dax".
-
-I noticed a few things while trying that out on both ext4 and xfs.
-
-$ sudo mkfs.ext4 -F -b 1024 /dev/pmem0
-$ sudo mount -o dax /dev/pmem0 /mnt/ext4-pmem0
-$ sudo mkfs.xfs -f -b size=1024 /dev/pmem0
-$ sudo mount -o dax /dev/pmem0 /mnt/xfs-pmem0
-
-[  199.679195] EXT4-fs (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-[  199.724931] EXT4-fs (pmem0): error: unsupported block size 1024 for dax 
-[  859.077766] XFS (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-[  859.118106] XFS (pmem0): Filesystem block size invalid for DAX Turning DAX off.
-[  859.156950] XFS (pmem0): Mounting V4 Filesystem
-[  859.183626] XFS (pmem0): Ending clean mount
-
-
-1. ext4 fails to mount the filesystem, while xfs just disables DAX.
-It seems like they should they be the same.
-
-2. if CONFIG_FS_DAX is not supported, ext4 fails to mount, but prints
-the message at the KERN_INFO level. All the rest of its mount errors
-use KERN_ERR.
-
-Completely unknown mount options are reported like this at the
-KERN_ERR level:
-[ 2188.194775] EXT4-fs (pmem0): Unrecognized mount option "xyzzy" or missing value
-
-In contrast, if CONFIG_FS_DAX is not supported, then xfs lumps it in
-with the rest of the unknown mount options, which are reported with 
-xfs_warn():
-[ 2347.654182] XFS (pmem0): unknown mount option [xyzzy].
-
-
-3. It might be worth printing the problematic filesystem block size
- (here and in a few other similar messages).  
-
-I like how xfs' wording of "Filesystem block size" helps distinguish
-the value from the block device's logical block size.
-
-
-Code excerpts
-=============
-fs/xfs/xfs_super.c:
-#ifdef CONFIG_FS_DAX
-                } else if (!strcmp(this_char, MNTOPT_DAX)) {
-                        mp->m_flags |= XFS_MOUNT_DAX;
-#endif
-...
-        if (mp->m_flags & XFS_MOUNT_DAX) {
-                xfs_warn(mp,
-        "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
-                if (sb->s_blocksize != PAGE_SIZE) {
-                        xfs_alert(mp,
-                "Filesystem block size invalid for DAX Turning DAX off.");
-                        mp->m_flags &= ~XFS_MOUNT_DAX;
-                } else if (!sb->s_bdev->bd_disk->fops->direct_access) {
-                        xfs_alert(mp,
-                "Block device does not support DAX Turning DAX off.");
-                        mp->m_flags &= ~XFS_MOUNT_DAX;
-                }
-        }
-
-fs/ext4/super.c:
-        } else if (token == Opt_dax) {
-#ifdef CONFIG_FS_DAX
-                ext4_msg(sb, KERN_WARNING,
-                "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
-                        sbi->s_mount_opt |= m->mount_opt;
-#else
-                ext4_msg(sb, KERN_INFO, "dax option not supported");
-                return -1;
-#endif
-
----
-Robert Elliott, HPE Persistent Memory
-
+--===============3580726080490554185==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3580726080490554185==--
