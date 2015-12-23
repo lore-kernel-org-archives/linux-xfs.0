@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 674BF7F6F
-	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 13:39:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4763A8F8052
-	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 11:39:45 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	SAY1DDUFDO90Mk3A for <xfs@oss.sgi.com>;
-	Wed, 23 Dec 2015 11:39:41 -0800 (PST)
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v6 6/7] ext4: call dax_pfn_mkwrite() for DAX fsync/msync
-Date: Wed, 23 Dec 2015 12:39:19 -0700
-Message-Id: <1450899560-26708-7-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A0387F37
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 15:19:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C1D44AC001
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2015 13:18:59 -0800 (PST)
+Received: from g9t5008.houston.hp.com (g9t5008.houston.hp.com [15.240.92.66])
+	by cuda.sgi.com with ESMTP id FEGoPAPBil4la4pI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 23 Dec 2015 13:18:57 -0800 (PST)
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: A blocksize problem about dax and ext4
+Date: Wed, 23 Dec 2015 21:18:05 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295BEC985F@G9W0745.americas.hpqcorp.net>
+References: <CAM=YXF-aXxp19=uFDExUswpEfKXNN6LJScxAB-7-u-AgRiXJ2g@mail.gmail.com>
+	<CAPcyv4gYHuSWuugnELSO6B1rye+b89io3zJVUXwRt0wE1ZfPrA@mail.gmail.com>
+In-Reply-To: <CAPcyv4gYHuSWuugnELSO6B1rye+b89io3zJVUXwRt0wE1ZfPrA@mail.gmail.com>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,49 +26,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>, Cholerae Hu <choleraehyq@gmail.com>, Ted Tso <tytso@mit.edu>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "david@fromorbit.com" <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
 
-To properly support the new DAX fsync/msync infrastructure filesystems
-need to call dax_pfn_mkwrite() so that DAX can track when user pages are
-dirtied.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+> -----Original Message-----
+> From: Linux-nvdimm [mailto:linux-nvdimm-bounces@lists.01.org] On Behalf Of
+> Dan Williams
+> Sent: Wednesday, December 23, 2015 11:16 AM
+> To: Cholerae Hu <choleraehyq@gmail.com>
+> Cc: linux-nvdimm@lists.01.org
+> Subject: Re: A blocksize problem about dax and ext4
+> 
+> On Wed, Dec 23, 2015 at 4:03 AM, Cholerae Hu <choleraehyq@gmail.com>
+> wrote:
+...
+> > [root@localhost cholerae]# mount -o dax /dev/pmem0 /mnt/mem
+> > mount: wrong fs type, bad option, bad superblock on /dev/pmem0,
+> >        missing codepage or helper program, or other error
+> >
+> >        In some cases useful info is found in syslog - try
+> >        dmesg | tail or so.
+> > [root@localhost cholerae]# dmesg | tail
+...
+> > [   81.779582] EXT4-fs (pmem0): error: unsupported blocksize for dax
+...
+
+> What's the fs block size?  For example:
+> # dumpe2fs -h /dev/pmem0  | grep "Block size"
+> dumpe2fs 1.42.9 (28-Dec-2013)
+> Block size:               4096
+> Depending on the size of /dev/pmem0 it may have automatically set it
+> to a block size less than 4 KiB which is incompatible with "-o dax".
+
+I noticed a few things while trying that out on both ext4 and xfs.
+
+$ sudo mkfs.ext4 -F -b 1024 /dev/pmem0
+$ sudo mount -o dax /dev/pmem0 /mnt/ext4-pmem0
+$ sudo mkfs.xfs -f -b size=1024 /dev/pmem0
+$ sudo mount -o dax /dev/pmem0 /mnt/xfs-pmem0
+
+[  199.679195] EXT4-fs (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+[  199.724931] EXT4-fs (pmem0): error: unsupported block size 1024 for dax 
+[  859.077766] XFS (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+[  859.118106] XFS (pmem0): Filesystem block size invalid for DAX Turning DAX off.
+[  859.156950] XFS (pmem0): Mounting V4 Filesystem
+[  859.183626] XFS (pmem0): Ending clean mount
+
+
+1. ext4 fails to mount the filesystem, while xfs just disables DAX.
+It seems like they should they be the same.
+
+2. if CONFIG_FS_DAX is not supported, ext4 fails to mount, but prints
+the message at the KERN_INFO level. All the rest of its mount errors
+use KERN_ERR.
+
+Completely unknown mount options are reported like this at the
+KERN_ERR level:
+[ 2188.194775] EXT4-fs (pmem0): Unrecognized mount option "xyzzy" or missing value
+
+In contrast, if CONFIG_FS_DAX is not supported, then xfs lumps it in
+with the rest of the unknown mount options, which are reported with 
+xfs_warn():
+[ 2347.654182] XFS (pmem0): unknown mount option [xyzzy].
+
+
+3. It might be worth printing the problematic filesystem block size
+ (here and in a few other similar messages).  
+
+I like how xfs' wording of "Filesystem block size" helps distinguish
+the value from the block device's logical block size.
+
+
+Code excerpts
+=============
+fs/xfs/xfs_super.c:
+#ifdef CONFIG_FS_DAX
+                } else if (!strcmp(this_char, MNTOPT_DAX)) {
+                        mp->m_flags |= XFS_MOUNT_DAX;
+#endif
+...
+        if (mp->m_flags & XFS_MOUNT_DAX) {
+                xfs_warn(mp,
+        "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+                if (sb->s_blocksize != PAGE_SIZE) {
+                        xfs_alert(mp,
+                "Filesystem block size invalid for DAX Turning DAX off.");
+                        mp->m_flags &= ~XFS_MOUNT_DAX;
+                } else if (!sb->s_bdev->bd_disk->fops->direct_access) {
+                        xfs_alert(mp,
+                "Block device does not support DAX Turning DAX off.");
+                        mp->m_flags &= ~XFS_MOUNT_DAX;
+                }
+        }
+
+fs/ext4/super.c:
+        } else if (token == Opt_dax) {
+#ifdef CONFIG_FS_DAX
+                ext4_msg(sb, KERN_WARNING,
+                "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+                        sbi->s_mount_opt |= m->mount_opt;
+#else
+                ext4_msg(sb, KERN_INFO, "dax option not supported");
+                return -1;
+#endif
+
 ---
- fs/ext4/file.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Robert Elliott, HPE Persistent Memory
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 60683ab..fa899c9 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -291,8 +291,8 @@ static int ext4_dax_pfn_mkwrite(struct vm_area_struct *vma,
- {
- 	struct inode *inode = file_inode(vma->vm_file);
- 	struct super_block *sb = inode->i_sb;
--	int ret = VM_FAULT_NOPAGE;
- 	loff_t size;
-+	int ret;
- 
- 	sb_start_pagefault(sb);
- 	file_update_time(vma->vm_file);
-@@ -300,6 +300,8 @@ static int ext4_dax_pfn_mkwrite(struct vm_area_struct *vma,
- 	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	if (vmf->pgoff >= size)
- 		ret = VM_FAULT_SIGBUS;
-+	else
-+		ret = dax_pfn_mkwrite(vma, vmf);
- 	up_read(&EXT4_I(inode)->i_mmap_sem);
- 	sb_end_pagefault(sb);
- 
--- 
-2.6.3
 
 _______________________________________________
 xfs mailing list
