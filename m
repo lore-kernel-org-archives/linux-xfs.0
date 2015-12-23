@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9B6867F37
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:16:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B1838F8039
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 16:16:32 -0800 (PST)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	iJUAPjxUPJcwqpJK for <xfs@oss.sgi.com>;
-	Tue, 22 Dec 2015 16:16:31 -0800 (PST)
-Date: Tue, 22 Dec 2015 17:16:27 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v5 2/7] dax: support dirty DAX entries in radix tree
-Message-ID: <20151223001627.GC24124@linux.intel.com>
-References: <1450502540-8744-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1450502540-8744-3-git-send-email-ross.zwisler@linux.intel.com>
-	<20151222144605.08a84ded98a42d6125a7991e@linux-foundation.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C008C7F37
+	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 20:39:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 948C2304039
+	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:39:34 -0800 (PST)
+Received: from mail-yk0-f173.google.com (mail-yk0-f173.google.com
+	[209.85.160.173]) by cuda.sgi.com with ESMTP id
+	LoFZV159k1JbK9j7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:39:31 -0800 (PST)
+Received: by mail-yk0-f173.google.com with SMTP id 140so182532028ykp.0
+	for <xfs@oss.sgi.com>; Tue, 22 Dec 2015 18:39:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20151222144605.08a84ded98a42d6125a7991e@linux-foundation.org>
+In-Reply-To: <20151201235846.36836.1476.stgit@dwillia2-desk3.jf.intel.com>
+References: <20151201235836.36836.90416.stgit@dwillia2-desk3.jf.intel.com>
+	<20151201235846.36836.1476.stgit@dwillia2-desk3.jf.intel.com>
+Date: Tue, 22 Dec 2015 18:39:31 -0800
+Message-ID: <CAPcyv4jCECQ55ZCXU1fmo52zHgv+1+pr0-UKUXmgMiRa0oovRQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] xfs: handle shutdown notifications
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,99 +32,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-block@vger.kernel.org, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>
 
-On Tue, Dec 22, 2015 at 02:46:05PM -0800, Andrew Morton wrote:
-> On Fri, 18 Dec 2015 22:22:15 -0700 Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> 
-> > Add support for tracking dirty DAX entries in the struct address_space
-> > radix tree.  This tree is already used for dirty page writeback, and it
-> > already supports the use of exceptional (non struct page*) entries.
-> > 
-> > In order to properly track dirty DAX pages we will insert new exceptional
-> > entries into the radix tree that represent dirty DAX PTE or PMD pages.
-> > These exceptional entries will also contain the writeback addresses for the
-> > PTE or PMD faults that we can use at fsync/msync time.
-> > 
-> > There are currently two types of exceptional entries (shmem and shadow)
-> > that can be placed into the radix tree, and this adds a third.  We rely on
-> > the fact that only one type of exceptional entry can be found in a given
-> > radix tree based on its usage.  This happens for free with DAX vs shmem but
-> > we explicitly prevent shadow entries from being added to radix trees for
-> > DAX mappings.
-> > 
-> > The only shadow entries that would be generated for DAX radix trees would
-> > be to track zero page mappings that were created for holes.  These pages
-> > would receive minimal benefit from having shadow entries, and the choice
-> > to have only one type of exceptional entry in a given radix tree makes the
-> > logic simpler both in clear_exceptional_entry() and in the rest of DAX.
-> > 
-> >
-> > ...
-> >
-> > --- a/include/linux/dax.h
-> > +++ b/include/linux/dax.h
-> > @@ -36,4 +36,9 @@ static inline bool vma_is_dax(struct vm_area_struct *vma)
-> >  {
-> >  	return vma->vm_file && IS_DAX(vma->vm_file->f_mapping->host);
-> >  }
-> > +
-> > +static inline bool dax_mapping(struct address_space *mapping)
-> > +{
-> > +	return mapping->host && IS_DAX(mapping->host);
-> > +}
-> 
-> Can we make this evaluate to plain old "0" when CONFIG_FS_DAX=n?  That
-> way a bunch of code in callers will fall away as well.
-> 
-> If the compiler has any brains then a good way to do this would be to
-> make IS_DAX be "0" but one would need to check that the zeroness
-> properly propagated out of the inline.
+Dave, I'm looking to push out a branch with this patch included.  Any concerns?
 
-Ah, it already works that way due to some magic with IS_DAX().  I believe we
-already use the fact that blocks protected by IS_DAX() go away if
-CONFIG_FS_DAX isn't set.
-
-The trick is that S_DAX is defined to be 0 if CONFIG_FS_DAX isn't set.
-
-I'm pretty sure this is working because of the code in
-filemap_write_and_wait_range().  I added a block with the later "dax: add
-support for fsync/msync" patch which looks like this:
-
-@@ -482,6 +482,9 @@ int filemap_write_and_wait_range(struct address_space *mapping,
- {
-        int err = 0;
- 
-+       if (dax_mapping(mapping) && mapping->nrdax)
-+               dax_writeback_mapping_range(mapping, lstart, lend);
-+
-
-Without the dax_mapping() check there the behavior is the same, but we fail to
-compile if CONFIG_FS_DAX isn't set because dax_writeback_mapping_range() isn't
-defined.  (Guess how I found that out.  :)  )
-
-> >  #endif
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 3aa5142..b9ac534 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -433,6 +433,7 @@ struct address_space {
-> >  	/* Protected by tree_lock together with the radix tree */
-> >  	unsigned long		nrpages;	/* number of total pages */
-> >  	unsigned long		nrshadows;	/* number of shadow entries */
-> > +	unsigned long		nrdax;	        /* number of DAX entries */
-> 
-> hm, that's unfortunate - machines commonly carry tremendous numbers of
-> address_spaces in memory and adding pork to them is rather a big deal. 
-> We can't avoid this somehow?  Maybe share the space with nrshadows by
-> some means?  Find some other field which is unused for dax files?
-
-Jan Kara noticed the same thing:
-
-https://lists.01.org/pipermail/linux-nvdimm/2015-December/003626.html
-
-It'll be fixed in the next spin of the patch set.
+On Tue, Dec 1, 2015 at 3:58 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> Force a filesystem shutdown when the backing device is known to be dead.
+> I.e. blk_queue_enter() permanently returns -ENODEV.
+>
+> Cc: xfs@oss.sgi.com
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  fs/block_dev.c     |    3 ++-
+>  fs/xfs/xfs_super.c |    9 +++++++++
+>  include/linux/fs.h |    2 ++
+>  3 files changed, 13 insertions(+), 1 deletion(-)
+>
+> diff --git a/fs/block_dev.c b/fs/block_dev.c
+> index 39989e990df9..dfe9a53a7c53 100644
+> --- a/fs/block_dev.c
+> +++ b/fs/block_dev.c
+> @@ -1802,7 +1802,7 @@ int __invalidate_device(struct block_device *bdev, bool kill_dirty)
+>  }
+>  EXPORT_SYMBOL(__invalidate_device);
+>
+> -static void generic_bdi_gone(struct super_block *sb)
+> +void generic_bdi_gone(struct super_block *sb)
+>  {
+>         struct inode *inode, *_inode = NULL;
+>
+> @@ -1828,6 +1828,7 @@ static void generic_bdi_gone(struct super_block *sb)
+>         spin_unlock(&sb->s_inode_list_lock);
+>         iput(_inode);
+>  }
+> +EXPORT_SYMBOL(generic_bdi_gone);
+>
+>  void shutdown_partition(struct gendisk *disk, int partno)
+>  {
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 36bd8825bfb0..63c36508e9db 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1618,6 +1618,14 @@ xfs_fs_free_cached_objects(
+>         return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+>  }
+>
+> +static void
+> +xfs_fs_bdi_gone(
+> +       struct super_block *sb)
+> +{
+> +       xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REQ);
+> +       generic_bdi_gone(sb);
+> +}
+> +
+>  static const struct super_operations xfs_super_operations = {
+>         .alloc_inode            = xfs_fs_alloc_inode,
+>         .destroy_inode          = xfs_fs_destroy_inode,
+> @@ -1632,6 +1640,7 @@ static const struct super_operations xfs_super_operations = {
+>         .show_options           = xfs_fs_show_options,
+>         .nr_cached_objects      = xfs_fs_nr_cached_objects,
+>         .free_cached_objects    = xfs_fs_free_cached_objects,
+> +       .bdi_gone               = xfs_fs_bdi_gone,
+>  };
+>
+>  static struct file_system_type xfs_fs_type = {
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 0e201ed38045..b1e8e049e4b8 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -2265,6 +2265,7 @@ extern struct super_block *freeze_bdev(struct block_device *);
+>  extern void emergency_thaw_all(void);
+>  extern int thaw_bdev(struct block_device *bdev, struct super_block *sb);
+>  extern int fsync_bdev(struct block_device *);
+> +extern void generic_bdi_gone(struct super_block *sb);
+>
+>  extern struct super_block *blockdev_superblock;
+>
+> @@ -2277,6 +2278,7 @@ static inline void bd_forget(struct inode *inode) {}
+>  static inline int sync_blockdev(struct block_device *bdev) { return 0; }
+>  static inline void kill_bdev(struct block_device *bdev) {}
+>  static inline void invalidate_bdev(struct block_device *bdev) {}
+> +static inline void generic_bdi_gone(struct super_block *sb) {}
+>
+>  static inline struct super_block *freeze_bdev(struct block_device *sb)
+>  {
+>
+> _______________________________________________
+> Linux-nvdimm mailing list
+> Linux-nvdimm@lists.01.org
+> https://lists.01.org/mailman/listinfo/linux-nvdimm
 
 _______________________________________________
 xfs mailing list
