@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C222D29DF5
-	for <xfs@oss.sgi.com>; Thu, 24 Dec 2015 06:27:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A2D4F304032
-	for <xfs@oss.sgi.com>; Thu, 24 Dec 2015 04:27:04 -0800 (PST)
-Received: from g4t3426.houston.hp.com (g4t3426.houston.hp.com [15.201.208.54])
-	by cuda.sgi.com with ESMTP id fp6Y3m0cKW5G2lK6 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Dec 2015 04:27:02 -0800 (PST)
-From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Subject: RE: A blocksize problem about dax and ext4
-Date: Thu, 24 Dec 2015 12:26:18 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295BEDCB5E@G9W0745.americas.hpqcorp.net>
-References: <CAM=YXF-aXxp19=uFDExUswpEfKXNN6LJScxAB-7-u-AgRiXJ2g@mail.gmail.com>
-	<CAPcyv4gYHuSWuugnELSO6B1rye+b89io3zJVUXwRt0wE1ZfPrA@mail.gmail.com>
-	<94D0CD8314A33A4D9D801C0FE68B40295BEC985F@G9W0745.americas.hpqcorp.net>
-	<20151224000021.GU19802@dastard>
-	<CAM=YXF9Dt-BuY9yM7d023a16gp=edGHeCDVTCwV-AEotj6sbFg@mail.gmail.com>
-	<CAPcyv4g1eHgm8oUvxFaJkRD-T7jAyw95FQ-q3_GC2JU_kkU-Kg@mail.gmail.com>
-	<CAM=YXF-wZEhodxVRN8nqyH9Vg7t85ut2-0PnEn9OvhpG_jX3mA@mail.gmail.com>
-	<94D0CD8314A33A4D9D801C0FE68B40295BEC9CDD@G9W0745.americas.hpqcorp.net>
-	<20151224101111.GA6438@infradead.org>
-In-Reply-To: <20151224101111.GA6438@infradead.org>
-Content-Language: en-US
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 79D7D7F37
+	for <xfs@oss.sgi.com>; Sat, 26 Dec 2015 16:54:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4EDCB8F8035
+	for <xfs@oss.sgi.com>; Sat, 26 Dec 2015 14:54:01 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	XLJOtZWNnAM9gHUk for <xfs@oss.sgi.com>;
+	Sat, 26 Dec 2015 14:53:58 -0800 (PST)
+Date: Sun, 27 Dec 2015 09:53:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Ideas on unified real-ro mount option across all filesystems
+Message-ID: <20151226225355.GV19802@dastard>
+References: <567212DA.8050808@cn.fujitsu.com> <567228EF.80007@redhat.com>
+	<87twn8vjgo.fsf@flamingspork.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <87twn8vjgo.fsf@flamingspork.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +30,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ted Tso <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, Cholerae Hu <choleraehyq@gmail.com>, Dan Williams <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Stewart Smith <stewart@flamingspork.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, Qu Wenruo <quwenruo@cn.fujitsu.com>, fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Thursday, December 24, 2015 4:11 AM
-> Subject: Re: A blocksize problem about dax and ext4
-> 
-> On Thu, Dec 24, 2015 at 02:47:07AM +0000, Elliott, Robert (Persistent
-> Memory) wrote:
-> > > Did you mean that I should make the blocksize bigger until the mount
-> > > command tell me that dax is enabled?
+On Thu, Dec 24, 2015 at 10:22:31AM +1100, Stewart Smith wrote:
+> Eric Sandeen <sandeen@redhat.com> writes:
+> >> 3) A lot of user even don't now mount ro can still modify device
+> >>    Yes, I didn't know this point until I checked the log replay code of
+> >>    btrfs.
+> >>    Adding such mount option alias may raise some attention of users.
 > >
-> > To really use DAX, the filesystem block size must match the
-> > system CPU's page size, which is probably 4096 bytes.
+> > Given that nothing in the documentation implies that the block device itself
+> > must remain unchanged on a read-only mount, I don't see any problem which
+> > needs fixing.  MS_RDONLY rejects user IO; that's all.
+> >
+> > If you want to be sure your block device rejects all IO for forensics or
+> > what have you, I'd suggest # blockdev --setro /dev/whatever prior to mount,
+> > and take it out of the filesystem's control.  Or better yet, making an
+> > image and not touching the original.
 > 
-> No, it doesn't.  File you use for DAX must be aligne at page size
-> granularity.  For XFS you could do this with the per-inode extent
-> size hint for example even if the overall block size is smaller.
+> What we do for the petitboot bootloader in POWER and OpenPower firmware
+> (a linux+initramfs that does kexec to boot) is that we use device mapper
+> to make a snapshot in memory where we run recovery (for some
+> filesystems, notably XFS is different due to journal not being endian
+> safe). We also have to have an option *not* to do that, just in case
+> there's a bug in journal replay... and we're lucky in the fact that we
+> probably do have enough memory to complete replay, this solution could
+> be completely impossible on lower memory machines.
 
-I think that's a future goal.
+Which means the boot loader is going to break horribly when we
+change the on-disk format and feature flags the boot loader doesn't
+understand get set in the root filesystem. Then the bootloader will
+refuse to mount the filesystem and the system won't boot anymore...
 
-Currently, the checks are like this:
+IOWs, developers and users can't make a root XFS filesystem with a
+new/experimental feature on POWER/OpenPower machines because the
+bootloader will refuse to mount it regardless of the clean/dirty
+state of the journal....
 
-	if (sb->s_blocksize != PAGE_SIZE) {
-		xfs_alert(mp,
-		"Filesystem block size invalid for DAX Turning DAX off.");
+> As such, I believe we're the only bit of firmware/bootloader ever that
+> has correctly parsed a journalling filesystem.
 
+Nope.  The Irix bootloader (sash) could do this 20 years ago - there
+are even feature mask bits reserved specifically for SASH in the XFS
+superblock. However, seeing as the bootloader was always upgraded
+during the install of each new Irix release, the bootloader was
+always up-to-date with the on-disk features the kernel supported and
+so there was never a problem with mismatched feature support.
+
+However, Linux users can upgrade or change the kernel at any time
+independently of the bootloader, so it's pretty much guaranteed that
+mismatched bootloader/kernel filesystem capabilities will cause
+users problems at some point in the not-too-distant future.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
