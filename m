@@ -1,18 +1,28 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 10BCD7F37
-	for <xfs@oss.sgi.com>; Mon, 28 Dec 2015 06:14:34 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E50527F37
+	for <xfs@oss.sgi.com>; Fri, 25 Dec 2015 23:18:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AF8248F8033
-	for <xfs@oss.sgi.com>; Mon, 28 Dec 2015 04:14:30 -0800 (PST)
-Received: from mailer25.1001couches.biz (mailer25.1001couches.biz
-	[158.69.36.25]) by cuda.sgi.com with ESMTP id vq537JPEPAMEr0xN
-	for <xfs@oss.sgi.com>; Mon, 28 Dec 2015 04:14:24 -0800 (PST)
-Date: Mon, 28 Dec 2015 12:29:04 +0000
-From: =?utf-8?Q?Superbe_ann=C3=A9e_sans_ronflements_!?= <Bea@lay-ota.fr>
-Subject: =?utf-8?Q?Superbe_ann=C3=A9e_sans_ronflements_!?=
-Message-ID: <dcbb44d9794b34febd6ecbeda822f668@1001couches.biz>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9826304032
+	for <xfs@oss.sgi.com>; Fri, 25 Dec 2015 21:18:17 -0800 (PST)
+Received: from fedcfecaabce.ru
+	(ec2-54-228-194-141.eu-west-1.compute.amazonaws.com
+	[54.228.194.141]) by cuda.sgi.com with ESMTP id
+	KP4IlAlOorZ2WFIT (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 25 Dec 2015 21:18:12 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by fedcfecaabce.ru (8.14.4/8.14.4/Debian-4.1ubuntu1) with ESMTP id
+	tBQ52jYd001608 for <xfs@oss.sgi.com>; Sat, 26 Dec 2015 08:18:10 +0300
+Date: Sat, 26 Dec 2015 08:18:10 +0300
+Message-Id: <201512260518.tBQ52jYd001608@fedcfecaabce.ru>
 MIME-Version: 1.0
-Reply-To: =?utf-8?Q?Superbe_ann=C3=A9e_sans_ronflements_!?= <Bea@lay-ota.fr>
+From: =?UTF-8?Q?=E2=9C=94_=D0=9C=D0=91=D0=A1?= <ottolknutyy@fedcfecaabce.ru>
+Subject: =?UTF-8?Q?=D0=A1=D0=BE=D0=B7=D0=B4=D0=B0=D0=BD=D0=B8=D0=B5_?=
+	=?UTF-8?Q?=D0=98=D0=BD=D1=82=D0=B5=D1=80=D0=BD=D0=B5=D1=82-=D0=9C=D0=B0?=
+	=?UTF-8?Q?=D0=B3=D0=B0=D0=B7=D0=B8=D0=BD=D0=B0_-_19_900_=D1=80=D1=83?=
+	=?UTF-8?Q?=D0=B1=D0=BB=D0=B5=D0=B9?=
+Reply-To: =?UTF-8?Q?=E2=9C=94_=D0=9C=D0=91=D0=A1?=
+	<ottolknutyy@fedcfecaabce.ru>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,231 +31,350 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2525163433562716745=="
+Content-Type: multipart/mixed; boundary="===============8518605288600901807=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?QsOpYQ==?= <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============2525163433562716745==
-Content-Type: multipart/alternative;
-	boundary="b1_3e4554f5a3c604eebbdbb9aa1216aa5c"
-Content-Transfer-Encoding: 8bit
-
---b1_3e4554f5a3c604eebbdbb9aa1216aa5c
-Content-Type: text/plain; charset=us-ascii
-
- 
-
-SOLUTIONS ANTIRONFLEMENT
-http://www.layota.com/fr/6-solutions-anti-ronflements STRAPPING
-http://www.layota.com/fr/7-bandages-et-strapping BOUTIQUE EN LIGNE
-http://www.layota.com
-.
- http://www.layota.com 
-
-Bonjour, 
- Ouverture exceptionnelle du seul magasin en ligne de solutions
-antironflement http://www.layota.com/fr/6-solutions-anti-ronflements,
-strapping http://www.layota.com/fr/7-bandages-et-strapping et
-accessoires pour sportifs.
-http://www.layota.com/fr/7-bandages-et-strapping
-. 
-
- http://www.layota.com/fr/home/19-attelle-mandibulaire-anti-ronflements-noir.html
-
-
-COURROIE DE TTE ANTI-RONFLEMENT
-HTTP://WWW.LAYOTA.COM/FR/6-SOLUTIONS-ANTI-RONFLEMENTS ET APNE.
-
-Le ronflement et l'apn
-
-
---b1_3e4554f5a3c604eebbdbb9aa1216aa5c
-Content-Type: text/html; charset=us-ascii
+--===============8518605288600901807==
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
 <!DOCTYPE html>
-<html><head><title>Document sans nom</title><meta name="charset" content="utf-8"></head><body>
-                
-            <table border="0" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td>
-			<div align="center">
-			<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-						<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td width="624">
-									<p style="text-align:center;"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/4de93c659c9ff8b0674eb7882c924d3600919548" target="_blank"><img alt="layota.com" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/logolayo.jpg" style="border-width:0px;border-style:solid;width:270px;height:70px;"></a><br><span style="color:#FFFFE0;">.</span></p>
-									</td>
-								</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-									<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/47b4d9dbb5ea71b8805c2c01f229d44f4c2b1081" target="_blank"><span style="color:#E11972;"><strong>Promo</strong></span></a></p>
-									</td>
-									<td>
-									<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/7194a0112a08128bf626f8ef4204713eeabb2037" target="_blank"><span style="color:#E11972;"><strong>Antironflements</strong></span></a></p>
-									</td>
-									<td>
-									<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/7267b940e39da2de094c3da74d0d627c5c97f50a" target="_blank"><span style="color:#E11972;"><strong>Trends</strong></span></a></p>
-									</td>
-									<td>
-									<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/8bfcafe283f471ea04b261a110a380afdc0ea036" target="_blank"><span style="color:#E11972;"><strong>Accessoires</strong></span></a></p>
-									</td>
-								</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td colspan="4" width="296">&nbsp;</td>
-								</tr><tr><td colspan="4" width="296">
-									<p align="center"><span style="color:#E11972;"><strong>CODE PROMO</strong> : SUPERNOEL2015&nbsp;</span></p>
-									</td>
-								</tr><tr><td colspan="3" valign="top">
-									<p><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/e19bf6fe2503c750f34025c31002b4a2a08bf653" target="_blank"><img alt="Main.jpg" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/Main5.jpg" style="width:624px;height:459px;"></a></p>
-									</td>
-									<td>&nbsp;</td>
-								</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td colspan="5" style="text-align:center;"><span style="color:#FFFFE0;">.</span><br><span style="color:#E11972;"><strong>* Code valable jusqu&rsquo;au 31/01/2016 inclus d&egrave;s 1&euro; d&rsquo;achat sur www.layota.com</strong></span><br><span style="color:#FFFFE0;">.</span></td>
-								</tr><tr><td width="15">
-									<p>&nbsp;</p>
-									</td>
-									<td width="289">
-									<table border="0" cellpadding="0" cellspacing="0" width="289"><tbody><tr><td valign="top">
-												<p><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/c11bff8927adb628c02631c781794ec658c1d7bd" target="_blank"><img alt="Id&eacute;es cadeaux" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/Art01.jpg" style="border-width:0px;border-style:solid;width:289px;height:141px;"></a></p>
-												</td>
-											</tr></tbody></table></td>
-									<td width="15">
-									<p>&nbsp;</p>
-									</td>
-									<td width="289">
-									<table border="0" cellpadding="0" cellspacing="0" width="289"><tbody><tr><td valign="top">
-												<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/fc258af0ab9d5bef032c83080c5eedd567d6e1e5" target="_blank"><img alt="Art2.jpg" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/Art2.jpg" style="width:295px;height:144px;"></a></p>
-												</td>
-											</tr></tbody></table></td>
-									<td width="15">
-									<p>&nbsp;</p>
-									</td>
-								</tr><tr><td colspan="5">&nbsp;</td>
-								</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-									<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-												<table align="left" border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td colspan="3">&nbsp;</td>
-														</tr><tr><td>
-															<p><img alt="sdc" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/trait.jpg" style="border-width:0px;border-style:solid;width:144px;height:28px;"></p>
-															</td>
-															<td width="100%">
-															<p align="center"><span style="color:#E11972;"><strong>Actualit&eacute;s, Conseils &amp; Nouveaut&eacute;s</strong></span></p>
-															</td>
-															<td>
-															<p><img alt="fgb" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/trait.jpg" style="border-width:0px;border-style:solid;width:144px;height:28px;"></p>
-															</td>
-														</tr></tbody></table></td>
-											</tr></tbody></table></td>
-								</tr><tr><td>
-									<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td colspan="5">&nbsp;</td>
-											</tr><tr><td width="13">
-												<p>&nbsp;</p>
-												</td>
-												<td width="289">
-												<table border="0" cellpadding="0" cellspacing="0" width="289"><tbody><tr><td>
-															<p><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/fe03ebcac610505531283a25acaa70c863ac808f" target="_blank"><img alt="Art3.jpg" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/Art3.jpg" style="width:289px;height:183px;"></a></p>
-															</td>
-														</tr><tr><td>&nbsp;</td>
-														</tr><tr><td valign="top" width="289">
-															<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/a24355fd43f2f152da3fa8161350376f037bb699" target="_blank"><strong><span style="color:#E11972;">Nos packs promo</span> </strong> </a><br><strong>Le coin des affaires !</strong><br>
-															D&eacute;couvrez notre cat&eacute;gorie consacr&eacute;e aux Packs Promo, articles &agrave; prix fous et bien plus encore. Vivez avec nous les actus et les nouveaut&eacute;s, r&eacute;agissez, partagez, achetez...</p>
-															</td>
-														</tr><tr><td>&nbsp;</td>
-														</tr><tr><td>
-															<table border="0" cellpadding="0" cellspacing="0" width="289"><tbody><tr><td width="73">&nbsp;</td>
-																		<td valign="top" width="140">
-																		<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/a24355fd43f2f152da3fa8161350376f037bb699" target="_blank"><span style="color:#E11972;"><strong>J'y vais </strong></span></a></p>
-																		</td>
-																		<td width="67">&nbsp;</td>
-																	</tr></tbody></table></td>
-														</tr></tbody></table></td>
-												<td width="21">
-												<p>&nbsp;</p>
-												</td>
-												<td width="289">
-												<table border="0" cellpadding="0" cellspacing="0" width="289"><tbody><tr><td valign="top">
-															<p><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/47b4d9dbb5ea71b8805c2c01f229d44f4c2b1081" target="_blank"><img alt="Art4.jpg" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/Art4.jpg" style="width:289px;height:183px;"></a></p>
-															</td>
-														</tr><tr><td>&nbsp;</td>
-														</tr><tr><td valign="top" width="289">
-															<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/47b4d9dbb5ea71b8805c2c01f229d44f4c2b1081" target="_blank"><strong><span style="color:#E11972;">Nos nouveaut&eacute;s</span> </strong> </a><br><strong>Le coin des nouveaut&eacute;s !</strong><br>
-															Retrouvez tous les arrivages, tous les articles tendances et pratiques. C'est bient&ocirc;t les vacances d'hiver, faites vous plaisir<br>
-															sans plus attendre...</p>
-															</td>
-														</tr><tr><td>&nbsp;</td>
-														</tr><tr><td>
-															<table border="0" cellpadding="0" cellspacing="0" width="289"><tbody><tr><td width="73">&nbsp;</td>
-																		<td valign="top" width="140">
-																		<p align="center"><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/47b4d9dbb5ea71b8805c2c01f229d44f4c2b1081" target="_blank"><span style="color:#E11972;"><strong>J'y vais</strong></span></a></p>
-																		</td>
-																		<td width="67">&nbsp;</td>
-																	</tr></tbody></table></td>
-														</tr></tbody></table></td>
-												<td width="12">
-												<p>&nbsp;</p>
-												</td>
-											</tr><tr><td colspan="5">&nbsp;</td>
-											</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-												<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-															<table align="left" border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-																		<p><img alt="ngfh" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/trait.jpg" style="border-width:0px;border-style:solid;width:124px;height:28px;"></p>
-																		</td>
-																		<td width="100%">
-																		<p align="center"><strong><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/8bfcafe283f471ea04b261a110a380afdc0ea036"><span style="color:#E11972;">Decouvrez la gamme d'appareils&nbsp;P</span></a><span style="color:#E11972;">ro</span></strong></p>
-																		</td>
-																		<td>
-																		<p><img alt="fn" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/trait.jpg" style="border-width:0px;border-style:solid;width:124px;height:28px;"></p>
-																		</td>
-																	</tr></tbody></table></td>
-														</tr></tbody></table></td>
-											</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td colspan="6" width="228">
-												<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-															<table align="left" border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-																		<p><img alt="zerf" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/trait.jpg" style="border-width:0px;border-style:solid;width:244px;height:28px;"></p>
-																		</td>
-																		<td width="100%">
-																		<p align="center"><strong><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/f8d43ab4253b59d23f2145f8d49305d4ecddc58f"><span style="color:#E11972;">Suivez-nous</span></a></strong><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/f8d43ab4253b59d23f2145f8d49305d4ecddc58f"><span style="color:#E11972;"><strong>&nbsp;sur Facebook</strong></span></a></p>
-																		</td>
-																		<td>
-																		<p><img alt="erg" src="http://tracking.lay-ota.fr/frontend/assets/files/customer/rm908yezhbeb8/LAYOTA%20DECEMBRE%202015/trait.jpg" style="border-width:0px;border-style:solid;width:244px;height:28px;"></p>
-																		</td>
-																	</tr></tbody></table></td>
-														</tr></tbody></table></td>
-											</tr></tbody></table><table align="left" border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td>
-												<table border="0" cellpadding="0" cellspacing="0" width="624"><tbody><tr><td width="23">&nbsp;</td>
-															<td width="578">
-															<table border="0" cellpadding="0" cellspacing="0" width="640"><tbody><tr><td bgcolor="#ffffff" width="640">
-																		<table align="center" border="1" cellpadding="0" cellspacing="0" dir="ltr" width="610"><tbody><tr><td bgcolor="#ffffff" width="130">
-																					<p align="left"><span style="font-size:12px;">&nbsp;&nbsp;<br><span style="color:#E11972;"><strong>&rsaquo;</strong></span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/3fa5e67924a6e2af1f3b67fe597c6a4dbee11060"><span style="color:#E11972;">Stop&nbsp;&nbsp;ronflement</span></a><span style="color:#E11972;">&nbsp;<br><strong>&rsaquo;</strong></span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/c19787001111e001828e91b9b4a852e369dccf5e"><span style="color:#E11972;">&nbsp;Attelle mandibulaire</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/100eaa0e1fb847a9ab9a4d6208e8165a9bd9130c"><span style="color:#E11972;">Bague nasale&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/100eaa0e1fb847a9ab9a4d6208e8165a9bd9130c"><span
-style="color:#E11972;">magn&eacute;tique</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/65145964b074d118a2a28e9b1f3a05f0cd71b815"><span style="color:#E11972;">Courroie de t&ecirc;te anti-</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/65145964b074d118a2a28e9b1f3a05f0cd71b815"><span style="color:#E11972;">ronflement et apn&eacute;e</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/e4a98510091aeb41384aaddeb1843324cf520cd4"><span style="color:#E11972;">Anneau anti-</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/e4a98510091aeb41384aaddeb1843324cf520cd4"><span style="color:#E11972;">ronflement</span></a><br><span
-style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/f0ee0acdfd122649a9f7234e821761aa242d6df2"><span style="color:#E11972;">Dilatateur nasal</span></a></span></p>
-																					</td>
-																					<td bgcolor="#ffffff" width="168">
-																					<p align="left"><span style="font-size:12px;"><span style="color:#E11972;"><b>&nbsp;</b><br><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/1f3dfeae6d4d75aa92edfd608fe1f0b461c54f36"><span style="color:#E11972;">Paire de bracelets de sport</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/be30a6456f9fdc3031ff9afc99eb8a350cce8bf1"><span style="color:#E11972;">Bracelet Band Protection&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/be30a6456f9fdc3031ff9afc99eb8a350cce8bf1"><span style="color:#E11972;">avant-bras</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/3198ea5fec1f7b1905e7f19df0dbbb322f5f2ea4"><span
- 
-style="color:#E11972;">Chevilli&egrave;res orthop&eacute;diques</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/eab3680d6afdf6c8099d7c6e64b332c22100ebf4"><span style="color:#E11972;">Genouill&egrave;re orthop&eacute;dique</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/8f3fcb6e361ddd6113cf9af40e03ef892c410260"><span style="color:#E11972;">Bandage orthop&eacute;dique</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/4151b7e4606b3d1e1d019e8ad1babd910db7d65c"><span style="color:#E11972;">Coudiere orthop&eacute;dique</span></a></span></p>
-																					</td>
-																					<td bgcolor="#ffffff" width="140">
-																					<p align="left"><span style="font-size:12px;"><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/dd816950e11ccd2e8d34a0471b4342d25f8eab2b"><span style="color:#E11972;">Manchons mollets et&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/dd816950e11ccd2e8d34a0471b4342d25f8eab2b"><span style="color:#E11972;">tibias</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/1f3dfeae6d4d75aa92edfd608fe1f0b461c54f36"><span style="color:#E11972;">Bracelets de sport</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/9e64ef0ea493e4296b35b57eff861080a2305fab"><span style="color:#E11972;">Bracelets&nb
- sp;de
-gym</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/be30a6456f9fdc3031ff9afc99eb8a350cce8bf1"><span style="color:#E11972;">Tennis Golfer Elbow</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/7e22444313e80b8f4dbbf5483b4b25c890902b73"><span style="color:#E11972;">Sangle de protection&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/7e22444313e80b8f4dbbf5483b4b25c890902b73"><span style="color:#E11972;">genou</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/7e22444313e80b8f4dbbf5483b4b25c890902b73"><span style="color:#E11972;">Sangle de protection&nbsp;rotule </span></a></span></p>
-																					</td>
-																					<td bgcolor="#ffffff" width="168">
-																					<p align="left"><br><span style="font-size:12px;"><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/9d350ba0ca23e94e3e6136ec5d1e831c5e66ac67"><span style="color:#E11972;">Elastique velcro genou -&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/9d350ba0ca23e94e3e6136ec5d1e831c5e66ac67"><span style="color:#E11972;">bras - coude - cheville</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/b52513be00824ce7f93dc29f38549925b8e9aaf6"><span style="color:#E11972;">Genouillere douce&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/b52513be00824ce7f93dc29f38549925b8e9aaf6"><span style="color:#E11972;">orthop&eacute;dique</span></a><br><span
-style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/cba2fb08b01d945160bc9c46daf3944cd40a967a"><span style="color:#E11972;">Bandage de soutien rotule</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/9a453763e27c650a07365510a7c0e3cd88399bbf"><span style="color:#E11972;">Sangle de compression&nbsp;</span></a><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/9a453763e27c650a07365510a7c0e3cd88399bbf"><span style="color:#E11972;">Genou-Sport-Course</span></a><br><span style="color:#E11972;"><strong>&rsaquo;</strong>&nbsp;</span><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/e45af7272e26d085d4d4134a315cce314f51d642"><span style="color:#E11972;">Orthop&eacute;dique de&nbsp;compression</span></a></span></p>
-																					</td>
-																				</tr></tbody></table></td>
-																	</tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="640"><tbody><tr><td bgcolor="#ffffff" valign="top">
-																		<p style="text-align:center;"><span style="color:#FFFFE0;">.</span><br><span style="font-size:12px;">Si vous souhaitez ne plus recevoir ce type d'e-mail de la part de LAYOTA &nbsp;<a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/d37c6bec84a18518df7969a7d60b59c7fe8f10ee">cliquez ici</a>&nbsp; -&nbsp;<br><a href="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-url/vp748vmcqw403/4de93c659c9ff8b0674eb7882c924d3600919548">www.layota.com</a> 70 Upper Richmond Road, SW15 2RP London UK</span></p>
-																		</td>
-																	</tr><tr><td bgcolor="#ffffff" valign="top">&nbsp;</td>
-																	</tr></tbody></table></td>
-															<td width="23">&nbsp;</td>
-														</tr></tbody></table></td>
-											</tr></tbody></table></td>
-								</tr></tbody></table></td>
-					</tr></tbody></table></div>
-			</td>
-		</tr></tbody></table><p><img alt="ty" border="0" height="1" src="http://layota.com/op/3165/9414435/405347/1449677381/49324/1/d33aa472.gif" width="1"></p><img width="1" height="1" src="http://tracking.lay-ota.fr/campaigns/zn915p76qcf3f/track-opening/vp748vmcqw403" alt="" />
-</body></html>
+<html lang=3D'ru'>
+    <head>
+        <meta charset=3D'utf-8'>
+    </head>
+    <body style=3D'margin:0;'>
+		<div style=3D'margin:0 auto; width:700px; background:#F2F2F2;'><!--wraper=
+-->
+			<div style=3D'margin-bottom:40px; padding-top:14px;'>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'>
+				<img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe12976=
+8c51c1038b/head.png' alt=3D'=D0=BF=D0=BE=D0=B4=D1=80=D0=BE=D0=B1=D0=BD=D0=
+=B5=D0=B5'>
+				</a>
+			</div>
+			<div style=3D'font-family:Arial, Helvetica, sans-serif;font-size:18px; f=
+ont-style:italic; line-height:153%; color:rgb(51,51,51); text-align:center;=
+'><a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0bV=
+9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmVjY=
+WFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJUJE=
+JUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCRF8=
+lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&p=
+=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com' style=3D'text-decoration:none; color:rgb(51,=
+51,51); font-size:40px; font-style: normal; margin-bottom:10px;'>=D0=98=D0=
+=BD=D1=82=D0=B5=D1=80=D0=BD=D0=B5=D1=82-=D0=9C=D0=B0=D0=B3=D0=B0=D0=B7=D0=
+=B8=D0=BD</a>
+			</div>
+			<div style=3D'margin-top:5px; font-family:Arial, Helvetica, sans-serif; =
+font-size:22px;
+font-style:italic;
+line-height:120%;
+color:rgb(51,51,51);
+text-align:center;'>
+				=D0=B8=D0=BD=D1=82=D0=B5=D1=80=D0=BD=D0=B5=D1=82-=D0=BC=D0=B0=D0=B3=D0=
+=B0=D0=B7=D0=B8=D0=BD =D1=81 =D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D0=B0=D0=
+=BC=D0=B8 =D0=BE=D0=BF=D0=BB=D0=B0=D1=82 =D0=B8 =D0=B8=D0=BD=D0=B4=D0=B8=D0=
+=B2=D0=B8=D0=B4=D1=83=D0=B0=D0=BB=D1=8C=D0=BD=D1=8B=D0=BC<br>=D0=B4=D0=B8=
+=D0=B7=D0=B0=D0=B9=D0=BD=D0=BE=D0=BC			=09
+			</div>
+			<div style=3D'padding-top:17px; margin-bottom:37px;'>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'>
+				<img style=3D'margin: 0 auto; display: block;' alt=3D'19 900 =D1=80=D1=
+=83=D0=B1.' src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe12=
+9768c51c1038b/cena.png'>
+				</a>
+			</div>
+			<div style=3D'text-align:center; margin-bottom:40px;'>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'><img src=3D'http://d1g47y9clleek6.cloudfront=
+=2Enet/5c55d4c751c7c0dbe129768c51c1038b/but.png' alt=3D'=D0=9F=D0=B5=D1=80=
+=D0=B5=D0=B9=D1=82=D0=B8 =D0=BD=D0=B0 =D0=BD=D0=B0=D1=88 =D1=81=D0=B0=D0=B9=
+=D1=82'></a>
+			</div>
+			<div style=3D'font-family:Arial, Helvetica, sans-serif; font-size:30px; =
+letter-spacing:-1pt; line-height:75%; color:rgb(51,51,51); text-align:cente=
+r; margin-bottom:20px; font-style: normal;'>
+			<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0b=
+V9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmVj=
+YWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJUJ=
+EJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCRF=
+8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&p=
+=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com' style=3D'text-decoration:none; color:rgb(51,=
+51,51);'>=D0=A1=D0=BF=D0=B5=D1=86=D0=B8=D1=84=D0=B8=D0=BA=D0=B0=D1=86=D0=B8=
+=D1=8F
+			</a>
+			<img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768=
+c51c1038b/line.png' alt=3D''>
+			</div>
+			<div>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'>
+				<img style=3D'margin: 0 auto; display: block;' src=3D'http://d1g47y9cll=
+eek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/real.png' alt=3D'=D0=
+=A1=D1=80=D0=BE=D0=BA =D1=80=D0=B5=D0=B0=D0=BB=D0=B8=D0=B7=D0=B0=D1=86=D0=
+=B8=D0=B8: 7 =D1=80=D0=B0=D0=B1=D0=BE=D1=87=D0=B8=D1=85 =D0=B4=D0=BD=D0=B5=
+=D0=B9'>
+				</a>
+			</div>
+			<div style=3D'margin-left:30px; background:white; width:640px; font-fami=
+ly:Arial, Helvetica, sans-serif; font-size:13px; line-height:138%; color:rg=
+b(51,51,51); text-align:left; display: table; font-style: normal;'>
+				<br>
+				<div style=3D'margin-bottom:12px; width:286px; float:left; margin-right=
+:20px; margin-left:20px;'>
+					<img style=3D'margin-right:10px; float: left; padding-top: 5px;' src=
+=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/o=
+k.png' alt=3D'ok'><span style=3D'width:260px; float:left;'>=D0=9E=D1=80=D0=
+=B8=D0=B3=D0=B8=D0=BD=D0=B0=D0=BB=D1=8C=D0=BD=D1=8B=D0=B9 (=D0=B8=D0=BD=D0=
+=B4=D0=B8=D0=B2=D0=B8=D0=B4=D1=83=D0=B0=D0=BB=D1=8C=D0=BD=D1=8B=D0=B9)<br>=
+=D0=BC=D0=B0=D0=BA=D0=B5=D1=82 =D0=B4=D0=B8=D0=B7=D0=B0=D0=B9=D0=BD=D0=B0</=
+span>
+				</div>
+				<div style=3D'margin-bottom:12px; width:280px; float:left;'>
+					<img style=3D'margin-right:10px;float: left; padding-top: 5px;' src=3D=
+'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/ok=
+=2Epng' alt=3D'ok'><span style=3D'width:254px; float:left;'>=D0=9F=D1=80=D0=
+=BE=D0=B3=D1=80=D0=B0=D0=BC=D0=BC=D0=BD=D1=8B=D0=B9 =D0=BC=D0=BE=D0=B4=D1=
+=83=D0=BB=D1=8C<br>=C2=AB=D0=A1=D1=82=D1=80=D0=B0=D0=BD=D0=B8=D1=86=D0=B0 =
+=D0=B4=D0=BB=D1=8F =D0=BF=D0=B5=D1=87=D0=B0=D1=82=D0=B8 (=D0=B2=D1=8B=D0=B2=
+=D0=BE=D0=B4 =D0=BD=D0=B0 =D0=BF=D0=B5=D1=87=D0=B0=D1=82=D1=8C)=C2=BB</span=
+>
+				</div>
+				<div style=3D'margin-bottom:12px; width:286px; float:left; margin-right=
+:20px; margin-left:20px;'>
+					<img style=3D'margin-right:10px; float: left; padding-top: 5px;' src=
+=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/o=
+k.png' alt=3D'ok'><span style=3D'width:260px; float:left;'>=D0=9F=D0=BE=D0=
+=BB=D0=BD=D0=BE=D1=84=D1=83=D0=BD=D0=BA=D1=86=D0=B8=D0=BE=D0=BD=D0=B0=D0=BB=
+=D1=8C=D0=BD=D0=B0=D1=8F =D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D0=B0 =D1=83=
+=D0=BF=D1=80=D0=B0=D0=B2=D0=BB=D0=B5=D0=BD=D0=B8=D1=8F =D1=81=D0=B0=D0=B9=
+=D1=82=D0=BE=D0=BC CMS</span>
+				</div>
+				<div style=3D'  margin-top: -20px; margin-bottom:12px; width:280px; flo=
+at:left; float: left; padding-top: 5px;'>
+					<img style=3D'margin-right:10px; float: left; padding-top: 5px;' src=
+=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/o=
+k.png' alt=3D'ok'><span style=3D'width:255px; float:left;'>=D0=A1=D0=B0=D0=
+=B9=D1=82 =D0=BE=D0=B1=D0=BB=D0=B0=D0=B4=D0=B0=D0=B5=D1=82 =D0=B2=D1=81=D0=
+=B5=D0=BC=D0=B8 =D0=BD=D0=B5=D0=BE=D0=B1=D1=85=D0=BE=D0=B4=D0=B8=D0=BC=D1=
+=8B=D0=BC=D0=B8 =D0=BE=D0=BF=D1=86=D0=B8=D1=8F=D0=BC=D0=B8 =D0=B4=D0=BB=D1=
+=8F =D0=B4=D0=B0=D0=BB=D1=8C=D0=BD=D0=B5=D0=B9=D1=88=D0=B5=D0=B3=D0=BE =D0=
+=BF=D0=BE=D0=B8=D1=81=D0=BA=D0=BE=D0=B2=D0=BE=D0=B3=D0=BE =D0=BF=D1=80=D0=
+=BE=D0=B4=D0=B2=D0=B8=D0=B6=D0=B5=D0=BD=D0=B8=D1=8F</span>
+				</div>
+				<div style=3D'width:286px; float:left; margin-right:20px; margin-left:2=
+0px;'>
+					<img style=3D'margin-right:10px;' src=3D'http://d1g47y9clleek6.cloudfr=
+ont.net/5c55d4c751c7c0dbe129768c51c1038b/ok.png' alt=3D'ok'>=D0=A0=D0=B5=D0=
+=B3=D0=B8=D1=81=D1=82=D1=80=D0=B0=D1=86=D0=B8=D1=8F =D0=B4=D0=BE=D0=BC=D0=
+=B5=D0=BD=D0=BD=D0=BE=D0=B3=D0=BE =D0=B8=D0=BC=D0=B5=D0=BD=D0=B8 =D0=B8 =D0=
+=BF=D0=BE=D0=BC=D0=BE=D1=89=D1=8C =D0=B2 =D0=B2=D1=8B=D0=B1=D0=BE=D1=80=D0=
+=B5 =D1=85=D0=BE=D1=81=D1=82=D0=B8=D0=BD=D0=B3=D0=B0</span>
+				</div>
+				<div style=3D'width:280px; float:left; margin-top: -15px;'>
+					<img style=3D'margin-right:10px; float: left; padding-top:5px;' src=3D=
+'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/ok=
+=2Epng' alt=3D'ok'><span style=3D'width:256px; float:left;'>=D0=97=D0=B0=D0=
+=BA=D0=B0=D0=B7=D1=87=D0=B8=D0=BA=D1=83 =D0=BF=D0=B5=D1=80=D0=B5=D0=B4=D0=
+=B0=D1=8E=D1=82=D1=81=D1=8F =D0=B8=D1=81=D0=BA=D0=BB=D1=8E=D1=87=D0=B8=D1=
+=82=D0=B5=D0=BB=D1=8C=D0=BD=D1=8B=D0=B5 (=D0=BF=D0=BE=D0=BB=D0=BD=D1=8B=D0=
+=B5) =D0=BF=D1=80=D0=B0=D0=B2=D0=B0 =D0=BD=D0=B0 =D1=80=D0=B0=D0=B7=D1=80=
+=D0=B0=D0=B1=D0=BE=D1=82=D0=B0=D0=BD=D0=BD=D1=8B=D0=B9 =D1=81=D0=B0=D0=B9=
+=D1=82</span>
+				</div>
+				<div style=3D'width:280px; float:left; margin-right:26px; margin-left:2=
+0px; margin-top: 10px;'>
+					<img style=3D'margin-right:10px; float:left; padding-top:5px;' src=3D'=
+http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/ok.pn=
+g' alt=3D'ok'>
+					<span style=3D'width:257px; float:left;'>=D0=9F=D1=80=D0=BE=D0=B3=D1=
+=80=D0=B0=D0=BC=D0=BC=D0=BD=D1=8B=D0=B9 =D0=BC=D0=BE=D0=B4=D1=83=D0=BB=D1=
+=8C<br>=C2=AB=D0=9A=D0=B0=D1=82=D0=B0=D0=BB=D0=BE=D0=B3 =D0=A2=D0=BE=D0=B2=
+=D0=B0=D1=80=D0=BE=D0=B2 =D0=B8=D0=BB=D0=B8 =D0=A3=D1=81=D0=BB=D1=83=D0=B3=
+=C2=BB
+				</div>
+				<div style=3D'width:280px; float:left; margin-top: 10px;'>
+					<img style=3D'margin-right:10px; float: left; padding-top:5px;' src=3D=
+'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/ok=
+=2Epng' alt=3D'ok'><span style=3D'width:256px; float:left;'>
+					=D0=9E=D1=80=D0=B3=D0=B0=D0=BD=D0=B8=D0=B7=D0=B0=D1=86=D0=B8=D1=8F =D0=
+=BE=D0=BF=D0=BB=D0=B0=D1=82=D1=8B =D0=BF=D0=BE =D0=B1=D0=B0=D0=BD=D0=BA=D0=
+=BE=D0=B2=D1=81=D0=BA=D0=B8=D0=BC =D0=BA=D0=B0=D1=80=D1=82=D0=B0=D0=BC =D0=
+=B8 =D1=87=D0=B5=D1=80=D0=B5=D0=B7 =D1=8D=D0=BB=D0=B5=D0=BA=D1=82=D1=80=D0=
+=BE=D0=BD=D0=BD=D1=8B=D0=B5 =D0=BF=D0=BB=D0=B0=D1=82=D0=B5=D0=B6=D0=BD=D1=
+=8B=D0=B5 =D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D1=8B</span>
+				</div>
+				<div style=3D'width:280px; float:left; margin-right:26px; margin-left:2=
+0px; margin-top: 10px;'>
+					<img style=3D'margin-right:10px; float:left; padding-top:5px;' src=3D'=
+http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768c51c1038b/ok.pn=
+g' alt=3D'ok'>
+					<span style=3D'width:257px; float:left;'>=D0=9F=D1=80=D0=BE=D0=B3=D1=
+=80=D0=B0=D0=BC=D0=BC=D0=BD=D1=8B=D0=B9 =D0=BC=D0=BE=D0=B4=D1=83=D0=BB=D1=
+=8C<br>=C2=AB=D0=92=D0=BE=D0=BF=D1=80=D0=BE=D1=81-=D0=9E=D1=82=D0=B2=D0=B5=
+=D1=82 (FAQ)=C2=BB,<br>=C2=AB=D0=93=D0=BE=D1=81=D1=82=D0=B5=D0=B2=D0=B0=D1=
+=8F =D0=BA=D0=BD=D0=B8=D0=B3=D0=B0=C2=BB
+				</div>
+				<div style=3D'width:280px; float:left; margin-top: 10px;'>
+					<img style=3D'margin-right:10px;' src=3D'http://d1g47y9clleek6.cloudfr=
+ont.net/5c55d4c751c7c0dbe129768c51c1038b/ok.png' alt=3D'ok'>
+					=D0=93=D0=B0=D1=80=D0=B0=D0=BD=D1=82=D0=B8=D1=8F - 12 =D0=BC=D0=B5=D1=
+=81=D1=8F=D1=86=D0=B5=D0=B2
+				</div>
+				<div style=3D'height:20px; float:left; width:600px;'>
+				</div>
+			</div><img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe=
+129768c51c1038b/line2.png' alt=3D''>
+			<div style=3D'margin-top:50px; text-align:center; font-family:Arial, Hel=
+vetica, sans-serif; font-size:30px; letter-spacing:-1pt; line-height:75%; c=
+olor:rgb(51,51,51); font-style: normal;'>
+			<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0b=
+V9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmVj=
+YWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJUJ=
+EJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCRF=
+8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&p=
+=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com' style=3D'text-decoration:none; color:rgb(51,=
+51,51);'>=D0=9F=D0=BE=D1=80=D1=82=D1=84=D0=BE=D0=BB=D0=B8=D0=BE
+			</a>
+			<img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe129768=
+c51c1038b/line.png' alt=3D''>
+			</div>
+			<div   style=3D'margin-top: 20px; margin-bottom:25px;'>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'>
+				<img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe12976=
+8c51c1038b/kar.png' alt=3D'=D0=92=D1=8B=D0=BF=D0=BE=D0=BB=D0=BD=D0=B5=D0=BD=
+=D0=BD=D1=8B=D0=B5 =D1=80=D0=B0=D0=B1=D0=BE=D1=82=D1=8B'>
+				</a>
+			</div>
+			<div style=3D'text-align:center; margin-bottom:25px;'>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'>
+					<img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe1297=
+68c51c1038b/but.png' alt=3D'=D0=9F=D0=B5=D1=80=D0=B5=D0=B9=D1=82=D0=B8 =D0=
+=BD=D0=B0 =D0=BD=D0=B0=D1=88 =D1=81=D0=B0=D0=B9=D1=82'>
+				</a>
+			</div>
+			<div>
+				<a href=3D'http://fedcfecaabce.ru/?u=3DaHR0cDovL21icy1kZXNpZ24ucnUvP3V0=
+bV9zb3VyY2U9ZW1haWwmdXRtX2NhbXBhaWduPTI2LjEyLjIwMTUmdXRtX21lZGl1bT1mZWRjZmV=
+jYWFiY2UucnUmdXRtX3Rlcm09UlVfJUQwJTk4JUQwJUJEJUQxJTgyJUQwJUI1JUQxJTgwJUQwJU=
+JEJUQwJUI1JUQxJTgyLSVEMCVCQyVEMCVCMCVEMCVCMyVEMCVCMCVEMCVCNyVEMCVCOCVEMCVCR=
+F8lRDAlQjIlRDAlQjUlRDElODAzJnV0bV9jb250ZW50PXhmcyU0MG9zcy5zZ2kuY29t&o=3D25&=
+p=3D4&domain=3Dfedcfecaabce.ru&h=3D464a624e3132d02da2016ad93002c5e3&subject=
+=3D%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%98%D0%BD%D1%82%D0%B=
+5%D1%80%D0%BD%D0%B5%D1%82-%D0%9C%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D0%B0+=
+-+19+900+%D1%80%D1%83%D0%B1%D0%BB%D0%B5%D0%B9&sender=3D%E2%9C%94+%D0%9C%D0%=
+91%D0%A1&template=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0=
+%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&base=3DAP_EP_MS=
+K_7&email=3Dxfs%40oss.sgi.com'>
+				<img src=3D'http://d1g47y9clleek6.cloudfront.net/5c55d4c751c7c0dbe12976=
+8c51c1038b/bot.png' alt=3D'MBS Group 8 800 333 18 98; =D0=A1-=D0=BF=D0=B1: =
++7 (812) 215-08-98; =D0=9C=D0=BE=D1=81=D0=BA=D0=B2=D0=B0: +7 (495) 385-72-9=
+8'>
+				</a>
+			</div>
+		</div><!--wrapper-->
+	<div style=3D'margin-top:40px; width:800px; padding:10px; text-align:cente=
+r; font-family: Verdana, Tahoma, Sans-Serif; font-size:10px; color:#949494'=
+>
+				=D0=92=D1=8B =D0=BC=D0=BE=D0=B6=D0=B5=D1=82=D0=B5 <a href=3D'http://fed=
+cfecaabce.ru/?unsubscribe&email=3Dxfs@oss.sgi.com&pid=3D4' style=3D'color:#=
+949494' target=3D'_blank'>=D0=BE=D1=82=D0=BA=D0=B0=D0=B7=D0=B0=D1=82=D1=8C=
+=D1=81=D1=8F =D0=BE=D1=82 =D0=BF=D0=BE=D0=BB=D1=83=D1=87=D0=B5=D0=BD=D0=B8=
+=D1=8F =D0=B8=D0=BD=D1=84=D0=BE=D1=80=D0=BC=D0=B0=D1=86=D0=B8=D0=B8</a>.
+			</div></body>
+</html><img src=3D"https://www.google-analytics.com/collect?v=3D1&tid=3DUA-=
+44436284-5&cid=3D368722a09baf57a27b39c0ba1f12b194&t=3Devent&ec=3Demail&ea=
+=3D5043&el=3Doss.sgi.com&cs=3Demail&cn=3D26.12.2015&cm=3Dfedcfecaabce.ru&ck=
+=3DRU_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82-%D0%BC%D0%B0%D0%B3%D=
+0%B0%D0%B7%D0%B8%D0%BD_%D0%B2%D0%B5%D1%803&cc=3Dxfs%40oss.sgi.com&cm1=3D1" =
+/>
 
 
-
---b1_3e4554f5a3c604eebbdbb9aa1216aa5c--
-
-
---===============2525163433562716745==
+--===============8518605288600901807==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -256,4 +385,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============2525163433562716745==--
+--===============8518605288600901807==--
