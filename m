@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 14A247F51
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:09:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A826AC001
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:09:43 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 974DE7F47
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:09:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 86FBE8F8037
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:09:50 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id eyFl5Gq20cYFZpMR (version=TLSv1.2
+	ESMTP id uHuhLrmfm9B97UfG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:09:42 -0800 (PST)
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:09:44 -0800 (PST)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] xfs: only end a COW operation in xfs_zero_remaining_bytes
-	if we started one
-Date: Sun,  3 Jan 2016 13:07:52 +0100
-Message-Id: <1451822873-12969-3-git-send-email-hch@lst.de>
+Subject: [PATCH 3/3] xfs: cancel COW in xfs_cancel_ioend
+Date: Sun,  3 Jan 2016 13:07:53 +0100
+Message-Id: <1451822873-12969-4-git-send-email-hch@lst.de>
 In-Reply-To: <1451822873-12969-1-git-send-email-hch@lst.de>
 References: <1451822873-12969-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,39 +31,40 @@ Sender: xfs-bounces@oss.sgi.com
 To: darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Without these we can see NULL pointer dereferences due to a non-existing
-COW fork during xfstests runs.
+Otherwise we leak COW allocations done earlier in writepage.  This
+can be reproduced fairly easily when we hit the non-blocking writeback
+EAGAIN case.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_util.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_aops.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7bee3c7..e777095 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1226,13 +1226,15 @@ xfs_zero_remaining_bytes(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 185415a..9c69dc3 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -588,6 +588,7 @@ xfs_cancel_ioend(
+ {
+ 	xfs_ioend_t		*next;
+ 	struct buffer_head	*bh, *next_bh;
++	int			error;
  
- 		error = xfs_bwrite(bp);
- 		xfs_buf_relse(bp);
--		if (error) {
--			err2 = xfs_reflink_end_cow_failed(ip, offset,
-+		if (should_fork) {
-+			if (error) {
-+				err2 = xfs_reflink_end_cow_failed(ip, offset,
-+						lastoffset - offset + 1);
-+				return error;
-+			}
-+			error = xfs_reflink_end_cow(ip, offset,
- 					lastoffset - offset + 1);
--			return error;
- 		}
--		error = xfs_reflink_end_cow(ip, offset,
--				lastoffset - offset + 1);
- 		if (error)
- 			return error;
- 	}
+ 	do {
+ 		next = ioend->io_list;
+@@ -605,6 +606,12 @@ xfs_cancel_ioend(
+ 			unlock_buffer(bh);
+ 		} while ((bh = next_bh) != NULL);
+ 
++		if (ioend->io_flags & XFS_IOEND_COW) {
++			error = xfs_reflink_end_cow_failed(
++					XFS_I(ioend->io_inode),
++					ioend->io_offset, ioend->io_size);
++			WARN_ON_ONCE(error);
++		}
+ 		mempool_free(ioend, xfs_ioend_pool);
+ 	} while ((ioend = next) != NULL);
+ }
 -- 
 1.9.1
 
