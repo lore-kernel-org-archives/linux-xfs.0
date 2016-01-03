@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B64CB7F55
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:26:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 57BA0AC004
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:26:35 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 234867F7B
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:26:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B67D2AC004
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:26:55 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Zj6SaqljADYYi5lh (version=TLSv1.2
+	ESMTP id 8gHwUk0M7TkYAKp2 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:26:34 -0800 (PST)
-Date: Sun, 3 Jan 2016 04:26:33 -0800
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:26:55 -0800 (PST)
+Date: Sun, 3 Jan 2016 04:26:54 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/22] xfsdocs: add missing xfs_db examples
-Message-ID: <20160103122633.GJ14361@infradead.org>
+Subject: Re: [PATCH 12/22] xfsdocs: fix quoted text markings
+Message-ID: <20160103122654.GK14361@infradead.org>
 References: <20151219091208.15558.65013.stgit@birch.djwong.org>
-	<20151219091325.15558.37906.stgit@birch.djwong.org>
+	<20151219091331.15558.64509.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151219091325.15558.37906.stgit@birch.djwong.org>
+In-Reply-To: <20151219091331.15558.64509.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
