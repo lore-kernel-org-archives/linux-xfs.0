@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6FDAA7F51
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:22:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C45BAC001
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:22:45 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id D6F287F51
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:23:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6BD37AC001
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:23:07 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id LJnRI2HtCmuWBrEv (version=TLSv1.2
+	ESMTP id EQ4ZHmdL17Ybqihi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:22:42 -0800 (PST)
-Date: Sun, 3 Jan 2016 04:22:41 -0800
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:23:06 -0800 (PST)
+Date: Sun, 3 Jan 2016 04:23:05 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/22] xfsdocs: update book subtitles and headings
-Message-ID: <20160103122241.GB14361@infradead.org>
+Subject: Re: [PATCH 03/22] xfsdocs: restore the old rendering of structure
+	field definitions
+Message-ID: <20160103122305.GC14361@infradead.org>
 References: <20151219091208.15558.65013.stgit@birch.djwong.org>
-	<20151219091221.15558.28333.stgit@birch.djwong.org>
+	<20151219091227.15558.73975.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151219091221.15558.28333.stgit@birch.djwong.org>
+In-Reply-To: <20151219091227.15558.73975.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
