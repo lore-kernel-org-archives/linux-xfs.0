@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 89B7A7F51
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:25:08 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 821717F51
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:25:42 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 390F1AC001
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:25:08 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 631BF304032
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:25:42 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 9no1YcSSIQsQ1Fi2 (version=TLSv1.2
+	ESMTP id Vj003xTeCOm8PNUb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:25:06 -0800 (PST)
-Date: Sun, 3 Jan 2016 04:25:06 -0800
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:25:41 -0800 (PST)
+Date: Sun, 3 Jan 2016 04:25:40 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/22] xfsdocs: make example section titles consistent
-Message-ID: <20160103122506.GG14361@infradead.org>
+Subject: Re: [PATCH 09/22] xfsdocs: fix various errors and missing bits in
+	the text
+Message-ID: <20160103122540.GH14361@infradead.org>
 References: <20151219091208.15558.65013.stgit@birch.djwong.org>
-	<20151219091305.15558.97231.stgit@birch.djwong.org>
+	<20151219091311.15558.80832.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151219091305.15558.97231.stgit@birch.djwong.org>
+In-Reply-To: <20151219091311.15558.80832.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
