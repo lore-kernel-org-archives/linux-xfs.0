@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 29BA07F58
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:21:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F19E5304053
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:21:00 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 14D9D7F5A
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:22:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A7A7CAC003
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:22:12 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id gCDpCC5IoRGQQe3a (version=TLSv1.2
+	ESMTP id gXQiAyWowKdBHDCb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:20:59 -0800 (PST)
-Date: Sun, 3 Jan 2016 04:20:58 -0800
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:22:11 -0800 (PST)
+Date: Sun, 3 Jan 2016 04:22:10 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 57/76] xfs: allocate delayed extents in CoW fork
-Message-ID: <20160103122058.GE28429@infradead.org>
-References: <20151219085622.12713.88678.stgit@birch.djwong.org>
-	<20151219090248.12713.32309.stgit@birch.djwong.org>
+Subject: Re: [PATCH 01/22] xfsdocs: fix asciidoc confusion w.r.t. include
+	file newline at EOF
+Message-ID: <20160103122210.GA14361@infradead.org>
+References: <20151219091208.15558.65013.stgit@birch.djwong.org>
+	<20151219091215.15558.79820.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151219090248.12713.32309.stgit@birch.djwong.org>
+In-Reply-To: <20151219091215.15558.79820.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,12 +32,17 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-I really don't like the separate XFS_IOEND_COW flag.  This should
-be an ioend type just like XFS_IO_DELALLOC, XFS_IO_UNWRITTEN and
-XFS_IO_OVERWRITE.  We might need some work in the direct I/O
-completions for that to really work, though.
+On Sat, Dec 19, 2015 at 01:12:15AM -0800, Darrick J. Wong wrote:
+> Space each include one line apart so that asciidoc knows that each
+> section has ended at included file's EOF.  This prevents it from
+> spewing horribly confused XML that blows up xmllint if each included
+> file doesn't itself end with a blank line.
+
+Looks fine,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
