@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 649737F4E
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:15:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 471B4304032
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:15:28 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CE1CA7F37
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 06:17:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 544E2AC003
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 04:17:31 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id HP63iPaVZujyrl1p (version=TLSv1.2
+	ESMTP id PMltMAXhjqORWQKd (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:15:25 -0800 (PST)
-Date: Sun, 3 Jan 2016 04:15:25 -0800
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 04:17:29 -0800 (PST)
+Date: Sun, 3 Jan 2016 04:17:28 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 05/76] libxfs: pack the agfl header structure so
-	XFS_AGFL_SIZE is correct
-Message-ID: <20160103121525.GB28429@infradead.org>
+Subject: Re: [PATCH 34/76] xfs: implement XFS_IOC_SWAPEXT when rmap btree is
+	enabled
+Message-ID: <20160103121728.GC28429@infradead.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
-	<20151219085655.12713.60317.stgit@birch.djwong.org>
+	<20151219090008.12713.25755.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151219085655.12713.60317.stgit@birch.djwong.org>
+In-Reply-To: <20151219090008.12713.25755.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,18 +34,12 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Dec 19, 2015 at 12:56:55AM -0800, Darrick J. Wong wrote:
-> Because struct xfs_agfl is 36 bytes long and has a 64-bit integer
-> inside it, gcc will quietly round the structure size up to the nearest
-> 64 bits -- in this case, 40 bytes.  This results in the XFS_AGFL_SIZE
-> macro returning incorrect results for v5 filesystems on 64-bit
-> machines (118 items instead of 119).  As a result, a 32-bit xfs_repair
-> will see garbage in AGFL item 119 and complain.
-> 
-> Therefore, tell gcc not to pad the structure so that the AGFL size
-> calculation is correct.
+On Sat, Dec 19, 2015 at 01:00:08AM -0800, Darrick J. Wong wrote:
+> Implement extent swapping when reverse-mapping is enabled.
 
-Do you have a testcase for this?
+Can you just fold this into the previous patch?  There seem to be a lot
+of patches in the series that would benefit from merging, but this
+is the one that really screams for it :)
 
 _______________________________________________
 xfs mailing list
