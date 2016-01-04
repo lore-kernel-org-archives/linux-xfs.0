@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9D7F529DF5
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 21:58:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7228D304032
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 19:58:44 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MIKYD4waopokCJJQ for <xfs@oss.sgi.com>;
-	Sun, 03 Jan 2016 19:58:41 -0800 (PST)
-Date: Mon, 4 Jan 2016 14:58:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs: create helper for bmap finish & trans join in
-	attr code
-Message-ID: <20160104035840.GA19802@dastard>
-References: <56441B8E.6070603@redhat.com> <5644BEF8.6070201@sandeen.net>
-	<20151112165801.GA14854@infradead.org>
-	<20151112201231.GS19199@dastard>
-	<20151113090840.GA16423@infradead.org>
-	<56465643.5070504@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id E4D0429DF5
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 22:57:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C38AA304032
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 20:57:25 -0800 (PST)
+Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
+	cuda.sgi.com with ESMTP id bUKQLa6FEMKTmsaV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 03 Jan 2016 20:57:18 -0800 (PST)
+Subject: Bug#766811: spurious library links
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.766811.B766811.14518831228992@bugs.debian.org>
+Date: Mon, 4 Jan 2016 05:41:36 +0100
+From: Marco d'Itri <md@linux.it>
+Message-ID: <20160104044136.GD11738@bongo.bofh.it>
+References: <20141026004825.GA27863@bongo.bofh.it>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56465643.5070504@sandeen.net>
+In-Reply-To: <20141026004825.GA27863@bongo.bofh.it>
+Reply-To: Marco d'Itri <md@linux.it>, 766811@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,117 +27,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3432837324973389613=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: 766811@bugs.debian.org
+Cc: 766811-submitter@bugs.debian.org
 
-On Fri, Nov 13, 2015 at 03:29:39PM -0600, Eric Sandeen wrote:
-> On 11/13/15 3:08 AM, Christoph Hellwig wrote:
-> > On Fri, Nov 13, 2015 at 07:12:31AM +1100, Dave Chinner wrote:
-> >> On Thu, Nov 12, 2015 at 08:58:01AM -0800, Christoph Hellwig wrote:
-> >>> I think the problem here is simply that our interfaces suck.
-> >>> xfs_trans_roll really needs to rejoin any inode to the new transaction
-> >>> to that was joined to the previous one.  Once we've fixed that we can
-> >>> get rid of the silly committed arguments and everyone will be happy.
-> >>
-> >> xfs_trans_roll is not specifically for rolling transactions with
-> >> locked inodes in them. We could use it for any object that needs
-> >> multiple transactions to modify. e.g. we could roll transactions
-> >> across an AGF (using hold+join) so that it remains locked across
-> >> multiple allocation/free transactions.
-> > 
-> > xfs_trans_roll already logs the inode core, which requires the
-> > inode to be attached to the transaction.  While I could see the
-> > point of moving this out of the core __xfs_trans_roll into an
-> > xfs_trans_roll_inode helper we might as well follow the current
-> > interface for now.
-> 
-> Trying to follow you guys ;)
-> 
-> Something like this?
 
-yes, something like that ;)
+--===============3432837324973389613==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="a2FkP9tdjPU2nyhF"
+Content-Disposition: inline
 
-(better late than never!)
 
--Dave.
+--a2FkP9tdjPU2nyhF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index dbae649..d23bce8 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -91,32 +91,32 @@ xfs_zero_extent(
->   * last due to locking considerations.  We never free any extents in
->   * the first transaction.
->   *
-> - * Return 1 if the given transaction was committed and a new one
-> - * started, and 0 otherwise in the committed parameter.
-> + * If an inode *ip is provided, rejoin it to the transaction if
-> + * the transaction was committed.
->   */
->  int						/* error */
->  xfs_bmap_finish(
->  	struct xfs_trans		**tp,	/* transaction pointer addr */
->  	struct xfs_bmap_free		*flist,	/* i/o: list extents to free */
-> -	int				*committed)/* xact committed or not */
-> +	xfs_inode_t			*ip)
->  {
->  	struct xfs_efd_log_item		*efd;	/* extent free data */
->  	struct xfs_efi_log_item		*efi;	/* extent free intention */
->  	int				error;	/* error return value */
-> +	int				committed;/* xact committed or not */
->  	struct xfs_bmap_free_item	*free;	/* free extent item */
->  	struct xfs_bmap_free_item	*next;	/* next item on free list */
->  
->  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
-> -	if (flist->xbf_count == 0) {
-> -		*committed = 0;
-> +	if (flist->xbf_count == 0)
->  		return 0;
-> -	}
-> +
->  	efi = xfs_trans_get_efi(*tp, flist->xbf_count);
->  	for (free = flist->xbf_first; free; free = free->xbfi_next)
->  		xfs_trans_log_efi_extent(*tp, efi, free->xbfi_startblock,
->  			free->xbfi_blockcount);
->  
-> -	error = __xfs_trans_roll(tp, NULL, committed);
-> +	error = __xfs_trans_roll(tp, ip, &committed);
->  	if (error) {
->  		/*
->  		 * If the transaction was committed, drop the EFD reference
-> @@ -128,16 +128,13 @@ xfs_bmap_finish(
->  		 * transaction so we should return committed=1 even though we're
->  		 * returning an error.
->  		 */
-> -		if (*committed) {
-> +		if (committed) {
->  			xfs_efi_release(efi);
->  			xfs_force_shutdown((*tp)->t_mountp,
->  				(error == -EFSCORRUPTED) ?
->  					SHUTDOWN_CORRUPT_INCORE :
->  					SHUTDOWN_META_IO_ERROR);
-> -		} else {
-> -			*committed = 1;
->  		}
-> -
->  		return error;
->  	}
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+On Oct 26, Marco d'Itri <md@linux.it> wrote:
 
--- 
-Dave Chinner
-david@fromorbit.com
+> These links do not appear to have any purpose and should be removed:
+>=20
+> /lib/libhandle.a -> /usr/lib/libhandle.a
+> /lib/libhandle.la -> /usr/lib/libhandle.la
+> /usr/lib/libhandle.so -> /lib/libhandle.so
+>=20
+> Also, policy forbids to thip the .la files at all for normal libraries.
+This is an obvious bug and I have not heard back from you in over one
+year, what are your plans about fixing this? Do you need help?
+
+--=20
+ciao,
+Marco
+
+--a2FkP9tdjPU2nyhF
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQGcBAABCAAGBQJWifgAAAoJECv1pcEixPek0JAL/ivJ8g5KklMSzitaMhhBqkw2
+I2BJ5hb3PIyBxqRWqzwrdHyGUJX8rkyJz+bFxYcUi9a0+/CYx7KYkqjkHGPiXiA7
+WWOQdCp8IPMdmR4QpY3KkamoGODvXJplSJvYeZd7wKWNfvznU+XsoREaXMm48vu4
+Xvyi76vYXxN9Gt0fRJ12K1Tsw5wSV2bxZollaHSyShIDEW8aR955O77gYQmnc6xW
+RTeM79ZkRBEEPhOgFw3wu1pjORUVAIPnNTIwXnMGxOgLLnxuoN6wfkcVMuYhCBK+
+8vUEgo+YezaMFxVEU/5+ew0C55RobZoSNTVTcNwrTSuSc974Y+W+Nxvb8/U6buDi
+JEVLea/aIzugUT9NmQ/UwtcdDClX2QY5G5XaFP8oniLI4NCQBPM3WRoi4kpjtkbc
+FVtdn/kjOIKVwIe5xYzwhczfp6YP1mm6Cr8a8ZJdK+o/LhUi41H/O4PyR6e+spoI
+2TV8F5j4guNpVCdTJzpzij1K7kzC3HcZQVDreCGwcA==
+=p1lD
+-----END PGP SIGNATURE-----
+
+--a2FkP9tdjPU2nyhF--
+
+
+--===============3432837324973389613==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3432837324973389613==--
