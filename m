@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 799C47F37
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 17:24:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BCC2304062
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 15:23:58 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id JK5BCkHISYjlLfEp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 15:23:56 -0800 (PST)
-Date: Mon, 4 Jan 2016 15:23:18 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 685817F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 17:52:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 24A26304066
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 15:52:46 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	lykMh2Zm4qHUnwZD for <xfs@oss.sgi.com>;
+	Mon, 04 Jan 2016 15:52:37 -0800 (PST)
+Date: Tue, 5 Jan 2016 10:51:25 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 05/76] libxfs: pack the agfl header structure so
 	XFS_AGFL_SIZE is correct
-Message-ID: <20160104232318.GC28330@birch.djwong.org>
+Message-ID: <20160104235125.GG19802@dastard>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
 	<20151219085655.12713.60317.stgit@birch.djwong.org>
 	<20160103121525.GB28429@infradead.org>
@@ -33,8 +33,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
 On Mon, Jan 04, 2016 at 02:12:18PM -0800, Darrick J. Wong wrote:
 > On Sun, Jan 03, 2016 at 04:15:25AM -0800, Christoph Hellwig wrote:
@@ -64,25 +64,18 @@ On Mon, Jan 04, 2016 at 02:12:18PM -0800, Darrick J. Wong wrote:
 > xfs_disk_object) values against known good values and stuff that into the
 > xfsprogs build process.
 
-I created a patch that uses BUILD_BUG_ON to stop kbuild if the sizes of the
-on-disk data structures don't match known values.  I've also ported it to
-xfsprogs, so we can check both.
+There's an xfstest for that: xfs/122. It notruns on my systems since
+the big xfsprogs build/header rework, and I haven't found the time
+to work out what it needs to run again. Also, I don't think it
+covers the AGFL structure, because that it relatively new and the
+test doesn't check any of the v5 specific structures....
 
---D
+Cheers,
 
-> 
-> --D
-> 
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
