@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CAC257F51
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 12:20:44 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0ADA27F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 13:11:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BC0CB8F8035
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 10:20:44 -0800 (PST)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id sGs31rhbZLgpBR15 for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 10:20:42 -0800 (PST)
-Subject: [resend PATCH 3/3] writeback: fix false positive WARN in
-	__mark_inode_dirty
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 04 Jan 2016 10:20:16 -0800
-Message-ID: <20160104182016.24118.33718.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F03DB8F8040
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 11:11:51 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id JpreCJ1UNyyFmqzF (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 11:11:50 -0800 (PST)
+Date: Mon, 4 Jan 2016 14:11:48 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/9] metadump: clean up btree block region zeroing
+Message-ID: <20160104191147.GA19852@bfoster.bfoster>
+References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
+	<1450733829-9319-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1450733829-9319-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,73 +30,151 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This warning was added as a debugging aid way back in commit
-500b067c5e6c "writeback: check for registered bdi in flusher add and
-inode dirty" when we were switching over to per-bdi writeback.
+On Tue, Dec 22, 2015 at 08:37:01AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Abstract out all the common operations in the btree block zeroing
+> so that we only have one copy of offset/len calculations and don't
+> require lots of casts for the pointer arithmetic.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Once the block device has been torn down it's no longer useful to
-complain about unregistered bdi's.  Clear the writeback capability under
-the the wb->list_lock(), so that __mark_inode_dirty has no opportunity
-to race bdi_unregister() to this WARN() condition.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Alternatively we could just delete the warning...
-
-Found this while testing block device remove from underneath an active
-fs triggering traces like:
-
- WARNING: CPU: 6 PID: 2129 at fs/fs-writeback.c:2065 __mark_inode_dirty+0x261/0x350()
- bdi-block not registered
- [..]
- Call Trace:
-  [<ffffffff81459f02>] dump_stack+0x44/0x62
-  [<ffffffff810a1f32>] warn_slowpath_common+0x82/0xc0
-  [<ffffffff810a1fcc>] warn_slowpath_fmt+0x5c/0x80
-  [<ffffffff812830b1>] __mark_inode_dirty+0x261/0x350
-  [<ffffffff8126d019>] generic_update_time+0x79/0xd0
-  [<ffffffff8126d19d>] file_update_time+0xbd/0x110
-  [<ffffffff812e4ab8>] ext4_dax_fault+0x68/0x110
-  [<ffffffff811f7f3e>] __do_fault+0x4e/0xf0
-  [<ffffffff811fc077>] handle_mm_fault+0x5e7/0x1b50
-  [<ffffffff811fbae1>] ? handle_mm_fault+0x51/0x1b50
-  [<ffffffff81068981>] __do_page_fault+0x191/0x3f0
-  [<ffffffff81068caf>] trace_do_page_fault+0x4f/0x120
-  [<ffffffff810630fa>] do_async_page_fault+0x1a/0xa0
-  [<ffffffff819023f8>] async_page_fault+0x28/0x30
-
-Cc: Jan Kara <jack@suse.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- mm/backing-dev.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 7340353f8aea..9ea843bca709 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -343,10 +343,17 @@ static void wb_shutdown(struct bdi_writeback *wb)
- {
- 	/* Make sure nobody queues further work */
- 	spin_lock_bh(&wb->work_lock);
-+
- 	if (!test_and_clear_bit(WB_registered, &wb->state)) {
- 		spin_unlock_bh(&wb->work_lock);
- 		return;
- 	}
-+
-+	/* tell __mark_inode_dirty that writeback is no longer possible */
-+	spin_lock(&wb->list_lock);
-+	wb->bdi->capabilities |= BDI_CAP_NO_WRITEBACK;
-+	spin_unlock(&wb->list_lock);
-+
- 	spin_unlock_bh(&wb->work_lock);
- 
- 	/*
+>  db/metadump.c | 61 +++++++++++++++++++++++------------------------------------
+>  1 file changed, 24 insertions(+), 37 deletions(-)
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 8455fdd..a185da5 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -258,8 +258,8 @@ zero_btree_node(
+>  	xfs_inobt_key_t		*ikp;
+>  	xfs_alloc_ptr_t		*app;
+>  	xfs_alloc_key_t		*akp;
+> -	void			*zp1, *zp2;
+> -	int			zlen1, zlen2;
+> +	char			*zp1, *zp2;
+> +	char			*key_end;
+>  
+>  	nrecs = be16_to_cpu(block->bb_numrecs);
+>  
+> @@ -268,43 +268,36 @@ zero_btree_node(
+>  	case TYP_BMAPBTD:
+>  		bkp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+>  		bpp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+> -		zp1 = &bkp[nrecs];
+> -		zlen1 = (char *)&bpp[0] - (char *)&bkp[nrecs];
+> -		zp2 = &bpp[nrecs];
+> -		zlen2 = (char *)block + mp->m_sb.sb_blocksize -
+> -							(char *)&bpp[nrecs];
+> +		zp1 = (char *)&bkp[nrecs];
+> +		zp2 = (char *)&bpp[nrecs];
+> +		key_end = (char *)bpp;
+>  		break;
+>  	case TYP_INOBT:
+>  	case TYP_FINOBT:
+>  		ikp = XFS_INOBT_KEY_ADDR(mp, block, 1);
+>  		ipp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
+> -		zp1 = &ikp[nrecs];
+> -		zlen1 = (char *)&ipp[0] - (char *)&ikp[nrecs];
+> -		zp2 = &ipp[nrecs];
+> -		zlen2 = (char *)block + mp->m_sb.sb_blocksize -
+> -							(char *)&ipp[nrecs];
+> +		zp1 = (char *)&ikp[nrecs];
+> +		zp2 = (char *)&ipp[nrecs];
+> +		key_end = (char *)ipp;
+>  		break;
+>  	case TYP_BNOBT:
+>  	case TYP_CNTBT:
+>  		akp = XFS_ALLOC_KEY_ADDR(mp, block, 1);
+>  		app = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
+> -		zp1 = &akp[nrecs];
+> -		zlen1 = (char *)&app[0] - (char *)&akp[nrecs];
+> -		zp2 = &app[nrecs];
+> -		zlen2 = (char *)block + mp->m_sb.sb_blocksize -
+> -							(char *)&app[nrecs];
+> +		zp1 = (char *)&akp[nrecs];
+> +		zp2 = (char *)&app[nrecs];
+> +		key_end = (char *)app;
+>  		break;
+>  	default:
+> -		zp1 = NULL;
+> -		break;
+> +		return;
+>  	}
+>  
+> -	if (zp1 && zp2) {
+> -		/* Zero from end of keys to beginning of pointers */
+> -		memset(zp1, 0, zlen1);
+> -		/* Zero from end of pointers to end of block */
+> -		memset(zp2, 0, zlen2);
+> -	}
+> +
+> +	/* Zero from end of keys to beginning of pointers */
+> +	memset(zp1, 0, key_end - zp1);
+> +
+> +	/* Zero from end of pointers to end of block */
+> +	memset(zp2, 0, (char *)block + mp->m_sb.sb_blocksize - zp2);
+>  }
+>  
+>  static void
+> @@ -316,8 +309,7 @@ zero_btree_leaf(
+>  	struct xfs_bmbt_rec	*brp;
+>  	struct xfs_inobt_rec	*irp;
+>  	struct xfs_alloc_rec	*arp;
+> -	void			*zp;
+> -	int			zlen;
+> +	char			*zp;
+>  
+>  	nrecs = be16_to_cpu(block->bb_numrecs);
+>  
+> @@ -325,29 +317,24 @@ zero_btree_leaf(
+>  	case TYP_BMAPBTA:
+>  	case TYP_BMAPBTD:
+>  		brp = XFS_BMBT_REC_ADDR(mp, block, 1);
+> -		zp = &brp[nrecs];
+> -		zlen = (char *)block + mp->m_sb.sb_blocksize - (char *)&brp[nrecs];
+> +		zp = (char *)&brp[nrecs];
+>  		break;
+>  	case TYP_INOBT:
+>  	case TYP_FINOBT:
+>  		irp = XFS_INOBT_REC_ADDR(mp, block, 1);
+> -		zp = &irp[nrecs];
+> -		zlen = (char *)block + mp->m_sb.sb_blocksize - (char *)&irp[nrecs];
+> +		zp = (char *)&irp[nrecs];
+>  		break;
+>  	case TYP_BNOBT:
+>  	case TYP_CNTBT:
+>  		arp = XFS_ALLOC_REC_ADDR(mp, block, 1);
+> -		zp = &arp[nrecs];
+> -		zlen = (char *)block + mp->m_sb.sb_blocksize - (char *)&arp[nrecs];
+> +		zp = (char *)&arp[nrecs];
+>  		break;
+>  	default:
+> -		zp = NULL;
+> -		break;
+> +		return;
+>  	}
+>  
+>  	/* Zero from end of records to end of block */
+> -	if (zp && zlen < mp->m_sb.sb_blocksize)
+> -		memset(zp, 0, zlen);
+> +	memset(zp, 0, (char *)block + mp->m_sb.sb_blocksize - zp);
+>  }
+>  
+>  static void
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
