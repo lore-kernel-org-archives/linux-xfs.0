@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 238297F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 04:30:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E3AAF8F8033
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:30:15 -0800 (PST)
-Received: from resqmta-ch2-04v.sys.comcast.net
-	(resqmta-ch2-04v.sys.comcast.net [69.252.207.36]) by
-	cuda.sgi.com with ESMTP id u0cuBkCvF7eAgykx (version=TLSv1.2
-	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:30:13 -0800 (PST)
-From: Joshua Kinard <kumba@gentoo.org>
-Subject: [PATCH 3/3] xfsprogs: misc uClibc patches: use statfs() instead of
-	ustat()
-Message-ID: <569CBE99.4000309@gentoo.org>
-Date: Mon, 18 Jan 2016 05:29:45 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 781D27F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 16:12:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 57CD08F8040
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 14:12:48 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id oLLsXIuDddf98yBy (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 14:12:45 -0800 (PST)
+Date: Mon, 4 Jan 2016 14:12:18 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 05/76] libxfs: pack the agfl header structure so
+	XFS_AGFL_SIZE is correct
+Message-ID: <20160104221218.GB28330@birch.djwong.org>
+References: <20151219085622.12713.88678.stgit@birch.djwong.org>
+	<20151219085655.12713.60317.stgit@birch.djwong.org>
+	<20160103121525.GB28429@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160103121525.GB28429@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,53 +28,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-RnJvbTogSm9zaHVhIEtpbmFyZCA8a3VtYmFAZ2VudG9vLm9yZz4KCnVDbGliYyBkb2Vzbid0IHBy
-b3ZpZGUgdGhlIHVzdGF0KCkgY2FsbCBhbmQgc3RhdGZzKCkgc2hvdWxkIGJlIHVzZWQgaW5zdGVh
-ZC4KUGF0Y2ggd2FzIHByZXZpb3VzbHkgc2VudCB1cHN0cmVhbSwgYnV0IHJlamVjdGVkIGJlY2F1
-c2UgdXN0YXQoKSBjaGVja3MgZm9yIHRoZQpibG9jayBkZXZpY2UgYmVpbmcgbW91bnRlZCBhbnl3
-aGVyZS4gIFRoaXMgdmVyc2lvbiBvZiB0aGUgcGF0Y2ggdGFrZXMgY2FyZSBvZgp0aGF0IGNoZWNr
-LCBhcyB3ZWxsIGFzIHJlcGxhY2luZyB1c3RhdCgpIHdpdGggc3RhdGZzKCkuCgpSZWZlciB0byBH
-ZW50b28gQnVnICM0Nzc3NTg6Cmh0dHBzOi8vYnVncy5nZW50b28ub3JnL3Nob3dfYnVnLmNnaT9p
-ZD00Nzc3NTgKClNpZ25lZC1vZmYtYnk6IEpvc2h1YSBLaW5hcmQgPGt1bWJhQGdlbnRvby5vcmc+
-ClN1Z2dlc3RlZC1ieTogUmVuw6kgUmjDqWF1bWUgPHJlbmUucmhlYXVtZUBnbWFpbC5jb20+Ci0t
-LQogbGlieGZzL2xpbnV4LmMgfCAgIDM1ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
-LS0tCiAxIGZpbGUgY2hhbmdlZCwgMzEgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCmRp
-ZmYgLU5hdXJwIHhmc3Byb2dzLTQuMy4wLm9yaWcvbGlieGZzL2xpbnV4LmMgeGZzcHJvZ3MtNC4z
-LjAvbGlieGZzL2xpbnV4LmMKLS0tIHhmc3Byb2dzLTQuMy4wLm9yaWcvbGlieGZzL2xpbnV4LmMJ
-MjAxNS0wOC0wMyAwMDozOTo0Mi4wMDAwMDAwMDAgKzAwMDAKKysrIHhmc3Byb2dzLTQuMy4wL2xp
-Ynhmcy9saW51eC5jCTIwMTYtMDEtMDEgMTA6NDk6MDYuMjcyMjI5MDAwICswMDAwCkBAIC0yMCw3
-ICsyMCw3IEBACiAjaW5jbHVkZSA8bW50ZW50Lmg+CiAjaW5jbHVkZSA8c3lzL3N0YXQuaD4KICN1
-bmRlZiB1c3RhdAotI2luY2x1ZGUgPHN5cy91c3RhdC5oPgorI2luY2x1ZGUgPHN5cy9zdGF0dmZz
-Lmg+CiAjaW5jbHVkZSA8c3lzL21vdW50Lmg+CiAjaW5jbHVkZSA8c3lzL2lvY3RsLmg+CiAjaW5j
-bHVkZSA8c3lzL3N5c2luZm8uaD4KQEAgLTUxLDkgKzUxLDExIEBAIHN0YXRpYyBpbnQgbWF4X2Js
-b2NrX2FsaWdubWVudDsKIGludAogcGxhdGZvcm1fY2hlY2tfaXNtb3VudGVkKGNoYXIgKm5hbWUs
-IGNoYXIgKmJsb2NrLCBzdHJ1Y3Qgc3RhdDY0ICpzLCBpbnQgdmVyYm9zZSkKIHsKLQkvKiBQYWQg
-dXN0OyBwcmUtMi42LjI4IGxpbnV4IGNvcGllcyBvdXQgdG9vIG11Y2ggaW4gMzJiaXQgY29tcGF0
-IG1vZGUgKi8KLQlzdHJ1Y3QgdXN0YXQJdXN0WzJdOworCXN0cnVjdCBzdGF0ZnMJdXN0OwogCXN0
-cnVjdCBzdGF0NjQJc3Q7CisJY2hhcgkJbW91bnRzW01BWFBBVEhMRU5dOworCUZJTEUqCQltdGFi
-OworCXN0cnVjdCBtbnRlbnQqCW1udDsKIAogCWlmICghcykgewogCQlpZiAoc3RhdDY0KGJsb2Nr
-LCAmc3QpIDwgMCkKQEAgLTYzLDcgKzY1LDMyIEBAIHBsYXRmb3JtX2NoZWNrX2lzbW91bnRlZChj
-aGFyICpuYW1lLCBjaGEKIAkJcyA9ICZzdDsKIAl9CiAKLQlpZiAodXN0YXQocy0+c3RfcmRldiwg
-dXN0KSA+PSAwKSB7CisJaWYgKHN0cmNtcChuYW1lLCBibG9jaykgPT0gMCkgeworCQkvKiBEZXZp
-Y2Ugbm9kZSB3YXMgcGFzc2VkIGFzIHBhcmFtZXRlci4gRmluZCBpdHMgbW91bnQgcG9pbnQgKi8K
-KwkJc3RyY3B5KG1vdW50cywgKCFhY2Nlc3MoUFJPQ19NT1VOVEVELCBSX09LKSkgPyBQUk9DX01P
-VU5URUQgOiBNT1VOVEVEKTsKKwkJbXRhYiA9IHNldG1udGVudChtb3VudHMsICJyIik7CisJCWlm
-IChtdGFiID09IE5VTEwpIHsKKwkJCWlmICh2ZXJib3NlKSB7CisJCQkJZnByaW50ZihzdGRlcnIs
-IF8oIiVzOiAlcyBjb250YWlucyBhIHBvc3NpYmx5IG1vdW50ZWQgZmlsZXN5c3RlbVxuIiksIHBy
-b2duYW1lLCBuYW1lKTsKKwkJCX0KKwkJCXJldHVybiAxOworCQl9CisJCWVsc2UgeworCQkJbW50
-ID0gZ2V0bW50ZW50KG10YWIpOworCQkJd2hpbGUgKG1udCAhPSBOVUxMKSB7CisJCQkJaWYgKHN0
-cmNtcChibG9jaywgbW50LT5tbnRfZnNuYW1lKSA9PSAwKSB7CisJCQkJCWlmICh2ZXJib3NlKSB7
-CisJCQkJCQkgZnByaW50ZihzdGRlcnIsIF8oIiVzOiAlcyBjb250YWlucyBhIG1vdW50ZWQgZmls
-ZXN5c3RlbVxuIiksIHByb2duYW1lLCBuYW1lKTsKKwkJCQkJfQorCQkJCQllbmRtbnRlbnQobXRh
-Yik7CisJCQkJCXJldHVybiAxOworCQkJCX0KKwkJCQltbnQgPSBnZXRtbnRlbnQobXRhYik7CisJ
-CQl9CisJCQllbmRtbnRlbnQobXRhYik7CisJCX0KKwl9CisJZWxzZSBpZiAoc3RhdGZzKG5hbWUs
-ICZ1c3QpID49IDApIHsKIAkJaWYgKHZlcmJvc2UpCiAJCQlmcHJpbnRmKHN0ZGVyciwKIAkJCQlf
-KCIlczogJXMgY29udGFpbnMgYSBtb3VudGVkIGZpbGVzeXN0ZW1cbiIpLAoKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Sun, Jan 03, 2016 at 04:15:25AM -0800, Christoph Hellwig wrote:
+> On Sat, Dec 19, 2015 at 12:56:55AM -0800, Darrick J. Wong wrote:
+> > Because struct xfs_agfl is 36 bytes long and has a 64-bit integer
+> > inside it, gcc will quietly round the structure size up to the nearest
+> > 64 bits -- in this case, 40 bytes.  This results in the XFS_AGFL_SIZE
+> > macro returning incorrect results for v5 filesystems on 64-bit
+> > machines (118 items instead of 119).  As a result, a 32-bit xfs_repair
+> > will see garbage in AGFL item 119 and complain.
+> > 
+> > Therefore, tell gcc not to pad the structure so that the AGFL size
+> > calculation is correct.
+> 
+> Do you have a testcase for this?
+
+Not much aside from:
+
+0. Build kernel/xfsprogs with RFCv4 patches on a 64bit machine.
+1. Build kernel/xfsprogs with RFCv4 patches on a 32bit machine.
+2. Format a XFS with reflink and rmap on a 64-bit machine, so that the AGFL
+   size is maximized.
+3. Mount FS and create a reflinked file.
+4. Unmount and xfs_repair with the 32-bit build.
+
+I guess we could create a program that compares all the known sizeof(struct
+xfs_disk_object) values against known good values and stuff that into the
+xfsprogs build process.
+
+--D
+
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
