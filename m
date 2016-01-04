@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 657A77F37
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 16:06:24 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 799C47F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 17:24:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5522230405F
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 14:06:21 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BCC2304062
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 15:23:58 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id zL0wQfbw5k3ObEpe (version=TLSv1.2
+	cuda.sgi.com with ESMTP id JK5BCkHISYjlLfEp (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 14:06:16 -0800 (PST)
-Date: Mon, 4 Jan 2016 14:06:13 -0800
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 15:23:56 -0800 (PST)
+Date: Mon, 4 Jan 2016 15:23:18 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/76] libxfs: refactor the btree size calculator code
-Message-ID: <20160104220613.GA28330@birch.djwong.org>
+Subject: Re: [PATCH 05/76] libxfs: pack the agfl header structure so
+	XFS_AGFL_SIZE is correct
+Message-ID: <20160104232318.GC28330@birch.djwong.org>
 References: <20151219085622.12713.88678.stgit@birch.djwong.org>
-	<20151219085642.12713.80467.stgit@birch.djwong.org>
-	<20151220203928.GS26718@dastard>
+	<20151219085655.12713.60317.stgit@birch.djwong.org>
+	<20160103121525.GB28429@infradead.org>
+	<20160104221218.GB28330@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20151220203928.GS26718@dastard>
+In-Reply-To: <20160104221218.GB28330@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,91 +33,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Dec 21, 2015 at 07:39:28AM +1100, Dave Chinner wrote:
-> On Sat, Dec 19, 2015 at 12:56:42AM -0800, Darrick J. Wong wrote:
-> > Create a macro to generate btree height calculator functions.
-> > This will be used (much) later when we get to the refcount
-> > btree.
+On Mon, Jan 04, 2016 at 02:12:18PM -0800, Darrick J. Wong wrote:
+> On Sun, Jan 03, 2016 at 04:15:25AM -0800, Christoph Hellwig wrote:
+> > On Sat, Dec 19, 2015 at 12:56:55AM -0800, Darrick J. Wong wrote:
+> > > Because struct xfs_agfl is 36 bytes long and has a 64-bit integer
+> > > inside it, gcc will quietly round the structure size up to the nearest
+> > > 64 bits -- in this case, 40 bytes.  This results in the XFS_AGFL_SIZE
+> > > macro returning incorrect results for v5 filesystems on 64-bit
+> > > machines (118 items instead of 119).  As a result, a 32-bit xfs_repair
+> > > will see garbage in AGFL item 119 and complain.
+> > > 
+> > > Therefore, tell gcc not to pad the structure so that the AGFL size
+> > > calculation is correct.
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ....
-> > +/* btree size calculator templates */
-> > +#define DECLARE_BTREE_SIZE_FN(btree) \
-> > +xfs_filblks_t xfs_##btree##_calc_btree_size(struct xfs_mount *mp, \
-> > +		unsigned long len);
-> > +
-> > +#define DEFINE_BTREE_SIZE_FN(btree, limitfield, maxlevels) \
-> > +xfs_filblks_t \
-> > +xfs_##btree##_calc_btree_size( \
-> > +	struct xfs_mount	*mp, \
-> > +	unsigned long		len) \
-> > +{ \
-> > +	int			level; \
-> > +	int			maxrecs; \
-> > +	xfs_filblks_t		rval; \
-> > +\
-> > +	maxrecs = mp->limitfield[0]; \
-> > +	for (level = 0, rval = 0; level < maxlevels; level++) { \
-> > +		len += maxrecs - 1; \
-> > +		do_div(len, maxrecs); \
-> > +		rval += len; \
-> > +		if (len == 1) \
-> > +			return rval + maxlevels - \
-> > +				level - 1; \
-> > +		if (level == 0) \
-> > +			maxrecs = mp->limitfield[1]; \
-> > +	} \
-> > +	return rval; \
-> > +}
+> > Do you have a testcase for this?
 > 
-> I really don't like using macros like this. The code becomes hard to
-> debug, hard to edit, the functions don't show up in grep/cscope,
-> etc.
+> Not much aside from:
 > 
-> A helper function like this:
+> 0. Build kernel/xfsprogs with RFCv4 patches on a 64bit machine.
+> 1. Build kernel/xfsprogs with RFCv4 patches on a 32bit machine.
+> 2. Format a XFS with reflink and rmap on a 64-bit machine, so that the AGFL
+>    size is maximized.
+> 3. Mount FS and create a reflinked file.
+> 4. Unmount and xfs_repair with the 32-bit build.
 > 
-> xfs_filblks_t
-> xfs_btree_calc_size(
-> 	struct xfs_mount        *mp,
-> 	int			*limits,
-> 	int			maxlevels,
-> 	unsigned long           len)
-> {
-> 	int			level;
-> 	int			maxrecs;
-> 	xfs_filblks_t		rval;
-> 
-> 	maxrecs = limits[0];
-> 	for (level = 0, rval = 0; level < maxlevels; level++) {
-> 		len += maxrecs - 1;
-> 		do_div(len, maxrecs);
-> 		rval += len;
-> 		if (len == 1)
-> 			return rval + maxlevels - level - 1;
-> 		if (level == 0)
-> 			maxrecs = limits[1];
-> 	}
-> 	return rval;
-> }
-> 
-> will work just as well when wrapped with the btree specific calling
-> function and that will have none of the problems using a macro to
-> build the functions has...
+> I guess we could create a program that compares all the known sizeof(struct
+> xfs_disk_object) values against known good values and stuff that into the
+> xfsprogs build process.
 
-Will change to use a helper function.
+I created a patch that uses BUILD_BUG_ON to stop kbuild if the sizes of the
+on-disk data structures don't match known values.  I've also ported it to
+xfsprogs, so we can check both.
 
 --D
 
 > 
-> Cheers,
+> --D
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 > 
 > _______________________________________________
 > xfs mailing list
