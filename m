@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B0C877F54
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 23:55:06 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D7D177F3F
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 23:55:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A1BF38F8035
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 21:55:03 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E1D4AC002
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2016 21:55:06 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	RAhxPNMP4VwXHou2 for <xfs@oss.sgi.com>;
-	Sun, 03 Jan 2016 21:55:01 -0800 (PST)
+	tUBGl2Gxqcps4pVJ for <xfs@oss.sgi.com>;
+	Sun, 03 Jan 2016 21:55:03 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: introduce per-inode DAX enablement
-Date: Mon,  4 Jan 2016 16:54:52 +1100
-Message-Id: <1451886892-15548-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: use FS_XFLAG definitions directly
+Date: Mon,  4 Jan 2016 16:54:51 +1100
+Message-Id: <1451886892-15548-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1451886892-15548-1-git-send-email-david@fromorbit.com>
 References: <1451886892-15548-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,199 +33,318 @@ Cc: linux-fsdevel@vger.kernel.org, ext4@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Rather than just being able to turn DAX on and off via a mount
-option, some applications may only want to enable DAX for certain
-performance critical files in a filesystem.
-
-This patch introduces a new inode flag to enable DAX in the v3 inode
-di_flags2 field. It adds support for setting and clearing flags in
-the di_flags2 field via the XFS_IOC_FSSETXATTR ioctl, and sets the
-S_DAX inode flag appropriately when it is seen.
-
-When this flag is set on a directory, it acts as an "inherit flag".
-That is, inodes created in the directory will automatically inherit
-the on-disk inode DAX flag, enabling administrators to set up
-directory heirarchies that automatically use DAX. Setting this flag
-on an empty root directory will make the entire filesystem use DAX
-by default.
+Now that the ioctls have been hoisted up to the VFS level, use
+the VFs definitions directly and remove the XFS specific definitions
+completely. Userspace is going to have to handle the change of this
+interface separately, so removing the definitions from xfs_fs.h is
+not an issue here at all.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_format.h |  9 +++++++++
- fs/xfs/xfs_inode.c         | 32 +++++++++++++++++++++++---------
- fs/xfs/xfs_ioctl.c         | 18 +++++++++++++++++-
- fs/xfs/xfs_iops.c          |  4 ++--
- include/uapi/linux/fs.h    |  1 +
- 5 files changed, 52 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |  2 --
+ fs/xfs/libxfs/xfs_fs.h     | 19 ------------
+ fs/xfs/xfs_inode.c         | 32 ++++++++++----------
+ fs/xfs/xfs_ioctl.c         | 74 +++++++++++++++++++++++-----------------------
+ 4 files changed, 53 insertions(+), 74 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index f28eeab..b4ae7ce 100644
+index 8774498..f28eeab 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1024,6 +1024,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- 	 XFS_DIFLAG_EXTSZINHERIT | XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM)
+@@ -984,8 +984,6 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
  
  /*
-+ * Values for di_flags2 These start by being exposed to userspace in the upper
-+ * 16 bits of the XFS_XFLAG_s range.
-+ */
-+#define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
-+#define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
-+
-+#define XFS_DIFLAG2_ANY		(XFS_DIFLAG2_DAX)
-+
-+/*
-  * Inode number format:
-  * low inopblog bits - offset in block
-  * next agblklog bits - block number in ag
+  * Values for di_flags
+- * There should be a one-to-one correspondence between these flags and the
+- * XFS_XFLAG_s.
+  */
+ #define XFS_DIFLAG_REALTIME_BIT  0	/* file's blocks come from rt area */
+ #define XFS_DIFLAG_PREALLOC_BIT  1	/* file space has been preallocated */
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index dd29d0a..fffe3d0 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -36,25 +36,6 @@ struct dioattr {
+ #endif
+ 
+ /*
+- * Flags for the bs_xflags/fsx_xflags field in FS_IOC_FS[GS]ETXATTR[A]
+- */
+-#define XFS_XFLAG_REALTIME	FS_XFLAG_REALTIME
+-#define XFS_XFLAG_PREALLOC	FS_XFLAG_PREALLOC
+-#define XFS_XFLAG_IMMUTABLE	FS_XFLAG_IMMUTABLE
+-#define XFS_XFLAG_APPEND	FS_XFLAG_APPEND
+-#define XFS_XFLAG_SYNC		FS_XFLAG_SYNC
+-#define XFS_XFLAG_NOATIME	FS_XFLAG_NOATIME
+-#define XFS_XFLAG_NODUMP	FS_XFLAG_NODUMP
+-#define XFS_XFLAG_RTINHERIT	FS_XFLAG_RTINHERIT
+-#define XFS_XFLAG_PROJINHERIT	FS_XFLAG_PROJINHERIT
+-#define XFS_XFLAG_NOSYMLINKS	FS_XFLAG_NOSYMLINKS
+-#define XFS_XFLAG_EXTSIZE	FS_XFLAG_EXTSIZE
+-#define XFS_XFLAG_EXTSZINHERIT	FS_XFLAG_EXTSZINHERIT
+-#define XFS_XFLAG_NODEFRAG	FS_XFLAG_NODEFRAG
+-#define XFS_XFLAG_FILESTREAM	FS_XFLAG_FILESTREAM
+-#define XFS_XFLAG_HASATTR	FS_XFLAG_HASATTR
+-
+-/*
+  * Structure for XFS_IOC_GETBMAP.
+  * On input, fill in bmv_offset and bmv_length of the first structure
+  * to indicate the area of interest in the file, and bmv_entries with
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ca9ca5a..8929908 100644
+index 8ee3939..ca9ca5a 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -610,7 +610,9 @@ __xfs_iflock(
+@@ -616,33 +616,33 @@ _xfs_dic2xflags(
  
- STATIC uint
- _xfs_dic2xflags(
--	__uint16_t		di_flags)
-+	__uint16_t		di_flags,
-+	uint64_t		di_flags2,
-+	bool			has_attr)
- {
- 	uint			flags = 0;
- 
-@@ -645,25 +647,32 @@ _xfs_dic2xflags(
- 			flags |= FS_XFLAG_FILESTREAM;
+ 	if (di_flags & XFS_DIFLAG_ANY) {
+ 		if (di_flags & XFS_DIFLAG_REALTIME)
+-			flags |= XFS_XFLAG_REALTIME;
++			flags |= FS_XFLAG_REALTIME;
+ 		if (di_flags & XFS_DIFLAG_PREALLOC)
+-			flags |= XFS_XFLAG_PREALLOC;
++			flags |= FS_XFLAG_PREALLOC;
+ 		if (di_flags & XFS_DIFLAG_IMMUTABLE)
+-			flags |= XFS_XFLAG_IMMUTABLE;
++			flags |= FS_XFLAG_IMMUTABLE;
+ 		if (di_flags & XFS_DIFLAG_APPEND)
+-			flags |= XFS_XFLAG_APPEND;
++			flags |= FS_XFLAG_APPEND;
+ 		if (di_flags & XFS_DIFLAG_SYNC)
+-			flags |= XFS_XFLAG_SYNC;
++			flags |= FS_XFLAG_SYNC;
+ 		if (di_flags & XFS_DIFLAG_NOATIME)
+-			flags |= XFS_XFLAG_NOATIME;
++			flags |= FS_XFLAG_NOATIME;
+ 		if (di_flags & XFS_DIFLAG_NODUMP)
+-			flags |= XFS_XFLAG_NODUMP;
++			flags |= FS_XFLAG_NODUMP;
+ 		if (di_flags & XFS_DIFLAG_RTINHERIT)
+-			flags |= XFS_XFLAG_RTINHERIT;
++			flags |= FS_XFLAG_RTINHERIT;
+ 		if (di_flags & XFS_DIFLAG_PROJINHERIT)
+-			flags |= XFS_XFLAG_PROJINHERIT;
++			flags |= FS_XFLAG_PROJINHERIT;
+ 		if (di_flags & XFS_DIFLAG_NOSYMLINKS)
+-			flags |= XFS_XFLAG_NOSYMLINKS;
++			flags |= FS_XFLAG_NOSYMLINKS;
+ 		if (di_flags & XFS_DIFLAG_EXTSIZE)
+-			flags |= XFS_XFLAG_EXTSIZE;
++			flags |= FS_XFLAG_EXTSIZE;
+ 		if (di_flags & XFS_DIFLAG_EXTSZINHERIT)
+-			flags |= XFS_XFLAG_EXTSZINHERIT;
++			flags |= FS_XFLAG_EXTSZINHERIT;
+ 		if (di_flags & XFS_DIFLAG_NODEFRAG)
+-			flags |= XFS_XFLAG_NODEFRAG;
++			flags |= FS_XFLAG_NODEFRAG;
+ 		if (di_flags & XFS_DIFLAG_FILESTREAM)
+-			flags |= XFS_XFLAG_FILESTREAM;
++			flags |= FS_XFLAG_FILESTREAM;
  	}
  
-+	if (di_flags2 & XFS_DIFLAG2_ANY) {
-+		if (di_flags2 & XFS_DIFLAG2_DAX)
-+			flags |= FS_XFLAG_DAX;
-+	}
-+
-+	if (has_attr)
-+		flags |= FS_XFLAG_HASATTR;
-+
  	return flags;
+@@ -655,7 +655,7 @@ xfs_ip2xflags(
+ 	xfs_icdinode_t		*dic = &ip->i_d;
+ 
+ 	return _xfs_dic2xflags(dic->di_flags) |
+-				(XFS_IFORK_Q(ip) ? XFS_XFLAG_HASATTR : 0);
++				(XFS_IFORK_Q(ip) ? FS_XFLAG_HASATTR : 0);
  }
  
  uint
- xfs_ip2xflags(
--	xfs_inode_t		*ip)
-+	struct xfs_inode	*ip)
+@@ -663,7 +663,7 @@ xfs_dic2xflags(
+ 	xfs_dinode_t		*dip)
  {
--	xfs_icdinode_t		*dic = &ip->i_d;
-+	struct xfs_icdinode	*dic = &ip->i_d;
- 
--	return _xfs_dic2xflags(dic->di_flags) |
--				(XFS_IFORK_Q(ip) ? FS_XFLAG_HASATTR : 0);
-+	return _xfs_dic2xflags(dic->di_flags, dic->di_flags2, XFS_IFORK_Q(ip));
- }
- 
- uint
- xfs_dic2xflags(
--	xfs_dinode_t		*dip)
-+	struct xfs_dinode	*dip)
- {
--	return _xfs_dic2xflags(be16_to_cpu(dip->di_flags)) |
--				(XFS_DFORK_Q(dip) ? FS_XFLAG_HASATTR : 0);
-+	return _xfs_dic2xflags(be16_to_cpu(dip->di_flags),
-+				be64_to_cpu(dip->di_flags2), XFS_DFORK_Q(dip));
+ 	return _xfs_dic2xflags(be16_to_cpu(dip->di_flags)) |
+-				(XFS_DFORK_Q(dip) ? XFS_XFLAG_HASATTR : 0);
++				(XFS_DFORK_Q(dip) ? FS_XFLAG_HASATTR : 0);
  }
  
  /*
-@@ -862,7 +871,8 @@ xfs_ialloc(
- 	case S_IFREG:
- 	case S_IFDIR:
- 		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
--			uint	di_flags = 0;
-+			uint64_t	di_flags2 = 0;
-+			uint		di_flags = 0;
- 
- 			if (S_ISDIR(mode)) {
- 				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
-@@ -898,7 +908,11 @@ xfs_ialloc(
- 				di_flags |= XFS_DIFLAG_NODEFRAG;
- 			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
- 				di_flags |= XFS_DIFLAG_FILESTREAM;
-+			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
-+				di_flags2 |= XFS_DIFLAG2_DAX;
-+
- 			ip->i_d.di_flags |= di_flags;
-+			ip->i_d.di_flags2 |= di_flags2;
- 		}
- 		/* FALLTHROUGH */
- 	case S_IFLNK:
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 94b35eb3..478d04e 100644
+index d42738d..94b35eb3 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -945,6 +945,7 @@ xfs_set_diflags(
- 	unsigned int		xflags)
- {
- 	unsigned int		di_flags;
-+	uint64_t		di_flags2;
+@@ -859,25 +859,25 @@ xfs_merge_ioc_xflags(
+ 	unsigned int	xflags = start;
+ 
+ 	if (flags & FS_IMMUTABLE_FL)
+-		xflags |= XFS_XFLAG_IMMUTABLE;
++		xflags |= FS_XFLAG_IMMUTABLE;
+ 	else
+-		xflags &= ~XFS_XFLAG_IMMUTABLE;
++		xflags &= ~FS_XFLAG_IMMUTABLE;
+ 	if (flags & FS_APPEND_FL)
+-		xflags |= XFS_XFLAG_APPEND;
++		xflags |= FS_XFLAG_APPEND;
+ 	else
+-		xflags &= ~XFS_XFLAG_APPEND;
++		xflags &= ~FS_XFLAG_APPEND;
+ 	if (flags & FS_SYNC_FL)
+-		xflags |= XFS_XFLAG_SYNC;
++		xflags |= FS_XFLAG_SYNC;
+ 	else
+-		xflags &= ~XFS_XFLAG_SYNC;
++		xflags &= ~FS_XFLAG_SYNC;
+ 	if (flags & FS_NOATIME_FL)
+-		xflags |= XFS_XFLAG_NOATIME;
++		xflags |= FS_XFLAG_NOATIME;
+ 	else
+-		xflags &= ~XFS_XFLAG_NOATIME;
++		xflags &= ~FS_XFLAG_NOATIME;
+ 	if (flags & FS_NODUMP_FL)
+-		xflags |= XFS_XFLAG_NODUMP;
++		xflags |= FS_XFLAG_NODUMP;
+ 	else
+-		xflags &= ~XFS_XFLAG_NODUMP;
++		xflags &= ~FS_XFLAG_NODUMP;
+ 
+ 	return xflags;
+ }
+@@ -948,33 +948,33 @@ xfs_set_diflags(
  
  	/* can't set PREALLOC this way, just preserve it */
  	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-@@ -977,8 +978,18 @@ xfs_set_diflags(
- 		if (xflags & FS_XFLAG_EXTSIZE)
+-	if (xflags & XFS_XFLAG_IMMUTABLE)
++	if (xflags & FS_XFLAG_IMMUTABLE)
+ 		di_flags |= XFS_DIFLAG_IMMUTABLE;
+-	if (xflags & XFS_XFLAG_APPEND)
++	if (xflags & FS_XFLAG_APPEND)
+ 		di_flags |= XFS_DIFLAG_APPEND;
+-	if (xflags & XFS_XFLAG_SYNC)
++	if (xflags & FS_XFLAG_SYNC)
+ 		di_flags |= XFS_DIFLAG_SYNC;
+-	if (xflags & XFS_XFLAG_NOATIME)
++	if (xflags & FS_XFLAG_NOATIME)
+ 		di_flags |= XFS_DIFLAG_NOATIME;
+-	if (xflags & XFS_XFLAG_NODUMP)
++	if (xflags & FS_XFLAG_NODUMP)
+ 		di_flags |= XFS_DIFLAG_NODUMP;
+-	if (xflags & XFS_XFLAG_NODEFRAG)
++	if (xflags & FS_XFLAG_NODEFRAG)
+ 		di_flags |= XFS_DIFLAG_NODEFRAG;
+-	if (xflags & XFS_XFLAG_FILESTREAM)
++	if (xflags & FS_XFLAG_FILESTREAM)
+ 		di_flags |= XFS_DIFLAG_FILESTREAM;
+ 	if (S_ISDIR(ip->i_d.di_mode)) {
+-		if (xflags & XFS_XFLAG_RTINHERIT)
++		if (xflags & FS_XFLAG_RTINHERIT)
+ 			di_flags |= XFS_DIFLAG_RTINHERIT;
+-		if (xflags & XFS_XFLAG_NOSYMLINKS)
++		if (xflags & FS_XFLAG_NOSYMLINKS)
+ 			di_flags |= XFS_DIFLAG_NOSYMLINKS;
+-		if (xflags & XFS_XFLAG_EXTSZINHERIT)
++		if (xflags & FS_XFLAG_EXTSZINHERIT)
+ 			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
+-		if (xflags & XFS_XFLAG_PROJINHERIT)
++		if (xflags & FS_XFLAG_PROJINHERIT)
+ 			di_flags |= XFS_DIFLAG_PROJINHERIT;
+ 	} else if (S_ISREG(ip->i_d.di_mode)) {
+-		if (xflags & XFS_XFLAG_REALTIME)
++		if (xflags & FS_XFLAG_REALTIME)
+ 			di_flags |= XFS_DIFLAG_REALTIME;
+-		if (xflags & XFS_XFLAG_EXTSIZE)
++		if (xflags & FS_XFLAG_EXTSIZE)
  			di_flags |= XFS_DIFLAG_EXTSIZE;
  	}
--
- 	ip->i_d.di_flags = di_flags;
-+
-+	/* diflags2 only valid for v3 inodes. */
-+	if (ip->i_d.di_version < 3)
-+		return;
-+
-+	di_flags2 = 0;
-+	if (xflags & FS_XFLAG_DAX)
-+		di_flags2 |= XFS_DIFLAG2_DAX;
-+
-+	ip->i_d.di_flags2 = di_flags2;
-+
- }
  
- STATIC void
-@@ -1004,6 +1015,11 @@ xfs_diflags_to_linux(
+@@ -988,19 +988,19 @@ xfs_diflags_to_linux(
+ 	struct inode		*inode = VFS_I(ip);
+ 	unsigned int		xflags = xfs_ip2xflags(ip);
+ 
+-	if (xflags & XFS_XFLAG_IMMUTABLE)
++	if (xflags & FS_XFLAG_IMMUTABLE)
+ 		inode->i_flags |= S_IMMUTABLE;
+ 	else
+ 		inode->i_flags &= ~S_IMMUTABLE;
+-	if (xflags & XFS_XFLAG_APPEND)
++	if (xflags & FS_XFLAG_APPEND)
+ 		inode->i_flags |= S_APPEND;
+ 	else
+ 		inode->i_flags &= ~S_APPEND;
+-	if (xflags & XFS_XFLAG_SYNC)
++	if (xflags & FS_XFLAG_SYNC)
+ 		inode->i_flags |= S_SYNC;
+ 	else
+ 		inode->i_flags &= ~S_SYNC;
+-	if (xflags & XFS_XFLAG_NOATIME)
++	if (xflags & FS_XFLAG_NOATIME)
  		inode->i_flags |= S_NOATIME;
  	else
  		inode->i_flags &= ~S_NOATIME;
-+	if (xflags & FS_XFLAG_DAX)
-+		inode->i_flags |= S_DAX;
-+	else
-+		inode->i_flags &= ~S_DAX;
-+
+@@ -1016,11 +1016,11 @@ xfs_ioctl_setattr_xflags(
+ 
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+-	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & XFS_XFLAG_REALTIME))
++	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & FS_XFLAG_REALTIME))
+ 		return -EINVAL;
+ 
+ 	/* If realtime flag is set then must have realtime device */
+-	if (fa->fsx_xflags & XFS_XFLAG_REALTIME) {
++	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
+ 		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+ 		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
+ 			return -EINVAL;
+@@ -1031,7 +1031,7 @@ xfs_ioctl_setattr_xflags(
+ 	 * we have appropriate permission.
+ 	 */
+ 	if (((ip->i_d.di_flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND)) ||
+-	     (fa->fsx_xflags & (XFS_XFLAG_IMMUTABLE | XFS_XFLAG_APPEND))) &&
++	     (fa->fsx_xflags & (FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND))) &&
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
+ 
+@@ -1095,8 +1095,8 @@ out_cancel:
+  * extent size hint validation is somewhat cumbersome. Rules are:
+  *
+  * 1. extent size hint is only valid for directories and regular files
+- * 2. XFS_XFLAG_EXTSIZE is only valid for regular files
+- * 3. XFS_XFLAG_EXTSZINHERIT is only valid for directories.
++ * 2. FS_XFLAG_EXTSIZE is only valid for regular files
++ * 3. FS_XFLAG_EXTSZINHERIT is only valid for directories.
+  * 4. can only be changed on regular files if no extents are allocated
+  * 5. can be changed on directories at any time
+  * 6. extsize hint of 0 turns off hints, clears inode flags.
+@@ -1112,10 +1112,10 @@ xfs_ioctl_setattr_check_extsize(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 
+-	if ((fa->fsx_xflags & XFS_XFLAG_EXTSIZE) && !S_ISREG(ip->i_d.di_mode))
++	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(ip->i_d.di_mode))
+ 		return -EINVAL;
+ 
+-	if ((fa->fsx_xflags & XFS_XFLAG_EXTSZINHERIT) &&
++	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
+ 	    !S_ISDIR(ip->i_d.di_mode))
+ 		return -EINVAL;
+ 
+@@ -1132,7 +1132,7 @@ xfs_ioctl_setattr_check_extsize(
+ 			return -EINVAL;
+ 
+ 		if (XFS_IS_REALTIME_INODE(ip) ||
+-		    (fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
++		    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
+ 			size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
+ 		} else {
+ 			size = mp->m_sb.sb_blocksize;
+@@ -1143,7 +1143,7 @@ xfs_ioctl_setattr_check_extsize(
+ 		if (fa->fsx_extsize % size)
+ 			return -EINVAL;
+ 	} else
+-		fa->fsx_xflags &= ~(XFS_XFLAG_EXTSIZE | XFS_XFLAG_EXTSZINHERIT);
++		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
+ 
+ 	return 0;
  }
+@@ -1168,7 +1168,7 @@ xfs_ioctl_setattr_check_projid(
  
- static int
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 245268a..a1b8af1 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1201,8 +1201,8 @@ xfs_diflags_to_iflags(
- 		inode->i_flags |= S_SYNC;
- 	if (flags & XFS_DIFLAG_NOATIME)
- 		inode->i_flags |= S_NOATIME;
--	/* XXX: Also needs an on-disk per inode flag! */
--	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
-+	if (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
-+	    ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
- 		inode->i_flags |= S_DAX;
- }
+ 	if (xfs_get_projid(ip) != fa->fsx_projid)
+ 		return -EINVAL;
+-	if ((fa->fsx_xflags & XFS_XFLAG_PROJINHERIT) !=
++	if ((fa->fsx_xflags & FS_XFLAG_PROJINHERIT) !=
+ 	    (ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT))
+ 		return -EINVAL;
  
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index df175dd..4cad4c8 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -138,6 +138,7 @@ struct fsxattr {
- #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
- #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
- #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-+#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
- #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
- 
- /* the read-only stuff doesn't really belong here, but any other place is
 -- 
 2.5.0
 
