@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 564387F58
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 13:12:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DAA29AC002
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 11:12:12 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id E7F947F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 13:12:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 78810AC005
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 11:12:17 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TRWRGYW30vWrBOAA (version=TLSv1.2
+	cuda.sgi.com with ESMTP id wTMLzirxCiYXbBCo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 11:12:11 -0800 (PST)
-Date: Mon, 4 Jan 2016 14:12:09 -0500
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 11:12:16 -0800 (PST)
+Date: Mon, 4 Jan 2016 14:12:14 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/9] repair: parallelise phase 7
-Message-ID: <20160104191209.GD19852@bfoster.bfoster>
+Subject: Re: [PATCH 5/9] repair: parallelise uncertin inode processing in
+	phase 3
+Message-ID: <20160104191213.GE19852@bfoster.bfoster>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
-	<1450733829-9319-5-git-send-email-david@fromorbit.com>
+	<1450733829-9319-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1450733829-9319-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1450733829-9319-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,178 +34,156 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 22, 2015 at 08:37:04AM +1100, Dave Chinner wrote:
+On Tue, Dec 22, 2015 at 08:37:05AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> It operates on a single AG at a time, sequentially, doing inode updates. All the
-> data structures accessed and modified are per AG, as are the modification to
-> on-disk structures. Hence we can run this phase concurrently across multiple
-> AGs.
-> 
-> This is important for large, broken filesystem repairs, where there can be
-> millions of inodes that need link counts updated. Once such repair image takes
-> more than 45 minutes to run phase 7 as a single threaded operation.
+> This can take a long time when there are millions of uncertain inodes in badly
+> broken filesystems. THe processing is per-ag, the data structures are all
+> per-ag, and the load is mostly CPU time spent checking CRCs on each
+> uncertaini inode. Parallelising reduced the runtime of this phase on a badly
+> broken filesytem from ~30 minutes to under 5 miniutes.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
+This one seems a bit more scary simply because the amount of work
+involved in phase 3, such as inode processing and whatnot. I don't think
+that everything in there is necessarily AG local as the commit log
+description above implies. On a skim through, I do see that we have
+ag_locks[agno].lock for cases that can cross AG boundaries, such as
+checking block allocation state (get_bmap()/set_bmap()) of bmapbt blocks
+(iiuc?), for example.
+
+So I can't really spot any actual problems, but there's a lot of code
+down in there. I'm fine with it as long as testing bears out and this
+gets a reasonable amount of soak time such that we can hopefully catch
+any serious issues or areas currently lacking sufficient locking:
+
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  repair/phase7.c     | 77 ++++++++++++++++++++++++++++++++++-------------------
->  repair/progress.c   |  4 +--
+>  repair/phase3.c     | 59 ++++++++++++++++++++++++++++++++++++++++++++---------
 >  repair/protos.h     |  2 +-
 >  repair/xfs_repair.c |  2 +-
->  4 files changed, 54 insertions(+), 31 deletions(-)
+>  3 files changed, 51 insertions(+), 12 deletions(-)
 > 
-> diff --git a/repair/phase7.c b/repair/phase7.c
-> index b1e3a55..91dad02 100644
-> --- a/repair/phase7.c
-> +++ b/repair/phase7.c
-> @@ -26,6 +26,7 @@
+> diff --git a/repair/phase3.c b/repair/phase3.c
+> index 76c9440..0890a27 100644
+> --- a/repair/phase3.c
+> +++ b/repair/phase3.c
+> @@ -28,6 +28,7 @@
 >  #include "dinode.h"
->  #include "versions.h"
 >  #include "progress.h"
+>  #include "bmap.h"
 > +#include "threads.h"
 >  
->  /* dinoc is a pointer to the IN-CORE dinode core */
 >  static void
-> @@ -108,45 +109,67 @@ update_inode_nlinks(
->  	IRELE(ip);
+>  process_agi_unlinked(
+> @@ -87,10 +88,33 @@ process_ags(
+>  	do_inode_prefetch(mp, ag_stride, process_ag_func, false, false);
 >  }
 >  
-> -void
-> -phase7(xfs_mount_t *mp)
-> +/*
-> + * for each ag, look at each inode 1 at a time. If the number of
-> + * links is bad, reset it, log the inode core, commit the transaction
-> + */
 > +static void
-> +do_link_updates(
-> +	struct work_queue	*wq,
-> +	xfs_agnumber_t		agno,
-> +	void			*arg)
->  {
->  	ino_tree_node_t		*irec;
-> -	int			i;
->  	int			j;
->  	__uint32_t		nrefs;
->  
-> +	irec = findfirst_inode_rec(agno);
+> +do_uncertain_aginodes(
+> +	work_queue_t	*wq,
+> +	xfs_agnumber_t	agno,
+> +	void		*arg)
+> +{
+> +	int		*count = arg;
 > +
-> +	while (irec != NULL)  {
-> +		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
-> +			ASSERT(is_inode_confirmed(irec, j));
+> +	*count = process_uncertain_aginodes(wq->mp, agno);
 > +
-> +			if (is_inode_free(irec, j))
-> +				continue;
-> +
-> +			ASSERT(no_modify || is_inode_reached(irec, j));
-> +
-> +			nrefs = num_inode_references(irec, j);
-> +			ASSERT(no_modify || nrefs > 0);
-> +
-> +			if (get_inode_disk_nlinks(irec, j) != nrefs)
-> +				update_inode_nlinks(wq->mp,
-> +					XFS_AGINO_TO_INO(wq->mp, agno,
-> +						irec->ino_startnum + j),
-> +					nrefs);
-> +		}
-> +		irec = next_ino_rec(irec);
-> +	}
+> +#ifdef XR_INODE_TRACE
+> +	fprintf(stderr,
+> +		"\t\t phase 3 - ag %d process_uncertain_inodes returns %d\n",
+> +		*count, j);
+> +#endif
 > +
 > +	PROG_RPT_INC(prog_rpt_done[agno], 1);
 > +}
 > +
-> +void
-> +phase7(
-> +	struct xfs_mount	*mp,
-> +	int			scan_threads)
-> +{
-> +	struct work_queue	wq;
-> +	int			agno;
-> +
+>  void
+> -phase3(xfs_mount_t *mp)
+> +phase3(
+> +	struct xfs_mount *mp,
+> +	int		scan_threads)
+>  {
+> -	int 			i, j;
+> +	int			i, j;
+> +	int			*counts;
+> +	work_queue_t		wq;
+>  
+>  	do_log(_("Phase 3 - for each AG...\n"));
 >  	if (!no_modify)
->  		do_log(_("Phase 7 - verify and correct link counts...\n"));
->  	else
->  		do_log(_("Phase 7 - verify link counts...\n"));
->  
-> -	/*
-> -	 * for each ag, look at each inode 1 at a time. If the number of
-> -	 * links is bad, reset it, log the inode core, commit the transaction
-> -	 */
-> -	for (i = 0; i < glob_agcount; i++)  {
-> -		irec = findfirst_inode_rec(i);
-> -
-> -		while (irec != NULL)  {
-> -			for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
-> -				ASSERT(is_inode_confirmed(irec, j));
-> +	set_progress_msg(PROGRESS_FMT_CORR_LINK, (__uint64_t) glob_agcount);
->  
-> -				if (is_inode_free(irec, j))
-> -					continue;
-> +	create_work_queue(&wq, mp, scan_threads);
->  
-> -				ASSERT(no_modify || is_inode_reached(irec, j));
-> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
-> +		queue_work(&wq, do_link_updates, agno, NULL);
->  
-> -				nrefs = num_inode_references(irec, j);
-> -				ASSERT(no_modify || nrefs > 0);
-> +	destroy_work_queue(&wq);
->  
-> -				if (get_inode_disk_nlinks(irec, j) != nrefs)
-> -					update_inode_nlinks(mp,
-> -						XFS_AGINO_TO_INO(mp, i,
-> -							irec->ino_startnum + j),
-> -						nrefs);
-> -			}
-> -			irec = next_ino_rec(irec);
+> @@ -129,20 +153,35 @@ phase3(xfs_mount_t *mp)
+>  	 */
+>  	do_log(_("        - process newly discovered inodes...\n"));
+>  	set_progress_msg(PROG_FMT_NEW_INODES, (__uint64_t) glob_agcount);
+> +
+> +	counts = calloc(sizeof(*counts), mp->m_sb.sb_agcount);
+> +	if (!counts) {
+> +		do_abort(_("no memory for uncertain inode counts\n"));
+> +		return;
+> +	}
+> +
+>  	do  {
+>  		/*
+>  		 * have to loop until no ag has any uncertain
+>  		 * inodes
+>  		 */
+>  		j = 0;
+> -		for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+> -			j += process_uncertain_aginodes(mp, i);
+> -#ifdef XR_INODE_TRACE
+> -			fprintf(stderr,
+> -				"\t\t phase 3 - process_uncertain_inodes returns %d\n", j);
+> -#endif
+> -			PROG_RPT_INC(prog_rpt_done[i], 1);
 > -		}
-> -	}
-> +	print_final_rpt();
+> +		memset(counts, 0, mp->m_sb.sb_agcount * sizeof(*counts));
+> +
+> +		create_work_queue(&wq, mp, scan_threads);
+> +
+> +		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+> +			queue_work(&wq, do_uncertain_aginodes, i, &counts[i]);
+> +
+> +		destroy_work_queue(&wq);
+> +
+> +		/* tally up the counts */
+> +		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+> +			j += counts[i];
+> +
+>  	} while (j != 0);
+> +
+> +	free(counts);
+> +
+>  	print_final_rpt();
 >  }
-> diff --git a/repair/progress.c b/repair/progress.c
-> index 418b803..2a09b23 100644
-> --- a/repair/progress.c
-> +++ b/repair/progress.c
-> @@ -75,9 +75,9 @@ progress_rpt_t progress_rpt_reports[] = {
->  {FMT2, N_("moving disconnected inodes to lost+found"),		/* 12 */
->  	&rpt_fmts[FMT2], &rpt_types[TYPE_INODE]},
->  {FMT1, N_("verify and correct link counts"),			/* 13 */
-> -	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
-> +	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
->  {FMT1, N_("verify link counts"),				/* 14 */
-> -	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]}
-> +	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]}
->  };
->  
->  pthread_t	report_thread;
 > diff --git a/repair/protos.h b/repair/protos.h
-> index 9d5a2a6..b113aca 100644
+> index b113aca..0290420 100644
 > --- a/repair/protos.h
 > +++ b/repair/protos.h
-> @@ -50,7 +50,7 @@ void	phase3(struct xfs_mount *);
+> @@ -46,7 +46,7 @@ void	thread_init(void);
+>  
+>  void	phase1(struct xfs_mount *);
+>  void	phase2(struct xfs_mount *, int);
+> -void	phase3(struct xfs_mount *);
+> +void	phase3(struct xfs_mount *, int);
 >  void	phase4(struct xfs_mount *);
 >  void	phase5(struct xfs_mount *);
 >  void	phase6(struct xfs_mount *);
-> -void	phase7(struct xfs_mount *);
-> +void	phase7(struct xfs_mount *, int);
->  
->  int	verify_set_agheader(struct xfs_mount *, struct xfs_buf *,
->  		struct xfs_sb *, struct xfs_agf *, struct xfs_agi *,
 > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 3eaced4..fcdb212 100644
+> index fcdb212..5d5f3aa 100644
 > --- a/repair/xfs_repair.c
 > +++ b/repair/xfs_repair.c
-> @@ -893,7 +893,7 @@ main(int argc, char **argv)
->  		phase6(mp);
->  		timestamp(PHASE_END, 6, NULL);
+> @@ -871,7 +871,7 @@ main(int argc, char **argv)
+>  	if (do_prefetch)
+>  		init_prefetch(mp);
 >  
-> -		phase7(mp);
-> +		phase7(mp, phase2_threads);
->  		timestamp(PHASE_END, 7, NULL);
->  	} else  {
->  		do_warn(
+> -	phase3(mp);
+> +	phase3(mp, phase2_threads);
+>  	timestamp(PHASE_END, 3, NULL);
+>  
+>  	phase4(mp);
 > -- 
 > 2.5.0
 > 
