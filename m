@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C16677F37
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 10:03:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CFFFAC002
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 08:03:44 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xtIyNEWjI8aqhPJx (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 08:03:43 -0800 (PST)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: test XFS torn log write detection
-Date: Mon,  4 Jan 2016 11:03:41 -0500
-Message-Id: <1451923421-16647-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A51387F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 12:20:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 87F4F304032
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 10:20:28 -0800 (PST)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id UrH0UeOiO7FIipHx for
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2016 10:20:27 -0800 (PST)
+Subject: [resend PATCH 0/3] fs, bdev: handle end of life
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 04 Jan 2016 10:20:00 -0800
+Message-ID: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,156 +21,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-XFS torn log write detection includes a mechanism to inject CRC errors
-into log records at runtime and shutdown the fs accordingly. This
-ensures that the CRC verification pass on the subsequent mount discovers
-an invalid record near the head of the log and considers it a torn
-write.
+Per Dave, resend to include the xfs list on the full set.  These are
+against v4.4-rc5.
 
-This test runs a workload with error injection enabled and verifies that
-the subsequent mount is successful. The test repeats for several
-iterations using a random frequency factor for the error event each
-time.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
 
-Here's a v2 of the XFS log crc verification test case now that the
-associated kernel code has been merged. The only change is the bugfix
-noted in the changelog below.
+As mentioned in [PATCH 1/3] "block, fs: reliably communicate bdev
+end-of-life", historically we have waited for filesystem specific
+heuristics to attempt to guess when a block device is gone.  Sometimes
+this works, but in other cases the system can hang waiting for the fs to
+trigger its shutdown protocol.
 
-Brian
+Now with DAX we need new actions, like unmapping all inodes, to be taken
+upon a shutdown event.  Those actions need to be taken whether the
+shutdown event comes from the block device being torn down, or some
+other file system specific event.
 
-v2:
-- Update random failure frequency calculation to ensure factor is never
-  0.
-v1: http://article.gmane.org/gmane.comp.file-systems.fstests/1406
+For now, the approach taken in the following patches only affects xfs
+and block drivers that are converted to use del_gendisk_queue().  We can
+add more filesystems and driver support over time.
 
- tests/xfs/350     | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/350.out |  2 ++
- tests/xfs/group   |  1 +
- 3 files changed, 88 insertions(+)
- create mode 100755 tests/xfs/350
- create mode 100644 tests/xfs/350.out
+Note that 'bdi_gone' was chosen over 'shutdown' so as not to be confused
+with generic_shutdown_super()
 
-diff --git a/tests/xfs/350 b/tests/xfs/350
-new file mode 100755
-index 0000000..1a1de6f
---- /dev/null
-+++ b/tests/xfs/350
-@@ -0,0 +1,85 @@
-+#! /bin/bash
-+# FS QA Test No. 350
-+#
-+# Use the XFS log record CRC error injection mechanism to test torn writes to
-+# the log. The error injection mechanism writes an invalid CRC and shuts down
-+# the filesystem. The test verifies that a subsequent remount recovers the log
-+# and that the filesystem is consistent.
-+#
-+# Note that this test requires a DEBUG mode kernel.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Red Hat, Inc. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	killall -9 fsstress > /dev/null 2>&1
-+	wait > /dev/null 2>&1
-+}
-+
-+rm -f $seqres.full
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_xfs_sysfs $(_short_dev $SCRATCH_DEV)/log/log_badcrc_factor
-+_require_scratch
-+
-+echo "Silence is golden."
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount
-+
-+sdev=$(_short_dev $SCRATCH_DEV)
-+
-+for i in $(seq 1 5); do
-+	# Enable error injection. Use a random bad crc factor up to 100
-+	# (increase this value to run fsstress longer).
-+	factor=$((RANDOM % 100 + 1))
-+	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
-+	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-+
-+	# Run fsstress until the filesystem shuts down. It will shut down
-+	# automatically when error injection triggers.
-+	$FSSTRESS_PROG -d $SCRATCH_MNT -p 4 -n 999999 >> $seqres.full 2>&1
-+
-+	# Verify that we can remount the fs. Log recovery should handle the torn
-+	# write.
-+	_scratch_unmount
-+	_scratch_mount || _fail "failed to mount"
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/350.out b/tests/xfs/350.out
-new file mode 100644
-index 0000000..c725135
---- /dev/null
-+++ b/tests/xfs/350.out
-@@ -0,0 +1,2 @@
-+QA output created by 350
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 634f7e7..5fbace9 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -232,3 +232,4 @@
- 303 auto quick quota
- 304 auto quick quota
- 305 auto quota
-+350 auto log metadata
--- 
-2.4.3
+---
+
+Dan Williams (3):
+      block, fs: reliably communicate bdev end-of-life
+      xfs: handle shutdown notifications
+      writeback: fix false positive WARN in __mark_inode_dirty
+
+
+ block/genhd.c                |   87 +++++++++++++++++++++++++++++++++++-------
+ drivers/block/brd.c          |    3 -
+ drivers/nvdimm/pmem.c        |    3 -
+ drivers/s390/block/dcssblk.c |    6 +--
+ fs/block_dev.c               |   79 +++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_super.c           |    9 ++++
+ include/linux/fs.h           |    4 ++
+ include/linux/genhd.h        |    1 
+ mm/backing-dev.c             |    7 +++
+ 9 files changed, 166 insertions(+), 33 deletions(-)
 
 _______________________________________________
 xfs mailing list
