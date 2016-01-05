@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 44E197F37
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 11:36:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 355918F8035
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 09:35:57 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id iMFt1IsvSOqbQB6a (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 09:35:55 -0800 (PST)
-Date: Tue, 5 Jan 2016 18:36:04 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: lazytime implementation questions
-Message-ID: <20160105173604.GE18604@quack.suse.cz>
-References: <20160104062219.GB19802@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 402AC7F37
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 12:14:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3056730405F
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 10:14:35 -0800 (PST)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id Hd99WdEVaUbT6T4o for
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 10:14:33 -0800 (PST)
+Date: Tue, 5 Jan 2016 11:14:30 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v6 4/7] dax: add support for fsync/msync
+Message-ID: <20160105181430.GC6462@linux.intel.com>
+References: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1450899560-26708-5-git-send-email-ross.zwisler@linux.intel.com>
+	<20160105111358.GD2724@quack.suse.cz>
+	<20160105171235.GB6462@linux.intel.com>
+	<CAPcyv4jAAAtRc7GSOqDZixxpQfM4bzHtkwmrsjLJ0Bqba+0KRA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160104062219.GB19802@dastard>
+In-Reply-To: <CAPcyv4jAAAtRc7GSOqDZixxpQfM4bzHtkwmrsjLJ0Bqba+0KRA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +32,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-  Hi,
+On Tue, Jan 05, 2016 at 09:20:47AM -0800, Dan Williams wrote:
+> On Tue, Jan 5, 2016 at 9:12 AM, Ross Zwisler
+> <ross.zwisler@linux.intel.com> wrote:
+> > On Tue, Jan 05, 2016 at 12:13:58PM +0100, Jan Kara wrote:
+> >> On Wed 23-12-15 12:39:17, Ross Zwisler wrote:
+> >> > To properly handle fsync/msync in an efficient way DAX needs to track dirty
+> >> > pages so it is able to flush them durably to media on demand.
+> >> >
+> >> > The tracking of dirty pages is done via the radix tree in struct
+> >> > address_space.  This radix tree is already used by the page writeback
+> >> > infrastructure for tracking dirty pages associated with an open file, and
+> >> > it already has support for exceptional (non struct page*) entries.  We
+> >> > build upon these features to add exceptional entries to the radix tree for
+> >> > DAX dirty PMD or PTE pages at fault time.
+> >> >
+> >> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> >> ...
+> >> > +static int dax_writeback_one(struct block_device *bdev,
+> >> > +           struct address_space *mapping, pgoff_t index, void *entry)
+> >> > +{
+> >> > +   struct radix_tree_root *page_tree = &mapping->page_tree;
+> >> > +   int type = RADIX_DAX_TYPE(entry);
+> >> > +   struct radix_tree_node *node;
+> >> > +   struct blk_dax_ctl dax;
+> >> > +   void **slot;
+> >> > +   int ret = 0;
+> >> > +
+> >> > +   spin_lock_irq(&mapping->tree_lock);
+> >> > +   /*
+> >> > +    * Regular page slots are stabilized by the page lock even
+> >> > +    * without the tree itself locked.  These unlocked entries
+> >> > +    * need verification under the tree lock.
+> >> > +    */
+> >> > +   if (!__radix_tree_lookup(page_tree, index, &node, &slot))
+> >> > +           goto unlock;
+> >> > +   if (*slot != entry)
+> >> > +           goto unlock;
+> >> > +
+> >> > +   /* another fsync thread may have already written back this entry */
+> >> > +   if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
+> >> > +           goto unlock;
+> >> > +
+> >> > +   radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_TOWRITE);
+> >> > +
+> >> > +   if (WARN_ON_ONCE(type != RADIX_DAX_PTE && type != RADIX_DAX_PMD)) {
+> >> > +           ret = -EIO;
+> >> > +           goto unlock;
+> >> > +   }
+> >> > +
+> >> > +   dax.sector = RADIX_DAX_SECTOR(entry);
+> >> > +   dax.size = (type == RADIX_DAX_PMD ? PMD_SIZE : PAGE_SIZE);
+> >> > +   spin_unlock_irq(&mapping->tree_lock);
+> >> > +
+> >> > +   /*
+> >> > +    * We cannot hold tree_lock while calling dax_map_atomic() because it
+> >> > +    * eventually calls cond_resched().
+> >> > +    */
+> >> > +   ret = dax_map_atomic(bdev, &dax);
+> >> > +   if (ret < 0)
+> >> > +           return ret;
+> >> > +
+> >> > +   if (WARN_ON_ONCE(ret < dax.size)) {
+> >> > +           ret = -EIO;
+> >> > +           dax_unmap_atomic(bdev, &dax);
+> >> > +           return ret;
+> >> > +   }
+> >> > +
+> >> > +   spin_lock_irq(&mapping->tree_lock);
+> >> > +   /*
+> >> > +    * We need to revalidate our radix entry while holding tree_lock
+> >> > +    * before we do the writeback.
+> >> > +    */
+> >>
+> >> Do we really need to revalidate here? dax_map_atomic() makes sure the addr
+> >> & size is still part of the device. I guess you are concerned that due to
+> >> truncate or similar operation those sectors needn't belong to the same file
+> >> anymore but we don't really care about flushing sectors for someone else,
+> >> do we?
+> >>
+> >> Otherwise the patch looks good to me.
+> >
+> > Yep, the concern is that we could have somehow raced against a truncate
+> > operation while we weren't holding the tree_lock, and that now the address we
+> > are about to flush belongs to another file or is unallocated by the
+> > filesystem.
+> >
+> > I agree that this should be non-destructive - if you think the additional
+> > check and locking isn't worth the overhead, I'm happy to take it out.  I don't
+> > have a strong opinion either way.
+> >
+> 
+> My concern is whether flushing potentially invalid virtual addresses
+> is problematic on some architectures.  Maybe it's just FUD, but it's
+> less work in my opinion to just revalidate the address versus auditing
+> each arch for this concern.
 
-On Mon 04-01-16 17:22:19, Dave Chinner wrote:
-> I've been looking at implementing the lazytime mount option for XFS,
-> and I'm struggling to work out what it is supposed to mean.
-> 
-> AFAICT, on ext4, lazytime means that pure timestamp updates are not
-> journalled and they are only ever written back when the inode is
-> otherwise dirtied and written, or they are timestamp dirty for 24
-> hours which triggers writeback.
-> 
-> This poses a couple of problems for XFS:
-> 
-> 	1. we log every timestamp change, so there is no mechanism
-> 	   for delayed/deferred update.
-> 
-> 	2. we track dirty metadata in the journal, not via the VFS
-> 	   dirty inode lists, so all the infrastructure written for
-> 	   ext4 to do periodic flushing is useless to us.
-> 
-> These are solvable problems, but what I'm not sure about is exactly
-> what the intended semantics of lazytime durability are. That is,
-> exactly what guaranteed are we giving userspace about timestamp
-> updates when lazytime is used? The guarantees we have to give will
-> greatly influence the XFS implementation, so I really need to nail
-> down what we are expected to provide userspace. Can we:
-> 
-> 	a) just ignore all durability concerns?
-> 	b) if not, do we only need to care about the 24 hour
-> 	   writeback and unmount?
-> 	c) if not, are fsync/sync/syncfs/freeze/unmount supposed
-> 	   to provide durability of all metadata changes?
-> 	d) do we have to care about ordering - if we fsync one inode
-> 	   with 1 hour old timestamps, do we also need to guarantee
-> 	   that all the inodes with older dirty timestamps also get
-> 	   made durable?
+I don't think that the addresses have the potential of being invalid from the
+driver's point of view - we are still holding a reference on the block queue
+via dax_map_atomic(), so we should be protected against races vs block device
+removal.  I think the only question is whether it is okay to flush an address
+that we know to be valid from the block device's point of view, but which the
+filesystem may have truncated from being allocated to our inode.
 
-So the intended semantics is:
-1) fsync / sync / freeze / unmount will write the timestamp updates even
-   with lazytime. So unless crash happens, timestamps are guaranteed to be
-   consistent. Also sync / fsync guarantees all changes to get to disk.
-2) We periodically write back timestamps (once per 24 hours) to avoid too
-   big timestamp inconsistencies in case of crash.
+Does that all make sense?
 
-Otherwise there are no guarantees wrt durability. I've CCed Ted who
-designed this just in case I missed something.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> At a minimum we can change the comment to not say "We need to" and
+> instead say "TODO: are all archs ok with flushing potentially invalid
+> addresses?"
 
 _______________________________________________
 xfs mailing list
