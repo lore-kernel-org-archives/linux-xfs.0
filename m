@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 02BC529DF5
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 17:47:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D8388304067
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 15:47:53 -0800 (PST)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	4f9HX7IHvCPAz9Bq for <xfs@oss.sgi.com>;
-	Tue, 05 Jan 2016 15:47:51 -0800 (PST)
-Date: Wed, 6 Jan 2016 07:46:39 +0800
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B459829DF5
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 17:54:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65557AC002
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 15:54:43 -0800 (PST)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id krCKlcMOBwYZmjIz for
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 15:54:42 -0800 (PST)
+Date: Wed, 6 Jan 2016 07:53:09 +0800
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 34/35] block: add QUEUE_FLAGs for flush and fua
-Message-ID: <201601060735.1UARVDdr%fengguang.wu@intel.com>
+Subject: Re: [PATCH 35/35] block, drivers, fs: rename REQ_FLUSH to REQ_PREFLUSH
+Message-ID: <201601060734.Dqx8lzOI%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="n8g4imXOkfNTN/H1"
+Content-Type: multipart/mixed; boundary="u3/rZRmxL6MmkK24"
 Content-Disposition: inline
-In-Reply-To: <1452027218-32303-35-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1452027218-32303-36-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,7 +30,7 @@ To: mchristi@redhat.com
 Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, kbuild-all@01.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 
 
---n8g4imXOkfNTN/H1
+--u3/rZRmxL6MmkK24
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -49,28 +49,32 @@ reproduce:
 All errors (new ones prefixed by >>):
 
    arch/um/drivers/ubd_kern.c: In function 'ubd_add':
->> arch/um/drivers/ubd_kern.c:869:43: error: macro "blk_queue_flush" passed 2 arguments, but takes just 1
+   arch/um/drivers/ubd_kern.c:869:43: error: macro "blk_queue_flush" passed 2 arguments, but takes just 1
      blk_queue_flush(ubd_dev->queue, REQ_FLUSH);
                                               ^
->> arch/um/drivers/ubd_kern.c:869:2: error: 'blk_queue_flush' undeclared (first use in this function)
+   arch/um/drivers/ubd_kern.c:869:2: error: 'blk_queue_flush' undeclared (first use in this function)
      blk_queue_flush(ubd_dev->queue, REQ_FLUSH);
      ^
    arch/um/drivers/ubd_kern.c:869:2: note: each undeclared identifier is reported only once for each function it appears in
+   arch/um/drivers/ubd_kern.c: In function 'do_ubd_request':
+>> arch/um/drivers/ubd_kern.c:1293:24: error: 'REQ_FLUSH' undeclared (first use in this function)
+      if (req->cmd_flags & REQ_FLUSH) {
+                           ^
 
-vim +/blk_queue_flush +869 arch/um/drivers/ubd_kern.c
+vim +/REQ_FLUSH +1293 arch/um/drivers/ubd_kern.c
 
-62f96cb0 Jeff Dike          2007-02-10  863  	ubd_dev->queue = blk_init_queue(do_ubd_request, &ubd_dev->lock);
-62f96cb0 Jeff Dike          2007-02-10  864  	if (ubd_dev->queue == NULL) {
-62f96cb0 Jeff Dike          2007-02-10  865  		*error_out = "Failed to initialize device queue";
-80c13749 Jeff Dike          2006-09-29  866  		goto out;
-62f96cb0 Jeff Dike          2007-02-10  867  	}
-62f96cb0 Jeff Dike          2007-02-10  868  	ubd_dev->queue->queuedata = ubd_dev;
-805f11a0 Richard Weinberger 2013-08-18 @869  	blk_queue_flush(ubd_dev->queue, REQ_FLUSH);
-62f96cb0 Jeff Dike          2007-02-10  870  
-8a78362c Martin K. Petersen 2010-02-26  871  	blk_queue_max_segments(ubd_dev->queue, MAX_SG);
-792dd4fc Christoph Hellwig  2009-03-31  872  	err = ubd_disk_register(UBD_MAJOR, ubd_dev->size, n, &ubd_gendisk[n]);
+a0044bdf Jeff Dike          2007-05-06  1287  			dev->start_sg = 0;
+a0044bdf Jeff Dike          2007-05-06  1288  			dev->end_sg = blk_rq_map_sg(q, req, dev->sg);
+a0044bdf Jeff Dike          2007-05-06  1289  		}
+a0044bdf Jeff Dike          2007-05-06  1290  
+a0044bdf Jeff Dike          2007-05-06  1291  		req = dev->request;
+805f11a0 Richard Weinberger 2013-08-18  1292  
+805f11a0 Richard Weinberger 2013-08-18 @1293  		if (req->cmd_flags & REQ_FLUSH) {
+805f11a0 Richard Weinberger 2013-08-18  1294  			io_req = kmalloc(sizeof(struct io_thread_req),
+805f11a0 Richard Weinberger 2013-08-18  1295  					 GFP_ATOMIC);
+805f11a0 Richard Weinberger 2013-08-18  1296  			if (io_req == NULL) {
 
-:::::: The code at line 869 was first introduced by commit
+:::::: The code at line 1293 was first introduced by commit
 :::::: 805f11a0d515658106bfbfadceff0eb30bd90ad2 um: ubd: Add REQ_FLUSH suppport
 
 :::::: TO: Richard Weinberger <richard@nod.at>
@@ -80,12 +84,12 @@ vim +/blk_queue_flush +869 arch/um/drivers/ubd_kern.c
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---n8g4imXOkfNTN/H1
+--u3/rZRmxL6MmkK24
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICFFVjFYAAy5jb25maWcAjDxbc9u20u/9FZz0pZ05aXyLa39n/ACRoIgjkqAJUJL9wlFk
+H4sICPpWjFYAAy5jb25maWcAjDxbc9u20u/9FZz0pZ05aXyLa39n/ACRoIgjkqAJUJL9wlFk
 JtHUljyS3Db//tsFSQkkF4pnOo2JXVz3vljo119+9djbfvOy2K+Wi+fnH963al1tF/vqyfu6
 eq7+6wXSS6X2eCD0H4Bc7Kqtl2yeKi9erd/+/fTvzXV5feVd/XH1x9nH7fLGm1TbdfXs+Zv1
 19W3NxhptVn/8usvvkxDMS6LJL770X4kSXH8SGUpZMITaPnVa9p0znxeivw+jNlYlarIMplr
@@ -218,7 +222,7 @@ rBZu/ZUcpEXlVecSdTkrp64D55fbYTCVIoEbK1cDFqJxa/RMzzUKXpCGjgdgQAODWnHbMXte
 EDcGYCrMZaIE6GaRTbnEFJq+/cBjojFDcoBCyoY9yNN5iDu13EBJ8We5Qic+buuKPujCL1U6
 k2nEuNqZmzBLqkMkyTVLPGFa6AgcGc1rbun/AUCFVaOkagAA
 
---n8g4imXOkfNTN/H1
+--u3/rZRmxL6MmkK24
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -229,4 +233,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---n8g4imXOkfNTN/H1--
+--u3/rZRmxL6MmkK24--
