@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BE93A7F50
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 12:34:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9488A8F8035
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 10:34:11 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 677E47F37
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 12:34:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DF765AC006
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 10:34:16 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id twwBAOeqJVo4Ha2Z (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3smDhsPW0gU1Qvaz (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 10:34:10 -0800 (PST)
-Date: Tue, 5 Jan 2016 13:34:08 -0500
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 10:34:15 -0800 (PST)
+Date: Tue, 5 Jan 2016 13:34:13 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/9] libxfs: don't discard dirty buffers
-Message-ID: <20160105183407.GC38749@bfoster.bfoster>
+Subject: Re: [PATCH 8/9] libxfs: don't repeatedly shake unwritable buffers
+Message-ID: <20160105183413.GD38749@bfoster.bfoster>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
-	<1450733829-9319-8-git-send-email-david@fromorbit.com>
+	<1450733829-9319-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1450733829-9319-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1450733829-9319-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,179 +33,109 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 22, 2015 at 08:37:07AM +1100, Dave Chinner wrote:
+On Tue, Dec 22, 2015 at 08:37:08AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When we release a buffer from the cache, if it is dirty we wite it
-> to disk then put the buffer on the free list for recycling. However,
-> if the write fails (e.g. verifier failure due unfixed corruption) we
-> effectively throw the buffer and it contents away. This causes all
-> sorts of problems for xfs_repair as it then re-reads the buffer from
-> disk on the next access and hence loses all the corrections that had
-> previously been made, resulting in tripping over corruptions in code
-> that assumes the corruptions have already been fixed/flagged in the
-> buffer it receives.
+> now that we try to write dirty buffers before we release them, we
+> can get buildup of unwritable dirty buffers on the LRU lists, This
+> results in the cache shaker repeatedly trying to write out these
+> buffers every time the cache fills up. This results in more
+> corruption warnings, and takes up a lot of time doing reclaiming
+> nothing. This can effectively livelock the processing parts of phase
+> 4.
 > 
-> TO fix this, we have to make the cache aware that writes can fail,
-> and keep the buffer in cache when writes fail. Hence we have to add
-> an explicit error notification to the flush operation, and we need
-> to do that before we release the buffer to the free list. This also
-> means that we need to remove the writeback code from the release
-> mechanisms, instead replacing them with assertions that the buffers
-> are already clean.
+> Fix this by not trying to write buffers with corruption errors on
+> them. These errors will get cleared when the buffer is re-read and
+> fixed and them marked dirty again. At which point, we'll be able to
+> write them and so the cache can reclaim them successfully.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  include/cache.h |  2 +-
->  libxfs/cache.c  | 15 ++++++++++++++-
->  libxfs/rdwr.c   | 44 +++++++++++++++++++++++++++-----------------
->  3 files changed, 42 insertions(+), 19 deletions(-)
+>  libxfs/rdwr.c | 27 ++++++++++++++++-----------
+>  1 file changed, 16 insertions(+), 11 deletions(-)
 > 
-> diff --git a/include/cache.h b/include/cache.h
-> index 0a84c69..87826be 100644
-> --- a/include/cache.h
-> +++ b/include/cache.h
-> @@ -64,7 +64,7 @@ typedef void *cache_key_t;
->  
->  typedef void (*cache_walk_t)(struct cache_node *);
->  typedef struct cache_node * (*cache_node_alloc_t)(cache_key_t);
-> -typedef void (*cache_node_flush_t)(struct cache_node *);
-> +typedef int (*cache_node_flush_t)(struct cache_node *);
->  typedef void (*cache_node_relse_t)(struct cache_node *);
->  typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int,
->  					  unsigned int);
-> diff --git a/libxfs/cache.c b/libxfs/cache.c
-> index 4753a1d..a48ebd9 100644
-> --- a/libxfs/cache.c
-> +++ b/libxfs/cache.c
-> @@ -219,6 +219,12 @@ cache_shake(
->  		if (pthread_mutex_trylock(&node->cn_mutex) != 0)
->  			continue;
->  
-> +		/* can't release dirty objects */
-> +		if (cache->flush(node)) {
-> +			pthread_mutex_unlock(&node->cn_mutex);
-> +			continue;
-> +		}
-> +
->  		hash = cache->c_hash + node->cn_hashidx;
->  		if (pthread_mutex_trylock(&hash->ch_mutex) != 0) {
->  			pthread_mutex_unlock(&node->cn_mutex);
-> @@ -311,6 +317,13 @@ __cache_node_purge(
->  		pthread_mutex_unlock(&node->cn_mutex);
->  		return count;
->  	}
-> +
-> +	/* can't purge dirty objects */
-> +	if (cache->flush(node)) {
-> +		pthread_mutex_unlock(&node->cn_mutex);
-> +		return 1;
-> +	}
-> +
->  	mru = &cache->c_mrus[node->cn_priority];
->  	pthread_mutex_lock(&mru->cm_mutex);
->  	list_del_init(&node->cn_mru);
-> @@ -321,7 +334,7 @@ __cache_node_purge(
->  	pthread_mutex_destroy(&node->cn_mutex);
->  	list_del_init(&node->cn_hash);
->  	cache->relse(node);
-> -	return count;
-> +	return 0;
->  }
->  
->  /*
 > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 7a04985..0337a21 100644
+> index 0337a21..a1f0029 100644
 > --- a/libxfs/rdwr.c
 > +++ b/libxfs/rdwr.c
-> @@ -659,6 +659,8 @@ __libxfs_getbufr(int blen)
->  		bp = kmem_zone_zalloc(xfs_buf_zone, 0);
->  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
->  	bp->b_ops = NULL;
-> +	if (bp->b_flags & LIBXFS_B_DIRTY)
-> +		fprintf(stderr, "found dirty buffer (bulk) on free list!");
->  
->  	return bp;
->  }
-> @@ -1223,23 +1225,26 @@ libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
->  }
->  
->  static void
-> -libxfs_brelse(struct cache_node *node)
-> +libxfs_brelse(
-> +	struct cache_node	*node)
+> @@ -1103,7 +1103,6 @@ int
+>  libxfs_writebufr(xfs_buf_t *bp)
 >  {
-> -	xfs_buf_t		*bp = (xfs_buf_t *)node;
-> +	struct xfs_buf		*bp = (struct xfs_buf *)node;
+>  	int	fd = libxfs_device_to_fd(bp->b_target->dev);
+> -	int	error = 0;
 >  
-> -	if (bp != NULL) {
-> -		if (bp->b_flags & LIBXFS_B_DIRTY)
-> -			libxfs_writebufr(bp);
-> -		pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
-> -		list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
-> -		pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
-> -	}
-> +	if (!bp)
-> +		return;
-> +	if (bp->b_flags & LIBXFS_B_DIRTY)
-> +		fprintf(stderr,
-> +			"releasing dirty buffer to free list!");
-> +
-> +	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
-> +	list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
-> +	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
->  }
->  
->  static unsigned int
->  libxfs_bulkrelse(
-> -	struct cache 		*cache,
-> -	struct list_head 	*list)
-> +	struct cache		*cache,
-> +	struct list_head	*list)
->  {
->  	xfs_buf_t		*bp;
->  	int			count = 0;
-> @@ -1249,7 +1254,8 @@ libxfs_bulkrelse(
->  
->  	list_for_each_entry(bp, list, b_node.cn_mru) {
->  		if (bp->b_flags & LIBXFS_B_DIRTY)
-> -			libxfs_writebufr(bp);
-> +			fprintf(stderr,
-> +				"releasing dirty buffer (bulk) to free list!");
->  		count++;
+>  	/*
+>  	 * we never write buffers that are marked stale. This indicates they
+> @@ -1134,7 +1133,7 @@ libxfs_writebufr(xfs_buf_t *bp)
 >  	}
 >  
-> @@ -1260,18 +1266,22 @@ libxfs_bulkrelse(
+>  	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
+> -		error = __write_buf(fd, bp->b_addr, bp->b_bcount,
+> +		bp->b_error = __write_buf(fd, bp->b_addr, bp->b_bcount,
+>  				    LIBXFS_BBTOOFF64(bp->b_bn), bp->b_flags);
+>  	} else {
+>  		int	i;
+> @@ -1144,11 +1143,10 @@ libxfs_writebufr(xfs_buf_t *bp)
+>  			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_map[i].bm_bn);
+>  			int len = BBTOB(bp->b_map[i].bm_len);
+>  
+> -			error = __write_buf(fd, buf, len, offset, bp->b_flags);
+> -			if (error) {
+> -				bp->b_error = error;
+> +			bp->b_error = __write_buf(fd, buf, len, offset,
+> +						  bp->b_flags);
+> +			if (bp->b_error)
+>  				break;
+> -			}
+>  			buf += len;
+>  		}
+>  	}
+> @@ -1157,14 +1155,14 @@ libxfs_writebufr(xfs_buf_t *bp)
+>  	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p, error %d\n",
+>  			pthread_self(), __FUNCTION__, bp->b_bcount,
+>  			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
+> -			(long long)bp->b_bn, bp, error);
+> +			(long long)bp->b_bn, bp, bp->b_error);
+>  #endif
+> -	if (!error) {
+> +	if (!bp->b_error) {
+>  		bp->b_flags |= LIBXFS_B_UPTODATE;
+>  		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
+>  				 LIBXFS_B_UNCHECKED);
+>  	}
+> -	return error;
+> +	return bp->b_error;
+>  }
+>  
+>  int
+> @@ -1266,15 +1264,22 @@ libxfs_bulkrelse(
 >  	return count;
 >  }
 >  
-> -static void
-> -libxfs_bflush(struct cache_node *node)
-> +static int
-> +libxfs_bflush(
-> +	struct cache_node	*node)
+> +/*
+> + * When a buffer is marked dirty, the error is cleared. Hence if we are trying
+> + * to flush a buffer prior to cache reclaim that has an error on it it means
+> + * we've already tried to flush it and it failed. Prevent repeated corruption
+> + * errors from being reported by skipping such buffers - when the corruption is
+> + * fixed the buffer will be marked dirty again and we can write it again.
+> + */
+>  static int
+>  libxfs_bflush(
+>  	struct cache_node	*node)
 >  {
-> -	xfs_buf_t		*bp = (xfs_buf_t *)node;
-> +	struct xfs_buf		*bp = (struct xfs_buf *)node;
+>  	struct xfs_buf		*bp = (struct xfs_buf *)node;
 >  
-> -	if ((bp != NULL) && (bp->b_flags & LIBXFS_B_DIRTY))
-> -		libxfs_writebufr(bp);
-> +	if (bp->b_flags & LIBXFS_B_DIRTY)
-> +		return libxfs_writebufr(bp);
-> +	return 0;
+> -	if (bp->b_flags & LIBXFS_B_DIRTY)
+> +	if (!bp->b_error && bp->b_flags & LIBXFS_B_DIRTY)
+>  		return libxfs_writebufr(bp);
+> -	return 0;
+> +	return bp->b_error;
 >  }
 >  
 >  void
->  libxfs_putbufr(xfs_buf_t *bp)
->  {
-> +	if (bp->b_flags & LIBXFS_B_DIRTY)
-> +		libxfs_writebufr(bp);
->  	libxfs_brelse((struct cache_node *)bp);
->  }
->  
 > -- 
 > 2.5.0
 > 
