@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 677E47F37
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E72F929DF5
 	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 12:34:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DF765AC006
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 10:34:16 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D023E304066
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 10:34:20 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3smDhsPW0gU1Qvaz (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yc5JY0Q4EjZkWuOc (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 10:34:15 -0800 (PST)
-Date: Tue, 5 Jan 2016 13:34:13 -0500
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 10:34:19 -0800 (PST)
+Date: Tue, 5 Jan 2016 13:34:17 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 8/9] libxfs: don't repeatedly shake unwritable buffers
-Message-ID: <20160105183413.GD38749@bfoster.bfoster>
+Subject: Re: [PATCH 9/9] libxfs: keep unflushable buffers off the cache MRUs
+Message-ID: <20160105183417.GE38749@bfoster.bfoster>
 References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
-	<1450733829-9319-9-git-send-email-david@fromorbit.com>
+	<1450733829-9319-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1450733829-9319-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1450733829-9319-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,109 +33,81 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 22, 2015 at 08:37:08AM +1100, Dave Chinner wrote:
+On Tue, Dec 22, 2015 at 08:37:09AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> now that we try to write dirty buffers before we release them, we
-> can get buildup of unwritable dirty buffers on the LRU lists, This
-> results in the cache shaker repeatedly trying to write out these
-> buffers every time the cache fills up. This results in more
-> corruption warnings, and takes up a lot of time doing reclaiming
-> nothing. This can effectively livelock the processing parts of phase
-> 4.
-> 
-> Fix this by not trying to write buffers with corruption errors on
-> them. These errors will get cleared when the buffer is re-read and
-> fixed and them marked dirty again. At which point, we'll be able to
-> write them and so the cache can reclaim them successfully.
+> There's no point trying to free buffers that are dirty and return
+> errors on flush as we have to keep them around until the corruption
+> is fixed. Hence if we fail to flush an inode during a cache shake,
+> move the buffer to a special dirty MRU list that the cache does not
+> shake. This prevents memory pressure from seeing these buffers, but
+> allows subsequent cache lookups to still find them through the hash.
+> This ensures we don't waste huge amounts of CPU trying to flush and
+> reclaim buffers that canot be flushed or reclaimed.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  libxfs/rdwr.c | 27 ++++++++++++++++-----------
->  1 file changed, 16 insertions(+), 11 deletions(-)
+>  include/cache.h |  3 ++-
+>  libxfs/cache.c  | 34 +++++++++++++++++++++++++++++-----
+>  2 files changed, 31 insertions(+), 6 deletions(-)
 > 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 0337a21..a1f0029 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -1103,7 +1103,6 @@ int
->  libxfs_writebufr(xfs_buf_t *bp)
->  {
->  	int	fd = libxfs_device_to_fd(bp->b_target->dev);
-> -	int	error = 0;
+...
+> diff --git a/libxfs/cache.c b/libxfs/cache.c
+> index a48ebd9..d5ea461 100644
+> --- a/libxfs/cache.c
+> +++ b/libxfs/cache.c
+...
+> @@ -202,10 +223,11 @@ cache_shake(
+>  	struct cache_node *	node;
+>  	unsigned int		count;
 >  
->  	/*
->  	 * we never write buffers that are marked stale. This indicates they
-> @@ -1134,7 +1133,7 @@ libxfs_writebufr(xfs_buf_t *bp)
->  	}
+> -	ASSERT(priority <= CACHE_MAX_PRIORITY);
+> -	if (priority > CACHE_MAX_PRIORITY)
+> +	ASSERT(priority <= CACHE_DIRTY_PRIORITY);
+> +	if (priority > CACHE_MAX_PRIORITY && !all)
+>  		priority = 0;
 >  
->  	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
-> -		error = __write_buf(fd, bp->b_addr, bp->b_bcount,
-> +		bp->b_error = __write_buf(fd, bp->b_addr, bp->b_bcount,
->  				    LIBXFS_BBTOOFF64(bp->b_bn), bp->b_flags);
->  	} else {
->  		int	i;
-> @@ -1144,11 +1143,10 @@ libxfs_writebufr(xfs_buf_t *bp)
->  			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_map[i].bm_bn);
->  			int len = BBTOB(bp->b_map[i].bm_len);
+> +
+
+Extra newline. FWIW, it also looks like the only cache_shake() caller
+where all == 0 already prevents calling with priority >
+CACHE_MAX_PRIORITY. I think a brief comment in one or both places with
+regard to why >max priority is skipped unless 'all == 1' would be good,
+though.
+
+Also, it looks like the loop in cache_report() could be updated to dump
+the dirty priority mru entry count.
+
+Finally, what happens once a buffer on the dirty mru is fully repaired,
+rewritten and released? Is it placed right back on the "unshakeable"
+dirty mru or is cn_priority updated somewhere? On further digging, it
+looks like a subsequent buffer lookup (__cache_lookup()) drops the
+priority, though it appears to be designed to deal with prefetched
+buffers and the associated B_INODE..B_DIR_BMAP mappings.
+
+Brian
+
+>  	mru = &cache->c_mrus[priority];
+>  	count = 0;
+>  	list_head_init(&temp);
+> @@ -221,6 +243,8 @@ cache_shake(
 >  
-> -			error = __write_buf(fd, buf, len, offset, bp->b_flags);
-> -			if (error) {
-> -				bp->b_error = error;
-> +			bp->b_error = __write_buf(fd, buf, len, offset,
-> +						  bp->b_flags);
-> +			if (bp->b_error)
->  				break;
-> -			}
->  			buf += len;
+>  		/* can't release dirty objects */
+>  		if (cache->flush(node)) {
+> +			cache_move_to_dirty_mru(cache, node);
+> +			mru->cm_count--;
+>  			pthread_mutex_unlock(&node->cn_mutex);
+>  			continue;
 >  		}
->  	}
-> @@ -1157,14 +1155,14 @@ libxfs_writebufr(xfs_buf_t *bp)
->  	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p, error %d\n",
->  			pthread_self(), __FUNCTION__, bp->b_bcount,
->  			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
-> -			(long long)bp->b_bn, bp, error);
-> +			(long long)bp->b_bn, bp, bp->b_error);
->  #endif
-> -	if (!error) {
-> +	if (!bp->b_error) {
->  		bp->b_flags |= LIBXFS_B_UPTODATE;
->  		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
->  				 LIBXFS_B_UNCHECKED);
->  	}
-> -	return error;
-> +	return bp->b_error;
->  }
->  
->  int
-> @@ -1266,15 +1264,22 @@ libxfs_bulkrelse(
->  	return count;
->  }
->  
-> +/*
-> + * When a buffer is marked dirty, the error is cleared. Hence if we are trying
-> + * to flush a buffer prior to cache reclaim that has an error on it it means
-> + * we've already tried to flush it and it failed. Prevent repeated corruption
-> + * errors from being reported by skipping such buffers - when the corruption is
-> + * fixed the buffer will be marked dirty again and we can write it again.
-> + */
->  static int
->  libxfs_bflush(
->  	struct cache_node	*node)
+> @@ -578,7 +602,7 @@ cache_purge(
 >  {
->  	struct xfs_buf		*bp = (struct xfs_buf *)node;
+>  	int			i;
 >  
-> -	if (bp->b_flags & LIBXFS_B_DIRTY)
-> +	if (!bp->b_error && bp->b_flags & LIBXFS_B_DIRTY)
->  		return libxfs_writebufr(bp);
-> -	return 0;
-> +	return bp->b_error;
->  }
+> -	for (i = 0; i <= CACHE_MAX_PRIORITY; i++)
+> +	for (i = 0; i <= CACHE_DIRTY_PRIORITY; i++)
+>  		cache_shake(cache, i, 1);
 >  
->  void
+>  #ifdef CACHE_DEBUG
 > -- 
 > 2.5.0
 > 
