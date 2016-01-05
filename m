@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EA6287F37
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 03:41:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 85AAEAC007
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 01:41:02 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id brfsZKvUeuxGh0EK (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 01:40:55 -0800 (PST)
-Date: Tue, 5 Jan 2016 10:41:01 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v6 2/7] dax: support dirty DAX entries in radix tree
-Message-ID: <20160105094101.GB2724@quack.suse.cz>
-References: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1450899560-26708-3-git-send-email-ross.zwisler@linux.intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7CA397F37
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 04:42:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F069AC002
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 02:42:20 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id ri65ZcTXc4ZvNazn (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 02:42:19 -0800 (PST)
+Date: Tue, 5 Jan 2016 02:42:14 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] xfs: cancel COW in xfs_cancel_ioend
+Message-ID: <20160105104214.GA16310@infradead.org>
+References: <1451822873-12969-1-git-send-email-hch@lst.de>
+	<1451822873-12969-4-git-send-email-hch@lst.de>
+	<20160105014310.GK28330@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1450899560-26708-3-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20160105014310.GK28330@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +31,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Wed 23-12-15 12:39:15, Ross Zwisler wrote:
-> Add support for tracking dirty DAX entries in the struct address_space
-> radix tree.  This tree is already used for dirty page writeback, and it
-> already supports the use of exceptional (non struct page*) entries.
-> 
-> In order to properly track dirty DAX pages we will insert new exceptional
-> entries into the radix tree that represent dirty DAX PTE or PMD pages.
-> These exceptional entries will also contain the writeback sectors for the
-> PTE or PMD faults that we can use at fsync/msync time.
-> 
-> There are currently two types of exceptional entries (shmem and shadow)
-> that can be placed into the radix tree, and this adds a third.  We rely on
-> the fact that only one type of exceptional entry can be found in a given
-> radix tree based on its usage.  This happens for free with DAX vs shmem but
-> we explicitly prevent shadow entries from being added to radix trees for
-> DAX mappings.
-> 
-> The only shadow entries that would be generated for DAX radix trees would
-> be to track zero page mappings that were created for holes.  These pages
-> would receive minimal benefit from having shadow entries, and the choice
-> to have only one type of exceptional entry in a given radix tree makes the
-> logic simpler both in clear_exceptional_entry() and in the rest of DAX.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+On Mon, Jan 04, 2016 at 05:43:10PM -0800, Darrick J. Wong wrote:
+> Hmm.  This might be the cause of the occasional complaints I've been seeing
+> where allocated blocks remain in the COW fork when the inode is being cleared
+> out.  That said, the xfs_reflink_end_cow_failed() is apparently missing a
+> xfs_bunmapi_cow() to actually clean out the COW fork.
 
-The patch looks good to me. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I can still reproduce xfs_reflink_cancel_pending_cow tripping over
+allocated blocks in the COW fork over NFS.  generic/154 reproduces
+it 100% over NFS, although when adding a delay before the cleanup
+it disappears.  I'm currently trying to figure out why.
 
 _______________________________________________
 xfs mailing list
