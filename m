@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 74C2629E4C
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 14:54:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 17D1DAC005
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 12:54:49 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4456529E20
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 14:54:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35EB88F804C
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 12:54:53 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zp17uQDrdx7hY8x3 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id AF9dhawYXMYo74y2 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 12:54:47 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 12:54:50 -0800 (PST)
 From: mchristi@redhat.com
-Subject: [PATCH 22/35] drbd: set bi_op to REQ_OP
-Date: Tue,  5 Jan 2016 14:53:25 -0600
-Message-Id: <1452027218-32303-23-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 23/35] md/raid: set bi_op to REQ_OP
+Date: Tue,  5 Jan 2016 14:53:26 -0600
+Message-Id: <1452027218-32303-24-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
 References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,309 +33,713 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has drbd set the bio bi_op to a REQ_OP, and rq_flag_bits
-to bi_rw.
-
-Lars and Philip, I might have split this patch up a little weird.
-Thisi patch handles setting up the bio, and then patch 30
-(0030-block-fs-drivers-do-not-test-bi_rw-for-REQ_OPs.patch) handles
-where were check/read bio->bi_rw.
+This patch has md/raid set the bio bi_op to a REQ_OP, and
+rq_flag_bits to bi_rw.
 
 This patch is compile tested only.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/block/drbd/drbd_actlog.c   | 29 ++++++++++++++++-------------
- drivers/block/drbd/drbd_bitmap.c   |  6 +++---
- drivers/block/drbd/drbd_int.h      |  4 ++--
- drivers/block/drbd/drbd_main.c     |  5 +++--
- drivers/block/drbd/drbd_receiver.c | 37 +++++++++++++++++++++++++------------
- drivers/block/drbd/drbd_worker.c   |  3 ++-
- 6 files changed, 51 insertions(+), 33 deletions(-)
+ drivers/md/bitmap.c      |  2 +-
+ drivers/md/dm-raid.c     |  5 +++--
+ drivers/md/md.c          | 11 +++++++----
+ drivers/md/md.h          |  3 ++-
+ drivers/md/raid1.c       | 34 ++++++++++++++++----------------
+ drivers/md/raid10.c      | 50 ++++++++++++++++++++++++++----------------------
+ drivers/md/raid5-cache.c | 25 +++++++++++++++---------
+ drivers/md/raid5.c       | 48 ++++++++++++++++++++++++++--------------------
+ 8 files changed, 101 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_actlog.c b/drivers/block/drbd/drbd_actlog.c
-index 6069e15..2fa8534 100644
---- a/drivers/block/drbd/drbd_actlog.c
-+++ b/drivers/block/drbd/drbd_actlog.c
-@@ -137,19 +137,19 @@ void wait_until_done_or_force_detached(struct drbd_device *device, struct drbd_b
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 13811fc..18458f2 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -160,7 +160,7 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
  
- static int _drbd_md_sync_page_io(struct drbd_device *device,
- 				 struct drbd_backing_dev *bdev,
--				 sector_t sector, int rw)
-+				 sector_t sector, int op)
- {
- 	struct bio *bio;
- 	/* we do all our meta data IO in aligned 4k blocks. */
- 	const int size = 4096;
--	int err;
-+	int err, op_flags = 0;
+ 		if (sync_page_io(rdev, target,
+ 				 roundup(size, bdev_logical_block_size(rdev->bdev)),
+-				 page, READ, true)) {
++				 page, REQ_OP_READ, 0, true)) {
+ 			page->index = index;
+ 			return 0;
+ 		}
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index a090121..43a749c 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -792,7 +792,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
+ 	if (rdev->sb_loaded)
+ 		return 0;
  
- 	device->md_io.done = 0;
- 	device->md_io.error = -ENODEV;
+-	if (!sync_page_io(rdev, 0, size, rdev->sb_page, READ, 1)) {
++	if (!sync_page_io(rdev, 0, size, rdev->sb_page, REQ_OP_READ, 0, 1)) {
+ 		DMERR("Failed to read superblock of device at position %d",
+ 		      rdev->raid_disk);
+ 		md_error(rdev->mddev, rdev);
+@@ -1646,7 +1646,8 @@ static void attempt_restore_of_faulty_devices(struct raid_set *rs)
+ 	for (i = 0; i < rs->md.raid_disks; i++) {
+ 		r = &rs->dev[i].rdev;
+ 		if (test_bit(Faulty, &r->flags) && r->sb_page &&
+-		    sync_page_io(r, 0, r->sb_size, r->sb_page, READ, 1)) {
++		    sync_page_io(r, 0, r->sb_size, r->sb_page, REQ_OP_READ, 0,
++				 1)) {
+ 			DMINFO("Faulty %s device #%d has readable super block."
+ 			       "  Attempting to revive it.",
+ 			       rs->raid_type->name, i);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e25ef97..ee1ef20 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -401,6 +401,7 @@ static void submit_flushes(struct work_struct *ws)
+ 			bi->bi_end_io = md_end_flush;
+ 			bi->bi_private = rdev;
+ 			bi->bi_bdev = rdev->bdev;
++			bi->bi_op = REQ_OP_WRITE;
+ 			bi->bi_rw |= WRITE_FLUSH;
+ 			atomic_inc(&mddev->flush_pending);
+ 			submit_bio(bi);
+@@ -747,6 +748,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+ 	bio_add_page(bio, page, size, 0);
+ 	bio->bi_private = rdev;
+ 	bio->bi_end_io = super_written;
++	bio->bi_op = REQ_OP_WRITE;
+ 	bio->bi_rw |= WRITE_FLUSH_FUA;
  
--	if ((rw & WRITE) && !test_bit(MD_NO_FUA, &device->flags))
--		rw |= REQ_FUA | REQ_FLUSH;
--	rw |= REQ_SYNC | REQ_NOIDLE;
-+	if ((op == REQ_OP_WRITE) && !test_bit(MD_NO_FUA, &device->flags))
-+		op_flags |= REQ_FUA | REQ_FLUSH;
-+	op_flags |= REQ_SYNC | REQ_NOIDLE;
- 
- 	bio = bio_alloc_drbd(GFP_NOIO);
- 	bio->bi_bdev = bdev->md_bdev;
-@@ -159,9 +159,10 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
- 		goto out;
- 	bio->bi_private = device;
- 	bio->bi_end_io = drbd_md_endio;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 
--	if (!(rw & WRITE) && device->state.disk == D_DISKLESS && device->ldev == NULL)
-+	if (op != REQ_OP_WRITE && device->state.disk == D_DISKLESS && device->ldev == NULL)
- 		/* special case, drbd_md_read() during drbd_adm_attach(): no get_ldev */
- 		;
- 	else if (!get_ldev_if_state(device, D_ATTACHING)) {
-@@ -174,7 +175,7 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
- 	bio_get(bio); /* one bio_put() is in the completion handler */
- 	atomic_inc(&device->md_io.in_use); /* drbd_md_put_buffer() is in the completion handler */
- 	device->md_io.submit_jif = jiffies;
--	if (drbd_insert_fault(device, (rw & WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD))
-+	if (drbd_insert_fault(device, (op == REQ_OP_WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD))
- 		bio_io_error(bio);
- 	else
- 		submit_bio(bio);
-@@ -188,7 +189,7 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
+ 	atomic_inc(&mddev->pending_writes);
+@@ -760,14 +762,15 @@ void md_super_wait(struct mddev *mddev)
  }
  
- int drbd_md_sync_page_io(struct drbd_device *device, struct drbd_backing_dev *bdev,
--			 sector_t sector, int rw)
-+			 sector_t sector, int op)
+ int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+-		 struct page *page, int rw, bool metadata_op)
++		 struct page *page, int op, int op_flags, bool metadata_op)
  {
- 	int err;
- 	D_ASSERT(device, atomic_read(&device->md_io.in_use) == 1);
-@@ -197,19 +198,21 @@ int drbd_md_sync_page_io(struct drbd_device *device, struct drbd_backing_dev *bd
+ 	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, rdev->mddev);
+ 	int ret;
  
- 	dynamic_drbd_dbg(device, "meta_data io: %s [%d]:%s(,%llus,%s) %pS\n",
- 	     current->comm, current->pid, __func__,
--	     (unsigned long long)sector, (rw & WRITE) ? "WRITE" : "READ",
-+	     (unsigned long long)sector, (op == REQ_OP_WRITE) ? "WRITE" : "READ",
- 	     (void*)_RET_IP_ );
- 
- 	if (sector < drbd_md_first_sector(bdev) ||
- 	    sector + 7 > drbd_md_last_sector(bdev))
- 		drbd_alert(device, "%s [%d]:%s(,%llus,%s) out of range md access!\n",
- 		     current->comm, current->pid, __func__,
--		     (unsigned long long)sector, (rw & WRITE) ? "WRITE" : "READ");
-+		     (unsigned long long)sector,
-+		     (op == REQ_OP_WRITE) ? "WRITE" : "READ");
- 
--	err = _drbd_md_sync_page_io(device, bdev, sector, rw);
-+	err = _drbd_md_sync_page_io(device, bdev, sector, op);
- 	if (err) {
- 		drbd_err(device, "drbd_md_sync_page_io(,%llus,%s) failed with error %d\n",
--		    (unsigned long long)sector, (rw & WRITE) ? "WRITE" : "READ", err);
-+		    (unsigned long long)sector,
-+		    (op == REQ_OP_WRITE) ? "WRITE" : "READ", err);
- 	}
- 	return err;
- }
-diff --git a/drivers/block/drbd/drbd_bitmap.c b/drivers/block/drbd/drbd_bitmap.c
-index ef44adb..126bf4a 100644
---- a/drivers/block/drbd/drbd_bitmap.c
-+++ b/drivers/block/drbd/drbd_bitmap.c
-@@ -980,7 +980,7 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
- 	struct drbd_bitmap *b = device->bitmap;
- 	struct page *page;
- 	unsigned int len;
--	unsigned int rw = (ctx->flags & BM_AIO_READ) ? READ : WRITE;
-+	unsigned int op = (ctx->flags & BM_AIO_READ) ? REQ_OP_READ : REQ_OP_WRITE;
- 
- 	sector_t on_disk_sector =
- 		device->ldev->md.md_offset + device->ldev->md.bm_offset;
-@@ -1011,9 +1011,9 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
- 	bio_add_page(bio, page, len, 0);
- 	bio->bi_private = ctx;
- 	bio->bi_end_io = drbd_bm_endio;
+ 	bio->bi_bdev = (metadata_op && rdev->meta_bdev) ?
+ 		rdev->meta_bdev : rdev->bdev;
 -	bio->bi_rw |= rw;
 +	bio->bi_op = op;
- 
--	if (drbd_insert_fault(device, (rw & WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD)) {
-+	if (drbd_insert_fault(device, (op == REQ_OP_WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD)) {
- 		bio_io_error(bio);
- 	} else {
- 		submit_bio(bio);
-diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
-index 34bc84e..5204079 100644
---- a/drivers/block/drbd/drbd_int.h
-+++ b/drivers/block/drbd/drbd_int.h
-@@ -1507,7 +1507,7 @@ extern int drbd_resync_finished(struct drbd_device *device);
- extern void *drbd_md_get_buffer(struct drbd_device *device, const char *intent);
- extern void drbd_md_put_buffer(struct drbd_device *device);
- extern int drbd_md_sync_page_io(struct drbd_device *device,
--		struct drbd_backing_dev *bdev, sector_t sector, int rw);
-+		struct drbd_backing_dev *bdev, sector_t sector, int op);
- extern void drbd_ov_out_of_sync_found(struct drbd_device *, sector_t, int);
- extern void wait_until_done_or_force_detached(struct drbd_device *device,
- 		struct drbd_backing_dev *bdev, unsigned int *done);
-@@ -1557,7 +1557,7 @@ extern bool drbd_rs_should_slow_down(struct drbd_device *device, sector_t sector
- 		bool throttle_if_app_is_waiting);
- extern int drbd_submit_peer_request(struct drbd_device *,
- 				    struct drbd_peer_request *, const unsigned,
--				    const int);
-+				    const unsigned, const int);
- extern int drbd_free_peer_reqs(struct drbd_device *, struct list_head *);
- extern struct drbd_peer_request *drbd_alloc_peer_req(struct drbd_peer_device *, u64,
- 						     sector_t, unsigned int,
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index 5b43dfb..f6626e5 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -3061,7 +3061,7 @@ void drbd_md_write(struct drbd_device *device, void *b)
- 	D_ASSERT(device, drbd_md_ss(device->ldev) == device->ldev->md.md_offset);
- 	sector = device->ldev->md.md_offset;
- 
--	if (drbd_md_sync_page_io(device, device->ldev, sector, WRITE)) {
-+	if (drbd_md_sync_page_io(device, device->ldev, sector, REQ_OP_WRITE)) {
- 		/* this was a try anyways ... */
- 		drbd_err(device, "meta data update failed!\n");
- 		drbd_chk_io_error(device, 1, DRBD_META_IO_ERROR);
-@@ -3263,7 +3263,8 @@ int drbd_md_read(struct drbd_device *device, struct drbd_backing_dev *bdev)
- 	 * Affects the paranoia out-of-range access check in drbd_md_sync_page_io(). */
- 	bdev->md.md_size_sect = 8;
- 
--	if (drbd_md_sync_page_io(device, bdev, bdev->md.md_offset, READ)) {
-+	if (drbd_md_sync_page_io(device, bdev, bdev->md.md_offset,
-+				 REQ_OP_READ)) {
- 		/* NOTE: can't do normal error processing here as this is
- 		   called BEFORE disk is attached */
- 		drbd_err(device, "Error while reading metadata.\n");
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index 1957fe8..880de0d 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -1398,7 +1398,8 @@ void drbd_bump_write_ordering(struct drbd_resource *resource, struct drbd_backin
- /* TODO allocate from our own bio_set. */
- int drbd_submit_peer_request(struct drbd_device *device,
- 			     struct drbd_peer_request *peer_req,
--			     const unsigned rw, const int fault_type)
-+			     const unsigned op, const unsigned op_flags,
-+			     const int fault_type)
- {
- 	struct bio *bios = NULL;
- 	struct bio *bio;
-@@ -1450,7 +1451,8 @@ next_bio:
- 	/* > peer_req->i.sector, unless this is the first bio */
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_bdev = device->ldev->backing_bdev;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	bio->bi_private = peer_req;
- 	bio->bi_end_io = drbd_peer_request_endio;
- 
-@@ -1458,7 +1460,7 @@ next_bio:
- 	bios = bio;
- 	++n_bios;
- 
--	if (rw & REQ_DISCARD) {
-+	if (op == REQ_OP_DISCARD) {
- 		bio->bi_iter.bi_size = data_size;
- 		goto submit;
- 	}
-@@ -1830,7 +1832,8 @@ static int recv_resync_read(struct drbd_peer_device *peer_device, sector_t secto
- 	spin_unlock_irq(&device->resource->req_lock);
- 
- 	atomic_add(pi->size >> 9, &device->rs_sect_ev);
--	if (drbd_submit_peer_request(device, peer_req, WRITE, DRBD_FAULT_RS_WR) == 0)
-+	if (drbd_submit_peer_request(device, peer_req, REQ_OP_WRITE, 0,
-+				     DRBD_FAULT_RS_WR) == 0)
++	bio->bi_rw |= op_flags;
+ 	if (metadata_op)
+ 		bio->bi_iter.bi_sector = sector + rdev->sb_start;
+ 	else if (rdev->mddev->reshape_position != MaxSector &&
+@@ -793,7 +796,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
+ 	if (rdev->sb_loaded)
  		return 0;
  
- 	/* don't care for the reason here */
-@@ -2152,12 +2155,19 @@ static int wait_for_and_update_peer_seq(struct drbd_peer_device *peer_device, co
- /* see also bio_flags_to_wire()
-  * DRBD_REQ_*, because we need to semantically map the flags to data packet
-  * flags and back. We may replicate to other kernel versions. */
--static unsigned long wire_flags_to_bio(u32 dpf)
-+static unsigned long wire_flags_to_bio_flags(u32 dpf)
+-	if (!sync_page_io(rdev, 0, size, rdev->sb_page, READ, true))
++	if (!sync_page_io(rdev, 0, size, rdev->sb_page, REQ_OP_READ, 0, true))
+ 		goto fail;
+ 	rdev->sb_loaded = 1;
+ 	return 0;
+@@ -1479,7 +1482,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+ 			return -EINVAL;
+ 		bb_sector = (long long)offset;
+ 		if (!sync_page_io(rdev, bb_sector, sectors << 9,
+-				  rdev->bb_page, READ, true))
++				  rdev->bb_page, REQ_OP_READ, 0, true))
+ 			return -EIO;
+ 		bbp = (u64 *)page_address(rdev->bb_page);
+ 		rdev->badblocks.shift = sb->bblog_shift;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 5eb0475..d542059 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -620,7 +620,8 @@ extern void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+ 			   sector_t sector, int size, struct page *page);
+ extern void md_super_wait(struct mddev *mddev);
+ extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+-			struct page *page, int rw, bool metadata_op);
++			struct page *page, int op, int op_flags,
++			bool metadata_op);
+ extern void md_do_sync(struct md_thread *thread);
+ extern void md_new_event(struct mddev *mddev);
+ extern int md_allow_write(struct mddev *mddev);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 01e6e74..2a42daa 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -759,7 +759,7 @@ static void flush_pending_writes(struct r1conf *conf)
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
+ 			bio->bi_next = NULL;
+-			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
++			if (unlikely((bio->bi_op == REQ_OP_DISCARD) &&
+ 			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 				/* Just ignore it */
+ 				bio_endio(bio);
+@@ -1033,7 +1033,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
+ 		bio->bi_next = NULL;
+-		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
++		if (unlikely((bio->bi_op == REQ_OP_DISCARD) &&
+ 		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 			/* Just ignore it */
+ 			bio_endio(bio);
+@@ -1053,12 +1053,11 @@ static void make_request(struct mddev *mddev, struct bio * bio)
+ 	int i, disks;
+ 	struct bitmap *bitmap;
+ 	unsigned long flags;
++	const int op = bio->bi_op;
+ 	const int rw = bio_data_dir(bio);
+ 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
+ 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
+-	const unsigned long do_discard = (bio->bi_rw
+-					  & (REQ_DISCARD | REQ_SECURE));
+-	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
++	const unsigned long do_sec = (bio->bi_rw & REQ_SECURE);
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+ 	struct raid1_plug_cb *plug = NULL;
+@@ -1166,7 +1165,8 @@ read_again:
+ 			mirror->rdev->data_offset;
+ 		read_bio->bi_bdev = mirror->rdev->bdev;
+ 		read_bio->bi_end_io = raid1_end_read_request;
+-		read_bio->bi_rw = READ | do_sync;
++		read_bio->bi_op = op;
++		read_bio->bi_rw = do_sync;
+ 		read_bio->bi_private = r1_bio;
+ 
+ 		if (max_sectors < r1_bio->sectors) {
+@@ -1376,8 +1376,9 @@ read_again:
+ 				   conf->mirrors[i].rdev->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
++		mbio->bi_op = op;
+ 		mbio->bi_rw =
+-			WRITE | do_flush_fua | do_sync | do_discard | do_same;
++			do_flush_fua | do_sync | do_sec;
+ 		mbio->bi_private = r1_bio;
+ 
+ 		atomic_inc(&r1_bio->remaining);
+@@ -1771,7 +1772,7 @@ static void end_sync_write(struct bio *bio)
+ static int r1_sync_page_io(struct md_rdev *rdev, sector_t sector,
+ 			    int sectors, struct page *page, int rw)
  {
- 	return  (dpf & DP_RW_SYNC ? REQ_SYNC : 0) |
- 		(dpf & DP_FUA ? REQ_FUA : 0) |
--		(dpf & DP_FLUSH ? REQ_FLUSH : 0) |
--		(dpf & DP_DISCARD ? REQ_DISCARD : 0);
-+		(dpf & DP_FLUSH ? REQ_FLUSH : 0);
-+}
-+
-+static unsigned long wire_flags_to_bio_op(u32 dpf)
-+{
-+	if (dpf & DP_DISCARD)
-+		return REQ_OP_DISCARD;
-+	else
-+		return REQ_OP_WRITE;
+-	if (sync_page_io(rdev, sector, sectors << 9, page, rw, false))
++	if (sync_page_io(rdev, sector, sectors << 9, page, rw, 0, false))
+ 		/* success */
+ 		return 1;
+ 	if (rw == WRITE) {
+@@ -1825,7 +1826,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				rdev = conf->mirrors[d].rdev;
+ 				if (sync_page_io(rdev, sect, s<<9,
+ 						 bio->bi_io_vec[idx].bv_page,
+-						 READ, false)) {
++						 REQ_OP_READ, 0, false)) {
+ 					success = 1;
+ 					break;
+ 				}
+@@ -2030,7 +2031,7 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
+ 		      !test_bit(MD_RECOVERY_SYNC, &mddev->recovery))))
+ 			continue;
+ 
+-		wbio->bi_rw = WRITE;
++		wbio->bi_op = REQ_OP_WRITE;
+ 		wbio->bi_end_io = end_sync_write;
+ 		atomic_inc(&r1_bio->remaining);
+ 		md_sync_acct(conf->mirrors[i].rdev->bdev, bio_sectors(wbio));
+@@ -2090,7 +2091,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+ 			    is_badblock(rdev, sect, s,
+ 					&first_bad, &bad_sectors) == 0 &&
+ 			    sync_page_io(rdev, sect, s<<9,
+-					 conf->tmppage, READ, false))
++					 conf->tmppage, REQ_OP_READ, 0, false))
+ 				success = 1;
+ 			else {
+ 				d++;
+@@ -2201,7 +2202,7 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
+ 			wbio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
+ 		}
+ 
+-		wbio->bi_rw = WRITE;
++		wbio->bi_op = REQ_OP_WRITE;
+ 		wbio->bi_iter.bi_sector = r1_bio->sector;
+ 		wbio->bi_iter.bi_size = r1_bio->sectors << 9;
+ 
+@@ -2343,7 +2344,8 @@ read_more:
+ 		bio->bi_iter.bi_sector = r1_bio->sector + rdev->data_offset;
+ 		bio->bi_bdev = rdev->bdev;
+ 		bio->bi_end_io = raid1_end_read_request;
+-		bio->bi_rw = READ | do_sync;
++		bio->bi_op = REQ_OP_READ;
++		bio->bi_rw = do_sync;
+ 		bio->bi_private = r1_bio;
+ 		if (max_sectors < r1_bio->sectors) {
+ 			/* Drat - have to split this up more */
+@@ -2568,7 +2570,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
+ 			if (i < conf->raid_disks)
+ 				still_degraded = 1;
+ 		} else if (!test_bit(In_sync, &rdev->flags)) {
+-			bio->bi_rw = WRITE;
++			bio->bi_op = REQ_OP_WRITE;
+ 			bio->bi_end_io = end_sync_write;
+ 			write_targets ++;
+ 		} else {
+@@ -2595,7 +2597,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
+ 					if (disk < 0)
+ 						disk = i;
+ 				}
+-				bio->bi_rw = READ;
++				bio->bi_op = REQ_OP_READ;
+ 				bio->bi_end_io = end_sync_read;
+ 				read_targets++;
+ 			} else if (!test_bit(WriteErrorSeen, &rdev->flags) &&
+@@ -2607,7 +2609,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
+ 				 * if we are doing resync or repair. Otherwise, leave
+ 				 * this device alone for this sync request.
+ 				 */
+-				bio->bi_rw = WRITE;
++				bio->bi_op = REQ_OP_WRITE;
+ 				bio->bi_end_io = end_sync_write;
+ 				write_targets++;
+ 			}
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index d2da45b..1cfc061 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -865,7 +865,7 @@ static void flush_pending_writes(struct r10conf *conf)
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
+ 			bio->bi_next = NULL;
+-			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
++			if (unlikely((bio->bi_op ==  REQ_OP_DISCARD) &&
+ 			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 				/* Just ignore it */
+ 				bio_endio(bio);
+@@ -1041,7 +1041,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
+ 		bio->bi_next = NULL;
+-		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
++		if (unlikely((bio->bi_op ==  REQ_OP_DISCARD) &&
+ 		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 			/* Just ignore it */
+ 			bio_endio(bio);
+@@ -1058,12 +1058,11 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
+ 	struct r10bio *r10_bio;
+ 	struct bio *read_bio;
+ 	int i;
++	const int op = bio->bi_op;
+ 	const int rw = bio_data_dir(bio);
+ 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
+ 	const unsigned long do_fua = (bio->bi_rw & REQ_FUA);
+-	const unsigned long do_discard = (bio->bi_rw
+-					  & (REQ_DISCARD | REQ_SECURE));
+-	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
++	const unsigned long do_sec = (bio->bi_rw & REQ_SECURE);
+ 	unsigned long flags;
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+@@ -1156,7 +1155,8 @@ read_again:
+ 			choose_data_offset(r10_bio, rdev);
+ 		read_bio->bi_bdev = rdev->bdev;
+ 		read_bio->bi_end_io = raid10_end_read_request;
+-		read_bio->bi_rw = READ | do_sync;
++		read_bio->bi_op = op;
++		read_bio->bi_rw = do_sync;
+ 		read_bio->bi_private = r10_bio;
+ 
+ 		if (max_sectors < r10_bio->sectors) {
+@@ -1363,8 +1363,9 @@ retry_write:
+ 							      rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
++			mbio->bi_op = op;
+ 			mbio->bi_rw =
+-				WRITE | do_sync | do_fua | do_discard | do_same;
++				do_sync | do_fua | do_sec;
+ 			mbio->bi_private = r10_bio;
+ 
+ 			atomic_inc(&r10_bio->remaining);
+@@ -1406,8 +1407,9 @@ retry_write:
+ 						   r10_bio, rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
++			mbio->bi_op = op;
+ 			mbio->bi_rw =
+-				WRITE | do_sync | do_fua | do_discard | do_same;
++				do_sync | do_fua | do_sec;
+ 			mbio->bi_private = r10_bio;
+ 
+ 			atomic_inc(&r10_bio->remaining);
+@@ -1992,7 +1994,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 
+ 		tbio->bi_vcnt = vcnt;
+ 		tbio->bi_iter.bi_size = fbio->bi_iter.bi_size;
+-		tbio->bi_rw = WRITE;
++		tbio->bi_op = REQ_OP_WRITE;
+ 		tbio->bi_private = r10_bio;
+ 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+ 		tbio->bi_end_io = end_sync_write;
+@@ -2078,7 +2080,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 				  addr,
+ 				  s << 9,
+ 				  bio->bi_io_vec[idx].bv_page,
+-				  READ, false);
++				  REQ_OP_READ, 0, false);
+ 		if (ok) {
+ 			rdev = conf->mirrors[dw].rdev;
+ 			addr = r10_bio->devs[1].addr + sect;
+@@ -2086,7 +2088,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 					  addr,
+ 					  s << 9,
+ 					  bio->bi_io_vec[idx].bv_page,
+-					  WRITE, false);
++					  REQ_OP_WRITE, 0, false);
+ 			if (!ok) {
+ 				set_bit(WriteErrorSeen, &rdev->flags);
+ 				if (!test_and_set_bit(WantReplacement,
+@@ -2213,7 +2215,7 @@ static int r10_sync_page_io(struct md_rdev *rdev, sector_t sector,
+ 	if (is_badblock(rdev, sector, sectors, &first_bad, &bad_sectors)
+ 	    && (rw == READ || test_bit(WriteErrorSeen, &rdev->flags)))
+ 		return -1;
+-	if (sync_page_io(rdev, sector, sectors << 9, page, rw, false))
++	if (sync_page_io(rdev, sector, sectors << 9, page, rw, 0, false))
+ 		/* success */
+ 		return 1;
+ 	if (rw == WRITE) {
+@@ -2299,7 +2301,8 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+ 						       r10_bio->devs[sl].addr +
+ 						       sect,
+ 						       s<<9,
+-						       conf->tmppage, READ, false);
++						       conf->tmppage,
++						       REQ_OP_READ, 0, false);
+ 				rdev_dec_pending(rdev, mddev);
+ 				rcu_read_lock();
+ 				if (success)
+@@ -2474,7 +2477,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+ 				   choose_data_offset(r10_bio, rdev) +
+ 				   (sector - r10_bio->sector));
+ 		wbio->bi_bdev = rdev->bdev;
+-		wbio->bi_rw |= WRITE;
++		wbio->bi_op = REQ_OP_WRITE;
+ 
+ 		if (submit_bio_wait(wbio) < 0)
+ 			/* Failure! */
+@@ -2550,7 +2553,8 @@ read_more:
+ 	bio->bi_iter.bi_sector = r10_bio->devs[slot].addr
+ 		+ choose_data_offset(r10_bio, rdev);
+ 	bio->bi_bdev = rdev->bdev;
+-	bio->bi_rw = READ | do_sync;
++	bio->bi_op = REQ_OP_READ;
++	bio->bi_rw = do_sync;
+ 	bio->bi_private = r10_bio;
+ 	bio->bi_end_io = raid10_end_read_request;
+ 	if (max_sectors < r10_bio->sectors) {
+@@ -3037,7 +3041,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+ 				biolist = bio;
+ 				bio->bi_private = r10_bio;
+ 				bio->bi_end_io = end_sync_read;
+-				bio->bi_rw = READ;
++				bio->bi_op = REQ_OP_READ;
+ 				from_addr = r10_bio->devs[j].addr;
+ 				bio->bi_iter.bi_sector = from_addr +
+ 					rdev->data_offset;
+@@ -3063,7 +3067,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+ 					biolist = bio;
+ 					bio->bi_private = r10_bio;
+ 					bio->bi_end_io = end_sync_write;
+-					bio->bi_rw = WRITE;
++					bio->bi_op = REQ_OP_WRITE;
+ 					bio->bi_iter.bi_sector = to_addr
+ 						+ rdev->data_offset;
+ 					bio->bi_bdev = rdev->bdev;
+@@ -3092,7 +3096,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+ 				biolist = bio;
+ 				bio->bi_private = r10_bio;
+ 				bio->bi_end_io = end_sync_write;
+-				bio->bi_rw = WRITE;
++				bio->bi_op = REQ_OP_WRITE;
+ 				bio->bi_iter.bi_sector = to_addr +
+ 					rdev->data_offset;
+ 				bio->bi_bdev = rdev->bdev;
+@@ -3212,7 +3216,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			biolist = bio;
+ 			bio->bi_private = r10_bio;
+ 			bio->bi_end_io = end_sync_read;
+-			bio->bi_rw = READ;
++			bio->bi_op = REQ_OP_READ;
+ 			bio->bi_iter.bi_sector = sector +
+ 				conf->mirrors[d].rdev->data_offset;
+ 			bio->bi_bdev = conf->mirrors[d].rdev->bdev;
+@@ -3234,7 +3238,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			biolist = bio;
+ 			bio->bi_private = r10_bio;
+ 			bio->bi_end_io = end_sync_write;
+-			bio->bi_rw = WRITE;
++			bio->bi_op = REQ_OP_WRITE;
+ 			bio->bi_iter.bi_sector = sector +
+ 				conf->mirrors[d].replacement->data_offset;
+ 			bio->bi_bdev = conf->mirrors[d].replacement->bdev;
+@@ -4317,7 +4321,7 @@ read_more:
+ 			       + rdev->data_offset);
+ 	read_bio->bi_private = r10_bio;
+ 	read_bio->bi_end_io = end_sync_read;
+-	read_bio->bi_rw = READ;
++	read_bio->bi_op = REQ_OP_READ;
+ 	read_bio->bi_flags &= (~0UL << BIO_RESET_BITS);
+ 	read_bio->bi_error = 0;
+ 	read_bio->bi_vcnt = 0;
+@@ -4351,7 +4355,7 @@ read_more:
+ 			rdev2->new_data_offset;
+ 		b->bi_private = r10_bio;
+ 		b->bi_end_io = end_reshape_write;
+-		b->bi_rw = WRITE;
++		b->bi_op = REQ_OP_WRITE;
+ 		b->bi_next = blist;
+ 		blist = b;
+ 	}
+@@ -4519,7 +4523,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
+ 					       addr,
+ 					       s << 9,
+ 					       bvec[idx].bv_page,
+-					       READ, false);
++					       REQ_OP_READ, 0, false);
+ 			if (success)
+ 				break;
+ 		failed:
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 6b500fd..e19c2f0 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -261,7 +261,7 @@ static struct bio *r5l_bio_alloc(struct r5l_log *log)
+ {
+ 	struct bio *bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, log->bs);
+ 
+-	bio->bi_rw = WRITE;
++	bio->bi_op = REQ_OP_WRITE;
+ 	bio->bi_bdev = log->rdev->bdev;
+ 	bio->bi_iter.bi_sector = log->rdev->data_offset + log->log_start;
+ 
+@@ -686,6 +686,7 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
+ 	bio_reset(&log->flush_bio);
+ 	log->flush_bio.bi_bdev = log->rdev->bdev;
+ 	log->flush_bio.bi_end_io = r5l_log_flush_endio;
++	log->flush_bio.bi_op = REQ_OP_WRITE;
+ 	log->flush_bio.bi_rw |= WRITE_FLUSH;
+ 	submit_bio(&log->flush_bio);
  }
+@@ -875,7 +876,8 @@ static int r5l_read_meta_block(struct r5l_log *log,
+ 	struct r5l_meta_block *mb;
+ 	u32 crc, stored_crc;
  
- static void fail_postponed_requests(struct drbd_device *device, sector_t sector,
-@@ -2303,7 +2313,7 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 	struct drbd_peer_request *peer_req;
- 	struct p_data *p = pi->data;
- 	u32 peer_seq = be32_to_cpu(p->seq_num);
--	int rw = WRITE;
-+	int op, op_flags;
- 	u32 dp_flags;
- 	int err, tp;
+-	if (!sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page, READ, false))
++	if (!sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page, REQ_OP_READ, 0,
++			  false))
+ 		return -EIO;
  
-@@ -2342,14 +2352,15 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 	peer_req->flags |= EE_APPLICATION;
+ 	mb = page_address(page);
+@@ -920,7 +922,8 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 					     &disk_index, sh);
  
- 	dp_flags = be32_to_cpu(p->dp_flags);
--	rw |= wire_flags_to_bio(dp_flags);
-+	op = wire_flags_to_bio_op(dp_flags);
-+	op_flags = wire_flags_to_bio_flags(dp_flags);
- 	if (pi->cmd == P_TRIM) {
- 		struct request_queue *q = bdev_get_queue(device->ldev->backing_bdev);
- 		peer_req->flags |= EE_IS_TRIM;
- 		if (!blk_queue_discard(q))
- 			peer_req->flags |= EE_IS_TRIM_USE_ZEROOUT;
- 		D_ASSERT(peer_device, peer_req->i.size > 0);
--		D_ASSERT(peer_device, rw & REQ_DISCARD);
-+		D_ASSERT(peer_device, op == REQ_OP_DISCARD);
- 		D_ASSERT(peer_device, peer_req->pages == NULL);
- 	} else if (peer_req->pages == NULL) {
- 		D_ASSERT(device, peer_req->i.size == 0);
-@@ -2433,7 +2444,8 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 		peer_req->flags |= EE_CALL_AL_COMPLETE_IO;
+ 			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
+-				     sh->dev[disk_index].page, READ, false);
++				     sh->dev[disk_index].page, REQ_OP_READ, 0,
++				     false);
+ 			sh->dev[disk_index].log_checksum =
+ 				le32_to_cpu(payload->checksum[0]);
+ 			set_bit(R5_Wantwrite, &sh->dev[disk_index].flags);
+@@ -928,7 +931,8 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 		} else {
+ 			disk_index = sh->pd_idx;
+ 			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
+-				     sh->dev[disk_index].page, READ, false);
++				     sh->dev[disk_index].page, REQ_OP_READ, 0,
++				     false);
+ 			sh->dev[disk_index].log_checksum =
+ 				le32_to_cpu(payload->checksum[0]);
+ 			set_bit(R5_Wantwrite, &sh->dev[disk_index].flags);
+@@ -938,7 +942,7 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 				sync_page_io(log->rdev,
+ 					     r5l_ring_add(log, *log_offset, BLOCK_SECTORS),
+ 					     PAGE_SIZE, sh->dev[disk_index].page,
+-					     READ, false);
++					     REQ_OP_READ, 0, false);
+ 				sh->dev[disk_index].log_checksum =
+ 					le32_to_cpu(payload->checksum[1]);
+ 				set_bit(R5_Wantwrite,
+@@ -980,11 +984,13 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 		rdev = rcu_dereference(conf->disks[disk_index].rdev);
+ 		if (rdev)
+ 			sync_page_io(rdev, stripe_sect, PAGE_SIZE,
+-				     sh->dev[disk_index].page, WRITE, false);
++				     sh->dev[disk_index].page, REQ_OP_WRITE, 0,
++				     false);
+ 		rrdev = rcu_dereference(conf->disks[disk_index].replacement);
+ 		if (rrdev)
+ 			sync_page_io(rrdev, stripe_sect, PAGE_SIZE,
+-				     sh->dev[disk_index].page, WRITE, false);
++				     sh->dev[disk_index].page, REQ_OP_WRITE, 0,
++				     false);
+ 	}
+ 	raid5_release_stripe(sh);
+ 	return 0;
+@@ -1056,7 +1062,8 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
+ 	crc = crc32c_le(log->uuid_checksum, mb, PAGE_SIZE);
+ 	mb->checksum = cpu_to_le32(crc);
+ 
+-	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, WRITE_FUA, false)) {
++	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, REQ_OP_WRITE,
++			  WRITE_FUA, false)) {
+ 		__free_page(page);
+ 		return -EIO;
+ 	}
+@@ -1131,7 +1138,7 @@ static int r5l_load_log(struct r5l_log *log)
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+-	if (!sync_page_io(rdev, cp, PAGE_SIZE, page, READ, false)) {
++	if (!sync_page_io(rdev, cp, PAGE_SIZE, page, REQ_OP_READ, 0, false)) {
+ 		ret = -EIO;
+ 		goto ioerr;
+ 	}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a086014..fa4fe95 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -815,7 +815,8 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 	dd_idx = 0;
+ 	while (dd_idx == sh->pd_idx || dd_idx == sh->qd_idx)
+ 		dd_idx++;
+-	if (head->dev[dd_idx].towrite->bi_rw != sh->dev[dd_idx].towrite->bi_rw)
++	if (head->dev[dd_idx].towrite->bi_rw != sh->dev[dd_idx].towrite->bi_rw ||
++	    head->dev[dd_idx].towrite->bi_op != sh->dev[dd_idx].towrite->bi_op)
+ 		goto unlock_out;
+ 
+ 	if (head->batch_head) {
+@@ -900,29 +901,32 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 	if (r5l_write_stripe(conf->log, sh) == 0)
+ 		return;
+ 	for (i = disks; i--; ) {
+-		int rw;
++		int op;
++		int op_flags = 0;
+ 		int replace_only = 0;
+ 		struct bio *bi, *rbi;
+ 		struct md_rdev *rdev, *rrdev = NULL;
+ 
+ 		sh = head_sh;
+ 		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags)) {
+-			if (test_and_clear_bit(R5_WantFUA, &sh->dev[i].flags))
+-				rw = WRITE_FUA;
+-			else
+-				rw = WRITE;
++			if (test_and_clear_bit(R5_WantFUA, &sh->dev[i].flags)) {
++				op = REQ_OP_WRITE;
++				op_flags = WRITE_FUA;
++			} else {
++				op = REQ_OP_WRITE;
++			}
+ 			if (test_bit(R5_Discard, &sh->dev[i].flags))
+-				rw |= REQ_DISCARD;
++				op = REQ_OP_DISCARD;
+ 		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
+-			rw = READ;
++			op = REQ_OP_READ;
+ 		else if (test_and_clear_bit(R5_WantReplace,
+ 					    &sh->dev[i].flags)) {
+-			rw = WRITE;
++			op = REQ_OP_WRITE;
+ 			replace_only = 1;
+ 		} else
+ 			continue;
+ 		if (test_and_clear_bit(R5_SyncIO, &sh->dev[i].flags))
+-			rw |= REQ_SYNC;
++			op_flags |= REQ_SYNC;
+ 
+ again:
+ 		bi = &sh->dev[i].req;
+@@ -936,7 +940,7 @@ again:
+ 			rdev = rrdev;
+ 			rrdev = NULL;
+ 		}
+-		if (rw & WRITE) {
++		if (op_is_write(op)) {
+ 			if (replace_only)
+ 				rdev = NULL;
+ 			if (rdev == rrdev)
+@@ -962,7 +966,7 @@ again:
+ 		 * need to check for writes.  We never accept write errors
+ 		 * on the replacement, so we don't to check rrdev.
+ 		 */
+-		while ((rw & WRITE) && rdev &&
++		while (op_is_write(op) && rdev &&
+ 		       test_bit(WriteErrorSeen, &rdev->flags)) {
+ 			sector_t first_bad;
+ 			int bad_sectors;
+@@ -1004,8 +1008,9 @@ again:
+ 
+ 			bio_reset(bi);
+ 			bi->bi_bdev = rdev->bdev;
+-			bi->bi_rw = rw;
+-			bi->bi_end_io = (rw & WRITE)
++			bi->bi_op = op;
++			bi->bi_rw = op_flags;
++			bi->bi_end_io = op_is_write(op)
+ 				? raid5_end_write_request
+ 				: raid5_end_read_request;
+ 			bi->bi_private = sh;
+@@ -1036,7 +1041,7 @@ again:
+ 			 * If this is discard request, set bi_vcnt 0. We don't
+ 			 * want to confuse SCSI because SCSI will replace payload
+ 			 */
+-			if (rw & REQ_DISCARD)
++			if (op == REQ_OP_DISCARD)
+ 				bi->bi_vcnt = 0;
+ 			if (rrdev)
+ 				set_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags);
+@@ -1056,8 +1061,9 @@ again:
+ 
+ 			bio_reset(rbi);
+ 			rbi->bi_bdev = rrdev->bdev;
+-			rbi->bi_rw = rw;
+-			BUG_ON(!(rw & WRITE));
++			rbi->bi_op = op;
++			rbi->bi_rw = op_flags;
++			BUG_ON(!op_is_write(op));
+ 			rbi->bi_end_io = raid5_end_write_request;
+ 			rbi->bi_private = sh;
+ 
+@@ -1085,7 +1091,7 @@ again:
+ 			 * If this is discard request, set bi_vcnt 0. We don't
+ 			 * want to confuse SCSI because SCSI will replace payload
+ 			 */
+-			if (rw & REQ_DISCARD)
++			if (op == REQ_OP_DISCARD)
+ 				rbi->bi_vcnt = 0;
+ 			if (conf->mddev->gendisk)
+ 				trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
+@@ -1094,7 +1100,7 @@ again:
+ 			generic_make_request(rbi);
+ 		}
+ 		if (!rdev && !rrdev) {
+-			if (rw & WRITE)
++			if (op_is_write(op))
+ 				set_bit(STRIPE_DEGRADED, &sh->state);
+ 			pr_debug("skip op %ld on disc %d for sector %llu\n",
+ 				bi->bi_rw, i, (unsigned long long)sh->sector);
+@@ -1632,7 +1638,7 @@ again:
+ 					set_bit(R5_WantFUA, &dev->flags);
+ 				if (wbi->bi_rw & REQ_SYNC)
+ 					set_bit(R5_SyncIO, &dev->flags);
+-				if (wbi->bi_rw & REQ_DISCARD)
++				if (wbi->bi_op == REQ_OP_DISCARD)
+ 					set_bit(R5_Discard, &dev->flags);
+ 				else {
+ 					tx = async_copy_data(1, wbi, &dev->page,
+@@ -5173,7 +5179,7 @@ static void make_request(struct mddev *mddev, struct bio * bi)
+ 			return;
  	}
  
--	err = drbd_submit_peer_request(device, peer_req, rw, DRBD_FAULT_DT_WR);
-+	err = drbd_submit_peer_request(device, peer_req, op, op_flags,
-+				       DRBD_FAULT_DT_WR);
- 	if (!err)
- 		return 0;
- 
-@@ -2723,7 +2735,8 @@ submit_for_resync:
- submit:
- 	update_receiver_timing_details(connection, drbd_submit_peer_request);
- 	inc_unacked(device);
--	if (drbd_submit_peer_request(device, peer_req, READ, fault_type) == 0)
-+	if (drbd_submit_peer_request(device, peer_req, REQ_OP_READ, 0,
-+				     fault_type) == 0)
- 		return 0;
- 
- 	/* don't care for the reason here */
-diff --git a/drivers/block/drbd/drbd_worker.c b/drivers/block/drbd/drbd_worker.c
-index eff716c..f92f533 100644
---- a/drivers/block/drbd/drbd_worker.c
-+++ b/drivers/block/drbd/drbd_worker.c
-@@ -392,7 +392,8 @@ static int read_for_csum(struct drbd_peer_device *peer_device, sector_t sector,
- 	spin_unlock_irq(&device->resource->req_lock);
- 
- 	atomic_add(size >> 9, &device->rs_sect_ev);
--	if (drbd_submit_peer_request(device, peer_req, READ, DRBD_FAULT_RS_RD) == 0)
-+	if (drbd_submit_peer_request(device, peer_req, REQ_OP_READ, 0,
-+				     DRBD_FAULT_RS_RD) == 0)
- 		return 0;
- 
- 	/* If it failed because of ENOMEM, retry should help.  If it failed
+-	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
++	if (unlikely(bi->bi_op == REQ_OP_DISCARD)) {
+ 		make_discard_request(mddev, bi);
+ 		return;
+ 	}
 -- 
 1.8.3.1
 
