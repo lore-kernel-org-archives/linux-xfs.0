@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CC9F97F37
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 20:41:34 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 106A27F37
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 21:51:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 76B2BAC006
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 18:41:34 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8A5730405F
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2016 19:51:53 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	3KRWu95HnivmK0v4 for <xfs@oss.sgi.com>;
-	Mon, 04 Jan 2016 18:41:32 -0800 (PST)
-Date: Tue, 5 Jan 2016 13:41:30 +1100
+	dva69V7iJ7FNVUbB for <xfs@oss.sgi.com>;
+	Mon, 04 Jan 2016 19:51:50 -0800 (PST)
+Date: Tue, 5 Jan 2016 14:51:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 34/76] xfs: implement XFS_IOC_SWAPEXT when rmap btree is
-	enabled
-Message-ID: <20160105024130.GI19802@dastard>
-References: <20151219085622.12713.88678.stgit@birch.djwong.org>
-	<20151219090008.12713.25755.stgit@birch.djwong.org>
-	<20160103121728.GC28429@infradead.org>
-	<20160104234033.GD28330@birch.djwong.org>
+Subject: Re: [resend PATCH 1/3] block, fs: reliably communicate bdev
+	end-of-life
+Message-ID: <20160105035147.GJ19802@dastard>
+References: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160104182005.24118.50361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160104234033.GD28330@birch.djwong.org>
+In-Reply-To: <20160104182005.24118.50361.stgit@dwillia2-desk3.amr.corp.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,31 +31,137 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Mon, Jan 04, 2016 at 03:40:33PM -0800, Darrick J. Wong wrote:
-> On Sun, Jan 03, 2016 at 04:17:28AM -0800, Christoph Hellwig wrote:
-> > On Sat, Dec 19, 2015 at 01:00:08AM -0800, Darrick J. Wong wrote:
-> > > Implement extent swapping when reverse-mapping is enabled.
-> > 
-> > Can you just fold this into the previous patch?  There seem to be a lot
-> > of patches in the series that would benefit from merging, but this
-> > is the one that really screams for it :)
+On Mon, Jan 04, 2016 at 10:20:05AM -0800, Dan Williams wrote:
+> Historically we have waited for filesystem specific heuristics to
+> attempt to guess when a block device is gone.  Sometimes this works, but
+> in other cases the system can hang waiting for the fs to trigger its
+> shutdown protocol.
 > 
-> The only reason I'm keeping Dave's original rmap patches separate is because
-> the last time I checked with Dave, he said that he'd made a few bugfixes to his
-> patchset that hadn't yet been sent out, so I'd like to merge those fixes into
-> the original patches before starting any combining work.
+> The initial motivation for this investigation was to prevent DAX
+> mappings (direct mmap access to persistent memory) from leaking past the
+> lifetime of the hosting block device.  However, Dave points out that
+> these shutdown operations are needed in other scenarios.  Quoting Dave:
+> 
+>     For example, if we detect a free space corruption during allocation,
+>     it is not safe to trust *any active mapping* because we can't trust
+>     that we having handed out the same block to multiple owners. Hence
+>     on such a filesystem shutdown, we have to prevent any new DAX
+>     mapping from occurring and invalidate all existing mappings as we
+>     cannot allow userspace to modify any data or metadata until we've
+>     resolved the corruption situation.
+> 
+> The current block device shutdown sequence of del_gendisk +
+> blk_cleanup_queue is problematic.  We want to tell the fs after
+> blk_cleanup_queue that there is no possibility of recovery, but by that
+> time we have deleted partitions and lost the ability to find all the
+> super-blocks on a block device.
+> 
+> Introduce del_gendisk_queue to trigger ->quiesce() and ->bdi_gone()
 
-I haven't had a chance to sort any of those out fully, so it's
-probably best if you combine all your patches to minimise the
-separation and I'll send delta patches (if still relevant) as I work
-through it all in the next couple of weeks...
+I don't see anything that introduces a ->quiesce() method.
 
-Cheers,
+> notifications to all the filesystems hosted on the disk.  Where
+> ->quiesce() are 'shutdown' operations while the bdev may still be alive,
 
-Dave.
+So you are saying "quiesce == invalidation", which is in conflict
+with what we typically think quiesce means. i.e.  "Quiesce" is what
+we do when doing orderly writeback of all outstanding dirty objects
+in a filesystem - what we do during freeze, remount-ro, and unmount.
+e.g. See the functions xfs_log_quiesce() and xfs_attr_quiesce()
+
+> and ->bdi_gone() is a set of actions to take after the backing device
+> is known to be permanently dead.
+
+In which case, bdi_gone == shutdown.
+
+Operation methods should be named after what they do, not what their
+calling context is. i.e. these are "invalidate" and "shutdown"
+superblock operations, not "quiesce" and "bdi_gone".
+
+> generic_quiesce_super and generic_bdi_gone, are the default operations
+> when a filesystem does not implement ->quiesce(), ->bdi_gone().  They
+> invalidate inodes and unmap DAX-inodes respectively.  For now only
+> ->bdi_gone() has an associated super operation as xfs will implement
+> ->bdi_gone() in a later patch.
+
+I don't quite understand what the point of factoring
+__invalidate_device() like this is - it's not used by anyone, so it
+seems completely unnecessary to me.
+
+And really, that points out that there are multiple changes in this
+patch set that should be done separately.  The rework of
+del_gendisk() into del_gendisk_start/del_gendisk_end should be the
+first patch.  The del_gendisk/blk_cleanup_queue to
+blk_cleanup_queue() combining should be the second part, as it
+builds on the factoring of del_gendisk(). Then, if we really need to
+keep it, the factoring to introduce generic_quiesce_super. And
+finally, the patch that allows the shutdown callout can be
+introduced.
+
+[snip]
+>  
+> +static void generic_bdi_gone(struct super_block *sb)
+> +{
+> +	struct inode *inode, *_inode = NULL;
+> +
+> +	spin_lock(&sb->s_inode_list_lock);
+> +	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
+> +		spin_lock(&inode->i_lock);
+> +		if ((inode->i_state & (I_FREEING|I_WILL_FREE|I_NEW))
+> +				|| !IS_DAX(inode)) {
+> +			spin_unlock(&inode->i_lock);
+> +			continue;
+> +		}
+> +		__iget(inode);
+> +		spin_unlock(&inode->i_lock);
+> +		spin_unlock(&sb->s_inode_list_lock);
+> +
+> +		unmap_mapping_range(inode->i_mapping, 0, 0, 1);
+> +		iput(_inode);
+> +		_inode = inode;
+> +		cond_resched();
+> +
+> +		spin_lock(&sb->s_inode_list_lock);
+> +	}
+> +	spin_unlock(&sb->s_inode_list_lock);
+> +	iput(_inode);
+> +}
+
+This belongs in fs/inode.c, right next to invalidate_inodes(), and
+with a name that describes what it does, not the context in which
+it is called. e.g. unmap_dax_inodes().
+
+> +void shutdown_partition(struct gendisk *disk, int partno)
+> +{
+> +	struct block_device *bdev = bdget_disk(disk, partno);
+> +	struct super_block *sb = get_super(bdev);
+> +
+> +	if (!bdev)
+> +		return;
+
+Null pointer deref. Certainly a landmine waiting for someone to
+tread on.
+
+> +	if (!sb) {
+> +		bdput(bdev);
+> +		return;
+> +	}
+> +
+> +	if (sb->s_op->bdi_gone)
+> +		sb->s_op->bdi_gone(sb);
+> +	else
+> +		generic_bdi_gone(sb);
+
+	if (sb->s_op->shutdown)
+		sb->s_op->shutdown(sb);
+	else
+		unmap_dax_inodes(sb);
+
+name things correctly, and the code documents itself.
+
 -- 
 Dave Chinner
 david@fromorbit.com
