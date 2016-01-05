@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4AE867F47
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 16:32:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A34330406A
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 14:32:42 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id E1CE129DF6
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 16:59:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A6334304067
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 14:59:14 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	y8ZEjn8K0zHX5vSz for <xfs@oss.sgi.com>;
-	Tue, 05 Jan 2016 14:32:39 -0800 (PST)
-Date: Wed, 6 Jan 2016 09:32:36 +1100
+	d7yrtGNiNGWjxEfz for <xfs@oss.sgi.com>;
+	Tue, 05 Jan 2016 14:59:11 -0800 (PST)
+Date: Wed, 6 Jan 2016 09:59:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [resend PATCH 1/3] block, fs: reliably communicate bdev
-	end-of-life
-Message-ID: <20160105223236.GD21461@dastard>
-References: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160104182005.24118.50361.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160105035147.GJ19802@dastard>
-	<CAPcyv4i=5-e6mobC5yu1SgESBNgCeqU5jwbaxhN8ZmNW+xUnJA@mail.gmail.com>
+Subject: Re: lazytime implementation questions
+Message-ID: <20160105225907.GE21461@dastard>
+References: <20160104062219.GB19802@dastard>
+	<20160105173604.GE18604@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4i=5-e6mobC5yu1SgESBNgCeqU5jwbaxhN8ZmNW+xUnJA@mail.gmail.com>
+In-Reply-To: <20160105173604.GE18604@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,82 +30,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jens Axboe <axboe@fb.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
 
-On Mon, Jan 04, 2016 at 08:25:16PM -0800, Dan Williams wrote:
-> On Mon, Jan 4, 2016 at 7:51 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Jan 04, 2016 at 10:20:05AM -0800, Dan Williams wrote:
-> >> Historically we have waited for filesystem specific heuristics to
-> >> attempt to guess when a block device is gone.  Sometimes this works, but
-> >> in other cases the system can hang waiting for the fs to trigger its
-> >> shutdown protocol.
-....
-> True, and following this logic I think the existing
-> generic_shutdown_super() should be renamed generic_kill_super() to
-> match the fs actions, but see below...
+On Tue, Jan 05, 2016 at 06:36:04PM +0100, Jan Kara wrote:
+>   Hi,
 > 
-> > Operation methods should be named after what they do, not what their
-> > calling context is. i.e. these are "invalidate" and "shutdown"
-> > superblock operations, not "quiesce" and "bdi_gone".
+> On Mon 04-01-16 17:22:19, Dave Chinner wrote:
+> > I've been looking at implementing the lazytime mount option for XFS,
+> > and I'm struggling to work out what it is supposed to mean.
+> > 
+> > AFAICT, on ext4, lazytime means that pure timestamp updates are not
+> > journalled and they are only ever written back when the inode is
+> > otherwise dirtied and written, or they are timestamp dirty for 24
+> > hours which triggers writeback.
+> > 
+> > This poses a couple of problems for XFS:
+> > 
+> > 	1. we log every timestamp change, so there is no mechanism
+> > 	   for delayed/deferred update.
+> > 
+> > 	2. we track dirty metadata in the journal, not via the VFS
+> > 	   dirty inode lists, so all the infrastructure written for
+> > 	   ext4 to do periodic flushing is useless to us.
+> > 
+> > These are solvable problems, but what I'm not sure about is exactly
+> > what the intended semantics of lazytime durability are. That is,
+> > exactly what guaranteed are we giving userspace about timestamp
+> > updates when lazytime is used? The guarantees we have to give will
+> > greatly influence the XFS implementation, so I really need to nail
+> > down what we are expected to provide userspace. Can we:
+> > 
+> > 	a) just ignore all durability concerns?
+> > 	b) if not, do we only need to care about the 24 hour
+> > 	   writeback and unmount?
+> > 	c) if not, are fsync/sync/syncfs/freeze/unmount supposed
+> > 	   to provide durability of all metadata changes?
+> > 	d) do we have to care about ordering - if we fsync one inode
+> > 	   with 1 hour old timestamps, do we also need to guarantee
+> > 	   that all the inodes with older dirty timestamps also get
+> > 	   made durable?
 > 
-> I was running out of colors to paint the bike shed given
-> generic_shutdown_super() was already in use.  Also, since
+> So the intended semantics is:
+> 1) fsync / sync / freeze / unmount will write the timestamp updates even
+>    with lazytime. So unless crash happens, timestamps are guaranteed to be
+>    consistent. Also sync / fsync guarantees all changes to get to disk.
+> 2) We periodically write back timestamps (once per 24 hours) to avoid too
+>    big timestamp inconsistencies in case of crash.
 
-Ah, yeah, i forgot about that function. To many different shades of
-purple are already in use. :/
+Ok, so it's supposed to be a delayed timestamp update mechanism
+without any specific ordering guarantees, not an opportunistic
+timestamp update mechanism.
 
-> >> +void shutdown_partition(struct gendisk *disk, int partno)
-> >> +{
-> >> +     struct block_device *bdev = bdget_disk(disk, partno);
-> >> +     struct super_block *sb = get_super(bdev);
-> >> +
-> >> +     if (!bdev)
-> >> +             return;
-> >
-> > Null pointer deref. Certainly a landmine waiting for someone to
-> > tread on.
-> >
-> 
-> Nope, get_super() checks for a NULL argument.
-
-Hence my comment about it being a landmine. If get_super() is ever
-changed, this code will explode on us when we least expect it. If I
-have to go read other code in a completely different file just to
-determine the code is actually safe, then I consider that bad code.
-Code that is slightly more verbose but is obviously correct and
-balanced is much, much easier to understand and maintain....
-
-> >> +     if (!sb) {
-> >> +             bdput(bdev);
-> >> +             return;
-> >> +     }
-> >> +
-> >> +     if (sb->s_op->bdi_gone)
-> >> +             sb->s_op->bdi_gone(sb);
-> >> +     else
-> >> +             generic_bdi_gone(sb);
-> >
-> >         if (sb->s_op->shutdown)
-> >                 sb->s_op->shutdown(sb);
-> >         else
-> >                 unmap_dax_inodes(sb);
-> >
-> > name things correctly, and the code documents itself.
-> 
-> How about 'stop' or 'halt' instead of 'shutdown' to preserve the
-> historical meaning of generic_shutdown_super?
-
-It's hard chosing a different color that is appropriate. :/
-
-Because it's a brute-force behavioural override, I think that needs
-to be obvious from the op name. So something like force_stop or
-force_failure seems best to me.
-
-In fact, now that I've thought/repaeated/written force_failure a
-couple of times, it seems quite appropriate here, as what we want to
-be able to do is force the filesystem into a (permanent) failure
-state.....
+I can work with that.
 
 Cheers,
 
