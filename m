@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 366D37F37
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 13:04:41 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A9CB7F37
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 13:06:08 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B119FAC004
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 11:04:37 -0800 (PST)
-Received: from mail-qk0-f174.google.com (mail-qk0-f174.google.com
-	[209.85.220.174]) by cuda.sgi.com with ESMTP id
-	xr6Ro7KExUNMwAos (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 11:04:35 -0800 (PST)
-Received: by mail-qk0-f174.google.com with SMTP id p186so77432254qke.0
-	for <xfs@oss.sgi.com>; Wed, 06 Jan 2016 11:04:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1452103263-1592-3-git-send-email-ross.zwisler@linux.intel.com>
-References: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452103263-1592-3-git-send-email-ross.zwisler@linux.intel.com>
-Date: Wed, 6 Jan 2016 11:04:35 -0800
-Message-ID: <CAPcyv4ig1W8LpC6ORYCZd65idK3QuOYa40FsbujWXXaZT_WMRA@mail.gmail.com>
-Subject: Re: [PATCH v7 2/9] dax: fix conversion of holes to PMDs
-From: Dan Williams <dan.j.williams@intel.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4D39B304066
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 11:06:05 -0800 (PST)
+Received: from linux-iscsi.org (mail.linux-iscsi.org [67.23.28.174]) by
+	cuda.sgi.com with ESMTP id TKG9iIz13BG4DWHD (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 11:06:02 -0800 (PST)
+Message-ID: <1452107160.26125.39.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 25/35] target: set bi_op to REQ_OP
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Date: Wed, 06 Jan 2016 11:06:00 -0800
+In-Reply-To: <1452027218-32303-26-git-send-email-mchristi@redhat.com>
+References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+	<1452027218-32303-26-git-send-email-mchristi@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,82 +29,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: X86 ML <x86@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Thomas Gleixner <tglx@linutronix.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: mchristi@redhat.com
+Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 
-On Wed, Jan 6, 2016 at 10:00 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> When we get a DAX PMD fault for a write it is possible that there could be
-> some number of 4k zero pages already present for the same range that were
-> inserted to service reads from a hole.  These 4k zero pages need to be
-> unmapped from the VMAs and removed from the struct address_space radix tree
-> before the real DAX PMD entry can be inserted.
->
-> For PTE faults this same use case also exists and is handled by a
-> combination of unmap_mapping_range() to unmap the VMAs and
-> delete_from_page_cache() to remove the page from the address_space radix
-> tree.
->
-> For PMD faults we do have a call to unmap_mapping_range() (protected by a
-> buffer_new() check), but nothing clears out the radix tree entry.  The
-> buffer_new() check is also incorrect as the current ext4 and XFS filesystem
-> code will never return a buffer_head with BH_New set, even when allocating
-> new blocks over a hole.  Instead the filesystem will zero the blocks
-> manually and return a buffer_head with only BH_Mapped set.
->
-> Fix this situation by removing the buffer_new() check and adding a call to
-> truncate_inode_pages_range() to clear out the radix tree entries before we
-> insert the DAX PMD.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Hi Mike,
 
-Replaced the current contents of v6 in -mm from next-20160106 with
-this v7 set and it looks good.
-
-Reported-by: Dan Williams <dan.j.williams@intel.com>
-Tested-by: Dan Williams <dan.j.williams@intel.com>
-
-One question below...
-
+On Tue, 2016-01-05 at 14:53 -0600, mchristi@redhat.com wrote:
+> From: Mike Christie <mchristi@redhat.com>
+> 
+> This patch has the target modules set the bio bi_op to a REQ_OP, and
+> rq_flag_bits to bi_rw.
+> 
+> This patch is compile tested only.
+> 
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
 > ---
->  fs/dax.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
->
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 03cc4a3..9dc0c97 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -594,6 +594,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
->         bool write = flags & FAULT_FLAG_WRITE;
->         struct block_device *bdev;
->         pgoff_t size, pgoff;
-> +       loff_t lstart, lend;
->         sector_t block;
->         int result = 0;
->
-> @@ -647,15 +648,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
->                 goto fallback;
->         }
->
-> -       /*
-> -        * If we allocated new storage, make sure no process has any
-> -        * zero pages covering this hole
-> -        */
-> -       if (buffer_new(&bh)) {
-> -               i_mmap_unlock_read(mapping);
-> -               unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
-> -               i_mmap_lock_read(mapping);
-> -       }
-> +       /* make sure no process has any zero pages covering this hole */
-> +       lstart = pgoff << PAGE_SHIFT;
-> +       lend = lstart + PMD_SIZE - 1; /* inclusive */
-> +       i_mmap_unlock_read(mapping);
-> +       unmap_mapping_range(mapping, lstart, PMD_SIZE, 0);
-> +       truncate_inode_pages_range(mapping, lstart, lend);
+>  drivers/target/target_core_iblock.c | 38 ++++++++++++++++++++++---------------
+>  drivers/target/target_core_pscsi.c  |  2 +-
+>  2 files changed, 24 insertions(+), 16 deletions(-)
+> 
 
-Do we need to do both unmap and truncate given that
-truncate_inode_page() optionally does an unmap_mapping_range()
-internally?
+Nice work to clean this long standing abuse.  ;)
+
+For the target/iblock bit:
+
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
 _______________________________________________
 xfs mailing list
