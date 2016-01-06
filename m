@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D86927F37
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 20:04:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9BC358F804B
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 18:04:46 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id ODprq5kU9PnsAL0o (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 18:04:43 -0800 (PST)
-Date: Tue, 5 Jan 2016 18:04:40 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFCv4 00/76] xfs: add reverse-mapping, reflink, and dedupe
-	support
-Message-ID: <20160106020440.GL28330@birch.djwong.org>
-References: <20151219085622.12713.88678.stgit@birch.djwong.org>
-	<20151220140254.GA3618@laptop.bfoster>
-	<20160104235951.GE28330@birch.djwong.org>
-	<20160105124226.GA38749@bfoster.bfoster>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7B6E17F37
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 21:28:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5949D304067
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 19:28:41 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	CtpxS77AmbwXMkrW for <xfs@oss.sgi.com>;
+	Tue, 05 Jan 2016 19:28:35 -0800 (PST)
+Date: Wed, 6 Jan 2016 14:28:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V3] xfs: eliminate committed arg from xfs_bmap_finish
+Message-ID: <20160106032832.GG21461@dastard>
+References: <56441B8E.6070603@redhat.com> <5644BEF8.6070201@sandeen.net>
+	<568C131C.9080907@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160105124226.GA38749@bfoster.bfoster>
+In-Reply-To: <568C131C.9080907@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,160 +30,162 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 05, 2016 at 07:42:26AM -0500, Brian Foster wrote:
-> On Mon, Jan 04, 2016 at 03:59:51PM -0800, Darrick J. Wong wrote:
-> > On Sun, Dec 20, 2015 at 09:02:54AM -0500, Brian Foster wrote:
-> > > On Sat, Dec 19, 2015 at 12:56:23AM -0800, Darrick J. Wong wrote:
-> > > > Hi all,
-> > > > 
-> > > ...
-> > > > Fixed since RFCv3:
-> > > > 
-> > > >  * The reflink and dedupe ioctls are being hoisted to the VFS, as
-> > > >    provided in the first few patches.  Patch 81 connects to this
-> > > >    functionality.
-> > > > 
-> > > >  * Copy on write has been rewritten for v4.  We now use the existing
-> > > >    delayed allocation mechanism to coalesce writes together, deferring
-> > > >    allocation until writeout time.  This enables CoW to make better
-> > > >    block placement decisions and significantly reduces overhead.
-> > > >    CoW is still pretty slow, but not as slow as before.
-> > > > 
-> > > >  * Direct IO CoW has been implemented using the same mechanism as
-> > > >    above, but modified to perform the allocation and remapping right
-> > > >    then and there.  Throughput is much higher than pushing data
-> > > >    through the page cache CoW.  (It's the same mechanism, but we're
-> > > >    playing with chunks bigger than a single memory page.)
-> > > > 
-> > > >  * CoW ENOSPC works correctly now, except in the pathological case
-> > > >    that the AG fills up and the rmap btree cannot expand.  That will
-> > > >    be addressed for v5.
-> > > > 
-> > > >  * fallocate will now unshare blocks to prevent future ENOSPC, as
-> > > >    you'd expect.
-> > > > 
-> > > >  * refcount btree blocks are preallocated at mount time to prevent
-> > > >    ENOSPC while trying to expand the tree.  This also has the effect
-> > > >    of grouping the btree blocks together, which can speed up CoW
-> > > >    remapping.
-> > > > 
-> > > 
-> > > Can you elaborate on how these blocks are preallocated? E.g., is the
-> > > tree "preconstructed" in some sense? However that is done, is this the
-> > > anticipated solution or a temporary workaround..?
-> > > 
-> > > Also, shouldn't the enospc condition be handled by the agfl? I take it
-> > > there is something going on here that renders that solution flawed, so
-> > > I'm just curious what it is.
-> > > 
-> > > (Sorry if this is all explained elsewhere, but I haven't yet had a
-> > > chance to take a close enough look at this feature..).
-> > 
-> > Reference count btree blocks aren't allocated from the AGFL; they're allocated
-> > from the free space in the same manner as the inobt, per a review comment from
-> > Dave a looong time ago. :) 
-> > 
+On Tue, Jan 05, 2016 at 01:01:48PM -0600, Eric Sandeen wrote:
+> Calls to xfs_bmap_finish() and xfs_trans_ijoin(), and the
+> associated comments were replicated several times across
+> the attribute code, all dealing with what to do if the
+> transaction was or wasn't committed.
 > 
-> Ah, Ok.
+> And in that replicated code, an ASSERT() test of an
+> uninitialized variable occurs in several locations:
 > 
-> > As such, we can get ourselves into the nasty situation where every block in the
-> > AG has been allocated to file data.  If we then see a bunch of reference count
-> > changes that are scattered around the AG, the reference count btree has to
-> > expand to hold all the new records... but there isn't space, and the operation
-> > fails.  Given that we know the maximum possible size of the refcount btree
-> > (it's 0.3% of the AG size with 4k blocks), I figured it was easy enough to
-> > avoid ENOSPC for reflink operations.
-> > 
+> 	error = xfs_attr_thing(&args);
+> 	if (!error) {
+> 		error = xfs_bmap_finish(&args.trans, args.flist,
+> 					&committed);
+> 	}
+> 	if (error) {
+> 		ASSERT(committed);
 > 
-> Sounds reasonable.
+> If the first xfs_attr_thing() failed, we'd skip the xfs_bmap_finish,
+> never set "committed", and then test it in the ASSERT.
 > 
-> > I've temporarily fixed this by adding code that figures out how many blocks we
-> > need if the reference count btree has to have a unique record for every block
-> > in the AG and holding that many blocks until either they're allocated to the
-> > refcount btree or freed at umount time.  Right now it's a temporary fix (if the
-> > FS crashes, the reserved blocks are lost) but it wouldn't be difficult for the
-> > FS to make a permanent reservation that's recorded on disk somehow.  But that's
-> > involves writing things to disk + making xfsprogs understand the reservation;
-> > let's see what people say about the reserved pool idea at all.
-> > 
-> > Does that make sense? :)
-> > 
+> Fix this up by moving the committed state internal to xfs_bmap_finish,
+> and add a new inode argument.  If an inode is passed in, it is passed
+> through to __xfs_trans_roll() and joined to the transaction there if
+> the transaction was committed.
 > 
-> Yep, it sounds sort of like the reserve pool mechanism used to protect
-> against ENOSPC when freeing blocks. Curious... why are the reserved
-> blocks lost on fs crash? Wouldn't they be reserved again on the
-> subsequent mount?
+> xfs_qm_dqalloc() was a little unique in that it called bjoin rather
+> than ijoin, but as Dave points out we can detect the committed state
+> but checking whether (*tpp != tp).
+> 
+> Addresses-Coverity-Id: 102360
+> Addresses-Coverity-Id: 102361
+> Addresses-Coverity-Id: 102363
+> Addresses-Coverity-Id: 102364
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+>  libxfs/xfs_attr.c        |  114 +++++------------------------------------------
+>  libxfs/xfs_attr_remote.c |   25 ----------
+>  libxfs/xfs_bmap.c        |    6 --
+>  libxfs/xfs_bmap.h        |    2 
+>  xfs_bmap_util.c          |   28 ++++-------
+>  xfs_dquot.c              |   12 ++--
+>  xfs_inode.c              |   22 ++-------
+>  xfs_iomap.c              |   10 +---
+>  xfs_rtalloc.c            |    3 -
+>  xfs_symlink.c            |   12 ----
+>  10 files changed, 50 insertions(+), 184 deletions(-)
 
-They will, but the pre-crash reservation isn't (yet) written down anywhere on
-disk.
+Nice!
 
-Thank /you/ for having a look at the reflink code! :)
+A few really minor things (repeated) to clean up the code being
+touched a bit more.
 
---D
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index f949818..e16aa32 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -207,7 +207,7 @@ xfs_attr_set(
+>  	struct xfs_trans_res	tres;
+>  	xfs_fsblock_t		firstblock;
+>  	int			rsvd = (flags & ATTR_ROOT) != 0;
+> -	int			error, err2, committed, local;
+> +	int			error, err2, local;
+>  
+>  	XFS_STATS_INC(mp, xs_attr_set);
+>  
+> @@ -335,24 +335,15 @@ xfs_attr_set(
+>  		xfs_bmap_init(args.flist, args.firstblock);
+>  		error = xfs_attr_shortform_to_leaf(&args);
+>  		if (!error) {
+> -			error = xfs_bmap_finish(&args.trans, args.flist,
+> -						&committed);
+> +			error = xfs_bmap_finish(&args.trans, args.flist, dp);
+>  		}
 
-> 
-> Thanks for the explanation...
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > Issues: 
-> > > > 
-> > > >  * The extent swapping ioctl still allocates a bigger fixed-size
-> > > >    transaction.  That's most likely a stupid thing to do, so getting a
-> > > >    better grip on how the journalling code works and auditing all the
-> > > >    new transaction users will have to happen.  Right now it mostly
-> > > >    gets lucky.
-> > > > 
-> > > >  * EFI tracking for the allocated-but-not-yet-mapped blocks is
-> > > >    nonexistant.  A crash will leak them.
-> > > > 
-> > > >  * ENOSPC while expanding the rmap btree can crash the FS.  For now we
-> > > >    work around this problem by making the AGFL as big as possible,
-> > > >    failing CoW attempts with ENOSPC if there aren't enough AGFL blocks
-> > > >    available, and hoping that doesn't actually happen.
-> > > > 
-> > > > If you're going to start using this mess, you probably ought to just
-> > > > pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-> > > > There are also updates for xfs-docs[4] and man-pages[5].
-> > > > 
-> > > > The patches have been xfstested with x64, i386, and ppc64; while in
-> > > > general the tests run to completion, there are still periodic bugs
-> > > > that will be addressed by the next RFC.  There's a persistent crash on
-> > > > arm64 and ppc64el that I haven't been able to triage.
-> > > > 
-> > > > This is an extraordinary way to eat your data.  Enjoy! 
-> > > > Comments and questions are, as always, welcome.
-> > > > 
-> > > > --D
-> > > > 
-> > > > [1] https://github.com/djwong/linux/tree/for-dave
-> > > > [2] https://github.com/djwong/xfsprogs/tree/for-dave
-> > > > [3] https://github.com/djwong/xfstests/tree/for-dave
-> > > > [4] https://github.com/djwong/xfs-documentation/tree/for-dave
-> > > > [5] https://github.com/djwong/man-pages/commits/for-mtk
-> > > > 
-> > > > _______________________________________________
-> > > > xfs mailing list
-> > > > xfs@oss.sgi.com
-> > > > http://oss.sgi.com/mailman/listinfo/xfs
-> > > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+You can kill the {} on this if as well. (repeats)
+
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -91,32 +91,32 @@ xfs_zero_extent(
+>   * last due to locking considerations.  We never free any extents in
+>   * the first transaction.
+>   *
+> - * Return 1 if the given transaction was committed and a new one
+> - * started, and 0 otherwise in the committed parameter.
+> + * If an inode *ip is provided, rejoin it to the transaction if
+> + * the transaction was committed.
+>   */
+>  int						/* error */
+>  xfs_bmap_finish(
+>  	struct xfs_trans		**tp,	/* transaction pointer addr */
+>  	struct xfs_bmap_free		*flist,	/* i/o: list extents to free */
+> -	int				*committed)/* xact committed or not */
+> +	xfs_inode_t			*ip)
+
+struct xfs_inode
+
+> @@ -1071,7 +1067,7 @@ xfs_alloc_file_space(
+>  		/*
+>  		 * Complete the transaction
+>  		 */
+> -		error = xfs_bmap_finish(&tp, &free_list, &committed);
+> +		error = xfs_bmap_finish(&tp, &free_list, NULL);
+>  		if (error) {
+>  			goto error0;
+>  		}
+
+Kill the {} here while touching the line above.
+
+> @@ -1353,7 +1348,7 @@ xfs_free_file_space(
+>  		/*
+>  		 * complete the transaction
+>  		 */
+> -		error = xfs_bmap_finish(&tp, &free_list, &committed);
+> +		error = xfs_bmap_finish(&tp, &free_list, NULL);
+>  		if (error) {
+>  			goto error0;
+>  		}
+
+And here.
+
+> +	int		nmaps, error;
+>  	xfs_buf_t	*bp;
+>  	xfs_trans_t	*tp = *tpp;
+>  
+> @@ -379,11 +379,11 @@ xfs_qm_dqalloc(
+>  
+>  	xfs_trans_bhold(tp, bp);
+>  
+> -	if ((error = xfs_bmap_finish(tpp, &flist, &committed))) {
+> +	if ((error = xfs_bmap_finish(tpp, &flist, NULL)))
+>  		goto error1;
+> -	}
+
+	error = xfs_bmap_finish(tpp, &flist, NULL);
+	if (error)
+		goto error1;
+
+> @@ -1841,7 +1835,7 @@ xfs_inactive_ifree(
+>  	 * Just ignore errors at this point.  There is nothing we can do except
+>  	 * to try to keep going. Make sure it's not a silent error.
+>  	 */
+> -	error = xfs_bmap_finish(&tp,  &free_list, &committed);
+> +	error = xfs_bmap_finish(&tp,  &free_list, NULL);
+				    ^^
+You can fix the extra whitespace here, too.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
