@@ -1,30 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0633D7F37
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 10:16:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 78BBEAC004
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 08:16:53 -0800 (PST)
-Received: from mail-lb0-f176.google.com (mail-lb0-f176.google.com
-	[209.85.217.176]) by cuda.sgi.com with ESMTP id
-	CIT9LE02Pnt2I4or (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 08:16:48 -0800 (PST)
-Received: by mail-lb0-f176.google.com with SMTP id sv6so186096574lbb.0
-	for <xfs@oss.sgi.com>; Wed, 06 Jan 2016 08:16:48 -0800 (PST)
-Received: from xps.localnet (85-222-71-204.dynamic.chello.pl. [85.222.71.204])
-	by smtp.gmail.com with ESMTPSA id
-	h196sm17584491lfb.48.2016.01.06.08.16.45 for <xfs@oss.sgi.com>
-	(version=TLSv1/SSLv3 cipher=OTHER);
-	Wed, 06 Jan 2016 08:16:45 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [PATCH] xfs: handle dquot buffer readahead in log recovery
-	correctly
-Date: Wed, 6 Jan 2016 17:16:44 +0100
-References: <1452052834-20605-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1452052834-20605-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Message-Id: <201601061716.44402.arekm@maven.pl>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C50717F37
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 12:01:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B3909304039
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 10:01:22 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id Ll1yowWRgGXE1HOl for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 10:01:20 -0800 (PST)
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v7 1/9] dax: fix NULL pointer dereference in __dax_dbg()
+Date: Wed,  6 Jan 2016 11:00:55 -0700
+Message-Id: <1452103263-1592-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,47 +22,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-T24gV2VkbmVzZGF5IDA2IG9mIEphbnVhcnkgMjAxNiwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IEZy
-b206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAKPiBXaGVuIHdlIGRvIGRx
-dW90IHJlYWRhaGVhZCBpbiBsb2cgcmVjb3ZlcnksIHdlIGRvIG5vdCB1c2UgYSB2ZXJpZmllcgo+
-IGFzIHRoZSB1bmRlcmx5aW5nIGJ1ZmZlciBtYXkgbm90IGhhdmUgZHF1b3RzIGluIGl0LiBlLmcu
-IHRoZQo+IGFsbG9jYXRpb24gb3BlcmF0aW9uIGhhc24ndCB5ZXQgYmVlbiByZXBsYXllZC4gSGVu
-Y2Ugd2UgZG8gbm90IHdhbnQKPiB0byBmYWlsIHJlY292ZXJ5IGJlY2F1c2Ugd2UgZGV0ZWN0IGFu
-IG9wZXJhdGlvbiB0byBiZSByZXBsYXllZCBoYXMKPiBub3QgYmVlbiBydW4geWV0LiBUaGlzIHBy
-b2JsZW0gd2FzIGFkZHJlc3NlZCBmb3IgaW5vZGVzIGluIGNvbW1pdAo+IGQ4OTE0MDAgKCJ4ZnM6
-IGlub2RlIGJ1ZmZlcnMgbWF5IG5vdCBiZSB2YWxpZCBkdXJpbmcgcmVjb3ZlcnkKPiByZWFkYWhl
-YWQiKSBidXQgdGhlIHByb2JsZW0gd2FzIG5vdCByZWNvZ25pc2VkIHRvIGV4aXN0IGZvciBkcXVv
-dHMKPiBhbmQgdGhlaXIgYnVmZmVycyBhcyB0aGUgZHF1b3QgcmVhZGFoZWFkIGRpZCBub3QgaGF2
-ZSBhIHZlcmlmaWVyLgo+IAo+IFRoZSByZXN1bHQgb2Ygbm90IHVzaW5nIGEgdmVyaWZpZXIgaXMg
-dGhhdCB3aGVuIHRoZSBidWZmZXIgaXMgdGhlbgo+IG5leHQgcmVhZCB0byByZXBsYXkgYSBkcXVv
-dCBtb2RpZmljYXRpb24sIHRoZSBkcXVvdCBidWZmZXIgdmVyaWZpZXIKPiB3aWxsIG9ubHkgYmUg
-YXR0YWNoZWQgdG8gdGhlIGJ1ZmZlciBpZiAqcmVhZGFoZWFkIGlzIG5vdCBjb21wbGV0ZSouCj4g
-SGVuY2Ugd2UgY2FuIHJlYWQgdGhlIGJ1ZmZlciwgcmVwbGF5IHRoZSBkcXVvdCBjaGFuZ2VzIGFu
-ZCB0aGVuIGFkZAo+IGl0IHRvIHRoZSBkZWx3cmkgc3VibWlzc2lvbiBsaXN0IHdpdGhvdXQgaXQg
-aGF2aW5nIGEgdmVyaWZpZXIKPiBhdHRhY2hlZCB0byBpdC4gVGhpcyB0aGVuIGdlbmVyYXRlcyB3
-YXJuaW5ncyBpbiB4ZnNfYnVmX2lvYXBwbHkoKSwKPiB3aGljaCBjYXRjaGVzIGFuZCB3YXJucyBh
-Ym91dCB0aGlzIGNhc2UuCj4gCj4gRml4IHRoaXMgYW5kIG1ha2UgaXQgaGFuZGxlIHRoZSBzYW1l
-IHJlYWRhaGVhZCB2ZXJpZmllciBlcnJvciBjYXNlcwo+IGFzIGZvciBpbm9kZSBidWZmZXJzIGJ5
-IGFkZGluZyBhIG5ldyByZWFkYWhlYWQgdmVyaWZpZXIgdGhhdCBoYXMgYQo+IHdyaXRlIG9wZXJh
-dGlvbiBhcyB3ZWxsIGFzIGEgcmVhZCBvcGVyYXRpb24gdGhhdCBtYXJrcyB0aGUgYnVmZmVyIGFz
-Cj4gbm90IGRvbmUgaWYgYW55IGNvcnJ1cHRpb24gaXMgZGV0ZWN0ZWQuICBBbHNvIG1ha2Ugc3Vy
-ZSB3ZSBkb24ndCBydW4KPiByZWFkYWhlYWQgaWYgdGhlIGRxdW90IGJ1ZmZlciBoYXMgYmVlbiBt
-YXJrZWQgYXMgY2FuY2VsbGVkIGJ5Cj4gcmVjb3ZlcnkuCj4gCj4gVGhpcyB3aWxsIHJlc3VsdCBp
-biByZWFkYWhlYWQgZWl0aGVyIHN1Y2NlZWRpbmcgYW5kIHRoZSBidWZmZXIKPiBoYXZpbmcgYSB2
-YWxpZCB3cml0ZSB2ZXJpZmllciwgb3IgcmVhZGFoZWFkIGZhaWxpbmcgYW5kIHRoZSBidWZmZXIK
-PiBzdGF0ZSByZXF1aXJpbmcgdGhlIHN1YnNlcXVlbnQgcmVhZCB0byByZXN1Ym1pdCB0aGUgSU8g
-d2l0aCB0aGUgbmV3Cj4gdmVyaWZpZXIuICBJbiBlaXRoZXIgY2FzZSwgdGhpcyB3aWxsIHJlc3Vs
-dCBpbiB0aGUgYnVmZmVyIGFsd2F5cwo+IGVuZGluZyB1cCB3aXRoIGEgdmFsaWQgd3JpdGUgdmVy
-aWZpZXIgb24gaXQuCgpDaGVja2VkIHRoaXMgcGF0Y2ggb24gNC4xLjE1LgoKV2hlbiB0aGUgaXNz
-dWUgb2NjdXJlZCBJIHN0YXJ0ZWQgc2VlaW5nIHRob3VzYW5kcyBvZiAiX3hmc19idWZfaW9hcHBs
-eTogbm8gb3BzIApvbiBibG9jayAuLi4iICBlbnRyaWVzIGluIGxvZ3MuCgpXaXRoIHRoaXMgcGF0
-Y2ggdGhlc2UgYXJlIGFsbCBnb25lLgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20g
-LyAoIG1hdmVuLnBsIHwgcGxkLWxpbnV4Lm9yZyApCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+__dax_dbg() currently assumes that bh->b_bdev is non-NULL, passing it into
+bdevname() where is is dereferenced.  This assumption isn't always true -
+when called for reads of holes, ext4_dax_mmap_get_block() returns a buffer
+head where bh->b_bdev is never set.  I hit this BUG while testing the DAX
+PMD fault path.
+
+Instead, verify that we have a valid bh->b_bdev, else just say "unknown"
+for the block device.
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/dax.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 7af8797..03cc4a3 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -563,7 +563,12 @@ static void __dax_dbg(struct buffer_head *bh, unsigned long address,
+ {
+ 	if (bh) {
+ 		char bname[BDEVNAME_SIZE];
+-		bdevname(bh->b_bdev, bname);
++
++		if (bh->b_bdev)
++			bdevname(bh->b_bdev, bname);
++		else
++			snprintf(bname, BDEVNAME_SIZE, "unknown");
++
+ 		pr_debug("%s: %s addr: %lx dev %s state %lx start %lld "
+ 			"length %zd fallback: %s\n", fn, current->comm,
+ 			address, bname, bh->b_state, (u64)bh->b_blocknr,
+-- 
+2.5.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
