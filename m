@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 66CD97F47
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 17:32:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E72498F8059
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 15:32:34 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4C8107F51
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 17:49:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BB7C304059
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 15:49:16 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	heSV7PBMFEzYHfRF for <xfs@oss.sgi.com>;
-	Wed, 06 Jan 2016 15:32:32 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aGxY9-0000Cj-SI
-	for xfs@oss.sgi.com; Thu, 07 Jan 2016 10:31:29 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aGxY9-0003d8-Rb
-	for xfs@oss.sgi.com; Thu, 07 Jan 2016 10:31:29 +1100
+	QZvNffP6PHaRuYrj for <xfs@oss.sgi.com>;
+	Wed, 06 Jan 2016 15:49:13 -0800 (PST)
+Date: Thu, 7 Jan 2016 10:49:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: add tracepoints to readpage calls
-Date: Thu,  7 Jan 2016 10:31:26 +1100
-Message-Id: <1452123087-13892-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1452123087-13892-1-git-send-email-david@fromorbit.com>
-References: <1452123087-13892-1-git-send-email-david@fromorbit.com>
+Subject: Re: xfs and swift
+Message-ID: <20160106234904.GL21461@dastard>
+References: <CAC2B=ZGX2bkEhdgCrpS2X5v+SpAg0jtxZ19vk_9+O9aHME-FSA@mail.gmail.com>
+	<20160106220454.GI21461@dastard> <20160106221004.GJ21461@dastard>
+	<CAC2B=ZHe+crzN4vTjuNRRFgaxFHDDX2=Jn16EcwY1-ukt1=M6g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAC2B=ZHe+crzN4vTjuNRRFgaxFHDDX2=Jn16EcwY1-ukt1=M6g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,85 +27,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Seger <mjseger@gmail.com>
+Cc: Laurence Oberman <loberman@redhat.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jan 06, 2016 at 05:46:33PM -0500, Mark Seger wrote:
+> dave, thanks for getting back to me and the pointer to the config doc.
+>  lots to absorb and play with.
+> 
+> the real challenge for me is that I'm doing testing as different levels.
+> While i realize running 100 parallel swift PUT threads on a small system is
+> not the ideal way to do things, it's the only easy way to get massive
+> numbers of objects into the fillesystem and once there, the performance of
+> a single stream is pretty poor and by instrumenting the swift code I can
+> clearly see excess time being spent in creating/writing the objects and so
+> that's lead us to believe the problem lies in the way xfs is configured.
+>  creating a new directory structure on that same mount point immediately
+> results in high levels of performance.
+> 
+> As an attempt to try to reproduce the problems w/o swift, I wrote a little
+> python script that simply creates files in a 2-tier structure, the first
+> tier consisting of 1024 directories and each directory contains 4096
+> subdirectories into which 1K files are created.
 
-This allows us to see page cache driven readahead in action as it
-passes through XFS. This helps to understand buffered read
-throughput problems such as readahead IO IO sizes being too small
-for the underlying device to reach max throughput.
+So you created something with even greater fan-out than what your
+swift app is using?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c  |  2 ++
- fs/xfs/xfs_trace.h | 26 ++++++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
+> I'm doing this for 10000
+> objects as a time and then timing them, reporting the times, 10 per line so
+> each line represents 100 thousand file creates.
+> 
+> Here too I'm seeing degradation and if I look at what happens when there
+> are already 3M files and I write 1M more, I see these creation times/10
+> thousand:
+> 
+>  1.004236  0.961419  0.996514  1.012150  1.101794  0.999422  0.994796
+>  1.214535  0.997276  1.306736
+>  2.793429  1.201471  1.133576  1.069682  1.030985  1.096341  1.052602
+>  1.391364  0.999480  1.914125
+>  1.193892  0.967206  1.263310  0.890472  1.051962  4.253694  1.145573
+>  1.528848 13.586892  4.925790
+>  3.975442  8.896552  1.197005  3.904226  7.503806  1.294842  1.816422
+>  9.329792  7.270323  5.936545
+>  7.058685  5.516841  4.527271  1.956592  1.382551  1.510339  1.318341
+> 13.255939  6.938845  4.106066
+>  2.612064  2.028795  4.647980  7.371628  5.473423  5.823201 14.229120
+>  0.899348  3.539658  8.501498
+>  4.662593  6.423530  7.980757  6.367012  3.414239  7.364857  4.143751
+>  6.317348 11.393067  1.273371
+> 146.067300  1.317814  1.176529  1.177830 52.206605  1.112854  2.087990
+> 42.328220  1.178436  1.335202
+> 49.118140  1.368696  1.515826 44.690431  0.927428  0.920801  0.985965
+>  1.000591  1.027458 60.650443
+>  1.771318  2.690499  2.262868  1.061343  0.932998 64.064210 37.726213
+>  1.245129  0.743771  0.996683
+> 
+> nothing one set of 10K took almost 3 minutes!
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 29e7e5d..379c089 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1917,6 +1917,7 @@ xfs_vm_readpage(
- 	struct file		*unused,
- 	struct page		*page)
- {
-+	trace_xfs_vm_readpage(page->mapping->host, 1);
- 	return mpage_readpage(page, xfs_get_blocks);
- }
- 
-@@ -1927,6 +1928,7 @@ xfs_vm_readpages(
- 	struct list_head	*pages,
- 	unsigned		nr_pages)
- {
-+	trace_xfs_vm_readpages(mapping->host, nr_pages);
- 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
- }
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 877079eb..391d797 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1222,6 +1222,32 @@ DEFINE_PAGE_EVENT(xfs_writepage);
- DEFINE_PAGE_EVENT(xfs_releasepage);
- DEFINE_PAGE_EVENT(xfs_invalidatepage);
- 
-+DECLARE_EVENT_CLASS(xfs_readpage_class,
-+	TP_PROTO(struct inode *inode, int nr_pages),
-+	TP_ARGS(inode, nr_pages),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(int, nr_pages)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->nr_pages = nr_pages;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->nr_pages)
-+)
-+
-+#define DEFINE_READPAGE_EVENT(name)		\
-+DEFINE_EVENT(xfs_readpage_class, name,	\
-+	TP_PROTO(struct inode *inode, int nr_pages), \
-+	TP_ARGS(inode, nr_pages))
-+DEFINE_READPAGE_EVENT(xfs_vm_readpage);
-+DEFINE_READPAGE_EVENT(xfs_vm_readpages);
-+
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
- 		 int type, struct xfs_bmbt_irec *irec),
+Which is no surprise because you have slow disks and a *lot* of
+memory. At some point the journal and/or memory is going to fill up
+with dirty objects and have to block waiting for writeback. At that
+point there's going to be several hundred thousand dirty inodes that
+need to be flushed to disk before progress can be made again.  That
+metadata writeback will be seek bound, and that's where all the
+delay comes from.
+
+We've been through this problem several times now with different
+swift users over the past couple of years. Please go and search the
+list archives, because every time the solution has been the same:
+
+	- reduce the directory heirarchy to a single level with, at
+	  most, the number of directories matching the expected
+	  *production* concurrency level 
+	- reduce the XFS log size down to 32-128MB to limit dirty
+	  metadata object buildup in memory
+	- reduce the number of AGs to as small as necessary to
+	  maintain /allocation/ concurrency to limit the number of
+	  different locations XFS writes to the disks (typically
+	  10-20x less than the application level concurrency)
+	- use a 3.16+ kernel with the free inode btree on-disk
+	  format feature to keep inode allocation CPU overhead low
+	  and consistent regardless of the number of inodes already
+	  allocated in the filesystem.
+
+> my main questions at this point are is this performance expected and/or
+> might a newer kernel help?  and might it be possible to significantly
+> improve things via tuning or is it what it is?  I do realize I'm starting
+> with an empty directory tree whose performance degrades as it fills, but if
+> I wanted to tune for say 10M or maybe 100M files might I be able to expect
+
+The mkfs defaults will work just fine with that many files in the
+filesystem. Your application configuration and data store layout is
+likely to be your biggest problem here.
+
+Cheers,
+
+Dave.
+
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
