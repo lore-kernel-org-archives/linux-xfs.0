@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AC46B7F47
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 12:10:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8C02B8F804B
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 10:10:17 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	7ujwGocr7anGK8xG for <xfs@oss.sgi.com>;
-	Wed, 06 Jan 2016 10:10:15 -0800 (PST)
-Date: Wed, 6 Jan 2016 11:10:12 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v6 4/7] dax: add support for fsync/msync
-Message-ID: <20160106181012.GA7332@linux.intel.com>
-References: <1450899560-26708-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1450899560-26708-5-git-send-email-ross.zwisler@linux.intel.com>
-	<CAPcyv4jVJGPO8Yhz8WgSJTFw+o8=5n6yx17zchXA6C+wEKcajg@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 366D37F37
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 13:04:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B119FAC004
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 11:04:37 -0800 (PST)
+Received: from mail-qk0-f174.google.com (mail-qk0-f174.google.com
+	[209.85.220.174]) by cuda.sgi.com with ESMTP id
+	xr6Ro7KExUNMwAos (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 11:04:35 -0800 (PST)
+Received: by mail-qk0-f174.google.com with SMTP id p186so77432254qke.0
+	for <xfs@oss.sgi.com>; Wed, 06 Jan 2016 11:04:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jVJGPO8Yhz8WgSJTFw+o8=5n6yx17zchXA6C+wEKcajg@mail.gmail.com>
+In-Reply-To: <1452103263-1592-3-git-send-email-ross.zwisler@linux.intel.com>
+References: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1452103263-1592-3-git-send-email-ross.zwisler@linux.intel.com>
+Date: Wed, 6 Jan 2016 11:04:35 -0800
+Message-ID: <CAPcyv4ig1W8LpC6ORYCZd65idK3QuOYa40FsbujWXXaZT_WMRA@mail.gmail.com>
+Subject: Re: [PATCH v7 2/9] dax: fix conversion of holes to PMDs
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,81 +32,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: X86 ML <x86@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Thomas Gleixner <tglx@linutronix.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Sun, Jan 03, 2016 at 10:13:06AM -0800, Dan Williams wrote:
-> On Wed, Dec 23, 2015 at 11:39 AM, Ross Zwisler
-> <ross.zwisler@linux.intel.com> wrote:
-> > To properly handle fsync/msync in an efficient way DAX needs to track dirty
-> > pages so it is able to flush them durably to media on demand.
-> >
-> > The tracking of dirty pages is done via the radix tree in struct
-> > address_space.  This radix tree is already used by the page writeback
-> > infrastructure for tracking dirty pages associated with an open file, and
-> > it already has support for exceptional (non struct page*) entries.  We
-> > build upon these features to add exceptional entries to the radix tree for
-> > DAX dirty PMD or PTE pages at fault time.
-> >
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> 
-> I'm hitting the following report with the ndctl dax test [1] on
-> next-20151231.  I bisected it to
->  commit 3cb108f941de "dax-add-support-for-fsync-sync-v6".  I'll take a
-> closer look tomorrow, but in case someone can beat me to it, here's
-> the back-trace:
-> 
-> ------------[ cut here ]------------
-> kernel BUG at fs/inode.c:497!
-> [..]
-> CPU: 1 PID: 3001 Comm: umount Tainted: G           O    4.4.0-rc7+ #2412
-> Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-> task: ffff8800da2a5a00 ti: ffff880307794000 task.ti: ffff880307794000
-> RIP: 0010:[<ffffffff81280171>]  [<ffffffff81280171>] clear_inode+0x71/0x80
-> RSP: 0018:ffff880307797d50  EFLAGS: 00010002
-> RAX: ffff8800da2a5a00 RBX: ffff8800ca2e7328 RCX: ffff8800da2a5a28
-> RDX: 0000000000000001 RSI: 0000000000000005 RDI: ffff8800ca2e7530
-> RBP: ffff880307797d60 R08: ffffffff82900ae0 R09: 0000000000000000
-> R10: ffff8800ca2e7548 R11: 0000000000000000 R12: ffff8800ca2e7530
-> R13: ffff8800ca2e7328 R14: ffff8800da2e88d0 R15: ffff8800da2e88d0
-> FS:  00007f2b22f4a880(0000) GS:ffff88031fc40000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00005648abd933e8 CR3: 000000007f3fc000 CR4: 00000000000006e0
-> Stack:
-> ffff8800ca2e7328 ffff8800ca2e7000 ffff880307797d88 ffffffffa01c18af
-> ffff8800ca2e7328 ffff8800ca2e74d0 ffffffffa01ec740 ffff880307797db0
-> ffffffff81281038 ffff8800ca2e74c0 ffff880307797e00 ffff8800ca2e7328
-> Call Trace:
-> [<ffffffffa01c18af>] xfs_fs_evict_inode+0x5f/0x110 [xfs]
-> [<ffffffff81281038>] evict+0xb8/0x180
-> [<ffffffff8128113b>] dispose_list+0x3b/0x50
-> [<ffffffff81282014>] evict_inodes+0x144/0x170
-> [<ffffffff8126447f>] generic_shutdown_super+0x3f/0xf0
-> [<ffffffff81264837>] kill_block_super+0x27/0x70
-> [<ffffffff81264a53>] deactivate_locked_super+0x43/0x70
-> [<ffffffff81264e9c>] deactivate_super+0x5c/0x60
-> [<ffffffff81285aff>] cleanup_mnt+0x3f/0x90
-> [<ffffffff81285b92>] __cleanup_mnt+0x12/0x20
-> [<ffffffff810c4f26>] task_work_run+0x76/0x90
-> [<ffffffff81003e3a>] syscall_return_slowpath+0x20a/0x280
-> [<ffffffff8192671a>] int_ret_from_sys_call+0x25/0x9f
-> Code: 48 8d 93 30 03 00 00 48 39 c2 75 23 48 8b 83 d0 00 00 00 a8 20
-> 74 1a a8 40 75 18 48 c7 8
-> 3 d0 00 00 00 60 00 00 00 5b 41 5c 5d c3 <0f> 0b 0f 0b 0f 0b 0f 0b 0f
-> 0b 0f 1f 44 00 00 0f 1f
-> 44 00 00 55
-> RIP  [<ffffffff81280171>] clear_inode+0x71/0x80
-> RSP <ffff880307797d50>
-> ---[ end trace 3b1d8898a94a4fc1 ]---
-> 
-> [1]: git://git@github.com:pmem/ndctl.git pending
-> make TESTS="test/dax.sh" check
+On Wed, Jan 6, 2016 at 10:00 AM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> When we get a DAX PMD fault for a write it is possible that there could be
+> some number of 4k zero pages already present for the same range that were
+> inserted to service reads from a hole.  These 4k zero pages need to be
+> unmapped from the VMAs and removed from the struct address_space radix tree
+> before the real DAX PMD entry can be inserted.
+>
+> For PTE faults this same use case also exists and is handled by a
+> combination of unmap_mapping_range() to unmap the VMAs and
+> delete_from_page_cache() to remove the page from the address_space radix
+> tree.
+>
+> For PMD faults we do have a call to unmap_mapping_range() (protected by a
+> buffer_new() check), but nothing clears out the radix tree entry.  The
+> buffer_new() check is also incorrect as the current ext4 and XFS filesystem
+> code will never return a buffer_head with BH_New set, even when allocating
+> new blocks over a hole.  Instead the filesystem will zero the blocks
+> manually and return a buffer_head with only BH_Mapped set.
+>
+> Fix this situation by removing the buffer_new() check and adding a call to
+> truncate_inode_pages_range() to clear out the radix tree entries before we
+> insert the DAX PMD.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-This issue is fixed with patch 2 of v7:
+Replaced the current contents of v6 in -mm from next-20160106 with
+this v7 set and it looks good.
 
-https://lists.01.org/pipermail/linux-nvdimm/2016-January/003888.html
+Reported-by: Dan Williams <dan.j.williams@intel.com>
+Tested-by: Dan Williams <dan.j.williams@intel.com>
 
-Thanks for the report!
+One question below...
+
+> ---
+>  fs/dax.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+>
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 03cc4a3..9dc0c97 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -594,6 +594,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+>         bool write = flags & FAULT_FLAG_WRITE;
+>         struct block_device *bdev;
+>         pgoff_t size, pgoff;
+> +       loff_t lstart, lend;
+>         sector_t block;
+>         int result = 0;
+>
+> @@ -647,15 +648,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+>                 goto fallback;
+>         }
+>
+> -       /*
+> -        * If we allocated new storage, make sure no process has any
+> -        * zero pages covering this hole
+> -        */
+> -       if (buffer_new(&bh)) {
+> -               i_mmap_unlock_read(mapping);
+> -               unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
+> -               i_mmap_lock_read(mapping);
+> -       }
+> +       /* make sure no process has any zero pages covering this hole */
+> +       lstart = pgoff << PAGE_SHIFT;
+> +       lend = lstart + PMD_SIZE - 1; /* inclusive */
+> +       i_mmap_unlock_read(mapping);
+> +       unmap_mapping_range(mapping, lstart, PMD_SIZE, 0);
+> +       truncate_inode_pages_range(mapping, lstart, lend);
+
+Do we need to do both unmap and truncate given that
+truncate_inode_page() optionally does an unmap_mapping_range()
+internally?
 
 _______________________________________________
 xfs mailing list
