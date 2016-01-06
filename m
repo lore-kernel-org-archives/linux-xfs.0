@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 192DC7F47
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 17:59:23 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id D86927F37
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 20:04:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DD7B98F8035
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 15:59:22 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	YellGJ6rgTsbOeWz for <xfs@oss.sgi.com>;
-	Tue, 05 Jan 2016 15:59:19 -0800 (PST)
-Date: Wed, 6 Jan 2016 10:58:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 9/9] libxfs: keep unflushable buffers off the cache MRUs
-Message-ID: <20160105235852.GF21461@dastard>
-References: <1450733829-9319-1-git-send-email-david@fromorbit.com>
-	<1450733829-9319-10-git-send-email-david@fromorbit.com>
-	<20160105183417.GE38749@bfoster.bfoster>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9BC358F804B
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2016 18:04:46 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id ODprq5kU9PnsAL0o (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2016 18:04:43 -0800 (PST)
+Date: Tue, 5 Jan 2016 18:04:40 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFCv4 00/76] xfs: add reverse-mapping, reflink, and dedupe
+	support
+Message-ID: <20160106020440.GL28330@birch.djwong.org>
+References: <20151219085622.12713.88678.stgit@birch.djwong.org>
+	<20151220140254.GA3618@laptop.bfoster>
+	<20160104235951.GE28330@birch.djwong.org>
+	<20160105124226.GA38749@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160105183417.GE38749@bfoster.bfoster>
+In-Reply-To: <20160105124226.GA38749@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,77 +36,157 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 05, 2016 at 01:34:17PM -0500, Brian Foster wrote:
-> On Tue, Dec 22, 2015 at 08:37:09AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jan 05, 2016 at 07:42:26AM -0500, Brian Foster wrote:
+> On Mon, Jan 04, 2016 at 03:59:51PM -0800, Darrick J. Wong wrote:
+> > On Sun, Dec 20, 2015 at 09:02:54AM -0500, Brian Foster wrote:
+> > > On Sat, Dec 19, 2015 at 12:56:23AM -0800, Darrick J. Wong wrote:
+> > > > Hi all,
+> > > > 
+> > > ...
+> > > > Fixed since RFCv3:
+> > > > 
+> > > >  * The reflink and dedupe ioctls are being hoisted to the VFS, as
+> > > >    provided in the first few patches.  Patch 81 connects to this
+> > > >    functionality.
+> > > > 
+> > > >  * Copy on write has been rewritten for v4.  We now use the existing
+> > > >    delayed allocation mechanism to coalesce writes together, deferring
+> > > >    allocation until writeout time.  This enables CoW to make better
+> > > >    block placement decisions and significantly reduces overhead.
+> > > >    CoW is still pretty slow, but not as slow as before.
+> > > > 
+> > > >  * Direct IO CoW has been implemented using the same mechanism as
+> > > >    above, but modified to perform the allocation and remapping right
+> > > >    then and there.  Throughput is much higher than pushing data
+> > > >    through the page cache CoW.  (It's the same mechanism, but we're
+> > > >    playing with chunks bigger than a single memory page.)
+> > > > 
+> > > >  * CoW ENOSPC works correctly now, except in the pathological case
+> > > >    that the AG fills up and the rmap btree cannot expand.  That will
+> > > >    be addressed for v5.
+> > > > 
+> > > >  * fallocate will now unshare blocks to prevent future ENOSPC, as
+> > > >    you'd expect.
+> > > > 
+> > > >  * refcount btree blocks are preallocated at mount time to prevent
+> > > >    ENOSPC while trying to expand the tree.  This also has the effect
+> > > >    of grouping the btree blocks together, which can speed up CoW
+> > > >    remapping.
+> > > > 
+> > > 
+> > > Can you elaborate on how these blocks are preallocated? E.g., is the
+> > > tree "preconstructed" in some sense? However that is done, is this the
+> > > anticipated solution or a temporary workaround..?
+> > > 
+> > > Also, shouldn't the enospc condition be handled by the agfl? I take it
+> > > there is something going on here that renders that solution flawed, so
+> > > I'm just curious what it is.
+> > > 
+> > > (Sorry if this is all explained elsewhere, but I haven't yet had a
+> > > chance to take a close enough look at this feature..).
 > > 
-> > There's no point trying to free buffers that are dirty and return
-> > errors on flush as we have to keep them around until the corruption
-> > is fixed. Hence if we fail to flush an inode during a cache shake,
-> > move the buffer to a special dirty MRU list that the cache does not
-> > shake. This prevents memory pressure from seeing these buffers, but
-> > allows subsequent cache lookups to still find them through the hash.
-> > This ensures we don't waste huge amounts of CPU trying to flush and
-> > reclaim buffers that canot be flushed or reclaimed.
+> > Reference count btree blocks aren't allocated from the AGFL; they're allocated
+> > from the free space in the same manner as the inobt, per a review comment from
+> > Dave a looong time ago. :) 
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  include/cache.h |  3 ++-
-> >  libxfs/cache.c  | 34 +++++++++++++++++++++++++++++-----
-> >  2 files changed, 31 insertions(+), 6 deletions(-)
-> > 
-> ...
-> > diff --git a/libxfs/cache.c b/libxfs/cache.c
-> > index a48ebd9..d5ea461 100644
-> > --- a/libxfs/cache.c
-> > +++ b/libxfs/cache.c
-> ...
-> > @@ -202,10 +223,11 @@ cache_shake(
-> >  	struct cache_node *	node;
-> >  	unsigned int		count;
-> >  
-> > -	ASSERT(priority <= CACHE_MAX_PRIORITY);
-> > -	if (priority > CACHE_MAX_PRIORITY)
-> > +	ASSERT(priority <= CACHE_DIRTY_PRIORITY);
-> > +	if (priority > CACHE_MAX_PRIORITY && !all)
-> >  		priority = 0;
-> >  
-> > +
 > 
-> Extra newline. FWIW, it also looks like the only cache_shake() caller
-> where all == 0 already prevents calling with priority >
-> CACHE_MAX_PRIORITY. I think a brief comment in one or both places with
-> regard to why >max priority is skipped unless 'all == 1' would be good,
-> though.
+> Ah, Ok.
+> 
+> > As such, we can get ourselves into the nasty situation where every block in the
+> > AG has been allocated to file data.  If we then see a bunch of reference count
+> > changes that are scattered around the AG, the reference count btree has to
+> > expand to hold all the new records... but there isn't space, and the operation
+> > fails.  Given that we know the maximum possible size of the refcount btree
+> > (it's 0.3% of the AG size with 4k blocks), I figured it was easy enough to
+> > avoid ENOSPC for reflink operations.
+> > 
+> 
+> Sounds reasonable.
+> 
+> > I've temporarily fixed this by adding code that figures out how many blocks we
+> > need if the reference count btree has to have a unique record for every block
+> > in the AG and holding that many blocks until either they're allocated to the
+> > refcount btree or freed at umount time.  Right now it's a temporary fix (if the
+> > FS crashes, the reserved blocks are lost) but it wouldn't be difficult for the
+> > FS to make a permanent reservation that's recorded on disk somehow.  But that's
+> > involves writing things to disk + making xfsprogs understand the reservation;
+> > let's see what people say about the reserved pool idea at all.
+> > 
+> > Does that make sense? :)
+> > 
+> 
+> Yep, it sounds sort of like the reserve pool mechanism used to protect
+> against ENOSPC when freeing blocks. Curious... why are the reserved
+> blocks lost on fs crash? Wouldn't they be reserved again on the
+> subsequent mount?
 
-OK, can add.
+They will, but the pre-crash reservation isn't (yet) written down anywhere on
+disk.
 
-> Also, it looks like the loop in cache_report() could be updated to dump
-> the dirty priority mru entry count.
+Thank /you/ for having a look at the reflink code! :)
 
-OK.
+--D
 
 > 
-> Finally, what happens once a buffer on the dirty mru is fully repaired,
-> rewritten and released? Is it placed right back on the "unshakeable"
-> dirty mru or is cn_priority updated somewhere? On further digging, it
-> looks like a subsequent buffer lookup (__cache_lookup()) drops the
-> priority, though it appears to be designed to deal with prefetched
-> buffers and the associated B_INODE..B_DIR_BMAP mappings.
-
-Somehow I missed sending the last patch in the series which
-addresses this exact issue (libxfs: reset dirty buffer priority on
-lookup) by saving the priority when the buffer is moved to the dirty
-MRU and restoring it when the buffer is removed from the dirty MRU
-on the next successful lookup. I'll make sure that's in the updated
-patch series ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Thanks for the explanation...
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > Issues: 
+> > > > 
+> > > >  * The extent swapping ioctl still allocates a bigger fixed-size
+> > > >    transaction.  That's most likely a stupid thing to do, so getting a
+> > > >    better grip on how the journalling code works and auditing all the
+> > > >    new transaction users will have to happen.  Right now it mostly
+> > > >    gets lucky.
+> > > > 
+> > > >  * EFI tracking for the allocated-but-not-yet-mapped blocks is
+> > > >    nonexistant.  A crash will leak them.
+> > > > 
+> > > >  * ENOSPC while expanding the rmap btree can crash the FS.  For now we
+> > > >    work around this problem by making the AGFL as big as possible,
+> > > >    failing CoW attempts with ENOSPC if there aren't enough AGFL blocks
+> > > >    available, and hoping that doesn't actually happen.
+> > > > 
+> > > > If you're going to start using this mess, you probably ought to just
+> > > > pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
+> > > > There are also updates for xfs-docs[4] and man-pages[5].
+> > > > 
+> > > > The patches have been xfstested with x64, i386, and ppc64; while in
+> > > > general the tests run to completion, there are still periodic bugs
+> > > > that will be addressed by the next RFC.  There's a persistent crash on
+> > > > arm64 and ppc64el that I haven't been able to triage.
+> > > > 
+> > > > This is an extraordinary way to eat your data.  Enjoy! 
+> > > > Comments and questions are, as always, welcome.
+> > > > 
+> > > > --D
+> > > > 
+> > > > [1] https://github.com/djwong/linux/tree/for-dave
+> > > > [2] https://github.com/djwong/xfsprogs/tree/for-dave
+> > > > [3] https://github.com/djwong/xfstests/tree/for-dave
+> > > > [4] https://github.com/djwong/xfs-documentation/tree/for-dave
+> > > > [5] https://github.com/djwong/man-pages/commits/for-mtk
+> > > > 
+> > > > _______________________________________________
+> > > > xfs mailing list
+> > > > xfs@oss.sgi.com
+> > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
