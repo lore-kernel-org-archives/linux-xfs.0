@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CE6EC7F59
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 12:01:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 51140AC004
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 10:01:23 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 841AC7F59
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 12:01:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 06652AC004
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 10:01:27 -0800 (PST)
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id ueJSc0cLp7a2maIx for
-	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 10:01:21 -0800 (PST)
+	cuda.sgi.com with ESMTP id EQuFULEoRYOBbumg for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 10:01:26 -0800 (PST)
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v7 2/9] dax: fix conversion of holes to PMDs
-Date: Wed,  6 Jan 2016 11:00:56 -0700
-Message-Id: <1452103263-1592-3-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v7 5/9] mm: add find_get_entries_tag()
+Date: Wed,  6 Jan 2016 11:00:59 -0700
+Message-Id: <1452103263-1592-6-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,78 +30,112 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-When we get a DAX PMD fault for a write it is possible that there could be
-some number of 4k zero pages already present for the same range that were
-inserted to service reads from a hole.  These 4k zero pages need to be
-unmapped from the VMAs and removed from the struct address_space radix tree
-before the real DAX PMD entry can be inserted.
-
-For PTE faults this same use case also exists and is handled by a
-combination of unmap_mapping_range() to unmap the VMAs and
-delete_from_page_cache() to remove the page from the address_space radix
-tree.
-
-For PMD faults we do have a call to unmap_mapping_range() (protected by a
-buffer_new() check), but nothing clears out the radix tree entry.  The
-buffer_new() check is also incorrect as the current ext4 and XFS filesystem
-code will never return a buffer_head with BH_New set, even when allocating
-new blocks over a hole.  Instead the filesystem will zero the blocks
-manually and return a buffer_head with only BH_Mapped set.
-
-Fix this situation by removing the buffer_new() check and adding a call to
-truncate_inode_pages_range() to clear out the radix tree entries before we
-insert the DAX PMD.
+Add find_get_entries_tag() to the family of functions that include
+find_get_entries(), find_get_pages() and find_get_pages_tag().  This is
+needed for DAX dirty page handling because we need a list of both page
+offsets and radix tree entries ('indices' and 'entries' in this function)
+that are marked with the PAGECACHE_TAG_TOWRITE tag.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/dax.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ include/linux/pagemap.h |  3 +++
+ mm/filemap.c            | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 71 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 03cc4a3..9dc0c97 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -594,6 +594,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 	bool write = flags & FAULT_FLAG_WRITE;
- 	struct block_device *bdev;
- 	pgoff_t size, pgoff;
-+	loff_t lstart, lend;
- 	sector_t block;
- 	int result = 0;
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 4d08b6c..92395a0 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -361,6 +361,9 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t start,
+ 			       unsigned int nr_pages, struct page **pages);
+ unsigned find_get_pages_tag(struct address_space *mapping, pgoff_t *index,
+ 			int tag, unsigned int nr_pages, struct page **pages);
++unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
++			int tag, unsigned int nr_entries,
++			struct page **entries, pgoff_t *indices);
  
-@@ -647,15 +648,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		goto fallback;
- 	}
+ struct page *grab_cache_page_write_begin(struct address_space *mapping,
+ 			pgoff_t index, unsigned flags);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 7b8be78..1e215fc 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1499,6 +1499,74 @@ repeat:
+ }
+ EXPORT_SYMBOL(find_get_pages_tag);
  
--	/*
--	 * If we allocated new storage, make sure no process has any
--	 * zero pages covering this hole
--	 */
--	if (buffer_new(&bh)) {
--		i_mmap_unlock_read(mapping);
--		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
--		i_mmap_lock_read(mapping);
--	}
-+	/* make sure no process has any zero pages covering this hole */
-+	lstart = pgoff << PAGE_SHIFT;
-+	lend = lstart + PMD_SIZE - 1; /* inclusive */
-+	i_mmap_unlock_read(mapping);
-+	unmap_mapping_range(mapping, lstart, PMD_SIZE, 0);
-+	truncate_inode_pages_range(mapping, lstart, lend);
-+	i_mmap_lock_read(mapping);
- 
- 	/*
- 	 * If a truncate happened while we were allocating blocks, we may
-@@ -669,7 +668,8 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		goto out;
- 	}
- 	if ((pgoff | PG_PMD_COLOUR) >= size) {
--		dax_pmd_dbg(&bh, address, "pgoff unaligned");
-+		dax_pmd_dbg(&bh, address,
-+				"offset + huge page size > file size");
- 		goto fallback;
- 	}
- 
++/**
++ * find_get_entries_tag - find and return entries that match @tag
++ * @mapping:	the address_space to search
++ * @start:	the starting page cache index
++ * @tag:	the tag index
++ * @nr_entries:	the maximum number of entries
++ * @entries:	where the resulting entries are placed
++ * @indices:	the cache indices corresponding to the entries in @entries
++ *
++ * Like find_get_entries, except we only return entries which are tagged with
++ * @tag.
++ */
++unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
++			int tag, unsigned int nr_entries,
++			struct page **entries, pgoff_t *indices)
++{
++	void **slot;
++	unsigned int ret = 0;
++	struct radix_tree_iter iter;
++
++	if (!nr_entries)
++		return 0;
++
++	rcu_read_lock();
++restart:
++	radix_tree_for_each_tagged(slot, &mapping->page_tree,
++				   &iter, start, tag) {
++		struct page *page;
++repeat:
++		page = radix_tree_deref_slot(slot);
++		if (unlikely(!page))
++			continue;
++		if (radix_tree_exception(page)) {
++			if (radix_tree_deref_retry(page)) {
++				/*
++				 * Transient condition which can only trigger
++				 * when entry at index 0 moves out of or back
++				 * to root: none yet gotten, safe to restart.
++				 */
++				goto restart;
++			}
++
++			/*
++			 * A shadow entry of a recently evicted page, a swap
++			 * entry from shmem/tmpfs or a DAX entry.  Return it
++			 * without attempting to raise page count.
++			 */
++			goto export;
++		}
++		if (!page_cache_get_speculative(page))
++			goto repeat;
++
++		/* Has the page moved? */
++		if (unlikely(page != *slot)) {
++			page_cache_release(page);
++			goto repeat;
++		}
++export:
++		indices[ret] = iter.index;
++		entries[ret] = page;
++		if (++ret == nr_entries)
++			break;
++	}
++	rcu_read_unlock();
++	return ret;
++}
++EXPORT_SYMBOL(find_get_entries_tag);
++
+ /*
+  * CD/DVDs are error prone. When a medium error occurs, the driver may fail
+  * a _large_ part of the i/o request. Imagine the worst scenario:
 -- 
 2.5.0
 
