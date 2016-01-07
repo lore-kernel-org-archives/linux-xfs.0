@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 345717F37
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 17:14:34 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6CF757F37
+	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 17:21:54 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1EBCB8F804C
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 15:14:31 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 334318F804B
+	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 15:21:54 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ChMaHvBkcJA6IfP1 for <xfs@oss.sgi.com>;
-	Thu, 07 Jan 2016 15:14:28 -0800 (PST)
-Date: Fri, 8 Jan 2016 10:04:36 +1100
+	CNhRj7lseFcYILak for <xfs@oss.sgi.com>;
+	Thu, 07 Jan 2016 15:21:51 -0800 (PST)
+Date: Fri, 8 Jan 2016 10:10:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Possible XFS or NFS bug in Latest RHEL 6.6
-	2.6.32-504.23.4.el6.x86_64 ?
-Message-ID: <20160107230436.GN21461@dastard>
-References: <OFE4A99C77.ACF09656-ONC1257F33.002FF7B8-C1257F33.0030F438@dolphingeo.com>
+Subject: Re: [PATCH v7 1/9] dax: fix NULL pointer dereference in __dax_dbg()
+Message-ID: <20160107231000.GO21461@dastard>
+References: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1452103263-1592-2-git-send-email-ross.zwisler@linux.intel.com>
+	<CAPcyv4h3NcXHHQAWL=HwgGxTbFTeOa98S9fxWu7dA3nTEcFxxA@mail.gmail.com>
+	<20160107093402.GA8380@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <OFE4A99C77.ACF09656-ONC1257F33.002FF7B8-C1257F33.0030F438@dolphingeo.com>
+In-Reply-To: <20160107093402.GA8380@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +32,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: tore.larsen@dolphingeo.com
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Thu, Jan 07, 2016 at 09:54:43AM +0100, tore.larsen@dolphingeo.com wrote:
-> Hi XFS'ers,
+On Thu, Jan 07, 2016 at 10:34:02AM +0100, Jan Kara wrote:
+> On Wed 06-01-16 11:14:09, Dan Williams wrote:
+> > On Wed, Jan 6, 2016 at 10:00 AM, Ross Zwisler
+> > <ross.zwisler@linux.intel.com> wrote:
+> > > __dax_dbg() currently assumes that bh->b_bdev is non-NULL, passing it into
+> > > bdevname() where is is dereferenced.  This assumption isn't always true -
+> > > when called for reads of holes, ext4_dax_mmap_get_block() returns a buffer
+> > > head where bh->b_bdev is never set.  I hit this BUG while testing the DAX
+> > > PMD fault path.
+> > >
+> > > Instead, verify that we have a valid bh->b_bdev, else just say "unknown"
+> > > for the block device.
+> > >
+> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > Cc: Dan Williams <dan.j.williams@intel.com>
+> > > ---
+> > >  fs/dax.c | 7 ++++++-
+> > >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/fs/dax.c b/fs/dax.c
+> > > index 7af8797..03cc4a3 100644
+> > > --- a/fs/dax.c
+> > > +++ b/fs/dax.c
+> > > @@ -563,7 +563,12 @@ static void __dax_dbg(struct buffer_head *bh, unsigned long address,
+> > >  {
+> > >         if (bh) {
+> > >                 char bname[BDEVNAME_SIZE];
+> > > -               bdevname(bh->b_bdev, bname);
+> > > +
+> > > +               if (bh->b_bdev)
+> > > +                       bdevname(bh->b_bdev, bname);
+> > > +               else
+> > > +                       snprintf(bname, BDEVNAME_SIZE, "unknown");
+> > > +
+> > >                 pr_debug("%s: %s addr: %lx dev %s state %lx start %lld "
+> > >                         "length %zd fallback: %s\n", fn, current->comm,
+> > >                         address, bname, bh->b_state, (u64)bh->b_blocknr,
+> > 
+> > I'm assuming there's no danger of a such a buffer_head ever being used
+> > for the bdev parameter to dax_map_atomic()?  Shouldn't we also/instead
+> > go fix ext4 to not send partially filled buffer_heads?
 > 
->      Anyone seen this?     SGI MIS server.  Been stable for months.
-> 
->      Resembles https://lkml.org/lkml/2014/5/23/261 
+> No. The real problem is a long-standing abuse of struct buffer_head to be
+> used for passing block mapping information (it's on my todo list to remove
+> that at least from DAX code and use cleaner block mapping interface but
+> first I want basic DAX functionality to settle down to avoid unnecessary
+> conflicts). Filesystem is not supposed to touch bh->b_bdev.
 
-Hi Tore,
+That has not been true for a long, long time. e.g. XFS always
+rewrites bh->b_bdev in get_blocks because the file may not reside on
+the primary block device of the filesystem. i.e.:
 
-This list is for developement and support of mainline XFS code base,
-not vendor-modified enterprise kernels. Please report the problem to
-your RHEL or SGI support contact so they can triage and solve your
-problem.
+        /*
+         * If this is a realtime file, data may be on a different device.
+         * to that pointed to from the buffer_head b_bdev currently.
+         */
+        bh_result->b_bdev = xfs_find_bdev_for_inode(inode);
+
+> If you need
+> that filled in, set it yourself in before passing bh to the block mapping
+> function.
+
+That may be true, but we cannot assume that the bdev coming back
+out of get_block is the same one that was passed in.
 
 Cheers,
 
