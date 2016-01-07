@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 52FAB7F37
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 03:34:00 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B0E1C7F37
+	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 06:44:40 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E46B8F8035
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 01:33:59 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id F3BGAKypCdOmODkb (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Jan 2016 01:33:58 -0800 (PST)
-Date: Thu, 7 Jan 2016 10:34:02 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v7 1/9] dax: fix NULL pointer dereference in __dax_dbg()
-Message-ID: <20160107093402.GA8380@quack.suse.cz>
-References: <1452103263-1592-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452103263-1592-2-git-send-email-ross.zwisler@linux.intel.com>
-	<CAPcyv4h3NcXHHQAWL=HwgGxTbFTeOa98S9fxWu7dA3nTEcFxxA@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A063A304039
+	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 04:44:37 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tQvh2oy1l4iber2p (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Jan 2016 04:44:36 -0800 (PST)
+Date: Thu, 7 Jan 2016 07:44:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: handle dquot buffer readahead in log recovery
+	correctly
+Message-ID: <20160107124433.GA33327@bfoster.bfoster>
+References: <1452052834-20605-1-git-send-email-david@fromorbit.com>
+	<20160107030830.GA32200@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4h3NcXHHQAWL=HwgGxTbFTeOa98S9fxWu7dA3nTEcFxxA@mail.gmail.com>
+In-Reply-To: <20160107030830.GA32200@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,62 +31,217 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed 06-01-16 11:14:09, Dan Williams wrote:
-> On Wed, Jan 6, 2016 at 10:00 AM, Ross Zwisler
-> <ross.zwisler@linux.intel.com> wrote:
-> > __dax_dbg() currently assumes that bh->b_bdev is non-NULL, passing it into
-> > bdevname() where is is dereferenced.  This assumption isn't always true -
-> > when called for reads of holes, ext4_dax_mmap_get_block() returns a buffer
-> > head where bh->b_bdev is never set.  I hit this BUG while testing the DAX
-> > PMD fault path.
-> >
-> > Instead, verify that we have a valid bh->b_bdev, else just say "unknown"
-> > for the block device.
-> >
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> >  fs/dax.c | 7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index 7af8797..03cc4a3 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -563,7 +563,12 @@ static void __dax_dbg(struct buffer_head *bh, unsigned long address,
-> >  {
-> >         if (bh) {
-> >                 char bname[BDEVNAME_SIZE];
-> > -               bdevname(bh->b_bdev, bname);
-> > +
-> > +               if (bh->b_bdev)
-> > +                       bdevname(bh->b_bdev, bname);
-> > +               else
-> > +                       snprintf(bname, BDEVNAME_SIZE, "unknown");
-> > +
-> >                 pr_debug("%s: %s addr: %lx dev %s state %lx start %lld "
-> >                         "length %zd fallback: %s\n", fn, current->comm,
-> >                         address, bname, bh->b_state, (u64)bh->b_blocknr,
+On Thu, Jan 07, 2016 at 02:08:30PM +1100, Dave Chinner wrote:
 > 
-> I'm assuming there's no danger of a such a buffer_head ever being used
-> for the bdev parameter to dax_map_atomic()?  Shouldn't we also/instead
-> go fix ext4 to not send partially filled buffer_heads?
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When we do dquot readahead in log recovery, we do not use a verifier
+> as the underlying buffer may not have dquots in it. e.g. the
+> allocation operation hasn't yet been replayed. Hence we do not want
+> to fail recovery because we detect an operation to be replayed has
+> not been run yet. This problem was addressed for inodes in commit
+> d891400 ("xfs: inode buffers may not be valid during recovery
+> readahead") but the problem was not recognised to exist for dquots
+> and their buffers as the dquot readahead did not have a verifier.
+> 
+> The result of not using a verifier is that when the buffer is then
+> next read to replay a dquot modification, the dquot buffer verifier
+> will only be attached to the buffer if *readahead is not complete*.
+> Hence we can read the buffer, replay the dquot changes and then add
+> it to the delwri submission list without it having a verifier
+> attached to it. This then generates warnings in xfs_buf_ioapply(),
+> which catches and warns about this case.
+> 
+> Fix this and make it handle the same readahead verifier error cases
+> as for inode buffers by adding a new readahead verifier that has a
+> write operation as well as a read operation that marks the buffer as
+> not done if any corruption is detected.  Also make sure we don't run
+> readahead if the dquot buffer has been marked as cancelled by
+> recovery.
+> 
+> This will result in readahead either succeeding and the buffer
+> having a valid write verifier, or readahead failing and the buffer
+> state requiring the subsequent read to resubmit the IO with the new
+> verifier.  In either case, this will result in the buffer always
+> ending up with a valid write verifier on it.
+> 
+> Note: we also need to fix the inode buffer readahead error handling
+> to mark the buffer with EIO. Brian noticed the code I copied from
+> there wrong during review, so fix it at the same time. Add comments
+> linking the two functions that handle readahead verifier errors
+> together so we don't forget this behavioural link in future.
+> 
+> cc: <stable@vger.kernel.org> # 3.12 - current
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+> 
+> Version 2
+> - fix logic error in determining if verify failed
+> - set error on buffer when verifier fails
+> - fix inode buffer readahead verifier to set error when it fails
+> - better comments, link dquot and inode buffer ra verifiers in the
+>   comments
+> 
+>  fs/xfs/libxfs/xfs_dquot_buf.c  | 36 ++++++++++++++++++++++++++++++------
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 14 +++++++++-----
+>  fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+>  fs/xfs/libxfs/xfs_shared.h     |  1 +
+>  fs/xfs/xfs_log_recover.c       |  9 +++++++--
+>  5 files changed, 48 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> index 11cefb2..3cc3cf7 100644
+> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+...
+> @@ -264,6 +264,25 @@ xfs_dquot_buf_read_verify(
+>  }
+>  
+>  /*
+> + * readahead errors are silent and simply leave the buffer as !done so a real
+> + * read will then be run with the xfs_dquot_buf_ops verifier. See
+> + * xfs_inode_buf_verify() for why we use EIO and ~XBF_DONE here rather than
+> + * reporting the failure.
+> + */
+> +static void
+> +xfs_dquot_buf_readahead_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +
+> +	if (!xfs_dquot_buf_verify_crc(mp, bp) ||
+> +	    !xfs_dquot_buf_verify(mp, bp, 0)) {
+> +		xfs_buf_ioerror(bp, -EIO);
+> +		bp->b_flags &= ~XBF_DONE;
 
-No. The real problem is a long-standing abuse of struct buffer_head to be
-used for passing block mapping information (it's on my todo list to remove
-that at least from DAX code and use cleaner block mapping interface but
-first I want basic DAX functionality to settle down to avoid unnecessary
-conflicts). Filesystem is not supposed to touch bh->b_bdev. If you need
-that filled in, set it yourself in before passing bh to the block mapping
-function.
+Do we really need to clear the flag if the I/O infrastructure doesn't
+set it until after the verifier is invoked? It's harmless, so if the
+intent is to just be cautious or future-proof:
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+... but it does look slightly confusing, without a mention in the
+comments at least.
+
+Brian
+
+> +	}
+> +}
+> +
+> +/*
+>   * we don't calculate the CRC here as that is done when the dquot is flushed to
+>   * the buffer after the update is done. This ensures that the dquot in the
+>   * buffer always has an up-to-date CRC value.
+> @@ -274,7 +293,7 @@ xfs_dquot_buf_write_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if (!xfs_dquot_buf_verify(mp, bp)) {
+> +	if (!xfs_dquot_buf_verify(mp, bp, XFS_QMOPT_DOWARN)) {
+>  		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+>  		xfs_verifier_error(bp);
+>  		return;
+> @@ -287,3 +306,8 @@ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+>  	.verify_write = xfs_dquot_buf_write_verify,
+>  };
+>  
+> +const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
+> +	.name = "xfs_dquot_ra",
+> +	.verify_read = xfs_dquot_buf_readahead_verify,
+> +	.verify_write = xfs_dquot_buf_write_verify,
+> +};
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 1b8d98a..4816209 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -62,11 +62,14 @@ xfs_inobp_check(
+>   * has not had the inode cores stamped into it. Hence for readahead, the buffer
+>   * may be potentially invalid.
+>   *
+> - * If the readahead buffer is invalid, we don't want to mark it with an error,
+> - * but we do want to clear the DONE status of the buffer so that a followup read
+> - * will re-read it from disk. This will ensure that we don't get an unnecessary
+> - * warnings during log recovery and we don't get unnecssary panics on debug
+> - * kernels.
+> + * If the readahead buffer is invalid, we need to mark it with an error and
+> + * clear the DONE status of the buffer so that a followup read will re-read it
+> + * from disk. We don't report the error otherwise to avoid warnings during log
+> + * recovery and we don't get unnecssary panics on debug kernels. We use EIO here
+> + * because all we want to do is say readahead failed; there is no-one to report
+> + * the error to, so this will distinguish it from a non-ra verifier failure.
+> + * Changes to this readahead error behavour also need to be reflected in
+> + * xfs_dquot_buf_readahead_verify().
+>   */
+>  static void
+>  xfs_inode_buf_verify(
+> @@ -92,6 +95,7 @@ xfs_inode_buf_verify(
+>  						XFS_ERRTAG_ITOBP_INOTOBP,
+>  						XFS_RANDOM_ITOBP_INOTOBP))) {
+>  			if (readahead) {
+> +				xfs_buf_ioerror(bp, -EIO);
+>  				bp->b_flags &= ~XBF_DONE;
+>  				return;
+>  			}
+> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> index 1b0a083..f51078f 100644
+> --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> @@ -153,7 +153,7 @@ typedef __uint16_t	xfs_qwarncnt_t;
+>  #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+>  
+>  extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
+> -		       xfs_dqid_t id, uint type, uint flags, char *str);
+> +		       xfs_dqid_t id, uint type, uint flags, const char *str);
+>  extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+>  
+>  #endif	/* __XFS_QUOTA_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 5be5297..15c3ceb 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -49,6 +49,7 @@ extern const struct xfs_buf_ops xfs_inobt_buf_ops;
+>  extern const struct xfs_buf_ops xfs_inode_buf_ops;
+>  extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
+>  extern const struct xfs_buf_ops xfs_dquot_buf_ops;
+> +extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
+>  extern const struct xfs_buf_ops xfs_sb_buf_ops;
+>  extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
+>  extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 26e67b4..da37beb 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3521,6 +3521,7 @@ xlog_recover_dquot_ra_pass2(
+>  	struct xfs_disk_dquot	*recddq;
+>  	struct xfs_dq_logformat	*dq_f;
+>  	uint			type;
+> +	int			len;
+>  
+>  
+>  	if (mp->m_qflags == 0)
+> @@ -3541,8 +3542,12 @@ xlog_recover_dquot_ra_pass2(
+>  	ASSERT(dq_f);
+>  	ASSERT(dq_f->qlf_len == 1);
+>  
+> -	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno,
+> -			  XFS_FSB_TO_BB(mp, dq_f->qlf_len), NULL);
+> +	len = XFS_FSB_TO_BB(mp, dq_f->qlf_len);
+> +	if (xlog_peek_buffer_cancelled(log, dq_f->qlf_blkno, len, 0))
+> +		return;
+> +
+> +	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno, len,
+> +			  &xfs_dquot_buf_ra_ops);
+>  }
+>  
+>  STATIC void
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
