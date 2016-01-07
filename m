@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8AA527F51
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 18:33:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 79F04304059
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 16:32:59 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id cYQJ4h22De4QARGD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 16:32:57 -0800 (PST)
-Date: Wed, 6 Jan 2016 16:32:27 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: cancel COW in xfs_cancel_ioend
-Message-ID: <20160107003227.GB8015@birch.djwong.org>
-References: <1451822873-12969-1-git-send-email-hch@lst.de>
-	<1451822873-12969-4-git-send-email-hch@lst.de>
-	<20160105014310.GK28330@birch.djwong.org>
-	<20160105104214.GA16310@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 131C47F37
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 19:05:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C2D8AC003
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 17:05:12 -0800 (PST)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id YytEKWkNFZ93KYrr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 17:05:10 -0800 (PST)
+Date: Wed, 6 Jan 2016 20:05:06 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: lazytime implementation questions
+Message-ID: <20160107010506.GB2866@thunk.org>
+References: <20160104062219.GB19802@dastard>
+	<20160105173604.GE18604@quack.suse.cz>
+	<20160105225907.GE21461@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160105104214.GA16310@infradead.org>
+In-Reply-To: <20160105225907.GE21461@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,36 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Tue, Jan 05, 2016 at 02:42:14AM -0800, Christoph Hellwig wrote:
-> On Mon, Jan 04, 2016 at 05:43:10PM -0800, Darrick J. Wong wrote:
-> > Hmm.  This might be the cause of the occasional complaints I've been seeing
-> > where allocated blocks remain in the COW fork when the inode is being cleared
-> > out.  That said, the xfs_reflink_end_cow_failed() is apparently missing a
-> > xfs_bunmapi_cow() to actually clean out the COW fork.
+On Wed, Jan 06, 2016 at 09:59:07AM +1100, Dave Chinner wrote:
+> > So the intended semantics is:
+> > 1) fsync / sync / freeze / unmount will write the timestamp updates even
+> >    with lazytime. So unless crash happens, timestamps are guaranteed to be
+> >    consistent. Also sync / fsync guarantees all changes to get to disk.
+> > 2) We periodically write back timestamps (once per 24 hours) to avoid too
+> >    big timestamp inconsistencies in case of crash.
 > 
-> I can still reproduce xfs_reflink_cancel_pending_cow tripping over
-> allocated blocks in the COW fork over NFS.  generic/154 reproduces
-> it 100% over NFS, although when adding a delay before the cleanup
-> it disappears.  I'm currently trying to figure out why.
+> Ok, so it's supposed to be a delayed timestamp update mechanism
+> without any specific ordering guarantees, not an opportunistic
+> timestamp update mechanism.
 
-Ok.  I spent a couple of days trying to find all the places where we need to
-delete CoW reservations (hole punch, truncate, etc.) and found some places
-where the code was leaving reservations behind in the CoW fork (most notable
-truncate).  I also made the inode eviction code purge any CoW leftovers, so
-that should all go away.
+There is an optimization which ext4 has which will update related
+timestamps when we write an inode table block, which is
+"opportunistic", but there is no guarantee that this will happen.
 
-I also wrote some more xfstests that try to hit all the CoW-cancelling code
-paths (fpunch, fzero, fcollapse, finsert, truncate, -EIO) to smoke test all
-that.  By the way, do you have a testcase handy for the "non-blocking writeback
-EAGAIN" case?  I'm guessing that we could hit that pretty easily by lowering
-dirty_background_* and dirtying a lot of pages while reflinking?
+This is purely optional; other file systems don't have to do this, but
+it can be a win in that if related inodes are in the same 4k block,
+and we need to update, say, the index file one because we are changing
+i_size, but we were also doing non-allocating writes to the data file,
+then we might as well write out the timestamps for the data file at
+the same time, since this is "free".
 
-(Will push new code to github in a day or two.)
-
---D
+						- Ted
 
 _______________________________________________
 xfs mailing list
