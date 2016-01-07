@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 97AB57F37
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 19:41:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7DEDA304059
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 17:41:05 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id mVNKjR5FoJZp2thu (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Jan 2016 17:41:00 -0800 (PST)
-Subject: Re: [PATCH 00/35 v2] separate operations from flags in the
-	bio/request structs
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-Date: Wed, 06 Jan 2016 20:40:09 -0500
-In-Reply-To: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-	(mchristi@redhat.com's message of "Tue, 5 Jan 2016 14:53:03 -0600")
-Message-ID: <yq14meqi2va.fsf@sermon.lab.mkp.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 385277F37
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 20:21:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 19D1C8F804C
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2016 18:21:46 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	iEB476Lu7OzyDMvc for <xfs@oss.sgi.com>;
+	Wed, 06 Jan 2016 18:21:43 -0800 (PST)
+Date: Thu, 7 Jan 2016 13:21:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: lazytime implementation questions
+Message-ID: <20160107022140.GM21461@dastard>
+References: <20160104062219.GB19802@dastard>
+	<20160105173604.GE18604@quack.suse.cz>
+	<20160105225907.GE21461@dastard> <20160107010506.GB2866@thunk.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160107010506.GB2866@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +31,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: mchristi@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
->>>>> "Mike" == mchristi  <mchristi@redhat.com> writes:
+On Wed, Jan 06, 2016 at 08:05:06PM -0500, Theodore Ts'o wrote:
+> On Wed, Jan 06, 2016 at 09:59:07AM +1100, Dave Chinner wrote:
+> > > So the intended semantics is:
+> > > 1) fsync / sync / freeze / unmount will write the timestamp updates even
+> > >    with lazytime. So unless crash happens, timestamps are guaranteed to be
+> > >    consistent. Also sync / fsync guarantees all changes to get to disk.
+> > > 2) We periodically write back timestamps (once per 24 hours) to avoid too
+> > >    big timestamp inconsistencies in case of crash.
+> > 
+> > Ok, so it's supposed to be a delayed timestamp update mechanism
+> > without any specific ordering guarantees, not an opportunistic
+> > timestamp update mechanism.
+> 
+> There is an optimization which ext4 has which will update related
+> timestamps when we write an inode table block, which is
+> "opportunistic", but there is no guarantee that this will happen.
 
-Mike> The following patches begin to cleanup the request->cmd_flags and
-bio-> bi_rw mess. We currently use cmd_flags to specify the operation,
-Mike> attributes and state of the request. For bi_rw we use it for
-Mike> similar info and also the priority but then also have another
-Mike> bi_flags field for state. At some point, we abused them so much we
-Mike> just made cmd_flags 64 bits, so we could add more.
+XFS used to do that, too, before we removed all that hackery when we
+moved to logging timestamp updates unconditionally a few years ago.
+I'm going to have to re-instate some of that code for lazytime, I
+think.
 
-Mike> The following patches seperate the operation (read, write discard,
-Mike> flush, etc) from cmd_flags/bi_rw.
+> This is purely optional; other file systems don't have to do this, but
+> it can be a win in that if related inodes are in the same 4k block,
+> and we need to update, say, the index file one because we are changing
+> i_size, but we were also doing non-allocating writes to the data file,
+> then we might as well write out the timestamps for the data file at
+> the same time, since this is "free".
 
-Mike> This patchset was made against linux-next from today Jan 5 2016.
-Mike> (git tag next-20160105).
+*nod*. Explicit, optimised clustered inode writeback (rather than
+purely opportunistic clustering via delayed buffer writeback) was
+added to XFS way back in early 1999. :)
 
-Very nice work. Thanks for doing this!
+Cheers,
 
-I think it's a much needed cleanup. I focused mainly on the core block,
-discard, write same and sd.c pieces and everything looks sensible to me.
-
-I wonder what the best approach is to move a patch set with this many
-stakeholders forward? Set a "speak now or forever hold your peace"
-review deadline?
-
+Dave.
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
