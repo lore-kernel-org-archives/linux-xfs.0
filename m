@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AB7897F37
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 17:56:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9217A304039
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 15:56:03 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id C8E887F37
+	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 18:16:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8EDC7304039
+	for <xfs@oss.sgi.com>; Thu,  7 Jan 2016 16:16:10 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7mGBq33dfqlllj5j for <xfs@oss.sgi.com>;
-	Thu, 07 Jan 2016 15:56:00 -0800 (PST)
-Date: Fri, 8 Jan 2016 10:55:58 +1100
+	iZMKjJzLKstfHXZG for <xfs@oss.sgi.com>;
+	Thu, 07 Jan 2016 16:16:05 -0800 (PST)
+Date: Fri, 8 Jan 2016 11:15:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: handle dquot buffer readahead in log recovery
-	correctly
-Message-ID: <20160107235558.GP21461@dastard>
-References: <1452052834-20605-1-git-send-email-david@fromorbit.com>
-	<20160107030830.GA32200@dastard>
-	<20160107124433.GA33327@bfoster.bfoster>
+Subject: Re: [PATCH v2 2/4] block: introduce del_gendisk_queue()
+Message-ID: <20160108001544.GQ21461@dastard>
+References: <20160106045616.38788.61076.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160106045627.38788.90127.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160107124433.GA33327@bfoster.bfoster>
+In-Reply-To: <20160106045627.38788.90127.stgit@dwillia2-desk3.amr.corp.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,86 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-[slightly hacked up quoting order so it makes sense]
-
-On Thu, Jan 07, 2016 at 07:44:33AM -0500, Brian Foster wrote:
-> On Thu, Jan 07, 2016 at 02:08:30PM +1100, Dave Chinner wrote:
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When we do dquot readahead in log recovery, we do not use a verifier
-......
-> > write operation as well as a read operation that marks the buffer as
-> > not done if any corruption is detected.  Also make sure we don't run
-
-Marking the buffer not done mentioned here...
-
-.....
-> >  
-> >  /*
-> > + * readahead errors are silent and simply leave the buffer as !done so a real
-> > + * read will then be run with the xfs_dquot_buf_ops verifier. See
-> > + * xfs_inode_buf_verify() for why we use EIO and ~XBF_DONE here rather than
-> > + * reporting the failure.
-
-... and here ...
-
-> > @@ -62,11 +62,14 @@ xfs_inobp_check(
-> >   * has not had the inode cores stamped into it. Hence for readahead, the buffer
-> >   * may be potentially invalid.
-> >   *
-> > - * If the readahead buffer is invalid, we don't want to mark it with an error,
-> > - * but we do want to clear the DONE status of the buffer so that a followup read
-> > - * will re-read it from disk. This will ensure that we don't get an unnecessary
-> > - * warnings during log recovery and we don't get unnecssary panics on debug
-> > - * kernels.
-> > + * If the readahead buffer is invalid, we need to mark it with an error and
-> > + * clear the DONE status of the buffer so that a followup read will re-read it
-> > + * from disk. We don't report the error otherwise to avoid warnings during log
-
-... and here ...
-
-> Do we really need to clear the flag if the I/O infrastructure doesn't
-> set it until after the verifier is invoked?  It's harmless, [...]
-> ... but it does look slightly confusing, without a mention in the
-> comments at least.
-
-I mentioned it 3 times. ;)
-
-Is there something I can do to make it more obvious what the
-comments are referring to?
-
-> > + */
-> > +static void
-> > +xfs_dquot_buf_readahead_verify(
-> > +	struct xfs_buf	*bp)
-> > +{
-> > +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> > +
-> > +	if (!xfs_dquot_buf_verify_crc(mp, bp) ||
-> > +	    !xfs_dquot_buf_verify(mp, bp, 0)) {
-> > +		xfs_buf_ioerror(bp, -EIO);
-> > +		bp->b_flags &= ~XBF_DONE;
+On Tue, Jan 05, 2016 at 08:56:27PM -0800, Dan Williams wrote:
+> Historically we have waited for filesystem specific heuristics to
+> attempt to guess when a block device is gone.  Sometimes this works, but
+> in other cases the system can hang waiting for the fs to trigger its
+> shutdown protocol.
 > 
-> Do we really need to clear the flag if the I/O infrastructure doesn't
-> set it until after the verifier is invoked?  It's harmless, so if the
-> intent is to just be cautious or future-proof:
+> The initial motivation for this investigation was to prevent DAX
+> mappings (direct mmap access to persistent memory) from leaking past the
+> lifetime of the hosting block device.  However, Dave points out that
+> these shutdown operations are needed in other scenarios.  Quoting Dave:
+> 
+>     For example, if we detect a free space corruption during allocation,
+>     it is not safe to trust *any active mapping* because we can't trust
+>     that we having handed out the same block to multiple owners. Hence
+>     on such a filesystem shutdown, we have to prevent any new DAX
+>     mapping from occurring and invalidate all existing mappings as we
+>     cannot allow userspace to modify any data or metadata until we've
+>     resolved the corruption situation.
+> 
+> The current block device shutdown sequence of del_gendisk +
+> blk_cleanup_queue is problematic.  We want to tell the fs after
+> blk_cleanup_queue that there is no possibility of recovery, but by that
+> time we have deleted partitions and lost the ability to find all the
+> super-blocks on a block device.
+> 
+> del_gendisk_queue() combines block device shutdown, blk_cleanup_queue(),
+> with block device end of life notification, del_gendisk().  A later
+> patch builds on this sequence to additionally communicate to the fs that
+> it should force-fail all future i/o since the queue is permanently dead.
 
-It's intended to cover the case that a verifier is run on a buffer
-that has already been read in successfully. This doesn't occur in
-the kernel code, but it most definitely does in the userspace code.
-Strictly speaking it's not necessary (at the moment) for the
-userspace code as it ignores the kernel buffer flags, but I figured
-it's better to leave it there for documentation of expected
-behaviour and to ensure we don't leave a landmine if we ever run a
-readahead verifier on a buffer that is already marked as done...
-
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Thanks!
+This still is two changes in one. Adding the force failure feature
+is a separate change to creating del_gendisk_queue().
 
 Cheers,
 
