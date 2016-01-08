@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 03FAA7F37
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 07:47:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D9D1B8F8052
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 05:47:08 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id MBxO5zJjjI0wKp7w (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E80807F37
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 10:56:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D72B3304039
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 08:56:14 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id d0RbfzkG1xaNQoEm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Jan 2016 05:47:06 -0800 (PST)
-Date: Fri, 8 Jan 2016 14:47:04 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] xfs: cancel COW in xfs_cancel_ioend
-Message-ID: <20160108134704.GA6708@lst.de>
-References: <1451822873-12969-1-git-send-email-hch@lst.de>
-	<1451822873-12969-4-git-send-email-hch@lst.de>
-	<20160105014310.GK28330@birch.djwong.org>
-	<20160105104214.GA16310@infradead.org>
-	<20160107003227.GB8015@birch.djwong.org>
-	<20160107152541.GA16982@lst.de>
-	<20160108100933.GN28330@birch.djwong.org>
+	<xfs@oss.sgi.com>; Fri, 08 Jan 2016 08:56:14 -0800 (PST)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
+Message-ID: <568FEA2C.6080708@redhat.com>
+Date: Fri, 8 Jan 2016 10:56:12 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160108100933.GN28330@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,31 +26,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+To: fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>
 
-Thanks Darrick!
+This adds a new quotactl, Q_XGETQUOTA2.
 
-I've not seen the inode eviction asserts anymore, but I now hit a
-corruption warnings in generic/168 reliably.  I did hit before as
-well, but not very reliably.
+Q_XGETQUOTA2 is exactly like Q_XGETQUOTA, except that it will
+return quota information for the id equal to or greater than
+the id requested.  In other words, if the specified id has
+no quota, the command will return quota information for the
+next higher id which does have a quota set.  If no higher id
+has an active quota, -ESRCH is returned.
 
-generic/168 17s ...[  296.988867] XFS (vdc): Metadata corruption detected at
-xfs_refcountbt_write_verify+0x3e/0x90, block 0xb0
-[  296.990412] XFS (vdc): Unmount and run xfs_repair
-[  296.991300] XFS (vdc): First 64 bytes of corrupted metadata buffer:
-[  296.992349] ffff88007b755000: 52 33 46 43 00 01 00 01 ff ff ff ff ff ff ff
-ff  R3FC............
-[  296.993893] ffff88007b755010: 00 00 00 00 00 00 00 b0 00 00 00 00 00 00 00
-00  ................
-[  297.003293] ffff88007b755020: fe 94 c7 69 fd bd 4a 77 85 3d 9d 6d 7b 45 38
-07  ...i..Jw.=.m{E8.
-[  297.004442] ffff88007b755030: 00 00 00 00 00 00 00 00 00 00 0b 9c 00 00 7f
-07  ................
-[  297.005867] XFS (vdc): xfs_do_force_shutdown(0x8) called from line 1247 of
-file fs/xfs/xfs_buf.c.  Return address = 0xffffffff814cce52
+So if you ask for id X, you can get back quota for id X,
+id X+N, or -ESRCH if no higher id has a quota.
 
-I'll investigate it in a little more detail.
+This allows filesystems to do efficient iteration in kernelspace,
+much like extN filesystems do in userspace when asked to report
+all active quotas.
+
+Today, filesystems such as XFS require getpwent()-style iterations,
+and for systems which have i.e. LDAP backends, this can be very
+slow, or even impossible, if iteration is not allowed in the
+configuration.
+
+I have patches to xfsprogs to allow xfs_quota to use this interface,
+but I haven't looked at generic quota tools yet TBH.  I'll send the
+xfsprogs patches to the xfs list shortly.
+
+Using an id as input fits very nicely with existing interfaces;
+however, I could imagine that making it a more generic "cookie"
+interface might be more extensible; is there any filesystem which
+wouldn't be collecting all active IDs in a linear fashion, and
+would rather have an arbitrary cookie passed back & forth?
+(I hope not) :)
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
