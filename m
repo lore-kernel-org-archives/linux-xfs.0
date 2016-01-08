@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0FA6A7F37
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 12:57:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 030EF8F8035
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 10:57:09 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 537947F37
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 12:57:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C4019AC002
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 10:57:44 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id DaFSVG7agK1iEDm8 for <xfs@oss.sgi.com>;
-	Fri, 08 Jan 2016 10:57:04 -0800 (PST)
+	ESMTP id bxkCkfZVLXGNNDOY for <xfs@oss.sgi.com>;
+	Fri, 08 Jan 2016 10:57:42 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 50B1161AC509
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 12:57:04 -0600 (CST)
-Subject: [PATCH 1/3] xfs_quota: define Q_XGETQUOTA2
+	by sandeen.net (Postfix) with ESMTPSA id 9307D61AC509
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 12:57:42 -0600 (CST)
+Subject: [PATCH 2/3] xfs_quota: make report_mount() take an "output id"
 References: <56900640.1050200@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5690067F.3060707@sandeen.net>
-Date: Fri, 8 Jan 2016 12:57:03 -0600
+Message-ID: <569006A6.7010102@sandeen.net>
+Date: Fri, 8 Jan 2016 12:57:42 -0600
 MIME-Version: 1.0
 In-Reply-To: <56900640.1050200@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,53 +34,118 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This simply defines the Q_XGETQUOTA2 quotactl in xfsprogs.
+Allow report_mount() to take a *oid pointer, an "output id"
+which will be filled in if the quotactl returns an ID for
+something other than that which was passed in.
+
+Also, when printing results, print the id which was actually
+returned, not the id which was passed in.
+
+Should be a no-op change at this point; the next patch which
+wires in Q_XGETQUOTA2 will make use of this.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- include/xqm.h |    1 +
- quota/linux.c |    2 ++
- quota/quota.h |    2 ++
- 3 files changed, 5 insertions(+), 0 deletions(-)
+ quota/report.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
-diff --git a/include/xqm.h b/include/xqm.h
-index 47f58a0..2cf4311 100644
---- a/include/xqm.h
-+++ b/include/xqm.h
-@@ -32,6 +32,7 @@
- #define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
- #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
- #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
-+#define Q_XGETQUOTA2	XQM_CMD(9)	/* get disk limits and usage */
+diff --git a/quota/report.c b/quota/report.c
+index c77b24f..746b04a 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -291,6 +291,7 @@ report_mount(
+ 	FILE		*fp,
+ 	__uint32_t	id,
+ 	char		*name,
++	__uint32_t	*oid,
+ 	uint		form,
+ 	uint		type,
+ 	fs_path_t	*mount,
+@@ -308,6 +309,9 @@ report_mount(
+ 		return 0;
+ 	}
  
- /*
-  * fs_disk_quota structure:
-diff --git a/quota/linux.c b/quota/linux.c
-index 8a73922..84ac674 100644
---- a/quota/linux.c
-+++ b/quota/linux.c
-@@ -49,6 +49,8 @@ xcommand_to_qcommand(
- 		return Q_XQUOTAOFF;
- 	case XFS_GETQUOTA:
- 		return Q_XGETQUOTA;
-+	case XFS_GETQUOTA2:
-+		return Q_XGETQUOTA2;
- 	case XFS_SETQLIM:
- 		return Q_XSETQLIM;
- 	case XFS_GETQSTAT:
-diff --git a/quota/quota.h b/quota/quota.h
-index 416f335..8b80029 100644
---- a/quota/quota.h
-+++ b/quota/quota.h
-@@ -43,6 +43,8 @@ enum {
- 	XFS_GETQSTAT,	/* get quota subsystem status */
- 	XFS_QUOTARM,	/* free disk space used by dquots */
- 	XFS_QSYNC,	/* flush delayed allocate space */
-+	XFS_GETQSTATV,	/* newer version of quota stats */
-+	XFS_GETQUOTA2,	/* get disk limits and usage */
- };
++	if (oid)
++		*oid = d.d_id;
++
+ 	if (flags & TERSE_FLAG) {
+ 		count = 0;
+ 		if ((form & XFS_BLOCK_QUOTA) && d.d_bcount)
+@@ -324,19 +328,19 @@ report_mount(
+ 		report_header(fp, form, type, mount, flags);
  
- /*
+ 	if (flags & NO_LOOKUP_FLAG) {
+-		fprintf(fp, "#%-10u", id);
++		fprintf(fp, "#%-10u", d.d_id);
+ 	} else {
+ 		if (name == NULL) {
+ 			if (type == XFS_USER_QUOTA) {
+-				struct passwd	*u = getpwuid(id);
++				struct passwd	*u = getpwuid(d.d_id);
+ 				if (u)
+ 					name = u->pw_name;
+ 			} else if (type == XFS_GROUP_QUOTA) {
+-				struct group	*g = getgrgid(id);
++				struct group	*g = getgrgid(d.d_id);
+ 				if (g)
+ 					name = g->gr_name;
+ 			} else if (type == XFS_PROJ_QUOTA) {
+-				fs_project_t	*p = getprprid(id);
++				fs_project_t	*p = getprprid(d.d_id);
+ 				if (p)
+ 					name = p->pr_name;
+ 			}
+@@ -425,14 +429,14 @@ report_user_mount(
+ 
+ 	if (upper) {	/* identifier range specified */
+ 		for (id = lower; id <= upper; id++) {
+-			if (report_mount(fp, id, NULL,
++			if (report_mount(fp, id, NULL, NULL,
+ 					form, XFS_USER_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+ 	} else {
+ 		setpwent();
+ 		while ((u = getpwent()) != NULL) {
+-			if (report_mount(fp, u->pw_uid, u->pw_name,
++			if (report_mount(fp, u->pw_uid, u->pw_name, NULL,
+ 					form, XFS_USER_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+@@ -457,14 +461,14 @@ report_group_mount(
+ 
+ 	if (upper) {	/* identifier range specified */
+ 		for (id = lower; id <= upper; id++) {
+-			if (report_mount(fp, id, NULL,
++			if (report_mount(fp, id, NULL, NULL,
+ 					form, XFS_GROUP_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+ 	} else {
+ 		setgrent();
+ 		while ((g = getgrent()) != NULL) {
+-			if (report_mount(fp, g->gr_gid, g->gr_name,
++			if (report_mount(fp, g->gr_gid, g->gr_name, NULL,
+ 					form, XFS_GROUP_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+@@ -488,14 +492,14 @@ report_project_mount(
+ 
+ 	if (upper) {	/* identifier range specified */
+ 		for (id = lower; id <= upper; id++) {
+-			if (report_mount(fp, id, NULL,
++			if (report_mount(fp, id, NULL, NULL,
+ 					form, XFS_PROJ_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+ 	} else {
+ 		setprent();
+ 		while ((p = getprent()) != NULL) {
+-			if (report_mount(fp, p->pr_prid, p->pr_name,
++			if (report_mount(fp, p->pr_prid, p->pr_name, NULL,
+ 					form, XFS_PROJ_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
 -- 
 1.7.1
 
