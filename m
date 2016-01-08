@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 621A37F37
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 15:31:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 552208F8049
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 13:31:32 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7uWZrwzouKqtJgAz for <xfs@oss.sgi.com>;
-	Fri, 08 Jan 2016 13:31:29 -0800 (PST)
-Date: Sat, 9 Jan 2016 08:31:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Suspend does not work with v4.4-rc8
-Message-ID: <20160108213127.GS21461@dastard>
-References: <20160104202611.5b100540@saldaea> <20160104194014.GD19802@dastard>
-	<alpine.LNX.2.00.1601081138110.3402@cbobk.fhfr.pm>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 449807F37
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 17:07:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B80A2AC001
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 15:07:17 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xJdk5rUkKmq7DHWG (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 08 Jan 2016 15:07:15 -0800 (PST)
+Date: Fri, 8 Jan 2016 18:07:10 -0500
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 00/35 v2] separate operations from flags in the
+	bio/request structs
+Message-ID: <20160108230709.GA15655@redhat.com>
+References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+	<20160108133237.GA7663@infradead.org>
+	<56902132.8080008@cs.wisc.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1601081138110.3402@cbobk.fhfr.pm>
+In-Reply-To: <56902132.8080008@cs.wisc.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +32,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Julian Wollrath <jwollrath@web.de>, xfs@oss.sgi.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-block@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-bcache@vger.kernel.org, mchristi@redhat.com, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, philipp.reisner@linbit.com, drbd-dev@lists.linbit.com, ocfs2-devel@oss.oracle.com, target-devel@vger.kernel.org
 
-On Fri, Jan 08, 2016 at 11:44:21AM +0100, Jiri Kosina wrote:
-> On Tue, 5 Jan 2016, Dave Chinner wrote:
+On Fri, Jan 08 2016 at  3:50P -0500,
+Mike Christie <michaelc@cs.wisc.edu> wrote:
+
+> On 01/08/2016 07:32 AM, Christoph Hellwig wrote:
+> > This looks good to me from a highlevel point of view.
+> > Do you also have a git tree to take a look at all the changes in a
+> > single big diff?
 > 
-> > > kernel: Freezing of tasks failed after 20.006 seconds (2 tasks refusing to freeze, wq_bu_busy=0):
-> > > kernel: xfsaild/dm-1    S 0000000000014100     0   283      2 0x00000000
-> > > kernel:  ffff880213f53e10 ffffffff8180e4c0 ffff880213f05040 0000000000000000
-> > > kernel:  0000000000000000 ffff880213f54000 0000000000000000 0000000000000000
-> > > kernel:  ffff8800ca389e40 ffff8800ca392000 ffff880213f53ed0 ffffffff814cd8ac
-> > > kernel: Call Trace:
-> > > kernel:  [<ffffffff814cd8ac>] ? schedule+0x2c/0x70
-> > > kernel:  [<ffffffff8125e37d>] ? xfsaild+0x4fd/0x5b0
-> > > kernel:  [<ffffffff8125de80>] ? xfs_trans_ail_cursor_first+0x80/0x80
-> > > kernel:  [<ffffffff8125de80>] ? xfs_trans_ail_cursor_first+0x80/0x80
-> > > kernel:  [<ffffffff8108bd18>] ? kthread+0xb8/0xd0
-> > > kernel:  [<ffffffff8108bc60>] ? kthread_worker_fn+0x150/0x150
-> > > kernel:  [<ffffffff814d115f>] ? ret_from_fork+0x3f/0x70 
-> > > kernel:  [<ffffffff8108bc60>] ? kthread_worker_fn+0x150/0x150
-> > > kernel: xfsaild/sda1    S 0000000000014100     0   591      2 0x00000000
-> > > kernel:  ffff88021193be10 ffff8802159c4dc0 ffff880213ab9340 0000000000000000
-> > > kernel:  0000000000000000 ffff88021193c000 0000000000000000 0000000000000000
-> > > kernel:  ffff8800ca2a4240 ffff880214eea000 ffff88021193bed0 ffffffff814cd8ac
-> > > kernel: Call Trace:
-> > > kernel:  [<ffffffff814cd8ac>] ? schedule+0x2c/0x70
-> > > kernel:  [<ffffffff8125e37d>] ? xfsaild+0x4fd/0x5b0
-> > > kernel:  [<ffffffff8125de80>] ? xfs_trans_ail_cursor_first+0x80/0x80
-> > > kernel:  [<ffffffff8125de80>] ? xfs_trans_ail_cursor_first+0x80/0x80
-> > > kernel:  [<ffffffff8108bd18>] ? kthread+0xb8/0xd0
-> > > kernel:  [<ffffffff8108bc60>] ? kthread_worker_fn+0x150/0x150
-> > > kernel:  [<ffffffff814d115f>] ? ret_from_fork+0x3f/0x70 
-> > > kernel:  [<ffffffff8108bc60>] ? kthread_worker_fn+0x150/0x150
-> > > 
-> > > Please tell me what more information you need to be able to fix this
-> > > issue.
-> > 
-> > The freezer detection is broken. The thread is sleeping in schedule
-> > until a wakeup occurs some time in the future, which means it cannot
-> > "enter then freezer" because it's not a running thread. This is a
-> > problem introduced by commit 24ba16b ("xfs: clear PF_NOFREEZE for
-> > xfsaild kthread").
-> > 
-> > Jiri, I'm tempted just to revert this change - if the freezer
-> > doesn't detect processes that are not in TASK_RUNNABLE state as
-> > frozeni or can't mark them as frozen, then this change will never
-> > work reliably for XFS....
+> I uploaded a git tree here:
 > 
-> Well, clearly the thread is sleeping in schedule() during the freezing 
-> operation and it's supposed to be doing so; therefore it doesn't need 
-> explicit freezing point, right?
-
-No.
-
-It's sleeping in schedule because it's got nothing more to do - it's
-issued all it's IO and is idle. It is not going to run again until
-filesystem modification activity is restarted.
-
-But if the AIL still has objects in it (like it will after a sync),
-then it will continue to run and issue IO until it returns to the
-empty, idle state.  In this active state, we need to freeze the
-thread on suspend so that it doesn't keep issuing IO all through the
-suspend process...
-
-> So the proper fix would rather be something like
+> https://github.com/mikechristie/linux-kernel.git
 > 
-> 
-> 
-> From: Jiri Kosina <jkosina@suse.cz>
-> Subject: [PATCH] xfs: xfsaild doesn't need to be freezable
+> based off of linux-next today. The patches are just in the master branch.
 
-No, that just means we guarantee that there will be suspend image
-coherency problems when suspend is run on a busy filesystem...
+Hi Mike,
 
-This process is not going to enter a runable state, so is never
-going to enter the freezer.  But we can't be certain of that,
-because we haven't frozen the filesystem and hence it can still be
-modified and this thread could be woken and do stuff when it
-shouldn't.
+I had a look at your DM changes.  That sucked (but things looked good).
+So much so that I want to thank you for tackling this task (and taking
+one for the team).
 
-Cheers,
+I'll get this kernel built and tested (using the various DM testsuites:
+lvm2, cryptsetup, device-mapper-test-suite for dm-thinp and dm-cache).
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+But I did make some changes during my review that I'd appreciate if
+you'd fold in to wherever you think it appropriate in your series:
+
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 96b5c1b..9e29dba 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -514,11 +514,10 @@ static void dm_stat_round(struct dm_stat *s, struct dm_stat_shared *shared,
+ }
+ 
+ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+-			      unsigned long bi_rw, sector_t len,
++			      int idx, sector_t len,
+ 			      struct dm_stats_aux *stats_aux, bool end,
+ 			      unsigned long duration_jiffies)
+ {
+-	unsigned long idx = bi_rw;
+ 	struct dm_stat_shared *shared = &s->stat_shared[entry];
+ 	struct dm_stat_percpu *p;
+ 
+@@ -584,7 +583,7 @@ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+ #endif
+ }
+ 
+-static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
++static void __dm_stat_bio(struct dm_stat *s, int bi_rw,
+ 			  sector_t bi_sector, sector_t end_sector,
+ 			  bool end, unsigned long duration_jiffies,
+ 			  struct dm_stats_aux *stats_aux)
+@@ -622,7 +621,7 @@ static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
+ 	} while (unlikely(todo != 0));
+ }
+ 
+-void dm_stats_account_io(struct dm_stats *stats, unsigned long bi_rw,
++void dm_stats_account_io(struct dm_stats *stats, int bi_rw,
+ 			 sector_t bi_sector, unsigned bi_sectors, bool end,
+ 			 unsigned long duration_jiffies,
+ 			 struct dm_stats_aux *stats_aux)
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 5e940f7..9a4b3cb 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1326,7 +1326,7 @@ static int device_fua_capable(struct dm_target *ti, struct dm_dev *dev,
+ }
+ 
+ static bool dm_table_supports_flush(struct dm_table *t,
+-				    iterate_devices_callout_fn support_test)
++				    iterate_devices_callout_fn callout_fn)
+ {
+ 	struct dm_target *ti;
+ 	unsigned i = 0;
+@@ -1347,7 +1347,7 @@ static bool dm_table_supports_flush(struct dm_table *t,
+ 			return true;
+ 
+ 		if (ti->type->iterate_devices &&
+-		    ti->type->iterate_devices(ti, support_test, NULL))
++		    ti->type->iterate_devices(ti, callout_fn, NULL))
+ 			return true;
+ 	}
+ 
 
 _______________________________________________
 xfs mailing list
