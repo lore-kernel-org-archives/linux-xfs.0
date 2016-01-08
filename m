@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D071F7F37
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 10:57:10 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 331947F3F
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 10:57:52 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9778E304039
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 08:57:10 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 02637304039
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 08:57:51 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id fhWQzblWLx9Pc4rA for <xfs@oss.sgi.com>;
-	Fri, 08 Jan 2016 08:57:08 -0800 (PST)
-Subject: [PATCH 1/4] quota: add new quotactl Q_XGETQUOTA2
+	ESMTP id 5gG9YtoYdoZCtexl for <xfs@oss.sgi.com>;
+	Fri, 08 Jan 2016 08:57:50 -0800 (PST)
+Subject: [PATCH 2/4] xfs: get quota inode from mp & flags rather than dqp
 References: <568FEA2C.6080708@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <568FEA63.5020604@sandeen.net>
-Date: Fri, 8 Jan 2016 10:57:07 -0600
+Message-ID: <568FEA8D.7080603@sandeen.net>
+Date: Fri, 8 Jan 2016 10:57:49 -0600
 MIME-Version: 1.0
 In-Reply-To: <568FEA2C.6080708@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,116 +30,62 @@ Sender: xfs-bounces@oss.sgi.com
 To: fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 Cc: Jan Kara <jack@suse.cz>
 
-Q_XGETQUOTA2 is exactly like Q_XGETQUOTA, except that it will
-return quota information for the id equal to or greater than
-the id requested.  In other words, if the specified id has
-no quota, the command will return quota information for the
-next higher id which does have a quota set.  If no higher id
-has an active quota, -ESRCH is returned.
-
-This allows filesystems to do efficient iteration in kernelspace,
-much like extN filesystems do in userspace when asked to report
-all active quotas.
-
-Today, filesystems such as XFS require getpwent-style iterations,
-and for systems which have i.e. LDAP backends, this can be very
-slow, or even impossible, if iteration is not allowed in the
-configuration.
+Allow us to get the appropriate quota inode from any
+mp & quota flags, not necessarily associated with a
+particular dqp.  Needed for when we are searching for
+the next active ID with quotas and we want to examine
+the quota inode.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/quota/quota.c               |   30 ++++++++++++++++++++++++++++++
- include/linux/quota.h          |    2 ++
- include/uapi/linux/dqblk_xfs.h |    1 +
- 3 files changed, 33 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_dquot.c |    3 ++-
+ fs/xfs/xfs_qm.h    |   10 +++++-----
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 3746367..441a4e6 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -33,6 +33,7 @@ static int check_quotactl_permission(struct super_block *sb, int type, int cmd,
- 	/* allow to query information for dquots we "own" */
- 	case Q_GETQUOTA:
- 	case Q_XGETQUOTA:
-+	case Q_XGETQUOTA2:
- 		if ((type == USRQUOTA && uid_eq(current_euid(), make_kuid(current_user_ns(), id))) ||
- 		    (type == GRPQUOTA && in_egroup_p(make_kgid(current_user_ns(), id))))
- 			break;
-@@ -625,6 +626,32 @@ static int quota_getxquota(struct super_block *sb, int type, qid_t id,
- 	return ret;
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 9c44d38..1983afc 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -464,12 +464,13 @@ xfs_qm_dqtobp(
+ 	struct xfs_bmbt_irec	map;
+ 	int			nmaps = 1, error;
+ 	struct xfs_buf		*bp;
+-	struct xfs_inode	*quotip = xfs_dq_to_quota_inode(dqp);
++	struct xfs_inode	*quotip;
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	xfs_dqid_t		id = be32_to_cpu(dqp->q_core.d_id);
+ 	struct xfs_trans	*tp = (tpp ? *tpp : NULL);
+ 	uint			lock_mode;
+ 
++	quotip = xfs_quota_inode(dqp->q_mount, dqp->dq_flags);
+ 	dqp->q_fileoffset = (xfs_fileoff_t)id / mp->m_quotainfo->qi_dqperchunk;
+ 
+ 	lock_mode = xfs_ilock_data_map_shared(quotip);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 996a040..8901a01 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -104,15 +104,15 @@ xfs_dquot_tree(
  }
  
-+/*
-+ * Return quota for next active quota >= this id, if any exists,
-+ * otherwise return -ESRCH.
-+ */
-+static int quota_getxquota2(struct super_block *sb, int type, qid_t id,
-+			    void __user *addr)
-+{
-+	struct fs_disk_quota fdq;
-+	struct qc_dqblk qdq;
-+	struct kqid qid;
-+	int ret;
-+
-+	if (!sb->s_qcop->get_dqblk2)
-+		return -ENOSYS;
-+	qid = make_kqid(current_user_ns(), type, id);
-+	if (!qid_valid(qid))
-+		return -EINVAL;
-+	ret = sb->s_qcop->get_dqblk2(sb, qid, &id, &qdq);
-+	if (ret)
-+		return ret;
-+	copy_to_xfs_dqblk(&fdq, &qdq, type, id);
-+	if (copy_to_user(addr, &fdq, sizeof(fdq)))
-+		return -EFAULT;
-+	return ret;
-+}
-+
- static int quota_rmxquota(struct super_block *sb, void __user *addr)
+ static inline struct xfs_inode *
+-xfs_dq_to_quota_inode(struct xfs_dquot *dqp)
++xfs_quota_inode(xfs_mount_t *mp, uint dq_flags)
  {
- 	__u32 flags;
-@@ -690,6 +717,8 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
- 		return quota_setxquota(sb, type, id, addr);
- 	case Q_XGETQUOTA:
- 		return quota_getxquota(sb, type, id, addr);
-+	case Q_XGETQUOTA2:
-+		return quota_getxquota2(sb, type, id, addr);
- 	case Q_XQUOTASYNC:
- 		if (sb->s_flags & MS_RDONLY)
- 			return -EROFS;
-@@ -712,6 +741,7 @@ static int quotactl_cmd_write(int cmd)
- 	case Q_XGETQSTAT:
- 	case Q_XGETQSTATV:
- 	case Q_XGETQUOTA:
-+	case Q_XGETQUOTA2:
- 	case Q_XQUOTASYNC:
- 		return 0;
+-	switch (dqp->dq_flags & XFS_DQ_ALLTYPES) {
++	switch (dq_flags & XFS_DQ_ALLTYPES) {
+ 	case XFS_DQ_USER:
+-		return dqp->q_mount->m_quotainfo->qi_uquotaip;
++		return mp->m_quotainfo->qi_uquotaip;
+ 	case XFS_DQ_GROUP:
+-		return dqp->q_mount->m_quotainfo->qi_gquotaip;
++		return mp->m_quotainfo->qi_gquotaip;
+ 	case XFS_DQ_PROJ:
+-		return dqp->q_mount->m_quotainfo->qi_pquotaip;
++		return mp->m_quotainfo->qi_pquotaip;
+ 	default:
+ 		ASSERT(0);
  	}
-diff --git a/include/linux/quota.h b/include/linux/quota.h
-index b2505ac..49e4f7c 100644
---- a/include/linux/quota.h
-+++ b/include/linux/quota.h
-@@ -425,6 +425,8 @@ struct quotactl_ops {
- 	int (*quota_sync)(struct super_block *, int);
- 	int (*set_info)(struct super_block *, int, struct qc_info *);
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
-+	int (*get_dqblk2)(struct super_block *, struct kqid, qid_t *,
-+			  struct qc_dqblk *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*get_state)(struct super_block *, struct qc_state *);
- 	int (*rm_xquota)(struct super_block *, unsigned int);
-diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-index dcd75cc..62441da 100644
---- a/include/uapi/linux/dqblk_xfs.h
-+++ b/include/uapi/linux/dqblk_xfs.h
-@@ -39,6 +39,7 @@
- #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
- #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
- #define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
-+#define Q_XGETQUOTA2	XQM_CMD(9)	/* get disk limits and usage >= ID */
- 
- /*
-  * fs_disk_quota structure:
 -- 
 1.7.1
 
