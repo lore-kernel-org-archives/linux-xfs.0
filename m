@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DB84E7F37
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 11:07:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CEB97304062
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 09:07:22 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id hl0964EyJ6wBJ3yW for <xfs@oss.sgi.com>;
-	Fri, 08 Jan 2016 09:07:20 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id D4FEC61AC50D
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 11:07:20 -0600 (CST)
-Subject: [PATCH 3/4 V2] xfs: Factor xfs_seek_hole_data into helper
-References: <568FEA2C.6080708@redhat.com> <568FEAD1.5040302@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <568FECC8.3040909@sandeen.net>
-Date: Fri, 8 Jan 2016 11:07:20 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C25C77F37
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 11:22:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4F61FAC002
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2016 09:22:44 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DviBJ0BXHu0DDxuf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 08 Jan 2016 09:22:43 -0800 (PST)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: A blocksize problem about dax and ext4
+References: <CAM=YXF-aXxp19=uFDExUswpEfKXNN6LJScxAB-7-u-AgRiXJ2g@mail.gmail.com>
+	<CAPcyv4gYHuSWuugnELSO6B1rye+b89io3zJVUXwRt0wE1ZfPrA@mail.gmail.com>
+	<94D0CD8314A33A4D9D801C0FE68B40295BEC985F@G9W0745.americas.hpqcorp.net>
+	<20151224000021.GU19802@dastard>
+Date: Fri, 08 Jan 2016 12:22:40 -0500
+In-Reply-To: <20151224000021.GU19802@dastard> (Dave Chinner's message of "Thu,
+	24 Dec 2015 11:00:21 +1100")
+Message-ID: <x49k2nk0yvz.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <568FEAD1.5040302@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,198 +32,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ted Tso <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, Cholerae Hu <choleraehyq@gmail.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
 
-Factor xfs_seek_hole_data into an unlocked helper which takes
-an xfs inode rather than a file for internal use.
+Dave Chinner <david@fromorbit.com> writes:
 
-Also allow specification of "end" - the vfs lseek interface is
-defined such that any offset past eof/i_size shall return -ENXIO,
-but we will use this for quota code which does not maintain i_size,
-and we want to be able to SEEK_DATA past i_size as well.  So the
-lseek path can send in i_size, and the quota code can determine
-its own ending offset.
+>> 1. ext4 fails to mount the filesystem, while xfs just disables DAX.
+>> It seems like they should they be the same.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I agree, it would be nice if they were the same.
 
-(Ugh, no idea what happened to that formatting!)
+> I don't really care what is done to ext4 here, but I'm not changing
+> XFS behaviour. I'm expecting mixed dax/non-dax fileystems to be a
+> thing, with DAX turned on by an inode flag on disk. Indeed, I see
+> the mount option going away permanently for XFS, and DAX being
+> controlled completely from on-disk flags. E.g. ext4 encrypted files
+> need to turn off DAX, while clear text files can be accessed using
+> DAX. This should happen completely transparently to the user....
 
- fs/xfs/xfs_file.c  |   82 ++++++++++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_inode.h |    2 +
- 2 files changed, 59 insertions(+), 25 deletions(-)
+The one thing we definitely need is a common way for an application to
+open a file in dax mode.  So, whatever ends up being the interface for
+xfs in the future sure as heck better work for ext4.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index ebe9b82..5dc7113 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1337,31 +1337,31 @@ out:
- 	return found;
- }
- 
--STATIC loff_t
--xfs_seek_hole_data(
--	struct file		*file,
-+/*
-+ * caller must lock inode with xfs_ilock_data_map_shared,
-+ * can we craft an appropriate ASSERT?
-+ *
-+ * end is because the VFS-level lseek interface is defined such that any
-+ * offset past i_size shall return -ENXIO, but we use this for quota code
-+ * which does not maintain i_size, and we want to SEEK_DATA past i_size.
-+ */
-+loff_t
-+__xfs_seek_hole_data(
-+	struct inode		*inode,
- 	loff_t			start,
-+	loff_t			end,
- 	int			whence)
- {
--	struct inode		*inode = file->f_mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	loff_t			uninitialized_var(offset);
--	xfs_fsize_t		isize;
- 	xfs_fileoff_t		fsbno;
--	xfs_filblks_t		end;
--	uint			lock;
-+	xfs_filblks_t		lastbno;
- 	int			error;
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
--	lock = xfs_ilock_data_map_shared(ip);
--
--	isize = i_size_read(inode);
--	if (start >= isize) {
-+	if (start >= end) {
- 		error = -ENXIO;
--		goto out_unlock;
-+		goto out_error;
- 	}
- 
- 	/*
-@@ -1369,22 +1369,22 @@ xfs_seek_hole_data(
- 	 * by fsbno to the end block of the file.
- 	 */
- 	fsbno = XFS_B_TO_FSBT(mp, start);
--	end = XFS_B_TO_FSB(mp, isize);
-+	lastbno = XFS_B_TO_FSB(mp, end);
- 
- 	for (;;) {
- 		struct xfs_bmbt_irec	map[2];
- 		int			nmap = 2;
- 		unsigned int		i;
- 
--		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
-+		error = xfs_bmapi_read(ip, fsbno, lastbno - fsbno, map, &nmap,
- 				       XFS_BMAPI_ENTIRE);
- 		if (error)
--			goto out_unlock;
-+			goto out_error;
- 
- 		/* No extents at given offset, must be beyond EOF */
- 		if (nmap == 0) {
- 			error = -ENXIO;
--			goto out_unlock;
-+			goto out_error;
- 		}
- 
- 		for (i = 0; i < nmap; i++) {
-@@ -1426,7 +1426,7 @@ xfs_seek_hole_data(
- 			 * hole at the end of any file).
- 		 	 */
- 			if (whence == SEEK_HOLE) {
--				offset = isize;
-+				offset = end;
- 				break;
- 			}
- 			/*
-@@ -1434,7 +1434,7 @@ xfs_seek_hole_data(
- 			 */
- 			ASSERT(whence == SEEK_DATA);
- 			error = -ENXIO;
--			goto out_unlock;
-+			goto out_error;
- 		}
- 
- 		ASSERT(i > 1);
-@@ -1445,14 +1445,14 @@ xfs_seek_hole_data(
- 		 */
- 		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
- 		start = XFS_FSB_TO_B(mp, fsbno);
--		if (start >= isize) {
-+		if (start >= end) {
- 			if (whence == SEEK_HOLE) {
--				offset = isize;
-+				offset = end;
- 				break;
- 			}
- 			ASSERT(whence == SEEK_DATA);
- 			error = -ENXIO;
--			goto out_unlock;
-+			goto out_error;
- 		}
- 	}
- 
-@@ -1464,7 +1464,39 @@ out:
- 	 * situation in particular.
- 	 */
- 	if (whence == SEEK_HOLE)
--		offset = min_t(loff_t, offset, isize);
-+		offset = min_t(loff_t, offset, end);
-+
-+	return offset;
-+
-+out_error:
-+	return error;
-+}
-+
-+STATIC loff_t
-+xfs_seek_hole_data(
-+	struct file		*file,
-+	loff_t			start,
-+	int			whence)
-+{
-+	struct inode		*inode = file->f_mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	uint			lock;
-+	loff_t			offset, end;
-+	int			error = 0;
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
-+	lock = xfs_ilock_data_map_shared(ip);
-+
-+	end = i_size_read(inode);
-+	offset = __xfs_seek_hole_data(inode, start, end, whence);
-+	if (offset < 0) {
-+		error = offset;
-+		goto out_unlock;
-+	}
-+
- 	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
- 
- out_unlock:
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca9e119..ed7e933 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -437,6 +437,8 @@ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- 		     xfs_fsize_t isize, bool *did_zeroing);
- int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
-+loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
-+			     loff_t eof, int whence);
- 
- 
- /* from xfs_iops.c */
--- 
-1.7.1
+I'm also not super keen on just getting rid of the dax mount option.  I
+understand why you'd want to do that, but I think it should stay, with
+documentation on when you simply won't get dax mappings.
 
+Please think about the poor programmers and system administrators that
+have to use these interfaces.
+
+Thanks,
+Jeff
 
 _______________________________________________
 xfs mailing list
