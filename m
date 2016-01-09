@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 43FAB7F37
-	for <xfs@oss.sgi.com>; Sat,  9 Jan 2016 08:17:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 24D1930405F
-	for <xfs@oss.sgi.com>; Sat,  9 Jan 2016 06:17:49 -0800 (PST)
-Received: from mail-yk0-f171.google.com (mail-yk0-f171.google.com
-	[209.85.160.171]) by cuda.sgi.com with ESMTP id
-	t8m1X6oeye02RiYE (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 09 Jan 2016 06:17:25 -0800 (PST)
-Received: by mail-yk0-f171.google.com with SMTP id v14so297456046ykd.3
-	for <xfs@oss.sgi.com>; Sat, 09 Jan 2016 06:17:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160109075414.GA5008@ZenIV.linux.org.uk>
-References: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160104182005.24118.50361.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160109075414.GA5008@ZenIV.linux.org.uk>
-Date: Sat, 9 Jan 2016 06:17:24 -0800
-Message-ID: <CAPcyv4gyNKHPbhwNrK3N3qtrpO5j=B6Os3ZHZFUrGA-DU6kHNQ@mail.gmail.com>
-Subject: Re: [resend PATCH 1/3] block,
-	fs: reliably communicate bdev end-of-life
-From: Dan Williams <dan.j.williams@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 31A237F37
+	for <xfs@oss.sgi.com>; Sat,  9 Jan 2016 15:02:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22ACA304062
+	for <xfs@oss.sgi.com>; Sat,  9 Jan 2016 13:02:10 -0800 (PST)
+Received: from mail-wm0-f50.google.com (mail-wm0-f50.google.com
+	[74.125.82.50]) by cuda.sgi.com with ESMTP id v7uFe7KCk6J8EhoJ
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 09 Jan 2016 13:02:07 -0800 (PST)
+Received: by mail-wm0-f50.google.com with SMTP id l65so170795037wmf.1
+	for <xfs@oss.sgi.com>; Sat, 09 Jan 2016 13:02:07 -0800 (PST)
+From: Andrea Gelmini <andrea.gelmini@gelma.net>
+Subject: [PATCH] Fix typos
+Date: Sat,  9 Jan 2016 22:01:51 +0100
+Message-Id: <1452373311-31940-1-git-send-email-andrea.gelmini@gelma.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,49 +24,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm <linux-nvdimm@ml01.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: xfs@oss.sgi.com
+Cc: Andrea Gelmini <andrea.gelmini@gelma.net>, darrick.wong@oracle.com
 
-On Fri, Jan 8, 2016 at 11:54 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> On Mon, Jan 04, 2016 at 10:20:05AM -0800, Dan Williams wrote:
-[..]
->         Would you mind explaining what the hell is _the_ backing device
-> of a filesystem?  What does that translate into in case of e.g. btrfs
-> spanning several disks?  Or ext4 with journal on a different device, for
-> that matter?
->
->         If anything, I would argue that filesystem is out of place here -
-> general situation is "IO on X may require IO on device Y and X needs to do
-> something when Y goes away".  Consider e.g. /dev/loop backed by a device
-> that went away.  Or by a file on fs that has run down the curtain and joined
-> the bleedin choir invisible.  With another fs partially hosted by that
-> loopback device.  Or by RAID0 containing said device.
->
->         You are given Y and attempt to locate the affected X.  _Then_
-> you assume that X is a filesystem and has "something to be done" independent
-> from the role Y played for it, so you can pick that action from superblock
-> method.
->
->         IMO you are placing the burden in the wrong place.  _Recepient_
-> knows what it depends upon and what should be done for each source of
-> trouble.  So make it recepient's responsibility to request notifications.
-> At which point the superblock method goes away, along with the requirement
-> to handle all sources of trouble the same way, etc.
->
->         What's more, things like RAID5 (also interested in knowing when
-> a component has been ripped out) might or might not decide to propagate
-> the event further - after all, that's exactly the point of redundancy.
->
->         I'd look into something along the lines of notifier chain per
-> gendisk, with potential victims registering a callback when they decide
-> that from now on such and such device might screw them over...
+Reviewed-by: Darrick J. Wong darrick.wong@oracle.com
 
-Makes sense.  I'll drop this series for now and come back after
-re-working it use notifiers.
+---
+ admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc    | 8 ++++----
+ admin/XFS_Performance_Tuning/xfs_performance_tuning.asciidoc | 4 ++--
+ design/XFS_Filesystem_Structure/magic.asciidoc               | 2 +-
+ design/xfs-self-describing-metadata.asciidoc                 | 2 +-
+ design/xfs-smr-structure.asciidoc                            | 8 ++++----
+ 5 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc b/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc
+index c12981b..30f39bf 100644
+--- a/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc
++++ b/admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc
+@@ -35,7 +35,7 @@ units as used on the +mkfs.xfs+ command line to configure these parameters.
+ The performance examples given in this section are highly dependent on storage,
+ CPU and RAM configuration. They are intended as guidelines to illustrate
+ behavioural differences, not the exact performance any configuration will
+-acheive.
++achieve.
+ =====
+ 
+ === Directory block size
+@@ -238,7 +238,7 @@ available for storing attributes.
+ When attributes are stored in the literal area of the inode, both attribute
+ names and attribute values are limited to a maximum size of 254 bytes. If either
+ name or value exceeds 254 bytes in length, or the total space used by the
+-atributes exceeds the size of the literal area, the entire set of attributes
++attributes exceeds the size of the literal area, the entire set of attributes
+ stored on the inode are pushed to a separate attribute block instead of being
+ stored inline.
+ 
+@@ -280,7 +280,7 @@ Therefore, the size of the log determines the concurrency of metadata
+ modification operations the filesystem can sustain, as well as how much and how
+ frequently metadata writeback occurs.  A smaller log forces data
+ write-back more frequently than a larger log, but can result in lower
+-synchronisation overhead as there will be fewer changes aggreagted in memory
++synchronisation overhead as there will be fewer changes aggregated in memory
+ between synchronisation triggers. Memory pressure also generates synchronisatin
+ triggers, so large logs may not benefit systems with limited memory.
+ 
+@@ -364,7 +364,7 @@ between 32KB and 256KB. It can be configured by use of the +logbsize+ mount
+ option.
+ 
+ The number of log buffers can also be configured to between 2 and 8. The default
+-is 8 log buffersi and can be configured by the use of the +logbufs+ mount
++is 8 log buffers can be configured by the use of the +logbufs+ mount
+ option. It is rare that this needs to be configured, and it should only be
+ considered if there is limited memory and lots of XFS filesystems such that the
+ memory allocated to the log buffers would consume a significant amount of
+diff --git a/admin/XFS_Performance_Tuning/xfs_performance_tuning.asciidoc b/admin/XFS_Performance_Tuning/xfs_performance_tuning.asciidoc
+index 0310bbd..b249e35 100644
+--- a/admin/XFS_Performance_Tuning/xfs_performance_tuning.asciidoc
++++ b/admin/XFS_Performance_Tuning/xfs_performance_tuning.asciidoc
+@@ -42,8 +42,8 @@ xref:Knowledge[Knowledge Section].
+ 
+ The xref:Process[Process section] will cover the typical processes used to
+ optimise a filesystem for a given workload. If the workload measurements are not
+-accurate or reproducable, then no conclusions can be drawn as to whether a
+-configuration changes an improvemnt or not. Hence without a robust testing
++accurate or reproducible, then no conclusions can be drawn as to whether a
++configuration changes an improvement or not. Hence without a robust testing
+ process, no amount of knowledge or observation will result in a well optimised
+ filesystem configuration.
+ 
+diff --git a/design/XFS_Filesystem_Structure/magic.asciidoc b/design/XFS_Filesystem_Structure/magic.asciidoc
+index 301cfa0..35d9c2b 100644
+--- a/design/XFS_Filesystem_Structure/magic.asciidoc
++++ b/design/XFS_Filesystem_Structure/magic.asciidoc
+@@ -82,5 +82,5 @@ XFS can create really big filesystems!
+ | Max Dir Size          | 32GiB | 32GiB | 32GiB
+ |=====
+ 
+-Linux doesn't suppport files or devices larger than 8EiB, so the block
++Linux doesn't support files or devices larger than 8EiB, so the block
+ limitations are largely ignorable.
+diff --git a/design/xfs-self-describing-metadata.asciidoc b/design/xfs-self-describing-metadata.asciidoc
+index b7dc3ff..d108f7a 100644
+--- a/design/xfs-self-describing-metadata.asciidoc
++++ b/design/xfs-self-describing-metadata.asciidoc
+@@ -5,7 +5,7 @@ v1.0, Feb 2014: Initial conversion to asciidoc
+ == Introduction
+ 
+ The largest scalability problem facing XFS is not one of algorithmic
+-scalability, but of verification of the filesystem structure. Scalabilty of the
++scalability, but of verification of the filesystem structure. Scalability of the
+ structures and indexes on disk and the algorithms for iterating them are
+ adequate for supporting PB scale filesystems with billions of inodes, however it
+ is this very scalability that causes the verification problem.
+diff --git a/design/xfs-smr-structure.asciidoc b/design/xfs-smr-structure.asciidoc
+index dd959ab..3e6c4ec 100644
+--- a/design/xfs-smr-structure.asciidoc
++++ b/design/xfs-smr-structure.asciidoc
+@@ -142,7 +142,7 @@ Hence we don't actually need any major new data moving functionality in the
+ kernel to enable this, except maybe an event channel for the kernel to tell
+ xfs_fsr it needs to do some cleaning work.
+ 
+-If we arrange zones into zoen groups, we also have a method for keeping new
++If we arrange zones into zone groups, we also have a method for keeping new
+ allocations out of regions we are re-organising. That is, we need to be able to
+ mark zone groups as "read only" so the kernel will not attempt to allocate from
+ them while the cleaner is running and re-organising the data within the zones in
+@@ -173,7 +173,7 @@ it will need ot be packaged by distros.
+ 
+ If mkfs cannot find ensough random write space for the amount of metadata we
+ need to track all the space in the sequential write zones and a decent amount of
+-internal fielsystem metadata (inodes, etc) then it will need to fail. Drive
++internal filesystem metadata (inodes, etc) then it will need to fail. Drive
+ vendors are going to need to provide sufficient space in these regions for us
+ to be able to make use of it, otherwise we'll simply not be able to do what we
+ need to do.
+@@ -193,7 +193,7 @@ bitmaps for verifying used space should already be there.
+ THere be dragons waiting for us if we don't have random write zones for
+ metadata. If that happens, we cannot repair metadata in place and we will have
+ to redesign xfs_repair from the ground up to support such functionality. That's
+-jus tnot going to happen, so we'll need drives with a significant amount of
++just not going to happen, so we'll need drives with a significant amount of
+ random write space for all our metadata......
+ 
+ == Quantification of Random Write Zone Capacity
+@@ -316,7 +316,7 @@ spiral.
+ I suspect the best we will be able to do with fallocate based preallocation is
+ to mark the region as delayed allocation.
+ 
+-=== Allocation Alignemnt
++=== Allocation Alignment
+ 
+ With zone based write pointers, we lose all capability of write alignment to the
+ underlying storage - our only choice to write is the current set of write
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
