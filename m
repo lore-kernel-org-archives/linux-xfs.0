@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0F74629DFD
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 09:24:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E4CBF8F8040
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:24:32 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HddJBGMaSTXLzVhK (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:24:31 -0800 (PST)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v17 22/22] ext4: Add richacl feature flag
-Date: Mon, 11 Jan 2016 16:21:53 +0100
-Message-Id: <1452525713-11348-23-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1452525713-11348-1-git-send-email-agruenba@redhat.com>
-References: <1452525713-11348-1-git-send-email-agruenba@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id D1D7429DFD
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 09:24:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B365B8F8050
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:24:43 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id gsIuCsw0tMf73SGY (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:24:41 -0800 (PST)
+Subject: Re: [resend PATCH 1/3] block, fs: reliably communicate bdev
+	end-of-life
+References: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160104182005.24118.50361.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160109075414.GA5008@ZenIV.linux.org.uk>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <5693C935.3060701@suse.de>
+Date: Mon, 11 Jan 2016 16:24:37 +0100
+MIME-Version: 1.0
+In-Reply-To: <20160109075414.GA5008@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,157 +27,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andreas Gruenbacher <agruenba@redhat.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>, Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+On 01/09/2016 08:54 AM, Al Viro wrote:
+> On Mon, Jan 04, 2016 at 10:20:05AM -0800, Dan Williams wrote:
+>> Historically we have waited for filesystem specific heuristics to
+>> attempt to guess when a block device is gone.  Sometimes this works, but
+>> in other cases the system can hang waiting for the fs to trigger its
+>> shutdown protocol.
+>>
+>> The initial motivation for this investigation was to prevent DAX
+>> mappings (direct mmap access to persistent memory) from leaking past the
+>> lifetime of the hosting block device.  However, Dave points out that
+>> these shutdown operations are needed in other scenarios.  Quoting Dave:
+>>
+>>      For example, if we detect a free space corruption during allocation,
+>>      it is not safe to trust *any active mapping* because we can't trust
+>>      that we having handed out the same block to multiple owners. Hence
+>>      on such a filesystem shutdown, we have to prevent any new DAX
+>>      mapping from occurring and invalidate all existing mappings as we
+>>      cannot allow userspace to modify any data or metadata until we've
+>>      resolved the corruption situation.
+>>
+>> The current block device shutdown sequence of del_gendisk +
+>> blk_cleanup_queue is problematic.  We want to tell the fs after
+>> blk_cleanup_queue that there is no possibility of recovery, but by that
+>> time we have deleted partitions and lost the ability to find all the
+>> super-blocks on a block device.
+>>
+>> Introduce del_gendisk_queue to trigger ->quiesce() and ->bdi_gone()
+>> notifications to all the filesystems hosted on the disk.  Where
+>> ->quiesce() are 'shutdown' operations while the bdev may still be alive,
+>> and ->bdi_gone() is a set of actions to take after the backing device
+>> is known to be permanently dead.
+>
+> 	Would you mind explaining what the hell is _the_ backing device
+> of a filesystem?  What does that translate into in case of e.g. btrfs
+> spanning several disks?  Or ext4 with journal on a different device, for
+> that matter?
+>
+> 	If anything, I would argue that filesystem is out of place here -
+> general situation is "IO on X may require IO on device Y and X needs to do
+> something when Y goes away".  Consider e.g. /dev/loop backed by a device
+> that went away.  Or by a file on fs that has run down the curtain and joi=
+ned
+> the bleedin choir invisible.  With another fs partially hosted by that
+> loopback device.  Or by RAID0 containing said device.
+>
+> 	You are given Y and attempt to locate the affected X.  _Then_
+> you assume that X is a filesystem and has "something to be done" independ=
+ent
+> from the role Y played for it, so you can pick that action from superblock
+> method.
+>
+> 	IMO you are placing the burden in the wrong place.  _Recepient_
+> knows what it depends upon and what should be done for each source of
+> trouble.  So make it recepient's responsibility to request notifications.
+> At which point the superblock method goes away, along with the requirement
+> to handle all sources of trouble the same way, etc.
+>
+> 	What's more, things like RAID5 (also interested in knowing when
+> a component has been ripped out) might or might not decide to propagate
+> the event further - after all, that's exactly the point of redundancy.
+>
+> 	I'd look into something along the lines of notifier chain per
+> gendisk, with potential victims registering a callback when they decide
+> that from now on such and such device might screw them over...
 
-This feature flag selects richacl instead of POSIX ACL support on the
-filesystem.  When this feature is off, the "acl" and "noacl" mount options
-control whether POSIX ACLs are enabled.  When it is on, richacls are
-automatically enabled and using the "noacl" mount option leads to an error.
+Fully support this. I was planning on something similar to transport =
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
----
- fs/ext4/ext4.h  |  6 ++++--
- fs/ext4/super.c | 49 ++++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 44 insertions(+), 11 deletions(-)
+device changes (resizing, topology change etc).
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 750063f..7072ff5 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -995,7 +995,7 @@ struct ext4_inode_info {
- #define EXT4_MOUNT_UPDATE_JOURNAL	0x01000	/* Update the journal format */
- #define EXT4_MOUNT_NO_UID32		0x02000  /* Disable 32-bit UIDs */
- #define EXT4_MOUNT_XATTR_USER		0x04000	/* Extended user attributes */
--#define EXT4_MOUNT_POSIX_ACL		0x08000	/* POSIX Access Control Lists */
-+#define EXT4_MOUNT_ACL			0x08000	/* Access Control Lists */
- #define EXT4_MOUNT_NO_AUTO_DA_ALLOC	0x10000	/* No auto delalloc mapping */
- #define EXT4_MOUNT_BARRIER		0x20000 /* Use block barriers */
- #define EXT4_MOUNT_QUOTA		0x80000 /* Some quota option set */
-@@ -1593,6 +1593,7 @@ static inline int ext4_encrypted_inode(struct inode *inode)
- #define EXT4_FEATURE_INCOMPAT_LARGEDIR		0x4000 /* >2GB or 3-lvl htree */
- #define EXT4_FEATURE_INCOMPAT_INLINE_DATA	0x8000 /* data in inode */
- #define EXT4_FEATURE_INCOMPAT_ENCRYPT		0x10000
-+#define EXT4_FEATURE_INCOMPAT_RICHACL		0x20000
- 
- #define EXT4_FEATURE_COMPAT_FUNCS(name, flagname) \
- static inline bool ext4_has_feature_##name(struct super_block *sb) \
-@@ -1707,7 +1708,8 @@ EXT4_FEATURE_INCOMPAT_FUNCS(encrypt,		ENCRYPT)
- 					 EXT4_FEATURE_INCOMPAT_MMP | \
- 					 EXT4_FEATURE_INCOMPAT_INLINE_DATA | \
- 					 EXT4_FEATURE_INCOMPAT_ENCRYPT | \
--					 EXT4_FEATURE_INCOMPAT_CSUM_SEED)
-+					 EXT4_FEATURE_INCOMPAT_CSUM_SEED | \
-+					 EXT4_FEATURE_INCOMPAT_RICHACL)
- #define EXT4_FEATURE_RO_COMPAT_SUPP	(EXT4_FEATURE_RO_COMPAT_SPARSE_SUPER| \
- 					 EXT4_FEATURE_RO_COMPAT_LARGE_FILE| \
- 					 EXT4_FEATURE_RO_COMPAT_GDT_CSUM| \
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index c9ab67d..9486b8a 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1273,6 +1273,28 @@ static ext4_fsblk_t get_sb_block(void **data)
- 	return sb_block;
- }
- 
-+static int enable_acl(struct super_block *sb)
-+{
-+	sb->s_flags &= ~(MS_POSIXACL | MS_RICHACL);
-+	if (test_opt(sb, ACL)) {
-+		if (EXT4_HAS_INCOMPAT_FEATURE(sb,
-+					      EXT4_FEATURE_INCOMPAT_RICHACL)) {
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+			sb->s_flags |= MS_RICHACL;
-+#else
-+			return -EOPNOTSUPP;
-+#endif
-+		} else {
-+#ifdef CONFIG_EXT4_FS_POSIX_ACL
-+			sb->s_flags |= MS_POSIXACL;
-+#else
-+			return -EOPNOTSUPP;
-+#endif
-+		}
-+	}
-+	return 0;
-+}
-+
- #define DEFAULT_JOURNAL_IOPRIO (IOPRIO_PRIO_VALUE(IOPRIO_CLASS_BE, 3))
- static char deprecated_msg[] = "Mount option \"%s\" will be removed by %s\n"
- 	"Contact linux-ext4@vger.kernel.org if you think we should keep it.\n";
-@@ -1419,9 +1441,9 @@ static const struct mount_opts {
- 	 MOPT_NO_EXT2 | MOPT_DATAJ},
- 	{Opt_user_xattr, EXT4_MOUNT_XATTR_USER, MOPT_SET},
- 	{Opt_nouser_xattr, EXT4_MOUNT_XATTR_USER, MOPT_CLEAR},
--#ifdef CONFIG_EXT4_FS_POSIX_ACL
--	{Opt_acl, EXT4_MOUNT_POSIX_ACL, MOPT_SET},
--	{Opt_noacl, EXT4_MOUNT_POSIX_ACL, MOPT_CLEAR},
-+#if defined(CONFIG_EXT4_FS_POSIX_ACL) || defined(CONFIG_EXT4_FS_RICHACL)
-+	{Opt_acl, EXT4_MOUNT_ACL, MOPT_SET},
-+	{Opt_noacl, EXT4_MOUNT_ACL, MOPT_CLEAR},
- #else
- 	{Opt_acl, 0, MOPT_NOSUPPORT},
- 	{Opt_noacl, 0, MOPT_NOSUPPORT},
-@@ -1469,6 +1491,13 @@ static int handle_mount_opt(struct super_block *sb, char *opt, int token,
- #endif
- 	switch (token) {
- 	case Opt_noacl:
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+	if (EXT4_HAS_INCOMPAT_FEATURE(sb, EXT4_FEATURE_INCOMPAT_RICHACL)) {
-+		ext4_msg(sb, KERN_ERR, "Mount option \"%s\" incompatible "
-+			 "with richacl feature", opt);
-+		return -1;
-+	}
-+#endif
- 	case Opt_nouser_xattr:
- 		ext4_msg(sb, KERN_WARNING, deprecated_msg, opt, "3.5");
- 		break;
-@@ -3229,8 +3258,8 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		set_opt(sb, NO_UID32);
- 	/* xattr user namespace & acls are now defaulted on */
- 	set_opt(sb, XATTR_USER);
--#ifdef CONFIG_EXT4_FS_POSIX_ACL
--	set_opt(sb, POSIX_ACL);
-+#if defined(CONFIG_EXT4_FS_POSIX_ACL) || defined(CONFIG_EXT4_FS_RICHACL)
-+	set_opt(sb, ACL);
- #endif
- 	/* don't forget to enable journal_csum when metadata_csum is enabled. */
- 	if (ext4_has_metadata_csum(sb))
-@@ -3313,8 +3342,9 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		sb->s_iflags |= SB_I_CGROUPWB;
- 	}
- 
--	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
--		(test_opt(sb, POSIX_ACL) ? MS_POSIXACL : 0);
-+	err = enable_acl(sb);
-+	if (err)
-+		goto failed_mount;
- 
- 	if (le32_to_cpu(es->s_rev_level) == EXT4_GOOD_OLD_REV &&
- 	    (ext4_has_compat_features(sb) ||
-@@ -4630,8 +4660,9 @@ static int ext4_remount(struct super_block *sb, int *flags, char *data)
- 	if (sbi->s_mount_flags & EXT4_MF_FS_ABORTED)
- 		ext4_abort(sb, "Abort forced by user");
- 
--	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
--		(test_opt(sb, POSIX_ACL) ? MS_POSIXACL : 0);
-+	err = enable_acl(sb);
-+	if (err)
-+		goto restore_opts;
- 
- 	es = sbi->s_es;
- 
--- 
-2.5.0
+And it might even be an idea to convert the block device events to a =
+
+notifier chain, too.
+
+Dan, can you keep me in the loop here?
+Thanks.
+
+Cheers,
+
+Hannes
+-- =
+
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
 
 _______________________________________________
 xfs mailing list
