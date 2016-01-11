@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E52297F56
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 16:37:19 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B1F6C29DF5
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 17:27:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 707D4AC002
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 14:37:16 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	aMXMc9FPDKYrTH9A for <xfs@oss.sgi.com>;
-	Mon, 11 Jan 2016 14:37:13 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1aIl4N-0004Ae-5J
-	for xfs@oss.sgi.com; Tue, 12 Jan 2016 09:36:11 +1100
-Date: Tue, 12 Jan 2016 09:36:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to dde7f55
-Message-ID: <20160111223611.GJ10456@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9322A8F804C
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 15:27:01 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id FjE7fNKqmngT5xEj (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 15:26:59 -0800 (PST)
+Date: Mon, 11 Jan 2016 15:26:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
+Message-ID: <20160111232657.GA7831@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,113 +23,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6760025056539862988=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+Check the sizes of XFS on-disk structures when compiling the kernel.
+Use this to catch inadvertent changes in structure size due to padding
+and alignment issues, etc.
 
---===============6760025056539862988==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
-Content-Disposition: inline
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_format.h |    4 ++++
+ fs/xfs/xfs_super.c         |   45 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
 
-
---VrqPEDrXMn8OVzN4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated. This should be the last update before asking
-Linus to pull the branch for the current merge window. If nothing
-shows up in the next couple of days, I'll send out a pull request...
-
--Dave.
-
-The new head of the for-next branch is commit:
-
-dde7f55 Merge branch 'xfs-misc-fixes-for-4.5-2' into for-next
-
-New Commits:
-
-Dave Chinner (5):
-      [121e213] xfs: add tracepoints to readpage calls
-      [e354381] xfs: bmapbt checking on debug kernels too expensive
-      [b79f4a1] xfs: inode recovery readahead can race with inode buffer cr=
-eation
-      [7d6a13f] xfs: handle dquot buffer readahead in log recovery correctly
-      [dde7f55] Merge branch 'xfs-misc-fixes-for-4.5-2' into for-next
-
-Eric Sandeen (1):
-      [f6106ef] xfs: eliminate committed arg from xfs_bmap_finish
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_attr.c        | 141 +++++++-----------------------------=
-----
- fs/xfs/libxfs/xfs_attr_remote.c |  31 ++-------
- fs/xfs/libxfs/xfs_bmap.c        |  16 +++--
- fs/xfs/libxfs/xfs_bmap.h        |   2 +-
- fs/xfs/libxfs/xfs_dquot_buf.c   |  36 ++++++++--
- fs/xfs/libxfs/xfs_inode_buf.c   |  14 ++--
- fs/xfs/libxfs/xfs_quota_defs.h  |   2 +-
- fs/xfs/libxfs/xfs_shared.h      |   1 +
- fs/xfs/xfs_aops.c               |   2 +
- fs/xfs/xfs_bmap_util.c          |  43 +++++-------
- fs/xfs/xfs_buf.c                |   7 ++
- fs/xfs/xfs_dquot.c              |  13 ++--
- fs/xfs/xfs_inode.c              |  25 +++----
- fs/xfs/xfs_iomap.c              |  10 ++-
- fs/xfs/xfs_log_recover.c        |   9 ++-
- fs/xfs/xfs_rtalloc.c            |   3 +-
- fs/xfs/xfs_symlink.c            |  12 +---
- fs/xfs/xfs_trace.h              |  26 ++++++++
- 18 files changed, 159 insertions(+), 234 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---VrqPEDrXMn8OVzN4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJWlC5aAAoJEK3oKUf0dfodQ3IP/3H9icA+AOk12PRwHHtaclA3
-PWw3rdlVI7QLIPMr+2a+YBGAHKrwfnsESg02Tmb5lgDMpXZdz42f6565phakWFZH
-dMYDP0R9pbODwOF8jWmaFOPrcfVD3i5BiZxdqifUmzG5KEbChaco10Vgq+akLrMr
-NTWPYZIr/6yTvTApXyV+7g/jw1XyJgJTcXiKJPzJ/UKpqAlYX30Wy+HXvFu8oKLZ
-1opPDPCHBiTjkdJ+wKZj8g6HGCSnwpbRWZRFjl0ltKEtVzs7vCrCLwrS+SqmJP3f
-YJ2Gm6EKq73yEpT8iQ5KY4rmAX63oiWAXAcUx1MunFIYyWdkyIuzYdzAevvVrDIy
-TiQicIBJV6f5LDkmBvE1xNiy7zZjILMNcoludQ8SlAIXCumlsAF5Uu0/vJ478fM3
-bCu7MMFWtMSS43GacgMWA8IAL9sQQXdilCLZTqbYkrYrMdhM46uNeEcSzCKyrJCL
-zn2TPjpk5KMIW2eP2cWW0f55HiuIlxMyDQn5htcMNUYFS1XHAVvcu3Cgyn1RcIt0
-WbPIJVN5jGBO1U6uBiEOzKZCtH26T03FdXKqlLEIoPkf4Un7CS/RgsyU1/ikLmwP
-VARFMQXlDHy5il45nqafUZxXRtGzCQd21JKBj/upGeGJm0fH9q1EBguGSUCe7RTX
-Bl74OTu4Ki4vVHuTmWI+
-=KogP
------END PGP SIGNATURE-----
-
---VrqPEDrXMn8OVzN4--
-
-
---===============6760025056539862988==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index e2536bb..a589b47 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1509,4 +1509,8 @@ struct xfs_acl {
+ #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+ #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+ 
++#define XFS_CHECK_STRUCT_SIZE(structname, size) \
++	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
++		#structname ") is wrong, expected " #size)
++
+ #endif /* __XFS_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 36bd882..31b69d1 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1812,11 +1812,56 @@ xfs_destroy_workqueues(void)
+ 	destroy_workqueue(xfs_alloc_wq);
+ }
+ 
++static void __init
++xfs_check_ondisk_structs(void)
++{
++	/* on-disk structures */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
++	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
++	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
++	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
++	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
++
++	/* log structures */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
++}
++
+ STATIC int __init
+ init_xfs_fs(void)
+ {
+ 	int			error;
+ 
++	xfs_check_ondisk_structs();
++
+ 	printk(KERN_INFO XFS_VERSION_STRING " with "
+ 			 XFS_BUILD_OPTIONS " enabled\n");
+ 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6760025056539862988==--
