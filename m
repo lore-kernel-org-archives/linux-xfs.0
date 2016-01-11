@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9505629E2C
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 14:22:13 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BD6C529E2C
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 14:22:15 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 583E030405F
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 12:22:13 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7BEF48F804B
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 12:22:15 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5KxVKdixW0o18ofS (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 0iNQI24UV9z4YwGp (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 12:22:12 -0800 (PST)
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 12:22:14 -0800 (PST)
 From: mchristi@redhat.com
-Subject: [PATCH 13/35] xfs: set bi_op to REQ_OP
-Date: Mon, 11 Jan 2016 14:21:11 -0600
-Message-Id: <1452543693-4440-14-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 14/35] hfsplus: set bi_op to REQ_OP
+Date: Mon, 11 Jan 2016 14:21:12 -0600
+Message-Id: <1452543693-4440-15-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
 References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,109 +33,134 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has xfs set the bio bi_op to a REQ_OP, and
+This patch has hfsplus set the bio bi_op to a REQ_OP, and
 rq_flag_bits to bi_rw.
+
+This patch is compile tested only.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- fs/xfs/xfs_aops.c |  3 ++-
- fs/xfs/xfs_buf.c  | 27 +++++++++++++++------------
- 2 files changed, 17 insertions(+), 13 deletions(-)
+ fs/hfsplus/hfsplus_fs.h |  2 +-
+ fs/hfsplus/part_tbl.c   |  5 +++--
+ fs/hfsplus/super.c      |  6 ++++--
+ fs/hfsplus/wrapper.c    | 15 +++++++++------
+ 4 files changed, 17 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 5525a1b..25673e0 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -382,7 +382,8 @@ xfs_submit_ioend_bio(
- 	atomic_inc(&ioend->io_remaining);
- 	bio->bi_private = ioend;
- 	bio->bi_end_io = xfs_end_bio;
--	bio->bi_rw = (wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE);
-+	bio->bi_op = REQ_OP_WRITE;
-+	bio->bi_rw = WB_SYNC_ALL ? WRITE_SYNC : 0;
- 	submit_bio(bio);
- }
+diff --git a/fs/hfsplus/hfsplus_fs.h b/fs/hfsplus/hfsplus_fs.h
+index f91a1fa..80154aa 100644
+--- a/fs/hfsplus/hfsplus_fs.h
++++ b/fs/hfsplus/hfsplus_fs.h
+@@ -525,7 +525,7 @@ int hfsplus_compare_dentry(const struct dentry *parent,
  
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 9fd85d5..de35a3c 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1124,7 +1124,8 @@ xfs_buf_ioapply_map(
- 	int		map,
- 	int		*buf_offset,
- 	int		*count,
--	int		rw)
-+	int		op,
-+	int		op_flags)
+ /* wrapper.c */
+ int hfsplus_submit_bio(struct super_block *sb, sector_t sector, void *buf,
+-		       void **data, int rw);
++		       void **data, int op, int op_flags);
+ int hfsplus_read_wrapper(struct super_block *sb);
+ 
+ /* time macros */
+diff --git a/fs/hfsplus/part_tbl.c b/fs/hfsplus/part_tbl.c
+index eb355d8..63164eb 100644
+--- a/fs/hfsplus/part_tbl.c
++++ b/fs/hfsplus/part_tbl.c
+@@ -112,7 +112,8 @@ static int hfs_parse_new_pmap(struct super_block *sb, void *buf,
+ 		if ((u8 *)pm - (u8 *)buf >= buf_size) {
+ 			res = hfsplus_submit_bio(sb,
+ 						 *part_start + HFS_PMAP_BLK + i,
+-						 buf, (void **)&pm, READ);
++						 buf, (void **)&pm, REQ_OP_READ,
++						 0);
+ 			if (res)
+ 				return res;
+ 		}
+@@ -136,7 +137,7 @@ int hfs_part_find(struct super_block *sb,
+ 		return -ENOMEM;
+ 
+ 	res = hfsplus_submit_bio(sb, *part_start + HFS_PMAP_BLK,
+-				 buf, &data, READ);
++				 buf, &data, REQ_OP_READ, 0);
+ 	if (res)
+ 		goto out;
+ 
+diff --git a/fs/hfsplus/super.c b/fs/hfsplus/super.c
+index 5d54490..01cf313 100644
+--- a/fs/hfsplus/super.c
++++ b/fs/hfsplus/super.c
+@@ -219,7 +219,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
+ 
+ 	error2 = hfsplus_submit_bio(sb,
+ 				   sbi->part_start + HFSPLUS_VOLHEAD_SECTOR,
+-				   sbi->s_vhdr_buf, NULL, WRITE_SYNC);
++				   sbi->s_vhdr_buf, NULL, REQ_OP_WRITE,
++				   WRITE_SYNC);
+ 	if (!error)
+ 		error = error2;
+ 	if (!write_backup)
+@@ -227,7 +228,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
+ 
+ 	error2 = hfsplus_submit_bio(sb,
+ 				  sbi->part_start + sbi->sect_count - 2,
+-				  sbi->s_backup_vhdr_buf, NULL, WRITE_SYNC);
++				  sbi->s_backup_vhdr_buf, NULL, REQ_OP_WRITE,
++				  WRITE_SYNC);
+ 	if (!error)
+ 		error2 = error;
+ out:
+diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
+index d026bb3..c5c916d 100644
+--- a/fs/hfsplus/wrapper.c
++++ b/fs/hfsplus/wrapper.c
+@@ -30,7 +30,8 @@ struct hfsplus_wd {
+  * @sector: block to read or write, for blocks of HFSPLUS_SECTOR_SIZE bytes
+  * @buf: buffer for I/O
+  * @data: output pointer for location of requested data
+- * @rw: direction of I/O
++ * @op: direction of I/O
++ * @op_flags: request op flags
+  *
+  * The unit of I/O is hfsplus_min_io_size(sb), which may be bigger than
+  * HFSPLUS_SECTOR_SIZE, and @buf must be sized accordingly. On reads
+@@ -44,7 +45,7 @@ struct hfsplus_wd {
+  * will work correctly.
+  */
+ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
+-		void *buf, void **data, int rw)
++		       void *buf, void **data, int op, int op_flags)
  {
- 	int		page_index;
- 	int		total_nr_pages = bp->b_page_count;
-@@ -1163,7 +1164,8 @@ next_chunk:
+ 	struct bio *bio;
+ 	int ret = 0;
+@@ -65,9 +66,10 @@ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
+ 	bio = bio_alloc(GFP_NOIO, 1);
  	bio->bi_iter.bi_sector = sector;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
+ 	bio->bi_bdev = sb->s_bdev;
 -	bio->bi_rw = rw;
 +	bio->bi_op = op;
 +	bio->bi_rw = op_flags;
  
- 	for (; size && nr_pages; nr_pages--, page_index++) {
- 		int	rbytes, nbytes = PAGE_SIZE - offset;
-@@ -1207,7 +1209,8 @@ _xfs_buf_ioapply(
- 	struct xfs_buf	*bp)
- {
- 	struct blk_plug	plug;
--	int		rw;
-+	int		op;
-+	int		op_flags = 0;
- 	int		offset;
- 	int		size;
- 	int		i;
-@@ -1226,14 +1229,13 @@ _xfs_buf_ioapply(
- 		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
+-	if (!(rw & WRITE) && data)
++	if (op != WRITE && data)
+ 		*data = (u8 *)buf + offset;
  
- 	if (bp->b_flags & XBF_WRITE) {
-+		op = REQ_OP_WRITE;
- 		if (bp->b_flags & XBF_SYNCIO)
--			rw = WRITE_SYNC;
--		else
--			rw = WRITE;
-+			op_flags = WRITE_SYNC;
- 		if (bp->b_flags & XBF_FUA)
--			rw |= REQ_FUA;
-+			op_flags |= REQ_FUA;
- 		if (bp->b_flags & XBF_FLUSH)
--			rw |= REQ_FLUSH;
-+			op_flags |= REQ_FLUSH;
+ 	while (io_size > 0) {
+@@ -182,7 +184,7 @@ int hfsplus_read_wrapper(struct super_block *sb)
+ reread:
+ 	error = hfsplus_submit_bio(sb, part_start + HFSPLUS_VOLHEAD_SECTOR,
+ 				   sbi->s_vhdr_buf, (void **)&sbi->s_vhdr,
+-				   READ);
++				   REQ_OP_READ, 0);
+ 	if (error)
+ 		goto out_free_backup_vhdr;
  
- 		/*
- 		 * Run the write verifier callback function if it exists. If
-@@ -1263,13 +1265,14 @@ _xfs_buf_ioapply(
- 			}
- 		}
- 	} else if (bp->b_flags & XBF_READ_AHEAD) {
--		rw = READA;
-+		op = REQ_OP_READ;
-+		op_flags = REQ_RAHEAD;
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
+@@ -214,7 +216,8 @@ reread:
  
- 	/* we only use the buffer cache for meta-data */
--	rw |= REQ_META;
-+	op_flags |= REQ_META;
+ 	error = hfsplus_submit_bio(sb, part_start + part_size - 2,
+ 				   sbi->s_backup_vhdr_buf,
+-				   (void **)&sbi->s_backup_vhdr, READ);
++				   (void **)&sbi->s_backup_vhdr, REQ_OP_READ,
++				   0);
+ 	if (error)
+ 		goto out_free_backup_vhdr;
  
- 	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
-@@ -1281,7 +1284,7 @@ _xfs_buf_ioapply(
- 	size = BBTOB(bp->b_io_length);
- 	blk_start_plug(&plug);
- 	for (i = 0; i < bp->b_map_count; i++) {
--		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
-+		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
- 		if (bp->b_error)
- 			break;
- 		if (size <= 0)
 -- 
 1.8.3.1
 
