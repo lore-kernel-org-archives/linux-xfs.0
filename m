@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 45BC47F3F
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 04:52:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CFE62AC001
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 02:52:36 -0800 (PST)
-Received: from nit.767295.net (nit.767295.net [65.181.125.169]) by
-	cuda.sgi.com with ESMTP id 76wJExOA7Hpcw5HI for
-	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 02:52:35 -0800 (PST)
-Subject: Our Custom Shaped USB drives with your logo
-Message-ID: <616154454b725e55f3898e69ca40a01d@madamenoire.com>
-Date: Mon, 11 Jan 2016 11:49:41 +0100
-From: "Heather Texana" <arodlink@yahoo.com>
+	by oss.sgi.com (Postfix) with ESMTP id 520037F37
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 05:52:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B1A69AC002
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 03:52:37 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7kgTIM8GtjIYXcRC (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 03:52:35 -0800 (PST)
+Date: Mon, 11 Jan 2016 06:52:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: test XFS torn log write detection
+Message-ID: <20160111115233.GA31956@bfoster.bfoster>
+References: <1451923421-16647-1-git-send-email-bfoster@redhat.com>
+	<20160111040435.GH10456@dastard>
 MIME-Version: 1.0
-Reply-To: krikees@aliyun.com
+Content-Disposition: inline
+In-Reply-To: <20160111040435.GH10456@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +26,130 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-Hi,
+On Mon, Jan 11, 2016 at 03:04:35PM +1100, Dave Chinner wrote:
+> On Mon, Jan 04, 2016 at 11:03:41AM -0500, Brian Foster wrote:
+> > XFS torn log write detection includes a mechanism to inject CRC errors
+> > into log records at runtime and shutdown the fs accordingly. This
+> > ensures that the CRC verification pass on the subsequent mount discovers
+> > an invalid record near the head of the log and considers it a torn
+> > write.
+> > 
+> > This test runs a workload with error injection enabled and verifies that
+> > the subsequent mount is successful. The test repeats for several
+> > iterations using a random frequency factor for the error event each
+> > time.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Here's a v2 of the XFS log crc verification test case now that the
+> > associated kernel code has been merged. The only change is the bugfix
+> > noted in the changelog below.
+> > 
+> > Brian
+> > 
+> > v2:
+> > - Update random failure frequency calculation to ensure factor is never
+> >   0.
+> > v1: http://article.gmane.org/gmane.comp.file-systems.fstests/1406
+> > 
+> >  tests/xfs/350     | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/350.out |  2 ++
+> >  tests/xfs/group   |  1 +
+> >  3 files changed, 88 insertions(+)
+> >  create mode 100755 tests/xfs/350
+> >  create mode 100644 tests/xfs/350.out
+> > 
+> > diff --git a/tests/xfs/350 b/tests/xfs/350
+> > new file mode 100755
+> > index 0000000..1a1de6f
+> > --- /dev/null
+> > +++ b/tests/xfs/350
+> > @@ -0,0 +1,85 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 350
+> > +#
+> > +# Use the XFS log record CRC error injection mechanism to test torn writes to
+> > +# the log. The error injection mechanism writes an invalid CRC and shuts down
+> > +# the filesystem. The test verifies that a subsequent remount recovers the log
+> > +# and that the filesystem is consistent.
+> > +#
+> > +# Note that this test requires a DEBUG mode kernel.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2015 Red Hat, Inc. All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +	killall -9 fsstress > /dev/null 2>&1
+> > +	wait > /dev/null 2>&1
+> > +}
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +
+> > +# real QA test starts here
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs xfs
+> > +_supported_os Linux
+> > +_require_xfs_sysfs $(_short_dev $SCRATCH_DEV)/log/log_badcrc_factor
+> 
+> Scratch is not mounted at this point, so I don't think you can test
+> the scratch device sysfs attrs here. I changed it to look at the
+> test device instead and it works fine.
+> 
 
-Not sure if you received my email from last week about our New Year's
-Promotion?
+Oops, thought I tested that. :/ Thanks.
 
-I would like to speak with the person in charge of purchasing your logo /
-branded promotional products for your company?
+Brian
 
-Our company manufactures USB Flash Drives, printed with your logo, the
-perfect marketing tool for your business or organization.
-
-We offer low minimum quantities, and all memory sizes.
-We are always running a promotion, just ask!
-
-We can pre-load your media files, images, presentations and files onto the
-drives for you.
-These are ideal handouts for trade shows, branding, corporate gifts and
-employees.
-Our USB Pricing is at an ALL TIME LOW - now is the time to get your USB
-drives.
-
-Let us send you a quote!  We will EARN your business!
-*Please reply back and let me know what quantity and memory size you need
-for a
-Fast New Year's Quote!*
-
-Are you a school or nonprofit?  Please let us know for even further
-discounts.
-
-Thanks!
-
-Heather Texana
-USB Drive Representative
-Promo / Branded Flash Drives
-Contact: keniurt@sina.com
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
