@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4956F29DF5
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:26:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 38A2A304053
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 05:26:08 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id f9j7yfRFagjDkFvW (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 05:26:06 -0800 (PST)
-Date: Mon, 11 Jan 2016 14:26:17 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
-Message-ID: <20160111132617.GD6262@quack.suse.cz>
-References: <568FEA2C.6080708@redhat.com>
-	<20160109072600.GA21636@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160109072600.GA21636@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 9686729DF5
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 09:22:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D071304053
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:22:05 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id sXoo3ETTVOxfyRHp (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:22:04 -0800 (PST)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v17 00/22] Richacls (Core and Ext4)
+Date: Mon, 11 Jan 2016 16:21:31 +0100
+Message-Id: <1452525713-11348-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,52 +21,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri 08-01-16 23:26:00, Christoph Hellwig wrote:
-> On Fri, Jan 08, 2016 at 10:56:12AM -0600, Eric Sandeen wrote:
-> > This adds a new quotactl, Q_XGETQUOTA2.
-> > 
-> > Q_XGETQUOTA2 is exactly like Q_XGETQUOTA, except that it will
-> > return quota information for the id equal to or greater than
-> > the id requested.  In other words, if the specified id has
-> > no quota, the command will return quota information for the
-> > next higher id which does have a quota set.  If no higher id
-> > has an active quota, -ESRCH is returned.
-> 
-> Please add a flags argument to Q_XGETQUOTA2, and then make the
-> new behavior the first flag.  Keep Q_XGETQUOTA behavior for the
-> flag-less case.  That way we get future etensibility for free.
+Al,
 
-So this is what I wanted to suggest at first as well. What I somewhat
-dislike is that 'addr' must now point to something like:
+could you please merge the current richacl patch queue, up to and including
+the ext4 support?  The patches apply on top of your current xattr.work
+branch.
 
-struct getquota_args {
-	__u64 flags;
-	struct fs_disk_quota ret;
-};
+Other than rebasing onto xattr.work, the patches haven't changed since
+November 9, 2015.  Previous posting: https://lwn.net/Articles/666596/.
 
-which is not as nice as passing pointer to fs_disk_quota directly. But
-probably still OK. So I agree with the flags idea.
 
-Another issue is that OCFS2 and ext4 with quota in hidden inodes would need
-call with these capabilities as well (they have the same problem as xfs).
-For reporting VFS quota we use bytes for space (since some filesystems need
-it) and we don't need RT fields (easy so zero-fill) and warning fields
-(there zeros may be confusing). So we would need something like struct
-qc_dqblk (currently only internal) extended with ID and maybe flags field
-XFS is using to return quota type which can contain all the information and
-tell which info is actually valid as return structure.
+The complete patch queue is available here:
 
-								Honza
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+        richacl-2015-12-15
+
+
+The richacl user-space utilitites, man pages, and test suite are available
+here:
+
+  https://github.com/andreas-gruenbacher/richacl
+
+
+Changes to other user-space packages for richacl:
+
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
+
+
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (20):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Make the inode passed to inode_change_ok non-const
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Compute maximum file masks from an acl
+  richacl: Permission check algorithm
+  posix_acl: Unexport acl_by_type and make it static
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+ fs/Kconfig                                      |   3 +
+ fs/Makefile                                     |   2 +
+ fs/attr.c                                       |  81 +++-
+ fs/ext4/Kconfig                                 |  11 +
+ fs/ext4/Makefile                                |   1 +
+ fs/ext4/ext4.h                                  |   6 +-
+ fs/ext4/file.c                                  |   3 +
+ fs/ext4/ialloc.c                                |  11 +-
+ fs/ext4/inode.c                                 |  12 +-
+ fs/ext4/namei.c                                 |   5 +
+ fs/ext4/richacl.c                               | 142 ++++++
+ fs/ext4/richacl.h                               |  40 ++
+ fs/ext4/super.c                                 |  49 +-
+ fs/ext4/xattr.c                                 |   7 +
+ fs/f2fs/acl.c                                   |   4 +-
+ fs/inode.c                                      |  15 +-
+ fs/jffs2/acl.c                                  |  10 +-
+ fs/namei.c                                      | 118 +++--
+ fs/posix_acl.c                                  |  50 +--
+ fs/richacl_base.c                               | 564 ++++++++++++++++++++++++
+ fs/richacl_inode.c                              | 333 ++++++++++++++
+ fs/richacl_xattr.c                              | 298 +++++++++++++
+ fs/xattr.c                                      |  34 +-
+ include/linux/fs.h                              |  60 ++-
+ include/linux/posix_acl.h                       |  13 +-
+ include/linux/richacl.h                         | 208 +++++++++
+ include/linux/richacl_xattr.h                   |  44 ++
+ include/uapi/linux/Kbuild                       |   2 +
+ include/uapi/linux/fs.h                         |   3 +-
+ include/uapi/linux/richacl.h                    | 152 +++++++
+ include/uapi/linux/richacl_xattr.h              |  44 ++
+ include/uapi/linux/xattr.h                      |   2 +
+ 33 files changed, 2222 insertions(+), 107 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl_base.c
+ create mode 100644 fs/richacl_inode.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.5.0
 
 _______________________________________________
 xfs mailing list
