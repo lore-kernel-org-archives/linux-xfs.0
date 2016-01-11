@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EC5A7CA2
-	for <xfs@oss.sgi.com>; Sun, 31 Jan 2016 23:46:56 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4E25429DF5
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 08:20:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CAD71304051
-	for <xfs@oss.sgi.com>; Sun, 31 Jan 2016 21:46:55 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	OPmAzI2sFewse89l for <xfs@oss.sgi.com>;
-	Sun, 31 Jan 2016 21:46:53 -0800 (PST)
-Date: Mon, 1 Feb 2016 16:46:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Random write result differences between RAID device and XFS
-Message-ID: <20160201054639.GU6033@dastard>
-References: <56AB44AF.8020807@purplehaze.ch> <20160129222553.GK20456@dastard>
-	<56AC93EC.80202@purplehaze.ch>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2101B8F804B
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 06:20:21 -0800 (PST)
+Received: from mail1.bemta14.messagelabs.com (mail1.bemta14.messagelabs.com
+	[193.109.254.116]) by cuda.sgi.com with ESMTP id
+	Gnqus4aClH4IfBfc (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 06:20:15 -0800 (PST)
+From: Sandeep Patel <spatel@omnifone.com>
+Subject: RE: XFS corruptions
+Date: Mon, 11 Jan 2016 14:20:12 +0000
+Message-ID: <558408F298C8CE4C89D93BD56AB474E801861CBD2B@EXBE1IS02.omnifone.com>
+References: <558408F298C8CE4C89D93BD56AB474E8018617B2B3@EXBE1IS02.omnifone.com>
+	<20151130184048.3fa123e0@harpe.intellique.com>
+	<558408F298C8CE4C89D93BD56AB474E8018617B3A6@EXBE1IS02.omnifone.com>
+	<20151130194554.6140bf30@harpe.intellique.com>
+	<558408F298C8CE4C89D93BD56AB474E8018617C636@EXBE1IS02.omnifone.com>
+	<20151201145011.6df02063@harpe.intellique.com>
+	<558408F298C8CE4C89D93BD56AB474E8018618503B@EXBE1IS02.omnifone.com>
+	<20151210164640.78a13865@harpe.intellique.com>
+In-Reply-To: <20151210164640.78a13865@harpe.intellique.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56AC93EC.80202@purplehaze.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,69 +33,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christian Affolter <c.affolter@purplehaze.ch>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, Jan 30, 2016 at 11:43:56AM +0100, Christian Affolter wrote:
-> Hi Dave,
-> 
-> On 29.01.2016 23:25, Dave Chinner wrote:
-> > On Fri, Jan 29, 2016 at 11:53:35AM +0100, Christian Affolter wrote:
-> >> Hi everyone,
-> >>
-> >> I'm trying to understand the differences of some bandwidth and IOPs test
-> >> results I see while running a random-write full-stripe-width aligned fio
-> >> test (using libaio with direct IO) on a hardware RAID 6 raw device
-> >> versus on the same device with the XFS file system on top of it.
-> >>
-> >> On the raw device I get:
-> >> write: io=24828MB, bw=423132KB/s, iops=137, runt= 60085msec
-> >>
-> >> With XFS on top of it:
-> >> write: io=14658MB, bw=249407KB/s, iops=81, runt= 60182msec
-> > 
-> > Now repeat with a file that is contiguously allocated before you
-> > start. And also perhaps with the "swalloc" mount option.
-> 
-> Wow, thanks! After specifying --fallocate=none (instead of the default
-> fallocate=posix), bandwidth and iops increases and are even higher than
-> on the raw device:
-> 
-> write: io=30720MB, bw=599232KB/s, iops=195, runt= 52496msec
-> 
-> I'm eager to learn what's going on behind the scenes, can you give a
-> short explanation?
-
-Usually when concurrent direct IO writes are slower than the raw
-device it's because something is causing IO submission
-serialisation.  Usually that's to do with writes that extend the
-file because that can require the inode to be locked exclusively.
-Whatever behaviour the fio configuration change modifed, it removed
-the IO submission serialisation and so it's now running at full disk
-speed.
-
-As to why XFS is faster than the raw block device, the XFS file
-is only 30GB, so the random writes are only seeking a short
-distance compared to the block device test which is seeking across
-the whole device.
-
-> Btw. mounting the volume with "swalloc" didn't make any change.
-
-Which means there is no performance differential between stripe unit
-and stripe width aligned writes in this test on your hardware.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgRW1tYW51ZWwsCgpJIGhhdmUgbWFuYWdlZCB0byB1cGdyYWRlIG91ciBrZXJuZWwgdG8gMy44
+LjEzLTExOC4yLjIuZWw2dWVrLng4Nl82NCB3aGljaCB3YXMgdGhlIGxhdGVzdCBhdmFpbGFibGUg
+b24gb3VyIHJlcG8uIEkgd2lsbCBsZXQgeW91IGtub3cgaG93IEkgZ2V0IG9uLgoKVGhhbmtzClNh
+bmRlZXAKCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCkZyb206IEVtbWFudWVsIEZsb3JhYyBb
+bWFpbHRvOmVmbG9yYWNAaW50ZWxsaXF1ZS5jb21dIApTZW50OiAxMCBEZWNlbWJlciAyMDE1IDE1
+OjQ3ClRvOiBTYW5kZWVwIFBhdGVsCkNjOiB4ZnNAb3NzLnNnaS5jb20KU3ViamVjdDogUmU6IFhG
+UyBjb3JydXB0aW9ucwoKTGUgVGh1LCAxMCBEZWMgMjAxNSAxNTowNzozMiArMDAwMApTYW5kZWVw
+IFBhdGVsIDxzcGF0ZWxAb21uaWZvbmUuY29tPiDDqWNyaXZhaXQ6Cgo+IEFueSBsdWNrIHdpdGgg
+dGhlIHRlc3RpbmcuIEkgYW0gYXR0YWNoaW5nIGEgY29weSBvZiBteSBkbWVzZyBvdXRwdXQgCj4g
+d2hpY2gga2VlcHMgb24gcmVwZWF0aW5nLiBJbiB0aGlzIGNhc2UsIHRoZSBlcnJvciBzZWVtcyB0
+byBiZSB3aXRoIG9uZSAKPiBkaW5vZGUuCj4gCgpJJ3ZlIHJ1biBzb21lIHRlc3RzIG9uIGEgMTh4
+NiBUQiBhcnJheSwgYW5kIG5vIGVycm9yIG9jY3VycmVkLiBIb3dldmVyIEknbSBydW5uaW5nIGEg
+bXVjaCBuZXdlciBrZXJuZWwsIDMuMTguMjQuCgpDb3VsZCB5b3UgbWF5YmUgdHJ5IGluc3RhbGxp
+bmcgYSBkaWZmZXJlbnQga2VybmVsIG9uIHNvbWUgbWFjaGluZXMgYW5kIHNlZSBpZiBpdCBwZXJm
+b3JtcyBkaWZmZXJlbnRseT8KCi0tCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAg
+IHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlx
+dWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAg
+ICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KVGhpcyBlbWFpbCBoYXMgYmVlbiBzY2FubmVkIGJ5IHRoZSBTeW1hbnRlYyBFbWFp
+bCBTZWN1cml0eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9yZSBpbmZvcm1hdGlvbiBwbGVhc2Ugdmlz
+aXQgaHR0cDovL3d3dy5zeW1hbnRlY2Nsb3VkLmNvbSBfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fClRoaXMgZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0aGUgU3ltYW50ZWMgRW1haWwgU2Vj
+dXJpdHkuY2xvdWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHZpc2l0IGh0
+dHA6Ly93d3cuc3ltYW50ZWNjbG91ZC5jb20KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
