@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6244D29DFC
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 09:55:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 264478F804C
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:55:18 -0800 (PST)
-Received: from mail-yk0-f172.google.com (mail-yk0-f172.google.com
-	[209.85.160.172]) by cuda.sgi.com with ESMTP id
-	Tg0lNu38sOHE4ejU (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:55:15 -0800 (PST)
-Received: by mail-yk0-f172.google.com with SMTP id a85so357523963ykb.1
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:55:15 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id CDB6D29DFC
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 09:57:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BBF348F804B
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:57:01 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id 5uENVmvk6flEc5dA (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2016 07:56:59 -0800 (PST)
+Date: Mon, 11 Jan 2016 16:57:09 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 3/4] xfs: Factor xfs_seek_hole_data into helper
+Message-ID: <20160111155709.GI6262@quack.suse.cz>
+References: <568FEA2C.6080708@redhat.com>
+ <568FEAD1.5040302@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <5693C935.3060701@suse.de>
-References: <20160104181220.24118.96661.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160104182005.24118.50361.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160109075414.GA5008@ZenIV.linux.org.uk>
-	<5693C935.3060701@suse.de>
-Date: Mon, 11 Jan 2016 07:55:14 -0800
-Message-ID: <CAPcyv4gF3hRrOt3uQ9X7Yzk=Bg6R9QdvdjBQ=e7xejAZkiFoag@mail.gmail.com>
-Subject: Re: [resend PATCH 1/3] block,
-	fs: reliably communicate bdev end-of-life
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
+In-Reply-To: <568FEAD1.5040302@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,88 +30,205 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-nvdimm <linux-nvdimm@ml01.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Mon, Jan 11, 2016 at 7:24 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 01/09/2016 08:54 AM, Al Viro wrote:
->>
->> On Mon, Jan 04, 2016 at 10:20:05AM -0800, Dan Williams wrote:
->>>
->>> Historically we have waited for filesystem specific heuristics to
->>> attempt to guess when a block device is gone.  Sometimes this works, but
->>> in other cases the system can hang waiting for the fs to trigger its
->>> shutdown protocol.
->>>
->>> The initial motivation for this investigation was to prevent DAX
->>> mappings (direct mmap access to persistent memory) from leaking past the
->>> lifetime of the hosting block device.  However, Dave points out that
->>> these shutdown operations are needed in other scenarios.  Quoting Dave:
->>>
->>>      For example, if we detect a free space corruption during allocation,
->>>      it is not safe to trust *any active mapping* because we can't trust
->>>      that we having handed out the same block to multiple owners. Hence
->>>      on such a filesystem shutdown, we have to prevent any new DAX
->>>      mapping from occurring and invalidate all existing mappings as we
->>>      cannot allow userspace to modify any data or metadata until we've
->>>      resolved the corruption situation.
->>>
->>> The current block device shutdown sequence of del_gendisk +
->>> blk_cleanup_queue is problematic.  We want to tell the fs after
->>> blk_cleanup_queue that there is no possibility of recovery, but by that
->>> time we have deleted partitions and lost the ability to find all the
->>> super-blocks on a block device.
->>>
->>> Introduce del_gendisk_queue to trigger ->quiesce() and ->bdi_gone()
->>> notifications to all the filesystems hosted on the disk.  Where
->>> ->quiesce() are 'shutdown' operations while the bdev may still be alive,
->>> and ->bdi_gone() is a set of actions to take after the backing device
->>> is known to be permanently dead.
->>
->>
->>         Would you mind explaining what the hell is _the_ backing device
->> of a filesystem?  What does that translate into in case of e.g. btrfs
->> spanning several disks?  Or ext4 with journal on a different device, for
->> that matter?
->>
->>         If anything, I would argue that filesystem is out of place here -
->> general situation is "IO on X may require IO on device Y and X needs to do
->> something when Y goes away".  Consider e.g. /dev/loop backed by a device
->> that went away.  Or by a file on fs that has run down the curtain and
->> joined
->> the bleedin choir invisible.  With another fs partially hosted by that
->> loopback device.  Or by RAID0 containing said device.
->>
->>         You are given Y and attempt to locate the affected X.  _Then_
->> you assume that X is a filesystem and has "something to be done"
->> independent
->> from the role Y played for it, so you can pick that action from superblock
->> method.
->>
->>         IMO you are placing the burden in the wrong place.  _Recepient_
->> knows what it depends upon and what should be done for each source of
->> trouble.  So make it recepient's responsibility to request notifications.
->> At which point the superblock method goes away, along with the requirement
->> to handle all sources of trouble the same way, etc.
->>
->>         What's more, things like RAID5 (also interested in knowing when
->> a component has been ripped out) might or might not decide to propagate
->> the event further - after all, that's exactly the point of redundancy.
->>
->>         I'd look into something along the lines of notifier chain per
->> gendisk, with potential victims registering a callback when they decide
->> that from now on such and such device might screw them over...
->
->
-> Fully support this. I was planning on something similar to transport device
-> changes (resizing, topology change etc).
->
-> And it might even be an idea to convert the block device events to a
-> notifier chain, too.
->
-> Dan, can you keep me in the loop here?
+On Fri 08-01-16 10:58:57, Eric Sandeen wrote:
+> Factor xfs_seek_hole_data into an unlocked helper which takes
+> an xfs inode rather than a file for internal use.
+> 
+> Also allow specification of "end" - the vfs lseek interface is
+> defined such that any offset past eof/i_size shall return -ENXIO,
+> but we will use this for quota code which does not maintain i_size,
+> and we want to be able to SEEK_DATA past i_size as well. So the
+> lseek path can send in i_size, and the quota code can determine
+> its own ending offset.
 
-Yes, will do.
+This patch looks whitespace damaged making it difficult to read...
+
+								Honza
+ 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> fs/xfs/xfs_file.c | 82 ++++++++++++++++++++++++++++++++++++----------------
+> fs/xfs/xfs_inode.h | 2 +
+> 2 files changed, 59 insertions(+), 25 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index ebe9b82..5dc7113 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1337,31 +1337,31 @@ out:
+> return found;
+> }
+> 
+> -STATIC loff_t
+> -xfs_seek_hole_data(
+> - struct file *file,
+> +/*
+> + * caller must lock inode with xfs_ilock_data_map_shared,
+> + * can we craft an appropriate ASSERT?
+> + *
+> + * end is because the VFS-level lseek interface is defined such that any
+> + * offset past i_size shall return -ENXIO, but we use this for quota code
+> + * which does not maintain i_size, and we want to SEEK_DATA past i_size.
+> + */
+> +loff_t
+> +__xfs_seek_hole_data(
+> + struct inode *inode,
+> loff_t start,
+> + loff_t end,
+> int whence)
+> {
+> - struct inode *inode = file->f_mapping->host;
+> struct xfs_inode *ip = XFS_I(inode);
+> struct xfs_mount *mp = ip->i_mount;
+> loff_t uninitialized_var(offset);
+> - xfs_fsize_t isize;
+> xfs_fileoff_t fsbno;
+> - xfs_filblks_t end;
+> - uint lock;
+> + xfs_filblks_t lastbno;
+> int error;
+> 
+> - if (XFS_FORCED_SHUTDOWN(mp))
+> - return -EIO;
+> -
+> - lock = xfs_ilock_data_map_shared(ip);
+> -
+> - isize = i_size_read(inode);
+> - if (start >= isize) {
+> + if (start >= end) {
+> error = -ENXIO;
+> - goto out_unlock;
+> + goto out_error;
+> }
+> 
+> /*
+> @@ -1369,22 +1369,22 @@ xfs_seek_hole_data(
+> * by fsbno to the end block of the file.
+> */
+> fsbno = XFS_B_TO_FSBT(mp, start);
+> - end = XFS_B_TO_FSB(mp, isize);
+> + lastbno = XFS_B_TO_FSB(mp, end);
+> 
+> for (;;) {
+> struct xfs_bmbt_irec map[2];
+> int nmap = 2;
+> unsigned int i;
+> 
+> - error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
+> + error = xfs_bmapi_read(ip, fsbno, lastbno - fsbno, map, &nmap,
+> XFS_BMAPI_ENTIRE);
+> if (error)
+> - goto out_unlock;
+> + goto out_error;
+> 
+> /* No extents at given offset, must be beyond EOF */
+> if (nmap == 0) {
+> error = -ENXIO;
+> - goto out_unlock;
+> + goto out_error;
+> }
+> 
+> for (i = 0; i < nmap; i++) {
+> @@ -1426,7 +1426,7 @@ xfs_seek_hole_data(
+> * hole at the end of any file).
+> */
+> if (whence == SEEK_HOLE) {
+> - offset = isize;
+> + offset = end;
+> break;
+> }
+> /*
+> @@ -1434,7 +1434,7 @@ xfs_seek_hole_data(
+> */
+> ASSERT(whence == SEEK_DATA);
+> error = -ENXIO;
+> - goto out_unlock;
+> + goto out_error;
+> }
+> 
+> ASSERT(i > 1);
+> @@ -1445,14 +1445,14 @@ xfs_seek_hole_data(
+> */
+> fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+> start = XFS_FSB_TO_B(mp, fsbno);
+> - if (start >= isize) {
+> + if (start >= end) {
+> if (whence == SEEK_HOLE) {
+> - offset = isize;
+> + offset = end;
+> break;
+> }
+> ASSERT(whence == SEEK_DATA);
+> error = -ENXIO;
+> - goto out_unlock;
+> + goto out_error;
+> }
+> }
+> 
+> @@ -1464,7 +1464,39 @@ out:
+> * situation in particular.
+> */
+> if (whence == SEEK_HOLE)
+> - offset = min_t(loff_t, offset, isize);
+> + offset = min_t(loff_t, offset, end);
+> +
+> + return offset;
+> +
+> +out_error:
+> + return error;
+> +}
+> +
+> +STATIC loff_t
+> +xfs_seek_hole_data(
+> + struct file *file,
+> + loff_t start,
+> + int whence)
+> +{
+> + struct inode *inode = file->f_mapping->host;
+> + struct xfs_inode *ip = XFS_I(inode);
+> + struct xfs_mount *mp = ip->i_mount;
+> + uint lock;
+> + loff_t offset, end;
+> + int error = 0;
+> +
+> + if (XFS_FORCED_SHUTDOWN(mp))
+> + return -EIO;
+> +
+> + lock = xfs_ilock_data_map_shared(ip);
+> +
+> + end = i_size_read(inode);
+> + offset = __xfs_seek_hole_data(inode, start, end, whence);
+> + if (offset < 0) {
+> + error = offset;
+> + goto out_unlock;
+> + }
+> +
+> offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> 
+> out_unlock:
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index ca9e119..ed7e933 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -437,6 +437,8 @@ int xfs_update_prealloc_flags(struct xfs_inode *ip,
+> int xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
+> xfs_fsize_t isize, bool *did_zeroing);
+> int xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
+> +loff_t __xfs_seek_hole_data(struct inode *inode, loff_t start,
+> + loff_t eof, int whence);
+> 
+> 
+> /* from xfs_iops.c */
+> -- 
+> 1.7.1
+> 
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
