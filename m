@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E26F77F37
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 04:29:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CC4738F8033
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:29:02 -0800 (PST)
-Received: from resqmta-ch2-01v.sys.comcast.net
-	(resqmta-ch2-01v.sys.comcast.net [69.252.207.33]) by
-	cuda.sgi.com with ESMTP id GCyMhSohqDBQk1LE (version=TLSv1.2
-	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:28:59 -0800 (PST)
-From: Joshua Kinard <kumba@gentoo.org>
-Subject: [PATCH 0/3] xfsprogs: misc uClibc patches
-Message-ID: <569CBE4F.6000306@gentoo.org>
-Date: Mon, 18 Jan 2016 05:28:31 -0500
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A4287F37
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 15:10:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B9552AC004
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:10:44 -0800 (PST)
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
+	cuda.sgi.com with ESMTP id vWbxwNGb6yxQbSzM (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:10:41 -0800 (PST)
+Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
+	by mout01.posteo.de (Postfix) with ESMTPS id 0DD1920970
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:10:36 +0100 (CET)
+Received: from mail.posteo.de (localhost [127.0.0.1])
+	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3pg4Lh4sJhz5vND
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:10:36 +0100 (CET)
+Resent-Message-ID: <20160112210801.GA10044@nyan>
+Resent-To: xfs@oss.sgi.com
+Message-Id: <cover.1452632647.git.felix.janda@posteo.de>
+From: Felix Janda <felix.janda@posteo.de>
+Date: Tue, 12 Jan 2016 22:04:07 +0100
+Subject: [PATCH 0/6] xfsdump: Compile with musl libc
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,56 +29,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Six simple patches fixing compilation on linux systems using the musl
+c library.
 
-Hi,
+Felix Janda (6):
+  invutil/invidx: include <fcntl.h> for O_CREAT
+  dump/content.c: Include <linux/limits.h> for XATTR_LIST_MAX
+  common/main.c: Replace nonstandard SIGCLD by SIGCHLD
+  librmt/rmtopen: Prefer <signal.h> over <sys/signal.h>
+  dump/var.c: Include <limits.h> for PATH_MAX
+  Prefer stdint types over __uint*_t and __int*_t
 
-I'm sending these three patches upstream that allow xfsprogs to compile and
-work on uclibc-based userlands.  Two of them were sent upstream a few years ago
-(2012), and one was rejected, but I don't know what the status was on the other.
-
-Patches were contributed to Gentoo in our Bug #477758:
-https://bugs.gentoo.org/show_bug.cgi?id=477758
-
-xfsprogs-4.3.0-remove-aio-check.patch
-Removes the configure check for aio.h, which is not provided by uClibc.  It
-appears xfsprogs has no logic (that I can find) to compile against or utilize
-AIO capabilities.
-
-xfsprogs-4.3.0-use-sigprocmask.patch
-uClibc doesn't provide the sigrelse or sighold calls, so this patch replaces
-them with POSIX signal API calls (sigprocmask(2), etc).  This was previously
-submitted in the below thread, but I don't see a status update on whether it
-was accepted or rejected:
-http://oss.sgi.com/archives/xfs/2012-03/msg00015.html
-
-xfsprogs-4.3.0-use-statfs.patch
-uClibc doesn't provide the ustat() call and (apparently) statfs() should be
-used instead.  This patch was sent upstream before, but rejected because
-xfsprogs apparently relies on ustat() reporting if a block device is mounted
-anywhere.  I don't know if that's still the case now, but the attached patch
-was re-written by another Gentoo user after the first one got rejected, so
-resubmitting seems prudent.  The newer patch looks for mounted block devices by
-checking mounts and/or mtab.
-
-Thanks!
+ common/content_inode.h | 4 ++--
+ common/hsmapi.c        | 2 +-
+ common/main.c          | 2 +-
+ doc/xfsdump.html       | 8 ++++----
+ dump/content.c         | 1 +
+ dump/var.c             | 1 +
+ inventory/inv_oref.h   | 2 +-
+ inventory/inv_priv.h   | 4 ++--
+ inventory/inventory.h  | 2 +-
+ invutil/invidx.c       | 1 +
+ librmt/rmtopen.c       | 2 +-
+ 11 files changed, 16 insertions(+), 13 deletions(-)
 
 -- 
-Joshua Kinard
-Gentoo/MIPS
-kumba@gentoo.org
-6144R/F5C6C943 2015-04-27
-177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
-
-"The past tempts us, the present confuses us, the future frightens us.  And our
-lives slip away, moment by moment, lost in that vast, terrible in-between."
-
---Emperor Turhan, Centauri Republic
+2.4.10
 
 _______________________________________________
 xfs mailing list
