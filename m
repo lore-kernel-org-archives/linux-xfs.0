@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0E7DA7F69
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:01:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F23868F8049
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:37 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	q5e1AwzaewmbPiID for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2016 01:01:33 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005K5-Ld
-	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008Ai-L3
-	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/8] xfs: mode di_mode to vfs inode
-Date: Tue, 12 Jan 2016 20:01:20 +1100
-Message-Id: <1452589280-30167-9-git-send-email-david@fromorbit.com>
-In-Reply-To: <1452589280-30167-1-git-send-email-david@fromorbit.com>
-References: <1452589280-30167-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A83C17F47
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:15:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B64330405F
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:15:14 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id Tz1P4xW6hy0jit5j (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:15:10 -0800 (PST)
+Date: Tue, 12 Jan 2016 01:14:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 8/9] vfs: hoist the btrfs deduplication ioctl to the vfs
+Message-ID: <20160112091432.GB7832@birch.djwong.org>
+References: <20151219085505.12478.71157.stgit@birch.djwong.org>
+	<20151219085559.12478.33700.stgit@birch.djwong.org>
+	<20160112060714.GA4980@zzz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160112060714.GA4980@zzz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,707 +27,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: linux-api@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+[adding btrfs to the cc since we're talking about a whole new dedupe interface]
 
-Move the di_mode value from the xfs_icdinode to the VFS inode, reducing
-the xfs_icdinode byte another 2 bytes and collapsing another 2 byte hole
-in the structure.
+On Tue, Jan 12, 2016 at 12:07:14AM -0600, Eric Biggers wrote:
+> Some feedback on the VFS portion of the FIDEDUPERANGE ioctl and its man page...
+> (note: I realize the patch is mostly just moving the code that already existed
+> in btrfs, but in the VFS it deserves a more thorough review):
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c       |  6 +++---
- fs/xfs/libxfs/xfs_dir2.c       | 12 +++++------
- fs/xfs/libxfs/xfs_inode_buf.c  |  8 +++----
- fs/xfs/libxfs/xfs_inode_buf.h  |  1 -
- fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
- fs/xfs/xfs_bmap_util.c         |  4 ++--
- fs/xfs/xfs_dir2_readdir.c      |  2 +-
- fs/xfs/xfs_file.c              |  6 +++---
- fs/xfs/xfs_filestream.c        |  4 ++--
- fs/xfs/xfs_icache.c            |  8 +++----
- fs/xfs/xfs_inode.c             | 48 ++++++++++++++++++++----------------------
- fs/xfs/xfs_inode.h             |  4 ++--
- fs/xfs/xfs_inode_item.c        |  2 +-
- fs/xfs/xfs_ioctl.c             | 14 ++++++------
- fs/xfs/xfs_iops.c              | 12 ++++-------
- fs/xfs/xfs_itable.c            |  2 +-
- fs/xfs/xfs_log_recover.c       |  2 +-
- fs/xfs/xfs_mount.c             |  2 +-
- 18 files changed, 66 insertions(+), 73 deletions(-)
+Wheee. :)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ef00156..6a05166 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -912,7 +912,7 @@ xfs_bmap_local_to_extents(
- 	 * We don't want to deal with the case of keeping inode data inline yet.
- 	 * So sending the data fork of a regular inode is invalid.
- 	 */
--	ASSERT(!(S_ISREG(ip->i_d.di_mode) && whichfork == XFS_DATA_FORK));
-+	ASSERT(!(S_ISREG(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK));
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
- 
-@@ -1079,7 +1079,7 @@ xfs_bmap_add_attrfork_local(
- 	if (ip->i_df.if_bytes <= XFS_IFORK_DSIZE(ip))
- 		return 0;
- 
--	if (S_ISDIR(ip->i_d.di_mode)) {
-+	if (S_ISDIR(VFS_I(ip)->i_mode)) {
- 		memset(&dargs, 0, sizeof(dargs));
- 		dargs.geo = ip->i_mount->m_dir_geo;
- 		dargs.dp = ip;
-@@ -1091,7 +1091,7 @@ xfs_bmap_add_attrfork_local(
- 		return xfs_dir2_sf_to_block(&dargs);
- 	}
- 
--	if (S_ISLNK(ip->i_d.di_mode))
-+	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		return xfs_bmap_local_to_extents(tp, ip, firstblock, 1,
- 						 flags, XFS_DATA_FORK,
- 						 xfs_symlink_local_to_remote);
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 2fb53a5..af0f9d1 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -176,7 +176,7 @@ xfs_dir_isempty(
- {
- 	xfs_dir2_sf_hdr_t	*sfp;
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	if (dp->i_d.di_size == 0)	/* might happen during shutdown. */
- 		return 1;
- 	if (dp->i_d.di_size > XFS_IFORK_DSIZE(dp))
-@@ -231,7 +231,7 @@ xfs_dir_init(
- 	struct xfs_da_args *args;
- 	int		error;
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	error = xfs_dir_ino_validate(tp->t_mountp, pdp->i_ino);
- 	if (error)
- 		return error;
-@@ -266,7 +266,7 @@ xfs_dir_createname(
- 	int			rval;
- 	int			v;		/* type-checking value */
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	if (inum) {
- 		rval = xfs_dir_ino_validate(tp->t_mountp, inum);
- 		if (rval)
-@@ -364,7 +364,7 @@ xfs_dir_lookup(
- 	int		v;		/* type-checking value */
- 	int		lock_mode;
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_lookup);
- 
- 	/*
-@@ -443,7 +443,7 @@ xfs_dir_removename(
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
- 
- 	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-@@ -505,7 +505,7 @@ xfs_dir_replace(
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 
- 	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
- 	if (rval)
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index a2b10e3..763eb1f 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -202,13 +202,12 @@ xfs_inode_from_disk(
- 	struct xfs_icdinode	*to = &ip->i_d;
- 	struct inode		*inode = VFS_I(ip);
- 
--	to->di_mode = be16_to_cpu(from->di_mode);
--	to->di_version = from ->di_version;
- 
- 	/*
- 	 * Convert v1 inodes immediately to v2 inode format as this is the
- 	 * minimum inode version format we support in the rest of the code.
- 	 */
-+	to->di_version = from->di_version;
- 	if (to->di_version == 1) {
- 		set_nlink(inode, be16_to_cpu(from->di_onlink));
- 		to->di_projid_lo = 0;
-@@ -232,6 +231,7 @@ xfs_inode_from_disk(
- 	inode->i_ctime.tv_sec = be32_to_cpu(from->di_ctime.t_sec);
- 	inode->i_ctime.tv_nsec = be32_to_cpu(from->di_ctime.t_nsec);
- 	inode->i_generation = be32_to_cpu(from->di_gen);
-+	inode->i_mode = be16_to_cpu(from->di_mode);
- 
- 	to->di_size = be64_to_cpu(from->di_size);
- 	to->di_nblocks = be64_to_cpu(from->di_nblocks);
-@@ -264,7 +264,6 @@ xfs_inode_to_disk(
- 	to->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
- 	to->di_onlink = 0;
- 
--	to->di_mode = cpu_to_be16(from->di_mode);
- 	to->di_version = from->di_version;
- 	to->di_format = from->di_format;
- 	to->di_uid = cpu_to_be32(from->di_uid);
-@@ -281,6 +280,7 @@ xfs_inode_to_disk(
- 	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
- 	to->di_nlink = cpu_to_be32(inode->i_nlink);
- 	to->di_gen = cpu_to_be32(inode->i_generation);
-+	to->di_mode = cpu_to_be16(inode->i_mode);
- 
- 	to->di_size = cpu_to_be64(from->di_size);
- 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-@@ -495,7 +495,7 @@ xfs_iread(
- 		 * the inode is already free and not try to mess
- 		 * with the uninitialized part of it.
- 		 */
--		ip->i_d.di_mode = 0;
-+		VFS_I(ip)->i_mode = 0;
- 	}
- 
- 	ASSERT(ip->i_d.di_version >= 2);
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index e49c229..5f349a2 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -28,7 +28,6 @@ struct xfs_dinode;
-  * translated to on-disk format specific structures at the appropriate time.
-  */
- struct xfs_icdinode {
--	__uint16_t	di_mode;	/* mode and type of file */
- 	__int8_t	di_version;	/* inode version */
- 	__int8_t	di_format;	/* format of di_c data */
- 	__uint16_t	di_flushiter;	/* incremented on flush */
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 0defbd0..0bf1c74 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -120,7 +120,7 @@ xfs_iformat_fork(
- 		return -EFSCORRUPTED;
- 	}
- 
--	switch (ip->i_d.di_mode & S_IFMT) {
-+	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 	case S_IFIFO:
- 	case S_IFCHR:
- 	case S_IFBLK:
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 45ec9e4..7087756 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -821,7 +821,7 @@ bool
- xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- {
- 	/* prealloc/delalloc exists only on regular files */
--	if (!S_ISREG(ip->i_d.di_mode))
-+	if (!S_ISREG(VFS_I(ip)->i_mode))
- 		return false;
- 
- 	/*
-@@ -1726,7 +1726,7 @@ xfs_swap_extents(
- 	xfs_lock_two_inodes(ip, tip, XFS_MMAPLOCK_EXCL);
- 
- 	/* Verify that both files have the same format */
--	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
-+	if ((VFS_I(ip)->i_mode & S_IFMT) != (VFS_I(tip)->i_mode & S_IFMT)) {
- 		error = -EINVAL;
- 		goto out_unlock;
- 	}
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 642d55d..93b3ab0 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -665,7 +665,7 @@ xfs_readdir(
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return -EIO;
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_getdents);
- 
- 	args.dp = dp;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index ebe9b82..20eb6e5 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -156,9 +156,9 @@ xfs_update_prealloc_flags(
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 
- 	if (!(flags & XFS_PREALLOC_INVISIBLE)) {
--		ip->i_d.di_mode &= ~S_ISUID;
--		if (ip->i_d.di_mode & S_IXGRP)
--			ip->i_d.di_mode &= ~S_ISGID;
-+		VFS_I(ip)->i_mode &= ~S_ISUID;
-+		if (VFS_I(ip)->i_mode & S_IXGRP)
-+			VFS_I(ip)->i_mode &= ~S_ISGID;
- 		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	}
- 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index c4c130f..a51353a 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -151,7 +151,7 @@ xfs_filestream_pick_ag(
- 	xfs_agnumber_t		ag, max_ag = NULLAGNUMBER;
- 	int			err, trylock, nscan;
- 
--	ASSERT(S_ISDIR(ip->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(ip)->i_mode));
- 
- 	/* 2% of an AG's blocks must be free for it to be chosen. */
- 	minfree = mp->m_sb.sb_agblocks / 50;
-@@ -319,7 +319,7 @@ xfs_filestream_lookup_ag(
- 	xfs_agnumber_t		startag, ag = NULLAGNUMBER;
- 	struct xfs_mru_cache_elem *mru;
- 
--	ASSERT(S_ISREG(ip->i_d.di_mode));
-+	ASSERT(S_ISREG(VFS_I(ip)->i_mode));
- 
- 	pip = xfs_filestream_get_parent(ip);
- 	if (!pip)
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 7c26f86..437cb2e 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -98,7 +98,7 @@ void
- xfs_inode_free(
- 	struct xfs_inode	*ip)
- {
--	switch (ip->i_d.di_mode & S_IFMT) {
-+	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 	case S_IFREG:
- 	case S_IFDIR:
- 	case S_IFLNK:
-@@ -185,7 +185,7 @@ xfs_iget_cache_hit(
- 	/*
- 	 * If lookup is racing with unlink return an error immediately.
- 	 */
--	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
-+	if (VFS_I(ip)->i_mode == 0 && !(flags & XFS_IGET_CREATE)) {
- 		error = -ENOENT;
- 		goto out_error;
- 	}
-@@ -295,7 +295,7 @@ xfs_iget_cache_miss(
- 
- 	trace_xfs_iget_miss(ip);
- 
--	if ((ip->i_d.di_mode == 0) && !(flags & XFS_IGET_CREATE)) {
-+	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
- 		error = -ENOENT;
- 		goto out_destroy;
- 	}
-@@ -444,7 +444,7 @@ again:
- 	 * If we have a real type for an on-disk inode, we can setup the inode
- 	 * now.	 If it's a new inode being created, xfs_ialloc will handle it.
- 	 */
--	if (xfs_iflags_test(ip, XFS_INEW) && ip->i_d.di_mode != 0)
-+	if (xfs_iflags_test(ip, XFS_INEW) && VFS_I(ip)->i_mode != 0)
- 		xfs_setup_existing_inode(ip);
- 	return 0;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f0b9ccb..1a71633 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -793,7 +793,7 @@ xfs_ialloc(
- 	if (ip->i_d.di_version == 1)
- 		ip->i_d.di_version = 2;
- 
--	ip->i_d.di_mode = mode;
-+	inode->i_mode = mode;
- 	set_nlink(inode, nlink);
- 	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
- 	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
-@@ -801,9 +801,8 @@ xfs_ialloc(
- 
- 	if (pip && XFS_INHERIT_GID(pip)) {
- 		ip->i_d.di_gid = pip->i_d.di_gid;
--		if ((pip->i_d.di_mode & S_ISGID) && S_ISDIR(mode)) {
--			ip->i_d.di_mode |= S_ISGID;
--		}
-+		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
-+			inode->i_mode |= S_ISGID;
- 	}
- 
- 	/*
-@@ -812,10 +811,9 @@ xfs_ialloc(
- 	 * (and only if the irix_sgid_inherit compatibility variable is set).
- 	 */
- 	if ((irix_sgid_inherit) &&
--	    (ip->i_d.di_mode & S_ISGID) &&
--	    (!in_group_p(xfs_gid_to_kgid(ip->i_d.di_gid)))) {
--		ip->i_d.di_mode &= ~S_ISGID;
--	}
-+	    (inode->i_mode & S_ISGID) &&
-+	    (!in_group_p(xfs_gid_to_kgid(ip->i_d.di_gid))))
-+		inode->i_mode &= ~S_ISGID;
- 
- 	ip->i_d.di_size = 0;
- 	ip->i_d.di_nextents = 0;
-@@ -1416,7 +1414,7 @@ xfs_link(
- 
- 	trace_xfs_link(tdp, target_name);
- 
--	ASSERT(!S_ISDIR(sip->i_d.di_mode));
-+	ASSERT(!S_ISDIR(VFS_I(sip)->i_mode));
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
-@@ -1623,7 +1621,7 @@ xfs_release(
- 	xfs_mount_t	*mp = ip->i_mount;
- 	int		error;
- 
--	if (!S_ISREG(ip->i_d.di_mode) || (ip->i_d.di_mode == 0))
-+	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
- 		return 0;
- 
- 	/* If this is a read-only mount, don't do this (would generate I/O) */
-@@ -1858,7 +1856,7 @@ xfs_inactive(
- 	 * If the inode is already free, then there can be nothing
- 	 * to clean up here.
- 	 */
--	if (ip->i_d.di_mode == 0) {
-+	if (VFS_I(ip)->i_mode == 0) {
- 		ASSERT(ip->i_df.if_real_bytes == 0);
- 		ASSERT(ip->i_df.if_broot_bytes == 0);
- 		return;
-@@ -1882,7 +1880,7 @@ xfs_inactive(
- 		return;
- 	}
- 
--	if (S_ISREG(ip->i_d.di_mode) &&
-+	if (S_ISREG(VFS_I(ip)->i_mode) &&
- 	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
- 	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
- 		truncate = 1;
-@@ -1891,7 +1889,7 @@ xfs_inactive(
- 	if (error)
- 		return;
- 
--	if (S_ISLNK(ip->i_d.di_mode))
-+	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		error = xfs_inactive_symlink(ip);
- 	else if (truncate)
- 		error = xfs_inactive_truncate(ip);
-@@ -1947,7 +1945,7 @@ xfs_iunlink(
- 	int		error;
- 
- 	ASSERT(VFS_I(ip)->i_nlink == 0);
--	ASSERT(ip->i_d.di_mode != 0);
-+	ASSERT(VFS_I(ip)->i_mode != 0);
- 
- 	mp = tp->t_mountp;
- 
-@@ -2390,7 +2388,7 @@ xfs_ifree(
- 	ASSERT(VFS_I(ip)->i_nlink == 0);
- 	ASSERT(ip->i_d.di_nextents == 0);
- 	ASSERT(ip->i_d.di_anextents == 0);
--	ASSERT(ip->i_d.di_size == 0 || !S_ISREG(ip->i_d.di_mode));
-+	ASSERT(ip->i_d.di_size == 0 || !S_ISREG(VFS_I(ip)->i_mode));
- 	ASSERT(ip->i_d.di_nblocks == 0);
- 
- 	/*
-@@ -2404,7 +2402,7 @@ xfs_ifree(
- 	if (error)
- 		return error;
- 
--	ip->i_d.di_mode = 0;		/* mark incore inode as free */
-+	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
- 	ip->i_d.di_flags = 0;
- 	ip->i_d.di_dmevmask = 0;
- 	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
-@@ -2501,7 +2499,7 @@ xfs_remove(
- {
- 	xfs_mount_t		*mp = dp->i_mount;
- 	xfs_trans_t             *tp = NULL;
--	int			is_dir = S_ISDIR(ip->i_d.di_mode);
-+	int			is_dir = S_ISDIR(VFS_I(ip)->i_mode);
- 	int                     error = 0;
- 	xfs_bmap_free_t         free_list;
- 	xfs_fsblock_t           first_block;
-@@ -2746,7 +2744,7 @@ xfs_cross_rename(
- 	if (dp1 != dp2) {
- 		dp2_flags = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
- 
--		if (S_ISDIR(ip2->i_d.di_mode)) {
-+		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
- 						dp1->i_ino, first_block,
- 						free_list, spaceres);
-@@ -2754,7 +2752,7 @@ xfs_cross_rename(
- 				goto out_trans_abort;
- 
- 			/* transfer ip2 ".." reference to dp1 */
--			if (!S_ISDIR(ip1->i_d.di_mode)) {
-+			if (!S_ISDIR(VFS_I(ip1)->i_mode)) {
- 				error = xfs_droplink(tp, dp2);
- 				if (error)
- 					goto out_trans_abort;
-@@ -2773,7 +2771,7 @@ xfs_cross_rename(
- 			ip2_flags |= XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
- 		}
- 
--		if (S_ISDIR(ip1->i_d.di_mode)) {
-+		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
- 						dp2->i_ino, first_block,
- 						free_list, spaceres);
-@@ -2781,7 +2779,7 @@ xfs_cross_rename(
- 				goto out_trans_abort;
- 
- 			/* transfer ip1 ".." reference to dp2 */
--			if (!S_ISDIR(ip2->i_d.di_mode)) {
-+			if (!S_ISDIR(VFS_I(ip2)->i_mode)) {
- 				error = xfs_droplink(tp, dp1);
- 				if (error)
- 					goto out_trans_abort;
-@@ -2878,7 +2876,7 @@ xfs_rename(
- 	struct xfs_inode	*inodes[__XFS_SORT_INODES];
- 	int			num_inodes = __XFS_SORT_INODES;
- 	bool			new_parent = (src_dp != target_dp);
--	bool			src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
-+	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
- 	int			spaceres;
- 	int			error;
- 
-@@ -3007,7 +3005,7 @@ xfs_rename(
- 		 * target and source are directories and that target can be
- 		 * destroyed, or that neither is a directory.
- 		 */
--		if (S_ISDIR(target_ip->i_d.di_mode)) {
-+		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
- 			/*
- 			 * Make sure target dir is empty.
- 			 */
-@@ -3437,7 +3435,7 @@ xfs_iflush_int(
- 			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
- 		goto corrupt_out;
- 	}
--	if (S_ISREG(ip->i_d.di_mode)) {
-+	if (S_ISREG(VFS_I(ip)->i_mode)) {
- 		if (XFS_TEST_ERROR(
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS) &&
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE),
-@@ -3447,7 +3445,7 @@ xfs_iflush_int(
- 				__func__, ip->i_ino, ip);
- 			goto corrupt_out;
- 		}
--	} else if (S_ISDIR(ip->i_d.di_mode)) {
-+	} else if (S_ISDIR(VFS_I(ip)->i_mode)) {
- 		if (XFS_TEST_ERROR(
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS) &&
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE) &&
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index aef5452..447a7fd 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -88,7 +88,7 @@ static inline struct inode *VFS_I(struct xfs_inode *ip)
-  */
- static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
- {
--	if (S_ISREG(ip->i_d.di_mode))
-+	if (S_ISREG(VFS_I(ip)->i_mode))
- 		return i_size_read(VFS_I(ip));
- 	return ip->i_d.di_size;
- }
-@@ -369,7 +369,7 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
-  */
- #define XFS_INHERIT_GID(pip)	\
- 	(((pip)->i_mount->m_flags & XFS_MOUNT_GRPID) || \
--	 ((pip)->i_d.di_mode & S_ISGID))
-+	 (VFS_I(pip)->i_mode & S_ISGID))
- 
- int		xfs_release(struct xfs_inode *ip);
- void		xfs_inactive(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 334d657..bd9808f 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -333,7 +333,6 @@ xfs_inode_to_log_dinode(
- 
- 	to->di_magic = XFS_DINODE_MAGIC;
- 
--	to->di_mode = from->di_mode;
- 	to->di_version = from->di_version;
- 	to->di_format = from->di_format;
- 	to->di_uid = from->di_uid;
-@@ -351,6 +350,7 @@ xfs_inode_to_log_dinode(
- 	to->di_ctime.t_nsec = inode->i_ctime.tv_nsec;
- 	to->di_nlink = inode->i_nlink;
- 	to->di_gen = inode->i_generation;
-+	to->di_mode = inode->i_mode;
- 
- 	to->di_size = from->di_size;
- 	to->di_nblocks = from->di_nblocks;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 2c40c5f..5069bd8 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -962,7 +962,7 @@ xfs_set_diflags(
- 		di_flags |= XFS_DIFLAG_NODEFRAG;
- 	if (xflags & XFS_XFLAG_FILESTREAM)
- 		di_flags |= XFS_DIFLAG_FILESTREAM;
--	if (S_ISDIR(ip->i_d.di_mode)) {
-+	if (S_ISDIR(VFS_I(ip)->i_mode)) {
- 		if (xflags & XFS_XFLAG_RTINHERIT)
- 			di_flags |= XFS_DIFLAG_RTINHERIT;
- 		if (xflags & XFS_XFLAG_NOSYMLINKS)
-@@ -971,7 +971,7 @@ xfs_set_diflags(
- 			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
- 		if (xflags & XFS_XFLAG_PROJINHERIT)
- 			di_flags |= XFS_DIFLAG_PROJINHERIT;
--	} else if (S_ISREG(ip->i_d.di_mode)) {
-+	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
- 		if (xflags & XFS_XFLAG_REALTIME)
- 			di_flags |= XFS_DIFLAG_REALTIME;
- 		if (xflags & XFS_XFLAG_EXTSIZE)
-@@ -1112,14 +1112,14 @@ xfs_ioctl_setattr_check_extsize(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 
--	if ((fa->fsx_xflags & XFS_XFLAG_EXTSIZE) && !S_ISREG(ip->i_d.di_mode))
-+	if ((fa->fsx_xflags & XFS_XFLAG_EXTSIZE) && !S_ISREG(VFS_I(ip)->i_mode))
- 		return -EINVAL;
- 
- 	if ((fa->fsx_xflags & XFS_XFLAG_EXTSZINHERIT) &&
--	    !S_ISDIR(ip->i_d.di_mode))
-+	    !S_ISDIR(VFS_I(ip)->i_mode))
- 		return -EINVAL;
- 
--	if (S_ISREG(ip->i_d.di_mode) && ip->i_d.di_nextents &&
-+	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_d.di_nextents &&
- 	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
- 		return -EINVAL;
- 
-@@ -1240,9 +1240,9 @@ xfs_ioctl_setattr(
- 	 * successful return from chown()
- 	 */
- 
--	if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
-+	if ((VFS_I(ip)->i_mode & (S_ISUID|S_ISGID)) &&
- 	    !capable_wrt_inode_uidgid(VFS_I(ip), CAP_FSETID))
--		ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
-+		VFS_I(ip)->i_mode &= ~(S_ISUID|S_ISGID);
- 
- 	/* Change the ownerships and register project quota modifications */
- 	if (xfs_get_projid(ip) != fa->fsx_projid) {
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 397ce85..34bff1e 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -454,7 +454,7 @@ xfs_vn_getattr(
- 
- 	stat->size = XFS_ISIZE(ip);
- 	stat->dev = inode->i_sb->s_dev;
--	stat->mode = ip->i_d.di_mode;
-+	stat->mode = inode->i_mode;
- 	stat->nlink = inode->i_nlink;
- 	stat->uid = inode->i_uid;
- 	stat->gid = inode->i_gid;
-@@ -501,9 +501,6 @@ xfs_setattr_mode(
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 
--	ip->i_d.di_mode &= S_IFMT;
--	ip->i_d.di_mode |= mode & ~S_IFMT;
--
- 	inode->i_mode &= S_IFMT;
- 	inode->i_mode |= mode & ~S_IFMT;
- }
-@@ -647,9 +644,9 @@ xfs_setattr_nonsize(
- 		 * The set-user-ID and set-group-ID bits of a file will be
- 		 * cleared upon successful return from chown()
- 		 */
--		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
-+		if ((inode->i_mode & (S_ISUID|S_ISGID)) &&
- 		    !capable(CAP_FSETID))
--			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
-+			inode->i_mode &= ~(S_ISUID|S_ISGID);
- 
- 		/*
- 		 * Change the ownerships and register quota modifications
-@@ -759,7 +756,7 @@ xfs_setattr_size(
- 
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
--	ASSERT(S_ISREG(ip->i_d.di_mode));
-+	ASSERT(S_ISREG(inode->i_mode));
- 	ASSERT((iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
- 		ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
- 
-@@ -1211,7 +1208,6 @@ xfs_setup_inode(
- 	/* make the inode look hashed for the writeback code */
- 	hlist_add_fake(&inode->i_hash);
- 
--	inode->i_mode	= ip->i_d.di_mode;
- 	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
- 	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
- 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 6162e65..ce73eb3 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -88,7 +88,6 @@ xfs_bulkstat_one_int(
- 	buf->bs_projid_lo = dic->di_projid_lo;
- 	buf->bs_projid_hi = dic->di_projid_hi;
- 	buf->bs_ino = ino;
--	buf->bs_mode = dic->di_mode;
- 	buf->bs_uid = dic->di_uid;
- 	buf->bs_gid = dic->di_gid;
- 	buf->bs_size = dic->di_size;
-@@ -101,6 +100,7 @@ xfs_bulkstat_one_int(
- 	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
- 	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
- 	buf->bs_gen = inode->i_generation;
-+	buf->bs_mode = inode->i_mode;
- 
- 	buf->bs_xflags = xfs_ip2xflags(ip);
- 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 611c25c..bd6f23b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4338,7 +4338,7 @@ xlog_recover_process_one_iunlink(
- 		goto fail_iput;
- 
- 	ASSERT(VFS_I(ip)->i_nlink == 0);
--	ASSERT(ip->i_d.di_mode != 0);
-+	ASSERT(VFS_I(ip)->i_mode != 0);
- 
- 	/* setup for the next pass */
- 	agino = be32_to_cpu(dip->di_next_unlinked);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index bb753b3..d306105 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -865,7 +865,7 @@ xfs_mountfs(
- 
- 	ASSERT(rip != NULL);
- 
--	if (unlikely(!S_ISDIR(rip->i_d.di_mode))) {
-+	if (unlikely(!S_ISDIR(VFS_I(rip)->i_mode))) {
- 		xfs_warn(mp, "corrupted root inode %llu: not a directory",
- 			(unsigned long long)rip->i_ino);
- 		xfs_iunlock(rip, XFS_ILOCK_EXCL);
--- 
-2.5.0
+Yes, let's discuss the concerns about the btrfs extent same ioctl.
+
+I believe Christoph dislikes about the odd return mechanism (i.e. status and
+bytes_deduped) and doubts that the vectorization is really necessary.  There's
+not a lot of documentation to go on aside from "Do whatever the BTRFS ioctl
+does".  I suspect that will leave my explanations lackng, since I neither
+designed the btrfs interface nor know all that much about the decisions made to
+arrive at what we have now.
+
+(I agree with both of hch's complaints.)
+
+Really, the best argument for keeping this ioctl is to avoid breaking
+duperemove.  Even then, given that current duperemove checks for btrfs before
+trying to use BTRFS_IOC_EXTENT_SAME, we could very well design a new dedupe
+ioctl for the VFS, hook the new dedupers (XFS) into the new VFS ioctl
+leaving the old btrfs ioctl intact, and train duperemove to try the new
+ioctl and fall back on the btrfs one if the VFS ioctl isn't supported.
+
+Frankly, I also wouldn't mind changing the VFS dedupe ioctl that to something
+that resembles the clone_range interface:
+
+int ioctl(int dest_fd, FIDEDUPERANGE, struct file_dedupe_range * arg);
+
+struct file_dedupe_range {
+    __s64 src_fd;
+    __u64 src_offset;
+    __u64 length;
+    __u64 dest_offset;
+    __u64 flags;
+};
+
+"See if the byte range src_offset:length in src_fd matches all of
+dest_offset:length in dest_fd; if so, share src_fd's physical storage with
+dest_fd.  Both fds must be files; if they are the same file the ranges cannot
+overlap; src_fd must be readable; dest_fd must be writable or append-only.
+Offsets and lengths probably need to be block-aligned, but that is filesystem
+dependent."
+
+The error conditions would be superset of the ones we know about today.  I'd
+return EOVERFLOW or something if length is longer than the FS wants to deal
+with.
+
+Now all the vectorization problems go away, and since it's a new VFS interface
+we can define everything from the start.
+
+Christoph, if this new interface solves your complaints I think I'd like to get
+started on the code/docs soon.
+
+> At high level, I am confused about what is meant by the "source" and
+> "destination" files.  I understand that with more than two files, you
+> effectively have to choose one file to treat specially and dedupe with all
+> the other files (an NxN comparison isn't realistic).  But with just two
+> files, a deduplication operation should be completely symmetric, should it
+> not?  The end
+
+Not sure what you mean by 'symmetric', but in any case the convention seems
+to be that src_fd's storage is shared with dest_fd if there's a match.
+
+> result should be that the data is deduplicated, regardless of the order in
+> which I gave the file descriptors.  So why is there some non-symmetric
+> behavior?  There are several examples but one is that the VFS is checking
+> !S_ISREG() on the "source" file descriptor but not on the "destination" file
+> descriptor.
+
+The dedupe_range function pointer should only be supplied for regular files.
+
+> Another is that different permissions are required on the source versus on
+> the destination.  If there are good reasons for the nonsymmetry then this
+> needs to be clearly explained in the man page; otherwise it may not be clear
+> what to use as the "source" and what to use as the "destination".
+> 
+> It seems odd to be adding "copy" as a system call but then have "dedupe" and
+> "clone" as ioctls rather than system calls... it seems that they should all
+> be one or the other (at least, if we put aside the fact that the ioctls
+> already exist in btrfs).
+
+We can't put the clone ioctl aside; coreutils has already started using it.
+
+I'm not sure if clone_range or extent_same are all that popular, though.
+AFAIK duperemove is the only program using extent_same, and I don't know
+of anything using clone_range.
+
+(Well, xfs_io does...)
+
+> The range checking in clone_verify_area() appears incomplete.  Someone could
+> provide len=UINT64_MAX and all the checks would still pass even though
+> 'pos+len' would overflow.
+
+Yeah...
+
+> Should the ioctl be interruptible?  Right now it always goes through *all*
+> the 'struct file_dedupe_range_info's you passed in --- potentially up to
+> 65535 of them.
+
+There probably ought to be explicit signal checks, or we could just get rid
+of the vectorization entirely. :)
+
+> Why 'info->bytes_deduped += deduped' rather than 'info->bytes_deduped =
+> deduped'?  'bytes_deduped' is per file descriptor, not for the operation as a
+> whole.
+
+Right, because bytes_deduped is a part of file_dedup_range_info, not
+file_dedupe_range.
+
+(Note the bytes_deduped = 0 earlier in the function.)
+
+> What permissions do you need on the destination file descriptors?  The man
+> page implies they must be open for writing and not appending.  The
+> implementation differs: it requires FMODE_WRITE only for non-admin users, and
+> it doesn't check for O_APPEND at all.
+
+I think the result of an earlier discussion was that src_fd must be readable,
+and dest_fd must be writable or appendable.
+
+> The man page also says you get EPERM if "dest_fd is immutable" and ETXTBSY if
+> "one of the files is a swap file", which I don't see actually happening in
+> the implementation; it seems those error codes perhaps exist at all for this
+> ioctl but rather be left to open(..., O_WRONLY).
+
+Those could be hoisted to the VFS (from the XFS implementation), I think.
+
+> If the filesystem doesn't support deduplication, or I pass in a strange file
+> descriptor such as one for a named pipe, do I get EINVAL or EOPNOTSUPP?  The
+> man page isn't clear.
+
+Should be EOPNOTSUPP if dest_fd isn't a regular file; EISDIR if either are
+directories; and EINVAL for any other kind of non-file fd.  I suspect the
+clone* manpages don't make this too clear either.
+
+> Under what circumstances will 'bytes_deduped' differ from the count that was
+> passed in?
+
+btrfs/xfs will only compare the first 16MB.  Not documented anywhere. :(
+
+> If short counts are allowed, what will be the 'status' be in that case:
+> FILE_DEDUP_RANGE_DIFFERS, FILE_DEDUPE_RANGE_SAME, or something else?
+
+One of those two.
+
+> Can data be deduped even if only a prefix of the data region matches?
+
+No.
+
+> The man page doesn't mention FILE_DEDUPE_RANGE_SAME at all, instead calling it
+> 0; it only mentions FILE_DEDUPE_RANGE_DIFFERS.
+
+Oops, good catch. :(
+
+> The man page isn't clear about whether the ioctl stops early if an error
+> occurs or always processes all the 'struct file_dedupe_range_info's you pass
+> in.  And if it were, hypothetically, to stop early, how is the user meant to
+> know on which file it stopped?
+
+I don't know if this should be the official behavior, but it stopped at
+whichever file_dedupe_range_info has both status and bytes_deduped set to zero.
+
+> The man page says "logical_offset" but in the struct it is called
+> "dest_offset".
+
+Oops.
+
+> There are some variables named "same" which don't really make sense now that
+> the ioctl is called FIDEDUPERANGE instead of EXTENT_SAME.
+
+Perhaps not.
+
+I'll later take a look at how many of these issues apply to clone/clone_range.
+
+--D
+
+> 
+> Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-api" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
