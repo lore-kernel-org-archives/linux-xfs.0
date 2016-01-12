@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D0C9D7F37
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 14:02:40 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CB1467F37
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 15:24:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B764C304059
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 12:02:40 -0800 (PST)
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
-	cuda.sgi.com with ESMTP id PYmL08KlFLA6Vla1 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 12:02:38 -0800 (PST)
-Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
-	by mout01.posteo.de (Postfix) with ESMTPS id AFC4B208B1
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 21:02:36 +0100 (CET)
-Received: from mail.posteo.de (localhost [127.0.0.1])
-	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3pg2rD45m2z5vN0
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 21:02:36 +0100 (CET)
-Date: Tue, 12 Jan 2016 21:00:01 +0100
-From: Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH 4/6] linux.h: Use off64_t instead of loff_t
-Message-ID: <20160112200001.GE568@nyan>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AFE6D8F8052
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:24:14 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	B0IDUeh1onL0EWVE for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2016 13:24:12 -0800 (PST)
+Date: Wed, 13 Jan 2016 08:24:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/6] Move from __uint*_t types to uint*_t and likewise
+	for __int*_t
+Message-ID: <20160112212405.GL10456@dastard>
 References: <cover.1452627740.git.felix.janda@posteo.de>
+	<20160112195935.GB568@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <cover.1452627740.git.felix.janda@posteo.de>
+In-Reply-To: <20160112195935.GB568@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,33 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Felix Janda <felix.janda@posteo.de>
+Cc: xfs@oss.sgi.com
 
-These are equivalent on glibc, while musl does not know loff_t.
+On Tue, Jan 12, 2016 at 08:59:35PM +0100, Felix Janda wrote:
+> The uint*_t and int*_t are defined by C99 and should be prefered
+> over the less portable __uint*_t and __int*_t variants. The
+> necessary <stdint.h> include is in platformdefs.h, which gets
+> included in most places via libxfs.h. In the public headers
+> <stdint.h> is included in <xfs/xfs_types.h>.
+> 
+> Signed-off-by: Felix Janda <felix.janda@posteo.de>
 
-In the long run, it would be preferable to enable transparent LFS so
-that off64_t could be replaced by off_t.
+I can't apply this straight off. Most of the libxfs code that is
+changed is shared with the kernel code, and so the definitions of
+the variables need to be the same as the kernel code. There are
+reasons for the kernel code using __[u]int*_t type variants (e.g.  I
+think the endian conversion static checker requires the __ variants
+for host order variables), and so before making sweeping changes
+like this we need to ensure that we can make the equivalent changes
+to the kernel code as well...
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- include/linux.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/include/linux.h b/include/linux.h
-index 827dbe1..4872a1e 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -141,7 +141,7 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
- #define EFSBADCRC	EBADMSG	/* Bad CRC detected */
- 
--typedef loff_t		xfs_off_t;
-+typedef off64_t	xfs_off_t;
- typedef uint64_t	xfs_ino_t;
- typedef uint32_t	xfs_dev_t;
- typedef int64_t	xfs_daddr_t;
+Dave.
 -- 
-2.4.10
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
