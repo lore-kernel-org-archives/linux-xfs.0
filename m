@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E728B7F37
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:44:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 77B31AC002
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:44:45 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A6357F37
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 04:57:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3ED9A30407E
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 02:57:11 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id BUyjoGDybXl1HnK6 (version=TLSv1
+	ESMTP id tXZbiqcHMqKqXXTn (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:44:43 -0800 (PST)
-Date: Tue, 12 Jan 2016 10:44:51 +0100
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 02:57:08 -0800 (PST)
+Date: Tue, 12 Jan 2016 11:57:16 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v8 2/9] dax: fix conversion of holes to PMDs
-Message-ID: <20160112094451.GS6262@quack.suse.cz>
+Subject: Re: [PATCH v8 6/9] dax: add support for fsync/msync
+Message-ID: <20160112105716.GT6262@quack.suse.cz>
 References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452230879-18117-3-git-send-email-ross.zwisler@linux.intel.com>
+	<1452230879-18117-7-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1452230879-18117-3-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1452230879-18117-7-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,82 +33,165 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ross Zwisler <ross.zwisler@linux.intel.com>
 Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Thu 07-01-16 22:27:52, Ross Zwisler wrote:
-> When we get a DAX PMD fault for a write it is possible that there could be
-> some number of 4k zero pages already present for the same range that were
-> inserted to service reads from a hole.  These 4k zero pages need to be
-> unmapped from the VMAs and removed from the struct address_space radix tree
-> before the real DAX PMD entry can be inserted.
+On Thu 07-01-16 22:27:56, Ross Zwisler wrote:
+> To properly handle fsync/msync in an efficient way DAX needs to track dirty
+> pages so it is able to flush them durably to media on demand.
 > 
-> For PTE faults this same use case also exists and is handled by a
-> combination of unmap_mapping_range() to unmap the VMAs and
-> delete_from_page_cache() to remove the page from the address_space radix
-> tree.
-> 
-> For PMD faults we do have a call to unmap_mapping_range() (protected by a
-> buffer_new() check), but nothing clears out the radix tree entry.  The
-> buffer_new() check is also incorrect as the current ext4 and XFS filesystem
-> code will never return a buffer_head with BH_New set, even when allocating
-> new blocks over a hole.  Instead the filesystem will zero the blocks
-> manually and return a buffer_head with only BH_Mapped set.
-> 
-> Fix this situation by removing the buffer_new() check and adding a call to
-> truncate_inode_pages_range() to clear out the radix tree entries before we
-> insert the DAX PMD.
+> The tracking of dirty pages is done via the radix tree in struct
+> address_space.  This radix tree is already used by the page writeback
+> infrastructure for tracking dirty pages associated with an open file, and
+> it already has support for exceptional (non struct page*) entries.  We
+> build upon these features to add exceptional entries to the radix tree for
+> DAX dirty PMD or PTE pages at fault time.
 > 
 > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reported-by: Dan Williams <dan.j.williams@intel.com>
-> Tested-by: Dan Williams <dan.j.williams@intel.com>
 
-Just two nits below. Nothing serious so you can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
+Some comments below.
 
 > ---
->  fs/dax.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
+>  fs/dax.c            | 194 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  include/linux/dax.h |   2 +
+>  mm/filemap.c        |   6 ++
+>  3 files changed, 196 insertions(+), 6 deletions(-)
 > 
 > diff --git a/fs/dax.c b/fs/dax.c
-> index 513bba5..5b84a46 100644
+> index 5b84a46..0db21ea 100644
 > --- a/fs/dax.c
 > +++ b/fs/dax.c
-> @@ -589,6 +589,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
->  	bool write = flags & FAULT_FLAG_WRITE;
->  	struct block_device *bdev;
->  	pgoff_t size, pgoff;
-> +	loff_t lstart, lend;
->  	sector_t block;
->  	int result = 0;
+> @@ -24,6 +24,7 @@
+>  #include <linux/memcontrol.h>
+>  #include <linux/mm.h>
+>  #include <linux/mutex.h>
+> +#include <linux/pagevec.h>
+>  #include <linux/pmem.h>
+>  #include <linux/sched.h>
+>  #include <linux/uio.h>
+> @@ -324,6 +325,174 @@ static int copy_user_bh(struct page *to, struct inode *inode,
+>  	return 0;
+>  }
 >  
-> @@ -643,15 +644,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
->  		goto fallback;
->  	}
+> +#define NO_SECTOR -1
+> +
+> +static int dax_radix_entry(struct address_space *mapping, pgoff_t index,
+> +		sector_t sector, bool pmd_entry, bool dirty)
+> +{
+> +	struct radix_tree_root *page_tree = &mapping->page_tree;
+> +	int type, error = 0;
+> +	void *entry;
+> +
+> +	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+> +
+> +	spin_lock_irq(&mapping->tree_lock);
+> +	entry = radix_tree_lookup(page_tree, index);
+> +
+> +	if (entry) {
+> +		type = RADIX_DAX_TYPE(entry);
+> +		if (WARN_ON_ONCE(type != RADIX_DAX_PTE &&
+> +					type != RADIX_DAX_PMD)) {
+> +			error = -EIO;
+> +			goto unlock;
+> +		}
+> +
+> +		if (!pmd_entry || type == RADIX_DAX_PMD)
+> +			goto dirty;
+> +		radix_tree_delete(&mapping->page_tree, index);
+> +		mapping->nrexceptional--;
+
+In theory, you can delete here DIRTY / TOWRITE PTE entry and insert a clean
+PMD entry instead of it. That will cause fsync() to miss some flushes. So
+you should make sure you transfer all the tags to the new entry.
+
+> +static int dax_writeback_one(struct block_device *bdev,
+> +		struct address_space *mapping, pgoff_t index, void *entry)
+> +{
+> +	struct radix_tree_root *page_tree = &mapping->page_tree;
+> +	int type = RADIX_DAX_TYPE(entry);
+> +	struct radix_tree_node *node;
+> +	struct blk_dax_ctl dax;
+> +	void **slot;
+> +	int ret = 0;
+> +
+> +	spin_lock_irq(&mapping->tree_lock);
+> +	/*
+> +	 * Regular page slots are stabilized by the page lock even
+> +	 * without the tree itself locked.  These unlocked entries
+> +	 * need verification under the tree lock.
+> +	 */
+> +	if (!__radix_tree_lookup(page_tree, index, &node, &slot))
+> +		goto unlock;
+> +	if (*slot != entry)
+> +		goto unlock;
+> +
+> +	/* another fsync thread may have already written back this entry */
+> +	if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
+> +		goto unlock;
+> +
+> +	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_TOWRITE);
+> +
+> +	if (WARN_ON_ONCE(type != RADIX_DAX_PTE && type != RADIX_DAX_PMD)) {
+> +		ret = -EIO;
+> +		goto unlock;
+> +	}
+> +
+> +	dax.sector = RADIX_DAX_SECTOR(entry);
+> +	dax.size = (type == RADIX_DAX_PMD ? PMD_SIZE : PAGE_SIZE);
+> +	spin_unlock_irq(&mapping->tree_lock);
+
+This seems to be somewhat racy as well - if there are two fsyncs running
+against the same inode, one wins the race and clears TOWRITE tag, the
+second then bails out and may finish before the skipped page gets flushed.
+
+So we should clear the TOWRITE tag only after the range is flushed.  This
+can result in some amount of duplicit flushing but I don't think the race
+will happen that frequently in practice to be performance relevant.
+
+And secondly: You must write-protect all mappings of the flushed range so
+that you get fault when the sector gets written-to again. We spoke about
+this in the past already but somehow it got lost and I forgot about it as
+well. You need something like rmap_walk_file()...
+
+> +	/*
+> +	 * We cannot hold tree_lock while calling dax_map_atomic() because it
+> +	 * eventually calls cond_resched().
+> +	 */
+> +	ret = dax_map_atomic(bdev, &dax);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (WARN_ON_ONCE(ret < dax.size)) {
+> +		ret = -EIO;
+> +		goto unmap;
+> +	}
+> +
+> +	wb_cache_pmem(dax.addr, dax.size);
+> + unmap:
+> +	dax_unmap_atomic(bdev, &dax);
+> +	return ret;
+> +
+> + unlock:
+> +	spin_unlock_irq(&mapping->tree_lock);
+> +	return ret;
+> +}
+
+...
+
+> @@ -791,15 +976,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
+>   * dax_pfn_mkwrite - handle first write to DAX page
+>   * @vma: The virtual memory area where the fault occurred
+>   * @vmf: The description of the fault
+> - *
+>   */
+>  int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  {
+> -	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
+> +	struct file *file = vma->vm_file;
 >  
-> -	/*
-> -	 * If we allocated new storage, make sure no process has any
-> -	 * zero pages covering this hole
-> -	 */
-> -	if (buffer_new(&bh)) {
-> -		i_mmap_unlock_read(mapping);
-> -		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
-> -		i_mmap_lock_read(mapping);
-> -	}
-> +	/* make sure no process has any zero pages covering this hole */
-> +	lstart = pgoff << PAGE_SHIFT;
-> +	lend = lstart + PMD_SIZE - 1; /* inclusive */
-> +	i_mmap_unlock_read(mapping);
+> -	sb_start_pagefault(sb);
+> -	file_update_time(vma->vm_file);
+> -	sb_end_pagefault(sb);
+> +	dax_radix_entry(file->f_mapping, vmf->pgoff, NO_SECTOR, false, true);
 
-Just a nit but is there reason why we grab i_mmap_lock_read(mapping) only
-to release it a few lines below? The bh checks inside the locked region
-don't seem to rely on i_mmap_lock...
-
-> +	unmap_mapping_range(mapping, lstart, PMD_SIZE, 0);
-> +	truncate_inode_pages_range(mapping, lstart, lend);
-
-These two calls can be shortened as:
-
-truncate_pagecache_range(inode, lstart, lend);
-
+Why is NO_SECTOR argument correct here?
 
 								Honza
 -- 
