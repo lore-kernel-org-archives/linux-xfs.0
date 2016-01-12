@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 070F729DF9
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 15:10:58 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AA4BA29E00
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 15:11:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EEF48304059
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:10:57 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3CC0AAC004
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:11:13 -0800 (PST)
 Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
-	cuda.sgi.com with ESMTP id sLtZv48GmEk3AR4Z (version=TLSv1.2
+	cuda.sgi.com with ESMTP id zBoB6uoTWQC3Cv38 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:10:56 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:11:12 -0800 (PST)
 Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
-	by mout01.posteo.de (Postfix) with ESMTPS id 8D624209AB
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:10:55 +0100 (CET)
+	by mout01.posteo.de (Postfix) with ESMTPS id DAAF4209B3
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:11:10 +0100 (CET)
 Received: from mail.posteo.de (localhost [127.0.0.1])
-	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3pg4M336V1z5vN2
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:10:55 +0100 (CET)
-Date: Tue, 12 Jan 2016 22:08:20 +0100
+	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3pg4ML55fgz5vN3
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:11:10 +0100 (CET)
+Date: Tue, 12 Jan 2016 22:08:35 +0100
 From: Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH 2/6] dump/content.c: Include <linux/limits.h> for
-	XATTR_LIST_MAX
-Message-ID: <20160112210820.GC10044@nyan>
+Subject: [PATCH 4/6] librmt/rmtopen: Prefer <signal.h> over <sys/signal.h>
+Message-ID: <20160112210835.GE10044@nyan>
 References: <cover.1452632647.git.felix.janda@posteo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -40,21 +39,22 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Felix Janda <felix.janda@posteo.de>
 ---
- dump/content.c | 1 +
- 1 file changed, 1 insertion(+)
+ librmt/rmtopen.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/dump/content.c b/dump/content.c
-index 1e86292..97e42ab 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -36,6 +36,7 @@
- #include <xfs/xfs.h>
- #include <xfs/jdm.h>
- #ifdef linux
-+#include <linux/limits.h>
- #include <xfs/xqm.h>
- #endif
- 
+diff --git a/librmt/rmtopen.c b/librmt/rmtopen.c
+index 4bf9383..09ba3e4 100644
+--- a/librmt/rmtopen.c
++++ b/librmt/rmtopen.c
+@@ -27,7 +27,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <string.h>
+-#include <sys/signal.h>
++#include <signal.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
 -- 
 2.4.10
 
