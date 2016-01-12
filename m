@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F23267F50
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 04:20:12 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id AA40C7F37
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 15:11:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 85D6EAC002
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 02:20:12 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id HtVF5v0tPt32MnvH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Jan 2016 02:20:10 -0800 (PST)
-Date: Thu, 14 Jan 2016 02:20:09 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/6] libxfs/linux.c: Replace use of ustat by stat
-Message-ID: <20160114102009.GD27644@infradead.org>
-References: <cover.1452627740.git.felix.janda@posteo.de>
-	<20160112195945.GC568@nyan> <20160113075501.GC21939@infradead.org>
-	<20160113174241.GC10942@nyan>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 36AFCAC001
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:11:06 -0800 (PST)
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
+	cuda.sgi.com with ESMTP id BP3BNvRjt8qT39eW (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 13:11:04 -0800 (PST)
+Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
+	by mout01.posteo.de (Postfix) with ESMTPS id BD445209CA
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:11:03 +0100 (CET)
+Received: from mail.posteo.de (localhost [127.0.0.1])
+	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3pg4MC4Y8Lz5vMK
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:11:03 +0100 (CET)
+Date: Tue, 12 Jan 2016 22:08:28 +0100
+From: Felix Janda <felix.janda@posteo.de>
+Subject: [PATCH 3/6] common/main.c: Replace nonstandard SIGCLD by SIGCHLD
+Message-ID: <20160112210828.GD10044@nyan>
+References: <cover.1452632647.git.felix.janda@posteo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160113174241.GC10942@nyan>
+In-Reply-To: <cover.1452632647.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,35 +35,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Felix Janda <felix.janda@posteo.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jan 13, 2016 at 06:42:41PM +0100, Felix Janda wrote:
-> Is this really performance relevant?
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
+---
+ common/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm not entirely sure.  There are systems with giant amounts of mounted
-file systems, in which case iterating each of them and requiring
-multiple syscalls each might not be a good idea.
-
-> Hmm, so we couldn't we use for linux just something like
-> 
-> int
-> platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
-> {
-> 	int fd = open(block, O_EXCL);
-> 	int e = errno;
-> 	
-> 	if (fd != -1) close(fd);
-> 	if (e == EBUSY) {
-> 		if (verbose)
-> 			fprintf(stderr, _("%s: %s contains a mounted filesystem\n"), progname, name);
-> 		return 1;
-> 	}
-> 
-> 	return 0;
-
-Please give me a couple of days to come up with an idea to use O_EXCL
-on Linux and work around it on other platforms in a more integrated way.
+diff --git a/common/main.c b/common/main.c
+index 3848499..faa66ee 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -2225,7 +2225,7 @@ static sig_printmap_t sig_printmap[ ] = {
+ 	{SIGTERM,	"SIGTERM"},
+ 	{SIGUSR1,	"SIGUSR1"},
+ 	{SIGUSR2,	"SIGUSR2"},
+-	{SIGCLD,	"SIGCLD"},
++	{SIGCHLD,	"SIGCHLD"},
+ 	{SIGPWR,	"SIGPWR"},
+ 	{SIGURG,	"SIGURG"},
+ 	{SIGPOLL,	"SIGPOLL"},
+-- 
+2.4.10
 
 _______________________________________________
 xfs mailing list
