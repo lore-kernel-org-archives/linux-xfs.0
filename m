@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6922E7F58
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C47887F59
 	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:01:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D9116AC001
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:34 -0800 (PST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A77008F8035
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:35 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kMDwI9JNk1OdHuaf for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2016 01:01:30 -0800 (PST)
+	37xXOOAkByhyo3hu for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2016 01:01:31 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005Jy-IY
+	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005Jz-J3
 	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008A9-Hx
+	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008AE-IQ
 	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/8] xfs: introduce inode log format object
-Date: Tue, 12 Jan 2016 20:01:13 +1100
-Message-Id: <1452589280-30167-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/8] xfs: remove timestamps from incore inode
+Date: Tue, 12 Jan 2016 20:01:14 +1100
+Message-Id: <1452589280-30167-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1452589280-30167-1-git-send-email-david@fromorbit.com>
 References: <1452589280-30167-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,517 +39,558 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We currently carry around and log an entire inode core in the
-struct xfs_inode. A lot of the information in the inode core is
-duplicated in the VFS inode, but we cannot remove this duplication
-of infomration because the inode core is logged directly in
-xfs_inode_item_format().
+The struct xfs_inode has two copies of the current timestamps in it,
+one in the vfs inode and one in the struct xfs_icdinode. Now that we
+no longer log the struct xfs_icdinode directly, we don't need to
+keep the timestamps in this structure. instead we can copy them
+straight out of the VFS inode when formatting the inode log item or
+the on-disk inode.
 
-Add a new function xfs_inode_item_format_core() that copies the
-inode core data into a struct xfs_icdinode that is pulled directly
-from the log vector buffer. This means we no longer directly
-copy the inode core, but copy the structures one member at a time.
-This will be slightly less efficient than copying, but will allow us
-to remove duplicate and unnecessary items from the struct xfs_inode.
-
-To enable us to do this, call the new structure a xfs_log_dinode,
-so that we know it's different to the physical xfs_dinode and the
-in-core xfs_icdinode.
+This reduces the struct xfs_inode in size by 24 bytes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c  |   8 +--
- fs/xfs/libxfs/xfs_inode_buf.h  |  53 ++++++++++++++++-
- fs/xfs/libxfs/xfs_log_format.h |  15 ++---
- fs/xfs/xfs_icache.c            |   2 +-
- fs/xfs/xfs_inode.c             |   6 +-
- fs/xfs/xfs_inode.h             |   2 +-
- fs/xfs/xfs_inode_item.c        | 128 +++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_inode_item.h        |   2 +
- fs/xfs/xfs_log_recover.c       |  52 +++++++++--------
- 9 files changed, 221 insertions(+), 47 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 85 +++++++++++++++++++++++++++++++++++++------
+ fs/xfs/libxfs/xfs_inode_buf.h |  9 ++---
+ fs/xfs/libxfs/xfs_rtbitmap.c  |  2 +-
+ fs/xfs/xfs_inode.c            | 21 ++++++-----
+ fs/xfs/xfs_inode_item.c       | 73 ++++++-------------------------------
+ fs/xfs/xfs_inode_item.h       |  2 -
+ fs/xfs/xfs_iops.c             | 37 ++++---------------
+ fs/xfs/xfs_itable.c           | 16 +++++---
+ fs/xfs/xfs_log_recover.c      |  8 ++--
+ fs/xfs/xfs_rtalloc.c          |  2 +-
+ fs/xfs/xfs_trans_inode.c      | 12 +-----
+ 11 files changed, 124 insertions(+), 143 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 1aabfda..63d46bf 100644
+index 63d46bf..0f33265 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -196,8 +196,8 @@ xfs_imap_to_bp(
+@@ -195,10 +195,13 @@ xfs_imap_to_bp(
+ }
  
  void
- xfs_dinode_from_disk(
--	xfs_icdinode_t		*to,
--	xfs_dinode_t		*from)
-+	struct xfs_icdinode	*to,
-+	struct xfs_dinode	*from)
+-xfs_dinode_from_disk(
+-	struct xfs_icdinode	*to,
++xfs_inode_from_disk(
++	struct xfs_inode	*ip,
+ 	struct xfs_dinode	*from)
  {
++	struct xfs_icdinode	*to = &ip->i_d;
++	struct inode		*inode = VFS_I(ip);
++
  	to->di_magic = be16_to_cpu(from->di_magic);
  	to->di_mode = be16_to_cpu(from->di_mode);
-@@ -243,8 +243,8 @@ xfs_dinode_from_disk(
+ 	to->di_version = from ->di_version;
+@@ -211,12 +214,14 @@ xfs_dinode_from_disk(
+ 	to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
+ 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+ 	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+-	to->di_atime.t_sec = be32_to_cpu(from->di_atime.t_sec);
+-	to->di_atime.t_nsec = be32_to_cpu(from->di_atime.t_nsec);
+-	to->di_mtime.t_sec = be32_to_cpu(from->di_mtime.t_sec);
+-	to->di_mtime.t_nsec = be32_to_cpu(from->di_mtime.t_nsec);
+-	to->di_ctime.t_sec = be32_to_cpu(from->di_ctime.t_sec);
+-	to->di_ctime.t_nsec = be32_to_cpu(from->di_ctime.t_nsec);
++
++	inode->i_atime.tv_sec = be32_to_cpu(from->di_atime.t_sec);
++	inode->i_atime.tv_nsec = be32_to_cpu(from->di_atime.t_nsec);
++	inode->i_mtime.tv_sec = be32_to_cpu(from->di_mtime.t_sec);
++	inode->i_mtime.tv_nsec = be32_to_cpu(from->di_mtime.t_nsec);
++	inode->i_ctime.tv_sec = be32_to_cpu(from->di_ctime.t_sec);
++	inode->i_ctime.tv_nsec = be32_to_cpu(from->di_ctime.t_nsec);
++
+ 	to->di_size = be64_to_cpu(from->di_size);
+ 	to->di_nblocks = be64_to_cpu(from->di_nblocks);
+ 	to->di_extsize = be32_to_cpu(from->di_extsize);
+@@ -242,9 +247,63 @@ xfs_dinode_from_disk(
+ }
  
  void
- xfs_dinode_to_disk(
--	xfs_dinode_t		*to,
--	xfs_icdinode_t		*from)
-+	struct xfs_dinode	*to,
-+	struct xfs_icdinode	*from)
+-xfs_dinode_to_disk(
+-	struct xfs_dinode	*to,
+-	struct xfs_icdinode	*from)
++xfs_inode_to_disk(
++	struct xfs_inode	*ip,
++	struct xfs_dinode	*to)
++{
++	struct xfs_icdinode	*from = &ip->i_d;
++	struct inode		*inode = VFS_I(ip);
++
++	to->di_magic = cpu_to_be16(from->di_magic);
++	to->di_mode = cpu_to_be16(from->di_mode);
++	to->di_version = from ->di_version;
++	to->di_format = from->di_format;
++	to->di_onlink = cpu_to_be16(from->di_onlink);
++	to->di_uid = cpu_to_be32(from->di_uid);
++	to->di_gid = cpu_to_be32(from->di_gid);
++	to->di_nlink = cpu_to_be32(from->di_nlink);
++	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
++	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
++	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
++
++	to->di_atime.t_sec = cpu_to_be32(inode->i_atime.tv_sec);
++	to->di_atime.t_nsec = cpu_to_be32(inode->i_atime.tv_nsec);
++	to->di_mtime.t_sec = cpu_to_be32(inode->i_mtime.tv_sec);
++	to->di_mtime.t_nsec = cpu_to_be32(inode->i_mtime.tv_nsec);
++	to->di_ctime.t_sec = cpu_to_be32(inode->i_ctime.tv_sec);
++	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
++
++	to->di_size = cpu_to_be64(from->di_size);
++	to->di_nblocks = cpu_to_be64(from->di_nblocks);
++	to->di_extsize = cpu_to_be32(from->di_extsize);
++	to->di_nextents = cpu_to_be32(from->di_nextents);
++	to->di_anextents = cpu_to_be16(from->di_anextents);
++	to->di_forkoff = from->di_forkoff;
++	to->di_aformat = from->di_aformat;
++	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
++	to->di_dmstate = cpu_to_be16(from->di_dmstate);
++	to->di_flags = cpu_to_be16(from->di_flags);
++	to->di_gen = cpu_to_be32(from->di_gen);
++
++	if (from->di_version == 3) {
++		to->di_changecount = cpu_to_be64(from->di_changecount);
++		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
++		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
++		to->di_flags2 = cpu_to_be64(from->di_flags2);
++		to->di_ino = cpu_to_be64(from->di_ino);
++		to->di_lsn = cpu_to_be64(from->di_lsn);
++		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
++		uuid_copy(&to->di_uuid, &from->di_uuid);
++		to->di_flushiter = 0;
++	} else {
++		to->di_flushiter = cpu_to_be16(from->di_flushiter);
++	}
++}
++
++void
++xfs_log_dinode_to_disk(
++	struct xfs_log_dinode	*from,
++	struct xfs_dinode	*to)
  {
  	to->di_magic = cpu_to_be16(from->di_magic);
  	to->di_mode = cpu_to_be16(from->di_mode);
+@@ -257,12 +316,14 @@ xfs_dinode_to_disk(
+ 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+ 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
+ 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
++
+ 	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
+ 	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
+ 	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
+ 	to->di_mtime.t_nsec = cpu_to_be32(from->di_mtime.t_nsec);
+ 	to->di_ctime.t_sec = cpu_to_be32(from->di_ctime.t_sec);
+ 	to->di_ctime.t_nsec = cpu_to_be32(from->di_ctime.t_nsec);
++
+ 	to->di_size = cpu_to_be64(from->di_size);
+ 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
+ 	to->di_extsize = cpu_to_be32(from->di_extsize);
+@@ -403,7 +464,7 @@ xfs_iread(
+ 	 * Otherwise, just get the truly permanent information.
+ 	 */
+ 	if (dip->di_mode) {
+-		xfs_dinode_from_disk(&ip->i_d, dip);
++		xfs_inode_from_disk(ip, dip);
+ 		error = xfs_iformat_fork(ip, dip);
+ 		if (error)  {
+ #ifdef DEBUG
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 9308c47..642f2a2 100644
+index 642f2a2..adcc9bf 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.h
 +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -20,7 +20,58 @@
+@@ -40,9 +40,6 @@ struct xfs_icdinode {
+ 	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	__uint8_t	di_pad[6];	/* unused, zeroed space */
+ 	__uint16_t	di_flushiter;	/* incremented on flush */
+-	xfs_ictimestamp_t di_atime;	/* time last accessed */
+-	xfs_ictimestamp_t di_mtime;	/* time last modified */
+-	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+@@ -89,8 +86,10 @@ int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+ int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ 		  struct xfs_inode *, uint);
+ void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+-void	xfs_dinode_to_disk(struct xfs_dinode *to, struct xfs_icdinode *from);
+-void	xfs_dinode_from_disk(struct xfs_icdinode *to, struct xfs_dinode *from);
++void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to);
++void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
++void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
++			       struct xfs_dinode *to);
  
- struct xfs_inode;
- struct xfs_dinode;
--struct xfs_icdinode;
-+
-+/*
-+ * In memory representation of the XFS inode. This is held in the in-core
-+ * struct xfs_inode to represent the on disk values, but no longer needs to be
-+ * identical to the on-disk structure as it is always translated to on-disk
-+ * format specific structures at the appropriate time.
-+ */
-+struct xfs_icdinode {
-+	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
-+	__uint16_t	di_mode;	/* mode and type of file */
-+	__int8_t	di_version;	/* inode version */
-+	__int8_t	di_format;	/* format of di_c data */
-+	__uint16_t	di_onlink;	/* old number of links to file */
-+	__uint32_t	di_uid;		/* owner's user id */
-+	__uint32_t	di_gid;		/* owner's group id */
-+	__uint32_t	di_nlink;	/* number of links to file */
-+	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
-+	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
-+	__uint8_t	di_pad[6];	/* unused, zeroed space */
-+	__uint16_t	di_flushiter;	/* incremented on flush */
-+	xfs_ictimestamp_t di_atime;	/* time last accessed */
-+	xfs_ictimestamp_t di_mtime;	/* time last modified */
-+	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
-+	xfs_fsize_t	di_size;	/* number of bytes in file */
-+	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
-+	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
-+	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
-+	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
-+	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
-+	__int8_t	di_aformat;	/* format of attr fork's data */
-+	__uint32_t	di_dmevmask;	/* DMIG event mask */
-+	__uint16_t	di_dmstate;	/* DMIG state info */
-+	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
-+	__uint32_t	di_gen;		/* generation number */
-+
-+	/* di_next_unlinked is the only non-core field in the old dinode */
-+	xfs_agino_t	di_next_unlinked;/* agi unlinked list ptr */
-+
-+	/* start of the extended dinode, writable fields */
-+	__uint32_t	di_crc;		/* CRC of the inode */
-+	__uint64_t	di_changecount;	/* number of attribute changes */
-+	xfs_lsn_t	di_lsn;		/* flush sequence */
-+	__uint64_t	di_flags2;	/* more random flags */
-+	__uint8_t	di_pad2[16];	/* more padding for future expansion */
-+
-+	/* fields only written to during inode creation */
-+	xfs_ictimestamp_t di_crtime;	/* time created */
-+	xfs_ino_t	di_ino;		/* inode number */
-+	uuid_t		di_uuid;	/* UUID of the filesystem */
-+
-+	/* structure must be padded to 64 bit alignment */
-+};
- 
- /*
-  * Inode location information.  Stored in the inode and passed to
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 2653146..d00ed63 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -290,6 +290,7 @@ typedef struct xfs_inode_log_format_64 {
- 	__int32_t		ilf_boffset;	/* off of inode in buffer */
- } xfs_inode_log_format_64_t;
- 
-+
- /*
-  * Flags for xfs_trans_log_inode flags field.
-  */
-@@ -360,10 +361,10 @@ typedef struct xfs_ictimestamp {
- } xfs_ictimestamp_t;
- 
- /*
-- * NOTE:  This structure must be kept identical to struct xfs_dinode
-- *	  except for the endianness annotations.
-+ * Define the format of the inode core that is logged. This structure must be
-+ * kept identical to struct xfs_dinode except for the endianness annotations.
-  */
--typedef struct xfs_icdinode {
-+struct xfs_log_dinode {
- 	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
- 	__uint16_t	di_mode;	/* mode and type of file */
- 	__int8_t	di_version;	/* inode version */
-@@ -407,13 +408,13 @@ typedef struct xfs_icdinode {
- 	uuid_t		di_uuid;	/* UUID of the filesystem */
- 
- 	/* structure must be padded to 64 bit alignment */
--} xfs_icdinode_t;
-+};
- 
--static inline uint xfs_icdinode_size(int version)
-+static inline uint xfs_log_dinode_size(int version)
- {
- 	if (version == 3)
--		return sizeof(struct xfs_icdinode);
--	return offsetof(struct xfs_icdinode, di_next_unlinked);
-+		return sizeof(struct xfs_log_dinode);
-+	return offsetof(struct xfs_log_dinode, di_next_unlinked);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d7a490f..7c26f86 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -79,7 +79,7 @@ xfs_inode_alloc(
- 	memset(&ip->i_df, 0, sizeof(xfs_ifork_t));
- 	ip->i_flags = 0;
- 	ip->i_delayed_blks = 0;
--	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
-+	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 
- 	return ip;
- }
+ #if defined(DEBUG)
+ void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 9b59ffa..acc71dd 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -983,7 +983,7 @@ xfs_rtfree_extent(
+ 	    mp->m_sb.sb_rextents) {
+ 		if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM))
+ 			mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
+-		*(__uint64_t *)&mp->m_rbmip->i_d.di_atime = 0;
++		*(__uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
+ 		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
+ 	}
+ 	return 0;
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ae3758a..7e24232 100644
+index 7e24232..3e9b8a0 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -650,9 +650,9 @@ _xfs_dic2xflags(
+@@ -757,6 +757,7 @@ xfs_ialloc(
+ 	uint		flags;
+ 	int		error;
+ 	struct timespec	tv;
++	struct inode	*inode;
  
- uint
- xfs_ip2xflags(
--	xfs_inode_t		*ip)
-+	struct xfs_inode	*ip)
- {
--	xfs_icdinode_t		*dic = &ip->i_d;
-+	struct xfs_icdinode	*dic = &ip->i_d;
+ 	/*
+ 	 * Call the space management code to pick
+@@ -782,6 +783,7 @@ xfs_ialloc(
+ 	if (error)
+ 		return error;
+ 	ASSERT(ip != NULL);
++	inode = VFS_I(ip);
  
- 	return _xfs_dic2xflags(dic->di_flags) |
- 				(XFS_IFORK_Q(ip) ? XFS_XFLAG_HASATTR : 0);
-@@ -660,7 +660,7 @@ xfs_ip2xflags(
+ 	/*
+ 	 * We always convert v1 inodes to v2 now - we only support filesystems
+@@ -823,10 +825,9 @@ xfs_ialloc(
+ 	ASSERT(ip->i_d.di_nblocks == 0);
  
- uint
- xfs_dic2xflags(
--	xfs_dinode_t		*dip)
-+	struct xfs_dinode	*dip)
- {
- 	return _xfs_dic2xflags(be16_to_cpu(dip->di_flags)) |
- 				(XFS_DFORK_Q(dip) ? XFS_XFLAG_HASATTR : 0);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca9e119..aef5452 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -63,7 +63,7 @@ typedef struct xfs_inode {
- 	unsigned long		i_flags;	/* see defined flags below */
- 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+ 	tv = current_fs_time(mp->m_super);
+-	ip->i_d.di_mtime.t_sec = (__int32_t)tv.tv_sec;
+-	ip->i_d.di_mtime.t_nsec = (__int32_t)tv.tv_nsec;
+-	ip->i_d.di_atime = ip->i_d.di_mtime;
+-	ip->i_d.di_ctime = ip->i_d.di_mtime;
++	inode->i_mtime = tv;
++	inode->i_atime = tv;
++	inode->i_ctime = tv;
  
--	xfs_icdinode_t		i_d;		/* most of ondisk inode */
-+	struct xfs_icdinode	i_d;		/* most of ondisk inode */
+ 	/*
+ 	 * di_gen will have been taken care of in xfs_iread.
+@@ -844,7 +845,8 @@ xfs_ialloc(
+ 		ip->i_d.di_lsn = 0;
+ 		ip->i_d.di_flags2 = 0;
+ 		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+-		ip->i_d.di_crtime = ip->i_d.di_mtime;
++		ip->i_d.di_crtime.t_sec = (__int32_t)tv.tv_sec;
++		ip->i_d.di_crtime.t_nsec = (__int32_t)tv.tv_nsec;
+ 	}
  
- 	/* VFS inode */
- 	struct inode		i_vnode;	/* embedded VFS inode */
+ 
+@@ -3509,12 +3511,11 @@ xfs_iflush_int(
+ 		ip->i_d.di_flushiter++;
+ 
+ 	/*
+-	 * Copy the dirty parts of the inode into the on-disk
+-	 * inode.  We always copy out the core of the inode,
+-	 * because if the inode is dirty at all the core must
+-	 * be.
++	 * Copy the dirty parts of the inode into the on-disk inode.  We always
++	 * copy out the core of the inode, because if the inode is dirty at all
++	 * the core must be.
+ 	 */
+-	xfs_dinode_to_disk(dip, &ip->i_d);
++	xfs_inode_to_disk(ip, dip);
+ 
+ 	/* Wrap, we never let the log put out DI_MAX_FLUSH */
+ 	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
 diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index d14b12b..3ad9972 100644
+index 3ad9972..9dcbf58 100644
 --- a/fs/xfs/xfs_inode_item.c
 +++ b/fs/xfs/xfs_inode_item.c
-@@ -135,7 +135,7 @@ xfs_inode_item_size(
- 
- 	*nvecs += 2;
- 	*nbytes += sizeof(struct xfs_inode_log_format) +
--		   xfs_icdinode_size(ip->i_d.di_version);
-+		   xfs_log_dinode_size(ip->i_d.di_version);
- 
- 	xfs_inode_item_data_fork_size(iip, nvecs, nbytes);
- 	if (XFS_IFORK_Q(ip))
-@@ -322,6 +322,127 @@ xfs_inode_item_format_attr_fork(
- 	}
+@@ -323,10 +323,13 @@ xfs_inode_item_format_attr_fork(
  }
  
-+static void
-+xfs_icdinode_to_log_dinode(
-+	struct xfs_icdinode	*from,
-+	struct xfs_log_dinode	*to)
-+{
-+	to->di_magic = from->di_magic;
-+	to->di_mode = from->di_mode;
-+	to->di_version = from->di_version;
-+	to->di_format = from->di_format;
-+	to->di_onlink = from->di_onlink;
-+	to->di_uid = from->di_uid;
-+	to->di_gid = from->di_gid;
-+	to->di_nlink = from->di_nlink;
-+	to->di_projid_lo = from->di_projid_lo;
-+	to->di_projid_hi = from->di_projid_hi;
-+	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
-+	to->di_atime.t_sec = from->di_atime.t_sec;
-+	to->di_atime.t_nsec = from->di_atime.t_nsec;
-+	to->di_mtime.t_sec = from->di_mtime.t_sec;
-+	to->di_mtime.t_nsec = from->di_mtime.t_nsec;
-+	to->di_ctime.t_sec = from->di_ctime.t_sec;
-+	to->di_ctime.t_nsec = from->di_ctime.t_nsec;
-+	to->di_size = from->di_size;
-+	to->di_nblocks = from->di_nblocks;
-+	to->di_extsize = from->di_extsize;
-+	to->di_nextents = from->di_nextents;
-+	to->di_anextents = from->di_anextents;
-+	to->di_forkoff = from->di_forkoff;
-+	to->di_aformat = from->di_aformat;
-+	to->di_dmevmask = from->di_dmevmask;
-+	to->di_dmstate = from->di_dmstate;
-+	to->di_flags = from->di_flags;
-+	to->di_gen = from->di_gen;
-+
-+	if (from->di_version == 3) {
-+		to->di_changecount = from->di_changecount;
-+		to->di_crtime.t_sec = from->di_crtime.t_sec;
-+		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
-+		to->di_flags2 = from->di_flags2;
-+		to->di_ino = from->di_ino;
-+		to->di_lsn = from->di_lsn;
-+		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-+		uuid_copy(&to->di_uuid, &from->di_uuid);
-+		to->di_flushiter = 0;
-+	} else {
-+		to->di_flushiter = from->di_flushiter;
-+	}
-+}
-+
-+/*
-+ * Recovery needs to be able to convert a log dinode back to a real dinode
-+ * for writeback we do that by converting a log dinode to a icdinode, and
-+ * then passing that to the formatting function.
-+ */
-+void
-+xfs_log_dinode_to_icdinode(
-+	struct xfs_log_dinode	*from,
-+	struct xfs_icdinode	*to)
-+{
-+	to->di_magic = from->di_magic;
-+	to->di_mode = from->di_mode;
-+	to->di_version = from->di_version;
-+	to->di_format = from->di_format;
-+	to->di_onlink = from->di_onlink;
-+	to->di_uid = from->di_uid;
-+	to->di_gid = from->di_gid;
-+	to->di_nlink = from->di_nlink;
-+	to->di_projid_lo = from->di_projid_lo;
-+	to->di_projid_hi = from->di_projid_hi;
-+	memset(to->di_pad, 0, sizeof(to->di_pad));
-+	to->di_atime.t_sec = from->di_atime.t_sec;
-+	to->di_atime.t_nsec = from->di_atime.t_nsec;
-+	to->di_mtime.t_sec = from->di_mtime.t_sec;
-+	to->di_mtime.t_nsec = from->di_mtime.t_nsec;
-+	to->di_ctime.t_sec = from->di_ctime.t_sec;
-+	to->di_ctime.t_nsec = from->di_ctime.t_nsec;
-+	to->di_size = from->di_size;
-+	to->di_nblocks = from->di_nblocks;
-+	to->di_extsize = from->di_extsize;
-+	to->di_nextents = from->di_nextents;
-+	to->di_anextents = from->di_anextents;
-+	to->di_forkoff = from->di_forkoff;
-+	to->di_aformat = from->di_aformat;
-+	to->di_dmevmask = from->di_dmevmask;
-+	to->di_dmstate = from->di_dmstate;
-+	to->di_flags = from->di_flags;
-+	to->di_gen = from->di_gen;
-+
-+	if (from->di_version == 3) {
-+		to->di_changecount = from->di_changecount;
-+		to->di_crtime.t_sec = from->di_crtime.t_sec;
-+		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
-+		to->di_flags2 = from->di_flags2;
-+		to->di_ino = from->di_ino;
-+		to->di_lsn = from->di_lsn;
-+		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-+		uuid_copy(&to->di_uuid, &from->di_uuid);
-+		to->di_flushiter = 0;
-+	} else {
-+		to->di_flushiter = from->di_flushiter;
-+	}
-+}
-+
-+/*
-+ * Format the inode core. Current timestamp data is only in the VFS inode
-+ * fields, so we need to grab them from there. Hence rather than just copying
-+ * the XFS inode core structure, format the fields directly into the iovec.
-+ */
-+static void
-+xfs_inode_item_format_core(
+ static void
+-xfs_icdinode_to_log_dinode(
+-	struct xfs_icdinode	*from,
++xfs_inode_to_log_dinode(
 +	struct xfs_inode	*ip,
-+	struct xfs_log_vec	*lv,
-+	struct xfs_log_iovec	**vecp)
-+{
-+	struct xfs_log_dinode	*dic;
+ 	struct xfs_log_dinode	*to)
+ {
++	struct xfs_icdinode	*from = &ip->i_d;
++	struct inode		*inode = VFS_I(ip);
 +
-+	dic = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_ICORE);
-+	xfs_icdinode_to_log_dinode(&ip->i_d, dic);
-+	xlog_finish_iovec(lv, *vecp, xfs_log_dinode_size(ip->i_d.di_version));
-+}
-+
- /*
-  * This is called to fill in the vector of log iovecs for the given inode
-  * log item.  It fills the first item with an inode log format structure,
-@@ -351,10 +472,7 @@ xfs_inode_item_format(
- 	ilf->ilf_size = 2; /* format + core */
- 	xlog_finish_iovec(lv, vecp, sizeof(struct xfs_inode_log_format));
+ 	to->di_magic = from->di_magic;
+ 	to->di_mode = from->di_mode;
+ 	to->di_version = from->di_version;
+@@ -338,66 +341,14 @@ xfs_icdinode_to_log_dinode(
+ 	to->di_projid_lo = from->di_projid_lo;
+ 	to->di_projid_hi = from->di_projid_hi;
+ 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+-	to->di_atime.t_sec = from->di_atime.t_sec;
+-	to->di_atime.t_nsec = from->di_atime.t_nsec;
+-	to->di_mtime.t_sec = from->di_mtime.t_sec;
+-	to->di_mtime.t_nsec = from->di_mtime.t_nsec;
+-	to->di_ctime.t_sec = from->di_ctime.t_sec;
+-	to->di_ctime.t_nsec = from->di_ctime.t_nsec;
+-	to->di_size = from->di_size;
+-	to->di_nblocks = from->di_nblocks;
+-	to->di_extsize = from->di_extsize;
+-	to->di_nextents = from->di_nextents;
+-	to->di_anextents = from->di_anextents;
+-	to->di_forkoff = from->di_forkoff;
+-	to->di_aformat = from->di_aformat;
+-	to->di_dmevmask = from->di_dmevmask;
+-	to->di_dmstate = from->di_dmstate;
+-	to->di_flags = from->di_flags;
+-	to->di_gen = from->di_gen;
  
--	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ICORE,
--			&ip->i_d,
--			xfs_icdinode_size(ip->i_d.di_version));
--
-+	xfs_inode_item_format_core(ip, lv, &vecp);
- 	xfs_inode_item_format_data_fork(iip, ilf, lv, &vecp);
- 	if (XFS_IFORK_Q(ip)) {
- 		xfs_inode_item_format_attr_fork(iip, ilf, lv, &vecp);
+-	if (from->di_version == 3) {
+-		to->di_changecount = from->di_changecount;
+-		to->di_crtime.t_sec = from->di_crtime.t_sec;
+-		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
+-		to->di_flags2 = from->di_flags2;
+-		to->di_ino = from->di_ino;
+-		to->di_lsn = from->di_lsn;
+-		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		uuid_copy(&to->di_uuid, &from->di_uuid);
+-		to->di_flushiter = 0;
+-	} else {
+-		to->di_flushiter = from->di_flushiter;
+-	}
+-}
++	to->di_atime.t_sec = inode->i_atime.tv_sec;
++	to->di_atime.t_nsec = inode->i_atime.tv_nsec;
++	to->di_mtime.t_sec = inode->i_mtime.tv_sec;
++	to->di_mtime.t_nsec = inode->i_mtime.tv_nsec;
++	to->di_ctime.t_sec = inode->i_ctime.tv_sec;
++	to->di_ctime.t_nsec = inode->i_ctime.tv_nsec;
+ 
+-/*
+- * Recovery needs to be able to convert a log dinode back to a real dinode
+- * for writeback we do that by converting a log dinode to a icdinode, and
+- * then passing that to the formatting function.
+- */
+-void
+-xfs_log_dinode_to_icdinode(
+-	struct xfs_log_dinode	*from,
+-	struct xfs_icdinode	*to)
+-{
+-	to->di_magic = from->di_magic;
+-	to->di_mode = from->di_mode;
+-	to->di_version = from->di_version;
+-	to->di_format = from->di_format;
+-	to->di_onlink = from->di_onlink;
+-	to->di_uid = from->di_uid;
+-	to->di_gid = from->di_gid;
+-	to->di_nlink = from->di_nlink;
+-	to->di_projid_lo = from->di_projid_lo;
+-	to->di_projid_hi = from->di_projid_hi;
+-	memset(to->di_pad, 0, sizeof(to->di_pad));
+-	to->di_atime.t_sec = from->di_atime.t_sec;
+-	to->di_atime.t_nsec = from->di_atime.t_nsec;
+-	to->di_mtime.t_sec = from->di_mtime.t_sec;
+-	to->di_mtime.t_nsec = from->di_mtime.t_nsec;
+-	to->di_ctime.t_sec = from->di_ctime.t_sec;
+-	to->di_ctime.t_nsec = from->di_ctime.t_nsec;
+ 	to->di_size = from->di_size;
+ 	to->di_nblocks = from->di_nblocks;
+ 	to->di_extsize = from->di_extsize;
+@@ -439,7 +390,7 @@ xfs_inode_item_format_core(
+ 	struct xfs_log_dinode	*dic;
+ 
+ 	dic = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_ICORE);
+-	xfs_icdinode_to_log_dinode(&ip->i_d, dic);
++	xfs_inode_to_log_dinode(ip, dic);
+ 	xlog_finish_iovec(lv, *vecp, xfs_log_dinode_size(ip->i_d.di_version));
+ }
+ 
 diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index 4c7722e..2426118 100644
+index 2426118..4c7722e 100644
 --- a/fs/xfs/xfs_inode_item.h
 +++ b/fs/xfs/xfs_inode_item.h
-@@ -49,6 +49,8 @@ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+@@ -49,8 +49,6 @@ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
  extern void xfs_iflush_abort(struct xfs_inode *, bool);
  extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
  					 xfs_inode_log_format_t *);
-+extern void xfs_log_dinode_to_icdinode(struct xfs_log_dinode *from,
-+				       struct xfs_icdinode *to);
+-extern void xfs_log_dinode_to_icdinode(struct xfs_log_dinode *from,
+-				       struct xfs_icdinode *to);
  
  extern struct kmem_zone	*xfs_ili_zone;
  
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 245268a..b008677 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -517,21 +517,12 @@ xfs_setattr_time(
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+-	if (iattr->ia_valid & ATTR_ATIME) {
++	if (iattr->ia_valid & ATTR_ATIME)
+ 		inode->i_atime = iattr->ia_atime;
+-		ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
+-		ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
+-	}
+-	if (iattr->ia_valid & ATTR_CTIME) {
++	if (iattr->ia_valid & ATTR_CTIME)
+ 		inode->i_ctime = iattr->ia_ctime;
+-		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
+-		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
+-	}
+-	if (iattr->ia_valid & ATTR_MTIME) {
++	if (iattr->ia_valid & ATTR_MTIME)
+ 		inode->i_mtime = iattr->ia_mtime;
+-		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
+-		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
+-	}
+ }
+ 
+ int
+@@ -986,21 +977,13 @@ xfs_vn_update_time(
+ 	}
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	if (flags & S_CTIME) {
++	if (flags & S_CTIME)
+ 		inode->i_ctime = *now;
+-		ip->i_d.di_ctime.t_sec = (__int32_t)now->tv_sec;
+-		ip->i_d.di_ctime.t_nsec = (__int32_t)now->tv_nsec;
+-	}
+-	if (flags & S_MTIME) {
++	if (flags & S_MTIME)
+ 		inode->i_mtime = *now;
+-		ip->i_d.di_mtime.t_sec = (__int32_t)now->tv_sec;
+-		ip->i_d.di_mtime.t_nsec = (__int32_t)now->tv_nsec;
+-	}
+-	if (flags & S_ATIME) {
++	if (flags & S_ATIME)
+ 		inode->i_atime = *now;
+-		ip->i_d.di_atime.t_sec = (__int32_t)now->tv_sec;
+-		ip->i_d.di_atime.t_nsec = (__int32_t)now->tv_nsec;
+-	}
++
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
+ 	return xfs_trans_commit(tp);
+@@ -1247,12 +1230,6 @@ xfs_setup_inode(
+ 
+ 	inode->i_generation = ip->i_d.di_gen;
+ 	i_size_write(inode, ip->i_d.di_size);
+-	inode->i_atime.tv_sec	= ip->i_d.di_atime.t_sec;
+-	inode->i_atime.tv_nsec	= ip->i_d.di_atime.t_nsec;
+-	inode->i_mtime.tv_sec	= ip->i_d.di_mtime.t_sec;
+-	inode->i_mtime.tv_nsec	= ip->i_d.di_mtime.t_nsec;
+-	inode->i_ctime.tv_sec	= ip->i_d.di_ctime.t_sec;
+-	inode->i_ctime.tv_nsec	= ip->i_d.di_ctime.t_nsec;
+ 	xfs_diflags_to_iflags(inode, ip);
+ 
+ 	ip->d_ops = ip->i_mount->m_nondir_inode_ops;
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 930ebd8..2acda42 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -57,6 +57,7 @@ xfs_bulkstat_one_int(
+ {
+ 	struct xfs_icdinode	*dic;		/* dinode core info pointer */
+ 	struct xfs_inode	*ip;		/* incore inode pointer */
++	struct inode		*inode;
+ 	struct xfs_bstat	*buf;		/* return buffer */
+ 	int			error = 0;	/* error value */
+ 
+@@ -77,6 +78,7 @@ xfs_bulkstat_one_int(
+ 
+ 	ASSERT(ip != NULL);
+ 	ASSERT(ip->i_imap.im_blkno != 0);
++	inode = VFS_I(ip);
+ 
+ 	dic = &ip->i_d;
+ 
+@@ -91,12 +93,14 @@ xfs_bulkstat_one_int(
+ 	buf->bs_uid = dic->di_uid;
+ 	buf->bs_gid = dic->di_gid;
+ 	buf->bs_size = dic->di_size;
+-	buf->bs_atime.tv_sec = dic->di_atime.t_sec;
+-	buf->bs_atime.tv_nsec = dic->di_atime.t_nsec;
+-	buf->bs_mtime.tv_sec = dic->di_mtime.t_sec;
+-	buf->bs_mtime.tv_nsec = dic->di_mtime.t_nsec;
+-	buf->bs_ctime.tv_sec = dic->di_ctime.t_sec;
+-	buf->bs_ctime.tv_nsec = dic->di_ctime.t_nsec;
++
++	buf->bs_atime.tv_sec = inode->i_atime.tv_sec;
++	buf->bs_atime.tv_nsec = inode->i_atime.tv_nsec;
++	buf->bs_mtime.tv_sec = inode->i_mtime.tv_sec;
++	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
++	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
++	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
++
+ 	buf->bs_xflags = xfs_ip2xflags(ip);
+ 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
+ 	buf->bs_extents = dic->di_nextents;
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index da37beb..3120f7b 100644
+index 3120f7b..4b79cf0 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2839,7 +2839,8 @@ xlog_recover_inode_pass2(
- 	int			error;
+@@ -2793,7 +2793,7 @@ xfs_recover_inode_owner_change(
+ 		return -ENOMEM;
+ 
+ 	/* instantiate the inode */
+-	xfs_dinode_from_disk(&ip->i_d, dip);
++	xfs_inode_from_disk(ip, dip);
+ 	ASSERT(ip->i_d.di_version >= 3);
+ 
+ 	error = xfs_iformat_fork(ip, dip);
+@@ -2840,7 +2840,6 @@ xlog_recover_inode_pass2(
  	int			attr_index;
  	uint			fields;
--	xfs_icdinode_t		*dicp;
-+	struct xfs_log_dinode	*ldip;
-+	struct xfs_icdinode	icic;
+ 	struct xfs_log_dinode	*ldip;
+-	struct xfs_icdinode	icic;
  	uint			isize;
  	int			need_free = 0;
  
-@@ -2892,8 +2893,8 @@ xlog_recover_inode_pass2(
- 		error = -EFSCORRUPTED;
+@@ -3007,9 +3006,8 @@ xlog_recover_inode_pass2(
  		goto out_release;
  	}
--	dicp = item->ri_buf[1].i_addr;
--	if (unlikely(dicp->di_magic != XFS_DINODE_MAGIC)) {
-+	ldip = item->ri_buf[1].i_addr;
-+	if (unlikely(ldip->di_magic != XFS_DINODE_MAGIC)) {
- 		xfs_alert(mp,
- 			"%s: Bad inode log record, rec ptr 0x%p, ino %Ld",
- 			__func__, item, in_f->ilf_ino);
-@@ -2929,13 +2930,13 @@ xlog_recover_inode_pass2(
- 	 * to skip replay when the on disk inode is newer than the log one
- 	 */
- 	if (!xfs_sb_version_hascrc(&mp->m_sb) &&
--	    dicp->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
-+	    ldip->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
- 		/*
- 		 * Deal with the wrap case, DI_MAX_FLUSH is less
- 		 * than smaller numbers
- 		 */
- 		if (be16_to_cpu(dip->di_flushiter) == DI_MAX_FLUSH &&
--		    dicp->di_flushiter < (DI_MAX_FLUSH >> 1)) {
-+		    ldip->di_flushiter < (DI_MAX_FLUSH >> 1)) {
- 			/* do nothing */
- 		} else {
- 			trace_xfs_log_recover_inode_skip(log, in_f);
-@@ -2945,13 +2946,13 @@ xlog_recover_inode_pass2(
- 	}
  
- 	/* Take the opportunity to reset the flush iteration count */
--	dicp->di_flushiter = 0;
-+	ldip->di_flushiter = 0;
- 
--	if (unlikely(S_ISREG(dicp->di_mode))) {
--		if ((dicp->di_format != XFS_DINODE_FMT_EXTENTS) &&
--		    (dicp->di_format != XFS_DINODE_FMT_BTREE)) {
-+	if (unlikely(S_ISREG(ldip->di_mode))) {
-+		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
-+		    (ldip->di_format != XFS_DINODE_FMT_BTREE)) {
- 			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(3)",
--					 XFS_ERRLEVEL_LOW, mp, dicp);
-+					 XFS_ERRLEVEL_LOW, mp, ldip);
- 			xfs_alert(mp,
- 		"%s: Bad regular inode log record, rec ptr 0x%p, "
- 		"ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
-@@ -2959,12 +2960,12 @@ xlog_recover_inode_pass2(
- 			error = -EFSCORRUPTED;
- 			goto out_release;
- 		}
--	} else if (unlikely(S_ISDIR(dicp->di_mode))) {
--		if ((dicp->di_format != XFS_DINODE_FMT_EXTENTS) &&
--		    (dicp->di_format != XFS_DINODE_FMT_BTREE) &&
--		    (dicp->di_format != XFS_DINODE_FMT_LOCAL)) {
-+	} else if (unlikely(S_ISDIR(ldip->di_mode))) {
-+		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
-+		    (ldip->di_format != XFS_DINODE_FMT_BTREE) &&
-+		    (ldip->di_format != XFS_DINODE_FMT_LOCAL)) {
- 			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(4)",
--					     XFS_ERRLEVEL_LOW, mp, dicp);
-+					     XFS_ERRLEVEL_LOW, mp, ldip);
- 			xfs_alert(mp,
- 		"%s: Bad dir inode log record, rec ptr 0x%p, "
- 		"ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
-@@ -2973,32 +2974,32 @@ xlog_recover_inode_pass2(
- 			goto out_release;
- 		}
- 	}
--	if (unlikely(dicp->di_nextents + dicp->di_anextents > dicp->di_nblocks)){
-+	if (unlikely(ldip->di_nextents + ldip->di_anextents > ldip->di_nblocks)){
- 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(5)",
--				     XFS_ERRLEVEL_LOW, mp, dicp);
-+				     XFS_ERRLEVEL_LOW, mp, ldip);
- 		xfs_alert(mp,
- 	"%s: Bad inode log record, rec ptr 0x%p, dino ptr 0x%p, "
- 	"dino bp 0x%p, ino %Ld, total extents = %d, nblocks = %Ld",
- 			__func__, item, dip, bp, in_f->ilf_ino,
--			dicp->di_nextents + dicp->di_anextents,
--			dicp->di_nblocks);
-+			ldip->di_nextents + ldip->di_anextents,
-+			ldip->di_nblocks);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
- 	}
--	if (unlikely(dicp->di_forkoff > mp->m_sb.sb_inodesize)) {
-+	if (unlikely(ldip->di_forkoff > mp->m_sb.sb_inodesize)) {
- 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(6)",
--				     XFS_ERRLEVEL_LOW, mp, dicp);
-+				     XFS_ERRLEVEL_LOW, mp, ldip);
- 		xfs_alert(mp,
- 	"%s: Bad inode log record, rec ptr 0x%p, dino ptr 0x%p, "
- 	"dino bp 0x%p, ino %Ld, forkoff 0x%x", __func__,
--			item, dip, bp, in_f->ilf_ino, dicp->di_forkoff);
-+			item, dip, bp, in_f->ilf_ino, ldip->di_forkoff);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
- 	}
--	isize = xfs_icdinode_size(dicp->di_version);
-+	isize = xfs_log_dinode_size(ldip->di_version);
- 	if (unlikely(item->ri_buf[1].i_len > isize)) {
- 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(7)",
--				     XFS_ERRLEVEL_LOW, mp, dicp);
-+				     XFS_ERRLEVEL_LOW, mp, ldip);
- 		xfs_alert(mp,
- 			"%s: Bad inode log record length %d, rec ptr 0x%p",
- 			__func__, item->ri_buf[1].i_len, item);
-@@ -3007,7 +3008,8 @@ xlog_recover_inode_pass2(
- 	}
- 
- 	/* The core is in in-core format */
--	xfs_dinode_to_disk(dip, dicp);
-+	xfs_log_dinode_to_icdinode(ldip, &icic);
-+	xfs_dinode_to_disk(dip, &icic);
+-	/* The core is in in-core format */
+-	xfs_log_dinode_to_icdinode(ldip, &icic);
+-	xfs_dinode_to_disk(dip, &icic);
++	/* recover the log dinode inode into the on disk inode */
++	xfs_log_dinode_to_disk(ldip, dip);
  
  	/* the rest is in on-disk format */
  	if (item->ri_buf[1].i_len > isize) {
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index be02a68..abf4443 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1272,7 +1272,7 @@ xfs_rtpick_extent(
+ 
+ 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+ 
+-	seqp = (__uint64_t *)&mp->m_rbmip->i_d.di_atime;
++	seqp = (__uint64_t *)&VFS_I(mp->m_rbmip)->i_atime;
+ 	if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM)) {
+ 		mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
+ 		*seqp = 0;
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index b97f1df..3f0d466 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -75,18 +75,10 @@ xfs_trans_ichgtime(
+ 
+ 	tv = current_fs_time(inode->i_sb);
+ 
+-	if ((flags & XFS_ICHGTIME_MOD) &&
+-	    !timespec_equal(&inode->i_mtime, &tv)) {
++	if (flags & XFS_ICHGTIME_MOD)
+ 		inode->i_mtime = tv;
+-		ip->i_d.di_mtime.t_sec = tv.tv_sec;
+-		ip->i_d.di_mtime.t_nsec = tv.tv_nsec;
+-	}
+-	if ((flags & XFS_ICHGTIME_CHG) &&
+-	    !timespec_equal(&inode->i_ctime, &tv)) {
++	if (flags & XFS_ICHGTIME_CHG)
+ 		inode->i_ctime = tv;
+-		ip->i_d.di_ctime.t_sec = tv.tv_sec;
+-		ip->i_d.di_ctime.t_nsec = tv.tv_nsec;
+-	}
+ }
+ 
+ /*
 -- 
 2.5.0
 
