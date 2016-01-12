@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 289677F3F
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:01:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A23CBAC005
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:32 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6AFC07F51
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:01:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5BABE8F8035
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:31 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	aMNd2KA4vTTHUWYI for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2016 01:01:30 -0800 (PST)
+	60kcdfdtsytVim9G for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2016 01:01:28 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005K3-Kv
+	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005K2-KX
 	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008AY-KL
+	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008AT-Jx
 	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/8] xfs: move inode generation count to VFS inode
-Date: Tue, 12 Jan 2016 20:01:18 +1100
-Message-Id: <1452589280-30167-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: use vfs inode nlink field everywhere
+Date: Tue, 12 Jan 2016 20:01:17 +1100
+Message-Id: <1452589280-30167-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1452589280-30167-1-git-send-email-david@fromorbit.com>
 References: <1452589280-30167-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,184 +39,265 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Pull another 4 bytes out of the xfs_icdinode.
+The Vfs tracks the inodenlink just like the xfs_icdinode. We can
+remove the variable from the icdinode and use the vfs inode variable
+everywhere, reducing the size of the xfs_icdinode by a further 4
+bytes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c | 8 ++++----
- fs/xfs/libxfs/xfs_inode_buf.h | 1 -
- fs/xfs/xfs_export.c           | 2 +-
- fs/xfs/xfs_inode.c            | 5 +----
- fs/xfs/xfs_inode_item.c       | 2 +-
- fs/xfs/xfs_ioctl.c            | 2 +-
- fs/xfs/xfs_iops.c             | 1 -
- fs/xfs/xfs_itable.c           | 2 +-
- 8 files changed, 9 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |  6 +++---
+ fs/xfs/libxfs/xfs_inode_buf.h |  1 -
+ fs/xfs/xfs_inode.c            | 30 ++++++++++++++----------------
+ fs/xfs/xfs_inode_item.c       |  2 +-
+ fs/xfs/xfs_iops.c             |  3 +--
+ fs/xfs/xfs_itable.c           |  2 +-
+ fs/xfs/xfs_log_recover.c      |  2 +-
+ 7 files changed, 21 insertions(+), 25 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 6c00277..0cf5a16 100644
+index a3e79a9..6c00277 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -231,6 +231,7 @@ xfs_inode_from_disk(
- 	inode->i_mtime.tv_nsec = be32_to_cpu(from->di_mtime.t_nsec);
- 	inode->i_ctime.tv_sec = be32_to_cpu(from->di_ctime.t_sec);
- 	inode->i_ctime.tv_nsec = be32_to_cpu(from->di_ctime.t_nsec);
-+	inode->i_generation = be32_to_cpu(from->di_gen);
+@@ -210,12 +210,12 @@ xfs_inode_from_disk(
+ 	 * minimum inode version format we support in the rest of the code.
+ 	 */
+ 	if (to->di_version == 1) {
+-		to->di_nlink = be16_to_cpu(from->di_onlink);
++		set_nlink(inode, be16_to_cpu(from->di_onlink));
+ 		to->di_projid_lo = 0;
+ 		to->di_projid_hi = 0;
+ 		to->di_version = 2;
+ 	} else {
+-		to->di_nlink = be32_to_cpu(from->di_nlink);
++		set_nlink(inode, be32_to_cpu(from->di_nlink));
+ 		to->di_projid_lo = be16_to_cpu(from->di_projid_lo);
+ 		to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
+ 	}
+@@ -269,7 +269,6 @@ xfs_inode_to_disk(
+ 	to->di_format = from->di_format;
+ 	to->di_uid = cpu_to_be32(from->di_uid);
+ 	to->di_gid = cpu_to_be32(from->di_gid);
+-	to->di_nlink = cpu_to_be32(from->di_nlink);
+ 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+ 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
  
- 	to->di_size = be64_to_cpu(from->di_size);
- 	to->di_nblocks = be64_to_cpu(from->di_nblocks);
-@@ -242,7 +243,6 @@ xfs_inode_from_disk(
- 	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
- 	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
- 	to->di_flags	= be16_to_cpu(from->di_flags);
--	to->di_gen	= be32_to_cpu(from->di_gen);
- 
- 	if (to->di_version == 3) {
- 		to->di_changecount = be64_to_cpu(from->di_changecount);
-@@ -280,6 +280,7 @@ xfs_inode_to_disk(
+@@ -280,6 +279,7 @@ xfs_inode_to_disk(
+ 	to->di_mtime.t_nsec = cpu_to_be32(inode->i_mtime.tv_nsec);
  	to->di_ctime.t_sec = cpu_to_be32(inode->i_ctime.tv_sec);
  	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
- 	to->di_nlink = cpu_to_be32(inode->i_nlink);
-+	to->di_gen = cpu_to_be32(inode->i_generation);
++	to->di_nlink = cpu_to_be32(inode->i_nlink);
  
  	to->di_size = cpu_to_be64(from->di_size);
  	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-@@ -291,7 +292,6 @@ xfs_inode_to_disk(
- 	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
- 	to->di_dmstate = cpu_to_be16(from->di_dmstate);
- 	to->di_flags = cpu_to_be16(from->di_flags);
--	to->di_gen = cpu_to_be32(from->di_gen);
- 
- 	if (from->di_version == 3) {
- 		to->di_changecount = cpu_to_be64(from->di_changecount);
-@@ -437,7 +437,7 @@ xfs_iread(
- 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
- 		/* initialise the on-disk inode core */
- 		memset(&ip->i_d, 0, sizeof(ip->i_d));
--		ip->i_d.di_gen = prandom_u32();
-+		VFS_I(ip)->i_generation = prandom_u32();
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
- 			ip->i_d.di_version = 3;
- 		else
-@@ -485,7 +485,7 @@ xfs_iread(
- 		 * that xfs_ialloc won't overwrite or relies on being correct.
- 		 */
- 		ip->i_d.di_version = dip->di_version;
--		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
-+		VFS_I(ip)->i_generation = be32_to_cpu(dip->di_gen);
- 		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
- 
- 		/*
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 774d71f..68da576 100644
+index feb04e6..774d71f 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.h
 +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -46,7 +46,6 @@ struct xfs_icdinode {
- 	__uint32_t	di_dmevmask;	/* DMIG event mask */
- 	__uint16_t	di_dmstate;	/* DMIG state info */
- 	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
--	__uint32_t	di_gen;		/* generation number */
- 
- 	__uint64_t	di_changecount;	/* number of attribute changes */
- 	__uint64_t	di_flags2;	/* more random flags */
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index 652cd3c..2816d42 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -152,7 +152,7 @@ xfs_nfs_get_inode(
- 		return ERR_PTR(error);
- 	}
- 
--	if (ip->i_d.di_gen != generation) {
-+	if (VFS_I(ip)->i_generation != generation) {
- 		IRELE(ip);
- 		return ERR_PTR(-ESTALE);
- 	}
+@@ -34,7 +34,6 @@ struct xfs_icdinode {
+ 	__uint16_t	di_flushiter;	/* incremented on flush */
+ 	__uint32_t	di_uid;		/* owner's user id */
+ 	__uint32_t	di_gid;		/* owner's group id */
+-	__uint32_t	di_nlink;	/* number of links to file */
+ 	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
+ 	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d4f328a..c8fa5d6 100644
+index 914ec41..d4f328a 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -826,9 +826,6 @@ xfs_ialloc(
- 	inode->i_atime = tv;
- 	inode->i_ctime = tv;
+@@ -794,7 +794,7 @@ xfs_ialloc(
+ 		ip->i_d.di_version = 2;
  
--	/*
--	 * di_gen will have been taken care of in xfs_iread.
--	 */
- 	ip->i_d.di_extsize = 0;
- 	ip->i_d.di_dmevmask = 0;
- 	ip->i_d.di_dmstate = 0;
-@@ -2417,7 +2414,7 @@ xfs_ifree(
- 	 * Bump the generation count so no one will be confused
- 	 * by reincarnations of this inode.
- 	 */
--	ip->i_d.di_gen++;
-+	VFS_I(ip)->i_generation++;
+ 	ip->i_d.di_mode = mode;
+-	ip->i_d.di_nlink = nlink;
++	set_nlink(inode, nlink);
+ 	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+ 	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
+ 	xfs_set_projid(ip, prid);
+@@ -1085,13 +1085,11 @@ xfs_droplink(
+ 
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+-	ASSERT (ip->i_d.di_nlink > 0);
+-	ip->i_d.di_nlink--;
+ 	drop_nlink(VFS_I(ip));
  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  
- 	if (xic.deleted)
+ 	error = 0;
+-	if (ip->i_d.di_nlink == 0) {
++	if (VFS_I(ip)->i_nlink == 0) {
+ 		/*
+ 		 * We're dropping the last link to this file.
+ 		 * Move the on-disk inode to the AGI unlinked list.
+@@ -1114,8 +1112,6 @@ xfs_bumplink(
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+ 	ASSERT(ip->i_d.di_version > 1);
+-	ASSERT(ip->i_d.di_nlink > 0 || (VFS_I(ip)->i_state & I_LINKABLE));
+-	ip->i_d.di_nlink++;
+ 	inc_nlink(VFS_I(ip));
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	return 0;
+@@ -1373,7 +1369,6 @@ xfs_create_tmpfile(
+ 	 */
+ 	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
+ 
+-	ip->i_d.di_nlink--;
+ 	error = xfs_iunlink(tp, ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+@@ -1472,7 +1467,10 @@ xfs_link(
+ 
+ 	xfs_bmap_init(&free_list, &first_block);
+ 
+-	if (sip->i_d.di_nlink == 0) {
++	/*
++	 * Handle initial link state of O_TMPFILE inode
++	 */
++	if (VFS_I(sip)->i_nlink == 0) {
+ 		error = xfs_iunlink_remove(tp, sip);
+ 		if (error)
+ 			goto error_return;
+@@ -1659,7 +1657,7 @@ xfs_release(
+ 		}
+ 	}
+ 
+-	if (ip->i_d.di_nlink == 0)
++	if (VFS_I(ip)->i_nlink == 0)
+ 		return 0;
+ 
+ 	if (xfs_can_free_eofblocks(ip, false)) {
+@@ -1875,7 +1873,7 @@ xfs_inactive(
+ 	if (mp->m_flags & XFS_MOUNT_RDONLY)
+ 		return;
+ 
+-	if (ip->i_d.di_nlink != 0) {
++	if (VFS_I(ip)->i_nlink != 0) {
+ 		/*
+ 		 * force is true because we are evicting an inode from the
+ 		 * cache. Post-eof blocks must be freed, lest we end up with
+@@ -1951,7 +1949,7 @@ xfs_iunlink(
+ 	int		offset;
+ 	int		error;
+ 
+-	ASSERT(ip->i_d.di_nlink == 0);
++	ASSERT(VFS_I(ip)->i_nlink == 0);
+ 	ASSERT(ip->i_d.di_mode != 0);
+ 
+ 	mp = tp->t_mountp;
+@@ -2392,7 +2390,7 @@ xfs_ifree(
+ 	struct xfs_icluster	xic = { 0 };
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT(ip->i_d.di_nlink == 0);
++	ASSERT(VFS_I(ip)->i_nlink == 0);
+ 	ASSERT(ip->i_d.di_nextents == 0);
+ 	ASSERT(ip->i_d.di_anextents == 0);
+ 	ASSERT(ip->i_d.di_size == 0 || !S_ISREG(ip->i_d.di_mode));
+@@ -2560,8 +2558,8 @@ xfs_remove(
+ 	 * If we're removing a directory perform some additional validation.
+ 	 */
+ 	if (is_dir) {
+-		ASSERT(ip->i_d.di_nlink >= 2);
+-		if (ip->i_d.di_nlink != 2) {
++		ASSERT(VFS_I(ip)->i_nlink >= 2);
++		if (VFS_I(ip)->i_nlink != 2) {
+ 			error = -ENOTEMPTY;
+ 			goto out_trans_cancel;
+ 		}
+@@ -3017,7 +3015,7 @@ xfs_rename(
+ 			 * Make sure target dir is empty.
+ 			 */
+ 			if (!(xfs_dir_isempty(target_ip)) ||
+-			    (target_ip->i_d.di_nlink > 2)) {
++			    (VFS_I(target_ip)->i_nlink > 2)) {
+ 				error = -EEXIST;
+ 				goto out_trans_cancel;
+ 			}
+@@ -3124,7 +3122,7 @@ xfs_rename(
+ 	 * intermediate state on disk.
+ 	 */
+ 	if (wip) {
+-		ASSERT(VFS_I(wip)->i_nlink == 0 && wip->i_d.di_nlink == 0);
++		ASSERT(VFS_I(wip)->i_nlink == 0);
+ 		error = xfs_bumplink(tp, wip);
+ 		if (error)
+ 			goto out_bmap_cancel;
 diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 4e3611d..5cdf5ef 100644
+index d777b7a..4e3611d 100644
 --- a/fs/xfs/xfs_inode_item.c
 +++ b/fs/xfs/xfs_inode_item.c
-@@ -350,6 +350,7 @@ xfs_inode_to_log_dinode(
+@@ -338,7 +338,6 @@ xfs_inode_to_log_dinode(
+ 	to->di_format = from->di_format;
+ 	to->di_uid = from->di_uid;
+ 	to->di_gid = from->di_gid;
+-	to->di_nlink = from->di_nlink;
+ 	to->di_projid_lo = from->di_projid_lo;
+ 	to->di_projid_hi = from->di_projid_hi;
+ 
+@@ -350,6 +349,7 @@ xfs_inode_to_log_dinode(
+ 	to->di_mtime.t_nsec = inode->i_mtime.tv_nsec;
  	to->di_ctime.t_sec = inode->i_ctime.tv_sec;
  	to->di_ctime.t_nsec = inode->i_ctime.tv_nsec;
- 	to->di_nlink = inode->i_nlink;
-+	to->di_gen = inode->i_generation;
++	to->di_nlink = inode->i_nlink;
  
  	to->di_size = from->di_size;
  	to->di_nblocks = from->di_nblocks;
-@@ -361,7 +362,6 @@ xfs_inode_to_log_dinode(
- 	to->di_dmevmask = from->di_dmevmask;
- 	to->di_dmstate = from->di_dmstate;
- 	to->di_flags = from->di_flags;
--	to->di_gen = from->di_gen;
- 
- 	if (from->di_version == 3) {
- 		to->di_changecount = from->di_changecount;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d42738d..2c40c5f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -114,7 +114,7 @@ xfs_find_handle(
- 		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
- 					sizeof(handle.ha_fid.fid_len);
- 		handle.ha_fid.fid_pad = 0;
--		handle.ha_fid.fid_gen = ip->i_d.di_gen;
-+		handle.ha_fid.fid_gen = inode->i_generation;
- 		handle.ha_fid.fid_ino = ip->i_ino;
- 
- 		hsize = XFS_HSIZE(handle);
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index c424d4b..397ce85 100644
+index b008677..c424d4b 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -1227,7 +1227,6 @@ xfs_setup_inode(
- 		break;
- 	}
+@@ -455,7 +455,7 @@ xfs_vn_getattr(
+ 	stat->size = XFS_ISIZE(ip);
+ 	stat->dev = inode->i_sb->s_dev;
+ 	stat->mode = ip->i_d.di_mode;
+-	stat->nlink = ip->i_d.di_nlink;
++	stat->nlink = inode->i_nlink;
+ 	stat->uid = inode->i_uid;
+ 	stat->gid = inode->i_gid;
+ 	stat->ino = ip->i_ino;
+@@ -1212,7 +1212,6 @@ xfs_setup_inode(
+ 	hlist_add_fake(&inode->i_hash);
  
--	inode->i_generation = ip->i_d.di_gen;
- 	i_size_write(inode, ip->i_d.di_size);
- 	xfs_diflags_to_iflags(inode, ip);
+ 	inode->i_mode	= ip->i_d.di_mode;
+-	set_nlink(inode, ip->i_d.di_nlink);
+ 	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
+ 	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
  
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index cfb6527..6162e65 100644
+index 2acda42..cfb6527 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -100,11 +100,11 @@ xfs_bulkstat_one_int(
- 	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
- 	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
- 	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
-+	buf->bs_gen = inode->i_generation;
+@@ -85,7 +85,6 @@ xfs_bulkstat_one_int(
+ 	/* xfs_iget returns the following without needing
+ 	 * further change.
+ 	 */
+-	buf->bs_nlink = dic->di_nlink;
+ 	buf->bs_projid_lo = dic->di_projid_lo;
+ 	buf->bs_projid_hi = dic->di_projid_hi;
+ 	buf->bs_ino = ino;
+@@ -94,6 +93,7 @@ xfs_bulkstat_one_int(
+ 	buf->bs_gid = dic->di_gid;
+ 	buf->bs_size = dic->di_size;
  
- 	buf->bs_xflags = xfs_ip2xflags(ip);
- 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
- 	buf->bs_extents = dic->di_nextents;
--	buf->bs_gen = dic->di_gen;
- 	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
- 	buf->bs_dmevmask = dic->di_dmevmask;
- 	buf->bs_dmstate = dic->di_dmstate;
++	buf->bs_nlink = inode->i_nlink;
+ 	buf->bs_atime.tv_sec = inode->i_atime.tv_sec;
+ 	buf->bs_atime.tv_nsec = inode->i_atime.tv_nsec;
+ 	buf->bs_mtime.tv_sec = inode->i_mtime.tv_sec;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 4b79cf0..611c25c 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4337,7 +4337,7 @@ xlog_recover_process_one_iunlink(
+ 	if (error)
+ 		goto fail_iput;
+ 
+-	ASSERT(ip->i_d.di_nlink == 0);
++	ASSERT(VFS_I(ip)->i_nlink == 0);
+ 	ASSERT(ip->i_d.di_mode != 0);
+ 
+ 	/* setup for the next pass */
 -- 
 2.5.0
 
