@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4D6577F37
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 16:03:04 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 557227F37
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 16:37:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DE638AC004
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 14:03:00 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2673730405F
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 14:37:07 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sYU08B1OBpdESfK2 for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2016 14:02:57 -0800 (PST)
-Date: Wed, 13 Jan 2016 09:02:40 +1100
+	TAHoGJSzcpqYyl04 for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2016 14:37:05 -0800 (PST)
+Date: Wed, 13 Jan 2016 09:37:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] Move from __uint*_t types to uint*_t and likewise
-	for __int*_t
-Message-ID: <20160112220240.GO10456@dastard>
+Subject: Re: [PATCH 6/6] Add configure check for members of dirent for use in
+	io/readdir.c
+Message-ID: <20160112223703.GP10456@dastard>
 References: <cover.1452627740.git.felix.janda@posteo.de>
-	<20160112195935.GB568@nyan> <20160112212405.GL10456@dastard>
-	<20160112214634.GC10558@nyan>
+	<20160112200022.GG568@nyan> <20160112213006.GN10456@dastard>
+	<20160112213711.GB10558@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160112214634.GC10558@nyan>
+In-Reply-To: <20160112213711.GB10558@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,42 +35,71 @@ Sender: xfs-bounces@oss.sgi.com
 To: Felix Janda <felix.janda@posteo.de>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 12, 2016 at 10:46:34PM +0100, Felix Janda wrote:
+On Tue, Jan 12, 2016 at 10:37:11PM +0100, Felix Janda wrote:
 > Dave Chinner wrote:
-> > On Tue, Jan 12, 2016 at 08:59:35PM +0100, Felix Janda wrote:
-> > > The uint*_t and int*_t are defined by C99 and should be prefered
-> > > over the less portable __uint*_t and __int*_t variants. The
-> > > necessary <stdint.h> include is in platformdefs.h, which gets
-> > > included in most places via libxfs.h. In the public headers
-> > > <stdint.h> is included in <xfs/xfs_types.h>.
-> > > 
+> > On Tue, Jan 12, 2016 at 09:00:22PM +0100, Felix Janda wrote:
 > > > Signed-off-by: Felix Janda <felix.janda@posteo.de>
+> > > ---
+> > >  configure.ac         |  7 +++++++
+> > >  include/builddefs.in |  4 ++++
+> > >  io/Makefile          | 10 ++++++++++
+> > >  3 files changed, 21 insertions(+)
+> > > 
+> > > diff --git a/configure.ac b/configure.ac
+> > > index feee50a..3d6443a 100644
+> > > --- a/configure.ac
+> > > +++ b/configure.ac
+> > > @@ -135,5 +135,12 @@ AC_CHECK_SIZEOF([char *])
+> > >  AC_TYPE_UMODE_T
+> > >  AC_MANUAL_FORMAT
+> > >  
+> > > +AC_CHECK_MEMBERS([struct dirent.d_reclen],[],[],[[#include <dirent.h>]])
+> > > +AC_SUBST(ac_cv_member_struct_dirent_d_reclen)
+> > > +AC_CHECK_MEMBERS([struct dirent.d_off],[],[],[[#include <dirent.h>]])
+> > > +AC_SUBST(ac_cv_member_struct_dirent_d_off)
+> > > +AC_CHECK_MEMBERS([struct dirent.d_type],[],[],[[#include <dirent.h>]])
+> > > +AC_SUBST(ac_cv_member_struct_dirent_d_type)
+> > > +
+> > >  AC_CONFIG_FILES([include/builddefs])
+> > >  AC_OUTPUT
+> > > diff --git a/include/builddefs.in b/include/builddefs.in
+> > > index b5ce336..67d963c 100644
+> > > --- a/include/builddefs.in
+> > > +++ b/include/builddefs.in
+> > > @@ -109,6 +109,10 @@ HAVE_FLS = @have_fls@
+> > >  HAVE_FSETXATTR = @have_fsetxattr@
+> > >  HAVE_MREMAP = @have_mremap@
+> > >  
+> > > +HAVE_STRUCT_DIRENT_D_RECLEN = @ac_cv_member_struct_dirent_d_reclen@
+> > > +HAVE_STRUCT_DIRENT_D_OFF = @ac_cv_member_struct_dirent_d_off@
+> > > +HAVE_STRUCT_DIRENT_D_TYPE = @ac_cv_member_struct_dirent_d_type@
+> > > +
+> > >  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+> > >  #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+> > >  
+> > > diff --git a/io/Makefile b/io/Makefile
+> > > index 0b53f41..9574168 100644
+> > > --- a/io/Makefile
+> > > +++ b/io/Makefile
+> > > @@ -94,6 +94,16 @@ ifeq ($(HAVE_MREMAP),yes)
+> > >  LCFLAGS += -DHAVE_MREMAP
+> > >  endif
+> > >  
+> > > +ifeq ($(HAVE_STRUCT_DIRENT_D_RECLEN),yes)
+> > > +LCFLAGS += -D_DIRENT_HAVE_D_RECLEN
+> > > +endif
 > > 
-> > I can't apply this straight off. Most of the libxfs code that is
-> > changed is shared with the kernel code, and so the definitions of
-> > the variables need to be the same as the kernel code. There are
-> > reasons for the kernel code using __[u]int*_t type variants (e.g.  I
-> > think the endian conversion static checker requires the __ variants
-> > for host order variables), and so before making sweeping changes
-> > like this we need to ensure that we can make the equivalent changes
-> > to the kernel code as well...
+> > The C library should be defining these if those fields are
+> > supported, right?
 > 
-> Thanks for the review!
-> 
-> Sorry, I was not aware about this difference between the types.
-> 
-> The simplest fix for musl would be to add defines or something similar
-> to linux.h.
-> 
-> On the other hand, on the long run it would be preferable to use
-> the stdint types (consistently).
+> It is strongly advised not to use these non-standard fields of dirent.
 
-Right, that's definitely the better solution. We can't just jump
-there in one go. :/
+We're not writing POSIX applications here - this is a diagnostic
+tool so if we are running on linux we need to expose them.
 
-FWIW, changing everything outside libxfs/ and include/ should be ok
-to do straight away; it's just the libxfs stuff that we have other
-constraints on.
+If we've got linux C libraries that don't provide feature macros for
+the fields in the linux_dirent eposed by readdir(3), then I guess
+we're stuck with having to play autoconf games, eh?
 
 Cheers,
 
