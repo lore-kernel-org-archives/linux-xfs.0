@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4756A29DFC
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 08:01:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 36ED7304053
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 06:01:27 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id CDCA029DF5
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 08:15:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B1C02304053
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 06:15:47 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id R1DhAsveOw3M3B2j (version=TLSv1.2
+	cuda.sgi.com with ESMTP id KyTFCA7jMbcboG6o (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 06:01:25 -0800 (PST)
-Date: Tue, 12 Jan 2016 09:01:22 -0500
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 06:15:43 -0800 (PST)
+Date: Tue, 12 Jan 2016 09:15:41 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_db: check on-disk structure sizes
-Message-ID: <20160112140122.GC12156@bfoster.bfoster>
-References: <20160111234644.GB7831@birch.djwong.org>
+Subject: Re: [PATCH] xfs: log mount failures don't wait for buffers to be
+	released
+Message-ID: <20160112141540.GD12156@bfoster.bfoster>
+References: <1452562536-32145-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160111234644.GB7831@birch.djwong.org>
+In-Reply-To: <1452562536-32145-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,312 +30,123 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 11, 2016 at 03:46:44PM -0800, Darrick J. Wong wrote:
-> Check on-disk structure sizes against known values.
-> Use this to catch inadvertent changes in structure size due to padding
-> and alignment issues, etc.
+On Tue, Jan 12, 2016 at 12:35:36PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Recently I've been seeing xfs/051 fail on 1k block size filesystems.
+> Trying to trace the events during the test lead to the problem going
+> away, indicating that it was a race condition that lead to this
+> ASSERT failure:
+> 
+> XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/xfs_mount.c, line: 156
+> .....
+> [<ffffffff814e1257>] xfs_free_perag+0x87/0xb0
+> [<ffffffff814e21b9>] xfs_mountfs+0x4d9/0x900
+> [<ffffffff814e5dff>] xfs_fs_fill_super+0x3bf/0x4d0
+> [<ffffffff811d8800>] mount_bdev+0x180/0x1b0
+> [<ffffffff814e3ff5>] xfs_fs_mount+0x15/0x20
+> [<ffffffff811d90a8>] mount_fs+0x38/0x170
+> [<ffffffff811f4347>] vfs_kern_mount+0x67/0x120
+> [<ffffffff811f7018>] do_mount+0x218/0xd60
+> [<ffffffff811f7e5b>] SyS_mount+0x8b/0xd0
+> 
+> When I finally caught it with tracing enabled, I saw that AG 2 had
+> an elevated reference count and a buffer was responsible for it. I
+> tracked down the specific buffer, and found that it was missing the
+> final reference count release that would put it back on the LRU and
+> hence be found by xfs_wait_buftarg() calls in the log mount failure
+> handling.
+> 
+> The last four traces for the buffer before the assert were (trimmed
+> for relevance)
+> 
+> kworker/0:1-5259   xfs_buf_iodone:        hold 2  lock 0 flags ASYNC
+> kworker/0:1-5259   xfs_buf_ioerror:       hold 2  lock 0 error -5
+> mount-7163	   xfs_buf_lock_done:     hold 2  lock 0 flags ASYNC
+> mount-7163	   xfs_buf_unlock:        hold 2  lock 1 flags ASYNC
+> 
+> This is an async write that is completing, so there's nobody waiting
+> for it directly.  Hence we call xfs_buf_relse() once all the
+> processing is complete. That does:
+> 
+> static inline void xfs_buf_relse(xfs_buf_t *bp)
+> {
+> 	xfs_buf_unlock(bp);
+> 	xfs_buf_rele(bp);
+> }
+> 
+> Now, it's clear that mount is waiting on the buffer lock, and that
+> it has been released by xfs_buf_relse() and gained by mount. This is
+> expected, because at this point the mount process is in
+> xfs_buf_delwri_submit() waiting for all the IO it submitted to
+> complete.
+> 
+> The mount process, however, is waiting on the lock for the buffer
+> because it is in xfs_buf_delwri_submit(). This waits for IO
+> completion, but it doesn't wait for the buffer reference owned by
+> the IO to go away. The mount process collects all the completions,
+> fails the log recovery, and the higher level code then calls
+> xfs_wait_buftarg() to free all the remaining buffers in the
+> filesystem.
+> 
+> The issue is that on unlocking the buffer, the scheduler has decided
+> that the mount process has higher priority than the the kworker
+> thread that is running the IO completion, and so immediately
+> switched contexts to the mount process from the semaphore unlock
+> code, hence preventing the kworker thread from finishing the IO
+> completion and releasing the IO reference to the buffer.
+> 
+> Hence by the time that xfs_wait_buftarg() is run, the buffer still
+> has an active reference and so isn't on the LRU list that the
+> function walks to free the remaining buffers. Hence we miss that
+> buffer and continue onwards to tear down the mount structures,
+> at which time we get find a stray reference count on the perag
+> structure. On a non-debug kernel, this will be ignored and the
+> structure torn down and freed. Hence when the kworker thread is then
+> rescheduled and the buffer released and freed, it will access a
+> freed perag structure.
+> 
+> The problem here is that when the log mount fails, we still need to
+> quiesce the log to ensure that the IO workqueues have returned to
+> idle before we run xfs_wait_buftarg(). By synchronising the
+> workqueues, we ensure that all IO completions are fully processed,
+> not just to the point where buffers have been unlocked. This ensures
+> we don't end up in the situation above.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-What's the need for this in userspace? Not a big deal really, but it
-seems like it serves the fundamental purpose sufficiently in the kernel.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-That aside, this does fail if I tweak a structure size, though I don't
-think I get the intended error. I end up with a linker error instead:
-
-...
-    [LD]     xfs_db
-ondisk.o: In function `xfs_check_ondisk_structs':
-/home/bfoster/repos/xfsprogs-dev/db/ondisk.c:26: undefined reference to `__compiletime_assert_26'
-collect2: error: ld returned 1 exit status
-../include/buildrules:45: recipe for target 'xfs_db' failed
-gmake[3]: *** [xfs_db] Error 1
-include/buildrules:35: recipe for target 'db' failed
-gmake[2]: *** [db] Error 2
-Makefile:70: recipe for target 'default' failed
-make[1]: *** [default] Error 2
-Makefile:68: recipe for target 'default' failed
-make: *** [default] Error 2
-
-This is with gcc 5.3.1. It works fine with the kernel patch so I don't
-_think_ it's my environment, but I could be wrong...
-
-Brian
-
->  db/Makefile         |    2 -
->  db/init.c           |    3 +
->  db/ondisk.c         |   63 +++++++++++++++++++++++
->  db/ondisk.h         |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  libxfs/xfs_format.h |    4 +
->  5 files changed, 210 insertions(+), 1 deletion(-)
->  create mode 100644 db/ondisk.c
->  create mode 100644 db/ondisk.h
+>  fs/xfs/xfs_buf.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> diff --git a/db/Makefile b/db/Makefile
-> index 8260da3..ba3e942 100644
-> --- a/db/Makefile
-> +++ b/db/Makefile
-> @@ -12,7 +12,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
->  	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
->  	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
->  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
-> -	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h
-> +	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h ondisk.h
->  CFILES = $(HFILES:.h=.c)
->  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 04d2bdd..08ad701 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1529,6 +1529,16 @@ xfs_wait_buftarg(
+>  	LIST_HEAD(dispose);
+>  	int loop = 0;
 >  
-> diff --git a/db/init.c b/db/init.c
-> index c0472c8..d6df093 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -28,6 +28,7 @@
->  #include "output.h"
->  #include "malloc.h"
->  #include "type.h"
-> +#include "ondisk.h"
->  
->  static char		**cmdline;
->  static int		ncmdline;
-> @@ -60,6 +61,8 @@ init(
->  	struct xfs_buf	*bp;
->  	int		c;
->  
-> +	xfs_check_ondisk_structs();
+> +	/*
+> +	 * We need to flush the buffer workqueue to ensure that all IO
+> +	 * completion processing is 100% done. Just waiting on buffer locks is
+> +	 * not sufficient for async IO as the reference count held over IO is
+> +	 * not released until after the buffer lock is dropped. Hence we need to
+> +	 * ensure here that all reference counts have been dropped before we
+> +	 * start walking the LRU list.
+> +	 */
+> +	drain_workqueue(btp->bt_mount->m_buf_workqueue);
 > +
->  	setlocale(LC_ALL, "");
->  	bindtextdomain(PACKAGE, LOCALEDIR);
->  	textdomain(PACKAGE);
-> diff --git a/db/ondisk.c b/db/ondisk.c
-> new file mode 100644
-> index 0000000..532333d
-> --- /dev/null
-> +++ b/db/ondisk.c
-> @@ -0,0 +1,63 @@
-> +/*
-> + * Copyright (c) 2016 Oracle.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include "libxfs.h"
-> +#include "ondisk.h"
-> +
-> +void
-> +xfs_check_ondisk_structs(void)
-> +{
-> +	/* on-disk structures */
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
-> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
-> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
-> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
-> +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
-> +
-> +	/* log structures */
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
-> +}
-> diff --git a/db/ondisk.h b/db/ondisk.h
-> new file mode 100644
-> index 0000000..b5784d1
-> --- /dev/null
-> +++ b/db/ondisk.h
-> @@ -0,0 +1,139 @@
-> +/*
-> + * Copyright (c) 2016 Oracle.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#ifndef __XFS_DB_ONDISK_H
-> +#define __XFS_DB_ONDISK_H
-> +
-> +/* Compile time object size, -1 for unknown */
-> +#ifndef __compiletime_error
-> +# define __compiletime_error(message)
-> +/*
-> + * Sparse complains of variable sized arrays due to the temporary variable in
-> + * __compiletime_assert. Unfortunately we can't just expand it out to make
-> + * sparse see a constant array size without breaking compiletime_assert on old
-> + * versions of GCC (e.g. 4.2.4), so hide the array from sparse altogether.
-> + */
-> +# ifndef __CHECKER__
-> +#  define __compiletime_error_fallback(condition) \
-> +	do { ((void)sizeof(char[1 - 2 * condition])); } while (0)
-> +# endif
-> +#endif
-> +#ifndef __compiletime_error_fallback
-> +# define __compiletime_error_fallback(condition) do { } while (0)
-> +#endif
-> +
-> +#define __compiletime_assert(condition, msg, prefix, suffix)		\
-> +	do {								\
-> +		bool __cond = !(condition);				\
-> +		extern void prefix ## suffix(void) __compiletime_error(msg); \
-> +		if (__cond)						\
-> +			prefix ## suffix();				\
-> +		__compiletime_error_fallback(__cond);			\
-> +	} while (0)
-> +
-> +#define _compiletime_assert(condition, msg, prefix, suffix) \
-> +	__compiletime_assert(condition, msg, prefix, suffix)
-> +
-> +/**
-> + * compiletime_assert - break build and emit msg if condition is false
-> + * @condition: a compile-time constant condition to check
-> + * @msg:       a message to emit if condition is false
-> + *
-> + * In tradition of POSIX assert, this macro will break the build if the
-> + * supplied condition is *false*, emitting the supplied error message if the
-> + * compiler has support to do so.
-> + */
-> +#define compiletime_assert(condition, msg) \
-> +	_compiletime_assert(condition, msg, __compiletime_assert_, __LINE__)
-> +
-> +#ifdef __CHECKER__
-> +#define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
-> +#define BUILD_BUG_ON_ZERO(e) (0)
-> +#define BUILD_BUG_ON_NULL(e) ((void*)0)
-> +#define BUILD_BUG_ON_INVALID(e) (0)
-> +#define BUILD_BUG_ON_MSG(cond, msg) (0)
-> +#define BUILD_BUG_ON(condition) (0)
-> +#define BUILD_BUG() (0)
-> +#else /* __CHECKER__ */
-> +
-> +/* Force a compilation error if a constant expression is not a power of 2 */
-> +#define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
-> +	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
-> +
-> +/* Force a compilation error if condition is true, but also produce a
-> +   result (of value 0 and type size_t), so the expression can be used
-> +   e.g. in a structure initializer (or where-ever else comma expressions
-> +   aren't permitted). */
-> +#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
-> +#define BUILD_BUG_ON_NULL(e) ((void *)sizeof(struct { int:-!!(e); }))
-> +
-> +/*
-> + * BUILD_BUG_ON_INVALID() permits the compiler to check the validity of the
-> + * expression but avoids the generation of any code, even if that expression
-> + * has side-effects.
-> + */
-> +#define BUILD_BUG_ON_INVALID(e) ((void)(sizeof((__force long)(e))))
-> +
-> +/**
-> + * BUILD_BUG_ON_MSG - break compile if a condition is true & emit supplied
-> + *		      error message.
-> + * @condition: the condition which the compiler should know is false.
-> + *
-> + * See BUILD_BUG_ON for description.
-> + */
-> +#define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-> +
-> +/**
-> + * BUILD_BUG_ON - break compile if a condition is true.
-> + * @condition: the condition which the compiler should know is false.
-> + *
-> + * If you have some code which relies on certain constants being equal, or
-> + * some other compile-time-evaluated condition, you should use BUILD_BUG_ON to
-> + * detect if someone changes it.
-> + *
-> + * The implementation uses gcc's reluctance to create a negative array, but gcc
-> + * (as of 4.4) only emits that error for obvious cases (e.g. not arguments to
-> + * inline functions).  Luckily, in 4.3 they added the "error" function
-> + * attribute just for this type of case.  Thus, we use a negative sized array
-> + * (should always create an error on gcc versions older than 4.4) and then call
-> + * an undefined function with the error attribute (should always create an
-> + * error on gcc 4.3 and later).  If for some reason, neither creates a
-> + * compile-time error, we'll still have a link-time error, which is harder to
-> + * track down.
-> + */
-> +#ifndef __OPTIMIZE__
-> +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
-> +#else
-> +#define BUILD_BUG_ON(condition) \
-> +	BUILD_BUG_ON_MSG(condition, "BUILD_BUG_ON failed: " #condition)
-> +#endif
-> +
-> +/**
-> + * BUILD_BUG - break compile if used.
-> + *
-> + * If you have some code that you expect the compiler to eliminate at
-> + * build time, you should use BUILD_BUG to detect if it is
-> + * unexpectedly used.
-> + */
-> +#define BUILD_BUG() BUILD_BUG_ON_MSG(1, "BUILD_BUG failed")
-> +
-> +#endif	/* __CHECKER__ */
-> +
-> +void xfs_check_ondisk_structs(void);
-> +
-> +#endif /* __XFS_DB_ONDISK_H */
-> diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-> index a35009a..c4c0c1c 100644
-> --- a/libxfs/xfs_format.h
-> +++ b/libxfs/xfs_format.h
-> @@ -1505,4 +1505,8 @@ struct xfs_acl {
->  #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
->  #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
->  
-> +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
-> +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
-> +		#structname ") is wrong, expected " #size)
-> +
->  #endif /* __XFS_FORMAT_H__ */
+>  	/* loop until there is nothing left on the lru list. */
+>  	while (list_lru_count(&btp->bt_lru)) {
+>  		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
+> -- 
+> 2.5.0
 > 
 > _______________________________________________
 > xfs mailing list
