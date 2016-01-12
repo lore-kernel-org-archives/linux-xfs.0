@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8E07C7F37
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:01:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 289677F3F
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 03:01:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 20DDFAC001
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:28 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A23CBAC005
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 01:01:32 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	IkjjDOXjaQnYUB37 for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2016 01:01:26 -0800 (PST)
+	aMNd2KA4vTTHUWYI for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2016 01:01:30 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005Jx-I6
+	(envelope-from <dave@fromorbit.com>) id 1aIupP-0005K3-Kv
 	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008A6-HT
+	(envelope-from <dave@disappointment.disaster>) id 1aIupP-0008AY-KL
 	for xfs@oss.sgi.com; Tue, 12 Jan 2016 20:01:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 0/8] xfs: shrink the struct xfs_icdinode
-Date: Tue, 12 Jan 2016 20:01:12 +1100
-Message-Id: <1452589280-30167-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/8] xfs: move inode generation count to VFS inode
+Date: Tue, 12 Jan 2016 20:01:18 +1100
+Message-Id: <1452589280-30167-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1452589280-30167-1-git-send-email-david@fromorbit.com>
+References: <1452589280-30167-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,57 +37,188 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is a patchset I've written over the past couple of afternoons.
-It smokes badly if you try to run it, so I'm posting this for early
-feedback, not for testing and bug reports.
+Pull another 4 bytes out of the xfs_icdinode.
 
-Despite it's name, the struct xfs_icdinode is an on-disk structure -
-it gets copied directly to the log, and so we are kind of stuck with
-keeping it around and all it's duplicate information while we do
-this. Hence before we can shrink this structure, wehave ot break
-it's link with the logging code.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c | 8 ++++----
+ fs/xfs/libxfs/xfs_inode_buf.h | 1 -
+ fs/xfs/xfs_export.c           | 2 +-
+ fs/xfs/xfs_inode.c            | 5 +----
+ fs/xfs/xfs_inode_item.c       | 2 +-
+ fs/xfs/xfs_ioctl.c            | 2 +-
+ fs/xfs/xfs_iops.c             | 1 -
+ fs/xfs/xfs_itable.c           | 2 +-
+ 8 files changed, 9 insertions(+), 14 deletions(-)
 
-That's what the first patch does - it introduces a struct
-xfs_log_dinode, and the log formatting and reocvery code use that
-for the structure that is placed physically in the log. We marshall
-the variables from the xfs_icdinode in and out individually so we
-break the dependence between the on-disk format and the
-xfs_icdinode.
-
-This now enables us to remove all the bits of the xfs_icdinode that
-are either unused (e.g. padding), only used to support old formats,
-or a duplicates with information stored in the VFS struct inode. As
-a result, I've been able to reduce the xfs_icdinode from 176 bytes
-down to:
-
-        /* size: 72, cachelines: 2, members: 19 */
-        /* sum members: 68, holes: 1, sum holes: 4 */
-
-72 bytes. This means it takes 104 bytes off the size of the struct
-xfs_inode, which a 12% reduction in size. This will be a massive win
-for systems that cache lots of inodes!
-
-I have not yet addressed the di_uid or the di_gid because I haven't
-had time to look into the user namespace conversion issues that I'll
-have to handle correctly to use the VFS inode fieldsr. I think
-I can also pull up the di_nblocks field to the VFS inode as well. If
-I manage this, I will reduce the xfs_icdinode by another 16 bytes.
-
-With this change made, the xfs_icdinode is no long an "in core disk
-inode" so I'm wondering whether I should rename it or simply make it
-go away altogether and pull the remaining fields straight into the
-struct xfs_inode. Any thoughts on new names and/or getting rid of it
-woul dbe appreciated.
-
-Some of the code is pretty raw - I haven't cleaned it up at all, so
-do be surprised if there's things I've missed or changed in the
-wrong patch, etc.
-
-Comments, thoughts, flames, all welcome!
-
--Dave.
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 6c00277..0cf5a16 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -231,6 +231,7 @@ xfs_inode_from_disk(
+ 	inode->i_mtime.tv_nsec = be32_to_cpu(from->di_mtime.t_nsec);
+ 	inode->i_ctime.tv_sec = be32_to_cpu(from->di_ctime.t_sec);
+ 	inode->i_ctime.tv_nsec = be32_to_cpu(from->di_ctime.t_nsec);
++	inode->i_generation = be32_to_cpu(from->di_gen);
+ 
+ 	to->di_size = be64_to_cpu(from->di_size);
+ 	to->di_nblocks = be64_to_cpu(from->di_nblocks);
+@@ -242,7 +243,6 @@ xfs_inode_from_disk(
+ 	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
+ 	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
+ 	to->di_flags	= be16_to_cpu(from->di_flags);
+-	to->di_gen	= be32_to_cpu(from->di_gen);
+ 
+ 	if (to->di_version == 3) {
+ 		to->di_changecount = be64_to_cpu(from->di_changecount);
+@@ -280,6 +280,7 @@ xfs_inode_to_disk(
+ 	to->di_ctime.t_sec = cpu_to_be32(inode->i_ctime.tv_sec);
+ 	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
+ 	to->di_nlink = cpu_to_be32(inode->i_nlink);
++	to->di_gen = cpu_to_be32(inode->i_generation);
+ 
+ 	to->di_size = cpu_to_be64(from->di_size);
+ 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
+@@ -291,7 +292,6 @@ xfs_inode_to_disk(
+ 	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
+ 	to->di_dmstate = cpu_to_be16(from->di_dmstate);
+ 	to->di_flags = cpu_to_be16(from->di_flags);
+-	to->di_gen = cpu_to_be32(from->di_gen);
+ 
+ 	if (from->di_version == 3) {
+ 		to->di_changecount = cpu_to_be64(from->di_changecount);
+@@ -437,7 +437,7 @@ xfs_iread(
+ 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+ 		/* initialise the on-disk inode core */
+ 		memset(&ip->i_d, 0, sizeof(ip->i_d));
+-		ip->i_d.di_gen = prandom_u32();
++		VFS_I(ip)->i_generation = prandom_u32();
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+ 			ip->i_d.di_version = 3;
+ 		else
+@@ -485,7 +485,7 @@ xfs_iread(
+ 		 * that xfs_ialloc won't overwrite or relies on being correct.
+ 		 */
+ 		ip->i_d.di_version = dip->di_version;
+-		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
++		VFS_I(ip)->i_generation = be32_to_cpu(dip->di_gen);
+ 		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
+ 
+ 		/*
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 774d71f..68da576 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -46,7 +46,6 @@ struct xfs_icdinode {
+ 	__uint32_t	di_dmevmask;	/* DMIG event mask */
+ 	__uint16_t	di_dmstate;	/* DMIG state info */
+ 	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+-	__uint32_t	di_gen;		/* generation number */
+ 
+ 	__uint64_t	di_changecount;	/* number of attribute changes */
+ 	__uint64_t	di_flags2;	/* more random flags */
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 652cd3c..2816d42 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -152,7 +152,7 @@ xfs_nfs_get_inode(
+ 		return ERR_PTR(error);
+ 	}
+ 
+-	if (ip->i_d.di_gen != generation) {
++	if (VFS_I(ip)->i_generation != generation) {
+ 		IRELE(ip);
+ 		return ERR_PTR(-ESTALE);
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d4f328a..c8fa5d6 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -826,9 +826,6 @@ xfs_ialloc(
+ 	inode->i_atime = tv;
+ 	inode->i_ctime = tv;
+ 
+-	/*
+-	 * di_gen will have been taken care of in xfs_iread.
+-	 */
+ 	ip->i_d.di_extsize = 0;
+ 	ip->i_d.di_dmevmask = 0;
+ 	ip->i_d.di_dmstate = 0;
+@@ -2417,7 +2414,7 @@ xfs_ifree(
+ 	 * Bump the generation count so no one will be confused
+ 	 * by reincarnations of this inode.
+ 	 */
+-	ip->i_d.di_gen++;
++	VFS_I(ip)->i_generation++;
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	if (xic.deleted)
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 4e3611d..5cdf5ef 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -350,6 +350,7 @@ xfs_inode_to_log_dinode(
+ 	to->di_ctime.t_sec = inode->i_ctime.tv_sec;
+ 	to->di_ctime.t_nsec = inode->i_ctime.tv_nsec;
+ 	to->di_nlink = inode->i_nlink;
++	to->di_gen = inode->i_generation;
+ 
+ 	to->di_size = from->di_size;
+ 	to->di_nblocks = from->di_nblocks;
+@@ -361,7 +362,6 @@ xfs_inode_to_log_dinode(
+ 	to->di_dmevmask = from->di_dmevmask;
+ 	to->di_dmstate = from->di_dmstate;
+ 	to->di_flags = from->di_flags;
+-	to->di_gen = from->di_gen;
+ 
+ 	if (from->di_version == 3) {
+ 		to->di_changecount = from->di_changecount;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d42738d..2c40c5f 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -114,7 +114,7 @@ xfs_find_handle(
+ 		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+ 					sizeof(handle.ha_fid.fid_len);
+ 		handle.ha_fid.fid_pad = 0;
+-		handle.ha_fid.fid_gen = ip->i_d.di_gen;
++		handle.ha_fid.fid_gen = inode->i_generation;
+ 		handle.ha_fid.fid_ino = ip->i_ino;
+ 
+ 		hsize = XFS_HSIZE(handle);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index c424d4b..397ce85 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1227,7 +1227,6 @@ xfs_setup_inode(
+ 		break;
+ 	}
+ 
+-	inode->i_generation = ip->i_d.di_gen;
+ 	i_size_write(inode, ip->i_d.di_size);
+ 	xfs_diflags_to_iflags(inode, ip);
+ 
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index cfb6527..6162e65 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -100,11 +100,11 @@ xfs_bulkstat_one_int(
+ 	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
+ 	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
+ 	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
++	buf->bs_gen = inode->i_generation;
+ 
+ 	buf->bs_xflags = xfs_ip2xflags(ip);
+ 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
+ 	buf->bs_extents = dic->di_nextents;
+-	buf->bs_gen = dic->di_gen;
+ 	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
+ 	buf->bs_dmevmask = dic->di_dmevmask;
+ 	buf->bs_dmstate = dic->di_dmstate;
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
