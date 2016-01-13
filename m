@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D32767F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 11:12:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B335C30405F
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 09:12:35 -0800 (PST)
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
-	cuda.sgi.com with ESMTP id m3E1W6b5CSssElcA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jan 2016 09:12:29 -0800 (PST)
-Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
-	by mout01.posteo.de (Postfix) with ESMTPS id 5B1D320BBC
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 18:12:23 +0100 (CET)
-Date: Wed, 13 Jan 2016 18:09:38 +0100
-From: Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH 6/6] Add configure check for members of dirent for use in
-	io/readdir.c
-Message-ID: <20160113170938.GA10942@nyan>
-References: <cover.1452627740.git.felix.janda@posteo.de>
-	<20160112200022.GG568@nyan> <20160113075855.GG21939@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160113075855.GG21939@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DE93D7F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 11:52:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8ADA7AC00C
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 09:52:46 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id UWCP9p35ZAJURWLR (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Jan 2016 09:52:45 -0800 (PST)
+Received: from [83.175.99.196] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1aJPbA-0003Lc-4h
+	for xfs@oss.sgi.com; Wed, 13 Jan 2016 17:52:44 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: a couple minor btree free_block patches
+Date: Wed, 13 Jan 2016 18:50:51 +0100
+Message-Id: <1452707454-15229-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,36 +25,17 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> I think we're having a deeper issue here.  For an LFS build we
-> absolutely should have these values as the kernel dirent64 has them.
-> 
-> Either we manage to not pull in the LFS version of readdir/getdents
-> or musl is doing something inredibly stupid.  Can you investigate if
-> and why we're not using the LFS getdents64 here?
-
-With musl you always have LFS. However still musl does not define the
-_DIRENT_HAVE_*. You can see the full dirent.h at:
-
-http://git.musl-libc.org/cgit/musl/tree/include/dirent.h
-
-I will ask on the musl list whether these constants can be added. So
-you can disregard this patch.
-
-
-However notice that these constants are not defined when not on linux
-or with glibc, e.g. freebsd (without k). On these systems the code in
-io/readdir.c just happens to have worked because either
-dirent.d_namelen exists or nobody has tested it on these systems.
-
-Felix
+The intent of this series is to invalidate buffers for freed btree
+blocks in common code instead of the methods after I found a reflink
+bug due to improper buffer invalidation.  The first two patches are
+things I noticed while doing that move.
 
 _______________________________________________
 xfs mailing list
