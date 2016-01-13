@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6485F7F37
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 19:30:00 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A16E129DF5
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 20:37:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 54596304053
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 17:29:57 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id AugVC0sE0Hy4vkHj (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 17:29:53 -0800 (PST)
-Date: Tue, 12 Jan 2016 17:29:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: check on-disk structure sizes
-Message-ID: <20160113012945.GC2455@birch.djwong.org>
-References: <20160111234644.GB7831@birch.djwong.org>
-	<20160112140122.GC12156@bfoster.bfoster>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 908FD304062
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 18:37:02 -0800 (PST)
+Received: from mail-io0-f194.google.com (mail-io0-f194.google.com
+	[209.85.223.194]) by cuda.sgi.com with ESMTP id
+	X6Hg7HUg0PCBMoRp (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 18:37:01 -0800 (PST)
+Received: by mail-io0-f194.google.com with SMTP id k127so46384723iok.1
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 18:37:01 -0800 (PST)
+Date: Tue, 12 Jan 2016 20:36:58 -0600
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH 8/9] vfs: hoist the btrfs deduplication ioctl to the vfs
+Message-ID: <20160113023658.GA1551@zzz>
+References: <20151219085505.12478.71157.stgit@birch.djwong.org>
+	<20151219085559.12478.33700.stgit@birch.djwong.org>
+	<20160112060714.GA4980@zzz>
+	<20160112091432.GB7832@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160112140122.GC12156@bfoster.bfoster>
+In-Reply-To: <20160112091432.GB7832@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,330 +35,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-api@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Tue, Jan 12, 2016 at 09:01:22AM -0500, Brian Foster wrote:
-> On Mon, Jan 11, 2016 at 03:46:44PM -0800, Darrick J. Wong wrote:
-> > Check on-disk structure sizes against known values.
-> > Use this to catch inadvertent changes in structure size due to padding
-> > and alignment issues, etc.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On Tue, Jan 12, 2016 at 01:14:32AM -0800, Darrick J. Wong wrote:
 > 
-> What's the need for this in userspace? Not a big deal really, but it
-> seems like it serves the fundamental purpose sufficiently in the kernel.
-
-The primary point is to make sure that we didn't make any errors with the
-on-disk structures when porting libxfs changes.  The kernel build is the first
-line of defense since it tends to big get changes first, but I figure a
-defensive build check for xfsprogs won't harm anyone...
-
-> That aside, this does fail if I tweak a structure size, though I don't
-> think I get the intended error. I end up with a linker error instead:
-
-...except for that.  Should I dig deeper into figuring out why this doesn't
-work in userland, or is a filename and line number sufficient to figure out
-which structure is misbehaving?
-
---D
-
+> Frankly, I also wouldn't mind changing the VFS dedupe ioctl that to something
+> that resembles the clone_range interface:
 > 
+> int ioctl(int dest_fd, FIDEDUPERANGE, struct file_dedupe_range * arg);
+
+Getting rid of the vectorization certainly avoids a lot of API complexity.  I
+don't know precisely why it was made vectorized in the first place, but to me it
+seems it shouldn't be vectorized unless there's a strong reason for it to be.
+
+> Not sure what you mean by 'symmetric', but in any case the convention seems
+> to be that src_fd's storage is shared with dest_fd if there's a match.
 > ...
->     [LD]     xfs_db
-> ondisk.o: In function `xfs_check_ondisk_structs':
-> /home/bfoster/repos/xfsprogs-dev/db/ondisk.c:26: undefined reference to `__compiletime_assert_26'
-> collect2: error: ld returned 1 exit status
-> ../include/buildrules:45: recipe for target 'xfs_db' failed
-> gmake[3]: *** [xfs_db] Error 1
-> include/buildrules:35: recipe for target 'db' failed
-> gmake[2]: *** [db] Error 2
-> Makefile:70: recipe for target 'default' failed
-> make[1]: *** [default] Error 2
-> Makefile:68: recipe for target 'default' failed
-> make: *** [default] Error 2
+> I think the result of an earlier discussion was that src_fd must be readable,
+> and dest_fd must be writable or appendable.
+
+Deduplication is a strange operation since you're not "reading" or "writing" in
+the traditional sense.  All file data stays exactly the same from a user
+perspective.
+
+So rather than arbitrarily say that you're "reading" from one file and "writing"
+to the other, one possibility is to have an API where you submit two files and
+the implementation decides how to best deduplicate them.  That could involve
+sharing existing extents in file 1 with file 2; or sharing existing extents in
+file 2 with file 1; or creating a new extent and referencing it from each file.
+It would be up to the implementation to choose the most efficient approach.
+
+But I take it that the existing btrfs ioctl doesn't work that way, and it always
+will share the existing extents in file 1 with file 2.
+
+That's probably a perfectly fine way to do it, but I was wondering whether it
+really makes sense to hard-code that detail in the API, since an API could be
+defined more generally.
+
+And from a practical perpective, people using the ioctl to deduplicate two files
+need to know which one to submit to the API as the "source" and which as the
+"destination", if it matters.
+
+Related to this are the permissions you need on each file descriptor.  Since
+deduplication isn't "reading" or "writing" in the traditional sense it could,
+theoretically, be argued that no permissions at all should be required: neither
+FMODE_READ nor FMODE_WRITE.
+
+Most likely are concerns that would make that a bad idea, though.  Perhaps
+someone could create mischief by causing fragmentation in system files.
+
+If this was previously discussed, can you point me to that discussion?
+
+The proposed man page is also very brief on permissions, only mentioning them
+indirectly in the error codes section.
+
+> > The man page also says you get EPERM if "dest_fd is immutable" and ETXTBSY if
+> > "one of the files is a swap file", which I don't see actually happening in
+> > the implementation; it seems those error codes perhaps exist at all for this
+> > ioctl but rather be left to open(..., O_WRONLY).
 > 
-> This is with gcc 5.3.1. It works fine with the kernel patch so I don't
-> _think_ it's my environment, but I could be wrong...
-> 
-> Brian
-> 
-> >  db/Makefile         |    2 -
-> >  db/init.c           |    3 +
-> >  db/ondisk.c         |   63 +++++++++++++++++++++++
-> >  db/ondisk.h         |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  libxfs/xfs_format.h |    4 +
-> >  5 files changed, 210 insertions(+), 1 deletion(-)
-> >  create mode 100644 db/ondisk.c
-> >  create mode 100644 db/ondisk.h
-> > 
-> > diff --git a/db/Makefile b/db/Makefile
-> > index 8260da3..ba3e942 100644
-> > --- a/db/Makefile
-> > +++ b/db/Makefile
-> > @@ -12,7 +12,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
-> >  	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
-> >  	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
-> >  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
-> > -	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h
-> > +	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h ondisk.h
-> >  CFILES = $(HFILES:.h=.c)
-> >  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
-> >  
-> > diff --git a/db/init.c b/db/init.c
-> > index c0472c8..d6df093 100644
-> > --- a/db/init.c
-> > +++ b/db/init.c
-> > @@ -28,6 +28,7 @@
-> >  #include "output.h"
-> >  #include "malloc.h"
-> >  #include "type.h"
-> > +#include "ondisk.h"
-> >  
-> >  static char		**cmdline;
-> >  static int		ncmdline;
-> > @@ -60,6 +61,8 @@ init(
-> >  	struct xfs_buf	*bp;
-> >  	int		c;
-> >  
-> > +	xfs_check_ondisk_structs();
-> > +
-> >  	setlocale(LC_ALL, "");
-> >  	bindtextdomain(PACKAGE, LOCALEDIR);
-> >  	textdomain(PACKAGE);
-> > diff --git a/db/ondisk.c b/db/ondisk.c
-> > new file mode 100644
-> > index 0000000..532333d
-> > --- /dev/null
-> > +++ b/db/ondisk.c
-> > @@ -0,0 +1,63 @@
-> > +/*
-> > + * Copyright (c) 2016 Oracle.
-> > + * All Rights Reserved.
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > + * modify it under the terms of the GNU General Public License as
-> > + * published by the Free Software Foundation.
-> > + *
-> > + * This program is distributed in the hope that it would be useful,
-> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > + * GNU General Public License for more details.
-> > + *
-> > + * You should have received a copy of the GNU General Public License
-> > + * along with this program; if not, write the Free Software Foundation,
-> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > + */
-> > +
-> > +#include "libxfs.h"
-> > +#include "ondisk.h"
-> > +
-> > +void
-> > +xfs_check_ondisk_structs(void)
-> > +{
-> > +	/* on-disk structures */
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
-> > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
-> > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
-> > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
-> > +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
-> > +
-> > +	/* log structures */
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
-> > +}
-> > diff --git a/db/ondisk.h b/db/ondisk.h
-> > new file mode 100644
-> > index 0000000..b5784d1
-> > --- /dev/null
-> > +++ b/db/ondisk.h
-> > @@ -0,0 +1,139 @@
-> > +/*
-> > + * Copyright (c) 2016 Oracle.
-> > + * All Rights Reserved.
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > + * modify it under the terms of the GNU General Public License as
-> > + * published by the Free Software Foundation.
-> > + *
-> > + * This program is distributed in the hope that it would be useful,
-> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > + * GNU General Public License for more details.
-> > + *
-> > + * You should have received a copy of the GNU General Public License
-> > + * along with this program; if not, write the Free Software Foundation,
-> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > + */
-> > +
-> > +#ifndef __XFS_DB_ONDISK_H
-> > +#define __XFS_DB_ONDISK_H
-> > +
-> > +/* Compile time object size, -1 for unknown */
-> > +#ifndef __compiletime_error
-> > +# define __compiletime_error(message)
-> > +/*
-> > + * Sparse complains of variable sized arrays due to the temporary variable in
-> > + * __compiletime_assert. Unfortunately we can't just expand it out to make
-> > + * sparse see a constant array size without breaking compiletime_assert on old
-> > + * versions of GCC (e.g. 4.2.4), so hide the array from sparse altogether.
-> > + */
-> > +# ifndef __CHECKER__
-> > +#  define __compiletime_error_fallback(condition) \
-> > +	do { ((void)sizeof(char[1 - 2 * condition])); } while (0)
-> > +# endif
-> > +#endif
-> > +#ifndef __compiletime_error_fallback
-> > +# define __compiletime_error_fallback(condition) do { } while (0)
-> > +#endif
-> > +
-> > +#define __compiletime_assert(condition, msg, prefix, suffix)		\
-> > +	do {								\
-> > +		bool __cond = !(condition);				\
-> > +		extern void prefix ## suffix(void) __compiletime_error(msg); \
-> > +		if (__cond)						\
-> > +			prefix ## suffix();				\
-> > +		__compiletime_error_fallback(__cond);			\
-> > +	} while (0)
-> > +
-> > +#define _compiletime_assert(condition, msg, prefix, suffix) \
-> > +	__compiletime_assert(condition, msg, prefix, suffix)
-> > +
-> > +/**
-> > + * compiletime_assert - break build and emit msg if condition is false
-> > + * @condition: a compile-time constant condition to check
-> > + * @msg:       a message to emit if condition is false
-> > + *
-> > + * In tradition of POSIX assert, this macro will break the build if the
-> > + * supplied condition is *false*, emitting the supplied error message if the
-> > + * compiler has support to do so.
-> > + */
-> > +#define compiletime_assert(condition, msg) \
-> > +	_compiletime_assert(condition, msg, __compiletime_assert_, __LINE__)
-> > +
-> > +#ifdef __CHECKER__
-> > +#define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
-> > +#define BUILD_BUG_ON_ZERO(e) (0)
-> > +#define BUILD_BUG_ON_NULL(e) ((void*)0)
-> > +#define BUILD_BUG_ON_INVALID(e) (0)
-> > +#define BUILD_BUG_ON_MSG(cond, msg) (0)
-> > +#define BUILD_BUG_ON(condition) (0)
-> > +#define BUILD_BUG() (0)
-> > +#else /* __CHECKER__ */
-> > +
-> > +/* Force a compilation error if a constant expression is not a power of 2 */
-> > +#define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
-> > +	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
-> > +
-> > +/* Force a compilation error if condition is true, but also produce a
-> > +   result (of value 0 and type size_t), so the expression can be used
-> > +   e.g. in a structure initializer (or where-ever else comma expressions
-> > +   aren't permitted). */
-> > +#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
-> > +#define BUILD_BUG_ON_NULL(e) ((void *)sizeof(struct { int:-!!(e); }))
-> > +
-> > +/*
-> > + * BUILD_BUG_ON_INVALID() permits the compiler to check the validity of the
-> > + * expression but avoids the generation of any code, even if that expression
-> > + * has side-effects.
-> > + */
-> > +#define BUILD_BUG_ON_INVALID(e) ((void)(sizeof((__force long)(e))))
-> > +
-> > +/**
-> > + * BUILD_BUG_ON_MSG - break compile if a condition is true & emit supplied
-> > + *		      error message.
-> > + * @condition: the condition which the compiler should know is false.
-> > + *
-> > + * See BUILD_BUG_ON for description.
-> > + */
-> > +#define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-> > +
-> > +/**
-> > + * BUILD_BUG_ON - break compile if a condition is true.
-> > + * @condition: the condition which the compiler should know is false.
-> > + *
-> > + * If you have some code which relies on certain constants being equal, or
-> > + * some other compile-time-evaluated condition, you should use BUILD_BUG_ON to
-> > + * detect if someone changes it.
-> > + *
-> > + * The implementation uses gcc's reluctance to create a negative array, but gcc
-> > + * (as of 4.4) only emits that error for obvious cases (e.g. not arguments to
-> > + * inline functions).  Luckily, in 4.3 they added the "error" function
-> > + * attribute just for this type of case.  Thus, we use a negative sized array
-> > + * (should always create an error on gcc versions older than 4.4) and then call
-> > + * an undefined function with the error attribute (should always create an
-> > + * error on gcc 4.3 and later).  If for some reason, neither creates a
-> > + * compile-time error, we'll still have a link-time error, which is harder to
-> > + * track down.
-> > + */
-> > +#ifndef __OPTIMIZE__
-> > +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
-> > +#else
-> > +#define BUILD_BUG_ON(condition) \
-> > +	BUILD_BUG_ON_MSG(condition, "BUILD_BUG_ON failed: " #condition)
-> > +#endif
-> > +
-> > +/**
-> > + * BUILD_BUG - break compile if used.
-> > + *
-> > + * If you have some code that you expect the compiler to eliminate at
-> > + * build time, you should use BUILD_BUG to detect if it is
-> > + * unexpectedly used.
-> > + */
-> > +#define BUILD_BUG() BUILD_BUG_ON_MSG(1, "BUILD_BUG failed")
-> > +
-> > +#endif	/* __CHECKER__ */
-> > +
-> > +void xfs_check_ondisk_structs(void);
-> > +
-> > +#endif /* __XFS_DB_ONDISK_H */
-> > diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-> > index a35009a..c4c0c1c 100644
-> > --- a/libxfs/xfs_format.h
-> > +++ b/libxfs/xfs_format.h
-> > @@ -1505,4 +1505,8 @@ struct xfs_acl {
-> >  #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
-> >  #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
-> >  
-> > +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
-> > +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
-> > +		#structname ") is wrong, expected " #size)
-> > +
-> >  #endif /* __XFS_FORMAT_H__ */
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> Those could be hoisted to the VFS (from the XFS implementation), I think.
+
+If the destination file has to already be open for writing then it can't be
+immutable.  So I don't think that error code is needed.  Checking for an active
+swapfile, on the other hand, may be valid, although I don't see such a check
+anywhere in the version of the code I'm looking at.
+
+> I'll later take a look at how many of these issues apply to clone/clone_range.
+
+clone and clone_range seem to avoid the two biggest issues I saw: they aren't
+vectorized, and there's a natural distinction between the "source" and the
+"destination" of the operation.  They definitely need careful consideration as
+well, though.
 
 _______________________________________________
 xfs mailing list
