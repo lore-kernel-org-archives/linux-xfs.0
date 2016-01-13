@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 33E917F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 02:37:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 14C768F8040
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 00:37:33 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 8B6E57F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 03:07:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E322E8F8040
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:07:38 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id QvjKaGUGNBm8iPhu (version=TLSv1
+	ESMTP id kltlrckFuF8HNBgE (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jan 2016 00:37:31 -0800 (PST)
-Date: Wed, 13 Jan 2016 09:37:29 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH] Revert "xfs: clear PF_NOFREEZE for xfsaild kthread"
-In-Reply-To: <1452661968-11482-1-git-send-email-david@fromorbit.com>
-Message-ID: <alpine.LNX.2.00.1601130931050.3402@cbobk.fhfr.pm>
-References: <1452661968-11482-1-git-send-email-david@fromorbit.com>
+	<xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:07:34 -0800 (PST)
+Date: Wed, 13 Jan 2016 10:07:34 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 1/9] dax: fix NULL pointer dereference in __dax_dbg()
+Message-ID: <20160113090734.GC14630@quack.suse.cz>
+References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1452230879-18117-2-git-send-email-ross.zwisler@linux.intel.com>
+	<20160112093458.GR6262@quack.suse.cz>
+	<20160113070829.GA30496@linux.intel.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160113070829.GA30496@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,34 +32,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Wed, 13 Jan 2016, Dave Chinner wrote:
-
-> This reverts commit 24ba16bb3d499c49974669cd8429c3e4138ab102 as it
-> prevents machines from suspending. This regression occurs when the
-> xfsaild is idle on entry to suspend, and so there s no activity to
-> wake it from it's idle sleep and hence see that it is supposed to
-> freeze. Hence the freezer times out waiting for it and suspend is
-> cancelled.
+On Wed 13-01-16 00:08:29, Ross Zwisler wrote:
+> On Tue, Jan 12, 2016 at 10:34:58AM +0100, Jan Kara wrote:
+> > On Thu 07-01-16 22:27:51, Ross Zwisler wrote:
+> > > In __dax_pmd_fault() we currently assume that get_block() will always set
+> > > bh.b_bdev and we unconditionally dereference it in __dax_dbg().  This
+> > > assumption isn't always true - when called for reads of holes
+> > > ext4_dax_mmap_get_block() returns a buffer head where bh->b_bdev is never
+> > > set.  I hit this BUG while testing the DAX PMD fault path.
+> > > 
+> > > Instead, initialize bh.b_bdev before passing bh into get_block().  It is
+> > > possible that the filesystem's get_block() will update bh.b_bdev, and this
+> > > is fine - we just want to initialize bh.b_bdev to something reasonable so
+> > > that the calls to __dax_dbg() work and print something useful.
+> > > 
+> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > Cc: Dan Williams <dan.j.williams@intel.com>
+> > 
+> > Looks good. But don't you need to do the same for __dax_fault(),
+> > dax_zero_page_range() and similar places passing bh to dax functions?
+> > 
+> > 								Honza
 > 
-> There is no obvious fix for this short of freezing the filesystem
-> properly, so revert this change for now.
+> I don't think we need it anywhere else.  The only reason that we need to
+> initialize the bh.b_bdev manually in the __dax_pmd_fault() path is that if the
+> get_block() call ends up finding a hole (so doesn't fill out b_bdev) we still
+> go through the dax_pmd_dbg() path to print an error message, which uses
+> b_bdev.  I believe that in the other paths where we hit a hole, such as
+> __dax_fault(), we don't use b_bdev because we don't have the same error path
+> prints, and the regular code for handling holes doesn't use b_bdev.
 > 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> That being said, if you feel like it's cleaner to initialize it
+> everywhere so everything is consistent and we don't have to worry about
+> it, I'm fine to make the change.
 
-I hope I'll find time in the future and make some progress on making the 
-fs freezing happen during suspend properly. Unfortunately, before that 
-happens
+Well, it seems more futureproof to me. In case someone decides to add some
+debug message later on...
 
-	Acked-by: Jiri Kosina <jkosina@suse.cz>
-
-Thanks,
-
+								Honza
 -- 
-Jiri Kosina
-SUSE Labs
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
