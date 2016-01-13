@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 603017F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:56:01 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0C88E7F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:58:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3AA8130405F
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:56:01 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DC663304062
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:58:57 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id uY4Ul60FaAiE0I4n (version=TLSv1.2
+	ESMTP id pzQhdEGUx07nc3z5 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:55:59 -0800 (PST)
-Date: Tue, 12 Jan 2016 23:55:55 -0800
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:58:56 -0800 (PST)
+Date: Tue, 12 Jan 2016 23:58:55 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] include/linux.h: Include <stdio.h> for fprintf and
-	stderr
-Message-ID: <20160113075555.GF21939@infradead.org>
+Subject: Re: [PATCH 6/6] Add configure check for members of dirent for use in
+	io/readdir.c
+Message-ID: <20160113075855.GG21939@infradead.org>
 References: <cover.1452627740.git.felix.janda@posteo.de>
-	<20160112200008.GF568@nyan>
+	<20160112200022.GG568@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160112200008.GF568@nyan>
+In-Reply-To: <20160112200022.GG568@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,12 +34,12 @@ Sender: xfs-bounces@oss.sgi.com
 To: Felix Janda <felix.janda@posteo.de>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 12, 2016 at 09:00:08PM +0100, Felix Janda wrote:
-> Signed-off-by: Felix Janda <felix.janda@posteo.de>
+I think we're having a deeper issue here.  For an LFS build we
+absolutely should have these values as the kernel dirent64 has them.
 
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Either we manage to not pull in the LFS version of readdir/getdents
+or musl is doing something inredibly stupid.  Can you investigate if
+and why we're not using the LFS getdents64 here?
 
 _______________________________________________
 xfs mailing list
