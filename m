@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 069C17F51
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 16:20:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EAB878F8059
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 14:20:35 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iEC6gy8yFw3XUiVl (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jan 2016 14:20:35 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 540E01836
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 22:20:34 +0000 (UTC)
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u0DMKWNm010894
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 17:20:34 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: remove unused function definitions
-Message-ID: <5696CDB1.3060404@redhat.com>
-Date: Wed, 13 Jan 2016 16:20:33 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9C0B27F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 16:40:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BF2F304053
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 14:40:09 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id K5cF392yordEnfh7 for <xfs@oss.sgi.com>;
+	Wed, 13 Jan 2016 14:40:07 -0800 (PST)
+Received: from Liberator.local (70-90-76-85-BusName-mn.hfc.comcastbusiness.net
+	[70.90.76.85])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 5814A60003C3
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 16:40:07 -0600 (CST)
+Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
+References: <568FEA2C.6080708@redhat.com>
+	<20160109072600.GA21636@infradead.org>
+	<20160111132617.GD6262@quack.suse.cz>
+	<5693D33A.5090307@sandeen.net> <20160111162807.GK6262@quack.suse.cz>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5696D247.30809@sandeen.net>
+Date: Wed, 13 Jan 2016 16:40:07 -0600
 MIME-Version: 1.0
+In-Reply-To: <20160111162807.GK6262@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,46 +38,73 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Old leftovers.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
 
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index b25bb9a..961e647 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -27,7 +27,6 @@ extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
- extern void	xfs_perag_put(struct xfs_perag *pag);
- extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
- 
--extern void	xfs_sb_calc_crc(struct xfs_buf *bp);
- extern void	xfs_log_sb(struct xfs_trans *tp);
- extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
- extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
-diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-index 1b6a98b..f32713f 100644
---- a/fs/xfs/xfs_fsops.h
-+++ b/fs/xfs/xfs_fsops.h
-@@ -25,6 +25,5 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
- extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
- 				xfs_fsop_resblks_t *outval);
- extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
--extern int xfs_fs_log_dummy(struct xfs_mount *mp);
- 
- #endif	/* __XFS_FSOPS_H__ */
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index b570984..a4e03ab 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -327,7 +327,6 @@ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
- 				 bool reserved);
- extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
- 
--extern int	xfs_mount_log_sb(xfs_mount_t *);
- extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
- extern int	xfs_readsb(xfs_mount_t *, int);
- extern void	xfs_freesb(xfs_mount_t *);
+On 1/11/16 10:28 AM, Jan Kara wrote:
+> On Mon 11-01-16 10:07:22, Eric Sandeen wrote:
+>> On 1/11/16 7:26 AM, Jan Kara wrote:
+>>> On Fri 08-01-16 23:26:00, Christoph Hellwig wrote:
+>>>> On Fri, Jan 08, 2016 at 10:56:12AM -0600, Eric Sandeen wrote:
+>>>>> This adds a new quotactl, Q_XGETQUOTA2.
+>>>>>
+>>>>> Q_XGETQUOTA2 is exactly like Q_XGETQUOTA, except that it will
+>>>>> return quota information for the id equal to or greater than
+>>>>> the id requested.  In other words, if the specified id has
+>>>>> no quota, the command will return quota information for the
+>>>>> next higher id which does have a quota set.  If no higher id
+>>>>> has an active quota, -ESRCH is returned.
+>>>>
+>>>> Please add a flags argument to Q_XGETQUOTA2, and then make the
+>>>> new behavior the first flag.  Keep Q_XGETQUOTA behavior for the
+>>>> flag-less case.  That way we get future etensibility for free.
+>>>
+>>> So this is what I wanted to suggest at first as well. What I somewhat
+>>> dislike is that 'addr' must now point to something like:
+>>>
+>>> struct getquota_args {
+>>> 	__u64 flags;
+>>> 	struct fs_disk_quota ret;
+>>> };
+>>
+>> Ok...
+>>
+>>> which is not as nice as passing pointer to fs_disk_quota directly. But
+>>> probably still OK. So I agree with the flags idea.
+>>
+>> I understand that flags are for future-proofing, for possibly-not-yet-imagined
+>> scenarios, but on the other hand, I wonder how many different flavors of
+>> "get me a disk quota" we really expect to have?
+>>
+>>> Another issue is that OCFS2 and ext4 with quota in hidden inodes would need
+>>> call with these capabilities as well (they have the same problem as xfs).
+>>> For reporting VFS quota we use bytes for space (since some filesystems need
+>>> it) and we don't need RT fields (easy so zero-fill) and warning fields
+>>> (there zeros may be confusing). So we would need something like struct
+>>> qc_dqblk (currently only internal) extended with ID and maybe flags field
+>>> XFS is using to return quota type which can contain all the information and
+>>> tell which info is actually valid as return structure.
+>>
+>> Hohum, yeah - I forgot that ext4 has (can have?) a hidden quota inode.
+>> And I didn't know about OCFS2.
+>>
+>> And TBH I did the xfs-specific one because it was trivial to extend, with the
+>> id already in the returned quota struct.
+>>
+>> So ok, it sounds like this needs a more significant overhaul at the vfs
+>> quota level...
+> 
+> Actually, what I want from you is just an interface which is usable for VFS
+> quotas as well since I'd like to avoid adding GETQUOTA2 quotactl shortly
+> after XGETQUOTA2 :).
+
+Actually, that's exactly what I thought would *need* to happen ... we already
+have this weird 15-year-old split-brain quota interface, so if xfs and ext4
+both need the same functionality, then we'd probably add both GETQUOTA2 and
+XGETQUOTA2.  If we were doing this all from scratch, sure, but adding a new
+handles-both-quota-types interface when every other operation is already split
+between the two almost seems to make matters worse.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
