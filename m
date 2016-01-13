@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5F3537F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 00:03:20 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 638277F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:08:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 340B78F8040
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 22:03:17 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KH9YlBk4P6Ma4eSy for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2016 22:03:10 -0800 (PST)
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH] xfs_db: check on-disk structure sizes
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20160113054730.GQ10456@dastard>
-Date: Wed, 13 Jan 2016 00:02:36 -0600
-Message-Id: <10021348-43A2-465E-BC00-E0A0882FFD22@sandeen.net>
-References: <20160111234644.GB7831@birch.djwong.org>
-	<20160112140122.GC12156@bfoster.bfoster>
-	<20160113012945.GC2455@birch.djwong.org>
-	<5695C01F.7030807@sandeen.net> <20160113054730.GQ10456@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2C0A08F8054
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:08:36 -0800 (PST)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	ROgHYDcUBaNtutUw for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2016 23:08:31 -0800 (PST)
+Date: Wed, 13 Jan 2016 00:08:29 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v8 1/9] dax: fix NULL pointer dereference in __dax_dbg()
+Message-ID: <20160113070829.GA30496@linux.intel.com>
+References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1452230879-18117-2-git-send-email-ross.zwisler@linux.intel.com>
+	<20160112093458.GR6262@quack.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160112093458.GR6262@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,56 +30,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-LOn Jan 12, 2016, at 11:47 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Tue, Jan 12, 2016 at 10:34:58AM +0100, Jan Kara wrote:
+> On Thu 07-01-16 22:27:51, Ross Zwisler wrote:
+> > In __dax_pmd_fault() we currently assume that get_block() will always set
+> > bh.b_bdev and we unconditionally dereference it in __dax_dbg().  This
+> > assumption isn't always true - when called for reads of holes
+> > ext4_dax_mmap_get_block() returns a buffer head where bh->b_bdev is never
+> > set.  I hit this BUG while testing the DAX PMD fault path.
+> > 
+> > Instead, initialize bh.b_bdev before passing bh into get_block().  It is
+> > possible that the filesystem's get_block() will update bh.b_bdev, and this
+> > is fine - we just want to initialize bh.b_bdev to something reasonable so
+> > that the calls to __dax_dbg() work and print something useful.
+> > 
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Cc: Dan Williams <dan.j.williams@intel.com>
 > 
->> On Tue, Jan 12, 2016 at 09:10:23PM -0600, Eric Sandeen wrote:
->> 
->> 
->>> On 1/12/16 7:29 PM, Darrick J. Wong wrote:
->>>> On Tue, Jan 12, 2016 at 09:01:22AM -0500, Brian Foster wrote:
->>>>> On Mon, Jan 11, 2016 at 03:46:44PM -0800, Darrick J. Wong wrote:
->>>>> Check on-disk structure sizes against known values.
->>>>> Use this to catch inadvertent changes in structure size due to padding
->>>>> and alignment issues, etc.
->>>>> 
->>>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>>>> ---
->>>> 
->>>> What's the need for this in userspace? Not a big deal really, but it
->>>> seems like it serves the fundamental purpose sufficiently in the kernel.
->>> 
->>> The primary point is to make sure that we didn't make any errors with the
->>> on-disk structures when porting libxfs changes.  The kernel build is the first
->>> line of defense since it tends to big get changes first, but I figure a
->>> defensive build check for xfsprogs won't harm anyone...
->> 
->> Does it need to actually be in the code?
->> 
->> $ pahole -s fs/xfs/xfs.ko | grep -w "xfs_dsb\|xfs_agf\|xfs_agi\|xfs_agfl"
->> xfs_agf    224    0
->> xfs_agfl    40    0
->> xfs_agi    336    0
->> xfs_dsb    264    0
->> 
->> pahole needs a binary w/ debuginfo, but maybe this could just be hooked up
->> in the Makefiles?
+> Looks good. But don't you need to do the same for __dax_fault(),
+> dax_zero_page_range() and similar places passing bh to dax functions?
 > 
-> As I've pointed out previously to Darrick: xfstests:/tests/xfs/122
-> 
-> Make that build again, update it.
-> 
-Oh, I went looking for that and missed it somehow, thought it had been removed.   Ok then!
+> 								Honza
 
--Eric
+I don't think we need it anywhere else.  The only reason that we need to
+initialize the bh.b_bdev manually in the __dax_pmd_fault() path is that if the
+get_block() call ends up finding a hole (so doesn't fill out b_bdev) we still
+go through the dax_pmd_dbg() path to print an error message, which uses
+b_bdev.  I believe that in the other paths where we hit a hole, such as
+__dax_fault(), we don't use b_bdev because we don't have the same error path
+prints, and the regular code for handling holes doesn't use b_bdev.
 
-> -Dave.
+That being said, if you feel like it's cleaner to initialize it everywhere so
+everything is consistent and we don't have to worry about it, I'm fine to make
+the change.
+
+> > ---
+> >  fs/dax.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/fs/dax.c b/fs/dax.c
+> > index 7af8797..513bba5 100644
+> > --- a/fs/dax.c
+> > +++ b/fs/dax.c
+> > @@ -624,6 +624,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+> >  	}
+> >  
+> >  	memset(&bh, 0, sizeof(bh));
+> > +	bh.b_bdev = inode->i_sb->s_bdev;
+> >  	block = (sector_t)pgoff << (PAGE_SHIFT - blkbits);
+> >  
+> >  	bh.b_size = PMD_SIZE;
+> > -- 
+> > 2.5.0
+> > 
+> > 
 > -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
