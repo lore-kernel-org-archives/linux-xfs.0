@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 874457F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:37:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5438A8F8040
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:37:20 -0800 (PST)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id fqKlGNFweetyZlgw for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:37:18 -0800 (PST)
-Date: Wed, 13 Jan 2016 00:37:16 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v8 2/9] dax: fix conversion of holes to PMDs
-Message-ID: <20160113073716.GC30496@linux.intel.com>
-References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452230879-18117-3-git-send-email-ross.zwisler@linux.intel.com>
-	<20160112094451.GS6262@quack.suse.cz>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 04B137F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 01:46:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E6AB630405F
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:46:43 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id bIc3SqUI3NbKzoLg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 23:46:42 -0800 (PST)
+Date: Tue, 12 Jan 2016 23:46:40 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_db: check on-disk structure sizes
+Message-ID: <20160113074640.GA21939@infradead.org>
+References: <20160111234644.GB7831@birch.djwong.org>
+	<20160112140122.GC12156@bfoster.bfoster>
+	<20160113012945.GC2455@birch.djwong.org>
+	<5695C01F.7030807@sandeen.net> <20160113054730.GQ10456@dastard>
+	<10021348-43A2-465E-BC00-E0A0882FFD22@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160112094451.GS6262@quack.suse.cz>
+In-Reply-To: <10021348-43A2-465E-BC00-E0A0882FFD22@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +33,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jan 12, 2016 at 10:44:51AM +0100, Jan Kara wrote:
-> On Thu 07-01-16 22:27:52, Ross Zwisler wrote:
-> > When we get a DAX PMD fault for a write it is possible that there could be
-> > some number of 4k zero pages already present for the same range that were
-> > inserted to service reads from a hole.  These 4k zero pages need to be
-> > unmapped from the VMAs and removed from the struct address_space radix tree
-> > before the real DAX PMD entry can be inserted.
+On Wed, Jan 13, 2016 at 12:02:36AM -0600, Eric Sandeen wrote:
+> > As I've pointed out previously to Darrick: xfstests:/tests/xfs/122
 > > 
-> > For PTE faults this same use case also exists and is handled by a
-> > combination of unmap_mapping_range() to unmap the VMAs and
-> > delete_from_page_cache() to remove the page from the address_space radix
-> > tree.
+> > Make that build again, update it.
 > > 
-> > For PMD faults we do have a call to unmap_mapping_range() (protected by a
-> > buffer_new() check), but nothing clears out the radix tree entry.  The
-> > buffer_new() check is also incorrect as the current ext4 and XFS filesystem
-> > code will never return a buffer_head with BH_New set, even when allocating
-> > new blocks over a hole.  Instead the filesystem will zero the blocks
-> > manually and return a buffer_head with only BH_Mapped set.
-> > 
-> > Fix this situation by removing the buffer_new() check and adding a call to
-> > truncate_inode_pages_range() to clear out the radix tree entries before we
-> > insert the DAX PMD.
-> > 
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > Reported-by: Dan Williams <dan.j.williams@intel.com>
-> > Tested-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> Just two nits below. Nothing serious so you can add:
-> 
-> Reviewed-by: Jan Kara <jack@suse.cz>
+> Oh, I went looking for that and missed it somehow, thought it had been removed.   Ok then!
 
-Cool, thank you for the review!
+The real issue is that build environment change alignments.  32 vs 64
+bit builds are obvious, but on some architectures different ABIs have
+different alignments (we had some fun with ARM in that regard),
+nevermind the equivalents to IRIX n32 popping up everywhere these days
+that make things complicated.
 
-> > ---
-> >  fs/dax.c | 20 ++++++++++----------
-> >  1 file changed, 10 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index 513bba5..5b84a46 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -589,6 +589,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
-> >  	bool write = flags & FAULT_FLAG_WRITE;
-> >  	struct block_device *bdev;
-> >  	pgoff_t size, pgoff;
-> > +	loff_t lstart, lend;
-> >  	sector_t block;
-> >  	int result = 0;
-> >  
-> > @@ -643,15 +644,13 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
-> >  		goto fallback;
-> >  	}
-> >  
-> > -	/*
-> > -	 * If we allocated new storage, make sure no process has any
-> > -	 * zero pages covering this hole
-> > -	 */
-> > -	if (buffer_new(&bh)) {
-> > -		i_mmap_unlock_read(mapping);
-> > -		unmap_mapping_range(mapping, pgoff << PAGE_SHIFT, PMD_SIZE, 0);
-> > -		i_mmap_lock_read(mapping);
-> > -	}
-> > +	/* make sure no process has any zero pages covering this hole */
-> > +	lstart = pgoff << PAGE_SHIFT;
-> > +	lend = lstart + PMD_SIZE - 1; /* inclusive */
-> > +	i_mmap_unlock_read(mapping);
-> 
-> Just a nit but is there reason why we grab i_mmap_lock_read(mapping) only
-> to release it a few lines below? The bh checks inside the locked region
-> don't seem to rely on i_mmap_lock...
-
-I think we can probably just take it when we're done with the truncate() -
-I'll fix for v9.
-
-> > +	unmap_mapping_range(mapping, lstart, PMD_SIZE, 0);
-> > +	truncate_inode_pages_range(mapping, lstart, lend);
-> 
-> These two calls can be shortened as:
-> 
-> truncate_pagecache_range(inode, lstart, lend);
-
-Nice.  I'll change it for v9.
+I'd really love to have Darrick's check in xfs_format.h as an opt-in
+if a build time assert is provided - that way every user can check it
+doesn't screw up the structures.
 
 _______________________________________________
 xfs mailing list
