@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BB7167F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 18:04:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AAD36304053
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 16:04:06 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 550F37F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 22:12:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2671630405F
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 20:12:36 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	XzUFfA0EkpErDdkl for <xfs@oss.sgi.com>;
-	Wed, 13 Jan 2016 16:04:02 -0800 (PST)
+	KZPDuer0TjzUG3N6 for <xfs@oss.sgi.com>;
+	Wed, 13 Jan 2016 20:12:32 -0800 (PST)
+Date: Thu, 14 Jan 2016 15:11:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs_quota: allow operation on foreign filesystem types
-Date: Thu, 14 Jan 2016 11:03:08 +1100
-Message-Id: <1452729788-5396-1-git-send-email-david@fromorbit.com>
+Subject: [GIT PULL] xfs: updates for 4.5-rc1
+Message-ID: <20160114041123.GS10456@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,247 +23,148 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Linus,
 
-This allows xfs_quota to be used on ext4 for project quota testing
-in xfstests.
+Can you please pull the XFS update from the location below? There's
+not a lot in this - the main addition is the CRC validation of the
+entire region of the log that the will be recovered, along with
+several log recovery fixes. Most of the rest is small bug fixes and
+cleanups.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- include/command.h |  3 ++-
- include/path.h    |  1 +
- io/init.h         |  2 +-
- libxcmd/paths.c   |  7 +++----
- quota/free.c      |  1 +
- quota/init.c      | 16 ++++++++++++++++
- quota/path.c      |  5 +++--
- quota/project.c   |  1 +
- quota/quota.c     |  1 +
- quota/report.c    |  2 ++
- quota/state.c     |  2 ++
- 11 files changed, 33 insertions(+), 8 deletions(-)
+I have 3 bug fixes still pending, all that address recently
+fixed regressions that I will send to next week after they've had
+some time in for-next.
 
-diff --git a/include/command.h b/include/command.h
-index 7b9fc28..81d5a4d 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -20,7 +20,8 @@
- 
- #include <sys/time.h>
- 
--#define CMD_FLAG_GLOBAL	((int)0x80000000)	/* don't iterate "args" */
-+#define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
-+#define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
- 
- typedef int (*cfunc_t)(int argc, char **argv);
- typedef void (*helpfunc_t)(void);
-diff --git a/include/path.h b/include/path.h
-index 46a887e..39c1a95 100644
---- a/include/path.h
-+++ b/include/path.h
-@@ -29,6 +29,7 @@
- 
- #define FS_MOUNT_POINT	(1<<0)
- #define FS_PROJECT_PATH	(1<<1)
-+#define FS_FOREIGN	(1<<2)
- 
- typedef struct fs_path {
- 	char		*fs_name;	/* Data device for filesystem 	*/
-diff --git a/io/init.h b/io/init.h
-index d773b1b..bb25242 100644
---- a/io/init.h
-+++ b/io/init.h
-@@ -18,7 +18,7 @@
- 
- #define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
- #define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
--#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
-+#define CMD_FOREIGN_OK	CMD_FLAG_FOREIGN_OK
- 
- extern char	*progname;
- extern int	exitcode;
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 71af25f..7c8c673 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -113,6 +113,9 @@ fs_table_insert(
- 			goto out_nodev;
- 	}
- 
-+	if (!platform_test_xfs_path(dir))
-+		flags |= FS_FOREIGN;
-+
- 	/*
- 	 * Make copies of the directory and data device path.
- 	 * The log device and real-time device, if non-null,
-@@ -301,8 +304,6 @@ fs_table_initialise_mounts(
- 			return errno;
- 
- 	while ((mnt = getmntent(mtp)) != NULL) {
--		if (strcmp(mnt->mnt_type, "xfs") != 0)
--			continue;
- 		if (!realpath(mnt->mnt_dir, rmnt_dir))
- 			continue;
- 		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
-@@ -360,8 +361,6 @@ fs_table_initialise_mounts(
- 			return errno;
- 
- 	for (i = 0; i < count; i++) {
--		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
--			continue;
- 		if (!realpath(stats[i].f_mntfromname, rmntfromname))
- 			continue;
- 		if (!realpath(stats[i].f_mntonname, rmntonname))
-diff --git a/quota/free.c b/quota/free.c
-index dcbe8ce..c7a1ec5 100644
---- a/quota/free.c
-+++ b/quota/free.c
-@@ -371,6 +371,7 @@ free_init(void)
- 	free_cmd.args = _("[-bir] [-hn] [-f file]");
- 	free_cmd.oneline = _("show free and used counts for blocks and inodes");
- 	free_cmd.help = free_help;
-+	free_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	add_command(&free_cmd);
- }
-diff --git a/quota/init.c b/quota/init.c
-index 52f7941..f1d3328 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -92,6 +92,21 @@ init_args_command(
- 	return index;
- }
- 
-+static int
-+init_check_command(
-+	const cmdinfo_t	*ct)
-+{
-+	if (fs_path &&
-+	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
-+	     (fs_path->fs_flags & FS_FOREIGN)) {
-+		fprintf(stderr,
-+	_("foreign mount active, %s command is for XFS filesystems only\n"),
-+			ct->name);
-+		return 0;
-+	}
-+	return 1;
-+}
-+
- static void
- init(
- 	int		argc,
-@@ -140,6 +155,7 @@ init(
- 
- 	init_commands();
- 	add_args_command(init_args_command);
-+	add_check_command(init_check_command);
- 
- 	/*
- 	 * Ensure that global commands don't end up with an invalid path pointer
-diff --git a/quota/path.c b/quota/path.c
-index bdb8c98..a623d25 100644
---- a/quota/path.c
-+++ b/quota/path.c
-@@ -42,6 +42,7 @@ printpath(
- 	if (number) {
- 		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
- 	}
-+	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
- 	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
- 	if (path->fs_flags & FS_PROJECT_PATH) {
- 		prj = getprprid(path->fs_prid);
-@@ -127,7 +128,7 @@ path_init(void)
- 	path_cmd.cfunc = path_f;
- 	path_cmd.argmin = 0;
- 	path_cmd.argmax = 1;
--	path_cmd.flags = CMD_FLAG_GLOBAL;
-+	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
- 	path_cmd.oneline = _("set current path, or show the list of paths");
- 
- 	print_cmd.name = "print";
-@@ -135,7 +136,7 @@ path_init(void)
- 	print_cmd.cfunc = print_f;
- 	print_cmd.argmin = 0;
- 	print_cmd.argmax = 0;
--	print_cmd.flags = CMD_FLAG_GLOBAL;
-+	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
- 	print_cmd.oneline = _("list known mount points and projects");
- 
- 	if (expert)
-diff --git a/quota/project.c b/quota/project.c
-index 17a83b0..79a0a8e 100644
---- a/quota/project.c
-+++ b/quota/project.c
-@@ -355,6 +355,7 @@ project_init(void)
- 	project_cmd.argmax = -1;
- 	project_cmd.oneline = _("check, setup or clear project quota trees");
- 	project_cmd.help = project_help;
-+	project_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	if (expert)
- 		add_command(&project_cmd);
-diff --git a/quota/quota.c b/quota/quota.c
-index f6b24c3..555ffd7 100644
---- a/quota/quota.c
-+++ b/quota/quota.c
-@@ -464,6 +464,7 @@ quota_init(void)
- 	quota_cmd.args = _("[-bir] [-gpu] [-hnNv] [-f file] [id|name]...");
- 	quota_cmd.oneline = _("show usage and limits");
- 	quota_cmd.help = quota_help;
-+	quota_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	add_command(&quota_cmd);
- }
-diff --git a/quota/report.c b/quota/report.c
-index c77b24f..eaf3a67 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -658,6 +658,7 @@ report_init(void)
- 	dump_cmd.args = _("[-gpu] [-f file]");
- 	dump_cmd.oneline = _("dump quota information for backup utilities");
- 	dump_cmd.help = dump_help;
-+	dump_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	report_cmd.name = "report";
- 	report_cmd.altname = "repquota";
-@@ -668,6 +669,7 @@ report_init(void)
- 	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
- 	report_cmd.oneline = _("report filesystem quota information");
- 	report_cmd.help = report_help;
-+	report_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	if (expert) {
- 		add_command(&dump_cmd);
-diff --git a/quota/state.c b/quota/state.c
-index 8186762..9d24d74 100644
---- a/quota/state.c
-+++ b/quota/state.c
-@@ -527,6 +527,7 @@ state_init(void)
- 	off_cmd.args = _("[-gpu] [-v]");
- 	off_cmd.oneline = _("permanently switch quota off for a path");
- 	off_cmd.help = off_help;
-+	off_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	state_cmd.name = "state";
- 	state_cmd.cfunc = state_f;
-@@ -535,6 +536,7 @@ state_init(void)
- 	state_cmd.args = _("[-gpu] [-a] [-v] [-f file]");
- 	state_cmd.oneline = _("get overall quota state information");
- 	state_cmd.help = state_help;
-+	state_cmd.flags = CMD_FLAG_FOREIGN_OK;
- 
- 	enable_cmd.name = "enable";
- 	enable_cmd.cfunc = enable_f;
+-Dave.
+
+The following changes since commit 168309855a7d1e16db751e9c647119fe2d2dc878:
+
+  Linux 4.4-rc8 (2016-01-03 15:15:37 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.5
+
+for you to fetch changes up to dde7f55bd000696acc38296c21241971e1840142:
+
+  Merge branch 'xfs-misc-fixes-for-4.5-2' into for-next (2016-01-12 07:04:30 +1100)
+
+----------------------------------------------------------------
+
+xfs: updates for 4.5-rc1
+
+This update contains:
+o extensive CRC validation during log recovery
+o several log recovery bug fixes
+o Various DAX support fixes
+o AGFL size calculation fix
+o various cleanups in preparation for new functionality
+o project quota ENOSPC notification via netlink
+o tracing and debug improvements
+
+----------------------------------------------------------------
+Alexander Kuleshov (1):
+      xfs: make xfs_buf_ioend_async() static
+
+Brian Foster (8):
+      xfs: detect and handle invalid iclog size set by mkfs
+      xfs: refactor log record unpack and data processing
+      xfs: refactor and open code log record crc check
+      xfs: return start block of first bad log record during recovery
+      xfs: support a crc verification only log record pass
+      xfs: refactor log record start detection into a new helper
+      xfs: detect and trim torn writes during log recovery
+      xfs: debug mode log record crc error injection
+
+Darrick J. Wong (5):
+      libxfs: make xfs_alloc_fix_freelist non-static
+      xfs: fix log ticket type printing
+      libxfs: use a convenience variable instead of open-coding the fork
+      libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
+      libxfs: refactor short btree block verification
+
+Dave Chinner (9):
+      xfs: Don't use reserved blocks for data blocks with DAX
+      xfs: fix recursive splice read locking with DAX
+      Merge branch 'xfs-misc-fixes-for-4.5' into for-next
+      Merge branch 'xfs-dax-fixes-for-4.5' into for-next
+      xfs: add tracepoints to readpage calls
+      xfs: bmapbt checking on debug kernels too expensive
+      xfs: inode recovery readahead can race with inode buffer creation
+      xfs: handle dquot buffer readahead in log recovery correctly
+      Merge branch 'xfs-misc-fixes-for-4.5-2' into for-next
+
+Eric Sandeen (3):
+      xfs: print name of verifier if it fails
+      xfs: get mp from bma->ip in xfs_bmap code
+      xfs: eliminate committed arg from xfs_bmap_finish
+
+Jia He (1):
+      libxfs: Optimize the loop for xfs_bitmap_empty
+
+Markus Elfring (1):
+      XFS: Use a signed return type for suffix_kstrtoint()
+
+Masatake YAMATO (1):
+      xfs: send warning of project quota to userspace via netlink
+
+ fs/xfs/libxfs/xfs_alloc.c          |    4 +-
+ fs/xfs/libxfs/xfs_alloc.h          |    1 +
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   35 +--
+ fs/xfs/libxfs/xfs_attr.c           |  141 ++-------
+ fs/xfs/libxfs/xfs_attr_leaf.c      |    1 +
+ fs/xfs/libxfs/xfs_attr_remote.c    |   32 +-
+ fs/xfs/libxfs/xfs_bit.c            |    6 +-
+ fs/xfs/libxfs/xfs_bmap.c           |   43 +--
+ fs/xfs/libxfs/xfs_bmap.h           |    2 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    1 +
+ fs/xfs/libxfs/xfs_btree.c          |   58 ++++
+ fs/xfs/libxfs/xfs_btree.h          |    3 +
+ fs/xfs/libxfs/xfs_da_btree.c       |    1 +
+ fs/xfs/libxfs/xfs_dir2_block.c     |    1 +
+ fs/xfs/libxfs/xfs_dir2_data.c      |    2 +
+ fs/xfs/libxfs/xfs_dir2_leaf.c      |    2 +
+ fs/xfs/libxfs/xfs_dir2_node.c      |    1 +
+ fs/xfs/libxfs/xfs_dquot_buf.c      |   37 ++-
+ fs/xfs/libxfs/xfs_format.h         |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.c         |    1 +
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   27 +-
+ fs/xfs/libxfs/xfs_inode_buf.c      |   16 +-
+ fs/xfs/libxfs/xfs_log_recover.h    |    1 +
+ fs/xfs/libxfs/xfs_quota_defs.h     |    2 +-
+ fs/xfs/libxfs/xfs_sb.c             |    2 +
+ fs/xfs/libxfs/xfs_shared.h         |    1 +
+ fs/xfs/libxfs/xfs_symlink_remote.c |    1 +
+ fs/xfs/xfs_aops.c                  |    2 +
+ fs/xfs/xfs_bmap_util.c             |   43 +--
+ fs/xfs/xfs_buf.c                   |    9 +-
+ fs/xfs/xfs_buf.h                   |    1 +
+ fs/xfs/xfs_dquot.c                 |   13 +-
+ fs/xfs/xfs_error.c                 |    4 +-
+ fs/xfs/xfs_file.c                  |   25 +-
+ fs/xfs/xfs_inode.c                 |   25 +-
+ fs/xfs/xfs_iomap.c                 |   21 +-
+ fs/xfs/xfs_log.c                   |   51 +++-
+ fs/xfs/xfs_log_priv.h              |    3 +
+ fs/xfs/xfs_log_recover.c           |  581 +++++++++++++++++++++++++++++-------
+ fs/xfs/xfs_rtalloc.c               |    3 +-
+ fs/xfs/xfs_super.c                 |    2 +-
+ fs/xfs/xfs_symlink.c               |   12 +-
+ fs/xfs/xfs_sysfs.c                 |   36 +++
+ fs/xfs/xfs_trace.h                 |   26 ++
+ fs/xfs/xfs_trans_dquot.c           |   14 +-
+ 45 files changed, 852 insertions(+), 443 deletions(-)
+
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
