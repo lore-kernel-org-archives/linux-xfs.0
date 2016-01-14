@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 67C757F37
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 16:41:00 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id BB7167F37
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 18:04:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5607A304053
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 14:41:00 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id hBXTzHnBfP6NLy9p for <xfs@oss.sgi.com>;
-	Wed, 13 Jan 2016 14:40:59 -0800 (PST)
-Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
-References: <568FEA2C.6080708@redhat.com>
-	<20160109072600.GA21636@infradead.org>
-	<20160111132617.GD6262@quack.suse.cz>
-	<5693D33A.5090307@sandeen.net> <20160111162807.GK6262@quack.suse.cz>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5696D27A.9070700@sandeen.net>
-Date: Wed, 13 Jan 2016 16:40:58 -0600
-MIME-Version: 1.0
-In-Reply-To: <20160111162807.GK6262@quack.suse.cz>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AAD36304053
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2016 16:04:06 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	XzUFfA0EkpErDdkl for <xfs@oss.sgi.com>;
+	Wed, 13 Jan 2016 16:04:02 -0800 (PST)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs_quota: allow operation on foreign filesystem types
+Date: Thu, 14 Jan 2016 11:03:08 +1100
+Message-Id: <1452729788-5396-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,80 +21,247 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org
 
+From: Dave Chinner <dchinner@redhat.com>
 
+This allows xfs_quota to be used on ext4 for project quota testing
+in xfstests.
 
-On 1/11/16 10:28 AM, Jan Kara wrote:
-> On Mon 11-01-16 10:07:22, Eric Sandeen wrote:
->> On 1/11/16 7:26 AM, Jan Kara wrote:
->>> On Fri 08-01-16 23:26:00, Christoph Hellwig wrote:
->>>> On Fri, Jan 08, 2016 at 10:56:12AM -0600, Eric Sandeen wrote:
->>>>> This adds a new quotactl, Q_XGETQUOTA2.
->>>>>
->>>>> Q_XGETQUOTA2 is exactly like Q_XGETQUOTA, except that it will
->>>>> return quota information for the id equal to or greater than
->>>>> the id requested.  In other words, if the specified id has
->>>>> no quota, the command will return quota information for the
->>>>> next higher id which does have a quota set.  If no higher id
->>>>> has an active quota, -ESRCH is returned.
->>>>
->>>> Please add a flags argument to Q_XGETQUOTA2, and then make the
->>>> new behavior the first flag.  Keep Q_XGETQUOTA behavior for the
->>>> flag-less case.  That way we get future etensibility for free.
->>>
->>> So this is what I wanted to suggest at first as well. What I somewhat
->>> dislike is that 'addr' must now point to something like:
->>>
->>> struct getquota_args {
->>> 	__u64 flags;
->>> 	struct fs_disk_quota ret;
->>> };
->>
->> Ok...
->>
->>> which is not as nice as passing pointer to fs_disk_quota directly. But
->>> probably still OK. So I agree with the flags idea.
->>
->> I understand that flags are for future-proofing, for possibly-not-yet-imagined
->> scenarios, but on the other hand, I wonder how many different flavors of
->> "get me a disk quota" we really expect to have?
->>
->>> Another issue is that OCFS2 and ext4 with quota in hidden inodes would need
->>> call with these capabilities as well (they have the same problem as xfs).
->>> For reporting VFS quota we use bytes for space (since some filesystems need
->>> it) and we don't need RT fields (easy so zero-fill) and warning fields
->>> (there zeros may be confusing). So we would need something like struct
->>> qc_dqblk (currently only internal) extended with ID and maybe flags field
->>> XFS is using to return quota type which can contain all the information and
->>> tell which info is actually valid as return structure.
->>
->> Hohum, yeah - I forgot that ext4 has (can have?) a hidden quota inode.
->> And I didn't know about OCFS2.
->>
->> And TBH I did the xfs-specific one because it was trivial to extend, with the
->> id already in the returned quota struct.
->>
->> So ok, it sounds like this needs a more significant overhaul at the vfs
->> quota level...
-> 
-> Actually, what I want from you is just an interface which is usable for VFS
-> quotas as well since I'd like to avoid adding GETQUOTA2 quotactl shortly
-> after XGETQUOTA2 :).
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/command.h |  3 ++-
+ include/path.h    |  1 +
+ io/init.h         |  2 +-
+ libxcmd/paths.c   |  7 +++----
+ quota/free.c      |  1 +
+ quota/init.c      | 16 ++++++++++++++++
+ quota/path.c      |  5 +++--
+ quota/project.c   |  1 +
+ quota/quota.c     |  1 +
+ quota/report.c    |  2 ++
+ quota/state.c     |  2 ++
+ 11 files changed, 33 insertions(+), 8 deletions(-)
 
-Actually, that's exactly what I thought would *need* to happen ... we already
-have this weird 15-year-old split-brain quota interface, so if xfs and ext4
-both need the same functionality, then we'd probably add both GETQUOTA2 and
-XGETQUOTA2.  If we were doing this all from scratch, sure, but adding a new
-handles-both-quota-types interface when every other operation is already split
-between the two almost seems to make matters worse.
-
--Eric
+diff --git a/include/command.h b/include/command.h
+index 7b9fc28..81d5a4d 100644
+--- a/include/command.h
++++ b/include/command.h
+@@ -20,7 +20,8 @@
+ 
+ #include <sys/time.h>
+ 
+-#define CMD_FLAG_GLOBAL	((int)0x80000000)	/* don't iterate "args" */
++#define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
++#define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+ 
+ typedef int (*cfunc_t)(int argc, char **argv);
+ typedef void (*helpfunc_t)(void);
+diff --git a/include/path.h b/include/path.h
+index 46a887e..39c1a95 100644
+--- a/include/path.h
++++ b/include/path.h
+@@ -29,6 +29,7 @@
+ 
+ #define FS_MOUNT_POINT	(1<<0)
+ #define FS_PROJECT_PATH	(1<<1)
++#define FS_FOREIGN	(1<<2)
+ 
+ typedef struct fs_path {
+ 	char		*fs_name;	/* Data device for filesystem 	*/
+diff --git a/io/init.h b/io/init.h
+index d773b1b..bb25242 100644
+--- a/io/init.h
++++ b/io/init.h
+@@ -18,7 +18,7 @@
+ 
+ #define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
+ #define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
+-#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
++#define CMD_FOREIGN_OK	CMD_FLAG_FOREIGN_OK
+ 
+ extern char	*progname;
+ extern int	exitcode;
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 71af25f..7c8c673 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -113,6 +113,9 @@ fs_table_insert(
+ 			goto out_nodev;
+ 	}
+ 
++	if (!platform_test_xfs_path(dir))
++		flags |= FS_FOREIGN;
++
+ 	/*
+ 	 * Make copies of the directory and data device path.
+ 	 * The log device and real-time device, if non-null,
+@@ -301,8 +304,6 @@ fs_table_initialise_mounts(
+ 			return errno;
+ 
+ 	while ((mnt = getmntent(mtp)) != NULL) {
+-		if (strcmp(mnt->mnt_type, "xfs") != 0)
+-			continue;
+ 		if (!realpath(mnt->mnt_dir, rmnt_dir))
+ 			continue;
+ 		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
+@@ -360,8 +361,6 @@ fs_table_initialise_mounts(
+ 			return errno;
+ 
+ 	for (i = 0; i < count; i++) {
+-		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
+-			continue;
+ 		if (!realpath(stats[i].f_mntfromname, rmntfromname))
+ 			continue;
+ 		if (!realpath(stats[i].f_mntonname, rmntonname))
+diff --git a/quota/free.c b/quota/free.c
+index dcbe8ce..c7a1ec5 100644
+--- a/quota/free.c
++++ b/quota/free.c
+@@ -371,6 +371,7 @@ free_init(void)
+ 	free_cmd.args = _("[-bir] [-hn] [-f file]");
+ 	free_cmd.oneline = _("show free and used counts for blocks and inodes");
+ 	free_cmd.help = free_help;
++	free_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	add_command(&free_cmd);
+ }
+diff --git a/quota/init.c b/quota/init.c
+index 52f7941..f1d3328 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -92,6 +92,21 @@ init_args_command(
+ 	return index;
+ }
+ 
++static int
++init_check_command(
++	const cmdinfo_t	*ct)
++{
++	if (fs_path &&
++	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
++	     (fs_path->fs_flags & FS_FOREIGN)) {
++		fprintf(stderr,
++	_("foreign mount active, %s command is for XFS filesystems only\n"),
++			ct->name);
++		return 0;
++	}
++	return 1;
++}
++
+ static void
+ init(
+ 	int		argc,
+@@ -140,6 +155,7 @@ init(
+ 
+ 	init_commands();
+ 	add_args_command(init_args_command);
++	add_check_command(init_check_command);
+ 
+ 	/*
+ 	 * Ensure that global commands don't end up with an invalid path pointer
+diff --git a/quota/path.c b/quota/path.c
+index bdb8c98..a623d25 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -42,6 +42,7 @@ printpath(
+ 	if (number) {
+ 		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+ 	}
++	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
+ 	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+ 	if (path->fs_flags & FS_PROJECT_PATH) {
+ 		prj = getprprid(path->fs_prid);
+@@ -127,7 +128,7 @@ path_init(void)
+ 	path_cmd.cfunc = path_f;
+ 	path_cmd.argmin = 0;
+ 	path_cmd.argmax = 1;
+-	path_cmd.flags = CMD_FLAG_GLOBAL;
++	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 	path_cmd.oneline = _("set current path, or show the list of paths");
+ 
+ 	print_cmd.name = "print";
+@@ -135,7 +136,7 @@ path_init(void)
+ 	print_cmd.cfunc = print_f;
+ 	print_cmd.argmin = 0;
+ 	print_cmd.argmax = 0;
+-	print_cmd.flags = CMD_FLAG_GLOBAL;
++	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 	print_cmd.oneline = _("list known mount points and projects");
+ 
+ 	if (expert)
+diff --git a/quota/project.c b/quota/project.c
+index 17a83b0..79a0a8e 100644
+--- a/quota/project.c
++++ b/quota/project.c
+@@ -355,6 +355,7 @@ project_init(void)
+ 	project_cmd.argmax = -1;
+ 	project_cmd.oneline = _("check, setup or clear project quota trees");
+ 	project_cmd.help = project_help;
++	project_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	if (expert)
+ 		add_command(&project_cmd);
+diff --git a/quota/quota.c b/quota/quota.c
+index f6b24c3..555ffd7 100644
+--- a/quota/quota.c
++++ b/quota/quota.c
+@@ -464,6 +464,7 @@ quota_init(void)
+ 	quota_cmd.args = _("[-bir] [-gpu] [-hnNv] [-f file] [id|name]...");
+ 	quota_cmd.oneline = _("show usage and limits");
+ 	quota_cmd.help = quota_help;
++	quota_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	add_command(&quota_cmd);
+ }
+diff --git a/quota/report.c b/quota/report.c
+index c77b24f..eaf3a67 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -658,6 +658,7 @@ report_init(void)
+ 	dump_cmd.args = _("[-gpu] [-f file]");
+ 	dump_cmd.oneline = _("dump quota information for backup utilities");
+ 	dump_cmd.help = dump_help;
++	dump_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	report_cmd.name = "report";
+ 	report_cmd.altname = "repquota";
+@@ -668,6 +669,7 @@ report_init(void)
+ 	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
+ 	report_cmd.oneline = _("report filesystem quota information");
+ 	report_cmd.help = report_help;
++	report_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	if (expert) {
+ 		add_command(&dump_cmd);
+diff --git a/quota/state.c b/quota/state.c
+index 8186762..9d24d74 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -527,6 +527,7 @@ state_init(void)
+ 	off_cmd.args = _("[-gpu] [-v]");
+ 	off_cmd.oneline = _("permanently switch quota off for a path");
+ 	off_cmd.help = off_help;
++	off_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	state_cmd.name = "state";
+ 	state_cmd.cfunc = state_f;
+@@ -535,6 +536,7 @@ state_init(void)
+ 	state_cmd.args = _("[-gpu] [-a] [-v] [-f file]");
+ 	state_cmd.oneline = _("get overall quota state information");
+ 	state_cmd.help = state_help;
++	state_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	enable_cmd.name = "enable";
+ 	enable_cmd.cfunc = enable_f;
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
