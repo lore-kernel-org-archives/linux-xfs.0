@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 149E67F47
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 10:47:49 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0258E7F47
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 11:32:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D90A8304053
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 08:47:45 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D820D8F8040
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 09:32:19 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AYecKTFtZXERxCR4 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id lYrmHsHFGLEMK4qo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Jan 2016 08:47:44 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id E5F2FA0792
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2016 16:47:43 +0000 (UTC)
-Date: Thu, 14 Jan 2016 17:47:40 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] libxfs: don't pass negative errnos to strerror()
-Message-ID: <20160114164740.GA20151@redhat.com>
-References: <5697CE69.3050905@redhat.com>
+	<xfs@oss.sgi.com>; Thu, 14 Jan 2016 09:32:18 -0800 (PST)
+Date: Thu, 14 Jan 2016 12:32:16 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: handle errors from ->free_blocks in
+	xfs_btree_kill_iroot
+Message-ID: <20160114173214.GA11448@bfoster.bfoster>
+References: <1452707454-15229-1-git-send-email-hch@lst.de>
+	<1452707454-15229-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5697CE69.3050905@redhat.com>
+In-Reply-To: <1452707454-15229-2-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,70 +31,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-This looks good to me, and simple enough.
-
-consider it
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-On Thu, Jan 14, 2016 at 10:35:53AM -0600, Eric Sandeen wrote:
-> The error negation work in 12b5319 tripped up a little bit
-> when we're reporting errors via strerror().  By negating
-> the error before passing it to strerror, we get i.e.
-> 
->    mkfs.xfs: pwrite64 failed: Unknown error -22
-> 
-> Keep the error positive, but return -error, just as we
-> do in the else clauses in these functions.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Wed, Jan 13, 2016 at 06:50:52PM +0100, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_btree.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 7a04985..7b23394 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -913,12 +913,12 @@ __read_buf(int fd, void *buf, int len, off64_t offset, int flags)
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index a0eb18c..3143577 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -3209,6 +3209,7 @@ xfs_btree_kill_iroot(
+>  	int			level;
+>  	int			index;
+>  	int			numrecs;
+> +	int			error;
+>  #ifdef DEBUG
+>  	union xfs_btree_ptr	ptr;
+>  	int			i;
+> @@ -3272,8 +3273,6 @@ xfs_btree_kill_iroot(
+>  	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
+>  #ifdef DEBUG
+>  	for (i = 0; i < numrecs; i++) {
+> -		int		error;
+> -
+>  		error = xfs_btree_check_ptr(cur, cpp, i, level - 1);
+>  		if (error) {
+>  			XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+> @@ -3283,7 +3282,11 @@ xfs_btree_kill_iroot(
+>  #endif
+>  	xfs_btree_copy_ptrs(cur, pp, cpp, numrecs);
 >  
->  	sts = pread64(fd, buf, len, offset);
->  	if (sts < 0) {
-> -		int error = -errno;
-> +		int error = errno;
->  		fprintf(stderr, _("%s: read failed: %s\n"),
->  			progname, strerror(error));
->  		if (flags & LIBXFS_EXIT_ON_FAILURE)
->  			exit(1);
-> -		return error;
-> +		return -error;
->  	} else if (sts != len) {
->  		fprintf(stderr, _("%s: error - read only %d of %d bytes\n"),
->  			progname, sts, len);
-> @@ -1081,12 +1081,12 @@ __write_buf(int fd, void *buf, int len, off64_t offset, int flags)
+> -	cur->bc_ops->free_block(cur, cbp);
+> +	error = cur->bc_ops->free_block(cur, cbp);
+> +	if (error) {
+> +		XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+> +		return error;
+> +	}
+>  	XFS_BTREE_STATS_INC(cur, free);
 >  
->  	sts = pwrite64(fd, buf, len, offset);
->  	if (sts < 0) {
-> -		int error = -errno;
-> +		int error = errno;
->  		fprintf(stderr, _("%s: pwrite64 failed: %s\n"),
->  			progname, strerror(error));
->  		if (flags & LIBXFS_B_EXIT)
->  			exit(1);
-> -		return error;
-> +		return -error;
->  	} else if (sts != len) {
->  		fprintf(stderr, _("%s: error - pwrite64 only %d of %d bytes\n"),
->  			progname, sts, len);
+>  	cur->bc_bufs[level - 1] = NULL;
+> -- 
+> 1.9.1
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-
--- 
-Carlos
 
 _______________________________________________
 xfs mailing list
