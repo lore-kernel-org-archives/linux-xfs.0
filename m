@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 13DB67F47
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 07:10:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 91E60AC003
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 05:10:27 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0D4FE7F47
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 07:22:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DAC2A8F8040
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 05:22:39 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 3pjfRuNZ73Rwp7Jw (version=TLSv1
+	ESMTP id QTLPbQCvss2guBwV (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 05:10:23 -0800 (PST)
-Date: Fri, 15 Jan 2016 14:10:32 +0100
+	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 05:22:38 -0800 (PST)
+Date: Fri, 15 Jan 2016 14:22:49 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v8 6/9] dax: add support for fsync/msync
-Message-ID: <20160115131032.GK15950@quack.suse.cz>
+Subject: Re: [PATCH v8 4/9] dax: support dirty DAX entries in radix tree
+Message-ID: <20160115132249.GL15950@quack.suse.cz>
 References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452230879-18117-7-git-send-email-ross.zwisler@linux.intel.com>
-	<20160112105716.GT6262@quack.suse.cz>
-	<20160113073019.GB30496@linux.intel.com>
-	<20160113093525.GD14630@quack.suse.cz>
-	<20160113185802.GB5904@linux.intel.com>
+	<1452230879-18117-5-git-send-email-ross.zwisler@linux.intel.com>
+	<20160113094411.GA17057@quack.suse.cz>
+	<20160113184832.GA5904@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160113185802.GB5904@linux.intel.com>
+In-Reply-To: <20160113184832.GA5904@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,108 +35,92 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ross Zwisler <ross.zwisler@linux.intel.com>
 Cc: Jan Kara <jack@suse.cz>, Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Wed 13-01-16 11:58:02, Ross Zwisler wrote:
-> On Wed, Jan 13, 2016 at 10:35:25AM +0100, Jan Kara wrote:
-> > On Wed 13-01-16 00:30:19, Ross Zwisler wrote:
-> > > > And secondly: You must write-protect all mappings of the flushed range so
-> > > > that you get fault when the sector gets written-to again. We spoke about
-> > > > this in the past already but somehow it got lost and I forgot about it as
-> > > > well. You need something like rmap_walk_file()...
+On Wed 13-01-16 11:48:32, Ross Zwisler wrote:
+> On Wed, Jan 13, 2016 at 10:44:11AM +0100, Jan Kara wrote:
+> > On Thu 07-01-16 22:27:54, Ross Zwisler wrote:
+> > > Add support for tracking dirty DAX entries in the struct address_space
+> > > radix tree.  This tree is already used for dirty page writeback, and it
+> > > already supports the use of exceptional (non struct page*) entries.
 > > > 
-> > > The code that write protected mappings and then cleaned the radix tree entries
-> > > did get written, and was part of v2:
+> > > In order to properly track dirty DAX pages we will insert new exceptional
+> > > entries into the radix tree that represent dirty DAX PTE or PMD pages.
+> > > These exceptional entries will also contain the writeback sectors for the
+> > > PTE or PMD faults that we can use at fsync/msync time.
 > > > 
-> > > https://lkml.org/lkml/2015/11/13/759
+> > > There are currently two types of exceptional entries (shmem and shadow)
+> > > that can be placed into the radix tree, and this adds a third.  We rely on
+> > > the fact that only one type of exceptional entry can be found in a given
+> > > radix tree based on its usage.  This happens for free with DAX vs shmem but
+> > > we explicitly prevent shadow entries from being added to radix trees for
+> > > DAX mappings.
 > > > 
-> > > I removed all the code that cleaned PTE entries and radix tree entries for v3.
-> > > The reason behind this was that there was a race that I couldn't figure out
-> > > how to solve between the cleaning of the PTEs and the cleaning of the radix
-> > > tree entries.
+> > > The only shadow entries that would be generated for DAX radix trees would
+> > > be to track zero page mappings that were created for holes.  These pages
+> > > would receive minimal benefit from having shadow entries, and the choice
+> > > to have only one type of exceptional entry in a given radix tree makes the
+> > > logic simpler both in clear_exceptional_entry() and in the rest of DAX.
 > > > 
-> > > The race goes like this:
-> > > 
-> > > Thread 1 (write)			Thread 2 (fsync)
-> > > ================			================
-> > > wp_pfn_shared()
-> > > pfn_mkwrite()
-> > > dax_radix_entry()
-> > > radix_tree_tag_set(DIRTY)
-> > > 					dax_writeback_mapping_range()
-> > > 					dax_writeback_one()
-> > > 					radix_tag_clear(DIRTY)
-> > > 					pgoff_mkclean()
-> > > ... return up to wp_pfn_shared()
-> > > wp_page_reuse()
-> > > pte_mkdirty()
-> > > 
-> > > After this sequence we end up with a dirty PTE that is writeable, but with a
-> > > clean radix tree entry.  This means that users can write to the page, but that
-> > > a follow-up fsync or msync won't flush this dirty data to media.
-> > > 
-> > > The overall issue is that in the write path that goes through wp_pfn_shared(),
-> > > the DAX code has control over when the radix tree entry is dirtied but not
-> > > when the PTE is made dirty and writeable.  This happens up in wp_page_reuse().
-> > > This means that we can't easily add locking, etc. to protect ourselves.
-> > > 
-> > > I spoke a bit about this with Dave Chinner and with Dave Hansen, but no really
-> > > easy solutions presented themselves in the absence of a page lock.  I do have
-> > > one idea, but I think it's pretty invasive and will need to wait for another
-> > > kernel cycle.
-> > > 
-> > > The current code that leaves the radix tree entry will give us correct
-> > > behavior - it'll just be less efficient because we will have an ever-growing
-> > > dirty set to flush.
+> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > Reviewed-by: Jan Kara <jack@suse.cz>
 > > 
-> > Ahaa! Somehow I imagined tag_pages_for_writeback() clears DIRTY radix tree
-> > tags but it does not (I should have known, I have written that functions
-> > few years ago ;). Makes sense. Thanks for clarification.
+> > I have realized there's one issue with this code. See below:
 > > 
-> > > > > @@ -791,15 +976,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
-> > > > >   * dax_pfn_mkwrite - handle first write to DAX page
-> > > > >   * @vma: The virtual memory area where the fault occurred
-> > > > >   * @vmf: The description of the fault
-> > > > > - *
-> > > > >   */
-> > > > >  int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
-> > > > >  {
-> > > > > -	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
-> > > > > +	struct file *file = vma->vm_file;
-> > > > >  
-> > > > > -	sb_start_pagefault(sb);
-> > > > > -	file_update_time(vma->vm_file);
-> > > > > -	sb_end_pagefault(sb);
-> > > > > +	dax_radix_entry(file->f_mapping, vmf->pgoff, NO_SECTOR, false, true);
-> > > > 
-> > > > Why is NO_SECTOR argument correct here?
-> > > 
-> > > Right - so NO_SECTOR means "I expect there to already be an entry in the radix
-> > > tree - just make that entry dirty".  This works because pfn_mkwrite() always
-> > > follows a normal __dax_fault() or __dax_pmd_fault() call.  These fault calls
-> > > will insert the radix tree entry, regardless of whether the fault was for a
-> > > read or a write.  If the fault was for a write, the radix tree entry will also
-> > > be made dirty.
-> > >
-> > > For reads the radix tree entry will be inserted but left clean.  When the
-> > > first write happens we will get a pfn_mkwrite() call, which will call
-> > > dax_radix_entry() with the NO_SECTOR argument.  This will look up the radix
-> > > tree entry & set the dirty tag.
+> > > @@ -34,31 +35,39 @@ static void clear_exceptional_entry(struct address_space *mapping,
+> > >  		return;
+> > >  
+> > >  	spin_lock_irq(&mapping->tree_lock);
+> > > -	/*
+> > > -	 * Regular page slots are stabilized by the page lock even
+> > > -	 * without the tree itself locked.  These unlocked entries
+> > > -	 * need verification under the tree lock.
+> > > -	 */
+> > > -	if (!__radix_tree_lookup(&mapping->page_tree, index, &node, &slot))
+> > > -		goto unlock;
+> > > -	if (*slot != entry)
+> > > -		goto unlock;
+> > > -	radix_tree_replace_slot(slot, NULL);
+> > > -	mapping->nrshadows--;
+> > > -	if (!node)
+> > > -		goto unlock;
+> > > -	workingset_node_shadows_dec(node);
+> > > -	/*
+> > > -	 * Don't track node without shadow entries.
+> > > -	 *
+> > > -	 * Avoid acquiring the list_lru lock if already untracked.
+> > > -	 * The list_empty() test is safe as node->private_list is
+> > > -	 * protected by mapping->tree_lock.
+> > > -	 */
+> > > -	if (!workingset_node_shadows(node) &&
+> > > -	    !list_empty(&node->private_list))
+> > > -		list_lru_del(&workingset_shadow_nodes, &node->private_list);
+> > > -	__radix_tree_delete_node(&mapping->page_tree, node);
+> > > +
+> > > +	if (dax_mapping(mapping)) {
+> > > +		if (radix_tree_delete_item(&mapping->page_tree, index, entry))
+> > > +			mapping->nrexceptional--;
 > > 
-> > So the explanation of this should be somewhere so that everyone knows that
-> > we must have radix tree entries even for clean mapped blocks. Because upto
-> > know that was not clear to me.  Also __dax_pmd_fault() seems to insert
-> > entries only for write fault so the assumption doesn't seem to hold there?
+> > So when you punch hole in a file, you can delete a PMD entry from a radix
+> > tree which covers part of the file which still stays. So in this case you
+> > have to split the PMD entry into PTE entries (probably that needs to happen
+> > up in truncate_inode_pages_range()) or something similar...
 > 
-> Ah, right, sorry, the read fault() -> pfn_mkwrite() sequence only happens for
-> 4k pages.  You are right about our handling of 2MiB pages - for a read
-> followed by a write we will just call into the normal __dax_pmd_fault() code
-> again, which will do the get_block() call and insert a dirty radix tree entry.
-> Because we have to go all the way through the fault handler again at write
-> time there isn't a benefit to inserting a clean radix tree entry on read, so
-> we just skip it.
+> I think (and will verify) that the DAX code just unmaps the entire PMD range
+> when we receive a hole punch request inside of the PMD.  If this is true then
+> I think the radix tree code should behave the same way and just remove the PMD
+> entry in the radix tree.
 
-Ouch, I wasn't aware of this asymetry between PMD and PTE faults. OK, so
-please just document this all somewhere because I'm pretty sure casual
-reader won't be able to figure this all out just from the code.
+But you cannot just remove it if it is dirty... You have to keep somewhere
+information that part of the PMD range is still dirty (or write that range
+out before removing the radix tree entry).
+
+> This will cause new accesses that used to land in the PMD range to get new
+> page faults.  These faults will call get_blocks(), where presumably the
+> filesystem will tell us that we don't have a contiguous 2MiB range anymore, so
+> we will fall back to PTE faults.  These PTEs will fill in both the radix tree
+> and the page tables.
+> 
+> So, I think the work here is to verify the behavior of DAX wrt hole punches
+> for PMD ranges, and make the radix tree code match that behavior.  Sound good?
 
 								Honza
 -- 
