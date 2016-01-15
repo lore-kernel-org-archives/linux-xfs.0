@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 004B47F47
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 14:57:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BE5EA304059
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 12:57:04 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id k7fENTpRcrQkGFWj (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 2B3117F47
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 14:58:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 11103304059
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 12:58:06 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 5Ebf2sMMeVMCFqLd (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 12:56:57 -0800 (PST)
-Date: Fri, 15 Jan 2016 12:56:29 -0800
+	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 12:58:05 -0800 (PST)
+Date: Fri, 15 Jan 2016 12:58:01 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: check on-disk structure sizes
-Message-ID: <20160115205629.GA5757@birch.djwong.org>
-References: <20160111234644.GB7831@birch.djwong.org>
-	<20160112140122.GC12156@bfoster.bfoster>
-	<20160113012945.GC2455@birch.djwong.org>
-	<5695C01F.7030807@sandeen.net> <20160113054730.GQ10456@dastard>
-	<10021348-43A2-465E-BC00-E0A0882FFD22@sandeen.net>
-	<20160113074640.GA21939@infradead.org>
+Subject: Re: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
+Message-ID: <20160115205801.GB5757@birch.djwong.org>
+References: <20160111232657.GA7831@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160113074640.GA21939@infradead.org>
+In-Reply-To: <20160111232657.GA7831@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,35 +29,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jan 12, 2016 at 11:46:40PM -0800, Christoph Hellwig wrote:
-> On Wed, Jan 13, 2016 at 12:02:36AM -0600, Eric Sandeen wrote:
-> > > As I've pointed out previously to Darrick: xfstests:/tests/xfs/122
-> > > 
-> > > Make that build again, update it.
-> > > 
-> > Oh, I went looking for that and missed it somehow, thought it had been removed.   Ok then!
+On Mon, Jan 11, 2016 at 03:26:57PM -0800, Darrick J. Wong wrote:
+> Check the sizes of XFS on-disk structures when compiling the kernel.
+> Use this to catch inadvertent changes in structure size due to padding
+> and alignment issues, etc.
 > 
-> The real issue is that build environment change alignments.  32 vs 64
-> bit builds are obvious, but on some architectures different ABIs have
-> different alignments (we had some fun with ARM in that regard),
-> nevermind the equivalents to IRIX n32 popping up everywhere these days
-> that make things complicated.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |    4 ++++
+>  fs/xfs/xfs_super.c         |   45 ++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 49 insertions(+)
 > 
-> I'd really love to have Darrick's check in xfs_format.h as an opt-in
-> if a build time assert is provided - that way every user can check it
-> doesn't screw up the structures.
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index e2536bb..a589b47 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1509,4 +1509,8 @@ struct xfs_acl {
+>  #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+>  #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+>  
+> +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
+> +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
+> +		#structname ") is wrong, expected " #size)
+> +
 
-I've fixed xfs/122, so I suppose we no longer need this to end up in
-xfsprogs.  The kernel-side patch can stick around in fs/xfs/ without
-touching libxfs.
+Since xfs/122 will handle this on the userspace side, this can move to
+xfs_super.c.
 
-(New patches out soonish.)
+>  #endif /* __XFS_FORMAT_H__ */
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 36bd882..31b69d1 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1812,11 +1812,56 @@ xfs_destroy_workqueues(void)
+>  	destroy_workqueue(xfs_alloc_wq);
+>  }
+>  
+> +static void __init
+> +xfs_check_ondisk_structs(void)
+> +{
+> +	/* on-disk structures */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+
+Forgot the dir/attr structures here.
+
+> +	/* log structures */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> +}
+
+Perhaps this huge function ought to hide away in its own file?
 
 --D
 
+> +
+>  STATIC int __init
+>  init_xfs_fs(void)
+>  {
+>  	int			error;
+>  
+> +	xfs_check_ondisk_structs();
+> +
+>  	printk(KERN_INFO XFS_VERSION_STRING " with "
+>  			 XFS_BUILD_OPTIONS " enabled\n");
+>  
 > 
 > _______________________________________________
 > xfs mailing list
