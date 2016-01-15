@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C00E17F47
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 15:06:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6154304059
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 13:06:09 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id HpJoISvJJViP6hOi (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 13:06:07 -0800 (PST)
-Date: Fri, 15 Jan 2016 13:05:56 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
-Message-ID: <20160115210556.GC5757@birch.djwong.org>
-References: <20160111232657.GA7831@birch.djwong.org>
-	<56969696.2040206@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 9B9577F47
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 16:50:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 771FF304053
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 14:50:50 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	6v7LBkyl2vMbsEH4 for <xfs@oss.sgi.com>;
+	Fri, 15 Jan 2016 14:50:47 -0800 (PST)
+Date: Sat, 16 Jan 2016 09:50:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
+Message-ID: <20160115225022.GO6033@dastard>
+References: <568FEA2C.6080708@redhat.com>
+	<20160109072600.GA21636@infradead.org>
+	<20160111132617.GD6262@quack.suse.cz>
+	<5693D33A.5090307@sandeen.net>
+	<20160111162807.GK6262@quack.suse.cz>
+	<5696D27A.9070700@sandeen.net>
+	<20160115093507.GA15950@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56969696.2040206@sandeen.net>
+In-Reply-To: <20160115093507.GA15950@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,69 +35,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Jan 13, 2016 at 12:25:26PM -0600, Eric Sandeen wrote:
-> On 1/11/16 5:26 PM, Darrick J. Wong wrote:
+On Fri, Jan 15, 2016 at 10:35:07AM +0100, Jan Kara wrote:
+> On Wed 13-01-16 16:40:58, Eric Sandeen wrote:
+> > Actually, that's exactly what I thought would *need* to happen ... we already
+> > have this weird 15-year-old split-brain quota interface, so if xfs and ext4
+> > both need the same functionality, then we'd probably add both GETQUOTA2 and
+> > XGETQUOTA2.  If we were doing this all from scratch, sure, but adding a new
+> > handles-both-quota-types interface when every other operation is already split
+> > between the two almost seems to make matters worse.
 > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 36bd882..31b69d1 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1812,11 +1812,56 @@ xfs_destroy_workqueues(void)
-> >  	destroy_workqueue(xfs_alloc_wq);
-> >  }
-> >  
-> > +static void __init
-> > +xfs_check_ondisk_structs(void)
-> > +{
-> > +	/* on-disk structures */
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+> Well, currently GETQUOTA and XGETQUOTA (and all the other quotactls) are
+> actually translated so they work regardless of the underlying filesystem.
+> So the only difference between XFS and VFS quotactls is in the formatting
+> of input/output structures. So from kernel POV it seems somewhat pointless
+> to add two calls doing the same thing and differing just in the formatting
+> of output - especially when we want the call to be extensible.
 > 
-> I'm not sure why, but all this hard-coded stuff in the codebase bugs me.
-> 
-> What if we did it as part of the build, but outside the code, something
-> like (pardon my bad Make-fu):
-> 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index f646391..da9ec6d 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -122,3 +122,8 @@ xfs-$(CONFIG_XFS_POSIX_ACL) += xfs_acl.o
->  xfs-$(CONFIG_SYSCTL)           += xfs_sysctl.o
->  xfs-$(CONFIG_COMPAT)           += xfs_ioctl32.o
->  xfs-$(CONFIG_NFSD_PNFS)                += xfs_pnfs.o
-> +
-> +check_structures: $(obj)/xfs.o
-> +       $(src)/scripts/check_structures.sh $(obj)/xfs.o
-> +
-> +$(obj)/built-in.o: check_structures
-> 
-> where the script executes pahole or whatever we want, to check the
-> structure sizes and possibly even alignment explicitly?  Presumably
-> we could make running the check a Kconfig option as well...
+> I agree that having a unified call means having a new structure for passing
+> dquot info between kernel and userspace. So just for adding that one small
+> feature you want it seems like an overkill. But when thinking about new
+> extensible getquota quotactl it IMHO makes sense to unify the VFS/XFS split
+> brain. Thoughts?
 
-We certainly /could/ do that, but now the build depends on pahole or whatever
-being installed, whereas this macroey doesn't add more tool dependencies.
-I think between this and xfs/122 we're probably fine?
+A new unified userspace quota API would be nice, but it's a
+completely separate piece of work. We'd also need to do userspace
+work to support it, so I think this is a valid medium term goal,
+but not somethign that should gate the work Eric is doing.
 
---D
+i.e. it might be best to introduce a quotactl2 syscall for a
+unified interface, such that the syscall itself has a flags
+argument rather than having to jump through hoops to embed flags
+in argument structures.....
 
-> 
-> similar tricks could surely be done for userspace as well.
-> 
-> -Eric
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+FWIW, converting xfs_quota to use a new kernel API is trivial (half
+an hour's work) as it already has a kernel API abstraction layer for
+cross platform support. Hence we can quickly get userspace support
+in place to test such a new kernel API...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
