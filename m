@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 458E87F47
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 03:35:01 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 13DB67F47
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 07:10:31 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17AB88F8040
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 01:34:57 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 91E60AC003
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2016 05:10:27 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id FQ8ZEyOtTLaMLGpN (version=TLSv1
+	ESMTP id 3pjfRuNZ73Rwp7Jw (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 01:34:55 -0800 (PST)
-Date: Fri, 15 Jan 2016 10:35:07 +0100
+	<xfs@oss.sgi.com>; Fri, 15 Jan 2016 05:10:23 -0800 (PST)
+Date: Fri, 15 Jan 2016 14:10:32 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
-Message-ID: <20160115093507.GA15950@quack.suse.cz>
-References: <568FEA2C.6080708@redhat.com>
-	<20160109072600.GA21636@infradead.org>
-	<20160111132617.GD6262@quack.suse.cz>
-	<5693D33A.5090307@sandeen.net>
-	<20160111162807.GK6262@quack.suse.cz>
-	<5696D27A.9070700@sandeen.net>
+Subject: Re: [PATCH v8 6/9] dax: add support for fsync/msync
+Message-ID: <20160115131032.GK15950@quack.suse.cz>
+References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1452230879-18117-7-git-send-email-ross.zwisler@linux.intel.com>
+	<20160112105716.GT6262@quack.suse.cz>
+	<20160113073019.GB30496@linux.intel.com>
+	<20160113093525.GD14630@quack.suse.cz>
+	<20160113185802.GB5904@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5696D27A.9070700@sandeen.net>
+In-Reply-To: <20160113185802.GB5904@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,86 +34,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-On Wed 13-01-16 16:40:58, Eric Sandeen wrote:
-> On 1/11/16 10:28 AM, Jan Kara wrote:
-> > On Mon 11-01-16 10:07:22, Eric Sandeen wrote:
-> >> On 1/11/16 7:26 AM, Jan Kara wrote:
-> >>> On Fri 08-01-16 23:26:00, Christoph Hellwig wrote:
-> >>>> On Fri, Jan 08, 2016 at 10:56:12AM -0600, Eric Sandeen wrote:
-> >>>>> This adds a new quotactl, Q_XGETQUOTA2.
-> >>>>>
-> >>>>> Q_XGETQUOTA2 is exactly like Q_XGETQUOTA, except that it will
-> >>>>> return quota information for the id equal to or greater than
-> >>>>> the id requested.  In other words, if the specified id has
-> >>>>> no quota, the command will return quota information for the
-> >>>>> next higher id which does have a quota set.  If no higher id
-> >>>>> has an active quota, -ESRCH is returned.
-> >>>>
-> >>>> Please add a flags argument to Q_XGETQUOTA2, and then make the
-> >>>> new behavior the first flag.  Keep Q_XGETQUOTA behavior for the
-> >>>> flag-less case.  That way we get future etensibility for free.
-> >>>
-> >>> So this is what I wanted to suggest at first as well. What I somewhat
-> >>> dislike is that 'addr' must now point to something like:
-> >>>
-> >>> struct getquota_args {
-> >>> 	__u64 flags;
-> >>> 	struct fs_disk_quota ret;
-> >>> };
-> >>
-> >> Ok...
-> >>
-> >>> which is not as nice as passing pointer to fs_disk_quota directly. But
-> >>> probably still OK. So I agree with the flags idea.
-> >>
-> >> I understand that flags are for future-proofing, for possibly-not-yet-imagined
-> >> scenarios, but on the other hand, I wonder how many different flavors of
-> >> "get me a disk quota" we really expect to have?
-> >>
-> >>> Another issue is that OCFS2 and ext4 with quota in hidden inodes would need
-> >>> call with these capabilities as well (they have the same problem as xfs).
-> >>> For reporting VFS quota we use bytes for space (since some filesystems need
-> >>> it) and we don't need RT fields (easy so zero-fill) and warning fields
-> >>> (there zeros may be confusing). So we would need something like struct
-> >>> qc_dqblk (currently only internal) extended with ID and maybe flags field
-> >>> XFS is using to return quota type which can contain all the information and
-> >>> tell which info is actually valid as return structure.
-> >>
-> >> Hohum, yeah - I forgot that ext4 has (can have?) a hidden quota inode.
-> >> And I didn't know about OCFS2.
-> >>
-> >> And TBH I did the xfs-specific one because it was trivial to extend, with the
-> >> id already in the returned quota struct.
-> >>
-> >> So ok, it sounds like this needs a more significant overhaul at the vfs
-> >> quota level...
+On Wed 13-01-16 11:58:02, Ross Zwisler wrote:
+> On Wed, Jan 13, 2016 at 10:35:25AM +0100, Jan Kara wrote:
+> > On Wed 13-01-16 00:30:19, Ross Zwisler wrote:
+> > > > And secondly: You must write-protect all mappings of the flushed range so
+> > > > that you get fault when the sector gets written-to again. We spoke about
+> > > > this in the past already but somehow it got lost and I forgot about it as
+> > > > well. You need something like rmap_walk_file()...
+> > > 
+> > > The code that write protected mappings and then cleaned the radix tree entries
+> > > did get written, and was part of v2:
+> > > 
+> > > https://lkml.org/lkml/2015/11/13/759
+> > > 
+> > > I removed all the code that cleaned PTE entries and radix tree entries for v3.
+> > > The reason behind this was that there was a race that I couldn't figure out
+> > > how to solve between the cleaning of the PTEs and the cleaning of the radix
+> > > tree entries.
+> > > 
+> > > The race goes like this:
+> > > 
+> > > Thread 1 (write)			Thread 2 (fsync)
+> > > ================			================
+> > > wp_pfn_shared()
+> > > pfn_mkwrite()
+> > > dax_radix_entry()
+> > > radix_tree_tag_set(DIRTY)
+> > > 					dax_writeback_mapping_range()
+> > > 					dax_writeback_one()
+> > > 					radix_tag_clear(DIRTY)
+> > > 					pgoff_mkclean()
+> > > ... return up to wp_pfn_shared()
+> > > wp_page_reuse()
+> > > pte_mkdirty()
+> > > 
+> > > After this sequence we end up with a dirty PTE that is writeable, but with a
+> > > clean radix tree entry.  This means that users can write to the page, but that
+> > > a follow-up fsync or msync won't flush this dirty data to media.
+> > > 
+> > > The overall issue is that in the write path that goes through wp_pfn_shared(),
+> > > the DAX code has control over when the radix tree entry is dirtied but not
+> > > when the PTE is made dirty and writeable.  This happens up in wp_page_reuse().
+> > > This means that we can't easily add locking, etc. to protect ourselves.
+> > > 
+> > > I spoke a bit about this with Dave Chinner and with Dave Hansen, but no really
+> > > easy solutions presented themselves in the absence of a page lock.  I do have
+> > > one idea, but I think it's pretty invasive and will need to wait for another
+> > > kernel cycle.
+> > > 
+> > > The current code that leaves the radix tree entry will give us correct
+> > > behavior - it'll just be less efficient because we will have an ever-growing
+> > > dirty set to flush.
 > > 
-> > Actually, what I want from you is just an interface which is usable for VFS
-> > quotas as well since I'd like to avoid adding GETQUOTA2 quotactl shortly
-> > after XGETQUOTA2 :).
+> > Ahaa! Somehow I imagined tag_pages_for_writeback() clears DIRTY radix tree
+> > tags but it does not (I should have known, I have written that functions
+> > few years ago ;). Makes sense. Thanks for clarification.
+> > 
+> > > > > @@ -791,15 +976,12 @@ EXPORT_SYMBOL_GPL(dax_pmd_fault);
+> > > > >   * dax_pfn_mkwrite - handle first write to DAX page
+> > > > >   * @vma: The virtual memory area where the fault occurred
+> > > > >   * @vmf: The description of the fault
+> > > > > - *
+> > > > >   */
+> > > > >  int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+> > > > >  {
+> > > > > -	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
+> > > > > +	struct file *file = vma->vm_file;
+> > > > >  
+> > > > > -	sb_start_pagefault(sb);
+> > > > > -	file_update_time(vma->vm_file);
+> > > > > -	sb_end_pagefault(sb);
+> > > > > +	dax_radix_entry(file->f_mapping, vmf->pgoff, NO_SECTOR, false, true);
+> > > > 
+> > > > Why is NO_SECTOR argument correct here?
+> > > 
+> > > Right - so NO_SECTOR means "I expect there to already be an entry in the radix
+> > > tree - just make that entry dirty".  This works because pfn_mkwrite() always
+> > > follows a normal __dax_fault() or __dax_pmd_fault() call.  These fault calls
+> > > will insert the radix tree entry, regardless of whether the fault was for a
+> > > read or a write.  If the fault was for a write, the radix tree entry will also
+> > > be made dirty.
+> > >
+> > > For reads the radix tree entry will be inserted but left clean.  When the
+> > > first write happens we will get a pfn_mkwrite() call, which will call
+> > > dax_radix_entry() with the NO_SECTOR argument.  This will look up the radix
+> > > tree entry & set the dirty tag.
+> > 
+> > So the explanation of this should be somewhere so that everyone knows that
+> > we must have radix tree entries even for clean mapped blocks. Because upto
+> > know that was not clear to me.  Also __dax_pmd_fault() seems to insert
+> > entries only for write fault so the assumption doesn't seem to hold there?
 > 
-> Actually, that's exactly what I thought would *need* to happen ... we already
-> have this weird 15-year-old split-brain quota interface, so if xfs and ext4
-> both need the same functionality, then we'd probably add both GETQUOTA2 and
-> XGETQUOTA2.  If we were doing this all from scratch, sure, but adding a new
-> handles-both-quota-types interface when every other operation is already split
-> between the two almost seems to make matters worse.
+> Ah, right, sorry, the read fault() -> pfn_mkwrite() sequence only happens for
+> 4k pages.  You are right about our handling of 2MiB pages - for a read
+> followed by a write we will just call into the normal __dax_pmd_fault() code
+> again, which will do the get_block() call and insert a dirty radix tree entry.
+> Because we have to go all the way through the fault handler again at write
+> time there isn't a benefit to inserting a clean radix tree entry on read, so
+> we just skip it.
 
-Well, currently GETQUOTA and XGETQUOTA (and all the other quotactls) are
-actually translated so they work regardless of the underlying filesystem.
-So the only difference between XFS and VFS quotactls is in the formatting
-of input/output structures. So from kernel POV it seems somewhat pointless
-to add two calls doing the same thing and differing just in the formatting
-of output - especially when we want the call to be extensible.
-
-I agree that having a unified call means having a new structure for passing
-dquot info between kernel and userspace. So just for adding that one small
-feature you want it seems like an overkill. But when thinking about new
-extensible getquota quotactl it IMHO makes sense to unify the VFS/XFS split
-brain. Thoughts?
+Ouch, I wasn't aware of this asymetry between PMD and PTE faults. OK, so
+please just document this all somewhere because I'm pretty sure casual
+reader won't be able to figure this all out just from the code.
 
 								Honza
 -- 
