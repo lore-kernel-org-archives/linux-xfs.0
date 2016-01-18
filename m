@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A38927F37
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 14:02:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 236D5AC005
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 12:02:32 -0800 (PST)
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
-	cuda.sgi.com with ESMTP id KidPqaoyGx12Rupw (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2016 12:02:21 -0800 (PST)
-Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
-	by mout01.posteo.de (Postfix) with ESMTPS id 31D76207AD
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 21:02:20 +0100 (CET)
-Received: from mail.posteo.de (localhost [127.0.0.1])
-	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3pg2qw0RVpz5vND
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2016 21:02:20 +0100 (CET)
-Date: Tue, 12 Jan 2016 20:59:45 +0100
-From: Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH 2/6] libxfs/linux.c: Replace use of ustat by stat
-Message-ID: <20160112195945.GC568@nyan>
-References: <cover.1452627740.git.felix.janda@posteo.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E26F77F37
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 04:29:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CC4738F8033
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:29:02 -0800 (PST)
+Received: from resqmta-ch2-01v.sys.comcast.net
+	(resqmta-ch2-01v.sys.comcast.net [69.252.207.33]) by
+	cuda.sgi.com with ESMTP id GCyMhSohqDBQk1LE (version=TLSv1.2
+	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:28:59 -0800 (PST)
+From: Joshua Kinard <kumba@gentoo.org>
+Subject: [PATCH 0/3] xfsprogs: misc uClibc patches
+Message-ID: <569CBE4F.6000306@gentoo.org>
+Date: Mon, 18 Jan 2016 05:28:31 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <cover.1452627740.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,80 +29,50 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-ustat has been used to check whether a device file is mounted.
-The function is deprecated and not supported by uclibc and musl.
-Now do the check using the *mntent functions.
 
-Based on patch by Natanael Copa <ncopa@alpinelinux.org>.
+Hi,
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- libxfs/linux.c | 29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+I'm sending these three patches upstream that allow xfsprogs to compile and
+work on uclibc-based userlands.  Two of them were sent upstream a few years ago
+(2012), and one was rejected, but I don't know what the status was on the other.
 
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index c532d65..e7adcf2 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -16,11 +16,8 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
--#define ustat __kernel_ustat
- #include <mntent.h>
- #include <sys/stat.h>
--#undef ustat
--#include <sys/ustat.h>
- #include <sys/mount.h>
- #include <sys/ioctl.h>
- #include <sys/sysinfo.h>
-@@ -51,9 +48,10 @@ static int max_block_alignment;
- int
- platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- {
--	/* Pad ust; pre-2.6.28 linux copies out too much in 32bit compat mode */
--	struct ustat	ust[2];
--	struct stat64	st;
-+	FILE		*f;
-+	struct stat64	st, mst;
-+	struct mntent	*mnt;
-+	char		mounts[MAXPATHLEN];
- 
- 	if (!s) {
- 		if (stat64(block, &st) < 0)
-@@ -63,14 +61,27 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- 		s = &st;
- 	}
- 
--	if (ustat(s->st_rdev, ust) >= 0) {
-+	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
-+	if ((f = setmntent(mounts, "r")) == NULL) {
-+		fprintf(stderr,
-+		    _("%s: %s possibly contains a mounted filesystem\n"),
-+		    progname, name);
-+		return 1;
-+	}
-+	while ((mnt = getmntent(f)) != NULL) {
-+		if (stat64(mnt->mnt_dir, &mst) < 0)
-+			continue;
-+		if (mst.st_dev != s->st_rdev)
-+			continue;
-+
- 		if (verbose)
- 			fprintf(stderr,
- 				_("%s: %s contains a mounted filesystem\n"),
- 				progname, name);
--		return 1;
-+		break;
- 	}
--	return 0;
-+	endmntent(f);
-+	return mnt == NULL;
- }
- 
- int
+Patches were contributed to Gentoo in our Bug #477758:
+https://bugs.gentoo.org/show_bug.cgi?id=477758
+
+xfsprogs-4.3.0-remove-aio-check.patch
+Removes the configure check for aio.h, which is not provided by uClibc.  It
+appears xfsprogs has no logic (that I can find) to compile against or utilize
+AIO capabilities.
+
+xfsprogs-4.3.0-use-sigprocmask.patch
+uClibc doesn't provide the sigrelse or sighold calls, so this patch replaces
+them with POSIX signal API calls (sigprocmask(2), etc).  This was previously
+submitted in the below thread, but I don't see a status update on whether it
+was accepted or rejected:
+http://oss.sgi.com/archives/xfs/2012-03/msg00015.html
+
+xfsprogs-4.3.0-use-statfs.patch
+uClibc doesn't provide the ustat() call and (apparently) statfs() should be
+used instead.  This patch was sent upstream before, but rejected because
+xfsprogs apparently relies on ustat() reporting if a block device is mounted
+anywhere.  I don't know if that's still the case now, but the attached patch
+was re-written by another Gentoo user after the first one got rejected, so
+resubmitting seems prudent.  The newer patch looks for mounted block devices by
+checking mounts and/or mtab.
+
+Thanks!
+
 -- 
-2.4.10
+Joshua Kinard
+Gentoo/MIPS
+kumba@gentoo.org
+6144R/F5C6C943 2015-04-27
+177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
+
+"The past tempts us, the present confuses us, the future frightens us.  And our
+lives slip away, moment by moment, lost in that vast, terrible in-between."
+
+--Emperor Turhan, Centauri Republic
 
 _______________________________________________
 xfs mailing list
