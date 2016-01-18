@@ -1,17 +1,21 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B5B907F37
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 10:39:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52725AC001
-	for <xfs@oss.sgi.com>; Mon,  7 Dec 2015 08:39:16 -0800 (PST)
-Received: from picconi.debian.org (picconi.debian.org [5.153.231.3]) by
-	cuda.sgi.com with ESMTP id Niiokjmt1KDoqNC8 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Dec 2015 08:39:14 -0800 (PST)
-From: Debian testing watch <noreply@release.debian.org>
-Subject: xfsprogs 4.3.0 MIGRATED to testing
-Message-Id: <E1a5yoh-0004aD-Dm@franck.debian.org>
-Date: Mon, 07 Dec 2015 16:39:11 +0000
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 238297F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 04:30:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E3AAF8F8033
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:30:15 -0800 (PST)
+Received: from resqmta-ch2-04v.sys.comcast.net
+	(resqmta-ch2-04v.sys.comcast.net [69.252.207.36]) by
+	cuda.sgi.com with ESMTP id u0cuBkCvF7eAgykx (version=TLSv1.2
+	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 02:30:13 -0800 (PST)
+From: Joshua Kinard <kumba@gentoo.org>
+Subject: [PATCH 3/3] xfsprogs: misc uClibc patches: use statfs() instead of
+	ustat()
+Message-ID: <569CBE99.4000309@gentoo.org>
+Date: Mon, 18 Jan 2016 05:29:45 -0500
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,26 +24,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfsprogs@packages.debian.org
+To: xfs@oss.sgi.com
 
-FYI: The status of the xfsprogs source package
-in Debian's testing distribution has changed.
-
-  Previous version: 4.2.0
-  Current version:  4.3.0
-
--- 
-This email is automatically generated once a day.  As the installation of
-new packages into testing happens multiple times a day you will receive
-later changes on the next day.
-See https://release.debian.org/testing-watch/ for more information.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogSm9zaHVhIEtpbmFyZCA8a3VtYmFAZ2VudG9vLm9yZz4KCnVDbGliYyBkb2Vzbid0IHBy
+b3ZpZGUgdGhlIHVzdGF0KCkgY2FsbCBhbmQgc3RhdGZzKCkgc2hvdWxkIGJlIHVzZWQgaW5zdGVh
+ZC4KUGF0Y2ggd2FzIHByZXZpb3VzbHkgc2VudCB1cHN0cmVhbSwgYnV0IHJlamVjdGVkIGJlY2F1
+c2UgdXN0YXQoKSBjaGVja3MgZm9yIHRoZQpibG9jayBkZXZpY2UgYmVpbmcgbW91bnRlZCBhbnl3
+aGVyZS4gIFRoaXMgdmVyc2lvbiBvZiB0aGUgcGF0Y2ggdGFrZXMgY2FyZSBvZgp0aGF0IGNoZWNr
+LCBhcyB3ZWxsIGFzIHJlcGxhY2luZyB1c3RhdCgpIHdpdGggc3RhdGZzKCkuCgpSZWZlciB0byBH
+ZW50b28gQnVnICM0Nzc3NTg6Cmh0dHBzOi8vYnVncy5nZW50b28ub3JnL3Nob3dfYnVnLmNnaT9p
+ZD00Nzc3NTgKClNpZ25lZC1vZmYtYnk6IEpvc2h1YSBLaW5hcmQgPGt1bWJhQGdlbnRvby5vcmc+
+ClN1Z2dlc3RlZC1ieTogUmVuw6kgUmjDqWF1bWUgPHJlbmUucmhlYXVtZUBnbWFpbC5jb20+Ci0t
+LQogbGlieGZzL2xpbnV4LmMgfCAgIDM1ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
+LS0tCiAxIGZpbGUgY2hhbmdlZCwgMzEgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCmRp
+ZmYgLU5hdXJwIHhmc3Byb2dzLTQuMy4wLm9yaWcvbGlieGZzL2xpbnV4LmMgeGZzcHJvZ3MtNC4z
+LjAvbGlieGZzL2xpbnV4LmMKLS0tIHhmc3Byb2dzLTQuMy4wLm9yaWcvbGlieGZzL2xpbnV4LmMJ
+MjAxNS0wOC0wMyAwMDozOTo0Mi4wMDAwMDAwMDAgKzAwMDAKKysrIHhmc3Byb2dzLTQuMy4wL2xp
+Ynhmcy9saW51eC5jCTIwMTYtMDEtMDEgMTA6NDk6MDYuMjcyMjI5MDAwICswMDAwCkBAIC0yMCw3
+ICsyMCw3IEBACiAjaW5jbHVkZSA8bW50ZW50Lmg+CiAjaW5jbHVkZSA8c3lzL3N0YXQuaD4KICN1
+bmRlZiB1c3RhdAotI2luY2x1ZGUgPHN5cy91c3RhdC5oPgorI2luY2x1ZGUgPHN5cy9zdGF0dmZz
+Lmg+CiAjaW5jbHVkZSA8c3lzL21vdW50Lmg+CiAjaW5jbHVkZSA8c3lzL2lvY3RsLmg+CiAjaW5j
+bHVkZSA8c3lzL3N5c2luZm8uaD4KQEAgLTUxLDkgKzUxLDExIEBAIHN0YXRpYyBpbnQgbWF4X2Js
+b2NrX2FsaWdubWVudDsKIGludAogcGxhdGZvcm1fY2hlY2tfaXNtb3VudGVkKGNoYXIgKm5hbWUs
+IGNoYXIgKmJsb2NrLCBzdHJ1Y3Qgc3RhdDY0ICpzLCBpbnQgdmVyYm9zZSkKIHsKLQkvKiBQYWQg
+dXN0OyBwcmUtMi42LjI4IGxpbnV4IGNvcGllcyBvdXQgdG9vIG11Y2ggaW4gMzJiaXQgY29tcGF0
+IG1vZGUgKi8KLQlzdHJ1Y3QgdXN0YXQJdXN0WzJdOworCXN0cnVjdCBzdGF0ZnMJdXN0OwogCXN0
+cnVjdCBzdGF0NjQJc3Q7CisJY2hhcgkJbW91bnRzW01BWFBBVEhMRU5dOworCUZJTEUqCQltdGFi
+OworCXN0cnVjdCBtbnRlbnQqCW1udDsKIAogCWlmICghcykgewogCQlpZiAoc3RhdDY0KGJsb2Nr
+LCAmc3QpIDwgMCkKQEAgLTYzLDcgKzY1LDMyIEBAIHBsYXRmb3JtX2NoZWNrX2lzbW91bnRlZChj
+aGFyICpuYW1lLCBjaGEKIAkJcyA9ICZzdDsKIAl9CiAKLQlpZiAodXN0YXQocy0+c3RfcmRldiwg
+dXN0KSA+PSAwKSB7CisJaWYgKHN0cmNtcChuYW1lLCBibG9jaykgPT0gMCkgeworCQkvKiBEZXZp
+Y2Ugbm9kZSB3YXMgcGFzc2VkIGFzIHBhcmFtZXRlci4gRmluZCBpdHMgbW91bnQgcG9pbnQgKi8K
+KwkJc3RyY3B5KG1vdW50cywgKCFhY2Nlc3MoUFJPQ19NT1VOVEVELCBSX09LKSkgPyBQUk9DX01P
+VU5URUQgOiBNT1VOVEVEKTsKKwkJbXRhYiA9IHNldG1udGVudChtb3VudHMsICJyIik7CisJCWlm
+IChtdGFiID09IE5VTEwpIHsKKwkJCWlmICh2ZXJib3NlKSB7CisJCQkJZnByaW50ZihzdGRlcnIs
+IF8oIiVzOiAlcyBjb250YWlucyBhIHBvc3NpYmx5IG1vdW50ZWQgZmlsZXN5c3RlbVxuIiksIHBy
+b2duYW1lLCBuYW1lKTsKKwkJCX0KKwkJCXJldHVybiAxOworCQl9CisJCWVsc2UgeworCQkJbW50
+ID0gZ2V0bW50ZW50KG10YWIpOworCQkJd2hpbGUgKG1udCAhPSBOVUxMKSB7CisJCQkJaWYgKHN0
+cmNtcChibG9jaywgbW50LT5tbnRfZnNuYW1lKSA9PSAwKSB7CisJCQkJCWlmICh2ZXJib3NlKSB7
+CisJCQkJCQkgZnByaW50ZihzdGRlcnIsIF8oIiVzOiAlcyBjb250YWlucyBhIG1vdW50ZWQgZmls
+ZXN5c3RlbVxuIiksIHByb2duYW1lLCBuYW1lKTsKKwkJCQkJfQorCQkJCQllbmRtbnRlbnQobXRh
+Yik7CisJCQkJCXJldHVybiAxOworCQkJCX0KKwkJCQltbnQgPSBnZXRtbnRlbnQobXRhYik7CisJ
+CQl9CisJCQllbmRtbnRlbnQobXRhYik7CisJCX0KKwl9CisJZWxzZSBpZiAoc3RhdGZzKG5hbWUs
+ICZ1c3QpID49IDApIHsKIAkJaWYgKHZlcmJvc2UpCiAJCQlmcHJpbnRmKHN0ZGVyciwKIAkJCQlf
+KCIlczogJXMgY29udGFpbnMgYSBtb3VudGVkIGZpbGVzeXN0ZW1cbiIpLAoKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
