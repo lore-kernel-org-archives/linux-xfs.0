@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 84EE77F54
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 05:17:15 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 48CCB7F5D
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 09:18:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F0A6AC00D
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 03:17:15 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 88hFkG09UDxVGxpV (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 03:17:13 -0800 (PST)
-Date: Mon, 18 Jan 2016 03:17:12 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfsprogs: misc uClibc patches: use statfs() instead
-	of ustat()
-Message-ID: <20160118111712.GC17495@infradead.org>
-References: <569CBE99.4000309@gentoo.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2A928304032
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 07:18:23 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Ew08AhUPNzbthcTI for <xfs@oss.sgi.com>;
+	Mon, 18 Jan 2016 07:18:17 -0800 (PST)
+Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
+References: <568FEA2C.6080708@redhat.com>
+	<20160109072600.GA21636@infradead.org>
+	<20160111132617.GD6262@quack.suse.cz>
+	<5693D33A.5090307@sandeen.net> <20160111162807.GK6262@quack.suse.cz>
+	<5696D27A.9070700@sandeen.net> <20160115093507.GA15950@quack.suse.cz>
+	<56992CD4.6030408@sandeen.net> <20160118103302.GD6850@quack.suse.cz>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <569D0238.5060407@sandeen.net>
+Date: Mon, 18 Jan 2016 09:18:16 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <569CBE99.4000309@gentoo.org>
+In-Reply-To: <20160118103302.GD6850@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +32,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Joshua Kinard <kumba@gentoo.org>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, Eric Sandeen <sandeen@redhat.com>
 
-A similar but slightly cleaner patch was posted recently, but we'll
-try to solve this in an even better although more invasive way.
+On 1/18/16 4:33 AM, Jan Kara wrote:
+> On Fri 15-01-16 11:31:00, Eric Sandeen wrote:
+
+...
+
+>> For a purpose-built interface of "find the next ID" that wouldn't require any
+>> structure or interface changes...
+>>
+>> We could name it Q_GETNEXTQUOTA / Q_XGETNEXTQUOTA to make it explicit about
+>> the purpose, and document that return behavior.  Done & done.  ;)
+>>
+>> A new grand unified extensible quota call sounds like a great idea, I just
+>> hate to gate this work on designing a brand-new interface.
+> 
+> OK, ok. I like Dave's proposal for quotactl2(). So let's leave the unification
+> for later and implent Q_GETNEXTQUOTA and Q_XGETNEXTQUOTA with the
+> functionality of your original Q_XGETQUOTA2. Having separate call to get
+> next ID would save us one new quotactl but OTOH we would need two syscalls
+> (and quota structure lookups) to report one structure and there are
+> potentially *lots* of them.
+
+Ok, I can re-do it with the new Q_[X]GETNEXTQUOTA names, I've already done
+the non-xfs one as well, just starting testing on that.
+
+With or without the flags argument?
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
