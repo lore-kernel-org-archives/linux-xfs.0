@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3E84B7F53
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 05:00:51 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B623A7F54
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 05:11:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 26488304032
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 03:00:51 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56B38AC005
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2016 03:11:26 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id p89dehkkKYGTlEMI (version=TLSv1.2
+	ESMTP id R98nM9dft9b4oaFV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 03:00:49 -0800 (PST)
-Date: Mon, 18 Jan 2016 03:00:46 -0800
+	<xfs@oss.sgi.com>; Mon, 18 Jan 2016 03:11:24 -0800 (PST)
+Date: Mon, 18 Jan 2016 03:11:23 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/4] quota: add new quotactl Q_XGETQUOTA2
-Message-ID: <20160118110046.GA25594@infradead.org>
-References: <568FEA2C.6080708@redhat.com>
-	<20160109072600.GA21636@infradead.org>
-	<20160111132617.GD6262@quack.suse.cz>
-	<5693D33A.5090307@sandeen.net>
-	<20160111162807.GK6262@quack.suse.cz>
-	<5696D27A.9070700@sandeen.net>
-	<20160115093507.GA15950@quack.suse.cz>
-	<56992CD4.6030408@sandeen.net>
-	<20160118103302.GD6850@quack.suse.cz>
+Subject: Re: [PATCH 1/3] xfsprogs: misc uClibc patches: remove aio.h check
+	from configure
+Message-ID: <20160118111123.GA17495@infradead.org>
+References: <569CBE64.6090603@gentoo.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160118103302.GD6850@quack.suse.cz>
+In-Reply-To: <569CBE64.6090603@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,18 +30,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>
+To: Joshua Kinard <kumba@gentoo.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jan 18, 2016 at 11:33:02AM +0100, Jan Kara wrote:
-> OK, ok. I like Dave's proposal for quotactl2(). So let's leave the unification
-> for later and implent Q_GETNEXTQUOTA and Q_XGETNEXTQUOTA with the
-> functionality of your original Q_XGETQUOTA2. Having separate call to get
-> next ID would save us one new quotactl but OTOH we would need two syscalls
-> (and quota structure lookups) to report one structure and there are
-> potentially *lots* of them.
+On Mon, Jan 18, 2016 at 05:28:52AM -0500, Joshua Kinard wrote:
+> From: Joshua Kinard <kumba@gentoo.org>
+> 
+> Remove the configure check for aio.h, which is not provided by uClibc, and
+> which does not appear to be used by xfsprogs.
+> 
+> Refer to Gentoo Bug #477758:
+> https://bugs.gentoo.org/show_bug.cgi?id=477758
 
-Oh well.  Guess I should give in and just accept the original patch..
+This looks fine:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
