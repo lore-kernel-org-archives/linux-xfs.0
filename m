@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 12FF17F37
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:59:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 01AE48F8052
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 09:59:11 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 8ZZY4V4GJpVu0AWd for <xfs@oss.sgi.com>;
-	Wed, 20 Jan 2016 09:59:10 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 3551263CBD0E
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:59:10 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Pass mp to kmem_alloc and friends?
-Message-ID: <569FCAED.4050306@sandeen.net>
-Date: Wed, 20 Jan 2016 11:59:09 -0600
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 03CFA7F37
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 12:54:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B76FAC002
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 10:54:36 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id x1SuEUX7GJDoEMC6 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 20 Jan 2016 10:54:35 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id DFEC6A452B
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 18:54:34 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-215.bos.redhat.com [10.18.41.215])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u0KIsYOq008881
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 13:54:34 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: clean up unwritten buffers on write failure
+Date: Wed, 20 Jan 2016 13:54:33 -0500
+Message-Id: <1453316073-9585-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,33 +29,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-I had a request for the kmem_alloc deadlock warning to print the
-filesystem involved.
+The xfs_vm_write_failed() handler is currently responsible for cleaning
+up any delalloc blocks over the range of a failed write beyond EOF.
+Failure to do so results in warning messages and other inconsistencies
+between buffer and extent state. The ->releasepage() handler currently
+warns in the event of a page being released with either unwritten or
+delalloc buffers, as neither is ever expected by the time a page is
+released.
 
-Any objections to passing mp into kmem_alloc() and friends whenever
-it's reasonably available from the caller?
+As has been reproduced by generic/083 on a -bsize=1k fs, it is currently
+possible to trigger the ->releasepage() warning for a page with
+unwritten buffers when a filesystem is near ENOSPC. This is reproduced
+by the following sequence:
 
-It'd be a big mechanical change, don't want to embark on that unless
-it seems acceptable & useful.
+  $ mkfs.xfs -f -b size=1k -d size=100m <dev>
+  $ mount <dev> /mnt/
+  $
+  $ xfs_io -fc "falloc -k 0 1k" /mnt/file
+  $ dd if=/dev/zero of=/mnt/enospc conv=notrunc oflag=append
+  $
+  $ xfs_io -c "pwrite 512 1k" /mnt/file
+  $ xfs_io -d -c "pwrite 16k 1k" /mnt/file
 
-I think we generally know the root causes of the most common deadlock
-warnings, but it's a warm fuzzy to give as much info as possible.
+The first pwrite command attempts a block unaligned write across an
+unwritten block and a hole. The delalloc for the hole fails with ENOSPC
+and the subsequent error handling does not clean up the unwritten buffer
+that was instantiated during the first ->get_block() call.
 
-Heck, I almost wonder if passing a descriptive string in, for at
-least the problematic cases we know about, i.e. "extent map realloc"
-so we'd get something like:
+The second pwrite triggers a warning as part of the inode mapping
+invalidation that occurs prior to direct I/O. The releasepage() handler
+detects the unwritten buffer at this time, warns and prevents the
+release of the page.
 
-XFS (sdb1): myprocess(123) possible memory allocation deadlock size 12345 during extent map realloc in kmem_alloc (mode:0x250)
+To deal with this problem, update xfs_vm_write_failed() to clean up
+unwritten as well as delalloc buffers that are beyond EOF and within the
+range of the failed write.
 
-I dunno ... too much? :)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
--Eric
+The alternative to this approach was to just kill the releasepage()
+unwritten buffer warning, but this seemed more consistent and cautious
+in that we can retain the warning to catch any other potential problems
+in the future. I'm open to either approach, along with any other ideas
+of course..
+
+As it is, this survives xfstests with 1k and 4k blocks without any
+explosions and many iterations of generic/083 w/ bsize=1k, which was the
+original reproducer.
+
+Brian
+
+ fs/xfs/xfs_aops.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 7d6e368..c8c74d0 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1783,14 +1783,22 @@ xfs_vm_write_failed(
+ 		if (block_start >= to)
+ 			break;
+ 
+-		if (!buffer_delay(bh))
++		/*
++		 * Process delalloc and unwritten buffers beyond EOF. We can
++		 * encounter unwritten buffers in the event that a file has
++		 * post-EOF unwritten extents and an extending write happens to
++		 * fail (e.g., an unaligned write that also involves a delalloc
++		 * to the same page).
++		 */
++		if (!buffer_delay(bh) && !buffer_unwritten(bh))
+ 			continue;
+ 
+ 		if (!buffer_new(bh) && block_offset < i_size_read(inode))
+ 			continue;
+ 
+-		xfs_vm_kill_delalloc_range(inode, block_offset,
+-					   block_offset + bh->b_size);
++		if (buffer_delay(bh))
++			xfs_vm_kill_delalloc_range(inode, block_offset,
++						   block_offset + bh->b_size);
+ 
+ 		/*
+ 		 * This buffer does not contain data anymore. make sure anyone
+@@ -1801,6 +1809,7 @@ xfs_vm_write_failed(
+ 		clear_buffer_mapped(bh);
+ 		clear_buffer_new(bh);
+ 		clear_buffer_dirty(bh);
++		clear_buffer_unwritten(bh);
+ 	}
+ 
+ }
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
