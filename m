@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0ED8D7F37
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 09:40:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D86608F804C
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 07:40:37 -0800 (PST)
-Received: from josefsipek.net (josefsipek.net [71.174.113.7]) by cuda.sgi.com
-	with ESMTP id vs33or1nXAaLkNgI for <xfs@oss.sgi.com>;
-	Wed, 20 Jan 2016 07:40:34 -0800 (PST)
-Date: Wed, 20 Jan 2016 10:40:36 -0500
-From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Subject: Re: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
-Message-ID: <20160120154035.GH1366@meili.valhalla.31bits.net>
-References: <20160111232657.GA7831@birch.djwong.org>
-	<20160115205801.GB5757@birch.djwong.org>
-	<20160115225219.GP6033@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 92B707F37
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:30:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 806A530405F
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 09:30:11 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 9kRFORuB0rn34RVp for <xfs@oss.sgi.com>;
+	Wed, 20 Jan 2016 09:30:07 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 83FF165F01BC
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:30:06 -0600 (CST)
+Subject: Re: [PATCH] Split default quota limits by quota type
+References: <1453303127-27295-1-git-send-email-cmaiolino@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <569FC41E.2040300@sandeen.net>
+Date: Wed, 20 Jan 2016 11:30:06 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160115225219.GP6033@dastard>
+In-Reply-To: <1453303127-27295-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,45 +32,403 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: xfs@oss.sgi.com
 
-On Sat, Jan 16, 2016 at 09:52:19AM +1100, Dave Chinner wrote:
-> On Fri, Jan 15, 2016 at 12:58:01PM -0800, Darrick J. Wong wrote:
-> > On Mon, Jan 11, 2016 at 03:26:57PM -0800, Darrick J. Wong wrote:
-> > > Check the sizes of XFS on-disk structures when compiling the kernel.
-> > > Use this to catch inadvertent changes in structure size due to padding
-> > > and alignment issues, etc.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ....
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
-> > > +}
-> > 
-> > Perhaps this huge function ought to hide away in its own file?
+On 1/20/16 9:18 AM, Carlos Maiolino wrote:
+> Default quotas are globally set due historical reasons. IRIX only supported user
+> and project quotas, and default quota was only applied to user quotas.
 > 
-> Yes, I think that's a good idea, and I think it should only be built
-> on debug builds, too.
+> In Linux, when a default quota is set, all different quota types inherits the
+> same default value.
+> 
+> An user with a quota limit larger than the default quota value, will still be
+> limited to the default value because the group quotas also inherits the default
+> quotas. Unless the group which the user belongs to have a custom quota limit
+> set.
+> 
+> This patch aims to split the default quota value by quota type. Allowing each
+> quota type having different default values.
+> 
+> Default time limits are still set globally, but I don't mind to split them by
+> quota type too.
 
-Doesn't this turn into nothingness as far as the generated binary is
-concerned?  Because if it does, I don't see a reason to keep it debug-only.
-Afterall, non-debug builds need to be correct and these are pretty important
-checks.  We certainly don't want another ARM structure padding & alignment
-fiasco.
+Hm, I guess it seems like it should be done; otherwise it's a weird
+caveat, isn't it?  "Default limits are set by type, but timers are
+inherited from whatever first default quota is found across all types"
 
-Just my 2 cents,
+So yeah, seems like it should be done for timers as well, IMHO;
+grace periods can be set for each default quota type, so they should
+be honored.
 
-Jeff.
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
--- 
-Only two things are infinite, the universe and human stupidity, and I'm not
-sure about the former.
-		- Albert Einstein
+Really just minor comments below; there is one code comment that needs to
+be removed.
+
+Thanks!
+-Eric
+
+> ---
+>  fs/xfs/xfs_dquot.c       | 26 +++++++------
+>  fs/xfs/xfs_qm.c          | 96 +++++++++++++++++++++++++++---------------------
+>  fs/xfs/xfs_qm.h          | 34 ++++++++++++++---
+>  fs/xfs/xfs_qm_syscalls.c | 15 +++++---
+>  fs/xfs/xfs_trans_dquot.c | 15 +++++---
+>  5 files changed, 114 insertions(+), 72 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 9c44d38..23f551b 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -92,26 +92,28 @@ xfs_qm_adjust_dqlimits(
+>  {
+>  	struct xfs_quotainfo	*q = mp->m_quotainfo;
+>  	struct xfs_disk_dquot	*d = &dq->q_core;
+> +	struct xfs_def_quota	*defq;
+>  	int			prealloc = 0;
+>  
+>  	ASSERT(d->d_id);
+> +	defq = xfs_get_defquota(dq, q);
+>  
+> -	if (q->qi_bsoftlimit && !d->d_blk_softlimit) {
+> -		d->d_blk_softlimit = cpu_to_be64(q->qi_bsoftlimit);
+> +	if (defq->bsoftlimit && !d->d_blk_softlimit) {
+> +		d->d_blk_softlimit = cpu_to_be64(defq->bsoftlimit);
+>  		prealloc = 1;
+>  	}
+> -	if (q->qi_bhardlimit && !d->d_blk_hardlimit) {
+> -		d->d_blk_hardlimit = cpu_to_be64(q->qi_bhardlimit);
+> +	if (defq->bhardlimit && !d->d_blk_hardlimit) {
+> +		d->d_blk_hardlimit = cpu_to_be64(defq->bhardlimit);
+>  		prealloc = 1;
+>  	}
+> -	if (q->qi_isoftlimit && !d->d_ino_softlimit)
+> -		d->d_ino_softlimit = cpu_to_be64(q->qi_isoftlimit);
+> -	if (q->qi_ihardlimit && !d->d_ino_hardlimit)
+> -		d->d_ino_hardlimit = cpu_to_be64(q->qi_ihardlimit);
+> -	if (q->qi_rtbsoftlimit && !d->d_rtb_softlimit)
+> -		d->d_rtb_softlimit = cpu_to_be64(q->qi_rtbsoftlimit);
+> -	if (q->qi_rtbhardlimit && !d->d_rtb_hardlimit)
+> -		d->d_rtb_hardlimit = cpu_to_be64(q->qi_rtbhardlimit);
+> +	if (defq->isoftlimit && !d->d_ino_softlimit)
+> +		d->d_ino_softlimit = cpu_to_be64(defq->isoftlimit);
+> +	if (defq->ihardlimit && !d->d_ino_hardlimit)
+> +		d->d_ino_hardlimit = cpu_to_be64(defq->ihardlimit);
+> +	if (defq->rtbsoftlimit && !d->d_rtb_softlimit)
+> +		d->d_rtb_softlimit = cpu_to_be64(defq->rtbsoftlimit);
+> +	if (defq->rtbhardlimit && !d->d_rtb_hardlimit)
+> +		d->d_rtb_hardlimit = cpu_to_be64(defq->rtbhardlimit);
+>  
+>  	if (prealloc)
+>  		xfs_dquot_set_prealloc_limits(dq);
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 532ab79..1bcb733 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -560,6 +560,54 @@ xfs_qm_shrink_count(
+>  	return list_lru_shrink_count(&qi->qi_lru, sc);
+>  }
+>  
+> +STATIC int
+> +xfs_qm_set_defquota(
+
+It'd be a little easier to review if this were simply factored
+out in patch 1, then default quotas handled in patch 2, I think,
+but not that big a deal.
+
+> +	xfs_mount_t	*mp,
+> +	uint		type,
+> +	xfs_quotainfo_t	*qinf)
+> +{
+> +	xfs_dquot_t		*dqp;
+> +	struct xfs_def_quota    *defq;
+> +	int			error;
+> +
+> +	error = xfs_qm_dqread(mp, 0, type, XFS_QMOPT_DOWARN, &dqp);
+> +
+> +	if (!error) {
+> +		xfs_disk_dquot_t        *ddqp = &dqp->q_core;
+> +
+> +		defq = xfs_get_defquota(dqp, qinf);
+> +
+> +		qinf->qi_btimelimit = ddqp->d_btimer ?
+> +			be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
+> +		qinf->qi_itimelimit = ddqp->d_itimer ?
+> +			be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
+> +		qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
+> +			be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
+> +		qinf->qi_bwarnlimit = ddqp->d_bwarns ?
+> +			be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
+> +		qinf->qi_iwarnlimit = ddqp->d_iwarns ?
+> +			be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
+> +		qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
+> +			be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
+> +		defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
+> +		defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
+> +		defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
+> +		defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
+> +		defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
+> +		defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
+> +		xfs_qm_dqdestroy(dqp);
+> +	} else {
+> +		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
+> +		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
+> +		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
+> +		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
+> +		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
+> +		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
+> +	}
+> +
+> +	return error;
+> +}
+> +
+>  /*
+>   * This initializes all the quota information that's kept in the
+>   * mount structure
+> @@ -570,7 +618,6 @@ xfs_qm_init_quotainfo(
+>  {
+>  	xfs_quotainfo_t *qinf;
+>  	int		error;
+> -	xfs_dquot_t	*dqp;
+>  
+>  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+>  
+> @@ -614,47 +661,12 @@ xfs_qm_init_quotainfo(
+
+There is a comment above this that should go away now:
+
+         * We look at the USR dquot with id == 0 first, but if user quotas
+         * are not enabled we goto the GRP dquot with id == 0.
+         * We don't really care to keep separate default limits for user
+         * and group quotas, at least not at this point.
+
+
+>  	 * Since we may not have done a quotacheck by this point, just read
+>  	 * the dquot without attaching it to any hashtables or lists.
+>  	 */
+> -	error = xfs_qm_dqread(mp, 0,
+> -			XFS_IS_UQUOTA_RUNNING(mp) ? XFS_DQ_USER :
+> -			 (XFS_IS_GQUOTA_RUNNING(mp) ? XFS_DQ_GROUP :
+> -			  XFS_DQ_PROJ),
+> -			XFS_QMOPT_DOWARN, &dqp);
+> -	if (!error) {
+> -		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
+> -
+> -		/*
+> -		 * The warnings and timers set the grace period given to
+> -		 * a user or group before he or she can not perform any
+> -		 * more writing. If it is zero, a default is used.
+> -		 */
+> -		qinf->qi_btimelimit = ddqp->d_btimer ?
+> -			be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
+> -		qinf->qi_itimelimit = ddqp->d_itimer ?
+> -			be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
+> -		qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
+> -			be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
+> -		qinf->qi_bwarnlimit = ddqp->d_bwarns ?
+> -			be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
+> -		qinf->qi_iwarnlimit = ddqp->d_iwarns ?
+> -			be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
+> -		qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
+> -			be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
+> -		qinf->qi_bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
+> -		qinf->qi_bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
+> -		qinf->qi_ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
+> -		qinf->qi_isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
+> -		qinf->qi_rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
+> -		qinf->qi_rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
+> -
+> -		xfs_qm_dqdestroy(dqp);
+> -	} else {
+> -		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
+> -		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
+> -		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
+> -		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
+> -		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
+> -		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
+> -	}
+
+
+
+> +	if (XFS_IS_UQUOTA_RUNNING(mp))
+> +		error = xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
+
+Hm, I guess the rest of the function looks at RUNNING not ENFORCED;
+for some reason I thought it would be ENFORCED, but *shrug* I guess
+it's right!
+
+> +	if (XFS_IS_GQUOTA_RUNNING(mp))
+> +		error = xfs_qm_set_defquota(mp, XFS_DQ_GROUP, qinf);
+> +	if (XFS_IS_PQUOTA_RUNNING(mp))
+> +		error = xfs_qm_set_defquota(mp, XFS_DQ_PROJ, qinf);
+>  
+>  	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
+>  	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+> index 996a040..45e2c36 100644
+> --- a/fs/xfs/xfs_qm.h
+> +++ b/fs/xfs/xfs_qm.h
+> @@ -53,6 +53,15 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
+>   */
+>  #define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
+>  
+> +struct xfs_def_quota {
+> +	xfs_qcnt_t       bhardlimit;     /* default data blk hard limit */
+> +	xfs_qcnt_t       bsoftlimit;	 /* default data blk soft limit */
+> +	xfs_qcnt_t       ihardlimit;	 /* default inode count hard limit */
+> +	xfs_qcnt_t       isoftlimit;	 /* default inode count soft limit */
+> +	xfs_qcnt_t	 rtbhardlimit;   /* default realtime blk hard limit */
+> +	xfs_qcnt_t	 rtbsoftlimit;   /* default realtime blk soft limit */
+> +};
+> +
+>  /*
+>   * Various quota information for individual filesystems.
+>   * The mount structure keeps a pointer to this.
+> @@ -76,12 +85,9 @@ typedef struct xfs_quotainfo {
+>  	struct mutex	 qi_quotaofflock;/* to serialize quotaoff */
+>  	xfs_filblks_t	 qi_dqchunklen;	 /* # BBs in a chunk of dqs */
+>  	uint		 qi_dqperchunk;	 /* # ondisk dqs in above chunk */
+> -	xfs_qcnt_t	 qi_bhardlimit;	 /* default data blk hard limit */
+> -	xfs_qcnt_t	 qi_bsoftlimit;	 /* default data blk soft limit */
+> -	xfs_qcnt_t	 qi_ihardlimit;	 /* default inode count hard limit */
+> -	xfs_qcnt_t	 qi_isoftlimit;	 /* default inode count soft limit */
+> -	xfs_qcnt_t	 qi_rtbhardlimit;/* default realtime blk hard limit */
+> -	xfs_qcnt_t	 qi_rtbsoftlimit;/* default realtime blk soft limit */
+> +	struct xfs_def_quota	qi_usr_default;
+> +	struct xfs_def_quota	qi_grp_default;
+> +	struct xfs_def_quota	qi_prj_default;
+>  	struct shrinker  qi_shrinker;
+>  } xfs_quotainfo_t;
+>  
+> @@ -171,4 +177,20 @@ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
+>  extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
+>  extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
+>  
+> +static inline struct xfs_def_quota *
+> +xfs_get_defquota(struct xfs_dquot *dqp, struct xfs_quotainfo *qi)
+> +{
+> +	struct xfs_def_quota *defq;
+> +
+> +	if (XFS_QM_ISUDQ(dqp))
+> +		defq = &qi->qi_usr_default;
+> +	else if (XFS_QM_ISGDQ(dqp))
+> +		defq = &qi->qi_grp_default;
+> +	else {
+> +		ASSERT(XFS_QM_ISPDQ(dqp));
+> +		defq = &qi->qi_prj_default;
+> +	}
+> +	return defq;
+> +}
+> +
+>  #endif /* __XFS_QM_H__ */
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index 3640c6e..31830f0 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -404,6 +404,7 @@ xfs_qm_scall_setqlim(
+>  	struct xfs_disk_dquot	*ddq;
+>  	struct xfs_dquot	*dqp;
+>  	struct xfs_trans	*tp;
+> +	struct xfs_def_quota	*defq;
+>  	int			error;
+>  	xfs_qcnt_t		hard, soft;
+>  
+> @@ -431,6 +432,8 @@ xfs_qm_scall_setqlim(
+>  		ASSERT(error != -ENOENT);
+>  		goto out_unlock;
+>  	}
+> +
+> +	defq = xfs_get_defquota(dqp, q);
+>  	xfs_dqunlock(dqp);
+>  
+>  	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
+> @@ -458,8 +461,8 @@ xfs_qm_scall_setqlim(
+>  		ddq->d_blk_softlimit = cpu_to_be64(soft);
+>  		xfs_dquot_set_prealloc_limits(dqp);
+>  		if (id == 0) {
+> -			q->qi_bhardlimit = hard;
+> -			q->qi_bsoftlimit = soft;
+> +			defq->bhardlimit = hard;
+> +			defq->bsoftlimit = soft;
+>  		}
+>  	} else {
+>  		xfs_debug(mp, "blkhard %Ld < blksoft %Ld", hard, soft);
+> @@ -474,8 +477,8 @@ xfs_qm_scall_setqlim(
+>  		ddq->d_rtb_hardlimit = cpu_to_be64(hard);
+>  		ddq->d_rtb_softlimit = cpu_to_be64(soft);
+>  		if (id == 0) {
+> -			q->qi_rtbhardlimit = hard;
+> -			q->qi_rtbsoftlimit = soft;
+> +			defq->rtbhardlimit = hard;
+> +			defq->rtbsoftlimit = soft;
+>  		}
+>  	} else {
+>  		xfs_debug(mp, "rtbhard %Ld < rtbsoft %Ld", hard, soft);
+> @@ -491,8 +494,8 @@ xfs_qm_scall_setqlim(
+>  		ddq->d_ino_hardlimit = cpu_to_be64(hard);
+>  		ddq->d_ino_softlimit = cpu_to_be64(soft);
+>  		if (id == 0) {
+> -			q->qi_ihardlimit = hard;
+> -			q->qi_isoftlimit = soft;
+> +			defq->ihardlimit = hard;
+> +			defq->isoftlimit = soft;
+>  		}
+>  	} else {
+>  		xfs_debug(mp, "ihard %Ld < isoft %Ld", hard, soft);
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 9951701..c3d5472 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -609,17 +609,20 @@ xfs_trans_dqresv(
+>  	xfs_qcnt_t	total_count;
+>  	xfs_qcnt_t	*resbcountp;
+>  	xfs_quotainfo_t	*q = mp->m_quotainfo;
+> +	struct xfs_def_quota	*defq;
+>  
+>  
+>  	xfs_dqlock(dqp);
+>  
+> +	defq = xfs_get_defquota(dqp, q);
+> +
+>  	if (flags & XFS_TRANS_DQ_RES_BLKS) {
+>  		hardlimit = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+>  		if (!hardlimit)
+> -			hardlimit = q->qi_bhardlimit;
+> +			hardlimit = defq->bhardlimit;
+>  		softlimit = be64_to_cpu(dqp->q_core.d_blk_softlimit);
+>  		if (!softlimit)
+> -			softlimit = q->qi_bsoftlimit;
+> +			softlimit = defq->bsoftlimit;
+>  		timer = be32_to_cpu(dqp->q_core.d_btimer);
+>  		warns = be16_to_cpu(dqp->q_core.d_bwarns);
+>  		warnlimit = dqp->q_mount->m_quotainfo->qi_bwarnlimit;
+> @@ -628,10 +631,10 @@ xfs_trans_dqresv(
+>  		ASSERT(flags & XFS_TRANS_DQ_RES_RTBLKS);
+>  		hardlimit = be64_to_cpu(dqp->q_core.d_rtb_hardlimit);
+>  		if (!hardlimit)
+> -			hardlimit = q->qi_rtbhardlimit;
+> +			hardlimit = defq->rtbhardlimit;
+>  		softlimit = be64_to_cpu(dqp->q_core.d_rtb_softlimit);
+>  		if (!softlimit)
+> -			softlimit = q->qi_rtbsoftlimit;
+> +			softlimit = defq->rtbsoftlimit;
+>  		timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
+>  		warns = be16_to_cpu(dqp->q_core.d_rtbwarns);
+>  		warnlimit = dqp->q_mount->m_quotainfo->qi_rtbwarnlimit;
+> @@ -672,10 +675,10 @@ xfs_trans_dqresv(
+>  			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
+>  			hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+>  			if (!hardlimit)
+> -				hardlimit = q->qi_ihardlimit;
+> +				hardlimit = defq->ihardlimit;
+>  			softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
+>  			if (!softlimit)
+> -				softlimit = q->qi_isoftlimit;
+> +				softlimit = defq->isoftlimit;
+>  
+>  			if (hardlimit && total_count > hardlimit) {
+>  				xfs_quota_warn(mp, dqp, QUOTA_NL_IHARDWARN);
+> 
 
 _______________________________________________
 xfs mailing list
