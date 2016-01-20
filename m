@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F2F57F37
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2016 23:13:00 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2FDD17F37
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 02:48:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B2E3AC003
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2016 21:12:57 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 2QCi9wAldW4CwsLt (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2016 21:12:52 -0800 (PST)
-Date: Tue, 19 Jan 2016 21:12:48 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
-Message-ID: <20160120051248.GA5744@birch.djwong.org>
-References: <20160111232657.GA7831@birch.djwong.org>
-	<20160115205801.GB5757@birch.djwong.org>
-	<20160115225219.GP6033@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E51778F8033
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 00:47:57 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id DVinrovMapiAG4ag (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 20 Jan 2016 00:47:52 -0800 (PST)
+Date: Wed, 20 Jan 2016 09:47:50 +0100
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] Revert "xfs: clear PF_NOFREEZE for xfsaild kthread"
+Message-ID: <20160120084750.GA14187@dhcp22.suse.cz>
+References: <1452661968-11482-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160115225219.GP6033@dastard>
+In-Reply-To: <1452661968-11482-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +30,90 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: jkosina@suse.cz, Hendrik Woltersdorf <hendrikw@arcor.de>, xfs@oss.sgi.com
 
-On Sat, Jan 16, 2016 at 09:52:19AM +1100, Dave Chinner wrote:
-> On Fri, Jan 15, 2016 at 12:58:01PM -0800, Darrick J. Wong wrote:
-> > On Mon, Jan 11, 2016 at 03:26:57PM -0800, Darrick J. Wong wrote:
-> > > Check the sizes of XFS on-disk structures when compiling the kernel.
-> > > Use this to catch inadvertent changes in structure size due to padding
-> > > and alignment issues, etc.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ....
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
-> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
-> > > +}
-> > 
-> > Perhaps this huge function ought to hide away in its own file?
+On Wed 13-01-16 16:12:48, Dave Chinner wrote:
+> This reverts commit 24ba16bb3d499c49974669cd8429c3e4138ab102 as it
+> prevents machines from suspending. This regression occurs when the
+> xfsaild is idle on entry to suspend, and so there s no activity to
+> wake it from it's idle sleep and hence see that it is supposed to
+> freeze. Hence the freezer times out waiting for it and suspend is
+> cancelled.
 > 
-> Yes, I think that's a good idea, and I think it should only be built
-> on debug builds, too.
+> There is no obvious fix for this short of freezing the filesystem
+> properly, so revert this change for now.
 
-Ok, I'll make it go away when !CONFIG_XFS_DEBUG.
+We had a similar report opensuse bugzilla just recently. I believe the
+proper fix should be the following:
+---
+>From ae910a86ada86804c34cc8136afebc9fefa15813 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
+Date: Tue, 19 Jan 2016 20:28:49 +0100
+Subject: [PATCH] xfs, xfsaild: Do not block suspend
 
---D
+Hendik has reported suspend failures due to xfsaild blocking the freezer
+to settle down.
+Jan 17 19:59:56 linux-6380 kernel: PM: Syncing filesystems ... done.
+Jan 17 19:59:56 linux-6380 kernel: PM: Preparing system for sleep (mem)
+Jan 17 19:59:56 linux-6380 kernel: Freezing user space processes ... (elapsed 0.001 seconds) done.
+Jan 17 19:59:56 linux-6380 kernel: Freezing remaining freezable tasks ...
+Jan 17 19:59:56 linux-6380 kernel: Freezing of tasks failed after 20.002 seconds (1 tasks refusing to freeze, wq_busy=0):
+Jan 17 19:59:56 linux-6380 kernel: xfsaild/dm-5    S 00000000     0  1293      2 0x00000080
+Jan 17 19:59:56 linux-6380 kernel:  f0ef5f00 00000046 00000200 00000000 ffff9022 c02d3800 00000000 00000032
+Jan 17 19:59:56 linux-6380 kernel:  ee0b2400 00000032 f71e0d00 f36fabc0 f0ef2d00 f0ef6000 f0ef2d00 f12f90c0
+Jan 17 19:59:56 linux-6380 kernel:  f0ef5f0c c0844e44 00000000 f0ef5f6c f811e0be 00000000 00000000 f0ef2d00
+Jan 17 19:59:56 linux-6380 kernel: Call Trace:
+Jan 17 19:59:56 linux-6380 kernel:  [<c0844e44>] schedule+0x34/0x90
+Jan 17 19:59:56 linux-6380 kernel:  [<f811e0be>] xfsaild+0x5de/0x600 [xfs]
+Jan 17 19:59:56 linux-6380 kernel:  [<c0286cbb>] kthread+0x9b/0xb0
+Jan 17 19:59:56 linux-6380 kernel:  [<c0848a79>] ret_from_kernel_thread+0x21/0x38
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+The issue has been there for quite some time but it has been made
+visible by only by 24ba16bb3d49 ("xfs: clear PF_NOFREEZE for xfsaild
+kthread") because the suspend started seeing xfsaild.
+
+The above commit has missed that the !xfs_ail_min branch might call
+schedule with TASK_INTERRUPTIBLE without calling try_to_freeze so the pm
+suspend would wake up the kernel thread over and over again without any
+progress. What we want here is to use freezable_schedule instead to hide
+the thread from the suspend.
+
+While we are here also change schedule_timeout to freezable variant to
+prevent from spurious wakeups by suspend.
+
+Reported-by: Hendrik Woltersdorf <hendrikw@arcor.de>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/xfs_trans_ail.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index aa67339b9537..d6c9c3e9e02b 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -520,14 +520,14 @@ xfsaild(
+ 		if (!xfs_ail_min(ailp) &&
+ 		    ailp->xa_target == ailp->xa_target_prev) {
+ 			spin_unlock(&ailp->xa_lock);
+-			schedule();
++			freezable_schedule();
+ 			tout = 0;
+ 			continue;
+ 		}
+ 		spin_unlock(&ailp->xa_lock);
+ 
+ 		if (tout)
+-			schedule_timeout(msecs_to_jiffies(tout));
++			freezable_schedule_timeout(msecs_to_jiffies(tout));
+ 
+ 		__set_current_state(TASK_RUNNING);
+ 
+-- 
+2.7.0.rc3
+
+-- 
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
