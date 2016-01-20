@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C7D0A7F37
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:35:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 96FF6304067
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 09:35:46 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 12FF17F37
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:59:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 01AE48F8052
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 09:59:11 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id hdZfRqfYE19Xk7HI for <xfs@oss.sgi.com>;
-	Wed, 20 Jan 2016 09:35:43 -0800 (PST)
+	ESMTP id 8ZZY4V4GJpVu0AWd for <xfs@oss.sgi.com>;
+	Wed, 20 Jan 2016 09:59:10 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9243E63CBD0E
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:35:43 -0600 (CST)
-Subject: Re: [PATCH] Minor whitespace cleanups
-References: <1453200369-20171-1-git-send-email-cmaiolino@redhat.com>
+	by sandeen.net (Postfix) with ESMTPSA id 3551263CBD0E
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 11:59:10 -0600 (CST)
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <569FC56F.6050902@sandeen.net>
-Date: Wed, 20 Jan 2016 11:35:43 -0600
+Subject: Pass mp to kmem_alloc and friends?
+Message-ID: <569FCAED.4050306@sandeen.net>
+Date: Wed, 20 Jan 2016 11:59:09 -0600
 MIME-Version: 1.0
-In-Reply-To: <1453200369-20171-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,65 +32,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 1/19/16 4:46 AM, Carlos Maiolino wrote:
-> While investigating a quota issue, I fixed a few whitespaces.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  include/xqm.h | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/xqm.h b/include/xqm.h
-> index 47f58a0..697cad4 100644
-> --- a/include/xqm.h
-> +++ b/include/xqm.h
-> @@ -55,14 +55,14 @@ typedef struct fs_disk_quota {
->  	__s32		d_itimer;	/* zero if within inode limits */
->  					/* if not, we refuse service */
->  	__s32		d_btimer;	/* similar to above; for disk blocks */
-> -	__u16	  	d_iwarns;       /* # warnings issued wrt num inodes */
-> -	__u16	  	d_bwarns;       /* # warnings issued wrt disk blocks */
-> +	__u16		d_iwarns;       /* # warnings issued wrt num inodes */
-> +	__u16		d_bwarns;       /* # warnings issued wrt disk blocks */
-                                 ^^^^^^^
+I had a request for the kmem_alloc deadlock warning to print the
+filesystem involved.
 
-If you're going to fix it up, might as well get the spaces-not-tabs
-before the comments on these 2 lines ;)
+Any objections to passing mp into kmem_alloc() and friends whenever
+it's reasonably available from the caller?
 
->  	__s32		d_padding2;	/* padding2 - for future use */
->  	__u64		d_rtb_hardlimit;/* absolute limit on realtime blks */
->  	__u64		d_rtb_softlimit;/* preferred limit on RT disk blks */
->  	__u64		d_rtbcount;	/* # realtime blocks owned */
->  	__s32		d_rtbtimer;	/* similar to above; for RT disk blks */
-> -	__u16	  	d_rtbwarns;     /* # warnings issued wrt RT disk blks */
-> +	__u16		d_rtbwarns;     /* # warnings issued wrt RT disk blks */
+It'd be a big mechanical change, don't want to embark on that unless
+it seems acceptable & useful.
 
-and on this one as well
+I think we generally know the root causes of the most common deadlock
+warnings, but it's a warm fuzzy to give as much info as possible.
+
+Heck, I almost wonder if passing a descriptive string in, for at
+least the problematic cases we know about, i.e. "extent map realloc"
+so we'd get something like:
+
+XFS (sdb1): myprocess(123) possible memory allocation deadlock size 12345 during extent map realloc in kmem_alloc (mode:0x250)
+
+I dunno ... too much? :)
 
 -Eric
-
->  	__s16		d_padding3;	/* padding3 - for future use */
->  	char		d_padding4[8];	/* yet more padding */
->  } fs_disk_quota_t;
-> @@ -73,7 +73,7 @@ typedef struct fs_disk_quota {
->  #define FS_DQ_ISOFT	(1<<0)
->  #define FS_DQ_IHARD	(1<<1)
->  #define FS_DQ_BSOFT	(1<<2)
-> -#define FS_DQ_BHARD 	(1<<3)
-> +#define FS_DQ_BHARD	(1<<3)
->  #define FS_DQ_RTBSOFT	(1<<4)
->  #define FS_DQ_RTBHARD	(1<<5)
->  #define FS_DQ_LIMIT_MASK	(FS_DQ_ISOFT | FS_DQ_IHARD | FS_DQ_BSOFT | \
-> @@ -87,7 +87,7 @@ typedef struct fs_disk_quota {
->   */
->  #define FS_DQ_BTIMER	(1<<6)
->  #define FS_DQ_ITIMER	(1<<7)
-> -#define FS_DQ_RTBTIMER 	(1<<8)
-> +#define FS_DQ_RTBTIMER	(1<<8)
->  #define FS_DQ_TIMER_MASK	(FS_DQ_BTIMER | FS_DQ_ITIMER | FS_DQ_RTBTIMER)
->  
->  /*
-> 
 
 _______________________________________________
 xfs mailing list
