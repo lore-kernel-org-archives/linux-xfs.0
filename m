@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9B6AC7F37
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 16:53:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 081C4AC002
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:53:09 -0800 (PST)
-Received: from mail-yk0-f174.google.com (mail-yk0-f174.google.com
-	[209.85.160.174]) by cuda.sgi.com with ESMTP id
-	pH6j0iwEB6cpyjnB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:53:08 -0800 (PST)
-Received: by mail-yk0-f174.google.com with SMTP id s126so41702451ykf.2
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:53:08 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 96C6C7F37
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 17:22:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68155304032
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 15:22:32 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	J5PNrAOpvZej3ZGr for <xfs@oss.sgi.com>;
+	Thu, 21 Jan 2016 15:22:29 -0800 (PST)
+Date: Fri, 22 Jan 2016 10:22:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [GIT PULL] xfs: update #2 for 4.5-rc1
+Message-ID: <20160121232227.GH20456@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160121215820.GA6033@dastard>
-References: <1451886892-15548-1-git-send-email-david@fromorbit.com>
-	<1451886892-15548-4-git-send-email-david@fromorbit.com>
-	<CAA9_cmdAYzf3DpjPRZWikNgmJT_sdDACXa_znz6j0oqmmRdLOA@mail.gmail.com>
-	<20160121215820.GA6033@dastard>
-Date: Thu, 21 Jan 2016 14:53:06 -0800
-Message-ID: <CAPcyv4iXg6pD4p2MTFA3hwUc6eTK=Lpw1nDuchAs1ZQWS05MtA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] xfs: introduce per-inode DAX enablement
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,69 +27,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, ext4@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jan 21, 2016 at 1:58 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jan 21, 2016 at 08:37:11AM -0800, Dan Williams wrote:
->> On Sun, Jan 3, 2016 at 9:54 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > From: Dave Chinner <dchinner@redhat.com>
->> >
->> > Rather than just being able to turn DAX on and off via a mount
->> > option, some applications may only want to enable DAX for certain
->> > performance critical files in a filesystem.
->> >
->> > This patch introduces a new inode flag to enable DAX in the v3 inode
->> > di_flags2 field. It adds support for setting and clearing flags in
->> > the di_flags2 field via the XFS_IOC_FSSETXATTR ioctl, and sets the
->> > S_DAX inode flag appropriately when it is seen.
->> >
->> > When this flag is set on a directory, it acts as an "inherit flag".
->> > That is, inodes created in the directory will automatically inherit
->> > the on-disk inode DAX flag, enabling administrators to set up
->> > directory heirarchies that automatically use DAX. Setting this flag
->> > on an empty root directory will make the entire filesystem use DAX
->> > by default.
->>
->> When switching from page-cache to DAX, don't we need to flush existing
->> page cache mappings and remap directly?  Or, is the thought that
->> userspace needs to comprehend the presence of mixed mappings after
->> changing S_DAX?
->
-> The change should be transparent to userspace. In general, I don't
-> expect users to change the behaviour of files that are in active use
-> (why would you do that?).
+Hi Linus,
 
-If by accident someone tries to dynamically change S_DAX while
-existing mappings are established I think the kernel should just
-return EBUSY.  I was not proposing we support it as a first-class
-operation.
+Can you please pull the changes from the tag below? This is the
+second update for XFS that I mentioned in the original pull request
+last week. It contains a revert for a suspend regression in 4.4 and
+a fix for a long standing log recovery issue that has been further
+exposed by all the log recovery changes made in the original 4.5
+merge.
 
-> This patch is really just introducing the
-> flag, the userspace API and making it propagate correctly via the
-> on-disk format. We'll fix up whatever problems with switching it
-> on/off dynamically as we go, like we do with most experimental
-> features once the on-disk behaviour is sorted out.
+There is one more thing in this pull request - one that I forgot to
+merge into the origin. That is, pulling the XFS_IOC_FS[GS]ETXATTR
+ioctl up to the VFS level so that other filesystems can also use it
+for modifying project quota IDs. This allows the new ext4 project
+quota functionality to work with the XFs quota tools to manage
+project quotas, which means the ext4 project quota code can be
+tested against all the xfstests project quota tests that are written
+around xfs_quota. The original branch I posted has been used by Ted
+in the ext4 tree, so I have not modified it to add SOBs, etc. I've
+added those tags in the summary for the tag for this pull request,
+hence they shouldn't ever get lost.
 
-Ok.
+Thanks!
 
-> i.e. I've already got a couple of fixes we need to add to this - the
-> DAX flag is only valid on CRC enabled filesystems,
+-Dave.
 
-I assume for torn-write protection?  The CRC limitation makes sense,
-but we theoretically could get the same effect by using a separate
-logdev that does not tear writes, right?
+The following changes since commit dde7f55bd000696acc38296c21241971e1840142:
 
-> so we need to
-> check that in the ioctl (general problem with using di_flags2 field,
-> not DAX flag specific issue). Adding a code to sync and unmap when
-> changing the flag is probably also necessary in the ioctl - I don't
-> have code to do that yet, but I have been thinking about it...
+  Merge branch 'xfs-misc-fixes-for-4.5-2' into for-next (2016-01-12 07:04:30 +1100)
 
-Matthew and I have also talked about a modification of mincore(2) to
-interrogate the effective mapping mode.  It seems we'll need that or
-something like it given the growing list of caveats with setting up a
-DAX mapping.
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.5-2
+
+for you to fetch changes up to ee3804d9f94c5a391c66386b70b9fe5a58775507:
+
+  Merge branch 'xfs-misc-fixes-for-4.5-3' into for-next (2016-01-19 08:28:36 +1100)
+
+----------------------------------------------------------------
+
+xfs: Update 2 for 4.5-rc1
+
+This update contains:
+
+o promotion of XFS_IOC_FS[GS]ETXATTR ioctl to the vfs level so that
+  it can be shared with other filesystems. The ext4 project quota
+  functionality is the first target for this. The commits in this
+  series have not been updated with review or final SOB tags because
+  the branch they were originally published in was needed by ext4.
+  Those tags are:
+
+  Reviewed-by: Theodore Ts'o <tytso@mit.edu>
+  Signed-off-by: Dave Chinner <david@fromrobit.com>
+
+o Revert a change that is causing suspend failures.
+o Fix a use-after-free that can occur on log mount failures. Been
+  around forever, but now exposed by other changes to log recovery
+  made in the first 4.5 merge.
+
+----------------------------------------------------------------
+Dave Chinner (7):
+      fs: XFS_IOC_FS[SG]SETXATTR to FS_IOC_FS[SG]ETXATTR promotion
+      xfs: use FS_XFLAG definitions directly
+      xfs: introduce per-inode DAX enablement
+      Merge branch 'xfs-setxattr-promotion' into for-next
+      Revert "xfs: clear PF_NOFREEZE for xfsaild kthread"
+      xfs: log mount failures don't wait for buffers to be released
+      Merge branch 'xfs-misc-fixes-for-4.5-3' into for-next
+
+ fs/xfs/libxfs/xfs_format.h |   11 +++++-
+ fs/xfs/libxfs/xfs_fs.h     |   38 +-----------------
+ fs/xfs/xfs_buf.c           |   10 +++++
+ fs/xfs/xfs_inode.c         |   60 ++++++++++++++++++-----------
+ fs/xfs/xfs_ioctl.c         |   92 ++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_iops.c          |    4 +-
+ fs/xfs/xfs_trans_ail.c     |    1 -
+ include/uapi/linux/fs.h    |   33 ++++++++++++++++
+ 8 files changed, 147 insertions(+), 102 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
