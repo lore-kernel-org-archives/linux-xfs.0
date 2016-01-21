@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 690067F37
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 17:43:54 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 96F097F37
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 18:07:39 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 586DB304053
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 15:43:51 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2510EAC002
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 16:07:36 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id khx3RyFeXMILjcfm (version=TLSv1.2
+	cuda.sgi.com with ESMTP id PGQPsOAedXh6YdCr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jan 2016 15:43:50 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 932918F877
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 23:43:49 +0000 (UTC)
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u0KNhmAm019831
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2016 18:43:49 -0500
+	<xfs@oss.sgi.com>; Wed, 20 Jan 2016 16:07:35 -0800 (PST)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 61A316E772
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 00:07:34 +0000 (UTC)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: don't overflow quota ID when initializing dqblk
-Message-ID: <56A01BB4.1050409@redhat.com>
-Date: Wed, 20 Jan 2016 17:43:48 -0600
+Subject: [PATCH] mkfs.xfs.8: Clarify mkfs vs. mount block size limits.
+Message-ID: <56A02144.9030206@redhat.com>
+Date: Wed, 20 Jan 2016 18:07:32 -0600
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -36,40 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, dwysocha@redhat.com
 
-Quota IDs are unsigned, and so we can pass in values up
-to 2^32-1.  But if we try to initialize a block containing
-values over MAX_INT, curid will overflow and assert.
-
-curid holds a quota ID, so give it the proper
-xfs_dqid_t type (and remove the now-impossible ASSERT).
+The current explanation is a bit vague to the uninitiated;
+clarify the text to make it obvious that while the mkfs.xfs
+utility is able to create valid filesystems with block sizes
+up to 65536, the Linux kernel can only mount filesystems with
+page sized or smaller blocks.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 83ce4aa..5d92bb5 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -232,7 +232,8 @@ xfs_qm_init_dquot_blk(
- {
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
- 	xfs_dqblk_t	*d;
--	int		curid, i;
-+	xfs_dqid_t	curid;
-+	int		i;
- 
- 	ASSERT(tp);
- 	ASSERT(xfs_buf_islocked(bp));
-@@ -243,7 +244,6 @@ xfs_qm_init_dquot_blk(
- 	 * ID of the first dquot in the block - id's are zero based.
- 	 */
- 	curid = id - (id % q->qi_dqperchunk);
--	ASSERT(curid >= 0);
- 	memset(d, 0, BBTOB(q->qi_dqchunklen));
- 	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++) {
- 		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 1fe510b..980c7bc 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -126,7 +126,10 @@ or in bytes with
+ .BR size= .
+ The default value is 4096 bytes (4 KiB), the minimum is 512, and the
+ maximum is 65536 (64 KiB).
+-XFS on Linux currently only supports pagesize or smaller blocks.
++Although
++.B mkfs.xfs
++will accept any of these values and create a valid filesystem,
++XFS on Linux can only mount filesystems with pagesize or smaller blocks.
+ .TP
+ .BI \-m " global_metadata_options"
+ These options specify metadata format options that either apply to the entire
 
 _______________________________________________
 xfs mailing list
