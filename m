@@ -1,19 +1,22 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 42ACB7F4E
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 19:32:02 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 203577F37
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 08:35:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BB1F4AC001
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 17:31:58 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Zllq6RsXCarn4kL1 (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A334AAC002
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 06:35:02 -0800 (PST)
+Received: from vps.paullafayet.com (vps.paullafayet.com [182.239.55.55]) by
+	cuda.sgi.com with ESMTP id 8r79d7bMYqQgiYqm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 17:31:57 -0800 (PST)
-Date: Fri, 22 Jan 2016 17:31:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: RFCv4+ WIP rollup of XFS reverse-mapping, reflink, and dedupe support
-Message-ID: <20160123013130.GC5496@birch.djwong.org>
+	<xfs@oss.sgi.com>; Thu, 21 Jan 2016 06:34:58 -0800 (PST)
+Received: from [154.118.46.189] (port=51164 helo=[192.168.8.102])
+	by vps.paullafayet.com with esmtpa (Exim 4.82)
+	(envelope-from <eStatement@ebill.etisalat.ae>) id 1aMEVq-0002iN-In
+	for xfs@oss.sgi.com; Thu, 21 Jan 2016 20:38:55 +0800
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Your Etisalat Online Bills Is Ready To Be Viewed
+From: "Etisalat Online Service" <eStatement@ebill.etisalat.ae>
+Date: Thu, 21 Jan 2016 13:38:48 +0100
+Message-Id: <20160121143502.1673C1296080@cuda.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,53 +25,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4377255470211621820=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi all,
+You will not see this in a MIME-aware mail reader.
+--===============4377255470211621820==
+Content-Type: multipart/alternative; boundary="===============1682289242=="
 
-I pushed all the current reflink/rmap code to github.  This time there are some
-incompat disk format changes, since I added a separate CoW extent size hint per
-discussion with Dave; and moved the reflink inode flag out of the way of the
-DAX inode flag.
+You will not see this in a MIME-aware mail reader.
+--===============1682289242==
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
 
-The last patch in the kernel tree tries to record extents being used to
-satisfy CoW requests in the refcount btree so that if we crash we can later
-find those extents (which are no longer pending) and free them.  I'm abandoning
-the use of EFIs to auto-zap the pending extents because I don't want the log
-size to be an upper bound on the number of CoW IOs we can have in flight at a
-given time.
+   =
 
-Furthermore, I think EFIs will interact badly with cowextsize -- since we must
-maintain an EFI for every extent that is alloc'd but not yet mapped, a writeout
-in the middle of the extent when the rest of the extent isn't yet dirty
-requires us to log an EFD to kill the first EFI and then log two more EFIs.  If
-the log happens to be /full/ (of pending EFIs) when we do this, we won't have
-space to log the extra EFIs and boom.  All this assumes that we can relog EFIs
-to avoid crashing the log head into the tail, which we can't at the moment.
+ Dear Customer, =
 
-Avoid running reflink and rmap at the same time -- there are some xfs_buf
-deadlocks that I haven't sorted out yet.  xfs/821 fails until I figure out
-a permanent solution to per-AG pools.
+  Your Etisalat online bills is ready to be viewed.  Simplyclick hereto vie=
+w statement.  Regards,  Etisalat Online Service Team  ---------------------=
+--------- -  Note : Do not reply this Email as all message(s) will not be r=
+esponded to and will disregard.   2015 Etisalat, Inc..Telecommunications Co=
+rporation, branded trade name Etisalat.   =
 
-On the plus side, there's now an inheritable CoW extent size hint so that we
-can fight fragmentation, and a lot more testing of IO errors and fragmentation
-problems that crop up with CoW.
+=20
+--===============1682289242==
+Content-Type: text/html; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
 
-I'll rebase on upstream after the merge window closes on Sunday.
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
+=3Diso-8859-1"/></head><td colspan=3D"2" id=3D"readmsg" class=3D"readmsg">
 
-https://github.com/djwong/linux/commits/for-dave
-https://github.com/djwong/xfsprogs/tree/for-dave
-https://github.com/djwong/xfstests/tree/for-dave
-https://github.com/djwong/xfs-documentation/tree/for-dave
 
---D
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	<p style=3D"line-height: 22px; margin: 0px 0px 1.35em;">
+	<img class=3D"yiv0908746544decoded" alt=3D"http://www.etisalat.ae/en/syste=
+m/images/rd/logo.png" src=3D"http://www.etisalat.ae/en/system/images/rd/log=
+o.png"></p>
+	<p style=3D"line-height: 22px; margin: 0px 0px 1.35em;">Dear Customer, =
+
+	</p></div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	Your Etisalat online bills is ready to be viewed.</div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	Simply<span class=3D"yiv0908746544ecxApple-converted-space" style=3D"line-=
+height: 22px;"><span class=3D"Apple-converted-space"></span></span><b style=
+=3D"line-height: 22px; font-weight: bold;"><a class=3D"aa" target=3D"_blank=
+" rel=3D"nofollow" style=3D"color: rgb(17, 85, 204); text-decoration: under=
+line; line-height: 22px; font-weight: inherit; cursor: pointer;" href=3D"ht=
+tp://www.co.asotin.wa.us/new/emiratee.htm">click =
+
+	here</a></b><span class=3D"yiv0908746544ecxApple-converted-space" style=3D=
+"line-height: 22px;"><span class=3D"Apple-converted-space"></span></span>to =
+
+	view statement.</div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	Regards,</div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	Etisalat Online Service Team</div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	------------------------------ -</div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	<font style=3D"line-height: normal;" color=3D"#999999">Note : Do not reply=
+ this =
+
+	Email as all message(s) will not be responded to and will disregard.</font=
+></div>
+<div style=3D"font-style: normal; font-variant: normal; font-weight: normal=
+; letter-spacing: normal; line-height: normal; text-align: start; text-inde=
+nt: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -web=
+kit-text-stroke-width: 0px; orphans: 2; widows: 2; color: rgb(34, 34, 34); =
+font-family: HelveticaNeue, 'Helvetica Neue', Helvetica, Arial, 'Lucida Gra=
+nde', sans-serif; font-size: 16px; background-color: rgb(255, 255, 255);">
+	<font color=3D"#999999"> 2015 Etisalat, Inc..<span class=3D"Apple-converte=
+d-space"></span>Telecommunications =
+
+	Corporation, branded trade name Etisalat.</font></div>
+<p style=3D"color: rgb(0, 0, 0); font-family: Arial, Helvetica, Verdana; fo=
+nt-size: 12px; font-style: normal; font-variant: normal; font-weight: norma=
+l; letter-spacing: normal; line-height: normal; orphans: auto; text-align: =
+start; text-indent: 0px; text-transform: none; white-space: normal; widows:=
+ 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">
+<a class=3D"aa" target=3D"_blank" href=3D"http://www.co.asotin.wa.us/new/em=
+iratee.htm">
+<img class=3D"yiv0908746544decoded" alt=3D"http://www.etisalat.ae/en/system=
+/images/rd/addBannar1.png" src=3D"http://www.etisalat.ae/en/system/images/r=
+d/addBannar1.png"><img class=3D"yiv0908746544decoded" alt=3D"http://www.eti=
+salat.ae/en/system/images/rd/addBannar4.png" src=3D"http://www.etisalat.ae/=
+en/system/images/rd/addBannar4.png"></a></p>
+
+
+
+
+
+</td></html>
+--===============1682289242==--
+
+
+--===============4377255470211621820==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4377255470211621820==--
