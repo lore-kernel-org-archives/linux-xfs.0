@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 48FF17F37
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 16:24:27 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 9B6AC7F37
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 16:53:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BDF15AC003
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:24:23 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	gZBBCTG4XHB8DBDV for <xfs@oss.sgi.com>;
-	Thu, 21 Jan 2016 14:24:20 -0800 (PST)
-Date: Fri, 22 Jan 2016 09:24:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Revert "xfs: clear PF_NOFREEZE for xfsaild kthread"
-Message-ID: <20160121222418.GB6033@dastard>
-References: <1452661968-11482-1-git-send-email-david@fromorbit.com>
-	<20160120084750.GA14187@dhcp22.suse.cz>
-	<20160120211944.GE20456@dastard>
-	<20160121102129.GD29520@dhcp22.suse.cz>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 081C4AC002
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:53:09 -0800 (PST)
+Received: from mail-yk0-f174.google.com (mail-yk0-f174.google.com
+	[209.85.160.174]) by cuda.sgi.com with ESMTP id
+	pH6j0iwEB6cpyjnB (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:53:08 -0800 (PST)
+Received: by mail-yk0-f174.google.com with SMTP id s126so41702451ykf.2
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 14:53:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160121102129.GD29520@dhcp22.suse.cz>
+In-Reply-To: <20160121215820.GA6033@dastard>
+References: <1451886892-15548-1-git-send-email-david@fromorbit.com>
+	<1451886892-15548-4-git-send-email-david@fromorbit.com>
+	<CAA9_cmdAYzf3DpjPRZWikNgmJT_sdDACXa_znz6j0oqmmRdLOA@mail.gmail.com>
+	<20160121215820.GA6033@dastard>
+Date: Thu, 21 Jan 2016 14:53:06 -0800
+Message-ID: <CAPcyv4iXg6pD4p2MTFA3hwUc6eTK=Lpw1nDuchAs1ZQWS05MtA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] xfs: introduce per-inode DAX enablement
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,66 +34,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@suse.cz>
-Cc: jkosina@suse.cz, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Hendrik Woltersdorf <hendrikw@arcor.de>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, ext4@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>
 
-On Thu, Jan 21, 2016 at 11:21:30AM +0100, Michal Hocko wrote:
-> [CCing Rafael - the thread starts here
-> http://lkml.kernel.org/r/1452661968-11482-1-git-send-email-david%40fromorbit.com]
-> 
-> On Thu 21-01-16 08:19:44, Dave Chinner wrote:
-> > On Wed, Jan 20, 2016 at 09:47:50AM +0100, Michal Hocko wrote:
-> > > On Wed 13-01-16 16:12:48, Dave Chinner wrote:
-> > > > This reverts commit 24ba16bb3d499c49974669cd8429c3e4138ab102 as it
-> > > > prevents machines from suspending. This regression occurs when the
-> > > > xfsaild is idle on entry to suspend, and so there s no activity to
-> > > > wake it from it's idle sleep and hence see that it is supposed to
-> > > > freeze. Hence the freezer times out waiting for it and suspend is
-> > > > cancelled.
-> > > > 
-> > > > There is no obvious fix for this short of freezing the filesystem
-> > > > properly, so revert this change for now.
-> > > 
-> > > We had a similar report opensuse bugzilla just recently. I believe the
-> > > proper fix should be the following:
-> > ....
-> > > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> > > index aa67339b9537..d6c9c3e9e02b 100644
-> > > --- a/fs/xfs/xfs_trans_ail.c
-> > > +++ b/fs/xfs/xfs_trans_ail.c
-> > > @@ -520,14 +520,14 @@ xfsaild(
-> > >  		if (!xfs_ail_min(ailp) &&
-> > >  		    ailp->xa_target == ailp->xa_target_prev) {
-> > >  			spin_unlock(&ailp->xa_lock);
-> > > -			schedule();
-> > > +			freezable_schedule();
-> > 
-> > Oh, wonderful. A completely separate set of undocumented schedule
-> > functions defined inside the freezer header files that are needed
-> > just for freezable kthreads.
-> 
-> Yeah, I am not really happy about them either.
-> 
-> > Perhaps there should be some documentation somewhere on how to write
-> > suspend safe kthreads?
-> 
-> There is something in Documentation/power/freezing-of-tasks.txt but
-> freezable_schedule* is not mentioned there. Prhaps something like the
-> following would make it more clear?
+On Thu, Jan 21, 2016 at 1:58 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jan 21, 2016 at 08:37:11AM -0800, Dan Williams wrote:
+>> On Sun, Jan 3, 2016 at 9:54 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > From: Dave Chinner <dchinner@redhat.com>
+>> >
+>> > Rather than just being able to turn DAX on and off via a mount
+>> > option, some applications may only want to enable DAX for certain
+>> > performance critical files in a filesystem.
+>> >
+>> > This patch introduces a new inode flag to enable DAX in the v3 inode
+>> > di_flags2 field. It adds support for setting and clearing flags in
+>> > the di_flags2 field via the XFS_IOC_FSSETXATTR ioctl, and sets the
+>> > S_DAX inode flag appropriately when it is seen.
+>> >
+>> > When this flag is set on a directory, it acts as an "inherit flag".
+>> > That is, inodes created in the directory will automatically inherit
+>> > the on-disk inode DAX flag, enabling administrators to set up
+>> > directory heirarchies that automatically use DAX. Setting this flag
+>> > on an empty root directory will make the entire filesystem use DAX
+>> > by default.
+>>
+>> When switching from page-cache to DAX, don't we need to flush existing
+>> page cache mappings and remap directly?  Or, is the thought that
+>> userspace needs to comprehend the presence of mixed mappings after
+>> changing S_DAX?
+>
+> The change should be transparent to userspace. In general, I don't
+> expect users to change the behaviour of files that are in active use
+> (why would you do that?).
 
-When I did "git grep freezable_schedule" nothing showed up in the
-Documentation directory. I'd suggest that the entire API needs
-reference in Documentation/scheduler (i.e. all the
-freezable_schedule_timeout variants, the wait_event stuff, etc) as
-well as in the freezer documentation so that git grep finds them in
-the appropriate places....
+If by accident someone tries to dynamically change S_DAX while
+existing mappings are established I think the kernel should just
+return EBUSY.  I was not proposing we support it as a first-class
+operation.
 
-Cheers,
+> This patch is really just introducing the
+> flag, the userspace API and making it propagate correctly via the
+> on-disk format. We'll fix up whatever problems with switching it
+> on/off dynamically as we go, like we do with most experimental
+> features once the on-disk behaviour is sorted out.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ok.
+
+> i.e. I've already got a couple of fixes we need to add to this - the
+> DAX flag is only valid on CRC enabled filesystems,
+
+I assume for torn-write protection?  The CRC limitation makes sense,
+but we theoretically could get the same effect by using a separate
+logdev that does not tear writes, right?
+
+> so we need to
+> check that in the ioctl (general problem with using di_flags2 field,
+> not DAX flag specific issue). Adding a code to sync and unmap when
+> changing the flag is probably also necessary in the ioctl - I don't
+> have code to do that yet, but I have been thinking about it...
+
+Matthew and I have also talked about a modification of mincore(2) to
+interrogate the effective mapping mode.  It seems we'll need that or
+something like it given the growing list of caveats with setting up a
+DAX mapping.
 
 _______________________________________________
 xfs mailing list
