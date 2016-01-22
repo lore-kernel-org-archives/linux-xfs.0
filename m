@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BC2327F37
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 03:52:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AC02F8F8049
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 01:52:37 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 6CF2hhwhkaGDrEQI (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 01:52:35 -0800 (PST)
-Date: Fri, 22 Jan 2016 10:52:33 +0100
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] Revert "xfs: clear PF_NOFREEZE for xfsaild kthread"
-Message-ID: <20160122095233.GA19465@dhcp22.suse.cz>
-References: <1452661968-11482-1-git-send-email-david@fromorbit.com>
-	<20160120084750.GA14187@dhcp22.suse.cz>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 873547F37
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 07:57:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A6CB304032
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 05:57:22 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id PtZAkaFpNmBpCCs7 for <xfs@oss.sgi.com>;
+	Fri, 22 Jan 2016 05:57:20 -0800 (PST)
+Subject: Re: [PATCH 2/7] quota: add new quotactl Q_XGETNEXTQUOTA
+References: <1453435644-32261-1-git-send-email-sandeen@redhat.com>
+	<1453435644-32261-3-git-send-email-sandeen@redhat.com>
+	<20160122085549.GB16898@quack.suse.cz>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56A2353F.4000400@sandeen.net>
+Date: Fri, 22 Jan 2016 07:57:19 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160120084750.GA14187@dhcp22.suse.cz>
+In-Reply-To: <20160122085549.GB16898@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +29,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jkosina@suse.cz, Hendrik Woltersdorf <hendrikw@arcor.de>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed 20-01-16 09:47:50, Michal Hocko wrote:
-> On Wed 13-01-16 16:12:48, Dave Chinner wrote:
-> > This reverts commit 24ba16bb3d499c49974669cd8429c3e4138ab102 as it
-> > prevents machines from suspending. This regression occurs when the
-> > xfsaild is idle on entry to suspend, and so there s no activity to
-> > wake it from it's idle sleep and hence see that it is supposed to
-> > freeze. Hence the freezer times out waiting for it and suspend is
-> > cancelled.
-> > 
-> > There is no obvious fix for this short of freezing the filesystem
-> > properly, so revert this change for now.
-> 
-> We had a similar report opensuse bugzilla just recently. I believe the
-> proper fix should be the following:
-> ---
-> From ae910a86ada86804c34cc8136afebc9fefa15813 Mon Sep 17 00:00:00 2001
-> From: Michal Hocko <mhocko@suse.com>
-> Date: Tue, 19 Jan 2016 20:28:49 +0100
-> Subject: [PATCH] xfs, xfsaild: Do not block suspend
-> 
-> Hendik has reported suspend failures due to xfsaild blocking the freezer
-> to settle down.
-> Jan 17 19:59:56 linux-6380 kernel: PM: Syncing filesystems ... done.
-> Jan 17 19:59:56 linux-6380 kernel: PM: Preparing system for sleep (mem)
-> Jan 17 19:59:56 linux-6380 kernel: Freezing user space processes ... (elapsed 0.001 seconds) done.
-> Jan 17 19:59:56 linux-6380 kernel: Freezing remaining freezable tasks ...
-> Jan 17 19:59:56 linux-6380 kernel: Freezing of tasks failed after 20.002 seconds (1 tasks refusing to freeze, wq_busy=0):
-> Jan 17 19:59:56 linux-6380 kernel: xfsaild/dm-5    S 00000000     0  1293      2 0x00000080
-> Jan 17 19:59:56 linux-6380 kernel:  f0ef5f00 00000046 00000200 00000000 ffff9022 c02d3800 00000000 00000032
-> Jan 17 19:59:56 linux-6380 kernel:  ee0b2400 00000032 f71e0d00 f36fabc0 f0ef2d00 f0ef6000 f0ef2d00 f12f90c0
-> Jan 17 19:59:56 linux-6380 kernel:  f0ef5f0c c0844e44 00000000 f0ef5f6c f811e0be 00000000 00000000 f0ef2d00
-> Jan 17 19:59:56 linux-6380 kernel: Call Trace:
-> Jan 17 19:59:56 linux-6380 kernel:  [<c0844e44>] schedule+0x34/0x90
-> Jan 17 19:59:56 linux-6380 kernel:  [<f811e0be>] xfsaild+0x5de/0x600 [xfs]
-> Jan 17 19:59:56 linux-6380 kernel:  [<c0286cbb>] kthread+0x9b/0xb0
-> Jan 17 19:59:56 linux-6380 kernel:  [<c0848a79>] ret_from_kernel_thread+0x21/0x38
-> 
-> The issue has been there for quite some time but it has been made
-> visible by only by 24ba16bb3d49 ("xfs: clear PF_NOFREEZE for xfsaild
-> kthread") because the suspend started seeing xfsaild.
-> 
-> The above commit has missed that the !xfs_ail_min branch might call
-> schedule with TASK_INTERRUPTIBLE without calling try_to_freeze so the pm
-> suspend would wake up the kernel thread over and over again without any
-> progress. What we want here is to use freezable_schedule instead to hide
-> the thread from the suspend.
-> 
-> While we are here also change schedule_timeout to freezable variant to
-> prevent from spurious wakeups by suspend.
-> 
-> Reported-by: Hendrik Woltersdorf <hendrikw@arcor.de>
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
 
-Hendrik was able to test the patch so feel free to add his Tested-by
--- 
-Michal Hocko
-SUSE Labs
+On 1/22/16 2:55 AM, Jan Kara wrote:
+> On Thu 21-01-16 22:07:19, Eric Sandeen wrote:
+>> Q_XGETNEXTQUOTA is exactly like Q_XGETQUOTA, except that it
+>> will return quota information for the id equal to or greater
+>> than the id requested.  In other words, if the requested id has
+>> no quota, the command will return quota information for the
+>> next higher id which does have a quota set.  If no higher id
+>> has an active quota, -ESRCH is returned.
+>>
+>> This allows filesystems to do efficient iteration in kernelspace,
+>> much like extN filesystems do in userspace when asked to report
+>> all active quotas.
+>>
+>> The patch adds a d_id field to struct qc_dqblk so that we can
+>> pass back the id of the quota which was found, and return it
+>> to userspace.
+>>
+>> Today, filesystems such as XFS require getpwent-style iterations,
+>> and for systems which have i.e. LDAP backends, this can be very
+>> slow, or even impossible if iteration is not allowed in the
+>> configuration.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ...
+>> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+>> index ea66670..4bf8d40 100644
+>> --- a/fs/quota/quota.c
+>> +++ b/fs/quota/quota.c
+>> @@ -33,6 +33,7 @@ static int check_quotactl_permission(struct super_block *sb, int type, int cmd,
+>>  	/* allow to query information for dquots we "own" */
+>>  	case Q_GETQUOTA:
+>>  	case Q_XGETQUOTA:
+>> +	case Q_XGETNEXTQUOTA:
+> 
+> IMO you should require CAP_SYS_ADMIN for the quotactl. Definitely doing the
+> UID and GID checks for GETNEXTQUOTA looks strange to me since the returned
+> structure may be for a different ID. Or did you assume that existing user
+> will have quota structure allocated so we always return quotas for that ID
+> in that case? I'm not sure this is good to rely on...
+
+Oh whoops.  OK that was dumb of me, thanks for catching it.  No, I
+didn't intend to rely on the asking user having a quota, it was
+just a dumb mistake.  :)
+
+>> +	ret = sb->s_qcop->get_nextdqblk(sb, qid, &qdq);
+>> +	if (ret)
+>> +	        return ret;
+>> +	copy_to_xfs_dqblk(&fdq, &qdq, type, qdq.d_id);
+>> +	if (copy_to_user(addr, &fdq, sizeof(fdq)))
+>> +	        return -EFAULT;
+>> +	return ret;
+>> +}
+> 
+> So how about passing pointer to 'qid' to ->get_nextdqblk() and return the ID
+> that way? That will also force you to fix the issue that you currently
+> completely miss user-namespace conversions for the ID ;).
+
+Ok.
+
+> I definitely dislike mixing d_id in the qdq structure with arguments of fs
+> callbacks and that d_id doesn't get filled for most callbacks. That is going
+> to cause confusion.
+
+Yeah, fair enough.  I'll change it.
+
+Thanks,
+-Eric
+
+> 								Honza
+> 
 
 _______________________________________________
 xfs mailing list
