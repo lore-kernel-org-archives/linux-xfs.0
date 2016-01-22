@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 464F57F50
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7B6977F51
 	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 12:25:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2DC83304053
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 725EF8F8033
 	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 10:25:42 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id SV0EBiiSA2A6wN8u for <xfs@oss.sgi.com>;
+	ESMTP id VEn3kYElu39fcKPy for <xfs@oss.sgi.com>;
 	Fri, 22 Jan 2016 10:25:40 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 6/7] xfs: Factor xfs_seek_hole_data into helper
-Date: Fri, 22 Jan 2016 12:25:35 -0600
-Message-Id: <1453487136-12681-7-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 7/7] xfs: wire up Q_XGETNEXTQUOTA / get_nextdqblk
+Date: Fri, 22 Jan 2016 12:25:36 -0600
+Message-Id: <1453487136-12681-8-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
 References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,190 +30,304 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 Cc: jack@suse.cz
 
-Factor xfs_seek_hole_data into an unlocked helper which takes
-an xfs inode rather than a file for internal use.
+Add code to allow the Q_XGETNEXTQUOTA quotactl to quickly find
+all active quotas by examining the quota inode, and skipping
+over unallocated or uninitialized regions.
 
-Also allow specification of "end" - the vfs lseek interface is
-defined such that any offset past eof/i_size shall return -ENXIO,
-but we will use this for quota code which does not maintain i_size,
-and we want to be able to SEEK_DATA past i_size as well.  So the
-lseek path can send in i_size, and the quota code can determine
-its own ending offset.
+Userspace can then use this interface rather than i.e. a
+getpwent() loop when asked to report all active quotas.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_file.c  |   82 ++++++++++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_inode.h |    2 +
- 2 files changed, 59 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_quota_defs.h |    3 +-
+ fs/xfs/xfs_dquot.c             |   96 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_qm.h                |    4 +-
+ fs/xfs/xfs_qm_syscalls.c       |   12 +++--
+ fs/xfs/xfs_quotaops.c          |   36 ++++++++++++++-
+ 5 files changed, 142 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index ebe9b82..5dc7113 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1337,31 +1337,31 @@ out:
- 	return found;
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index f51078f..8eed512 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -37,7 +37,7 @@ typedef __uint16_t	xfs_qwarncnt_t;
+ #define XFS_DQ_PROJ		0x0002		/* project quota */
+ #define XFS_DQ_GROUP		0x0004		/* a group quota */
+ #define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
+-#define XFS_DQ_FREEING		0x0010		/* dquot is beeing torn down */
++#define XFS_DQ_FREEING		0x0010		/* dquot is being torn down */
+ 
+ #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+ 
+@@ -116,6 +116,7 @@ typedef __uint16_t	xfs_qwarncnt_t;
+ #define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
+ #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
+ #define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
++#define XFS_QMOPT_DQNEXT	0x0008000 /* return next dquot >= this ID */
+ 
+ /*
+  * flags to xfs_trans_mod_dquot to indicate which field needs to be
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 5dbde0d..3b93e94 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -686,6 +686,56 @@ error0:
  }
  
--STATIC loff_t
--xfs_seek_hole_data(
--	struct file		*file,
-+/*
-+ * caller must lock inode with xfs_ilock_data_map_shared,
-+ * can we craft an appropriate ASSERT?
-+ *
-+ * end is because the VFS-level lseek interface is defined such that any
-+ * offset past i_size shall return -ENXIO, but we use this for quota code
-+ * which does not maintain i_size, and we want to SEEK_DATA past i_size.
+ /*
++ * Advance to the next id in the current chunk, or if at the
++ * end of the chunk, skip ahead to first id in next allocated chunk
++ * using the SEEK_DATA interface.
 + */
-+loff_t
-+__xfs_seek_hole_data(
-+	struct inode		*inode,
- 	loff_t			start,
-+	loff_t			end,
- 	int			whence)
- {
--	struct inode		*inode = file->f_mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	loff_t			uninitialized_var(offset);
--	xfs_fsize_t		isize;
- 	xfs_fileoff_t		fsbno;
--	xfs_filblks_t		end;
--	uint			lock;
-+	xfs_filblks_t		lastbno;
- 	int			error;
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
--	lock = xfs_ilock_data_map_shared(ip);
--
--	isize = i_size_read(inode);
--	if (start >= isize) {
-+	if (start >= end) {
- 		error = -ENXIO;
--		goto out_unlock;
-+		goto out_error;
- 	}
- 
- 	/*
-@@ -1369,22 +1369,22 @@ xfs_seek_hole_data(
- 	 * by fsbno to the end block of the file.
- 	 */
- 	fsbno = XFS_B_TO_FSBT(mp, start);
--	end = XFS_B_TO_FSB(mp, isize);
-+	lastbno = XFS_B_TO_FSB(mp, end);
- 
- 	for (;;) {
- 		struct xfs_bmbt_irec	map[2];
- 		int			nmap = 2;
- 		unsigned int		i;
- 
--		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
-+		error = xfs_bmapi_read(ip, fsbno, lastbno - fsbno, map, &nmap,
- 				       XFS_BMAPI_ENTIRE);
- 		if (error)
--			goto out_unlock;
-+			goto out_error;
- 
- 		/* No extents at given offset, must be beyond EOF */
- 		if (nmap == 0) {
- 			error = -ENXIO;
--			goto out_unlock;
-+			goto out_error;
- 		}
- 
- 		for (i = 0; i < nmap; i++) {
-@@ -1426,7 +1426,7 @@ xfs_seek_hole_data(
- 			 * hole at the end of any file).
- 		 	 */
- 			if (whence == SEEK_HOLE) {
--				offset = isize;
-+				offset = end;
- 				break;
- 			}
- 			/*
-@@ -1434,7 +1434,7 @@ xfs_seek_hole_data(
- 			 */
- 			ASSERT(whence == SEEK_DATA);
- 			error = -ENXIO;
--			goto out_unlock;
-+			goto out_error;
- 		}
- 
- 		ASSERT(i > 1);
-@@ -1445,14 +1445,14 @@ xfs_seek_hole_data(
- 		 */
- 		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
- 		start = XFS_FSB_TO_B(mp, fsbno);
--		if (start >= isize) {
-+		if (start >= end) {
- 			if (whence == SEEK_HOLE) {
--				offset = isize;
-+				offset = end;
- 				break;
- 			}
- 			ASSERT(whence == SEEK_DATA);
- 			error = -ENXIO;
--			goto out_unlock;
-+			goto out_error;
- 		}
- 	}
- 
-@@ -1464,7 +1464,39 @@ out:
- 	 * situation in particular.
- 	 */
- 	if (whence == SEEK_HOLE)
--		offset = min_t(loff_t, offset, isize);
-+		offset = min_t(loff_t, offset, end);
-+
-+	return offset;
-+
-+out_error:
-+	return error;
-+}
-+
-+STATIC loff_t
-+xfs_seek_hole_data(
-+	struct file		*file,
-+	loff_t			start,
-+	int			whence)
++int
++xfs_dq_get_next_id(
++	xfs_mount_t		*mp,
++	uint			type,
++	xfs_dqid_t		*id,
++	loff_t			eof)
 +{
-+	struct inode		*inode = file->f_mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_inode	*quotip;
++	xfs_fsblock_t		start;
++	loff_t			offset;
 +	uint			lock;
-+	loff_t			offset, end;
++	xfs_dqid_t		next_id;
 +	int			error = 0;
 +
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
++	/* Simple advance */
++	next_id = *id + 1;
 +
-+	lock = xfs_ilock_data_map_shared(ip);
-+
-+	end = i_size_read(inode);
-+	offset = __xfs_seek_hole_data(inode, start, end, whence);
-+	if (offset < 0) {
-+		error = offset;
-+		goto out_unlock;
++	/* If new ID is within the current chunk, advancing it sufficed */
++	if (next_id % mp->m_quotainfo->qi_dqperchunk) {
++		*id = next_id;
++		return 0;
 +	}
 +
- 	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
++	/* Nope, next_id is now past the current chunk, so find the next one */
++	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
++
++	quotip = xfs_quota_inode(mp, type);
++	lock = xfs_ilock_data_map_shared(quotip);
++
++	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
++				      eof, SEEK_DATA);
++	if (offset < 0)
++		error = offset;
++
++	xfs_iunlock(quotip, lock);
++
++	/* -ENXIO is essentially "no more data" */
++	if (error)
++		return (error == -ENXIO ? -ESRCH : error);
++
++	/* Convert next data offset back to a quota id */
++	*id = XFS_B_TO_FSB(mp, offset) * mp->m_quotainfo->qi_dqperchunk;
++	return 0;
++}
++
++/*
+  * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
+  * a locked dquot, doing an allocation (if requested) as needed.
+  * When both an inode and an id are given, the inode's id takes precedence.
+@@ -705,6 +755,7 @@ xfs_qm_dqget(
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
++	loff_t			eof = 0;
+ 	int			error;
  
- out_unlock:
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca9e119..ed7e933 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -437,6 +437,8 @@ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- 		     xfs_fsize_t isize, bool *did_zeroing);
- int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
-+loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
-+			     loff_t eof, int whence);
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -732,6 +783,21 @@ xfs_qm_dqget(
+ 	}
+ #endif
  
++	/* Get the end of the quota file if we need it */
++	if (flags & XFS_QMOPT_DQNEXT) {
++		struct xfs_inode	*quotip;
++		xfs_fileoff_t		last;
++		uint			lock_mode;
++
++		quotip = xfs_quota_inode(mp, type);
++		lock_mode = xfs_ilock_data_map_shared(quotip);
++		error = xfs_bmap_last_offset(quotip, &last, XFS_DATA_FORK);
++		xfs_iunlock(quotip, lock_mode);
++		if (error)
++			return error;
++		eof = XFS_FSB_TO_B(mp, last);
++	}
++
+ restart:
+ 	mutex_lock(&qi->qi_tree_lock);
+ 	dqp = radix_tree_lookup(tree, id);
+@@ -745,6 +811,18 @@ restart:
+ 			goto restart;
+ 		}
  
- /* from xfs_iops.c */
++		/* uninit / unused quota found in radix tree, keep looking  */
++		if (flags & XFS_QMOPT_DQNEXT) {
++			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
++				xfs_dqunlock(dqp);
++				mutex_unlock(&qi->qi_tree_lock);
++				error = xfs_dq_get_next_id(mp, type, &id, eof);
++				if (error)
++					return error;
++				goto restart;
++			}
++		}
++
+ 		dqp->q_nrefs++;
+ 		mutex_unlock(&qi->qi_tree_lock);
+ 
+@@ -771,6 +849,13 @@ restart:
+ 	if (ip)
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
++	/* If we are asked to find next active id, keep looking */
++	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
++		error = xfs_dq_get_next_id(mp, type, &id, eof);
++		if (!error)
++			goto restart;
++	}
++
+ 	if (error)
+ 		return error;
+ 
+@@ -821,6 +906,17 @@ restart:
+ 	qi->qi_dquots++;
+ 	mutex_unlock(&qi->qi_tree_lock);
+ 
++	/* If we are asked to find next active id, keep looking */
++	if (flags & XFS_QMOPT_DQNEXT) {
++		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
++			xfs_qm_dqput(dqp);
++			error = xfs_dq_get_next_id(mp, type, &id, eof);
++			if (error)
++				return error;
++			goto restart;
++		}
++	}
++
+  dqret:
+ 	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	trace_xfs_dqget_miss(dqp);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 8901a01..c68a38f 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -164,8 +164,8 @@ extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
+ 
+ /* quota ops */
+ extern int		xfs_qm_scall_trunc_qfiles(struct xfs_mount *, uint);
+-extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t,
+-					uint, struct qc_dqblk *);
++extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t *,
++					uint, struct qc_dqblk *, uint);
+ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
+ 					struct qc_dqblk *);
+ extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 3640c6e..0a25286 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -635,9 +635,10 @@ out:
+ int
+ xfs_qm_scall_getquota(
+ 	struct xfs_mount	*mp,
+-	xfs_dqid_t		id,
++	xfs_dqid_t		*id,
+ 	uint			type,
+-	struct qc_dqblk		*dst)
++	struct qc_dqblk		*dst,
++	uint			dqget_flags)
+ {
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+@@ -647,7 +648,7 @@ xfs_qm_scall_getquota(
+ 	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
+ 	 * exist, we'll get ENOENT back.
+ 	 */
+-	error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
++	error = xfs_qm_dqget(mp, NULL, *id, type, dqget_flags, &dqp);
+ 	if (error)
+ 		return error;
+ 
+@@ -660,6 +661,9 @@ xfs_qm_scall_getquota(
+ 		goto out_put;
+ 	}
+ 
++	/* Fill in the ID we actually read from disk */
++	*id = be32_to_cpu(dqp->q_core.d_id);
++
+ 	memset(dst, 0, sizeof(*dst));
+ 	dst->d_spc_hardlimit =
+ 		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_blk_hardlimit));
+@@ -701,7 +705,7 @@ xfs_qm_scall_getquota(
+ 	if (((XFS_IS_UQUOTA_ENFORCED(mp) && type == XFS_DQ_USER) ||
+ 	     (XFS_IS_GQUOTA_ENFORCED(mp) && type == XFS_DQ_GROUP) ||
+ 	     (XFS_IS_PQUOTA_ENFORCED(mp) && type == XFS_DQ_PROJ)) &&
+-	    id != 0) {
++	    *id != 0) {
+ 		if ((dst->d_space > dst->d_spc_softlimit) &&
+ 		    (dst->d_spc_softlimit > 0)) {
+ 			ASSERT(dst->d_spc_timer != 0);
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 7795e0d..f82d79a 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -231,14 +231,45 @@ xfs_fs_get_dqblk(
+ 	struct qc_dqblk		*qdq)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
++	xfs_dqid_t		id;
+ 
+ 	if (!XFS_IS_QUOTA_RUNNING(mp))
+ 		return -ENOSYS;
+ 	if (!XFS_IS_QUOTA_ON(mp))
+ 		return -ESRCH;
+ 
+-	return xfs_qm_scall_getquota(mp, from_kqid(&init_user_ns, qid),
+-				      xfs_quota_type(qid.type), qdq);
++	id = from_kqid(&init_user_ns, qid);
++	return xfs_qm_scall_getquota(mp, &id,
++				      xfs_quota_type(qid.type), qdq, 0);
++}
++
++/* Return quota info for active quota >= this qid */
++STATIC int
++xfs_fs_get_nextdqblk(
++	struct super_block	*sb,
++	struct kqid		*qid,
++	struct qc_dqblk		*qdq)
++{
++	int			ret;
++	struct xfs_mount	*mp = XFS_M(sb);
++	xfs_dqid_t		id;
++
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return -ENOSYS;
++	if (!XFS_IS_QUOTA_ON(mp))
++		return -ESRCH;
++
++	id = from_kqid(&init_user_ns, *qid);
++	ret = xfs_qm_scall_getquota(mp, &id,
++				    xfs_quota_type(qid->type), qdq,
++				    XFS_QMOPT_DQNEXT);
++	if (ret)
++		return ret;
++
++	/* ID may be different, so convert back what we got */
++	*qid = make_kqid(current_user_ns(), qid->type, id);
++	return 0;
++	
+ }
+ 
+ STATIC int
+@@ -267,5 +298,6 @@ const struct quotactl_ops xfs_quotactl_operations = {
+ 	.quota_disable		= xfs_quota_disable,
+ 	.rm_xquota		= xfs_fs_rm_xquota,
+ 	.get_dqblk		= xfs_fs_get_dqblk,
++	.get_nextdqblk		= xfs_fs_get_nextdqblk,
+ 	.set_dqblk		= xfs_fs_set_dqblk,
+ };
 -- 
 1.7.1
 
