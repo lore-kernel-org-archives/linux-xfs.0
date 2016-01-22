@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 32BC77F37
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 22:28:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0FD07304039
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 20:28:58 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id sUvuHav3HCTlHrek for <xfs@oss.sgi.com>;
-	Thu, 21 Jan 2016 20:28:56 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 4458260DDB96
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 22:28:56 -0600 (CST)
-Subject: [PATCH 3/3] xfs_quota: use Q_XGETNEXTQUOTA for report and dump
-References: <56A1AF9F.80303@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56A1B008.1020801@sandeen.net>
-Date: Thu, 21 Jan 2016 22:28:56 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BD23B7F37
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 02:55:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 48A73AC001
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 00:55:44 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id wMhiRuF7EgVeEzxM (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 00:55:38 -0800 (PST)
+Date: Fri, 22 Jan 2016 09:55:49 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/7] quota: add new quotactl Q_XGETNEXTQUOTA
+Message-ID: <20160122085549.GB16898@quack.suse.cz>
+References: <1453435644-32261-1-git-send-email-sandeen@redhat.com>
+	<1453435644-32261-3-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <56A1AF9F.80303@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <1453435644-32261-3-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,249 +30,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-Rather than a loop over getpwnam() etc, use the Q_XGETNEXTQUOTA
-command to iterate through all active quotas in quota
-reports and quota file dump.
+On Thu 21-01-16 22:07:19, Eric Sandeen wrote:
+> Q_XGETNEXTQUOTA is exactly like Q_XGETQUOTA, except that it
+> will return quota information for the id equal to or greater
+> than the id requested.  In other words, if the requested id has
+> no quota, the command will return quota information for the
+> next higher id which does have a quota set.  If no higher id
+> has an active quota, -ESRCH is returned.
+> 
+> This allows filesystems to do efficient iteration in kernelspace,
+> much like extN filesystems do in userspace when asked to report
+> all active quotas.
+> 
+> The patch adds a d_id field to struct qc_dqblk so that we can
+> pass back the id of the quota which was found, and return it
+> to userspace.
+> 
+> Today, filesystems such as XFS require getpwent-style iterations,
+> and for systems which have i.e. LDAP backends, this can be very
+> slow, or even impossible if iteration is not allowed in the
+> configuration.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+...
+> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> index ea66670..4bf8d40 100644
+> --- a/fs/quota/quota.c
+> +++ b/fs/quota/quota.c
+> @@ -33,6 +33,7 @@ static int check_quotactl_permission(struct super_block *sb, int type, int cmd,
+>  	/* allow to query information for dquots we "own" */
+>  	case Q_GETQUOTA:
+>  	case Q_XGETQUOTA:
+> +	case Q_XGETNEXTQUOTA:
 
-If Q_XGETNEXTQUOTA fails, go back to the old way.
+IMO you should require CAP_SYS_ADMIN for the quotactl. Definitely doing the
+UID and GID checks for GETNEXTQUOTA looks strange to me since the returned
+structure may be for a different ID. Or did you assume that existing user
+will have quota structure allocated so we always return quotas for that ID
+in that case? I'm not sure this is good to rely on...
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> +	ret = sb->s_qcop->get_nextdqblk(sb, qid, &qdq);
+> +	if (ret)
+> +	        return ret;
+> +	copy_to_xfs_dqblk(&fdq, &qdq, type, qdq.d_id);
+> +	if (copy_to_user(addr, &fdq, sizeof(fdq)))
+> +	        return -EFAULT;
+> +	return ret;
+> +}
 
+So how about passing pointer to 'qid' to ->get_nextdqblk() and return the ID
+that way? That will also force you to fix the issue that you currently
+completely miss user-namespace conversions for the ID ;).
 
-(This stuff is screaming to be refactored and made consistent,
-but my first attempt left me screaming too, so I'll leave
-it for another day.)
+I definitely dislike mixing d_id in the qdq structure with arguments of fs
+callbacks and that d_id doesn't get filled for most callbacks. That is going
+to cause confusion.
 
-
- quota/quota.h  |    1 +
- quota/report.c |   84 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 71 insertions(+), 14 deletions(-)
-
-diff --git a/quota/quota.h b/quota/quota.h
-index 2bbc176..4bde351 100644
---- a/quota/quota.h
-+++ b/quota/quota.h
-@@ -74,6 +74,7 @@ enum {
- 	DEFAULTS_FLAG =		0x0100,	/* use value as a default */
- 	ABSOLUTE_FLAG =		0x0200, /* absolute time, not related to now */
- 	NO_LOOKUP_FLAG =	0x0400, /* skip name lookups, just report ID */
-+	GETNEXTQUOTA_FLAG =	0x0800, /* use getnextquota quotactl */
- };
- 
- /*
-diff --git a/quota/report.c b/quota/report.c
-index 3085a9e..8653134 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -73,20 +73,27 @@ report_help(void)
- "\n"));
- }
- 
--static void
-+static int 
- dump_file(
- 	FILE		*fp,
- 	uint		id,
- 	uint		*oid,
- 	uint		type,
--	char		*dev)
-+	char		*dev,
-+	int		flags)
- {
- 	fs_disk_quota_t	d;
-+	int		cmd;
-+
-+	if (flags & GETNEXTQUOTA_FLAG)
-+		cmd = XFS_GETNEXTQUOTA;
-+	else
-+		cmd = XFS_GETQUOTA;
- 
--	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
-+	if (xfsquotactl(cmd, dev, type, id, (void *)&d) < 0) {
- 		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
- 			perror("XFS_GETQUOTA");
--		return;
-+		return 0;
- 	}
- 
- 	if (oid)
-@@ -95,7 +102,7 @@ dump_file(
- 	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
- 	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
- 	    !d.d_rtb_softlimit && !d.d_rtb_hardlimit)
--		return;
-+		return 1;
- 	fprintf(fp, "fs = %s\n", dev);
- 	/* this branch is for backward compatibility reasons */
- 	if (d.d_rtb_softlimit || d.d_rtb_hardlimit)
-@@ -114,6 +121,8 @@ dump_file(
- 			(unsigned long long)d.d_blk_hardlimit,
- 			(unsigned long long)d.d_ino_softlimit,
- 			(unsigned long long)d.d_ino_hardlimit);
-+
-+	return 1;
- }
- 
- static void
-@@ -125,7 +134,7 @@ dump_limits_any_type(
- 	uint		upper)
- {
- 	fs_path_t	*mount;
--	uint		id;
-+	uint		id = 0, oid;
- 
- 	if ((mount = fs_table_lookup(dir, FS_MOUNT_POINT)) == NULL) {
- 		exitcode = 1;
-@@ -134,19 +143,30 @@ dump_limits_any_type(
- 		return;
- 	}
- 
-+	/* Range was specified; query everything in it */
- 	if (upper) {
- 		for (id = lower; id <= upper; id++)
--			dump_file(fp, id, NULL, type, mount->fs_name);
-+			dump_file(fp, id, NULL, type, mount->fs_name, 0);
- 		return;
- 	}
- 
-+	/* Use GETNEXTQUOTA if it's available */
-+	if (dump_file(fp, id, &oid, type, mount->fs_name, GETNEXTQUOTA_FLAG)) {
-+		id = oid + 1;
-+		while (dump_file(fp, id, &oid, type, mount->fs_name,
-+				 GETNEXTQUOTA_FLAG))
-+			id = oid + 1;
-+		return;
-+        }
-+
-+	/* Otherwise fall back to iterating over each uid/gid/prjid */
- 	switch (type) {
- 	case XFS_GROUP_QUOTA: {
- 			struct group *g;
- 			setgrent();
- 			while ((g = getgrent()) != NULL)
- 				dump_file(fp, g->gr_gid, NULL, type,
--					  mount->fs_name);
-+					  mount->fs_name, 0);
- 			endgrent();
- 			break;
- 		}
-@@ -155,7 +175,7 @@ dump_limits_any_type(
- 			setprent();
- 			while ((p = getprent()) != NULL)
- 				dump_file(fp, p->pr_prid, NULL, type,
--					  mount->fs_name);
-+					  mount->fs_name, 0);
- 			endprent();
- 			break;
- 		}
-@@ -164,7 +184,7 @@ dump_limits_any_type(
- 			setpwent();
- 			while ((u = getpwent()) != NULL)
- 				dump_file(fp, u->pw_uid, NULL, type,
--					  mount->fs_name);
-+					  mount->fs_name, 0);
- 			endpwent();
- 			break;
- 		}
-@@ -312,8 +332,14 @@ report_mount(
- 	char		c[8], h[8], s[8];
- 	uint		qflags;
- 	int		count;
-+	int		cmd;
-+
-+	if (flags & GETNEXTQUOTA_FLAG)
-+		cmd = XFS_GETNEXTQUOTA;
-+	else
-+		cmd = XFS_GETQUOTA;
- 
--	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
-+	if (xfsquotactl(cmd, dev, type, id, (void *)&d) < 0) {
- 		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
- 			perror("XFS_GETQUOTA");
- 		return 0;
-@@ -435,7 +461,7 @@ report_user_mount(
- 	uint		flags)
- {
- 	struct passwd	*u;
--	uint		id;
-+	uint		id = 0, oid;
- 
- 	if (upper) {	/* identifier range specified */
- 		for (id = lower; id <= upper; id++) {
-@@ -443,6 +469,16 @@ report_user_mount(
- 					form, XFS_USER_QUOTA, mount, flags))
- 				flags |= NO_HEADER_FLAG;
- 		}
-+	} else if (report_mount(fp, id, NULL, &oid, form,
-+				XFS_USER_QUOTA, mount,
-+				flags|GETNEXTQUOTA_FLAG)) {
-+		id = oid + 1;
-+		flags |= GETNEXTQUOTA_FLAG;
-+		flags |= NO_HEADER_FLAG;
-+		while (report_mount(fp, id, NULL, &oid, form, XFS_USER_QUOTA,
-+				    mount, flags)) {
-+			id = oid + 1;
-+		}
- 	} else {
- 		setpwent();
- 		while ((u = getpwent()) != NULL) {
-@@ -467,7 +503,7 @@ report_group_mount(
- 	uint		flags)
- {
- 	struct group	*g;
--	uint		id;
-+	uint		id = 0, oid;
- 
- 	if (upper) {	/* identifier range specified */
- 		for (id = lower; id <= upper; id++) {
-@@ -475,6 +511,16 @@ report_group_mount(
- 					form, XFS_GROUP_QUOTA, mount, flags))
- 				flags |= NO_HEADER_FLAG;
- 		}
-+	} else if (report_mount(fp, id, NULL, &oid, form,
-+				XFS_GROUP_QUOTA, mount,
-+				flags|GETNEXTQUOTA_FLAG)) {
-+		id = oid + 1;
-+		flags |= GETNEXTQUOTA_FLAG;
-+		flags |= NO_HEADER_FLAG;
-+		while (report_mount(fp, id, NULL, &oid, form, XFS_GROUP_QUOTA,
-+				    mount, flags)) {
-+			id = oid + 1;
-+		}
- 	} else {
- 		setgrent();
- 		while ((g = getgrent()) != NULL) {
-@@ -498,7 +544,7 @@ report_project_mount(
- 	uint		flags)
- {
- 	fs_project_t	*p;
--	uint		id;
-+	uint		id = 0, oid;
- 
- 	if (upper) {	/* identifier range specified */
- 		for (id = lower; id <= upper; id++) {
-@@ -506,6 +552,16 @@ report_project_mount(
- 					form, XFS_PROJ_QUOTA, mount, flags))
- 				flags |= NO_HEADER_FLAG;
- 		}
-+	} else if (report_mount(fp, id, NULL, &oid, form,
-+				XFS_PROJ_QUOTA, mount,
-+				flags|GETNEXTQUOTA_FLAG)) {
-+		id = oid + 1;
-+		flags |= GETNEXTQUOTA_FLAG;
-+		flags |= NO_HEADER_FLAG;
-+		while (report_mount(fp, id, NULL, &oid, form, XFS_PROJ_QUOTA,
-+				    mount, flags)) {
-+			id = oid + 1;
-+		}
- 	} else {
- 		setprent();
- 		while ((p = getprent()) != NULL) {
+								Honza
 -- 
-1.7.1
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
