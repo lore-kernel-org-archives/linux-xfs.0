@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 130947F47
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 27C327F4E
 	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 12:25:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DEAD9304062
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 10:25:41 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E97C8F8033
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 10:25:42 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id MOMozuSj1G8o4vGy for <xfs@oss.sgi.com>;
+	ESMTP id YMSCKhN7CHQr91HE for <xfs@oss.sgi.com>;
 	Fri, 22 Jan 2016 10:25:39 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 4/7] xfs: don't overflow quota ID when initializing dqblk
-Date: Fri, 22 Jan 2016 12:25:33 -0600
-Message-Id: <1453487136-12681-5-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 1/7] quota: remove unused cmd argument from quota_quotaon()
+Date: Fri, 22 Jan 2016 12:25:30 -0600
+Message-Id: <1453487136-12681-2-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
 References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,40 +30,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 Cc: jack@suse.cz
 
-Quota IDs are unsigned, and so we can pass in values up
-to 2^32-1.  But if we try to initialize a block containing
-values over MAX_INT, curid will overflow and assert.
-
-curid holds a quota ID, so give it the proper
-xfs_dqid_t type (and remove the now-impossible ASSERT).
+The cmd argument to quota_quotaon() via Q_QUOTAON quotactl
+is not used, so remove it.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_dquot.c |    4 ++--
+ fs/quota/quota.c |    4 ++--
  1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 9c44d38..c9c7c2d 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -232,7 +232,8 @@ xfs_qm_init_dquot_blk(
- {
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
- 	xfs_dqblk_t	*d;
--	int		curid, i;
-+	xfs_dqid_t	curid;
-+	int		i;
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 3746367..ea66670 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -79,7 +79,7 @@ unsigned int qtype_enforce_flag(int type)
+ 	return 0;
+ }
  
- 	ASSERT(tp);
- 	ASSERT(xfs_buf_islocked(bp));
-@@ -243,7 +244,6 @@ xfs_qm_init_dquot_blk(
- 	 * ID of the first dquot in the block - id's are zero based.
- 	 */
- 	curid = id - (id % q->qi_dqperchunk);
--	ASSERT(curid >= 0);
- 	memset(d, 0, BBTOB(q->qi_dqchunklen));
- 	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++) {
- 		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+-static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
++static int quota_quotaon(struct super_block *sb, int type, qid_t id,
+ 		         struct path *path)
+ {
+ 	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_enable)
+@@ -659,7 +659,7 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+ 
+ 	switch (cmd) {
+ 	case Q_QUOTAON:
+-		return quota_quotaon(sb, type, cmd, id, path);
++		return quota_quotaon(sb, type, id, path);
+ 	case Q_QUOTAOFF:
+ 		return quota_quotaoff(sb, type);
+ 	case Q_GETFMT:
 -- 
 1.7.1
 
