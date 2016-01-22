@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 97ED07F37
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 22:28:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 17C8AAC002
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 20:28:24 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 32BC77F37
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 22:28:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0FD07304039
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 20:28:58 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4YtxwcPJlMpEClts for <xfs@oss.sgi.com>;
-	Thu, 21 Jan 2016 20:28:23 -0800 (PST)
+	ESMTP id sUvuHav3HCTlHrek for <xfs@oss.sgi.com>;
+	Thu, 21 Jan 2016 20:28:56 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 1CF0360DDB96
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 22:28:23 -0600 (CST)
-Subject: [PATCH 2/3] xfs_quota: make report_mount() & dump_file() take an
-	"output id"
+	by sandeen.net (Postfix) with ESMTPSA id 4458260DDB96
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2016 22:28:56 -0600 (CST)
+Subject: [PATCH 3/3] xfs_quota: use Q_XGETNEXTQUOTA for report and dump
 References: <56A1AF9F.80303@sandeen.net>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56A1AFE7.8040604@sandeen.net>
-Date: Thu, 21 Jan 2016 22:28:23 -0600
+Message-ID: <56A1B008.1020801@sandeen.net>
+Date: Thu, 21 Jan 2016 22:28:56 -0600
 MIME-Version: 1.0
 In-Reply-To: <56A1AF9F.80303@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,197 +34,245 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Allow report_mount() and dump_file() to take a *oid pointer,
-an "output id" which will be filled in from the returned quota
-information.  Useful if the quotactl returns an ID for something
-other than that which was passed in, i.e. GETNEXTQUOTA.
+Rather than a loop over getpwnam() etc, use the Q_XGETNEXTQUOTA
+command to iterate through all active quotas in quota
+reports and quota file dump.
 
-Also, when printing results, print the id which was actually
-returned, not the id which was passed in.
-
-Should be a no-op change at this point; the next patch which
-wires in Q_XGETNEXTQUOTA will make use of this.
+If Q_XGETNEXTQUOTA fails, go back to the old way.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- quota/report.c |   46 ++++++++++++++++++++++++++++++----------------
- 1 files changed, 30 insertions(+), 16 deletions(-)
 
+
+(This stuff is screaming to be refactored and made consistent,
+but my first attempt left me screaming too, so I'll leave
+it for another day.)
+
+
+ quota/quota.h  |    1 +
+ quota/report.c |   84 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 71 insertions(+), 14 deletions(-)
+
+diff --git a/quota/quota.h b/quota/quota.h
+index 2bbc176..4bde351 100644
+--- a/quota/quota.h
++++ b/quota/quota.h
+@@ -74,6 +74,7 @@ enum {
+ 	DEFAULTS_FLAG =		0x0100,	/* use value as a default */
+ 	ABSOLUTE_FLAG =		0x0200, /* absolute time, not related to now */
+ 	NO_LOOKUP_FLAG =	0x0400, /* skip name lookups, just report ID */
++	GETNEXTQUOTA_FLAG =	0x0800, /* use getnextquota quotactl */
+ };
+ 
+ /*
 diff --git a/quota/report.c b/quota/report.c
-index c77b24f..3085a9e 100644
+index 3085a9e..8653134 100644
 --- a/quota/report.c
 +++ b/quota/report.c
-@@ -77,6 +77,7 @@ static void
+@@ -73,20 +73,27 @@ report_help(void)
+ "\n"));
+ }
+ 
+-static void
++static int 
  dump_file(
  	FILE		*fp,
  	uint		id,
-+	uint		*oid,
+ 	uint		*oid,
  	uint		type,
- 	char		*dev)
+-	char		*dev)
++	char		*dev,
++	int		flags)
  {
-@@ -87,6 +88,10 @@ dump_file(
+ 	fs_disk_quota_t	d;
++	int		cmd;
++
++	if (flags & GETNEXTQUOTA_FLAG)
++		cmd = XFS_GETNEXTQUOTA;
++	else
++		cmd = XFS_GETQUOTA;
+ 
+-	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
++	if (xfsquotactl(cmd, dev, type, id, (void *)&d) < 0) {
+ 		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
  			perror("XFS_GETQUOTA");
- 		return;
+-		return;
++		return 0;
  	}
-+
-+	if (oid)
-+		*oid = d.d_id;
-+
+ 
+ 	if (oid)
+@@ -95,7 +102,7 @@ dump_file(
  	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
  	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
  	    !d.d_rtb_softlimit && !d.d_rtb_hardlimit)
-@@ -94,7 +99,8 @@ dump_file(
+-		return;
++		return 1;
  	fprintf(fp, "fs = %s\n", dev);
  	/* this branch is for backward compatibility reasons */
  	if (d.d_rtb_softlimit || d.d_rtb_hardlimit)
--		fprintf(fp, "%-10d %7llu %7llu %7llu %7llu %7llu %7llu\n", id,
-+		fprintf(fp, "%-10d %7llu %7llu %7llu %7llu %7llu %7llu\n",
-+			d.d_id,
- 			(unsigned long long)d.d_blk_softlimit,
+@@ -114,6 +121,8 @@ dump_file(
  			(unsigned long long)d.d_blk_hardlimit,
  			(unsigned long long)d.d_ino_softlimit,
-@@ -102,7 +108,8 @@ dump_file(
- 			(unsigned long long)d.d_rtb_softlimit,
- 			(unsigned long long)d.d_rtb_hardlimit);
- 	else
--		fprintf(fp, "%-10d %7llu %7llu %7llu %7llu\n", id,
-+		fprintf(fp, "%-10d %7llu %7llu %7llu %7llu\n",
-+			d.d_id,
- 			(unsigned long long)d.d_blk_softlimit,
- 			(unsigned long long)d.d_blk_hardlimit,
- 			(unsigned long long)d.d_ino_softlimit,
-@@ -129,7 +136,7 @@ dump_limits_any_type(
+ 			(unsigned long long)d.d_ino_hardlimit);
++
++	return 1;
+ }
  
- 	if (upper) {
- 		for (id = lower; id <= upper; id++)
--			dump_file(fp, id, type, mount->fs_name);
-+			dump_file(fp, id, NULL, type, mount->fs_name);
+ static void
+@@ -125,7 +134,7 @@ dump_limits_any_type(
+ 	uint		upper)
+ {
+ 	fs_path_t	*mount;
+-	uint		id;
++	uint		id = 0, oid;
+ 
+ 	if ((mount = fs_table_lookup(dir, FS_MOUNT_POINT)) == NULL) {
+ 		exitcode = 1;
+@@ -134,19 +143,30 @@ dump_limits_any_type(
  		return;
  	}
  
-@@ -138,7 +145,8 @@ dump_limits_any_type(
++	/* Range was specified; query everything in it */
+ 	if (upper) {
+ 		for (id = lower; id <= upper; id++)
+-			dump_file(fp, id, NULL, type, mount->fs_name);
++			dump_file(fp, id, NULL, type, mount->fs_name, 0);
+ 		return;
+ 	}
+ 
++	/* Use GETNEXTQUOTA if it's available */
++	if (dump_file(fp, id, &oid, type, mount->fs_name, GETNEXTQUOTA_FLAG)) {
++		id = oid + 1;
++		while (dump_file(fp, id, &oid, type, mount->fs_name,
++				 GETNEXTQUOTA_FLAG))
++			id = oid + 1;
++		return;
++        }
++
++	/* Otherwise fall back to iterating over each uid/gid/prjid */
+ 	switch (type) {
+ 	case XFS_GROUP_QUOTA: {
  			struct group *g;
  			setgrent();
  			while ((g = getgrent()) != NULL)
--				dump_file(fp, g->gr_gid, type, mount->fs_name);
-+				dump_file(fp, g->gr_gid, NULL, type,
-+					  mount->fs_name);
+ 				dump_file(fp, g->gr_gid, NULL, type,
+-					  mount->fs_name);
++					  mount->fs_name, 0);
  			endgrent();
  			break;
  		}
-@@ -146,7 +154,8 @@ dump_limits_any_type(
- 			struct fs_project *p;
+@@ -155,7 +175,7 @@ dump_limits_any_type(
  			setprent();
  			while ((p = getprent()) != NULL)
--				dump_file(fp, p->pr_prid, type, mount->fs_name);
-+				dump_file(fp, p->pr_prid, NULL, type,
-+					  mount->fs_name);
+ 				dump_file(fp, p->pr_prid, NULL, type,
+-					  mount->fs_name);
++					  mount->fs_name, 0);
  			endprent();
  			break;
  		}
-@@ -154,7 +163,8 @@ dump_limits_any_type(
- 			struct passwd *u;
+@@ -164,7 +184,7 @@ dump_limits_any_type(
  			setpwent();
  			while ((u = getpwent()) != NULL)
--				dump_file(fp, u->pw_uid, type, mount->fs_name);
-+				dump_file(fp, u->pw_uid, NULL, type,
-+					  mount->fs_name);
+ 				dump_file(fp, u->pw_uid, NULL, type,
+-					  mount->fs_name);
++					  mount->fs_name, 0);
  			endpwent();
  			break;
  		}
-@@ -291,6 +301,7 @@ report_mount(
- 	FILE		*fp,
- 	__uint32_t	id,
- 	char		*name,
-+	__uint32_t	*oid,
- 	uint		form,
- 	uint		type,
- 	fs_path_t	*mount,
-@@ -308,6 +319,9 @@ report_mount(
- 		return 0;
- 	}
- 
-+	if (oid)
-+		*oid = d.d_id;
+@@ -312,8 +332,14 @@ report_mount(
+ 	char		c[8], h[8], s[8];
+ 	uint		qflags;
+ 	int		count;
++	int		cmd;
 +
- 	if (flags & TERSE_FLAG) {
- 		count = 0;
- 		if ((form & XFS_BLOCK_QUOTA) && d.d_bcount)
-@@ -324,19 +338,19 @@ report_mount(
- 		report_header(fp, form, type, mount, flags);
++	if (flags & GETNEXTQUOTA_FLAG)
++		cmd = XFS_GETNEXTQUOTA;
++	else
++		cmd = XFS_GETQUOTA;
  
- 	if (flags & NO_LOOKUP_FLAG) {
--		fprintf(fp, "#%-10u", id);
-+		fprintf(fp, "#%-10u", d.d_id);
- 	} else {
- 		if (name == NULL) {
- 			if (type == XFS_USER_QUOTA) {
--				struct passwd	*u = getpwuid(id);
-+				struct passwd	*u = getpwuid(d.d_id);
- 				if (u)
- 					name = u->pw_name;
- 			} else if (type == XFS_GROUP_QUOTA) {
--				struct group	*g = getgrgid(id);
-+				struct group	*g = getgrgid(d.d_id);
- 				if (g)
- 					name = g->gr_name;
- 			} else if (type == XFS_PROJ_QUOTA) {
--				fs_project_t	*p = getprprid(id);
-+				fs_project_t	*p = getprprid(d.d_id);
- 				if (p)
- 					name = p->pr_name;
- 			}
-@@ -425,14 +439,14 @@ report_user_mount(
+-	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
++	if (xfsquotactl(cmd, dev, type, id, (void *)&d) < 0) {
+ 		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
+ 			perror("XFS_GETQUOTA");
+ 		return 0;
+@@ -435,7 +461,7 @@ report_user_mount(
+ 	uint		flags)
+ {
+ 	struct passwd	*u;
+-	uint		id;
++	uint		id = 0, oid;
  
  	if (upper) {	/* identifier range specified */
  		for (id = lower; id <= upper; id++) {
--			if (report_mount(fp, id, NULL,
-+			if (report_mount(fp, id, NULL, NULL,
+@@ -443,6 +469,16 @@ report_user_mount(
  					form, XFS_USER_QUOTA, mount, flags))
  				flags |= NO_HEADER_FLAG;
  		}
++	} else if (report_mount(fp, id, NULL, &oid, form,
++				XFS_USER_QUOTA, mount,
++				flags|GETNEXTQUOTA_FLAG)) {
++		id = oid + 1;
++		flags |= GETNEXTQUOTA_FLAG;
++		flags |= NO_HEADER_FLAG;
++		while (report_mount(fp, id, NULL, &oid, form, XFS_USER_QUOTA,
++				    mount, flags)) {
++			id = oid + 1;
++		}
  	} else {
  		setpwent();
  		while ((u = getpwent()) != NULL) {
--			if (report_mount(fp, u->pw_uid, u->pw_name,
-+			if (report_mount(fp, u->pw_uid, u->pw_name, NULL,
- 					form, XFS_USER_QUOTA, mount, flags))
- 				flags |= NO_HEADER_FLAG;
- 		}
-@@ -457,14 +471,14 @@ report_group_mount(
+@@ -467,7 +503,7 @@ report_group_mount(
+ 	uint		flags)
+ {
+ 	struct group	*g;
+-	uint		id;
++	uint		id = 0, oid;
  
  	if (upper) {	/* identifier range specified */
  		for (id = lower; id <= upper; id++) {
--			if (report_mount(fp, id, NULL,
-+			if (report_mount(fp, id, NULL, NULL,
+@@ -475,6 +511,16 @@ report_group_mount(
  					form, XFS_GROUP_QUOTA, mount, flags))
  				flags |= NO_HEADER_FLAG;
  		}
++	} else if (report_mount(fp, id, NULL, &oid, form,
++				XFS_GROUP_QUOTA, mount,
++				flags|GETNEXTQUOTA_FLAG)) {
++		id = oid + 1;
++		flags |= GETNEXTQUOTA_FLAG;
++		flags |= NO_HEADER_FLAG;
++		while (report_mount(fp, id, NULL, &oid, form, XFS_GROUP_QUOTA,
++				    mount, flags)) {
++			id = oid + 1;
++		}
  	} else {
  		setgrent();
  		while ((g = getgrent()) != NULL) {
--			if (report_mount(fp, g->gr_gid, g->gr_name,
-+			if (report_mount(fp, g->gr_gid, g->gr_name, NULL,
- 					form, XFS_GROUP_QUOTA, mount, flags))
- 				flags |= NO_HEADER_FLAG;
- 		}
-@@ -488,14 +502,14 @@ report_project_mount(
+@@ -498,7 +544,7 @@ report_project_mount(
+ 	uint		flags)
+ {
+ 	fs_project_t	*p;
+-	uint		id;
++	uint		id = 0, oid;
  
  	if (upper) {	/* identifier range specified */
  		for (id = lower; id <= upper; id++) {
--			if (report_mount(fp, id, NULL,
-+			if (report_mount(fp, id, NULL, NULL,
+@@ -506,6 +552,16 @@ report_project_mount(
  					form, XFS_PROJ_QUOTA, mount, flags))
  				flags |= NO_HEADER_FLAG;
  		}
++	} else if (report_mount(fp, id, NULL, &oid, form,
++				XFS_PROJ_QUOTA, mount,
++				flags|GETNEXTQUOTA_FLAG)) {
++		id = oid + 1;
++		flags |= GETNEXTQUOTA_FLAG;
++		flags |= NO_HEADER_FLAG;
++		while (report_mount(fp, id, NULL, &oid, form, XFS_PROJ_QUOTA,
++				    mount, flags)) {
++			id = oid + 1;
++		}
  	} else {
  		setprent();
  		while ((p = getprent()) != NULL) {
--			if (report_mount(fp, p->pr_prid, p->pr_name,
-+			if (report_mount(fp, p->pr_prid, p->pr_name, NULL,
- 					form, XFS_PROJ_QUOTA, mount, flags))
- 				flags |= NO_HEADER_FLAG;
- 		}
 -- 
 1.7.1
 
