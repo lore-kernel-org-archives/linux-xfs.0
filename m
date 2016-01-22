@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EFB977F59
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 12:25:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D45F98F8033
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 10:25:41 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id PC6XDxNGkWV3urc1 for <xfs@oss.sgi.com>;
-	Fri, 22 Jan 2016 10:25:39 -0800 (PST)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 2/7] quota: add new quotactl Q_XGETNEXTQUOTA
-Date: Fri, 22 Jan 2016 12:25:31 -0600
-Message-Id: <1453487136-12681-3-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
-References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D5F097F37
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:01:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C5B26304032
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 14:01:56 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id s4nBGNasIrzK2bdn (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 14:01:54 -0800 (PST)
+Date: Fri, 22 Jan 2016 14:01:45 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
+Message-ID: <20160122220145.GA26408@birch.djwong.org>
+References: <20160111232657.GA7831@birch.djwong.org>
+	<20160115205801.GB5757@birch.djwong.org>
+	<20160115225219.GP6033@dastard>
+	<20160120154035.GH1366@meili.valhalla.31bits.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160120154035.GH1366@meili.valhalla.31bits.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,124 +28,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-Cc: jack@suse.cz
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: xfs@oss.sgi.com
 
-Q_XGETNEXTQUOTA is exactly like Q_XGETQUOTA, except that it
-will return quota information for the id equal to or greater
-than the id requested.  In other words, if the requested id has
-no quota, the command will return quota information for the
-next higher id which does have a quota set.  If no higher id
-has an active quota, -ESRCH is returned.
+On Wed, Jan 20, 2016 at 10:40:36AM -0500, Josef 'Jeff' Sipek wrote:
+> On Sat, Jan 16, 2016 at 09:52:19AM +1100, Dave Chinner wrote:
+> > On Fri, Jan 15, 2016 at 12:58:01PM -0800, Darrick J. Wong wrote:
+> > > On Mon, Jan 11, 2016 at 03:26:57PM -0800, Darrick J. Wong wrote:
+> > > > Check the sizes of XFS on-disk structures when compiling the kernel.
+> > > > Use this to catch inadvertent changes in structure size due to padding
+> > > > and alignment issues, etc.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ....
+> > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
+> > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
+> > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
+> > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> > > > +}
+> > > 
+> > > Perhaps this huge function ought to hide away in its own file?
+> > 
+> > Yes, I think that's a good idea, and I think it should only be built
+> > on debug builds, too.
+> 
+> Doesn't this turn into nothingness as far as the generated binary is
+> concerned?  Because if it does, I don't see a reason to keep it debug-only.
+> Afterall, non-debug builds need to be correct and these are pretty important
+> checks.  We certainly don't want another ARM structure padding & alignment
+> fiasco.
 
-This allows filesystems to do efficient iteration in kernelspace,
-much like extN filesystems do in userspace when asked to report
-all active quotas.
+I moved the function to a separate header file and changed the declaration to:
 
-The patch adds a d_id field to struct qc_dqblk so that we can
-pass back the id of the quota which was found, and return it
-to userspace.
+static inline void __init xfs_check_ondisk_structs(void)
 
-Today, filesystems such as XFS require getpwent-style iterations,
-and for systems which have i.e. LDAP backends, this can be very
-slow, or even impossible if iteration is not allowed in the
-configuration.
+With any luck that should compile down to an empty inline function which should
+be optimized out of the resulting code.  Worst case it's a separate function
+that gets discarded after the module loads.  If Dave doesn't object, I'll leave
+it enabled for all builds.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/quota/quota.c               |   31 +++++++++++++++++++++++++++++++
- include/linux/quota.h          |    2 ++
- include/uapi/linux/dqblk_xfs.h |    1 +
- 3 files changed, 34 insertions(+), 0 deletions(-)
+--D
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index ea66670..0a6dd71 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -625,6 +625,34 @@ static int quota_getxquota(struct super_block *sb, int type, qid_t id,
- 	return ret;
- }
- 
-+/*
-+ * Return quota for next active quota >= this id, if any exists,
-+ * otherwise return -ESRCH via ->get_nextdqblk.
-+ */
-+static int quota_getnextxquota(struct super_block *sb, int type, qid_t id,
-+			    void __user *addr)
-+{
-+	struct fs_disk_quota fdq;
-+	struct qc_dqblk qdq;
-+	struct kqid qid;
-+	qid_t id_out;
-+	int ret;
-+
-+	if (!sb->s_qcop->get_nextdqblk)
-+		return -ENOSYS;
-+	qid = make_kqid(current_user_ns(), type, id);
-+	if (!qid_valid(qid))
-+		return -EINVAL;
-+	ret = sb->s_qcop->get_nextdqblk(sb, &qid, &qdq);
-+	if (ret)
-+		return ret;
-+	id_out = from_kqid(current_user_ns(), qid);
-+	copy_to_xfs_dqblk(&fdq, &qdq, type, id_out);
-+	if (copy_to_user(addr, &fdq, sizeof(fdq)))
-+		return -EFAULT;
-+	return ret;
-+}
-+
- static int quota_rmxquota(struct super_block *sb, void __user *addr)
- {
- 	__u32 flags;
-@@ -690,6 +718,8 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
- 		return quota_setxquota(sb, type, id, addr);
- 	case Q_XGETQUOTA:
- 		return quota_getxquota(sb, type, id, addr);
-+	case Q_XGETNEXTQUOTA:
-+		return quota_getnextxquota(sb, type, id, addr);
- 	case Q_XQUOTASYNC:
- 		if (sb->s_flags & MS_RDONLY)
- 			return -EROFS;
-@@ -712,6 +742,7 @@ static int quotactl_cmd_write(int cmd)
- 	case Q_XGETQSTAT:
- 	case Q_XGETQSTATV:
- 	case Q_XGETQUOTA:
-+	case Q_XGETNEXTQUOTA:
- 	case Q_XQUOTASYNC:
- 		return 0;
- 	}
-diff --git a/include/linux/quota.h b/include/linux/quota.h
-index b2505ac..fba92f5 100644
---- a/include/linux/quota.h
-+++ b/include/linux/quota.h
-@@ -425,6 +425,8 @@ struct quotactl_ops {
- 	int (*quota_sync)(struct super_block *, int);
- 	int (*set_info)(struct super_block *, int, struct qc_info *);
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
-+	int (*get_nextdqblk)(struct super_block *, struct kqid *,
-+			     struct qc_dqblk *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*get_state)(struct super_block *, struct qc_state *);
- 	int (*rm_xquota)(struct super_block *, unsigned int);
-diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-index dcd75cc..11b3b31 100644
---- a/include/uapi/linux/dqblk_xfs.h
-+++ b/include/uapi/linux/dqblk_xfs.h
-@@ -39,6 +39,7 @@
- #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
- #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
- #define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
-+#define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage >= ID */
- 
- /*
-  * fs_disk_quota structure:
--- 
-1.7.1
+> 
+> Just my 2 cents,
+> 
+> Jeff.
+> 
+> -- 
+> Only two things are infinite, the universe and human stupidity, and I'm not
+> sure about the former.
+> 		- Albert Einstein
 
 _______________________________________________
 xfs mailing list
