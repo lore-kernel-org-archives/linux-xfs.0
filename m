@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BE7617F51
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 19:30:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AC9768F8059
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 17:30:30 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id 12bGfyvsNHTqBELw (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 17:30:25 -0800 (PST)
-Date: Sat, 23 Jan 2016 01:30:21 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH] vfs: abort dedupe loop if fatal signals are pending
-Message-ID: <20160123013021.GL17997@ZenIV.linux.org.uk>
-References: <20160123005828.GB5496@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 2933F7F4E
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 20:01:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A8CE8F804B
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 18:01:06 -0800 (PST)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	9VbkrqHnaYS0b6sl for <xfs@oss.sgi.com>;
+	Fri, 22 Jan 2016 18:01:05 -0800 (PST)
+Date: Fri, 22 Jan 2016 21:01:02 -0500
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [RFC PATCH] dax, ext2, ext4, XFS: fix data corruption race
+Message-ID: <20160123020102.GG2948@linux.intel.com>
+References: <1453503971-5319-1-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160123005828.GB5496@birch.djwong.org>
+In-Reply-To: <1453503971-5319-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,14 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ebiggers3@gmail.com, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Fri, Jan 22, 2016 at 04:58:28PM -0800, Darrick J. Wong wrote:
-> If the program running dedupe receives a fatal signal during the
-> dedupe loop, we should bail out to avoid tying up the system.
+On Fri, Jan 22, 2016 at 04:06:11PM -0700, Ross Zwisler wrote:
+> +++ b/fs/block_dev.c
+> @@ -1733,13 +1733,28 @@ static const struct address_space_operations def_blk_aops = {
+>   */
+>  static int blkdev_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  {
+> -	return __dax_fault(vma, vmf, blkdev_get_block, NULL);
+> +	int ret;
+> +
+> +	ret = __dax_fault(vma, vmf, blkdev_get_block, NULL, false);
+> +
+> +	if (WARN_ON_ONCE(ret == -EAGAIN))
+> +		ret = VM_FAULT_SIGBUS;
+> +
+> +	return ret;
+>  }
 
-Applied.
+Let's not mix up -E returns and VM_FAULT returns.  We already have a
+perfectly good VM_FAULT return value -- VM_FAULT_RETRY.
 
 _______________________________________________
 xfs mailing list
