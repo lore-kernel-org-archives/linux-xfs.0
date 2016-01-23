@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D5AA77F4E
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 18:35:24 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0079D7F61
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 18:35:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C9BF1304039
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:35:24 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 93Tqf5WjEEjnw9vo (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81845AC004
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:35:29 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id SpeHJsnRWVs0pViN (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:35:23 -0800 (PST)
-Subject: [PATCH 3/5] libxfs: move struct xfs_attr_shortform to xfs_da_format.h
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:35:27 -0800 (PST)
+Subject: [PATCH 4/5] xfs_db: don't error out when blocksize > 64 * inodesize
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Jan 2016 16:35:14 -0800
-Message-ID: <20160123003514.2475.80318.stgit@birch.djwong.org>
+Date: Fri, 22 Jan 2016 16:35:25 -0800
+Message-ID: <20160123003525.2475.44264.stgit@birch.djwong.org>
 In-Reply-To: <20160123003502.2475.99558.stgit@birch.djwong.org>
 References: <20160123003502.2475.99558.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,84 +31,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Move the shortform attr structure definition to the same place as the
-other attribute structure definitions for consistency and also so that
-xfs/122 verifies the structure size.
+When the block size is large enough that multiple inode chunks can fit
+in a single block (e.g. 64k blocks, 512 byte inodes) we must calculate
+the per-chunk block size and the buffer offset correctly so that check
+actually examines the correct metadata.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_attr_sf.h    |   16 ----------------
- libxfs/xfs_da_format.h  |   16 ++++++++++++++++
- libxfs/xfs_inode_fork.c |    1 +
- 3 files changed, 17 insertions(+), 16 deletions(-)
+ db/check.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr_sf.h b/libxfs/xfs_attr_sf.h
-index 919756e..90928bb 100644
---- a/libxfs/xfs_attr_sf.h
-+++ b/libxfs/xfs_attr_sf.h
-@@ -24,22 +24,6 @@
-  * Small attribute lists are packed as tightly as possible so as
-  * to fit into the literal area of the inode.
-  */
--
--/*
-- * Entries are packed toward the top as tight as possible.
-- */
--typedef struct xfs_attr_shortform {
--	struct xfs_attr_sf_hdr {	/* constant-structure header block */
--		__be16	totsize;	/* total bytes in shortform list */
--		__u8	count;	/* count of active entries */
--	} hdr;
--	struct xfs_attr_sf_entry {
--		__uint8_t namelen;	/* actual length of name (no NULL) */
--		__uint8_t valuelen;	/* actual length of value (no NULL) */
--		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
--		__uint8_t nameval[1];	/* name & value bytes concatenated */
--	} list[1];			/* variable sized array */
--} xfs_attr_shortform_t;
- typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
- typedef struct xfs_attr_sf_entry xfs_attr_sf_entry_t;
+diff --git a/db/check.c b/db/check.c
+index 838db53..4e2768e 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -4386,6 +4386,7 @@ scanfunc_ino(
+ 	__u16			holemask;
+ 	xfs_agino_t		rino;
+ 	xfs_extlen_t		cblocks;
++	int			bufoff;
  
-diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
-index b14bbd6..8d4d8bc 100644
---- a/libxfs/xfs_da_format.h
-+++ b/libxfs/xfs_da_format.h
-@@ -641,6 +641,22 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
-  */
- #define XFS_ATTR_LEAF_MAPSIZE	3	/* how many freespace slots */
+ 	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
+ 	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
+@@ -4455,6 +4456,8 @@ scanfunc_ino(
+ 				rino = agino + startidx;
+ 				cblocks = (endidx - startidx) >>
+ 						mp->m_sb.sb_inopblog;
++				if (cblocks == 0)
++					cblocks = 1;
  
-+/*
-+ * Entries are packed toward the top as tight as possible.
-+ */
-+typedef struct xfs_attr_shortform {
-+	struct xfs_attr_sf_hdr {	/* constant-structure header block */
-+		__be16	totsize;	/* total bytes in shortform list */
-+		__u8	count;	/* count of active entries */
-+	} hdr;
-+	struct xfs_attr_sf_entry {
-+		__uint8_t namelen;	/* actual length of name (no NULL) */
-+		__uint8_t valuelen;	/* actual length of value (no NULL) */
-+		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
-+		__uint8_t nameval[1];	/* name & value bytes concatenated */
-+	} list[1];			/* variable sized array */
-+} xfs_attr_shortform_t;
-+
- typedef struct xfs_attr_leaf_map {	/* RLE map of free bytes */
- 	__be16	base;			  /* base of free region */
- 	__be16	size;			  /* length of free region */
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index e1968b4..f40649e 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -27,6 +27,7 @@
- #include "xfs_bmap.h"
- #include "xfs_trace.h"
- #include "xfs_attr_sf.h"
-+#include "xfs_da_format.h"
+ 				/* Check the sparse chunk alignment */
+ 				if (sparse &&
+@@ -4468,8 +4471,9 @@ scanfunc_ino(
+ 				}
  
- kmem_zone_t *xfs_ifork_zone;
+ 				/* Check the block map */
+-				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
+-					cblocks, DBM_INODE, seqno, bno);
++				if (XFS_AGINO_TO_OFFSET(mp, rino) == 0)
++					set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
++						cblocks, DBM_INODE, seqno, bno);
  
+ 				push_cur();
+ 				set_cur(&typtab[TYP_INODE],
+@@ -4489,14 +4493,15 @@ scanfunc_ino(
+ 				}
+ 
+ 				/* Examine each inode in this chunk */
+-				for (j = startidx; j < endidx; j++) {
++				bufoff = ((XFS_AGINO_TO_OFFSET(mp, rino) - startidx) << mp->m_sb.sb_inodelog);
++				for (j = startidx; j < endidx; j++, bufoff += (1 << mp->m_sb.sb_inodelog)) {
+ 					if (ino_issparse(&rp[i], j))
+ 						continue;
+ 					isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
+ 					if (isfree)
+ 						nfree++;
+ 					process_inode(agf, agino + j,
+-						(xfs_dinode_t *)((char *)iocur_top->data + ((j - startidx) << mp->m_sb.sb_inodelog)),
++						(xfs_dinode_t *)((char *)iocur_top->data + bufoff),
+ 							isfree);
+ 				}
+ 				pop_cur();
 
 _______________________________________________
 xfs mailing list
