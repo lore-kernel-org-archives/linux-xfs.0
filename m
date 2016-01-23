@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 339557F56
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 18:58:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C09A2AC002
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:58:39 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id kYuVT8uhHkwHPDt4 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:58:38 -0800 (PST)
-Date: Fri, 22 Jan 2016 16:58:28 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] vfs: abort dedupe loop if fatal signals are pending
-Message-ID: <20160123005828.GB5496@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BE7617F51
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 19:30:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AC9768F8059
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 17:30:30 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id 12bGfyvsNHTqBELw (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 17:30:25 -0800 (PST)
+Date: Sat, 23 Jan 2016 01:30:21 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] vfs: abort dedupe loop if fatal signals are pending
+Message-ID: <20160123013021.GL17997@ZenIV.linux.org.uk>
+References: <20160123005828.GB5496@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160123005828.GB5496@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,31 +29,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: viro@ZenIV.linux.org.uk
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ebiggers3@gmail.com, xfs@oss.sgi.com
 
-If the program running dedupe receives a fatal signal during the
-dedupe loop, we should bail out to avoid tying up the system.
+On Fri, Jan 22, 2016 at 04:58:28PM -0800, Darrick J. Wong wrote:
+> If the program running dedupe receives a fatal signal during the
+> dedupe loop, we should bail out to avoid tying up the system.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/read_write.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/read_write.c b/fs/read_write.c
-index aaaad52..aab334e 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1617,6 +1617,9 @@ next_file:
- 		mnt_drop_write_file(dst_file);
- next_loop:
- 		fdput(dst_fd);
-+
-+		if (fatal_signal_pending(current))
-+			goto out;
- 	}
- 
- out:
+Applied.
 
 _______________________________________________
 xfs mailing list
