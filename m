@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 96B2D7F76
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 18:36:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7B4FE8F8040
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:36:58 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 363717F5E
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 18:37:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0E95E8F8040
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:37:06 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id mqS5pfhWivGCBd3x (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 5qgO2E2tO2ZajEZQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:36:57 -0800 (PST)
-Subject: [PATCH 2/5] reflink: fix off-by-one errors when iterating file
-	blocks in a loop
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2016 16:37:03 -0800 (PST)
+Subject: [PATCH 3/5] xfs/122: update against xfsprogs 4.3
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Jan 2016 16:36:54 -0800
-Message-ID: <20160123003654.2666.17112.stgit@birch.djwong.org>
+Date: Fri, 22 Jan 2016 16:37:00 -0800
+Message-ID: <20160123003700.2666.8133.stgit@birch.djwong.org>
 In-Reply-To: <20160123003648.2666.37062.stgit@birch.djwong.org>
 References: <20160123003648.2666.37062.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,130 +31,347 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-When we're iterating file blocks in a loop (via seq), we have to
-end at $nr-1, not $nr.
+Make the xfsprogs sb layout and structure size checker work with
+modern xfsprogs (i.e. 4.3+ and all the new v5 stuff).  The old test
+wasn't picking up structures because they're no longer defined in the
+"typedef struct xfs_foo { } xfs_foo_t;" style.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/183 |    2 +-
- tests/generic/185 |    2 +-
- tests/generic/186 |    2 +-
- tests/generic/187 |    2 +-
- tests/generic/194 |    2 +-
- tests/generic/195 |    2 +-
- tests/xfs/129     |    6 +++---
- tests/xfs/140     |    2 +-
- 8 files changed, 10 insertions(+), 10 deletions(-)
+ tests/xfs/122     |   29 +++++-
+ tests/xfs/122.out |  265 +++++++++++++++++++++++++++++------------------------
+ 2 files changed, 166 insertions(+), 128 deletions(-)
 
 
-diff --git a/tests/generic/183 b/tests/generic/183
-index 5c65e9a..2cf9ce4 100755
---- a/tests/generic/183
-+++ b/tests/generic/183
-@@ -69,7 +69,7 @@ seq 0 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file1" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x61 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file2" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
-diff --git a/tests/generic/185 b/tests/generic/185
-index 384c9aa..55c54ac 100755
---- a/tests/generic/185
-+++ b/tests/generic/185
-@@ -69,7 +69,7 @@ seq 0 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file1" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x61 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file2" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
-diff --git a/tests/generic/186 b/tests/generic/186
-index d84166d..f1c0e6b 100755
---- a/tests/generic/186
-+++ b/tests/generic/186
-@@ -112,7 +112,7 @@ seq 0 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file1" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x61 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file2" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
-diff --git a/tests/generic/187 b/tests/generic/187
-index c85a0a9..ce35ec0 100755
---- a/tests/generic/187
-+++ b/tests/generic/187
-@@ -112,7 +112,7 @@ seq 0 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file1" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x61 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR-1)) | while read f; do
- 	_reflink_range "$TESTDIR/file2" $((BLKSZ * f)) "$TESTDIR/file3" $((BLKSZ * f)) $BLKSZ >> "$seqres.full"
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
-diff --git a/tests/generic/194 b/tests/generic/194
-index a441aee..b88297e 100755
---- a/tests/generic/194
-+++ b/tests/generic/194
-@@ -79,7 +79,7 @@ md5sum "$TESTDIR/file3" | _filter_scratch
- md5sum "$TESTDIR/file3.chk" | _filter_scratch
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index 682ffb4..e6697a2 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -74,10 +74,22 @@ progout=$tmp.output
  
- echo "directio CoW across the transition"
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR-1)) | while read f; do
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3" >> "$seqres.full"
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
-diff --git a/tests/generic/195 b/tests/generic/195
-index 83e7b23..464a4d4 100755
---- a/tests/generic/195
-+++ b/tests/generic/195
-@@ -79,7 +79,7 @@ md5sum "$TESTDIR/file3" | _filter_scratch
- md5sum "$TESTDIR/file3.chk" | _filter_scratch
+ cat >$cprog <<EOF
+ #include <stdio.h>
+-#include <xfs/libxlog.h>
+ EOF
++for hdr in /usr/include/xfs/xfs*.h; do
++	echo "#include <$(echo "$hdr" | sed -e 's|/usr/include/||g')>" >> $cprog
++done
++
++# missing:
++# xfs_attr_shortform_t
++# xfs_trans_header_t
  
- echo "CoW across the transition"
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR-1)) | while read f; do
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3" >> "$seqres.full"
- 	_pwrite_byte 0x62 $((BLKSZ * f)) $BLKSZ "$TESTDIR/file3.chk" >> "$seqres.full"
- done
-diff --git a/tests/xfs/129 b/tests/xfs/129
-index c8c47a2..3b7c59c 100755
---- a/tests/xfs/129
-+++ b/tests/xfs/129
-@@ -65,9 +65,9 @@ NR_BLKS=$((4 * BLKSZ / 12))
- _pwrite_byte 0x61 0 $((BLKSZ * NR_BLKS)) "$TESTDIR/file1" >> "$seqres.full"
+ cat >$tmp.ignore <<EOF
++xfs_buf_log_format_t
++xfs_attr3_icleaf_hdr
++xfs_da3_icnode_hdr
++xfs_dir3_icfree_hdr
++xfs_dir3_icleaf_hdr
++xfs_name
+ xfs_alloctype_t
+ xfs_buf_cancel_t
+ xfs_bmbt_rec_32_t
+@@ -177,11 +189,16 @@ echo 'int main(int argc, char *argv[]) {' >>$cprog
+ #
+ cat /usr/include/xfs/xfs*.h | indent |\
+ _attribute_filter |\
+-tee $seqres.full |\
+-egrep '} *xfs_.*_t' |\
++egrep '(} *xfs_.*_t|^struct xfs_[a-z0-9_]*$)' > /tmp/barf
++
++cat /usr/include/xfs/xfs*.h | indent |\
++_attribute_filter |\
++egrep '(} *xfs_.*_t|^struct xfs_[a-z0-9_]*$)' |\
+ egrep -v -f $tmp.ignore |\
+-awk '{sub(/[;,]/,"",$2); print "printf(\"sizeof(", $2, ") = %d\\n\", sizeof(", $2, "));"}' \
+->>$cprog
++sed -e 's/^.*}[[:space:]]*//g' -e 's/;.*$//g' -e 's/_t, /_t\n/g' |\
++sort | uniq |\
++awk '{printf("printf(\"sizeof(%s) = \\%zu\\n\", sizeof(%s));\n", $0, $0);}' |\
++cat >> $cprog
  
- echo "Reflink every other block"
--seq 1 $((NR_BLKS / 2)) | while read nr; do
--	_reflink_range  "$TESTDIR/file1" $((nr * 2 * BLKSZ)) \
--			"$TESTDIR/file2" $((nr * 2 * BLKSZ)) $BLKSZ >> "$seqres.full"
-+seq 1 2 $((NR_BLKS - 1)) | while read nr; do
-+	_reflink_range  "$TESTDIR/file1" $((nr * BLKSZ)) \
-+			"$TESTDIR/file2" $((nr * BLKSZ)) $BLKSZ >> "$seqres.full"
- done
+ #
+ # Look at offsets of key ones which differ in lengths
+@@ -192,7 +209,7 @@ cat /usr/include/xfs/xfs*.h | indent |\
+ awk '
+    /typedef struct xfs_sb/ { structon = 1; next }
+    structon && $2 ~ /^sb_/ { sub(/[;,]/,"",$2)
+-                             print "printf(\"offsetof(xfs_sb_t,", $2, ") = %d\\n\", offsetof(xfs_sb_t,", $2, "));"; next}
++                             printf("printf(\"offsetof(xfs_sb_t, %s) = \\%zu\\n\", offsetof(xfs_sb_t, %s));", $2, $2); next}
+    structon && /}/ { structon = 0; next}
+ '>>$cprog
  
- echo "Create metadump file"
-diff --git a/tests/xfs/140 b/tests/xfs/140
-index e20cd3f..45be9f4 100644
---- a/tests/xfs/140
-+++ b/tests/xfs/140
-@@ -70,7 +70,7 @@ cmp -s "$TESTDIR/file1" "$TESTDIR/file2" || echo "file1 and file2 do not match"
- cmp -s "$TESTDIR/file2" "$TESTDIR/file2.chk" || echo "file2 and file2.chk do not match"
- 
- echo "CoW every other block"
--seq 1 2 $NR | while read f; do
-+seq 1 2 $((NR - 1)) | while read f; do
- 	_pwrite_byte 0x62 $((f * BLKSZ)) $BLKSZ "$TESTDIR/file2" >> "$seqres.full"
- 	_pwrite_byte 0x62 $((f * BLKSZ)) $BLKSZ "$TESTDIR/file2.chk" >> "$seqres.full"
- done
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index c30e988..8ba121e 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -1,123 +1,144 @@
+ QA output created by 122
+-offsetof(xfs_sb_t, sb_agblklog ) = 124
+-offsetof(xfs_sb_t, sb_agblocks ) = 84
+-offsetof(xfs_sb_t, sb_agcount ) = 88
+-offsetof(xfs_sb_t, sb_bad_features2 ) = 204
+-offsetof(xfs_sb_t, sb_blocklog ) = 120
+-offsetof(xfs_sb_t, sb_blocksize ) = 4
+-offsetof(xfs_sb_t, sb_dblocks ) = 8
+-offsetof(xfs_sb_t, sb_dirblklog ) = 192
+-offsetof(xfs_sb_t, sb_fdblocks ) = 144
+-offsetof(xfs_sb_t, sb_features2 ) = 200
+-offsetof(xfs_sb_t, sb_flags ) = 178
+-offsetof(xfs_sb_t, sb_fname[12] ) = 120
+-offsetof(xfs_sb_t, sb_frextents ) = 152
+-offsetof(xfs_sb_t, sb_gquotino ) = 168
+-offsetof(xfs_sb_t, sb_icount ) = 128
+-offsetof(xfs_sb_t, sb_ifree ) = 136
+-offsetof(xfs_sb_t, sb_imax_pct ) = 127
+-offsetof(xfs_sb_t, sb_inoalignmt ) = 180
+-offsetof(xfs_sb_t, sb_inodelog ) = 122
+-offsetof(xfs_sb_t, sb_inodesize ) = 104
+-offsetof(xfs_sb_t, sb_inopblock ) = 106
+-offsetof(xfs_sb_t, sb_inopblog ) = 123
+-offsetof(xfs_sb_t, sb_inprogress ) = 126
+-offsetof(xfs_sb_t, sb_logblocks ) = 96
+-offsetof(xfs_sb_t, sb_logsectlog ) = 193
+-offsetof(xfs_sb_t, sb_logsectsize ) = 194
+-offsetof(xfs_sb_t, sb_logstart ) = 48
+-offsetof(xfs_sb_t, sb_logsunit ) = 196
+-offsetof(xfs_sb_t, sb_magicnum ) = 0
+-offsetof(xfs_sb_t, sb_qflags ) = 176
+-offsetof(xfs_sb_t, sb_rblocks ) = 16
+-offsetof(xfs_sb_t, sb_rbmblocks ) = 92
+-offsetof(xfs_sb_t, sb_rbmino ) = 64
+-offsetof(xfs_sb_t, sb_rextents ) = 24
+-offsetof(xfs_sb_t, sb_rextsize ) = 80
+-offsetof(xfs_sb_t, sb_rextslog ) = 125
+-offsetof(xfs_sb_t, sb_rootino ) = 56
+-offsetof(xfs_sb_t, sb_rsumino ) = 72
+-offsetof(xfs_sb_t, sb_sectlog ) = 121
+-offsetof(xfs_sb_t, sb_sectsize ) = 102
+-offsetof(xfs_sb_t, sb_shared_vn ) = 179
+-offsetof(xfs_sb_t, sb_unit ) = 184
+-offsetof(xfs_sb_t, sb_uquotino ) = 160
+-offsetof(xfs_sb_t, sb_uuid ) = 32
+-offsetof(xfs_sb_t, sb_versionnum ) = 100
+-offsetof(xfs_sb_t, sb_width ) = 188
+-sizeof( xfs_agf_t ) = <SIZE>
+-sizeof( xfs_agfl_t ) = 4
+-sizeof( xfs_agi_t ) = 296
+-sizeof( xfs_alloc_rec_incore_t ) = 8
+-sizeof( xfs_alloc_rec_t ) = 8
+-sizeof( xfs_attr_inactive_list_t ) = 8
+-sizeof( xfs_attr_leaf_entry_t ) = 8
+-sizeof( xfs_attr_leaf_hdr_t ) = 32
+-sizeof( xfs_attr_leaf_map_t ) = 4
+-sizeof( xfs_attr_leaf_name_local_t ) = 4
+-sizeof( xfs_attr_leaf_name_remote_t ) = 12
+-sizeof( xfs_attr_leafblock_t ) = 56
+-sizeof( xfs_attr_shortform_t ) = 8
+-sizeof( xfs_attrlist_cursor_t ) = 16
+-sizeof( xfs_bmbt_key_t ) = 8
+-sizeof( xfs_bmbt_rec_t ) = 16
+-sizeof( xfs_bmdr_block_t ) = 4
+-sizeof( xfs_btnum_t ) = 4
+-sizeof( xfs_buf_log_format_t ) = 24
+-sizeof( xfs_da_blkinfo_t ) = 12
+-sizeof( xfs_da_intnode_t ) = 24
+-sizeof( xfs_dinode_fmt_t ) = 4
+-sizeof( xfs_dir2_data_free_t ) = 4
+-sizeof( xfs_dir2_data_hdr_t ) = 16
+-sizeof( xfs_dir2_data_unused_t ) = 6
+-sizeof( xfs_dir2_free_hdr_t ) = 16
+-sizeof( xfs_dir2_free_t ) = 20
+-sizeof( xfs_dir2_ino4_t ) = 4
+-sizeof( xfs_dir2_ino8_t ) = 8
+-sizeof( xfs_dir2_inou_t ) = 8
+-sizeof( xfs_dir2_leaf_entry_t ) = 8
+-sizeof( xfs_dir2_leaf_hdr_t ) = 16
+-sizeof( xfs_dir2_leaf_t ) = 32
+-sizeof( xfs_dir2_leaf_tail_t ) = 4
+-sizeof( xfs_dir2_sf_entry_t ) = 12
+-sizeof( xfs_dir2_sf_hdr_t ) = 10
+-sizeof( xfs_dir2_sf_off_t ) = 2
+-sizeof( xfs_dir2_sf_t ) = 22
+-sizeof( xfs_dir_leaf_entry_t ) = 8
+-sizeof( xfs_dir_leaf_hdr_t ) = 32
+-sizeof( xfs_dir_leaf_map_t ) = 4
+-sizeof( xfs_dir_leaf_name_t ) = 9
+-sizeof( xfs_dir_leafblock_t ) = 52
+-sizeof( xfs_dir_sf_entry_t ) = 10
+-sizeof( xfs_dir_sf_hdr_t ) = 9
+-sizeof( xfs_dir_shortform_t ) = 19
+-sizeof( xfs_disk_dquot_t ) = 104
+-sizeof( xfs_dq_logformat_t ) = 24
+-sizeof( xfs_dqblk_t ) = 136
+-sizeof( xfs_dsb_t ) = 208
+-sizeof( xfs_efd_log_format_32_t ) = 28
+-sizeof( xfs_efd_log_format_64_t ) = 32
+-sizeof( xfs_efi_log_format_32_t ) = 28
+-sizeof( xfs_efi_log_format_64_t ) = 32
+-sizeof( xfs_error_injection_t ) = 8
+-sizeof( xfs_exntfmt_t ) = 4
+-sizeof( xfs_exntst_t ) = 4
+-sizeof( xfs_extent_32_t ) = 12
+-sizeof( xfs_extent_64_t ) = 16
+-sizeof( xfs_fid_t ) = 16
+-sizeof( xfs_fsid_t ) = 8
+-sizeof( xfs_fsop_counts_t ) = 32
+-sizeof( xfs_fsop_geom_t ) = 112
+-sizeof( xfs_fsop_resblks_t ) = 16
+-sizeof( xfs_growfs_log_t ) = 8
+-sizeof( xfs_handle_t ) = 24
+-sizeof( xfs_inobt_key_t ) = 4
+-sizeof( xfs_inobt_rec_t ) = 16
+-sizeof( xfs_inode_log_format_32_t ) = 52
+-sizeof( xfs_inode_log_format_64_t ) = 56
+-sizeof( xfs_lookup_t ) = 4
+-sizeof( xfs_qoff_logformat_t ) = 20
+-sizeof( xfs_sb_field_t ) = 4
+-sizeof( xfs_timestamp_t ) = 8
+-sizeof( xfs_trans_header_t ) = 16
+-sizeof( xfs_trans_reservations_t ) = 84
++offsetof(xfs_sb_t, sb_agblklog) = 124
++offsetof(xfs_sb_t, sb_agblocks) = 84
++offsetof(xfs_sb_t, sb_agcount) = 88
++offsetof(xfs_sb_t, sb_bad_features2) = 204
++offsetof(xfs_sb_t, sb_blocklog) = 120
++offsetof(xfs_sb_t, sb_blocksize) = 4
++offsetof(xfs_sb_t, sb_crc) = 224
++offsetof(xfs_sb_t, sb_dblocks) = 8
++offsetof(xfs_sb_t, sb_dirblklog) = 192
++offsetof(xfs_sb_t, sb_fdblocks) = 144
++offsetof(xfs_sb_t, sb_features2) = 200
++offsetof(xfs_sb_t, sb_features_compat) = 208
++offsetof(xfs_sb_t, sb_features_incompat) = 216
++offsetof(xfs_sb_t, sb_features_log_incompat) = 220
++offsetof(xfs_sb_t, sb_features_ro_compat) = 212
++offsetof(xfs_sb_t, sb_flags) = 178
++offsetof(xfs_sb_t, sb_fname[12]) = 120
++offsetof(xfs_sb_t, sb_frextents) = 152
++offsetof(xfs_sb_t, sb_gquotino) = 168
++offsetof(xfs_sb_t, sb_icount) = 128
++offsetof(xfs_sb_t, sb_ifree) = 136
++offsetof(xfs_sb_t, sb_imax_pct) = 127
++offsetof(xfs_sb_t, sb_inoalignmt) = 180
++offsetof(xfs_sb_t, sb_inodelog) = 122
++offsetof(xfs_sb_t, sb_inodesize) = 104
++offsetof(xfs_sb_t, sb_inopblock) = 106
++offsetof(xfs_sb_t, sb_inopblog) = 123
++offsetof(xfs_sb_t, sb_inprogress) = 126
++offsetof(xfs_sb_t, sb_logblocks) = 96
++offsetof(xfs_sb_t, sb_logsectlog) = 193
++offsetof(xfs_sb_t, sb_logsectsize) = 194
++offsetof(xfs_sb_t, sb_logstart) = 48
++offsetof(xfs_sb_t, sb_logsunit) = 196
++offsetof(xfs_sb_t, sb_lsn) = 240
++offsetof(xfs_sb_t, sb_magicnum) = 0
++offsetof(xfs_sb_t, sb_meta_uuid) = 248
++offsetof(xfs_sb_t, sb_pquotino) = 232
++offsetof(xfs_sb_t, sb_qflags) = 176
++offsetof(xfs_sb_t, sb_rblocks) = 16
++offsetof(xfs_sb_t, sb_rbmblocks) = 92
++offsetof(xfs_sb_t, sb_rbmino) = 64
++offsetof(xfs_sb_t, sb_rextents) = 24
++offsetof(xfs_sb_t, sb_rextsize) = 80
++offsetof(xfs_sb_t, sb_rextslog) = 125
++offsetof(xfs_sb_t, sb_rootino) = 56
++offsetof(xfs_sb_t, sb_rsumino) = 72
++offsetof(xfs_sb_t, sb_sectlog) = 121
++offsetof(xfs_sb_t, sb_sectsize) = 102
++offsetof(xfs_sb_t, sb_shared_vn) = 179
++offsetof(xfs_sb_t, sb_spino_align) = 228
++offsetof(xfs_sb_t, sb_unit) = 184
++offsetof(xfs_sb_t, sb_uquotino) = 160
++offsetof(xfs_sb_t, sb_uuid) = 32
++offsetof(xfs_sb_t, sb_versionnum) = 100
++offsetof(xfs_sb_t, sb_width) = 188
++sizeof(struct xfs_acl) = 4
++sizeof(struct xfs_acl_entry) = 12
++sizeof(struct xfs_attr3_leaf_hdr) = 80
++sizeof(struct xfs_attr3_leafblock) = 88
++sizeof(struct xfs_attr3_rmt_hdr) = 56
++sizeof(struct xfs_btree_block) = 72
++sizeof(struct xfs_clone_args) = 32
++sizeof(struct xfs_da3_blkinfo) = 56
++sizeof(struct xfs_da3_intnode) = 64
++sizeof(struct xfs_da3_node_hdr) = 64
++sizeof(struct xfs_dir3_blk_hdr) = 48
++sizeof(struct xfs_dir3_data_hdr) = 64
++sizeof(struct xfs_dir3_free) = 64
++sizeof(struct xfs_dir3_free_hdr) = 64
++sizeof(struct xfs_dir3_leaf) = 64
++sizeof(struct xfs_dir3_leaf_hdr) = 64
++sizeof(struct xfs_dsymlink_hdr) = 56
++sizeof(struct xfs_extent_data) = 24
++sizeof(struct xfs_extent_data_info) = 32
++sizeof(struct xfs_fs_eofblocks) = 128
++sizeof(struct xfs_icreate_log) = 28
++sizeof(xfs_agf_t) = 224
++sizeof(xfs_agfl_t) = 36
++sizeof(xfs_agi_t) = 336
++sizeof(xfs_alloc_key_t) = 8
++sizeof(xfs_alloc_rec_incore_t) = 8
++sizeof(xfs_alloc_rec_t) = 8
++sizeof(xfs_attr_leaf_entry_t) = 8
++sizeof(xfs_attr_leaf_hdr_t) = 32
++sizeof(xfs_attr_leaf_map_t) = 4
++sizeof(xfs_attr_leaf_name_local_t) = 4
++sizeof(xfs_attr_leaf_name_remote_t) = 12
++sizeof(xfs_attr_leafblock_t) = 40
++sizeof(xfs_attr_shortform_t) = 8
++sizeof(xfs_attrlist_cursor_t) = 16
++sizeof(xfs_bmbt_key_t) = 8
++sizeof(xfs_bmbt_rec_t) = 16
++sizeof(xfs_bmdr_block_t) = 4
++sizeof(xfs_bmdr_key_t) = 8
++sizeof(xfs_btnum_t) = 4
++sizeof(xfs_da_blkinfo_t) = 12
++sizeof(xfs_da_intnode_t) = 16
++sizeof(xfs_da_node_entry_t) = 8
++sizeof(xfs_da_node_hdr_t) = 16
++sizeof(xfs_dinode_fmt_t) = 4
++sizeof(xfs_dir2_data_free_t) = 4
++sizeof(xfs_dir2_data_hdr_t) = 16
++sizeof(xfs_dir2_data_unused_t) = 6
++sizeof(xfs_dir2_free_hdr_t) = 16
++sizeof(xfs_dir2_free_t) = 16
++sizeof(xfs_dir2_ino4_t) = 4
++sizeof(xfs_dir2_ino8_t) = 8
++sizeof(xfs_dir2_inou_t) = 8
++sizeof(xfs_dir2_leaf_entry_t) = 8
++sizeof(xfs_dir2_leaf_hdr_t) = 16
++sizeof(xfs_dir2_leaf_t) = 16
++sizeof(xfs_dir2_leaf_tail_t) = 4
++sizeof(xfs_dir2_sf_entry_t) = 3
++sizeof(xfs_dir2_sf_hdr_t) = 10
++sizeof(xfs_dir2_sf_off_t) = 2
++sizeof(xfs_disk_dquot_t) = 104
++sizeof(xfs_dq_logformat_t) = 24
++sizeof(xfs_dqblk_t) = 136
++sizeof(xfs_dsb_t) = 264
++sizeof(xfs_efd_log_format_32_t) = 28
++sizeof(xfs_efd_log_format_64_t) = 32
++sizeof(xfs_efi_log_format_32_t) = 28
++sizeof(xfs_efi_log_format_64_t) = 32
++sizeof(xfs_error_injection_t) = 8
++sizeof(xfs_exntfmt_t) = 4
++sizeof(xfs_exntst_t) = 4
++sizeof(xfs_extent_32_t) = 12
++sizeof(xfs_extent_64_t) = 16
++sizeof(xfs_fid_t) = 16
++sizeof(xfs_fsid_t) = 8
++sizeof(xfs_fsop_counts_t) = 32
++sizeof(xfs_fsop_geom_t) = 112
++sizeof(xfs_fsop_resblks_t) = 16
++sizeof(xfs_growfs_log_t) = 8
++sizeof(xfs_handle_t) = 24
++sizeof(xfs_inobt_key_t) = 4
++sizeof(xfs_inobt_rec_t) = 16
++sizeof(xfs_inode_log_format_32_t) = 52
++sizeof(xfs_inode_log_format_64_t) = 56
++sizeof(xfs_lookup_t) = 4
++sizeof(xfs_qoff_logformat_t) = 20
++sizeof(xfs_timestamp_t) = 8
++sizeof(xfs_trans_header_t) = 16
 
 _______________________________________________
 xfs mailing list
