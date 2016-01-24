@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 27F3B7F37
-	for <xfs@oss.sgi.com>; Sun, 24 Jan 2016 11:08:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18A57304039
-	for <xfs@oss.sgi.com>; Sun, 24 Jan 2016 09:08:27 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id eWCR4HuHWCjTN2n8 for <xfs@oss.sgi.com>;
-	Sun, 24 Jan 2016 09:08:25 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 694E061A5FC7
-	for <xfs@oss.sgi.com>; Sun, 24 Jan 2016 11:08:25 -0600 (CST)
-Subject: [PATCH] xfs_repair: Fix untranslatable strings
-References: <20160124155853.GA10063@stranger.qboosh.pl>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56A50508.4060207@sandeen.net>
-Date: Sun, 24 Jan 2016 11:08:24 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CDA987F37
+	for <xfs@oss.sgi.com>; Sun, 24 Jan 2016 16:01:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F08FAC002
+	for <xfs@oss.sgi.com>; Sun, 24 Jan 2016 14:01:37 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	17N3fMWex1iEUfj1 for <xfs@oss.sgi.com>;
+	Sun, 24 Jan 2016 14:01:34 -0800 (PST)
+Date: Mon, 25 Jan 2016 09:01:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH] dax, ext2, ext4, XFS: fix data corruption race
+Message-ID: <20160124220107.GI20456@dastard>
+References: <1453503971-5319-1-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160124155853.GA10063@stranger.qboosh.pl>
+Content-Disposition: inline
+In-Reply-To: <1453503971-5319-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +29,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-Don't substitute in "would" or "will" for %s here, it makes
-it untranslatable.  Just spell it out twice like every other
-message in the function.
+On Fri, Jan 22, 2016 at 04:06:11PM -0700, Ross Zwisler wrote:
+> With the current DAX code the following race exists:
+> 
+> Process 1                	Process 2
+> ---------			---------
+> 
+> __dax_fault() - read file f, index 0
+>   get_block() -> returns hole
+>                              	__dax_fault() - write file f, index 0
+>                                   get_block() -> allocates blocks
+>                                   dax_insert_mapping()
+>   dax_load_hole()
+>   *data corruption*
+> 
+> An analogous race exists between __dax_fault() loading a hole and
+> __dax_pmd_fault() allocating a PMD DAX page and trying to insert it, and
+> that race also ends in data corruption.
 
-Reported-by: Jakub Bogusz <qboosh@pld-linux.org>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Ok, so why doesn't this problem exist for the normal page cache
+insertion case with concurrent read vs write faults?  It's because
+the write fault first does a read fault and so always the write
+fault always has a page in the radix tree for the get_block call
+that allocates the extents, right?
 
-diff --git a/repair/versions.c b/repair/versions.c
-index 1585385..978f48b 100644
---- a/repair/versions.c
-+++ b/repair/versions.c
-@@ -224,10 +224,17 @@ _("WARNING:  you have disallowed attr2 attributes but this filesystem\n"
- 	}
- 
- 	if (!(sb->sb_versionnum & XFS_SB_VERSION_NLINKBIT)) {
--		do_warn(
--_("WARNING: you have a V1 inode filesystem. It %s be converted to a\n"
-+		if (!no_modify) {
-+			do_warn(
-+_("WARNING: you have a V1 inode filesystem. It will be converted to a\n"
-   "\tversion 2 inode filesystem. If you do not want this, run an older\n"
--  "\tversion of xfs_repair.\n"), no_modify ? "would" : "will");
-+  "\tversion of xfs_repair.\n"));
-+		} else  {
-+			do_warn(
-+_("WARNING: you have a V1 inode filesystem. It would be converted to a\n"
-+  "\tversion 2 inode filesystem. If you do not want this, run an older\n"
-+  "\tversion of xfs_repair.\n"));
-+		}
- 	}
- 
- 	if (xfs_sb_version_hasquota(sb))  {
+And DAX has an optimisation in the page fault part where it skips
+the read fault part of the write fault?  And so essentially the DAX
+write fault is missing the object (page lock of page in the radix
+tree) that the non-DAX write fault uses to avoid this problem?
+
+What happens if we get rid of that DAX write fault optimisation that
+skips the initial read fault? The write fault will always run on a
+mapping that has a hole loaded, right?, so the race between
+dax_load_hole() and dax_insert_mapping() goes away, because nothing
+will be calling dax_load_hole() once the write fault is allocating
+blocks....
+
+> One solution to this race was proposed by Jan Kara:
+> 
+>   So we need some exclusion that makes sure pgoff->block mapping
+>   information is uptodate at the moment we insert it into page tables. The
+>   simplest reasonably fast thing I can see is:
+> 
+>   When handling a read fault, things stay as is and filesystem protects the
+>   fault with an equivalent of EXT4_I(inode)->i_mmap_sem held for reading.
+>   When handling a write fault we first grab EXT4_I(inode)->i_mmap_sem for
+>   reading and try a read fault. If __dax_fault() sees a hole returned from
+>   get_blocks() during a write fault, it bails out. Filesystem grabs
+>   EXT4_I(inode)->i_mmap_sem for writing and retries with different
+>   get_blocks() callback which will allocate blocks. That way we get proper
+>   exclusion for faults needing to allocate blocks.
+> 
+> This patch adds this logic to DAX, ext2, ext4 and XFS.
+
+It's too ugly to live. It hacks around a special DAX optimisation in
+the fault code by adding special case locking to the filesystems,
+and adds a siginificant new locking constraint to the page fault
+path.
+
+If the write fault first goes through the read fault path and loads
+the hole, this race condition simply does not exist. I'd suggest
+that we get rid of the DAX optimisation that skips read fault
+processing on write fault so that this problem simply goes away.
+Yes, it means write faults on holes will be a little slower (which,
+quite frankly, I don't care at all about), but it means we don't
+need to hack special cases into code that should not have to care
+about various different types of page fault races. Correctness
+first, speed later.
+
+FWIW, this also means we can get rid of the hacks in the filesystem
+code where we have to handle write faults through the ->fault
+handler rather than the ->page_mkwrite handler.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
