@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 26C747F37
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 07:59:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 16E24304032
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 05:59:13 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 2D3C27F37
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 08:46:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E5ED7304032
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:46:52 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id OeYZrNotFn9TYBFG (version=TLSv1
+	ESMTP id y3GpoCsVrYbklP7N (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 05:59:11 -0800 (PST)
-Date: Mon, 25 Jan 2016 14:59:21 +0100
+	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:46:50 -0800 (PST)
+Date: Mon, 25 Jan 2016 15:47:02 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC PATCH] dax, ext2, ext4, XFS: fix data corruption race
-Message-ID: <20160125135921.GE24938@quack.suse.cz>
-References: <1453503971-5319-1-git-send-email-ross.zwisler@linux.intel.com>
-	<20160124220107.GI20456@dastard>
+Subject: Re: [PATCH 1/7] quota: remove unused cmd argument from quota_quotaon()
+Message-ID: <20160125144702.GJ24938@quack.suse.cz>
+References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
+	<1453487136-12681-2-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160124220107.GI20456@dastard>
+In-Reply-To: <1453487136-12681-2-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,110 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-On Mon 25-01-16 09:01:07, Dave Chinner wrote:
-> On Fri, Jan 22, 2016 at 04:06:11PM -0700, Ross Zwisler wrote:
-> > With the current DAX code the following race exists:
-> > 
-> > Process 1                	Process 2
-> > ---------			---------
-> > 
-> > __dax_fault() - read file f, index 0
-> >   get_block() -> returns hole
-> >                              	__dax_fault() - write file f, index 0
-> >                                   get_block() -> allocates blocks
-> >                                   dax_insert_mapping()
-> >   dax_load_hole()
-> >   *data corruption*
-> > 
-> > An analogous race exists between __dax_fault() loading a hole and
-> > __dax_pmd_fault() allocating a PMD DAX page and trying to insert it, and
-> > that race also ends in data corruption.
+On Fri 22-01-16 12:25:30, Eric Sandeen wrote:
+> The cmd argument to quota_quotaon() via Q_QUOTAON quotactl
+> is not used, so remove it.
 > 
-> Ok, so why doesn't this problem exist for the normal page cache
-> insertion case with concurrent read vs write faults?  It's because
-> the write fault first does a read fault and so always the write
-> fault always has a page in the radix tree for the get_block call
-> that allocates the extents, right?
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Yes, any fault (read or write) has a page to lock which avoids races for
-normal fault path.
+Looks good. You can add:
 
-> And DAX has an optimisation in the page fault part where it skips
-> the read fault part of the write fault?  And so essentially the DAX
-> write fault is missing the object (page lock of page in the radix
-> tree) that the non-DAX write fault uses to avoid this problem?
-> 
-> What happens if we get rid of that DAX write fault optimisation that
-> skips the initial read fault? The write fault will always run on a
-> mapping that has a hole loaded, right?, so the race between
-> dax_load_hole() and dax_insert_mapping() goes away, because nothing
-> will be calling dax_load_hole() once the write fault is allocating
-> blocks....
-
-So frankly I don't like mixing of page locks into the DAX fault locking.
-Also your scheme would require more tricks to deal with races between PMD
-write faults racing with PTE read faults since you don't want to require
-2MB worth of hole-pages to be able to do a PMD write fault. Transparent
-huge pages deal with this issue using compound pages but I'd like to avoid
-that horror in the DAX path...
-
-> > One solution to this race was proposed by Jan Kara:
-> > 
-> >   So we need some exclusion that makes sure pgoff->block mapping
-> >   information is uptodate at the moment we insert it into page tables. The
-> >   simplest reasonably fast thing I can see is:
-> > 
-> >   When handling a read fault, things stay as is and filesystem protects the
-> >   fault with an equivalent of EXT4_I(inode)->i_mmap_sem held for reading.
-> >   When handling a write fault we first grab EXT4_I(inode)->i_mmap_sem for
-> >   reading and try a read fault. If __dax_fault() sees a hole returned from
-> >   get_blocks() during a write fault, it bails out. Filesystem grabs
-> >   EXT4_I(inode)->i_mmap_sem for writing and retries with different
-> >   get_blocks() callback which will allocate blocks. That way we get proper
-> >   exclusion for faults needing to allocate blocks.
-> > 
-> > This patch adds this logic to DAX, ext2, ext4 and XFS.
-> 
-> It's too ugly to live. It hacks around a special DAX optimisation in
-> the fault code by adding special case locking to the filesystems,
-> and adds a siginificant new locking constraint to the page fault
-> path.
-> 
-> If the write fault first goes through the read fault path and loads
-> the hole, this race condition simply does not exist. I'd suggest
-> that we get rid of the DAX optimisation that skips read fault
-> processing on write fault so that this problem simply goes away.
-> Yes, it means write faults on holes will be a little slower (which,
-> quite frankly, I don't care at all about), but it means we don't
-> need to hack special cases into code that should not have to care
-> about various different types of page fault races. Correctness
-> first, speed later.
-> 
-> FWIW, this also means we can get rid of the hacks in the filesystem
-> code where we have to handle write faults through the ->fault
-> handler rather than the ->page_mkwrite handler.
-
-So I don't mind doing read-fault first. But as I wrote above I don't think
-it solves all the issues. The rule I wanted to introduce is:
-
-1) Fault requiring block allocation require exclusive lock held over the
-whole fault.
-
-2) Fault not requiring allocation is enough with shared lock held over the
-whole fault.
-
-So we can certainly grab i_mmap_sem exclusively whenever we hit a write
-fault and it would be correct. This looks like a quite clean design to me.
-
-As a performance optimization (which is upto each filesystem) we can try to
-satisfy write fault without allocation while holding i_mmap_sem in a shared
-mode and if that fails, grab the lock exclusively and retry. Still don't like
-it?
+Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
+
+> ---
+>  fs/quota/quota.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> index 3746367..ea66670 100644
+> --- a/fs/quota/quota.c
+> +++ b/fs/quota/quota.c
+> @@ -79,7 +79,7 @@ unsigned int qtype_enforce_flag(int type)
+>  	return 0;
+>  }
+>  
+> -static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
+> +static int quota_quotaon(struct super_block *sb, int type, qid_t id,
+>  		         struct path *path)
+>  {
+>  	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_enable)
+> @@ -659,7 +659,7 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+>  
+>  	switch (cmd) {
+>  	case Q_QUOTAON:
+> -		return quota_quotaon(sb, type, cmd, id, path);
+> +		return quota_quotaon(sb, type, id, path);
+>  	case Q_QUOTAOFF:
+>  		return quota_quotaoff(sb, type);
+>  	case Q_GETFMT:
+> -- 
+> 1.7.1
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
