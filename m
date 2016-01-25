@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8192F7F37
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 08:51:30 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2F3997CBD
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 09:07:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 37CC48F8033
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:30 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D9385304059
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 07:07:01 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id OAEwd6uvkOAOiCkA (version=TLSv1
+	ESMTP id Swla8qqZM3264JHw (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:28 -0800 (PST)
-Date: Mon, 25 Jan 2016 15:51:40 +0100
+	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 07:06:59 -0800 (PST)
+Date: Mon, 25 Jan 2016 16:07:10 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/7] quota: add new quotactl Q_XGETNEXTQUOTA
-Message-ID: <20160125145140.GM24938@quack.suse.cz>
+Subject: Re: [PATCH 0/7 V3] quota: add new quotactl Q_GETNEXTQUOTA
+Message-ID: <20160125150710.GN24938@quack.suse.cz>
 References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
-	<1453487136-12681-3-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1453487136-12681-3-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,123 +32,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-On Fri 22-01-16 12:25:31, Eric Sandeen wrote:
-> Q_XGETNEXTQUOTA is exactly like Q_XGETQUOTA, except that it
-> will return quota information for the id equal to or greater
-> than the id requested.  In other words, if the requested id has
+On Fri 22-01-16 12:25:29, Eric Sandeen wrote:
+> This adds a new quotactl, Q_GETNEXTQUOTA.
+> 
+> Q_GETNEXTQUOTA is exactly like Q_GETQUOTA, except that it will
+> return quota information for the id equal to or greater than
+> the id requested.  In other words, if the specified id has
 > no quota, the command will return quota information for the
 > next higher id which does have a quota set.  If no higher id
 > has an active quota, -ESRCH is returned.
+> 
+> So if you ask for id X, you can get back quota for id X,
+> id X+N, or -ESRCH if no higher id has a quota.
 > 
 > This allows filesystems to do efficient iteration in kernelspace,
 > much like extN filesystems do in userspace when asked to report
 > all active quotas.
 > 
-> The patch adds a d_id field to struct qc_dqblk so that we can
-> pass back the id of the quota which was found, and return it
-> to userspace.
-
-This paragraph is no longer true. Otherwise the patch looks good to me.
-
-								Honza
-
-> 
-> Today, filesystems such as XFS require getpwent-style iterations,
+> Today, filesystems such as XFS require getpwent()-style iterations,
 > and for systems which have i.e. LDAP backends, this can be very
 > slow, or even impossible if iteration is not allowed in the
 > configuration.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  fs/quota/quota.c               |   31 +++++++++++++++++++++++++++++++
->  include/linux/quota.h          |    2 ++
->  include/uapi/linux/dqblk_xfs.h |    1 +
->  3 files changed, 34 insertions(+), 0 deletions(-)
+> Patches 1 and 4 are just small fixups that turned up along the way;
+> 2 and 3 add the actual quota plumbing, and the rest are xfs-specific
+> to allow xfs to support this new interface.
 > 
-> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-> index ea66670..0a6dd71 100644
-> --- a/fs/quota/quota.c
-> +++ b/fs/quota/quota.c
-> @@ -625,6 +625,34 @@ static int quota_getxquota(struct super_block *sb, int type, qid_t id,
->  	return ret;
->  }
->  
-> +/*
-> + * Return quota for next active quota >= this id, if any exists,
-> + * otherwise return -ESRCH via ->get_nextdqblk.
-> + */
-> +static int quota_getnextxquota(struct super_block *sb, int type, qid_t id,
-> +			    void __user *addr)
-> +{
-> +	struct fs_disk_quota fdq;
-> +	struct qc_dqblk qdq;
-> +	struct kqid qid;
-> +	qid_t id_out;
-> +	int ret;
-> +
-> +	if (!sb->s_qcop->get_nextdqblk)
-> +		return -ENOSYS;
-> +	qid = make_kqid(current_user_ns(), type, id);
-> +	if (!qid_valid(qid))
-> +		return -EINVAL;
-> +	ret = sb->s_qcop->get_nextdqblk(sb, &qid, &qdq);
-> +	if (ret)
-> +		return ret;
-> +	id_out = from_kqid(current_user_ns(), qid);
-> +	copy_to_xfs_dqblk(&fdq, &qdq, type, id_out);
-> +	if (copy_to_user(addr, &fdq, sizeof(fdq)))
-> +		return -EFAULT;
-> +	return ret;
-> +}
-> +
->  static int quota_rmxquota(struct super_block *sb, void __user *addr)
->  {
->  	__u32 flags;
-> @@ -690,6 +718,8 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
->  		return quota_setxquota(sb, type, id, addr);
->  	case Q_XGETQUOTA:
->  		return quota_getxquota(sb, type, id, addr);
-> +	case Q_XGETNEXTQUOTA:
-> +		return quota_getnextxquota(sb, type, id, addr);
->  	case Q_XQUOTASYNC:
->  		if (sb->s_flags & MS_RDONLY)
->  			return -EROFS;
-> @@ -712,6 +742,7 @@ static int quotactl_cmd_write(int cmd)
->  	case Q_XGETQSTAT:
->  	case Q_XGETQSTATV:
->  	case Q_XGETQUOTA:
-> +	case Q_XGETNEXTQUOTA:
->  	case Q_XQUOTASYNC:
->  		return 0;
->  	}
-> diff --git a/include/linux/quota.h b/include/linux/quota.h
-> index b2505ac..fba92f5 100644
-> --- a/include/linux/quota.h
-> +++ b/include/linux/quota.h
-> @@ -425,6 +425,8 @@ struct quotactl_ops {
->  	int (*quota_sync)(struct super_block *, int);
->  	int (*set_info)(struct super_block *, int, struct qc_info *);
->  	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
-> +	int (*get_nextdqblk)(struct super_block *, struct kqid *,
-> +			     struct qc_dqblk *);
->  	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
->  	int (*get_state)(struct super_block *, struct qc_state *);
->  	int (*rm_xquota)(struct super_block *, unsigned int);
-> diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-> index dcd75cc..11b3b31 100644
-> --- a/include/uapi/linux/dqblk_xfs.h
-> +++ b/include/uapi/linux/dqblk_xfs.h
-> @@ -39,6 +39,7 @@
->  #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
->  #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
->  #define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
-> +#define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage >= ID */
->  
->  /*
->   * fs_disk_quota structure:
-> -- 
-> 1.7.1
+> For non-xfs quota, this does require a new structure which is
+> able to pass back the discovered ID along with the quota info.
+> For xfs-quota, the id is already present in the structure.
 > 
+> V3:
+> * Remove 32-bit compat stuff (i686/x86_64 at least works w/o it...)
+> * Require CAP_SYS_ADMIN for these calls
+> * Pass back found ID in &qid passed to ->get_nextdqblk, rather
+>   than modifying struct qc_dqblk
+> * Munge that found ID back through user-namespace conversions
+>   before returning it in the user structure.
+
+So I've taken patch 1/7 into my tree since that is completely independent.
+Patches 2/7 and 3/7 look mostly good to me (except for that small omission
+in 3/7) so I can take them to my tree as well. Once I'll finish testing
+some UDF changes I have pending I'll push the tree to:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git for_next
+
+and Dave can pull from there to have a basis for XFS patches. I want to
+implement Q_GETNEXTQUOTA for VFS quota formats as well and those will go
+through my tree so that's why I want the interface changes go via my tree.
+
+								Honza
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
