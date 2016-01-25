@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 67E457CBD
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 08:49:18 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E29B7F37
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 08:51:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2C8C78F8049
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:49:18 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C3C57AC002
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:06 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id xATlRAmT0yeLaYKH (version=TLSv1
+	ESMTP id bfZikI0brjcu4hgU (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:49:16 -0800 (PST)
-Date: Mon, 25 Jan 2016 15:49:28 +0100
+	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:05 -0800 (PST)
+Date: Mon, 25 Jan 2016 15:51:17 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/7] quota: remove unused cmd argument from quota_quotaon()
-Message-ID: <20160125144928.GK24938@quack.suse.cz>
+Subject: Re: [PATCH 3/7] quota: add new quotactl Q_GETNEXTQUOTA
+Message-ID: <20160125145117.GL24938@quack.suse.cz>
 References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
-	<1453487136-12681-2-git-send-email-sandeen@redhat.com>
-	<20160125144702.GJ24938@quack.suse.cz>
+	<1453487136-12681-4-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160125144702.GJ24938@quack.suse.cz>
+In-Reply-To: <1453487136-12681-4-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,53 +33,122 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-On Mon 25-01-16 15:47:02, Jan Kara wrote:
-> On Fri 22-01-16 12:25:30, Eric Sandeen wrote:
-> > The cmd argument to quota_quotaon() via Q_QUOTAON quotactl
-> > is not used, so remove it.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Fri 22-01-16 12:25:32, Eric Sandeen wrote:
+> Q_GETNEXTQUOTA is exactly like Q_GETQUOTA, except that it
+> will return quota information for the id equal to or greater
+> than the id requested.  In other words, if the requested id has
+> no quota, the command will return quota information for the
+> next higher id which does have a quota set.  If no higher id
+> has an active quota, -ESRCH is returned.
 > 
-> Looks good. You can add:
+> This allows filesystems to do efficient iteration in kernelspace,
+> much like extN filesystems do in userspace when asked to report
+> all active quotas.
 > 
-> Reviewed-by: Jan Kara <jack@suse.cz>
+> This does require a new data structure for userspace, as the
+> current structure does not include an ID for the returned quota
+> information.
+> 
+> Today, Ext4 with a hidden quota inode requires getpwent-style
+> iterations, and for systems which have i.e. LDAP backends,
+> this can be very slow, or even impossible if iteration is not
+> allowed in the configuration.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Ah, I'm in a reviewe mode... ;) I'll just take this patch to my tree.
+The patch seems to be missing addition of Q_GETNEXTQUOTA into
+quotactl_cmd_write(). Otherwise it looks good to me.
 
-								Honza
+							Honza
 
-> > ---
-> >  fs/quota/quota.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-> > index 3746367..ea66670 100644
-> > --- a/fs/quota/quota.c
-> > +++ b/fs/quota/quota.c
-> > @@ -79,7 +79,7 @@ unsigned int qtype_enforce_flag(int type)
-> >  	return 0;
-> >  }
-> >  
-> > -static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
-> > +static int quota_quotaon(struct super_block *sb, int type, qid_t id,
-> >  		         struct path *path)
-> >  {
-> >  	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_enable)
-> > @@ -659,7 +659,7 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
-> >  
-> >  	switch (cmd) {
-> >  	case Q_QUOTAON:
-> > -		return quota_quotaon(sb, type, cmd, id, path);
-> > +		return quota_quotaon(sb, type, id, path);
-> >  	case Q_QUOTAOFF:
-> >  		return quota_quotaoff(sb, type);
-> >  	case Q_GETFMT:
-> > -- 
-> > 1.7.1
-> > 
+> ---
+>  fs/quota/quota.c           |   30 ++++++++++++++++++++++++++++++
+>  include/uapi/linux/quota.h |   14 ++++++++++++++
+>  2 files changed, 44 insertions(+), 0 deletions(-)
+> 
+> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> index 0a6dd71..ffa4e0b 100644
+> --- a/fs/quota/quota.c
+> +++ b/fs/quota/quota.c
+> @@ -222,6 +222,34 @@ static int quota_getquota(struct super_block *sb, int type, qid_t id,
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Return quota for next active quota >= this id, if any exists,
+> + * otherwise return -ESRCH via ->get_nextdqblk
+> + */
+> +static int quota_getnextquota(struct super_block *sb, int type, qid_t id,
+> +			  void __user *addr)
+> +{
+> +	struct kqid qid;
+> +	struct qc_dqblk fdq;
+> +	struct if_nextdqblk idq;
+> +	int ret;
+> +
+> +	if (!sb->s_qcop->get_nextdqblk)
+> +		return -ENOSYS;
+> +	qid = make_kqid(current_user_ns(), type, id);
+> +	if (!qid_valid(qid))
+> +		return -EINVAL;
+> +	ret = sb->s_qcop->get_nextdqblk(sb, &qid, &fdq);
+> +	if (ret)
+> +		return ret;
+> +	/* struct if_nextdqblk is a superset of struct if_dqblk */
+> +	copy_to_if_dqblk((struct if_dqblk *)&idq, &fdq);
+> +	idq.dqb_id = from_kqid(current_user_ns(), qid);
+> +	if (copy_to_user(addr, &idq, sizeof(idq)))
+> +		return -EFAULT;
+> +	return 0;
+> +}
+> +
+>  static void copy_from_if_dqblk(struct qc_dqblk *dst, struct if_dqblk *src)
+>  {
+>  	dst->d_spc_hardlimit = qbtos(src->dqb_bhardlimit);
+> @@ -698,6 +726,8 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+>  		return quota_setinfo(sb, type, addr);
+>  	case Q_GETQUOTA:
+>  		return quota_getquota(sb, type, id, addr);
+> +	case Q_GETNEXTQUOTA:
+> +		return quota_getnextquota(sb, type, id, addr);
+>  	case Q_SETQUOTA:
+>  		return quota_setquota(sb, type, id, addr);
+>  	case Q_SYNC:
+> diff --git a/include/uapi/linux/quota.h b/include/uapi/linux/quota.h
+> index 9c95b2c..38baddb 100644
+> --- a/include/uapi/linux/quota.h
+> +++ b/include/uapi/linux/quota.h
+> @@ -71,6 +71,7 @@
+>  #define Q_SETINFO  0x800006	/* set information about quota files */
+>  #define Q_GETQUOTA 0x800007	/* get user quota structure */
+>  #define Q_SETQUOTA 0x800008	/* set user quota structure */
+> +#define Q_GETNEXTQUOTA 0x800009	/* get disk limits and usage >= ID */
+>  
+>  /* Quota format type IDs */
+>  #define	QFMT_VFS_OLD 1
+> @@ -119,6 +120,19 @@ struct if_dqblk {
+>  	__u32 dqb_valid;
+>  };
+>  
+> +struct if_nextdqblk {
+> +	__u64 dqb_bhardlimit;
+> +	__u64 dqb_bsoftlimit;
+> +	__u64 dqb_curspace;
+> +	__u64 dqb_ihardlimit;
+> +	__u64 dqb_isoftlimit;
+> +	__u64 dqb_curinodes;
+> +	__u64 dqb_btime;
+> +	__u64 dqb_itime;
+> +	__u32 dqb_valid;
+> +	__u32 dqb_id;
+> +};
+> +
+>  /*
+>   * Structure used for setting quota information about file via quotactl
+>   * Following flags are used to specify which fields are valid
 > -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> 1.7.1
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
