@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3E29B7F37
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 08:51:10 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8192F7F37
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 08:51:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C3C57AC002
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:06 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 37CC48F8033
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:30 -0800 (PST)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id bfZikI0brjcu4hgU (version=TLSv1
+	ESMTP id OAEwd6uvkOAOiCkA (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:05 -0800 (PST)
-Date: Mon, 25 Jan 2016 15:51:17 +0100
+	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 06:51:28 -0800 (PST)
+Date: Mon, 25 Jan 2016 15:51:40 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/7] quota: add new quotactl Q_GETNEXTQUOTA
-Message-ID: <20160125145117.GL24938@quack.suse.cz>
+Subject: Re: [PATCH 2/7] quota: add new quotactl Q_XGETNEXTQUOTA
+Message-ID: <20160125145140.GM24938@quack.suse.cz>
 References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
-	<1453487136-12681-4-git-send-email-sandeen@redhat.com>
+	<1453487136-12681-3-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1453487136-12681-4-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1453487136-12681-3-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,8 +33,8 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-On Fri 22-01-16 12:25:32, Eric Sandeen wrote:
-> Q_GETNEXTQUOTA is exactly like Q_GETQUOTA, except that it
+On Fri 22-01-16 12:25:31, Eric Sandeen wrote:
+> Q_XGETNEXTQUOTA is exactly like Q_XGETQUOTA, except that it
 > will return quota information for the id equal to or greater
 > than the id requested.  In other words, if the requested id has
 > no quota, the command will return quota information for the
@@ -45,45 +45,46 @@ On Fri 22-01-16 12:25:32, Eric Sandeen wrote:
 > much like extN filesystems do in userspace when asked to report
 > all active quotas.
 > 
-> This does require a new data structure for userspace, as the
-> current structure does not include an ID for the returned quota
-> information.
+> The patch adds a d_id field to struct qc_dqblk so that we can
+> pass back the id of the quota which was found, and return it
+> to userspace.
+
+This paragraph is no longer true. Otherwise the patch looks good to me.
+
+								Honza
+
 > 
-> Today, Ext4 with a hidden quota inode requires getpwent-style
-> iterations, and for systems which have i.e. LDAP backends,
-> this can be very slow, or even impossible if iteration is not
-> allowed in the configuration.
+> Today, filesystems such as XFS require getpwent-style iterations,
+> and for systems which have i.e. LDAP backends, this can be very
+> slow, or even impossible if iteration is not allowed in the
+> configuration.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-The patch seems to be missing addition of Q_GETNEXTQUOTA into
-quotactl_cmd_write(). Otherwise it looks good to me.
-
-							Honza
-
 > ---
->  fs/quota/quota.c           |   30 ++++++++++++++++++++++++++++++
->  include/uapi/linux/quota.h |   14 ++++++++++++++
->  2 files changed, 44 insertions(+), 0 deletions(-)
+>  fs/quota/quota.c               |   31 +++++++++++++++++++++++++++++++
+>  include/linux/quota.h          |    2 ++
+>  include/uapi/linux/dqblk_xfs.h |    1 +
+>  3 files changed, 34 insertions(+), 0 deletions(-)
 > 
 > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-> index 0a6dd71..ffa4e0b 100644
+> index ea66670..0a6dd71 100644
 > --- a/fs/quota/quota.c
 > +++ b/fs/quota/quota.c
-> @@ -222,6 +222,34 @@ static int quota_getquota(struct super_block *sb, int type, qid_t id,
->  	return 0;
+> @@ -625,6 +625,34 @@ static int quota_getxquota(struct super_block *sb, int type, qid_t id,
+>  	return ret;
 >  }
 >  
 > +/*
 > + * Return quota for next active quota >= this id, if any exists,
-> + * otherwise return -ESRCH via ->get_nextdqblk
+> + * otherwise return -ESRCH via ->get_nextdqblk.
 > + */
-> +static int quota_getnextquota(struct super_block *sb, int type, qid_t id,
-> +			  void __user *addr)
+> +static int quota_getnextxquota(struct super_block *sb, int type, qid_t id,
+> +			    void __user *addr)
 > +{
+> +	struct fs_disk_quota fdq;
+> +	struct qc_dqblk qdq;
 > +	struct kqid qid;
-> +	struct qc_dqblk fdq;
-> +	struct if_nextdqblk idq;
+> +	qid_t id_out;
 > +	int ret;
 > +
 > +	if (!sb->s_qcop->get_nextdqblk)
@@ -91,61 +92,61 @@ quotactl_cmd_write(). Otherwise it looks good to me.
 > +	qid = make_kqid(current_user_ns(), type, id);
 > +	if (!qid_valid(qid))
 > +		return -EINVAL;
-> +	ret = sb->s_qcop->get_nextdqblk(sb, &qid, &fdq);
+> +	ret = sb->s_qcop->get_nextdqblk(sb, &qid, &qdq);
 > +	if (ret)
 > +		return ret;
-> +	/* struct if_nextdqblk is a superset of struct if_dqblk */
-> +	copy_to_if_dqblk((struct if_dqblk *)&idq, &fdq);
-> +	idq.dqb_id = from_kqid(current_user_ns(), qid);
-> +	if (copy_to_user(addr, &idq, sizeof(idq)))
+> +	id_out = from_kqid(current_user_ns(), qid);
+> +	copy_to_xfs_dqblk(&fdq, &qdq, type, id_out);
+> +	if (copy_to_user(addr, &fdq, sizeof(fdq)))
 > +		return -EFAULT;
-> +	return 0;
+> +	return ret;
 > +}
 > +
->  static void copy_from_if_dqblk(struct qc_dqblk *dst, struct if_dqblk *src)
+>  static int quota_rmxquota(struct super_block *sb, void __user *addr)
 >  {
->  	dst->d_spc_hardlimit = qbtos(src->dqb_bhardlimit);
-> @@ -698,6 +726,8 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
->  		return quota_setinfo(sb, type, addr);
->  	case Q_GETQUOTA:
->  		return quota_getquota(sb, type, id, addr);
-> +	case Q_GETNEXTQUOTA:
-> +		return quota_getnextquota(sb, type, id, addr);
->  	case Q_SETQUOTA:
->  		return quota_setquota(sb, type, id, addr);
->  	case Q_SYNC:
-> diff --git a/include/uapi/linux/quota.h b/include/uapi/linux/quota.h
-> index 9c95b2c..38baddb 100644
-> --- a/include/uapi/linux/quota.h
-> +++ b/include/uapi/linux/quota.h
-> @@ -71,6 +71,7 @@
->  #define Q_SETINFO  0x800006	/* set information about quota files */
->  #define Q_GETQUOTA 0x800007	/* get user quota structure */
->  #define Q_SETQUOTA 0x800008	/* set user quota structure */
-> +#define Q_GETNEXTQUOTA 0x800009	/* get disk limits and usage >= ID */
+>  	__u32 flags;
+> @@ -690,6 +718,8 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+>  		return quota_setxquota(sb, type, id, addr);
+>  	case Q_XGETQUOTA:
+>  		return quota_getxquota(sb, type, id, addr);
+> +	case Q_XGETNEXTQUOTA:
+> +		return quota_getnextxquota(sb, type, id, addr);
+>  	case Q_XQUOTASYNC:
+>  		if (sb->s_flags & MS_RDONLY)
+>  			return -EROFS;
+> @@ -712,6 +742,7 @@ static int quotactl_cmd_write(int cmd)
+>  	case Q_XGETQSTAT:
+>  	case Q_XGETQSTATV:
+>  	case Q_XGETQUOTA:
+> +	case Q_XGETNEXTQUOTA:
+>  	case Q_XQUOTASYNC:
+>  		return 0;
+>  	}
+> diff --git a/include/linux/quota.h b/include/linux/quota.h
+> index b2505ac..fba92f5 100644
+> --- a/include/linux/quota.h
+> +++ b/include/linux/quota.h
+> @@ -425,6 +425,8 @@ struct quotactl_ops {
+>  	int (*quota_sync)(struct super_block *, int);
+>  	int (*set_info)(struct super_block *, int, struct qc_info *);
+>  	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+> +	int (*get_nextdqblk)(struct super_block *, struct kqid *,
+> +			     struct qc_dqblk *);
+>  	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+>  	int (*get_state)(struct super_block *, struct qc_state *);
+>  	int (*rm_xquota)(struct super_block *, unsigned int);
+> diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
+> index dcd75cc..11b3b31 100644
+> --- a/include/uapi/linux/dqblk_xfs.h
+> +++ b/include/uapi/linux/dqblk_xfs.h
+> @@ -39,6 +39,7 @@
+>  #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
+>  #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
+>  #define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
+> +#define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage >= ID */
 >  
->  /* Quota format type IDs */
->  #define	QFMT_VFS_OLD 1
-> @@ -119,6 +120,19 @@ struct if_dqblk {
->  	__u32 dqb_valid;
->  };
->  
-> +struct if_nextdqblk {
-> +	__u64 dqb_bhardlimit;
-> +	__u64 dqb_bsoftlimit;
-> +	__u64 dqb_curspace;
-> +	__u64 dqb_ihardlimit;
-> +	__u64 dqb_isoftlimit;
-> +	__u64 dqb_curinodes;
-> +	__u64 dqb_btime;
-> +	__u64 dqb_itime;
-> +	__u32 dqb_valid;
-> +	__u32 dqb_id;
-> +};
-> +
 >  /*
->   * Structure used for setting quota information about file via quotactl
->   * Following flags are used to specify which fields are valid
+>   * fs_disk_quota structure:
 > -- 
 > 1.7.1
 > 
