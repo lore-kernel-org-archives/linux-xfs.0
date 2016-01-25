@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2F3997CBD
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 09:07:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D9385304059
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 07:07:01 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id Swla8qqZM3264JHw (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Jan 2016 07:06:59 -0800 (PST)
-Date: Mon, 25 Jan 2016 16:07:10 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/7 V3] quota: add new quotactl Q_GETNEXTQUOTA
-Message-ID: <20160125150710.GN24938@quack.suse.cz>
-References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id CB3637CBD
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 09:16:33 -0600 (CST)
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 93257304032
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 07:16:33 -0800 (PST)
+Received: from [128.162.232.11] (porter.americas.sgi.com [128.162.232.11])
+	by estes.americas.sgi.com (Postfix) with ESMTP id 6815D70028CF
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2016 09:16:33 -0600 (CST)
+Message-ID: <56A63C51.100@sgi.com>
+Date: Mon, 25 Jan 2016 09:16:33 -0600
+From: Troy McCorkell <tdm@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
+Subject: Re: oss.sgi.com - maintenance Jan 25 08:00 CT USA
+References: <DF733A1EC32F124D86BC1188068FECB101A72585FE@P-EXMB4-DC21.corp.sgi.com>
+In-Reply-To: <DF733A1EC32F124D86BC1188068FECB101A72585FE@P-EXMB4-DC21.corp.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,68 +23,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8189593298728680290=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri 22-01-16 12:25:29, Eric Sandeen wrote:
-> This adds a new quotactl, Q_GETNEXTQUOTA.
-> 
-> Q_GETNEXTQUOTA is exactly like Q_GETQUOTA, except that it will
-> return quota information for the id equal to or greater than
-> the id requested.  In other words, if the specified id has
-> no quota, the command will return quota information for the
-> next higher id which does have a quota set.  If no higher id
-> has an active quota, -ESRCH is returned.
-> 
-> So if you ask for id X, you can get back quota for id X,
-> id X+N, or -ESRCH if no higher id has a quota.
-> 
-> This allows filesystems to do efficient iteration in kernelspace,
-> much like extN filesystems do in userspace when asked to report
-> all active quotas.
-> 
-> Today, filesystems such as XFS require getpwent()-style iterations,
-> and for systems which have i.e. LDAP backends, this can be very
-> slow, or even impossible if iteration is not allowed in the
-> configuration.
-> 
-> Patches 1 and 4 are just small fixups that turned up along the way;
-> 2 and 3 add the actual quota plumbing, and the rest are xfs-specific
-> to allow xfs to support this new interface.
-> 
-> For non-xfs quota, this does require a new structure which is
-> able to pass back the discovered ID along with the quota info.
-> For xfs-quota, the id is already present in the structure.
-> 
-> V3:
-> * Remove 32-bit compat stuff (i686/x86_64 at least works w/o it...)
-> * Require CAP_SYS_ADMIN for these calls
-> * Pass back found ID in &qid passed to ->get_nextdqblk, rather
->   than modifying struct qc_dqblk
-> * Munge that found ID back through user-namespace conversions
->   before returning it in the user structure.
+This is a multi-part message in MIME format.
+--===============8189593298728680290==
+Content-Type: multipart/alternative;
+ boundary="------------060809000900010602010307"
 
-So I've taken patch 1/7 into my tree since that is completely independent.
-Patches 2/7 and 3/7 look mostly good to me (except for that small omission
-in 3/7) so I can take them to my tree as well. Once I'll finish testing
-some UDF changes I have pending I'll push the tree to:
+This is a multi-part message in MIME format.
+--------------060809000900010602010307
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git for_next
+On 01/24/2016 09:11 PM, Troy McCorkell wrote:
+> oss.sgi.com will be down approximately 30 minutes starting at 08:00 CT USA
+> on Monday January 25th for maintenance.
+>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>    
 
-and Dave can pull from there to have a basis for XFS patches. I want to
-implement Q_GETNEXTQUOTA for VFS quota formats as well and those will go
-through my tree so that's why I want the interface changes go via my tree.
+Rebooting oss.sgi.com one more time.   Expect a 15 minute outage.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--------------060809000900010602010307
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="Content-Type">
+</head>
+<body text="#000000" bgcolor="#ffffff">
+On 01/24/2016 09:11 PM, Troy McCorkell wrote:
+<blockquote
+ cite="mid:DF733A1EC32F124D86BC1188068FECB101A72585FE@P-EXMB4-DC21.corp.sgi.com"
+ type="cite">
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=ISO-8859-1">
+  <style id="owaParaStyle" type="text/css">P {margin-top:0;margin-bottom:0;}</style>
+  <div
+ style="direction: ltr; font-family: Tahoma; color: rgb(0, 0, 0); font-size: 10pt;">oss.sgi.com
+will be down approximately 30 minutes starting at 08:00 CT USA<br>
+on Monday January 25th for maintenance.<br>
+  </div>
+  <pre wrap="">
+<fieldset class="mimeAttachmentHeader"></fieldset>
+_______________________________________________
+xfs mailing list
+<a class="moz-txt-link-abbreviated" href="mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a>
+<a class="moz-txt-link-freetext" href="http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com/mailman/listinfo/xfs</a>
+  </pre>
+</blockquote>
+<br>
+Rebooting oss.sgi.com one more time.&nbsp;&nbsp; Expect a 15 minute outage.<br>
+</body>
+</html>
+
+--------------060809000900010602010307--
+
+
+--===============8189593298728680290==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8189593298728680290==--
