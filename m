@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EC08F7CA2
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 11:57:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DA8D2304032
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 09:57:14 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id RHiOoMGpEykbIb6I (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 463397CA3
+	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 12:05:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 382868F804B
+	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 10:05:06 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id w32TfKUgyOFQfGco (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Jan 2016 09:57:12 -0800 (PST)
-Subject: Re: [PATCH 2/7] quota: add new quotactl Q_XGETNEXTQUOTA
-References: <1453487136-12681-1-git-send-email-sandeen@redhat.com>
-	<1453487136-12681-3-git-send-email-sandeen@redhat.com>
-	<20160126125710.GA23820@quack.suse.cz> <56A78A09.5080307@redhat.com>
-	<20160126175205.GA29388@quack.suse.cz>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <56A7B375.3000304@redhat.com>
-Date: Tue, 26 Jan 2016 11:57:09 -0600
+	<xfs@oss.sgi.com>; Tue, 26 Jan 2016 10:05:04 -0800 (PST)
+Date: Tue, 26 Jan 2016 10:05:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: fix endianness error when checking log block crc on big
+	endian platforms
+Message-ID: <20160126180500.GA5852@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20160126175205.GA29388@quack.suse.cz>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +28,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Brian Foster <bfoster@redhat.com>, xfs <xfs@oss.sgi.com>
 
-On 1/26/16 11:52 AM, Jan Kara wrote:
-> On Tue 26-01-16 09:00:25, Eric Sandeen wrote:
->> On 1/26/16 6:57 AM, Jan Kara wrote:
->>> On Fri 22-01-16 12:25:31, Eric Sandeen wrote:
->>>> Q_XGETNEXTQUOTA is exactly like Q_XGETQUOTA, except that it
->>>> will return quota information for the id equal to or greater
->>>> than the id requested.  In other words, if the requested id has
->>>> no quota, the command will return quota information for the
->>>> next higher id which does have a quota set.  If no higher id
->>>> has an active quota, -ESRCH is returned.
->>>
->>> Actually, is -ESRCH the right return value? It seems XFS traditionally
->>> returns -ENOENT when id doesn't exist. So that would look more logical to
->>> me.
->>
->> Hm, I was just going by the quotactl manpage, TBH, which says:
->>
->>        ESRCH          No disc quota is found for the indicated user.
->>
->>
->> But yes, you are right, it is ENOENT for xfs... argh.  I suppose the
->> quotactl manpage could use an update as well, then.
-> 
-> Yeah, so VFS quotas use ESRCH when quota for particular fs is not enabled
-> (while ENOENT means device you passed in doesn't exist). So probably a
-> solution that keeps XFS and VFS interfaces most selfconsistent is to return
-> ENOENT from Q_XGETNEXTQUOTA and ESRCH from Q_GETNEXTQUOTA. I'll update your
-> patches in this sense in the comments and changelogs. But XFS patches
-> (which I don't carry) need updating the actual code...
+Since the checksum function and the field are both __le32, don't
+perform endian conversion when comparing the two.  This fixes mount
+failures on ppc64 in 4.5-rc1.
 
-*nod* thanks.  I'll just resend the XFS patches to the XFS list.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_log_recover.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--Eric
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ac80f39..52dd946 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4502,7 +4502,7 @@ xlog_recover_process(
+ 	 * know precisely what failed.
+ 	 */
+ 	if (pass == XLOG_RECOVER_CRCPASS) {
+-		if (rhead->h_crc && crc != le32_to_cpu(rhead->h_crc))
++		if (rhead->h_crc && crc != rhead->h_crc)
+ 			return -EFSBADCRC;
+ 		return 0;
+ 	}
 
 _______________________________________________
 xfs mailing list
