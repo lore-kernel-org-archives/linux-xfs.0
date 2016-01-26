@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 92D1E7CA2
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 02:46:50 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 9B8C27CA2
+	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 06:48:17 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7231A8F8033
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 00:46:47 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id DTaozrfhVl6GrNnN (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Jan 2016 00:46:45 -0800 (PST)
-Date: Tue, 26 Jan 2016 09:46:54 +0100
-From: Jan Kara <jack@suse.cz>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7A5048F8033
+	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 04:48:17 -0800 (PST)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	FIwWWnbpXHvyQeIK for <xfs@oss.sgi.com>;
+	Tue, 26 Jan 2016 04:48:15 -0800 (PST)
+Date: Tue, 26 Jan 2016 07:48:12 -0500
+From: Matthew Wilcox <willy@linux.intel.com>
 Subject: Re: [RFC PATCH] dax, ext2, ext4, XFS: fix data corruption race
-Message-ID: <20160126084654.GT24938@quack.suse.cz>
+Message-ID: <20160126124812.GJ2948@linux.intel.com>
 References: <1453503971-5319-1-git-send-email-ross.zwisler@linux.intel.com>
 	<20160124220107.GI20456@dastard>
-	<20160125204636.GI2948@linux.intel.com>
+	<20160125135921.GE24938@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160125204636.GI2948@linux.intel.com>
+In-Reply-To: <20160125135921.GE24938@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,43 +30,11 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthew Wilcox <willy@linux.intel.com>
+To: Jan Kara <jack@suse.cz>
 Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>
 
-On Mon 25-01-16 15:46:36, Matthew Wilcox wrote:
-> On Mon, Jan 25, 2016 at 09:01:07AM +1100, Dave Chinner wrote:
-> > On Fri, Jan 22, 2016 at 04:06:11PM -0700, Ross Zwisler wrote:
-> > > With the current DAX code the following race exists:
-> > > 
-> > > Process 1                	Process 2
-> > > ---------			---------
-> > > 
-> > > __dax_fault() - read file f, index 0
-> > >   get_block() -> returns hole
-> > >                              	__dax_fault() - write file f, index 0
-> > >                                   get_block() -> allocates blocks
-> > >                                   dax_insert_mapping()
-> > >   dax_load_hole()
-> > >   *data corruption*
-> > > 
-> > > An analogous race exists between __dax_fault() loading a hole and
-> > > __dax_pmd_fault() allocating a PMD DAX page and trying to insert it, and
-> > > that race also ends in data corruption.
-> > 
-> > Ok, so why doesn't this problem exist for the normal page cache
-> > insertion case with concurrent read vs write faults?  It's because
-> > the write fault first does a read fault and so always the write
-> > fault always has a page in the radix tree for the get_block call
-> > that allocates the extents, right?
-> 
-> No, it's because allocation of blocks is separated from allocation of
-> struct page.
-> 
-> > And DAX has an optimisation in the page fault part where it skips
-> > the read fault part of the write fault?  And so essentially the DAX
-> > write fault is missing the object (page lock of page in the radix
-> > tree) that the non-DAX write fault uses to avoid this problem?
-> >
+On Mon, Jan 25, 2016 at 02:59:21PM +0100, Jan Kara wrote:
+> On Mon 25-01-16 09:01:07, Dave Chinner wrote:
 > > What happens if we get rid of that DAX write fault optimisation that
 > > skips the initial read fault? The write fault will always run on a
 > > mapping that has a hole loaded, right?, so the race between
@@ -75,33 +42,20 @@ On Mon 25-01-16 15:46:36, Matthew Wilcox wrote:
 > > will be calling dax_load_hole() once the write fault is allocating
 > > blocks....
 > 
-> So in your proposal, we'd look in the radix tree, find nothing,
-> call get_block(..., 0).  If we get something back, we can insert it.
-> If we hit a hole, we allocate a struct page, put it in the radix tree
-> and return to user space.  If that was a write fault after all, it'll
-> come back to us through the ->page_mkwrite handler where we can take the
-> page lock on the allocated struct page, then call down to DAX which calls
-> back through get_block to allocate?  Then DAX kicks the struct page out
-> of the page cache and frees it.
-> 
-> That seems to work to me.  And we can get rid of pfn_mkwrite at the same
-> time which seems like a win to me.
+> So frankly I don't like mixing of page locks into the DAX fault locking.
+> Also your scheme would require more tricks to deal with races between PMD
+> write faults racing with PTE read faults since you don't want to require
+> 2MB worth of hole-pages to be able to do a PMD write fault. Transparent
+> huge pages deal with this issue using compound pages but I'd like to avoid
+> that horror in the DAX path...
 
-Getting rid of pfn_mkwrite() would be nice, I agree. But the above scheme
-still has issues when PMD pages come into play. Or maybe to start from the
-beginning: How would you like PMD faults to work? Because there is no
-obvious 'struct page' to protect the allocation of 2MB worth of blocks. You
-could resort to similar tricks like transparent huge pages do (compound
-pages) but then the cure is IMHO worse than the disease.
+I *think* that what Dave's proposing (and if he isn't, I'm proposing it
+for him) is that the filesystem takes its allocation lock shared during
+the ->fault handler, then in the ->page_mkwrite handler, it knows that an
+allocation is coming, so it takes its allocation lock in exclusive mode.
 
-There is one option: No allocation of blocks for PMD faults. That would
-make code much simpler and solve the races but I'm not sure whether that is
-really an acceptable loss of functionality...
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+So read vs write faults won't be able to race because the allocation lock
+will prevent it.
 
 _______________________________________________
 xfs mailing list
