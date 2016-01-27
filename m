@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8AC507CA2
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 22:45:01 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 335027CA2
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 07:31:15 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 35958AC004
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2016 20:44:58 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id MrzQW3LR4GnlhuBI (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 07A0E30405F
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:14 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vPiuoMUmLzeAxErG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Jan 2016 20:44:55 -0800 (PST)
-Date: Tue, 26 Jan 2016 20:44:48 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 6/5] mkfs: factor finobt changes into min log size when
-	formatting
-Message-ID: <20160127044448.GA20038@birch.djwong.org>
-References: <20160123003502.2475.99558.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:10 -0800 (PST)
+Date: Wed, 27 Jan 2016 08:31:08 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: use named array initializers for log item dumping
+Message-ID: <20160127133106.GB60730@bfoster.bfoster>
+References: <20160123003425.2338.18133.stgit@birch.djwong.org>
+	<20160123003431.2338.77639.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160123003502.2475.99558.stgit@birch.djwong.org>
+In-Reply-To: <20160123003431.2338.77639.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,71 +30,110 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-Since the finobt affects the size of the log reservations, we need to
-be able to include its effects in the calculation of the minimum log
-size.
+On Fri, Jan 22, 2016 at 04:34:31PM -0800, Darrick J. Wong wrote:
+> Use named array initializers for the string arrays used to dump log
+> items, rather than depending on the order being maintained correctly.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_log.c |  132 ++++++++++++++++++++++++++++--------------------------
+>  1 file changed, 68 insertions(+), 64 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 2aa187e..4758f06 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1989,77 +1989,81 @@ xlog_print_tic_res(
+>  	uint ophdr_spc = ticket->t_res_num_ophdrs * (uint)sizeof(xlog_op_header_t);
+>  
+>  	/* match with XLOG_REG_TYPE_* in xfs_log.h */
+> -	static char *res_type_str[XLOG_REG_TYPE_MAX] = {
+> -	    "bformat",
+> -	    "bchunk",
+> -	    "efi_format",
+> -	    "efd_format",
+> -	    "iformat",
+> -	    "icore",
+> -	    "iext",
+> -	    "ibroot",
+> -	    "ilocal",
+> -	    "iattr_ext",
+> -	    "iattr_broot",
+> -	    "iattr_local",
+> -	    "qformat",
+> -	    "dquot",
+> -	    "quotaoff",
+> -	    "LR header",
+> -	    "unmount",
+> -	    "commit",
+> -	    "trans header"
+> +#define REG_TYPE_STR(type, str)	[XLOG_REG_TYPE_##type] = str
+> +	static char *res_type_str[XLOG_REG_TYPE_MAX + 1] = {
 
-(Not really a problem now, but adding rmapbt will give this one some
-bite.)
+Maybe we should just fix XLOG_REG_TYPE_MAX to hold the array size (as
+XFS_TRANS_TYPE_MAX does)..?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- mkfs/maxtrres.c |    5 ++++-
- mkfs/xfs_mkfs.c |    2 +-
- mkfs/xfs_mkfs.h |    2 +-
- 3 files changed, 6 insertions(+), 3 deletions(-)
+> +	    REG_TYPE_STR(BFORMAT, "bformat"),
+> +	    REG_TYPE_STR(BCHUNK, "bchunk"),
+> +	    REG_TYPE_STR(EFI_FORMAT, "efi_format"),
+> +	    REG_TYPE_STR(EFD_FORMAT, "efd_format"),
+> +	    REG_TYPE_STR(IFORMAT, "iformat"),
+> +	    REG_TYPE_STR(ICORE, "icore"),
+> +	    REG_TYPE_STR(IEXT, "iext"),
+> +	    REG_TYPE_STR(IBROOT, "ibroot"),
+> +	    REG_TYPE_STR(ILOCAL, "ilocal"),
+> +	    REG_TYPE_STR(IATTR_EXT, "iattr_ext"),
+> +	    REG_TYPE_STR(IATTR_BROOT, "iattr_broot"),
+> +	    REG_TYPE_STR(IATTR_LOCAL, "iattr_local"),
+> +	    REG_TYPE_STR(QFORMAT, "qformat"),
+> +	    REG_TYPE_STR(DQUOT, "dquot"),
+> +	    REG_TYPE_STR(QUOTAOFF, "quotaoff"),
+> +	    REG_TYPE_STR(LRHEADER, "LR header"),
+> +	    REG_TYPE_STR(UNMOUNT, "unmount"),
+> +	    REG_TYPE_STR(COMMIT, "commit"),
+> +	    REG_TYPE_STR(TRANSHDR, "trans header"),
+> +	    REG_TYPE_STR(ICREATE, "inode create")
+>  	};
+> +#undef REG_TYPE_STR
+> +#define TRANS_TYPE_STR(type)	[XFS_TRANS_##type] = #type
+>  	static char *trans_type_str[XFS_TRANS_TYPE_MAX] = {
+...
+>  	};
+> +#undef TRANS_TYPE_STR
+>  
+>  	xfs_warn(mp, "xlog_write: reservation summary:");
+>  	xfs_warn(mp, "  trans type  = %s (%u)",
+>  		 ((ticket->t_trans_type <= 0 ||
+>  		   ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
+> -		  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
+> +		  "bad-trans-type" : trans_type_str[ticket->t_trans_type]),
 
-diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
-index e1d5ee9..b97d020 100644
---- a/mkfs/maxtrres.c
-+++ b/mkfs/maxtrres.c
-@@ -36,7 +36,8 @@ max_trans_res(
- 	int		inodelog,
- 	int		dirblocklog,
- 	int		logversion,
--	int		log_sunit)
-+	int		log_sunit,
-+	int		finobt)
- {
- 	xfs_sb_t	*sbp;
- 	xfs_mount_t	mount;
-@@ -68,6 +69,8 @@ max_trans_res(
- 			(dirversion == 2 ? XFS_SB_VERSION_DIRV2BIT : 0) |
- 			(logversion > 1 ? XFS_SB_VERSION_LOGV2BIT : 0) |
- 			XFS_DFL_SB_VERSION_BITS;
-+	if (finobt)
-+		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FINOBT;
- 
- 	libxfs_mount(&mount, sbp, 0,0,0,0);
- 	maxfsb = xfs_log_calc_minimum_size(&mount);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 700d12c..4c3a802 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2406,7 +2406,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 
- 	min_logblocks = max_trans_res(crcs_enabled, dirversion,
- 				   sectorlog, blocklog, inodelog, dirblocklog,
--				   logversion, lsunit);
-+				   logversion, lsunit, finobt);
- 	ASSERT(min_logblocks);
- 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
- 	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-diff --git a/mkfs/xfs_mkfs.h b/mkfs/xfs_mkfs.h
-index 9df5f37..128068e 100644
---- a/mkfs/xfs_mkfs.h
-+++ b/mkfs/xfs_mkfs.h
-@@ -84,6 +84,6 @@ extern void res_failed (int err);
- /* maxtrres.c */
- extern int max_trans_res (int crcs_enabled, int dirversion,
- 		int sectorlog, int blocklog, int inodelog, int dirblocklog,
--		int logversion, int log_sunit);
-+		int logversion, int log_sunit, int finobt);
- 
- #endif	/* __XFS_MKFS_H__ */
+Why not incorporate the -1 offset in the new macros and leave these as
+is? That avoids a dummy entry at index 0 in each array as well.
+
+Brian
+
+>  		 ticket->t_trans_type);
+>  	xfs_warn(mp, "  unit res    = %d bytes",
+>  		 ticket->t_unit_res);
+> @@ -2078,7 +2082,7 @@ xlog_print_tic_res(
+>  		uint r_type = ticket->t_res_arr[i].r_type;
+>  		xfs_warn(mp, "region[%u]: %s - %u bytes", i,
+>  			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
+> -			    "bad-rtype" : res_type_str[r_type-1]),
+> +			    "bad-rtype" : res_type_str[r_type]),
+>  			    ticket->t_res_arr[i].r_len);
+>  	}
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
