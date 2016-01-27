@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 335027CA2
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 07:31:15 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9C7AF7CA2
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 07:31:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 07A0E30405F
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:14 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 575A78F8035
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:16 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vPiuoMUmLzeAxErG (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Sbqh3KPusmXqWPCy (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:10 -0800 (PST)
-Date: Wed, 27 Jan 2016 08:31:08 -0500
+	<xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:15 -0800 (PST)
+Date: Wed, 27 Jan 2016 08:31:13 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: use named array initializers for log item dumping
-Message-ID: <20160127133106.GB60730@bfoster.bfoster>
+Subject: Re: [PATCH 2/3] xfs: move struct xfs_attr_shortform to xfs_da_format.h
+Message-ID: <20160127133113.GC60730@bfoster.bfoster>
 References: <20160123003425.2338.18133.stgit@birch.djwong.org>
-	<20160123003431.2338.77639.stgit@birch.djwong.org>
+	<20160123003438.2338.51748.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160123003431.2338.77639.stgit@birch.djwong.org>
+In-Reply-To: <20160123003438.2338.51748.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,101 +33,89 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 22, 2016 at 04:34:31PM -0800, Darrick J. Wong wrote:
-> Use named array initializers for the string arrays used to dump log
-> items, rather than depending on the order being maintained correctly.
+On Fri, Jan 22, 2016 at 04:34:38PM -0800, Darrick J. Wong wrote:
+> Move the shortform attr structure definition to the same place as the
+> other attribute structure definitions for consistency and also so that
+> xfs/122 verifies the structure size.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_log.c |  132 ++++++++++++++++++++++++++++--------------------------
->  1 file changed, 68 insertions(+), 64 deletions(-)
+
+Seems fine:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_attr_sf.h    |   16 ----------------
+>  fs/xfs/libxfs/xfs_da_format.h  |   16 ++++++++++++++++
+>  fs/xfs/libxfs/xfs_inode_fork.c |    1 +
+>  3 files changed, 17 insertions(+), 16 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 2aa187e..4758f06 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1989,77 +1989,81 @@ xlog_print_tic_res(
->  	uint ophdr_spc = ticket->t_res_num_ophdrs * (uint)sizeof(xlog_op_header_t);
+> diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
+> index 919756e..90928bb 100644
+> --- a/fs/xfs/libxfs/xfs_attr_sf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_sf.h
+> @@ -24,22 +24,6 @@
+>   * Small attribute lists are packed as tightly as possible so as
+>   * to fit into the literal area of the inode.
+>   */
+> -
+> -/*
+> - * Entries are packed toward the top as tight as possible.
+> - */
+> -typedef struct xfs_attr_shortform {
+> -	struct xfs_attr_sf_hdr {	/* constant-structure header block */
+> -		__be16	totsize;	/* total bytes in shortform list */
+> -		__u8	count;	/* count of active entries */
+> -	} hdr;
+> -	struct xfs_attr_sf_entry {
+> -		__uint8_t namelen;	/* actual length of name (no NULL) */
+> -		__uint8_t valuelen;	/* actual length of value (no NULL) */
+> -		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
+> -		__uint8_t nameval[1];	/* name & value bytes concatenated */
+> -	} list[1];			/* variable sized array */
+> -} xfs_attr_shortform_t;
+>  typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
+>  typedef struct xfs_attr_sf_entry xfs_attr_sf_entry_t;
 >  
->  	/* match with XLOG_REG_TYPE_* in xfs_log.h */
-> -	static char *res_type_str[XLOG_REG_TYPE_MAX] = {
-> -	    "bformat",
-> -	    "bchunk",
-> -	    "efi_format",
-> -	    "efd_format",
-> -	    "iformat",
-> -	    "icore",
-> -	    "iext",
-> -	    "ibroot",
-> -	    "ilocal",
-> -	    "iattr_ext",
-> -	    "iattr_broot",
-> -	    "iattr_local",
-> -	    "qformat",
-> -	    "dquot",
-> -	    "quotaoff",
-> -	    "LR header",
-> -	    "unmount",
-> -	    "commit",
-> -	    "trans header"
-> +#define REG_TYPE_STR(type, str)	[XLOG_REG_TYPE_##type] = str
-> +	static char *res_type_str[XLOG_REG_TYPE_MAX + 1] = {
-
-Maybe we should just fix XLOG_REG_TYPE_MAX to hold the array size (as
-XFS_TRANS_TYPE_MAX does)..?
-
-> +	    REG_TYPE_STR(BFORMAT, "bformat"),
-> +	    REG_TYPE_STR(BCHUNK, "bchunk"),
-> +	    REG_TYPE_STR(EFI_FORMAT, "efi_format"),
-> +	    REG_TYPE_STR(EFD_FORMAT, "efd_format"),
-> +	    REG_TYPE_STR(IFORMAT, "iformat"),
-> +	    REG_TYPE_STR(ICORE, "icore"),
-> +	    REG_TYPE_STR(IEXT, "iext"),
-> +	    REG_TYPE_STR(IBROOT, "ibroot"),
-> +	    REG_TYPE_STR(ILOCAL, "ilocal"),
-> +	    REG_TYPE_STR(IATTR_EXT, "iattr_ext"),
-> +	    REG_TYPE_STR(IATTR_BROOT, "iattr_broot"),
-> +	    REG_TYPE_STR(IATTR_LOCAL, "iattr_local"),
-> +	    REG_TYPE_STR(QFORMAT, "qformat"),
-> +	    REG_TYPE_STR(DQUOT, "dquot"),
-> +	    REG_TYPE_STR(QUOTAOFF, "quotaoff"),
-> +	    REG_TYPE_STR(LRHEADER, "LR header"),
-> +	    REG_TYPE_STR(UNMOUNT, "unmount"),
-> +	    REG_TYPE_STR(COMMIT, "commit"),
-> +	    REG_TYPE_STR(TRANSHDR, "trans header"),
-> +	    REG_TYPE_STR(ICREATE, "inode create")
->  	};
-> +#undef REG_TYPE_STR
-> +#define TRANS_TYPE_STR(type)	[XFS_TRANS_##type] = #type
->  	static char *trans_type_str[XFS_TRANS_TYPE_MAX] = {
-...
->  	};
-> +#undef TRANS_TYPE_STR
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index b14bbd6..8d4d8bc 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -641,6 +641,22 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
+>   */
+>  #define XFS_ATTR_LEAF_MAPSIZE	3	/* how many freespace slots */
 >  
->  	xfs_warn(mp, "xlog_write: reservation summary:");
->  	xfs_warn(mp, "  trans type  = %s (%u)",
->  		 ((ticket->t_trans_type <= 0 ||
->  		   ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
-> -		  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
-> +		  "bad-trans-type" : trans_type_str[ticket->t_trans_type]),
-
-Why not incorporate the -1 offset in the new macros and leave these as
-is? That avoids a dummy entry at index 0 in each array as well.
-
-Brian
-
->  		 ticket->t_trans_type);
->  	xfs_warn(mp, "  unit res    = %d bytes",
->  		 ticket->t_unit_res);
-> @@ -2078,7 +2082,7 @@ xlog_print_tic_res(
->  		uint r_type = ticket->t_res_arr[i].r_type;
->  		xfs_warn(mp, "region[%u]: %s - %u bytes", i,
->  			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
-> -			    "bad-rtype" : res_type_str[r_type-1]),
-> +			    "bad-rtype" : res_type_str[r_type]),
->  			    ticket->t_res_arr[i].r_len);
->  	}
+> +/*
+> + * Entries are packed toward the top as tight as possible.
+> + */
+> +typedef struct xfs_attr_shortform {
+> +	struct xfs_attr_sf_hdr {	/* constant-structure header block */
+> +		__be16	totsize;	/* total bytes in shortform list */
+> +		__u8	count;	/* count of active entries */
+> +	} hdr;
+> +	struct xfs_attr_sf_entry {
+> +		__uint8_t namelen;	/* actual length of name (no NULL) */
+> +		__uint8_t valuelen;	/* actual length of value (no NULL) */
+> +		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
+> +		__uint8_t nameval[1];	/* name & value bytes concatenated */
+> +	} list[1];			/* variable sized array */
+> +} xfs_attr_shortform_t;
+> +
+>  typedef struct xfs_attr_leaf_map {	/* RLE map of free bytes */
+>  	__be16	base;			  /* base of free region */
+>  	__be16	size;			  /* length of free region */
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 0defbd0..ef22a78 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -31,6 +31,7 @@
+>  #include "xfs_error.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_attr_sf.h"
+> +#include "xfs_da_format.h"
+>  
+>  kmem_zone_t *xfs_ifork_zone;
 >  
 > 
 > _______________________________________________
