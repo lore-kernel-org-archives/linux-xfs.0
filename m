@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEFE17CA2
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 13:04:34 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C6F717CA2
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 13:06:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B1BD6304059
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 11:04:34 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 974A68F8040
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 11:06:47 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 1HJSXv0d4sNXJax1 for <xfs@oss.sgi.com>;
-	Wed, 27 Jan 2016 11:04:28 -0800 (PST)
+	ESMTP id KN12quvGpdnBAW5K for <xfs@oss.sgi.com>;
+	Wed, 27 Jan 2016 11:06:46 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id ECC3B61213DD
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 13:04:27 -0600 (CST)
-Subject: Re: [PATCH] xfs: split default quota limits by quota type V2
-References: <1453913878-30900-1-git-send-email-cmaiolino@redhat.com>
+	by sandeen.net (Postfix) with ESMTPSA id DD0D661213D3
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 13:06:45 -0600 (CST)
+Subject: Re: [PATCH] Split default quota limits by quota type
+References: <1453303127-27295-1-git-send-email-cmaiolino@redhat.com>
+	<569FC41E.2040300@sandeen.net> <20160127153705.GA17571@redhat.com>
+	<56A8FBA9.3060205@sandeen.net>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56A914BB.4050301@sandeen.net>
-Date: Wed, 27 Jan 2016 13:04:27 -0600
+Message-ID: <56A91545.3090806@sandeen.net>
+Date: Wed, 27 Jan 2016 13:06:45 -0600
 MIME-Version: 1.0
-In-Reply-To: <1453913878-30900-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <56A8FBA9.3060205@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,106 +36,91 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 1/27/16 10:57 AM, Carlos Maiolino wrote:
-> Default quotas are globally set due historical reasons. IRIX only supported user
-> and project quotas, and default quota was only applied to user quotas.
+On 1/27/16 11:17 AM, Eric Sandeen wrote:
+> On 1/27/16 9:37 AM, Carlos Maiolino wrote:
+>>>>
+>>>> This patch aims to split the default quota value by quota type. Allowing each
+>>>> quota type having different default values.
+>>>>
+>>>> Default time limits are still set globally, but I don't mind to split them by
+>>>> quota type too.
+>>>
+>>> Hm, I guess it seems like it should be done; otherwise it's a weird
+>>> caveat, isn't it?  "Default limits are set by type, but timers are
+>>> inherited from whatever first default quota is found across all types"
+>>>
+>>> So yeah, seems like it should be done for timers as well, IMHO;
+>>> grace periods can be set for each default quota type, so they should
+>>> be honored.
+>>>
+>>
+>> Ok, I was just working on implement it, but honestly, I don't see the point now
+>> in split time limits by user/group/project.
+>>
+>> grace periods are set globally by default. We don't have specific quota grace
+>> limits for each user or each group. Just a single value for them.
 > 
-> In Linux, when a default quota is set, all different quota types inherits the
-> same default value.
-> 
-> An user with a quota limit larger than the default quota value, will still be
-> limited to the default value because the group quotas also inherits the default
-> quotas. Unless the group which the user belongs to have a custom quota limit
-> set.
-> 
-> This patch aims to split the default quota value by quota type. Allowing each
-> quota type having different default values.
-> 
-> Default time limits are still set globally. XFS does not set a per-user/group
-> timer, but a single global timer, so, there is no reason to split time limits
-> too.
-> 
+> yeah, sorry about that.  I forgot that they were fs-wide, but that makes sense.
+> Sorry for leading you astray.
 
-Hohum, found something else, sorry:
+Ugh, this is a mess.  The xfs_quota command says:
 
-> @@ -606,55 +653,15 @@ xfs_qm_init_quotainfo(
->  	 * We try to get the limits from the superuser's limits fields.
->  	 * This is quite hacky, but it is standard quota practice.
->  	 *
-> -	 * We look at the USR dquot with id == 0 first, but if user quotas
-> -	 * are not enabled we goto the GRP dquot with id == 0.
-> -	 * We don't really care to keep separate default limits for user
-> -	 * and group quotas, at least not at this point.
-> -	 *
->  	 * Since we may not have done a quotacheck by this point, just read
->  	 * the dquot without attaching it to any hashtables or lists.
->  	 */
-> -	error = xfs_qm_dqread(mp, 0,
-> -			XFS_IS_UQUOTA_RUNNING(mp) ? XFS_DQ_USER :
-> -			 (XFS_IS_GQUOTA_RUNNING(mp) ? XFS_DQ_GROUP :
-> -			  XFS_DQ_PROJ),
-> -			XFS_QMOPT_DOWARN, &dqp);
+       timer [ -gpu ] [ -bir ] value
 
-So here, we grab the *first* one that is running, and only that, to
-populate the defaults ...
+we can indeed set timers for each type; group, project, and user.
+These really are stored on-disk for ID 0 for each type.
+We can set different values for user, group, and project.
 
-> -	if (!error) {
-> -		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
-> -
-> -		/*
-> -		 * The warnings and timers set the grace period given to
-> -		 * a user or group before he or she can not perform any
-> -		 * more writing. If it is zero, a default is used.
-> -		 */
-> -		qinf->qi_btimelimit = ddqp->d_btimer ?
-> -			be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
-> -		qinf->qi_itimelimit = ddqp->d_itimer ?
-> -			be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
-> -		qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
-> -			be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
-> -		qinf->qi_bwarnlimit = ddqp->d_bwarns ?
-> -			be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
-> -		qinf->qi_iwarnlimit = ddqp->d_iwarns ?
-> -			be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
-> -		qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
-> -			be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
+However, let's set the inode timer for group quota to 30 minutes:
 
-... including the time limits.
+# xfs_quota -x -c "timer -i -g 30m" /dev/sdb1
+# xfs_quota -x -c "state" /dev/sdb1 | grep grace
+Blocks grace time: [7 days 00:00:30]
+Inodes grace time: [0 days 00:30:30]
 
-> -		qinf->qi_bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
-> -		qinf->qi_bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
-> -		qinf->qi_ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
-> -		qinf->qi_isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
-> -		qinf->qi_rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
-> -		qinf->qi_rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
-> -
-> -		xfs_qm_dqdestroy(dqp);
-> -	} else {
-> -		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-> -		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-> -		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-> -		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-> -		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-> -		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-> -	}
-> +	if (XFS_IS_UQUOTA_RUNNING(mp))
-> +		error = xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
-> +	if (XFS_IS_GQUOTA_RUNNING(mp))
-> +		error = xfs_qm_set_defquota(mp, XFS_DQ_GROUP, qinf);
-> +	if (XFS_IS_PQUOTA_RUNNING(mp))
-> +		error = xfs_qm_set_defquota(mp, XFS_DQ_PROJ, qinf);
+Uh, ok, it set a global default.  (And where did the 30s come
+from?)
 
-Here, you set the defaults for *each* one that is running, in succession.
-But xfs_qm_set_defquota() sets global time limits, so you may overwrite
-what you set earlier, for the previous type.  i.e. it's last one wins.
+Now let's set an inode timer for *user* quota:
 
-So before, the global grace period was set by the first quota found running;
-now it will be set by the last quota found running.  That's probably a difference
-in behavior you didn't intend.
+# xfs_quota -x -c "timer -i -u 60m" /dev/sdb1
+# xfs_quota -x -c "state" /dev/sdb1 | grep grace
+Blocks grace time: [7 days 00:00:30]
+Inodes grace time: [0 days 01:00:30]
 
-(It's crazy behavior to start with, though; see my other email in this thread,
-but we probably shouldn't trade crazy(1) for crazy(1);  we should keep crazy(1)
-and fix it properly at some point)
+Uh, ok, now that's the grace time...
+
+Go back to group quota, try something smaller?
+
+# xfs_quota -x -c "timer -i -g 10m" /dev/sdb1
+# xfs_quota -x -c "state" /dev/sdb1 | grep grace
+Blocks grace time: [7 days 00:00:30]
+Inodes grace time: [0 days 00:10:30]
+
+Ok, seems that "type" doesn't matter, and whatever was set last wins.  Except:
+
+<remount>
+
+# xfs_quota -x -c "state" /dev/sdb1 | grep grace
+Blocks grace time: [7 days 00:00:30]
+Inodes grace time: [0 days 01:00:30]
+
+ohai, now we are back to the user quota we set, because that's checked first.  :(
+
+(with your most recent patch, it'll be whatever is checked *last*).
+
+So this is all a big steaming pile, right down to the "timer"
+command help giving you options it won't accept (-d), or ignores (id|name).
+
+I guess it seems ok to just break out default limits into per-type limits; that's
+a decent step in the right direction.  We probably need to think more about
+how the timers should work; do we really want them to be global?  The tool
+certainly reports them as such, although it claims to set them per-type.
+
+Anyway, changes you make for per-type limits probably shouldn't change
+how time limits are interpreted, but today they do.
+
+...
 
 -Eric
 
