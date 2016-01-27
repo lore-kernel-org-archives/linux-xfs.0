@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9C7AF7CA2
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 07:31:16 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9AD607CAA
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 07:31:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 575A78F8035
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:16 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FE5C304066
+	for <xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:21 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Sbqh3KPusmXqWPCy (version=TLSv1.2
+	cuda.sgi.com with ESMTP id hTY8KNduNkooYNAX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:15 -0800 (PST)
-Date: Wed, 27 Jan 2016 08:31:13 -0500
+	<xfs@oss.sgi.com>; Wed, 27 Jan 2016 05:31:20 -0800 (PST)
+Date: Wed, 27 Jan 2016 08:31:17 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: move struct xfs_attr_shortform to xfs_da_format.h
-Message-ID: <20160127133113.GC60730@bfoster.bfoster>
+Subject: Re: [PATCH 3/3] xfs: check sizes of XFS on-disk structures at
+	compile time
+Message-ID: <20160127133117.GD60730@bfoster.bfoster>
 References: <20160123003425.2338.18133.stgit@birch.djwong.org>
-	<20160123003438.2338.51748.stgit@birch.djwong.org>
+	<20160123003444.2338.37236.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160123003438.2338.51748.stgit@birch.djwong.org>
+In-Reply-To: <20160123003444.2338.37236.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,89 +34,164 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 22, 2016 at 04:34:38PM -0800, Darrick J. Wong wrote:
-> Move the shortform attr structure definition to the same place as the
-> other attribute structure definitions for consistency and also so that
-> xfs/122 verifies the structure size.
+On Fri, Jan 22, 2016 at 04:34:44PM -0800, Darrick J. Wong wrote:
+> Check the sizes of XFS on-disk structures when compiling the kernel.
+> Use this to catch inadvertent changes in structure size due to padding
+> and alignment issues, etc.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Seems fine:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_attr_sf.h    |   16 ----------------
->  fs/xfs/libxfs/xfs_da_format.h  |   16 ++++++++++++++++
->  fs/xfs/libxfs/xfs_inode_fork.c |    1 +
->  3 files changed, 17 insertions(+), 16 deletions(-)
+>  fs/xfs/xfs_ondisk.h |  108 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_super.c  |    3 +
+>  2 files changed, 111 insertions(+)
+>  create mode 100644 fs/xfs/xfs_ondisk.h
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-> index 919756e..90928bb 100644
-> --- a/fs/xfs/libxfs/xfs_attr_sf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_sf.h
-> @@ -24,22 +24,6 @@
->   * Small attribute lists are packed as tightly as possible so as
->   * to fit into the literal area of the inode.
->   */
-> -
-> -/*
-> - * Entries are packed toward the top as tight as possible.
-> - */
-> -typedef struct xfs_attr_shortform {
-> -	struct xfs_attr_sf_hdr {	/* constant-structure header block */
-> -		__be16	totsize;	/* total bytes in shortform list */
-> -		__u8	count;	/* count of active entries */
-> -	} hdr;
-> -	struct xfs_attr_sf_entry {
-> -		__uint8_t namelen;	/* actual length of name (no NULL) */
-> -		__uint8_t valuelen;	/* actual length of value (no NULL) */
-> -		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
-> -		__uint8_t nameval[1];	/* name & value bytes concatenated */
-> -	} list[1];			/* variable sized array */
-> -} xfs_attr_shortform_t;
->  typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
->  typedef struct xfs_attr_sf_entry xfs_attr_sf_entry_t;
->  
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index b14bbd6..8d4d8bc 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -641,6 +641,22 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
->   */
->  #define XFS_ATTR_LEAF_MAPSIZE	3	/* how many freespace slots */
->  
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> new file mode 100644
+> index 0000000..56fab46
+> --- /dev/null
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -0,0 +1,108 @@
 > +/*
-> + * Entries are packed toward the top as tight as possible.
+> + * Copyright (c) 2016 Oracle.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 > + */
-> +typedef struct xfs_attr_shortform {
-> +	struct xfs_attr_sf_hdr {	/* constant-structure header block */
-> +		__be16	totsize;	/* total bytes in shortform list */
-> +		__u8	count;	/* count of active entries */
-> +	} hdr;
-> +	struct xfs_attr_sf_entry {
-> +		__uint8_t namelen;	/* actual length of name (no NULL) */
-> +		__uint8_t valuelen;	/* actual length of value (no NULL) */
-> +		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
-> +		__uint8_t nameval[1];	/* name & value bytes concatenated */
-> +	} list[1];			/* variable sized array */
-> +} xfs_attr_shortform_t;
+> +#ifndef __XFS_ONDISK_H
+> +#define __XFS_ONDISK_H
 > +
->  typedef struct xfs_attr_leaf_map {	/* RLE map of free bytes */
->  	__be16	base;			  /* base of free region */
->  	__be16	size;			  /* length of free region */
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 0defbd0..ef22a78 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -31,6 +31,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_attr_sf.h"
-> +#include "xfs_da_format.h"
+> +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
+> +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
+
+We're printing "struct" in the core message as well as part of the
+structname (where appropriate). E.g., "sizeof(struct struct xfs_acl) is
+wrong, ..."
+
+It would also be nice to include the current structure size in the
+message if it happens to be unexpected. Otherwise, seems fine to me.
+
+Brian
+
+> +		#structname ") is wrong, expected " #size)
+> +
+
+> +static inline void __init
+> +xfs_check_ondisk_structs(void)
+> +{
+> +	/* ag/file structures */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+> +
+> +	/* dir/attr trees */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leafblock,	88);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_rmt_hdr,		56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_blkinfo,		56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_intnode,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_node_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_blk_hdr,		48);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_data_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_entry_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_hdr_t,		32);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino8_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_inou_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_entry_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+> +
+> +	/* log structures */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+> +}
+> +
+> +#endif /* __XFS_ONDISK_H */
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 36bd882..f63d212 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -45,6 +45,7 @@
+>  #include "xfs_filestream.h"
+>  #include "xfs_quota.h"
+>  #include "xfs_sysfs.h"
+> +#include "xfs_ondisk.h"
 >  
->  kmem_zone_t *xfs_ifork_zone;
+>  #include <linux/namei.h>
+>  #include <linux/init.h>
+> @@ -1817,6 +1818,8 @@ init_xfs_fs(void)
+>  {
+>  	int			error;
+>  
+> +	xfs_check_ondisk_structs();
+> +
+>  	printk(KERN_INFO XFS_VERSION_STRING " with "
+>  			 XFS_BUILD_OPTIONS " enabled\n");
 >  
 > 
 > _______________________________________________
