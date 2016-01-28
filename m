@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2AFF07CA2
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 13:30:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0748D8F8039
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:30:22 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id I9GTNR2i9ASWBdl1 (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1CA3C7CA2
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 13:35:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 90C89AC001
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:35:12 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id CIo3yIKXUbvDfbMp (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:30:15 -0800 (PST)
-Date: Thu, 28 Jan 2016 11:30:10 -0800
+	<xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:35:10 -0800 (PST)
+Date: Thu, 28 Jan 2016 11:35:06 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] xfstests: also treat EINVAL as reflink/dedup not
-	supported
-Message-ID: <20160128193010.GD20038@birch.djwong.org>
+Subject: Re: [PATCH 1/4] xfstests: fix scratch device filtering in 139
+Message-ID: <20160128193506.GE20038@birch.djwong.org>
 References: <1454001236-2600-1-git-send-email-hch@lst.de>
-	<1454001236-2600-4-git-send-email-hch@lst.de>
+	<1454001236-2600-2-git-send-email-hch@lst.de>
+	<20160128192446.GB20038@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1454001236-2600-4-git-send-email-hch@lst.de>
+In-Reply-To: <20160128192446.GB20038@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,44 +34,71 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 28, 2016 at 06:13:55PM +0100, Christoph Hellwig wrote:
-> This can be returned by various implementations of the ioctl.
+On Thu, Jan 28, 2016 at 11:24:46AM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 28, 2016 at 06:13:53PM +0100, Christoph Hellwig wrote:
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  tests/xfs/139     | 4 ++--
+> >  tests/xfs/139.out | 4 ++--
+> >  2 files changed, 4 insertions(+), 4 deletions(-)
+> >  mode change 100644 => 100755 tests/xfs/139
+> > 
+> > diff --git a/tests/xfs/139 b/tests/xfs/139
+> > old mode 100644
+> > new mode 100755
+> > index 7400cf8..51c903e
+> > --- a/tests/xfs/139
+> > +++ b/tests/xfs/139
 
-Looks reasonable, so
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+DOH             ^^^
+
+/me grabs another cup of coffee, tries again.
+
+This patch is fine, ignore my earlier statements.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> > @@ -69,8 +69,8 @@ _pwrite_byte 0x62 0 $sz "$testdir/file1" >> "$seqres.full"
+> >  _scratch_remount
+> >  
+> >  echo "Compare files"
+> > -md5sum "$testdir/file1" | _filter_test_dir
+> > -md5sum "$testdir/file2" | _filter_test_dir
+> > +md5sum "$testdir/file1" | _filter_scratch
+> > +md5sum "$testdir/file2" | _filter_scratch
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  common/reflink | 4 ++++
->  1 file changed, 4 insertions(+)
+> This is fixed upstream.
 > 
-> diff --git a/common/reflink b/common/reflink
-> index de8e56d..8638aba 100644
-> --- a/common/reflink
-> +++ b/common/reflink
-> @@ -92,6 +92,8 @@ _require_test_dedupe()
->  		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
->  	echo $testio | grep -q "Inappropriate ioctl for device" && \
->  		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
-> +	echo $testio | grep -q "Invalid argument" && \
-> +		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
->  	rm -rf "$TEST_DIR/file1" "$TEST_DIR/file2"
->  }
->  
-> @@ -110,6 +112,8 @@ _require_scratch_dedupe()
->  		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
->  	echo $testio | grep -q "Inappropriate ioctl for device" && \
->  		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
-> +	echo $testio | grep -q "Invalid argument" && \
-> +		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
->  	_scratch_unmount
->  }
->  
-> -- 
-> 2.1.4
+> Well, the filtering was fixed and the test now runs on the test device
+> and leaves scratchdev alone. :)
+> 
+> --D
+> 
+> >  #filefrag -v "$testdir/file1" "$testdir/file2"
+> >  
+> >  echo "Check scratch fs"
+> > diff --git a/tests/xfs/139.out b/tests/xfs/139.out
+> > index 729e2d6..090e3af 100644
+> > --- a/tests/xfs/139.out
+> > +++ b/tests/xfs/139.out
+> > @@ -3,6 +3,6 @@ Format and mount
+> >  Create the original files
+> >  CoW every other block
+> >  Compare files
+> > -673c759fb131ccf3336c4f8c549a497e  /opt/test-139/file1
+> > -dc802351f6717547cbf4c951b294f952  /opt/test-139/file2
+> > +673c759fb131ccf3336c4f8c549a497e  SCRATCH_MNT/test-139/file1
+> > +dc802351f6717547cbf4c951b294f952  SCRATCH_MNT/test-139/file2
+> >  Check scratch fs
+> > -- 
+> > 2.1.4
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 > 
 > _______________________________________________
 > xfs mailing list
