@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F18697CA2
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 13:24:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F0A4AC001
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:24:52 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8D5A7CA2
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 13:28:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A26D1304039
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:27:59 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id YMtcLwtXj23x6os4 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 7HnDPovMP3rorjfP (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:24:50 -0800 (PST)
-Date: Thu, 28 Jan 2016 11:24:46 -0800
+	<xfs@oss.sgi.com>; Thu, 28 Jan 2016 11:27:57 -0800 (PST)
+Date: Thu, 28 Jan 2016 11:27:53 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/4] xfstests: fix scratch device filtering in 139
-Message-ID: <20160128192446.GB20038@birch.djwong.org>
+Subject: Re: [PATCH 2/4] xfstests: require dedup ioctl support in 182
+Message-ID: <20160128192753.GC20038@birch.djwong.org>
 References: <1454001236-2600-1-git-send-email-hch@lst.de>
-	<1454001236-2600-2-git-send-email-hch@lst.de>
+	<1454001236-2600-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1454001236-2600-2-git-send-email-hch@lst.de>
+In-Reply-To: <1454001236-2600-3-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +33,32 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 28, 2016 at 06:13:53PM +0100, Christoph Hellwig wrote:
+On Thu, Jan 28, 2016 at 06:13:54PM +0100, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  tests/xfs/139     | 4 ++--
->  tests/xfs/139.out | 4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
->  mode change 100644 => 100755 tests/xfs/139
+>  tests/generic/182 | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/tests/xfs/139 b/tests/xfs/139
-> old mode 100644
-> new mode 100755
-> index 7400cf8..51c903e
-> --- a/tests/xfs/139
-> +++ b/tests/xfs/139
-> @@ -69,8 +69,8 @@ _pwrite_byte 0x62 0 $sz "$testdir/file1" >> "$seqres.full"
->  _scratch_remount
->  
->  echo "Compare files"
-> -md5sum "$testdir/file1" | _filter_test_dir
-> -md5sum "$testdir/file2" | _filter_test_dir
-> +md5sum "$testdir/file1" | _filter_scratch
-> +md5sum "$testdir/file2" | _filter_scratch
+> diff --git a/tests/generic/182 b/tests/generic/182
+> index bf5cd38..eb80b43 100755
+> --- a/tests/generic/182
+> +++ b/tests/generic/182
+> @@ -46,6 +46,7 @@ _cleanup()
+>  # real QA test starts here
+>  _supported_os Linux
+>  _require_test_reflink
+> +_require_test_dedupe
+>  _require_cp_reflink
 
-This is fixed upstream.
+The _require_*_reflink bits are unnecessary.  I must've been going too fast
+when I wrote 181/182; I'll fix that in my repo and send patches.
 
-Well, the filtering was fixed and the test now runs on the test device
-and leaves scratchdev alone. :)
+Also 182's comments should s/reflink/dedupe/.
 
 --D
 
->  #filefrag -v "$testdir/file1" "$testdir/file2"
 >  
->  echo "Check scratch fs"
-> diff --git a/tests/xfs/139.out b/tests/xfs/139.out
-> index 729e2d6..090e3af 100644
-> --- a/tests/xfs/139.out
-> +++ b/tests/xfs/139.out
-> @@ -3,6 +3,6 @@ Format and mount
->  Create the original files
->  CoW every other block
->  Compare files
-> -673c759fb131ccf3336c4f8c549a497e  /opt/test-139/file1
-> -dc802351f6717547cbf4c951b294f952  /opt/test-139/file2
-> +673c759fb131ccf3336c4f8c549a497e  SCRATCH_MNT/test-139/file1
-> +dc802351f6717547cbf4c951b294f952  SCRATCH_MNT/test-139/file2
->  Check scratch fs
+>  rm -f "$seqres.full"
 > -- 
 > 2.1.4
 > 
