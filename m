@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E94227CA2
-	for <xfs@oss.sgi.com>; Fri, 29 Jan 2016 14:37:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BBD5530405F
-	for <xfs@oss.sgi.com>; Fri, 29 Jan 2016 12:37:55 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id YBHuc27u2g7LEhXb (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 29 Jan 2016 12:37:44 -0800 (PST)
-Date: Fri, 29 Jan 2016 12:37:40 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfstests xfs/293 failure with current xfstests
-Message-ID: <20160129203740.GG20038@birch.djwong.org>
-References: <20160129192145.GC5224@linux.intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3D4C37CA2
+	for <xfs@oss.sgi.com>; Fri, 29 Jan 2016 16:20:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1C339304043
+	for <xfs@oss.sgi.com>; Fri, 29 Jan 2016 14:20:22 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	JbhU8kwM1Hi9CuGn for <xfs@oss.sgi.com>;
+	Fri, 29 Jan 2016 14:20:20 -0800 (PST)
+Date: Sat, 30 Jan 2016 09:20:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: introduce per-inode DAX enablement
+Message-ID: <20160129222006.GJ20456@dastard>
+References: <1451886892-15548-1-git-send-email-david@fromorbit.com>
+	<1451886892-15548-4-git-send-email-david@fromorbit.com>
+	<CAA9_cmdAYzf3DpjPRZWikNgmJT_sdDACXa_znz6j0oqmmRdLOA@mail.gmail.com>
+	<20160121215820.GA6033@dastard>
+	<CAPcyv4iXg6pD4p2MTFA3hwUc6eTK=Lpw1nDuchAs1ZQWS05MtA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160129192145.GC5224@linux.intel.com>
+In-Reply-To: <CAPcyv4iXg6pD4p2MTFA3hwUc6eTK=Lpw1nDuchAs1ZQWS05MtA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, ext4@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>
 
-On Fri, Jan 29, 2016 at 12:21:45PM -0700, Ross Zwisler wrote:
-> It looks like the current version of xfsprogs (v4.3.0) has an inconsistency
-> between its documentation and implementation that is making the xfstest
-> xfs/293 fail:
+On Thu, Jan 21, 2016 at 02:53:06PM -0800, Dan Williams wrote:
+> On Thu, Jan 21, 2016 at 1:58 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Jan 21, 2016 at 08:37:11AM -0800, Dan Williams wrote:
+> >> On Sun, Jan 3, 2016 at 9:54 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > i.e. I've already got a couple of fixes we need to add to this - the
+> > DAX flag is only valid on CRC enabled filesystems,
 > 
-> ./check xfs/293
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 lorwyn 4.5.0-rc1
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
-> MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
-> 
-> xfs/293	 - output mismatch (see /root/xfstests/results//xfs/293.out.bad)
->     --- tests/xfs/293.out	2015-10-02 10:19:36.836796097 -0600
->     +++ /root/xfstests/results//xfs/293.out.bad	2016-01-29 10:41:25.530512911 -0700
->     @@ -1,2 +1,4 @@
->      QA output created by 293
->      Silence is golden
->     +help not documented in the xfs_io manpage
->     +zero not documented in the xfs_io manpage
->     ...
->     (Run 'diff -u tests/xfs/293.out /root/xfstests/results//xfs/293.out.bad'  to see the entire diff)
-> Ran: xfs/293
-> Failures: xfs/293
-> Failed 1 of 1 tests
-> 
-> "help" and "zero" are indeed options in xfs_io, but aren't listed in the man
-> page.
+> I assume for torn-write protection?  The CRC limitation makes sense,
+> but we theoretically could get the same effect by using a separate
+> logdev that does not tear writes, right?
 
-Commit 270dae6c0b41d855729fec73f94f33665bd36349 in xfsprogs for-next fixes
-this.
+No, it requires the CRC enabled format because there isn't any
+flag space left in the v2 inode and so we need v3 inodes to store
+the flag.
 
---D
+Cheers,
 
-> 
-> Thanks,
-> - Ross
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
