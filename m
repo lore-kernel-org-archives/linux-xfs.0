@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 09E847CA2
-	for <xfs@oss.sgi.com>; Sat, 30 Jan 2016 15:07:11 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D591B7CA4
+	for <xfs@oss.sgi.com>; Sat, 30 Jan 2016 15:53:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8200CAC004
-	for <xfs@oss.sgi.com>; Sat, 30 Jan 2016 13:07:07 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	p3g0UNyrfFQSAcws for <xfs@oss.sgi.com>;
-	Sat, 30 Jan 2016 13:07:04 -0800 (PST)
-Date: Sun, 31 Jan 2016 08:06:50 +1100
-From: Dave Chinner <david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C35BE8F8035
+	for <xfs@oss.sgi.com>; Sat, 30 Jan 2016 13:53:53 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id g0ksw6PlGUbLFQHH for <xfs@oss.sgi.com>;
+	Sat, 30 Jan 2016 13:53:50 -0800 (PST)
+Mime-Version: 1.0 (1.0)
 Subject: Re: [PATCH] xfs: lock bitmap/summary inodes in xfs_rtbuf_get()
-Message-ID: <20160130210650.GL20456@dastard>
-References: <56AC2D64.2080907@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56AC2D64.2080907@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20160130210650.GL20456@dastard>
+Date: Sat, 30 Jan 2016 15:53:48 -0600
+Message-Id: <015F4CF0-425A-4EB0-ACE2-4EBBE0B78173@sandeen.net>
+References: <56AC2D64.2080907@redhat.com> <20160130210650.GL20456@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,84 +23,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Jan 29, 2016 at 09:26:28PM -0600, Eric Sandeen wrote:
-> Commit eef334e added an ASSERT that the inode was locked in
-> some way in xfs_bmapi_read(), but on realtime paths through
-> xfs_rtbuf_get() this isn't the case; fix that.
-> 
-> Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> I think we need the data_map_shared gyrations here, but not certain...
-> 
-> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-> index 9b59ffa..e6da0b2 100644
-> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
-> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-> @@ -57,11 +57,14 @@ xfs_rtbuf_get(
->  	xfs_inode_t	*ip;		/* bitmap or summary inode */
->  	xfs_bmbt_irec_t	map;
->  	int		nmap = 1;
-> +	int		lock_mode;
->  	int		error;		/* error value */
->  
->  	ip = issum ? mp->m_rsumip : mp->m_rbmip;
->  
-> +	lock_mode = xfs_ilock_data_map_shared(ip);
->  	error = xfs_bmapi_read(ip, block, 1, &map, &nmap, XFS_DATA_FORK);
-> +	xfs_iunlock(ip, lock_mode);
-
-I've looked into this recently and didn't think up a simple answer
-to the problem. I didn't spend much time on it because it's nowhere
-near the top of my priority list because it only affects debug
-kernels as the summary inode is effectively protected by the bitmap
-inode exclusion during allocation.
-
-That said, the above change is not safe because xfs_rtbuf_get() can
-be called with the bitmap inode lock already held. e.g:
-
-  xfs_bmap_rtalloc
-    xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);   << locks bitmap
-    xfs_rtallocate_extent
-      xfs_rtallocate_extent_exact
-	xfs_rtcheck_range
-	  xfs_rtbuf_get(issum = 0)
-	    xfs_ilock_data_map_shared(mp->m_rbmip)
-	    <self deadlock>
-
-The issue here is that the summary inode is not locked early on in
-the transaction, so modifications are done with it unlocked.
-
-  xfs_bmap_rtalloc
-    xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);   << locks bitmap
-    xfs_rtallocate_extent
-      xfs_rtallocate_extent_size
-        xfs_rtget_summary
-          xfs_rtmodify_summary_int
-	    xfs_rtbuf_get
-	      xfs_bmapi_read(summary inode)    << unlocked summary
-
-The only path through which the summary inode is locked for
-modification is the growfs path (xfs_rtcopy_summary()), so all the
-other paths that modify/access the summary inode also need to be
-locked at a higher level before calling into the summary functions.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T0ssIHRoYW5rcyBEYXZlLiBJdCBzZWVtZWQgbGlrZSBpdCB3YXMgcHJvYmFibHkgdG9vIHNpbXBs
+ZeKApgoKPiBPbiBKYW4gMzAsIDIwMTYsIGF0IDM6MDYgUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
+ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gCj4+IE9uIEZyaSwgSmFuIDI5LCAyMDE2IGF0IDA5OjI2
+OjI4UE0gLTA2MDAsIEVyaWMgU2FuZGVlbiB3cm90ZToKPj4gQ29tbWl0IGVlZjMzNGUgYWRkZWQg
+YW4gQVNTRVJUIHRoYXQgdGhlIGlub2RlIHdhcyBsb2NrZWQgaW4KPj4gc29tZSB3YXkgaW4geGZz
+X2JtYXBpX3JlYWQoKSwgYnV0IG9uIHJlYWx0aW1lIHBhdGhzIHRocm91Z2gKPj4geGZzX3J0YnVm
+X2dldCgpIHRoaXMgaXNuJ3QgdGhlIGNhc2U7IGZpeCB0aGF0Lgo+PiAKPj4gUmVwb3J0ZWQtYnk6
+IFJvc3MgWndpc2xlciA8cm9zcy56d2lzbGVyQGxpbnV4LmludGVsLmNvbT4KPj4gU2lnbmVkLW9m
+Zi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+Cj4+IC0tLQo+PiAKPj4gSSB0
+aGluayB3ZSBuZWVkIHRoZSBkYXRhX21hcF9zaGFyZWQgZ3lyYXRpb25zIGhlcmUsIGJ1dCBub3Qg
+Y2VydGFpbi4uLgo+PiAKPj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9saWJ4ZnMveGZzX3J0Yml0bWFw
+LmMgYi9mcy94ZnMvbGlieGZzL3hmc19ydGJpdG1hcC5jCj4+IGluZGV4IDliNTlmZmEuLmU2ZGEw
+YjIgMTAwNjQ0Cj4+IC0tLSBhL2ZzL3hmcy9saWJ4ZnMveGZzX3J0Yml0bWFwLmMKPj4gKysrIGIv
+ZnMveGZzL2xpYnhmcy94ZnNfcnRiaXRtYXAuYwo+PiBAQCAtNTcsMTEgKzU3LDE0IEBAIHhmc19y
+dGJ1Zl9nZXQoCj4+ICAgIHhmc19pbm9kZV90ICAgICppcDsgICAgICAgIC8qIGJpdG1hcCBvciBz
+dW1tYXJ5IGlub2RlICovCj4+ICAgIHhmc19ibWJ0X2lyZWNfdCAgICBtYXA7Cj4+ICAgIGludCAg
+ICAgICAgbm1hcCA9IDE7Cj4+ICsgICAgaW50ICAgICAgICBsb2NrX21vZGU7Cj4+ICAgIGludCAg
+ICAgICAgZXJyb3I7ICAgICAgICAvKiBlcnJvciB2YWx1ZSAqLwo+PiAKPj4gICAgaXAgPSBpc3N1
+bSA/IG1wLT5tX3JzdW1pcCA6IG1wLT5tX3JibWlwOwo+PiAKPj4gKyAgICBsb2NrX21vZGUgPSB4
+ZnNfaWxvY2tfZGF0YV9tYXBfc2hhcmVkKGlwKTsKPj4gICAgZXJyb3IgPSB4ZnNfYm1hcGlfcmVh
+ZChpcCwgYmxvY2ssIDEsICZtYXAsICZubWFwLCBYRlNfREFUQV9GT1JLKTsKPj4gKyAgICB4ZnNf
+aXVubG9jayhpcCwgbG9ja19tb2RlKTsKPiAKPiBJJ3ZlIGxvb2tlZCBpbnRvIHRoaXMgcmVjZW50
+bHkgYW5kIGRpZG4ndCB0aGluayB1cCBhIHNpbXBsZSBhbnN3ZXIKPiB0byB0aGUgcHJvYmxlbS4g
+SSBkaWRuJ3Qgc3BlbmQgbXVjaCB0aW1lIG9uIGl0IGJlY2F1c2UgaXQncyBub3doZXJlCj4gbmVh
+ciB0aGUgdG9wIG9mIG15IHByaW9yaXR5IGxpc3QgYmVjYXVzZSBpdCBvbmx5IGFmZmVjdHMgZGVi
+dWcKPiBrZXJuZWxzIGFzIHRoZSBzdW1tYXJ5IGlub2RlIGlzIGVmZmVjdGl2ZWx5IHByb3RlY3Rl
+ZCBieSB0aGUgYml0bWFwCj4gaW5vZGUgZXhjbHVzaW9uIGR1cmluZyBhbGxvY2F0aW9uLgo+IAo+
+IFRoYXQgc2FpZCwgdGhlIGFib3ZlIGNoYW5nZSBpcyBub3Qgc2FmZSBiZWNhdXNlIHhmc19ydGJ1
+Zl9nZXQoKSBjYW4KPiBiZSBjYWxsZWQgd2l0aCB0aGUgYml0bWFwIGlub2RlIGxvY2sgYWxyZWFk
+eSBoZWxkLiBlLmc6Cj4gCj4gIHhmc19ibWFwX3J0YWxsb2MKPiAgICB4ZnNfaWxvY2sobXAtPm1f
+cmJtaXAsIFhGU19JTE9DS19FWENMKTsgICA8PCBsb2NrcyBiaXRtYXAKPiAgICB4ZnNfcnRhbGxv
+Y2F0ZV9leHRlbnQKPiAgICAgIHhmc19ydGFsbG9jYXRlX2V4dGVudF9leGFjdAo+ICAgIHhmc19y
+dGNoZWNrX3JhbmdlCj4gICAgICB4ZnNfcnRidWZfZ2V0KGlzc3VtID0gMCkKPiAgICAgICAgeGZz
+X2lsb2NrX2RhdGFfbWFwX3NoYXJlZChtcC0+bV9yYm1pcCkKPiAgICAgICAgPHNlbGYgZGVhZGxv
+Y2s+Cj4gCj4gVGhlIGlzc3VlIGhlcmUgaXMgdGhhdCB0aGUgc3VtbWFyeSBpbm9kZSBpcyBub3Qg
+bG9ja2VkIGVhcmx5IG9uIGluCj4gdGhlIHRyYW5zYWN0aW9uLCBzbyBtb2RpZmljYXRpb25zIGFy
+ZSBkb25lIHdpdGggaXQgdW5sb2NrZWQuCj4gCj4gIHhmc19ibWFwX3J0YWxsb2MKPiAgICB4ZnNf
+aWxvY2sobXAtPm1fcmJtaXAsIFhGU19JTE9DS19FWENMKTsgICA8PCBsb2NrcyBiaXRtYXAKPiAg
+ICB4ZnNfcnRhbGxvY2F0ZV9leHRlbnQKPiAgICAgIHhmc19ydGFsbG9jYXRlX2V4dGVudF9zaXpl
+Cj4gICAgICAgIHhmc19ydGdldF9zdW1tYXJ5Cj4gICAgICAgICAgeGZzX3J0bW9kaWZ5X3N1bW1h
+cnlfaW50Cj4gICAgICAgIHhmc19ydGJ1Zl9nZXQKPiAgICAgICAgICB4ZnNfYm1hcGlfcmVhZChz
+dW1tYXJ5IGlub2RlKSAgICA8PCB1bmxvY2tlZCBzdW1tYXJ5Cj4gCj4gVGhlIG9ubHkgcGF0aCB0
+aHJvdWdoIHdoaWNoIHRoZSBzdW1tYXJ5IGlub2RlIGlzIGxvY2tlZCBmb3IKPiBtb2RpZmljYXRp
+b24gaXMgdGhlIGdyb3dmcyBwYXRoICh4ZnNfcnRjb3B5X3N1bW1hcnkoKSksIHNvIGFsbCB0aGUK
+PiBvdGhlciBwYXRocyB0aGF0IG1vZGlmeS9hY2Nlc3MgdGhlIHN1bW1hcnkgaW5vZGUgYWxzbyBu
+ZWVkIHRvIGJlCj4gbG9ja2VkIGF0IGEgaGlnaGVyIGxldmVsIGJlZm9yZSBjYWxsaW5nIGludG8g
+dGhlIHN1bW1hcnkgZnVuY3Rpb25zLgo+IAo+IENoZWVycywKPiAKPiBEYXZlLgo+IC0tIAo+IERh
+dmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KPiAKPiBfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3Nz
+LnNnaS5jb20KPiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPiAKCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
