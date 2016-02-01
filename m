@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4BBC57CB1
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 13:15:04 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A808A7CB1
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 13:55:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 36DE2304048
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 11:15:01 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id vpgsdbgQHyHoTJMF (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 85F93304039
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 11:55:03 -0800 (PST)
+Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
+	with ESMTP id XMZuDCjq1EoNjoyp (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 11:14:55 -0800 (PST)
-Date: Mon, 1 Feb 2016 11:14:53 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/5] libxfs: refactor the btree size calculator code
-Message-ID: <20160201191453.GH20038@birch.djwong.org>
-References: <20160123003502.2475.99558.stgit@birch.djwong.org>
-	<20160123003508.2475.53723.stgit@birch.djwong.org>
-	<20160201151755.GB3992@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 11:55:00 -0800 (PST)
+Date: Mon, 1 Feb 2016 11:54:58 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 4.5-rc2: Torn write (CRC failure) detected
+In-Reply-To: <20160201123401.GA3992@bfoster.bfoster>
+Message-ID: <alpine.DEB.2.20.10.1602011154500.22992@trent.utfs.org>
+References: <alpine.DEB.2.20.10.1602010152110.22992@trent.utfs.org>
+	<20160201123401.GA3992@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160201151755.GB3992@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,181 +25,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
 
-On Mon, Feb 01, 2016 at 10:17:56AM -0500, Brian Foster wrote:
-> On Fri, Jan 22, 2016 at 04:35:08PM -0800, Darrick J. Wong wrote:
-> > Create a macro to generate btree height calculator functions.
-> > This will be used (much) later when we get to the refcount
-> > btree.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> The refactoring looks fine to me... though shouldn't this head into the
-> kernel first and get backported to xfsprogs (or did I miss that
-> somewhere)?
-
-I think I've posted the kernelside version of this patch, though I suppose it
-doesn't really become important until one starts adding the rmap/reflink stuff.
-
-> That and one question below...
-> 
-> >  libxfs/xfs_bmap.c       |   18 +-----------------
-> >  libxfs/xfs_bmap_btree.c |    9 +++++++++
-> >  libxfs/xfs_bmap_btree.h |    3 +++
-> >  libxfs/xfs_btree.c      |   28 ++++++++++++++++++++++++++++
-> >  libxfs/xfs_btree.h      |    3 +++
-> >  5 files changed, 44 insertions(+), 17 deletions(-)
-> > 
-> > 
-> > diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-> > index aef7cf3..c134765 100644
-> > --- a/libxfs/xfs_bmap.c
-> > +++ b/libxfs/xfs_bmap.c
-> > @@ -172,25 +172,9 @@ xfs_bmap_worst_indlen(
-> >  	xfs_inode_t	*ip,		/* incore inode pointer */
-> >  	xfs_filblks_t	len)		/* delayed extent length */
-> >  {
-> > -	int		level;		/* btree level number */
-> > -	int		maxrecs;	/* maximum record count at this level */
-> > -	xfs_mount_t	*mp;		/* mount structure */
-> >  	xfs_filblks_t	rval;		/* return value */
-> >  
-> > -	mp = ip->i_mount;
-> > -	maxrecs = mp->m_bmap_dmxr[0];
-> > -	for (level = 0, rval = 0;
-> > -	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-> > -	     level++) {
-> > -		len += maxrecs - 1;
-> > -		do_div(len, maxrecs);
-> > -		rval += len;
-> > -		if (len == 1)
-> > -			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-> > -				level - 1;
-> > -		if (level == 0)
-> > -			maxrecs = mp->m_bmap_dmxr[1];
-> > -	}
-> > +	rval = xfs_bmbt_calc_size(ip->i_mount, len);
-> 
-> We go from xfs_filblks_t to unsigned long here. Isn't the latter 4 bytes
-> on 32-bit systems? Was that intentional?
-
-Semi-intentional.  The 'len' argument is the number of records you want to
-store in the btree.  For a bmbt, we're capped by di_nextents/di_anextents,
-which limit us to 2^32 records and I think the methods in xfs_bmap.c won't
-create an extent longer than MAXEXTLEN (2^21) blocks anyway.
-
-OTOH I suppose the rmap btree can store more than 2^32 records when reflink
-is turned on (not that you'd want to) so this could be widened to ULL.
-
---D
-
-> 
-> Brian
-> 
-> >  	return rval;
-> >  }
-> >  
-> > diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-> > index 2ef1836..3c595e2 100644
-> > --- a/libxfs/xfs_bmap_btree.c
-> > +++ b/libxfs/xfs_bmap_btree.c
-> > @@ -880,3 +880,12 @@ xfs_bmbt_change_owner(
-> >  	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> >  	return error;
-> >  }
-> > +
-> > +xfs_filblks_t
-> > +xfs_bmbt_calc_size(
-> > +	struct xfs_mount	*mp,
-> > +	unsigned long		len)
-> > +{
-> > +	return xfs_btree_calc_size(mp, mp->m_bmap_dmxr,
-> > +			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), len);
-> > +}
-> > diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
-> > index 819a8a4..04bc6e2 100644
-> > --- a/libxfs/xfs_bmap_btree.h
-> > +++ b/libxfs/xfs_bmap_btree.h
-> > @@ -140,4 +140,7 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
-> >  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
-> >  		struct xfs_trans *, struct xfs_inode *, int);
-> >  
-> > +extern xfs_filblks_t xfs_bmbt_calc_size(struct xfs_mount *mp,
-> > +		unsigned long len);
-> > +
-> >  #endif	/* __XFS_BMAP_BTREE_H__ */
-> > diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-> > index 658f27e..d5f16c5 100644
-> > --- a/libxfs/xfs_btree.c
-> > +++ b/libxfs/xfs_btree.c
-> > @@ -4081,6 +4081,34 @@ xfs_btree_change_owner(
-> >  	return 0;
-> >  }
-> >  
-> > +/*
-> > + * xfs_btree_calc_size() -- Calculate the number of blocks needed to store
-> > + *			    a given number of records.
-> > + */
-> > +xfs_filblks_t
-> > +xfs_btree_calc_size(
-> > +	struct xfs_mount	*mp,
-> > +	uint			*limits,
-> > +	int			maxlevels,
-> > +	unsigned long		len)
-> > +{
-> > +	int			level;
-> > +	int			maxrecs;
-> > +	xfs_filblks_t		rval;
-> > +
-> > +	maxrecs = limits[0];
-> > +	for (level = 0, rval = 0; level < maxlevels; level++) {
-> > +		len += maxrecs - 1;
-> > +		do_div(len, maxrecs);
-> > +		rval += len;
-> > +		if (len == 1)
-> > +			return rval + maxlevels - level - 1;
-> > +		if (level == 0)
-> > +			maxrecs = limits[1];
-> > +	}
-> > +	return rval;
-> > +}
-> > +
-> >  /**
-> >   * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
-> >   *				      btree block
-> > diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-> > index 48cb251..b25ffd3 100644
-> > --- a/libxfs/xfs_btree.h
-> > +++ b/libxfs/xfs_btree.h
-> > @@ -465,6 +465,9 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
-> >  #define XFS_BTREE_TRACE_ARGR(c, r)
-> >  #define	XFS_BTREE_TRACE_CURSOR(c, t)
-> >  
-> > +xfs_filblks_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-> > +		int maxlevels, unsigned long len);
-> > +
-> >  bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
-> >  bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
-> >  
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCAxIEZlYiAyMDE2LCBCcmlhbiBGb3N0ZXIgd3JvdGU6Cj4gT24gTW9uLCBGZWIgMDEs
+IDIwMTYgYXQgMDI6MTE6MThBTSAtMDgwMCwgQ2hyaXN0aWFuIEt1amF1IHdyb3RlOgo+ID4gSSB0
+cmllZCB0byB1cGdyYWRlIGZyb20gNC40LjAtcmM1IHRvIDQuNS4wLXJjMiBidXQgSSdtIGN1cnJl
+bnRseSB1bmFibGUgdG8gCj4gPiBtb3VudCBteSBYRlMgZmlsZXN5c3RlbXMgYW55IG1vcmUgb24g
+dGhpcyBQb3dlclBDIEc0IG1hY2hpbmU6Cj4gPiAKPiAKPiBZb3UgbW9zdCBsaWtlbHkgbmVlZCBE
+YXJyaWNrJ3MgcmVjZW50IGZpeCwgcG9zdGVkIGhlcmU6Cj4gCj4gaHR0cDovL29zcy5zZ2kuY29t
+L3BpcGVybWFpbC94ZnMvMjAxNi1KYW51YXJ5LzA0NjQzNy5odG1sCj4gCj4gVGhlIG9yaWdpbmFs
+IHBhdGNoIGhhZCBzb21lIGVuZGlhbiBjb252ZXJzaW9uIGJyb2tlbm5lc3MgdGhhdCB3YXNuJ3QK
+PiBkZXRlY3RlZCBvbiB4ODYtNjQuCgpUaGFua3MhIFRoZSBwYXRjaCBoZWxwcyBhbmQgdGhlIFhG
+UyBmaWxlIHN5c3RlbXMgY2FuIGJlIG1vdW50ZWQgYWdhaW4hCgpUZXN0ZWQtYnk6IENocmlzdGlh
+biBLdWphdSA8bGlzdHNAbmVyZGJ5bmF0dXJlLmRlPgoKQy4KCj4gCj4gQnJpYW4KPiAKPiA+ICMg
+bW91bnQgLXQgeGZzIC1vIHJvIC9kZXYvbWFwcGVyL3dkYzEgL21udC9kaXNrCj4gPiBtb3VudDog
+bW91bnQgL2Rldi9tYXBwZXIvd2RjMSBvbiAvbW50L2Rpc2sgZmFpbGVkOiBCYWQgbWVzc2FnZQo+
+ID4gCj4gPiAjIGRtZXNnIHwgdGFpbAo+ID4gWyAyMDM1LjkzNzE2NV0gWEZTIChkbS0yKTogTW91
+bnRpbmcgVjQgRmlsZXN5c3RlbQo+ID4gWyAyMDM2LjM1NzE5OF0gWEZTIChkbS0yKTogVG9ybiB3
+cml0ZSAoQ1JDIGZhaWx1cmUpIGRldGVjdGVkIGF0IGxvZyBibG9jayAweDI5NmU0LiBUcnVuY2F0
+aW5nIGhlYWQgYmxvY2sgZnJvbSAweDI5NmU4Lgo+ID4gWyAyMDM2LjM2MDE1NV0gWEZTIChkbS0y
+KTogZmFpbGVkIHRvIGxvY2F0ZSBsb2cgdGFpbAo+ID4gWyAyMDM2LjM2MDIyMl0gWEZTIChkbS0y
+KTogbG9nIG1vdW50L3JlY292ZXJ5IGZhaWxlZDogZXJyb3IgLTc0Cj4gPiBbIDIwMzYuMzYwNzUx
+XSBYRlMgKGRtLTIpOiBsb2cgbW91bnQgZmFpbGVkCj4gPiAKPiA+IEFGQUlDUyB0aGUgbWVzc2Fn
+ZSBnb3QgaW50cm9kdWNlZCBieSAieGZzOiBkZXRlY3QgYW5kIHRyaW0gdG9ybiB3cml0ZXMgCj4g
+PiBkdXJpbmcgbG9nIHJlY292ZXJ5IiAtIGhvd2V2ZXIsIHRoZXJlIGlzIG5vIGNyYXNoIGludm9s
+dmVkIGhlcmUuIFRoZSAKPiA+IHN5c3RlbSB3YXMgcnVubmluZyA0LjQuMC1yYzUganVzdCBmaW5l
+IGFuZCByZWJvb3RlZCBwcm9wZXJseSBpbnRvIAo+ID4gNC41LjAtcmMyLiBUaGUgdW5kZXJseWlu
+ZyBzdG9yYWdlIGlzIGFuIGV4dGVybmFsIGRpc2sgYXR0YWNoZWQgdmlhIAo+ID4gRmlyZXdpcmUg
+YW5kIGRtLWNyeXB0IG9uIHRvcCBvZiB0aGF0Lgo+ID4gCj4gPiBSdW5uaW5nICJ4ZnNfcmVwYWly
+IC1uIiBvbiB0aGUgZGV2aWNlIGNhbWUgYmFjayB3aXRoIGVycm9yIGNvZGUgMSAoc2VlIAo+ID4g
+YmVsb3cgZm9yIGl0cyBsb2dbMF0pLgo+ID4gCj4gPiBUaGlzIGlzIGFsbCBvbiBEZWJpYW4vc3Rh
+YmxlIHdpdGggeGZzX3JlcGFpciB2My4yLjEgLSBidXQgSSB3YXMgdW5hYmxlIHRvIAo+ID4gY29t
+cGlsZSB4ZnNwcm9ncyBmcm9tIHRoZSBjdXJyZW50IGdpdCB0cmVlLCBiZWNhdXNlIG9mIGEgY29t
+cGlsYXRpb24gZXJyb3JbMV0KPiA+IAo+ID4gV291bGQgaXQgYmUgc2FmZSB0byBydW4geGZzX3Jl
+cGFpciB3aXRob3V0IC1uIG9uIHRoYXQgZGV2aWNlPwo+ID4gCj4gPiBDaHJpc3RpYW4uCj4gPiAK
+PiA+IFswXSB4ZnNfcmVwYWlyCj4gPiAjIGZpbGUgLUxzIC9kZXYvbWFwcGVyL3dkYzEKPiA+IC9k
+ZXYvbWFwcGVyL3dkYzE6IFNHSSBYRlMgZmlsZXN5c3RlbSBkYXRhIChibGtzeiA0MDk2LCBpbm9z
+eiAyNTYsIHYyIGRpcnMpCj4gPiAKPiA+ICMgY3J5cHRzZXR1cCBzdGF0dXMgd2RjMQo+ID4gL2Rl
+di9tYXBwZXIvd2RjMSBpcyBhY3RpdmUuCj4gPiAgIHR5cGU6ICAgIExVS1MxCj4gPiAgIGNpcGhl
+cjogIGFlcy1jYmMtZXNzaXY6c2hhMjU2Cj4gPiAgIGtleXNpemU6IDEyOCBiaXRzCj4gPiAgIGRl
+dmljZTogIC9kZXYvc2RlMQo+ID4gICBvZmZzZXQ6ICAxMDMyIHNlY3RvcnMKPiA+ICAgc2l6ZTog
+ICAgMTk1MzUyNDA2OSBzZWN0b3JzCj4gPiAgIG1vZGU6ICAgIHJlYWQvd3JpdGUKPiA+IAo+ID4g
+IyB0aW1lIHhmc19yZXBhaXIgLW4gL2Rldi9tYXBwZXIvd2RjMTsgZWNobyAkPwo+ID4gUGhhc2Ug
+MSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCj4gPiBQaGFzZSAyIC0gdXNpbmcgaW50
+ZXJuYWwgbG9nCj4gPiAgICAgICAgIC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBhbmQgaW5v
+ZGUgbWFwcy4uLgo+ID4gc2JfZmRibG9ja3MgMTU2ODE5NjgsIGNvdW50ZWQgMTU3MzExMjAKPiA+
+ICAgICAgICAgLSBmb3VuZCByb290IGlub2RlIGNodW5rCj4gPiBQaGFzZSAzIC0gZm9yIGVhY2gg
+QUcuLi4KPiA+ICAgICAgICAgLSBzY2FuIChidXQgZG9uJ3QgY2xlYXIpIGFnaSB1bmxpbmtlZCBs
+aXN0cy4uLgo+ID4gICAgICAgICAtIHByb2Nlc3Mga25vd24gaW5vZGVzIGFuZCBwZXJmb3JtIGlu
+b2RlIGRpc2NvdmVyeS4uLgo+ID4gICAgICAgICAtIGFnbm8gPSAwCj4gPiAgICAgICAgIC0gYWdu
+byA9IDEKPiA+ICAgICAgICAgLSBhZ25vID0gMgo+ID4gICAgICAgICAtIGFnbm8gPSAzCj4gPiAg
+ICAgICAgIC0gcHJvY2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2Rlcy4uLgo+ID4gUGhhc2UgNCAt
+IGNoZWNrIGZvciBkdXBsaWNhdGUgYmxvY2tzLi4uCj4gPiAgICAgICAgIC0gc2V0dGluZyB1cCBk
+dXBsaWNhdGUgZXh0ZW50IGxpc3QuLi4KPiA+ICAgICAgICAgLSBjaGVjayBmb3IgaW5vZGVzIGNs
+YWltaW5nIGR1cGxpY2F0ZSBibG9ja3MuLi4KPiA+ICAgICAgICAgLSBhZ25vID0gMAo+ID4gICAg
+ICAgICAtIGFnbm8gPSAxCj4gPiAgICAgICAgIC0gYWdubyA9IDIKPiA+ICAgICAgICAgLSBhZ25v
+ID0gMwo+ID4gTm8gbW9kaWZ5IGZsYWcgc2V0LCBza2lwcGluZyBwaGFzZSA1Cj4gPiBQaGFzZSA2
+IC0gY2hlY2sgaW5vZGUgY29ubmVjdGl2aXR5Li4uCj4gPiAgICAgICAgIC0gdHJhdmVyc2luZyBm
+aWxlc3lzdGVtIC4uLgo+ID4gICAgICAgICAtIHRyYXZlcnNhbCBmaW5pc2hlZCAuLi4KPiA+ICAg
+ICAgICAgLSBtb3ZpbmcgZGlzY29ubmVjdGVkIGlub2RlcyB0byBsb3N0K2ZvdW5kIC4uLgo+ID4g
+UGhhc2UgNyAtIHZlcmlmeSBsaW5rIGNvdW50cy4uLgo+ID4gTm8gbW9kaWZ5IGZsYWcgc2V0LCBz
+a2lwcGluZyBmaWxlc3lzdGVtIGZsdXNoIGFuZCBleGl0aW5nLgo+ID4gCj4gPiByZWFsICAgIDFt
+MjQuODI5cwo+ID4gdXNlciAgICAwbTUuMDEycwo+ID4gc3lzICAgICAwbTEuMjAwcwo+ID4gMSAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA9PSBFeGl0
+IGNvZGUKPiA+IAo+ID4gCj4gPiAKPiA+IFsxXSB4ZnNwcm9ncy92NC4zLjAKPiA+ID09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KPiA+IEJ1aWxkaW5n
+IGlvCj4gPiAgICAgW0NDXSAgICAgZmllbWFwLm8KPiA+IEluIGZpbGUgaW5jbHVkZWQgZnJvbSAu
+Li9pbmNsdWRlL3hmcy5oOjU4OjAsCj4gPiAgICAgICAgICAgICAgICAgIGZyb20gaW8uaDoxOSwK
+PiA+ICAgICAgICAgICAgICAgICAgZnJvbSBmaWVtYXAuYzoyNDoKPiA+IC4uL2luY2x1ZGUveGZz
+L3hmc19mcy5oOjQyOjg6IGVycm9yOiByZWRlZmluaXRpb24gb2Yg4oCYc3RydWN0IGZzeGF0dHLi
+gJkKPiA+ICBzdHJ1Y3QgZnN4YXR0ciB7Cj4gPiAgICAgICAgIF4KPiA+IEluIGZpbGUgaW5jbHVk
+ZWQgZnJvbSBmaWVtYXAuYzoyMjowOgo+ID4gL3Vzci9pbmNsdWRlL2xpbnV4L2ZzLmg6MTU1Ojg6
+IG5vdGU6IG9yaWdpbmFsbHkgZGVmaW5lZCBoZXJlCj4gPiAgc3RydWN0IGZzeGF0dHIgewo+ID4g
+ICAgICAgICBeCj4gPiAuLi9pbmNsdWRlL2J1aWxkcnVsZXM6NTk6IHJlY2lwZSBmb3IgdGFyZ2V0
+ICdmaWVtYXAubycgZmFpbGVkCj4gPiBtYWtlWzJdOiAqKiogW2ZpZW1hcC5vXSBFcnJvciAxCj4g
+PiBpbmNsdWRlL2J1aWxkcnVsZXM6MzU6IHJlY2lwZSBmb3IgdGFyZ2V0ICdpbycgZmFpbGVkCj4g
+PiBtYWtlWzFdOiAqKiogW2lvXSBFcnJvciAyCj4gPiBNYWtlZmlsZTo3MDogcmVjaXBlIGZvciB0
+YXJnZXQgJ2RlZmF1bHQnIGZhaWxlZAo+ID4gbWFrZTogKioqIFtkZWZhdWx0XSBFcnJvciAyCj4g
+PiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Cj4g
+PiAKPiA+IEFuZCBpbmRlZWQsICJzdHJ1Y3QgZnN4YXR0ciIgaXMgYWxyZWFkeSBkZWZpbmVkIGlu
+IC91c3IvaW5jbHVkZS9saW51eC9mcy5oIAo+ID4gd2hpY2ggaXMgcHJvdmlkZWQgYnkgbGludXgt
+bGliYy1kZXYsIHdoaWNoIGNhbm5vdCBiZSByZW1vdmVkIHRoYXQgZWFzaWx5Ogo+ID4gCj4gPiAk
+IHN1ZG8gYXB0LWdldCBwdXJnZSBsaW51eC1saWJjLWRldgo+ID4gVGhlIGZvbGxvd2luZyBwYWNr
+YWdlcyB3aWxsIGJlIFJFTU9WRUQ6Cj4gPiBidWlsZC1lc3NlbnRpYWwqIGRoLWF1dG9yZWNvbmYq
+IGcrKyogZysrLTQuOSogbGliYmxraWQtZGV2KiBsaWJiejItZGV2KiAKPiA+IGxpYmM2LWRldiog
+bGliZXhwYXQxLWRldiogbGliaWN1LWRldiogbGlibXlzcWxjbGllbnQtZGV2KiBsaWJuY3Vyc2Vz
+NS1kZXYqIAo+ID4gbGlibmN1cnNlc3c1LWRldiogbGlicGFtMGctZGV2KiBsaWJwY3JlMy1kZXYq
+IGxpYnBlcmwtZGV2KiBsaWJweXRob24tZGV2KiAKPiA+IGxpYnB5dGhvbjIuNy1kZXYqIGxpYnNz
+bC1kZXYqIGxpYnN0ZGMrKy00LjktZGV2KiBsaWJ0b29sKiBsaWJ4bWxycGMtY29yZS1jMy1kZXYq
+Cj4gPiBsaW51eC1saWJjLWRldiogcHl0aG9uLWRldiogcHl0aG9uMi43LWRldiogdXVpZC1kZXYq
+IHpsaWIxZy1kZXYqCj4gPiAKPiA+IE5vdGU6IHRoZSBjb21waWxhdGlvbiBlcnJvciB3YXMgcmVw
+b3J0ZWQgYSBmZXcgZGF5cyBhZ28gb24gdGhlIHFlbXUtZGV2ZWwgCj4gPiBtYWlsaW5nIGxpc3Qg
+dG9vOgo+ID4gCj4gPiAgIFtRZW11LWRldmVsXSBxZW11IGZhaWxzIHRvIGJ1aWxkIG9uIDQuNS1y
+YzEKPiA+ICAgaHR0cHM6Ly93d3cubWFpbC1hcmNoaXZlLmNvbS9xZW11LWRldmVsQG5vbmdudS5v
+cmcvbXNnMzQ4NzU2Lmh0bWwKPiA+IAo+ID4gLS0gCj4gPiBCT0ZIIGV4Y3VzZSAjMTU0Ogo+ID4g
+Cj4gPiBZb3UgY2FuIHR1bmUgYSBmaWxlIHN5c3RlbSwgYnV0IHlvdSBjYW4ndCB0dW5lIGEgZmlz
+aCAoZnJvbSBtb3N0IHR1bmVmcyBtYW4gcGFnZXMpCj4gPiAKPiA+IF9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPiB4ZnMgbWFpbGluZyBsaXN0Cj4gPiB4
+ZnNAb3NzLnNnaS5jb20KPiA+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo+IAoKLS0gCkJPRkggZXhjdXNlICMzNTQ6CgpDaGV3aW5nIGd1bSBvbiAvZGV2L3NkM2MKCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
