@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BD99D7CB5
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 09:03:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9FDAB8F8035
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 07:03:42 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CBC467CB8
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 09:03:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 48EF7AC003
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 07:03:46 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xPPhUNnnMgWh5lsj (version=TLSv1.2
+	cuda.sgi.com with ESMTP id SUIJRUZsFhwAKK8X (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 07:03:38 -0800 (PST)
-Date: Mon, 1 Feb 2016 10:18:49 -0500
+	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 07:03:45 -0800 (PST)
+Date: Mon, 1 Feb 2016 10:18:56 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/5] xfs_db: don't error out when blocksize > 64 *
-	inodesize
-Message-ID: <20160201151849.GC3992@bfoster.bfoster>
+Subject: Re: [PATCH 6/5] mkfs: factor finobt changes into min log size when
+	formatting
+Message-ID: <20160201151856.GD3992@bfoster.bfoster>
 References: <20160123003502.2475.99558.stgit@birch.djwong.org>
-	<20160123003525.2475.44264.stgit@birch.djwong.org>
+	<20160127044448.GA20038@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160123003525.2475.44264.stgit@birch.djwong.org>
+In-Reply-To: <20160127044448.GA20038@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,84 +34,72 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 22, 2016 at 04:35:25PM -0800, Darrick J. Wong wrote:
-> When the block size is large enough that multiple inode chunks can fit
-> in a single block (e.g. 64k blocks, 512 byte inodes) we must calculate
-> the per-chunk block size and the buffer offset correctly so that check
-> actually examines the correct metadata.
+On Tue, Jan 26, 2016 at 08:44:48PM -0800, Darrick J. Wong wrote:
+> Since the finobt affects the size of the log reservations, we need to
+> be able to include its effects in the calculation of the minimum log
+> size.
+> 
+> (Not really a problem now, but adding rmapbt will give this one some
+> bite.)
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  db/check.c |   13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  mkfs/maxtrres.c |    5 ++++-
+>  mkfs/xfs_mkfs.c |    2 +-
+>  mkfs/xfs_mkfs.h |    2 +-
+>  3 files changed, 6 insertions(+), 3 deletions(-)
 > 
-> 
-> diff --git a/db/check.c b/db/check.c
-> index 838db53..4e2768e 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -4386,6 +4386,7 @@ scanfunc_ino(
->  	__u16			holemask;
->  	xfs_agino_t		rino;
->  	xfs_extlen_t		cblocks;
-> +	int			bufoff;
+> diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+> index e1d5ee9..b97d020 100644
+> --- a/mkfs/maxtrres.c
+> +++ b/mkfs/maxtrres.c
+> @@ -36,7 +36,8 @@ max_trans_res(
+>  	int		inodelog,
+>  	int		dirblocklog,
+>  	int		logversion,
+> -	int		log_sunit)
+> +	int		log_sunit,
+> +	int		finobt)
+>  {
+>  	xfs_sb_t	*sbp;
+>  	xfs_mount_t	mount;
+> @@ -68,6 +69,8 @@ max_trans_res(
+>  			(dirversion == 2 ? XFS_SB_VERSION_DIRV2BIT : 0) |
+>  			(logversion > 1 ? XFS_SB_VERSION_LOGV2BIT : 0) |
+>  			XFS_DFL_SB_VERSION_BITS;
+> +	if (finobt)
+> +		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FINOBT;
 >  
->  	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
->  	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
-> @@ -4455,6 +4456,8 @@ scanfunc_ino(
->  				rino = agino + startidx;
->  				cblocks = (endidx - startidx) >>
->  						mp->m_sb.sb_inopblog;
-> +				if (cblocks == 0)
-> +					cblocks = 1;
-
-A comment would be nice here (i.e., "handle the case where the entire
-chunk is in a single block").
-
+>  	libxfs_mount(&mount, sbp, 0,0,0,0);
+>  	maxfsb = xfs_log_calc_minimum_size(&mount);
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 700d12c..4c3a802 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2406,7 +2406,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 >  
->  				/* Check the sparse chunk alignment */
->  				if (sparse &&
-> @@ -4468,8 +4471,9 @@ scanfunc_ino(
->  				}
+>  	min_logblocks = max_trans_res(crcs_enabled, dirversion,
+>  				   sectorlog, blocklog, inodelog, dirblocklog,
+> -				   logversion, lsunit);
+> +				   logversion, lsunit, finobt);
+>  	ASSERT(min_logblocks);
+>  	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+>  	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+> diff --git a/mkfs/xfs_mkfs.h b/mkfs/xfs_mkfs.h
+> index 9df5f37..128068e 100644
+> --- a/mkfs/xfs_mkfs.h
+> +++ b/mkfs/xfs_mkfs.h
+> @@ -84,6 +84,6 @@ extern void res_failed (int err);
+>  /* maxtrres.c */
+>  extern int max_trans_res (int crcs_enabled, int dirversion,
+>  		int sectorlog, int blocklog, int inodelog, int dirblocklog,
+> -		int logversion, int log_sunit);
+> +		int logversion, int log_sunit, int finobt);
 >  
->  				/* Check the block map */
-> -				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
-> -					cblocks, DBM_INODE, seqno, bno);
-> +				if (XFS_AGINO_TO_OFFSET(mp, rino) == 0)
-> +					set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
-> +						cblocks, DBM_INODE, seqno, bno);
->  
->  				push_cur();
->  				set_cur(&typtab[TYP_INODE],
-> @@ -4489,14 +4493,15 @@ scanfunc_ino(
->  				}
->  
->  				/* Examine each inode in this chunk */
-> -				for (j = startidx; j < endidx; j++) {
-> +				bufoff = ((XFS_AGINO_TO_OFFSET(mp, rino) - startidx) << mp->m_sb.sb_inodelog);
-> +				for (j = startidx; j < endidx; j++, bufoff += (1 << mp->m_sb.sb_inodelog)) {
-
-Here as well.
-
-Though, does this work for sparse inodes? Suppose we start halfway into
-a sparse inode record. So XFS_AGINO_TO_OFFSET(mp, rino) is 0 since we're
-at the first inode of the fs block; and say startidx is 32 as that could
-be the first real inode index in the record. It looks like we could go
-off the rails in that case..?
-
-Brian
-
->  					if (ino_issparse(&rp[i], j))
->  						continue;
->  					isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
->  					if (isfree)
->  						nfree++;
->  					process_inode(agf, agino + j,
-> -						(xfs_dinode_t *)((char *)iocur_top->data + ((j - startidx) << mp->m_sb.sb_inodelog)),
-> +						(xfs_dinode_t *)((char *)iocur_top->data + bufoff),
->  							isfree);
->  				}
->  				pop_cur();
+>  #endif	/* __XFS_MKFS_H__ */
 > 
 > _______________________________________________
 > xfs mailing list
