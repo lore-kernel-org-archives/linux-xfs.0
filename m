@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BB6A37CB1
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 09:41:37 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4BBC57CB1
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 13:15:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 48ABDAC003
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 07:41:37 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id y7PC2d2yveS04ZbB (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 36DE2304048
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 11:15:01 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id vpgsdbgQHyHoTJMF (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 07:41:36 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 74278C0A9CE8
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 15:41:35 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-28.bos.redhat.com [10.18.41.28])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u11FfZdK005634
-	for <xfs@oss.sgi.com>; Mon, 1 Feb 2016 10:41:35 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: fix xfs_log_ticket leak in xfs_end_io() after fs shutdown
-Date: Mon,  1 Feb 2016 10:56:47 -0500
-Message-Id: <1454342207-52734-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 11:14:55 -0800 (PST)
+Date: Mon, 1 Feb 2016 11:14:53 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/5] libxfs: refactor the btree size calculator code
+Message-ID: <20160201191453.GH20038@birch.djwong.org>
+References: <20160123003502.2475.99558.stgit@birch.djwong.org>
+	<20160123003508.2475.53723.stgit@birch.djwong.org>
+	<20160201151755.GB3992@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160201151755.GB3992@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +27,179 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-If the filesystem has shut down, xfs_end_io() currently sets an error on
-the ioend and proceeds to ioend destruction. The ioend might contain a
-truncate transaction if the I/O extended the size of the file. This
-transaction is only cleaned up in xfs_setfilesize_ioend(), however,
-which is skipped in this case. This results in an xfs_log_ticket leak
-message when the associate cache slab is destroyed (e.g., on rmmod).
+On Mon, Feb 01, 2016 at 10:17:56AM -0500, Brian Foster wrote:
+> On Fri, Jan 22, 2016 at 04:35:08PM -0800, Darrick J. Wong wrote:
+> > Create a macro to generate btree height calculator functions.
+> > This will be used (much) later when we get to the refcount
+> > btree.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> The refactoring looks fine to me... though shouldn't this head into the
+> kernel first and get backported to xfsprogs (or did I miss that
+> somewhere)?
 
-This was originally reproduced by xfs/141 on a distro kernel. The
-problem is reproducible on an upstream kernel, but not easily detected
-in current upstream if the xfs_log_ticket cache happens to be merged
-with another cache. This can be reproduced more deterministically with
-the 'slab_nomerge' kernel boot option.
+I think I've posted the kernelside version of this patch, though I suppose it
+doesn't really become important until one starts adding the rmap/reflink stuff.
 
-Update xfs_end_io() to proceed with normal end I/O processing after an
-error is set on an ioend due to fs shutdown. The I/O type-based
-processing is already designed to handle an I/O error and ensure that
-the ioend is cleaned up correctly.
+> That and one question below...
+> 
+> >  libxfs/xfs_bmap.c       |   18 +-----------------
+> >  libxfs/xfs_bmap_btree.c |    9 +++++++++
+> >  libxfs/xfs_bmap_btree.h |    3 +++
+> >  libxfs/xfs_btree.c      |   28 ++++++++++++++++++++++++++++
+> >  libxfs/xfs_btree.h      |    3 +++
+> >  5 files changed, 44 insertions(+), 17 deletions(-)
+> > 
+> > 
+> > diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+> > index aef7cf3..c134765 100644
+> > --- a/libxfs/xfs_bmap.c
+> > +++ b/libxfs/xfs_bmap.c
+> > @@ -172,25 +172,9 @@ xfs_bmap_worst_indlen(
+> >  	xfs_inode_t	*ip,		/* incore inode pointer */
+> >  	xfs_filblks_t	len)		/* delayed extent length */
+> >  {
+> > -	int		level;		/* btree level number */
+> > -	int		maxrecs;	/* maximum record count at this level */
+> > -	xfs_mount_t	*mp;		/* mount structure */
+> >  	xfs_filblks_t	rval;		/* return value */
+> >  
+> > -	mp = ip->i_mount;
+> > -	maxrecs = mp->m_bmap_dmxr[0];
+> > -	for (level = 0, rval = 0;
+> > -	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
+> > -	     level++) {
+> > -		len += maxrecs - 1;
+> > -		do_div(len, maxrecs);
+> > -		rval += len;
+> > -		if (len == 1)
+> > -			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+> > -				level - 1;
+> > -		if (level == 0)
+> > -			maxrecs = mp->m_bmap_dmxr[1];
+> > -	}
+> > +	rval = xfs_bmbt_calc_size(ip->i_mount, len);
+> 
+> We go from xfs_filblks_t to unsigned long here. Isn't the latter 4 bytes
+> on 32-bit systems? Was that intentional?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_aops.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Semi-intentional.  The 'len' argument is the number of records you want to
+store in the btree.  For a bmbt, we're capped by di_nextents/di_anextents,
+which limit us to 2^32 records and I think the methods in xfs_bmap.c won't
+create an extent longer than MAXEXTLEN (2^21) blocks anyway.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 379c089..7bf8512 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -214,10 +214,12 @@ xfs_end_io(
- 	struct xfs_inode *ip = XFS_I(ioend->io_inode);
- 	int		error = 0;
- 
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+	/*
-+	 * Set an error if the mount has shut down and proceed with end I/O
-+	 * processing so it can perform whatever cleanups are necessary.
-+	 */
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		ioend->io_error = -EIO;
--		goto done;
--	}
- 
- 	/*
- 	 * For unwritten extents we need to issue transactions to convert a
--- 
-2.4.3
+OTOH I suppose the rmap btree can store more than 2^32 records when reflink
+is turned on (not that you'd want to) so this could be widened to ULL.
+
+--D
+
+> 
+> Brian
+> 
+> >  	return rval;
+> >  }
+> >  
+> > diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+> > index 2ef1836..3c595e2 100644
+> > --- a/libxfs/xfs_bmap_btree.c
+> > +++ b/libxfs/xfs_bmap_btree.c
+> > @@ -880,3 +880,12 @@ xfs_bmbt_change_owner(
+> >  	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> >  	return error;
+> >  }
+> > +
+> > +xfs_filblks_t
+> > +xfs_bmbt_calc_size(
+> > +	struct xfs_mount	*mp,
+> > +	unsigned long		len)
+> > +{
+> > +	return xfs_btree_calc_size(mp, mp->m_bmap_dmxr,
+> > +			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), len);
+> > +}
+> > diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
+> > index 819a8a4..04bc6e2 100644
+> > --- a/libxfs/xfs_bmap_btree.h
+> > +++ b/libxfs/xfs_bmap_btree.h
+> > @@ -140,4 +140,7 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
+> >  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+> >  		struct xfs_trans *, struct xfs_inode *, int);
+> >  
+> > +extern xfs_filblks_t xfs_bmbt_calc_size(struct xfs_mount *mp,
+> > +		unsigned long len);
+> > +
+> >  #endif	/* __XFS_BMAP_BTREE_H__ */
+> > diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+> > index 658f27e..d5f16c5 100644
+> > --- a/libxfs/xfs_btree.c
+> > +++ b/libxfs/xfs_btree.c
+> > @@ -4081,6 +4081,34 @@ xfs_btree_change_owner(
+> >  	return 0;
+> >  }
+> >  
+> > +/*
+> > + * xfs_btree_calc_size() -- Calculate the number of blocks needed to store
+> > + *			    a given number of records.
+> > + */
+> > +xfs_filblks_t
+> > +xfs_btree_calc_size(
+> > +	struct xfs_mount	*mp,
+> > +	uint			*limits,
+> > +	int			maxlevels,
+> > +	unsigned long		len)
+> > +{
+> > +	int			level;
+> > +	int			maxrecs;
+> > +	xfs_filblks_t		rval;
+> > +
+> > +	maxrecs = limits[0];
+> > +	for (level = 0, rval = 0; level < maxlevels; level++) {
+> > +		len += maxrecs - 1;
+> > +		do_div(len, maxrecs);
+> > +		rval += len;
+> > +		if (len == 1)
+> > +			return rval + maxlevels - level - 1;
+> > +		if (level == 0)
+> > +			maxrecs = limits[1];
+> > +	}
+> > +	return rval;
+> > +}
+> > +
+> >  /**
+> >   * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
+> >   *				      btree block
+> > diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+> > index 48cb251..b25ffd3 100644
+> > --- a/libxfs/xfs_btree.h
+> > +++ b/libxfs/xfs_btree.h
+> > @@ -465,6 +465,9 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+> >  #define XFS_BTREE_TRACE_ARGR(c, r)
+> >  #define	XFS_BTREE_TRACE_CURSOR(c, t)
+> >  
+> > +xfs_filblks_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+> > +		int maxlevels, unsigned long len);
+> > +
+> >  bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+> >  bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+> >  
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
