@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DED637C8C
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 11:55:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BB7CF8F804C
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 09:55:12 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id s5yTR2DWK5F3cpWq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Feb 2016 09:55:11 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 6D34A64454
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 17:55:10 +0000 (UTC)
-Date: Fri, 19 Feb 2016 12:55:08 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_io: implement 'inode' command V6
-Message-ID: <20160219175508.GD27263@bfoster.bfoster>
-References: <1455814159-14191-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4E8EC7CA3
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 02:59:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22A5E304051
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 00:59:43 -0800 (PST)
+Received: from mail.stepping-stone.ch (mail.stepping-stone.ch
+	[194.176.109.206]) by cuda.sgi.com with ESMTP id
+	IRyalYA4O82PMJvI (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 01 Feb 2016 00:59:35 -0800 (PST)
+Subject: Re: Random write result differences between RAID device and XFS
+References: <56AB44AF.8020807@purplehaze.ch> <20160129222553.GK20456@dastard>
+	<56AC93EC.80202@purplehaze.ch> <20160201054639.GU6033@dastard>
+From: Christian Affolter <c.affolter@purplehaze.ch>
+Message-ID: <56AF1E6B.5090402@purplehaze.ch>
+Date: Mon, 1 Feb 2016 09:59:23 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1455814159-14191-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <20160201054639.GU6033@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,204 +30,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Feb 18, 2016 at 05:49:19PM +0100, Carlos Maiolino wrote:
-> Implements a new xfs_io command, named 'inode', which is supposed to be
-> used to query information about inode's existence and its physical size
-> in the filesystem.
-> 
-> Supported options:
-> 
-> Default:     -- Return true(1) or false(0) if any inode greater than
->                 32bits has been found in the filesystem
-> [num]        -- Return inode number or 0 if the inode [num] is in use
-> -n [num]     -- Return the next valid inode after [num]
-> -v           -- verbose mode
->                 Display the inode number and its physical size according to the
-> 		argument used
-> 
-> No manpage sent because there were changes in the supported options and its
-> descriptions.
-> I'll send the manpage after the options and descriptions are reviewed.
-> 
-> - Changelog
-> 
-> V3:
-> 	- Merge all 3 patches from the V2 together in a single patch
-> 	- Rework of '-n [num]' and 'num' only arguments algorithm
-> 	- Argument -n now relies on bulkreq.count to check for next inodes, not
-> 	  on bstat.bs_ino anymore.
-> 	- for loop in ret_lsize or ret_largest case, now relies on count being 0
-> 	  to break the loop
-> 
-> V4:
-> 	- Refactor inode_f function to reduce its size and easier logic
-> 	- Implement error handlers for invalid command combination (hopefully
-> 	  all invalid combinations).
-> 	- use a single xfs_inogrp array for keep track of inodes
-> 	- Fix missing newline in inode_help()
-> 	- Rewrite help message in inode_help()
-> 	- Fix indentation
-> 
-> V5:
-> 	- Reduce the amount of options
-> 	- remove igrp_rec variable, and use igroup[lastgrp] directly to get
-> 	  information from the last inode groups returned by ioctl
-> 
-> V6:
-> 	- Re-use userino variable to reduce code duplication for command output
-> 	- Use verbose option as an extension to another commands
-> 	- report usage message when -n option is passed stand-alone
-> 	- Refactor command outputs
-> 	- Add a few comments to the code
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  io/open.c | 150 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 150 insertions(+)
-> 
-> diff --git a/io/open.c b/io/open.c
-> index 037843d..5e607f1 100644
-...
-> +
-> +static int
-> +inode_f(
-> +	  int			argc,
-> +	  char			**argv)
-> +{
-...
-> +
-> +	/*
-> +	 * Inode number can be passed with or without extra arguments, so we
-> +	 * should handle inode numbers passed by user out of getopt()
-> +	 */
-> +	if (optind < argc) {
-> +
-> +		if (ret_next) {
-> +			cmd = XFS_IOC_FSBULKSTAT;
-> +		} else {
-> +			if (argc > 2)
-> +				return command_usage(&inode_cmd);
+Hello Dave,
 
-FYI, this means one can't do the following:
-
-  xfs_io -c "inode -v 123" <mnt>
-
-Otherwise it looks good to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +			else
-> +				cmd = XFS_IOC_FSBULKSTAT_SINGLE;
-> +		}
-> +
-> +		userino = strtoull(argv[optind], &p, 10);
-> +		if ((*p != '\0')) {
-> +			printf(_("[num] must be a numeric value\n"));
-> +			exitcode = 1;
-> +			return 0;
-> +		}
-> +
-> +		bulkreq.lastip = &userino;
-> +		bulkreq.icount = 1;
-> +		bulkreq.ubuffer = &bstat;
-> +		bulkreq.ocount = &count;
-> +
-> +		if (xfsctl(file->name, file->fd, cmd, &bulkreq)) {
-> +			if (errno == EINVAL) {
-> +				if (!ret_next)
-> +					printf("0\n");
-> +			} else {
-> +				perror("xfsctl");
-> +			}
-> +			exitcode = 1;
-> +			return 0;
-> +		}
-> +
-> +		if (ret_next)
-> +			userino = bstat.bs_ino;
-> +
-> +		if (verbose)
-> +			printf("%llu:%d\n",
-> +			       userino,
-> +			       userino > XFS_MAXINUMBER_32 ? 64 : 32);
-> +		else
-> +			/* Inode in use */
-> +			printf("%llu\n", userino);
-> +		return 0;
-> +
-> +	/* -n option must not be used stand alone */
-> +	} else if (ret_next) {
-> +		return command_usage(&inode_cmd);
-> +	}
-> +
-> +	bulkreq.lastip = &last;
-> +	bulkreq.icount = 1024; /* User-defined maybe!? */
-> +	bulkreq.ubuffer = &igroup;
-> +	bulkreq.ocount = &count;
-> +
-> +	for (;;) {
-> +		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-> +				&bulkreq)) {
-> +			perror("XFS_IOC_FSINUMBERS");
-> +			exitcode = 1;
-> +			return 0;
-> +		}
-> +
-> +		if (count == 0)
-> +			break;
-> +
-> +		lastgrp = count;
-> +	}
-> +
-> +	lastgrp--;
-> +	lastino = igroup[lastgrp].xi_startino +
-> +		  xfs_highbit64(igroup[lastgrp].xi_allocmask);
-> +
-> +	if (verbose)
-> +		printf("%llu:%d\n", lastino,
-> +			lastino > XFS_MAXINUMBER_32 ? 64 : 32);
-> +	else
-> +		printf("%d\n", lastino > XFS_MAXINUMBER_32 ? 1 : 0);
-> +
-> +	return 0;
-> +}
-> +
->  void
->  open_init(void)
->  {
-> @@ -815,6 +954,16 @@ open_init(void)
->  		_("get/set preferred extent size (in bytes) for the open file");
->  	extsize_cmd.help = extsize_help;
->  
-> +	inode_cmd.name = "inode";
-> +	inode_cmd.cfunc = inode_f;
-> +	inode_cmd.args = _("[-n | -v] [num]");
-> +	inode_cmd.argmin = 0;
-> +	inode_cmd.argmax = 2;
-> +	inode_cmd.flags = CMD_NOMAP_OK;
-> +	inode_cmd.oneline =
-> +		_("Query inode number usage in the filesystem");
-> +	inode_cmd.help = inode_help;
-> +
->  	add_command(&open_cmd);
->  	add_command(&stat_cmd);
->  	add_command(&close_cmd);
-> @@ -822,4 +971,5 @@ open_init(void)
->  	add_command(&chproj_cmd);
->  	add_command(&lsproj_cmd);
->  	add_command(&extsize_cmd);
-> +	add_command(&inode_cmd);
->  }
-> -- 
-> 2.4.3
+On 01.02.2016 06:46, Dave Chinner wrote:
+> On Sat, Jan 30, 2016 at 11:43:56AM +0100, Christian Affolter wrote:
+>> Hi Dave,
+>>
+>> On 29.01.2016 23:25, Dave Chinner wrote:
+>>> On Fri, Jan 29, 2016 at 11:53:35AM +0100, Christian Affolter wrote:
+>>>> Hi everyone,
+>>>>
+>>>> I'm trying to understand the differences of some bandwidth and IOPs test
+>>>> results I see while running a random-write full-stripe-width aligned fio
+>>>> test (using libaio with direct IO) on a hardware RAID 6 raw device
+>>>> versus on the same device with the XFS file system on top of it.
+>>>>
+>>>> On the raw device I get:
+>>>> write: io=24828MB, bw=423132KB/s, iops=137, runt= 60085msec
+>>>>
+>>>> With XFS on top of it:
+>>>> write: io=14658MB, bw=249407KB/s, iops=81, runt= 60182msec
+>>>
+>>> Now repeat with a file that is contiguously allocated before you
+>>> start. And also perhaps with the "swalloc" mount option.
+>>
+>> Wow, thanks! After specifying --fallocate=none (instead of the default
+>> fallocate=posix), bandwidth and iops increases and are even higher than
+>> on the raw device:
+>>
+>> write: io=30720MB, bw=599232KB/s, iops=195, runt= 52496msec
+>>
+>> I'm eager to learn what's going on behind the scenes, can you give a
+>> short explanation?
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Usually when concurrent direct IO writes are slower than the raw
+> device it's because something is causing IO submission
+> serialisation.  Usually that's to do with writes that extend the
+> file because that can require the inode to be locked exclusively.
+> Whatever behaviour the fio configuration change modifed, it removed
+> the IO submission serialisation and so it's now running at full disk
+> speed.
+> 
+> As to why XFS is faster than the raw block device, the XFS file
+> is only 30GB, so the random writes are only seeking a short
+> distance compared to the block device test which is seeking across
+> the whole device.
+> 
+>> Btw. mounting the volume with "swalloc" didn't make any change.
+> 
+> Which means there is no performance differential between stripe unit
+> and stripe width aligned writes in this test on your hardware.
+
+Thank you so much for the detailed explanation and taking the time to help.
+
+
+Best,
+Chris
 
 _______________________________________________
 xfs mailing list
