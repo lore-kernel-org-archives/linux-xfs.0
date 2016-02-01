@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 562527CB1
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 09:02:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B8478F8033
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 07:02:48 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id BD99D7CB5
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 09:03:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9FDAB8F8035
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 07:03:42 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Hx3Cui2BYUDwBP4j (version=TLSv1.2
+	cuda.sgi.com with ESMTP id xPPhUNnnMgWh5lsj (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 07:02:44 -0800 (PST)
-Date: Mon, 1 Feb 2016 10:17:56 -0500
+	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 07:03:38 -0800 (PST)
+Date: Mon, 1 Feb 2016 10:18:49 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] libxfs: refactor the btree size calculator code
-Message-ID: <20160201151755.GB3992@bfoster.bfoster>
+Subject: Re: [PATCH 4/5] xfs_db: don't error out when blocksize > 64 *
+	inodesize
+Message-ID: <20160201151849.GC3992@bfoster.bfoster>
 References: <20160123003502.2475.99558.stgit@birch.djwong.org>
-	<20160123003508.2475.53723.stgit@birch.djwong.org>
+	<20160123003525.2475.44264.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160123003508.2475.53723.stgit@birch.djwong.org>
+In-Reply-To: <20160123003525.2475.44264.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,147 +34,84 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 22, 2016 at 04:35:08PM -0800, Darrick J. Wong wrote:
-> Create a macro to generate btree height calculator functions.
-> This will be used (much) later when we get to the refcount
-> btree.
+On Fri, Jan 22, 2016 at 04:35:25PM -0800, Darrick J. Wong wrote:
+> When the block size is large enough that multiple inode chunks can fit
+> in a single block (e.g. 64k blocks, 512 byte inodes) we must calculate
+> the per-chunk block size and the buffer offset correctly so that check
+> actually examines the correct metadata.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-The refactoring looks fine to me... though shouldn't this head into the
-kernel first and get backported to xfsprogs (or did I miss that
-somewhere)?
-
-That and one question below...
-
->  libxfs/xfs_bmap.c       |   18 +-----------------
->  libxfs/xfs_bmap_btree.c |    9 +++++++++
->  libxfs/xfs_bmap_btree.h |    3 +++
->  libxfs/xfs_btree.c      |   28 ++++++++++++++++++++++++++++
->  libxfs/xfs_btree.h      |    3 +++
->  5 files changed, 44 insertions(+), 17 deletions(-)
+>  db/check.c |   13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
 > 
 > 
-> diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-> index aef7cf3..c134765 100644
-> --- a/libxfs/xfs_bmap.c
-> +++ b/libxfs/xfs_bmap.c
-> @@ -172,25 +172,9 @@ xfs_bmap_worst_indlen(
->  	xfs_inode_t	*ip,		/* incore inode pointer */
->  	xfs_filblks_t	len)		/* delayed extent length */
->  {
-> -	int		level;		/* btree level number */
-> -	int		maxrecs;	/* maximum record count at this level */
-> -	xfs_mount_t	*mp;		/* mount structure */
->  	xfs_filblks_t	rval;		/* return value */
+> diff --git a/db/check.c b/db/check.c
+> index 838db53..4e2768e 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -4386,6 +4386,7 @@ scanfunc_ino(
+>  	__u16			holemask;
+>  	xfs_agino_t		rino;
+>  	xfs_extlen_t		cblocks;
+> +	int			bufoff;
 >  
-> -	mp = ip->i_mount;
-> -	maxrecs = mp->m_bmap_dmxr[0];
-> -	for (level = 0, rval = 0;
-> -	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-> -	     level++) {
-> -		len += maxrecs - 1;
-> -		do_div(len, maxrecs);
-> -		rval += len;
-> -		if (len == 1)
-> -			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-> -				level - 1;
-> -		if (level == 0)
-> -			maxrecs = mp->m_bmap_dmxr[1];
-> -	}
-> +	rval = xfs_bmbt_calc_size(ip->i_mount, len);
+>  	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
+>  	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
+> @@ -4455,6 +4456,8 @@ scanfunc_ino(
+>  				rino = agino + startidx;
+>  				cblocks = (endidx - startidx) >>
+>  						mp->m_sb.sb_inopblog;
+> +				if (cblocks == 0)
+> +					cblocks = 1;
 
-We go from xfs_filblks_t to unsigned long here. Isn't the latter 4 bytes
-on 32-bit systems? Was that intentional?
+A comment would be nice here (i.e., "handle the case where the entire
+chunk is in a single block").
+
+>  
+>  				/* Check the sparse chunk alignment */
+>  				if (sparse &&
+> @@ -4468,8 +4471,9 @@ scanfunc_ino(
+>  				}
+>  
+>  				/* Check the block map */
+> -				set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
+> -					cblocks, DBM_INODE, seqno, bno);
+> +				if (XFS_AGINO_TO_OFFSET(mp, rino) == 0)
+> +					set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, rino),
+> +						cblocks, DBM_INODE, seqno, bno);
+>  
+>  				push_cur();
+>  				set_cur(&typtab[TYP_INODE],
+> @@ -4489,14 +4493,15 @@ scanfunc_ino(
+>  				}
+>  
+>  				/* Examine each inode in this chunk */
+> -				for (j = startidx; j < endidx; j++) {
+> +				bufoff = ((XFS_AGINO_TO_OFFSET(mp, rino) - startidx) << mp->m_sb.sb_inodelog);
+> +				for (j = startidx; j < endidx; j++, bufoff += (1 << mp->m_sb.sb_inodelog)) {
+
+Here as well.
+
+Though, does this work for sparse inodes? Suppose we start halfway into
+a sparse inode record. So XFS_AGINO_TO_OFFSET(mp, rino) is 0 since we're
+at the first inode of the fs block; and say startidx is 32 as that could
+be the first real inode index in the record. It looks like we could go
+off the rails in that case..?
 
 Brian
 
->  	return rval;
->  }
->  
-> diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-> index 2ef1836..3c595e2 100644
-> --- a/libxfs/xfs_bmap_btree.c
-> +++ b/libxfs/xfs_bmap_btree.c
-> @@ -880,3 +880,12 @@ xfs_bmbt_change_owner(
->  	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
->  	return error;
->  }
-> +
-> +xfs_filblks_t
-> +xfs_bmbt_calc_size(
-> +	struct xfs_mount	*mp,
-> +	unsigned long		len)
-> +{
-> +	return xfs_btree_calc_size(mp, mp->m_bmap_dmxr,
-> +			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), len);
-> +}
-> diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
-> index 819a8a4..04bc6e2 100644
-> --- a/libxfs/xfs_bmap_btree.h
-> +++ b/libxfs/xfs_bmap_btree.h
-> @@ -140,4 +140,7 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
->  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
->  		struct xfs_trans *, struct xfs_inode *, int);
->  
-> +extern xfs_filblks_t xfs_bmbt_calc_size(struct xfs_mount *mp,
-> +		unsigned long len);
-> +
->  #endif	/* __XFS_BMAP_BTREE_H__ */
-> diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-> index 658f27e..d5f16c5 100644
-> --- a/libxfs/xfs_btree.c
-> +++ b/libxfs/xfs_btree.c
-> @@ -4081,6 +4081,34 @@ xfs_btree_change_owner(
->  	return 0;
->  }
->  
-> +/*
-> + * xfs_btree_calc_size() -- Calculate the number of blocks needed to store
-> + *			    a given number of records.
-> + */
-> +xfs_filblks_t
-> +xfs_btree_calc_size(
-> +	struct xfs_mount	*mp,
-> +	uint			*limits,
-> +	int			maxlevels,
-> +	unsigned long		len)
-> +{
-> +	int			level;
-> +	int			maxrecs;
-> +	xfs_filblks_t		rval;
-> +
-> +	maxrecs = limits[0];
-> +	for (level = 0, rval = 0; level < maxlevels; level++) {
-> +		len += maxrecs - 1;
-> +		do_div(len, maxrecs);
-> +		rval += len;
-> +		if (len == 1)
-> +			return rval + maxlevels - level - 1;
-> +		if (level == 0)
-> +			maxrecs = limits[1];
-> +	}
-> +	return rval;
-> +}
-> +
->  /**
->   * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
->   *				      btree block
-> diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-> index 48cb251..b25ffd3 100644
-> --- a/libxfs/xfs_btree.h
-> +++ b/libxfs/xfs_btree.h
-> @@ -465,6 +465,9 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
->  #define XFS_BTREE_TRACE_ARGR(c, r)
->  #define	XFS_BTREE_TRACE_CURSOR(c, t)
->  
-> +xfs_filblks_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-> +		int maxlevels, unsigned long len);
-> +
->  bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
->  bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
->  
+>  					if (ino_issparse(&rp[i], j))
+>  						continue;
+>  					isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j);
+>  					if (isfree)
+>  						nfree++;
+>  					process_inode(agf, agino + j,
+> -						(xfs_dinode_t *)((char *)iocur_top->data + ((j - startidx) << mp->m_sb.sb_inodelog)),
+> +						(xfs_dinode_t *)((char *)iocur_top->data + bufoff),
+>  							isfree);
+>  				}
+>  				pop_cur();
 > 
 > _______________________________________________
 > xfs mailing list
