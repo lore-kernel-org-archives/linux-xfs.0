@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 720297CA3
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 03:57:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EC4E304043
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 01:57:12 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id X3uqk0SrY35vlu5P (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id D51EC7CA6
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 04:11:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C45F1304048
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 02:11:27 -0800 (PST)
+Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
+	with ESMTP id pndtYieOwWSeUteA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 01:57:11 -0800 (PST)
-Date: Mon, 1 Feb 2016 10:57:07 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: Split default quota limits by quota type V3
-Message-ID: <20160201095707.GB8141@redhat.com>
-References: <1454000266-22541-1-git-send-email-cmaiolino@redhat.com>
-	<56AA51B7.7030403@sandeen.net>
+	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 02:11:21 -0800 (PST)
+Date: Mon, 1 Feb 2016 02:11:18 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: 4.5-rc2: Torn write (CRC failure) detected
+Message-ID: <alpine.DEB.2.20.10.1602010152110.22992@trent.utfs.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56AA51B7.7030403@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,88 +22,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, bfoster@redhat.com
 
-On Thu, Jan 28, 2016 at 11:36:55AM -0600, Eric Sandeen wrote:
-> On 1/28/16 10:57 AM, Carlos Maiolino wrote:
-> > Default quotas are globally set due historical reasons. IRIX only supported user
-> > and project quotas, and default quota was only applied to user quotas.
-> > 
-> > In Linux, when a default quota is set, all different quota types inherits the
-> > same default value.
-> > 
-> > An user with a quota limit larger than the default quota value, will still be
-> > limited to the default value because the group quotas also inherits the default
-> > quotas. Unless the group which the user belongs to have a custom quota limit
-> > set.
-> > 
-> > This patch aims to split the default quota value by quota type. Allowing each
-> > quota type having different default values.
-> > 
-> > Default time limits are still set globally. XFS does not set a per-user/group
-> > timer, but a single global timer. For changing this behavior, some changes
-> > should be made in user-space tools another bugs being fixed.
-> 
-> Some minor comments about comments below.  But the code looks fine to me,
-> so:
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> and if you want to fix the comments & resend w/ my review tag I think that'd
-> be ok.
-> 
-> Care to write an xfstests testcase for the default quota limit while you're
-> at it?
-> 
-> Thanks,
-> -Eric
-> 
-> > Changelog:
-> > 
-> > 	V2 - Remove comment about old behavior
-> > 	V3 - Keep time limit configuration inside xfs_qm_init_quotainfo to keep
-> > 	     the current behavior of quota timers
-> > 
-> > +	 *
-> > +	 * Timers and warnings are globally set by the first timer found in
-> > +	 * user/group/proj quota types, otherwise a default value is used.
-> > +	 * This should be splitted into different fields per quota type.
-> 
-> s/splitted/split/
-> 
-> >  	 */
-> >  	error = xfs_qm_dqread(mp, 0,
-> >  			XFS_IS_UQUOTA_RUNNING(mp) ? XFS_DQ_USER :
-> >  			 (XFS_IS_GQUOTA_RUNNING(mp) ? XFS_DQ_GROUP :
-> >  			  XFS_DQ_PROJ),
-> >  			XFS_QMOPT_DOWARN, &dqp);
-> > +
-> >  	if (!error) {
-> >  		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
-> >  
-> > -		/*
-> > -		 * The warnings and timers set the grace period given to
-> > -		 * a user or group before he or she can not perform any
-> > -		 * more writing. If it is zero, a default is used.
-> > -		 */
-> 
-> Not sure why you removed this comment?
-> 
-Regarding this comment, I think it's just redundant with the previous comment, I
-left it in the code for the V4 though, I believe Dave can rip it off if it is
-really redundant.
-
-Cheers
-
--- 
-Carlos
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SSB0cmllZCB0byB1cGdyYWRlIGZyb20gNC40LjAtcmM1IHRvIDQuNS4wLXJjMiBidXQgSSdtIGN1
+cnJlbnRseSB1bmFibGUgdG8gCm1vdW50IG15IFhGUyBmaWxlc3lzdGVtcyBhbnkgbW9yZSBvbiB0
+aGlzIFBvd2VyUEMgRzQgbWFjaGluZToKCiMgbW91bnQgLXQgeGZzIC1vIHJvIC9kZXYvbWFwcGVy
+L3dkYzEgL21udC9kaXNrCm1vdW50OiBtb3VudCAvZGV2L21hcHBlci93ZGMxIG9uIC9tbnQvZGlz
+ayBmYWlsZWQ6IEJhZCBtZXNzYWdlCgojIGRtZXNnIHwgdGFpbApbIDIwMzUuOTM3MTY1XSBYRlMg
+KGRtLTIpOiBNb3VudGluZyBWNCBGaWxlc3lzdGVtClsgMjAzNi4zNTcxOThdIFhGUyAoZG0tMik6
+IFRvcm4gd3JpdGUgKENSQyBmYWlsdXJlKSBkZXRlY3RlZCBhdCBsb2cgYmxvY2sgMHgyOTZlNC4g
+VHJ1bmNhdGluZyBoZWFkIGJsb2NrIGZyb20gMHgyOTZlOC4KWyAyMDM2LjM2MDE1NV0gWEZTIChk
+bS0yKTogZmFpbGVkIHRvIGxvY2F0ZSBsb2cgdGFpbApbIDIwMzYuMzYwMjIyXSBYRlMgKGRtLTIp
+OiBsb2cgbW91bnQvcmVjb3ZlcnkgZmFpbGVkOiBlcnJvciAtNzQKWyAyMDM2LjM2MDc1MV0gWEZT
+IChkbS0yKTogbG9nIG1vdW50IGZhaWxlZAoKQUZBSUNTIHRoZSBtZXNzYWdlIGdvdCBpbnRyb2R1
+Y2VkIGJ5ICJ4ZnM6IGRldGVjdCBhbmQgdHJpbSB0b3JuIHdyaXRlcyAKZHVyaW5nIGxvZyByZWNv
+dmVyeSIgLSBob3dldmVyLCB0aGVyZSBpcyBubyBjcmFzaCBpbnZvbHZlZCBoZXJlLiBUaGUgCnN5
+c3RlbSB3YXMgcnVubmluZyA0LjQuMC1yYzUganVzdCBmaW5lIGFuZCByZWJvb3RlZCBwcm9wZXJs
+eSBpbnRvIAo0LjUuMC1yYzIuIFRoZSB1bmRlcmx5aW5nIHN0b3JhZ2UgaXMgYW4gZXh0ZXJuYWwg
+ZGlzayBhdHRhY2hlZCB2aWEgCkZpcmV3aXJlIGFuZCBkbS1jcnlwdCBvbiB0b3Agb2YgdGhhdC4K
+ClJ1bm5pbmcgInhmc19yZXBhaXIgLW4iIG9uIHRoZSBkZXZpY2UgY2FtZSBiYWNrIHdpdGggZXJy
+b3IgY29kZSAxIChzZWUgCmJlbG93IGZvciBpdHMgbG9nWzBdKS4KClRoaXMgaXMgYWxsIG9uIERl
+Ymlhbi9zdGFibGUgd2l0aCB4ZnNfcmVwYWlyIHYzLjIuMSAtIGJ1dCBJIHdhcyB1bmFibGUgdG8g
+CmNvbXBpbGUgeGZzcHJvZ3MgZnJvbSB0aGUgY3VycmVudCBnaXQgdHJlZSwgYmVjYXVzZSBvZiBh
+IGNvbXBpbGF0aW9uIGVycm9yWzFdCgpXb3VsZCBpdCBiZSBzYWZlIHRvIHJ1biB4ZnNfcmVwYWly
+IHdpdGhvdXQgLW4gb24gdGhhdCBkZXZpY2U/CgpDaHJpc3RpYW4uCgpbMF0geGZzX3JlcGFpcgoj
+IGZpbGUgLUxzIC9kZXYvbWFwcGVyL3dkYzEKL2Rldi9tYXBwZXIvd2RjMTogU0dJIFhGUyBmaWxl
+c3lzdGVtIGRhdGEgKGJsa3N6IDQwOTYsIGlub3N6IDI1NiwgdjIgZGlycykKCiMgY3J5cHRzZXR1
+cCBzdGF0dXMgd2RjMQovZGV2L21hcHBlci93ZGMxIGlzIGFjdGl2ZS4KICB0eXBlOiAgICBMVUtT
+MQogIGNpcGhlcjogIGFlcy1jYmMtZXNzaXY6c2hhMjU2CiAga2V5c2l6ZTogMTI4IGJpdHMKICBk
+ZXZpY2U6ICAvZGV2L3NkZTEKICBvZmZzZXQ6ICAxMDMyIHNlY3RvcnMKICBzaXplOiAgICAxOTUz
+NTI0MDY5IHNlY3RvcnMKICBtb2RlOiAgICByZWFkL3dyaXRlCgojIHRpbWUgeGZzX3JlcGFpciAt
+biAvZGV2L21hcHBlci93ZGMxOyBlY2hvICQ/ClBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJpZnkgc3Vw
+ZXJibG9jay4uLgpQaGFzZSAyIC0gdXNpbmcgaW50ZXJuYWwgbG9nCiAgICAgICAgLSBzY2FuIGZp
+bGVzeXN0ZW0gZnJlZXNwYWNlIGFuZCBpbm9kZSBtYXBzLi4uCnNiX2ZkYmxvY2tzIDE1NjgxOTY4
+LCBjb3VudGVkIDE1NzMxMTIwCiAgICAgICAgLSBmb3VuZCByb290IGlub2RlIGNodW5rClBoYXNl
+IDMgLSBmb3IgZWFjaCBBRy4uLgogICAgICAgIC0gc2NhbiAoYnV0IGRvbid0IGNsZWFyKSBhZ2kg
+dW5saW5rZWQgbGlzdHMuLi4KICAgICAgICAtIHByb2Nlc3Mga25vd24gaW5vZGVzIGFuZCBwZXJm
+b3JtIGlub2RlIGRpc2NvdmVyeS4uLgogICAgICAgIC0gYWdubyA9IDAKICAgICAgICAtIGFnbm8g
+PSAxCiAgICAgICAgLSBhZ25vID0gMgogICAgICAgIC0gYWdubyA9IDMKICAgICAgICAtIHByb2Nl
+c3MgbmV3bHkgZGlzY292ZXJlZCBpbm9kZXMuLi4KUGhhc2UgNCAtIGNoZWNrIGZvciBkdXBsaWNh
+dGUgYmxvY2tzLi4uCiAgICAgICAgLSBzZXR0aW5nIHVwIGR1cGxpY2F0ZSBleHRlbnQgbGlzdC4u
+LgogICAgICAgIC0gY2hlY2sgZm9yIGlub2RlcyBjbGFpbWluZyBkdXBsaWNhdGUgYmxvY2tzLi4u
+CiAgICAgICAgLSBhZ25vID0gMAogICAgICAgIC0gYWdubyA9IDEKICAgICAgICAtIGFnbm8gPSAy
+CiAgICAgICAgLSBhZ25vID0gMwpObyBtb2RpZnkgZmxhZyBzZXQsIHNraXBwaW5nIHBoYXNlIDUK
+UGhhc2UgNiAtIGNoZWNrIGlub2RlIGNvbm5lY3Rpdml0eS4uLgogICAgICAgIC0gdHJhdmVyc2lu
+ZyBmaWxlc3lzdGVtIC4uLgogICAgICAgIC0gdHJhdmVyc2FsIGZpbmlzaGVkIC4uLgogICAgICAg
+IC0gbW92aW5nIGRpc2Nvbm5lY3RlZCBpbm9kZXMgdG8gbG9zdCtmb3VuZCAuLi4KUGhhc2UgNyAt
+IHZlcmlmeSBsaW5rIGNvdW50cy4uLgpObyBtb2RpZnkgZmxhZyBzZXQsIHNraXBwaW5nIGZpbGVz
+eXN0ZW0gZmx1c2ggYW5kIGV4aXRpbmcuCgpyZWFsICAgIDFtMjQuODI5cwp1c2VyICAgIDBtNS4w
+MTJzCnN5cyAgICAgMG0xLjIwMHMKMSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICA9PSBFeGl0IGNvZGUKCgoKWzFdIHhmc3Byb2dzL3Y0LjMuMAo9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CkJ1aWxkaW5n
+IGlvCiAgICBbQ0NdICAgICBmaWVtYXAubwpJbiBmaWxlIGluY2x1ZGVkIGZyb20gLi4vaW5jbHVk
+ZS94ZnMuaDo1ODowLAogICAgICAgICAgICAgICAgIGZyb20gaW8uaDoxOSwKICAgICAgICAgICAg
+ICAgICBmcm9tIGZpZW1hcC5jOjI0OgouLi9pbmNsdWRlL3hmcy94ZnNfZnMuaDo0Mjo4OiBlcnJv
+cjogcmVkZWZpbml0aW9uIG9mIOKAmHN0cnVjdCBmc3hhdHRy4oCZCiBzdHJ1Y3QgZnN4YXR0ciB7
+CiAgICAgICAgXgpJbiBmaWxlIGluY2x1ZGVkIGZyb20gZmllbWFwLmM6MjI6MDoKL3Vzci9pbmNs
+dWRlL2xpbnV4L2ZzLmg6MTU1Ojg6IG5vdGU6IG9yaWdpbmFsbHkgZGVmaW5lZCBoZXJlCiBzdHJ1
+Y3QgZnN4YXR0ciB7CiAgICAgICAgXgouLi9pbmNsdWRlL2J1aWxkcnVsZXM6NTk6IHJlY2lwZSBm
+b3IgdGFyZ2V0ICdmaWVtYXAubycgZmFpbGVkCm1ha2VbMl06ICoqKiBbZmllbWFwLm9dIEVycm9y
+IDEKaW5jbHVkZS9idWlsZHJ1bGVzOjM1OiByZWNpcGUgZm9yIHRhcmdldCAnaW8nIGZhaWxlZApt
+YWtlWzFdOiAqKiogW2lvXSBFcnJvciAyCk1ha2VmaWxlOjcwOiByZWNpcGUgZm9yIHRhcmdldCAn
+ZGVmYXVsdCcgZmFpbGVkCm1ha2U6ICoqKiBbZGVmYXVsdF0gRXJyb3IgMgo9PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgpBbmQgaW5kZWVkLCAic3Ry
+dWN0IGZzeGF0dHIiIGlzIGFscmVhZHkgZGVmaW5lZCBpbiAvdXNyL2luY2x1ZGUvbGludXgvZnMu
+aCAKd2hpY2ggaXMgcHJvdmlkZWQgYnkgbGludXgtbGliYy1kZXYsIHdoaWNoIGNhbm5vdCBiZSBy
+ZW1vdmVkIHRoYXQgZWFzaWx5OgoKJCBzdWRvIGFwdC1nZXQgcHVyZ2UgbGludXgtbGliYy1kZXYK
+VGhlIGZvbGxvd2luZyBwYWNrYWdlcyB3aWxsIGJlIFJFTU9WRUQ6CmJ1aWxkLWVzc2VudGlhbCog
+ZGgtYXV0b3JlY29uZiogZysrKiBnKystNC45KiBsaWJibGtpZC1kZXYqIGxpYmJ6Mi1kZXYqIAps
+aWJjNi1kZXYqIGxpYmV4cGF0MS1kZXYqIGxpYmljdS1kZXYqIGxpYm15c3FsY2xpZW50LWRldiog
+bGlibmN1cnNlczUtZGV2KiAKbGlibmN1cnNlc3c1LWRldiogbGlicGFtMGctZGV2KiBsaWJwY3Jl
+My1kZXYqIGxpYnBlcmwtZGV2KiBsaWJweXRob24tZGV2KiAKbGlicHl0aG9uMi43LWRldiogbGli
+c3NsLWRldiogbGlic3RkYysrLTQuOS1kZXYqIGxpYnRvb2wqIGxpYnhtbHJwYy1jb3JlLWMzLWRl
+dioKbGludXgtbGliYy1kZXYqIHB5dGhvbi1kZXYqIHB5dGhvbjIuNy1kZXYqIHV1aWQtZGV2KiB6
+bGliMWctZGV2KgoKTm90ZTogdGhlIGNvbXBpbGF0aW9uIGVycm9yIHdhcyByZXBvcnRlZCBhIGZl
+dyBkYXlzIGFnbyBvbiB0aGUgcWVtdS1kZXZlbCAKbWFpbGluZyBsaXN0IHRvbzoKCiAgW1FlbXUt
+ZGV2ZWxdIHFlbXUgZmFpbHMgdG8gYnVpbGQgb24gNC41LXJjMQogIGh0dHBzOi8vd3d3Lm1haWwt
+YXJjaGl2ZS5jb20vcWVtdS1kZXZlbEBub25nbnUub3JnL21zZzM0ODc1Ni5odG1sCgotLSAKQk9G
+SCBleGN1c2UgIzE1NDoKCllvdSBjYW4gdHVuZSBhIGZpbGUgc3lzdGVtLCBidXQgeW91IGNhbid0
+IHR1bmUgYSBmaXNoIChmcm9tIG1vc3QgdHVuZWZzIG1hbiBwYWdlcykKCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
