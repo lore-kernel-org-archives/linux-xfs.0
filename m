@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AF1217CA2
-	for <xfs@oss.sgi.com>; Sun, 31 Jan 2016 23:05:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 84CE6304059
-	for <xfs@oss.sgi.com>; Sun, 31 Jan 2016 21:05:39 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id B8A9D7CA2
+	for <xfs@oss.sgi.com>; Sun, 31 Jan 2016 23:06:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B308304059
+	for <xfs@oss.sgi.com>; Sun, 31 Jan 2016 21:06:43 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	o7dsbXx7Ym9gp4IU for <xfs@oss.sgi.com>;
-	Sun, 31 Jan 2016 21:05:37 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1aQ6fy-0005Q3-KH
-	for xfs@oss.sgi.com; Mon, 01 Feb 2016 16:05:22 +1100
-Date: Mon, 1 Feb 2016 16:05:22 +1100
+	pbDdkGRZ7IOzNuQs for <xfs@oss.sgi.com>;
+	Sun, 31 Jan 2016 21:06:41 -0800 (PST)
+Date: Mon, 1 Feb 2016 16:06:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: master, for-next branch updated to v4.5-rc2
-Message-ID: <20160201050522.GR6033@dastard>
+Subject: Re: [PATCH] xfs: check sizes of XFS on-disk structures at compile time
+Message-ID: <20160201050626.GS6033@dastard>
+References: <20160111232657.GA7831@birch.djwong.org>
+	<20160115205801.GB5757@birch.djwong.org>
+	<20160115225219.GP6033@dastard>
+	<20160120154035.GH1366@meili.valhalla.31bits.net>
+	<20160122220145.GA26408@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160122220145.GA26408@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,68 +29,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1041827861793985482=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, xfs@oss.sgi.com
 
+On Fri, Jan 22, 2016 at 02:01:45PM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 20, 2016 at 10:40:36AM -0500, Josef 'Jeff' Sipek wrote:
+> > On Sat, Jan 16, 2016 at 09:52:19AM +1100, Dave Chinner wrote:
+> > > On Fri, Jan 15, 2016 at 12:58:01PM -0800, Darrick J. Wong wrote:
+> > > > On Mon, Jan 11, 2016 at 03:26:57PM -0800, Darrick J. Wong wrote:
+> > > > > Check the sizes of XFS on-disk structures when compiling the kernel.
+> > > > > Use this to catch inadvertent changes in structure size due to padding
+> > > > > and alignment issues, etc.
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ....
+> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
+> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
+> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
+> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> > > > > +}
+> > > > 
+> > > > Perhaps this huge function ought to hide away in its own file?
+> > > 
+> > > Yes, I think that's a good idea, and I think it should only be built
+> > > on debug builds, too.
+> > 
+> > Doesn't this turn into nothingness as far as the generated binary is
+> > concerned?  Because if it does, I don't see a reason to keep it debug-only.
+> > Afterall, non-debug builds need to be correct and these are pretty important
+> > checks.  We certainly don't want another ARM structure padding & alignment
+> > fiasco.
+> 
+> I moved the function to a separate header file and changed the declaration to:
+> 
+> static inline void __init xfs_check_ondisk_structs(void)
+> 
+> With any luck that should compile down to an empty inline function which should
+> be optimized out of the resulting code.  Worst case it's a separate function
+> that gets discarded after the module loads.  If Dave doesn't object, I'll leave
+> it enabled for all builds.
 
---===============1041827861793985482==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+g7M9IMkV8truYOl"
-Content-Disposition: inline
+Really, it doesn't matter either way....
 
+Cheers,
 
---+g7M9IMkV8truYOl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi Folks,
-
-I've just updated the master and for-next branches in the XFS tree
-to v4.5-rc2 ready for the next cycle. Please update you local dev
-trees for new patch sumissions.
-
--Dave.
---=20
+Dave.
+-- 
 Dave Chinner
 david@fromorbit.com
-
---+g7M9IMkV8truYOl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJWrueSAAoJEK3oKUf0dfodjV4P/jFMdjVMCE21YNiEgXSSwmiD
-0kLu7X1THVueB4cmH9pGmhdLRgNmQhIb5KnNJ0tWXIpKpPKIwuxKEHrAwxM5ZEQI
-qYPdanXObSjPwVRX3tCarc3NdbhjdPCi+SaXMWd+2CntMGU7rNO12BV5rXKpZdlV
-0fI1zGWZgUxNWM+PGzi/8fg9LDZhdgdyMRhwIorwlou1zQ5wUNkQsb9tdi0usSvA
-u/mrEKuRqpoecaG71bCWd0BURfa4Djo2/JKNRYtgJket7o+zNzI6OQnX7aB+S1WF
-XyFJq3FojSUdLct5tUh++x42kaSD1hBbWBBIjjXPEUhhZcE85gCXpPnPy2nKYQxk
-hgyIK8mN5tAW4pmrJcGXqF/6Df50ySD9f0Xnk3Vz1N6X9Dg4L9qxSID1/BXMZN8N
-GYUsJ+B70pnSRTqhQ/W5aETRlgbts/Srgl306XOgDMmZ+ISk9qGe3mZfVC48TF08
-n312VTNYkr61yMO+QuqKL2ujyotXXrCCi3L/RVwtHdBmjNJQ3TQS6ev7I4TQToK0
-JxCKuGPS5eRLTxxevMX2/TQiJ4Y9dpoB9ffS8veYQAX+tSmrZ7j8uJJwOHdGRljC
-8OL4ecpJoK+GNq+MXjmuMKTT3MmLduU6fv4V0L7Luc4/cEbiXvwTXpkhTyhYmx6V
-xB+IR6VETZjHU2tKrHcQ
-=sV6K
------END PGP SIGNATURE-----
-
---+g7M9IMkV8truYOl--
-
-
---===============1041827861793985482==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1041827861793985482==--
