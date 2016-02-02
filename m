@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0E2A27CB1
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 05:20:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E41398F8033
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 03:20:50 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id KFqg2Q8DHIDh75h8 (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D3B907CB1
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 08:22:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 63CB3AC005
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 06:22:18 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 692vwR8aVhEyIABD (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 03:20:48 -0800 (PST)
-Date: Tue, 2 Feb 2016 12:20:46 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: stop using ioends for direct write completions
-Message-ID: <20160202112046.GB28777@lst.de>
-References: <1452766237-2314-1-git-send-email-hch@lst.de>
-	<20160128131656.GB14876@infradead.org>
-	<20160129141232.GA43184@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 06:22:17 -0800 (PST)
+Date: Tue, 2 Feb 2016 15:22:12 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: Split default quota limits by quota type V3
+Message-ID: <20160202142212.GA5630@redhat.com>
+References: <1454000266-22541-1-git-send-email-cmaiolino@redhat.com>
+	<56AA51B7.7030403@sandeen.net> <20160201095707.GB8141@redhat.com>
+	<20160201212238.GV6033@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160129141232.GA43184@bfoster.bfoster>
+In-Reply-To: <20160201212238.GV6033@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +31,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>, darrick.wong@oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Fri, Jan 29, 2016 at 09:12:33AM -0500, Brian Foster wrote:
-> My understanding is that the original requirement for ioends here was to
-> track the state necessary in order to defer (to wq) completions that had
-> to allocate transactions. Eventually, the deferred buffer state was
-> implemented and we no longer required an ioend for that, so we removed
-> the ioends here:
+On Tue, Feb 02, 2016 at 08:22:38AM +1100, Dave Chinner wrote:
+> On Mon, Feb 01, 2016 at 10:57:07AM +0100, Carlos Maiolino wrote:
+> > On Thu, Jan 28, 2016 at 11:36:55AM -0600, Eric Sandeen wrote:
+> > > On 1/28/16 10:57 AM, Carlos Maiolino wrote:
+> > > >  		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
+> > > >  
+> > > > -		/*
+> > > > -		 * The warnings and timers set the grace period given to
+> > > > -		 * a user or group before he or she can not perform any
+> > > > -		 * more writing. If it is zero, a default is used.
+> > > > -		 */
+> > > 
+> > > Not sure why you removed this comment?
+> > > 
+> > Regarding this comment, I think it's just redundant with the previous comment, I
+> > left it in the code for the V4 though, I believe Dave can rip it off if it is
+> > really redundant.
 > 
->   2ba6623 xfs: don't allocate an ioend for direct I/O completions
+> No, please don't ask me to do make random patch edits on commit -
+> it's your job as a patch submitter to get it right. I will sometimes
+> do this for simple patches or patches that come from a
+> never-seen-before-and-never-seen-again patch submitter, but for a
+> regular developer submitting non-trivial patches I won't change the
+> patches because the issue hasn't been sorted out during peer review.
 > 
-> Then just a couple months later, we merged the following to re-add the
-> ioend into the dio path:
-> 
->   d5cc2e3f xfs: DIO needs an ioend for writes
+Hey, I apologize, I had no intention to give you any extra job :) I meant that
+in case you agreed or not with the comment, I thought you could decide by
+ripping the comment off or not, I had no intention to actually give you some
+unfinished job.
 
-And I complained about that one!  I didn't have time to provide a full
-analysis and the patches around this one were criticial enough.  But this
-patch has the analysis on why ioends are not needed and bad which should
-have been the full review back then.  Note that this new version is
-better than the old ioend removal as it does not just use the private
-data as a boolean, but as a bitmask so that additional information
-such as the COW status can be communicated.
+In any case, I sent a V4 of this patch with the comment's change Eric suggested,
+adding his review-by too, although, a quick look from him again would be nice,
+I'll figure it out with him.
+
+cheers.
+
+
+> Work it out with Eric, get a reviewed-by tag, and I'll apply it as
+> reviewed.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
