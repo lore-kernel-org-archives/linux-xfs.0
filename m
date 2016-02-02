@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 742437CB1
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 19:26:53 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 7FC267CB1
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 23:14:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6638D8F8039
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 17:26:53 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id dKWQ9pmyr4GGAkmb for <xfs@oss.sgi.com>;
-	Mon, 01 Feb 2016 17:26:51 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id AF23663C6064
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 19:26:51 -0600 (CST)
-Subject: Re: [PATCH 1/3] xfs: lock rt summary inode on allocation
-References: <1454373550-3102-1-git-send-email-david@fromorbit.com>
-	<1454373550-3102-2-git-send-email-david@fromorbit.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56B005DA.2030200@sandeen.net>
-Date: Mon, 1 Feb 2016 19:26:50 -0600
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7202B8F8039
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 21:14:34 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	tUl7ns3QbZ3t4Nqv for <xfs@oss.sgi.com>;
+	Mon, 01 Feb 2016 21:14:23 -0800 (PST)
+Date: Tue, 2 Feb 2016 16:14:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/5] xfs_io: print dedupe errors to stderr, not stdout
+Message-ID: <20160202051410.GB32032@dastard>
+References: <20160123003502.2475.99558.stgit@birch.djwong.org>
+	<20160123003531.2475.59752.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <1454373550-3102-2-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <20160123003531.2475.59752.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-
-
-On 2/1/16 6:39 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> RT allocation can fail on a debug kernel with:
-> 
-> XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_bmap.c, line: 4039
-> 
-> When modifying the summary inode during allocation. This occurs
-> because the summary inode is never locked, and xfs_bmapi_*
-> operations expect it to be locked. The summary inode is effectively
-> protected byt he lock on the bitmap inode, so this really is only a
-> debug kernel issue.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Oh, it was easy after all...
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
+On Fri, Jan 22, 2016 at 04:35:31PM -0800, Darrick J. Wong wrote:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_bmap_util.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  io/reflink.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 7087756..fd7f51c 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -202,10 +202,12 @@ xfs_bmap_rtalloc(
->  		ralen = MAXEXTLEN / mp->m_sb.sb_rextsize;
->  
->  	/*
-> -	 * Lock out other modifications to the RT bitmap inode.
-> +	 * Lock out modifications to both the RT bitmap and summary inodes
->  	 */
->  	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-> +	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL);
-> +	xfs_trans_ijoin(ap->tp, mp->m_rsumip, XFS_ILOCK_EXCL);
->  
->  	/*
->  	 * If it's an allocation to an empty file at offset 0,
 > 
+> diff --git a/io/reflink.c b/io/reflink.c
+> index def01be..a09e82d 100644
+> --- a/io/reflink.c
+> +++ b/io/reflink.c
+> @@ -78,11 +78,13 @@ dedupe_ioctl(
+>  			goto done;
+>  		}
+>  		if (info->status < 0) {
+> -			printf("dedupe: %s\n", _(strerror(-info->status)));
+> +			fprintf(stderr, "dedupe: %s\n",
+> +					_(strerror(-info->status)));
+>  			goto done;
+>  		}
+>  		if (info->status == XFS_EXTENT_DATA_DIFFERS) {
+> -			printf(_("Extents did not match.\n"));
+> +			fprintf(stderr, "dedupe: %s\n",
+> +					_("Extents did not match."));
+>  			goto done;
+>  		}
+>  		if (args->length != 0 &&
+
+I think this patch breaks dedupe detection in xfstests. I see the
+dedupe tests running instead of being detected as not supported, and
+all the diffs from test failures contain:
+
+    +dedupe: Invalid argument
+
+This is on 4.5-rc2, so I suspect it's not returning the expected
+"not supported" error to xfstests from the ioctl.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
