@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 547227CB0
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 17:19:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D88B5AC004
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 15:19:45 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id SfoMULraO9o5zbJk (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 15:19:42 -0800 (PST)
-Date: Tue, 2 Feb 2016 23:19:31 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH] dax: allow DAX to look up an inode's block device
-Message-ID: <20160202231931.GR17997@ZenIV.linux.org.uk>
-References: <1454454702-11889-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C4DAC7CAF
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 17:27:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7EC4A8F8040
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 15:27:44 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 2QLkUfEf54er4p0j (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 15:27:42 -0800 (PST)
+Date: Tue, 2 Feb 2016 15:27:35 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] xfs: check sizes of XFS on-disk structures at
+	compile time
+Message-ID: <20160202232735.GE22352@birch.djwong.org>
+References: <20160123003425.2338.18133.stgit@birch.djwong.org>
+	<20160123003444.2338.37236.stgit@birch.djwong.org>
+	<20160127133117.GD60730@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1454454702-11889-1-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20160127133117.GD60730@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +32,183 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jeff Layton <jlayton@poochiereds.net>, linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 02, 2016 at 04:11:42PM -0700, Ross Zwisler wrote:
-
-> However, for raw block devices and for XFS with a real-time device, the
-> value in inode->i_sb->s_bdev is not correct.  With the code as it is
-> currently written, an fsync or msync to a DAX enabled raw block device will
-> cause a NULL pointer dereference kernel BUG.  For this to work correctly we
-> need to ask the block device or filesystem what struct block_device is
-> appropriate for our inode.
+On Wed, Jan 27, 2016 at 08:31:17AM -0500, Brian Foster wrote:
+> On Fri, Jan 22, 2016 at 04:34:44PM -0800, Darrick J. Wong wrote:
+> > Check the sizes of XFS on-disk structures when compiling the kernel.
+> > Use this to catch inadvertent changes in structure size due to padding
+> > and alignment issues, etc.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_ondisk.h |  108 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_super.c  |    3 +
+> >  2 files changed, 111 insertions(+)
+> >  create mode 100644 fs/xfs/xfs_ondisk.h
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > new file mode 100644
+> > index 0000000..56fab46
+> > --- /dev/null
+> > +++ b/fs/xfs/xfs_ondisk.h
+> > @@ -0,0 +1,108 @@
+> > +/*
+> > + * Copyright (c) 2016 Oracle.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +#ifndef __XFS_ONDISK_H
+> > +#define __XFS_ONDISK_H
+> > +
+> > +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
+> > +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
 > 
-> To that end, add a get_bdev(struct inode *) entry point to struct
-> super_operations.  If this function pointer is non-NULL, this notifies DAX
-> that it needs to use it to look up the correct block_device.  If
-> i_sb->get_bdev() is NULL DAX will default to inode->i_sb->s_bdev.
+> We're printing "struct" in the core message as well as part of the
+> structname (where appropriate). E.g., "sizeof(struct struct xfs_acl) is
+> wrong, ..."
 
-Umm...  It assumes that bdev will stay pinned for as long as inode is
-referenced, presumably?  If so, that needs to be documented (and verified
-for existing fs instances).  In principle, multi-disk fs might want to
-support things like "silently move the inodes backed by that disk to other
-ones"...
+Heh, fixed.
+
+> It would also be nice to include the current structure size in the
+> message if it happens to be unexpected. Otherwise, seems fine to me.
+
+I don't think it's possible to pass the size to __attribute__((error(msg...)))?
+
+gcc only seems only to accept string arguments to the error() attribute.
+
+--D
+
+> 
+> Brian
+> 
+> > +		#structname ") is wrong, expected " #size)
+> > +
+> 
+> > +static inline void __init
+> > +xfs_check_ondisk_structs(void)
+> > +{
+> > +	/* ag/file structures */
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+> > +
+> > +	/* dir/attr trees */
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leafblock,	88);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_rmt_hdr,		56);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_blkinfo,		56);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_intnode,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_node_hdr,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_blk_hdr,		48);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_data_hdr,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_entry_t,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_hdr_t,		32);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino8_t,			8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_inou_t,			8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_entry_t,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_hdr_t,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+> > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+> > +
+> > +	/* log structures */
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+> > +}
+> > +
+> > +#endif /* __XFS_ONDISK_H */
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 36bd882..f63d212 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -45,6 +45,7 @@
+> >  #include "xfs_filestream.h"
+> >  #include "xfs_quota.h"
+> >  #include "xfs_sysfs.h"
+> > +#include "xfs_ondisk.h"
+> >  
+> >  #include <linux/namei.h>
+> >  #include <linux/init.h>
+> > @@ -1817,6 +1818,8 @@ init_xfs_fs(void)
+> >  {
+> >  	int			error;
+> >  
+> > +	xfs_check_ondisk_structs();
+> > +
+> >  	printk(KERN_INFO XFS_VERSION_STRING " with "
+> >  			 XFS_BUILD_OPTIONS " enabled\n");
+> >  
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
