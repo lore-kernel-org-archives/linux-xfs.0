@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4CC597CB1
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 23:16:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 136178F8033
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 21:16:23 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 1DuxB4jWn21gWw8c (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2016 21:16:21 -0800 (PST)
-Date: Mon, 1 Feb 2016 21:16:13 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4282A7CB1
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 23:16:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 28E148F8033
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 21:16:49 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	PIDtZiVweq7SOvQm for <xfs@oss.sgi.com>;
+	Mon, 01 Feb 2016 21:16:42 -0800 (PST)
+Date: Tue, 2 Feb 2016 16:16:28 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 5/5] xfs_io: print dedupe errors to stderr, not stdout
-Message-ID: <20160202051613.GB22352@birch.djwong.org>
+Message-ID: <20160202051628.GC32032@dastard>
 References: <20160123003502.2475.99558.stgit@birch.djwong.org>
 	<20160123003531.2475.59752.stgit@birch.djwong.org>
 	<20160202051410.GB32032@dastard>
@@ -31,7 +31,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs@oss.sgi.com
 
 On Tue, Feb 02, 2016 at 04:14:10PM +1100, Dave Chinner wrote:
@@ -72,18 +72,15 @@ On Tue, Feb 02, 2016 at 04:14:10PM +1100, Dave Chinner wrote:
 > This is on 4.5-rc2, so I suspect it's not returning the expected
 > "not supported" error to xfstests from the ioctl.
 
-Christoph sent a patch "[PATCH 3/4] xfstests: also treat EINVAL as
-reflink/dedup not supported" to take care of that.
+Oh, never mind. I just found the xfstests patches Christoph sent to
+the wrong list that will fix this.
 
---D
+Cheers,
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
