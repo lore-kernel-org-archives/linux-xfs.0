@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4282A7CB1
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 23:16:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 28E148F8033
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2016 21:16:49 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	PIDtZiVweq7SOvQm for <xfs@oss.sgi.com>;
-	Mon, 01 Feb 2016 21:16:42 -0800 (PST)
-Date: Tue, 2 Feb 2016 16:16:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs_io: print dedupe errors to stderr, not stdout
-Message-ID: <20160202051628.GC32032@dastard>
-References: <20160123003502.2475.99558.stgit@birch.djwong.org>
-	<20160123003531.2475.59752.stgit@birch.djwong.org>
-	<20160202051410.GB32032@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 81AEA7CB1
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 05:17:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1FB19AC002
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 03:17:47 -0800 (PST)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id H0rnzNFRzUOIDLr5 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 03:17:42 -0800 (PST)
+Date: Tue, 2 Feb 2016 12:17:40 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: stop using ioends for direct write completions
+Message-ID: <20160202111740.GA28777@lst.de>
+References: <1452766237-2314-1-git-send-email-hch@lst.de>
+	<20160128131656.GB14876@infradead.org>
+	<20160129141232.GA43184@bfoster.bfoster>
+	<20160201215407.GI20038@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160202051410.GB32032@dastard>
+In-Reply-To: <20160201215407.GI20038@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,55 +33,25 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Tue, Feb 02, 2016 at 04:14:10PM +1100, Dave Chinner wrote:
-> On Fri, Jan 22, 2016 at 04:35:31PM -0800, Darrick J. Wong wrote:
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  io/reflink.c |    6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/io/reflink.c b/io/reflink.c
-> > index def01be..a09e82d 100644
-> > --- a/io/reflink.c
-> > +++ b/io/reflink.c
-> > @@ -78,11 +78,13 @@ dedupe_ioctl(
-> >  			goto done;
-> >  		}
-> >  		if (info->status < 0) {
-> > -			printf("dedupe: %s\n", _(strerror(-info->status)));
-> > +			fprintf(stderr, "dedupe: %s\n",
-> > +					_(strerror(-info->status)));
-> >  			goto done;
-> >  		}
-> >  		if (info->status == XFS_EXTENT_DATA_DIFFERS) {
-> > -			printf(_("Extents did not match.\n"));
-> > +			fprintf(stderr, "dedupe: %s\n",
-> > +					_("Extents did not match."));
-> >  			goto done;
-> >  		}
-> >  		if (args->length != 0 &&
+On Mon, Feb 01, 2016 at 01:54:07PM -0800, Darrick J. Wong wrote:
+> Also: I've noticed that if I write 8MB file to a file backed by a failing
+> device, xfs_end_io_direct_write() gets called with size == 8MB even if the
+> writes failed.  If the write was to an unwritten extent, the extent will be
+> converted to a regular extent even though the blocks contain old file contents
+> and other garbage, which can subsequently be read off the disk.
 > 
-> I think this patch breaks dedupe detection in xfstests. I see the
-> dedupe tests running instead of being detected as not supported, and
-> all the diffs from test failures contain:
+> For CoW I'd only want to remap the blocks if the write totally succeeds.  If a
+> disk error happens, the EIO code gets passed back to userspace, and it seems
+> logical to me that the file contents should remain unchanged.
 > 
->     +dedupe: Invalid argument
-> 
-> This is on 4.5-rc2, so I suspect it's not returning the expected
-> "not supported" error to xfstests from the ioctl.
+> To that end, I'm changing dio_iodone_t to pass an error code, and I think I
+> want to change XFS to avoid doing unwritten extent conversions when the write
+> fails.  Does that make sense?
 
-Oh, never mind. I just found the xfstests patches Christoph sent to
-the wrong list that will fix this.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I have some of these patches prepared already, I'm just too busy keeping
+up with all your changes.  I'll rebase and post this ASAP!
 
 _______________________________________________
 xfs mailing list
