@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 586C77CB1
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 10:42:44 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 9A9E47CB3
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 12:08:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D65B2AC007
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 08:42:40 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id HyQtwyWoTbtDqajh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 08:42:38 -0800 (PST)
-Date: Tue, 2 Feb 2016 17:42:37 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: stop using ioends for direct write completions
-Message-ID: <20160202164237.GA25436@lst.de>
-References: <1452766237-2314-1-git-send-email-hch@lst.de>
-	<20160128131656.GB14876@infradead.org>
-	<20160129141232.GA43184@bfoster.bfoster>
-	<20160202112046.GB28777@lst.de>
-	<20160202153117.GB1853@bfoster.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 27D32AC004
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 10:08:33 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id nZxH990CR2T0mKRz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 10:08:31 -0800 (PST)
+Date: Tue, 2 Feb 2016 10:08:28 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfsprogs: Add BUILD_CFLAGS for cross compilation
+Message-ID: <20160202180828.GA13880@infradead.org>
+References: <1437913255-7524-4-git-send-email-tytso@mit.edu>
+	<1454361909-36538-1-git-send-email-gwendal@chromium.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160202153117.GB1853@bfoster.bfoster>
+In-Reply-To: <1454361909-36538-1-git-send-email-gwendal@chromium.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: darrick.wong@oracle.com, xfs@oss.sgi.com
+To: Gwendal Grignou <gwendal@chromium.org>
+Cc: hch@infradead.org, tytso@mit.edu, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 02, 2016 at 10:31:18AM -0500, Brian Foster wrote:
-> FWIW, I don't see any such review comments against the three versions of
-> the "DIO needs an ioend for writes" patch I have in my mailbox, but I
-> easily could have missed something..? But if there wasn't time, then
-> fair enough.
+On Mon, Feb 01, 2016 at 01:25:09PM -0800, Gwendal Grignou wrote:
+> When cross compiling, CFLAGS may contains option for the cros-compiler the
+> host compiler can not handle.
+> Add BUILD_CFLAGS variable that does not include $OPTIMIZER options.
 
-I'll have to look at the mailboxes, but I remember Dave sending this
-out and complaining.
+I would have expected this to be HOST_CFLAGS, but it seems the
+BUILD_ convention already exists in xfsprogs, so sticking to it
+looks fine to me.
 
-> I'm just looking for context. I don't have much of an opinion on which
-> approach is used here. If it simplifies COW, then that seems good enough
-> reason to me to take this approach. I'm pointing this out more because
-> this code seems to have been rewritten the last couple of times we
-> needed to fix something, which makes backports particularly annoying.
-> The two patches above were associated with a broader enhancement and a
-> bug fix (respectively) as a sort of justification, whereas this post had
-> a much more vague purpose from what I could tell, and therefore why I at
-> least hadn't taken the time to review it.
-> 
-> If COW is the primary motivator, perhaps we can bundle it with that
-> work?
-
-The prime motivator is to:
-
- (1) avoid a pointless memory allocation
- (2) avoid a pointless context switch
- (3) avoid pointless code complexity
-
-COW is just another case where these show up.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
