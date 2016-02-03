@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 239327CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 10:50:50 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DFC4429E00
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 12:40:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 03FDD8F8039
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 08:50:50 -0800 (PST)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id WuR0BcOrRA9cf2Zp for
-	<xfs@oss.sgi.com>; Wed, 03 Feb 2016 08:50:49 -0800 (PST)
-Date: Wed, 3 Feb 2016 09:50:31 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: real-time device warning
-Message-ID: <20160203165031.GB29275@linux.intel.com>
-MIME-Version: 1.0
-Content-Disposition: inline
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D25AE304053
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 10:40:23 -0800 (PST)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id lS77bagSBWtyvAI7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 03 Feb 2016 10:40:20 -0800 (PST)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/3] direct-io: always call ->end_io if non-NULL
+Date: Wed,  3 Feb 2016 19:40:14 +0100
+Message-Id: <1454524816-11392-2-git-send-email-hch@lst.de>
+In-Reply-To: <1454524816-11392-1-git-send-email-hch@lst.de>
+References: <1454524816-11392-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,90 +23,195 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-I've been doing some more real-time device testing with XFS, and I was able to
-get past the BUG I reported here:
+This way we can pass back errors to the file system, and allow for
+cleanup required for all direct I/O invocations.
 
-http://www.spinics.net/lists/xfs/msg37445.html
+Also allow the ->end_io handlers to return errors on their own, so that
+I/O completion errors can be passed on to the callers.
 
-by setting CONFIG_XFS_DEBUG=n as Dave suggested.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/dax.c           |  9 +++++++--
+ fs/direct-io.c     |  9 +++++++--
+ fs/ext4/inode.c    |  9 +++++++--
+ fs/ocfs2/aops.c    |  7 ++++++-
+ fs/xfs/xfs_aops.c  | 13 +++++++------
+ include/linux/fs.h |  2 +-
+ 6 files changed, 35 insertions(+), 14 deletions(-)
 
-After that I/O seems to work, although it doesn't look like the DAX mount
-option is applied to I/Os that go to the real-time device.
-
-After the first I/O, though, the following warning is hit:
-
-[  413.086897] XFS (ram1): _xfs_buf_ioapply: no ops on block 0xa0/0x8
-[  413.091102] ffff8805038e8000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[  413.093495] ffff8805038e8010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[  413.095855] ffff8805038e8020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[  413.098221] ffff8805038e8030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[  413.100576] CPU: 0 PID: 1362 Comm: xfsaild/ram1 Not tainted 4.5.0-rc2 #20
-[  413.102244] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
-[  413.104494]  0000000000000000 0000000004f1f04f ffff8800981abbe0 ffffffff8155d6b2
-[  413.106378]  0000000000000001 ffff8800981abc98 ffffffff814780d2 ffffffff81a50737
-[  413.108253]  ffffe8ffffa00c00 ffff8800981abc50 ffffffff810c1947 00000000001d12d0
-[  413.110071] Call Trace:
-[  413.110635]  [<ffffffff8155d6b2>] dump_stack+0x44/0x62
-[  413.111807]  [<ffffffff814780d2>] _xfs_buf_ioapply+0x432/0x480
-[  413.113106]  [<ffffffff81a50737>] ? _raw_spin_unlock+0x27/0x30
-[  413.114406]  [<ffffffff810c1947>] ? __queue_work+0x167/0x3a0
-[  413.115788]  [<ffffffff810f8a64>] ? lockdep_init_map+0x64/0x6b0
-[  413.117116]  [<ffffffff810fbc7d>] ? trace_hardirqs_on+0xd/0x10
-[  413.118421]  [<ffffffff810d6a20>] ? wake_up_q+0x70/0x70
-[  413.119589]  [<ffffffff81479964>] ? __xfs_buf_delwri_submit+0x1f4/0x2e0
-[  413.120984]  [<ffffffff81479683>] xfs_buf_submit+0x73/0x160
-[  413.122175]  [<ffffffff81479964>] __xfs_buf_delwri_submit+0x1f4/0x2e0
-[  413.123520]  [<ffffffff8147a7cf>] ? xfs_buf_delwri_submit_nowait+0x2f/0x50
-[  413.124967]  [<ffffffff8147a7cf>] ? xfs_buf_delwri_submit_nowait+0x2f/0x50
-[  413.126417]  [<ffffffff8147a7cf>] xfs_buf_delwri_submit_nowait+0x2f/0x50
-[  413.127815]  [<ffffffff814a7734>] xfsaild+0x264/0x6c0
-[  413.128871]  [<ffffffff814a74d0>] ? xfs_trans_ail_cursor_first+0x90/0x90
-[  413.130222]  [<ffffffff814a74d0>] ? xfs_trans_ail_cursor_first+0x90/0x90
-[  413.131529]  [<ffffffff810c99a6>] kthread+0xf6/0x110
-[  413.132510]  [<ffffffff810fbbe9>] ? trace_hardirqs_on_caller+0x129/0x1b0
-[  413.133805]  [<ffffffff810c98b0>] ? kthread_create_on_node+0x250/0x250
-[  413.135036]  [<ffffffff81a514df>] ret_from_fork+0x3f/0x70
-[  413.136084]  [<ffffffff810c98b0>] ? kthread_create_on_node+0x250/0x250
-
-The steps to reproduce this are as follows:
-
-# fdisk -l /dev/ram*
-Disk /dev/ram0: 4 GiB, 4294967296 bytes, 8388608 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 4096 bytes
-I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-Disk /dev/ram1: 4 GiB, 4294967296 bytes, 8388608 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 4096 bytes
-I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-
-# mkfs.xfs -f -r rtdev=/dev/ram0 /dev/ram1
-meta-data=/dev/ram1              isize=512    agcount=4, agsize=262144 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0
-data     =                       bsize=4096   blocks=1048576, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =/dev/ram0              extsz=4096   blocks=1048576, rtextents=1048576
-
-# mount -t xfs -o rtdev=/dev/ram0 /dev/ram1 /mnt
-
-# mount | grep '/mnt'
-/dev/ram1 on /mnt type xfs (rw,relatime,seclabel,attr2,inode64,rtdev=/dev/ram0,noquota)
-
-# xfs_rtcp ~/data /mnt/
-xfs_rtcp: /root/data is not a realtime file.
-
-Thanks,
-- Ross
+diff --git a/fs/dax.c b/fs/dax.c
+index 4fd6b0c..e38b2c5 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -267,8 +267,13 @@ ssize_t dax_do_io(struct kiocb *iocb, struct inode *inode,
+ 	if ((flags & DIO_LOCKING) && iov_iter_rw(iter) == READ)
+ 		inode_unlock(inode);
+ 
+-	if ((retval > 0) && end_io)
+-		end_io(iocb, pos, retval, bh.b_private);
++	if (end_io) {
++		int err;
++
++		err = end_io(iocb, pos, retval, bh.b_private);
++		if (err)
++			retval = err;
++	}
+ 
+ 	if (!(flags & DIO_SKIP_DIO_COUNT))
+ 		inode_dio_end(inode);
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 1b2f7ff..9c6f885 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -253,8 +253,13 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
+ 	if (ret == 0)
+ 		ret = transferred;
+ 
+-	if (dio->end_io && dio->result)
+-		dio->end_io(dio->iocb, offset, transferred, dio->private);
++	if (dio->end_io) {
++		int err;
++
++		err = dio->end_io(dio->iocb, offset, ret, dio->private);
++		if (err)
++			ret = err;
++	}
+ 
+ 	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
+ 		inode_dio_end(dio->inode);
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 83bc8bf..9db04dd 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3161,14 +3161,17 @@ out:
+ }
+ #endif
+ 
+-static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
++static int ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
+ 			    ssize_t size, void *private)
+ {
+         ext4_io_end_t *io_end = iocb->private;
+ 
++	if (size <= 0)
++		return 0;
++
+ 	/* if not async direct IO just return */
+ 	if (!io_end)
+-		return;
++		return 0;
+ 
+ 	ext_debug("ext4_end_io_dio(): io_end 0x%p "
+ 		  "for inode %lu, iocb 0x%p, offset %llu, size %zd\n",
+@@ -3179,6 +3182,8 @@ static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
+ 	io_end->offset = offset;
+ 	io_end->size = size;
+ 	ext4_put_io_end(io_end);
++
++	return 0;
+ }
+ 
+ /*
+diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
+index 794fd15..5dcc5f5 100644
+--- a/fs/ocfs2/aops.c
++++ b/fs/ocfs2/aops.c
+@@ -620,7 +620,7 @@ bail:
+  * particularly interested in the aio/dio case.  We use the rw_lock DLM lock
+  * to protect io on one node from truncation on another.
+  */
+-static void ocfs2_dio_end_io(struct kiocb *iocb,
++static int ocfs2_dio_end_io(struct kiocb *iocb,
+ 			     loff_t offset,
+ 			     ssize_t bytes,
+ 			     void *private)
+@@ -628,6 +628,9 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
+ 	struct inode *inode = file_inode(iocb->ki_filp);
+ 	int level;
+ 
++	if (bytes <= 0)
++		return 0;
++
+ 	/* this io's submitter should not have unlocked this before we could */
+ 	BUG_ON(!ocfs2_iocb_is_rw_locked(iocb));
+ 
+@@ -644,6 +647,8 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
+ 		level = ocfs2_iocb_rw_locked_level(iocb);
+ 		ocfs2_rw_unlock(inode, level);
+ 	}
++
++	return 0;
+ }
+ 
+ static int ocfs2_releasepage(struct page *page, gfp_t wait)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 379c089..295aaff 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1645,7 +1645,7 @@ out_end_io:
+  * case the completion can be called in interrupt context, whereas if we have an
+  * ioend we will always be called in task context (i.e. from a workqueue).
+  */
+-STATIC void
++STATIC int
+ xfs_end_io_direct_write(
+ 	struct kiocb		*iocb,
+ 	loff_t			offset,
+@@ -1655,15 +1655,19 @@ xfs_end_io_direct_write(
+ 	struct inode		*inode = file_inode(iocb->ki_filp);
+ 	struct xfs_ioend	*ioend = private;
+ 
++	if (size <= 0)
++		return 0;
++
+ 	trace_xfs_gbmap_direct_endio(XFS_I(inode), offset, size,
+ 				     ioend ? ioend->io_type : 0, NULL);
+ 
+ 	if (!ioend) {
+ 		ASSERT(offset + size <= i_size_read(inode));
+-		return;
++		return 0;
+ 	}
+ 
+ 	__xfs_end_io_direct_write(inode, ioend, offset, size);
++	return 0;
+ }
+ 
+ static inline ssize_t
+@@ -1672,10 +1676,7 @@ xfs_vm_do_dio(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*iter,
+ 	loff_t			offset,
+-	void			(*endio)(struct kiocb	*iocb,
+-					 loff_t		offset,
+-					 ssize_t	size,
+-					 void		*private),
++	dio_iodone_t		endio,
+ 	int			flags)
+ {
+ 	struct block_device	*bdev;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 1a20462..d7f37bf 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -70,7 +70,7 @@ extern int sysctl_protected_hardlinks;
+ struct buffer_head;
+ typedef int (get_block_t)(struct inode *inode, sector_t iblock,
+ 			struct buffer_head *bh_result, int create);
+-typedef void (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
++typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+ 			ssize_t bytes, void *private);
+ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+ 
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
