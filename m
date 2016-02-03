@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 943F37CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 10:42:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80296304048
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 08:42:19 -0800 (PST)
-Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
-	v7spxxQ0Lzrs1yhj for <xfs@oss.sgi.com>;
-	Wed, 03 Feb 2016 08:42:18 -0800 (PST)
-Date: Wed, 3 Feb 2016 09:42:09 -0700
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 239327CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 10:50:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 03FDD8F8039
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 08:50:50 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id WuR0BcOrRA9cf2Zp for
+	<xfs@oss.sgi.com>; Wed, 03 Feb 2016 08:50:49 -0800 (PST)
+Date: Wed, 3 Feb 2016 09:50:31 -0700
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v8 4/9] dax: support dirty DAX entries in radix tree
-Message-ID: <20160203164209.GA29275@linux.intel.com>
-References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452230879-18117-5-git-send-email-ross.zwisler@linux.intel.com>
-	<20160113094411.GA17057@quack.suse.cz>
-	<20160113184832.GA5904@linux.intel.com>
-	<20160115132249.GL15950@quack.suse.cz>
+Subject: real-time device warning
+Message-ID: <20160203165031.GB29275@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160115132249.GL15950@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,134 +26,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
 
-On Fri, Jan 15, 2016 at 02:22:49PM +0100, Jan Kara wrote:
-> On Wed 13-01-16 11:48:32, Ross Zwisler wrote:
-> > On Wed, Jan 13, 2016 at 10:44:11AM +0100, Jan Kara wrote:
-> > > On Thu 07-01-16 22:27:54, Ross Zwisler wrote:
-> > > > Add support for tracking dirty DAX entries in the struct address_space
-> > > > radix tree.  This tree is already used for dirty page writeback, and it
-> > > > already supports the use of exceptional (non struct page*) entries.
-> > > > 
-> > > > In order to properly track dirty DAX pages we will insert new exceptional
-> > > > entries into the radix tree that represent dirty DAX PTE or PMD pages.
-> > > > These exceptional entries will also contain the writeback sectors for the
-> > > > PTE or PMD faults that we can use at fsync/msync time.
-> > > > 
-> > > > There are currently two types of exceptional entries (shmem and shadow)
-> > > > that can be placed into the radix tree, and this adds a third.  We rely on
-> > > > the fact that only one type of exceptional entry can be found in a given
-> > > > radix tree based on its usage.  This happens for free with DAX vs shmem but
-> > > > we explicitly prevent shadow entries from being added to radix trees for
-> > > > DAX mappings.
-> > > > 
-> > > > The only shadow entries that would be generated for DAX radix trees would
-> > > > be to track zero page mappings that were created for holes.  These pages
-> > > > would receive minimal benefit from having shadow entries, and the choice
-> > > > to have only one type of exceptional entry in a given radix tree makes the
-> > > > logic simpler both in clear_exceptional_entry() and in the rest of DAX.
-> > > > 
-> > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > > Reviewed-by: Jan Kara <jack@suse.cz>
-> > > 
-> > > I have realized there's one issue with this code. See below:
-> > > 
-> > > > @@ -34,31 +35,39 @@ static void clear_exceptional_entry(struct address_space *mapping,
-> > > >  		return;
-> > > >  
-> > > >  	spin_lock_irq(&mapping->tree_lock);
-> > > > -	/*
-> > > > -	 * Regular page slots are stabilized by the page lock even
-> > > > -	 * without the tree itself locked.  These unlocked entries
-> > > > -	 * need verification under the tree lock.
-> > > > -	 */
-> > > > -	if (!__radix_tree_lookup(&mapping->page_tree, index, &node, &slot))
-> > > > -		goto unlock;
-> > > > -	if (*slot != entry)
-> > > > -		goto unlock;
-> > > > -	radix_tree_replace_slot(slot, NULL);
-> > > > -	mapping->nrshadows--;
-> > > > -	if (!node)
-> > > > -		goto unlock;
-> > > > -	workingset_node_shadows_dec(node);
-> > > > -	/*
-> > > > -	 * Don't track node without shadow entries.
-> > > > -	 *
-> > > > -	 * Avoid acquiring the list_lru lock if already untracked.
-> > > > -	 * The list_empty() test is safe as node->private_list is
-> > > > -	 * protected by mapping->tree_lock.
-> > > > -	 */
-> > > > -	if (!workingset_node_shadows(node) &&
-> > > > -	    !list_empty(&node->private_list))
-> > > > -		list_lru_del(&workingset_shadow_nodes, &node->private_list);
-> > > > -	__radix_tree_delete_node(&mapping->page_tree, node);
-> > > > +
-> > > > +	if (dax_mapping(mapping)) {
-> > > > +		if (radix_tree_delete_item(&mapping->page_tree, index, entry))
-> > > > +			mapping->nrexceptional--;
-> > > 
-> > > So when you punch hole in a file, you can delete a PMD entry from a radix
-> > > tree which covers part of the file which still stays. So in this case you
-> > > have to split the PMD entry into PTE entries (probably that needs to happen
-> > > up in truncate_inode_pages_range()) or something similar...
-> > 
-> > I think (and will verify) that the DAX code just unmaps the entire PMD range
-> > when we receive a hole punch request inside of the PMD.  If this is true then
-> > I think the radix tree code should behave the same way and just remove the PMD
-> > entry in the radix tree.
-> 
-> But you cannot just remove it if it is dirty... You have to keep somewhere
-> information that part of the PMD range is still dirty (or write that range
-> out before removing the radix tree entry).
+I've been doing some more real-time device testing with XFS, and I was able to
+get past the BUG I reported here:
 
-It turns out that hole punching a DAX PMD hits a BUG:
+http://www.spinics.net/lists/xfs/msg37445.html
 
-[  247.821632] ------------[ cut here ]------------
-[  247.822744] kernel BUG at mm/memory.c:1195!
-[  247.823742] invalid opcode: 0000 [#1] SMP 
-[  247.824768] Modules linked in: nd_pmem nd_btt nd_e820 libnvdimm
-[  247.826299] CPU: 1 PID: 1544 Comm: test Tainted: G        W       4.4.0-rc8+ #9
-[  247.828017] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
-[  247.830298] task: ffff880036756200 ti: ffff8800a077c000 task.ti: ffff8800a077c000
-[  247.831935] RIP: 0010:[<ffffffff81203157>]  [<ffffffff81203157>] unmap_page_range+0x907/0x910
-[  247.833847] RSP: 0018:ffff8800a077fb88  EFLAGS: 00010282
-[  247.835030] RAX: 0000000000000073 RBX: ffffc00000000fff RCX: 0000000000000000
-[  247.836595] RDX: 0000000000000000 RSI: ffff88051a3ce168 RDI: ffff88051a3ce168
-[  247.838168] RBP: ffff8800a077fc68 R08: 0000000000000001 R09: 0000000000000001
-[  247.839728] R10: 0000000000000001 R11: 0000000000000001 R12: 0000000010405000
-[  247.841244] R13: 0000000010403000 R14: ffff8800a077fcb0 R15: 0000000010403000
-[  247.842715] FS:  00007f533a5bb700(0000) GS:ffff88051a200000(0000) knlGS:0000000000000000
-[  247.844395] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  247.845589] CR2: 0000000010403000 CR3: 0000000514337000 CR4: 00000000000006e0
-[  247.847076] Stack:
-[  247.847502]  ffff8800a077fcb0 ffff8800a077fc38 ffff880036756200 ffff8800a077fbb0
-[  247.849126]  0000000010404fff 0000000010404fff 0000000010404fff ffff880514337000
-[  247.850714]  ffff880513499000 ffff8800a077fcc0 0000000010405000 0000000000000000
-[  247.852246] Call Trace:
-[  247.852740]  [<ffffffff810fbb4d>] ? trace_hardirqs_on+0xd/0x10
-[  247.853883]  [<ffffffff812031dd>] unmap_single_vma+0x7d/0xe0
-[  247.855004]  [<ffffffff812032ed>] zap_page_range_single+0xad/0xf0
-[  247.856195]  [<ffffffff81203410>] ? unmap_mapping_range+0xa0/0x190
-[  247.857403]  [<ffffffff812034d6>] unmap_mapping_range+0x166/0x190
-[  247.858596]  [<ffffffff811e0948>] truncate_pagecache_range+0x48/0x60
-[  247.859839]  [<ffffffff8130b7ba>] ext4_punch_hole+0x33a/0x4b0
-[  247.860837]  [<ffffffff8133a274>] ext4_fallocate+0x144/0x890
-[  247.861784]  [<ffffffff810f6cd7>] ? update_fast_ctr+0x17/0x30
-[  247.862751]  [<ffffffff810f6d69>] ? percpu_down_read+0x49/0x90
-[  247.863731]  [<ffffffff812640c4>] ? __sb_start_write+0xb4/0xf0
-[  247.864709]  [<ffffffff8125d900>] vfs_fallocate+0x140/0x220
-[  247.865645]  [<ffffffff8125e7d4>] SyS_fallocate+0x44/0x70
-[  247.866553]  [<ffffffff81a68ef2>] entry_SYSCALL_64_fastpath+0x12/0x76
-[  247.867632] Code: 12 fe ff ff 0f 0b 48 8b 45 98 48 8b 4d 90 4c 89 fa 48 c7 c6 78 30 c2 81 48 c7 c7 50 6b f0 81 4c 8b 48 08 4c 8b 00 e8 06 4a fc ff <0f> 0b e8 d2 2f ea ff 66 90 66 66 66 66 90 48 8b 06 4c 8b 4e 08 
-[  247.871862] RIP  [<ffffffff81203157>] unmap_page_range+0x907/0x910
-[  247.872843]  RSP <ffff8800a077fb88>
-[  247.873435] ---[ end trace 75145e78670ba43d ]---
+by setting CONFIG_XFS_DEBUG=n as Dave suggested.
 
-This happens with XFS as well.  I'm not sure that this path has ever been run,
-so essentially the next step is "add PMD hole punch support to DAX, including
-fsync/msync support".
+After that I/O seems to work, although it doesn't look like the DAX mount
+option is applied to I/Os that go to the real-time device.
+
+After the first I/O, though, the following warning is hit:
+
+[  413.086897] XFS (ram1): _xfs_buf_ioapply: no ops on block 0xa0/0x8
+[  413.091102] ffff8805038e8000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  413.093495] ffff8805038e8010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  413.095855] ffff8805038e8020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  413.098221] ffff8805038e8030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  413.100576] CPU: 0 PID: 1362 Comm: xfsaild/ram1 Not tainted 4.5.0-rc2 #20
+[  413.102244] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
+[  413.104494]  0000000000000000 0000000004f1f04f ffff8800981abbe0 ffffffff8155d6b2
+[  413.106378]  0000000000000001 ffff8800981abc98 ffffffff814780d2 ffffffff81a50737
+[  413.108253]  ffffe8ffffa00c00 ffff8800981abc50 ffffffff810c1947 00000000001d12d0
+[  413.110071] Call Trace:
+[  413.110635]  [<ffffffff8155d6b2>] dump_stack+0x44/0x62
+[  413.111807]  [<ffffffff814780d2>] _xfs_buf_ioapply+0x432/0x480
+[  413.113106]  [<ffffffff81a50737>] ? _raw_spin_unlock+0x27/0x30
+[  413.114406]  [<ffffffff810c1947>] ? __queue_work+0x167/0x3a0
+[  413.115788]  [<ffffffff810f8a64>] ? lockdep_init_map+0x64/0x6b0
+[  413.117116]  [<ffffffff810fbc7d>] ? trace_hardirqs_on+0xd/0x10
+[  413.118421]  [<ffffffff810d6a20>] ? wake_up_q+0x70/0x70
+[  413.119589]  [<ffffffff81479964>] ? __xfs_buf_delwri_submit+0x1f4/0x2e0
+[  413.120984]  [<ffffffff81479683>] xfs_buf_submit+0x73/0x160
+[  413.122175]  [<ffffffff81479964>] __xfs_buf_delwri_submit+0x1f4/0x2e0
+[  413.123520]  [<ffffffff8147a7cf>] ? xfs_buf_delwri_submit_nowait+0x2f/0x50
+[  413.124967]  [<ffffffff8147a7cf>] ? xfs_buf_delwri_submit_nowait+0x2f/0x50
+[  413.126417]  [<ffffffff8147a7cf>] xfs_buf_delwri_submit_nowait+0x2f/0x50
+[  413.127815]  [<ffffffff814a7734>] xfsaild+0x264/0x6c0
+[  413.128871]  [<ffffffff814a74d0>] ? xfs_trans_ail_cursor_first+0x90/0x90
+[  413.130222]  [<ffffffff814a74d0>] ? xfs_trans_ail_cursor_first+0x90/0x90
+[  413.131529]  [<ffffffff810c99a6>] kthread+0xf6/0x110
+[  413.132510]  [<ffffffff810fbbe9>] ? trace_hardirqs_on_caller+0x129/0x1b0
+[  413.133805]  [<ffffffff810c98b0>] ? kthread_create_on_node+0x250/0x250
+[  413.135036]  [<ffffffff81a514df>] ret_from_fork+0x3f/0x70
+[  413.136084]  [<ffffffff810c98b0>] ? kthread_create_on_node+0x250/0x250
+
+The steps to reproduce this are as follows:
+
+# fdisk -l /dev/ram*
+Disk /dev/ram0: 4 GiB, 4294967296 bytes, 8388608 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk /dev/ram1: 4 GiB, 4294967296 bytes, 8388608 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+
+# mkfs.xfs -f -r rtdev=/dev/ram0 /dev/ram1
+meta-data=/dev/ram1              isize=512    agcount=4, agsize=262144 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0
+data     =                       bsize=4096   blocks=1048576, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =/dev/ram0              extsz=4096   blocks=1048576, rtextents=1048576
+
+# mount -t xfs -o rtdev=/dev/ram0 /dev/ram1 /mnt
+
+# mount | grep '/mnt'
+/dev/ram1 on /mnt type xfs (rw,relatime,seclabel,attr2,inode64,rtdev=/dev/ram0,noquota)
+
+# xfs_rtcp ~/data /mnt/
+xfs_rtcp: /root/data is not a realtime file.
+
+Thanks,
+- Ross
 
 _______________________________________________
 xfs mailing list
