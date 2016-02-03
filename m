@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 987437CB0
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 18:33:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 198DBAC006
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 16:33:22 -0800 (PST)
-Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
-	[74.125.82.53]) by cuda.sgi.com with ESMTP id a7QwRMYCcFeK0ep8
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Feb 2016 16:33:17 -0800 (PST)
-Received: by mail-wm0-f53.google.com with SMTP id l66so47371974wml.0
-	for <xfs@oss.sgi.com>; Tue, 02 Feb 2016 16:33:17 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id C7B7B7CB0
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 20:47:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 63304AC001
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 18:47:29 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id pi7JkXppOrRwOEFX for <xfs@oss.sgi.com>;
+	Tue, 02 Feb 2016 18:47:26 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 9652563C6064
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 20:47:25 -0600 (CST)
+Subject: Re: Request for information on bloated writes using Swift
+References: <CAFHL4X1JU02LFYntkqhYg1N++ZU46ML3v5higo1nRsPyoZxL5A@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56B16A3C.1030207@sandeen.net>
+Date: Tue, 2 Feb 2016 20:47:24 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4h4Xk-=TeC_wz2Kemy-OzayyU9gP_cxe7S4aU_8VoV_Yw@mail.gmail.com>
-References: <1454454702-11889-1-git-send-email-ross.zwisler@linux.intel.com>
-	<20160202231931.GR17997@ZenIV.linux.org.uk>
-	<CA+ZsKJ5Xd1VyMD4KCTw4GLYn_stAUZX0OcQVju72+FPgYsGR6w@mail.gmail.com>
-	<CAPcyv4h4Xk-=TeC_wz2Kemy-OzayyU9gP_cxe7S4aU_8VoV_Yw@mail.gmail.com>
-Date: Tue, 2 Feb 2016 16:33:16 -0800
-Message-ID: <CA+ZsKJ51JT_oG6a-JWvPCk8QzSQmCJNUQYcrHgTbX4xOL61_1Q@mail.gmail.com>
-Subject: Re: [PATCH] dax: allow DAX to look up an inode's block device
-From: Jared Hulbert <jaredeh@gmail.com>
+In-Reply-To: <CAFHL4X1JU02LFYntkqhYg1N++ZU46ML3v5higo1nRsPyoZxL5A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,58 +32,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: xfs@oss.sgi.com
 
-On Tue, Feb 2, 2016 at 3:41 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Tue, Feb 2, 2016 at 3:36 PM, Jared Hulbert <jaredeh@gmail.com> wrote:
->> On Tue, Feb 2, 2016 at 3:19 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
->>>
->>> On Tue, Feb 02, 2016 at 04:11:42PM -0700, Ross Zwisler wrote:
->>>
->>> > However, for raw block devices and for XFS with a real-time device, the
->>> > value in inode->i_sb->s_bdev is not correct.  With the code as it is
->>> > currently written, an fsync or msync to a DAX enabled raw block device will
->>> > cause a NULL pointer dereference kernel BUG.  For this to work correctly we
->>> > need to ask the block device or filesystem what struct block_device is
->>> > appropriate for our inode.
->>> >
->>> > To that end, add a get_bdev(struct inode *) entry point to struct
->>> > super_operations.  If this function pointer is non-NULL, this notifies DAX
->>> > that it needs to use it to look up the correct block_device.  If
->>> > i_sb->get_bdev() is NULL DAX will default to inode->i_sb->s_bdev.
->>>
->>> Umm...  It assumes that bdev will stay pinned for as long as inode is
->>> referenced, presumably?  If so, that needs to be documented (and verified
->>> for existing fs instances).  In principle, multi-disk fs might want to
->>> support things like "silently move the inodes backed by that disk to other
->>> ones"...
->>
->> Dan, This is exactly the kind of thing I'm taking about WRT the
->> weirder device models and directly calling bdev_direct_access().
->> Filesystems don't have the monogamous relationship with a device that
->> is implicitly assumed in DAX, you have to ask the filesystem what the
->> relationship is and is migrating to, and allow the filesystem to
->> update DAX when the relationship is changing.
->
-> That's precisely what ->get_bdev() does.  When the answer
-> inode->i_sb->s_bdev lookup is invalid, use ->get_bdev().
->
->> As we start to see many
->> DIMM's and 10s TiB pmem systems this is going be an even bigger deal
->> as load balancing, wear leveling, and fault tolerance concerned are
->> inevitably driven by the filesystem.
->
-> No, there are no plans on the horizon for an fs to manage these media
-> specific concerns for persistent memory.
 
-So the filesystem is now directly in charge of mapping user pages to
-physical memory.  The filesystem is effectively bypassing NUMA and
-zones and all that stuff that tries to balance memory bus and QPI
-traffic etc.  You don't think the filesystem will therefore be in
-charge of memory bus hotspots?
 
-Alright.  We can just agree to disagree on that point.
+On 2/2/16 4:32 PM, Dilip Simha wrote:
+> Hi,
+> 
+> I have a question regarding speculated preallocation in XFS, w.r.t
+> kernel version: 3.16.0-46-generic. I am using Swift version: 1.0 and
+> mkfs.xfs version 3.2.1
+> 
+> When I write a 256KiB file to Swift, I see that the underlying XFS
+> uses 3x the amount of space/blocks to write that data. Upon
+> performing detailed experiments, I see that when Swift uses fallocate
+> (default approach), XFS doesn't reclaim the preallocated blocks that
+> XFS allocated. Swift fallocate doesn't exceed the body size(256
+> KiB).
+> 
+> Interestingly, when either allocsize=4k or when swift doesn't use
+> fallocate, XFS doesn't consume additional space.
+> 
+> Can you please let me know if this is a known bug and if its fixed in
+> the later versions?
+
+Can you clarify the exact sequence of events?
+
+i.e. -
+
+xfs_io -f -c "fallocate 0 256k" -c "pwrite 0 256k" somefile
+
+leads to unreaclaimed preallocation, while
+
+xfs_io -f -c "pwrite 0 256k" somefile
+
+does not?  Or is it some other sequence?  I don't have a
+3.16 handy to test, but if you can describe it in more detail
+that'd help.  Some of this is influenced by fs geometry, too
+so xfs_info output would be good, along with any mount options
+you might be using.
+
+Are you preallocating with or without KEEP_SIZE?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
