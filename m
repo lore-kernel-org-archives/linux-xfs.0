@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EC6C829DF5
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 02:31:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DDC73304043
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 00:31:25 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	W9Yco8tWrbhgOTuu for <xfs@oss.sgi.com>;
-	Wed, 03 Feb 2016 00:30:54 -0800 (PST)
-Date: Wed, 3 Feb 2016 19:30:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Request for information on bloated writes using Swift
-Message-ID: <20160203083016.GD459@dastard>
-References: <CAFHL4X1JU02LFYntkqhYg1N++ZU46ML3v5higo1nRsPyoZxL5A@mail.gmail.com>
-	<56B16A3C.1030207@sandeen.net>
-	<CAFHL4X0QBtFpz3=HMVMrp6NoaW5BRkDSoTE1yJQvQ=0JrW5+YQ@mail.gmail.com>
-	<20160203063705.GB459@dastard>
-	<CAFHL4X0m8Ov+zJxteUJJxzEHVXpJsfe=9mtapRmWkhT6VRkDxg@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id D7A4B7CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 06:37:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9C83C304048
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 04:37:06 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id y8UcZcmyAcvudLm0 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 03 Feb 2016 04:37:05 -0800 (PST)
+Date: Wed, 3 Feb 2016 07:37:03 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/3] xfs: check sizes of XFS on-disk structures at
+	compile time
+Message-ID: <20160203123702.GA20211@bfoster.bfoster>
+References: <20160123003425.2338.18133.stgit@birch.djwong.org>
+	<20160123003444.2338.37236.stgit@birch.djwong.org>
+	<20160127133117.GD60730@bfoster.bfoster>
+	<20160202232735.GE22352@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAFHL4X0m8Ov+zJxteUJJxzEHVXpJsfe=9mtapRmWkhT6VRkDxg@mail.gmail.com>
+In-Reply-To: <20160202232735.GE22352@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,89 +33,195 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dilip Simha <nmdilipsimha@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 02, 2016 at 11:09:15PM -0800, Dilip Simha wrote:
-> Hi Dave,
+On Tue, Feb 02, 2016 at 03:27:35PM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 27, 2016 at 08:31:17AM -0500, Brian Foster wrote:
+> > On Fri, Jan 22, 2016 at 04:34:44PM -0800, Darrick J. Wong wrote:
+> > > Check the sizes of XFS on-disk structures when compiling the kernel.
+> > > Use this to catch inadvertent changes in structure size due to padding
+> > > and alignment issues, etc.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/xfs_ondisk.h |  108 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_super.c  |    3 +
+> > >  2 files changed, 111 insertions(+)
+> > >  create mode 100644 fs/xfs/xfs_ondisk.h
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > > new file mode 100644
+> > > index 0000000..56fab46
+> > > --- /dev/null
+> > > +++ b/fs/xfs/xfs_ondisk.h
+> > > @@ -0,0 +1,108 @@
+> > > +/*
+> > > + * Copyright (c) 2016 Oracle.
+> > > + * All Rights Reserved.
+> > > + *
+> > > + * This program is free software; you can redistribute it and/or
+> > > + * modify it under the terms of the GNU General Public License as
+> > > + * published by the Free Software Foundation.
+> > > + *
+> > > + * This program is distributed in the hope that it would be useful,
+> > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > + * GNU General Public License for more details.
+> > > + *
+> > > + * You should have received a copy of the GNU General Public License
+> > > + * along with this program; if not, write the Free Software Foundation,
+> > > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > > + */
+> > > +#ifndef __XFS_ONDISK_H
+> > > +#define __XFS_ONDISK_H
+> > > +
+> > > +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
+> > > +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(struct " \
+> > 
+> > We're printing "struct" in the core message as well as part of the
+> > structname (where appropriate). E.g., "sizeof(struct struct xfs_acl) is
+> > wrong, ..."
 > 
-> On Tue, Feb 2, 2016 at 10:37 PM, Dave Chinner <david@fromorbit.com> wrote:
+> Heh, fixed.
 > 
-> > On Tue, Feb 02, 2016 at 07:40:34PM -0800, Dilip Simha wrote:
-> > > Hi Eric,
-> > >
-> > > Thank you for your quick reply.
-> > >
-> > > Using xfs_io as per your suggestion, I am able to reproduce the issue.
-> > > However, I need to falloc for 256K and write for 257K to see this issue.
-> > >
-> > > # xfs_io -f -c "falloc 0 256k" -c "pwrite 0 257k" /srv/node/r1/t1.txt
-> > > # stat /srv/node/r1/t4.txt | grep Blocks
-> > >   Size: 263168     Blocks: 1536       IO Block: 4096   regular file
-> >
-> > Fallocate sets the XFS_DIFLAG_PREALLOC on the inode.
-> >
-> > When you writing *past the preallocated area* and do delayed
-> > allocation, the speculative preallocation beyond EOF is double the
-> > size of the extent at EOF. i.e. 512k, leading to 768k being
-> > allocated to the file (1536 blocks, exactly).
-> >
+> > It would also be nice to include the current structure size in the
+> > message if it happens to be unexpected. Otherwise, seems fine to me.
 > 
-> Thank you for the details.
-> This is exactly where I am a bit perplexed. Since the reclamation logic
-> skips inodes that have the XFS_DIFLAG_PREALLOC flag set, why did the
-> allocation logic allot more blocks on such an inode?
+> I don't think it's possible to pass the size to __attribute__((error(msg...)))?
+> 
+> gcc only seems only to accept string arguments to the error() attribute.
+> 
 
-To store the data you wrote outside the preallocated region, of
-course.
+Ah, I guess we'd have to preconstruct the string or something like that.
+Definitely not worth it, thanks!
 
-> My understanding is that the fallocate caller only requested for 256K worth
-> of blocks to be available sequentially if possible.
+Brian
 
-fallocate only guarantees the blocks are allocated - it does not
-guarantee anything about the layout of the blocks.
-
-> On any subsequent write beyond the EOF, the caller is completely
-> unaware of the underlying file-system storing that data adjacent
-> to the first 256K data.  Since XFS is speculatively allocating
-> additional space (512K) adjacent to the first 256K data, I would
-> expect XFS to either treat these two allocations distinctly and
-> NOT mark XFS_DIFLAG_PREALLOC on the additional 512K data(minus the
-> actually used additional data=1K), OR remove XFS_DIFLAG_PREALLOC
-> flag on the entire inode.
-
-Oh, if only it were that simple. It's way more complex than I have
-time to explain here.
-
-Fundamentally, XFS_DIFLAG_PREALLOC is used to indicate that
-persistent preallocation has been done on the file, and so if that
-has happened we need to turn off optimistic removal of blocks
-anywhere in the file because we can't tell what blocks had
-persistent preallocation done on them after the fact.  That's the
-way it's been since unwritten extents were added to XFS back in
-1998, and I don't really see the need for it to change right now.
-
-If an application wants to mix fallocate and delayed allocatin
-writes to the same file in the same IO, then that's an application
-bug. It's going to cause bad IO patterns and file fragmentation and
-have other side effects (as you've noticed), and there's nothing the
-filesystem can do about it. fallocate() requires expertise to use in
-a beneficial manner - most developers do not have the required
-expertise (and don't have enough expertise to realise this) and so
-usually make things worse rather than better by using fallocate.
-
-> Also, is there any way I can check for this flag?
-> The FLAGS, as observed from xfs_bmap doesn't show any flags set to it. Am I
-> not looking at the right flags?
-
-xfs_io -c stat <file>
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > > +		#structname ") is wrong, expected " #size)
+> > > +
+> > 
+> > > +static inline void __init
+> > > +xfs_check_ondisk_structs(void)
+> > > +{
+> > > +	/* ag/file structures */
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+> > > +
+> > > +	/* dir/attr trees */
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leafblock,	88);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_rmt_hdr,		56);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_blkinfo,		56);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_intnode,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_node_hdr,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_blk_hdr,		48);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_data_hdr,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_entry_t,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_hdr_t,		32);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino8_t,			8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_inou_t,			8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_entry_t,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_hdr_t,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+> > > +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+> > > +
+> > > +	/* log structures */
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	28);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	32);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	32);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icdinode,		176);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_ictimestamp,		8);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_64,	56);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+> > > +}
+> > > +
+> > > +#endif /* __XFS_ONDISK_H */
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index 36bd882..f63d212 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -45,6 +45,7 @@
+> > >  #include "xfs_filestream.h"
+> > >  #include "xfs_quota.h"
+> > >  #include "xfs_sysfs.h"
+> > > +#include "xfs_ondisk.h"
+> > >  
+> > >  #include <linux/namei.h>
+> > >  #include <linux/init.h>
+> > > @@ -1817,6 +1818,8 @@ init_xfs_fs(void)
+> > >  {
+> > >  	int			error;
+> > >  
+> > > +	xfs_check_ondisk_structs();
+> > > +
+> > >  	printk(KERN_INFO XFS_VERSION_STRING " with "
+> > >  			 XFS_BUILD_OPTIONS " enabled\n");
+> > >  
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
