@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 138617CB0
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 18:05:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8EAB7AC005
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 16:05:21 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id fUdhtzQUIcTd3NHJ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Feb 2016 16:05:16 -0800 (PST)
-Date: Tue, 2 Feb 2016 16:05:10 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] direct-io: always call ->end_io if non-NULL
-Message-ID: <20160203000510.GB5854@birch.djwong.org>
-References: <1454444257-9086-1-git-send-email-hch@lst.de>
-	<1454444257-9086-2-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 987437CB0
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 18:33:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 198DBAC006
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2016 16:33:22 -0800 (PST)
+Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id a7QwRMYCcFeK0ep8
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Feb 2016 16:33:17 -0800 (PST)
+Received: by mail-wm0-f53.google.com with SMTP id l66so47371974wml.0
+	for <xfs@oss.sgi.com>; Tue, 02 Feb 2016 16:33:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1454444257-9086-2-git-send-email-hch@lst.de>
+In-Reply-To: <CAPcyv4h4Xk-=TeC_wz2Kemy-OzayyU9gP_cxe7S4aU_8VoV_Yw@mail.gmail.com>
+References: <1454454702-11889-1-git-send-email-ross.zwisler@linux.intel.com>
+	<20160202231931.GR17997@ZenIV.linux.org.uk>
+	<CA+ZsKJ5Xd1VyMD4KCTw4GLYn_stAUZX0OcQVju72+FPgYsGR6w@mail.gmail.com>
+	<CAPcyv4h4Xk-=TeC_wz2Kemy-OzayyU9gP_cxe7S4aU_8VoV_Yw@mail.gmail.com>
+Date: Tue, 2 Feb 2016 16:33:16 -0800
+Message-ID: <CA+ZsKJ51JT_oG6a-JWvPCk8QzSQmCJNUQYcrHgTbX4xOL61_1Q@mail.gmail.com>
+Subject: Re: [PATCH] dax: allow DAX to look up an inode's block device
+From: Jared Hulbert <jaredeh@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,124 +34,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Tue, Feb 02, 2016 at 09:17:35PM +0100, Christoph Hellwig wrote:
-> See http://www.infradead.org/rpr.html
+On Tue, Feb 2, 2016 at 3:41 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Tue, Feb 2, 2016 at 3:36 PM, Jared Hulbert <jaredeh@gmail.com> wrote:
+>> On Tue, Feb 2, 2016 at 3:19 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>>>
+>>> On Tue, Feb 02, 2016 at 04:11:42PM -0700, Ross Zwisler wrote:
+>>>
+>>> > However, for raw block devices and for XFS with a real-time device, the
+>>> > value in inode->i_sb->s_bdev is not correct.  With the code as it is
+>>> > currently written, an fsync or msync to a DAX enabled raw block device will
+>>> > cause a NULL pointer dereference kernel BUG.  For this to work correctly we
+>>> > need to ask the block device or filesystem what struct block_device is
+>>> > appropriate for our inode.
+>>> >
+>>> > To that end, add a get_bdev(struct inode *) entry point to struct
+>>> > super_operations.  If this function pointer is non-NULL, this notifies DAX
+>>> > that it needs to use it to look up the correct block_device.  If
+>>> > i_sb->get_bdev() is NULL DAX will default to inode->i_sb->s_bdev.
+>>>
+>>> Umm...  It assumes that bdev will stay pinned for as long as inode is
+>>> referenced, presumably?  If so, that needs to be documented (and verified
+>>> for existing fs instances).  In principle, multi-disk fs might want to
+>>> support things like "silently move the inodes backed by that disk to other
+>>> ones"...
+>>
+>> Dan, This is exactly the kind of thing I'm taking about WRT the
+>> weirder device models and directly calling bdev_direct_access().
+>> Filesystems don't have the monogamous relationship with a device that
+>> is implicitly assumed in DAX, you have to ask the filesystem what the
+>> relationship is and is migrating to, and allow the filesystem to
+>> update DAX when the relationship is changing.
+>
+> That's precisely what ->get_bdev() does.  When the answer
+> inode->i_sb->s_bdev lookup is invalid, use ->get_bdev().
+>
+>> As we start to see many
+>> DIMM's and 10s TiB pmem systems this is going be an even bigger deal
+>> as load balancing, wear leveling, and fault tolerance concerned are
+>> inevitably driven by the filesystem.
+>
+> No, there are no plans on the horizon for an fs to manage these media
+> specific concerns for persistent memory.
 
-Ick. ^^^
+So the filesystem is now directly in charge of mapping user pages to
+physical memory.  The filesystem is effectively bypassing NUMA and
+zones and all that stuff that tries to balance memory bus and QPI
+traffic etc.  You don't think the filesystem will therefore be in
+charge of memory bus hotspots?
 
-> This way we can pass back errors to the file system, and allow for
-> cleanup required for all direct I/O invocations.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/dax.c          | 2 +-
->  fs/direct-io.c    | 4 ++--
->  fs/ext4/inode.c   | 3 +++
->  fs/ocfs2/aops.c   | 3 +++
->  fs/xfs/xfs_aops.c | 3 +++
->  5 files changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 4fd6b0c..e47d1ba 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -267,7 +267,7 @@ ssize_t dax_do_io(struct kiocb *iocb, struct inode *inode,
->  	if ((flags & DIO_LOCKING) && iov_iter_rw(iter) == READ)
->  		inode_unlock(inode);
->  
-> -	if ((retval > 0) && end_io)
-> +	if (end_io)
->  		end_io(iocb, pos, retval, bh.b_private);
->  
->  	if (!(flags & DIO_SKIP_DIO_COUNT))
-> diff --git a/fs/direct-io.c b/fs/direct-io.c
-> index 1b2f7ff..ead7ac1 100644
-> --- a/fs/direct-io.c
-> +++ b/fs/direct-io.c
-> @@ -253,8 +253,8 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
->  	if (ret == 0)
->  		ret = transferred;
->  
-> -	if (dio->end_io && dio->result)
-> -		dio->end_io(dio->iocb, offset, transferred, dio->private);
-> +	if (dio->end_io)
-> +		dio->end_io(dio->iocb, offset, ret, dio->private);
-
-Could we make end_io return an int so that errors during completion can be
-stuffed into ret to be picked up by whatever's calling directio?  Something
-like this:
-
-if (dio->end_io) {
-	int ret2;
-
-	ret2 = dio->end_io(dio->iocb, offset, ret, dio->private);
-	if (ret2 && !ret)
-		ret = ret2;
-}
-
-That way I can capture IO errors during the CoW remapping step and pass them to
-userland either via dio_complete()'s return value or through ki_complete.
-
-(If ret itself is an error code then obviously we don't bother with the
-post-CoW remap.)
-
---D
-
->  
->  	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
->  		inode_dio_end(dio->inode);
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 83bc8bf..d04555b 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3166,6 +3166,9 @@ static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
->  {
->          ext4_io_end_t *io_end = iocb->private;
->  
-> +	if (size <= 0)
-> +		return;
-> +
->  	/* if not async direct IO just return */
->  	if (!io_end)
->  		return;
-> diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
-> index 794fd15..1eeb804 100644
-> --- a/fs/ocfs2/aops.c
-> +++ b/fs/ocfs2/aops.c
-> @@ -628,6 +628,9 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
->  	struct inode *inode = file_inode(iocb->ki_filp);
->  	int level;
->  
-> +	if (bytes <= 0)
-> +		return;
-> +
->  	/* this io's submitter should not have unlocked this before we could */
->  	BUG_ON(!ocfs2_iocb_is_rw_locked(iocb));
->  
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 379c089..c318e9f 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1655,6 +1655,9 @@ xfs_end_io_direct_write(
->  	struct inode		*inode = file_inode(iocb->ki_filp);
->  	struct xfs_ioend	*ioend = private;
->  
-> +	if (size <= 0)
-> +		return;
-> +
->  	trace_xfs_gbmap_direct_endio(XFS_I(inode), offset, size,
->  				     ioend ? ioend->io_type : 0, NULL);
->  
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alright.  We can just agree to disagree on that point.
 
 _______________________________________________
 xfs mailing list
