@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F2D5C7CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 10:15:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D24368F8033
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 08:15:56 -0800 (PST)
-Received: from mail-ob0-f175.google.com (mail-ob0-f175.google.com
-	[209.85.214.175]) by cuda.sgi.com with ESMTP id
-	F8qAxBEshzknyMzR (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Feb 2016 08:15:54 -0800 (PST)
-Received: by mail-ob0-f175.google.com with SMTP id ba1so36243448obb.3
-	for <xfs@oss.sgi.com>; Wed, 03 Feb 2016 08:15:54 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 943F37CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 10:42:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80296304048
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2016 08:42:19 -0800 (PST)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	v7spxxQ0Lzrs1yhj for <xfs@oss.sgi.com>;
+	Wed, 03 Feb 2016 08:42:18 -0800 (PST)
+Date: Wed, 3 Feb 2016 09:42:09 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v8 4/9] dax: support dirty DAX entries in radix tree
+Message-ID: <20160203164209.GA29275@linux.intel.com>
+References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1452230879-18117-5-git-send-email-ross.zwisler@linux.intel.com>
+	<20160113094411.GA17057@quack.suse.cz>
+	<20160113184832.GA5904@linux.intel.com>
+	<20160115132249.GL15950@quack.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <CAFHL4X0rkBUdtLn04sqeAdUgUfqMcSAOtEjtwupNk5KKk=owpQ@mail.gmail.com>
-References: <CAFHL4X1JU02LFYntkqhYg1N++ZU46ML3v5higo1nRsPyoZxL5A@mail.gmail.com>
-	<56B16A3C.1030207@sandeen.net>
-	<CAFHL4X0QBtFpz3=HMVMrp6NoaW5BRkDSoTE1yJQvQ=0JrW5+YQ@mail.gmail.com>
-	<20160203063705.GB459@dastard>
-	<CAFHL4X0m8Ov+zJxteUJJxzEHVXpJsfe=9mtapRmWkhT6VRkDxg@mail.gmail.com>
-	<20160203083016.GD459@dastard>
-	<CAFHL4X0rkBUdtLn04sqeAdUgUfqMcSAOtEjtwupNk5KKk=owpQ@mail.gmail.com>
-From: Dilip Simha <nmdilipsimha@gmail.com>
-Date: Wed, 3 Feb 2016 08:15:34 -0800
-Message-ID: <CAFHL4X1UHvo2aVcUaAjY2b7gUyELLBaH1Tg3eQNvmUOswW1Urg@mail.gmail.com>
-Subject: Re: Request for information on bloated writes using Swift
+Content-Disposition: inline
+In-Reply-To: <20160115132249.GL15950@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,307 +28,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5401408377959829846=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
---===============5401408377959829846==
-Content-Type: multipart/alternative; boundary=089e01229de0afab6f052adfeec4
+On Fri, Jan 15, 2016 at 02:22:49PM +0100, Jan Kara wrote:
+> On Wed 13-01-16 11:48:32, Ross Zwisler wrote:
+> > On Wed, Jan 13, 2016 at 10:44:11AM +0100, Jan Kara wrote:
+> > > On Thu 07-01-16 22:27:54, Ross Zwisler wrote:
+> > > > Add support for tracking dirty DAX entries in the struct address_space
+> > > > radix tree.  This tree is already used for dirty page writeback, and it
+> > > > already supports the use of exceptional (non struct page*) entries.
+> > > > 
+> > > > In order to properly track dirty DAX pages we will insert new exceptional
+> > > > entries into the radix tree that represent dirty DAX PTE or PMD pages.
+> > > > These exceptional entries will also contain the writeback sectors for the
+> > > > PTE or PMD faults that we can use at fsync/msync time.
+> > > > 
+> > > > There are currently two types of exceptional entries (shmem and shadow)
+> > > > that can be placed into the radix tree, and this adds a third.  We rely on
+> > > > the fact that only one type of exceptional entry can be found in a given
+> > > > radix tree based on its usage.  This happens for free with DAX vs shmem but
+> > > > we explicitly prevent shadow entries from being added to radix trees for
+> > > > DAX mappings.
+> > > > 
+> > > > The only shadow entries that would be generated for DAX radix trees would
+> > > > be to track zero page mappings that were created for holes.  These pages
+> > > > would receive minimal benefit from having shadow entries, and the choice
+> > > > to have only one type of exceptional entry in a given radix tree makes the
+> > > > logic simpler both in clear_exceptional_entry() and in the rest of DAX.
+> > > > 
+> > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > > Reviewed-by: Jan Kara <jack@suse.cz>
+> > > 
+> > > I have realized there's one issue with this code. See below:
+> > > 
+> > > > @@ -34,31 +35,39 @@ static void clear_exceptional_entry(struct address_space *mapping,
+> > > >  		return;
+> > > >  
+> > > >  	spin_lock_irq(&mapping->tree_lock);
+> > > > -	/*
+> > > > -	 * Regular page slots are stabilized by the page lock even
+> > > > -	 * without the tree itself locked.  These unlocked entries
+> > > > -	 * need verification under the tree lock.
+> > > > -	 */
+> > > > -	if (!__radix_tree_lookup(&mapping->page_tree, index, &node, &slot))
+> > > > -		goto unlock;
+> > > > -	if (*slot != entry)
+> > > > -		goto unlock;
+> > > > -	radix_tree_replace_slot(slot, NULL);
+> > > > -	mapping->nrshadows--;
+> > > > -	if (!node)
+> > > > -		goto unlock;
+> > > > -	workingset_node_shadows_dec(node);
+> > > > -	/*
+> > > > -	 * Don't track node without shadow entries.
+> > > > -	 *
+> > > > -	 * Avoid acquiring the list_lru lock if already untracked.
+> > > > -	 * The list_empty() test is safe as node->private_list is
+> > > > -	 * protected by mapping->tree_lock.
+> > > > -	 */
+> > > > -	if (!workingset_node_shadows(node) &&
+> > > > -	    !list_empty(&node->private_list))
+> > > > -		list_lru_del(&workingset_shadow_nodes, &node->private_list);
+> > > > -	__radix_tree_delete_node(&mapping->page_tree, node);
+> > > > +
+> > > > +	if (dax_mapping(mapping)) {
+> > > > +		if (radix_tree_delete_item(&mapping->page_tree, index, entry))
+> > > > +			mapping->nrexceptional--;
+> > > 
+> > > So when you punch hole in a file, you can delete a PMD entry from a radix
+> > > tree which covers part of the file which still stays. So in this case you
+> > > have to split the PMD entry into PTE entries (probably that needs to happen
+> > > up in truncate_inode_pages_range()) or something similar...
+> > 
+> > I think (and will verify) that the DAX code just unmaps the entire PMD range
+> > when we receive a hole punch request inside of the PMD.  If this is true then
+> > I think the radix tree code should behave the same way and just remove the PMD
+> > entry in the radix tree.
+> 
+> But you cannot just remove it if it is dirty... You have to keep somewhere
+> information that part of the PMD range is still dirty (or write that range
+> out before removing the radix tree entry).
 
---089e01229de0afab6f052adfeec4
-Content-Type: text/plain; charset=UTF-8
+It turns out that hole punching a DAX PMD hits a BUG:
 
-Thank you Eric,
-I am sorry, I missed reading your message before replying.
-You got my question right.
+[  247.821632] ------------[ cut here ]------------
+[  247.822744] kernel BUG at mm/memory.c:1195!
+[  247.823742] invalid opcode: 0000 [#1] SMP 
+[  247.824768] Modules linked in: nd_pmem nd_btt nd_e820 libnvdimm
+[  247.826299] CPU: 1 PID: 1544 Comm: test Tainted: G        W       4.4.0-rc8+ #9
+[  247.828017] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
+[  247.830298] task: ffff880036756200 ti: ffff8800a077c000 task.ti: ffff8800a077c000
+[  247.831935] RIP: 0010:[<ffffffff81203157>]  [<ffffffff81203157>] unmap_page_range+0x907/0x910
+[  247.833847] RSP: 0018:ffff8800a077fb88  EFLAGS: 00010282
+[  247.835030] RAX: 0000000000000073 RBX: ffffc00000000fff RCX: 0000000000000000
+[  247.836595] RDX: 0000000000000000 RSI: ffff88051a3ce168 RDI: ffff88051a3ce168
+[  247.838168] RBP: ffff8800a077fc68 R08: 0000000000000001 R09: 0000000000000001
+[  247.839728] R10: 0000000000000001 R11: 0000000000000001 R12: 0000000010405000
+[  247.841244] R13: 0000000010403000 R14: ffff8800a077fcb0 R15: 0000000010403000
+[  247.842715] FS:  00007f533a5bb700(0000) GS:ffff88051a200000(0000) knlGS:0000000000000000
+[  247.844395] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  247.845589] CR2: 0000000010403000 CR3: 0000000514337000 CR4: 00000000000006e0
+[  247.847076] Stack:
+[  247.847502]  ffff8800a077fcb0 ffff8800a077fc38 ffff880036756200 ffff8800a077fbb0
+[  247.849126]  0000000010404fff 0000000010404fff 0000000010404fff ffff880514337000
+[  247.850714]  ffff880513499000 ffff8800a077fcc0 0000000010405000 0000000000000000
+[  247.852246] Call Trace:
+[  247.852740]  [<ffffffff810fbb4d>] ? trace_hardirqs_on+0xd/0x10
+[  247.853883]  [<ffffffff812031dd>] unmap_single_vma+0x7d/0xe0
+[  247.855004]  [<ffffffff812032ed>] zap_page_range_single+0xad/0xf0
+[  247.856195]  [<ffffffff81203410>] ? unmap_mapping_range+0xa0/0x190
+[  247.857403]  [<ffffffff812034d6>] unmap_mapping_range+0x166/0x190
+[  247.858596]  [<ffffffff811e0948>] truncate_pagecache_range+0x48/0x60
+[  247.859839]  [<ffffffff8130b7ba>] ext4_punch_hole+0x33a/0x4b0
+[  247.860837]  [<ffffffff8133a274>] ext4_fallocate+0x144/0x890
+[  247.861784]  [<ffffffff810f6cd7>] ? update_fast_ctr+0x17/0x30
+[  247.862751]  [<ffffffff810f6d69>] ? percpu_down_read+0x49/0x90
+[  247.863731]  [<ffffffff812640c4>] ? __sb_start_write+0xb4/0xf0
+[  247.864709]  [<ffffffff8125d900>] vfs_fallocate+0x140/0x220
+[  247.865645]  [<ffffffff8125e7d4>] SyS_fallocate+0x44/0x70
+[  247.866553]  [<ffffffff81a68ef2>] entry_SYSCALL_64_fastpath+0x12/0x76
+[  247.867632] Code: 12 fe ff ff 0f 0b 48 8b 45 98 48 8b 4d 90 4c 89 fa 48 c7 c6 78 30 c2 81 48 c7 c7 50 6b f0 81 4c 8b 48 08 4c 8b 00 e8 06 4a fc ff <0f> 0b e8 d2 2f ea ff 66 90 66 66 66 66 90 48 8b 06 4c 8b 4e 08 
+[  247.871862] RIP  [<ffffffff81203157>] unmap_page_range+0x907/0x910
+[  247.872843]  RSP <ffff8800a077fb88>
+[  247.873435] ---[ end trace 75145e78670ba43d ]---
 
-Regards,
-Dilip
-
-On Wed, Feb 3, 2016 at 8:10 AM, Dilip Simha <nmdilipsimha@gmail.com> wrote:
-
-> On Wed, Feb 3, 2016 at 12:30 AM, Dave Chinner <david@fromorbit.com> wrote:
->
->> On Tue, Feb 02, 2016 at 11:09:15PM -0800, Dilip Simha wrote:
->> > Hi Dave,
->> >
->> > On Tue, Feb 2, 2016 at 10:37 PM, Dave Chinner <david@fromorbit.com>
->> wrote:
->> >
->> > > On Tue, Feb 02, 2016 at 07:40:34PM -0800, Dilip Simha wrote:
->> > > > Hi Eric,
->> > > >
->> > > > Thank you for your quick reply.
->> > > >
->> > > > Using xfs_io as per your suggestion, I am able to reproduce the
->> issue.
->> > > > However, I need to falloc for 256K and write for 257K to see this
->> issue.
->> > > >
->> > > > # xfs_io -f -c "falloc 0 256k" -c "pwrite 0 257k"
->> /srv/node/r1/t1.txt
->> > > > # stat /srv/node/r1/t4.txt | grep Blocks
->> > > >   Size: 263168     Blocks: 1536       IO Block: 4096   regular file
->> > >
->> > > Fallocate sets the XFS_DIFLAG_PREALLOC on the inode.
->> > >
->> > > When you writing *past the preallocated area* and do delayed
->> > > allocation, the speculative preallocation beyond EOF is double the
->> > > size of the extent at EOF. i.e. 512k, leading to 768k being
->> > > allocated to the file (1536 blocks, exactly).
->> > >
->> >
->> > Thank you for the details.
->> > This is exactly where I am a bit perplexed. Since the reclamation logic
->> > skips inodes that have the XFS_DIFLAG_PREALLOC flag set, why did the
->> > allocation logic allot more blocks on such an inode?
->>
->> To store the data you wrote outside the preallocated region, of
->> course.
->>
->> > My understanding is that the fallocate caller only requested for 256K
->> worth
->> > of blocks to be available sequentially if possible.
->>
->> fallocate only guarantees the blocks are allocated - it does not
->> guarantee anything about the layout of the blocks.
->>
->> > On any subsequent write beyond the EOF, the caller is completely
->> > unaware of the underlying file-system storing that data adjacent
->> > to the first 256K data.  Since XFS is speculatively allocating
->> > additional space (512K) adjacent to the first 256K data, I would
->> > expect XFS to either treat these two allocations distinctly and
->> > NOT mark XFS_DIFLAG_PREALLOC on the additional 512K data(minus the
->> > actually used additional data=1K), OR remove XFS_DIFLAG_PREALLOC
->> > flag on the entire inode.
->>
->> Oh, if only it were that simple. It's way more complex than I have
->> time to explain here.
->>
->> Fundamentally, XFS_DIFLAG_PREALLOC is used to indicate that
->> persistent preallocation has been done on the file, and so if that
->> has happened we need to turn off optimistic removal of blocks
->> anywhere in the file because we can't tell what blocks had
->> persistent preallocation done on them after the fact.  That's the
->> way it's been since unwritten extents were added to XFS back in
->> 1998, and I don't really see the need for it to change right now.
->>
->
-> I completely understand the reasoning behind this reclamation logic and I
-> also agree to it.
-> But my question is with the allocation logic. I don't understand why XFS
-> allocates more than necessary blocks when this flag is set and when it
-> knows that its not going to clean up the additional space.
->
-> A simple example would be:
-> 1: Open File in Write mode.
-> 2: Fallocate 256K
-> 3: Write 256K
-> 4: Close File
->
-> Stat shows that XFS allocated 512 blocks as expected.
->
-> 5: Open file in append mode.
-> 6: Write 256 bytes.
-> 7: Close file.
->
-> Expectation is that the number of blocks allocated is either 512+1 or
-> 512+8 depending on the block size.
-> However, XFS uses speculative preallocation to allocate 512K (as per your
-> explanation) to write 256 bytes and hence the overall disk usage goes up to
-> 1536 blocks.
-> Now, who is responsible for clearing up the additional allocated blocks?
-> Clearly the application has no idea about the over-allocation.
->
-> I agree that if an application uses fallocate and delayed allocation on
-> the same file in the same IO, then its a badly structured application. But
-> in this case we have two different IOs on the same file. The first IO did
-> not expect an append and hence issued an fallocate. So that looks good to
-> me.
->
-> Your thoughts on this?
->
-> Regards,
-> Dilip
->
->
->> If an application wants to mix fallocate and delayed allocatin
->> writes to the same file in the same IO, then that's an application
->> bug. It's going to cause bad IO patterns and file fragmentation and
->> have other side effects (as you've noticed), and there's nothing the
->> filesystem can do about it. fallocate() requires expertise to use in
->> a beneficial manner - most developers do not have the required
->> expertise (and don't have enough expertise to realise this) and so
->> usually make things worse rather than better by using fallocate.
->>
->> > Also, is there any way I can check for this flag?
->> > The FLAGS, as observed from xfs_bmap doesn't show any flags set to it.
->> Am I
->> > not looking at the right flags?
->>
->> xfs_io -c stat <file>
->>
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
->>
->
->
-
---089e01229de0afab6f052adfeec4
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Thank you Eric,<div>I am sorry, I missed reading your mess=
-age before replying.</div><div>You got my question right.</div><div><br></d=
-iv><div>Regards,</div><div>Dilip</div></div><div class=3D"gmail_extra"><br>=
-<div class=3D"gmail_quote">On Wed, Feb 3, 2016 at 8:10 AM, Dilip Simha <spa=
-n dir=3D"ltr">&lt;<a href=3D"mailto:nmdilipsimha@gmail.com" target=3D"_blan=
-k">nmdilipsimha@gmail.com</a>&gt;</span> wrote:<br><blockquote class=3D"gma=
-il_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-lef=
-t:1ex"><div dir=3D"ltr"><div class=3D"gmail_extra"><div class=3D"gmail_quot=
-e"><div><div class=3D"h5">On Wed, Feb 3, 2016 at 12:30 AM, Dave Chinner <sp=
-an dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank"=
->david@fromorbit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_qu=
-ote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex=
-"><span>On Tue, Feb 02, 2016 at 11:09:15PM -0800, Dilip Simha wrote:<br>
-&gt; Hi Dave,<br>
-&gt;<br>
-&gt; On Tue, Feb 2, 2016 at 10:37 PM, Dave Chinner &lt;<a href=3D"mailto:da=
-vid@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&gt; wrote:<br>
-&gt;<br>
-&gt; &gt; On Tue, Feb 02, 2016 at 07:40:34PM -0800, Dilip Simha wrote:<br>
-&gt; &gt; &gt; Hi Eric,<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; Thank you for your quick reply.<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; Using xfs_io as per your suggestion, I am able to reproduce =
-the issue.<br>
-&gt; &gt; &gt; However, I need to falloc for 256K and write for 257K to see=
- this issue.<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; # xfs_io -f -c &quot;falloc 0 256k&quot; -c &quot;pwrite 0 2=
-57k&quot; /srv/node/r1/t1.txt<br>
-&gt; &gt; &gt; # stat /srv/node/r1/t4.txt | grep Blocks<br>
-&gt; &gt; &gt;=C2=A0 =C2=A0Size: 263168=C2=A0 =C2=A0 =C2=A0Blocks: 1536=C2=
-=A0 =C2=A0 =C2=A0 =C2=A0IO Block: 4096=C2=A0 =C2=A0regular file<br>
-&gt; &gt;<br>
-&gt; &gt; Fallocate sets the XFS_DIFLAG_PREALLOC on the inode.<br>
-&gt; &gt;<br>
-&gt; &gt; When you writing *past the preallocated area* and do delayed<br>
-&gt; &gt; allocation, the speculative preallocation beyond EOF is double th=
-e<br>
-&gt; &gt; size of the extent at EOF. i.e. 512k, leading to 768k being<br>
-&gt; &gt; allocated to the file (1536 blocks, exactly).<br>
-&gt; &gt;<br>
-&gt;<br>
-&gt; Thank you for the details.<br>
-&gt; This is exactly where I am a bit perplexed. Since the reclamation logi=
-c<br>
-&gt; skips inodes that have the XFS_DIFLAG_PREALLOC flag set, why did the<b=
-r>
-&gt; allocation logic allot more blocks on such an inode?<br>
-<br>
-</span>To store the data you wrote outside the preallocated region, of<br>
-course.<br>
-<span><br>
-&gt; My understanding is that the fallocate caller only requested for 256K =
-worth<br>
-&gt; of blocks to be available sequentially if possible.<br>
-<br>
-</span>fallocate only guarantees the blocks are allocated - it does not<br>
-guarantee anything about the layout of the blocks.<br>
-<span><br>
-&gt; On any subsequent write beyond the EOF, the caller is completely<br>
-&gt; unaware of the underlying file-system storing that data adjacent<br>
-&gt; to the first 256K data.=C2=A0 Since XFS is speculatively allocating<br=
->
-&gt; additional space (512K) adjacent to the first 256K data, I would<br>
-&gt; expect XFS to either treat these two allocations distinctly and<br>
-&gt; NOT mark XFS_DIFLAG_PREALLOC on the additional 512K data(minus the<br>
-&gt; actually used additional data=3D1K), OR remove XFS_DIFLAG_PREALLOC<br>
-&gt; flag on the entire inode.<br>
-<br>
-</span>Oh, if only it were that simple. It&#39;s way more complex than I ha=
-ve<br>
-time to explain here.<br>
-<br>
-Fundamentally, XFS_DIFLAG_PREALLOC is used to indicate that<br>
-persistent preallocation has been done on the file, and so if that<br>
-has happened we need to turn off optimistic removal of blocks<br>
-anywhere in the file because we can&#39;t tell what blocks had<br>
-persistent preallocation done on them after the fact.=C2=A0 That&#39;s the<=
-br>
-way it&#39;s been since unwritten extents were added to XFS back in<br>
-1998, and I don&#39;t really see the need for it to change right now.<br></=
-blockquote><div><br></div></div></div><div>I completely understand the reas=
-oning behind this reclamation logic and I also agree to it.</div><div>But m=
-y question is with the allocation logic. I don&#39;t understand why XFS all=
-ocates more than necessary blocks when this flag is set and when it knows t=
-hat its not going to clean up the additional space.</div><div><br></div><di=
-v>A simple example would be:</div><div>1: Open File in Write mode.</div><di=
-v>2: Fallocate 256K</div><div>3: Write 256K</div><div>4: Close File</div><d=
-iv><br></div><div>Stat shows that XFS allocated 512 blocks as expected.</di=
-v><div><br></div><div>5: Open file in append mode.</div><div>6: Write 256 b=
-ytes.</div><div>7: Close file.</div><div><br></div><div>Expectation is that=
- the number of blocks allocated is either 512+1 or 512+8 depending on the b=
-lock size.</div><div>However, XFS uses speculative preallocation to allocat=
-e 512K (as per your explanation) to write 256 bytes and hence the overall d=
-isk usage goes up to 1536 blocks.</div><div>Now, who is responsible for cle=
-aring up the additional allocated blocks? Clearly the application has no id=
-ea about the over-allocation.</div><div><br></div><div>I agree that if an a=
-pplication uses fallocate and delayed allocation on the same file in the sa=
-me IO, then its a badly structured application. But in this case we have tw=
-o different IOs on the same file. The first IO did not expect an append and=
- hence issued an fallocate. So that looks good to me.</div><div><br></div><=
-div>Your thoughts on this?</div><div><br></div><div>Regards,</div><div>Dili=
-p</div><span class=3D""><div><br></div><blockquote class=3D"gmail_quote" st=
-yle=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<br>
-If an application wants to mix fallocate and delayed allocatin<br>
-writes to the same file in the same IO, then that&#39;s an application<br>
-bug. It&#39;s going to cause bad IO patterns and file fragmentation and<br>
-have other side effects (as you&#39;ve noticed), and there&#39;s nothing th=
-e<br>
-filesystem can do about it. fallocate() requires expertise to use in<br>
-a beneficial manner - most developers do not have the required<br>
-expertise (and don&#39;t have enough expertise to realise this) and so<br>
-usually make things worse rather than better by using fallocate.<br>
-<span><br>
-&gt; Also, is there any way I can check for this flag?<br>
-&gt; The FLAGS, as observed from xfs_bmap doesn&#39;t show any flags set to=
- it. Am I<br>
-&gt; not looking at the right flags?<br>
-<br>
-</span>xfs_io -c stat &lt;file&gt;<br>
-<div><div><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.co=
-m</a><br>
-</div></div></blockquote></span></div><br></div></div>
-</blockquote></div><br></div>
-
---089e01229de0afab6f052adfeec4--
-
-
---===============5401408377959829846==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This happens with XFS as well.  I'm not sure that this path has ever been run,
+so essentially the next step is "add PMD hole punch support to DAX, including
+fsync/msync support".
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5401408377959829846==--
