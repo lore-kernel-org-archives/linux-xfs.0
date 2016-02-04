@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A16E929E05
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 17:03:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 336E6AC001
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 15:03:10 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B13177CA2
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 17:07:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E885304051
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 15:07:33 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	VpgJtA2GPOcMSDqT for <xfs@oss.sgi.com>;
-	Thu, 04 Feb 2016 15:02:56 -0800 (PST)
+	enJ7Qag7pfWHbzqJ for <xfs@oss.sgi.com>;
+	Thu, 04 Feb 2016 15:07:30 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aRStY-0000D9-ST
-	for xfs@oss.sgi.com; Fri, 05 Feb 2016 10:01:00 +1100
+	(envelope-from <dave@fromorbit.com>) id 1aRSxa-0000Ea-Ak
+	for xfs@oss.sgi.com; Fri, 05 Feb 2016 10:05:10 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aRStY-0004vc-R6
-	for xfs@oss.sgi.com; Fri, 05 Feb 2016 10:01:00 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1aRSxa-0004yr-AG
+	for xfs@oss.sgi.com; Fri, 05 Feb 2016 10:05:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] metadump: bounds check btree block regions being zeroed
-Date: Fri,  5 Feb 2016 10:00:57 +1100
-Message-Id: <1454626858-17823-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1454626858-17823-1-git-send-email-david@fromorbit.com>
-References: <1454626858-17823-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/7] repair: parallelise phase 7
+Date: Fri,  5 Feb 2016 10:05:02 +1100
+Message-Id: <1454627108-19036-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1454627108-19036-1-git-send-email-david@fromorbit.com>
+References: <1454627108-19036-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,115 +39,174 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Arkadiusz Miskiewicz reported that metadump was crashing on one of
-his corrupted filesystems, and the trace indicated that it was
-zeroing unused regions in inode btree blocks when it failed. The
-btree block had a corrupt nrecs field, which was resulting in an out
-of bounds memset() occurring.  Ensure that the region being
-generated for zeroing is within bounds before executing the zeroing.
+It operates on a single AG at a time, sequentially, doing inode updates. All the
+data structures accessed and modified are per AG, as are the modification to
+on-disk structures. Hence we can run this phase concurrently across multiple
+AGs.
 
-Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+This is important for large, broken filesystem repairs, where there can be
+millions of inodes that need link counts updated. Once such repair image takes
+more than 45 minutes to run phase 7 as a single threaded operation.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- db/metadump.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ repair/phase7.c     | 77 ++++++++++++++++++++++++++++++++++-------------------
+ repair/progress.c   |  4 +--
+ repair/protos.h     |  2 +-
+ repair/xfs_repair.c |  2 +-
+ 4 files changed, 54 insertions(+), 31 deletions(-)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index a185da5..26a3bd5 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -246,6 +246,11 @@ write_buf(
- 	return seenint() ? -EINTR : 0;
+diff --git a/repair/phase7.c b/repair/phase7.c
+index b1e3a55..91dad02 100644
+--- a/repair/phase7.c
++++ b/repair/phase7.c
+@@ -26,6 +26,7 @@
+ #include "dinode.h"
+ #include "versions.h"
+ #include "progress.h"
++#include "threads.h"
+ 
+ /* dinoc is a pointer to the IN-CORE dinode core */
+ static void
+@@ -108,45 +109,67 @@ update_inode_nlinks(
+ 	IRELE(ip);
  }
  
+-void
+-phase7(xfs_mount_t *mp)
 +/*
-+ * We could be processing a corrupt block, so we can't trust any of
-+ * the offsets or lengths to be within the buffer range. Hence check
-+ * carefully!
++ * for each ag, look at each inode 1 at a time. If the number of
++ * links is bad, reset it, log the inode core, commit the transaction
 + */
- static void
- zero_btree_node(
- 	struct xfs_btree_block	*block,
-@@ -262,10 +267,15 @@ zero_btree_node(
- 	char			*key_end;
++static void
++do_link_updates(
++	struct work_queue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
+ {
+ 	ino_tree_node_t		*irec;
+-	int			i;
+ 	int			j;
+ 	__uint32_t		nrefs;
  
- 	nrecs = be16_to_cpu(block->bb_numrecs);
-+	if (nrecs < 0)
-+		return;
++	irec = findfirst_inode_rec(agno);
++
++	while (irec != NULL)  {
++		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
++			ASSERT(is_inode_confirmed(irec, j));
++
++			if (is_inode_free(irec, j))
++				continue;
++
++			ASSERT(no_modify || is_inode_reached(irec, j));
++
++			nrefs = num_inode_references(irec, j);
++			ASSERT(no_modify || nrefs > 0);
++
++			if (get_inode_disk_nlinks(irec, j) != nrefs)
++				update_inode_nlinks(wq->mp,
++					XFS_AGINO_TO_INO(wq->mp, agno,
++						irec->ino_startnum + j),
++					nrefs);
++		}
++		irec = next_ino_rec(irec);
++	}
++
++	PROG_RPT_INC(prog_rpt_done[agno], 1);
++}
++
++void
++phase7(
++	struct xfs_mount	*mp,
++	int			scan_threads)
++{
++	struct work_queue	wq;
++	int			agno;
++
+ 	if (!no_modify)
+ 		do_log(_("Phase 7 - verify and correct link counts...\n"));
+ 	else
+ 		do_log(_("Phase 7 - verify link counts...\n"));
  
- 	switch (btype) {
- 	case TYP_BMAPBTA:
- 	case TYP_BMAPBTD:
-+		if (nrecs > mp->m_bmap_dmxr[1])
-+			return;
-+
- 		bkp = XFS_BMBT_KEY_ADDR(mp, block, 1);
- 		bpp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
- 		zp1 = (char *)&bkp[nrecs];
-@@ -274,6 +284,9 @@ zero_btree_node(
- 		break;
- 	case TYP_INOBT:
- 	case TYP_FINOBT:
-+		if (nrecs > mp->m_inobt_mxr[1])
-+			return;
-+
- 		ikp = XFS_INOBT_KEY_ADDR(mp, block, 1);
- 		ipp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
- 		zp1 = (char *)&ikp[nrecs];
-@@ -282,6 +295,9 @@ zero_btree_node(
- 		break;
- 	case TYP_BNOBT:
- 	case TYP_CNTBT:
-+		if (nrecs > mp->m_alloc_mxr[1])
-+			return;
-+
- 		akp = XFS_ALLOC_KEY_ADDR(mp, block, 1);
- 		app = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
- 		zp1 = (char *)&akp[nrecs];
-@@ -300,6 +316,11 @@ zero_btree_node(
- 	memset(zp2, 0, (char *)block + mp->m_sb.sb_blocksize - zp2);
+-	/*
+-	 * for each ag, look at each inode 1 at a time. If the number of
+-	 * links is bad, reset it, log the inode core, commit the transaction
+-	 */
+-	for (i = 0; i < glob_agcount; i++)  {
+-		irec = findfirst_inode_rec(i);
+-
+-		while (irec != NULL)  {
+-			for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
+-				ASSERT(is_inode_confirmed(irec, j));
++	set_progress_msg(PROGRESS_FMT_CORR_LINK, (__uint64_t) glob_agcount);
+ 
+-				if (is_inode_free(irec, j))
+-					continue;
++	create_work_queue(&wq, mp, scan_threads);
+ 
+-				ASSERT(no_modify || is_inode_reached(irec, j));
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
++		queue_work(&wq, do_link_updates, agno, NULL);
+ 
+-				nrefs = num_inode_references(irec, j);
+-				ASSERT(no_modify || nrefs > 0);
++	destroy_work_queue(&wq);
+ 
+-				if (get_inode_disk_nlinks(irec, j) != nrefs)
+-					update_inode_nlinks(mp,
+-						XFS_AGINO_TO_INO(mp, i,
+-							irec->ino_startnum + j),
+-						nrefs);
+-			}
+-			irec = next_ino_rec(irec);
+-		}
+-	}
++	print_final_rpt();
  }
+diff --git a/repair/progress.c b/repair/progress.c
+index 418b803..2a09b23 100644
+--- a/repair/progress.c
++++ b/repair/progress.c
+@@ -75,9 +75,9 @@ progress_rpt_t progress_rpt_reports[] = {
+ {FMT2, N_("moving disconnected inodes to lost+found"),		/* 12 */
+ 	&rpt_fmts[FMT2], &rpt_types[TYPE_INODE]},
+ {FMT1, N_("verify and correct link counts"),			/* 13 */
+-	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
++	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+ {FMT1, N_("verify link counts"),				/* 14 */
+-	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]}
++	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]}
+ };
  
-+/*
-+ * We could be processing a corrupt block, so we can't trust any of
-+ * the offsets or lengths to be within the buffer range. Hence check
-+ * carefully!
-+ */
- static void
- zero_btree_leaf(
- 	struct xfs_btree_block	*block,
-@@ -312,20 +333,31 @@ zero_btree_leaf(
- 	char			*zp;
+ pthread_t	report_thread;
+diff --git a/repair/protos.h b/repair/protos.h
+index 9d5a2a6..b113aca 100644
+--- a/repair/protos.h
++++ b/repair/protos.h
+@@ -50,7 +50,7 @@ void	phase3(struct xfs_mount *);
+ void	phase4(struct xfs_mount *);
+ void	phase5(struct xfs_mount *);
+ void	phase6(struct xfs_mount *);
+-void	phase7(struct xfs_mount *);
++void	phase7(struct xfs_mount *, int);
  
- 	nrecs = be16_to_cpu(block->bb_numrecs);
-+	if (nrecs < 0)
-+		return;
+ int	verify_set_agheader(struct xfs_mount *, struct xfs_buf *,
+ 		struct xfs_sb *, struct xfs_agf *, struct xfs_agi *,
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 3eaced4..fcdb212 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -893,7 +893,7 @@ main(int argc, char **argv)
+ 		phase6(mp);
+ 		timestamp(PHASE_END, 6, NULL);
  
- 	switch (btype) {
- 	case TYP_BMAPBTA:
- 	case TYP_BMAPBTD:
-+		if (nrecs > mp->m_bmap_dmxr[0])
-+			return;
-+
- 		brp = XFS_BMBT_REC_ADDR(mp, block, 1);
- 		zp = (char *)&brp[nrecs];
- 		break;
- 	case TYP_INOBT:
- 	case TYP_FINOBT:
-+		if (nrecs > mp->m_inobt_mxr[0])
-+			return;
-+
- 		irp = XFS_INOBT_REC_ADDR(mp, block, 1);
- 		zp = (char *)&irp[nrecs];
- 		break;
- 	case TYP_BNOBT:
- 	case TYP_CNTBT:
-+		if (nrecs > mp->m_alloc_mxr[0])
-+			return;
-+
- 		arp = XFS_ALLOC_REC_ADDR(mp, block, 1);
- 		zp = (char *)&arp[nrecs];
- 		break;
+-		phase7(mp);
++		phase7(mp, phase2_threads);
+ 		timestamp(PHASE_END, 7, NULL);
+ 	} else  {
+ 		do_warn(
 -- 
 2.5.0
 
