@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 10FA829DFC
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 17:15:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 01177304032
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 15:15:27 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 16E9129E0B
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 17:15:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0714B8F8035
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 15:15:28 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	dHCUIJ4LaQ81Qxml for <xfs@oss.sgi.com>;
+	shEtJYqIktwCoies for <xfs@oss.sgi.com>;
 	Thu, 04 Feb 2016 15:15:24 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs_fs.h: XFS_IOC_FS[SG]SETXATTR to FS_IOC_FS[SG]ETXATTR
-	promotion
-Date: Fri,  5 Feb 2016 10:15:18 +1100
-Message-Id: <1454627718-19583-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs_quota: allow operation on foreign filesystem types
+Date: Fri,  5 Feb 2016 10:15:17 +1100
+Message-Id: <1454627718-19583-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1454627718-19583-1-git-send-email-david@fromorbit.com>
 References: <1454627718-19583-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,124 +33,380 @@ Cc: fstests@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The kernel commit to make this ioctl promotion (bb99e06ddf) moved
-the definitions for the XFS ioctl to uapi/linux/fs.h for the
-following reason:
-
-    Hoist the ioctl definitions for the XFS_IOC_FS[SG]SETXATTR API
-    from fs/xfs/libxfs/xfs_fs.h to include/uapi/linux/fs.h so that
-    the ioctls can be used by all filesystems, not just XFS. This
-    enables (initially) ext4 to use the ioctl to set project IDs on
-    inodes.
-
-This means we now need to handle this change in userspace as the
-uapi/linux/fs.h file may not contain the definitions (i.e. new
-xfsprogs/ old linux uapi files) xfsprogs needs to build. Hence we
-need to massage the definition in xfs_fs.h to take the values from
-the system header if it exists, otherwise keep the old definitions
-for compatibility and platforms other than linux..
+This allows xfs_quota to be used on ext4 for project quota testing
+in xfstests.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_fs.h | 67 ++++++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 43 insertions(+), 24 deletions(-)
+ include/command.h |  3 ++-
+ include/path.h    |  1 +
+ io/init.h         |  2 +-
+ libxcmd/paths.c   |  7 +++----
+ quota/free.c      |  2 ++
+ quota/init.c      | 29 +++++++++++++++++++++++++++--
+ quota/init.h      |  1 +
+ quota/path.c      |  5 +++--
+ quota/project.c   |  1 +
+ quota/quot.c      |  1 +
+ quota/quota.c     |  2 ++
+ quota/report.c    | 11 +++++++++--
+ quota/state.c     |  4 +++-
+ quota/util.c      |  1 +
+ 14 files changed, 57 insertions(+), 13 deletions(-)
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index d8b733a..ced9b2d 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -35,10 +35,8 @@ struct dioattr {
- };
- #endif
+diff --git a/include/command.h b/include/command.h
+index 7b9fc28..81d5a4d 100644
+--- a/include/command.h
++++ b/include/command.h
+@@ -20,7 +20,8 @@
  
--/*
-- * Structure for XFS_IOC_FSGETXATTR[A] and XFS_IOC_FSSETXATTR.
-- */
--#ifndef HAVE_FSXATTR
-+/* check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves */
-+#ifndef FS_IOC_FSGETXATTR
- struct fsxattr {
- 	__u32		fsx_xflags;	/* xflags field value (get/set) */
- 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
-@@ -46,28 +44,49 @@ struct fsxattr {
- 	__u32		fsx_projid;	/* project identifier (get/set) */
- 	unsigned char	fsx_pad[12];
- };
-+
-+/*
-+ * Flags for the fsx_xflags field
-+ */
-+#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
-+#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
-+#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
-+#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
-+#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
-+#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
-+#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
-+#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
-+#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
-+#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
-+#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
-+#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
-+#define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
-+#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-+#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
-+
-+#define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
-+#define FS_IOC_FSSETXATTR     _IOW ('X', 32, struct fsxattr)
-+
- #endif
+ #include <sys/time.h>
  
- /*
-- * Flags for the bs_xflags/fsx_xflags field
-- * There should be a one-to-one correspondence between these flags and the
-- * XFS_DIFLAG_s.
-+ * Flags for the bs_xflags/fsx_xflags field in FS_IOC_FS[GS]ETXATTR[A]
+-#define CMD_FLAG_GLOBAL	((int)0x80000000)	/* don't iterate "args" */
++#define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
++#define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+ 
+ typedef int (*cfunc_t)(int argc, char **argv);
+ typedef void (*helpfunc_t)(void);
+diff --git a/include/path.h b/include/path.h
+index 46a887e..39c1a95 100644
+--- a/include/path.h
++++ b/include/path.h
+@@ -29,6 +29,7 @@
+ 
+ #define FS_MOUNT_POINT	(1<<0)
+ #define FS_PROJECT_PATH	(1<<1)
++#define FS_FOREIGN	(1<<2)
+ 
+ typedef struct fs_path {
+ 	char		*fs_name;	/* Data device for filesystem 	*/
+diff --git a/io/init.h b/io/init.h
+index d773b1b..bb25242 100644
+--- a/io/init.h
++++ b/io/init.h
+@@ -18,7 +18,7 @@
+ 
+ #define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
+ #define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
+-#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
++#define CMD_FOREIGN_OK	CMD_FLAG_FOREIGN_OK
+ 
+ extern char	*progname;
+ extern int	exitcode;
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 71af25f..7c8c673 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -113,6 +113,9 @@ fs_table_insert(
+ 			goto out_nodev;
+ 	}
+ 
++	if (!platform_test_xfs_path(dir))
++		flags |= FS_FOREIGN;
++
+ 	/*
+ 	 * Make copies of the directory and data device path.
+ 	 * The log device and real-time device, if non-null,
+@@ -301,8 +304,6 @@ fs_table_initialise_mounts(
+ 			return errno;
+ 
+ 	while ((mnt = getmntent(mtp)) != NULL) {
+-		if (strcmp(mnt->mnt_type, "xfs") != 0)
+-			continue;
+ 		if (!realpath(mnt->mnt_dir, rmnt_dir))
+ 			continue;
+ 		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
+@@ -360,8 +361,6 @@ fs_table_initialise_mounts(
+ 			return errno;
+ 
+ 	for (i = 0; i < count; i++) {
+-		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
+-			continue;
+ 		if (!realpath(stats[i].f_mntfromname, rmntfromname))
+ 			continue;
+ 		if (!realpath(stats[i].f_mntonname, rmntonname))
+diff --git a/quota/free.c b/quota/free.c
+index dcbe8ce..487260a 100644
+--- a/quota/free.c
++++ b/quota/free.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   */
--#define XFS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
--#define XFS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
--#define XFS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
--#define XFS_XFLAG_APPEND	0x00000010	/* all writes append */
--#define XFS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
--#define XFS_XFLAG_NOATIME	0x00000040	/* do not update access time */
--#define XFS_XFLAG_NODUMP	0x00000080	/* do not include in backups */
--#define XFS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
--#define XFS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
--#define XFS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
--#define XFS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
--#define XFS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
--#define XFS_XFLAG_NODEFRAG	0x00002000  	/* do not defragment */
--#define XFS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
--#define XFS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
-+#define	XFS_XFLAG_REALTIME	FS_XFLAG_REALTIME
-+#define	XFS_XFLAG_PREALLOC	FS_XFLAG_PREALLOC
-+#define	XFS_XFLAG_IMMUTABLE	FS_XFLAG_IMMUTABLE
-+#define	XFS_XFLAG_APPEND	FS_XFLAG_APPEND
-+#define	XFS_XFLAG_SYNC		FS_XFLAG_SYNC
-+#define	XFS_XFLAG_NOATIME	FS_XFLAG_NOATIME
-+#define	XFS_XFLAG_NODUMP	FS_XFLAG_NODUMP
-+#define	XFS_XFLAG_RTINHERIT	FS_XFLAG_RTINHERIT
-+#define	XFS_XFLAG_PROJINHERIT	FS_XFLAG_PROJINHERIT
-+#define	XFS_XFLAG_NOSYMLINKS	FS_XFLAG_NOSYMLINKS
-+#define	XFS_XFLAG_EXTSIZE	FS_XFLAG_EXTSIZE
-+#define	XFS_XFLAG_EXTSZINHERIT	FS_XFLAG_EXTSZINHERIT
-+#define	XFS_XFLAG_NODEFRAG	FS_XFLAG_NODEFRAG
-+#define	XFS_XFLAG_FILESTREAM	FS_XFLAG_FILESTREAM
-+#define	XFS_XFLAG_HASATTR	FS_XFLAG_HASATTR
  
- /*
-  * Structure for XFS_IOC_GETBMAP.
-@@ -513,8 +532,8 @@ typedef struct xfs_swapext
- #define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
- #define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
- #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
--#define XFS_IOC_FSGETXATTR	_IOR ('X', 31, struct fsxattr)
--#define XFS_IOC_FSSETXATTR	_IOW ('X', 32, struct fsxattr)
-+#define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
-+#define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
- #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
- #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
- #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
++#include <stdbool.h>
+ #include "command.h"
+ #include "init.h"
+ #include "quota.h"
+@@ -371,6 +372,7 @@ free_init(void)
+ 	free_cmd.args = _("[-bir] [-hn] [-f file]");
+ 	free_cmd.oneline = _("show free and used counts for blocks and inodes");
+ 	free_cmd.help = free_help;
++	free_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	add_command(&free_cmd);
+ }
+diff --git a/quota/init.c b/quota/init.c
+index 52f7941..dfd8ce7 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -24,6 +24,7 @@
+ char	*progname;
+ int	exitcode;
+ int	expert;
++bool	foreign_allowed = false;
+ 
+ static char **projopts;	/* table of project names (cmdline) */
+ static int nprojopts;	/* number of entries in name table. */
+@@ -83,15 +84,36 @@ init_args_command(
+ 
+ 	do {
+ 		fs_path = &fs_table[index++];
+-	} while ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count);
++		if (fs_path->fs_flags & FS_PROJECT_PATH)
++			continue;
++		if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
++			continue;
++	} while (index < fs_count);
+ 
+ 	if (fs_path->fs_flags & FS_PROJECT_PATH)
+ 		return 0;
++	if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
++		return 0;
+ 	if (index > fs_count)
+ 		return 0;
+ 	return index;
+ }
+ 
++static int
++init_check_command(
++	const cmdinfo_t	*ct)
++{
++	if (fs_path &&
++	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
++	     (fs_path->fs_flags & FS_FOREIGN)) {
++		fprintf(stderr,
++	_("foreign mount active, %s command is for XFS filesystems only\n"),
++			ct->name);
++		return 0;
++	}
++	return 1;
++}
++
+ static void
+ init(
+ 	int		argc,
+@@ -104,7 +126,7 @@ init(
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+ 
+-	while ((c = getopt(argc, argv, "c:d:D:P:p:t:xV")) != EOF) {
++	while ((c = getopt(argc, argv, "c:d:D:fP:p:t:xV")) != EOF) {
+ 		switch (c) {
+ 		case 'c':	/* commands */
+ 			add_user_command(optarg);
+@@ -112,6 +134,8 @@ init(
+ 		case 'd':
+ 			add_project_opt(optarg);
+ 			break;
++		case 'f':
++			foreign_allowed = true;
+ 		case 't':
+ 			mtab_file = optarg;
+ 			break;
+@@ -140,6 +164,7 @@ init(
+ 
+ 	init_commands();
+ 	add_args_command(init_args_command);
++	add_check_command(init_check_command);
+ 
+ 	/*
+ 	 * Ensure that global commands don't end up with an invalid path pointer
+diff --git a/quota/init.h b/quota/init.h
+index 71706cb..6879855 100644
+--- a/quota/init.h
++++ b/quota/init.h
+@@ -19,6 +19,7 @@
+ extern char	*progname;
+ extern int	exitcode;
+ extern int	expert;
++extern bool	foreign_allowed;
+ 
+ extern void	edit_init(void);
+ extern void	free_init(void);
+diff --git a/quota/path.c b/quota/path.c
+index bdb8c98..a623d25 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -42,6 +42,7 @@ printpath(
+ 	if (number) {
+ 		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+ 	}
++	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
+ 	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+ 	if (path->fs_flags & FS_PROJECT_PATH) {
+ 		prj = getprprid(path->fs_prid);
+@@ -127,7 +128,7 @@ path_init(void)
+ 	path_cmd.cfunc = path_f;
+ 	path_cmd.argmin = 0;
+ 	path_cmd.argmax = 1;
+-	path_cmd.flags = CMD_FLAG_GLOBAL;
++	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 	path_cmd.oneline = _("set current path, or show the list of paths");
+ 
+ 	print_cmd.name = "print";
+@@ -135,7 +136,7 @@ path_init(void)
+ 	print_cmd.cfunc = print_f;
+ 	print_cmd.argmin = 0;
+ 	print_cmd.argmax = 0;
+-	print_cmd.flags = CMD_FLAG_GLOBAL;
++	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 	print_cmd.oneline = _("list known mount points and projects");
+ 
+ 	if (expert)
+diff --git a/quota/project.c b/quota/project.c
+index 17a83b0..79a0a8e 100644
+--- a/quota/project.c
++++ b/quota/project.c
+@@ -355,6 +355,7 @@ project_init(void)
+ 	project_cmd.argmax = -1;
+ 	project_cmd.oneline = _("check, setup or clear project quota trees");
+ 	project_cmd.help = project_help;
++	project_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	if (expert)
+ 		add_command(&project_cmd);
+diff --git a/quota/quot.c b/quota/quot.c
+index 9116e48..cff8629 100644
+--- a/quota/quot.c
++++ b/quota/quot.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <stdbool.h>
+ #include "command.h"
+ #include <ctype.h>
+ #include <pwd.h>
+diff --git a/quota/quota.c b/quota/quota.c
+index f6b24c3..dd12158 100644
+--- a/quota/quota.c
++++ b/quota/quota.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <stdbool.h>
+ #include "command.h"
+ #include <ctype.h>
+ #include <pwd.h>
+@@ -464,6 +465,7 @@ quota_init(void)
+ 	quota_cmd.args = _("[-bir] [-gpu] [-hnNv] [-f file] [id|name]...");
+ 	quota_cmd.oneline = _("show usage and limits");
+ 	quota_cmd.help = quota_help;
++	quota_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	add_command(&quota_cmd);
+ }
+diff --git a/quota/report.c b/quota/report.c
+index 8653134..e8e5d96 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -15,7 +15,7 @@
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+-
++#include <stdbool.h>
+ #include "command.h"
+ #include <sys/types.h>
+ #include <pwd.h>
+@@ -592,6 +592,8 @@ report_any_type(
+ 	if (type & XFS_USER_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
++			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
++				continue;
+ 			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+ 						XFS_USER_QUOTA, 0, NULL) < 0
+ 					&& errno != ENOENT && errno != ENOSYS)
+@@ -603,6 +605,8 @@ report_any_type(
+ 	if (type & XFS_GROUP_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
++			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
++				continue;
+ 			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+ 						XFS_GROUP_QUOTA, 0, NULL) < 0
+ 					&& errno != ENOENT && errno != ENOSYS)
+@@ -614,6 +618,8 @@ report_any_type(
+ 	if (type & XFS_PROJ_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
++			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
++				continue;
+ 			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+ 						XFS_PROJ_QUOTA, 0, NULL) < 0
+ 					&& errno != ENOENT && errno != ENOSYS)
+@@ -728,16 +734,17 @@ report_init(void)
+ 	dump_cmd.args = _("[-gpu] [-f file]");
+ 	dump_cmd.oneline = _("dump quota information for backup utilities");
+ 	dump_cmd.help = dump_help;
++	dump_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	report_cmd.name = "report";
+ 	report_cmd.altname = "repquota";
+ 	report_cmd.cfunc = report_f;
+ 	report_cmd.argmin = 0;
+ 	report_cmd.argmax = -1;
+-	report_cmd.flags = CMD_FLAG_GLOBAL;
+ 	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
+ 	report_cmd.oneline = _("report filesystem quota information");
+ 	report_cmd.help = report_help;
++	report_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 
+ 	if (expert) {
+ 		add_command(&dump_cmd);
+diff --git a/quota/state.c b/quota/state.c
+index 8186762..d134580 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -15,7 +15,7 @@
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+-
++#include <stdbool.h>
+ #include "command.h"
+ #include "init.h"
+ #include "quota.h"
+@@ -527,6 +527,7 @@ state_init(void)
+ 	off_cmd.args = _("[-gpu] [-v]");
+ 	off_cmd.oneline = _("permanently switch quota off for a path");
+ 	off_cmd.help = off_help;
++	off_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	state_cmd.name = "state";
+ 	state_cmd.cfunc = state_f;
+@@ -535,6 +536,7 @@ state_init(void)
+ 	state_cmd.args = _("[-gpu] [-a] [-v] [-f file]");
+ 	state_cmd.oneline = _("get overall quota state information");
+ 	state_cmd.help = state_help;
++	state_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	enable_cmd.name = "enable";
+ 	enable_cmd.cfunc = enable_f;
+diff --git a/quota/util.c b/quota/util.c
+index 7c43fbd..42746d9 100644
+--- a/quota/util.c
++++ b/quota/util.c
+@@ -17,6 +17,7 @@
+  */
+ 
+ #include <sys/types.h>
++#include <stdbool.h>
+ #include <pwd.h>
+ #include <grp.h>
+ #include <utmp.h>
 -- 
 2.5.0
 
