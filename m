@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 46D5B7CA2
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 09:52:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2864C304048
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 07:52:03 -0800 (PST)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	FM16NqOHe6WJ81t5 for <xfs@oss.sgi.com>;
-	Thu, 04 Feb 2016 07:51:59 -0800 (PST)
-Date: Thu, 4 Feb 2016 08:50:39 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH] dax: dirty inode only if required
-Message-ID: <20160204155039.GA17818@linux.intel.com>
-References: <87k2mkr2ud.fsf@openvz.org> <20160204143344.GA6895@quack.suse.cz>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F3C427CA2
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 12:06:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9170DAC004
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 10:06:03 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id KQzeelV6jt5Td65a (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 04 Feb 2016 10:05:56 -0800 (PST)
+Date: Thu, 4 Feb 2016 10:05:51 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: reflink log reservations
+Message-ID: <20160204180551.GB27899@birch.djwong.org>
+References: <20160204074617.GB20496@lst.de>
+	<20160204081620.GL20038@birch.djwong.org>
+	<20160204133133.GA28701@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160204143344.GA6895@quack.suse.cz>
+In-Reply-To: <20160204133133.GA28701@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +31,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Dmitry Monakhov <dmonakhov@openvz.org>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 04, 2016 at 03:33:44PM +0100, Jan Kara wrote:
-> On Thu 04-02-16 17:02:02, Dmitry Monakhov wrote:
+On Thu, Feb 04, 2016 at 02:31:33PM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 04, 2016 at 12:16:20AM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 04, 2016 at 08:46:17AM +0100, Christoph Hellwig wrote:
+> > > Hi Darrick,
+> > > 
+> > > I'm running into the following log reservation assert after a few
+> > > xfstests runs over NFS.  I'll try to understand the reservation
+> > > calculations, but in case this is still fresh in your head here's
+> > > a headsup:
 > > 
-> > Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> > Hmm, interesting, I haven't seen /that/ one... my guess is that the
+> > block reservation needs to be bumped up for the refcount tree.
 > 
-> Makes sense. You can add:
+> This seems to fix it for me:
 > 
-> Reviewed-by: Jan Kara <jack@suse.cz>
+> ---
+> From 6e27eb42ece3a25f610690487b403a0091cafa26 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Thu, 4 Feb 2016 13:50:16 +0100
+> Subject: xfs: account for the refcount btree in the alloc/free log reservation
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_trans_resv.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index d495f82..f4c2648 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -65,12 +65,15 @@ xfs_calc_buf_res(
+>  
+>  /*
+>   * Per-extent log reservation for the allocation btree changes
+> - * involved in freeing or allocating an extent. When rmap is not enabled,
+> - * there are only two trees that will be modified (free space trees), and when
+> - * rmap is enabled there will be three (freespace + rmap trees). The number of
+> - * blocks reserved is based on the formula:
+> + * involved in freeing or allocating an extent.
+>   *
+> - * num trees * ((2 blocks/level * max depth) - 1)
+> + * There are at least two trees that will be modified (free space trees), when
+> + * rmap is enabled there will be an additional rmap tree, and when reflinks
+> + * are enabled there will be a refcount btree as well
+> + *
+> + * The number of  blocks reserved is based on the formula:
+> + *
+> + *     num trees * ((2 blocks/level * max depth) - 1)
 
-Looks good to me as well.
+Huh, could've sworn I used to have a patch that does this... but I can't find
+it, so it clearly fell out.  Thanks for the patch.
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+--D
 
-> 								Honza
-> > ---
-> >  fs/dax.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index e0e9358..fc2e314 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -358,7 +358,8 @@ static int dax_radix_entry(struct address_space *mapping, pgoff_t index,
-> >  	void *entry;
-> >  
-> >  	WARN_ON_ONCE(pmd_entry && !dirty);
-> > -	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> > +	if (dirty)
-> > +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> >  
-> >  	spin_lock_irq(&mapping->tree_lock);
-> >  
-> > -- 
-> > 1.8.3.1
-> > 
+>   */
+>  static uint
+>  xfs_allocfree_log_count(
+> @@ -81,6 +84,8 @@ xfs_allocfree_log_count(
+>  
+>  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+>  		num_trees++;
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> +		num_trees++;
+>  
+>  	return num_ops * num_trees * (2 * mp->m_ag_maxlevels - 1);
+>  }
 > -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> 2.1.4
+> 
 
 _______________________________________________
 xfs mailing list
