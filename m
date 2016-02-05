@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C1487CA2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3F3447CA3
 	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 19:23:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BEE6AC001
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 17:23:41 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BADD8F8040
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 17:23:40 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Qn30dHkT66CvvwNT for <xfs@oss.sgi.com>;
-	Thu, 04 Feb 2016 17:23:38 -0800 (PST)
+	tiQjRoHeOeTuc1lE for <xfs@oss.sgi.com>;
+	Thu, 04 Feb 2016 17:23:37 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aRV7T-0000Wp-1k
+	(envelope-from <dave@fromorbit.com>) id 1aRV7T-0000Wx-5M
 	for xfs@oss.sgi.com; Fri, 05 Feb 2016 12:23:31 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aRV7T-0005tF-0i
+	(envelope-from <dave@disappointment.disaster>) id 1aRV7T-0005tt-4X
 	for xfs@oss.sgi.com; Fri, 05 Feb 2016 12:23:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: configurable error behaviour via sysfs
-Date: Fri,  5 Feb 2016 12:23:19 +1100
-Message-Id: <1454635407-22276-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 9/9] xfs: add kmem error configuration class
+Date: Fri,  5 Feb 2016 12:23:27 +1100
+Message-Id: <1454635407-22276-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1454635407-22276-1-git-send-email-david@fromorbit.com>
 References: <1454635407-22276-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,196 +39,191 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We need to be able to change the way XFS behaviours in error
-conditions depending on the type of underlying storage. This is
-necessary for handling non-traditional block devices with extended
-error cases, such as thin provisioned devices that can return ENOSPC
-as an IO error.
+Add a new error configuration class for defining how memory
+allocation failures are supposed to be handled, This requires
+factoring the initialisation/teardown code to be able to handle
+a generic error class object.
 
-Introduce the basic sysfs infrastructure needed to define and
-configure error behaviours. This is done to be generic enough to
-extend to configuring behaviour in other error conditions, such as
-ENOMEM, which also has different desired behaviours according to
-machine configuration.
+I'm not yet sure how to hook it into the memory allocation calls -
+that will be done in a later patch; this just demonstrates how
+multiple classes are configured and initialised. It may be that we
+don't configure specific errors here - instead configure how we
+handle specific types of allocation failure e.g. GFP_KERNEL vs
+GFP_NOFS vs allocations inside transactions. Either way, we are
+going to need to plumb the error config handler into the
+memory allocation code in some manner.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.c | 10 +++++++++-
- fs/xfs/xfs_mount.h | 27 ++++++++++++++++++++++++++
- fs/xfs/xfs_sysfs.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.h |  3 +++
- 4 files changed, 94 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.h |  3 ++-
+ fs/xfs/xfs_sysfs.c | 77 +++++++++++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 61 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 986290c..f6fb5e1 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -708,10 +708,15 @@ xfs_mountfs(
- 	if (error)
- 		goto out_remove_sysfs;
- 
--	error = xfs_uuid_mount(mp);
-+	error = xfs_error_sysfs_init(mp);
- 	if (error)
- 		goto out_del_stats;
- 
-+
-+	error = xfs_uuid_mount(mp);
-+	if (error)
-+		goto out_remove_error_sysfs;
-+
- 	/*
- 	 * Set the minimum read and write sizes
- 	 */
-@@ -986,6 +991,8 @@ xfs_mountfs(
- 	xfs_da_unmount(mp);
-  out_remove_uuid:
- 	xfs_uuid_unmount(mp);
-+ out_remove_error_sysfs:
-+	xfs_error_sysfs_del(mp);
-  out_del_stats:
- 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
-  out_remove_sysfs:
-@@ -1074,6 +1081,7 @@ xfs_unmountfs(
- #endif
- 	xfs_free_perag(mp);
- 
-+	xfs_error_sysfs_del(mp);
- 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
- 	xfs_sysfs_del(&mp->m_kobj);
- }
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index b570984..96c9658 100644
+index 0ff14a90..62bcdcb 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -37,6 +37,31 @@ enum {
- 	XFS_LOWSP_MAX,
+@@ -46,6 +46,7 @@ enum {
+  */
+ enum {
+ 	XFS_ERR_METADATA,
++	XFS_ERR_KMEM,
+ 	XFS_ERR_CLASS_MAX,
  };
- 
-+/*
-+ * Error Configuration
-+ *
-+ * Error classes define the subsystem the configuration belongs to.
-+ * Error numbers define the errors that are configurable.
-+ * Failure types describe when an error is considered fatal.
-+ */
-+enum {
-+	XFS_ERR_CLASS_MAX,
-+};
-+enum {
-+	XFS_ERR_ERRNO_MAX,
-+};
-+enum {
-+	XFS_ERR_FAIL_DEFAULT,
-+	XFS_ERR_FAIL_NEVER,
-+	XFS_ERR_FAIL_SLOW,
-+	XFS_ERR_FAIL_FAST,
-+};
-+
-+struct xfs_error_cfg {
-+	struct xfs_kobj	kobj;
-+	int		fail_speed;
-+};
-+
- typedef struct xfs_mount {
- 	struct super_block	*m_super;
- 	xfs_tid_t		m_tid;		/* next unused tid for fs */
-@@ -127,6 +152,8 @@ typedef struct xfs_mount {
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
+ enum {
+@@ -162,7 +163,7 @@ typedef struct xfs_mount {
  						/* low free space thresholds */
  	struct xfs_kobj		m_kobj;
-+	struct xfs_kobj		m_error_kobj;
-+	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+ 	struct xfs_kobj		m_error_kobj;
+-	struct xfs_kobj		m_error_meta_kobj;
++	struct xfs_kobj		m_error_class_kobj[XFS_ERR_CLASS_MAX];
+ 	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
  	struct xstats		m_stats;	/* per-fs stats */
  
- 	struct workqueue_struct *m_buf_workqueue;
 diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 641d625..7d81c1b 100644
+index c984c3e..c3dff95 100644
 --- a/fs/xfs/xfs_sysfs.c
 +++ b/fs/xfs/xfs_sysfs.c
-@@ -17,11 +17,15 @@
-  */
- 
- #include "xfs.h"
--#include "xfs_sysfs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
- #include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_sysfs.h"
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
- #include "xfs_stats.h"
-+#include "xfs_mount.h"
- 
- struct xfs_sysfs_attr {
- 	struct attribute attr;
-@@ -304,3 +308,53 @@ struct kobj_type xfs_log_ktype = {
- 	.sysfs_ops = &xfs_sysfs_ops,
- 	.default_attrs = xfs_log_attrs,
+@@ -522,26 +522,50 @@ static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
+ 	{ .name = "ENODEV",
+ 	  .fail_speed = XFS_ERR_FAIL_FAST,
+ 	},
+-	{ .name = "ENOMEM",
++	{ /* ENOMEM */
+ 	  .fail_speed = XFS_ERR_FAIL_DEFAULT,
+ 	},
  };
-+
-+/*
-+ * Metadata IO error configuration
-+ *
-+ * The sysfs structure here is:
-+ *	...xfs/<dev>/error/<class>/<errno>/<error_attrs>
-+ *
-+ * where <class> allows use to discriminate between data IO and metadata IO,
-+ * and any other future type of IO (e.g. special inode or directory error
-+ * handling) we care to support.
-+ */
-+static struct attribute *xfs_error_attrs[] = {
-+	NULL,
+ 
++static const struct xfs_error_init xfs_error_kmem_init[XFS_ERR_ERRNO_MAX] = {
++	{ .name = "Default",
++	  .fail_speed = XFS_ERR_FAIL_NEVER,
++	  .max_retries = INT_MAX,
++	  .retry_timeout = 0,
++	  .fail_at_unmount = false,
++	},
++	{ /* EIO */
++	  .fail_speed = XFS_ERR_FAIL_DEFAULT,
++	},
++	{ /* ENOSPC */
++	  .fail_speed = XFS_ERR_FAIL_DEFAULT,
++	},
++	{ /* ENODEV */
++	  .fail_speed = XFS_ERR_FAIL_DEFAULT,
++	},
++	{ .name = "ENOMEM",
++	  .fail_speed = XFS_ERR_FAIL_NEVER,
++	  .max_retries = INT_MAX,
++	  .retry_timeout = 0,
++	  .fail_at_unmount = false,
++	},
 +};
 +
-+static inline struct xfs_error_cfg *
-+to_error_cfg(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
-+	return container_of(kobj, struct xfs_error_cfg, kobj);
-+}
-+
-+struct kobj_type xfs_error_cfg_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_sysfs_ops,
-+	.default_attrs = xfs_error_attrs,
-+};
-+
-+struct kobj_type xfs_error_ktype = {
-+	.release = xfs_sysfs_release,
-+};
-+
-+int
-+xfs_error_sysfs_init(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
-+
-+	/* .../xfs/<dev>/error/ */
-+	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
-+				&mp->m_kobj, "error");
-+	return error;
-+}
-+
-+void
-+xfs_error_sysfs_del(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_sysfs_del(&mp->m_error_kobj);
-+}
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index be692e5..d046371 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -58,4 +58,7 @@ xfs_sysfs_del(
- 	wait_for_completion(&kobj->complete);
+ static int
+ xfs_error_sysfs_init_class(
+ 	struct xfs_mount	*mp,
+ 	int			class,
+ 	const char		*parent_name,
+-	struct xfs_kobj		*parent_kobj,
+ 	const struct xfs_error_init init[])
+ {
++	struct xfs_kobj		*class_kobj = &mp->m_error_class_kobj[class];
+ 	struct xfs_error_cfg	*cfg;
+ 	int			error;
+ 	int			i;
+ 
+ 	ASSERT(class < XFS_ERR_CLASS_MAX);
+ 
+-	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
++	error = xfs_sysfs_init(class_kobj, &xfs_error_ktype,
+ 				&mp->m_error_kobj, parent_name);
+ 	if (error)
+ 		return error;
+@@ -554,8 +578,9 @@ xfs_error_sysfs_init_class(
+ 		if (cfg->fail_speed == XFS_ERR_FAIL_DEFAULT)
+ 			continue;
+ 
++		ASSERT(init[i].name);
+ 		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
+-					parent_kobj, init[i].name);
++					class_kobj, init[i].name);
+ 		if (error)
+ 			goto out_error;
+ 
+@@ -572,10 +597,28 @@ out_error:
+ 		cfg = &mp->m_error_cfg[class][i];
+ 		xfs_sysfs_del(&cfg->kobj);
+ 	}
+-	xfs_sysfs_del(parent_kobj);
++	xfs_sysfs_del(class_kobj);
+ 	return error;
  }
  
-+int	xfs_error_sysfs_init(struct xfs_mount *mp);
-+void	xfs_error_sysfs_del(struct xfs_mount *mp);
++static void
++xfs_error_sysfs_del_class(
++	struct xfs_mount	*mp,
++	int			class)
++{
++	struct xfs_error_cfg	*cfg;
++	int			i;
 +
- #endif	/* __XFS_SYSFS_H__ */
++	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
++		cfg = &mp->m_error_cfg[class][i];
++
++		if (cfg->fail_speed != XFS_ERR_FAIL_DEFAULT)
++			xfs_sysfs_del(&cfg->kobj);
++	}
++
++	xfs_sysfs_del(&mp->m_error_class_kobj[class]);
++}
++
+ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+@@ -589,14 +632,19 @@ xfs_error_sysfs_init(
+ 		return error;
+ 
+ 	/* .../xfs/<dev>/error/metadata/ */
+-	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
+-				"metadata", &mp->m_error_meta_kobj,
+-				xfs_error_meta_init);
++	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA, "metadata",
++					   xfs_error_meta_init);
+ 	if (error)
+ 		goto out_error;
+ 
++	error = xfs_error_sysfs_init_class(mp, XFS_ERR_KMEM, "kmem",
++					   xfs_error_kmem_init);
++	if (error)
++		goto out_error_meta;
+ 	return 0;
+ 
++out_error_meta:
++	xfs_error_sysfs_del_class(mp, XFS_ERR_METADATA);
+ out_error:
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ 	return error;
+@@ -606,18 +654,11 @@ void
+ xfs_error_sysfs_del(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xfs_error_cfg	*cfg;
+-	int			i, j;
++	int			i;
+ 
+-	for (i = 0; i < XFS_ERR_CLASS_MAX; i++) {
+-		for (j = 0; j < XFS_ERR_ERRNO_MAX; j++) {
+-			cfg = &mp->m_error_cfg[i][j];
++	for (i = 0; i < XFS_ERR_CLASS_MAX; i++)
++		xfs_error_sysfs_del_class(mp, i);
+ 
+-			if (cfg->fail_speed != XFS_ERR_FAIL_DEFAULT)
+-				xfs_sysfs_del(&cfg->kobj);
+-		}
+-	}
+-	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ }
+ 
 -- 
 2.5.0
 
