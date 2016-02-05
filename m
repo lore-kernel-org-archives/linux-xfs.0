@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0184029E00
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D612629E00
 	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 18:41:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A3188AC004
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 16:41:21 -0800 (PST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C5E2E30405F
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2016 16:41:22 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	b9EKeSIPCwZQdhbP for <xfs@oss.sgi.com>;
-	Thu, 04 Feb 2016 16:41:19 -0800 (PST)
+	xoeSmTHVR6TNqdiW for <xfs@oss.sgi.com>;
+	Thu, 04 Feb 2016 16:41:21 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aRUPV-0000Rm-B2
+	(envelope-from <dave@fromorbit.com>) id 1aRUPV-0000Rk-AE
 	for xfs@oss.sgi.com; Fri, 05 Feb 2016 11:38:05 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aRUPV-0005Mm-AH
+	(envelope-from <dave@disappointment.disaster>) id 1aRUPV-0005Mc-9R
 	for xfs@oss.sgi.com; Fri, 05 Feb 2016 11:38:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: remove XBF_STALE flag wrapper macros
-Date: Fri,  5 Feb 2016 11:38:02 +1100
-Message-Id: <1454632683-20543-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] xfs: remove XBF_READ flag wrapper macros
+Date: Fri,  5 Feb 2016 11:38:00 +1100
+Message-Id: <1454632683-20543-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1454632683-20543-1-git-send-email-david@fromorbit.com>
 References: <1454632683-20543-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -44,70 +44,47 @@ with a macro.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.h       | 4 +---
- fs/xfs/xfs_buf_item.c  | 2 +-
- fs/xfs/xfs_trans_buf.c | 6 +++---
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_buf.h         | 4 ----
+ fs/xfs/xfs_log_recover.c | 4 ++--
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index a118962..98b7ee9 100644
+index 2a28d1c..329e612 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -302,6 +302,7 @@ extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+@@ -321,10 +321,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
+ #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
+ #define XFS_BUF_ISSTALE(bp)	((bp)->b_flags & XBF_STALE)
  
- /* Buffer Utility Routines */
- extern void *xfs_buf_offset(struct xfs_buf *, size_t);
-+extern void xfs_buf_stale(struct xfs_buf *bp);
+-#define XFS_BUF_READ(bp)	((bp)->b_flags |= XBF_READ)
+-#define XFS_BUF_UNREAD(bp)	((bp)->b_flags &= ~XBF_READ)
+-#define XFS_BUF_ISREAD(bp)	((bp)->b_flags & XBF_READ)
+-
+ #define XFS_BUF_WRITE(bp)	((bp)->b_flags |= XBF_WRITE)
+ #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
+ #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index b34337d..81c525a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -190,7 +190,7 @@ xlog_bread_noalign(
+ 	ASSERT(nbblks <= bp->b_length);
  
- /* Delayed Write Buffer Routines */
- extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
-@@ -317,9 +318,6 @@ extern void xfs_buf_terminate(void);
- 			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH| \
- 			    XBF_WRITE_FAIL))
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+-	XFS_BUF_READ(bp);
++	bp->b_flags |= XBF_READ;
+ 	bp->b_io_length = nbblks;
+ 	bp->b_error = 0;
  
--void xfs_buf_stale(struct xfs_buf *bp);
--#define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
--#define XFS_BUF_ISSTALE(bp)	((bp)->b_flags & XBF_STALE)
+@@ -4928,7 +4928,7 @@ xlog_do_recover(
+ 	bp = xfs_getsb(log->l_mp, 0);
+ 	bp->b_flags &= ~(XBF_DONE | XBF_ASYNC);
+ 	ASSERT(!(XFS_BUF_ISWRITE(bp)));
+-	XFS_BUF_READ(bp);
++	bp->b_flags |= XBF_READ;
+ 	bp->b_ops = &xfs_sb_buf_ops;
  
- /*
-  * These macros use the IO block map rather than b_bn. b_bn is now really
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 344ab44..2891134 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -408,7 +408,7 @@ xfs_buf_item_unpin(
- 	if (freed && stale) {
- 		ASSERT(bip->bli_flags & XFS_BLI_STALE);
- 		ASSERT(xfs_buf_islocked(bp));
--		ASSERT(XFS_BUF_ISSTALE(bp));
-+		ASSERT(bp->b_flags & XBF_STALE);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
- 
- 		trace_xfs_buf_item_unpin_stale(bip);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index ed6f61f..8ee29ca 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -534,8 +534,8 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	 */
- 	if (bip->bli_flags & XFS_BLI_STALE) {
- 		bip->bli_flags &= ~XFS_BLI_STALE;
--		ASSERT(XFS_BUF_ISSTALE(bp));
--		XFS_BUF_UNSTALE(bp);
-+		ASSERT(bp->b_flags & XBF_STALE);
-+		bp->b_flags &= ~XBF_STALE;
- 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
- 	}
- 
-@@ -600,7 +600,7 @@ xfs_trans_binval(
- 		 * If the buffer is already invalidated, then
- 		 * just return.
- 		 */
--		ASSERT(XFS_BUF_ISSTALE(bp));
-+		ASSERT(bp->b_flags & XBF_STALE);
- 		ASSERT(!(bip->bli_flags & (XFS_BLI_LOGGED | XFS_BLI_DIRTY)));
- 		ASSERT(!(bip->__bli_format.blf_flags & XFS_BLF_INODE_BUF));
- 		ASSERT(!(bip->__bli_format.blf_flags & XFS_BLFT_MASK));
+ 	error = xfs_buf_submit_wait(bp);
 -- 
 2.5.0
 
