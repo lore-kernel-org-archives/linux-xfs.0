@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5FA6729DF5
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 12:19:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 50D47304043
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 10:19:32 -0800 (PST)
-Received: from mail-yw0-f173.google.com (mail-yw0-f173.google.com
-	[209.85.161.173]) by cuda.sgi.com with ESMTP id
-	0bQc4pkeJ02qFeMf (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 5D47B29DF5
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 13:13:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 21D36304032
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 11:13:55 -0800 (PST)
+Received: from mail-yw0-f179.google.com (mail-yw0-f179.google.com
+	[209.85.161.179]) by cuda.sgi.com with ESMTP id
+	sZhyZ1DCL2hUom5S (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 07 Feb 2016 10:19:30 -0800 (PST)
-Received: by mail-yw0-f173.google.com with SMTP id g127so88032686ywf.2
-	for <xfs@oss.sgi.com>; Sun, 07 Feb 2016 10:19:30 -0800 (PST)
+	<xfs@oss.sgi.com>; Sun, 07 Feb 2016 11:13:52 -0800 (PST)
+Received: by mail-yw0-f179.google.com with SMTP id q190so88695217ywd.3
+	for <xfs@oss.sgi.com>; Sun, 07 Feb 2016 11:13:52 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1454829553-29499-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
 References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-2-git-send-email-ross.zwisler@linux.intel.com>
-Date: Sun, 7 Feb 2016 10:19:29 -0800
-Message-ID: <CAPcyv4jOAKeTXt0EvZzfxzqcaf+ZWrtsFeN2JFP_sf1HcTpVOw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] dax: pass bdev argument to dax_clear_blocks()
+	<1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
+Date: Sun, 7 Feb 2016 11:13:51 -0800
+Message-ID: <CAPcyv4jT=yAb2_yLfMGqV1SdbQwoWQj7joroeJGAJAcjsMY_oQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] dax: move writeback calls into the filesystems
 From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,44 +33,73 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, jmoyer <jmoyer@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
 On Sat, Feb 6, 2016 at 11:19 PM, Ross Zwisler
 <ross.zwisler@linux.intel.com> wrote:
-> dax_clear_blocks() needs a valid struct block_device and previously it was
-> using inode->i_sb->s_bdev in all cases.  This is correct for normal inodes
-> on mounted ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-> block devices and for XFS real-time devices.
+> Previously calls to dax_writeback_mapping_range() for all DAX filesystems
+> (ext2, ext4 & xfs) were centralized in filemap_write_and_wait_range().
+> dax_writeback_mapping_range() needs a struct block_device, and it used to
+> get that from inode->i_sb->s_bdev.  This is correct for normal inodes
+> mounted on ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
+> block devices and for XFS real-time files.
 >
-> Instead, have the caller pass in a struct block_device pointer which it
-> knows to be correct.
+> Instead, call dax_writeback_mapping_range() directly from the filesystem or
+> raw block device fsync/msync code so that they can supply us with a valid
+> block device.
+>
+> It should be noted that this will reduce the number of calls to
+> dax_writeback_mapping_range() because filemap_write_and_wait_range() is
+> called in the various filesystems for operations other than just
+> fsync/msync.  Both ext4 & XFS call filemap_write_and_wait_range() outside
+> of ->fsync for hole punch, truncate, and block relocation
+> (xfs_shift_file_space() && ext4_collapse_range()/ext4_insert_range()).
+>
+> I don't believe that these extra flushes are necessary in the DAX case.  In
+> the page cache case when we have dirty data in the page cache, that data
+> will be actively lost if we evict a dirty page cache page without flushing
+> it to media first.  For DAX, though, the data will remain consistent with
+> the physical address to which it was written regardless of whether it's in
+> the processor cache or not - really the only reason I see to flush is in
+> response to a fsync or msync so that our data is durable on media in case
+> of a power loss.  The case where we could throw dirty data out of the page
+> cache and essentially lose writes simply doesn't exist.
 >
 > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 > ---
->  fs/dax.c               | 4 ++--
->  fs/ext2/inode.c        | 5 +++--
->  fs/xfs/xfs_aops.c      | 2 +-
->  fs/xfs/xfs_aops.h      | 1 +
->  fs/xfs/xfs_bmap_util.c | 4 +++-
->  include/linux/dax.h    | 3 ++-
->  6 files changed, 12 insertions(+), 7 deletions(-)
->
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 227974a..4592241 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -83,9 +83,9 @@ struct page *read_dax_sector(struct block_device *bdev, sector_t n)
->   * and hence this means the stack from this point must follow GFP_NOFS
->   * semantics for all operations.
->   */
-> -int dax_clear_blocks(struct inode *inode, sector_t block, long _size)
-> +int dax_clear_blocks(struct inode *inode, struct block_device *bdev,
-> +               sector_t block, long _size)
+>  fs/block_dev.c      |  7 +++++++
+>  fs/dax.c            |  5 ++---
+>  fs/ext2/file.c      | 10 ++++++++++
+>  fs/ext4/fsync.c     | 10 +++++++++-
+>  fs/xfs/xfs_file.c   | 12 ++++++++++--
+>  include/linux/dax.h |  4 ++--
+>  mm/filemap.c        |  6 ------
+>  7 files changed, 40 insertions(+), 14 deletions(-)
 
-Since this is a bdev relative routine we should also resolve the
-sector, i.e. the signature should drop the inode:
+This sprinkling of dax specific fixups outside of vm_operations_struct
+routines still has me thinking that we are going in the wrong
+direction for fsync/msync support.
 
-int dax_clear_sectors(struct block_device *bdev, sector_t sector, long _size)
+If an application is both unaware of DAX and doing mmap I/O it is
+better served by the page cache where writeback is durable by default.
+We expect DAX-aware applications to assume responsibility for cpu
+cache management [1].  Making DAX mmap semantics explicit opt-in
+solves not only durability support, but also the current problem that
+DAX gets silently disabled leaving an app to wonder if it really got a
+direct mapping. DAX also silently picks pud, pmd, or pte mappings
+which is information an application would really like to know at map
+time.
+
+The proposal: make applications explicitly request DAX semantics with
+a new MAP_DAX flag and fail if DAX is unavailable.  Document that a
+successful MAP_DAX request mandates that the application assumes
+responsibility for cpu cache management.  Require that all
+applications that mmap the file agree on MAP_DAX.  This also solves
+the future problem of DAX support on virtually tagged cache
+architectures where it is difficult for the kernel to know what alias
+addresses need flushing.
+
+[1]: https://github.com/pmem/nvml
 
 _______________________________________________
 xfs mailing list
