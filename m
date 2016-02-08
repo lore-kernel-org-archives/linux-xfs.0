@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2DBB97CA2
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 19:46:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EB2768F8049
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 17:46:11 -0800 (PST)
-Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
-	iuL2AcHzymiUKyMp for <xfs@oss.sgi.com>;
-	Sun, 07 Feb 2016 17:46:11 -0800 (PST)
-Date: Sun, 7 Feb 2016 18:46:01 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 1/2] dax: pass bdev argument to dax_clear_blocks()
-Message-ID: <20160208014601.GB2343@linux.intel.com>
-References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-2-git-send-email-ross.zwisler@linux.intel.com>
-	<CAPcyv4jOAKeTXt0EvZzfxzqcaf+ZWrtsFeN2JFP_sf1HcTpVOw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jOAKeTXt0EvZzfxzqcaf+ZWrtsFeN2JFP_sf1HcTpVOw@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C48AB7CA2
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 22:24:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B44D2304048
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 20:24:28 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	ABEtLlvCEhdnpDBy for <xfs@oss.sgi.com>;
+	Sun, 07 Feb 2016 20:24:26 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aSdN9-00072H-MS
+	for xfs@oss.sgi.com; Mon, 08 Feb 2016 15:24:23 +1100
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aSdN9-0000lk-LF
+	for xfs@oss.sgi.com; Mon, 08 Feb 2016 15:24:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH v3 0/9] xfs: gut the struct xfs_icdinode
+Date: Mon,  8 Feb 2016 15:24:12 +1100
+Message-Id: <1454905461-2773-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +28,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: xfs@oss.sgi.com
 
-On Sun, Feb 07, 2016 at 10:19:29AM -0800, Dan Williams wrote:
-> On Sat, Feb 6, 2016 at 11:19 PM, Ross Zwisler
-> <ross.zwisler@linux.intel.com> wrote:
-> > dax_clear_blocks() needs a valid struct block_device and previously it was
-> > using inode->i_sb->s_bdev in all cases.  This is correct for normal inodes
-> > on mounted ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-> > block devices and for XFS real-time devices.
-> >
-> > Instead, have the caller pass in a struct block_device pointer which it
-> > knows to be correct.
-> >
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > ---
-> >  fs/dax.c               | 4 ++--
-> >  fs/ext2/inode.c        | 5 +++--
-> >  fs/xfs/xfs_aops.c      | 2 +-
-> >  fs/xfs/xfs_aops.h      | 1 +
-> >  fs/xfs/xfs_bmap_util.c | 4 +++-
-> >  include/linux/dax.h    | 3 ++-
-> >  6 files changed, 12 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index 227974a..4592241 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -83,9 +83,9 @@ struct page *read_dax_sector(struct block_device *bdev, sector_t n)
-> >   * and hence this means the stack from this point must follow GFP_NOFS
-> >   * semantics for all operations.
-> >   */
-> > -int dax_clear_blocks(struct inode *inode, sector_t block, long _size)
-> > +int dax_clear_blocks(struct inode *inode, struct block_device *bdev,
-> > +               sector_t block, long _size)
-> 
-> Since this is a bdev relative routine we should also resolve the
-> sector, i.e. the signature should drop the inode:
-> 
-> int dax_clear_sectors(struct block_device *bdev, sector_t sector, long _size)
+Hi folks,
 
-The inode is still needed because dax_clear_blocks() needs inode->i_blkbits.
-Unless there is some easy way to get this from the bdev that I'm not seeing?
+This is the thrid version of this patchset, the second version is
+here:
+
+http://oss.sgi.com/archives/xfs/2016-01/msg00459.html
+
+There is no change to the space savings the series gives us; it is
+an update to address Brian's review comments. Testing over the past
+couple of weeks indicates no new regressions, so hopefully this is
+the final review posting. :)
+
+Version 3
+- fix typos/comments and use sb_meta_uuid (patch 3)
+- introduce new patch for reclaimable inode core reinitialisation
+  infrastructure (patch 5)
+- remove typedefs (patch 6)
+- added field reinitialisation to function introduced in patch 5
+  (patches 6-9)
+- removed stray debug hunk (patch 9)
+- added reviewed-by tags to patches that have been reviewed already.
+
+Version 2
+- timestamps are signed, so need casting to int before being stored
+  in a 64 bit variable when read from disk. Fixes generic/258
+  failure (patch 2).
+- nlink wasn't being accounted correctly for O_TMPFILE files and
+  rename whiteouts. Fixes generic/078 and others. (patch 5)
+- VFS does not initialise i_mode, ever, so we need to initialise it
+  directly after slab allocation to ensure that we correctly detect
+  new file creates and hence don't add the inode the sb list twice,
+  corrupting it. (busy inodes after unmount, self destruct in 5
+  seconds, have a nice day!) (patch 8)
+- when reallocating a reclaimable inode, we need to save the
+  variables that hold on-disk values across the inode_init_always()
+  call, otherwise we lose them. This results in corruption of these
+  fields. (patch 8)
+
 
 _______________________________________________
 xfs mailing list
