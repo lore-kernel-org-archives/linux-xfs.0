@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C281A29DF5
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 09:34:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5E44CAC001
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 07:34:54 -0800 (PST)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id LkV3j53B2N0TXoAN for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 07:34:53 -0800 (PST)
-Date: Mon, 8 Feb 2016 08:34:43 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 1/2] dax: pass bdev argument to dax_clear_blocks()
-Message-ID: <20160208153443.GC2343@linux.intel.com>
-References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-2-git-send-email-ross.zwisler@linux.intel.com>
-	<20160207220329.GK31407@dastard>
-	<20160208014409.GA2343@linux.intel.com>
-	<20160208051725.GM31407@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2F1BA29DF5
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 09:37:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E72B8304051
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 07:37:23 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id wb8pEmfpmPuWQ0iS (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 07:37:22 -0800 (PST)
+Date: Mon, 8 Feb 2016 10:37:20 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 4a91310
+Message-ID: <20160208153720.GG19597@bfoster.bfoster>
+References: <20160208060751.GA27429@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160208051725.GM31407@dastard>
+In-Reply-To: <20160208060751.GA27429@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,57 +30,127 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 08, 2016 at 04:17:25PM +1100, Dave Chinner wrote:
-> On Sun, Feb 07, 2016 at 06:44:09PM -0700, Ross Zwisler wrote:
-> > On Mon, Feb 08, 2016 at 09:03:29AM +1100, Dave Chinner wrote:
-> > > On Sun, Feb 07, 2016 at 12:19:12AM -0700, Ross Zwisler wrote:
-> > > > dax_clear_blocks() needs a valid struct block_device and previously it was
-> > > > using inode->i_sb->s_bdev in all cases.  This is correct for normal inodes
-> > > > on mounted ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-> > > > block devices and for XFS real-time devices.
-> > > > 
-> > > > Instead, have the caller pass in a struct block_device pointer which it
-> > > > knows to be correct.
-> > > ....
-> > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > > index 07ef29b..f722ba2 100644
-> > > > --- a/fs/xfs/xfs_bmap_util.c
-> > > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > > @@ -73,9 +73,11 @@ xfs_zero_extent(
-> > > >  	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
-> > > >  	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
-> > > >  	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
-> > > > +	struct inode	*inode = VFS_I(ip);
-> > > >  
-> > > >  	if (IS_DAX(VFS_I(ip)))
-> > > > -		return dax_clear_blocks(VFS_I(ip), block, size);
-> > > > +		return dax_clear_blocks(inode, xfs_find_bdev_for_inode(inode),
-> > > > +				block, size);
-> > > 
-> > > Get rid of the local inode variable and use VFS_I(ip) like the code
-> > > originally did. Do not change code that is unrelated to the
-> > > modifcation being made, especially when it results in making
-> > > the code an inconsistent mess of mixed pointer constructs....
-> > 
-> > The local 'inode' variable was added to avoid multiple calls for VFS_I() for
-> > the same 'ip'.
+On Mon, Feb 08, 2016 at 05:07:51PM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> My point is you didn't achieve that. The end result of your patch
-> is:
+> The for-next branch of the xfs kernel repository at
 > 
-> 	struct inode	*inode = VFS_I(ip);
+> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 > 
-> 	if (IS_DAX(VFS_I(ip)))
-> 		return dax_clear_blocks(inode, xfs_find_bdev_for_inode(inode),
-> 					block, size);
+> has just been updated. I've pushed this out with both generic quota
+> and direct Io modifications in it, so if they end up going into
+> another tree expect a rebase of the for-next branch to occur to pull
+> them in from the appropriate trees.
 > 
-> So now we have a local variable, but we still have 2 calls to
-> VFS_I(ip). i.e. this makes the code harder to read and understand
-> than before for no benefit.
+> There is still a lot of changes pending review to go into this
+> for-next tree, and I'm hoping to get the first part of the
+> rmap/reflink work into it as well, so there's plenty of work still
+> to be done in this cycle....
+> 
+> The new head of the for-next branch is commit:
+> 
+> 4a91310 Merge branch 'xfs-misc-fixes-4.6' into for-next
+> 
+> New Commits:
+> 
+> Brian Foster (2):
+>       [60630fe] xfs: clean up unwritten buffers on write failure
+>       [af055e3] xfs: fix xfs_log_ticket leak in xfs_end_io() after fs shutdown
+> 
+> Carlos Maiolino (1):
+>       [be60794] xfs: Split default quota limits by quota type
+> 
+> Christoph Hellwig (6):
+>       [187372a] direct-io: always call ->end_io if non-NULL
+>       [273dda7] xfs: don't use ioends for direct write completions
+>       [c19b104] xfs: fold xfs_vm_do_dio into xfs_vm_direct_IO
+>       [196328e] xfs: handle errors from ->free_blocks in xfs_btree_kill_iroot
+>       [c46ee8a] xfs: factor btree block freeing into a helper
+>       [edfd9dd] xfs: move buffer invalidation to xfs_btree_free_block
+> 
+> Darrick J. Wong (2):
+>       [8e0bd49] xfs: fix endianness error when checking log block crc on big endian platforms
+>       [244efea] xfs: move struct xfs_attr_shortform to xfs_da_format.h
+> 
+> Dave Chinner (7):
+>       [4b680af] xfs: lock rt summary inode on allocation
+>       [a204d07] xfs: RT bitmap and summary buffers are not typed
+>       [ca4de5c] xfs: RT bitmap and summary buffers need verifiers
 
-*facepalm*  Yep, thanks for the correction.
+FYI, this one ^ leads to compile failures when CONFIG_XFS_RT is not
+enabled. xfs_rtbuf_ops is defined in the conditionally compiled
+xfs_rtbitmap.c file and used unconditionally in xfs_log_recover.c.
+
+Brian
+
+>       [e892a10] Merge branch 'xfs-rt-fixes-4.6' into for-next
+>       [ec370f5] Merge branch 'xfs-get-next-dquot-4.6' into for-next
+>       [0d077b8] Merge branch 'xfs-dio-fix-4.6' into for-next
+>       [4a91310] Merge branch 'xfs-misc-fixes-4.6' into for-next
+> 
+> Eric Sandeen (8):
+>       [3218a3e] quota: remove unused cmd argument from quota_quotaon()
+>       [8b37524] quota: add new quotactl Q_XGETNEXTQUOTA
+>       [926132c] quota: add new quotactl Q_GETNEXTQUOTA
+>       [a484bcd] xfs: don't overflow quota ID when initializing dqblk
+>       [4d4d952] xfs: get quota inode from mp & flags rather than dqp
+>       [8aa7d37] xfs: Factor xfs_seek_hole_data into helper
+>       [296c24e] xfs: wire up Q_XGETNEXTQUOTA / get_nextdqblk
+>       [de0b85a] xfs: remove unused function definitions
+> 
+> Michal Hocko (1):
+>       [18f1df4] xfs: Make xfsaild freezeable again
+> 
+> 
+> Code Diffstat:
+> 
+>  fs/dax.c                         |   9 +-
+>  fs/direct-io.c                   |   9 +-
+>  fs/ext4/inode.c                  |   9 +-
+>  fs/ocfs2/aops.c                  |   7 +-
+>  fs/quota/quota.c                 |  66 +++++++++-
+>  fs/xfs/libxfs/xfs_alloc_btree.c  |   2 -
+>  fs/xfs/libxfs/xfs_attr_sf.h      |  16 ---
+>  fs/xfs/libxfs/xfs_bmap_btree.c   |   1 -
+>  fs/xfs/libxfs/xfs_btree.c        |  32 +++--
+>  fs/xfs/libxfs/xfs_da_format.h    |  16 +++
+>  fs/xfs/libxfs/xfs_ialloc_btree.c |  12 +-
+>  fs/xfs/libxfs/xfs_inode_fork.c   |   1 +
+>  fs/xfs/libxfs/xfs_log_format.h   |   2 +
+>  fs/xfs/libxfs/xfs_quota_defs.h   |   3 +-
+>  fs/xfs/libxfs/xfs_rtbitmap.c     |  30 ++++-
+>  fs/xfs/libxfs/xfs_sb.h           |   1 -
+>  fs/xfs/libxfs/xfs_shared.h       |   1 +
+>  fs/xfs/xfs_aops.c                | 274 +++++++++++++++------------------------
+>  fs/xfs/xfs_bmap_util.c           |   4 +-
+>  fs/xfs/xfs_dquot.c               | 129 +++++++++++++++---
+>  fs/xfs/xfs_file.c                |  82 ++++++++----
+>  fs/xfs/xfs_fsops.h               |   1 -
+>  fs/xfs/xfs_inode.h               |   2 +
+>  fs/xfs/xfs_log_recover.c         |   9 +-
+>  fs/xfs/xfs_mount.h               |   1 -
+>  fs/xfs/xfs_qm.c                  |  55 ++++++--
+>  fs/xfs/xfs_qm.h                  |  48 +++++--
+>  fs/xfs/xfs_qm_syscalls.c         |  27 ++--
+>  fs/xfs/xfs_quotaops.c            |  36 ++++-
+>  fs/xfs/xfs_trace.h               |   9 +-
+>  fs/xfs/xfs_trans_ail.c           |   5 +-
+>  fs/xfs/xfs_trans_dquot.c         |  15 ++-
+>  include/linux/fs.h               |   2 +-
+>  include/linux/quota.h            |   2 +
+>  include/uapi/linux/dqblk_xfs.h   |   1 +
+>  include/uapi/linux/quota.h       |  14 ++
+>  36 files changed, 615 insertions(+), 318 deletions(-)
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
