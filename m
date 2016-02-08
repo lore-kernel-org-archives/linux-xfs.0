@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4D70E7CA2
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 04:48:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C58DCAC003
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 02:48:38 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id w7xhkZIhTZew5WQj (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 02:48:35 -0800 (PST)
-Date: Mon, 8 Feb 2016 11:48:50 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/2] dax: move writeback calls into the filesystems
-Message-ID: <20160208104849.GB9451@quack.suse.cz>
-References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6D77229DF5
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 07:09:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4D554304032
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 05:09:18 -0800 (PST)
+Received: from mail-yw0-f174.google.com (mail-yw0-f174.google.com
+	[209.85.161.174]) by cuda.sgi.com with ESMTP id
+	kLBj5ccDxu5txF1l (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 05:09:16 -0800 (PST)
+Received: by mail-yw0-f174.google.com with SMTP id q190so101116996ywd.3
+	for <xfs@oss.sgi.com>; Mon, 08 Feb 2016 05:09:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20160205223023.GL459@dastard>
+References: <CAAgKQi+AOZO_K9Garmz3G6C1X8TuTRxrfF1MP2HPEZ3JkdE41w@mail.gmail.com>
+	<20160205223023.GL459@dastard>
+Date: Mon, 8 Feb 2016 14:09:15 +0100
+Message-ID: <CAAgKQiJ17XKu-k-Gufk0O_EgXcZvebzCEO4STGdAkszoZxAqfw@mail.gmail.com>
+Subject: Re: Question about continous blocks for inode due to 'no space left
+	on device' problem
+From: Michel Verbraak <info1stsetup@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,227 +29,166 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5728875979708889824=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Sun 07-02-16 00:19:13, Ross Zwisler wrote:
-> Previously calls to dax_writeback_mapping_range() for all DAX filesystems
-> (ext2, ext4 & xfs) were centralized in filemap_write_and_wait_range().
-> dax_writeback_mapping_range() needs a struct block_device, and it used to
-> get that from inode->i_sb->s_bdev.  This is correct for normal inodes
-> mounted on ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-> block devices and for XFS real-time files.
-> 
-> Instead, call dax_writeback_mapping_range() directly from the filesystem or
-> raw block device fsync/msync code so that they can supply us with a valid
-> block device.
-> 
-> It should be noted that this will reduce the number of calls to
-> dax_writeback_mapping_range() because filemap_write_and_wait_range() is
-> called in the various filesystems for operations other than just
-> fsync/msync.  Both ext4 & XFS call filemap_write_and_wait_range() outside
-> of ->fsync for hole punch, truncate, and block relocation
-> (xfs_shift_file_space() && ext4_collapse_range()/ext4_insert_range()).
-> 
-> I don't believe that these extra flushes are necessary in the DAX case.  In
-> the page cache case when we have dirty data in the page cache, that data
-> will be actively lost if we evict a dirty page cache page without flushing
-> it to media first.  For DAX, though, the data will remain consistent with
-> the physical address to which it was written regardless of whether it's in
-> the processor cache or not - really the only reason I see to flush is in
-> response to a fsync or msync so that our data is durable on media in case
-> of a power loss.  The case where we could throw dirty data out of the page
-> cache and essentially lose writes simply doesn't exist.
+--===============5728875979708889824==
+Content-Type: multipart/alternative; boundary=001a114054466c2058052b41e8ef
 
-You should at least note that sync(2) won't make data durable with this
-patch in the changelog. Dave and Christoph have told you that Linux users
-depend on sync(2) to make data durable and I fully agree with them.  Given
-current options, I think we can live with this for 4.5 but long term this
-is IMO unacceptable.
+--001a114054466c2058052b41e8ef
+Content-Type: text/plain; charset=UTF-8
 
-								Honza
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  fs/block_dev.c      |  7 +++++++
->  fs/dax.c            |  5 ++---
->  fs/ext2/file.c      | 10 ++++++++++
->  fs/ext4/fsync.c     | 10 +++++++++-
->  fs/xfs/xfs_file.c   | 12 ++++++++++--
->  include/linux/dax.h |  4 ++--
->  mm/filemap.c        |  6 ------
->  7 files changed, 40 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index fa0507a..312ad44 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -356,8 +356,15 @@ int blkdev_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
->  {
->  	struct inode *bd_inode = bdev_file_inode(filp);
->  	struct block_device *bdev = I_BDEV(bd_inode);
-> +	struct address_space *mapping = bd_inode->i_mapping;
->  	int error;
->  	
-> +	if (dax_mapping(mapping) && mapping->nrexceptional) {
-> +		error = dax_writeback_mapping_range(mapping, bdev, start, end);
-> +		if (error)
-> +			return error;
-> +	}
-> +
->  	error = filemap_write_and_wait_range(filp->f_mapping, start, end);
->  	if (error)
->  		return error;
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 4592241..4b5006a 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -484,11 +484,10 @@ static int dax_writeback_one(struct block_device *bdev,
->   * end]. This is required by data integrity operations to ensure file data is
->   * on persistent storage prior to completion of the operation.
->   */
-> -int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
-> -		loff_t end)
-> +int dax_writeback_mapping_range(struct address_space *mapping,
-> +		struct block_device *bdev, loff_t start, loff_t end)
->  {
->  	struct inode *inode = mapping->host;
-> -	struct block_device *bdev = inode->i_sb->s_bdev;
->  	pgoff_t start_index, end_index, pmd_index;
->  	pgoff_t indices[PAGEVEC_SIZE];
->  	struct pagevec pvec;
-> diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-> index 2c88d68..d1abf53 100644
-> --- a/fs/ext2/file.c
-> +++ b/fs/ext2/file.c
-> @@ -162,6 +162,16 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
->  	int ret;
->  	struct super_block *sb = file->f_mapping->host->i_sb;
->  	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
-> +#ifdef CONFIG_FS_DAX
-> +	struct address_space *inode_mapping = file->f_inode->i_mapping;
-> +
-> +	if (dax_mapping(inode_mapping) && inode_mapping->nrexceptional) {
-> +		ret = dax_writeback_mapping_range(inode_mapping, sb->s_bdev,
-> +				start, end);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +#endif
->  
->  	ret = generic_file_fsync(file, start, end, datasync);
->  	if (ret == -EIO || test_and_clear_bit(AS_EIO, &mapping->flags)) {
-> diff --git a/fs/ext4/fsync.c b/fs/ext4/fsync.c
-> index 8850254..e9cf53b 100644
-> --- a/fs/ext4/fsync.c
-> +++ b/fs/ext4/fsync.c
-> @@ -27,6 +27,7 @@
->  #include <linux/sched.h>
->  #include <linux/writeback.h>
->  #include <linux/blkdev.h>
-> +#include <linux/dax.h>
->  
->  #include "ext4.h"
->  #include "ext4_jbd2.h"
-> @@ -83,10 +84,10 @@ static int ext4_sync_parent(struct inode *inode)
->   * What we do is just kick off a commit and wait on it.  This will snapshot the
->   * inode to disk.
->   */
-> -
->  int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
->  {
->  	struct inode *inode = file->f_mapping->host;
-> +	struct address_space *mapping = inode->i_mapping;
->  	struct ext4_inode_info *ei = EXT4_I(inode);
->  	journal_t *journal = EXT4_SB(inode->i_sb)->s_journal;
->  	int ret = 0, err;
-> @@ -97,6 +98,13 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
->  
->  	trace_ext4_sync_file_enter(file, datasync);
->  
-> +	if (dax_mapping(mapping) && mapping->nrexceptional) {
-> +		err = dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev,
-> +				start, end);
-> +		if (err)
-> +			goto out;
-> +	}
-> +
->  	if (inode->i_sb->s_flags & MS_RDONLY) {
->  		/* Make sure that we read updated s_mount_flags value */
->  		smp_rmb();
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 52883ac..84e95cc 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -209,7 +209,8 @@ xfs_file_fsync(
->  	loff_t			end,
->  	int			datasync)
->  {
-> -	struct inode		*inode = file->f_mapping->host;
-> +	struct address_space	*mapping = file->f_mapping;
-> +	struct inode		*inode = mapping->host;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	int			error = 0;
-> @@ -218,7 +219,14 @@ xfs_file_fsync(
->  
->  	trace_xfs_file_fsync(ip);
->  
-> -	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
-> +	if (dax_mapping(mapping) && mapping->nrexceptional) {
-> +		error = dax_writeback_mapping_range(mapping,
-> +				xfs_find_bdev_for_inode(inode), start, end);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	error = filemap_write_and_wait_range(mapping, start, end);
->  	if (error)
->  		return error;
->  
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index bad27b0..8e9f114 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -42,6 +42,6 @@ static inline bool dax_mapping(struct address_space *mapping)
->  {
->  	return mapping->host && IS_DAX(mapping->host);
->  }
-> -int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
-> -		loff_t end);
-> +int dax_writeback_mapping_range(struct address_space *mapping,
-> +		struct block_device *bdev, loff_t start, loff_t end);
->  #endif
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index bc94386..c4286eb 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -482,12 +482,6 @@ int filemap_write_and_wait_range(struct address_space *mapping,
->  {
->  	int err = 0;
->  
-> -	if (dax_mapping(mapping) && mapping->nrexceptional) {
-> -		err = dax_writeback_mapping_range(mapping, lstart, lend);
-> -		if (err)
-> -			return err;
-> -	}
-> -
->  	if (mapping->nrpages) {
->  		err = __filemap_fdatawrite_range(mapping, lstart, lend,
->  						 WB_SYNC_ALL);
-> -- 
-> 2.5.0
-> 
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2016-02-05 23:30 GMT+01:00 Dave Chinner <david@fromorbit.com>:
+
+> On Fri, Feb 05, 2016 at 02:13:00PM +0100, Michel Verbraak wrote:
+> > All,
+> >
+> > Recently we ran into a problem where our filesystem (300GB in size)
+> > reported 'no space left on device' (ENOSPC) but when we looked at disk
+> > space usage and inode usage it was around 52% for disk space and 11% for
+> .......
+
+
+>
+> > Store 03 (root@server):~# xfs_db -c freesp /dev/sdb
+> >    from      to extents  blocks    pct
+> >       1       1 3282633 3282633   9.03
+> >       2       3 3416223 8372325  23.03
+> >       4       7 6175009 24700036  67.94
+>
+> Yup, no more aligned 4 block extents in the filesystem.
+>
+> Dave Thank you for your answer but are you able to explain a bit more on
+how you determine there are no aligned 4 block extends available?
+It apparently is not the 'from 4 to 7' line telling there are at least
+continuous extents of 4 blocks big. Or is it because 24700036 divided
+by 6175009
+is exactly 4 and not a bit more?
+When I calculate the ratio between the individual AG freesp they were all
+four exactly 4.
+
+As said we would like to detect this problem from happening again. And we
+would like this detection to be done by our monitoring service.
+One of my colleagues mentions the following calculation to find out if
+there are enough aligned 4 block extents:
+
+Starting from line "from 4 to 7" calculate: <blocks-column> - (4 *
+<extents-column>) > 0. When not there is not enough free space for new
+inodes.
+
+On another system we have which does not see these problems yet we have:
+
+   from      to extents  blocks    pct
+      1       1 3483987 3483987   7.83
+      2       3 3560607 8709838  19.58
+      4       7 6402893 26486634  59.55
+      8      15  418450 5799206  13.04
+
+26486634 / 6402893 = 4.136666 and
+26486634 - (4 * 6402893) = 875062 > 0 and
+5799205 - (4 * 418450) = 4125405 > 0
+
+
+> into this condition.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+Michel.
+
+--001a114054466c2058052b41e8ef
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
+te">2016-02-05 23:30 GMT+01:00 Dave Chinner <span dir=3D"ltr">&lt;<a href=
+=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&g=
+t;</span>:<br><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px=
+ 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex"><span class=
+=3D"">On Fri, Feb 05, 2016 at 02:13:00PM +0100, Michel Verbraak wrote:<br>
+&gt; All,<br>
+&gt;<br>
+&gt; Recently we ran into a problem where our filesystem (300GB in size)<br=
+>
+&gt; reported &#39;no space left on device&#39; (ENOSPC) but when we looked=
+ at disk<br>
+&gt; space usage and inode usage it was around 52% for disk space and 11% f=
+or<br>
+.......</span></blockquote><div><br></div><blockquote class=3D"gmail_quote"=
+ style=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);p=
+adding-left:1ex"><span class=3D"">&gt;<br>
+&gt; Store 03 (root@server):~# xfs_db -c freesp /dev/sdb<br>
+&gt;=C2=A0 =C2=A0 from=C2=A0 =C2=A0 =C2=A0 to extents=C2=A0 blocks=C2=A0 =
+=C2=A0 pct<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A01 3282633 328263=
+3=C2=A0 =C2=A09.03<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A0 =C2=A03 3416223 837232=
+5=C2=A0 23.03<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A04=C2=A0 =C2=A0 =C2=A0 =C2=A07 6175009 247000=
+36=C2=A0 67.94<br>
+<br>
+</span>Yup, no more aligned 4 block extents in the filesystem.<br>
+<br>
+</blockquote><div>Dave Thank you for your answer but are you able to explai=
+n a bit more on how you determine there are no aligned 4 block extends avai=
+lable?<br></div><div>It apparently is not the &#39;from 4 to 7&#39; line te=
+lling there are at least continuous extents of 4 blocks big. Or is it becau=
+se <span class=3D"">24700036 divided by </span><span class=3D"">6175009 is =
+exactly 4 and not a bit more?<br></span></div><div><span class=3D"">When I =
+calculate the ratio between the individual AG freesp they were all four exa=
+ctly 4.<br></span></div><div><span class=3D""><br></span></div><div><span c=
+lass=3D"">As said we would like to detect this problem from happening again=
+. And we would like this detection to be done by our monitoring service.<br=
+></span></div><div><span class=3D"">One of my colleagues mentions the follo=
+wing calculation to find out if there are enough aligned 4 block extents:<b=
+r><br></span></div><div><span class=3D"">Starting from line &quot;from 4 to=
+ 7&quot; calculate: &lt;blocks-column&gt; - (4 * &lt;extents-column&gt;) &g=
+t; 0. When not there is not enough free space for new inodes.<br><br></span=
+></div><div><span class=3D"">On another system we have which does not see t=
+hese problems yet we have:<br><br>=C2=A0=C2=A0 from=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 to extents=C2=A0 blocks=C2=A0=C2=A0=C2=A0 pct<br>=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 1=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1 3483987 3483987=C2=A0=
+=C2=A0 7.83<br>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 2=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 3 3560607 8709838=C2=A0 19.58<br>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 4=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 7 6402893 26486634=C2=A0 59.55<br>=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 15=C2=A0 418450=
+ 5799206=C2=A0 13.04<br><br></span></div><div><span class=3D"">26486634 / <=
+/span><span class=3D"">6402893 =3D 4.136666 and <br></span></div><div><span=
+ class=3D"">26486634 - (4 * </span><span class=3D"">6402893) =3D 875062 &gt=
+; 0 and<br>5799205 - (4 * 418450) =3D 4125405 &gt; 0<br></span></div><div>=
+=C2=A0<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0=
+px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">into this=
+ condition.<br>
+<br>
+Cheers,<br>
+<br>
+Dave.<br>
+<span class=3D""><font color=3D"#888888">--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</font></span></blockquote></div><br></div><div class=3D"gmail_extra">Miche=
+l.<br></div></div>
+
+--001a114054466c2058052b41e8ef--
+
+
+--===============5728875979708889824==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5728875979708889824==--
