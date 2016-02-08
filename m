@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F2E997CA2
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 03:07:41 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A4657CA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 03:12:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 95013AC001
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 01:07:41 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B9D8304048
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 01:12:38 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id LMe8qbCIAr9oz3zo (version=TLSv1.2
+	ESMTP id m9EOOPvJtKjRSzsG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 01:07:35 -0800 (PST)
-Date: Mon, 8 Feb 2016 01:07:34 -0800
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 01:12:36 -0800 (PST)
+Date: Mon, 8 Feb 2016 01:12:36 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] xfs: remove XBF_STALE flag wrapper macros
-Message-ID: <20160208090734.GM5534@infradead.org>
+Subject: Re: [PATCH 6/6] xfs: rename XFS_BUF_ZEROFLAGS macro
+Message-ID: <20160208091235.GN5534@infradead.org>
 References: <1454632683-20543-1-git-send-email-david@fromorbit.com>
-	<1454632683-20543-6-git-send-email-david@fromorbit.com>
+	<1454632683-20543-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1454632683-20543-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1454632683-20543-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,9 +33,24 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+Instead of just renaming it I'd rather dig deeper.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+In xlog_bwrite we call xfs_bwrite, which already handles all flag
+clearing, so the call to XFS_BUF_ZEROFLAGS can just
+be removed.
+
+xlog_sync already sets a lot of these flags again, and is called on an
+iclog buffer which never has the READ or XBF_WRITE_FAIL set, so just
+replacing it with an opencoded
+
+	bp->b_flags &= (XBF_FUA | XBF_FLUSH);
+
+for both instances should be enough, and even that could be moved
+into and else clause of the
+
+	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
+
+conditional.
 
 _______________________________________________
 xfs mailing list
