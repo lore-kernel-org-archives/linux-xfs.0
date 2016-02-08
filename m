@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B967029DFD
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 23:44:35 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BE1C67CA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 00:08:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C969AC001
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 21:44:35 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9A1B304048
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 22:08:33 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	CN9zpfxWJ1ru6VtO for <xfs@oss.sgi.com>;
-	Sun, 07 Feb 2016 21:44:31 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aSecX-0007As-Qh
-	for xfs@oss.sgi.com; Mon, 08 Feb 2016 16:44:21 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aSecX-00021X-Q4
-	for xfs@oss.sgi.com; Mon, 08 Feb 2016 16:44:21 +1100
+	qRcEQtFQZsxaWZrp for <xfs@oss.sgi.com>;
+	Sun, 07 Feb 2016 22:08:27 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aSezH-0007FY-N0
+	for xfs@oss.sgi.com; Mon, 08 Feb 2016 17:07:51 +1100
+Date: Mon, 8 Feb 2016 17:07:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/5] xfs: Introduce writeback context for writepages
-Date: Mon,  8 Feb 2016 16:44:15 +1100
-Message-Id: <1454910258-7578-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1454910258-7578-1-git-send-email-david@fromorbit.com>
-References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 4a91310
+Message-ID: <20160208060751.GA27429@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,525 +26,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-xfs_vm_writepages() calls generic_writepages to writeback a range of
-a file, but then xfs_vm_writepage() clusters pages itself as it does
-not have any context it can pass between->writepage calls from
-__write_cache_pages().
+The for-next branch of the xfs kernel repository at
 
-Introduce a writeback context for xfs_vm_writepages() and call
-__write_cache_pages directly with our own writepage callback so that
-we can pass that context to each writepage invocation. This
-encapsulates the current mapping, whether it is valid or not, the
-current ioend and it's IO type and the ioend chain being built.
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-This requires us to move the ioend submission up to the level where
-the writepage context is declared. This does mean we do not submit
-IO until we packaged the entire writeback range, but with the block
-plugging in the writepages call this is the way IO is submitted,
-anyway.
+has just been updated. I've pushed this out with both generic quota
+and direct Io modifications in it, so if they end up going into
+another tree expect a rebase of the for-next branch to occur to pull
+them in from the appropriate trees.
 
-It also means that we need to handle discontiguous page ranges.  If
-the pages sent down by write_cache_pages to the writepage callback
-are discontiguous, we need to detect this and put each discontiguous
-page range into individual ioends. This is needed to ensure that the
-ioend accurately represents the range of the file that it covers so
-that file size updates during IO completion set the size correctly.
-Failure to take into account the discontiguous ranges results in
-files being too small when writeback patterns are non-sequential.
+There is still a lot of changes pending review to go into this
+for-next tree, and I'm hoping to get the first part of the
+rmap/reflink work into it as well, so there's plenty of work still
+to be done in this cycle....
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c | 277 ++++++++++++++++++++++++++++--------------------------
- 1 file changed, 146 insertions(+), 131 deletions(-)
+The new head of the for-next branch is commit:
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 00452cb..4453d1d 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -40,6 +40,18 @@
- #define XFS_DIO_FLAG_UNWRITTEN	(1 << 0)
- #define XFS_DIO_FLAG_APPEND	(1 << 1)
- 
-+/*
-+ * structure owned by writepages passed to individual writepage calls
-+ */
-+struct xfs_writepage_ctx {
-+	struct xfs_bmbt_irec    imap;
-+	bool			imap_valid;
-+	unsigned int		io_type;
-+	struct xfs_ioend	*iohead;
-+	struct xfs_ioend	*ioend;
-+	sector_t		last_block;
-+};
-+
- void
- xfs_count_page_state(
- 	struct page		*page,
-@@ -341,7 +353,7 @@ xfs_map_blocks(
- 	return 0;
- }
- 
--STATIC int
-+STATIC bool
- xfs_imap_valid(
- 	struct inode		*inode,
- 	struct xfs_bmbt_irec	*imap,
-@@ -528,38 +540,6 @@ xfs_submit_ioend(
- }
- 
- /*
-- * Cancel submission of all buffer_heads so far in this endio.
-- * Toss the endio too.  Only ever called for the initial page
-- * in a writepage request, so only ever one page.
-- */
--STATIC void
--xfs_cancel_ioend(
--	xfs_ioend_t		*ioend)
--{
--	xfs_ioend_t		*next;
--	struct buffer_head	*bh, *next_bh;
--
--	do {
--		next = ioend->io_list;
--		bh = ioend->io_buffer_head;
--		do {
--			next_bh = bh->b_private;
--			clear_buffer_async_write(bh);
--			/*
--			 * The unwritten flag is cleared when added to the
--			 * ioend. We're not submitting for I/O so mark the
--			 * buffer unwritten again for next time around.
--			 */
--			if (ioend->io_type == XFS_IO_UNWRITTEN)
--				set_buffer_unwritten(bh);
--			unlock_buffer(bh);
--		} while ((bh = next_bh) != NULL);
--
--		mempool_free(ioend, xfs_ioend_pool);
--	} while ((ioend = next) != NULL);
--}
--
--/*
-  * Test to see if we've been building up a completion structure for
-  * earlier buffers -- if so, we try to append to this ioend if we
-  * can, otherwise we finish off any current ioend and start another.
-@@ -570,29 +550,27 @@ xfs_add_to_ioend(
- 	struct inode		*inode,
- 	struct buffer_head	*bh,
- 	xfs_off_t		offset,
--	unsigned int		type,
--	xfs_ioend_t		**result,
--	int			need_ioend)
-+	struct xfs_writepage_ctx *wpc)
- {
--	xfs_ioend_t		*ioend = *result;
--
--	if (!ioend || need_ioend || type != ioend->io_type) {
--		xfs_ioend_t	*previous = *result;
--
--		ioend = xfs_alloc_ioend(inode, type);
--		ioend->io_offset = offset;
--		ioend->io_buffer_head = bh;
--		ioend->io_buffer_tail = bh;
--		if (previous)
--			previous->io_list = ioend;
--		*result = ioend;
-+	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
-+	    bh->b_blocknr != wpc->last_block + 1) {
-+		struct xfs_ioend	*new;
-+
-+		new = xfs_alloc_ioend(inode, wpc->io_type);
-+		new->io_offset = offset;
-+		new->io_buffer_head = bh;
-+		new->io_buffer_tail = bh;
-+		if (wpc->ioend)
-+			wpc->ioend->io_list = new;
-+		wpc->ioend = new;
- 	} else {
--		ioend->io_buffer_tail->b_private = bh;
--		ioend->io_buffer_tail = bh;
-+		wpc->ioend->io_buffer_tail->b_private = bh;
-+		wpc->ioend->io_buffer_tail = bh;
- 	}
- 
- 	bh->b_private = NULL;
--	ioend->io_size += bh->b_size;
-+	wpc->ioend->io_size += bh->b_size;
-+	wpc->last_block = bh->b_blocknr;
- }
- 
- STATIC void
-@@ -689,17 +667,15 @@ xfs_convert_page(
- 	struct inode		*inode,
- 	struct page		*page,
- 	loff_t			tindex,
--	struct xfs_bmbt_irec	*imap,
--	xfs_ioend_t		**ioendp,
-+	struct xfs_writepage_ctx *wpc,
- 	struct writeback_control *wbc)
- {
- 	struct buffer_head	*bh, *head;
- 	xfs_off_t		end_offset;
- 	unsigned long		p_offset;
--	unsigned int		type;
- 	int			len, page_dirty;
- 	int			count = 0, done = 0, uptodate = 1;
-- 	xfs_off_t		offset = page_offset(page);
-+	xfs_off_t		offset = page_offset(page);
- 
- 	if (page->index != tindex)
- 		goto fail;
-@@ -709,7 +685,7 @@ xfs_convert_page(
- 		goto fail_unlock_page;
- 	if (page->mapping != inode->i_mapping)
- 		goto fail_unlock_page;
--	if (!xfs_check_page_type(page, (*ioendp)->io_type, false))
-+	if (!xfs_check_page_type(page, wpc->ioend->io_type, false))
- 		goto fail_unlock_page;
- 
- 	/*
-@@ -745,7 +721,7 @@ xfs_convert_page(
- 	 * writeback.  Hence for more optimal IO patterns, we should always
- 	 * avoid partial page writeback due to multiple mappings on a page here.
- 	 */
--	if (!xfs_imap_valid(inode, imap, end_offset))
-+	if (!xfs_imap_valid(inode, &wpc->imap, end_offset))
- 		goto fail_unlock_page;
- 
- 	len = 1 << inode->i_blkbits;
-@@ -777,23 +753,22 @@ xfs_convert_page(
- 		if (buffer_unwritten(bh) || buffer_delay(bh) ||
- 		    buffer_mapped(bh)) {
- 			if (buffer_unwritten(bh))
--				type = XFS_IO_UNWRITTEN;
-+				wpc->io_type = XFS_IO_UNWRITTEN;
- 			else if (buffer_delay(bh))
--				type = XFS_IO_DELALLOC;
-+				wpc->io_type = XFS_IO_DELALLOC;
- 			else
--				type = XFS_IO_OVERWRITE;
-+				wpc->io_type = XFS_IO_OVERWRITE;
- 
- 			/*
- 			 * imap should always be valid because of the above
- 			 * partial page end_offset check on the imap.
- 			 */
--			ASSERT(xfs_imap_valid(inode, imap, offset));
-+			ASSERT(xfs_imap_valid(inode, &wpc->imap, offset));
- 
- 			lock_buffer(bh);
--			if (type != XFS_IO_OVERWRITE)
--				xfs_map_at_offset(inode, bh, imap, offset);
--			xfs_add_to_ioend(inode, bh, offset, type,
--					 ioendp, done);
-+			if (wpc->io_type != XFS_IO_OVERWRITE)
-+				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
-+			xfs_add_to_ioend(inode, bh, offset, wpc);
- 
- 			page_dirty--;
- 			count++;
-@@ -828,8 +803,7 @@ STATIC void
- xfs_cluster_write(
- 	struct inode		*inode,
- 	pgoff_t			tindex,
--	struct xfs_bmbt_irec	*imap,
--	xfs_ioend_t		**ioendp,
-+	struct xfs_writepage_ctx *wpc,
- 	struct writeback_control *wbc,
- 	pgoff_t			tlast)
- {
-@@ -845,7 +819,7 @@ xfs_cluster_write(
- 
- 		for (i = 0; i < pagevec_count(&pvec); i++) {
- 			done = xfs_convert_page(inode, pvec.pages[i], tindex++,
--					imap, ioendp, wbc);
-+						wpc, wbc);
- 			if (done)
- 				break;
- 		}
-@@ -931,6 +905,27 @@ out_invalidate:
- 	return;
- }
- 
-+static int
-+xfs_writepage_submit(
-+	struct xfs_writepage_ctx *wpc,
-+	struct writeback_control *wbc,
-+	int			status)
-+{
-+	struct blk_plug		plug;
-+
-+	/* Reserve log space if we might write beyond the on-disk inode size. */
-+	if (!status && wpc->ioend && wpc->ioend->io_type != XFS_IO_UNWRITTEN &&
-+	    xfs_ioend_is_append(wpc->ioend))
-+		status = xfs_setfilesize_trans_alloc(wpc->ioend);
-+
-+	if (wpc->iohead) {
-+		blk_start_plug(&plug);
-+		xfs_submit_ioend(wbc, wpc->iohead, status);
-+		blk_finish_plug(&plug);
-+	}
-+	return status;
-+}
-+
- /*
-  * Write out a dirty page.
-  *
-@@ -940,20 +935,19 @@ out_invalidate:
-  * For any other dirty buffer heads on the page we should flush them.
-  */
- STATIC int
--xfs_vm_writepage(
-+xfs_do_writepage(
- 	struct page		*page,
--	struct writeback_control *wbc)
-+	struct writeback_control *wbc,
-+	void			*data)
- {
-+	struct xfs_writepage_ctx *wpc = data;
- 	struct inode		*inode = page->mapping->host;
- 	struct buffer_head	*bh, *head;
--	struct xfs_bmbt_irec	imap;
--	xfs_ioend_t		*ioend = NULL, *iohead = NULL;
- 	loff_t			offset;
--	unsigned int		type;
- 	__uint64_t              end_offset;
- 	pgoff_t                 end_index, last_index;
- 	ssize_t			len;
--	int			err, imap_valid = 0, uptodate = 1;
-+	int			err, uptodate = 1;
- 	int			count = 0;
- 
- 	trace_xfs_writepage(inode, page, 0, 0);
-@@ -1052,11 +1046,8 @@ xfs_vm_writepage(
- 
- 	bh = head = page_buffers(page);
- 	offset = page_offset(page);
--	type = XFS_IO_OVERWRITE;
- 
- 	do {
--		int new_ioend = 0;
--
- 		if (offset >= end_offset)
- 			break;
- 		if (!buffer_uptodate(bh))
-@@ -1069,24 +1060,24 @@ xfs_vm_writepage(
- 		 * buffers covering holes here.
- 		 */
- 		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
--			imap_valid = 0;
-+			wpc->imap_valid = false;
- 			continue;
- 		}
- 
- 		if (buffer_unwritten(bh)) {
--			if (type != XFS_IO_UNWRITTEN) {
--				type = XFS_IO_UNWRITTEN;
--				imap_valid = 0;
-+			if (wpc->io_type != XFS_IO_UNWRITTEN) {
-+				wpc->io_type = XFS_IO_UNWRITTEN;
-+				wpc->imap_valid = false;
- 			}
- 		} else if (buffer_delay(bh)) {
--			if (type != XFS_IO_DELALLOC) {
--				type = XFS_IO_DELALLOC;
--				imap_valid = 0;
-+			if (wpc->io_type != XFS_IO_DELALLOC) {
-+				wpc->io_type = XFS_IO_DELALLOC;
-+				wpc->imap_valid = false;
- 			}
- 		} else if (buffer_uptodate(bh)) {
--			if (type != XFS_IO_OVERWRITE) {
--				type = XFS_IO_OVERWRITE;
--				imap_valid = 0;
-+			if (wpc->io_type != XFS_IO_OVERWRITE) {
-+				wpc->io_type = XFS_IO_OVERWRITE;
-+				wpc->imap_valid = false;
- 			}
- 		} else {
- 			if (PageUptodate(page))
-@@ -1097,38 +1088,31 @@ xfs_vm_writepage(
- 			 * subsequent writeable buffers into a new
- 			 * ioend.
- 			 */
--			imap_valid = 0;
-+			wpc->imap_valid = false;
- 			continue;
- 		}
- 
--		if (imap_valid)
--			imap_valid = xfs_imap_valid(inode, &imap, offset);
--		if (!imap_valid) {
--			/*
--			 * If we didn't have a valid mapping then we need to
--			 * put the new mapping into a separate ioend structure.
--			 * This ensures non-contiguous extents always have
--			 * separate ioends, which is particularly important
--			 * for unwritten extent conversion at I/O completion
--			 * time.
--			 */
--			new_ioend = 1;
--			err = xfs_map_blocks(inode, offset, &imap, type);
-+		if (wpc->imap_valid)
-+			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
-+							 offset);
-+		if (!wpc->imap_valid) {
-+			err = xfs_map_blocks(inode, offset, &wpc->imap,
-+					     wpc->io_type);
- 			if (err)
- 				goto error;
--			imap_valid = xfs_imap_valid(inode, &imap, offset);
-+			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
-+							 offset);
- 		}
--		if (imap_valid) {
-+		if (wpc->imap_valid) {
- 			lock_buffer(bh);
--			if (type != XFS_IO_OVERWRITE)
--				xfs_map_at_offset(inode, bh, &imap, offset);
--			xfs_add_to_ioend(inode, bh, offset, type, &ioend,
--					 new_ioend);
-+			if (wpc->io_type != XFS_IO_OVERWRITE)
-+				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
-+			xfs_add_to_ioend(inode, bh, offset, wpc);
- 			count++;
- 		}
- 
--		if (!iohead)
--			iohead = ioend;
-+		if (!wpc->iohead)
-+			wpc->iohead = wpc->ioend;
- 
- 	} while (offset += len, ((bh = bh->b_this_page) != head));
- 
-@@ -1138,20 +1122,20 @@ xfs_vm_writepage(
- 	xfs_start_page_writeback(page, 1, count);
- 
- 	/* if there is no IO to be submitted for this page, we are done */
--	if (!ioend)
-+	if (!count)
- 		return 0;
- 
--	ASSERT(iohead);
-+	ASSERT(wpc->iohead);
- 
- 	/*
- 	 * Any errors from this point onwards need tobe reported through the IO
- 	 * completion path as we have marked the initial page as under writeback
- 	 * and unlocked it.
- 	 */
--	if (imap_valid) {
-+	if (wpc->imap_valid) {
- 		xfs_off_t		end_index;
- 
--		end_index = imap.br_startoff + imap.br_blockcount;
-+		end_index = wpc->imap.br_startoff + wpc->imap.br_blockcount;
- 
- 		/* to bytes */
- 		end_index <<= inode->i_blkbits;
-@@ -1163,29 +1147,36 @@ xfs_vm_writepage(
- 		if (end_index > last_index)
- 			end_index = last_index;
- 
--		xfs_cluster_write(inode, page->index + 1, &imap, &ioend,
--				  wbc, end_index);
-+		xfs_cluster_write(inode, page->index + 1, wpc, wbc, end_index);
- 	}
- 
--
--	/*
--	 * Reserve log space if we might write beyond the on-disk inode size.
--	 */
--	err = 0;
--	if (ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
--		err = xfs_setfilesize_trans_alloc(ioend);
--
--	xfs_submit_ioend(wbc, iohead, err);
--
- 	return 0;
- 
- error:
--	if (iohead)
--		xfs_cancel_ioend(iohead);
-+	/*
-+	 * We have to fail the iohead here because we buffers locked in the
-+	 * ioend chain. If we don't do this, we'll deadlock invalidating the
-+	 * page as that tries to lock the buffers on the page. Also, because we
-+	 * have set pages under writeback, we have to run IO completion to mark
-+	 * the error state of the IO appropriately, so we can't cancel the ioend
-+	 * directly here. That means we have to mark this page as under
-+	 * writeback if we included any buffers from it in the ioend chain.
-+	 */
-+	if (count)
-+		xfs_start_page_writeback(page, 0, count);
-+	xfs_writepage_submit(wpc, wbc, err);
- 
--	xfs_aops_discard_page(page);
--	ClearPageUptodate(page);
--	unlock_page(page);
-+	/*
-+	 * We can only discard the page we had the IO error on if we haven't
-+	 * included it in the ioend above. If it has already been errored out,
-+	 * the it is unlocked and we can't touch it here.
-+	 */
-+	if (!count) {
-+		xfs_aops_discard_page(page);
-+		ClearPageUptodate(page);
-+		unlock_page(page);
-+	}
-+	mapping_set_error(page->mapping, err);
- 	return err;
- 
- redirty:
-@@ -1195,12 +1186,36 @@ redirty:
- }
- 
- STATIC int
-+xfs_vm_writepage(
-+	struct page		*page,
-+	struct writeback_control *wbc)
-+{
-+	struct xfs_writepage_ctx wpc = {
-+		.io_type = XFS_IO_OVERWRITE,
-+	};
-+	int			ret;
-+
-+	ret = xfs_do_writepage(page, wbc, &wpc);
-+	if (ret)
-+		return ret;
-+	return xfs_writepage_submit(&wpc, wbc, ret);
-+}
-+
-+STATIC int
- xfs_vm_writepages(
- 	struct address_space	*mapping,
- 	struct writeback_control *wbc)
- {
-+	struct xfs_writepage_ctx wpc = {
-+		.io_type = XFS_IO_OVERWRITE,
-+	};
-+	int			ret;
-+
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
--	return generic_writepages(mapping, wbc);
-+	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
-+	if (ret)
-+		return ret;
-+	return xfs_writepage_submit(&wpc, wbc, ret);
- }
- 
- /*
+4a91310 Merge branch 'xfs-misc-fixes-4.6' into for-next
+
+New Commits:
+
+Brian Foster (2):
+      [60630fe] xfs: clean up unwritten buffers on write failure
+      [af055e3] xfs: fix xfs_log_ticket leak in xfs_end_io() after fs shutdown
+
+Carlos Maiolino (1):
+      [be60794] xfs: Split default quota limits by quota type
+
+Christoph Hellwig (6):
+      [187372a] direct-io: always call ->end_io if non-NULL
+      [273dda7] xfs: don't use ioends for direct write completions
+      [c19b104] xfs: fold xfs_vm_do_dio into xfs_vm_direct_IO
+      [196328e] xfs: handle errors from ->free_blocks in xfs_btree_kill_iroot
+      [c46ee8a] xfs: factor btree block freeing into a helper
+      [edfd9dd] xfs: move buffer invalidation to xfs_btree_free_block
+
+Darrick J. Wong (2):
+      [8e0bd49] xfs: fix endianness error when checking log block crc on big endian platforms
+      [244efea] xfs: move struct xfs_attr_shortform to xfs_da_format.h
+
+Dave Chinner (7):
+      [4b680af] xfs: lock rt summary inode on allocation
+      [a204d07] xfs: RT bitmap and summary buffers are not typed
+      [ca4de5c] xfs: RT bitmap and summary buffers need verifiers
+      [e892a10] Merge branch 'xfs-rt-fixes-4.6' into for-next
+      [ec370f5] Merge branch 'xfs-get-next-dquot-4.6' into for-next
+      [0d077b8] Merge branch 'xfs-dio-fix-4.6' into for-next
+      [4a91310] Merge branch 'xfs-misc-fixes-4.6' into for-next
+
+Eric Sandeen (8):
+      [3218a3e] quota: remove unused cmd argument from quota_quotaon()
+      [8b37524] quota: add new quotactl Q_XGETNEXTQUOTA
+      [926132c] quota: add new quotactl Q_GETNEXTQUOTA
+      [a484bcd] xfs: don't overflow quota ID when initializing dqblk
+      [4d4d952] xfs: get quota inode from mp & flags rather than dqp
+      [8aa7d37] xfs: Factor xfs_seek_hole_data into helper
+      [296c24e] xfs: wire up Q_XGETNEXTQUOTA / get_nextdqblk
+      [de0b85a] xfs: remove unused function definitions
+
+Michal Hocko (1):
+      [18f1df4] xfs: Make xfsaild freezeable again
+
+
+Code Diffstat:
+
+ fs/dax.c                         |   9 +-
+ fs/direct-io.c                   |   9 +-
+ fs/ext4/inode.c                  |   9 +-
+ fs/ocfs2/aops.c                  |   7 +-
+ fs/quota/quota.c                 |  66 +++++++++-
+ fs/xfs/libxfs/xfs_alloc_btree.c  |   2 -
+ fs/xfs/libxfs/xfs_attr_sf.h      |  16 ---
+ fs/xfs/libxfs/xfs_bmap_btree.c   |   1 -
+ fs/xfs/libxfs/xfs_btree.c        |  32 +++--
+ fs/xfs/libxfs/xfs_da_format.h    |  16 +++
+ fs/xfs/libxfs/xfs_ialloc_btree.c |  12 +-
+ fs/xfs/libxfs/xfs_inode_fork.c   |   1 +
+ fs/xfs/libxfs/xfs_log_format.h   |   2 +
+ fs/xfs/libxfs/xfs_quota_defs.h   |   3 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c     |  30 ++++-
+ fs/xfs/libxfs/xfs_sb.h           |   1 -
+ fs/xfs/libxfs/xfs_shared.h       |   1 +
+ fs/xfs/xfs_aops.c                | 274 +++++++++++++++------------------------
+ fs/xfs/xfs_bmap_util.c           |   4 +-
+ fs/xfs/xfs_dquot.c               | 129 +++++++++++++++---
+ fs/xfs/xfs_file.c                |  82 ++++++++----
+ fs/xfs/xfs_fsops.h               |   1 -
+ fs/xfs/xfs_inode.h               |   2 +
+ fs/xfs/xfs_log_recover.c         |   9 +-
+ fs/xfs/xfs_mount.h               |   1 -
+ fs/xfs/xfs_qm.c                  |  55 ++++++--
+ fs/xfs/xfs_qm.h                  |  48 +++++--
+ fs/xfs/xfs_qm_syscalls.c         |  27 ++--
+ fs/xfs/xfs_quotaops.c            |  36 ++++-
+ fs/xfs/xfs_trace.h               |   9 +-
+ fs/xfs/xfs_trans_ail.c           |   5 +-
+ fs/xfs/xfs_trans_dquot.c         |  15 ++-
+ include/linux/fs.h               |   2 +-
+ include/linux/quota.h            |   2 +
+ include/uapi/linux/dqblk_xfs.h   |   1 +
+ include/uapi/linux/quota.h       |  14 ++
+ 36 files changed, 615 insertions(+), 318 deletions(-)
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
