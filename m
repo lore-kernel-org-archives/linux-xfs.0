@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 76EE97CA2
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 23:44:30 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D79097CA6
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 23:44:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 24A7FAC004
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 21:44:30 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A35498F8033
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 21:44:32 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	MdvxMg0W3utDBXvT for <xfs@oss.sgi.com>;
-	Sun, 07 Feb 2016 21:44:28 -0800 (PST)
+	mWBmYMOY7fvG1sAm for <xfs@oss.sgi.com>;
+	Sun, 07 Feb 2016 21:44:29 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aSecX-0007Ar-QG
+	(envelope-from <dave@fromorbit.com>) id 1aSecX-0007At-RU
 	for xfs@oss.sgi.com; Mon, 08 Feb 2016 16:44:21 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aSecX-00021S-Pd
+	(envelope-from <dave@disappointment.disaster>) id 1aSecX-00021c-QV
 	for xfs@oss.sgi.com; Mon, 08 Feb 2016 16:44:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] xfs: remove nonblocking mode from xfs_vm_writepage
-Date: Mon,  8 Feb 2016 16:44:14 +1100
-Message-Id: <1454910258-7578-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/5] xfs: xfs_cluster_write is redundant
+Date: Mon,  8 Feb 2016 16:44:16 +1100
+Message-Id: <1454910258-7578-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1454910258-7578-1-git-send-email-david@fromorbit.com>
 References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,88 +39,273 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Remove the nonblocking optimisation done for mapping lookups during
-writeback. It's not clear that leaving a hole in the writeback range
-just because we couldn't get a lock is really a win, as it makes us
-do another small random IO later on rather than a large sequential
-IO now.
-
-As this gets in the way of sane error handling later on, just remove
-for the moment and we can re-introduce an equivalent optimisation in
-future if we see problems due to extent map lock contention.
+xfs_cluster_write() is not necessary now that xfs_vm_writepages()
+aggregates writepage calls across a single mapping. This means we no
+longer need to do page lookups in xfs_cluster_write, so writeback
+only needs to look up th epage cache once per page being written.
+This also removes a large amount of mostly duplicate code between
+xfs_do_writepage() and xfs_convert_page().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 20 +++-----------------
- 1 file changed, 3 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_aops.c | 215 ++----------------------------------------------------
+ 1 file changed, 6 insertions(+), 209 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 14ac982..00452cb 100644
+index 4453d1d..e473f53 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -289,8 +289,7 @@ xfs_map_blocks(
- 	struct inode		*inode,
- 	loff_t			offset,
- 	struct xfs_bmbt_irec	*imap,
--	int			type,
--	int			nonblocking)
-+	int			type)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -306,12 +305,7 @@ xfs_map_blocks(
- 	if (type == XFS_IO_UNWRITTEN)
- 		bmapi_flags |= XFS_BMAPI_IGSTATE;
+@@ -656,179 +656,6 @@ xfs_check_page_type(
+ 	return false;
+ }
  
--	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
--		if (nonblocking)
--			return -EAGAIN;
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-/*
+- * Allocate & map buffers for page given the extent map. Write it out.
+- * except for the original page of a writepage, this is called on
+- * delalloc/unwritten pages only, for the original page it is possible
+- * that the page has no mapping at all.
+- */
+-STATIC int
+-xfs_convert_page(
+-	struct inode		*inode,
+-	struct page		*page,
+-	loff_t			tindex,
+-	struct xfs_writepage_ctx *wpc,
+-	struct writeback_control *wbc)
+-{
+-	struct buffer_head	*bh, *head;
+-	xfs_off_t		end_offset;
+-	unsigned long		p_offset;
+-	int			len, page_dirty;
+-	int			count = 0, done = 0, uptodate = 1;
+-	xfs_off_t		offset = page_offset(page);
+-
+-	if (page->index != tindex)
+-		goto fail;
+-	if (!trylock_page(page))
+-		goto fail;
+-	if (PageWriteback(page))
+-		goto fail_unlock_page;
+-	if (page->mapping != inode->i_mapping)
+-		goto fail_unlock_page;
+-	if (!xfs_check_page_type(page, wpc->ioend->io_type, false))
+-		goto fail_unlock_page;
+-
+-	/*
+-	 * page_dirty is initially a count of buffers on the page before
+-	 * EOF and is decremented as we move each into a cleanable state.
+-	 *
+-	 * Derivation:
+-	 *
+-	 * End offset is the highest offset that this page should represent.
+-	 * If we are on the last page, (end_offset & (PAGE_CACHE_SIZE - 1))
+-	 * will evaluate non-zero and be less than PAGE_CACHE_SIZE and
+-	 * hence give us the correct page_dirty count. On any other page,
+-	 * it will be zero and in that case we need page_dirty to be the
+-	 * count of buffers on the page.
+-	 */
+-	end_offset = min_t(unsigned long long,
+-			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
+-			i_size_read(inode));
+-
+-	/*
+-	 * If the current map does not span the entire page we are about to try
+-	 * to write, then give up. The only way we can write a page that spans
+-	 * multiple mappings in a single writeback iteration is via the
+-	 * xfs_vm_writepage() function. Data integrity writeback requires the
+-	 * entire page to be written in a single attempt, otherwise the part of
+-	 * the page we don't write here doesn't get written as part of the data
+-	 * integrity sync.
+-	 *
+-	 * For normal writeback, we also don't attempt to write partial pages
+-	 * here as it simply means that write_cache_pages() will see it under
+-	 * writeback and ignore the page until some point in the future, at
+-	 * which time this will be the only page in the file that needs
+-	 * writeback.  Hence for more optimal IO patterns, we should always
+-	 * avoid partial page writeback due to multiple mappings on a page here.
+-	 */
+-	if (!xfs_imap_valid(inode, &wpc->imap, end_offset))
+-		goto fail_unlock_page;
+-
+-	len = 1 << inode->i_blkbits;
+-	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
+-					PAGE_CACHE_SIZE);
+-	p_offset = p_offset ? roundup(p_offset, len) : PAGE_CACHE_SIZE;
+-	page_dirty = p_offset / len;
+-
+-	/*
+-	 * The moment we find a buffer that doesn't match our current type
+-	 * specification or can't be written, abort the loop and start
+-	 * writeback. As per the above xfs_imap_valid() check, only
+-	 * xfs_vm_writepage() can handle partial page writeback fully - we are
+-	 * limited here to the buffers that are contiguous with the current
+-	 * ioend, and hence a buffer we can't write breaks that contiguity and
+-	 * we have to defer the rest of the IO to xfs_vm_writepage().
+-	 */
+-	bh = head = page_buffers(page);
+-	do {
+-		if (offset >= end_offset)
+-			break;
+-		if (!buffer_uptodate(bh))
+-			uptodate = 0;
+-		if (!(PageUptodate(page) || buffer_uptodate(bh))) {
+-			done = 1;
+-			break;
+-		}
+-
+-		if (buffer_unwritten(bh) || buffer_delay(bh) ||
+-		    buffer_mapped(bh)) {
+-			if (buffer_unwritten(bh))
+-				wpc->io_type = XFS_IO_UNWRITTEN;
+-			else if (buffer_delay(bh))
+-				wpc->io_type = XFS_IO_DELALLOC;
+-			else
+-				wpc->io_type = XFS_IO_OVERWRITE;
+-
+-			/*
+-			 * imap should always be valid because of the above
+-			 * partial page end_offset check on the imap.
+-			 */
+-			ASSERT(xfs_imap_valid(inode, &wpc->imap, offset));
+-
+-			lock_buffer(bh);
+-			if (wpc->io_type != XFS_IO_OVERWRITE)
+-				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
+-			xfs_add_to_ioend(inode, bh, offset, wpc);
+-
+-			page_dirty--;
+-			count++;
+-		} else {
+-			done = 1;
+-			break;
+-		}
+-	} while (offset += len, (bh = bh->b_this_page) != head);
+-
+-	if (uptodate && bh == head)
+-		SetPageUptodate(page);
+-
+-	if (count) {
+-		if (--wbc->nr_to_write <= 0 &&
+-		    wbc->sync_mode == WB_SYNC_NONE)
+-			done = 1;
+-	}
+-	xfs_start_page_writeback(page, !page_dirty, count);
+-
+-	return done;
+- fail_unlock_page:
+-	unlock_page(page);
+- fail:
+-	return 1;
+-}
+-
+-/*
+- * Convert & write out a cluster of pages in the same extent as defined
+- * by mp and following the start page.
+- */
+-STATIC void
+-xfs_cluster_write(
+-	struct inode		*inode,
+-	pgoff_t			tindex,
+-	struct xfs_writepage_ctx *wpc,
+-	struct writeback_control *wbc,
+-	pgoff_t			tlast)
+-{
+-	struct pagevec		pvec;
+-	int			done = 0, i;
+-
+-	pagevec_init(&pvec, 0);
+-	while (!done && tindex <= tlast) {
+-		unsigned len = min_t(pgoff_t, PAGEVEC_SIZE, tlast - tindex + 1);
+-
+-		if (!pagevec_lookup(&pvec, inode->i_mapping, tindex, len))
+-			break;
+-
+-		for (i = 0; i < pagevec_count(&pvec); i++) {
+-			done = xfs_convert_page(inode, pvec.pages[i], tindex++,
+-						wpc, wbc);
+-			if (done)
+-				break;
+-		}
+-
+-		pagevec_release(&pvec);
+-		cond_resched();
+-	}
+-}
+-
+ STATIC void
+ xfs_vm_invalidatepage(
+ 	struct page		*page,
+@@ -945,7 +772,7 @@ xfs_do_writepage(
+ 	struct buffer_head	*bh, *head;
+ 	loff_t			offset;
+ 	__uint64_t              end_offset;
+-	pgoff_t                 end_index, last_index;
++	pgoff_t                 end_index;
+ 	ssize_t			len;
+ 	int			err, uptodate = 1;
+ 	int			count = 0;
+@@ -975,12 +802,9 @@ xfs_do_writepage(
+ 	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
+ 		goto redirty;
+ 
+-	/* Is this page beyond the end of the file? */
+-	offset = i_size_read(inode);
+-	end_index = offset >> PAGE_CACHE_SHIFT;
+-	last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
+-
+ 	/*
++	 * Is this page beyond the end of the file?
++	 *
+ 	 * The page index is less than the end_index, adjust the end_offset
+ 	 * to the highest offset that this page should represent.
+ 	 * -----------------------------------------------------
+@@ -991,6 +815,8 @@ xfs_do_writepage(
+ 	 * |     desired writeback range    |      see else    |
+ 	 * ---------------------------------^------------------|
+ 	 */
++	offset = i_size_read(inode);
++	end_index = offset >> PAGE_CACHE_SHIFT;
+ 	if (page->index < end_index)
+ 		end_offset = (xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT;
+ 	else {
+@@ -1120,36 +946,7 @@ xfs_do_writepage(
+ 		SetPageUptodate(page);
+ 
+ 	xfs_start_page_writeback(page, 1, count);
+-
+-	/* if there is no IO to be submitted for this page, we are done */
+-	if (!count)
+-		return 0;
+-
+-	ASSERT(wpc->iohead);
+-
+-	/*
+-	 * Any errors from this point onwards need tobe reported through the IO
+-	 * completion path as we have marked the initial page as under writeback
+-	 * and unlocked it.
+-	 */
+-	if (wpc->imap_valid) {
+-		xfs_off_t		end_index;
+-
+-		end_index = wpc->imap.br_startoff + wpc->imap.br_blockcount;
+-
+-		/* to bytes */
+-		end_index <<= inode->i_blkbits;
+-
+-		/* to pages */
+-		end_index = (end_index - 1) >> PAGE_CACHE_SHIFT;
+-
+-		/* check against file size */
+-		if (end_index > last_index)
+-			end_index = last_index;
+-
+-		xfs_cluster_write(inode, page->index + 1, wpc, wbc, end_index);
 -	}
 -
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
-@@ -961,7 +955,6 @@ xfs_vm_writepage(
- 	ssize_t			len;
- 	int			err, imap_valid = 0, uptodate = 1;
- 	int			count = 0;
--	int			nonblocking = 0;
++	ASSERT(wpc->iohead || !count);
+ 	return 0;
  
- 	trace_xfs_writepage(inode, page, 0, 0);
- 
-@@ -1061,9 +1054,6 @@ xfs_vm_writepage(
- 	offset = page_offset(page);
- 	type = XFS_IO_OVERWRITE;
- 
--	if (wbc->sync_mode == WB_SYNC_NONE)
--		nonblocking = 1;
--
- 	do {
- 		int new_ioend = 0;
- 
-@@ -1123,8 +1113,7 @@ xfs_vm_writepage(
- 			 * time.
- 			 */
- 			new_ioend = 1;
--			err = xfs_map_blocks(inode, offset, &imap, type,
--					     nonblocking);
-+			err = xfs_map_blocks(inode, offset, &imap, type);
- 			if (err)
- 				goto error;
- 			imap_valid = xfs_imap_valid(inode, &imap, offset);
-@@ -1194,9 +1183,6 @@ error:
- 	if (iohead)
- 		xfs_cancel_ioend(iohead);
- 
--	if (err == -EAGAIN)
--		goto redirty;
--
- 	xfs_aops_discard_page(page);
- 	ClearPageUptodate(page);
- 	unlock_page(page);
+ error:
 -- 
 2.5.0
 
