@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 63FB57CA2
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 16:31:55 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 27FA27CA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 16:59:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 43802304039
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 14:31:55 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0892F304032
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 14:59:08 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	cwZwws2tVEs8G40A for <xfs@oss.sgi.com>;
-	Mon, 08 Feb 2016 14:31:52 -0800 (PST)
-Date: Tue, 9 Feb 2016 09:31:20 +1100
+	f8sxAfKVFGBeyO2B for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2016 14:59:03 -0800 (PST)
+Date: Tue, 9 Feb 2016 09:59:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] xfs: rename XFS_BUF_ZEROFLAGS macro
-Message-ID: <20160208223120.GM27429@dastard>
+Subject: [PATCH 6/6 v2] xfs: rename XFS_BUF_ZEROFLAGS macro
+Message-ID: <20160208225901.GN27429@dastard>
 References: <1454632683-20543-1-git-send-email-david@fromorbit.com>
 	<1454632683-20543-7-git-send-email-david@fromorbit.com>
 	<20160208091235.GN5534@infradead.org>
+	<20160208223120.GM27429@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160208091235.GN5534@infradead.org>
+In-Reply-To: <20160208223120.GM27429@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +35,78 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 08, 2016 at 01:12:36AM -0800, Christoph Hellwig wrote:
-> Instead of just renaming it I'd rather dig deeper.
-> 
-> In xlog_bwrite we call xfs_bwrite, which already handles all flag
-> clearing, so the call to XFS_BUF_ZEROFLAGS can just
-> be removed.
 
-Done.
+From: Dave Chinner <dchinner@redhat.com>
 
-> xlog_sync already sets a lot of these flags again, and is called on an
-> iclog buffer which never has the READ or XBF_WRITE_FAIL set, so just
-> replacing it with an opencoded
-> 
-> 	bp->b_flags &= (XBF_FUA | XBF_FLUSH);
+This macro is really clearing the IO flags from the buffer. Rename
+it appropriately and turn it into a static inline to get rid of the
+shoutiness.
 
-We can't do that because there are internal flags like _XBF_PAGES
-that are set on log buffers. Clearing such flags will cause problems
-when the iclog buffer is finally released on unmount. Hence I'd
-prefer to keep the code as it stands.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+V2 - kill call from xlog_bwrite completely as xfs_bwrite() takes
+care of clearing the flags appropriately.
 
-Cheers,
+ fs/xfs/xfs_buf.h         | 10 ++++++----
+ fs/xfs/xfs_log.c         |  4 ++--
+ fs/xfs/xfs_log_recover.c |  1 -
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 98b7ee9..0735096 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -313,10 +313,12 @@ extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+ extern int xfs_buf_init(void);
+ extern void xfs_buf_terminate(void);
+ 
+-#define XFS_BUF_ZEROFLAGS(bp) \
+-	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC| \
+-			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH| \
+-			    XBF_WRITE_FAIL))
++static inline void xfs_buf_clear_ioflags(struct xfs_buf *bp)
++{
++	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_ASYNC |
++			 XBF_SYNCIO | XBF_FUA | XBF_FLUSH |
++			 XBF_WRITE_FAIL);
++}
+ 
+ 
+ /*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index edf20b2..185d1b0 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1864,7 +1864,7 @@ xlog_sync(
+ 
+ 	bp->b_io_length = BTOBB(count);
+ 	bp->b_fspriv = iclog;
+-	XFS_BUF_ZEROFLAGS(bp);
++	xfs_buf_clear_ioflags(bp);
+ 	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE);
+ 
+ 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
+@@ -1908,7 +1908,7 @@ xlog_sync(
+ 		xfs_buf_associate_memory(bp,
+ 				(char *)&iclog->ic_header + count, split);
+ 		bp->b_fspriv = iclog;
+-		XFS_BUF_ZEROFLAGS(bp);
++		xfs_buf_clear_ioflags(bp);
+ 		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE);
+ 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
+ 			bp->b_flags |= XBF_FUA;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index bee2257..23ad143 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -275,7 +275,6 @@ xlog_bwrite(
+ 	ASSERT(nbblks <= bp->b_length);
+ 
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+-	XFS_BUF_ZEROFLAGS(bp);
+ 	xfs_buf_hold(bp);
+ 	xfs_buf_lock(bp);
+ 	bp->b_io_length = nbblks;
 -- 
 Dave Chinner
 david@fromorbit.com
