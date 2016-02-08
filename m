@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4B1AE7CA2
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 13:24:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E0B87AC003
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 11:24:00 -0800 (PST)
-Received: from mail-yw0-f181.google.com (mail-yw0-f181.google.com
-	[209.85.161.181]) by cuda.sgi.com with ESMTP id
-	8mb44bIsBi7Zzqpl (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 11:23:58 -0800 (PST)
-Received: by mail-yw0-f181.google.com with SMTP id h129so110048181ywb.1
-	for <xfs@oss.sgi.com>; Mon, 08 Feb 2016 11:23:58 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9594B7CA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 13:28:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7DC748F8049
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 11:28:28 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	xGA2G7EtB0x2Haaa for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2016 11:28:26 -0800 (PST)
+Date: Tue, 9 Feb 2016 06:28:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/9] xfs: introduce inode log format object
+Message-ID: <20160208192823.GE27429@dastard>
+References: <1454905461-2773-1-git-send-email-david@fromorbit.com>
+	<1454905461-2773-2-git-send-email-david@fromorbit.com>
+	<20160208092318.GA28146@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20160208183112.GF2343@linux.intel.com>
-References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
-	<CAPcyv4jT=yAb2_yLfMGqV1SdbQwoWQj7joroeJGAJAcjsMY_oQ@mail.gmail.com>
-	<20160208183112.GF2343@linux.intel.com>
-Date: Mon, 8 Feb 2016 11:23:56 -0800
-Message-ID: <CAPcyv4gdej=BfP-MDWbgTy7JTciiU_6F3zaAyzUJ2Ofgh0gapg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] dax: move writeback calls into the filesystems
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
+In-Reply-To: <20160208092318.GA28146@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,48 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, jmoyer <jmoyer@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 8, 2016 at 10:31 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> On Sun, Feb 07, 2016 at 11:13:51AM -0800, Dan Williams wrote:
->> The proposal: make applications explicitly request DAX semantics with
->> a new MAP_DAX flag and fail if DAX is unavailable.  Document that a
->> successful MAP_DAX request mandates that the application assumes
->> responsibility for cpu cache management.
->
->> Require that all applications that mmap the file agree on MAP_DAX.
->
-> I think this proposal could run into issues with aliasing.  For example, say
-> you have two threads accessing the same region, and one wants to use DAX and
-> the other wants to use the page cache.  What happens?
->
-> If we satisfy both requests, we end up with one user reading and writing to
-> the page cache, while the other is reading and writing directly to the media.
-> They can't see each other's changes, and you get data corruption.
->
-> If we satisfy the request of whoever asked first, sort of lock the inode into
-> that mode, and then return an error to the second thread because they are
-> asking for the other mode, we have now introduced a new weird failure case
-> where mmaps can randomly fail based on the behavior of other applications.
-> I think this is where you were going with the last line quoted above, but I
-> don't understand how it would work in an acceptable way.
->
-> It seems like we have to have the decision about whether or not to use DAX
-> made in the same way for all users of the inode so that we don't run into
-> these types of conflicts.
+On Mon, Feb 08, 2016 at 01:23:18AM -0800, Christoph Hellwig wrote:
+> This looks fine in general:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> But: this now introduce struct inode to libxfs code, what's your plan
+> to deal with that in xfsprogs?
 
-We haven't solved the conflict problem by pushing it out to the inode,
-see the recent revert of blkdev_daxset().  We're heading in a
-direction where an application can't develop it's own policies about
-DAX usage, it's always an administrative decision.  However, maybe
-that is ok.  Dave is right that if an application is using an existing
-filesystem it should get all the existing semantics.
+The struct xfs_inode is already unique between user and kernel
+space, so I was simply going to define all the new fields directly
+inside the struct xfs_inode and:
 
-If the existing semantics (or overhead of maintaining the existing
-semantics) turn out not to fit a given pmem-aware application then we
-may just need new interfaces (separate from fs/dax.c) to persistent
-memory.  I admit we're a ways off from knowing if that is needed.
+#define VFS_I(ip)	(ip)
+
+Or If I can't get that to work without somehow defining a struct
+inode, then put all the fields in a struct inode private to the
+struct xfs_inode and just do the same conversion as the kernel.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
