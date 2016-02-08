@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2F1BA29DF5
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 09:37:24 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id E9AFD29DF5
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 10:12:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E72B8304051
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 07:37:23 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wb8pEmfpmPuWQ0iS (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 07:37:22 -0800 (PST)
-Date: Mon, 8 Feb 2016 10:37:20 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 4a91310
-Message-ID: <20160208153720.GG19597@bfoster.bfoster>
-References: <20160208060751.GA27429@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D9057304043
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 08:12:47 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id kxdC56C2d9zUYT6f for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 08:12:46 -0800 (PST)
+Date: Mon, 8 Feb 2016 09:12:11 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 2/2] dax: move writeback calls into the filesystems
+Message-ID: <20160208161211.GE2343@linux.intel.com>
+References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
+	<20160208104849.GB9451@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160208060751.GA27429@dastard>
+In-Reply-To: <20160208104849.GB9451@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,128 +30,226 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, Feb 08, 2016 at 05:07:51PM +1100, Dave Chinner wrote:
-> Hi folks,
+On Mon, Feb 08, 2016 at 11:48:50AM +0100, Jan Kara wrote:
+> On Sun 07-02-16 00:19:13, Ross Zwisler wrote:
+> > Previously calls to dax_writeback_mapping_range() for all DAX filesystems
+> > (ext2, ext4 & xfs) were centralized in filemap_write_and_wait_range().
+> > dax_writeback_mapping_range() needs a struct block_device, and it used to
+> > get that from inode->i_sb->s_bdev.  This is correct for normal inodes
+> > mounted on ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
+> > block devices and for XFS real-time files.
+> > 
+> > Instead, call dax_writeback_mapping_range() directly from the filesystem or
+> > raw block device fsync/msync code so that they can supply us with a valid
+> > block device.
+> > 
+> > It should be noted that this will reduce the number of calls to
+> > dax_writeback_mapping_range() because filemap_write_and_wait_range() is
+> > called in the various filesystems for operations other than just
+> > fsync/msync.  Both ext4 & XFS call filemap_write_and_wait_range() outside
+> > of ->fsync for hole punch, truncate, and block relocation
+> > (xfs_shift_file_space() && ext4_collapse_range()/ext4_insert_range()).
+> > 
+> > I don't believe that these extra flushes are necessary in the DAX case.  In
+> > the page cache case when we have dirty data in the page cache, that data
+> > will be actively lost if we evict a dirty page cache page without flushing
+> > it to media first.  For DAX, though, the data will remain consistent with
+> > the physical address to which it was written regardless of whether it's in
+> > the processor cache or not - really the only reason I see to flush is in
+> > response to a fsync or msync so that our data is durable on media in case
+> > of a power loss.  The case where we could throw dirty data out of the page
+> > cache and essentially lose writes simply doesn't exist.
 > 
-> The for-next branch of the xfs kernel repository at
+> You should at least note that sync(2) won't make data durable with this
+> patch in the changelog. Dave and Christoph have told you that Linux users
+> depend on sync(2) to make data durable and I fully agree with them.  Given
+> current options, I think we can live with this for 4.5 but long term this
+> is IMO unacceptable.
 > 
-> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-> 
-> has just been updated. I've pushed this out with both generic quota
-> and direct Io modifications in it, so if they end up going into
-> another tree expect a rebase of the for-next branch to occur to pull
-> them in from the appropriate trees.
-> 
-> There is still a lot of changes pending review to go into this
-> for-next tree, and I'm hoping to get the first part of the
-> rmap/reflink work into it as well, so there's plenty of work still
-> to be done in this cycle....
-> 
-> The new head of the for-next branch is commit:
-> 
-> 4a91310 Merge branch 'xfs-misc-fixes-4.6' into for-next
-> 
-> New Commits:
-> 
-> Brian Foster (2):
->       [60630fe] xfs: clean up unwritten buffers on write failure
->       [af055e3] xfs: fix xfs_log_ticket leak in xfs_end_io() after fs shutdown
-> 
-> Carlos Maiolino (1):
->       [be60794] xfs: Split default quota limits by quota type
-> 
-> Christoph Hellwig (6):
->       [187372a] direct-io: always call ->end_io if non-NULL
->       [273dda7] xfs: don't use ioends for direct write completions
->       [c19b104] xfs: fold xfs_vm_do_dio into xfs_vm_direct_IO
->       [196328e] xfs: handle errors from ->free_blocks in xfs_btree_kill_iroot
->       [c46ee8a] xfs: factor btree block freeing into a helper
->       [edfd9dd] xfs: move buffer invalidation to xfs_btree_free_block
-> 
-> Darrick J. Wong (2):
->       [8e0bd49] xfs: fix endianness error when checking log block crc on big endian platforms
->       [244efea] xfs: move struct xfs_attr_shortform to xfs_da_format.h
-> 
-> Dave Chinner (7):
->       [4b680af] xfs: lock rt summary inode on allocation
->       [a204d07] xfs: RT bitmap and summary buffers are not typed
->       [ca4de5c] xfs: RT bitmap and summary buffers need verifiers
+> 								Honza
 
-FYI, this one ^ leads to compile failures when CONFIG_XFS_RT is not
-enabled. xfs_rtbuf_ops is defined in the conditionally compiled
-xfs_rtbitmap.c file and used unconditionally in xfs_log_recover.c.
+I agree.  I'll add a note to the changelog and will work on adding support for
+sync(2).
 
-Brian
-
->       [e892a10] Merge branch 'xfs-rt-fixes-4.6' into for-next
->       [ec370f5] Merge branch 'xfs-get-next-dquot-4.6' into for-next
->       [0d077b8] Merge branch 'xfs-dio-fix-4.6' into for-next
->       [4a91310] Merge branch 'xfs-misc-fixes-4.6' into for-next
-> 
-> Eric Sandeen (8):
->       [3218a3e] quota: remove unused cmd argument from quota_quotaon()
->       [8b37524] quota: add new quotactl Q_XGETNEXTQUOTA
->       [926132c] quota: add new quotactl Q_GETNEXTQUOTA
->       [a484bcd] xfs: don't overflow quota ID when initializing dqblk
->       [4d4d952] xfs: get quota inode from mp & flags rather than dqp
->       [8aa7d37] xfs: Factor xfs_seek_hole_data into helper
->       [296c24e] xfs: wire up Q_XGETNEXTQUOTA / get_nextdqblk
->       [de0b85a] xfs: remove unused function definitions
-> 
-> Michal Hocko (1):
->       [18f1df4] xfs: Make xfsaild freezeable again
-> 
-> 
-> Code Diffstat:
-> 
->  fs/dax.c                         |   9 +-
->  fs/direct-io.c                   |   9 +-
->  fs/ext4/inode.c                  |   9 +-
->  fs/ocfs2/aops.c                  |   7 +-
->  fs/quota/quota.c                 |  66 +++++++++-
->  fs/xfs/libxfs/xfs_alloc_btree.c  |   2 -
->  fs/xfs/libxfs/xfs_attr_sf.h      |  16 ---
->  fs/xfs/libxfs/xfs_bmap_btree.c   |   1 -
->  fs/xfs/libxfs/xfs_btree.c        |  32 +++--
->  fs/xfs/libxfs/xfs_da_format.h    |  16 +++
->  fs/xfs/libxfs/xfs_ialloc_btree.c |  12 +-
->  fs/xfs/libxfs/xfs_inode_fork.c   |   1 +
->  fs/xfs/libxfs/xfs_log_format.h   |   2 +
->  fs/xfs/libxfs/xfs_quota_defs.h   |   3 +-
->  fs/xfs/libxfs/xfs_rtbitmap.c     |  30 ++++-
->  fs/xfs/libxfs/xfs_sb.h           |   1 -
->  fs/xfs/libxfs/xfs_shared.h       |   1 +
->  fs/xfs/xfs_aops.c                | 274 +++++++++++++++------------------------
->  fs/xfs/xfs_bmap_util.c           |   4 +-
->  fs/xfs/xfs_dquot.c               | 129 +++++++++++++++---
->  fs/xfs/xfs_file.c                |  82 ++++++++----
->  fs/xfs/xfs_fsops.h               |   1 -
->  fs/xfs/xfs_inode.h               |   2 +
->  fs/xfs/xfs_log_recover.c         |   9 +-
->  fs/xfs/xfs_mount.h               |   1 -
->  fs/xfs/xfs_qm.c                  |  55 ++++++--
->  fs/xfs/xfs_qm.h                  |  48 +++++--
->  fs/xfs/xfs_qm_syscalls.c         |  27 ++--
->  fs/xfs/xfs_quotaops.c            |  36 ++++-
->  fs/xfs/xfs_trace.h               |   9 +-
->  fs/xfs/xfs_trans_ail.c           |   5 +-
->  fs/xfs/xfs_trans_dquot.c         |  15 ++-
->  include/linux/fs.h               |   2 +-
->  include/linux/quota.h            |   2 +
->  include/uapi/linux/dqblk_xfs.h   |   1 +
->  include/uapi/linux/quota.h       |  14 ++
->  36 files changed, 615 insertions(+), 318 deletions(-)
+> > 
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > ---
+> >  fs/block_dev.c      |  7 +++++++
+> >  fs/dax.c            |  5 ++---
+> >  fs/ext2/file.c      | 10 ++++++++++
+> >  fs/ext4/fsync.c     | 10 +++++++++-
+> >  fs/xfs/xfs_file.c   | 12 ++++++++++--
+> >  include/linux/dax.h |  4 ++--
+> >  mm/filemap.c        |  6 ------
+> >  7 files changed, 40 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/fs/block_dev.c b/fs/block_dev.c
+> > index fa0507a..312ad44 100644
+> > --- a/fs/block_dev.c
+> > +++ b/fs/block_dev.c
+> > @@ -356,8 +356,15 @@ int blkdev_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
+> >  {
+> >  	struct inode *bd_inode = bdev_file_inode(filp);
+> >  	struct block_device *bdev = I_BDEV(bd_inode);
+> > +	struct address_space *mapping = bd_inode->i_mapping;
+> >  	int error;
+> >  	
+> > +	if (dax_mapping(mapping) && mapping->nrexceptional) {
+> > +		error = dax_writeback_mapping_range(mapping, bdev, start, end);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> >  	error = filemap_write_and_wait_range(filp->f_mapping, start, end);
+> >  	if (error)
+> >  		return error;
+> > diff --git a/fs/dax.c b/fs/dax.c
+> > index 4592241..4b5006a 100644
+> > --- a/fs/dax.c
+> > +++ b/fs/dax.c
+> > @@ -484,11 +484,10 @@ static int dax_writeback_one(struct block_device *bdev,
+> >   * end]. This is required by data integrity operations to ensure file data is
+> >   * on persistent storage prior to completion of the operation.
+> >   */
+> > -int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
+> > -		loff_t end)
+> > +int dax_writeback_mapping_range(struct address_space *mapping,
+> > +		struct block_device *bdev, loff_t start, loff_t end)
+> >  {
+> >  	struct inode *inode = mapping->host;
+> > -	struct block_device *bdev = inode->i_sb->s_bdev;
+> >  	pgoff_t start_index, end_index, pmd_index;
+> >  	pgoff_t indices[PAGEVEC_SIZE];
+> >  	struct pagevec pvec;
+> > diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+> > index 2c88d68..d1abf53 100644
+> > --- a/fs/ext2/file.c
+> > +++ b/fs/ext2/file.c
+> > @@ -162,6 +162,16 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+> >  	int ret;
+> >  	struct super_block *sb = file->f_mapping->host->i_sb;
+> >  	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
+> > +#ifdef CONFIG_FS_DAX
+> > +	struct address_space *inode_mapping = file->f_inode->i_mapping;
+> > +
+> > +	if (dax_mapping(inode_mapping) && inode_mapping->nrexceptional) {
+> > +		ret = dax_writeback_mapping_range(inode_mapping, sb->s_bdev,
+> > +				start, end);
+> > +		if (ret)
+> > +			return ret;
+> > +	}
+> > +#endif
+> >  
+> >  	ret = generic_file_fsync(file, start, end, datasync);
+> >  	if (ret == -EIO || test_and_clear_bit(AS_EIO, &mapping->flags)) {
+> > diff --git a/fs/ext4/fsync.c b/fs/ext4/fsync.c
+> > index 8850254..e9cf53b 100644
+> > --- a/fs/ext4/fsync.c
+> > +++ b/fs/ext4/fsync.c
+> > @@ -27,6 +27,7 @@
+> >  #include <linux/sched.h>
+> >  #include <linux/writeback.h>
+> >  #include <linux/blkdev.h>
+> > +#include <linux/dax.h>
+> >  
+> >  #include "ext4.h"
+> >  #include "ext4_jbd2.h"
+> > @@ -83,10 +84,10 @@ static int ext4_sync_parent(struct inode *inode)
+> >   * What we do is just kick off a commit and wait on it.  This will snapshot the
+> >   * inode to disk.
+> >   */
+> > -
+> >  int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+> >  {
+> >  	struct inode *inode = file->f_mapping->host;
+> > +	struct address_space *mapping = inode->i_mapping;
+> >  	struct ext4_inode_info *ei = EXT4_I(inode);
+> >  	journal_t *journal = EXT4_SB(inode->i_sb)->s_journal;
+> >  	int ret = 0, err;
+> > @@ -97,6 +98,13 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+> >  
+> >  	trace_ext4_sync_file_enter(file, datasync);
+> >  
+> > +	if (dax_mapping(mapping) && mapping->nrexceptional) {
+> > +		err = dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev,
+> > +				start, end);
+> > +		if (err)
+> > +			goto out;
+> > +	}
+> > +
+> >  	if (inode->i_sb->s_flags & MS_RDONLY) {
+> >  		/* Make sure that we read updated s_mount_flags value */
+> >  		smp_rmb();
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 52883ac..84e95cc 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -209,7 +209,8 @@ xfs_file_fsync(
+> >  	loff_t			end,
+> >  	int			datasync)
+> >  {
+> > -	struct inode		*inode = file->f_mapping->host;
+> > +	struct address_space	*mapping = file->f_mapping;
+> > +	struct inode		*inode = mapping->host;
+> >  	struct xfs_inode	*ip = XFS_I(inode);
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	int			error = 0;
+> > @@ -218,7 +219,14 @@ xfs_file_fsync(
+> >  
+> >  	trace_xfs_file_fsync(ip);
+> >  
+> > -	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+> > +	if (dax_mapping(mapping) && mapping->nrexceptional) {
+> > +		error = dax_writeback_mapping_range(mapping,
+> > +				xfs_find_bdev_for_inode(inode), start, end);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> > +	error = filemap_write_and_wait_range(mapping, start, end);
+> >  	if (error)
+> >  		return error;
+> >  
+> > diff --git a/include/linux/dax.h b/include/linux/dax.h
+> > index bad27b0..8e9f114 100644
+> > --- a/include/linux/dax.h
+> > +++ b/include/linux/dax.h
+> > @@ -42,6 +42,6 @@ static inline bool dax_mapping(struct address_space *mapping)
+> >  {
+> >  	return mapping->host && IS_DAX(mapping->host);
+> >  }
+> > -int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
+> > -		loff_t end);
+> > +int dax_writeback_mapping_range(struct address_space *mapping,
+> > +		struct block_device *bdev, loff_t start, loff_t end);
+> >  #endif
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index bc94386..c4286eb 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -482,12 +482,6 @@ int filemap_write_and_wait_range(struct address_space *mapping,
+> >  {
+> >  	int err = 0;
+> >  
+> > -	if (dax_mapping(mapping) && mapping->nrexceptional) {
+> > -		err = dax_writeback_mapping_range(mapping, lstart, lend);
+> > -		if (err)
+> > -			return err;
+> > -	}
+> > -
+> >  	if (mapping->nrpages) {
+> >  		err = __filemap_fdatawrite_range(mapping, lstart, lend,
+> >  						 WB_SYNC_ALL);
+> > -- 
+> > 2.5.0
+> > 
+> > 
 > -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
