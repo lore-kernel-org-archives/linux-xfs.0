@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 03C0F7CA2
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 16:07:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E5DA9304039
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 14:07:06 -0800 (PST)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id rIfTM0jLLeX2tDWj for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 14:07:05 -0800 (PST)
-Date: Mon, 8 Feb 2016 15:06:50 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v8 6/9] dax: add support for fsync/msync
-Message-ID: <20160208220650.GG2343@linux.intel.com>
-References: <1452230879-18117-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1452230879-18117-7-git-send-email-ross.zwisler@linux.intel.com>
-	<878u2xrjrw.fsf@openvz.org>
+	by oss.sgi.com (Postfix) with ESMTP id 63FB57CA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 16:31:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 43802304039
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 14:31:55 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	cwZwws2tVEs8G40A for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2016 14:31:52 -0800 (PST)
+Date: Tue, 9 Feb 2016 09:31:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6] xfs: rename XFS_BUF_ZEROFLAGS macro
+Message-ID: <20160208223120.GM27429@dastard>
+References: <1454632683-20543-1-git-send-email-david@fromorbit.com>
+	<1454632683-20543-7-git-send-email-david@fromorbit.com>
+	<20160208091235.GN5534@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <878u2xrjrw.fsf@openvz.org>
+In-Reply-To: <20160208091235.GN5534@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,98 +31,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonlist@gmail.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Layton <jlayton@poochiereds.net>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@lists.01.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Sat, Feb 06, 2016 at 05:33:07PM +0300, Dmitry Monakhov wrote:
-> Ross Zwisler <ross.zwisler@linux.intel.com> writes:
-<>
-> > +static int dax_radix_entry(struct address_space *mapping, pgoff_t index,
-> IMHO it would be sane to call that function as dax_radix_entry_insert() 
-
-I think I may have actually had it named that at some point. :)  I changed it
-because it doesn't always insert an entry - in the read case for example we
-insert a clean entry, and then on the following dax_pfn_mkwrite() we call back
-in and mark it as dirty.
-
-<>
-> > +/*
-> > + * Flush the mapping to the persistent domain within the byte range of [start,
-> > + * end]. This is required by data integrity operations to ensure file data is
-> > + * on persistent storage prior to completion of the operation.
-> > + */
-> > +int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
-> > +		loff_t end)
-> > +{
-> > +	struct inode *inode = mapping->host;
-> > +	struct block_device *bdev = inode->i_sb->s_bdev;
-> > +	pgoff_t indices[PAGEVEC_SIZE];
-> > +	pgoff_t start_page, end_page;
-> > +	struct pagevec pvec;
-> > +	void *entry;
-> > +	int i, ret = 0;
-> > +
-> > +	if (WARN_ON_ONCE(inode->i_blkbits != PAGE_SHIFT))
-> > +		return -EIO;
-> > +
-> > +	rcu_read_lock();
-> > +	entry = radix_tree_lookup(&mapping->page_tree, start & PMD_MASK);
-> > +	rcu_read_unlock();
-> > +
-> > +	/* see if the start of our range is covered by a PMD entry */
-> > +	if (entry && RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
-> > +		start &= PMD_MASK;
-> > +
-> > +	start_page = start >> PAGE_CACHE_SHIFT;
-> > +	end_page = end >> PAGE_CACHE_SHIFT;
-> > +
-> > +	tag_pages_for_writeback(mapping, start_page, end_page);
-> > +
-> > +	pagevec_init(&pvec, 0);
-> > +	while (1) {
-> > +		pvec.nr = find_get_entries_tag(mapping, start_page,
-> > +				PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
-> > +				pvec.pages, indices);
-> > +
-> > +		if (pvec.nr == 0)
-> > +			break;
-> > +
-> > +		for (i = 0; i < pvec.nr; i++) {
-> > +			ret = dax_writeback_one(bdev, mapping, indices[i],
-> > +					pvec.pages[i]);
-> > +			if (ret < 0)
-> > +				return ret;
-> > +		}
-> I think it would be more efficient to use batched locking like follows:
->                 spin_lock_irq(&mapping->tree_lock);
-> 		for (i = 0; i < pvec.nr; i++) {
->                     struct blk_dax_ctl dax[PAGEVEC_SIZE];                
->                     radix_tree_tag_clear(page_tree, indices[i], PAGECACHE_TAG_TOWRITE);
->                     /* It is also reasonable to merge adjacent dax
->                      * regions in to one */
->                     dax[i].sector = RADIX_DAX_SECTOR(entry);
->                     dax[i].size = (type == RADIX_DAX_PMD ? PMD_SIZE : PAGE_SIZE);                    
+On Mon, Feb 08, 2016 at 01:12:36AM -0800, Christoph Hellwig wrote:
+> Instead of just renaming it I'd rather dig deeper.
 > 
->                 }
->                 spin_unlock_irq(&mapping->tree_lock);
->                	if (blk_queue_enter(q, true) != 0)
->                     goto error;
->                 for (i = 0; i < pvec.nr; i++) {
->                     rc = bdev_direct_access(bdev, dax[i]);
->                     wb_cache_pmem(dax[i].addr, dax[i].size);
->                 }
->                 ret = blk_queue_exit(q, true)
+> In xlog_bwrite we call xfs_bwrite, which already handles all flag
+> clearing, so the call to XFS_BUF_ZEROFLAGS can just
+> be removed.
 
-I guess this could be more efficient, but as Jan said in his response we're
-currently focused on correctness.  I also wonder if it would be measurably
-better?
+Done.
 
-In any case, Jan is right - you have to clear the TOWRITE tag only after
-you've flushed, and you also need to include the entry verification code from
-dax_writeback_one() after you grab the tree lock.  Basically, I believe all
-the code in dax_writeback_one() is needed - this change would essentially just
-be inlining that code in dax_writeback_mapping_range() so you could do
-multiple operations without giving up a lock.
+> xlog_sync already sets a lot of these flags again, and is called on an
+> iclog buffer which never has the READ or XBF_WRITE_FAIL set, so just
+> replacing it with an opencoded
+> 
+> 	bp->b_flags &= (XBF_FUA | XBF_FLUSH);
+
+We can't do that because there are internal flags like _XBF_PAGES
+that are set on log buffers. Clearing such flags will cause problems
+when the iclog buffer is finally released on unmount. Hence I'd
+prefer to keep the code as it stands.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
