@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4AC207CA2
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 23:17:34 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 76EE97CA2
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 23:44:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 295FD304039
-	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 21:17:31 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 24A7FAC004
+	for <xfs@oss.sgi.com>; Sun,  7 Feb 2016 21:44:30 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BrvN2lTqGT489lqh for <xfs@oss.sgi.com>;
-	Sun, 07 Feb 2016 21:17:28 -0800 (PST)
-Date: Mon, 8 Feb 2016 16:17:25 +1100
+	MdvxMg0W3utDBXvT for <xfs@oss.sgi.com>;
+	Sun, 07 Feb 2016 21:44:28 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aSecX-0007Ar-QG
+	for xfs@oss.sgi.com; Mon, 08 Feb 2016 16:44:21 +1100
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aSecX-00021S-Pd
+	for xfs@oss.sgi.com; Mon, 08 Feb 2016 16:44:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] dax: pass bdev argument to dax_clear_blocks()
-Message-ID: <20160208051725.GM31407@dastard>
-References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-2-git-send-email-ross.zwisler@linux.intel.com>
-	<20160207220329.GK31407@dastard>
-	<20160208014409.GA2343@linux.intel.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160208014409.GA2343@linux.intel.com>
+Subject: [PATCH 1/5] xfs: remove nonblocking mode from xfs_vm_writepage
+Date: Mon,  8 Feb 2016 16:44:14 +1100
+Message-Id: <1454910258-7578-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1454910258-7578-1-git-send-email-david@fromorbit.com>
+References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,65 +30,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Feb 07, 2016 at 06:44:09PM -0700, Ross Zwisler wrote:
-> On Mon, Feb 08, 2016 at 09:03:29AM +1100, Dave Chinner wrote:
-> > On Sun, Feb 07, 2016 at 12:19:12AM -0700, Ross Zwisler wrote:
-> > > dax_clear_blocks() needs a valid struct block_device and previously it was
-> > > using inode->i_sb->s_bdev in all cases.  This is correct for normal inodes
-> > > on mounted ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-> > > block devices and for XFS real-time devices.
-> > > 
-> > > Instead, have the caller pass in a struct block_device pointer which it
-> > > knows to be correct.
-> > ....
-> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > index 07ef29b..f722ba2 100644
-> > > --- a/fs/xfs/xfs_bmap_util.c
-> > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > @@ -73,9 +73,11 @@ xfs_zero_extent(
-> > >  	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
-> > >  	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
-> > >  	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
-> > > +	struct inode	*inode = VFS_I(ip);
-> > >  
-> > >  	if (IS_DAX(VFS_I(ip)))
-> > > -		return dax_clear_blocks(VFS_I(ip), block, size);
-> > > +		return dax_clear_blocks(inode, xfs_find_bdev_for_inode(inode),
-> > > +				block, size);
-> > 
-> > Get rid of the local inode variable and use VFS_I(ip) like the code
-> > originally did. Do not change code that is unrelated to the
-> > modifcation being made, especially when it results in making
-> > the code an inconsistent mess of mixed pointer constructs....
-> 
-> The local 'inode' variable was added to avoid multiple calls for VFS_I() for
-> the same 'ip'.
+From: Dave Chinner <dchinner@redhat.com>
 
-My point is you didn't achieve that. The end result of your patch
-is:
+Remove the nonblocking optimisation done for mapping lookups during
+writeback. It's not clear that leaving a hole in the writeback range
+just because we couldn't get a lock is really a win, as it makes us
+do another small random IO later on rather than a large sequential
+IO now.
 
-	struct inode	*inode = VFS_I(ip);
+As this gets in the way of sane error handling later on, just remove
+for the moment and we can re-introduce an equivalent optimisation in
+future if we see problems due to extent map lock contention.
 
-	if (IS_DAX(VFS_I(ip)))
-		return dax_clear_blocks(inode, xfs_find_bdev_for_inode(inode),
-					block, size);
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 20 +++-----------------
+ 1 file changed, 3 insertions(+), 17 deletions(-)
 
-So now we have a local variable, but we still have 2 calls to
-VFS_I(ip). i.e. this makes the code harder to read and understand
-than before for no benefit.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 14ac982..00452cb 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -289,8 +289,7 @@ xfs_map_blocks(
+ 	struct inode		*inode,
+ 	loff_t			offset,
+ 	struct xfs_bmbt_irec	*imap,
+-	int			type,
+-	int			nonblocking)
++	int			type)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -306,12 +305,7 @@ xfs_map_blocks(
+ 	if (type == XFS_IO_UNWRITTEN)
+ 		bmapi_flags |= XFS_BMAPI_IGSTATE;
+ 
+-	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
+-		if (nonblocking)
+-			return -EAGAIN;
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	}
+-
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+@@ -961,7 +955,6 @@ xfs_vm_writepage(
+ 	ssize_t			len;
+ 	int			err, imap_valid = 0, uptodate = 1;
+ 	int			count = 0;
+-	int			nonblocking = 0;
+ 
+ 	trace_xfs_writepage(inode, page, 0, 0);
+ 
+@@ -1061,9 +1054,6 @@ xfs_vm_writepage(
+ 	offset = page_offset(page);
+ 	type = XFS_IO_OVERWRITE;
+ 
+-	if (wbc->sync_mode == WB_SYNC_NONE)
+-		nonblocking = 1;
+-
+ 	do {
+ 		int new_ioend = 0;
+ 
+@@ -1123,8 +1113,7 @@ xfs_vm_writepage(
+ 			 * time.
+ 			 */
+ 			new_ioend = 1;
+-			err = xfs_map_blocks(inode, offset, &imap, type,
+-					     nonblocking);
++			err = xfs_map_blocks(inode, offset, &imap, type);
+ 			if (err)
+ 				goto error;
+ 			imap_valid = xfs_imap_valid(inode, &imap, offset);
+@@ -1194,9 +1183,6 @@ error:
+ 	if (iohead)
+ 		xfs_cancel_ioend(iohead);
+ 
+-	if (err == -EAGAIN)
+-		goto redirty;
+-
+ 	xfs_aops_discard_page(page);
+ 	ClearPageUptodate(page);
+ 	unlock_page(page);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.0
 
 _______________________________________________
 xfs mailing list
