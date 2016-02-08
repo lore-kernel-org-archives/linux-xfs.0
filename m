@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2E6EE29DF5
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 09:13:13 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7A5A529DF5
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 09:29:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0FB12304051
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 07:13:13 -0800 (PST)
-Received: from mail-yk0-f175.google.com (mail-yk0-f175.google.com
-	[209.85.160.175]) by cuda.sgi.com with ESMTP id
-	fHPdeoGWbXHTIHSO (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 07:13:07 -0800 (PST)
-Received: by mail-yk0-f175.google.com with SMTP id r207so88205632ykd.2
-	for <xfs@oss.sgi.com>; Mon, 08 Feb 2016 07:13:07 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E0F6FAC002
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 07:29:24 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EboppOBLuR8Uk77n (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 07:29:22 -0800 (PST)
+Date: Mon, 8 Feb 2016 10:29:20 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/9] xfs: cull unnecessary icdinode fields
+Message-ID: <20160208152919.GB19597@bfoster.bfoster>
+References: <1454905461-2773-1-git-send-email-david@fromorbit.com>
+	<1454905461-2773-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20160208143531.GA19597@bfoster.bfoster>
-References: <CAAgKQi+AOZO_K9Garmz3G6C1X8TuTRxrfF1MP2HPEZ3JkdE41w@mail.gmail.com>
-	<20160205223023.GL459@dastard>
-	<CAAgKQiJ17XKu-k-Gufk0O_EgXcZvebzCEO4STGdAkszoZxAqfw@mail.gmail.com>
-	<20160208143531.GA19597@bfoster.bfoster>
-Date: Mon, 8 Feb 2016 16:13:06 +0100
-Message-ID: <CAAgKQi+AnDXQKVBe4aC=0iHv2_W44f-Fx4KJRvQRMMWo3weKkg@mail.gmail.com>
-Subject: Re: Question about continous blocks for inode due to 'no space left
-	on device' problem
-From: Michel Verbraak <info1stsetup@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1454905461-2773-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,255 +26,352 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7169826349842314778=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
---===============7169826349842314778==
-Content-Type: multipart/alternative; boundary=001a113c5fc05aedbd052b43a3c7
+On Mon, Feb 08, 2016 at 03:24:15PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Now that the struct xfs_icdinode is not directly related to the
+> on-disk format, we can cull things in it we really don't need to
+> store:
+> 
+> 	- magic number never changes
+> 	- padding is not necessary
+> 	- next_unlinked is never used
+> 	- inode number is redundant
+> 	- uuid is redundant
+> 	- lsn is accessed directly from dinode
+> 	- inode CRC is only accessed directly from dinode
+> 
+> Hence we can remove these from the struct xfs_icdinode and redirect
+> the code that uses them to the xfs_dinode appripriately.  This
+> reduces the size of the struct icdinode from 152 bytes to 88 bytes,
+> and removes a fair chunk of unnecessary code, too.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
---001a113c5fc05aedbd052b43a3c7
-Content-Type: text/plain; charset=UTF-8
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-2016-02-08 15:35 GMT+01:00 Brian Foster <bfoster@redhat.com>:
-
-> On Mon, Feb 08, 2016 at 02:09:15PM +0100, Michel Verbraak wrote:
-> > 2016-02-05 23:30 GMT+01:00 Dave Chinner <david@fromorbit.com>:
-> >
-> > > On Fri, Feb 05, 2016 at 02:13:00PM +0100, Michel Verbraak wrote:
-> > > > All,
-> > > >
-> > > > Recently we ran into a problem where our filesystem (300GB in size)
-> > > > reported 'no space left on device' (ENOSPC) but when we looked at
-> disk
-> > > > space usage and inode usage it was around 52% for disk space and 11%
-> for
-> > > .......
-> >
-> >
-> > >
-> > > > Store 03 (root@server):~# xfs_db -c freesp /dev/sdb
-> > > >    from      to extents  blocks    pct
-> > > >       1       1 3282633 3282633   9.03
-> > > >       2       3 3416223 8372325  23.03
-> > > >       4       7 6175009 24700036  67.94
-> > >
-> > > Yup, no more aligned 4 block extents in the filesystem.
-> > >
-> > > Dave Thank you for your answer but are you able to explain a bit more
-> on
-> > how you determine there are no aligned 4 block extends available?
-> > It apparently is not the 'from 4 to 7' line telling there are at least
-> > continuous extents of 4 blocks big. Or is it because 24700036 divided
-> > by 6175009
-> > is exactly 4 and not a bit more?
-> > When I calculate the ratio between the individual AG freesp they were all
-> > four exactly 4.
-> >
->
-> I'm not sure there is a way to determine whether these extents are
-> aligned or not short of walking the free space btree structures with
-> ..<snip>
-
-
-
-> BTW, a metadump of your fs while it's in this ENOSPC state would be
-> useful towards testing something like that, if you'd be willing to
-> provide one. Note that xfs_metadump has obfuscation that hides filenames
-> and whatnot for privacy purposes.
->
-> If we do run into problem again, we do hope not as it is on a production
-system, we will create the xfs_metadump and provide it to this list.
-
-Thank you for the extra explanation.
-
-Cheers Michel.
-
-
-> Brian
->
-> > As said we would like to detect this problem from happening again. And we
-> > would like this detection to be done by our monitoring service.
-> > One of my colleagues mentions the following calculation to find out if
-> > there are enough aligned 4 block extents:
-> >
-> > Starting from line "from 4 to 7" calculate: <blocks-column> - (4 *
-> > <extents-column>) > 0. When not there is not enough free space for new
-> > inodes.
-> >
-> > On another system we have which does not see these problems yet we have:
-> >
-> >    from      to extents  blocks    pct
-> >       1       1 3483987 3483987   7.83
-> >       2       3 3560607 8709838  19.58
-> >       4       7 6402893 26486634  59.55
-> >       8      15  418450 5799206  13.04
-> >
-> > 26486634 / 6402893 = 4.136666 and
-> > 26486634 - (4 * 6402893) = 875062 > 0 and
-> > 5799205 - (4 * 418450) = 4125405 > 0
-> >
-> >
-> > > into this condition.
-> > >
-> > > Cheers,
-> > >
-> > > Dave.
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > >
-> >
-> > Michel.
->
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
->
->
-
---001a113c5fc05aedbd052b43a3c7
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
-te">2016-02-08 15:35 GMT+01:00 Brian Foster <span dir=3D"ltr">&lt;<a href=
-=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.com</a>&gt;=
-</span>:<br><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0=
-.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex"><div><span cl=
-ass=3D"">On Mon, Feb 08, 2016 at 02:09:15PM +0100, Michel Verbraak wrote:<b=
-r>
-&gt; 2016-02-05 23:30 GMT+01:00 Dave Chinner &lt;<a href=3D"mailto:david@fr=
-omorbit.com">david@fromorbit.com</a>&gt;:<br>
-&gt;<br>
-&gt; &gt; On Fri, Feb 05, 2016 at 02:13:00PM +0100, Michel Verbraak wrote:<=
-br>
-&gt; &gt; &gt; All,<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; Recently we ran into a problem where our filesystem (300GB i=
-n size)<br>
-&gt; &gt; &gt; reported &#39;no space left on device&#39; (ENOSPC) but when=
- we looked at disk<br>
-&gt; &gt; &gt; space usage and inode usage it was around 52% for disk space=
- and 11% for<br>
-&gt; &gt; .......<br>
-&gt;<br>
-&gt;<br>
-&gt; &gt;<br>
-&gt; &gt; &gt; Store 03 (root@server):~# xfs_db -c freesp /dev/sdb<br>
-&gt; &gt; &gt;=C2=A0 =C2=A0 from=C2=A0 =C2=A0 =C2=A0 to extents=C2=A0 block=
-s=C2=A0 =C2=A0 pct<br>
-&gt; &gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A01 3282=
-633 3282633=C2=A0 =C2=A09.03<br>
-&gt; &gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A0 =C2=A03 3416=
-223 8372325=C2=A0 23.03<br>
-&gt; &gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A04=C2=A0 =C2=A0 =C2=A0 =C2=A07 6175=
-009 24700036=C2=A0 67.94<br>
-&gt; &gt;<br>
-&gt; &gt; Yup, no more aligned 4 block extents in the filesystem.<br>
-&gt; &gt;<br>
-&gt; &gt; Dave Thank you for your answer but are you able to explain a bit =
-more on<br>
-&gt; how you determine there are no aligned 4 block extends available?<br>
-&gt; It apparently is not the &#39;from 4 to 7&#39; line telling there are =
-at least<br>
-&gt; continuous extents of 4 blocks big. Or is it because 24700036 divided<=
-br>
-&gt; by 6175009<br>
-&gt; is exactly 4 and not a bit more?<br>
-&gt; When I calculate the ratio between the individual AG freesp they were =
-all<br>
-&gt; four exactly 4.<br>
-&gt;<br>
-<br>
-</span>I&#39;m not sure there is a way to determine whether these extents a=
-re<br>
-aligned or not short of walking the free space btree structures with<br></d=
-iv>
-..&lt;snip&gt;=C2=A0</blockquote><div>=C2=A0</div><blockquote class=3D"gmai=
-l_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,20=
-4,204);padding-left:1ex"><div>
-BTW, a metadump of your fs while it&#39;s in this ENOSPC state would be<br>
-useful towards testing something like that, if you&#39;d be willing to<br>
-provide one. Note that xfs_metadump has obfuscation that hides filenames<br=
->
-and whatnot for privacy purposes.<br>
-<br></div></blockquote><div>If we do run into problem again, we do hope not=
- as it is on a production system, we will create the xfs_metadump and provi=
-de it to this list.<br><br></div><div>Thank you for the extra explanation.<=
-br><br></div><div>Cheers Michel.<br>=C2=A0<br></div><blockquote class=3D"gm=
-ail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,=
-204,204);padding-left:1ex"><div>
-Brian<br>
-<span class=3D""><br>
-&gt; As said we would like to detect this problem from happening again. And=
- we<br>
-&gt; would like this detection to be done by our monitoring service.<br>
-&gt; One of my colleagues mentions the following calculation to find out if=
-<br>
-&gt; there are enough aligned 4 block extents:<br>
-&gt;<br>
-&gt; Starting from line &quot;from 4 to 7&quot; calculate: &lt;blocks-colum=
-n&gt; - (4 *<br>
-&gt; &lt;extents-column&gt;) &gt; 0. When not there is not enough free spac=
-e for new<br>
-&gt; inodes.<br>
-&gt;<br>
-&gt; On another system we have which does not see these problems yet we hav=
-e:<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 from=C2=A0 =C2=A0 =C2=A0 to extents=C2=A0 blocks=C2=A0 =
-=C2=A0 pct<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A01 3483987 348398=
-7=C2=A0 =C2=A07.83<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A0 =C2=A03 3560607 870983=
-8=C2=A0 19.58<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A04=C2=A0 =C2=A0 =C2=A0 =C2=A07 6402893 264866=
-34=C2=A0 59.55<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=A0 =C2=A0 15=C2=A0 418450 579920=
-6=C2=A0 13.04<br>
-&gt;<br>
-&gt; 26486634 / 6402893 =3D 4.136666 and<br>
-&gt; 26486634 - (4 * 6402893) =3D 875062 &gt; 0 and<br>
-&gt; 5799205 - (4 * 418450) =3D 4125405 &gt; 0<br>
-&gt;<br>
-&gt;<br>
-&gt; &gt; into this condition.<br>
-&gt; &gt;<br>
-&gt; &gt; Cheers,<br>
-&gt; &gt;<br>
-&gt; &gt; Dave.<br>
-&gt; &gt; --<br>
-&gt; &gt; Dave Chinner<br>
-&gt; &gt; <a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br=
->
-&gt; &gt;<br>
-&gt;<br>
-&gt; Michel.<br>
-<br>
-</span>&gt; _______________________________________________<br>
-&gt; xfs mailing list<br>
-&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
-&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer"=
- target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
-<br>
-</div></blockquote></div><br></div></div>
-
---001a113c5fc05aedbd052b43a3c7--
-
-
---===============7169826349842314778==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>  fs/xfs/libxfs/xfs_inode_buf.c | 39 +++++++++++++--------------------------
+>  fs/xfs/libxfs/xfs_inode_buf.h | 25 ++++++-------------------
+>  fs/xfs/xfs_inode.c            | 19 +------------------
+>  fs/xfs/xfs_inode_item.c       | 19 +++++++++++--------
+>  4 files changed, 31 insertions(+), 71 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 26e3c46..17ff4e8 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -202,7 +202,6 @@ xfs_inode_from_disk(
+>  	struct xfs_icdinode	*to = &ip->i_d;
+>  	struct inode		*inode = VFS_I(ip);
+>  
+> -	to->di_magic = be16_to_cpu(from->di_magic);
+>  	to->di_mode = be16_to_cpu(from->di_mode);
+>  	to->di_version = from ->di_version;
+>  	to->di_format = from->di_format;
+> @@ -212,7 +211,6 @@ xfs_inode_from_disk(
+>  	to->di_nlink = be32_to_cpu(from->di_nlink);
+>  	to->di_projid_lo = be16_to_cpu(from->di_projid_lo);
+>  	to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
+> -	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+>  	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+>  
+>  	/*
+> @@ -245,24 +243,22 @@ xfs_inode_from_disk(
+>  		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+>  		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+>  		to->di_flags2 = be64_to_cpu(from->di_flags2);
+> -		to->di_ino = be64_to_cpu(from->di_ino);
+> -		to->di_lsn = be64_to_cpu(from->di_lsn);
+> -		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> -		uuid_copy(&to->di_uuid, &from->di_uuid);
+>  	}
+>  }
+>  
+>  void
+>  xfs_inode_to_disk(
+>  	struct xfs_inode	*ip,
+> -	struct xfs_dinode	*to)
+> +	struct xfs_dinode	*to,
+> +	xfs_lsn_t		lsn)
+>  {
+>  	struct xfs_icdinode	*from = &ip->i_d;
+>  	struct inode		*inode = VFS_I(ip);
+>  
+> -	to->di_magic = cpu_to_be16(from->di_magic);
+> +	to->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+> +
+>  	to->di_mode = cpu_to_be16(from->di_mode);
+> -	to->di_version = from ->di_version;
+> +	to->di_version = from->di_version;
+>  	to->di_format = from->di_format;
+>  	to->di_onlink = cpu_to_be16(from->di_onlink);
+>  	to->di_uid = cpu_to_be32(from->di_uid);
+> @@ -270,8 +266,8 @@ xfs_inode_to_disk(
+>  	to->di_nlink = cpu_to_be32(from->di_nlink);
+>  	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+>  	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
+> -	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+>  
+> +	memset(to->di_pad, 0, sizeof(to->di_pad));
+>  	to->di_atime.t_sec = cpu_to_be32(inode->i_atime.tv_sec);
+>  	to->di_atime.t_nsec = cpu_to_be32(inode->i_atime.tv_nsec);
+>  	to->di_mtime.t_sec = cpu_to_be32(inode->i_mtime.tv_sec);
+> @@ -296,10 +292,11 @@ xfs_inode_to_disk(
+>  		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+>  		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+>  		to->di_flags2 = cpu_to_be64(from->di_flags2);
+> -		to->di_ino = cpu_to_be64(from->di_ino);
+> -		to->di_lsn = cpu_to_be64(from->di_lsn);
+> -		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> -		uuid_copy(&to->di_uuid, &from->di_uuid);
+> +
+> +		to->di_ino = cpu_to_be64(ip->i_ino);
+> +		to->di_lsn = cpu_to_be64(lsn);
+> +		memset(to->di_pad2, 0, sizeof(to->di_pad2));
+> +		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
+>  		to->di_flushiter = 0;
+>  	} else {
+>  		to->di_flushiter = cpu_to_be16(from->di_flushiter);
+> @@ -434,13 +431,10 @@ xfs_iread(
+>  	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+>  		/* initialise the on-disk inode core */
+>  		memset(&ip->i_d, 0, sizeof(ip->i_d));
+> -		ip->i_d.di_magic = XFS_DINODE_MAGIC;
+>  		ip->i_d.di_gen = prandom_u32();
+> -		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		if (xfs_sb_version_hascrc(&mp->m_sb))
+>  			ip->i_d.di_version = 3;
+> -			ip->i_d.di_ino = ip->i_ino;
+> -			uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid);
+> -		} else
+> +		else
+>  			ip->i_d.di_version = 2;
+>  		return 0;
+>  	}
+> @@ -484,16 +478,10 @@ xfs_iread(
+>  		 * Partial initialisation of the in-core inode. Just the bits
+>  		 * that xfs_ialloc won't overwrite or relies on being correct.
+>  		 */
+> -		ip->i_d.di_magic = be16_to_cpu(dip->di_magic);
+>  		ip->i_d.di_version = dip->di_version;
+>  		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
+>  		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
+>  
+> -		if (dip->di_version == 3) {
+> -			ip->i_d.di_ino = be64_to_cpu(dip->di_ino);
+> -			uuid_copy(&ip->i_d.di_uuid, &dip->di_uuid);
+> -		}
+> -
+>  		/*
+>  		 * Make sure to pull in the mode here as well in
+>  		 * case the inode is released without being used.
+> @@ -514,7 +502,6 @@ xfs_iread(
+>  	 */
+>  	if (ip->i_d.di_version == 1) {
+>  		ip->i_d.di_version = 2;
+> -		memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
+>  		ip->i_d.di_nlink = ip->i_d.di_onlink;
+>  		ip->i_d.di_onlink = 0;
+>  		xfs_set_projid(ip, 0);
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> index adcc9bf..7b8b1b9 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> @@ -22,24 +22,22 @@ struct xfs_inode;
+>  struct xfs_dinode;
+>  
+>  /*
+> - * In memory representation of the XFS inode. This is held in the in-core
+> - * struct xfs_inode to represent the on disk values, but no longer needs to be
+> - * identical to the on-disk structure as it is always translated to on-disk
+> + * In memory representation of the XFS inode. This is held in the in-core struct
+> + * xfs_inode and represents the current on disk values but the structure is not
+> + * in on-disk format.  That is, this structure is always translated to on-disk
+>   * format specific structures at the appropriate time.
+>   */
+>  struct xfs_icdinode {
+> -	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
+>  	__uint16_t	di_mode;	/* mode and type of file */
+>  	__int8_t	di_version;	/* inode version */
+>  	__int8_t	di_format;	/* format of di_c data */
+>  	__uint16_t	di_onlink;	/* old number of links to file */
+> +	__uint16_t	di_flushiter;	/* incremented on flush */
+>  	__uint32_t	di_uid;		/* owner's user id */
+>  	__uint32_t	di_gid;		/* owner's group id */
+>  	__uint32_t	di_nlink;	/* number of links to file */
+>  	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
+>  	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+> -	__uint8_t	di_pad[6];	/* unused, zeroed space */
+> -	__uint16_t	di_flushiter;	/* incremented on flush */
+>  	xfs_fsize_t	di_size;	/* number of bytes in file */
+>  	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+>  	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+> @@ -52,22 +50,10 @@ struct xfs_icdinode {
+>  	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+>  	__uint32_t	di_gen;		/* generation number */
+>  
+> -	/* di_next_unlinked is the only non-core field in the old dinode */
+> -	xfs_agino_t	di_next_unlinked;/* agi unlinked list ptr */
+> -
+> -	/* start of the extended dinode, writable fields */
+> -	__uint32_t	di_crc;		/* CRC of the inode */
+>  	__uint64_t	di_changecount;	/* number of attribute changes */
+> -	xfs_lsn_t	di_lsn;		/* flush sequence */
+>  	__uint64_t	di_flags2;	/* more random flags */
+> -	__uint8_t	di_pad2[16];	/* more padding for future expansion */
+>  
+> -	/* fields only written to during inode creation */
+>  	xfs_ictimestamp_t di_crtime;	/* time created */
+> -	xfs_ino_t	di_ino;		/* inode number */
+> -	uuid_t		di_uuid;	/* UUID of the filesystem */
+> -
+> -	/* structure must be padded to 64 bit alignment */
+>  };
+>  
+>  /*
+> @@ -86,7 +72,8 @@ int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+>  int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
+>  		  struct xfs_inode *, uint);
+>  void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+> -void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to);
+> +void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
+> +			  xfs_lsn_t lsn);
+>  void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
+>  void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
+>  			       struct xfs_dinode *to);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 9ad9e35..45acdee 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -809,7 +809,6 @@ xfs_ialloc(
+>  	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+>  	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
+>  	xfs_set_projid(ip, prid);
+> -	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
+>  
+>  	if (pip && XFS_INHERIT_GID(pip)) {
+>  		ip->i_d.di_gid = pip->i_d.di_gid;
+> @@ -847,13 +846,8 @@ xfs_ialloc(
+>  	ip->i_d.di_flags = 0;
+>  
+>  	if (ip->i_d.di_version == 3) {
+> -		ASSERT(ip->i_d.di_ino == ino);
+> -		ASSERT(uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_meta_uuid));
+> -		ip->i_d.di_crc = 0;
+>  		ip->i_d.di_changecount = 1;
+> -		ip->i_d.di_lsn = 0;
+>  		ip->i_d.di_flags2 = 0;
+> -		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+>  		ip->i_d.di_crtime.t_sec = (__int32_t)tv.tv_sec;
+>  		ip->i_d.di_crtime.t_nsec = (__int32_t)tv.tv_nsec;
+>  	}
+> @@ -3464,13 +3458,6 @@ xfs_iflush_int(
+>  			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
+>  		goto corrupt_out;
+>  	}
+> -	if (XFS_TEST_ERROR(ip->i_d.di_magic != XFS_DINODE_MAGIC,
+> -				mp, XFS_ERRTAG_IFLUSH_2, XFS_RANDOM_IFLUSH_2)) {
+> -		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+> -			"%s: Bad inode %Lu, ptr 0x%p, magic number 0x%x",
+> -			__func__, ip->i_ino, ip, ip->i_d.di_magic);
+> -		goto corrupt_out;
+> -	}
+>  	if (S_ISREG(ip->i_d.di_mode)) {
+>  		if (XFS_TEST_ERROR(
+>  		    (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS) &&
+> @@ -3529,7 +3516,7 @@ xfs_iflush_int(
+>  	 * copy out the core of the inode, because if the inode is dirty at all
+>  	 * the core must be.
+>  	 */
+> -	xfs_inode_to_disk(ip, dip);
+> +	xfs_inode_to_disk(ip, dip, iip->ili_item.li_lsn);
+>  
+>  	/* Wrap, we never let the log put out DI_MAX_FLUSH */
+>  	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+> @@ -3581,10 +3568,6 @@ xfs_iflush_int(
+>  	 */
+>  	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
+>  
+> -	/* update the lsn in the on disk inode if required */
+> -	if (ip->i_d.di_version == 3)
+> -		dip->di_lsn = cpu_to_be64(iip->ili_item.li_lsn);
+> -
+>  	/* generate the checksum. */
+>  	xfs_dinode_calc_crc(mp, dip);
+>  
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 9dcbf58..588d1b4 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -325,12 +325,14 @@ xfs_inode_item_format_attr_fork(
+>  static void
+>  xfs_inode_to_log_dinode(
+>  	struct xfs_inode	*ip,
+> -	struct xfs_log_dinode	*to)
+> +	struct xfs_log_dinode	*to,
+> +	xfs_lsn_t		lsn)
+>  {
+>  	struct xfs_icdinode	*from = &ip->i_d;
+>  	struct inode		*inode = VFS_I(ip);
+>  
+> -	to->di_magic = from->di_magic;
+> +	to->di_magic = XFS_DINODE_MAGIC;
+> +
+>  	to->di_mode = from->di_mode;
+>  	to->di_version = from->di_version;
+>  	to->di_format = from->di_format;
+> @@ -340,8 +342,8 @@ xfs_inode_to_log_dinode(
+>  	to->di_nlink = from->di_nlink;
+>  	to->di_projid_lo = from->di_projid_lo;
+>  	to->di_projid_hi = from->di_projid_hi;
+> -	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+>  
+> +	memset(to->di_pad, 0, sizeof(to->di_pad));
+>  	to->di_atime.t_sec = inode->i_atime.tv_sec;
+>  	to->di_atime.t_nsec = inode->i_atime.tv_nsec;
+>  	to->di_mtime.t_sec = inode->i_mtime.tv_sec;
+> @@ -366,10 +368,11 @@ xfs_inode_to_log_dinode(
+>  		to->di_crtime.t_sec = from->di_crtime.t_sec;
+>  		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
+>  		to->di_flags2 = from->di_flags2;
+> -		to->di_ino = from->di_ino;
+> -		to->di_lsn = from->di_lsn;
+> -		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> -		uuid_copy(&to->di_uuid, &from->di_uuid);
+> +
+> +		to->di_ino = ip->i_ino;
+> +		to->di_lsn = lsn;
+> +		memset(to->di_pad2, 0, sizeof(to->di_pad2));
+> +		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
+>  		to->di_flushiter = 0;
+>  	} else {
+>  		to->di_flushiter = from->di_flushiter;
+> @@ -390,7 +393,7 @@ xfs_inode_item_format_core(
+>  	struct xfs_log_dinode	*dic;
+>  
+>  	dic = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_ICORE);
+> -	xfs_inode_to_log_dinode(ip, dic);
+> +	xfs_inode_to_log_dinode(ip, dic, ip->i_itemp->ili_item.li_lsn);
+>  	xlog_finish_iovec(lv, *vecp, xfs_log_dinode_size(ip->i_d.di_version));
+>  }
+>  
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7169826349842314778==--
