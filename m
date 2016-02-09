@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A32197CA2
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 01:55:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D98F304039
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 23:55:18 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id KwsZ1EiKeaEALh8Q (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 23:55:14 -0800 (PST)
-Date: Mon, 8 Feb 2016 23:55:06 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/23] xfs/122: support refcount/rmap data structures
-Message-ID: <20160209075506.GB6346@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 02A0A7CA2
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 02:01:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5DF18F8033
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 00:01:48 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	wrzG7mAXEGKb852p for <xfs@oss.sgi.com>;
+	Tue, 09 Feb 2016 00:01:46 -0800 (PST)
+Date: Tue, 9 Feb 2016 19:01:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 13/23] xfs: test fragmentation characteristics of
+	copy-on-write
+Message-ID: <20160209080144.GL19486@dastard>
 References: <20160209011145.23099.95354.stgit@birch.djwong.org>
-	<20160209011303.23099.40721.stgit@birch.djwong.org>
-	<20160209074330.GK19486@dastard>
+	<20160209011309.23099.60912.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160209074330.GK19486@dastard>
+In-Reply-To: <20160209011309.23099.60912.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,60 +31,133 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 09, 2016 at 06:43:30PM +1100, Dave Chinner wrote:
-> On Mon, Feb 08, 2016 at 05:13:03PM -0800, Darrick J. Wong wrote:
-> > Include the refcount and rmap structures in the golden output.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/xfs/122     |    3 +++
-> >  tests/xfs/122.out |    4 ++++
-> >  tests/xfs/group   |    2 +-
-> >  3 files changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/tests/xfs/122 b/tests/xfs/122
-> > index e6697a2..758cb50 100755
-> > --- a/tests/xfs/122
-> > +++ b/tests/xfs/122
-> > @@ -90,6 +90,9 @@ xfs_da3_icnode_hdr
-> >  xfs_dir3_icfree_hdr
-> >  xfs_dir3_icleaf_hdr
-> >  xfs_name
-> > +xfs_owner_info
-> > +xfs_refcount_irec
-> > +xfs_rmap_irec
-> >  xfs_alloctype_t
-> >  xfs_buf_cancel_t
-> >  xfs_bmbt_rec_32_t
+On Mon, Feb 08, 2016 at 05:13:09PM -0800, Darrick J. Wong wrote:
+> Perform copy-on-writes at random offsets to stress the CoW allocation
+> system.  Assess the effectiveness of the extent size hint at
+> combatting fragmentation via unshare, a rewrite, and no-op after the
+> random writes.
 > 
-> So this is going to cause failures on any userspace that doesn't
-> know about these new types, right?
-> 
-> Should these be conditional in some way?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+....
+> +seq=`basename "$0"`
+> +seqres="$RESULT_DIR/$seq"
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    #rm -rf "$tmp".* "$testdir"
 
-I wasn't sure how to handle this -- I could just keep the patch at the head of
-my stack (unreleased) until xfsprogs pulls in the appropriate libxfs pieces?
-So long as we're not dead certain of the final format of the rmapbt and
-refcountbt, there's probably not a lot of value in putting this in (yet).
+Now that I've noticed it, a few tests have this line commented out.
+Probably should remove the tmp files, at least.
 
---D
+> +rm -f "$seqres.full"
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount >> "$seqres.full" 2>&1
+> +
+> +testdir="$SCRATCH_MNT/test-$seq"
+> +rm -rf $testdir
+> +mkdir $testdir
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Again, somthing that is repeated - we just mkfs'd the scratch
+device, so the $testdir is guaranteed not to exist...
+
+> +echo "Check for damage"
+> +umount "$SCRATCH_MNT"
+
+I've also noticed this in a lot of tests - the scratch device will
+be unmounted by the harness, so I don't think this is necessary....
+
+> +free_blocks=$(stat -f -c '%a' "$testdir")
+> +real_blksz=$(stat -f -c '%S' "$testdir")
+> +space_needed=$(((blksz * nr * 3) * 5 / 4))
+> +space_avail=$((free_blocks * real_blksz))
+> +internal_blks=$((blksz * nr / real_blksz))
+> +test $space_needed -gt $space_avail && _notrun "Not enough space. $space_avail < $space_needed"
+
+Why not:
+
+_require_fs_space $space_needed
+
+At minimum, it seems to be a repeated hunk of code, so it shoul dbe
+factored.
+
+> +testdir="$SCRATCH_MNT/test-$seq"
+> +rm -rf $testdir
+> +mkdir $testdir
+> +
+> +echo "Create the original files"
+> +"$XFS_IO_PROG" -f -c "pwrite -S 0x61 0 0" "$testdir/file1" >> "$seqres.full"
+> +"$XFS_IO_PROG" -f -c "pwrite -S 0x61 0 1048576" "$testdir/file2" >> "$seqres.full"
+> +_scratch_remount
+> +
+> +echo "Set extsz and cowextsz on zero byte file"
+> +"$XFS_IO_PROG" -f -c "extsize 1048576" "$testdir/file1" | _filter_scratch
+> +"$XFS_IO_PROG" -f -c "cowextsize 1048576" "$testdir/file1" | _filter_scratch
+> +
+> +echo "Set extsz and cowextsz on 1Mbyte file"
+> +"$XFS_IO_PROG" -f -c "extsize 1048576" "$testdir/file2" | _filter_scratch
+> +"$XFS_IO_PROG" -f -c "cowextsize 1048576" "$testdir/file2" | _filter_scratch
+> +_scratch_remount
+> +
+> +fn() {
+> +	"$XFS_IO_PROG" -c "$1" "$2" | sed -e 's/.\([0-9]*\).*$/\1/g'
+> +}
+> +echo "Check extsz and cowextsz settings on zero byte file"
+> +test $(fn extsize "$testdir/file1") -eq 1048576 || echo "file1 extsize not set"
+> +test $(fn cowextsize "$testdir/file1") -eq 1048576 || echo "file1 cowextsize not set" 
+
+For this sort of thing, just dump the extent size value to the
+golden output. i.e.
+
+echo "Check extsz and cowextsz settings on zero byte file"
+$XFS_IO_PROG -c extsize $testdir/file1
+$XFS_IO_PROG -c cowextsize $testdir/file1
+
+is all that is needed. that way if it fails, we see what value it
+had instead of the expected 1MB. This also makes the test much less
+verbose and easier to read
+
+> +
+> +echo "Check extsz and cowextsz settings on 1Mbyte file"
+> +test $(fn extsize "$testdir/file2") -eq 0 || echo "file2 extsize not set"
+> +test $(fn cowextsize "$testdir/file2") -eq 1048576 || echo "file2 cowextsize not set" 
+> +
+> +echo "Set cowextsize and check flag"
+> +"$XFS_IO_PROG" -f -c "cowextsize 1048576" "$testdir/file3" | _filter_scratch
+> +_scratch_remount
+> +test $("$XFS_IO_PROG" -c "stat" "$testdir/file3" | grep 'fsxattr.xflags' | awk '{print $4}' | grep -c 'C') -eq 1 || echo "file3 cowextsz flag not set"
+> +test $(fn cowextsize "$testdir/file3") -eq 1048576 || echo "file3 cowextsize not set"
+> +"$XFS_IO_PROG" -f -c "cowextsize 0" "$testdir/file3" | _filter_scratch
+> +_scratch_remount
+> +test $(fn cowextsize "$testdir/file3") -eq 0 || echo "file3 cowextsize not set"
+> +test $("$XFS_IO_PROG" -c "stat" "$testdir/file3" | grep 'fsxattr.xflags' | awk '{print $4}' | grep -c 'C') -eq 0 || echo "file3 cowextsz flag not set"
+
+Same with all these - just grep the output for the line you want,
+and the golden output matching does everything else. e.g. the flag
+check simply becomes:
+
+$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags'
+
+Again, this tells us what the wrong flags are if it fails...
+
+There are quite a few bits of these tests where the same thing
+applies....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
