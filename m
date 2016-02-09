@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B49B87CA2
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 02:16:51 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A7EE87CA2
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 02:26:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F9C3AC004
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 00:16:50 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id S359FaoFtFvLgskS (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Feb 2016 00:16:49 -0800 (PST)
-Date: Tue, 9 Feb 2016 00:16:44 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/23] xfs: more reflink tests
-Message-ID: <20160209081644.GB6350@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 79B148F8033
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 00:26:45 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	fGRrDTNd5gMAXC0G for <xfs@oss.sgi.com>;
+	Tue, 09 Feb 2016 00:26:42 -0800 (PST)
+Date: Tue, 9 Feb 2016 19:26:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 19/23] xfs: test rmapbt functionality
+Message-ID: <20160209082639.GO19486@dastard>
 References: <20160209011145.23099.95354.stgit@birch.djwong.org>
-	<20160209011250.23099.50000.stgit@birch.djwong.org>
-	<20160209073622.GI19486@dastard>
+	<20160209011348.23099.30668.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160209073622.GI19486@dastard>
+In-Reply-To: <20160209011348.23099.30668.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,87 +30,139 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 09, 2016 at 06:36:22PM +1100, Dave Chinner wrote:
-> On Mon, Feb 08, 2016 at 05:12:50PM -0800, Darrick J. Wong wrote:
-> > Create a couple of XFS-specific tests -- one to check that growing
-> > and shrinking the refcount btree works and a second one to check
-> > what happens when we hit maximum refcount.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> .....
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs xfs
-> > +_require_scratch_reflink
-> > +_require_cp_reflink
-> ....
-> > +
-> > +test -x "$here/src/punch-alternating" || _notrun "punch-alternating not built"
+On Mon, Feb 08, 2016 at 05:13:48PM -0800, Darrick J. Wong wrote:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/xfs        |   44 ++++++++++++++++++++++
+>  tests/xfs/233     |   78 ++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/233.out |    6 +++
+>  tests/xfs/234     |   89 ++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/234.out |    6 +++
+>  tests/xfs/235     |  108 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/235.out |   14 +++++++
+>  tests/xfs/236     |   93 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/236.out |    8 ++++
+>  tests/xfs/group   |    4 ++
+>  10 files changed, 450 insertions(+)
+>  create mode 100644 common/xfs
+>  create mode 100755 tests/xfs/233
+>  create mode 100644 tests/xfs/233.out
+>  create mode 100755 tests/xfs/234
+>  create mode 100644 tests/xfs/234.out
+>  create mode 100755 tests/xfs/235
+>  create mode 100644 tests/xfs/235.out
+>  create mode 100755 tests/xfs/236
+>  create mode 100644 tests/xfs/236.out
 > 
-> I suspect we need a _require rule for checking that something in
-> the test src directory has been built.
-
-Crapola, we also need punch-alternating, which doesn't appear until the next
-patch.  Guess I'll go move it out of the next patch (or swap the order of
-these two I guess.)
-
-I added _require_test_program() which complains if src/$1 isn't built.
-
-> > +echo "Check scratch fs"
-> > +umount "$SCRATCH_MNT"
-> > +echo "check refcount after removing all files" >> "$seqres.full"
-> > +"$XFS_DB_PROG" -c 'agf 0' -c 'addr refcntroot' -c 'p recs[1]' "$SCRATCH_DEV" >> "$seqres.full"
-> > +"$XFS_REPAIR_PROG" -o force_geometry -n "$SCRATCH_DEV" >> "$seqres.full" 2>&1
-> > +res=$?
-> > +if [ $res -eq 0 ]; then
-> > +	# If repair succeeds then format the device so that the post-test
-> > +	# check doesn't fail due to the single AG.
-> > +	_scratch_mkfs >> "$seqres.full" 2>&1
-> > +else
-> > +	_fail "xfs_repair fails"
-> > +fi
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
 > 
-> This is what _require_scratch_nocheck avoids.
-> 
-> i.e. do this instead:
-> 
-> _require_scratch_nocheck
-> .....
-> 
-> "$XFS_REPAIR_PROG" -o force_geometry -n "$SCRATCH_DEV" >> "$seqres.full" 2>&1 
-> status=$?
-> exit
+> diff --git a/common/xfs b/common/xfs
+> new file mode 100644
+> index 0000000..2d1a76f
+> --- /dev/null
+> +++ b/common/xfs
+> @@ -0,0 +1,44 @@
+> +##/bin/bash
+> +# Routines for handling XFS
+> +#-----------------------------------------------------------------------
+> +#  Copyright (c) 2015 Oracle.  All Rights Reserved.
+> +#  This program is free software; you can redistribute it and/or modify
+> +#  it under the terms of the GNU General Public License as published by
+> +#  the Free Software Foundation; either version 2 of the License, or
+> +#  (at your option) any later version.
+> +#
+> +#  This program is distributed in the hope that it will be useful,
+> +#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +#  GNU General Public License for more details.
+> +#
+> +#  You should have received a copy of the GNU General Public License
+> +#  along with this program; if not, write to the Free Software
+> +#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+> +#  USA
+> +#
+> +#  Contact information: Oracle Corporation, 500 Oracle Parkway,
+> +#  Redwood Shores, CA 94065, USA, or: http://www.oracle.com/
+> +#-----------------------------------------------------------------------
+> +
+> +_require_xfs_test_rmapbt()
+> +{
+> +	_require_test
+> +
+> +	if [ "$(xfs_info "$TEST_DIR" | grep -c "rmapbt=1")" -ne 1 ]; then
+> +		_notrun "rmapbt not supported by test filesystem type: $FSTYP"
+> +	fi
+> +}
+> +
+> +_require_xfs_scratch_rmapbt()
+> +{
+> +	_require_scratch
+> +
+> +	_scratch_mkfs > /dev/null
+> +	_scratch_mount
+> +	if [ "$(xfs_info "$SCRATCH_MNT" | grep -c "rmapbt=1")" -ne 1 ]; then
+> +		_scratch_unmount
+> +		_notrun "rmapbt not supported by scratch filesystem type: $FSTYP"
+> +	fi
+> +	_scratch_unmount
+> +}
 
-Ok.
+No, not yet. :)
 
-> Also, we really don't need the quotes around these global
-> variables.  They are just noise and lots of stuff will break if
-> those variables are set to something that requires them to be
-> quoted.
+Wait until I get my "split common/rc" patchset out there, because it
+does not require:
 
-<nod>
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/xfs
 
---D
+This.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+And i don't want to have to undo a bunch of stuff in tests yet. Just
+lump it all in common/rc for the moment.
+
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_xfs_scratch_rmapbt
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs -d size=$((2 * 4096 * 4096)) -l size=4194304 > "$seqres.full" 2>&1
+> +_scratch_mount >> "$seqres.full" 2>&1
+
+_scratch_mkfs_sized ?
+
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    #rm -f $tmp.*
+
+More random uncommenting needed.
+
+> +
+> +echo "Check for damage"
+> +umount "$SCRATCH_MNT"
+> +_check_scratch_fs
+> +
+> +# success, all done
+> +status=0
+> +exit
+
+Cull.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
