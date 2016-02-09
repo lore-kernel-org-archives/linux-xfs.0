@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 40B6D29DF5
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 12:07:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1F68E8F8064
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 10:07:27 -0800 (PST)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id KZGJZgHn7eePIpDn for
-	<xfs@oss.sgi.com>; Tue, 09 Feb 2016 10:07:26 -0800 (PST)
-Date: Tue, 9 Feb 2016 11:06:47 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 2/2] dax: move writeback calls into the filesystems
-Message-ID: <20160209180647.GA2450@linux.intel.com>
-References: <1454829553-29499-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1454829553-29499-3-git-send-email-ross.zwisler@linux.intel.com>
-	<CAPcyv4jT=yAb2_yLfMGqV1SdbQwoWQj7joroeJGAJAcjsMY_oQ@mail.gmail.com>
-	<20160207215047.GJ31407@dastard>
-	<CAPcyv4jNmdm-ATTBaLLLzBT+RXJ0YrxxXLYZ=T7xUgEJ8PaSKw@mail.gmail.com>
-	<20160208201808.GK27429@dastard>
-	<CAPcyv4iHi17pv_VC=WgEP4_GgN9OvSr8xbw1bvbEFMiQ83GbWw@mail.gmail.com>
-	<20160209094353.GF9451@quack.suse.cz>
-	<20160209160134.GA12245@quack.suse.cz>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8942D29DF5
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 13:05:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 35A2FAC006
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 11:05:18 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id BJlnNvQyowfGjDbM for <xfs@oss.sgi.com>;
+	Tue, 09 Feb 2016 11:05:13 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id E81C563C607A
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 13:05:12 -0600 (CST)
+Subject: Re: [PATCH 2/2] xfs_repair: new secondary superblock search method
+References: <1455037988-7213-1-git-send-email-billodo@redhat.com>
+	<1455037988-7213-3-git-send-email-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56BA3868.7090900@sandeen.net>
+Date: Tue, 9 Feb 2016 13:05:12 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160209160134.GA12245@quack.suse.cz>
+In-Reply-To: <1455037988-7213-3-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,81 +33,357 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, jmoyer <jmoyer@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: xfs@oss.sgi.com
 
-On Tue, Feb 09, 2016 at 05:01:34PM +0100, Jan Kara wrote:
-> On Tue 09-02-16 10:43:53, Jan Kara wrote:
-> > On Mon 08-02-16 12:55:24, Dan Williams wrote:
-> > > On Mon, Feb 8, 2016 at 12:18 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > > [..]
-> > > >> Setting aside the current block zeroing problem you seem to assuming
-> > > >> that DAX will always be faster and that may not be true at a media
-> > > >> level.  Waiting years for some applications to determine if DAX makes
-> > > >> sense for their use case seems completely reasonable.  In the meantime
-> > > >> the apps that are already making these changes want to know that a DAX
-> > > >> mapping request has not silently dropped backed to page cache.  They
-> > > >> also want to know if they successfully jumped through all the hoops to
-> > > >> get a larger than pte mapping.
-> > > >>
-> > > >> I agree it is useful to be able to force DAX on an unmodified
-> > > >> application to see what happens, and it follows that if those
-> > > >> applications want to run in that mode they will need functional
-> > > >> fsync()...
-> > > >>
-> > > >> I would feel better if we were talking about specific applications and
-> > > >> performance numbers to know if forcing DAX on application is a debug
-> > > >> facility or a production level capability.  You seem to have already
-> > > >> made that determination and I'm curious what I'm missing.
-> > > >
-> > > > I'm not setting any policy here at all.  This whole argument is
-> > > > based around the DAX mount option doing "global fs enable or
-> > > > silently turning it off" and the application not knowing about that.
-> > > >
-> > > > The whole point of having a persistent per-inode DAX flags is that
-> > > > it is a policy mechanism, not a policy.  The application can, if it
-> > > > is DAX aware, directly control whether DAX is used on a file or not.
-> > > > The application can even query and clear that persistent inode flag
-> > > > if it is configured not to (or cannot) use DAX.
-> > > >
-> > > > If the filesystem cannot support DAX, then we can error out attempts
-> > > > to set the DAX flag and then the app knows DAX is not available.
-> > > > i.e. the attempt to set policy failed. If the flag is set, then the
-> > > > inode will *always* use DAX - there is no "fall back to page cache"
-> > > > when DAX is enabled.
-> > > >
-> > > > If the applicaiton is not DAX aware, then the admin can control the
-> > > > DAX policy by manipulating these flags themselves, and hence control
-> > > > whether DAX is used by the application or not.
-> > > >
-> > > > If you think I'm dictating policy for DAX users and application,
-> > > > then you haven't understood anything I've previously said about why
-> > > > the DAX mount option needs to die before any of this is considered
-> > > > production ready. DAX is not an opaque "all or nothing" option. XFS
-> > > > will provide apps and admins with fine-grained, persistent,
-> > > > discoverable policy flags to allow admins and applications to set
-> > > > DAX policies however they see fit. This simply cannot be done if the
-> > > > only knob you have is a mount option that may or may not stick.
-> > > 
-> > > I agree the mount option needs to die, and I fully grok the reasoning.
-> > >   What I'm concerned with is that a system using fully-DAX-aware
-> > > applications is forced to incur the overhead of maintaining *sync
-> > > semantics, periodic sync(2) in particular,  even if it is not relying
-> > > on those semantics.
-> > 
-> > Let me somewhat correct this: IMO hard requirement is maintaining sync(2)
-> > semantics. Periodic writeback does not have any hard durability guarantees
-> > and we are free to ignore such requests in ->writepages() (that function
-> > has enough information in the writeback_control structure to differentiate
-> > between periodic writeback and data integrity sync) if we decide it is
-> > useful. Actually, we could do that even for 4.5.
+On 2/9/16 11:13 AM, Bill O'Donnell wrote:
+> Optimize secondary sb search, using similar method to find
+> fs geometry as that of xfs_mkfs. If this faster method fails
+> in finding a secondary sb, fall back to original brute force
+> slower search.
 > 
-> Attached is a version of Ross' patch that will work for sync(2) and
-> fsync(2) and we won't flush caches during periodic writeback. The patch is
-> only compile-tested. Ross?
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  Makefile           |  2 +-
+>  include/libxcmd.h  |  4 +++-
+>  libxcmd/topology.c | 28 +++++++++++++++++++++++++++-
+>  repair/Makefile    |  4 ++--
+>  repair/phase1.c    | 25 +++++++++++++++++++++++--
+>  repair/protos.h    |  2 +-
+>  repair/sb.c        | 27 +++++++++++++++++++++------
+>  7 files changed, 78 insertions(+), 14 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index fca0a42..1d60d9c 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -80,7 +80,7 @@ fsr: libhandle
+>  growfs: libxcmd
+>  io: libxcmd libhandle
+>  quota: libxcmd
+> -repair: libxlog
+> +repair: libxlog libxcmd
+>  copy: libxlog
+>  
+>  ifeq ($(HAVE_BUILDDEFS), yes)
+> diff --git a/include/libxcmd.h b/include/libxcmd.h
+> index df7046e..b140adb 100644
+> --- a/include/libxcmd.h
+> +++ b/include/libxcmd.h
+> @@ -50,6 +50,8 @@ extern int
+>  check_overwrite(
+>  	char		*device);
+>  
+> -
+> +extern int guess_default_geometry(__uint64_t *agsize,
+> +				  __uint64_t *agcount,
+> +				  libxfs_init_t x);
+>  
+>  #endif	/* __LIBXCMD_H__ */
+> diff --git a/libxcmd/topology.c b/libxcmd/topology.c
+> index 0eeea28..4a8ab8b 100644
+> --- a/libxcmd/topology.c
+> +++ b/libxcmd/topology.c
+> @@ -302,7 +302,6 @@ static void blkid_get_topology(
+>  
+>  #endif /* ENABLE_BLKID */
+>  
+> -
+>  void get_topology(
+>  	libxfs_init_t		*xi,
+>  	struct fs_topology	*ft,
+> @@ -346,3 +345,30 @@ void get_topology(
+>  				   &lsectorsize, &psectorsize, force_overwrite);
+>  	}
+>  }
+> +
+> +/*
+> + * Use this macro before we have superblock and mount structure
+> + */
+> +#define	DTOBT(d)	((xfs_rfsblock_t)((d) >> (blocklog - BBSHIFT)))
 
-This looks great.  I'll send out a v2 with this and with the
-dax_clear_sectors() changes after I'm done testing.
+Hm, I hate this macro.  ;)  I know it lives in xfs_mkfs.c too... depending
+on a local variable is ick.  Since you only use it once below, it might be best
+to just open-code it, see below.
+
+> +
+> +int guess_default_geometry(__uint64_t *agsize, __uint64_t *agcount, libxfs_init_t x) {
+
+Move the "{" down to this line, please, and wrap the args so it doesn't go
+over 80 chars.
+
+> +	struct fs_topology ft;
+> +	int blocklog;
+> +	__uint64_t      dblocks;
+                  ^tab here please
+> +	int             multidisk;
+           ^tabs here please
+
+... and a newline here to separate variable declarations...
+
+> +        memset(&ft, 0, sizeof(ft));
+
+... from this call.  Tab this call in...
+
+
+> +        get_topology(&x, &ft, 1);
+   ^^^^ as well as this one.
+
+> +
+> +        /*
+   ^ tab here too
+> +	 * get geometry from get_topology result.
+> +	 * Use default block size (2^12)
+> +	 */
+> +        blocklog = 12;
+> +        multidisk = ft.dswidth | ft.dsunit;
+> +	printf("x.dsize = %lu\n",(long unsigned int)x.dsize);
+
+drop the debug printf
+
+> +        dblocks = DTOBT(x.dsize);
+
+maybe best to just:
+
+           dblocks = x.dsize >> (blocklog - BBSHIFT); 
+
+> +        calc_default_ag_geometry(blocklog, dblocks, multidisk,
+> +                                 agsize, agcount);
+
+general whitespace problems above; use tabs not spaces please,
+as appropriate.
+
+> +
+> +	return(blocklog);
+
+while we're at it it'd be nice to make return not a function; 
+just "return blocklog;"
+
+> +}
+> diff --git a/repair/Makefile b/repair/Makefile
+> index 251722b..d24ab1f 100644
+> --- a/repair/Makefile
+> +++ b/repair/Makefile
+> @@ -20,8 +20,8 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
+>  	progress.c prefetch.c rt.c sb.c scan.c threads.c \
+>  	versions.c xfs_repair.c
+>  
+> -LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+> -LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
+> +LLDLIBS = $(LIBBLKID) $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) $(LIBXCMD)
+> +LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD)
+>  LLDFLAGS = -static-libtool-libs
+>  
+>  default: depend $(LTCOMMAND)
+> diff --git a/repair/phase1.c b/repair/phase1.c
+> index 126d0b3..c27033d 100644
+> --- a/repair/phase1.c
+> +++ b/repair/phase1.c
+> @@ -21,6 +21,7 @@
+>  #include "agheader.h"
+>  #include "protos.h"
+>  #include "err_protos.h"
+> +#include "libxcmd.h"
+>  
+>  static void
+>  no_sb(void)
+> @@ -47,6 +48,9 @@ alloc_ag_buf(int size)
+>   */
+>  #define MAX_SECTSIZE		(512 * 1024)
+>  
+> +extern libxfs_init_t x;
+
+It would be better to 
+
+#include "libxlog.h"
+
+after the inclusion of libxfs.h at the top of this file, and you won't
+need this extern.  That's how the main file/function gets "x" for
+xfs_repair.  but actually, see more below.
+
+> +
+> +
+>  /* ARGSUSED */
+>  void
+>  phase1(xfs_mount_t *mp)
+> @@ -54,6 +58,10 @@ phase1(xfs_mount_t *mp)
+>  	xfs_sb_t		*sb;
+>  	char			*ag_bp;
+>  	int			rval;
+> +	int			blocklog;
+> +	__uint64_t		agcount;
+> +	__uint64_t		agsize;
+> +	__uint64_t		skipsize;
+>  
+>  	do_log(_("Phase 1 - find and verify superblock...\n"));
+>  
+> @@ -65,6 +73,18 @@ phase1(xfs_mount_t *mp)
+>  	lost_quotas = 0;
+>  
+>  	/*
+> +	 * divine the geometry 
+> +	 */
+> +	blocklog = guess_default_geometry(&agsize, &agcount, x);
+> +
+> +	/*
+> +	 * use found ag geometry to quickly find secondary sb
+> +	 */
+> +	skipsize = agsize << blocklog;
+> +	do_log("agsize = %d  agcount = %d  skipsize = %d\n",
+> +	       (int)agsize, (int)agcount, (int)skipsize);
+
+Since this is just a guess, I wouldn't log.  It may well
+print out geometry that is not correct, and that would be confusing.
+
+And actually - looking at how you have refactored find_secondary_sb(),
+you can move the above 12 or so lines into find_secondary_sb(),
+and you don't need to pre-compute skipsize etc here.  You can do it
+all in find_secondary_sb() when it gets called.
+
+Then this file (phase1.c) can be completely unchanged, and all the
+magic happens in repair/sb.c.
+
+> +
+> +	/*
+>  	 * get AG 0 into ag header buf
+>  	 */
+>  	ag_bp = alloc_ag_buf(MAX_SECTSIZE);
+> @@ -80,14 +100,15 @@ phase1(xfs_mount_t *mp)
+>  	if (rval != XR_OK)  {
+>  		do_warn(_("bad primary superblock - %s !!!\n"),
+>  			err_string(rval));
+> -		if (!find_secondary_sb(sb))
+> +
+> +		if (!find_secondary_sb(sb, skipsize))
+>  			no_sb();
+>  		primary_sb_modified = 1;
+>  	} else if ((rval = verify_set_primary_sb(sb, 0,
+>  					&primary_sb_modified)) != XR_OK)  {
+>  		do_warn(_("couldn't verify primary superblock - %s !!!\n"),
+>  			err_string(rval));
+> -		if (!find_secondary_sb(sb))
+> +		if (!find_secondary_sb(sb, skipsize))
+>  			no_sb();
+>  		primary_sb_modified = 1;
+>  	}
+> diff --git a/repair/protos.h b/repair/protos.h
+> index 9d5a2a6..d96373e 100644
+> --- a/repair/protos.h
+> +++ b/repair/protos.h
+> @@ -31,7 +31,7 @@ int	get_sb(xfs_sb_t			*sbp,
+>  void	write_primary_sb(xfs_sb_t	*sbp,
+>  			int		size);
+>  
+> -int	find_secondary_sb(xfs_sb_t	*sb);
+> +int	find_secondary_sb(xfs_sb_t	*sb, __uint64_t skipsize);
+
+this would be unchanged as well.
+
+>  
+>  struct fs_geometry;
+>  void	get_sb_geometry(struct fs_geometry	*geo,
+> diff --git a/repair/sb.c b/repair/sb.c
+> index 4eef14a..4386479 100644
+> --- a/repair/sb.c/d
+> +++ b/repair/sb.c
+> @@ -87,8 +87,7 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
+>  /*
+>   * find a secondary superblock, copy it into the sb buffer
+
+It'd be good to document "skipsize" here - units, and purpose.
+
+>   */
+> -int
+> -find_secondary_sb(xfs_sb_t *rsb)
+> +static int __find_secondary_sb(xfs_sb_t *rsb, __uint64_t skipsize )
+
+no space between skipsize and ")" please.
+
+>  {
+>  	xfs_off_t	off;
+>  	xfs_sb_t	*sb;
+> @@ -101,7 +100,6 @@ find_secondary_sb(xfs_sb_t *rsb)
+>  	int		bsize;
+>  
+>  	do_warn(_("\nattempting to find secondary superblock...\n"));
+> -
+>  	sb = (xfs_sb_t *)memalign(libxfs_device_alignment(), BSIZE);
+>  	if (!sb) {
+>  		do_error(
+> @@ -117,7 +115,7 @@ find_secondary_sb(xfs_sb_t *rsb)
+>  	/*
+>  	 * skip first sector since we know that's bad
+>  	 */
+> -	for (done = 0, off = XFS_AG_MIN_BYTES; !done ; off += bsize)  {
+> +	for (done = 0, off = skipsize; !done ; off += bsize)  {
+
+Ok, so you jump out "skipsize" for the first read, but after that you
+only move the offset by bsize, which is BSIZE (or 1MB).
+
+That works OK if the 2nd superblock (at skipsize) is OK, but if it's
+not, you'll start from there doing smaller reads like before, and
+then this loop isn't really any more efficient than it was.
+
+If skipsize is set, you need to start out 1x skipsize, then read
+at 2x skipsize, 3x skipsize, etc.  So you need to change the
+loop increment as well.
+
+i.e. fast path: start at skipsize, advance by skipsize each loop
+
+slow path: start at XFS_AG_MIN_BYTES, advance by BSIZE each loop
+
+If you make a 4t sparse file, mkfs it, and corrupt the first *2*
+superblocks, then point repair at it you'll see what I mean.
+
+>  		/*
+>  		 * read disk 1 MByte at a time.
+>  		 */
+> @@ -130,7 +128,6 @@ find_secondary_sb(xfs_sb_t *rsb)
+>  		}
+>  
+>  		do_warn(".");
+> -
+>  		/*
+>  		 * check the buffer 512 bytes at a time since
+>  		 * we don't know how big the sectors really are.
+> @@ -164,11 +161,29 @@ find_secondary_sb(xfs_sb_t *rsb)
+>  			}
+>  		}
+>  	}
+> -
+>  	free(sb);
+>  	return(retval);
+>  }
+>  
+> +int
+> +find_secondary_sb(xfs_sb_t *rsb, __uint64_t skipsize)
+> +{
+> +	int		retval;
+> +
+> +	/*
+> +	 * Attempt to find secondary sb with a coarse approach,
+> +	 * using a large skipsize (agsize in bytes). Failing that,
+> +	 * fallback to the fine-grained approach using min agsize.
+> +	 */
+> +	retval = __find_secondary_sb(rsb, skipsize);
+> +	if (!retval)
+
+With the comment below, it's safest to wrap these multiple lines after
+the conditional in { .... }
+
+> +		/*
+> +		 * fallback: use minimum agsize for skipsize
+> +		 */
+> +		retval = __find_secondary_sb(rsb, XFS_AG_MIN_BYTES);
+> +	return(retval);
+
+again drop the () on the return, please.
+
+> +}
+> +
+>  /*
+>   * Calculate what the inode alignment field ought to be based on internal
+>   * superblock info and determine if it is valid.
+> 
 
 _______________________________________________
 xfs mailing list
