@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8BA8329DF5
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 15:48:54 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 37DB629DF5
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 15:49:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B473AC005
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 13:48:54 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	SympHHJR636AqXdW for <xfs@oss.sgi.com>;
-	Tue, 09 Feb 2016 13:48:51 -0800 (PST)
-Date: Wed, 10 Feb 2016 08:48:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] xfs: Introduce writeback context for writepages
-Message-ID: <20160209214850.GE14668@dastard>
-References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
-	<1454910258-7578-3-git-send-email-david@fromorbit.com>
-	<20160209133941.GA13357@infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CBAF7AC006
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 13:49:24 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id PhrrfbmmOVHkNq1V (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2016 13:49:23 -0800 (PST)
+Date: Tue, 9 Feb 2016 13:49:23 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/6 v3] xfs: remove XFS_BUF_ZEROFLAGS macro
+Message-ID: <20160209214923.GA32201@infradead.org>
+References: <1454632683-20543-1-git-send-email-david@fromorbit.com>
+	<1454632683-20543-7-git-send-email-david@fromorbit.com>
+	<20160208091235.GN5534@infradead.org>
+	<20160208223120.GM27429@dastard>
+	<20160209091632.GB23349@infradead.org>
+	<20160209212336.GB14668@dastard> <20160209213801.GC14668@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160209133941.GA13357@infradead.org>
+In-Reply-To: <20160209213801.GC14668@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +34,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Feb 09, 2016 at 05:39:41AM -0800, Christoph Hellwig wrote:
-> Removing xfs_cancel_ioend and replacing it with the start and cancel
-> writeback scheme that we currently only use for
-> xfs_setfilesize_trans_alloc failures actually seems to be the biggest
-> change in this patch and is entirely undocumented.  Any chance you
-> could split this into a prep patch and properly document it?
+Looks good,
 
-I can try.
-
-> > -
-> > -	if (!ioend || need_ioend || type != ioend->io_type) {
-> > -		xfs_ioend_t	*previous = *result;
-> > -
-> > -		ioend = xfs_alloc_ioend(inode, type);
-> > -		ioend->io_offset = offset;
-> > -		ioend->io_buffer_head = bh;
-> > -		ioend->io_buffer_tail = bh;
-> > -		if (previous)
-> > -			previous->io_list = ioend;
-> > -		*result = ioend;
-> > +	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
-> > +	    bh->b_blocknr != wpc->last_block + 1) {
-> 
-> We now start a new ioend if the blocks aren't contiguous, which seems
-> reasonable.  But this also means the similar check in xfs_submit_ioend
-> should be removed at the same time.
-
-OK.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
