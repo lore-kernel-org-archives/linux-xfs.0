@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D3F5C29DF6
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 15:59:04 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8BFAF29DF5
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 16:38:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C36618F804B
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 13:59:04 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BCE3AC006
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 14:38:01 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	gJocx9nEvIaERWXX for <xfs@oss.sgi.com>;
-	Tue, 09 Feb 2016 13:59:02 -0800 (PST)
-Date: Wed, 10 Feb 2016 08:59:00 +1100
+	9G2n4w8RVMiIXiii for <xfs@oss.sgi.com>;
+	Tue, 09 Feb 2016 14:37:58 -0800 (PST)
+Date: Wed, 10 Feb 2016 09:37:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: don't chain ioends during writepage submission
-Message-ID: <20160209215900.GH14668@dastard>
-References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
-	<1454910258-7578-6-git-send-email-david@fromorbit.com>
-	<20160209142355.GB25829@bfoster.bfoster>
+Subject: Re: [PATCH] xfsprogs: guard fsxattr definition for newer kernels
+Message-ID: <20160209223713.GI14668@dastard>
+References: <56BA24A9.4090403@redhat.com> <20160209195502.GR27429@dastard>
+	<56BA4495.9060304@redhat.com> <20160209211010.GA14668@dastard>
+	<56BA59B6.3030803@sandeen.net> <20160209214433.GD14668@dastard>
+	<56BA5E0E.7030209@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160209142355.GB25829@bfoster.bfoster>
+In-Reply-To: <56BA5E0E.7030209@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,91 +32,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, Feb 09, 2016 at 09:23:55AM -0500, Brian Foster wrote:
-> On Mon, Feb 08, 2016 at 04:44:18PM +1100, Dave Chinner wrote:
-> > @@ -738,29 +726,22 @@ xfs_writepage_submit(
-> >  	struct writeback_control *wbc,
-> >  	int			status)
-> >  {
-> > -	struct blk_plug		plug;
-> > -
-> > -	/* Reserve log space if we might write beyond the on-disk inode size. */
-> > -	if (!status && wpc->ioend && wpc->ioend->io_type != XFS_IO_UNWRITTEN &&
-> > -	    xfs_ioend_is_append(wpc->ioend))
-> > -		status = xfs_setfilesize_trans_alloc(wpc->ioend);
-> > -
-> > -	if (wpc->iohead) {
-> > -		blk_start_plug(&plug);
-> > -		xfs_submit_ioend(wbc, wpc->iohead, status);
-> > -		blk_finish_plug(&plug);
-> > -	}
+On Tue, Feb 09, 2016 at 03:45:50PM -0600, Eric Sandeen wrote:
 > 
-> We've dropped our plug here but I don't see anything added in
-> xfs_vm_writepages(). Shouldn't we have one there now that ioends are
-> submitted as we go? generic_writepages() uses one around its
-> write_cache_pages() call..
-
-It's not really necessary, as we now have higher level plugging in
-the writeback go will get flushed on context switch, and if we don't
-have a high level plug (e.g. fsync triggered writeback), then we
-submit the IO immediately, just like flushing the plug here would do
-anyway....
-
-> > @@ -827,23 +808,37 @@ xfs_writepage_map(
-> >  							 offset);
-> >  		}
-> >  		if (wpc->imap_valid) {
-> > +			struct xfs_ioend *ioend;
-> > +
-> >  			lock_buffer(bh);
-> >  			if (wpc->io_type != XFS_IO_OVERWRITE)
-> >  				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
-> > -			xfs_add_to_ioend(inode, bh, offset, wpc);
 > 
-> "Big picture" comment here please, i.e. something along the lines of
-> (feel free to rewrite/fix/enhance):
+> On 2/9/16 3:44 PM, Dave Chinner wrote:
+> > On Tue, Feb 09, 2016 at 03:27:18PM -0600, Eric Sandeen wrote:
+> >>
+> >>
+> >> On 2/9/16 3:10 PM, Dave Chinner wrote:
+> >>> On Tue, Feb 09, 2016 at 01:57:09PM -0600, Eric Sandeen wrote:
+> >>>> On 2/9/16 1:55 PM, Dave Chinner wrote:
+> >>>>> On Tue, Feb 09, 2016 at 11:40:57AM -0600, Eric Sandeen wrote:
+> >>>>>> After 334e580,
+> >>>>>> fs: XFS_IOC_FS[SG]SETXATTR to FS_IOC_FS[SG]ETXATTR promotion
+> >>>>>>
+> >>>>>> the file include/linux/fs.h now defines struct fsxattr.
+> >>>>>>
+> >>>>>> It defines FS_IOC_FSGETXATTR as well, so use that to wrap
+> >>>>>> our local definition, and skip it if the kernel is providing
+> >>>>>> it so that we don't get multiple definitions.
+> >>>>>>
+> >>>>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >>>>>> ---
+> >>>>>>
+> >>>>>> Should the kernel also #define HAVE_FSXATTR to help existing
+> >>>>>> xfsprogs-devel installations?
+> >>>>>>
+> >>>>>> (And what if headers are included in the other order?  Should
+> >>>>>> we try to guard on the kernel side or no?)
+> >>>>>
+> >>>>> I've already sent a patch to fix this - it was with the foreign
+> >>>>> filesystem xfs_quota patch....
+> >>>>
+> >>>> Oh, sorry, spaced it.
+> >>>>
+> >>>> What do you think of the HAVE_FSXATTR definition in fs.h?
+> >>>
+> >>> Which fs.h? The include/linux/fs.h file does not have such
+> >>> guards...
+> >>
+> >> If include/linux/fs.h defined HAVE_FSXATTR, a subsequent inclusion
+> >> of xfs_fs.h would not redefine the structure, because it is
+> >> guarded with that (for irix!)
+> > 
+> > That's why I changed it to check if the ioctl is defined, rather
+> > than checking for HAVE_FSXATTR.
 > 
-> "This implements an immediate ioend submission policy. If a new ioend is
-> required, the old ioend is returned and slated for submission on
-> function exit. The purpose of this policy is to avoid creating and
-> holding large chains of ioend objects in memory. While ioends are
-> submitted immediately after they are completed, block plugging helps
-> provide batching."
+> Right, but I'm talking about protecting older, existing versions of
+> xfsprogs headers which use HAVE_FSXATTR as the guard.
 
-I can add something like that to the function.
+Nothing we can really do about that. There's no way we can get
+random unused defines into general linux uapi header files.
 
-> > -	else {
-> > +		while (ioend_to_submit) {
-> > +			struct xfs_ioend *next = ioend_to_submit->io_list;
-> > +
-> > +			ioend_to_submit->io_list = NULL;
-> > +			xfs_submit_ioend(wbc, ioend_to_submit, 0);
-> > +			ioend_to_submit = next;
-> > +		}
-> > +	} else {
-> >  		xfs_aops_discard_page(page);
-> >  		ClearPageUptodate(page);
-> >  		unlock_page(page);
-> 
-> If we have an error and count == 0, we know that ioend_to_submit is NULL
-> because that is only potentially set once the first buffer is added.
-> That said, this doesn't mean that we don't have an ioend waiting on the
-> wpc. If we do, we still return the error and the ioend is errored out.
-> 
-> I wonder if that is really necessary if we haven't added any buffers
-> from the page..? Could we submit the ioend properly in that case? OTOH,
-> that might complicate the error reporting and an error here might be
-> serious enough that it isn't worth it, as opposed to just making sure we
-> clean up everything appropriately.
-
-The way I've done it is the same as the existing code - on error the
-entire ioend chain that has been built is errored out. I'd prefer to
-keep it that way right now to minimise the potential behavioural
-changes of the patch series. We can look to changing to partial
-submission in a separate patch set if it makes sense to do so.
+If a distro updates their kernel to 4.5 and hence introduces this
+general definition, then they also be upgrading xfsprogs to match.
+If a user has upgraded their kernel and then tries to build xfsprogs
+from source, then they are also going to need to update xfsprogs...
 
 Cheers,
 
