@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EDD2F7CA2
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 00:49:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6CDDAAC005
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 22:49:46 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A4B917CA2
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 01:21:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 784B8304039
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 23:21:12 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	JvqgcHyCz5Qx5PeY for <xfs@oss.sgi.com>;
-	Mon, 08 Feb 2016 22:49:43 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1aT27I-00024F-QR
-	for xfs@oss.sgi.com; Tue, 09 Feb 2016 17:49:40 +1100
-Date: Tue, 9 Feb 2016 17:49:40 +1100
+	AAmogCG8tlANwEzg for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2016 23:21:08 -0800 (PST)
+Date: Tue, 9 Feb 2016 18:21:06 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch rebased to 4faac78
-Message-ID: <20160209064940.GQ27429@dastard>
+Subject: Re: [PATCH v4.1 00/23] xfstests: test the nfs/cifs/btrfs/xfs
+	reflink/dedupe ioctls
+Message-ID: <20160209072106.GH19486@dastard>
+References: <20160209011145.23099.95354.stgit@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160209011145.23099.95354.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,128 +26,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8475757031298708930=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
+On Mon, Feb 08, 2016 at 05:11:45PM -0800, Darrick J. Wong wrote:
+> Happy New Year!
+> 
+> Dave Chinner: I've renumbered the new tests and pushed to github[3] if
+> you'd like to pull.
 
---===============8475757031298708930==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
-Content-Disposition: inline
+Can you include the commit ID I should see at the head of the
+tree so I can confirm I'm pulling the right branch?
 
+BTW, git doesn't like this:
 
---DocE+STaALJfprDB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+https://github.com/djwong/xfstests/tree/for-dave
 
-Hi folks,
+What git really wants is the tree url with a separate branch name
+like so:
 
-The for-next branch of the xfs kernel repository at
+https://github.com/djwong/xfstests.git for-dave
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+(i.e. the typical output from a git request-pull command)
 
-has just been updated. This is a rebase due to needing to fix the
-commits in the xfs-rt-fixes-4.6 branch due to a build failure. It
-also includes the struct xfs_icdinode size reduction patchset.
-See the commit list below for all the new commits compared to the
-previous for-next branch.
+> This is a (no longer) small patch set against the reflink/dedupe test
+> cases in xfstests.  The first four patches fix errors in the existing
+> reflink tests, some of which are from Christoph Hellwig.
+> 
+> Patches 5-6 refactor the dmerror code so that we can use it to
+> simulate transient IO errors, then use this code to test that
+> unwritten extent conversion does NOT happen after a directio write to
+> an unwritten extent hits a disk error.   Due to a bug in the VFS
+> directio code, ext4 can disclose stale disk contents if an aio dio
+> write fails; XFS suffers this problem for any failing dio write to an
+> unwritten extent.  Christoph's kernel patchset titled "vfs/xfs:
+> directio updates to ease COW handling V2" (and a separate ext4 warning
+> cleanup) is needed to fix this.
+> 
+> Patches 7-9, 13, 15, 17, 18, 20, 21, and 23 exercise various parts
+> of the copy on write behavior that are necessary to support shared
+> blocks.  The earlier patches focus on correct CoW behavior in the
+> presence of IO errors during the copy-write, and the later patches
+> focus on XFS' new cow-extent-size hint that greatly reduces
+> fragmentation due to copy on write behavior by encouraging the
+> allocator to allocate larger extents of replacement blocks.
+> 
+> Patches 10-12 and 14 perform stress testing on reflink and CoW to
+> check the behaviors when we get close to maximum refcount, when we
+> specify obnxiously large offsets and lengths, and when we try to
+> reflink millions of extents at a time.
+> 
+> Patch 16 tests quota accounting behavior when reflink is enabled.
+> 
+> Patch 19 adds a few tests for the XFS reverse mapping btree to ensure
+> that things like metadump and growfs work correctly.
+> 
+> Patch 22 checks that get_bmapx and fiemap (on XFS) correctly flag
+> extents as having shared blocks.  XFS now follows btrfs and ocfs2
+> FIEMAP behavior such that if any blocks of a file's extent are shared,
+> the whole extent is marked shared.  This is in contrast to earlier
+> XFS-only behavior that reported shared and non-shared regions as
+> separate extents.
 
--Dave.
+This may change - xfs_bmap doesn't combine extents in it's output
+even if they are adjacent. For debugging purposes (which is what
+xfs_bmap/fiemap is for), it's much better to be able to see the
+exact extent layout and block sharing.
 
-The new head of the for-next branch is commit:
+I suspect the solution of least surprise is to make fiemap behave
+like the other filesystems, and make xfs_bmap behave in a manner
+that is useful to us.... :P
 
-4faac78 Merge branch 'xfs-gut-icdinode-4.6' into for-next
+> If you're going to start using this mess, you probably ought to just
+> pull from my github trees for kernel[1], xfsprogs[2], xfstests[3],
+> xfs-docs[4], and man-pages[5].  All tests should pass on XFS.   I
+> tried btrfs this weekend and it failed 166, 175, 182, 266, 271, 272,
+> 278, 281, 297, 298, 304, 333, and 334.  ocfs2 (when I jury-rigged it
+> to run the cp_reflink tests) seemed to have a quota bug and crashes
+> hard in 284 (but was otherwise fine).
 
-New Commits:
+Fun fun fun. I'll look through the patchs, and if there's nothing
+major I'll pull it in once I get a commit ID from you.
 
-Dave Chinner (16):
-      [f67ca6e] xfs: RT bitmap and summary buffers are not typed
-      [bf85e09] xfs: RT bitmap and summary buffers need verifiers
-      [f8d55aa] xfs: introduce inode log format object
-      [3987848] xfs: remove timestamps from incore inode
-      [93f958f] xfs: cull unnecessary icdinode fields
-      [faeb4e4] xfs: move v1 inode conversion to xfs_inode_from_disk
-      [5099747] xfs: reinitialise recycled VFS inode correctly
-      [54d7b5c] xfs: use vfs inode nlink field everywhere
-      [9e9a267] xfs: move inode generation count to VFS inode
-      [83e06f2] xfs: move di_changecount to VFS inode
-      [c19b3b05] xfs: mode di_mode to vfs inode
-      [fc0f49c] Merge branch 'xfs-rt-fixes-4.6' into for-next
-      [4f22770] Merge branch 'xfs-get-next-dquot-4.6' into for-next
-      [0294f79] Merge branch 'xfs-dio-fix-4.6' into for-next
-      [18c5e03] Merge branch 'xfs-misc-fixes-4.6' into for-next
-      [4faac78] Merge branch 'xfs-gut-icdinode-4.6' into for-next
+Cheers,
 
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_bmap.c       |   6 +-
- fs/xfs/libxfs/xfs_dir2.c       |  12 +--
- fs/xfs/libxfs/xfs_inode_buf.c  | 170 ++++++++++++++++++++++++++-----------=
----
- fs/xfs/libxfs/xfs_inode_buf.h  |  38 ++++++++-
- fs/xfs/libxfs/xfs_inode_fork.c |   2 +-
- fs/xfs/libxfs/xfs_log_format.h |  17 ++--
- fs/xfs/libxfs/xfs_rtbitmap.c   |   2 +-
- fs/xfs/xfs_bmap_util.c         |   4 +-
- fs/xfs/xfs_dir2_readdir.c      |   2 +-
- fs/xfs/xfs_export.c            |   2 +-
- fs/xfs/xfs_file.c              |   6 +-
- fs/xfs/xfs_filestream.c        |   4 +-
- fs/xfs/xfs_icache.c            |  43 +++++++++--
- fs/xfs/xfs_inode.c             | 172 +++++++++++++++++--------------------=
-----
- fs/xfs/xfs_inode.h             |   8 +-
- fs/xfs/xfs_inode_item.c        |  82 ++++++++++++++++++--
- fs/xfs/xfs_ioctl.c             |  16 ++--
- fs/xfs/xfs_iops.c              |  53 +++----------
- fs/xfs/xfs_itable.c            |  22 +++---
- fs/xfs/xfs_log_recover.c       |  60 +++++++-------
- fs/xfs/xfs_mount.c             |   2 +-
- fs/xfs/xfs_rtalloc.c           |   2 +-
- fs/xfs/xfs_trans_inode.c       |  14 +---
- 23 files changed, 431 insertions(+), 308 deletions(-)
---=20
+Dave.
+-- 
 Dave Chinner
 david@fromorbit.com
-
---DocE+STaALJfprDB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJWuYwEAAoJEK3oKUf0dfodurUP/1EATQ+mGOPZsR3ZCXVquDQJ
-2SSuGFpaMC/LqKMZzYhv5/vV+jWagNPOZ3+xqTC22Gl6SldhR7EBDKDe4pwgEJUA
-S3wNXXwOxWD79CbmcqDVHSofnnZgCaegCGYen4H3I8H7iurM9RPz0h8ClB8VYLNk
-QQHEEzfO3ahnHyZr5lsY2718RZjXjqvkugEkT/cH5ve/iRscA7gMeLogXUl8WIMS
-jwuYDIWUWkYN6vo5T2vdVQAXrUeTfRrM5sfYmfdM40UlVlFoQtCB7pu3oy/O5Fcz
-wg+d9eEHzRD56gA2wRC1I0IO5wtffxgg+OUdWYnsSMLgtLJr8zKQh/whPQUgRtNu
-oXQCyaFwZu75Y8tMcf/KuX2nyvhX1hgcpYbZbKC+zwYhq4DmyDtEfte2VlXdBnx9
-LHdhp7EuMmQLMV45GyrSPdUwzbFkaXJRcTjTY3vLW+5AbhrZzgvtPjinsE71LNEq
-Vqeh+iz4cUh3JUokpgQu3lqAVvHFtier43v4Z71qjrxhgapZaja6yZOMPoa7FoL2
-7F6eeUyB7GuiI0e9Dh5PcYij+DCU6ZDXy1WUCfbWEbjzJC+cERgNbHqJoeBY1Xcw
-O9nj4Ziijv0rukUMpY3bSM71Gnd13VqWonMtqMp1cOIKfDlMmCWAtXGq56vH9StW
-aCHT/vQy7CWX2U+37CmV
-=+aFs
------END PGP SIGNATURE-----
-
---DocE+STaALJfprDB--
-
-
---===============8475757031298708930==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8475757031298708930==--
