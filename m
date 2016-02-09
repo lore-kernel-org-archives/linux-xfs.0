@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5452B7CA4
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 19:14:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B2018F804B
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 17:14:02 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id H1czSfINb93pcXbE (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E3D9B29E2C
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 19:14:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9CFB3304032
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 17:14:08 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id gL7vKXNohyJVDPDr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 17:13:59 -0800 (PST)
-Subject: [PATCH 20/23] reflink: test aio copy on write
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2016 17:14:05 -0800 (PST)
+Subject: [PATCH 21/23] xfs: aio cow tests
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 08 Feb 2016 17:13:55 -0800
-Message-ID: <20160209011355.23099.80973.stgit@birch.djwong.org>
+Date: Mon, 08 Feb 2016 17:14:01 -0800
+Message-ID: <20160209011401.23099.38.stgit@birch.djwong.org>
 In-Reply-To: <20160209011145.23099.95354.stgit@birch.djwong.org>
 References: <20160209011145.23099.95354.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,38 +31,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Make sure that copy on write works with the AIO path.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/329     |  105 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/329.out |   12 +++++
- tests/generic/330     |   96 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/330.out |   11 +++++
- tests/generic/331     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/331.out |   12 +++++
- tests/generic/332     |   97 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/332.out |   11 +++++
- tests/generic/group   |    4 ++
- 9 files changed, 455 insertions(+)
- create mode 100755 tests/generic/329
- create mode 100644 tests/generic/329.out
- create mode 100755 tests/generic/330
- create mode 100644 tests/generic/330.out
- create mode 100755 tests/generic/331
- create mode 100644 tests/generic/331.out
- create mode 100755 tests/generic/332
- create mode 100644 tests/generic/332.out
+ tests/xfs/237     |  107 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/237.out |   12 ++++++
+ tests/xfs/239     |   98 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/239.out |   11 +++++
+ tests/xfs/240     |  109 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/240.out |   12 ++++++
+ tests/xfs/241     |   99 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/241.out |   11 +++++
+ tests/xfs/group   |    4 ++
+ 9 files changed, 463 insertions(+)
+ create mode 100755 tests/xfs/237
+ create mode 100644 tests/xfs/237.out
+ create mode 100755 tests/xfs/239
+ create mode 100644 tests/xfs/239.out
+ create mode 100755 tests/xfs/240
+ create mode 100644 tests/xfs/240.out
+ create mode 100755 tests/xfs/241
+ create mode 100644 tests/xfs/241.out
 
 
-diff --git a/tests/generic/329 b/tests/generic/329
+diff --git a/tests/xfs/237 b/tests/xfs/237
 new file mode 100755
-index 0000000..cf6dab0
+index 0000000..8288724
 --- /dev/null
-+++ b/tests/generic/329
-@@ -0,0 +1,105 @@
++++ b/tests/xfs/237
+@@ -0,0 +1,107 @@
 +#! /bin/bash
-+# FS QA Test No. 329
++# FS QA Test No. 237
 +#
 +# Test AIO DIO CoW behavior when the write temporarily fails.
 +#
@@ -95,7 +93,7 @@ index 0000000..cf6dab0
 +_cleanup()
 +{
 +    cd /
-+    rm -rf "$tmp".* "$TEST_DIR/moo"
++    rm -rf "$tmp".* "$testdir" "$TEST_DIR/moo"
 +    _dmerror_cleanup
 +}
 +
@@ -110,6 +108,7 @@ index 0000000..cf6dab0
 +_require_scratch_reflink
 +_require_cp_reflink
 +_require_dm_target error
++_require_xfs_io_command "cowextsize"
 +_require_aiodio "aiocp"
 +
 +rm -f "$seqres.full"
@@ -135,6 +134,7 @@ index 0000000..cf6dab0
 +test $space_needed -gt $space_avail && _notrun "Not enough space. $space_avail < $space_needed"
 +
 +echo "Create the original files"
++"$XFS_IO_PROG" -c "cowextsize $((blksz * bsz * 2))" "$testdir"
 +"$XFS_IO_PROG" -f -c "pwrite -S 0x61 -b $((blksz * bsz)) 0 $((blksz * nr))" "$testdir/file1" >> "$seqres.full"
 +_cp_reflink "$testdir/file1" "$testdir/file2" >> "$seqres.full"
 +_dmerror_unmount
@@ -166,32 +166,32 @@ index 0000000..cf6dab0
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/329.out b/tests/generic/329.out
+diff --git a/tests/xfs/237.out b/tests/xfs/237.out
 new file mode 100644
-index 0000000..f14726c
+index 0000000..c83dd8b
 --- /dev/null
-+++ b/tests/generic/329.out
++++ b/tests/xfs/237.out
 @@ -0,0 +1,12 @@
-+QA output created by 329
++QA output created by 237
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-329/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-329/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-237/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-237/file2
 +CoW and unmount
 +write missed bytes expect 8388608 got 0
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-329/file1
-+d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-329/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-237/file1
++d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-237/file2
 +Check for damage
-diff --git a/tests/generic/330 b/tests/generic/330
+diff --git a/tests/xfs/239 b/tests/xfs/239
 new file mode 100755
-index 0000000..d720f58
+index 0000000..dfb1107
 --- /dev/null
-+++ b/tests/generic/330
-@@ -0,0 +1,96 @@
++++ b/tests/xfs/239
+@@ -0,0 +1,98 @@
 +#! /bin/bash
-+# FS QA Test No. 330
++# FS QA Test No. 239
 +#
 +# Test AIO DIO CoW behavior.
 +#
@@ -224,7 +224,7 @@ index 0000000..d720f58
 +_cleanup()
 +{
 +    cd /
-+    rm -rf "$tmp".* "$TEST_DIR/moo"
++    rm -rf "$tmp".* "$testdir" "$TEST_DIR/moo"
 +}
 +
 +# get standard environment, filters and checks
@@ -236,6 +236,7 @@ index 0000000..d720f58
 +_supported_os Linux
 +_require_scratch_reflink
 +_require_cp_reflink
++_require_xfs_io_command "cowextsize"
 +_require_aiodio "aiocp"
 +
 +rm -f "$seqres.full"
@@ -260,6 +261,7 @@ index 0000000..d720f58
 +test $space_needed -gt $space_avail && _notrun "Not enough space. $space_avail < $space_needed"
 +
 +echo "Create the original files"
++"$XFS_IO_PROG" -c "cowextsize $((blksz * bsz * 2))" "$testdir"
 +"$XFS_IO_PROG" -f -c "pwrite -S 0x61 -b $((blksz * bsz)) 0 $((blksz * nr))" "$testdir/file1" >> "$seqres.full"
 +_cp_reflink "$testdir/file1" "$testdir/file2" >> "$seqres.full"
 +_scratch_remount
@@ -286,31 +288,31 @@ index 0000000..d720f58
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/330.out b/tests/generic/330.out
+diff --git a/tests/xfs/239.out b/tests/xfs/239.out
 new file mode 100644
-index 0000000..9a33a22
+index 0000000..a123da9
 --- /dev/null
-+++ b/tests/generic/330.out
++++ b/tests/xfs/239.out
 @@ -0,0 +1,11 @@
-+QA output created by 330
++QA output created by 239
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-330/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-330/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-239/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-239/file2
 +CoW and unmount
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-330/file1
-+7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-330/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-239/file1
++7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-239/file2
 +Check for damage
-diff --git a/tests/generic/331 b/tests/generic/331
+diff --git a/tests/xfs/240 b/tests/xfs/240
 new file mode 100755
-index 0000000..589150b
+index 0000000..100beba
 --- /dev/null
-+++ b/tests/generic/331
-@@ -0,0 +1,107 @@
++++ b/tests/xfs/240
+@@ -0,0 +1,109 @@
 +#! /bin/bash
-+# FS QA Test No. 331
++# FS QA Test No. 240
 +#
 +# Test AIO CoW behavior when the write temporarily fails.
 +#
@@ -343,7 +345,7 @@ index 0000000..589150b
 +_cleanup()
 +{
 +    cd /
-+    rm -rf "$tmp".* "$TEST_DIR/moo"
++    rm -rf "$tmp".* "$testdir" "$TEST_DIR/moo"
 +    _dmerror_cleanup
 +}
 +
@@ -358,6 +360,7 @@ index 0000000..589150b
 +_require_scratch_reflink
 +_require_cp_reflink
 +_require_dm_target error
++_require_xfs_io_command "cowextsize"
 +AIO_TEST="src/aio-dio-regress/aiocp"
 +test -x "$AIO_TEST" || _notrun "aiocp not built"
 +
@@ -384,6 +387,7 @@ index 0000000..589150b
 +test $space_needed -gt $space_avail && _notrun "Not enough space. $space_avail < $space_needed"
 +
 +echo "Create the original files"
++"$XFS_IO_PROG" -c "cowextsize $((blksz * bsz * 2))" "$testdir"
 +"$XFS_IO_PROG" -f -c "pwrite -S 0x61 -b $((blksz * bsz)) 0 $((blksz * nr))" "$testdir/file1" >> "$seqres.full"
 +_cp_reflink "$testdir/file1" "$testdir/file2" >> "$seqres.full"
 +_dmerror_unmount
@@ -416,32 +420,32 @@ index 0000000..589150b
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/331.out b/tests/generic/331.out
+diff --git a/tests/xfs/240.out b/tests/xfs/240.out
 new file mode 100644
-index 0000000..adbf841
+index 0000000..1a22e8a
 --- /dev/null
-+++ b/tests/generic/331.out
++++ b/tests/xfs/240.out
 @@ -0,0 +1,12 @@
-+QA output created by 331
++QA output created by 240
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-331/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-331/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-240/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-240/file2
 +CoW and unmount
 +fdatasync: Input/output error
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-331/file1
-+d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-331/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-240/file1
++d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-240/file2
 +Check for damage
-diff --git a/tests/generic/332 b/tests/generic/332
+diff --git a/tests/xfs/241 b/tests/xfs/241
 new file mode 100755
-index 0000000..7c24a61
+index 0000000..3fdb9c3
 --- /dev/null
-+++ b/tests/generic/332
-@@ -0,0 +1,97 @@
++++ b/tests/xfs/241
+@@ -0,0 +1,99 @@
 +#! /bin/bash
-+# FS QA Test No. 332
++# FS QA Test No. 241
 +#
 +# Test AIO CoW behavior.
 +#
@@ -474,7 +478,7 @@ index 0000000..7c24a61
 +_cleanup()
 +{
 +    cd /
-+    rm -rf "$tmp".* "$TEST_DIR/moo"
++    rm -rf "$tmp".* "$testdir" "$TEST_DIR/moo"
 +}
 +
 +# get standard environment, filters and checks
@@ -486,6 +490,7 @@ index 0000000..7c24a61
 +_supported_os Linux
 +_require_scratch_reflink
 +_require_cp_reflink
++_require_xfs_io_command "cowextsize"
 +AIO_TEST="src/aio-dio-regress/aiocp"
 +test -x "$AIO_TEST" || _notrun "aiocp not built"
 +
@@ -511,6 +516,7 @@ index 0000000..7c24a61
 +test $space_needed -gt $space_avail && _notrun "Not enough space. $space_avail < $space_needed"
 +
 +echo "Create the original files"
++"$XFS_IO_PROG" -c "cowextsize $((blksz * bsz * 2))" "$testdir"
 +"$XFS_IO_PROG" -f -c "pwrite -S 0x61 -b $((blksz * bsz)) 0 $((blksz * nr))" "$testdir/file1" >> "$seqres.full"
 +_cp_reflink "$testdir/file1" "$testdir/file2" >> "$seqres.full"
 +_scratch_remount
@@ -537,35 +543,39 @@ index 0000000..7c24a61
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/332.out b/tests/generic/332.out
+diff --git a/tests/xfs/241.out b/tests/xfs/241.out
 new file mode 100644
-index 0000000..b584b1e
+index 0000000..a7e7df2
 --- /dev/null
-+++ b/tests/generic/332.out
++++ b/tests/xfs/241.out
 @@ -0,0 +1,11 @@
-+QA output created by 332
++QA output created by 241
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-332/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-332/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-241/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-241/file2
 +CoW and unmount
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-332/file1
-+7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-332/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-241/file1
++7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-241/file2
 +Check for damage
-diff --git a/tests/generic/group b/tests/generic/group
-index d4531f8..b5ae5ad 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -331,3 +331,7 @@
- 326 auto quick clone
- 327 auto quick clone
- 328 auto quick clone
-+329 auto quick clone
-+330 auto quick clone
-+331 auto quick clone
-+332 auto quick clone
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 1d08065..c0ce1f4 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -234,7 +234,11 @@
+ 234 auto quick rmap
+ 235 fuzzers rmap
+ 236 auto quick rmap
++237 auto quick clone
+ 238 auto quick metadata ioctl
++239 auto quick clone
++240 auto quick clone
++241 auto quick clone
+ 242 auto quick prealloc
+ 244 auto quota quick
+ 250 auto quick rw prealloc metadata
 
 _______________________________________________
 xfs mailing list
