@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E76477CA2
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 17:33:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DD3BF8F8033
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 15:33:54 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A419B7CA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 18:12:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 83408304032
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2016 16:12:51 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	uBzTebMpZKglB7Rm for <xfs@oss.sgi.com>;
-	Mon, 08 Feb 2016 15:33:52 -0800 (PST)
-Date: Tue, 9 Feb 2016 10:33:50 +1100
+	Eu3siw81xhqgGyRs for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2016 16:12:45 -0800 (PST)
+Date: Tue, 9 Feb 2016 11:12:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: log recovery needs to be aware of CONFIG_XFS_RT now
-Message-ID: <20160208233350.GO27429@dastard>
-References: <20160208060751.GA27429@dastard>
-	<20160208153720.GG19597@bfoster.bfoster>
-	<20160208195253.GI27429@dastard>
+Subject: Re: [PATCH 1/7] repair: parallelise phase 7
+Message-ID: <20160209001234.GP27429@dastard>
+References: <1454627108-19036-1-git-send-email-david@fromorbit.com>
+	<1454627108-19036-2-git-send-email-david@fromorbit.com>
+	<20160208085555.GD5534@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160208195253.GI27429@dastard>
+In-Reply-To: <20160208085555.GD5534@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Feb 08, 2016 at 12:55:55AM -0800, Christoph Hellwig wrote:
+> > +	irec = findfirst_inode_rec(agno);
+> > +
+> > +	while (irec != NULL)  {
+> > +		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
+> > +			ASSERT(is_inode_confirmed(irec, j));
+> > +
+> > +			if (is_inode_free(irec, j))
+> > +				continue;
+> > +
+> > +			ASSERT(no_modify || is_inode_reached(irec, j));
+> > +
+> > +			nrefs = num_inode_references(irec, j);
+> > +			ASSERT(no_modify || nrefs > 0);
+> > +
+> > +			if (get_inode_disk_nlinks(irec, j) != nrefs)
+> > +				update_inode_nlinks(wq->mp,
+> > +					XFS_AGINO_TO_INO(wq->mp, agno,
+> > +						irec->ino_startnum + j),
+> > +					nrefs);
+> > +		}
+> > +		irec = next_ino_rec(irec);
+> 
+> Wouldn't this look be slightly cleaner as:
+> 
+> 	for (irec = findfirst_inode_rec(agno);
+> 	     irec;
+> 	     irec = next_ino_rec(irec)) {
 
-As it uses buffer verifiers that only exist when CONFIG_XFS_RT=y.
+Yup, done.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-Note: I will fold this back into the original patch that caused
-this build regression and rebuild the for-next tree.
+Cheers,
 
- fs/xfs/xfs_log_recover.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 23ad143..1dc0e14 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2472,11 +2472,13 @@ xlog_recover_validate_buf_type(
- 		}
- 		bp->b_ops = &xfs_sb_buf_ops;
- 		break;
-+#ifdef CONFIG_XFS_RT
- 	case XFS_BLFT_RTBITMAP_BUF:
- 	case XFS_BLFT_RTSUMMARY_BUF:
- 		/* no magic numbers for verification of RT buffers */
- 		bp->b_ops = &xfs_rtbuf_ops;
- 		break;
-+#endif /* CONFIG_XFS_RT */
- 	default:
- 		xfs_warn(mp, "Unknown buffer type %d!",
- 			 xfs_blft_from_flags(buf_f));
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
