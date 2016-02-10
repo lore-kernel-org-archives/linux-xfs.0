@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 98A0D7CA2
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 05:36:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7567B304062
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:36:12 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id iycftzDZjf3ECCuv (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:36:10 -0800 (PST)
-Date: Wed, 10 Feb 2016 03:36:09 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/8] xfs: don't chain ioends during writepage submission
-Message-ID: <20160210113609.GC15221@infradead.org>
-References: <1455094043-9694-1-git-send-email-david@fromorbit.com>
-	<1455094043-9694-7-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 353157CA4
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 07:18:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 098358F8033
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 05:18:20 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id OhcCZvlfsyQVXMf4 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 05:18:18 -0800 (PST)
+Date: Wed, 10 Feb 2016 08:18:17 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: don't chain ioends during writepage submission
+Message-ID: <20160210131816.GB48974@bfoster.bfoster>
+References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
+	<1454910258-7578-6-git-send-email-david@fromorbit.com>
+	<20160209142355.GB25829@bfoster.bfoster>
+	<20160209215900.GH14668@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455094043-9694-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <20160209215900.GH14668@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,77 +35,106 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> -STATIC void
-> +STATIC int
->  xfs_submit_ioend(
->  	struct writeback_control *wbc,
->  	xfs_ioend_t		*ioend,
->  	int			fail)
+On Wed, Feb 10, 2016 at 08:59:00AM +1100, Dave Chinner wrote:
+> On Tue, Feb 09, 2016 at 09:23:55AM -0500, Brian Foster wrote:
+> > On Mon, Feb 08, 2016 at 04:44:18PM +1100, Dave Chinner wrote:
+> > > @@ -738,29 +726,22 @@ xfs_writepage_submit(
+> > >  	struct writeback_control *wbc,
+> > >  	int			status)
+> > >  {
+> > > -	struct blk_plug		plug;
+> > > -
+> > > -	/* Reserve log space if we might write beyond the on-disk inode size. */
+> > > -	if (!status && wpc->ioend && wpc->ioend->io_type != XFS_IO_UNWRITTEN &&
+> > > -	    xfs_ioend_is_append(wpc->ioend))
+> > > -		status = xfs_setfilesize_trans_alloc(wpc->ioend);
+> > > -
+> > > -	if (wpc->iohead) {
+> > > -		blk_start_plug(&plug);
+> > > -		xfs_submit_ioend(wbc, wpc->iohead, status);
+> > > -		blk_finish_plug(&plug);
+> > > -	}
+> > 
+> > We've dropped our plug here but I don't see anything added in
+> > xfs_vm_writepages(). Shouldn't we have one there now that ioends are
+> > submitted as we go? generic_writepages() uses one around its
+> > write_cache_pages() call..
+> 
+> It's not really necessary, as we now have higher level plugging in
+> the writeback go will get flushed on context switch, and if we don't
+> have a high level plug (e.g. fsync triggered writeback), then we
+> submit the IO immediately, just like flushing the plug here would do
+> anyway....
+> 
 
-No that almost all of the function is rewritten can you rename
-fail to error or status?  fail always suggests a boolean to me and
-is rather confusing.
+Ok, I'm digging around the wb code a bit and I see plugs in/around
+wb_writeback(), so I assume that's what you're referring to in the first
+case. I'm not quite following the fsync case though...
 
-> + * Return the ioend we finished off so that the caller can submit it
-> + * once it has finished processing the dirty page.
->   */
-> -STATIC void
-> +STATIC struct xfs_ioend *
->  xfs_add_to_ioend(
->  	struct inode		*inode,
->  	struct buffer_head	*bh,
->  	xfs_off_t		offset,
->  	struct xfs_writepage_ctx *wpc)
->  {
-> +	struct xfs_ioend	*prev = NULL;
-> +
->  	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
->  	    bh->b_blocknr != wpc->last_block + 1) {
->  		struct xfs_ioend	*new;
->  
-> +		prev = wpc->ioend;
+In the current upstream code, fsync() leads to the following call chain:
 
-Looking at the new list_head based code it might be either to just
-pass in a pointer to the submit_list and just add the previous ioend
-here directly.
+  filemap_write_and_wait_range()
+    __filemap_fdatawrite_range()
+      do_writepages()
+        xfs_vm_writepages()
+          generic_writepages()
+            blk_start_plug()
+            write_cache_pages()
+            blk_finish_plug()
 
-> +	LIST_HEAD(submit_list);
-> +	struct xfs_ioend	*ioend, *next;
->  	struct buffer_head	*bh, *head;
->  	ssize_t			len = 1 << inode->i_blkbits;
->  	int			error = 0;
->  	int			uptodate = 1;
->  	int			count = 0;
+After this series, we have the following:
 
-The count variable is pointless now - we only check for it being
-non-zero, and we can do the same with a list_emptry on submit_list.
+  filemap_write_and_wait_range()
+    __filemap_fdatawrite_range()
+      do_writepages()
+        xfs_vm_writepages() 
+          write_cache_pages()
 
->  
-> +
->  	bh = head = page_buffers(page);
->  	offset = page_offset(page);
+... with no plug that I can see. What am I missing?
+      
+...
+> > > -	else {
+> > > +		while (ioend_to_submit) {
+> > > +			struct xfs_ioend *next = ioend_to_submit->io_list;
+> > > +
+> > > +			ioend_to_submit->io_list = NULL;
+> > > +			xfs_submit_ioend(wbc, ioend_to_submit, 0);
+> > > +			ioend_to_submit = next;
+> > > +		}
+> > > +	} else {
+> > >  		xfs_aops_discard_page(page);
+> > >  		ClearPageUptodate(page);
+> > >  		unlock_page(page);
+> > 
+> > If we have an error and count == 0, we know that ioend_to_submit is NULL
+> > because that is only potentially set once the first buffer is added.
+> > That said, this doesn't mean that we don't have an ioend waiting on the
+> > wpc. If we do, we still return the error and the ioend is errored out.
+> > 
+> > I wonder if that is really necessary if we haven't added any buffers
+> > from the page..? Could we submit the ioend properly in that case? OTOH,
+> > that might complicate the error reporting and an error here might be
+> > serious enough that it isn't worth it, as opposed to just making sure we
+> > clean up everything appropriately.
+> 
+> The way I've done it is the same as the existing code - on error the
+> entire ioend chain that has been built is errored out. I'd prefer to
+> keep it that way right now to minimise the potential behavioural
+> changes of the patch series. We can look to changing to partial
+> submission in a separate patch set if it makes sense to do so.
+> 
 
-nit: pointless second empty line added above
+I noticed that the existing code is roughly equivalent, so that's fair I
+think. Thanks.
 
->  	ret = xfs_do_writepage(page, wbc, &wpc);
-> -	return xfs_writepage_submit(&wpc, wbc, ret);
-> +	if (wpc.ioend)
-> +		xfs_submit_ioend(wbc, wpc.ioend, ret);
-> +	return ret;
->  }
->  
->  STATIC int
-> @@ -1019,7 +1022,9 @@ xfs_vm_writepages(
->  
->  	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
->  	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
-> -	return xfs_writepage_submit(&wpc, wbc, ret);
-> +	if (wpc.ioend)
-> +		xfs_submit_ioend(wbc, wpc.ioend, ret);
-> +	return ret;
+Brian
 
-And this is where ignoreing the xfs_setfilesize_trans_alloc errors
-reappears after a previous patch mostly fixed it up.
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
