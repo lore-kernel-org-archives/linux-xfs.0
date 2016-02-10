@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 56F317CA2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7B4FB7CA7
 	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 02:48:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 309428F804B
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 00:47:57 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DA22AAC005
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 00:47:59 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	dT4x3Vq95DuRZA8r for <xfs@oss.sgi.com>;
-	Wed, 10 Feb 2016 00:47:54 -0800 (PST)
+	JIdk5H6AHjjFqirr for <xfs@oss.sgi.com>;
+	Wed, 10 Feb 2016 00:47:58 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aTQQo-0005Bh-83
+	(envelope-from <dave@fromorbit.com>) id 1aTQQo-0005Bg-7j
 	for xfs@oss.sgi.com; Wed, 10 Feb 2016 19:47:26 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aTQQo-0002aQ-7I
+	(envelope-from <dave@disappointment.disaster>) id 1aTQQo-0002aL-6y
 	for xfs@oss.sgi.com; Wed, 10 Feb 2016 19:47:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/8] xfs: remove xfs_cancel_ioend
-Date: Wed, 10 Feb 2016 19:47:17 +1100
-Message-Id: <1455094043-9694-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/8] xfs: remove nonblocking mode from xfs_vm_writepage
+Date: Wed, 10 Feb 2016 19:47:16 +1100
+Message-Id: <1455094043-9694-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455094043-9694-1-git-send-email-david@fromorbit.com>
 References: <1455094043-9694-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,155 +39,88 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We currently have code to cancel ioends being built because we
-change bufferhead state as we build the ioend. On error, this needs
-to be unwound and so we have cancelling code that walks the buffers
-on the ioend chain and undoes these state changes.
+Remove the nonblocking optimisation done for mapping lookups during
+writeback. It's not clear that leaving a hole in the writeback range
+just because we couldn't get a lock is really a win, as it makes us
+do another small random IO later on rather than a large sequential
+IO now.
 
-However, the IO submission path already handles state changes for
-buffers when a submission error occurs, so we don't really need a
-separate cancel function to do this - we can simply submit the
-ioend chain with the specific error and it will be cancelled rather
-than submitted.
-
-Hence we can remove the explicit cancel code and just rely on
-submission to deal with the error correctly.
+As this gets in the way of sane error handling later on, just remove
+for the moment and we can re-introduce an equivalent optimisation in
+future if we see problems due to extent map lock contention.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 94 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 47 insertions(+), 47 deletions(-)
+ fs/xfs/xfs_aops.c | 20 +++-----------------
+ 1 file changed, 3 insertions(+), 17 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 00452cb..4fe74727 100644
+index 14ac982..00452cb 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -528,38 +528,6 @@ xfs_submit_ioend(
- }
+@@ -289,8 +289,7 @@ xfs_map_blocks(
+ 	struct inode		*inode,
+ 	loff_t			offset,
+ 	struct xfs_bmbt_irec	*imap,
+-	int			type,
+-	int			nonblocking)
++	int			type)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -306,12 +305,7 @@ xfs_map_blocks(
+ 	if (type == XFS_IO_UNWRITTEN)
+ 		bmapi_flags |= XFS_BMAPI_IGSTATE;
  
- /*
-- * Cancel submission of all buffer_heads so far in this endio.
-- * Toss the endio too.  Only ever called for the initial page
-- * in a writepage request, so only ever one page.
-- */
--STATIC void
--xfs_cancel_ioend(
--	xfs_ioend_t		*ioend)
--{
--	xfs_ioend_t		*next;
--	struct buffer_head	*bh, *next_bh;
+-	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
+-		if (nonblocking)
+-			return -EAGAIN;
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	}
 -
--	do {
--		next = ioend->io_list;
--		bh = ioend->io_buffer_head;
--		do {
--			next_bh = bh->b_private;
--			clear_buffer_async_write(bh);
--			/*
--			 * The unwritten flag is cleared when added to the
--			 * ioend. We're not submitting for I/O so mark the
--			 * buffer unwritten again for next time around.
--			 */
--			if (ioend->io_type == XFS_IO_UNWRITTEN)
--				set_buffer_unwritten(bh);
--			unlock_buffer(bh);
--		} while ((bh = next_bh) != NULL);
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+@@ -961,7 +955,6 @@ xfs_vm_writepage(
+ 	ssize_t			len;
+ 	int			err, imap_valid = 0, uptodate = 1;
+ 	int			count = 0;
+-	int			nonblocking = 0;
+ 
+ 	trace_xfs_writepage(inode, page, 0, 0);
+ 
+@@ -1061,9 +1054,6 @@ xfs_vm_writepage(
+ 	offset = page_offset(page);
+ 	type = XFS_IO_OVERWRITE;
+ 
+-	if (wbc->sync_mode == WB_SYNC_NONE)
+-		nonblocking = 1;
 -
--		mempool_free(ioend, xfs_ioend_pool);
--	} while ((ioend = next) != NULL);
--}
+ 	do {
+ 		int new_ioend = 0;
+ 
+@@ -1123,8 +1113,7 @@ xfs_vm_writepage(
+ 			 * time.
+ 			 */
+ 			new_ioend = 1;
+-			err = xfs_map_blocks(inode, offset, &imap, type,
+-					     nonblocking);
++			err = xfs_map_blocks(inode, offset, &imap, type);
+ 			if (err)
+ 				goto error;
+ 			imap_valid = xfs_imap_valid(inode, &imap, offset);
+@@ -1194,9 +1183,6 @@ error:
+ 	if (iohead)
+ 		xfs_cancel_ioend(iohead);
+ 
+-	if (err == -EAGAIN)
+-		goto redirty;
 -
--/*
-  * Test to see if we've been building up a completion structure for
-  * earlier buffers -- if so, we try to append to this ioend if we
-  * can, otherwise we finish off any current ioend and start another.
-@@ -931,6 +899,28 @@ out_invalidate:
- 	return;
- }
- 
-+static int
-+xfs_writepage_submit(
-+	struct xfs_ioend	*ioend,
-+	struct xfs_ioend	*iohead,
-+	struct writeback_control *wbc,
-+	int			status)
-+{
-+	struct blk_plug		plug;
-+
-+	/* Reserve log space if we might write beyond the on-disk inode size. */
-+	if (!status && ioend && ioend->io_type != XFS_IO_UNWRITTEN &&
-+	    xfs_ioend_is_append(ioend))
-+		status = xfs_setfilesize_trans_alloc(ioend);
-+
-+	if (iohead) {
-+		blk_start_plug(&plug);
-+		xfs_submit_ioend(wbc, iohead, status);
-+		blk_finish_plug(&plug);
-+	}
-+	return status;
-+}
-+
- /*
-  * Write out a dirty page.
-  *
-@@ -1142,6 +1132,7 @@ xfs_vm_writepage(
- 		return 0;
- 
- 	ASSERT(iohead);
-+	ASSERT(err == 0);
- 
- 	/*
- 	 * Any errors from this point onwards need tobe reported through the IO
-@@ -1167,25 +1158,34 @@ xfs_vm_writepage(
- 				  wbc, end_index);
- 	}
- 
--
--	/*
--	 * Reserve log space if we might write beyond the on-disk inode size.
--	 */
--	err = 0;
--	if (ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
--		err = xfs_setfilesize_trans_alloc(ioend);
--
--	xfs_submit_ioend(wbc, iohead, err);
--
-+	xfs_writepage_submit(ioend, iohead, wbc, err);
- 	return 0;
- 
- error:
--	if (iohead)
--		xfs_cancel_ioend(iohead);
-+	/*
-+	 * On error, we have to fail the iohead here because we buffers locked
-+	 * in the ioend chain. If we don't do this, we'll deadlock invalidating
-+	 * the page as that tries to lock the buffers on the page. Also, because
-+	 * we may have set pages under writeback, we have to run IO completion to
-+	 * mark the error state of the IO appropriately, so we can't cancel the
-+	 * ioend directly here. That means we have to mark this page as under
-+	 * writeback if we included any buffers from it in the ioend chain.
-+	 */
-+	if (count)
-+		xfs_start_page_writeback(page, 0, count);
-+	xfs_writepage_submit(ioend, iohead, wbc, err);
- 
--	xfs_aops_discard_page(page);
--	ClearPageUptodate(page);
--	unlock_page(page);
-+	/*
-+	 * We can only discard the page we had the IO error on if we haven't
-+	 * included it in the ioend above. If it has already been errored out,
-+	 * the it is unlocked and we can't touch it here.
-+	 */
-+	if (!count) {
-+		xfs_aops_discard_page(page);
-+		ClearPageUptodate(page);
-+		unlock_page(page);
-+	}
-+	mapping_set_error(page->mapping, err);
- 	return err;
- 
- redirty:
+ 	xfs_aops_discard_page(page);
+ 	ClearPageUptodate(page);
+ 	unlock_page(page);
 -- 
 2.5.0
 
