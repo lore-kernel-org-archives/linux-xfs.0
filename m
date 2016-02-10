@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 875207CA2
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 02:48:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 781A8304039
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 00:48:08 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vEJsSBT3XQWCZia5 for <xfs@oss.sgi.com>;
-	Wed, 10 Feb 2016 00:48:05 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aTQQo-0005Bj-9A
-	for xfs@oss.sgi.com; Wed, 10 Feb 2016 19:47:26 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aTQQo-0002aa-7v
-	for xfs@oss.sgi.com; Wed, 10 Feb 2016 19:47:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/8] xfs: xfs_cluster_write is redundant
-Date: Wed, 10 Feb 2016 19:47:19 +1100
-Message-Id: <1455094043-9694-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1455094043-9694-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0C2047CA3
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:05:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E2D498F8049
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 01:05:09 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id JbFvocT3OyUh2c9g (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 01:05:06 -0800 (PST)
+Date: Wed, 10 Feb 2016 01:05:06 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/8 v4] xfs: get rid of xfs_cluster_write
+Message-ID: <20160210090506.GA1508@infradead.org>
 References: <1455094043-9694-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1455094043-9694-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,285 +25,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Seems like only 4 patches made it through..
 
-xfs_cluster_write() is not necessary now that xfs_vm_writepages()
-aggregates writepage calls across a single mapping. This means we no
-longer need to do page lookups in xfs_cluster_write, so writeback
-only needs to look up th epage cache once per page being written.
-This also removes a large amount of mostly duplicate code between
-xfs_do_writepage() and xfs_convert_page().
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_aops.c | 214 ++----------------------------------------------------
- 1 file changed, 6 insertions(+), 208 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index c93de73..c9e14d3 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -656,179 +656,6 @@ xfs_check_page_type(
- 	return false;
- }
- 
--/*
-- * Allocate & map buffers for page given the extent map. Write it out.
-- * except for the original page of a writepage, this is called on
-- * delalloc/unwritten pages only, for the original page it is possible
-- * that the page has no mapping at all.
-- */
--STATIC int
--xfs_convert_page(
--	struct inode		*inode,
--	struct page		*page,
--	loff_t			tindex,
--	struct xfs_writepage_ctx *wpc,
--	struct writeback_control *wbc)
--{
--	struct buffer_head	*bh, *head;
--	xfs_off_t		end_offset;
--	unsigned long		p_offset;
--	int			len, page_dirty;
--	int			count = 0, done = 0, uptodate = 1;
--	xfs_off_t		offset = page_offset(page);
--
--	if (page->index != tindex)
--		goto fail;
--	if (!trylock_page(page))
--		goto fail;
--	if (PageWriteback(page))
--		goto fail_unlock_page;
--	if (page->mapping != inode->i_mapping)
--		goto fail_unlock_page;
--	if (!xfs_check_page_type(page, wpc->ioend->io_type, false))
--		goto fail_unlock_page;
--
--	/*
--	 * page_dirty is initially a count of buffers on the page before
--	 * EOF and is decremented as we move each into a cleanable state.
--	 *
--	 * Derivation:
--	 *
--	 * End offset is the highest offset that this page should represent.
--	 * If we are on the last page, (end_offset & (PAGE_CACHE_SIZE - 1))
--	 * will evaluate non-zero and be less than PAGE_CACHE_SIZE and
--	 * hence give us the correct page_dirty count. On any other page,
--	 * it will be zero and in that case we need page_dirty to be the
--	 * count of buffers on the page.
--	 */
--	end_offset = min_t(unsigned long long,
--			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
--			i_size_read(inode));
--
--	/*
--	 * If the current map does not span the entire page we are about to try
--	 * to write, then give up. The only way we can write a page that spans
--	 * multiple mappings in a single writeback iteration is via the
--	 * xfs_vm_writepage() function. Data integrity writeback requires the
--	 * entire page to be written in a single attempt, otherwise the part of
--	 * the page we don't write here doesn't get written as part of the data
--	 * integrity sync.
--	 *
--	 * For normal writeback, we also don't attempt to write partial pages
--	 * here as it simply means that write_cache_pages() will see it under
--	 * writeback and ignore the page until some point in the future, at
--	 * which time this will be the only page in the file that needs
--	 * writeback.  Hence for more optimal IO patterns, we should always
--	 * avoid partial page writeback due to multiple mappings on a page here.
--	 */
--	if (!xfs_imap_valid(inode, &wpc->imap, end_offset))
--		goto fail_unlock_page;
--
--	len = 1 << inode->i_blkbits;
--	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
--					PAGE_CACHE_SIZE);
--	p_offset = p_offset ? roundup(p_offset, len) : PAGE_CACHE_SIZE;
--	page_dirty = p_offset / len;
--
--	/*
--	 * The moment we find a buffer that doesn't match our current type
--	 * specification or can't be written, abort the loop and start
--	 * writeback. As per the above xfs_imap_valid() check, only
--	 * xfs_vm_writepage() can handle partial page writeback fully - we are
--	 * limited here to the buffers that are contiguous with the current
--	 * ioend, and hence a buffer we can't write breaks that contiguity and
--	 * we have to defer the rest of the IO to xfs_vm_writepage().
--	 */
--	bh = head = page_buffers(page);
--	do {
--		if (offset >= end_offset)
--			break;
--		if (!buffer_uptodate(bh))
--			uptodate = 0;
--		if (!(PageUptodate(page) || buffer_uptodate(bh))) {
--			done = 1;
--			break;
--		}
--
--		if (buffer_unwritten(bh) || buffer_delay(bh) ||
--		    buffer_mapped(bh)) {
--			if (buffer_unwritten(bh))
--				wpc->io_type = XFS_IO_UNWRITTEN;
--			else if (buffer_delay(bh))
--				wpc->io_type = XFS_IO_DELALLOC;
--			else
--				wpc->io_type = XFS_IO_OVERWRITE;
--
--			/*
--			 * imap should always be valid because of the above
--			 * partial page end_offset check on the imap.
--			 */
--			ASSERT(xfs_imap_valid(inode, &wpc->imap, offset));
--
--			lock_buffer(bh);
--			if (wpc->io_type != XFS_IO_OVERWRITE)
--				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
--			xfs_add_to_ioend(inode, bh, offset, wpc);
--
--			page_dirty--;
--			count++;
--		} else {
--			done = 1;
--			break;
--		}
--	} while (offset += len, (bh = bh->b_this_page) != head);
--
--	if (uptodate && bh == head)
--		SetPageUptodate(page);
--
--	if (count) {
--		if (--wbc->nr_to_write <= 0 &&
--		    wbc->sync_mode == WB_SYNC_NONE)
--			done = 1;
--	}
--	xfs_start_page_writeback(page, !page_dirty, count);
--
--	return done;
-- fail_unlock_page:
--	unlock_page(page);
-- fail:
--	return 1;
--}
--
--/*
-- * Convert & write out a cluster of pages in the same extent as defined
-- * by mp and following the start page.
-- */
--STATIC void
--xfs_cluster_write(
--	struct inode		*inode,
--	pgoff_t			tindex,
--	struct xfs_writepage_ctx *wpc,
--	struct writeback_control *wbc,
--	pgoff_t			tlast)
--{
--	struct pagevec		pvec;
--	int			done = 0, i;
--
--	pagevec_init(&pvec, 0);
--	while (!done && tindex <= tlast) {
--		unsigned len = min_t(pgoff_t, PAGEVEC_SIZE, tlast - tindex + 1);
--
--		if (!pagevec_lookup(&pvec, inode->i_mapping, tindex, len))
--			break;
--
--		for (i = 0; i < pagevec_count(&pvec); i++) {
--			done = xfs_convert_page(inode, pvec.pages[i], tindex++,
--						wpc, wbc);
--			if (done)
--				break;
--		}
--
--		pagevec_release(&pvec);
--		cond_resched();
--	}
--}
--
- STATIC void
- xfs_vm_invalidatepage(
- 	struct page		*page,
-@@ -945,7 +772,7 @@ xfs_do_writepage(
- 	struct buffer_head	*bh, *head;
- 	loff_t			offset;
- 	__uint64_t              end_offset;
--	pgoff_t                 end_index, last_index;
-+	pgoff_t                 end_index;
- 	ssize_t			len;
- 	int			err, uptodate = 1;
- 	int			count = 0;
-@@ -975,12 +802,9 @@ xfs_do_writepage(
- 	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
- 		goto redirty;
- 
--	/* Is this page beyond the end of the file? */
--	offset = i_size_read(inode);
--	end_index = offset >> PAGE_CACHE_SHIFT;
--	last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
--
- 	/*
-+	 * Is this page beyond the end of the file?
-+	 *
- 	 * The page index is less than the end_index, adjust the end_offset
- 	 * to the highest offset that this page should represent.
- 	 * -----------------------------------------------------
-@@ -991,6 +815,8 @@ xfs_do_writepage(
- 	 * |     desired writeback range    |      see else    |
- 	 * ---------------------------------^------------------|
- 	 */
-+	offset = i_size_read(inode);
-+	end_index = offset >> PAGE_CACHE_SHIFT;
- 	if (page->index < end_index)
- 		end_offset = (xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT;
- 	else {
-@@ -1119,35 +945,7 @@ xfs_do_writepage(
- 
- 	xfs_start_page_writeback(page, 1, count);
- 
--	/* if there is no IO to be submitted for this page, we are done */
--	if (!count)
--		return 0;
--
--	ASSERT(wpc->iohead);
--	ASSERT(err == 0);
--
--	/*
--	 * Any errors from this point onwards need tobe reported through the IO
--	 * completion path as we have marked the initial page as under writeback
--	 * and unlocked it.
--	 */
--	if (wpc->imap_valid) {
--		xfs_off_t		end_index;
--
--		end_index = wpc->imap.br_startoff + wpc->imap.br_blockcount;
--
--		/* to bytes */
--		end_index <<= inode->i_blkbits;
--
--		/* to pages */
--		end_index = (end_index - 1) >> PAGE_CACHE_SHIFT;
--
--		/* check against file size */
--		if (end_index > last_index)
--			end_index = last_index;
--
--		xfs_cluster_write(inode, page->index + 1, wpc, wbc, end_index);
--	}
-+	ASSERT(wpc->iohead || !count);
- 	return 0;
- 
- error:
--- 
-2.5.0
+On Wed, Feb 10, 2016 at 07:47:15PM +1100, Dave Chinner wrote:
+> 
+> Hi folks,
+> 
+> This is the 4th version of this series to followup on review
+> comments from Brian and Christoph. There are three new patches in
+> this series. Patch 2/8 is split out from patch 3/8 to document the
+> removal of the ioend cancelling code, spearate from the introduction
+> of the writepage context. Patches 7 and 8 are new patches (as in the
+> first time I've posted them) to demonstrate how to remove the IO
+> completion dependency on recording the bufferehads attached to the
+> ioend. This is the first step in removing bufferheads from the
+> writepage IO path - these are FYI patches, not patches I want to
+> have committed immediately.
+> 
+> The changes all run through xfstests on 4k and 1k block size
+> filesystems fine, and I think i addressed all the review comments.
+> Patch 6/8 changed enough that I removed Brian's reviewed-by from it
+> and so it will need to be looked at completely again.
+> 
+> -Dave.
+> 
+> Version 4:
+> - split xfs_ioend_cancel removal into it's own patch (patch 2)
+> - cleaned up submission of ioends to be consistent w.r.t. success
+>   and error paths (patch 3)
+> - made variables names less verbose (patch 6)
+> - got rid of xfs_writepage_submit() (patch 6)
+> - use a struct list_head for ioend chaining (patch 6)
+> - consolidated ioend submission paths to use common code (patch 6)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
