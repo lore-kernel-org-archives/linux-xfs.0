@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6DE897CA2
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 05:28:06 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B22837CA2
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 05:31:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C1FB8F8049
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:28:03 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 91F11304066
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:31:29 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id i86t3xMIdWZXz9eY (version=TLSv1.2
+	ESMTP id nINsPc7cDzsqURRg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:28:01 -0800 (PST)
-Date: Wed, 10 Feb 2016 03:28:00 -0800
+	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 03:31:27 -0800 (PST)
+Date: Wed, 10 Feb 2016 03:31:26 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/8] xfs: remove xfs_cancel_ioend
-Message-ID: <20160210112800.GA15221@infradead.org>
+Subject: Re: [PATCH 3/8] xfs: Introduce writeback context for writepages
+Message-ID: <20160210113126.GB15221@infradead.org>
 References: <1455094043-9694-1-git-send-email-david@fromorbit.com>
-	<1455094043-9694-3-git-send-email-david@fromorbit.com>
+	<1455094043-9694-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455094043-9694-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1455094043-9694-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +33,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> +static int
-> +xfs_writepage_submit(
-> +	struct xfs_ioend	*ioend,
-> +	struct xfs_ioend	*iohead,
-> +	struct writeback_control *wbc,
-> +	int			status)
-> +{
-> +	struct blk_plug		plug;
+> +	struct xfs_writepage_ctx wpc = {
+> +		.io_type = XFS_IO_OVERWRITE,
+> +	};
+> +	int			ret;
 > +
-> +	/* Reserve log space if we might write beyond the on-disk inode size. */
-> +	if (!status && ioend && ioend->io_type != XFS_IO_UNWRITTEN &&
-> +	    xfs_ioend_is_append(ioend))
-> +		status = xfs_setfilesize_trans_alloc(ioend);
-> +
-> +	if (iohead) {
-> +		blk_start_plug(&plug);
-> +		xfs_submit_ioend(wbc, iohead, status);
-> +		blk_finish_plug(&plug);
-> +	}
-> +	return status;
+> +	ret = xfs_do_writepage(page, wbc, &wpc);
+> +	return xfs_writepage_submit(&wpc, wbc, ret);
 > +}
+> +
+> +STATIC int
+>  xfs_vm_writepages(
+>  	struct address_space	*mapping,
+>  	struct writeback_control *wbc)
+>  {
+> +	struct xfs_writepage_ctx wpc = {
+> +		.io_type = XFS_IO_OVERWRITE,
+> +	};
 
-We return the xfs_setfilesize_trans_alloc failure status here,
-but none of the callers pick it up.  The way this is handled later
-changes a bit, but even at the end of the series only 1 of the
-three callers handles the error.
+Shouldn't we start out with an invalid (0) state, and just move
+the actual states up to start from 1?
+
+Otherwise looks fine,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
