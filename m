@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C53797CA8
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 13:07:43 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BE7907CAA
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 13:19:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AE07C8F8050
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 11:07:40 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id bcHripAoJA0JWVaP (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 11:07:39 -0800 (PST)
-Date: Wed, 10 Feb 2016 11:07:38 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: block allocations for the refcount btree
-Message-ID: <20160210190738.GA13051@infradead.org>
-References: <20160210093011.GA19147@infradead.org>
-	<20160210095010.GC23904@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5B4BFAC002
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 11:18:59 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Ir5CCVrsmk6RU1Zg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 10 Feb 2016 11:18:53 -0800 (PST)
+Date: Wed, 10 Feb 2016 11:18:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [LFS/MM TOPIC] fs reflink issues, fs online scrub/check, etc
+Message-ID: <20160210191848.GC6346@birch.djwong.org>
+References: <20160210191715.GB6339@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160210095010.GC23904@birch.djwong.org>
+In-Reply-To: <20160210191715.GB6339@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +29,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, ocfs2-devel@oss.oracle.com, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs <xfs@oss.sgi.com>
 
-On Wed, Feb 10, 2016 at 01:50:10AM -0800, Darrick J. Wong wrote:
-> That's odd... I'd have thought that the AG reservation would always be able
-> to handle a refcount btree expansion, since it calculates how many blocks
-> are needed to handle the worst case of 1 record per extent.  There's also
-> a bug where we undercount the number of blocks already used, so it should
-> have an extra big reservation.
-> 
-> OTOH I've seen occasional ENOSPCs in generic/186 and generic/168 too, so I
-> guess something's going wrong.  Maybe the xfs_ag_resv* tracepoints can help?
+[resend, email exploded, sorry...]
 
-I'm not seeing an ENOSPC, I run into:
+Hi,
 
-[  640.924891] XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 315
+I want to discuss a few FS related topics that I haven't already seen on
+the mailing lists:
 
-Which asserts that the current transaction is using up more blocks from
-its reservation than it reserved.  The AG reservation seems to operate
-on a different level than that.
+ * Shared pagecache pages for reflinked files (and by extension making dax
+   work with reflink on xfs)
+
+ * Providing a simple interface for scrubbing filesystem metadata in the
+   background (the online check thing).  Ideally we'd make it easy to discover
+   what kind of metadata there is to check and provide a simple interface to
+   check the metadata, once discovered.  This is a tricky interface topic
+   since FS design differs pretty widely.
+
+ * Rudimentary online repair and rebuilding (xfs) from secondary metadata
+
+ * Working out the variances in the btrfs/xfs/ocfs2/nfs reflink implementations
+   and making sure they all get test coverage
+
+I would also like participate in some of the proposed discussions:
+
+ * The ext4 summit (and whatever meeting of XFS devs may happen)
+
+ * Integrating existing filesystems into pmem, or hallway bofs about designing
+   new filesystems for pmem
+
+ * Actually seeing the fs developers (well, everyone!) in person again :)
+
+--Darrick
 
 _______________________________________________
 xfs mailing list
