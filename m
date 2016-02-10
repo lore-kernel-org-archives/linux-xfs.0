@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0DAB929DF5
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 22:49:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 92C16AC005
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 20:49:25 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TWh594ffnCwW2dNu for <xfs@oss.sgi.com>;
-	Tue, 09 Feb 2016 20:49:21 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 596AF63C607A
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 22:49:21 -0600 (CST)
-Subject: Re: [PATCH 2/2 v2] xfs_repair: new secondary superblock search
-	method] xfs_repair: new secondary superblock search method
-References: <1455068099-26992-1-git-send-email-billodo@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56BAC150.7070808@sandeen.net>
-Date: Tue, 9 Feb 2016 22:49:20 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DAE0629DF5
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 23:24:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CA81F304048
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2016 21:24:31 -0800 (PST)
+Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
+	ESMTP id jrAJouPMqn7Y9xSV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2016 21:24:23 -0800 (PST)
+Date: Wed, 10 Feb 2016 16:24:20 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: manual merge of the akpm-current tree with the xfs tree
+Message-ID: <20160210162420.2d1a352a@canb.auug.org.au>
 MIME-Version: 1.0
-In-Reply-To: <1455068099-26992-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,351 +26,402 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>, David Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: linux-next@vger.kernel.org, Ryan Ding <ryan.ding@oracle.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On 2/9/16 7:34 PM, Bill O'Donnell wrote:
-> Optimize secondary sb search, using similar method to find
-> fs geometry as that of xfs_mkfs. If this faster method fails
-> in finding a secondary sb, fall back to original brute force
-> slower search.
-> 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> ---
->  Makefile           |  2 +-
->  include/libxcmd.h  |  4 +++-
->  libxcmd/topology.c | 35 ++++++++++++++++++++++++++++----
->  repair/Makefile    |  4 ++--
->  repair/sb.c        | 58 ++++++++++++++++++++++++++++++++++++++++++++----------
->  5 files changed, 85 insertions(+), 18 deletions(-)
-> 
-> diff --git a/Makefile b/Makefile
-> index fca0a42..1d60d9c 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -80,7 +80,7 @@ fsr: libhandle
->  growfs: libxcmd
->  io: libxcmd libhandle
->  quota: libxcmd
-> -repair: libxlog
-> +repair: libxlog libxcmd
->  copy: libxlog
->  
->  ifeq ($(HAVE_BUILDDEFS), yes)
-> diff --git a/include/libxcmd.h b/include/libxcmd.h
-> index df7046e..b140adb 100644
-> --- a/include/libxcmd.h
-> +++ b/include/libxcmd.h
-> @@ -50,6 +50,8 @@ extern int
->  check_overwrite(
->  	char		*device);
->  
-> -
-> +extern int guess_default_geometry(__uint64_t *agsize,
-> +				  __uint64_t *agcount,
-> +				  libxfs_init_t x);
->  
->  #endif	/* __LIBXCMD_H__ */
-> diff --git a/libxcmd/topology.c b/libxcmd/topology.c
-> index 0eeea28..b98d9b9 100644
-> --- a/libxcmd/topology.c
-> +++ b/libxcmd/topology.c
-> @@ -192,7 +192,8 @@ out:
->  	return ret;
->  }
->  
-> -static void blkid_get_topology(
-> +static void
-> +blkid_get_topology(
->  	const char	*device,
->  	int		*sunit,
->  	int		*swidth,
-> @@ -284,7 +285,8 @@ check_overwrite(
->  	return 1;
->  }
->  
-> -static void blkid_get_topology(
-> +static void
-> +blkid_get_topology(
->  	const char	*device,
->  	int		*sunit,
->  	int		*swidth,
-> @@ -302,8 +304,8 @@ static void blkid_get_topology(
->  
->  #endif /* ENABLE_BLKID */
->  
-> -
-> -void get_topology(
-> +void
-> +get_topology(
->  	libxfs_init_t		*xi,
->  	struct fs_topology	*ft,
->  	int			force_overwrite)
-> @@ -346,3 +348,28 @@ void get_topology(
->  				   &lsectorsize, &psectorsize, force_overwrite);
->  	}
->  }
-> +
-> +int
-> +guess_default_geometry(__uint64_t *agsize, __uint64_t *agcount,
-> +		       libxfs_init_t x)
-> +{
-> +	struct fs_topology ft;
-> +	int blocklog;
+Hi Andrew,
 
-When in Rome:  :)
+Today's linux-next merge of the akpm-current tree got a conflict in:
 
-int
-guess_default_geometry(
-	__uint64_t	*agsize,
-	__uint64_t	*agcount,
-	libxfs_init_t	x)
-{
-...
+  fs/ocfs2/aops.c
 
-(sorry, forgot to mention that last time, but other functions in the
-file are laid out this way; it is easier to read)
+between commit:
 
-> +	__uint64_t	dblocks;
-> +	int		multidisk;
-> +
-> +	memset(&ft, 0, sizeof(ft));
-> +	get_topology(&x, &ft, 1);
-> +
-> +	/*
-> +	 * get geometry from get_topology result.
-> +	 * Use default block size (2^12)
-> +	 */
-> +	blocklog = 12;
-> +	multidisk = ft.dswidth | ft.dsunit;
-> +	dblocks = x.dsize >> (blocklog - BBSHIFT);
-> +	calc_default_ag_geometry(blocklog, dblocks, multidisk,
-> +				 agsize, agcount);
-> +
-> +	return blocklog;
-> +}
-> diff --git a/repair/Makefile b/repair/Makefile
-> index 251722b..d24ab1f 100644
-> --- a/repair/Makefile
-> +++ b/repair/Makefile
-> @@ -20,8 +20,8 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
->  	progress.c prefetch.c rt.c sb.c scan.c threads.c \
->  	versions.c xfs_repair.c
->  
-> -LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-> -LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
-> +LLDLIBS = $(LIBBLKID) $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) $(LIBXCMD)
-> +LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD)
->  LLDFLAGS = -static-libtool-libs
->  
->  default: depend $(LTCOMMAND)
-> diff --git a/repair/sb.c b/repair/sb.c
-> index 4eef14a..8bc246e 100644
-> --- a/repair/sb.c
-> +++ b/repair/sb.c
-> @@ -22,6 +22,7 @@
->  #include "globals.h"
->  #include "protos.h"
->  #include "err_protos.h"
-> +#include "libxcmd.h"
+  187372a3b9fa ("direct-io: always call ->end_io if non-NULL")
 
-Nitpick, we usually include that right after libxfs.h.
- 
->  #define BSIZE	(1024 * 1024)
->  
-> @@ -85,10 +86,11 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
->  }
->  
->  /*
-> - * find a secondary superblock, copy it into the sb buffer
-> + * find a secondary superblock, copy it into the sb buffer.
-> + * skipsize units is bytes, it contains either the agsize in bytes
-> + * (if known), or the minimum agsize in bytes if agsize unknown.
->   */
+from the xfs tree and commit:
 
-Ok, so this is a little confused.  There are actually 3 relevant
-parameters here:
+  8e1fbb488a18 ("ocfs2: fix sparse file & data ordering issue in direct io")
 
-1) The place to start reading
-2) The number of bytes to read at that point
-3) How far to seek forward for the next read
+from the akpm-current tree.
 
-In the old world, it's:
+I fixed it up (I think - see below) and can carry the fix as necessary
+(no action is required).
 
-1) XFS_MIN_AG_BYTES
-2) BSIZE (1MB)
-3) BSIZE (i.e. it does sequential reads)
+-- 
+Cheers,
+Stephen Rothwell
 
-In the new world, it's:
-
-1) the guessed AG size (skipsize?)
-2) BSIZE (more than we need, but not expensive, so leave it)
-3) the guessed AG size (skipsize)
-
-You really have 2 different pieces of info: Where to do the first read,
-and how far forward to skip for the next read.  I don't think you
-can convey that with a single argument, "skipsize."
-
-> -int
-> -find_secondary_sb(xfs_sb_t *rsb)
-> +static int __find_secondary_sb(xfs_sb_t *rsb, __uint64_t skipsize)
-
-better to format as:
-
-static int
-__find_secondary_sb(
-	xfs_sb_t	*rsb,
-	__uint64_t	skipsize)
-{
-
-but ...
-
->  {
->  	xfs_off_t	off;
->  	xfs_sb_t	*sb;
-> @@ -99,9 +101,9 @@ find_secondary_sb(xfs_sb_t *rsb)
->  	int		dirty;
->  	int		retval;
->  	int		bsize;
-> +	int		readsize;
->  
->  	do_warn(_("\nattempting to find secondary superblock...\n"));
-> -
->  	sb = (xfs_sb_t *)memalign(libxfs_device_alignment(), BSIZE);
->  	if (!sb) {
->  		do_error(
-> @@ -113,13 +115,16 @@ find_secondary_sb(xfs_sb_t *rsb)
->  	retval = 0;
->  	dirty = 0;
->  	bsize = 0;
-> +	readsize = 0;
->  
->  	/*
->  	 * skip first sector since we know that's bad
->  	 */
-> -	for (done = 0, off = XFS_AG_MIN_BYTES; !done ; off += bsize)  {
-> +	for (done = 0, off = skipsize; !done ; off += readsize)  {
->  		/*
-> -		 * read disk 1 MByte at a time.
-
-we are actually still doing that, read(x.dfd, sb, BSIZE), so I'd
-leave the comment...
-
-> +		 * read disk using readsize interval
-> +		 * (either the bytecount of actual agsize or bsize if
-> +		 * agsize undetermined.)
-
-
->  		 */
->  		if (lseek64(x.dfd, off, SEEK_SET) != off)  {
->  			done = 1;
-> @@ -128,9 +133,13 @@ find_secondary_sb(xfs_sb_t *rsb)
->  		if (!done && (bsize = read(x.dfd, sb, BSIZE)) <= 0)  {
->  			done = 1;
->  		}
-> -
-> +		if (skipsize == XFS_AG_MIN_BYTES)  {
-> +			readsize = bsize;
-> +		}
-> +		else  {
-
-better as:
-		} else {
-
-> +			readsize = skipsize;
-> +		}
-
-I wouldn't call this "readsize" - we are only ever reading BSIZE at a time.
-This is how much we advance each loop, so skipsize is a bit better.
-
-But the _functional_ problem here is that it is possible and permissible
-to have a filesystem with an AG size of XFS_AG_MIN_BYTES (16MB).
-
-So if you guessed a default geometry with an agsize of XFS_AG_MIN_BYTES,
-you've gone back to the fine-grained scanning.  The fs probably isn't
-very big as a result, so it's not the end of the world, but ...
-see below.
-
->  		do_warn(".");
-> -
->  		/*
->  		 * check the buffer 512 bytes at a time since
->  		 * we don't know how big the sectors really are.
-> @@ -164,9 +173,38 @@ find_secondary_sb(xfs_sb_t *rsb)
->  			}
->  		}
->  	}
-> -
->  	free(sb);
-> -	return(retval);
-> +	return retval;
-> +}
-> +
-> +int
-> +find_secondary_sb(xfs_sb_t *rsb)
-> +{
-> +	int		retval;
-> +	__uint64_t	skipsize;
-> +	__uint64_t	agcount;
-> +	__uint64_t	agsize;
-> +	int		blocklog;
-> +
-> +	/*
-> +	 * Attempt to find secondary sb with a coarse approach,
-> +	 * using a large skipsize (agsize in bytes). Failing that,
-> +	 * fallback to the fine-grained approach using min agsize.
-> +	 */
-> +	blocklog = guess_default_geometry(&agsize, &agcount, x);
-> +
-> +	/*
-> +	 * use found ag geometry to quickly find secondary sb
-> +	 */
-> +	skipsize = agsize << blocklog;
-> +	retval = __find_secondary_sb(rsb, skipsize);
-> +	if (!retval)  {
-> +		/*
-> +		 * fallback: use minimum agsize for skipsize
-> +		 */
-> +		retval = __find_secondary_sb(rsb, XFS_AG_MIN_BYTES);
-> +	}
-> +	return retval;
->  }
-
-I'd make __find_secondary_sb() take (sb, start, skip) i.e. send in
-this:
-
-> +	retval = __find_secondary_sb(rsb, agsize, agsize);
-> +	if (!retval)  {
-> +		/*
-> +		 * fallback: use minimum agsize for skipsize
-> +		 */
-> +		retval = __find_secondary_sb(rsb, XFS_AG_MIN_BYTES, BSIZE);
-> +	}
-
-and the function is something like:
-
-static int
-__find_secondary_sb(
-        xfs_sb_t	*rsb,
-	xfs_off_t	start,
-        xfs_off_t	skip)
-
-{
-
-...
-
-        for (done = 0, off = start; !done ; off += skip)  {
-...
-               if (lseek64(x.dfd, off, SEEK_SET) != off)
-                        done = 1;
-
-               if (!done && (read(x.dfd, sb, BSIZE)) <= 0)
-                        done = 1;
-
-
-because you really can't deduce both the starting point and the skip-ahead
-size from just one parameter.
-
--Eric
+diff --cc fs/ocfs2/aops.c
+index 5dcc5f5a842e,3d3952ebe101..000000000000
+--- a/fs/ocfs2/aops.c
++++ b/fs/ocfs2/aops.c
+@@@ -2476,6 -2099,356 +2099,361 @@@ static int ocfs2_write_end(struct file 
+  	return ret;
+  }
+  
++ struct ocfs2_dio_write_ctxt {
++ 	struct list_head	dw_zero_list;
++ 	unsigned		dw_zero_count;
++ 	int			dw_orphaned;
++ 	pid_t			dw_writer_pid;
++ };
++ 
++ static struct ocfs2_dio_write_ctxt *
++ ocfs2_dio_alloc_write_ctx(struct buffer_head *bh, int *alloc)
++ {
++ 	struct ocfs2_dio_write_ctxt *dwc = NULL;
++ 
++ 	if (bh->b_private)
++ 		return bh->b_private;
++ 
++ 	dwc = kmalloc(sizeof(struct ocfs2_dio_write_ctxt), GFP_NOFS);
++ 	if (dwc == NULL)
++ 		return NULL;
++ 	INIT_LIST_HEAD(&dwc->dw_zero_list);
++ 	dwc->dw_zero_count = 0;
++ 	dwc->dw_orphaned = 0;
++ 	dwc->dw_writer_pid = task_pid_nr(current);
++ 	bh->b_private = dwc;
++ 	*alloc = 1;
++ 
++ 	return dwc;
++ }
++ 
++ static void ocfs2_dio_free_write_ctx(struct inode *inode,
++ 				     struct ocfs2_dio_write_ctxt *dwc)
++ {
++ 	ocfs2_free_unwritten_list(inode, &dwc->dw_zero_list);
++ 	kfree(dwc);
++ }
++ 
++ /*
++  * TODO: Make this into a generic get_blocks function.
++  *
++  * From do_direct_io in direct-io.c:
++  *  "So what we do is to permit the ->get_blocks function to populate
++  *   bh.b_size with the size of IO which is permitted at this offset and
++  *   this i_blkbits."
++  *
++  * This function is called directly from get_more_blocks in direct-io.c.
++  *
++  * called like this: dio->get_blocks(dio->inode, fs_startblk,
++  * 					fs_count, map_bh, dio->rw == WRITE);
++  */
++ static int ocfs2_dio_get_block(struct inode *inode, sector_t iblock,
++ 			       struct buffer_head *bh_result, int create)
++ {
++ 	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
++ 	struct ocfs2_inode_info *oi = OCFS2_I(inode);
++ 	struct ocfs2_write_ctxt *wc;
++ 	struct ocfs2_write_cluster_desc *desc = NULL;
++ 	struct ocfs2_dio_write_ctxt *dwc = NULL;
++ 	struct buffer_head *di_bh = NULL;
++ 	u64 p_blkno;
++ 	loff_t pos = iblock << inode->i_sb->s_blocksize_bits;
++ 	unsigned len, total_len = bh_result->b_size;
++ 	int ret = 0, first_get_block = 0;
++ 
++ 	len = osb->s_clustersize - (pos & (osb->s_clustersize - 1));
++ 	len = min(total_len, len);
++ 
++ 	mlog(0, "get block of %lu at %llu:%u req %u\n",
++ 			inode->i_ino, pos, len, total_len);
++ 
++ 	/*
++ 	 * Because we need to change file size in ocfs2_dio_end_io_write(), or
++ 	 * we may need to add it to orphan dir. So can not fall to fast path
++ 	 * while file size will be changed.
++ 	 */
++ 	if (pos + total_len <= i_size_read(inode)) {
++ 		down_read(&oi->ip_alloc_sem);
++ 		/* This is the fast path for re-write. */
++ 		ret = ocfs2_get_block(inode, iblock, bh_result, create);
++ 
++ 		up_read(&oi->ip_alloc_sem);
++ 
++ 		if (buffer_mapped(bh_result) &&
++ 		    !buffer_new(bh_result) &&
++ 		    ret == 0)
++ 			goto out;
++ 
++ 		/* Clear state set by ocfs2_get_block. */
++ 		bh_result->b_state = 0;
++ 	}
++ 
++ 	dwc = ocfs2_dio_alloc_write_ctx(bh_result, &first_get_block);
++ 	if (unlikely(dwc == NULL)) {
++ 		ret = -ENOMEM;
++ 		mlog_errno(ret);
++ 		goto out;
++ 	}
++ 
++ 	if (ocfs2_clusters_for_bytes(inode->i_sb, pos + total_len) >
++ 	    ocfs2_clusters_for_bytes(inode->i_sb, i_size_read(inode)) &&
++ 	    !dwc->dw_orphaned) {
++ 		/*
++ 		 * when we are going to alloc extents beyond file size, add the
++ 		 * inode to orphan dir, so we can recall those spaces when
++ 		 * system crashed during write.
++ 		 */
++ 		ret = ocfs2_add_inode_to_orphan(osb, inode);
++ 		if (ret < 0) {
++ 			mlog_errno(ret);
++ 			goto out;
++ 		}
++ 		dwc->dw_orphaned = 1;
++ 	}
++ 
++ 	ret = ocfs2_inode_lock(inode, &di_bh, 1);
++ 	if (ret) {
++ 		mlog_errno(ret);
++ 		goto out;
++ 	}
++ 
++ 	down_write(&oi->ip_alloc_sem);
++ 
++ 	if (first_get_block) {
++ 		if (ocfs2_sparse_alloc(OCFS2_SB(inode->i_sb)))
++ 			ret = ocfs2_zero_tail(inode, di_bh, pos);
++ 		else
++ 			ret = ocfs2_expand_nonsparse_inode(inode, di_bh, pos,
++ 							   total_len, NULL);
++ 		if (ret < 0) {
++ 			mlog_errno(ret);
++ 			goto unlock;
++ 		}
++ 	}
++ 
++ 	ret = ocfs2_write_begin_nolock(inode->i_mapping, pos, len,
++ 				       OCFS2_WRITE_DIRECT, NULL,
++ 				       (void **)&wc, di_bh, NULL);
++ 	if (ret) {
++ 		mlog_errno(ret);
++ 		goto unlock;
++ 	}
++ 
++ 	desc = &wc->w_desc[0];
++ 
++ 	p_blkno = ocfs2_clusters_to_blocks(inode->i_sb, desc->c_phys);
++ 	BUG_ON(p_blkno == 0);
++ 	p_blkno += iblock & (u64)(ocfs2_clusters_to_blocks(inode->i_sb, 1) - 1);
++ 
++ 	map_bh(bh_result, inode->i_sb, p_blkno);
++ 	bh_result->b_size = len;
++ 	if (desc->c_needs_zero)
++ 		set_buffer_new(bh_result);
++ 
++ 	/* May sleep in end_io. It should not happen in a irq context. So defer
++ 	 * it to dio work queue. */
++ 	set_buffer_defer_completion(bh_result);
++ 
++ 	if (!list_empty(&wc->w_unwritten_list)) {
++ 		struct ocfs2_unwritten_extent *ue = NULL;
++ 
++ 		ue = list_first_entry(&wc->w_unwritten_list,
++ 				      struct ocfs2_unwritten_extent,
++ 				      ue_node);
++ 		BUG_ON(ue->ue_cpos != desc->c_cpos);
++ 		/* The physical address may be 0, fill it. */
++ 		ue->ue_phys = desc->c_phys;
++ 
++ 		list_splice_tail_init(&wc->w_unwritten_list, &dwc->dw_zero_list);
++ 		dwc->dw_zero_count++;
++ 	}
++ 
++ 	ret = ocfs2_write_end_nolock(inode->i_mapping, pos, len, len, NULL, wc);
++ 	BUG_ON(ret != len);
++ 	ret = 0;
++ unlock:
++ 	up_write(&oi->ip_alloc_sem);
++ 	ocfs2_inode_unlock(inode, 1);
++ 	brelse(di_bh);
++ out:
++ 	if (ret < 0)
++ 		ret = -EIO;
++ 	return ret;
++ }
++ 
++ static void ocfs2_dio_end_io_write(struct inode *inode,
++ 				   struct ocfs2_dio_write_ctxt *dwc,
++ 				   loff_t offset,
++ 				   ssize_t bytes)
++ {
++ 	struct ocfs2_cached_dealloc_ctxt dealloc;
++ 	struct ocfs2_extent_tree et;
++ 	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
++ 	struct ocfs2_inode_info *oi = OCFS2_I(inode);
++ 	struct ocfs2_unwritten_extent *ue = NULL;
++ 	struct buffer_head *di_bh = NULL;
++ 	struct ocfs2_dinode *di;
++ 	struct ocfs2_alloc_context *data_ac = NULL;
++ 	struct ocfs2_alloc_context *meta_ac = NULL;
++ 	handle_t *handle = NULL;
++ 	loff_t end = offset + bytes;
++ 	int ret = 0, credits = 0, locked = 0;
++ 
++ 	ocfs2_init_dealloc_ctxt(&dealloc);
++ 
++ 	/* We do clear unwritten, delete orphan, change i_size here. If neither
++ 	 * of these happen, we can skip all this. */
++ 	if (list_empty(&dwc->dw_zero_list) &&
++ 	    end <= i_size_read(inode) &&
++ 	    !dwc->dw_orphaned)
++ 		goto out;
++ 
++ 	/* ocfs2_file_write_iter will get i_mutex, so we need not lock if we
++ 	 * are in that context. */
++ 	if (dwc->dw_writer_pid != task_pid_nr(current)) {
++ 		mutex_lock(&inode->i_mutex);
++ 		locked = 1;
++ 	}
++ 
++ 	ret = ocfs2_inode_lock(inode, &di_bh, 1);
++ 	if (ret < 0) {
++ 		mlog_errno(ret);
++ 		goto out;
++ 	}
++ 
++ 	down_write(&oi->ip_alloc_sem);
++ 
++ 	/* Delete orphan before acquire i_mutex. */
++ 	if (dwc->dw_orphaned) {
++ 		BUG_ON(dwc->dw_writer_pid != task_pid_nr(current));
++ 
++ 		end = end > i_size_read(inode) ? end : 0;
++ 
++ 		ret = ocfs2_del_inode_from_orphan(osb, inode, di_bh,
++ 				!!end, end);
++ 		if (ret < 0)
++ 			mlog_errno(ret);
++ 	}
++ 
++ 	di = (struct ocfs2_dinode *)di_bh;
++ 
++ 	ocfs2_init_dinode_extent_tree(&et, INODE_CACHE(inode), di_bh);
++ 
++ 	ret = ocfs2_lock_allocators(inode, &et, 0, dwc->dw_zero_count*2,
++ 				    &data_ac, &meta_ac);
++ 	if (ret) {
++ 		mlog_errno(ret);
++ 		goto unlock;
++ 	}
++ 
++ 	credits = ocfs2_calc_extend_credits(inode->i_sb, &di->id2.i_list);
++ 
++ 	handle = ocfs2_start_trans(osb, credits);
++ 	if (IS_ERR(handle)) {
++ 		ret = PTR_ERR(handle);
++ 		mlog_errno(ret);
++ 		goto unlock;
++ 	}
++ 	ret = ocfs2_journal_access_di(handle, INODE_CACHE(inode), di_bh,
++ 				      OCFS2_JOURNAL_ACCESS_WRITE);
++ 	if (ret) {
++ 		mlog_errno(ret);
++ 		goto commit;
++ 	}
++ 
++ 	list_for_each_entry(ue, &dwc->dw_zero_list, ue_node) {
++ 		ret = ocfs2_mark_extent_written(inode, &et, handle,
++ 						ue->ue_cpos, 1,
++ 						ue->ue_phys,
++ 						meta_ac, &dealloc);
++ 		if (ret < 0) {
++ 			mlog_errno(ret);
++ 			break;
++ 		}
++ 	}
++ 
++ 	if (end > i_size_read(inode)) {
++ 		ret = ocfs2_set_inode_size(handle, inode, di_bh, end);
++ 		if (ret < 0)
++ 			mlog_errno(ret);
++ 	}
++ commit:
++ 	ocfs2_commit_trans(osb, handle);
++ unlock:
++ 	up_write(&oi->ip_alloc_sem);
++ 	ocfs2_inode_unlock(inode, 1);
++ 	brelse(di_bh);
++ out:
++ 	if (data_ac)
++ 		ocfs2_free_alloc_context(data_ac);
++ 	if (meta_ac)
++ 		ocfs2_free_alloc_context(meta_ac);
++ 	ocfs2_run_deallocs(osb, &dealloc);
++ 	if (locked)
++ 		mutex_unlock(&inode->i_mutex);
++ 	ocfs2_dio_free_write_ctx(inode, dwc);
++ }
++ 
++ /*
++  * ocfs2_dio_end_io is called by the dio core when a dio is finished.  We're
++  * particularly interested in the aio/dio case.  We use the rw_lock DLM lock
++  * to protect io on one node from truncation on another.
++  */
+ -static void ocfs2_dio_end_io(struct kiocb *iocb,
+ -			     loff_t offset,
+ -			     ssize_t bytes,
+ -			     void *private)
+++static int ocfs2_dio_end_io(struct kiocb *iocb,
+++			    loff_t offset,
+++			    ssize_t bytes,
+++			    void *private)
++ {
++ 	struct inode *inode = file_inode(iocb->ki_filp);
++ 	int level;
++ 
+++	if (bytes <= 0)
+++		return 0;
+++
++ 	/* this io's submitter should not have unlocked this before we could */
++ 	BUG_ON(!ocfs2_iocb_is_rw_locked(iocb));
++ 
++ 	if (private)
++ 		ocfs2_dio_end_io_write(inode, private, offset, bytes);
++ 
++ 	ocfs2_iocb_clear_rw_locked(iocb);
++ 
++ 	level = ocfs2_iocb_rw_locked_level(iocb);
++ 	ocfs2_rw_unlock(inode, level);
+++
+++	return 0;
++ }
++ 
++ static ssize_t ocfs2_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
++ 			       loff_t offset)
++ {
++ 	struct file *file = iocb->ki_filp;
++ 	struct inode *inode = file_inode(file)->i_mapping->host;
++ 	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
++ 	loff_t end = offset + iter->count;
++ 	get_block_t *get_block;
++ 
++ 	/*
++ 	 * Fallback to buffered I/O if we see an inode without
++ 	 * extents.
++ 	 */
++ 	if (OCFS2_I(inode)->ip_dyn_features & OCFS2_INLINE_DATA_FL)
++ 		return 0;
++ 
++ 	/* Fallback to buffered I/O if we do not support append dio. */
++ 	if (end > i_size_read(inode) && !ocfs2_supports_append_dio(osb))
++ 		return 0;
++ 
++ 	if (iov_iter_rw(iter) == READ)
++ 		get_block = ocfs2_get_block;
++ 	else
++ 		get_block = ocfs2_dio_get_block;
++ 
++ 	return __blockdev_direct_IO(iocb, inode, inode->i_sb->s_bdev,
++ 				    iter, offset, get_block,
++ 				    ocfs2_dio_end_io, NULL, 0);
++ }
++ 
+  const struct address_space_operations ocfs2_aops = {
+  	.readpage		= ocfs2_readpage,
+  	.readpages		= ocfs2_readpages,
 
 _______________________________________________
 xfs mailing list
