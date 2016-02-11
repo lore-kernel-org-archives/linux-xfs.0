@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A6AD17FB5
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:42:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1B7BEAC002
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:42:21 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 9MPuqoJy6uqsVr3J (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EBF2E7FCD
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:42:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D8ED08F804B
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:42:27 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id BGkx3n3aMCkwOVwL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:42:18 -0800 (PST)
-Subject: [PATCH 26/32] reflink: test aio copy on write
+	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:42:24 -0800 (PST)
+Subject: [PATCH 27/32] xfs: aio cow tests
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 11 Feb 2016 15:42:14 -0800
-Message-ID: <20160211234214.2202.32501.stgit@birch.djwong.org>
+Date: Thu, 11 Feb 2016 15:42:21 -0800
+Message-ID: <20160211234221.2202.14857.stgit@birch.djwong.org>
 In-Reply-To: <20160211233916.2202.40961.stgit@birch.djwong.org>
 References: <20160211233916.2202.40961.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,38 +31,39 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Make sure that copy on write works with the AIO path.
+Test what happens when AIO writes fail when we have a cowextsize hint
+set on the files.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/329     |  102 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/329.out |   12 ++++++
- tests/generic/330     |   93 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/330.out |   11 +++++
- tests/generic/331     |  104 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/331.out |   12 ++++++
- tests/generic/332     |   94 ++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/332.out |   11 +++++
- tests/generic/group   |    4 ++
- 9 files changed, 443 insertions(+)
- create mode 100755 tests/generic/329
- create mode 100644 tests/generic/329.out
- create mode 100755 tests/generic/330
- create mode 100644 tests/generic/330.out
- create mode 100755 tests/generic/331
- create mode 100644 tests/generic/331.out
- create mode 100755 tests/generic/332
- create mode 100644 tests/generic/332.out
+ tests/xfs/237     |  105 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/237.out |   12 ++++++
+ tests/xfs/239     |   98 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/239.out |   11 +++++
+ tests/xfs/240     |  110 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/240.out |   12 ++++++
+ tests/xfs/241     |  100 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/241.out |   11 +++++
+ tests/xfs/group   |    4 ++
+ 9 files changed, 463 insertions(+)
+ create mode 100755 tests/xfs/237
+ create mode 100644 tests/xfs/237.out
+ create mode 100755 tests/xfs/239
+ create mode 100644 tests/xfs/239.out
+ create mode 100755 tests/xfs/240
+ create mode 100644 tests/xfs/240.out
+ create mode 100755 tests/xfs/241
+ create mode 100644 tests/xfs/241.out
 
 
-diff --git a/tests/generic/329 b/tests/generic/329
+diff --git a/tests/xfs/237 b/tests/xfs/237
 new file mode 100755
-index 0000000..3991672
+index 0000000..f961de3
 --- /dev/null
-+++ b/tests/generic/329
-@@ -0,0 +1,102 @@
++++ b/tests/xfs/237
+@@ -0,0 +1,105 @@
 +#! /bin/bash
-+# FS QA Test No. 329
++# FS QA Test No. 237
 +#
 +# Test AIO DIO CoW behavior when the write temporarily fails.
 +#
@@ -107,9 +108,11 @@ index 0000000..3991672
 +
 +# real QA test starts here
 +_supported_os Linux
++_supported_fs xfs
 +_require_scratch_reflink
 +_require_cp_reflink
 +_require_dm_target error
++_require_xfs_io_command "cowextsize"
 +_require_aiodio "aiocp"
 +
 +rm -f $seqres.full
@@ -132,6 +135,7 @@ index 0000000..3991672
 +_require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
 +
 +echo "Create the original files"
++$XFS_IO_PROG -c "cowextsize $((bufsize * 2))" $testdir
 +$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $bufsize 0 $filesize" $testdir/file1 >> $seqres.full
 +_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
 +_dmerror_unmount
@@ -163,32 +167,32 @@ index 0000000..3991672
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/329.out b/tests/generic/329.out
+diff --git a/tests/xfs/237.out b/tests/xfs/237.out
 new file mode 100644
-index 0000000..f14726c
+index 0000000..c83dd8b
 --- /dev/null
-+++ b/tests/generic/329.out
++++ b/tests/xfs/237.out
 @@ -0,0 +1,12 @@
-+QA output created by 329
++QA output created by 237
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-329/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-329/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-237/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-237/file2
 +CoW and unmount
 +write missed bytes expect 8388608 got 0
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-329/file1
-+d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-329/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-237/file1
++d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-237/file2
 +Check for damage
-diff --git a/tests/generic/330 b/tests/generic/330
+diff --git a/tests/xfs/239 b/tests/xfs/239
 new file mode 100755
-index 0000000..377d822
+index 0000000..5bab633
 --- /dev/null
-+++ b/tests/generic/330
-@@ -0,0 +1,93 @@
++++ b/tests/xfs/239
+@@ -0,0 +1,98 @@
 +#! /bin/bash
-+# FS QA Test No. 330
++# FS QA Test No. 239
 +#
 +# Test AIO DIO CoW behavior.
 +#
@@ -231,8 +235,10 @@ index 0000000..377d822
 +
 +# real QA test starts here
 +_supported_os Linux
++_supported_fs xfs
 +_require_scratch_reflink
 +_require_cp_reflink
++_require_xfs_io_command "cowextsize"
 +_require_aiodio "aiocp"
 +
 +rm -f $seqres.full
@@ -250,10 +256,13 @@ index 0000000..377d822
 +bufnr=128
 +filesize=$((blksz * nr))
 +bufsize=$((blksz * bufnr))
++filesize=$filesize
++bufsize=$bufsize
 +
 +_require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
 +
 +echo "Create the original files"
++$XFS_IO_PROG -c "cowextsize $((bufsize * 2))" $testdir
 +$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $bufsize 0 $filesize" $testdir/file1 >> $seqres.full
 +_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
 +_scratch_remount
@@ -280,31 +289,31 @@ index 0000000..377d822
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/330.out b/tests/generic/330.out
+diff --git a/tests/xfs/239.out b/tests/xfs/239.out
 new file mode 100644
-index 0000000..9a33a22
+index 0000000..a123da9
 --- /dev/null
-+++ b/tests/generic/330.out
++++ b/tests/xfs/239.out
 @@ -0,0 +1,11 @@
-+QA output created by 330
++QA output created by 239
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-330/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-330/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-239/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-239/file2
 +CoW and unmount
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-330/file1
-+7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-330/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-239/file1
++7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-239/file2
 +Check for damage
-diff --git a/tests/generic/331 b/tests/generic/331
+diff --git a/tests/xfs/240 b/tests/xfs/240
 new file mode 100755
-index 0000000..8d8fd6a
+index 0000000..62a7735
 --- /dev/null
-+++ b/tests/generic/331
-@@ -0,0 +1,104 @@
++++ b/tests/xfs/240
+@@ -0,0 +1,110 @@
 +#! /bin/bash
-+# FS QA Test No. 331
++# FS QA Test No. 240
 +#
 +# Test AIO CoW behavior when the write temporarily fails.
 +#
@@ -349,11 +358,14 @@ index 0000000..8d8fd6a
 +
 +# real QA test starts here
 +_supported_os Linux
++_supported_fs xfs
 +_require_scratch_reflink
 +_require_cp_reflink
 +_require_dm_target error
++_require_xfs_io_command "cowextsize"
 +_require_test_program "aio-dio-regress/aiocp"
 +AIO_TEST="src/aio-dio-regress/aiocp"
++_require_odirect
 +
 +rm -f $seqres.full
 +
@@ -371,10 +383,13 @@ index 0000000..8d8fd6a
 +bufnr=128
 +filesize=$((blksz * nr))
 +bufsize=$((blksz * bufnr))
++filesize=$filesize
++bufsize=$bufsize
 +
 +_require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
 +
 +echo "Create the original files"
++$XFS_IO_PROG -c "cowextsize $((bufsize * 2))" $testdir
 +$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $bufsize 0 $filesize" $testdir/file1 >> $seqres.full
 +_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
 +_dmerror_unmount
@@ -407,32 +422,32 @@ index 0000000..8d8fd6a
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/331.out b/tests/generic/331.out
+diff --git a/tests/xfs/240.out b/tests/xfs/240.out
 new file mode 100644
-index 0000000..adbf841
+index 0000000..1a22e8a
 --- /dev/null
-+++ b/tests/generic/331.out
++++ b/tests/xfs/240.out
 @@ -0,0 +1,12 @@
-+QA output created by 331
++QA output created by 240
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-331/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-331/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-240/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-240/file2
 +CoW and unmount
 +fdatasync: Input/output error
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-331/file1
-+d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-331/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-240/file1
++d94b0ab13385aba594411c174b1cc13c  SCRATCH_MNT/test-240/file2
 +Check for damage
-diff --git a/tests/generic/332 b/tests/generic/332
+diff --git a/tests/xfs/241 b/tests/xfs/241
 new file mode 100755
-index 0000000..f9b5f6f
+index 0000000..090f913
 --- /dev/null
-+++ b/tests/generic/332
-@@ -0,0 +1,94 @@
++++ b/tests/xfs/241
+@@ -0,0 +1,100 @@
 +#! /bin/bash
-+# FS QA Test No. 332
++# FS QA Test No. 241
 +#
 +# Test AIO CoW behavior.
 +#
@@ -475,10 +490,13 @@ index 0000000..f9b5f6f
 +
 +# real QA test starts here
 +_supported_os Linux
++_supported_fs xfs
 +_require_scratch_reflink
 +_require_cp_reflink
++_require_xfs_io_command "cowextsize"
 +_require_test_program "aio-dio-regress/aiocp"
 +AIO_TEST="src/aio-dio-regress/aiocp"
++_require_odirect
 +
 +rm -f $seqres.full
 +
@@ -495,10 +513,13 @@ index 0000000..f9b5f6f
 +bufnr=128
 +filesize=$((blksz * nr))
 +bufsize=$((blksz * bufnr))
++filesize=$filesize
++bufsize=$bufsize
 +
 +_require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
 +
 +echo "Create the original files"
++$XFS_IO_PROG -c "cowextsize $((bufsize * 2))" $testdir
 +$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $bufsize 0 $filesize" $testdir/file1 >> $seqres.full
 +_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
 +_scratch_remount
@@ -525,35 +546,39 @@ index 0000000..f9b5f6f
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/332.out b/tests/generic/332.out
+diff --git a/tests/xfs/241.out b/tests/xfs/241.out
 new file mode 100644
-index 0000000..b584b1e
+index 0000000..a7e7df2
 --- /dev/null
-+++ b/tests/generic/332.out
++++ b/tests/xfs/241.out
 @@ -0,0 +1,11 @@
-+QA output created by 332
++QA output created by 241
 +Format and mount
 +Create the original files
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-332/file1
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-332/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-241/file1
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-241/file2
 +CoW and unmount
 +Compare files
-+1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-332/file1
-+7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-332/file2
++1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-241/file1
++7a4d22297e80ff3c92cb1b3e4566d234  SCRATCH_MNT/test-241/file2
 +Check for damage
-diff --git a/tests/generic/group b/tests/generic/group
-index 8b9e0e5..e7ed475 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -331,3 +331,7 @@
- 326 auto quick clone
- 327 auto quick clone
- 328 auto quick clone
-+329 auto quick clone
-+330 auto quick clone
-+331 auto quick clone
-+332 auto quick clone
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 1d08065..c0ce1f4 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -234,7 +234,11 @@
+ 234 auto quick rmap
+ 235 fuzzers rmap
+ 236 auto quick rmap
++237 auto quick clone
+ 238 auto quick metadata ioctl
++239 auto quick clone
++240 auto quick clone
++241 auto quick clone
+ 242 auto quick prealloc
+ 244 auto quota quick
+ 250 auto quick rw prealloc metadata
 
 _______________________________________________
 xfs mailing list
