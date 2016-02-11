@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 69C827CA2
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 14:14:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3BC1F30405F
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 12:14:58 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A21827CA2
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 14:24:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D70AAC002
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 12:24:42 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6sxEjHNgvnIhZjiB for <xfs@oss.sgi.com>;
-	Thu, 11 Feb 2016 12:14:55 -0800 (PST)
-Date: Fri, 12 Feb 2016 07:12:38 +1100
+	KaiCe3ypI68uOCcA for <xfs@oss.sgi.com>;
+	Thu, 11 Feb 2016 12:24:39 -0800 (PST)
+Date: Fri, 12 Feb 2016 07:21:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/8 v4] xfs: get rid of xfs_cluster_write
-Message-ID: <20160211201238.GG19486@dastard>
-References: <1455094043-9694-1-git-send-email-david@fromorbit.com>
-	<20160210182538.GA7481@infradead.org>
-	<20160210212550.GM14668@dastard>
-	<20160211151301.GA13515@infradead.org>
+Subject: Re: block allocations for the refcount btree
+Message-ID: <20160211202148.GH19486@dastard>
+References: <20160210093011.GA19147@infradead.org>
+	<20160210095010.GC23904@birch.djwong.org>
+	<20160210190738.GA13051@infradead.org>
+	<20160210214058.GN14668@dastard>
+	<20160211140936.GB4156@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160211151301.GA13515@infradead.org>
+In-Reply-To: <20160211140936.GB4156@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +33,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
 
-On Thu, Feb 11, 2016 at 07:13:01AM -0800, Christoph Hellwig wrote:
-> On Thu, Feb 11, 2016 at 08:25:51AM +1100, Dave Chinner wrote:
-> > I really like the idea, especially how using a bioset encapsulates
-> > the ioend and binds the life cycle to the bio. It also removes a
-> > heap of code, too.
+On Thu, Feb 11, 2016 at 09:09:37AM -0500, Brian Foster wrote:
+> On Thu, Feb 11, 2016 at 08:40:58AM +1100, Dave Chinner wrote:
+> > On Wed, Feb 10, 2016 at 11:07:38AM -0800, Christoph Hellwig wrote:
+> > > On Wed, Feb 10, 2016 at 01:50:10AM -0800, Darrick J. Wong wrote:
+> > > > That's odd... I'd have thought that the AG reservation would always be able
+> > > > to handle a refcount btree expansion, since it calculates how many blocks
+> > > > are needed to handle the worst case of 1 record per extent.  There's also
+> > > > a bug where we undercount the number of blocks already used, so it should
+> > > > have an extra big reservation.
+> > > > 
+> > > > OTOH I've seen occasional ENOSPCs in generic/186 and generic/168 too, so I
+> > > > guess something's going wrong.  Maybe the xfs_ag_resv* tracepoints can help?
+> > > 
+> > > I'm not seeing an ENOSPC, I run into:
+> > > 
+> > > [  640.924891] XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 315
 > > 
-> > We really do need some form of chaining here, though. If we don't,
-> > then we'll be doing unwritten extent of set file size transactions
-> > for ever 1MB bio completion instead of once for however large
-> > writepages can build an ioend.
+> > I run into that from time to time (maybe once a month) on a vanilla
+> > kernel.
 > > 
-> > I think this is definitely worth pursuing - are you going to get any
-> > time to work on this in the next couple of months, Christoph (i.e.
-> > to target the 4.7 merge window)?
 > 
-> Yes, I've just started working on this and would love to get it off
-> my table ASAP.  I was doing this ontop of your initial writeback
-> changes, so let me know if I should go back to that version, or
-> you think the last two patches will be ready in time as well?
+> Any idea which test reproduces? I see that generic/033 resulted from the
+> discussion below on the rfc. I don't currently reproduce with that test,
+> however. The test mentions it uses fzero because zero range doesn't do
+> writeback (comments ftw :) and thus allows splitting of delalloc
+> extents, but it looks like that might no longer be the case in the
+> kernel (since zero range was simplified to reuse punch/alloc).
 
-Keep my extra two patches in your series. I'm going to try to spend
-the rest of this cycle (for the 4.6 merge window) on Darrick's
-reflink patchset, but I can carry whatever patches you finish off
-until the appropriate time to merge them is.
+It's usually one of the fsstress tests that triggers it. For some
+reason generic/233 sticks in my mind, but it's a pretty rare failure
+these days...
+
+> > IIRC, the problem is the delayed allocation extent split runs out of
+> > it's reserved block count if you split it enough times. The case
+> > I've seen is that  the indlen calculated in xfs_bmap_worst_indlen()
+> > ends up too small for a subsequent allocation after we've called
+> > xfs_bmap_del_extent() to delete the middle of a delalloc extent too
+> > many times.
+> > 
+> > Brian had some patches that attempted to solve it - we may have
+> > simply dropped the ball on this (again).
+> > 
+> > http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
+> > 
+> 
+> I recall working on this, but not quite where it left off. If I dig back
+> to my old tree from before the oss.sgi.com->vger switchover, I have a v1
+> branch for this work that was posted here:
+> 
+> http://oss.sgi.com/archives/xfs/2014-10/msg00294.html
+> 
+> It looks like we just never got it reviewed and I since lost track of
+> it. I can resurrect it if warranted. I would like to nail down a current
+> reproducer though...
+
+*nod*. Not sure what we can use to trigger it, though.
 
 Cheers,
 
