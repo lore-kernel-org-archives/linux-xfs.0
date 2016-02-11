@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A2ED97FE9
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:42:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9561E8F8033
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:42:59 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Qx5z906WKYgmiKyy (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:42:57 -0800 (PST)
-Subject: [PATCH 32/32] reflink: kick the slow tests out of the 'quick' group
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 11 Feb 2016 15:42:54 -0800
-Message-ID: <20160211234254.2202.90445.stgit@birch.djwong.org>
-In-Reply-To: <20160211233916.2202.40961.stgit@birch.djwong.org>
-References: <20160211233916.2202.40961.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 83E4A8000
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:44:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 76087304051
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:44:20 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	yeSuxkQDrynnHgBi for <xfs@oss.sgi.com>;
+	Thu, 11 Feb 2016 15:44:18 -0800 (PST)
+Date: Fri, 12 Feb 2016 10:44:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/2] dax: move writeback calls into the filesystems
+Message-ID: <20160211234415.GM19486@dastard>
+References: <1455137336-28720-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1455137336-28720-3-git-send-email-ross.zwisler@linux.intel.com>
+	<20160210220312.GP14668@dastard>
+	<20160210224340.GA30938@linux.intel.com>
+	<20160211125044.GJ21760@quack.suse.cz>
+	<CAPcyv4g60iOTd-ShBCfsK+B7xArcc5pWXWktNop53otDbUW-3g@mail.gmail.com>
+	<20160211204635.GI19486@dastard>
+	<CAPcyv4h4u+LB5U5nm4Jo32r=33D02yv36k5QxmJoy3DRiHmQEQ@mail.gmail.com>
+	<20160211224616.GL19486@dastard>
+	<CAPcyv4hR60bahtQq68SgSG2uT9zP4H8u3zbUqtqndnx=ogwVtA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hR60bahtQq68SgSG2uT9zP4H8u3zbUqtqndnx=ogwVtA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,132 +38,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Since 'quick' tests are supposed to run in < 15s, kick out the ones
-that can't finish that soon even on fast storage.
+On Thu, Feb 11, 2016 at 02:59:14PM -0800, Dan Williams wrote:
+> On Thu, Feb 11, 2016 at 2:46 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Feb 11, 2016 at 12:58:38PM -0800, Dan Williams wrote:
+> >> On Thu, Feb 11, 2016 at 12:46 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >> Maybe I don't need to worry because it's already the case that a
+> >> mmap of the raw device may not see the most up to date data for a
+> >> file that has dirty fs-page-cache data.
+> >
+> > It goes both ways. What happens if mkfs or fsck modifies the
+> > block device via mmap+DAX and then the filesystem mounts the block
+> > device and tries to read that metadata via the block device page
+> > cache?
+> >
+> > Quite frankly, DAX on the block device is a can of worms we really
+> > don't need to deal with right now. IMO it's a solution looking for a
+> > problem to solve,
+> 
+> Virtualization use cases want to give large ranges to guest-VMs, and
+> it is currently the only way to reliably get 1GiB mappings.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/group |   34 +++++++++++++++++-----------------
- tests/xfs/group     |    6 +++---
- 2 files changed, 20 insertions(+), 20 deletions(-)
+Precisely my point - block devices are not the best way to solve
+this problem.
 
+A file, on XFS, with a 1GB extent size hint and preallocated to be
+aligned to 1GB addresses (i.e. mkfs.xfs -d su=1G,sw=1 on the host
+filesystem) will give reliable 1GB aligned blocks for DAX mappings,
+just like a block device will. Peformance wise it's little different
+to using the block device directly. Management wise it's way more
+flexible, especially as such image files can be recycled for new VMs
+almost instantly via FALLOC_FL_FLAG_ZERO_RANGE.
 
-diff --git a/tests/generic/group b/tests/generic/group
-index e3c4e8a..5f699ce 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -139,7 +139,7 @@
- 134 auto quick clone
- 135 metadata auto quick
- 136 auto quick clone dedupe
--137 auto quick clone dedupe
-+137 auto clone dedupe
- 138 auto quick clone
- 139 auto quick clone
- 140 auto quick clone
-@@ -166,19 +166,19 @@
- 161 auto quick clone
- 162 auto quick clone dedupe
- 163 auto quick clone dedupe
--164 auto quick clone
--165 auto quick clone
--166 auto quick clone
--167 auto quick clone
--168 auto quick clone
-+164 auto clone
-+165 auto clone
-+166 auto clone
-+167 auto clone
-+168 auto clone
- 169 rw metadata auto quick
--170 auto quick clone
-+170 auto clone
- 171 auto quick clone
- 172 auto quick clone
- 173 auto quick clone
- 174 auto quick clone
--175 auto quick clone
--176 auto quick clone
-+175 auto clone
-+176 auto clone
- 177 auto quick prealloc metadata
- 178 auto quick clone
- 179 auto quick clone
-@@ -188,8 +188,8 @@
- 183 auto quick clone
- 184 metadata auto quick
- 185 auto quick clone
--186 auto quick clone
--187 auto quick clone
-+186 auto clone
-+187 auto clone
- 188 auto quick clone
- 189 auto quick clone
- 190 auto quick clone
-@@ -244,8 +244,8 @@
- 239 auto aio rw
- 240 auto aio quick rw
- 241 auto
--242 auto quick clone
--243 auto quick clone
-+242 auto clone
-+243 auto clone
- 244 auto quick quota
- 245 auto quick dir
- 246 auto quick rw
-@@ -299,8 +299,8 @@
- 294 auto quick
- 295 auto quick clone
- 296 auto quick clone
--297 auto quick clone
--298 auto quick clone
-+297 auto clone
-+298 auto clone
- 299 auto aio enospc rw stress
- 300 auto aio enospc preallocrw stress
- 301 auto quick clone
-@@ -335,5 +335,5 @@
- 330 auto quick clone
- 331 auto quick clone
- 332 auto quick clone
--333 auto quick clone
--334 auto quick clone
-+333 auto clone
-+334 auto clone
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 4fb7618..eadc212 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -137,7 +137,7 @@
- 137 auto metadata v2log
- 138 auto quick quota
- 139 auto quick clone
--140 auto quick clone
-+140 auto clone
- 141 auto log metadata
- 142 dmapi
- 143 dmapi
-@@ -166,7 +166,7 @@
- 166 rw metadata auto quick
- 167 rw metadata auto stress
- 168 dmapi
--169 auto quick clone
-+169 auto clone
- 170 rw filestreams auto quick
- 171 rw filestreams
- 172 rw filestreams
-@@ -233,7 +233,7 @@
- 233 auto quick rmap
- 234 auto quick rmap
- 235 fuzzers rmap
--236 auto quick rmap
-+236 auto rmap
- 237 auto quick clone
- 238 auto quick metadata ioctl
- 239 auto quick clone
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
