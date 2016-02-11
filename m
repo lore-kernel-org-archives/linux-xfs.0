@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B7CE67CA2
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 09:13:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 914C58F8033
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 07:13:03 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EFC017CA2
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 09:14:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E27AA304039
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 07:14:30 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id FtHTKnvAXTAT6yJv (version=TLSv1.2
+	ESMTP id rXnC56a6RyC3jESq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 07:13:01 -0800 (PST)
-Date: Thu, 11 Feb 2016 07:13:01 -0800
+	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 07:14:26 -0800 (PST)
+Date: Thu, 11 Feb 2016 07:14:25 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/8 v4] xfs: get rid of xfs_cluster_write
-Message-ID: <20160211151301.GA13515@infradead.org>
+Subject: Re: [PATCH 2/8] xfs: remove xfs_cancel_ioend
+Message-ID: <20160211151425.GB13515@infradead.org>
 References: <1455094043-9694-1-git-send-email-david@fromorbit.com>
-	<20160210182538.GA7481@infradead.org>
-	<20160210212550.GM14668@dastard>
+	<1455094043-9694-3-git-send-email-david@fromorbit.com>
+	<20160210112800.GA15221@infradead.org>
+	<20160211002137.GR14668@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160210212550.GM14668@dastard>
+In-Reply-To: <20160211002137.GR14668@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,24 +35,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Feb 11, 2016 at 08:25:51AM +1100, Dave Chinner wrote:
-> I really like the idea, especially how using a bioset encapsulates
-> the ioend and binds the life cycle to the bio. It also removes a
-> heap of code, too.
-> 
-> We really do need some form of chaining here, though. If we don't,
-> then we'll be doing unwritten extent of set file size transactions
-> for ever 1MB bio completion instead of once for however large
-> writepages can build an ioend.
-> 
-> I think this is definitely worth pursuing - are you going to get any
-> time to work on this in the next couple of months, Christoph (i.e.
-> to target the 4.7 merge window)?
+On Thu, Feb 11, 2016 at 11:21:37AM +1100, Dave Chinner wrote:
+> I'll propagate it through where it makes sense. If we alrady have an
+> error, then we aren't going to call xfs_setfilesize_trans_alloc()
+> anyway, so checking the return value only matters in the non-error
+> cases.
 
-Yes, I've just started working on this and would love to get it off
-my table ASAP.  I was doing this ontop of your initial writeback
-changes, so let me know if I should go back to that version, or
-you think the last two patches will be ready in time as well?
+Oh, I missed that we don't care about the failure case.  Maybe we
+should just call xfs_setfilesize_trans_alloc instead, and just move
+the conditionals to it so that it's a no-op if no transaction is needed?
 
 _______________________________________________
 xfs mailing list
