@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7AB937CA2
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 11:19:41 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 1308B7CA3
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:39:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2168AAC005
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 09:19:40 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 0L506w4rCuimCYbr for <xfs@oss.sgi.com>;
-	Wed, 17 Feb 2016 09:19:32 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 1676C65E4189
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 11:19:32 -0600 (CST)
-Subject: [PATCH 1/3 V3] xfs: convert mount option parsing to tokens
-References: <56BBC982.50804@redhat.com> <56BBC9E6.5030100@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56C4ABA3.3030905@sandeen.net>
-Date: Wed, 17 Feb 2016 11:19:31 -0600
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4FC6AC003
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:39:25 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 5aihXUSwCSaDK00X (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:39:21 -0800 (PST)
+Subject: [PATCH v4.2 00/32] xfstests: test the nfs/cifs/btrfs/xfs
+	reflink/dedupe ioctls
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 11 Feb 2016 15:39:16 -0800
+Message-ID: <20160211233916.2202.40961.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <56BBC9E6.5030100@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,560 +27,646 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-This should be a no-op change, just switch to token parsing
-like every other respectable filesystem does.
+Dave Chinner: I've renumbered the new tests and pushed to github[3] if
+you'd like to pull.  See the pull request at the end of this message.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This is a patch set against the reflink/dedupe test cases in xfstests.
+The first three patches fix errors in the existing reflink tests, some
+of which are from Christoph Hellwig.
+
+The next eight patches fix style errors, refactor commonly used code,
+remove unnecessary clutter, and add missing _require* checks to the
+existing reflink tests.
+
+Patch 12 adds a test checking that unwritten extent conversion does
+NOT happen after a directio write to an unwritten extent hits a disk
+error.   Due to a bug in the VFS directio code, ext4 can disclose
+stale disk contents if an aio dio write fails; XFS suffers this
+problem for any failing dio write to an unwritten extent.  Christoph's
+kernel patchset titled "vfs/xfs: directio updates to ease COW handling
+V2" (and a separate ext4 warning cleanup) is needed to fix this.
+
+Patches 13-31 add more reflink tests focusing on correct CoW behavior
+particularly with the CoW extent size hint enabled.  It also provides
+a few regression tests for bugs that have been hit while running XFS
+reflink, a few tests of the quota accounting when various reflink
+operations happen, and a few tests for get_bmapx to ensure that what
+it reports is at least somewhat accurate.
+
+Patch 25 adds a few basic reverse-mapping tests for XFS.
+
+If you're going to start using this mess, you probably ought to just
+pull from my github trees for kernel[1], xfsprogs[2], xfstests[3],
+xfs-docs[4], and man-pages[5].  All tests should pass on XFS, YMWV on
+btrfs and ocfs2.
+
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://github.com/djwong/linux/tree/for-dave
+[2] https://github.com/djwong/xfsprogs/tree/for-dave
+[3] https://github.com/djwong/xfstests/tree/for-dave
+[4] https://github.com/djwong/xfs-documentation/tree/for-dave
+[5] https://github.com/djwong/man-pages/commits/for-mtk
+
 ---
 
-V2: Whitespace fixes, remove extraneous break-after-return (Thanks Brian!)
-V3: Check for -ENOMEM from match_strdup (Thanks Christoph!)
+The following changes since commit d98149c205559950c03d6b1d539e45fd35b5630e:
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 59c9b7b..9e1538d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -65,83 +65,85 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
- static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
- #endif
- 
--#define MNTOPT_LOGBUFS	"logbufs"	/* number of XFS log buffers */
--#define MNTOPT_LOGBSIZE	"logbsize"	/* size of XFS log buffers */
--#define MNTOPT_LOGDEV	"logdev"	/* log device */
--#define MNTOPT_RTDEV	"rtdev"		/* realtime I/O device */
--#define MNTOPT_BIOSIZE	"biosize"	/* log2 of preferred buffered io size */
--#define MNTOPT_WSYNC	"wsync"		/* safe-mode nfs compatible mount */
--#define MNTOPT_NOALIGN	"noalign"	/* turn off stripe alignment */
--#define MNTOPT_SWALLOC	"swalloc"	/* turn on stripe width allocation */
--#define MNTOPT_SUNIT	"sunit"		/* data volume stripe unit */
--#define MNTOPT_SWIDTH	"swidth"	/* data volume stripe width */
--#define MNTOPT_NOUUID	"nouuid"	/* ignore filesystem UUID */
--#define MNTOPT_MTPT	"mtpt"		/* filesystem mount point */
--#define MNTOPT_GRPID	"grpid"		/* group-ID from parent directory */
--#define MNTOPT_NOGRPID	"nogrpid"	/* group-ID from current process */
--#define MNTOPT_BSDGROUPS    "bsdgroups"    /* group-ID from parent directory */
--#define MNTOPT_SYSVGROUPS   "sysvgroups"   /* group-ID from current process */
--#define MNTOPT_ALLOCSIZE    "allocsize"    /* preferred allocation size */
--#define MNTOPT_NORECOVERY   "norecovery"   /* don't run XFS recovery */
--#define MNTOPT_BARRIER	"barrier"	/* use writer barriers for log write and
--					 * unwritten extent conversion */
--#define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
--#define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
--#define MNTOPT_32BITINODE   "inode32"	/* inode allocation limited to
--					 * XFS_MAXINUMBER_32 */
--#define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
--#define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
--#define MNTOPT_LARGEIO	   "largeio"	/* report large I/O sizes in stat() */
--#define MNTOPT_NOLARGEIO   "nolargeio"	/* do not report large I/O sizes
--					 * in stat(). */
--#define MNTOPT_ATTR2	"attr2"		/* do use attr2 attribute format */
--#define MNTOPT_NOATTR2	"noattr2"	/* do not use attr2 attribute format */
--#define MNTOPT_FILESTREAM  "filestreams" /* use filestreams allocator */
--#define MNTOPT_QUOTA	"quota"		/* disk quotas (user) */
--#define MNTOPT_NOQUOTA	"noquota"	/* no quotas */
--#define MNTOPT_USRQUOTA	"usrquota"	/* user quota enabled */
--#define MNTOPT_GRPQUOTA	"grpquota"	/* group quota enabled */
--#define MNTOPT_PRJQUOTA	"prjquota"	/* project quota enabled */
--#define MNTOPT_UQUOTA	"uquota"	/* user quota (IRIX variant) */
--#define MNTOPT_GQUOTA	"gquota"	/* group quota (IRIX variant) */
--#define MNTOPT_PQUOTA	"pquota"	/* project quota (IRIX variant) */
--#define MNTOPT_UQUOTANOENF "uqnoenforce"/* user quota limit enforcement */
--#define MNTOPT_GQUOTANOENF "gqnoenforce"/* group quota limit enforcement */
--#define MNTOPT_PQUOTANOENF "pqnoenforce"/* project quota limit enforcement */
--#define MNTOPT_QUOTANOENF  "qnoenforce"	/* same as uqnoenforce */
--#define MNTOPT_DISCARD	   "discard"	/* Discard unused blocks */
--#define MNTOPT_NODISCARD   "nodiscard"	/* Do not discard unused blocks */
--
--#define MNTOPT_DAX	"dax"		/* Enable direct access to bdev pages */
--
- /*
-  * Table driven mount option parser.
-- *
-- * Currently only used for remount, but it will be used for mount
-- * in the future, too.
-  */
- enum {
--	Opt_barrier,
--	Opt_nobarrier,
--	Opt_inode64,
--	Opt_inode32,
--	Opt_err
-+	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
-+	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
-+	Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
-+	Opt_allocsize, Opt_norecovery, Opt_barrier, Opt_nobarrier,
-+	Opt_inode64, Opt_inode32, Opt_ikeep, Opt_noikeep,
-+	Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2, Opt_filestreams,
-+	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
-+	Opt_uquota, Opt_gquota, Opt_pquota,
-+	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
-+	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
- };
- 
- static const match_table_t tokens = {
--	{Opt_barrier, "barrier"},
--	{Opt_nobarrier, "nobarrier"},
--	{Opt_inode64, "inode64"},
--	{Opt_inode32, "inode32"},
--	{Opt_err, NULL}
-+	{Opt_logbufs,	"logbufs=%u"},	/* number of XFS log buffers */
-+	{Opt_logbsize,	"logbsize=%s"},	/* size of XFS log buffers */
-+	{Opt_logdev,	"logdev=%s"},	/* log device */
-+	{Opt_rtdev,	"rtdev=%s"},	/* realtime I/O device */
-+	{Opt_biosize,	"biosize=%u"},	/* log2 of preferred buffered io size */
-+	{Opt_wsync,	"wsync"},	/* safe-mode nfs compatible mount */
-+	{Opt_noalign,	"noalign"},	/* turn off stripe alignment */
-+	{Opt_swalloc,	"swalloc"},	/* turn on stripe width allocation */
-+	{Opt_sunit,	"sunit=%u"},	/* data volume stripe unit */
-+	{Opt_swidth,	"swidth=%u"},	/* data volume stripe width */
-+	{Opt_nouuid,	"nouuid"},	/* ignore filesystem UUID */
-+	{Opt_mtpt,	"mtpt"},	/* filesystem mount point */
-+	{Opt_grpid,	"grpid"},	/* group-ID from parent directory */
-+	{Opt_nogrpid,	"nogrpid"},	/* group-ID from current process */
-+	{Opt_bsdgroups,	"bsdgroups"},	/* group-ID from parent directory */
-+	{Opt_sysvgroups,"sysvgroups"},	/* group-ID from current process */
-+	{Opt_allocsize,	"allocsize=%s"},/* preferred allocation size */
-+	{Opt_norecovery,"norecovery"},	/* don't run XFS recovery */
-+	{Opt_barrier,	"barrier"},	/* use writer barriers for log write and
-+					 * unwritten extent conversion */
-+	{Opt_nobarrier,	"nobarrier"},	/* .. disable */
-+	{Opt_inode64,	"inode64"},	/* inodes can be allocated anywhere */
-+	{Opt_inode32,   "inode32"},	/* inode allocation limited to
-+					 * XFS_MAXINUMBER_32 */
-+	{Opt_ikeep,	"ikeep"},	/* do not free empty inode clusters */
-+	{Opt_noikeep,	"noikeep"},	/* free empty inode clusters */
-+	{Opt_largeio,	"largeio"},	/* report large I/O sizes in stat() */
-+	{Opt_nolargeio,	"nolargeio"},	/* do not report large I/O sizes
-+					 * in stat(). */
-+	{Opt_attr2,	"attr2"},	/* do use attr2 attribute format */
-+	{Opt_noattr2,	"noattr2"},	/* do not use attr2 attribute format */
-+	{Opt_filestreams,"filestreams"},/* use filestreams allocator */
-+	{Opt_quota,	"quota"},	/* disk quotas (user) */
-+	{Opt_noquota,	"noquota"},	/* no quotas */
-+	{Opt_usrquota,	"usrquota"},	/* user quota enabled */
-+	{Opt_grpquota,	"grpquota"},	/* group quota enabled */
-+	{Opt_prjquota,	"prjquota"},	/* project quota enabled */
-+	{Opt_uquota,	"uquota"},	/* user quota (IRIX variant) */
-+	{Opt_gquota,	"gquota"},	/* group quota (IRIX variant) */
-+	{Opt_pquota,	"pquota"},	/* project quota (IRIX variant) */
-+	{Opt_uqnoenforce,"uqnoenforce"},/* user quota limit enforcement */
-+	{Opt_gqnoenforce,"gqnoenforce"},/* group quota limit enforcement */
-+	{Opt_pqnoenforce,"pqnoenforce"},/* project quota limit enforcement */
-+	{Opt_qnoenforce, "qnoenforce"},	/* same as uqnoenforce */
-+	{Opt_discard,	"discard"},	/* Discard unused blocks */
-+	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
-+
-+	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
-+	{Opt_err,	NULL},
- };
- 
- 
- STATIC int
--suffix_kstrtoint(char *s, unsigned int base, int *res)
-+suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
- {
- 	int	last, shift_left_factor = 0, _res;
--	char	*value = s;
-+	char	*value;
-+	int	ret = 0;
-+
-+	value = match_strdup(s);
-+	if (!value)
-+		return -ENOMEM;
- 
- 	last = strlen(value) - 1;
- 	if (value[last] == 'K' || value[last] == 'k') {
-@@ -157,10 +159,11 @@ suffix_kstrtoint(char *s, unsigned int base, int *res)
- 		value[last] = '\0';
- 	}
- 
--	if (kstrtoint(s, base, &_res))
--		return -EINVAL;
-+	if (kstrtoint(value, base, &_res))
-+		ret = -EINVAL;
-+	kfree(value);
- 	*res = _res << shift_left_factor;
--	return 0;
-+	return ret;
- }
- 
- /*
-@@ -176,7 +179,8 @@ xfs_parseargs(
- 	char			*options)
- {
- 	struct super_block	*sb = mp->m_super;
--	char			*this_char, *value;
-+	char			*p;
-+	substring_t		args[MAX_OPT_ARGS];
- 	int			dsunit = 0;
- 	int			dswidth = 0;
- 	int			iosize = 0;
-@@ -217,152 +221,152 @@ xfs_parseargs(
- 	if (!options)
- 		goto done;
- 
--	while ((this_char = strsep(&options, ",")) != NULL) {
--		if (!*this_char)
-+	while ((p = strsep(&options, ",")) != NULL) {
-+		int		token;
-+
-+		if (!*p)
- 			continue;
--		if ((value = strchr(this_char, '=')) != NULL)
--			*value++ = 0;
- 
--		if (!strcmp(this_char, MNTOPT_LOGBUFS)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
--				return -EINVAL;
--			}
--			if (kstrtoint(value, 10, &mp->m_logbufs))
--				return -EINVAL;
--		} else if (!strcmp(this_char, MNTOPT_LOGBSIZE)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
--				return -EINVAL;
--			}
--			if (suffix_kstrtoint(value, 10, &mp->m_logbsize))
-+		token = match_token(p, tokens, args);
-+		switch (token) {
-+		case Opt_logbufs:
-+			if (match_int(args, &mp->m_logbufs))
- 				return -EINVAL;
--		} else if (!strcmp(this_char, MNTOPT_LOGDEV)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
-+			break;
-+		case Opt_logbsize:
-+			if (suffix_kstrtoint(args, 10, &mp->m_logbsize))
- 				return -EINVAL;
--			}
--			mp->m_logname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
-+			break;
-+		case Opt_logdev:
-+			mp->m_logname = match_strdup(args);
- 			if (!mp->m_logname)
- 				return -ENOMEM;
--		} else if (!strcmp(this_char, MNTOPT_MTPT)) {
--			xfs_warn(mp, "%s option not allowed on this system",
--				this_char);
-+			break;
-+		case Opt_mtpt:
-+			xfs_warn(mp, "%s option not allowed on this system", p);
- 			return -EINVAL;
--		} else if (!strcmp(this_char, MNTOPT_RTDEV)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
--				return -EINVAL;
--			}
--			mp->m_rtname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
-+		case Opt_rtdev:
-+			mp->m_rtname = match_strdup(args);
- 			if (!mp->m_rtname)
- 				return -ENOMEM;
--		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE) ||
--			   !strcmp(this_char, MNTOPT_BIOSIZE)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
--				return -EINVAL;
--			}
--			if (suffix_kstrtoint(value, 10, &iosize))
-+			break;
-+		case Opt_allocsize:
-+		case Opt_biosize:
-+			if (suffix_kstrtoint(args, 10, &iosize))
- 				return -EINVAL;
- 			iosizelog = ffs(iosize) - 1;
--		} else if (!strcmp(this_char, MNTOPT_GRPID) ||
--			   !strcmp(this_char, MNTOPT_BSDGROUPS)) {
-+			break;
-+		case Opt_grpid:
-+		case Opt_bsdgroups:
- 			mp->m_flags |= XFS_MOUNT_GRPID;
--		} else if (!strcmp(this_char, MNTOPT_NOGRPID) ||
--			   !strcmp(this_char, MNTOPT_SYSVGROUPS)) {
-+			break;
-+		case Opt_nogrpid:
-+		case Opt_sysvgroups:
- 			mp->m_flags &= ~XFS_MOUNT_GRPID;
--		} else if (!strcmp(this_char, MNTOPT_WSYNC)) {
-+			break;
-+		case Opt_wsync:
- 			mp->m_flags |= XFS_MOUNT_WSYNC;
--		} else if (!strcmp(this_char, MNTOPT_NORECOVERY)) {
-+			break;
-+		case Opt_norecovery:
- 			mp->m_flags |= XFS_MOUNT_NORECOVERY;
--		} else if (!strcmp(this_char, MNTOPT_NOALIGN)) {
-+			break;
-+		case Opt_noalign:
- 			mp->m_flags |= XFS_MOUNT_NOALIGN;
--		} else if (!strcmp(this_char, MNTOPT_SWALLOC)) {
-+			break;
-+		case Opt_swalloc:
- 			mp->m_flags |= XFS_MOUNT_SWALLOC;
--		} else if (!strcmp(this_char, MNTOPT_SUNIT)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
--				return -EINVAL;
--			}
--			if (kstrtoint(value, 10, &dsunit))
--				return -EINVAL;
--		} else if (!strcmp(this_char, MNTOPT_SWIDTH)) {
--			if (!value || !*value) {
--				xfs_warn(mp, "%s option requires an argument",
--					this_char);
-+			break;
-+		case Opt_sunit:
-+			if (match_int(args, &dsunit))
- 				return -EINVAL;
--			}
--			if (kstrtoint(value, 10, &dswidth))
-+			break;
-+		case Opt_swidth:
-+			if (match_int(args, &dswidth))
- 				return -EINVAL;
--		} else if (!strcmp(this_char, MNTOPT_32BITINODE)) {
-+			break;
-+		case Opt_inode32:
- 			mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
--		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
-+			break;
-+		case Opt_inode64:
- 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
--		} else if (!strcmp(this_char, MNTOPT_NOUUID)) {
-+			break;
-+		case Opt_nouuid:
- 			mp->m_flags |= XFS_MOUNT_NOUUID;
--		} else if (!strcmp(this_char, MNTOPT_BARRIER)) {
-+			break;
-+		case Opt_barrier:
- 			mp->m_flags |= XFS_MOUNT_BARRIER;
--		} else if (!strcmp(this_char, MNTOPT_NOBARRIER)) {
-+			break;
-+		case Opt_nobarrier:
- 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
--		} else if (!strcmp(this_char, MNTOPT_IKEEP)) {
-+			break;
-+		case Opt_ikeep:
- 			mp->m_flags |= XFS_MOUNT_IKEEP;
--		} else if (!strcmp(this_char, MNTOPT_NOIKEEP)) {
-+			break;
-+		case Opt_noikeep:
- 			mp->m_flags &= ~XFS_MOUNT_IKEEP;
--		} else if (!strcmp(this_char, MNTOPT_LARGEIO)) {
-+			break;
-+		case Opt_largeio:
- 			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
--		} else if (!strcmp(this_char, MNTOPT_NOLARGEIO)) {
-+			break;
-+		case Opt_nolargeio:
- 			mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
--		} else if (!strcmp(this_char, MNTOPT_ATTR2)) {
-+			break;
-+		case Opt_attr2:
- 			mp->m_flags |= XFS_MOUNT_ATTR2;
--		} else if (!strcmp(this_char, MNTOPT_NOATTR2)) {
-+			break;
-+		case Opt_noattr2:
- 			mp->m_flags &= ~XFS_MOUNT_ATTR2;
- 			mp->m_flags |= XFS_MOUNT_NOATTR2;
--		} else if (!strcmp(this_char, MNTOPT_FILESTREAM)) {
-+			break;
-+		case Opt_filestreams:
- 			mp->m_flags |= XFS_MOUNT_FILESTREAMS;
--		} else if (!strcmp(this_char, MNTOPT_NOQUOTA)) {
-+			break;
-+		case Opt_noquota:
- 			mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
- 			mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
- 			mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
--		} else if (!strcmp(this_char, MNTOPT_QUOTA) ||
--			   !strcmp(this_char, MNTOPT_UQUOTA) ||
--			   !strcmp(this_char, MNTOPT_USRQUOTA)) {
-+			break;
-+		case Opt_quota:
-+		case Opt_uquota:
-+		case Opt_usrquota:
- 			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
- 					 XFS_UQUOTA_ENFD);
--		} else if (!strcmp(this_char, MNTOPT_QUOTANOENF) ||
--			   !strcmp(this_char, MNTOPT_UQUOTANOENF)) {
-+			break;
-+		case Opt_qnoenforce:
-+		case Opt_uqnoenforce:
- 			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
- 			mp->m_qflags &= ~XFS_UQUOTA_ENFD;
--		} else if (!strcmp(this_char, MNTOPT_PQUOTA) ||
--			   !strcmp(this_char, MNTOPT_PRJQUOTA)) {
-+			break;
-+		case Opt_pquota:
-+		case Opt_prjquota:
- 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
- 					 XFS_PQUOTA_ENFD);
--		} else if (!strcmp(this_char, MNTOPT_PQUOTANOENF)) {
-+			break;
-+		case Opt_pqnoenforce:
- 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
- 			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
--		} else if (!strcmp(this_char, MNTOPT_GQUOTA) ||
--			   !strcmp(this_char, MNTOPT_GRPQUOTA)) {
-+		case Opt_gquota:
-+		case Opt_grpquota:
- 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
- 					 XFS_GQUOTA_ENFD);
--		} else if (!strcmp(this_char, MNTOPT_GQUOTANOENF)) {
-+			break;
-+		case Opt_gqnoenforce:
- 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
- 			mp->m_qflags &= ~XFS_GQUOTA_ENFD;
--		} else if (!strcmp(this_char, MNTOPT_DISCARD)) {
-+			break;
-+		case Opt_discard:
- 			mp->m_flags |= XFS_MOUNT_DISCARD;
--		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
-+			break;
-+		case Opt_nodiscard:
- 			mp->m_flags &= ~XFS_MOUNT_DISCARD;
-+			break;
- #ifdef CONFIG_FS_DAX
--		} else if (!strcmp(this_char, MNTOPT_DAX)) {
-+		case Opt_dax:
- 			mp->m_flags |= XFS_MOUNT_DAX;
-+			break;
- #endif
--		} else {
--			xfs_warn(mp, "unknown mount option [%s].", this_char);
-+		default:
-+			xfs_warn(mp, "unknown mount option [%s].", p);
- 			return -EINVAL;
- 		}
- 	}
-@@ -461,25 +465,25 @@ xfs_showargs(
- {
- 	static struct proc_xfs_info xfs_info_set[] = {
- 		/* the few simple ones we can get from the mount struct */
--		{ XFS_MOUNT_IKEEP,		"," MNTOPT_IKEEP },
--		{ XFS_MOUNT_WSYNC,		"," MNTOPT_WSYNC },
--		{ XFS_MOUNT_NOALIGN,		"," MNTOPT_NOALIGN },
--		{ XFS_MOUNT_SWALLOC,		"," MNTOPT_SWALLOC },
--		{ XFS_MOUNT_NOUUID,		"," MNTOPT_NOUUID },
--		{ XFS_MOUNT_NORECOVERY,		"," MNTOPT_NORECOVERY },
--		{ XFS_MOUNT_ATTR2,		"," MNTOPT_ATTR2 },
--		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
--		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
--		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
--		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_32BITINODE },
--		{ XFS_MOUNT_DAX,		"," MNTOPT_DAX },
-+		{ XFS_MOUNT_IKEEP,		",ikeep" },
-+		{ XFS_MOUNT_WSYNC,		",wsync" },
-+		{ XFS_MOUNT_NOALIGN,		",noalign" },
-+		{ XFS_MOUNT_SWALLOC,		",swalloc" },
-+		{ XFS_MOUNT_NOUUID,		",nouuid" },
-+		{ XFS_MOUNT_NORECOVERY,		",norecovery" },
-+		{ XFS_MOUNT_ATTR2,		",attr2" },
-+		{ XFS_MOUNT_FILESTREAMS,	",filestreams" },
-+		{ XFS_MOUNT_GRPID,		",grpid" },
-+		{ XFS_MOUNT_DISCARD,		",discard" },
-+		{ XFS_MOUNT_SMALL_INUMS,	",inode32" },
-+		{ XFS_MOUNT_DAX,		",dax" },
- 		{ 0, NULL }
- 	};
- 	static struct proc_xfs_info xfs_info_unset[] = {
- 		/* the few simple ones we can get from the mount struct */
--		{ XFS_MOUNT_COMPAT_IOSIZE,	"," MNTOPT_LARGEIO },
--		{ XFS_MOUNT_BARRIER,		"," MNTOPT_NOBARRIER },
--		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_64BITINODE },
-+		{ XFS_MOUNT_COMPAT_IOSIZE,	",largeio" },
-+		{ XFS_MOUNT_BARRIER,		",nobarrier" },
-+		{ XFS_MOUNT_SMALL_INUMS,	",inode64" },
- 		{ 0, NULL }
- 	};
- 	struct proc_xfs_info	*xfs_infop;
-@@ -494,46 +498,46 @@ xfs_showargs(
- 	}
- 
- 	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
--		seq_printf(m, "," MNTOPT_ALLOCSIZE "=%dk",
-+		seq_printf(m, ",allocsize=%dk",
- 				(int)(1 << mp->m_writeio_log) >> 10);
- 
- 	if (mp->m_logbufs > 0)
--		seq_printf(m, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
-+		seq_printf(m, ",logbufs=%d", mp->m_logbufs);
- 	if (mp->m_logbsize > 0)
--		seq_printf(m, "," MNTOPT_LOGBSIZE "=%dk", mp->m_logbsize >> 10);
-+		seq_printf(m, ",logbsize=%dk", mp->m_logbsize >> 10);
- 
- 	if (mp->m_logname)
--		seq_show_option(m, MNTOPT_LOGDEV, mp->m_logname);
-+		seq_show_option(m, "logdev", mp->m_logname);
- 	if (mp->m_rtname)
--		seq_show_option(m, MNTOPT_RTDEV, mp->m_rtname);
-+		seq_show_option(m, "rtdev", mp->m_rtname);
- 
- 	if (mp->m_dalign > 0)
--		seq_printf(m, "," MNTOPT_SUNIT "=%d",
-+		seq_printf(m, ",sunit=%d",
- 				(int)XFS_FSB_TO_BB(mp, mp->m_dalign));
- 	if (mp->m_swidth > 0)
--		seq_printf(m, "," MNTOPT_SWIDTH "=%d",
-+		seq_printf(m, ",swidth=%d",
- 				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
- 
- 	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
--		seq_puts(m, "," MNTOPT_USRQUOTA);
-+		seq_puts(m, ",usrquota");
- 	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
--		seq_puts(m, "," MNTOPT_UQUOTANOENF);
-+		seq_puts(m, ",uqnoenforce");
- 
- 	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
- 		if (mp->m_qflags & XFS_PQUOTA_ENFD)
--			seq_puts(m, "," MNTOPT_PRJQUOTA);
-+			seq_puts(m, ",prjquota");
- 		else
--			seq_puts(m, "," MNTOPT_PQUOTANOENF);
-+			seq_puts(m, ",pqnoenforce");
- 	}
- 	if (mp->m_qflags & XFS_GQUOTA_ACCT) {
- 		if (mp->m_qflags & XFS_GQUOTA_ENFD)
--			seq_puts(m, "," MNTOPT_GRPQUOTA);
-+			seq_puts(m, ",grpquota");
- 		else
--			seq_puts(m, "," MNTOPT_GQUOTANOENF);
-+			seq_puts(m, ",gqnoenforce");
- 	}
- 
- 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
--		seq_puts(m, "," MNTOPT_NOQUOTA);
-+		seq_puts(m, ",noquota");
- 
- 	return 0;
- }
-@@ -1344,9 +1348,8 @@ xfs_finish_flags(
- 	 */
- 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
- 	    (mp->m_flags & XFS_MOUNT_NOATTR2)) {
--		xfs_warn(mp,
--"Cannot mount a V5 filesystem as %s. %s is always enabled for V5 filesystems.",
--			MNTOPT_NOATTR2, MNTOPT_ATTR2);
-+		xfs_warn(mp, "Cannot mount a V5 filesystem as noattr2. "
-+			     "attr2 is always enabled for V5 filesystems.");
- 		return -EINVAL;
- 	}
- 
+  Fix prerequisite packages to build fstests on Ubuntu (2016-02-08 09:27:15 +1100)
 
+are available in the git repository at:
+
+  https://github.com/djwong/xfstests for-dave
+
+for you to fetch changes up to 6e560dc336d857bc589b1debbf610fd2a3344ccd:
+
+  reflink: kick the slow tests out of the 'quick' group (2016-02-11 15:27:47 -0800)
+
+----------------------------------------------------------------
+Darrick J. Wong (32):
+      generic/182: this is a dedupe test, check for dedupe
+      xfstests: filter whitespace in 128 and 132
+      xfstests: make _scratch_mkfs_blocksized usable
+      reflink: remove redundant filesystem checks from the end of the tests
+      reflink: remove unnecessary umounts from test code
+      common/dmerror: add some more dmerror routines
+      common: create _require_test_program to look for programs in src/
+      common: provide a method to repair the scratch fs
+      reflink: refactor mixed block creation code
+      reflink: fix style problems in existing tests
+      reflink: add _require_odirect to the directio tests
+      dio: unwritten conversion bug tests
+      reflink: test intersecting CoW and falloc/fpunch/fzero/fcollapse/finsert/ftrunc
+      reflink: test CoW behavior with IO errors
+      reflink: test CoW operations against the source file
+      reflink: ensure that we can handle reflinking a lot of extents
+      xfs: more reflink tests
+      xfs/122: support refcount/rmap data structures
+      xfs: test fragmentation characteristics of copy-on-write
+      reflink: high offset reflink and dedupe tests
+      reflink: test xfs cow behavior when the filesystem crashes
+      reflink: test quota accounting
+      reflink: test CoW across a mixed range of block types with cowextsize set
+      xfs: test the automatic cowextsize extent garbage collector
+      xfs: test rmapbt functionality
+      reflink: test aio copy on write
+      xfs: aio cow tests
+      xfs: test xfs_getbmapx behavior with shared extents
+      reflink: test reflink+cow+enospc all at the same time
+      xfs: ensure that we don't crash when freeing the ag reservations on a ro mount
+      xfs: test source CoW across mixed block types with cowextsz set
+      reflink: kick the slow tests out of the 'quick' group
+
+ .gitignore                  |   2 +
+ common/dmerror              |  27 ++-
+ common/rc                   | 117 +++++++++++
+ common/reflink              | 202 +++++++++++++++---
+ src/Makefile                |   2 +-
+ src/aio-dio-regress/aiocp.c | 489 ++++++++++++++++++++++++++++++++++++++++++++
+ src/punch-alternating.c     |  59 ++++++
+ tests/btrfs/100             |   2 +-
+ tests/btrfs/101             |   2 +-
+ tests/generic/010           |   2 +-
+ tests/generic/094           |   2 +-
+ tests/generic/110           |   2 +-
+ tests/generic/111           |   2 +-
+ tests/generic/115           |   2 +-
+ tests/generic/116           |  44 ++--
+ tests/generic/118           |  42 ++--
+ tests/generic/119           | 102 ++++-----
+ tests/generic/121           |  44 ++--
+ tests/generic/122           |  44 ++--
+ tests/generic/134           |  78 +++----
+ tests/generic/136           |  78 +++----
+ tests/generic/137           |  44 ++--
+ tests/generic/138           | 104 +++++-----
+ tests/generic/139           |  99 ++++-----
+ tests/generic/140           | 104 +++++-----
+ tests/generic/142           |  37 ++--
+ tests/generic/143           |  38 ++--
+ tests/generic/144           | 124 +++++------
+ tests/generic/145           | 150 +++++++-------
+ tests/generic/146           | 132 ++++++------
+ tests/generic/147           | 146 ++++++-------
+ tests/generic/148           |  84 ++++----
+ tests/generic/149           | 132 ++++++------
+ tests/generic/150           |  23 ++-
+ tests/generic/151           |  35 ++--
+ tests/generic/152           |  39 ++--
+ tests/generic/153           |  41 ++--
+ tests/generic/154           |  43 ++--
+ tests/generic/155           |  40 ++--
+ tests/generic/156           |  43 ++--
+ tests/generic/157           |  64 +++---
+ tests/generic/157.out       |   1 -
+ tests/generic/158           |  66 +++---
+ tests/generic/158.out       |   1 -
+ tests/generic/159           |  19 +-
+ tests/generic/160           |  19 +-
+ tests/generic/161           |  30 ++-
+ tests/generic/161.out       |   2 -
+ tests/generic/162           |  36 ++--
+ tests/generic/162.out       |   2 -
+ tests/generic/163           |  36 ++--
+ tests/generic/163.out       |   2 -
+ tests/generic/164           |  40 ++--
+ tests/generic/164.out       |   2 -
+ tests/generic/165           |  39 ++--
+ tests/generic/165.out       |   2 -
+ tests/generic/166           |  36 ++--
+ tests/generic/166.out       |   2 -
+ tests/generic/167           |  35 ++--
+ tests/generic/167.out       |   2 -
+ tests/generic/168           |  37 ++--
+ tests/generic/168.out       |   2 -
+ tests/generic/170           |  38 ++--
+ tests/generic/170.out       |   2 -
+ tests/generic/171           |  62 +++---
+ tests/generic/171.out       |   1 -
+ tests/generic/172           |  62 +++---
+ tests/generic/172.out       |   1 -
+ tests/generic/173           |  54 +++--
+ tests/generic/173.out       |   1 -
+ tests/generic/174           |  63 +++---
+ tests/generic/174.out       |   1 -
+ tests/generic/175           |  47 ++---
+ tests/generic/175.out       |   5 +
+ tests/generic/176           |  54 +++--
+ tests/generic/176.out       |   5 +-
+ tests/generic/178           |  31 +--
+ tests/generic/179           |  50 ++---
+ tests/generic/180           |  50 ++---
+ tests/generic/181           |  38 ++--
+ tests/generic/182           |  89 ++++----
+ tests/generic/183           |  55 +++--
+ tests/generic/183.out       |   1 -
+ tests/generic/185           |  54 +++--
+ tests/generic/185.out       |   1 -
+ tests/generic/186           |  73 ++++---
+ tests/generic/186.out       |   1 -
+ tests/generic/187           |  74 +++----
+ tests/generic/187.out       |   1 -
+ tests/generic/188           |  47 ++---
+ tests/generic/188.out       |   1 -
+ tests/generic/189           |  46 ++---
+ tests/generic/189.out       |   1 -
+ tests/generic/190           |  47 ++---
+ tests/generic/190.out       |   1 -
+ tests/generic/191           |  46 ++---
+ tests/generic/191.out       |   1 -
+ tests/generic/194           |  52 ++---
+ tests/generic/194.out       |   1 -
+ tests/generic/195           |  51 ++---
+ tests/generic/195.out       |   1 -
+ tests/generic/196           |  49 ++---
+ tests/generic/196.out       |   1 -
+ tests/generic/197           |  48 ++---
+ tests/generic/197.out       |   1 -
+ tests/generic/199           |  70 ++-----
+ tests/generic/199.out       |   5 +-
+ tests/generic/200           |  70 ++-----
+ tests/generic/200.out       |   5 +-
+ tests/generic/201           |  42 ++--
+ tests/generic/201.out       |   1 -
+ tests/generic/202           |  41 ++--
+ tests/generic/202.out       |   1 -
+ tests/generic/203           |  42 ++--
+ tests/generic/203.out       |   1 -
+ tests/generic/205           |  51 +++--
+ tests/generic/205.out       |   1 -
+ tests/generic/206           |  52 +++--
+ tests/generic/206.out       |   1 -
+ tests/generic/216           |  51 +++--
+ tests/generic/216.out       |   1 -
+ tests/generic/217           |  52 +++--
+ tests/generic/217.out       |   1 -
+ tests/generic/218           |  43 ++--
+ tests/generic/218.out       |   1 -
+ tests/generic/220           |  44 ++--
+ tests/generic/220.out       |   1 -
+ tests/generic/222           |  51 +++--
+ tests/generic/222.out       |   1 -
+ tests/generic/225           |   2 +-
+ tests/generic/227           |  52 +++--
+ tests/generic/227.out       |   1 -
+ tests/generic/229           |  77 ++++---
+ tests/generic/229.out       |   1 -
+ tests/generic/238           |  78 ++++---
+ tests/generic/238.out       |   1 -
+ tests/generic/242           |  51 +++--
+ tests/generic/242.out       |   1 -
+ tests/generic/243           |  52 +++--
+ tests/generic/243.out       |   1 -
+ tests/generic/250           | 100 +++++++++
+ tests/generic/250.out       |  10 +
+ tests/generic/252           | 103 ++++++++++
+ tests/generic/252.out       |  10 +
+ tests/generic/253           |  90 ++++++++
+ tests/generic/253.out       |  12 ++
+ tests/generic/254           |  90 ++++++++
+ tests/generic/254.out       |  12 ++
+ tests/generic/259           |  90 ++++++++
+ tests/generic/259.out       |  12 ++
+ tests/generic/261           |  90 ++++++++
+ tests/generic/261.out       |  12 ++
+ tests/generic/262           |  93 +++++++++
+ tests/generic/262.out       |  12 ++
+ tests/generic/264           |  90 ++++++++
+ tests/generic/264.out       |  12 ++
+ tests/generic/265           |  99 +++++++++
+ tests/generic/265.out       |  11 +
+ tests/generic/266           |  97 +++++++++
+ tests/generic/266.out       |  11 +
+ tests/generic/267           | 100 +++++++++
+ tests/generic/267.out       |  10 +
+ tests/generic/268           | 103 ++++++++++
+ tests/generic/268.out       |  12 ++
+ tests/generic/271           | 100 +++++++++
+ tests/generic/271.out       |  11 +
+ tests/generic/272           |  98 +++++++++
+ tests/generic/272.out       |  11 +
+ tests/generic/276           | 101 +++++++++
+ tests/generic/276.out       |  11 +
+ tests/generic/278           | 104 ++++++++++
+ tests/generic/278.out       |  12 ++
+ tests/generic/279           | 100 +++++++++
+ tests/generic/279.out       |  11 +
+ tests/generic/281           |  98 +++++++++
+ tests/generic/281.out       |  11 +
+ tests/generic/282           | 101 +++++++++
+ tests/generic/282.out       |  10 +
+ tests/generic/283           | 104 ++++++++++
+ tests/generic/283.out       |  12 ++
+ tests/generic/284           |  89 ++++++++
+ tests/generic/284.out       |  12 ++
+ tests/generic/285           |   2 +-
+ tests/generic/286           |   2 +-
+ tests/generic/287           |  90 ++++++++
+ tests/generic/287.out       |  12 ++
+ tests/generic/289           |  91 +++++++++
+ tests/generic/289.out       |  12 ++
+ tests/generic/290           |  92 +++++++++
+ tests/generic/290.out       |  12 ++
+ tests/generic/291           |  91 +++++++++
+ tests/generic/291.out       |  12 ++
+ tests/generic/292           |  92 +++++++++
+ tests/generic/292.out       |  12 ++
+ tests/generic/293           |  93 +++++++++
+ tests/generic/293.out       |  12 ++
+ tests/generic/295           |  94 +++++++++
+ tests/generic/295.out       |  12 ++
+ tests/generic/296           |  90 ++++++++
+ tests/generic/296.out       |  12 ++
+ tests/generic/297           |  99 +++++++++
+ tests/generic/297.out       |   6 +
+ tests/generic/298           |  99 +++++++++
+ tests/generic/298.out       |   6 +
+ tests/generic/301           | 100 +++++++++
+ tests/generic/301.out       |  10 +
+ tests/generic/302           | 101 +++++++++
+ tests/generic/302.out       |  10 +
+ tests/generic/303           |  98 +++++++++
+ tests/generic/303.out       |  21 ++
+ tests/generic/304           |  99 +++++++++
+ tests/generic/304.out       |  22 ++
+ tests/generic/305           | 100 +++++++++
+ tests/generic/305.out       |  22 ++
+ tests/generic/311           |   2 +-
+ tests/generic/326           | 101 +++++++++
+ tests/generic/326.out       |  22 ++
+ tests/generic/327           |  87 ++++++++
+ tests/generic/327.out       |  12 ++
+ tests/generic/328           | 105 ++++++++++
+ tests/generic/328.out       |  25 +++
+ tests/generic/329           | 102 +++++++++
+ tests/generic/329.out       |  12 ++
+ tests/generic/330           |  93 +++++++++
+ tests/generic/330.out       |  11 +
+ tests/generic/331           | 104 ++++++++++
+ tests/generic/331.out       |  12 ++
+ tests/generic/332           |  94 +++++++++
+ tests/generic/332.out       |  11 +
+ tests/generic/333           |  99 +++++++++
+ tests/generic/333.out       |   4 +
+ tests/generic/334           |  98 +++++++++
+ tests/generic/334.out       |   4 +
+ tests/generic/group         |  71 +++++--
+ tests/xfs/032               |   3 +-
+ tests/xfs/044               |   2 +-
+ tests/xfs/122               |   3 +
+ tests/xfs/122.out           |   4 +
+ tests/xfs/127               |  33 ++-
+ tests/xfs/127.out           |   1 -
+ tests/xfs/128               |  97 +++++----
+ tests/xfs/128.out           |   9 +-
+ tests/xfs/129               |  33 ++-
+ tests/xfs/131               |  25 +--
+ tests/xfs/131.out           |   1 -
+ tests/xfs/132               |  53 ++---
+ tests/xfs/132.out           |  40 ++--
+ tests/xfs/139               |  35 ++--
+ tests/xfs/139.out           |   1 -
+ tests/xfs/140               |  41 ++--
+ tests/xfs/140.out           |   1 -
+ tests/xfs/169               |  86 ++++++++
+ tests/xfs/169.out           |   7 +
+ tests/xfs/179               | 118 +++++++++++
+ tests/xfs/179.out           |  10 +
+ tests/xfs/180               | 106 ++++++++++
+ tests/xfs/180.out           |  11 +
+ tests/xfs/182               | 107 ++++++++++
+ tests/xfs/182.out           |  12 ++
+ tests/xfs/184               | 105 ++++++++++
+ tests/xfs/184.out           |  10 +
+ tests/xfs/192               | 106 ++++++++++
+ tests/xfs/192.out           |  10 +
+ tests/xfs/193               | 102 +++++++++
+ tests/xfs/193.out           |  10 +
+ tests/xfs/198               | 103 ++++++++++
+ tests/xfs/198.out           |  10 +
+ tests/xfs/200               | 109 ++++++++++
+ tests/xfs/200.out           |  10 +
+ tests/xfs/204               | 110 ++++++++++
+ tests/xfs/204.out           |  10 +
+ tests/xfs/207               | 101 +++++++++
+ tests/xfs/207.out           |  18 ++
+ tests/xfs/208               | 138 +++++++++++++
+ tests/xfs/208.out           |  13 ++
+ tests/xfs/209               |  82 ++++++++
+ tests/xfs/209.out           |  13 ++
+ tests/xfs/210               | 108 ++++++++++
+ tests/xfs/210.out           |  23 +++
+ tests/xfs/211               | 107 ++++++++++
+ tests/xfs/211.out           |  11 +
+ tests/xfs/212               |  99 +++++++++
+ tests/xfs/212.out           |  13 ++
+ tests/xfs/213               | 105 ++++++++++
+ tests/xfs/213.out           |  22 ++
+ tests/xfs/214               | 106 ++++++++++
+ tests/xfs/214.out           |  22 ++
+ tests/xfs/215               | 102 +++++++++
+ tests/xfs/215.out           |  13 ++
+ tests/xfs/218               | 101 +++++++++
+ tests/xfs/218.out           |  13 ++
+ tests/xfs/219               | 102 +++++++++
+ tests/xfs/219.out           |  13 ++
+ tests/xfs/221               | 101 +++++++++
+ tests/xfs/221.out           |  13 ++
+ tests/xfs/223               | 104 ++++++++++
+ tests/xfs/223.out           |  13 ++
+ tests/xfs/224               | 103 ++++++++++
+ tests/xfs/224.out           |  13 ++
+ tests/xfs/225               | 102 +++++++++
+ tests/xfs/225.out           |  13 ++
+ tests/xfs/226               | 101 +++++++++
+ tests/xfs/226.out           |  13 ++
+ tests/xfs/228               | 110 ++++++++++
+ tests/xfs/228.out           |  13 ++
+ tests/xfs/230               | 110 ++++++++++
+ tests/xfs/230.out           |  13 ++
+ tests/xfs/231               | 130 ++++++++++++
+ tests/xfs/231.out           |  16 ++
+ tests/xfs/232               | 132 ++++++++++++
+ tests/xfs/232.out           |  16 ++
+ tests/xfs/233               |  73 +++++++
+ tests/xfs/233.out           |   5 +
+ tests/xfs/234               |  88 ++++++++
+ tests/xfs/234.out           |   6 +
+ tests/xfs/235               | 108 ++++++++++
+ tests/xfs/235.out           |  14 ++
+ tests/xfs/236               |  88 ++++++++
+ tests/xfs/236.out           |   7 +
+ tests/xfs/237               | 105 ++++++++++
+ tests/xfs/237.out           |  12 ++
+ tests/xfs/239               |  98 +++++++++
+ tests/xfs/239.out           |  11 +
+ tests/xfs/240               | 110 ++++++++++
+ tests/xfs/240.out           |  12 ++
+ tests/xfs/241               | 100 +++++++++
+ tests/xfs/241.out           |  11 +
+ tests/xfs/243               | 165 +++++++++++++++
+ tests/xfs/243.out           |  26 +++
+ tests/xfs/245               |  95 +++++++++
+ tests/xfs/245.out           |  12 ++
+ tests/xfs/246               |  65 ++++++
+ tests/xfs/246.out           |   6 +
+ tests/xfs/247               |  57 ++++++
+ tests/xfs/247.out           |   2 +
+ tests/xfs/248               |  91 +++++++++
+ tests/xfs/248.out           |  12 ++
+ tests/xfs/249               |  92 +++++++++
+ tests/xfs/249.out           |  12 ++
+ tests/xfs/251               |  93 +++++++++
+ tests/xfs/251.out           |  12 ++
+ tests/xfs/254               |  94 +++++++++
+ tests/xfs/254.out           |  12 ++
+ tests/xfs/255               |  93 +++++++++
+ tests/xfs/255.out           |  12 ++
+ tests/xfs/256               |  94 +++++++++
+ tests/xfs/256.out           |  12 ++
+ tests/xfs/257               |  95 +++++++++
+ tests/xfs/257.out           |  12 ++
+ tests/xfs/258               |  96 +++++++++
+ tests/xfs/258.out           |  12 ++
+ tests/xfs/group             |  56 ++++-
+ 352 files changed, 13925 insertions(+), 2729 deletions(-)
+ create mode 100644 src/aio-dio-regress/aiocp.c
+ create mode 100644 src/punch-alternating.c
+ create mode 100755 tests/generic/250
+ create mode 100644 tests/generic/250.out
+ create mode 100755 tests/generic/252
+ create mode 100644 tests/generic/252.out
+ create mode 100755 tests/generic/253
+ create mode 100644 tests/generic/253.out
+ create mode 100755 tests/generic/254
+ create mode 100644 tests/generic/254.out
+ create mode 100755 tests/generic/259
+ create mode 100644 tests/generic/259.out
+ create mode 100755 tests/generic/261
+ create mode 100644 tests/generic/261.out
+ create mode 100755 tests/generic/262
+ create mode 100644 tests/generic/262.out
+ create mode 100755 tests/generic/264
+ create mode 100644 tests/generic/264.out
+ create mode 100755 tests/generic/265
+ create mode 100644 tests/generic/265.out
+ create mode 100755 tests/generic/266
+ create mode 100644 tests/generic/266.out
+ create mode 100755 tests/generic/267
+ create mode 100644 tests/generic/267.out
+ create mode 100755 tests/generic/268
+ create mode 100644 tests/generic/268.out
+ create mode 100755 tests/generic/271
+ create mode 100644 tests/generic/271.out
+ create mode 100755 tests/generic/272
+ create mode 100644 tests/generic/272.out
+ create mode 100755 tests/generic/276
+ create mode 100644 tests/generic/276.out
+ create mode 100755 tests/generic/278
+ create mode 100644 tests/generic/278.out
+ create mode 100755 tests/generic/279
+ create mode 100644 tests/generic/279.out
+ create mode 100755 tests/generic/281
+ create mode 100644 tests/generic/281.out
+ create mode 100755 tests/generic/282
+ create mode 100644 tests/generic/282.out
+ create mode 100755 tests/generic/283
+ create mode 100644 tests/generic/283.out
+ create mode 100755 tests/generic/284
+ create mode 100644 tests/generic/284.out
+ create mode 100755 tests/generic/287
+ create mode 100644 tests/generic/287.out
+ create mode 100755 tests/generic/289
+ create mode 100644 tests/generic/289.out
+ create mode 100755 tests/generic/290
+ create mode 100644 tests/generic/290.out
+ create mode 100755 tests/generic/291
+ create mode 100644 tests/generic/291.out
+ create mode 100755 tests/generic/292
+ create mode 100644 tests/generic/292.out
+ create mode 100755 tests/generic/293
+ create mode 100644 tests/generic/293.out
+ create mode 100755 tests/generic/295
+ create mode 100644 tests/generic/295.out
+ create mode 100755 tests/generic/296
+ create mode 100644 tests/generic/296.out
+ create mode 100755 tests/generic/297
+ create mode 100644 tests/generic/297.out
+ create mode 100755 tests/generic/298
+ create mode 100644 tests/generic/298.out
+ create mode 100755 tests/generic/301
+ create mode 100644 tests/generic/301.out
+ create mode 100755 tests/generic/302
+ create mode 100644 tests/generic/302.out
+ create mode 100755 tests/generic/303
+ create mode 100644 tests/generic/303.out
+ create mode 100755 tests/generic/304
+ create mode 100644 tests/generic/304.out
+ create mode 100755 tests/generic/305
+ create mode 100644 tests/generic/305.out
+ create mode 100755 tests/generic/326
+ create mode 100644 tests/generic/326.out
+ create mode 100755 tests/generic/327
+ create mode 100644 tests/generic/327.out
+ create mode 100755 tests/generic/328
+ create mode 100644 tests/generic/328.out
+ create mode 100755 tests/generic/329
+ create mode 100644 tests/generic/329.out
+ create mode 100755 tests/generic/330
+ create mode 100644 tests/generic/330.out
+ create mode 100755 tests/generic/331
+ create mode 100644 tests/generic/331.out
+ create mode 100755 tests/generic/332
+ create mode 100644 tests/generic/332.out
+ create mode 100755 tests/generic/333
+ create mode 100644 tests/generic/333.out
+ create mode 100755 tests/generic/334
+ create mode 100644 tests/generic/334.out
+ create mode 100755 tests/xfs/169
+ create mode 100644 tests/xfs/169.out
+ create mode 100755 tests/xfs/179
+ create mode 100644 tests/xfs/179.out
+ create mode 100755 tests/xfs/180
+ create mode 100644 tests/xfs/180.out
+ create mode 100755 tests/xfs/182
+ create mode 100644 tests/xfs/182.out
+ create mode 100755 tests/xfs/184
+ create mode 100644 tests/xfs/184.out
+ create mode 100755 tests/xfs/192
+ create mode 100644 tests/xfs/192.out
+ create mode 100755 tests/xfs/193
+ create mode 100644 tests/xfs/193.out
+ create mode 100755 tests/xfs/198
+ create mode 100644 tests/xfs/198.out
+ create mode 100755 tests/xfs/200
+ create mode 100644 tests/xfs/200.out
+ create mode 100755 tests/xfs/204
+ create mode 100644 tests/xfs/204.out
+ create mode 100755 tests/xfs/207
+ create mode 100644 tests/xfs/207.out
+ create mode 100755 tests/xfs/208
+ create mode 100644 tests/xfs/208.out
+ create mode 100755 tests/xfs/209
+ create mode 100644 tests/xfs/209.out
+ create mode 100755 tests/xfs/210
+ create mode 100644 tests/xfs/210.out
+ create mode 100755 tests/xfs/211
+ create mode 100644 tests/xfs/211.out
+ create mode 100755 tests/xfs/212
+ create mode 100644 tests/xfs/212.out
+ create mode 100755 tests/xfs/213
+ create mode 100644 tests/xfs/213.out
+ create mode 100755 tests/xfs/214
+ create mode 100644 tests/xfs/214.out
+ create mode 100755 tests/xfs/215
+ create mode 100644 tests/xfs/215.out
+ create mode 100755 tests/xfs/218
+ create mode 100644 tests/xfs/218.out
+ create mode 100755 tests/xfs/219
+ create mode 100644 tests/xfs/219.out
+ create mode 100755 tests/xfs/221
+ create mode 100644 tests/xfs/221.out
+ create mode 100755 tests/xfs/223
+ create mode 100644 tests/xfs/223.out
+ create mode 100755 tests/xfs/224
+ create mode 100644 tests/xfs/224.out
+ create mode 100755 tests/xfs/225
+ create mode 100644 tests/xfs/225.out
+ create mode 100755 tests/xfs/226
+ create mode 100644 tests/xfs/226.out
+ create mode 100755 tests/xfs/228
+ create mode 100644 tests/xfs/228.out
+ create mode 100755 tests/xfs/230
+ create mode 100644 tests/xfs/230.out
+ create mode 100755 tests/xfs/231
+ create mode 100644 tests/xfs/231.out
+ create mode 100755 tests/xfs/232
+ create mode 100644 tests/xfs/232.out
+ create mode 100755 tests/xfs/233
+ create mode 100644 tests/xfs/233.out
+ create mode 100755 tests/xfs/234
+ create mode 100644 tests/xfs/234.out
+ create mode 100755 tests/xfs/235
+ create mode 100644 tests/xfs/235.out
+ create mode 100755 tests/xfs/236
+ create mode 100644 tests/xfs/236.out
+ create mode 100755 tests/xfs/237
+ create mode 100644 tests/xfs/237.out
+ create mode 100755 tests/xfs/239
+ create mode 100644 tests/xfs/239.out
+ create mode 100755 tests/xfs/240
+ create mode 100644 tests/xfs/240.out
+ create mode 100755 tests/xfs/241
+ create mode 100644 tests/xfs/241.out
+ create mode 100755 tests/xfs/243
+ create mode 100644 tests/xfs/243.out
+ create mode 100755 tests/xfs/245
+ create mode 100644 tests/xfs/245.out
+ create mode 100755 tests/xfs/246
+ create mode 100644 tests/xfs/246.out
+ create mode 100755 tests/xfs/247
+ create mode 100644 tests/xfs/247.out
+ create mode 100755 tests/xfs/248
+ create mode 100644 tests/xfs/248.out
+ create mode 100755 tests/xfs/249
+ create mode 100644 tests/xfs/249.out
+ create mode 100755 tests/xfs/251
+ create mode 100644 tests/xfs/251.out
+ create mode 100755 tests/xfs/254
+ create mode 100644 tests/xfs/254.out
+ create mode 100755 tests/xfs/255
+ create mode 100644 tests/xfs/255.out
+ create mode 100755 tests/xfs/256
+ create mode 100644 tests/xfs/256.out
+ create mode 100755 tests/xfs/257
+ create mode 100644 tests/xfs/257.out
+ create mode 100755 tests/xfs/258
+ create mode 100644 tests/xfs/258.out
 
 _______________________________________________
 xfs mailing list
