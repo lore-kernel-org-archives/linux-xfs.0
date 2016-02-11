@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 530527CA2
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:29:30 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 134AA7CA2
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:40:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 207BC304043
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 20:29:29 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C98F48F8033
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 20:40:29 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id X9RUy0sm5UKdCkrx for <xfs@oss.sgi.com>;
-	Tue, 16 Feb 2016 20:29:23 -0800 (PST)
+	ESMTP id sbwzmoESpDYvdsCU for <xfs@oss.sgi.com>;
+	Tue, 16 Feb 2016 20:40:25 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id D84C463C3D46
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:29:22 -0600 (CST)
-Subject: [PATCH 2/3 V2] xfs: sanitize remount options
-References: <56BBC982.50804@redhat.com> <56BBCA55.3000506@sandeen.net>
+	by sandeen.net (Postfix) with ESMTPSA id 7131863C3D46
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:40:25 -0600 (CST)
+Resent-To: xfs@oss.sgi.com
+Resent-Message-ID: <56C3F9B8.8070105@sandeen.net>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56C3F721.8080705@sandeen.net>
-Date: Tue, 16 Feb 2016 22:29:21 -0600
+Subject: [PATCH] xfs: test inode32/inode64 options w/ remount & growfs
+Message-ID: <56BD1C80.8090302@sandeen.net>
+Date: Thu, 11 Feb 2016 17:42:56 -0600
 MIME-Version: 1.0
-In-Reply-To: <56BBCA55.3000506@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,83 +32,310 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: fstests <fstests@vger.kernel.org>
 
-Perform basic sanitization of remount options by
-passing the option string and a dummy mount structure
-through xfs_parseargs and returning the result.
+inode32/inode64 allocator behavior with respect to mount,
+remount and growfs is a little tricky.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The inode32 mount option should only enable the inode32
+allocator heuristics if the filesystem is large enough
+for 64-bit inodes to exist.  Today, it has this behavior
+on the initial mount, but a remount with inode32
+unconditionally changes the allocation heuristics, even
+for a small fs.
+
+Also, an inode32 mounted small filesystem should transition
+to the inode32 allocator if the filesystem is subsequently
+grown to a sufficient size.  Today that does not happen.
+
+This test tests both of these behaviors and demonstrates the
+problem.
+
+Signed-off-by: Eric Sandeen <sandeen@redha.com>
 ---
 
-V2: make *sb const in xfs_parseargs, with comment about why
-    rename tmp->tmp_mp
+right now the golden output is the actual AGs for file
+data allocation; I'm not sure if that's too "tight" an
+output or not - the rotor *does* have well-defined
+behavior, so I think it's ok.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 9b2e268..fe4c14e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -169,13 +169,17 @@ suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
-  *
-  * Note that this function leaks the various device name allocations on
-  * failure.  The caller takes care of them.
-+ *
-+ * *sb is const because this is also used to test options on the remount
-+ * path, and we don't want this to have any side effects at remount time.
-+ * Today this function does not change *sb, but just to future-proof...
-  */
- STATIC int
- xfs_parseargs(
- 	struct xfs_mount	*mp,
- 	char			*options)
- {
--	struct super_block	*sb = mp->m_super;
-+	const struct super_block *sb = mp->m_super;
- 	char			*p;
- 	substring_t		args[MAX_OPT_ARGS];
- 	int			dsunit = 0;
-@@ -1167,6 +1171,27 @@ xfs_quiesce_attr(
- }
- 
- STATIC int
-+xfs_test_remount_options(
-+	struct super_block	*sb,
-+	struct xfs_mount	*mp,
-+	char			*options)
+diff --git a/tests/xfs/260 b/tests/xfs/260
+new file mode 100755
+index 0000000..a5e2324
+--- /dev/null
++++ b/tests/xfs/260
+@@ -0,0 +1,135 @@
++#! /bin/bash
++# FS QA Test 260
++#
++# Test inode32/inode64 mount/remount options, with growfs
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	int			error = 0;
-+	struct xfs_mount	*tmp_mp;
-+
-+	tmp_mp = kmem_zalloc(sizeof(*tmp_mp), KM_MAYFAIL);
-+	if (!tmp_mp)
-+		return -ENOMEM;
-+
-+	tmp_mp->m_super = sb;
-+	error = xfs_parseargs(tmp_mp, options);
-+	xfs_free_fsname(tmp_mp);
-+	kfree(tmp_mp);
-+
-+	return error;
++	cd /
++	rm -f $tmp.*
 +}
 +
-+STATIC int
- xfs_fs_remount(
- 	struct super_block	*sb,
- 	int			*flags,
-@@ -1178,6 +1203,11 @@ xfs_fs_remount(
- 	char			*p;
- 	int			error;
- 
-+	/* First, check for complete junk; i.e. invalid options */
-+	error = xfs_test_remount_options(sb, mp, options);
-+	if (error)
-+		return error;
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
 +
- 	sync_filesystem(sb);
- 	while ((p = strsep(&options, ",")) != NULL) {
- 		int token;
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_test
++_require_loop
++
++loopfile=$TEST_DIR/testfile
++loopmnt=$TEST_DIR/mnt
++
++mkdir -p $loopmnt
++
++# Takes file path as argument
++create_and_map()
++{
++	echo foo > $1
++	xfs_bmap -v $1 | grep -v "EXT\|file" | awk '{print $4}'
++}
++
++# Test proper inode32/inode64 behavior for initial mount and remount.
++# mount, remount, remount
++#
++# Args: size, initial opt, first remount, 2nd remount
++# i.e.: 512g inode32 inode64 inode32
++#   or:   4t inode64 inode32 inode64
++workout_remount()
++{
++	echo "Remount: $1, $2, $3, $4"
++
++	rm -f $loopfile
++	xfs_io -f -c "truncate $1" $loopfile
++	$MKFS_XFS_PROG $loopfile >> $seqres.full 2>&1
++
++	echo "mount $2"
++	mount -t xfs -o loop,$2 $loopfile $loopmnt
++	for I in `seq 1 4`; do create_and_map $loopmnt/file$I; done
++
++	echo "remount $3"
++	mount -o remount,$3 $loopmnt
++	for I in `seq 5 8`; do create_and_map $loopmnt/file$I; done
++
++	echo "remount $4"
++	mount -o remount,$4 $loopmnt
++	for I in `seq 9 12`; do create_and_map $loopmnt/file$I; done
++
++	umount $loopmnt
++}
++
++# Test proper inode32/inode64 across a growfs
++# Mount, grow, remount
++#
++# Args: size1, size2, mount opt, remount opt
++# i.e.: 512g 1t inode32 inode64
++
++workout_growfs()
++{
++	echo "Growfs: $1, $2, $3, $4"
++
++	rm -f $loopfile
++	xfs_io -f -c "truncate $2" $loopfile
++	$MKFS_XFS_PROG -d size=$1 $loopfile >> $seqres.full 2>&1
++
++	echo "$1, mount $3"
++	mount -t xfs -o loop,$3 $loopfile $loopmnt
++	for I in `seq 1 4`; do create_and_map $loopmnt/file$I; done
++
++	echo "growfs $1 to $2"
++	$XFS_GROWFS_PROG $loopmnt >> $seqres.full 2>&1
++	for I in `seq 5 12`; do create_and_map $loopmnt/file$I; done
++
++	# Do more than 4 files here to try to hit new AGs
++	echo "$2, remount $4"
++	mount -o remount,$4 $loopmnt
++	for I in `seq 13 20`; do create_and_map $loopmnt/file$I; done
++
++	umount $loopmnt
++}
++
++workout_remount 128g inode64 inode32 inode64
++workout_remount 128g inode32 inode64 inode32
++workout_remount   4t inode64 inode32 inode64
++workout_remount   4t inode32 inode64 inode32
++
++workout_growfs 1t 4t inode32 inode64
++workout_growfs 1t 4t inode64 inode32
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/260.out b/tests/xfs/260.out
+new file mode 100644
+index 0000000..4bdf2f0
+--- /dev/null
++++ b/tests/xfs/260.out
+@@ -0,0 +1,113 @@
++QA output created by 260
++Remount: 128g, inode64, inode32, inode64
++mount inode64
++0
++0
++0
++0
++remount inode32
++0
++0
++0
++0
++remount inode64
++0
++0
++0
++0
++Remount: 128g, inode32, inode64, inode32
++mount inode32
++0
++0
++0
++0
++remount inode64
++0
++0
++0
++0
++remount inode32
++0
++0
++0
++0
++Remount: 4t, inode64, inode32, inode64
++mount inode64
++0
++0
++0
++0
++remount inode32
++1
++2
++3
++1
++remount inode64
++0
++0
++0
++0
++Remount: 4t, inode32, inode64, inode32
++mount inode32
++1
++2
++3
++1
++remount inode64
++0
++0
++0
++0
++remount inode32
++2
++3
++1
++2
++Growfs: 1t, 4t, inode32, inode64
++1t, mount inode32
++0
++0
++0
++0
++growfs 1t to 4t
++1
++2
++3
++4
++5
++6
++7
++8
++4t, remount inode64
++0
++0
++0
++0
++0
++0
++0
++0
++Growfs: 1t, 4t, inode64, inode32
++1t, mount inode64
++0
++0
++0
++0
++growfs 1t to 4t
++0
++0
++0
++0
++0
++0
++0
++0
++4t, remount inode32
++1
++2
++3
++4
++5
++6
++7
++8
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 2db3520..ce0c69d 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -207,6 +207,7 @@
+ 252 auto quick prealloc
+ 253 auto quick
+ 259 auto quick
++260 auto growfs
+ 261 auto quick quota
+ 262 auto quick quota
+ 266 dump ioctl auto quick
 
+--
+To unsubscribe from this list: send the line "unsubscribe fstests" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
