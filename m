@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9C5B27CBB
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:40:21 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C49387CAE
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 17:40:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8DAE2304059
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:40:21 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id VsslWDKGELitvuiN (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 47105AC006
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:40:37 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id mDQE2PhrDK9gxSrl (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:40:18 -0800 (PST)
-Subject: [PATCH 09/32] reflink: refactor mixed block creation code
+	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 15:40:34 -0800 (PST)
+Subject: [PATCH 11/32] reflink: add _require_odirect to the directio tests
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 11 Feb 2016 15:40:15 -0800
-Message-ID: <20160211234015.2202.41362.stgit@birch.djwong.org>
+Date: Thu, 11 Feb 2016 15:40:29 -0800
+Message-ID: <20160211234029.2202.82743.stgit@birch.djwong.org>
 In-Reply-To: <20160211233916.2202.40961.stgit@birch.djwong.org>
 References: <20160211233916.2202.40961.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,441 +31,299 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Refactor the code that creates files with mixed block types that we feed
-into CoW tests to make sure that we can tiptoe around that kind of stuff.
+For the tests that test O_DIRECT, we need to _require_odirect.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/reflink        |  108 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/188     |    8 ----
- tests/generic/189     |    8 ----
- tests/generic/190     |    8 ----
- tests/generic/191     |    8 ----
- tests/generic/194     |   13 +-----
- tests/generic/195     |   13 +-----
- tests/generic/196     |    8 ----
- tests/generic/197     |    8 ----
- tests/generic/199     |   31 +-------------
- tests/generic/199.out |    4 +-
- tests/generic/200     |   31 +-------------
- tests/generic/200.out |    4 +-
- 13 files changed, 126 insertions(+), 126 deletions(-)
+ tests/generic/139 |    1 +
+ tests/generic/143 |    1 +
+ tests/generic/155 |    1 +
+ tests/generic/165 |    1 +
+ tests/generic/166 |    1 +
+ tests/generic/170 |    1 +
+ tests/generic/174 |    1 +
+ tests/generic/183 |    1 +
+ tests/generic/187 |    1 +
+ tests/generic/188 |    1 +
+ tests/generic/190 |    1 +
+ tests/generic/194 |    1 +
+ tests/generic/196 |    1 +
+ tests/generic/199 |    1 +
+ tests/generic/200 |    1 +
+ tests/generic/203 |    1 +
+ tests/generic/206 |    1 +
+ tests/generic/217 |    1 +
+ tests/generic/220 |    1 +
+ tests/generic/227 |    1 +
+ tests/generic/238 |    1 +
+ tests/generic/243 |    1 +
+ 22 files changed, 22 insertions(+)
 
 
-diff --git a/common/reflink b/common/reflink
-index 3d6a8c1..b92f664 100644
---- a/common/reflink
-+++ b/common/reflink
-@@ -187,3 +187,111 @@ _dedupe_range() {
+diff --git a/tests/generic/139 b/tests/generic/139
+index 5e7b631..989b054 100755
+--- a/tests/generic/139
++++ b/tests/generic/139
+@@ -47,6 +47,7 @@ _cleanup()
+ _supported_os Linux
+ _require_test_reflink
+ _require_cp_reflink
++_require_odirect
  
- 	"$XFS_IO_PROG" $xfs_io_args -f -c "dedupe $file1 $offset1 $offset2 $len" "$file2"
- }
-+
-+# Create a file of interleaved unwritten and reflinked blocks
-+_weave_reflink_unwritten() {
-+	blksz=$1
-+	nr=$2
-+	sfile=$3
-+	dfile=$4
-+
-+	_pwrite_byte 0x61 0 $((blksz * nr)) $sfile
-+	$XFS_IO_PROG -f -c "falloc 0 $((blksz * nr))" $dfile
-+	_pwrite_byte 0x00 0 $((blksz * nr)) $dfile.chk
-+	seq 0 2 $((nr - 1)) | while read i; do
-+		_reflink_range $sfile $((blksz * i)) $dfile $((blksz * i)) $blksz
-+		_pwrite_byte 0x61 $((blksz * i)) $blksz $dfile.chk
-+	done
-+}
-+
-+# Create a file of interleaved holes and reflinked blocks
-+_weave_reflink_holes() {
-+	blksz=$1
-+	nr=$2
-+	sfile=$3
-+	dfile=$4
-+
-+	_pwrite_byte 0x61 0 $((blksz * nr)) $sfile
-+	$XFS_IO_PROG -f -c "truncate $((blksz * nr))" $dfile
-+	_pwrite_byte 0x00 0 $((blksz * nr)) $dfile.chk
-+	seq 0 2 $((nr - 1)) | while read i; do
-+		_reflink_range $sfile $((blksz * i)) $dfile $((blksz * i)) $blksz
-+		_pwrite_byte 0x61 $((blksz * i)) $blksz $dfile.chk
-+	done
-+}
-+
-+# For a file created with _weave_reflink_holes, fill the holes with delalloc
-+# extents
-+_weave_reflink_holes_delalloc() {
-+	blksz=$1
-+	nr=$2
-+	dfile=$3
-+
-+	seq 1 2 $((nr - 1)) | while read i; do
-+		_pwrite_byte 0x62 $((blksz * i)) $blksz $dfile
-+		_pwrite_byte 0x62 $((blksz * i)) $blksz $dfile.chk
-+	done
-+}
-+
-+# Create a file of interleaved regular blocks and reflinked blocks
-+_weave_reflink_regular() {
-+	blksz=$1
-+	nr=$2
-+	sfile=$3
-+	dfile=$4
-+
-+	_pwrite_byte 0x61 0 $((blksz * nr)) $sfile
-+	_pwrite_byte 0x62 0 $((blksz * nr)) $dfile
-+	_pwrite_byte 0x62 0 $((blksz * nr)) $dfile.chk
-+	seq 0 2 $((nr - 1)) | while read i; do
-+		_reflink_range $sfile $((blksz * i)) $dfile $((blksz * i)) $blksz
-+		_pwrite_byte 0x61 $((blksz * i)) $blksz $dfile.chk
-+	done
-+}
-+
-+# Create a file of interleaved holes, unwritten blocks, regular blocks, and
-+# reflinked blocks
-+_weave_reflink_rainbow() {
-+	blksz=$1
-+	nr=$2
-+	sfile=$3
-+	dfile=$4
-+
-+	_pwrite_byte 0x61 0 $((blksz * nr)) $sfile
-+	$XFS_IO_PROG -f -c "truncate $((blksz * nr))" $dfile
-+	_pwrite_byte 0x00 0 $((blksz * nr)) $dfile.chk
-+	# 0 blocks are reflinked
-+	seq 0 5 $((nr - 1)) | while read i; do
-+		_reflink_range $sfile $((blksz * i)) $dfile $((blksz * i)) $blksz
-+		_pwrite_byte 0x61 $((blksz * i)) $blksz $dfile.chk
-+	done
-+	# 1 blocks are unwritten
-+	seq 1 5 $((nr - 1)) | while read i; do
-+		$XFS_IO_PROG -f -c "falloc $((blksz * i)) $blksz" $dfile
-+		_pwrite_byte 0x00 $((blksz * i)) $blksz $dfile.chk
-+	done
-+	# 2 blocks are holes
-+	seq 2 5 $((nr - 1)) | while read i; do
-+		_pwrite_byte 0x00 $((blksz * i)) $blksz $dfile.chk
-+	done
-+	# 3 blocks are regular
-+	seq 3 5 $((nr - 1)) | while read i; do
-+		_pwrite_byte 0x71 $((blksz * i)) $blksz $dfile
-+		_pwrite_byte 0x71 $((blksz * i)) $blksz $dfile.chk
-+	done
-+	# 4 blocks will be delalloc later
-+}
-+
-+# For a file created with _weave_reflink_rainbow, fill the holes with delalloc
-+# extents
-+_weave_reflink_rainbow_delalloc() {
-+	blksz=$1
-+	nr=$2
-+	dfile=$3
-+
-+	# 4 blocks are delalloc (do later)
-+	seq 4 5 $((nr - 1)) | while read i; do
-+		_pwrite_byte 0x62 $((blksz * i)) $blksz $dfile
-+		_pwrite_byte 0x62 $((blksz * i)) $blksz $dfile.chk
-+	done
-+}
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/143 b/tests/generic/143
+index 586cf5c..703b585 100755
+--- a/tests/generic/143
++++ b/tests/generic/143
+@@ -49,6 +49,7 @@ _cleanup()
+ _supported_os Linux
+ _require_test_reflink
+ _require_cp_reflink
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/155 b/tests/generic/155
+index c6416a1..e96bda7 100755
+--- a/tests/generic/155
++++ b/tests/generic/155
+@@ -55,6 +55,7 @@ _supported_os Linux
+ _require_test_reflink
+ _require_cp_reflink
+ _require_xfs_io_command "fzero"
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/165 b/tests/generic/165
+index e4c9a9d..1ae08a4 100755
+--- a/tests/generic/165
++++ b/tests/generic/165
+@@ -47,6 +47,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_odirect
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/generic/166 b/tests/generic/166
+index 9be753d..9b177be 100755
+--- a/tests/generic/166
++++ b/tests/generic/166
+@@ -47,6 +47,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_odirect
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/generic/170 b/tests/generic/170
+index dbf1564..0f29b3a 100755
+--- a/tests/generic/170
++++ b/tests/generic/170
+@@ -46,6 +46,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _require_scratch_reflink
++_require_odirect
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/generic/174 b/tests/generic/174
+index cec2f05..edfc2bc 100755
+--- a/tests/generic/174
++++ b/tests/generic/174
+@@ -46,6 +46,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/183 b/tests/generic/183
+index 0f35da2..0ab4afe 100755
+--- a/tests/generic/183
++++ b/tests/generic/183
+@@ -49,6 +49,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _require_scratch_reflink
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/187 b/tests/generic/187
+index b8fade2..ac6037d 100755
+--- a/tests/generic/187
++++ b/tests/generic/187
+@@ -55,6 +55,7 @@ _require_cp_reflink
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fpunch"
+ test $FSTYP = "btrfs" && _notrun "Can't fragment free space on btrfs."
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
 diff --git a/tests/generic/188 b/tests/generic/188
-index 7596c4b..86980cc 100755
+index 7be1080..bb293b1 100755
 --- a/tests/generic/188
 +++ b/tests/generic/188
-@@ -63,13 +63,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "falloc 0 $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x00 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_unwritten $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+@@ -49,6 +49,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
  
- echo "Compare files"
-diff --git a/tests/generic/189 b/tests/generic/189
-index 130dc58..8f5a338 100755
---- a/tests/generic/189
-+++ b/tests/generic/189
-@@ -63,13 +63,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "falloc 0 $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x00 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_unwritten $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+ rm -f $seqres.full
  
- echo "Compare files"
 diff --git a/tests/generic/190 b/tests/generic/190
-index 0171475..8edfeb7 100755
+index a5c2137..b4de3ed 100755
 --- a/tests/generic/190
 +++ b/tests/generic/190
-@@ -63,13 +63,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "truncate $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x00 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_holes $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+@@ -49,6 +49,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
  
- echo "Compare files"
-diff --git a/tests/generic/191 b/tests/generic/191
-index 34d96f9..dd97baa 100755
---- a/tests/generic/191
-+++ b/tests/generic/191
-@@ -63,13 +63,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "truncate $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x00 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_holes $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+ rm -f $seqres.full
  
- echo "Compare files"
 diff --git a/tests/generic/194 b/tests/generic/194
-index e9feaad..82b3100 100755
+index 69a3e6c..f67e567 100755
 --- a/tests/generic/194
 +++ b/tests/generic/194
-@@ -64,13 +64,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "truncate $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x00 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_holes $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+@@ -50,6 +50,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
  
- echo "Compare files"
-@@ -79,10 +73,7 @@ md5sum "$testdir/file3" | _filter_scratch
- md5sum "$testdir/file3.chk" | _filter_scratch
+ rm -f $seqres.full
  
- echo "directio CoW across the transition"
--seq 1 2 $((nr-1)) | while read f; do
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_holes_delalloc $blksz $nr $testdir/file3 >> $seqres.full
- "$XFS_IO_PROG" -d -f -c "pwrite -S 0x63 -b $((blksz * nr / 2)) $((blksz * nr / 4)) $((blksz * nr / 2))" "$testdir/file3" >> "$seqres.full"
- _pwrite_byte 0x63 $((blksz * nr / 4)) $((blksz * nr / 2)) "$testdir/file3.chk" >> "$seqres.full"
- _scratch_remount
-diff --git a/tests/generic/195 b/tests/generic/195
-index 32548ba..ce4c0a9 100755
---- a/tests/generic/195
-+++ b/tests/generic/195
-@@ -64,13 +64,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "truncate $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x00 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_holes $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
- 
- echo "Compare files"
-@@ -79,10 +73,7 @@ md5sum "$testdir/file3" | _filter_scratch
- md5sum "$testdir/file3.chk" | _filter_scratch
- 
- echo "CoW across the transition"
--seq 1 2 $((nr-1)) | while read f; do
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_holes_delalloc $blksz $nr $testdir/file3 >> $seqres.full
- "$XFS_IO_PROG" -f -c "pwrite -S 0x63 -b $((blksz * nr / 2)) $((blksz * nr / 4)) $((blksz * nr / 2))" "$testdir/file3" >> "$seqres.full"
- _pwrite_byte 0x63 $((blksz * nr / 4)) $((blksz * nr / 2)) "$testdir/file3.chk" >> "$seqres.full"
- _scratch_remount
 diff --git a/tests/generic/196 b/tests/generic/196
-index 4ec2cff..a7a0035 100755
+index 951079c..1505de8 100755
 --- a/tests/generic/196
 +++ b/tests/generic/196
-@@ -63,13 +63,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--_pwrite_byte 0x62 0 $((blksz * nr)) "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x62 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_regular $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+@@ -49,6 +49,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
  
- echo "Compare files"
-diff --git a/tests/generic/197 b/tests/generic/197
-index 356a587..84a14ff 100755
---- a/tests/generic/197
-+++ b/tests/generic/197
-@@ -63,13 +63,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--_pwrite_byte 0x62 0 $((blksz * nr)) "$testdir/file3" >> "$seqres.full"
--_pwrite_byte 0x62 0 $((blksz * nr)) "$testdir/file3.chk" >> "$seqres.full"
--seq 0 2 $((nr-1)) | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_regular $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+ rm -f $seqres.full
  
- echo "Compare files"
 diff --git a/tests/generic/199 b/tests/generic/199
-index 03b8fda..6a65533 100755
+index f457245..04380ed 100755
 --- a/tests/generic/199
 +++ b/tests/generic/199
-@@ -69,30 +69,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "truncate $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--# 0 blocks are reflinked
--seq 0 5 $nr | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--sync
--# 1 blocks are unwritten
--seq 1 5 $nr | while read f; do
--	$XFS_IO_PROG -f -c "falloc $((blksz * f)) $blksz" "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x00 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--sync
--# 2 blocks are holes
--seq 2 5 $nr | while read f; do
--	_pwrite_byte 0x00 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--# 3 blocks are regular
--seq 3 5 $nr | while read f; do
--	_pwrite_byte 0x71 $((blksz * f)) $blksz "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x71 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--sync
-+_weave_reflink_rainbow $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+@@ -55,6 +55,7 @@ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fpunch"
+ _require_cp_reflink
++_require_odirect
  
- echo "Compare files"
-@@ -101,11 +78,7 @@ md5sum "$testdir/file3" | _filter_scratch
- md5sum "$testdir/file3.chk" | _filter_scratch
+ rm -f $seqres.full
  
- echo "directio CoW across the transition"
--# 4 blocks are delalloc (do later)
--seq 4 5 $nr | while read f; do
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_rainbow_delalloc $blksz $nr $testdir/file3 >> $seqres.full
- # now cow
- "$XFS_IO_PROG" -d -f -c "pwrite -S 0x63 -b $((blksz * nr / 2)) $((blksz * nr / 4)) $((blksz * nr / 2))" "$testdir/file3" >> "$seqres.full"
- _pwrite_byte 0x63 $((blksz * nr / 4)) $((blksz * nr / 2)) "$testdir/file3.chk" >> "$seqres.full"
-diff --git a/tests/generic/199.out b/tests/generic/199.out
-index b35c135..a1016ac 100644
---- a/tests/generic/199.out
-+++ b/tests/generic/199.out
-@@ -8,5 +8,5 @@ bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-199/file1
- directio CoW across the transition
- Compare files
- bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-199/file1
--36f6b5317a9a921fc91175390ccf7f69  SCRATCH_MNT/test-199/file3
--36f6b5317a9a921fc91175390ccf7f69  SCRATCH_MNT/test-199/file3.chk
-+26aa3a0749b867ec58363c8539ee5471  SCRATCH_MNT/test-199/file3
-+26aa3a0749b867ec58363c8539ee5471  SCRATCH_MNT/test-199/file3.chk
 diff --git a/tests/generic/200 b/tests/generic/200
-index e71eedc..541d16d 100755
+index ffb5869..2aa0315 100755
 --- a/tests/generic/200
 +++ b/tests/generic/200
-@@ -69,30 +69,7 @@ mkdir $testdir
- echo "Create the original files"
- blksz=65536
- nr=64
--_pwrite_byte 0x61 0 $((blksz * nr)) "$testdir/file1" >> "$seqres.full"
--$XFS_IO_PROG -f -c "truncate $((blksz * nr))" "$testdir/file3" >> "$seqres.full"
--# 0 blocks are reflinked
--seq 0 5 $nr | while read f; do
--	_reflink_range "$testdir/file1" $((blksz * f)) "$testdir/file3" $((blksz * f)) $blksz >> "$seqres.full"
--	_pwrite_byte 0x61 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--sync
--# 1 blocks are unwritten
--seq 1 5 $nr | while read f; do
--	$XFS_IO_PROG -f -c "falloc $((blksz * f)) $blksz" "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x00 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--sync
--# 2 blocks are holes
--seq 2 5 $nr | while read f; do
--	_pwrite_byte 0x00 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--# 3 blocks are regular
--seq 3 5 $nr | while read f; do
--	_pwrite_byte 0x71 $((blksz * f)) $blksz "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x71 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
--sync
-+_weave_reflink_rainbow $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
- _scratch_remount
+@@ -55,6 +55,7 @@ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fpunch"
+ _require_cp_reflink
++_require_odirect
  
- echo "Compare files"
-@@ -101,11 +78,7 @@ md5sum "$testdir/file3" | _filter_scratch
- md5sum "$testdir/file3.chk" | _filter_scratch
+ rm -f $seqres.full
  
- echo "directio CoW across the transition"
--# 4 blocks are delalloc (do later)
--seq 4 5 $nr | while read f; do
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3" >> "$seqres.full"
--	_pwrite_byte 0x62 $((blksz * f)) $blksz "$testdir/file3.chk" >> "$seqres.full"
--done
-+_weave_reflink_rainbow_delalloc $blksz $nr $testdir/file3 >> $seqres.full
- # now cow
- "$XFS_IO_PROG" -f -c "pwrite -S 0x63 -b $((blksz * nr / 2)) $((blksz * nr / 4)) $((blksz * nr / 2))" "$testdir/file3" >> "$seqres.full"
- _pwrite_byte 0x63 $((blksz * nr / 4)) $((blksz * nr / 2)) "$testdir/file3.chk" >> "$seqres.full"
-diff --git a/tests/generic/200.out b/tests/generic/200.out
-index 140eff9..76c01c7 100644
---- a/tests/generic/200.out
-+++ b/tests/generic/200.out
-@@ -8,5 +8,5 @@ bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-200/file1
- directio CoW across the transition
- Compare files
- bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-200/file1
--36f6b5317a9a921fc91175390ccf7f69  SCRATCH_MNT/test-200/file3
--36f6b5317a9a921fc91175390ccf7f69  SCRATCH_MNT/test-200/file3.chk
-+26aa3a0749b867ec58363c8539ee5471  SCRATCH_MNT/test-200/file3
-+26aa3a0749b867ec58363c8539ee5471  SCRATCH_MNT/test-200/file3.chk
+diff --git a/tests/generic/203 b/tests/generic/203
+index 5d9bfc4..2ffb311 100755
+--- a/tests/generic/203
++++ b/tests/generic/203
+@@ -44,6 +44,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/206 b/tests/generic/206
+index 4054626..6b3e200 100755
+--- a/tests/generic/206
++++ b/tests/generic/206
+@@ -47,6 +47,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _require_scratch_reflink
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/217 b/tests/generic/217
+index b1bd635..ce8e0a1 100755
+--- a/tests/generic/217
++++ b/tests/generic/217
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/220 b/tests/generic/220
+index edb8432..3bce21b 100755
+--- a/tests/generic/220
++++ b/tests/generic/220
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/227 b/tests/generic/227
+index abaf8f7..00985d3 100755
+--- a/tests/generic/227
++++ b/tests/generic/227
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/238 b/tests/generic/238
+index ce7408c..3b46492 100755
+--- a/tests/generic/238
++++ b/tests/generic/238
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc"
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/243 b/tests/generic/243
+index 127070e..e1d698b 100755
+--- a/tests/generic/243
++++ b/tests/generic/243
+@@ -47,6 +47,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_odirect
+ 
+ rm -f $seqres.full
+ 
 
 _______________________________________________
 xfs mailing list
