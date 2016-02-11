@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 424D27CA6
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 00:45:59 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6D59B7CA2
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 06:24:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 20D8A8F8050
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 22:45:59 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	X2B1jSLQjnrPJT6C for <xfs@oss.sgi.com>;
-	Wed, 10 Feb 2016 22:45:56 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aTl0e-0007oA-TS
-	for xfs@oss.sgi.com; Thu, 11 Feb 2016 17:45:48 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aTl0e-00057Y-Se
-	for xfs@oss.sgi.com; Thu, 11 Feb 2016 17:45:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] xfs: xfs_cluster_write is redundant
-Date: Thu, 11 Feb 2016 17:45:44 +1100
-Message-Id: <1455173146-19535-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1455173146-19535-1-git-send-email-david@fromorbit.com>
-References: <1455173146-19535-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E9394AC001
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 04:24:19 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id A8zb5q9ncTBRENIt (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 11 Feb 2016 04:24:15 -0800 (PST)
+Date: Thu, 11 Feb 2016 07:24:13 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: don't chain ioends during writepage submission
+Message-ID: <20160211122413.GA4156@bfoster.bfoster>
+References: <1454910258-7578-1-git-send-email-david@fromorbit.com>
+	<1454910258-7578-6-git-send-email-david@fromorbit.com>
+	<20160209142355.GB25829@bfoster.bfoster>
+	<20160209215900.GH14668@dastard>
+	<20160210131816.GB48974@bfoster.bfoster>
+	<20160210210926.GL14668@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160210210926.GL14668@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,285 +30,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Feb 11, 2016 at 08:09:26AM +1100, Dave Chinner wrote:
+> On Wed, Feb 10, 2016 at 08:18:17AM -0500, Brian Foster wrote:
+> > On Wed, Feb 10, 2016 at 08:59:00AM +1100, Dave Chinner wrote:
+> > > On Tue, Feb 09, 2016 at 09:23:55AM -0500, Brian Foster wrote:
+> > > > On Mon, Feb 08, 2016 at 04:44:18PM +1100, Dave Chinner wrote:
+> > > > > @@ -738,29 +726,22 @@ xfs_writepage_submit(
+> > > > >  	struct writeback_control *wbc,
+> > > > >  	int			status)
+> > > > >  {
+> > > > > -	struct blk_plug		plug;
+> > > > > -
+> > > > > -	/* Reserve log space if we might write beyond the on-disk inode size. */
+> > > > > -	if (!status && wpc->ioend && wpc->ioend->io_type != XFS_IO_UNWRITTEN &&
+> > > > > -	    xfs_ioend_is_append(wpc->ioend))
+> > > > > -		status = xfs_setfilesize_trans_alloc(wpc->ioend);
+> > > > > -
+> > > > > -	if (wpc->iohead) {
+> > > > > -		blk_start_plug(&plug);
+> > > > > -		xfs_submit_ioend(wbc, wpc->iohead, status);
+> > > > > -		blk_finish_plug(&plug);
+> > > > > -	}
+> > > > 
+> > > > We've dropped our plug here but I don't see anything added in
+> > > > xfs_vm_writepages(). Shouldn't we have one there now that ioends are
+> > > > submitted as we go? generic_writepages() uses one around its
+> > > > write_cache_pages() call..
+> > > 
+> > > It's not really necessary, as we now have higher level plugging in
+> > > the writeback go will get flushed on context switch, and if we don't
+> > > have a high level plug (e.g. fsync triggered writeback), then we
+> > > submit the IO immediately, just like flushing the plug here would do
+> > > anyway....
+> > > 
+> > 
+> > Ok, I'm digging around the wb code a bit and I see plugs in/around
+> > wb_writeback(), so I assume that's what you're referring to in the first
+> > case. I'm not quite following the fsync case though...
+> > 
+> > In the current upstream code, fsync() leads to the following call chain:
+> > 
+> >   filemap_write_and_wait_range()
+> >     __filemap_fdatawrite_range()
+> >       do_writepages()
+> >         xfs_vm_writepages()
+> >           generic_writepages()
+> >             blk_start_plug()
+> >             write_cache_pages()
+> >             blk_finish_plug()
+> > 
+> > After this series, we have the following:
+> > 
+> >   filemap_write_and_wait_range()
+> >     __filemap_fdatawrite_range()
+> >       do_writepages()
+> >         xfs_vm_writepages() 
+> >           write_cache_pages()
+> > 
+> > ... with no plug that I can see. What am I missing?
+> 
+> fsync tends to be a latency sensitive operation, not a bandwidth
+> maximising operation. Plugging trades off IO submission latency for
+> maximising IO bandwidth. For fsync and other single inode operations
+> that block waiting for the IO to complete, maximising bandwidth is
+> not necessarily the right thing to do.
+> 
 
-xfs_cluster_write() is not necessary now that xfs_vm_writepages()
-aggregates writepage calls across a single mapping. This means we no
-longer need to do page lookups in xfs_cluster_write, so writeback
-only needs to look up th epage cache once per page being written.
-This also removes a large amount of mostly duplicate code between
-xfs_do_writepage() and xfs_convert_page().
+Ok.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_aops.c | 214 ++----------------------------------------------------
- 1 file changed, 6 insertions(+), 208 deletions(-)
+> For single inode IO commands (such as through
+> __filemap_fdatawrite_range), block plugging will only improve
+> performance if the filesystem does not form large bios to begin
+> with. XFS always builds maximally sized bios if it can, so plugging
+> cannot improve the IO throughput from such writeback behaviour
+> because the bios it builds cannot be further merged.  Such bios are
+> better served being pushed straight in the the IO scheduler queues.
+> 
+> IOWs, plugging only makes a difference when the IO being formed is
+> small but is mergable in the IO scheduler. This what happens with
+> small file delayed allocation in writeback in XFS, and nowdays we
+> have a high level plug for this (i.e. in writeback_inodes_wb() and
+> wb_writeback()). Hence those one-bio-per-inode-but-all-sequential IO
+> will be merged in the plug before dispatch, thereby improving write
+> bandwidth under such small file writeback workloads. (See the
+> numbers in commmit d353d75 writeback: plug writeback at a high
+> level").)
+> 
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index ea2f4f8..01e1663 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -656,179 +656,6 @@ xfs_check_page_type(
- 	return false;
- }
- 
--/*
-- * Allocate & map buffers for page given the extent map. Write it out.
-- * except for the original page of a writepage, this is called on
-- * delalloc/unwritten pages only, for the original page it is possible
-- * that the page has no mapping at all.
-- */
--STATIC int
--xfs_convert_page(
--	struct inode		*inode,
--	struct page		*page,
--	loff_t			tindex,
--	struct xfs_writepage_ctx *wpc,
--	struct writeback_control *wbc)
--{
--	struct buffer_head	*bh, *head;
--	xfs_off_t		end_offset;
--	unsigned long		p_offset;
--	int			len, page_dirty;
--	int			count = 0, done = 0, uptodate = 1;
--	xfs_off_t		offset = page_offset(page);
--
--	if (page->index != tindex)
--		goto fail;
--	if (!trylock_page(page))
--		goto fail;
--	if (PageWriteback(page))
--		goto fail_unlock_page;
--	if (page->mapping != inode->i_mapping)
--		goto fail_unlock_page;
--	if (!xfs_check_page_type(page, wpc->ioend->io_type, false))
--		goto fail_unlock_page;
--
--	/*
--	 * page_dirty is initially a count of buffers on the page before
--	 * EOF and is decremented as we move each into a cleanable state.
--	 *
--	 * Derivation:
--	 *
--	 * End offset is the highest offset that this page should represent.
--	 * If we are on the last page, (end_offset & (PAGE_CACHE_SIZE - 1))
--	 * will evaluate non-zero and be less than PAGE_CACHE_SIZE and
--	 * hence give us the correct page_dirty count. On any other page,
--	 * it will be zero and in that case we need page_dirty to be the
--	 * count of buffers on the page.
--	 */
--	end_offset = min_t(unsigned long long,
--			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
--			i_size_read(inode));
--
--	/*
--	 * If the current map does not span the entire page we are about to try
--	 * to write, then give up. The only way we can write a page that spans
--	 * multiple mappings in a single writeback iteration is via the
--	 * xfs_vm_writepage() function. Data integrity writeback requires the
--	 * entire page to be written in a single attempt, otherwise the part of
--	 * the page we don't write here doesn't get written as part of the data
--	 * integrity sync.
--	 *
--	 * For normal writeback, we also don't attempt to write partial pages
--	 * here as it simply means that write_cache_pages() will see it under
--	 * writeback and ignore the page until some point in the future, at
--	 * which time this will be the only page in the file that needs
--	 * writeback.  Hence for more optimal IO patterns, we should always
--	 * avoid partial page writeback due to multiple mappings on a page here.
--	 */
--	if (!xfs_imap_valid(inode, &wpc->imap, end_offset))
--		goto fail_unlock_page;
--
--	len = 1 << inode->i_blkbits;
--	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
--					PAGE_CACHE_SIZE);
--	p_offset = p_offset ? roundup(p_offset, len) : PAGE_CACHE_SIZE;
--	page_dirty = p_offset / len;
--
--	/*
--	 * The moment we find a buffer that doesn't match our current type
--	 * specification or can't be written, abort the loop and start
--	 * writeback. As per the above xfs_imap_valid() check, only
--	 * xfs_vm_writepage() can handle partial page writeback fully - we are
--	 * limited here to the buffers that are contiguous with the current
--	 * ioend, and hence a buffer we can't write breaks that contiguity and
--	 * we have to defer the rest of the IO to xfs_vm_writepage().
--	 */
--	bh = head = page_buffers(page);
--	do {
--		if (offset >= end_offset)
--			break;
--		if (!buffer_uptodate(bh))
--			uptodate = 0;
--		if (!(PageUptodate(page) || buffer_uptodate(bh))) {
--			done = 1;
--			break;
--		}
--
--		if (buffer_unwritten(bh) || buffer_delay(bh) ||
--		    buffer_mapped(bh)) {
--			if (buffer_unwritten(bh))
--				wpc->io_type = XFS_IO_UNWRITTEN;
--			else if (buffer_delay(bh))
--				wpc->io_type = XFS_IO_DELALLOC;
--			else
--				wpc->io_type = XFS_IO_OVERWRITE;
--
--			/*
--			 * imap should always be valid because of the above
--			 * partial page end_offset check on the imap.
--			 */
--			ASSERT(xfs_imap_valid(inode, &wpc->imap, offset));
--
--			lock_buffer(bh);
--			if (wpc->io_type != XFS_IO_OVERWRITE)
--				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
--			xfs_add_to_ioend(inode, bh, offset, wpc);
--
--			page_dirty--;
--			count++;
--		} else {
--			done = 1;
--			break;
--		}
--	} while (offset += len, (bh = bh->b_this_page) != head);
--
--	if (uptodate && bh == head)
--		SetPageUptodate(page);
--
--	if (count) {
--		if (--wbc->nr_to_write <= 0 &&
--		    wbc->sync_mode == WB_SYNC_NONE)
--			done = 1;
--	}
--	xfs_start_page_writeback(page, !page_dirty, count);
--
--	return done;
-- fail_unlock_page:
--	unlock_page(page);
-- fail:
--	return 1;
--}
--
--/*
-- * Convert & write out a cluster of pages in the same extent as defined
-- * by mp and following the start page.
-- */
--STATIC void
--xfs_cluster_write(
--	struct inode		*inode,
--	pgoff_t			tindex,
--	struct xfs_writepage_ctx *wpc,
--	struct writeback_control *wbc,
--	pgoff_t			tlast)
--{
--	struct pagevec		pvec;
--	int			done = 0, i;
--
--	pagevec_init(&pvec, 0);
--	while (!done && tindex <= tlast) {
--		unsigned len = min_t(pgoff_t, PAGEVEC_SIZE, tlast - tindex + 1);
--
--		if (!pagevec_lookup(&pvec, inode->i_mapping, tindex, len))
--			break;
--
--		for (i = 0; i < pagevec_count(&pvec); i++) {
--			done = xfs_convert_page(inode, pvec.pages[i], tindex++,
--						wpc, wbc);
--			if (done)
--				break;
--		}
--
--		pagevec_release(&pvec);
--		cond_resched();
--	}
--}
--
- STATIC void
- xfs_vm_invalidatepage(
- 	struct page		*page,
-@@ -945,7 +772,7 @@ xfs_do_writepage(
- 	struct buffer_head	*bh, *head;
- 	loff_t			offset;
- 	__uint64_t              end_offset;
--	pgoff_t                 end_index, last_index;
-+	pgoff_t                 end_index;
- 	ssize_t			len;
- 	int			err, uptodate = 1;
- 	int			count = 0;
-@@ -975,12 +802,9 @@ xfs_do_writepage(
- 	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
- 		goto redirty;
- 
--	/* Is this page beyond the end of the file? */
--	offset = i_size_read(inode);
--	end_index = offset >> PAGE_CACHE_SHIFT;
--	last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
--
- 	/*
-+	 * Is this page beyond the end of the file?
-+	 *
- 	 * The page index is less than the end_index, adjust the end_offset
- 	 * to the highest offset that this page should represent.
- 	 * -----------------------------------------------------
-@@ -991,6 +815,8 @@ xfs_do_writepage(
- 	 * |     desired writeback range    |      see else    |
- 	 * ---------------------------------^------------------|
- 	 */
-+	offset = i_size_read(inode);
-+	end_index = offset >> PAGE_CACHE_SHIFT;
- 	if (page->index < end_index)
- 		end_offset = (xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT;
- 	else {
-@@ -1119,35 +945,7 @@ xfs_do_writepage(
- 
- 	xfs_start_page_writeback(page, 1, count);
- 
--	/* if there is no IO to be submitted for this page, we are done */
--	if (!count)
--		return 0;
--
--	ASSERT(wpc->iohead);
--	ASSERT(err == 0);
--
--	/*
--	 * Any errors from this point onwards need tobe reported through the IO
--	 * completion path as we have marked the initial page as under writeback
--	 * and unlocked it.
--	 */
--	if (wpc->imap_valid) {
--		xfs_off_t		end_index;
--
--		end_index = wpc->imap.br_startoff + wpc->imap.br_blockcount;
--
--		/* to bytes */
--		end_index <<= inode->i_blkbits;
--
--		/* to pages */
--		end_index = (end_index - 1) >> PAGE_CACHE_SHIFT;
--
--		/* check against file size */
--		if (end_index > last_index)
--			end_index = last_index;
--
--		xfs_cluster_write(inode, page->index + 1, wpc, wbc, end_index);
--	}
-+	ASSERT(wpc->iohead || !count);
- 	return 0;
- 
- error:
--- 
-2.5.0
+Makes sense.
+
+> IOWs, block plugging is not a magical "make everything go faster"
+> knob. Different filesystems have different IO dispatch methods, and
+> so require different plugging strategies to optimise their IO
+> patterns.  It may be that plugging in xfs_vm_writepages is
+> advantageous in some workloads for fsync, but I haven't been able to
+> measure them.
+> 
+
+I don't think I suggested it was magical in any way. ;) My initial
+feedback was simply based on the fact that it looked like the behavior
+changed without notice, so it wasn't clear if that was intentional. You
+pointed out the higher level wb plug but at the same time implied not
+having a plug in the fsync case, which we previously did have (granted,
+only for the mapping). Perhaps I read into that wrong. It would be nice
+if the commit log made a quick mention about the plug situation (one
+context has a separate plug, for the other it is unnecessary), but
+otherwise the explanation addresses my concerns. Thanks!
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
