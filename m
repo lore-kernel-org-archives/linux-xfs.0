@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3E4327CAC
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 08:18:43 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 39C4E7CA5
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 09:22:43 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1D7558F8035
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 06:18:42 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id sCJNC1c8WBbDIaoc for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2016 06:18:39 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 4115B63C5FF0
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 08:18:39 -0600 (CST)
-Subject: Re: [PATCH 2/2 v3] xfs_repair: new secondary superblock search method
-References: <1455130218-8683-1-git-send-email-billodo@redhat.com>
-	<56BD2500.4080708@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56BDE9BE.9030300@sandeen.net>
-Date: Fri, 12 Feb 2016 08:18:38 -0600
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 28B07304059
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 07:22:39 -0800 (PST)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id J81KswwP75XzckGl (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 12 Feb 2016 07:22:36 -0800 (PST)
+Date: Fri, 12 Feb 2016 10:22:31 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 12/32] dio: unwritten conversion bug tests
+Message-ID: <20160212152231.GA7928@thunk.org>
+References: <20160211233916.2202.40961.stgit@birch.djwong.org>
+	<20160211234037.2202.93885.stgit@birch.djwong.org>
+	<20160212035253.GX14668@dastard>
 MIME-Version: 1.0
-In-Reply-To: <56BD2500.4080708@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20160212035253.GX14668@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,44 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
+On Fri, Feb 12, 2016 at 02:52:53PM +1100, Dave Chinner wrote:
+> On Thu, Feb 11, 2016 at 03:40:37PM -0800, Darrick J. Wong wrote:
+> > Check that we don't expose old disk contents when a directio write to
+> > an unwritten extent fails due to IO errors.  This primarily affects
+> > XFS and ext4.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> aiocp.c: In function 'main':
+> aiocp.c:407:1: warning: format '%d' expects argument of type 'int', but argument 3 has type 'off_t' [-Wformat=]
+>  printf("tocopy=%d len=%d blk=%d\n", tocopy, length, aio_blksize);
+>  ^
+> 
+> Followup patch is fine, I'll commit as is.
 
-
-On 2/11/16 6:19 PM, Eric Sandeen wrote:
-> Hi Bill, looks like this is a diff on top of your prior patch,
-> not a standalone patch.  It's modifying (not creating) libxcmd/topology.c,
-> which doesn't exist upstream yet.
-
-Sorry, I apologize - this was patch 2 of 2, and I didn't have patch 1
-applied.  It's easier to spot dependencies when a series stays properly
-threaded, though.  :)
-
-And best to not fix issues with patch 1 in patch 2; just fix things
-in the original patch which introduced it.
-
-i.e. this:
-
---- a/libxcmd/topology.c
-+++ b/libxcmd/topology.c
-@@ -192,7 +192,8 @@ out:
- 	return ret;
- }
- 
--static void blkid_get_topology(
-+static void
-+blkid_get_topology(
- 	const char	*device,
- 	int		*sunit,
- 	int		*swidth,
-@@ -284,7 +285,8 @@ check_overwrite(
- 	return 1;
- }
-
-should all just be formatted as you want it in patch 1.
+Dave, given that Darrick's patches is going to cause more
+_scratch_mount occurences, how quickly do you plan to commit his
+patchset?  Should I wait until he makes his change before I do the
+s/_scratch_mount/_scratch_cycle_mount/ change?  Should I make that
+change, and let you fix it up the commit?
 
 Thanks,
--Eric
+
+					- Ted
 
 _______________________________________________
 xfs mailing list
