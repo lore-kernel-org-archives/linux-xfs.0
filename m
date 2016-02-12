@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 444347CA3
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 21:44:00 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6D1827CA5
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 21:53:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C8E09AC006
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 19:43:59 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 50A89304059
+	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 19:53:30 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	udpq71rQopcUbDlk for <xfs@oss.sgi.com>;
-	Thu, 11 Feb 2016 19:43:57 -0800 (PST)
-Date: Fri, 12 Feb 2016 14:43:19 +1100
+	ZCT3jNvKjSnFBGIW for <xfs@oss.sgi.com>;
+	Thu, 11 Feb 2016 19:53:28 -0800 (PST)
+Date: Fri, 12 Feb 2016 14:52:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: fixes for 4.5-rc4
-Message-ID: <20160212034319.GW14668@dastard>
+Subject: Re: [PATCH 12/32] dio: unwritten conversion bug tests
+Message-ID: <20160212035253.GX14668@dastard>
+References: <20160211233916.2202.40961.stgit@birch.djwong.org>
+	<20160211234037.2202.93885.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160211234037.2202.93885.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,42 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Linus,
+On Thu, Feb 11, 2016 at 03:40:37PM -0800, Darrick J. Wong wrote:
+> Check that we don't expose old disk contents when a directio write to
+> an unwritten extent fails due to IO errors.  This primarily affects
+> XFS and ext4.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can you please pull the XFS commit from the tag below? It contains a
-fix for a regression introduced in 4.5-rc1 by the new log recovery
-CRC validation code. Thanks!
+aiocp.c: In function 'main':
+aiocp.c:407:1: warning: format '%d' expects argument of type 'int', but argument 3 has type 'off_t' [-Wformat=]
+ printf("tocopy=%d len=%d blk=%d\n", tocopy, length, aio_blksize);
+ ^
 
--Dave.
+Followup patch is fine, I'll commit as is.
 
-The following changes since commit 36f90b0a2ddd60823fe193a85e60ff1906c2a9b3:
+Cheers,
 
-  Linux 4.5-rc2 (2016-01-31 18:12:16 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-fixes-for-linus-4.5
-
-for you to fetch changes up to 8e0bd4925bf693520295de403483efad4dc5cc16:
-
-  xfs: fix endianness error when checking log block crc on big endian platforms (2016-02-08 11:03:58 +1100)
-
-----------------------------------------------------------------
-xfs: updates for 4.5-rc4
-
-Contains:
-o fix for endian conversion issue in new CRC validation in
-  log recovery that was discovered on a ppc64 platform.
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: fix endianness error when checking log block crc on big endian platforms
-
- fs/xfs/xfs_log_recover.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
