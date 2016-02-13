@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FBE27CB5
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2016 00:45:58 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6A8847CA2
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 11:09:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B3300AC002
-	for <xfs@oss.sgi.com>; Wed, 10 Feb 2016 22:45:57 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Uffe6VcjEhd5TDox for <xfs@oss.sgi.com>;
-	Wed, 10 Feb 2016 22:45:54 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aTl0e-0007oC-Uh
-	for xfs@oss.sgi.com; Thu, 11 Feb 2016 17:45:49 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aTl0e-00057i-TU
-	for xfs@oss.sgi.com; Thu, 11 Feb 2016 17:45:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] xfs: don't chain ioends during writepage submission
-Date: Thu, 11 Feb 2016 17:45:46 +1100
-Message-Id: <1455173146-19535-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1455173146-19535-1-git-send-email-david@fromorbit.com>
-References: <1455173146-19535-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 17528AC003
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 09:09:23 -0800 (PST)
+Received: from mail-lf0-f48.google.com (mail-lf0-f48.google.com
+	[209.85.215.48]) by cuda.sgi.com with ESMTP id bP75vMWQsdExCk0P
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 13 Feb 2016 09:09:19 -0800 (PST)
+Received: by mail-lf0-f48.google.com with SMTP id m1so68534316lfg.0
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 09:09:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20160126141733.GA48264@bfoster.bfoster>
+References: <1453177919-17849-1-git-send-email-david@fromorbit.com>
+	<20160120015853.GU6033@dastard>
+	<20160126141733.GA48264@bfoster.bfoster>
+Date: Sat, 13 Feb 2016 18:09:17 +0100
+Message-ID: <CADr68Wa9vG=ZOn4gbHezEyOeM+tCo69s3WVqcVXnZrn+=DdoVA@mail.gmail.com>
+Subject: Re: [PATCH v2] [RFC] xfs: allocate log vector buffers outside CIL
+	context lock
+From: Jens Rosenboom <j.rosenboom@x-ion.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,453 +30,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+2016-01-26 15:17 GMT+01:00 Brian Foster <bfoster@redhat.com>:
+> On Wed, Jan 20, 2016 at 12:58:53PM +1100, Dave Chinner wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>>
+>> One of the problems we currently have with delayed logging is that
+>> under serious memory pressure we can deadlock memory reclaim. THis
+>> occurs when memory reclaim (such as run by kswapd) is reclaiming XFS
+>> inodes and issues a log force to unpin inodes that are dirty in the
+>> CIL.
+>>
+>> The CIL is pushed, but this will only occur once it gets the CIL
+>> context lock to ensure that all committing transactions are complete
+>> and no new transactions start being committed to the CIL while the
+>> push switches to a new context.
+>>
+>> The deadlock occurs when the CIL context lock is held by a
+>> committing process that is doing memory allocation for log vector
+>> buffers, and that allocation is then blocked on memory reclaim
+>> making progress. Memory reclaim, however, is blocked waiting for
+>> a log force to make progress, and so we effectively deadlock at this
+>> point.
+>>
+>> To solve this problem, we have to move the CIL log vector buffer
+>> allocation outside of the context lock so that memory reclaim can
+>> always make progress when it needs to force the log. The problem
+>> with doing this is that a CIL push can take place while we are
+>> determining if we need to allocate a new log vector buffer for
+>> an item and hence the current log vector may go away without
+>> warning. That means we canot rely on the existing log vector being
+>> present when we finally grab the context lock and so we must have a
+>> replacement buffer ready to go at all times.
+>>
+>> To ensure this, introduce a "shadow log vector" buffer that is
+>> always guaranteed to be present when we gain the CIL context lock
+>> and format the item. This shadow buffer may or may not be used
+>> during the formatting, but if the log item does not have an existing
+>> log vector buffer or that buffer is too small for the new
+>> modifications, we swap it for the new shadow buffer and format
+>> the modifications into that new log vector buffer.
+>>
+>> The result of this is that for any object we modify more than once
+>> in a given CIL checkpoint, we double the memory required
+>> to track dirty regions in the log. For single modifications then
+>> we consume the shadow log vectorwe allocate on commit, and that gets
+>> consumed by the checkpoint. However, if we make multiple
+>> modifications, then the second transaction commit will allocate a
+>> shadow log vector and hence we will end up with double the memory
+>> usage as only one of the log vectors is consumed by the CIL
+>> checkpoint. The remaining shadow vector will be freed when th elog
+>> item is freed.
+>>
+>> This can probably be optimised - access to the shadow log vector is
+>> serialised by the object lock (as opposited to the active log
+>> vector, which is controlled by the CIL context lock) and so we can
+>> probably free shadow log vector from some objects when the log item
+>> is marked clean on removal from the AIL.
+>>
+>> The patch survives smoke testing and some load testing. I haven't
+>> done any real performance testing, but I have done some load and low
+>> memory testing and it hasn't exploded (perf did - it failed several
+>> order 2 memory allocations, which XFS continued along just fine).
+>>
+>> That said, I don't have a reliable deadlock reproducer in the first
+>> place, so I'm interested i hearing what people think about this
+>> approach to solve the problem and ways to test and improve it.
+>>
+>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>> ---
+>
+> This seems reasonable to me in principle. It would be nice to have some
+> kind of feedback in terms of effectiveness resolving the original
+> deadlock report. I can't think of a good way of testing short of
+> actually instrumenting the deadlock one way or another, unfortunately.
+> Was there a user that might be willing to test or had a detailed enough
+> description of the workload/environment?
 
-Currently we can build a long ioend chain during ->writepages that
-gets attached to the writepage context. IO submission only then
-occurs when we finish all the writepage processing. This means we
-can have many ioends allocated and pending, and this violates the
-mempool guarantees that we need to give about forwards progress.
-i.e. we really should only have one ioend being built at a time,
-otherwise we may drain the mempool trying to allocate a new ioend
-and that blocks submission, completion and freeing of ioends that
-are already in progress.
+We have seen this issue on our production Ceph cluster sporadically
+and have tried a long time to reproduce it in a lab environment.
 
-To prevent this situation from happening, we need to submit ioends
-for IO as soon as they are ready for dispatch rather than queuing
-them for later submission. This means the ioends have bios built
-immediately and they get queued on any plug that is current active.
-Hence if we schedule away from writeback, the ioends that have been
-built will make forwards progress due to the plug flushing on
-context switch. This will also prevent context switches from
-creating unnecessary IO submission latency.
+Now I finally seem to have found a way to reproduce it at least twice
+in a row. My test cluster is composed of 8 small nodes with 2 SSDs
+each, so 16 OSDs. One of the nodes runs as rgw and I use cosbench to
+write objects into the cluster. Running with 32 workers writing
+16k-size objects into 100 buckets, I start seeing messages like this
+after a couple of hours (at this point there are about 10M objects in
+the cluster):
 
-We can't completely avoid having nested IO allocation - when we have
-a block size smaller than a page size, we still need to hold the
-ioend submission until after we have marked the current page dirty.
-Hence we may need multiple ioends to be held while the current page
-is completely mapped and made ready for IO dispatch. We cannot avoid
-this problem - the current code already has this ioend chaining
-within a page so we can mostly ignore that it occurs.
+Feb 13 10:51:53 storage-node35 kernel: [10558.479309] XFS:
+ceph-osd(10078) possible memory allocation deadlock size 32856 in
+kmem_alloc (mode:0x2408240)
+Feb 13 10:51:55 storage-node35 kernel: [10560.289810] XFS:
+ceph-osd(10078) possible memory allocation deadlock size 32856 in
+kmem_alloc (mode:0x2408240)
+Feb 13 10:51:55 storage-node35 kernel: [10560.613984] XFS:
+ceph-osd(10078) possible memory allocation deadlock size 32856 in
+kmem_alloc (mode:0x2408240)
+Feb 13 10:51:57 storage-node35 kernel: [10562.614089] XFS:
+ceph-osd(10078) possible memory allocation deadlock size 32856 in
+kmem_alloc (mode:0x2408240)
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c | 237 ++++++++++++++++++++++++++----------------------------
- fs/xfs/xfs_aops.h |   2 +-
- 2 files changed, 117 insertions(+), 122 deletions(-)
+Soon after this, operations get so slow that the OSDs die because of
+their suicide timeouts.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 691cdf9..114a8a5 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -47,7 +47,6 @@ struct xfs_writepage_ctx {
- 	struct xfs_bmbt_irec    imap;
- 	bool			imap_valid;
- 	unsigned int		io_type;
--	struct xfs_ioend	*iohead;
- 	struct xfs_ioend	*ioend;
- 	sector_t		last_block;
- };
-@@ -283,7 +282,7 @@ xfs_alloc_ioend(
- 	 */
- 	atomic_set(&ioend->io_remaining, 1);
- 	ioend->io_error = 0;
--	ioend->io_list = NULL;
-+	INIT_LIST_HEAD(&ioend->io_list);
- 	ioend->io_type = type;
- 	ioend->io_inode = inode;
- 	ioend->io_buffer_head = NULL;
-@@ -426,8 +425,7 @@ xfs_start_buffer_writeback(
- STATIC void
- xfs_start_page_writeback(
- 	struct page		*page,
--	int			clear_dirty,
--	int			buffers)
-+	int			clear_dirty)
- {
- 	ASSERT(PageLocked(page));
- 	ASSERT(!PageWriteback(page));
-@@ -446,10 +444,6 @@ xfs_start_page_writeback(
- 		set_page_writeback_keepwrite(page);
- 
- 	unlock_page(page);
--
--	/* If no buffers on the page are to be written, finish it here */
--	if (!buffers)
--		end_page_writeback(page);
- }
- 
- static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
-@@ -458,110 +452,90 @@ static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
- }
- 
- /*
-- * Submit all of the bios for all of the ioends we have saved up, covering the
-- * initial writepage page and also any probed pages.
-- *
-- * Because we may have multiple ioends spanning a page, we need to start
-- * writeback on all the buffers before we submit them for I/O. If we mark the
-- * buffers as we got, then we can end up with a page that only has buffers
-- * marked async write and I/O complete on can occur before we mark the other
-- * buffers async write.
-- *
-- * The end result of this is that we trip a bug in end_page_writeback() because
-- * we call it twice for the one page as the code in end_buffer_async_write()
-- * assumes that all buffers on the page are started at the same time.
-- *
-- * The fix is two passes across the ioend list - one to start writeback on the
-- * buffer_heads, and then submit them for I/O on the second pass.
-+ * Submit all of the bios for an ioend. We are only passed a single ioend at a
-+ * time; the caller is responsible for chaining prior to submission.
-  *
-  * If @fail is non-zero, it means that we have a situation where some part of
-  * the submission process has failed after we have marked paged for writeback
-  * and unlocked them. In this situation, we need to fail the ioend chain rather
-  * than submit it to IO. This typically only happens on a filesystem shutdown.
-  */
--STATIC void
-+STATIC int
- xfs_submit_ioend(
- 	struct writeback_control *wbc,
- 	xfs_ioend_t		*ioend,
--	int			fail)
-+	int			status)
- {
--	xfs_ioend_t		*head = ioend;
--	xfs_ioend_t		*next;
- 	struct buffer_head	*bh;
- 	struct bio		*bio;
- 	sector_t		lastblock = 0;
- 
--	/* Pass 1 - start writeback */
--	do {
--		next = ioend->io_list;
--		for (bh = ioend->io_buffer_head; bh; bh = bh->b_private)
--			xfs_start_buffer_writeback(bh);
--	} while ((ioend = next) != NULL);
-+	/* Reserve log space if we might write beyond the on-disk inode size. */
-+	if (!status &&
-+	     ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
-+		status = xfs_setfilesize_trans_alloc(ioend);
-+	/*
-+	 * If we are failing the IO now, just mark the ioend with an
-+	 * error and finish it. This will run IO completion immediately
-+	 * as there is only one reference to the ioend at this point in
-+	 * time.
-+	 */
-+	if (status) {
-+		ioend->io_error = status;
-+		xfs_finish_ioend(ioend);
-+		return status;
-+	}
- 
--	/* Pass 2 - submit I/O */
--	ioend = head;
--	do {
--		next = ioend->io_list;
--		bio = NULL;
-+	bio = NULL;
-+	for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
- 
--		/*
--		 * If we are failing the IO now, just mark the ioend with an
--		 * error and finish it. This will run IO completion immediately
--		 * as there is only one reference to the ioend at this point in
--		 * time.
--		 */
--		if (fail) {
--			ioend->io_error = fail;
--			xfs_finish_ioend(ioend);
--			continue;
-+		if (!bio) {
-+retry:
-+			bio = xfs_alloc_ioend_bio(bh);
-+		} else if (bh->b_blocknr != lastblock + 1) {
-+			xfs_submit_ioend_bio(wbc, ioend, bio);
-+			goto retry;
- 		}
- 
--		for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
--
--			if (!bio) {
-- retry:
--				bio = xfs_alloc_ioend_bio(bh);
--			} else if (bh->b_blocknr != lastblock + 1) {
--				xfs_submit_ioend_bio(wbc, ioend, bio);
--				goto retry;
--			}
--
--			if (xfs_bio_add_buffer(bio, bh) != bh->b_size) {
--				xfs_submit_ioend_bio(wbc, ioend, bio);
--				goto retry;
--			}
--
--			lastblock = bh->b_blocknr;
--		}
--		if (bio)
-+		if (xfs_bio_add_buffer(bio, bh) != bh->b_size) {
- 			xfs_submit_ioend_bio(wbc, ioend, bio);
--		xfs_finish_ioend(ioend);
--	} while ((ioend = next) != NULL);
-+			goto retry;
-+		}
-+
-+		lastblock = bh->b_blocknr;
-+	}
-+	if (bio)
-+		xfs_submit_ioend_bio(wbc, ioend, bio);
-+	xfs_finish_ioend(ioend);
-+	return 0;
- }
- 
- /*
-  * Test to see if we've been building up a completion structure for
-  * earlier buffers -- if so, we try to append to this ioend if we
-  * can, otherwise we finish off any current ioend and start another.
-- * Return true if we've finished the given ioend.
-+ * Return the ioend we finished off so that the caller can submit it
-+ * once it has finished processing the dirty page.
-  */
- STATIC void
- xfs_add_to_ioend(
- 	struct inode		*inode,
- 	struct buffer_head	*bh,
- 	xfs_off_t		offset,
--	struct xfs_writepage_ctx *wpc)
-+	struct xfs_writepage_ctx *wpc,
-+	struct list_head	*iolist)
- {
- 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
- 	    bh->b_blocknr != wpc->last_block + 1) {
- 		struct xfs_ioend	*new;
- 
-+		if (wpc->ioend)
-+			list_add(&wpc->ioend->io_list, iolist);
-+
- 		new = xfs_alloc_ioend(inode, wpc->io_type);
- 		new->io_offset = offset;
- 		new->io_buffer_head = bh;
- 		new->io_buffer_tail = bh;
--		if (wpc->ioend)
--			wpc->ioend->io_list = new;
- 		wpc->ioend = new;
- 	} else {
- 		wpc->ioend->io_buffer_tail->b_private = bh;
-@@ -571,6 +545,7 @@ xfs_add_to_ioend(
- 	bh->b_private = NULL;
- 	wpc->ioend->io_size += bh->b_size;
- 	wpc->last_block = bh->b_blocknr;
-+	xfs_start_buffer_writeback(bh);
- }
- 
- STATIC void
-@@ -732,44 +707,41 @@ out_invalidate:
- 	return;
- }
- 
--static int
--xfs_writepage_submit(
--	struct xfs_writepage_ctx *wpc,
--	struct writeback_control *wbc,
--	int			status)
--{
--	struct blk_plug		plug;
--
--	/* Reserve log space if we might write beyond the on-disk inode size. */
--	if (!status && wpc->ioend && wpc->ioend->io_type != XFS_IO_UNWRITTEN &&
--	    xfs_ioend_is_append(wpc->ioend))
--		status = xfs_setfilesize_trans_alloc(wpc->ioend);
--
--	if (wpc->iohead) {
--		blk_start_plug(&plug);
--		xfs_submit_ioend(wbc, wpc->iohead, status);
--		blk_finish_plug(&plug);
--	}
--	return status;
--}
--
-+/*
-+ * We implement an immediate ioend submission policy here to avoid needing to
-+ * chain multiple ioends and hence nest mempool allocations which can violate
-+ * forward progress guarantees we need to provide. The current ioend we are
-+ * adding buffers to is cached on the writepage context, and if the new buffer
-+ * does not append to the cached ioend it will create a new ioend and cache that
-+ * instead.
-+ *
-+ * If a new ioend is created and cached, the old ioend is returned and queued
-+ * locally for submission once the entire page is processed or an error has been
-+ * detected.  While ioends are submitted immediately after they are completed,
-+ * batching optimisations are provided by higher level block plugging.
-+ *
-+ * At the end of a writeback pass, there will be a cached ioend remaining on the
-+ * writepage context that the caller will need to submit.
-+ */
- static int
- xfs_writepage_map(
- 	struct xfs_writepage_ctx *wpc,
-+	struct writeback_control *wbc,
- 	struct inode		*inode,
- 	struct page		*page,
- 	loff_t			offset,
- 	__uint64_t              end_offset)
- {
-+	LIST_HEAD(submit_list);
-+	struct xfs_ioend	*ioend, *next;
- 	struct buffer_head	*bh, *head;
- 	ssize_t			len = 1 << inode->i_blkbits;
- 	int			error = 0;
--	int			uptodate = 1;
- 	int			count = 0;
-+	int			uptodate = 1;
- 
- 	bh = head = page_buffers(page);
- 	offset = page_offset(page);
--
- 	do {
- 		if (offset >= end_offset)
- 			break;
-@@ -830,46 +802,65 @@ xfs_writepage_map(
- 			lock_buffer(bh);
- 			if (wpc->io_type != XFS_IO_OVERWRITE)
- 				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
--			xfs_add_to_ioend(inode, bh, offset, wpc);
-+			xfs_add_to_ioend(inode, bh, offset, wpc, &submit_list);
- 			count++;
- 		}
- 
--		if (!wpc->iohead)
--			wpc->iohead = wpc->ioend;
--
- 	} while (offset += len, ((bh = bh->b_this_page) != head));
- 
- 	if (uptodate && bh == head)
- 		SetPageUptodate(page);
- 
--	xfs_start_page_writeback(page, 1, count);
--	ASSERT(wpc->iohead || !count);
--	return 0;
-+	ASSERT(wpc->ioend || list_empty(&submit_list));
- 
- out_error:
- 	/*
--	 * On error, we have to fail the iohead here because we locked buffers
--	 * in the ioend chain. If we don't do this, we'll deadlock invalidating
--	 * the page as that tries to lock the buffers on the page. Also, because
--	 * we may have set pages under writeback, we have to make sure we run
--	 * IO completion to mark the error state of the IO appropriately, so we
--	 * can't cancel the ioend directly here. That means we have to mark this
--	 * page as under writeback if we included any buffers from it in the
--	 * ioend chain so that completion treats it correctly.
-+	 * On error, we have to fail the ioend here because we have locked
-+	 * buffers in the ioend. If we don't do this, we'll deadlock
-+	 * invalidating the page as that tries to lock the buffers on the page.
-+	 * Also, because we may have set pages under writeback, we have to make
-+	 * sure we run IO completion to mark the error state of the IO
-+	 * appropriately, so we can't cancel the ioend directly here. That means
-+	 * we have to mark this page as under writeback if we included any
-+	 * buffers from it in the ioend chain so that completion treats it
-+	 * correctly.
- 	 *
--	 * If we didn't include the page in the ioend, then we can simply
--	 * discard and unlock it as there are no other users of the page or it's
--	 * buffers right now. The caller will still need to trigger submission
--	 * of outstanding ioends on the writepage context so they are treated
--	 * correctly on error.
-+	 * If we didn't include the page in the ioend, the on error we can
-+	 * simply discard and unlock it as there are no other users of the page
-+	 * or it's buffers right now. The caller will still need to trigger
-+	 * submission of outstanding ioends on the writepage context so they are
-+	 * treated correctly on error.
- 	 */
--	if (count)
--		xfs_start_page_writeback(page, 0, count);
--	else {
-+	if (count) {
-+		xfs_start_page_writeback(page, !error);
-+
-+		/*
-+		 * Preserve the original error if there was one, otherwise catch
-+		 * submission errors here and propagate into subsequent ioend
-+		 * submissions.
-+		 */
-+		list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
-+			int error2;
-+
-+			list_del_init(&ioend->io_list);
-+			error2 = xfs_submit_ioend(wbc, ioend, error);
-+			if (error2 && !error)
-+				error = error2;
-+		}
-+	} else if (error) {
- 		xfs_aops_discard_page(page);
- 		ClearPageUptodate(page);
- 		unlock_page(page);
-+	} else {
-+		/*
-+		 * We can end up here with no error and nothing to write if we
-+		 * race with a partial page truncate on a sub-page block sized
-+		 * filesystem. In that case we need to mark the page clean.
-+		 */
-+		xfs_start_page_writeback(page, 1);
-+		end_page_writeback(page);
- 	}
-+
- 	mapping_set_error(page->mapping, error);
- 	return error;
- }
-@@ -985,7 +976,7 @@ xfs_do_writepage(
- 		end_offset = offset;
- 	}
- 
--	return xfs_writepage_map(wpc, inode, page, offset, end_offset);
-+	return xfs_writepage_map(wpc, wbc, inode, page, offset, end_offset);
- 
- redirty:
- 	redirty_page_for_writepage(wbc, page);
-@@ -1004,7 +995,9 @@ xfs_vm_writepage(
- 	int			ret;
- 
- 	ret = xfs_do_writepage(page, wbc, &wpc);
--	return xfs_writepage_submit(&wpc, wbc, ret);
-+	if (wpc.ioend)
-+		ret = xfs_submit_ioend(wbc, wpc.ioend, ret);
-+	return ret;
- }
- 
- STATIC int
-@@ -1019,7 +1012,9 @@ xfs_vm_writepages(
- 
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
- 	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
--	return xfs_writepage_submit(&wpc, wbc, ret);
-+	if (wpc.ioend)
-+		ret = xfs_submit_ioend(wbc, wpc.ioend, ret);
-+	return ret;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 3c3f1a3..4e01bd5 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -41,7 +41,7 @@ enum {
-  * It can manage several multi-page bio's at once.
-  */
- typedef struct xfs_ioend {
--	struct xfs_ioend	*io_list;	/* next ioend in chain */
-+	struct list_head	io_list;	/* next ioend in chain */
- 	unsigned int		io_type;	/* delalloc / unwritten */
- 	int			io_error;	/* I/O error code */
- 	atomic_t		io_remaining;	/* hold count */
--- 
-2.5.0
+Then I installed onto 3 servers this patch (applied onto kernel
+v4.4.1). The bad news is that I am still getting the kernel messages
+on these machines. The good news, though, is that they appear at a
+much lower frequency and also the impact on performance seems to be
+lower, so the OSD processes on these three nodes did not get killed.
+
+I'm going to rerun the test with the patched kernel on all nodes next
+week, I could also run debug stuff if you have some idea for that.
 
 _______________________________________________
 xfs mailing list
