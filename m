@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 43C9D7CA2
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 02:02:24 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6F69E7CA2
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 02:03:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C49B6AC002
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 00:02:20 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D526304051
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 00:03:26 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id EqGQI4PrcEiqAYry (version=TLSv1.2
+	ESMTP id egHKaO6SL5K8tXbR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 13 Feb 2016 00:02:16 -0800 (PST)
-Date: Sat, 13 Feb 2016 00:02:15 -0800
+	<xfs@oss.sgi.com>; Sat, 13 Feb 2016 00:03:23 -0800 (PST)
+Date: Sat, 13 Feb 2016 00:03:21 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: block allocations for the refcount btree
-Message-ID: <20160213080215.GA2151@infradead.org>
-References: <20160210093011.GA19147@infradead.org>
-	<20160210095010.GC23904@birch.djwong.org>
-	<20160210190738.GA13051@infradead.org>
-	<20160210214058.GN14668@dastard>
-	<20160212191046.GA28421@infradead.org>
-	<20160213023310.GC14668@dastard>
-	<20160213044400.GJ6350@birch.djwong.org>
+Subject: Re: [PATCH v4.2 00/32] xfstests: test the nfs/cifs/btrfs/xfs
+	reflink/dedupe ioctls
+Message-ID: <20160213080321.GB2151@infradead.org>
+References: <20160211233916.2202.40961.stgit@birch.djwong.org>
+	<20160213012659.GA14668@dastard>
+	<20160213043834.GC26204@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160213044400.GJ6350@birch.djwong.org>
+In-Reply-To: <20160213043834.GC26204@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,16 +33,18 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Feb 12, 2016 at 08:44:00PM -0800, Darrick J. Wong wrote:
-> Brain dead, going to bed.  Next on my list is to rebase the more stable
-> parts of the patchset against Dave's for-4.6 branch and do another mass
-> mailing.
+On Fri, Feb 12, 2016 at 08:38:34PM -0800, Darrick J. Wong wrote:
+> > Followup patch, anyway, because I'm about to push out everything
+> > that was in your second pull req (i.e. with the aiocp fix).
+> 
+> xfs_io "bmap -c" is a new switch that dumps the CoW fork of a file.
+> AFAICT there isn't any way to check that an xfs_io command supports
+> a particular switch, though it wouldn't be difficult to add a check.
 
-Yes, it would be great the prep work into for-next ASAP.  Another
-important thing would be to rebase on the writepage changes now that
-they are basically ready to be merged.
+Just test for it the same way we test for the existance of xfs_io
+subcommmand.
 
 _______________________________________________
 xfs mailing list
