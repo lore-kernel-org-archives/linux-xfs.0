@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 18BE57CA2
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 19:27:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D96608F8039
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 17:27:03 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BdsNvFUUzlK74LgS for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2016 17:27:01 -0800 (PST)
-Date: Sat, 13 Feb 2016 12:26:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4.2 00/32] xfstests: test the nfs/cifs/btrfs/xfs
-	reflink/dedupe ioctls
-Message-ID: <20160213012659.GA14668@dastard>
-References: <20160211233916.2202.40961.stgit@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id D733F7CA2
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 20:22:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C9F268F8039
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 18:22:23 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id z5pgC89cjBfSvAa1 for <xfs@oss.sgi.com>;
+	Fri, 12 Feb 2016 18:22:21 -0800 (PST)
+Received: from Liberator.local (24-158-28-51.static.dlth.mn.charter.com
+	[24.158.28.51])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id F21D463C5FF0
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 20:22:20 -0600 (CST)
+Subject: Re: [PATCH v4 1/2] libxcmd: generalize topology functions
+References: <1455303811-9874-1-git-send-email-billodo@redhat.com>
+	<1455303811-9874-2-git-send-email-billodo@redhat.com>
+	<20160212193942.GA4770@infradead.org>
+	<20160212194749.GA10069@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56BE935B.8030501@sandeen.net>
+Date: Fri, 12 Feb 2016 20:22:19 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160211233916.2202.40961.stgit@birch.djwong.org>
+In-Reply-To: <20160212194749.GA10069@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,73 +36,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Feb 11, 2016 at 03:39:16PM -0800, Darrick J. Wong wrote:
-> Dave Chinner: I've renumbered the new tests and pushed to github[3] if
-> you'd like to pull.  See the pull request at the end of this message.
-> 
-> This is a patch set against the reflink/dedupe test cases in xfstests.
-> The first three patches fix errors in the existing reflink tests, some
-> of which are from Christoph Hellwig.
-> 
-> The next eight patches fix style errors, refactor commonly used code,
-> remove unnecessary clutter, and add missing _require* checks to the
-> existing reflink tests.
-> 
-> Patch 12 adds a test checking that unwritten extent conversion does
-> NOT happen after a directio write to an unwritten extent hits a disk
-> error.   Due to a bug in the VFS directio code, ext4 can disclose
-> stale disk contents if an aio dio write fails; XFS suffers this
-> problem for any failing dio write to an unwritten extent.  Christoph's
-> kernel patchset titled "vfs/xfs: directio updates to ease COW handling
-> V2" (and a separate ext4 warning cleanup) is needed to fix this.
-> 
-> Patches 13-31 add more reflink tests focusing on correct CoW behavior
-> particularly with the CoW extent size hint enabled.  It also provides
-> a few regression tests for bugs that have been hit while running XFS
-> reflink, a few tests of the quota accounting when various reflink
-> operations happen, and a few tests for get_bmapx to ensure that what
-> it reports is at least somewhat accurate.
-> 
-> Patch 25 adds a few basic reverse-mapping tests for XFS.
-> 
-> If you're going to start using this mess, you probably ought to just
-> pull from my github trees for kernel[1], xfsprogs[2], xfstests[3],
-> xfs-docs[4], and man-pages[5].  All tests should pass on XFS, YMWV on
-> btrfs and ocfs2.
-> 
-> Comments and questions are, as always, welcome.
 
-I haven't worked out which patch causes this, but:
 
-xfs/246  - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_1k/xfs/246.out.bad)
-    --- tests/xfs/246.out       2016-02-13 09:46:01.419169115 +1100
-    +++ /home/dave/src/xfstests-dev/results//xfs_1k/xfs/246.out.bad     2016-02-13 11:36:05.205851863 +1100
-    @@ -3,4 +3,5 @@
-     Create the original files
-     Dump extents after sync
-     Hole CoW extents:
-    -SCRATCH_MNT/test-246/file1: no extents
-    +bmap: invalid option -- 'c'
-    +bmap [-adlpv] [-n nx] -- print block mapping for an XFS file
-    ...
-    (Run 'diff -u tests/xfs/246.out /home/dave/src/xfstests-dev/results//xfs_1k/xfs/246.out.bad'  to see the entire diff)
+On 2/12/16 1:47 PM, Bill O'Donnell wrote:
+> On Fri, Feb 12, 2016 at 11:39:42AM -0800, Christoph Hellwig wrote:
+>> On Fri, Feb 12, 2016 at 01:03:30PM -0600, Bill O'Donnell wrote:
+>>> Move general topology functions from xfs_mkfs to new topology
+>>> collection in libxcmd.
+>>
+>> Why libxcmd and not libxfs?
+> 
+> We discussed that a bit. Since libxfs has the kernel support code, and
+> not generally the xfsprogs library, I put it in libxcmd.
 
-This test neds a check that the "-c" option in the bmap command
-exists. Not sure if you can use '_requires_xfs_io_command "bmap -c"'
-here or whether this requires more help...
+Yep, Dave asked for libxcmd, to keep stuff that's not shared with
+the kernel away from libxfs.
 
-Followup patch, anyway, because I'm about to push out everything
-that was in your second pull req (i.e. with the aiocp fix).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
