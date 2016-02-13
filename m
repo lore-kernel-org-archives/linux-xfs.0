@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D733F7CA2
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 20:22:26 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DE5C17CA2
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 20:33:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C9F268F8039
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 18:22:23 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id z5pgC89cjBfSvAa1 for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2016 18:22:21 -0800 (PST)
-Received: from Liberator.local (24-158-28-51.static.dlth.mn.charter.com
-	[24.158.28.51])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id F21D463C5FF0
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 20:22:20 -0600 (CST)
-Subject: Re: [PATCH v4 1/2] libxcmd: generalize topology functions
-References: <1455303811-9874-1-git-send-email-billodo@redhat.com>
-	<1455303811-9874-2-git-send-email-billodo@redhat.com>
-	<20160212193942.GA4770@infradead.org>
-	<20160212194749.GA10069@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56BE935B.8030501@sandeen.net>
-Date: Fri, 12 Feb 2016 20:22:19 -0600
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E194AC002
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2016 18:33:18 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	bDCuJJkyXw1kIOC4 for <xfs@oss.sgi.com>;
+	Fri, 12 Feb 2016 18:33:12 -0800 (PST)
+Date: Sat, 13 Feb 2016 13:33:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: block allocations for the refcount btree
+Message-ID: <20160213023310.GC14668@dastard>
+References: <20160210093011.GA19147@infradead.org>
+	<20160210095010.GC23904@birch.djwong.org>
+	<20160210190738.GA13051@infradead.org>
+	<20160210214058.GN14668@dastard>
+	<20160212191046.GA28421@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20160212194749.GA10069@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20160212191046.GA28421@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,25 +33,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
 
-
-
-On 2/12/16 1:47 PM, Bill O'Donnell wrote:
-> On Fri, Feb 12, 2016 at 11:39:42AM -0800, Christoph Hellwig wrote:
->> On Fri, Feb 12, 2016 at 01:03:30PM -0600, Bill O'Donnell wrote:
->>> Move general topology functions from xfs_mkfs to new topology
->>> collection in libxcmd.
->>
->> Why libxcmd and not libxfs?
+On Fri, Feb 12, 2016 at 11:10:46AM -0800, Christoph Hellwig wrote:
+> On Thu, Feb 11, 2016 at 08:40:58AM +1100, Dave Chinner wrote:
+> > I run into that from time to time (maybe once a month) on a vanilla
+> > kernel.
+> > 
+> > IIRC, the problem is the delayed allocation extent split runs out of
+> > it's reserved block count if you split it enough times. The case
+> > I've seen is that  the indlen calculated in xfs_bmap_worst_indlen()
+> > ends up too small for a subsequent allocation after we've called
+> > xfs_bmap_del_extent() to delete the middle of a delalloc extent too
+> > many times.
+> > 
+> > Brian had some patches that attempted to solve it - we may have
+> > simply dropped the ball on this (again).
+> > 
+> > http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
 > 
-> We discussed that a bit. Since libxfs has the kernel support code, and
-> not generally the xfsprogs library, I put it in libxcmd.
+> I'm pretty sure that is a separate issue.  With the refcount btree we may
+> allocate an extent (or rather just a single block) in xfs_alloc_ag_vextent
+> as called from xfs_refcountbt_alloc_block.  The reservation helps us to
+> ensure this block is always available, but we still need to account for
+> that in xfs_trans_reserve(), which we currently don't do for itruncate
+> transactions.  
 
-Yep, Dave asked for libxcmd, to keep stuff that's not shared with
-the kernel away from libxfs.
+Ok, so we may have two different issues with a similar failure
+symptom. As it is, I don't think this is a show stopper - we're
+expecting to find these sorts of issues as we go along (hence the
+experimental tag on the feature) and I think, at this point, getting
+review and an initial merge done is more important...
 
--Eric
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
