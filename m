@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 97D3E7CA4
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 18:16:50 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6A17F7CA6
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 18:21:42 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 86D62304039
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 16:16:50 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 47B8C304039
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 16:21:42 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	kJDNyF8nbsIDpHbR for <xfs@oss.sgi.com>;
-	Sat, 13 Feb 2016 16:16:47 -0800 (PST)
-Date: Sun, 14 Feb 2016 11:16:45 +1100
+	p61PSXmxyhP0imyU for <xfs@oss.sgi.com>;
+	Sat, 13 Feb 2016 16:21:37 -0800 (PST)
+Date: Sun, 14 Feb 2016 11:21:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] [RFC] xfs: allocate log vector buffers outside CIL
-	context lock
-Message-ID: <20160214001645.GF14668@dastard>
-References: <1453177919-17849-1-git-send-email-david@fromorbit.com>
-	<20160120015853.GU6033@dastard>
-	<20160126141733.GA48264@bfoster.bfoster>
-	<CADr68Wa9vG=ZOn4gbHezEyOeM+tCo69s3WVqcVXnZrn+=DdoVA@mail.gmail.com>
+Subject: Re: block allocations for the refcount btree
+Message-ID: <20160214002135.GG14668@dastard>
+References: <20160210093011.GA19147@infradead.org>
+	<20160210095010.GC23904@birch.djwong.org>
+	<20160210190738.GA13051@infradead.org>
+	<20160210214058.GN14668@dastard>
+	<20160212191046.GA28421@infradead.org>
+	<20160213023310.GC14668@dastard>
+	<20160213074827.GA11543@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CADr68Wa9vG=ZOn4gbHezEyOeM+tCo69s3WVqcVXnZrn+=DdoVA@mail.gmail.com>
+In-Reply-To: <20160213074827.GA11543@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,71 +35,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Rosenboom <j.rosenboom@x-ion.de>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Sat, Feb 13, 2016 at 06:09:17PM +0100, Jens Rosenboom wrote:
-> 2016-01-26 15:17 GMT+01:00 Brian Foster <bfoster@redhat.com>:
-> > On Wed, Jan 20, 2016 at 12:58:53PM +1100, Dave Chinner wrote:
-> >> From: Dave Chinner <dchinner@redhat.com>
-> >>
-> >> One of the problems we currently have with delayed logging is that
-> >> under serious memory pressure we can deadlock memory reclaim. THis
-> >> occurs when memory reclaim (such as run by kswapd) is reclaiming XFS
-> >> inodes and issues a log force to unpin inodes that are dirty in the
-> >> CIL.
-....
-> >> That said, I don't have a reliable deadlock reproducer in the first
-> >> place, so I'm interested i hearing what people think about this
-> >> approach to solve the problem and ways to test and improve it.
-> >>
-> >> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> >> ---
-> >
-> > This seems reasonable to me in principle. It would be nice to have some
-> > kind of feedback in terms of effectiveness resolving the original
-> > deadlock report. I can't think of a good way of testing short of
-> > actually instrumenting the deadlock one way or another, unfortunately.
-> > Was there a user that might be willing to test or had a detailed enough
-> > description of the workload/environment?
+On Fri, Feb 12, 2016 at 11:48:27PM -0800, Christoph Hellwig wrote:
+> On Sat, Feb 13, 2016 at 01:33:10PM +1100, Dave Chinner wrote:
+> > > allocate an extent (or rather just a single block) in xfs_alloc_ag_vextent
+> > > as called from xfs_refcountbt_alloc_block.  The reservation helps us to
+> > > ensure this block is always available, but we still need to account for
+> > > that in xfs_trans_reserve(), which we currently don't do for itruncate
+> > > transactions.  
+> > 
+> > Ok, so we may have two different issues with a similar failure
+> > symptom. As it is, I don't think this is a show stopper - we're
+> > expecting to find these sorts of issues as we go along (hence the
+> > experimental tag on the feature) and I think, at this point, getting
+> > review and an initial merge done is more important...
 > 
-> We have seen this issue on our production Ceph cluster sporadically
-> and have tried a long time to reproduce it in a lab environment.
-....
-> kmem_alloc (mode:0x2408240)
-> Feb 13 10:51:57 storage-node35 kernel: [10562.614089] XFS:
-> ceph-osd(10078) possible memory allocation deadlock size 32856 in
-> kmem_alloc (mode:0x2408240)
+> This triggers 100% reproducible over NFS, and as outlined I'm
+> also pretty sure about the root cause.  I don't think this is something
+> to be ignored.
 
-High order allocation of 32k. That implies a buffer size of at least
-32k is in use. Can you tell me what the output of xfs_info <mntpt>
-is for one of your filesystems?
-
-I suspect you are using a 64k directory block size, in which case
-I'll ask "are you storing millions of files in a single directory"?
-If your answer is no, then "don't do that" is an appropriate
-solution because large directory block sizes are slower than the
-default (4k) for almost all operations until you get up into the
-millions of files per directory range.
-
-> Soon after this, operations get so slow that the OSDs die because of
-> their suicide timeouts.
-> 
-> Then I installed onto 3 servers this patch (applied onto kernel
-> v4.4.1). The bad news is that I am still getting the kernel messages
-> on these machines. The good news, though, is that they appear at a
-> much lower frequency and also the impact on performance seems to be
-> lower, so the OSD processes on these three nodes did not get killed.
-
-Right, the patch doesn't fix the underlying issue that memory
-fragmentation can prevent high order allocation from succeeding for
-long periods.  However, it does ensure that the filesystem does not
-immediately deadlock memory reclaim when it happens so the system
-has a chance to recover. It still can deadlock the filesystem,
-because if we can't commit the transaction we can't unlock the
-objects in the transaction and everything can get stuck behind that
-if there's something sufficiently important in the blocked
-transaction.
+I didn't say we should to ignore it - I simply stated my priority
+was getting the code reviewed and merged.  That doesn't stop you or
+Darrick from working on a fix - if that happens after the initial
+merge, we've still got the whole -rc cycle to find and fix issues
+like this.
 
 Cheers,
 
