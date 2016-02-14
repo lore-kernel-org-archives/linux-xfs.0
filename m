@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6A17F7CA6
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 18:21:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 47B8C304039
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2016 16:21:42 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	p61PSXmxyhP0imyU for <xfs@oss.sgi.com>;
-	Sat, 13 Feb 2016 16:21:37 -0800 (PST)
-Date: Sun, 14 Feb 2016 11:21:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: block allocations for the refcount btree
-Message-ID: <20160214002135.GG14668@dastard>
-References: <20160210093011.GA19147@infradead.org>
-	<20160210095010.GC23904@birch.djwong.org>
-	<20160210190738.GA13051@infradead.org>
-	<20160210214058.GN14668@dastard>
-	<20160212191046.GA28421@infradead.org>
-	<20160213023310.GC14668@dastard>
-	<20160213074827.GA11543@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EF8DC7CA2
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 15:27:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C4CDC8F8039
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 13:27:53 -0800 (PST)
+Received: from mail-wm0-f52.google.com (mail-wm0-f52.google.com
+	[74.125.82.52]) by cuda.sgi.com with ESMTP id WDq2tLsfIy303Nwk
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 14 Feb 2016 13:27:51 -0800 (PST)
+Received: by mail-wm0-f52.google.com with SMTP id g62so33608226wme.1
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 13:27:51 -0800 (PST)
+Subject: Re: richacl(7) man page review comments
+References: <56B770B6.7040803@gmail.com> <56B77262.7090107@gmail.com>
+	<CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Message-ID: <56C0F150.60008@gmail.com>
+Date: Sun, 14 Feb 2016 22:27:44 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160213074827.GA11543@infradead.org>
+In-Reply-To: <CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,39 +32,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, mtk.manpages@gmail.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri, Feb 12, 2016 at 11:48:27PM -0800, Christoph Hellwig wrote:
-> On Sat, Feb 13, 2016 at 01:33:10PM +1100, Dave Chinner wrote:
-> > > allocate an extent (or rather just a single block) in xfs_alloc_ag_vextent
-> > > as called from xfs_refcountbt_alloc_block.  The reservation helps us to
-> > > ensure this block is always available, but we still need to account for
-> > > that in xfs_trans_reserve(), which we currently don't do for itruncate
-> > > transactions.  
-> > 
-> > Ok, so we may have two different issues with a similar failure
-> > symptom. As it is, I don't think this is a show stopper - we're
-> > expecting to find these sorts of issues as we go along (hence the
-> > experimental tag on the feature) and I think, at this point, getting
-> > review and an initial merge done is more important...
+On 02/12/2016 11:25 PM, Andreas Gruenbacher wrote:
+> Hi Michael,
 > 
-> This triggers 100% reproducible over NFS, and as outlined I'm
-> also pretty sure about the root cause.  I don't think this is something
-> to be ignored.
+> On Sun, Feb 7, 2016 at 5:35 PM, Michael Kerrisk (man-pages)
+> <mtk.manpages@gmail.com> wrote:
+>> Hi Andreas,
+>>
+>> I'll probably have quite a few more comments on this page as I get to
+>> understand RichACLs better. Here's some comments from an initial
+>> reading.
+> 
+> thanks a lot for all the feedback to the man-pages. I've more or less
+> made all the suggested changes but didn't get to adding examples yet
+> (that's not so easy).
+> 
+> The changes are here:
+> 
+>   https://github.com/andreas-gruenbacher/richacl
 
-I didn't say we should to ignore it - I simply stated my priority
-was getting the code reviewed and merged.  That doesn't stop you or
-Darrick from working on a fix - if that happens after the initial
-merge, we've still got the whole -rc cycle to find and fix issues
-like this.
+Thanks. I'll send a few further comments. But I hope to send
+more in the future.
+
+>> So, an initial comment. It seems to me to that this page (but
+>> not setrichacl(1) and getrichacl(1)) should ultimately land in
+>> man-pages (just like acl(7)), since we're talking about a kernel
+>> feature. Make sense?
+> 
+> We could sure move acl(5) and richacl(7) there.
+
+We already have acl(5) (now "acl(7)" in man pages) ;-).
 
 Cheers,
 
-Dave.
+Michael
+
+
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
 
 _______________________________________________
 xfs mailing list
