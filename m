@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EF8DC7CA2
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 15:27:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C4CDC8F8039
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 13:27:53 -0800 (PST)
-Received: from mail-wm0-f52.google.com (mail-wm0-f52.google.com
-	[74.125.82.52]) by cuda.sgi.com with ESMTP id WDq2tLsfIy303Nwk
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 781147CA2
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 15:29:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 54235304032
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 13:29:16 -0800 (PST)
+Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id 7gfgP3ZBCMcTbvRj
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 14 Feb 2016 13:27:51 -0800 (PST)
-Received: by mail-wm0-f52.google.com with SMTP id g62so33608226wme.1
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 13:27:51 -0800 (PST)
-Subject: Re: richacl(7) man page review comments
-References: <56B770B6.7040803@gmail.com> <56B77262.7090107@gmail.com>
-	<CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
+	Sun, 14 Feb 2016 13:29:13 -0800 (PST)
+Received: by mail-wm0-f53.google.com with SMTP id b205so45091850wmb.1
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 13:29:13 -0800 (PST)
+Subject: Re: setrichacl(1) man page review comments
+References: <56B770B6.7040803@gmail.com> <56B7716F.6060404@gmail.com>
 From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Message-ID: <56C0F150.60008@gmail.com>
-Date: Sun, 14 Feb 2016 22:27:44 +0100
+Message-ID: <56C0F1A5.9010109@gmail.com>
+Date: Sun, 14 Feb 2016 22:29:09 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
+In-Reply-To: <56B7716F.6060404@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +27,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, mtk.manpages@gmail.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On 02/12/2016 11:25 PM, Andreas Gruenbacher wrote:
-> Hi Michael,
-> 
-> On Sun, Feb 7, 2016 at 5:35 PM, Michael Kerrisk (man-pages)
-> <mtk.manpages@gmail.com> wrote:
->> Hi Andreas,
->>
->> I'll probably have quite a few more comments on this page as I get to
->> understand RichACLs better. Here's some comments from an initial
->> reading.
-> 
-> thanks a lot for all the feedback to the man-pages. I've more or less
-> made all the suggested changes but didn't get to adding examples yet
-> (that's not so easy).
-> 
-> The changes are here:
-> 
->   https://github.com/andreas-gruenbacher/richacl
-
-Thanks. I'll send a few further comments. But I hope to send
-more in the future.
-
->> So, an initial comment. It seems to me to that this page (but
->> not setrichacl(1) and getrichacl(1)) should ultimately land in
->> man-pages (just like acl(7)), since we're talking about a kernel
->> feature. Make sense?
-> 
-> We could sure move acl(5) and richacl(7) there.
-
-We already have acl(5) (now "acl(7)" in man pages) ;-).
-
-Cheers,
-
-Michael
-
-
-
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgQW5kcmVhcywKCkhlcmUncyBhIGZldyBtb3JlIGNvbW1lbnRzIG9uIHRoZSBsYXRlc3Qgc2V0
+cmljaGFjbCgxKQpwYWdlIHRoYXQgSSBwdWxsZWQgb3V0IG9mIHRoZSBnaXQgcmVwby4KCj4gLlwi
+Cj4gLlwiIFJpY2hBQ0wgTWFudWFsIFBhZ2VzCj4gLlwiCj4gLlwiIENvcHlyaWdodCAoQykgMjAx
+NSwyMDE2ICBSZWQgSGF0LCBJbmMuCj4gLlwiIFdyaXR0ZW4gYnkgQW5kcmVhcyBHcnVlbmJhY2hl
+ciA8YWdydWVuYmFAcmVkaGF0LmNvbT4KPiAuXCIgVGhpcyBpcyBmcmVlIGRvY3VtZW50YXRpb247
+IHlvdSBjYW4gcmVkaXN0cmlidXRlIGl0IGFuZC9vcgo+IC5cIiBtb2RpZnkgaXQgdW5kZXIgdGhl
+IHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSBhcwo+IC5cIiBwdWJsaXNo
+ZWQgYnkgdGhlIEZyZWUgU29mdHdhcmUgRm91bmRhdGlvbjsgZWl0aGVyIHZlcnNpb24gMiBvZgo+
+IC5cIiB0aGUgTGljZW5zZSwgb3IgKGF0IHlvdXIgb3B0aW9uKSBhbnkgbGF0ZXIgdmVyc2lvbi4K
+PiAuXCIKPiAuXCIgVGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlJ3MgcmVmZXJlbmNlcyB0
+byAib2JqZWN0IGNvZGUiCj4gLlwiIGFuZCAiZXhlY3V0YWJsZXMiIGFyZSB0byBiZSBpbnRlcnBy
+ZXRlZCBhcyB0aGUgb3V0cHV0IG9mIGFueQo+IC5cIiBkb2N1bWVudCBmb3JtYXR0aW5nIG9yIHR5
+cGVzZXR0aW5nIHN5c3RlbSwgaW5jbHVkaW5nCj4gLlwiIGludGVybWVkaWF0ZSBhbmQgcHJpbnRl
+ZCBvdXRwdXQuCj4gLlwiCj4gLlwiIFRoaXMgbWFudWFsIGlzIGRpc3RyaWJ1dGVkIGluIHRoZSBo
+b3BlIHRoYXQgaXQgd2lsbCBiZSB1c2VmdWwsCj4gLlwiIGJ1dCBXSVRIT1VUIEFOWSBXQVJSQU5U
+WTsgd2l0aG91dCBldmVuIHRoZSBpbXBsaWVkIHdhcnJhbnR5IG9mCj4gLlwiIE1FUkNIQU5UQUJJ
+TElUWSBvciBGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIgUFVSUE9TRS4gIFNlZSB0aGUKPiAuXCIg
+R05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy4KPiAuXCIKPiAuXCIg
+WW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGlj
+Cj4gLlwiIExpY2Vuc2UgYWxvbmcgd2l0aCB0aGlzIG1hbnVhbC4gIElmIG5vdCwgc2VlCj4gLlwi
+IDxodHRwOi8vd3d3LmdudS5vcmcvbGljZW5zZXMvPi4KPiAuXCIKPiAuVEggU0VUUklDSEFDTCA3
+IDIwMTUtMDktMDEgIkxpbnV4IiAiUmljaCBBY2Nlc3MgQ29udHJvbCBMaXN0cyIKPiAKPiAuU0gg
+TkFNRQo+IHNldHJpY2hhY2wgXC0gU2V0IFJpY2ggQWNjZXNzIENvbnRyb2wgTGlzdHMKPiAKPiAu
+U0ggU1lOT1BTSVMKPiAuQiBzZXRyaWNoYWNsCj4gLlJJIFsgb3B0aW9uICJdLi4uIFsiIGZpbGUg
+XS4uLgo+IAo+IC5TSCBERVNDUklQVElPTgo+IFRoZQo+IC5CIHNldHJpY2hhY2wKPiB1dGlsaXR5
+IHNldHMgb3IgbW9kaWZpZXMgUmljaCBBY2Nlc3MgQ29udHJvbCBMaXN0cyAoUmljaEFDTHMpIG9m
+IGZpbGVzIGFuZAo+IGRpcmVjdG9yaWVzLgo+IAo+IFRoZQo+IC5CIFwtbQo+IGFuZAo+IC5CIFwt
+cwo+IG9wdGlvbnMgZXhwZWN0IGFuIEFDTCBvciBwYXJ0cyBvZiBhbiBBQ0wgb24gdGhlIGNvbW1h
+bmQgbGluZS4gVGhlCj4gLkIgXC1NCj4gYW5kCj4gLkIgXC1TCj4gb3B0aW9ucyByZWFkIGFuIEFD
+TCBvciBwYXJ0cyBvZiBhbiBBQ0wgZnJvbSBhIGZpbGUuIEluIGVpdGhlciBjYXNlLCB0aGUgZW50
+cnkKPiBmb3JtYXQgaXMgZGVzY3JpYmVkIGluIHNlY3Rpb24KPiAuSSBURVhUIEZPUk0KCi5JIFRl
+eHQgZm9ybQoKPiBvZiB0aGUKPiAuQlIgcmljaGFjbCAoNykKPiBtYW51YWwgcGFnZS4gVGhlIHNp
+bmdsZS1sZXR0ZXIgb3IgbG9uZyBmb3JtcyBvZiBmbGFncyBhbmQgcGVybWlzc2lvbnMgY2FuIGJl
+Cj4gbWl4ZWQgYXJiaXRyYXJpbHkuIE11bHRpcGxlIGVudHJpZXMgYXJlIHNlcGFyYXRlZCBieSB3
+aGl0ZXNwYWNlLCBuZXdsaW5lcyBvcgoKcy9uZXdsaW5lcy9uZXdsaW5lcywvCgooWW91IGFscmVh
+ZHkgdXNlIHRoZSAiT3hmb3JkIGNvbW1hIiBjb252ZW50aW9uIGVsc2V3aGVyZSwgc28gYmUgY29u
+c2lzdGVudC4pCgoKPiBjb21tYXMuCj4gCj4gTm90ZSB0aGF0IHRoZSBvcmRlciBvZiBlbnRyaWVz
+IGluIGEgUmljaEFDTCBtYXR0ZXJzLCBhbmQgdGhhdCByZW9yZGVyaW5nCgpzL21hdHRlcnMvaXMg
+c2lnbmlmaWNhbnQvCgo+IGVudHJpZXMgbWF5IGNoYW5nZSB0aGUgcGVybWlzc2lvbnMgZ3JhbnRl
+ZC4KPiAKPiBUaGUgdXNlIG9mCj4gLkIgZGVueQo+IGVudHJpZXMgaXMgZGlzY291cmFnZWQuIElm
+Cj4gLkIgZGVueQo+IGVudHJpZXMgYXJlIHVzZWQsIHRoZXkgc2hvdWxkIGJlIHBsYWNlZCBhaGVh
+ZCBvZgo+IC5CIGFsbG93Cj4gZW50cmllcyBmb3IgaW1wcm92ZWQgaW50ZXJvcGVyYWJpbGl0eSB3
+aXRoIFdpbmRvd3Mgd2hlcmUgcG9zc2libGUuCj4gCj4gV2hlbiB0aGUgZmlsZSBtYXNrcyBhcmUg
+bm90IHNwZWNpZmllZCwgdGhleSBhcmUgY29tcHV0ZWQgYXV0b21hdGljYWxseS4KPiAKPiBXaGVu
+IHRoZSBBQ0wgdG8gYmUgc2V0IGlzIHNpbXBsZSBlbm91Z2ggdGhhdCB0aGUgdHJhZGl0aW9uYWwg
+ZmlsZSBwZXJtaXNzaW9uCj4gYml0cyBjYW4gZXhwcmVzcyB0aGUgc2FtZSBwZXJtaXNzaW9ucywK
+PiAuQiBzZXRyaWNoYWNsCj4gc2V0cyB0aGUgZmlsZSBwZXJtaXNzaW9uIGJpdHMgYW5kIHJlbW92
+ZXMgdGhlIEFDTC4gV2hlbgo+IC5CUiBzZXRyaWNoYWNsICdzCj4gY291bnRlcnBhcnQgdXRpbGl0
+eSwKPiAuQlIgZ2V0cmljaGFjbCAoMSksCj4gaXMgdXNlZCBvbiBhIGZpbGUgb3IgZGlyZWN0b3J5
+IHRoYXQgZG9lcyBub3QgaGF2ZSBhIFJpY2hBQ0wsIGl0IGRpc3BsYXlzIHRoZQo+IGFjY2VzcyBw
+ZXJtaXNzaW9ucyBkZWZpbmVkIGJ5IHRoZSBmaWxlIHBlcm1pc3Npb24gYml0cyBhcyBhbiBBQ0wu
+IFRoaXMgbWVhbnMKPiB0aGF0IGZvciBzaW1wbGUgQUNMcywKPiAuQiBnZXRyaWNoYWNsCj4gbWF5
+IGRpc3BsYXkgYSBzbGlnaHRseSBkaWZmZXJlbnQgQUNMIHdoaWNoIGlzIGVxdWl2YWxlbnQgdG8g
+dGhlIG9uZSB0aGF0IHdhcwo+IHNldCB3aXRoCj4gLkJSIHNldHJpY2hhY2wgLgo+IAo+IC5TUyBQ
+ZXJtaXNzaW9ucwo+IAo+IFNldHRpbmcgQUNMcyBvciBjaGFuZ2luZyB0aGUgZmlsZSBwZXJtaXNz
+aW9uIGJpdHMgaXMgYWxsb3dlZCB0byB0aGUgZmlsZSBvd25lciwKPiB0byBwcm9jZXNzZXMgd2hp
+Y2ggaGF2ZSB0aGUKPiAuQiB3cml0ZV9hY2wKPiBwZXJtaXNzaW9uLCBhbmQgdG8gcHJvY2Vzc2Vz
+IHdoaWNoIGhhdmUgdGhlCj4gLkIgQ0FQX0ZPV05FUgo+IGNhcGFiaWxpdHkuCj4gCj4gLlNIIE9Q
+VElPTlMKPiAuVFAKPiBcZkJcLVwtbW9kaWZ5XGZSIFxmSWFjbFxmUiwgXGZCXC1tXGZSIFxmSWFj
+bFxmUgo+IE1vZGlmeSB0aGUgQUNMIG9mIFxmSWZpbGVcZlIgYnkgcmVwbGFjaW5nIGV4aXN0aW5n
+IGVudHJpZXMgd2l0aCB0aGUgZW50cmllcyBpbgo+IFxmSWFjbFxmUiwgYW5kIGFkZGluZyBhbGwg
+bmV3IGVudHJpZXMuIFdoZW4gdGhlIHBlcm1pc3Npb25zIG9mIGFuIGVudHJ5IGFyZQo+IGVtcHR5
+LCByZW1vdmUgdGhlIGVudHJ5Lgo+IC5UUAo+IFxmQlwtXC1tb2RpZnlcLWZpbGVcZlIgXGZJYWNs
+X2ZpbGVcZlIsIFxmQlwtTVxmUiBcZklhY2xfZmlsZVxmUgo+IElkZW50aWNhbCB0byBcZkJcLVwt
+bW9kaWZ5XGZSLCBidXQgcmVhZCB0aGUgQUNMIGZyb20gXGZJYWNsX2ZpbGVcZlIgaW5zdGVhZC4g
+SWYKPiB0aGUgZmlsZSBpcyBcKGxxXC1cKHJxLCByZWFkIGZyb20gc3RhbmRhcmQgaW5wdXQuCj4g
+LlRQCj4gXGZCXC1cLXNldFxmUiBcZklhY2xcZlIsIFxmQlwtc1xmUiBcZklhY2xcZlIKPiBTZXQg
+dGhlIEFDTCBvZiBcZklmaWxlXGZSIHRvIFxmSWFjbFxmUi4gQW55IHByZXZpb3VzIEFDTCBpcyBy
+ZXBsYWNlZC4KPiBBQ0wgZW50cmllcyBhcmUgc2VwYXJhdGVkIGJ5IHdoaXRlc3BhY2UsIG5ld2xp
+bmVzLCBvciBjb21tYXMuCj4gLlRQCj4gXGZCXC1cLXNldFwtZmlsZVxmUiBcZklhY2xfZmlsZVxm
+UiwgXGZCXC1TXGZSIFxmSWFjbF9maWxlXGZSCj4gSWRlbnRpY2FsIHRvIFxmQlwtXC1zZXRcZlIs
+IGJ1dCByZWFkIHRoZSBBQ0wgZnJvbSBcZklhY2xfZmlsZVxmUiBpbnN0ZWFkLiBJZgo+IHRoZSBm
+aWxlIGlzIFwobHFcLVwocnEsIHJlYWQgZnJvbSBzdGFuZGFyZCBpbnB1dC4KPiAuVFAKPiBcZkJc
+LVwtcmVtb3ZlXGZSLCBcZkJcLWJcZlIKPiBSZW1vdmUgYWxsIGV4dGVuZGVkIHBlcm1pc3Npb25z
+IGFuZCByZXZlcnQgdG8gdGhlIGZpbGUgcGVybWlzc2lvbiBiaXRzIG9ubHkuCj4gLlRQCj4gXGZC
+XC1cLXZlcnNpb25cZlIsIFxmQlwtdlxmUgo+IERpc3BsYXkgdGhlIHZlcnNpb24gb2YKPiAuQiBz
+ZXRyaWNoYWNsCj4gYW5kIGV4aXQuCj4gLlRQCj4gXGZCXC1cLWhlbHBcZlIsIFxmQlwtaFxmUgo+
+IERpc3BsYXkgY29tbWFuZC1saW5lIHVzYWdlIGhlbHAgdGV4dC4KPiAKPiAuXCIgLlNIIEVYQU1Q
+TEVTCj4gCj4gLlNIIEFVVEhPUgo+IFdyaXR0ZW4gYnkgQW5kcmVhcyBHcsO8bmJhY2hlciA8YWdy
+dWVuYmFAcmVkaGF0LmNvbT4uCj4gCj4gUGxlYXNlIHNlbmQgeW91ciBidWcgcmVwb3J0cywgc3Vn
+Z2VzdGVkIGZlYXR1cmVzIGFuZCBjb21tZW50cyB0byB0aGUgYWJvdmUgYWRkcmVzcy4KPiAKPiAu
+U0ggQ09ORk9STUlORyBUTwo+IFJpY2ggQWNjZXNzIENvbnRyb2wgTGlzdHMgYXJlIExpbnV4LXNw
+ZWNpZmljLgo+IAo+IC5TSCBTRUUgQUxTTwo+IC5CUiBnZXRyaWNoYWNsICgxKSwKPiAuQlIgcmlj
+aGFjbCAoNykKCkNoZWVycywKCk1pY2hhZWwKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
+Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
