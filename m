@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EA8007CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 14:40:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ADD10304039
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:40:49 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	hB1HjRTdjmhbh4Zh for <xfs@oss.sgi.com>;
-	Mon, 15 Feb 2016 12:40:47 -0800 (PST)
-Date: Tue, 16 Feb 2016 07:40:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS fiemap issue with Linux 3.10.0-327.el7.x86_64 (CentOS 7)
-Message-ID: <20160215204009.GJ14668@dastard>
-References: <CAJkH1p6LU=d5oLh3A+j_GQ70uoCYMjR=a5yS1w8p5d5ZXz6fwg@mail.gmail.com>
-	<56C219F0.3050002@sandeen.net>
-	<CAJkH1p5ZP-Wg=UgwBZKz6rZS=_5-o625HZPAosW7tt-zpaNDOg@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A70067CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 14:46:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 39331AC002
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:46:16 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 8ZmKervsCjxJvezd (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:46:14 -0800 (PST)
+Subject: [PATCH v4.3 0/3] xfstests: minor fixes for the reflink/dedupe tests
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 15 Feb 2016 12:46:08 -0800
+Message-ID: <20160215204608.7977.2802.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAJkH1p5ZP-Wg=UgwBZKz6rZS=_5-o625HZPAosW7tt-zpaNDOg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,48 +26,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jim Wilcoxson <prirun@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Feb 15, 2016 at 02:28:36PM -0500, Jim Wilcoxson wrote:
-> Thanks Eric.
-> 
-> I ran xfs_bmap -v and it returned extents 0-19999, alternating data
-> with holes.  The holes and data were various sizes, I suppose for xfs
-> alignment reasons, but everything was there.
-> 
-> Running fiemap again after xfs_bmap still returned 1364 extents.
+This is a patch set against the reflink/dedupe test cases in xfstests.
+All three patches fix some minor problems in the giant testcase merge
+last weekend.
 
-Yes, fiemap in XFS uses a buffer size of:
+The zeroth patch ought to be Filipe Manana's patch ("fstests:
+generic/158, test dedupe with destination offset past EOF") but as he
+just resent that this morning, I won't repost it here.
 
-        bm.bmv_count = min_t(__s32, bm.bmv_count,
-                             (PAGE_SIZE * 16 / sizeof(struct getbmapx)));
+The first patch, then, corrects the error output in the high offset
+dedupe test (generic/304).
 
-i.e. limits a single fiemap fetch to a maximum of 64k of extent
-data.
+The second patch changes punch-alternating.c to use the filesystem
+accounting block size to determine where to punch holes in the file
+because that value is the internal filesystem block size.  This makes
+the program behave as expected when testing with non-page-size block
+sizes on XFS.
 
-I think you have an incorrect assumption about fiemap behaviour.
-fiemap is not designed to return or even count all the extents in a
-file in a single call; on XFS it returns how many extents it can
-return in a single call. When you then map the file, if the
-FIEMAP_EXTENT_LAST is not set on the last extent returned, then the
-application needs to make another FIEMAP call from the end offset of
-last extent mapping returned in the last call, and it will then
-return the next N extents in the file.
+The third patch adds to _require_xfs_io_command the ability to check
+that a subcommand supports a particular command line argument and adds
+to xfs/24[356] the ability to check for the -c switch to the xfs_io
+bmap command.
 
-IOWs, you have to keep calling FIEMAP to map the entire file, not
-assume a single call will return an arbitrary amount of data to you
-in a single call.
+Comments and questions are, as always, welcome.  The fixes are
+available on github[1].
 
-But, as Eric said - fiemap is a diagnosis tool, not an interface you
-can rely on for anything involving data movement.
+--D
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+[1] https://github.com/djwong/xfstests/tree/for-dave
 
 _______________________________________________
 xfs mailing list
