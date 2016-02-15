@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3AD417CA2
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 23:32:33 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 310C529DF6
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 23:32:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D09CFAC003
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 21:32:32 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CBBEBAC004
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 21:32:33 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	uFPMfQddHMOas5Yh for <xfs@oss.sgi.com>;
-	Sun, 14 Feb 2016 21:32:30 -0800 (PST)
+	LQUJsOXc4WC9FHbY for <xfs@oss.sgi.com>;
+	Sun, 14 Feb 2016 21:32:32 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] xfsprogs: FS_IOC_FS[SG]ETXATTR and DAX support
-Date: Mon, 15 Feb 2016 16:32:23 +1100
-Message-Id: <1455514346-15481-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: introduce per-inode DAX enablement
+Date: Mon, 15 Feb 2016 16:32:25 +1100
+Message-Id: <1455514346-15481-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1455514346-15481-1-git-send-email-david@fromorbit.com>
+References: <1455514346-15481-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,34 +31,54 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: ross.zwisler@linux.intel.com, jack@suse.cz
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-There are two parts to this patchset. The first is ensuring that
-xfsprogs builds correctly with the new kernel header provided
-definitions of XFS_IOC_FS[SG]SETXATTR and it's flags. I modified
-my original approach to this to hide the definitions of the FS*
-ioctl and flags in the platofrm headers if the system didn't provide
-them.
+Source kernel commit 58f88ca2df7270881de2034c8286233a89efe71c
 
-While this does result in some duplication, it solves the problem of
-needing different definitions for FS_IOC_FS[SG]ETXATTR on different
-platforms - they are different ioctl names on IRIX, so we can't just
-define it once in xfs_fs.h. The detection can also then be different
-- we only include the definitions on linux if we don't have the
-system version, and on the other platforms it retains the
-HAVE_FSXATTR guards.
+Rather than just being able to turn DAX on and off via a mount
+option, some applications may only want to enable DAX for certain
+performance critical files in a filesystem.
 
-The second and third patches are adding support for the FS_XFLAG_DAX
-and enabling xfs_io to set, get and clear the flag. Actual support
-of the on disk flag in libxfs will come in a later patchset that
-adds support into db and repair, too. This is the patchset I used to
-test the kernel side flag support.
+This patch introduces a new inode flag to enable DAX in the v3 inode
+di_flags2 field. It adds support for setting and clearing flags in
+the di_flags2 field via the XFS_IOC_FSSETXATTR ioctl, and sets the
+S_DAX inode flag appropriately when it is seen.
 
-Comments and testing welcome.
+When this flag is set on a directory, it acts as an "inherit flag".
+That is, inodes created in the directory will automatically inherit
+the on-disk inode DAX flag, enabling administrators to set up
+directory heirarchies that automatically use DAX. Setting this flag
+on an empty root directory will make the entire filesystem use DAX
+by default.
 
-Cheers,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ libxfs/xfs_format.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Dave.
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 967b1ef..7eae0a5 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1024,6 +1024,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ 	 XFS_DIFLAG_EXTSZINHERIT | XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM)
+ 
+ /*
++ * Values for di_flags2 These start by being exposed to userspace in the upper
++ * 16 bits of the XFS_XFLAG_s range.
++ */
++#define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
++#define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
++
++#define XFS_DIFLAG2_ANY		(XFS_DIFLAG2_DAX)
++
++/*
+  * Inode number format:
+  * low inopblog bits - offset in block
+  * next agblklog bits - block number in ag
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
