@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AAFC87CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 14:46:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 43D59AC004
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:46:26 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5E01F7CA8
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 14:46:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 407D2304032
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:46:30 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id oATAZtjgpU0G7XtK (version=TLSv1.2
+	cuda.sgi.com with ESMTP id LUjTf2gddPaEEB5u (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:46:24 -0800 (PST)
-Subject: [PATCH 2/3] punch-alternating: use the block size reported by the
-	fs for punching
+	<xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:46:28 -0800 (PST)
+Subject: [PATCH 1/3] generic/304: fix high offset
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 15 Feb 2016 12:46:21 -0800
-Message-ID: <20160215204621.7977.91236.stgit@birch.djwong.org>
+Date: Mon, 15 Feb 2016 12:46:14 -0800
+Message-ID: <20160215204614.7977.2848.stgit@birch.djwong.org>
 In-Reply-To: <20160215204608.7977.2802.stgit@birch.djwong.org>
 References: <20160215204608.7977.2802.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,41 +31,28 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-When we're trying to punch alternating blocks out of a file, use the
-bsize reported by fstatfs so that we can punch out single blocks.
+"Invalid argument" is a better response to an impossibly high offset
+dedupe request than "extents don't match", so change the test.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- src/punch-alternating.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ tests/generic/304.out |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/src/punch-alternating.c b/src/punch-alternating.c
-index 9566310..4148622 100644
---- a/src/punch-alternating.c
-+++ b/src/punch-alternating.c
-@@ -14,6 +14,7 @@
- int main(int argc, char *argv[])
- {
- 	struct stat	s;
-+	struct statfs	sf;
- 	off_t		offset;
- 	int		fd;
- 	blksize_t	blksz;
-@@ -35,8 +36,12 @@ int main(int argc, char *argv[])
- 	if (error)
- 		goto err;
- 
-+	error = fstatfs(fd, &sf);
-+	if (error)
-+		goto err;
-+
- 	sz = s.st_size;
--	blksz = s.st_blksize;
-+	blksz = sf.f_bsize;
- 
- 	mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
- 	for (offset = 0; offset < sz; offset += blksz * 2) {
+diff --git a/tests/generic/304.out b/tests/generic/304.out
+index 4af2a39..7b5ff0e 100644
+--- a/tests/generic/304.out
++++ b/tests/generic/304.out
+@@ -8,7 +8,7 @@ dedupe: Invalid argument
+ Dedupe past maximum file size in dest file (should fail)
+ dedupe: Invalid argument
+ Dedupe high offset to low offset
+-dedupe: Extents did not match.
++dedupe: Invalid argument
+ Dedupe past source file EOF (should fail)
+ dedupe: Invalid argument
+ Dedupe max size at nonzero offset (should fail)
 
 _______________________________________________
 xfs mailing list
