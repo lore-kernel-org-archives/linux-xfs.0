@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D28E67CAB
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C374D304043
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:02 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8B0D27CAC
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FB9C8F8033
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:03 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	7iN0f2tKR3RXvpt3 for <xfs@oss.sgi.com>;
-	Sun, 14 Feb 2016 22:18:57 -0800 (PST)
+	F5ukwxzq1OGgwLrG for <xfs@oss.sgi.com>;
+	Sun, 14 Feb 2016 22:19:01 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000ML-Lu
+	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MI-KK
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005H8-LD
+	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005Gs-JZ
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/14] xfs: stop holding ILOCK over filldir callbacks
-Date: Mon, 15 Feb 2016 17:18:24 +1100
-Message-Id: <1455517105-20033-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/14] xfs: handle dquot buffer readahead in log recovery
+	correctly
+Date: Mon, 15 Feb 2016 17:18:21 +1100
+Message-Id: <1455517105-20033-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 References: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,85 +40,181 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit dbad7c993053d8f482a5f76270a93307537efd8e
+Source kernel commit 7d6a13f023567d573ac362502bb702eda716e654
 
-The recent change to the readdir locking made in 40194ec ("xfs:
-reinstate the ilock in xfs_readdir") for CXFS directory sanity was
-probably the wrong thing to do. Deep in the readdir code we
-can take page faults in the filldir callback, and so taking a page
-fault while holding an inode ilock creates a new set of locking
-issues that lockdep warns all over the place about.
+When we do dquot readahead in log recovery, we do not use a verifier
+as the underlying buffer may not have dquots in it. e.g. the
+allocation operation hasn't yet been replayed. Hence we do not want
+to fail recovery because we detect an operation to be replayed has
+not been run yet. This problem was addressed for inodes in commit
+d891400 ("xfs: inode buffers may not be valid during recovery
+readahead") but the problem was not recognised to exist for dquots
+and their buffers as the dquot readahead did not have a verifier.
 
-The locking order for regular inodes w.r.t. page faults is io_lock
--> pagefault -> mmap_sem -> ilock. The directory readdir code now
-triggers ilock -> page fault -> mmap_sem. While we cannot deadlock
-at this point, it inverts all the locking patterns that lockdep
-normally sees on XFS inodes, and so triggers lockdep. We worked
-around this with commit 93a8614 ("xfs: fix directory inode iolock
-lockdep false positive"), but that then just moved the lockdep
-warning to deeper in the page fault path and triggered on security
-inode locks. Fixing the shmem issue there just moved the lockdep
-reports somewhere else, and now we are getting false positives from
-filesystem freezing annotations getting confused.
+The result of not using a verifier is that when the buffer is then
+next read to replay a dquot modification, the dquot buffer verifier
+will only be attached to the buffer if *readahead is not complete*.
+Hence we can read the buffer, replay the dquot changes and then add
+it to the delwri submission list without it having a verifier
+attached to it. This then generates warnings in xfs_buf_ioapply(),
+which catches and warns about this case.
 
-Further, if we enter memory reclaim in a readdir path, we now get
-lockdep warning about potential deadlocks because the ilock is held
-when we enter reclaim. This, again, is different to a regular file
-in that we never allow memory reclaim to run while holding the ilock
-for regular files. Hence lockdep now throws
-ilock->kmalloc->reclaim->ilock warnings.
+Fix this and make it handle the same readahead verifier error cases
+as for inode buffers by adding a new readahead verifier that has a
+write operation as well as a read operation that marks the buffer as
+not done if any corruption is detected.  Also make sure we don't run
+readahead if the dquot buffer has been marked as cancelled by
+recovery.
 
-Basically, the problem is that the ilock is being used to protect
-the directory data and the inode metadata, whereas for a regular
-file the iolock protects the data and the ilock protects the
-metadata. From the VFS perspective, the i_mutex serialises all
-accesses to the directory data, and so not holding the ilock for
-readdir doesn't matter. The issue is that CXFS doesn't access
-directory data via the VFS, so it has no "data serialisaton"
-mechanism. Hence we need to hold the IOLOCK in the correct places to
-provide this low level directory data access serialisation.
+This will result in readahead either succeeding and the buffer
+having a valid write verifier, or readahead failing and the buffer
+state requiring the subsequent read to resubmit the IO with the new
+verifier.  In either case, this will result in the buffer always
+ending up with a valid write verifier on it.
 
-The ilock can then be used just when the extent list needs to be
-read, just like we do for regular files. The directory modification
-code can take the iolock exclusive when the ilock is also taken,
-and this then ensures that readdir is correct excluded while
-modifications are in progress.
+Note: we also need to fix the inode buffer readahead error handling
+to mark the buffer with EIO. Brian noticed the code I copied from
+there wrong during review, so fix it at the same time. Add comments
+linking the two functions that handle readahead verifier errors
+together so we don't forget this behavioural link in future.
 
+cc: <stable@vger.kernel.org> # 3.12 - current
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- libxfs/xfs_dir2.c | 3 +++
- 1 file changed, 3 insertions(+)
+ libxfs/xfs_dquot_buf.c  | 36 ++++++++++++++++++++++++++++++------
+ libxfs/xfs_inode_buf.c  |  2 ++
+ libxfs/xfs_quota_defs.h |  2 +-
+ libxfs/xfs_shared.h     |  1 +
+ 4 files changed, 34 insertions(+), 7 deletions(-)
 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 383401b..89b4781 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -360,6 +360,7 @@ xfs_dir_lookup(
- 	struct xfs_da_args *args;
- 	int		rval;
- 	int		v;		/* type-checking value */
-+	int		lock_mode;
+diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
+index fd4aa4b..025d49b 100644
+--- a/libxfs/xfs_dquot_buf.c
++++ b/libxfs/xfs_dquot_buf.c
+@@ -62,7 +62,7 @@ xfs_dqcheck(
+ 	xfs_dqid_t	 id,
+ 	uint		 type,	  /* used only when IO_dorepair is true */
+ 	uint		 flags,
+-	char		 *str)
++	const char	 *str)
+ {
+ 	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
+ 	int		errs = 0;
+@@ -215,7 +215,8 @@ xfs_dquot_buf_verify_crc(
+ STATIC bool
+ xfs_dquot_buf_verify(
+ 	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
++	struct xfs_buf		*bp,
++	int			warn)
+ {
+ 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+ 	xfs_dqid_t		id = 0;
+@@ -248,8 +249,7 @@ xfs_dquot_buf_verify(
+ 		if (i == 0)
+ 			id = be32_to_cpu(ddq->d_id);
  
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_lookup);
-@@ -385,6 +386,7 @@ xfs_dir_lookup(
- 	if (ci_name)
- 		args->op_flags |= XFS_DA_OP_CILOOKUP;
- 
-+	lock_mode = xfs_ilock_data_map_shared(dp);
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_lookup(args);
- 		goto out_check_rval;
-@@ -417,6 +419,7 @@ out_check_rval:
- 		}
+-		error = xfs_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
+-				       "xfs_dquot_buf_verify");
++		error = xfs_dqcheck(mp, ddq, id + i, 0, warn, __func__);
+ 		if (error)
+ 			return false;
  	}
- out_free:
-+	xfs_iunlock(dp, lock_mode);
- 	kmem_free(args);
- 	return rval;
+@@ -264,7 +264,7 @@ xfs_dquot_buf_read_verify(
+ 
+ 	if (!xfs_dquot_buf_verify_crc(mp, bp))
+ 		xfs_buf_ioerror(bp, -EFSBADCRC);
+-	else if (!xfs_dquot_buf_verify(mp, bp))
++	else if (!xfs_dquot_buf_verify(mp, bp, XFS_QMOPT_DOWARN))
+ 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+ 
+ 	if (bp->b_error)
+@@ -272,6 +272,25 @@ xfs_dquot_buf_read_verify(
  }
+ 
+ /*
++ * readahead errors are silent and simply leave the buffer as !done so a real
++ * read will then be run with the xfs_dquot_buf_ops verifier. See
++ * xfs_inode_buf_verify() for why we use EIO and ~XBF_DONE here rather than
++ * reporting the failure.
++ */
++static void
++xfs_dquot_buf_readahead_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify_crc(mp, bp) ||
++	    !xfs_dquot_buf_verify(mp, bp, 0)) {
++		xfs_buf_ioerror(bp, -EIO);
++		bp->b_flags &= ~XBF_DONE;
++	}
++}
++
++/*
+  * we don't calculate the CRC here as that is done when the dquot is flushed to
+  * the buffer after the update is done. This ensures that the dquot in the
+  * buffer always has an up-to-date CRC value.
+@@ -282,13 +301,18 @@ xfs_dquot_buf_write_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (!xfs_dquot_buf_verify(mp, bp)) {
++	if (!xfs_dquot_buf_verify(mp, bp, XFS_QMOPT_DOWARN)) {
+ 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+ 		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ }
+ 
++const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
++	.name = "xfs_dquot_ra",
++	.verify_read = xfs_dquot_buf_readahead_verify,
++	.verify_write = xfs_dquot_buf_write_verify,
++};
+ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+ 	.name = "xfs_dquot",
+ 	.verify_read = xfs_dquot_buf_read_verify,
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 546af74..89c05ad 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -77,6 +77,8 @@ xfs_dinode_good_version(
+  * recovery and we don't get unnecssary panics on debug kernels. We use EIO here
+  * because all we want to do is say readahead failed; there is no-one to report
+  * the error to, so this will distinguish it from a non-ra verifier failure.
++ * Changes to this readahead error behavour also need to be reflected in
++ * xfs_dquot_buf_readahead_verify().
+  */
+ static void
+ xfs_inode_buf_verify(
+diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
+index 1b0a083..f51078f 100644
+--- a/libxfs/xfs_quota_defs.h
++++ b/libxfs/xfs_quota_defs.h
+@@ -153,7 +153,7 @@ typedef __uint16_t	xfs_qwarncnt_t;
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+ 
+ extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
+-		       xfs_dqid_t id, uint type, uint flags, char *str);
++		       xfs_dqid_t id, uint type, uint flags, const char *str);
+ extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+ 
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
+index 5be5297..15c3ceb 100644
+--- a/libxfs/xfs_shared.h
++++ b/libxfs/xfs_shared.h
+@@ -49,6 +49,7 @@ extern const struct xfs_buf_ops xfs_inobt_buf_ops;
+ extern const struct xfs_buf_ops xfs_inode_buf_ops;
+ extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
+ extern const struct xfs_buf_ops xfs_dquot_buf_ops;
++extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
+ extern const struct xfs_buf_ops xfs_sb_buf_ops;
+ extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
+ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
 -- 
 2.5.0
 
