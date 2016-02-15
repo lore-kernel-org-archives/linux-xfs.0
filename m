@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CE78F7CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 05:35:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4F58AAC004
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 03:35:19 -0800 (PST)
-Received: from mail-vk0-f47.google.com (mail-vk0-f47.google.com
-	[209.85.213.47]) by cuda.sgi.com with ESMTP id 6pCnGH5CkTJ92BW9
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 246BC7CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 05:58:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DE913304039
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 03:57:56 -0800 (PST)
+Received: from mail-lf0-f47.google.com (mail-lf0-f47.google.com
+	[209.85.215.47]) by cuda.sgi.com with ESMTP id TcsluIMcKmkl6fcg
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 15 Feb 2016 03:35:15 -0800 (PST)
-Received: by mail-vk0-f47.google.com with SMTP id e185so104996753vkb.1
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 03:35:15 -0800 (PST)
+	Mon, 15 Feb 2016 03:57:53 -0800 (PST)
+Received: by mail-lf0-f47.google.com with SMTP id 78so87482799lfy.3
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 03:57:53 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <56C1A788.9020008@gmail.com>
-References: <56B770B6.7040803@gmail.com> <56B77262.7090107@gmail.com>
-	<CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
-	<56C0F150.60008@gmail.com>
-	<CAHc6FU49uRb11HhO655jimn_CzLrDyGHAB2iDAv92cftCCXkEA@mail.gmail.com>
-	<56C1A788.9020008@gmail.com>
-Date: Mon, 15 Feb 2016 12:35:14 +0100
-Message-ID: <CAHc6FU69k2uRXjSSS+9K0cXzFs74DPsz6DDv8GN=hmh7RpPA-Q@mail.gmail.com>
-Subject: Re: richacl(7) man page review comments
-From: Andreas Gruenbacher <agruenba@redhat.com>
+In-Reply-To: <20160214001645.GF14668@dastard>
+References: <1453177919-17849-1-git-send-email-david@fromorbit.com>
+	<20160120015853.GU6033@dastard>
+	<20160126141733.GA48264@bfoster.bfoster>
+	<CADr68Wa9vG=ZOn4gbHezEyOeM+tCo69s3WVqcVXnZrn+=DdoVA@mail.gmail.com>
+	<20160214001645.GF14668@dastard>
+Date: Mon, 15 Feb 2016 12:57:51 +0100
+Message-ID: <CADr68WZZHSEexV4aBDNhLjE1oNAHftfORCGCA-q7WH2DY8X9xg@mail.gmail.com>
+Subject: Re: [PATCH v2] [RFC] xfs: allocate log vector buffers outside CIL
+	context lock
+From: Jens Rosenboom <j.rosenboom@x-ion.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,26 +36,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Mon, Feb 15, 2016 at 11:25 AM, Michael Kerrisk (man-pages)
-<mtk.manpages@gmail.com> wrote:
-> You're right. I was confusing with xattr(7). So, I think it might
-> make some sense to eventually move both of these into man-pages (for
-> richacl(7), at least, it's probably worth delaying this for a bit),
-> since  they're describing kernel-user-space interfaces.
+2016-02-14 1:16 GMT+01:00 Dave Chinner <david@fromorbit.com>:
+> On Sat, Feb 13, 2016 at 06:09:17PM +0100, Jens Rosenboom wrote:
+>> 2016-01-26 15:17 GMT+01:00 Brian Foster <bfoster@redhat.com>:
+>> > On Wed, Jan 20, 2016 at 12:58:53PM +1100, Dave Chinner wrote:
+>> >> From: Dave Chinner <dchinner@redhat.com>
+>> >>
+>> >> One of the problems we currently have with delayed logging is that
+>> >> under serious memory pressure we can deadlock memory reclaim. THis
+>> >> occurs when memory reclaim (such as run by kswapd) is reclaiming XFS
+>> >> inodes and issues a log force to unpin inodes that are dirty in the
+>> >> CIL.
+> ....
+>> >> That said, I don't have a reliable deadlock reproducer in the first
+>> >> place, so I'm interested i hearing what people think about this
+>> >> approach to solve the problem and ways to test and improve it.
+>> >>
+>> >> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>> >> ---
+>> >
+>> > This seems reasonable to me in principle. It would be nice to have some
+>> > kind of feedback in terms of effectiveness resolving the original
+>> > deadlock report. I can't think of a good way of testing short of
+>> > actually instrumenting the deadlock one way or another, unfortunately.
+>> > Was there a user that might be willing to test or had a detailed enough
+>> > description of the workload/environment?
+>>
+>> We have seen this issue on our production Ceph cluster sporadically
+>> and have tried a long time to reproduce it in a lab environment.
+> ....
+>> kmem_alloc (mode:0x2408240)
+>> Feb 13 10:51:57 storage-node35 kernel: [10562.614089] XFS:
+>> ceph-osd(10078) possible memory allocation deadlock size 32856 in
+>> kmem_alloc (mode:0x2408240)
+>
+> High order allocation of 32k. That implies a buffer size of at least
+> 32k is in use. Can you tell me what the output of xfs_info <mntpt>
+> is for one of your filesystems?
 
-Well, the actual user-space interface is xattrs in both cases.
+$ xfs_info /tmp/cbt/mnt/osd-device-0-data/
+meta-data=/dev/sda2              isize=2048   agcount=4, agsize=97370688 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=389482752, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=65536  ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=190177, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-> I can see counter-arguments too, such as these pages are closely
-> related to the corresponding user-space libraries you maintain.
-> What do you think?
+> I suspect you are using a 64k directory block size, in which case
+> I'll ask "are you storing millions of files in a single directory"?
+> If your answer is no, then "don't do that" is an appropriate
+> solution because large directory block sizes are slower than the
+> default (4k) for almost all operations until you get up into the
+> millions of files per directory range.
 
-I would keep the man-pages where they are right now, but I don't have
-a strong preference.
+These options are kind of standard folklore for setting up Ceph
+clusters, I must admit that I delayed testing their performance
+implications up to now, so many knobs to turn, so little time.
 
-Andreas
+  mkfs_opts: '-f -i size=2048 -n size=64k'
+  mount_opts: '-o inode64,noatime,logbsize=256k'
+
+It turns out that when running with '-n size=4k', indeed I do not get
+any warnings during a 10h test run. I'll try to come up with some more
+detailed benchmarking of the possible performance impacts, too.
+
+Am I right in assuming that this parameter can not be tuned after the
+initial mkfs? In that case getting a production-ready version of your
+patch would probably still be valuable for cluster admins wanting to
+avoid having to move all of their data to new filesystems.
+
+>> Soon after this, operations get so slow that the OSDs die because of
+>> their suicide timeouts.
+>>
+>> Then I installed onto 3 servers this patch (applied onto kernel
+>> v4.4.1). The bad news is that I am still getting the kernel messages
+>> on these machines. The good news, though, is that they appear at a
+>> much lower frequency and also the impact on performance seems to be
+>> lower, so the OSD processes on these three nodes did not get killed.
+>
+> Right, the patch doesn't fix the underlying issue that memory
+> fragmentation can prevent high order allocation from succeeding for
+> long periods.  However, it does ensure that the filesystem does not
+> immediately deadlock memory reclaim when it happens so the system
+> has a chance to recover. It still can deadlock the filesystem,
+> because if we can't commit the transaction we can't unlock the
+> objects in the transaction and everything can get stuck behind that
+> if there's something sufficiently important in the blocked
+> transaction.
+
+So how would your success criteria for getting this patch into
+upstream look like? Would a benchmark of the 64k directory block size
+case on machines all running with patched kernels be interesting? Or
+would that scenario disqualify itself as being mistuned in the first
+place?
 
 _______________________________________________
 xfs mailing list
