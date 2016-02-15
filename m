@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8B0D27CAC
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FB9C8F8033
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:03 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4474D7CAB
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 281ED304051
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:05 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	F5ukwxzq1OGgwLrG for <xfs@oss.sgi.com>;
-	Sun, 14 Feb 2016 22:19:01 -0800 (PST)
+	lYEMwHqX8N422B40 for <xfs@oss.sgi.com>;
+	Sun, 14 Feb 2016 22:19:02 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MI-KK
+	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MD-IF
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005Gs-JZ
+	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005GT-HR
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/14] xfs: handle dquot buffer readahead in log recovery
-	correctly
-Date: Mon, 15 Feb 2016 17:18:21 +1100
-Message-Id: <1455517105-20033-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/14] xfs: introduce BMAPI_ZERO for allocating zeroed extents
+Date: Mon, 15 Feb 2016 17:18:16 +1100
+Message-Id: <1455517105-20033-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 References: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,181 +39,348 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit 7d6a13f023567d573ac362502bb702eda716e654
+Source kernel commit 3fbbbea34bac049c0b5938dc065f7d8ee1ef7e67
 
-When we do dquot readahead in log recovery, we do not use a verifier
-as the underlying buffer may not have dquots in it. e.g. the
-allocation operation hasn't yet been replayed. Hence we do not want
-to fail recovery because we detect an operation to be replayed has
-not been run yet. This problem was addressed for inodes in commit
-d891400 ("xfs: inode buffers may not be valid during recovery
-readahead") but the problem was not recognised to exist for dquots
-and their buffers as the dquot readahead did not have a verifier.
+To enable DAX to do atomic allocation of zeroed extents, we need to
+drive the block zeroing deep into the allocator. Because
+xfs_bmapi_write() can return merged extents on allocation that were
+only partially allocated (i.e. requested range spans allocated and
+hole regions, allocation into the hole was contiguous), we cannot
+zero the extent returned from xfs_bmapi_write() as that can
+overwrite existing data with zeros.
 
-The result of not using a verifier is that when the buffer is then
-next read to replay a dquot modification, the dquot buffer verifier
-will only be attached to the buffer if *readahead is not complete*.
-Hence we can read the buffer, replay the dquot changes and then add
-it to the delwri submission list without it having a verifier
-attached to it. This then generates warnings in xfs_buf_ioapply(),
-which catches and warns about this case.
+Hence we have to drive the extent zeroing into the allocation code,
+prior to where we merge the extents into the BMBT and return the
+resultant map. This means we need to propagate this need down to
+the xfs_alloc_vextent() and issue the block zeroing at this point.
 
-Fix this and make it handle the same readahead verifier error cases
-as for inode buffers by adding a new readahead verifier that has a
-write operation as well as a read operation that marks the buffer as
-not done if any corruption is detected.  Also make sure we don't run
-readahead if the dquot buffer has been marked as cancelled by
-recovery.
+While this functionality is being introduced for DAX, there is no
+reason why it is specific to DAX - we can per-zero blocks during the
+allocation transaction on any type of device. It's just slow (and
+usually slower than unwritten allocation and conversion) on
+traditional block devices so doesn't tend to get used. We can,
+however, hook hardware zeroing optimisations via sb_issue_zeroout()
+to this operation, so it may be useful in future and hence the
+"allocate zeroed blocks" API needs to be implementation neutral.
 
-This will result in readahead either succeeding and the buffer
-having a valid write verifier, or readahead failing and the buffer
-state requiring the subsequent read to resubmit the IO with the new
-verifier.  In either case, this will result in the buffer always
-ending up with a valid write verifier on it.
-
-Note: we also need to fix the inode buffer readahead error handling
-to mark the buffer with EIO. Brian noticed the code I copied from
-there wrong during review, so fix it at the same time. Add comments
-linking the two functions that handle readahead verifier errors
-together so we don't forget this behavioural link in future.
-
-cc: <stable@vger.kernel.org> # 3.12 - current
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- libxfs/xfs_dquot_buf.c  | 36 ++++++++++++++++++++++++++++++------
- libxfs/xfs_inode_buf.c  |  2 ++
- libxfs/xfs_quota_defs.h |  2 +-
- libxfs/xfs_shared.h     |  1 +
- 4 files changed, 34 insertions(+), 7 deletions(-)
+ include/libxfs.h         |  1 -
+ libxfs/libxfs_api_defs.h |  1 +
+ libxfs/libxfs_io.h       |  2 ++
+ libxfs/libxfs_priv.h     |  3 +++
+ libxfs/rdwr.c            |  4 +++-
+ libxfs/util.c            | 35 +++++++++++++++++++++++++++++++++++
+ libxfs/xfs_alloc.c       | 10 +++++++++-
+ libxfs/xfs_alloc.h       |  8 +++++---
+ libxfs/xfs_bmap.c        | 35 +++++++++++++++++++++++++++++++++--
+ libxfs/xfs_bmap.h        | 13 +++++++++++--
+ 10 files changed, 102 insertions(+), 10 deletions(-)
 
-diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
-index fd4aa4b..025d49b 100644
---- a/libxfs/xfs_dquot_buf.c
-+++ b/libxfs/xfs_dquot_buf.c
-@@ -62,7 +62,7 @@ xfs_dqcheck(
- 	xfs_dqid_t	 id,
- 	uint		 type,	  /* used only when IO_dorepair is true */
- 	uint		 flags,
--	char		 *str)
-+	const char	 *str)
- {
- 	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
- 	int		errs = 0;
-@@ -215,7 +215,8 @@ xfs_dquot_buf_verify_crc(
- STATIC bool
- xfs_dquot_buf_verify(
- 	struct xfs_mount	*mp,
--	struct xfs_buf		*bp)
-+	struct xfs_buf		*bp,
-+	int			warn)
- {
- 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
- 	xfs_dqid_t		id = 0;
-@@ -248,8 +249,7 @@ xfs_dquot_buf_verify(
- 		if (i == 0)
- 			id = be32_to_cpu(ddq->d_id);
+diff --git a/include/libxfs.h b/include/libxfs.h
+index bd51df0..5e8f3d4 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -139,7 +139,6 @@ extern int	libxfs_init (libxfs_init_t *);
+ extern void	libxfs_destroy (void);
+ extern int	libxfs_device_to_fd (dev_t);
+ extern dev_t	libxfs_device_open (char *, int, int, int);
+-extern void	libxfs_device_zero(struct xfs_buftarg *, xfs_daddr_t, uint);
+ extern void	libxfs_device_close (dev_t);
+ extern int	libxfs_device_alignment (void);
+ extern void	libxfs_report(FILE *);
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index e9fd9c8..3a649e3 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -73,6 +73,7 @@
+ #define xfs_bunmapi			libxfs_bunmapi
+ #define xfs_bmbt_get_all		libxfs_bmbt_get_all
+ #define xfs_rtfree_extent		libxfs_rtfree_extent
++#define xfs_zero_extent			libxfs_zero_extent
  
--		error = xfs_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
--				       "xfs_dquot_buf_verify");
-+		error = xfs_dqcheck(mp, ddq, id + i, 0, warn, __func__);
- 		if (error)
- 			return false;
+ #define xfs_da_brelse			libxfs_da_brelse
+ #define xfs_da_hashname			libxfs_da_hashname
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 86b18a0..29ab583 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -212,6 +212,8 @@ extern int	libxfs_writebufr(struct xfs_buf *);
+ extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
+ extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *, int);
+ 
++extern int	libxfs_device_zero(struct xfs_buftarg *, xfs_daddr_t, uint);
++
+ extern int libxfs_bhash_size;
+ 
+ #define LIBXFS_BREAD	0x1
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index e2884a2..2c5aba0 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -520,6 +520,9 @@ void xfs_verifier_error(struct xfs_buf *bp);
+ /* xfs_rtalloc.c */
+ int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
+ 
++int libxfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
++                        xfs_off_t count_fsb);
++
+ bool xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+ 
+ #endif	/* __LIBXFS_INTERNAL_XFS_H__ */
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 2e298c2..3522c26 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -67,7 +67,8 @@
+ 
+ #define IO_BCOMPARE_CHECK
+ 
+-void
++/* XXX: (dgc) Propagate errors, only exit if fail-on-error flag set */
++int
+ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+ {
+ 	xfs_off_t	start_offset, end_offset, offset;
+@@ -109,6 +110,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+ 		offset += bytes;
  	}
-@@ -264,7 +264,7 @@ xfs_dquot_buf_read_verify(
- 
- 	if (!xfs_dquot_buf_verify_crc(mp, bp))
- 		xfs_buf_ioerror(bp, -EFSBADCRC);
--	else if (!xfs_dquot_buf_verify(mp, bp))
-+	else if (!xfs_dquot_buf_verify(mp, bp, XFS_QMOPT_DOWARN))
- 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 
- 	if (bp->b_error)
-@@ -272,6 +272,25 @@ xfs_dquot_buf_read_verify(
+ 	free(z);
++	return 0;
  }
+ 
+ static void unmount_record(void *p)
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 90031fd..ee4bf3c 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -17,6 +17,7 @@
+  */
+ 
+ #include "libxfs_priv.h"
++#include "libxfs_io.h"
+ #include "init.h"
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
+@@ -33,6 +34,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_alloc.h"
++#include "xfs_bit.h"
  
  /*
-+ * readahead errors are silent and simply leave the buffer as !done so a real
-+ * read will then be run with the xfs_dquot_buf_ops verifier. See
-+ * xfs_inode_buf_verify() for why we use EIO and ~XBF_DONE here rather than
-+ * reporting the failure.
-+ */
-+static void
-+xfs_dquot_buf_readahead_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
+  * Calculate the worst case log unit reservation for a given superblock
+@@ -770,3 +772,36 @@ xfs_log_check_lsn(
+ 
+ 	return true;
+ }
 +
-+	if (!xfs_dquot_buf_verify_crc(mp, bp) ||
-+	    !xfs_dquot_buf_verify(mp, bp, 0)) {
-+		xfs_buf_ioerror(bp, -EIO);
-+		bp->b_flags &= ~XBF_DONE;
-+	}
++static struct xfs_buftarg *
++xfs_find_bdev_for_inode(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	if (XFS_IS_REALTIME_INODE(ip))
++		return mp->m_rtdev_targp;
++	return mp->m_ddev_targp;
 +}
 +
-+/*
-  * we don't calculate the CRC here as that is done when the dquot is flushed to
-  * the buffer after the update is done. This ensures that the dquot in the
-  * buffer always has an up-to-date CRC value.
-@@ -282,13 +301,18 @@ xfs_dquot_buf_write_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if (!xfs_dquot_buf_verify(mp, bp)) {
-+	if (!xfs_dquot_buf_verify(mp, bp, XFS_QMOPT_DOWARN)) {
- 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 		xfs_verifier_error(bp);
- 		return;
++static xfs_daddr_t
++xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
++{
++	if (XFS_IS_REALTIME_INODE(ip))
++		 return XFS_FSB_TO_BB(ip->i_mount, fsb);
++	return XFS_FSB_TO_DADDR(ip->i_mount, (fsb));
++}
++
++
++int
++libxfs_zero_extent(
++	struct xfs_inode *ip,
++	xfs_fsblock_t	start_fsb,
++	xfs_off_t	count_fsb)
++{
++	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
++	ssize_t		size = XFS_FSB_TO_BB(ip->i_mount, count_fsb);
++
++	return libxfs_device_zero(xfs_find_bdev_for_inode(ip), sector, size);
++}
++
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 12d59df..af40270 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -2508,7 +2508,7 @@ xfs_alloc_vextent(
+ 		 * Try near allocation first, then anywhere-in-ag after
+ 		 * the first a.g. fails.
+ 		 */
+-		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
++		if ((args->userdata & XFS_ALLOC_INITIAL_USER_DATA) &&
+ 		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
+ 			args->fsbno = XFS_AGB_TO_FSB(mp,
+ 					((mp->m_agfrotor / rotorstep) %
+@@ -2639,6 +2639,14 @@ xfs_alloc_vextent(
+ 		XFS_AG_CHECK_DADDR(mp, XFS_FSB_TO_DADDR(mp, args->fsbno),
+ 			args->len);
+ #endif
++
++		/* Zero the extent if we were asked to do so */
++		if (args->userdata & XFS_ALLOC_USERDATA_ZERO) {
++			error = xfs_zero_extent(args->ip, args->fsbno, args->len);
++			if (error)
++				goto error0;
++		}
++
  	}
- }
+ 	xfs_perag_put(args->pag);
+ 	return 0;
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index 071b28b..135eb3d 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -101,6 +101,7 @@ typedef struct xfs_alloc_arg {
+ 	struct xfs_mount *mp;		/* file system mount point */
+ 	struct xfs_buf	*agbp;		/* buffer for a.g. freelist header */
+ 	struct xfs_perag *pag;		/* per-ag struct for this agno */
++	struct xfs_inode *ip;		/* for userdata zeroing method */
+ 	xfs_fsblock_t	fsbno;		/* file system block number */
+ 	xfs_agnumber_t	agno;		/* allocation group number */
+ 	xfs_agblock_t	agbno;		/* allocation group-relative block # */
+@@ -120,15 +121,16 @@ typedef struct xfs_alloc_arg {
+ 	char		wasdel;		/* set if allocation was prev delayed */
+ 	char		wasfromfl;	/* set if allocation is from freelist */
+ 	char		isfl;		/* set if is freelist blocks - !acctg */
+-	char		userdata;	/* set if this is user data */
++	char		userdata;	/* mask defining userdata treatment */
+ 	xfs_fsblock_t	firstblock;	/* io first block allocated */
+ } xfs_alloc_arg_t;
  
-+const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
-+	.name = "xfs_dquot_ra",
-+	.verify_read = xfs_dquot_buf_readahead_verify,
-+	.verify_write = xfs_dquot_buf_write_verify,
-+};
- const struct xfs_buf_ops xfs_dquot_buf_ops = {
- 	.name = "xfs_dquot",
- 	.verify_read = xfs_dquot_buf_read_verify,
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 546af74..89c05ad 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -77,6 +77,8 @@ xfs_dinode_good_version(
-  * recovery and we don't get unnecssary panics on debug kernels. We use EIO here
-  * because all we want to do is say readahead failed; there is no-one to report
-  * the error to, so this will distinguish it from a non-ra verifier failure.
-+ * Changes to this readahead error behavour also need to be reflected in
-+ * xfs_dquot_buf_readahead_verify().
+ /*
+  * Defines for userdata
   */
- static void
- xfs_inode_buf_verify(
-diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
-index 1b0a083..f51078f 100644
---- a/libxfs/xfs_quota_defs.h
-+++ b/libxfs/xfs_quota_defs.h
-@@ -153,7 +153,7 @@ typedef __uint16_t	xfs_qwarncnt_t;
- #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+-#define XFS_ALLOC_USERDATA		1	/* allocation is for user data*/
+-#define XFS_ALLOC_INITIAL_USER_DATA	2	/* special case start of file */
++#define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
++#define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
++#define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
  
- extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
--		       xfs_dqid_t id, uint type, uint flags, char *str);
-+		       xfs_dqid_t id, uint type, uint flags, const char *str);
- extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+ xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_mount *mp,
+ 		struct xfs_perag *pag, xfs_extlen_t need);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 8e19b50..a38549c 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -3795,8 +3795,13 @@ xfs_bmap_btalloc(
+ 	args.wasdel = ap->wasdel;
+ 	args.isfl = 0;
+ 	args.userdata = ap->userdata;
+-	if ((error = xfs_alloc_vextent(&args)))
++	if (ap->userdata & XFS_ALLOC_USERDATA_ZERO)
++		args.ip = ap->ip;
++
++	error = xfs_alloc_vextent(&args);
++	if (error)
+ 		return error;
++
+ 	if (tryagain && args.fsbno == NULLFSBLOCK) {
+ 		/*
+ 		 * Exact allocation failed. Now try with alignment
+@@ -4295,11 +4300,14 @@ xfs_bmapi_allocate(
  
- #endif	/* __XFS_QUOTA_H__ */
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 5be5297..15c3ceb 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -49,6 +49,7 @@ extern const struct xfs_buf_ops xfs_inobt_buf_ops;
- extern const struct xfs_buf_ops xfs_inode_buf_ops;
- extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
- extern const struct xfs_buf_ops xfs_dquot_buf_ops;
-+extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
- extern const struct xfs_buf_ops xfs_sb_buf_ops;
- extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
- extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+ 	/*
+ 	 * Indicate if this is the first user data in the file, or just any
+-	 * user data.
++	 * user data. And if it is userdata, indicate whether it needs to
++	 * be initialised to zero during allocation.
+ 	 */
+ 	if (!(bma->flags & XFS_BMAPI_METADATA)) {
+ 		bma->userdata = (bma->offset == 0) ?
+ 			XFS_ALLOC_INITIAL_USER_DATA : XFS_ALLOC_USERDATA;
++		if (bma->flags & XFS_BMAPI_ZERO)
++			bma->userdata |= XFS_ALLOC_USERDATA_ZERO;
+ 	}
+ 
+ 	bma->minlen = (bma->flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
+@@ -4414,6 +4422,17 @@ xfs_bmapi_convert_unwritten(
+ 	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
+ 				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
+ 
++	/*
++	 * Before insertion into the bmbt, zero the range being converted
++	 * if required.
++	 */
++	if (flags & XFS_BMAPI_ZERO) {
++		error = xfs_zero_extent(bma->ip, mval->br_startblock,
++					mval->br_blockcount);
++		if (error)
++			return error;
++	}
++
+ 	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
+ 			&bma->cur, mval, bma->firstblock, bma->flist,
+ 			&tmp_logflags);
+@@ -4507,6 +4526,18 @@ xfs_bmapi_write(
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
++	/* zeroing is for currently only for data extents, not metadata */
++	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
++			(XFS_BMAPI_METADATA | XFS_BMAPI_ZERO));
++	/*
++	 * we can allocate unwritten extents or pre-zero allocated blocks,
++	 * but it makes no sense to do both at once. This would result in
++	 * zeroing the unwritten extent twice, but it still being an
++	 * unwritten extent....
++	 */
++	ASSERT((flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO)) !=
++			(XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO));
++
+ 	if (unlikely(XFS_TEST_ERROR(
+ 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+ 	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index d3daf6d..baec27d 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -52,9 +52,9 @@ struct xfs_bmalloca {
+ 	xfs_extlen_t		minleft; /* amount must be left after alloc */
+ 	bool			eof;	/* set if allocating past last extent */
+ 	bool			wasdel;	/* replacing a delayed allocation */
+-	bool			userdata;/* set if is user data */
+ 	bool			aeof;	/* allocated space at eof */
+ 	bool			conv;	/* overwriting unwritten extents */
++	char			userdata;/* userdata mask */
+ 	int			flags;
+ };
+ 
+@@ -109,6 +109,14 @@ typedef	struct xfs_bmap_free
+  */
+ #define XFS_BMAPI_CONVERT	0x040
+ 
++/*
++ * allocate zeroed extents - this requires all newly allocated user data extents
++ * to be initialised to zero. It will be ignored if XFS_BMAPI_METADATA is set.
++ * Use in conjunction with XFS_BMAPI_CONVERT to convert unwritten extents found
++ * during the allocation range to zeroed written extents.
++ */
++#define XFS_BMAPI_ZERO		0x080
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -116,7 +124,8 @@ typedef	struct xfs_bmap_free
+ 	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
+ 	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
+ 	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
+-	{ XFS_BMAPI_CONVERT,	"CONVERT" }
++	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
++	{ XFS_BMAPI_ZERO,	"ZERO" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
 -- 
 2.5.0
 
