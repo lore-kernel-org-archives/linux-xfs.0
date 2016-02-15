@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EEE627CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 13:28:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9F416AC003
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 11:28:39 -0800 (PST)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id aZVVD0BVe7EbLNDv
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 15 Feb 2016 11:28:37 -0800 (PST)
-Received: by mail-wm0-f46.google.com with SMTP id g62so162093121wme.0
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 11:28:37 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5F25F7CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 14:26:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5054B304039
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 12:26:22 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ak99udxQTn1eorG6 for <xfs@oss.sgi.com>;
+	Mon, 15 Feb 2016 12:26:14 -0800 (PST)
+Date: Tue, 16 Feb 2016 07:25:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: test for valid remount options, error if not
+Message-ID: <20160215202521.GI14668@dastard>
+References: <56BBC982.50804@redhat.com>
+ <56BBCB9D.6080404@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <56C219F0.3050002@sandeen.net>
-References: <CAJkH1p6LU=d5oLh3A+j_GQ70uoCYMjR=a5yS1w8p5d5ZXz6fwg@mail.gmail.com>
-	<56C219F0.3050002@sandeen.net>
-Date: Mon, 15 Feb 2016 14:28:36 -0500
-Message-ID: <CAJkH1p5ZP-Wg=UgwBZKz6rZS=_5-o625HZPAosW7tt-zpaNDOg@mail.gmail.com>
-Subject: Re: XFS fiemap issue with Linux 3.10.0-327.el7.x86_64 (CentOS 7)
-From: Jim Wilcoxson <prirun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <56BBCB9D.6080404@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,74 +33,111 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Thanks Eric.
+On Wed, Feb 10, 2016 at 05:45:33PM -0600, Eric Sandeen wrote:
+> This patch attempts to check for a valid set of remount
+> options.  As far as I can tell, it's tricky; as the old
+> comment says, on remount we may get a long string of
+> options from /proc/mounts and/or /etc/mtab, as well
+> as options specified on the commandline.  Later options
+> may negate previous options, etc.
+> 
+> At the most basic level, we may be handed a mount option
+> which we do not handle on remount, but which may not actually
+> be a change from the current mount option set.
+> 
+> Unfortunately our mount option state is somewhat far flung;
+> a combinations of m_flags, and values in various other
+> mount structure members; see the showargs function for
+> a taste of that.
+> 
+> So this extends xfs_test_remount_options() to do a full set
+> of mount processing of the options remount sees, to arrive
+> at a final state, then compares that state to the current
+> state, and determines if we can proceed.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> This is lightly tested; mostly just a sanity check to see
+> if this approach is a "wtf?" or a "yeah, seems ok."
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 986290c..3d4187c 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -455,7 +455,7 @@ xfs_set_maxicount(xfs_mount_t *mp)
+>   * We use smaller I/O sizes when the file system
+>   * is being used for NFS service (wsync mount option).
+>   */
+> -STATIC void
+> +void
+>  xfs_set_rw_sizes(xfs_mount_t *mp)
+>  {
+>  	xfs_sb_t	*sbp = &(mp->m_sb);
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index a4e03ab..bee9284 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -335,6 +335,7 @@ extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
+>  
+>  extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
+>  
+> +extern void	xfs_set_rw_sizes(xfs_mount_t *);
+>  extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+>  
+>  int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index d1cd4fa..50e15d8 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -65,6 +65,8 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+>  #endif
+>  
+> +STATIC int xfs_finish_flags(struct xfs_mount *mp);
+> +
+>  /*
+>   * Table driven mount option parser.
+>   */
+> @@ -1167,24 +1169,87 @@ xfs_quiesce_attr(
+>  	xfs_log_quiesce(mp);
+>  }
+>  
+> +#define XFS_BAD_REMOUNT_GOTO(mp, option, l)	\
+> +	{ \
+> +		xfs_warn(mp, \
+> +		  option " options may not be changed via remount");	\
+> +		goto l;	\
+> +	}
 
-I ran xfs_bmap -v and it returned extents 0-19999, alternating data
-with holes.  The holes and data were various sizes, I suppose for xfs
-alignment reasons, but everything was there.
+I think hiding a goto like this is wrong - it forces you to go read
+the macro, making the code harder to read and follow. Really, what's
+wrong with the simple and obvious:
 
-Running fiemap again after xfs_bmap still returned 1364 extents.
-Fiemap only returns data extents, with holes implied, and comparing
-this to a seek_data/seek_hole map, they are identical as far as they
-go.  The fiemap just poops out early, around the 5GB mark as I recall,
-but the file is 41GB.  It appears broken to me.
 
-I appreciate the advice about things changing after the fiemap call.
-That's true of any backup that isn't of a snapshot, so it's usually a
-crap shoot in that regard.
+	if (bad option) {
+		bad_option = "bad option string";
+		goto out_warn;
+	}
+	.....
 
-Jim
+out_warn:
+	xfs_warn(mp, "%s options may not be changed via remount",
+		 bad_option);
+	// free stuff
+	return -EINVAL;
+}
 
-On 2/15/16, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 2/15/16 11:26 AM, Jim Wilcoxson wrote:
->> I'm developing a backup program, HashBackup, and recently added sparse
->> "hole skipping" using fiemap.
->
-> That is probably not safe.  Mapping can change immediately after fiemap
-> returns, and you could miss data.  cp went down that path a few years ago,
-> and it caused pain.
->
-> SEEK_HOLE/SEEK_DATA would be a better choice.
->
->> Today I ran into a weird issue with xfs
->> on Linux 3.10.
->>
->> A test program creates a sparse file with 10000*(4K data, 4M hole).
->> HB calls fiemap with start=0, length=0xFFFF...FFFF, mapped_extents=0
->> to get the number of extents.    Fiemap is coming back with
->> mapped_extents=1364 instead of 10000.
->
-> Take a look at xfs_bmap -v output to get a clear picture of what
-> is actually on disk.  It's possible that some combination of
-> speculative preallocation or other things has merged extents.
->
-> In general, the kernel has plenty of leeway in terms of how it
-> chooses to lay out a file.  "seek/write" doesn't necessarily
-> guarantee a hole.
->
->> The fiemap.txt file says:
->>
->> "If fm_extent_count is zero, then the fm_extents[] array is ignored
->> (no extents will be returned), and the fm_mapped_extents count will
->> hold the number of extents needed in fm_extents[] to hold the file's
->> current mapping."
->>
->> It doesn't say the filesystem can choose to return fewer extents if it
->> wants, but maybe xfs interprets it this way and fiemap has to be
->> called in a loop until the extent_last flag is set.  If that's the
->> case, fiemap.txt should be updated.
->
-> It's not clear that it is returning fewer extents.  See what xfs_bmap
-> says, and compare.
->
-> But also, don't use fiemap results for anything that requires
-> data integrity...
->
-> -Eric
->
->> Thanks,
->> Jim
->> (not on the xfs mailing list)
+Yes, I know that this sort of logic flow hiding was done with the
+XFS_WANT_CORRUPTED macros, but they were written back in 90s on Irix
+when using macros to implement everything were all the rage.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
