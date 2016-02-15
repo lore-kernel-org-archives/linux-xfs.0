@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 310C529DF6
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 23:32:34 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 2E27C29DF6
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 23:32:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CBBEBAC004
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 21:32:33 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D1BBFAC003
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 21:32:34 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LQUJsOXc4WC9FHbY for <xfs@oss.sgi.com>;
+	2IXDWacpAnxHFDqC for <xfs@oss.sgi.com>;
 	Sun, 14 Feb 2016 21:32:32 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: introduce per-inode DAX enablement
-Date: Mon, 15 Feb 2016 16:32:25 +1100
-Message-Id: <1455514346-15481-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs_io: add support for changing the new inode DAX
+	attribute
+Date: Mon, 15 Feb 2016 16:32:26 +1100
+Message-Id: <1455514346-15481-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455514346-15481-1-git-send-email-david@fromorbit.com>
 References: <1455514346-15481-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,50 +34,99 @@ Cc: ross.zwisler@linux.intel.com, jack@suse.cz
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit 58f88ca2df7270881de2034c8286233a89efe71c
-
-Rather than just being able to turn DAX on and off via a mount
-option, some applications may only want to enable DAX for certain
-performance critical files in a filesystem.
-
-This patch introduces a new inode flag to enable DAX in the v3 inode
-di_flags2 field. It adds support for setting and clearing flags in
-the di_flags2 field via the XFS_IOC_FSSETXATTR ioctl, and sets the
-S_DAX inode flag appropriately when it is seen.
-
-When this flag is set on a directory, it acts as an "inherit flag".
-That is, inodes created in the directory will automatically inherit
-the on-disk inode DAX flag, enabling administrators to set up
-directory heirarchies that automatically use DAX. Setting this flag
-on an empty root directory will make the entire filesystem use DAX
-by default.
+It is changed via the FS_IOC_FSSETXATTR ioctl, so add the new flag
+to the platform definitions for  userspace that don't this API. Then
+add support to the relevant xfs_io chattr and stat commands.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- libxfs/xfs_format.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ include/darwin.h  | 1 +
+ include/freebsd.h | 1 +
+ include/irix.h    | 1 +
+ include/linux.h   | 1 +
+ io/attr.c         | 5 ++++-
+ 5 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 967b1ef..7eae0a5 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -1024,6 +1024,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- 	 XFS_DIFLAG_EXTSZINHERIT | XFS_DIFLAG_NODEFRAG | XFS_DIFLAG_FILESTREAM)
+diff --git a/include/darwin.h b/include/darwin.h
+index 2baa536..a52030d 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -312,6 +312,7 @@ struct fsxattr {
+ #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+ #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+ #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
++#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+ #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
  
- /*
-+ * Values for di_flags2 These start by being exposed to userspace in the upper
-+ * 16 bits of the XFS_XFLAG_s range.
-+ */
-+#define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
-+#define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
-+
-+#define XFS_DIFLAG2_ANY		(XFS_DIFLAG2_DAX)
-+
-+/*
-  * Inode number format:
-  * low inopblog bits - offset in block
-  * next agblklog bits - block number in ag
+ #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+diff --git a/include/freebsd.h b/include/freebsd.h
+index fe567d4..f7e0c75 100644
+--- a/include/freebsd.h
++++ b/include/freebsd.h
+@@ -202,6 +202,7 @@ struct fsxattr {
+ #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+ #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+ #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
++#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+ #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+ 
+ #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+diff --git a/include/irix.h b/include/irix.h
+index bdb4b6a..c2191ee 100644
+--- a/include/irix.h
++++ b/include/irix.h
+@@ -447,6 +447,7 @@ struct fsxattr {
+ #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+ #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+ #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
++#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+ #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+ 
+ #define FS_IOC_FSGETXATTR		F_FSGETXATTR
+diff --git a/include/linux.h b/include/linux.h
+index 17391c3..cc0f70c 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -205,6 +205,7 @@ struct fsxattr {
+ #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+ #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+ #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
++#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+ #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+ 
+ #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+diff --git a/io/attr.c b/io/attr.c
+index 6fa08bf..0186b1d 100644
+--- a/io/attr.c
++++ b/io/attr.c
+@@ -47,9 +47,10 @@ static struct xflags {
+ 	{ FS_XFLAG_EXTSZINHERIT,	"E", "extsz-inherit"	},
+ 	{ FS_XFLAG_NODEFRAG,		"f", "no-defrag"	},
+ 	{ FS_XFLAG_FILESTREAM,		"S", "filestream"	},
++	{ FS_XFLAG_DAX,			"x", "dax"		},
+ 	{ 0, NULL, NULL }
+ };
+-#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfS"
++#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfSx"
+ 
+ static void
+ lsattr_help(void)
+@@ -73,6 +74,7 @@ lsattr_help(void)
+ " E -- children created in this directory inherit the extent size value\n"
+ " f -- do not include this file when defragmenting the filesystem\n"
+ " S -- enable filestreams allocator for this directory\n"
++" x -- Use direct access (DAX) for data in this file\n"
+ "\n"
+ " Options:\n"
+ " -R -- recursively descend (useful when current file is a directory)\n"
+@@ -108,6 +110,7 @@ chattr_help(void)
+ " +/-E -- set/clear the extent-size inheritance flag\n"
+ " +/-f -- set/clear the no-defrag flag\n"
+ " +/-S -- set/clear the filestreams allocator flag\n"
++" +/-x -- set/clear the direct access (DAX) flag\n"
+ " Note1: user must have certain capabilities to modify immutable/append-only.\n"
+ " Note2: immutable/append-only files cannot be deleted; removing these files\n"
+ "        requires the immutable/append-only flag to be cleared first.\n"
 -- 
 2.5.0
 
