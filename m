@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E4F227CAA
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E5E9A7CAB
 	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:00 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 88229AC004
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:18:57 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA9AD304043
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:00 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	2512rhIiNzSCmsGK for <xfs@oss.sgi.com>;
-	Sun, 14 Feb 2016 22:18:55 -0800 (PST)
+	Z7tJCRk6Ma4i60Qp for <xfs@oss.sgi.com>;
+	Sun, 14 Feb 2016 22:18:58 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MJ-L9
+	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MC-Hl
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005Gy-K1
+	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005GO-Gc
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/14] xfs: swap leaf buffer into path struct atomically
-	during path shift
-Date: Mon, 15 Feb 2016 17:18:22 +1100
-Message-Id: <1455517105-20033-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/14] xfs: per-filesystem stats counter implementation
+Date: Mon, 15 Feb 2016 17:18:15 +1100
+Message-Id: <1455517105-20033-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 References: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,104 +37,293 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Brian Foster <bfoster@redhat.com>
+From: Bill O'Donnell <billodo@redhat.com>
 
-Source kernel commit 7df1c170b9a45ab3a7401c79bbefa9939bf8eafb
+Source kernel commit ff6d6af2351caea7db681f4539d0d893e400557a
 
-The node directory lookup code uses a state structure that tracks the
-path of buffers used to search for the hash of a filename through the
-leaf blocks. When the lookup encounters a block that ends with the
-requested hash, but the entry has not yet been found, it must shift over
-to the next block and continue looking for the entry (i.e., duplicate
-hashes could continue over into the next block). This shift mechanism
-involves walking back up and down the state structure, replacing buffers
-at the appropriate btree levels as necessary.
+This patch modifies the stats counting macros and the callers
+to those macros to properly increment, decrement, and add-to
+the xfs stats counts. The counts for global and per-fs stats
+are correctly advanced, and cleared by writing a "1" to the
+corresponding clear file.
 
-When a buffer is replaced, the old buffer is released and the new buffer
-read into the active slot in the path structure. Because the buffer is
-read directly into the path slot, a buffer read failure can result in
-setting a NULL buffer pointer in an active slot. This throws off the
-state cleanup code in xfs_dir2_node_lookup(), which expects to release a
-buffer from each active slot. Instead, a BUG occurs due to a NULL
-pointer dereference:
+global counts: /sys/fs/xfs/stats/stats
+per-fs counts: /sys/fs/xfs/sda*/stats/stats
 
-  BUG: unable to handle kernel NULL pointer dereference at 00000000000001e8
-  IP: [<ffffffffa0585063>] xfs_trans_brelse+0x2a3/0x3c0 [xfs]
-  ...
-  RIP: 0010:[<ffffffffa0585063>]  [<ffffffffa0585063>] xfs_trans_brelse+0x2a3/0x3c0 [xfs]
-  ...
-  Call Trace:
-   [<ffffffffa05250c6>] xfs_dir2_node_lookup+0xa6/0x2c0 [xfs]
-   [<ffffffffa0519f7c>] xfs_dir_lookup+0x1ac/0x1c0 [xfs]
-   [<ffffffffa055d0e1>] xfs_lookup+0x91/0x290 [xfs]
-   [<ffffffffa05580b3>] xfs_vn_lookup+0x73/0xb0 [xfs]
-   [<ffffffff8122de8d>] lookup_real+0x1d/0x50
-   [<ffffffff8123330e>] path_openat+0x91e/0x1490
-   [<ffffffff81235079>] do_filp_open+0x89/0x100
-   ...
+global clear:  /sys/fs/xfs/stats/stats_clear
+per-fs clear:  /sys/fs/xfs/sda*/stats/stats_clear
 
-This has been reproduced via a parallel fsstress and filesystem shutdown
-workload in a loop. The shutdown triggers the read error in the
-aforementioned codepath and causes the BUG in xfs_dir2_node_lookup().
+[dchinner: cleaned up macro variables, removed CONFIG_FS_PROC around
+ stats structures and macros. ]
 
-Update xfs_da3_path_shift() to update the active path slot atomically
-with respect to the caller when a buffer is replaced. This ensures that
-the caller always sees the old or new buffer in the slot and prevents
-the NULL pointer dereference.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- libxfs/xfs_da_btree.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ libxfs/libxfs_priv.h |  6 +++---
+ libxfs/xfs_alloc.c   |  8 ++++----
+ libxfs/xfs_attr.c    |  6 +++---
+ libxfs/xfs_bmap.c    | 20 ++++++++++----------
+ libxfs/xfs_btree.h   | 41 ++++++++++++++++++++++++-----------------
+ libxfs/xfs_dir2.c    |  6 +++---
+ 6 files changed, 47 insertions(+), 40 deletions(-)
 
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index 25072c7..f3c04ab 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -1822,6 +1822,7 @@ xfs_da3_path_shift(
- 	struct xfs_da_args	*args;
- 	struct xfs_da_node_entry *btree;
- 	struct xfs_da3_icnode_hdr nodehdr;
-+	struct xfs_buf		*bp;
- 	xfs_dablk_t		blkno = 0;
- 	int			level;
- 	int			error;
-@@ -1866,20 +1867,24 @@ xfs_da3_path_shift(
- 	 */
- 	for (blk++, level++; level < path->active; blk++, level++) {
- 		/*
--		 * Release the old block.
--		 * (if it's dirty, trans won't actually let go)
-+		 * Read the next child block into a local buffer.
- 		 */
--		if (release)
--			xfs_trans_brelse(args->trans, blk->bp);
-+		error = xfs_da3_node_read(args->trans, dp, blkno, -1, &bp,
-+					  args->whichfork);
-+		if (error)
-+			return error;
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 0f4d3e5..e2884a2 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -140,9 +140,9 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define XFS_ERRLEVEL_LOW		1
+ #define XFS_FORCED_SHUTDOWN(mp)		0
+ #define XFS_ILOCK_EXCL			0
+-#define XFS_STATS_INC(count)		do { } while (0)
+-#define XFS_STATS_DEC(count, x)		do { } while (0)
+-#define XFS_STATS_ADD(count, x)		do { } while (0)
++#define XFS_STATS_INC(mp, count)	do { } while (0)
++#define XFS_STATS_DEC(mp, count, x)	do { } while (0)
++#define XFS_STATS_ADD(mp, count, x)	do { } while (0)
+ #define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)	do { } while (0)
+ #define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+ #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index b43655c..12d59df 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -650,8 +650,8 @@ xfs_alloc_ag_vextent(
+ 				 -((long)(args->len)));
+ 	}
  
- 		/*
--		 * Read the next child block.
-+		 * Release the old block (if it's dirty, the trans doesn't
-+		 * actually let go) and swap the local buffer into the path
-+		 * structure. This ensures failure of the above read doesn't set
-+		 * a NULL buffer in an active slot in the path.
- 		 */
-+		if (release)
-+			xfs_trans_brelse(args->trans, blk->bp);
- 		blk->blkno = blkno;
--		error = xfs_da3_node_read(args->trans, dp, blkno, -1,
--					&blk->bp, args->whichfork);
--		if (error)
--			return error;
-+		blk->bp = bp;
-+
- 		info = blk->bp->b_addr;
- 		ASSERT(info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
- 		       info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC) ||
+-	XFS_STATS_INC(xs_allocx);
+-	XFS_STATS_ADD(xs_allocb, args->len);
++	XFS_STATS_INC(args->mp, xs_allocx);
++	XFS_STATS_ADD(args->mp, xs_allocb, args->len);
+ 	return error;
+ }
+ 
+@@ -1807,8 +1807,8 @@ xfs_free_ag_extent(
+ 
+ 	if (!isfl)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (long)len);
+-	XFS_STATS_INC(xs_freex);
+-	XFS_STATS_ADD(xs_freeb, len);
++	XFS_STATS_INC(mp, xs_freex);
++	XFS_STATS_ADD(mp, xs_freeb, len);
+ 
+ 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
+ 
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index bdde0f6..5e79f3d 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -120,7 +120,7 @@ xfs_attr_get(
+ 	uint			lock_mode;
+ 	int			error;
+ 
+-	XFS_STATS_INC(xs_attr_get);
++	XFS_STATS_INC(ip->i_mount, xs_attr_get);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+@@ -202,7 +202,7 @@ xfs_attr_set(
+ 	int			rsvd = (flags & ATTR_ROOT) != 0;
+ 	int			error, err2, committed, local;
+ 
+-	XFS_STATS_INC(xs_attr_set);
++	XFS_STATS_INC(mp, xs_attr_set);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+@@ -405,7 +405,7 @@ xfs_attr_remove(
+ 	xfs_fsblock_t		firstblock;
+ 	int			error;
+ 
+-	XFS_STATS_INC(xs_attr_remove);
++	XFS_STATS_INC(mp, xs_attr_remove);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 8464810..8e19b50 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -1429,7 +1429,7 @@ xfs_bmap_search_extents(
+ 	xfs_ifork_t	*ifp;		/* inode fork pointer */
+ 	xfs_bmbt_rec_host_t  *ep;            /* extent record pointer */
+ 
+-	XFS_STATS_INC(xs_look_exlist);
++	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
+ 	ifp = XFS_IFORK_PTR(ip, fork);
+ 
+ 	ep = xfs_bmap_search_multi_extents(ifp, bno, eofp, lastxp, gotp, prevp);
+@@ -1727,7 +1727,7 @@ xfs_bmap_add_extent_delay_real(
+ 	ASSERT(!bma->cur ||
+ 	       (bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+ 
+-	XFS_STATS_INC(xs_add_exlist);
++	XFS_STATS_INC(mp, xs_add_exlist);
+ 
+ #define	LEFT		r[0]
+ #define	RIGHT		r[1]
+@@ -2281,7 +2281,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	ASSERT(*idx <= ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 
+-	XFS_STATS_INC(xs_add_exlist);
++	XFS_STATS_INC(mp, xs_add_exlist);
+ 
+ #define	LEFT		r[0]
+ #define	RIGHT		r[1]
+@@ -2941,7 +2941,7 @@ xfs_bmap_add_extent_hole_real(
+ 	ASSERT(!bma->cur ||
+ 	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+ 
+-	XFS_STATS_INC(xs_add_exlist);
++	XFS_STATS_INC(mp, xs_add_exlist);
+ 
+ 	state = 0;
+ 	if (whichfork == XFS_ATTR_FORK)
+@@ -4031,7 +4031,7 @@ xfs_bmapi_read(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	XFS_STATS_INC(xs_blk_mapr);
++	XFS_STATS_INC(mp, xs_blk_mapr);
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 
+@@ -4216,7 +4216,7 @@ xfs_bmapi_delay(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	XFS_STATS_INC(xs_blk_mapw);
++	XFS_STATS_INC(mp, xs_blk_mapw);
+ 
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+@@ -4520,7 +4520,7 @@ xfs_bmapi_write(
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 
+-	XFS_STATS_INC(xs_blk_mapw);
++	XFS_STATS_INC(mp, xs_blk_mapw);
+ 
+ 	if (*firstblock == NULLFSBLOCK) {
+ 		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+@@ -4713,12 +4713,12 @@ xfs_bmap_del_extent(
+ 	xfs_filblks_t		temp2;	/* for indirect length calculations */
+ 	int			state = 0;
+ 
+-	XFS_STATS_INC(xs_del_exlist);
++	mp = ip->i_mount;
++	XFS_STATS_INC(mp, xs_del_exlist);
+ 
+ 	if (whichfork == XFS_ATTR_FORK)
+ 		state |= BMAP_ATTRFORK;
+ 
+-	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT((*idx >= 0) && (*idx < ifp->if_bytes /
+ 		(uint)sizeof(xfs_bmbt_rec_t)));
+@@ -5065,7 +5065,7 @@ xfs_bunmapi(
+ 		*done = 1;
+ 		return 0;
+ 	}
+-	XFS_STATS_INC(xs_blk_unmap);
++	XFS_STATS_INC(mp, xs_blk_unmap);
+ 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
+ 	start = bno;
+ 	bno = start + len - 1;
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 48cb251..9a88839 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -84,31 +84,38 @@ union xfs_btree_rec {
+ /*
+  * Generic stats interface
+  */
+-#define __XFS_BTREE_STATS_INC(type, stat) \
+-	XFS_STATS_INC(xs_ ## type ## _2_ ## stat)
+-#define XFS_BTREE_STATS_INC(cur, stat)  \
++#define __XFS_BTREE_STATS_INC(mp, type, stat) \
++	XFS_STATS_INC(mp, xs_ ## type ## _2_ ## stat)
++#define XFS_BTREE_STATS_INC(cur, stat)	\
+ do {    \
++	struct xfs_mount *__mp = cur->bc_mp; \
+ 	switch (cur->bc_btnum) {  \
+-	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_INC(abtb, stat); break;	\
+-	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_INC(abtc, stat); break;	\
+-	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
+-	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
+-	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
+-	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_INC(__mp, abtb, stat); break; \
++	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_INC(__mp, abtc, stat); break; \
++	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(__mp, bmbt, stat); break; \
++	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(__mp, ibt, stat); break; \
++	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(__mp, fibt, stat); break; \
++	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
+ 	}       \
+ } while (0)
+ 
+-#define __XFS_BTREE_STATS_ADD(type, stat, val) \
+-	XFS_STATS_ADD(xs_ ## type ## _2_ ## stat, val)
++#define __XFS_BTREE_STATS_ADD(mp, type, stat, val) \
++	XFS_STATS_ADD(mp, xs_ ## type ## _2_ ## stat, val)
+ #define XFS_BTREE_STATS_ADD(cur, stat, val)  \
+ do {    \
++	struct xfs_mount *__mp = cur->bc_mp; \
+ 	switch (cur->bc_btnum) {  \
+-	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_ADD(abtb, stat, val); break; \
+-	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_ADD(abtc, stat, val); break; \
+-	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
+-	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
+-	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
+-	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	case XFS_BTNUM_BNO:	\
++		__XFS_BTREE_STATS_ADD(__mp, abtb, stat, val); break; \
++	case XFS_BTNUM_CNT:	\
++		__XFS_BTREE_STATS_ADD(__mp, abtc, stat, val); break; \
++	case XFS_BTNUM_BMAP:	\
++		__XFS_BTREE_STATS_ADD(__mp, bmbt, stat, val); break; \
++	case XFS_BTNUM_INO:	\
++		__XFS_BTREE_STATS_ADD(__mp, ibt, stat, val); break; \
++	case XFS_BTNUM_FINO:	\
++		__XFS_BTREE_STATS_ADD(__mp, fibt, stat, val); break; \
++	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
+ 	}       \
+ } while (0)
+ 
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 4a19b76..383401b 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -269,7 +269,7 @@ xfs_dir_createname(
+ 		rval = xfs_dir_ino_validate(tp->t_mountp, inum);
+ 		if (rval)
+ 			return rval;
+-		XFS_STATS_INC(xs_dir_create);
++		XFS_STATS_INC(dp->i_mount, xs_dir_create);
+ 	}
+ 
+ 	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
+@@ -362,7 +362,7 @@ xfs_dir_lookup(
+ 	int		v;		/* type-checking value */
+ 
+ 	ASSERT(S_ISDIR(dp->i_d.di_mode));
+-	XFS_STATS_INC(xs_dir_lookup);
++	XFS_STATS_INC(dp->i_mount, xs_dir_lookup);
+ 
+ 	/*
+ 	 * We need to use KM_NOFS here so that lockdep will not throw false
+@@ -439,7 +439,7 @@ xfs_dir_removename(
+ 	int		v;		/* type-checking value */
+ 
+ 	ASSERT(S_ISDIR(dp->i_d.di_mode));
+-	XFS_STATS_INC(xs_dir_remove);
++	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
+ 
+ 	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
+ 	if (!args)
 -- 
 2.5.0
 
