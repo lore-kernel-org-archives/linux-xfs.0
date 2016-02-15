@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4474D7CAB
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 281ED304051
-	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:05 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 903EB7CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 00:19:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5787C304051
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2016 22:19:07 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lYEMwHqX8N422B40 for <xfs@oss.sgi.com>;
+	0saJzx61KwOEUJG5 for <xfs@oss.sgi.com>;
 	Sun, 14 Feb 2016 22:19:02 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MD-IF
+	(envelope-from <dave@fromorbit.com>) id 1aVCUN-0000MG-JP
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005GT-HR
+	(envelope-from <dave@disappointment.disaster>) id 1aVCUN-0005Gi-Ii
 	for xfs@oss.sgi.com; Mon, 15 Feb 2016 17:18:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/14] xfs: introduce BMAPI_ZERO for allocating zeroed extents
-Date: Mon, 15 Feb 2016 17:18:16 +1100
-Message-Id: <1455517105-20033-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/14] xfs: eliminate committed arg from xfs_bmap_finish
+Date: Mon, 15 Feb 2016 17:18:19 +1100
+Message-Id: <1455517105-20033-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 References: <1455517105-20033-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,350 +37,798 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 
-Source kernel commit 3fbbbea34bac049c0b5938dc065f7d8ee1ef7e67
+Source kernel commit f6106efae5f4144b32f6c10de0dc3e7efc9181e3
 
-To enable DAX to do atomic allocation of zeroed extents, we need to
-drive the block zeroing deep into the allocator. Because
-xfs_bmapi_write() can return merged extents on allocation that were
-only partially allocated (i.e. requested range spans allocated and
-hole regions, allocation into the hole was contiguous), we cannot
-zero the extent returned from xfs_bmapi_write() as that can
-overwrite existing data with zeros.
+Calls to xfs_bmap_finish() and xfs_trans_ijoin(), and the
+associated comments were replicated several times across
+the attribute code, all dealing with what to do if the
+transaction was or wasn't committed.
 
-Hence we have to drive the extent zeroing into the allocation code,
-prior to where we merge the extents into the BMBT and return the
-resultant map. This means we need to propagate this need down to
-the xfs_alloc_vextent() and issue the block zeroing at this point.
+And in that replicated code, an ASSERT() test of an
+uninitialized variable occurs in several locations:
 
-While this functionality is being introduced for DAX, there is no
-reason why it is specific to DAX - we can per-zero blocks during the
-allocation transaction on any type of device. It's just slow (and
-usually slower than unwritten allocation and conversion) on
-traditional block devices so doesn't tend to get used. We can,
-however, hook hardware zeroing optimisations via sb_issue_zeroout()
-to this operation, so it may be useful in future and hence the
-"allocate zeroed blocks" API needs to be implementation neutral.
+	error = xfs_attr_thing(&args);
+	if (!error) {
+		error = xfs_bmap_finish(&args.trans, args.flist,
+					&committed);
+	}
+	if (error) {
+		ASSERT(committed);
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+If the first xfs_attr_thing() failed, we'd skip the xfs_bmap_finish,
+never set "committed", and then test it in the ASSERT.
+
+Fix this up by moving the committed state internal to xfs_bmap_finish,
+and add a new inode argument.  If an inode is passed in, it is passed
+through to __xfs_trans_roll() and joined to the transaction there if
+the transaction was committed.
+
+xfs_qm_dqalloc() was a little unique in that it called bjoin rather
+than ijoin, but as Dave points out we can detect the committed state
+but checking whether (*tpp != tp).
+
+Addresses-Coverity-Id: 102360
+Addresses-Coverity-Id: 102361
+Addresses-Coverity-Id: 102363
+Addresses-Coverity-Id: 102364
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- include/libxfs.h         |  1 -
- libxfs/libxfs_api_defs.h |  1 +
- libxfs/libxfs_io.h       |  2 ++
- libxfs/libxfs_priv.h     |  3 +++
- libxfs/rdwr.c            |  4 +++-
- libxfs/util.c            | 35 +++++++++++++++++++++++++++++++++++
- libxfs/xfs_alloc.c       | 10 +++++++++-
- libxfs/xfs_alloc.h       |  8 +++++---
- libxfs/xfs_bmap.c        | 35 +++++++++++++++++++++++++++++++++--
- libxfs/xfs_bmap.h        | 13 +++++++++++--
- 10 files changed, 102 insertions(+), 10 deletions(-)
+ include/libxfs.h         |   1 -
+ libxfs/util.c            |  19 +++----
+ libxfs/xfs_attr.c        | 141 ++++++++---------------------------------------
+ libxfs/xfs_attr_remote.c |  31 ++---------
+ libxfs/xfs_bmap.c        |   6 +-
+ libxfs/xfs_bmap.h        |   2 +-
+ mkfs/proto.c             |  14 ++---
+ repair/phase6.c          |  33 +++++------
+ 8 files changed, 57 insertions(+), 190 deletions(-)
 
 diff --git a/include/libxfs.h b/include/libxfs.h
-index bd51df0..5e8f3d4 100644
+index 5e8f3d4..cf2e20e 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -139,7 +139,6 @@ extern int	libxfs_init (libxfs_init_t *);
- extern void	libxfs_destroy (void);
- extern int	libxfs_device_to_fd (dev_t);
- extern dev_t	libxfs_device_open (char *, int, int, int);
--extern void	libxfs_device_zero(struct xfs_buftarg *, xfs_daddr_t, uint);
- extern void	libxfs_device_close (dev_t);
- extern int	libxfs_device_alignment (void);
- extern void	libxfs_report(FILE *);
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e9fd9c8..3a649e3 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -73,6 +73,7 @@
- #define xfs_bunmapi			libxfs_bunmapi
- #define xfs_bmbt_get_all		libxfs_bmbt_get_all
- #define xfs_rtfree_extent		libxfs_rtfree_extent
-+#define xfs_zero_extent			libxfs_zero_extent
+@@ -163,7 +163,6 @@ extern unsigned int	libxfs_log2_roundup(unsigned int i);
  
- #define xfs_da_brelse			libxfs_da_brelse
- #define xfs_da_hashname			libxfs_da_hashname
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 86b18a0..29ab583 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -212,6 +212,8 @@ extern int	libxfs_writebufr(struct xfs_buf *);
- extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
- extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *, int);
+ extern int	libxfs_alloc_file_space (struct xfs_inode *, xfs_off_t,
+ 				xfs_off_t, int, int);
+-extern int	libxfs_bmap_finish(xfs_trans_t **, xfs_bmap_free_t *, int *);
  
-+extern int	libxfs_device_zero(struct xfs_buftarg *, xfs_daddr_t, uint);
-+
- extern int libxfs_bhash_size;
- 
- #define LIBXFS_BREAD	0x1
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index e2884a2..2c5aba0 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -520,6 +520,9 @@ void xfs_verifier_error(struct xfs_buf *bp);
- /* xfs_rtalloc.c */
- int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
- 
-+int libxfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
-+                        xfs_off_t count_fsb);
-+
- bool xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
- 
- #endif	/* __LIBXFS_INTERNAL_XFS_H__ */
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 2e298c2..3522c26 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -67,7 +67,8 @@
- 
- #define IO_BCOMPARE_CHECK
- 
--void
-+/* XXX: (dgc) Propagate errors, only exit if fail-on-error flag set */
-+int
- libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
- {
- 	xfs_off_t	start_offset, end_offset, offset;
-@@ -109,6 +110,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
- 		offset += bytes;
- 	}
- 	free(z);
-+	return 0;
- }
- 
- static void unmount_record(void *p)
+ extern void 	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
+ extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
 diff --git a/libxfs/util.c b/libxfs/util.c
-index 90031fd..ee4bf3c 100644
+index ee4bf3c..484a924 100644
 --- a/libxfs/util.c
 +++ b/libxfs/util.c
-@@ -17,6 +17,7 @@
-  */
+@@ -493,27 +493,25 @@ libxfs_mod_incore_sb(
  
- #include "libxfs_priv.h"
-+#include "libxfs_io.h"
- #include "init.h"
- #include "xfs_fs.h"
- #include "xfs_shared.h"
-@@ -33,6 +34,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_ialloc.h"
- #include "xfs_alloc.h"
-+#include "xfs_bit.h"
- 
- /*
-  * Calculate the worst case log unit reservation for a given superblock
-@@ -770,3 +772,36 @@ xfs_log_check_lsn(
- 
- 	return true;
- }
-+
-+static struct xfs_buftarg *
-+xfs_find_bdev_for_inode(
+ int
+ libxfs_bmap_finish(
+-	xfs_trans_t	**tp,
+-	xfs_bmap_free_t *flist,
+-	int		*committed)
++	struct xfs_trans	**tp,
++	struct xfs_bmap_free	*flist,
 +	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		return mp->m_rtdev_targp;
-+	return mp->m_ddev_targp;
-+}
-+
-+static xfs_daddr_t
-+xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
-+{
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		 return XFS_FSB_TO_BB(ip->i_mount, fsb);
-+	return XFS_FSB_TO_DADDR(ip->i_mount, (fsb));
-+}
-+
-+
-+int
-+libxfs_zero_extent(
-+	struct xfs_inode *ip,
-+	xfs_fsblock_t	start_fsb,
-+	xfs_off_t	count_fsb)
-+{
-+	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
-+	ssize_t		size = XFS_FSB_TO_BB(ip->i_mount, count_fsb);
-+
-+	return libxfs_device_zero(xfs_find_bdev_for_inode(ip), sector, size);
-+}
-+
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 12d59df..af40270 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -2508,7 +2508,7 @@ xfs_alloc_vextent(
- 		 * Try near allocation first, then anywhere-in-ag after
- 		 * the first a.g. fails.
- 		 */
--		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
-+		if ((args->userdata & XFS_ALLOC_INITIAL_USER_DATA) &&
- 		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
- 			args->fsbno = XFS_AGB_TO_FSB(mp,
- 					((mp->m_agfrotor / rotorstep) %
-@@ -2639,6 +2639,14 @@ xfs_alloc_vextent(
- 		XFS_AG_CHECK_DADDR(mp, XFS_FSB_TO_DADDR(mp, args->fsbno),
- 			args->len);
- #endif
-+
-+		/* Zero the extent if we were asked to do so */
-+		if (args->userdata & XFS_ALLOC_USERDATA_ZERO) {
-+			error = xfs_zero_extent(args->ip, args->fsbno, args->len);
-+			if (error)
-+				goto error0;
-+		}
-+
+ {
+ 	xfs_bmap_free_item_t	*free;	/* free extent list item */
+ 	xfs_bmap_free_item_t	*next;	/* next item on free list */
+ 	int			error;
+ 
+-	if (flist->xbf_count == 0) {
+-		*committed = 0;
++	if (flist->xbf_count == 0)
+ 		return 0;
+-	}
+ 
+ 	for (free = flist->xbf_first; free != NULL; free = next) {
+ 		next = free->xbfi_next;
+-		if ((error = xfs_free_extent(*tp, free->xbfi_startblock,
+-				free->xbfi_blockcount)))
++		error = xfs_free_extent(*tp, free->xbfi_startblock,
++					free->xbfi_blockcount);
++		if (error)
+ 			return error;
+ 		xfs_bmap_del_free(flist, NULL, free);
  	}
- 	xfs_perag_put(args->pag);
+-	*committed = 0;
  	return 0;
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 071b28b..135eb3d 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -101,6 +101,7 @@ typedef struct xfs_alloc_arg {
- 	struct xfs_mount *mp;		/* file system mount point */
- 	struct xfs_buf	*agbp;		/* buffer for a.g. freelist header */
- 	struct xfs_perag *pag;		/* per-ag struct for this agno */
-+	struct xfs_inode *ip;		/* for userdata zeroing method */
- 	xfs_fsblock_t	fsbno;		/* file system block number */
- 	xfs_agnumber_t	agno;		/* allocation group number */
- 	xfs_agblock_t	agbno;		/* allocation group-relative block # */
-@@ -120,15 +121,16 @@ typedef struct xfs_alloc_arg {
- 	char		wasdel;		/* set if allocation was prev delayed */
- 	char		wasfromfl;	/* set if allocation is from freelist */
- 	char		isfl;		/* set if is freelist blocks - !acctg */
--	char		userdata;	/* set if this is user data */
-+	char		userdata;	/* mask defining userdata treatment */
- 	xfs_fsblock_t	firstblock;	/* io first block allocated */
- } xfs_alloc_arg_t;
+ }
  
- /*
-  * Defines for userdata
-  */
--#define XFS_ALLOC_USERDATA		1	/* allocation is for user data*/
--#define XFS_ALLOC_INITIAL_USER_DATA	2	/* special case start of file */
-+#define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
-+#define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
-+#define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
+@@ -543,7 +541,6 @@ libxfs_alloc_file_space(
+ 	xfs_fileoff_t	startoffset_fsb;
+ 	xfs_trans_t	*tp;
+ 	int		xfs_bmapi_flags;
+-	int		committed;
+ 	int		error;
  
- xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_mount *mp,
- 		struct xfs_perag *pag, xfs_extlen_t need);
+ 	if (len <= 0)
+@@ -588,7 +585,7 @@ libxfs_alloc_file_space(
+ 			goto error0;
+ 
+ 		/* complete the transaction */
+-		error = xfs_bmap_finish(&tp, &free_list, &committed);
++		error = xfs_bmap_finish(&tp, &free_list, ip);
+ 		if (error)
+ 			goto error0;
+ 
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 5e79f3d..afe3dcb 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -200,7 +200,7 @@ xfs_attr_set(
+ 	struct xfs_trans_res	tres;
+ 	xfs_fsblock_t		firstblock;
+ 	int			rsvd = (flags & ATTR_ROOT) != 0;
+-	int			error, err2, committed, local;
++	int			error, err2, local;
+ 
+ 	XFS_STATS_INC(mp, xs_attr_set);
+ 
+@@ -327,25 +327,15 @@ xfs_attr_set(
+ 		 */
+ 		xfs_bmap_init(args.flist, args.firstblock);
+ 		error = xfs_attr_shortform_to_leaf(&args);
+-		if (!error) {
+-			error = xfs_bmap_finish(&args.trans, args.flist,
+-						&committed);
+-		}
++		if (!error)
++			error = xfs_bmap_finish(&args.trans, args.flist, dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args.trans = NULL;
+ 			xfs_bmap_cancel(&flist);
+ 			goto out;
+ 		}
+ 
+ 		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args.trans, dp, 0);
+-
+-		/*
+ 		 * Commit the leaf transformation.  We'll need another (linked)
+ 		 * transaction to add the new attribute to the leaf.
+ 		 */
+@@ -561,7 +551,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ {
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+-	int retval, error, committed, forkoff;
++	int retval, error, forkoff;
+ 
+ 	trace_xfs_attr_leaf_addname(args);
+ 
+@@ -621,25 +611,15 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		 */
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		error = xfs_attr3_leaf_to_node(args);
+-		if (!error) {
+-			error = xfs_bmap_finish(&args->trans, args->flist,
+-						&committed);
+-		}
++		if (!error)
++			error = xfs_bmap_finish(&args->trans, args->flist, dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+ 			return error;
+ 		}
+ 
+ 		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args->trans, dp, 0);
+-
+-		/*
+ 		 * Commit the current trans (including the inode) and start
+ 		 * a new one.
+ 		 */
+@@ -722,25 +702,14 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 			xfs_bmap_init(args->flist, args->firstblock);
+ 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+-			if (!error) {
++			if (!error)
+ 				error = xfs_bmap_finish(&args->trans,
+-							args->flist,
+-							&committed);
+-			}
++							args->flist, dp);
+ 			if (error) {
+-				ASSERT(committed);
+ 				args->trans = NULL;
+ 				xfs_bmap_cancel(args->flist);
+ 				return error;
+ 			}
+-
+-			/*
+-			 * bmap_finish() may have committed the last trans
+-			 * and started a new one.  We need the inode to be
+-			 * in all transactions.
+-			 */
+-			if (committed)
+-				xfs_trans_ijoin(args->trans, dp, 0);
+ 		}
+ 
+ 		/*
+@@ -768,7 +737,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ {
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+-	int error, committed, forkoff;
++	int error, forkoff;
+ 
+ 	trace_xfs_attr_leaf_removename(args);
+ 
+@@ -796,23 +765,13 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 		/* bp is gone due to xfs_da_shrink_inode */
+-		if (!error) {
+-			error = xfs_bmap_finish(&args->trans, args->flist,
+-						&committed);
+-		}
++		if (!error)
++			error = xfs_bmap_finish(&args->trans, args->flist, dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+ 			return error;
+ 		}
+-
+-		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args->trans, dp, 0);
+ 	}
+ 	return 0;
+ }
+@@ -870,7 +829,7 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+ 	xfs_da_state_blk_t *blk;
+ 	xfs_inode_t *dp;
+ 	xfs_mount_t *mp;
+-	int committed, retval, error;
++	int retval, error;
+ 
+ 	trace_xfs_attr_node_addname(args);
+ 
+@@ -931,27 +890,16 @@ restart:
+ 			state = NULL;
+ 			xfs_bmap_init(args->flist, args->firstblock);
+ 			error = xfs_attr3_leaf_to_node(args);
+-			if (!error) {
++			if (!error)
+ 				error = xfs_bmap_finish(&args->trans,
+-							args->flist,
+-							&committed);
+-			}
++							args->flist, dp);
+ 			if (error) {
+-				ASSERT(committed);
+ 				args->trans = NULL;
+ 				xfs_bmap_cancel(args->flist);
+ 				goto out;
+ 			}
+ 
+ 			/*
+-			 * bmap_finish() may have committed the last trans
+-			 * and started a new one.  We need the inode to be
+-			 * in all transactions.
+-			 */
+-			if (committed)
+-				xfs_trans_ijoin(args->trans, dp, 0);
+-
+-			/*
+ 			 * Commit the node conversion and start the next
+ 			 * trans in the chain.
+ 			 */
+@@ -970,23 +918,13 @@ restart:
+ 		 */
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		error = xfs_da3_split(state);
+-		if (!error) {
+-			error = xfs_bmap_finish(&args->trans, args->flist,
+-						&committed);
+-		}
++		if (!error)
++			error = xfs_bmap_finish(&args->trans, args->flist, dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+ 			goto out;
+ 		}
+-
+-		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args->trans, dp, 0);
+ 	} else {
+ 		/*
+ 		 * Addition succeeded, update Btree hashvals.
+@@ -1079,25 +1017,14 @@ restart:
+ 		if (retval && (state->path.active > 1)) {
+ 			xfs_bmap_init(args->flist, args->firstblock);
+ 			error = xfs_da3_join(state);
+-			if (!error) {
++			if (!error)
+ 				error = xfs_bmap_finish(&args->trans,
+-							args->flist,
+-							&committed);
+-			}
++							args->flist, dp);
+ 			if (error) {
+-				ASSERT(committed);
+ 				args->trans = NULL;
+ 				xfs_bmap_cancel(args->flist);
+ 				goto out;
+ 			}
+-
+-			/*
+-			 * bmap_finish() may have committed the last trans
+-			 * and started a new one.  We need the inode to be
+-			 * in all transactions.
+-			 */
+-			if (committed)
+-				xfs_trans_ijoin(args->trans, dp, 0);
+ 		}
+ 
+ 		/*
+@@ -1139,7 +1066,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 	xfs_da_state_blk_t *blk;
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+-	int retval, error, committed, forkoff;
++	int retval, error, forkoff;
+ 
+ 	trace_xfs_attr_node_removename(args);
+ 
+@@ -1213,24 +1140,13 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 	if (retval && (state->path.active > 1)) {
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		error = xfs_da3_join(state);
+-		if (!error) {
+-			error = xfs_bmap_finish(&args->trans, args->flist,
+-						&committed);
+-		}
++		if (!error)
++			error = xfs_bmap_finish(&args->trans, args->flist, dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+ 			goto out;
+ 		}
+-
+-		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args->trans, dp, 0);
+-
+ 		/*
+ 		 * Commit the Btree join operation and start a new trans.
+ 		 */
+@@ -1258,25 +1174,14 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 			xfs_bmap_init(args->flist, args->firstblock);
+ 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+-			if (!error) {
++			if (!error)
+ 				error = xfs_bmap_finish(&args->trans,
+-							args->flist,
+-							&committed);
+-			}
++							args->flist, dp);
+ 			if (error) {
+-				ASSERT(committed);
+ 				args->trans = NULL;
+ 				xfs_bmap_cancel(args->flist);
+ 				goto out;
+ 			}
+-
+-			/*
+-			 * bmap_finish() may have committed the last trans
+-			 * and started a new one.  We need the inode to be
+-			 * in all transactions.
+-			 */
+-			if (committed)
+-				xfs_trans_ijoin(args->trans, dp, 0);
+ 		} else
+ 			xfs_trans_brelse(args->trans, bp);
+ 	}
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 95383e3..79d663e 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -443,8 +443,6 @@ xfs_attr_rmtval_set(
+ 	 * Roll through the "value", allocating blocks on disk as required.
+ 	 */
+ 	while (blkcnt > 0) {
+-		int	committed;
+-
+ 		/*
+ 		 * Allocate a single extent, up to the size of the value.
+ 		 *
+@@ -462,24 +460,14 @@ xfs_attr_rmtval_set(
+ 		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
+ 				  blkcnt, XFS_BMAPI_ATTRFORK, args->firstblock,
+ 				  args->total, &map, &nmap, args->flist);
+-		if (!error) {
+-			error = xfs_bmap_finish(&args->trans, args->flist,
+-						&committed);
+-		}
++		if (!error)
++			error = xfs_bmap_finish(&args->trans, args->flist, dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+ 			return error;
+ 		}
+ 
+-		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args->trans, dp, 0);
+-
+ 		ASSERT(nmap == 1);
+ 		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+ 		       (map.br_startblock != HOLESTARTBLOCK));
+@@ -610,31 +598,20 @@ xfs_attr_rmtval_remove(
+ 	blkcnt = args->rmtblkcnt;
+ 	done = 0;
+ 	while (!done) {
+-		int committed;
+-
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+ 				    XFS_BMAPI_ATTRFORK, 1, args->firstblock,
+ 				    args->flist, &done);
+-		if (!error) {
++		if (!error)
+ 			error = xfs_bmap_finish(&args->trans, args->flist,
+-						&committed);
+-		}
++						args->dp);
+ 		if (error) {
+-			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+ 			return error;
+ 		}
+ 
+ 		/*
+-		 * bmap_finish() may have committed the last trans and started
+-		 * a new one.  We need the inode to be in all transactions.
+-		 */
+-		if (committed)
+-			xfs_trans_ijoin(args->trans, args->dp, 0);
+-
+-		/*
+ 		 * Close out trans and start the next one in the chain.
+ 		 */
+ 		error = xfs_trans_roll(&args->trans, args->dp);
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 8e19b50..a38549c 100644
+index eb19133..8cb89bc 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -3795,8 +3795,13 @@ xfs_bmap_btalloc(
- 	args.wasdel = ap->wasdel;
- 	args.isfl = 0;
- 	args.userdata = ap->userdata;
--	if ((error = xfs_alloc_vextent(&args)))
-+	if (ap->userdata & XFS_ALLOC_USERDATA_ZERO)
-+		args.ip = ap->ip;
-+
-+	error = xfs_alloc_vextent(&args);
-+	if (error)
- 		return error;
-+
- 	if (tryagain && args.fsbno == NULLFSBLOCK) {
- 		/*
- 		 * Exact allocation failed. Now try with alignment
-@@ -4295,11 +4300,14 @@ xfs_bmapi_allocate(
+@@ -1109,7 +1109,6 @@ xfs_bmap_add_attrfork(
+ 	xfs_trans_t		*tp;		/* transaction pointer */
+ 	int			blks;		/* space reservation */
+ 	int			version = 1;	/* superblock attr version */
+-	int			committed;	/* xaction was committed */
+ 	int			logflags;	/* logging flags */
+ 	int			error;		/* error return value */
  
- 	/*
- 	 * Indicate if this is the first user data in the file, or just any
--	 * user data.
-+	 * user data. And if it is userdata, indicate whether it needs to
-+	 * be initialised to zero during allocation.
- 	 */
- 	if (!(bma->flags & XFS_BMAPI_METADATA)) {
- 		bma->userdata = (bma->offset == 0) ?
- 			XFS_ALLOC_INITIAL_USER_DATA : XFS_ALLOC_USERDATA;
-+		if (bma->flags & XFS_BMAPI_ZERO)
-+			bma->userdata |= XFS_ALLOC_USERDATA_ZERO;
+@@ -1212,7 +1211,7 @@ xfs_bmap_add_attrfork(
+ 			xfs_log_sb(tp);
  	}
  
- 	bma->minlen = (bma->flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
-@@ -4414,6 +4422,17 @@ xfs_bmapi_convert_unwritten(
- 	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
- 				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
+-	error = xfs_bmap_finish(&tp, &flist, &committed);
++	error = xfs_bmap_finish(&tp, &flist, NULL);
+ 	if (error)
+ 		goto bmap_cancel;
+ 	error = xfs_trans_commit(tp);
+@@ -5949,7 +5948,6 @@ xfs_bmap_split_extent(
+ 	struct xfs_trans        *tp;
+ 	struct xfs_bmap_free    free_list;
+ 	xfs_fsblock_t           firstfsb;
+-	int                     committed;
+ 	int                     error;
  
-+	/*
-+	 * Before insertion into the bmbt, zero the range being converted
-+	 * if required.
-+	 */
-+	if (flags & XFS_BMAPI_ZERO) {
-+		error = xfs_zero_extent(bma->ip, mval->br_startblock,
-+					mval->br_blockcount);
-+		if (error)
-+			return error;
-+	}
-+
- 	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
- 			&bma->cur, mval, bma->firstblock, bma->flist,
- 			&tmp_logflags);
-@@ -4507,6 +4526,18 @@ xfs_bmapi_write(
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+@@ -5970,7 +5968,7 @@ xfs_bmap_split_extent(
+ 	if (error)
+ 		goto out;
  
-+	/* zeroing is for currently only for data extents, not metadata */
-+	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-+			(XFS_BMAPI_METADATA | XFS_BMAPI_ZERO));
-+	/*
-+	 * we can allocate unwritten extents or pre-zero allocated blocks,
-+	 * but it makes no sense to do both at once. This would result in
-+	 * zeroing the unwritten extent twice, but it still being an
-+	 * unwritten extent....
-+	 */
-+	ASSERT((flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO)) !=
-+			(XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO));
-+
- 	if (unlikely(XFS_TEST_ERROR(
- 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
- 	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+-	error = xfs_bmap_finish(&tp, &free_list, &committed);
++	error = xfs_bmap_finish(&tp, &free_list, NULL);
+ 	if (error)
+ 		goto out;
+ 
 diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index d3daf6d..baec27d 100644
+index baec27d..6485403 100644
 --- a/libxfs/xfs_bmap.h
 +++ b/libxfs/xfs_bmap.h
-@@ -52,9 +52,9 @@ struct xfs_bmalloca {
- 	xfs_extlen_t		minleft; /* amount must be left after alloc */
- 	bool			eof;	/* set if allocating past last extent */
- 	bool			wasdel;	/* replacing a delayed allocation */
--	bool			userdata;/* set if is user data */
- 	bool			aeof;	/* allocated space at eof */
- 	bool			conv;	/* overwriting unwritten extents */
-+	char			userdata;/* userdata mask */
- 	int			flags;
- };
+@@ -195,7 +195,7 @@ void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_bmap_free *flist,
+ 			  xfs_fsblock_t bno, xfs_filblks_t len);
+ void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
+ int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
+-			int *committed);
++			struct xfs_inode *ip);
+ void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork);
+ int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index cb34b28..21960d5 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -358,7 +358,6 @@ parseproto(
+ #define	IF_FIFO		6
  
-@@ -109,6 +109,14 @@ typedef	struct xfs_bmap_free
-  */
- #define XFS_BMAPI_CONVERT	0x040
+ 	char		*buf;
+-	int		committed;
+ 	int		error;
+ 	xfs_fsblock_t	first;
+ 	int		flags;
+@@ -481,7 +480,7 @@ parseproto(
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_log_inode(tp, ip, flags);
  
-+/*
-+ * allocate zeroed extents - this requires all newly allocated user data extents
-+ * to be initialised to zero. It will be ignored if XFS_BMAPI_METADATA is set.
-+ * Use in conjunction with XFS_BMAPI_CONVERT to convert unwritten extents found
-+ * during the allocation range to zeroed written extents.
-+ */
-+#define XFS_BMAPI_ZERO		0x080
-+
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -116,7 +124,8 @@ typedef	struct xfs_bmap_free
- 	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
- 	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
- 	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
--	{ XFS_BMAPI_CONVERT,	"CONVERT" }
-+	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
-+	{ XFS_BMAPI_ZERO,	"ZERO" }
+-		error = -libxfs_bmap_finish(&tp, &flist, &committed);
++		error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 		if (error)
+ 			fail(_("Pre-allocated file creation failed"), error);
+ 		libxfs_trans_commit(tp);
+@@ -563,7 +562,7 @@ parseproto(
+ 		}
+ 		newdirectory(mp, tp, ip, pip);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+-		error = -libxfs_bmap_finish(&tp, &flist, &committed);
++		error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 		if (error)
+ 			fail(_("Directory creation failed"), error);
+ 		libxfs_trans_commit(tp);
+@@ -589,7 +588,7 @@ parseproto(
+ 		fail(_("Unknown format"), EINVAL);
+ 	}
+ 	libxfs_trans_log_inode(tp, ip, flags);
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 	if (error) {
+ 		fail(_("Error encountered creating file from prototype file"),
+ 			error);
+@@ -615,7 +614,6 @@ rtinit(
+ 	xfs_mount_t	*mp)
+ {
+ 	xfs_fileoff_t	bno;
+-	int		committed;
+ 	xfs_fileoff_t	ebno;
+ 	xfs_bmbt_irec_t	*ep;
+ 	int		error;
+@@ -700,7 +698,7 @@ rtinit(
+ 		}
+ 	}
  
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, rbmip);
+ 	if (error) {
+ 		fail(_("Completion of the realtime bitmap failed"), error);
+ 	}
+@@ -735,7 +733,7 @@ rtinit(
+ 			bno += ep->br_blockcount;
+ 		}
+ 	}
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, rsumip);
+ 	if (error) {
+ 		fail(_("Completion of the realtime summary failed"), error);
+ 	}
+@@ -759,7 +757,7 @@ rtinit(
+ 			fail(_("Error initializing the realtime space"),
+ 				error);
+ 		}
+-		error = -libxfs_bmap_finish(&tp, &flist, &committed);
++		error = -libxfs_bmap_finish(&tp, &flist, rbmip);
+ 		if (error) {
+ 			fail(_("Error completing the realtime space"), error);
+ 		}
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 7680deb..eb36520 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -483,7 +483,6 @@ mk_rbmino(xfs_mount_t *mp)
+ 	xfs_fsblock_t	first;
+ 	int		i;
+ 	int		nmap;
+-	int		committed;
+ 	int		error;
+ 	xfs_bmap_free_t	flist;
+ 	xfs_fileoff_t	bno;
+@@ -578,7 +577,7 @@ mk_rbmino(xfs_mount_t *mp)
+ 			bno += ep->br_blockcount;
+ 		}
+ 	}
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 	if (error) {
+ 		do_error(
+ 		_("allocation of the realtime bitmap failed, error = %d\n"),
+@@ -742,7 +741,6 @@ mk_rsumino(xfs_mount_t *mp)
+ 	xfs_fsblock_t	first;
+ 	int		i;
+ 	int		nmap;
+-	int		committed;
+ 	int		error;
+ 	int		nsumblocks;
+ 	xfs_bmap_free_t	flist;
+@@ -843,7 +841,7 @@ mk_rsumino(xfs_mount_t *mp)
+ 			bno += ep->br_blockcount;
+ 		}
+ 	}
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 	if (error) {
+ 		do_error(
+ 	_("allocation of the realtime summary ino failed, error = %d\n"),
+@@ -947,7 +945,6 @@ mk_orphanage(xfs_mount_t *mp)
+ 	ino_tree_node_t	*irec;
+ 	int		ino_offset = 0;
+ 	int		i;
+-	int		committed;
+ 	int		error;
+ 	xfs_bmap_free_t	flist;
+ 	const int	mode = 0755;
+@@ -1059,7 +1056,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 	libxfs_dir_init(tp, ip, pip);
+ 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  
- static inline int xfs_bmapi_aflag(int w)
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 	if (error) {
+ 		do_error(_("%s directory creation failed -- bmapf error %d\n"),
+ 			ORPHANAGE, error);
+@@ -1090,7 +1087,6 @@ mv_orphanage(
+ 	xfs_fsblock_t		first;
+ 	xfs_bmap_free_t		flist;
+ 	int			err;
+-	int			committed;
+ 	unsigned char		fname[MAXPATHLEN + 1];
+ 	int			nres;
+ 	int			incr;
+@@ -1168,7 +1164,7 @@ mv_orphanage(
+ 			ino_p->i_d.di_nlink++;
+ 			libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
+ 
+-			err = -libxfs_bmap_finish(&tp, &flist, &committed);
++			err = -libxfs_bmap_finish(&tp, &flist, ino_p);
+ 			if (err)
+ 				do_error(
+ 	_("bmap finish failed (err - %d), filesystem may be out of space\n"),
+@@ -1215,7 +1211,7 @@ mv_orphanage(
+ 						err);
+ 			}
+ 
+-			err = -libxfs_bmap_finish(&tp, &flist, &committed);
++			err = -libxfs_bmap_finish(&tp, &flist, ino_p);
+ 			if (err)
+ 				do_error(
+ 	_("bmap finish failed (%d), filesystem may be out of space\n"),
+@@ -1254,7 +1250,7 @@ mv_orphanage(
+ 		ino_p->i_d.di_nlink = 1;
+ 		libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
+ 
+-		err = -libxfs_bmap_finish(&tp, &flist, &committed);
++		err = -libxfs_bmap_finish(&tp, &flist, ino_p);
+ 		if (err)
+ 			do_error(
+ 	_("bmap finish failed (%d), filesystem may be out of space\n"),
+@@ -1306,7 +1302,6 @@ longform_dir2_rebuild(
+ 	xfs_bmap_free_t		flist;
+ 	xfs_inode_t		pip;
+ 	dir_hash_ent_t		*p;
+-	int			committed;
+ 	int			done;
+ 
+ 	/*
+@@ -1356,7 +1351,7 @@ longform_dir2_rebuild(
+ 		goto out_bmap_cancel;
+ 	}
+ 
+-	error = -libxfs_bmap_finish(&tp, &flist, &committed);
++	error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 
+ 	libxfs_trans_commit(tp);
+ 
+@@ -1391,7 +1386,7 @@ _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"
+ 			goto out_bmap_cancel;
+ 		}
+ 
+-		error = -libxfs_bmap_finish(&tp, &flist, &committed);
++		error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 		if (error) {
+ 			do_warn(
+ 	_("bmap finish failed (%d), filesystem may be out of space\n"),
+@@ -1423,7 +1418,6 @@ dir2_kill_block(
+ 	struct xfs_buf	*bp)
+ {
+ 	xfs_da_args_t	args;
+-	int		committed;
+ 	int		error;
+ 	xfs_fsblock_t	firstblock;
+ 	xfs_bmap_free_t	flist;
+@@ -1453,7 +1447,7 @@ dir2_kill_block(
+ 	if (error)
+ 		do_error(_("shrink_inode failed inode %" PRIu64 " block %u\n"),
+ 			ip->i_ino, da_bno);
+-	libxfs_bmap_finish(&tp, &flist, &committed);
++	libxfs_bmap_finish(&tp, &flist, ip);
+ 	libxfs_trans_commit(tp);
+ }
+ 
+@@ -1479,7 +1473,6 @@ longform_dir2_entry_check_data(
+ 	xfs_dir2_leaf_entry_t	*blp;
+ 	struct xfs_buf		*bp;
+ 	xfs_dir2_block_tail_t	*btp;
+-	int			committed;
+ 	struct xfs_dir2_data_hdr *d;
+ 	xfs_dir2_db_t		db;
+ 	xfs_dir2_data_entry_t	*dep;
+@@ -1930,7 +1923,7 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+ 		libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp), d, &i);
+ 	if (needlog)
+ 		libxfs_dir2_data_log_header(&da, bp);
+-	libxfs_bmap_finish(&tp, &flist, &committed);
++	libxfs_bmap_finish(&tp, &flist, ip);
+ 	libxfs_trans_commit(tp);
+ 
+ 	/* record the largest free space in the freetab for later checking */
+@@ -2851,7 +2844,7 @@ process_dir_inode(
+ 	xfs_inode_t		*ip;
+ 	xfs_trans_t		*tp;
+ 	dir_hash_tab_t		*hashtab;
+-	int			need_dot, committed;
++	int			need_dot;
+ 	int			dirty, num_illegal, error, nres;
+ 
+ 	ino = XFS_AGINO_TO_INO(mp, agno, irec->ino_startnum + ino_offset);
+@@ -2996,7 +2989,7 @@ process_dir_inode(
+ 
+ 		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-		error = -libxfs_bmap_finish(&tp, &flist, &committed);
++		error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 		ASSERT(error == 0);
+ 		libxfs_trans_commit(tp);
+ 
+@@ -3057,7 +3050,7 @@ process_dir_inode(
+ 
+ 			libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-			error = -libxfs_bmap_finish(&tp, &flist, &committed);
++			error = -libxfs_bmap_finish(&tp, &flist, ip);
+ 			ASSERT(error == 0);
+ 			libxfs_trans_commit(tp);
+ 		}
 -- 
 2.5.0
 
