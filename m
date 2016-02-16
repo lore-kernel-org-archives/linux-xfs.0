@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6CAA47CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 18:55:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 222C18F8035
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 16:55:01 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id qBEGam2Bx6W6h1Fo for <xfs@oss.sgi.com>;
-	Mon, 15 Feb 2016 16:54:58 -0800 (PST)
-Subject: Re: [PATCH 4/4] xfs: XFS_DIFLAG2_DAX limited by PAGE_SIZE
-References: <1455513734-15192-1-git-send-email-david@fromorbit.com>
-	<1455513734-15192-5-git-send-email-david@fromorbit.com>
-	<56C26954.2010001@sandeen.net> <20160216003923.GL14668@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56C27360.4020004@sandeen.net>
-Date: Mon, 15 Feb 2016 18:54:56 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 9AA2A7CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 23:46:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 89BAF8F8040
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 21:45:58 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	EbLWWRhO5MwrivPI for <xfs@oss.sgi.com>;
+	Mon, 15 Feb 2016 21:45:55 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aVYSI-00033Z-S5
+	for xfs@oss.sgi.com; Tue, 16 Feb 2016 16:45:46 +1100
+Date: Tue, 16 Feb 2016 16:45:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to e15c65b
+Message-ID: <20160216054546.GM14668@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160216003923.GL14668@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +25,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3910122074002497992=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 
+--===============3910122074002497992==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GPJrCs/72TxItFYR"
+Content-Disposition: inline
 
-On 2/15/16 6:39 PM, Dave Chinner wrote:
-> On Mon, Feb 15, 2016 at 06:12:04PM -0600, Eric Sandeen wrote:
 
-...
+--GPJrCs/72TxItFYR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> So which is it, at least PAGE_SIZE or == PAGE_SIZE?
-> 
-> Linux does not support filesystems where the block size is larger
-> than the page size, so the supported set of "block size at least as
-> large as PAGE_SIZE" is only block size == PAGE_SIZE.
+Hi folks,
 
-Um, ok.  Comment is still confusing.  ;)
+The for-next branch of the xfs kernel repository at
 
->>>  	/* If the DAX state is not changing, we have nothing to do here. */
->>>  	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
->>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>> index 9c984a0..fb7dc61 100644
->>> --- a/fs/xfs/xfs_iops.c
->>> +++ b/fs/xfs/xfs_iops.c
->>> @@ -1186,6 +1186,7 @@ xfs_diflags_to_iflags(
->>>  	if (flags & XFS_DIFLAG_NOATIME)
->>>  		inode->i_flags |= S_NOATIME;
->>>  	if (S_ISREG(inode->i_mode) &&
->>> +	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
->>>  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
->>>  	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
->>>  		inode->i_flags |= S_DAX;
->>
->> Is it possible to get mounted with XFS_MOUNT_DAX if blocksize != PAGE_SIZE?
-> 
-> No, It's checked at mount time.
-> 
->> If so, should it be?  This seems like a strange place to catch this mismatch.
-> 
-> It's not for catching a bad mount option (which will go away,
-> anyway). it's for catching an "in-pmem" inode flag that can't be
-> applied because, e.g, the kernel was rebuilt with a different base
-> page size and now the extents won't align correctly for DAX to work.
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-Oh, with the di_flags2 already set on disk, and now encountering a
-new page size.  Right, ok.
+has just been updated.
 
--Eric
+The new head of the for-next branch is commit:
+
+e15c65b Merge branch 'xfs-writepage-rework-4.6' into for-next
+
+New Commits:
+
+Dave Chinner (7):
+      [988ef92] xfs: remove nonblocking mode from xfs_vm_writepage
+      [150d5be] xfs: remove xfs_cancel_ioend
+      [fbcc025] xfs: Introduce writeback context for writepages
+      [ad68972] xfs: xfs_cluster_write is redundant
+      [bfce7d2] xfs: factor mapping out of xfs_do_writepage
+      [e10de37] xfs: don't chain ioends during writepage submission
+      [e15c65b] Merge branch 'xfs-writepage-rework-4.6' into for-next
+
+
+Code Diffstat:
+
+ fs/xfs/xfs_aops.c | 732 ++++++++++++++++++++------------------------------=
+----
+ fs/xfs/xfs_aops.h |   4 +-
+ 2 files changed, 269 insertions(+), 467 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--GPJrCs/72TxItFYR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJWwreKAAoJEK3oKUf0dfodsAgQAIsnVCYe/c0tA1uY5hJofeLW
+NJRUg4zSVh+zgE8ySIOpxmec/BIGIG5yiBQvt4/5R8omjGPc2le6rzgRm1y7Av0H
+177bMvaX0yKMkCN1AJBnA3ezsjIFpnidjZOy4Oh4oC5HwRncurbvtdjr+2DwaHww
+OSmQ0gGoevOxNpG+fXy3UmNmkqaZR4OP1A3eXLhBYmM61EPmVklpD4PmPwET0wee
+Qr+KF0X81dOezbwazyNhV1kbRs7dB/nkkKdFl/cYETl+MysdWs+HXUt475N/25zt
+U/qnh3MLuHuNi1TspvXXoc7mIhiL0O38eP/nFrI7lN/AvTTcx9PyF0DHlD3AvwMu
+K0hYqzgMnbGYPgvz5vtzVXxVIdijcpVl6L4RQOxSj4ZUDRhonW5d3wtmazuU5B0e
+w1rNoUf2+uFpDlL1Iu3Em/7a0ujl+GvoTBkJgGNFqUdT2W5aaoXBVff6NYjz8whB
+h8+pjaDsHJFHdYx6s6BJwwBmq8veIKNL3l8ajjZ6hQE9TfIlVvS4wcZjJG7kcMLD
+B1+YyG4LtR3SDybckJkyNG8t9BaDaWXbczR5xAEF8lIkAVX3joTZEm1EOa1Vjig6
+s3nqK4FkJIQyKL1mbQjA9zJI/G+fU4ZUEi9A9RZO4lV39yq66heHA7WMma861Yjz
+IZRMrubbfvtWCMy3Y44M
+=KJqY
+-----END PGP SIGNATURE-----
+
+--GPJrCs/72TxItFYR--
+
+
+--===============3910122074002497992==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3910122074002497992==--
