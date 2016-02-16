@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7CDAB7CA3
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 13:20:02 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 66E507CA3
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 13:20:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FCC78F8049
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 11:20:02 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E1776AC008
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 11:20:12 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zUlOQd2c2a1VyiFu (version=TLSv1.2
+	cuda.sgi.com with ESMTP id rfUJcQqrTFWH9Fw7 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Feb 2016 11:19:58 -0800 (PST)
-Date: Tue, 16 Feb 2016 14:19:56 -0500
+	<xfs@oss.sgi.com>; Tue, 16 Feb 2016 11:20:11 -0800 (PST)
+Date: Tue, 16 Feb 2016 14:20:08 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/14] xfsprogs: kernel libxfs sync up to 4.5-rc2
-Message-ID: <20160216191955.GE39655@bfoster.bfoster>
+Subject: Re: [PATCH 05/14] xfs: introduce BMAPI_ZERO for allocating zeroed
+	extents
+Message-ID: <20160216192008.GF39655@bfoster.bfoster>
 References: <1455517105-20033-1-git-send-email-david@fromorbit.com>
+	<1455517105-20033-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455517105-20033-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1455517105-20033-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +34,248 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 15, 2016 at 05:18:11PM +1100, Dave Chinner wrote:
-> Hi folks,
+On Mon, Feb 15, 2016 at 05:18:16PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This patchset pulls xfsprogs lixfs up to the same base code as the
-> v4.5-rc2 kernel. I've simply pulled the commits across and in each
-> patch made the external xfsprogs changes necessary to make them
-> compile and work correctly. This applies on top of the xfs_io dax
-> patchset I posted a short while ago. I've left all the kernel
-> sign-offs on the commits - it's really only the patches that change
-> stuff outside libxfs that need any sort of review...
+> Source kernel commit 3fbbbea34bac049c0b5938dc065f7d8ee1ef7e67
 > 
-> This is pretty much all of the remaining changes needed before I can
-> cut a 4.5.0-rc1 release of xfsprogs - it's really only bug fixes and
-> minor changes from here, as I really need this base tree mostly
-> stable from here on.
+> To enable DAX to do atomic allocation of zeroed extents, we need to
+> drive the block zeroing deep into the allocator. Because
+> xfs_bmapi_write() can return merged extents on allocation that were
+> only partially allocated (i.e. requested range spans allocated and
+> hole regions, allocation into the hole was contiguous), we cannot
+> zero the extent returned from xfs_bmapi_write() as that can
+> overwrite existing data with zeros.
 > 
-> The reason for that I'm now going to be build a for-next branch off
-> this that has all the changes in the current kernel for-next branch.
-> This will enable Darrick to have a sane code base that he can rebase
-> all his xfsprogs changes for rmap/reflink on top of. That will make
-> review, testing and eventual merge much easier for everyone.
+> Hence we have to drive the extent zeroing into the allocation code,
+> prior to where we merge the extents into the BMBT and return the
+> resultant map. This means we need to propagate this need down to
+> the xfs_alloc_vextent() and issue the block zeroing at this point.
 > 
+> While this functionality is being introduced for DAX, there is no
+> reason why it is specific to DAX - we can per-zero blocks during the
+> allocation transaction on any type of device. It's just slow (and
+> usually slower than unwritten allocation and conversion) on
+> traditional block devices so doesn't tend to get used. We can,
+> however, hook hardware zeroing optimisations via sb_issue_zeroout()
+> to this operation, so it may be useful in future and hence the
+> "allocate zeroed blocks" API needs to be implementation neutral.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  include/libxfs.h         |  1 -
+>  libxfs/libxfs_api_defs.h |  1 +
+>  libxfs/libxfs_io.h       |  2 ++
+>  libxfs/libxfs_priv.h     |  3 +++
+>  libxfs/rdwr.c            |  4 +++-
+>  libxfs/util.c            | 35 +++++++++++++++++++++++++++++++++++
+>  libxfs/xfs_alloc.c       | 10 +++++++++-
+>  libxfs/xfs_alloc.h       |  8 +++++---
+>  libxfs/xfs_bmap.c        | 35 +++++++++++++++++++++++++++++++++--
+>  libxfs/xfs_bmap.h        | 13 +++++++++++--
+>  10 files changed, 102 insertions(+), 10 deletions(-)
+> 
+...
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index 90031fd..ee4bf3c 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+...
+> @@ -770,3 +772,36 @@ xfs_log_check_lsn(
+...
+> +int
+> +libxfs_zero_extent(
+> +	struct xfs_inode *ip,
+> +	xfs_fsblock_t	start_fsb,
+> +	xfs_off_t	count_fsb)
+> +{
+> +	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
+> +	ssize_t		size = XFS_FSB_TO_BB(ip->i_mount, count_fsb);
+> +
+> +	return libxfs_device_zero(xfs_find_bdev_for_inode(ip), sector, size);
+> +}
+> +
 
-A couple nits to follow that don't warrant a resend. So, for the series:
+Extra whitespace ^, otherwise looks good:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> -Dave.
+> diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+> index 12d59df..af40270 100644
+> --- a/libxfs/xfs_alloc.c
+> +++ b/libxfs/xfs_alloc.c
+> @@ -2508,7 +2508,7 @@ xfs_alloc_vextent(
+>  		 * Try near allocation first, then anywhere-in-ag after
+>  		 * the first a.g. fails.
+>  		 */
+> -		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
+> +		if ((args->userdata & XFS_ALLOC_INITIAL_USER_DATA) &&
+>  		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
+>  			args->fsbno = XFS_AGB_TO_FSB(mp,
+>  					((mp->m_agfrotor / rotorstep) %
+> @@ -2639,6 +2639,14 @@ xfs_alloc_vextent(
+>  		XFS_AG_CHECK_DADDR(mp, XFS_FSB_TO_DADDR(mp, args->fsbno),
+>  			args->len);
+>  #endif
+> +
+> +		/* Zero the extent if we were asked to do so */
+> +		if (args->userdata & XFS_ALLOC_USERDATA_ZERO) {
+> +			error = xfs_zero_extent(args->ip, args->fsbno, args->len);
+> +			if (error)
+> +				goto error0;
+> +		}
+> +
+>  	}
+>  	xfs_perag_put(args->pag);
+>  	return 0;
+> diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+> index 071b28b..135eb3d 100644
+> --- a/libxfs/xfs_alloc.h
+> +++ b/libxfs/xfs_alloc.h
+> @@ -101,6 +101,7 @@ typedef struct xfs_alloc_arg {
+>  	struct xfs_mount *mp;		/* file system mount point */
+>  	struct xfs_buf	*agbp;		/* buffer for a.g. freelist header */
+>  	struct xfs_perag *pag;		/* per-ag struct for this agno */
+> +	struct xfs_inode *ip;		/* for userdata zeroing method */
+>  	xfs_fsblock_t	fsbno;		/* file system block number */
+>  	xfs_agnumber_t	agno;		/* allocation group number */
+>  	xfs_agblock_t	agbno;		/* allocation group-relative block # */
+> @@ -120,15 +121,16 @@ typedef struct xfs_alloc_arg {
+>  	char		wasdel;		/* set if allocation was prev delayed */
+>  	char		wasfromfl;	/* set if allocation is from freelist */
+>  	char		isfl;		/* set if is freelist blocks - !acctg */
+> -	char		userdata;	/* set if this is user data */
+> +	char		userdata;	/* mask defining userdata treatment */
+>  	xfs_fsblock_t	firstblock;	/* io first block allocated */
+>  } xfs_alloc_arg_t;
+>  
+>  /*
+>   * Defines for userdata
+>   */
+> -#define XFS_ALLOC_USERDATA		1	/* allocation is for user data*/
+> -#define XFS_ALLOC_INITIAL_USER_DATA	2	/* special case start of file */
+> +#define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
+> +#define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
+> +#define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
+>  
+>  xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_mount *mp,
+>  		struct xfs_perag *pag, xfs_extlen_t need);
+> diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+> index 8e19b50..a38549c 100644
+> --- a/libxfs/xfs_bmap.c
+> +++ b/libxfs/xfs_bmap.c
+> @@ -3795,8 +3795,13 @@ xfs_bmap_btalloc(
+>  	args.wasdel = ap->wasdel;
+>  	args.isfl = 0;
+>  	args.userdata = ap->userdata;
+> -	if ((error = xfs_alloc_vextent(&args)))
+> +	if (ap->userdata & XFS_ALLOC_USERDATA_ZERO)
+> +		args.ip = ap->ip;
+> +
+> +	error = xfs_alloc_vextent(&args);
+> +	if (error)
+>  		return error;
+> +
+>  	if (tryagain && args.fsbno == NULLFSBLOCK) {
+>  		/*
+>  		 * Exact allocation failed. Now try with alignment
+> @@ -4295,11 +4300,14 @@ xfs_bmapi_allocate(
+>  
+>  	/*
+>  	 * Indicate if this is the first user data in the file, or just any
+> -	 * user data.
+> +	 * user data. And if it is userdata, indicate whether it needs to
+> +	 * be initialised to zero during allocation.
+>  	 */
+>  	if (!(bma->flags & XFS_BMAPI_METADATA)) {
+>  		bma->userdata = (bma->offset == 0) ?
+>  			XFS_ALLOC_INITIAL_USER_DATA : XFS_ALLOC_USERDATA;
+> +		if (bma->flags & XFS_BMAPI_ZERO)
+> +			bma->userdata |= XFS_ALLOC_USERDATA_ZERO;
+>  	}
+>  
+>  	bma->minlen = (bma->flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
+> @@ -4414,6 +4422,17 @@ xfs_bmapi_convert_unwritten(
+>  	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
+>  				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
+>  
+> +	/*
+> +	 * Before insertion into the bmbt, zero the range being converted
+> +	 * if required.
+> +	 */
+> +	if (flags & XFS_BMAPI_ZERO) {
+> +		error = xfs_zero_extent(bma->ip, mval->br_startblock,
+> +					mval->br_blockcount);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+>  	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
+>  			&bma->cur, mval, bma->firstblock, bma->flist,
+>  			&tmp_logflags);
+> @@ -4507,6 +4526,18 @@ xfs_bmapi_write(
+>  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+> +	/* zeroing is for currently only for data extents, not metadata */
+> +	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
+> +			(XFS_BMAPI_METADATA | XFS_BMAPI_ZERO));
+> +	/*
+> +	 * we can allocate unwritten extents or pre-zero allocated blocks,
+> +	 * but it makes no sense to do both at once. This would result in
+> +	 * zeroing the unwritten extent twice, but it still being an
+> +	 * unwritten extent....
+> +	 */
+> +	ASSERT((flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO)) !=
+> +			(XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO));
+> +
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+>  	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+> diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+> index d3daf6d..baec27d 100644
+> --- a/libxfs/xfs_bmap.h
+> +++ b/libxfs/xfs_bmap.h
+> @@ -52,9 +52,9 @@ struct xfs_bmalloca {
+>  	xfs_extlen_t		minleft; /* amount must be left after alloc */
+>  	bool			eof;	/* set if allocating past last extent */
+>  	bool			wasdel;	/* replacing a delayed allocation */
+> -	bool			userdata;/* set if is user data */
+>  	bool			aeof;	/* allocated space at eof */
+>  	bool			conv;	/* overwriting unwritten extents */
+> +	char			userdata;/* userdata mask */
+>  	int			flags;
+>  };
+>  
+> @@ -109,6 +109,14 @@ typedef	struct xfs_bmap_free
+>   */
+>  #define XFS_BMAPI_CONVERT	0x040
+>  
+> +/*
+> + * allocate zeroed extents - this requires all newly allocated user data extents
+> + * to be initialised to zero. It will be ignored if XFS_BMAPI_METADATA is set.
+> + * Use in conjunction with XFS_BMAPI_CONVERT to convert unwritten extents found
+> + * during the allocation range to zeroed written extents.
+> + */
+> +#define XFS_BMAPI_ZERO		0x080
+> +
+>  #define XFS_BMAPI_FLAGS \
+>  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+>  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+> @@ -116,7 +124,8 @@ typedef	struct xfs_bmap_free
+>  	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
+>  	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
+>  	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
+> -	{ XFS_BMAPI_CONVERT,	"CONVERT" }
+> +	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+> +	{ XFS_BMAPI_ZERO,	"ZERO" }
+>  
+>  
+>  static inline int xfs_bmapi_aflag(int w)
+> -- 
+> 2.5.0
 > 
 > _______________________________________________
 > xfs mailing list
