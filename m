@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8CD4F7CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 18:12:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6D922304032
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 16:12:07 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 930127CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 18:12:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 82E028F8033
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 16:12:54 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id h6WzgKsAQJZVuMDR for <xfs@oss.sgi.com>;
-	Mon, 15 Feb 2016 16:12:06 -0800 (PST)
+	ESMTP id r5sK8xZfNyxgZfkK for <xfs@oss.sgi.com>;
+	Mon, 15 Feb 2016 16:12:51 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id AD16063C5FF0
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 18:12:05 -0600 (CST)
-Subject: Re: [PATCH 4/4] xfs: XFS_DIFLAG2_DAX limited by PAGE_SIZE
-References: <1455513734-15192-1-git-send-email-david@fromorbit.com>
-	<1455513734-15192-5-git-send-email-david@fromorbit.com>
+	by sandeen.net (Postfix) with ESMTPSA id 4F8BC63C5FF0
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2016 18:12:51 -0600 (CST)
+Subject: Re: [PATCH v3] xfs_quota: modify commands which can't handle multiple
+	types
+References: <1455554759-29213-1-git-send-email-zlang@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56C26954.2010001@sandeen.net>
-Date: Mon, 15 Feb 2016 18:12:04 -0600
+Message-ID: <56C26982.3020900@sandeen.net>
+Date: Mon, 15 Feb 2016 18:12:50 -0600
 MIME-Version: 1.0
-In-Reply-To: <1455513734-15192-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1455554759-29213-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,75 +35,419 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+On 2/15/16 10:45 AM, Zorro Lang wrote:
+> Some xfs_quota commands can't deal with multiple types together.
+> For example, if we run "limit -ug ...", one type will overwrite
+> the other. I find below commands can't handle multiple types:
+> 
+>   [quota, limit, timer, warn, dump, restore and quot]
+> 
+> (Although timer and warn command can't support -ugp types until
+> now, it will in one day.)
+> 
+> For every single $command, I change their ${command}_f function,
+> ${command}_cmd structure and man page.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-On 2/14/16 11:22 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> If the block size of a filesystem is not at least PAGE_SIZEd, then
-> at this point in time DAX cannot be used due to the fact we can't
-> guarantee extents are page sized or aligned without further work.
-> Hence disallow setting the DAX flag on an inode if the block size is
-> too small. Also, be defensive and check the block size when reading
-> an inode in off disk.
-> 
-> In future, we want to allow DAX to work on any filesystem, so this
-> is temporary while we sort of the correct conbination of extent size
-> hints and allocation alignment configurations needed to guarantee
-> page sized and aligned extent allocation for DAX enabled files.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_ioctl.c | 12 ++++++++----
->  fs/xfs/xfs_iops.c  |  1 +
->  2 files changed, 9 insertions(+), 4 deletions(-)
+>  man/man8/xfs_quota.8 | 14 ++++++------
+>  quota/edit.c         | 60 ++++++++++++++++++++++++++++++++++------------------
+>  quota/quot.c         | 15 ++++++++-----
+>  quota/quota.c        | 15 ++++++++-----
+>  quota/report.c       | 20 ++++++++++++------
+>  5 files changed, 81 insertions(+), 43 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index a870d16..8e9cd3c 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1080,11 +1080,15 @@ xfs_ioctl_setattr_dax_invalidate(
+> diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
+> index 3bee145..951252b 100644
+> --- a/man/man8/xfs_quota.8
+> +++ b/man/man8/xfs_quota.8
+> @@ -169,7 +169,7 @@ command.
+>  .HP
+>  .B quota
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ] [
+>  .B \-bir
+>  ] [
+> @@ -398,7 +398,7 @@ option reports state on all filesystems and not just the current path.
+>  .B
+>  limit
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ]
+>  .BI bsoft= N
+>  |
+> @@ -430,7 +430,7 @@ must be specified.
+>  .HP
+>  .B timer
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ] [
+>  .B \-bir
+>  ]
+> @@ -446,7 +446,7 @@ command. The value argument is a number of seconds, but units of
+>  .HP
+>  .B warn
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ] [
+>  .B \-bir
+>  ]
+> @@ -497,7 +497,7 @@ report an error.
+>  .B
+>  dump
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ] [
+>  .B \-f
+>  .I file
+> @@ -510,7 +510,7 @@ This is only the limits, not the usage information, of course.
+>  .HP
+>  .B restore
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ] [
+>  .B \-f
+>  .I file
+> @@ -525,7 +525,7 @@ command.
+>  .B
+>  quot
+>  [
+> -.B \-gpu
+> +.BR \-g " | " \-p " | " \-u
+>  ] [
+>  .B \-bir
+>  ] [
+> diff --git a/quota/edit.c b/quota/edit.c
+> index 6146f7e..e5ddc8c 100644
+> --- a/quota/edit.c
+> +++ b/quota/edit.c
+> @@ -282,13 +282,13 @@ limit_f(
+>  			flags |= DEFAULTS_FLAG;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		default:
+>  			return command_usage(&limit_cmd);
+> @@ -343,8 +343,13 @@ limit_f(
 >  
->  	/*
->  	 * It is only valid to set the DAX flag on regular files and
-> -	 * directories. On directories it serves as an inherit hint.
-> +	 * directories on filesystems where the block size is at least the page
-                                                              ^^^^^^^^
-> +	 * size. On directories it serves as an inherit hint.
->  	 */
-> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) &&
-> -	    !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
-> -		return -EINVAL;
-> +	if (fa->fsx_xflags & FS_XFLAG_DAX) {
-> +		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
-> +			return -EINVAL;
-> +		if (ip->i_mount->m_sb.sb_blocksize != PAGE_SIZE)
-                                                   ^^
-
-So which is it, at least PAGE_SIZE or == PAGE_SIZE?
-
-> +			return -EINVAL;
+>  	name = (flags & DEFAULTS_FLAG) ? "0" : argv[optind++];
+>  
+> -	if (!type)
+> +	if (!type) {
+>  		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&limit_cmd);
 > +	}
 >  
->  	/* If the DAX state is not changing, we have nothing to do here. */
->  	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 9c984a0..fb7dc61 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1186,6 +1186,7 @@ xfs_diflags_to_iflags(
->  	if (flags & XFS_DIFLAG_NOATIME)
->  		inode->i_flags |= S_NOATIME;
->  	if (S_ISREG(inode->i_mode) &&
-> +	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
->  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
->  	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
->  		inode->i_flags |= S_DAX;
-
-Is it possible to get mounted with XFS_MOUNT_DAX if blocksize != PAGE_SIZE?
-If so, should it be?  This seems like a strange place to catch this mismatch.
-
--Eric
+>  	switch (type) {
+>  	case XFS_USER_QUOTA:
+> @@ -422,13 +427,13 @@ restore_f(
+>  			fname = optarg;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		default:
+>  			return command_usage(&restore_cmd);
+> @@ -438,8 +443,13 @@ restore_f(
+>  	if (argc < optind)
+>  		return command_usage(&restore_cmd);
+>  
+> -	if (!type)
+> +	if (!type) {
+>  		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&restore_cmd);
+> +	}
+>  
+>  	if (fname) {
+>  		if ((fp = fopen(fname, "r")) == NULL) {
+> @@ -501,13 +511,13 @@ timer_f(
+>  			mask |= FS_DQ_RTBTIMER;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		default:
+>  			return command_usage(&timer_cmd);
+> @@ -522,8 +532,13 @@ timer_f(
+>  	if (!mask)
+>  		mask = FS_DQ_TIMER_MASK;
+>  
+> -	if (!type)
+> +	if (!type) {
+>  		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&timer_cmd);
+> +	}
+>  
+>  	set_timer(type, mask, fs_path->fs_name, value);
+>  	return 0;
+> @@ -630,13 +645,13 @@ warn_f(
+>  			mask |= FS_DQ_RTBWARNS;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		default:
+>  			return command_usage(&warn_cmd);
+> @@ -661,8 +676,13 @@ warn_f(
+>  	if (!mask)
+>  		mask = FS_DQ_WARNS_MASK;
+>  
+> -	if (!type)
+> +	if (!type) {
+>  		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&warn_cmd);
+> +	}
+>  
+>  	switch (type) {
+>  	case XFS_USER_QUOTA:
+> @@ -686,7 +706,7 @@ edit_init(void)
+>  	limit_cmd.argmin = 2;
+>  	limit_cmd.argmax = -1;
+>  	limit_cmd.args = \
+> -	_("[-gpu] bsoft|bhard|isoft|ihard|rtbsoft|rtbhard=N -d|id|name");
+> +	_("[-g|-p|-u] bsoft|bhard|isoft|ihard|rtbsoft|rtbhard=N -d|id|name");
+>  	limit_cmd.oneline = _("modify quota limits");
+>  	limit_cmd.help = limit_help;
+>  
+> @@ -694,14 +714,14 @@ edit_init(void)
+>  	restore_cmd.cfunc = restore_f;
+>  	restore_cmd.argmin = 0;
+>  	restore_cmd.argmax = -1;
+> -	restore_cmd.args = _("[-gpu] [-f file]");
+> +	restore_cmd.args = _("[-g|-p|-u] [-f file]");
+>  	restore_cmd.oneline = _("restore quota limits from a backup file");
+>  
+>  	timer_cmd.name = "timer";
+>  	timer_cmd.cfunc = timer_f;
+>  	timer_cmd.argmin = 2;
+>  	timer_cmd.argmax = -1;
+> -	timer_cmd.args = _("[-bir] [-gpu] value");
+> +	timer_cmd.args = _("[-bir] [-g|-p|-u] value");
+>  	timer_cmd.oneline = _("set quota enforcement timeouts");
+>  	timer_cmd.help = timer_help;
+>  
+> @@ -709,7 +729,7 @@ edit_init(void)
+>  	warn_cmd.cfunc = warn_f;
+>  	warn_cmd.argmin = 2;
+>  	warn_cmd.argmax = -1;
+> -	warn_cmd.args = _("[-bir] [-gpu] value -d|id|name");
+> +	warn_cmd.args = _("[-bir] [-g|-p|-u] value -d|id|name");
+>  	warn_cmd.oneline = _("get/set enforcement warning counter");
+>  	warn_cmd.help = warn_help;
+>  
+> diff --git a/quota/quot.c b/quota/quot.c
+> index 9116e48..2e583e5 100644
+> --- a/quota/quot.c
+> +++ b/quota/quot.c
+> @@ -361,13 +361,13 @@ quot_f(
+>  			form |= XFS_RTBLOCK_QUOTA;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		case 'a':
+>  			flags |= ALL_MOUNTS_FLAG;
+> @@ -389,8 +389,13 @@ quot_f(
+>  	if (!form)
+>  		form = XFS_BLOCK_QUOTA;
+>  
+> -	if (!type)
+> +	if (!type) {
+>  		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&quot_cmd);
+> +	}
+>  
+>  	if ((fp = fopen_write_secure(fname)) == NULL)
+>  		return 0;
+> @@ -416,7 +421,7 @@ quot_init(void)
+>  	quot_cmd.cfunc = quot_f;
+>  	quot_cmd.argmin = 0;
+>  	quot_cmd.argmax = -1;
+> -	quot_cmd.args = _("[-bir] [-gpu] [-acv] [-f file]");
+> +	quot_cmd.args = _("[-bir] [-g|-p|-u] [-acv] [-f file]");
+>  	quot_cmd.oneline = _("summarize filesystem ownership");
+>  	quot_cmd.help = quot_help;
+>  
+> diff --git a/quota/quota.c b/quota/quota.c
+> index f6b24c3..e0da7c0 100644
+> --- a/quota/quota.c
+> +++ b/quota/quota.c
+> @@ -409,13 +409,13 @@ quota_f(
+>  			form |= XFS_RTBLOCK_QUOTA;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		case 'h':
+>  			flags |= HUMAN_FLAG;
+> @@ -437,8 +437,13 @@ quota_f(
+>  	if (!form)
+>  		form = XFS_BLOCK_QUOTA;
+>  
+> -	if (!type)
+> +	if (!type) {
+>  		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&quota_cmd);
+> +	}
+>  
+>  	if ((fp = fopen_write_secure(fname)) == NULL)
+>  		return 0;
+> @@ -461,7 +466,7 @@ quota_init(void)
+>  	quota_cmd.cfunc = quota_f;
+>  	quota_cmd.argmin = 0;
+>  	quota_cmd.argmax = -1;
+> -	quota_cmd.args = _("[-bir] [-gpu] [-hnNv] [-f file] [id|name]...");
+> +	quota_cmd.args = _("[-bir] [-g|-p|-u] [-hnNv] [-f file] [id|name]...");
+>  	quota_cmd.oneline = _("show usage and limits");
+>  	quota_cmd.help = quota_help;
+>  
+> diff --git a/quota/report.c b/quota/report.c
+> index 8653134..48a3f29 100644
+> --- a/quota/report.c
+> +++ b/quota/report.c
+> @@ -30,7 +30,7 @@ static cmdinfo_t report_cmd;
+>  static void
+>  dump_help(void)
+>  {
+> -	dump_cmd.args = _("[-gpu] [-f file]");
+> +	dump_cmd.args = _("[-g|-p|-u] [-f file]");
+>  	dump_cmd.oneline = _("dump quota information for backup utilities");
+>  	printf(_(
+>  "\n"
+> @@ -199,7 +199,7 @@ dump_f(
+>  	FILE		*fp;
+>  	char		*fname = NULL;
+>  	uint		lower = 0, upper = 0;
+> -	int		c, type = XFS_USER_QUOTA;
+> +	int		c, type = 0;
+>  
+>  	while ((c = getopt(argc, argv, "f:gpuL:U:")) != EOF) {
+>  		switch(c) {
+> @@ -207,13 +207,13 @@ dump_f(
+>  			fname = optarg;
+>  			break;
+>  		case 'g':
+> -			type = XFS_GROUP_QUOTA;
+> +			type |= XFS_GROUP_QUOTA;
+>  			break;
+>  		case 'p':
+> -			type = XFS_PROJ_QUOTA;
+> +			type |= XFS_PROJ_QUOTA;
+>  			break;
+>  		case 'u':
+> -			type = XFS_USER_QUOTA;
+> +			type |= XFS_USER_QUOTA;
+>  			break;
+>  		case 'L':
+>  			lower = (uint)atoi(optarg);
+> @@ -229,6 +229,14 @@ dump_f(
+>  	if (argc != optind)
+>  		return command_usage(&dump_cmd);
+>  
+> +	if (!type) {
+> +		type = XFS_USER_QUOTA;
+> +	} else if (type != XFS_GROUP_QUOTA &&
+> +	           type != XFS_PROJ_QUOTA &&
+> +	           type != XFS_USER_QUOTA) {
+> +		return command_usage(&dump_cmd);
+> +	}
+> +
+>  	if ((fp = fopen_write_secure(fname)) == NULL)
+>  		return 0;
+>  
+> @@ -725,7 +733,7 @@ report_init(void)
+>  	dump_cmd.cfunc = dump_f;
+>  	dump_cmd.argmin = 0;
+>  	dump_cmd.argmax = -1;
+> -	dump_cmd.args = _("[-gpu] [-f file]");
+> +	dump_cmd.args = _("[-g|-p|-u] [-f file]");
+>  	dump_cmd.oneline = _("dump quota information for backup utilities");
+>  	dump_cmd.help = dump_help;
+>  
+> 
 
 _______________________________________________
 xfs mailing list
