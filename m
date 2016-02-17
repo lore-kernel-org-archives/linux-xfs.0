@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 61F267CB7
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:53:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 244D38F804B
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:53:41 -0800 (PST)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	K8mmra4uKt4Cwlzo for <xfs@oss.sgi.com>;
-	Wed, 17 Feb 2016 14:53:39 -0800 (PST)
-Date: Wed, 17 Feb 2016 15:53:23 -0700
+	by oss.sgi.com (Postfix) with ESMTP id 483FE7CA6
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:56:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 36C588F8049
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:56:58 -0800 (PST)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id eGUG2w7wPiMGUy0H for
+	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:56:57 -0800 (PST)
+Date: Wed, 17 Feb 2016 15:56:45 -0700
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 3/3] xfs_io: add support for changing the new inode DAX
-	attribute
-Message-ID: <20160217225323.GC30126@linux.intel.com>
-References: <1455514346-15481-1-git-send-email-david@fromorbit.com>
-	<1455514346-15481-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 0/4] xfs: fixes for XFS_DIFLAG2_DAX support
+Message-ID: <20160217225645.GD30126@linux.intel.com>
+References: <1455513734-15192-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455514346-15481-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1455513734-15192-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,110 +31,41 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Mon, Feb 15, 2016 at 04:32:26PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Feb 15, 2016 at 04:22:10PM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> It is changed via the FS_IOC_FSSETXATTR ioctl, so add the new flag
-> to the platform definitions for  userspace that don't this API. Then
-> add support to the relevant xfs_io chattr and stat commands.
+> This is a series to add the correct constraints to using the on-disk
+> inode flag to enable DAX on per-file basis. The same constraints are
+> placed on setting the flag on directories for inheritance purposes.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> These constraints are:
+> 	- the inode flag is limited to regular files or directory
+> 	  inodes.
+> 	- the S_DAX flag is only ever set on regular files
+> 	- the flag can only ever be set on filesystems which have
+> 	  blocksize == PAGE_SIZE (for now)
+> 	- When the flag is set or cleared, the current mapping
+> 	  contents are flushed and then invalidated so that the new
+> 	  access mode starts with an empty mapping.
+> 	- Setting or clearing the flag is atomic w.r.t. IO and
+> 	  page faults.
+> 
+> I've tested these manually with xfs_io (patchset for supporting
+> chattr +x/-x to be sent soon), and it all appears to work as
+> expected. I'd like to push these for 4.5-rc6 so the initial kernel
+> with support for this flag doesn't do silly things, so comments,
+> testing and review woul dbe appreciated.
+> 
+> Cheers,
+> 
+> Dave.
 
-Works for me.
-
-Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-
-> ---
->  include/darwin.h  | 1 +
->  include/freebsd.h | 1 +
->  include/irix.h    | 1 +
->  include/linux.h   | 1 +
->  io/attr.c         | 5 ++++-
->  5 files changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/darwin.h b/include/darwin.h
-> index 2baa536..a52030d 100644
-> --- a/include/darwin.h
-> +++ b/include/darwin.h
-> @@ -312,6 +312,7 @@ struct fsxattr {
->  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
->  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
->  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->  
->  #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
-> diff --git a/include/freebsd.h b/include/freebsd.h
-> index fe567d4..f7e0c75 100644
-> --- a/include/freebsd.h
-> +++ b/include/freebsd.h
-> @@ -202,6 +202,7 @@ struct fsxattr {
->  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
->  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
->  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->  
->  #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
-> diff --git a/include/irix.h b/include/irix.h
-> index bdb4b6a..c2191ee 100644
-> --- a/include/irix.h
-> +++ b/include/irix.h
-> @@ -447,6 +447,7 @@ struct fsxattr {
->  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
->  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
->  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->  
->  #define FS_IOC_FSGETXATTR		F_FSGETXATTR
-> diff --git a/include/linux.h b/include/linux.h
-> index 17391c3..cc0f70c 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -205,6 +205,7 @@ struct fsxattr {
->  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
->  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
->  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->  
->  #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
-> diff --git a/io/attr.c b/io/attr.c
-> index 6fa08bf..0186b1d 100644
-> --- a/io/attr.c
-> +++ b/io/attr.c
-> @@ -47,9 +47,10 @@ static struct xflags {
->  	{ FS_XFLAG_EXTSZINHERIT,	"E", "extsz-inherit"	},
->  	{ FS_XFLAG_NODEFRAG,		"f", "no-defrag"	},
->  	{ FS_XFLAG_FILESTREAM,		"S", "filestream"	},
-> +	{ FS_XFLAG_DAX,			"x", "dax"		},
->  	{ 0, NULL, NULL }
->  };
-> -#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfS"
-> +#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfSx"
->  
->  static void
->  lsattr_help(void)
-> @@ -73,6 +74,7 @@ lsattr_help(void)
->  " E -- children created in this directory inherit the extent size value\n"
->  " f -- do not include this file when defragmenting the filesystem\n"
->  " S -- enable filestreams allocator for this directory\n"
-> +" x -- Use direct access (DAX) for data in this file\n"
->  "\n"
->  " Options:\n"
->  " -R -- recursively descend (useful when current file is a directory)\n"
-> @@ -108,6 +110,7 @@ chattr_help(void)
->  " +/-E -- set/clear the extent-size inheritance flag\n"
->  " +/-f -- set/clear the no-defrag flag\n"
->  " +/-S -- set/clear the filestreams allocator flag\n"
-> +" +/-x -- set/clear the direct access (DAX) flag\n"
->  " Note1: user must have certain capabilities to modify immutable/append-only.\n"
->  " Note2: immutable/append-only files cannot be deleted; removing these files\n"
->  "        requires the immutable/append-only flag to be cleared first.\n"
-> -- 
-> 2.5.0
-> 
+This seems like what we want to be doing for raw block devices, when we add
+back in support.  Default to DAX off so we have to opt-in, and when we get an
+IOCTL to enable them block I/O and page faults, clear out all mappings and
+radix tree entries, and then change the flag and turn back on I/O and page
+faults.  We'll also need to add a check to prevent mounts on raw block devices
+with S_DAX set.
 
 _______________________________________________
 xfs mailing list
