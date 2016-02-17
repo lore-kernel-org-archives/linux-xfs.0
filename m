@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B1EC37CAE
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 15:38:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F1B5AC00A
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:38:02 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id JiMHE9P3hS5G14PA (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:38:00 -0800 (PST)
-Date: Wed, 17 Feb 2016 22:37:38 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 4/6] dax: give DAX clearing code correct bdev
-Message-ID: <20160217213738.GJ14140@quack.suse.cz>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 036FB7CAE
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 15:50:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BC79A304048
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:50:54 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	Tm60NMGI2T7rBszp for <xfs@oss.sgi.com>;
+	Wed, 17 Feb 2016 13:50:50 -0800 (PST)
+Date: Wed, 17 Feb 2016 14:50:37 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v3 3/6] ext4: Online defrag not supported with DAX
+Message-ID: <20160217215037.GB30126@linux.intel.com>
 References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1455680059-20126-5-git-send-email-ross.zwisler@linux.intel.com>
+	<1455680059-20126-4-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455680059-20126-5-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1455680059-20126-4-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,145 +29,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Jan Kara <jack@suse.cz>
 Cc: Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@poochiereds.net>, Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Tue 16-02-16 20:34:17, Ross Zwisler wrote:
-> dax_clear_blocks() needs a valid struct block_device and previously it was
-> using inode->i_sb->s_bdev in all cases.  This is correct for normal inodes
-> on mounted ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-> block devices and for XFS real-time devices.
+On Tue, Feb 16, 2016 at 08:34:16PM -0700, Ross Zwisler wrote:
+> Online defrag operations for ext4 are hard coded to use the page cache.
+> See ext4_ioctl() -> ext4_move_extents() -> move_extent_per_page()
 > 
-> Instead, rename dax_clear_blocks() to dax_clear_sectors(), and change its
-> arguments to take a bdev and a sector instead of an inode and a block.
-> This better reflects what the function does, and it allows the filesystem
-> and raw block device code to pass in an appropriate struct block_device.
+> When combined with DAX I/O, which circumvents the page cache, this can
+> result in data corruption.  This was observed with xfstests ext4/307 and
+> ext4/308.
+> 
+> Fix this by only allowing online defrag for non-DAX files.
+
+Jan,
+
+Thinking about this a bit more, it's probably the case that the data
+corruption I was observing was due to us skipping the writeback of the dirty
+page cache pages because S_DAX was set.
+
+I do think we have a problem with defrag because it is doing the extent
+swapping using the page cache, and we won't flush the dirty pages due to
+S_DAX being set.
+
+This patch is the quick and easy answer, and is perhaps appropriate for v4.5.
+
+Looking forward, though, what do you think the correct solution is?  Making an
+extent swapper that doesn't use the page cache (as I believe XFS has? see
+xfs_swap_extents()), or maybe just unsetting S_DAX while we do the defrag and
+being careful to block out page faults and I/O?  Or is it acceptable to just
+say that DAX and defrag are mutually exclusive for ext4?
+
+Thanks,
+- Ross
+
 > 
 > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Suggested-by: Dan Williams <dan.j.williams@intel.com>
-
-The patch looks good to me. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
 > ---
->  fs/dax.c               | 9 ++++-----
->  fs/ext2/inode.c        | 6 ++++--
->  fs/xfs/xfs_aops.c      | 2 +-
->  fs/xfs/xfs_aops.h      | 1 +
->  fs/xfs/xfs_bmap_util.c | 3 ++-
->  include/linux/dax.h    | 2 +-
->  6 files changed, 13 insertions(+), 10 deletions(-)
+>  fs/ext4/ioctl.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index fc2e314..9a173dd 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -79,15 +79,14 @@ struct page *read_dax_sector(struct block_device *bdev, sector_t n)
->  }
+> diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+> index 0f6c369..e32c86f 100644
+> --- a/fs/ext4/ioctl.c
+> +++ b/fs/ext4/ioctl.c
+> @@ -583,6 +583,11 @@ group_extend_out:
+>  				 "Online defrag not supported with bigalloc");
+>  			err = -EOPNOTSUPP;
+>  			goto mext_out;
+> +		} else if (IS_DAX(inode)) {
+> +			ext4_msg(sb, KERN_ERR,
+> +				 "Online defrag not supported with DAX");
+> +			err = -EOPNOTSUPP;
+> +			goto mext_out;
+>  		}
 >  
->  /*
-> - * dax_clear_blocks() is called from within transaction context from XFS,
-> + * dax_clear_sectors() is called from within transaction context from XFS,
->   * and hence this means the stack from this point must follow GFP_NOFS
->   * semantics for all operations.
->   */
-> -int dax_clear_blocks(struct inode *inode, sector_t block, long _size)
-> +int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size)
->  {
-> -	struct block_device *bdev = inode->i_sb->s_bdev;
->  	struct blk_dax_ctl dax = {
-> -		.sector = block << (inode->i_blkbits - 9),
-> +		.sector = _sector,
->  		.size = _size,
->  	};
->  
-> @@ -109,7 +108,7 @@ int dax_clear_blocks(struct inode *inode, sector_t block, long _size)
->  	wmb_pmem();
->  	return 0;
->  }
-> -EXPORT_SYMBOL_GPL(dax_clear_blocks);
-> +EXPORT_SYMBOL_GPL(dax_clear_sectors);
->  
->  /* the clear_pmem() calls are ordered by a wmb_pmem() in the caller */
->  static void dax_new_buf(void __pmem *addr, unsigned size, unsigned first,
-> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-> index 27e2cdd..4467cbd 100644
-> --- a/fs/ext2/inode.c
-> +++ b/fs/ext2/inode.c
-> @@ -737,8 +737,10 @@ static int ext2_get_blocks(struct inode *inode,
->  		 * so that it's not found by another thread before it's
->  		 * initialised
->  		 */
-> -		err = dax_clear_blocks(inode, le32_to_cpu(chain[depth-1].key),
-> -						1 << inode->i_blkbits);
-> +		err = dax_clear_sectors(inode->i_sb->s_bdev,
-> +				le32_to_cpu(chain[depth-1].key) <<
-> +				(inode->i_blkbits - 9),
-> +				1 << inode->i_blkbits);
->  		if (err) {
->  			mutex_unlock(&ei->truncate_mutex);
->  			goto cleanup;
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 379c089..fc20518 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -55,7 +55,7 @@ xfs_count_page_state(
->  	} while ((bh = bh->b_this_page) != head);
->  }
->  
-> -STATIC struct block_device *
-> +struct block_device *
->  xfs_find_bdev_for_inode(
->  	struct inode		*inode)
->  {
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index f6ffc9a..a4343c6 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -62,5 +62,6 @@ int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
->  			         struct buffer_head *map_bh, int create);
->  
->  extern void xfs_count_page_state(struct page *, int *, int *);
-> +extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
->  
->  #endif /* __XFS_AOPS_H__ */
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 45ec9e4..6c87601 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -75,7 +75,8 @@ xfs_zero_extent(
->  	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
->  
->  	if (IS_DAX(VFS_I(ip)))
-> -		return dax_clear_blocks(VFS_I(ip), block, size);
-> +		return dax_clear_sectors(xfs_find_bdev_for_inode(VFS_I(ip)),
-> +				sector, size);
->  
->  	/*
->  	 * let the block layer decide on the fastest method of
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 818e450..7b6bced 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -7,7 +7,7 @@
->  
->  ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *, loff_t,
->  		  get_block_t, dio_iodone_t, int flags);
-> -int dax_clear_blocks(struct inode *, sector_t block, long size);
-> +int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size);
->  int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
->  int dax_truncate_page(struct inode *, loff_t from, get_block_t);
->  int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
+>  		err = mnt_want_write_file(filp);
 > -- 
 > 2.5.0
 > 
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
