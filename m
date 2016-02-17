@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 96A3D7CB4
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 15:55:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 757318F8033
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:55:15 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id Vaw8ueG6DUkavoQi (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:55:13 -0800 (PST)
-Date: Wed, 17 Feb 2016 22:55:34 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 1/6] block: disable block device DAX by default
-Message-ID: <20160217215534.GL14140@quack.suse.cz>
-References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1455680059-20126-2-git-send-email-ross.zwisler@linux.intel.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EB5C97CB6
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:04:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DAC5AC007
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:04:44 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ubCLo5KOAyE7b1fH for <xfs@oss.sgi.com>;
+	Wed, 17 Feb 2016 14:04:38 -0800 (PST)
+Date: Thu, 18 Feb 2016 09:04:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: better xfs_trans_alloc interface
+Message-ID: <20160217220436.GI19486@dastard>
+References: <1455699159-20906-1-git-send-email-hch@lst.de>
+	<1455699159-20906-2-git-send-email-hch@lst.de>
+	<20160217134006.GA4065@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455680059-20126-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20160217134006.GA4065@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,105 +31,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Jeff Layton <jlayton@poochiereds.net>, linux-nvdimm@lists.01.org, Matthew Wilcox <willy@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Jens Axboe <axboe@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Al Viro <viro@ftp.linux.org.uk>, Dan Williams <dan.j.williams@intel.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Tue 16-02-16 20:34:14, Ross Zwisler wrote:
-> From: Dan Williams <dan.j.williams@intel.com>
+On Wed, Feb 17, 2016 at 08:40:08AM -0500, Brian Foster wrote:
+> On Wed, Feb 17, 2016 at 09:52:38AM +0100, Christoph Hellwig wrote:
+> > Merge xfs_trans_reserve and xfs_trans_alloc into a single function call
+> > that returns a transaction with all the required log and block reservations,
+> > and which allows passing transaction flags directly to avoid the cumbersome
+> > _xfs_trans_alloc interface.
+> > 
+> > While we're at it we also get rid of the transaction type argument that has
+> > been superflous since we stopped supporting the non-CIL logging mode.  The
+> > guts of it will be removed in another patch.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
 > 
-> The recent *sync enabling discovered that we are inserting into the
-> block_device pagecache counter to the expectations of the dirty data
-> tracking for dax mappings.  This can lead to data corruption.
+> > @@ -165,7 +123,7 @@ xfs_trans_dup(
+> >   * This does not do quota reservations. That typically is done by the
+> >   * caller afterwards.
+> >   */
+> > -int
+> > +static int
+> >  xfs_trans_reserve(
+> >  	struct xfs_trans	*tp,
+> >  	struct xfs_trans_res	*resp,
+> > @@ -219,7 +177,7 @@ xfs_trans_reserve(
+> >  						resp->tr_logres,
+> >  						resp->tr_logcount,
+> >  						&tp->t_ticket, XFS_TRANSACTION,
+> > -						permanent, tp->t_type);
+> > +						permanent, 0);
 > 
-> We want to support DAX for block devices eventually, but it requires
-> wider changes to properly manage the pagecache.
-> 
->   [<ffffffff81576d93>] dump_stack+0x85/0xc2
->   [<ffffffff812b9ee0>] dax_writeback_mapping_range+0x60/0xe0
->   [<ffffffff812a1d4f>] blkdev_writepages+0x3f/0x50
->   [<ffffffff811db011>] do_writepages+0x21/0x30
->   [<ffffffff811cb6a6>] __filemap_fdatawrite_range+0xc6/0x100
->   [<ffffffff811cb75a>] filemap_write_and_wait+0x4a/0xa0
->   [<ffffffff812a15e0>] set_blocksize+0x70/0xd0
->   [<ffffffff812a273d>] sb_set_blocksize+0x1d/0x50
->   [<ffffffff8132ac9b>] ext4_fill_super+0x75b/0x3360
->   [<ffffffff81583381>] ? vsnprintf+0x201/0x4c0
->   [<ffffffff815836d9>] ? snprintf+0x49/0x60
->   [<ffffffff81263010>] mount_bdev+0x180/0x1b0
->   [<ffffffff8132a540>] ? ext4_calculate_overhead+0x370/0x370
->   [<ffffffff8131ad95>] ext4_mount+0x15/0x20
->   [<ffffffff81263908>] mount_fs+0x38/0x170
-> 
-> Mark the support broken so its disabled by default, but otherwise still
-> available for testing.
-> 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Jens Axboe <axboe@fb.com>
-> Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>
-> Cc: Al Viro <viro@ftp.linux.org.uk>
-> Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> So this looks like it effectively breaks xlog_print_tic_res()..? I see
+> that is all removed in the subsequent patch, but the type still seems
+> like useful information in the event that an associated problem occurs
+> with the transaction. In fact, we just had a transaction overrun report
+> over the weekend (on irc) where at least I thought this was useful
+> (unfortunately it looks like I lost the reference to the syslog output).
 
-Makes sense. You can add:
+I've considered doing this removal myself in the past - doing
+somethign like embedding the return address of the
+xfs-trans_reserve() call in the ticket that is allocated tells us
+exactly where the call was made. This can be printed with %pS, and
+that gives us the function (and location in the function) the
+reservation was made. Hence we solve the problem of not
+knowing which call path triggered the problem.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Hence I don't think we actually need to the type in every function
+call.
 
-								Honza
+Cheers,
 
-> ---
->  block/Kconfig  | 13 +++++++++++++
->  fs/block_dev.c |  6 +++++-
->  2 files changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/block/Kconfig b/block/Kconfig
-> index 161491d..0363cd7 100644
-> --- a/block/Kconfig
-> +++ b/block/Kconfig
-> @@ -88,6 +88,19 @@ config BLK_DEV_INTEGRITY
->  	T10/SCSI Data Integrity Field or the T13/ATA External Path
->  	Protection.  If in doubt, say N.
->  
-> +config BLK_DEV_DAX
-> +	bool "Block device DAX support"
-> +	depends on FS_DAX
-> +	depends on BROKEN
-> +	help
-> +	  When DAX support is available (CONFIG_FS_DAX) raw block
-> +	  devices can also support direct userspace access to the
-> +	  storage capacity via MMAP(2) similar to a file on a
-> +	  DAX-enabled filesystem.  However, the DAX I/O-path disables
-> +	  some standard I/O-statistics, and the MMAP(2) path has some
-> +	  operational differences due to bypassing the page
-> +	  cache.  If in doubt, say N.
-> +
->  config BLK_DEV_THROTTLING
->  	bool "Block layer bio throttling support"
->  	depends on BLK_CGROUP=y
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 39b3a17..31c6d10 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -1201,7 +1201,11 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
->  		bdev->bd_disk = disk;
->  		bdev->bd_queue = disk->queue;
->  		bdev->bd_contains = bdev;
-> -		bdev->bd_inode->i_flags = disk->fops->direct_access ? S_DAX : 0;
-> +		if (IS_ENABLED(CONFIG_BLK_DEV_DAX) && disk->fops->direct_access)
-> +			bdev->bd_inode->i_flags = S_DAX;
-> +		else
-> +			bdev->bd_inode->i_flags = 0;
-> +
->  		if (!partno) {
->  			ret = -ENXIO;
->  			bdev->bd_part = disk_get_part(disk, partno);
-> -- 
-> 2.5.0
-> 
+Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
