@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1C4C07CA3
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 02:33:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AC95DAC001
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 00:33:13 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id HEcctY1Bk2gUyDL8 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 93B4D7CA3
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 02:52:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4BF1E8F8033
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 00:52:46 -0800 (PST)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id A8C2gLSB7NyoHMgI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 00:33:10 -0800 (PST)
-Date: Wed, 17 Feb 2016 00:33:08 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/15] xfs: move v1 inode conversion to xfs_inode_from_disk
-Message-ID: <20160217083308.GA11766@infradead.org>
-References: <1455693652-3899-1-git-send-email-david@fromorbit.com>
-	<1455693652-3899-12-git-send-email-david@fromorbit.com>
-	<20160217073204.GB16363@infradead.org>
-	<20160217074821.GD19486@dastard> <20160217083000.GG19486@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160217083000.GG19486@dastard>
+	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 00:52:43 -0800 (PST)
+Received: from 212095007014.public.telering.at ([212.95.7.14] helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
+	id 1aVxqj-0003HG-AZ
+	for xfs@oss.sgi.com; Wed, 17 Feb 2016 08:52:41 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/3] xfs: remove xfs_trans_get_block_res
+Date: Wed, 17 Feb 2016 09:52:37 +0100
+Message-Id: <1455699159-20906-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +25,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Feb 17, 2016 at 07:30:00PM +1100, Dave Chinner wrote:
-> > Yeah, probably. I'll have to look at this a bit closer - I think I
-> > assumed that we're always going to have v2 inode format here (like
-> > we do in the kernel), but that may not be true. I'll have a closer
-> > look.
-> 
-> having a closer look, the XFS_SB_VERSION_NLINKBIT that is set here
-> in sbversion is never used, so I just removed it. I also changed it
-> back to using the converted in-memory link count so it's always
-> going to be correct now. Now it is just:
-> 
-> +       setlink_inode(id, xino.i_d.di_nlink, type == DBM_DIR, security);
+Just use the t_blk_res field directly instead of obsfucating the reference
+by a macro.
 
-Great.  With that and the other nitpicks address:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
+ fs/xfs/libxfs/xfs_bmap_btree.c | 4 ++--
+ fs/xfs/xfs_trans.h             | 1 -
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-for the whole series.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6a05166..cb58d72 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5210,7 +5210,7 @@ xfs_bunmapi(
+ 			 * This is better than zeroing it.
+ 			 */
+ 			ASSERT(del.br_state == XFS_EXT_NORM);
+-			ASSERT(xfs_trans_get_block_res(tp) > 0);
++			ASSERT(tp->t_blk_res > 0);
+ 			/*
+ 			 * If this spans a realtime extent boundary,
+ 			 * chop it back to the start of the one we end at.
+@@ -5241,7 +5241,7 @@ xfs_bunmapi(
+ 				del.br_startblock += mod;
+ 			} else if ((del.br_startoff == start &&
+ 				    (del.br_state == XFS_EXT_UNWRITTEN ||
+-				     xfs_trans_get_block_res(tp) == 0)) ||
++				     tp->t_blk_res == 0)) ||
+ 				   !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+ 				/*
+ 				 * Can't make it unwritten.  There isn't
+@@ -5332,7 +5332,7 @@ xfs_bunmapi(
+ 		 * conversion to btree format, since the transaction
+ 		 * will be dirty.
+ 		 */
+-		if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
++		if (!wasdel && tp->t_blk_res == 0 &&
+ 		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+ 		    XFS_IFORK_NEXTENTS(ip, whichfork) >= /* Note the >= */
+ 			XFS_IFORK_MAXEXT(ip, whichfork) &&
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index e37508a..6282f6e 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -461,7 +461,7 @@ xfs_bmbt_alloc_block(
+ 		 * reservation amount is insufficient then we may fail a
+ 		 * block allocation here and corrupt the filesystem.
+ 		 */
+-		args.minleft = xfs_trans_get_block_res(args.tp);
++		args.minleft = args.tp->t_blk_res;
+ 	} else if (cur->bc_private.b.flist->xbf_low) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+@@ -470,7 +470,7 @@ xfs_bmbt_alloc_block(
+ 
+ 	args.minlen = args.maxlen = args.prod = 1;
+ 	args.wasdel = cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL;
+-	if (!args.wasdel && xfs_trans_get_block_res(args.tp) == 0) {
++	if (!args.wasdel && args.tp->t_blk_res == 0) {
+ 		error = -ENOSPC;
+ 		goto error0;
+ 	}
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 4643070..e7c49cf 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -133,7 +133,6 @@ typedef struct xfs_trans {
+  * XFS transaction mechanism exported interfaces that are
+  * actually macros.
+  */
+-#define	xfs_trans_get_block_res(tp)	((tp)->t_blk_res)
+ #define	xfs_trans_set_sync(tp)		((tp)->t_flags |= XFS_TRANS_SYNC)
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
