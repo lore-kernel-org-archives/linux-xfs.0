@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 887D57CB6
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:18:19 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 61F267CB7
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:53:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5CC70304032
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:18:16 -0800 (PST)
-Received: from mail-yk0-f173.google.com (mail-yk0-f173.google.com
-	[209.85.160.173]) by cuda.sgi.com with ESMTP id
-	TNu5gSeISkOhQ5uz (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:18:14 -0800 (PST)
-Received: by mail-yk0-f173.google.com with SMTP id z7so13189864yka.3
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:18:14 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 244D38F804B
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:53:41 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	K8mmra4uKt4Cwlzo for <xfs@oss.sgi.com>;
+	Wed, 17 Feb 2016 14:53:39 -0800 (PST)
+Date: Wed, 17 Feb 2016 15:53:23 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 3/3] xfs_io: add support for changing the new inode DAX
+	attribute
+Message-ID: <20160217225323.GC30126@linux.intel.com>
+References: <1455514346-15481-1-git-send-email-david@fromorbit.com>
+	<1455514346-15481-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20160217215420.GK14140@quack.suse.cz>
-References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
-	<1455680059-20126-7-git-send-email-ross.zwisler@linux.intel.com>
-	<20160217215420.GK14140@quack.suse.cz>
-Date: Wed, 17 Feb 2016 14:18:13 -0800
-Message-ID: <CAPcyv4g3iCL1q7FoeTwKvtqo2mLfA=mfi1K5PdmZVjU+PA-gOA@mail.gmail.com>
-Subject: Re: [PATCH v3 6/6] block: use dax_do_io() if blkdev_dax_capable()
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
+In-Reply-To: <1455514346-15481-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,39 +30,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@poochiereds.net>, Jens Axboe <axboe@fb.com>, Theodore Ts'o <tytso@mit.edu>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-block@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Linux MM <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Wed, Feb 17, 2016 at 1:54 PM, Jan Kara <jack@suse.cz> wrote:
-> On Tue 16-02-16 20:34:19, Ross Zwisler wrote:
->> From: Dan Williams <dan.j.williams@intel.com>
->>
->> Setting S_DAX on an inode requires that the inode participate in the
->> DAX-fsync mechanism which expects to use the pagecache for tracking
->> potentially dirty cpu cachelines.  However, dax_do_io() participates in
->> the standard pagecache sync semantics and arranges for dirty pages to be
->> flushed through the driver when a direct-IO operation accesses the same
->> ranges.
->>
->> It should always be valid to use the dax_do_io() path regardless of
->> whether the block_device inode has S_DAX set.  In either case dirty
->> pages or dirty cachelines are made durable before the direct-IO
->> operation proceeds.
->
-> Please no. I agree that going via DAX path for normal likely won't
-> introduce new data corruption issues. But I dislike having a special
-> case for block devices. Also you have no way of turning DAX off for block
-> devices AFAIU and as Dave said, DAX should be opt-in, not opt-out. Note
-> that you may actually want to go through the block layer for normal IO e.g.
-> because you use IO cgroups to limit processes so using DAX regresses some
-> functionality.
->
+On Mon, Feb 15, 2016 at 04:32:26PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> It is changed via the FS_IOC_FSSETXATTR ioctl, so add the new flag
+> to the platform definitions for  userspace that don't this API. Then
+> add support to the relevant xfs_io chattr and stat commands.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Sounds good.
+Works for me.
 
-As Ross mentioned in the cover letter, I'm fine with dropping this one
-for now as we think through how to restore raw device DAX support.  In
-the meantime we can still force CONFIG_BLK_DEV_DAX=y for testing.
+Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
+> ---
+>  include/darwin.h  | 1 +
+>  include/freebsd.h | 1 +
+>  include/irix.h    | 1 +
+>  include/linux.h   | 1 +
+>  io/attr.c         | 5 ++++-
+>  5 files changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/darwin.h b/include/darwin.h
+> index 2baa536..a52030d 100644
+> --- a/include/darwin.h
+> +++ b/include/darwin.h
+> @@ -312,6 +312,7 @@ struct fsxattr {
+>  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+>  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+>  #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+> diff --git a/include/freebsd.h b/include/freebsd.h
+> index fe567d4..f7e0c75 100644
+> --- a/include/freebsd.h
+> +++ b/include/freebsd.h
+> @@ -202,6 +202,7 @@ struct fsxattr {
+>  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+>  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+>  #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+> diff --git a/include/irix.h b/include/irix.h
+> index bdb4b6a..c2191ee 100644
+> --- a/include/irix.h
+> +++ b/include/irix.h
+> @@ -447,6 +447,7 @@ struct fsxattr {
+>  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+>  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+>  #define FS_IOC_FSGETXATTR		F_FSGETXATTR
+> diff --git a/include/linux.h b/include/linux.h
+> index 17391c3..cc0f70c 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -205,6 +205,7 @@ struct fsxattr {
+>  #define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+>  #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+> +#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+>  #define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+> diff --git a/io/attr.c b/io/attr.c
+> index 6fa08bf..0186b1d 100644
+> --- a/io/attr.c
+> +++ b/io/attr.c
+> @@ -47,9 +47,10 @@ static struct xflags {
+>  	{ FS_XFLAG_EXTSZINHERIT,	"E", "extsz-inherit"	},
+>  	{ FS_XFLAG_NODEFRAG,		"f", "no-defrag"	},
+>  	{ FS_XFLAG_FILESTREAM,		"S", "filestream"	},
+> +	{ FS_XFLAG_DAX,			"x", "dax"		},
+>  	{ 0, NULL, NULL }
+>  };
+> -#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfS"
+> +#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfSx"
+>  
+>  static void
+>  lsattr_help(void)
+> @@ -73,6 +74,7 @@ lsattr_help(void)
+>  " E -- children created in this directory inherit the extent size value\n"
+>  " f -- do not include this file when defragmenting the filesystem\n"
+>  " S -- enable filestreams allocator for this directory\n"
+> +" x -- Use direct access (DAX) for data in this file\n"
+>  "\n"
+>  " Options:\n"
+>  " -R -- recursively descend (useful when current file is a directory)\n"
+> @@ -108,6 +110,7 @@ chattr_help(void)
+>  " +/-E -- set/clear the extent-size inheritance flag\n"
+>  " +/-f -- set/clear the no-defrag flag\n"
+>  " +/-S -- set/clear the filestreams allocator flag\n"
+> +" +/-x -- set/clear the direct access (DAX) flag\n"
+>  " Note1: user must have certain capabilities to modify immutable/append-only.\n"
+>  " Note2: immutable/append-only files cannot be deleted; removing these files\n"
+>  "        requires the immutable/append-only flag to be cleared first.\n"
+> -- 
+> 2.5.0
+> 
 
 _______________________________________________
 xfs mailing list
