@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 20F9B7CA2
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 03:30:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0115F304032
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 01:30:45 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	I5wQilMc71n3YGp9 for <xfs@oss.sgi.com>;
-	Wed, 17 Feb 2016 01:30:43 -0800 (PST)
-Date: Wed, 17 Feb 2016 20:30:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/15] xfs: move v1 inode conversion to xfs_inode_from_disk
-Message-ID: <20160217093041.GH19486@dastard>
-References: <1455693652-3899-1-git-send-email-david@fromorbit.com>
-	<1455693652-3899-12-git-send-email-david@fromorbit.com>
-	<20160217073204.GB16363@infradead.org>
-	<20160217074821.GD19486@dastard> <20160217083000.GG19486@dastard>
-	<20160217083308.GA11766@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5D39D7CA2
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 03:56:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3C25AC001
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 01:56:51 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id UjXf3CdVkkheAAcH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 01:56:49 -0800 (PST)
+Date: Wed, 17 Feb 2016 01:56:46 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] generic/304: fix high offset
+Message-ID: <20160217095646.GA21482@infradead.org>
+References: <20160215204608.7977.2802.stgit@birch.djwong.org>
+	<20160215204614.7977.2848.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160217083308.GA11766@infradead.org>
+In-Reply-To: <20160215204614.7977.2848.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +30,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Feb 17, 2016 at 12:33:08AM -0800, Christoph Hellwig wrote:
-> On Wed, Feb 17, 2016 at 07:30:00PM +1100, Dave Chinner wrote:
-> > > Yeah, probably. I'll have to look at this a bit closer - I think I
-> > > assumed that we're always going to have v2 inode format here (like
-> > > we do in the kernel), but that may not be true. I'll have a closer
-> > > look.
-> > 
-> > having a closer look, the XFS_SB_VERSION_NLINKBIT that is set here
-> > in sbversion is never used, so I just removed it. I also changed it
-> > back to using the converted in-memory link count so it's always
-> > going to be correct now. Now it is just:
-> > 
-> > +       setlink_inode(id, xino.i_d.di_nlink, type == DBM_DIR, security);
-> 
-> Great.  With that and the other nitpicks address:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> for the whole series.
+On Mon, Feb 15, 2016 at 12:46:14PM -0800, Darrick J. Wong wrote:
+> "Invalid argument" is a better response to an impossibly high offset
+> dedupe request than "extents don't match", so change the test.
 
-Thanks for the fast turnaround, Christoph! I'll get this
-pushed out in the morning....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+What does btrfs return here?
 
 _______________________________________________
 xfs mailing list
