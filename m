@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 690AF7CA2
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 01:21:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5ABED304032
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 23:21:16 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 574BB7CB7
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 01:21:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 18B7A8F8033
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 23:21:20 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	D3FHGklRBLqYr7lP for <xfs@oss.sgi.com>;
-	Tue, 16 Feb 2016 23:21:14 -0800 (PST)
+	vPP8FrT6ulVT5Giu for <xfs@oss.sgi.com>;
+	Tue, 16 Feb 2016 23:21:17 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aVwPu-0004lr-Ls
+	(envelope-from <dave@fromorbit.com>) id 1aVwPu-0004lu-Nh
 	for xfs@oss.sgi.com; Wed, 17 Feb 2016 18:20:54 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aVwPu-00013l-Kl
+	(envelope-from <dave@disappointment.disaster>) id 1aVwPu-00013y-Ms
 	for xfs@oss.sgi.com; Wed, 17 Feb 2016 18:20:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/15] xfsprogs: libxfs kernel sync to 4.6-for-next
-Date: Wed, 17 Feb 2016 18:20:37 +1100
-Message-Id: <1455693652-3899-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/15] xfs: factor btree block freeing into a helper
+Date: Wed, 17 Feb 2016 18:20:40 +1100
+Message-Id: <1455693652-3899-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1455693652-3899-1-git-send-email-david@fromorbit.com>
+References: <1455693652-3899-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,29 +37,85 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Christoph Hellwig <hch@lst.de>
 
-This series brings the xfsprogs libxfs code in sync with what is
-currently in the kernel for-next branch. This is aimed at the
-xfsprogs for-next branch so that Darrick can use this as the base
-for his rmap/reflink xfsprogs tree.
+Source kernel commit c46ee8ad7856b58eeb383c30ce847897f85c4103
 
-The only "interesting" thing in this series is the xfs_icdinode
-modifications. I've made the structures similar to the kernel
-so the same macros can be used, and jumped one step ahead of the
-kernel by adding XFS_ISREG/XFS_ISDIR wrappers to keep the userspace
-conversions simple.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ libxfs/xfs_btree.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
-Overall, it turned out ot be a lot simpler than I though it would
-be, and points to the general direction that needs to be taken here:
-use the xfs_dinode for anythign futzing directly with on disk
-inodes, use the xfs_inode for everything else. I also noticed a
-coupl eof good opportunites for factoring, such as the repeated
-copy/paste of inode allocation and initialisation code.
-
-Comments welcome!
-
--Dave.
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 14d8bf3..f4a1c67 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -290,6 +290,19 @@ xfs_btree_sblock_verify_crc(
+ 	return true;
+ }
+ 
++static int
++xfs_btree_free_block(
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*bp)
++{
++	int			error;
++
++	error = cur->bc_ops->free_block(cur, bp);
++	if (!error)
++		XFS_BTREE_STATS_INC(cur, free);
++	return error;
++}
++
+ /*
+  * Delete the btree cursor.
+  */
+@@ -3282,12 +3295,11 @@ xfs_btree_kill_iroot(
+ #endif
+ 	xfs_btree_copy_ptrs(cur, pp, cpp, numrecs);
+ 
+-	error = cur->bc_ops->free_block(cur, cbp);
++	error = xfs_btree_free_block(cur, cbp);
+ 	if (error) {
+ 		XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+ 		return error;
+ 	}
+-	XFS_BTREE_STATS_INC(cur, free);
+ 
+ 	cur->bc_bufs[level - 1] = NULL;
+ 	be16_add_cpu(&block->bb_level, -1);
+@@ -3320,14 +3332,12 @@ xfs_btree_kill_root(
+ 	 */
+ 	cur->bc_ops->set_root(cur, newroot, -1);
+ 
+-	error = cur->bc_ops->free_block(cur, bp);
++	error = xfs_btree_free_block(cur, bp);
+ 	if (error) {
+ 		XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+ 		return error;
+ 	}
+ 
+-	XFS_BTREE_STATS_INC(cur, free);
+-
+ 	cur->bc_bufs[level] = NULL;
+ 	cur->bc_ra[level] = 0;
+ 	cur->bc_nlevels--;
+@@ -3833,10 +3843,9 @@ xfs_btree_delrec(
+ 	}
+ 
+ 	/* Free the deleted block. */
+-	error = cur->bc_ops->free_block(cur, rbp);
++	error = xfs_btree_free_block(cur, rbp);
+ 	if (error)
+ 		goto error0;
+-	XFS_BTREE_STATS_INC(cur, free);
+ 
+ 	/*
+ 	 * If we joined with the left neighbor, set the buffer in the
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
