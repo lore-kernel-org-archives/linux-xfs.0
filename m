@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EB5C97CB6
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:04:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DAC5AC007
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:04:44 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ubCLo5KOAyE7b1fH for <xfs@oss.sgi.com>;
-	Wed, 17 Feb 2016 14:04:38 -0800 (PST)
-Date: Thu, 18 Feb 2016 09:04:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: better xfs_trans_alloc interface
-Message-ID: <20160217220436.GI19486@dastard>
-References: <1455699159-20906-1-git-send-email-hch@lst.de>
-	<1455699159-20906-2-git-send-email-hch@lst.de>
-	<20160217134006.GA4065@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id 8D61F7CB6
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:10:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 162A6AC009
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:10:13 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id SXdQWAXug7g6bSGo (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:10:09 -0800 (PST)
+Date: Wed, 17 Feb 2016 23:10:29 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 3/6] ext4: Online defrag not supported with DAX
+Message-ID: <20160217221029.GM14140@quack.suse.cz>
+References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1455680059-20126-4-git-send-email-ross.zwisler@linux.intel.com>
+	<20160217215037.GB30126@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160217134006.GA4065@bfoster.bfoster>
+In-Reply-To: <20160217215037.GB30126@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,63 +31,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@poochiereds.net>, Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Wed, Feb 17, 2016 at 08:40:08AM -0500, Brian Foster wrote:
-> On Wed, Feb 17, 2016 at 09:52:38AM +0100, Christoph Hellwig wrote:
-> > Merge xfs_trans_reserve and xfs_trans_alloc into a single function call
-> > that returns a transaction with all the required log and block reservations,
-> > and which allows passing transaction flags directly to avoid the cumbersome
-> > _xfs_trans_alloc interface.
+On Wed 17-02-16 14:50:37, Ross Zwisler wrote:
+> On Tue, Feb 16, 2016 at 08:34:16PM -0700, Ross Zwisler wrote:
+> > Online defrag operations for ext4 are hard coded to use the page cache.
+> > See ext4_ioctl() -> ext4_move_extents() -> move_extent_per_page()
 > > 
-> > While we're at it we also get rid of the transaction type argument that has
-> > been superflous since we stopped supporting the non-CIL logging mode.  The
-> > guts of it will be removed in another patch.
+> > When combined with DAX I/O, which circumvents the page cache, this can
+> > result in data corruption.  This was observed with xfstests ext4/307 and
+> > ext4/308.
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Fix this by only allowing online defrag for non-DAX files.
+> 
+> Jan,
+> 
+> Thinking about this a bit more, it's probably the case that the data
+> corruption I was observing was due to us skipping the writeback of the dirty
+> page cache pages because S_DAX was set.
+> 
+> I do think we have a problem with defrag because it is doing the extent
+> swapping using the page cache, and we won't flush the dirty pages due to
+> S_DAX being set.
+> 
+> This patch is the quick and easy answer, and is perhaps appropriate for v4.5.
+> 
+> Looking forward, though, what do you think the correct solution is?  Making an
+> extent swapper that doesn't use the page cache (as I believe XFS has? see
+> xfs_swap_extents()), or maybe just unsetting S_DAX while we do the defrag and
+> being careful to block out page faults and I/O?  Or is it acceptable to just
+> say that DAX and defrag are mutually exclusive for ext4?
+
+For 4.5 I'd just say just make them exclusive. Long term, we could just
+avoid using page cache for copying data - grab all the necessary locks,
+wait for all DIO to complete, evict anything in pagecache, copy data, swap
+extents. It could even result in a simpler code.
+
+								Honza
+
+
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 > > ---
-> 
-> > @@ -165,7 +123,7 @@ xfs_trans_dup(
-> >   * This does not do quota reservations. That typically is done by the
-> >   * caller afterwards.
-> >   */
-> > -int
-> > +static int
-> >  xfs_trans_reserve(
-> >  	struct xfs_trans	*tp,
-> >  	struct xfs_trans_res	*resp,
-> > @@ -219,7 +177,7 @@ xfs_trans_reserve(
-> >  						resp->tr_logres,
-> >  						resp->tr_logcount,
-> >  						&tp->t_ticket, XFS_TRANSACTION,
-> > -						permanent, tp->t_type);
-> > +						permanent, 0);
-> 
-> So this looks like it effectively breaks xlog_print_tic_res()..? I see
-> that is all removed in the subsequent patch, but the type still seems
-> like useful information in the event that an associated problem occurs
-> with the transaction. In fact, we just had a transaction overrun report
-> over the weekend (on irc) where at least I thought this was useful
-> (unfortunately it looks like I lost the reference to the syslog output).
-
-I've considered doing this removal myself in the past - doing
-somethign like embedding the return address of the
-xfs-trans_reserve() call in the ticket that is allocated tells us
-exactly where the call was made. This can be printed with %pS, and
-that gives us the function (and location in the function) the
-reservation was made. Hence we solve the problem of not
-knowing which call path triggered the problem.
-
-Hence I don't think we actually need to the type in every function
-call.
-
-Cheers,
-
-Dave.
+> >  fs/ext4/ioctl.c | 5 +++++
+> >  1 file changed, 5 insertions(+)
+> > 
+> > diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+> > index 0f6c369..e32c86f 100644
+> > --- a/fs/ext4/ioctl.c
+> > +++ b/fs/ext4/ioctl.c
+> > @@ -583,6 +583,11 @@ group_extend_out:
+> >  				 "Online defrag not supported with bigalloc");
+> >  			err = -EOPNOTSUPP;
+> >  			goto mext_out;
+> > +		} else if (IS_DAX(inode)) {
+> > +			ext4_msg(sb, KERN_ERR,
+> > +				 "Online defrag not supported with DAX");
+> > +			err = -EOPNOTSUPP;
+> > +			goto mext_out;
+> >  		}
+> >  
+> >  		err = mnt_want_write_file(filp);
+> > -- 
+> > 2.5.0
+> > 
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
