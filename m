@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EB6C87CA6
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:57:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D73738F8040
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 12:57:47 -0800 (PST)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id TA4gfMPgNDmdtOmW for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 12:57:39 -0800 (PST)
-Date: Wed, 17 Feb 2016 13:57:27 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 3/4 v2] xfs: dynamically switch modes when
-	XFS_DIFLAG2_DAX is set/cleared
-Message-ID: <20160217205727.GA30126@linux.intel.com>
-References: <1455513734-15192-1-git-send-email-david@fromorbit.com>
-	<1455513734-15192-4-git-send-email-david@fromorbit.com>
-	<20160217073121.GC19486@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 6BC607CA8
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 15:33:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C1DE8F8033
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:33:09 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id cUARPXHKGAEpn5K8 (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 13:33:06 -0800 (PST)
+Date: Wed, 17 Feb 2016 22:33:25 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 2/6] ext2, ext4: only set S_DAX for regular inodes
+Message-ID: <20160217213325.GH14140@quack.suse.cz>
+References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1455680059-20126-3-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160217073121.GC19486@dastard>
+In-Reply-To: <1455680059-20126-3-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,52 +30,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@poochiereds.net>, Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Wed, Feb 17, 2016 at 06:31:21PM +1100, Dave Chinner wrote:
-> xfs: dynamically switch modes when XFS_DIFLAG2_DAX is set/cleared
+On Tue 16-02-16 20:34:15, Ross Zwisler wrote:
+> When S_DAX is set on an inode we assume that if there are pages attached
+> to the mapping (mapping->nrpages != 0), those pages are clean zero pages
+> that were used to service reads from holes.  Any dirty data associated with
+> the inode should be in the form of DAX exceptional entries
+> (mapping->nrexceptional) that is written back via
+> dax_writeback_mapping_range().
 > 
-> From: Dave Chinner <dchinner@redhat.com>
+> With the current code, though, this isn't always true.  For example, ext2
+> and ext4 directory inodes can have S_DAX set, but have their dirty data
+> stored as dirty page cache entries.  For these types of inodes, having
+> S_DAX set doesn't really make sense since their I/O doesn't actually happen
+> through the DAX code path.
 > 
-> When we set or clear the XFS_DIFLAG2_DAX flag, we should also
-> set/clear the S_DAX flag in the VFS inode. To do this, we need to
-> ensure that we first flush and remove any cached entries in the
-> radix tree to ensure the correct data access method is used when we
-> next try to read or write data. We ahve to be especially careful
-> here to lock out page faults so they don't race with the flush and
-> invalidation before we change the access mode.
+> Instead, only allow S_DAX to be set for regular inodes for ext2 and ext4.
+> This allows us to have strict DAX vs non-DAX paths in the writeback code.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
+Looks good. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > ---
-> Version 2:
-> - fix lock leak in xfs_ioctl_setattr where dquot allocation could
->   fail after we'd locked the inode iolock and mmaplock but we didn't
->   unlock them on error.
+>  fs/ext2/inode.c | 2 +-
+>  fs/ext4/inode.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
->  fs/xfs/xfs_ioctl.c | 105 ++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 92 insertions(+), 13 deletions(-)
-<>
-> @@ -1072,19 +1115,27 @@ xfs_ioctl_setattr_xflags(
->   * have permission to do so. On success, return a clean transaction and the
->   * inode locked exclusively ready for further operation specific checks. On
->   * failure, return an error without modifying or locking the inode.
-> + *
-> + * The inode might already be IO locked on call. If this is the case, it is
-> + * indicated in @join_flags and we take full responsibility for ensuring they
-> + * are unlocked from now on. Hence if we have an error here, we still have to
-> + * unlock them. Otherwise, once they are joined to the transaction, they will
-> + * be unlocked on commit/cancel.
->   */
->  static struct xfs_trans *
->  xfs_ioctl_setattr_get_trans(
-> -	struct xs_inode	*ip)
-> +	struct xfs_inode	*ip,
-
-Interesting - it looks like 'xfs_inode' got corrupted to 'xs_inode'?
-
-After fixing this the series passed all my testing.
-Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 338eefd..27e2cdd 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -1296,7 +1296,7 @@ void ext2_set_inode_flags(struct inode *inode)
+>  		inode->i_flags |= S_NOATIME;
+>  	if (flags & EXT2_DIRSYNC_FL)
+>  		inode->i_flags |= S_DIRSYNC;
+> -	if (test_opt(inode->i_sb, DAX))
+> +	if (test_opt(inode->i_sb, DAX) && S_ISREG(inode->i_mode))
+>  		inode->i_flags |= S_DAX;
+>  }
+>  
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 83bc8bf..7088aa5 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -4127,7 +4127,7 @@ void ext4_set_inode_flags(struct inode *inode)
+>  		new_fl |= S_NOATIME;
+>  	if (flags & EXT4_DIRSYNC_FL)
+>  		new_fl |= S_DIRSYNC;
+> -	if (test_opt(inode->i_sb, DAX))
+> +	if (test_opt(inode->i_sb, DAX) && S_ISREG(inode->i_mode))
+>  		new_fl |= S_DAX;
+>  	inode_set_flags(inode, new_fl,
+>  			S_SYNC|S_APPEND|S_IMMUTABLE|S_NOATIME|S_DIRSYNC|S_DAX);
+> -- 
+> 2.5.0
+> 
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
