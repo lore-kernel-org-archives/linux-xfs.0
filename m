@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9ECDD7CA2
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:47:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8C2BD8F8033
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 20:47:53 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id P2dkw7FyaqCRNxo4 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Feb 2016 20:47:52 -0800 (PST)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 355C9C075655
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 04:47:51 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u1H4looG032539
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 23:47:50 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: fix up inode32/64 (re)mount handling
-Message-ID: <56C3FB75.6030104@redhat.com>
-Date: Tue, 16 Feb 2016 22:47:49 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 45F677CA2
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 00:24:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 365538F8035
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:24:33 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	vBhBqKea52QQBwYl for <xfs@oss.sgi.com>;
+	Tue, 16 Feb 2016 22:24:28 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aVvWc-0004fY-8G
+	for xfs@oss.sgi.com; Wed, 17 Feb 2016 17:23:46 +1100
+Date: Wed, 17 Feb 2016 17:23:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: v4.5.0-rc1 released
+Message-ID: <20160217062346.GB19486@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,249 +32,107 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-inode32/inode64 allocator behavior with respect to mount,
-remount and growfs is a little tricky.
+Hi Folks,
 
-The inode32 mount option should only enable the inode32
-allocator heuristics if the filesystem is large enough
-for 64-bit inodes to exist.  Today, it has this behavior
-on the initial mount, but a remount with inode32
-unconditionally changes the allocation heuristics, even
-for a small fs.
+The xfsprogs repository at:
 
-Also, an inode32 mounted small filesystem should transition
-to the inode32 allocator if the filesystem is subsequently
-grown to a sufficient size.  Today that does not happen.
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-This patch consolidates xfs_set_inode32 and xfs_set_inode64
-into a single new function, and moves the "is the maximum inode
-number big enough to matter" test into that function, so
-it doesn't rely on the caller to get it right - which
-remount did not do, previously.
+has just been updated and tagged as the first 4.5.0 release
+candidate. This update brings the libxfs/ code in sync with the
+kernel 4.5-rc2 kernel code. The master branch is now for bug fixes
+only until release.  Development for the 4.6.0 release will shift to
+the for-next branch at this point.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+-Dave.
 
-Note, this goes after my token-parsing patch for mount.
+The new head of the master branch is commit:
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index f8c4a50..83c2f92 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -185,9 +185,6 @@ xfs_initialize_perag(
- 	xfs_agnumber_t	index;
- 	xfs_agnumber_t	first_initialised = 0;
- 	xfs_perag_t	*pag;
--	xfs_agino_t	agino;
--	xfs_ino_t	ino;
--	xfs_sb_t	*sbp = &mp->m_sb;
- 	int		error = -ENOMEM;
- 
- 	/*
-@@ -230,22 +227,7 @@ xfs_initialize_perag(
- 		radix_tree_preload_end();
- 	}
- 
--	/*
--	 * If we mount with the inode64 option, or no inode overflows
--	 * the legacy 32-bit address space clear the inode32 option.
--	 */
--	agino = XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks - 1, 0);
--	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
--
--	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32)
--		mp->m_flags |= XFS_MOUNT_32BITINODES;
--	else
--		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
--
--	if (mp->m_flags & XFS_MOUNT_32BITINODES)
--		index = xfs_set_inode32(mp, agcount);
--	else
--		index = xfs_set_inode64(mp, agcount);
-+	index = xfs_set_inode_alloc(mp, agcount);
- 
- 	if (maxagi)
- 		*maxagi = index;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 2c38bef..40acf8f 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -205,9 +205,8 @@ typedef struct xfs_mount {
- #define XFS_MOUNT_GRPID		(1ULL << 9)	/* group-ID assigned from directory */
- #define XFS_MOUNT_NORECOVERY	(1ULL << 10)	/* no recovery - dirty fs */
- #define XFS_MOUNT_DFLT_IOSIZE	(1ULL << 12)	/* set default i/o size */
--#define XFS_MOUNT_32BITINODES	(1ULL << 14)	/* do not create inodes above
--						 * 32 bits in size */
--#define XFS_MOUNT_SMALL_INUMS	(1ULL << 15)	/* users wants 32bit inodes */
-+#define XFS_MOUNT_SMALL_INUMS	(1ULL << 14)	/* user wants 32bit inodes */
-+#define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
- #define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
- #define XFS_MOUNT_BARRIER	(1ULL << 17)
- #define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fe4c14e..044b416 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -577,23 +577,35 @@ xfs_max_file_offset(
- }
- 
- /*
-- * xfs_set_inode32() and xfs_set_inode64() are passed an agcount
-- * because in the growfs case, mp->m_sb.sb_agcount is not updated
-- * yet to the potentially higher ag count.
-+ * Set parameters for inode allocation heuristics, taking into account
-+ * filesystem size and inode32/inode64 mount options; i.e. specifically
-+ * whether or not XFS_MOUNT_SMALL_INUMS is set.
-+ *
-+ * Inode allocation patterns are altered only if inode32 is requested
-+ * (XFS_MOUNT_SMALL_INUMS), and the filesystem is sufficiently large.
-+ * If altered, XFS_MOUNT_32BITINODES is set as well.
-+ *
-+ * An agcount independent of that in the mount structure is provided
-+ * because in the growfs case, mp->m_sb.sb_agcount is not yet updated
-+ * to the potentially higher ag count.
-+ *
-+ * Returns the maximum AG index which may contain inodes.
-  */
- xfs_agnumber_t
--xfs_set_inode32(struct xfs_mount *mp, xfs_agnumber_t agcount)
-+xfs_set_inode_alloc(
-+	struct xfs_mount *mp,
-+	xfs_agnumber_t	agcount)
- {
--	xfs_agnumber_t	index = 0;
-+	xfs_agnumber_t	index;
- 	xfs_agnumber_t	maxagi = 0;
- 	xfs_sb_t	*sbp = &mp->m_sb;
- 	xfs_agnumber_t	max_metadata;
- 	xfs_agino_t	agino;
- 	xfs_ino_t	ino;
--	xfs_perag_t	*pag;
- 
--	/* Calculate how much should be reserved for inodes to meet
--	 * the max inode percentage.
-+	/*
-+	 * Calculate how much should be reserved for inodes to meet
-+	 * the max inode percentage.  Used only for inode32.
- 	 */
- 	if (mp->m_maxicount) {
- 		__uint64_t	icount;
-@@ -607,54 +619,48 @@ xfs_set_inode32(struct xfs_mount *mp, xfs_agnumber_t agcount)
- 		max_metadata = agcount;
- 	}
- 
-+	/* Get the last possible inode in the filesystem */
- 	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks - 1, 0);
-+	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
-+
-+	/*
-+	 * If user asked for no more than 32-bit inodes, and the fs is
-+	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
-+	 * the allocator to accommodate the request.
-+	 */
-+	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32)
-+		mp->m_flags |= XFS_MOUNT_32BITINODES;
-+	else
-+		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
- 
- 	for (index = 0; index < agcount; index++) {
--		ino = XFS_AGINO_TO_INO(mp, index, agino);
-+		struct xfs_perag	*pag;
- 
--		if (ino > XFS_MAXINUMBER_32) {
--			pag = xfs_perag_get(mp, index);
--			pag->pagi_inodeok = 0;
--			pag->pagf_metadata = 0;
--			xfs_perag_put(pag);
--			continue;
--		}
-+		ino = XFS_AGINO_TO_INO(mp, index, agino);
- 
- 		pag = xfs_perag_get(mp, index);
--		pag->pagi_inodeok = 1;
--		maxagi++;
--		if (index < max_metadata)
--			pag->pagf_metadata = 1;
--		xfs_perag_put(pag);
--	}
--	mp->m_flags |= (XFS_MOUNT_32BITINODES |
--			XFS_MOUNT_SMALL_INUMS);
- 
--	return maxagi;
--}
--
--xfs_agnumber_t
--xfs_set_inode64(struct xfs_mount *mp, xfs_agnumber_t agcount)
--{
--	xfs_agnumber_t index = 0;
--
--	for (index = 0; index < agcount; index++) {
--		struct xfs_perag	*pag;
-+		if (mp->m_flags & XFS_MOUNT_32BITINODES) {
-+			if (ino > XFS_MAXINUMBER_32) {
-+				pag->pagi_inodeok = 0;
-+				pag->pagf_metadata = 0;
-+			} else {
-+				pag->pagi_inodeok = 1;
-+				maxagi++;
-+				if (index < max_metadata)
-+					pag->pagf_metadata = 1;
-+				else
-+					pag->pagf_metadata = 0;
-+			}
-+		} else {
-+			pag->pagi_inodeok = 1;
-+			pag->pagf_metadata = 0;
-+		}
- 
--		pag = xfs_perag_get(mp, index);
--		pag->pagi_inodeok = 1;
--		pag->pagf_metadata = 0;
- 		xfs_perag_put(pag);
- 	}
- 
--	/* There is no need for lock protection on m_flags,
--	 * the rw_semaphore of the VFS superblock is locked
--	 * during mount/umount/remount operations, so this is
--	 * enough to avoid concurency on the m_flags field
--	 */
--	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
--			 XFS_MOUNT_SMALL_INUMS);
--	return index;
-+	return (mp->m_flags & XFS_MOUNT_32BITINODES) ? maxagi : agcount;
- }
- 
- STATIC int
-@@ -1224,10 +1230,12 @@ xfs_fs_remount(
- 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
- 			break;
- 		case Opt_inode64:
--			mp->m_maxagi = xfs_set_inode64(mp, sbp->sb_agcount);
-+			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-+			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
- 			break;
- 		case Opt_inode32:
--			mp->m_maxagi = xfs_set_inode32(mp, sbp->sb_agcount);
-+			mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-+			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
- 			break;
- 		default:
- 			/*
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 499058f..2dfb1ce 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -65,8 +65,8 @@ extern __uint64_t xfs_max_file_offset(unsigned int);
- 
- extern void xfs_flush_inodes(struct xfs_mount *mp);
- extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
--extern xfs_agnumber_t xfs_set_inode32(struct xfs_mount *, xfs_agnumber_t agcount);
--extern xfs_agnumber_t xfs_set_inode64(struct xfs_mount *, xfs_agnumber_t agcount);
-+extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
-+					   xfs_agnumber_t agcount);
- 
- extern const struct export_operations xfs_export_operations;
- extern const struct xattr_handler *xfs_xattr_handlers[];
+1abecda xfsprogs: Release v4.5.0-rc1
+
+New Commits:
+
+Andreas Gruenbacher (1):
+      [22b8a86] xfs: Validate the length of on-disk ACLs
+
+Bill O'Donnell (1):
+      [7989643] xfs: per-filesystem stats counter implementation
+
+Brian Foster (3):
+      [5769a37] xfs: add missing bmap cancel calls in error paths
+      [f44fbde] xfs: log local to remote symlink conversions correctly on v5 supers
+      [c063b96] xfs: swap leaf buffer into path struct atomically during path shift
+
+Dave Chinner (9):
+      [83f4b5a] xfs_fs.h: XFS_IOC_FS[SG]SETXATTR to FS_IOC_FS[SG]ETXATTR promotion
+      [a0363e2] xfs: introduce per-inode DAX enablement
+      [7093f63] xfs_io: add support for changing the new inode DAX attribute
+      [9542ae1] xfs: introduce BMAPI_ZERO for allocating zeroed extents
+      [f07ae2a] xfs: bmapbt checking on debug kernels too expensive
+      [736e1cf] xfs: inode recovery readahead can race with inode buffer creation
+      [6daba42] xfs: handle dquot buffer readahead in log recovery correctly
+      [7ebb764] xfs: stop holding ILOCK over filldir callbacks
+      [1abecda] xfsprogs: Release v4.5.0-rc1
+
+Eric Sandeen (2):
+      [65ca380] xfs: get mp from bma->ip in xfs_bmap code
+      [0b66d45] xfs: eliminate committed arg from xfs_bmap_finish
+
+Geliang Tang (1):
+      [eab16f4] libxfs: fix two comment typos
+
+Jia He (1):
+      [c5c9f53] libxfs: Optimize the loop for xfs_bitmap_empty
+
+
+Code Diffstat:
+
+ VERSION                     |   4 +-
+ configure.ac                |   2 +-
+ doc/CHANGES                 |  19 ++++++
+ fsr/xfs_fsr.c               |  16 ++---
+ include/darwin.h            |  35 +++++++++++
+ include/freebsd.h           |  35 +++++++++++
+ include/irix.h              |  38 +++++++++++-
+ include/libxfs.h            |   2 -
+ include/linux.h             |  39 ++++++++++++
+ io/attr.c                   |  45 +++++++-------
+ io/bmap.c                   |  16 ++---
+ io/open.c                   |  32 +++++-----
+ libxcmd/projects.c          |   8 +--
+ libxfs/libxfs_api_defs.h    |   1 +
+ libxfs/libxfs_io.h          |   2 +
+ libxfs/libxfs_priv.h        |   9 ++-
+ libxfs/rdwr.c               |   4 +-
+ libxfs/util.c               |  52 ++++++++++++----
+ libxfs/xfs_alloc.c          |  18 ++++--
+ libxfs/xfs_alloc.h          |   8 ++-
+ libxfs/xfs_attr.c           | 147 ++++++++------------------------------------
+ libxfs/xfs_attr_remote.c    |  31 ++--------
+ libxfs/xfs_bit.c            |   6 +-
+ libxfs/xfs_bmap.c           |  86 ++++++++++++++++++--------
+ libxfs/xfs_bmap.h           |  15 ++++-
+ libxfs/xfs_btree.c          |   4 +-
+ libxfs/xfs_btree.h          |  41 +++++++-----
+ libxfs/xfs_da_btree.c       |  23 ++++---
+ libxfs/xfs_dir2.c           |   9 ++-
+ libxfs/xfs_dquot_buf.c      |  37 +++++++++--
+ libxfs/xfs_format.h         |  19 ++++--
+ libxfs/xfs_fs.h             |  54 +++++++---------
+ libxfs/xfs_inode_buf.c      |  14 +++--
+ libxfs/xfs_quota_defs.h     |   2 +-
+ libxfs/xfs_shared.h         |   1 +
+ libxfs/xfs_symlink_remote.c |   3 +
+ mkfs/proto.c                |  14 ++---
+ quota/free.c                |   6 +-
+ quota/project.c             |  16 ++---
+ repair/dinode.c             |   4 +-
+ repair/phase6.c             |  33 ++++------
+ rtcp/xfs_rtcp.c             |  12 ++--
+ 42 files changed, 567 insertions(+), 395 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
