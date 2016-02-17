@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C63057CB3
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 21:34:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B42128F8040
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 19:34:43 -0800 (PST)
-Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
-	shDPwuFYybnfkOup for <xfs@oss.sgi.com>;
-	Tue, 16 Feb 2016 19:34:42 -0800 (PST)
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v3 6/6] block: use dax_do_io() if blkdev_dax_capable()
-Date: Tue, 16 Feb 2016 20:34:19 -0700
-Message-Id: <1455680059-20126-7-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 530527CA2
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:29:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 207BC304043
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 20:29:29 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id X9RUy0sm5UKdCkrx for <xfs@oss.sgi.com>;
+	Tue, 16 Feb 2016 20:29:23 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id D84C463C3D46
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 22:29:22 -0600 (CST)
+Subject: [PATCH 2/3 V2] xfs: sanitize remount options
+References: <56BBC982.50804@redhat.com> <56BBCA55.3000506@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56C3F721.8080705@sandeen.net>
+Date: Tue, 16 Feb 2016 22:29:21 -0600
+MIME-Version: 1.0
+In-Reply-To: <56BBCA55.3000506@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,130 +28,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Jeff Layton <jlayton@poochiereds.net>, linux-nvdimm@lists.01.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Al Viro <viro@ftp.linux.org.uk>, Dan Williams <dan.j.williams@intel.com>, Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: xfs@oss.sgi.com
 
-From: Dan Williams <dan.j.williams@intel.com>
+Perform basic sanitization of remount options by
+passing the option string and a dummy mount structure
+through xfs_parseargs and returning the result.
 
-Setting S_DAX on an inode requires that the inode participate in the
-DAX-fsync mechanism which expects to use the pagecache for tracking
-potentially dirty cpu cachelines.  However, dax_do_io() participates in
-the standard pagecache sync semantics and arranges for dirty pages to be
-flushed through the driver when a direct-IO operation accesses the same
-ranges.
-
-It should always be valid to use the dax_do_io() path regardless of
-whether the block_device inode has S_DAX set.  In either case dirty
-pages or dirty cachelines are made durable before the direct-IO
-operation proceeds.
-
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Al Viro <viro@ftp.linux.org.uk>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- block/ioctl.c      |  1 +
- fs/block_dev.c     |  3 ++-
- include/linux/fs.h | 31 +++++++++++++++++++++----------
- 3 files changed, 24 insertions(+), 11 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index d8996bb..7c64286 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -434,6 +434,7 @@ bool blkdev_dax_capable(struct block_device *bdev)
- 
- 	return true;
- }
-+EXPORT_SYMBOL(blkdev_dax_capable);
- #endif
- 
- static int blkdev_flushbuf(struct block_device *bdev, fmode_t mode,
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 826b164..0e937dd 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -166,8 +166,9 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
+V2: make *sb const in xfs_parseargs, with comment about why
+    rename tmp->tmp_mp
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 9b2e268..fe4c14e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -169,13 +169,17 @@ suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
+  *
+  * Note that this function leaks the various device name allocations on
+  * failure.  The caller takes care of them.
++ *
++ * *sb is const because this is also used to test options on the remount
++ * path, and we don't want this to have any side effects at remount time.
++ * Today this function does not change *sb, but just to future-proof...
+  */
+ STATIC int
+ xfs_parseargs(
+ 	struct xfs_mount	*mp,
+ 	char			*options)
  {
- 	struct file *file = iocb->ki_filp;
- 	struct inode *inode = bdev_file_inode(file);
-+	struct block_device *bdev = I_BDEV(inode);
- 
--	if (IS_DAX(inode))
-+	if (blkdev_dax_capable(bdev))
- 		return dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
- 				NULL, DIO_SKIP_DIO_COUNT);
- 	return __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ae68100..a3f5ee8 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -830,7 +830,14 @@ static inline unsigned imajor(const struct inode *inode)
- 	return MAJOR(inode->i_rdev);
+-	struct super_block	*sb = mp->m_super;
++	const struct super_block *sb = mp->m_super;
+ 	char			*p;
+ 	substring_t		args[MAX_OPT_ARGS];
+ 	int			dsunit = 0;
+@@ -1167,6 +1171,27 @@ xfs_quiesce_attr(
  }
  
-+#ifdef CONFIG_BLOCK
- extern struct block_device *I_BDEV(struct inode *inode);
-+#else
-+static inline struct block_device *I_BDEV(struct inode *inode)
+ STATIC int
++xfs_test_remount_options(
++	struct super_block	*sb,
++	struct xfs_mount	*mp,
++	char			*options)
 +{
-+	return NULL;
-+}
-+#endif
- 
- struct fown_struct {
- 	rwlock_t lock;          /* protects pid, uid, euid fields */
-@@ -2306,15 +2313,6 @@ extern struct super_block *freeze_bdev(struct block_device *);
- extern void emergency_thaw_all(void);
- extern int thaw_bdev(struct block_device *bdev, struct super_block *sb);
- extern int fsync_bdev(struct block_device *);
--#ifdef CONFIG_FS_DAX
--extern bool blkdev_dax_capable(struct block_device *bdev);
--#else
--static inline bool blkdev_dax_capable(struct block_device *bdev)
--{
--	return false;
--}
--#endif
--
- extern struct super_block *blockdev_superblock;
- 
- static inline bool sb_is_blkdev_sb(struct super_block *sb)
-@@ -2902,9 +2900,22 @@ extern int generic_show_options(struct seq_file *m, struct dentry *root);
- extern void save_mount_options(struct super_block *sb, char *options);
- extern void replace_mount_options(struct super_block *sb, char *options);
- 
-+#ifdef CONFIG_FS_DAX
-+extern bool blkdev_dax_capable(struct block_device *bdev);
-+#else
-+static inline bool blkdev_dax_capable(struct block_device *bdev)
-+{
-+	return false;
-+}
-+#endif
++	int			error = 0;
++	struct xfs_mount	*tmp_mp;
 +
- static inline bool io_is_direct(struct file *filp)
- {
--	return (filp->f_flags & O_DIRECT) || IS_DAX(filp->f_mapping->host);
-+	struct inode *inode = filp->f_mapping->host;
++	tmp_mp = kmem_zalloc(sizeof(*tmp_mp), KM_MAYFAIL);
++	if (!tmp_mp)
++		return -ENOMEM;
 +
-+	return (filp->f_flags & O_DIRECT) || IS_DAX(inode)
-+		|| (S_ISBLK(file_inode(filp)->i_mode)
-+				&& blkdev_dax_capable(I_BDEV(inode)));
- }
++	tmp_mp->m_super = sb;
++	error = xfs_parseargs(tmp_mp, options);
++	xfs_free_fsname(tmp_mp);
++	kfree(tmp_mp);
++
++	return error;
++}
++
++STATIC int
+ xfs_fs_remount(
+ 	struct super_block	*sb,
+ 	int			*flags,
+@@ -1178,6 +1203,11 @@ xfs_fs_remount(
+ 	char			*p;
+ 	int			error;
  
- static inline int iocb_flags(struct file *file)
--- 
-2.5.0
++	/* First, check for complete junk; i.e. invalid options */
++	error = xfs_test_remount_options(sb, mp, options);
++	if (error)
++		return error;
++
+ 	sync_filesystem(sb);
+ 	while ((p = strsep(&options, ",")) != NULL) {
+ 		int token;
+
 
 _______________________________________________
 xfs mailing list
