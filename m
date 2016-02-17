@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7535A7F4E
+	by oss.sgi.com (Postfix) with ESMTP id AD73F7F52
 	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 01:21:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64CBE8F8033
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D23C8F8035
 	for <xfs@oss.sgi.com>; Tue, 16 Feb 2016 23:21:23 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	mIwZJExc2BTKBiYh for <xfs@oss.sgi.com>;
-	Tue, 16 Feb 2016 23:21:20 -0800 (PST)
+	9L7fMs6hoFBjYRcm for <xfs@oss.sgi.com>;
+	Tue, 16 Feb 2016 23:21:19 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aVwPu-0004m8-TF
+	(envelope-from <dave@fromorbit.com>) id 1aVwPu-0004m0-QF
 	for xfs@oss.sgi.com; Wed, 17 Feb 2016 18:20:54 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aVwPu-00014w-SJ
+	(envelope-from <dave@disappointment.disaster>) id 1aVwPu-00014S-PO
 	for xfs@oss.sgi.com; Wed, 17 Feb 2016 18:20:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/15] xfs: mode di_mode to vfs inode
-Date: Wed, 17 Feb 2016 18:20:52 +1100
-Message-Id: <1455693652-3899-16-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/15] xfs: remove timestamps from incore inode
+Date: Wed, 17 Feb 2016 18:20:46 +1100
+Message-Id: <1455693652-3899-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1455693652-3899-1-git-send-email-david@fromorbit.com>
 References: <1455693652-3899-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,449 +39,562 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit c19b3b05ae440de50fffe2ac2a9b27392a7448e9
+Source kernel commit 3987848c7c2be112e03c82d03821b044f1c0edec
 
-Move the di_mode value from the xfs_icdinode to the VFS inode, reducing
-the xfs_icdinode byte another 2 bytes and collapsing another 2 byte hole
-in the structure.
+The struct xfs_inode has two copies of the current timestamps in it,
+one in the vfs inode and one in the struct xfs_icdinode. Now that we
+no longer log the struct xfs_icdinode directly, we don't need to
+keep the timestamps in this structure. instead we can copy them
+straight out of the VFS inode when formatting the inode log item or
+the on-disk inode.
+
+This reduces the struct xfs_inode in size by 24 bytes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- db/check.c              | 18 ++++++++++--------
- include/xfs_inode.h     | 16 +++++++++++++++-
- libxfs/rdwr.c           |  4 ++--
- libxfs/util.c           | 17 ++++++++---------
- libxfs/xfs_bmap.c       |  6 +++---
- libxfs/xfs_dir2.c       | 12 ++++++------
- libxfs/xfs_inode_buf.c  |  8 ++++----
- libxfs/xfs_inode_buf.h  |  1 -
- libxfs/xfs_inode_fork.c |  2 +-
- mkfs/proto.c            |  6 +++---
- repair/phase6.c         |  8 ++++----
- 11 files changed, 56 insertions(+), 42 deletions(-)
+ db/check.c               | 106 +++++++++++++++++++++++------------------------
+ include/xfs_inode.h      |  16 ++++++-
+ libxfs/libxfs_api_defs.h |   4 +-
+ libxfs/util.c            |  17 ++++----
+ libxfs/xfs_inode_buf.c   |  91 ++++++++++++++++++++++++++++++++++------
+ libxfs/xfs_inode_buf.h   |   9 ++--
+ libxfs/xfs_rtbitmap.c    |   2 +-
+ mkfs/proto.c             |   2 +-
+ 8 files changed, 162 insertions(+), 85 deletions(-)
 
 diff --git a/db/check.c b/db/check.c
-index 412ab3d..36a0f64 100644
+index d6d1d57..2203f41 100644
 --- a/db/check.c
 +++ b/db/check.c
-@@ -2636,6 +2636,7 @@ process_inode(
- 	xfs_qcnt_t		rc = 0;
- 	xfs_dqid_t		dqprid;
- 	int			v = 0;
-+	mode_t			mode;
- 	static char		okfmts[] = {
- 		0,				/* type 0 unused */
- 		1 << XFS_DINODE_FMT_DEV,	/* FIFO */
-@@ -2699,10 +2700,10 @@ process_inode(
- 					be32_to_cpu(dip->di_nlink), ino);
- 			error++;
- 		}
--		if (xino.i_d.di_mode != 0) {
-+		if (dip->di_mode != 0) {
- 			if (v)
- 				dbprintf(_("bad mode %#o for free inode %lld\n"),
--					xino.i_d.di_mode, ino);
-+					be16_to_cpu(dip->di_mode), ino);
- 			error++;
- 		}
- 		return;
-@@ -2717,11 +2718,12 @@ process_inode(
- 	/*
- 	 * di_mode is a 16-bit uint so no need to check the < 0 case
- 	 */
--	if ((((xino.i_d.di_mode & S_IFMT) >> 12) > 15) ||
--	    (!(okfmts[(xino.i_d.di_mode & S_IFMT) >> 12] & (1 << xino.i_d.di_format)))) {
-+	mode = be16_to_cpu(dip->di_mode);
-+	if ((((mode & S_IFMT) >> 12) > 15) ||
-+	    (!(okfmts[(mode & S_IFMT) >> 12] & (1 << xino.i_d.di_format)))) {
- 		if (v)
- 			dbprintf(_("bad format %d for inode %lld type %#o\n"),
--				xino.i_d.di_format, id->ino, xino.i_d.di_mode & S_IFMT);
-+				xino.i_d.di_format, id->ino, mode & S_IFMT);
+@@ -2619,7 +2619,7 @@ process_inode(
+ {
+ 	blkmap_t		*blkmap;
+ 	xfs_fsblock_t		bno = 0;
+-	struct xfs_icdinode	idic;
++	struct xfs_inode	xino;
+ 	inodata_t		*id = NULL;
+ 	xfs_ino_t		ino;
+ 	xfs_extnum_t		nextents = 0;
+@@ -2663,7 +2663,7 @@ process_inode(
+ 		"dev", "local", "extents", "btree", "uuid"
+ 	};
+ 
+-	libxfs_dinode_from_disk(&idic, dip);
++	libxfs_inode_from_disk(&xino, dip);
+ 
+ 	ino = XFS_AGINO_TO_INO(mp, be32_to_cpu(agf->agf_seqno), agino);
+ 	if (!isfree) {
+@@ -2672,42 +2672,42 @@ process_inode(
+ 		blkmap = NULL;
+ 	}
+ 	v = (!sflag || (id && id->ilist) || CHECK_BLIST(bno));
+-	if (idic.di_magic != XFS_DINODE_MAGIC) {
++	if (xino.i_d.di_magic != XFS_DINODE_MAGIC) {
+ 		if (isfree || v)
+ 			dbprintf(_("bad magic number %#x for inode %lld\n"),
+-				idic.di_magic, ino);
++				xino.i_d.di_magic, ino);
  		error++;
  		return;
  	}
-@@ -2744,7 +2746,7 @@ process_inode(
+-	if (!xfs_dinode_good_version(mp, idic.di_version)) {
++	if (!xfs_dinode_good_version(mp, xino.i_d.di_version)) {
+ 		if (isfree || v)
+ 			dbprintf(_("bad version number %#x for inode %lld\n"),
+-				idic.di_version, ino);
++				xino.i_d.di_version, ino);
+ 		error++;
+ 		return;
+ 	}
+ 	if (isfree) {
+-		if (idic.di_nblocks != 0) {
++		if (xino.i_d.di_nblocks != 0) {
+ 			if (v)
+ 				dbprintf(_("bad nblocks %lld for free inode "
+ 					 "%lld\n"),
+-					idic.di_nblocks, ino);
++					xino.i_d.di_nblocks, ino);
+ 			error++;
+ 		}
+-		if (idic.di_version == 1)
+-			nlink = idic.di_onlink;
++		if (xino.i_d.di_version == 1)
++			nlink = xino.i_d.di_onlink;
+ 		else
+-			nlink = idic.di_nlink;
++			nlink = xino.i_d.di_nlink;
+ 		if (nlink != 0) {
+ 			if (v)
+ 				dbprintf(_("bad nlink %d for free inode %lld\n"),
+ 					nlink, ino);
+ 			error++;
+ 		}
+-		if (idic.di_mode != 0) {
++		if (xino.i_d.di_mode != 0) {
+ 			if (v)
+ 				dbprintf(_("bad mode %#o for free inode %lld\n"),
+-					idic.di_mode, ino);
++					xino.i_d.di_mode, ino);
+ 			error++;
+ 		}
+ 		return;
+@@ -2722,26 +2722,26 @@ process_inode(
+ 	/*
+ 	 * di_mode is a 16-bit uint so no need to check the < 0 case
+ 	 */
+-	if ((((idic.di_mode & S_IFMT) >> 12) > 15) ||
+-	    (!(okfmts[(idic.di_mode & S_IFMT) >> 12] & (1 << idic.di_format)))) {
++	if ((((xino.i_d.di_mode & S_IFMT) >> 12) > 15) ||
++	    (!(okfmts[(xino.i_d.di_mode & S_IFMT) >> 12] & (1 << xino.i_d.di_format)))) {
+ 		if (v)
+ 			dbprintf(_("bad format %d for inode %lld type %#o\n"),
+-				idic.di_format, id->ino, idic.di_mode & S_IFMT);
++				xino.i_d.di_format, id->ino, xino.i_d.di_mode & S_IFMT);
+ 		error++;
+ 		return;
+ 	}
+ 	if ((unsigned int)XFS_DFORK_ASIZE(dip, mp) >=
+-					XFS_LITINO(mp, idic.di_version))  {
++					XFS_LITINO(mp, xino.i_d.di_version))  {
+ 		if (v)
+ 			dbprintf(_("bad fork offset %d for inode %lld\n"),
+-				idic.di_forkoff, id->ino);
++				xino.i_d.di_forkoff, id->ino);
+ 		error++;
+ 		return;
+ 	}
+-	if ((unsigned int)idic.di_aformat > XFS_DINODE_FMT_BTREE)  {
++	if ((unsigned int)xino.i_d.di_aformat > XFS_DINODE_FMT_BTREE)  {
+ 		if (v)
+ 			dbprintf(_("bad attribute format %d for inode %lld\n"),
+-				idic.di_aformat, id->ino);
++				xino.i_d.di_aformat, id->ino);
+ 		error++;
+ 		return;
+ 	}
+@@ -2749,48 +2749,48 @@ process_inode(
  		dbprintf(_("inode %lld mode %#o fmt %s "
  			 "afmt %s "
  			 "nex %d anex %d nblk %lld sz %lld%s%s%s%s%s%s%s\n"),
--			id->ino, xino.i_d.di_mode, fmtnames[(int)xino.i_d.di_format],
-+			id->ino, mode, fmtnames[(int)xino.i_d.di_format],
- 			fmtnames[(int)xino.i_d.di_aformat],
- 			xino.i_d.di_nextents,
- 			xino.i_d.di_anextents,
-@@ -2757,7 +2759,7 @@ process_inode(
- 			xino.i_d.di_flags & XFS_DIFLAG_NOATIME  ? " noa" : "",
- 			xino.i_d.di_flags & XFS_DIFLAG_NODUMP   ? " nod" : "");
+-			id->ino, idic.di_mode, fmtnames[(int)idic.di_format],
+-			fmtnames[(int)idic.di_aformat],
+-			idic.di_nextents,
+-			idic.di_anextents,
+-			idic.di_nblocks, idic.di_size,
+-			idic.di_flags & XFS_DIFLAG_REALTIME ? " rt" : "",
+-			idic.di_flags & XFS_DIFLAG_PREALLOC ? " pre" : "",
+-			idic.di_flags & XFS_DIFLAG_IMMUTABLE? " imm" : "",
+-			idic.di_flags & XFS_DIFLAG_APPEND   ? " app" : "",
+-			idic.di_flags & XFS_DIFLAG_SYNC     ? " syn" : "",
+-			idic.di_flags & XFS_DIFLAG_NOATIME  ? " noa" : "",
+-			idic.di_flags & XFS_DIFLAG_NODUMP   ? " nod" : "");
++			id->ino, xino.i_d.di_mode, fmtnames[(int)xino.i_d.di_format],
++			fmtnames[(int)xino.i_d.di_aformat],
++			xino.i_d.di_nextents,
++			xino.i_d.di_anextents,
++			xino.i_d.di_nblocks, xino.i_d.di_size,
++			xino.i_d.di_flags & XFS_DIFLAG_REALTIME ? " rt" : "",
++			xino.i_d.di_flags & XFS_DIFLAG_PREALLOC ? " pre" : "",
++			xino.i_d.di_flags & XFS_DIFLAG_IMMUTABLE? " imm" : "",
++			xino.i_d.di_flags & XFS_DIFLAG_APPEND   ? " app" : "",
++			xino.i_d.di_flags & XFS_DIFLAG_SYNC     ? " syn" : "",
++			xino.i_d.di_flags & XFS_DIFLAG_NOATIME  ? " noa" : "",
++			xino.i_d.di_flags & XFS_DIFLAG_NODUMP   ? " nod" : "");
  	security = 0;
--	switch (xino.i_d.di_mode & S_IFMT) {
-+	switch (mode & S_IFMT) {
+-	switch (idic.di_mode & S_IFMT) {
++	switch (xino.i_d.di_mode & S_IFMT) {
  	case S_IFDIR:
  		type = DBM_DIR;
- 		if (xino.i_d.di_format == XFS_DINODE_FMT_LOCAL)
-@@ -2785,7 +2787,7 @@ process_inode(
+-		if (idic.di_format == XFS_DINODE_FMT_LOCAL)
++		if (xino.i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 			break;
+-		blkmap = blkmap_alloc(idic.di_nextents);
++		blkmap = blkmap_alloc(xino.i_d.di_nextents);
+ 		break;
+ 	case S_IFREG:
+-		if (idic.di_flags & XFS_DIFLAG_REALTIME)
++		if (xino.i_d.di_flags & XFS_DIFLAG_REALTIME)
+ 			type = DBM_RTDATA;
+ 		else if (id->ino == mp->m_sb.sb_rbmino) {
+ 			type = DBM_RTBITMAP;
+-			blkmap = blkmap_alloc(idic.di_nextents);
++			blkmap = blkmap_alloc(xino.i_d.di_nextents);
+ 			addlink_inode(id);
+ 		} else if (id->ino == mp->m_sb.sb_rsumino) {
+ 			type = DBM_RTSUM;
+-			blkmap = blkmap_alloc(idic.di_nextents);
++			blkmap = blkmap_alloc(xino.i_d.di_nextents);
+ 			addlink_inode(id);
+ 		}
+ 		else if (id->ino == mp->m_sb.sb_uquotino ||
+ 			 id->ino == mp->m_sb.sb_gquotino ||
+ 			 id->ino == mp->m_sb.sb_pquotino) {
+ 			type = DBM_QUOTA;
+-			blkmap = blkmap_alloc(idic.di_nextents);
++			blkmap = blkmap_alloc(xino.i_d.di_nextents);
+ 			addlink_inode(id);
  		}
  		else
  			type = DBM_DATA;
--		if (xino.i_d.di_mode & (S_ISUID | S_ISGID))
-+		if (mode & (S_ISUID | S_ISGID))
+-		if (idic.di_mode & (S_ISUID | S_ISGID))
++		if (xino.i_d.di_mode & (S_ISUID | S_ISGID))
  			security = 1;
  		break;
  	case S_IFLNK:
+@@ -2801,13 +2801,13 @@ process_inode(
+ 		type = DBM_UNKNOWN;
+ 		break;
+ 	}
+-	if (idic.di_version == 1)
+-		setlink_inode(id, idic.di_onlink, type == DBM_DIR, security);
++	if (xino.i_d.di_version == 1)
++		setlink_inode(id, xino.i_d.di_onlink, type == DBM_DIR, security);
+ 	else {
+ 		sbversion |= XFS_SB_VERSION_NLINKBIT;
+-		setlink_inode(id, idic.di_nlink, type == DBM_DIR, security);
++		setlink_inode(id, xino.i_d.di_nlink, type == DBM_DIR, security);
+ 	}
+-	switch (idic.di_format) {
++	switch (xino.i_d.di_format) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		process_lclinode(id, dip, type, &totdblocks, &totiblocks,
+ 			&nextents, &blkmap, XFS_DATA_FORK);
+@@ -2823,7 +2823,7 @@ process_inode(
+ 	}
+ 	if (XFS_DFORK_Q(dip)) {
+ 		sbversion |= XFS_SB_VERSION_ATTRBIT;
+-		switch (idic.di_aformat) {
++		switch (xino.i_d.di_aformat) {
+ 		case XFS_DINODE_FMT_LOCAL:
+ 			process_lclinode(id, dip, DBM_ATTR, &atotdblocks,
+ 				&atotiblocks, &anextents, NULL, XFS_ATTR_FORK);
+@@ -2859,30 +2859,30 @@ process_inode(
+ 			break;
+ 		}
+ 		if (ic) {
+-			dqprid = xfs_get_projid(&idic);	/* dquot ID is u32 */
+-			quota_add(&dqprid, &idic.di_gid, &idic.di_uid,
++			dqprid = xfs_get_projid(&xino.i_d);	/* dquot ID is u32 */
++			quota_add(&dqprid, &xino.i_d.di_gid, &xino.i_d.di_uid,
+ 				  0, bc, ic, rc);
+ 		}
+ 	}
+ 	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
+-	if (totblocks != idic.di_nblocks) {
++	if (totblocks != xino.i_d.di_nblocks) {
+ 		if (v)
+ 			dbprintf(_("bad nblocks %lld for inode %lld, counted "
+ 				 "%lld\n"),
+-				idic.di_nblocks, id->ino, totblocks);
++				xino.i_d.di_nblocks, id->ino, totblocks);
+ 		error++;
+ 	}
+-	if (nextents != idic.di_nextents) {
++	if (nextents != xino.i_d.di_nextents) {
+ 		if (v)
+ 			dbprintf(_("bad nextents %d for inode %lld, counted %d\n"),
+-				idic.di_nextents, id->ino, nextents);
++				xino.i_d.di_nextents, id->ino, nextents);
+ 		error++;
+ 	}
+-	if (anextents != idic.di_anextents) {
++	if (anextents != xino.i_d.di_anextents) {
+ 		if (v)
+ 			dbprintf(_("bad anextents %d for inode %lld, counted "
+ 				 "%d\n"),
+-				idic.di_anextents, id->ino, anextents);
++				xino.i_d.di_anextents, id->ino, anextents);
+ 		error++;
+ 	}
+ 	if (type == DBM_DIR)
 diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 0290f97..d6990e5 100644
+index 71c0fb4..1efff0f 100644
 --- a/include/xfs_inode.h
 +++ b/include/xfs_inode.h
-@@ -34,6 +34,7 @@ struct xfs_dir_ops;
-  * metadata.
-  */
- struct inode {
-+	mode_t		i_mode;
- 	uint32_t	i_nlink;
- 	uint32_t	i_generation;
- 	uint64_t	i_version;
-@@ -65,13 +66,26 @@ static inline struct inode *VFS_I(struct xfs_inode *ip)
- }
+@@ -29,8 +29,16 @@ struct xfs_inode_log_item;
+ struct xfs_dir_ops;
  
  /*
-+ * wrappers around the mode checks to simplify code
-+ */
-+static inline bool XFS_ISREG(struct xfs_inode *ip)
+- * Inode interface
++ * Inode interface. This fakes up a "VFS inode" to make the xfs_inode appear
++ * similar to the kernel which now is used tohold certain parts of the on-disk
++ * metadata.
+  */
++struct inode {
++	struct timespec	i_atime;
++	struct timespec	i_mtime;
++	struct timespec	i_ctime;
++};
++
+ typedef struct xfs_inode {
+ 	struct cache_node	i_node;
+ 	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
+@@ -45,8 +53,14 @@ typedef struct xfs_inode {
+ 	struct xfs_icdinode	i_d;		/* most of ondisk inode */
+ 	xfs_fsize_t		i_size;		/* in-memory size */
+ 	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
++	struct inode		i_vnode;
+ } xfs_inode_t;
+ 
++static inline struct inode *VFS_I(struct xfs_inode *ip)
 +{
-+	return S_ISREG(VFS_I(ip)->i_mode);
++	return &ip->i_vnode;
 +}
 +
-+static inline bool XFS_ISDIR(struct xfs_inode *ip)
-+{
-+	return S_ISDIR(VFS_I(ip)->i_mode);
-+}
-+
-+/*
+ /*
   * For regular files we only update the on-disk filesize when actually
   * writing data back to disk.  Until then only the copy in the VFS inode
-  * is uptodate.
-  */
- static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
- {
--	if (S_ISREG(ip->i_d.di_mode))
-+	if (XFS_ISREG(ip))
- 		return ip->i_size;
- 	return ip->i_d.di_size;
- }
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 3522c26..0ec38c5 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1351,7 +1351,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
- 	/*
- 	 * set up the inode ops structure that the libxfs code relies on
- 	 */
--	if (S_ISDIR(ip->i_d.di_mode))
-+	if (XFS_ISDIR(ip))
- 		ip->d_ops = mp->m_dir_inode_ops;
- 	else
- 		ip->d_ops = mp->m_nondir_inode_ops;
-@@ -1363,7 +1363,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
- static void
- libxfs_idestroy(xfs_inode_t *ip)
- {
--	switch (ip->i_d.di_mode & S_IFMT) {
-+	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 		case S_IFREG:
- 		case S_IFDIR:
- 		case S_IFLNK:
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 3a649e3..685c7a7 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -92,8 +92,8 @@
+ #define xfs_dir2_data_use_free		libxfs_dir2_data_use_free
+ #define xfs_dir2_shrink_inode		libxfs_dir2_shrink_inode
+ 
+-#define xfs_dinode_from_disk		libxfs_dinode_from_disk
+-#define xfs_dinode_to_disk		libxfs_dinode_to_disk
++#define xfs_inode_from_disk		libxfs_inode_from_disk
++#define xfs_inode_to_disk		libxfs_inode_to_disk
+ #define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
+ #define xfs_idata_realloc		libxfs_idata_realloc
+ #define xfs_idestroy_fork		libxfs_idestroy_fork
 diff --git a/libxfs/util.c b/libxfs/util.c
-index 9c2f1d2..576f954 100644
+index 787fd5d..86fadc3 100644
 --- a/libxfs/util.c
 +++ b/libxfs/util.c
-@@ -217,7 +217,7 @@ libxfs_ialloc(
- 		return error;
- 	ASSERT(ip != NULL);
- 
--	ip->i_d.di_mode = (__uint16_t)mode;
-+	VFS_I(ip)->i_mode = mode;
- 	set_nlink(VFS_I(ip), nlink);
- 	ip->i_d.di_uid = cr->cr_uid;
- 	ip->i_d.di_gid = cr->cr_gid;
-@@ -238,10 +238,10 @@ libxfs_ialloc(
- 		 */
- 	}
- 
--	if (pip && (pip->i_d.di_mode & S_ISGID)) {
-+	if (pip && (VFS_I(pip)->i_mode & S_ISGID)) {
- 		ip->i_d.di_gid = pip->i_d.di_gid;
--		if ((pip->i_d.di_mode & S_ISGID) && (mode & S_IFMT) == S_IFDIR)
--			ip->i_d.di_mode |= S_ISGID;
-+		if ((VFS_I(pip)->i_mode & S_ISGID) && (mode & S_IFMT) == S_IFDIR)
-+			VFS_I(ip)->i_mode |= S_ISGID;
- 	}
- 
- 	ip->i_d.di_size = 0;
-@@ -316,7 +316,7 @@ libxfs_ialloc(
- 	/*
- 	 * set up the inode ops structure that the libxfs code relies on
- 	 */
--	if (S_ISDIR(ip->i_d.di_mode))
-+	if (XFS_ISDIR(ip))
- 		ip->d_ops = ip->i_mount->m_dir_inode_ops;
- 	else
- 		ip->d_ops = ip->i_mount->m_nondir_inode_ops;
-@@ -367,7 +367,7 @@ libxfs_iprint(
- 
- 	dip = &ip->i_d;
- 	printf("\nOn disk portion\n");
--	printf("    di_mode %o\n", dip->di_mode);
-+	printf("    di_mode %o\n", VFS_I(ip)->i_mode);
- 	printf("    di_version %x\n", (uint)dip->di_version);
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_LOCAL:
-@@ -417,11 +417,10 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
- 	dip = xfs_buf_offset(bp, ip->i_imap.im_boffset);
- 
- 	ASSERT(ip->i_d.di_magic == XFS_DINODE_MAGIC);
--	if ((ip->i_d.di_mode & S_IFMT) == S_IFREG) {
-+	if (XFS_ISREG(ip)) {
- 		ASSERT( (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS) ||
- 			(ip->i_d.di_format == XFS_DINODE_FMT_BTREE) );
+@@ -161,14 +161,10 @@ libxfs_trans_ichgtime(
+ 	gettimeofday(&stv, (struct timezone *)0);
+ 	tv.tv_sec = stv.tv_sec;
+ 	tv.tv_nsec = stv.tv_usec * 1000;
+-	if (flags & XFS_ICHGTIME_MOD) {
+-		ip->i_d.di_mtime.t_sec = (__int32_t)tv.tv_sec;
+-		ip->i_d.di_mtime.t_nsec = (__int32_t)tv.tv_nsec;
 -	}
--	else if ((ip->i_d.di_mode & S_IFMT) == S_IFDIR) {
-+	} else if (XFS_ISDIR(ip) == S_IFDIR) {
- 		ASSERT( (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS) ||
- 			(ip->i_d.di_format == XFS_DINODE_FMT_BTREE)   ||
- 			(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) );
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 8cb89bc..40286e4 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -904,7 +904,7 @@ xfs_bmap_local_to_extents(
- 	 * We don't want to deal with the case of keeping inode data inline yet.
- 	 * So sending the data fork of a regular inode is invalid.
- 	 */
--	ASSERT(!(S_ISREG(ip->i_d.di_mode) && whichfork == XFS_DATA_FORK));
-+	ASSERT(!(S_ISREG(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK));
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
- 
-@@ -1071,7 +1071,7 @@ xfs_bmap_add_attrfork_local(
- 	if (ip->i_df.if_bytes <= XFS_IFORK_DSIZE(ip))
- 		return 0;
- 
--	if (S_ISDIR(ip->i_d.di_mode)) {
-+	if (S_ISDIR(VFS_I(ip)->i_mode)) {
- 		memset(&dargs, 0, sizeof(dargs));
- 		dargs.geo = ip->i_mount->m_dir_geo;
- 		dargs.dp = ip;
-@@ -1083,7 +1083,7 @@ xfs_bmap_add_attrfork_local(
- 		return xfs_dir2_sf_to_block(&dargs);
+-	if (flags & XFS_ICHGTIME_CHG) {
+-		ip->i_d.di_ctime.t_sec = (__int32_t)tv.tv_sec;
+-		ip->i_d.di_ctime.t_nsec = (__int32_t)tv.tv_nsec;
+-	}
++	if (flags & XFS_ICHGTIME_MOD)
++		VFS_I(ip)->i_mtime = tv;
++	if (flags & XFS_ICHGTIME_CHG)
++		VFS_I(ip)->i_ctime = tv;
+ 	if (flags & XFS_ICHGTIME_CREATE) {
+ 		ip->i_d.di_crtime.t_sec = (__int32_t)tv.tv_sec;
+ 		ip->i_d.di_crtime.t_nsec = (__int32_t)tv.tv_nsec;
+@@ -270,7 +266,8 @@ libxfs_ialloc(
+ 		ip->i_d.di_lsn = 0;
+ 		ip->i_d.di_flags2 = 0;
+ 		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+-		ip->i_d.di_crtime = ip->i_d.di_mtime;
++		ip->i_d.di_crtime.t_sec = (__int32_t)VFS_I(ip)->i_mtime.tv_sec;
++		ip->i_d.di_crtime.t_nsec = (__int32_t)VFS_I(ip)->i_mtime.tv_nsec;
  	}
  
--	if (S_ISLNK(ip->i_d.di_mode))
-+	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		return xfs_bmap_local_to_extents(tp, ip, firstblock, 1,
- 						 flags, XFS_DATA_FORK,
- 						 xfs_symlink_local_to_remote);
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 89b4781..723b267 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -174,7 +174,7 @@ xfs_dir_isempty(
- {
- 	xfs_dir2_sf_hdr_t	*sfp;
+ 	flags = XFS_ILOG_CORE;
+@@ -452,7 +449,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+ 	 * because if the inode is dirty at all the core must
+ 	 * be.
+ 	 */
+-	xfs_dinode_to_disk(dip, &ip->i_d);
++	xfs_inode_to_disk(ip, dip);
  
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	if (dp->i_d.di_size == 0)	/* might happen during shutdown. */
- 		return 1;
- 	if (dp->i_d.di_size > XFS_IFORK_DSIZE(dp))
-@@ -229,7 +229,7 @@ xfs_dir_init(
- 	struct xfs_da_args *args;
- 	int		error;
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	error = xfs_dir_ino_validate(tp->t_mountp, pdp->i_ino);
- 	if (error)
- 		return error;
-@@ -264,7 +264,7 @@ xfs_dir_createname(
- 	int			rval;
- 	int			v;		/* type-checking value */
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	if (inum) {
- 		rval = xfs_dir_ino_validate(tp->t_mountp, inum);
- 		if (rval)
-@@ -362,7 +362,7 @@ xfs_dir_lookup(
- 	int		v;		/* type-checking value */
- 	int		lock_mode;
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_lookup);
- 
- 	/*
-@@ -441,7 +441,7 @@ xfs_dir_removename(
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
- 
- 	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-@@ -503,7 +503,7 @@ xfs_dir_replace(
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 
- 	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
- 	if (rval)
+ 	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+ 	if (XFS_IFORK_Q(ip))
 diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index da9edcd..e3d674d 100644
+index dbea592..f546b41 100644
 --- a/libxfs/xfs_inode_buf.c
 +++ b/libxfs/xfs_inode_buf.c
-@@ -211,13 +211,12 @@ xfs_inode_from_disk(
- 	struct xfs_icdinode	*to = &ip->i_d;
- 	struct inode		*inode = VFS_I(ip);
+@@ -204,10 +204,13 @@ xfs_imap_to_bp(
+ }
  
--	to->di_mode = be16_to_cpu(from->di_mode);
--	to->di_version = from ->di_version;
- 
- 	/*
- 	 * Convert v1 inodes immediately to v2 inode format as this is the
- 	 * minimum inode version format we support in the rest of the code.
- 	 */
-+	to->di_version = from->di_version;
- 	if (to->di_version == 1) {
- 		set_nlink(inode, be16_to_cpu(from->di_onlink));
- 		to->di_projid_lo = 0;
-@@ -247,6 +246,7 @@ xfs_inode_from_disk(
- 	inode->i_ctime.tv_sec = (int)be32_to_cpu(from->di_ctime.t_sec);
- 	inode->i_ctime.tv_nsec = (int)be32_to_cpu(from->di_ctime.t_nsec);
- 	inode->i_generation = be32_to_cpu(from->di_gen);
-+	inode->i_mode = be16_to_cpu(from->di_mode);
- 
+ void
+-xfs_dinode_from_disk(
+-	struct xfs_icdinode	*to,
++xfs_inode_from_disk(
++	struct xfs_inode	*ip,
+ 	struct xfs_dinode	*from)
+ {
++	struct xfs_icdinode	*to = &ip->i_d;
++	struct inode		*inode = VFS_I(ip);
++
+ 	to->di_magic = be16_to_cpu(from->di_magic);
+ 	to->di_mode = be16_to_cpu(from->di_mode);
+ 	to->di_version = from ->di_version;
+@@ -220,12 +223,20 @@ xfs_dinode_from_disk(
+ 	to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
+ 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+ 	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+-	to->di_atime.t_sec = be32_to_cpu(from->di_atime.t_sec);
+-	to->di_atime.t_nsec = be32_to_cpu(from->di_atime.t_nsec);
+-	to->di_mtime.t_sec = be32_to_cpu(from->di_mtime.t_sec);
+-	to->di_mtime.t_nsec = be32_to_cpu(from->di_mtime.t_nsec);
+-	to->di_ctime.t_sec = be32_to_cpu(from->di_ctime.t_sec);
+-	to->di_ctime.t_nsec = be32_to_cpu(from->di_ctime.t_nsec);
++
++	/*
++	 * Time is signed, so need to convert to signed 32 bit before
++	 * storing in inode timestamp which may be 64 bit. Otherwise
++	 * a time before epoch is converted to a time long after epoch
++	 * on 64 bit systems.
++	 */
++	inode->i_atime.tv_sec = (int)be32_to_cpu(from->di_atime.t_sec);
++	inode->i_atime.tv_nsec = (int)be32_to_cpu(from->di_atime.t_nsec);
++	inode->i_mtime.tv_sec = (int)be32_to_cpu(from->di_mtime.t_sec);
++	inode->i_mtime.tv_nsec = (int)be32_to_cpu(from->di_mtime.t_nsec);
++	inode->i_ctime.tv_sec = (int)be32_to_cpu(from->di_ctime.t_sec);
++	inode->i_ctime.tv_nsec = (int)be32_to_cpu(from->di_ctime.t_nsec);
++
  	to->di_size = be64_to_cpu(from->di_size);
  	to->di_nblocks = be64_to_cpu(from->di_nblocks);
-@@ -279,7 +279,6 @@ xfs_inode_to_disk(
- 	to->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
- 	to->di_onlink = 0;
+ 	to->di_extsize = be32_to_cpu(from->di_extsize);
+@@ -251,9 +262,63 @@ xfs_dinode_from_disk(
+ }
  
--	to->di_mode = cpu_to_be16(from->di_mode);
- 	to->di_version = from->di_version;
- 	to->di_format = from->di_format;
- 	to->di_uid = cpu_to_be32(from->di_uid);
-@@ -296,6 +295,7 @@ xfs_inode_to_disk(
- 	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
- 	to->di_nlink = cpu_to_be32(inode->i_nlink);
- 	to->di_gen = cpu_to_be32(inode->i_generation);
-+	to->di_mode = cpu_to_be16(inode->i_mode);
- 
+ void
+-xfs_dinode_to_disk(
+-	struct xfs_dinode	*to,
+-	struct xfs_icdinode	*from)
++xfs_inode_to_disk(
++	struct xfs_inode	*ip,
++	struct xfs_dinode	*to)
++{
++	struct xfs_icdinode	*from = &ip->i_d;
++	struct inode		*inode = VFS_I(ip);
++
++	to->di_magic = cpu_to_be16(from->di_magic);
++	to->di_mode = cpu_to_be16(from->di_mode);
++	to->di_version = from ->di_version;
++	to->di_format = from->di_format;
++	to->di_onlink = cpu_to_be16(from->di_onlink);
++	to->di_uid = cpu_to_be32(from->di_uid);
++	to->di_gid = cpu_to_be32(from->di_gid);
++	to->di_nlink = cpu_to_be32(from->di_nlink);
++	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
++	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
++	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
++
++	to->di_atime.t_sec = cpu_to_be32(inode->i_atime.tv_sec);
++	to->di_atime.t_nsec = cpu_to_be32(inode->i_atime.tv_nsec);
++	to->di_mtime.t_sec = cpu_to_be32(inode->i_mtime.tv_sec);
++	to->di_mtime.t_nsec = cpu_to_be32(inode->i_mtime.tv_nsec);
++	to->di_ctime.t_sec = cpu_to_be32(inode->i_ctime.tv_sec);
++	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
++
++	to->di_size = cpu_to_be64(from->di_size);
++	to->di_nblocks = cpu_to_be64(from->di_nblocks);
++	to->di_extsize = cpu_to_be32(from->di_extsize);
++	to->di_nextents = cpu_to_be32(from->di_nextents);
++	to->di_anextents = cpu_to_be16(from->di_anextents);
++	to->di_forkoff = from->di_forkoff;
++	to->di_aformat = from->di_aformat;
++	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
++	to->di_dmstate = cpu_to_be16(from->di_dmstate);
++	to->di_flags = cpu_to_be16(from->di_flags);
++	to->di_gen = cpu_to_be32(from->di_gen);
++
++	if (from->di_version == 3) {
++		to->di_changecount = cpu_to_be64(from->di_changecount);
++		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
++		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
++		to->di_flags2 = cpu_to_be64(from->di_flags2);
++		to->di_ino = cpu_to_be64(from->di_ino);
++		to->di_lsn = cpu_to_be64(from->di_lsn);
++		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
++		uuid_copy(&to->di_uuid, &from->di_uuid);
++		to->di_flushiter = 0;
++	} else {
++		to->di_flushiter = cpu_to_be16(from->di_flushiter);
++	}
++}
++
++void
++xfs_log_dinode_to_disk(
++	struct xfs_log_dinode	*from,
++	struct xfs_dinode	*to)
+ {
+ 	to->di_magic = cpu_to_be16(from->di_magic);
+ 	to->di_mode = cpu_to_be16(from->di_mode);
+@@ -266,12 +331,14 @@ xfs_dinode_to_disk(
+ 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+ 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
+ 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
++
+ 	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
+ 	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
+ 	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
+ 	to->di_mtime.t_nsec = cpu_to_be32(from->di_mtime.t_nsec);
+ 	to->di_ctime.t_sec = cpu_to_be32(from->di_ctime.t_sec);
+ 	to->di_ctime.t_nsec = cpu_to_be32(from->di_ctime.t_nsec);
++
  	to->di_size = cpu_to_be64(from->di_size);
  	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-@@ -510,7 +510,7 @@ xfs_iread(
- 		 * the inode is already free and not try to mess
- 		 * with the uninitialized part of it.
- 		 */
--		ip->i_d.di_mode = 0;
-+		VFS_I(ip)->i_mode = 0;
- 	}
- 
- 	ASSERT(ip->i_d.di_version >= 2);
+ 	to->di_extsize = cpu_to_be32(from->di_extsize);
+@@ -412,7 +479,7 @@ xfs_iread(
+ 	 * Otherwise, just get the truly permanent information.
+ 	 */
+ 	if (dip->di_mode) {
+-		xfs_dinode_from_disk(&ip->i_d, dip);
++		xfs_inode_from_disk(ip, dip);
+ 		error = xfs_iformat_fork(ip, dip);
+ 		if (error)  {
+ #ifdef DEBUG
 diff --git a/libxfs/xfs_inode_buf.h b/libxfs/xfs_inode_buf.h
-index ad98fdd..4ece9bf 100644
+index da66458..6242974 100644
 --- a/libxfs/xfs_inode_buf.h
 +++ b/libxfs/xfs_inode_buf.h
-@@ -28,7 +28,6 @@ struct xfs_dinode;
-  * format specific structures at the appropriate time.
-  */
- struct xfs_icdinode {
--	__uint16_t	di_mode;	/* mode and type of file */
- 	__int8_t	di_version;	/* inode version */
- 	__int8_t	di_format;	/* format of di_c data */
+@@ -40,9 +40,6 @@ struct xfs_icdinode {
+ 	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	__uint8_t	di_pad[6];	/* unused, zeroed space */
  	__uint16_t	di_flushiter;	/* incremented on flush */
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index f40649e..2af1dba 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -117,7 +117,7 @@ xfs_iformat_fork(
- 		return -EFSCORRUPTED;
- 	}
+-	xfs_ictimestamp_t di_atime;	/* time last accessed */
+-	xfs_ictimestamp_t di_mtime;	/* time last modified */
+-	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+@@ -89,8 +86,10 @@ int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+ int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ 		  struct xfs_inode *, uint);
+ void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+-void	xfs_dinode_to_disk(struct xfs_dinode *to, struct xfs_icdinode *from);
+-void	xfs_dinode_from_disk(struct xfs_icdinode *to, struct xfs_dinode *from);
++void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to);
++void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
++void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
++			       struct xfs_dinode *to);
+ bool	xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
+ 			  struct xfs_dinode *dip);
  
--	switch (ip->i_d.di_mode & S_IFMT) {
-+	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 	case S_IFIFO:
- 	case S_IFCHR:
- 	case S_IFBLK:
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 684a18b..70ea975 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1006,7 +1006,7 @@ xfs_rtfree_extent(
+ 	    mp->m_sb.sb_rextents) {
+ 		if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM))
+ 			mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
+-		*(__uint64_t *)&mp->m_rbmip->i_d.di_atime = 0;
++		*(__uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
+ 		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
+ 	}
+ 	return 0;
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 9550859..4fc1f3c 100644
+index 21960d5..72a1576 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -198,7 +198,7 @@ rsvfile(
- 
- 	libxfs_trans_ijoin(tp, ip, 0);
- 
--	ip->i_d.di_mode &= ~S_ISUID;
-+	VFS_I(ip)->i_mode &= ~S_ISUID;
- 
- 	/*
- 	 * Note that we don't have to worry about mandatory
-@@ -207,8 +207,8 @@ rsvfile(
- 	 * on, but if it was on then mandatory locking wouldn't
- 	 * have been enabled.
- 	 */
--	if (ip->i_d.di_mode & S_IXGRP)
--		ip->i_d.di_mode &= ~S_ISGID;
-+	if (VFS_I(ip)->i_mode & S_IXGRP)
-+		VFS_I(ip)->i_mode &= ~S_ISGID;
- 
- 	libxfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 7415199..0a71164 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -510,7 +510,7 @@ mk_rbmino(xfs_mount_t *mp)
- 	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 2;
- 	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 
--	ip->i_d.di_mode = S_IFREG;
-+	VFS_I(ip)->i_mode = S_IFREG;
- 	ip->i_d.di_version = vers;
- 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
- 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-@@ -763,7 +763,7 @@ mk_rsumino(xfs_mount_t *mp)
- 	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 1;
- 	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 
--	ip->i_d.di_mode = S_IFREG;
-+	VFS_I(ip)->i_mode = S_IFREG;
- 	ip->i_d.di_version = vers;
- 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
- 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-@@ -872,7 +872,7 @@ mk_root_dir(xfs_mount_t *mp)
- 	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 2;
- 	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 
--	ip->i_d.di_mode = (__uint16_t) mode|S_IFDIR;
-+	VFS_I(ip)->i_mode = mode|S_IFDIR;
- 	ip->i_d.di_version = vers;
- 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
- 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-@@ -1097,7 +1097,7 @@ mv_orphanage(
- 	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, 0)))
- 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
- 
--	xname.type = xfs_mode_to_ftype[(ino_p->i_d.di_mode & S_IFMT)>>S_SHIFT];
-+	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
- 
- 	if (isa_dir)  {
- 		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
+@@ -653,7 +653,7 @@ rtinit(
+ 	mp->m_sb.sb_rbmino = rbmip->i_ino;
+ 	rbmip->i_d.di_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
+ 	rbmip->i_d.di_flags = XFS_DIFLAG_NEWRTBM;
+-	*(__uint64_t *)&rbmip->i_d.di_atime = 0;
++	*(__uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
+ 	libxfs_trans_log_inode(tp, rbmip, XFS_ILOG_CORE);
+ 	libxfs_log_sb(tp);
+ 	mp->m_rbmip = rbmip;
 -- 
 2.7.0
 
