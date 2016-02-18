@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 46F6A7CA1
-	for <xfs@oss.sgi.com>; Thu, 18 Feb 2016 07:32:48 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 206777CA1
+	for <xfs@oss.sgi.com>; Thu, 18 Feb 2016 08:06:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 25E458F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Feb 2016 05:32:45 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id JNkINloP87a53K8i (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 18 Feb 2016 05:32:42 -0800 (PST)
-Date: Thu, 18 Feb 2016 14:32:40 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: [fengguang.wu@intel.com: [pnfs:xfs-nfsd-clone]
-	57b7d25bf4c57ebe0fbd2d8c5b37edf503175e1f BUILD DONE]
-Message-ID: <20160218133240.GA5228@lst.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 024C48F8033
+	for <xfs@oss.sgi.com>; Thu, 18 Feb 2016 06:06:25 -0800 (PST)
+Received: from mail-ig0-f179.google.com (mail-ig0-f179.google.com
+	[209.85.213.179]) by cuda.sgi.com with ESMTP id
+	Bgrwr6JEHgyCKauN (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 18 Feb 2016 06:06:14 -0800 (PST)
+Received: by mail-ig0-f179.google.com with SMTP id y8so14318228igp.0
+	for <xfs@oss.sgi.com>; Thu, 18 Feb 2016 06:06:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20160218133240.GA5228@lst.de>
+References: <20160218133240.GA5228@lst.de>
+Date: Thu, 18 Feb 2016 15:06:14 +0100
+Message-ID: <CAMuHMdVixG0ihW4pMG7Zv3RgQ+g4nTfof0o4P_kmu7RRFyE9Rg@mail.gmail.com>
+Subject: Re: [fengguang.wu@intel.com: [pnfs:xfs-nfsd-clone]
+	57b7d25bf4c57ebe0fbd2d8c5b37edf503175e1f BUILD DONE]
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,136 +28,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-m68k@lists.linux-m68k.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-m68k <linux-m68k@lists.linux-m68k.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
 
-TG9va3MgbGlrZSB0aGUgc3RydWN0dXJlIHNpemUgY2hlY2tlciBmb3VuZCBpdCdzIGZpcnN0IHZp
-Y3RpbSBvbiBtNjhrLAp3aGljaCBkb2Vzbid0IHNlZW0gdG8gcGFkIHRvIDQgYnl0ZSBib3VuZGFy
-aWVzLiAgSSBkb24ndCB0aGluayBpdCBhY3R1YWxseQptYXR0ZXJzIGluIHByYWN0aWNlIGFzIHdl
-J2xsIGFsd2F5cyB0aGUgaGFja3kgYXBwcm9taWF0aW9uIG9mIGEgdmFyaWFibGUKc2l6ZWQgYXJy
-YXkgYmVoaW5kIGl0LiAgSSBndWVzcyB3ZSBzaG91bGQgbW92ZSB0aGlzIHRvIGEgbW9kZXJuIEM5
-OSBWTEEKYW5kIG1hcmsgaXQgYXMgX19wYWNrZWQ/CgotLS0tLSBGb3J3YXJkZWQgbWVzc2FnZSBm
-cm9tIGtidWlsZCB0ZXN0IHJvYm90IDxmZW5nZ3Vhbmcud3VAaW50ZWwuY29tPiAtLS0tLQoKRGF0
-ZTogVGh1LCAxOCBGZWIgMjAxNiAyMToyNjoyMyArMDgwMApGcm9tOiBrYnVpbGQgdGVzdCByb2Jv
-dCA8ZmVuZ2d1YW5nLnd1QGludGVsLmNvbT4KU3ViamVjdDogW3BuZnM6eGZzLW5mc2QtY2xvbmVd
-IDU3YjdkMjViZjRjNTdlYmUwZmJkMmQ4YzViMzdlZGY1MDMxNzVlMWYKCUJVSUxEIERPTkUKVG86
-IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgoKZ2l0Oi8vZ2l0LmluZnJhZGVhZC5vcmcv
-dXNlcnMvaGNoL3BuZnMuZ2l0ICB4ZnMtbmZzZC1jbG9uZQo1N2I3ZDI1YmY0YzU3ZWJlMGZiZDJk
-OGM1YjM3ZWRmNTAzMTc1ZTFmICBuZnM0OiBmaXggc3RhdGVpZCBoYW5kbGluZyBmb3IgdGhlIE5G
-UyB2NC4yIG9wZXJhdGlvbnMKCmZzL3hmcy94ZnNfb25kaXNrLmg6MjI6Mjogbm90ZTogaW4gZXhw
-YW5zaW9uIG9mIG1hY3JvICdCVUlMRF9CVUdfT05fTVNHJwpmcy94ZnMveGZzX29uZGlzay5oOjc0
-OjI6IG5vdGU6IGluIGV4cGFuc2lvbiBvZiBtYWNybyAnWEZTX0NIRUNLX1NUUlVDVF9TSVpFJwpp
-bmNsdWRlL2xpbnV4L2NvbXBpbGVyLmg6NTAyOjM4OiBlcnJvcjogY2FsbCB0byAnX19jb21waWxl
-dGltZV9hc3NlcnRfNzQnIGRlY2xhcmVkIHdpdGggYXR0cmlidXRlIGVycm9yOiBYRlM6IHNpemVv
-Zih4ZnNfYXR0cl9sZWFmX25hbWVfcmVtb3RlX3QpIGlzIHdyb25nLCBleHBlY3RlZCAxMgoKRXJy
-b3IgaWRzIGdyb3VwZWQgYnkga2NvbmZpZ3M6CgpyZWNlbnRfZXJyb3JzCuKUnOKUgOKUgCBtNjhr
-LW11bHRpX2RlZmNvbmZpZwrilILCoMKgIOKUnOKUgOKUgCBmcy14ZnMteGZzX29uZGlzay5oOm5v
-dGU6aW4tZXhwYW5zaW9uLW9mLW1hY3JvLUJVSUxEX0JVR19PTl9NU0cK4pSCwqDCoCDilJzilIDi
-lIAgZnMteGZzLXhmc19vbmRpc2suaDpub3RlOmluLWV4cGFuc2lvbi1vZi1tYWNyby1YRlNfQ0hF
-Q0tfU1RSVUNUX1NJWkUK4pSCwqDCoCDilJTilIDilIAgaW5jbHVkZS1saW51eC1jb21waWxlci5o
-OmVycm9yOmNhbGwtdG8tX19jb21waWxldGltZV9hc3NlcnRfTk5OLWRlY2xhcmVkLXdpdGgtYXR0
-cmlidXRlLWVycm9yOlhGUzpzaXplb2YoeGZzX2F0dHJfbGVhZl9uYW1lX3JlbW90ZV90KS1pcy13
-cm9uZy1leHBlY3RlZArilJTilIDilIAgbTY4ay1zdW4zX2RlZmNvbmZpZwogICAg4pSc4pSA4pSA
-IGZzLXhmcy14ZnNfb25kaXNrLmg6bm90ZTppbi1leHBhbnNpb24tb2YtbWFjcm8tQlVJTERfQlVH
-X09OX01TRwogICAg4pSc4pSA4pSAIGZzLXhmcy14ZnNfb25kaXNrLmg6bm90ZTppbi1leHBhbnNp
-b24tb2YtbWFjcm8tWEZTX0NIRUNLX1NUUlVDVF9TSVpFCiAgICDilJTilIDilIAgaW5jbHVkZS1s
-aW51eC1jb21waWxlci5oOmVycm9yOmNhbGwtdG8tX19jb21waWxldGltZV9hc3NlcnRfTk5OLWRl
-Y2xhcmVkLXdpdGgtYXR0cmlidXRlLWVycm9yOlhGUzpzaXplb2YoeGZzX2F0dHJfbGVhZl9uYW1l
-X3JlbW90ZV90KS1pcy13cm9uZy1leHBlY3RlZAoKZWxhcHNlZCB0aW1lOiA2Nm0KCmNvbmZpZ3Mg
-dGVzdGVkOiAxMTEKCmFscGhhICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRlZmNvbmZp
-ZwpwYXJpc2MgICAgICAgICAgICAgICAgICAgICAgICAgICAgYWxsbm9jb25maWcKcGFyaXNjICAg
-ICAgICAgICAgICAgICAgICAgICAgYzMwMDBfZGVmY29uZmlnCnBhcmlzYyAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIGRlZmNvbmZpZwphcm0gICAgICAgICAgICAgICAgICAgICAgICAgIGJh
-ZGdlNF9kZWZjb25maWcKYXJtICAgICAgICAgICAgICAgICAgICAgICAgY2VyZmN1YmVfZGVmY29u
-ZmlnCnBvd2VycGMgICAgICAgICAgICAgICBtcGM4MzR4X2l0eGdwX2RlZmNvbmZpZwppMzg2ICAg
-ICAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy1hMC0yMDE2MDcKeDg2XzY0ICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICBhY3BpLXJlZGVmCng4Nl82NCAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIGFsbHllc2RlYmlhbgp4ODZfNjQgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5m
-c3Jvb3QKYmxhY2tmaW4gICAgICAgICAgICAgICAgQkY1MjYtRVpCUkRfZGVmY29uZmlnCmJsYWNr
-ZmluICAgICAgICAgICAgICAgIEJGNTMzLUVaS0lUX2RlZmNvbmZpZwpibGFja2ZpbiAgICAgICAg
-ICAgIEJGNTYxLUVaS0lULVNNUF9kZWZjb25maWcKYmxhY2tmaW4gICAgICAgICAgICAgICAgICBU
-Q00tQkY1MzdfZGVmY29uZmlnCmNyaXMgICAgICAgICAgICAgICAgIGV0cmF4LTEwMGx4X3YyX2Rl
-ZmNvbmZpZwpzaCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYWxsbm9jb25maWcKc2gg
-ICAgICAgICAgICAgICAgICAgICAgICAgIHJzazcyNjlfZGVmY29uZmlnCnNoICAgICAgICAgICAg
-ICAgICAgc2g3Nzg1bGNyXzMyYml0X2RlZmNvbmZpZwpzaCAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICB0aXRhbl9kZWZjb25maWcKeDg2XzY0ICAgICAgICAgICAgICAgICAgICAgICAgICAgYWxs
-bW9kY29uZmlnCmFybSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhbGxub2NvbmZpZwph
-cm0gICAgICAgICAgICAgICAgICAgICAgICAgYXQ5MV9kdF9kZWZjb25maWcKYXJtICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgZWZtMzJfZGVmY29uZmlnCmFybSAgICAgICAgICAgICAgICAgICAg
-ICAgICAgZXh5bm9zX2RlZmNvbmZpZwphcm0gICAgICAgICAgICAgICAgICAgICAgICBtdWx0aV92
-NV9kZWZjb25maWcKYXJtICAgICAgICAgICAgICAgICAgICAgICAgbXVsdGlfdjdfZGVmY29uZmln
-CmFybSAgICAgICAgICAgICAgICAgICAgICAgIHNobW9iaWxlX2RlZmNvbmZpZwphcm0gICAgICAg
-ICAgICAgICAgICAgICAgICAgICBzdW54aV9kZWZjb25maWcKcG93ZXJwYyAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIGFsbG5vY29uZmlnCnBvd2VycGMgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIGRlZmNvbmZpZwpwb3dlcnBjICAgICAgICAgICAgICAgICAgICAgICBwcGM2NF9kZWZjb25m
-aWcKbTMyciAgICAgICAgICAgICAgICAgICAgICAgbTMyMTA0dXRfZGVmY29uZmlnCm0zMnIgICAg
-ICAgICAgICAgICAgICAgICBtYXBwaTMuc21wX2RlZmNvbmZpZwptMzJyICAgICAgICAgICAgICAg
-ICAgICAgICAgIG9wc3B1dF9kZWZjb25maWcKbTMyciAgICAgICAgICAgICAgICAgICAgICAgICAg
-IHVzcnZfZGVmY29uZmlnCnh0ZW5zYSAgICAgICAgICAgICAgICAgICAgICAgY29tbW9uX2RlZmNv
-bmZpZwp4dGVuc2EgICAgICAgICAgICAgICAgICAgICAgICAgIGlzc19kZWZjb25maWcKcGFyaXNj
-ICAgICAgICAgICAgICAgICAgICAgICAgIGIxODBfZGVmY29uZmlnCmFybSAgICAgICAgICAgICAg
-ICAgICAgICAgICBlYnNhMTEwX2RlZmNvbmZpZwphcm0gICAgICAgICAgICAgICAgICAgICAgICAg
-ICBoMzYwMF9kZWZjb25maWcKbWlwcyAgICAgICAgICAgICAgICBtYWx0YV9xZW11XzMycjZfZGVm
-Y29uZmlnCnBvd2VycGMgICAgICAgICAgICAgICAgICAgICAgd2FsbnV0X2RlZmNvbmZpZwp4ODZf
-NjQgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAxMi0yMDE2MDcKeDg2XzY0ICAgICAgICAg
-ICAgICAgICByYW5kY29uZmlnLXgwMTQtMjAxNjA3Cng4Nl82NCAgICAgICAgICAgICAgICAgcmFu
-ZGNvbmZpZy14MDE3LTIwMTYwNwp4ODZfNjQgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAx
-MS0yMDE2MDcKeDg2XzY0ICAgICAgICAgICAgICAgICByYW5kY29uZmlnLXgwMTMtMjAxNjA3Cng4
-Nl82NCAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy14MDE5LTIwMTYwNwp4ODZfNjQgICAgICAg
-ICAgICAgICAgIHJhbmRjb25maWcteDAxNS0yMDE2MDcKeDg2XzY0ICAgICAgICAgICAgICAgICBy
-YW5kY29uZmlnLXgwMTAtMjAxNjA3Cng4Nl82NCAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy14
-MDE2LTIwMTYwNwp4ODZfNjQgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAxOC0yMDE2MDcK
-aTM4NiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYWxsZGVmY29uZmlnCmkzODYgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICBhbGxub2NvbmZpZwppMzg2ICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBkZWZjb25maWcKaTM4NiAgICAgICAgICAgICAgICAgICAgIHJhbmRjb25m
-aWctczAtMjAxNjA3CmkzODYgICAgICAgICAgICAgICAgICAgICByYW5kY29uZmlnLXMxLTIwMTYw
-NwphdnIzMiAgICAgICAgICAgICAgICAgICAgICBhdG5ndzEwMF9kZWZjb25maWcKYXZyMzIgICAg
-ICAgICAgICAgICAgICAgICBhdHN0azEwMDZfZGVmY29uZmlnCmZydiAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIGRlZmNvbmZpZwptbjEwMzAwICAgICAgICAgICAgICAgICAgICAgYXNi
-MjM2NF9kZWZjb25maWcKb3BlbnJpc2MgICAgICAgICAgICAgICAgICAgIG9yMWtzaW1fZGVmY29u
-ZmlnCnRpbGUgICAgICAgICAgICAgICAgICAgICAgICAgdGlsZWd4X2RlZmNvbmZpZwp1bSAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgaTM4Nl9kZWZjb25maWcKdW0gICAgICAgICAgICAgICAg
-ICAgICAgICAgICB4ODZfNjRfZGVmY29uZmlnCmkzODYgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgdGlueWNvbmZpZwp4ODZfNjQgICAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy1pMC0y
-MDE2MDcKbWljcm9ibGF6ZSAgICAgICAgICAgICAgICAgICAgICBtbXVfZGVmY29uZmlnCm1pY3Jv
-YmxhemUgICAgICAgICAgICAgICAgICAgIG5vbW11X2RlZmNvbmZpZwppMzg2ICAgICAgICAgICAg
-ICAgICAgICAgcmFuZGNvbmZpZy1pMC0yMDE2MDcKaTM4NiAgICAgICAgICAgICAgICAgICAgIHJh
-bmRjb25maWctaTEtMjAxNjA3CnNwYXJjICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRl
-ZmNvbmZpZwpzcGFyYzY0ICAgICAgICAgICAgICAgICAgICAgICAgICAgYWxsbm9jb25maWcKc3Bh
-cmM2NCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGVmY29uZmlnCng4Nl82NCAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIGxrcAp4ODZfNjQgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHJoZWwKeDg2XzY0ICAgICAgICAgcmhlbCtDT05GSUdfREVCVUdfSU5G
-T19SRURVQ0VECmkzODYgICAgICAgICAgICAgICAgICAgICByYW5kY29uZmlnLW4wLTIwMTYwNwpp
-YTY0ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhbGxkZWZjb25maWcKaWE2NCAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIGFsbG5vY29uZmlnCmlhNjQgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIGRlZmNvbmZpZwptNjhrICAgICAgICAgICAgICAgICAgICAgICBtNTQ3NWV2
-Yl9kZWZjb25maWcKbTY4ayAgICAgICAgICAgICAgICAgICAgICAgICAgbXVsdGlfZGVmY29uZmln
-Cm02OGsgICAgICAgICAgICAgICAgICAgICAgICAgICBzdW4zX2RlZmNvbmZpZwp4ODZfNjQgICAg
-ICAgICAgICAgICAgIHJhbmRjb25maWcteDAwNC0yMDE2MDcKeDg2XzY0ICAgICAgICAgICAgICAg
-ICByYW5kY29uZmlnLXgwMDItMjAxNjA3Cng4Nl82NCAgICAgICAgICAgICAgICAgcmFuZGNvbmZp
-Zy14MDAwLTIwMTYwNwp4ODZfNjQgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAwOS0yMDE2
-MDcKeDg2XzY0ICAgICAgICAgICAgICAgICByYW5kY29uZmlnLXgwMDYtMjAxNjA3Cng4Nl82NCAg
-ICAgICAgICAgICAgICAgcmFuZGNvbmZpZy14MDAzLTIwMTYwNwp4ODZfNjQgICAgICAgICAgICAg
-ICAgIHJhbmRjb25maWcteDAwNS0yMDE2MDcKeDg2XzY0ICAgICAgICAgICAgICAgICByYW5kY29u
-ZmlnLXgwMDEtMjAxNjA3Cng4Nl82NCAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy14MDA3LTIw
-MTYwNwp4ODZfNjQgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAwOC0yMDE2MDcKaTM4NiAg
-ICAgICAgICAgICAgICAgICAgIHJhbmRjb25maWctcjAtMjAxNjA3CmkzODYgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIGFsbG1vZGNvbmZpZwppMzg2ICAgICAgICAgICAgICAgICAgIHJhbmRj
-b25maWcteDAwMS0yMDE2MDcKaTM4NiAgICAgICAgICAgICAgICAgICByYW5kY29uZmlnLXgwMDct
-MjAxNjA3CmkzODYgICAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy14MDA0LTIwMTYwNwppMzg2
-ICAgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAwMi0yMDE2MDcKaTM4NiAgICAgICAgICAg
-ICAgICAgICByYW5kY29uZmlnLXgwMDgtMjAxNjA3CmkzODYgICAgICAgICAgICAgICAgICAgcmFu
-ZGNvbmZpZy14MDAzLTIwMTYwNwppMzg2ICAgICAgICAgICAgICAgICAgIHJhbmRjb25maWcteDAw
-Ni0yMDE2MDcKaTM4NiAgICAgICAgICAgICAgICAgICByYW5kY29uZmlnLXgwMDUtMjAxNjA3Cmkz
-ODYgICAgICAgICAgICAgICAgICAgcmFuZGNvbmZpZy14MDA5LTIwMTYwNwppMzg2ICAgICAgICAg
-ICAgICAgICAgIHJhbmRjb25maWcteDAwMC0yMDE2MDcKbWlwcyAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIGFsbG5vY29uZmlnCm1pcHMgICAgICAgICAgICAgICAgICAgICAgZnVsb29uZzJl
-X2RlZmNvbmZpZwptaXBzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBqejQ3NDAK
-bWlwcyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eHg5CgpUaGFua3MsCkZl
-bmdndWFuZwoKLS0tLS0gRW5kIGZvcndhcmRlZCBtZXNzYWdlIC0tLS0tCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi Christoph,
+
+On Thu, Feb 18, 2016 at 2:32 PM, Christoph Hellwig <hch@lst.de> wrote:
+> Looks like the structure size checker found it's first victim on m68k,
+> which doesn't seem to pad to 4 byte boundaries.  I don't think it actually
+> matters in practice as we'll always the hacky appromiation of a variable
+> sized array behind it.  I guess we should move this to a modern C99 VLA
+> and mark it as __packed?
+
+Marking it __packed causes the compiler to assume that the other 32-bit
+values may not be aligned.
+
+You can add 2 padding bytes to struct xfs_attr_leaf_name_remote.
+Or change name[1] to name[3].
+
+> ----- Forwarded message from kbuild test robot <fengguang.wu@intel.com> -----
+>
+> Date: Thu, 18 Feb 2016 21:26:23 +0800
+> From: kbuild test robot <fengguang.wu@intel.com>
+> Subject: [pnfs:xfs-nfsd-clone] 57b7d25bf4c57ebe0fbd2d8c5b37edf503175e1f
+>         BUILD DONE
+> To: Christoph Hellwig <hch@lst.de>
+>
+> git://git.infradead.org/users/hch/pnfs.git  xfs-nfsd-clone
+> 57b7d25bf4c57ebe0fbd2d8c5b37edf503175e1f  nfs4: fix stateid handling for the NFS v4.2 operations
+>
+> fs/xfs/xfs_ondisk.h:22:2: note: in expansion of macro 'BUILD_BUG_ON_MSG'
+> fs/xfs/xfs_ondisk.h:74:2: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+> include/linux/compiler.h:502:38: error: call to '__compiletime_assert_74' declared with attribute error: XFS: sizeof(xfs_attr_leaf_name_remote_t) is wrong, expected 12
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
