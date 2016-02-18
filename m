@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 483FE7CA6
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:56:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 36C588F8049
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:56:58 -0800 (PST)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id eGUG2w7wPiMGUy0H for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2016 14:56:57 -0800 (PST)
-Date: Wed, 17 Feb 2016 15:56:45 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 0/4] xfs: fixes for XFS_DIFLAG2_DAX support
-Message-ID: <20160217225645.GD30126@linux.intel.com>
-References: <1455513734-15192-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 320AE7CBE
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 18:12:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 07F20304032
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2016 16:12:27 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	OdZfNRZD7WzAOkEx for <xfs@oss.sgi.com>;
+	Wed, 17 Feb 2016 16:12:25 -0800 (PST)
+Date: Thu, 18 Feb 2016 11:12:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 3/6] ext4: Online defrag not supported with DAX
+Message-ID: <20160218001223.GJ19486@dastard>
+References: <1455680059-20126-1-git-send-email-ross.zwisler@linux.intel.com>
+	<1455680059-20126-4-git-send-email-ross.zwisler@linux.intel.com>
+	<20160217215037.GB30126@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1455513734-15192-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20160217215037.GB30126@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,44 +31,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: ross.zwisler@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, "J. Bruce Fields" <bfields@fieldses.org>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@linux.intel.com>, linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, xfs@oss.sgi.com
 
-On Mon, Feb 15, 2016 at 04:22:10PM +1100, Dave Chinner wrote:
-> Hi folks,
+On Wed, Feb 17, 2016 at 02:50:37PM -0700, Ross Zwisler wrote:
+> On Tue, Feb 16, 2016 at 08:34:16PM -0700, Ross Zwisler wrote:
+> > Online defrag operations for ext4 are hard coded to use the page cache.
+> > See ext4_ioctl() -> ext4_move_extents() -> move_extent_per_page()
+> > 
+> > When combined with DAX I/O, which circumvents the page cache, this can
+> > result in data corruption.  This was observed with xfstests ext4/307 and
+> > ext4/308.
+> > 
+> > Fix this by only allowing online defrag for non-DAX files.
 > 
-> This is a series to add the correct constraints to using the on-disk
-> inode flag to enable DAX on per-file basis. The same constraints are
-> placed on setting the flag on directories for inheritance purposes.
+> Jan,
 > 
-> These constraints are:
-> 	- the inode flag is limited to regular files or directory
-> 	  inodes.
-> 	- the S_DAX flag is only ever set on regular files
-> 	- the flag can only ever be set on filesystems which have
-> 	  blocksize == PAGE_SIZE (for now)
-> 	- When the flag is set or cleared, the current mapping
-> 	  contents are flushed and then invalidated so that the new
-> 	  access mode starts with an empty mapping.
-> 	- Setting or clearing the flag is atomic w.r.t. IO and
-> 	  page faults.
+> Thinking about this a bit more, it's probably the case that the data
+> corruption I was observing was due to us skipping the writeback of the dirty
+> page cache pages because S_DAX was set.
 > 
-> I've tested these manually with xfs_io (patchset for supporting
-> chattr +x/-x to be sent soon), and it all appears to work as
-> expected. I'd like to push these for 4.5-rc6 so the initial kernel
-> with support for this flag doesn't do silly things, so comments,
-> testing and review woul dbe appreciated.
+> I do think we have a problem with defrag because it is doing the extent
+> swapping using the page cache, and we won't flush the dirty pages due to
+> S_DAX being set.
 > 
-> Cheers,
+> This patch is the quick and easy answer, and is perhaps appropriate for v4.5.
 > 
-> Dave.
+> Looking forward, though, what do you think the correct solution is?  Making an
+> extent swapper that doesn't use the page cache (as I believe XFS has? see
+> xfs_swap_extents()),
 
-This seems like what we want to be doing for raw block devices, when we add
-back in support.  Default to DAX off so we have to opt-in, and when we get an
-IOCTL to enable them block I/O and page faults, clear out all mappings and
-radix tree entries, and then change the flag and turn back on I/O and page
-faults.  We'll also need to add a check to prevent mounts on raw block devices
-with S_DAX set.
+XFS does the data copy in userspace using direct IO so we don't
+care about whether DAX is enabled or not on either the source or
+destination inode. i.e. xfs_swap_extents() is a pure
+metadata operation, swapping the entire extent tree between two
+inodes if the source data has not changed while the copy was in
+progress.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
