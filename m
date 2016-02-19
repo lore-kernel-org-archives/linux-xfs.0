@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9F16C7CAF
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 00:49:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7314A8F8040
-	for <xfs@oss.sgi.com>; Thu, 18 Feb 2016 22:49:40 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3XS9Zzxzczt84dYJ for <xfs@oss.sgi.com>;
-	Thu, 18 Feb 2016 22:49:35 -0800 (PST)
-Date: Fri, 19 Feb 2016 17:49:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [lkp] [xfs] fbcc025613: -5.6% fsmark.files_per_sec
-Message-ID: <20160219064932.GX14668@dastard>
-References: <87vb5lqunb.fsf@yhuang-dev.intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 82BFA7F47
+	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 07:35:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6269D304051
+	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 05:35:13 -0800 (PST)
+Received: from mail-io0-f171.google.com (mail-io0-f171.google.com
+	[209.85.223.171]) by cuda.sgi.com with ESMTP id
+	Z1CwjmQcg20iUPQV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 19 Feb 2016 05:35:12 -0800 (PST)
+Received: by mail-io0-f171.google.com with SMTP id 9so109156419iom.1
+	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 05:35:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87vb5lqunb.fsf@yhuang-dev.intel.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Fri, 19 Feb 2016 14:34:52 +0100
+Message-ID: <CACj3i70osVyt=QTTqoqKGttwNC8w7Gtq479-Nk-icQrDn83hCA@mail.gmail.com>
+Subject: What is the meaning of XLOG_MIN_RECORD_BSIZE? (Missing a check?)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,129 +25,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============3204069507363898599=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: kernel test robot <ying.huang@linux.intel.com>
-Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>, lkp@01.org, LKML <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Feb 19, 2016 at 10:52:08AM +0800, kernel test robot wrote:
-> FYI, we noticed the below changes on
-> =
+--===============3204069507363898599==
+Content-Type: multipart/alternative; boundary=001a114157c66c3daf052c1f8d19
 
-> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> commit fbcc025613590d7b1d15521555dcc6393a148a6b ("xfs: Introduce writebac=
-k context for writepages")
-> =
+--001a114157c66c3daf052c1f8d19
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> =
+Hi guys,
 
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> compiler/cpufreq_governor/disk/filesize/fs/iterations/kconfig/md/nr_threa=
-ds/rootfs/sync_method/tbox_group/test_size/testcase:
->   gcc-4.9/performance/8BRD_12G/4M/xfs/1x/x86_64-rhel/RAID0/1t/debian-x86_=
-64-2015-02-07.cgz/fsyncBeforeClose/lkp-hsx02/60G/fsmark
-> =
+what is the meaning of XLOG_MIN_RECORD_BSIZE in libxfs/xfs_log_format.h?
+It is not used anywhere. I thought it might be related to -l su/sunit
+option, but seeing tests with -l su=3D4096 (the macro is set to 16k), it
+looks more like a forgotten value.
 
-> commit: =
+There is no check for a minimal value, so I can do -l su=3D1 (or su=3D0). A=
+re
+there some caveat=E2=80=8Bs (other than performance) with such a small valu=
+e? Can
+it be that we are missing a check? Because
+XLOG_BIG_RECORD_BSIZE
+=E2=80=8B and XLOG_MAX_RECORD_BSIZE are used and the upper bound is limited=
+.=E2=80=8B..
 
->   150d5be09ce49a9bed6feb7b7dc4e5ae188778ec
->   fbcc025613590d7b1d15521555dcc6393a148a6b
-> =
 
-> 150d5be09ce49a9b fbcc025613590d7b1d15521555 =
-
-> ---------------- -------------------------- =
-
->          %stddev     %change         %stddev
->              \          |                \  =
-
->      36122 =B1  0%     -57.4%      15404 =B1  0%  fsmark.time.involuntary=
-_context_switches
->      95.30 =B1  0%      +1.8%      97.00 =B1  0%  fsmark.time.percent_of_=
-cpu_this_job_got
->      25339 =B1 32%   +5756.0%    1483901 =B1  1%  fsmark.time.voluntary_c=
-ontext_switches
->     881.80 =B1 45%  +14258.5%     126613 =B1 10%  latency_stats.hits.wait=
-_on_page_bit.__filemap_fdatawait_range.filemap_fdatawait_range.filemap_writ=
-e_and_wait_range.xfs_file_fsync.vfs_fsync_range.do_fsync.SyS_fsync.entry_SY=
-SCALL_64_fastpath
->       3548 =B1 48%  +11967.4%     428200 =B1  7%  latency_stats.sum.wait_=
-on_page_bit.__filemap_fdatawait_range.filemap_fdatawait_range.filemap_write=
-_and_wait_range.xfs_file_fsync.vfs_fsync_range.do_fsync.SyS_fsync.entry_SYS=
-CALL_64_fastpath
-.....
-> 2016-02-17 22:08:15 mount -t xfs -o nobarrier,inode64 /dev/ram0 /fs/ram0
-> 2016-02-17 22:08:16 ./fs_mark -d /fs/ram0/1 -n 10240 -L 1 -S 1 -s 4194304
-
-Ok, so 10k x 4MB files, fsync after each. Let me go look.
-
-So the problem above appears to be that fsync is waiting on 125,000
-more pages to complete IO, causing a major increase in context
-switches during fsync. With only 10000 files being created, that
-mores than 10 pages per file that is being waited on.
-
-That doesn't really seem right. The writeback should be done as a
-single ioend, with a single completion, with a single setsize
-transaction, adn then all the pages are marked clean sequentially.
-The above behaviour implies we are ending up doing something like:
-
-fsync proc		io completion
-wait on page 0
-			end page 0 writeback
-			wake up page 0
-wait on page 1
-			end page 1 writeback
-			wake up page 1
-wait on page 2
-			end page 2 writeback
-			wake up page 2
-
-Though in slightly larger batches than a single page (10 wakeups a
-file, so batches of around 100 pages per wakeup?). i.e. the fsync
-IO wait appears to be racing with IO completion marking pages as
-done. I simply cannot see how the above change would cause that, as
-it was simply a change in the IO submission code that doesn't affect
-overall size or shape of the IOs being submitted.
-
-This is a patch in the middle of a larger patch set - if any of the
-patches in that series should affect behaviour, it's the commit a
-couple further that removed the XFS page clustering code - that
-changes the size and shape of the ioends and bios we build and
-submit and so if anything is perturbing Io completion behaviour I'd
-expect those to be the culprit....
-
-Does this same problem context switch problem still exist when the
-entire set of patches in the XFs series has been applied? I can't
-reproduce it here locally with the entire series applied, but I have
-only tested on 16p with 48GB RAM. The context switch rate does not
-go above 3,000/s, regardless of whether I use a ramdisk or high
-throughput SSDs. Tracing also clearly indicates a single 4MB ioend
-is being build and submitted by the new code and so that implies
-that the io completions that are occuring before and after this
-patchset are identical, and so therefore the way pages are moving
-from dirty -> writeback -> clean is identical before and after the
-patch series.
-
-So, like I said - this makes no sense to me from the perspective of
-the change that you've bisected it down to. This smells to me of a
-scheduler change in the linux-next tree, espcially as I can't
-reproduce the behaviour with just the XFS commits in isolation on a
-4.5-rc3 tree.
+=E2=80=8BThanks=E2=80=8B.
 
 Cheers,
+Jan
 
-Dave.
--- =
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
 
-Dave Chinner
-david@fromorbit.com
+--001a114157c66c3daf052c1f8d19
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif">Hi guys,</div><div class=3D"gmail_default" style=3D"fon=
+t-family:arial,helvetica,sans-serif"><br></div><div class=3D"gmail_default"=
+ style=3D"font-family:arial,helvetica,sans-serif">what is the meaning of=C2=
+=A0XLOG_MIN_RECORD_BSIZE in=C2=A0libxfs/xfs_log_format.h?</div><div class=
+=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">It is n=
+ot used anywhere. I thought it might be related to -l su/sunit option, but =
+seeing tests with -l su=3D4096 (the macro is set to 16k), it looks more lik=
+e a forgotten value.=C2=A0</div><div><br></div><div><div class=3D"gmail_def=
+ault" style=3D"font-family:arial,helvetica,sans-serif">There is no check fo=
+r a minimal value, so I can do -l su=3D1 (or su=3D0). Are there some caveat=
+=E2=80=8Bs (other than performance) with such a small value? Can it be that=
+ we are missing a check? Because=C2=A0</div>XLOG_BIG_RECORD_BSIZE<div class=
+=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;display:=
+inline">=E2=80=8B and XLOG_MAX_RECORD_BSIZE are used and the upper bound is=
+ limited.=E2=80=8B..</div><br></div><div><br></div><div><div class=3D"gmail=
+_default" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BThanks=
+=E2=80=8B.</div><div class=3D"gmail_default" style=3D"font-family:arial,hel=
+vetica,sans-serif"><br></div><div class=3D"gmail_default" style=3D"font-fam=
+ily:arial,helvetica,sans-serif">Cheers,</div><div class=3D"gmail_default" s=
+tyle=3D"font-family:arial,helvetica,sans-serif">Jan</div></div><div><br></d=
+iv>-- <br><div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"=
+ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D=
+"_blank">jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" targe=
+t=3D"_blank">jan@tulak.me</a></div></div></div></div>
+</div>
+
+--001a114157c66c3daf052c1f8d19--
+
+
+--===============3204069507363898599==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3204069507363898599==--
