@@ -1,28 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6B4697CAA
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 14:25:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 31470304039
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 12:25:31 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id maNisJO2wGkECRC6 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 49D177CBA
+	for <xfs@oss.sgi.com>; Sat, 20 Feb 2016 02:20:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E4A5E8F804B
+	for <xfs@oss.sgi.com>; Sat, 20 Feb 2016 00:20:02 -0800 (PST)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id hq8D3JJeTY8c1gXy (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Feb 2016 12:25:15 -0800 (PST)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 9FA2328A4D
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 20:25:14 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u1JKPDEH016164
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 19 Feb 2016 15:25:14 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_db: Fix dquot command docs
-Message-ID: <56C77A29.7070806@redhat.com>
-Date: Fri, 19 Feb 2016 14:25:13 -0600
+	<xfs@oss.sgi.com>; Sat, 20 Feb 2016 00:01:21 -0800 (PST)
+From: Stefan Priebe <s.priebe@profihost.ag>
+Subject: xfs trace in 4.4.2
+Message-ID: <56C81D94.7090603@profihost.ag>
+Date: Sat, 20 Feb 2016 09:02:28 +0100
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,52 +22,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>
 
-The dquot command in xfs_db takes quota type as well as an ID.
-Fix the usage & man page to reflect this.
+Hi,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+got this one today. Not sure if this is a bug.
 
-diff --git a/db/dquot.c b/db/dquot.c
-index 3adde3b..c4d0bff 100644
---- a/db/dquot.c
-+++ b/db/dquot.c
-@@ -33,9 +33,11 @@
- static int	dquot_f(int argc, char **argv);
- static void	dquot_help(void);
- 
--static const cmdinfo_t	dquot_cmd =
--	{ "dquot", NULL, dquot_f, 1, 2, 1, N_("[projid|gid|uid]"),
--	  N_("set current address to project, group or user quota block"), dquot_help };
-+static const cmdinfo_t	dquot_cmd = {
-+	"dquot", NULL, dquot_f, 1, 2, 1, N_("[-g|-p|-u] id"),
-+N_("set current address to a group, project or user quota block for given ID"),
-+	dquot_help,
-+};
- 
- const field_t	dqblk_hfld[] = {
- 	{ "", FLDT_DQBLK, OI(0), C1, 0, TYP_NONE },
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 5745b22..6f0c424 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -444,8 +444,8 @@ If no value is given for
- .IR flagbits ,
- print the current debug option bits. These are for the use of the implementor.
- .TP
--.BI "dquot [" projectid_or_userid ]
--Set current address to a project or user quota block.
-+.BI "dquot [" \-g | \-p | \-u ] " id"
-+Set current address to a group, project or user quota block for the given ID. Defaults to user quota.
- .TP
- .BI "echo [" arg "] ..."
- Echo the arguments to the output.
+[67674.907736] ------------[ cut here ]------------
+[67674.955858] WARNING: CPU: 5 PID: 197 at fs/xfs/xfs_aops.c:1232 
+xfs_vm_releasepage+0xa9/0xe0()
+[67675.005345] Modules linked in: dm_mod netconsole ipt_REJECT 
+nf_reject_ipv4 mpt3sas raid_class xt_multiport iptable_filter ip_tabl
+es x_tables 8021q garp bonding coretemp loop usbhid ehci_pci ehci_hcd 
+sb_edac ipmi_si usbcore i2c_i801 edac_core usb_common ipmi_msg
+handler button btrfs xor raid6_pq raid1 md_mod sg igb sd_mod 
+i2c_algo_bit ixgbe ahci i2c_core mdio isci libahci libsas ptp megaraid_
+sas scsi_transport_sas pps_core
+[67675.221939] CPU: 5 PID: 197 Comm: kswapd0 Not tainted 4.4.2+1-ph #1
+[67675.277120] Hardware name: Supermicro 
+X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.2 03/04/2015
+[67675.335176]  ffffffffa3a5065d ffff88007950fa98 ffffffffa33bd4e1 
+0000000000000001
+[67675.392983]  0000000000000000 ffff88007950fad8 ffffffffa3083587 
+ffff88007950fae8
+[67675.449743]  0000000000000001 ffffea0020883480 ffff880cf4b9cdd0 
+ffffea00208834a0
+[67675.506112] Call Trace:
+[67675.561285]  [<ffffffffa33bd4e1>] dump_stack+0x45/0x64
+[67675.619364]  [<ffffffffa3083587>] warn_slowpath_common+0x97/0xe0
+[67675.675719]  [<ffffffffa30835ea>] warn_slowpath_null+0x1a/0x20
+[67675.731113]  [<ffffffffa3320a89>] xfs_vm_releasepage+0xa9/0xe0
+[67675.786116]  [<ffffffffa318a4b0>] ? page_mkclean_one+0xd0/0xd0
+[67675.844216]  [<ffffffffa318b1d0>] ? anon_vma_prepare+0x150/0x150
+[67675.903862]  [<ffffffffa31506c2>] try_to_release_page+0x32/0x50
+[67675.957625]  [<ffffffffa3164d3e>] shrink_active_list+0x3ce/0x3e0
+[67676.011497]  [<ffffffffa31653d7>] shrink_lruvec+0x687/0x7d0
+[67676.064980]  [<ffffffffa31655fc>] shrink_zone+0xdc/0x2c0
+[67676.118828]  [<ffffffffa3166659>] kswapd+0x4f9/0x930
+[67676.172075]  [<ffffffffa3166160>] ? 
+mem_cgroup_shrink_node_zone+0x150/0x150
+[67676.225139]  [<ffffffffa30a08c9>] kthread+0xc9/0xe0
+[67676.277539]  [<ffffffffa30a0800>] ? kthread_stop+0xe0/0xe0
+[67676.330124]  [<ffffffffa36a8c8f>] ret_from_fork+0x3f/0x70
+[67676.381816]  [<ffffffffa30a0800>] ? kthread_stop+0xe0/0xe0
+[67676.433499] ---[ end trace cb1827fe308f7f6b ]---
+
+Greets Stefan
 
 _______________________________________________
 xfs mailing list
