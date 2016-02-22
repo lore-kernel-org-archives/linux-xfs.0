@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BDF917F67
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 11:53:32 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 703647C8C
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 12:59:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7CA948F80B9
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 09:53:26 -0800 (PST)
-Received: from vern.gendns.com (vern.gendns.com [206.190.152.46]) by
-	cuda.sgi.com with ESMTP id wuTlkIp2Z07aC5Dj (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 22 Feb 2016 09:53:24 -0800 (PST)
-Subject: Re: recovering corrupt filesystem after raid failure
-References: <56CA6492.7000407@lechnology.com> <20160222022439.GE14668@dastard>
-From: David Lechner <david@lechnology.com>
-Message-ID: <56CB4B16.8010101@lechnology.com>
-Date: Mon, 22 Feb 2016 11:53:26 -0600
-MIME-Version: 1.0
-In-Reply-To: <20160222022439.GE14668@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 31206304093
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 10:59:40 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	puA4f3aw8K8BY2Ge for <xfs@oss.sgi.com>;
+	Mon, 22 Feb 2016 10:59:39 -0800 (PST)
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v4 0/5] DAX fixes, move flushing calls to FS
+Date: Mon, 22 Feb 2016 11:59:17 -0700
+Message-Id: <1456167562-28576-1-git-send-email-ross.zwisler@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,68 +20,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On 02/21/2016 08:24 PM, Dave Chinner wrote:
-> On Sun, Feb 21, 2016 at 07:29:54PM -0600, David Lechner wrote:
->> Long story short, I had a dual disk failure in a raid 5. I've managed to
->> get the raid back up and salvaged what I could. However, the xfs is
->> seriously damaged. I've tried running xfs_repair, but it is failing and
->> it recommended to send a message to this mailing list. This is an Ubuntu
->> 12.04 machine, so xfs_repair version 3.1.7.
-> 
-> So the first thing to do is get a more recent xfsprogs package and
-> try that. There's not a lot of point in us looking at problems with
-> a 4 and half year old package that we've probably already fixed.
-> 
->> The file system won't mount. Fails with "mount: Structure needs
->> cleaning". So I tried xfs_repair. I had to resort to xfs_repair -L
->> because the first 500MB or so of the filesystem was wiped out.
-> 
-> Oh, so even if you can repair the filesystem, your data is likely to
-> be irretreivably corrupted.
-> 
->> Now,
->> xfs_repair /dev/md127 gets stuck, so I am running xfs_repair -P
->> /dev/md127. This gets much farther, but it is failing too. It gives an
->> error message like this:
->>
->>
->> ...
->> disconnected inode 2101958, moving to lost+found
->> corrupt dinode 2101958, extent total = 1, nblocks = 0.  This is a bug.
->> Please capture the filesystem metadata with xfs_metadump and
->> report it to xfs@oss.sgi.com.
->> cache_node_purge: refcount was 1, not zero (node=0x7f2c57e1b120)
->>
->> fatal error -- 117 - couldn't iget disconnected inode
->>
->>
->>
->> However, nblocks = 0 does not seem to be true...
-> 
-> Probably because it got cleared in memory before this problem was
-> tripped over.
-> 
->> If I re-run xfs_repair -P /dev/md127, it will fail on different
->> seemingly random inode with the same error message.
-> 
-> Yup, you definitely need to run a current xfs_repair on this
-> filesystem before going any further.
-> 
-> Cheers,
-> 
-> Dave.
-> 
+Changes since v3:
+- Added Reviewed-by tags from Jan Kara.
+- Dropped patch 6, "block: use dax_do_io() if blkdev_dax_capable()"
 
-Thanks for the advice. The newer version was able to complete
-successfully. I can now mount the file system and I ended up with 1.5TB
-in lost+found, so at least there is still something there.
+I believe that this series is ready for inclusion in v4.5.  I think it
+should be merged for v4.5 because it fixes serious issues with the DAX code
+including possible data corruption and kernel OOPSes.
+
+akpm, for the v4.5 merge do you want these patches to go through the -mm
+tree, or would it be better if I just sent them to Linus directly?
+
+A working tree can be found here:
+https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=fsync_bdev_v4
+
+---
+Previous summary with issue impacts added:
+
+This patch series fixes several issues with the current DAX code:
+
+1) DAX is used by default on raw block devices that are capable of
+supporting it.  This creates an issue because there are still uses of the
+block device that use the page cache, and having one block device user
+doing DAX I/O and another doing page cache I/O can lead to data corruption.
+
+2) When S_DAX is set on an inode we assume that if there are pages attached
+to the mapping (mapping->nrpages != 0), those pages are clean zero pages
+that were used to service reads from holes.  This wasn't true in all cases.
+
+3) ext4 online defrag combined with DAX I/O could lead to data corruption.
+
+4) The DAX block/sector zeroing code needs a valid struct block_device,
+which it wasn't always getting.  This could lead to a kernel OOPS.
+
+5) The DAX writeback code needs a valid struct block_device, which it
+wasn't always getting.  This could lead to a kernel OOPS.
+
+6) The DAX writeback code needs to be called for sync(2) and syncfs(2).
+This could lead to data loss.
+
+Dan Williams (1):
+  block: disable block device DAX by default
+
+Ross Zwisler (4):
+  ext2, ext4: only set S_DAX for regular inodes
+  ext4: Online defrag not supported with DAX
+  dax: give DAX clearing code correct bdev
+  dax: move writeback calls into the filesystems
+
+ block/Kconfig          | 13 +++++++++++++
+ fs/block_dev.c         | 19 +++++++++++++++++--
+ fs/dax.c               | 21 +++++++++++----------
+ fs/ext2/inode.c        | 16 +++++++++++++---
+ fs/ext4/inode.c        |  6 +++++-
+ fs/ext4/ioctl.c        |  5 +++++
+ fs/xfs/xfs_aops.c      |  6 +++++-
+ fs/xfs/xfs_aops.h      |  1 +
+ fs/xfs/xfs_bmap_util.c |  3 ++-
+ include/linux/dax.h    |  8 +++++---
+ mm/filemap.c           | 12 ++++--------
+ 11 files changed, 81 insertions(+), 29 deletions(-)
+
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
