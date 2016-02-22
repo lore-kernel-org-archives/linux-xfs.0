@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7176E7CB4
-	for <xfs@oss.sgi.com>; Sun, 21 Feb 2016 17:38:48 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 809DB7CA1
+	for <xfs@oss.sgi.com>; Sun, 21 Feb 2016 19:30:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 412288F80B6
-	for <xfs@oss.sgi.com>; Sun, 21 Feb 2016 15:38:42 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	nH7OPCuBzbgN7tHb for <xfs@oss.sgi.com>;
-	Sun, 21 Feb 2016 15:18:29 -0800 (PST)
-Date: Mon, 22 Feb 2016 10:18:15 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: What is the meaning of XLOG_MIN_RECORD_BSIZE? (Missing a check?)
-Message-ID: <20160221231815.GD25832@dastard>
-References: <CACj3i70osVyt=QTTqoqKGttwNC8w7Gtq479-Nk-icQrDn83hCA@mail.gmail.com>
-	<20160219154347.GA27263@bfoster.bfoster>
-	<CACj3i72wijiApA0gD0mRrMvPomDC5pEAr1Mvv6e3vi4HU1S_sw@mail.gmail.com>
-	<20160219162913.GC27263@bfoster.bfoster>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 410168F80B7
+	for <xfs@oss.sgi.com>; Sun, 21 Feb 2016 17:30:15 -0800 (PST)
+Received: from vern.gendns.com (vern.gendns.com [206.190.152.46]) by
+	cuda.sgi.com with ESMTP id kB2AG8lqoIuk6KWg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 21 Feb 2016 17:29:53 -0800 (PST)
+Received: from 108-198-5-147.lightspeed.okcbok.sbcglobal.net
+	([108.198.5.147]:51926 helo=[192.168.0.113])
+	by vern.gendns.com with esmtpsa (TLSv1.2:DHE-RSA-AES128-SHA:128)
+	(Exim 4.86) (envelope-from <david@lechnology.com>)
+	id 1aXfJu-002sNR-TG
+	for xfs@oss.sgi.com; Sun, 21 Feb 2016 20:29:50 -0500
+From: David Lechner <david@lechnology.com>
+Subject: recovering corrupt filesystem after raid failure
+Message-ID: <56CA6492.7000407@lechnology.com>
+Date: Sun, 21 Feb 2016 19:29:54 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160219162913.GC27263@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,43 +28,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, Jan Tulak <jtulak@redhat.com>
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBGZWIgMTksIDIwMTYgYXQgMTE6Mjk6MTNBTSAtMDUwMCwgQnJpYW4gRm9zdGVyIHdy
-b3RlOgo+IE9uIEZyaSwgRmViIDE5LCAyMDE2IGF0IDA1OjE2OjI4UE0gKzAxMDAsIEphbiBUdWxh
-ayB3cm90ZToKPiA+IE9uIEZyaSwgRmViIDE5LCAyMDE2IGF0IDQ6NDMgUE0sIEJyaWFuIEZvc3Rl
-ciA8YmZvc3RlckByZWRoYXQuY29tPiB3cm90ZToKPiA+ID4gT24gRnJpLCBGZWIgMTksIDIwMTYg
-YXQgMDI6MzQ6NTJQTSArMDEwMCwgSmFuIFR1bGFrIHdyb3RlOgo+ID4gPiA+IFRoZXJlIGlzIG5v
-IGNoZWNrIGZvciBhIG1pbmltYWwgdmFsdWUsIHNvIEkgY2FuIGRvIC1sIHN1PTEgKG9yIHN1PTAp
-LiBBcmUKPiA+ID4gPiB0aGVyZSBzb21lIGNhdmVhdOKAi3MgKG90aGVyIHRoYW4gcGVyZm9ybWFu
-Y2UpIHdpdGggc3VjaCBhIHNtYWxsIHZhbHVlPyBDYW4KPiA+ID4gPiBpdCBiZSB0aGF0IHdlIGFy
-ZSBtaXNzaW5nIGEgY2hlY2s/IEJlY2F1c2UKPiA+ID4gPiBYTE9HX0JJR19SRUNPUkRfQlNJWkUK
-PiA+ID4gPiDigIsgYW5kIFhMT0dfTUFYX1JFQ09SRF9CU0laRSBhcmUgdXNlZCBhbmQgdGhlIHVw
-cGVyIGJvdW5kIGlzIGxpbWl0ZWQu4oCLLi4KPiA+ID4gPgo+ID4gPgo+ID4gPiBPbiBhIHF1aWNr
-IHRlc3QsIGl0IGxvb2tzIGxpa2UgbWtmcyBqdXN0IGlnbm9yZXMgY2VydGFpbiBsb2cgc3RyaXBl
-IHVuaXQKPiA+ID4gdmFsdWVzIHRoYXQgYXJlbid0IGJsb2NrIGFsaWduZWQuIEknZCBwcm9iYWJs
-eSBleHBlY3QgdGhpcyB0byBiZWhhdmUKPiA+ID4gc2ltaWxhciB0byB0aGUgJy1kIHN1JyBvcHRp
-b24gYW5kIGNvbXBsYWluIGFib3V0IGludmFsaWQgaW5wdXQuLj8KPiA+IAo+ID4g4oCLU291bmRz
-IGxvZ2ljYWwgYW5kIGxpa2Ugd2hhdCBJIGV4cGVjdGVkIGFuZCBkaWRuJ3QgZm91bmQuIEkgd2ls
-bCBzZW5kIGEKPiA+IHBhdGNoIGFkZGluZyB0aGlzIGNoZWNrLi4uIHRoZSBvbmx5IHF1ZXN0aW9u
-IGlzLCB3aGF0IHNob3VsZCBiZSB0aGUgbWluaW1hbAo+ID4gdmFsdWU/IFNob3VsZCBJIGNoZWNr
-IGl0IGFnYWluc3QgYmxvY2sgc2l6ZSBhbmQgZm9yYmlkIHNtYWxsZXIgc2l6ZXM/Cj4gPiBBbGln
-bmluZyBhIHN0cmlwZSB1bml0IHdpdGggbGVuZ3RoIDEwMjQgb24gNDA5NiBibG9ja3MgZG9lc24n
-dCBsb29rcyBsaWtlIGEKPiA+IG5pY2UgdGhpbmcuIDotKQo+ID4gKEFuZCBvbiBhIHF1aWNrIGNo
-ZWNrLCBpdCBzZWVtcyB0aGF0IC1kIHN1IGlzIGRvaW5nIGp1c3QgdGhhdC4pCj4gCj4gVGhlIG1h
-biBwYWdlIHNheXMgaXQgbXVzdCBiZSBhIG11bHRpcGxlIG9mIHRoZSBmc2Igc2l6ZS4gSW5kZWVk
-LCAnLWQgc3UnCj4gY29tcGxhaW5zIGFib3V0IGFueXRoaW5nIHRoYXQgaXMgbGVzcyB0aGFuIDEg
-RlNCLCBzbyBJIHdvdWxkIGp1c3QgZ28KPiB3aXRoIHRoYXQuIDopCgpLZWVwIGluIG1pbmQgdGhh
-dCBhIHZhbHVlIG9mIDAgaW4gdGhlIHN1cGVyYmxvY2sgaXMgY29tcGxldGVseQphY2NlcHRpYmxl
-LCBpbiB3aGljaCBjYXNlIHRoZSBrZXJuZWwgdHJlYXRzIHRoZSBsb2cgc3RyaXBlIHVuaXQgYXMK
-YmVpbmcgYSBzaW5nbGUgc2VjdG9yIChpLmUuIHNhbWUgYXMgYSB2MSBsb2cpLiBTZWUsIGZvciBl
-eGFtcGxlLAp4bG9nX3N5bmMoKSB3aGVyZSBpdCB3b3JrcyBvdXQgdGhlIHBhZGRpbmcgdG8gdXNl
-IGZvciB0aGUgbG9nIGJ1ZmZlcgp3cml0ZS4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5u
-ZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Long story short, I had a dual disk failure in a raid 5. I've managed to
+get the raid back up and salvaged what I could. However, the xfs is
+seriously damaged. I've tried running xfs_repair, but it is failing and
+it recommended to send a message to this mailing list. This is an Ubuntu
+12.04 machine, so xfs_repair version 3.1.7.
+
+
+The file system won't mount. Fails with "mount: Structure needs
+cleaning". So I tried xfs_repair. I had to resort to xfs_repair -L
+because the first 500MB or so of the filesystem was wiped out. Now,
+xfs_repair /dev/md127 gets stuck, so I am running xfs_repair -P
+/dev/md127. This gets much farther, but it is failing too. It gives an
+error message like this:
+
+
+...
+disconnected inode 2101958, moving to lost+found
+corrupt dinode 2101958, extent total = 1, nblocks = 0.  This is a bug.
+Please capture the filesystem metadata with xfs_metadump and
+report it to xfs@oss.sgi.com.
+cache_node_purge: refcount was 1, not zero (node=0x7f2c57e1b120)
+
+fatal error -- 117 - couldn't iget disconnected inode
+
+
+
+However, nblocks = 0 does not seem to be true...
+
+xfs_db -x /dev/md127
+cache_node_purge: refcount was 1, not zero (node=0x219c9e0)
+xfs_db: cannot read root inode (117)
+cache_node_purge: refcount was 1, not zero (node=0x21a0620)
+xfs_db: cannot read realtime bitmap inode (117)
+xfs_db> inode 2101958
+xfs_db> print
+core.magic = 0x494e
+core.mode = 0100664
+core.version = 2
+core.format = 2 (extents)
+core.nlinkv2 = 1
+core.onlink = 0
+core.projid_lo = 0
+core.projid_hi = 0
+core.uid = 119
+core.gid = 133
+core.flushiter = 5
+core.atime.sec = Sun Apr 26 02:30:54 2015
+core.atime.nsec = 000000000
+core.mtime.sec = Fri Nov  7 14:54:27 2014
+core.mtime.nsec = 000000000
+core.ctime.sec = Sun Apr 26 02:30:54 2015
+core.ctime.nsec = 941028318
+core.size = 279864
+core.nblocks = 69
+core.extsize = 0
+core.nextents = 1
+core.naextents = 0
+core.forkoff = 0
+core.aformat = 2 (extents)
+core.dmevmask = 0
+core.dmstate = 0
+core.newrtbm = 0
+core.prealloc = 0
+core.realtime = 0
+core.immutable = 0
+core.append = 0
+core.sync = 0
+core.noatime = 0
+core.nodump = 0
+core.rtinherit = 0
+core.projinherit = 0
+core.nosymlinks = 0
+core.extsz = 0
+core.extszinherit = 0
+core.nodefrag = 0
+core.filestream = 0
+core.gen = 3320313054
+next_unlinked = null
+u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,147322885,69,0]
+
+
+If I re-run xfs_repair -P /dev/md127, it will fail on different
+seemingly random inode with the same error message.
+
+I've uploaded the output of xfs_metadump to dropbox if anyone would like
+to have a look. It is 22MB compressed, 2.2GB uncompressed.
+
+https://www.dropbox.com/s/o18cxapu7o75sor/xfs_metadump.xz?dl=0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
