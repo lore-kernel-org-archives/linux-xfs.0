@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 80B727F7B
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 16:49:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F6608F8039
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 14:49:23 -0800 (PST)
-Received: from mail-yw0-f175.google.com (mail-yw0-f175.google.com
-	[209.85.161.175]) by cuda.sgi.com with ESMTP id
-	kd8m45N29bhHR8fX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 22 Feb 2016 14:38:49 -0800 (PST)
-Received: by mail-yw0-f175.google.com with SMTP id h129so131913224ywb.1
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 14:38:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160222212019.GI25832@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 755DB7F6F
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 17:56:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 17EC0304039
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 15:56:41 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Shgu3E1NaK0CsC3q for <xfs@oss.sgi.com>;
+	Mon, 22 Feb 2016 15:56:31 -0800 (PST)
+Date: Tue, 23 Feb 2016 10:56:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs resize: primary superblock is not updated immediately
+Message-ID: <20160222235628.GK25832@dastard>
 References: <3685DFAD20214109878873CF81232704@alyakaslap>
 	<20160222212019.GI25832@dastard>
-Date: Tue, 23 Feb 2016 00:38:48 +0200
-Message-ID: <CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
-Subject: Re: xfs resize: primary superblock is not updated immediately
-From: Alex Lyakas <alex@zadarastorage.com>
+	<CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,75 +27,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Lyakas <alex@zadarastorage.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Danny Shavit <danny@zadarastorage.com>, xfs@oss.sgi.com
 
-SGkgRGF2ZSwKVGhhbmtzIGZvciB5b3VyIHJlc3BvbnNlLgoKSSBhbSBub3QgZnJlZXppbmcgdGhl
-IGZpbGVzeXN0ZW0gYmVmb3JlIHRoZSBzbmFwc2hvdC4KCkhvd2V2ZXIsIGxldCdzIGFzc3VtZSB0
-aGF0IHNvbWVib2R5IHJlc2l6ZWQgdGhlIFhGUywgYW5kIGl0IGNvbXBsZXRlZAphbmQgZ290IGJh
-Y2sgdG8gdXNlci1zcGFjZS4gQXQgdGhpcyBtb21lbnQgdGhlIHByaW1hcnkgc3VwZXJibG9jawpv
-bi1kaXNrIGlzIG5vdCB1cGRhdGVkIHlldCB3aXRoIHRoZSBuZXcgYWdjb3VudC4gQW5kIGF0IHRo
-aXMgc2FtZQptb21lbnQgdGhlcmUgaXMgYSBwb3dlci1vdXQuIEFmdGVyIHRoZSBwb3dlciBjb21l
-cyBiYWNrIGFuZCB0aGUKbWFjaGluZSBib290cywgaWYgd2UgbW91bnQgdGhlIFhGUywgdGhlIHNh
-bWUgcHJvYmxlbSB3b3VsZCBoYXBwZW4sIEkKYmVsaWV2ZS4gQmVjYXVzZSB0aGUgcHJpbWFyeSBz
-dXBlcmJsb2NrIG9uLWRpc2sgc3RpbGwgaGFzIG9sZCBhZ2NvdW50LgpTbyB0aGUgaW4tbWVtb3J5
-IHBhZyBzdHJ1Y3R1cmVzIHdpbGwgbm90IGJlIGNyZWF0ZWQgZm9yIHRoZSBuZXcgQUdzCmR1cmlu
-ZyBtb3VudCwgYnV0IHJlcGxheWluZyB0aGUgbG9nIG1pZ2h0IHRyeSB0byB1c2UgdGhlbS4KClRh
-a2luZyBhIGJsb2NrLWxldmVsIHNuYXBzaG90IGlzIGV4YWN0bHkgbGlrZSBhIHBvd2VyLW91dCBm
-cm9tIFhGUwpwZXJzcGVjdGl2ZS4gQW5kIFhGUyBzaG91bGQsIGluIHByaW5jaXBsZSwgYmUgYWJs
-ZSB0byByZWNvdmVyIGZyb20KdGhhdC4gVGhlIHNuYXBzaG90IHdpbGwgY29tZSB1cCBhcyBhIG5l
-dyBibG9jayBkZXZpY2UsIHdoaWNoIGV4aGliaXRzCmlkZW50aWNhbCBjb250ZW50IGFzIHRoZSBv
-cmlnaW5hbCBibG9jayBkZXZpY2UgaGFkIGF0IHRoZSBtb21lbnQgd2hlbgp0aGUgc25hcHNob3Qg
-d2FzIHRha2VuIChsaWtlIGEgYm9vdCBhZnRlciBwb3dlci1vdXQpLgoKSSB3aWxsIHRyeSB0byBy
-ZXByb2R1Y2UgdGhlIHByb2JsZW0gYnkgY3Jhc2hpbmcgdGhlIG1hY2hpbmUgYXQgdGhlCnByb2Js
-ZW1hdGljIG1vbWVudCwgd2hlbiB0aGUgcHJpbWFyeSBvbi1kaXNrIHN1cGVyYmxvY2sgc3RpbGwg
-aGFzIHRoZQpvbGQgdmFsdWUuIFdpdGhvdXQgdGhlIHNuYXBzaG90IHRoaW5nLgoKVGhhbmtzLApB
-bGV4LgoKCgoKT24gTW9uLCBGZWIgMjIsIDIwMTYgYXQgMTE6MjAgUE0sIERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gT24gTW9uLCBGZWIgMjIsIDIwMTYgYXQgMDk6
-MDg6MDZQTSArMDIwMCwgQWxleCBMeWFrYXMgd3JvdGU6Cj4+IEdyZWV0aW5ncyBYRlMgZGV2ZWxv
-cGVycywKPj4KPj4gSSBhbSBzZWVpbmcgdGhlIGZvbGxvd2luZyBpc3N1ZSB3aXRoIFhGUyBvbiBr
-ZXJuZWwgMy4xOC4xOS4KPj4KPj4gV2hlbiByZXNpemluZywgWEZTIGFkZHMgbmV3IEFHcyBhbmQg
-ZXZlbnR1YWxseSB1cGRhdGVzIHRoZSBwcmltYXJ5Cj4+IHN1cGVyYmxvY2sgd2l0aCB0aGUgbmV3
-IOKAnHNiX2FnY291bnTigJ0gdmFsdWUuIEhvd2V2ZXIsIGl0IGhhcHBlbnMgZmV3Cj4+IHNlY29u
-ZHMgYWZ0ZXIgdGhlIHJlc2l6ZSBvcGVyYXRpb24gY29tcGxldGVzIGJhY2sgdG8gdXNlci1zcGFj
-ZS4gQXMKPj4gYSByZXN1bHQsIGlmIGEgYmxvY2stbGV2ZWwgc25hcHNob3QgaXMgdGFrZW4gb2Zm
-IHRoZSB1bmRlcmx5aW5nCj4+IGJsb2NrIGRldmljZSwgd2hpbGUg4oCcc2JfYWdjb3VudOKAnSBz
-dGlsbCBoYXMgdGhlIG9sZCB2YWx1ZSwgdGhlbgo+PiBzdWJzZXF1ZW50IFhGUyBtb3VudCBjcmFz
-aGVzIHdpdGggc3RhY2sgbGlrZVsxXS4KPgo+IFRoZSBwcmltYXJ5IHN1cGVyYmxvY2sgY2hhbmdl
-IGlzIGxvZ2dlZCwgc28gaXQgZG9lc24ndCBuZWVkIHRvIGJlCj4gd3JpdHRlbiBiYWNrIGltbWVk
-aWF0ZWx5LiBUaGF0IG1lYW5zIGl0IGlzIGluIHRoZSBqb3VybmFsLi4uCj4KPj4gU29tZSBkZWJ1
-Z2dpbmcgc2hvd3MgdGhhdCBfeGZzX2J1Zl9maW5kIGlzIGNhbGxlZCB3aXRoIGFnbm8gdGhhdCBo
-YXMKPj4gYmVlbiBhZGRlZCBkdXJpbmcgdGhlIHJlc2l6ZSwgYnV0IGFwcHJvcHJpYXRlICJwYWci
-IGhhcyBub3QgYmVlbgo+PiBjcmVhdGVkIGZvciB0aGlzIGFnbm8gZHVyaW5nIG1vdW50Lgo+Cj4g
-VGhlIG5ldyBwZXItYWcgc3RydWN0dXJlcyBhcmUgY3JlYXRlZCBkdXJpbmcgZ3Jvd2ZzLCBhZnRl
-ciB0aGUKPiBncm93ZnMgdHJhbnNhY3Rpb24gaGFzIGNvbW1pdHRlZC4gaWYgeW91IGFyZSBtb3Vu
-dGluZyBhIHNuYXBzaG90Cj4gdGhhdCBoYXMgdGhlIHdyb25nIGFnY291bnQgaW4gaXQsIHRoZW4g
-bG90cyBvZiB0aGluZ3Mgd2lsbCBnbyB3cm9uZwo+IGlmIHRoZXJlIGlzIG1ldGFkYXRhIHRoYXQg
-YWxyZWFkeSB1c2VzIHRoZSBleHBhbmRlZCBzcGFjZS4KPgo+PiBJIGhhdmUgZm91bmQgdGhlIHBh
-dGNoIGJ5IENocmlzdG9waCBIZWxsd2lnOgo+PiBodHRwOi8vb3NzLnNnaS5jb20vYXJjaGl2ZXMv
-eGZzLzIwMTUtMDEvbXNnMDAzOTEuaHRtbAo+PiB3aGljaCBzZXRzIHRoZSByZXNpemUgdHJhbnNh
-Y3Rpb24gdG8gYmUgc3luY2hyb25vdXMsIGFuZCBhcHBsaWVkIGl0LAo+PiBidXQgaXQgc3RpbGwg
-ZG9lc27igJl0IGhlbHAuCj4+Cj4+IFJpZ2h0IGFmdGVyIHRoZSByZXNpemUgY29tcGxldGVzLCBJ
-IGFtIGlzc3Vpbmc6Cj4+IHhmc19kYiAtciAtYyAic2IgMCIgLWMgInAiICAgPGRldmljZT4KPj4g
-YW5kIGZvciBhIGZldyBzZWNvbmRzIHN0aWxsIGdldCB0aGUgb2xkIHZhbHVlIG9mIOKAnHNiX2Fn
-Y291bnTigJ0uCj4+Cj4+IENhbiBhbnlib2R5IGFkdmlzZSB3aGF0IGFtIEkgbWlzc2luZz8gV2hh
-dCBuZWVkcyB0byBiZSBkb25lIHNvIHRoYXQKPj4gdGhlIHByaW1hcnkgc3VwZXJibG9jayB3aWxs
-IGdldCB0aGUgbmV3IHZhbHVlIG9mIOKAnHNiX2Fnb3VudOKAnQo+PiBwcm9tcHRseT8KPgo+IEFy
-ZSB5b3UgZnJlZXppbmcgdGhlIGZpbGVzeXN0ZW0gYmVmb3JlIHRha2luZyBhIGJsb2NrIGxldmVs
-Cj4gc25hcHNob3Q/Cj4KPiBDaGVlcnMsCj4KPiBEYXZlLgo+IC0tCj4gRGF2ZSBDaGlubmVyCj4g
-ZGF2aWRAZnJvbW9yYml0LmNvbTxkaXYgaWQ9IkREQjRGQUE4LTJERDctNDBCQi1BMUI4LTRFMkFB
-MUY5RkRGMiI+PGJyIC8+Cjx0YWJsZSBzdHlsZT0iYm9yZGVyLXRvcDogMXB4IHNvbGlkICNhYWFi
-YjY7Ij4KCTx0cj4KCQk8dGQgc3R5bGU9IndpZHRoOiA0NzBweDsgcGFkZGluZy10b3A6IDIwcHg7
-IGNvbG9yOiAjNDE0MjRlOwpmb250LXNpemU6IDEzcHg7IGZvbnQtZmFtaWx5OiBBcmlhbCwgSGVs
-dmV0aWNhLCBzYW5zLXNlcmlmOwpsaW5lLWhlaWdodDogMThweDsiPlRoaXMgZW1haWwgaGFzIGJl
-ZW4gc2VudCBmcm9tIGEgdmlydXMtZnJlZQpjb21wdXRlciBwcm90ZWN0ZWQgYnkgQXZhc3QuIDxi
-ciAvPjxhCmhyZWY9Imh0dHBzOi8vd3d3LmF2YXN0LmNvbS9zaWctZW1haWwiIHRhcmdldD0iX2Js
-YW5rIiBzdHlsZT0iY29sb3I6CiM0NDUzZWE7Ij53d3cuYXZhc3QuY29tPC9hPgoJCTwvdGQ+Cgk8
-L3RyPgo8L3RhYmxlPjxhIGhyZWY9IiNEREI0RkFBOC0yREQ3LTQwQkItQTFCOC00RTJBQTFGOUZE
-RjIiIHdpZHRoPSIxIgpoZWlnaHQ9IjEiPjwvYT48L2Rpdj4KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Tue, Feb 23, 2016 at 12:38:48AM +0200, Alex Lyakas wrote:
+> Hi Dave,
+> Thanks for your response.
+> 
+> I am not freezing the filesystem before the snapshot.
+
+There's your problem. A mounted filesystem is not consistent on disk
+without flushing the entire journal and all the dirty metadata to
+disk.
+
+> However, let's assume that somebody resized the XFS, and it completed
+> and got back to user-space. At this moment the primary superblock
+> on-disk is not updated yet with the new agcount. And at this same
+> moment there is a power-out. After the power comes back and the
+> machine boots, if we mount the XFS, the same problem would happen, I
+> believe.
+
+Log recovery will run and update the superblock buffer with the correct
+values. But the in-memory superblock that log recoery is working
+with does not change, and so if there were accesses beyond the
+current superblock ag/block count you'd see messages like this:
+
+XFS (sda1): _xfs_buf_find: Block out of range: block 0xnnnnn EOFS 0xmmmmm
+
+and log recovery should fail at that point because it can't pull in
+a buffer it needs for recovery to make further progress. At which
+point, you have an unmountable filesystem.
+
+If log recovery succeeds, then yes, I can see that there is a
+problem here because the per-ag tree is not reinitialised after the
+superblock is re-read. That's a pretty easy fix, though (3-4 lines
+of code in xlog_do_recover() to detect a change in filesystem block
+count and call xfs_initialize_perag() again.
+
+> Taking a block-level snapshot is exactly like a power-out from XFS
+> perspective.
+
+It's similar, but it's not the same. e.g. there are no issues like
+volatile storage cache loss that have to be handled.
+
+> And XFS should, in principle, be able to recover from
+> that.
+
+For some definition of recover. There is no guarantee that any of
+the async transactions in memory will make it to disk, so the point
+to which XFS can recover is undefined.
+
+> The snapshot will come up as a new block device, which exhibits
+> identical content as the original block device had at the moment when
+> the snapshot was taken (like a boot after power-out).
+
+The block device might be identical, but it's not identical to what
+the filesystem is presenting the user. Any user dirty data cached in
+memory, or metadata changes staged in the CIL will not be in the
+snapshot. Hence the snapshot block device is not identical to the
+original user visible state and data. You only get that if you
+freeze the filesystem before taking the snapshot.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
