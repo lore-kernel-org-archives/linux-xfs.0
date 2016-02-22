@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3D19B7CB4
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 02:20:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BDE6CAC00F
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 00:20:11 -0800 (PST)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id ZlGkvJg9dn9GFhYC (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 22 Feb 2016 00:01:04 -0800 (PST)
-Date: Mon, 22 Feb 2016 09:01:24 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/3] quota: Add support for ->get_nextdqblk() for VFS quota
-Message-ID: <20160222080124.GC7791@quack.suse.cz>
-References: <1454596087-6814-1-git-send-email-jack@suse.cz>
-	<1454596087-6814-2-git-send-email-jack@suse.cz>
-	<56C7518E.4020204@sandeen.net>
-	<20160219183342.GH30068@quack.suse.cz>
-	<56C76241.9020203@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1F5EB7CB7
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 02:38:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E35678F80B6
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 00:38:37 -0800 (PST)
+Received: from mail-io0-f172.google.com (mail-io0-f172.google.com
+	[209.85.223.172]) by cuda.sgi.com with ESMTP id
+	cREfVG1SLCHHIWRX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 22 Feb 2016 00:38:36 -0800 (PST)
+Received: by mail-io0-f172.google.com with SMTP id z135so170146994iof.0
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 00:38:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56C76241.9020203@sandeen.net>
+In-Reply-To: <20160221231815.GD25832@dastard>
+References: <CACj3i70osVyt=QTTqoqKGttwNC8w7Gtq479-Nk-icQrDn83hCA@mail.gmail.com>
+	<20160219154347.GA27263@bfoster.bfoster>
+	<CACj3i72wijiApA0gD0mRrMvPomDC5pEAr1Mvv6e3vi4HU1S_sw@mail.gmail.com>
+	<20160219162913.GC27263@bfoster.bfoster>
+	<20160221231815.GD25832@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Mon, 22 Feb 2016 09:38:17 +0100
+Message-ID: <CACj3i732q842g_vSh9UueheQs52C9XF1AR79mOJ2g07cbzfwFw@mail.gmail.com>
+Subject: Re: What is the meaning of XLOG_MIN_RECORD_BSIZE? (Missing a check?)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,80 +31,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0088647226044025891=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jan Kara <jack@suse.cz>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Joel Becker <jlbec@evilplan.org>, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri 19-02-16 12:43:13, Eric Sandeen wrote:
-> 
-> 
-> On 2/19/16 12:33 PM, Jan Kara wrote:
-> > On Fri 19-02-16 11:31:58, Eric Sandeen wrote:
-> >>
-> >>
-> >> On 2/4/16 8:28 AM, Jan Kara wrote:
-> >>> Add infrastructure for supporting get_nextdqblk() callback for VFS
-> >>> quotas. Translate the operation into a callback to appropriate
-> >>> filesystem and consequently to quota format callback.
-> >>>
-> >>> Signed-off-by: Jan Kara <jack@suse.cz>
-> >>> ---
-> >>>  fs/ext4/super.c          |  1 +
-> >>>  fs/quota/dquot.c         | 39 +++++++++++++++++++++++++++++++++++++++
-> >>>  fs/reiserfs/super.c      |  1 +
-> >>>  include/linux/quota.h    |  3 +++
-> >>>  include/linux/quotaops.h |  3 +++
-> >>>  5 files changed, 47 insertions(+)
-> >>>
-> >>> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> >>> index f1b56ff01208..51649f442bf6 100644
-> >>> --- a/fs/ext4/super.c
-> >>> +++ b/fs/ext4/super.c
-> >>> @@ -1100,6 +1100,7 @@ static const struct dquot_operations ext4_quota_operations = {
-> >>>  	.write_info	= ext4_write_info,
-> >>>  	.alloc_dquot	= dquot_alloc,
-> >>>  	.destroy_dquot	= dquot_destroy,
-> >>> +	.get_next_id	= dquot_get_next_id,
-> >>>  };
-> >>
-> >> Hi Jan, doesn't this also need to set:
-> >>
-> >>
-> >> +       .get_nextdqblk  = dquot_get_next_dqblk,
-> >>
-> >> in ext4_qctl_sysfile_operations?
-> > 
-> > Indeed, thanks for catching this. Patch added (with your authorship and
-> > sign-off) into my tree and this time I've properly tested Q_GETNEXTQUOTA
-> > for ext4 with quota in hidden inodes indeed works (previously I've tested
-> > only visible quota files).
-> 
-> Thanks Jan, I wasn't quite sure what it should be doing, but this seemed
-> right.  ;)  Sorry for not sending a proper patch.
-> 
-> So, when you tested visible quota files, I assume it was just falling
-> back to the non-next variants of the quotactl, right?  We should not
-> be hooking up the call for the visible quota files, right?
+--===============0088647226044025891==
+Content-Type: multipart/alternative; boundary=001a114157c6447cfd052c57c2de
 
-We are hooking up the call for visible quota files since it works without
-issues. It is upto userspace to decide whether it wants to read the quota
-file directly or use Q_GETNEXTQUOTA call to iterate over all dquots.
+--001a114157c6447cfd052c57c2de
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> FWIW, there is a test in [x]fstests now for the [X]GETNEXT calls, it's
-> generic/244
+On Mon, Feb 22, 2016 at 12:18 AM, Dave Chinner <david@fromorbit.com> wrote:
 
-Great, thanks!
+>
+> Keep in mind that a value of 0 in the superblock is completely
+> acceptible, in which case the kernel treats the log stripe unit as
+> being a single sector (i.e. same as a v1 log). See, for example,
+> xlog_sync() where it works out the padding to use for the log buffer
+> write.
+>
 
-								Honza
+=E2=80=8BGood to know. :-)
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Cheers,
+Jan=E2=80=8B
+
+
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a114157c6447cfd052c57c2de
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Mon, Fe=
+b 22, 2016 at 12:18 AM, Dave Chinner </span><span dir=3D"ltr" style=3D"font=
+-family:arial,sans-serif">&lt;<a href=3D"mailto:david@fromorbit.com" target=
+=3D"_blank">david@fromorbit.com</a>&gt;</span><span style=3D"font-family:ar=
+ial,sans-serif"> wrote:</span></div><div class=3D"gmail_extra"><div class=
+=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8=
+ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D"">
+<br>
+</span>Keep in mind that a value of 0 in the superblock is completely<br>
+acceptible, in which case the kernel treats the log stripe unit as<br>
+being a single sector (i.e. same as a v1 log). See, for example,<br>
+xlog_sync() where it works out the padding to use for the log buffer<br>
+write.<br></blockquote><div><br></div><div><div class=3D"gmail_default" sty=
+le=3D"font-family:arial,helvetica,sans-serif;display:inline">=E2=80=8BGood =
+to know. :-)</div></div><div><div class=3D"gmail_default" style=3D"font-fam=
+ily:arial,helvetica,sans-serif;display:inline"><br></div></div><div><div cl=
+ass=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;displ=
+ay:inline">Cheers,</div></div><div><div class=3D"gmail_default" style=3D"fo=
+nt-family:arial,helvetica,sans-serif;display:inline">Jan=E2=80=8B</div>=C2=
+=A0</div></div><div><br></div>-- <br><div class=3D"gmail_signature"><div di=
+r=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:j=
+tulak@redhat.com" target=3D"_blank">jtulak@redhat.com</a>=C2=A0/ <a href=3D=
+"mailto:jan@tulak.me" target=3D"_blank">jan@tulak.me</a></div></div></div><=
+/div>
+</div></div>
+
+--001a114157c6447cfd052c57c2de--
+
+
+--===============0088647226044025891==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0088647226044025891==--
