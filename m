@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E1C987CB1
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 12:59:55 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 8B02D7F6C
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 15:15:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A47458F80B7
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 10:59:46 -0800 (PST)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	tvn1piJTiLAhBE7P for <xfs@oss.sgi.com>;
-	Mon, 22 Feb 2016 10:59:45 -0800 (PST)
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 5/5] dax: move writeback calls into the filesystems
-Date: Mon, 22 Feb 2016 11:59:22 -0700
-Message-Id: <1456167562-28576-6-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1456167562-28576-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1456167562-28576-1-git-send-email-ross.zwisler@linux.intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FCC88F8040
+	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 13:15:51 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	YG7Sc4gacrMif6lc for <xfs@oss.sgi.com>;
+	Mon, 22 Feb 2016 13:15:42 -0800 (PST)
+Date: Tue, 23 Feb 2016 08:14:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: better xfs_trans_alloc interface
+Message-ID: <20160222211410.GH25832@dastard>
+References: <1455699159-20906-1-git-send-email-hch@lst.de>
+	<1455699159-20906-2-git-send-email-hch@lst.de>
+	<20160217134006.GA4065@bfoster.bfoster>
+	<20160217220436.GI19486@dastard> <20160222133943.GA26966@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160222133943.GA26966@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,196 +28,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Previously calls to dax_writeback_mapping_range() for all DAX filesystems
-(ext2, ext4 & xfs) were centralized in filemap_write_and_wait_range().
-dax_writeback_mapping_range() needs a struct block_device, and it used to
-get that from inode->i_sb->s_bdev.  This is correct for normal inodes
-mounted on ext2, ext4 and XFS filesystems, but is incorrect for DAX raw
-block devices and for XFS real-time files.
+On Mon, Feb 22, 2016 at 02:39:43PM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 18, 2016 at 09:04:36AM +1100, Dave Chinner wrote:
+> > I've considered doing this removal myself in the past - doing
+> > somethign like embedding the return address of the
+> > xfs-trans_reserve() call in the ticket that is allocated tells us
+> > exactly where the call was made. This can be printed with %pS, and
+> > that gives us the function (and location in the function) the
+> > reservation was made. Hence we solve the problem of not
+> > knowing which call path triggered the problem.
+> > 
+> > Hence I don't think we actually need to the type in every function
+> > call.
+> 
+> This brings up a question:  do we care about the type of the transaction,
+> or the caller?  The existing types were rather confused about that.
+> If it's the transaction type we could simply add a name field to
+> struct xfs_trans_res, if we care about caller the trick from Dave
+> should do the job.
 
-Instead, call dax_writeback_mapping_range() directly from the filesystem
-->writepages function so that it can supply us with a valid block
-device. This also fixes DAX code to properly flush caches in response to
-sync(2).
+I think the caller is more important, because that gives us the
+entire context of the transaction. We reuse the same transaction
+type in several different places, so it can be ambiguous if we only
+have a transaction type in an error message at commit and nothing
+else...
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/block_dev.c      | 13 ++++++++++++-
- fs/dax.c            | 12 +++++++-----
- fs/ext2/inode.c     |  8 ++++++++
- fs/ext4/inode.c     |  4 ++++
- fs/xfs/xfs_aops.c   |  4 ++++
- include/linux/dax.h |  6 ++++--
- mm/filemap.c        | 12 ++++--------
- 7 files changed, 43 insertions(+), 16 deletions(-)
+Cheers,
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 31c6d10..826b164 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1697,13 +1697,24 @@ static int blkdev_releasepage(struct page *page, gfp_t wait)
- 	return try_to_free_buffers(page);
- }
- 
-+static int blkdev_writepages(struct address_space *mapping,
-+			     struct writeback_control *wbc)
-+{
-+	if (dax_mapping(mapping)) {
-+		struct block_device *bdev = I_BDEV(mapping->host);
-+
-+		return dax_writeback_mapping_range(mapping, bdev, wbc);
-+	}
-+	return generic_writepages(mapping, wbc);
-+}
-+
- static const struct address_space_operations def_blk_aops = {
- 	.readpage	= blkdev_readpage,
- 	.readpages	= blkdev_readpages,
- 	.writepage	= blkdev_writepage,
- 	.write_begin	= blkdev_write_begin,
- 	.write_end	= blkdev_write_end,
--	.writepages	= generic_writepages,
-+	.writepages	= blkdev_writepages,
- 	.releasepage	= blkdev_releasepage,
- 	.direct_IO	= blkdev_direct_IO,
- 	.is_dirty_writeback = buffer_check_dirty_writeback,
-diff --git a/fs/dax.c b/fs/dax.c
-index 9a173dd..7111724 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -484,11 +484,10 @@ static int dax_writeback_one(struct block_device *bdev,
-  * end]. This is required by data integrity operations to ensure file data is
-  * on persistent storage prior to completion of the operation.
-  */
--int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
--		loff_t end)
-+int dax_writeback_mapping_range(struct address_space *mapping,
-+		struct block_device *bdev, struct writeback_control *wbc)
- {
- 	struct inode *inode = mapping->host;
--	struct block_device *bdev = inode->i_sb->s_bdev;
- 	pgoff_t start_index, end_index, pmd_index;
- 	pgoff_t indices[PAGEVEC_SIZE];
- 	struct pagevec pvec;
-@@ -499,8 +498,11 @@ int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
- 	if (WARN_ON_ONCE(inode->i_blkbits != PAGE_SHIFT))
- 		return -EIO;
- 
--	start_index = start >> PAGE_CACHE_SHIFT;
--	end_index = end >> PAGE_CACHE_SHIFT;
-+	if (!mapping->nrexceptional || wbc->sync_mode != WB_SYNC_ALL)
-+		return 0;
-+
-+	start_index = wbc->range_start >> PAGE_CACHE_SHIFT;
-+	end_index = wbc->range_end >> PAGE_CACHE_SHIFT;
- 	pmd_index = DAX_PMD_INDEX(start_index);
- 
- 	rcu_read_lock();
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 4467cbd..6bd58e6 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -876,6 +876,14 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
- static int
- ext2_writepages(struct address_space *mapping, struct writeback_control *wbc)
- {
-+#ifdef CONFIG_FS_DAX
-+	if (dax_mapping(mapping)) {
-+		return dax_writeback_mapping_range(mapping,
-+						   mapping->host->i_sb->s_bdev,
-+						   wbc);
-+	}
-+#endif
-+
- 	return mpage_writepages(mapping, wbc, ext2_get_block);
- }
- 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 5708e68..aee960b 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -2478,6 +2478,10 @@ static int ext4_writepages(struct address_space *mapping,
- 
- 	trace_ext4_writepages(inode, wbc);
- 
-+	if (dax_mapping(mapping))
-+		return dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev,
-+						   wbc);
-+
- 	/*
- 	 * No pages to write? This is mainly a kludge to avoid starting
- 	 * a transaction for special inodes like journal inode on last iput()
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index fc20518..a9ebabfe 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1208,6 +1208,10 @@ xfs_vm_writepages(
- 	struct writeback_control *wbc)
- {
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-+	if (dax_mapping(mapping))
-+		return dax_writeback_mapping_range(mapping,
-+				xfs_find_bdev_for_inode(mapping->host), wbc);
-+
- 	return generic_writepages(mapping, wbc);
- }
- 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 7b6bced..636dd59 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -52,6 +52,8 @@ static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
- }
--int dax_writeback_mapping_range(struct address_space *mapping, loff_t start,
--		loff_t end);
-+
-+struct writeback_control;
-+int dax_writeback_mapping_range(struct address_space *mapping,
-+		struct block_device *bdev, struct writeback_control *wbc);
- #endif
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 23edcce..3461d97 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -446,7 +446,8 @@ int filemap_write_and_wait(struct address_space *mapping)
- {
- 	int err = 0;
- 
--	if (mapping->nrpages) {
-+	if ((!dax_mapping(mapping) && mapping->nrpages) ||
-+	    (dax_mapping(mapping) && mapping->nrexceptional)) {
- 		err = filemap_fdatawrite(mapping);
- 		/*
- 		 * Even if the above returned error, the pages may be
-@@ -482,13 +483,8 @@ int filemap_write_and_wait_range(struct address_space *mapping,
- {
- 	int err = 0;
- 
--	if (dax_mapping(mapping) && mapping->nrexceptional) {
--		err = dax_writeback_mapping_range(mapping, lstart, lend);
--		if (err)
--			return err;
--	}
--
--	if (mapping->nrpages) {
-+	if ((!dax_mapping(mapping) && mapping->nrpages) ||
-+	    (dax_mapping(mapping) && mapping->nrexceptional)) {
- 		err = __filemap_fdatawrite_range(mapping, lstart, lend,
- 						 WB_SYNC_ALL);
- 		/* See comment of filemap_write_and_wait() */
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
