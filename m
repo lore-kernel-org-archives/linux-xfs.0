@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 528DA7F94
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 10:27:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 22AB1304039
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 08:27:32 -0800 (PST)
-Received: from 10.mo174.mail-out.ovh.net (10.mo174.mail-out.ovh.net
-	[46.105.58.75]) by cuda.sgi.com with ESMTP id eHmhasQEoC4a0zck
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7A66B7F9A
+	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 13:20:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EC09DAC002
+	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 11:20:03 -0800 (PST)
+Received: from mail-vk0-f50.google.com (mail-vk0-f50.google.com
+	[209.85.213.50]) by cuda.sgi.com with ESMTP id w0gzeH5p2fm8ABqi
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Feb 2016 08:13:14 -0800 (PST)
-Received: from ex2.OVH.local (corp.ovh.com [5.196.251.137])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mo174.mail-out.ovh.net (Postfix) with ESMTPS id 59FBBFF828C
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 17:13:13 +0100 (CET)
-Message-ID: <56CC852F.7010507@corp.ovh.com>
-Date: Tue, 23 Feb 2016 17:13:35 +0100
-From: Jean-Tiare Le Bigot <jean-tiare.le-bigot@corp.ovh.com>
+	Tue, 23 Feb 2016 11:01:21 -0800 (PST)
+Received: by mail-vk0-f50.google.com with SMTP id c3so170546023vkb.3
+	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 11:01:21 -0800 (PST)
 MIME-Version: 1.0
-Subject: backport 7a29ac474a47eb8cf212b45917683ae89d6fa13b to stable ?
+In-Reply-To: <CAHc6FU67LnV7-roofFe1y_uTfvgwonRZimyu7Wn1CDRzwHZJSw@mail.gmail.com>
+References: <56B770B6.7040803@gmail.com> <56B77262.7090107@gmail.com>
+	<CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
+	<56C0F23C.7030902@gmail.com>
+	<CAHc6FU4CCrcrA6=oCiq2A5rGd9CCGELaTZq6tGpmd2jcV_Zp4A@mail.gmail.com>
+	<56CA2EEB.9080504@gmail.com>
+	<CAHc6FU46vO8NM3cvFH7b8X7U9R+m6wcYj8EQKVnSQkiY3Q051A@mail.gmail.com>
+	<56CC3B4A.7070204@gmail.com>
+	<CAHc6FU67LnV7-roofFe1y_uTfvgwonRZimyu7Wn1CDRzwHZJSw@mail.gmail.com>
+Date: Tue, 23 Feb 2016 20:01:20 +0100
+Message-ID: <CAHc6FU4FR577X=sZAPUXhCL4SUfrRYTHw9_byehZqwYyBOhQiA@mail.gmail.com>
+Subject: Re: richacl(7) man page review comments
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,58 +38,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-Hi,
+On Tue, Feb 23, 2016 at 4:09 PM, Andreas Gruenbacher
+<agruenba@redhat.com> wrote:
+> Hi Michael,
+>
+> On Tue, Feb 23, 2016 at 11:58 AM, Michael Kerrisk (man-pages)
+> <mtk.manpages@gmail.com> wrote:
+>> On 02/22/2016 03:46 PM, Andreas Gruenbacher wrote:
+>>> On Sun, Feb 21, 2016 at 10:40 PM, Michael Kerrisk (man-pages) <mtk.manpages@gmail.com> wrote:
+>>>> I've once more pulled from the latest git; here's some more comments.
+>>>
+>>> thanks again. I've updated the repo with your changes.
+>>
+>> Next round :-). Just a few quick comments while I'm on a train ride.
+>
+> applied, thanks.
 
-We've hit kernel hang related to XFS reclaim under heavy I/O load on a
-couple of storage servers using XFS over flashcache over a 3.13.y kernel.
+I've fixed the following additional problems:
 
-On the crash dumps, kthreadd is blocked, waiting for XFS to reclaim some
-memory but the related reclaim job is queued on a worker_pool stuck
-waiting for some I/O, itself depending on other jobs on other queues
-which would require additional threads to go forward. Unfortunately
-kthreadd is blocked.
-The host has plenty of memory (~128GB), about 80% of which being used
-for the page cache.
+> diff --git a/man/richacl.7 b/man/richacl.7
+> index acdff31..1c82644 100644
+> --- a/man/richacl.7
+> +++ b/man/richacl.7
+> @@ -30,10 +30,8 @@
+>  .SH NAME
+>  richacl \- Rich Access Control Lists
+>  .SH DESCRIPTION
+> -Rich Access Control Lists (RichACLs) are an extension of the POSIX file
+> -permission model (see
+> -.BR acl (5))
+> -to support
+> +Rich Access Control Lists (RichACLs) are an extension of the traditional POSIX
+> +file permission model to support
+>  .URL https://tools.ietf.org/rfc/rfc5661.txt "NFSv4 Access Control Lists"
+>  on local and remote-mounted filesystems.
 
-It looks like this is fixed by commit
-7a29ac474a47eb8cf212b45917683ae89d6fa13b. We manually applied a fix to
-our internal branch but I could not find a similar commit on the
-longterm branches. Maybe it could be a good candidate for backport for
-other users ?
+RichACLs are an extension of the traditional POSIX file permission
+model, not of the POSIX ACL model.
 
-On linux-3.14.y, this would be
+Unfortunately, there doesn't seem to be a man-page covering POSIX File
+Access Permissions as in Appendix A of
+http://www.bestbits.at/richacl/draft-gruenbacher-nfsv4-acls-in-posix-00.html.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d971f49..36af881 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -858,17 +858,17 @@ xfs_init_mount_workqueues(
-                goto out_destroy_unwritten;
+A lot of the gaps between paragraphs were wrong when rendered for printing.
 
-        mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
--                       0, 0, mp->m_fsname);
-+                       WQ_MEM_RECLAIM, 0, mp->m_fsname);
-        if (!mp->m_reclaim_workqueue)
-                goto out_destroy_cil;
+The modification dates were outdated.
 
-        mp->m_log_workqueue = alloc_workqueue("xfs-log/%s",
--                       0, 0, mp->m_fsname);
-+                       WQ_MEM_RECLAIM, 0, mp->m_fsname);
-        if (!mp->m_log_workqueue)
-                goto out_destroy_reclaim;
-
-        mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
--                       0, 0, mp->m_fsname);
-+                       WQ_MEM_RECLAIM, 0, mp->m_fsname);
-        if (!mp->m_eofblocks_workqueue)
-                goto out_destroy_log;
-
-Regards,
-
--- 
-Jean-Tiare Le Bigot, OVH
+Andreas
 
 _______________________________________________
 xfs mailing list
