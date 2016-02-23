@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7A66B7F9A
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 13:20:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EC09DAC002
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 11:20:03 -0800 (PST)
-Received: from mail-vk0-f50.google.com (mail-vk0-f50.google.com
-	[209.85.213.50]) by cuda.sgi.com with ESMTP id w0gzeH5p2fm8ABqi
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Feb 2016 11:01:21 -0800 (PST)
-Received: by mail-vk0-f50.google.com with SMTP id c3so170546023vkb.3
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 11:01:21 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 0744D7F50
+	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 16:58:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B309AC005
+	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 14:58:44 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	fjtOAWkcWJ2q854M for <xfs@oss.sgi.com>;
+	Tue, 23 Feb 2016 14:45:57 -0800 (PST)
+Date: Wed, 24 Feb 2016 09:45:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: backport 7a29ac474a47eb8cf212b45917683ae89d6fa13b to stable ?
+Message-ID: <20160223224555.GM25832@dastard>
+References: <56CC852F.7010507@corp.ovh.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHc6FU67LnV7-roofFe1y_uTfvgwonRZimyu7Wn1CDRzwHZJSw@mail.gmail.com>
-References: <56B770B6.7040803@gmail.com> <56B77262.7090107@gmail.com>
-	<CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
-	<56C0F23C.7030902@gmail.com>
-	<CAHc6FU4CCrcrA6=oCiq2A5rGd9CCGELaTZq6tGpmd2jcV_Zp4A@mail.gmail.com>
-	<56CA2EEB.9080504@gmail.com>
-	<CAHc6FU46vO8NM3cvFH7b8X7U9R+m6wcYj8EQKVnSQkiY3Q051A@mail.gmail.com>
-	<56CC3B4A.7070204@gmail.com>
-	<CAHc6FU67LnV7-roofFe1y_uTfvgwonRZimyu7Wn1CDRzwHZJSw@mail.gmail.com>
-Date: Tue, 23 Feb 2016 20:01:20 +0100
-Message-ID: <CAHc6FU4FR577X=sZAPUXhCL4SUfrRYTHw9_byehZqwYyBOhQiA@mail.gmail.com>
-Subject: Re: richacl(7) man page review comments
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <56CC852F.7010507@corp.ovh.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,56 +29,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: Jean-Tiare Le Bigot <jean-tiare.le-bigot@corp.ovh.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 23, 2016 at 4:09 PM, Andreas Gruenbacher
-<agruenba@redhat.com> wrote:
-> Hi Michael,
->
-> On Tue, Feb 23, 2016 at 11:58 AM, Michael Kerrisk (man-pages)
-> <mtk.manpages@gmail.com> wrote:
->> On 02/22/2016 03:46 PM, Andreas Gruenbacher wrote:
->>> On Sun, Feb 21, 2016 at 10:40 PM, Michael Kerrisk (man-pages) <mtk.manpages@gmail.com> wrote:
->>>> I've once more pulled from the latest git; here's some more comments.
->>>
->>> thanks again. I've updated the repo with your changes.
->>
->> Next round :-). Just a few quick comments while I'm on a train ride.
->
-> applied, thanks.
+On Tue, Feb 23, 2016 at 05:13:35PM +0100, Jean-Tiare Le Bigot wrote:
+> Hi,
+> 
+> We've hit kernel hang related to XFS reclaim under heavy I/O load on a
+> couple of storage servers using XFS over flashcache over a 3.13.y kernel.
+> 
+> On the crash dumps, kthreadd is blocked, waiting for XFS to reclaim some
+> memory but the related reclaim job is queued on a worker_pool stuck
+> waiting for some I/O, itself depending on other jobs on other queues
+> which would require additional threads to go forward. Unfortunately
+> kthreadd is blocked.
+> The host has plenty of memory (~128GB), about 80% of which being used
+> for the page cache.
+> 
+> It looks like this is fixed by commit
+> 7a29ac474a47eb8cf212b45917683ae89d6fa13b.
 
-I've fixed the following additional problems:
+That commit fixed a regression introduced, IIRC, in 3.19. The
+problem it fixed didn't exist before then, so I doubt you are seeing
+the problem that the above commit fixed. Perhaps you'd like to
+describe your problem along with the stack traces, etc so we have
+some idea of what you are trying to to fix?
 
-> diff --git a/man/richacl.7 b/man/richacl.7
-> index acdff31..1c82644 100644
-> --- a/man/richacl.7
-> +++ b/man/richacl.7
-> @@ -30,10 +30,8 @@
->  .SH NAME
->  richacl \- Rich Access Control Lists
->  .SH DESCRIPTION
-> -Rich Access Control Lists (RichACLs) are an extension of the POSIX file
-> -permission model (see
-> -.BR acl (5))
-> -to support
-> +Rich Access Control Lists (RichACLs) are an extension of the traditional POSIX
-> +file permission model to support
->  .URL https://tools.ietf.org/rfc/rfc5661.txt "NFSv4 Access Control Lists"
->  on local and remote-mounted filesystems.
+Cheers,
 
-RichACLs are an extension of the traditional POSIX file permission
-model, not of the POSIX ACL model.
-
-Unfortunately, there doesn't seem to be a man-page covering POSIX File
-Access Permissions as in Appendix A of
-http://www.bestbits.at/richacl/draft-gruenbacher-nfsv4-acls-in-posix-00.html.
-
-A lot of the gaps between paragraphs were wrong when rendered for printing.
-
-The modification dates were outdated.
-
-Andreas
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
