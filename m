@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3087629E05
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 00:28:50 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9E6007CA2
+	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 02:20:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EB26D304051
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 22:28:43 -0800 (PST)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id J4JtiOzf6DtsPb6J
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Feb 2016 22:12:36 -0800 (PST)
-Received: by mail-wm0-f46.google.com with SMTP id b205so20696932wmb.1
-	for <xfs@oss.sgi.com>; Tue, 23 Feb 2016 22:12:36 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 24 Feb 2016 14:12:34 +0800
-Message-ID: <CACepTxgki0HxCv4MwBRbtP0k2hv8Qguq-UO_BA3U0eeAsN_8Fw@mail.gmail.com>
-Subject: XFS Corruption
-From: fangchen sun <sunspot0105@gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 72A0C8F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 00:20:24 -0800 (PST)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id a513rW7Y76LEVEp2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 24 Feb 2016 00:20:21 -0800 (PST)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/3] xfs: don't release bios on completion immediately
+Date: Wed, 24 Feb 2016 09:20:10 +0100
+Message-Id: <1456302011-18915-3-git-send-email-hch@lst.de>
+In-Reply-To: <1456302011-18915-1-git-send-email-hch@lst.de>
+References: <1456302011-18915-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,138 +23,199 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0218299671113620830=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
---===============0218299671113620830==
-Content-Type: multipart/alternative; boundary=001a114b3054b72322052c7df3c6
+Completion of an ioend requires us to walk the bufferhead list to
+end writback on all the bufferheads. This, in turn, is needed so
+that we can end writeback on all the pages we just did IO on.
 
---001a114b3054b72322052c7df3c6
-Content-Type: text/plain; charset=UTF-8
+To remove our dependency on bufferheads in writeback, we need to
+turn this around the other way - we need to walk the pages we've
+just completed IO on, and then walk the buffers attached to the
+pages and complete their IO. In doing this, we remove the
+requirement for the ioend to track bufferheads directly.
 
-Dear all:
+To enable IO completion to walk all the pages we've submitted IO on,
+we need to keep the bios that we used for IO around until the ioend
+has been completed. We can do this simply by chaining the bios to
+the ioend at completion time, and then walking their pages directly
+just before destroying the ioend.
 
-I have a ceph object storage cluster, and choose XFS as the underlying file
-system.
-I recently ran into a problem that sometimes the function "setxattr()"
- failed,
-I can only umount the disk and repair it with "xfs_repair".
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_aops.c | 90 +++++++++++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_aops.h |  5 ++--
+ 2 files changed, 71 insertions(+), 24 deletions(-)
 
-os: centos 6.5
-kernel version: 2.6.32
-
-the log for dmesg command:
-[41796028.532225] Pid: 1438740, comm: ceph-osd Not tainted
-2.6.32-925.431.23.3.letv.el6.x86_64 #1
-[41796028.532227] Call Trace:
-[41796028.532255]  [<ffffffffa01e1e5f>] ? xfs_error_report+0x3f/0x50 [xfs]
-[41796028.532276]  [<ffffffffa01d506a>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
-[41796028.532296]  [<ffffffffa01e1ece>] ? xfs_corruption_error+0x5e/0x90
-[xfs]
-[41796028.532316]  [<ffffffffa01d4f4c>] ? xfs_da_do_buf+0x6cc/0x770 [xfs]
-[41796028.532335]  [<ffffffffa01d506a>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
-[41796028.532359]  [<ffffffffa0206fc7>] ? kmem_zone_alloc+0x77/0xf0 [xfs]
-[41796028.532380]  [<ffffffffa01d506a>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
-[41796028.532399]  [<ffffffffa01bc481>] ? xfs_attr_leaf_addname+0x61/0x3d0
-[xfs]
-[41796028.532426]  [<ffffffffa01bc481>] ? xfs_attr_leaf_addname+0x61/0x3d0
-[xfs]
-[41796028.532455]  [<ffffffffa01ff187>] ? xfs_trans_add_item+0x57/0x70 [xfs]
-[41796028.532476]  [<ffffffffa01cc208>] ? xfs_bmbt_get_all+0x18/0x20 [xfs]
-[41796028.532495]  [<ffffffffa01bcbb4>] ? xfs_attr_set_int+0x3c4/0x510 [xfs]
-[41796028.532517]  [<ffffffffa01d4f5b>] ? xfs_da_do_buf+0x6db/0x770 [xfs]
-[41796028.532536]  [<ffffffffa01bcd81>] ? xfs_attr_set+0x81/0x90 [xfs]
-[41796028.532560]  [<ffffffffa0216cc3>] ? __xfs_xattr_set+0x43/0x60 [xfs]
-[41796028.532584]  [<ffffffffa0216d31>] ? xfs_xattr_user_set+0x11/0x20 [xfs]
-[41796028.532592]  [<ffffffff811aee92>] ? generic_setxattr+0xa2/0xb0
-[41796028.532596]  [<ffffffff811b134e>] ? __vfs_setxattr_noperm+0x4e/0x160
-[41796028.532600]  [<ffffffff81196b77>] ? inode_permission+0xa7/0x100
-[41796028.532604]  [<ffffffff811b151c>] ? vfs_setxattr+0xbc/0xc0
-[41796028.532607]  [<ffffffff811b15f0>] ? setxattr+0xd0/0x150
-[41796028.532612]  [<ffffffff8105af80>] ? __dequeue_entity+0x30/0x50
-[41796028.532617]  [<ffffffff8100988e>] ? __switch_to+0x26e/0x320
-[41796028.532621]  [<ffffffff8118aec0>] ? __sb_start_write+0x80/0x120
-[41796028.532626]  [<ffffffff8152912e>] ? thread_return+0x4e/0x760
-[41796028.532630]  [<ffffffff811b171d>] ? sys_fsetxattr+0xad/0xd0
-[41796028.532633]  [<ffffffff8100b072>] ? system_call_fastpath+0x16/0x1b
-[41796028.532636] XFS (sdi1): Corruption detected. Unmount and run
-xfs_repair
-
-Any comments will be much appreciated!
-
-Best Regards!
-sunspot
-
---001a114b3054b72322052c7df3c6
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><span style=3D"font-size:14px">Dear all:</span><div style=
-=3D"font-size:14px"><br></div><div style=3D"font-size:14px">I have a ceph o=
-bject storage cluster, and choose XFS as the underlying file system.</div><=
-div style=3D"font-size:14px">I recently ran into a problem that sometimes t=
-he function &quot;setxattr()&quot; =C2=A0failed,=C2=A0</div><div style=3D"f=
-ont-size:14px">I can only umount the disk and repair it with &quot;xfs_repa=
-ir&quot;.</div><div style=3D"font-size:14px"><br></div><div style=3D"font-s=
-ize:14px">os: centos 6.5</div><div style=3D"font-size:14px">kernel version:=
- 2.6.32</div><div style=3D"font-size:14px"><br></div><div style=3D"font-siz=
-e:14px">the log for dmesg command:</div><div style=3D"font-size:14px"><div>=
-[41796028.532225] Pid: 1438740, comm: ceph-osd Not tainted 2.6.32-925.431.2=
-3.3.letv.el6.x86_64 #1</div><div>[41796028.532227] Call Trace:</div><div>[4=
-1796028.532255] =C2=A0[&lt;ffffffffa01e1e5f&gt;] ? xfs_error_report+0x3f/0x=
-50 [xfs]</div><div>[41796028.532276] =C2=A0[&lt;ffffffffa01d506a&gt;] ? xfs=
-_da_read_buf+0x2a/0x30 [xfs]</div><div>[41796028.532296] =C2=A0[&lt;fffffff=
-fa01e1ece&gt;] ? xfs_corruption_error+0x5e/0x90 [xfs]</div><div>[41796028.5=
-32316] =C2=A0[&lt;ffffffffa01d4f4c&gt;] ? xfs_da_do_buf+0x6cc/0x770 [xfs]</=
-div><div>[41796028.532335] =C2=A0[&lt;ffffffffa01d506a&gt;] ? xfs_da_read_b=
-uf+0x2a/0x30 [xfs]</div><div>[41796028.532359] =C2=A0[&lt;ffffffffa0206fc7&=
-gt;] ? kmem_zone_alloc+0x77/0xf0 [xfs]</div><div>[41796028.532380] =C2=A0[&=
-lt;ffffffffa01d506a&gt;] ? xfs_da_read_buf+0x2a/0x30 [xfs]</div><div>[41796=
-028.532399] =C2=A0[&lt;ffffffffa01bc481&gt;] ? xfs_attr_leaf_addname+0x61/0=
-x3d0 [xfs]</div><div>[41796028.532426] =C2=A0[&lt;ffffffffa01bc481&gt;] ? x=
-fs_attr_leaf_addname+0x61/0x3d0 [xfs]</div><div>[41796028.532455] =C2=A0[&l=
-t;ffffffffa01ff187&gt;] ? xfs_trans_add_item+0x57/0x70 [xfs]</div><div>[417=
-96028.532476] =C2=A0[&lt;ffffffffa01cc208&gt;] ? xfs_bmbt_get_all+0x18/0x20=
- [xfs]</div><div>[41796028.532495] =C2=A0[&lt;ffffffffa01bcbb4&gt;] ? xfs_a=
-ttr_set_int+0x3c4/0x510 [xfs]</div><div>[41796028.532517] =C2=A0[&lt;ffffff=
-ffa01d4f5b&gt;] ? xfs_da_do_buf+0x6db/0x770 [xfs]</div><div>[41796028.53253=
-6] =C2=A0[&lt;ffffffffa01bcd81&gt;] ? xfs_attr_set+0x81/0x90 [xfs]</div><di=
-v>[41796028.532560] =C2=A0[&lt;ffffffffa0216cc3&gt;] ? __xfs_xattr_set+0x43=
-/0x60 [xfs]</div><div>[41796028.532584] =C2=A0[&lt;ffffffffa0216d31&gt;] ? =
-xfs_xattr_user_set+0x11/0x20 [xfs]</div><div>[41796028.532592] =C2=A0[&lt;f=
-fffffff811aee92&gt;] ? generic_setxattr+0xa2/0xb0</div><div>[41796028.53259=
-6] =C2=A0[&lt;ffffffff811b134e&gt;] ? __vfs_setxattr_noperm+0x4e/0x160</div=
-><div>[41796028.532600] =C2=A0[&lt;ffffffff81196b77&gt;] ? inode_permission=
-+0xa7/0x100</div><div>[41796028.532604] =C2=A0[&lt;ffffffff811b151c&gt;] ? =
-vfs_setxattr+0xbc/0xc0</div><div>[41796028.532607] =C2=A0[&lt;ffffffff811b1=
-5f0&gt;] ? setxattr+0xd0/0x150</div><div>[41796028.532612] =C2=A0[&lt;fffff=
-fff8105af80&gt;] ? __dequeue_entity+0x30/0x50</div><div>[41796028.532617] =
-=C2=A0[&lt;ffffffff8100988e&gt;] ? __switch_to+0x26e/0x320</div><div>[41796=
-028.532621] =C2=A0[&lt;ffffffff8118aec0&gt;] ? __sb_start_write+0x80/0x120<=
-/div><div>[41796028.532626] =C2=A0[&lt;ffffffff8152912e&gt;] ? thread_retur=
-n+0x4e/0x760</div><div>[41796028.532630] =C2=A0[&lt;ffffffff811b171d&gt;] ?=
- sys_fsetxattr+0xad/0xd0</div><div>[41796028.532633] =C2=A0[&lt;ffffffff810=
-0b072&gt;] ? system_call_fastpath+0x16/0x1b</div><div>[41796028.532636] XFS=
- (sdi1): Corruption detected. Unmount and run xfs_repair</div></div><div st=
-yle=3D"font-size:14px"><br></div><div style=3D"font-size:14px">Any comments=
- will be much appreciated!</div><div style=3D"font-size:14px"><br></div><di=
-v style=3D"font-size:14px">Best Regards!</div><div style=3D"font-size:14px"=
->sunspot</div></div>
-
---001a114b3054b72322052c7df3c6--
-
-
---===============0218299671113620830==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 90e6e3a..fc4fed6 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -84,25 +84,71 @@ xfs_find_bdev_for_inode(
+ }
+ 
+ /*
+- * We're now finished for good with this ioend structure.
+- * Update the page state via the associated buffer_heads,
+- * release holds on the inode and bio, and finally free
+- * up memory.  Do not use the ioend after this.
++ * We're now finished for good with this page.  Update the page state via the
++ * associated buffer_heads, paying attention to the start and end offsets that
++ * we need to process on the page.
++ */
++static void
++xfs_finish_page_writeback(
++	struct page	*page,
++	unsigned int	start,
++	unsigned int	end,
++	int		error)
++{
++	struct buffer_head	*head, *bh;
++	unsigned int		off = 0;
++
++	bh = head = page_buffers(page);
++
++	do {
++		if (start > off)
++			goto next_bh;
++		if (off > end)
++			break;
++		bh->b_end_io(bh, !error);
++next_bh:
++		off += bh->b_size;
++	} while ((bh = bh->b_this_page) != head);
++}
++
++/*
++ * We're now finished for good with this ioend structure.  Update the page
++ * state, release holds on bios, and finally free up memory.  Do not use the
++ * ioend after this.
+  */
+ STATIC void
+ xfs_destroy_ioend(
+-	xfs_ioend_t		*ioend)
++	struct xfs_ioend	*ioend)
+ {
+-	struct buffer_head	*bh, *next;
++	struct bio		*bio, *next;
++
++	for (bio = ioend->io_bio_done; bio; bio = next) {
++		struct bio_vec	*bvec;
++		int		i;
+ 
+-	for (bh = ioend->io_buffer_head; bh; bh = next) {
+-		next = bh->b_private;
+-		bh->b_end_io(bh, !ioend->io_error);
++		next = bio->bi_private;
++		bio->bi_private = NULL;
++
++		/* walk each page on bio, ending page IO on them */
++		bio_for_each_segment_all(bvec, bio, i) {
++			struct page	*page = bvec->bv_page;
++			unsigned int	off = bvec->bv_offset;
++			unsigned int	end_off = off + bvec->bv_len - 1;
++
++			ASSERT(off < PAGE_SIZE);
++			ASSERT(end_off <= PAGE_SIZE);
++
++			xfs_finish_page_writeback(page, off, end_off,
++						  ioend->io_error);
++
++		}
++		bio_put(bio);
+ 	}
+ 
+ 	mempool_free(ioend, xfs_ioend_pool);
+ }
+ 
++
+ /*
+  * Fast and loose check if this write could update the on-disk inode size.
+  */
+@@ -286,6 +332,7 @@ xfs_alloc_ioend(
+ 	ioend->io_type = type;
+ 	ioend->io_inode = inode;
+ 	INIT_WORK(&ioend->io_work, xfs_end_io);
++	spin_lock_init(&ioend->io_lock);
+ 	return ioend;
+ }
+ 
+@@ -365,15 +412,21 @@ STATIC void
+ xfs_end_bio(
+ 	struct bio		*bio)
+ {
+-	xfs_ioend_t		*ioend = bio->bi_private;
++	struct xfs_ioend	*ioend = bio->bi_private;
++	unsigned long		flags;
+ 
+-	if (!ioend->io_error)
+-		ioend->io_error = bio->bi_error;
+-
+-	/* Toss bio and pass work off to an xfsdatad thread */
+ 	bio->bi_private = NULL;
+ 	bio->bi_end_io = NULL;
+-	bio_put(bio);
++
++	spin_lock_irqsave(&ioend->io_lock, flags);
++	if (!ioend->io_error)
++	       ioend->io_error = bio->bi_error;
++	if (!ioend->io_bio_done)
++		ioend->io_bio_done = bio;
++	else
++		ioend->io_bio_done_tail->bi_private = bio;
++	ioend->io_bio_done_tail = bio;
++	spin_unlock_irqrestore(&ioend->io_lock, flags);
+ 
+ 	xfs_finish_ioend(ioend);
+ }
+@@ -517,16 +570,9 @@ xfs_add_to_ioend(
+ 	    bh->b_blocknr != wpc->last_block + 1) {
+ 		if (ioend)
+ 			list_add(&ioend->io_list, iolist);
+-
+ 		ioend = wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type);
+ 		ioend->io_offset = offset;
+-		ioend->io_buffer_head = bh;
+-		ioend->io_buffer_tail = bh;
+-	} else {
+-		ioend->io_buffer_tail->b_private = bh;
+-		ioend->io_buffer_tail = bh;
+ 	}
+-	bh->b_private = NULL;
+ 
+ retry:
+ 	if (!ioend->io_bio)
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index c89c3bd..1c7b041 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -46,13 +46,14 @@ typedef struct xfs_ioend {
+ 	int			io_error;	/* I/O error code */
+ 	atomic_t		io_remaining;	/* hold count */
+ 	struct inode		*io_inode;	/* file being written to */
+-	struct buffer_head	*io_buffer_head;/* buffer linked list head */
+-	struct buffer_head	*io_buffer_tail;/* buffer linked list tail */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
+ 	struct work_struct	io_work;	/* xfsdatad work queue */
+ 	struct xfs_trans	*io_append_trans;/* xact. for size update */
+ 	struct bio		*io_bio;	/* bio being built */
++	struct bio		*io_bio_done;	/* bios completed */
++	struct bio		*io_bio_done_tail; /* bios completed */
++	spinlock_t		io_lock;	/* for bio completion list */
+ } xfs_ioend_t;
+ 
+ extern const struct address_space_operations xfs_address_space_operations;
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0218299671113620830==--
