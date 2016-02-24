@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 704F57CB9
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C5C497CB9
 	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 13:49:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F54E8F8039
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 38E70AC005
 	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:49:00 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0AvkiJjiLVaLtKwT (version=TLSv1.2
+	cuda.sgi.com with ESMTP id wuyA3xEO39dIdNyg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:59 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:30 -0800 (PST)
 From: mchristi@redhat.com
-Subject: [PATCH 13/35] xfs: set bi_op to REQ_OP
-Date: Wed, 24 Feb 2016 13:47:50 -0600
-Message-Id: <1456343292-14535-14-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 02/35] block: add REQ_OP definitions and bi_op/op fields
+Date: Wed, 24 Feb 2016 13:47:39 -0600
+Message-Id: <1456343292-14535-3-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,111 +33,178 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has xfs set the bio bi_op to a REQ_OP, and
-rq_flag_bits to bi_rw.
+The following patches separate the operation (write, read, discard,
+etc) from the flags in bi_rw/cmd_flags. This patch adds definitions
+for request/bio operations, adds fields to the request/bio to set
+them, and some temporary compat code so the kernel/modules can use
+either one. In the final patches this compat code will be removed
+when everything is converted.
+
+Also, in this patch the REQ_OPs match the REQ rq_flag_bits ones
+for compat reasons while all the code is converted in this set. In the
+last patches that will also be removed.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
-Acked-by: Dave Chinner <dchinner@redhat.com>
-
 ---
- fs/xfs/xfs_aops.c |  3 ++-
- fs/xfs/xfs_buf.c  | 27 +++++++++++++++------------
- 2 files changed, 17 insertions(+), 13 deletions(-)
+ block/blk-core.c          | 19 ++++++++++++++++---
+ include/linux/blk_types.h | 15 ++++++++++++++-
+ include/linux/blkdev.h    |  1 +
+ include/linux/fs.h        | 37 +++++++++++++++++++++++++++++++++++--
+ 4 files changed, 66 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 9cd38d1..21867fc 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -393,7 +393,8 @@ xfs_submit_ioend_bio(
- 	atomic_inc(&ioend->io_remaining);
- 	bio->bi_private = ioend;
- 	bio->bi_end_io = xfs_end_bio;
--	bio->bi_rw = (wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE);
-+	bio->bi_op = REQ_OP_WRITE;
-+	bio->bi_rw = WB_SYNC_ALL ? WRITE_SYNC : 0;
- 	submit_bio(bio);
- }
- 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 079bb77..917774e 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1131,7 +1131,8 @@ xfs_buf_ioapply_map(
- 	int		map,
- 	int		*buf_offset,
- 	int		*count,
--	int		rw)
-+	int		op,
-+	int		op_flags)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index f23d1b0..74aa201 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1697,7 +1697,8 @@ void init_request_from_bio(struct request *req, struct bio *bio)
  {
- 	int		page_index;
- 	int		total_nr_pages = bp->b_page_count;
-@@ -1170,7 +1171,8 @@ next_chunk:
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
+ 	req->cmd_type = REQ_TYPE_FS;
  
- 	for (; size && nr_pages; nr_pages--, page_index++) {
- 		int	rbytes, nbytes = PAGE_SIZE - offset;
-@@ -1214,7 +1216,8 @@ _xfs_buf_ioapply(
- 	struct xfs_buf	*bp)
+-	req->cmd_flags |= bio->bi_rw & REQ_COMMON_MASK;
++	/* tmp compat. Allow users to set bi_op or bi_rw */
++	req->cmd_flags |= (bio->bi_rw | bio->bi_op) & REQ_COMMON_MASK;
+ 	if (bio->bi_rw & REQ_RAHEAD)
+ 		req->cmd_flags |= REQ_FAILFAST_MASK;
+ 
+@@ -2032,6 +2033,12 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	struct bio_list bio_list_on_stack;
+ 	blk_qc_t ret = BLK_QC_T_NONE;
+ 
++	/* tmp compat. Allow users to set either one or both.
++	 * This will be removed when we have converted
++	 * everyone in the next patches.
++	 */
++	bio->bi_rw |= bio->bi_op;
++
+ 	if (!generic_make_request_checks(bio))
+ 		goto out;
+ 
+@@ -2101,6 +2108,12 @@ EXPORT_SYMBOL(generic_make_request);
+  */
+ blk_qc_t submit_bio(struct bio *bio)
  {
- 	struct blk_plug	plug;
--	int		rw;
-+	int		op;
-+	int		op_flags = 0;
- 	int		offset;
- 	int		size;
- 	int		i;
-@@ -1233,14 +1236,13 @@ _xfs_buf_ioapply(
- 		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
- 
- 	if (bp->b_flags & XBF_WRITE) {
-+		op = REQ_OP_WRITE;
- 		if (bp->b_flags & XBF_SYNCIO)
--			rw = WRITE_SYNC;
--		else
--			rw = WRITE;
-+			op_flags = WRITE_SYNC;
- 		if (bp->b_flags & XBF_FUA)
--			rw |= REQ_FUA;
-+			op_flags |= REQ_FUA;
- 		if (bp->b_flags & XBF_FLUSH)
--			rw |= REQ_FLUSH;
-+			op_flags |= REQ_FLUSH;
- 
- 		/*
- 		 * Run the write verifier callback function if it exists. If
-@@ -1270,13 +1272,14 @@ _xfs_buf_ioapply(
- 			}
- 		}
- 	} else if (bp->b_flags & XBF_READ_AHEAD) {
--		rw = READA;
-+		op = REQ_OP_READ;
-+		op_flags = REQ_RAHEAD;
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
- 
- 	/* we only use the buffer cache for meta-data */
--	rw |= REQ_META;
-+	op_flags |= REQ_META;
- 
++	/* tmp compat. Allow users to set either one or both.
++	 * This will be removed when we have converted
++	 * everyone in the next patches.
++	 */
++	bio->bi_rw |= bio->bi_op;
++
  	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
-@@ -1288,7 +1291,7 @@ _xfs_buf_ioapply(
- 	size = BBTOB(bp->b_io_length);
- 	blk_start_plug(&plug);
- 	for (i = 0; i < bp->b_map_count; i++) {
--		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
-+		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
- 		if (bp->b_error)
- 			break;
- 		if (size <= 0)
+ 	 * If it's a regular read/write or a barrier with data attached,
+ 	 * go through the normal accounting stuff before submission.
+@@ -2974,8 +2987,8 @@ EXPORT_SYMBOL_GPL(__blk_end_request_err);
+ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ 		     struct bio *bio)
+ {
+-	/* Bit 0 (R/W) is identical in rq->cmd_flags and bio->bi_rw */
+-	rq->cmd_flags |= bio->bi_rw & REQ_WRITE;
++	/* tmp compat. Allow users to set bi_op or bi_rw */
++	rq->cmd_flags |= bio_data_dir(bio);
+ 
+ 	if (bio_has_data(bio))
+ 		rq->nr_phys_segments = bio_phys_segments(q, bio);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 86a38ea..6e49c91 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -48,9 +48,15 @@ struct bio {
+ 	struct block_device	*bi_bdev;
+ 	unsigned int		bi_flags;	/* status, command, etc */
+ 	int			bi_error;
+-	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
++	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
+ 						 * top bits priority
+ 						 */
++	/*
++	 * this will be a u8 in the next patches and bi_rw can be shrunk to
++	 * a u32. For compat in these transistional patches op is a int here.
++	 */
++	int			bi_op;		/* REQ_OP */
++
+ 
+ 	struct bvec_iter	bi_iter;
+ 
+@@ -242,6 +248,13 @@ enum rq_flag_bits {
+ #define REQ_HASHED		(1ULL << __REQ_HASHED)
+ #define REQ_MQ_INFLIGHT		(1ULL << __REQ_MQ_INFLIGHT)
+ 
++enum req_op {
++	REQ_OP_READ,
++	REQ_OP_WRITE		= REQ_WRITE,
++	REQ_OP_DISCARD		= REQ_DISCARD,
++	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
++};
++
+ typedef unsigned int blk_qc_t;
+ #define BLK_QC_T_NONE	-1U
+ #define BLK_QC_T_SHIFT	16
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 40c0241..d4d3b06 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -96,6 +96,7 @@ struct request {
+ 	struct request_queue *q;
+ 	struct blk_mq_ctx *mq_ctx;
+ 
++	int op;
+ 	u64 cmd_flags;
+ 	unsigned cmd_type;
+ 	unsigned long atomic_flags;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 3d9fdf4..399b22b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2434,15 +2434,48 @@ extern void make_bad_inode(struct inode *);
+ extern bool is_bad_inode(struct inode *);
+ 
+ #ifdef CONFIG_BLOCK
++
++static inline bool op_is_write(int op)
++{
++	switch (op) {
++	case REQ_OP_WRITE:
++	case REQ_OP_WRITE_SAME:
++	case REQ_OP_DISCARD:
++		return true;
++	default:
++		return false;
++	}
++}
++
+ /*
+  * return READ, READA, or WRITE
+  */
+-#define bio_rw(bio)		((bio)->bi_rw & (RW_MASK | RWA_MASK))
++static inline int bio_rw(struct bio *bio)
++{
++	/*
++	 * tmp cpmpat. Allow users to set either op or rw, until
++	 * all code is converted in the next patches.
++	 */
++	if (op_is_write(bio->bi_op))
++		return WRITE;
++
++	return bio->bi_rw & (RW_MASK | RWA_MASK);
++}
+ 
+ /*
+  * return data direction, READ or WRITE
+  */
+-#define bio_data_dir(bio)	((bio)->bi_rw & 1)
++static inline int bio_data_dir(struct bio *bio)
++{
++	/*
++	 * tmp cpmpat. Allow users to set either op or rw, until
++	 * all code is converted in the next patches.
++	 */
++	if (op_is_write(bio->bi_op))
++		return WRITE;
++
++	return bio->bi_rw & 1;
++}
+ 
+ extern void check_disk_size_change(struct gendisk *disk,
+ 				   struct block_device *bdev);
 -- 
 1.8.3.1
 
