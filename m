@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1B2DA7FA8
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 14:27:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E0489304062
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 12:27:34 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GanitvLhBjgpmGBb (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:25 -0800 (PST)
-From: mchristi@redhat.com
-Subject: [PATCH 00/35 v4] separate operations from flags in the bio/request
-	structs
-Date: Wed, 24 Feb 2016 13:47:37 -0600
-Message-Id: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 487997F5F
+	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 15:31:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E8B9304032
+	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 13:31:15 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	CE59RvcUbOYpB6mc for <xfs@oss.sgi.com>;
+	Wed, 24 Feb 2016 13:31:13 -0800 (PST)
+Date: Thu, 25 Feb 2016 08:30:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: backport 7a29ac474a47eb8cf212b45917683ae89d6fa13b to stable ?
+Message-ID: <20160224213038.GK14668@dastard>
+References: <56CC852F.7010507@corp.ovh.com> <20160223224555.GM25832@dastard>
+	<56CDE801.2030402@corp.ovh.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <56CDE801.2030402@corp.ovh.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,50 +26,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: Jean-Tiare Le Bigot <jean-tiare.le-bigot@corp.ovh.com>
+Cc: xfs@oss.sgi.com
 
-The following patches begin to cleanup the request->cmd_flags and
-bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-attributes and state of the request. For bi_rw we use it for similar
-info and also the priority but then also have another bi_flags field
-for state. At some point, we abused them so much we just made cmd_flags
-64 bits, so we could add more.
+On Wed, Feb 24, 2016 at 06:27:29PM +0100, Jean-Tiare Le Bigot wrote:
+> Hi,
+> 
+> Thanks for having a look.
+> 
+> On 02/23/2016 11:45 PM, Dave Chinner wrote:
+> > On Tue, Feb 23, 2016 at 05:13:35PM +0100, Jean-Tiare Le Bigot wrote:
+> >> Hi,
+> >>
+> >> We've hit kernel hang related to XFS reclaim under heavy I/O load on a
+> >> couple of storage servers using XFS over flashcache over a 3.13.y kernel.
+> >>
+> >> On the crash dumps, kthreadd is blocked, waiting for XFS to reclaim some
+> >> memory but the related reclaim job is queued on a worker_pool stuck
+> >> waiting for some I/O, itself depending on other jobs on other queues
+> >> which would require additional threads to go forward. Unfortunately
+> >> kthreadd is blocked.
+> >> The host has plenty of memory (~128GB), about 80% of which being used
+> >> for the page cache.
+> >>
+> >> It looks like this is fixed by commit
+> >> 7a29ac474a47eb8cf212b45917683ae89d6fa13b.
+> > 
+> > That commit fixed a regression introduced, IIRC, in 3.19. The
+> > problem it fixed didn't exist before then, so I doubt you are seeing
+> > the problem that the above commit fixed. Perhaps you'd like to
+> > describe your problem along with the stack traces, etc so we have
+> > some idea of what you are trying to to fix?
+> 
+> On the dump we investigated, kthreadd is stuck, waiting for some memory
+> 
+> crash> bt 2
+> PID: 2      TASK: ffff881fd2a39800  CPU: 0   COMMAND: "kthreadd"
+>  #0 [ffff881fd2ab37c8] __schedule at ffffffff81724e19
+>  #1 [ffff881fd2ab3830] io_schedule at ffffffff817255fd
+>  #2 [ffff881fd2ab3848] __xfs_iunpin_wait at ffffffffa06cf269 [xfs]
+>  #3 [ffff881fd2ab38c0] xfs_iunpin_wait at ffffffffa06d2629 [xfs]
+>  #4 [ffff881fd2ab38d0] xfs_reclaim_inode at ffffffffa068ed4c [xfs]
+>  #5 [ffff881fd2ab3910] xfs_reclaim_inodes_ag at ffffffffa068f267 [xfs]
+>  #6 [ffff881fd2ab3aa0] xfs_reclaim_inodes_nr at ffffffffa068fd73 [xfs]
+>  #7 [ffff881fd2ab3ac0] xfs_fs_free_cached_objects at ffffffffa069a3a5 [xfs]
+>  #8 [ffff881fd2ab3ad0] super_cache_scan at ffffffff811c13e9
+>  #9 [ffff881fd2ab3b18] shrink_slab at ffffffff81160f27
+> #10 [ffff881fd2ab3bc0] do_try_to_free_pages at ffffffff8116405d
+> #11 [ffff881fd2ab3c38] try_to_free_pages at ffffffff8116429c
+> #12 [ffff881fd2ab3cd8] __alloc_pages_nodemask at ffffffff81158f15
+> #13 [ffff881fd2ab3e10] copy_process at ffffffff810652b3
+> #14 [ffff881fd2ab3e90] do_fork at ffffffff810669f5
+> #15 [ffff881fd2ab3ef8] kernel_thread at ffffffff81066c86
+> #16 [ffff881fd2ab3f08] kthreadd at ffffffff8108beea
+> #17 [ffff881fd2ab3f50] ret_from_fork at ffffffff817318bc
 
-The following patches seperate the operation (read, write discard,
-flush, etc) from cmd_flags/bi_rw.
+So, it's waiting for a log force to complete because it needs to
+reclaim a dirty inode...
 
-This patchset was made against linux-next from today Feb 24 2016
-(git tag next-20160224).
+> This triggered the insertion of a xfs-reclaim job for device dm-46 on
+> the workerpool bound to cpu #0
+> 
+> This xfs_reclaim job is the first *pending* job on the workerpool. The
+> workerpool has 2 active workers stuck in "xfs_log_worker" both blocked
+> in "xlog_state_get_iclog_space". My guess is they are waiting for some
+> underlying flashcache I/O (which won't happen, see below)
+> 
+> 
+> --> busy_hash aka busy workers:
+> crash> struct worker_pool.busy_hash 0xffff88207fc12d40 | grep -o 0xf.*
+> 0xffff8806dd3b5780  --> 132626
+>                     --> in xfs_log_worker
+>                     --> in xlog_state_get_iclog_space
+>                     --> dm-40
+> 0xffff88142d06ae80  --> 129142
+>                     --> in xfs_log_worker
+>                     --> in xlog_state_get_iclog_space
+>                     --> dm-63
 
-I put a git tree here:
-https://github.com/mikechristie/linux-kernel.git
+These are both waiting on IO completion of log IO. And the IO
+completion is blocked behind metadata buffer completion that is
+blocked waiting on locks. Yes, this can happen when we are running
+low on memory, but it can also occur when we hit maximum workqueue
+concurrency limits. The problem is not solved by adding a rescuer
+thread to the workqueue because it ends up blocking, too.
 
-v4:
-1. Rebased to current linux-next tree.
+> --> pending jobs:
+> crash> list -o work_struct.entry -s work_struct.func -H ffff88207fc12d58
+> -x | awk 'BEGIN{w="";c=0} {if($1=="func") printf("%2d %s --> %s\n", c,
+> w, $4); else {w=$1;c++}}'
+>    WORK                 FUNC                    DEVICE
+>  1 ffff881fceda6ca8 --> <xfs_reclaim_worker>    dm-46
+>  2 ffff881fcd51bc28 --> <xfs_log_worker>        dm-46
+>  3 ffff88207fc0f3a0 --> <vmstat_update>         N/A
+>  ...
+> 
+> To progress this queue needs either:
+> - the I/O to complete
+> - a new thread to handle the xfs_reclaim
+>   (which does not trigger I/O in this context, If I got the code right)
 
-v3:
+The reclaim worker runs background inode reclaim - it doesn't
+guarantee forwards progress. Running it won't make the log IO
+completion the kthreadd is waiting on complete any faster, because
+that's not what is preventing IO completion from running.
 
-1. Used "=" instead of "|="  to setup bio bi_rw.
-2. Removed __get_request cmd_flags compat code.
-3. Merged initial dm related changes requested by Mike Snitzer.
-4. Fixed ubd kbuild errors in flush related patches.
-5. Fix 80 char col issues in several patches.
-6. Fix issue with one of the btrfs patches where it looks like I reverted
-a patch when trying to fix a merge error.
+> The I/O is stuck so we need a new thread. The pool manager requested
+> this thread BUT the request is pending in kthreadd queue. It is #5 in
+> the line
 
-v2
+Actually, we needed a different workqueue that is marked as a high
+priority workqueue so log IO completion doesn't get held up by
+metadata buffer IO completion waiting on locks and stalling.  This
+is the problem that commit b29c70f59870 ("xfs: split metadata and
+log buffer completion to separate workqueues") addressed in 3.18
+addressed.
 
-1. Dropped arguments from submit_bio, and had callers setup
-bio.
-2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
-to REQ_PREFLUSH for make_request_fn users.
-3. Dropped bio/rq_data_dir functions, and added a op_is_write
-function instead.
+Remember how I said commit 7a29ac474 ("xfs: give all workqueues
+rescuer threads") fixed a regression we'd introduced, not the
+problem you are reporting?  Yeah, in commit b29c70f59870 I forgot to
+add the WQ_MEM_RECLAIM to the m_log_workqueue when we moved all the
+log IO completions to it and that introduced the problem seen in
+subsequent kernels.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
