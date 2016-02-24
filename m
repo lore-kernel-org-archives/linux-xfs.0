@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AF2927CB9
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 13:48:50 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C18437CB9
+	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 13:48:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7BF18304066
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:44 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 943C68F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:49 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MwZJO5G8TvYpq3FH (version=TLSv1.2
+	cuda.sgi.com with ESMTP id PwZqvPyHpNYsXXAl (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:42 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 24 Feb 2016 11:48:48 -0800 (PST)
 From: mchristi@redhat.com
-Subject: [PATCH 07/35] btrfs: have submit_one_bio users setup bio bi_op
-Date: Wed, 24 Feb 2016 13:47:44 -0600
-Message-Id: <1456343292-14535-8-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 09/35] btrfs: update __btrfs_map_block for bi_op transition
+Date: Wed, 24 Feb 2016 13:47:46 -0600
+Message-Id: <1456343292-14535-10-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,326 +33,251 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has btrfs's submit_one_bio callers set
-the bio->bi_op to a REQ_OP and the bi_rw to rq_flag_bits.
-
-The next patches will continue to convert btrfs,
-so submit_bio_hook and merge_bio_hook
-related code will be modified to take only the bio. I did
-not do it in this patch to try and keep it smaller.
+We no longer pass in a bitmap of rq_flag_bits bits
+to __btrfs_map_block. It will always be a REQ_OP,
+or the btrfs specific REQ_GET_READ_MIRRORS,
+so this drops the bit tests.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- fs/btrfs/extent_io.c | 88 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 45 insertions(+), 43 deletions(-)
+ fs/btrfs/extent-tree.c |  2 +-
+ fs/btrfs/inode.c       |  2 +-
+ fs/btrfs/volumes.c     | 55 +++++++++++++++++++++++++++-----------------------
+ fs/btrfs/volumes.h     |  4 ++--
+ 4 files changed, 34 insertions(+), 29 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 454100e..4472d69 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2377,7 +2377,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	int read_mode;
- 	int ret;
+diff --git a/fs/btrfs/extent-tree.c b/fs/btrfs/extent-tree.c
+index 083783b..1db6bd0 100644
+--- a/fs/btrfs/extent-tree.c
++++ b/fs/btrfs/extent-tree.c
+@@ -2043,7 +2043,7 @@ int btrfs_discard_extent(struct btrfs_root *root, u64 bytenr,
  
--	BUG_ON(failed_bio->bi_rw & REQ_WRITE);
-+	BUG_ON(failed_bio->bi_op == REQ_OP_WRITE);
  
- 	ret = btrfs_get_io_failure_record(inode, start, end, &failrec);
+ 	/* Tell the block device(s) that the sectors can be discarded */
+-	ret = btrfs_map_block(root->fs_info, REQ_DISCARD,
++	ret = btrfs_map_block(root->fs_info, REQ_OP_DISCARD,
+ 			      bytenr, &num_bytes, &bbio, 0);
+ 	/* Error condition is -ENOMEM */
+ 	if (!ret) {
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 19f38f5..49842d2 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8279,7 +8279,7 @@ static int btrfs_submit_direct_hook(int rw, struct btrfs_dio_private *dip,
+ 	int i;
+ 
+ 	map_length = orig_bio->bi_iter.bi_size;
+-	ret = btrfs_map_block(root->fs_info, rw, start_sector << 9,
++	ret = btrfs_map_block(root->fs_info, orig_bio->bi_op, start_sector << 9,
+ 			      &map_length, NULL, 0);
  	if (ret)
-@@ -2403,6 +2403,8 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 		free_io_failure(inode, failrec);
  		return -EIO;
+diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+index 2be39f6..62fcbd2 100644
+--- a/fs/btrfs/volumes.c
++++ b/fs/btrfs/volumes.c
+@@ -5207,7 +5207,7 @@ void btrfs_put_bbio(struct btrfs_bio *bbio)
+ 		kfree(bbio);
+ }
+ 
+-static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
++static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int op,
+ 			     u64 logical, u64 *length,
+ 			     struct btrfs_bio **bbio_ret,
+ 			     int mirror_num, int need_raid_map)
+@@ -5285,7 +5285,7 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 		raid56_full_stripe_start *= full_stripe_len;
  	}
-+	bio->bi_op = REQ_OP_READ;
-+	bio->bi_rw = read_mode;
  
- 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
- 		 read_mode, failrec->this_mirror, failrec->in_validation);
-@@ -2714,8 +2716,8 @@ struct bio *btrfs_io_bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
- }
+-	if (rw & REQ_DISCARD) {
++	if (op == REQ_OP_DISCARD) {
+ 		/* we don't discard raid56 yet */
+ 		if (map->type & BTRFS_BLOCK_GROUP_RAID56_MASK) {
+ 			ret = -EOPNOTSUPP;
+@@ -5298,7 +5298,7 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 		   For other RAID types and for RAID[56] reads, just allow a single
+ 		   stripe (on a single disk). */
+ 		if ((map->type & BTRFS_BLOCK_GROUP_RAID56_MASK) &&
+-		    (rw & REQ_WRITE)) {
++		    (op == REQ_OP_WRITE)) {
+ 			max_len = stripe_len * nr_data_stripes(map) -
+ 				(offset - raid56_full_stripe_start);
+ 		} else {
+@@ -5323,8 +5323,8 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 		btrfs_dev_replace_set_lock_blocking(dev_replace);
  
+ 	if (dev_replace_is_ongoing && mirror_num == map->num_stripes + 1 &&
+-	    !(rw & (REQ_WRITE | REQ_DISCARD | REQ_GET_READ_MIRRORS)) &&
+-	    dev_replace->tgtdev != NULL) {
++	    op != REQ_OP_WRITE && op != REQ_OP_DISCARD &&
++	    op != REQ_GET_READ_MIRRORS && dev_replace->tgtdev != NULL) {
+ 		/*
+ 		 * in dev-replace case, for repair case (that's the only
+ 		 * case where the mirror is selected explicitly when
+@@ -5411,15 +5411,17 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 			    (offset + *length);
  
--static int __must_check submit_one_bio(int rw, struct bio *bio,
--				       int mirror_num, unsigned long bio_flags)
-+static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
-+				       unsigned long bio_flags)
- {
- 	int ret = 0;
- 	struct bio_vec *bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
-@@ -2726,12 +2728,12 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	start = page_offset(page) + bvec->bv_offset;
- 
- 	bio->bi_private = NULL;
--	bio->bi_rw = rw;
- 	bio_get(bio);
- 
- 	if (tree->ops && tree->ops->submit_bio_hook)
--		ret = tree->ops->submit_bio_hook(page->mapping->host, rw, bio,
--					   mirror_num, bio_flags, start);
-+		ret = tree->ops->submit_bio_hook(page->mapping->host,
-+						 bio->bi_rw, bio, mirror_num,
-+						 bio_flags, start);
- 	else
- 		btrfsic_submit_bio(bio);
- 
-@@ -2739,20 +2741,20 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	return ret;
- }
- 
--static int merge_bio(int rw, struct extent_io_tree *tree, struct page *page,
-+static int merge_bio(struct extent_io_tree *tree, struct page *page,
- 		     unsigned long offset, size_t size, struct bio *bio,
- 		     unsigned long bio_flags)
- {
- 	int ret = 0;
- 	if (tree->ops && tree->ops->merge_bio_hook)
--		ret = tree->ops->merge_bio_hook(rw, page, offset, size, bio,
--						bio_flags);
-+		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
-+						bio, bio_flags);
- 	BUG_ON(ret < 0);
- 	return ret;
- 
- }
- 
--static int submit_extent_page(int rw, struct extent_io_tree *tree,
-+static int submit_extent_page(int op, int op_flags, struct extent_io_tree *tree,
- 			      struct writeback_control *wbc,
- 			      struct page *page, sector_t sector,
- 			      size_t size, unsigned long offset,
-@@ -2780,10 +2782,9 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 
- 		if (prev_bio_flags != bio_flags || !contig ||
- 		    force_bio_submit ||
--		    merge_bio(rw, tree, page, offset, page_size, bio, bio_flags) ||
-+		    merge_bio(tree, page, offset, page_size, bio, bio_flags) ||
- 		    bio_add_page(bio, page, page_size, offset) < page_size) {
--			ret = submit_one_bio(rw, bio, mirror_num,
--					     prev_bio_flags);
-+			ret = submit_one_bio(bio, mirror_num, prev_bio_flags);
- 			if (ret < 0) {
- 				*bio_ret = NULL;
- 				return ret;
-@@ -2804,6 +2805,8 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	bio_add_page(bio, page, page_size, offset);
- 	bio->bi_end_io = end_io_func;
- 	bio->bi_private = tree;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	if (wbc) {
- 		wbc_init_bio(wbc, bio);
- 		wbc_account_io(wbc, page, page_size);
-@@ -2812,7 +2815,7 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	if (bio_ret)
- 		*bio_ret = bio;
- 	else
--		ret = submit_one_bio(rw, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 
- 	return ret;
- }
-@@ -2876,7 +2879,7 @@ static int __do_readpage(struct extent_io_tree *tree,
- 			 get_extent_t *get_extent,
- 			 struct extent_map **em_cached,
- 			 struct bio **bio, int mirror_num,
--			 unsigned long *bio_flags, int rw,
-+			 unsigned long *bio_flags, int read_flags,
- 			 u64 *prev_em_start)
- {
- 	struct inode *inode = page->mapping->host;
-@@ -3059,8 +3062,8 @@ static int __do_readpage(struct extent_io_tree *tree,
+ 	if (map->type & BTRFS_BLOCK_GROUP_RAID0) {
+-		if (rw & REQ_DISCARD)
++		if (op == REQ_OP_DISCARD)
+ 			num_stripes = min_t(u64, map->num_stripes,
+ 					    stripe_nr_end - stripe_nr_orig);
+ 		stripe_nr = div_u64_rem(stripe_nr, map->num_stripes,
+ 				&stripe_index);
+-		if (!(rw & (REQ_WRITE | REQ_DISCARD | REQ_GET_READ_MIRRORS)))
++		if (op != REQ_OP_WRITE && op != REQ_OP_DISCARD &&
++		    op != REQ_GET_READ_MIRRORS)
+ 			mirror_num = 1;
+ 	} else if (map->type & BTRFS_BLOCK_GROUP_RAID1) {
+-		if (rw & (REQ_WRITE | REQ_DISCARD | REQ_GET_READ_MIRRORS))
++		if (op == REQ_OP_WRITE || op == REQ_OP_DISCARD ||
++		    op == REQ_GET_READ_MIRRORS)
+ 			num_stripes = map->num_stripes;
+ 		else if (mirror_num)
+ 			stripe_index = mirror_num - 1;
+@@ -5432,7 +5434,8 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
  		}
  
- 		pnr -= page->index;
--		ret = submit_extent_page(rw, tree, NULL, page,
--					 sector, disk_io_size, pg_offset,
-+		ret = submit_extent_page(REQ_OP_READ, read_flags, tree, NULL,
-+					 page, sector, disk_io_size, pg_offset,
- 					 bdev, bio, pnr,
- 					 end_bio_extent_readpage, mirror_num,
- 					 *bio_flags,
-@@ -3091,7 +3094,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 					     get_extent_t *get_extent,
- 					     struct extent_map **em_cached,
- 					     struct bio **bio, int mirror_num,
--					     unsigned long *bio_flags, int rw,
-+					     unsigned long *bio_flags,
- 					     u64 *prev_em_start)
- {
- 	struct inode *inode;
-@@ -3112,7 +3115,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
+ 	} else if (map->type & BTRFS_BLOCK_GROUP_DUP) {
+-		if (rw & (REQ_WRITE | REQ_DISCARD | REQ_GET_READ_MIRRORS)) {
++		if (op == REQ_OP_WRITE || REQ_OP_DISCARD ||
++		    op == REQ_GET_READ_MIRRORS) {
+ 			num_stripes = map->num_stripes;
+ 		} else if (mirror_num) {
+ 			stripe_index = mirror_num - 1;
+@@ -5446,9 +5449,9 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 		stripe_nr = div_u64_rem(stripe_nr, factor, &stripe_index);
+ 		stripe_index *= map->sub_stripes;
  
- 	for (index = 0; index < nr_pages; index++) {
- 		__do_readpage(tree, pages[index], get_extent, em_cached, bio,
--			      mirror_num, bio_flags, rw, prev_em_start);
-+			      mirror_num, bio_flags, 0, prev_em_start);
- 		page_cache_release(pages[index]);
+-		if (rw & (REQ_WRITE | REQ_GET_READ_MIRRORS))
++		if (op == REQ_OP_WRITE || op == REQ_GET_READ_MIRRORS)
+ 			num_stripes = map->sub_stripes;
+-		else if (rw & REQ_DISCARD)
++		else if (op == REQ_OP_DISCARD)
+ 			num_stripes = min_t(u64, map->sub_stripes *
+ 					    (stripe_nr_end - stripe_nr_orig),
+ 					    map->num_stripes);
+@@ -5466,7 +5469,7 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 
+ 	} else if (map->type & BTRFS_BLOCK_GROUP_RAID56_MASK) {
+ 		if (need_raid_map &&
+-		    ((rw & (REQ_WRITE | REQ_GET_READ_MIRRORS)) ||
++		    (op == REQ_OP_WRITE || op == REQ_GET_READ_MIRRORS ||
+ 		     mirror_num > 1)) {
+ 			/* push stripe_nr back to the start of the full stripe */
+ 			stripe_nr = div_u64(raid56_full_stripe_start,
+@@ -5494,8 +5497,8 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 			/* We distribute the parity blocks across stripes */
+ 			div_u64_rem(stripe_nr + stripe_index, map->num_stripes,
+ 					&stripe_index);
+-			if (!(rw & (REQ_WRITE | REQ_DISCARD |
+-				    REQ_GET_READ_MIRRORS)) && mirror_num <= 1)
++			if ((op != REQ_OP_WRITE && op != REQ_OP_DISCARD &&
++			    op != REQ_GET_READ_MIRRORS) && mirror_num <= 1)
+ 				mirror_num = 1;
+ 		}
+ 	} else {
+@@ -5512,9 +5515,9 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 
+ 	num_alloc_stripes = num_stripes;
+ 	if (dev_replace_is_ongoing) {
+-		if (rw & (REQ_WRITE | REQ_DISCARD))
++		if (op == REQ_OP_WRITE || op == REQ_OP_DISCARD)
+ 			num_alloc_stripes <<= 1;
+-		if (rw & REQ_GET_READ_MIRRORS)
++		if (op == REQ_GET_READ_MIRRORS)
+ 			num_alloc_stripes++;
+ 		tgtdev_indexes = num_stripes;
  	}
- }
-@@ -3122,7 +3125,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 			       int nr_pages, get_extent_t *get_extent,
- 			       struct extent_map **em_cached,
- 			       struct bio **bio, int mirror_num,
--			       unsigned long *bio_flags, int rw,
-+			       unsigned long *bio_flags,
- 			       u64 *prev_em_start)
- {
- 	u64 start = 0;
-@@ -3144,7 +3147,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 						  index - first_index, start,
- 						  end, get_extent, em_cached,
- 						  bio, mirror_num, bio_flags,
--						  rw, prev_em_start);
-+						  prev_em_start);
- 			start = page_start;
- 			end = start + PAGE_CACHE_SIZE - 1;
- 			first_index = index;
-@@ -3155,7 +3158,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 		__do_contiguous_readpages(tree, &pages[first_index],
- 					  index - first_index, start,
- 					  end, get_extent, em_cached, bio,
--					  mirror_num, bio_flags, rw,
-+					  mirror_num, bio_flags,
- 					  prev_em_start);
- }
+@@ -5529,7 +5532,8 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
  
-@@ -3163,7 +3166,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
- 				   struct page *page,
- 				   get_extent_t *get_extent,
- 				   struct bio **bio, int mirror_num,
--				   unsigned long *bio_flags, int rw)
-+				   unsigned long *bio_flags, int read_flags)
- {
- 	struct inode *inode = page->mapping->host;
- 	struct btrfs_ordered_extent *ordered;
-@@ -3183,7 +3186,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
+ 	/* build raid_map */
+ 	if (map->type & BTRFS_BLOCK_GROUP_RAID56_MASK &&
+-	    need_raid_map && ((rw & (REQ_WRITE | REQ_GET_READ_MIRRORS)) ||
++	    need_raid_map &&
++	    ((op == REQ_OP_WRITE || op == REQ_GET_READ_MIRRORS) ||
+ 	    mirror_num > 1)) {
+ 		u64 tmp;
+ 		unsigned rot;
+@@ -5554,7 +5558,7 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 				RAID6_Q_STRIPE;
  	}
  
- 	ret = __do_readpage(tree, page, get_extent, NULL, bio, mirror_num,
--			    bio_flags, rw, NULL);
-+			    bio_flags, read_flags, NULL);
- 	return ret;
- }
+-	if (rw & REQ_DISCARD) {
++	if (op == REQ_OP_DISCARD) {
+ 		u32 factor = 0;
+ 		u32 sub_stripes = 0;
+ 		u64 stripes_per_dev = 0;
+@@ -5634,14 +5638,15 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
+ 		}
+ 	}
  
-@@ -3195,9 +3198,9 @@ int extent_read_full_page(struct extent_io_tree *tree, struct page *page,
- 	int ret;
+-	if (rw & (REQ_WRITE | REQ_GET_READ_MIRRORS))
++	if (op == REQ_OP_WRITE || op == REQ_GET_READ_MIRRORS)
+ 		max_errors = btrfs_chunk_max_errors(map);
  
- 	ret = __extent_read_full_page(tree, page, get_extent, &bio, mirror_num,
--				      &bio_flags, READ);
-+				      &bio_flags, 0);
- 	if (bio)
--		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 	return ret;
- }
+ 	if (bbio->raid_map)
+ 		sort_parity_stripes(bbio, num_stripes);
  
-@@ -3444,7 +3447,8 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
- 				       page->index, cur, end);
+ 	tgtdev_indexes = 0;
+-	if (dev_replace_is_ongoing && (rw & (REQ_WRITE | REQ_DISCARD)) &&
++	if (dev_replace_is_ongoing &&
++	   (op == REQ_OP_WRITE || op == REQ_OP_DISCARD) &&
+ 	    dev_replace->tgtdev != NULL) {
+ 		int index_where_to_add;
+ 		u64 srcdev_devid = dev_replace->srcdev->devid;
+@@ -5676,7 +5681,7 @@ static int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
  			}
- 
--			ret = submit_extent_page(write_flags, tree, wbc, page,
-+			ret = submit_extent_page(REQ_OP_WRITE, write_flags,
-+						 tree, wbc, page,
- 						 sector, iosize, pg_offset,
- 						 bdev, &epd->bio, max_nr,
- 						 end_bio_extent_writepage,
-@@ -3484,13 +3488,11 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
- 	size_t pg_offset = 0;
- 	loff_t i_size = i_size_read(inode);
- 	unsigned long end_index = i_size >> PAGE_CACHE_SHIFT;
--	int write_flags;
-+	int write_flags = 0;
- 	unsigned long nr_written = 0;
- 
- 	if (wbc->sync_mode == WB_SYNC_ALL)
- 		write_flags = WRITE_SYNC;
--	else
--		write_flags = WRITE;
- 
- 	trace___extent_writepage(page, inode, wbc);
- 
-@@ -3734,7 +3736,7 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 	u64 offset = eb->start;
- 	unsigned long i, num_pages;
- 	unsigned long bio_flags = 0;
--	int rw = (epd->sync_io ? WRITE_SYNC : WRITE) | REQ_META;
-+	int write_flags = (epd->sync_io ? WRITE_SYNC : 0) | REQ_META;
- 	int ret = 0;
- 
- 	clear_bit(EXTENT_BUFFER_WRITE_ERR, &eb->bflags);
-@@ -3748,9 +3750,10 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 
- 		clear_page_dirty_for_io(p);
- 		set_page_writeback(p);
--		ret = submit_extent_page(rw, tree, wbc, p, offset >> 9,
--					 PAGE_CACHE_SIZE, 0, bdev, &epd->bio,
--					 -1, end_bio_extent_buffer_writepage,
-+		ret = submit_extent_page(REQ_OP_WRITE, write_flags, tree, wbc,
-+					 p, offset >> 9, PAGE_CACHE_SIZE, 0,
-+					 bdev, &epd->bio, -1,
-+					 end_bio_extent_buffer_writepage,
- 					 0, epd->bio_flags, bio_flags, false);
- 		epd->bio_flags = bio_flags;
- 		if (ret) {
-@@ -4039,13 +4042,13 @@ retry:
- static void flush_epd_write_bio(struct extent_page_data *epd)
- {
- 	if (epd->bio) {
--		int rw = WRITE;
- 		int ret;
- 
-+		epd->bio->bi_op = REQ_OP_WRITE;
- 		if (epd->sync_io)
--			rw = WRITE_SYNC;
-+			epd->bio->bi_rw = WRITE_SYNC;
- 
--		ret = submit_one_bio(rw, epd->bio, 0, epd->bio_flags);
-+		ret = submit_one_bio(epd->bio, 0, epd->bio_flags);
- 		BUG_ON(ret < 0); /* -ENOMEM */
- 		epd->bio = NULL;
- 	}
-@@ -4172,19 +4175,19 @@ int extent_readpages(struct extent_io_tree *tree,
- 		if (nr < ARRAY_SIZE(pagepool))
- 			continue;
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 		nr = 0;
- 	}
- 	if (nr)
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 
- 	if (em_cached)
- 		free_extent_map(em_cached);
- 
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		return submit_one_bio(READ, bio, 0, bio_flags);
-+		return submit_one_bio(bio, 0, bio_flags);
- 	return 0;
+ 		}
+ 		num_stripes = index_where_to_add;
+-	} else if (dev_replace_is_ongoing && (rw & REQ_GET_READ_MIRRORS) &&
++	} else if (dev_replace_is_ongoing && (op == REQ_GET_READ_MIRRORS) &&
+ 		   dev_replace->tgtdev != NULL) {
+ 		u64 srcdev_devid = dev_replace->srcdev->devid;
+ 		int index_srcdev = 0;
+@@ -5751,21 +5756,21 @@ out:
+ 	return ret;
  }
  
-@@ -5206,7 +5209,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 			err = __extent_read_full_page(tree, page,
- 						      get_extent, &bio,
- 						      mirror_num, &bio_flags,
--						      READ | REQ_META);
-+						      REQ_META);
- 			if (err)
- 				ret = err;
- 		} else {
-@@ -5215,8 +5218,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 	}
+-int btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
++int btrfs_map_block(struct btrfs_fs_info *fs_info, int op,
+ 		      u64 logical, u64 *length,
+ 		      struct btrfs_bio **bbio_ret, int mirror_num)
+ {
+-	return __btrfs_map_block(fs_info, rw, logical, length, bbio_ret,
++	return __btrfs_map_block(fs_info, op, logical, length, bbio_ret,
+ 				 mirror_num, 0);
+ }
  
- 	if (bio) {
--		err = submit_one_bio(READ | REQ_META, bio, mirror_num,
--				     bio_flags);
-+		err = submit_one_bio(bio, mirror_num, bio_flags);
- 		if (err)
- 			return err;
- 	}
+ /* For Scrub/replace */
+-int btrfs_map_sblock(struct btrfs_fs_info *fs_info, int rw,
++int btrfs_map_sblock(struct btrfs_fs_info *fs_info, int op,
+ 		     u64 logical, u64 *length,
+ 		     struct btrfs_bio **bbio_ret, int mirror_num,
+ 		     int need_raid_map)
+ {
+-	return __btrfs_map_block(fs_info, rw, logical, length, bbio_ret,
++	return __btrfs_map_block(fs_info, op, logical, length, bbio_ret,
+ 				 mirror_num, need_raid_map);
+ }
+ 
+diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
+index febdb7b..c64229e 100644
+--- a/fs/btrfs/volumes.h
++++ b/fs/btrfs/volumes.h
+@@ -421,10 +421,10 @@ int btrfs_account_dev_extents_size(struct btrfs_device *device, u64 start,
+ 				   u64 end, u64 *length);
+ void btrfs_get_bbio(struct btrfs_bio *bbio);
+ void btrfs_put_bbio(struct btrfs_bio *bbio);
+-int btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
++int btrfs_map_block(struct btrfs_fs_info *fs_info, int op,
+ 		    u64 logical, u64 *length,
+ 		    struct btrfs_bio **bbio_ret, int mirror_num);
+-int btrfs_map_sblock(struct btrfs_fs_info *fs_info, int rw,
++int btrfs_map_sblock(struct btrfs_fs_info *fs_info, int op,
+ 		     u64 logical, u64 *length,
+ 		     struct btrfs_bio **bbio_ret, int mirror_num,
+ 		     int need_raid_map);
 -- 
 1.8.3.1
 
