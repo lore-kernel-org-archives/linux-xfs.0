@@ -1,17 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5672C7F92
-	for <xfs@oss.sgi.com>; Thu, 25 Feb 2016 06:44:10 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EEF267F91
+	for <xfs@oss.sgi.com>; Thu, 25 Feb 2016 09:21:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0A888304043
-	for <xfs@oss.sgi.com>; Thu, 25 Feb 2016 04:44:09 -0800 (PST)
-Received: from lists.s-osg.org (lists.s-osg.org [54.187.51.154]) by
-	cuda.sgi.com with ESMTP id xiPFcaEAKHRAjhM4 for
-	<xfs@oss.sgi.com>; Thu, 25 Feb 2016 04:44:07 -0800 (PST)
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH] xfs: remove impossible condition
-Date: Thu, 25 Feb 2016 12:43:57 +0000
-Message-Id: <1456404237-18169-1-git-send-email-luisbg@osg.samsung.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 80E9AAC005
+	for <xfs@oss.sgi.com>; Thu, 25 Feb 2016 07:21:00 -0800 (PST)
+Received: from mail-lb0-f178.google.com (mail-lb0-f178.google.com
+	[209.85.217.178]) by cuda.sgi.com with ESMTP id
+	J0rWsD8emdtFAfg2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Feb 2016 07:20:56 -0800 (PST)
+Received: by mail-lb0-f178.google.com with SMTP id x1so30717680lbj.3
+	for <xfs@oss.sgi.com>; Thu, 25 Feb 2016 07:20:56 -0800 (PST)
+Received: from smtp.gmail.com ([195.214.234.4])
+	by smtp.gmail.com with ESMTPSA id rk1sm1248525lbb.0.2016.02.25.07.20.54
+	for <xfs@oss.sgi.com>
+	(version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Thu, 25 Feb 2016 07:20:54 -0800 (PST)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: [PATCH] xfs_io: Prevent devide by zero from {pread,pwrite}_random
+Date: Thu, 25 Feb 2016 19:20:53 +0400
+Message-ID: <8760xc3jfu.fsf@openvz.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,50 +30,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: cmaiolino@redhat.com, darrick.wong@oracle.com, namjae.jeon@samsung.com, bfoster@redhat.com, sandeen@sandeen.net, xfs@oss.sgi.com, Luis de Bethencourt <luisbg@osg.samsung.com>, billodo@redhat.com
+To: xfs@oss.sgi.com
 
-bp_release is set to 0 just before the breakpoint of the for loop before
-the conditional check (in line 458). The other breakpoint is a goto that
-skips the dead code.
 
-Addresses-Coverity-Id: 102338
+Math is wrong if range requested is less or equals to block size
 
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+xfs_io -c 'pwrite -b 4k 8k 4k -R' \
+       -c 'pread -b 4k  4k 4k -R' -f file
+
+Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
+ io/pread.c  | 6 +++++-
+ io/pwrite.c | 6 +++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-Hi,
-
-Thanks for reviewing this :)
-
-Luis
-
- fs/xfs/libxfs/xfs_bmap.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6a05166..1171795 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -477,10 +477,7 @@ xfs_bmap_check_leaf_extents(
- 		}
- 		block = XFS_BUF_TO_BLOCK(bp);
- 	}
--	if (bp_release) {
--		bp_release = 0;
--		xfs_trans_brelse(NULL, bp);
--	}
-+
- 	return;
+diff --git a/io/pread.c b/io/pread.c
+index f16c86c..b98355f 100644
+--- a/io/pread.c
++++ b/io/pread.c
+@@ -245,7 +245,11 @@ read_random(
  
- error0:
+ 	*total = 0;
+ 	while (count > 0) {
+-		off = ((offset + (random() % range)) / buffersize) * buffersize;
++		if (range)
++			off = ((offset + (random() % range)) / buffersize) *
++				buffersize;
++		else
++			off = offset;
+ 		bytes = do_pread(fd, off, buffersize, buffersize);
+ 		if (bytes == 0)
+ 			break;
+diff --git a/io/pwrite.c b/io/pwrite.c
+index 4fc8de6..67631ce 100644
+--- a/io/pwrite.c
++++ b/io/pwrite.c
+@@ -128,7 +128,11 @@ write_random(
+ 
+ 	*total = 0;
+ 	while (count > 0) {
+-		off = ((offset + (random() % range)) / buffersize) * buffersize;
++		if (range)
++			off = ((offset + (random() % range)) / buffersize) *
++				buffersize;
++		else
++			off = offset;
+ 		bytes = do_pwrite(file->fd, off, buffersize, buffersize);
+ 		if (bytes == 0)
+ 			break;
 -- 
-2.5.1
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
