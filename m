@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 20BBB29E05
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 01:01:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 89957AC006
-	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 23:01:51 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	UDcn3uRe2qKc1KOH for <xfs@oss.sgi.com>;
-	Sun, 28 Feb 2016 23:01:49 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1aaHpR-0000PX-10
-	for xfs@oss.sgi.com; Mon, 29 Feb 2016 18:01:13 +1100
-Date: Mon, 29 Feb 2016 18:01:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to f012de6
-Message-ID: <20160229070112.GJ29057@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id EF8A17C8C
+	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 16:11:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 535CFAC004
+	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 14:11:59 -0800 (PST)
+Received: from mail-vk0-f53.google.com (mail-vk0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id N2f0Og2tpvAcIrgd
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 28 Feb 2016 14:11:57 -0800 (PST)
+Received: by mail-vk0-f53.google.com with SMTP id c3so118100919vkb.3
+	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 14:11:57 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <56CC3174.2060207@gmail.com>
+References: <56B770B6.7040803@gmail.com> <56B77262.7090107@gmail.com>
+	<CAHc6FU5__xbKm4mg8+fK_ZW5ZYsDoQcYBBvQg573Eq4ERDsROw@mail.gmail.com>
+	<56C0F23C.7030902@gmail.com>
+	<CAHc6FU4CCrcrA6=oCiq2A5rGd9CCGELaTZq6tGpmd2jcV_Zp4A@mail.gmail.com>
+	<56CA2EEB.9080504@gmail.com>
+	<CAHc6FU46vO8NM3cvFH7b8X7U9R+m6wcYj8EQKVnSQkiY3Q051A@mail.gmail.com>
+	<56CC3174.2060207@gmail.com>
+Date: Sun, 28 Feb 2016 23:11:57 +0100
+Message-ID: <CAHc6FU4eOzNg0Tfb-29uQD9r1AzwZhZPMZnRnbjyYpkQxm=Cxw@mail.gmail.com>
+Subject: Re: richacl(7) man page review comments
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,91 +33,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3157638493215192900=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, lkml <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
+On Tue, Feb 23, 2016 at 11:16 AM, Michael Kerrisk (man-pages)
+<mtk.manpages@gmail.com> wrote:
+> On 02/22/2016 03:46 PM, Andreas Gruenbacher wrote:
+>> On Sun, Feb 21, 2016 at 10:40 PM, Michael Kerrisk (man-pages) <mtk.manpages@gmail.com> wrote:
+>>> I've once more pulled from the latest git; here's some more comments.
+>>
+>> thanks again. I've updated the repo with your changes.
+>
+> Thanks!
+>
+> [...]
+>
+>>> I'm going to play the broken record :-)
+>>>
+>>> Could we start with just a few simple examples already, and build up
+>>> over future iterations of this page?
+>>
+>> Yes, as soon as I'll get to it :)
+>
+> Sure. But, to press the point home, I'm interested to do further
+> review, but I feel like the lack of examples is limiting my ability to
+> understand what's going on and deepen the feedback that I provide in
+> future iterations. So, start please, even if only starting small :-).
 
---===============3157638493215192900==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5p8PegU4iirBW1oA"
-Content-Disposition: inline
+I've added a richaclex(7) examples man page now. What did I miss to explain?
 
-
---5p8PegU4iirBW1oA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated. This is to pick up a bug fix for ext4
-unwritten extent conversion in the xfs-dio-fix-4.6 branch.
-
--Dave.
-
-The new head of the for-next branch is commit:
-
-f012de6 Merge branch 'xfs-dio-fix-4.6' into for-next
-
-New Commits:
-
-Dave Chinner (1):
-      [f012de6] Merge branch 'xfs-dio-fix-4.6' into for-next
-
-Jan Kara (1):
-      [74c66bc] ext4: Fix data exposure after failed AIO DIO
-
-
-Code Diffstat:
-
- fs/ext4/ext4.h    | 30 +++++++++++++++++++++---------
- fs/ext4/inode.c   | 21 ++++++++-------------
- fs/ext4/page-io.c | 10 ----------
- 3 files changed, 29 insertions(+), 32 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---5p8PegU4iirBW1oA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJW0+y4AAoJEK3oKUf0dfod/7gQAK9XQ6C7gdkzcKhU0cXMFAkg
-q8Sct/WRbwGujW90YUwgYlBV89rOUT7/hLDT86lIsbQOTnB/ITn9jx2zIq8+w35M
-HgwLWjUFXsILyLWZQmA/Ex1weV7HqH3esn8B9xuMvgNVQwuIVaIU/SEOBg6k6SXz
-4toogCPCtxs9njflUWgqrK40L84wDeSVJppN2/1Pb1qJff83PniGnhf2hGINTzDU
-CkEOenC4gHTiqXuRZ/4c0IAKq2WwyRO/9KQoggMZBCuG7kp3oqGExqPIpG38KT3L
-xtLgP8G/rLB63SoC9Qa1JuQEIZZZ2YwvaUlb0BqEvrZAXUlepOppDdhr+kZaXw8q
-rpqZouvkvmq8x4xqeaCwWE+T1OGtxn+FclcUirkitOg2qwwRr3peeqx4es6EgPeu
-xT3IUncSyprahjPpNxAUe/7iugKS70N9mzsQfHxZklp923PTdt/dI8wvDz37VYmx
-YDfaeX5V8LDKr/APYu38EWdNNku1AvkLhHaBsQpdY9BTCFjGcty/CfF3fONMU9JT
-3sgm4Swffa5RQeiMUDxFXOlVd5eiHgQE6K7CQwIwlYbuSFRi7qqEtHHvsRf481qL
-jwYrpGq/EyUZUFk0AEKWL4lQRigazhavznvXWvqcpdonXUmAKlkVu5OSSkV76b11
-kYC/O++3HlEJNgTBtQrZ
-=MLS+
------END PGP SIGNATURE-----
-
---5p8PegU4iirBW1oA--
-
-
---===============3157638493215192900==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3157638493215192900==--
