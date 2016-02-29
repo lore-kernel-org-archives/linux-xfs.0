@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6666C7CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 02:17:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D7E08F8033
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:17:37 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 9794B7CB5
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 02:17:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 427B88F8037
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:17:52 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id f857Ve4FKWwidf1a (version=TLSv1.2
+	cuda.sgi.com with ESMTP id NVr5d7IBTaZjP8IP (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:17:36 -0800 (PST)
+	<xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:17:50 -0800 (PST)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v18 01/22] vfs: Add IS_ACL() and IS_RICHACL() tests
-Date: Mon, 29 Feb 2016 09:17:06 +0100
-Message-Id: <1456733847-17982-2-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v18 05/22] vfs: Add permission flags for setting file
+	attributes
+Date: Mon, 29 Feb 2016 09:17:10 +0100
+Message-Id: <1456733847-17982-6-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
 References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,127 +32,141 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-The vfs does not apply the umask for file systems that support acls. The
-test used for this used to be called IS_POSIXACL(). Switch to a new
-IS_ACL() test to check for either posix acls or richacls instead. Add a new
-MS_RICHACL flag and IS_RICHACL() test for richacls alone. The IS_POSIXACL()
-test is still needed by nfsd.
+Richacls support permissions that allow to take ownership of a file,
+change the file permissions, and set the file timestamps.  Support that
+by introducing new permission mask flags and by checking for those mask
+flags in inode_change_ok().
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
 ---
- fs/Kconfig              |  3 +++
- fs/namei.c              |  8 ++++----
- include/linux/fs.h      | 12 ++++++++++++
- include/uapi/linux/fs.h |  3 ++-
- 4 files changed, 21 insertions(+), 5 deletions(-)
+ fs/attr.c          | 79 +++++++++++++++++++++++++++++++++++++++++++++---------
+ include/linux/fs.h |  3 +++
+ 2 files changed, 70 insertions(+), 12 deletions(-)
 
-diff --git a/fs/Kconfig b/fs/Kconfig
-index 9adee0d..f7b26f3 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -63,6 +63,9 @@ endif # BLOCK
- config FS_POSIX_ACL
- 	def_bool n
+diff --git a/fs/attr.c b/fs/attr.c
+index 7ca7fa0..2a8c49c 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -17,6 +17,65 @@
+ #include <linux/ima.h>
  
-+config FS_RICHACL
-+	def_bool n
+ /**
++ * inode_extended_permission  -  permissions beyond read/write/execute
++ *
++ * Check for permissions that only richacls can currently grant.
++ */
++static int inode_extended_permission(struct inode *inode, int mask)
++{
++	if (!IS_RICHACL(inode))
++		return -EPERM;
++	return inode_permission(inode, mask);
++}
 +
- config EXPORTFS
- 	tristate
++static bool inode_uid_change_ok(struct inode *inode, kuid_t ia_uid)
++{
++	if (uid_eq(current_fsuid(), inode->i_uid) &&
++	    uid_eq(ia_uid, inode->i_uid))
++		return true;
++	if (uid_eq(current_fsuid(), ia_uid) &&
++	    inode_extended_permission(inode, MAY_TAKE_OWNERSHIP) == 0)
++		return true;
++	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
++		return true;
++	return false;
++}
++
++static bool inode_gid_change_ok(struct inode *inode, kgid_t ia_gid)
++{
++	int in_group = in_group_p(ia_gid);
++	if (uid_eq(current_fsuid(), inode->i_uid) &&
++	    (in_group || gid_eq(ia_gid, inode->i_gid)))
++		return true;
++	if (in_group && inode_extended_permission(inode, MAY_TAKE_OWNERSHIP) == 0)
++		return true;
++	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
++		return true;
++	return false;
++}
++
++/**
++ * inode_owner_permitted_or_capable
++ *
++ * Check for permissions implicitly granted to the owner, like MAY_CHMOD or
++ * MAY_SET_TIMES.  Equivalent to inode_owner_or_capable for file systems
++ * without support for those permissions.
++ */
++static bool inode_owner_permitted_or_capable(struct inode *inode, int mask)
++{
++	struct user_namespace *ns;
++
++	if (uid_eq(current_fsuid(), inode->i_uid))
++		return true;
++	if (inode_extended_permission(inode, mask) == 0)
++		return true;
++	ns = current_user_ns();
++	if (ns_capable(ns, CAP_FOWNER) && kuid_has_mapping(ns, inode->i_uid))
++		return true;
++	return false;
++}
++
++/**
+  * inode_change_ok - check if attribute changes to an inode are allowed
+  * @inode:	inode to check
+  * @attr:	attributes to change
+@@ -47,22 +106,18 @@ int inode_change_ok(struct inode *inode, struct iattr *attr)
+ 		return 0;
  
-diff --git a/fs/namei.c b/fs/namei.c
-index f624d13..5756c1a 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -2856,7 +2856,7 @@ static int atomic_open(struct nameidata *nd, struct dentry *dentry,
+ 	/* Make sure a caller can chown. */
+-	if ((ia_valid & ATTR_UID) &&
+-	    (!uid_eq(current_fsuid(), inode->i_uid) ||
+-	     !uid_eq(attr->ia_uid, inode->i_uid)) &&
+-	    !capable_wrt_inode_uidgid(inode, CAP_CHOWN))
+-		return -EPERM;
++	if (ia_valid & ATTR_UID)
++		if (!inode_uid_change_ok(inode, attr->ia_uid))
++			return -EPERM;
+ 
+ 	/* Make sure caller can chgrp. */
+-	if ((ia_valid & ATTR_GID) &&
+-	    (!uid_eq(current_fsuid(), inode->i_uid) ||
+-	    (!in_group_p(attr->ia_gid) && !gid_eq(attr->ia_gid, inode->i_gid))) &&
+-	    !capable_wrt_inode_uidgid(inode, CAP_CHOWN))
+-		return -EPERM;
++	if (ia_valid & ATTR_GID)
++		if (!inode_gid_change_ok(inode, attr->ia_gid))
++			return -EPERM;
+ 
+ 	/* Make sure a caller can chmod. */
+ 	if (ia_valid & ATTR_MODE) {
+-		if (!inode_owner_or_capable(inode))
++		if (!inode_owner_permitted_or_capable(inode, MAY_CHMOD))
+ 			return -EPERM;
+ 		/* Also check the setgid bit! */
+ 		if (!in_group_p((ia_valid & ATTR_GID) ? attr->ia_gid :
+@@ -73,7 +128,7 @@ int inode_change_ok(struct inode *inode, struct iattr *attr)
+ 
+ 	/* Check for setting the inode time. */
+ 	if (ia_valid & (ATTR_MTIME_SET | ATTR_ATIME_SET | ATTR_TIMES_SET)) {
+-		if (!inode_owner_or_capable(inode))
++		if (!inode_owner_permitted_or_capable(inode, MAY_SET_TIMES))
+ 			return -EPERM;
  	}
  
- 	mode = op->mode;
--	if ((open_flag & O_CREAT) && !IS_POSIXACL(dir))
-+	if ((open_flag & O_CREAT) && !IS_ACL(dir))
- 		mode &= ~current_umask();
- 
- 	excl = (open_flag & (O_EXCL | O_CREAT)) == (O_EXCL | O_CREAT);
-@@ -3040,7 +3040,7 @@ static int lookup_open(struct nameidata *nd, struct path *path,
- 	/* Negative dentry, just create the file */
- 	if (!dentry->d_inode && (op->open_flag & O_CREAT)) {
- 		umode_t mode = op->mode;
--		if (!IS_POSIXACL(dir->d_inode))
-+		if (!IS_ACL(dir->d_inode))
- 			mode &= ~current_umask();
- 		/*
- 		 * This write is needed to ensure that a
-@@ -3612,7 +3612,7 @@ retry:
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	if (!IS_POSIXACL(path.dentry->d_inode))
-+	if (!IS_ACL(path.dentry->d_inode))
- 		mode &= ~current_umask();
- 	error = security_path_mknod(&path, dentry, mode, dev);
- 	if (error)
-@@ -3681,7 +3681,7 @@ retry:
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	if (!IS_POSIXACL(path.dentry->d_inode))
-+	if (!IS_ACL(path.dentry->d_inode))
- 		mode &= ~current_umask();
- 	error = security_path_mkdir(&path, dentry, mode);
- 	if (!error)
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ae68100..f9d2b59 100644
+index efff04f..0f560b7 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -1804,6 +1804,12 @@ struct super_operations {
- #define IS_IMMUTABLE(inode)	((inode)->i_flags & S_IMMUTABLE)
- #define IS_POSIXACL(inode)	__IS_FLG(inode, MS_POSIXACL)
- 
-+#ifdef CONFIG_FS_RICHACL
-+#define IS_RICHACL(inode)	__IS_FLG(inode, MS_RICHACL)
-+#else
-+#define IS_RICHACL(inode)	0
-+#endif
-+
- #define IS_DEADDIR(inode)	((inode)->i_flags & S_DEAD)
- #define IS_NOCMTIME(inode)	((inode)->i_flags & S_NOCMTIME)
- #define IS_SWAPFILE(inode)	((inode)->i_flags & S_SWAPFILE)
-@@ -1817,6 +1823,12 @@ struct super_operations {
- 				 (inode)->i_rdev == WHITEOUT_DEV)
+@@ -87,6 +87,9 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+ #define MAY_CREATE_DIR		0x00000200
+ #define MAY_DELETE_CHILD	0x00000400
+ #define MAY_DELETE_SELF		0x00000800
++#define MAY_TAKE_OWNERSHIP	0x00001000
++#define MAY_CHMOD		0x00002000
++#define MAY_SET_TIMES		0x00004000
  
  /*
-+ * IS_ACL() tells the VFS to not apply the umask
-+ * and use check_acl for acl permission checks when defined.
-+ */
-+#define IS_ACL(inode)		__IS_FLG(inode, MS_POSIXACL | MS_RICHACL)
-+
-+/*
-  * Inode state bits.  Protected by inode->i_lock
-  *
-  * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 149bec8..540dbef 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -120,7 +120,7 @@ struct inodes_stat_t {
- #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
- 				   MS_VERBOSE is deprecated. */
- #define MS_SILENT	32768
--#define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
-+#define MS_POSIXACL	(1<<16)	/* Supports POSIX ACLs */
- #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
- #define MS_PRIVATE	(1<<18)	/* change to private */
- #define MS_SLAVE	(1<<19)	/* change to slave */
-@@ -130,6 +130,7 @@ struct inodes_stat_t {
- #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
- #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
- #define MS_LAZYTIME	(1<<25) /* Update the on-disk [acm]times lazily */
-+#define MS_RICHACL	(1<<26) /* Supports richacls */
- 
- /* These sb flags are internal to the kernel */
- #define MS_NOSEC	(1<<28)
+  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
 -- 
 2.4.3
 
