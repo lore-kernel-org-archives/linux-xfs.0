@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F3A4529E05
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 11:31:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 61B62AC002
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 09:31:40 -0800 (PST)
-Received: from sabe.cs.wisc.edu (sabe.cs.wisc.edu [128.105.6.20]) by
-	cuda.sgi.com with ESMTP id DCFSMBFDWui5ju1U (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Feb 2016 09:31:38 -0800 (PST)
-Subject: Re: [PATCH 00/35 v4] separate operations from flags in the
-	bio/request structs
-References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-	<20160229171339.GA17755@infradead.org>
-From: Mike Christie <michaelc@cs.wisc.edu>
-Message-ID: <56D4802E.3090507@cs.wisc.edu>
-Date: Mon, 29 Feb 2016 11:30:22 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 47D5B7CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 15:16:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1A7758F8033
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 13:16:35 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	eejH755o6TuWe2dp for <xfs@oss.sgi.com>;
+	Mon, 29 Feb 2016 13:16:31 -0800 (PST)
+Date: Tue, 1 Mar 2016 08:16:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs resize: primary superblock is not updated immediately
+Message-ID: <20160229211628.GK29057@dastard>
+References: <3685DFAD20214109878873CF81232704@alyakaslap>
+	<20160222212019.GI25832@dastard>
+	<CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
+	<20160222235628.GK25832@dastard>
+	<D5578D3E98EE48B88EA9A1126B671155@alyakaslap>
+	<20160223225926.GN25832@dastard>
+	<BC0CC25E00CE4CEDA1FFDFC0A2F38742@alyakaslap>
 MIME-Version: 1.0
-In-Reply-To: <20160229171339.GA17755@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <BC0CC25E00CE4CEDA1FFDFC0A2F38742@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,15 +35,122 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, mchristi@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Danny Shavit <danny@zadarastorage.com>, Shyam Kaushik <shyam@zadarastorage.com>, Yair Hershko <yair@zadarastorage.com>, xfs@oss.sgi.com
 
-On 02/29/2016 11:13 AM, Christoph Hellwig wrote:
-> Any reason you've dropped my ACK for the previous version?
+On Mon, Feb 29, 2016 at 11:47:54AM +0200, Alex Lyakas wrote:
+> Hello Dave,
+> I have tried the same scenario with the 4.5 kernel from about a week
+> ago, latest commit being [1].
+> The same crash is happening, stack trace being [2].
+> 
+> I am not proficient with xfstests, unfortunately. I tried running
+> them several times, but I am not sure I was doing that properly.
+> 
+> As for your question why the "block beyond end of the filesystem
+> fails". I tried to debug it further and added a print into
+> _xfs_buf_find. What happens is that at some point, the sb_dblocks
+> value is updated to the new value, but the in-memory pag object is
+> not created. So the test:
+> 
+> eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
+> if (blkno < 0 || blkno >= eofs) {
+> ...
+> 
+> still holds, but the needed pag does not exist.
+> 
+> Here are the results of the prints that I added:
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.546542] SGI XFS with
+> ACLs, security attributes, realtime, no debug enabled
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.551243] XFS (dm-0):
+> Mounting V4 Filesystem
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.576677] XFS (dm-0):
+> Starting recovery (logdev: internal)
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.577866]
+> _xfs_buf_find: blkno=0 eofs=200704 >m_sb.sb_dblocks=25088
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.577872]
+> _xfs_buf_find: blkno=0 eofs=200704 >m_sb.sb_dblocks=25088
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.577882]
+> _xfs_buf_find: blkno=0 eofs=200704 >m_sb.sb_dblocks=25088
+> ===> Here we start seeing the new value of "sb_dblocks" and hence
+> the new value of "eofs":
 
-Sorry. I think I accidentally dropped it when I rebased back over to
-linux-next. It looks like it only got stuck on the first patch. I will
-fix that up on the resend for those kbuild errors.
+We shouldn't see sb_dblocks change until log recovery completes the
+first phase of log recovery and the in-core superblock is re-read
+from disk in xlog_do_recover().
+
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.606796]
+> _xfs_buf_find: blkno=1 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.606804]
+> _xfs_buf_find: blkno=1 eofs=204800 >m_sb.sb_dblocks=25600
+
+looking up AGF 0.
+
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.606988]
+> _xfs_buf_find: blkno=2 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.606991]
+> _xfs_buf_find: blkno=2 eofs=204800 >m_sb.sb_dblocks=25600
+
+Now AGI 0.
+
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607205]
+> _xfs_buf_find: blkno=50177 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607210]
+> _xfs_buf_find: blkno=50177 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607375]
+> _xfs_buf_find: blkno=50178 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607378]
+> _xfs_buf_find: blkno=50178 eofs=204800 >m_sb.sb_dblocks=25600
+
+AGF/AGI 1.
+
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607512]
+> _xfs_buf_find: blkno=100353 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607515]
+> _xfs_buf_find: blkno=100353 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607652]
+> _xfs_buf_find: blkno=100354 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607655]
+> _xfs_buf_find: blkno=100354 eofs=204800 >m_sb.sb_dblocks=25600
+
+AGF/AGI 2.
+
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607829]
+> _xfs_buf_find: blkno=150529 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607832]
+> _xfs_buf_find: blkno=150529 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607980]
+> _xfs_buf_find: blkno=150530 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.607982]
+> _xfs_buf_find: blkno=150530 eofs=204800 >m_sb.sb_dblocks=25600
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.608073]
+
+AGF/AGI 4.
+
+> _xfs_buf_find: blkno=200705 eofs=204800 >m_sb.sb_dblocks=25600
+> ===> and here we crash, but as you see, blkno is valid WRT eofs value.
+> Feb 29 11:47:09 vc-00-00-350-dev kernel: [   91.608120] BUG: unable
+> to handle kernel NULL pointer dereference at 0000000000000098
+
+AGF 5 goes splat.
+
+Which means it's through the first phase of log recovery and it's
+not failing in log recovery. i.e. we are now running
+xfs_initialize_perag_data() after log recovery. So, as I said a
+couple of posts back up this thread:
+
+| If log recovery succeeds, then yes, I can see that there is a
+| problem here because the per-ag tree is not reinitialised after
+| the superblock is re-read. That's a pretty easy fix, though (3-4
+| lines of code in xlog_do_recover() to detect a change in
+| filesystem block count and call xfs_initialize_perag() again..
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
