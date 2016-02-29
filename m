@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BAF2F7CB3
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 02:17:48 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 637407C8C
+	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 22:58:48 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 258FAAC003
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:17:48 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mRfd83d4BEhXWtI0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:17:47 -0800 (PST)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v18 04/22] vfs: Make the inode passed to inode_change_ok
-	non-const
-Date: Mon, 29 Feb 2016 09:17:09 +0100
-Message-Id: <1456733847-17982-5-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BD481AC002
+	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 20:58:47 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	mF3ZDKVeddLRwdkm for <xfs@oss.sgi.com>;
+	Sun, 28 Feb 2016 20:58:44 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aaFur-0000CG-Rp
+	for xfs@oss.sgi.com; Mon, 29 Feb 2016 15:58:41 +1100
+Date: Mon, 29 Feb 2016 15:58:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: master branch updated to 2ab8ecb
+Message-ID: <20160229045841.GF29057@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,56 +25,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4173840690673437858=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-We will need to call iop->permission and iop->get_acl from
-inode_change_ok() for additional permission checks, and both take a
-non-const inode.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
----
- fs/attr.c          | 2 +-
- include/linux/fs.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+--===============4173840690673437858==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
+Content-Disposition: inline
 
-diff --git a/fs/attr.c b/fs/attr.c
-index 25b24d0..7ca7fa0 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -28,7 +28,7 @@
-  * Should be called as the first thing in ->setattr implementations,
-  * possibly after taking additional locks.
-  */
--int inode_change_ok(const struct inode *inode, struct iattr *attr)
-+int inode_change_ok(struct inode *inode, struct iattr *attr)
- {
- 	unsigned int ia_valid = attr->ia_valid;
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 97e34ba..efff04f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2908,7 +2908,7 @@ extern int buffer_migrate_page(struct address_space *,
- #define buffer_migrate_page NULL
- #endif
- 
--extern int inode_change_ok(const struct inode *, struct iattr *);
-+extern int inode_change_ok(struct inode *, struct iattr *);
- extern int inode_newsize_ok(const struct inode *, loff_t offset);
- extern void setattr_copy(struct inode *inode, const struct iattr *attr);
- 
--- 
-2.4.3
+
+--MGYHOYXEY6WxJCY8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Folks,
+
+The xfsprogs repository at:
+
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+The new head of the master branch is commit:
+
+2ab8ecb xfs_io: Prevent devide by zero from {pread,pwrite}_random
+
+New Commits:
+
+Dmitry Monakhov (1):
+      [2ab8ecb] xfs_io: Prevent devide by zero from {pread,pwrite}_random
+
+Eric Sandeen (1):
+      [fa247a5] xfs_db: Fix dquot command docs
+
+Zorro Lang (1):
+      [c614d3b] xfs_quota: modify commands which can't handle multiple types
+
+
+Code Diffstat:
+
+ db/dquot.c           |  8 +++++---
+ io/pread.c           |  6 +++++-
+ io/pwrite.c          |  6 +++++-
+ man/man8/xfs_db.8    |  4 ++--
+ man/man8/xfs_quota.8 | 14 ++++++-------
+ quota/edit.c         | 60 ++++++++++++++++++++++++++++++++++++------------=
+------
+ quota/quot.c         | 15 +++++++++-----
+ quota/quota.c        | 15 +++++++++-----
+ quota/report.c       | 20 ++++++++++++------
+ 9 files changed, 98 insertions(+), 50 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--MGYHOYXEY6WxJCY8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJW09ABAAoJEK3oKUf0dfodgL0P/3/CpVA/oJm8joQKMR0VrLhR
+q29YS8+9XoEJtrCY9buQ2beEV2p6rj5wKE1KPxh4Z3HlseNkrs7JiDYUe+wcTaYm
+qJZByrwhkNOqUPVGU5UWbHoNIeE86zgP+G6Fr3IyuGQVw413zLVLcUtQ2vXIbKtC
+ezd1dVsO6VYqWWnK/yGGPY8noGQKDGK8o/ivH3VaI8TvutfRPl7zEwFiDhWeLcvV
+1GJlmX4c8UGTbbigmLQPUDCEDcxsRBfFtq2iq4fKwH9ACmp/TMSvPVNZeGWEEgt5
+8qHz5XM6wfZq/QNaDQZJa8SV6aCZmzgxl5YuSvI5zfP22xXKAoEvp7cz3XRU72qH
+0Ke3Kf+tCYBZqm94tY2NfcQGW9AkCQ6iqrjQ4M6sVpMwMQhuXC4pSWdlbUmDOUxv
+YHr5Ff6ffhE1LMV/gt9r+UnhXC6Wx5f4p9q3/7Y9glr0EYSN0qk9Vgbb8EeIEx+U
+Lv/LWUweyitN8DyQ2InL2O1yrvVNq5wvuA6zmd8C9fFo1IoUQudZyRnUBAR3NUmJ
+hAR7Uet35z/DioqN6G1uoazTHxHlB0zd4AkMVWBaDTPs8cb/igNMuGjYKQ8HICOJ
+qFM4GfKlOv0TqE386p7VSdfEURctSzxiWSP9C6fWVE3Di48QfvoBoBbd7syIyiSg
+MVCztrE8vwu56R6LoFv4
+=CVs1
+-----END PGP SIGNATURE-----
+
+--MGYHOYXEY6WxJCY8--
+
+
+--===============4173840690673437858==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4173840690673437858==--
