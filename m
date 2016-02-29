@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DF26429E05
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 11:13:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 51F2CAC002
-	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 09:13:56 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id EcQ1IuH4BpKAa7F6 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 598DF7CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 12:22:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 182588F8040
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 10:22:08 -0800 (PST)
+Received: from mail-ob0-f170.google.com (mail-ob0-f170.google.com
+	[209.85.214.170]) by cuda.sgi.com with ESMTP id
+	AXubrLICZcVaErJg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Feb 2016 09:13:54 -0800 (PST)
-Date: Mon, 29 Feb 2016 09:13:39 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/35 v4] separate operations from flags in the
-	bio/request structs
-Message-ID: <20160229171339.GA17755@infradead.org>
-References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
+	<xfs@oss.sgi.com>; Mon, 29 Feb 2016 10:22:07 -0800 (PST)
+Received: by mail-ob0-f170.google.com with SMTP id fz5so10886579obc.0
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 10:22:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
+In-Reply-To: <20160228053158.GK11419@eguan.usersys.redhat.com>
+References: <20160227130256.GJ11419@eguan.usersys.redhat.com>
+	<CAPcyv4gZKzUsch2RQm-QQWuUHtmtQerz2fstCwbwaMjyzYvwrA@mail.gmail.com>
+	<20160228053158.GK11419@eguan.usersys.redhat.com>
+Date: Mon, 29 Feb 2016 10:22:06 -0800
+Message-ID: <CAPcyv4jNhCkStvwtS54FjJVWAfvMv-gEDjHWq3V7_YTOmk+W2g@mail.gmail.com>
+Subject: Re: generic/320 triggers "list_add attempted on force-poisoned entry"
+	warning on XFS
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,18 +34,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: mchristi@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, XFS Developers <xfs@oss.sgi.com>
 
-Any reason you've dropped my ACK for the previous version?
+On Sat, Feb 27, 2016 at 9:31 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Sat, Feb 27, 2016 at 12:10:51PM -0800, Dan Williams wrote:
+>> On Sat, Feb 27, 2016 at 5:02 AM, Eryu Guan <eguan@redhat.com> wrote:
+>> > Hi,
+>> >
+>> > Starting from 4.5-rc1 kernel, I sometimes see generic/320 triggers
+>> > "list_add attempted on force-poisoned entry" warnings on XFS, test hosts
+>> > are arm64/ppc64/ppc64le, haven't seen it on x86_64 hosts.
+>>
+>> Hmm, this triggers when a list_head has ->next or ->prev pointing at
+>> the address of force_poison which is only defined in lib/list_debug.c.
+>> The only call site that uses list_force_poison() is in
+>> devm_memremap_pages().  That currently depends on CONFIG_ZONE_DEVICE
+>> which in turn depends on X86_64.
+>>
+>> So, this appears to be a false positive and the address of
+>> force_poison is somehow ending up on the stack by accident as that is
+>> the random value being passed in from __down_common:
+>>
+>>     struct semaphore_waiter waiter;
+>>
+>>     list_add_tail(&waiter.list, &sem->wait_list);
+>>
+>> So, I think we need a more unique poison value that should never
+>> appear on the stack:
+>
+> Unfortunately I can still see the warning after applying this test patch.
+>
+> Then I added debug code to print the pointer value and re-ran the test.
+> All five failures printed the same pointer value, failed in the same
+> pattern:
+>
+> list_add attempted on force-poisoned entry(0000000000000500), new->next = c00000000136bc00, new->prev = 0000000000000500
+>
 
-Jens, is this something you're fine with?  Would be great to figure
-out a way to get this into 4.6.  There's probably going to be
-plenty of conflicts, so having some sort of stable base tree
-would be nice..
+I think this means that no matter what we do the stack will pick up
+these poison values unless the list_head is explicitly initialized.
+Something like the following:
 
-(Talking about conflicts, seems like the block for-linus and for-next
-trees already conflict quite a bit..)
+diff --git a/kernel/locking/semaphore.c b/kernel/locking/semaphore.c
+index b8120abe594b..39929b4e6fbb 100644
+--- a/kernel/locking/semaphore.c
++++ b/kernel/locking/semaphore.c
+@@ -205,7 +205,9 @@ static inline int __sched __down_common(struct
+semaphore *sem, long state,
+                                                               long timeout)
+{
+       struct task_struct *task = current;
+-       struct semaphore_waiter waiter;
++       struct semaphore_waiter waiter = {
++               .list = LIST_HEAD_INIT(waiter.list),
++       };
+
+       list_add_tail(&waiter.list, &sem->wait_list);
+       waiter.task = task;
 
 _______________________________________________
 xfs mailing list
