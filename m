@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 755DB7F6F
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 17:56:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 17EC0304039
-	for <xfs@oss.sgi.com>; Mon, 22 Feb 2016 15:56:41 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7D0477C8C
+	for <xfs@oss.sgi.com>; Mon, 29 Feb 2016 00:24:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5E55AC003
+	for <xfs@oss.sgi.com>; Sun, 28 Feb 2016 22:24:02 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Shgu3E1NaK0CsC3q for <xfs@oss.sgi.com>;
-	Mon, 22 Feb 2016 15:56:31 -0800 (PST)
-Date: Tue, 23 Feb 2016 10:56:28 +1100
+	jrBxj5tZrdWUjbn0 for <xfs@oss.sgi.com>;
+	Sun, 28 Feb 2016 22:24:00 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aaHFM-0000LA-9u
+	for xfs@oss.sgi.com; Mon, 29 Feb 2016 17:23:56 +1100
+Date: Mon, 29 Feb 2016 17:23:56 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs resize: primary superblock is not updated immediately
-Message-ID: <20160222235628.GK25832@dastard>
-References: <3685DFAD20214109878873CF81232704@alyakaslap>
-	<20160222212019.GI25832@dastard>
-	<CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
+Subject: [ANNOUNCE] xfsprogs: for-next branch updated to c062cfe
+Message-ID: <20160229062356.GG29057@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,79 +25,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2890514037036415258=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Danny Shavit <danny@zadarastorage.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 23, 2016 at 12:38:48AM +0200, Alex Lyakas wrote:
-> Hi Dave,
-> Thanks for your response.
-> 
-> I am not freezing the filesystem before the snapshot.
 
-There's your problem. A mounted filesystem is not consistent on disk
-without flushing the entire journal and all the dirty metadata to
-disk.
+--===============2890514037036415258==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="hHWLQfXTYDoKhP50"
+Content-Disposition: inline
 
-> However, let's assume that somebody resized the XFS, and it completed
-> and got back to user-space. At this moment the primary superblock
-> on-disk is not updated yet with the new agcount. And at this same
-> moment there is a power-out. After the power comes back and the
-> machine boots, if we mount the XFS, the same problem would happen, I
-> believe.
 
-Log recovery will run and update the superblock buffer with the correct
-values. But the in-memory superblock that log recoery is working
-with does not change, and so if there were accesses beyond the
-current superblock ag/block count you'd see messages like this:
+--hHWLQfXTYDoKhP50
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-XFS (sda1): _xfs_buf_find: Block out of range: block 0xnnnnn EOFS 0xmmmmm
+Hi Folks,
 
-and log recovery should fail at that point because it can't pull in
-a buffer it needs for recovery to make further progress. At which
-point, you have an unmountable filesystem.
+The for-next branch of the xfsprogs repository at:
 
-If log recovery succeeds, then yes, I can see that there is a
-problem here because the per-ag tree is not reinitialised after the
-superblock is re-read. That's a pretty easy fix, though (3-4 lines
-of code in xlog_do_recover() to detect a change in filesystem block
-count and call xfs_initialize_perag() again.
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> Taking a block-level snapshot is exactly like a power-out from XFS
-> perspective.
+has just been updated, bringing it back in line with the current
+master branch, fixing bugs in the libxfs sync branch, and adding
+Carlos' new inode command.
 
-It's similar, but it's not the same. e.g. there are no issues like
-volatile storage cache loss that have to be handled.
+The new head of the master branch is commit:
 
-> And XFS should, in principle, be able to recover from
-> that.
+c062cfe Merge branch 'progs-misc-fixes-for-4.6' into for-next
 
-For some definition of recover. There is no guarantee that any of
-the async transactions in memory will make it to disk, so the point
-to which XFS can recover is undefined.
+New Commits:
 
-> The snapshot will come up as a new block device, which exhibits
-> identical content as the original block device had at the moment when
-> the snapshot was taken (like a boot after power-out).
+Carlos Maiolino (1):
+      [ef25c9e] xfs_io: implement 'inode' command
 
-The block device might be identical, but it's not identical to what
-the filesystem is presenting the user. Any user dirty data cached in
-memory, or metadata changes staged in the CIL will not be in the
-snapshot. Hence the snapshot block device is not identical to the
-original user visible state and data. You only get that if you
-freeze the filesystem before taking the snapshot.
+Darrick J. Wong (1):
+      [71893d8] mkfs: fix crash when initializing rbmip
 
-Cheers,
+Dave Chinner (2):
+      [3efa0bd] Merge branch 'libxfs-4.6-sync' into for-next
+      [c062cfe] Merge branch 'progs-misc-fixes-for-4.6' into for-next
 
-Dave.
--- 
+Dmitry Monakhov (1):
+      [2ab8ecb] xfs_io: Prevent devide by zero from {pread,pwrite}_random
+
+Eric Sandeen (2):
+      [fa247a5] xfs_db: Fix dquot command docs
+      [ff0f39e] libxfs: fix up mismerge in libxfs_iflush_int
+
+Zorro Lang (1):
+      [c614d3b] xfs_quota: modify commands which can't handle multiple types
+
+
+Code Diffstat:
+
+ db/dquot.c           |   8 +--
+ io/open.c            | 150 +++++++++++++++++++++++++++++++++++++++++++++++=
+++++++
+ io/pread.c           |   6 ++-
+ io/pwrite.c          |   6 ++-
+ libxfs/util.c        |   2 +-
+ man/man8/xfs_db.8    |   4 +-
+ man/man8/xfs_quota.8 |  14 ++---
+ mkfs/proto.c         |   2 +-
+ quota/edit.c         |  60 ++++++++++++++-------
+ quota/quot.c         |  15 ++++--
+ quota/quota.c        |  15 ++++--
+ quota/report.c       |  20 ++++---
+ 12 files changed, 250 insertions(+), 52 deletions(-)
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--hHWLQfXTYDoKhP50
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJW0+P7AAoJEK3oKUf0dfodSAoQALqXHt2LVzdu229iYNdCtBUQ
+9eAXxAVkm2I6ZDr0sNg2PxSFgCwpMo6cIFXCOzIsXA41o/r9DC7o1drbG0x2Fj87
+Ce2wP4Ngb3pyA0bM+4wgbeSwPe2LEJyUzfmXL1UE+mpO6L5FpmIOgax+joYO5i+W
+3Xia7gK+/v4FOCyPMaWwyjlVRdnKNBnsK27qDLIw8hAgt12tixX+taONZUovH1iR
+gJK1RzVi91OfMvQ/COvXfAgXJ8TC6fD1iO7SgfUSaWtMtXE+xN+42zOlvfjrvLoq
+wBQ2iOaBT/vvvvuyDDfP2Uu9jlXEiV9U90d/oUkQah6EgFOR8IpXkOnYZlLsJMV0
+7l/Y4Sur94JN/GlGuMCNhKU+VGFtbjgFAfShpbHgt5e8eUhYvD+VpKjKcM86p4XX
+qNyN+onmB0bIIvYKoWM8v4us4z8QBf3PbEUIm6GpiLhT8Fajn2FkCOFcz4eZ3p7+
+bDbxrAsRmiDPBejUKOM5EvKJTyf+wdJpGPL/xamzWpYAkaCartZQSXt3UbvXPhAs
+Dh9vuB0YfLdT6yTjaTlCp5Mx/1+tcexIVeWyAfJ6XjS5zo47g7kDqwiaNmmWNW1H
+NAhei3V4cAZSC2wJKVCorA5QySzDzyzFTmfWjzsEiZ9L3SkSvkDN8sD4vz4xOOPi
+fkZ44s2zHrKNihXwvHO7
+=DTca
+-----END PGP SIGNATURE-----
+
+--hHWLQfXTYDoKhP50--
+
+
+--===============2890514037036415258==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2890514037036415258==--
