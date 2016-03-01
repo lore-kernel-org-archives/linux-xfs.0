@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EE9CC7CAE
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 13:55:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 008F47CB9
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 14:40:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 55823AC001
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 11:55:29 -0800 (PST)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	TGI3Aebcz9IghlH8 for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2016 11:55:28 -0800 (PST)
-Subject: [RFC PATCH] semaphore: fix uninitialized list_head vs
-	list_force_poison
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 01 Mar 2016 11:55:04 -0800
-Message-ID: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65F92AC001
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 12:40:16 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id nkhbOcl9TDizq2Sg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 12:40:13 -0800 (PST)
+Date: Tue, 1 Mar 2016 12:40:13 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: block allocations for the refcount btree
+Message-ID: <20160301204013.GA23128@infradead.org>
+References: <20160210093011.GA19147@infradead.org>
+	<20160210095010.GC23904@birch.djwong.org>
+	<20160210190738.GA13051@infradead.org>
+	<20160210214058.GN14668@dastard>
+	<20160212191046.GA28421@infradead.org>
+	<20160301181809.GC27973@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160301181809.GC27973@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,90 +34,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, Peter Zijlstra <peterz@infradead.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, akpm@linux-foundation.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-list_force_poison is a debug mechanism to make sure that ZONE_DEVICE
-pages never appear on an lru.  Those pages only exist for enabling DMA
-to device discovered memory ranges and are not suitable for general
-purpose allocations.  list_force_poison() explicitly initializes a
-list_head with a poison value that list_add() can use to detect mistaken
-use of page->lru.
+On Tue, Mar 01, 2016 at 10:18:09AM -0800, Darrick J. Wong wrote:
+> One side effect of the per-ag block reservation code is that it reserves all
+> the blocks that the refcountbt will ever need at mount time, which includes
+> decreasing the incore fdblocks counter at mount and putting it back at unmount
+> time.  This /should/ eliminate the need for reserving blocks in truncate
+> transactions, though clearly this isn't being done correctly.
 
-Unfortunately, it seems calling list_add() leads to the poison value
-leaking on to the stack and occasionally cause stack-allocated
-list_heads to be inadvertently "force poisoned".
+We're still accouting these blocks in t_blk_res_used through
+xfs_alloc_vextent -> xfs_alloc_ag_vextent -> xfs_trans_mod_sb.
 
- list_add attempted on force-poisoned entry
- WARNING: at lib/list_debug.c:34
- [..]
- NIP [c00000000043c390] __list_add+0xb0/0x150
- LR [c00000000043c38c] __list_add+0xac/0x150
- Call Trace:
- [c000000fb5fc3320] [c00000000043c38c] __list_add+0xac/0x150 (unreliable)
- [c000000fb5fc33a0] [c00000000081b454] __down+0x4c/0xf8
- [c000000fb5fc3410] [c00000000010b6f8] down+0x68/0x70
- [c000000fb5fc3450] [d0000000201ebf4c] xfs_buf_lock+0x4c/0x150 [xfs]
+I don't really see how the reservation code changes anything about
+that accounting.  It just ensures the allocation will succeed through
+xfs_ag_resv_needed in xfs_alloc_ag_vextent, and then removes the
+allocated block from the reservation using xfs_ag_resv_alloc_block.
 
- list_add attempted on force-poisoned entry(0000000000000500),
-  new->next == d0000000059ecdb0, new->prev == 0000000000000500
- WARNING: at lib/list_debug.c:33
- [..]
- NIP [c00000000042db78] __list_add+0xa8/0x140
- LR [c00000000042db74] __list_add+0xa4/0x140
- Call Trace:
- [c0000004c749f620] [c00000000042db74] __list_add+0xa4/0x140 (unreliable)
- [c0000004c749f6b0] [c0000000008010ec] rwsem_down_read_failed+0x6c/0x1a0
- [c0000004c749f760] [c000000000800828] down_read+0x58/0x60
- [c0000004c749f7e0] [d000000005a1a6bc] xfs_log_commit_cil+0x7c/0x600 [xfs]
+Maybe we need to find a way to not account for these blocks.
 
-We can squash these uninitialized list_heads as they pop-up as this
-patch does, or maybe need to rethink how to implement the
-list_force_poison() safety mechanism.
+> So what I'm saying is that I think this problem was with the AGresv code not
+> doing accounting correctly, and that I've fixed it in a subsequent rewrite of
+> the AGresv code.  I'll post it later, after I figure out why generic/333
+> regresses with the new code.
 
-Reported-by: Eryu Guan <eguan@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: <xfs@oss.sgi.com>
-Fixes: commit 5c2c2587b132 ("mm, dax, pmem: introduce {get|put}_dev_pagemap() for dax-gup")
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- kernel/locking/rwsem-xadd.c |    4 +++-
- kernel/locking/semaphore.c  |    4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Ok, let's see if the new version helps with the above issue.
 
-diff --git a/kernel/locking/rwsem-xadd.c b/kernel/locking/rwsem-xadd.c
-index a4d4de05b2d1..68678a20da52 100644
---- a/kernel/locking/rwsem-xadd.c
-+++ b/kernel/locking/rwsem-xadd.c
-@@ -214,8 +214,10 @@ __visible
- struct rw_semaphore __sched *rwsem_down_read_failed(struct rw_semaphore *sem)
- {
- 	long count, adjustment = -RWSEM_ACTIVE_READ_BIAS;
--	struct rwsem_waiter waiter;
- 	struct task_struct *tsk = current;
-+	struct rwsem_waiter waiter = {
-+		.list = LIST_HEAD_INIT(waiter.list),
-+	};
- 
- 	/* set up my own style of waitqueue */
- 	waiter.task = tsk;
-diff --git a/kernel/locking/semaphore.c b/kernel/locking/semaphore.c
-index b8120abe594b..39929b4e6fbb 100644
---- a/kernel/locking/semaphore.c
-+++ b/kernel/locking/semaphore.c
-@@ -205,7 +205,9 @@ static inline int __sched __down_common(struct semaphore *sem, long state,
- 								long timeout)
- {
- 	struct task_struct *task = current;
--	struct semaphore_waiter waiter;
-+	struct semaphore_waiter waiter = {
-+		.list = LIST_HEAD_INIT(waiter.list),
-+	};
- 
- 	list_add_tail(&waiter.list, &sem->wait_list);
- 	waiter.task = task;
+> However, there's one thing to be aware of -- if the AGresv uses up all the
+> blocks that were preallocated at mount time, the allocator will grab any free
+> blocks available and charge the blocks to the transaction, just like before.
+> If this ever happens (in theory we reserve enough blocks so that we can have a
+> refcount record for every block in the AG) then we'll still have this problem.
+
+It seems like we should simply avoid that this case ever happens.
 
 _______________________________________________
 xfs mailing list
