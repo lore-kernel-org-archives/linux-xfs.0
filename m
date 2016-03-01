@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 375CF7CA4
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 06:40:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F32CAC003
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 04:40:02 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nICBSMjGRbjI0mbs (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B2AF67CB9
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 14:53:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 644A9304039
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 12:53:45 -0800 (PST)
+Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
+	[140.211.169.12]) by cuda.sgi.com with ESMTP id
+	ofCeHJbn87LtiROb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 03 Mar 2016 04:40:00 -0800 (PST)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/4] xfs: refactor unmount record detection into helper
-Date: Thu,  3 Mar 2016 07:39:56 -0500
-Message-Id: <1457008798-58734-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1457008798-58734-1-git-send-email-bfoster@redhat.com>
-References: <1457008798-58734-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 12:53:42 -0800 (PST)
+Date: Tue, 1 Mar 2016 12:53:40 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [RFC PATCH] semaphore: fix uninitialized list_head vs
+	list_force_poison
+Message-Id: <20160301125340.ffcc278e7f35fc3a28268e08@linux-foundation.org>
+In-Reply-To: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,220 +26,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Beulich <JBeulich@suse.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Eryu Guan <eguan@redhat.com>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Once the mount sequence has identified the head and tail blocks of the
-physical log, the record at the head of the log is located and examined
-for an unmount record to determine if the log is clean. This currently
-occurs after torn write verification of the head region of the log.
+On Tue, 01 Mar 2016 11:55:04 -0800 Dan Williams <dan.j.williams@intel.com> wrote:
 
-This must ultimately be separated from torn write verification and may
-need to be called again if the log head is walked back due to a torn
-write (to determine whether the new head record is an unmount record).
-Separate this logic into a new helper function. This patch does not
-change behavior.
+> list_force_poison is a debug mechanism to make sure that ZONE_DEVICE
+> pages never appear on an lru.  Those pages only exist for enabling DMA
+> to device discovered memory ranges and are not suitable for general
+> purpose allocations.  list_force_poison() explicitly initializes a
+> list_head with a poison value that list_add() can use to detect mistaken
+> use of page->lru.
+> 
+> Unfortunately, it seems calling list_add() leads to the poison value
+> leaking on to the stack and occasionally cause stack-allocated
+> list_heads to be inadvertently "force poisoned".
+> 
+>  list_add attempted on force-poisoned entry
+>  WARNING: at lib/list_debug.c:34
+>  [..]
+>  NIP [c00000000043c390] __list_add+0xb0/0x150
+>  LR [c00000000043c38c] __list_add+0xac/0x150
+>  Call Trace:
+>  [c000000fb5fc3320] [c00000000043c38c] __list_add+0xac/0x150 (unreliable)
+>  [c000000fb5fc33a0] [c00000000081b454] __down+0x4c/0xf8
+>  [c000000fb5fc3410] [c00000000010b6f8] down+0x68/0x70
+>  [c000000fb5fc3450] [d0000000201ebf4c] xfs_buf_lock+0x4c/0x150 [xfs]
+> 
+>  list_add attempted on force-poisoned entry(0000000000000500),
+>   new->next == d0000000059ecdb0, new->prev == 0000000000000500
+>  WARNING: at lib/list_debug.c:33
+>  [..]
+>  NIP [c00000000042db78] __list_add+0xa8/0x140
+>  LR [c00000000042db74] __list_add+0xa4/0x140
+>  Call Trace:
+>  [c0000004c749f620] [c00000000042db74] __list_add+0xa4/0x140 (unreliable)
+>  [c0000004c749f6b0] [c0000000008010ec] rwsem_down_read_failed+0x6c/0x1a0
+>  [c0000004c749f760] [c000000000800828] down_read+0x58/0x60
+>  [c0000004c749f7e0] [d000000005a1a6bc] xfs_log_commit_cil+0x7c/0x600 [xfs]
+> 
+> We can squash these uninitialized list_heads as they pop-up as this
+> patch does, or maybe need to rethink how to implement the
+> list_force_poison() safety mechanism.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 153 ++++++++++++++++++++++++++++-------------------
- 1 file changed, 93 insertions(+), 60 deletions(-)
+Yes, problem.
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6813e28..8a240d1 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1198,6 +1198,84 @@ xlog_verify_head(
- }
- 
- /*
-+ * Check whether the head of the log points to an unmount record. In other
-+ * words, determine whether the log is clean. If so, update the in-core state
-+ * appropriately.
-+ */
-+static int
-+xlog_check_unmount_rec(
-+	struct xlog		*log,
-+	xfs_daddr_t		*head_blk,
-+	xfs_daddr_t		*tail_blk,
-+	struct xlog_rec_header	*rhead,
-+	xfs_daddr_t		rhead_blk,
-+	struct xfs_buf		*bp,
-+	bool			*clean)
-+{
-+	struct xlog_op_header	*op_head;
-+	xfs_daddr_t		umount_data_blk;
-+	xfs_daddr_t		after_umount_blk;
-+	int			hblks;
-+	int			error;
-+	char			*offset;
-+
-+	*clean = false;
-+
-+	/*
-+	 * Look for unmount record. If we find it, then we know there was a
-+	 * clean unmount. Since 'i' could be the last block in the physical
-+	 * log, we convert to a log block before comparing to the head_blk.
-+	 *
-+	 * Save the current tail lsn to use to pass to xlog_clear_stale_blocks()
-+	 * below. We won't want to clear the unmount record if there is one, so
-+	 * we pass the lsn of the unmount record rather than the block after it.
-+	 */
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-+		int	h_size = be32_to_cpu(rhead->h_size);
-+		int	h_version = be32_to_cpu(rhead->h_version);
-+
-+		if ((h_version & XLOG_VERSION_2) &&
-+		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
-+			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
-+			if (h_size % XLOG_HEADER_CYCLE_SIZE)
-+				hblks++;
-+		} else {
-+			hblks = 1;
-+		}
-+	} else {
-+		hblks = 1;
-+	}
-+	after_umount_blk = rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len));
-+	after_umount_blk = do_mod(after_umount_blk, log->l_logBBsize);
-+	if (*head_blk == after_umount_blk &&
-+	    be32_to_cpu(rhead->h_num_logops) == 1) {
-+		umount_data_blk = rhead_blk + hblks;
-+		umount_data_blk = do_mod(umount_data_blk, log->l_logBBsize);
-+		error = xlog_bread(log, umount_data_blk, 1, bp, &offset);
-+		if (error)
-+			return error;
-+
-+		op_head = (struct xlog_op_header *)offset;
-+		if (op_head->oh_flags & XLOG_UNMOUNT_TRANS) {
-+			/*
-+			 * Set tail and last sync so that newly written log
-+			 * records will point recovery to after the current
-+			 * unmount record.
-+			 */
-+			xlog_assign_atomic_lsn(&log->l_tail_lsn,
-+					log->l_curr_cycle, after_umount_blk);
-+			xlog_assign_atomic_lsn(&log->l_last_sync_lsn,
-+					log->l_curr_cycle, after_umount_blk);
-+			*tail_blk = after_umount_blk;
-+
-+			*clean = true;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-  * Find the sync block number or the tail of the log.
-  *
-  * This will be the block number of the last record to have its
-@@ -1220,16 +1298,13 @@ xlog_find_tail(
- 	xfs_daddr_t		*tail_blk)
- {
- 	xlog_rec_header_t	*rhead;
--	xlog_op_header_t	*op_head;
- 	char			*offset = NULL;
- 	xfs_buf_t		*bp;
- 	int			error;
--	xfs_daddr_t		umount_data_blk;
--	xfs_daddr_t		after_umount_blk;
- 	xfs_daddr_t		rhead_blk;
- 	xfs_lsn_t		tail_lsn;
--	int			hblks;
- 	bool			wrapped = false;
-+	bool			clean = false;
- 
- 	/*
- 	 * Find previous log record
-@@ -1300,66 +1375,24 @@ xlog_find_tail(
- 					BBTOB(log->l_curr_block));
- 	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
- 					BBTOB(log->l_curr_block));
-+	tail_lsn = atomic64_read(&log->l_tail_lsn);
- 
- 	/*
--	 * Look for unmount record.  If we find it, then we know there
--	 * was a clean unmount.  Since 'i' could be the last block in
--	 * the physical log, we convert to a log block before comparing
--	 * to the head_blk.
--	 *
--	 * Save the current tail lsn to use to pass to
--	 * xlog_clear_stale_blocks() below.  We won't want to clear the
--	 * unmount record if there is one, so we pass the lsn of the
--	 * unmount record rather than the block after it.
-+	 * Look for an unmount record at the head of the log. This sets the log
-+	 * state to determine whether recovery is necessary.
- 	 */
--	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		int	h_size = be32_to_cpu(rhead->h_size);
--		int	h_version = be32_to_cpu(rhead->h_version);
--
--		if ((h_version & XLOG_VERSION_2) &&
--		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
--			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
--			if (h_size % XLOG_HEADER_CYCLE_SIZE)
--				hblks++;
--		} else {
--			hblks = 1;
--		}
--	} else {
--		hblks = 1;
--	}
--	after_umount_blk = rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len));
--	after_umount_blk = do_mod(after_umount_blk, log->l_logBBsize);
--	tail_lsn = atomic64_read(&log->l_tail_lsn);
--	if (*head_blk == after_umount_blk &&
--	    be32_to_cpu(rhead->h_num_logops) == 1) {
--		umount_data_blk = rhead_blk + hblks;
--		umount_data_blk = do_mod(umount_data_blk, log->l_logBBsize);
--		error = xlog_bread(log, umount_data_blk, 1, bp, &offset);
--		if (error)
--			goto done;
--
--		op_head = (xlog_op_header_t *)offset;
--		if (op_head->oh_flags & XLOG_UNMOUNT_TRANS) {
--			/*
--			 * Set tail and last sync so that newly written
--			 * log records will point recovery to after the
--			 * current unmount record.
--			 */
--			xlog_assign_atomic_lsn(&log->l_tail_lsn,
--					log->l_curr_cycle, after_umount_blk);
--			xlog_assign_atomic_lsn(&log->l_last_sync_lsn,
--					log->l_curr_cycle, after_umount_blk);
--			*tail_blk = after_umount_blk;
-+	error = xlog_check_unmount_rec(log, head_blk, tail_blk, rhead,
-+				       rhead_blk, bp, &clean);
-+	if (error)
-+		goto done;
- 
--			/*
--			 * Note that the unmount was clean. If the unmount
--			 * was not clean, we need to know this to rebuild the
--			 * superblock counters from the perag headers if we
--			 * have a filesystem using non-persistent counters.
--			 */
--			log->l_mp->m_flags |= XFS_MOUNT_WAS_CLEAN;
--		}
--	}
-+	/*
-+	 * Note that the unmount was clean. If the unmount was not clean, we
-+	 * need to know this to rebuild the superblock counters from the perag
-+	 * headers if we have a filesystem using non-persistent counters.
-+	 */
-+	if (clean)
-+		log->l_mp->m_flags |= XFS_MOUNT_WAS_CLEAN;
- 
- 	/*
- 	 * Make sure that there are no blocks in front of the head
--- 
-2.4.3
+>  kernel/locking/rwsem-xadd.c |    4 +++-
+>  kernel/locking/semaphore.c  |    4 +++-
+
+The patch adds slight overhead and there will be other uninitialized
+list_heads around the place and more will turn up in the future.
+
+I don't see how list_force_poison is fixable, really - we're relying
+upon some uninitialized word of memory not having some particular value.
+Good luck with that.
+
+Maybe we simply remove list_force_poison() - it isn't terribly
+important?
+
+	/* ZONE_DEVICE pages must never appear on a slab lru */
+
+Can we instead add a check of page_zone(page) into the lru-addition
+sites?  There are probably quite a few possible places.  (Why does the
+comment say "slab"?).
 
 _______________________________________________
 xfs mailing list
