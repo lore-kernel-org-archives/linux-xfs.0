@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE56F7CA1
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 09:17:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9254130404E
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 07:17:15 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Ku1SLiOkhsglvSDJ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 03 Mar 2016 07:17:13 -0800 (PST)
-Date: Thu, 3 Mar 2016 10:17:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: build bios directly in xfs_add_to_ioend
-Message-ID: <20160303151710.GA57990@bfoster.bfoster>
-References: <1456302011-18915-1-git-send-email-hch@lst.de>
-	<1456302011-18915-2-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6BF3B7CBB
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 10:28:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3BC648F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 08:28:04 -0800 (PST)
+Received: from mail-oi0-f53.google.com (mail-oi0-f53.google.com
+	[209.85.218.53]) by cuda.sgi.com with ESMTP id 9MGEIHHrYQycqXvr
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 01 Mar 2016 08:27:59 -0800 (PST)
+Received: by mail-oi0-f53.google.com with SMTP id d205so49899270oia.0
+	for <xfs@oss.sgi.com>; Tue, 01 Mar 2016 08:27:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1456302011-18915-2-git-send-email-hch@lst.de>
+In-Reply-To: <20160301080057.GL11419@eguan.usersys.redhat.com>
+References: <20160227130256.GJ11419@eguan.usersys.redhat.com>
+	<CAPcyv4gZKzUsch2RQm-QQWuUHtmtQerz2fstCwbwaMjyzYvwrA@mail.gmail.com>
+	<20160228053158.GK11419@eguan.usersys.redhat.com>
+	<CAPcyv4jNhCkStvwtS54FjJVWAfvMv-gEDjHWq3V7_YTOmk+W2g@mail.gmail.com>
+	<20160301080057.GL11419@eguan.usersys.redhat.com>
+Date: Tue, 1 Mar 2016 08:27:58 -0800
+Message-ID: <CAPcyv4hLqJQ6xQ+ifhi4q=wdEP=AJGLZ0Ep-KoEvq20EiP5EbQ@mail.gmail.com>
+Subject: Re: generic/320 triggers "list_add attempted on force-poisoned entry"
+	warning on XFS
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,240 +36,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, XFS Developers <xfs@oss.sgi.com>
 
-On Wed, Feb 24, 2016 at 09:20:09AM +0100, Christoph Hellwig wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Currently adding a buffer to the ioend and then building a bio from
-> the buffer list are two separate operations. We don't build the bios
-> and submit them until the ioend is submitted, and this places a
-> fixed dependency on bufferhead chaining in the ioend.
-> 
-> The first step to removing the bufferhead chaining in the ioend is
-> on the IO submission side. We can build the bio directly as we add
-> the buffers to the ioend chain, thereby removing the need for a
-> latter "buffer-to-bio" submission loop. This allows us to submit
-> bios on large ioends as soon as we cannot add more data to the bio.
-> 
-> These bios then get captured by the active plug, and hence will be
-> dispatched as soon as either the plug overflows or we schedule away
-> from the writeback context. This will reduce submission latency for
-> large IOs, but will also allow more timely request queue based
-> writeback blocking when the device becomes congested.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+On Tue, Mar 1, 2016 at 12:00 AM, Eryu Guan <eguan@redhat.com> wrote:
+> On Mon, Feb 29, 2016 at 10:22:06AM -0800, Dan Williams wrote:
+>> On Sat, Feb 27, 2016 at 9:31 PM, Eryu Guan <eguan@redhat.com> wrote:
+>> > On Sat, Feb 27, 2016 at 12:10:51PM -0800, Dan Williams wrote:
+>> >> On Sat, Feb 27, 2016 at 5:02 AM, Eryu Guan <eguan@redhat.com> wrote:
+>> >> > Hi,
+>> >> >
+>> >> > Starting from 4.5-rc1 kernel, I sometimes see generic/320 triggers
+>> >> > "list_add attempted on force-poisoned entry" warnings on XFS, test hosts
+>> >> > are arm64/ppc64/ppc64le, haven't seen it on x86_64 hosts.
+>> >>
+>> >> Hmm, this triggers when a list_head has ->next or ->prev pointing at
+>> >> the address of force_poison which is only defined in lib/list_debug.c.
+>> >> The only call site that uses list_force_poison() is in
+>> >> devm_memremap_pages().  That currently depends on CONFIG_ZONE_DEVICE
+>> >> which in turn depends on X86_64.
+>> >>
+>> >> So, this appears to be a false positive and the address of
+>> >> force_poison is somehow ending up on the stack by accident as that is
+>> >> the random value being passed in from __down_common:
+>> >>
+>> >>     struct semaphore_waiter waiter;
+>> >>
+>> >>     list_add_tail(&waiter.list, &sem->wait_list);
+>> >>
+>> >> So, I think we need a more unique poison value that should never
+>> >> appear on the stack:
+>> >
+>> > Unfortunately I can still see the warning after applying this test patch.
+>> >
+>> > Then I added debug code to print the pointer value and re-ran the test.
+>> > All five failures printed the same pointer value, failed in the same
+>> > pattern:
+>> >
+>> > list_add attempted on force-poisoned entry(0000000000000500), new->next = c00000000136bc00, new->prev = 0000000000000500
+>> >
+>>
+>> I think this means that no matter what we do the stack will pick up
+>> these poison values unless the list_head is explicitly initialized.
+>> Something like the following:
+>
+> Umm, it's still reproducible... but seems harder than before, it took me
+> 200+ iterations to hit (less than 10 iterations in previous runs)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Similar fix, just in rwsem_down_read_failed() this time:
 
->  fs/xfs/xfs_aops.c | 117 ++++++++++++++++++++++++++----------------------------
->  fs/xfs/xfs_aops.h |   1 +
->  2 files changed, 57 insertions(+), 61 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 7a467b3..90e6e3a 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -274,6 +274,7 @@ xfs_alloc_ioend(
->  	xfs_ioend_t		*ioend;
->  
->  	ioend = mempool_alloc(xfs_ioend_pool, GFP_NOFS);
-> +	memset(ioend, 0, sizeof(*ioend));
->  
->  	/*
->  	 * Set the count to 1 initially, which will prevent an I/O
-> @@ -281,16 +282,9 @@ xfs_alloc_ioend(
->  	 * all the I/O from calling the completion routine too early.
->  	 */
->  	atomic_set(&ioend->io_remaining, 1);
-> -	ioend->io_error = 0;
->  	INIT_LIST_HEAD(&ioend->io_list);
->  	ioend->io_type = type;
->  	ioend->io_inode = inode;
-> -	ioend->io_buffer_head = NULL;
-> -	ioend->io_buffer_tail = NULL;
-> -	ioend->io_offset = 0;
-> -	ioend->io_size = 0;
-> -	ioend->io_append_trans = NULL;
-> -
->  	INIT_WORK(&ioend->io_work, xfs_end_io);
->  	return ioend;
->  }
-> @@ -452,13 +446,18 @@ static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
->  }
->  
->  /*
-> - * Submit all of the bios for an ioend. We are only passed a single ioend at a
-> - * time; the caller is responsible for chaining prior to submission.
-> + * Submit the bio for an ioend. We are passed an ioend with a bio attached to
-> + * it, and we submit that bio. The ioend may be used for multiple bio
-> + * submissions, so we only want to allocate an append transaction for the ioend
-> + * once. In the case of multiple bio submission, each bio will take an IO
-> + * reference to the ioend to ensure that the ioend completion is only done once
-> + * all bios have been submitted and the ioend is really done.
->   *
->   * If @fail is non-zero, it means that we have a situation where some part of
->   * the submission process has failed after we have marked paged for writeback
-> - * and unlocked them. In this situation, we need to fail the ioend chain rather
-> - * than submit it to IO. This typically only happens on a filesystem shutdown.
-> + * and unlocked them. In this situation, we need to fail the bio and ioend
-> + * rather than submit it to IO. This typically only happens on a filesystem
-> + * shutdown.
->   */
->  STATIC int
->  xfs_submit_ioend(
-> @@ -466,48 +465,34 @@ xfs_submit_ioend(
->  	xfs_ioend_t		*ioend,
->  	int			status)
->  {
-> -	struct buffer_head	*bh;
-> -	struct bio		*bio;
-> -	sector_t		lastblock = 0;
-> +	if (!ioend->io_bio || status)
-> +		goto error_finish;
->  
->  	/* Reserve log space if we might write beyond the on-disk inode size. */
-> -	if (!status &&
-> -	     ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
-> +	if (ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend) &&
-> +	    !ioend->io_append_trans) {
->  		status = xfs_setfilesize_trans_alloc(ioend);
-> -	/*
-> -	 * If we are failing the IO now, just mark the ioend with an
-> -	 * error and finish it. This will run IO completion immediately
-> -	 * as there is only one reference to the ioend at this point in
-> -	 * time.
-> -	 */
-> -	if (status) {
-> -		ioend->io_error = status;
-> -		xfs_finish_ioend(ioend);
-> -		return status;
-> +		if (status)
-> +			goto error_finish;
->  	}
->  
-> -	bio = NULL;
-> -	for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
-> -
-> -		if (!bio) {
-> -retry:
-> -			bio = xfs_alloc_ioend_bio(bh);
-> -		} else if (bh->b_blocknr != lastblock + 1) {
-> -			xfs_submit_ioend_bio(wbc, ioend, bio);
-> -			goto retry;
-> -		}
-> -
-> -		if (xfs_bio_add_buffer(bio, bh) != bh->b_size) {
-> -			xfs_submit_ioend_bio(wbc, ioend, bio);
-> -			goto retry;
-> -		}
-> -
-> -		lastblock = bh->b_blocknr;
-> -	}
-> -	if (bio)
-> -		xfs_submit_ioend_bio(wbc, ioend, bio);
-> +	xfs_submit_ioend_bio(wbc, ioend, ioend->io_bio);
-> +	ioend->io_bio = NULL;
->  	xfs_finish_ioend(ioend);
->  	return 0;
-> +
-> +	/*
-> +	 * If we are failing the IO now, just mark the ioend with an error and
-> +	 * finish it, releasing the active bio if there is one.  This will run
-> +	 * IO completion immediately as there is only one reference to the ioend
-> +	 * at this point in time.
-> +	 */
-> +error_finish:
-> +	if (ioend->io_bio)
-> +		bio_put(ioend->io_bio);
-> +	ioend->io_error = status;
-> +	xfs_finish_ioend(ioend);
-> +	return status;
->  }
->  
->  /*
-> @@ -523,27 +508,37 @@ xfs_add_to_ioend(
->  	struct buffer_head	*bh,
->  	xfs_off_t		offset,
->  	struct xfs_writepage_ctx *wpc,
-> +	struct writeback_control *wbc,
->  	struct list_head	*iolist)
->  {
-> -	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
-> -	    bh->b_blocknr != wpc->last_block + 1) {
-> -		struct xfs_ioend	*new;
-> +	struct xfs_ioend	*ioend = wpc->ioend;
->  
-> -		if (wpc->ioend)
-> -			list_add(&wpc->ioend->io_list, iolist);
-> +	if (!ioend || wpc->io_type != ioend->io_type ||
-> +	    bh->b_blocknr != wpc->last_block + 1) {
-> +		if (ioend)
-> +			list_add(&ioend->io_list, iolist);
->  
-> -		new = xfs_alloc_ioend(inode, wpc->io_type);
-> -		new->io_offset = offset;
-> -		new->io_buffer_head = bh;
-> -		new->io_buffer_tail = bh;
-> -		wpc->ioend = new;
-> +		ioend = wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type);
-> +		ioend->io_offset = offset;
-> +		ioend->io_buffer_head = bh;
-> +		ioend->io_buffer_tail = bh;
->  	} else {
-> -		wpc->ioend->io_buffer_tail->b_private = bh;
-> -		wpc->ioend->io_buffer_tail = bh;
-> +		ioend->io_buffer_tail->b_private = bh;
-> +		ioend->io_buffer_tail = bh;
->  	}
-> -
->  	bh->b_private = NULL;
-> -	wpc->ioend->io_size += bh->b_size;
-> +
-> +retry:
-> +	if (!ioend->io_bio)
-> +		ioend->io_bio = xfs_alloc_ioend_bio(bh);
-> +
-> +	if (xfs_bio_add_buffer(ioend->io_bio, bh) != bh->b_size) {
-> +		xfs_submit_ioend_bio(wbc, ioend, ioend->io_bio);
-> +		ioend->io_bio = NULL;
-> +		goto retry;
-> +	}
-> +
-> +	ioend->io_size += bh->b_size;
->  	wpc->last_block = bh->b_blocknr;
->  	xfs_start_buffer_writeback(bh);
->  }
-> @@ -802,7 +797,7 @@ xfs_writepage_map(
->  			lock_buffer(bh);
->  			if (wpc->io_type != XFS_IO_OVERWRITE)
->  				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
-> -			xfs_add_to_ioend(inode, bh, offset, wpc, &submit_list);
-> +			xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
->  			count++;
->  		}
->  
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index 4e01bd5..c89c3bd 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -52,6 +52,7 @@ typedef struct xfs_ioend {
->  	xfs_off_t		io_offset;	/* offset in the file */
->  	struct work_struct	io_work;	/* xfsdatad work queue */
->  	struct xfs_trans	*io_append_trans;/* xact. for size update */
-> +	struct bio		*io_bio;	/* bio being built */
->  } xfs_ioend_t;
->  
->  extern const struct address_space_operations xfs_address_space_operations;
-> -- 
-> 2.1.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/kernel/locking/rwsem-xadd.c b/kernel/locking/rwsem-xadd.c
+index a4d4de05b2d1..68678a20da52 100644
+--- a/kernel/locking/rwsem-xadd.c
++++ b/kernel/locking/rwsem-xadd.c
+@@ -214,8 +214,10 @@ __visible
+struct rw_semaphore __sched *rwsem_down_read_failed(struct rw_semaphore *sem)
+{
+       long count, adjustment = -RWSEM_ACTIVE_READ_BIAS;
+-       struct rwsem_waiter waiter;
+       struct task_struct *tsk = current;
++       struct rwsem_waiter waiter = {
++               .list = LIST_HEAD_INIT(waiter.list),
++       };
+
+       /* set up my own style of waitqueue */
+       waiter.task = tsk;
 
 _______________________________________________
 xfs mailing list
