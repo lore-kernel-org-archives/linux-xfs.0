@@ -1,15 +1,15 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B56367CB1
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 05:46:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 36E32AC002
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 03:46:42 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id B82BA7CBB
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 05:40:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 38B00AC002
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 03:40:49 -0800 (PST)
 Received: from meng.elmk.net (meng.elmk.net [78.142.18.109]) by cuda.sgi.com
-	with ESMTP id 8EEF4wkQS5UpbQ8n for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2016 03:46:39 -0800 (PST)
-Subject: Custom Shaped USB drives
-Message-ID: <32430dbe934295a31a21aa27cd7b9228@surfstitch.com>
-Date: Tue, 01 Mar 2016 12:35:41 +0100
+	with ESMTP id alMosO56wH5RmKZC for <xfs@oss.sgi.com>;
+	Tue, 01 Mar 2016 03:40:47 -0800 (PST)
+Subject: Custom Shaped USB drives with your logo
+Message-ID: <d0adef4bdf188a77a6ce2d6024c47047@swissgear.com>
+Date: Tue, 01 Mar 2016 12:39:53 +0100
 From: "Christina Devlin" <ajondreyy@yahoo.com>
 MIME-Version: 1.0
 Reply-To: borguio@aliyun.com
