@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 77EFE7CBB
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 12:22:39 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3731E7CB9
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 14:45:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E210BAC001
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 10:22:35 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1311F8F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 12:45:41 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 08xFzfVuLzN0ABu5 (version=TLSv1.2
+	ESMTP id 8ohOA4cFHFLDfKQo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 10:22:33 -0800 (PST)
-Date: Tue, 1 Mar 2016 10:22:27 -0800
+	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 12:45:39 -0800 (PST)
+Date: Tue, 1 Mar 2016 12:45:38 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: remove impossible condition
-Message-ID: <20160301182227.GA21238@infradead.org>
-References: <1456404237-18169-1-git-send-email-luisbg@osg.samsung.com>
-	<20160301120814.GA5217@infradead.org>
-	<56D597D5.3040002@osg.samsung.com>
+Subject: Re: ASSERT in xlog_find_verify_log_record during xfs/098
+Message-ID: <20160301204538.GA6371@infradead.org>
+References: <56D5E7DA.3080900@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56D597D5.3040002@osg.samsung.com>
+In-Reply-To: <56D5E7DA.3080900@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,17 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Luis de Bethencourt <luisbg@osg.samsung.com>
-Cc: cmaiolino@redhat.com, darrick.wong@oracle.com, namjae.jeon@samsung.com, bfoster@redhat.com, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, billodo@redhat.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
 
-On Tue, Mar 01, 2016 at 01:23:33PM +0000, Luis de Bethencourt wrote:
-> If you have some specific things in mind that I could fix in the code around
-> this, I am happy to add it to my ToDo list. Or I can continue reading it and
-> let you know of anything I see, so you can confirm before I try to fix it.
+On Tue, Mar 01, 2016 at 01:04:58PM -0600, Eric Sandeen wrote:
+> Should that assert even be there?  Looks like it's gracefully
+> handled, I don't see offhand that anything should have caught
+> this corruption earlier, and we don't really want to bug on disk
+> corruption.  Am I missing something?
 
-I don't think this mess is something I want to let newbies loose on :)
+We used to have a couple of these, especially in log recovery - whoever
+wrote this code probably though trapping on these corruptions for
+a debug kernel makes sense.
 
-Thanks a lot for the patch again!
+I'm fine with dropping them, and a little audit for more of them
+might not hurt.
 
 _______________________________________________
 xfs mailing list
