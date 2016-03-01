@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B2BDA7CB7
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 06:09:16 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 464077CB4
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 06:48:53 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 30F93AC001
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 04:09:13 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F01498F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 04:48:49 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id CjXhi7NJBiIKZeLj (version=TLSv1.2
+	ESMTP id tGikPyH6Rwa08fXH (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 04:09:11 -0800 (PST)
-Date: Tue, 1 Mar 2016 04:09:11 -0800
+	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 04:48:47 -0800 (PST)
+Date: Tue, 1 Mar 2016 04:48:47 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_io: Prevent devide by zero from {pread, pwrite}_random
-Message-ID: <20160301120911.GB5217@infradead.org>
-References: <8760xc3jfu.fsf@openvz.org>
+Subject: Re: [PATCH 2/3] xfs: update icsb freeblocks counter after extent
+	deletion
+Message-ID: <20160301124847.GA3540@infradead.org>
+References: <1456756170-51248-1-git-send-email-bfoster@redhat.com>
+	<1456756170-51248-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <8760xc3jfu.fsf@openvz.org>
+In-Reply-To: <1456756170-51248-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +31,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Feb 25, 2016 at 07:20:53PM +0400, Dmitry Monakhov wrote:
+On Mon, Feb 29, 2016 at 09:29:29AM -0500, Brian Foster wrote:
+> xfs_bunmapi() currently updates the icsb fdblocks counter, unreserves
+> quota, etc. before the extent is deleted by xfs_bmap_del_extent(). The
+> function has problems dividing up the indirect reserved blocks for
+> scenarios where a single delalloc extent is split in two. Particularly,
+> there aren't always enough blocks reserved for multiple extents in a
+> single extent reservation.
 > 
-> Math is wrong if range requested is less or equals to block size
+> The solution to this problem is to allow the extent removal code to
+> steal from the deleted extent to meet indirect reservation requirements.
+> Move the block of code in xfs_bmapi() that updates the icsb fdblocks
+> counter to after the call to xfs_bmap_del_extent() to allow the codepath
+> to update the extent record before the free blocks are accounted. Also,
+> reshuffle the code slightly so the delalloc accounting occurs near the
+> xfs_bmap_del_extent() call to provide context for the comments.
 > 
-> xfs_io -c 'pwrite -b 4k 8k 4k -R' \
->        -c 'pread -b 4k  4k 4k -R' -f file
-> 
-> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
 Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Are we going to see a new testcase that relies on this soon? :)
 
 _______________________________________________
 xfs mailing list
