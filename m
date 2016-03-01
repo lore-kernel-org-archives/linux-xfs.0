@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2A4F67CB7
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 03:18:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 80078AC004
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 01:18:43 -0800 (PST)
-Received: from mail-wm0-f41.google.com (mail-wm0-f41.google.com
-	[74.125.82.41]) by cuda.sgi.com with ESMTP id 3IhG59wwR52Lyqpe
+	by oss.sgi.com (Postfix) with ESMTP id 7000C7CBB
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 15:07:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E559DAC001
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 13:07:12 -0800 (PST)
+Received: from mail-oi0-f44.google.com (mail-oi0-f44.google.com
+	[209.85.218.44]) by cuda.sgi.com with ESMTP id RFD6SCAjpcm2eNwb
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 Mar 2016 01:18:40 -0800 (PST)
-Received: by mail-wm0-f41.google.com with SMTP id p65so22892641wmp.0
-	for <xfs@oss.sgi.com>; Thu, 03 Mar 2016 01:18:40 -0800 (PST)
-Message-ID: <E965894DE8D542788CCE98F72C218C05@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <3685DFAD20214109878873CF81232704@alyakaslap>
-	<20160222212019.GI25832@dastard>
-	<CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
-	<20160222235628.GK25832@dastard>
-	<D5578D3E98EE48B88EA9A1126B671155@alyakaslap>
-	<20160223225926.GN25832@dastard>
-	<BC0CC25E00CE4CEDA1FFDFC0A2F38742@alyakaslap>
-	<20160229211628.GK29057@dastard> <20160301072011.GF30721@dastard>
-In-Reply-To: <20160301072011.GF30721@dastard>
-Subject: Re: xfs resize: primary superblock is not updated immediately
-Date: Thu, 3 Mar 2016 11:18:43 +0200
+	Tue, 01 Mar 2016 13:07:10 -0800 (PST)
+Received: by mail-oi0-f44.google.com with SMTP id m82so138716500oif.1
+	for <xfs@oss.sgi.com>; Tue, 01 Mar 2016 13:07:10 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20160301125340.ffcc278e7f35fc3a28268e08@linux-foundation.org>
+References: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160301125340.ffcc278e7f35fc3a28268e08@linux-foundation.org>
+Date: Tue, 1 Mar 2016 13:07:10 -0800
+Message-ID: <CAPcyv4hxU-JM5mwM_YnZciyEBieVtyPf42QQpZv30HnhbcrTRQ@mail.gmail.com>
+Subject: Re: [RFC PATCH] semaphore: fix uninitialized list_head vs
+	list_force_poison
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,222 +29,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Danny Shavit <danny@zadarastorage.com>, Shyam Kaushik <shyam@zadarastorage.com>, Yair Hershko <yair@zadarastorage.com>, xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Eryu Guan <eguan@redhat.com>, Peter Zijlstra <peterz@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Hello Dave,
-Thanks for the patch! I confirm that it fixes the scenario.
-
-At [1] please find all the blknos that are being used during the log 
-recovery (if that's of any interest).
-
-Thanks,
-Alex.
-
-[1]
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.068647] XFS (dm-0): Mounting 
-V4 Filesystem
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.099664] XFS (dm-0): Starting 
-recovery (logdev: internal)
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.102539] _xfs_buf_find: 
-blkno=0 eofs=200704 >m_sb.sb_dblocks=25088
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.102549] _xfs_buf_find: 
-blkno=0 eofs=200704 >m_sb.sb_dblocks=25088
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.102580] _xfs_buf_find: 
-blkno=0 eofs=200704 >m_sb.sb_dblocks=25088
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.126231] _xfs_buf_find: 
-blkno=1 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.126238] _xfs_buf_find: 
-blkno=1 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.126753] _xfs_buf_find: 
-blkno=2 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.126762] _xfs_buf_find: 
-blkno=2 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.127234] _xfs_buf_find: 
-blkno=50177 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.127244] _xfs_buf_find: 
-blkno=50177 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.127751] _xfs_buf_find: 
-blkno=50178 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.127760] _xfs_buf_find: 
-blkno=50178 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.128224] _xfs_buf_find: 
-blkno=100353 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.128234] _xfs_buf_find: 
-blkno=100353 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.128638] _xfs_buf_find: 
-blkno=100354 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.128646] _xfs_buf_find: 
-blkno=100354 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129054] _xfs_buf_find: 
-blkno=150529 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129062] _xfs_buf_find: 
-blkno=150529 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129449] _xfs_buf_find: 
-blkno=150530 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129459] _xfs_buf_find: 
-blkno=150530 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129739] _xfs_buf_find: 
-blkno=200705 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129746] _xfs_buf_find: 
-blkno=200705 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130051] _xfs_buf_find: 
-blkno=200706 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130061] _xfs_buf_find: 
-blkno=200706 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130317] _xfs_buf_find: 
-blkno=64 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130324] _xfs_buf_find: 
-blkno=64 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130548] _xfs_buf_find: 
-blkno=64 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130560] _xfs_buf_find: 
-blkno=64 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130571] _xfs_buf_find: 
-blkno=2 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130581] _xfs_buf_find: 
-blkno=50178 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130591] _xfs_buf_find: 
-blkno=100354 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130610] _xfs_buf_find: 
-blkno=150530 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130613] _xfs_buf_find: 
-blkno=200706 eofs=204800 >m_sb.sb_dblocks=25600
-Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.130618] XFS (dm-0): Ending 
-recovery (logdev: internal)
-
------Original Message----- 
-From: Dave Chinner
-Sent: 01 March, 2016 9:20 AM
-To: Alex Lyakas
-Cc: Christoph Hellwig ; Danny Shavit ; Shyam Kaushik ; Yair Hershko ; 
-xfs@oss.sgi.com
-Subject: Re: xfs resize: primary superblock is not updated immediately
-
-On Tue, Mar 01, 2016 at 08:16:28AM +1100, Dave Chinner wrote:
-> On Mon, Feb 29, 2016 at 11:47:54AM +0200, Alex Lyakas wrote:
-> Which means it's through the first phase of log recovery and it's
-> not failing in log recovery. i.e. we are now running
-> xfs_initialize_perag_data() after log recovery. So, as I said a
-> couple of posts back up this thread:
+On Tue, Mar 1, 2016 at 12:53 PM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Tue, 01 Mar 2016 11:55:04 -0800 Dan Williams <dan.j.williams@intel.com> wrote:
 >
-> | If log recovery succeeds, then yes, I can see that there is a
-> | problem here because the per-ag tree is not reinitialised after
-> | the superblock is re-read. That's a pretty easy fix, though (3-4
-> | lines of code in xlog_do_recover() to detect a change in
-> | filesystem block count and call xfs_initialize_perag() again..
+>> list_force_poison is a debug mechanism to make sure that ZONE_DEVICE
+>> pages never appear on an lru.  Those pages only exist for enabling DMA
+>> to device discovered memory ranges and are not suitable for general
+>> purpose allocations.  list_force_poison() explicitly initializes a
+>> list_head with a poison value that list_add() can use to detect mistaken
+>> use of page->lru.
+>>
+>> Unfortunately, it seems calling list_add() leads to the poison value
+>> leaking on to the stack and occasionally cause stack-allocated
+>> list_heads to be inadvertently "force poisoned".
+>>
+>>  list_add attempted on force-poisoned entry
+>>  WARNING: at lib/list_debug.c:34
+>>  [..]
+>>  NIP [c00000000043c390] __list_add+0xb0/0x150
+>>  LR [c00000000043c38c] __list_add+0xac/0x150
+>>  Call Trace:
+>>  [c000000fb5fc3320] [c00000000043c38c] __list_add+0xac/0x150 (unreliable)
+>>  [c000000fb5fc33a0] [c00000000081b454] __down+0x4c/0xf8
+>>  [c000000fb5fc3410] [c00000000010b6f8] down+0x68/0x70
+>>  [c000000fb5fc3450] [d0000000201ebf4c] xfs_buf_lock+0x4c/0x150 [xfs]
+>>
+>>  list_add attempted on force-poisoned entry(0000000000000500),
+>>   new->next == d0000000059ecdb0, new->prev == 0000000000000500
+>>  WARNING: at lib/list_debug.c:33
+>>  [..]
+>>  NIP [c00000000042db78] __list_add+0xa8/0x140
+>>  LR [c00000000042db74] __list_add+0xa4/0x140
+>>  Call Trace:
+>>  [c0000004c749f620] [c00000000042db74] __list_add+0xa4/0x140 (unreliable)
+>>  [c0000004c749f6b0] [c0000000008010ec] rwsem_down_read_failed+0x6c/0x1a0
+>>  [c0000004c749f760] [c000000000800828] down_read+0x58/0x60
+>>  [c0000004c749f7e0] [d000000005a1a6bc] xfs_log_commit_cil+0x7c/0x600 [xfs]
+>>
+>> We can squash these uninitialized list_heads as they pop-up as this
+>> patch does, or maybe need to rethink how to implement the
+>> list_force_poison() safety mechanism.
+>
+> Yes, problem.
+>
+>>  kernel/locking/rwsem-xadd.c |    4 +++-
+>>  kernel/locking/semaphore.c  |    4 +++-
+>
+> The patch adds slight overhead and there will be other uninitialized
+> list_heads around the place and more will turn up in the future.
+>
+> I don't see how list_force_poison is fixable, really - we're relying
+> upon some uninitialized word of memory not having some particular value.
+> Good luck with that.
+>
+> Maybe we simply remove list_force_poison() - it isn't terribly
+> important?
+>
+>         /* ZONE_DEVICE pages must never appear on a slab lru */
+>
+> Can we instead add a check of page_zone(page) into the lru-addition
+> sites?
 
-Patch below.
+That's a possibility although I also wanted to catch drivers that
+think they can use page->lru as long as they have a reference against
+the page.  However, moving the safety mechanism to the individual call
+sites guarantees that we'll miss some.  It trades one form of
+wack-a-mole for another, so I think just killing list_force_poison()
+is our best option.
 
--- 
-Dave Chinner
-david@fromorbit.com
+> There are probably quite a few possible places.  (Why does the
+> comment say "slab"?).
 
-
-xfs: reinitialise per-AG structures if geometry changes during recovery
-
-From: Dave Chinner <dchinner@redhat.com>
-
-If a crash occurs immediately after a filesystem grow operation, the
-updated superblock geometry is found only in the log. After we
-recover the log, the superblock is reread and re-initialised and so
-has the new geometry in memory. If the new geometry has more AGs
-than prior to the grow operation, then the new AGs will not have
-in-memory xfs_perag structurea associated with them.
-
-This will result in an oops when the first metadata buffer from a
-new AG is looked up in the buffer cache, as the block lies within
-the new geometry but then fails to find a perag structure on lookup.
-This is easily fixed by simply re-initialising the perag structure
-after re-reading the superblock at the conclusion of the first pahse
-of log recovery.
-
-This, however, does not fix the case of log recovery requiring
-access to metadata in the newly grown space. Fortunately for us,
-because the in-core superblock has not been updated, this will
-result in detection of access beyond the end of the filesystem
-and so recovery will fail at that point. If this proves to be
-a problem, then we can address it separately to the current
-reported issue.
-
-Reported-by: Alex Lyakas <alex@zadarastorage.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
-1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1dc0e14..520471b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4898,6 +4898,7 @@ xlog_do_recover(
-  xfs_daddr_t head_blk,
-  xfs_daddr_t tail_blk)
-{
-+ struct xfs_mount *mp = log->l_mp;
-  int error;
-  xfs_buf_t *bp;
-  xfs_sb_t *sbp;
-@@ -4912,7 +4913,7 @@ xlog_do_recover(
-  /*
-  * If IO errors happened during recovery, bail out.
-  */
-- if (XFS_FORCED_SHUTDOWN(log->l_mp)) {
-+ if (XFS_FORCED_SHUTDOWN(mp)) {
-  return -EIO;
-  }
-
-@@ -4925,13 +4926,13 @@ xlog_do_recover(
-  * or iunlinks they will have some entries in the AIL; so we look at
-  * the AIL to determine how to set the tail_lsn.
-  */
-- xlog_assign_tail_lsn(log->l_mp);
-+ xlog_assign_tail_lsn(mp);
-
-  /*
-  * Now that we've finished replaying all buffer and inode
-  * updates, re-read in the superblock and reverify it.
-  */
-- bp = xfs_getsb(log->l_mp, 0);
-+ bp = xfs_getsb(mp, 0);
-  bp->b_flags &= ~(XBF_DONE | XBF_ASYNC);
-  ASSERT(!(bp->b_flags & XBF_WRITE));
-  bp->b_flags |= XBF_READ;
-@@ -4939,7 +4940,7 @@ xlog_do_recover(
-
-  error = xfs_buf_submit_wait(bp);
-  if (error) {
-- if (!XFS_FORCED_SHUTDOWN(log->l_mp)) {
-+ if (!XFS_FORCED_SHUTDOWN(mp)) {
-  xfs_buf_ioerror_alert(bp, __func__);
-  ASSERT(0);
-  }
-@@ -4948,14 +4949,17 @@ xlog_do_recover(
-  }
-
-  /* Convert superblock from on-disk format */
-- sbp = &log->l_mp->m_sb;
-+ sbp = &mp->m_sb;
-  xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-- ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
-- ASSERT(xfs_sb_good_version(sbp));
-- xfs_reinit_percpu_counters(log->l_mp);
--
-  xfs_buf_relse(bp);
-
-+ /* re-initialise in-core superblock and geometry structures */
-+ xfs_reinit_percpu_counters(mp);
-+ error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
-+ if (error) {
-+ xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
-+ return error;
-+ }
-
-  xlog_recover_check_summary(log);
+Yeah, it should say zone lru, I was referring to placing a ZONE_DEVICE
+page on a free list that would allow it to be allocated via
+alloc_page().
 
 _______________________________________________
 xfs mailing list
