@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 998487CBB
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 23:09:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 01F00AC001
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 21:09:39 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id R1r8PW53fkl0iofR (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 3B1FB7CB3
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 07:11:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B3308AC001
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 05:11:10 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cCgvZ63MAZ9XZDpJ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 21:09:35 -0800 (PST)
-Date: Tue, 1 Mar 2016 21:09:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix computation of inode btree maxlevels
-Message-ID: <20160302050930.GD27973@birch.djwong.org>
+	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 05:11:05 -0800 (PST)
+Date: Tue, 1 Mar 2016 08:11:03 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/3] xfs: borrow indirect blocks from freed extent when
+	available
+Message-ID: <20160301131103.GB22465@bfoster.bfoster>
+References: <1456756170-51248-1-git-send-email-bfoster@redhat.com>
+	<1456756170-51248-4-git-send-email-bfoster@redhat.com>
+	<20160301130018.GA28675@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160301130018.GA28675@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +32,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Commit 88740da18[1] introduced a function to compute the maximum
-height of the inode btree back in 1994.  Back then, apparently, the
-freespace and inode btrees shared the same geometry; however, it has
-long since been the case that the inode and freespace btrees have
-different record and key sizes.  Therefore, we must use m_inobt_mnr if
-we want a correct calculation/log reservation/etc.
+On Tue, Mar 01, 2016 at 05:00:18AM -0800, Christoph Hellwig wrote:
+> I've been wrapping my head around this since yersterday..
+> 
+> It looks reasonable, but I'd be much more comfortable if you could
+> split this into two patches:
+> 
+>  - one to just factor out a helper to update the temp and temp2
+>    values (great variable names while we're at it..  not your fault,
+>    though)
+>  - one to actually change the algorithm used.
 
-(Yes, this bug has been around for 21 years and ten months.)
+Sure, will do.
 
-(Yes, I was in middle school when this bug was committed. 8-) )
-
-[1] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=88740da18ddd9d7ba3ebaa9502fefc6ef2fd19cd
-
-Historical-research-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_ialloc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 66d702e..22297f9 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2403,8 +2403,8 @@ xfs_ialloc_compute_maxlevels(
- 
- 	maxleafents = (1LL << XFS_INO_AGINO_BITS(mp)) >>
- 		XFS_INODES_PER_CHUNK_LOG;
--	minleafrecs = mp->m_alloc_mnr[0];
--	minnoderecs = mp->m_alloc_mnr[1];
-+	minleafrecs = mp->m_inobt_mnr[0];
-+	minnoderecs = mp->m_inobt_mnr[1];
- 	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
- 	for (level = 1; maxblocks > 1; level++)
- 		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+Brian
 
 _______________________________________________
 xfs mailing list
