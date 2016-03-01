@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7000C7CBB
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 15:07:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E559DAC001
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 13:07:12 -0800 (PST)
-Received: from mail-oi0-f44.google.com (mail-oi0-f44.google.com
-	[209.85.218.44]) by cuda.sgi.com with ESMTP id RFD6SCAjpcm2eNwb
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2016 13:07:10 -0800 (PST)
-Received: by mail-oi0-f44.google.com with SMTP id m82so138716500oif.1
-	for <xfs@oss.sgi.com>; Tue, 01 Mar 2016 13:07:10 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D15097CBB
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 18:40:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A2A1E304048
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 16:40:32 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	9XtWXa1OSGvHJD3K for <xfs@oss.sgi.com>;
+	Tue, 01 Mar 2016 16:40:27 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aatVX-00051R-8L
+	for xfs@oss.sgi.com; Wed, 02 Mar 2016 10:15:11 +1100
+Date: Wed, 2 Mar 2016 10:15:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs; for-next branch updated to 31bb236
+Message-ID: <20160301231511.GM30721@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160301125340.ffcc278e7f35fc3a28268e08@linux-foundation.org>
-References: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160301125340.ffcc278e7f35fc3a28268e08@linux-foundation.org>
-Date: Tue, 1 Mar 2016 13:07:10 -0800
-Message-ID: <CAPcyv4hxU-JM5mwM_YnZciyEBieVtyPf42QQpZv30HnhbcrTRQ@mail.gmail.com>
-Subject: Re: [RFC PATCH] semaphore: fix uninitialized list_head vs
-	list_force_poison
-From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +25,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4383276065190453898=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Eryu Guan <eguan@redhat.com>, Peter Zijlstra <peterz@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, Ingo Molnar <mingo@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: xfs@oss.sgi.com
 
-On Tue, Mar 1, 2016 at 12:53 PM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> On Tue, 01 Mar 2016 11:55:04 -0800 Dan Williams <dan.j.williams@intel.com> wrote:
->
->> list_force_poison is a debug mechanism to make sure that ZONE_DEVICE
->> pages never appear on an lru.  Those pages only exist for enabling DMA
->> to device discovered memory ranges and are not suitable for general
->> purpose allocations.  list_force_poison() explicitly initializes a
->> list_head with a poison value that list_add() can use to detect mistaken
->> use of page->lru.
->>
->> Unfortunately, it seems calling list_add() leads to the poison value
->> leaking on to the stack and occasionally cause stack-allocated
->> list_heads to be inadvertently "force poisoned".
->>
->>  list_add attempted on force-poisoned entry
->>  WARNING: at lib/list_debug.c:34
->>  [..]
->>  NIP [c00000000043c390] __list_add+0xb0/0x150
->>  LR [c00000000043c38c] __list_add+0xac/0x150
->>  Call Trace:
->>  [c000000fb5fc3320] [c00000000043c38c] __list_add+0xac/0x150 (unreliable)
->>  [c000000fb5fc33a0] [c00000000081b454] __down+0x4c/0xf8
->>  [c000000fb5fc3410] [c00000000010b6f8] down+0x68/0x70
->>  [c000000fb5fc3450] [d0000000201ebf4c] xfs_buf_lock+0x4c/0x150 [xfs]
->>
->>  list_add attempted on force-poisoned entry(0000000000000500),
->>   new->next == d0000000059ecdb0, new->prev == 0000000000000500
->>  WARNING: at lib/list_debug.c:33
->>  [..]
->>  NIP [c00000000042db78] __list_add+0xa8/0x140
->>  LR [c00000000042db74] __list_add+0xa4/0x140
->>  Call Trace:
->>  [c0000004c749f620] [c00000000042db74] __list_add+0xa4/0x140 (unreliable)
->>  [c0000004c749f6b0] [c0000000008010ec] rwsem_down_read_failed+0x6c/0x1a0
->>  [c0000004c749f760] [c000000000800828] down_read+0x58/0x60
->>  [c0000004c749f7e0] [d000000005a1a6bc] xfs_log_commit_cil+0x7c/0x600 [xfs]
->>
->> We can squash these uninitialized list_heads as they pop-up as this
->> patch does, or maybe need to rethink how to implement the
->> list_force_poison() safety mechanism.
->
-> Yes, problem.
->
->>  kernel/locking/rwsem-xadd.c |    4 +++-
->>  kernel/locking/semaphore.c  |    4 +++-
->
-> The patch adds slight overhead and there will be other uninitialized
-> list_heads around the place and more will turn up in the future.
->
-> I don't see how list_force_poison is fixable, really - we're relying
-> upon some uninitialized word of memory not having some particular value.
-> Good luck with that.
->
-> Maybe we simply remove list_force_poison() - it isn't terribly
-> important?
->
->         /* ZONE_DEVICE pages must never appear on a slab lru */
->
-> Can we instead add a check of page_zone(page) into the lru-addition
-> sites?
 
-That's a possibility although I also wanted to catch drivers that
-think they can use page->lru as long as they have a reference against
-the page.  However, moving the safety mechanism to the individual call
-sites guarantees that we'll miss some.  It trades one form of
-wack-a-mole for another, so I think just killing list_force_poison()
-is our best option.
+--===============4383276065190453898==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WYTEVAkct0FjGQmd"
+Content-Disposition: inline
 
-> There are probably quite a few possible places.  (Why does the
-> comment say "slab"?).
 
-Yeah, it should say zone lru, I was referring to placing a ZONE_DEVICE
-page on a free list that would allow it to be allocated via
-alloc_page().
+--WYTEVAkct0FjGQmd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The for-next branch of the xfs kernel repository at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+has just been updated.
+
+The new head of the for-next branch is commit:
+
+31bb236 Merge branch 'xfs-misc-fixes-4.6-2' into for-next
+
+New Commits:
+
+Christoph Hellwig (1):
+      [a7e5d03] xfs: remove xfs_trans_get_block_res
+
+Colin Ian King (1):
+      [5d518bd] xfs: fix format specifier , should be %llx and not %llu
+
+Dave Chinner (1):
+      [31bb236] Merge branch 'xfs-misc-fixes-4.6-2' into for-next
+
+Eric Sandeen (3):
+      [2e74af0] xfs: convert mount option parsing to tokens
+      [a08ee40] xfs: sanitize remount options
+      [12c3f05] xfs: fix up inode32/64 (re)mount handling
+
+Mateusz Guzik (1):
+      [2e83b79] xfs: fix two memory leaks in xfs_attr_list.c error paths
+
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_bmap.c       |   6 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c |   4 +-
+ fs/xfs/xfs_attr_list.c         |  19 +-
+ fs/xfs/xfs_discard.c           |   2 +-
+ fs/xfs/xfs_mount.c             |  20 +-
+ fs/xfs/xfs_mount.h             |   5 +-
+ fs/xfs/xfs_super.c             | 525 +++++++++++++++++++++++--------------=
+------
+ fs/xfs/xfs_super.h             |   4 +-
+ fs/xfs/xfs_trans.h             |   1 -
+ 9 files changed, 304 insertions(+), 282 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--WYTEVAkct0FjGQmd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJW1iJ+AAoJEK3oKUf0dfodUrsP/i9U30bIJeSd2dmoGQlKPtL4
+zpgTEu13ZVN+XjpFeV0OViAze0aG8ITlNKmSGERN3sx05IhbugfHJM6ok7YOvxfj
+m9si6G66eoAAb2MJUrfjh9XZoq59mpWmOehjidrAqB9+YGDABhp1rMdlCg+xXgTr
+PGbT/53/buwxoVN7FI32bo2sdSVAV17GUfla3Dh+d4wKUKud3J4vw2jx2K8VBoqM
+4HezNR0qml96+85F/hZ1oauzbP0AGTg8aRCUc/2DbdZCX7SoRS80cyGMXl5FASis
+/UZYk1sUeXLnIGTOsifqgE+98ycYg5oFtEPYZTLDvf070KbBvEEZxn/dsN87OubN
+EywjdB3xO9mfFWCyyuZZdIR1Xp5h/OPaf1wvD6P2g3MBCNd1vjTbpvRPydEE7lVb
+yRrFOivTTkHjr58RqK3C384FQzpXEatYeDP7jOPT7aO6KfPa/BpfYvEurCdBlBu8
+1cYcVvGR90o8dwXjcz3NHHpeGic4GNjUirnuoBNv7mE67K5gfeVti4QjVHbVyTZD
+PtJUC5TaEqkNJk1eOUok5lEyU1wyoTzMpHqCq+qK4k/4Acq/rkJ4evTkKFTZ9mE5
+8rtrSMG7u6QP+HM4Canu+JZhykRTA636FiqO434x3un1xTY0yf9pMofboozwW4uP
+T4rWjxcszb7+lmtEnc6u
+=eLos
+-----END PGP SIGNATURE-----
+
+--WYTEVAkct0FjGQmd--
+
+
+--===============4383276065190453898==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4383276065190453898==--
