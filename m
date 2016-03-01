@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3B1FB7CB3
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 07:11:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B3308AC001
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 05:11:10 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cCgvZ63MAZ9XZDpJ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 05:11:05 -0800 (PST)
-Date: Tue, 1 Mar 2016 08:11:03 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: borrow indirect blocks from freed extent when
-	available
-Message-ID: <20160301131103.GB22465@bfoster.bfoster>
-References: <1456756170-51248-1-git-send-email-bfoster@redhat.com>
-	<1456756170-51248-4-git-send-email-bfoster@redhat.com>
-	<20160301130018.GA28675@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1CF0C7CB7
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 06:08:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E501F304032
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 04:08:23 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Fp9Y418dBjsWaGnl (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 04:08:21 -0800 (PST)
+Date: Tue, 1 Mar 2016 04:08:14 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: remove impossible condition
+Message-ID: <20160301120814.GA5217@infradead.org>
+References: <1456404237-18169-1-git-send-email-luisbg@osg.samsung.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160301130018.GA28675@infradead.org>
+In-Reply-To: <1456404237-18169-1-git-send-email-luisbg@osg.samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,23 +29,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Luis de Bethencourt <luisbg@osg.samsung.com>
+Cc: cmaiolino@redhat.com, darrick.wong@oracle.com, namjae.jeon@samsung.com, bfoster@redhat.com, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, billodo@redhat.com
 
-On Tue, Mar 01, 2016 at 05:00:18AM -0800, Christoph Hellwig wrote:
-> I've been wrapping my head around this since yersterday..
-> 
-> It looks reasonable, but I'd be much more comfortable if you could
-> split this into two patches:
-> 
->  - one to just factor out a helper to update the temp and temp2
->    values (great variable names while we're at it..  not your fault,
->    though)
->  - one to actually change the algorithm used.
+On Thu, Feb 25, 2016 at 12:43:57PM +0000, Luis de Bethencourt wrote:
+> bp_release is set to 0 just before the breakpoint of the for loop before
+> the conditional check (in line 458). The other breakpoint is a goto that
+> skips the dead code.
 
-Sure, will do.
+Yes, this looks correct:
 
-Brian
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+The whole code around this is rather grotty and could use some more
+work, though..
 
 _______________________________________________
 xfs mailing list
