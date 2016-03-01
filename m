@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 694207CB7
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 22:38:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3BFC48F8033
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 20:38:57 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AkKkGbagiAyIvIU5 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 20:38:53 -0800 (PST)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfs/137: require scratch to be CRC enabled XFS
-Date: Thu,  3 Mar 2016 12:38:19 +0800
-Message-Id: <1456979899-7221-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0E1C17CBB
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 15:42:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 82AA4AC001
+	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 13:42:26 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	PmBUFP448MWwcAKF for <xfs@oss.sgi.com>;
+	Tue, 01 Mar 2016 13:42:23 -0800 (PST)
+Date: Wed, 2 Mar 2016 08:42:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: futher writeback updates
+Message-ID: <20160301214222.GK30721@dastard>
+References: <1456302011-18915-1-git-send-email-hch@lst.de>
+	<20160301130113.GA3901@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160301130113.GA3901@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,40 +26,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-This test is only valid for CRC enabled XFS, and test fails with
-MKFS_OPTIONS="-m crc=0" being set (no mount failure detected).
+On Tue, Mar 01, 2016 at 05:01:13AM -0800, Christoph Hellwig wrote:
+> Any comments?
 
-Fix it by adding _require_scratch_xfs_crc, which ensures scratch device
-has CRC support and enabled.
+I pulled them in to my testing stack yesterday afternoon.  There's a
+good chance I'll end up delaying commiting these to the next merge
+window, simply because I don't have the bandwidth at this point to
+process any more significant changes to the for-next tree.  I think
+it's much more important right now to get the rmap/reflink in the
+the 4.6 merge window than these writeback changes.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- tests/xfs/137 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/tests/xfs/137 b/tests/xfs/137
-index f162264..dec9fc9 100755
---- a/tests/xfs/137
-+++ b/tests/xfs/137
-@@ -52,7 +52,7 @@ rm -f $seqres.full
- _supported_fs xfs
- _supported_os Linux
- _require_scratch
--_require_xfs_crc
-+_require_scratch_xfs_crc
- _require_xfs_db_command "logformat"
- 
- _scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
