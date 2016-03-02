@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CBBF67CBB
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 15:44:57 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E94027CB4
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 10:57:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B7E2304039
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 13:44:57 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	wmBorXALxRsaDxuC for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2016 13:44:56 -0800 (PST)
-Subject: [PATCH] list: kill list_force_poison()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 01 Mar 2016 13:44:32 -0800
-Message-ID: <20160301214432.4473.76919.stgit@dwillia2-desk3.amr.corp.intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A97D58F8039
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 08:57:06 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id LzJIMQCKsyMPa7sN (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 08:57:04 -0800 (PST)
+Date: Wed, 2 Mar 2016 08:57:04 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: block allocations for the refcount btree
+Message-ID: <20160302165704.GA31438@infradead.org>
+References: <20160210093011.GA19147@infradead.org>
+	<20160210095010.GC23904@birch.djwong.org>
+	<20160210190738.GA13051@infradead.org>
+	<20160210214058.GN14668@dastard>
+	<20160212191046.GA28421@infradead.org>
+	<20160301181809.GC27973@birch.djwong.org>
+	<20160301204013.GA23128@infradead.org>
+	<20160302052411.GB1902@birch.djwong.org>
+	<20160302095932.GA9141@infradead.org>
+	<20160302164102.GA20109@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160302164102.GA20109@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,118 +38,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: akpm@linux-foundation.org
-Cc: linux-mm@kvack.org, Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Given we have uninitialized list_heads being passed to list_add() it
-will always be the case that those uninitialized values randomly trigger
-the poison value.  Especially since a list_add() operation will seed the
-stack with the poison value for later stack allocations to trip over.
-For example, see these two false positive reports:
+On Wed, Mar 02, 2016 at 08:41:02AM -0800, Darrick J. Wong wrote:
+> Hmm, I'll give it a spin when I get in later.  Can you send me xfs_info
+> output so I can try to construct an equivalent reproducer setup?
 
- list_add attempted on force-poisoned entry
- WARNING: at lib/list_debug.c:34
- [..]
- NIP [c00000000043c390] __list_add+0xb0/0x150
- LR [c00000000043c38c] __list_add+0xac/0x150
- Call Trace:
- [c000000fb5fc3320] [c00000000043c38c] __list_add+0xac/0x150 (unreliable)
- [c000000fb5fc33a0] [c00000000081b454] __down+0x4c/0xf8
- [c000000fb5fc3410] [c00000000010b6f8] down+0x68/0x70
- [c000000fb5fc3450] [d0000000201ebf4c] xfs_buf_lock+0x4c/0x150 [xfs]
-
- list_add attempted on force-poisoned entry(0000000000000500),
-  new->next == d0000000059ecdb0, new->prev == 0000000000000500
- WARNING: at lib/list_debug.c:33
- [..]
- NIP [c00000000042db78] __list_add+0xa8/0x140
- LR [c00000000042db74] __list_add+0xa4/0x140
- Call Trace:
- [c0000004c749f620] [c00000000042db74] __list_add+0xa4/0x140 (unreliable)
- [c0000004c749f6b0] [c0000000008010ec] rwsem_down_read_failed+0x6c/0x1a0
- [c0000004c749f760] [c000000000800828] down_read+0x58/0x60
- [c0000004c749f7e0] [d000000005a1a6bc] xfs_log_commit_cil+0x7c/0x600 [xfs]
-
-Reported-by: Eryu Guan <eguan@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: <xfs@oss.sgi.com>
-Fixes: commit 5c2c2587b132 ("mm, dax, pmem: introduce {get|put}_dev_pagemap() for dax-gup")
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- include/linux/list.h |   11 -----------
- kernel/memremap.c    |    9 +++++++--
- lib/list_debug.c     |    9 ---------
- 3 files changed, 7 insertions(+), 22 deletions(-)
-
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 30cf4200ab40..5356f4d661a7 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -113,17 +113,6 @@ extern void __list_del_entry(struct list_head *entry);
- extern void list_del(struct list_head *entry);
- #endif
- 
--#ifdef CONFIG_DEBUG_LIST
--/*
-- * See devm_memremap_pages() which wants DEBUG_LIST=y to assert if one
-- * of the pages it allocates is ever passed to list_add()
-- */
--extern void list_force_poison(struct list_head *entry);
--#else
--/* fallback to the less strict LIST_POISON* definitions */
--#define list_force_poison list_del
--#endif
--
- /**
-  * list_replace - replace old entry by new one
-  * @old : the element to be replaced
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index b981a7b023f0..778191e3e887 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -351,8 +351,13 @@ void *devm_memremap_pages(struct device *dev, struct resource *res,
- 	for_each_device_pfn(pfn, page_map) {
- 		struct page *page = pfn_to_page(pfn);
- 
--		/* ZONE_DEVICE pages must never appear on a slab lru */
--		list_force_poison(&page->lru);
-+		/*
-+		 * ZONE_DEVICE pages union ->lru with a ->pgmap back
-+		 * pointer.  It is a bug if a ZONE_DEVICE page is ever
-+		 * freed or placed on a driver-private list.  Seed the
-+		 * storage with LIST_POISON* values.
-+		 */
-+		list_del(&page->lru);
- 		page->pgmap = pgmap;
- 	}
- 	devres_add(dev, page_map);
-diff --git a/lib/list_debug.c b/lib/list_debug.c
-index 3345a089ef7b..3859bf63561c 100644
---- a/lib/list_debug.c
-+++ b/lib/list_debug.c
-@@ -12,13 +12,6 @@
- #include <linux/kernel.h>
- #include <linux/rculist.h>
- 
--static struct list_head force_poison;
--void list_force_poison(struct list_head *entry)
--{
--	entry->next = &force_poison;
--	entry->prev = &force_poison;
--}
--
- /*
-  * Insert a new entry between two known consecutive entries.
-  *
-@@ -30,8 +23,6 @@ void __list_add(struct list_head *new,
- 			      struct list_head *prev,
- 			      struct list_head *next)
- {
--	WARN(new->next == &force_poison || new->prev == &force_poison,
--		"list_add attempted on force-poisoned entry\n");
- 	WARN(next->prev != prev,
- 		"list_add corruption. next->prev should be "
- 		"prev (%p), but was %p. (next=%p).\n",
+root@vm:~/xfstests# xfs_info /mnt/scratch/
+meta-data=/dev/vdc               isize=512    agcount=320, agsize=8192 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=2621440, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 _______________________________________________
 xfs mailing list
