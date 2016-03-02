@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2432B7CB1
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 07:14:52 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E7827CB4
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 09:50:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DBAE2304032
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 05:14:48 -0800 (PST)
-Received: from mail-oi0-f41.google.com (mail-oi0-f41.google.com
-	[209.85.218.41]) by cuda.sgi.com with ESMTP id xyRmzq5Nw7AGSqVX
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Mar 2016 05:14:46 -0800 (PST)
-Received: by mail-oi0-f41.google.com with SMTP id c203so59925504oia.2
-	for <xfs@oss.sgi.com>; Wed, 02 Mar 2016 05:14:46 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9DC41AC001
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 07:50:10 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id NFiCRgp1GsYoGoo8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 07:50:08 -0800 (PST)
+Date: Wed, 2 Mar 2016 07:50:07 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: falloc vs reflink revisited
+Message-ID: <20160302155007.GB7125@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20160301072011.GF30721@dastard>
-References: <3685DFAD20214109878873CF81232704@alyakaslap>
-	<20160222212019.GI25832@dastard>
-	<CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
-	<20160222235628.GK25832@dastard>
-	<D5578D3E98EE48B88EA9A1126B671155@alyakaslap>
-	<20160223225926.GN25832@dastard>
-	<BC0CC25E00CE4CEDA1FFDFC0A2F38742@alyakaslap>
-	<20160229211628.GK29057@dastard> <20160301072011.GF30721@dastard>
-Date: Wed, 2 Mar 2016 14:14:46 +0100
-Message-ID: <CA+o=1OV3U=miqbaxJpPpioWmFnu4zDdb3+PwAdG7=2HtZqVyFQ@mail.gmail.com>
-Subject: Re: xfs resize: primary superblock is not updated immediately
-From: Fanael Linithien <fanael4@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,22 +27,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Danny Shavit <danny@zadarastorage.com>, Shyam Kaushik <shyam@zadarastorage.com>, Yair Hershko <yair@zadarastorage.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Alex Lyakas <alex@zadarastorage.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
-2016-03-01 8:20 GMT+01:00 Dave Chinner <david@fromorbit.com>:
-> than prior to the grow operation, then the new AGs will not have
-> in-memory xfs_perag structurea associated with them.
+Hi Darrick,
 
-                      ^^^^^^^^^^
-structures
+I know that I suggested unsharing blocks on fallocate, but it turns out
+this is causing problems.  Applications expect falloc to be a fast
+metadata operation, and copying a potentially large number of blocks
+is against that expextation.  This is especially bad for the NFS
+server, which should not be blocked for a long time in a synchronous
+operation.
 
-> This is easily fixed by simply re-initialising the perag structure
-> after re-reading the superblock at the conclusion of the first pahse
-> of log recovery.
+I think we'll have to remove the unshare and just fail the fallocate
+for a reflinked region for now.  I still think it makes sense to expose
+an unshare operation, and we probably should make that anyother
+fallocate mode.
 
-                                                                 ^^^^^
-phase
+Opininions?
 
 _______________________________________________
 xfs mailing list
