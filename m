@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B86B67CBB
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 03:45:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B2BAAC007
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 01:45:28 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id grZjdv4Od6z8yVWg (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 01:45:21 -0800 (PST)
-Date: Wed, 2 Mar 2016 01:45:20 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix computation of inode btree maxlevels
-Message-ID: <20160302094520.GA18130@infradead.org>
-References: <20160302050930.GD27973@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160302050930.GD27973@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E33127CB4
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 09:28:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A6869304039
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 07:28:36 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id nskFujAOOoa5JFBQ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 07:28:35 -0800 (PST)
+From: Mateusz Guzik <mguzik@redhat.com>
+Subject: [PATCH] xfs: tidy up xfs_attr_shortform_list
+Date: Wed,  2 Mar 2016 16:28:31 +0100
+Message-Id: <1456932511-19305-1-git-send-email-mguzik@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,24 +21,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>
 
-On Tue, Mar 01, 2016 at 09:09:30PM -0800, Darrick J. Wong wrote:
-> Commit 88740da18[1] introduced a function to compute the maximum
-> height of the inode btree back in 1994.  Back then, apparently, the
-> freespace and inode btrees shared the same geometry; however, it has
-> long since been the case that the inode and freespace btrees have
-> different record and key sizes.
+Remove an unnecessary i == nsbuf test and replace a common label for error
+handling after sbuf is allocated.
 
-I think that's always been the case, so this has been buggy since
-day one.  Congrat for gfinding one of the probably oldest bugs so far!
+Signed-off-by: Mateusz Guzik <mguzik@redhat.com>
+---
+ fs/xfs/xfs_attr_list.c | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 4fa1482..7129fbc 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -74,7 +74,7 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 	xfs_attr_sf_entry_t *sfe;
+ 	xfs_inode_t *dp;
+ 	int sbsize, nsbuf, count, i;
+-	int error;
++	int error = 0;
+ 
+ 	ASSERT(context != NULL);
+ 	dp = context->dp;
+@@ -146,8 +146,8 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 			XFS_CORRUPTION_ERROR("xfs_attr_shortform_list",
+ 					     XFS_ERRLEVEL_LOW,
+ 					     context->dp->i_mount, sfe);
+-			kmem_free(sbuf);
+-			return -EFSCORRUPTED;
++			error = -EFSCORRUPTED;
++			goto out;
+ 		}
+ 
+ 		sbp->entno = i;
+@@ -183,10 +183,6 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 			break;
+ 		}
+ 	}
+-	if (i == nsbuf) {
+-		kmem_free(sbuf);
+-		return 0;
+-	}
+ 
+ 	/*
+ 	 * Loop putting entries into the user buffer.
+@@ -202,17 +198,16 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 					sbp->namelen,
+ 					sbp->valuelen,
+ 					&sbp->name[sbp->namelen]);
+-		if (error) {
+-			kmem_free(sbuf);
+-			return error;
+-		}
++		if (error)
++			break;
+ 		if (context->seen_enough)
+ 			break;
+ 		cursor->offset++;
+ 	}
+ 
++out:
+ 	kmem_free(sbuf);
+-	return 0;
++	return error;
+ }
+ 
+ STATIC int
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
