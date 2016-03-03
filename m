@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B2AF67CB9
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 14:53:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 644A9304039
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 12:53:45 -0800 (PST)
-Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
-	[140.211.169.12]) by cuda.sgi.com with ESMTP id
-	ofCeHJbn87LtiROb (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9AEED7CAE
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 06:40:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 65D9A8F8040
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 04:40:02 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kjKQJbbB8BTXh08v (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Mar 2016 12:53:42 -0800 (PST)
-Date: Tue, 1 Mar 2016 12:53:40 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [RFC PATCH] semaphore: fix uninitialized list_head vs
-	list_force_poison
-Message-Id: <20160301125340.ffcc278e7f35fc3a28268e08@linux-foundation.org>
-In-Reply-To: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <20160301195504.40400.79558.stgit@dwillia2-desk3.amr.corp.intel.com>
-Mime-Version: 1.0
+	<xfs@oss.sgi.com>; Thu, 03 Mar 2016 04:40:00 -0800 (PST)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 3/4] xfs: refactor in-core log state update to helper
+Date: Thu,  3 Mar 2016 07:39:57 -0500
+Message-Id: <1457008798-58734-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1457008798-58734-1-git-send-email-bfoster@redhat.com>
+References: <1457008798-58734-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,73 +23,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Eryu Guan <eguan@redhat.com>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: xfs@oss.sgi.com
+Cc: Jan Beulich <JBeulich@suse.com>
 
-On Tue, 01 Mar 2016 11:55:04 -0800 Dan Williams <dan.j.williams@intel.com> wrote:
+Once the record at the head of the log is identified and verified, the
+in-core log state is updated based on the record. This includes
+information such as the current head block and cycle, the start block of
+the last record written to the log, the tail lsn, etc.
 
-> list_force_poison is a debug mechanism to make sure that ZONE_DEVICE
-> pages never appear on an lru.  Those pages only exist for enabling DMA
-> to device discovered memory ranges and are not suitable for general
-> purpose allocations.  list_force_poison() explicitly initializes a
-> list_head with a poison value that list_add() can use to detect mistaken
-> use of page->lru.
-> 
-> Unfortunately, it seems calling list_add() leads to the poison value
-> leaking on to the stack and occasionally cause stack-allocated
-> list_heads to be inadvertently "force poisoned".
-> 
->  list_add attempted on force-poisoned entry
->  WARNING: at lib/list_debug.c:34
->  [..]
->  NIP [c00000000043c390] __list_add+0xb0/0x150
->  LR [c00000000043c38c] __list_add+0xac/0x150
->  Call Trace:
->  [c000000fb5fc3320] [c00000000043c38c] __list_add+0xac/0x150 (unreliable)
->  [c000000fb5fc33a0] [c00000000081b454] __down+0x4c/0xf8
->  [c000000fb5fc3410] [c00000000010b6f8] down+0x68/0x70
->  [c000000fb5fc3450] [d0000000201ebf4c] xfs_buf_lock+0x4c/0x150 [xfs]
-> 
->  list_add attempted on force-poisoned entry(0000000000000500),
->   new->next == d0000000059ecdb0, new->prev == 0000000000000500
->  WARNING: at lib/list_debug.c:33
->  [..]
->  NIP [c00000000042db78] __list_add+0xa8/0x140
->  LR [c00000000042db74] __list_add+0xa4/0x140
->  Call Trace:
->  [c0000004c749f620] [c00000000042db74] __list_add+0xa4/0x140 (unreliable)
->  [c0000004c749f6b0] [c0000000008010ec] rwsem_down_read_failed+0x6c/0x1a0
->  [c0000004c749f760] [c000000000800828] down_read+0x58/0x60
->  [c0000004c749f7e0] [d000000005a1a6bc] xfs_log_commit_cil+0x7c/0x600 [xfs]
-> 
-> We can squash these uninitialized list_heads as they pop-up as this
-> patch does, or maybe need to rethink how to implement the
-> list_force_poison() safety mechanism.
+Once torn write detection is conditional, this logic will need to be
+reused. Factor the code to update the in-core log data structures into a
+new helper function. This patch does not change behavior.
 
-Yes, problem.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 52 ++++++++++++++++++++++++++++++------------------
+ 1 file changed, 33 insertions(+), 19 deletions(-)
 
->  kernel/locking/rwsem-xadd.c |    4 +++-
->  kernel/locking/semaphore.c  |    4 +++-
-
-The patch adds slight overhead and there will be other uninitialized
-list_heads around the place and more will turn up in the future.
-
-I don't see how list_force_poison is fixable, really - we're relying
-upon some uninitialized word of memory not having some particular value.
-Good luck with that.
-
-Maybe we simply remove list_force_poison() - it isn't terribly
-important?
-
-	/* ZONE_DEVICE pages must never appear on a slab lru */
-
-Can we instead add a check of page_zone(page) into the lru-addition
-sites?  There are probably quite a few possible places.  (Why does the
-comment say "slab"?).
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 8a240d1..0ebc2b2 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1275,6 +1275,37 @@ xlog_check_unmount_rec(
+ 	return 0;
+ }
+ 
++static void
++xlog_set_state(
++	struct xlog		*log,
++	xfs_daddr_t		head_blk,
++	struct xlog_rec_header	*rhead,
++	xfs_daddr_t		rhead_blk,
++	bool			bump_cycle)
++{
++	/*
++	 * Reset log values according to the state of the log when we
++	 * crashed.  In the case where head_blk == 0, we bump curr_cycle
++	 * one because the next write starts a new cycle rather than
++	 * continuing the cycle of the last good log record.  At this
++	 * point we have guaranteed that all partial log records have been
++	 * accounted for.  Therefore, we know that the last good log record
++	 * written was complete and ended exactly on the end boundary
++	 * of the physical log.
++	 */
++	log->l_prev_block = rhead_blk;
++	log->l_curr_block = (int)head_blk;
++	log->l_curr_cycle = be32_to_cpu(rhead->h_cycle);
++	if (bump_cycle)
++		log->l_curr_cycle++;
++	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
++	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
++	xlog_assign_grant_head(&log->l_reserve_head.grant, log->l_curr_cycle,
++					BBTOB(log->l_curr_block));
++	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
++					BBTOB(log->l_curr_block));
++}
++
+ /*
+  * Find the sync block number or the tail of the log.
+  *
+@@ -1355,26 +1386,9 @@ xlog_find_tail(
+ 		goto done;
+ 
+ 	/*
+-	 * Reset log values according to the state of the log when we
+-	 * crashed.  In the case where head_blk == 0, we bump curr_cycle
+-	 * one because the next write starts a new cycle rather than
+-	 * continuing the cycle of the last good log record.  At this
+-	 * point we have guaranteed that all partial log records have been
+-	 * accounted for.  Therefore, we know that the last good log record
+-	 * written was complete and ended exactly on the end boundary
+-	 * of the physical log.
++	 * Set the log state based on the current head record.
+ 	 */
+-	log->l_prev_block = rhead_blk;
+-	log->l_curr_block = (int)*head_blk;
+-	log->l_curr_cycle = be32_to_cpu(rhead->h_cycle);
+-	if (wrapped)
+-		log->l_curr_cycle++;
+-	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
+-	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+-	xlog_assign_grant_head(&log->l_reserve_head.grant, log->l_curr_cycle,
+-					BBTOB(log->l_curr_block));
+-	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
+-					BBTOB(log->l_curr_block));
++	xlog_set_state(log, *head_blk, rhead, rhead_blk, wrapped);
+ 	tail_lsn = atomic64_read(&log->l_tail_lsn);
+ 
+ 	/*
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
