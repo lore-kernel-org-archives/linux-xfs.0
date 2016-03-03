@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3E7827CB4
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 09:50:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9DC41AC001
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 07:50:10 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id D4D987CA1
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 08:06:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FED0AC004
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 06:05:59 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id NFiCRgp1GsYoGoo8 (version=TLSv1.2
+	ESMTP id GPw3WS89wIdBG8cu (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 07:50:08 -0800 (PST)
-Date: Wed, 2 Mar 2016 07:50:07 -0800
+	<xfs@oss.sgi.com>; Thu, 03 Mar 2016 06:05:57 -0800 (PST)
+Date: Thu, 3 Mar 2016 06:05:56 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: falloc vs reflink revisited
-Message-ID: <20160302155007.GB7125@infradead.org>
+Subject: Re: block allocations for the refcount btree
+Message-ID: <20160303140556.GA26825@infradead.org>
+References: <20160210190738.GA13051@infradead.org>
+	<20160210214058.GN14668@dastard>
+	<20160212191046.GA28421@infradead.org>
+	<20160301181809.GC27973@birch.djwong.org>
+	<20160301204013.GA23128@infradead.org>
+	<20160302052411.GB1902@birch.djwong.org>
+	<20160302095932.GA9141@infradead.org>
+	<20160302164102.GA20109@birch.djwong.org>
+	<20160302165704.GA31438@infradead.org>
+	<20160302212101.GF27973@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160302212101.GF27973@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +39,16 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi Darrick,
+On Wed, Mar 02, 2016 at 01:21:01PM -0800, Darrick J. Wong wrote:
+> Ok.  I think the problem is that making changes to the refcount btree eats
+> up our entire reservation in certain cases.  Can you try the following bandaid?
+> This should give us enough room to handle splitting the btree at both ends
+> of a range that we're refcount-changing.
 
-I know that I suggested unsharing blocks on fallocate, but it turns out
-this is causing problems.  Applications expect falloc to be a fast
-metadata operation, and copying a potentially large number of blocks
-is against that expextation.  This is especially bad for the NFS
-server, which should not be blocked for a long time in a synchronous
-operation.
-
-I think we'll have to remove the unshare and just fail the fallocate
-for a reflinked region for now.  I still think it makes sense to expose
-an unshare operation, and we probably should make that anyother
-fallocate mode.
-
-Opininions?
+This seems to work in general.  I ran into one log related hang when
+running -g auto on nfs, but it's not been reproducible so far.
 
 _______________________________________________
 xfs mailing list
