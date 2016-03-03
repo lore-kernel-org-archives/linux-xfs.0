@@ -1,30 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A0D207CB4
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 10:41:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A8F3AC003
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2016 08:41:31 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id bpzZuAW6UXqPpyOi (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 9D5EF7CB0
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 06:40:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 11678AC004
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2016 04:40:01 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id x45AqlQVdrVZfwHC (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 02 Mar 2016 08:41:29 -0800 (PST)
-Date: Wed, 2 Mar 2016 08:41:02 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: block allocations for the refcount btree
-Message-ID: <20160302164102.GA20109@birch.djwong.org>
-References: <20160210093011.GA19147@infradead.org>
-	<20160210095010.GC23904@birch.djwong.org>
-	<20160210190738.GA13051@infradead.org>
-	<20160210214058.GN14668@dastard>
-	<20160212191046.GA28421@infradead.org>
-	<20160301181809.GC27973@birch.djwong.org>
-	<20160301204013.GA23128@infradead.org>
-	<20160302052411.GB1902@birch.djwong.org>
-	<20160302095932.GA9141@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160302095932.GA9141@infradead.org>
+	<xfs@oss.sgi.com>; Thu, 03 Mar 2016 04:40:00 -0800 (PST)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/4] only run torn log write detection on dirty logs
+Date: Thu,  3 Mar 2016 07:39:54 -0500
+Message-Id: <1457008798-58734-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +21,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jan Beulich <JBeulich@suse.com>
 
-On Wed, Mar 02, 2016 at 01:59:32AM -0800, Christoph Hellwig wrote:
-> On Tue, Mar 01, 2016 at 09:24:11PM -0800, Darrick J. Wong wrote:
-> > I've rebased my trees and pushed them all to github.
-> > 
-> > The for-dave-for-4.6 kernel and progs branches are the giant piles of patches
-> > against Dave's for-next integration trees which (I think) are being reviewed
-> > for 4.6.
-> > 
-> > The for-dave branches are against upstream as they've always been.
-> 
-> BTW, what's the point of for-dave vs for-dave-for-4.6 for xfsprogs?
+Hi all,
 
-for-dave-for-4.6 = all the stuff I'm pushing to Dave for 4.6
-for-dave = all the stuff from my dev tree minus the non-XFS stuff
+This series addresses a problem reported by Jan Beulich here:
 
-("non XFS stuff" means all the ext4 fixes, etc.)
+  http://oss.sgi.com/pipermail/xfs/2016-February/047302.html
 
-> > New patches have been added on the end of the patchset.
-> > 
-> > I noticed that generic/139 crashes for-dave with a 1k block size due something
-> > or other sending us bio->bi_bdev == NULL.  This seems to be sorted out somehow
-> > in for-next.  Other than that I haven't seen any problems... but I've only
-> > run against x64 on bare XFS.  Will run other arches/NFS/etc tonight/tomorrow.
-> > 
-> > The transaction block reservation complaints should be fixed now, and I
-> > think the transaction reservations have been fixed too... or at least they
-> > don't show up on the tinydisk test setup.  But all that means is that someone
-> > else will find it, probably within the first 3 minutes of testing. :P
-> 
-> Passes on NFS without hitting the space reservation issue, and passes
-> on XFS without new regression.  The odd transaction (not space)
-> reservation assert in xfs/140 that I started to myesteriously 100%
-> reproduce last week still is around on XFS.  I'll see if I can fix that
-> or at least triage it further..
+The problem in this particular x86 vs. x86-64 case is that the size of
+some of the log data structures change due to padding (e.g., struct
+xlog_rec_header). The more general problem is that torn log write
+detection unconditionally scans behind an unmount record on a cleanly
+mounted filesystem, and thus can trip over log data that might not have
+been written by the currently running system.
 
-Hmm, I'll give it a spin when I get in later.  Can you send me xfs_info
-output so I can try to construct an equivalent reproducer setup?
+The solution implemented here is to limit torn write detection to when
+the log is dirty. Patches 1-3 refactor the existing code into some new
+helpers such that torn write detection can be made conditional. Patch 4
+reorders the head/tail discovery logic to check for an unmount record at
+the head of the log and run torn write detection only when one is not
+present.
 
---D
+This survives xfstests on x86-64, x86 and ppc64 boxes. I've also run the
+log test group against a test volume that was preserved and passed back
+and forth across all three of the aforementioned arches without a
+problem. Thoughts, reviews, flames appreciated.
+
+Brian
+
+Brian Foster (4):
+  xfs: separate log head record discovery from verification
+  xfs: refactor unmount record detection into helper
+  xfs: refactor in-core log state update to helper
+  xfs: only run torn log write detection on dirty logs
+
+ fs/xfs/xfs_log_recover.c | 271 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 168 insertions(+), 103 deletions(-)
+
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
