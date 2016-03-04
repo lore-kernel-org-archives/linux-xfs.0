@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6BA877CBA
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 06:06:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D483304039
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 04:06:59 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8bAiV7rUicAl6wsJ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Mar 2016 04:06:54 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5D62864D26
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 12:06:53 +0000 (UTC)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [XFSTESTS v4 4/4] generic/338: Add richacl tests
-Date: Wed,  9 Mar 2016 13:06:39 +0100
-Message-Id: <1457525199-15355-6-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
-References: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id C562B7CB3
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 13:13:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C8A0304039
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 11:13:33 -0800 (PST)
+Date: Fri, 4 Mar 2016 14:13:29 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING
+	fs/xfs/xfs_aops.c:1232 xfs_vm_releasepage
+Message-ID: <20160304191329.GC3758@bfoster.bfoster>
+References: <56C81D94.7090603@profihost.ag>
+	<20160220144533.GA36182@bfoster.bfoster>
+	<B833B258-1140-464C-94CD-09B840BD4220@profihost.ag>
+	<56D9D834.2000303@profihost.ag>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <56D9D834.2000303@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,1257 +25,144 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Andreas Gruenbacher <agruenba@redhat.com>
+To: Stefan Priebe <s.priebe@profihost.ag>
+Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Add the Rich Access Control List tests from the richacl package as
-generic/338.  The new test requires SCRATCH_DEV and SCRATCH_MNT to be
-set.  It tries to create and mount a scratch filesystem with richacl
-support before running the tests; if that fails, the richacl tests will
-be skipped.
+On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
+> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
+> >
+> >>Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
+> >>
+> >>>On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
+> >>>Hi,
+> >>>
+> >>>got this one today. Not sure if this is a bug.
+> >>
+> >>That looks like the releasepage() delayed allocation block warning. I'm
+> >>not sure we've had any fixes for (or reports of) that issue since the
+> >>v4.2 timeframe.
+> >>
+> >>What is the xfs_info of the associated filesystem? Also, do you have any
+> >>insight as to the possible reproducer application or workload? Is this
+> >>reproducible at all? Note that this is a WARN_ON_ONCE(), so the warning
+> >>won't fire again regardless until after a reboot.
+> 
+> Toda i got this one running 4.3.3.
+> 
+> [154152.949610] ------------[ cut here ]------------
+> [154152.950704] WARNING: CPU: 0 PID: 79 at fs/xfs/xfs_aops.c:1232
+> xfs_vm_releasepage+0xc3/0xf0()
+> [154152.952596] Modules linked in: netconsole mpt3sas raid_class
+> nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_tcpudp ipt_REJECT
+> nf_reject_ipv4 xt_owner xt_multiport iptable_filter ip_tables x_tables 8021q
+> garp coretemp k8temp ehci_pci ehci_hcd sb_edac ipmi_si usbcore edac_core
+> ipmi_msghandler i2c_i801 usb_common button btrfs xor raid6_pq sg igb sd_mod
+> i2c_algo_bit isci i2c_core libsas ahci ptp libahci scsi_transport_sas
+> megaraid_sas pps_core
+> [154152.963240] CPU: 0 PID: 79 Comm: kswapd0 Not tainted 4.4.3+3-ph #1
+> [154152.964625] Hardware name: Supermicro
+> X9SRE/X9SRE-3F/X9SRi/X9SRi-3F/X9SRE/X9SRE-3F/X9SRi/X9SRi-3F, BIOS 1.0a
+> 03/06/2012
+> [154152.967029]  0000000000000000 ffff88103dd67a98 ffffffffa73c3b5f
+> 0000000000000000
+> [154152.968836]  ffffffffa7a5063b ffff88103dd67ad8 ffffffffa7083757
+> 0000000000000000
+> [154152.970641]  0000000000000001 ffffea0001e7bfc0 ffff88071ef72dd0
+> ffffea0001e7bfe0
+> [154152.972447] Call Trace:
+> [154152.973011]  [<ffffffffa73c3b5f>] dump_stack+0x63/0x84
+> [154152.974167]  [<ffffffffa7083757>] warn_slowpath_common+0x97/0xe0
+> [154152.975515]  [<ffffffffa70837ba>] warn_slowpath_null+0x1a/0x20
+> [154152.976826]  [<ffffffffa7324f23>] xfs_vm_releasepage+0xc3/0xf0
+> [154152.978137]  [<ffffffffa71510b2>] try_to_release_page+0x32/0x50
+> [154152.979467]  [<ffffffffa71659be>] shrink_active_list+0x3ce/0x3e0
+> [154152.980816]  [<ffffffffa7166057>] shrink_lruvec+0x687/0x7d0
+> [154152.982068]  [<ffffffffa716627c>] shrink_zone+0xdc/0x2c0
+> [154152.983262]  [<ffffffffa7167399>] kswapd+0x4f9/0x970
+> [154152.984380]  [<ffffffffa7166ea0>] ?
+> mem_cgroup_shrink_node_zone+0x1a0/0x1a0
+> [154152.985942]  [<ffffffffa70a0ac9>] kthread+0xc9/0xe0
+> [154152.987040]  [<ffffffffa70a0a00>] ? kthread_stop+0x100/0x100
+> [154152.988313]  [<ffffffffa76b03cf>] ret_from_fork+0x3f/0x70
+> [154152.989527]  [<ffffffffa70a0a00>] ? kthread_stop+0x100/0x100
+> [154152.990818] ---[ end trace 3fac2515e92c7cb1 ]---
+> 
+> This time with an xfs info:
+> # xfs_info /
+> meta-data=/dev/disk/by-uuid/9befe321-e9cc-4e31-82df-efabb3211bac isize=256
+> agcount=4, agsize=58224256 blks
+>          =                       sectsz=512   attr=2, projid32bit=0
+>          =                       crc=0        finobt=0
+> data     =                       bsize=4096   blocks=232897024, imaxpct=25
+>          =                       sunit=64     swidth=384 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> log      =internal               bsize=4096   blocks=113728, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- Makefile                  |   2 +-
- common/rc                 |  32 ++++++++
- richacl/Makefile          |  23 ++++++
- richacl/apply-masks       | 163 +++++++++++++++++++++++++++++++++++++++
- richacl/auto-inheritance  | 191 ++++++++++++++++++++++++++++++++++++++++++++++
- richacl/basic             |  97 +++++++++++++++++++++++
- richacl/chmod             |  40 ++++++++++
- richacl/chown             |  42 ++++++++++
- richacl/create            |  36 +++++++++
- richacl/ctime             |  35 +++++++++
- richacl/delete            |  89 +++++++++++++++++++++
- richacl/setrichacl-modify |  57 ++++++++++++++
- richacl/test-lib.sh       | 154 +++++++++++++++++++++++++++++++++++++
- richacl/write-vs-append   |  54 +++++++++++++
- tests/generic/338         |  78 +++++++++++++++++++
- tests/generic/group       |   1 +
- 16 files changed, 1093 insertions(+), 1 deletion(-)
- create mode 100644 richacl/Makefile
- create mode 100755 richacl/apply-masks
- create mode 100755 richacl/auto-inheritance
- create mode 100755 richacl/basic
- create mode 100755 richacl/chmod
- create mode 100755 richacl/chown
- create mode 100755 richacl/create
- create mode 100755 richacl/ctime
- create mode 100755 richacl/delete
- create mode 100755 richacl/setrichacl-modify
- create mode 100644 richacl/test-lib.sh
- create mode 100755 richacl/write-vs-append
- create mode 100755 tests/generic/338
+Can you describe the workload to the filesystem?
 
-diff --git a/Makefile b/Makefile
-index 30d8747..3eec26f 100644
---- a/Makefile
-+++ b/Makefile
-@@ -57,7 +57,7 @@ TOOL_SUBDIRS += dmapi
- endif
- 
- export TESTS_DIR = tests
--SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) $(TESTS_DIR)
-+SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) $(TESTS_DIR) richacl
- 
- default: include/builddefs $(DMAPI_MAKEFILE)
- ifeq ($(HAVE_BUILDDEFS), no)
-diff --git a/common/rc b/common/rc
-index 16f5a43..61e85ad 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1908,6 +1908,38 @@ _require_xfs_db_command()
- 		_notrun "xfs_db $command support is missing"
- }
- 
-+_require_scratch_richacl_xfs()
-+{
-+	_scratch_mkfs_xfs_supported -m richacl=1 >/dev/null 2>&1 \
-+		|| _notrun "mkfs.xfs doesn't have richacl feature"
-+
-+	_scratch_mkfs_xfs -m richacl=1 >/dev/null 2>&1
-+	_scratch_mount >/dev/null 2>&1 \
-+		|| _notrun "kernel doesn't support richacl feature"
-+	_scratch_unmount
-+}
-+
-+__require_scratch_richacl()
-+{
-+	_scratch_mkfs -O richacl >/dev/null 2>&1 \
-+		|| _notrun "can't mkfs $FSTYP with option -O richacl"
-+	_scratch_mount >/dev/null 2>&1 \
-+		|| _notrun "kernel doesn't support richacl feature on $FSTYP"
-+	_scratch_unmount
-+}
-+
-+_require_scratch_richacl()
-+{
-+	case "$FSTYP" in
-+	xfs)	_require_scratch_richacl_xfs
-+		;;
-+	ext4)	__require_scratch_richacl
-+		;;
-+	*)	_notrun "this test requires richacl support on \$SCRATCH_DEV"
-+		;;
-+	esac
-+}
-+
- # check that kernel and filesystem support direct I/O
- _require_odirect()
- {
-diff --git a/richacl/Makefile b/richacl/Makefile
-new file mode 100644
-index 0000000..8d19d1a
---- /dev/null
-+++ b/richacl/Makefile
-@@ -0,0 +1,23 @@
-+#
-+# Copyright (C) 2015  Red Hat, Inc.
-+#
-+
-+TESTS = apply-masks basic chmod chown create delete setrichacl-modify \
-+	write-vs-append ctime auto-inheritance
-+
-+LSRCFILES = test-lib.sh $(TESTS)
-+
-+TOPDIR = ..
-+include $(TOPDIR)/include/builddefs
-+
-+TARGET_DIR = $(PKG_LIB_DIR)/richacl
-+
-+include $(BUILDRULES)
-+
-+install:
-+	$(INSTALL) -m 755 -d $(TARGET_DIR)
-+	$(INSTALL) -m 755 $(TESTS) $(TARGET_DIR)
-+	$(INSTALL) -m 644 test-lib.sh $(TARGET_DIR)
-+
-+# Nothing.
-+install-dev install-lib:
-diff --git a/richacl/apply-masks b/richacl/apply-masks
-new file mode 100755
-index 0000000..8d3493d
---- /dev/null
-+++ b/richacl/apply-masks
-@@ -0,0 +1,163 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_richacls
-+use_testdir
-+
-+ncheck "touch x"
-+ncheck "setrichacl --set 'owner@:rwp::allow group@:rwp::allow everyone@:r::allow' x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'everyone@:wp::allow owner@:r::allow group@:r::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'everyone@:wp::deny owner@:rwp::allow group@:rwp::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'owner@:rwCo::allow' x"
-+check "getrichacl x" <<EOF
-+x:
-+ owner@:rw-------Co--::allow
-+EOF
-+
-+ncheck "setrichacl --set 'owner@:rwpCo::allow' x"
-+check "getrichacl x" <<EOF
-+x:
-+ owner@:rwp----------::allow
-+EOF
-+
-+ncheck "chmod 644 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'u:77:rwp::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+   user:77:rwp----------::allow
-+    group@:r------------::deny
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "chmod 644 x"
-+check "getrichacl --numeric-ids x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+   user:77:r------------::allow
-+    group@:r------------::deny
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+   user:77:rwp----------::allow
-+    group@:r------------::deny
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'u:77:rwp::allow everyone@:r::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+   user:77:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'u:77:r::allow everyone@:rwp::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+   user:77:rwp----------::allow
-+    owner@:rwp----------::allow
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'u:77:wp::deny everyone@:rwp::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+   user:77:-wp----------::deny
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'u:77:rwp::allow u:77:wp::deny everyone@:rwp::allow' x"
-+ncheck "chmod 664 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+   user:77:rwp----------::allow
-+   user:77:-wp----------::deny
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'everyone@:rwp::allow' x"
-+ncheck "chmod 066 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::deny
-+ everyone@:rwp----------::allow
-+EOF
-+
-+ncheck "chmod 006 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::deny
-+    group@:rwp----------::deny
-+ everyone@:rwp----------::allow
-+EOF
-+
-+ncheck "chmod 606 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+    group@:rwp----------::deny
-+ everyone@:rwp----------::allow
-+EOF
-+
-+ncheck "setrichacl --set 'u:77:rwp::allow everyone@:rwp::allow' x"
-+ncheck "chmod 606 x"
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+    group@:rwp----------::deny
-+ everyone@:rwp----------::allow
-+EOF
-+
-+ncheck "chmod 646 x"
-+check "getrichacl x" <<EOF
-+x:
-+   user:77:r------------::allow
-+    owner@:rwp----------::allow
-+    group@:-wp----------::deny
-+   user:77:-wp----------::deny
-+ everyone@:rwp----------::allow
-+EOF
-diff --git a/richacl/auto-inheritance b/richacl/auto-inheritance
-new file mode 100755
-index 0000000..4642125
---- /dev/null
-+++ b/richacl/auto-inheritance
-@@ -0,0 +1,191 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_richacls
-+use_testdir
-+
-+umask 022
-+
-+ncheck "mkdir d1"
-+ncheck "setrichacl --modify u:101:rw:fd:deny d1"
-+ncheck "setrichacl --modify u:102:rw:f:deny d1"
-+ncheck "setrichacl --modify u:103:rw:d:deny d1"
-+ncheck "setrichacl --modify g:101:rw:fdi:deny d1"
-+
-+ncheck "setrichacl --modify flags:a d1"
-+
-+check "getrichacl --numeric --raw d1" <<EOF
-+d1:
-+     flags:a
-+     owner:rwpxd-----------::mask
-+     group:r--x------------::mask
-+     other:r--x------------::mask
-+  user:101:rw--------------:fd:deny
-+  user:102:rw--------------:f:deny
-+  user:103:rw--------------:d:deny
-+ group:101:rw--------------:fdi:deny
-+    owner@:rwpxd-----------::allow
-+ everyone@:r--x------------::allow
-+EOF
-+
-+ncheck "mkdir d1/d2"
-+ncheck "touch d1/d3"
-+
-+# Mode bits derived from inherited ACEs
-+check "getrichacl --numeric --raw d1/d2" <<EOF
-+d1/d2:
-+     flags:map
-+     owner:----------------::mask
-+     group:----------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:fda:deny
-+  user:102:rw--------------:fia:deny
-+  user:103:rw--------------:da:deny
-+ group:101:rw--------------:fda:deny
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d3" <<EOF
-+d1/d3:
-+     flags:map
-+     owner:----------------::mask
-+     group:----------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:a:deny
-+  user:102:rw--------------:a:deny
-+ group:101:rw--------------:a:deny
-+EOF
-+
-+ncheck "mkdir d1/d2/d4"
-+ncheck "touch d1/d2/d4/d5"
-+
-+# Protected files
-+ncheck "mkdir d1/d6"
-+ncheck "touch d1/d7"
-+
-+check "getrichacl --numeric --raw d1/d2/d4" <<EOF
-+d1/d2/d4:
-+     flags:map
-+     owner:----------------::mask
-+     group:----------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:fda:deny
-+  user:102:rw--------------:fia:deny
-+  user:103:rw--------------:da:deny
-+ group:101:rw--------------:fda:deny
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d2/d4/d5" <<EOF
-+d1/d2/d4/d5:
-+     flags:map
-+     owner:----------------::mask
-+     group:----------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:a:deny
-+  user:102:rw--------------:a:deny
-+ group:101:rw--------------:a:deny
-+EOF
-+
-+# Clear protected flag from all the ACLs
-+ncheck "setrichacl --modify flags:a d1/d2"
-+ncheck "setrichacl --modify flags:a d1/d3"
-+ncheck "setrichacl --modify flags:a d1/d2/d4"
-+ncheck "setrichacl --modify flags:a d1/d2/d4/d5"
-+
-+ncheck "getrichacl --numeric d1 | sed -e 's/:fd:deny/:fd:allow/' > acl.txt"
-+check "cat acl.txt" <<EOF
-+d1:
-+     flags:a
-+  user:101:rw-----------:fd:allow
-+  user:102:rw-----------:f:deny
-+  user:103:rw-----------:d:deny
-+ group:101:rw-----------:fdi:deny
-+    owner@:rwpxd--------::allow
-+ everyone@:r--x---------::allow
-+EOF
-+
-+ncheck "setrichacl --set-file acl.txt d1"
-+
-+check "getrichacl --numeric --raw d1" <<EOF
-+d1:
-+     flags:a
-+     owner:rwpxd-----------::mask
-+     group:rw-x------------::mask
-+     other:r--x------------::mask
-+  user:101:rw--------------:fd:allow
-+  user:102:rw--------------:f:deny
-+  user:103:rw--------------:d:deny
-+ group:101:rw--------------:fdi:deny
-+    owner@:rwpxd-----------::allow
-+ everyone@:r--x------------::allow
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d2" <<EOF
-+d1/d2:
-+     flags:a
-+     owner:rw--------------::mask
-+     group:rw--------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:fda:allow
-+  user:102:rw--------------:fia:deny
-+  user:103:rw--------------:da:deny
-+ group:101:rw--------------:fda:deny
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d3" <<EOF
-+d1/d3:
-+     flags:a
-+     owner:rw--------------::mask
-+     group:rw--------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:a:allow
-+  user:102:rw--------------:a:deny
-+ group:101:rw--------------:a:deny
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d2/d4" <<EOF
-+d1/d2/d4:
-+     flags:a
-+     owner:rw--------------::mask
-+     group:rw--------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:fda:allow
-+  user:102:rw--------------:fia:deny
-+  user:103:rw--------------:da:deny
-+ group:101:rw--------------:fda:deny
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d2/d4/d5" <<EOF
-+d1/d2/d4/d5:
-+     flags:a
-+     owner:rw--------------::mask
-+     group:rw--------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:a:allow
-+  user:102:rw--------------:a:deny
-+ group:101:rw--------------:a:deny
-+EOF
-+
-+# No automatic inheritance for protected files
-+check "getrichacl --numeric --raw d1/d6" <<EOF
-+d1/d6:
-+     flags:map
-+     owner:----------------::mask
-+     group:----------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:fda:deny
-+  user:102:rw--------------:fia:deny
-+  user:103:rw--------------:da:deny
-+ group:101:rw--------------:fda:deny
-+EOF
-+
-+check "getrichacl --numeric --raw d1/d7" <<EOF
-+d1/d7:
-+     flags:map
-+     owner:----------------::mask
-+     group:----------------::mask
-+     other:----------------::mask
-+  user:101:rw--------------:a:deny
-+  user:102:rw--------------:a:deny
-+ group:101:rw--------------:a:deny
-+EOF
-diff --git a/richacl/basic b/richacl/basic
-new file mode 100755
-index 0000000..88e378b
---- /dev/null
-+++ b/richacl/basic
-@@ -0,0 +1,97 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_richacls
-+require_getfattr
-+use_testdir
-+
-+umask 022
-+
-+ncheck "touch x"
-+ncheck "setrichacl --set 'everyone@:rwp::allow' x"
-+check "ls -l x | sed -e 's/[. ].*//'" <<EOF
-+-rw-rw-rw-
-+EOF
-+
-+check "getrichacl x" <<EOF
-+x:
-+ everyone@:rwp----------::allow
-+EOF
-+
-+ncheck 'chmod 664 x'
-+check "ls -l x | sed -e 's/[. ].*//'" <<EOF
-+-rw-rw-r--
-+EOF
-+
-+check "getrichacl x" <<EOF
-+x:
-+    owner@:rwp----------::allow
-+    group@:rwp----------::allow
-+ everyone@:r------------::allow
-+EOF
-+
-+# Note that unlike how the test cases look at first sight, we do *not* require
-+# a richacl-enabled version of ls here ...
-+
-+ncheck "mkdir sub"
-+ncheck "setrichacl --set 'everyone@:rwpxd:fd:allow' sub"
-+check "ls -dl sub | sed -e 's/[.+ ].*/+/'" <<EOF
-+drwxrwxrwx+
-+EOF
-+
-+#check 'getfattr sub | grep -e system\.richacl' <<EOF
-+check 'getfattr -m system\.richacl sub' <<EOF
-+# file: sub
-+system.richacl
-+EOF
-+
-+ncheck "chmod 775 sub"
-+check "ls -dl sub | sed -e 's/[.+ ].*/+/'" <<EOF
-+drwxrwxr-x+
-+EOF
-+
-+check 'getfattr -m system\.richacl sub' <<EOF
-+# file: sub
-+system.richacl
-+EOF
-+
-+check "getrichacl sub" <<EOF
-+sub:
-+    owner@:rwpxd--------::allow
-+    group@:rwpxd--------::allow
-+ everyone@:rwpxd--------:fdi:allow
-+ everyone@:r--x---------::allow
-+EOF
-+
-+ncheck "touch sub/f"
-+check "ls -l sub/f | sed -e 's/[. ].*//'" <<EOF
-+-rw-rw-rw-
-+EOF
-+
-+check "getrichacl sub/f" <<EOF
-+sub/f:
-+ everyone@:rwp----------::allow
-+EOF
-+
-+ncheck "mkdir sub/sub2"
-+check "ls -dl sub/sub2 | sed -e 's/[.+ ].*/+/'" <<EOF
-+drwxrwxrwx+
-+EOF
-+
-+check "getrichacl sub/sub2" <<EOF
-+sub/sub2:
-+ everyone@:rwpxd--------:fd:allow
-+EOF
-+
-+ncheck "mkdir -m 750 sub/sub3"
-+check "ls -dl sub/sub3 | sed -e 's/[.+ ].*/+/'" <<EOF
-+drwxr-x---+
-+EOF
-+
-+check "getrichacl sub/sub3" <<EOF
-+sub/sub3:
-+    owner@:rwpxd--------::allow
-+    group@:r--x---------::allow
-+ everyone@:rwpxd--------:fdi:allow
-+EOF
-diff --git a/richacl/chmod b/richacl/chmod
-new file mode 100755
-index 0000000..0020f36
---- /dev/null
-+++ b/richacl/chmod
-@@ -0,0 +1,40 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_runas
-+require_richacls
-+use_testdir
-+
-+export LC_ALL=C
-+
-+# Create file as root
-+ncheck "touch a"
-+
-+# We cannot set the acl as another user
-+runas -u 99 -g 99
-+check "setrichacl --set 'u:99:rwc::allow' a || echo status: \$?" <<EOF
-+a: Operation not permitted
-+status: 1
-+EOF
-+
-+# We cannot chmod as another user
-+check "chmod 666 a || echo status: \$?" <<EOF
-+chmod: changing permissions of 'a': Operation not permitted
-+status: 1
-+EOF
-+
-+# Give user 99 the write_acl permission
-+runas
-+ncheck "setrichacl --set 'u:99:rwpC::allow' a"
-+
-+# Now user 99 can setrichacl and chmod ...
-+runas -u 99 -g 99
-+ncheck "setrichacl --set 'u:99:rwpC::allow' a"
-+ncheck "chmod 666 a"
-+
-+# ... but chmod disables the write_acl permission
-+check "setrichacl --set 'u:99:rwpC::allow' a || echo status: \$?" <<EOF
-+a: Operation not permitted
-+status: 1
-+EOF
-diff --git a/richacl/chown b/richacl/chown
-new file mode 100755
-index 0000000..b8ae1d3
---- /dev/null
-+++ b/richacl/chown
-@@ -0,0 +1,42 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_runas
-+require_richacls
-+use_testdir
-+
-+export LC_ALL=C
-+
-+# Create file as root
-+ncheck "touch a"
-+
-+# Chown and chgrp with no take ownership permission fails
-+runas -u 99 -g 99
-+check "chown 99 a || echo status: \$?" <<EOF
-+chown: changing ownership of 'a': Operation not permitted
-+status: 1
-+EOF
-+check "chgrp 99 a || echo status: \$?" <<EOF
-+chgrp: changing group of 'a': Operation not permitted
-+status: 1
-+EOF
-+
-+# Add the take_ownership permission
-+runas
-+ncheck "setrichacl --set 'u:99:rwpo::allow' a"
-+
-+# Chown and chgrp to a user or group the process is not in fails
-+runas -u 99 -g 99
-+check "chown 100 a || echo status: \$?" <<EOF
-+chown: changing ownership of 'a': Operation not permitted
-+status: 1
-+EOF
-+check "chgrp 100 a || echo status: \$?" <<EOF
-+chgrp: changing group of 'a': Operation not permitted
-+status: 1
-+EOF
-+
-+# Chown and chgrp to a user and group the process is in succeeds
-+ncheck "chown 99 a"
-+ncheck "chgrp 99 a"
-diff --git a/richacl/create b/richacl/create
-new file mode 100755
-index 0000000..f10f05c
---- /dev/null
-+++ b/richacl/create
-@@ -0,0 +1,36 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_runas
-+require_richacls
-+use_testdir
-+
-+export LC_ALL=C
-+
-+# Create directories as root with different permissions
-+ncheck "mkdir d1 d2 d3"
-+ncheck "setrichacl --set 'u:99:wx::allow' d2"
-+ncheck "setrichacl --set 'u:99:px::allow' d3"
-+
-+runas -u 99 -g 99
-+
-+# Cannot create files or directories without permissions
-+check "touch d1/f || :" <<EOF
-+touch: cannot touch 'd1/f': Permission denied
-+EOF
-+check "mkdir d1/d || :" <<EOF
-+mkdir: cannot create directory 'd1/d': Permission denied
-+EOF
-+
-+# Can create files with add_file (w) permission
-+ncheck "touch d2/f"
-+check "mkdir d2/d || :" <<EOF
-+mkdir: cannot create directory 'd2/d': Permission denied
-+EOF
-+
-+# Can create directories with add_subdirectory (p) permission
-+check "touch d3/f || :" <<EOF
-+touch: cannot touch 'd3/f': Permission denied
-+EOF
-+ncheck "mkdir d3/d"
-diff --git a/richacl/ctime b/richacl/ctime
-new file mode 100755
-index 0000000..98b8782
---- /dev/null
-+++ b/richacl/ctime
-@@ -0,0 +1,35 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_runas
-+require_richacls
-+use_testdir
-+
-+export LC_ALL=C
-+
-+ncheck "touch a"
-+
-+# Without write access, the ctime cannot be changed
-+runas -u 99 -g 99
-+check "touch a || :" <<EOF
-+touch: cannot touch 'a': Permission denied
-+EOF
-+
-+runas
-+ncheck "setrichacl --set 'u:99:rw::allow' a"
-+
-+# With write access, the ctime can be set to the current time, but not to
-+# any other time
-+runas -u 99 -g 99
-+ncheck "touch a"
-+check "touch -d '1 hour ago' a || :" <<EOF
-+touch: setting times of 'a': Operation not permitted
-+EOF
-+
-+runas
-+ncheck "setrichacl --set 'u:99:rwA::allow' a"
-+
-+# With set_attributes access, the ctime can be set to an arbitrary time
-+runas -u 99 -g 99
-+ncheck "touch -d '1 hour ago' a"
-diff --git a/richacl/delete b/richacl/delete
-new file mode 100755
-index 0000000..9537d33
---- /dev/null
-+++ b/richacl/delete
-@@ -0,0 +1,89 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_runas
-+require_richacls
-+use_testdir
-+
-+umask 022
-+export LC_ALL=C
-+
-+ncheck "chmod go+w ."
-+ncheck "mkdir d1 d2 d3 d4 d5 d6 d7"
-+ncheck "touch d1/f d1/g d2/f d3/f d4/f d5/f d6/f d7/f d7/g d7/h"
-+ncheck "chmod o+w d1/g"
-+ncheck "chown 99 d2"
-+ncheck "chgrp 99 d3"
-+ncheck "chmod g+w d3"
-+ncheck "setrichacl --set 'u:99:wx::allow' d4"
-+ncheck "setrichacl --set 'u:99:d::allow' d5"
-+ncheck "setrichacl --set 'u:99:xd::allow' d6"
-+ncheck "setrichacl --set 'u:99:D::allow' d7/f d7/g d7/h"
-+ncheck "chmod 664 d7/g"
-+
-+ncheck "mkdir s2 s3 s4 s5 s6 s7"
-+ncheck "chmod +t s2 s3 s4 s5 s6 s7"
-+ncheck "touch s2/f s3/f s4/f s5/f s6/f s7/f s7/g s7/h"
-+ncheck "chown 99 s2"
-+ncheck "chgrp 99 s3"
-+ncheck "chmod g+w s3"
-+ncheck "setrichacl --set 'u:99:wx::allow' s4"
-+ncheck "setrichacl --set 'u:99:d::allow' s5"
-+ncheck "setrichacl --set 'u:99:xd::allow' s6"
-+ncheck "setrichacl --set 'u:99:D::allow' s7/f s7/g s7/h"
-+ncheck "chmod 664 s7/g"
-+
-+runas -u 99 -g 99
-+
-+# Cannot delete files with no or only with write permissions on the directory
-+check "rm -f d1/f d1/g || :" <<EOF
-+rm: cannot remove 'd1/f': Permission denied
-+rm: cannot remove 'd1/g': Permission denied
-+EOF
-+
-+# Can delete files in directories we own
-+ncheck "rm -f d2/f s2/f"
-+
-+# Can delete files in non-sticky directories we have write access to
-+check "rm -f d3/f s3/f || :" <<EOF
-+rm: cannot remove 's3/f': Operation not permitted
-+EOF
-+
-+# "Write_data/execute" access does not include delete_child access, so deleting
-+# is not allowed:
-+check "rm -f d4/f s4/f || :" <<EOF
-+rm: cannot remove 'd4/f': Permission denied
-+rm: cannot remove 's4/f': Permission denied
-+EOF
-+
-+# "Delete_child" access alone also is not sufficient
-+check "rm -f d5/f s5/f || :" <<EOF
-+rm: cannot remove 'd5/f': Permission denied
-+rm: cannot remove 's5/f': Permission denied
-+EOF
-+
-+# "Execute/delete_child" access is sufficient for non-sticky directories
-+check "rm -f d6/f s6/f || :" <<EOF
-+rm: cannot remove 's6/f': Operation not permitted
-+EOF
-+
-+# "Delete" access on the child is sufficient, even in sticky directories.
-+check "rm -f d7/f s7/f || :" <<EOF
-+EOF
-+
-+# Regression: Delete access must not override add_file / add_subdirectory
-+# access.
-+ncheck "touch h"
-+check "mv h d7/h || :" <<EOF
-+mv: cannot move 'h' to 'd7/h': Permission denied
-+EOF
-+check "mv h s7/h || :" <<EOF
-+mv: cannot move 'h' to 's7/h': Permission denied
-+EOF
-+
-+# A chmod turns off the "delete" permission
-+check "rm -f d7/g s7/g || :" <<EOF
-+rm: cannot remove 'd7/g': Permission denied
-+rm: cannot remove 's7/g': Permission denied
-+EOF
-diff --git a/richacl/setrichacl-modify b/richacl/setrichacl-modify
-new file mode 100755
-index 0000000..2723bd5
---- /dev/null
-+++ b/richacl/setrichacl-modify
-@@ -0,0 +1,57 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_richacls
-+use_testdir
-+
-+umask 022
-+
-+ncheck "touch f"
-+ncheck "setrichacl --set 'flags:a u:101:w::deny u:101:rw::allow u:101:w:a:deny u:101:rw:a:allow' f"
-+ncheck "setrichacl --modify 'u:202:w::deny' f"
-+check "getrichacl --numeric f" <<EOF
-+f:
-+    flags:a
-+ user:101:-w-----------::deny
-+ user:202:-w-----------::deny
-+ user:101:rw-----------::allow
-+ user:101:-w-----------:a:deny
-+ user:101:rw-----------:a:allow
-+EOF
-+
-+ncheck "setrichacl --set 'flags:a u:101:w::deny u:101:rw::allow u:101:w:a:deny u:101:rw:a:allow' f"
-+ncheck "setrichacl --modify 'u:202:rw::allow' f"
-+check "getrichacl --numeric f" <<EOF
-+f:
-+    flags:a
-+ user:101:-w-----------::deny
-+ user:101:rw-----------::allow
-+ user:202:rw-----------::allow
-+ user:101:-w-----------:a:deny
-+ user:101:rw-----------:a:allow
-+EOF
-+
-+ncheck "setrichacl --set 'flags:a u:101:w::deny u:101:rw::allow u:101:w:a:deny u:101:rw:a:allow' f"
-+ncheck "setrichacl --modify 'u:202:w:a:deny' f"
-+check "getrichacl --numeric f" <<EOF
-+f:
-+    flags:a
-+ user:101:-w-----------::deny
-+ user:101:rw-----------::allow
-+ user:101:-w-----------:a:deny
-+ user:202:-w-----------:a:deny
-+ user:101:rw-----------:a:allow
-+EOF
-+
-+ncheck "setrichacl --set 'flags:a u:101:w::deny u:101:rw::allow u:101:w:a:deny u:101:rw:a:allow' f"
-+ncheck "setrichacl --modify 'u:202:rw:a:allow' f"
-+check "getrichacl --numeric f" <<EOF
-+f:
-+    flags:a
-+ user:101:-w-----------::deny
-+ user:101:rw-----------::allow
-+ user:101:-w-----------:a:deny
-+ user:101:rw-----------:a:allow
-+ user:202:rw-----------:a:allow
-+EOF
-diff --git a/richacl/test-lib.sh b/richacl/test-lib.sh
-new file mode 100644
-index 0000000..8705e50
---- /dev/null
-+++ b/richacl/test-lib.sh
-@@ -0,0 +1,154 @@
-+# Library for simple test scripts
-+# Copyright (C) 2009, 2011-2013 Free Software Foundation, Inc.
-+#
-+# Copying and distribution of this file, with or without modification,
-+# in any medium, are permitted without royalty provided the copyright
-+# notice and this notice are preserved.
-+
-+use_testdir() {
-+    testdir=$PWD/testdir.`basename $0`
-+    if [ -e "$testdir" ]; then
-+	chmod -R u+rwx "$testdir" 2>/dev/null
-+	rm -rf "$testdir" || exit 2
-+    fi
-+    mkdir "$testdir" || exit 2
-+    cd "$testdir"
-+}
-+
-+require_runas() {
-+    if ! $here/src/runas -u 99 -g 99 true ; then
-+	echo "This test must be run as root" >&2
-+	exit 77
-+    fi
-+}
-+
-+require_richacls() {
-+    if [ -e $here/src/require-richacls ]; then
-+	$here/src/require-richacls || exit $?
-+    fi
-+    if ! type -f getrichacl setrichacl > /dev/null; then
-+	echo "This test requires the getrichacl and setrichacl utilities" >&2
-+	exit 77
-+    fi
-+}
-+
-+require_getfattr() {
-+    if ! type -f getfattr > /dev/null ; then
-+	echo "This test requires the getfattr utility" >&2
-+	exit 77
-+    fi
-+}
-+
-+_RUNAS=
-+runas() {
-+    _start_test -1 runas "$*"
-+    if [ $# = 0 ]; then
-+	_RUNAS=
-+    else
-+	_RUNAS="$here/src/runas $* --"
-+    fi
-+    echo "ok"
-+}
-+
-+if diff -u -L expected -L got /dev/null /dev/null 2> /dev/null; then
-+    eval '_compare() {
-+	diff -u -L expected -L got "$1" "$2"
-+    }'
-+else
-+    eval '_compare() {
-+	echo "expected:"
-+	cat "$1"
-+	echo "got:"
-+	cat "$2"
-+    }'
-+fi
-+
-+_check() {
-+    local frame=$1
-+    shift
-+    _start_test "$frame" "$*"
-+    expected=`cat`
-+    if got=`set +x; eval "$_RUNAS $*" 3>&2 </dev/null 2>&1` && \
-+            test "$expected" = "$got" ; then
-+	echo "ok"
-+	checks_succeeded="$checks_succeeded + 1"
-+    else
-+	echo "FAILED"
-+	if test "$expected" != "$got" ; then
-+	    echo "$expected" > expected~
-+	    echo "$got" > got~
-+	    _compare expected~ got~
-+	    rm -f expected~ got~
-+	fi
-+	checks_failed="$checks_failed + 1"
-+    fi
-+}
-+
-+check() {
-+    _check 0 "$@"
-+}
-+
-+ncheck() {
-+    _check 0 "$@" < /dev/null
-+}
-+
-+parent_check() {
-+    _check 1 "$@"
-+}
-+
-+parent_ncheck() {
-+    _check 1 "$@" < /dev/null
-+}
-+
-+cleanup() {
-+    status=$?
-+    checks_succeeded=`expr $checks_succeeded`
-+    checks_failed=`expr $checks_failed`
-+    checks_total=`expr $checks_succeeded + $checks_failed`
-+    if test $checks_total -gt 0 ; then
-+	if test $checks_failed -gt 0 && test $status -eq 0 ; then
-+	    status=1
-+	fi
-+	echo "$checks_total tests ($checks_succeeded passed," \
-+	     "$checks_failed failed)"
-+    fi
-+    if test $status = 0 -a -n "$testdir"; then
-+	chmod -R u+rwx "$testdir" 2>/dev/null
-+	cd / && rm -rf "$testdir"
-+    fi
-+    exit $status
-+}
-+
-+if test -z "`echo -n`"; then
-+    if eval 'test -n "${BASH_LINENO[0]}" 2>/dev/null'; then
-+	eval '
-+	    _start_test() {
-+		local frame=$1
-+		shift
-+		printf "[${BASH_LINENO[2+frame]}] $* -- "
-+	    }'
-+    else
-+	eval '
-+	    _start_test() {
-+		shift
-+		printf "* $* -- "
-+	    }'
-+    fi
-+else
-+    eval '
-+	_start_test() {
-+	    shift
-+	    printf "* $*\\n"
-+	}'
-+fi
-+
-+if ! type cat > /dev/null 2> /dev/null; then
-+    echo "This test requires the cat utility" >&2
-+    exit 77
-+fi
-+
-+export PATH=$here/src:$PATH
-+
-+checks_succeeded=0
-+checks_failed=0
-+trap cleanup 0
-diff --git a/richacl/write-vs-append b/richacl/write-vs-append
-new file mode 100755
-index 0000000..3e8c156
---- /dev/null
-+++ b/richacl/write-vs-append
-@@ -0,0 +1,54 @@
-+#! /bin/bash
-+
-+. ${0%/*}/test-lib.sh
-+
-+require_runas
-+require_richacls
-+use_testdir
-+
-+export LC_ALL=C
-+
-+ncheck "touch a b c d e f"
-+ncheck "setrichacl --set 'owner@:rwp::allow' a"
-+ncheck "setrichacl --set 'owner@:rwp::allow u:99:w::allow' b"
-+ncheck "setrichacl --set 'owner@:rwp::allow u:99:p::allow' c"
-+ncheck "setrichacl --set 'owner@:rwp::allow u:99:wp::allow' d"
-+ncheck "setrichacl --set 'u:99:a::deny owner@:rwp::allow u:99:w::allow' e"
-+ncheck "setrichacl --set 'u:99:w::deny owner@:rwp::allow u:99:p::allow' f"
-+
-+runas -u 99 -g 99
-+check "sh -c 'echo a > a' || :" <<EOF
-+sh: a: Permission denied
-+EOF
-+ncheck "sh -c 'echo b > b' || :"
-+check "sh -c 'echo c > c' || :" <<EOF
-+sh: c: Permission denied
-+EOF
-+ncheck "sh -c 'echo d > d' || :"
-+ncheck "sh -c 'echo e > e' || :"
-+check "sh -c 'echo f > f' || :" <<EOF
-+sh: f: Permission denied
-+EOF
-+
-+check "sh -c 'echo A >> a' || :" <<EOF
-+sh: a: Permission denied
-+EOF
-+check "sh -c 'echo B >> b' || :" <<EOF
-+sh: b: Permission denied
-+EOF
-+ncheck "sh -c 'echo C >> c' || :"
-+ncheck "sh -c 'echo D >> d' || :"
-+check "sh -c 'echo E >> e' || :" <<EOF
-+sh: e: Permission denied
-+EOF
-+ncheck "sh -c 'echo F >> f' || :"
-+
-+runas
-+check "cat a b c d e f" <<EOF
-+b
-+C
-+d
-+D
-+e
-+F
-+EOF
-diff --git a/tests/generic/338 b/tests/generic/338
-new file mode 100755
-index 0000000..44bb102
---- /dev/null
-+++ b/tests/generic/338
-@@ -0,0 +1,78 @@
-+#! /bin/bash
-+# FS QA Test 338
-+#
-+# Richacl tests
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os IRIX Linux
-+_require_scratch
-+
-+# require getrichacl and setrichacl
-+_require_scratch_richacl
-+
-+doit() {
-+	local file=$1 status
-+	echo "*** ${file##*/} ***"
-+	"$@"
-+	status=$?
-+	echo
-+	return $status
-+}
-+
-+cd $SCRATCH_MNT
-+
-+failure=false
-+for file in $here/richacl/*; do
-+	[ -x "$file" ] || continue
-+	_scratch_mount
-+	doit "$file" | tee -a $seqres.full >$tmp.${file##*/}
-+	if [ ${PIPESTATUS[0]} -ne 0 ]; then
-+		cat $tmp.${file##*/}
-+		failure=true
-+	fi
-+	_scratch_unmount
-+done
-+
-+$failure || status=0
-diff --git a/tests/generic/group b/tests/generic/group
-index 727648c..0388b44 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -340,3 +340,4 @@
- 335 auto quick metadata
- 336 auto quick metadata
- 337 auto quick metadata
-+338 richacl auto
--- 
-2.5.0
+Brian
+
+> >
+> >>
+> >>Brian
+> >>
+> >>>[67674.907736] ------------[ cut here ]------------
+> >>>[67674.955858] WARNING: CPU: 5 PID: 197 at fs/xfs/xfs_aops.c:1232
+> >>>xfs_vm_releasepage+0xa9/0xe0()
+> >>>[67675.005345] Modules linked in: dm_mod netconsole ipt_REJECT
+> >>>nf_reject_ipv4 mpt3sas raid_class xt_multiport iptable_filter ip_tabl
+> >>>es x_tables 8021q garp bonding coretemp loop usbhid ehci_pci ehci_hcd
+> >>>sb_edac ipmi_si usbcore i2c_i801 edac_core usb_common ipmi_msg
+> >>>handler button btrfs xor raid6_pq raid1 md_mod sg igb sd_mod i2c_algo_bit
+> >>>ixgbe ahci i2c_core mdio isci libahci libsas ptp megaraid_
+> >>>sas scsi_transport_sas pps_core
+> >>>[67675.221939] CPU: 5 PID: 197 Comm: kswapd0 Not tainted 4.4.2+1-ph #1
+> >>>[67675.277120] Hardware name: Supermicro
+> >>>X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.2 03/04/2015
+> >>>[67675.335176]  ffffffffa3a5065d ffff88007950fa98 ffffffffa33bd4e1
+> >>>0000000000000001
+> >>>[67675.392983]  0000000000000000 ffff88007950fad8 ffffffffa3083587
+> >>>ffff88007950fae8
+> >>>[67675.449743]  0000000000000001 ffffea0020883480 ffff880cf4b9cdd0
+> >>>ffffea00208834a0
+> >>>[67675.506112] Call Trace:
+> >>>[67675.561285]  [<ffffffffa33bd4e1>] dump_stack+0x45/0x64
+> >>>[67675.619364]  [<ffffffffa3083587>] warn_slowpath_common+0x97/0xe0
+> >>>[67675.675719]  [<ffffffffa30835ea>] warn_slowpath_null+0x1a/0x20
+> >>>[67675.731113]  [<ffffffffa3320a89>] xfs_vm_releasepage+0xa9/0xe0
+> >>>[67675.786116]  [<ffffffffa318a4b0>] ? page_mkclean_one+0xd0/0xd0
+> >>>[67675.844216]  [<ffffffffa318b1d0>] ? anon_vma_prepare+0x150/0x150
+> >>>[67675.903862]  [<ffffffffa31506c2>] try_to_release_page+0x32/0x50
+> >>>[67675.957625]  [<ffffffffa3164d3e>] shrink_active_list+0x3ce/0x3e0
+> >>>[67676.011497]  [<ffffffffa31653d7>] shrink_lruvec+0x687/0x7d0
+> >>>[67676.064980]  [<ffffffffa31655fc>] shrink_zone+0xdc/0x2c0
+> >>>[67676.118828]  [<ffffffffa3166659>] kswapd+0x4f9/0x930
+> >>>[67676.172075]  [<ffffffffa3166160>] ?
+> >>>mem_cgroup_shrink_node_zone+0x150/0x150
+> >>>[67676.225139]  [<ffffffffa30a08c9>] kthread+0xc9/0xe0
+> >>>[67676.277539]  [<ffffffffa30a0800>] ? kthread_stop+0xe0/0xe0
+> >>>[67676.330124]  [<ffffffffa36a8c8f>] ret_from_fork+0x3f/0x70
+> >>>[67676.381816]  [<ffffffffa30a0800>] ? kthread_stop+0xe0/0xe0
+> >>>[67676.433499] ---[ end trace cb1827fe308f7f6b ]---
+> >>>
+> >>>Greets Stefan
+> >>>
+> >>>_______________________________________________
+> >>>xfs mailing list
+> >>>xfs@oss.sgi.com
+> >>>http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
