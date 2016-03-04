@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 488AE7CD8
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 16:03:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B046FAC002
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:59 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id HK1T0jcROoPRnZgX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:54 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
-	id 1afZdc-0000GO-RQ
-	for xfs@oss.sgi.com; Mon, 14 Mar 2016 21:02:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/7] fs: move struct iomap from exportfs.h to a separate header
-Date: Mon, 14 Mar 2016 22:02:44 +0100
-Message-Id: <1457989370-6904-2-git-send-email-hch@lst.de>
-In-Reply-To: <1457989370-6904-1-git-send-email-hch@lst.de>
-References: <1457989370-6904-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BAD967CA1
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 06:50:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 809E7304048
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 04:50:18 -0800 (PST)
+Received: from prv-mh.provo.novell.com (prv-mh.provo.novell.com
+	[137.65.248.74]) by cuda.sgi.com with ESMTP id 5qzUyU6BkIrM5kCE
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 04 Mar 2016 04:49:50 -0800 (PST)
+Message-Id: <56D9927E02000078000D9696@prv-mh.provo.novell.com>
+Date: Fri, 04 Mar 2016 05:49:50 -0700
+From: "Jan Beulich" <JBeulich@suse.com>
+Subject: Re: [PATCH 4/4] xfs: only run torn log write detection on dirty logs
+References: <1457008798-58734-1-git-send-email-bfoster@redhat.com>
+	<1457008798-58734-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1457008798-58734-5-git-send-email-bfoster@redhat.com>
+Mime-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,122 +27,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/nfsd/blocklayout.c    |  1 +
- fs/nfsd/blocklayoutxdr.c |  1 +
- fs/xfs/xfs_pnfs.c        |  1 +
- include/linux/exportfs.h | 16 +---------------
- include/linux/iomap.h    | 21 +++++++++++++++++++++
- 5 files changed, 25 insertions(+), 15 deletions(-)
- create mode 100644 include/linux/iomap.h
+>>> On 03.03.16 at 13:39, <bfoster@redhat.com> wrote:
+> XFS uses CRC verification over a sub-range of the head of the log to
+> detect and handle torn writes. This torn log write detection currently
+> runs unconditionally at mount time, regardless of whether the log is
+> dirty or clean. This is problematic in cases where a filesystem might
+> end up being moved across different, incompatible (i.e., opposite
+> byte-endianness) architectures.
+> 
+> The problem lies in the fact that log data is not necessarily written in
+> an architecture independent format. For example, certain bits of data
+> are written in native endian format. Further, the size of certain log
+> data structures differs (i.e., struct xlog_rec_header) depending on the
+> word size of the cpu. This leads to false positive crc verification
+> errors and ultimately failed mounts when a cleanly unmounted filesystem
+> is mounted on a system with an incompatible architecture from data that
+> was written near the head of the log.
+> 
+> Update the log head/tail discovery code to run torn write detection only
+> when the log is not clean. This means something other than an unmount
+> record resides at the head of the log and log recovery is imminent. It
+> is a requirement to run log recovery on the same type of host that had
+> written the content of the dirty log and therefore CRC failures are
+> legitimate corruptions in that scenario.
+> 
+> Reported-by: Jan Beulich <JBeulich@suse.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index c29d942..c49adba 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -2,6 +2,7 @@
-  * Copyright (c) 2014 Christoph Hellwig.
-  */
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/genhd.h>
- #include <linux/slab.h>
- 
-diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
-index 6d834dc..19c8168 100644
---- a/fs/nfsd/blocklayoutxdr.c
-+++ b/fs/nfsd/blocklayoutxdr.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/sunrpc/svc.h>
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/nfs4.h>
- 
- #include "nfsd.h"
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index ade236e..8b6f20f 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2014 Christoph Hellwig.
-  */
-+#include <linux/iomap.h>
- #include "xfs.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index fa05e04..c96f47b 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -6,6 +6,7 @@
- struct dentry;
- struct iattr;
- struct inode;
-+struct iomap;
- struct super_block;
- struct vfsmount;
- 
-@@ -181,21 +182,6 @@ struct fid {
-  *    get_name is not (which is possibly inconsistent)
-  */
- 
--/* types of block ranges for multipage write mappings. */
--#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
--#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
--#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
--#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
--
--#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
--
--struct iomap {
--	sector_t	blkno;	/* first sector of mapping */
--	loff_t		offset;	/* file offset of mapping, bytes */
--	u64		length;	/* length of mapping, bytes */
--	int		type;	/* type of mapping */
--};
--
- struct export_operations {
- 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
- 			struct inode *parent);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-new file mode 100644
-index 0000000..1b22197
---- /dev/null
-+++ b/include/linux/iomap.h
-@@ -0,0 +1,21 @@
-+#ifndef LINUX_IOMAP_H
-+#define LINUX_IOMAP_H 1
-+
-+#include <linux/types.h>
-+
-+/* types of block ranges for multipage write mappings. */
-+#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
-+#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
-+#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
-+#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
-+
-+#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-+
-+struct iomap {
-+	sector_t	blkno;	/* first sector of mapping */
-+	loff_t		offset;	/* file offset of mapping, bytes */
-+	u64		length;	/* length of mapping, bytes */
-+	int		type;	/* type of mapping */
-+};
-+
-+#endif /* LINUX_IOMAP_H */
--- 
-2.1.4
+Tested-by: Jan Beulich <JBeulich@suse.com>
+
+Thank you Brian.
+
+Jan
 
 _______________________________________________
 xfs mailing list
