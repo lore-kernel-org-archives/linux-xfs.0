@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 255617CBB
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 18:36:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7F0B5AC001
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 16:36:06 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id N5So2OuwVLPApfja (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7E8EF7CB7
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 18:36:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 26FA88F8033
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 16:36:11 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id kMLRjUGW0CBBsZA1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 16:36:03 -0800 (PST)
-Subject: [PATCH 4/6] xfsdocs: reverse-mapping btree documentation
+	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 16:36:08 -0800 (PST)
+Subject: [PATCH 5/6] xfsdocs: document refcount btree and reflink
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Mar 2016 16:35:30 -0800
-Message-ID: <20160305003530.28327.97522.stgit@birch.djwong.org>
+Date: Fri, 04 Mar 2016 16:35:38 -0800
+Message-ID: <20160305003538.28327.18120.stgit@birch.djwong.org>
 In-Reply-To: <20160305003505.28327.95288.stgit@birch.djwong.org>
 References: <20160305003505.28327.95288.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -24,317 +24,417 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: hch@infradead.org, david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-QWRkIGNoYXB0ZXJzIG9uIHRoZSBvcGVyYXRpb24gb2YgdGhlIHJldmVyc2UgbWFwcGluZyBidHJl
-ZSBhbmQgZnV0dXJlCnRoaW5ncyB3ZSBjb3VsZCBkbyB3aXRoIHJtYXAgZGF0YS4KCnYyOiBBZGQg
-bWFnaWMgbnVtYmVyIHRvIHRoZSB0YWJsZS4KClNpZ25lZC1vZmYtYnk6IERhcnJpY2sgSi4gV29u
-ZyA8ZGFycmljay53b25nQG9yYWNsZS5jb20+Ci0tLQogLi4uL2FsbG9jYXRpb25fZ3JvdXBzLmFz
-Y2lpZG9jICAgICAgICAgICAgICAgICAgICAgfCAgIDI0ICstCiBkZXNpZ24vWEZTX0ZpbGVzeXN0
-ZW1fU3RydWN0dXJlL2RvY2luZm8ueG1sICAgICAgICB8ICAgMTQgKwogZGVzaWduL1hGU19GaWxl
-c3lzdGVtX1N0cnVjdHVyZS9tYWdpYy5hc2NpaWRvYyAgICAgfCAgICAxIAogLi4uL3JlY29uc3Ry
-dWN0aW9uLmFzY2lpZG9jICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDUzICsrKysrCiBkZXNp
-Z24vWEZTX0ZpbGVzeXN0ZW1fU3RydWN0dXJlL3JtYXBidC5hc2NpaWRvYyAgICB8ICAyMjMgKysr
-KysrKysrKysrKysrKysrKysKIC4uLi94ZnNfZmlsZXN5c3RlbV9zdHJ1Y3R1cmUuYXNjaWlkb2Mg
-ICAgICAgICAgICAgIHwgICAgNCAKIDYgZmlsZXMgY2hhbmdlZCwgMzExIGluc2VydGlvbnMoKyks
-IDggZGVsZXRpb25zKC0pCiBjcmVhdGUgbW9kZSAxMDA2NDQgZGVzaWduL1hGU19GaWxlc3lzdGVt
-X1N0cnVjdHVyZS9yZWNvbnN0cnVjdGlvbi5hc2NpaWRvYwogY3JlYXRlIG1vZGUgMTAwNjQ0IGRl
-c2lnbi9YRlNfRmlsZXN5c3RlbV9TdHJ1Y3R1cmUvcm1hcGJ0LmFzY2lpZG9jCgoKZGlmZiAtLWdp
-dCBhL2Rlc2lnbi9YRlNfRmlsZXN5c3RlbV9TdHJ1Y3R1cmUvYWxsb2NhdGlvbl9ncm91cHMuYXNj
-aWlkb2MgYi9kZXNpZ24vWEZTX0ZpbGVzeXN0ZW1fU3RydWN0dXJlL2FsbG9jYXRpb25fZ3JvdXBz
-LmFzY2lpZG9jCmluZGV4IDg2NTY2MzYuLmJkMmRiNWMgMTAwNjQ0Ci0tLSBhL2Rlc2lnbi9YRlNf
-RmlsZXN5c3RlbV9TdHJ1Y3R1cmUvYWxsb2NhdGlvbl9ncm91cHMuYXNjaWlkb2MKKysrIGIvZGVz
-aWduL1hGU19GaWxlc3lzdGVtX1N0cnVjdHVyZS9hbGxvY2F0aW9uX2dyb3Vwcy5hc2NpaWRvYwpA
-QCAtMTIsNiArMTIsNyBAQCBFYWNoIEFHIGhhcyB0aGUgZm9sbG93aW5nIGNoYXJhY3RlcmlzdGlj
-czoKICAgICAgICAgICogQSBzdXBlciBibG9jayBkZXNjcmliaW5nIG92ZXJhbGwgZmlsZXN5c3Rl
-bSBpbmZvCiAgICAgICAgICAqIEZyZWUgc3BhY2UgbWFuYWdlbWVudAogICAgICAgICAgKiBJbm9k
-ZSBhbGxvY2F0aW9uIGFuZCB0cmFja2luZworICAgICAgICAgKiBSZXZlcnNlIGJsb2NrLW1hcHBp
-bmcgaW5kZXggKG9wdGlvbmFsKQogCiBIYXZpbmcgbXVsdGlwbGUgQUdzIGFsbG93cyBYRlMgdG8g
-aGFuZGxlIG1vc3Qgb3BlcmF0aW9ucyBpbiBwYXJhbGxlbCB3aXRob3V0CiBkZWdyYWRpbmcgcGVy
-Zm9ybWFuY2UgYXMgdGhlIG51bWJlciBvZiBjb25jdXJyZW50IGFjY2Vzc2VzIGluY3JlYXNlcy4K
-QEAgLTM3OSw2ICszODAsMTIgQEAgaXQgZG9lc24ndCB1bmRlcnN0YW5kIHRoZSBmbGFnLgogRnJl
-ZSBpbm9kZSBCK3RyZWUuICBFYWNoIGFsbG9jYXRpb24gZ3JvdXAgY29udGFpbnMgYSBCK3RyZWUg
-dG8gdHJhY2sgaW5vZGUgY2h1bmtzCiBjb250YWluaW5nIGZyZWUgaW5vZGVzLiAgVGhpcyBpcyBh
-IHBlcmZvcm1hbmNlIG9wdGltaXphdGlvbiB0byByZWR1Y2UgdGhlIHRpbWUKIHJlcXVpcmVkIHRv
-IGFsbG9jYXRlIGlub2Rlcy4KKworfCArWEZTX1NCX0ZFQVRfUk9fQ09NUEFUX1JNQVBCVCsgfAor
-UmV2ZXJzZSBtYXBwaW5nIEIrdHJlZS4gIEVhY2ggYWxsb2NhdGlvbiBncm91cCBjb250YWlucyBh
-IEIrdHJlZSBjb250YWluaW5nCityZWNvcmRzIG1hcHBpbmcgQUcgYmxvY2tzIHRvIHRoZWlyIG93
-bmVycy4gIFNlZSB0aGUgc2VjdGlvbiBhYm91dAoreHJlZjpSZWNvbnN0cnVjdGlvbltyZWNvbnN0
-cnVjdGlvbl0gZm9yIG1vcmUgZGV0YWlscy4KKwogfD09PT09CiAKICpzYl9mZWF0dXJlc19pbmNv
-bXBhdCo6OgpAQCAtNTI5LDkgKzUzNiw3IEBAIHN0cnVjdCB4ZnNfYWdmIHsKICAgICAgX19iZTMy
-ICAgICAgICAgICAgICBhZ2Zfc2Vxbm87CiAgICAgIF9fYmUzMiAgICAgICAgICAgICAgYWdmX2xl
-bmd0aDsKICAgICAgX19iZTMyICAgICAgICAgICAgICBhZ2Zfcm9vdHNbWEZTX0JUTlVNX0FHRl07
-Ci0gICAgIF9fYmUzMiAgICAgICAgICAgICAgYWdmX3NwYXJlMDsKICAgICAgX19iZTMyICAgICAg
-ICAgICAgICBhZ2ZfbGV2ZWxzW1hGU19CVE5VTV9BR0ZdOwotICAgICBfX2JlMzIgICAgICAgICAg
-ICAgIGFnZl9zcGFyZTE7CiAgICAgIF9fYmUzMiAgICAgICAgICAgICAgYWdmX2ZsZmlyc3Q7CiAg
-ICAgIF9fYmUzMiAgICAgICAgICAgICAgYWdmX2ZsbGFzdDsKICAgICAgX19iZTMyICAgICAgICAg
-ICAgICBhZ2ZfZmxjb3VudDsKQEAgLTU1MCw5ICs1NTUsMTAgQEAgc3RydWN0IHhmc19hZ2Ygewog
-fTsKIC0tLS0KIAotVGhlIHJlc3Qgb2YgdGhlIGJ5dGVzIGluIHRoZSBzZWN0b3IgYXJlIHplcm9l
-ZC4gK1hGU19CVE5VTV9BR0YrIGlzIHNldCB0byAyOgotaW5kZXggMCBmb3IgdGhlIGZyZWUgc3Bh
-Y2UgQit0cmVlIGluZGV4ZWQgYnkgYmxvY2sgbnVtYmVyOyBhbmQgaW5kZXggMSBmb3IgdGhlCi1m
-cmVlIHNwYWNlIEIrdHJlZSBpbmRleGVkIGJ5IGV4dGVudCBzaXplLgorVGhlIHJlc3Qgb2YgdGhl
-IGJ5dGVzIGluIHRoZSBzZWN0b3IgYXJlIHplcm9lZC4gK1hGU19CVE5VTV9BR0YrIGlzIHNldCB0
-byAzOgoraW5kZXggMCBmb3IgdGhlIGZyZWUgc3BhY2UgQit0cmVlIGluZGV4ZWQgYnkgYmxvY2sg
-bnVtYmVyOyBpbmRleCAxIGZvciB0aGUgZnJlZQorc3BhY2UgQit0cmVlIGluZGV4ZWQgYnkgZXh0
-ZW50IHNpemU7IGFuZCBpbmRleCAyIGZvciB0aGUgcmV2ZXJzZS1tYXBwaW5nCitCK3RyZWUuCiAK
-ICphZ2ZfbWFnaWNudW0qOjoKIFNwZWNpZmllcyB0aGUgbWFnaWMgbnVtYmVyIGZvciB0aGUgQUdG
-IHNlY3RvcjogYGBYQUdGJycgKDB4NTg0MTQ3NDYpLgpAQCAtNTcwLDExICs1NzYsMTMgQEAgdGhp
-cyBjb3VsZCBiZSBsZXNzIHRoYW4gdGhlICtzYl9hZ2Jsb2NrcysgdmFsdWUuIEl0IGlzIHRoaXMg
-dmFsdWUgdGhhdCBzaG91bGQKIGJlIHVzZWQgdG8gZGV0ZXJtaW5lIHRoZSBzaXplIG9mIHRoZSBB
-Ry4KIAogKmFnZl9yb290cyo6OgotU3BlY2lmaWVzIHRoZSBibG9jayBudW1iZXIgZm9yIHRoZSBy
-b290IG9mIHRoZSB0d28gZnJlZSBzcGFjZSBCK3RyZWVzLgorU3BlY2lmaWVzIHRoZSBibG9jayBu
-dW1iZXIgZm9yIHRoZSByb290IG9mIHRoZSB0d28gZnJlZSBzcGFjZSBCK3RyZWVzIGFuZCB0aGUK
-K3JldmVyc2UtbWFwcGluZyBCK3RyZWUsIGlmIGVuYWJsZWQuCiAKICphZ2ZfbGV2ZWxzKjo6Ci1T
-cGVjaWZpZXMgdGhlIGxldmVsIG9yIGRlcHRoIG9mIHRoZSB0d28gZnJlZSBzcGFjZSBCK3RyZWVz
-LiBGb3IgYSBmcmVzaCBBRywgdGhpcwotd2lsbCBiZSBvbmUsIGFuZCB0aGUgYGByb290cycnIHdp
-bGwgcG9pbnQgdG8gYSBzaW5nbGUgbGVhZiBvZiBsZXZlbCAwLgorU3BlY2lmaWVzIHRoZSBsZXZl
-bCBvciBkZXB0aCBvZiB0aGUgdHdvIGZyZWUgc3BhY2UgQit0cmVlcyBhbmQgdGhlCityZXZlcnNl
-LW1hcHBpbmcgQit0cmVlLCBpZiBlbmFibGVkLiAgRm9yIGEgZnJlc2ggQUcsIHRoaXMgdmFsdWUg
-d2lsbCBiZSBvbmUsCithbmQgdGhlIGBgcm9vdHMnJyB3aWxsIHBvaW50IHRvIGEgc2luZ2xlIGxl
-YWYgb2YgbGV2ZWwgMC4KIAogKmFnZl9mbGZpcnN0Kjo6CiBTcGVjaWZpZXMgdGhlIGluZGV4IG9m
-IHRoZSBmaXJzdCBgYGZyZWUgbGlzdCcnIGJsb2NrLiBGcmVlIGxpc3RzIGFyZSBjb3ZlcmVkIGlu
-CmRpZmYgLS1naXQgYS9kZXNpZ24vWEZTX0ZpbGVzeXN0ZW1fU3RydWN0dXJlL2RvY2luZm8ueG1s
-IGIvZGVzaWduL1hGU19GaWxlc3lzdGVtX1N0cnVjdHVyZS9kb2NpbmZvLnhtbAppbmRleCBjYzU1
-OTZkLi5mZjM4MThhIDEwMDY0NAotLS0gYS9kZXNpZ24vWEZTX0ZpbGVzeXN0ZW1fU3RydWN0dXJl
-L2RvY2luZm8ueG1sCisrKyBiL2Rlc2lnbi9YRlNfRmlsZXN5c3RlbV9TdHJ1Y3R1cmUvZG9jaW5m
-by54bWwKQEAgLTEyMiw0ICsxMjIsMTggQEAKIAkJCTwvc2ltcGxlbGlzdD4KIAkJPC9yZXZkZXNj
-cmlwdGlvbj4KIAk8L3JldmlzaW9uPgorCTxyZXZpc2lvbj4KKwkJPHJldm51bWJlcj4zLjE0MTwv
-cmV2bnVtYmVyPgorCQk8ZGF0ZT5KYW51YXJ5IDIwMTY8L2RhdGU+CisJCTxhdXRob3I+CisJCQk8
-Zmlyc3RuYW1lPkRhcnJpY2s8L2ZpcnN0bmFtZT4KKwkJCTxzdXJuYW1lPldvbmc8L3N1cm5hbWU+
-CisJCQk8ZW1haWw+PC9lbWFpbD4KKwkJPC9hdXRob3I+CisJCTxyZXZkZXNjcmlwdGlvbj4KKwkJ
-CTxzaW1wbGVsaXN0PgorCQkJCTxtZW1iZXI+RG9jdW1lbnQgdGhlIHJldmVyc2UtbWFwcGluZyBi
-dHJlZS48L21lbWJlcj4KKwkJCTwvc2ltcGxlbGlzdD4KKwkJPC9yZXZkZXNjcmlwdGlvbj4KKwk8
-L3JldmlzaW9uPgogPC9yZXZoaXN0b3J5PgpkaWZmIC0tZ2l0IGEvZGVzaWduL1hGU19GaWxlc3lz
-dGVtX1N0cnVjdHVyZS9tYWdpYy5hc2NpaWRvYyBiL2Rlc2lnbi9YRlNfRmlsZXN5c3RlbV9TdHJ1
-Y3R1cmUvbWFnaWMuYXNjaWlkb2MKaW5kZXggMzAxY2ZhMC4uYzNkMDM0MSAxMDA2NDQKLS0tIGEv
-ZGVzaWduL1hGU19GaWxlc3lzdGVtX1N0cnVjdHVyZS9tYWdpYy5hc2NpaWRvYworKysgYi9kZXNp
-Z24vWEZTX0ZpbGVzeXN0ZW1fU3RydWN0dXJlL21hZ2ljLmFzY2lpZG9jCkBAIC00NCw2ICs0NCw3
-IEBAIHJlbGV2YW50IGNoYXB0ZXJzLiAgTWFnaWMgbnVtYmVycyB0ZW5kIHRvIGhhdmUgY29uc2lz
-dGVudCBsb2NhdGlvbnM6CiB8ICtYRlNfQVRUUl9MRUFGX01BR0lDKwkJfCAweGZiZWUJfCAgICAg
-CXwgeHJlZjpMZWFmX0F0dHJpYnV0ZXNbTGVhZiBBdHRyaWJ1dGVdCiB8ICtYRlNfQVRUUjNfTEVB
-Rl9NQUdJQysJfCAweDNiZWUJfCAgICAgCXwgeHJlZjpMZWFmX0F0dHJpYnV0ZXNbTGVhZiBBdHRy
-aWJ1dGVdLCB2NSBvbmx5CiB8ICtYRlNfQVRUUjNfUk1UX01BR0lDKwkJfCAweDU4NDE1MjRkCXwg
-WEFSTQl8IHhyZWY6UmVtb3RlX1ZhbHVlc1tSZW1vdGUgQXR0cmlidXRlIFZhbHVlXSwgdjUgb25s
-eQorfCArWEZTX1JNQVBfQ1JDX01BR0lDKwkJfCAweDUyNGQ0MjMzCXwgUk1CMwl8IHhyZWY6UmV2
-ZXJzZV9NYXBwaW5nX0J0cmVlW1JldmVyc2UgTWFwcGluZyBCK3RyZWVdLCB2NSBvbmx5CiB8PT09
-PT0KIAogVGhlIG1hZ2ljIG51bWJlcnMgZm9yIGxvZyBpdGVtcyBhcmUgYXQgb2Zmc2V0IHplcm8g
-aW4gZWFjaCBsb2cgaXRlbSwgYnV0IGl0ZW1zCmRpZmYgLS1naXQgYS9kZXNpZ24vWEZTX0ZpbGVz
-eXN0ZW1fU3RydWN0dXJlL3JlY29uc3RydWN0aW9uLmFzY2lpZG9jIGIvZGVzaWduL1hGU19GaWxl
-c3lzdGVtX1N0cnVjdHVyZS9yZWNvbnN0cnVjdGlvbi5hc2NpaWRvYwpuZXcgZmlsZSBtb2RlIDEw
-MDY0NAppbmRleCAwMDAwMDAwLi5mMTcyZTBmCi0tLSAvZGV2L251bGwKKysrIGIvZGVzaWduL1hG
-U19GaWxlc3lzdGVtX1N0cnVjdHVyZS9yZWNvbnN0cnVjdGlvbi5hc2NpaWRvYwpAQCAtMCwwICsx
-LDUzIEBACitbW1JlY29uc3RydWN0aW9uXV0KKz0gTWV0YWRhdGEgUmVjb25zdHJ1Y3Rpb24KKwor
-W05PVEVdCitUaGlzIGlzIGEgdGhlb3JldGljYWwgZGlzY3Vzc2lvbiBvZiBob3cgcmVjb25zdHJ1
-Y3Rpb24gY291bGQgd29yazsgbm9uZSBvZiB0aGlzCitpcyBpbXBsZW1lbnRlZCBhcyBvZiAyMDE1
-LgorCitBIHNpbXBsZSBVTklYIGZpbGVzeXN0ZW0gY2FuIGJlIHRob3VnaHQgb2YgaW4gdGVybXMg
-b2YgYSBkaXJlY3RlZCBhY3ljbGljIGdyYXBoLgorVG8gYSBmaXJzdCBhcHByb3hpbWF0aW9uLCB0
-aGVyZSBleGlzdHMgYSByb290IGRpcmVjdG9yeSBub2RlLCB3aGljaCBwb2ludHMgdG8KK290aGVy
-IG5vZGVzLiAgVGhvc2Ugb3RoZXIgbm9kZXMgY2FuIHRoZW1zZWx2ZXMgYmUgZGlyZWN0b3JpZXMg
-b3IgdGhleSBjYW4gYmUKK2ZpbGVzLiAgRWFjaCBmaWxlLCBpbiB0dXJuLCBwb2ludHMgdG8gZGF0
-YSBibG9ja3MuCisKK1hGUyBhZGRzIGEgZmV3IG1vcmUgZGV0YWlscyB0byB0aGlzIHBpY3R1cmU6
-CisKKyogVGhlIHJlYWwgcm9vdChzKSBvZiBhbiBYRlMgZmlsZXN5c3RlbSBhcmUgdGhlIGFsbG9j
-YXRpb24gZ3JvdXAgaGVhZGVycworKHN1cGVyYmxvY2ssIEFHRiwgQUdJLCBBR0ZMKS4KKyogRWFj
-aCBhbGxvY2F0aW9uIGdyb3Vw4oCZcyBoZWFkZXJzIHBvaW50IHRvIHZhcmlvdXMgcGVyLUFHIEIr
-dHJlZXMgKGZyZWUgc3BhY2UsCitpbm9kZSwgZnJlZSBpbm9kZXMsIGZyZWUgbGlzdCwgZXRjLikK
-KyogVGhlIGZyZWUgc3BhY2UgQit0cmVlcyBwb2ludCB0byB1bnVzZWQgZXh0ZW50czsKKyogVGhl
-IGlub2RlIEIrdHJlZXMgcG9pbnQgdG8gYmxvY2tzIGNvbnRhaW5pbmcgaW5vZGUgY2h1bmtzOwor
-KiBBbGwgc3VwZXJibG9ja3MgcG9pbnQgdG8gdGhlIHJvb3QgZGlyZWN0b3J5IGFuZCB0aGUgbG9n
-OworKiBIYXJkbGlua3MgbWVhbiB0aGF0IG11bHRpcGxlIGRpcmVjdG9yaWVzIGNhbiBwb2ludCB0
-byBhIHNpbmdsZSBmaWxlIG5vZGU7CisqIEZpbGUgZGF0YSBibG9jayBwb2ludGVycyBhcmUgaW5k
-ZXhlZCBieSBmaWxlIG9mZnNldDsKKyogRmlsZXMgYW5kIGRpcmVjdG9yaWVzIGNhbiBoYXZlIGEg
-c2Vjb25kIGNvbGxlY3Rpb24gb2YgcG9pbnRlcnMgdG8gZGF0YSBibG9ja3MKK3doaWNoIGNvbnRh
-aW4gZXh0ZW5kZWQgYXR0cmlidXRlczsKKyogTGFyZ2UgZGlyZWN0b3JpZXMgcmVxdWlyZSBtdWx0
-aXBsZSBkYXRhIGJsb2NrcyB0byBzdG9yZSBhbGwgdGhlIHN1YnBvaW50ZXJzOworKiBTdGlsbCBs
-YXJnZXIgZGlyZWN0b3JpZXMgdXNlIGhpZ2gtb2Zmc2V0IGRhdGEgYmxvY2tzIHRvIHN0b3JlIGEg
-Qit0cmVlIG9mCitoYXNoZXMgdG8gZGlyZWN0b3J5IGVudHJpZXM7CisqIExhcmdlIGV4dGVuZGVk
-IGF0dHJpYnV0ZSBmb3JrcyBzaW1pbGFybHkgdXNlIGhpZ2gtb2Zmc2V0IGRhdGEgYmxvY2tzIHRv
-IHN0b3JlCithIEIrdHJlZSBvZiBoYXNoZXMgdG8gYXR0cmlidXRlIGtleXM7IGFuZAorKiBTeW1i
-b2xpYyBsaW5rcyBjYW4gcG9pbnQgdG8gZGF0YSBibG9ja3MuCisKK1RoZSBiZWF1dHkgb2YgdGhp
-cyBtYXNzaXZlIGdyYXBoIHN0cnVjdHVyZSBpcyB0aGF0IHVuZGVyIG5vcm1hbCBjaXJjdW1zdGFu
-Y2VzLAorZXZlcnl0aGluZyBrbm93biB0byB0aGUgZmlsZXN5c3RlbSBpcyBkaXNjb3ZlcmFibGUg
-KGFjY2VzcyBjb250cm9scworbm90d2l0aHN0YW5kaW5nKSBmcm9tIHRoZSByb290LiAgVGhlIG1h
-am9yIHdlYWtuZXNzIG9mIHRoaXMgc3RydWN0dXJlIG9mIGNvdXJzZQoraXMgdGhhdCBicmVha2lu
-ZyBhIGVkZ2UgaW4gdGhlIGdyYXBoIGNhbiByZW5kZXIgZW50aXJlIHN1YnRyZWVzIGluYWNjZXNz
-aWJsZS4KKyt4ZnNfcmVwYWlyKyDigJxyZWNvdmVyc+KAnSBmcm9tIGJyb2tlbiBkaXJlY3Rvcmll
-cyBieSBzY2FubmluZyBmb3IgdW5saW5rZWQgaW5vZGVzCithbmQgY29ubmVjdGluZyB0aGVtIHRv
-ICsvbG9zdCtmb3VuZCssIGJ1dCB0aGlzIGlzbuKAmXQgc3VmZmljaWVudGx5IGdlbmVyYWwgdG8K
-K3JlY292ZXIgZnJvbSBicmVha3MgaW4gb3RoZXIgcGFydHMgb2YgdGhlIGdyYXBoIHN0cnVjdHVy
-ZS4gIFdvdWxkbuKAmXQgaXQgYmUKK3VzZWZ1bCB0byBoYXZlIGJhY2sgcG9pbnRlcnMgYXMgYSBz
-ZWNvbmRhcnkgZGF0YSBzdHJ1Y3R1cmU/ICBUaGUgY3VycmVudCByZXBhaXIKK3N0cmF0ZWd5IGlz
-IHRvIHJlY29uc3RydWN0IHdoYXRldmVyIGNhbiBiZSByZWJ1aWx0LCBidXQgdG8gc2NyYXAgYW55
-dGhpbmcgdGhhdAorZG9lc24ndCBjaGVjayBvdXQuCisKK1RoZSB4cmVmOlJldmVyc2VfTWFwcGlu
-Z19CdHJlZVtyZXZlcnNlLW1hcHBpbmcgQit0cmVlXSBmaWxscyBpbiBwYXJ0IG9mIHRoZQorcHV6
-emxlLiAgU2luY2UgaXQgY29udGFpbnMgY29waWVzIG9mIGV2ZXJ5IGVudHJ5IGluIGVhY2ggaW5v
-ZGXigJlzIGRhdGEgYW5kCithdHRyaWJ1dGUgZm9ya3MsIHdlIGNhbiBmaXggYSBjb3JydXB0ZWQg
-YmxvY2sgbWFwIHdpdGggdGhlc2UgcmVjb3Jkcy4KK0Z1cnRoZXJtb3JlLCBpZiB0aGUgaW5vZGUg
-Qit0cmVlcyBiZWNvbWUgY29ycnVwdCwgaXQgaXMgcG9zc2libGUgdG8gdmlzaXQgYWxsCitpbm9k
-ZSBjaHVua3MgdXNpbmcgdGhlIHJldmVyc2UtbWFwcGluZyBkYXRhLiAgU2hvdWxkIFhGUyBldmVy
-IGdhaW4gdGhlIGFiaWxpdHkKK3RvIHN0b3JlIHBhcmVudCBkaXJlY3RvcnkgaW5mb3JtYXRpb24g
-aW4gZWFjaCBpbm9kZSwgaXQgYWxzbyBiZWNvbWVzIHBvc3NpYmxlCit0byByZXN1cnJlY3QgZGFt
-YWdlZCBkaXJlY3RvcnkgdHJlZXMsIHdoaWNoIHNob3VsZCByZWR1Y2UgdGhlIGNvbXBsYWludHMg
-YWJvdXQKK2lub2RlcyBlbmRpbmcgdXAgaW4gKy9sb3N0K2ZvdW5kKy4gIEV2ZXJ5dGhpbmcgZWxz
-ZSBpbiB0aGUgcGVyLUFHIHByaW1hcnkKK21ldGFkYXRhIGNhbiBhbHJlYWR5IGJlIHJlY29uc3Ry
-dWN0ZWQgdmlhICt4ZnNfcmVwYWlyKy4gIEhvcGVmdWxseSwKK3JlY29uc3RydWN0aW9uIHdpbGwg
-bm90IHR1cm4gb3V0IHRvIGJlIGEgZm9vbCdzIGVycmFuZC4KZGlmZiAtLWdpdCBhL2Rlc2lnbi9Y
-RlNfRmlsZXN5c3RlbV9TdHJ1Y3R1cmUvcm1hcGJ0LmFzY2lpZG9jIGIvZGVzaWduL1hGU19GaWxl
-c3lzdGVtX1N0cnVjdHVyZS9ybWFwYnQuYXNjaWlkb2MKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5k
-ZXggMDAwMDAwMC4uZjA1ZjJkZgotLS0gL2Rldi9udWxsCisrKyBiL2Rlc2lnbi9YRlNfRmlsZXN5
-c3RlbV9TdHJ1Y3R1cmUvcm1hcGJ0LmFzY2lpZG9jCkBAIC0wLDAgKzEsMjIzIEBACitbW1JldmVy
-c2VfTWFwcGluZ19CdHJlZV1dCis9PSBSZXZlcnNlLU1hcHBpbmcgQit0cmVlCisKK1tOT1RFXQor
-VGhpcyBkYXRhIHN0cnVjdHVyZSBpcyB1bmRlciBjb25zdHJ1Y3Rpb24hICBEZXRhaWxzIG1heSBj
-aGFuZ2UuCisKK0lmIHRoZSBmZWF0dXJlIGlzIGVuYWJsZWQsIGVhY2ggYWxsb2NhdGlvbiBncm91
-cCBoYXMgaXRzIG93biByZXZlcnNlCitibG9jay1tYXBwaW5nIEIrdHJlZSwgd2hpY2ggZ3Jvd3Mg
-aW4gdGhlIGZyZWUgc3BhY2UgbGlrZSB0aGUgZnJlZSBzcGFjZQorQit0cmVlcy4gIEFzIG1lbnRp
-b25lZCBpbiB0aGUgY2hhcHRlciBhYm91dAoreHJlZjpSZWNvbnN0cnVjdGlvbltyZWNvbnN0cnVj
-dGlvbl0sIHRoaXMgZGF0YSBzdHJ1Y3R1cmUgaXMgYW5vdGhlciBwaWVjZSBvZgordGhlIHB1enps
-ZSBuZWNlc3NhcnkgdG8gcmVjb25zdHJ1Y3QgdGhlIGRhdGEgb3IgYXR0cmlidXRlIGZvcmsgb2Yg
-YSBmaWxlIGZyb20KK3JldmVyc2UtbWFwcGluZyByZWNvcmRzOyB3ZSBjYW4gYWxzbyB1c2UgaXQg
-dG8gZG91YmxlLWNoZWNrIGFsbG9jYXRpb25zIHRvCitlbnN1cmUgdGhhdCB3ZSBhcmUgbm90IGFj
-Y2lkZW50YWxseSBjcm9zcy1saW5raW5nIGJsb2Nrcywgd2hpY2ggY2FuIGNhdXNlCitzZXZlcmUg
-ZGFtYWdlIHRvIHRoZSBmaWxlc3lzdGVtLgorCitUaGlzIEIrdHJlZSBpcyBvbmx5IHByZXNlbnQg
-aWYgdGhlICtYRlNfU0JfRkVBVF9ST19DT01QQVRfUk1BUEJUKworZmVhdHVyZSBpcyBlbmFibGVk
-LiAgVGhlIGZlYXR1cmUgcmVxdWlyZXMgYSB2ZXJzaW9uIDUgZmlsZXN5c3RlbS4KKworRWFjaCBy
-ZWNvcmQgaW4gdGhlIHJldmVyc2UtbWFwcGluZyBCK3RyZWUgaGFzIHRoZSBmb2xsb3dpbmcgc3Ry
-dWN0dXJlOgorCitbc291cmNlLCBjXQorLS0tLQorc3RydWN0IHhmc19ybWFwX3JlYyB7CisgICAg
-IF9fYmUzMiAgICAgICAgICAgICAgICAgICAgIHJtX3N0YXJ0YmxvY2s7CisgICAgIF9fYmUzMiAg
-ICAgICAgICAgICAgICAgICAgIHJtX3Vud3JpdHRlbjoxOworICAgICBfX2JlMzIgICAgICAgICAg
-ICAgICAgICAgICBybV9ibG9ja2NvdW50OjMxOworICAgICBfX2JlNjQgICAgICAgICAgICAgICAg
-ICAgICBybV9vd25lcjsKKyAgICAgX19iZTY0ICAgICAgICAgICAgICAgICAgICAgcm1fZm9yazox
-OworICAgICBfX2JlNjQgICAgICAgICAgICAgICAgICAgICBybV9ibWJ0OjE7CisgICAgIF9fYmU2
-NCAgICAgICAgICAgICAgICAgICAgIHJtX29mZnNldDo2MjsKK307CistLS0tCisKKypybV9zdGFy
-dGJsb2NrKjo6CitBRyBibG9jayBudW1iZXIgb2YgdGhpcyByZWNvcmQuCisKKypybV91bndyaXR0
-ZW4qOjoKK0EgZmxhZyBpbmRpY2F0aW5nIHRoYXQgdGhlIGV4dGVudCBpcyB1bndyaXR0ZW4uICBU
-aGlzIGNvcnJlc3BvbmRzIHRvIHRoZSBmbGFnIGluCit0aGUgeHJlZjpEYXRhX0V4dGVudHNbZXh0
-ZW50IHJlY29yZF0gZm9ybWF0IHdoaWNoIG1lYW5zICtYRlNfRVhUX1VOV1JJVFRFTisuCisKKypy
-bV9ibG9ja2NvdW50Kjo6CitUaGUgbGVuZ3RoIG9mIHRoaXMgZXh0ZW50LgorCisqcm1fb3duZXIq
-OjoKK0EgNjQtYml0IG51bWJlciBkZXNjcmliaW5nIHRoZSBvd25lciBvZiB0aGlzIGV4dGVudC4g
-IFRoaXMgaXMgdHlwaWNhbGx5IHRoZQorYWJzb2x1dGUgaW5vZGUgbnVtYmVyLCBidXQgY2FuIGFs
-c28gY29ycmVzcG9uZCB0byBvbmUgb2YgdGhlIGZvbGxvd2luZzoKKworLlNwZWNpYWwgb3duZXIg
-dmFsdWVzCitbb3B0aW9ucz0iaGVhZGVyIl0KK3w9PT09PQorfCBWYWx1ZQkJCQl8IERlc2NyaXB0
-aW9uCit8ICtYRlNfUk1BUF9PV05fTlVMTCsgICAgICAgICAgIHwgTm8gb3duZXIuICBUaGlzIHNo
-b3VsZCBuZXZlciBhcHBlYXIgb24gZGlzay4KK3wgK1hGU19STUFQX09XTl9VTktOT1dOKyAgICAg
-ICAgfCBVbmtub3duIG93bmVyOyBmb3IgRUZJIHJlY292ZXJ5LiAgVGhpcyBzaG91bGQgbmV2ZXIg
-YXBwZWFyIG9uIGRpc2suCit8ICtYRlNfUk1BUF9PV05fRlMrICAgICAgICAgICAgIHwgQWxsb2Nh
-dGlvbiBncm91cCBoZWFkZXJzCit8ICtYRlNfUk1BUF9PV05fTE9HKyAgICAgICAgICAgIHwgWEZT
-IGxvZyBibG9ja3MKK3wgK1hGU19STUFQX09XTl9BRysgICAgICAgICAgICAgfCBQZXItYWxsb2Nh
-dGlvbiBncm91cCBCK3RyZWUgYmxvY2tzLiAgVGhpcyBtZWFucyBmcmVlIHNwYWNlIEIrdHJlZSBi
-bG9ja3MsIGJsb2NrcyBvbiB0aGUgZnJlZWxpc3QsIGFuZCByZXZlcnNlLW1hcHBpbmcgQit0cmVl
-IGJsb2Nrcy4KK3wgK1hGU19STUFQX09XTl9JTk9CVCsgICAgICAgICAgfCBQZXItYWxsb2NhdGlv
-biBncm91cCBpbm9kZSBCK3RyZWUgYmxvY2tzLiAgVGhpcyBpbmNsdWRlcyBmcmVlIGlub2RlIEIr
-dHJlZSBibG9ja3MuCit8ICtYRlNfUk1BUF9PV05fSU5PREVTKyAgICAgICAgIHwgSW5vZGUgY2h1
-bmtzCit8ICtYRlNfUk1BUF9PV05fUkVGQysgICAgICAgICAgIHwgUGVyLWFsbG9jYXRpb24gZ3Jv
-dXAgcmVmY291bnQgQit0cmVlIGJsb2Nrcy4gIFRoaXMgd2lsbCBiZSB1c2VkIGZvciByZWZsaW5r
-IHN1cHBvcnQuCit8PT09PT0KKworKnJtX2ZvcmsqOjoKK0lmICtybV9vd25lcisgZGVzY3JpYmVz
-IGFuIGlub2RlLCB0aGlzIGNhbiBiZSAxIGlmIHRoaXMgcmVjb3JkIGlzIGZvciBhbgorYXR0cmli
-dXRlIGZvcmsuCisKKypybV9ibWJ0Kjo6CitJZiArcm1fb3duZXIrIGRlc2NyaWJlcyBhbiBpbm9k
-ZSwgdGhpcyBjYW4gYmUgMSB0byBzaWduaWZ5IHRoYXQgdGhpcyByZWNvcmQgaXMKK2ZvciBhIGJs
-b2NrIG1hcCBCK3RyZWUgYmxvY2suICBJbiB0aGlzIGNhc2UsICtybV9vZmZzZXQrIGhhcyBubyBt
-ZWFuaW5nLgorCisqcm1fb2Zmc2V0Kjo6CitUaGUgNjItYml0IGxvZ2ljYWwgZmlsZSBibG9jayBv
-ZmZzZXQsIGlmICtybV9vd25lcisgZGVzY3JpYmVzIGFuIGlub2RlLgorTWVhbmluZ2xlc3Mgb3Ro
-ZXJ3aXNlLgorCitbTk9URV0KK1RoZSBzaW5nbGUtYml0IGZsYWcgdmFsdWVzICtybV91bndyaXR0
-ZW4rLCArcm1fZm9yayssIGFuZCArcm1fYm1idCsgYXJlIHBhY2tlZAoraW50byB0aGUgbGFyZ2Vy
-IGZpZWxkcyBpbiB0aGUgQyBzdHJ1Y3R1cmUgZGVmaW5pdGlvbi4KKworW05PVEVdCitGb3IgdGhl
-IG1vbWVudCwgdGhlcmUgaXMgYSByZXF1aXJlbWVudCB0aGF0IGFsbCByZWNvcmRzIGluIHRoZSBk
-YXRhIG9yCithdHRyaWJ1dGUgZm9ya3MgbXVzdCBtYXRjaCBleGFjdGx5IHdpdGggdGhlIGNvcnJl
-c3BvbmRpbmcgZW50cnkgaW4gdGhlCityZXZlcnNlLW1hcHBpbmcgQit0cmVlLiAgVGhpcyBtYXkg
-YmUgbGlmdGVkIGluIGZ1dHVyZSB2ZXJzaW9ucyBvZiB0aGUgcGF0Y2hzZXQuCisKK0ZvciB0aGUg
-cmV2ZXJzZS1tYXBwaW5nIEIrdHJlZSwgdGhlIGtleSBkZWZpbml0aW9uIGlzIGxhcmdlciB0aGFu
-IHRoZSB1c3VhbCBBRworYmxvY2sgbnVtYmVyLiAgT24gYSBjbGFzc2ljIFhGUyBmaWxlc3lzdGVt
-LCBlYWNoIGJsb2NrIGhhcyBvbmx5IG9uZSBvd25lciwgd2hpY2gKK21lYW5zIHRoYXQgK3JtX3N0
-YXJ0YmxvY2srIGlzIHN1ZmZpY2llbnQgdG8gdW5pcXVlbHkgaWRlbnRpZnkgZWFjaCByZWNvcmQu
-CitIb3dldmVyLCBzaGFyZWQgYmxvY2sgc3VwcG9ydCAocmVmbGluaykgb24gWEZTIGJyZWFrcyB0
-aGF0IGFzc3VtcHRpb247IG5vdworZmlsZXN5c3RlbSBibG9ja3MgY2FuIGJlIGxpbmtlZCB0byBh
-bnkgbG9naWNhbCBibG9jayBvZmZzZXQgb2YgYW55IGZpbGUgaW5vZGUuCitUaGVyZWZvcmUsIHRo
-ZSBrZXkgbXVzdCBpbmNsdWRlIHRoZSBvd25lciBhbmQgb2Zmc2V0IGluZm9ybWF0aW9uIHRvIHBy
-ZXNlcnZlIHRoZQorMSB0byAxIHJlbGF0aW9uIGJldHdlZW4ga2V5IGFuZCByZWNvcmQuICBUaGUg
-a2V5IGhhcyB0aGUgZm9sbG93aW5nIHN0cnVjdHVyZToKKworW3NvdXJjZSwgY10KKy0tLS0KK3N0
-cnVjdCB4ZnNfcm1hcF9rZXkgeworICAgICBfX2JlMzIgICAgICAgICAgICAgICAgICAgICBybV9z
-dGFydGJsb2NrOworICAgICBfX2JlNjQgICAgICAgICAgICAgICAgICAgICBybV9vd25lcjsKKyAg
-ICAgX19iZTY0ICAgICAgICAgICAgICAgICAgICAgcm1fZm9yazoxOworICAgICBfX2JlNjQgICAg
-ICAgICAgICAgICAgICAgICBybV9ibWJ0OjE7CisgICAgIF9fYmU2NCAgICAgICAgICAgICAgICAg
-ICAgIHJtX29mZnNldDo2MjsKK307CistLS0tCisKKyogQXMgdGhlIHJlZmVyZW5jZSBjb3VudGlu
-ZyBpcyBBRyByZWxhdGl2ZSwgYWxsIHRoZSBibG9jayBudW1iZXJzIGFyZSBvbmx5CiszMi1iaXRz
-LgorKiBUaGUgK2JiX21hZ2ljKyB2YWx1ZSBpcyAiUk1CMyIgKDB4NTI0ZDQyMzMpLgorKiBUaGUg
-K3hmc19idHJlZV9zYmxvY2tfdCsgaGVhZGVyIGlzIHVzZWQgZm9yIGludGVybWVkaWF0ZSBCK3Ry
-ZWUgbm9kZSBhcyB3ZWxsCithcyB0aGUgbGVhdmVzLgorCis9PT0geGZzX2RiIHJtYXBidCBFeGFt
-cGxlCisKK1RoaXMgZXhhbXBsZSBzaG93cyBhIHJldmVyc2UtbWFwcGluZyBCK3RyZWUgZnJvbSBh
-IGZyZXNobHkgZm9ybWF0dGVkIHJvb3QKK2ZpbGVzeXN0ZW06CisKKy0tLS0KK3hmc19kYj4gYWdp
-IDAKK3hmc19kYj4gYWRkciBybWFwcm9vdAoreGZzX2RiPiBwCittYWdpYyA9IDB4NTI0ZDQyMzMK
-K2xldmVsID0gMQorbnVtcmVjcyA9IDQzCitsZWZ0c2liID0gbnVsbAorcmlnaHRzaWIgPSBudWxs
-Citibm8gPSA1NgorbHNuID0gMHgzMDAwMDA0YzgKK3V1aWQgPSAxOTc3MjIxZC04MzQ1LTQ2NGUt
-YjFmNC1hYTJlYTM2ODk1ZjQKK293bmVyID0gMAorY3JjID0gMHg3Y2Y4YmU2ZiAoY29ycmVjdCkK
-K2tleXNbMS00M10gPSBbc3RhcnRibG9jayxvd25lcixvZmZzZXRdCisgICAgICAgIDE6WzAsLTMs
-MF0gMjpbNDE3LDI4NSwwXSAzOls4MjksNDk5LDBdIDQ6WzEyOTIsNzEwLDBdIDU6WzMyMjE1LC01
-LDBdCisgICAgICAgIDY6WzM0MDgzLDExNjEsMF0gNzpbMzQ4OTYsMjU2MTkxLDBdCisgICAgICAg
-IC4uLgorICAgICAgICA0MTpbNTA5OTgsMzI2NzM0LDBdIDQyOls1MTQzMSwzMjcwMTAsMF0gNDM6
-WzUxNjExLDMyNzExMiwwXQorcHRyc1sxLTQzXSA9IDE6NSAyOjYgMzo4IDQ6OSA1OjEwIDY6MTEg
-Nzo0MTggLi4uIDQxOjQ2Mzc3IDQyOjQ4Nzg0IDQzOjQ5NTIyCit4ZnNfZGI+IGFkZHIgcHRyc1sx
-N10KK3hmc19kYj4gcAorbWFnaWMgPSAweDUyNGQ0MjMzCitsZXZlbCA9IDAKK251bXJlY3MgPSAx
-NjgKK2xlZnRzaWIgPSAzNjI4NAorcmlnaHRzaWIgPSAzNzYxNworYm5vID0gMjk0NzYwCitsc24g
-PSAweDIwMDAwMjc2MQordXVpZCA9IDE5NzcyMjFkLTgzNDUtNDY0ZS1iMWY0LWFhMmVhMzY4OTVm
-NAorb3duZXIgPSAwCitjcmMgPSAweDJkYWQzZmJlIChjb3JyZWN0KQorcmVjc1sxLTE2OF0gPSBb
-c3RhcnRibG9jayxibG9ja2NvdW50LG93bmVyLG9mZnNldCxleHRlbnRmbGFnLGF0dHJmb3JrLGJt
-YnRibG9ja10KKyAgICAgICAgMTpbNDAzMjYsMSwyNTk2MTUsMCwwLDAsMF0gMjpbNDAzMjcsMSwt
-NSwwLDAsMCwwXQorICAgICAgICAzOls0MDMyOCwyLDI1OTYxOCwwLDAsMCwwXSA0Ols0MDMzMCwx
-LDI1OTYxOSwwLDAsMCwwXQorICAgICAgICAuLi4KKyAgICAgICAgMTI3Ols0MDU0MCwxLDMyNDI2
-NiwwLDAsMCwwXSAxMjg6WzQwNTQxLDEsMzI0MjY2LDgzODg2MDgsMCwwLDBdCisgICAgICAgIDEy
-OTpbNDA1NDIsMiwzMjQyNjYsMSwwLDAsMF0gMTMwOls0MDU0NCwzMiwtNywwLDAsMCwwXQorLS0t
-LQorCitTZXZlcmFsIGludGVyZXN0aW5nIHRoaW5ncyBwb3Agb3V0IGhlcmUuICBUaGUgZmlyc3Qg
-cmVjb3JkIHNob3dzIHRoYXQgaW5vZGUKKzI1OSw2MTUgaGFzIG1hcHBlZCBBRyBibG9jayA0MCwz
-MjYgYXQgb2Zmc2V0IDAuICBXZSBjb25maXJtIHRoaXMgYnkgbG9va2luZyBhdAordGhlIGJsb2Nr
-IG1hcCBmb3IgdGhhdCBpbm9kZToKKworLS0tLQoreGZzX2RiPiBpbm9kZSAyNTk2MTUKK3hmc19k
-Yj4gYm1hcAorZGF0YSBvZmZzZXQgMCBzdGFydGJsb2NrIDQwMzI2ICgwLzQwMzI2KSBjb3VudCAx
-IGZsYWcgMAorLS0tLQorCitOZXh0LCBub3RpY2UgcmVjb3JkcyAxMjcgYW5kIDEyOCwgd2hpY2gg
-ZGVzY3JpYmUgbmVpZ2hib3JpbmcgQUcgYmxvY2tzIHRoYXQgYXJlCittYXBwZWQgdG8gbm9uLWNv
-bnRpZ3VvdXMgbG9naWNhbCBibG9ja3MgaW4gaW5vZGUgMzI0LDI2Ni4gIEdpdmVuIHRoZSBsb2dp
-Y2FsCitvZmZzZXQgb2YgOCwzODgsNjA4IHdlIHN1cm1pc2UgdGhhdCB0aGlzIGlzIGEgbGVhZiBk
-aXJlY3RvcnksIGJ1dCBsZXQgdXMKK2NvbmZpcm06CisKKy0tLS0KK3hmc19kYj4gaW5vZGUgMzI0
-MjY2Cit4ZnNfZGI+IHAgY29yZS5tb2RlCitjb3JlLm1vZGUgPSAwNDA3NTUKK3hmc19kYj4gYm1h
-cAorZGF0YSBvZmZzZXQgMCBzdGFydGJsb2NrIDQwNTQwICgwLzQwNTQwKSBjb3VudCAxIGZsYWcg
-MAorZGF0YSBvZmZzZXQgMSBzdGFydGJsb2NrIDQwNTQyICgwLzQwNTQyKSBjb3VudCAyIGZsYWcg
-MAorZGF0YSBvZmZzZXQgMyBzdGFydGJsb2NrIDQwNTc2ICgwLzQwNTc2KSBjb3VudCAxIGZsYWcg
-MAorZGF0YSBvZmZzZXQgODM4ODYwOCBzdGFydGJsb2NrIDQwNTQxICgwLzQwNTQxKSBjb3VudCAx
-IGZsYWcgMAoreGZzX2RiPiBwIGNvcmUubW9kZQorY29yZS5tb2RlID0gMDEwMDY0NAoreGZzX2Ri
-PiBkYmxvY2sgMAoreGZzX2RiPiBwIGRoZHIuaGRyLm1hZ2ljCitkaGRyLmhkci5tYWdpYyA9IDB4
-NTg0NDQ0MzMKK3hmc19kYj4gZGJsb2NrIDgzODg2MDgKK3hmc19kYj4gcCBsaGRyLmluZm8uaGRy
-Lm1hZ2ljCitsaGRyLmluZm8uaGRyLm1hZ2ljID0gMHgzZGYxCistLS0tCisKK0luZGVlZCwgdGhp
-cyBpbm9kZSAzMjQsMjY2IGFwcGVhcnMgdG8gYmUgYSBsZWFmIGRpcmVjdG9yeSwgYXMgaXQgaGFz
-IHJlZ3VsYXIKK2RpcmVjdG9yeSBkYXRhIGJsb2NrcyBhdCBsb3cgb2Zmc2V0cywgYW5kIGEgc2lu
-Z2xlIGxlYWYgYmxvY2suCisKK05vdGljZSBmdXJ0aGVyIHRoZSB0d28gcmV2ZXJzZS1tYXBwaW5n
-IHJlY29yZHMgd2l0aCBuZWdhdGl2ZSBvd25lcnMuICBBbiBvd25lcgorb2YgLTcgY29ycmVzcG9u
-ZHMgdG8gK1hGU19STUFQX09XTl9JTk9ERVMrLCB3aGljaCBpcyBhbiBpbm9kZSBjaHVuaywgYW5k
-IGFuCitvd25lciBjb2RlIG9mIC01IGNvcnJlc3BvbmRzIHRvICtYRlNfUk1BUF9PV05fQUcrLCB3
-aGljaCBjb3ZlcnMgZnJlZSBzcGFjZQorQit0cmVlcyBhbmQgZnJlZSBzcGFjZS4gIExldCdzIHNl
-ZSBpZiBibG9jayA0MCw1NDQgaXMgcGFydCBvZiBhbiBpbm9kZSBjaHVuazoKKworLS0tLQoreGZz
-X2RiPiBibG9ja2dldAoreGZzX2RiPiBmc2Jsb2NrIDQwNTQ0Cit4ZnNfZGI+IGJsb2NrdXNlCiti
-bG9jayA0MDU0NCAoMC80MDU0NCkgdHlwZSBpbm9kZQoreGZzX2RiPiBzdGFjaworMToKKyAgICAg
-ICAgYnl0ZSBvZmZzZXQgMTY2MDY4MjI0LCBsZW5ndGggNDA5NgorICAgICAgICBidWZmZXIgYmxv
-Y2sgMzI0MzUyIChmc2JubyA0MDU0NCksIDggYmJzCisgICAgICAgIGlub2RlIDMyNDI2NiwgZGly
-IGlub2RlIDMyNDI2NiwgdHlwZSBkYXRhCit4ZnNfZGI+IHR5cGUgaW5vZGUKK3hmc19kYj4gcAor
-Y29yZS5tYWdpYyA9IDB4NDk0ZQorLS0tLQorCitPdXIgc3VzcGljaW9ucyBhcmUgY29uZmlybWVk
-LiAgTGV0J3MgYWxzbyBzZWUgaWYgNDAsMzI3IGlzIHBhcnQgb2YgYSBmcmVlIHNwYWNlCit0cmVl
-OgorCistLS0tCit4ZnNfZGI+IGZzYmxvY2sgNDAzMjcKK3hmc19kYj4gYmxvY2t1c2UKK2Jsb2Nr
-IDQwMzI3ICgwLzQwMzI3KSB0eXBlIGJ0cm1hcAoreGZzX2RiPiB0eXBlIHJtYXBidAoreGZzX2Ri
-PiBwCittYWdpYyA9IDB4NTI0ZDQyMzMKKy0tLS0KKworQXMgeW91IGNhbiBzZWUsIHRoZSByZXZl
-cnNlIGJsb2NrLW1hcHBpbmcgQit0cmVlIGlzIGFuIGltcG9ydGFudCBzZWNvbmRhcnkKK21ldGFk
-YXRhIHN0cnVjdHVyZSwgd2hpY2ggY2FuIGJlIHVzZWQgdG8gcmVjb25zdHJ1Y3QgZGFtYWdlZCBw
-cmltYXJ5IG1ldGFkYXRhLgpkaWZmIC0tZ2l0IGEvZGVzaWduL1hGU19GaWxlc3lzdGVtX1N0cnVj
-dHVyZS94ZnNfZmlsZXN5c3RlbV9zdHJ1Y3R1cmUuYXNjaWlkb2MgYi9kZXNpZ24vWEZTX0ZpbGVz
-eXN0ZW1fU3RydWN0dXJlL3hmc19maWxlc3lzdGVtX3N0cnVjdHVyZS5hc2NpaWRvYwppbmRleCA2
-MjUwMmIzLi4xYjg2NThkIDEwMDY0NAotLS0gYS9kZXNpZ24vWEZTX0ZpbGVzeXN0ZW1fU3RydWN0
-dXJlL3hmc19maWxlc3lzdGVtX3N0cnVjdHVyZS5hc2NpaWRvYworKysgYi9kZXNpZ24vWEZTX0Zp
-bGVzeXN0ZW1fU3RydWN0dXJlL3hmc19maWxlc3lzdGVtX3N0cnVjdHVyZS5hc2NpaWRvYwpAQCAt
-NDgsNiArNDgsOCBAQCBpbmNsdWRlOjpvdmVydmlldy5hc2NpaWRvY1tdCiAKIGluY2x1ZGU6Om1l
-dGFkYXRhX2ludGVncml0eS5hc2NpaWRvY1tdCiAKK2luY2x1ZGU6OnJlY29uc3RydWN0aW9uLmFz
-Y2lpZG9jW10KKwogaW5jbHVkZTo6Y29tbW9uX3R5cGVzLmFzY2lpZG9jW10KIAogaW5jbHVkZTo6
-bWFnaWMuYXNjaWlkb2NbXQpAQCAtNjYsNiArNjgsOCBAQCBpbmNsdWRlOjpidHJlZXMuYXNjaWlk
-b2NbXQogCiBpbmNsdWRlOjphbGxvY2F0aW9uX2dyb3Vwcy5hc2NpaWRvY1tdCiAKK2luY2x1ZGU6
-OnJtYXBidC5hc2NpaWRvY1tdCisKIGluY2x1ZGU6OmpvdXJuYWxpbmdfbG9nLmFzY2lpZG9jW10K
-IAogaW5jbHVkZTo6aW50ZXJuYWxfaW5vZGVzLmFzY2lpZG9jW10KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Document the reference count btree and talk a little bit about how
+the reflink feature uses it.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ .../allocation_groups.asciidoc                     |   20 ++-
+ .../XFS_Filesystem_Structure/directories.asciidoc  |    1 
+ design/XFS_Filesystem_Structure/docinfo.xml        |    2 
+ design/XFS_Filesystem_Structure/magic.asciidoc     |    1 
+ .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |   25 +++
+ .../XFS_Filesystem_Structure/refcountbt.asciidoc   |  145 ++++++++++++++++++++
+ design/XFS_Filesystem_Structure/reflink.asciidoc   |   40 ++++++
+ design/XFS_Filesystem_Structure/rmapbt.asciidoc    |    1 
+ .../xfs_filesystem_structure.asciidoc              |    4 +
+ 9 files changed, 234 insertions(+), 5 deletions(-)
+ create mode 100644 design/XFS_Filesystem_Structure/refcountbt.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/reflink.asciidoc
+
+
+diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+index bd2db5c..a6ce76a 100644
+--- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
++++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+@@ -13,6 +13,7 @@ Each AG has the following characteristics:
+          * Free space management
+          * Inode allocation and tracking
+          * Reverse block-mapping index (optional)
++         * Data block reference count index (optional)
+ 
+ Having multiple AGs allows XFS to handle most operations in parallel without
+ degrading performance as the number of concurrent accesses increases.
+@@ -386,6 +387,12 @@ Reverse mapping B+tree.  Each allocation group contains a B+tree containing
+ records mapping AG blocks to their owners.  See the section about
+ xref:Reconstruction[reconstruction] for more details.
+ 
++| +XFS_SB_FEAT_RO_COMPAT_REFLINK+ |
++Reference count B+tree.  Each allocation group contains a B+tree to track the
++reference counts of AG blocks.  This enables files to share data blocks safely.
++See the section about xref:Reflink_Deduplication[reflink and deduplication] for
++more details.
++
+ |=====
+ 
+ *sb_features_incompat*::
+@@ -546,7 +553,9 @@ struct xfs_agf {
+ 
+      /* version 5 filesystem fields start here */
+      uuid_t              agf_uuid;
+-     __be64              agf_spare64[16];
++     __be32              agf_refcount_root;
++     __be32              agf_refcount_level;
++     __be64              agf_spare64[15];
+ 
+      /* unlogged fields, written during buffer writeback. */
+      __be64              agf_lsn;
+@@ -608,6 +617,12 @@ used if the +XFS_SB_VERSION2_LAZYSBCOUNTBIT+ bit is set in +sb_features2+.
+ The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
+ depending on which features are set.
+ 
++*agf_refcount_root*::
++Block number for the root of the reference count B+tree, if enabled.
++
++*agf_refcount_root*::
++Depth of the reference count B+tree, if enabled.
++
+ *agf_spare64*::
+ Empty space in the logged part of the AGF sector, for use for future features.
+ 
+@@ -1241,4 +1256,5 @@ By placing the real time device (and the journal) on separate high-performance
+ storage devices, it is possible to reduce most of the unpredictability in I/O
+ response times that come from metadata operations.
+ 
+-None of the XFS per-AG B+trees are involved with real time files.
++None of the XFS per-AG B+trees are involved with real time files.  It is not
++possible for real time files to share data blocks.
+diff --git a/design/XFS_Filesystem_Structure/directories.asciidoc b/design/XFS_Filesystem_Structure/directories.asciidoc
+index bccf912..1758c4e 100644
+--- a/design/XFS_Filesystem_Structure/directories.asciidoc
++++ b/design/XFS_Filesystem_Structure/directories.asciidoc
+@@ -1419,6 +1419,7 @@ The hash value of a particular record.
+ The directory/attribute logical block containing all entries up to the
+ corresponding hash value.
+ 
++//
+ * The freeindex's +bests+ array starts from the end of the block and grows to the
+ start of the block.
+ 
+diff --git a/design/XFS_Filesystem_Structure/docinfo.xml b/design/XFS_Filesystem_Structure/docinfo.xml
+index ff3818a..009376f 100644
+--- a/design/XFS_Filesystem_Structure/docinfo.xml
++++ b/design/XFS_Filesystem_Structure/docinfo.xml
+@@ -133,6 +133,8 @@
+ 		<revdescription>
+ 			<simplelist>
+ 				<member>Document the reverse-mapping btree.</member>
++				<member>Document the reference-count btree.</member>
++				<member>Discuss block sharing, reflink, &amp; deduplication.</member>
+ 			</simplelist>
+ 		</revdescription>
+ 	</revision>
+diff --git a/design/XFS_Filesystem_Structure/magic.asciidoc b/design/XFS_Filesystem_Structure/magic.asciidoc
+index c3d0341..7caf20e 100644
+--- a/design/XFS_Filesystem_Structure/magic.asciidoc
++++ b/design/XFS_Filesystem_Structure/magic.asciidoc
+@@ -45,6 +45,7 @@ relevant chapters.  Magic numbers tend to have consistent locations:
+ | +XFS_ATTR3_LEAF_MAGIC+	| 0x3bee	|     	| xref:Leaf_Attributes[Leaf Attribute], v5 only
+ | +XFS_ATTR3_RMT_MAGIC+		| 0x5841524d	| XARM	| xref:Remote_Values[Remote Attribute Value], v5 only
+ | +XFS_RMAP_CRC_MAGIC+		| 0x524d4233	| RMB3	| xref:Reverse_Mapping_Btree[Reverse Mapping B+tree], v5 only
++| +XFS_REFC_CRC_MAGIC+		| 0x52334643	| R3FC	| xref:Reference_Count_Btree[Reference Count B+tree], v5 only
+ |=====
+ 
+ The magic numbers for log items are at offset zero in each log item, but items
+diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
+index f1b0421..737a57b 100644
+--- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
++++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
+@@ -108,7 +108,8 @@ struct xfs_dinode_core {
+      __be64                    di_changecount;
+      __be64                    di_lsn;
+      __be64                    di_flags2;
+-     __u8                      di_pad2[16];
++     __be32                    di_cowextsize;
++     __u8                      di_pad2[12];
+      xfs_timestamp_t           di_crtime;
+      __be64                    di_ino;
+      uuid_t                    di_uuid;
+@@ -214,7 +215,7 @@ including relevant metadata like B+trees. This does not include blocks used for
+ extended attributes.
+ 
+ *di_extsize*::
+-Specifies the extent size for filesystems with real-time devices and an extent
++Specifies the extent size for filesystems with real-time devices or an extent
+ size hint for standard filesystems. For normal filesystems, and with
+ directories, the +XFS_DIFLAG_EXTSZINHERIT+ flag must be set in +di_flags+ if
+ this field is used. Inodes created in these directories will inherit the
+@@ -278,7 +279,7 @@ For directory inodes, new inodes inherit the +di_projid+ value.
+ For directory inodes, symlinks cannot be created.
+ 
+ | +XFS_DIFLAG_EXTSIZE+		|
+-Specifies the extent size for real-time files or a and extent size hint for regular files.
++Specifies the extent size for real-time files or an extent size hint for regular files.
+ 
+ | +XFS_DIFLAG_EXTSZINHERIT+	|
+ For directory inodes, new inodes inherit the +di_extsize+ value.
+@@ -322,8 +323,26 @@ Specifies extended flags associated with a v3 inode.
+ | +XFS_DIFLAG2_DAX+		|
+ For a file, enable DAX to increase performance on persistent-memory storage.
+ If set on a directory, files created in the directory will inherit this flag.
++| +XFS_DIFLAG2_REFLINK+		|
++This inode shares (or has shared) data blocks with another inode.
++| +XFS_DIFLAG2_COWEXTSIZE+	|
++For files, this is the extent size hint for copy on write operations; see
+++di_cowextsize+ for details.  For directories, the value in +di_cowextsize+
++will be copied to all newly created files and directories.
+ |=====
+ 
++*di_cowextsize*::
++Specifies the extent size hint for copy on write operations.  When allocating
++extents for a copy on write operation, the allocator will be asked to align
++its allocations to either +di_cowextsize+ blocks or +di_extsize+ blocks,
++whichever is greater.  The +XFS_DIFLAG2_COWEXTSIZE+ flag must be set if this
++field is used.  If this field and its flag are set on a directory file, the
++value will be copied into any files or directories created within this
++directory.  During a block sharing operation, this value will be copied from
++the source file to the destination file if the sharing operation completely
++overwrites the destination file's contents and the destination file does not
++already have +di_cowextsize+ set.
++
+ *di_pad2*::
+ Padding for future expansion of the inode.
+ 
+diff --git a/design/XFS_Filesystem_Structure/refcountbt.asciidoc b/design/XFS_Filesystem_Structure/refcountbt.asciidoc
+new file mode 100644
+index 0000000..dbbb98e
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/refcountbt.asciidoc
+@@ -0,0 +1,145 @@
++[[Reference_Count_Btree]]
++== Reference Count B+tree
++
++[NOTE]
++This data structure is under construction!  Details may change.
++
++To support the sharing of file data blocks (reflink), each allocation group has
++its own reference count B+tree, which grows in the allocated space like the
++inode B+trees.  This data could be gleaned by performing an interval query of
++the reverse-mapping B+tree, but doing so would come at a huge performance
++penalty.  Therefore, this data structure is a cache of computable information.
++
++This B+tree is only present if the +XFS_SB_FEAT_RO_COMPAT_REFLINK+
++feature is enabled.  The feature requires a version 5 filesystem.
++
++Each record in the reference count B+tree has the following structure:
++
++[source, c]
++----
++struct xfs_refcount_rec {
++     __be32                     rc_startblock;
++     __be32                     rc_blockcount;
++     __be32                     rc_refcount;
++};
++----
++
++*rc_startblock*::
++AG block number of this record.
++
++*rc_blockcount*::
++The length of this extent.
++
++*rc_refcount*::
++Number of mappings of this filesystem extent.
++
++Node pointers are an AG relative block pointer:
++
++[source, c]
++----
++struct xfs_refcount_key {
++     __be32                     rc_startblock;
++};
++----
++
++* As the reference counting is AG relative, all the block numbers are only
++32-bits.
++* The +bb_magic+ value is "R3FC" (0x52334643).
++* The +xfs_btree_sblock_t+ header is used for intermediate B+tree node as well
++as the leaves.
++
++=== xfs_db refcntbt Example
++
++For this example, an XFS filesystem was populated with a root filesystem and
++a deduplication program was run to create shared blocks:
++
++----
++xfs_db> agf 0
++xfs_db> addr refcntroot
++xfs_db> p
++magic = 0x52334643
++level = 1
++numrecs = 6
++leftsib = null
++rightsib = null
++bno = 36892
++lsn = 0x200004ec2
++uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
++owner = 0
++crc = 0x75f35128 (correct)
++keys[1-6] = [startblock] 1:[14] 2:[65633] 3:[65780] 4:[94571] 5:[117201] 6:[152442]
++ptrs[1-6] = 1:7 2:25836 3:25835 4:18447 5:18445 6:18449
++xfs_db> addr ptrs[3]
++xfs_db> p
++magic = 0x52334643
++level = 0
++numrecs = 80
++leftsib = 25836
++rightsib = 18447
++bno = 51670
++lsn = 0x200004ec2
++uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
++owner = 0
++crc = 0xc3962813 (correct)
++recs[1-80] = [startblock,blockcount,refcount]
++        1:[65780,1,2] 2:[65781,1,3] 3:[65785,2,2] 4:[66640,1,2]
++        5:[69602,4,2] 6:[72256,16,2] 7:[72871,4,2] 8:[72879,20,2]
++        9:[73395,4,2] 10:[75063,4,2] 11:[79093,4,2] 12:[86344,16,2]
++----
++
++Record 6 in the reference count B+tree for AG 0 indicates that the AG extent
++starting at block 72,256 and running for 16 blocks has a reference count of 2.
++This means that there are two files sharing the block:
++
++----
++xfs_db> blockget -n
++xfs_db> fsblock 72256
++xfs_db> blockuse
++block 72256 (0/72256) type rldata inode 25169197
++----
++
++The blockuse type changes to ``rldata'' to indicate that the block is shared
++data.  Unfortunately, blockuse only tells us about one block owner.  If we
++happen to have enabled the reverse-mapping B+tree, we can use it to find all
++inodes that own this block:
++
++----
++xfs_db> agf 0
++xfs_db> addr rmaproot
++...
++xfs_db> addr ptrs[3]
++...
++xfs_db> addr ptrs[7]
++xfs_db> p
++magic = 0x524d4233
++level = 0
++numrecs = 22
++leftsib = 65057
++rightsib = 65058
++bno = 291478
++lsn = 0x200004ec2
++uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
++owner = 0
++crc = 0xed7da3f7 (correct)
++recs[1-22] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
++        1:[68957,8,3201,0,0,0,0] 2:[68965,4,25260953,0,0,0,0]
++        ...
++        18:[72232,58,3227,0,0,0,0] 19:[72256,16,25169197,24,0,0,0]
++        20:[72290,75,3228,0,0,0,0] 21:[72365,46,3229,0,0,0,0]
++----
++
++Records 18 and 19 intersect the block 72,256; they tell us that inodes 3,227
++and 25,169,197 both claim ownership.  Let us confirm this:
++
++----
++xfs_db> inode 25169197
++xfs_db> bmap
++data offset 0 startblock 12632259 (3/49347) count 24 flag 0
++data offset 24 startblock 72256 (0/72256) count 16 flag 0
++data offset 40 startblock 12632299 (3/49387) count 18 flag 0
++xfs_db> inode 3227
++xfs_db> bmap
++data offset 0 startblock 72232 (0/72232) count 58 flag 0
++----
++
++Inodes 25,169,197 and 3,227 both contain mappings to block 0/72,256.
+diff --git a/design/XFS_Filesystem_Structure/reflink.asciidoc b/design/XFS_Filesystem_Structure/reflink.asciidoc
+new file mode 100644
+index 0000000..8f52b90
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/reflink.asciidoc
+@@ -0,0 +1,40 @@
++[[Reflink_Deduplication]]
++= Sharing Data Blocks
++
++On a traditional filesystem, there is a 1:1 mapping between a logical block
++offset in a file and a physical block on disk, which is to say that physical
++blocks are not shared.  However, there exist various use cases for being able
++to share blocks between files -- deduplicating files saves space on archival
++systems; creating space-efficient clones of disk images for virtual machines
++and containers facilitates efficient datacenters; and deferring the payment of
++the allocation cost of a file system tree copy as long as possible makes
++regular work faster.  In all of these cases, a write to one of the shared
++copies *must* not affect the other shared copies, which means that writes to
++shared blocks must employ a copy-on-write strategy.  Sharing blocks in this
++manner is commonly referred to as ``reflinking''.
++
++XFS implements block sharing in a fairly straightforward manner.  All existing
++data fork structures remain unchanged, save for the addition of a
++per-allocation group xref:Reference_Count_Btree[reference count B+tree].  This
++data structure tracks reference counts for all shared physical blocks, with a
++few rules to maintain compatibility with existing code: If a block is free, it
++will be tracked in the free space B+trees.  If a block is owned by a single
++file, it appears in neither the free space nor the reference count B+trees.  If
++a block is shared, it will appear in the reference count B+tree with a
++reference count >= 2.  The first two cases are established precedent in XFS, so
++the third case is the only behavioral change.
++
++When a filesystem block is shared, the block mapping in the destination file is
++updated to point to that filesystem block and the reference count B+tree records
++are updated to reflect the increased refcount.  If a shared block is written, a
++new block will be allocated, the dirty data written to this new block, and the
++file's block mapping updated to point to the new block.  If a shared block is
++unmapped, the reference count records are updated to reflect the decreased
++refcount and the block is also freed if its reference count becomes zero.  This
++enables users to create space efficient clones of disk images and to copy
++filesystem subtrees quickly, using the standard Linux coreutils packages.
++
++Deduplication employs the same mechanism to share blocks and copy them at write
++time.  However, the kernel confirms that the contents of both files are
++identical before updating the destination file's mapping.  This enables XFS to
++be used by userspace deduplication programs such as +duperemove+.
+diff --git a/design/XFS_Filesystem_Structure/rmapbt.asciidoc b/design/XFS_Filesystem_Structure/rmapbt.asciidoc
+index f05f2df..2be28fa 100644
+--- a/design/XFS_Filesystem_Structure/rmapbt.asciidoc
++++ b/design/XFS_Filesystem_Structure/rmapbt.asciidoc
+@@ -57,6 +57,7 @@ absolute inode number, but can also correspond to one of the following:
+ | +XFS_RMAP_OWN_INOBT+          | Per-allocation group inode B+tree blocks.  This includes free inode B+tree blocks.
+ | +XFS_RMAP_OWN_INODES+         | Inode chunks
+ | +XFS_RMAP_OWN_REFC+           | Per-allocation group refcount B+tree blocks.  This will be used for reflink support.
++| +XFS_RMAP_OWN_COW+		| Blocks that have been reserved for a copy-on-write operation that has not completed.
+ |=====
+ 
+ *rm_fork*::
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 1b8658d..7916fbe 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -48,6 +48,8 @@ include::overview.asciidoc[]
+ 
+ include::metadata_integrity.asciidoc[]
+ 
++include::reflink.asciidoc[]
++
+ include::reconstruction.asciidoc[]
+ 
+ include::common_types.asciidoc[]
+@@ -70,6 +72,8 @@ include::allocation_groups.asciidoc[]
+ 
+ include::rmapbt.asciidoc[]
+ 
++include::refcountbt.asciidoc[]
++
+ include::journaling_log.asciidoc[]
+ 
+ include::internal_inodes.asciidoc[]
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
