@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A96717CB0
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 18:38:47 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B6FA87CA1
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 20:52:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C4EEAC005
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 16:38:47 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JKP1O5zCYay0uWGq (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E4958F8039
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 18:52:06 -0800 (PST)
+Received: from g1t6220.austin.hp.com (g1t6220.austin.hp.com [15.73.96.84]) by
+	cuda.sgi.com with ESMTP id qBx393gMBjT0043W (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 16:38:44 -0800 (PST)
-Subject: [PATCH 12/12] block: test fallocate for block devices
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Mar 2016 16:38:37 -0800
-Message-ID: <20160305003837.28738.49794.stgit@birch.djwong.org>
-In-Reply-To: <20160305003717.28738.98818.stgit@birch.djwong.org>
-References: <20160305003717.28738.98818.stgit@birch.djwong.org>
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 18:52:03 -0800 (PST)
+From: Waiman Long <Waiman.Long@hpe.com>
+Subject: [RFC PATCH 1/2] percpu_counter: Allow falling back to global counter
+	on large system
+Date: Fri,  4 Mar 2016 21:51:38 -0500
+Message-Id: <1457146299-1601-2-git-send-email-Waiman.Long@hpe.com>
+In-Reply-To: <1457146299-1601-1-git-send-email-Waiman.Long@hpe.com>
+References: <1457146299-1601-1-git-send-email-Waiman.Long@hpe.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,388 +24,216 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Dave Chinner <dchinner@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Scott J Norton <scott.norton@hp.com>, linux-kernel@vger.kernel.org, Waiman Long <Waiman.Long@hpe.com>, xfs@oss.sgi.com, Ingo Molnar <mingo@redhat.com>, Douglas Hatch <doug.hatch@hp.com>
 
-Now that we're wiring up fallocate's PUNCH_HOLE and ZERO_RANGE
-features for block devices, add some tests to make sure they
-work correctly.
+Per-cpu counters are used in quite a number of places within
+the kernel.  On large system with a lot of CPUs, however, doing a
+percpu_counter_sum() can be very expensive as nr_cpu cachelines will
+need to be read. In __percpu_counter_compare(), the chance of calling
+percpu_counter_sum() also increases with increasing number of CPUs
+if the global counter value is relatively small.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On large system, using a global counter with lock may actually be
+faster than doing a percpu_counter_sum() which can be frequently
+called from __percpu_counter_compare().
+
+This patch provides a mechanism to selectively degenerate per-cpu
+counters to global counters at per-cpu counter initialization time. The
+following new API is added:
+
+  percpu_counter_set_limit(struct percpu_counter *fbc,
+                           u32 percpu_limit)
+
+The function should be called after percpu_counter_set(). It will
+compare the total limit (nr_cpu * percpu_limit) against the current
+counter value.  If the limit is not smaller, it will disable per-cpu
+counter and use only the global counter instead. At run time, when
+the counter value grows past the total limit, per-cpu counter will
+be enabled again.
+
+Runtime disabling of per-cpu counters, however, is not currently
+supported as it will slow down the per-cpu fast path.
+
+Signed-off-by: Waiman Long <Waiman.Long@hpe.com>
 ---
- common/scsi_debug     |    6 ++-
- tests/generic/705     |   65 ++++++++++++++++++++++++++++
- tests/generic/705.out |    6 +++
- tests/generic/706     |   65 ++++++++++++++++++++++++++++
- tests/generic/706.out |    6 +++
- tests/generic/707     |  112 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/707.out |   28 ++++++++++++
- tests/generic/group   |    3 +
- 8 files changed, 290 insertions(+), 1 deletion(-)
- create mode 100755 tests/generic/705
- create mode 100644 tests/generic/705.out
- create mode 100755 tests/generic/706
- create mode 100644 tests/generic/706.out
- create mode 100755 tests/generic/707
- create mode 100644 tests/generic/707.out
+ include/linux/percpu_counter.h |   10 +++++
+ lib/percpu_counter.c           |   72 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 81 insertions(+), 1 deletions(-)
 
-
-diff --git a/common/scsi_debug b/common/scsi_debug
-index eb08126..74c3802 100644
---- a/common/scsi_debug
-+++ b/common/scsi_debug
-@@ -40,13 +40,17 @@ _get_scsi_debug_dev()
- 	logical=${2-512}
- 	unaligned=${3-0}
- 	size=${4-128}
-+	test -n "$4" && shift
-+	test -n "$3" && shift
-+	test -n "$2" && shift
-+	test -n "$1" && shift
+diff --git a/include/linux/percpu_counter.h b/include/linux/percpu_counter.h
+index 84a1094..04a3783 100644
+--- a/include/linux/percpu_counter.h
++++ b/include/linux/percpu_counter.h
+@@ -16,8 +16,14 @@
  
- 	phys_exp=0
- 	while [ $logical -lt $physical ]; do
- 		let physical=physical/2
- 		let phys_exp=phys_exp+1
- 	done
--	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size"
-+	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size $@"
- 	echo "scsi_debug options $opts" >> $seqres.full
- 	modprobe scsi_debug $opts
- 	[ $? -eq 0 ] || _fail "scsi_debug modprobe failed"
-diff --git a/tests/generic/705 b/tests/generic/705
-new file mode 100755
-index 0000000..25872ac
---- /dev/null
-+++ b/tests/generic/705
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# FS QA Test No. 705
-+#
-+# Test fallocate(ZERO_RANGE) on a block device, which should be able to
-+# WRITE SAME (or equivalent) the range.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
+ #ifdef CONFIG_SMP
+ 
++/*
++ * The per-cpu counter will be degenerated into a global counter when limit
++ * is set at initialization time. It will change back to a real per-cpu
++ * counter once the count exceed the given limit.
++ */
+ struct percpu_counter {
+ 	raw_spinlock_t lock;
++	u32 limit;
+ 	s64 count;
+ #ifdef CONFIG_HOTPLUG_CPU
+ 	struct list_head list;	/* All percpu_counters are on a list */
+@@ -42,6 +48,7 @@ void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
+ void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch);
+ s64 __percpu_counter_sum(struct percpu_counter *fbc);
+ int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch);
++void percpu_counter_set_limit(struct percpu_counter *fbc, u32 percpu_limit);
+ 
+ static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
+ {
+@@ -170,6 +177,9 @@ static inline int percpu_counter_initialized(struct percpu_counter *fbc)
+ 	return 1;
+ }
+ 
++static inline void percpu_counter_set_limit(struct percpu_counter *fbc,
++					    u32 percpu_limit) { }
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
+ #endif	/* CONFIG_SMP */
+ 
+ static inline void percpu_counter_inc(struct percpu_counter *fbc)
+diff --git a/lib/percpu_counter.c b/lib/percpu_counter.c
+index f051d69..f101c06 100644
+--- a/lib/percpu_counter.c
++++ b/lib/percpu_counter.c
+@@ -75,11 +75,25 @@ EXPORT_SYMBOL(percpu_counter_set);
+ void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch)
+ {
+ 	s64 count;
++	unsigned long flags;
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
++	if (fbc->limit) {
++		raw_spin_lock_irqsave(&fbc->lock, flags);
++		if (unlikely(!fbc->limit)) {
++			raw_spin_unlock_irqrestore(&fbc->lock, flags);
++			goto percpu_add;
++		}
++		fbc->count += amount;
++		if (abs(fbc->count) > fbc->limit)
++			fbc->limit = 0;	/* Revert back to per-cpu counter */
+ 
++		raw_spin_unlock_irqrestore(&fbc->lock, flags);
++		return;
++	}
++percpu_add:
+ 	preempt_disable();
+ 	count = __this_cpu_read(*fbc->counters) + amount;
+ 	if (count >= batch || count <= -batch) {
+-		unsigned long flags;
+ 		raw_spin_lock_irqsave(&fbc->lock, flags);
+ 		fbc->count += count;
+ 		__this_cpu_sub(*fbc->counters, count - amount);
+@@ -94,6 +108,8 @@ EXPORT_SYMBOL(__percpu_counter_add);
+ /*
+  * Add up all the per-cpu counts, return the result.  This is a more accurate
+  * but much slower version of percpu_counter_read_positive()
++ *
++ * If a limit is set, the count can be returned directly without locking.
+  */
+ s64 __percpu_counter_sum(struct percpu_counter *fbc)
+ {
+@@ -101,6 +117,9 @@ s64 __percpu_counter_sum(struct percpu_counter *fbc)
+ 	int cpu;
+ 	unsigned long flags;
+ 
++	if (READ_ONCE(fbc->limit))
++		return READ_ONCE(fbc->count);
 +
-+_cleanup()
+ 	raw_spin_lock_irqsave(&fbc->lock, flags);
+ 	ret = fbc->count;
+ 	for_each_online_cpu(cpu) {
+@@ -120,6 +139,7 @@ int __percpu_counter_init(struct percpu_counter *fbc, s64 amount, gfp_t gfp,
+ 	raw_spin_lock_init(&fbc->lock);
+ 	lockdep_set_class(&fbc->lock, key);
+ 	fbc->count = amount;
++	fbc->limit = 0;
+ 	fbc->counters = alloc_percpu_gfp(s32, gfp);
+ 	if (!fbc->counters)
+ 		return -ENOMEM;
+@@ -202,6 +222,9 @@ int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
+ 	s64	count;
+ 
+ 	count = percpu_counter_read(fbc);
++	if (READ_ONCE(fbc->limit))
++		goto compare;
++
+ 	/* Check to see if rough count will be sufficient for comparison */
+ 	if (abs(count - rhs) > (batch * num_online_cpus())) {
+ 		if (count > rhs)
+@@ -211,6 +234,7 @@ int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
+ 	}
+ 	/* Need to use precise count */
+ 	count = percpu_counter_sum(fbc);
++compare:
+ 	if (count > rhs)
+ 		return 1;
+ 	else if (count < rhs)
+@@ -220,6 +244,52 @@ int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
+ }
+ EXPORT_SYMBOL(__percpu_counter_compare);
+ 
++/*
++ * Set the limit if the count is less than the given per-cpu limit * # of cpus.
++ *
++ * This function should only be called at initialization time right after
++ * percpu_counter_set(). Limit will only be set if there is more than
++ * 32 cpus in the system and the current counter value is not bigger than
++ * the limit. Once it is set, it can be cleared as soon as the counter
++ * value exceeds the given limit and real per-cpu counters are used again.
++ * However, switching from per-cpu counters back to global counter is not
++ * currently supported as that will slow down the per-cpu counter fastpath.
++ *
++ * The magic number 32 is chosen to be a compromise between the cost of
++ * reading all the per-cpu counters and that of locking. It can be changed
++ * if there is a better value.
++ */
++#define PERCPU_SET_LIMIT_CPU_THRESHOLD	32
++void percpu_counter_set_limit(struct percpu_counter *fbc, u32 percpu_limit)
 +{
-+    cd /
-+    rm -rf $tmp.*
++	unsigned long flags;
++	int nrcpus = num_possible_cpus();
++	u32 limit;
++
++	if (nrcpus <= PERCPU_SET_LIMIT_CPU_THRESHOLD)
++		return;
++
++	if (!fbc->count) {
++		WARN(1, "percpu_counter_set_limit() called without an initial counter value!\n");
++		return;
++	}
++	/*
++	 * Use default batch size if the given percpu limit is 0.
++	 */
++	if (!percpu_limit)
++		percpu_limit = percpu_counter_batch;
++	limit = percpu_limit * nrcpus;
++
++	/*
++	 * Limit will not be set if the count is large enough
++	 */
++	raw_spin_lock_irqsave(&fbc->lock, flags);
++	if (abs(fbc->count) <= limit)
++		fbc->limit = limit;
++	raw_spin_unlock_irqrestore(&fbc->lock, flags);
 +}
++EXPORT_SYMBOL(percpu_counter_set_limit);
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/scsi_debug
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scsi_debug
-+_require_xfs_io_command "fzero"
-+
-+echo "Create and format"
-+dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
-+_pwrite_byte 0x62 0 4m $dev >> $seqres.full
-+
-+echo "Zero range"
-+$XFS_IO_PROG -c "fzero -k 512k 1m" $dev
-+
-+echo "Check contents"
-+md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
-+
-+echo "Destroy device"
-+_put_scsi_debug_dev
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/705.out b/tests/generic/705.out
-new file mode 100644
-index 0000000..7e58a07
---- /dev/null
-+++ b/tests/generic/705.out
-@@ -0,0 +1,6 @@
-+QA output created by 705
-+Create and format
-+Zero range
-+Check contents
-+caa26edd6c70ce862eb7ec6f10b138a8  SCSI_DEBUG_DEV
-+Destroy device
-diff --git a/tests/generic/706 b/tests/generic/706
-new file mode 100755
-index 0000000..432b800
---- /dev/null
-+++ b/tests/generic/706
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# FS QA Test No. 706
-+#
-+# Test fallocate(PUNCH_HOLE) on a block device, which should be able to
-+# zero-TRIM (or equivalent) the range.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/scsi_debug
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scsi_debug
-+_require_xfs_io_command "fpunch"
-+
-+echo "Create and format"
-+dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
-+_pwrite_byte 0x62 0 4m $dev >> $seqres.full
-+
-+echo "Zero punch"
-+$XFS_IO_PROG -c "fpunch 512k 1m" $dev
-+
-+echo "Check contents"
-+md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
-+
-+echo "Destroy device"
-+_put_scsi_debug_dev
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/706.out b/tests/generic/706.out
-new file mode 100644
-index 0000000..58b9c03
---- /dev/null
-+++ b/tests/generic/706.out
-@@ -0,0 +1,6 @@
-+QA output created by 706
-+Create and format
-+Zero punch
-+Check contents
-+caa26edd6c70ce862eb7ec6f10b138a8  SCSI_DEBUG_DEV
-+Destroy device
-diff --git a/tests/generic/707 b/tests/generic/707
-new file mode 100755
-index 0000000..fb378cd
---- /dev/null
-+++ b/tests/generic/707
-@@ -0,0 +1,112 @@
-+#! /bin/bash
-+# FS QA Test No. 707
-+#
-+# Test the unsupported fallocate flags on a block device.  No collapse
-+# or insert range, no regular fallocate, no forgetting keep-space on
-+# zero range, no punching past EOD, no requests that aren't aligned
-+# with the logicalsector size, and make sure the fallbacks work for
-+# devices that don't support write_same or discard.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/scsi_debug
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scsi_debug
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "finsert"
-+_require_xfs_io_command "fcollapse"
-+_require_xfs_io_command "fzero"
-+_require_xfs_io_command "fpunch"
-+
-+
-+echo "Create and format"
-+dev=$(_get_scsi_debug_dev 4096 4096 0 4 "lbpws=1 lbpws10=1")
-+_pwrite_byte 0x62 0 4m $dev >> $seqres.full
-+$XFS_IO_PROG -c "fsync" $dev
-+
-+echo "Regular fallocate"
-+$XFS_IO_PROG -c "falloc 64k 64k" $dev
-+
-+echo "Insert range"
-+$XFS_IO_PROG -c "finsert 128k 64k" $dev
-+
-+echo "Collapse range"
-+$XFS_IO_PROG -c "fcollapse 256k 64k" $dev
-+
-+echo "Zero range without keep_size"
-+$XFS_IO_PROG -c "fzero 384k 64k" $dev
-+
-+echo "Zero range past EOD"
-+$XFS_IO_PROG -c "fzero -k 3m 4m" $dev
-+
-+echo "Punch range past EOD"
-+$XFS_IO_PROG -c "fpunch 3m 4m" $dev
-+
-+echo "Unaligned zero range"
-+$XFS_IO_PROG -c "fzero -k 512 512" $dev
-+
-+echo "Unaligned punch"
-+$XFS_IO_PROG -c "fpunch 512 512" $dev
-+
-+echo "Check contents"
-+md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
-+
-+echo "Destroy device"
-+_put_scsi_debug_dev
-+
-+echo "Create w/o unmap or writesame and format"
-+dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0")
-+_pwrite_byte 0x62 0 4m $dev >> $seqres.full
-+$XFS_IO_PROG -c "fsync" $dev
-+
-+echo "Zero punch, no fallback available"
-+$XFS_IO_PROG -c "fpunch 512k 512k" $dev
-+
-+echo "Zero range, write fallback"
-+$XFS_IO_PROG -c "fzero -k 1536k 512k" $dev
-+
-+echo "Check contents"
-+md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
-+
-+echo "Destroy device"
-+_put_scsi_debug_dev
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/707.out b/tests/generic/707.out
-new file mode 100644
-index 0000000..a77e7e5
---- /dev/null
-+++ b/tests/generic/707.out
-@@ -0,0 +1,28 @@
-+QA output created by 707
-+Create and format
-+Regular fallocate
-+fallocate: Operation not supported
-+Insert range
-+fallocate: Operation not supported
-+Collapse range
-+fallocate: Operation not supported
-+Zero range without keep_size
-+fallocate: Operation not supported
-+Zero range past EOD
-+fallocate: Invalid argument
-+Punch range past EOD
-+fallocate: Invalid argument
-+Unaligned zero range
-+fallocate: Invalid argument
-+Unaligned punch
-+fallocate: Invalid argument
-+Check contents
-+b83f9394092e15bdcda585cd8e776dc6  SCSI_DEBUG_DEV
-+Destroy device
-+Create w/o unmap or writesame and format
-+Zero punch, no fallback available
-+fallocate: Operation not supported
-+Zero range, write fallback
-+Check contents
-+0fc6bc93cd0cd97e3cde5ea39ea1185d  SCSI_DEBUG_DEV
-+Destroy device
-diff --git a/tests/generic/group b/tests/generic/group
-index 727648c..3d375b5 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -340,3 +340,6 @@
- 335 auto quick metadata
- 336 auto quick metadata
- 337 auto quick metadata
-+705 auto quick rw
-+706 auto quick rw
-+707 auto quick rw
+ static int __init percpu_counter_startup(void)
+ {
+ 	compute_batch_value();
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
