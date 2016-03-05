@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 052BF7F61
-	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 15:50:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CF2DE8F8033
-	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 13:50:13 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	QD2PbZaUeTEEPq0A for <xfs@oss.sgi.com>;
-	Sun, 06 Mar 2016 13:50:12 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1acgYt-0000YA-My
-	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:50:03 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1acgYh-0004oO-VL
-	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:49:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] xfs: pad xfs_attr_leaf_name_remote to avoid tripping on
-	m68k
-Date: Mon,  7 Mar 2016 08:49:50 +1100
-Message-Id: <1457300990-18300-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1457300990-18300-1-git-send-email-david@fromorbit.com>
-References: <1457300990-18300-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7709E7CA0
+	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 00:35:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F1AE3AC001
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 22:34:56 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uKZEE01rfohXq7fv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 22:34:56 -0800 (PST)
+Date: Sat, 5 Mar 2016 17:34:47 +1100
+From: Dave Chinner <dchinner@redhat.com>
+Subject: Re: [RFC PATCH 0/2] percpu_counter: Enable switching to global counter
+Message-ID: <20160305063447.GB2235@devil.localdomain>
+References: <1457146299-1601-1-git-send-email-Waiman.Long@hpe.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1457146299-1601-1-git-send-email-Waiman.Long@hpe.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,68 +25,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Waiman Long <Waiman.Long@hpe.com>
+Cc: Christoph Lameter <cl@linux-foundation.org>, Peter Zijlstra <peterz@infradead.org>, Scott J Norton <scott.norton@hp.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ingo Molnar <mingo@redhat.com>, Douglas Hatch <doug.hatch@hp.com>, Tejun Heo <tj@kernel.org>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Fri, Mar 04, 2016 at 09:51:37PM -0500, Waiman Long wrote:
+> This patchset allows the degeneration of per-cpu counters back to
+> global counters when:
+> 
+>  1) The number of CPUs in the system is large, hence a high cost for
+>     calling percpu_counter_sum().
+>  2) The initial count value is small so that it has a high chance of
+>     excessive percpu_counter_sum() calls.
+> 
+> When the above 2 conditions are true, this patchset allows the user of
+> per-cpu counters to selectively degenerate them into global counters
+> with lock. This is done by calling the new percpu_counter_set_limit()
+> API after percpu_counter_set(). Without this call, there is no change
+> in the behavior of the per-cpu counters.
+> 
+> Patch 1 implements the new percpu_counter_set_limit() API.
+> 
+> Patch 2 modifies XFS to call the new API for the m_ifree and m_fdblocks
+> per-cpu counters.
+> 
+> Waiman Long (2):
+>   percpu_counter: Allow falling back to global counter on large system
+>   xfs: Allow degeneration of m_fdblocks/m_ifree to global counters
 
-Pad the xfs_attr_leaf_name_remote so that we don't trip the structure
-size checker on m68k.
+NACK.
 
-[dchinner: add comment, XFS_ATTR_LEAF_NAME_BYTES constant and make sure
-	   xfs_attr_leaf_entsize_remote() does the right thing. ]
+This change to turns off per-counter free block counters for 32p for
+the XFS free block counters.  We proved 10 years ago that a global
+lock for these counters was a massive scalability limitation for
+concurrent buffered writes on 16p machines.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/libxfs/xfs_da_format.h | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+IOWs, this change is going to cause fast path concurrent sequential
+write regressions for just about everyone, even on empty
+filesystems.
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 8d4d8bc..b6d58f6 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -686,11 +686,19 @@ typedef struct xfs_attr_leaf_name_local {
- 	__u8	nameval[1];		/* name/value bytes */
- } xfs_attr_leaf_name_local_t;
- 
-+/*
-+ * some platforms (like m68k) don't like non-word sized structures and pad them
-+ * out inappropriately. To work around this, we set the name array to the size
-+ * that pads out to a 4 byte word size. We need to take this away from the size
-+ * of the structure when calculating the length of the entry in
-+ * xfs_attr_leaf_entsize_remote(), hence we define a constant for this value.
-+ */
-+#define XFS_ATTR_LEAF_NAME_BYTES	3
- typedef struct xfs_attr_leaf_name_remote {
- 	__be32	valueblk;		/* block number of value bytes */
- 	__be32	valuelen;		/* number of bytes in value */
- 	__u8	namelen;		/* length of name bytes */
--	__u8	name[1];		/* name bytes */
-+	__u8	name[XFS_ATTR_LEAF_NAME_BYTES];	/* name bytes */
- } xfs_attr_leaf_name_remote_t;
- 
- typedef struct xfs_attr_leafblock {
-@@ -847,8 +855,10 @@ xfs_attr3_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx)
-  */
- static inline int xfs_attr_leaf_entsize_remote(int nlen)
- {
--	return ((uint)sizeof(xfs_attr_leaf_name_remote_t) - 1 + (nlen) + \
--		XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
-+	return ((uint)sizeof(xfs_attr_leaf_name_remote_t) -
-+		      XFS_ATTR_LEAF_NAME_BYTES + nlen +
-+		      XFS_ATTR_LEAF_NAME_ALIGN - 1) &
-+	       ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
- }
- 
- static inline int xfs_attr_leaf_entsize_local(int nlen, int vlen)
+The behaviour you are seeing only occurs when the filesystem is near
+to ENOSPC. As i asked you last time - if you want to make this
+problem go away, please increase the size of the filesystem you are
+running your massively concurrent benchmarks on.
+
+IOWs, please stop trying to optimise a filesystem slow path that:
+
+	a) 99.9% of production workloads never execute,
+	b) where we expect performance to degrade as allocation gets
+	   computationally expensive as we close in on ENOSPC,
+	c) we start to execute blocking data flush operations that
+	   slow everything down massively, and
+	d) is indicative that the workload is about to suffer
+	   from a fatal, unrecoverable error (i.e. ENOSPC)
+
+Cheers,
+
+Dave.
 -- 
-2.7.0
+Dave Chinner
+dchinner@redhat.com
 
 _______________________________________________
 xfs mailing list
