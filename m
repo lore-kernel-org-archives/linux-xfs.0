@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C2CDA7CBA
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 18:37:58 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ABF6B7CB1
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 18:38:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F578304039
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 16:37:58 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 3nQvlMyLXYeq3sVy (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E9CD8F8035
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2016 16:38:09 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id wy105vmvLDdM7Mla (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 16:37:57 -0800 (PST)
-Subject: [PATCH 05/12] xfs/206: fix output when mkfs knows about reflink
+	<xfs@oss.sgi.com>; Fri, 04 Mar 2016 16:38:08 -0800 (PST)
+Subject: [PATCH 06/12] xfs/030: fix output on newer filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Mar 2016 16:37:50 -0800
-Message-ID: <20160305003750.28738.48204.stgit@birch.djwong.org>
+Date: Fri, 04 Mar 2016 16:37:56 -0800
+Message-ID: <20160305003756.28738.26362.stgit@birch.djwong.org>
 In-Reply-To: <20160305003717.28738.98818.stgit@birch.djwong.org>
 References: <20160305003717.28738.98818.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -33,43 +33,40 @@ Cc: linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/206     |    1 +
- tests/xfs/206.out |    2 ++
- 2 files changed, 3 insertions(+)
+ tests/xfs/030           |    5 ++++-
+ tests/xfs/030.out.linux |    2 ++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/206 b/tests/xfs/206
-index 0f5d97d..24e690a 100755
---- a/tests/xfs/206
-+++ b/tests/xfs/206
-@@ -80,6 +80,7 @@ mkfs_filter()
- 	    -e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
- 	    -e "s/, projid32bit=[0-9]//" \
- 	    -e "s/ ftype=[0-9]//" \
-+	    -e "s/ reflink=[0-9]//" \
- 	    -e "s/\(sectsz\)\(=[0-9]* *\)/\1=512   /" \
- 	    -e "s/\(sunit=\)\([0-9]* blks,\)/\10 blks,/" \
- 	    -e "s/, lazy-count=[0-9]//" \
-diff --git a/tests/xfs/206.out b/tests/xfs/206.out
-index 2db839d..e73a954 100644
---- a/tests/xfs/206.out
-+++ b/tests/xfs/206.out
-@@ -12,6 +12,7 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
- === xfs_growfs ===
- meta-data=FILE isize=N    agcount=52, agsize=76288719 blks
-          =                       sectsz=512   attr=2
-+         =                      
- data     =                       bsize=4096   blocks=3905982455, imaxpct=5
-          =                       sunit=0      swidth=0 blks
- naming   =version 2              bsize=4096   ascii-ci=0
-@@ -22,6 +23,7 @@ data blocks changed from 3905982455 to 4882478016
- === xfs_info ===
- meta-data=FILE isize=N    agcount=64, agsize=76288719 blks
-          =                       sectsz=512   attr=2
-+         =                      
- data     =                       bsize=4096   blocks=4882478016, imaxpct=5
-          =                       sunit=0      swidth=0 blks
- naming   =version 2              bsize=4096   ascii-ci=0
+diff --git a/tests/xfs/030 b/tests/xfs/030
+index 4cb1524..33c906c 100755
+--- a/tests/xfs/030
++++ b/tests/xfs/030
+@@ -57,7 +57,10 @@ _check_ag()
+ 		echo "Corrupting $structure - setting bits to $1"
+ 		_check_repair $1 "$structure" |
+ 			sed -e '/^error following ag 0 unlinked list$/d' \
+-			    -e '/^bad agbno AGBNO for finobt/d'
++			    -e '/^bad agbno AGBNO for finobt/d' \
++			    -e '/^bad agbno AGBNO for rmapbt/d' \
++			    -e '/^bad agbno AGBNO for refcntbt/d' \
++			    -e '/^Missing reverse-mapping record.*/d'
+ 	done
+ }
+ 
+diff --git a/tests/xfs/030.out.linux b/tests/xfs/030.out.linux
+index cf3259f..14b9b35 100644
+--- a/tests/xfs/030.out.linux
++++ b/tests/xfs/030.out.linux
+@@ -231,6 +231,8 @@ bad agbno AGBNO in agfl, agno 0
+ bad agbno AGBNO in agfl, agno 0
+ bad agbno AGBNO in agfl, agno 0
+ bad agbno AGBNO in agfl, agno 0
++bad agbno AGBNO in agfl, agno 0
++bad agbno AGBNO in agfl, agno 0
+         - found root inode chunk
+ Phase 3 - for each AG...
+         - scan and clear agi unlinked lists...
 
 _______________________________________________
 xfs mailing list
