@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BB7B17CAF
-	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 14:10:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8CD03304039
-	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 12:10:50 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 32AD27CA7
+	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 14:12:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 06A5E8F8039
+	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 12:12:13 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 5pwLtc9xNAMFW60h (version=TLSv1.2
+	ESMTP id 3vz7OkFmMfY4Xsdm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 05 Mar 2016 12:10:48 -0800 (PST)
-Date: Sat, 5 Mar 2016 12:10:44 -0800
+	<xfs@oss.sgi.com>; Sat, 05 Mar 2016 12:12:12 -0800 (PST)
+Date: Sat, 5 Mar 2016 12:12:10 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/12] xfs/122: define _GNU_SOURCE when compiling test
-	program
-Message-ID: <20160305201044.GB28728@infradead.org>
+Subject: Re: [PATCH 09/12] xfs/122: support rmapxbt
+Message-ID: <20160305201210.GC28728@infradead.org>
 References: <20160305003717.28738.98818.stgit@birch.djwong.org>
-	<20160305003809.28738.85961.stgit@birch.djwong.org>
+	<20160305003815.28738.81125.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160305003809.28738.85961.stgit@birch.djwong.org>
+In-Reply-To: <20160305003815.28738.81125.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
