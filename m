@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DF6B97CA0
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 11:02:49 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DB9007F6F
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 15:50:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A3898304032
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 09:02:46 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id DUgqyH72HNxpbvDB for <xfs@oss.sgi.com>;
-	Thu, 10 Mar 2016 09:02:42 -0800 (PST)
-Received: from Liberator.local (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 6FCF44801
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 11:02:30 -0600 (CST)
-Subject: Re: an mount option question and dunno if right here...
-References: <08297acdf77244b468e15458f3d78327@zbfmail.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56E1A8B1.2080800@sandeen.net>
-Date: Thu, 10 Mar 2016 11:02:41 -0600
-MIME-Version: 1.0
-In-Reply-To: <08297acdf77244b468e15458f3d78327@zbfmail.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 83FD38F8033
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 13:50:38 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	C1zmm0DfOBLRC4Uz for <xfs@oss.sgi.com>;
+	Sun, 06 Mar 2016 13:50:07 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1acgYt-0000Y5-Ko
+	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:50:03 +1100
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1acgYh-0004nz-T9
+	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:49:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/6] xfs: reinitialise per-AG structures if geometry changes
+	during recovery
+Date: Mon,  7 Mar 2016 08:49:45 +1100
+Message-Id: <1457300990-18300-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1457300990-18300-1-git-send-email-david@fromorbit.com>
+References: <1457300990-18300-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,60 +31,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 3/9/16 4:35 AM, Marko Weber | 8000 wrote:
-> 
-> 
-> hello list,
-> 
-> my drives are all xfs formatted.
-> in fstab i set:
-> 
->                  lazytime,logbsize=256k,logbufs=8
-> 
-> 
-> when i call "mount" on console i get:
-> 
->                  rw,relatime,lazytime,attr2,inode64,logbufs=8,logbsize=256k,sunit=1024,swidth=3072,noquota
-> 
-> 
-> Why is relatime listed? Or is lazytime override this setting?
-> Even when i set "norelatime" in /etc/fstab i get "relatime" listed on 'mount'
-> 
-> Or am i wrong here with this question? is this not xfs related?
-> anyway, for any hints or suggestions i am thankful
+From: Dave Chinner <dchinner@redhat.com>
 
-lazytime is not a valid xfs mount option:
+If a crash occurs immediately after a filesystem grow operation, the
+updated superblock geometry is found only in the log. After we
+recover the log, the superblock is reread and re-initialised and so
+has the new geometry in memory. If the new geometry has more AGs
+than prior to the grow operation, then the new AGs will not have
+in-memory xfs_perag structurea associated with them.
 
-[root ~]# mount -o lazytime /dev/sdb1 /mnt/test
-mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
-missing codepage or helper program, or other error
-In some cases useful info is found in syslog - try
-dmesg | tail or so
+This will result in an oops when the first metadata buffer from a
+new AG is looked up in the buffer cache, as the block lies within
+the new geometry but then fails to find a perag structure on lookup.
+This is easily fixed by simply re-initialising the perag structure
+after re-reading the superblock at the conclusion of the first pahse
+of log recovery.
 
-[root ~]# dmesg | tail -n 1
-[645779.811802] XFS (sdb1): unknown mount option [lazytime].
+This, however, does not fix the case of log recovery requiring
+access to metadata in the newly grown space. Fortunately for us,
+because the in-core superblock has not been updated, this will
+result in detection of access beyond the end of the filesystem
+and so recovery will fail at that point. If this proves to be
+a problem, then we can address it separately to the current
+reported issue.
 
-I'm guessing this is your root fs? xfs today will silently ignore
-unknown mount options on remount (patches to fix that are upstream),
-and the root fs may get remounted w/ fstab options.  So presumably
-that's how you got lazytime into the mount output, especially if
-it's looking at /etc/mtab. Look in /proc/mounts; I doubt you'll
-see "lazytime" for this filesystem:
+Reported-by: Alex Lyakas <alex@zadarastorage.com>
+Tested-by: Alex Lyakas <alex@zadarastorage.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-[root ~]# mount /dev/sdb1 /mnt/test
-[root ~]# mount -o remount,lazytime /mnt/test
-
-[root ~]# grep sdb1 /etc/mtab /proc/mounts
-/etc/mtab:/dev/sdb1 /mnt/test xfs rw,lazytime 0 0
-/proc/mounts:/dev/sdb1 /mnt/test xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
-
--Eric
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1dc0e14..520471b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4898,6 +4898,7 @@ xlog_do_recover(
+ 	xfs_daddr_t	head_blk,
+ 	xfs_daddr_t	tail_blk)
+ {
++	struct xfs_mount *mp = log->l_mp;
+ 	int		error;
+ 	xfs_buf_t	*bp;
+ 	xfs_sb_t	*sbp;
+@@ -4912,7 +4913,7 @@ xlog_do_recover(
+ 	/*
+ 	 * If IO errors happened during recovery, bail out.
+ 	 */
+-	if (XFS_FORCED_SHUTDOWN(log->l_mp)) {
++	if (XFS_FORCED_SHUTDOWN(mp)) {
+ 		return -EIO;
+ 	}
+ 
+@@ -4925,13 +4926,13 @@ xlog_do_recover(
+ 	 * or iunlinks they will have some entries in the AIL; so we look at
+ 	 * the AIL to determine how to set the tail_lsn.
+ 	 */
+-	xlog_assign_tail_lsn(log->l_mp);
++	xlog_assign_tail_lsn(mp);
+ 
+ 	/*
+ 	 * Now that we've finished replaying all buffer and inode
+ 	 * updates, re-read in the superblock and reverify it.
+ 	 */
+-	bp = xfs_getsb(log->l_mp, 0);
++	bp = xfs_getsb(mp, 0);
+ 	bp->b_flags &= ~(XBF_DONE | XBF_ASYNC);
+ 	ASSERT(!(bp->b_flags & XBF_WRITE));
+ 	bp->b_flags |= XBF_READ;
+@@ -4939,7 +4940,7 @@ xlog_do_recover(
+ 
+ 	error = xfs_buf_submit_wait(bp);
+ 	if (error) {
+-		if (!XFS_FORCED_SHUTDOWN(log->l_mp)) {
++		if (!XFS_FORCED_SHUTDOWN(mp)) {
+ 			xfs_buf_ioerror_alert(bp, __func__);
+ 			ASSERT(0);
+ 		}
+@@ -4948,14 +4949,17 @@ xlog_do_recover(
+ 	}
+ 
+ 	/* Convert superblock from on-disk format */
+-	sbp = &log->l_mp->m_sb;
++	sbp = &mp->m_sb;
+ 	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+-	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
+-	ASSERT(xfs_sb_good_version(sbp));
+-	xfs_reinit_percpu_counters(log->l_mp);
+-
+ 	xfs_buf_relse(bp);
+ 
++	/* re-initialise in-core superblock and geometry structures */
++	xfs_reinit_percpu_counters(mp);
++	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
++	if (error) {
++		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
++		return error;
++	}
+ 
+ 	xlog_recover_check_summary(log);
+ 
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
