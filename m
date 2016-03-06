@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 404217F61
-	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 15:50:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 068B6304043
-	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 13:50:11 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	WHP1peVsJ3owUEdb for <xfs@oss.sgi.com>;
-	Sun, 06 Mar 2016 13:50:08 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1acgYt-0000Y6-LH
-	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:50:03 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1acgYh-0004o4-Te
-	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:49:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/6] xfs: ioends require logically contiguous file offsets
-Date: Mon,  7 Mar 2016 08:49:46 +1100
-Message-Id: <1457300990-18300-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1457300990-18300-1-git-send-email-david@fromorbit.com>
-References: <1457300990-18300-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7A71C7F77
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 16:10:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4EFCE30404E
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 14:10:15 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id wz7UNyqc4jcYC90b (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 06 Mar 2016 14:10:10 -0800 (PST)
+Date: Sun, 6 Mar 2016 14:09:35 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 13/12] xfs/209: filter scratch dir properly
+Message-ID: <20160306220935.GB27960@birch.djwong.org>
+References: <20160305003717.28738.98818.stgit@birch.djwong.org>
+	<20160305202502.GI10245@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160305202502.GI10245@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +26,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Good catch,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-We need to create a new ioend if the current writepage call isn't
-logically contiguous with the range contained in the previous ioend.
-Hopefully writepage gets called in order of increasing file offset.
+--D
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_aops.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 7a467b3..75a39a8 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -526,7 +526,8 @@ xfs_add_to_ioend(
- 	struct list_head	*iolist)
- {
- 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
--	    bh->b_blocknr != wpc->last_block + 1) {
-+	    bh->b_blocknr != wpc->last_block + 1 ||
-+	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
- 		struct xfs_ioend	*new;
- 
- 		if (wpc->ioend)
--- 
-2.7.0
+On Sat, Mar 05, 2016 at 12:25:02PM -0800, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> diff --git a/tests/xfs/209 b/tests/xfs/209
+> index cecd9c7..9bf1f12 100755
+> --- a/tests/xfs/209
+> +++ b/tests/xfs/209
+> @@ -73,7 +73,7 @@ echo "Check cowextsize settings"
+>  seq 1 2 | while read nr; do
+>  	seq 1 4 | while read nnr; do
+>  		file="$testdir/dir-$nr/file-$nnr"
+> -		$XFS_IO_PROG -c "cowextsize" $file
+> +		$XFS_IO_PROG -c "cowextsize" $file | _filter_scratch
+>  	done
+>  done
+>  
+> diff --git a/tests/xfs/209.out b/tests/xfs/209.out
+> index 109af34..b97fa96 100644
+> --- a/tests/xfs/209.out
+> +++ b/tests/xfs/209.out
+> @@ -3,11 +3,11 @@ Format and mount
+>  Set extsz and cowextsz on directory
+>  Create a fake tree structure
+>  Check cowextsize settings
+> -[1048576] /opt/test-209/dir-1/file-1
+> -[1048576] /opt/test-209/dir-1/file-2
+> -[1048576] /opt/test-209/dir-1/file-3
+> -[1048576] /opt/test-209/dir-1/file-4
+> -[1048576] /opt/test-209/dir-2/file-1
+> -[1048576] /opt/test-209/dir-2/file-2
+> -[1048576] /opt/test-209/dir-2/file-3
+> -[1048576] /opt/test-209/dir-2/file-4
+> +[1048576] SCRATCH_MNT/test-209/dir-1/file-1
+> +[1048576] SCRATCH_MNT/test-209/dir-1/file-2
+> +[1048576] SCRATCH_MNT/test-209/dir-1/file-3
+> +[1048576] SCRATCH_MNT/test-209/dir-1/file-4
+> +[1048576] SCRATCH_MNT/test-209/dir-2/file-1
+> +[1048576] SCRATCH_MNT/test-209/dir-2/file-2
+> +[1048576] SCRATCH_MNT/test-209/dir-2/file-3
+> +[1048576] SCRATCH_MNT/test-209/dir-2/file-4
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
