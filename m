@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CE5567F5E
-	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 16:58:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52188AC003
-	for <xfs@oss.sgi.com>; Sat,  5 Mar 2016 14:58:09 -0800 (PST)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id PVltm8djZ4ETIOX3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 05 Mar 2016 14:58:06 -0800 (PST)
-Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
-	xfs_vm_releasepage
-References: <56C81D94.7090603@profihost.ag>
-	<20160220144533.GA36182@bfoster.bfoster>
-	<B833B258-1140-464C-94CD-09B840BD4220@profihost.ag>
-	<56D9D834.2000303@profihost.ag> <20160304191329.GC3758@bfoster.bfoster>
-	<56D9E9BE.40101@profihost.ag> <20160304210341.GA8035@bfoster.bfoster>
-	<20160305224845.GR30721@dastard>
-From: Stefan Priebe <s.priebe@profihost.ag>
-Message-ID: <56DB649D.7030502@profihost.ag>
-Date: Sat, 5 Mar 2016 23:58:37 +0100
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4EAFD7F63
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 14:49:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 247F08F8035
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 12:49:45 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	5jeEvLvBnCdYBvvc for <xfs@oss.sgi.com>;
+	Sun, 06 Mar 2016 12:49:40 -0800 (PST)
+Date: Mon, 7 Mar 2016 07:49:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs resize: primary superblock is not updated immediately
+Message-ID: <20160306204938.GS30721@dastard>
+References: <CAOcd+r1XY2kcp+qJ=mPOAQSmb90QUnLfmT3-FkMjQN_+Ejmt8A@mail.gmail.com>
+	<20160222235628.GK25832@dastard>
+	<D5578D3E98EE48B88EA9A1126B671155@alyakaslap>
+	<20160223225926.GN25832@dastard>
+	<BC0CC25E00CE4CEDA1FFDFC0A2F38742@alyakaslap>
+	<20160229211628.GK29057@dastard> <20160301072011.GF30721@dastard>
+	<E965894DE8D542788CCE98F72C218C05@alyakaslap>
+	<20160303213108.GQ30721@dastard>
+	<CAOcd+r1b_9yhBtaBGHeMY7eOUyp1pO=DRbq0z2B1ojyiO-8t=A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160305224845.GR30721@dastard>
+Content-Disposition: inline
+In-Reply-To: <CAOcd+r1b_9yhBtaBGHeMY7eOUyp1pO=DRbq0z2B1ojyiO-8t=A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,121 +33,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Danny Shavit <danny@zadarastorage.com>, xfs@oss.sgi.com
 
+On Sun, Mar 06, 2016 at 11:46:58AM +0200, Alex Lyakas wrote:
+> Hello Dave,
+> 
+> On Thu, Mar 3, 2016 at 11:31 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Mar 03, 2016 at 11:18:43AM +0200, Alex Lyakas wrote:
+> >> Hello Dave,
+> >> Thanks for the patch! I confirm that it fixes the scenario.
+> >>
+> >> At [1] please find all the blknos that are being used during the log
+> >> recovery (if that's of any interest).
+> > ....
+> >> Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129739]
+> >> _xfs_buf_find: blkno=200705 eofs=204800 >m_sb.sb_dblocks=25600
+> >> Mar  3 11:17:41 vc-00-00-350-dev kernel: [   68.129746]
+> >> _xfs_buf_find: blkno=200705 eofs=204800 >m_sb.sb_dblocks=25600
+> >
+> > Where is the warning that this block is out of range?
+> Perhaps you are being confused by the ">" mark that appears in the
+> prints? This was definitely added by mistake, it appears on every
+> print. I apologize for that.
+> If not, then my understanding is that 200705 is still less than
+> 204800, so this block number is not out of range. And since we have
+> added the new pag structure, the issue is now fixed.
 
-Am 05.03.2016 um 23:48 schrieb Dave Chinner:
-> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
->> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
->>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
->>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
->>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
->>>>>>
->>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
->>>>>>>
->>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
->>>>>>>> Hi,
->>>>>>>>
->>>>>>>> got this one today. Not sure if this is a bug.
->>>>>>>
->>>>>>> That looks like the releasepage() delayed allocation block warning. I'm
->>>>>>> not sure we've had any fixes for (or reports of) that issue since the
->>>>>>> v4.2 timeframe.
->>>>>>>
->>>>>>> What is the xfs_info of the associated filesystem? Also, do you have any
->>>>>>> insight as to the possible reproducer application or workload? Is this
->>>>>>> reproducible at all? Note that this is a WARN_ON_ONCE(), so the warning
->>>>>>> won't fire again regardless until after a reboot.
->>>>>
->>>>> Toda i got this one running 4.3.3.
->>>>>
->>>>> [154152.949610] ------------[ cut here ]------------
->>>>> [154152.950704] WARNING: CPU: 0 PID: 79 at fs/xfs/xfs_aops.c:1232
->>>>> xfs_vm_releasepage+0xc3/0xf0()
->>>>> [154152.952596] Modules linked in: netconsole mpt3sas raid_class
->>>>> nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_tcpudp ipt_REJECT
->>>>> nf_reject_ipv4 xt_owner xt_multiport iptable_filter ip_tables x_tables 8021q
->>>>> garp coretemp k8temp ehci_pci ehci_hcd sb_edac ipmi_si usbcore edac_core
->>>>> ipmi_msghandler i2c_i801 usb_common button btrfs xor raid6_pq sg igb sd_mod
->>>>> i2c_algo_bit isci i2c_core libsas ahci ptp libahci scsi_transport_sas
->>>>> megaraid_sas pps_core
->>>>> [154152.963240] CPU: 0 PID: 79 Comm: kswapd0 Not tainted 4.4.3+3-ph #1
->>>>> [154152.964625] Hardware name: Supermicro
->>>>> X9SRE/X9SRE-3F/X9SRi/X9SRi-3F/X9SRE/X9SRE-3F/X9SRi/X9SRi-3F, BIOS 1.0a
->>>>> 03/06/2012
->>>>> [154152.967029]  0000000000000000 ffff88103dd67a98 ffffffffa73c3b5f
->>>>> 0000000000000000
->>>>> [154152.968836]  ffffffffa7a5063b ffff88103dd67ad8 ffffffffa7083757
->>>>> 0000000000000000
->>>>> [154152.970641]  0000000000000001 ffffea0001e7bfc0 ffff88071ef72dd0
->>>>> ffffea0001e7bfe0
->>>>> [154152.972447] Call Trace:
->>>>> [154152.973011]  [<ffffffffa73c3b5f>] dump_stack+0x63/0x84
->>>>> [154152.974167]  [<ffffffffa7083757>] warn_slowpath_common+0x97/0xe0
->>>>> [154152.975515]  [<ffffffffa70837ba>] warn_slowpath_null+0x1a/0x20
->>>>> [154152.976826]  [<ffffffffa7324f23>] xfs_vm_releasepage+0xc3/0xf0
->>>>> [154152.978137]  [<ffffffffa71510b2>] try_to_release_page+0x32/0x50
->>>>> [154152.979467]  [<ffffffffa71659be>] shrink_active_list+0x3ce/0x3e0
->>>>> [154152.980816]  [<ffffffffa7166057>] shrink_lruvec+0x687/0x7d0
->>>>> [154152.982068]  [<ffffffffa716627c>] shrink_zone+0xdc/0x2c0
->>>>> [154152.983262]  [<ffffffffa7167399>] kswapd+0x4f9/0x970
->>>>> [154152.984380]  [<ffffffffa7166ea0>] ?
->>>>> mem_cgroup_shrink_node_zone+0x1a0/0x1a0
->>>>> [154152.985942]  [<ffffffffa70a0ac9>] kthread+0xc9/0xe0
->>>>> [154152.987040]  [<ffffffffa70a0a00>] ? kthread_stop+0x100/0x100
->>>>> [154152.988313]  [<ffffffffa76b03cf>] ret_from_fork+0x3f/0x70
->>>>> [154152.989527]  [<ffffffffa70a0a00>] ? kthread_stop+0x100/0x100
->>>>> [154152.990818] ---[ end trace 3fac2515e92c7cb1 ]---
->>>>>
->>>>> This time with an xfs info:
->>>>> # xfs_info /
->>>>> meta-data=/dev/disk/by-uuid/9befe321-e9cc-4e31-82df-efabb3211bac isize=256
->>>>> agcount=4, agsize=58224256 blks
->>>>>           =                       sectsz=512   attr=2, projid32bit=0
->>>>>           =                       crc=0        finobt=0
->>>>> data     =                       bsize=4096   blocks=232897024, imaxpct=25
->>>>>           =                       sunit=64     swidth=384 blks
->>>>> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
->>>>> log      =internal               bsize=4096   blocks=113728, version=2
->>>>>           =                       sectsz=512   sunit=64 blks, lazy-count=1
->>>>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>>>>
->>>>
->>>> Can you describe the workload to the filesystem?
->>>
->>> At the time of this trace the rsync backup of the fs has started. So the
->>> workload was going from nearly idle to 4000 iop/s read at 60 MB/s peak.
->>>
->>
->> Interesting. The warning is associated with releasing a page that has a
->> delayed allocation when it shouldn't. That means something had written
->> to a file to cause the delalloc in the first place. Any idea what could
->> have been writing at the time or shortly before the rsync read workload
->> had kicked in?
->
-> It's memory reclaim that tripped over it, so the cause is long gone
-> - couple have been anything in the previous 24 hours that caused the
-> issue. i.e. rsync has triggered memory reclaim which triggered the
-> warning, but I don't think rsync has anything to do with causing the
-> page to be in a state that caused the warning.
->
-> I'd be interested to know if there are any other warnings in the
-> logs - stuff like IO errors, page discards, ENOSPC issues, etc that
-> could trigger less travelled write error paths...
+Sorry, I misread it as 200480, not 204800. My fault, too much to do,
+brain mostly fried by other stuff. So the patch works.
 
-No dmesg is absolutely clean. This hasn't happened with 4.1.18 before. 
-It has started after upgrade from 4.1 to 4.4.
+Cheers,
 
-Stefan
-
->
-> -Dave.
->
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
