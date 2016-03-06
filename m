@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6C87F7F6F
-	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 15:50:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 315348F8033
-	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 13:50:38 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 404217F61
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 15:50:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 068B6304043
+	for <xfs@oss.sgi.com>; Sun,  6 Mar 2016 13:50:11 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	7CBdvZrBwWfF88Pr for <xfs@oss.sgi.com>;
-	Sun, 06 Mar 2016 13:50:05 -0800 (PST)
+	WHP1peVsJ3owUEdb for <xfs@oss.sgi.com>;
+	Sun, 06 Mar 2016 13:50:08 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1acgYt-0000Y4-KQ
+	(envelope-from <dave@fromorbit.com>) id 1acgYt-0000Y6-LH
 	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:50:03 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1acgYh-0004nw-Sj
+	(envelope-from <dave@disappointment.disaster>) id 1acgYh-0004o4-Te
 	for xfs@oss.sgi.com; Mon, 07 Mar 2016 08:49:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6] xfs: accumulated fixes for 4.6
-Date: Mon,  7 Mar 2016 08:49:44 +1100
-Message-Id: <1457300990-18300-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/6] xfs: ioends require logically contiguous file offsets
+Date: Mon,  7 Mar 2016 08:49:46 +1100
+Message-Id: <1457300990-18300-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1457300990-18300-1-git-send-email-david@fromorbit.com>
+References: <1457300990-18300-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,23 +37,35 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-This series is mostly fixes pulled from Darrick's rmap tree and one
-for a growfs log recovery fix from me. I'm posting them mainly for a
-final check before I merge them, and so everyone knows what is going
-to be merged from Darrick's trees before the merge actually occurs.
+We need to create a new ioend if the current writepage call isn't
+logically contiguous with the range contained in the previous ioend.
+Hopefully writepage gets called in order of increasing file offset.
 
-Realistically, I'm not going to wait for days for people to
-check/review these patch series before I merge them. If i don't hear
-any objections within a couple of days, I'll simply push them out
-into the for-next tree. Yes, I know this is a bit different to the
-normal process, but I'm not posting these patches from Darrick's
-tree until I've already reviewed (and therefore tested) them.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_aops.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 7a467b3..75a39a8 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -526,7 +526,8 @@ xfs_add_to_ioend(
+ 	struct list_head	*iolist)
+ {
+ 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
+-	    bh->b_blocknr != wpc->last_block + 1) {
++	    bh->b_blocknr != wpc->last_block + 1 ||
++	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+ 		struct xfs_ioend	*new;
+ 
+ 		if (wpc->ioend)
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
