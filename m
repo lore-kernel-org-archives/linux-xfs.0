@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E90D629E1B
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 22:17:12 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 9B3B529E07
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 22:17:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D6CFAC001
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 20:17:09 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0FBF4AC002
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 20:17:13 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	DflHNA6hA4faTfH8 for <xfs@oss.sgi.com>;
-	Mon, 07 Mar 2016 20:17:07 -0800 (PST)
+	OKRyGSxtGAwbWmIm for <xfs@oss.sgi.com>;
+	Mon, 07 Mar 2016 20:17:10 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1ad94T-0004AQ-68
+	(envelope-from <dave@fromorbit.com>) id 1ad94T-0004AL-4B
 	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:33 +1100
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1ad94G-0007vB-Kb
+	(envelope-from <dave@disappointment.disaster>) id 1ad94G-0007uw-Ie
 	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/16] xfs: add rmap btree insert and delete helpers
-Date: Tue,  8 Mar 2016 15:16:17 +1100
-Message-Id: <1457410578-30233-16-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/16] xfs: add tracepoints for the rmap-mirrors-bmbt functions
+Date: Tue,  8 Mar 2016 15:16:14 +1100
+Message-Id: <1457410578-30233-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1457410578-30233-1-git-send-email-david@fromorbit.com>
 References: <1457410578-30233-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,110 +39,275 @@ To: xfs@oss.sgi.com
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Add a couple of helper functions to encapsulate rmap btree insert and
-delete operations.  Add tracepoints to the update function.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_rmap.c       | 62 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rmap_btree.h |  2 ++
- 2 files changed, 64 insertions(+)
+ fs/xfs/xfs_trace.h | 251 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 251 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index d2e01b2..479cb73 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -88,6 +88,10 @@ xfs_rmap_update(
- {
- 	union xfs_btree_rec	rec;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 7968e92..f5fb33f 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1746,6 +1746,257 @@ DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent);
+ DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_done);
+ DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_error);
  
-+	trace_xfs_rmapbt_update(cur->bc_mp, cur->bc_private.a.agno,
-+			irec->rm_startblock, irec->rm_blockcount,
-+			irec->rm_owner, irec->rm_offset);
++/* rmap-mirrors-bmbt traces */
++DECLARE_EVENT_CLASS(xfs_rmap_bmbt3_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_ino_t ino,
++		 int whichfork,
++		 struct xfs_bmbt_irec *left,
++		 struct xfs_bmbt_irec *prev,
++		 struct xfs_bmbt_irec *right),
++	TP_ARGS(mp, agno, ino, whichfork, left, prev, right),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, l_loff)
++		__field(xfs_fsblock_t, l_poff)
++		__field(xfs_filblks_t, l_len)
++		__field(xfs_fileoff_t, p_loff)
++		__field(xfs_fsblock_t, p_poff)
++		__field(xfs_filblks_t, p_len)
++		__field(xfs_fileoff_t, r_loff)
++		__field(xfs_fsblock_t, r_poff)
++		__field(xfs_filblks_t, r_len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->ino = ino;
++		__entry->whichfork = whichfork;
++		__entry->l_loff = left->br_startoff;
++		__entry->l_poff = left->br_startblock;
++		__entry->l_len = left->br_blockcount;
++		__entry->p_loff = prev->br_startoff;
++		__entry->p_poff = prev->br_startblock;
++		__entry->p_len = prev->br_blockcount;
++		__entry->r_loff = right->br_startoff;
++		__entry->r_poff = right->br_startblock;
++		__entry->r_len = right->br_blockcount;
++	),
++	TP_printk("dev %d:%d agno %u ino 0x%llx %s (%llu:%lld:%lld):(%llu:%lld:%lld):(%llu:%lld:%lld)",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->ino,
++		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
++		  __entry->l_poff,
++		  __entry->l_len,
++		  __entry->l_loff,
++		  __entry->p_poff,
++		  __entry->p_len,
++		  __entry->p_loff,
++		  __entry->r_poff,
++		  __entry->r_len,
++		  __entry->r_loff)
++);
++#define DEFINE_RMAP_BMBT3_EVENT(name) \
++DEFINE_EVENT(xfs_rmap_bmbt3_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_ino_t ino, \
++		 int whichfork, \
++		 struct xfs_bmbt_irec *left, \
++		 struct xfs_bmbt_irec *prev, \
++		 struct xfs_bmbt_irec *right), \
++	TP_ARGS(mp, agno, ino, whichfork, left, prev, right))
 +
- 	rec.rmap.rm_startblock = cpu_to_be32(irec->rm_startblock);
- 	rec.rmap.rm_blockcount = cpu_to_be32(irec->rm_blockcount);
- 	rec.rmap.rm_owner = cpu_to_be64(irec->rm_owner);
-@@ -95,6 +99,64 @@ xfs_rmap_update(
- 	return xfs_btree_update(cur, &rec);
- }
- 
-+int
-+xfs_rmapbt_insert(
-+	struct xfs_btree_cur	*rcur,
-+	xfs_agblock_t		agbno,
-+	xfs_extlen_t		len,
-+	uint64_t		owner,
-+	uint64_t		offset)
-+{
-+	int			i;
-+	int			error;
++DECLARE_EVENT_CLASS(xfs_rmap_bmbt2_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_ino_t ino,
++		 int whichfork,
++		 struct xfs_bmbt_irec *left,
++		 struct xfs_bmbt_irec *prev),
++	TP_ARGS(mp, agno, ino, whichfork, left, prev),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, l_loff)
++		__field(xfs_fsblock_t, l_poff)
++		__field(xfs_filblks_t, l_len)
++		__field(xfs_fileoff_t, p_loff)
++		__field(xfs_fsblock_t, p_poff)
++		__field(xfs_filblks_t, p_len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->ino = ino;
++		__entry->whichfork = whichfork;
++		__entry->l_loff = left->br_startoff;
++		__entry->l_poff = left->br_startblock;
++		__entry->l_len = left->br_blockcount;
++		__entry->p_loff = prev->br_startoff;
++		__entry->p_poff = prev->br_startblock;
++		__entry->p_len = prev->br_blockcount;
++	),
++	TP_printk("dev %d:%d agno %u ino 0x%llx %s (%llu:%lld:%lld):(%llu:%lld:%lld)",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->ino,
++		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
++		  __entry->l_poff,
++		  __entry->l_len,
++		  __entry->l_loff,
++		  __entry->p_poff,
++		  __entry->p_len,
++		  __entry->p_loff)
++);
++#define DEFINE_RMAP_BMBT2_EVENT(name) \
++DEFINE_EVENT(xfs_rmap_bmbt2_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_ino_t ino, \
++		 int whichfork, \
++		 struct xfs_bmbt_irec *left, \
++		 struct xfs_bmbt_irec *prev), \
++	TP_ARGS(mp, agno, ino, whichfork, left, prev))
 +
-+	trace_xfs_rmapbt_insert(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
-+			len, owner, offset);
++DECLARE_EVENT_CLASS(xfs_rmap_bmbt1_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_ino_t ino,
++		 int whichfork,
++		 struct xfs_bmbt_irec *left),
++	TP_ARGS(mp, agno, ino, whichfork, left),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, l_loff)
++		__field(xfs_fsblock_t, l_poff)
++		__field(xfs_filblks_t, l_len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->ino = ino;
++		__entry->whichfork = whichfork;
++		__entry->l_loff = left->br_startoff;
++		__entry->l_poff = left->br_startblock;
++		__entry->l_len = left->br_blockcount;
++	),
++	TP_printk("dev %d:%d agno %u ino 0x%llx %s (%llu:%lld:%lld)",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->ino,
++		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
++		  __entry->l_poff,
++		  __entry->l_len,
++		  __entry->l_loff)
++);
++#define DEFINE_RMAP_BMBT1_EVENT(name) \
++DEFINE_EVENT(xfs_rmap_bmbt1_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_ino_t ino, \
++		 int whichfork, \
++		 struct xfs_bmbt_irec *left), \
++	TP_ARGS(mp, agno, ino, whichfork, left))
 +
-+	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 0, done);
++DECLARE_EVENT_CLASS(xfs_rmap_adjust_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_ino_t ino,
++		 int whichfork,
++		 struct xfs_bmbt_irec *left,
++		 long adj),
++	TP_ARGS(mp, agno, ino, whichfork, left, adj),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, l_loff)
++		__field(xfs_fsblock_t, l_poff)
++		__field(xfs_filblks_t, l_len)
++		__field(long, adj)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->ino = ino;
++		__entry->whichfork = whichfork;
++		__entry->l_loff = left->br_startoff;
++		__entry->l_poff = left->br_startblock;
++		__entry->l_len = left->br_blockcount;
++		__entry->adj = adj;
++	),
++	TP_printk("dev %d:%d agno %u ino 0x%llx %s (%llu:%lld:%lld) adj %ld",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->ino,
++		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
++		  __entry->l_poff,
++		  __entry->l_len,
++		  __entry->l_loff,
++		  __entry->adj)
++);
++#define DEFINE_RMAP_ADJUST_EVENT(name) \
++DEFINE_EVENT(xfs_rmap_adjust_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_ino_t ino, \
++		 int whichfork, \
++		 struct xfs_bmbt_irec *left, \
++		 long adj), \
++	TP_ARGS(mp, agno, ino, whichfork, left, adj))
 +
-+	rcur->bc_rec.r.rm_startblock = agbno;
-+	rcur->bc_rec.r.rm_blockcount = len;
-+	rcur->bc_rec.r.rm_owner = owner;
-+	rcur->bc_rec.r.rm_offset = offset;
-+	error = xfs_btree_insert(rcur, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
-+done:
-+	return error;
-+}
++DECLARE_EVENT_CLASS(xfs_rmapbt_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 uint64_t owner, uint64_t offset),
++	TP_ARGS(mp, agno, agbno, len, owner, offset),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u, owner 0x%llx, offset %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset)
++);
++#define DEFINE_RMAPBT_EVENT(name) \
++DEFINE_EVENT(xfs_rmapbt_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len, \
++		 uint64_t owner, uint64_t offset), \
++	TP_ARGS(mp, agno, agbno, len, owner, offset))
 +
-+STATIC int
-+xfs_rmapbt_delete(
-+	struct xfs_btree_cur	*rcur,
-+	xfs_agblock_t		agbno,
-+	xfs_extlen_t		len,
-+	uint64_t		owner,
-+	uint64_t		offset)
-+{
-+	int			i;
-+	int			error;
++DEFINE_RMAP_BMBT3_EVENT(xfs_rmap_combine);
++DEFINE_RMAP_BMBT2_EVENT(xfs_rmap_lcombine);
++DEFINE_RMAP_BMBT2_EVENT(xfs_rmap_rcombine);
++DEFINE_RMAP_BMBT1_EVENT(xfs_rmap_insert);
++DEFINE_RMAP_BMBT1_EVENT(xfs_rmap_delete);
++DEFINE_RMAP_ADJUST_EVENT(xfs_rmap_move);
++DEFINE_RMAP_ADJUST_EVENT(xfs_rmap_slide);
++DEFINE_RMAP_ADJUST_EVENT(xfs_rmap_resize);
++DEFINE_RMAPBT_EVENT(xfs_rmapbt_update);
++DEFINE_RMAPBT_EVENT(xfs_rmapbt_insert);
++DEFINE_RMAPBT_EVENT(xfs_rmapbt_delete);
 +
-+	trace_xfs_rmapbt_delete(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
-+			len, owner, offset);
-+
-+	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
-+
-+	error = xfs_btree_delete(rcur, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
-+done:
-+	return error;
-+}
-+
- /*
-  * Get the data from the pointed-to record.
-  */
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index 0dfc151..d7c9722 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -55,6 +55,8 @@ int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t	bno,
- 		xfs_extlen_t len, uint64_t owner, uint64_t offset, int *stat);
- int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t	bno,
- 		xfs_extlen_t len, uint64_t owner, uint64_t offset, int *stat);
-+int xfs_rmapbt_insert(struct xfs_btree_cur *rcur, xfs_agblock_t	agbno,
-+		xfs_extlen_t len, uint64_t owner, uint64_t offset);
- int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
- 		int *stat);
- 
+ DECLARE_EVENT_CLASS(xfs_da_class,
+ 	TP_PROTO(struct xfs_da_args *args),
+ 	TP_ARGS(args),
 -- 
 2.7.0
 
