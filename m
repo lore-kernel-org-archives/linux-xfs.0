@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9FA607CA0
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 20:33:53 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A3E27CA1
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 22:17:07 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 152E6AC001
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 18:33:49 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 3nBJoUvFDDI74mI2 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Mar 2016 18:33:48 -0800 (PST)
-Date: Mon, 7 Mar 2016 18:33:11 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] xfs: ioends require logically contiguous file offsets
-Message-ID: <20160308023311.GB27689@birch.djwong.org>
-References: <1457300990-18300-1-git-send-email-david@fromorbit.com>
-	<1457300990-18300-3-git-send-email-david@fromorbit.com>
-	<20160307162644.GB19784@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160307162644.GB19784@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D331304039
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 20:17:07 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	8oVXAa4QSvkCxst1 for <xfs@oss.sgi.com>;
+	Mon, 07 Mar 2016 20:17:04 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1ad94T-0004A6-06
+	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:33 +1100
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1ad94G-0007uD-EP
+	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 03/16] xfs: rmap btree add more reserved blocks
+Date: Tue,  8 Mar 2016 15:16:05 +1100
+Message-Id: <1457410578-30233-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1457410578-30233-1-git-send-email-david@fromorbit.com>
+References: <1457410578-30233-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +30,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Mar 07, 2016 at 08:26:44AM -0800, Christoph Hellwig wrote:
-> On Mon, Mar 07, 2016 at 08:49:46AM +1100, Dave Chinner wrote:
-> > From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > 
-> > We need to create a new ioend if the current writepage call isn't
-> > logically contiguous with the range contained in the previous ioend.
-> > Hopefully writepage gets called in order of increasing file offset.
-> 
-> This looks reasonable, but how did we manage to get away without this for
-> so long?  I think as-is we do not actually require it - for setting
-> i_size we just care about the highest offset, and for unwritten extent
-> conversion we just need the lowest and highest offset, and we were
-> making use of that fact in direct I/O extensively before I rewrote that
-> code not to use ioends.
+>From : Dave Chinner <dchinner@redhat.com>
 
-The way I found this was by one of the cow tests failing (generic/139,
-I think?) -- if two non-adjacent file blocks were both CoW but mapped
-to adjacent physical blocks, the ioend check behaved as if the two
-file blocks were logically adjacent and combine them into one ioend.
-That sounds confusing even as I write it, so let's try an example:
+XFS reserves a small amount of space in each AG for the minimum
+number of free blocks needed for operation. Adding the rmap btree
+increases the number of reserved blocks, but it also increases the
+complexity of the calculation as the free inode btree is optional
+(like the rmbt).
 
-Say that /tmp/a block 10 and block 12 are both shared and dirty.
-Writepage comes along and allocates blocks 980 and 981 as
-replacements.  This means that 10 -> 980 and 12 -> 981.  The ioend
-combining code seems that 980 and 981 are adjacent and submits an
-ioend with offset 10 and length 2, instead of two ioends {10, 1} and
-{12, 1} like you'd expect, and as a result the CoW remapping is
-incorrect.
+Rather than calculate the prealloc blocks every time we need to
+check it, add a function to calculate it at mount time and store it
+in the struct xfs_mount, and convert the XFS_PREALLOC_BLOCKS macro
+just to use the xfs-mount variable directly.
 
-I think we used to get away with this because _vm_writepage gets a
-mapping that only extends as far as the next io_type change, because
-XFS_IO_OVERWRITE and XFS_IO_UNWRITTEN only change at bmbt record
-boundaries and since for CoW we only deal with CoW fork bmbt records,
-that still holds true.  Therefore, we performed only limited ioend
-chaining that ended at every extent boundary.  Now that we collect the
-ioends in a struct writepage_ctx that can span several writepage
-calls, we can end up with ioends crossing bmbt record boundaries.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c  | 11 +++++++++++
+ fs/xfs/libxfs/xfs_alloc.h  |  2 ++
+ fs/xfs/libxfs/xfs_format.h |  9 +--------
+ fs/xfs/xfs_fsops.c         |  6 +++---
+ fs/xfs/xfs_mount.c         |  2 ++
+ fs/xfs/xfs_mount.h         |  1 +
+ 6 files changed, 20 insertions(+), 11 deletions(-)
 
---D
-
-> So this looks fine to me, but the description could use some better
-> wording.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index d0b78b7..19b7521 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -49,6 +49,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+ 
++xfs_extlen_t
++xfs_prealloc_blocks(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
++
+ /*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
+  */
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 135eb3d..d260916 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -237,4 +237,6 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ 
++xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
++
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 4a48977..ebe0eec 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1319,18 +1319,11 @@ typedef __be32 xfs_inobt_ptr_t;
+  */
+ #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
+ 
+-/*
+- * The first data block of an AG depends on whether the filesystem was formatted
+- * with the finobt feature. If so, account for the finobt reserved root btree
+- * block.
+- */
+-#define XFS_PREALLOC_BLOCKS(mp) \
++#define	XFS_RMAP_BLOCK(mp) \
+ 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
+ 	 XFS_FIBT_BLOCK(mp) + 1 : \
+ 	 XFS_IBT_BLOCK(mp) + 1)
+ 
+-
+-
+ /*
+  * BMAP Btree format definitions
+  *
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index ee3aaa0a..32e24ec 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -246,7 +246,7 @@ xfs_growfs_data_private(
+ 		agf->agf_flfirst = 0;
+ 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+ 		agf->agf_flcount = 0;
+-		tmpsize = agsize - XFS_PREALLOC_BLOCKS(mp);
++		tmpsize = agsize - mp->m_ag_prealloc_blocks;
+ 		agf->agf_freeblks = cpu_to_be32(tmpsize);
+ 		agf->agf_longest = cpu_to_be32(tmpsize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+@@ -343,7 +343,7 @@ xfs_growfs_data_private(
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
++		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+ 		arec->ar_blockcount = cpu_to_be32(
+ 			agsize - be32_to_cpu(arec->ar_startblock));
+ 
+@@ -372,7 +372,7 @@ xfs_growfs_data_private(
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
++		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+ 		arec->ar_blockcount = cpu_to_be32(
+ 			agsize - be32_to_cpu(arec->ar_startblock));
+ 		nfree += be32_to_cpu(arec->ar_blockcount);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 536a0ee..ef5de545 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -231,6 +231,8 @@ xfs_initialize_perag(
+ 
+ 	if (maxagi)
+ 		*maxagi = index;
++
++	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+ 	return 0;
+ 
+ out_unwind:
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1c8611f..9788686 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -93,6 +93,7 @@ typedef struct xfs_mount {
+ 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+ 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+ 	uint			m_in_maxlevels;	/* max inobt btree levels. */
++	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
+ 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+ 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+ 	struct mutex		m_growlock;	/* growfs mutex */
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
