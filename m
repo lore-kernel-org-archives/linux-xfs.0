@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DA8DD29E05
-	for <xfs@oss.sgi.com>; Tue,  8 Mar 2016 01:02:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A978D8F8035
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 23:02:10 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3CD907CA0
+	for <xfs@oss.sgi.com>; Tue,  8 Mar 2016 01:57:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B19F9AC002
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 23:57:03 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id DjLp6OKqAzYccRTA (version=TLSv1.2
+	ESMTP id EPrgimsIyGYXdgcC (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Mar 2016 23:02:09 -0800 (PST)
-Date: Mon, 7 Mar 2016 23:02:08 -0800
+	<xfs@oss.sgi.com>; Mon, 07 Mar 2016 23:57:02 -0800 (PST)
+Date: Mon, 7 Mar 2016 23:57:01 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] xfs: pad xfs_attr_leaf_name_remote to avoid tripping
-	on m68k
-Message-ID: <20160308070208.GB30440@infradead.org>
-References: <1457300990-18300-1-git-send-email-david@fromorbit.com>
-	<1457300990-18300-7-git-send-email-david@fromorbit.com>
-	<20160307162858.GE19784@infradead.org>
-	<20160308035648.GV30721@dastard>
+Subject: Re: [NOPATCH v5]: XFS reverse-mapping, reflink, and dedupe support
+Message-ID: <20160308075701.GA24365@infradead.org>
+References: <20160305011530.GG27973@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160308035648.GV30721@dastard>
+In-Reply-To: <20160305011530.GG27973@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,22 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Mar 08, 2016 at 02:56:48PM +1100, Dave Chinner wrote:
-> > I think using a small fixed size array as a variable sized array
-> > is not a good idea, especially with increasinly "smart" optimizing
-> > compilers.  I'd rather take this structure out the size checking,
-> > and then move it to a C99 VLA instead of the size 1 hack in the long
-> > run.
+On Fri, Mar 04, 2016 at 05:15:30PM -0800, Darrick J. Wong wrote:
+> Soooo... stuff I'm hoping to get upstream for 4.6:
+> https://github.com/djwong/linux/tree/for-dave-for-4.6
+> https://github.com/djwong/xfsprogs/tree/for-dave-for-4.6
 > 
-> I don't have the time right now to do this, so I'm just going to
-> drop it - I'd guess the overlap between m68k and XFS users is so
-> close to zero that it just doesn't matter.  I'll just drop this
-> patch for now.
+> Stuff I hope to get upstream:
+> https://github.com/djwong/xfs-documentation/tree/reflink-devel
+> https://github.com/djwong/xfstests/tree/reflink-dev
+> 
+> Development branch, not for upstream:
+> https://github.com/djwong/linux/tree/rmap-reflink-devel
+> https://github.com/djwong/xfsprogs/tree/rmap-reflink-devel
 
-I'll send you a patch for it.
+I've been testing or-dave-for-4.6 + the increased log reservation for
+rmap-reflink-devel for a couple days now and it's doing fine both on
+XFS itself, as well as NFS over XFS so far.  Great work!
 
 _______________________________________________
 xfs mailing list
