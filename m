@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C15817CA2
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 21:05:17 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9C76B29E07
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 22:17:08 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 88FE1304032
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 19:05:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id XzPounrAgn7SdhQv for <xfs@oss.sgi.com>;
-	Thu, 31 Mar 2016 19:05:06 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 86EAC56A
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 21:05:05 -0500 (CDT)
-Subject: Re: [PATCH 03/19] mkfs: Sanitise the superblock feature macros
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-4-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56FDD750.3040002@sandeen.net>
-Date: Thu, 31 Mar 2016 21:05:04 -0500
-MIME-Version: 1.0
-In-Reply-To: <1458818136-56043-4-git-send-email-jtulak@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 604D98F8039
+	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 20:17:05 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	OGgDHFr8VkMCszn1 for <xfs@oss.sgi.com>;
+	Mon, 07 Mar 2016 20:17:02 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1ad94S-0004A3-Tp
+	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:32 +1100
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1ad94G-0007u0-Bl
+	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/16] xfs: first part of rmapbt functionality
+Date: Tue,  8 Mar 2016 15:16:02 +1100
+Message-Id: <1457410578-30233-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,84 +28,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> UPDATE
-> o disable finobt when crc=0 no matter if user used -m finobt=X
-> o split line > 80 chars
-> o remove unused variable
-> o add omitted finobtflag
-> o change variables in spinodes case to look like surrounding code
-> o add I_ALIGN reqval
+Hi folks,
 
-Just FYI - generally, the patch changelog goes below the "---"
-so it doesn't end up as part of the changelog in git.
+This is the first set of patches for reverse mapping support that
+I've grabbed from Darrick's tree. They are are largely unchanged
+from his tree, with minor cleanups to the commit messages and
+formatting (e.g. de-shouting inline functions), some small bug fixes
+and some code/patch rearrangement. Changes are noted in the commit
+messages.
 
-...
+This isn't all of the rmap functionality. It's patches up to the
+point where I've come across the first piece that needs to be
+reworked (the rmap intent execution code), so there's no point
+holding these back until I've sorted that out. This builds on top of
+for-next and the patch set I posted yesterday.
 
-(sorry for being late to the review party btw...)
+Darrick, I've changed the authorship of the patches to reflect
+the original series this has come from - can you check to see if
+there's anything I got wrong when I did that?
 
->  	} else {
->  		/*
->  		 * The kernel doesn't currently support crc=0,finobt=1
-> -		 * filesystems. If crcs are not enabled and the user has
-> -		 * explicitly turned them off then silently turn them off
-> -		 * to avoid an unnecessary warning. If the user explicitly
-> -		 * tried to use crc=0,finobt=1, then issue a warning before
-> -		 * turning them off.
-> +		 * filesystems. If crcs are not enabled and the user has not
-> +		 * explicitly turned finobt on, then silently turn it off to
-> +		 * avoid an unnecessary warning. If the user explicitly tried
-> +		 * to use crc=0,finobt=1, then issue a warning before turning
-> +		 * them off.
->  		 */
-> -		if (finobt && finobtflag) {
-> -			fprintf(stderr,
-> -_("warning: finobt not supported without CRC support, disabled.\n"));
-> +		if (sb_feat.finobt){
-> +			if (sb_feat.finobtflag) {
-> +				fprintf(stderr,
-> +	_("warning: finobt not supported without CRC support, disabled.\n"));
-> +			}
-> +			sb_feat.finobt = 0;
->  		}
-> -		finobt = 0;
->  	}
+Cheers,
 
-Is there any other case in mkfs where options are automatically disabled?
-I don't think so .. I'd just prefer a failure here, not a fix-up, even
-with the warning.  But I guess that's how it was before, so probably
-not something to change in this patch.  So never mind.  :)
+Dave.
 
-But, do we need the extra indentation?
-
-		if (sb_feat.finobt && sb_feat.finobtflag) {
-			fprintf(stderr,
-_("warning: finobt not supported without CRC support, disabled.\n"));
-		}
-		sb_feat.finobt = 0;
-
-would suffice as before, no? Meh.  Not a big deal I guess....
-
-> @@ -2962,7 +3038,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
->  		/*
->  		 * Free INO btree root block
->  		 */
-> -		if (!finobt) {
-> +		if (!sb_feat.finobt){
-                                    ^ please fix whitespace :)
-
->  			xfs_perag_put(pag);
->  			continue;
->  		}
-> 
 
 _______________________________________________
 xfs mailing list
