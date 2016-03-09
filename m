@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EF5E37CA6
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 06:06:50 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A893F7CA7
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 06:06:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 42A15AC004
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 04:06:47 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 788428F804B
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 04:06:48 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QlDoEiMOmUHKfTMr (version=TLSv1.2
+	cuda.sgi.com with ESMTP id DFsZHVAuGzEl6N7X (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Mar 2016 04:06:45 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 09 Mar 2016 04:06:47 -0800 (PST)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id EB5C98E3CF
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 12:06:44 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id D8781627F3
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 12:06:46 +0000 (UTC)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [XFSTESTS v4 1/4] Rename output file templates to match TEST.out*
-Date: Wed,  9 Mar 2016 13:06:35 +0100
-Message-Id: <1457525199-15355-2-git-send-email-agruenba@redhat.com>
+Subject: [XFSTESTS v4 2/4] check: Add support for tests without *.out files
+Date: Wed,  9 Mar 2016 13:06:36 +0100
+Message-Id: <1457525199-15355-3-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
 References: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,294 +35,127 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Rename the expected output files so that they all match "$TEST_NAME.out*".
-That way, we can statically check if a test has any .out* files.
+Add support for tests which report their status through their exit code
+instead of producing output that is compared with the expected output.
 
-Add $TEST_NAME.out and similar symlinks to .gitignore.
+When such a test returns with exit code 77, it is assumed to have been
+skipped; all other non-zero exit codes are treated as test failures.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- .gitignore                 | 19 +++++++++++++++++
- tests/xfs/096              |  4 ++--
- tests/xfs/096.external     | 50 ---------------------------------------------
- tests/xfs/096.internal     | 51 ----------------------------------------------
- tests/xfs/096.out.external | 50 +++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/096.out.internal | 51 ++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 122 insertions(+), 103 deletions(-)
- delete mode 100644 tests/xfs/096.external
- delete mode 100644 tests/xfs/096.internal
- create mode 100644 tests/xfs/096.out.external
- create mode 100644 tests/xfs/096.out.internal
+ check | 77 +++++++++++++++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 50 insertions(+), 27 deletions(-)
 
-diff --git a/.gitignore b/.gitignore
-index 28fa205..f9ea1fa 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -199,3 +199,22 @@
- /dmapi/src/suite2/src/test_invis
- /dmapi/src/suite2/src/test_region
- /dmapi/src/suite2/src/test_rights
-+
-+# Symlinked files
-+/tests/generic/088.out
-+/tests/generic/097.out
-+/tests/xfs/018.op
-+/tests/xfs/022.out
-+/tests/xfs/023.out
-+/tests/xfs/030.out
-+/tests/xfs/031.out
-+/tests/xfs/033.out
-+/tests/xfs/035.out
-+/tests/xfs/036.out
-+/tests/xfs/039.out
-+/tests/xfs/043.out
-+/tests/xfs/055.out
-+/tests/xfs/071.out
-+/tests/xfs/082.op
-+/tests/xfs/096.out
-+/tests/xfs/146.out
-diff --git a/tests/xfs/096 b/tests/xfs/096
-index c289c10..f949e83 100755
---- a/tests/xfs/096
-+++ b/tests/xfs/096
-@@ -109,9 +109,9 @@ _require_v2log
- # choose .out file based on internal/external log
- rm -f $seqfull.out
- if [ "$USE_EXTERNAL" = yes ]; then
--	ln -s $seq.external $seqfull.out
-+	ln -s $seq.out.external $seqfull.out
- else
--	ln -s $seq.internal $seqfull.out
-+	ln -s $seq.out.internal $seqfull.out
- fi
+diff --git a/check b/check
+index 2986d84..1327e1c 100755
+--- a/check
++++ b/check
+@@ -203,6 +203,13 @@ _prepare_test_list()
+ 	fi
+ }
  
- # maximum log record size
-diff --git a/tests/xfs/096.external b/tests/xfs/096.external
-deleted file mode 100644
-index 3122330..0000000
---- a/tests/xfs/096.external
-+++ /dev/null
-@@ -1,50 +0,0 @@
--QA output created by 096
--
--# su too big but must be a multiple of fs block size too
----- mkfs=-l version=2,su=262656 ---
--log stripe unit (262656) must be a multiple of the block size (4096)
--
--
--# test log stripe greater than LR size
----- mkfs=-l version=2,su=266240 ---
--meta-data=DEV isize=N      agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=0      swidth=0 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
--# same test but get log stripe from data stripe
----- mkfs=-l version=2 -d su=266240,sw=1 ---
--meta-data=DEV isize=N      agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=65     swidth=65 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
--# test out data stripe
----- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
--meta-data=DEV isize=N      agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=65     swidth=65 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
--# test out data stripe the same but using sunit & swidth
----- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
--meta-data=DEV isize=N      agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=65     swidth=65 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
-diff --git a/tests/xfs/096.internal b/tests/xfs/096.internal
-deleted file mode 100644
-index 80201d2..0000000
---- a/tests/xfs/096.internal
-+++ /dev/null
-@@ -1,51 +0,0 @@
--QA output created by 096
--
--# su too big but must be a multiple of fs block size too
----- mkfs=-l version=2,su=262656 ---
--log stripe unit (262656) must be a multiple of the block size (4096)
--
--
--# test log stripe greater than LR size
----- mkfs=-l version=2,su=266240 ---
--meta-data=DEV isize=N    agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=0      swidth=0 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
--# same test but get log stripe from data stripe
----- mkfs=-l version=2 -d su=266240,sw=1 ---
--meta-data=DEV isize=N    agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=65     swidth=65 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
--# test out data stripe
----- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
--meta-data=DEV isize=N    agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=65     swidth=65 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
--# test out data stripe the same but using sunit & swidth
----- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
--meta-data=DEV isize=N    agcount=N, agsize=N blks
--data     =                       bsize=4096   blocks=N, imaxpct=N
--         =                       sunit=65     swidth=65 blks, unwritten=1
--naming   =version 2              bsize=4096
--log      =LOG                    bsize=4096   blocks=N, version=N
--         =                       sunit=N blks
--realtime =REALTIME               extsz=N, blocks=N, rtextents=N
--
--
-diff --git a/tests/xfs/096.out.external b/tests/xfs/096.out.external
-new file mode 100644
-index 0000000..3122330
---- /dev/null
-+++ b/tests/xfs/096.out.external
-@@ -0,0 +1,50 @@
-+QA output created by 096
++# Check if a test has any .out* files
++has_out_files()
++{
++    set -- "$1".out*
++    [ $# -gt 0 -a -e "$1" ]
++}
 +
-+# su too big but must be a multiple of fs block size too
-+--- mkfs=-l version=2,su=262656 ---
-+log stripe unit (262656) must be a multiple of the block size (4096)
+ # Process command arguments first.
+ while [ $# -gt 0 ]; do
+ 	case "$1" in
+@@ -635,6 +642,13 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 		    err=true
+ 		fi
+ 
++		if ! has_out_files $seq; then
++		    if [ $sts -eq 77 ]; then
++			cat $tmp.out > $seqres.notrun
++			sts=0
++		    fi
++		fi
 +
+ 		if [ -f $seqres.notrun ]
+ 		then
+ 		    $timestamp || echo -n " [not run] "
+@@ -647,41 +661,50 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 			echo -n " [failed, exit status $sts]"
+ 			err=true
+ 		    fi
+-		    if [ ! -f $seq.out ]
+-		    then
+-			echo " - no qualified output"
+-			err=true
+-		    else
+ 
+-			# coreutils 8.16+ changed quote formats in error messages from
+-			# `foo' to 'foo'. Filter old versions to match the new version.
+-			sed -i "s/\`/\'/g" $tmp.out
+-			if diff $seq.out $tmp.out >/dev/null 2>&1
++		    if has_out_files $seq; then
++			if [ ! -f $seq.out ]
+ 			then
+-			    if $err
++			    echo " - no qualified output"
++			    err=true
++			else
++			    # coreutils 8.16+ changed quote formats in error messages from
++			    # `foo' to 'foo'. Filter old versions to match the new version.
++			    sed -i "s/\`/\'/g" $tmp.out
 +
-+# test log stripe greater than LR size
-+--- mkfs=-l version=2,su=266240 ---
-+meta-data=DEV isize=N      agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=0      swidth=0 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
++			    if ! diff $seq.out $tmp.out >/dev/null 2>&1
+ 			    then
+-				:
+-			    else
+-				echo "$seqnum `expr $stop - $start`" >>$tmp.time
+-				echo -n " `expr $stop - $start`s"
++				echo " - output mismatch (see $seqres.out.bad)"
++				mv $tmp.out $seqres.out.bad
++				$diff $seq.out $seqres.out.bad | {
++				    if test "$DIFF_LENGTH" -le 0; then
++					    cat
++				    else
++					    head -n "$DIFF_LENGTH"
++					    echo "..."
++					    echo "(Run '$diff $seq.out $seqres.out.bad'" \
++						    " to see the entire diff)"
++				    fi; } | \
++				    sed -e 's/^\(.\)/    \1/'
++				err=true
+ 			    fi
+-			    echo ""
++			fi
++		    else
++			if ! $err; then
++			    mv $tmp.out $seqres.out.good
+ 			else
+-			    echo " - output mismatch (see $seqres.out.bad)"
+ 			    mv $tmp.out $seqres.out.bad
+-			    $diff $seq.out $seqres.out.bad | {
+-				if test "$DIFF_LENGTH" -le 0; then
+-					cat
+-				else
+-					head -n "$DIFF_LENGTH"
+-					echo "..."
+-					echo "(Run '$diff $seq.out $seqres.out.bad'" \
+-						" to see the entire diff)"
+-				fi; } | \
+-				sed -e 's/^\(.\)/    \1/'
+-			    err=true
++			    echo " - output (see $seqres.out.bad)"
++			    cat $seqres.out.bad
+ 			fi
+ 		    fi
 +
++		    if ! $err; then
++			echo "$seqnum `expr $stop - $start`" >>$tmp.time
++			echo -n " `expr $stop - $start`s"
++			echo ""
++		    fi
 +
-+# same test but get log stripe from data stripe
-+--- mkfs=-l version=2 -d su=266240,sw=1 ---
-+meta-data=DEV isize=N      agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=65     swidth=65 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
-+# test out data stripe
-+--- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
-+meta-data=DEV isize=N      agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=65     swidth=65 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
-+# test out data stripe the same but using sunit & swidth
-+--- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
-+meta-data=DEV isize=N      agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=65     swidth=65 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
-diff --git a/tests/xfs/096.out.internal b/tests/xfs/096.out.internal
-new file mode 100644
-index 0000000..80201d2
---- /dev/null
-+++ b/tests/xfs/096.out.internal
-@@ -0,0 +1,51 @@
-+QA output created by 096
-+
-+# su too big but must be a multiple of fs block size too
-+--- mkfs=-l version=2,su=262656 ---
-+log stripe unit (262656) must be a multiple of the block size (4096)
-+
-+
-+# test log stripe greater than LR size
-+--- mkfs=-l version=2,su=266240 ---
-+meta-data=DEV isize=N    agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=0      swidth=0 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
-+# same test but get log stripe from data stripe
-+--- mkfs=-l version=2 -d su=266240,sw=1 ---
-+meta-data=DEV isize=N    agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=65     swidth=65 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
-+# test out data stripe
-+--- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
-+meta-data=DEV isize=N    agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=65     swidth=65 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
-+# test out data stripe the same but using sunit & swidth
-+--- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
-+meta-data=DEV isize=N    agcount=N, agsize=N blks
-+data     =                       bsize=4096   blocks=N, imaxpct=N
-+         =                       sunit=65     swidth=65 blks, unwritten=1
-+naming   =version 2              bsize=4096
-+log      =LOG                    bsize=4096   blocks=N, version=N
-+         =                       sunit=N blks
-+realtime =REALTIME               extsz=N, blocks=N, rtextents=N
-+
-+
+ 		    try="$try $seqnum"
+ 		    n_try=`expr $n_try + 1`
+ 		    _check_filesystems
 -- 
 2.5.0
 
