@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A74547CDA
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 16:02:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 68D08304062
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:59 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 90AG5DsHmcSNcD5Z (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:54 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
-	id 1afZdd-0000GT-HR
-	for xfs@oss.sgi.com; Mon, 14 Mar 2016 21:02:53 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/7] fs: introduce iomap infrastructure
-Date: Mon, 14 Mar 2016 22:02:45 +0100
-Message-Id: <1457989370-6904-3-git-send-email-hch@lst.de>
-In-Reply-To: <1457989370-6904-1-git-send-email-hch@lst.de>
-References: <1457989370-6904-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 3D29F7CA0
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 06:06:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E5444304039
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 04:06:43 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Vps4OmIixXKPXewv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 09 Mar 2016 04:06:42 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id A486B6315B
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 12:06:42 +0000 (UTC)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [XFSTESTS v4 0/4] Richacl tests
+Date: Wed,  9 Mar 2016 13:06:34 +0100
+Message-Id: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,639 +31,116 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Andreas Gruenbacher <agruenba@redhat.com>
 
-Add infrastructure for multipage buffered writes.  This is implemented
-using an main iterator that applies an actor function to a range that
-can be written.
+Hello,
 
-This infrastucture is used to implement a buffered write helper, one
-to zero file ranges and one to implement the ->page_mkwrite VM
-operations.  All of them borrow a fair amount of code from fs/buffers.
-for now by using an internal version of __block_write_begin that
-gets passed an iomap and builds the corresponding buffer head.
+here is a new version of the richacl tests. According to feedback from the
+previous posting (http://oss.sgi.com/archives/xfs/2015-12/msg00316.html), each
+of the richacl tests is not run separately, on a new scratch filesystem.
 
-The file system is gets a set of paired ->iomap_begin and ->iomap_end
-calls which allow it to map/reserve a range and get a notification
-once the write code is finished with it.
+Thanks,
+Andreas
 
-Based on earlier code from Dave Chinner.
+Andreas Gruenbacher (4):
+  Rename output file templates to match TEST.out*
+  check: Add support for tests without *.out files
+  xfs/191: Remove obsolete nfs4acl tests
+  Add richacl tests
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/Makefile           |   2 +-
- fs/buffer.c           |  77 +++++++++-
- fs/internal.h         |   3 +
- fs/iomap.c            | 381 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  55 +++++++-
- 5 files changed, 507 insertions(+), 11 deletions(-)
- create mode 100644 fs/iomap.c
+ .gitignore                          |  19 +++
+ Makefile                            |   2 +-
+ check                               |  77 ++++++---
+ common/rc                           |  36 ++++
+ nfs4acl/Makefile                    |  29 ----
+ nfs4acl/apply-mask.test             | 143 ----------------
+ nfs4acl/basic.test                  |  70 --------
+ nfs4acl/chmod.test                  |  31 ----
+ nfs4acl/chown.test                  |  63 -------
+ nfs4acl/computed-mode.test          |  62 -------
+ nfs4acl/create.test                 |  35 ----
+ nfs4acl/ctime.test                  |  36 ----
+ nfs4acl/delete.test                 |  77 ---------
+ nfs4acl/run                         | 298 ---------------------------------
+ nfs4acl/unrepresentable.test        |  20 ---
+ nfs4acl/write-vs-append.test        |  46 -----
+ richacl/Makefile                    |  23 +++
+ richacl/apply-masks                 | 163 ++++++++++++++++++
+ richacl/auto-inheritance            | 191 +++++++++++++++++++++
+ richacl/basic                       |  97 +++++++++++
+ richacl/chmod                       |  40 +++++
+ richacl/chown                       |  42 +++++
+ richacl/create                      |  36 ++++
+ richacl/ctime                       |  35 ++++
+ richacl/delete                      |  89 ++++++++++
+ richacl/setrichacl-modify           |  57 +++++++
+ richacl/test-lib.sh                 | 154 +++++++++++++++++
+ richacl/write-vs-append             |  54 ++++++
+ tests/generic/338                   |  67 ++++++++
+ tests/generic/339-apply-masks       |   1 +
+ tests/generic/340-auto-inheritance  |   1 +
+ tests/generic/341-basic             |   1 +
+ tests/generic/342-chmod             |   1 +
+ tests/generic/343-chown             |   1 +
+ tests/generic/344-create            |   1 +
+ tests/generic/345-ctime             |   1 +
+ tests/generic/346-delete            |   1 +
+ tests/generic/347-setrichacl-modify |   1 +
+ tests/generic/348-write-vs-append   |   1 +
+ tests/generic/group                 |  10 ++
+ tests/xfs/096                       |   4 +-
+ tests/xfs/096.external              |  50 ------
+ tests/xfs/096.internal              |  51 ------
+ tests/xfs/096.out.external          |  50 ++++++
+ tests/xfs/096.out.internal          |  51 ++++++
+ tests/xfs/191                       |  75 ---------
+ tests/xfs/191.out                   | 324 ------------------------------------
+ tests/xfs/group                     |   1 -
+ 48 files changed, 1277 insertions(+), 1441 deletions(-)
+ delete mode 100644 nfs4acl/Makefile
+ delete mode 100644 nfs4acl/apply-mask.test
+ delete mode 100644 nfs4acl/basic.test
+ delete mode 100644 nfs4acl/chmod.test
+ delete mode 100644 nfs4acl/chown.test
+ delete mode 100644 nfs4acl/computed-mode.test
+ delete mode 100644 nfs4acl/create.test
+ delete mode 100644 nfs4acl/ctime.test
+ delete mode 100644 nfs4acl/delete.test
+ delete mode 100755 nfs4acl/run
+ delete mode 100644 nfs4acl/unrepresentable.test
+ delete mode 100644 nfs4acl/write-vs-append.test
+ create mode 100644 richacl/Makefile
+ create mode 100755 richacl/apply-masks
+ create mode 100755 richacl/auto-inheritance
+ create mode 100755 richacl/basic
+ create mode 100755 richacl/chmod
+ create mode 100755 richacl/chown
+ create mode 100755 richacl/create
+ create mode 100755 richacl/ctime
+ create mode 100755 richacl/delete
+ create mode 100755 richacl/setrichacl-modify
+ create mode 100644 richacl/test-lib.sh
+ create mode 100755 richacl/write-vs-append
+ create mode 100755 tests/generic/338
+ create mode 120000 tests/generic/339-apply-masks
+ create mode 120000 tests/generic/340-auto-inheritance
+ create mode 120000 tests/generic/341-basic
+ create mode 120000 tests/generic/342-chmod
+ create mode 120000 tests/generic/343-chown
+ create mode 120000 tests/generic/344-create
+ create mode 120000 tests/generic/345-ctime
+ create mode 120000 tests/generic/346-delete
+ create mode 120000 tests/generic/347-setrichacl-modify
+ create mode 120000 tests/generic/348-write-vs-append
+ delete mode 100644 tests/xfs/096.external
+ delete mode 100644 tests/xfs/096.internal
+ create mode 100644 tests/xfs/096.out.external
+ create mode 100644 tests/xfs/096.out.internal
+ delete mode 100755 tests/xfs/191
+ delete mode 100644 tests/xfs/191.out
 
-diff --git a/fs/Makefile b/fs/Makefile
-index 79f5225..d522fd2 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -14,7 +14,7 @@ obj-y :=	open.o read_write.o file_table.o super.o \
- 		stack.o fs_struct.o statfs.o fs_pin.o nsfs.o
- 
- ifeq ($(CONFIG_BLOCK),y)
--obj-y +=	buffer.o block_dev.o direct-io.o mpage.o
-+obj-y +=	buffer.o block_dev.o direct-io.o mpage.o iomap.o
- else
- obj-y +=	no-block.o
- endif
-diff --git a/fs/buffer.c b/fs/buffer.c
-index e1632ab..03379de 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -21,6 +21,7 @@
- #include <linux/kernel.h>
- #include <linux/syscalls.h>
- #include <linux/fs.h>
-+#include <linux/iomap.h>
- #include <linux/mm.h>
- #include <linux/percpu.h>
- #include <linux/slab.h>
-@@ -1893,8 +1894,63 @@ void page_zero_new_buffers(struct page *page, unsigned from, unsigned to)
- }
- EXPORT_SYMBOL(page_zero_new_buffers);
- 
--int __block_write_begin(struct page *page, loff_t pos, unsigned len,
--		get_block_t *get_block)
-+static void
-+iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
-+		struct iomap *iomap)
-+{
-+	loff_t offset = block << inode->i_blkbits;
-+
-+	bh->b_bdev = iomap->bdev;
-+
-+	/*
-+	 * Block points to offset in file we need to map, iomap contains
-+	 * the offset at which the map starts. If the map ends before the
-+	 * current block, then do not map the buffer and let the caller
-+	 * handle it.
-+	 */
-+	BUG_ON(offset >= iomap->offset + iomap->length);
-+
-+	switch (iomap->type) {
-+	case IOMAP_HOLE:
-+		/*
-+		 * If the buffer is not up to date or beyond the current EOF,
-+		 * we need to mark it as new to ensure sub-block zeroing is
-+		 * executed if necessary.
-+		 */
-+		if (!buffer_uptodate(bh) ||
-+		    (offset >= i_size_read(inode)))
-+			set_buffer_new(bh);
-+		break;
-+	case IOMAP_DELALLOC:
-+		if (!buffer_uptodate(bh) ||
-+		    (offset >= i_size_read(inode)))
-+			set_buffer_new(bh);
-+		set_buffer_uptodate(bh);
-+		set_buffer_mapped(bh);
-+		set_buffer_delay(bh);
-+		break;
-+	case IOMAP_UNWRITTEN:
-+		/*
-+		 * For unwritten regions, we always need to ensure that
-+		 * sub-block writes cause the regions in the block we are not
-+		 * writing to are zeroed. Set the buffer as new to ensre this.
-+		 */
-+		set_buffer_new(bh);
-+		set_buffer_unwritten(bh);
-+		/* FALLTHRU */
-+	case IOMAP_MAPPED:
-+		if (offset >= i_size_read(inode))
-+			set_buffer_new(bh);
-+		bh->b_blocknr = (iomap->blkno >> (inode->i_blkbits - 9)) +
-+				((offset - iomap->offset) >> inode->i_blkbits);
-+		set_buffer_mapped(bh);
-+		break;
-+	}
-+
-+}
-+
-+int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
-+		get_block_t *get_block, struct iomap *iomap)
- {
- 	unsigned from = pos & (PAGE_CACHE_SIZE - 1);
- 	unsigned to = from + len;
-@@ -1930,9 +1986,14 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
- 			clear_buffer_new(bh);
- 		if (!buffer_mapped(bh)) {
- 			WARN_ON(bh->b_size != blocksize);
--			err = get_block(inode, block, bh, 1);
--			if (err)
--				break;
-+			if (get_block) {
-+				err = get_block(inode, block, bh, 1);
-+				if (err)
-+					break;
-+			} else {
-+				iomap_to_bh(inode, block, bh, iomap);
-+			}
-+
- 			if (buffer_new(bh)) {
- 				unmap_underlying_metadata(bh->b_bdev,
- 							bh->b_blocknr);
-@@ -1973,6 +2034,12 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
- 		page_zero_new_buffers(page, from, to);
- 	return err;
- }
-+
-+int __block_write_begin(struct page *page, loff_t pos, unsigned len,
-+		get_block_t *get_block)
-+{
-+	return __block_write_begin_int(page, pos, len, get_block, NULL);
-+}
- EXPORT_SYMBOL(__block_write_begin);
- 
- static int __block_commit_write(struct inode *inode, struct page *page,
-diff --git a/fs/internal.h b/fs/internal.h
-index b71deee..c0c6f49 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -11,6 +11,7 @@
- 
- struct super_block;
- struct file_system_type;
-+struct iomap;
- struct linux_binprm;
- struct path;
- struct mount;
-@@ -39,6 +40,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
-  * buffer.c
-  */
- extern void guard_bio_eod(int rw, struct bio *bio);
-+extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
-+		get_block_t *get_block, struct iomap *iomap);
- 
- /*
-  * char_dev.c
-diff --git a/fs/iomap.c b/fs/iomap.c
-new file mode 100644
-index 0000000..d4528cb
---- /dev/null
-+++ b/fs/iomap.c
-@@ -0,0 +1,381 @@
-+
-+#include <linux/module.h>
-+#include <linux/compiler.h>
-+#include <linux/fs.h>
-+#include <linux/iomap.h>
-+#include <linux/uaccess.h>
-+#include <linux/gfp.h>
-+#include <linux/mm.h>
-+#include <linux/swap.h>
-+#include <linux/pagemap.h>
-+#include <linux/file.h>
-+#include <linux/uio.h>
-+#include <linux/backing-dev.h>
-+#include <linux/buffer_head.h>
-+#include "internal.h"
-+
-+typedef ssize_t (*write_actor_t)(struct inode *inode, loff_t pos, ssize_t len,
-+		void *data, struct iomap *iomap);
-+
-+/*
-+ * Execute a iomap write on a segment of the mapping that spans a
-+ * contiguous range of pages that have identical block mapping state.
-+ *
-+ * This avoids the need to map pages individually, do individual allocations
-+ * for each page and most importantly avoid the need for filesystem specific
-+ * locking per page. Instead, all the operations are amortised over the entire
-+ * range of pages. It is assumed that the filesystems will lock whatever
-+ * resources they require in the iomap_begin call, and release them in the
-+ * iomap_end call.
-+ */
-+static ssize_t
-+iomap_write_segment(struct inode *inode, loff_t pos, ssize_t length,
-+		unsigned flags, struct iomap_ops *ops, void *data,
-+		write_actor_t actor)
-+{
-+	struct iomap iomap = { 0 };
-+	ssize_t written;
-+	int error;
-+
-+	/*
-+	 * Need to map a range from start position for count bytes. This can
-+	 * span multiple pages - it is only guaranteed to return a range of a
-+	 * single type of pages (e.g. all into a hole, all mapped or all
-+	 * unwritten). Failure at this point has nothing to undo.
-+	 *
-+	 * If allocation is required for this range, reserve the space now so
-+	 * that the allocation is guaranteed to succeed later on. Once we copy
-+	 * the data into the page cache pages, then we cannot fail otherwise we
-+	 * expose transient stale data. If the reserve fails, we can safely
-+	 * back out at this point as there is nothing to undo.
-+	 *
-+	 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
-+	 * to keep the chunks of work done where somewhat symmetric with the
-+	 * work writeback does. This is a completely arbitrary number pulled
-+	 * out of thin air as a best guess for initial testing.
-+	 */
-+	length = min_t(size_t, length, 1024 * PAGE_SIZE);
-+
-+	error = ops->iomap_begin(inode, pos, length, flags, &iomap);
-+	if (error)
-+		return error;
-+	if (WARN_ON(iomap.offset > pos))
-+		return -EIO;
-+
-+	/*
-+	 * Cut down the length to the one actually provided by the filesystem,
-+	 * as it might not be able to give us the whole size that we requested.
-+	 */
-+	if (iomap.offset + iomap.length < pos + length)
-+		length = iomap.offset + iomap.length - pos;
-+
-+	/*
-+	 * Now that we have guaranteed that the space allocation will succeed.
-+	 * we can do the copy-in page by page without having to worry about
-+	 * failures exposing transient data.
-+	 */
-+	written = actor(inode, pos, length, data, &iomap);
-+
-+	/*
-+	 * Now the data has been copied, commit the range we've copied.  This
-+	 * should not fail unless the filesystem has had a fatal error.
-+	 */
-+	error = ops->iomap_end(inode, pos, length,
-+			written > 0 ? written : 0, &iomap);
-+
-+	return written > 0 ? written : error;
-+}
-+
-+static void
-+iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
-+{
-+	loff_t i_size = i_size_read(inode);
-+
-+	/*
-+	 * Only truncate newly allocated pages beyoned EOF, even if the
-+	 * write started inside the existing inode size.
-+	 */
-+	if (pos + len > i_size)
-+		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
-+}
-+
-+static int
-+iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
-+		struct page **pagep, struct iomap *iomap)
-+{
-+	pgoff_t index = pos >> PAGE_CACHE_SHIFT;
-+	struct page *page;
-+	int status = 0;
-+
-+	BUG_ON(pos + len > iomap->offset + iomap->length);
-+
-+	page = grab_cache_page_write_begin(inode->i_mapping, index, flags);
-+	if (!page)
-+		return -ENOMEM;
-+
-+	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	if (unlikely(status)) {
-+		unlock_page(page);
-+		page_cache_release(page);
-+		page = NULL;
-+
-+		iomap_write_failed(inode, pos, len);
-+	}
-+
-+	*pagep = page;
-+	return status;
-+}
-+
-+static int
-+iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-+		unsigned copied, struct page *page)
-+{
-+	int ret;
-+
-+	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-+			copied, page, NULL);
-+	if (ret < len)
-+		iomap_write_failed(inode, pos, len);
-+	return ret;
-+}
-+
-+static ssize_t
-+iomap_write_actor(struct inode *inode, loff_t pos, ssize_t length, void *data,
-+		struct iomap *iomap)
-+{
-+	struct iov_iter *i = data;
-+	long status = 0;
-+	ssize_t written = 0;
-+	unsigned int flags = AOP_FLAG_NOFS;
-+
-+	/*
-+	 * Copies from kernel address space cannot fail (NFSD is a big user).
-+	 */
-+	if (!iter_is_iovec(i))
-+		flags |= AOP_FLAG_UNINTERRUPTIBLE;
-+
-+	do {
-+		struct page *page;
-+		unsigned long offset;	/* Offset into pagecache page */
-+		unsigned long bytes;	/* Bytes to write to page */
-+		size_t copied;		/* Bytes copied from user */
-+
-+		offset = (pos & (PAGE_CACHE_SIZE - 1));
-+		bytes = min_t(unsigned long, PAGE_CACHE_SIZE - offset,
-+						iov_iter_count(i));
-+again:
-+		if (bytes > length)
-+			bytes = length;
-+
-+		/*
-+		 * Bring in the user page that we will copy from _first_.
-+		 * Otherwise there's a nasty deadlock on copying from the
-+		 * same page as we're writing to, without it being marked
-+		 * up-to-date.
-+		 *
-+		 * Not only is this an optimisation, but it is also required
-+		 * to check that the address is actually valid, when atomic
-+		 * usercopies are used, below.
-+		 */
-+		if (unlikely(iov_iter_fault_in_readable(i, bytes))) {
-+			status = -EFAULT;
-+			break;
-+		}
-+
-+		status = iomap_write_begin(inode, pos, bytes, flags, &page,
-+				iomap);
-+		if (unlikely(status))
-+			break;
-+
-+		if (mapping_writably_mapped(inode->i_mapping))
-+			flush_dcache_page(page);
-+
-+		pagefault_disable();
-+		copied = iov_iter_copy_from_user_atomic(page, i, offset, bytes);
-+		pagefault_enable();
-+
-+		flush_dcache_page(page);
-+		mark_page_accessed(page);
-+
-+		status = iomap_write_end(inode, pos, bytes, copied, page);
-+		if (unlikely(status < 0))
-+			break;
-+		copied = status;
-+
-+		cond_resched();
-+
-+		iov_iter_advance(i, copied);
-+		if (unlikely(copied == 0)) {
-+			/*
-+			 * If we were unable to copy any data at all, we must
-+			 * fall back to a single segment length write.
-+			 *
-+			 * If we didn't fallback here, we could livelock
-+			 * because not all segments in the iov can be copied at
-+			 * once without a pagefault.
-+			 */
-+			bytes = min_t(unsigned long, PAGE_CACHE_SIZE - offset,
-+						iov_iter_single_seg_count(i));
-+			goto again;
-+		}
-+		pos += copied;
-+		written += copied;
-+		length -= copied;
-+
-+		balance_dirty_pages_ratelimited(inode->i_mapping);
-+	} while (iov_iter_count(i) && length);
-+
-+	return written ? written : status;
-+}
-+
-+ssize_t
-+iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
-+		struct iomap_ops *ops)
-+{
-+	struct inode *inode = iocb->ki_filp->f_mapping->host;
-+	loff_t pos = iocb->ki_pos;
-+	ssize_t ret = 0, written = 0;
-+
-+	while (iov_iter_count(iter)) {
-+		ret = iomap_write_segment(inode, pos, iov_iter_count(iter),
-+				IOMAP_ALLOCATE, ops, iter, iomap_write_actor);
-+		if (ret <= 0)
-+			break;
-+		pos += ret;
-+		written += ret;
-+	}
-+
-+	return written ? written : ret;
-+}
-+EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
-+
-+static ssize_t
-+iomap_zero_range_actor(struct inode *inode, loff_t pos, ssize_t count,
-+		void *data, struct iomap *iomap)
-+{
-+	bool *did_zero = data;
-+	struct page *page;
-+	int status;
-+	ssize_t written = 0;
-+
-+	/*
-+	 * No need to zero anything if we fall into a hole or unwritten extent.
-+	 */
-+	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
-+		return count;
-+
-+	do {
-+		unsigned offset, bytes;
-+
-+		offset = pos & (PAGE_CACHE_SIZE - 1); /* Within page */
-+		bytes = min_t(unsigned, PAGE_CACHE_SIZE - offset, count);
-+
-+		status = iomap_write_begin(inode, pos, bytes,
-+				AOP_FLAG_UNINTERRUPTIBLE | AOP_FLAG_NOFS,
-+				&page, iomap);
-+		if (status)
-+			break;
-+
-+		zero_user(page, offset, bytes);
-+		mark_page_accessed(page);
-+
-+		status = iomap_write_end(inode, pos, bytes, bytes, page);
-+		if (status)
-+			break;
-+
-+		pos += bytes;
-+		count -= bytes;
-+		written += bytes;
-+		if (did_zero)
-+			*did_zero = true;
-+	} while (count > 0);
-+
-+	return status ? status : written;
-+}
-+
-+int
-+iomap_zero_range(struct inode *inode, loff_t pos, u64 len, bool *did_zero,
-+		struct iomap_ops *ops)
-+{
-+	ssize_t ret;
-+
-+	while (len > 0) {
-+		ssize_t chunk_size = min_t(u64, len, INT_MAX);
-+
-+		ret = iomap_write_segment(inode, pos, chunk_size, 0, ops,
-+				did_zero, iomap_zero_range_actor);
-+		if (ret <= 0)
-+			return ret;
-+
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iomap_zero_range);
-+
-+int
-+iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		struct iomap_ops *ops)
-+{
-+	unsigned blocksize = (1 << inode->i_blkbits);
-+	unsigned off = pos & (blocksize - 1);
-+
-+	/* Block boundary? Nothing to do */
-+	if (!off)
-+		return 0;
-+	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
-+}
-+EXPORT_SYMBOL_GPL(iomap_truncate_page);
-+
-+static ssize_t
-+iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, ssize_t length,
-+		void *data, struct iomap *iomap)
-+{
-+	struct page *page = data;
-+	int ret;
-+
-+	ret = __block_write_begin_int(page, 0, length, NULL, iomap);
-+	if (!ret)
-+		ret = block_commit_write(page, 0, length);
-+
-+	return ret;
-+}
-+
-+int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-+		struct iomap_ops *ops)
-+{
-+	struct page *page = vmf->page;
-+	struct inode *inode = file_inode(vma->vm_file);
-+	unsigned long length;
-+	loff_t size;
-+	int ret;
-+
-+	lock_page(page);
-+	size = i_size_read(inode);
-+	if ((page->mapping != inode->i_mapping) ||
-+	    (page_offset(page) > size)) {
-+		/* We overload EFAULT to mean page got truncated */
-+		ret = -EFAULT;
-+		goto out_unlock;
-+	}
-+
-+	/* page is wholly or partially inside EOF */
-+	if (((page->index + 1) << PAGE_CACHE_SHIFT) > size)
-+		length = size & ~PAGE_CACHE_MASK;
-+	else
-+		length = PAGE_CACHE_SIZE;
-+
-+	ret = iomap_write_segment(inode, page_offset(page), length,
-+			IOMAP_ALLOCATE, ops, page, iomap_page_mkwrite_actor);
-+	if (unlikely(ret < 0))
-+		goto out_unlock;
-+	set_page_dirty(page);
-+	wait_for_stable_page(page);
-+	return 0;
-+out_unlock:
-+	unlock_page(page);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 1b22197..ae0b92c 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -3,19 +3,64 @@
- 
- #include <linux/types.h>
- 
--/* types of block ranges for multipage write mappings. */
-+struct inode;
-+struct iov_iter;
-+struct kiocb;
-+struct vm_area_struct;
-+struct vm_fault;
-+
-+/*
-+ * Types of block ranges for iomap mappings:
-+ */
- #define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
- #define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
- #define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
- #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
- 
-+/*
-+ * Magic value for blkno:
-+ */
- #define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
- 
- struct iomap {
--	sector_t	blkno;	/* first sector of mapping */
--	loff_t		offset;	/* file offset of mapping, bytes */
--	u64		length;	/* length of mapping, bytes */
--	int		type;	/* type of mapping */
-+	sector_t		blkno;	/* first sector of mapping, fs blocks */
-+	loff_t			offset;	/* file offset of mapping, bytes */
-+	u64			length;	/* length of mapping, bytes */
-+	int			type;	/* type of mapping */
-+	struct block_device	*bdev; /* block device for I/O */
-+};
-+
-+/*
-+ * Flags for iomap_begin:
-+ */
-+#define IOMAP_ALLOCATE	0x01	/* allocate / reserve blocks if not present */
-+
-+struct iomap_ops {
-+	/*
-+	 * Return the existing mapping at pos, or reserve space starting at
-+	 * pos for up to length, as long as we can do it as a single mapping.
-+	 * The actual length is returned in iomap->length.
-+	 */
-+	int (*iomap_begin)(struct inode *inode, loff_t pos, ssize_t length,
-+			unsigned flags, struct iomap *iomap);
-+
-+	/*
-+	 * Commit and/or unreserve space previous allocated using iomap_begin.
-+	 * Written indicates the length of the successful write operation which
-+	 * needs to be commited, while the rest needs to be unreserved.
-+	 * Written might be zero if no data was written.
-+	 */
-+	int (*iomap_end)(struct inode *inode, loff_t pos, ssize_t length,
-+			ssize_t written, struct iomap *iomap);
- };
- 
-+ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
-+		struct iomap_ops *ops);
-+int iomap_zero_range(struct inode *inode, loff_t pos, u64 len, bool *did_zero,
-+		struct iomap_ops *ops);
-+int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		struct iomap_ops *ops);
-+int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-+		struct iomap_ops *ops);
-+
- #endif /* LINUX_IOMAP_H */
 -- 
-2.1.4
+2.5.0
 
 _______________________________________________
 xfs mailing list
