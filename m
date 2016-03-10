@@ -1,30 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2F7ED7CA0
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 07:28:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 88A64AC007
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:28:24 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 085D37CA0
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 07:04:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CCBDC8F8050
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:04:08 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 4xcdZLIwd3vR24y8 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id pEnBKw9AlJn70JOr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:28:22 -0800 (PST)
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id u2ADSMYu014729
-	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 13:28:22 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-	by aserv0022.oracle.com (8.13.8/8.13.8) with ESMTP id u2ADSMZU027253
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 13:28:22 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-	by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id u2ADSLqq014606
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 13:28:22 GMT
-Date: Thu, 10 Mar 2016 16:28:16 +0300
+	<xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:04:07 -0800 (PST)
+Date: Thu, 10 Mar 2016 16:03:49 +0300
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [report] potential uninitialized variable in xfs_dir2_node_to_leaf()
-Message-ID: <20160310132816.GA16611@mwanda>
+Subject: re: xfs: eliminate committed arg from xfs_bmap_finish
+Message-ID: <20160310130349.GA15596@mwanda>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,62 +27,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: sandeen@sandeen.net
+Cc: xfs@oss.sgi.com
 
-Hello XFS devs,
+Hello Eric Sandeen,
 
-I get the following static checker warning:
+The patch f6106efae5f4: "xfs: eliminate committed arg from
+xfs_bmap_finish" from Jan 11, 2016, leads to the following static
+checker warning:
 
-	fs/xfs/libxfs/xfs_dir2_leaf.c:1726 xfs_dir2_node_to_leaf()
-	error: potentially using uninitialized 'rval'.
+	fs/xfs/xfs_bmap_util.c:132 xfs_bmap_finish()
+	error: XXX potentially using uninitialized 'committed'.
 
-fs/xfs/libxfs/xfs_dir2_leaf.c
-  1691          int                     rval;           /* successful free trim? */
-                                        ^^^^
+fs/xfs/xfs_bmap_util.c
+    98  int                                             /* error */
+    99  xfs_bmap_finish(
+   100          struct xfs_trans                **tp,   /* transaction pointer addr */
+   101          struct xfs_bmap_free            *flist, /* i/o: list extents to free */
+   102          struct xfs_inode                *ip)
+   103  {
+   104          struct xfs_efd_log_item         *efd;   /* extent free data */
+   105          struct xfs_efi_log_item         *efi;   /* extent free intention */
+   106          int                             error;  /* error return value */
+   107          int                             committed;/* xact committed or not */
+   108          struct xfs_bmap_free_item       *free;  /* free extent item */
+   109          struct xfs_bmap_free_item       *next;  /* next item on free list */
+   110  
+   111          ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+   112          if (flist->xbf_count == 0)
+   113                  return 0;
+   114  
+   115          efi = xfs_trans_get_efi(*tp, flist->xbf_count);
+   116          for (free = flist->xbf_first; free; free = free->xbfi_next)
+   117                  xfs_trans_log_efi_extent(*tp, efi, free->xbfi_startblock,
+   118                          free->xbfi_blockcount);
+   119  
+   120          error = __xfs_trans_roll(tp, ip, &committed);
+   121          if (error) {
+   122                  /*
+   123                   * If the transaction was committed, drop the EFD reference
+   124                   * since we're bailing out of here. The other reference is
+   125                   * dropped when the EFI hits the AIL.
+   126                   *
+   127                   * If the transaction was not committed, the EFI is freed by the
+   128                   * EFI item unlock handler on abort. Also, we have a new
+   129                   * transaction so we should return committed=1 even though we're
+   130                   * returning an error.
+   131                   */
+   132                  if (committed) {
 
-  1692          xfs_trans_t             *tp;            /* transaction pointer */
-  1693          struct xfs_dir3_icleaf_hdr leafhdr;
-  1694          struct xfs_dir3_icfree_hdr freehdr;
-  1695  
-  1696          /*
-  1697           * There's more than a leaf level in the btree, so there must
-  1698           * be multiple leafn blocks.  Give up.
-  1699           */
-  1700          if (state->path.active > 1)
-  1701                  return 0;
-  1702          args = state->args;
-  1703  
-  1704          trace_xfs_dir2_node_to_leaf(args);
-  1705  
-  1706          mp = state->mp;
-  1707          dp = args->dp;
-  1708          tp = args->trans;
-  1709          /*
-  1710           * Get the last offset in the file.
-  1711           */
-  1712          if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK))) {
-  1713                  return error;
-  1714          }
-  1715          fo -= args->geo->fsbcount;
-  1716          /*
-  1717           * If there are freespace blocks other than the first one,
-  1718           * take this opportunity to remove trailing empty freespace blocks
-  1719           * that may have been left behind during no-space-reservation
-  1720           * operations.
-  1721           */
-  1722          while (fo > args->geo->freeblk) {
-  1723                  if ((error = xfs_dir2_node_trim_free(args, fo, &rval))) {
-                                                                        ^^^^
-The first "return 0" happens before "rval" is initialized.
+"committed" is never initialized to zero.  It's either 1 or
+uninitialized.
 
-  1724                          return error;
-  1725                  }
-  1726                  if (rval)
-                            ^^^^
-  1727                          fo -= args->geo->fsbcount;
-  1728                  else
-  1729                          return 0;
-  1730          }
+   133                          xfs_efi_release(efi);
+   134                          xfs_force_shutdown((*tp)->t_mountp,
+   135                                  (error == -EFSCORRUPTED) ?
+   136                                          SHUTDOWN_CORRUPT_INCORE :
+   137                                          SHUTDOWN_META_IO_ERROR);
+   138                  }
 
 regards,
 dan carpenter
