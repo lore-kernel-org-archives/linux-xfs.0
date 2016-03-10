@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D15097CBB
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 18:40:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A2A1E304048
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 16:40:32 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9XtWXa1OSGvHJD3K for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2016 16:40:27 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1aatVX-00051R-8L
-	for xfs@oss.sgi.com; Wed, 02 Mar 2016 10:15:11 +1100
-Date: Wed, 2 Mar 2016 10:15:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs; for-next branch updated to 31bb236
-Message-ID: <20160301231511.GM30721@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 140867CA0
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 07:52:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C8A8C304053
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:51:58 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id OKtJmt03uyxGPSyX for <xfs@oss.sgi.com>;
+	Thu, 10 Mar 2016 05:51:54 -0800 (PST)
+Received: from Liberator.local (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 661D83251
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 07:51:43 -0600 (CST)
+Subject: Re: xfs: eliminate committed arg from xfs_bmap_finish
+References: <20160310130349.GA15596@mwanda>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56E17BFA.7010000@sandeen.net>
+Date: Thu, 10 Mar 2016 07:51:54 -0600
 MIME-Version: 1.0
+In-Reply-To: <20160310130349.GA15596@mwanda>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,106 +28,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4383276065190453898=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
---===============4383276065190453898==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WYTEVAkct0FjGQmd"
-Content-Disposition: inline
 
+On 3/10/16 7:03 AM, Dan Carpenter wrote:
+> Hello Eric Sandeen,
+> 
+> The patch f6106efae5f4: "xfs: eliminate committed arg from
+> xfs_bmap_finish" from Jan 11, 2016, leads to the following static
+> checker warning:
+> 
+> 	fs/xfs/xfs_bmap_util.c:132 xfs_bmap_finish()
+> 	error: XXX potentially using uninitialized 'committed'.
 
---WYTEVAkct0FjGQmd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+You're right; thankfully it's "only" on an error path, but I'll
+get a patch sent out to fix this up.
 
-Hi folks,
+-Eric
 
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated.
-
-The new head of the for-next branch is commit:
-
-31bb236 Merge branch 'xfs-misc-fixes-4.6-2' into for-next
-
-New Commits:
-
-Christoph Hellwig (1):
-      [a7e5d03] xfs: remove xfs_trans_get_block_res
-
-Colin Ian King (1):
-      [5d518bd] xfs: fix format specifier , should be %llx and not %llu
-
-Dave Chinner (1):
-      [31bb236] Merge branch 'xfs-misc-fixes-4.6-2' into for-next
-
-Eric Sandeen (3):
-      [2e74af0] xfs: convert mount option parsing to tokens
-      [a08ee40] xfs: sanitize remount options
-      [12c3f05] xfs: fix up inode32/64 (re)mount handling
-
-Mateusz Guzik (1):
-      [2e83b79] xfs: fix two memory leaks in xfs_attr_list.c error paths
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_bmap.c       |   6 +-
- fs/xfs/libxfs/xfs_bmap_btree.c |   4 +-
- fs/xfs/xfs_attr_list.c         |  19 +-
- fs/xfs/xfs_discard.c           |   2 +-
- fs/xfs/xfs_mount.c             |  20 +-
- fs/xfs/xfs_mount.h             |   5 +-
- fs/xfs/xfs_super.c             | 525 +++++++++++++++++++++++--------------=
-------
- fs/xfs/xfs_super.h             |   4 +-
- fs/xfs/xfs_trans.h             |   1 -
- 9 files changed, 304 insertions(+), 282 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---WYTEVAkct0FjGQmd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJW1iJ+AAoJEK3oKUf0dfodUrsP/i9U30bIJeSd2dmoGQlKPtL4
-zpgTEu13ZVN+XjpFeV0OViAze0aG8ITlNKmSGERN3sx05IhbugfHJM6ok7YOvxfj
-m9si6G66eoAAb2MJUrfjh9XZoq59mpWmOehjidrAqB9+YGDABhp1rMdlCg+xXgTr
-PGbT/53/buwxoVN7FI32bo2sdSVAV17GUfla3Dh+d4wKUKud3J4vw2jx2K8VBoqM
-4HezNR0qml96+85F/hZ1oauzbP0AGTg8aRCUc/2DbdZCX7SoRS80cyGMXl5FASis
-/UZYk1sUeXLnIGTOsifqgE+98ycYg5oFtEPYZTLDvf070KbBvEEZxn/dsN87OubN
-EywjdB3xO9mfFWCyyuZZdIR1Xp5h/OPaf1wvD6P2g3MBCNd1vjTbpvRPydEE7lVb
-yRrFOivTTkHjr58RqK3C384FQzpXEatYeDP7jOPT7aO6KfPa/BpfYvEurCdBlBu8
-1cYcVvGR90o8dwXjcz3NHHpeGic4GNjUirnuoBNv7mE67K5gfeVti4QjVHbVyTZD
-PtJUC5TaEqkNJk1eOUok5lEyU1wyoTzMpHqCq+qK4k/4Acq/rkJ4evTkKFTZ9mE5
-8rtrSMG7u6QP+HM4Canu+JZhykRTA636FiqO434x3un1xTY0yf9pMofboozwW4uP
-T4rWjxcszb7+lmtEnc6u
-=eLos
------END PGP SIGNATURE-----
-
---WYTEVAkct0FjGQmd--
-
-
---===============4383276065190453898==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> fs/xfs/xfs_bmap_util.c
+>     98  int                                             /* error */
+>     99  xfs_bmap_finish(
+>    100          struct xfs_trans                **tp,   /* transaction pointer addr */
+>    101          struct xfs_bmap_free            *flist, /* i/o: list extents to free */
+>    102          struct xfs_inode                *ip)
+>    103  {
+>    104          struct xfs_efd_log_item         *efd;   /* extent free data */
+>    105          struct xfs_efi_log_item         *efi;   /* extent free intention */
+>    106          int                             error;  /* error return value */
+>    107          int                             committed;/* xact committed or not */
+>    108          struct xfs_bmap_free_item       *free;  /* free extent item */
+>    109          struct xfs_bmap_free_item       *next;  /* next item on free list */
+>    110  
+>    111          ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+>    112          if (flist->xbf_count == 0)
+>    113                  return 0;
+>    114  
+>    115          efi = xfs_trans_get_efi(*tp, flist->xbf_count);
+>    116          for (free = flist->xbf_first; free; free = free->xbfi_next)
+>    117                  xfs_trans_log_efi_extent(*tp, efi, free->xbfi_startblock,
+>    118                          free->xbfi_blockcount);
+>    119  
+>    120          error = __xfs_trans_roll(tp, ip, &committed);
+>    121          if (error) {
+>    122                  /*
+>    123                   * If the transaction was committed, drop the EFD reference
+>    124                   * since we're bailing out of here. The other reference is
+>    125                   * dropped when the EFI hits the AIL.
+>    126                   *
+>    127                   * If the transaction was not committed, the EFI is freed by the
+>    128                   * EFI item unlock handler on abort. Also, we have a new
+>    129                   * transaction so we should return committed=1 even though we're
+>    130                   * returning an error.
+>    131                   */
+>    132                  if (committed) {
+> 
+> "committed" is never initialized to zero.  It's either 1 or
+> uninitialized.
+> 
+>    133                          xfs_efi_release(efi);
+>    134                          xfs_force_shutdown((*tp)->t_mountp,
+>    135                                  (error == -EFSCORRUPTED) ?
+>    136                                          SHUTDOWN_CORRUPT_INCORE :
+>    137                                          SHUTDOWN_META_IO_ERROR);
+>    138                  }
+> 
+> regards,
+> dan carpenter
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4383276065190453898==--
