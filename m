@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 085D37CA0
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 07:04:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CCBDC8F8050
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:04:08 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 902627CA0
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 10:58:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4130B8F8040
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 08:57:59 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id pEnBKw9AlJn70JOr (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 5ykynyij83ooZRmI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Mar 2016 05:04:07 -0800 (PST)
-Date: Thu, 10 Mar 2016 16:03:49 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: xfs: eliminate committed arg from xfs_bmap_finish
-Message-ID: <20160310130349.GA15596@mwanda>
+	<xfs@oss.sgi.com>; Thu, 10 Mar 2016 08:57:57 -0800 (PST)
+Date: Thu, 10 Mar 2016 08:57:17 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/16] xfs: first part of rmapbt functionality
+Message-ID: <20160310165717.GH27973@birch.djwong.org>
+References: <1457410578-30233-1-git-send-email-david@fromorbit.com>
+	<20160310141434.GA29058@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160310141434.GA29058@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +30,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: sandeen@sandeen.net
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Hello Eric Sandeen,
+On Thu, Mar 10, 2016 at 06:14:34AM -0800, Christoph Hellwig wrote:
+> On Tue, Mar 08, 2016 at 03:16:02PM +1100, Dave Chinner wrote:
+> > This isn't all of the rmap functionality. It's patches up to the
+> > point where I've come across the first piece that needs to be
+> > reworked (the rmap intent execution code), so there's no point
+> > holding these back until I've sorted that out. This builds on top of
+> > for-next and the patch set I posted yesterday.
+> > 
+> > Darrick, I've changed the authorship of the patches to reflect
+> > the original series this has come from - can you check to see if
+> > there's anything I got wrong when I did that?
+> 
+> I'll come some minor bits on the actual patches, but I'd like to
+> understand a few fundamental things first:
+> 
+> For one Darrick has introduced a new rmapxbt btree recently, which
+> allows using a rmap on reflink enabled file systems.  In his tree
+> we thus have two different implementation of a reverse mapping
+> btree.  Is there any good reason to keep it this way?  For one
+> reflinks are a compelling feature that I doubt people want to
+> disable in the long run, so most filesystem will be using rmapxbt.
+> I also don't think having these two implementations is good for the
+> testing matrix in the long run.
 
-The patch f6106efae5f4: "xfs: eliminate committed arg from
-xfs_bmap_finish" from Jan 11, 2016, leads to the following static
-checker warning:
+The only compelling reason for the split rmapbt/rmapxbt is to increase the
+fanout factor for (!reflink && rmap) by a factor of 5.  If we assume a 4K
+block size, that works out to the rmapbt occupying about 0.023% more space.
+(It's half a percent for a 1k block size, but I assume that's not a common
+case.)
 
-	fs/xfs/xfs_bmap_util.c:132 xfs_bmap_finish()
-	error: XXX potentially using uninitialized 'committed'.
+Functionality-wise, there's no reason why we can't just run the rmapxbt
+even if reflink is disabled.  If our notion is to introduce both features
+at the same time then Christoph is probably right that we don't need to
+have both tree types.
 
-fs/xfs/xfs_bmap_util.c
-    98  int                                             /* error */
-    99  xfs_bmap_finish(
-   100          struct xfs_trans                **tp,   /* transaction pointer addr */
-   101          struct xfs_bmap_free            *flist, /* i/o: list extents to free */
-   102          struct xfs_inode                *ip)
-   103  {
-   104          struct xfs_efd_log_item         *efd;   /* extent free data */
-   105          struct xfs_efi_log_item         *efi;   /* extent free intention */
-   106          int                             error;  /* error return value */
-   107          int                             committed;/* xact committed or not */
-   108          struct xfs_bmap_free_item       *free;  /* free extent item */
-   109          struct xfs_bmap_free_item       *next;  /* next item on free list */
-   110  
-   111          ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
-   112          if (flist->xbf_count == 0)
-   113                  return 0;
-   114  
-   115          efi = xfs_trans_get_efi(*tp, flist->xbf_count);
-   116          for (free = flist->xbf_first; free; free = free->xbfi_next)
-   117                  xfs_trans_log_efi_extent(*tp, efi, free->xbfi_startblock,
-   118                          free->xbfi_blockcount);
-   119  
-   120          error = __xfs_trans_roll(tp, ip, &committed);
-   121          if (error) {
-   122                  /*
-   123                   * If the transaction was committed, drop the EFD reference
-   124                   * since we're bailing out of here. The other reference is
-   125                   * dropped when the EFI hits the AIL.
-   126                   *
-   127                   * If the transaction was not committed, the EFI is freed by the
-   128                   * EFI item unlock handler on abort. Also, we have a new
-   129                   * transaction so we should return committed=1 even though we're
-   130                   * returning an error.
-   131                   */
-   132                  if (committed) {
+--D
 
-"committed" is never initialized to zero.  It's either 1 or
-uninitialized.
-
-   133                          xfs_efi_release(efi);
-   134                          xfs_force_shutdown((*tp)->t_mountp,
-   135                                  (error == -EFSCORRUPTED) ?
-   136                                          SHUTDOWN_CORRUPT_INCORE :
-   137                                          SHUTDOWN_META_IO_ERROR);
-   138                  }
-
-regards,
-dan carpenter
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
