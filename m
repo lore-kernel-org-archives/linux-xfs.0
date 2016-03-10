@@ -1,18 +1,22 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 04E6A7CB1
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 08:23:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CBDF830404E
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 06:23:46 -0700 (PDT)
-Received: from zhuyu.305503.com (zhuyu.305503.com [77.81.108.13]) by
-	cuda.sgi.com with ESMTP id YsT4ryOg0TbbTy1d for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 06:23:43 -0700 (PDT)
-Subject: Distribute a Necessary Safety Product
-Message-ID: <1e90f1be8c952a85f857f4509018df9a@minnetonkamoccasin.com>
-Date: Mon, 14 Mar 2016 14:08:36 +0100
-From: "Jason Williams" <molienase@yahoo.com>
+	by oss.sgi.com (Postfix) with ESMTP id 002A97CA0
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 11:31:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A6B0F304043
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 09:31:29 -0800 (PST)
+Received: from cpanel.mailpowerpc.gr (mail.marketing.powerpc.gr
+	[5.172.194.87]) by cuda.sgi.com with ESMTP id nnIsMOx7pB8CyeEG
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 10 Mar 2016 09:31:21 -0800 (PST)
+Received: from powerpc by cpanel.mailpowerpc.gr with local (Exim 4.86_1)
+	(envelope-from <sales@marketing.powerpc.gr>) id 1ae4Qf-0009ko-Cy
+	for xfs@oss.sgi.com; Thu, 10 Mar 2016 19:31:17 +0200
+Subject: Goodbye from our Newsletter
+Date: Thu, 10 Mar 2016 11:31:17 -0600
+From: PowerPC <sales@marketing.powerpc.gr>
+Message-ID: <7adb0aa73ce18784dc5cc7dd9ace4907@marketing.powerpc.gr>
 MIME-Version: 1.0
-Reply-To: christend@aliyun.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,37 +25,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-26 YEAR OLD U.S. COMPANY NEEDS DISTRIBUTORS IN MANY COUNTRIES for our
-amazing slip-resistant floor product.
-One 30 minute application with our Amazing Anti-Slip Floor Treatment
-will make floors slip-resistant and safe for 4 years - Guaranteed!
 
-Indoors or Outdoors
-No Change in Appearance
+  
+  Goodbye from our Newsletter, sorry to see you go.
 
-Typical Applications: Restaurant Kitchen Floors, Hotels, Hospitals,
-Office Buildings, etc.
-For use on: Ceramic, Porcelain and Quarry Tiles, Marble, Granite,
-Concrete, etc.
+  You have been unsubscribed from our newsletters.
 
-Some of our satisfied customers: McDonald's, Kroger, Holiday Inn, Miami
-Children's Hospital Pfizer, etc.
+  This is the last email you will receive from us. Our newsletter system,
+phpList,
+  will refuse to send you any further messages, without manual intervention
+by our administrator.
 
-Please contact us for details and to see if there is a distributorship
-available in your country.
+  If there is an error in this information, you can re-subscribe:
+  please go to http://marketing.powerpc.gr/lists/?p=subscribe and follow
+the steps.
 
-$2,000-$4,000 INVENTORY INVESTMENT REQUIRED
-
-PLEASE INCLUDE YOUR NAME, COUNTRY & E-MAIL ADDRESS
-
-Jason Williams
-Email: carerynt@sina.com
+  Thank you
+  
+  
 
 _______________________________________________
 xfs mailing list
