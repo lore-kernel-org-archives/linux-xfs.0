@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 831EF7CA1
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 10:24:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 28F4E304043
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:24:49 -0800 (PST)
-Received: from mail-vk0-f43.google.com (mail-vk0-f43.google.com
-	[209.85.213.43]) by cuda.sgi.com with ESMTP id pfv0iOVxsABPc6XV
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 11 Mar 2016 08:24:46 -0800 (PST)
-Received: by mail-vk0-f43.google.com with SMTP id e6so140000351vkh.2
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:24:46 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id F3A7E7CA4
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 16:11:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B6725304032
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 14:11:17 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id EuPM4octX7amcBFX for <xfs@oss.sgi.com>;
+	Fri, 11 Mar 2016 14:11:15 -0800 (PST)
+Received: from Liberator.local (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id EE9682AD4
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 16:11:01 -0600 (CST)
+Subject: [PATCH 1/4] xfs: only return -errno or success from attr ->put_listent
+References: <56E3425E.40509@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56E34282.5050906@sandeen.net>
+Date: Fri, 11 Mar 2016 16:11:14 -0600
 MIME-Version: 1.0
-In-Reply-To: <20160311140746.GC14808@infradead.org>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-	<1456733847-17982-12-git-send-email-agruenba@redhat.com>
-	<20160311140746.GC14808@infradead.org>
-Date: Fri, 11 Mar 2016 17:24:45 +0100
-Message-ID: <CAHc6FU7hSDBa51mJZZZ=q3agzWXk=DZicnyuPriKHnC2Nxr8rw@mail.gmail.com>
-Subject: Re: [PATCH v18 11/22] vfs: Cache base_acl objects in inodes
-From: Andreas Gruenbacher <agruenba@redhat.com>
+In-Reply-To: <56E3425E.40509@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +32,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, chao2.yu@samsung.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, jaegeuk@kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-On Fri, Mar 11, 2016 at 3:07 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Mon, Feb 29, 2016 at 09:17:16AM +0100, Andreas Gruenbacher wrote:
->> POSIX ACLs and richacls are both objects allocated by kmalloc() with a
->> reference count which are freed by kfree_rcu().  An inode can either
->> cache an access and a default POSIX ACL, or a richacl (richacls do not
->> have default acls).  To allow an inode to cache either of the two kinds
->> of acls, introduce a new base_acl type and convert i_acl and
->> i_default_acl to that type. In most cases, the vfs then doesn't care which
->> kind of acl an inode caches (if any).
->
-> This base_acl object is pointless.  I've asked in the past to have
-> a proper container for the ACLs in common code, but a union
-> of a refcount and a rcu head doesn't really fit that category.
+Today, the put_listent formatters return either 1 or 0; if
+they return 1, some callers treat this as an error and return
+it up the stack, despite "1" not being a valid (negative)
+error code.
 
-POSIX ACLs and RichACLs are different objects, with different members
-and different algorithms operating on them. The only commonality is
-that they are both kmalloc()ed, reference counted objects, and when an
-inode is destroyed, both kinds of ACLs can be put in the same way,
-avoiding an unnecessary if. What kind of common-code container beyond
-that are you still dreaming about?
+The intent seems to be that if the input buffer is full,
+we set seen_enough or set count = -1, and return 1;
+but some callers check the return before checking the
+seen_enough or count fields of the context.
 
-Thanks,
-Andreas
+Fix this by only returning non-zero for actual errors
+encountered, and rely on the caller to first check the
+return value, then check the values in the context to
+decide what to do.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/xfs_attr.h      |    1 +
+ fs/xfs/xfs_attr_list.c |    8 +++-----
+ fs/xfs/xfs_xattr.c     |   14 ++++++++++----
+ 3 files changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index dd48245..2343312 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -112,6 +112,7 @@ typedef struct attrlist_cursor_kern {
+  *========================================================================*/
+ 
+ 
++/* Return 0 on success, or -errno; other state communicated via *context */
+ typedef int (*put_listent_func_t)(struct xfs_attr_list_context *, int,
+ 			      unsigned char *, int, int, unsigned char *);
+ 
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 0ef7c2e..d5ab59f 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -108,16 +108,14 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 					   (int)sfe->namelen,
+ 					   (int)sfe->valuelen,
+ 					   &sfe->nameval[sfe->namelen]);
+-
++			if (error)
++				return error;
+ 			/*
+ 			 * Either search callback finished early or
+ 			 * didn't fit it all in the buffer after all.
+ 			 */
+ 			if (context->seen_enough)
+ 				break;
+-
+-			if (error)
+-				return error;
+ 			sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+ 		}
+ 		trace_xfs_attr_list_sf_all(context);
+@@ -580,7 +578,7 @@ xfs_attr_put_listent(
+ 		trace_xfs_attr_list_full(context);
+ 		alist->al_more = 1;
+ 		context->seen_enough = 1;
+-		return 1;
++		return 0;
+ 	}
+ 
+ 	aep = (attrlist_ent_t *)&context->alist[context->firstu];
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 110f1d7..f220129 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -146,7 +146,7 @@ __xfs_xattr_put_listent(
+ 	arraytop = context->count + prefix_len + namelen + 1;
+ 	if (arraytop > context->firstu) {
+ 		context->count = -1;	/* insufficient space */
+-		return 1;
++		return 0;
+ 	}
+ 	offset = (char *)context->alist + context->count;
+ 	strncpy(offset, prefix, prefix_len);
+@@ -221,11 +221,15 @@ xfs_xattr_put_listent(
+ }
+ 
+ ssize_t
+-xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
++xfs_vn_listxattr(
++	struct dentry	*dentry,
++	char		*data,
++	size_t		size)
+ {
+ 	struct xfs_attr_list_context context;
+ 	struct attrlist_cursor_kern cursor = { 0 };
+-	struct inode		*inode = d_inode(dentry);
++	struct inode	*inode = d_inode(dentry);
++	int		error;
+ 
+ 	/*
+ 	 * First read the regular on-disk attributes.
+@@ -239,7 +243,9 @@ xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
+ 	context.firstu = context.bufsize;
+ 	context.put_listent = xfs_xattr_put_listent;
+ 
+-	xfs_attr_list_int(&context);
++	error = xfs_attr_list_int(&context);
++	if (error)
++		return error;
+ 	if (context.count < 0)
+ 		return -ERANGE;
+ 
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
