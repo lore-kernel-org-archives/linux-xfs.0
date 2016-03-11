@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 10B837CA0
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:55:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BA14D304032
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:55:14 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id fCjLAEQGXroYF2cQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:55:12 -0800 (PST)
-Date: Fri, 11 Mar 2016 15:55:09 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] xfs: optimize bio handling in the buffer writeback
-	path
-Message-ID: <20160311145509.GB2551@lst.de>
-References: <1456302011-18915-1-git-send-email-hch@lst.de>
-	<1456302011-18915-4-git-send-email-hch@lst.de>
-	<20160303151730.GC57990@bfoster.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B4D6C7CA0
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 10:11:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A1468F8033
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:11:54 -0800 (PST)
+Received: from mail-vk0-f54.google.com (mail-vk0-f54.google.com
+	[209.85.213.54]) by cuda.sgi.com with ESMTP id Krt1bM8hPqUdrfa8
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 11 Mar 2016 08:11:52 -0800 (PST)
+Received: by mail-vk0-f54.google.com with SMTP id c3so139456931vkb.3
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:11:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160303151730.GC57990@bfoster.bfoster>
+In-Reply-To: <20160311140134.GA14808@infradead.org>
+References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
+	<20160311140134.GA14808@infradead.org>
+Date: Fri, 11 Mar 2016 17:11:51 +0100
+Message-ID: <CAHc6FU4t3yisCM=MXrHRmCja_A8eZOpVa1smJ0gUhv+vuUAuXA@mail.gmail.com>
+Subject: Re: [PATCH v18 00/22] Richacls (Core and Ext4)
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,73 +32,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Thu, Mar 03, 2016 at 10:17:30AM -0500, Brian Foster wrote:
-> > +
-> > +		/*
-> > +		 * For the last bio, bi_private points to the ioend, so we
-> > +		 * need to explicitly end the iteration here.
-> > +		 */
-> 
-> Do you mean the last bio is pointed to by the ioend?
+On Fri, Mar 11, 2016 at 3:01 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Feb 29, 2016 at 09:17:05AM +0100, Andreas Gruenbacher wrote:
+>> Al,
+>>
+>> could you please make sure you are happy with the current version of the
+>> richacl patch queue for the next merge window?
+>
+> I'm still not happy.
+>
+> For one I still see no reason to merge this broken ACL model at all.
+> It provides our actualy Linux users no benefit at all,
 
-No, bio->bi_private of the last bio points to the ioend.
+This permission model is useful in mixed environments that involve
+UNIX and Windows machines. Think of NAS boxes with Linux and Windows
+clients, for example. It also fits the NFSv4 ACL model very well. If
+you're not a user dealing with such environments, then the model
+likely won't provide any benefits to *you*, and you're better off with
+a less complicated permission model. That doesn't say anything about
+other users, though.
 
-> > @@ -541,10 +457,8 @@ xfs_submit_ioend(
-> >  	 * at this point in time.
-> >  	 */
-> >  error_finish:
-> > -	if (ioend->io_bio)
-> > -		bio_put(ioend->io_bio);
-> > -	ioend->io_error = status;
-> > -	xfs_finish_ioend(ioend);
-> > +	ioend->io_bio->bi_error = status;
-> > +	bio_endio(ioend->io_bio);
-> >  	return status;
-> 
-> bi_end_io is not set here, so what happens to the buffers added to the
-> ioend in this case?
+> while breaking a lot of assumptions,
 
-We're not calling the end_io function we should be, good catch and fixed.
+The model is designed specifically to be compliant with the POSIX
+permission model. What assumptions are you talking about?
 
-> Trailing whitespace on the above line.
+> especially by adding allow and deny ACE at the same time.
 
-Ok, fixed.
+I remember from past discussions that a permission model like the
+POSIX ACL model that doesn't have DENY ACEs would be more to your
+liking. This argument is dead from the start though: NFSv4 ACLs
+without DENY ACEs cannot represent basic file permissions like 0604
+where the owning group has fewer permissions than others, for example
+(see the richaclex(7) man page). We would end up with a permission
+model that isn't even compatible with the traditional POSIX file
+permission model, one which nobody else implements or cares about.
 
-> And FWIW, I'm not a huge fan of
-> open coding both the bio and ioend allocations. It makes it easier to
-> distinguish the higher level algorithm from all of the structure
-> initialization noise. It looks to me that alloc_ioend() could remain
-> mostly as is, using the new bioset allocation, and alloc_ioend_bio()
-> could be inlined and renamed to something like init_bio_from_bh() or
-> some such.
+> It also doesn't help with the issue that the main thing it's trying
+> to be compatible with (Windows) actually uses a fundamentally different
+> identifier to apply the ACLs to - as long as you're still limited
+> to users and groups and not guids we'll still have that mapping problem
+> anyway.
 
-Hmm, not a huge fan of these single use function in general, but
-I'll see if I can do something sensible.
+Samba has been dealing with mapping between SIDs and UIDs/GIDs for a
+long time, and it's working acceptably well.
 
-> I'm trying to make sure I grok how this works without knowing much about
-> the block layer. So we chain the current bio to the new one, the latter
-> becoming the parent, and submit the old one. It looks to me that this
-> could result in bio_endio() on the parent, which seems fishy... what am
-> I missing? IOW, is it safe to submit bios like this before the entire
-> chain is created?
+We could store SIDs in ACEs, but that wouldn't make the actual
+problems go away: Files on Linux have an owner and an owning group
+which are identitifed by UID/GID, whereas a file is owned by a SID
+which can be either a user or a group in a SID world. Also, processes
+on Linux have an owner and a list of groups which are identified by
+UID/GID, so any SIDs stored in filesystems would never match a
+process, anyway.
 
-Ignoring this for now and jumping to the next reply..
+(NFSv4 refers to users and groups as opposed to SIDs, and so it
+doesn't have this problem.)
 
-> > + out_free_ioend_bioset:
-> > + 	bioset_free(xfs_ioend_bioset);
-> 
-> Space before tab ^.
-
-Fixed.
-
-> > + 	bioset_free(xfs_ioend_bioset);
-> 
-> Space before tab ^.
-
-Fixed.
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
