@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ADDA07CA0
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 17:03:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E215304043
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 15:03:56 -0800 (PST)
-Received: from hr2.samba.org (hr2.samba.org [144.76.82.148]) by cuda.sgi.com
-	with ESMTP id SDYlLEXUyNVHGGs7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 15:03:53 -0800 (PST)
-Date: Fri, 11 Mar 2016 15:02:54 -0800
-From: Jeremy Allison <jra@samba.org>
-Subject: Re: [PATCH v18 00/22] Richacls (Core and Ext4)
-Message-ID: <20160311230254.GG2792@jra3>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-	<20160311140134.GA14808@infradead.org>
-	<CAHc6FU4t3yisCM=MXrHRmCja_A8eZOpVa1smJ0gUhv+vuUAuXA@mail.gmail.com>
-	<CAH2r5mv3OTmPOQBV7xc-uZmB0gWxykXOCEVOcybx3tbHiViTZg@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0FE247CA0
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 16:10:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D56D58F8033
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 14:10:41 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id BiFGQb259DEcA0Yx (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 14:10:41 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id F27EFC00F5FD
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 22:10:39 +0000 (UTC)
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u2BMAcx0003909
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 17:10:39 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/4] xfs: rework the attr ->put_listent code a bit
+Message-ID: <56E3425E.40509@redhat.com>
+Date: Fri, 11 Mar 2016 16:10:38 -0600
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAH2r5mv3OTmPOQBV7xc-uZmB0gWxykXOCEVOcybx3tbHiViTZg@mail.gmail.com>
-Reply-To: Jeremy Allison <jra@samba.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,19 +36,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steve French <smfrench@gmail.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-On Fri, Mar 11, 2016 at 02:05:16PM -0600, Steve French wrote:
-> Sounds like I need to quickly rework the SMB3 ACL helper functions
-> for cifs.ko
-> 
-> Also do you know where is the current version of the corresponding
-> vfs_richacl for
-> Samba which works with the current RichACL format?
+Lots of cruft in there, maybe more to do but here's the
+obvious stuff; removing bad error returns, unused variables
+and structure members, and then consolidating a little code.
 
-I have a patch for a new vfs_richacl somewhere. I remember
-sending it to Andreas for testing...
+ xfs_attr.h      |    4 +-
+ xfs_attr_list.c |   86 ++++++++++++++++----------------------------------------
+ xfs_xattr.c     |   17 +++++++----
+ 3 files changed, 39 insertions(+), 68 deletions(-)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
