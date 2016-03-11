@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0A3437CA0
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:48:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D28F48F8040
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:48:02 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id VKz7xR3OuAhYvxJ0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:48:00 -0800 (PST)
-Date: Fri, 11 Mar 2016 15:47:58 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] xfs: don't release bios on completion immediately
-Message-ID: <20160311144758.GA2551@lst.de>
-References: <1456302011-18915-1-git-send-email-hch@lst.de>
-	<1456302011-18915-3-git-send-email-hch@lst.de>
-	<20160303151722.GB57990@bfoster.bfoster>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B9FE77CA3
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 11:03:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45B86AC005
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 09:03:18 -0800 (PST)
+Received: from mail-vk0-f47.google.com (mail-vk0-f47.google.com
+	[209.85.213.47]) by cuda.sgi.com with ESMTP id yhkzmZeSr7MG7T6w
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 11 Mar 2016 09:03:12 -0800 (PST)
+Received: by mail-vk0-f47.google.com with SMTP id e185so141318103vkb.1
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 09:03:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160303151722.GB57990@bfoster.bfoster>
+In-Reply-To: <20160311141701.GE14808@infradead.org>
+References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
+	<1456733847-17982-19-git-send-email-agruenba@redhat.com>
+	<20160311141701.GE14808@infradead.org>
+Date: Fri, 11 Mar 2016 18:03:11 +0100
+Message-ID: <CAHc6FU7gH54C-hfV8VQzgpYv=PYNvpA9dc8stgVf2_khF7dUdg@mail.gmail.com>
+Subject: Re: [PATCH v18 18/22] richacl: xattr mapping functions
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,43 +33,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Thu, Mar 03, 2016 at 10:17:22AM -0500, Brian Foster wrote:
-> > +xfs_finish_page_writeback(
-> > +	struct page	*page,
-> > +	unsigned int	start,
-> > +	unsigned int	end,
-> > +	int		error)
-> > +{
-> > +	struct buffer_head	*head, *bh;
-> > +	unsigned int		off = 0;
-> > +
-> > +	bh = head = page_buffers(page);
-> > +
-> > +	do {
-> > +		if (start > off)
-> > +			goto next_bh;
-> 
-> Probably not an issue for current usage, which appears to be on buffer
-> size granularity, but shouldn't this check whether start is beyond the
-> end of the current buffer (e.g., start >= off + bh->b_size)?
+On Fri, Mar 11, 2016 at 3:17 PM, Christoph Hellwig <hch@infradead.org> wrote:
+>> +#include <linux/richacl_xattr.h>
+>> +
+>> +MODULE_LICENSE("GPL");
+>
+> what's the point given that the code isn't even modolar?
 
-I don't understand that question.  We get called for a given page,
-and a start and end offset inside that page.  These offsets by design
-need to be aligned to the filesystem blocksize.  So what we basically
-want is to skip a few buffers at the beginning and/or end of the page,
-and the code seems to handle that fine.
+A leftover, removed now.
 
-> >  	mempool_free(ioend, xfs_ioend_pool);
-> >  }
-> >  
-> > +
-> 
-> Unnecessary whitespace here.
+>> +static void
+>> +fix_xattr_from_user(const char *kname, void *kvalue, size_t size)
+>> +{
+>> +     if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
+>> +             return;
+>> +     kname += XATTR_SYSTEM_PREFIX_LEN;
+>> +     if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
+>> +         !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
+>> +             posix_acl_fix_xattr_from_user(kvalue, size);
+>> +}
+>>
+>>  /*
+>>   * Extended attribute SET operations
+>> @@ -329,9 +339,7 @@ setxattr(struct dentry *d, const char __user *name, const void __user *value,
+>>                       error = -EFAULT;
+>>                       goto out;
+>>               }
+>> -             if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+>> -                 (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+>> -                     posix_acl_fix_xattr_from_user(kvalue, size);
+>> +             fix_xattr_from_user(kname, kvalue, size);
+>>       }
+>>
+>>       error = vfs_setxattr(d, kname, kvalue, size, flags);
+>> @@ -396,6 +404,17 @@ SYSCALL_DEFINE5(fsetxattr, int, fd, const char __user *, name,
+>>       return error;
+>>  }
+>>
+>> +static void
+>> +fix_xattr_to_user(const char *kname, void *kvalue, size_t size)
+>> +{
+>> +     if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
+>> +             return;
+>> +     kname += XATTR_SYSTEM_PREFIX_LEN;
+>> +     if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
+>> +         !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
+>> +             posix_acl_fix_xattr_to_user(kvalue, size);
+>> +}
+>> +
+>>  /*
+>>   * Extended attribute GET operations
+>>   */
+>> @@ -426,9 +445,7 @@ getxattr(struct dentry *d, const char __user *name, void __user *value,
+>>
+>>       error = vfs_getxattr(d, kname, kvalue, size);
+>>       if (error > 0) {
+>> -             if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+>> -                 (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+>> -                     posix_acl_fix_xattr_to_user(kvalue, size);
+>> +             fix_xattr_to_user(kname, kvalue, size);
+>
+> I don't see how this is related to the rest of the patch.
 
-Fixed.
+Indeed, this is unrelated now. I'll split it off.
+
+>> +++ b/include/linux/richacl_xattr.h
+>
+> What's the point in splitting this from the richacl.h header?
+>
+> Same for the uapi versions.
+>
+>> +struct richacl_xattr {
+>> +     unsigned char   a_version;
+>> +     unsigned char   a_flags;
+>
+> Explicit __u8 for uapi headers, please.
+
+Okay.
+
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
