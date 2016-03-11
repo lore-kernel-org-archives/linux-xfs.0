@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C9CB87CA3
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 16:09:56 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 141FF7CA0
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 03:42:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9DFFA8F8040
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2016 14:09:53 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0qCiji7nAi3h0AIT for <xfs@oss.sgi.com>;
-	Thu, 10 Mar 2016 14:09:47 -0800 (PST)
-Date: Fri, 11 Mar 2016 09:09:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/16] xfs: rmap btree add more reserved blocks
-Message-ID: <20160310220945.GY30721@dastard>
-References: <1457410578-30233-1-git-send-email-david@fromorbit.com>
-	<1457410578-30233-4-git-send-email-david@fromorbit.com>
-	<20160310142207.GD29058@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160310142207.GD29058@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DB480304043
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 01:42:21 -0800 (PST)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id c5n9kAsyjVekCjoc (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 01:42:19 -0800 (PST)
+Received: from [83.175.99.196] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
+	id 1aeJaM-0008BB-1E
+	for xfs@oss.sgi.com; Fri, 11 Mar 2016 09:42:18 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: always set rvalp in xfs_dir2_node_trim_free
+Date: Fri, 11 Mar 2016 10:42:17 +0100
+Message-Id: <1457689337-4018-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,49 +25,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Mar 10, 2016 at 06:22:07AM -0800, Christoph Hellwig wrote:
-> Sorry for the second reply to the same mail - I expect this defintion to
-> be in patch 7, where it logically belongs..
-> 
-> > +#define	XFS_RMAP_BLOCK(mp) \
-> >  	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
-> >  	 XFS_FIBT_BLOCK(mp) + 1 : \
-> >  	 XFS_IBT_BLOCK(mp) + 1)
-> 
-> Is there any good reason for the variable offset for the rmap block.
-> Yes, it saves one otherwise unused block per AG, but fixed offsets
-> for metadata make a format much easier to understand.
+xfs_dir2_node_trim_free can return with setting the rvalp argument
+pointer.  Initialize it to 0 at the beginning of the function and
+only update it to 1 if we succeeded trimming a freespace block.
 
-The root btree blocks are not a fixed location. The moment the tree
-splits to the root we get a new root block and the old root is now
-at a lower level of the tree. IOWs, it doesn't matter if there is a
-hole at the time of growfs/mkfs laying out the initial tree roots
-because they are going to move around anyway.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ fs/xfs/libxfs/xfs_dir2_node.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Also, it depends on the sector vs block size as to where these are
-initially located, too. A disk with 512 byte sectors and 4k block
-size results in the root btree blocks being located from fsb 2-7.
-On a 4k sector/4k block size fs has the root btree blocks located
-from fsb 4-9.
-
-Hence I really don't think it matters if the initial location
-changes depenedent on features and geometry as you have to look it
-up with xfs_db anyway to find it even on a pristine new
-filesystem...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 63ee03d..75a5574 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -2235,6 +2235,9 @@ xfs_dir2_node_trim_free(
+ 
+ 	dp = args->dp;
+ 	tp = args->trans;
++
++	*rvalp = 0;
++
+ 	/*
+ 	 * Read the freespace block.
+ 	 */
+@@ -2255,7 +2258,6 @@ xfs_dir2_node_trim_free(
+ 	 */
+ 	if (freehdr.nused > 0) {
+ 		xfs_trans_brelse(tp, bp);
+-		*rvalp = 0;
+ 		return 0;
+ 	}
+ 	/*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
 
 _______________________________________________
 xfs mailing list
