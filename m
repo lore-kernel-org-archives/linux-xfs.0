@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3375E7CA1
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:17:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 05EE58F8039
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:17:07 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 46CY1DSdkRr9OBeQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:17:05 -0800 (PST)
-Date: Fri, 11 Mar 2016 06:17:01 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v18 18/22] richacl: xattr mapping functions
-Message-ID: <20160311141701.GE14808@infradead.org>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-	<1456733847-17982-19-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 10B837CA0
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:55:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA14D304032
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:55:14 -0800 (PST)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id fCjLAEQGXroYF2cQ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:55:12 -0800 (PST)
+Date: Fri, 11 Mar 2016 15:55:09 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/3] xfs: optimize bio handling in the buffer writeback
+	path
+Message-ID: <20160311145509.GB2551@lst.de>
+References: <1456302011-18915-1-git-send-email-hch@lst.de>
+	<1456302011-18915-4-git-send-email-hch@lst.de>
+	<20160303151730.GC57990@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1456733847-17982-19-git-send-email-agruenba@redhat.com>
+In-Reply-To: <20160303151730.GC57990@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,79 +32,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-> +#include <linux/richacl_xattr.h>
-> +
-> +MODULE_LICENSE("GPL");
+On Thu, Mar 03, 2016 at 10:17:30AM -0500, Brian Foster wrote:
+> > +
+> > +		/*
+> > +		 * For the last bio, bi_private points to the ioend, so we
+> > +		 * need to explicitly end the iteration here.
+> > +		 */
+> 
+> Do you mean the last bio is pointed to by the ioend?
 
-what's the point given that the code isn't even modolar?
+No, bio->bi_private of the last bio points to the ioend.
 
-> +static void
-> +fix_xattr_from_user(const char *kname, void *kvalue, size_t size)
-> +{
-> +	if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
-> +		return;
-> +	kname += XATTR_SYSTEM_PREFIX_LEN;
-> +	if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
-> +	    !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
-> +		posix_acl_fix_xattr_from_user(kvalue, size);
-> +}
->  
->  /*
->   * Extended attribute SET operations
-> @@ -329,9 +339,7 @@ setxattr(struct dentry *d, const char __user *name, const void __user *value,
->  			error = -EFAULT;
->  			goto out;
->  		}
-> -		if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
-> -		    (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
-> -			posix_acl_fix_xattr_from_user(kvalue, size);
-> +		fix_xattr_from_user(kname, kvalue, size);
->  	}
->  
->  	error = vfs_setxattr(d, kname, kvalue, size, flags);
-> @@ -396,6 +404,17 @@ SYSCALL_DEFINE5(fsetxattr, int, fd, const char __user *, name,
->  	return error;
->  }
->  
-> +static void
-> +fix_xattr_to_user(const char *kname, void *kvalue, size_t size)
-> +{
-> +	if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
-> +		return;
-> +	kname += XATTR_SYSTEM_PREFIX_LEN;
-> +	if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
-> +	    !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
-> +		posix_acl_fix_xattr_to_user(kvalue, size);
-> +}
-> +
->  /*
->   * Extended attribute GET operations
->   */
-> @@ -426,9 +445,7 @@ getxattr(struct dentry *d, const char __user *name, void __user *value,
->  
->  	error = vfs_getxattr(d, kname, kvalue, size);
->  	if (error > 0) {
-> -		if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
-> -		    (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
-> -			posix_acl_fix_xattr_to_user(kvalue, size);
-> +		fix_xattr_to_user(kname, kvalue, size);
+> > @@ -541,10 +457,8 @@ xfs_submit_ioend(
+> >  	 * at this point in time.
+> >  	 */
+> >  error_finish:
+> > -	if (ioend->io_bio)
+> > -		bio_put(ioend->io_bio);
+> > -	ioend->io_error = status;
+> > -	xfs_finish_ioend(ioend);
+> > +	ioend->io_bio->bi_error = status;
+> > +	bio_endio(ioend->io_bio);
+> >  	return status;
+> 
+> bi_end_io is not set here, so what happens to the buffers added to the
+> ioend in this case?
 
-I don't see how this is related to the rest of the patch.
+We're not calling the end_io function we should be, good catch and fixed.
 
-> +++ b/include/linux/richacl_xattr.h
+> Trailing whitespace on the above line.
 
-What's the point in splitting this from the richacl.h header?
+Ok, fixed.
 
-Same for the uapi versions.
+> And FWIW, I'm not a huge fan of
+> open coding both the bio and ioend allocations. It makes it easier to
+> distinguish the higher level algorithm from all of the structure
+> initialization noise. It looks to me that alloc_ioend() could remain
+> mostly as is, using the new bioset allocation, and alloc_ioend_bio()
+> could be inlined and renamed to something like init_bio_from_bh() or
+> some such.
 
-> +struct richacl_xattr {
-> +	unsigned char	a_version;
-> +	unsigned char	a_flags;
+Hmm, not a huge fan of these single use function in general, but
+I'll see if I can do something sensible.
 
-Explicit __u8 for uapi headers, please.
+> I'm trying to make sure I grok how this works without knowing much about
+> the block layer. So we chain the current bio to the new one, the latter
+> becoming the parent, and submit the old one. It looks to me that this
+> could result in bio_endio() on the parent, which seems fishy... what am
+> I missing? IOW, is it safe to submit bios like this before the entire
+> chain is created?
+
+Ignoring this for now and jumping to the next reply..
+
+> > + out_free_ioend_bioset:
+> > + 	bioset_free(xfs_ioend_bioset);
+> 
+> Space before tab ^.
+
+Fixed.
+
+> > + 	bioset_free(xfs_ioend_bioset);
+> 
+> Space before tab ^.
+
+Fixed.
 
 _______________________________________________
 xfs mailing list
