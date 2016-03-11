@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EFD329E08
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 17:41:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D491030404E
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2016 15:41:04 -0800 (PST)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id myGjcfgIwH7M98y6 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 Mar 2016 15:41:02 -0800 (PST)
-Date: Thu, 10 Mar 2016 10:41:00 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the xfs tree with the ext4 tree
-Message-ID: <20160310104100.6f906679@canb.auug.org.au>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 925A17CA0
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 08:01:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 06F96AC001
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:01:45 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id cwHgbRyCvXdtJwQM (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 11 Mar 2016 06:01:42 -0800 (PST)
+Date: Fri, 11 Mar 2016 06:01:34 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v18 00/22] Richacls (Core and Ext4)
+Message-ID: <20160311140134.GA14808@infradead.org>
+References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: linux-next@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Hi all,
+On Mon, Feb 29, 2016 at 09:17:05AM +0100, Andreas Gruenbacher wrote:
+> Al,
+> 
+> could you please make sure you are happy with the current version of the
+> richacl patch queue for the next merge window?
 
-Today's linux-next merge of the xfs tree got a conflict in:
+I'm still not happy.
 
-  fs/ext4/ext4.h
+For one I still see no reason to merge this broken ACL model at all.
+It provides our actualy Linux users no benefit at all, while breaking
+a lot of assumptions, especially by adding allow and deny ACE at the
+same sime.
 
-between commit:
+It also doesn't help with the issue that the main thing it's trying
+to be compatible with (Windows) actually uses a fundamentally different
+identifier to apply the ACLs to - as long as you're still limited
+to users and groups and not guids we'll still have that mapping problem
+anyway.
 
-  109811c20fb8 ("ext4: simplify io_end handling for AIO DIO")
-
-from the ext4 tree and commit:
-
-  74c66bcb7eda ("ext4: Fix data exposure after failed AIO DIO")
-
-from the xfs tree.
-
-I fixed it up (see below) and can carry the fix as necessary (no action
-is required).
-
--- 
-Cheers,
-Stephen Rothwell
-
-diff --cc fs/ext4/ext4.h
-index 70b8e0409566,56c12df107ab..000000000000
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@@ -1499,15 -1504,16 +1499,6 @@@ static inline int ext4_valid_inum(struc
-  		 ino <= le32_to_cpu(EXT4_SB(sb)->s_es->s_inodes_count));
-  }
-  
-- static inline void ext4_set_io_unwritten_flag(struct inode *inode,
-- 					      struct ext4_io_end *io_end)
- -static inline ext4_io_end_t *ext4_inode_aio(struct inode *inode)
---{
-- 	if (!(io_end->flag & EXT4_IO_END_UNWRITTEN)) {
-- 		io_end->flag |= EXT4_IO_END_UNWRITTEN;
-- 		atomic_inc(&EXT4_I(inode)->i_unwritten);
-- 	}
- -	return inode->i_private;
- -}
- -
- -static inline void ext4_inode_aio_set(struct inode *inode, ext4_io_end_t *io)
- -{
- -	inode->i_private = io;
---}
---
-  /*
-   * Inode dynamic state flags
-   */
+But besides that fundamental question on the purpose of it I also
+don't think the code is suitable, more in the individual patches.
 
 _______________________________________________
 xfs mailing list
