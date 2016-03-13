@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 624EB7CDE
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 22:29:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0BE007CA1
+	for <xfs@oss.sgi.com>; Sun, 13 Mar 2016 18:02:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25607304039
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 20:29:06 -0700 (PDT)
-Received: from mail-ig0-f182.google.com (mail-ig0-f182.google.com
-	[209.85.213.182]) by cuda.sgi.com with ESMTP id
-	wx4l5R4OSX4VN6G4 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Mar 2016 20:29:04 -0700 (PDT)
-Received: by mail-ig0-f182.google.com with SMTP id nk17so82447985igb.1
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 20:29:04 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D278B8F8035
+	for <xfs@oss.sgi.com>; Sun, 13 Mar 2016 16:02:15 -0700 (PDT)
+Received: from mail-vk0-f43.google.com (mail-vk0-f43.google.com
+	[209.85.213.43]) by cuda.sgi.com with ESMTP id cv7nZFlkzGgKWTwd
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 13 Mar 2016 16:02:13 -0700 (PDT)
+Received: by mail-vk0-f43.google.com with SMTP id k1so189707204vkb.0
+	for <xfs@oss.sgi.com>; Sun, 13 Mar 2016 16:02:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160315201700.GA22945@sernet.de>
+In-Reply-To: <20160311230254.GG2792@jra3>
 References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
 	<20160311140134.GA14808@infradead.org>
 	<CAHc6FU4t3yisCM=MXrHRmCja_A8eZOpVa1smJ0gUhv+vuUAuXA@mail.gmail.com>
-	<20160315071103.GC19747@infradead.org> <20160315154514.GB39038@jra3>
-	<20160315201700.GA22945@sernet.de>
-From: Steve French <smfrench@gmail.com>
-Date: Tue, 15 Mar 2016 22:28:44 -0500
-Message-ID: <CAH2r5mt1SBnxnu=c8JGA1dmUUcHXG+wYXfWFQCcbC1tZT0BHpQ@mail.gmail.com>
+	<CAH2r5mv3OTmPOQBV7xc-uZmB0gWxykXOCEVOcybx3tbHiViTZg@mail.gmail.com>
+	<20160311230254.GG2792@jra3>
+Date: Mon, 14 Mar 2016 00:02:13 +0100
+Message-ID: <CAHc6FU5Bq9afVdNogc9DQYyyXwLfUopXW5ZnSuct3N+NvKW4Rg@mail.gmail.com>
 Subject: Re: [PATCH v18 00/22] Richacls (Core and Ext4)
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,32 +35,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Volker.Lendecke@sernet.de" <Volker.Lendecke@sernet.de>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Cristoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>, Jeremy Allison <jra@samba.org>
+To: Jeremy Allison <jra@samba.org>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Steve French <smfrench@gmail.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Tue, Mar 15, 2016 at 3:17 PM, Volker Lendecke
-<Volker.Lendecke@sernet.de> wrote:
-> On Tue, Mar 15, 2016 at 08:45:14AM -0700, Jeremy Allison wrote:
->> On Tue, Mar 15, 2016 at 12:11:03AM -0700, Christoph Hellwig wrote:
->> > People have long learned that we only have 'alloc' permissions.  Any
->> > model that mixes allow and deny ACE is a mistake.
+On Sat, Mar 12, 2016 at 12:02 AM, Jeremy Allison <jra@samba.org> wrote:
+> On Fri, Mar 11, 2016 at 02:05:16PM -0600, Steve French wrote:
+>> Sounds like I need to quickly rework the SMB3 ACL helper functions
+>> for cifs.ko
 >>
->> People can also learn and change though :-). One of the
->> biggest complaints people deploying Samba on Linux have is the
->> incompatible ACL models.
+>> Also do you know where is the current version of the corresponding
+>> vfs_richacl for
+>> Samba which works with the current RichACL format?
 >
-> Just to confirm: I see this a lot in the field. NFSv4 ACLs, while not a
-> perfect match for NTFS ACLs are a lot closer much more usable to people
-> who want to serve Windows clients.
+> I have a patch for a new vfs_richacl somewhere. I remember
+> sending it to Andreas for testing...
 
-Yes (and presumably Macs as well)
+Ah, the patch was for testing, not resting ... how could I get that mixed up.
 
+I've applied your patch to the latest master branch, made it compile
+again, and fixed a few obvious problems. The results I get with
+smbcacls look reasonable now.
 
+The code is here:
+  https://github.com/andreas-gruenbacher/samba richacl
 
--- 
+I've used the following smb.conf:
+  [richacl]
+  comment = Richacl directory
+  path = /mnt/ext4
+  vfs objects = richacl
+  writeable = yes
+  browseable = yes
+
+Is there a particular reason why you didn't make vfs_richacl a
+dynamically loadable module?
+
 Thanks,
-
-Steve
+Andreas
 
 _______________________________________________
 xfs mailing list
