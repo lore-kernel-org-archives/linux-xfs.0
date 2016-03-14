@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DAB4F29E11
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 09:56:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E9BD304051
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:56:12 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7B54229E1D
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 09:56:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5B6CAC008
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:56:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kmhdAzoIxkcEDVY5 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id uH5B5uM8yUneha2e (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:56:11 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:56:15 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v19 10/23] posix_acl: Unexport acl_by_type and make it static
-Date: Mon, 14 Mar 2016 15:55:09 +0100
-Message-Id: <1457967322-14886-11-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v19 11/23] posix_acl: Improve xattr fixup code
+Date: Mon, 14 Mar 2016 15:55:10 +0100
+Message-Id: <1457967322-14886-12-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
 References: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,50 +31,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-acl_by_type(inode, type) returns a pointer to either inode->i_acl or
-inode->i_default_acl depending on type.  This is useful in
-fs/posix_acl.c, but should never have been visible outside that file.
+Both XATTR_NAME_POSIX_ACL_ACCESS and XATTR_NAME_POSIX_ACL_DEFAULT have
+the same XATTR_SYSTEM_PREFIX prefix; don't check for the same prefix
+repeatedly.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/posix_acl.c            | 3 +--
- include/linux/posix_acl.h | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ fs/xattr.c | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index 711dd51..55f2445 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -21,7 +21,7 @@
- #include <linux/export.h>
- #include <linux/user_namespace.h>
- 
--struct posix_acl **acl_by_type(struct inode *inode, int type)
-+static struct posix_acl **acl_by_type(struct inode *inode, int type)
- {
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
-@@ -32,7 +32,6 @@ struct posix_acl **acl_by_type(struct inode *inode, int type)
- 		BUG();
- 	}
+diff --git a/fs/xattr.c b/fs/xattr.c
+index 4861322..c364696 100644
+--- a/fs/xattr.c
++++ b/fs/xattr.c
+@@ -295,6 +295,16 @@ out:
  }
--EXPORT_SYMBOL(acl_by_type);
+ EXPORT_SYMBOL_GPL(vfs_removexattr);
  
- struct posix_acl *get_cached_acl(struct inode *inode, int type)
- {
-diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
-index 3e96a6a..5b5a80c 100644
---- a/include/linux/posix_acl.h
-+++ b/include/linux/posix_acl.h
-@@ -99,7 +99,6 @@ extern int posix_acl_create(struct inode *, umode_t *, struct posix_acl **,
- extern int simple_set_acl(struct inode *, struct posix_acl *, int);
- extern int simple_acl_create(struct inode *, struct inode *);
++static void
++fix_xattr_from_user(const char *kname, void *kvalue, size_t size)
++{
++	if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
++		return;
++	kname += XATTR_SYSTEM_PREFIX_LEN;
++	if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
++	    !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
++		posix_acl_fix_xattr_from_user(kvalue, size);
++}
  
--struct posix_acl **acl_by_type(struct inode *inode, int type);
- struct posix_acl *get_cached_acl(struct inode *inode, int type);
- struct posix_acl *get_cached_acl_rcu(struct inode *inode, int type);
- void set_cached_acl(struct inode *inode, int type, struct posix_acl *acl);
+ /*
+  * Extended attribute SET operations
+@@ -329,9 +339,7 @@ setxattr(struct dentry *d, const char __user *name, const void __user *value,
+ 			error = -EFAULT;
+ 			goto out;
+ 		}
+-		if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+-		    (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+-			posix_acl_fix_xattr_from_user(kvalue, size);
++		fix_xattr_from_user(kname, kvalue, size);
+ 	}
+ 
+ 	error = vfs_setxattr(d, kname, kvalue, size, flags);
+@@ -396,6 +404,17 @@ SYSCALL_DEFINE5(fsetxattr, int, fd, const char __user *, name,
+ 	return error;
+ }
+ 
++static void
++fix_xattr_to_user(const char *kname, void *kvalue, size_t size)
++{
++	if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
++		return;
++	kname += XATTR_SYSTEM_PREFIX_LEN;
++	if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
++	    !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
++		posix_acl_fix_xattr_to_user(kvalue, size);
++}
++
+ /*
+  * Extended attribute GET operations
+  */
+@@ -426,9 +445,7 @@ getxattr(struct dentry *d, const char __user *name, void __user *value,
+ 
+ 	error = vfs_getxattr(d, kname, kvalue, size);
+ 	if (error > 0) {
+-		if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+-		    (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+-			posix_acl_fix_xattr_to_user(kvalue, size);
++		fix_xattr_to_user(kname, kvalue, size);
+ 		if (size && copy_to_user(value, kvalue, error))
+ 			error = -EFAULT;
+ 	} else if (error == -ERANGE && size >= XATTR_SIZE_MAX) {
 -- 
 2.5.0
 
