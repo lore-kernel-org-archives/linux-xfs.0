@@ -1,15 +1,15 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 027297CB3
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 08:39:48 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 04E6A7CB1
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 08:23:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68F4AAC004
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 06:39:44 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CBDF830404E
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 06:23:46 -0700 (PDT)
 Received: from zhuyu.305503.com (zhuyu.305503.com [77.81.108.13]) by
-	cuda.sgi.com with ESMTP id p4wjayaWDY8LQOyr for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 06:39:41 -0700 (PDT)
-Subject: Distributorships Available
-Message-ID: <e53b860a92c84fcd1ebea5d047cbcd50@urbanoutfitters.com>
-Date: Mon, 14 Mar 2016 14:37:12 +0100
+	cuda.sgi.com with ESMTP id YsT4ryOg0TbbTy1d for
+	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 06:23:43 -0700 (PDT)
+Subject: Distribute a Necessary Safety Product
+Message-ID: <1e90f1be8c952a85f857f4509018df9a@minnetonkamoccasin.com>
+Date: Mon, 14 Mar 2016 14:08:36 +0100
 From: "Jason Williams" <molienase@yahoo.com>
 MIME-Version: 1.0
 Reply-To: christend@aliyun.com
