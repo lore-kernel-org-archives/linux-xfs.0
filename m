@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE5047CD8
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 16:03:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E783F8F8039
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:03:02 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 9rA8css72lpDOhBe (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:58 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
-	id 1afZdh-0000Gn-Hm
-	for xfs@oss.sgi.com; Mon, 14 Mar 2016 21:02:57 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 7/7] xfs: remove buffered write support from __xfs_get_blocks
-Date: Mon, 14 Mar 2016 22:02:50 +0100
-Message-Id: <1457989370-6904-8-git-send-email-hch@lst.de>
-In-Reply-To: <1457989370-6904-1-git-send-email-hch@lst.de>
-References: <1457989370-6904-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 2AC867CB4
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 09:55:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EF3E28F804B
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:55:31 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DImwq1IA7V4Mao3M (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:55:30 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v19 00/23] Richacls (Core and Ext4)
+Date: Mon, 14 Mar 2016 15:54:59 +0100
+Message-Id: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,166 +26,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 77 +++++++++++++++----------------------------------------
- 1 file changed, 21 insertions(+), 56 deletions(-)
+Al,
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 32aae77..8b09e93 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1110,7 +1110,6 @@ __xfs_get_blocks(
- 	sector_t		iblock,
- 	struct buffer_head	*bh_result,
- 	int			create,
--	bool			direct,
- 	bool			dax_fault)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
-@@ -1131,22 +1130,14 @@ __xfs_get_blocks(
- 	ASSERT(bh_result->b_size >= (1 << inode->i_blkbits));
- 	size = bh_result->b_size;
- 
--	if (!create && direct && offset >= i_size_read(inode))
-+	if (!create && offset >= i_size_read(inode))
- 		return 0;
- 
- 	/*
- 	 * Direct I/O is usually done on preallocated files, so try getting
--	 * a block mapping without an exclusive lock first.  For buffered
--	 * writes we already have the exclusive iolock anyway, so avoiding
--	 * a lock roundtrip here by taking the ilock exclusive from the
--	 * beginning is a useful micro optimization.
-+	 * a block mapping without an exclusive lock first.
- 	 */
--	if (create && !direct) {
--		lockmode = XFS_ILOCK_EXCL;
--		xfs_ilock(ip, lockmode);
--	} else {
--		lockmode = xfs_ilock_data_map_shared(ip);
--	}
-+	lockmode = xfs_ilock_data_map_shared(ip);
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 	if (offset + size > mp->m_super->s_maxbytes)
-@@ -1165,37 +1156,19 @@ __xfs_get_blocks(
- 	     (imap.br_startblock == HOLESTARTBLOCK ||
- 	      imap.br_startblock == DELAYSTARTBLOCK) ||
- 	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
--		if (direct || xfs_get_extsz_hint(ip)) {
--			/*
--			 * xfs_iomap_write_direct() expects the shared lock. It
--			 * is unlocked on return.
--			 */
--			if (lockmode == XFS_ILOCK_EXCL)
--				xfs_ilock_demote(ip, lockmode);
--
--			error = xfs_iomap_write_direct(ip, offset, size,
--						       &imap, nimaps);
--			if (error)
--				return error;
--			new = 1;
-+		/*
-+		 * xfs_iomap_write_direct() expects the shared lock. It
-+		 * is unlocked on return.
-+		 */
-+		if (lockmode == XFS_ILOCK_EXCL)
-+			xfs_ilock_demote(ip, lockmode);
- 
--		} else {
--			/*
--			 * Delalloc reservations do not require a transaction,
--			 * we can go on without dropping the lock here. If we
--			 * are allocating a new delalloc block, make sure that
--			 * we set the new flag so that we mark the buffer new so
--			 * that we know that it is newly allocated if the write
--			 * fails.
--			 */
--			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
--				new = 1;
--			error = xfs_iomap_write_delay(ip, offset, size, &imap);
--			if (error)
--				goto out_unlock;
-+		error = xfs_iomap_write_direct(ip, offset, size,
-+					       &imap, nimaps);
-+		if (error)
-+			return error;
-+		new = 1;
- 
--			xfs_iunlock(ip, lockmode);
--		}
- 		trace_xfs_get_blocks_alloc(ip, offset, size,
- 				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
- 						   : XFS_IO_DELALLOC, &imap);
-@@ -1216,9 +1189,7 @@ __xfs_get_blocks(
- 	}
- 
- 	/* trim mapping down to size requested */
--	if (direct || size > (1 << inode->i_blkbits))
--		xfs_map_trim_size(inode, iblock, bh_result,
--				  &imap, offset, size);
-+	xfs_map_trim_size(inode, iblock, bh_result, &imap, offset, size);
- 
- 	/*
- 	 * For unwritten extents do not report a disk address in the buffered
-@@ -1231,7 +1202,7 @@ __xfs_get_blocks(
- 		if (ISUNWRITTEN(&imap))
- 			set_buffer_unwritten(bh_result);
- 		/* direct IO needs special help */
--		if (create && direct) {
-+		if (create) {
- 			if (dax_fault)
- 				ASSERT(!ISUNWRITTEN(&imap));
- 			else
-@@ -1260,14 +1231,7 @@ __xfs_get_blocks(
- 	     (new || ISUNWRITTEN(&imap))))
- 		set_buffer_new(bh_result);
- 
--	if (imap.br_startblock == DELAYSTARTBLOCK) {
--		BUG_ON(direct);
--		if (create) {
--			set_buffer_uptodate(bh_result);
--			set_buffer_mapped(bh_result);
--			set_buffer_delay(bh_result);
--		}
--	}
-+	BUG_ON(imap.br_startblock == DELAYSTARTBLOCK);
- 
- 	return 0;
- 
-@@ -1283,7 +1247,8 @@ xfs_get_blocks(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
-+	BUG_ON(create);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
- }
- 
- int
-@@ -1293,7 +1258,7 @@ xfs_get_blocks_direct(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
- }
- 
- int
-@@ -1303,7 +1268,7 @@ xfs_get_blocks_dax_fault(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
- }
- 
- /*
+could you please merge the current richacl patch queue, up to and including
+the ext4 support?
+
+
+Changes since the last posting (https://lwn.net/Articles/677901/):
+
+ * richacl_from_xattr now takes an invalid_error parameter specifying
+   the error code to return when an xattr is invallid.  This allows to
+   better use this function when decoding an xattr stored on a filesystem
+   as well as when decoding a user-provided xattr.
+
+ * ext4_acl_chmod and xfs_acl_chmod have lost their mode parameter;
+   they have aready been using inode->i_mode instead of the parameter.
+
+ * Use __u8 instead of unsigned char in uapi headers.  Drop left-over
+   MODULE_LICENSE declarations.  Use IS_ERR_OR_NULL instead of IS_ERR in
+   ext4_init_richacl.
+
+ * Rebased on top of v4.5.
+
+
+The complete patch queue is available here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+        richacl-2016-03-14
+
+
+The richacl user-space utilitites, man pages, and test suite are available
+here:
+
+  https://github.com/andreas-gruenbacher/richacl
+
+
+Changes to other user-space packages for richacl:
+
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/samba
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
+
+
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (21):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Make the inode passed to inode_change_ok non-const
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Compute maximum file masks from an acl
+  richacl: Permission check algorithm
+  posix_acl: Unexport acl_by_type and make it static
+  posix_acl: Improve xattr fixup code
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+ fs/Kconfig                                      |   3 +
+ fs/Makefile                                     |   2 +
+ fs/attr.c                                       |  81 +++-
+ fs/ext4/Kconfig                                 |  11 +
+ fs/ext4/Makefile                                |   1 +
+ fs/ext4/ext4.h                                  |   6 +-
+ fs/ext4/file.c                                  |   3 +
+ fs/ext4/ialloc.c                                |  11 +-
+ fs/ext4/inode.c                                 |  12 +-
+ fs/ext4/namei.c                                 |   5 +
+ fs/ext4/richacl.c                               | 137 ++++++
+ fs/ext4/richacl.h                               |  40 ++
+ fs/ext4/super.c                                 |  49 +-
+ fs/ext4/xattr.c                                 |   7 +
+ fs/f2fs/acl.c                                   |   4 +-
+ fs/inode.c                                      |  15 +-
+ fs/jffs2/acl.c                                  |  10 +-
+ fs/namei.c                                      | 118 ++++-
+ fs/posix_acl.c                                  |  50 +-
+ fs/richacl_base.c                               | 578 ++++++++++++++++++++++++
+ fs/richacl_inode.c                              | 333 ++++++++++++++
+ fs/richacl_xattr.c                              | 235 ++++++++++
+ fs/xattr.c                                      |  29 +-
+ include/linux/fs.h                              |  60 ++-
+ include/linux/posix_acl.h                       |  13 +-
+ include/linux/richacl.h                         | 208 +++++++++
+ include/linux/richacl_xattr.h                   |  31 ++
+ include/uapi/linux/Kbuild                       |   2 +
+ include/uapi/linux/fs.h                         |   3 +-
+ include/uapi/linux/richacl.h                    | 152 +++++++
+ include/uapi/linux/richacl_xattr.h              |  44 ++
+ include/uapi/linux/xattr.h                      |   2 +
+ 33 files changed, 2150 insertions(+), 107 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl_base.c
+ create mode 100644 fs/richacl_inode.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
 -- 
-2.1.4
+2.5.0
 
 _______________________________________________
 xfs mailing list
