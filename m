@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B9FE77CA3
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 11:03:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 45B86AC005
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 09:03:18 -0800 (PST)
-Received: from mail-vk0-f47.google.com (mail-vk0-f47.google.com
-	[209.85.213.47]) by cuda.sgi.com with ESMTP id yhkzmZeSr7MG7T6w
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 11 Mar 2016 09:03:12 -0800 (PST)
-Received: by mail-vk0-f47.google.com with SMTP id e185so141318103vkb.1
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2016 09:03:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160311141701.GE14808@infradead.org>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-	<1456733847-17982-19-git-send-email-agruenba@redhat.com>
-	<20160311141701.GE14808@infradead.org>
-Date: Fri, 11 Mar 2016 18:03:11 +0100
-Message-ID: <CAHc6FU7gH54C-hfV8VQzgpYv=PYNvpA9dc8stgVf2_khF7dUdg@mail.gmail.com>
-Subject: Re: [PATCH v18 18/22] richacl: xattr mapping functions
+	by oss.sgi.com (Postfix) with ESMTP id A738529E07
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 09:55:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E639AC005
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:55:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id CWwL81qjun7elO0n (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:55:33 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v19 01/23] vfs: Add IS_ACL() and IS_RICHACL() tests
+Date: Mon, 14 Mar 2016 15:55:00 +0100
+Message-Id: <1457967322-14886-2-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
+References: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,93 +23,137 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri, Mar 11, 2016 at 3:17 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> +#include <linux/richacl_xattr.h>
->> +
->> +MODULE_LICENSE("GPL");
->
-> what's the point given that the code isn't even modolar?
+The vfs does not apply the umask for file systems that support acls. The
+test used for this used to be called IS_POSIXACL(). Switch to a new
+IS_ACL() test to check for either posix acls or richacls instead. Add a new
+MS_RICHACL flag and IS_RICHACL() test for richacls alone. The IS_POSIXACL()
+test is still needed by nfsd.
 
-A leftover, removed now.
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Andreas Dilger <adilger@dilger.ca>
+---
+ fs/Kconfig              |  3 +++
+ fs/namei.c              |  8 ++++----
+ include/linux/fs.h      | 12 ++++++++++++
+ include/uapi/linux/fs.h |  3 ++-
+ 4 files changed, 21 insertions(+), 5 deletions(-)
 
->> +static void
->> +fix_xattr_from_user(const char *kname, void *kvalue, size_t size)
->> +{
->> +     if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
->> +             return;
->> +     kname += XATTR_SYSTEM_PREFIX_LEN;
->> +     if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
->> +         !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
->> +             posix_acl_fix_xattr_from_user(kvalue, size);
->> +}
->>
->>  /*
->>   * Extended attribute SET operations
->> @@ -329,9 +339,7 @@ setxattr(struct dentry *d, const char __user *name, const void __user *value,
->>                       error = -EFAULT;
->>                       goto out;
->>               }
->> -             if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
->> -                 (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
->> -                     posix_acl_fix_xattr_from_user(kvalue, size);
->> +             fix_xattr_from_user(kname, kvalue, size);
->>       }
->>
->>       error = vfs_setxattr(d, kname, kvalue, size, flags);
->> @@ -396,6 +404,17 @@ SYSCALL_DEFINE5(fsetxattr, int, fd, const char __user *, name,
->>       return error;
->>  }
->>
->> +static void
->> +fix_xattr_to_user(const char *kname, void *kvalue, size_t size)
->> +{
->> +     if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
->> +             return;
->> +     kname += XATTR_SYSTEM_PREFIX_LEN;
->> +     if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
->> +         !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
->> +             posix_acl_fix_xattr_to_user(kvalue, size);
->> +}
->> +
->>  /*
->>   * Extended attribute GET operations
->>   */
->> @@ -426,9 +445,7 @@ getxattr(struct dentry *d, const char __user *name, void __user *value,
->>
->>       error = vfs_getxattr(d, kname, kvalue, size);
->>       if (error > 0) {
->> -             if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
->> -                 (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
->> -                     posix_acl_fix_xattr_to_user(kvalue, size);
->> +             fix_xattr_to_user(kname, kvalue, size);
->
-> I don't see how this is related to the rest of the patch.
-
-Indeed, this is unrelated now. I'll split it off.
-
->> +++ b/include/linux/richacl_xattr.h
->
-> What's the point in splitting this from the richacl.h header?
->
-> Same for the uapi versions.
->
->> +struct richacl_xattr {
->> +     unsigned char   a_version;
->> +     unsigned char   a_flags;
->
-> Explicit __u8 for uapi headers, please.
-
-Okay.
-
-Thanks,
-Andreas
+diff --git a/fs/Kconfig b/fs/Kconfig
+index 9adee0d..f7b26f3 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -63,6 +63,9 @@ endif # BLOCK
+ config FS_POSIX_ACL
+ 	def_bool n
+ 
++config FS_RICHACL
++	def_bool n
++
+ config EXPORTFS
+ 	tristate
+ 
+diff --git a/fs/namei.c b/fs/namei.c
+index 9c590e0..68e1056 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2861,7 +2861,7 @@ static int atomic_open(struct nameidata *nd, struct dentry *dentry,
+ 	}
+ 
+ 	mode = op->mode;
+-	if ((open_flag & O_CREAT) && !IS_POSIXACL(dir))
++	if ((open_flag & O_CREAT) && !IS_ACL(dir))
+ 		mode &= ~current_umask();
+ 
+ 	excl = (open_flag & (O_EXCL | O_CREAT)) == (O_EXCL | O_CREAT);
+@@ -3045,7 +3045,7 @@ static int lookup_open(struct nameidata *nd, struct path *path,
+ 	/* Negative dentry, just create the file */
+ 	if (!dentry->d_inode && (op->open_flag & O_CREAT)) {
+ 		umode_t mode = op->mode;
+-		if (!IS_POSIXACL(dir->d_inode))
++		if (!IS_ACL(dir->d_inode))
+ 			mode &= ~current_umask();
+ 		/*
+ 		 * This write is needed to ensure that a
+@@ -3620,7 +3620,7 @@ retry:
+ 	if (IS_ERR(dentry))
+ 		return PTR_ERR(dentry);
+ 
+-	if (!IS_POSIXACL(path.dentry->d_inode))
++	if (!IS_ACL(path.dentry->d_inode))
+ 		mode &= ~current_umask();
+ 	error = security_path_mknod(&path, dentry, mode, dev);
+ 	if (error)
+@@ -3689,7 +3689,7 @@ retry:
+ 	if (IS_ERR(dentry))
+ 		return PTR_ERR(dentry);
+ 
+-	if (!IS_POSIXACL(path.dentry->d_inode))
++	if (!IS_ACL(path.dentry->d_inode))
+ 		mode &= ~current_umask();
+ 	error = security_path_mkdir(&path, dentry, mode);
+ 	if (!error)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index ae68100..f9d2b59 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1804,6 +1804,12 @@ struct super_operations {
+ #define IS_IMMUTABLE(inode)	((inode)->i_flags & S_IMMUTABLE)
+ #define IS_POSIXACL(inode)	__IS_FLG(inode, MS_POSIXACL)
+ 
++#ifdef CONFIG_FS_RICHACL
++#define IS_RICHACL(inode)	__IS_FLG(inode, MS_RICHACL)
++#else
++#define IS_RICHACL(inode)	0
++#endif
++
+ #define IS_DEADDIR(inode)	((inode)->i_flags & S_DEAD)
+ #define IS_NOCMTIME(inode)	((inode)->i_flags & S_NOCMTIME)
+ #define IS_SWAPFILE(inode)	((inode)->i_flags & S_SWAPFILE)
+@@ -1817,6 +1823,12 @@ struct super_operations {
+ 				 (inode)->i_rdev == WHITEOUT_DEV)
+ 
+ /*
++ * IS_ACL() tells the VFS to not apply the umask
++ * and use check_acl for acl permission checks when defined.
++ */
++#define IS_ACL(inode)		__IS_FLG(inode, MS_POSIXACL | MS_RICHACL)
++
++/*
+  * Inode state bits.  Protected by inode->i_lock
+  *
+  * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 149bec8..540dbef 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -120,7 +120,7 @@ struct inodes_stat_t {
+ #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
+ 				   MS_VERBOSE is deprecated. */
+ #define MS_SILENT	32768
+-#define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
++#define MS_POSIXACL	(1<<16)	/* Supports POSIX ACLs */
+ #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
+ #define MS_PRIVATE	(1<<18)	/* change to private */
+ #define MS_SLAVE	(1<<19)	/* change to slave */
+@@ -130,6 +130,7 @@ struct inodes_stat_t {
+ #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
+ #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
+ #define MS_LAZYTIME	(1<<25) /* Update the on-disk [acm]times lazily */
++#define MS_RICHACL	(1<<26) /* Supports richacls */
+ 
+ /* These sb flags are internal to the kernel */
+ #define MS_NOSEC	(1<<28)
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
