@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 83DAA29DF8
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 09:56:58 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9025C7CDA
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 16:03:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 582408F804C
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:56:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yb0EU2Jh9lyHQOK2 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 07:56:57 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v19 21/23] vfs: Add richacl permission checking
-Date: Mon, 14 Mar 2016 15:55:20 +0100
-Message-Id: <1457967322-14886-22-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
-References: <1457967322-14886-1-git-send-email-agruenba@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D506AC002
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:58 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id y1R5r1FXx99DZm9v (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 14 Mar 2016 14:02:55 -0700 (PDT)
+Received: from [83.175.99.196] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
+	id 1afZde-0000GX-Bw
+	for xfs@oss.sgi.com; Mon, 14 Mar 2016 21:02:54 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/7] xfs: make xfs_find_bdev_for_inode available outside of
+	xfs_aops.c
+Date: Mon, 14 Mar 2016 22:02:46 +0100
+Message-Id: <1457989370-6904-4-git-send-email-hch@lst.de>
+In-Reply-To: <1457989370-6904-1-git-send-email-hch@lst.de>
+References: <1457989370-6904-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,120 +33,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-Hook the richacl permission checking function into the vfs.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/namei.c     | 51 +++++++++++++++++++++++++++++++++++++++++++++++++--
- fs/posix_acl.c |  6 +++---
- 2 files changed, 52 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_aops.c  | 17 ++---------------
+ fs/xfs/xfs_inode.h |  9 +++++++++
+ 2 files changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 28707ae..b55cee6 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -35,6 +35,7 @@
- #include <linux/fs_struct.h>
- #include <linux/posix_acl.h>
- #include <linux/hash.h>
-+#include <linux/richacl.h>
- #include <asm/uaccess.h>
- 
- #include "internal.h"
-@@ -255,7 +256,40 @@ void putname(struct filename *name)
- 		__putname(name);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 75a39a8..72ee3f2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -70,19 +70,6 @@ xfs_count_page_state(
+ 	} while ((bh = bh->b_this_page) != head);
  }
  
--static int check_acl(struct inode *inode, int mask)
-+static int check_richacl(struct inode *inode, int mask)
+-STATIC struct block_device *
+-xfs_find_bdev_for_inode(
+-	struct inode		*inode)
+-{
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+-
+-	if (XFS_IS_REALTIME_INODE(ip))
+-		return mp->m_rtdev_targp->bt_bdev;
+-	else
+-		return mp->m_ddev_targp->bt_bdev;
+-}
+-
+ /*
+  * We're now finished for good with this ioend structure.
+  * Update the page state via the associated buffer_heads,
+@@ -1256,7 +1243,7 @@ __xfs_get_blocks(
+ 	 * If this is a realtime file, data may be on a different device.
+ 	 * to that pointed to from the buffer_head b_bdev currently.
+ 	 */
+-	bh_result->b_bdev = xfs_find_bdev_for_inode(inode);
++	bh_result->b_bdev = xfs_find_bdev_for_inode(ip);
+ 
+ 	/*
+ 	 * If we previously allocated a block out beyond eof and we are now
+@@ -1420,7 +1407,7 @@ xfs_vm_direct_IO(
+ 				 xfs_get_blocks_direct, endio, 0);
+ 	}
+ 
+-	bdev = xfs_find_bdev_for_inode(inode);
++	bdev = xfs_find_bdev_for_inode(XFS_I(inode));
+ 	return  __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
+ 			xfs_get_blocks_direct, endio, NULL, flags);
+ }
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 43e1d51..70bedf0 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -474,6 +474,15 @@ do { \
+ 	iput(VFS_I(ip)); \
+ } while (0)
+ 
++static inline struct block_device *xfs_find_bdev_for_inode(struct xfs_inode *ip)
 +{
-+#ifdef CONFIG_FS_RICHACL
-+	struct richacl *acl;
-+
-+	if (mask & MAY_NOT_BLOCK) {
-+		acl = get_cached_richacl_rcu(inode);
-+		if (!acl)
-+			goto no_acl;
-+		/* no ->get_richacl() calls in RCU mode... */
-+		if (acl == ACL_NOT_CACHED)
-+			return -ECHILD;
-+		return richacl_permission(inode, acl, mask & ~MAY_NOT_BLOCK);
-+	}
-+
-+	acl = get_richacl(inode);
-+	if (IS_ERR(acl))
-+		return PTR_ERR(acl);
-+	if (acl) {
-+		int error = richacl_permission(inode, acl, mask);
-+		richacl_put(acl);
-+		return error;
-+	}
-+no_acl:
-+#endif
-+	if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
-+		    MAY_CHMOD | MAY_SET_TIMES)) {
-+		/* File permission bits cannot grant this. */
-+		return -EACCES;
-+	}
-+	return -EAGAIN;
++	if (XFS_IS_REALTIME_INODE(ip))
++		return ip->i_mount->m_rtdev_targp->bt_bdev;
++	else
++		return ip->i_mount->m_ddev_targp->bt_bdev;
 +}
 +
-+static int check_posix_acl(struct inode *inode, int mask)
- {
- #ifdef CONFIG_FS_POSIX_ACL
- 	struct posix_acl *acl;
-@@ -290,11 +324,24 @@ static int acl_permission_check(struct inode *inode, int mask)
- {
- 	unsigned int mode = inode->i_mode;
- 
-+	/*
-+	 * With POSIX ACLs, the (mode & S_IRWXU) bits exactly match the owner
-+	 * permissions, and we can skip checking posix acls for the owner.
-+	 * With richacls, the owner may be granted fewer permissions than the
-+	 * mode bits seem to suggest (for example, append but not write), and
-+	 * we always need to check the richacl.
-+	 */
 +
-+	if (IS_RICHACL(inode)) {
-+		int error = check_richacl(inode, mask);
-+		if (error != -EAGAIN)
-+			return error;
-+	}
- 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
- 		mode >>= 6;
- 	else {
- 		if (IS_POSIXACL(inode) && (mode & S_IRWXG)) {
--			int error = check_acl(inode, mask);
-+			int error = check_posix_acl(inode, mask);
- 			if (error != -EAGAIN)
- 				return error;
- 		}
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index f24646e..7810c6f 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -100,13 +100,13 @@ struct posix_acl *get_acl(struct inode *inode, int type)
- {
- 	struct posix_acl *acl;
+ extern struct kmem_zone	*xfs_inode_zone;
  
-+	if (!IS_POSIXACL(inode))
-+		return NULL;
-+
- 	acl = get_cached_acl(inode, type);
- 	if (acl != ACL_NOT_CACHED)
- 		return acl;
- 
--	if (!IS_POSIXACL(inode))
--		return NULL;
--
- 	/*
- 	 * A filesystem can force a ACL callback by just never filling the
- 	 * ACL cache. But normally you'd fill the cache either at inode
+ /*
 -- 
-2.5.0
+2.1.4
 
 _______________________________________________
 xfs mailing list
