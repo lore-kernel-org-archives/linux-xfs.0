@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 04B3F7CCD
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 05:16:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7A2B0AC001
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 03:16:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8NYFDDXmXomZUWp3 (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F7527CD3
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 14:26:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6EB50304064
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 12:26:13 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 0eRXVTbBn16kdgGU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Mar 2016 03:16:23 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id CB1D7F9E76
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 10:16:22 +0000 (UTC)
-Received: from redhat.com (dhcp-26-103.brq.redhat.com [10.34.26.103])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u2FAGITY007794
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 06:16:20 -0400
-Date: Tue, 15 Mar 2016 11:16:18 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 0/9] xfs: configurable error behaviour
-Message-ID: <20160315101618.GA1539@redhat.com>
-References: <1454635407-22276-1-git-send-email-david@fromorbit.com>
+	<xfs@oss.sgi.com>; Tue, 15 Mar 2016 12:26:08 -0700 (PDT)
+Date: Tue, 15 Mar 2016 12:25:37 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 12/12] block: test fallocate for block devices
+Message-ID: <20160315192537.GB5818@birch.djwong.org>
+References: <20160305003717.28738.98818.stgit@birch.djwong.org>
+	<20160305003837.28738.49794.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1454635407-22276-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20160305003837.28738.49794.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,146 +30,425 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Dave,
+Now that we're wiring up fallocate's PUNCH_HOLE and ZERO_RANGE
+features for block devices, add some tests to make sure they
+work correctly.
 
-Here are a few comments about it, I didn't finish to review all the patches, so,
-for now, it's an implementation review, other than code review.
+v2: Update tests to reflect EOD clamping suggested by Linus.
 
-First, I tend to agree with Brian and Eric in most of their comments.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/scsi_debug     |    6 ++
+ tests/generic/705     |   77 ++++++++++++++++++++++++++++++++
+ tests/generic/705.out |   11 +++++
+ tests/generic/706     |   74 +++++++++++++++++++++++++++++++
+ tests/generic/706.out |   10 ++++
+ tests/generic/707     |  118 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/707.out |   32 +++++++++++++
+ tests/generic/group   |    3 +
+ 8 files changed, 330 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/705
+ create mode 100644 tests/generic/705.out
+ create mode 100755 tests/generic/706
+ create mode 100644 tests/generic/706.out
+ create mode 100755 tests/generic/707
+ create mode 100644 tests/generic/707.out
 
-I don't see any point in having a fail fast/slow/never, if we can configure the
-number of retries, so, it just looks redundant to me.
-
-Setting 1, -1 or N for fail fast/never/after N times, looks simpler.
-
-Also, I don't see a point in having a fail_at_unmount option, IMHO it should
-always fail at unmount, unless, if we expect the sysadmin to extend the
-underlying storage device (let's say here, a thin pool), so that we can flush
-all the metadata in AIL and clean unmount.
-
-I'm sorry if I'm wrong here, but, shouldn't xfs_log_force also check for the error
-configuration here? Otherwise, if, we set the configuration from fail never
-to fail fast, after an unmount has been issued, unmount will be stuck waiting
-for xfs_log_worker to finish metadata writeback, which will never happen
-since we have no space and, it does not check for the error configuration.
-
-I can easily reproduce this behavior trying to unmount a filesystem, then set
-the configuration to fail fast after the unmount.
-
-Unmount will be stuck at:
-
-[<ffffffff8138ad56>] xfs_ail_push_all_sync+0xb6/0x100
-[<ffffffff813750ee>] xfs_unmountfs+0x6e/0x1b0
-[<ffffffff81377bf0>] xfs_fs_put_super+0x30/0x90
-[<ffffffff812193da>] generic_shutdown_super+0x6a/0xf0
-[<ffffffff81219747>] kill_block_super+0x27/0x70
-[<ffffffff81219a83>] deactivate_locked_super+0x43/0x70
-[<ffffffff81219b0c>] deactivate_super+0x5c/0x60
-[<ffffffff81236baf>] cleanup_mnt+0x3f/0x90
-[<ffffffff81236c42>] __cleanup_mnt+0x12/0x20
-[<ffffffff810a49c3>] task_work_run+0x73/0x90
-[<ffffffff81002242>] exit_to_usermode_loop+0xc2/0xd0
-[<ffffffff81002d11>] syscall_return_slowpath+0xa1/0xb0
-[<ffffffff818129cc>] int_ret_from_sys_call+0x25/0x8f
-[<ffffffffffffffff>] 0xffffffffffffffff
-
-and kernel will be spinning into:
-
-kworker/3:1H-478   [003] ....   361.187791: xfs_log_force: dev 253:4 lsn 0x0
-caller xfs_log_worker
-
-
-or from dmesg output:
-
-[  103.881961] XFS (dm-4): Unmounting Filesystem
-[  103.882824] XFS (dm-4): xfs_do_force_shutdown(0x1) called from line 1134 of
-file fs/xfs/xfs_buf_item.c.  Return address = 0xffffffff813818d7
-[  103.884101] XFS (dm-4): I/O Error Detected. Shutting down filesystem
-[  103.884713] XFS (dm-4): Please umount the filesystem and rectify the
-problem(s)
-[  121.185786] XFS (dm-4): xfs_log_force: error -5 returned.
-[  151.185818] XFS (dm-4): xfs_log_force: error -5 returned.
-
-
-
-I'll add more comments as soon as I finish to review the patches.
-
-
-
-Btw, while testing it, I found a bug in dm-thin and direct-io code, which return
-wrong error information to the filesystem, and actually prevented your patchset
-to work as expected, I got a few patches to dm-thin and direct io to test, and
-the patches fixed the problem I found, but I'm not sure when they will be posted
-upstream. Hopefully today? :)
-
-
-
-On Fri, Feb 05, 2016 at 12:23:18PM +1100, Dave Chinner wrote:
-> Hi folks,
-> 
-> I need to restart the discussion and review of this patch series.
-> There was some discussion of it last time, but nothing really came
-> from that. I'm posting what I have in my tree right now - treat it
-> as though it's an initial posting of the code because I can't recall
-> what I've changed since the first posting.
-> 
-> What I'd like to have to for the next merge window is all the IO
-> error bits sorted out. The final patch (kmem failure behaviour)
-> needs more infrastructure (passing mp to every allocation) so that's
-> a secondary concern right now and I've only included it to
-> demonstrate how to apply this code ot a different subsystem.
-> 
-> Things that need to be nailed down before I can commit the series:
-> 
-> 	- sysfs layout
-> 	- naming conventions for errors and subsystems in sysfs
-> 	- how best to display/change default behaviour
-> 
-> Things that we can change/implement later:
-> 
-> 	- default behaviour
-> 	- additional error classes
-> 	- additional error types
-> 	- additional subsystems
-> 	- subsystem error handling implementation
-> 	- communication with other subsystems to dynamically change
-> 	  error behaviour
-> 
-> IOWs, what is important right now is how we present this to
-> userspace, because we can't change that easily once we've decided on
-> a presentation structure.
-> 
-> Modifying the code to classify and handle all the different error
-> types is much less important, as we can change that to fix whatever
-> problems we have without impacting the presentation to userspace.
-> 
-> There is definite need for this (e.g. handling of ENOSPC on thin
-> provisioned devices), so I want to get quickly to a consensus on the
-> userspace facing aspects so that we can get this ball rolling.
-> 
-> The biggest unsolved issue is how to change the default behaviour
-> persistently. There is no infrastructure in this patch series to do
-> that, but it is someting that we have to consider so that we don't
-> require default behaviour to be changed after every mount of every
-> filesystem on a system. My thoughts on this is we store changes to
-> the defaults in xattrs on the root inode, but I'm open to ideas here
-> as there's no code written for it yet. Solving this problem,
-> however, is not necessary before commiting the initial code; it's
-> something we can add later once we've worked out all the details.
-> 
-> Discuss!
-> 
-> -Dave.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
--- 
-Carlos
+diff --git a/common/scsi_debug b/common/scsi_debug
+index eb08126..74c3802 100644
+--- a/common/scsi_debug
++++ b/common/scsi_debug
+@@ -40,13 +40,17 @@ _get_scsi_debug_dev()
+ 	logical=${2-512}
+ 	unaligned=${3-0}
+ 	size=${4-128}
++	test -n "$4" && shift
++	test -n "$3" && shift
++	test -n "$2" && shift
++	test -n "$1" && shift
+ 
+ 	phys_exp=0
+ 	while [ $logical -lt $physical ]; do
+ 		let physical=physical/2
+ 		let phys_exp=phys_exp+1
+ 	done
+-	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size"
++	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size $@"
+ 	echo "scsi_debug options $opts" >> $seqres.full
+ 	modprobe scsi_debug $opts
+ 	[ $? -eq 0 ] || _fail "scsi_debug modprobe failed"
+diff --git a/tests/generic/705 b/tests/generic/705
+new file mode 100755
+index 0000000..4bb8752
+--- /dev/null
++++ b/tests/generic/705
+@@ -0,0 +1,77 @@
++#! /bin/bash
++# FS QA Test No. 705
++#
++# Test fallocate(ZERO_RANGE) on a block device, which should be able to
++# WRITE SAME (or equivalent) the range.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
++
++# real QA test starts here
++_supported_os Linux
++_require_scsi_debug
++_require_xfs_io_command "fzero"
++
++echo "Create and format"
++dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++
++echo "Zero range"
++$XFS_IO_PROG -c "fzero -k 512k 1m" $dev
++
++echo "Zero range without keep_size"
++$XFS_IO_PROG -c "fzero 384k 64k" $dev
++
++echo "Zero range past EOD"
++$XFS_IO_PROG -c "fzero -k 3m 4m" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Zero range to EOD"
++$XFS_IO_PROG -c "fzero -k 0 9223372036854775807" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/705.out b/tests/generic/705.out
+new file mode 100644
+index 0000000..ccbda23
+--- /dev/null
++++ b/tests/generic/705.out
+@@ -0,0 +1,11 @@
++QA output created by 705
++Create and format
++Zero range
++Zero range without keep_size
++Zero range past EOD
++Check contents
++f0cb9070c098aa347f664bead3a219d9  SCSI_DEBUG_DEV
++Zero range to EOD
++Check contents
++b5cfa9d6c8febd618f91ac2843d50a1c  SCSI_DEBUG_DEV
++Destroy device
+diff --git a/tests/generic/706 b/tests/generic/706
+new file mode 100755
+index 0000000..184dbc2
+--- /dev/null
++++ b/tests/generic/706
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test No. 706
++#
++# Test fallocate(PUNCH_HOLE) on a block device, which should be able to
++# zero-TRIM (or equivalent) the range.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
++
++# real QA test starts here
++_supported_os Linux
++_require_scsi_debug
++_require_xfs_io_command "fpunch"
++
++echo "Create and format"
++dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++
++echo "Zero punch"
++$XFS_IO_PROG -c "fpunch 512k 1m" $dev
++
++echo "Punch range past EOD"
++$XFS_IO_PROG -c "fpunch 3m 4m" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Punch to EOD"
++$XFS_IO_PROG -c "fpunch 0 9223372036854775807" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/706.out b/tests/generic/706.out
+new file mode 100644
+index 0000000..53a09ae
+--- /dev/null
++++ b/tests/generic/706.out
+@@ -0,0 +1,10 @@
++QA output created by 706
++Create and format
++Zero punch
++Punch range past EOD
++Check contents
++8c6a3fd51601141b56eaebbab3746156  SCSI_DEBUG_DEV
++Punch to EOD
++Check contents
++b5cfa9d6c8febd618f91ac2843d50a1c  SCSI_DEBUG_DEV
++Destroy device
+diff --git a/tests/generic/707 b/tests/generic/707
+new file mode 100755
+index 0000000..fab997f
+--- /dev/null
++++ b/tests/generic/707
+@@ -0,0 +1,118 @@
++#! /bin/bash
++# FS QA Test No. 707
++#
++# Test the unsupported fallocate flags on a block device.  No collapse
++# or insert range, no regular fallocate, no forgetting keep-space on
++# zero range, no punching past EOD, no requests that aren't aligned
++# with the logicalsector size, and make sure the fallbacks work for
++# devices that don't support write_same or discard.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
++
++# real QA test starts here
++_supported_os Linux
++_require_scsi_debug
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "finsert"
++_require_xfs_io_command "fcollapse"
++_require_xfs_io_command "fzero"
++_require_xfs_io_command "fpunch"
++
++
++echo "Create and format"
++dev=$(_get_scsi_debug_dev 4096 4096 0 4 "lbpws=1 lbpws10=1")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++$XFS_IO_PROG -c "fsync" $dev
++
++echo "Regular fallocate"
++$XFS_IO_PROG -c "falloc 64k 64k" $dev
++
++echo "Insert range"
++$XFS_IO_PROG -c "finsert 128k 64k" $dev
++
++echo "Collapse range"
++$XFS_IO_PROG -c "fcollapse 256k 64k" $dev
++
++echo "Unaligned zero range"
++$XFS_IO_PROG -c "fzero -k 512 512" $dev
++
++echo "Unaligned punch"
++$XFS_IO_PROG -c "fpunch 512 512" $dev
++
++echo "Zero range toobig keep size"
++$XFS_IO_PROG -c "fzero -k 512k 9223372036854775807" $dev
++
++echo "Zero range toobig"
++$XFS_IO_PROG -c "fzero 512k 9223372036854775807" $dev
++
++echo "Zero range to EOD fail w/o keepsize"
++$XFS_IO_PROG -c "fzero 0 9223372036854775807" $dev
++
++echo "Zero range starts past EOD"
++$XFS_IO_PROG -c "fzero -k 900m 1m" $dev
++
++echo "Punch starts past EOD"
++$XFS_IO_PROG -c "fpunch 900m 1m" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++echo "Create w/o unmap or writesame and format"
++dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++$XFS_IO_PROG -c "fsync" $dev
++
++echo "Zero punch, no fallback available"
++$XFS_IO_PROG -c "fpunch 512k 512k" $dev
++
++echo "Zero range, write fallback"
++$XFS_IO_PROG -c "fzero -k 1536k 512k" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/707.out b/tests/generic/707.out
+new file mode 100644
+index 0000000..050c70c
+--- /dev/null
++++ b/tests/generic/707.out
+@@ -0,0 +1,32 @@
++QA output created by 707
++Create and format
++Regular fallocate
++fallocate: Operation not supported
++Insert range
++fallocate: Operation not supported
++Collapse range
++fallocate: Operation not supported
++Unaligned zero range
++fallocate: Invalid argument
++Unaligned punch
++fallocate: Invalid argument
++Zero range toobig keep size
++fallocate: File too large
++Zero range toobig
++fallocate: File too large
++Zero range to EOD fail w/o keepsize
++fallocate: Invalid argument
++Zero range starts past EOD
++fallocate: Invalid argument
++Punch starts past EOD
++fallocate: Invalid argument
++Check contents
++b83f9394092e15bdcda585cd8e776dc6  SCSI_DEBUG_DEV
++Destroy device
++Create w/o unmap or writesame and format
++Zero punch, no fallback available
++fallocate: Operation not supported
++Zero range, write fallback
++Check contents
++0fc6bc93cd0cd97e3cde5ea39ea1185d  SCSI_DEBUG_DEV
++Destroy device
+diff --git a/tests/generic/group b/tests/generic/group
+index 727648c..51a2d63 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -340,3 +340,6 @@
+ 335 auto quick metadata
+ 336 auto quick metadata
+ 337 auto quick metadata
++705 blockdev quick rw
++706 blockdev quick rw
++707 blockdev quick rw
 
 _______________________________________________
 xfs mailing list
