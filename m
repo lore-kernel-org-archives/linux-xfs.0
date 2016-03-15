@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4624A7CA0
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 09:54:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 03AFA304051
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:54:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xyln8YJTycv8mLi4 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:54:21 -0700 (PDT)
-Date: Wed, 16 Mar 2016 22:54:18 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs/073: filter out finobt warning from mkfs.xfs
-Message-ID: <20160316145418.GT11419@eguan.usersys.redhat.com>
-References: <1458129204-31882-1-git-send-email-eguan@redhat.com>
-	<20160316120416.GA18030@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 039937CA0
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 22:42:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A98098F8033
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 20:42:04 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	r7SAyb5MOFtdmEdD for <xfs@oss.sgi.com>;
+	Mon, 14 Mar 2016 20:42:02 -0700 (PDT)
+Date: Tue, 15 Mar 2016 14:41:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 12/12] block: test fallocate for block devices
+Message-ID: <20160315034148.GF30721@dastard>
+References: <20160305003717.28738.98818.stgit@birch.djwong.org>
+	<20160305003837.28738.49794.stgit@birch.djwong.org>
+	<20160305182508.GA25528@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160316120416.GA18030@infradead.org>
+In-Reply-To: <20160305182508.GA25528@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +32,27 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com, linux-ext4@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Wed, Mar 16, 2016 at 05:04:16AM -0700, Christoph Hellwig wrote:
-> On Wed, Mar 16, 2016 at 07:53:24PM +0800, Eryu Guan wrote:
-> > When testing xfs/073 with MKFS_OPTIONS="-m crc=1,finobt=1" set, it fails
-> > due to extra warning about disabling finobt feature:
-> > 
-> >  +warning: finobt not supported without CRC support, disabled.
-> > 
-> > Because xfs/073 disables crc unconditionally and finobt can not be
-> > enabled either.
+On Sat, Mar 05, 2016 at 10:25:08AM -0800, Christoph Hellwig wrote:
+> I'm not sure xfstests is the right fit, as it does not test a file
+> system, but rather block devices.
 > 
-> How about explicitly disabling finobt as well?
+> If people think it should go into xfstests we should at least not
+> add it to the default group, but just to a new bdev group.
 
-I think that's a cleaner way to fix it. Just that some extra work is
-needed to let the test pass with old mkfs.xfs without metadata suport.
+I think it's the right place to test it - we have all the
+infrastructure available to do it (i.e. xfs_io and various block
+devices) and we really need to make sure this stuff works,
+especially if we start to write filesystem code that depends on
+correct behaviour...
 
-Will send v2 shortly. Thanks for the review!
+Cheers,
 
-Eryu
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
