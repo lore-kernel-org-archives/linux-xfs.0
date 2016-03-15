@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2C74F7CA0
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 09:23:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F3AE18F8035
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:23:01 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cuVQWU6ORqT56eHx (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:22:56 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 278FD7F09A
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 14:22:55 +0000 (UTC)
-Date: Wed, 16 Mar 2016 10:22:53 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] io/mmap: new -s option for mmap command to reserve some
-	free space
-Message-ID: <20160316142253.GD8096@bfoster.bfoster>
-References: <1458119884-17942-1-git-send-email-zlang@redhat.com>
-	<20160316123113.GB8096@bfoster.bfoster>
-	<20160316135343.GA2772@dhcp12-237.nay.redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 96E407CA2
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 01:57:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E2426AC001
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 23:56:56 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	gcipzjUl5HnTjoWr for <xfs@oss.sgi.com>;
+	Mon, 14 Mar 2016 23:56:52 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1afiuD-0004DQ-HL
+	for xfs@oss.sgi.com; Tue, 15 Mar 2016 17:56:37 +1100
+Date: Tue, 15 Mar 2016 17:56:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: v4.5.0 released
+Message-ID: <20160315065637.GD11812@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160316135343.GA2772@dhcp12-237.nay.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,230 +25,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1487865176050351677=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Mar 16, 2016 at 09:53:43PM +0800, Zorro Lang wrote:
-> On Wed, Mar 16, 2016 at 08:31:14AM -0400, Brian Foster wrote:
-> > On Wed, Mar 16, 2016 at 05:18:04PM +0800, Zorro Lang wrote:
-> > > This patch come from a test likes below:
-> > > xfs_io -t -f
-> > >        -c "truncate 10000"
-> > >        -c "mmap -rw 0 1024"
-> > >        -c "mremap 8192"
-> > >        file
-> > > 
-> > > mremap always hit ENOMEM error, when it try to remap more space
-> > > without MREMAP_MAYMOVE flag. This's a normal condition, due to
-> > > no free space after mapped 1024 bytes region.
-> > > 
-> > > But if we try to mremap from the original mapped starting point in
-> > > a C program, at first we always do:
-> > > 
-> > >   addr = mmap(NULL, res_size, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-> > >   munmap(addr, res_size);
-> > > 
-> > > Then do:
-> > > 
-> > >   addr = mmap(addr, real_len, ...);
-> > > 
-> > > The "res_size" is bigger than "real_len". This will help us get a
-> > > region between real_len and res_size, which maybe free space. The
-> > > truth is we can't guarantee that this free memory will stay free.
-> > > But this method is still very helpful for reserve some free space
-> > > in short time.
-> > > 
-> > > After merge this patch, we can resolve above mremap problem by run:
-> > > xfs_io -t -f
-> > >        ...
-> > >        -c "mmap -rw -s 8192 0 1024"
-> > >        -c "mremap 8192"
-> > >        ...
-> > > 
-> > > Although we can't sure it's useful 100%, it really have pretty high
-> > > success rate.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > 
-> > I'm a little curious why one would use this as opposed to 'mremap -m' in
-> > the context of xfs_io (it certainly might make sense for an
-> > application). It sounds like any xfstests tests, for example, that is
-> > susceptible to this problem might want to use -m even if -s is employed
-> > as well. Can you provide any additional context on this or do you have a
-> > use case in mind?
-> > 
-> > That said, I'm not against adding this to the xfs_io toolbox and the
-> > code looks Ok to me:
-> 
-> Hi Brian,
-> 
-> I hit this problem when I try to use xfs_io to rewrite LTP's mmap16
-> testcase for xfstests(I know I can backport that mmap16.c into
-> xfstests/src directly, but I just try to use xfs_io). That case
-> from linux commit:
-> 
->   90a8020 vfs: fix data corruption when blocksize < pagesize for
->   mmaped data
-> 
-> For reproduce that bug, I think I shouldn't move page when mremap. So
-> I need mremap to extend mapped space from orignal starting address.
-> 
-> If no this option, xfs_io -c "mmap 0 1024" -c "mremap 8192" will
-> hit ENOMEM error nearly 100%, but if use this option, it nearly always
-> remap successfully(on my test machine). So I think it maybe helpful
-> in the future, if someone try to mremap without "-m" :)
-> 
 
-Sounds good, thanks for the explanation! I might suggest to include this
-use case in the commit log description for future reference (perhaps
-condense it a bit first).
+--===============1487865176050351677==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
+Content-Disposition: inline
 
-Brian
 
-> Thanks,
-> Zorro
-> 
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > 
-> > >  io/mmap.c         | 29 +++++++++++++++++++++++------
-> > >  man/man8/xfs_io.8 | 17 ++++++++++++++++-
-> > >  2 files changed, 39 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/io/mmap.c b/io/mmap.c
-> > > index 5970069..6cd37a9 100644
-> > > --- a/io/mmap.c
-> > > +++ b/io/mmap.c
-> > > @@ -146,6 +146,7 @@ mmap_help(void)
-> > >  " -r -- map with PROT_READ protection\n"
-> > >  " -w -- map with PROT_WRITE protection\n"
-> > >  " -x -- map with PROT_EXEC protection\n"
-> > > +" -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
-> > >  " If no protection mode is specified, all are used by default.\n"
-> > >  "\n"));
-> > >  }
-> > > @@ -156,8 +157,8 @@ mmap_f(
-> > >  	char		**argv)
-> > >  {
-> > >  	off64_t		offset;
-> > > -	ssize_t		length;
-> > > -	void		*address;
-> > > +	ssize_t		length = 0, length2 = 0;
-> > > +	void		*address = NULL;
-> > >  	char		*filename;
-> > >  	size_t		blocksize, sectsize;
-> > >  	int		c, prot = 0;
-> > > @@ -181,7 +182,9 @@ mmap_f(
-> > >  		return 0;
-> > >  	}
-> > >  
-> > > -	while ((c = getopt(argc, argv, "rwx")) != EOF) {
-> > > +	init_cvtnum(&blocksize, &sectsize);
-> > > +
-> > > +	while ((c = getopt(argc, argv, "rwxs:")) != EOF) {
-> > >  		switch (c) {
-> > >  		case 'r':
-> > >  			prot |= PROT_READ;
-> > > @@ -192,6 +195,9 @@ mmap_f(
-> > >  		case 'x':
-> > >  			prot |= PROT_EXEC;
-> > >  			break;
-> > > +		case 's':
-> > > +			length2 = cvtnum(blocksize, sectsize, optarg);
-> > > +			break;
-> > >  		default:
-> > >  			return command_usage(&mmap_cmd);
-> > >  		}
-> > > @@ -202,7 +208,6 @@ mmap_f(
-> > >  	if (optind != argc - 2)
-> > >  		return command_usage(&mmap_cmd);
-> > >  
-> > > -	init_cvtnum(&blocksize, &sectsize);
-> > >  	offset = cvtnum(blocksize, sectsize, argv[optind]);
-> > >  	if (offset < 0) {
-> > >  		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
-> > > @@ -221,7 +226,19 @@ mmap_f(
-> > >  		return 0;
-> > >  	}
-> > >  
-> > > -	address = mmap(NULL, length, prot, MAP_SHARED, file->fd, offset);
-> > > +	/*
-> > > +	 * mmap and munmap memory area of length2 region is helpful to
-> > > +	 * make a region of extendible free memory. It's generally used
-> > > +	 * for later mremap operation(no MREMAP_MAYMOVE flag). But there
-> > > +	 * isn't guarantee that the memory after length (up to length2)
-> > > +	 * will stay free.
-> > > +	 */
-> > > +	if (length2 > length) {
-> > > +		address = mmap(NULL, length2, prot,
-> > > +		               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-> > > +		munmap(address, length2);
-> > > +	}
-> > > +	address = mmap(address, length, prot, MAP_SHARED, file->fd, offset);
-> > >  	if (address == MAP_FAILED) {
-> > >  		perror("mmap");
-> > >  		free(filename);
-> > > @@ -647,7 +664,7 @@ mmap_init(void)
-> > >  	mmap_cmd.argmin = 0;
-> > >  	mmap_cmd.argmax = -1;
-> > >  	mmap_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
-> > > -	mmap_cmd.args = _("[N] | [-rwx] [off len]");
-> > > +	mmap_cmd.args = _("[N] | [-rwx] [-s size] [off len]");
-> > >  	mmap_cmd.oneline =
-> > >  		_("mmap a range in the current file, show mappings");
-> > >  	mmap_cmd.help = mmap_help;
-> > > diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> > > index 33fbe6a..93a8a00 100644
-> > > --- a/man/man8/xfs_io.8
-> > > +++ b/man/man8/xfs_io.8
-> > > @@ -559,7 +559,7 @@ Do not print timing statistics at all.
-> > >  
-> > >  .SH MEMORY MAPPED I/O COMMANDS
-> > >  .TP
-> > > -.BI "mmap [ " N " | [[ \-rwx ] " "offset length " ]]
-> > > +.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
-> > >  With no arguments,
-> > >  .B mmap
-> > >  shows the current mappings. Specifying a single numeric argument
-> > > @@ -575,6 +575,21 @@ PROT_WRITE
-> > >  .RB ( \-w ),
-> > >  and PROT_EXEC
-> > >  .RB ( \-x ).
-> > > +.BI \-s " size"
-> > > +is used to do a mmap(size) && munmap(size) operation at first, try to reserve some
-> > > +extendible free memory space, if
-> > > +.I size
-> > > +is bigger than
-> > > +.I length
-> > > +parameter. But there's not guarantee that the memory after
-> > > +.I length
-> > > +( up to
-> > > +.I size
-> > > +) will stay free.
-> > > +.B e.g.
-> > > +"mmap -rw -s 8192 1024" will mmap 0 ~ 1024 bytes memory, but try to reserve 1024 ~ 8192
-> > > +free space(no guarantee). This free space will helpful for "mremap 8192" without
-> > > +MREMAP_MAYMOVE flag.
-> > >  .TP
-> > >  .B mm
-> > >  See the
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+--ibTvN161/egqYuK8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The xfsprogs repositories have just been updated and tagged with the
+v4.5.0 release tag. It can be found here:
+
+git://oss.sgi.com/xfs/cmds/xfsprogs.git v4.5.0
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.5.0
+
+A signed gzipped-tar archive of the source code is available
+here:
+
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.5.0.tar.gz
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.5.0.tar.gz.sign
+
+The archive is signed with my gpg key (the same one that this
+release announcement is signed with).
+
+Many thanks go to all the contributors to this release. The summary
+of changes since v4.3.0 can be found listed in doc/CHANGES, which I
+have reproduced in part below.
+
+-Dave.
+
+xfsprogs-4.5.0 (15 Mar 2015)
+        - xfs_io: prevent divide-by-zero on random IO (Dmitry Monakhov)
+        - xfs_db: dquot command documentation fixes (Eric Sandeen)
+        - xfs_quota: better command line parsing and documentation
+          (Zorro Lang)
+
+xfsprogs-4.5.0-rc1 (17 Feb 2015)
+        - libxfs: update to match kernel 4.5-rc1 code base
+        - xfs_io: add DAX inode flag support
+        - repair: scalability improvements on large corrupt filesystems
+        - repair: directory rebuild fixes
+        - mdrestore: progress accounting now works
+        - metadump: fix btree block unused region zeroing
+        - quota: timer command fixes (Eric Sandeen)
+        - mkfs: man page cleanups (Eric Sandeen)
+        - xfs_io: reflink, dedupe and other fixes (Darrick Wong)
+        - quota: Q_XGETNEXTQUOTA support (Eric Sandeen)
+        - build cleanups for alternate C librarys (Joshua Kinard, Felix Jan=
+da)
+        - db: check fixes for sparse inodes (Darrick Wong)
+        - various: Fixes for Coverity reports (Vivek Trivedi)
+        - xfs_io: Document zero and help commands (Eric Sandeen)
+        - mkfs: DIO can use logical sector size limits (Eric Sandeen)
+        - repair: don't reset log cycle numbers when zeroing (Brian Foster)
+        - db: add ability to format log to a specific cycle (Brian Foster)
+
+The new head of the master branch is commit:
+
+53cefc4 xfsprogs: Release v4.5.0
+
+New Commits:
+
+Dave Chinner (1):
+      [53cefc4] xfsprogs: Release v4.5.0
+
+Dmitry Monakhov (1):
+      [2ab8ecb] xfs_io: Prevent devide by zero from {pread,pwrite}_random
+
+Eric Sandeen (1):
+      [fa247a5] xfs_db: Fix dquot command docs
+
+Zorro Lang (1):
+      [c614d3b] xfs_quota: modify commands which can't handle multiple types
+
+
+Code Diffstat:
+
+ VERSION              |  2 +-
+ configure.ac         |  2 +-
+ db/dquot.c           |  8 +++++---
+ debian/changelog     |  6 ++++++
+ doc/CHANGES          |  6 ++++++
+ io/pread.c           |  6 +++++-
+ io/pwrite.c          |  6 +++++-
+ man/man8/xfs_db.8    |  4 ++--
+ man/man8/xfs_quota.8 | 14 ++++++-------
+ quota/edit.c         | 60 ++++++++++++++++++++++++++++++++++++------------=
+------
+ quota/quot.c         | 15 +++++++++-----
+ quota/quota.c        | 15 +++++++++-----
+ quota/report.c       | 20 ++++++++++++------
+ 13 files changed, 112 insertions(+), 52 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--ibTvN161/egqYuK8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJW57IkAAoJEK3oKUf0dfodgboQAIh+Xmyx7DY0iH2M8BjuJyET
+ut+dRAdIYooN9biXCM1aeHLaegMIIA1rNQ7t1yf/opHeRVz2uwa7OKhga5LNwLvr
+xEEksJvWMCoz0mGe00N3PhWt34zCLZqkCnfZg0alHa3gSkteT9muqBKXRlFs0x7N
+xcrLZdoTTVsiI7fY3rGOaCcZOo+88sO0nONFFTDPgMVIWo9eIC7enZpNkbrxspkg
+ymTo55vTQdCg+LZx4sryu2JlAFcNcjNbxL8GBlzJhDWMKfzoVSEKDh1pRHge4LfB
+jtqnDXwHhe8W1Ddh1myeJYJgC1HMTxAN5Uf4hTjjUe7/LyX0mwpd/8UlqSnVWDCE
+ApT2uVtnUbAJoOTzgU2Fjyh0CAoHTKHJGhBftw8piGydk0XyFu+SWMSAGNEROEw1
+jgBvvw99PdBMcwe29nr2GaqaCosG7MGQOjVU2vnjluBhs6pU6GgZB1yd/xD/FVVf
+W74G1cQ4ZKO8URmjJCgPecxtLFMBuWmmFjK3eG1SYTlzyBZ/m6FBUsnNdCP732Yo
+XzzT07FNaR+gvcT6gy7wDuAxjz+G9bjPTmIkMt0lTB7r5RgNAN9dor/eTt4fmbRW
+vyE1eKC7qnstwwBoqU+eAbVyPXZ7sv79ObRRjGRkxfF3/hRfL5m2ApTRzqdzY7Ya
+mJVZhG+4V+G47T1iuu/X
+=RfUV
+-----END PGP SIGNATURE-----
+
+--ibTvN161/egqYuK8--
+
+
+--===============1487865176050351677==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1487865176050351677==--
