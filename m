@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 912B27CA0
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 10:05:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0D9717CD9
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 16:05:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 63A93304051
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 08:05:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v37k0ZOXP3HWG0kb (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 08:05:23 -0700 (PDT)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v2] xfs/073: avoid finobt warning from mkfs
-Date: Wed, 16 Mar 2016 23:04:44 +0800
-Message-Id: <1458140684-4723-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1458129204-31882-1-git-send-email-eguan@redhat.com>
-References: <1458129204-31882-1-git-send-email-eguan@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D63D48F8033
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 14:05:29 -0700 (PDT)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id lQQWqVo0h0h7YZ6D for <xfs@oss.sgi.com>;
+	Tue, 15 Mar 2016 14:05:27 -0700 (PDT)
+Date: Tue, 15 Mar 2016 17:05:26 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH v18 19/22] richacl: Add richacl xattr handler
+Message-ID: <20160315210526.GC3658@fieldses.org>
+References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
+	<1456733847-17982-20-git-send-email-agruenba@redhat.com>
+	<20160311141735.GF14808@infradead.org>
+	<20160311141905.GC13178@fieldses.org>
+	<20160315071014.GB19747@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160315071014.GB19747@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,70 +28,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-When testing xfs/073 with MKFS_OPTIONS="-m crc=1,finobt=1" set, it fails
-due to extra warning about disabling finobt feature:
+On Tue, Mar 15, 2016 at 12:10:14AM -0700, Christoph Hellwig wrote:
+> On Fri, Mar 11, 2016 at 09:19:05AM -0500, J. Bruce Fields wrote:
+> > On Fri, Mar 11, 2016 at 06:17:35AM -0800, Christoph Hellwig wrote:
+> > > On Mon, Feb 29, 2016 at 09:17:24AM +0100, Andreas Gruenbacher wrote:
+> > > > Add richacl xattr handler implementing the xattr operations based on the
+> > > > get_richacl and set_richacl inode operations.
+> > > 
+> > > Given all the issues with Posix ACLs and selinux attributes these really
+> > > should be proper syscalls instead of abusing the xattr interface.
+> > 
+> > What are those problems exactly?
+> 
+> That people get confused between the attr used by the xattr syscall
+> interface and the attr used to store things on disk or the protocol.
+> This has happened every time we have non-native support, e.g. XFS, NFS,
+> CIFS, ntfs, etc.  And it's only going to become worse.
 
- +warning: finobt not supported without CRC support, disabled.
+How has that confusion caused problems in practice?
 
-Because xfs/073 disables crc unconditionally and finobt can not be
-enabled either.
-
-Fix it by explicitly disabling finobt as well.
-
-Also remove all meta related mkfs options in _scratch_mkfs_xfs_opts() if
-mkfs.xfs has no metadata support, not only the crc option. So that test
-still passes on distros with such old binaries.
-
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-
-v2:
-- disable finobt explicitly, instead of filtering the warning
-
- common/rc     | 4 ++--
- tests/xfs/073 | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index a34c387..73d2ea6 100644
---- a/common/rc
-+++ b/common/rc
-@@ -444,9 +444,9 @@ _scratch_mkfs_xfs_opts()
- {
- 	mkfs_opts=$*
- 
--	# remove crc related mkfs options if mkfs.xfs doesn't support v5 xfs
-+	# remove metadata related mkfs options if mkfs.xfs doesn't them
- 	if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
--		mkfs_opts=`echo $mkfs_opts | sed "s/-m\s\+crc=.//"`
-+		mkfs_opts=`echo $mkfs_opts | sed "s/-m\s\+\S\+//g"`
- 	fi
- 
- 	_scratch_options mkfs
-diff --git a/tests/xfs/073 b/tests/xfs/073
-index e1335df..e2c1af3 100755
---- a/tests/xfs/073
-+++ b/tests/xfs/073
-@@ -138,7 +138,7 @@ _require_loop
- 
- rm -f $seqres.full
- 
--_scratch_mkfs_xfs -m crc=0 -dsize=41m,agcount=2 | _filter_mkfs 2>/dev/null
-+_scratch_mkfs_xfs -m crc=0,finobt=0 -dsize=41m,agcount=2 | _filter_mkfs 2>/dev/null
- _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
- 
- echo
--- 
-2.5.0
+--b.
 
 _______________________________________________
 xfs mailing list
