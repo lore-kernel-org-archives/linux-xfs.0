@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EAEE57CA0
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 09:22:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 66C04AC001
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:22:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dzn1Fn8dpOzLR1Fi (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:22:04 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 264BD80508
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 14:22:04 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2] io/mremap: modify argument errors of mremap command
-Date: Wed, 16 Mar 2016 22:21:58 +0800
-Message-Id: <1458138118-5272-1-git-send-email-zlang@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 955A47CA0
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 22:31:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62AC930404E
+	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 20:31:00 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	fVraIi2BnIIlqSNF for <xfs@oss.sgi.com>;
+	Mon, 14 Mar 2016 20:30:56 -0700 (PDT)
+Date: Tue, 15 Mar 2016 14:30:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [XFSTESTS v4 0/4] Richacl tests
+Message-ID: <20160315033040.GD30721@dastard>
+References: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
+	<20160314222433.GC11812@dastard>
+	<CAHc6FU4MqOqfzEeig-73An-9tQEgZE2BtWpjrs6ZPWB26x9AxQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU4MqOqfzEeig-73An-9tQEgZE2BtWpjrs6ZPWB26x9AxQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,127 +27,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bfoster@redhat.com, Zorro Lang <zlang@redhat.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: fstests@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>
 
-There're 2 argument errors in mremap command:
-1. If run "mremap 1024 8192", it won't return error and try to
-do "mremap 1024" silently.
+On Tue, Mar 15, 2016 at 12:23:57AM +0100, Andreas Gruenbacher wrote:
+> On Mon, Mar 14, 2016 at 11:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Mar 09, 2016 at 01:06:34PM +0100, Andreas Gruenbacher wrote:
+> >> Hello,
+> >>
+> >> here is a new version of the richacl tests.
+> >
+> > xfstests patches need to be sent to fstests@vger.kernel.org (added
+> > to CC list), not xfs@oss.sgi.com.
+> 
+> Sorry for that.
+> 
+> >> According to feedback from the
+> >> previous posting (http://oss.sgi.com/archives/xfs/2015-12/msg00316.html), each
+> >> of the richacl tests is not run separately, on a new scratch filesystem.
+> >
+> > Oh, my. So, you've taken this one comment:
+> >
+> >         "The rule of thumb is that there should be one xfs test per
+> >         individual regression test. You've got at least 10 separate
+> >         regression tests there, so there should be at least 10
+> >         xfstests.  They should not be aggregated into a single test
+> >         - if you need to run them all at once, then that is what the
+> >         richacl test group is for..."
+> >
+> > And then *implemented your own execution infrastructure* so that the
+> > tests are /listed/ as separate tests in a group file but you still
+> > /run them/ as one test?
+> >
+> > I'm almost lost for words.
+> 
+> What? Each test runs separately; not sure what makes you think otherwise.
 
-2. The "-f" option can't be used, due to it need a new address
-argument as the fifth argument of mremap() syscall(man mremap).
+You added test generic/338, which is *not included in the group
+file* and so is not run by the test harness. then you added
+tests generic/339-348, which have a name suffix that matches the
+script they are supposed to run located in the richacl/ directory.
 
-This patch try to fix above two problems.
+tests generic/339-348 do one thing: they execute generic/338,
+which then looks at the calling program name (e.g. 339-apply-masks)
+strips out the test number to get the script it's supposed to run.
+then it runs $here/richacl/apply-masks, captures all the
+output and only if the test fails (based on the return value of
+the script being run) does it dump the output of the test.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- io/mmap.c         | 25 ++++++++++++++++++-------
- man/man8/xfs_io.8 |  5 ++++-
- 2 files changed, 22 insertions(+), 8 deletions(-)
 
-diff --git a/io/mmap.c b/io/mmap.c
-index 5970069..568102e 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -589,7 +589,7 @@ mremap_help(void)
- "\n"
- " Resizes the mappping, growing or shrinking from the current size.\n"
- " The default stored value is 'X', repeated to fill the range specified.\n"
--" -f -- use the MREMAP_FIXED flag\n"
-+" -f <new_address> -- use MREMAP_FIXED flag to mremap on new_address\n"
- " -m -- use the MREMAP_MAYMOVE flag\n"
- "\n"));
- }
-@@ -600,15 +600,19 @@ mremap_f(
- 	char		**argv)
- {
- 	ssize_t		new_length;
--	void		*new_addr;
-+	void		*new_addr = NULL;
- 	int		flags = 0;
- 	int		c;
- 	size_t		blocksize, sectsize;
- 
--	while ((c = getopt(argc, argv, "fm")) != EOF) {
-+	init_cvtnum(&blocksize, &sectsize);
-+
-+	while ((c = getopt(argc, argv, "f:m")) != EOF) {
- 		switch (c) {
- 		case 'f':
- 			flags = MREMAP_FIXED|MREMAP_MAYMOVE;
-+			new_addr = (void *)cvtnum(blocksize, sectsize,
-+			                          optarg);
- 			break;
- 		case 'm':
- 			flags = MREMAP_MAYMOVE;
-@@ -618,7 +622,9 @@ mremap_f(
- 		}
- 	}
- 
--	init_cvtnum(&blocksize, &sectsize);
-+	if (optind != argc - 1)
-+		return command_usage(&mremap_cmd);
-+
- 	new_length = cvtnum(blocksize, sectsize, argv[optind]);
- 	if (new_length < 0) {
- 		printf(_("non-numeric offset argument -- %s\n"),
-@@ -626,7 +632,12 @@ mremap_f(
- 		return 0;
- 	}
- 
--	new_addr = mremap(mapping->addr, mapping->length, new_length, flags);
-+	if (!new_addr)
-+		new_addr = mremap(mapping->addr, mapping->length,
-+		                  new_length, flags);
-+	else
-+		new_addr = mremap(mapping->addr, mapping->length,
-+		                  new_length, flags, new_addr);
- 	if (new_addr == MAP_FAILED)
- 		perror("mremap");
- 	else {
-@@ -697,9 +708,9 @@ mmap_init(void)
- 	mremap_cmd.altname = "mrm";
- 	mremap_cmd.cfunc = mremap_f;
- 	mremap_cmd.argmin = 1;
--	mremap_cmd.argmax = 2;
-+	mremap_cmd.argmax = 3;
- 	mremap_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
--	mremap_cmd.args = _("[-m|-f] newsize");
-+	mremap_cmd.args = _("[-m|-f <new_address>] newsize");
- 	mremap_cmd.oneline =
- 		_("alters the size of the current memory mapping");
- 	mremap_cmd.help = mremap_help;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 33fbe6a..984b551 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -581,7 +581,7 @@ See the
- .B mmap
- command.
- .TP
--.BI "mremap [ \-f ] [ \-m ] " new_length
-+.BI "mremap [ \-f <new_address> ] [ \-m ] " new_length
- Changes the current mapping size to
- .IR new_length .
- Whether the mapping may be moved is controlled by the flags passed;
-@@ -589,6 +589,9 @@ MREMAP_FIXED
- .RB ( \-f ),
- or MREMAP_MAYMOVE
- .RB ( \-m ).
-+.IR new_length
-+specifies a page-aligned address to which the mapping must be moved. It
-+can be setted to 139946004389888, 4096k or 1g etc.
- .TP
- .B mrm
- See the
+If I renumber tests on commit (which I do regularly), this
+magical "run test generic/338" mechanism breaks completely. It's
+fragile, unmaintainable and *completely unnecessary*.
+
+> I've said again and again that maintaining one set of richacl tests in
+> xfstests and another in the richacl package is going to really
+> painful, and that because of that, I'm trying to find a way of using
+> the same test scripts in both places. That message obviously didn't
+> get through at all though. That is just sad.
+
+Yes, I fully understand that's what you are trying to do. I've
+already explained to you why your approached doesn't work for
+xfstests, which Eric has further explained in his response.
+
+Once we add a test to xfstests, the author *loses control* of the
+test. Nobody "owns" a set of tests - anyone can modify them and we
+expect that *everyone* will modify them. e.g. if someone is changing
+some generic infrastructure, we don't expect them to have to
+understand that there are these magical richacl tests that you can't
+move or filter or change in the same way all the other hundreds of
+tests can be changed. All the tests need to look the same, run the
+same way, and be structured in the same way. Otherwise we are simply
+setting ourselve up with a long term maintenance nightmare.
+
+If you really need to keep an identical copy of the tests somewhere
+else, then make the xfstests versions the master copy and write your
+own harness wrapper around the outside of those scripts. Keeping
+tests in standard format in xfstests is far more important to me
+than whether they get kept in sync with some other external
+package...
+
+Cheers,
+
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
