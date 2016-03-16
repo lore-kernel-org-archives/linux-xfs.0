@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C7F997CD1
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 10:46:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 955587CFB
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 07:31:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A2068F8049
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 08:46:19 -0700 (PDT)
-Received: from hr2.samba.org (hr2.samba.org [144.76.82.148]) by cuda.sgi.com
-	with ESMTP id LMwx9jnT4WGSw0pQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Mar 2016 08:46:17 -0700 (PDT)
-Date: Tue, 15 Mar 2016 08:45:14 -0700
-From: Jeremy Allison <jra@samba.org>
-Subject: Re: [PATCH v18 00/22] Richacls (Core and Ext4)
-Message-ID: <20160315154514.GB39038@jra3>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-	<20160311140134.GA14808@infradead.org>
-	<CAHc6FU4t3yisCM=MXrHRmCja_A8eZOpVa1smJ0gUhv+vuUAuXA@mail.gmail.com>
-	<20160315071103.GC19747@infradead.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6601A8F8035
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 05:31:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ZDZDXCCOCC9nrzYs (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 05:31:17 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 8DD5D2563
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 12:31:16 +0000 (UTC)
+Date: Wed, 16 Mar 2016 08:31:14 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] io/mmap: new -s option for mmap command to reserve some
+	free space
+Message-ID: <20160316123113.GB8096@bfoster.bfoster>
+References: <1458119884-17942-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160315071103.GC19747@infradead.org>
-Reply-To: Jeremy Allison <jra@samba.org>
+In-Reply-To: <1458119884-17942-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,27 +34,190 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Mar 15, 2016 at 12:11:03AM -0700, Christoph Hellwig wrote:
-> On Fri, Mar 11, 2016 at 05:11:51PM +0100, Andreas Gruenbacher wrote:
-> > > while breaking a lot of assumptions,
-> > 
-> > The model is designed specifically to be compliant with the POSIX
-> > permission model. What assumptions are you talking about?
+On Wed, Mar 16, 2016 at 05:18:04PM +0800, Zorro Lang wrote:
+> This patch come from a test likes below:
+> xfs_io -t -f
+>        -c "truncate 10000"
+>        -c "mmap -rw 0 1024"
+>        -c "mremap 8192"
+>        file
 > 
-> People have long learned that we only have 'alloc' permissions.  Any
-> model that mixes allow and deny ACE is a mistake.
+> mremap always hit ENOMEM error, when it try to remap more space
+> without MREMAP_MAYMOVE flag. This's a normal condition, due to
+> no free space after mapped 1024 bytes region.
+> 
+> But if we try to mremap from the original mapped starting point in
+> a C program, at first we always do:
+> 
+>   addr = mmap(NULL, res_size, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+>   munmap(addr, res_size);
+> 
+> Then do:
+> 
+>   addr = mmap(addr, real_len, ...);
+> 
+> The "res_size" is bigger than "real_len". This will help us get a
+> region between real_len and res_size, which maybe free space. The
+> truth is we can't guarantee that this free memory will stay free.
+> But this method is still very helpful for reserve some free space
+> in short time.
+> 
+> After merge this patch, we can resolve above mremap problem by run:
+> xfs_io -t -f
+>        ...
+>        -c "mmap -rw -s 8192 0 1024"
+>        -c "mremap 8192"
+>        ...
+> 
+> Although we can't sure it's useful 100%, it really have pretty high
+> success rate.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
 
-People can also learn and change though :-). One of the
-biggest complaints people deploying Samba on Linux have is the
-incompatible ACL models.
+I'm a little curious why one would use this as opposed to 'mremap -m' in
+the context of xfs_io (it certainly might make sense for an
+application). It sounds like any xfstests tests, for example, that is
+susceptible to this problem might want to use -m even if -s is employed
+as well. Can you provide any additional context on this or do you have a
+use case in mind?
 
-Whilst I have sympathy with your intense dislike of the
-Windows ACL model, this comes down to the core of "who
-do we serve ?" IMHO we should serve the users (although
-I must confess I'd look awful in a TRON suit :-).
+That said, I'm not against adding this to the xfs_io toolbox and the
+code looks Ok to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  io/mmap.c         | 29 +++++++++++++++++++++++------
+>  man/man8/xfs_io.8 | 17 ++++++++++++++++-
+>  2 files changed, 39 insertions(+), 7 deletions(-)
+> 
+> diff --git a/io/mmap.c b/io/mmap.c
+> index 5970069..6cd37a9 100644
+> --- a/io/mmap.c
+> +++ b/io/mmap.c
+> @@ -146,6 +146,7 @@ mmap_help(void)
+>  " -r -- map with PROT_READ protection\n"
+>  " -w -- map with PROT_WRITE protection\n"
+>  " -x -- map with PROT_EXEC protection\n"
+> +" -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
+>  " If no protection mode is specified, all are used by default.\n"
+>  "\n"));
+>  }
+> @@ -156,8 +157,8 @@ mmap_f(
+>  	char		**argv)
+>  {
+>  	off64_t		offset;
+> -	ssize_t		length;
+> -	void		*address;
+> +	ssize_t		length = 0, length2 = 0;
+> +	void		*address = NULL;
+>  	char		*filename;
+>  	size_t		blocksize, sectsize;
+>  	int		c, prot = 0;
+> @@ -181,7 +182,9 @@ mmap_f(
+>  		return 0;
+>  	}
+>  
+> -	while ((c = getopt(argc, argv, "rwx")) != EOF) {
+> +	init_cvtnum(&blocksize, &sectsize);
+> +
+> +	while ((c = getopt(argc, argv, "rwxs:")) != EOF) {
+>  		switch (c) {
+>  		case 'r':
+>  			prot |= PROT_READ;
+> @@ -192,6 +195,9 @@ mmap_f(
+>  		case 'x':
+>  			prot |= PROT_EXEC;
+>  			break;
+> +		case 's':
+> +			length2 = cvtnum(blocksize, sectsize, optarg);
+> +			break;
+>  		default:
+>  			return command_usage(&mmap_cmd);
+>  		}
+> @@ -202,7 +208,6 @@ mmap_f(
+>  	if (optind != argc - 2)
+>  		return command_usage(&mmap_cmd);
+>  
+> -	init_cvtnum(&blocksize, &sectsize);
+>  	offset = cvtnum(blocksize, sectsize, argv[optind]);
+>  	if (offset < 0) {
+>  		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
+> @@ -221,7 +226,19 @@ mmap_f(
+>  		return 0;
+>  	}
+>  
+> -	address = mmap(NULL, length, prot, MAP_SHARED, file->fd, offset);
+> +	/*
+> +	 * mmap and munmap memory area of length2 region is helpful to
+> +	 * make a region of extendible free memory. It's generally used
+> +	 * for later mremap operation(no MREMAP_MAYMOVE flag). But there
+> +	 * isn't guarantee that the memory after length (up to length2)
+> +	 * will stay free.
+> +	 */
+> +	if (length2 > length) {
+> +		address = mmap(NULL, length2, prot,
+> +		               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+> +		munmap(address, length2);
+> +	}
+> +	address = mmap(address, length, prot, MAP_SHARED, file->fd, offset);
+>  	if (address == MAP_FAILED) {
+>  		perror("mmap");
+>  		free(filename);
+> @@ -647,7 +664,7 @@ mmap_init(void)
+>  	mmap_cmd.argmin = 0;
+>  	mmap_cmd.argmax = -1;
+>  	mmap_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
+> -	mmap_cmd.args = _("[N] | [-rwx] [off len]");
+> +	mmap_cmd.args = _("[N] | [-rwx] [-s size] [off len]");
+>  	mmap_cmd.oneline =
+>  		_("mmap a range in the current file, show mappings");
+>  	mmap_cmd.help = mmap_help;
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 33fbe6a..93a8a00 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -559,7 +559,7 @@ Do not print timing statistics at all.
+>  
+>  .SH MEMORY MAPPED I/O COMMANDS
+>  .TP
+> -.BI "mmap [ " N " | [[ \-rwx ] " "offset length " ]]
+> +.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
+>  With no arguments,
+>  .B mmap
+>  shows the current mappings. Specifying a single numeric argument
+> @@ -575,6 +575,21 @@ PROT_WRITE
+>  .RB ( \-w ),
+>  and PROT_EXEC
+>  .RB ( \-x ).
+> +.BI \-s " size"
+> +is used to do a mmap(size) && munmap(size) operation at first, try to reserve some
+> +extendible free memory space, if
+> +.I size
+> +is bigger than
+> +.I length
+> +parameter. But there's not guarantee that the memory after
+> +.I length
+> +( up to
+> +.I size
+> +) will stay free.
+> +.B e.g.
+> +"mmap -rw -s 8192 1024" will mmap 0 ~ 1024 bytes memory, but try to reserve 1024 ~ 8192
+> +free space(no guarantee). This free space will helpful for "mremap 8192" without
+> +MREMAP_MAYMOVE flag.
+>  .TP
+>  .B mm
+>  See the
+> -- 
+> 2.5.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
