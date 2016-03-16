@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A68C37CE6
+	by oss.sgi.com (Postfix) with ESMTP id 66EF17CB4
 	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 17:20:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 79E4E304048
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1D27D304048
 	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:20:37 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xcJdXD7nyr71wZS7 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id NVxnB0rwP43HELlN (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:20:36 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:20:31 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v20 20/23] richacl: Add richacl xattr handler
-Date: Wed, 16 Mar 2016 23:19:00 +0100
-Message-Id: <1458166743-18488-21-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v20 19/23] richacl: xattr mapping functions
+Date: Wed, 16 Mar 2016 23:18:59 +0100
+Message-Id: <1458166743-18488-20-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1458166743-18488-1-git-send-email-agruenba@redhat.com>
 References: <1458166743-18488-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,116 +31,310 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Add richacl xattr handler implementing the xattr operations based on the
-get_richacl and set_richacl inode operations.
+Map between "system.richacl" xattrs and the in-kernel representation.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/richacl_xattr.c            | 74 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl_xattr.h |  2 ++
- 2 files changed, 76 insertions(+)
+ fs/Makefile                        |   2 +-
+ fs/richacl_xattr.c                 | 161 +++++++++++++++++++++++++++++++++++++
+ include/linux/richacl_xattr.h      |  29 +++++++
+ include/uapi/linux/Kbuild          |   1 +
+ include/uapi/linux/richacl_xattr.h |  44 ++++++++++
+ include/uapi/linux/xattr.h         |   2 +
+ 6 files changed, 238 insertions(+), 1 deletion(-)
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
 
-diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
-index dc1ad36..5cb5e11 100644
---- a/fs/richacl_xattr.c
-+++ b/fs/richacl_xattr.c
-@@ -18,7 +18,9 @@
- #include <linux/fs.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-+#include <linux/xattr.h>
- #include <linux/richacl_xattr.h>
-+#include <uapi/linux/xattr.h>
+diff --git a/fs/Makefile b/fs/Makefile
+index 884d7a4..a6f15f1 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -48,7 +48,7 @@ obj-$(CONFIG_COREDUMP)		+= coredump.o
+ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
  
- /**
-  * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
-@@ -159,3 +161,75 @@ richacl_to_xattr(struct user_namespace *user_ns,
- 	return real_size;
- }
- EXPORT_SYMBOL_GPL(richacl_to_xattr);
+ obj-$(CONFIG_FHANDLE)		+= fhandle.o
+-obj-$(CONFIG_FS_RICHACL)	+= richacl.o
++obj-$(CONFIG_FS_RICHACL)	+= richacl.o richacl_xattr.o
+ 
+ obj-y				+= quota/
+ 
+diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
+new file mode 100644
+index 0000000..dc1ad36
+--- /dev/null
++++ b/fs/richacl_xattr.c
+@@ -0,0 +1,161 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
 +
-+static bool
-+richacl_xattr_list(struct dentry *dentry)
-+{
-+	return IS_RICHACL(d_backing_inode(dentry));
-+}
++#include <linux/sched.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/richacl_xattr.h>
 +
-+static int
-+richacl_xattr_get(const struct xattr_handler *handler,
-+		  struct dentry *dentry, const char *name, void *buffer,
-+		  size_t buffer_size)
++/**
++ * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
++ */
++struct richacl *
++richacl_from_xattr(struct user_namespace *user_ns,
++		   const void *value, size_t size, int invalid_error)
 +{
-+	struct inode *inode = d_backing_inode(dentry);
++	const struct richacl_xattr *xattr_acl = value;
++	const struct richace_xattr *xattr_ace = (void *)(xattr_acl + 1);
 +	struct richacl *acl;
-+	int error;
++	struct richace *ace;
++	int count;
 +
-+	if (*name)
-+		return -EINVAL;
-+	if (!IS_RICHACL(inode))
-+		return -EOPNOTSUPP;
-+	if (S_ISLNK(inode->i_mode))
-+		return -EOPNOTSUPP;
-+	acl = get_richacl(inode);
-+	if (IS_ERR(acl))
-+		return PTR_ERR(acl);
-+	if (acl == NULL)
-+		return -ENODATA;
-+	error = richacl_to_xattr(current_user_ns(), acl, buffer, buffer_size);
-+	richacl_put(acl);
-+	return error;
-+}
++	if (size < sizeof(*xattr_acl) ||
++	    xattr_acl->a_version != RICHACL_XATTR_VERSION ||
++	    (xattr_acl->a_flags & ~RICHACL_VALID_FLAGS))
++		goto invalid;
++	size -= sizeof(*xattr_acl);
++	count = le16_to_cpu(xattr_acl->a_count);
++	if (count > RICHACL_XATTR_MAX_COUNT)
++		goto invalid;
++	if (size != count * sizeof(*xattr_ace))
++		goto invalid;
 +
-+static int
-+richacl_xattr_set(const struct xattr_handler *handler,
-+		  struct dentry *dentry, const char *name,
-+		  const void *value, size_t size, int flags)
-+{
-+	struct inode *inode = d_backing_inode(dentry);
-+	struct richacl *acl = NULL;
-+	int ret;
++	acl = richacl_alloc(count, GFP_NOFS);
++	if (!acl)
++		return ERR_PTR(-ENOMEM);
 +
-+	if (*name)
-+		return -EINVAL;
-+	if (!IS_RICHACL(inode))
-+		return -EOPNOTSUPP;
-+	if (!inode->i_op->set_richacl)
-+		return -EOPNOTSUPP;
++	acl->a_flags = xattr_acl->a_flags;
++	acl->a_owner_mask = le32_to_cpu(xattr_acl->a_owner_mask);
++	if (acl->a_owner_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++	acl->a_group_mask = le32_to_cpu(xattr_acl->a_group_mask);
++	if (acl->a_group_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++	acl->a_other_mask = le32_to_cpu(xattr_acl->a_other_mask);
++	if (acl->a_other_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
 +
-+	if (!uid_eq(current_fsuid(), inode->i_uid) &&
-+	    inode_permission(inode, MAY_CHMOD) &&
-+	    !capable(CAP_FOWNER))
-+		return -EPERM;
++	richacl_for_each_entry(ace, acl) {
++		ace->e_type  = le16_to_cpu(xattr_ace->e_type);
++		ace->e_flags = le16_to_cpu(xattr_ace->e_flags);
++		ace->e_mask  = le32_to_cpu(xattr_ace->e_mask);
 +
-+	if (value) {
-+		acl = richacl_from_xattr(current_user_ns(), value, size,
-+					 -EINVAL);
-+		if (IS_ERR(acl))
-+			return PTR_ERR(acl);
++		if (ace->e_flags & ~RICHACE_VALID_FLAGS)
++			goto put_invalid;
++		if (ace->e_flags & RICHACE_SPECIAL_WHO) {
++			ace->e_id.special = le32_to_cpu(xattr_ace->e_id);
++			if (ace->e_id.special > RICHACE_EVERYONE_SPECIAL_ID)
++				goto put_invalid;
++		} else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP) {
++			u32 id = le32_to_cpu(xattr_ace->e_id);
++
++			ace->e_id.gid = make_kgid(user_ns, id);
++			if (!gid_valid(ace->e_id.gid))
++				goto put_invalid;
++		} else {
++			u32 id = le32_to_cpu(xattr_ace->e_id);
++
++			ace->e_id.uid = make_kuid(user_ns, id);
++			if (!uid_valid(ace->e_id.uid))
++				goto put_invalid;
++		}
++		if (ace->e_type > RICHACE_ACCESS_DENIED_ACE_TYPE ||
++		    (ace->e_mask & ~RICHACE_VALID_MASK))
++			goto put_invalid;
++
++		xattr_ace++;
 +	}
 +
-+	ret = inode->i_op->set_richacl(inode, acl);
++	return acl;
++
++put_invalid:
 +	richacl_put(acl);
-+	return ret;
++invalid:
++	return ERR_PTR(invalid_error);
 +}
++EXPORT_SYMBOL_GPL(richacl_from_xattr);
 +
-+struct xattr_handler richacl_xattr_handler = {
-+	.name = XATTR_NAME_RICHACL,
-+	.list = richacl_xattr_list,
-+	.get = richacl_xattr_get,
-+	.set = richacl_xattr_set,
-+};
-+EXPORT_SYMBOL(richacl_xattr_handler);
++/**
++ * richacl_xattr_size  -  compute the size of the xattr representation of @acl
++ */
++size_t
++richacl_xattr_size(const struct richacl *acl)
++{
++	size_t size = sizeof(struct richacl_xattr);
++
++	size += sizeof(struct richace_xattr) * acl->a_count;
++	return size;
++}
++EXPORT_SYMBOL_GPL(richacl_xattr_size);
++
++/**
++ * richacl_to_xattr  -  convert @acl into its xattr representation
++ * @acl:	the richacl to convert
++ * @buffer:	buffer for the result
++ * @size:	size of @buffer
++ */
++int
++richacl_to_xattr(struct user_namespace *user_ns,
++		 const struct richacl *acl, void *buffer, size_t size)
++{
++	struct richacl_xattr *xattr_acl = buffer;
++	struct richace_xattr *xattr_ace;
++	const struct richace *ace;
++	size_t real_size;
++
++	real_size = richacl_xattr_size(acl);
++	if (!buffer)
++		return real_size;
++	if (real_size > size)
++		return -ERANGE;
++
++	xattr_acl->a_version = RICHACL_XATTR_VERSION;
++	xattr_acl->a_flags = acl->a_flags;
++	xattr_acl->a_count = cpu_to_le16(acl->a_count);
++
++	xattr_acl->a_owner_mask = cpu_to_le32(acl->a_owner_mask);
++	xattr_acl->a_group_mask = cpu_to_le32(acl->a_group_mask);
++	xattr_acl->a_other_mask = cpu_to_le32(acl->a_other_mask);
++
++	xattr_ace = (void *)(xattr_acl + 1);
++	richacl_for_each_entry(ace, acl) {
++		xattr_ace->e_type = cpu_to_le16(ace->e_type);
++		xattr_ace->e_flags = cpu_to_le16(ace->e_flags);
++		xattr_ace->e_mask = cpu_to_le32(ace->e_mask);
++		if (ace->e_flags & RICHACE_SPECIAL_WHO)
++			xattr_ace->e_id = cpu_to_le32(ace->e_id.special);
++		else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP)
++			xattr_ace->e_id =
++				cpu_to_le32(from_kgid(user_ns, ace->e_id.gid));
++		else
++			xattr_ace->e_id =
++				cpu_to_le32(from_kuid(user_ns, ace->e_id.uid));
++		xattr_ace++;
++	}
++	return real_size;
++}
++EXPORT_SYMBOL_GPL(richacl_to_xattr);
 diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
-index 0efa14b..6c6adb1 100644
---- a/include/linux/richacl_xattr.h
+new file mode 100644
+index 0000000..0efa14b
+--- /dev/null
 +++ b/include/linux/richacl_xattr.h
-@@ -26,4 +26,6 @@ extern size_t richacl_xattr_size(const struct richacl *);
- extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
- 			    void *, size_t);
- 
-+extern struct xattr_handler richacl_xattr_handler;
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
 +
- #endif /* __RICHACL_XATTR_H */
++#ifndef __RICHACL_XATTR_H
++#define __RICHACL_XATTR_H
++
++#include <uapi/linux/richacl_xattr.h>
++#include <linux/richacl.h>
++
++extern struct richacl *richacl_from_xattr(struct user_namespace *, const void *,
++					  size_t, int);
++extern size_t richacl_xattr_size(const struct richacl *);
++extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
++			    void *, size_t);
++
++#endif /* __RICHACL_XATTR_H */
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index 6e05dc8..14b8a06 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -352,6 +352,7 @@ header-y += reiserfs_fs.h
+ header-y += reiserfs_xattr.h
+ header-y += resource.h
+ header-y += richacl.h
++header-y += richacl_xattr.h
+ header-y += rfkill.h
+ header-y += romfs_fs.h
+ header-y += rose.h
+diff --git a/include/uapi/linux/richacl_xattr.h b/include/uapi/linux/richacl_xattr.h
+new file mode 100644
+index 0000000..20da204
+--- /dev/null
++++ b/include/uapi/linux/richacl_xattr.h
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This file is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This file is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ */
++
++#ifndef __UAPI_RICHACL_XATTR_H
++#define __UAPI_RICHACL_XATTR_H
++
++#include <linux/types.h>
++#include <linux/limits.h>
++
++struct richace_xattr {
++	__le16	e_type;
++	__le16	e_flags;
++	__le32	e_mask;
++	__le32	e_id;
++};
++
++struct richacl_xattr {
++	__u8	a_version;
++	__u8	a_flags;
++	__le16	a_count;
++	__le32	a_owner_mask;
++	__le32	a_group_mask;
++	__le32	a_other_mask;
++};
++
++#define RICHACL_XATTR_VERSION 0
++#define RICHACL_XATTR_MAX_COUNT \
++	((XATTR_SIZE_MAX - sizeof(struct richacl_xattr)) / \
++	 sizeof(struct richace_xattr))
++
++#endif  /* __UAPI_RICHACL_XATTR_H */
+diff --git a/include/uapi/linux/xattr.h b/include/uapi/linux/xattr.h
+index 1590c49..1996903 100644
+--- a/include/uapi/linux/xattr.h
++++ b/include/uapi/linux/xattr.h
+@@ -73,5 +73,7 @@
+ #define XATTR_POSIX_ACL_DEFAULT  "posix_acl_default"
+ #define XATTR_NAME_POSIX_ACL_DEFAULT XATTR_SYSTEM_PREFIX XATTR_POSIX_ACL_DEFAULT
+ 
++#define XATTR_RICHACL "richacl"
++#define XATTR_NAME_RICHACL XATTR_SYSTEM_PREFIX XATTR_RICHACL
+ 
+ #endif /* _UAPI_LINUX_XATTR_H */
 -- 
 2.5.0
 
