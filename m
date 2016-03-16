@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 96E407CA2
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 01:57:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E2426AC001
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 23:56:56 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	gcipzjUl5HnTjoWr for <xfs@oss.sgi.com>;
-	Mon, 14 Mar 2016 23:56:52 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1afiuD-0004DQ-HL
-	for xfs@oss.sgi.com; Tue, 15 Mar 2016 17:56:37 +1100
-Date: Tue, 15 Mar 2016 17:56:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: v4.5.0 released
-Message-ID: <20160315065637.GD11812@dastard>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 54C4D7CE7
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:31:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96704AC001
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 02:31:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 2sxxBhxt0aUAcMOL (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 02:31:51 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 9FD424DE96
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 09:31:50 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] io/mremap: modify argument errors of mremap command
+Date: Wed, 16 Mar 2016 17:31:47 +0800
+Message-Id: <1458120707-25219-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,146 +25,144 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1487865176050351677=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Zorro Lang <zlang@redhat.com>
+
+There're 2 argument errors in mremap command:
+1. If run "mremap 1024 8192", it won't return error and try to
+do "mremap 1024" silently.
+
+2. The "-f" option can't be used, due to it need a new address
+argument as the fifth argument of mremap() syscall(man mremap).
+
+This patch try to fix above two problems.
+
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+
+Hi,
+
+I'm not sure pass a address argument to mremap command is right or
+wrong. And maybe I should use strtoul() to instead of cvtnum() for
+address argument.
+
+At least I did some simple test with this patch on my machine, results are:
+"mremap -f 139946004389888 2048"  PASS
+"mremap -f 4096k 2048"            PASS
+"mremap -f 1g 2048"               PASS
+"mremap -f 4096 2048"             FAIL as 'Permission denied'
+
+What do you think of this patch?
+
+Thanks,
+Zorro
 
 
---===============1487865176050351677==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
-Content-Disposition: inline
+ io/mmap.c         | 22 +++++++++++++++-------
+ man/man8/xfs_io.8 |  5 ++++-
+ 2 files changed, 19 insertions(+), 8 deletions(-)
 
-
---ibTvN161/egqYuK8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi folks,
-
-The xfsprogs repositories have just been updated and tagged with the
-v4.5.0 release tag. It can be found here:
-
-git://oss.sgi.com/xfs/cmds/xfsprogs.git v4.5.0
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.5.0
-
-A signed gzipped-tar archive of the source code is available
-here:
-
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.5.0.tar.gz
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-4.5.0.tar.gz.sign
-
-The archive is signed with my gpg key (the same one that this
-release announcement is signed with).
-
-Many thanks go to all the contributors to this release. The summary
-of changes since v4.3.0 can be found listed in doc/CHANGES, which I
-have reproduced in part below.
-
--Dave.
-
-xfsprogs-4.5.0 (15 Mar 2015)
-        - xfs_io: prevent divide-by-zero on random IO (Dmitry Monakhov)
-        - xfs_db: dquot command documentation fixes (Eric Sandeen)
-        - xfs_quota: better command line parsing and documentation
-          (Zorro Lang)
-
-xfsprogs-4.5.0-rc1 (17 Feb 2015)
-        - libxfs: update to match kernel 4.5-rc1 code base
-        - xfs_io: add DAX inode flag support
-        - repair: scalability improvements on large corrupt filesystems
-        - repair: directory rebuild fixes
-        - mdrestore: progress accounting now works
-        - metadump: fix btree block unused region zeroing
-        - quota: timer command fixes (Eric Sandeen)
-        - mkfs: man page cleanups (Eric Sandeen)
-        - xfs_io: reflink, dedupe and other fixes (Darrick Wong)
-        - quota: Q_XGETNEXTQUOTA support (Eric Sandeen)
-        - build cleanups for alternate C librarys (Joshua Kinard, Felix Jan=
-da)
-        - db: check fixes for sparse inodes (Darrick Wong)
-        - various: Fixes for Coverity reports (Vivek Trivedi)
-        - xfs_io: Document zero and help commands (Eric Sandeen)
-        - mkfs: DIO can use logical sector size limits (Eric Sandeen)
-        - repair: don't reset log cycle numbers when zeroing (Brian Foster)
-        - db: add ability to format log to a specific cycle (Brian Foster)
-
-The new head of the master branch is commit:
-
-53cefc4 xfsprogs: Release v4.5.0
-
-New Commits:
-
-Dave Chinner (1):
-      [53cefc4] xfsprogs: Release v4.5.0
-
-Dmitry Monakhov (1):
-      [2ab8ecb] xfs_io: Prevent devide by zero from {pread,pwrite}_random
-
-Eric Sandeen (1):
-      [fa247a5] xfs_db: Fix dquot command docs
-
-Zorro Lang (1):
-      [c614d3b] xfs_quota: modify commands which can't handle multiple types
-
-
-Code Diffstat:
-
- VERSION              |  2 +-
- configure.ac         |  2 +-
- db/dquot.c           |  8 +++++---
- debian/changelog     |  6 ++++++
- doc/CHANGES          |  6 ++++++
- io/pread.c           |  6 +++++-
- io/pwrite.c          |  6 +++++-
- man/man8/xfs_db.8    |  4 ++--
- man/man8/xfs_quota.8 | 14 ++++++-------
- quota/edit.c         | 60 ++++++++++++++++++++++++++++++++++++------------=
-------
- quota/quot.c         | 15 +++++++++-----
- quota/quota.c        | 15 +++++++++-----
- quota/report.c       | 20 ++++++++++++------
- 13 files changed, 112 insertions(+), 52 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---ibTvN161/egqYuK8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJW57IkAAoJEK3oKUf0dfodgboQAIh+Xmyx7DY0iH2M8BjuJyET
-ut+dRAdIYooN9biXCM1aeHLaegMIIA1rNQ7t1yf/opHeRVz2uwa7OKhga5LNwLvr
-xEEksJvWMCoz0mGe00N3PhWt34zCLZqkCnfZg0alHa3gSkteT9muqBKXRlFs0x7N
-xcrLZdoTTVsiI7fY3rGOaCcZOo+88sO0nONFFTDPgMVIWo9eIC7enZpNkbrxspkg
-ymTo55vTQdCg+LZx4sryu2JlAFcNcjNbxL8GBlzJhDWMKfzoVSEKDh1pRHge4LfB
-jtqnDXwHhe8W1Ddh1myeJYJgC1HMTxAN5Uf4hTjjUe7/LyX0mwpd/8UlqSnVWDCE
-ApT2uVtnUbAJoOTzgU2Fjyh0CAoHTKHJGhBftw8piGydk0XyFu+SWMSAGNEROEw1
-jgBvvw99PdBMcwe29nr2GaqaCosG7MGQOjVU2vnjluBhs6pU6GgZB1yd/xD/FVVf
-W74G1cQ4ZKO8URmjJCgPecxtLFMBuWmmFjK3eG1SYTlzyBZ/m6FBUsnNdCP732Yo
-XzzT07FNaR+gvcT6gy7wDuAxjz+G9bjPTmIkMt0lTB7r5RgNAN9dor/eTt4fmbRW
-vyE1eKC7qnstwwBoqU+eAbVyPXZ7sv79ObRRjGRkxfF3/hRfL5m2ApTRzqdzY7Ya
-mJVZhG+4V+G47T1iuu/X
-=RfUV
------END PGP SIGNATURE-----
-
---ibTvN161/egqYuK8--
-
-
---===============1487865176050351677==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/io/mmap.c b/io/mmap.c
+index 5970069..672ee61 100644
+--- a/io/mmap.c
++++ b/io/mmap.c
+@@ -589,7 +589,7 @@ mremap_help(void)
+ "\n"
+ " Resizes the mappping, growing or shrinking from the current size.\n"
+ " The default stored value is 'X', repeated to fill the range specified.\n"
+-" -f -- use the MREMAP_FIXED flag\n"
++" -f <new_address> -- use the MREMAP_FIXED flag to mremap on the new address\n"
+ " -m -- use the MREMAP_MAYMOVE flag\n"
+ "\n"));
+ }
+@@ -600,15 +600,18 @@ mremap_f(
+ 	char		**argv)
+ {
+ 	ssize_t		new_length;
+-	void		*new_addr;
++	void		*new_addr = NULL;
+ 	int		flags = 0;
+ 	int		c;
+ 	size_t		blocksize, sectsize;
+ 
+-	while ((c = getopt(argc, argv, "fm")) != EOF) {
++	init_cvtnum(&blocksize, &sectsize);
++
++	while ((c = getopt(argc, argv, "f:m")) != EOF) {
+ 		switch (c) {
+ 		case 'f':
+ 			flags = MREMAP_FIXED|MREMAP_MAYMOVE;
++			new_addr = (void *)cvtnum(blocksize, sectsize, optarg);
+ 			break;
+ 		case 'm':
+ 			flags = MREMAP_MAYMOVE;
+@@ -618,7 +621,9 @@ mremap_f(
+ 		}
+ 	}
+ 
+-	init_cvtnum(&blocksize, &sectsize);
++	if (optind != argc - 1)
++		return command_usage(&mremap_cmd);
++
+ 	new_length = cvtnum(blocksize, sectsize, argv[optind]);
+ 	if (new_length < 0) {
+ 		printf(_("non-numeric offset argument -- %s\n"),
+@@ -626,7 +631,10 @@ mremap_f(
+ 		return 0;
+ 	}
+ 
+-	new_addr = mremap(mapping->addr, mapping->length, new_length, flags);
++	if (!new_addr)
++		new_addr = mremap(mapping->addr, mapping->length, new_length, flags);
++	else
++		new_addr = mremap(mapping->addr, mapping->length, new_length, flags, new_addr);
+ 	if (new_addr == MAP_FAILED)
+ 		perror("mremap");
+ 	else {
+@@ -697,9 +705,9 @@ mmap_init(void)
+ 	mremap_cmd.altname = "mrm";
+ 	mremap_cmd.cfunc = mremap_f;
+ 	mremap_cmd.argmin = 1;
+-	mremap_cmd.argmax = 2;
++	mremap_cmd.argmax = 3;
+ 	mremap_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
+-	mremap_cmd.args = _("[-m|-f] newsize");
++	mremap_cmd.args = _("[-m|-f <new_address>] newsize");
+ 	mremap_cmd.oneline =
+ 		_("alters the size of the current memory mapping");
+ 	mremap_cmd.help = mremap_help;
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 33fbe6a..984b551 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -581,7 +581,7 @@ See the
+ .B mmap
+ command.
+ .TP
+-.BI "mremap [ \-f ] [ \-m ] " new_length
++.BI "mremap [ \-f <new_address> ] [ \-m ] " new_length
+ Changes the current mapping size to
+ .IR new_length .
+ Whether the mapping may be moved is controlled by the flags passed;
+@@ -589,6 +589,9 @@ MREMAP_FIXED
+ .RB ( \-f ),
+ or MREMAP_MAYMOVE
+ .RB ( \-m ).
++.IR new_length
++specifies a page-aligned address to which the mapping must be moved. It
++can be setted to 139946004389888, 4096k or 1g etc.
+ .TP
+ .B mrm
+ See the
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1487865176050351677==--
