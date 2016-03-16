@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB4907CDF
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 19:34:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5E4D17CF5
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 06:44:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4564EAC001
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 17:34:46 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 9DYNztOCb7FP46xK for <xfs@oss.sgi.com>;
-	Tue, 15 Mar 2016 17:34:44 -0700 (PDT)
-Received: from Liberator.local (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 0A21E481F
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 19:34:42 -0500 (CDT)
-Subject: Re: new fs, xfs_admin new label, metadata corruption detected
-References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56E8AA22.7080301@sandeen.net>
-Date: Tue, 15 Mar 2016 19:34:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 145F2304039
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:44:49 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id HeqBuiHFUvzqIBML (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:44:46 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/3] xfs: don't release bios on completion immediately
+Date: Wed, 16 Mar 2016 12:44:40 +0100
+Message-Id: <1458128681-10869-3-git-send-email-hch@lst.de>
+In-Reply-To: <1458128681-10869-1-git-send-email-hch@lst.de>
+References: <1458128681-10869-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +23,199 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
 
-On 3/15/16 6:08 PM, Chris Murphy wrote:
-> Is this expected? File system continues to work OK, sha256sum on the
-> single file on this fs matches the source, but the metadata corruption
-> messages are a bit scary so figured I'd ask about it.
-> 
-> Filesystem created with
-> xfsprogs-4.3.0-1.fc23
-> kernel-4.4.4-300.fc23.x86_64
-> 
-> mkfs.xfs defaults used on an LVM thinly provisioned volume on a single
-> spinning disk.
-> 
-> # xfs_info /dev/mapper/VG-testxfs
-> meta-data=/dev/mapper/VG-testxfs isize=512    agcount=23, agsize=399984 blks
-                                                ^^^^^^^^^^
+Completion of an ioend requires us to walk the bufferhead list to
+end writback on all the bufferheads. This, in turn, is needed so
+that we can end writeback on all the pages we just did IO on.
 
-It seems that you left a growfs step out of it, where does that come in
-to the testcase?
+To remove our dependency on bufferheads in writeback, we need to
+turn this around the other way - we need to walk the pages we've
+just completed IO on, and then walk the buffers attached to the
+pages and complete their IO. In doing this, we remove the
+requirement for the ioend to track bufferheads directly.
 
--Eric
+To enable IO completion to walk all the pages we've submitted IO on,
+we need to keep the bios that we used for IO around until the ioend
+has been completed. We can do this simply by chaining the bios to
+the ioend at completion time, and then walking their pages directly
+just before destroying the ioend.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[hch: changed the xfs_finish_page_writeback calling convention]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 95 +++++++++++++++++++++++++++++++++++++++----------------
+ fs/xfs/xfs_aops.h |  5 +--
+ 2 files changed, 71 insertions(+), 29 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 17cc6cc..5928770 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -84,20 +84,64 @@ xfs_find_bdev_for_inode(
+ }
+ 
+ /*
+- * We're now finished for good with this ioend structure.
+- * Update the page state via the associated buffer_heads,
+- * release holds on the inode and bio, and finally free
+- * up memory.  Do not use the ioend after this.
++ * We're now finished for good with this page.  Update the page state via the
++ * associated buffer_heads, paying attention to the start and end offsets that
++ * we need to process on the page.
++ */
++static void
++xfs_finish_page_writeback(
++	struct inode		*inode,
++	struct bio_vec		*bvec,
++	int			error)
++{
++	unsigned int		blockmask = (1 << inode->i_blkbits) - 1;
++	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
++	struct buffer_head	*head, *bh;
++	unsigned int		off = 0;
++
++	ASSERT(bvec->bv_offset < PAGE_SIZE);
++	ASSERT((bvec->bv_offset & blockmask) == 0);
++	ASSERT(end < PAGE_SIZE);
++	ASSERT((bvec->bv_len & blockmask) == 0);
++
++	bh = head = page_buffers(bvec->bv_page);
++
++	do {
++		if (off < bvec->bv_offset)
++			goto next_bh;
++		if (off > end)
++			break;
++		bh->b_end_io(bh, !error);
++next_bh:
++		off += bh->b_size;
++	} while ((bh = bh->b_this_page) != head);
++}
++
++/*
++ * We're now finished for good with this ioend structure.  Update the page
++ * state, release holds on bios, and finally free up memory.  Do not use the
++ * ioend after this.
+  */
+ STATIC void
+ xfs_destroy_ioend(
+-	xfs_ioend_t		*ioend)
++	struct xfs_ioend	*ioend)
+ {
+-	struct buffer_head	*bh, *next;
++	struct inode		*inode = ioend->io_inode;
++	int			error = ioend->io_error;
++	struct bio		*bio, *next;
++
++	for (bio = ioend->io_bio_done; bio; bio = next) {
++		struct bio_vec	*bvec;
++		int		i;
++
++		next = bio->bi_private;
++		bio->bi_private = NULL;
+ 
+-	for (bh = ioend->io_buffer_head; bh; bh = next) {
+-		next = bh->b_private;
+-		bh->b_end_io(bh, !ioend->io_error);
++		/* walk each page on bio, ending page IO on them */
++		bio_for_each_segment_all(bvec, bio, i)
++			xfs_finish_page_writeback(inode, bvec, error);
++
++		bio_put(bio);
+ 	}
+ 
+ 	mempool_free(ioend, xfs_ioend_pool);
+@@ -286,6 +330,7 @@ xfs_alloc_ioend(
+ 	ioend->io_type = type;
+ 	ioend->io_inode = inode;
+ 	INIT_WORK(&ioend->io_work, xfs_end_io);
++	spin_lock_init(&ioend->io_lock);
+ 	return ioend;
+ }
+ 
+@@ -365,15 +410,21 @@ STATIC void
+ xfs_end_bio(
+ 	struct bio		*bio)
+ {
+-	xfs_ioend_t		*ioend = bio->bi_private;
+-
+-	if (!ioend->io_error)
+-		ioend->io_error = bio->bi_error;
++	struct xfs_ioend	*ioend = bio->bi_private;
++	unsigned long		flags;
+ 
+-	/* Toss bio and pass work off to an xfsdatad thread */
+ 	bio->bi_private = NULL;
+ 	bio->bi_end_io = NULL;
+-	bio_put(bio);
++
++	spin_lock_irqsave(&ioend->io_lock, flags);
++	if (!ioend->io_error)
++	       ioend->io_error = bio->bi_error;
++	if (!ioend->io_bio_done)
++		ioend->io_bio_done = bio;
++	else
++		ioend->io_bio_done_tail->bi_private = bio;
++	ioend->io_bio_done_tail = bio;
++	spin_unlock_irqrestore(&ioend->io_lock, flags);
+ 
+ 	xfs_finish_ioend(ioend);
+ }
+@@ -511,21 +562,11 @@ xfs_add_to_ioend(
+ 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
+ 	    bh->b_blocknr != wpc->last_block + 1 ||
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+-		struct xfs_ioend	*new;
+-
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+-
+-		new = xfs_alloc_ioend(inode, wpc->io_type);
+-		new->io_offset = offset;
+-		new->io_buffer_head = bh;
+-		new->io_buffer_tail = bh;
+-		wpc->ioend = new;
+-	} else {
+-		wpc->ioend->io_buffer_tail->b_private = bh;
+-		wpc->ioend->io_buffer_tail = bh;
++		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type);
++		wpc->ioend->io_offset = offset;
+ 	}
+-	bh->b_private = NULL;
+ 
+ retry:
+ 	if (!wpc->ioend->io_bio)
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index c89c3bd..1c7b041 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -46,13 +46,14 @@ typedef struct xfs_ioend {
+ 	int			io_error;	/* I/O error code */
+ 	atomic_t		io_remaining;	/* hold count */
+ 	struct inode		*io_inode;	/* file being written to */
+-	struct buffer_head	*io_buffer_head;/* buffer linked list head */
+-	struct buffer_head	*io_buffer_tail;/* buffer linked list tail */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
+ 	struct work_struct	io_work;	/* xfsdatad work queue */
+ 	struct xfs_trans	*io_append_trans;/* xact. for size update */
+ 	struct bio		*io_bio;	/* bio being built */
++	struct bio		*io_bio_done;	/* bios completed */
++	struct bio		*io_bio_done_tail; /* bios completed */
++	spinlock_t		io_lock;	/* for bio completion list */
+ } xfs_ioend_t;
+ 
+ extern const struct address_space_operations xfs_address_space_operations;
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
