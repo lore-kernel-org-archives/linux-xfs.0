@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D366E7CE5
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:18:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27F4AAC002
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 02:18:16 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EWBDFAyTSyATRHmC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 02:18:12 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id DD98D64D1D
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 09:18:11 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] io/mmap: new -s option for mmap command to reserve some free
-	space
-Date: Wed, 16 Mar 2016 17:18:04 +0800
-Message-Id: <1458119884-17942-1-git-send-email-zlang@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 250957CF5
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 06:44:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 95DF6AC002
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:44:49 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id hTEhq4ejbN4Idsde (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:44:46 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/3] xfs: optimize bio handling in the buffer writeback path
+Date: Wed, 16 Mar 2016 12:44:41 +0100
+Message-Id: <1458128681-10869-4-git-send-email-hch@lst.de>
+In-Reply-To: <1458128681-10869-1-git-send-email-hch@lst.de>
+References: <1458128681-10869-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,170 +29,499 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Zorro Lang <zlang@redhat.com>
+Cc: bfoster@redhat.com
 
-This patch come from a test likes below:
-xfs_io -t -f
-       -c "truncate 10000"
-       -c "mmap -rw 0 1024"
-       -c "mremap 8192"
-       file
+This patch implements two closely related changes:  First it embedds a
+bio the ioend structure so that we don't have to allocate one separately.
+Second it uses the block layer bio chaining mechanism to chain additional
+bios off this first one if needed instead of manually accouting for
+multiple bio completions in the ioend structure.  Together this removes a
+memory allocation per ioend and greatly simplifies the ioend setup and
+I/O completion path.
 
-mremap always hit ENOMEM error, when it try to remap more space
-without MREMAP_MAYMOVE flag. This's a normal condition, due to
-no free space after mapped 1024 bytes region.
-
-But if we try to mremap from the original mapped starting point in
-a C program, at first we always do:
-
-  addr = mmap(NULL, res_size, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  munmap(addr, res_size);
-
-Then do:
-
-  addr = mmap(addr, real_len, ...);
-
-The "res_size" is bigger than "real_len". This will help us get a
-region between real_len and res_size, which maybe free space. The
-truth is we can't guarantee that this free memory will stay free.
-But this method is still very helpful for reserve some free space
-in short time.
-
-After merge this patch, we can resolve above mremap problem by run:
-xfs_io -t -f
-       ...
-       -c "mmap -rw -s 8192 0 1024"
-       -c "mremap 8192"
-       ...
-
-Although we can't sure it's useful 100%, it really have pretty high
-success rate.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- io/mmap.c         | 29 +++++++++++++++++++++++------
- man/man8/xfs_io.8 | 17 ++++++++++++++++-
- 2 files changed, 39 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c  | 247 ++++++++++++++++++++++++-----------------------------
+ fs/xfs/xfs_aops.h  |  15 ++--
+ fs/xfs/xfs_super.c |  26 ++----
+ 3 files changed, 123 insertions(+), 165 deletions(-)
 
-diff --git a/io/mmap.c b/io/mmap.c
-index 5970069..6cd37a9 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -146,6 +146,7 @@ mmap_help(void)
- " -r -- map with PROT_READ protection\n"
- " -w -- map with PROT_WRITE protection\n"
- " -x -- map with PROT_EXEC protection\n"
-+" -s <size> -- first do mmap(size)/munmap(size), try to reserve some free space\n"
- " If no protection mode is specified, all are used by default.\n"
- "\n"));
- }
-@@ -156,8 +157,8 @@ mmap_f(
- 	char		**argv)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5928770..42e7368 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -124,18 +124,25 @@ next_bh:
+  */
+ STATIC void
+ xfs_destroy_ioend(
+-	struct xfs_ioend	*ioend)
++	struct xfs_ioend	*ioend,
++	int			error)
  {
- 	off64_t		offset;
--	ssize_t		length;
--	void		*address;
-+	ssize_t		length = 0, length2 = 0;
-+	void		*address = NULL;
- 	char		*filename;
- 	size_t		blocksize, sectsize;
- 	int		c, prot = 0;
-@@ -181,7 +182,9 @@ mmap_f(
- 		return 0;
+ 	struct inode		*inode = ioend->io_inode;
+-	int			error = ioend->io_error;
++	struct bio		*last = ioend->io_bio;
+ 	struct bio		*bio, *next;
+ 
+-	for (bio = ioend->io_bio_done; bio; bio = next) {
++	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec	*bvec;
+ 		int		i;
+ 
+-		next = bio->bi_private;
+-		bio->bi_private = NULL;
++		/*
++		 * For the last bio, bi_private points to the ioend, so we
++		 * need to explicitly end the iteration here.
++		 */
++		if (bio == last)
++			next = NULL;
++		else
++			next = bio->bi_private;
+ 
+ 		/* walk each page on bio, ending page IO on them */
+ 		bio_for_each_segment_all(bvec, bio, i)
+@@ -143,8 +150,6 @@ xfs_destroy_ioend(
+ 
+ 		bio_put(bio);
+ 	}
+-
+-	mempool_free(ioend, xfs_ioend_pool);
+ }
+ 
+ /*
+@@ -218,7 +223,8 @@ xfs_setfilesize(
+ 
+ STATIC int
+ xfs_setfilesize_ioend(
+-	struct xfs_ioend	*ioend)
++	struct xfs_ioend	*ioend,
++	int			error)
+ {
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	struct xfs_trans	*tp = ioend->io_append_trans;
+@@ -232,53 +238,32 @@ xfs_setfilesize_ioend(
+ 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+ 
+ 	/* we abort the update if there was an IO error */
+-	if (ioend->io_error) {
++	if (error) {
+ 		xfs_trans_cancel(tp);
+-		return ioend->io_error;
++		return error;
  	}
  
--	while ((c = getopt(argc, argv, "rwx")) != EOF) {
-+	init_cvtnum(&blocksize, &sectsize);
+ 	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+ }
+ 
+ /*
+- * Schedule IO completion handling on the final put of an ioend.
+- *
+- * If there is no work to do we might as well call it a day and free the
+- * ioend right now.
+- */
+-STATIC void
+-xfs_finish_ioend(
+-	struct xfs_ioend	*ioend)
+-{
+-	if (atomic_dec_and_test(&ioend->io_remaining)) {
+-		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
+-
+-		if (ioend->io_type == XFS_IO_UNWRITTEN)
+-			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
+-		else if (ioend->io_append_trans)
+-			queue_work(mp->m_data_workqueue, &ioend->io_work);
+-		else
+-			xfs_destroy_ioend(ioend);
+-	}
+-}
+-
+-/*
+  * IO write completion.
+  */
+ STATIC void
+ xfs_end_io(
+ 	struct work_struct *work)
+ {
+-	xfs_ioend_t	*ioend = container_of(work, xfs_ioend_t, io_work);
+-	struct xfs_inode *ip = XFS_I(ioend->io_inode);
+-	int		error = 0;
++	struct xfs_ioend	*ioend =
++		container_of(work, struct xfs_ioend, io_work);
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	int			error = ioend->io_bio->bi_error;
+ 
+ 	/*
+ 	 * Set an error if the mount has shut down and proceed with end I/O
+ 	 * processing so it can perform whatever cleanups are necessary.
+ 	 */
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+-		ioend->io_error = -EIO;
++		error = -EIO;
+ 
+ 	/*
+ 	 * For unwritten extents we need to issue transactions to convert a
+@@ -288,50 +273,33 @@ xfs_end_io(
+ 	 * on error.
+ 	 */
+ 	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+-		if (ioend->io_error)
++		if (error)
+ 			goto done;
+ 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+ 						  ioend->io_size);
+ 	} else if (ioend->io_append_trans) {
+-		error = xfs_setfilesize_ioend(ioend);
++		error = xfs_setfilesize_ioend(ioend, error);
+ 	} else {
+ 		ASSERT(!xfs_ioend_is_append(ioend));
+ 	}
+ 
+ done:
+-	if (error)
+-		ioend->io_error = error;
+-	xfs_destroy_ioend(ioend);
++	xfs_destroy_ioend(ioend, error);
+ }
+ 
+-/*
+- * Allocate and initialise an IO completion structure.
+- * We need to track unwritten extent write completion here initially.
+- * We'll need to extend this for updating the ondisk inode size later
+- * (vs. incore size).
+- */
+-STATIC xfs_ioend_t *
+-xfs_alloc_ioend(
+-	struct inode		*inode,
+-	unsigned int		type)
++STATIC void
++xfs_end_bio(
++	struct bio		*bio)
+ {
+-	xfs_ioend_t		*ioend;
+-
+-	ioend = mempool_alloc(xfs_ioend_pool, GFP_NOFS);
+-	memset(ioend, 0, sizeof(*ioend));
++	struct xfs_ioend	*ioend = bio->bi_private;
++	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
+ 
+-	/*
+-	 * Set the count to 1 initially, which will prevent an I/O
+-	 * completion callback from happening before we have started
+-	 * all the I/O from calling the completion routine too early.
+-	 */
+-	atomic_set(&ioend->io_remaining, 1);
+-	INIT_LIST_HEAD(&ioend->io_list);
+-	ioend->io_type = type;
+-	ioend->io_inode = inode;
+-	INIT_WORK(&ioend->io_work, xfs_end_io);
+-	spin_lock_init(&ioend->io_lock);
+-	return ioend;
++	if (ioend->io_type == XFS_IO_UNWRITTEN)
++		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
++	else if (ioend->io_append_trans)
++		queue_work(mp->m_data_workqueue, &ioend->io_work);
++	else
++		xfs_destroy_ioend(ioend, bio->bi_error);
+ }
+ 
+ STATIC int
+@@ -403,56 +371,6 @@ xfs_imap_valid(
+ 		offset < imap->br_startoff + imap->br_blockcount;
+ }
+ 
+-/*
+- * BIO completion handler for buffered IO.
+- */
+-STATIC void
+-xfs_end_bio(
+-	struct bio		*bio)
+-{
+-	struct xfs_ioend	*ioend = bio->bi_private;
+-	unsigned long		flags;
+-
+-	bio->bi_private = NULL;
+-	bio->bi_end_io = NULL;
+-
+-	spin_lock_irqsave(&ioend->io_lock, flags);
+-	if (!ioend->io_error)
+-	       ioend->io_error = bio->bi_error;
+-	if (!ioend->io_bio_done)
+-		ioend->io_bio_done = bio;
+-	else
+-		ioend->io_bio_done_tail->bi_private = bio;
+-	ioend->io_bio_done_tail = bio;
+-	spin_unlock_irqrestore(&ioend->io_lock, flags);
+-
+-	xfs_finish_ioend(ioend);
+-}
+-
+-STATIC void
+-xfs_submit_ioend_bio(
+-	struct writeback_control *wbc,
+-	xfs_ioend_t		*ioend,
+-	struct bio		*bio)
+-{
+-	atomic_inc(&ioend->io_remaining);
+-	bio->bi_private = ioend;
+-	bio->bi_end_io = xfs_end_bio;
+-	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE, bio);
+-}
+-
+-STATIC struct bio *
+-xfs_alloc_ioend_bio(
+-	struct buffer_head	*bh)
+-{
+-	struct bio		*bio = bio_alloc(GFP_NOIO, BIO_MAX_PAGES);
+-
+-	ASSERT(bio->bi_private == NULL);
+-	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+-	bio->bi_bdev = bh->b_bdev;
+-	return bio;
+-}
+-
+ STATIC void
+ xfs_start_buffer_writeback(
+ 	struct buffer_head	*bh)
+@@ -513,16 +431,19 @@ static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
+ STATIC int
+ xfs_submit_ioend(
+ 	struct writeback_control *wbc,
+-	xfs_ioend_t		*ioend,
++	struct xfs_ioend	*ioend,
+ 	int			status)
+ {
+ 	/* Reserve log space if we might write beyond the on-disk inode size. */
+ 	if (!status &&
+-	    ioend->io_bio && ioend->io_type != XFS_IO_UNWRITTEN &&
++	    ioend->io_type != XFS_IO_UNWRITTEN &&
+ 	    xfs_ioend_is_append(ioend) &&
+ 	    !ioend->io_append_trans)
+ 		status = xfs_setfilesize_trans_alloc(ioend);
+ 
++	ioend->io_bio->bi_private = ioend;
++	ioend->io_bio->bi_end_io = xfs_end_bio;
 +
-+	while ((c = getopt(argc, argv, "rwxs:")) != EOF) {
- 		switch (c) {
- 		case 'r':
- 			prot |= PROT_READ;
-@@ -192,6 +195,9 @@ mmap_f(
- 		case 'x':
- 			prot |= PROT_EXEC;
- 			break;
-+		case 's':
-+			length2 = cvtnum(blocksize, sectsize, optarg);
-+			break;
- 		default:
- 			return command_usage(&mmap_cmd);
- 		}
-@@ -202,7 +208,6 @@ mmap_f(
- 	if (optind != argc - 2)
- 		return command_usage(&mmap_cmd);
- 
--	init_cvtnum(&blocksize, &sectsize);
- 	offset = cvtnum(blocksize, sectsize, argv[optind]);
- 	if (offset < 0) {
- 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
-@@ -221,7 +226,19 @@ mmap_f(
- 		return 0;
+ 	/*
+ 	 * If we are failing the IO now, just mark the ioend with an
+ 	 * error and finish it. This will run IO completion immediately
+@@ -530,19 +451,75 @@ xfs_submit_ioend(
+ 	 * time.
+ 	 */
+ 	if (status) {
+-		if (ioend->io_bio)
+-			bio_put(ioend->io_bio);
+-		ioend->io_error = status;
+-		xfs_finish_ioend(ioend);
++		ioend->io_bio->bi_error = status;
++		bio_endio(ioend->io_bio);
+ 		return status;
  	}
  
--	address = mmap(NULL, length, prot, MAP_SHARED, file->fd, offset);
-+	/*
-+	 * mmap and munmap memory area of length2 region is helpful to
-+	 * make a region of extendible free memory. It's generally used
-+	 * for later mremap operation(no MREMAP_MAYMOVE flag). But there
-+	 * isn't guarantee that the memory after length (up to length2)
-+	 * will stay free.
-+	 */
-+	if (length2 > length) {
-+		address = mmap(NULL, length2, prot,
-+		               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-+		munmap(address, length2);
-+	}
-+	address = mmap(address, length, prot, MAP_SHARED, file->fd, offset);
- 	if (address == MAP_FAILED) {
- 		perror("mmap");
- 		free(filename);
-@@ -647,7 +664,7 @@ mmap_init(void)
- 	mmap_cmd.argmin = 0;
- 	mmap_cmd.argmax = -1;
- 	mmap_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
--	mmap_cmd.args = _("[N] | [-rwx] [off len]");
-+	mmap_cmd.args = _("[N] | [-rwx] [-s size] [off len]");
- 	mmap_cmd.oneline =
- 		_("mmap a range in the current file, show mappings");
- 	mmap_cmd.help = mmap_help;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 33fbe6a..93a8a00 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -559,7 +559,7 @@ Do not print timing statistics at all.
+-	xfs_submit_ioend_bio(wbc, ioend, ioend->io_bio);
+-	ioend->io_bio = NULL;
+-	xfs_finish_ioend(ioend);
++	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE,
++			ioend->io_bio);
+ 	return 0;
+ }
  
- .SH MEMORY MAPPED I/O COMMANDS
- .TP
--.BI "mmap [ " N " | [[ \-rwx ] " "offset length " ]]
-+.BI "mmap [ " N " | [[ \-rwx ] [\-s " size " ] " "offset length " ]]
- With no arguments,
- .B mmap
- shows the current mappings. Specifying a single numeric argument
-@@ -575,6 +575,21 @@ PROT_WRITE
- .RB ( \-w ),
- and PROT_EXEC
- .RB ( \-x ).
-+.BI \-s " size"
-+is used to do a mmap(size) && munmap(size) operation at first, try to reserve some
-+extendible free memory space, if
-+.I size
-+is bigger than
-+.I length
-+parameter. But there's not guarantee that the memory after
-+.I length
-+( up to
-+.I size
-+) will stay free.
-+.B e.g.
-+"mmap -rw -s 8192 1024" will mmap 0 ~ 1024 bytes memory, but try to reserve 1024 ~ 8192
-+free space(no guarantee). This free space will helpful for "mremap 8192" without
-+MREMAP_MAYMOVE flag.
- .TP
- .B mm
- See the
++static void
++xfs_init_bio_from_bh(
++	struct bio		*bio,
++	struct buffer_head	*bh)
++{
++	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
++	bio->bi_bdev = bh->b_bdev;
++}
++
++static struct xfs_ioend *
++xfs_alloc_ioend(
++	struct inode		*inode,
++	unsigned int		type,
++	xfs_off_t		offset,
++	struct buffer_head	*bh)
++{
++	struct xfs_ioend	*ioend;
++	struct bio		*bio;
++
++	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, xfs_ioend_bioset);
++	xfs_init_bio_from_bh(bio, bh);
++
++	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
++	INIT_LIST_HEAD(&ioend->io_list);
++	ioend->io_type = type;
++	ioend->io_inode = inode;
++	ioend->io_size = 0;
++	ioend->io_offset = offset;
++	INIT_WORK(&ioend->io_work, xfs_end_io);
++	ioend->io_append_trans = NULL;
++	ioend->io_bio = bio;
++	return ioend;
++}
++
++/*
++ * Allocate a new bio, and chain the old bio to the new one.
++ *
++ * Note that we have to do perform the chaining in this unintuitive order
++ * so that the bi_private linkage is set up in the right direction for the
++ * traversal in xfs_destroy_ioend().
++ */
++static void
++xfs_chain_bio(
++	struct xfs_ioend	*ioend,
++	struct writeback_control *wbc,
++	struct buffer_head	*bh)
++{
++	struct bio *new;
++
++	new = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
++	xfs_init_bio_from_bh(new, bh);
++
++	bio_chain(ioend->io_bio, new);
++	bio_get(ioend->io_bio);		/* for xfs_destroy_ioend */
++	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE,
++			ioend->io_bio);
++	ioend->io_bio = new;
++}
++
+ /*
+  * Test to see if we've been building up a completion structure for
+  * earlier buffers -- if so, we try to append to this ioend if we
+@@ -564,19 +541,15 @@ xfs_add_to_ioend(
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+-		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type);
+-		wpc->ioend->io_offset = offset;
++		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
+ 	}
+ 
+-retry:
+-	if (!wpc->ioend->io_bio)
+-		wpc->ioend->io_bio = xfs_alloc_ioend_bio(bh);
+-
+-	if (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size) {
+-		xfs_submit_ioend_bio(wbc, wpc->ioend, wpc->ioend->io_bio);
+-		wpc->ioend->io_bio = NULL;
+-		goto retry;
+-	}
++	/*
++	 * If the buffer doesn't fit into the bio we need to allocate a new
++	 * one.  This shouldn't happen more than once for a given buffer.
++	 */
++	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
++		xfs_chain_bio(wpc->ioend, wbc, bh);
+ 
+ 	wpc->ioend->io_size += bh->b_size;
+ 	wpc->last_block = bh->b_blocknr;
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 1c7b041..8b5b641 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -18,7 +18,7 @@
+ #ifndef __XFS_AOPS_H__
+ #define __XFS_AOPS_H__
+ 
+-extern mempool_t *xfs_ioend_pool;
++extern struct bio_set *xfs_ioend_bioset;
+ 
+ /*
+  * Types of I/O for bmap clustering and I/O completion tracking.
+@@ -37,24 +37,19 @@ enum {
+ 	{ XFS_IO_OVERWRITE,		"overwrite" }
+ 
+ /*
+- * xfs_ioend struct manages large extent writes for XFS.
+- * It can manage several multi-page bio's at once.
++ * Structure for buffered I/O completions.
+  */
+-typedef struct xfs_ioend {
++struct xfs_ioend {
+ 	struct list_head	io_list;	/* next ioend in chain */
+ 	unsigned int		io_type;	/* delalloc / unwritten */
+-	int			io_error;	/* I/O error code */
+-	atomic_t		io_remaining;	/* hold count */
+ 	struct inode		*io_inode;	/* file being written to */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
+ 	struct work_struct	io_work;	/* xfsdatad work queue */
+ 	struct xfs_trans	*io_append_trans;/* xact. for size update */
+ 	struct bio		*io_bio;	/* bio being built */
+-	struct bio		*io_bio_done;	/* bios completed */
+-	struct bio		*io_bio_done_tail; /* bios completed */
+-	spinlock_t		io_lock;	/* for bio completion list */
+-} xfs_ioend_t;
++	struct bio		io_inline_bio;	/* MUST BE LAST! */
++};
+ 
+ extern const struct address_space_operations xfs_address_space_operations;
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d760934..e52e9c1 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -58,8 +58,7 @@
+ #include <linux/parser.h>
+ 
+ static const struct super_operations xfs_super_operations;
+-static kmem_zone_t *xfs_ioend_zone;
+-mempool_t *xfs_ioend_pool;
++struct bio_set *xfs_ioend_bioset;
+ 
+ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+ #ifdef DEBUG
+@@ -1688,20 +1687,15 @@ MODULE_ALIAS_FS("xfs");
+ STATIC int __init
+ xfs_init_zones(void)
+ {
+-
+-	xfs_ioend_zone = kmem_zone_init(sizeof(xfs_ioend_t), "xfs_ioend");
+-	if (!xfs_ioend_zone)
++	xfs_ioend_bioset = bioset_create(4 * MAX_BUF_PER_PAGE,
++			offsetof(struct xfs_ioend, io_inline_bio));
++	if (!xfs_ioend_bioset)
+ 		goto out;
+ 
+-	xfs_ioend_pool = mempool_create_slab_pool(4 * MAX_BUF_PER_PAGE,
+-						  xfs_ioend_zone);
+-	if (!xfs_ioend_pool)
+-		goto out_destroy_ioend_zone;
+-
+ 	xfs_log_ticket_zone = kmem_zone_init(sizeof(xlog_ticket_t),
+ 						"xfs_log_ticket");
+ 	if (!xfs_log_ticket_zone)
+-		goto out_destroy_ioend_pool;
++		goto out_free_ioend_bioset;
+ 
+ 	xfs_bmap_free_item_zone = kmem_zone_init(sizeof(xfs_bmap_free_item_t),
+ 						"xfs_bmap_free_item");
+@@ -1797,10 +1791,8 @@ xfs_init_zones(void)
+ 	kmem_zone_destroy(xfs_bmap_free_item_zone);
+  out_destroy_log_ticket_zone:
+ 	kmem_zone_destroy(xfs_log_ticket_zone);
+- out_destroy_ioend_pool:
+-	mempool_destroy(xfs_ioend_pool);
+- out_destroy_ioend_zone:
+-	kmem_zone_destroy(xfs_ioend_zone);
++ out_free_ioend_bioset:
++	bioset_free(xfs_ioend_bioset);
+  out:
+ 	return -ENOMEM;
+ }
+@@ -1826,9 +1818,7 @@ xfs_destroy_zones(void)
+ 	kmem_zone_destroy(xfs_btree_cur_zone);
+ 	kmem_zone_destroy(xfs_bmap_free_item_zone);
+ 	kmem_zone_destroy(xfs_log_ticket_zone);
+-	mempool_destroy(xfs_ioend_pool);
+-	kmem_zone_destroy(xfs_ioend_zone);
+-
++	bioset_free(xfs_ioend_bioset);
+ }
+ 
+ STATIC int __init
 -- 
-2.5.0
+2.1.4
 
 _______________________________________________
 xfs mailing list
