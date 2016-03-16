@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5E4D17CF5
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 06:44:52 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C87337CF5
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 08:03:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 145F2304039
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:44:49 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id HeqBuiHFUvzqIBML (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 04:44:46 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] xfs: don't release bios on completion immediately
-Date: Wed, 16 Mar 2016 12:44:40 +0100
-Message-Id: <1458128681-10869-3-git-send-email-hch@lst.de>
-In-Reply-To: <1458128681-10869-1-git-send-email-hch@lst.de>
-References: <1458128681-10869-1-git-send-email-hch@lst.de>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80789304039
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 06:03:33 -0700 (PDT)
+Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
+	with ESMTP id 0W7kmtyeFoRkZ1Zv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 06:03:30 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 16 Mar 2016 14:03:28 +0100
+From: Marko Weber | 8000 <weber@zbfmail.de>
+Subject: Re: an mount option question and dunno if right here...
+In-Reply-To: <56E1A8B1.2080800@sandeen.net>
+References: <08297acdf77244b468e15458f3d78327@zbfmail.de>
+	<56E1A8B1.2080800@sandeen.net>
+Message-ID: <ebcb0a57f224c5a9be0d2d2777bca581@zbfmail.de>
+Reply-To: weber@zbfmail.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,199 +26,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Completion of an ioend requires us to walk the bufferhead list to
-end writback on all the bufferheads. This, in turn, is needed so
-that we can end writeback on all the pages we just did IO on.
 
-To remove our dependency on bufferheads in writeback, we need to
-turn this around the other way - we need to walk the pages we've
-just completed IO on, and then walk the buffers attached to the
-pages and complete their IO. In doing this, we remove the
-requirement for the ioend to track bufferheads directly.
 
-To enable IO completion to walk all the pages we've submitted IO on,
-we need to keep the bios that we used for IO around until the ioend
-has been completed. We can do this simply by chaining the bios to
-the ioend at completion time, and then walking their pages directly
-just before destroying the ioend.
+Am 2016-03-10 18:02, schrieb Eric Sandeen:
+> On 3/9/16 4:35 AM, Marko Weber | 8000 wrote:
+>> 
+>> 
+>> hello list,
+>> 
+>> my drives are all xfs formatted.
+>> in fstab i set:
+>> 
+>>                  lazytime,logbsize=256k,logbufs=8
+>> 
+>> 
+>> when i call "mount" on console i get:
+>> 
+>>                  
+>> rw,relatime,lazytime,attr2,inode64,logbufs=8,logbsize=256k,sunit=1024,swidth=3072,noquota
+>> 
+>> 
+>> Why is relatime listed? Or is lazytime override this setting?
+>> Even when i set "norelatime" in /etc/fstab i get "relatime" listed on 
+>> 'mount'
+>> 
+>> Or am i wrong here with this question? is this not xfs related?
+>> anyway, for any hints or suggestions i am thankful
+> 
+> lazytime is not a valid xfs mount option:
+> 
+> [root ~]# mount -o lazytime /dev/sdb1 /mnt/test
+> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
+> missing codepage or helper program, or other error
+> In some cases useful info is found in syslog - try
+> dmesg | tail or so
+> 
+> [root ~]# dmesg | tail -n 1
+> [645779.811802] XFS (sdb1): unknown mount option [lazytime].
+> 
+> I'm guessing this is your root fs? xfs today will silently ignore
+> unknown mount options on remount (patches to fix that are upstream),
+> and the root fs may get remounted w/ fstab options.  So presumably
+> that's how you got lazytime into the mount output, especially if
+> it's looking at /etc/mtab. Look in /proc/mounts; I doubt you'll
+> see "lazytime" for this filesystem:
+> 
+> [root ~]# mount /dev/sdb1 /mnt/test
+> [root ~]# mount -o remount,lazytime /mnt/test
+> 
+> [root ~]# grep sdb1 /etc/mtab /proc/mounts
+> /etc/mtab:/dev/sdb1 /mnt/test xfs rw,lazytime 0 0
+> /proc/mounts:/dev/sdb1 /mnt/test xfs
+> rw,seclabel,relatime,attr2,inode64,noquota 0 0
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[hch: changed the xfs_finish_page_writeback calling convention]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 95 +++++++++++++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_aops.h |  5 +--
- 2 files changed, 71 insertions(+), 29 deletions(-)
+Hi Eric,
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 17cc6cc..5928770 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -84,20 +84,64 @@ xfs_find_bdev_for_inode(
- }
- 
- /*
-- * We're now finished for good with this ioend structure.
-- * Update the page state via the associated buffer_heads,
-- * release holds on the inode and bio, and finally free
-- * up memory.  Do not use the ioend after this.
-+ * We're now finished for good with this page.  Update the page state via the
-+ * associated buffer_heads, paying attention to the start and end offsets that
-+ * we need to process on the page.
-+ */
-+static void
-+xfs_finish_page_writeback(
-+	struct inode		*inode,
-+	struct bio_vec		*bvec,
-+	int			error)
-+{
-+	unsigned int		blockmask = (1 << inode->i_blkbits) - 1;
-+	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
-+	struct buffer_head	*head, *bh;
-+	unsigned int		off = 0;
-+
-+	ASSERT(bvec->bv_offset < PAGE_SIZE);
-+	ASSERT((bvec->bv_offset & blockmask) == 0);
-+	ASSERT(end < PAGE_SIZE);
-+	ASSERT((bvec->bv_len & blockmask) == 0);
-+
-+	bh = head = page_buffers(bvec->bv_page);
-+
-+	do {
-+		if (off < bvec->bv_offset)
-+			goto next_bh;
-+		if (off > end)
-+			break;
-+		bh->b_end_io(bh, !error);
-+next_bh:
-+		off += bh->b_size;
-+	} while ((bh = bh->b_this_page) != head);
-+}
-+
-+/*
-+ * We're now finished for good with this ioend structure.  Update the page
-+ * state, release holds on bios, and finally free up memory.  Do not use the
-+ * ioend after this.
-  */
- STATIC void
- xfs_destroy_ioend(
--	xfs_ioend_t		*ioend)
-+	struct xfs_ioend	*ioend)
- {
--	struct buffer_head	*bh, *next;
-+	struct inode		*inode = ioend->io_inode;
-+	int			error = ioend->io_error;
-+	struct bio		*bio, *next;
-+
-+	for (bio = ioend->io_bio_done; bio; bio = next) {
-+		struct bio_vec	*bvec;
-+		int		i;
-+
-+		next = bio->bi_private;
-+		bio->bi_private = NULL;
- 
--	for (bh = ioend->io_buffer_head; bh; bh = next) {
--		next = bh->b_private;
--		bh->b_end_io(bh, !ioend->io_error);
-+		/* walk each page on bio, ending page IO on them */
-+		bio_for_each_segment_all(bvec, bio, i)
-+			xfs_finish_page_writeback(inode, bvec, error);
-+
-+		bio_put(bio);
- 	}
- 
- 	mempool_free(ioend, xfs_ioend_pool);
-@@ -286,6 +330,7 @@ xfs_alloc_ioend(
- 	ioend->io_type = type;
- 	ioend->io_inode = inode;
- 	INIT_WORK(&ioend->io_work, xfs_end_io);
-+	spin_lock_init(&ioend->io_lock);
- 	return ioend;
- }
- 
-@@ -365,15 +410,21 @@ STATIC void
- xfs_end_bio(
- 	struct bio		*bio)
- {
--	xfs_ioend_t		*ioend = bio->bi_private;
--
--	if (!ioend->io_error)
--		ioend->io_error = bio->bi_error;
-+	struct xfs_ioend	*ioend = bio->bi_private;
-+	unsigned long		flags;
- 
--	/* Toss bio and pass work off to an xfsdatad thread */
- 	bio->bi_private = NULL;
- 	bio->bi_end_io = NULL;
--	bio_put(bio);
-+
-+	spin_lock_irqsave(&ioend->io_lock, flags);
-+	if (!ioend->io_error)
-+	       ioend->io_error = bio->bi_error;
-+	if (!ioend->io_bio_done)
-+		ioend->io_bio_done = bio;
-+	else
-+		ioend->io_bio_done_tail->bi_private = bio;
-+	ioend->io_bio_done_tail = bio;
-+	spin_unlock_irqrestore(&ioend->io_lock, flags);
- 
- 	xfs_finish_ioend(ioend);
- }
-@@ -511,21 +562,11 @@ xfs_add_to_ioend(
- 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
- 	    bh->b_blocknr != wpc->last_block + 1 ||
- 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
--		struct xfs_ioend	*new;
--
- 		if (wpc->ioend)
- 			list_add(&wpc->ioend->io_list, iolist);
--
--		new = xfs_alloc_ioend(inode, wpc->io_type);
--		new->io_offset = offset;
--		new->io_buffer_head = bh;
--		new->io_buffer_tail = bh;
--		wpc->ioend = new;
--	} else {
--		wpc->ioend->io_buffer_tail->b_private = bh;
--		wpc->ioend->io_buffer_tail = bh;
-+		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type);
-+		wpc->ioend->io_offset = offset;
- 	}
--	bh->b_private = NULL;
- 
- retry:
- 	if (!wpc->ioend->io_bio)
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index c89c3bd..1c7b041 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -46,13 +46,14 @@ typedef struct xfs_ioend {
- 	int			io_error;	/* I/O error code */
- 	atomic_t		io_remaining;	/* hold count */
- 	struct inode		*io_inode;	/* file being written to */
--	struct buffer_head	*io_buffer_head;/* buffer linked list head */
--	struct buffer_head	*io_buffer_tail;/* buffer linked list tail */
- 	size_t			io_size;	/* size of the extent */
- 	xfs_off_t		io_offset;	/* offset in the file */
- 	struct work_struct	io_work;	/* xfsdatad work queue */
- 	struct xfs_trans	*io_append_trans;/* xact. for size update */
- 	struct bio		*io_bio;	/* bio being built */
-+	struct bio		*io_bio_done;	/* bios completed */
-+	struct bio		*io_bio_done_tail; /* bios completed */
-+	spinlock_t		io_lock;	/* for bio completion list */
- } xfs_ioend_t;
- 
- extern const struct address_space_operations xfs_address_space_operations;
--- 
-2.1.4
+
+my /etc/fstab entry:
+
+/dev/VolGroup01/wiso    /raid5/wiso     xfs     norelatime,lazytime
+
+
+
+# mount:
+
+
+/dev/mapper/VolGroup01-wiso on /raid5/wiso type xfs 
+(rw,relatime,lazytime,attr2,inode64,logbufs=8,logbsize=256k,sunit=1024,swidth=3072,noquota)
+
+
+cat /proc/mounts:
+
+/dev/mapper/VolGroup01-wiso /raid5/wiso xfs 
+rw,lazytime,relatime,attr2,inode64,logbufs=8,logbsize=256k,sunit=1024,swidth=3072,noquota 
+0 0
+
+
+
+
+
+
+> 
+> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
