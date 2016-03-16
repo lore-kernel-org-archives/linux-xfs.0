@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2DA897CA1
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 17:20:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2DC027CB7
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 17:20:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CB7798F804B
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:20:11 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C70DC304048
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:20:18 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6FiXA43Rb3XEkP8Y (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yibXmMJnZvC6Ib51 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:20:10 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:19:57 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v20 14/23] vfs: Cache richacl in struct inode
-Date: Wed, 16 Mar 2016 23:18:54 +0100
-Message-Id: <1458166743-18488-15-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v20 11/23] posix_acl: Improve xattr fixup code
+Date: Wed, 16 Mar 2016 23:18:51 +0100
+Message-Id: <1458166743-18488-12-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1458166743-18488-1-git-send-email-agruenba@redhat.com>
 References: <1458166743-18488-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,194 +31,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Cache richacls in struct inode so that this doesn't have to be done
-individually in each filesystem.  This is similar to POSIX ACLs.
+Both XATTR_NAME_POSIX_ACL_ACCESS and XATTR_NAME_POSIX_ACL_DEFAULT have
+the same XATTR_SYSTEM_PREFIX prefix; don't check for the same prefix
+repeatedly.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/inode.c              | 11 +++++--
- fs/posix_acl.c          |  2 +-
- fs/richacl.c            | 77 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/fs.h      |  5 +++-
- include/linux/richacl.h |  6 ++++
- 5 files changed, 96 insertions(+), 5 deletions(-)
+ fs/xattr.c | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 101d806..de80116 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -180,8 +180,11 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
- 	inode->i_private = NULL;
- 	inode->i_mapping = mapping;
- 	INIT_HLIST_HEAD(&inode->i_dentry);	/* buggered by rcu freeing */
--#ifdef CONFIG_FS_POSIX_ACL
--	inode->i_acl = inode->i_default_acl = ACL_NOT_CACHED;
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
-+	inode->i_acl = ACL_NOT_CACHED;
-+# if defined(CONFIG_FS_POSIX_ACL)
-+	inode->i_default_acl = ACL_NOT_CACHED;
-+# endif
- #endif
+diff --git a/fs/xattr.c b/fs/xattr.c
+index 4861322..c364696 100644
+--- a/fs/xattr.c
++++ b/fs/xattr.c
+@@ -295,6 +295,16 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(vfs_removexattr);
  
- #ifdef CONFIG_FSNOTIFY
-@@ -237,11 +240,13 @@ void __destroy_inode(struct inode *inode)
- 		atomic_long_dec(&inode->i_sb->s_remove_count);
++static void
++fix_xattr_from_user(const char *kname, void *kvalue, size_t size)
++{
++	if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
++		return;
++	kname += XATTR_SYSTEM_PREFIX_LEN;
++	if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
++	    !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
++		posix_acl_fix_xattr_from_user(kvalue, size);
++}
+ 
+ /*
+  * Extended attribute SET operations
+@@ -329,9 +339,7 @@ setxattr(struct dentry *d, const char __user *name, const void __user *value,
+ 			error = -EFAULT;
+ 			goto out;
+ 		}
+-		if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+-		    (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+-			posix_acl_fix_xattr_from_user(kvalue, size);
++		fix_xattr_from_user(kname, kvalue, size);
  	}
  
--#ifdef CONFIG_FS_POSIX_ACL
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
- 	if (inode->i_acl && inode->i_acl != ACL_NOT_CACHED)
- 		base_acl_put(inode->i_acl);
-+# if defined(CONFIG_FS_POSIX_ACL)
- 	if (inode->i_default_acl && inode->i_default_acl != ACL_NOT_CACHED)
- 		base_acl_put(inode->i_default_acl);
-+# endif
- #endif
- 	this_cpu_dec(nr_inodes);
- }
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index 743b6dc..f24646e 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -37,7 +37,7 @@ struct posix_acl *get_cached_acl(struct inode *inode, int type)
- {
- 	struct base_acl **p = acl_by_type(inode, type);
- 	struct base_acl *acl = ACCESS_ONCE(*p);
--	if (acl) {
-+	if (acl && IS_POSIXACL(inode)) {
- 		spin_lock(&inode->i_lock);
- 		acl = *p;
- 		if (acl != ACL_NOT_CACHED)
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 8971ead..59ef600 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -20,6 +20,83 @@
- #include <linux/slab.h>
- #include <linux/richacl.h>
- 
-+struct richacl *get_cached_richacl(struct inode *inode)
-+{
-+	struct base_acl *acl;
-+
-+	acl = ACCESS_ONCE(inode->i_acl);
-+	if (acl && IS_RICHACL(inode)) {
-+		spin_lock(&inode->i_lock);
-+		acl = inode->i_acl;
-+		if (acl != ACL_NOT_CACHED)
-+			base_acl_get(acl);
-+		spin_unlock(&inode->i_lock);
-+	}
-+	return container_of(acl, struct richacl, a_base);
-+}
-+EXPORT_SYMBOL_GPL(get_cached_richacl);
-+
-+struct richacl *get_cached_richacl_rcu(struct inode *inode)
-+{
-+	struct base_acl *acl = rcu_dereference(inode->i_acl);
-+
-+	return container_of(acl, struct richacl, a_base);
-+}
-+EXPORT_SYMBOL_GPL(get_cached_richacl_rcu);
-+
-+void set_cached_richacl(struct inode *inode, struct richacl *acl)
-+{
-+	struct base_acl *old = NULL;
-+
-+	spin_lock(&inode->i_lock);
-+	old = inode->i_acl;
-+	rcu_assign_pointer(inode->i_acl, &richacl_get(acl)->a_base);
-+	spin_unlock(&inode->i_lock);
-+	if (old != ACL_NOT_CACHED)
-+		base_acl_put(old);
-+}
-+EXPORT_SYMBOL_GPL(set_cached_richacl);
-+
-+void forget_cached_richacl(struct inode *inode)
-+{
-+	struct base_acl *old = NULL;
-+
-+	spin_lock(&inode->i_lock);
-+	old = inode->i_acl;
-+	inode->i_acl = ACL_NOT_CACHED;
-+	spin_unlock(&inode->i_lock);
-+	if (old != ACL_NOT_CACHED)
-+		base_acl_put(old);
-+}
-+EXPORT_SYMBOL_GPL(forget_cached_richacl);
-+
-+struct richacl *get_richacl(struct inode *inode)
-+{
-+	struct richacl *acl;
-+
-+	acl = get_cached_richacl(inode);
-+	if (acl != ACL_NOT_CACHED)
-+		return acl;
-+
-+	if (!IS_RICHACL(inode))
-+		return NULL;
-+
-+	/*
-+	 * A filesystem can force a ACL callback by just never filling the
-+	 * ACL cache. But normally you'd fill the cache either at inode
-+	 * instantiation time, or on the first ->get_richacl call.
-+	 *
-+	 * If the filesystem doesn't have a get_richacl() function at all,
-+	 * we'll just create the negative cache entry.
-+	 */
-+	if (!inode->i_op->get_richacl) {
-+		set_cached_richacl(inode, NULL);
-+		return NULL;
-+	}
-+	return inode->i_op->get_richacl(inode);
-+}
-+EXPORT_SYMBOL_GPL(get_richacl);
-+
- /**
-  * richacl_alloc  -  allocate a richacl
-  * @count:	number of entries
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e04dbb4..560f4e0 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -585,6 +585,7 @@ struct base_acl {
- 	};
- };
- struct posix_acl;
-+struct richacl;
- #define ACL_NOT_CACHED ((void *)(-1))
- 
- #define IOP_FASTPERM	0x0001
-@@ -603,9 +604,11 @@ struct inode {
- 	kgid_t			i_gid;
- 	unsigned int		i_flags;
- 
--#if defined(CONFIG_FS_POSIX_ACL)
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
- 	struct base_acl		*i_acl;
-+# if defined(CONFIG_FS_POSIX_ACL)
- 	struct base_acl		*i_default_acl;
-+# endif
- #endif
- 
- 	const struct inode_operations	*i_op;
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 35a5bcb..d19b61b 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -70,6 +70,12 @@ richacl_put(struct richacl *acl)
- 	base_acl_put(&acl->a_base);
+ 	error = vfs_setxattr(d, kname, kvalue, size, flags);
+@@ -396,6 +404,17 @@ SYSCALL_DEFINE5(fsetxattr, int, fd, const char __user *, name,
+ 	return error;
  }
  
-+extern struct richacl *get_cached_richacl(struct inode *);
-+extern struct richacl *get_cached_richacl_rcu(struct inode *);
-+extern void set_cached_richacl(struct inode *, struct richacl *);
-+extern void forget_cached_richacl(struct inode *);
-+extern struct richacl *get_richacl(struct inode *);
++static void
++fix_xattr_to_user(const char *kname, void *kvalue, size_t size)
++{
++	if (strncmp(kname, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
++		return;
++	kname += XATTR_SYSTEM_PREFIX_LEN;
++	if (!strcmp(kname, XATTR_POSIX_ACL_ACCESS) ||
++	    !strcmp(kname, XATTR_POSIX_ACL_DEFAULT))
++		posix_acl_fix_xattr_to_user(kvalue, size);
++}
 +
- /**
-  * richace_is_owner  -  check if @ace is an OWNER@ entry
+ /*
+  * Extended attribute GET operations
   */
+@@ -426,9 +445,7 @@ getxattr(struct dentry *d, const char __user *name, void __user *value,
+ 
+ 	error = vfs_getxattr(d, kname, kvalue, size);
+ 	if (error > 0) {
+-		if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+-		    (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+-			posix_acl_fix_xattr_to_user(kvalue, size);
++		fix_xattr_to_user(kname, kvalue, size);
+ 		if (size && copy_to_user(value, kvalue, error))
+ 			error = -EFAULT;
+ 	} else if (error == -ERANGE && size >= XATTR_SIZE_MAX) {
 -- 
 2.5.0
 
