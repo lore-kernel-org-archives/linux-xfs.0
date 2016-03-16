@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BC91F7CD1
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 17:19:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8113030405F
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:19:50 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7680C7CA0
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 17:19:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4A6AB8F804B
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:19:54 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PxVmreJs4rcfrkZg (version=TLSv1.2
+	cuda.sgi.com with ESMTP id VX8zuOWKORC8N5In (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:19:49 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:19:53 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v20 09/23] richacl: Permission check algorithm
-Date: Wed, 16 Mar 2016 23:18:49 +0100
-Message-Id: <1458166743-18488-10-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v20 10/23] posix_acl: Unexport acl_by_type and make it static
+Date: Wed, 16 Mar 2016 23:18:50 +0100
+Message-Id: <1458166743-18488-11-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1458166743-18488-1-git-send-email-agruenba@redhat.com>
 References: <1458166743-18488-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,165 +31,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-A richacl roughly grants a requested access if the NFSv4 acl in the
-richacl grants the requested permissions according to the NFSv4
-permission check algorithm and the file mask that applies to the process
-includes the requested permissions.
+acl_by_type(inode, type) returns a pointer to either inode->i_acl or
+inode->i_default_acl depending on type.  This is useful in
+fs/posix_acl.c, but should never have been visible outside that file.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: "J. Bruce Fields" <bfields@fieldses.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/richacl.c            | 128 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |   1 +
- 2 files changed, 129 insertions(+)
+ fs/posix_acl.c            | 3 +--
+ include/linux/posix_acl.h | 1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 056228f..cb0ef3f 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -338,3 +338,131 @@ restart:
- 	acl->a_flags &= ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED);
- }
- EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
-+
-+/**
-+ * richacl_permission  -  richacl permission check algorithm
-+ * @inode:	inode to check
-+ * @acl:	rich acl of the inode
-+ * @want:	requested access (MAY_* flags)
-+ *
-+ * Checks if the current process is granted @mask flags in @acl.
-+ */
-+int
-+richacl_permission(struct inode *inode, const struct richacl *acl,
-+		   int want)
-+{
-+	const struct richace *ace;
-+	unsigned int mask = richacl_want_to_mask(want);
-+	unsigned int requested = mask, denied = 0;
-+	int in_owning_group = in_group_p(inode->i_gid);
-+	int in_owner_or_group_class = in_owning_group;
-+
-+	/*
-+	 * A process is
-+	 *   - in the owner file class if it owns the file,
-+	 *   - in the group file class if it is in the file's owning group or
-+	 *     it matches any of the user or group entries, and
-+	 *   - in the other file class otherwise.
-+	 * The file class is only relevant for determining which file mask to
-+	 * apply, which only happens for masked acls.
-+	 */
-+	if (acl->a_flags & RICHACL_MASKED) {
-+		if ((acl->a_flags & RICHACL_WRITE_THROUGH) &&
-+		    uid_eq(current_fsuid(), inode->i_uid)) {
-+			denied = requested & ~acl->a_owner_mask;
-+			goto out;
-+		}
-+	} else {
-+		/*
-+		 * When the acl is not masked, there is no need to determine if
-+		 * the process is in the group class and we can break out
-+		 * earlier of the loop below.
-+		 */
-+		in_owner_or_group_class = 1;
-+	}
-+
-+	/*
-+	 * Check if the acl grants the requested access and determine which
-+	 * file class the process is in.
-+	 */
-+	richacl_for_each_entry(ace, acl) {
-+		unsigned int ace_mask = ace->e_mask;
-+
-+		if (richace_is_inherit_only(ace))
-+			continue;
-+		if (richace_is_owner(ace)) {
-+			if (!uid_eq(current_fsuid(), inode->i_uid))
-+				continue;
-+			goto entry_matches_owner;
-+		} else if (richace_is_group(ace)) {
-+			if (!in_owning_group)
-+				continue;
-+		} else if (richace_is_unix_user(ace)) {
-+			if (!uid_eq(current_fsuid(), ace->e_id.uid))
-+				continue;
-+			if (uid_eq(current_fsuid(), inode->i_uid))
-+				goto entry_matches_owner;
-+		} else if (richace_is_unix_group(ace)) {
-+			if (!in_group_p(ace->e_id.gid))
-+				continue;
-+		} else
-+			goto entry_matches_everyone;
-+
-+		/*
-+		 * Apply the group file mask to entries other than owner@ and
-+		 * everyone@ or user entries matching the owner.  This ensures
-+		 * that we grant the same permissions as the acl computed by
-+		 * richacl_apply_masks().
-+		 *
-+		 * Without this restriction, the following richacl would grant
-+		 * rw access to processes which are both the owner and in the
-+		 * owning group, but not to other users in the owning group,
-+		 * which could not be represented without masks:
-+		 *
-+		 *  owner:rw::mask
-+		 *  group@:rw::allow
-+		 */
-+		if ((acl->a_flags & RICHACL_MASKED) && richace_is_allow(ace))
-+			ace_mask &= acl->a_group_mask;
-+
-+entry_matches_owner:
-+		/* The process is in the owner or group file class. */
-+		in_owner_or_group_class = 1;
-+
-+entry_matches_everyone:
-+		/* Check which mask flags the ACE allows or denies. */
-+		if (richace_is_deny(ace))
-+			denied |= ace_mask & mask;
-+		mask &= ~ace_mask;
-+
-+		/*
-+		 * Keep going until we know which file class
-+		 * the process is in.
-+		 */
-+		if (!mask && in_owner_or_group_class)
-+			break;
-+	}
-+	denied |= mask;
-+
-+	if (acl->a_flags & RICHACL_MASKED) {
-+		/*
-+		 * The file class a process is in determines which file mask
-+		 * applies.  Check if that file mask also grants the requested
-+		 * access.
-+		 */
-+		if (uid_eq(current_fsuid(), inode->i_uid))
-+			denied |= requested & ~acl->a_owner_mask;
-+		else if (in_owner_or_group_class)
-+			denied |= requested & ~acl->a_group_mask;
-+		else {
-+			if (acl->a_flags & RICHACL_WRITE_THROUGH)
-+				denied = requested & ~acl->a_other_mask;
-+			else
-+				denied |= requested & ~acl->a_other_mask;
-+		}
-+	}
-+
-+out:
-+	return denied ? -EACCES : 0;
-+}
-+EXPORT_SYMBOL_GPL(richacl_permission);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 3559b2c..be9fb65 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -179,5 +179,6 @@ extern int richacl_masks_to_mode(const struct richacl *);
- extern unsigned int richacl_mode_to_mask(umode_t);
- extern unsigned int richacl_want_to_mask(unsigned int);
- extern void richacl_compute_max_masks(struct richacl *);
-+extern int richacl_permission(struct inode *, const struct richacl *, int);
+diff --git a/fs/posix_acl.c b/fs/posix_acl.c
+index 711dd51..55f2445 100644
+--- a/fs/posix_acl.c
++++ b/fs/posix_acl.c
+@@ -21,7 +21,7 @@
+ #include <linux/export.h>
+ #include <linux/user_namespace.h>
  
- #endif /* __RICHACL_H */
+-struct posix_acl **acl_by_type(struct inode *inode, int type)
++static struct posix_acl **acl_by_type(struct inode *inode, int type)
+ {
+ 	switch (type) {
+ 	case ACL_TYPE_ACCESS:
+@@ -32,7 +32,6 @@ struct posix_acl **acl_by_type(struct inode *inode, int type)
+ 		BUG();
+ 	}
+ }
+-EXPORT_SYMBOL(acl_by_type);
+ 
+ struct posix_acl *get_cached_acl(struct inode *inode, int type)
+ {
+diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
+index 3e96a6a..5b5a80c 100644
+--- a/include/linux/posix_acl.h
++++ b/include/linux/posix_acl.h
+@@ -99,7 +99,6 @@ extern int posix_acl_create(struct inode *, umode_t *, struct posix_acl **,
+ extern int simple_set_acl(struct inode *, struct posix_acl *, int);
+ extern int simple_acl_create(struct inode *, struct inode *);
+ 
+-struct posix_acl **acl_by_type(struct inode *inode, int type);
+ struct posix_acl *get_cached_acl(struct inode *inode, int type);
+ struct posix_acl *get_cached_acl_rcu(struct inode *inode, int type);
+ void set_cached_acl(struct inode *inode, int type, struct posix_acl *acl);
 -- 
 2.5.0
 
