@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2A14D7CA0
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 14:34:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E1F928F8040
-	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 12:34:41 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GTNzTISRRRbekEP8 for <xfs@oss.sgi.com>;
-	Wed, 16 Mar 2016 12:34:38 -0700 (PDT)
-Date: Thu, 17 Mar 2016 06:34:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: an mount option question and dunno if right here...
-Message-ID: <20160316193436.GF11812@dastard>
-References: <08297acdf77244b468e15458f3d78327@zbfmail.de>
-	<56E1A8B1.2080800@sandeen.net>
-	<ebcb0a57f224c5a9be0d2d2777bca581@zbfmail.de>
-	<56E9641D.7010203@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id D05497CCA
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 17:31:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 95BD78F8039
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:31:41 -0700 (PDT)
+Received: from mail-vk0-f45.google.com (mail-vk0-f45.google.com
+	[209.85.213.45]) by cuda.sgi.com with ESMTP id jCaAOdsZxHalOVHC
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Mar 2016 15:31:39 -0700 (PDT)
+Received: by mail-vk0-f45.google.com with SMTP id c3so80677497vkb.3
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 15:31:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56E9641D.7010203@sandeen.net>
+In-Reply-To: <20160315071256.GD19747@infradead.org>
+References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
+	<1456733847-17982-12-git-send-email-agruenba@redhat.com>
+	<20160311140746.GC14808@infradead.org>
+	<CAHc6FU7hSDBa51mJZZZ=q3agzWXk=DZicnyuPriKHnC2Nxr8rw@mail.gmail.com>
+	<20160315071256.GD19747@infradead.org>
+Date: Wed, 16 Mar 2016 23:31:38 +0100
+Message-ID: <CAHc6FU54E9EnsK3H==VyK3htXMNb4pPR4jcLi1GcOF+nb4Sw+g@mail.gmail.com>
+Subject: Re: [PATCH v18 11/22] vfs: Cache base_acl objects in inodes
+From: Andreas Gruenbacher <agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,53 +35,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com, weber@zbfmail.de
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, "J. Bruce Fields" <bfields@fieldses.org>, chao2.yu@samsung.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, jaegeuk@kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Wed, Mar 16, 2016 at 08:48:13AM -0500, Eric Sandeen wrote:
-> On 3/16/16 8:03 AM, Marko Weber | 8000 wrote:
-> > 
-> 
-> > Hi Eric,
-> > 
-> > 
-> > my /etc/fstab entry:
-> > 
-> > /dev/VolGroup01/wiso    /raid5/wiso     xfs     norelatime,lazytime
-> > 
-> > 
-> > 
-> > # mount:
-> > 
-> > 
-> > /dev/mapper/VolGroup01-wiso on /raid5/wiso type xfs (rw,relatime,lazytime,attr2,inode64,logbufs=8,logbsize=256k,sunit=1024,swidth=3072,noquota)
-> > 
-> > 
-> > cat /proc/mounts:
-> > 
-> > /dev/mapper/VolGroup01-wiso /raid5/wiso xfs rw,lazytime,relatime,attr2,inode64,logbufs=8,logbsize=256k,sunit=1024,swidth=3072,noquota 0 0
-> > 
-> 
-> Ok, I stand corrected, sorry; I forgot about this:
-> 
-> commit 0ae45f63d4ef8d8eeec49c7d8b44a1775fff13e8
-> Author: Theodore Ts'o <tytso@mit.edu>
-> Date:   Mon Feb 2 00:37:00 2015 -0500
-> 
->     vfs: add support for a lazytime mount option
+On Tue, Mar 15, 2016 at 8:12 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Mar 11, 2016 at 05:24:45PM +0100, Andreas Gruenbacher wrote:
+>> POSIX ACLs and RichACLs are different objects, with different members
+>> and different algorithms operating on them. The only commonality is
+>> that they are both kmalloc()ed, reference counted objects, and when an
+>> inode is destroyed, both kinds of ACLs can be put in the same way,
+>> avoiding an unnecessary if. What kind of common-code container beyond
+>> that are you still dreaming about?
+>
+> We still have a main object that is simply a list of ACEs.  But if that
+> doesn't work out (I suspect it should) I don't think the common base
+> object is a good idea.  It just leads to a lot of crazy container_of
+> calls.
 
-Don't for that lazytime isn't actually implemented by XFS, and we
-can't intercept that flag at mount time because it's been added as a
-VFS flag. So on everything but ext4 it does nothing, it conflicts
-with other atime settings we do support, and we can't really do
-anything about it...
+There are two such container_of calls for POSIX ACLs in fs/jffs2/acl.c
+[which could be replaced by get_acl()], two in fs/posix_acl.c for
+POSIX ACLs, and two in fs/richacl.c for RichACLs. That's it.
 
-Cheers,
+> If the common object abstraction doesn't work out we'll need
+> a procedural one instead that has common acl_* calls that decide what
+> do to based on the file system acl flag.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I've already made such abstractions where it made sense; if you can
+find more, I don't see why we shouldn't add them.
+
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
