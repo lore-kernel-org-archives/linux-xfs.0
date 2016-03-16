@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D9717CD9
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 16:05:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D63D48F8033
-	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 14:05:29 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id lQQWqVo0h0h7YZ6D for <xfs@oss.sgi.com>;
-	Tue, 15 Mar 2016 14:05:27 -0700 (PDT)
-Date: Tue, 15 Mar 2016 17:05:26 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH v18 19/22] richacl: Add richacl xattr handler
-Message-ID: <20160315210526.GC3658@fieldses.org>
-References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
-	<1456733847-17982-20-git-send-email-agruenba@redhat.com>
-	<20160311141735.GF14808@infradead.org>
-	<20160311141905.GC13178@fieldses.org>
-	<20160315071014.GB19747@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CB4907CDF
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 19:34:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4564EAC001
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 17:34:46 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 9DYNztOCb7FP46xK for <xfs@oss.sgi.com>;
+	Tue, 15 Mar 2016 17:34:44 -0700 (PDT)
+Received: from Liberator.local (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 0A21E481F
+	for <xfs@oss.sgi.com>; Tue, 15 Mar 2016 19:34:42 -0500 (CDT)
+Subject: Re: new fs, xfs_admin new label, metadata corruption detected
+References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56E8AA22.7080301@sandeen.net>
+Date: Tue, 15 Mar 2016 19:34:42 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160315071014.GB19747@infradead.org>
+In-Reply-To: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,29 +32,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-On Tue, Mar 15, 2016 at 12:10:14AM -0700, Christoph Hellwig wrote:
-> On Fri, Mar 11, 2016 at 09:19:05AM -0500, J. Bruce Fields wrote:
-> > On Fri, Mar 11, 2016 at 06:17:35AM -0800, Christoph Hellwig wrote:
-> > > On Mon, Feb 29, 2016 at 09:17:24AM +0100, Andreas Gruenbacher wrote:
-> > > > Add richacl xattr handler implementing the xattr operations based on the
-> > > > get_richacl and set_richacl inode operations.
-> > > 
-> > > Given all the issues with Posix ACLs and selinux attributes these really
-> > > should be proper syscalls instead of abusing the xattr interface.
-> > 
-> > What are those problems exactly?
+On 3/15/16 6:08 PM, Chris Murphy wrote:
+> Is this expected? File system continues to work OK, sha256sum on the
+> single file on this fs matches the source, but the metadata corruption
+> messages are a bit scary so figured I'd ask about it.
 > 
-> That people get confused between the attr used by the xattr syscall
-> interface and the attr used to store things on disk or the protocol.
-> This has happened every time we have non-native support, e.g. XFS, NFS,
-> CIFS, ntfs, etc.  And it's only going to become worse.
+> Filesystem created with
+> xfsprogs-4.3.0-1.fc23
+> kernel-4.4.4-300.fc23.x86_64
+> 
+> mkfs.xfs defaults used on an LVM thinly provisioned volume on a single
+> spinning disk.
+> 
+> # xfs_info /dev/mapper/VG-testxfs
+> meta-data=/dev/mapper/VG-testxfs isize=512    agcount=23, agsize=399984 blks
+                                                ^^^^^^^^^^
 
-How has that confusion caused problems in practice?
+It seems that you left a growfs step out of it, where does that come in
+to the testcase?
 
---b.
+-Eric
 
 _______________________________________________
 xfs mailing list
