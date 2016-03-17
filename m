@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C65F7CA1
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 19:36:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 96CEAAC002
-	for <xfs@oss.sgi.com>; Mon, 14 Mar 2016 17:36:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zm10jN5BqSRQtVFd for <xfs@oss.sgi.com>;
-	Mon, 14 Mar 2016 17:36:09 -0700 (PDT)
-Subject: Re: [XFSTESTS v4 0/4] Richacl tests
-References: <1457525199-15355-1-git-send-email-agruenba@redhat.com>
-	<20160314222433.GC11812@dastard>
-	<CAHc6FU4MqOqfzEeig-73An-9tQEgZE2BtWpjrs6ZPWB26x9AxQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56E758F7.900@sandeen.net>
-Date: Mon, 14 Mar 2016 19:36:07 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A9A5E7CA0
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 21:39:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 78AA18F8049
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 19:39:25 -0700 (PDT)
+Received: from mail-io0-f172.google.com (mail-io0-f172.google.com
+	[209.85.223.172]) by cuda.sgi.com with ESMTP id
+	RcwsKqUl3i3FPsA6 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Mar 2016 19:39:22 -0700 (PDT)
+Received: by mail-io0-f172.google.com with SMTP id n190so83101118iof.0
+	for <xfs@oss.sgi.com>; Wed, 16 Mar 2016 19:39:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAHc6FU4MqOqfzEeig-73An-9tQEgZE2BtWpjrs6ZPWB26x9AxQ@mail.gmail.com>
+In-Reply-To: <CAJCQCtQYMitUvPN1ORyEHvDhddJ09Hp_xK_CBc0e1Cu972S3_w@mail.gmail.com>
+References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
+	<56E8AA22.7080301@sandeen.net>
+	<CAJCQCtQYMitUvPN1ORyEHvDhddJ09Hp_xK_CBc0e1Cu972S3_w@mail.gmail.com>
+Date: Wed, 16 Mar 2016 20:39:21 -0600
+Message-ID: <CAJCQCtQJ_1ARXYuN3j2VyVN8FBtG0myqmPnOgco1v-tQxqmyBg@mail.gmail.com>
+Subject: Re: new fs, xfs_admin new label, metadata corruption detected
+From: Chris Murphy <lists@colorremedies.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +33,133 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, fstests <fstests@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 3/14/16 6:23 PM, Andreas Gruenbacher wrote:
-> On Mon, Mar 14, 2016 at 11:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+OK I can consistently reproduce this on the CLI. I end up with totally different
 
-<snip>
+# lvcreate -L 40g VG -n testxfs
+  Logical volume "testxfs" created.
+# lvs
+  LV         VG   Attr       LSize  Pool       Origin Data%  Meta%
+Move Log Cpy%Sync Convert
+  testbtrfs  VG   Vwi-a-tz-- 39.06g thintastic        0.01
+  testext4   VG   Vwi-a-tz-- 39.06g thintastic        3.96
+  testxfs    VG   -wi-a----- 40.00g
+  thintastic VG   twi-aotz-- 39.06g                   3.97   4.86
+# mkfs.xfs /dev/VG/testxfs
+meta-data=/dev/VG/testxfs        isize=512    agcount=4, agsize=2621440 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0
+data     =                       bsize=4096   blocks=10485760, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=5120, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# mount /dev/VG/testxfs /mnt/0
+# cp file.iso /mnt/0
+# lvresize -L 80g VG/testxfs
+  Size of logical volume VG/testxfs changed from 40.00 GiB (10240
+extents) to 80.00 GiB (20480 extents).
+  Logical volume testxfs successfully resized.
+# xfs_growfs -d /mnt/0
+meta-data=/dev/mapper/VG-testxfs isize=512    agcount=4, agsize=2621440 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0
+data     =                       bsize=4096   blocks=10485760, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=5120, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 10485760 to 20971520
+# df -h
+Filesystem              Size  Used Avail Use% Mounted on
+devtmpfs                1.9G     0  1.9G   0% /dev
+tmpfs                   1.9G     0  1.9G   0% /dev/shm
+tmpfs                   1.9G  904K  1.9G   1% /run
+tmpfs                   1.9G     0  1.9G   0% /sys/fs/cgroup
+/dev/sda1               180G   15G  165G   9% /
+tmpfs                   1.9G  4.0K  1.9G   1% /tmp
+/dev/sda1               180G   15G  165G   9% /boot
+/dev/sda6               525M  8.4M  517M   2% /boot/efi
+/dev/mapper/brick1      562G  355G  205G  64% /brick1
+tmpfs                   388M     0  388M   0% /run/user/1000
+/dev/mapper/VG-testxfs   80G  857M   80G   2% /mnt/0
+[root@f23s ~]# lvs
+  LV         VG   Attr       LSize  Pool       Origin Data%  Meta%
+Move Log Cpy%Sync Convert
+  testbtrfs  VG   Vwi-a-tz-- 39.06g thintastic        0.01
+  testext4   VG   Vwi-a-tz-- 39.06g thintastic        3.96
+  testxfs    VG   -wi-ao---- 80.00g
+  thintastic VG   twi-aotz-- 39.06g                   3.97   4.86
+# xfs_info /dev/VG/testxfs
+meta-data=/dev/mapper/VG-testxfs isize=512    agcount=8, agsize=2621440 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0
+data     =                       bsize=4096   blocks=20971520, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=5120, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# xfs_repair -n /dev/VG/testxfs
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+Metadata corruption detected at xfs_agf block 0x8c00008/0x1000
+fllast 1014 in agf 7 too large (max = 1014)
+Metadata corruption detected at xfs_agf block 0x6400008/0x1000
+fllast 1014 in agf 5 too large (max = 1014)
+Metadata corruption detected at xfs_agf block 0x5000008/0x1000
+fllast 1014 in agf 4 too large (max = 1014)
+Metadata corruption detected at xfs_agf block 0x7800008/0x1000
+fllast 1014 in agf 6 too large (max = 1014)
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 4
+        - agno = 2
+        - agno = 7
+        - agno = 5
+        - agno = 6
+        - agno = 3
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify link counts...
+No modify flag set, skipping filesystem flush and exiting.
+# mount /dev/VG/testxfs /mnt/0
 
->> Most of this is as simple as copying the execution parts of your
->> scripts to the xfstests test scripts, and the output parts of the
->> test scripts into the test.out file. There's no new infrastructure
->> needed for running tests, no separate richacl/ script directory,
->> etc.
-> 
-> I've said again and again that maintaining one set of richacl tests in
-> xfstests and another in the richacl package is going to really
-> painful, and that because of that, I'm trying to find a way of using
-> the same test scripts in both places. That message obviously didn't
-> get through at all though. That is just sad.
+No mount errors.
+[14189.495433] XFS (dm-5): Mounting V5 Filesystem
+[14189.710141] XFS (dm-5): Ending clean mount
+[14326.856144] XFS (dm-5): Unmounting Filesystem
+[14413.691734] XFS (dm-5): Mounting V5 Filesystem
+[14413.833598] XFS (dm-5): Ending clean mount
 
-Andreas, the issue as I see it is that xfstests is a large community
-project, with many users who have come to understand its implementation
-and its quirks^Wconventions.  It is run and maintained by many people;
-over 150 authors have committed patches to the codebase.  They understand
-how it all works together; it is a common language.
 
-The way you are proposing your richacl tests integration is unlike any
-other tests in the codebase; you have, to some degree, spliced your own
-test harness into xfstests, rather than following the advice of
-"When in Rome, do as the Romans do."
 
-This might make your life a little easier if you plan to maintain
-a separate repo of tests; in the meantime it makes life harder for the
-150+ people who will be running and maintaining xfstests, not your
-test repo.
-
-The advantage of xfstests is that is is a common language, warts
-and all.  It is run by developers and qa groups all over the world.
-There is a learning curve, but many people have learned it.
-Implementing your tests in this way adds a new and unique learning
-curve for all those people, and will make it less likely that others
-will share in the maintenance burden for these new tests.
-
-What I would suggest is that if you have tests which test only
-richacl userspace functionality, then perhaps you should keep
-them private to the richacl package.  For tests which test kernel
-functionality, make them native to xfstests.  This way you will get
-good coverage and maintenance help from all the people testing
-kernelspace with xfstests, and those hacking on richacls can run the
-tests local to it.
-
-This is more or less what e2fsprogs has done, and it seems to work
-out ok.
-
--Eric
+Chris Murphy
 
 _______________________________________________
 xfs mailing list
