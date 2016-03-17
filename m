@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 45EF97CA0
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 08:05:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B9E00AC004
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 06:05:22 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 732AF7CA1
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 09:30:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3983C30406B
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fWXWa6Ksmgh7KfwB (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3NOTPqXcPQyK0yEV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 06:05:21 -0700 (PDT)
-Date: Thu, 17 Mar 2016 09:05:18 -0400
+	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:39 -0700 (PDT)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: build bios directly in xfs_add_to_ioend
-Message-ID: <20160317130517.GA8242@bfoster.bfoster>
-References: <1458128681-10869-1-git-send-email-hch@lst.de>
-	<1458128681-10869-2-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1458128681-10869-2-git-send-email-hch@lst.de>
+Subject: [RFC PATCH 0/9] dm-thin/xfs: prototype a block reservation allocation
+	model
+Date: Thu, 17 Mar 2016 10:30:28 -0400
+Message-Id: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,205 +22,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-On Wed, Mar 16, 2016 at 12:44:39PM +0100, Christoph Hellwig wrote:
-> Currently adding a buffer to the ioend and then building a bio from
-> the buffer list are two separate operations. We don't build the bios
-> and submit them until the ioend is submitted, and this places a
-> fixed dependency on bufferhead chaining in the ioend.
-> 
-> The first step to removing the bufferhead chaining in the ioend is
-> on the IO submission side. We can build the bio directly as we add
-> the buffers to the ioend chain, thereby removing the need for a
-> latter "buffer-to-bio" submission loop. This allows us to submit
-> bios on large ioends as soon as we cannot add more data to the bio.
-> 
-> These bios then get captured by the active plug, and hence will be
-> dispatched as soon as either the plug overflows or we schedule away
-> from the writeback context. This will reduce submission latency for
-> large IOs, but will also allow more timely request queue based
-> writeback blocking when the device becomes congested.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [hch: various small updates]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Hi all,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This is a proof-of-concept of a block reservation allocation model
+between XFS and dm-thin. The purpose is to create a mechanism by which
+the filesystem can determine an underlying thin volume is out of space
+and opt to return -ENOSPC to userspace rather than waiting until the
+volume is driven out of space (and deactivated or transitioned
+read-only). The idea, in principle, is to use a similar reservation
+model for thin pool blocks as the filesystem does today for delayed
+allocation blocks and to prevent similar risk of overprovisioning of fs
+blocks.
 
->  fs/xfs/xfs_aops.c | 69 +++++++++++++++++++++++++------------------------------
->  fs/xfs/xfs_aops.h |  1 +
->  2 files changed, 32 insertions(+), 38 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 75a39a8..17cc6cc 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -274,6 +274,7 @@ xfs_alloc_ioend(
->  	xfs_ioend_t		*ioend;
->  
->  	ioend = mempool_alloc(xfs_ioend_pool, GFP_NOFS);
-> +	memset(ioend, 0, sizeof(*ioend));
->  
->  	/*
->  	 * Set the count to 1 initially, which will prevent an I/O
-> @@ -281,16 +282,9 @@ xfs_alloc_ioend(
->  	 * all the I/O from calling the completion routine too early.
->  	 */
->  	atomic_set(&ioend->io_remaining, 1);
-> -	ioend->io_error = 0;
->  	INIT_LIST_HEAD(&ioend->io_list);
->  	ioend->io_type = type;
->  	ioend->io_inode = inode;
-> -	ioend->io_buffer_head = NULL;
-> -	ioend->io_buffer_tail = NULL;
-> -	ioend->io_offset = 0;
-> -	ioend->io_size = 0;
-> -	ioend->io_append_trans = NULL;
-> -
->  	INIT_WORK(&ioend->io_work, xfs_end_io);
->  	return ioend;
->  }
-> @@ -452,13 +446,18 @@ static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
->  }
->  
->  /*
-> - * Submit all of the bios for an ioend. We are only passed a single ioend at a
-> - * time; the caller is responsible for chaining prior to submission.
-> + * Submit the bio for an ioend. We are passed an ioend with a bio attached to
-> + * it, and we submit that bio. The ioend may be used for multiple bio
-> + * submissions, so we only want to allocate an append transaction for the ioend
-> + * once. In the case of multiple bio submission, each bio will take an IO
-> + * reference to the ioend to ensure that the ioend completion is only done once
-> + * all bios have been submitted and the ioend is really done.
->   *
->   * If @fail is non-zero, it means that we have a situation where some part of
->   * the submission process has failed after we have marked paged for writeback
-> - * and unlocked them. In this situation, we need to fail the ioend chain rather
-> - * than submit it to IO. This typically only happens on a filesystem shutdown.
-> + * and unlocked them. In this situation, we need to fail the bio and ioend
-> + * rather than submit it to IO. This typically only happens on a filesystem
-> + * shutdown.
->   */
->  STATIC int
->  xfs_submit_ioend(
-> @@ -466,14 +465,13 @@ xfs_submit_ioend(
->  	xfs_ioend_t		*ioend,
->  	int			status)
->  {
-> -	struct buffer_head	*bh;
-> -	struct bio		*bio;
-> -	sector_t		lastblock = 0;
-> -
->  	/* Reserve log space if we might write beyond the on-disk inode size. */
->  	if (!status &&
-> -	     ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
-> +	    ioend->io_bio && ioend->io_type != XFS_IO_UNWRITTEN &&
-> +	    xfs_ioend_is_append(ioend) &&
-> +	    !ioend->io_append_trans)
->  		status = xfs_setfilesize_trans_alloc(ioend);
-> +
->  	/*
->  	 * If we are failing the IO now, just mark the ioend with an
->  	 * error and finish it. This will run IO completion immediately
-> @@ -481,31 +479,15 @@ xfs_submit_ioend(
->  	 * time.
->  	 */
->  	if (status) {
-> +		if (ioend->io_bio)
-> +			bio_put(ioend->io_bio);
->  		ioend->io_error = status;
->  		xfs_finish_ioend(ioend);
->  		return status;
->  	}
->  
-> -	bio = NULL;
-> -	for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
-> -
-> -		if (!bio) {
-> -retry:
-> -			bio = xfs_alloc_ioend_bio(bh);
-> -		} else if (bh->b_blocknr != lastblock + 1) {
-> -			xfs_submit_ioend_bio(wbc, ioend, bio);
-> -			goto retry;
-> -		}
-> -
-> -		if (xfs_bio_add_buffer(bio, bh) != bh->b_size) {
-> -			xfs_submit_ioend_bio(wbc, ioend, bio);
-> -			goto retry;
-> -		}
-> -
-> -		lastblock = bh->b_blocknr;
-> -	}
-> -	if (bio)
-> -		xfs_submit_ioend_bio(wbc, ioend, bio);
-> +	xfs_submit_ioend_bio(wbc, ioend, ioend->io_bio);
-> +	ioend->io_bio = NULL;
->  	xfs_finish_ioend(ioend);
->  	return 0;
->  }
-> @@ -523,6 +505,7 @@ xfs_add_to_ioend(
->  	struct buffer_head	*bh,
->  	xfs_off_t		offset,
->  	struct xfs_writepage_ctx *wpc,
-> +	struct writeback_control *wbc,
->  	struct list_head	*iolist)
->  {
->  	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
-> @@ -542,8 +525,18 @@ xfs_add_to_ioend(
->  		wpc->ioend->io_buffer_tail->b_private = bh;
->  		wpc->ioend->io_buffer_tail = bh;
->  	}
-> -
->  	bh->b_private = NULL;
-> +
-> +retry:
-> +	if (!wpc->ioend->io_bio)
-> +		wpc->ioend->io_bio = xfs_alloc_ioend_bio(bh);
-> +
-> +	if (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size) {
-> +		xfs_submit_ioend_bio(wbc, wpc->ioend, wpc->ioend->io_bio);
-> +		wpc->ioend->io_bio = NULL;
-> +		goto retry;
-> +	}
-> +
->  	wpc->ioend->io_size += bh->b_size;
->  	wpc->last_block = bh->b_blocknr;
->  	xfs_start_buffer_writeback(bh);
-> @@ -803,7 +796,7 @@ xfs_writepage_map(
->  			lock_buffer(bh);
->  			if (wpc->io_type != XFS_IO_OVERWRITE)
->  				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
-> -			xfs_add_to_ioend(inode, bh, offset, wpc, &submit_list);
-> +			xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
->  			count++;
->  		}
->  
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index 4e01bd5..c89c3bd 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -52,6 +52,7 @@ typedef struct xfs_ioend {
->  	xfs_off_t		io_offset;	/* offset in the file */
->  	struct work_struct	io_work;	/* xfsdatad work queue */
->  	struct xfs_trans	*io_append_trans;/* xact. for size update */
-> +	struct bio		*io_bio;	/* bio being built */
->  } xfs_ioend_t;
->  
->  extern const struct address_space_operations xfs_address_space_operations;
-> -- 
-> 2.1.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+This idea was concocted a while back during some discussions around how
+to provide a more user friendly out of space condition to users of
+filesystems on top of thin devices. At the moment, we (XFS) write to the
+underlying volume until it runs out of space and transitions to
+read-only. The administrator is responsible to prevent or recover from
+this condition via auto provisioning and/or monitoring for low watermark
+notifications. With a reservation model, the filesytem returns -ENOSPC
+at write time when the underlying pool is out of space and operation
+otherwise continues (e.g., space can be freed from the fs) as if the fs
+itself were out of space.
+
+Joe and Mike were kind enough to hack together a dm block reservation
+mechanism to help us experiment further. I slightly modified and hacked
+in an additional provision call based on their code, and then hacked up
+an integration with the existing XFS resource reservation mechanism. I
+think the results are slightly encouraging, at least in that the basic
+buffered write mechanism works as expected without too much inefficiency
+due to the over-reservation.
+
+There are still flaws and tradeoffs to this approach, of course. The
+current implementation uses a worst case reservation model that assumes
+every unallocated filesystem block requires a new dm-thin block
+allocation. With dm-thin block sizes on the order of 256k-1MB for larger
+volumes, this is a significant over-reservation for 4k (or smaller)
+filesystem blocks. XFS has algorithms in some areas (buffered writes)
+that deal with this problem already, but at the very least, further
+optimization might be in order to improve performance. This also doesn't
+consider other operations (fallocate) or filesystems that might not be
+immediately suited to handle this limitation. Also, the interface to the
+block device is clearly crude, incomplete and hacked together
+(particularly the provision bits added by me). It remains to be seen
+whether we can define a sane interface to fully support this
+functionality.
+
+As far as the implementation goes, this is a toy/experiment with various
+other known issues (mostly documented in the code, see the comments in
+xfs_thin.c) and should not be used for anything outside of
+experimentation. I haven't done much testing beyond simple buffered
+write runs to ENOSPC, so problems in other areas can be expected.
+Apologies for whatever general shoddiness might be discovered, but I
+wanted to get something posted to generate discussion before putting too
+much effort into testing and exploring all of the dark corners where
+more issues certainly lurk.
+
+In summary, the primary purpose of this series is to close the loop on
+some of the early XFS/dm-thin discussion around whether something like
+this is feasible, worthwhile, and to otherwise gather initial thoughts
+from fs and dm folks on the general topic. If worth pursuing further,
+discussion around things like an appropriate interface to the block
+device is certainly warranted.
+
+Thanks again to Joe and Mike for entertaining the idea and hacking
+something together to play around with. Thoughts, reviews, flames
+appreciated. (BTW, I'm also planning to be at LSF if anybody is
+interested in discussing this further).
+
+Brian
+
+P.S., With these patches applied, use the following to create an
+over-provisioned thin volume and mount XFS in "reservation mode:"
+
+# lvcreate --thinpool test/pool -L1G
+# lvcreate -T test/pool -n thin -V 10G
+# mkfs.xfs -f /dev/test/thin
+# mount /dev/test/thin /mnt -o discard
+# dmesg | tail
+...
+XFS (dm-8): Mounting V5 Filesystem
+XFS (dm-8): Ending clean mount
+XFS (dm-8): Thin pool reservation enabled
+XFS (dm-8): Thin reserve blocksize: 512 sectors
+# dd if=/dev/zero of=/mnt/file bs=4k
+dd: error writing '/mnt/file': No space left on device
+...
+
+Brian Foster (6):
+  dm thin: update reserve space func to allow reduction
+  block: add a block_device_operations method to provision space
+  dm: add method to provision space
+  dm thin: add method to provision space
+  xfs: thin block device reservation mechanism
+  xfs: adopt a reserved allocation model on dm-thin devices
+
+Joe Thornber (1):
+  dm thin: add methods to set and get reserved space
+
+Mike Snitzer (2):
+  block: add block_device_operations methods to set and get reserved
+    space
+  dm: add methods to set and get reserved space
+
+ drivers/md/dm-thin.c          | 187 +++++++++++++++++++++++++++--
+ drivers/md/dm.c               | 110 +++++++++++++++++
+ fs/block_dev.c                |  30 +++++
+ fs/xfs/Makefile               |   1 +
+ fs/xfs/libxfs/xfs_alloc.c     |   6 +
+ fs/xfs/xfs_mount.c            |  81 +++++++++++--
+ fs/xfs/xfs_mount.h            |   7 ++
+ fs/xfs/xfs_thin.c             | 273 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_thin.h             |   9 ++
+ fs/xfs/xfs_trace.h            |  27 +++++
+ fs/xfs/xfs_trans.c            |  26 +++-
+ include/linux/blkdev.h        |   7 ++
+ include/linux/device-mapper.h |   7 ++
+ 13 files changed, 749 insertions(+), 22 deletions(-)
+ create mode 100644 fs/xfs/xfs_thin.c
+ create mode 100644 fs/xfs/xfs_thin.h
+
+-- 
+2.4.3
 
 _______________________________________________
 xfs mailing list
