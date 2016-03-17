@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AA89C7CB1
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 09:30:44 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 03C947CC7
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 09:30:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D0736AC007
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 840AFAC006
 	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Te3nhYZ1CF0CLHc0 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 1VRejwcIgS0sn88i (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:39 -0700 (PDT)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC PATCH 2/9] dm: add methods to set and get reserved space
-Date: Thu, 17 Mar 2016 10:30:30 -0400
-Message-Id: <1458225037-24155-3-git-send-email-bfoster@redhat.com>
+Subject: [RFC PATCH 4/9] dm thin: update reserve space func to allow reduction
+Date: Thu, 17 Mar 2016 10:30:32 -0400
+Message-Id: <1458225037-24155-5-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
 References: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,130 +31,59 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-From: Mike Snitzer <snitzer@redhat.com>
+The dm-thin set_reserve_count() function is designed to control the
+current block reservation for a thin pool. It currently only provides
+the ability to increase the reservation.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Clients such as XFS will rely on over-reservation and thus require the
+ability to release excess reservation back to the pool. Update
+set_reserve_count() to return reserved blocks back to the pool.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- drivers/md/dm.c               | 75 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/device-mapper.h |  5 +++
- 2 files changed, 80 insertions(+)
+ drivers/md/dm-thin.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index be49057..4da5d3e 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -664,6 +664,79 @@ out:
- 	return r;
- }
- 
-+/*
-+ * FIXME: factor out common helper that can be used by
-+ * multiple block_device_operations -> target methods
-+ * (including dm_blk_ioctl above)
-+ */
-+
-+static int dm_blk_reserve_space(struct block_device *bdev, sector_t nr_sects)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	int srcu_idx;
-+	struct dm_table *map;
-+	struct dm_target *tgt;
-+	int r = -EINVAL;
-+
-+	map = dm_get_live_table(md, &srcu_idx);
-+
-+	if (!map || !dm_table_get_size(map))
-+		goto out;
-+
-+	/* We only support devices that have a single target */
-+	if (dm_table_get_num_targets(map) != 1)
-+		goto out;
-+
-+	tgt = dm_table_get_target(map, 0);
-+	if (!tgt->type->reserve_space)
-+		goto out;
-+
-+	if (dm_suspended_md(md)) {
-+		r = -EAGAIN;
-+		goto out;
-+	}
-+
-+	r = tgt->type->reserve_space(tgt, nr_sects);
-+out:
-+	dm_put_live_table(md, srcu_idx);
-+
-+	return r;
-+}
-+
-+static int dm_blk_get_reserved_space(struct block_device *bdev,
-+				     sector_t *nr_sects)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	int srcu_idx;
-+	struct dm_table *map;
-+	struct dm_target *tgt;
-+	int r = -EINVAL;
-+
-+	map = dm_get_live_table(md, &srcu_idx);
-+
-+	if (!map || !dm_table_get_size(map))
-+		goto out;
-+
-+	/* We only support devices that have a single target */
-+	if (dm_table_get_num_targets(map) != 1)
-+		goto out;
-+
-+	tgt = dm_table_get_target(map, 0);
-+	if (!tgt->type->get_reserved_space)
-+		goto out;
-+
-+	if (dm_suspended_md(md)) {
-+		r = -EAGAIN;
-+		goto out;
-+	}
-+
-+	r = tgt->type->get_reserved_space(tgt, nr_sects);
-+out:
-+	dm_put_live_table(md, srcu_idx);
-+
-+	return r;
-+}
-+
- static struct dm_io *alloc_io(struct mapped_device *md)
+diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+index 31d36da..ac770d89 100644
+--- a/drivers/md/dm-thin.c
++++ b/drivers/md/dm-thin.c
+@@ -1429,7 +1429,8 @@ static bool dec_reserve_count(struct thin_c *tc, dm_block_t free_blocks)
+ static int set_reserve_count(struct thin_c *tc, dm_block_t count)
  {
- 	return mempool_alloc(md->io_pool, GFP_NOIO);
-@@ -3723,6 +3796,8 @@ static const struct block_device_operations dm_blk_dops = {
- 	.ioctl = dm_blk_ioctl,
- 	.getgeo = dm_blk_getgeo,
- 	.pr_ops = &dm_pr_ops,
-+	.reserve_space = dm_blk_reserve_space,
-+	.get_reserved_space = dm_blk_get_reserved_space,
- 	.owner = THIS_MODULE
- };
+ 	int r;
+-	dm_block_t free_blocks, delta;
++	dm_block_t free_blocks;
++	int64_t delta;
+ 	unsigned long flags;
  
-diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-index 0830c9e..540c772 100644
---- a/include/linux/device-mapper.h
-+++ b/include/linux/device-mapper.h
-@@ -116,6 +116,9 @@ typedef void (*dm_io_hints_fn) (struct dm_target *ti,
-  */
- typedef int (*dm_busy_fn) (struct dm_target *ti);
+ 	r = get_free_blocks(tc->pool, &free_blocks);
+@@ -1437,8 +1438,6 @@ static int set_reserve_count(struct thin_c *tc, dm_block_t count)
+ 		return r;
  
-+typedef int (*dm_reserve_space_fn) (struct dm_target *ti, sector_t nr_sects);
-+typedef int (*dm_get_reserved_space_fn) (struct dm_target *ti, sector_t *nr_sects);
-+
- void dm_error(const char *message);
+ 	spin_lock_irqsave(&tc->pool->lock, flags);
+-	if (count <= tc->reserve_count)
+-		goto out_unlock; /* nothing to do */
+ 	delta = count - tc->reserve_count;
+ 	if (tc->pool->reserve_count + delta > free_blocks)
+ 		r = -ENOSPC;
+@@ -1446,7 +1445,6 @@ static int set_reserve_count(struct thin_c *tc, dm_block_t count)
+ 		tc->reserve_count = count;
+ 		tc->pool->reserve_count += delta;
+ 	}
+-out_unlock:
+ 	spin_unlock_irqrestore(&tc->pool->lock, flags);
  
- struct dm_dev {
-@@ -162,6 +165,8 @@ struct target_type {
- 	dm_busy_fn busy;
- 	dm_iterate_devices_fn iterate_devices;
- 	dm_io_hints_fn io_hints;
-+	dm_reserve_space_fn reserve_space;
-+	dm_get_reserved_space_fn get_reserved_space;
+ 	return r;
+@@ -4369,7 +4367,7 @@ static int thin_reserve_space(struct dm_target *ti, sector_t nr_sects)
+ 	 * @nr_sects must always be a factor of the pool's blocksize;
+ 	 * upper layers can rely on the bdev's minimum_io_size for this.
+ 	 */
+-	if (!nr_sects || !is_factor(nr_sects, pool->sectors_per_block))
++	if (!is_factor(nr_sects, pool->sectors_per_block))
+ 		return -EINVAL;
  
- 	/* For internal device-mapper use. */
- 	struct list_head list;
+ 	blocks = nr_sects;
 -- 
 2.4.3
 
