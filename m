@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 732AF7CA1
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 09:30:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3983C30406B
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2E7407CA1
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 09:30:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 021728F8059
 	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3NOTPqXcPQyK0yEV (version=TLSv1.2
+	cuda.sgi.com with ESMTP id YLfbfrG4wujx16w7 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:39 -0700 (PDT)
+	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 07:30:40 -0700 (PDT)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC PATCH 0/9] dm-thin/xfs: prototype a block reservation allocation
-	model
-Date: Thu, 17 Mar 2016 10:30:28 -0400
-Message-Id: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
+Subject: [RFC PATCH 9/9] xfs: adopt a reserved allocation model on dm-thin
+	devices
+Date: Thu, 17 Mar 2016 10:30:37 -0400
+Message-Id: <1458225037-24155-10-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
+References: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,126 +32,287 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-Hi all,
+Adopt a reservation-based block allocation model when XFS runs on top of
+a dm-thin device with accompanying support. As of today, the filesystem
+has no indication of available space in the underlying device. If the
+thin pool is depleted, the filesystem has no recourse but to handle the
+read-only state change of the device. This results in unexpected higher
+level behavior, error returns and can result in data loss if the
+filesystem is ultimately shutdown before more space is provisioned to
+the pool.
 
-This is a proof-of-concept of a block reservation allocation model
-between XFS and dm-thin. The purpose is to create a mechanism by which
-the filesystem can determine an underlying thin volume is out of space
-and opt to return -ENOSPC to userspace rather than waiting until the
-volume is driven out of space (and deactivated or transitioned
-read-only). The idea, in principle, is to use a similar reservation
-model for thin pool blocks as the filesystem does today for delayed
-allocation blocks and to prevent similar risk of overprovisioning of fs
-blocks.
+The reservation model enables XFS to manage thin pool space similar to
+how delayed allocation blocks are managed today. Delalloc blocks are
+reserved up front (e.g., at write time) to guarantee physical space is
+available at writeback time and thus prevent data loss due to
+overprovisioning. Similarly, block device reservation allows XFS to
+reserve space for various operations in advance and thus guarantee an
+operation will not fail for lack of space, or otherwise return an error
+to the user.
 
-This idea was concocted a while back during some discussions around how
-to provide a more user friendly out of space condition to users of
-filesystems on top of thin devices. At the moment, we (XFS) write to the
-underlying volume until it runs out of space and transitions to
-read-only. The administrator is responsible to prevent or recover from
-this condition via auto provisioning and/or monitoring for low watermark
-notifications. With a reservation model, the filesytem returns -ENOSPC
-at write time when the underlying pool is out of space and operation
-otherwise continues (e.g., space can be freed from the fs) as if the fs
-itself were out of space.
+To accomplish this, tie in the device block reservation calls to the
+existing filesystem reservation mechanism. Each transaction now reserves
+physical space in the underlying thin pool along with other such
+reserved resources (e.g., filesystem blocks, log space). Delayed
+allocation blocks are similarly reserved in the thin device when the
+associated filesystem blocks are reserved. If a reservation cannot be
+satisfied, the associated operation returns -ENOSPC precisely as if the
+filesystem itself were out of space.
 
-Joe and Mike were kind enough to hack together a dm block reservation
-mechanism to help us experiment further. I slightly modified and hacked
-in an additional provision call based on their code, and then hacked up
-an integration with the existing XFS resource reservation mechanism. I
-think the results are slightly encouraging, at least in that the basic
-buffered write mechanism works as expected without too much inefficiency
-due to the over-reservation.
+Note that this is proof-of-concept and highly experimental. The purpose
+is to explore the potential effectiveness of such a scheme between the
+filesystem and a thinly provisioned device. As such, the implementation
+is hacky, broken and geared towards proof-of-concept over correctness or
+completeness.
 
-There are still flaws and tradeoffs to this approach, of course. The
-current implementation uses a worst case reservation model that assumes
-every unallocated filesystem block requires a new dm-thin block
-allocation. With dm-thin block sizes on the order of 256k-1MB for larger
-volumes, this is a significant over-reservation for 4k (or smaller)
-filesystem blocks. XFS has algorithms in some areas (buffered writes)
-that deal with this problem already, but at the very least, further
-optimization might be in order to improve performance. This also doesn't
-consider other operations (fallocate) or filesystems that might not be
-immediately suited to handle this limitation. Also, the interface to the
-block device is clearly crude, incomplete and hacked together
-(particularly the provision bits added by me). It remains to be seen
-whether we can define a sane interface to fully support this
-functionality.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |  6 ++++
+ fs/xfs/xfs_mount.c        | 81 +++++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_mount.h        |  2 ++
+ fs/xfs/xfs_trans.c        | 26 +++++++++++++--
+ 4 files changed, 103 insertions(+), 12 deletions(-)
 
-As far as the implementation goes, this is a toy/experiment with various
-other known issues (mostly documented in the code, see the comments in
-xfs_thin.c) and should not be used for anything outside of
-experimentation. I haven't done much testing beyond simple buffered
-write runs to ENOSPC, so problems in other areas can be expected.
-Apologies for whatever general shoddiness might be discovered, but I
-wanted to get something posted to generate discussion before putting too
-much effort into testing and exploring all of the dark corners where
-more issues certainly lurk.
-
-In summary, the primary purpose of this series is to close the loop on
-some of the early XFS/dm-thin discussion around whether something like
-this is feasible, worthwhile, and to otherwise gather initial thoughts
-from fs and dm folks on the general topic. If worth pursuing further,
-discussion around things like an appropriate interface to the block
-device is certainly warranted.
-
-Thanks again to Joe and Mike for entertaining the idea and hacking
-something together to play around with. Thoughts, reviews, flames
-appreciated. (BTW, I'm also planning to be at LSF if anybody is
-interested in discussing this further).
-
-Brian
-
-P.S., With these patches applied, use the following to create an
-over-provisioned thin volume and mount XFS in "reservation mode:"
-
-# lvcreate --thinpool test/pool -L1G
-# lvcreate -T test/pool -n thin -V 10G
-# mkfs.xfs -f /dev/test/thin
-# mount /dev/test/thin /mnt -o discard
-# dmesg | tail
-...
-XFS (dm-8): Mounting V5 Filesystem
-XFS (dm-8): Ending clean mount
-XFS (dm-8): Thin pool reservation enabled
-XFS (dm-8): Thin reserve blocksize: 512 sectors
-# dd if=/dev/zero of=/mnt/file bs=4k
-dd: error writing '/mnt/file': No space left on device
-...
-
-Brian Foster (6):
-  dm thin: update reserve space func to allow reduction
-  block: add a block_device_operations method to provision space
-  dm: add method to provision space
-  dm thin: add method to provision space
-  xfs: thin block device reservation mechanism
-  xfs: adopt a reserved allocation model on dm-thin devices
-
-Joe Thornber (1):
-  dm thin: add methods to set and get reserved space
-
-Mike Snitzer (2):
-  block: add block_device_operations methods to set and get reserved
-    space
-  dm: add methods to set and get reserved space
-
- drivers/md/dm-thin.c          | 187 +++++++++++++++++++++++++++--
- drivers/md/dm.c               | 110 +++++++++++++++++
- fs/block_dev.c                |  30 +++++
- fs/xfs/Makefile               |   1 +
- fs/xfs/libxfs/xfs_alloc.c     |   6 +
- fs/xfs/xfs_mount.c            |  81 +++++++++++--
- fs/xfs/xfs_mount.h            |   7 ++
- fs/xfs/xfs_thin.c             | 273 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_thin.h             |   9 ++
- fs/xfs/xfs_trace.h            |  27 +++++
- fs/xfs/xfs_trans.c            |  26 +++-
- include/linux/blkdev.h        |   7 ++
- include/linux/device-mapper.h |   7 ++
- 13 files changed, 749 insertions(+), 22 deletions(-)
- create mode 100644 fs/xfs/xfs_thin.c
- create mode 100644 fs/xfs/xfs_thin.h
-
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index a708e38..2497fd3 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -35,6 +35,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
++#include "xfs_thin.h"
+ 
+ struct workqueue_struct *xfs_alloc_wq;
+ 
+@@ -2650,6 +2651,11 @@ xfs_alloc_vextent(
+ 				goto error0;
+ 		}
+ 
++		if (mp->m_thin_reserve) {
++			error = xfs_thin_provision(mp, args->fsbno, args->len);
++			WARN_ON(error);
++			error = 0;
++		}
+ 	}
+ 	xfs_perag_put(args->pag);
+ 	return 0;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bb753b3..98c437b 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -41,6 +41,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+ #include "xfs_sysfs.h"
++#include "xfs_thin.h"
+ 
+ 
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+@@ -947,6 +948,8 @@ xfs_mountfs(
+ 		xfs_qm_mount_quotas(mp);
+ 	}
+ 
++	xfs_thin_init(mp);
++
+ 	/*
+ 	 * Now we are mounted, reserve a small amount of unused space for
+ 	 * privileged transactions. This is needed so that transaction
+@@ -1165,21 +1168,32 @@ xfs_mod_ifree(
+  */
+ #define XFS_FDBLOCKS_BATCH	1024
+ int
+-xfs_mod_fdblocks(
++__xfs_mod_fdblocks(
+ 	struct xfs_mount	*mp,
+ 	int64_t			delta,
+-	bool			rsvd)
++	bool			rsvd,
++	bool			unres)
+ {
+ 	int64_t			lcounter;
+ 	long long		res_used;
+ 	s32			batch;
++	int			error;
++	int64_t			res_delta = 0;
+ 
+ 	if (delta > 0) {
+ 		/*
+-		 * If the reserve pool is depleted, put blocks back into it
+-		 * first. Most of the time the pool is full.
++		 * If the reserve pool is full (the typical case), return the
++		 * blocks to the general fs pool. Otherwise, return what we can
++		 * to the reserve pool first.
+ 		 */
+ 		if (likely(mp->m_resblks == mp->m_resblks_avail)) {
++main_pool:
++			if (mp->m_thin_reserve && unres) {
++				error = xfs_thin_unreserve(mp, delta);
++				if (error)
++					return error;
++			}
++
+ 			percpu_counter_add(&mp->m_fdblocks, delta);
+ 			return 0;
+ 		}
+@@ -1187,17 +1201,56 @@ xfs_mod_fdblocks(
+ 		spin_lock(&mp->m_sb_lock);
+ 		res_used = (long long)(mp->m_resblks - mp->m_resblks_avail);
+ 
+-		if (res_used > delta) {
+-			mp->m_resblks_avail += delta;
++		/*
++		 * The reserve pool is not full. Blocks in the reserve pool must
++		 * hold a bdev reservation which means we may need to re-reserve
++		 * blocks depending on what the caller is giving us.
++		 *
++		 * If the blocks are already reserved (i.e., via a transaction
++		 * reservation), simply update the reserve pool counter. If not,
++		 * reserve as many blocks as we can, return those to the reserve
++		 * pool, and then jump back above to return whatever is left
++		 * back to the general filesystem pool.
++		 */
++		if (!unres) {
++			while (!unres && delta) {
++				if (res_delta >= res_used)
++					break;
++
++				/* XXX: shouldn't call this w/ m_sb_lock */
++				error = xfs_thin_reserve(mp, 1);
++				if (error)
++					break;
++
++				res_delta++;
++				delta--;
++			}
+ 		} else {
+-			delta -= res_used;
+-			mp->m_resblks_avail = mp->m_resblks;
+-			percpu_counter_add(&mp->m_fdblocks, delta);
++			res_delta = min(delta, res_used);
++			delta -= res_delta;
+ 		}
++
++		if (res_used > res_delta)
++			mp->m_resblks_avail += res_delta;
++		else
++			mp->m_resblks_avail = mp->m_resblks;
+ 		spin_unlock(&mp->m_sb_lock);
++		if (delta)
++			goto main_pool;
+ 		return 0;
+ 	}
+ 
++	/* res calls take positive value */
++	if (mp->m_thin_reserve) {
++		error = xfs_thin_reserve(mp, -delta);
++		if (error == -ENOSPC && rsvd) {
++			spin_lock(&mp->m_sb_lock);
++			goto fdblocks_rsvd;
++		}
++		if (error)
++			return error;
++	}
++
+ 	/*
+ 	 * Taking blocks away, need to be more accurate the closer we
+ 	 * are to zero.
+@@ -1228,6 +1281,7 @@ xfs_mod_fdblocks(
+ 	if (!rsvd)
+ 		goto fdblocks_enospc;
+ 
++fdblocks_rsvd:
+ 	lcounter = (long long)mp->m_resblks_avail + delta;
+ 	if (lcounter >= 0) {
+ 		mp->m_resblks_avail = lcounter;
+@@ -1244,6 +1298,15 @@ fdblocks_enospc:
+ }
+ 
+ int
++xfs_mod_fdblocks(
++	struct xfs_mount	*mp,
++	int64_t			delta,
++	bool			rsvd)
++{
++	return __xfs_mod_fdblocks(mp, delta, rsvd, true);
++}
++
++int
+ xfs_mod_frextents(
+ 	struct xfs_mount	*mp,
+ 	int64_t			delta)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 3696700..2d43422 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -328,6 +328,8 @@ extern void	xfs_unmountfs(xfs_mount_t *);
+ 
+ extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
+ extern int	xfs_mod_ifree(struct xfs_mount *mp, int64_t delta);
++extern int	__xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
++				   bool reserved, bool unres);
+ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+ 				 bool reserved);
+ extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 748b16a..729367c 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -548,11 +548,22 @@ xfs_trans_unreserve_and_mod_sb(
+ 	int64_t			rtxdelta = 0;
+ 	int64_t			idelta = 0;
+ 	int64_t			ifreedelta = 0;
++	int64_t			resdelta = 0;
+ 	int			error;
+ 
+ 	/* calculate deltas */
+-	if (tp->t_blk_res > 0)
++	if (tp->t_blk_res > 0) {
++		/*
++		 * Distinguish between what should be unreserved from an
++		 * underlying thin pool and and what is only returned to the
++		 * free blocks counter.
++		 */
+ 		blkdelta = tp->t_blk_res;
++		if (tp->t_blk_res > tp->t_blk_res_used) {
++			resdelta = tp->t_blk_res - tp->t_blk_res_used;
++			blkdelta -= resdelta;
++		}
++	}
+ 	if ((tp->t_fdblocks_delta != 0) &&
+ 	    (xfs_sb_version_haslazysbcount(&mp->m_sb) ||
+ 	     (tp->t_flags & XFS_TRANS_SB_DIRTY)))
+@@ -571,12 +582,18 @@ xfs_trans_unreserve_and_mod_sb(
+ 	}
+ 
+ 	/* apply the per-cpu counters */
+-	if (blkdelta) {
+-		error = xfs_mod_fdblocks(mp, blkdelta, rsvd);
++	if (resdelta) {
++		error = __xfs_mod_fdblocks(mp, resdelta, rsvd, true);
+ 		if (error)
+ 			goto out;
+ 	}
+ 
++	if (blkdelta) {
++		error = __xfs_mod_fdblocks(mp, blkdelta, rsvd, false);
++		if (error)
++			goto out_undo_resblocks;
++	}
++
+ 	if (idelta) {
+ 		error = xfs_mod_icount(mp, idelta);
+ 		if (error)
+@@ -681,6 +698,9 @@ out_undo_icount:
+ out_undo_fdblocks:
+ 	if (blkdelta)
+ 		xfs_mod_fdblocks(mp, -blkdelta, rsvd);
++out_undo_resblocks:
++	if (resdelta)
++		xfs_mod_fdblocks(mp, -resdelta, rsvd);
+ out:
+ 	ASSERT(error == 0);
+ 	return;
 -- 
 2.4.3
 
