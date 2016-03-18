@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 20BB27CA0
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 17:55:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8947CAC008
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 15:55:56 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id x8aisyuVt42CrkCT for <xfs@oss.sgi.com>;
-	Thu, 17 Mar 2016 15:55:53 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id E5A2A19120
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 17:55:48 -0500 (CDT)
-Subject: Re: xfs_growfs causing "Metadata corruption detected at
-	xfs_agf_read_verify"
-References: <20160317224803.GA8856@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56EB35F8.1030601@sandeen.net>
-Date: Thu, 17 Mar 2016 17:55:52 -0500
+	by oss.sgi.com (Postfix) with ESMTP id BEEFA7CA0
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 21:23:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 27008AC002
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 19:23:22 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	uK8fNJpDuOE7rZFm for <xfs@oss.sgi.com>;
+	Thu, 17 Mar 2016 19:23:20 -0700 (PDT)
+Date: Fri, 18 Mar 2016 13:22:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: new fs, xfs_admin new label, metadata corruption detected
+Message-ID: <20160318022253.GN30721@dastard>
+References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
+	<56E8AA22.7080301@sandeen.net>
+	<CAJCQCtQYMitUvPN1ORyEHvDhddJ09Hp_xK_CBc0e1Cu972S3_w@mail.gmail.com>
+	<CAJCQCtQJ_1ARXYuN3j2VyVN8FBtG0myqmPnOgco1v-tQxqmyBg@mail.gmail.com>
+	<20160317205729.GL30721@dastard>
+	<CAJCQCtTZ_sS9TGTDvzCcD5P2biKznsvx1XnrKv3KC9ZynrJsYA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160317224803.GA8856@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtTZ_sS9TGTDvzCcD5P2biKznsvx1XnrKv3KC9ZynrJsYA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,26 +34,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 3/17/16 5:48 PM, Richard W.M. Jones wrote:
+On Thu, Mar 17, 2016 at 05:21:51PM -0600, Chris Murphy wrote:
+> On Thu, Mar 17, 2016 at 2:57 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Mar 16, 2016 at 08:39:21PM -0600, Chris Murphy wrote:
+> >> OK I can consistently reproduce this on the CLI. I end up with totally different
+> >>
+> >> # lvcreate -L 40g VG -n testxfs
+> >>   Logical volume "testxfs" created.
+> > ....
+> > [grow]
+> > ....
+> >> # xfs_repair -n /dev/VG/testxfs
+> >> Phase 1 - find and verify superblock...
+> >> Phase 2 - using internal log
+> >>         - zero log...
+> >>         - scan filesystem freespace and inode maps...
+> >> Metadata corruption detected at xfs_agf block 0x8c00008/0x1000
+> >> fllast 1014 in agf 7 too large (max = 1014)
+> >> Metadata corruption detected at xfs_agf block 0x6400008/0x1000
+> >> fllast 1014 in agf 5 too large (max = 1014)
+> >> Metadata corruption detected at xfs_agf block 0x5000008/0x1000
+> >> fllast 1014 in agf 4 too large (max = 1014)
+> >> Metadata corruption detected at xfs_agf block 0x7800008/0x1000
+> >> fllast 1014 in agf 6 too large (max = 1014)
+> >>         - found root inode chunk
+> >
+> > That's caused by commit 96f859d ("libxfs: pack the agfl header
+> > structure so XFS_AGFL_SIZE is correct") and growfs setting the
+> > last free list entry to something that a userspace without the
+> > commit  9fccb9f ("libxfs: pack the agfl header structure so
+> > XFS_AGFL_SIZE is correct") fails to validate correctly.
+> >
+> > i.e. update userspace to 4.5.0, and the repair noise will go away.
 > 
-> With recent kernels (or maybe xfsprogs?) we've noticed strange
-> filesystem corruption after using xfs_growfs.
-> 
-> Examples:
-> 
-> https://bugzilla.redhat.com/show_bug.cgi?id=1315895 (on aarch64)
-> https://www.redhat.com/archives/libguestfs/2016-March/msg00113.html (x86_64)
-> https://rwmj.wordpress.com/2015/11/04/virt-builder-fedora-23-image/#comment-15668 (x86_64)
-> 
-> Do these errors look familiar?  I don't yet have a simple test case,
-> still working on that.
+> Yep. The problem is not reproducible with xfsprogs 4.5.0.
 
-try:
-http://oss.sgi.com/pipermail/xfs/2016-March/047683.html
+Thanks for confirming that, Chris.
 
--Eric
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
