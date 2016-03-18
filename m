@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BEEFA7CA0
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 21:23:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 99A517CA0
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 23:43:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27008AC002
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 19:23:22 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uK8fNJpDuOE7rZFm for <xfs@oss.sgi.com>;
-	Thu, 17 Mar 2016 19:23:20 -0700 (PDT)
-Date: Fri, 18 Mar 2016 13:22:53 +1100
-From: Dave Chinner <david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C506AC001
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 21:43:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id c9NHGietVAilp58v (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 21:43:34 -0700 (PDT)
+Date: Fri, 18 Mar 2016 12:43:31 +0800
+From: Zorro Lang <zlang@redhat.com>
 Subject: Re: new fs, xfs_admin new label, metadata corruption detected
-Message-ID: <20160318022253.GN30721@dastard>
+Message-ID: <20160318044331.GA3939@dhcp12-237.nay.redhat.com>
 References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
 	<56E8AA22.7080301@sandeen.net>
 	<CAJCQCtQYMitUvPN1ORyEHvDhddJ09Hp_xK_CBc0e1Cu972S3_w@mail.gmail.com>
@@ -72,14 +72,24 @@ On Thu, Mar 17, 2016 at 05:21:51PM -0600, Chris Murphy wrote:
 > 
 > Yep. The problem is not reproducible with xfsprogs 4.5.0.
 
-Thanks for confirming that, Chris.
+HaHa, Dave always knows more XFS change history:)
 
-Cheers,
+BTW, this bug don't need LVM resize, just need
+---
+  mkfs.xfs -d size=$half_size $dev
+  mount $dev $mnt
+  xfs_growfs -d $mnt
+  umount $mnt
+  xfs_repair -n $dev
+---
+to reproduce it.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+And I think xfstests xfs/015 can cover this test.
+
+Thanks,
+Zorro
+> 
+> 
 
 _______________________________________________
 xfs mailing list
