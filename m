@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 99A517CA0
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 23:43:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C506AC001
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 21:43:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id c9NHGietVAilp58v (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 17 Mar 2016 21:43:34 -0700 (PDT)
-Date: Fri, 18 Mar 2016 12:43:31 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: new fs, xfs_admin new label, metadata corruption detected
-Message-ID: <20160318044331.GA3939@dhcp12-237.nay.redhat.com>
-References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
-	<56E8AA22.7080301@sandeen.net>
-	<CAJCQCtQYMitUvPN1ORyEHvDhddJ09Hp_xK_CBc0e1Cu972S3_w@mail.gmail.com>
-	<CAJCQCtQJ_1ARXYuN3j2VyVN8FBtG0myqmPnOgco1v-tQxqmyBg@mail.gmail.com>
-	<20160317205729.GL30721@dastard>
-	<CAJCQCtTZ_sS9TGTDvzCcD5P2biKznsvx1XnrKv3KC9ZynrJsYA@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 244C97CA1
+	for <xfs@oss.sgi.com>; Sun, 20 Mar 2016 18:30:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EBD1A304048
+	for <xfs@oss.sgi.com>; Sun, 20 Mar 2016 16:30:06 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	ab8ygbW9L2W0yFDZ for <xfs@oss.sgi.com>;
+	Sun, 20 Mar 2016 16:30:00 -0700 (PDT)
+Date: Mon, 21 Mar 2016 10:29:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: splice vs truncate lockdep splat
+Message-ID: <20160320232939.GQ30721@dastard>
+References: <alpine.DEB.2.11.1603200938010.17552@cpach.fuggernut.com>
+	<20160320231638.GP30721@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAJCQCtTZ_sS9TGTDvzCcD5P2biKznsvx1XnrKv3KC9ZynrJsYA@mail.gmail.com>
+In-Reply-To: <20160320231638.GP30721@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,62 +30,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Sage Weil <sweil@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 17, 2016 at 05:21:51PM -0600, Chris Murphy wrote:
-> On Thu, Mar 17, 2016 at 2:57 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Mar 16, 2016 at 08:39:21PM -0600, Chris Murphy wrote:
-> >> OK I can consistently reproduce this on the CLI. I end up with totally different
-> >>
-> >> # lvcreate -L 40g VG -n testxfs
-> >>   Logical volume "testxfs" created.
-> > ....
-> > [grow]
-> > ....
-> >> # xfs_repair -n /dev/VG/testxfs
-> >> Phase 1 - find and verify superblock...
-> >> Phase 2 - using internal log
-> >>         - zero log...
-> >>         - scan filesystem freespace and inode maps...
-> >> Metadata corruption detected at xfs_agf block 0x8c00008/0x1000
-> >> fllast 1014 in agf 7 too large (max = 1014)
-> >> Metadata corruption detected at xfs_agf block 0x6400008/0x1000
-> >> fllast 1014 in agf 5 too large (max = 1014)
-> >> Metadata corruption detected at xfs_agf block 0x5000008/0x1000
-> >> fllast 1014 in agf 4 too large (max = 1014)
-> >> Metadata corruption detected at xfs_agf block 0x7800008/0x1000
-> >> fllast 1014 in agf 6 too large (max = 1014)
-> >>         - found root inode chunk
-> >
-> > That's caused by commit 96f859d ("libxfs: pack the agfl header
-> > structure so XFS_AGFL_SIZE is correct") and growfs setting the
-> > last free list entry to something that a userspace without the
-> > commit  9fccb9f ("libxfs: pack the agfl header structure so
-> > XFS_AGFL_SIZE is correct") fails to validate correctly.
-> >
-> > i.e. update userspace to 4.5.0, and the repair noise will go away.
+On Mon, Mar 21, 2016 at 10:16:38AM +1100, Dave Chinner wrote:
+> On Sun, Mar 20, 2016 at 09:43:01AM -0400, Sage Weil wrote:
+> > Hi all,
+> > 
+> > For the last few kernel releases we've been seeing this pretty regularly:
+> > 
 > 
-> Yep. The problem is not reproducible with xfsprogs 4.5.0.
-
-HaHa, Dave always knows more XFS change history:)
-
-BTW, this bug don't need LVM resize, just need
----
-  mkfs.xfs -d size=$half_size $dev
-  mount $dev $mnt
-  xfs_growfs -d $mnt
-  umount $mnt
-  xfs_repair -n $dev
----
-to reproduce it.
-
-And I think xfstests xfs/015 can cover this test.
-
-Thanks,
-Zorro
+> [snip]
 > 
+> Yup, splice still has locking problems. Always has, and the
+> write_iter rework a few releases ago just moved the warnings
+> elsewhere.
 > 
+> >  #012-> #2 (&pipe->mutex/1){+.+.+.}:
+> 
+> xfs_file_splice_read
+>   xfs_iolock(XFS_IOLOCK_SHARED)
+>     ....
+>     pipe_lock(pipe)
+> 
+> XFS takes the XFS_IOLOCK_SHARED here to serialise splice read
+> against truncate.
+> 
+> >  #012-> #1 (&(&ip->i_iolock)->mr_lock){++++++}:
+> 
+> mutex_lock(inode->i_mutex)
+> ....
+>   xfs_vn_setattr
+>     xfs_iolock(XFS_IOLOCK_EXCL)
+> 
+> Truncate lock order for IO serialisation (no pipe lock).
+> 
+> >  #012-> #0 (&sb->s_type->i_mutex_key#19){+.+.+.}:
+> 
+> iter_file_splice_write
+>   pipe_lock(pipe)
+>     xfs_file_buffered_aio_write
+>       mutex_lock(inode->i_mutex)
+>         xfs_iolock(XFS_IOLOCK_EXCL)
+> 
+> XFS takes i_mutex (required for buffered IO path) and
+> XFS_IOLOCK_EXCL (for atomic write semantics and truncate exclusion),
+> but the splice write path has put this under the pipe lock....
+> 
+> i.e. because the read/write path take the IOLOCK different ways,
+> lockdep seems to think it's OK. Hence IO testing doesn't report
+> issues, but the moment you throw in another operation that takes
+> both the i_mutex and XFS_IOLOCK_EXCL, lockdep will through a lock
+> order violation report.
+> 
+> > We're not actually doing racing truncate and splice (or any racing 
+> > operations for that matter) to the same files, so we don't actually hit 
+> > this, but the lockdep warning is enough to make our test runs fail, and 
+> > we'd rather not whitelist this if it's something that should get fixed 
+> > anyway.
+> 
+> We can't fix it in XFS - the high level splice infrastructure which
+> that read IO serialisation is done entirely based on page cache page
+> locking and so can hold the pipe lock across ->splice_read callouts.
+                                                 ^^^^^^^^^^^
+						vfs_iter_write()
+
+Got my read and write callouts  mixed up there. (i.e. splice_read is
+assumed to have no filesystem locking above the pipe lock, so it is
+assumed to be safe to take inode locks in vfs_iter_write() whilst
+under the pipe lock).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
