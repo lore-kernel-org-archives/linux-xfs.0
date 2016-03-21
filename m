@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 244C97CA1
-	for <xfs@oss.sgi.com>; Sun, 20 Mar 2016 18:30:07 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D338A7CA0
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 02:39:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EBD1A304048
-	for <xfs@oss.sgi.com>; Sun, 20 Mar 2016 16:30:06 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ab8ygbW9L2W0yFDZ for <xfs@oss.sgi.com>;
-	Sun, 20 Mar 2016 16:30:00 -0700 (PDT)
-Date: Mon, 21 Mar 2016 10:29:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: splice vs truncate lockdep splat
-Message-ID: <20160320232939.GQ30721@dastard>
-References: <alpine.DEB.2.11.1603200938010.17552@cpach.fuggernut.com>
-	<20160320231638.GP30721@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 928038F8040
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 00:39:40 -0700 (PDT)
+Received: from mail-lb0-f193.google.com (mail-lb0-f193.google.com
+	[209.85.217.193]) by cuda.sgi.com with ESMTP id
+	hY6Vfa8drnV470M9 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 00:39:38 -0700 (PDT)
+Received: by mail-lb0-f193.google.com with SMTP id wn5so10293440lbb.2
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 00:39:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160320231638.GP30721@dastard>
+In-Reply-To: <20160321073016.GR30721@dastard>
+References: <CANq6e6jjBqis7dhTTPST+bKDbwvYDbzvPg3G7V3eiD-+OB2U7A@mail.gmail.com>
+	<20160321063848.GK11812@dastard>
+	<CANq6e6gHuZsb-g_WAHH5sypedtUb0i6UADp5B=Rio7Cw=G9z1w@mail.gmail.com>
+	<20160321073016.GR30721@dastard>
+Date: Mon, 21 Mar 2016 08:39:37 +0100
+Message-ID: <CANq6e6jPz5fDeCCQuZFEYmApCFH0-pkBYJ-Z-s7zYap3QM3sEQ@mail.gmail.com>
+Subject: Re: obtaining xfstests repository
+From: Sonia mandelbrott <sonia.mandelbrott@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,88 +30,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3135393701524499230=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sage Weil <sweil@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Mar 21, 2016 at 10:16:38AM +1100, Dave Chinner wrote:
-> On Sun, Mar 20, 2016 at 09:43:01AM -0400, Sage Weil wrote:
-> > Hi all,
-> > 
-> > For the last few kernel releases we've been seeing this pretty regularly:
-> > 
-> 
-> [snip]
-> 
-> Yup, splice still has locking problems. Always has, and the
-> write_iter rework a few releases ago just moved the warnings
-> elsewhere.
-> 
-> >  #012-> #2 (&pipe->mutex/1){+.+.+.}:
-> 
-> xfs_file_splice_read
->   xfs_iolock(XFS_IOLOCK_SHARED)
->     ....
->     pipe_lock(pipe)
-> 
-> XFS takes the XFS_IOLOCK_SHARED here to serialise splice read
-> against truncate.
-> 
-> >  #012-> #1 (&(&ip->i_iolock)->mr_lock){++++++}:
-> 
-> mutex_lock(inode->i_mutex)
-> ....
->   xfs_vn_setattr
->     xfs_iolock(XFS_IOLOCK_EXCL)
-> 
-> Truncate lock order for IO serialisation (no pipe lock).
-> 
-> >  #012-> #0 (&sb->s_type->i_mutex_key#19){+.+.+.}:
-> 
-> iter_file_splice_write
->   pipe_lock(pipe)
->     xfs_file_buffered_aio_write
->       mutex_lock(inode->i_mutex)
->         xfs_iolock(XFS_IOLOCK_EXCL)
-> 
-> XFS takes i_mutex (required for buffered IO path) and
-> XFS_IOLOCK_EXCL (for atomic write semantics and truncate exclusion),
-> but the splice write path has put this under the pipe lock....
-> 
-> i.e. because the read/write path take the IOLOCK different ways,
-> lockdep seems to think it's OK. Hence IO testing doesn't report
-> issues, but the moment you throw in another operation that takes
-> both the i_mutex and XFS_IOLOCK_EXCL, lockdep will through a lock
-> order violation report.
-> 
-> > We're not actually doing racing truncate and splice (or any racing 
-> > operations for that matter) to the same files, so we don't actually hit 
-> > this, but the lockdep warning is enough to make our test runs fail, and 
-> > we'd rather not whitelist this if it's something that should get fixed 
-> > anyway.
-> 
-> We can't fix it in XFS - the high level splice infrastructure which
-> that read IO serialisation is done entirely based on page cache page
-> locking and so can hold the pipe lock across ->splice_read callouts.
-                                                 ^^^^^^^^^^^
-						vfs_iter_write()
+--===============3135393701524499230==
+Content-Type: multipart/alternative; boundary=001a1133bad0dcc7e2052e8a32fc
 
-Got my read and write callouts  mixed up there. (i.e. splice_read is
-assumed to have no filesystem locking above the pipe lock, so it is
-assumed to be safe to take inode locks in vfs_iter_write() whilst
-under the pipe lock).
+--001a1133bad0dcc7e2052e8a32fc
+Content-Type: text/plain; charset=UTF-8
 
-Cheers,
+It is probably because I am using my work connection...
+But thank you for all the replies :)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+On Mon, Mar 21, 2016 at 8:30 AM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Mon, Mar 21, 2016 at 08:22:09AM +0100, Sonia mandelbrott wrote:
+> > Thank you for your replies, here is output when used your link:
+> >
+> > -bash-4.2$ git clone git://
+> git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+> > Cloning into 'xfstests-dev'...
+> > fatal: unable to connect to git.kernel.org:
+> > git.kernel.org[0: 149.20.4.72]: errno=Connection timed out
+> > git.kernel.org[1: 199.204.44.194]: errno=Connection timed out
+> > git.kernel.org[2: 198.145.20.140]: errno=Connection timed out
+> > git.kernel.org[3: 2620:3:c000:a:0:1991:8:25]: errno=Network is
+> unreachable
+> > git.kernel.org[4: 2001:4f8:1:10:0:1991:8:25]: errno=Network is
+> unreachable
+>
+> There's almost certainly a firewall in your way. Try cloning over
+> http.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+--001a1133bad0dcc7e2052e8a32fc
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">It is probably because I am using my work connection...<di=
+v>But thank you for all the replies :)<br><div><br></div></div></div><div c=
+lass=3D"gmail_extra"><br><div class=3D"gmail_quote">On Mon, Mar 21, 2016 at=
+ 8:30 AM, Dave Chinner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromor=
+bit.com" target=3D"_blank">david@fromorbit.com</a>&gt;</span> wrote:<br><bl=
+ockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #=
+ccc solid;padding-left:1ex"><span class=3D"">On Mon, Mar 21, 2016 at 08:22:=
+09AM +0100, Sonia mandelbrott wrote:<br>
+</span><span class=3D"">&gt; Thank you for your replies, here is output whe=
+n used your link:<br>
+&gt;<br>
+&gt; -bash-4.2$ git clone git://<a href=3D"http://git.kernel.org/pub/scm/fs=
+/xfs/xfstests-dev.git" rel=3D"noreferrer" target=3D"_blank">git.kernel.org/=
+pub/scm/fs/xfs/xfstests-dev.git</a><br>
+&gt; Cloning into &#39;xfstests-dev&#39;...<br>
+&gt; fatal: unable to connect to <a href=3D"http://git.kernel.org" rel=3D"n=
+oreferrer" target=3D"_blank">git.kernel.org</a>:<br>
+&gt; <a href=3D"http://git.kernel.org" rel=3D"noreferrer" target=3D"_blank"=
+>git.kernel.org</a>[0: 149.20.4.72]: errno=3DConnection timed out<br>
+&gt; <a href=3D"http://git.kernel.org" rel=3D"noreferrer" target=3D"_blank"=
+>git.kernel.org</a>[1: 199.204.44.194]: errno=3DConnection timed out<br>
+&gt; <a href=3D"http://git.kernel.org" rel=3D"noreferrer" target=3D"_blank"=
+>git.kernel.org</a>[2: 198.145.20.140]: errno=3DConnection timed out<br>
+&gt; <a href=3D"http://git.kernel.org" rel=3D"noreferrer" target=3D"_blank"=
+>git.kernel.org</a>[3: 2620:3:c000:a:0:1991:8:25]: errno=3DNetwork is unrea=
+chable<br>
+&gt; <a href=3D"http://git.kernel.org" rel=3D"noreferrer" target=3D"_blank"=
+>git.kernel.org</a>[4: 2001:4f8:1:10:0:1991:8:25]: errno=3DNetwork is unrea=
+chable<br>
+<br>
+</span>There&#39;s almost certainly a firewall in your way. Try cloning ove=
+r<br>
+http.<br>
+<div class=3D"HOEnZb"><div class=3D"h5"><br>
+Cheers,<br>
+<br>
+Dave.<br>
+--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</div></div></blockquote></div><br></div>
+
+--001a1133bad0dcc7e2052e8a32fc--
+
+
+--===============3135393701524499230==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3135393701524499230==--
