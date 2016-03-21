@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 11CD07CA1
-	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 17:36:30 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 72C0A7CA3
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 13:34:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93A3CAC003
-	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 15:36:26 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hq5dVoz4GwFspsKH for <xfs@oss.sgi.com>;
-	Mon, 21 Mar 2016 15:36:23 -0700 (PDT)
-Date: Tue, 22 Mar 2016 09:36:21 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/9] dm-thin/xfs: prototype a block reservation
-	allocation model
-Message-ID: <20160321223621.GN11812@dastard>
-References: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
-	<20160321133346.GD25476@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C6513AC004
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 11:34:25 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id FBCZstwGZjYDYB7N (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 11:34:20 -0700 (PDT)
+Date: Mon, 21 Mar 2016 14:34:14 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [GIT PULL] xfs: updates for 4.6-rc1
+Message-ID: <20160321183414.GB3490@thunk.org>
+References: <20160321020505.GJ11812@dastard>
+	<20160321091628.GE30819@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160321133346.GD25476@redhat.com>
+In-Reply-To: <20160321091628.GE30819@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,87 +30,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Mar 21, 2016 at 02:33:46PM +0100, Carlos Maiolino wrote:
-> Hi.
+Thanks Jan, for checking the merge.
+
+I didn't realize the ext4 fixups were going in via the xfs tree.  I
+didn't see any merge conflicts from the linux-next tree (or maybe I
+missed it) so I had assumed it wasn't in Dave's xfs.git tree.  My plan
+had been to deal with it after the prereq patch went in via the xfs
+tree --- in fact I was thinking about checking to see if the xfs.git
+tree had been merged so I could get the ext4 commit merged and sent to
+Linus.
+
+Sorry I lost track of things.  If I had known I would have indeed
+manually merged in the branch, resolved the merge, and done a
+regression test cycle before pushing to Linus.
+
+						- Ted
+						
+On Mon, Mar 21, 2016 at 10:16:28AM +0100, Jan Kara wrote:
+> On Mon 21-03-16 13:05:05, Dave Chinner wrote:
+> The resolution of conflict in fs/ext4/inode.c is fine except for one minor
+> issue:
 > 
-> From my point of view, I like the idea of an interface between the filesystem,
-> and the thin-provisioned device, so that we can actually know if the thin
-> volume is running out of space or not, but, before we actually start to discuss
-> how this should be implemented, I'd like to ask if this should be implemented.
-
-TL;DR: No-brainer, yes.
-
-> After a few days discussing this with some block layer and dm-thin developers,
-> what I most hear/read is that a thin volume should be transparent to the
-> filesystem. So, the filesystem itself should not know it's running over a
-> thin-provisioned volume. And such interface being discussed here, breaks this
-> abstraction.
-
-We're adding things like fallocate to block devices to control
-preallocation, zeroing and freeing of ranges within the block device
-from user space. If filesystems can't directly control and query
-block device ranges on thinp block devices, then why should we let
-userspace have this capability?
-
-The problem we need to solve is that users want transparency between
-filesystems and thinp devices. They don't want the filesytsem to
-tell them they have lots of space available, and then get unexpected
-ENOSPC because the thinp pool backing the fs has run out of space.
-Users don't want a write over a region they have run
-posix_fallocate() on to return ENOSPC because the thinp pool ran out
-of space, even after the filesystem said it guaranteed space was
-available.Filesystems want to know that they should run fstrim
-passes internally when the underlying thinp pool is running out of
-space so that it can free as much unused space as possible.
-
-So there's lots of reasons why we need closer functional integration of
-the filesytem and block layers, but doing this does not need to
-break the abstraction layer between the filesystem and block device.
-Indeed, we have already have mechanisms to provide block layer
-functionality to the filesystems, and this patchset uses it - the
-bdev ops structure.
-
-Just because the filesystem knows that the underlying device has
-it's own space management and it has to interact with it to give
-users the correct results does not mean we are "breaking layering
-abstractions". Filesystems has long assumed that the the LBA space
-presented by the block device is a physical representation of the
-underlying device.
-
-We know this is not true, and has not been true for a long time.
-Most devices really present a virtual LBA space to the higher
-layers, and manipulate their underlying "physical" storage in a
-manner that suits them best. SSDs do this, thinp does this, RAID
-does this, dedupe/compressing/encrypting storage does this, etc.
-IOWs, we've got virtual LBA abstractions right through the storage
-stack, whether the higher layers realise it or not.
-
-IOWs, we know that filesystems have been using virutal LBA address
-spaces for a long time, yet we keep a block device model that
-treats them as a physical, unchangable address space with known
-physical characteristics (e.g. seek time is correlated with LBA
-distance). We need to stop thinking of block devices as linear
-devices and start treating them as they really are - a set of
-devices capable of complex management operations, and we need
-to start exposing those management operations for the higher layer
-to be able to take advantage of.
-
-Filesystems can take advantage of block devices that expose some of
-their space management operations. We can make the interactions
-users have on these storage stacks much better if we expose smarter
-primitives from the block devices to the filesystems. We don't need
-to break or change any abstractions - the filesystem is still very
-much separate from the block device - but we need to improve the
-communications and functionality channels between them.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > diff --cc fs/ext4/inode.c
+> > index b2e9576,2b98171..e5ba3b0
+> > --- a/fs/ext4/inode.c
+> > +++ b/fs/ext4/inode.c
+> > @@@ -3289,10 -3161,10 +3289,10 @@@ out
+> >   }
+> >   #endif
+> >   
+> > - static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
+> > + static int ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
+> >   			    ssize_t size, void *private)
+> >   {
+> >  -        ext4_io_end_t *io_end = iocb->private;
+> >  +        ext4_io_end_t *io_end = private;
+> >   
+> >   	/* if not async direct IO just return */
+> >   	if (!io_end)
+> > @@@ -3300,8 -3172,18 +3300,17 @@@
+> >   
+> >   	ext_debug("ext4_end_io_dio(): io_end 0x%p "
+> >   		  "for inode %lu, iocb 0x%p, offset %llu, size %zd\n",
+> >  - 		  iocb->private, io_end->inode->i_ino, iocb, offset,
+> >  -		  size);
+> >  +		  io_end, io_end->inode->i_ino, iocb, offset, size);
+> >   
+> > + 	iocb->private = NULL;
+> 
+> The line above should not exist in the result. It does no harm but is
+> unnecessary.
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
