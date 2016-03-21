@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BCA4D7CA7
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 06:15:57 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CBB467CA3
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 17:41:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 31512AC002
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:57 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UK32YIzI6vqmUNWq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:56 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 732B5C00F5D6
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 11:15:55 +0000 (UTC)
-Received: from localhost.localdomain (vpn1-7-36.ams2.redhat.com [10.36.7.36])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u2OBFbLO009274
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 07:15:54 -0400
-From: jtulak@redhat.com
-Subject: [PATCH 18/19] mkfs: unit conversions are case insensitive
-Date: Thu, 24 Mar 2016 12:15:35 +0100
-Message-Id: <1458818136-56043-19-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A382B30405F
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 15:41:18 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	tblLVk8QCFIdael1 for <xfs@oss.sgi.com>;
+	Mon, 21 Mar 2016 15:41:15 -0700 (PDT)
+Date: Tue, 22 Mar 2016 09:40:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [GIT PULL] xfs: updates for 4.6-rc1
+Message-ID: <20160321224057.GO11812@dastard>
+References: <20160321020505.GJ11812@dastard>
+	<CA+55aFy4NNR+VUD=KpLE=vMz22xrQ7E5J8A_B-Pf4Hj8GjBVFQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFy4NNR+VUD=KpLE=vMz22xrQ7E5J8A_B-Pf4Hj8GjBVFQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,52 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-From: Jan Tulak <jtulak@redhat.com>
+On Mon, Mar 21, 2016 at 11:59:54AM -0700, Linus Torvalds wrote:
+> On Sun, Mar 20, 2016 at 7:05 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > There are conflicts with the ext4 code that has already been merged
+> > this cycle.
+> 
+> The merge looked pretty straightforward, but both of you (ie both the
+> xfs and ext4 people, please) should check the end result please.
+> 
+> My sanity-check is still building, but it should be all pushed out in
+> another 15 minutes or so.
 
-Solves the question "Should I use 10g or 10G?"
+Merged XFS bits look fine, ext4 parts look ok according to Jan's
+last comments.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- mkfs/xfs_mkfs.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Cheers,
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 2bb3b35..680c6c4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3625,17 +3625,17 @@ cvtnum(
- 	if (*sp == 's' && sp[1] == '\0')
- 		return i * sectsize;
- 
--	if (*sp == 'k' && sp[1] == '\0')
-+	if ((*sp == 'k'  || *sp == 'K' ) && sp[1] == '\0')
- 		return 1024LL * i;
--	if (*sp == 'm' && sp[1] == '\0')
-+	if ((*sp == 'm'  || *sp == 'M' ) && sp[1] == '\0')
- 		return 1024LL * 1024LL * i;
--	if (*sp == 'g' && sp[1] == '\0')
-+	if ((*sp == 'g'  || *sp == 'G' ) && sp[1] == '\0')
- 		return 1024LL * 1024LL * 1024LL * i;
--	if (*sp == 't' && sp[1] == '\0')
-+	if ((*sp == 't'  || *sp == 'T' ) && sp[1] == '\0')
- 		return 1024LL * 1024LL * 1024LL * 1024LL * i;
--	if (*sp == 'p' && sp[1] == '\0')
-+	if ((*sp == 'p'  || *sp == 'P' ) && sp[1] == '\0')
- 		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
--	if (*sp == 'e' && sp[1] == '\0')
-+	if ((*sp == 'e'  || *sp == 'E' ) && sp[1] == '\0')
- 		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
- 	return -1LL;
- }
+Dave.
 -- 
-2.6.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
