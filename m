@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CCBB57CA0
-	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 02:27:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D69B8F8039
-	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 00:27:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id m0QdnE0Bgh3TdaHE (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 00:27:37 -0700 (PDT)
-Date: Mon, 21 Mar 2016 15:27:35 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: obtaining xfstests repository
-Message-ID: <20160321072735.GB11419@eguan.usersys.redhat.com>
-References: <CANq6e6jjBqis7dhTTPST+bKDbwvYDbzvPg3G7V3eiD-+OB2U7A@mail.gmail.com>
-	<20160321063848.GK11812@dastard>
-	<CANq6e6gHuZsb-g_WAHH5sypedtUb0i6UADp5B=Rio7Cw=G9z1w@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D14C87CA1
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 11:09:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9CA9330404E
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 09:09:30 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id yRBVRMCA2CtOcwjX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 09:09:28 -0700 (PDT)
+Date: Mon, 21 Mar 2016 09:09:22 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v18 19/22] richacl: Add richacl xattr handler
+Message-ID: <20160321160922.GA18734@infradead.org>
+References: <1456733847-17982-1-git-send-email-agruenba@redhat.com>
+	<1456733847-17982-20-git-send-email-agruenba@redhat.com>
+	<20160311141735.GF14808@infradead.org>
+	<20160311141905.GC13178@fieldses.org>
+	<20160315071014.GB19747@infradead.org>
+	<20160315210526.GC3658@fieldses.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CANq6e6gHuZsb-g_WAHH5sypedtUb0i6UADp5B=Rio7Cw=G9z1w@mail.gmail.com>
+In-Reply-To: <20160315210526.GC3658@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +34,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sonia mandelbrott <sonia.mandelbrott@gmail.com>
-Cc: xfs@oss.sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Mon, Mar 21, 2016 at 08:22:09AM +0100, Sonia mandelbrott wrote:
-> Thank you for your replies, here is output when used your link:
+On Tue, Mar 15, 2016 at 05:05:26PM -0400, J. Bruce Fields wrote:
+> > That people get confused between the attr used by the xattr syscall
+> > interface and the attr used to store things on disk or the protocol.
+> > This has happened every time we have non-native support, e.g. XFS, NFS,
+> > CIFS, ntfs, etc.  And it's only going to become worse.
 > 
-> -bash-4.2$ git clone git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> Cloning into 'xfstests-dev'...
-> fatal: unable to connect to git.kernel.org:
-> git.kernel.org[0: 149.20.4.72]: errno=Connection timed out
-> git.kernel.org[1: 199.204.44.194]: errno=Connection timed out
-> git.kernel.org[2: 198.145.20.140]: errno=Connection timed out
-> git.kernel.org[3: 2620:3:c000:a:0:1991:8:25]: errno=Network is unreachable
-> git.kernel.org[4: 2001:4f8:1:10:0:1991:8:25]: errno=Network is unreachable
+> How has that confusion caused problems in practice?
 
-I have no problem cloning both repos, perhaps something went wrong with
-your network connection?
-
-Thanks,
-Eryu
-
-> 
-> On Mon, Mar 21, 2016 at 7:38 AM, Dave Chinner <david@fromorbit.com> wrote:
-> 
->     On Mon, Mar 21, 2016 at 05:57:39AM +0100, Sonia mandelbrott wrote:
->     > Hi. This might sound stupid to you, but I have gotproblem with obtaining
->     > xfstests repo.
->     > When I try git clone git://oss.sgi.com/xfs/cmds/xfstests
->     > I get timeout after several minutes. I think it is problem with ssh keys?
->     > Can You possibly guide me step by step what I need to do?
->     > Sorry for all the trouble,
-> 
->     Just use this repository:
-> 
->     git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> 
->     Cheers,
-> 
->     Dave.
->     --
->     Dave Chinner
->     david@fromorbit.com
-> 
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+We had all kinds of bugs in this area that were only slowly uncovered.
+We also had all kind of privilegue escalations with (non-ACLs) xattrs
+as people never grasped the way different free-form namespaces have
+different permission checking.
 
 _______________________________________________
 xfs mailing list
