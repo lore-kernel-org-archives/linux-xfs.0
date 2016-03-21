@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C9D037CA0
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 15:57:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9FAA78F8066
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2016 13:57:37 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	uNZxS2lHw0uF9bk8 for <xfs@oss.sgi.com>;
-	Thu, 17 Mar 2016 13:57:33 -0700 (PDT)
-Date: Fri, 18 Mar 2016 07:57:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: new fs, xfs_admin new label, metadata corruption detected
-Message-ID: <20160317205729.GL30721@dastard>
-References: <CAJCQCtR4tq8+BXRX+Y4rkqn6ZrFLw-9SX=gXKkF3QS1b2c8Ksg@mail.gmail.com>
-	<56E8AA22.7080301@sandeen.net>
-	<CAJCQCtQYMitUvPN1ORyEHvDhddJ09Hp_xK_CBc0e1Cu972S3_w@mail.gmail.com>
-	<CAJCQCtQJ_1ARXYuN3j2VyVN8FBtG0myqmPnOgco1v-tQxqmyBg@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 559FC7CA0
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 07:17:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 16C12304048
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 05:17:32 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id e6jyWY81YXTVEJb0 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 05:17:31 -0700 (PDT)
+Date: Mon, 21 Mar 2016 13:17:26 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [RFC PATCH 2/9] dm: add methods to set and get reserved space
+Message-ID: <20160321121726.GC25476@redhat.com>
+References: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
+	<1458225037-24155-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAJCQCtQJ_1ARXYuN3j2VyVN8FBtG0myqmPnOgco1v-tQxqmyBg@mail.gmail.com>
+In-Reply-To: <1458225037-24155-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Mar 16, 2016 at 08:39:21PM -0600, Chris Murphy wrote:
-> OK I can consistently reproduce this on the CLI. I end up with totally different
-> 
-> # lvcreate -L 40g VG -n testxfs
->   Logical volume "testxfs" created.
-....
-[grow]
-....
-> # xfs_repair -n /dev/VG/testxfs
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> Metadata corruption detected at xfs_agf block 0x8c00008/0x1000
-> fllast 1014 in agf 7 too large (max = 1014)
-> Metadata corruption detected at xfs_agf block 0x6400008/0x1000
-> fllast 1014 in agf 5 too large (max = 1014)
-> Metadata corruption detected at xfs_agf block 0x5000008/0x1000
-> fllast 1014 in agf 4 too large (max = 1014)
-> Metadata corruption detected at xfs_agf block 0x7800008/0x1000
-> fllast 1014 in agf 6 too large (max = 1014)
->         - found root inode chunk
+> +static int dm_blk_reserve_space(struct block_device *bdev, sector_t nr_sects)
+> +{
+> +
+> +static int dm_blk_get_reserved_space(struct block_device *bdev,
+> +				     sector_t *nr_sects)
+> +{
 
-That's caused by commit 96f859d ("libxfs: pack the agfl header
-structure so XFS_AGFL_SIZE is correct") and growfs setting the
-last free list entry to something that a userspace without the
-commit  9fccb9f ("libxfs: pack the agfl header structure so
-XFS_AGFL_SIZE is correct") fails to validate correctly.
+These two functions are almost identical, what about refactoring it to a single
+function like dm_blk_reserved_space(), and maybe adding a flags argument, for
+choosing between set/get reserved space? Or maybe just add the common parts of
+these two functions inside a helper function or a macro?!
 
-i.e. update userspace to 4.5.0, and the repair noise will go away.
-
-I think we probably need to fix the growfs code to set it's initial
-flfirst/fllast values to be 1/0, not 0/EOFL, and the problem will
-then go away....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
 
 _______________________________________________
 xfs mailing list
