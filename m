@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 16F017CA2
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 21:00:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CFC1F8F8039
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:00:23 -0700 (PDT)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	yymAv6T6zKuJRCtw for <xfs@oss.sgi.com>;
-	Tue, 29 Mar 2016 19:00:22 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v2 2/5] dax: fallback from pmd to pte on error
-Date: Tue, 29 Mar 2016 19:59:47 -0600
-Message-Id: <1459303190-20072-3-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8429D7CB1
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 10:57:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 563173040E9
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 08:57:17 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id q2zOrGKXh5NmLpG2 (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 22 Mar 2016 08:57:14 -0700 (PDT)
+Date: Tue, 22 Mar 2016 16:57:40 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: XFS hole punch races
+Message-ID: <20160322155740.GB28772@quack.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,43 +23,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: stable@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-From: Dan Williams <dan.j.williams@intel.com>
+Hi,
 
-In preparation for consulting a badblocks list in pmem_direct_access(),
-teach dax_pmd_fault() to fallback rather than fail immediately upon
-encountering an error.  The thought being that reducing the span of the
-dax request may avoid the error region.
+similarly to ext4 also XFS had races between hole punching and page faults
+which could result in data corruption. The fixes were merged in 4.1-rc1 but
+it might make sense to backport them to older stable releases given the
+nature of the issue.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/dax.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Relevant fixes are:
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 90322eb..ec6417b 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -945,8 +945,8 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		long length = dax_map_atomic(bdev, &dax);
- 
- 		if (length < 0) {
--			result = VM_FAULT_SIGBUS;
--			goto out;
-+			dax_pmd_dbg(&bh, address, "dax-error fallback");
-+			goto fallback;
- 		}
- 		if (length < PMD_SIZE) {
- 			dax_pmd_dbg(&bh, address, "dax-length too small");
+de0e8c20ba3a65b0f15040aabbefdc1999876e6b
+075a924d45cc69c75a35f20b4912b85aa98b180a
+e8e9ad42c1f1e1bfbe0e8c32c8cac02e9ebfb7ef
+0f9160b444e4de33b65dfcd3b901358a3129461a
+723cac48473358939759885a18e8df113ea96138
+ec56b1f1fdc69599963574ce94cc5693d535dd64
+
+								Honza
+
 -- 
-2.5.5
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
