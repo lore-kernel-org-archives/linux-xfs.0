@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 10A197CD1
-	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 01:13:11 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 13A057CAF
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 07:19:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C7D088F8039
-	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 23:13:10 -0700 (PDT)
-Received: from mail-pf0-f195.google.com (mail-pf0-f195.google.com
-	[209.85.192.195]) by cuda.sgi.com with ESMTP id
-	pEiueVTyk2Etf4qh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 23:13:08 -0700 (PDT)
-Received: by mail-pf0-f195.google.com with SMTP id x3so33963220pfb.0
-	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 23:13:08 -0700 (PDT)
-From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH 8/8] block: bio: remove BIO_MAX_SIZE
-Date: Tue, 22 Mar 2016 14:12:29 +0800
-Message-Id: <1458627149-12988-9-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
-References: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D5DE88F8040
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 05:19:26 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tncNv8plVYEogHj0 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 22 Mar 2016 05:19:25 -0700 (PDT)
+Date: Tue, 22 Mar 2016 08:19:23 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160322121922.GA53693@bfoster.bfoster>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,38 +26,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
+To: Shyam Kaushik <shyam@zadarastorage.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-No one need this macro now, so remove it. The motivation is
-for supporting multipage bvecs, in which we only know
-what the max count of bvecs is supported in the bio,
-instead of max bio size.
+On Tue, Mar 22, 2016 at 04:51:39PM +0530, Shyam Kaushik wrote:
+> Hi XFS developers,
+> 
+> We are seeing the following issue with XFS on kernel 3.18.19.
+> 
+> We have XFS mounted over a raw disk. Disk was pulled out manually. There
+> were async writes on files that were errored like this
+> 
+...
+> 
+> And XFS hit metadata & Log IO errors that it decides to shutdown:
+> 
+> Mar 16 16:03:22 host0 kernel: [ 4637.351841] XFS (dm-29): metadata I/O
+> error: block 0x3a27fbd0 ("xlog_iodone") error 5 numblks 64
+> Mar 16 16:03:22 host0 kernel: [ 4637.352820] XFS(dm-29): SHUTDOWN!!!
+> old_flags=0x0 new_flags=0x2
+> Mar 16 16:03:22 host0 kernel: [ 4637.353187] XFS (dm-29): Log I/O Error
+> Detected.  Shutting down filesystem
+...
+> Later the drive was re-inserted back. After the drive was re-inserted, XFS
+> was attempted to be unmounted
+> 
+> Mar 16 16:16:53 host0 controld: [2557] [     ] umount[202]
+> : umount(/sdisk/vol5b0, xfs)
+> 
+> But nothing happens except for the 30-secs xfs_log_force errors that keeps
+> repeating
+> 
+...
+> 
+> This problem doesn't happen consistently, but happens periodically with a
+> drive failure/recovery followed by XFS unmount. I couldn't find this issue
+> fixed in later kernels. Can you please suggest how I can debug this issue
+> further?
+> 
 
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- include/linux/bvec_iter.h | 1 -
- 1 file changed, 1 deletion(-)
+Similar problems have been reproduced due to racy/incorrect EFI/EFD
+object tracking, which are internal data structures associated with
+freeing extents.
 
-diff --git a/include/linux/bvec_iter.h b/include/linux/bvec_iter.h
-index a979690..8ddaacf 100644
---- a/include/linux/bvec_iter.h
-+++ b/include/linux/bvec_iter.h
-@@ -23,7 +23,6 @@
- #include <linux/blk_types.h>
- 
- #define BIO_MAX_PAGES		256
--#define BIO_MAX_SIZE		(BIO_MAX_PAGES << PAGE_CACHE_SHIFT)
- 
- /*
-  * various member access, note that bio_data should of course not be used
--- 
-1.9.1
+What happens if you enable tracepoints while the fs is in this hung
+unmount state? 
+
+# trace-cmd start -e "xfs:*"
+# cat /sys/kernel/debug/tracing/trace_pipe
+
+Brian
+
+> Thanks!
+> 
+> --Shyam
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
