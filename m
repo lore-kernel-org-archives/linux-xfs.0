@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E7C837CA6
-	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 07:07:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8DA2304059
-	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 05:07:00 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nioaHcUkhWD1BAwW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 22 Mar 2016 05:06:59 -0700 (PDT)
-Date: Tue, 22 Mar 2016 08:06:57 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 0/9] dm-thin/xfs: prototype a block reservation
-	allocation model
-Message-ID: <20160322120656.GB51718@bfoster.bfoster>
-References: <1458225037-24155-1-git-send-email-bfoster@redhat.com>
-	<20160321133346.GD25476@redhat.com>
-	<20160321223621.GN11812@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id B15317CB7
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 08:01:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 56D32304051
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 06:01:54 -0700 (PDT)
+Received: from mail-ob0-f178.google.com (mail-ob0-f178.google.com
+	[209.85.214.178]) by cuda.sgi.com with ESMTP id
+	gYD9nc8CV7uI8BVr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 22 Mar 2016 06:01:51 -0700 (PDT)
+Received: by mail-ob0-f178.google.com with SMTP id m7so199663561obh.3
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 06:01:51 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadarastorage.com>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+In-Reply-To: <20160322121922.GA53693@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160321223621.GN11812@dastard>
+Date: Tue, 22 Mar 2016 18:31:48 +0530
+Message-ID: <6457b1d9de271ec6cca6bc2626aac161@mail.gmail.com>
+Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS after
+	disk failure/recovery
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,123 +33,196 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@redhat.com, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-Re-add dm-devel@redhat.com, linux-block@vger.kernel.org to CC.
+Hi Brian,
 
-(Also not trimming since the previous replies dropped some CCs)
+Thanks for your quick reply. I repeated the test & trace-pipe is
+constantly filled with this:
 
-On Tue, Mar 22, 2016 at 09:36:21AM +1100, Dave Chinner wrote:
-> On Mon, Mar 21, 2016 at 02:33:46PM +0100, Carlos Maiolino wrote:
-> > Hi.
-> > 
-> > From my point of view, I like the idea of an interface between the filesystem,
-> > and the thin-provisioned device, so that we can actually know if the thin
-> > volume is running out of space or not, but, before we actually start to discuss
-> > how this should be implemented, I'd like to ask if this should be implemented.
-> 
-> TL;DR: No-brainer, yes.
-> 
-> > After a few days discussing this with some block layer and dm-thin developers,
-> > what I most hear/read is that a thin volume should be transparent to the
-> > filesystem. So, the filesystem itself should not know it's running over a
-> > thin-provisioned volume. And such interface being discussed here, breaks this
-> > abstraction.
-> 
-> We're adding things like fallocate to block devices to control
-> preallocation, zeroing and freeing of ranges within the block device
-> from user space. If filesystems can't directly control and query
-> block device ranges on thinp block devices, then why should we let
-> userspace have this capability?
-> 
-> The problem we need to solve is that users want transparency between
-> filesystems and thinp devices. They don't want the filesytsem to
-> tell them they have lots of space available, and then get unexpected
-> ENOSPC because the thinp pool backing the fs has run out of space.
-> Users don't want a write over a region they have run
-> posix_fallocate() on to return ENOSPC because the thinp pool ran out
-> of space, even after the filesystem said it guaranteed space was
-> available.Filesystems want to know that they should run fstrim
-> passes internally when the underlying thinp pool is running out of
-> space so that it can free as much unused space as possible.
-> 
-> So there's lots of reasons why we need closer functional integration of
-> the filesytem and block layers, but doing this does not need to
-> break the abstraction layer between the filesystem and block device.
-> Indeed, we have already have mechanisms to provide block layer
-> functionality to the filesystems, and this patchset uses it - the
-> bdev ops structure.
-> 
-> Just because the filesystem knows that the underlying device has
-> it's own space management and it has to interact with it to give
-> users the correct results does not mean we are "breaking layering
-> abstractions". Filesystems has long assumed that the the LBA space
-> presented by the block device is a physical representation of the
-> underlying device.
-> 
-> We know this is not true, and has not been true for a long time.
-> Most devices really present a virtual LBA space to the higher
-> layers, and manipulate their underlying "physical" storage in a
-> manner that suits them best. SSDs do this, thinp does this, RAID
-> does this, dedupe/compressing/encrypting storage does this, etc.
-> IOWs, we've got virtual LBA abstractions right through the storage
-> stack, whether the higher layers realise it or not.
-> 
-> IOWs, we know that filesystems have been using virutal LBA address
-> spaces for a long time, yet we keep a block device model that
-> treats them as a physical, unchangable address space with known
-> physical characteristics (e.g. seek time is correlated with LBA
-> distance). We need to stop thinking of block devices as linear
-> devices and start treating them as they really are - a set of
-> devices capable of complex management operations, and we need
-> to start exposing those management operations for the higher layer
-> to be able to take advantage of.
-> 
-> Filesystems can take advantage of block devices that expose some of
-> their space management operations. We can make the interactions
-> users have on these storage stacks much better if we expose smarter
-> primitives from the block devices to the filesystems. We don't need
-> to break or change any abstractions - the filesystem is still very
-> much separate from the block device - but we need to improve the
-> communications and functionality channels between them.
-> 
+   xfsaild/dm-10-3335  [003] ...2 24890.546491: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.546492: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.546493: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.596491: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.596492: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.596494: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.646497: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.646498: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.646500: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.696467: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.696468: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.696468: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.746548: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.746550: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.746550: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.796479: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.796480: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.796480: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.846467: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.846468: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
 
-Thanks for the replies. I don't have a ton to add on this point beyond
-that I tend to agree with Dave. I don't think the mere existence of
-additional functionality in the thin bdev necessarily breaks any kind of
-contract or layering between the filesystem and thin volume. The key
-point there is everything should continue to work as it does today if
-the underlying device doesn't support the particular mechanism (i.e.,
-reservation), the filesystem doesn't have support, or if the
-administrator simply chooses not to enable it at mount time (I'd expect
-a new mount option, though this rfc enlists '-o discard' for that
-purpose ;) due to the tradeoffs.
 
-The bigger questions I have are whether people agree the solution is
-useful, whether the reserve/provision interface is appropriate or
-generic enough for outside the XFS sandbox I'm playing in, etc. For
-example, I wonder if something similar could be extended to writeable
-snapshots in the future to avoid exhaustion of the exception store. Last
-I knew, this currently can result in invalidating the entire snapshot. I
-think COW down in the volume turns that into a slightly different
-problem for the fs, but I would expect to be able to use the same
-general mechanism there. That said, if these are internal only
-interfaces, perhaps it's not such a big deal if they evolve a bit as we
-go.
+while regular activity seems to happen on other inodes/kworker threads
+
+    kworker/u8:4-27691 [001] ...1 24895.811474: xfs_writepage: dev 253:10
+ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811477: xfs_invalidatepage: dev
+253:10 ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811478: xfs_releasepage: dev
+253:10 ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 0
+delalloc 0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811482: xfs_writepage: dev 253:10
+ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811482: xfs_invalidatepage: dev
+253:10 ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811483: xfs_releasepage: dev
+253:10 ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 0
+delalloc 0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811485: xfs_writepage: dev 253:10
+ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811486: xfs_invalidatepage: dev
+253:10 ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811486: xfs_releasepage: dev
+253:10 ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 0
+delalloc 0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812381: xfs_writepage: dev 253:10
+ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812382: xfs_invalidatepage: dev
+253:10 ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812382: xfs_releasepage: dev
+253:10 ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc
+0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812385: xfs_writepage: dev 253:10
+ino 0x4019c95 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812385: xfs_invalidatepage: dev
+253:10 ino 0x4019c95 pgoff 0x29000 size 0x68470 offset 0 length 1000
+delalloc 1 unwritten 0
+
+
+looks like xfsaild is not able to take lock until hung-task timeout kicks
+in
+
+   xfsaild/dm-10-3335  [003] ...2 25247.649468: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.649469: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.649469: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 25247.699478: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.699516: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.699517: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 25247.749471: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.749478: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.749479: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+
+Please let me know how to debug this further. Thanks.
+
+--Shyam
+-----Original Message-----
+From: Brian Foster [mailto:bfoster@redhat.com]
+Sent: 22 March 2016 17:49
+To: Shyam Kaushik
+Cc: xfs@oss.sgi.com; Alex Lyakas
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
+
+On Tue, Mar 22, 2016 at 04:51:39PM +0530, Shyam Kaushik wrote:
+> Hi XFS developers,
+>
+> We are seeing the following issue with XFS on kernel 3.18.19.
+>
+> We have XFS mounted over a raw disk. Disk was pulled out manually. There
+> were async writes on files that were errored like this
+>
+...
+>
+> And XFS hit metadata & Log IO errors that it decides to shutdown:
+>
+> Mar 16 16:03:22 host0 kernel: [ 4637.351841] XFS (dm-29): metadata I/O
+> error: block 0x3a27fbd0 ("xlog_iodone") error 5 numblks 64
+> Mar 16 16:03:22 host0 kernel: [ 4637.352820] XFS(dm-29): SHUTDOWN!!!
+> old_flags=0x0 new_flags=0x2
+> Mar 16 16:03:22 host0 kernel: [ 4637.353187] XFS (dm-29): Log I/O Error
+> Detected.  Shutting down filesystem
+...
+> Later the drive was re-inserted back. After the drive was re-inserted,
+XFS
+> was attempted to be unmounted
+>
+> Mar 16 16:16:53 host0 controld: [2557] [     ] umount[202]
+> : umount(/sdisk/vol5b0, xfs)
+>
+> But nothing happens except for the 30-secs xfs_log_force errors that
+keeps
+> repeating
+>
+...
+>
+> This problem doesn't happen consistently, but happens periodically with
+a
+> drive failure/recovery followed by XFS unmount. I couldn't find this
+issue
+> fixed in later kernels. Can you please suggest how I can debug this
+issue
+> further?
+>
+
+Similar problems have been reproduced due to racy/incorrect EFI/EFD
+object tracking, which are internal data structures associated with
+freeing extents.
+
+What happens if you enable tracepoints while the fs is in this hung
+unmount state?
+
+# trace-cmd start -e "xfs:*"
+# cat /sys/kernel/debug/tracing/trace_pipe
 
 Brian
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks!
+>
+> --Shyam
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
