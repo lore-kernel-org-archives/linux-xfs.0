@@ -1,34 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A8F8E7CA0
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 16:56:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6AA7C8F804B
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 14:56:09 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wK6MCttuWoPH10EB for <xfs@oss.sgi.com>;
-	Thu, 24 Mar 2016 14:56:05 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1ajDEZ-0001SS-2e
-	for xfs@oss.sgi.com; Fri, 25 Mar 2016 08:56:03 +1100
-Date: Fri, 25 Mar 2016 08:56:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
-	after disk failure/recovery
-Message-ID: <20160324215603.GD11812@dastard>
-References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
-	<20160322121922.GA53693@bfoster.bfoster>
-	<6457b1d9de271ec6cca6bc2626aac161@mail.gmail.com>
-	<20160322140345.GA54245@bfoster.bfoster>
-	<0f3832c45509f444f55fda2aaf9c9deb@mail.gmail.com>
-	<20160323123010.GA43073@bfoster.bfoster>
-	<20160323153221.GA19456@redhat.com>
-	<20160323223747.GX30721@dastard>
-	<20160324165244.GA17555@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160324165244.GA17555@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 883577CA0
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2016 01:12:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CFF28F8040
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 23:12:43 -0700 (PDT)
+Received: from mail-pf0-f196.google.com (mail-pf0-f196.google.com
+	[209.85.192.196]) by cuda.sgi.com with ESMTP id
+	wvrh8hEbc0gCqYBn (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Mar 2016 23:12:41 -0700 (PDT)
+Received: by mail-pf0-f196.google.com with SMTP id u190so34029349pfb.2
+	for <xfs@oss.sgi.com>; Mon, 21 Mar 2016 23:12:41 -0700 (PDT)
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 0/8] block: prepare for multipage bvecs
+Date: Tue, 22 Mar 2016 14:12:21 +0800
+Message-Id: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,96 +24,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-On Thu, Mar 24, 2016 at 05:52:44PM +0100, Carlos Maiolino wrote:
-> I can now reproduce it, or at least part of the problem.
-> =
+Hi,
 
-> Regarding your question Dave, yes, it can be unmounted after I issue xfs_=
-io shutdown
-> command. But, if a umount is issued before that, then we can't find the
-> mountpoint anymore.
-> =
+Interests[1] have been shown in multipage bvecs, so this patchset
+try to prepare for the support and do two things:
 
-> I'm not sure if I'm correct, but, what it looks like to me, as you already
-> mentioned, is that we keep getting IO errors but we never actually shutdo=
-wn
-> the filesystem while doing async metadata writes.
+1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
+then we can drop the non-standard way for iterating bvec
 
-*nod*
+2) remove BIO_MAX_SECTORS & BIO_MAX_SIZE, and now there is only
+one user for each. Once multipage bvecs is introduced, one bio
+may hold lots of sectors, and we should always use sort of BIO_MAX_VECS
+which should be introduced in future and is similiar with current
+BIO_MAX_PAGES.
 
-> I believe I've found the problem. So, I will try to explain it, so you gu=
-ys
-> can review and let me know if I'm right or not
-> =
+xfstests(-a auto) have been run and no regression found by this
+patchset against linus v4.5+.
 
-> I was looking the code, and for me, looks like async retries are designed=
- to
-> keep retrying forever, and rely on some other part of the filesystem to a=
-ctually
-> shutdown it.
+ drivers/block/drbd/drbd_int.h |  4 +--
+ fs/xfs/xfs_buf.c              |  2 +-
+ include/linux/bio.h           | 55 +------------------------------
+ include/linux/blk_types.h     |  4 +--
+ include/linux/bvec_iter.h     | 77 +++++++++++++++++++++++++++++++++++++++++++
+ lib/iov_iter.c                | 31 +++++++----------
+ 6 files changed, 94 insertions(+), 79 deletions(-)
 
-*nod*
 
-[snip description of metadata IO error behaviour]
+[1], http://marc.info/?w=2&r=1&s=++[LSF%2FMM+ATTEND]+block%3A+multipage+bvecs&q=t
 
-Yes, that is exactly how the code is expected to behave - in fact,
-that's how it was originally designed to behave.
 
-> Looks like, somebody already noticed it:
-> =
-
->         /*
->         =A6* If the write was asynchronous then no one will be looking fo=
-r the
->         =A6* error.  Clear the error state and write the buffer out again.
->         =A6*
->         =A6* XXX: This helps against transient write errors, but we need =
-to find
->         =A6* a way to shut the filesystem down if the writes keep failing.
->         =A6*
->         =A6* In practice we'll shut the filesystem down soon as non-trans=
-ient
->         =A6* errors tend to affect the whole device and a failing log wri=
-te
->         =A6* will make us give up.  But we really ought to do better here.
->         =A6*/
-> =
-
-> =
-
-> So, if I'm write in how we hit this problem, and IIRC, Dave's patchset for
-> setting limits to IO errors can be slightly modified to fix this issue to=
-o, but,
-
-The patchset I have doesn't need modification to fix this issue - it
-has a patch specifically to address this, and it changes the default
-behaviour to "fail async writes at unmount":
-
-http://oss.sgi.com/archives/xfs/2015-08/msg00092.html
-
-> the problem is that the user must set it BEFORE he tries to unmount the
-> filesystem, otherwise it will get stuck here.
-
-Yes, but that doesn't answer the big question: why don't the
-periodic log forces that are failing with EIO cause a filesystem
-shutdown? We issue a log force every 30s even during unmount, and a
-failed log IO must cause the filesystem to shut down. So why aren't
-these causing the filesystem to shutdown as we'd expect when the
-device has been pulled?
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Ming
 
 _______________________________________________
 xfs mailing list
