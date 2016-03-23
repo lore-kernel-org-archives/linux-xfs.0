@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 307A57CCC
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 08:47:49 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ADF257CA4
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 05:15:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E8B078F8035
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 06:47:48 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id eMjy0FeNy2cdDlWJ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 23 Mar 2016 06:47:19 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85 #2 (Red Hat Linux))
-	id 1aij81-00011U-OG
-	for xfs@oss.sgi.com; Wed, 23 Mar 2016 13:47:17 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: improve kmem_realloc
-Date: Wed, 23 Mar 2016 14:47:16 +0100
-Message-Id: <1458740836-31211-1-git-send-email-hch@lst.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12E2BAC005
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 03:15:48 -0700 (PDT)
+Received: from mail-wm0-f50.google.com (mail-wm0-f50.google.com
+	[74.125.82.50]) by cuda.sgi.com with ESMTP id OfGVBbo3MMagk8tv
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 23 Mar 2016 03:15:45 -0700 (PDT)
+Received: by mail-wm0-f50.google.com with SMTP id l68so226793455wml.0
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 03:15:45 -0700 (PDT)
+From: Nikolay Borisov <kernel@kyup.com>
+Subject: Failing XFS memory allocation
+Message-ID: <56F26CCE.6010502@kyup.com>
+Date: Wed, 23 Mar 2016 12:15:42 +0200
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,149 +25,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Use krealloc to implement our realloc function.  This helps to avoid
-new allocations if we are still in the slab bucket.  At least for the
-bmap btree root that's actually the common case.
+Hello,
 
-This also allows removing the now unused oldsize argument.
+So I have an XFS filesystem which houses 2 2.3T sparse files, which are
+loop-mounted. Recently I migrated a server to a 4.4.6 kernel and this
+morning I observed the following in my dmesg:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/kmem.c                  | 26 +++++++++++++++-----------
- fs/xfs/kmem.h                  |  2 +-
- fs/xfs/libxfs/xfs_inode_fork.c | 10 +++-------
- fs/xfs/xfs_log_recover.c       |  2 +-
- fs/xfs/xfs_mount.c             |  1 -
- 5 files changed, 20 insertions(+), 21 deletions(-)
+XFS: loop0(15174) possible memory allocation deadlock size 107168 in
+kmem_alloc (mode:0x2400240)
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 686ba6f..339c696 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -93,19 +93,23 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- }
- 
- void *
--kmem_realloc(const void *ptr, size_t newsize, size_t oldsize,
--	     xfs_km_flags_t flags)
-+kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
- {
--	void	*new;
-+	int	retries = 0;
-+	gfp_t	lflags = kmem_flags_convert(flags);
-+	void	*ptr;
- 
--	new = kmem_alloc(newsize, flags);
--	if (ptr) {
--		if (new)
--			memcpy(new, ptr,
--				((oldsize < newsize) ? oldsize : newsize));
--		kmem_free(ptr);
--	}
--	return new;
-+	do {
-+		ptr = krealloc(old, newsize, lflags);
-+		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-+			return ptr;
-+		if (!(++retries % 100))
-+			xfs_err(NULL,
-+	"%s(%u) possible memory allocation deadlock size %zu in %s (mode:0x%x)",
-+				current->comm, current->pid,
-+				newsize, __func__, lflags);
-+		congestion_wait(BLK_RW_ASYNC, HZ/50);
-+	} while (1);
- }
- 
- void *
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index d1c66e4..689f746 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -62,7 +62,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
- 
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
- extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
--extern void *kmem_realloc(const void *, size_t, size_t, xfs_km_flags_t);
-+extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
- static inline void  kmem_free(const void *ptr)
- {
- 	kvfree(ptr);
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 4fbe226..d3d1477 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -542,7 +542,6 @@ xfs_iroot_realloc(
- 		new_max = cur_max + rec_diff;
- 		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
- 		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
--				XFS_BMAP_BROOT_SPACE_CALC(mp, cur_max),
- 				KM_SLEEP | KM_NOFS);
- 		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
- 						     ifp->if_broot_bytes);
-@@ -686,7 +685,6 @@ xfs_idata_realloc(
- 				ifp->if_u1.if_data =
- 					kmem_realloc(ifp->if_u1.if_data,
- 							real_size,
--							ifp->if_real_bytes,
- 							KM_SLEEP | KM_NOFS);
- 			}
- 		} else {
-@@ -1402,8 +1400,7 @@ xfs_iext_realloc_direct(
- 		if (rnew_size != ifp->if_real_bytes) {
- 			ifp->if_u1.if_extents =
- 				kmem_realloc(ifp->if_u1.if_extents,
--						rnew_size,
--						ifp->if_real_bytes, KM_NOFS);
-+						rnew_size, KM_NOFS);
- 		}
- 		if (rnew_size > ifp->if_real_bytes) {
- 			memset(&ifp->if_u1.if_extents[ifp->if_bytes /
-@@ -1487,9 +1484,8 @@ xfs_iext_realloc_indirect(
- 	if (new_size == 0) {
- 		xfs_iext_destroy(ifp);
- 	} else {
--		ifp->if_u1.if_ext_irec = (xfs_ext_irec_t *)
--			kmem_realloc(ifp->if_u1.if_ext_irec,
--				new_size, size, KM_NOFS);
-+		ifp->if_u1.if_ext_irec =
-+			kmem_realloc(ifp->if_u1.if_ext_irec, new_size, KM_NOFS);
- 	}
- }
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 396565f..bf6e807 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3843,7 +3843,7 @@ xlog_recover_add_to_cont_trans(
- 	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
- 	old_len = item->ri_buf[item->ri_cnt-1].i_len;
- 
--	ptr = kmem_realloc(old_ptr, len+old_len, old_len, KM_SLEEP);
-+	ptr = kmem_realloc(old_ptr, len + old_len, KM_SLEEP);
- 	memcpy(&ptr[old_len], dp, len);
- 	item->ri_buf[item->ri_cnt-1].i_len += len;
- 	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 536a0ee..654799f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -89,7 +89,6 @@ xfs_uuid_mount(
- 	if (hole < 0) {
- 		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
- 			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
--			xfs_uuid_table_size  * sizeof(*xfs_uuid_table),
- 			KM_SLEEP);
- 		hole = xfs_uuid_table_size++;
- 	}
--- 
-2.1.4
+the mode is essentially (GFP_KERNEL | GFP_NOWARN) &= ~__GFP_FS.
+Here is the site of the loop file in case it matters:
+
+du -h --apparent-size /storage/loop/file1
+2.3T	/storage/loop/file1
+
+du -h /storage/loop/file1
+878G	/storage/loop/file1
+
+And this string is repeated multiple times. Looking at the output of
+"echo w > /proc/sysrq-trigger" I see the following suspicious entry:
+
+loop0           D ffff881fe081f038     0 15174      2 0x00000000
+ ffff881fe081f038 ffff883ff29fa700 ffff881fecb70d00 ffff88407fffae00
+ 0000000000000000 0000000502404240 ffffffff81e30d60 0000000000000000
+ 0000000000000000 ffff881f00000003 0000000000000282 ffff883f00000000
+Call Trace:
+ [<ffffffff8163ac01>] ? _raw_spin_lock_irqsave+0x21/0x60
+ [<ffffffff81636fd7>] schedule+0x47/0x90
+ [<ffffffff81639f03>] schedule_timeout+0x113/0x1e0
+ [<ffffffff810ac580>] ? lock_timer_base+0x80/0x80
+ [<ffffffff816363d4>] io_schedule_timeout+0xa4/0x110
+ [<ffffffff8114aadf>] congestion_wait+0x7f/0x130
+ [<ffffffff810939e0>] ? woken_wake_function+0x20/0x20
+ [<ffffffffa0283bac>] kmem_alloc+0x8c/0x120 [xfs]
+ [<ffffffff81181751>] ? __kmalloc+0x121/0x250
+ [<ffffffffa0283c73>] kmem_realloc+0x33/0x80 [xfs]
+ [<ffffffffa02546cd>] xfs_iext_realloc_indirect+0x3d/0x60 [xfs]
+ [<ffffffffa02548cf>] xfs_iext_irec_new+0x3f/0xf0 [xfs]
+ [<ffffffffa0254c0d>] xfs_iext_add_indirect_multi+0x14d/0x210 [xfs]
+ [<ffffffffa02554b5>] xfs_iext_add+0xc5/0x230 [xfs]
+ [<ffffffff8112b5c5>] ? mempool_alloc_slab+0x15/0x20
+ [<ffffffffa0256269>] xfs_iext_insert+0x59/0x110 [xfs]
+ [<ffffffffa0230928>] ? xfs_bmap_add_extent_hole_delay+0xd8/0x740 [xfs]
+ [<ffffffffa0230928>] xfs_bmap_add_extent_hole_delay+0xd8/0x740 [xfs]
+ [<ffffffff8112b5c5>] ? mempool_alloc_slab+0x15/0x20
+ [<ffffffff8112b725>] ? mempool_alloc+0x65/0x180
+ [<ffffffffa02543d8>] ? xfs_iext_get_ext+0x38/0x70 [xfs]
+ [<ffffffffa0254e8d>] ? xfs_iext_bno_to_ext+0xed/0x150 [xfs]
+ [<ffffffffa02311b5>] xfs_bmapi_reserve_delalloc+0x225/0x250 [xfs]
+ [<ffffffffa023131e>] xfs_bmapi_delay+0x13e/0x290 [xfs]
+ [<ffffffffa02730ad>] xfs_iomap_write_delay+0x17d/0x300 [xfs]
+ [<ffffffffa022e434>] ? xfs_bmapi_read+0x114/0x330 [xfs]
+ [<ffffffffa025ddc5>] __xfs_get_blocks+0x585/0xa90 [xfs]
+ [<ffffffff81324b53>] ? __percpu_counter_add+0x63/0x80
+ [<ffffffff811374cd>] ? account_page_dirtied+0xed/0x1b0
+ [<ffffffff811cfc59>] ? alloc_buffer_head+0x49/0x60
+ [<ffffffff811d07c0>] ? alloc_page_buffers+0x60/0xb0
+ [<ffffffff811d13e5>] ? create_empty_buffers+0x45/0xc0
+ [<ffffffffa025e324>] xfs_get_blocks+0x14/0x20 [xfs]
+ [<ffffffff811d34e2>] __block_write_begin+0x1c2/0x580
+ [<ffffffffa025e310>] ? xfs_get_blocks_direct+0x20/0x20 [xfs]
+ [<ffffffffa025bbb1>] xfs_vm_write_begin+0x61/0xf0 [xfs]
+ [<ffffffff81127e50>] generic_perform_write+0xd0/0x1f0
+ [<ffffffffa026a341>] xfs_file_buffered_aio_write+0xe1/0x240 [xfs]
+ [<ffffffff812e16d2>] ? bt_clear_tag+0xb2/0xd0
+ [<ffffffffa026ab87>] xfs_file_write_iter+0x167/0x170 [xfs]
+ [<ffffffff81199d76>] vfs_iter_write+0x76/0xa0
+ [<ffffffffa03fb735>] lo_write_bvec+0x65/0x100 [loop]
+ [<ffffffffa03fd589>] loop_queue_work+0x689/0x924 [loop]
+ [<ffffffff8163ba52>] ? retint_kernel+0x10/0x10
+ [<ffffffff81074d71>] kthread_worker_fn+0x61/0x1c0
+ [<ffffffff81074d10>] ? flush_kthread_work+0x120/0x120
+ [<ffffffff81074d10>] ? flush_kthread_work+0x120/0x120
+ [<ffffffff810744d7>] kthread+0xd7/0xf0
+ [<ffffffff8107d22e>] ? schedule_tail+0x1e/0xd0
+ [<ffffffff81074400>] ? kthread_freezable_should_stop+0x80/0x80
+ [<ffffffff8163b2af>] ret_from_fork+0x3f/0x70
+ [<ffffffff81074400>] ? kthread_freezable_should_stop+0x80/0x80
+
+So this seems that there are writes to the loop device being queued and
+while being served XFS has to do some internal memory allocation to fit
+the new data, however due to some *uknown* reason it fails and starts
+looping in kmem_alloc.  I didn't see any OOM reports so presumably the
+server was not out of memory, but unfortunately I didn't check the
+memory fragmentation, though I collected a crash dump in case you need
+further info.
+
+The one thing which bugs me is that XFS tried to allocate 107 contiguous
+kb which is page-order-26 isn't this waaaaay too big and almost never
+satisfiable, despite direct/bg reclaim to be enabled? For now I've
+reverted to using 3.12.52 kernel, where this issue hasn't been observed
+(yet) any ideas would be much appreciated.
 
 _______________________________________________
 xfs mailing list
