@@ -1,26 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8701E7CE1
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 09:07:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 59EFD30405F
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 07:07:40 -0700 (PDT)
-Date: Wed, 23 Mar 2016 10:07:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING
-	fs/xfs/xfs_aops.c:1232 xfs_vm_releasepage
-Message-ID: <20160323140736.GD43073@bfoster.bfoster>
-References: <56C81D94.7090603@profihost.ag>
-	<20160220144533.GA36182@bfoster.bfoster>
-	<B833B258-1140-464C-94CD-09B840BD4220@profihost.ag>
-	<56D9D834.2000303@profihost.ag>
-	<20160304191329.GC3758@bfoster.bfoster>
-	<56D9E9BE.40101@profihost.ag>
-	<20160304210341.GA8035@bfoster.bfoster>
-	<20160305224845.GR30721@dastard> <56F299E3.4020703@profihost.ag>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E63EA7CCD
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 17:37:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6BD1EAC001
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 15:37:56 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	hWK9G6j2KOvggpz9 for <xfs@oss.sgi.com>;
+	Wed, 23 Mar 2016 15:37:49 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1airPP-0007YT-B6
+	for xfs@oss.sgi.com; Thu, 24 Mar 2016 09:37:47 +1100
+Date: Thu, 24 Mar 2016 09:37:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160323223747.GX30721@dastard>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<6457b1d9de271ec6cca6bc2626aac161@mail.gmail.com>
+	<20160322140345.GA54245@bfoster.bfoster>
+	<0f3832c45509f444f55fda2aaf9c9deb@mail.gmail.com>
+	<20160323123010.GA43073@bfoster.bfoster>
+	<20160323153221.GA19456@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56F299E3.4020703@profihost.ag>
+In-Reply-To: <20160323153221.GA19456@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,67 +39,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
-> sorry new one the last one got mangled. Comments inside.
+On Wed, Mar 23, 2016 at 04:32:21PM +0100, Carlos Maiolino wrote:
+> I'm still trying to get a reliable reproducer, at least exactly with what I have
+> seen a few days ago.
 > 
-> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
-> > On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
-> >> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
-> >>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
-> >>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
-> >>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
-> >>>>>>
-> >>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
-> >>>>>>>
-> >>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
-...
+> Shyam, could you try to reproduce it with a recent/upstream kernel? That would
+> be great to make sure we have been seen the same issue.
 > 
-> This has happened again on 8 different hosts in the last 24 hours
-> running 4.4.6.
+> AFAICT, it happens in the following situation:
 > 
-> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
-> OS stuff as the VMs have remote storage. So no database, no rsync on
-> those hosts - just the OS doing nearly nothing.
+> 1 - Something is written to the filesystem
+> 2 - log checkpoint is done for the previous write
+> 3 - Disk failure
+> 4 - XFS tries to writeback metadata logged in [2]
 > 
-> All those show:
-> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
-> xfs_vm_releasepage+0xe2/0xf0()
+> When [4] happens, I can't trigger xfs_log_force messages all the time, most of
+> time I just get an infinite loop in these messages:
 > 
+> [12694.318109] XFS (dm-0): Failing async write on buffer block
+> 0xffffffffffffffff. Retrying async write.
+>
+> Sometimes I can trigger the xfs_log_force() loop.
 
-Ok, well at this point the warning isn't telling us anything beyond
-you're reproducing the problem. We can't really make progress without
-more information. We don't necessarily know what application or
-operations caused this by the time it occurs, but perhaps knowing what
-file is affected could give us a hint.
+This all smells like the filesystem is getting IO errors but it not
+in a shutdown state. What happens when you run 'xfs_io -x -c
+"shutdown" /mnt/pt' on a filesystem in this state? Can you then
+unmount it?
 
-We have the xfs_releasepage tracepoint, but that's unconditional and so
-might generate a lot of noise by default. Could you enable the
-xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
-E.g., we could leave a long running 'trace-cmd record -e
-"xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
-problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
--e "xfs:xfs_releasepage"' and leave something like 'cat
-/sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
-~/trace.out' running to capture instances.
+Cheers,
 
-If we can get a tracepoint hit, it will include the inode number and
-something like 'find / -inum <ino>' can point us at the file.
-
-Brian
-
-> Stefan
-> 
-> > 
-> > -Dave.
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
