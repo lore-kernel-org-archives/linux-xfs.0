@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8F9387CB1
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 10:03:26 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B13037CB6
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 18:46:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 609038F8035
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 08:03:23 -0700 (PDT)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id zj0ddH70vWHh3wW1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 23 Mar 2016 08:03:20 -0700 (PDT)
-Received: by mail-wm0-f46.google.com with SMTP id l68so200097968wml.0
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 08:03:20 -0700 (PDT)
-Subject: Re: Failing XFS memory allocation
-References: <56F26CCE.6010502@kyup.com>
-	<20160323124312.GB43073@bfoster.bfoster> <56F29279.70600@kyup.com>
-	<20160323131059.GC43073@bfoster.bfoster>
-From: Nikolay Borisov <kernel@kyup.com>
-Message-ID: <56F2B036.4090306@kyup.com>
-Date: Wed, 23 Mar 2016 17:03:18 +0200
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 911FE304051
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 16:46:31 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	wqMiBFrOUCkDAQd4 for <xfs@oss.sgi.com>;
+	Wed, 23 Mar 2016 16:46:28 -0700 (PDT)
+Date: Thu, 24 Mar 2016 10:45:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] xfs: set up inode operation vectors later
+Message-ID: <20160323234554.GA30721@dastard>
+References: <1458740935-31260-1-git-send-email-hch@lst.de>
+	<1458740935-31260-3-git-send-email-hch@lst.de>
+	<20160323230500.GZ30721@dastard> <20160323232630.GA5646@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20160323131059.GC43073@bfoster.bfoster>
+Content-Disposition: inline
+In-Reply-To: <20160323232630.GA5646@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,83 +31,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-
-
-On 03/23/2016 03:10 PM, Brian Foster wrote:
-> On Wed, Mar 23, 2016 at 02:56:25PM +0200, Nikolay Borisov wrote:
->>
->>
->> On 03/23/2016 02:43 PM, Brian Foster wrote:
->>> On Wed, Mar 23, 2016 at 12:15:42PM +0200, Nikolay Borisov wrote:
-> ...
->>> It looks like it's working to add a new extent to the in-core extent
->>> list. If this is the stack associated with the warning message (combined
->>> with the large alloc size), I wonder if there's a fragmentation issue on
->>> the file leading to an excessive number of extents.
->>
->> Yes this is the stack trace associated.
->>
->>>
->>> What does 'xfs_bmap -v /storage/loop/file1' show?
->>
->> It spews a lot of stuff but here is a summary, more detailed info can be
->> provided if you need it:
->>
->> xfs_bmap -v /storage/loop/file1 | wc -l
->> 900908
->> xfs_bmap -v /storage/loop/file1 | grep -c hole
->> 94568
->>
->> Also, what would constitute an "excessive number of extents"?
->>
+On Thu, Mar 24, 2016 at 12:26:30AM +0100, Christoph Hellwig wrote:
+> On Thu, Mar 24, 2016 at 10:05:00AM +1100, Dave Chinner wrote:
+> > >  	d_instantiate(dentry, inode);
+> > >  	xfs_finish_inode_setup(cip);
+> > 
+> > I think there are more places than this that need xfs_setup_iops()
+> > calls - a quick look around makes me think they need to be paired
+> > with every path that calls xfs_finish_inode_setup().
 > 
-> I'm not sure where one would draw the line tbh, it's just a matter of
-> having too many extents to the point that it causes problems in terms of
-> performance (i.e., reading/modifying the extent list) or such as the
-> allocation problem you're running into. As it is, XFS maintains the full
-> extent list for an active inode in memory, so that's 800k+ extents that
-> it's looking for memory for.
+> Most calls to xfs_finish_inode_setup are for error cases that
+> just drop the inode instantly and don't need it.
 
-I saw in the comments that this problem has already been identified and
-a possible solution would be to add another level of indirection. Also,
-can you confirm that my understanding of the operation of the
-indirection array is correct in that each entry in the indirection array
-xfs_ext_irec is responsible for 256 extents. (the er_extbuf is
-PAGE_SIZE/4kb and an extent is 16 bytes which results in 256 extents)
+Fair enough.
 
+> The other
+> cases are:
 > 
-> It looks like that is your problem here. 800k or so extents over 878G
-> looks to be about 1MB per extent. Are you using extent size hints? One
-> option that might prevent this is to use a larger extent size hint
-> value. Another might be to preallocate the entire file up front with
-> fallocate. You'd probably have to experiment with what option or value
-> works best for your workload.
+>  - xfs_generic_create, xfs_vn_symlink and xfs_setup_existing_inode,
+>    which are handled in this patch
+>  - xfs_qm_qino_alloc, which is for the quota inode that doesn't have
+>    inode operations
 
-By preallocating with fallocate you mean using fallocate with
-FALLOC_FL_ZERO_RANGE and not FALLOC_FL_PUNCH_HOLE, right? Because as it
-stands now the file does have holes, which presumably are being filled
-and in order to be filled an extent has to be allocated which caused the
-issue?  Am I right in this reasoning?
+*nod*
 
-Currently I'm not using extents size hint but will look into that, also
-if the extent size hint is say 4mb, wouldn't that cause a fairly serious
-loss of space, provided that the writes are smaller than 4mb. Would XFS
-try to perform some sort of extent coalescing or something else? I'm not
-an FS developer but my understanding is that with a 4mb extent size,
-whenever a new write occurs even if it's 256kb a new 4mb extent would be
-allocated, no?
+>  - xfs_rename_alloc_whiteout which probably needs it.  This seems
+>    to be recent and has no apparent test coverage, so I'm not sure
+>    how to verify it, though.
 
-And a final question - when i printed the contents of the inode with
-xfs_db I get core.nextents = 972564 whereas invoking the xfs_bmap | wc
--l on the file always gives varying numbers?
+Yup, that's the one I first noticed. generic/078 tests
+RENAME_WHITEOUT functionality through renameat2() and it includes
+operations on symlinks, so there is some coverage in xfstests for
+it.
 
-Thanks a lot for taking the time to reply.
+Cheers,
 
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
