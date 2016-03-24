@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 705797CA6
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 06:15:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4202130405F
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:40 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 83B537CBB
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 06:16:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 47CC3304062
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:16:04 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id s7k7vHhIxkrL8pyw (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ZbS9JeMsmBwHEHhk (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:39 -0700 (PDT)
+	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:58 -0700 (PDT)
 Received: from int-mx13.intmail.prod.int.phx2.redhat.com
 	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 79EDF64373
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 11:15:38 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 5E4FDC00EB2E
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 11:15:56 +0000 (UTC)
 Received: from localhost.localdomain (vpn1-7-36.ams2.redhat.com [10.36.7.36])
 	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u2OBFbL6009274
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 07:15:37 -0400
+	ESMTP id u2OBFbLP009274
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 07:15:55 -0400
 From: jtulak@redhat.com
-Subject: [PATCH 00/19] mkfs cleaning
-Date: Thu, 24 Mar 2016 12:15:17 +0100
-Message-Id: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
+Subject: [PATCH 19/19] mkfs: add optional 'reason' for illegal_option
+Date: Thu, 24 Mar 2016 12:15:36 +0100
+Message-Id: <1458818136-56043-20-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,90 +31,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogSmFuIFR1bGFrIDxqdHVsYWtAcmVkaGF0LmNvbT4KCkhpIGd1eXMsCmEgbmV3IGl0ZXJh
-dGlvbiBvZiB0aGlzIHBhdGNoc2V0IGFmdGVyIGEgbG9uZyB0aW1lLgoKKEp1bXAgZG93biB0byB0
-aGUgcXVvdGUgb2YgdGhlIG9yaWdpbmFsIHBvc3QgZnJvbSBEYXZlIHdobyBzdGFydGVkIHRoaXMg
-c2V0LikKCkkgdHJpZWQgdG8gc29sdmUgYWxsIHRoZSBpc3N1ZXMgeW91IG1lbnRpb25lZCB0aGUg
-bGFzdCB0aW1lICh0aGFua3MgZm9yIHRoZW0hKQphbmQgSSB3ZW50IGFsc28gdGhyb3VnaCBtb3Jl
-IGludGVuc2UgdGVzdGluZy4gQXMgZmFyIGFzIEknbSBhd2FyZSwgdGhlIG9ubHkKZmV3IG9jY2Fz
-c2lvbnMgd2hlcmUgeGZzdGVzdHMgY3VycmVudGx5IGZhaWxzIHdpdGggdGhpcyBwYXRjaHNldCBp
-cyBiZWNhdXNlCkkgZml4ZWQgc29tZSB3cm9uZy9ub3QgaWRlYWwgYmVoYXZpb3VyIGluIHRoZSBv
-cmlnaW5hbCBjb2RlLiBJdCBzaG91bGQgYmUKY2xlYW4gYWxzbyBmcm9tIENvdmVyaXR5J3MgcG9p
-bnQgb2Ygdmlldy4KClNvbWUgdGVzdHMgd2hpY2ggbm93IGZhaWxzIGFuZCB3aWxsIG5lZWQgYSBj
-aGFuZ2UgYXJlIHhmcy8wNzgsIDIwNiwgMjE2CmFuZCAyMTcuIFNlZSAiW1BBVENIIDE1LzE5XSBt
-a2ZzOiBkb24ndCB0cmVhdCBmaWxlcyBhcyB0aG91Z2ggdGhleSBhcmUgYmxvY2sKZGV2aWNlcyIg
-Zm9yIG1vcmUgZGV0YWlscwoKRWFjaCBzcGVjaWZpYyBwYXRjaCBoYXMgYSBjaGFuZ2Vsb2cgb2Yg
-dGhlIHRoaW5ncyBjaGFnZWQgaW4gaXQgc2luY2UgdGhlIGxhc3QKdmVyc2lvbi4KCkkgaG9wZSB0
-aGF0IHRoaXMgcGF0Y2hzZXQgaXMgZ2V0dGluZyBpbnRvIGEgcmVhc29uYWJsZSBmb3JtLiBXaGls
-ZSBpdCBkb2Vzbid0CmNsZWFuIGV2ZXJ5dGhpbmcsIGl0IGdyZWF0ZWx5IGNsZWFucyBzb21lIHBh
-cnRzIG9mIG1rZnMgYW5kIGZpeGVzIHNvbWUgaXNzdWVzLgoKCkFuZCB0byByZW1pbmQgd2hhdCB0
-aGlzIHBhdGNoc2V0IGlzIGFib3V0LCBoZXJlIGlzIHRoZSBvcmlnaW5hbCBEYXZlJ3MgZW1haWwu
-Cgo+IEhpIGZvbGtzLAo+4pCjCj4gVGhpcyBpcyBzdGlsbCBhIHdvcmsgaW4gcHJvZ3Jlc3MsIGJ1
-dCBpcyBjb21wZWx0ZSBlbm91Z2ggdG8gZ2V0Cj4gZmVlZGJhY2sgb24gdGhlIGdlbmVyYWwgc3Ry
-dWN0dXJlLiBUaGUgcHJvYmxlbSBiZWluZyBzb2x2ZWQgaGVyZSBpcwo+IHRoYXQgbWtmcyBkb2Vz
-IGEgdGVycmlibGUgam9iIG9mIGlucHV0IHZhbGlkYXRpb24gZnJvbSB0aGUgY29tbWFuZAo+IGxp
-bmUsIGhhcyBodWdlIGFtb3VudHMgb2YgcmVwZWF0ZWQgY29kZSBpbiB0aGUgc3ViIG9wdGlvbnMK
-PiBwcm9jZXNzaW5nIGxvb3BzIGFuZCBoYXMgbWFueSwgbWFueSB1bm5lY2Vzc2FyeSB2YXJpYWJs
-ZSBmb3IKPiB0cmFja2luZyBzaW1wbHkgdGhpbmdzIGxpa2Ugd2hldGhlciBhIHBhcmFtZXRlciB3
-YXMgc3BlY2lmaWVkLgo+4pCjCj4gVGhpcyBwYXRjaHNldCBpbnRyb2R1Y2VzIGEgcGFyYW1ldGVy
-IHRhYmxlIHN0cnVjdHVyZSB0aGF0IGlzIHVzZWQgdG8KPiBkZWZpbmUgdGhlIHBhcmFtZXRlcnMg
-YW5kIHRoZWlyIGNvbnN0cmFpbnRzLiBUaGluZ3MgbGlrZSBtaW5pbXVtIGFuZAo+IG1heGltdW0g
-dmFsaWQgdmFsdWVzLCBkZWZhdWx0IHZhbHVlcywgY29uZmxpY3Rpbmcgb3B0aW9ucywgZXRjIGFy
-ZQo+IGFsbCBjb250YWluZWQgd2l0aGluIHRoZSB0YWJsZSwgc28gYWxsIHRoZSAicG9saWN5IiBp
-cyBmb3VuZCBpbiBhCj4gc2luZ2xlIHBsYWNlLgo+4pCjCj4gVGhpcyBncmVhdGx5IHJlZHVjZXMg
-dGhlIGNvbXBsZXhpdHkgb2YgdGhlIG9wdGlvbiBwYXJzaW5nIGxvb3AuIEl0Cj4gZG9lc24ndCBy
-ZW1vdmUgYWxsIHRoZSBjb21wbGV4aXR5ICh5ZXQpIGJlY2F1c2UgbWFueSBvZiB0aGUgb3B0aW9u
-cwo+IGhhdmUgc3BlY2lhbCBjYXNlcyBvciBtb3JlIGNvbXBsZXggY29uZmxpY3RzIHRoYW4gSSd2
-ZSB5ZXQgYWRkZWQKPiBzdXBwb3J0IGZvci4gVGhlIGlkZWEgaXMsIGhvd2V2ZXIsIHRoYXQgYWxs
-IG9mIHRoZSBzdWItb3B0aW9uCj4gcGFyYW1ldGVyIHNldHVwIHdpbGwgZXZlbnR1YWxseSBlbmQg
-dXAgYmVpbmcgaW1wbGVtZW50ZWQgYXMgYQo+IGdlbmVyaWMgbG9vcCBhcyB0aGUgcGFyYW1ldGVy
-IHN0cnVjdHVyZSB3aWxsIGhvbGQgYWxsIHRoZQo+IGluZm9ybWF0aW9uIGFib3V0IGluIHRoZSBp
-bnB1dCBwYXJhbWV0ZXJzLgo+4pCjCj4gVG8gZ2V0IHRoZXJlLCB0aGUgcGFyYW1ldGVyIHRhYmxl
-IHN0aWxsIG5lZWRzIG1vcmUgd29yayAtIGl0IG5lZWRzCj4gdG8gaG9sZCB0aGUgdmFsdWUvc3Ry
-aW5nIGZvciB0aGUgcGFyYW1ldGVyLCBhbmQgd2UgbmVlZCB0byByZWZlcmVuY2UKPiB0aG9zZSBp
-biB0aGUgY29kZS4KPuKQowo+IFRoZSBmbG93IG9uIGVmZmVjdCBvZiB0aGlzIGlzIHRoYXQgd2Ug
-Y2FuIHJlbW92ZSB0aGUgbWFueSwgbWFueQo+IGluZGl2aWR1YWwgdmFyaWFibGVzIGFuZCBzdGFy
-dCBwYXNzaW5nIHRoZSBvcHRpb24gc3RydWN0dXJlcyB0bwo+IGZ1bmN0aW9ucyByYXRoZXIgdGhh
-biBhdm9pZGluZyB1c2luZyBmdW5jdGlvbnMgYmVjYXVzZSBwYXNzaW5nIHNvCj4gbWFueSB2YXJp
-YWJsZXMgaXMgbWVzc3kgYW5kIG5hc3R5LiBJT1dzLCBpdCBsYXlzIHRoZSBncm91bmR3b3JrIGZv
-cgo+IGZhY3RvcmluZyB4ZnNfbWtmcy5jIGludG8gc29tZXRoaW5nIG1vcmUgdGhhbiBhIGJ1bmNo
-IG9mIHNwYWdldHRpLi4uCj7ikKMKPiBBbnl3YXksIGhhdmUgYSBsb29rIGFuZCBzZWUgd2hhdCB5
-b3UgdGhpbmsgYWJvdXQgcHJvZ3Jlc3Mgc28gZmFyLgo+4pCjCj4gRldJVywgdGhlIGZpcnN0IHBh
-dGNoIGlzIGZvbGxvd2luZyB1cCBvbiB0aGUgbXVsdGktZGlzayBkaXNjdXNzaW9uCj4gQ2hyaXN0
-b3BoIGFuZCBJIGhhZCwgYW5kIHRoZSBsYXN0IHBhdGNoIGluIHRoZSBzZXJpZXMgY292ZXJzIGFs
-bCB0aGUKPiBpc3N1ZXMgdGhhdCBhcm9zZSB3aXRoICItZCBmaWxlIiBhbmQgdHJlYXRpbmcgZmls
-ZXMgbGlrZSBibG9jawo+IGRldmljZXMuLi4uCj7ikKMKPiBDaGVlcnMsCj7ikKMKPiBEYXZlLgoK
-CkRhdmUgQ2hpbm5lciAoMTUpOgogIHhmc3Byb2dzOiB1c2UgY29tbW9uIGNvZGUgZm9yIG11bHRp
-LWRpc2sgZGV0ZWN0aW9uCiAgbWtmczogc2FuaXRpc2UgZnR5cGUgcGFyYW1ldGVyIHZhbHVlcy4K
-ICBta2ZzOiBTYW5pdGlzZSB0aGUgc3VwZXJibG9jayBmZWF0dXJlIG1hY3JvcwogIG1rZnM6IHZh
-bGlkYXRlIGFsbCBpbnB1dCB2YWx1ZXMKICBta2ZzOiBmYWN0b3IgYm9vbGVhbiBvcHRpb24gcGFy
-c2luZwogIG1rZnM6IHZhbGlkYXRlIGxvZ2FyaXRobWljIHBhcmFtZXRlcnMgc2FuZWx5CiAgbWtm
-czogc3RydWN0aWZ5IGlucHV0IHBhcmFtZXRlciBwYXNzaW5nCiAgbWtmczogZ2V0Ym9vbCBpcyBy
-ZWR1bmRhbnQKICBta2ZzOiB1c2UgZ2V0bnVtX2NoZWNrZWQgZm9yIGFsbCByYW5nZWQgcGFyYW1l
-dGVycwogIG1rZnM6IGFkZCByZXNwZWNpZmljYXRpb24gZGV0ZWN0aW9uIHRvIGdlbmVyaWMgcGFy
-c2luZwogIG1rZnM6IHRhYmxlIGJhc2VkIHBhcnNpbmcgZm9yIGNvbnZlcnRlZCBwYXJhbWV0ZXJz
-CiAgbWtmczogbWVyZ2UgZ2V0bnVtCiAgbWtmczogZW5jb2RlIGNvbmZsaWN0cyBpbnRvIHBhcnNp
-bmcgdGFibGUKICBta2ZzOiBhZGQgc3RyaW5nIG9wdGlvbnMgdG8gZ2VuZXJpYyBwYXJzaW5nCiAg
-bWtmczogZG9uJ3QgdHJlYXQgZmlsZXMgYXMgdGhvdWdoIHRoZXkgYXJlIGJsb2NrIGRldmljZXMK
-CkphbiBUdWxhayAoNCk6CiAgbWtmczogbW92ZSBzcGlub2RlcyBjcmMgY2hlY2sKICB4ZnNwcm9n
-czogZGlzYWJsZSB0cnVuY2F0aW5nIG9mIGZpbGVzCiAgbWtmczogdW5pdCBjb252ZXJzaW9ucyBh
-cmUgY2FzZSBpbnNlbnNpdGl2ZQogIG1rZnM6IGFkZCBvcHRpb25hbCAncmVhc29uJyBmb3IgaWxs
-ZWdhbF9vcHRpb24KCgogaW5jbHVkZS9NYWtlZmlsZSAgICAgICAgfCAgICA1ICstCiBpbmNsdWRl
-L3hmc19tdWx0aWRpc2suaCB8ICAgNzMgKysKIGxpYnhmcy9pbml0LmMgICAgICAgICAgIHwgICAx
-NCArLQogbGlieGZzL2xpbnV4LmMgICAgICAgICAgfCAgIDEyICstCiBtYW4vbWFuOC9ta2ZzLnhm
-cy44ICAgICB8ICAgMzcgKy0KIG1rZnMvTWFrZWZpbGUgICAgICAgICAgIHwgICAgMiArLQogbWtm
-cy9tYXh0cnJlcy5jICAgICAgICAgfCAgICAyICstCiBta2ZzL3Byb3RvLmMgICAgICAgICAgICB8
-ICAgNTggKy0KIG1rZnMveGZzX21rZnMuYyAgICAgICAgIHwgMjAwMyArKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLQogbWtmcy94ZnNfbWtmcy5oICAgICAgICAg
-fCAgIDg5IC0tLQogcmVwYWlyL3hmc19yZXBhaXIuYyAgICAgfCAgIDQ0ICstCiAxMSBmaWxlcyBj
-aGFuZ2VkLCAxNDM3IGluc2VydGlvbnMoKyksIDkwMiBkZWxldGlvbnMoLSkKIGNyZWF0ZSBtb2Rl
-IDEwMDY0NCBpbmNsdWRlL3hmc19tdWx0aWRpc2suaAogZGVsZXRlIG1vZGUgMTAwNjQ0IG1rZnMv
-eGZzX21rZnMuaAoKLS0gCjIuNi4wCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
-LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Jan Tulak <jtulak@redhat.com>
+
+Allow us to tell the user what exactly is wrong with his options.
+For example, that the value is too small, instead of just generic
+"bad option."
+
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 680c6c4..76e193d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1550,11 +1550,18 @@ static __attribute__((noreturn)) void
+ illegal_option(
+ 	const char	*value,
+ 	struct opt_params	*opts,
+-	int		index)
++	int		index,
++	const char *reason)
+ {
+-	fprintf(stderr,
+-		_("Illegal value %s for -%c %s option\n"),
+-		value, opts->name, opts->subopts[index]);
++	if(reason == NULL){
++		fprintf(stderr,
++			_("Illegal value %s for -%c %s option\n"),
++			value, opts->name, opts->subopts[index]);
++	} else {
++		fprintf(stderr,
++			_("Illegal value %s for -%c %s option: %s\n"),
++			value, opts->name, opts->subopts[index], reason);
++	}
+ 	usage();
+ }
+
+@@ -1646,16 +1653,18 @@ getnum(
+
+ 		c = strtoll(str, &str_end, 0);
+ 		if (c == 0 && str_end == str)
+-			illegal_option(str, opts, index);
++			illegal_option(str, opts, index, NULL);
+ 		if (*str_end != '\0')
+-			illegal_option(str, opts, index);
++			illegal_option(str, opts, index, NULL);
+ 	}
+
+ 	/* Validity check the result. */
+-	if (c < sp->minval || c > sp->maxval)
+-		illegal_option(str, opts, index);
++	if (c < sp->minval)
++		illegal_option(str, opts, index, "value is too small");
++	else if (c > sp->maxval)
++		illegal_option(str, opts, index, "value is too large");
+ 	if (sp->is_power_2 && !ispow2(c))
+-		illegal_option(str, opts, index);
++		illegal_option(str, opts, index, "value has to be power of 2");
+ 	return c;
+ }
+
+--
+2.6.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
