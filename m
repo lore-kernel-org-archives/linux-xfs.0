@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8A2427CA2
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 21:44:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C969304032
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 19:44:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Mo1s320MPi3ROne7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 19:44:18 -0700 (PDT)
-Date: Fri, 1 Apr 2016 13:44:13 +1100
-From: Dave Chinner <dchinner@redhat.com>
-Subject: Re: list_add corruption after "xfs: mode di_mode to vfs inode"
-Message-ID: <20160401024413.GB2072@devil.localdomain>
-References: <56FC9FA6.1080700@stratus.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 359E87CAF
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 06:17:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E9ED28F8052
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:17:10 -0700 (PDT)
+Date: Thu, 24 Mar 2016 07:17:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING
+	fs/xfs/xfs_aops.c:1232 xfs_vm_releasepage
+Message-ID: <20160324111703.GA4068@bfoster.bfoster>
+References: <B833B258-1140-464C-94CD-09B840BD4220@profihost.ag>
+	<56D9D834.2000303@profihost.ag>
+	<20160304191329.GC3758@bfoster.bfoster>
+	<56D9E9BE.40101@profihost.ag>
+	<20160304210341.GA8035@bfoster.bfoster>
+	<20160305224845.GR30721@dastard> <56F299E3.4020703@profihost.ag>
+	<20160323140736.GD43073@bfoster.bfoster>
+	<56F3A101.1020300@profihost.ag> <56F3A213.2020908@profihost.ag>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56FC9FA6.1080700@stratus.com>
+In-Reply-To: <56F3A213.2020908@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,129 +33,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: xfs@oss.sgi.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Mar 30, 2016 at 11:55:18PM -0400, Joe Lawrence wrote:
-> Hi Dave,
+On Thu, Mar 24, 2016 at 09:15:15AM +0100, Stefan Priebe - Profihost AG wrote:
 > 
-> Upon loading 4.6-rc1, I noticed a few linked list corruption messages in
-> dmesg shortly after boot up.  I bisected the kernel, landing on:
+> Am 24.03.2016 um 09:10 schrieb Stefan Priebe - Profihost AG:
+> > 
+> > Am 23.03.2016 um 15:07 schrieb Brian Foster:
+> >> On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
+> >>> sorry new one the last one got mangled. Comments inside.
+> >>>
+> >>> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
+> >>>> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
+> >>>>> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
+> >>>>>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
+> >>>>>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
+> >>>>>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
+> >>>>>>>>>
+> >>>>>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
+> >>>>>>>>>>
+> >>>>>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
+> >> ...
+> >>>
+> >>> This has happened again on 8 different hosts in the last 24 hours
+> >>> running 4.4.6.
+> >>>
+> >>> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
+> >>> OS stuff as the VMs have remote storage. So no database, no rsync on
+> >>> those hosts - just the OS doing nearly nothing.
+> >>>
+> >>> All those show:
+> >>> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
+> >>> xfs_vm_releasepage+0xe2/0xf0()
+> >>>
+> >>
+> >> Ok, well at this point the warning isn't telling us anything beyond
+> >> you're reproducing the problem. We can't really make progress without
+> >> more information. We don't necessarily know what application or
+> >> operations caused this by the time it occurs, but perhaps knowing what
+> >> file is affected could give us a hint.
+> >>
+> >> We have the xfs_releasepage tracepoint, but that's unconditional and so
+> >> might generate a lot of noise by default. Could you enable the
+> >> xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
+> >> E.g., we could leave a long running 'trace-cmd record -e
+> >> "xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
+> >> problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
+> >> -e "xfs:xfs_releasepage"' and leave something like 'cat
+> >> /sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
+> >> ~/trace.out' running to capture instances.
 > 
->   [c19b3b05ae440de50fffe2ac2a9b27392a7448e9] xfs: mode di_mode to vfs inode
+> Isn't the trace a WARN_ONCE? So it does not reoccur or can i check the
+> it in the trace.out even the WARN_ONCE was already triggered?
 > 
-> If I revert c19b3b05ae44 from 4.6-rc1, the warnings stop.
-> 
-> WARNING: CPU: 35 PID: 6715 at lib/list_debug.c:29 __list_add+0x65/0xc0
-> list_add corruption. next->prev should be prev (ffff882030928a00), but was ffff88103f00c300. (next=ffff88100fde5ce8).
-.....
->  [<ffffffff812488f0>] ? bdev_test+0x20/0x20
->  [<ffffffff813551a5>] __list_add+0x65/0xc0
->  [<ffffffff81249bd8>] bd_acquire+0xc8/0xd0
->  [<ffffffff8124aa59>] blkdev_open+0x39/0x70
->  [<ffffffff8120bc27>] do_dentry_open+0x227/0x320
->  [<ffffffff8124aa20>] ? blkdev_get_by_dev+0x50/0x50
->  [<ffffffff8120d057>] vfs_open+0x57/0x60
->  [<ffffffff8121c9fa>] path_openat+0x1ba/0x1340
->  [<ffffffff8121eff1>] do_filp_open+0x91/0x100
->  [<ffffffff8122c806>] ? __alloc_fd+0x46/0x180
->  [<ffffffff8120d3b4>] do_sys_open+0x124/0x210
->  [<ffffffff8120d4be>] SyS_open+0x1e/0x20
->  [<ffffffff81003c12>] do_syscall_64+0x62/0x110
->  [<ffffffff8169ade1>] entry_SYSCALL64_slow_path+0x25/0x25
-....
-> According to the bd_acquire+0xc8 offset, we're in bd_acquire()
-> attempting the list add:
-....
->  713         bdev = bdget(inode->i_rdev);
->  714         if (bdev) {
->  715                 spin_lock(&bdev_lock);
->  716                 if (!inode->i_bdev) {
->  717                         /*
->  718                          * We take an additional reference to bd_inode,
->  719                          * and it's released in clear_inode() of inode.
->  720                          * So, we can access it via ->i_mapping always
->  721                          * without igrab().
->  722                          */
->  723                         bdgrab(bdev);
->  724                         inode->i_bdev = bdev;
->  725                         inode->i_mapping = bdev->bd_inode->i_mapping;
->  726                         list_add(&inode->i_devices, &bdev->bd_inodes);
 
-So the bdev->bd_inodes list is corrupt, and this call trace is
-just the messenger.
+The tracepoint is independent from the warning (see
+xfs_vm_releasepage()), so the tracepoint will fire every invocation of
+the function regardless of whether delalloc blocks still exist at that
+point. That creates the need to filter the entries.
 
-> crash> ps -a | grep mdadm
-> ...
-> PID: 6715   TASK: ffff882033ac2d40  CPU: 35  COMMAND: "mdadm"
-> ARG: /sbin/mdadm --detail --export /var/opt/ft/osm/osm_temporary_md_device_node
-> ...
-> 
-> I traced the proprietary-driver-dependent user program to figure out
-> what it was doing and boiled that down to a repro that hits the same
-> corruption when running *stock* 4.6-rc1.  (Note /tmp is hosted on an 
-> XFS volume):
-> 
-> --
-> 
-> MD=/dev/md1
-> LOOP_A=/dev/loop0
-> LOOP_B=/dev/loop1
-> TMP_A=/tmp/diska
-> TMP_B=/tmp/diskb
-> 
-> echo
-> echo Setting up ...
-> 
-> dd if=/dev/zero of=$TMP_A bs=1M count=200
-> dd if=/dev/zero of=$TMP_B bs=1M count=200
-> losetup $LOOP_A $TMP_A
-> losetup $LOOP_B $TMP_B
-> 
-> mdadm --create $MD \
->         --metadata=1 \
->         --level=1 \
->         --raid-devices=2 \
->         --bitmap=internal \
->         $LOOP_A $LOOP_B
-> 
-> MAJOR=$(stat -c %t $MD)
-> MINOR=$(stat -c %T $MD)
-> 
-> echo
-> echo Testing major: $MAJOR minor: $MINOR ...
-> 
-> for i in {0..100}; do
->   mknod --mode=0600 /tmp/tmp_node b $MAJOR $MINOR
->   mdadm --detail --export /tmp/tmp_node
->   rm -f /tmp/tmp_node
-> done
-> 
-> echo
-> echo Cleanup ...
-> 
-> mdadm --stop $MD
-> losetup -d $LOOP_A $LOOP_B
-> rm -f $TMP_A $TMP_B
-> 
-> echo
-> echo Done.
-> 
-> --
-> 
-> I'm not really sure why the bisect landed on c19b3b05ae44 "xfs: mode
-> di_mode to vfs inode", but as I mentioned, reverting it made the list
-> warnings go away.
+With regard to performance, I believe the tracepoints are intended to be
+pretty lightweight. I don't think it should hurt to try it on a box,
+observe for a bit and make sure there isn't a huge impact. Note that the
+'trace-cmd record' approach will save everything to file, so that's
+something to consider I suppose.
 
-Neither am I at this point as it's the bdev inode (not an xfs
-inode) that has a corrupted list. I'll have to try to reproduce this.
+Brian
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dchinner@redhat.com
+> Stefan
+> 
+> 
+> > 
+> > Stefan
+> > 
+> >>
+> >> Brian
+> >>
+> >>> Stefan
+> >>>
+> >>>>
+> >>>> -Dave.
+> >>>>
+> >>>
+> >>> _______________________________________________
+> >>> xfs mailing list
+> >>> xfs@oss.sgi.com
+> >>> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
