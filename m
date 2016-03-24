@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 06DA37CA1
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:31:35 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D67567CA0
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 16:59:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CC2C9304053
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 02:31:31 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id IrbOyjkjgmKUadtH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 02:31:29 -0700 (PDT)
-Date: Thu, 24 Mar 2016 02:31:27 -0700
-From: Christoph Hellwig <hch@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9704E304051
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 14:59:02 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	83wyptkHoLaI6gXM for <xfs@oss.sgi.com>;
+	Thu, 24 Mar 2016 14:59:00 -0700 (PDT)
+Date: Fri, 25 Mar 2016 08:58:58 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Failing XFS memory allocation
-Message-ID: <20160324093127.GA4204@infradead.org>
+Message-ID: <20160324215858.GE11812@dastard>
 References: <56F26CCE.6010502@kyup.com>
 	<20160323124312.GB43073@bfoster.bfoster> <56F29279.70600@kyup.com>
 	<20160323131059.GC43073@bfoster.bfoster>
-	<20160323230002.GY30721@dastard>
+	<20160323230002.GY30721@dastard> <56F3B157.2060505@kyup.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160323230002.GY30721@dastard>
+In-Reply-To: <56F3B157.2060505@kyup.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,23 +32,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Nikolay Borisov <kernel@kyup.com>, xfs@oss.sgi.com
+To: Nikolay Borisov <kernel@kyup.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Mar 24, 2016 at 10:00:02AM +1100, Dave Chinner wrote:
-> I'm working on prototype patches to convert it to an in-memory btree
-> but they are far from ready at this point. This isn't straight
-> forward because all the extent management code assumes extents are
-> kept in a linear array and can be directly indexed by array offset
-> rather than file offset. I also want to make sure we can demand page
-> the extent list if necessary, and that also complicates things like
-> locking, as we currently assume the extent list is either completely
-> in memory or not in memory at all.
+On Thu, Mar 24, 2016 at 11:20:23AM +0200, Nikolay Borisov wrote:
+> On 03/24/2016 01:00 AM, Dave Chinner wrote:
+> > As it is, yes, the memory allocation problem is with the in-core
+> > extent tree, and we've known about it for some time. The issue is
+> > that as memory gets fragmented, the top level indirection array
+> > grows too large to be allocated as a contiguous chunk. When this
+> > happens really depends on memory load, uptime and the way the extent
+> > tree is being modified.
+> 
+> And what about the following completely crazy idea of switching order >
+> 3 allocations to using vmalloc? I know this would incur heavy
+> performance hit, but other than that would it cause correctness issues?
+> Of course I'm not saying this should be implemented in upstream rather
+> whether it's worth it having a go for experimenting with this idea.
 
-FYI, I did patches to get rid almost all direct extent array access
-a while ago, but I never bothered to post it as it seemed to much
-churn.  Have you started that work yet or would it be useful
-to dust those up again?
+It's not an option as many supported platforms which have extremely
+limited vmalloc space.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
