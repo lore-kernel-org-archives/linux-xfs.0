@@ -1,23 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8C9237CA0
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:33:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 556A7304053
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 02:33:49 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id NLGd1D76drnJ8Mwv (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 02:33:46 -0700 (PDT)
-Date: Thu, 24 Mar 2016 02:33:45 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Failing XFS memory allocation
-Message-ID: <20160324093345.GA13569@infradead.org>
-References: <56F26CCE.6010502@kyup.com>
+	by oss.sgi.com (Postfix) with ESMTP id BD9757CA0
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 11:52:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 654D2304053
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 09:52:49 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ChtSRyO7iFylbpGD (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 09:52:47 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 3E6B5804EC
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 16:52:47 +0000 (UTC)
+Received: from redhat.com (dhcp-26-103.brq.redhat.com [10.34.26.103])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u2OGqior011720
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 12:52:46 -0400
+Date: Thu, 24 Mar 2016 17:52:44 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160324165244.GA17555@redhat.com>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<6457b1d9de271ec6cca6bc2626aac161@mail.gmail.com>
+	<20160322140345.GA54245@bfoster.bfoster>
+	<0f3832c45509f444f55fda2aaf9c9deb@mail.gmail.com>
+	<20160323123010.GA43073@bfoster.bfoster>
+	<20160323153221.GA19456@redhat.com>
+	<20160323223747.GX30721@dastard>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8t9RHnE3ZwKMSgU+"
 Content-Disposition: inline
-In-Reply-To: <56F26CCE.6010502@kyup.com>
+In-Reply-To: <20160323223747.GX30721@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,180 +42,285 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Nikolay Borisov <kernel@kyup.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+
+I can now reproduce it, or at least part of the problem.
+
+Regarding your question Dave, yes, it can be unmounted after I issue xfs_io=
+ shutdown
+command. But, if a umount is issued before that, then we can't find the
+mountpoint anymore.
+
+I'm not sure if I'm correct, but, what it looks like to me, as you already
+mentioned, is that we keep getting IO errors but we never actually shutdown
+the filesystem while doing async metadata writes.
+
+I believe I've found the problem. So, I will try to explain it, so you guys
+can review and let me know if I'm right or not
+
+I was looking the code, and for me, looks like async retries are designed to
+keep retrying forever, and rely on some other part of the filesystem to act=
+ually
+shutdown it.
+
+I tested this hypothesis trying to issue some other IO after the messages b=
+elow
+starts to be logged with trace_xfs_buf_ioerror turned on, And before actual=
+ly
+umount the filesystem.
+
+And yes, the filesystem has been shutdown after some extra IO (IO errors
+returned of course).
+
+But, if we try to unmount, we can't issue any other IO, since we loose the
+mountpoint.
+
+I apologize if my description is confusing, I'm not the best person organiz=
+ing
+ideas, but, feel free to ask me any question.
 
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi Nikolay,
-
-can you give the patch below a spin?  While it doesn't solve the root
-cause it makes many typical uses of kmem_realloc behave less badly,
-so it should help with at least some of the less dramatic cases of very
-fragmented files:
 
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0001-xfs-improve-kmem_realloc.patch"
+When I reproduce the problem, I can see these two messages being written to
+kernel:
 
->From 4cfef0d21729704c79dc26621a254e507ea372a7 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 17 Mar 2016 11:15:59 +0100
-Subject: xfs: improve kmem_realloc
+[   59.914938] XFS (dm-0): metadata I/O error: block 0x0
+("xfs_buf_iodone_callbacks") error 5 numblks 1
 
-Use krealloc to implement our realloc function.  This helps to avoid
-new allocations if we are still in the slab bucket.  At least for the
-bmap btree root that's actually the common case.
-
-This also allows removing the now unused oldsize argument.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/kmem.c                  | 26 +++++++++++++++-----------
- fs/xfs/kmem.h                  |  2 +-
- fs/xfs/libxfs/xfs_inode_fork.c | 10 +++-------
- fs/xfs/xfs_log_recover.c       |  2 +-
- fs/xfs/xfs_mount.c             |  1 -
- 5 files changed, 20 insertions(+), 21 deletions(-)
-
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 686ba6f..339c696 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -93,19 +93,23 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- }
- 
- void *
--kmem_realloc(const void *ptr, size_t newsize, size_t oldsize,
--	     xfs_km_flags_t flags)
-+kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
- {
--	void	*new;
-+	int	retries = 0;
-+	gfp_t	lflags = kmem_flags_convert(flags);
-+	void	*ptr;
- 
--	new = kmem_alloc(newsize, flags);
--	if (ptr) {
--		if (new)
--			memcpy(new, ptr,
--				((oldsize < newsize) ? oldsize : newsize));
--		kmem_free(ptr);
--	}
--	return new;
-+	do {
-+		ptr = krealloc(old, newsize, lflags);
-+		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-+			return ptr;
-+		if (!(++retries % 100))
-+			xfs_err(NULL,
-+	"%s(%u) possible memory allocation deadlock size %zu in %s (mode:0x%x)",
-+				current->comm, current->pid,
-+				newsize, __func__, lflags);
-+		congestion_wait(BLK_RW_ASYNC, HZ/50);
-+	} while (1);
- }
- 
- void *
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index d1c66e4..689f746 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -62,7 +62,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
- 
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
- extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
--extern void *kmem_realloc(const void *, size_t, size_t, xfs_km_flags_t);
-+extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
- static inline void  kmem_free(const void *ptr)
- {
- 	kvfree(ptr);
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 4fbe226..d3d1477 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -542,7 +542,6 @@ xfs_iroot_realloc(
- 		new_max = cur_max + rec_diff;
- 		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
- 		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
--				XFS_BMAP_BROOT_SPACE_CALC(mp, cur_max),
- 				KM_SLEEP | KM_NOFS);
- 		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
- 						     ifp->if_broot_bytes);
-@@ -686,7 +685,6 @@ xfs_idata_realloc(
- 				ifp->if_u1.if_data =
- 					kmem_realloc(ifp->if_u1.if_data,
- 							real_size,
--							ifp->if_real_bytes,
- 							KM_SLEEP | KM_NOFS);
- 			}
- 		} else {
-@@ -1402,8 +1400,7 @@ xfs_iext_realloc_direct(
- 		if (rnew_size != ifp->if_real_bytes) {
- 			ifp->if_u1.if_extents =
- 				kmem_realloc(ifp->if_u1.if_extents,
--						rnew_size,
--						ifp->if_real_bytes, KM_NOFS);
-+						rnew_size, KM_NOFS);
- 		}
- 		if (rnew_size > ifp->if_real_bytes) {
- 			memset(&ifp->if_u1.if_extents[ifp->if_bytes /
-@@ -1487,9 +1484,8 @@ xfs_iext_realloc_indirect(
- 	if (new_size == 0) {
- 		xfs_iext_destroy(ifp);
- 	} else {
--		ifp->if_u1.if_ext_irec = (xfs_ext_irec_t *)
--			kmem_realloc(ifp->if_u1.if_ext_irec,
--				new_size, size, KM_NOFS);
-+		ifp->if_u1.if_ext_irec =
-+			kmem_realloc(ifp->if_u1.if_ext_irec, new_size, KM_NOFS);
- 	}
- }
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 396565f..bf6e807 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3843,7 +3843,7 @@ xlog_recover_add_to_cont_trans(
- 	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
- 	old_len = item->ri_buf[item->ri_cnt-1].i_len;
- 
--	ptr = kmem_realloc(old_ptr, len+old_len, old_len, KM_SLEEP);
-+	ptr = kmem_realloc(old_ptr, len + old_len, KM_SLEEP);
- 	memcpy(&ptr[old_len], dp, len);
- 	item->ri_buf[item->ri_cnt-1].i_len += len;
- 	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 536a0ee..654799f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -89,7 +89,6 @@ xfs_uuid_mount(
- 	if (hole < 0) {
- 		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
- 			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
--			xfs_uuid_table_size  * sizeof(*xfs_uuid_table),
- 			KM_SLEEP);
- 		hole = xfs_uuid_table_size++;
- 	}
--- 
-2.1.4
+[   59.964831] XFS (dm-0): Failing async write on buffer block
+0xffffffffffffffff. Retrying async write.
 
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Looking through the code, looks like inside xfs_buf_iodone_callbacks(), we
+expect the filesystem to be put down somewhere else, and then stop retrying:
+
+        /*
+        =A6* If we've already decided to shutdown the filesystem because of
+        =A6* I/O errors, there's no point in giving this a retry.
+        =A6*/
+        if (XFS_FORCED_SHUTDOWN(mp)) {
+
+
+And so, since we are in ASYNC writes here, we fall in:
+
+if (bp->b_flags & XBF_ASYNC) {
+
+Where, we will clear bp->b_error and set XBF_WRITE_FAIL flag in the buffer,
+and submit the buffer for IO.
+
+
+xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+
+if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+                        bp->b_flags |=3D XBF_WRITE | XBF_ASYNC |
+                                =A6      XBF_DONE | XBF_WRITE_FAIL;
+                        xfs_buf_submit(bp);
+
+
+So the buffer flag is set with XBF_WRITE_FAIL and IO submitted.
+
+In xfs_buf_submit():
+
+We clear the io_error, if any:
+
+bp->b_io_error =3D 0;
+
+Then, we send buffer for IO via _xfs_buf_ioapply():
+
+atomic_set(&bp->b_io_remaining, 1);
+_xfs_buf_ioapply(bp);
+
+At _xfs_buf_ioapply, we clear buffer errors:
+
+bp->b_error =3D 0;
+
+Then call:  xfs_buf_ioapply_map()
+
+Where we actually setup the bio and send it to block layer, where
+such status is captured by xfs_buf_bio_end_io()
+
+--- done, buffer has been sent for IO ---
+
+
+Now, inside xfs_buf_bio_end_io():
+
+Since we receive an IO error here, we set bp->b_io_error:
+
+bp->b_io_error =3D bio->bi_error
+
+I did no reads here, so we skip until:
+
+if (atomic_dec_and_test(&bp->b_io_remaining) =3D=3D 1)
+        xfs_buf_ioend_async(bp);
+
+
+Workqueue starts to handle the IO completion where we call xfS_buf_ioend():
+
+
+At xfs_buf_ioend(), we catch the I/O error here, and set bp->berror accordi=
+ngly:
+
+If (!bp->b_error && bp->b_io_error)
+        xfs_buf_ioerror(bp, bp->b_io_error);
+
+and we have one of the traces being logged:
+
+kworker/1:2-1294  [001] .... 11814.953710: xfs_buf_ioerror: dev 253:0 bno
+0xffffffffffffffff len 0x200 hold 3 pincount 0 lock 0 error -5 flags
+ASYNC|DONE|PAGES caller xfs_buf_ioend_work
+
+Since it's an inode, we have iodone set to xfs_buf_iodone_callbacks() and c=
+all
+it here:
+
+  if (bp->b_iodone)
+                (*(bp->b_iodone))(bp);
+
+
+At xfs_buf_iodone_callbacks:
+
+
+bp->berror is set, so we do not skip until do_callbacks label.
+
+        if (likely(!bp->b_error))
+                goto do_callbacks;
+
+
+we call xfs_buf_ioerror_alert() here, and then we have logged:
+
+[15063.857999] XFS (dm-0): metadata I/O error: block 0x0
+("xfs_buf_iodone_callbacks") error 5 numblks 1
+
+
+
+So, we reach again:
+
+if (bp->b_flags & XBF_ASYNC) {
+
+and again, we clear the error here:
+
+xfs_buf_ioerror(bp, 0); =
+
+
+Issuing this trace:
+
+     kworker/1:2-1294  [001] .... 11814.953711: xfs_buf_ioerror: dev 253:0 =
+bno
+0xffffffffffffffff len 0x200 hold 3 pincount 0 lock 0 error 0 flags
+ASYNC|DONE|PAGES caller xfs_buf_iodone_callbacks
+
+and submit the buffer again, restarting the process.
+
+
+
+
+Looks like, somebody already noticed it:
+
+        /*
+        =A6* If the write was asynchronous then no one will be looking for =
+the
+        =A6* error.  Clear the error state and write the buffer out again.
+        =A6*
+        =A6* XXX: This helps against transient write errors, but we need to=
+ find
+        =A6* a way to shut the filesystem down if the writes keep failing.
+        =A6*
+        =A6* In practice we'll shut the filesystem down soon as non-transie=
+nt
+        =A6* errors tend to affect the whole device and a failing log write
+        =A6* will make us give up.  But we really ought to do better here.
+        =A6*/
+
+
+
+
+So, if I'm write in how we hit this problem, and IIRC, Dave's patchset for
+setting limits to IO errors can be slightly modified to fix this issue too,=
+ but,
+the problem is that the user must set it BEFORE he tries to unmount the
+filesystem, otherwise it will get stuck here.
+
+IMHO, we maybe need to fix it during the umount process, so, despite how the
+error handler is set (using Dave's patchset), or in the current situation (=
+try
+forever), unmount process does not lockup because of this.
+
+I wrote a "hacky" patch to notify buf_iodone_callback that the filesystem w=
+as
+being unmounted, and stop retrying. I'm not sure if it's a good solution, b=
+ut,
+I'll send the patch to at least log it in the mailing list and keep the
+discussion.
+
+
+Sorry for the long e-mail, hope it was at least useful :)
+
+Cheers
+
+
+On Thu, Mar 24, 2016 at 09:37:47AM +1100, Dave Chinner wrote:
+> On Wed, Mar 23, 2016 at 04:32:21PM +0100, Carlos Maiolino wrote:
+> > I'm still trying to get a reliable reproducer, at least exactly with wh=
+at I have
+> > seen a few days ago.
+> > =
+
+> > Shyam, could you try to reproduce it with a recent/upstream kernel? Tha=
+t would
+> > be great to make sure we have been seen the same issue.
+> > =
+
+> > AFAICT, it happens in the following situation:
+> > =
+
+> > 1 - Something is written to the filesystem
+> > 2 - log checkpoint is done for the previous write
+> > 3 - Disk failure
+> > 4 - XFS tries to writeback metadata logged in [2]
+> > =
+
+> > When [4] happens, I can't trigger xfs_log_force messages all the time, =
+most of
+> > time I just get an infinite loop in these messages:
+> > =
+
+> > [12694.318109] XFS (dm-0): Failing async write on buffer block
+> > 0xffffffffffffffff. Retrying async write.
+> >
+> > Sometimes I can trigger the xfs_log_force() loop.
+> =
+
+> This all smells like the filesystem is getting IO errors but it not
+> in a shutdown state. What happens when you run 'xfs_io -x -c
+> "shutdown" /mnt/pt' on a filesystem in this state? Can you then
+> unmount it?
+> =
+
+> Cheers,
+> =
+
+> Dave.
+> -- =
+
+> Dave Chinner
+> david@fromorbit.com
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- =
+
+Carlos
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8t9RHnE3ZwKMSgU+--
