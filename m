@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED7497CAE
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 21:00:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D641AC007
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:00:26 -0700 (PDT)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	SnGHNSsTkxoGCGdV for <xfs@oss.sgi.com>;
-	Tue, 29 Mar 2016 19:00:24 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Date: Tue, 29 Mar 2016 19:59:50 -0600
-Message-Id: <1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 0A4577CA0
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:20:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B2FCAC006
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 02:20:30 -0700 (PDT)
+Received: from mail-wm0-f50.google.com (mail-wm0-f50.google.com
+	[74.125.82.50]) by cuda.sgi.com with ESMTP id JjmVRCBJRfwA5Dn2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 24 Mar 2016 02:20:26 -0700 (PDT)
+Received: by mail-wm0-f50.google.com with SMTP id l68so228485079wml.0
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 02:20:26 -0700 (PDT)
+Subject: Re: Failing XFS memory allocation
+References: <56F26CCE.6010502@kyup.com>
+	<20160323124312.GB43073@bfoster.bfoster> <56F29279.70600@kyup.com>
+	<20160323131059.GC43073@bfoster.bfoster>
+	<20160323230002.GY30721@dastard>
+From: Nikolay Borisov <kernel@kyup.com>
+Message-ID: <56F3B157.2060505@kyup.com>
+Date: Thu, 24 Mar 2016 11:20:23 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160323230002.GY30721@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,216 +30,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-dax_do_io (called for read() or write() for a dax file system) may fail
-in the presence of bad blocks or media errors. Since we expect that a
-write should clear media errors on nvdimms, make dax_do_io fall back to
-the direct_IO path, which will send down a bio to the driver, which can
-then attempt to clear the error.
 
-Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- fs/block_dev.c     | 17 ++++++++++++++---
- fs/ext2/inode.c    | 22 +++++++++++++++-------
- fs/ext4/indirect.c | 18 +++++++++++++-----
- fs/ext4/inode.c    | 21 ++++++++++++++-------
- fs/xfs/xfs_aops.c  | 14 ++++++++++++--
- 5 files changed, 68 insertions(+), 24 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index c5837fa..d6113b9 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -166,13 +166,24 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
- {
- 	struct file *file = iocb->ki_filp;
- 	struct inode *inode = bdev_file_inode(file);
-+	ssize_t ret, ret_saved = 0;
- 
--	if (IS_DAX(inode))
--		return dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
-+	if (IS_DAX(inode)) {
-+		ret = dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
- 				NULL, DIO_SKIP_DIO_COUNT);
--	return __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
-+		if (ret == -EIO && (iov_iter_rw(iter) == WRITE))
-+			ret_saved = ret;
-+		else
-+			return ret;
-+	}
-+
-+	ret = __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
- 				    blkdev_get_block, NULL, NULL,
- 				    DIO_SKIP_DIO_COUNT);
-+	if (ret < 0 && ret_saved)
-+		return ret_saved;
-+
-+	return ret;
- }
- 
- int __sync_blockdev(struct block_device *bdev, int wait)
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 824f249..64792c6 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -859,14 +859,22 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
- 	struct address_space *mapping = file->f_mapping;
- 	struct inode *inode = mapping->host;
- 	size_t count = iov_iter_count(iter);
--	ssize_t ret;
-+	ssize_t ret, ret_saved = 0;
- 
--	if (IS_DAX(inode))
--		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block, NULL,
--				DIO_LOCKING);
--	else
--		ret = blockdev_direct_IO(iocb, inode, iter, offset,
--					 ext2_get_block);
-+	if (IS_DAX(inode)) {
-+		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block,
-+				NULL, DIO_LOCKING | DIO_SKIP_HOLES);
-+		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
-+			ret_saved = ret;
-+		else
-+			goto out;
-+	}
-+
-+	ret = blockdev_direct_IO(iocb, inode, iter, offset, ext2_get_block);
-+	if (ret < 0 && ret_saved)
-+		ret = ret_saved;
-+
-+ out:
- 	if (ret < 0 && iov_iter_rw(iter) == WRITE)
- 		ext2_write_failed(mapping, offset + count);
- 	return ret;
-diff --git a/fs/ext4/indirect.c b/fs/ext4/indirect.c
-index 3027fa6..798f341 100644
---- a/fs/ext4/indirect.c
-+++ b/fs/ext4/indirect.c
-@@ -716,14 +716,22 @@ retry:
- 						   NULL, NULL, 0);
- 		inode_dio_end(inode);
- 	} else {
-+		ssize_t ret_saved = 0;
-+
- locked:
--		if (IS_DAX(inode))
-+		if (IS_DAX(inode)) {
- 			ret = dax_do_io(iocb, inode, iter, offset,
- 					ext4_dio_get_block, NULL, DIO_LOCKING);
--		else
--			ret = blockdev_direct_IO(iocb, inode, iter, offset,
--						 ext4_dio_get_block);
--
-+			if (ret == -EIO && iov_iter_rw(iter) == WRITE)
-+				ret_saved = ret;
-+			else
-+				goto skip_dio;
-+		}
-+		ret = blockdev_direct_IO(iocb, inode, iter, offset,
-+					 ext4_get_block);
-+		if (ret < 0 && ret_saved)
-+			ret = ret_saved;
-+skip_dio:
- 		if (unlikely(iov_iter_rw(iter) == WRITE && ret < 0)) {
- 			loff_t isize = i_size_read(inode);
- 			loff_t end = offset + count;
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index dab84a2..27f07c2 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3341,7 +3341,7 @@ static ssize_t ext4_ext_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
- {
- 	struct file *file = iocb->ki_filp;
- 	struct inode *inode = file->f_mapping->host;
--	ssize_t ret;
-+	ssize_t ret, ret_saved = 0;
- 	size_t count = iov_iter_count(iter);
- 	int overwrite = 0;
- 	get_block_t *get_block_func = NULL;
-@@ -3401,15 +3401,22 @@ static ssize_t ext4_ext_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
- #ifdef CONFIG_EXT4_FS_ENCRYPTION
- 	BUG_ON(ext4_encrypted_inode(inode) && S_ISREG(inode->i_mode));
- #endif
--	if (IS_DAX(inode))
-+	if (IS_DAX(inode)) {
- 		ret = dax_do_io(iocb, inode, iter, offset, get_block_func,
- 				ext4_end_io_dio, dio_flags);
--	else
--		ret = __blockdev_direct_IO(iocb, inode,
--					   inode->i_sb->s_bdev, iter, offset,
--					   get_block_func,
--					   ext4_end_io_dio, NULL, dio_flags);
-+		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
-+			ret_saved = ret;
-+		else
-+			goto skip_dio;
-+	}
- 
-+	ret = __blockdev_direct_IO(iocb, inode,
-+				   inode->i_sb->s_bdev, iter, offset,
-+				   get_block_func,
-+				   ext4_end_io_dio, NULL, dio_flags);
-+	if (ret < 0 && ret_saved)
-+		ret = ret_saved;
-+ skip_dio:
- 	if (ret > 0 && !overwrite && ext4_test_inode_state(inode,
- 						EXT4_STATE_DIO_UNWRITTEN)) {
- 		int err;
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d445a64..7cfcf86 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1413,6 +1413,7 @@ xfs_vm_direct_IO(
- 	dio_iodone_t		*endio = NULL;
- 	int			flags = 0;
- 	struct block_device	*bdev;
-+	ssize_t 		ret, ret_saved = 0;
- 
- 	if (iov_iter_rw(iter) == WRITE) {
- 		endio = xfs_end_io_direct_write;
-@@ -1420,13 +1421,22 @@ xfs_vm_direct_IO(
- 	}
- 
- 	if (IS_DAX(inode)) {
--		return dax_do_io(iocb, inode, iter, offset,
-+		ret = dax_do_io(iocb, inode, iter, offset,
- 				 xfs_get_blocks_direct, endio, 0);
-+		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
-+			ret_saved = ret;
-+		else
-+			return ret;
- 	}
- 
- 	bdev = xfs_find_bdev_for_inode(inode);
--	return  __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
-+	ret = __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
- 			xfs_get_blocks_direct, endio, NULL, flags);
-+
-+	if (ret < 0 && ret_saved)
-+		ret = ret_saved;
-+
-+	return ret;
- }
- 
- /*
--- 
-2.5.5
+On 03/24/2016 01:00 AM, Dave Chinner wrote:
+> On Wed, Mar 23, 2016 at 09:10:59AM -0400, Brian Foster wrote:
+>> On Wed, Mar 23, 2016 at 02:56:25PM +0200, Nikolay Borisov wrote:
+>>> On 03/23/2016 02:43 PM, Brian Foster wrote:
+>>>> On Wed, Mar 23, 2016 at 12:15:42PM +0200, Nikolay Borisov wrote:
+>> ...
+>>>> It looks like it's working to add a new extent to the in-core extent
+>>>> list. If this is the stack associated with the warning message (combined
+>>>> with the large alloc size), I wonder if there's a fragmentation issue on
+>>>> the file leading to an excessive number of extents.
+>>>
+>>> Yes this is the stack trace associated.
+>>>
+>>>>
+>>>> What does 'xfs_bmap -v /storage/loop/file1' show?
+>>>
+>>> It spews a lot of stuff but here is a summary, more detailed info can be
+>>> provided if you need it:
+>>>
+>>> xfs_bmap -v /storage/loop/file1 | wc -l
+>>> 900908
+>>> xfs_bmap -v /storage/loop/file1 | grep -c hole
+>>> 94568
+>>>
+>>> Also, what would constitute an "excessive number of extents"?
+>>>
+>>
+>> I'm not sure where one would draw the line tbh, it's just a matter of
+>> having too many extents to the point that it causes problems in terms of
+>> performance (i.e., reading/modifying the extent list) or such as the
+>> allocation problem you're running into. As it is, XFS maintains the full
+>> extent list for an active inode in memory, so that's 800k+ extents that
+>> it's looking for memory for.
+>>
+>> It looks like that is your problem here. 800k or so extents over 878G
+>> looks to be about 1MB per extent.
+> 
+> Which I wouldn't call excessive. I use a 1MB extent size hint on all
+> my VM images as this allows the underlying device to do IOs large
+> enough to maintain clear to full bandwidth when reading and writing
+> regions of the underlying image file that are non-contiguous w.r.t.
+> sequential IO from the guest.
+> 
+> Mind you, it's not until I use ext4 or btrfs in the guests that I
+> actually see significant increases in extent size. Rule of thumb in
+> my testing is that if XFs creates 100k extents in the image file,
+> ext4 will create 500k, and btrfs will create somewhere between 1m
+> and 5m extents....
+> 
+> i.e. XFS as a guest filesystem gives results in much lower image
+> file fragmentation that the other options....
+> 
+> As it is, yes, the memory allocation problem is with the in-core
+> extent tree, and we've known about it for some time. The issue is
+> that as memory gets fragmented, the top level indirection array
+> grows too large to be allocated as a contiguous chunk. When this
+> happens really depends on memory load, uptime and the way the extent
+> tree is being modified.
+
+And what about the following completely crazy idea of switching order >
+3 allocations to using vmalloc? I know this would incur heavy
+performance hit, but other than that would it cause correctness issues?
+Of course I'm not saying this should be implemented in upstream rather
+whether it's worth it having a go for experimenting with this idea.
+
+
+> 
+> I'm working on prototype patches to convert it to an in-memory btree
+> but they are far from ready at this point. This isn't straight
+> forward because all the extent management code assumes extents are
+> kept in a linear array and can be directly indexed by array offset
+> rather than file offset. I also want to make sure we can demand page
+> the extent list if necessary, and that also complicates things like
+> locking, as we currently assume the extent list is either completely
+> in memory or not in memory at all.
+> 
+> Fundamentally, I don't want to repeat the mistakes ext4 and btrfs
+> have made with their fine-grained in memory extent trees that are
+> based on rb-trees (e.g. global locks, shrinkers that don't scale or
+> consume way too much CPU, excessive memory consumption, etc) and so
+> solving all aspects of the problem in one go is somewhat complex.
+> And, of course, there's so much other stuff that needs to be done at
+> the same time, I cannot find much time to work on it at the
+> moment...
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
