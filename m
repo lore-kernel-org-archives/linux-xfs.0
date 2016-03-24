@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1D9277CA3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 04:13:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DFCC48F8049
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 02:13:46 -0700 (PDT)
-Received: from mail-pf0-f193.google.com (mail-pf0-f193.google.com
-	[209.85.192.193]) by cuda.sgi.com with ESMTP id
-	T7Q9tC2EyvK22TxX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 02:13:45 -0700 (PDT)
-Received: by mail-pf0-f193.google.com with SMTP id x3so10428365pfb.0
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 02:13:45 -0700 (PDT)
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: [PATCH] xfs: add missing break in xfs_parseargs()
-Date: Thu, 31 Mar 2016 17:13:03 +0800
-Message-Id: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BCA4D7CA7
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 06:15:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 31512AC002
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:57 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UK32YIzI6vqmUNWq (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:56 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 732B5C00F5D6
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 11:15:55 +0000 (UTC)
+Received: from localhost.localdomain (vpn1-7-36.ams2.redhat.com [10.36.7.36])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id u2OBFbLO009274
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 07:15:54 -0400
+From: jtulak@redhat.com
+Subject: [PATCH 18/19] mkfs: unit conversions are case insensitive
+Date: Thu, 24 Mar 2016 12:15:35 +0100
+Message-Id: <1458818136-56043-19-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +37,46 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eryu Guan <guaneryu@gmail.com>, esandeen@redhat.com
 
-Commit 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
-missed a 'break;' in xfs_parseargs() which causes mount to fail with
-"-o pqnoenforce" option. xfs/050 catches this failure.
+From: Jan Tulak <jtulak@redhat.com>
 
-XFS (vda6): Super block does not support project and group quota together
+Solves the question "Should I use 10g or 10G?"
 
-Fixes: 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
-Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fs/xfs/xfs_super.c | 1 +
- 1 file changed, 1 insertion(+)
+ mkfs/xfs_mkfs.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d760934..361564e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -350,6 +350,7 @@ xfs_parseargs(
- 		case Opt_pqnoenforce:
- 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
- 			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
-+			break;
- 		case Opt_gquota:
- 		case Opt_grpquota:
- 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2bb3b35..680c6c4 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3625,17 +3625,17 @@ cvtnum(
+ 	if (*sp == 's' && sp[1] == '\0')
+ 		return i * sectsize;
+ 
+-	if (*sp == 'k' && sp[1] == '\0')
++	if ((*sp == 'k'  || *sp == 'K' ) && sp[1] == '\0')
+ 		return 1024LL * i;
+-	if (*sp == 'm' && sp[1] == '\0')
++	if ((*sp == 'm'  || *sp == 'M' ) && sp[1] == '\0')
+ 		return 1024LL * 1024LL * i;
+-	if (*sp == 'g' && sp[1] == '\0')
++	if ((*sp == 'g'  || *sp == 'G' ) && sp[1] == '\0')
+ 		return 1024LL * 1024LL * 1024LL * i;
+-	if (*sp == 't' && sp[1] == '\0')
++	if ((*sp == 't'  || *sp == 'T' ) && sp[1] == '\0')
+ 		return 1024LL * 1024LL * 1024LL * 1024LL * i;
+-	if (*sp == 'p' && sp[1] == '\0')
++	if ((*sp == 'p'  || *sp == 'P' ) && sp[1] == '\0')
+ 		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
+-	if (*sp == 'e' && sp[1] == '\0')
++	if ((*sp == 'e'  || *sp == 'E' ) && sp[1] == '\0')
+ 		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
+ 	return -1LL;
+ }
 -- 
-2.5.5
+2.6.0
 
 _______________________________________________
 xfs mailing list
