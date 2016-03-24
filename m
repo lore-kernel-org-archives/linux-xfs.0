@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B13037CB6
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 18:46:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 23B207CA1
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 03:15:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 911FE304051
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2016 16:46:31 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	wqMiBFrOUCkDAQd4 for <xfs@oss.sgi.com>;
-	Wed, 23 Mar 2016 16:46:28 -0700 (PDT)
-Date: Thu, 24 Mar 2016 10:45:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: set up inode operation vectors later
-Message-ID: <20160323234554.GA30721@dastard>
-References: <1458740935-31260-1-git-send-email-hch@lst.de>
-	<1458740935-31260-3-git-send-email-hch@lst.de>
-	<20160323230500.GZ30721@dastard> <20160323232630.GA5646@lst.de>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E73883040FE
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 01:15:31 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id sqp7Ah0KzmftSBny (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 01:15:17 -0700 (PDT)
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage
+References: <56C81D94.7090603@profihost.ag>
+	<20160220144533.GA36182@bfoster.bfoster>
+	<B833B258-1140-464C-94CD-09B840BD4220@profihost.ag>
+	<56D9D834.2000303@profihost.ag> <20160304191329.GC3758@bfoster.bfoster>
+	<56D9E9BE.40101@profihost.ag> <20160304210341.GA8035@bfoster.bfoster>
+	<20160305224845.GR30721@dastard> <56F299E3.4020703@profihost.ag>
+	<20160323140736.GD43073@bfoster.bfoster>
+	<56F3A101.1020300@profihost.ag>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <56F3A213.2020908@profihost.ag>
+Date: Thu, 24 Mar 2016 09:15:15 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160323232630.GA5646@lst.de>
+In-Reply-To: <56F3A101.1020300@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,48 +36,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Mar 24, 2016 at 12:26:30AM +0100, Christoph Hellwig wrote:
-> On Thu, Mar 24, 2016 at 10:05:00AM +1100, Dave Chinner wrote:
-> > >  	d_instantiate(dentry, inode);
-> > >  	xfs_finish_inode_setup(cip);
-> > 
-> > I think there are more places than this that need xfs_setup_iops()
-> > calls - a quick look around makes me think they need to be paired
-> > with every path that calls xfs_finish_inode_setup().
+
+Am 24.03.2016 um 09:10 schrieb Stefan Priebe - Profihost AG:
 > 
-> Most calls to xfs_finish_inode_setup are for error cases that
-> just drop the inode instantly and don't need it.
+> Am 23.03.2016 um 15:07 schrieb Brian Foster:
+>> On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
+>>> sorry new one the last one got mangled. Comments inside.
+>>>
+>>> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
+>>>> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
+>>>>> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
+>>>>>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
+>>>>>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
+>>>>>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
+>>>>>>>>>
+>>>>>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
+>>>>>>>>>>
+>>>>>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
+>> ...
+>>>
+>>> This has happened again on 8 different hosts in the last 24 hours
+>>> running 4.4.6.
+>>>
+>>> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
+>>> OS stuff as the VMs have remote storage. So no database, no rsync on
+>>> those hosts - just the OS doing nearly nothing.
+>>>
+>>> All those show:
+>>> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
+>>> xfs_vm_releasepage+0xe2/0xf0()
+>>>
+>>
+>> Ok, well at this point the warning isn't telling us anything beyond
+>> you're reproducing the problem. We can't really make progress without
+>> more information. We don't necessarily know what application or
+>> operations caused this by the time it occurs, but perhaps knowing what
+>> file is affected could give us a hint.
+>>
+>> We have the xfs_releasepage tracepoint, but that's unconditional and so
+>> might generate a lot of noise by default. Could you enable the
+>> xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
+>> E.g., we could leave a long running 'trace-cmd record -e
+>> "xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
+>> problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
+>> -e "xfs:xfs_releasepage"' and leave something like 'cat
+>> /sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
+>> ~/trace.out' running to capture instances.
 
-Fair enough.
+Isn't the trace a WARN_ONCE? So it does not reoccur or can i check the
+it in the trace.out even the WARN_ONCE was already triggered?
 
-> The other
-> cases are:
+Stefan
+
+
 > 
->  - xfs_generic_create, xfs_vn_symlink and xfs_setup_existing_inode,
->    which are handled in this patch
->  - xfs_qm_qino_alloc, which is for the quota inode that doesn't have
->    inode operations
-
-*nod*
-
->  - xfs_rename_alloc_whiteout which probably needs it.  This seems
->    to be recent and has no apparent test coverage, so I'm not sure
->    how to verify it, though.
-
-Yup, that's the one I first noticed. generic/078 tests
-RENAME_WHITEOUT functionality through renameat2() and it includes
-operations on symlinks, so there is some coverage in xfstests for
-it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Stefan
+> 
+>>
+>> Brian
+>>
+>>> Stefan
+>>>
+>>>>
+>>>> -Dave.
+>>>>
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
