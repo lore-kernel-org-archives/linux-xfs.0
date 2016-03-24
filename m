@@ -1,19 +1,28 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A1F3E29DF5
-	for <xfs@oss.sgi.com>; Sat,  6 Feb 2016 16:41:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3FB01AC002
-	for <xfs@oss.sgi.com>; Sat,  6 Feb 2016 14:41:38 -0800 (PST)
-Received: from s01.emaildodo.com (s01.emaildodo.com [213.201.230.70]) by
-	cuda.sgi.com with ESMTP id BqGcfmUGyBvNriAF for
-	<xfs@oss.sgi.com>; Sat, 06 Feb 2016 14:41:36 -0800 (PST)
-From: =?UTF-8?B?Q3VydGlzIElydmluZw==?= <investopedia@emaildodo.com>
-Subject: =?UTF-8?B?MjAwJSDQstC+0LfQstGA0LDRgtCwINC40L3QstC10YHRgg==?=
-	=?UTF-8?B?0LjRhtC40Lk=?=
-MIME-Version: 1.0
-Message-Id: <20160206224138.1455534D2627@s01.emaildodo.com>
-Date: Sat,  6 Feb 2016 23:41:20 +0100 (CET)
-Reply-To: curtis@lnvestopedia.com
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5EC1B7CA0
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 06:15:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 20F028F8050
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:47 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EtDChSHbVGxAbJTm (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 04:15:44 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 235FF78233
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 11:15:44 +0000 (UTC)
+Received: from localhost.localdomain (vpn1-7-36.ams2.redhat.com [10.36.7.36])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id u2OBFbLC009274
+	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 07:15:43 -0400
+From: jtulak@redhat.com
+Subject: [PATCH 06/19] mkfs: validate logarithmic parameters sanely
+Date: Thu, 24 Mar 2016 12:15:23 +0100
+Message-Id: <1458818136-56043-7-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,200 +31,201 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5720375939366522231=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============5720375939366522231==
-Content-Transfer-Encoding: 8bit
-Content-Type: multipart/alternative; boundary="b1_79d6e1b5525464cf619a324f0bb9a878"
+From: Dave Chinner <dchinner@redhat.com>
 
---b1_79d6e1b5525464cf619a324f0bb9a878
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Testing logarithmic paramters like "-n log=<num>" shows that we do a
+terrible job of validating such input. e.g.:
 
+.....
+naming   =version 2              bsize=65536  ascii-ci=0 ftype=0
+....
 
-0J/RgNC40LLQtdGCCgrQryDQstCw0YjQuCDQu9C40YfQvdGL0LUg0JrQtdGA0YLQuNGBINC40Lcg
-0LrQvtGC0L7RgNGL0YUg0Y/QstC70Y/QtdGC0YHRjyDQstC10LTRg9GJ0LjQvCDRgNC10YHRg9GA
-0YHQvtC8INC00LvRjyDQuNC90LLQtdGB0YLQuNGA0L7QstCw0L3QuNGPINC+0LHRgNCw0LfQvtCy
-0LDQvdC40Y8sINC70LjRh9C90YvRhSDRhNC40L3QsNC90YHQvtCyINC4INCw0L3QsNC70LjQt9Cw
-INGA0YvQvdC60LAsINC80Ysg0LTQsNC10Lwg0LLQvtC30LzQvtC20L3QvtGB0YLRjCDQvdC10LDQ
-utC60YDQtdC00LjRgtC+0LLQsNC90L3Ri9C1INC40L3QstC10YHRgtC+0YDRiywg0YDQvtC30L3Q
-uNGH0L3Ri9C1INC40L3QstC10YHRgtC+0YDRiyDQuNC70Lgg0LrRgtC+LdC70LjQsdC+INC00L7R
-gdGC0YPQvyDQuiDRgdC00LXQu9C+0Log0L/RgNGP0LzRi9GFINC40L3QstC10YHRgtC40YbQuNC5
-LCDQuNC90LLQtdGB0YLQuNGA0L7QstCw0YLRjCDQsiDRh9Cw0YHRgtC90YvQuSDQutCw0L/QuNGC
-0LDQuyDQutC+0LzQv9Cw0L3QuNC5LCDQvdCw0YDRj9C00YMg0YEg0LjQvdGB0YLQuNGC0YPRhtC4
-0L7QvdCw0LvRjNC90YvQvNC4INC4INCw0LrQutGA0LXQtNC40YLQvtCy0LDQvdC90YvRhSDQuNC9
-0LLQtdGB0YLQvtGA0L7QsiDRgSDQs9Cw0YDQsNC90YLQuNGA0L7QstCw0L3QvdC+0LkgMjAwJSDQ
-uNC70Lgg0LHQvtC70YzRiNC1ICjRgNC10L3RgtCw0LHQtdC70YzQvdC+0YHRgtGMKSDRgNC10L3R
-gtCw0LHQtdC70YzQvdC+0YHRgtGMINCy0L7Qt9Cy0YDQsNGC0LAg0LjQvdCy0LXRgdGC0LjRhtC4
-0Lkg0YbQtdC70YwgPSAyMDDQpSDQvdCwINCy0LvQvtC20LXQvdC90YvQuSDQutCw0L/QuNGC0LDQ
-uywg0L3QtSDQv9GA0LjQstGP0LfQsNC90L3Ri9C5INC6INGA0YvQvdC60YMg0Lgg0LXQttC10LTQ
-vdC10LLQvdC+0Lkg0LLRi9C/0LvQsNGC0LUg0LTQuNCy0LjQtNC10L3QtNC+0LIg0LjQvdCy0LXR
-gdGC0L7RgNCw0LwuCtCl0L7RgtC40YLQtSDQuNC90LLQtdGB0YLQuNGA0L7QstCw0YLRjD8g0LfQ
-sNGC0LXQvCDQntGC0L/RgNCw0LLQuNGC0Ywg0LzQvdC1INC/0L4g0Y3Qu9C10LrRgtGA0L7QvdC9
-0L7QuSDQv9C+0YfRgtC1INC4LArQryDRgSDQvdC10YLQtdGA0L/QtdC90LjQtdC8INC+0LbQuNC0
-0LDRjiDRg9GB0LvRi9GI0LDRgtGMINC+0YIg0LLQsNGBCtChINCd0LDQuNC70YPRh9GI0LjQvNC4
-INCf0L7QttC10LvQsNC90LjRj9C80LgKCtCa0LXRgNGC0LjRgSDQmNGA0LLQuNC90LMKCgoKSW52
-ZXN0b3BlZGlhIFVTLCBBIERpdmlzaW9uIG9mIElBQy4xMTAgRSA0Mm5kIFN0LiBOZXcgWW9yaywg
-TlkgMTAwMTdDb3B5cmlnaHQgJmNvcHk7IDIwMTYsIEludmVzdG9wZWRpYSwgTExDLiBBbGwgUmln
-aHRzIFJlc2VydmVkCgoKCgpGb2xsb3cgVXM6CiZuYnNwOyZuYnNwOwoKCgoKCgoKCl8tXy1fLV8t
-XwpJZiB5b3Ugd2FudCB0byB1bnN1YnNjcmliZSBmcm9tIHRoaXMgR3JvdXAgY2xpY2sgaHR0cDov
-L3d3dy5lbWFpbGRvZG8uY29tL3Vuc3Vic2NyaWJlX290aGVyLnBocD9saXN0bmFtZT1pbnZlc3Rv
-cGVkaWEmZW1haWw9eGZzQG9zcy5zZ2kuY29tIA0KVG8gZmlsZSBhIGNvbXBsYWludCBwbGVhc2Ug
-c2VuZCBhbiBlTWFpbCB0bzogY29tcGxhaW50c0BlbWFpbGRvZG8uY29tDQooYW5kIGluY2x1ZGUg
-dGhlICBHcm91cCBuYW1lKQotXy1fLV8tXy0KCg==
---b1_79d6e1b5525464cf619a324f0bb9a878
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: base64
+Yeah, I just asked for a block size of 2^456858480, and it didn't
+get rejected. Great, isn't it?
 
+So, factor out the parsing of logarithmic parameters, and pass in
+the maximum valid value that they can take. These maximum values
+might not be completely accurate (e.g. block/sector sizes will
+affect the eventual valid maximum) but we can get rid of all the
+overflows and stupidities before we get to fine-grained validity
+checking later in mkfs once things like block and sector sizes have
+been finalised.
 
-PHAgc3R5bGU9Im1hcmdpbi1ib3R0b206IDEuMzVlbTsgbWFyZ2luLXRvcDogMHB4ICFpbXBvcnRh
-bnQ7IG1hcmdpbi1yaWdodDogMHB4ICFpbXBvcnRhbnQ7IG1hcmdpbi1sZWZ0OiAwcHggIWltcG9y
-dGFudDsgcGFkZGluZzogMHB4ICFpbXBvcnRhbnQ7Ij48c3BhbiBzdHlsZT0iZm9udC1mYW1pbHk6
-IEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjogIzQ0NDQ0NDsiPjxzcGFuIHN0eWxlPSJmb250LXNp
-emU6IDE0cHg7IGxpbmUtaGVpZ2h0OiAxNi4xcHg7Ij7Qn9GA0LjQstC10YI8L3NwYW4+PC9zcGFu
-PjwvcD4KPHAgc3R5bGU9Im1hcmdpbi1ib3R0b206IDEuMzVlbTsgbWFyZ2luLXRvcDogMHB4ICFp
-bXBvcnRhbnQ7IG1hcmdpbi1yaWdodDogMHB4ICFpbXBvcnRhbnQ7IG1hcmdpbi1sZWZ0OiAwcHgg
-IWltcG9ydGFudDsgcGFkZGluZzogMHB4ICFpbXBvcnRhbnQ7Ij48c3BhbiBzdHlsZT0iZm9udC1m
-YW1pbHk6IEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjogIzQ0NDQ0NDsiPjxzcGFuIHN0eWxlPSJm
-b250LXNpemU6IDE0cHg7IGxpbmUtaGVpZ2h0OiAxNi4xcHg7Ij48YnIgLz48L3NwYW4+PC9zcGFu
-PjwvcD4KPHAgc3R5bGU9Im1hcmdpbi1ib3R0b206IDEuMzVlbTsgbWFyZ2luLXRvcDogMHB4ICFp
-bXBvcnRhbnQ7IG1hcmdpbi1yaWdodDogMHB4ICFpbXBvcnRhbnQ7IG1hcmdpbi1sZWZ0OiAwcHgg
-IWltcG9ydGFudDsgcGFkZGluZzogMHB4ICFpbXBvcnRhbnQ7Ij48c3BhbiBzdHlsZT0iZm9udC1m
-YW1pbHk6IEFyaWFsLCBzYW5zLXNlcmlmOyBjb2xvcjogIzQ0NDQ0NDsiPjxzcGFuIHN0eWxlPSJm
-b250LXNpemU6IDE0cHg7IGxpbmUtaGVpZ2h0OiAxNi4xcHg7Ij7QryDQstCw0YjQuCDQu9C40YfQ
-vdGL0LUg0JrQtdGA0YLQuNGBINC40Lcg0LrQvtGC0L7RgNGL0YUg0Y/QstC70Y/QtdGC0YHRjyDQ
-stC10LTRg9GJ0LjQvCDRgNC10YHRg9GA0YHQvtC8INC00LvRjyDQuNC90LLQtdGB0YLQuNGA0L7Q
-stCw0L3QuNGPINC+0LHRgNCw0LfQvtCy0LDQvdC40Y8sINC70LjRh9C90YvRhSDRhNC40L3QsNC9
-0YHQvtCyINC4INCw0L3QsNC70LjQt9CwINGA0YvQvdC60LAsINC80Ysg0LTQsNC10Lwg0LLQvtC3
-0LzQvtC20L3QvtGB0YLRjCDQvdC10LDQutC60YDQtdC00LjRgtC+0LLQsNC90L3Ri9C1INC40L3Q
-stC10YHRgtC+0YDRiywg0YDQvtC30L3QuNGH0L3Ri9C1INC40L3QstC10YHRgtC+0YDRiyDQuNC7
-0Lgg0LrRgtC+LdC70LjQsdC+INC00L7RgdGC0YPQvyDQuiDRgdC00LXQu9C+0Log0L/RgNGP0LzR
-i9GFINC40L3QstC10YHRgtC40YbQuNC5LCDQuNC90LLQtdGB0YLQuNGA0L7QstCw0YLRjCDQsiDR
-h9Cw0YHRgtC90YvQuSDQutCw0L/QuNGC0LDQuyDQutC+0LzQv9Cw0L3QuNC5LCDQvdCw0YDRj9C0
-0YMg0YEg0LjQvdGB0YLQuNGC0YPRhtC40L7QvdCw0LvRjNC90YvQvNC4INC4INCw0LrQutGA0LXQ
-tNC40YLQvtCy0LDQvdC90YvRhSDQuNC90LLQtdGB0YLQvtGA0L7QsiDRgSDQs9Cw0YDQsNC90YLQ
-uNGA0L7QstCw0L3QvdC+0LkgMjAwJSDQuNC70Lgg0LHQvtC70YzRiNC1ICjRgNC10L3RgtCw0LHQ
-tdC70YzQvdC+0YHRgtGMKSDRgNC10L3RgtCw0LHQtdC70YzQvdC+0YHRgtGMINCy0L7Qt9Cy0YDQ
-sNGC0LAg0LjQvdCy0LXRgdGC0LjRhtC40Lkg0YbQtdC70YwgPSAyMDDQpSDQvdCwINCy0LvQvtC2
-0LXQvdC90YvQuSDQutCw0L/QuNGC0LDQuywg0L3QtSDQv9GA0LjQstGP0LfQsNC90L3Ri9C5INC6
-INGA0YvQvdC60YMg0Lgg0LXQttC10LTQvdC10LLQvdC+0Lkg0LLRi9C/0LvQsNGC0LUg0LTQuNCy
-0LjQtNC10L3QtNC+0LIg0LjQvdCy0LXRgdGC0L7RgNCw0LwuPC9zcGFuPjwvc3Bhbj48L3A+Cjxw
-IHN0eWxlPSJtYXJnaW4tYm90dG9tOiAxLjM1ZW07IG1hcmdpbi10b3A6IDBweCAhaW1wb3J0YW50
-OyBtYXJnaW4tcmlnaHQ6IDBweCAhaW1wb3J0YW50OyBtYXJnaW4tbGVmdDogMHB4ICFpbXBvcnRh
-bnQ7IHBhZGRpbmc6IDBweCAhaW1wb3J0YW50OyI+PHNwYW4gc3R5bGU9ImZvbnQtc2l6ZTogMTRw
-eDsgbGluZS1oZWlnaHQ6IDE2LjFweDsgY29sb3I6ICM0NDQ0NDQ7IGZvbnQtZmFtaWx5OiBBcmlh
-bCwgc2Fucy1zZXJpZjsiPtCl0L7RgtC40YLQtSDQuNC90LLQtdGB0YLQuNGA0L7QstCw0YLRjD8g
-0LfQsNGC0LXQvCDQntGC0L/RgNCw0LLQuNGC0Ywg0LzQvdC1INC/0L4g0Y3Qu9C10LrRgtGA0L7Q
-vdC90L7QuSDQv9C+0YfRgtC1INC4LDwvc3Bhbj48L3A+CjxwIHN0eWxlPSJtYXJnaW4tYm90dG9t
-OiAxLjM1ZW07IG1hcmdpbi10b3A6IDBweCAhaW1wb3J0YW50OyBtYXJnaW4tcmlnaHQ6IDBweCAh
-aW1wb3J0YW50OyBtYXJnaW4tbGVmdDogMHB4ICFpbXBvcnRhbnQ7IHBhZGRpbmc6IDBweCAhaW1w
-b3J0YW50OyI+PHNwYW4gc3R5bGU9ImZvbnQtc2l6ZTogMTRweDsgbGluZS1oZWlnaHQ6IDE2LjFw
-eDsgY29sb3I6ICM0NDQ0NDQ7IGZvbnQtZmFtaWx5OiBBcmlhbCwgc2Fucy1zZXJpZjsiPtCvINGB
-INC90LXRgtC10YDQv9C10L3QuNC10Lwg0L7QttC40LTQsNGOINGD0YHQu9GL0YjQsNGC0Ywg0L7R
-giDQstCw0YE8L3NwYW4+PC9wPgo8cCBzdHlsZT0ibWFyZ2luLWJvdHRvbTogMS4zNWVtOyBtYXJn
-aW4tdG9wOiAwcHggIWltcG9ydGFudDsgbWFyZ2luLXJpZ2h0OiAwcHggIWltcG9ydGFudDsgbWFy
-Z2luLWxlZnQ6IDBweCAhaW1wb3J0YW50OyBwYWRkaW5nOiAwcHggIWltcG9ydGFudDsiPjxzcGFu
-IHN0eWxlPSJjb2xvcjogIzQ0NDQ0NDsgZm9udC1mYW1pbHk6IEFyaWFsLCBzYW5zLXNlcmlmOyBm
-b250LXNpemU6IDE0cHg7IGxpbmUtaGVpZ2h0OiAxNi4xcHg7Ij7QoSDQndCw0LjQu9GD0YfRiNC4
-0LzQuCDQn9C+0LbQtdC70LDQvdC40Y/QvNC4PC9zcGFuPjwvcD4KPHAgc3R5bGU9Im1hcmdpbi1i
-b3R0b206IDEuMzVlbTsgbWFyZ2luLXRvcDogMHB4ICFpbXBvcnRhbnQ7IG1hcmdpbi1yaWdodDog
-MHB4ICFpbXBvcnRhbnQ7IG1hcmdpbi1sZWZ0OiAwcHggIWltcG9ydGFudDsgcGFkZGluZzogMHB4
-ICFpbXBvcnRhbnQ7Ij48L3A+CjxwIHN0eWxlPSJtYXJnaW4tYm90dG9tOiAxLjM1ZW07IG1hcmdp
-bi10b3A6IDBweCAhaW1wb3J0YW50OyBtYXJnaW4tcmlnaHQ6IDBweCAhaW1wb3J0YW50OyBtYXJn
-aW4tbGVmdDogMHB4ICFpbXBvcnRhbnQ7IHBhZGRpbmc6IDBweCAhaW1wb3J0YW50OyI+PHNwYW4g
-c3R5bGU9ImNvbG9yOiAjNDQ0NDQ0OyBmb250LWZhbWlseTogQXJpYWwsIHNhbnMtc2VyaWY7IGZv
-bnQtc2l6ZTogMTRweDsgbGluZS1oZWlnaHQ6IDE2LjFweDsiPtCa0LXRgNGC0LjRgSDQmNGA0LLQ
-uNC90LM8L3NwYW4+PC9wPgo8dGFibGUgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxOC40NnB4OyBmb250
-LXNpemU6IDEzcHg7IGZvbnQtZmFtaWx5OiBzb3VyY2Vfc2Fuc19wcm9saWdodCwgSGVsdmV0aWNh
-LCBBcmlhbCwgc2Fucy1zZXJpZjsgd2lkdGg6IDcyOHB4OyBjb2xvcjogI2ZmZmZmZjsgYmFja2dy
-b3VuZC1jb2xvcjogIzI2MmEzOTsiIGJvcmRlcj0iMCIgY2VsbHNwYWNpbmc9IjAiIGNlbGxwYWRk
-aW5nPSIwIiBhbGlnbj0iY2VudGVyIj4KPHRib2R5IHN0eWxlPSJsaW5lLWhlaWdodDogMTguNDZw
-eDsiPgo8dHIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxOC40NnB4OyI+Cjx0ZCBzdHlsZT0iZm9udC1m
-YW1pbHk6IGFyaWFsLCBzYW5zLXNlcmlmOyBtYXJnaW46IDBweDsgbGluZS1oZWlnaHQ6IDE0LjJw
-eDsgcGFkZGluZzogMjBweCAyMHB4IDIwcHggODBweDsgdmVydGljYWwtYWxpZ246IG1pZGRsZTsi
-PjxiciBzdHlsZT0ibGluZS1oZWlnaHQ6IDE0LjJweDsiIC8+SW52ZXN0b3BlZGlhIFVTLCBBIERp
-dmlzaW9uIG9mIElBQy48YnIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxNC4ycHg7IiAvPjExMCBFIDQy
-bmQgU3QuIE5ldyBZb3JrLCBOWSAxMDAxNzxiciBzdHlsZT0ibGluZS1oZWlnaHQ6IDE0LjJweDsi
-IC8+PGEgc3R5bGU9ImNvbG9yOiAjZmZmZmZmOyBsaW5lLWhlaWdodDogMTQuMnB4OyBmb250LXdl
-aWdodDogaW5oZXJpdDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyIgaHJlZj0iaHR0cDovL2xpbmsu
-aW52ZXN0b3BlZGlhLmNvbS9jbGljay82MDAxMzk5LjQ0NTgyL2FIUjBjRG92TDNkM2R5NXBiblps
-YzNSdmNHVmthV0V1WTI5dEwyTnZjbkF2WTI5d2VYSnBaMmgwTG1GemNIZ19kWFJ0WDNOdmRYSmpa
-VDFwYm5abGMzUnBibWN0WW1GemFXTnovNTZhNTU2OTY5OGNiNzU0NDJmOGI0NTk4QjgwZTk1NWIx
-IiB0YXJnZXQ9Il9ibGFuayI+Q29weXJpZ2h0ICZjb3B5OyAyMDE2LCBJbnZlc3RvcGVkaWEsIExM
-Qy4gQWxsIFJpZ2h0cyBSZXNlcnZlZDwvYT48L3RkPgo8dGQgc3R5bGU9ImZvbnQtZmFtaWx5OiBh
-cmlhbCwgc2Fucy1zZXJpZjsgbWFyZ2luOiAwcHg7IGxpbmUtaGVpZ2h0OiAxNC4ycHg7IHRleHQt
-YWxpZ246IHJpZ2h0OyBwYWRkaW5nOiAyMHB4IDgwcHggMjBweCAyMHB4OyB2ZXJ0aWNhbC1hbGln
-bjogbWlkZGxlOyI+Cjx0YWJsZSBzdHlsZT0ibGluZS1oZWlnaHQ6IDE0LjJweDsiIGJvcmRlcj0i
-MCIgY2VsbHNwYWNpbmc9IjAiIGNlbGxwYWRkaW5nPSIwIiB3aWR0aD0iMTAwJSI+Cjx0Ym9keSBz
-dHlsZT0ibGluZS1oZWlnaHQ6IDE0LjJweDsiPgo8dHIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxNC4y
-cHg7Ij4KPHRkIHN0eWxlPSJmb250LWZhbWlseTogYXJpYWwsIHNhbnMtc2VyaWY7IG1hcmdpbjog
-MHB4OyBsaW5lLWhlaWdodDogMTQuMnB4OyB2ZXJ0aWNhbC1hbGlnbjogbWlkZGxlOyB3aWR0aDog
-OTBweDsiPkZvbGxvdyBVczo8L3RkPgo8dGQgc3R5bGU9ImZvbnQtZmFtaWx5OiBhcmlhbCwgc2Fu
-cy1zZXJpZjsgbWFyZ2luOiAwcHg7IGxpbmUtaGVpZ2h0OiAxNC4ycHg7IHZlcnRpY2FsLWFsaWdu
-OiBtaWRkbGU7IHdpZHRoOiA5MHB4OyI+PGEgc3R5bGU9ImNvbG9yOiAjMTE1NWNjOyBsaW5lLWhl
-aWdodDogMTQuMnB4OyBmb250LXdlaWdodDogaW5oZXJpdDsgYm9yZGVyOiBub25lOyIgaHJlZj0i
-aHR0cDovL2xpbmsuaW52ZXN0b3BlZGlhLmNvbS9jbGljay82MDAxMzk5LjQ0NTgyL2FIUjBjRG92
-TDNkM2R5NW1ZV05sWW05dmF5NWpiMjB2U1c1MlpYTjBiM0JsWkdsaFAzVjBiVjl6YjNWeVkyVTlh
-VzUyWlhOMGFXNW5MV0poYzJsamN3LzU2YTU1Njk2OThjYjc1NDQyZjhiNDU5OEJhY2NhZGYzYSIg
-dGFyZ2V0PSJfYmxhbmsiPjxpbWcgY2xhc3M9IkNUb1dVZCIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAx
-NC4ycHg7IGJvcmRlcjogbm9uZTsiIHNyYz0iaHR0cHM6Ly9jaTYuZ29vZ2xldXNlcmNvbnRlbnQu
-Y29tL3Byb3h5L09paUVsb1BjZWlNWFh6OUZ0VXFkSV9MekpjR0RaeC1YTTl2cGg5TXVfS1h2cnBR
-TlI4QWw3emZVS0hnRjJjTzBxRlV6TlFrNjFqU1Y1c1F5Y2RldHEtVllMWUFnUGVrV0dZczdRREJV
-dXdRPXMwLWQtZTEtZnQjaHR0cDovL2kuaW52ZXN0b3BlZGlhLmNvbS9uZXdzbGV0dGVyc192Mi9p
-Y29uX2ZhY2Vib29rLnBuZyIgYWx0PSIiIC8+PC9hPiZuYnNwOzxhIHN0eWxlPSJjb2xvcjogIzEx
-NTVjYzsgbGluZS1oZWlnaHQ6IDE0LjJweDsgZm9udC13ZWlnaHQ6IGluaGVyaXQ7IGJvcmRlcjog
-bm9uZTsiIGhyZWY9Imh0dHA6Ly9saW5rLmludmVzdG9wZWRpYS5jb20vY2xpY2svNjAwMTM5OS40
-NDU4Mi9hSFIwY0hNNkx5OTBkMmwwZEdWeUxtTnZiUzlwYm5abGMzUnZjR1ZrYVdFX2RYUnRYM052
-ZFhKalpUMXBiblpsYzNScGJtY3RZbUZ6YVdOei81NmE1NTY5Njk4Y2I3NTQ0MmY4YjQ1OThCMjAy
-ZTZjMTUiIHRhcmdldD0iX2JsYW5rIj48aW1nIGNsYXNzPSJDVG9XVWQiIHN0eWxlPSJsaW5lLWhl
-aWdodDogMTQuMnB4OyBib3JkZXI6IG5vbmU7IiBzcmM9Imh0dHBzOi8vY2kzLmdvb2dsZXVzZXJj
-b250ZW50LmNvbS9wcm94eS9BSTNFZXh5U3ZNLVgyQW1aRGdGT3gweUFDUUxEcU9qOHZ4STE4S2lo
-bkNOMmlpTUNpVVdRM3VTU05iaE91QWN5MDZ1SmpaRzR2alAtMnh3NlhjUnlNMUxYbGRGb2h3cXJm
-X08tUjJFUldRPXMwLWQtZTEtZnQjaHR0cDovL2kuaW52ZXN0b3BlZGlhLmNvbS9uZXdzbGV0dGVy
-c192Mi9pY29uX3R3aXR0ZXIucG5nIiBhbHQ9IiIgLz48L2E+Jm5ic3A7PGEgc3R5bGU9ImNvbG9y
-OiAjMTE1NWNjOyBsaW5lLWhlaWdodDogMTQuMnB4OyBmb250LXdlaWdodDogaW5oZXJpdDsgYm9y
-ZGVyOiBub25lOyIgaHJlZj0iaHR0cDovL2xpbmsuaW52ZXN0b3BlZGlhLmNvbS9jbGljay82MDAx
-Mzk5LjQ0NTgyL2FIUjBjSE02THk5d2JIVnpMbWR2YjJkc1pTNWpiMjB2SzJsdWRtVnpkRzl3WldS
-cFlTOF9kWFJ0WDNOdmRYSmpaVDFwYm5abGMzUnBibWN0WW1GemFXTnovNTZhNTU2OTY5OGNiNzU0
-NDJmOGI0NTk4QjUyMmRhM2RjIiB0YXJnZXQ9Il9ibGFuayI+PGltZyBjbGFzcz0iQ1RvV1VkIiBz
-dHlsZT0ibGluZS1oZWlnaHQ6IDE0LjJweDsgYm9yZGVyOiBub25lOyIgc3JjPSJodHRwczovL2Np
-My5nb29nbGV1c2VyY29udGVudC5jb20vcHJveHkvX3RmVGZZOUFlVjBSUFVnWmZLVlptM0xLZ1Vl
-NXhReEZUOEdua0UxbmVsalFrdDh3Qlc0Sm0tS3ZtYW1ET1ZseWlBUGdWdDd1LWFEclBMWVRFRHpu
-bENtN2N1Tnp1VDRqQ0M4SGZYY1g9czAtZC1lMS1mdCNodHRwOi8vaS5pbnZlc3RvcGVkaWEuY29t
-L25ld3NsZXR0ZXJzX3YyL2ljb25fZ29vZ2xlLnBuZyIgYWx0PSIiIC8+PC9hPjwvdGQ+CjwvdHI+
-CjwvdGJvZHk+CjwvdGFibGU+CjwvdGQ+CjwvdHI+CjwvdGJvZHk+CjwvdGFibGU+CgoKCjxhIG5h
-bWU9ImVEb2RvRm9vdFN0YXJ0Ij48L2E+Cjxicj48cD48L3A+DQo8aHIgc2l6ZT0iMSIgYWxpZ249
-ImxlZnQiIHN0eWxlPSJtYXJnaW46MHB4IGF1dG87Y29sb3I6ICM2OTk7Ii8+DQo8c3BhbiBzdHls
-ZT0iY29sb3I6ICM2NjY2NjY7Zm9udC1mYW1pbHk6IEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2Vy
-aWY7Zm9udC1zaXplOjEwcHgiPg0KDQpJZiB5b3Ugd2FudCB0byB1bnN1YnNjcmliZSBmcm9tIHRo
-aXMgaW52ZXN0b3BlZGlhQGVtYWlsZG9kby5jb20gR3JvdXAgY2xpY2sgIA0KPGEgaHJlZj0iaHR0
-cDovL3d3dy5lbWFpbGRvZG8uY29tL3Vuc3Vic2NyaWJlX290aGVyLnBocD9saXN0bmFtZT1pbnZl
-c3RvcGVkaWEmZW1haWw9eGZzQG9zcy5zZ2kuY29tIj5oZXJlPC9hPjxiciAvPg0KVG8gZmlsZSBh
-IGNvbXBsYWludCBwbGVhc2Ugc2VuZCBhbiBlTWFpbCB0bzogIA0KPHNwYW4gc3R5bGU9ImNvbG9y
-OmJsdWUiPjxhIGhyZWY9Im1haWx0bzpjb21wbGFpbnRzQGVtYWlsZG9kby5jb20/c3ViamVjdD1U
-aGlzIGlzIGEgY29tcGxhaW50IGFib3V0IGludmVzdG9wZWRpYUBlbWFpbGRvZG8uY29tJmFtcDti
-b2R5PUhpLCUwRCUwQSUwRCUwQQ0KSSB3b3VsZCBsaWtlIHRvIGZpbGUgYSBjb21wbGFpbnQgYWJv
-dXQgdGhlIGludmVzdG9wZWRpYUBlbWFpbGRvZG8uY29tIGdyb3VwLiAlMEQlMEElMEQlMEFJIGFt
-IG5vdCBoYXBweSBhYm91dCB0aGUgZmFjdCB0aGF0IC4uLi4uLi4lMEQlMEElMEQlMEFXb3VsZCB5
-b3UgYmUgc28ga2luZCB0byBmb2xsb3cgdGhpcyB1cCA/JTBEJTBBJTBEJTBBVGhhbmtzLCUwRCUw
-QSI+Y29tcGxhaW50c0BlbWFpbGRvZG8uY29tPC9hPjwvc3Bhbj48aW1nIHNyYz0iaHR0cHM6Ly93
-d3cuZW1haWxkb2RvLmNvbS90cmFja2VyLnBocD9jcElkPTE1NDU2Jm1JZD0yMDg4MjI0Ij48YnI+
-CjxhIG5hbWU9ImVEb2RvRm9vdEVuZCI+PC9hPgo=
---b1_79d6e1b5525464cf619a324f0bb9a878--
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 79 +++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 51 insertions(+), 28 deletions(-)
 
-
---===============5720375939366522231==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 9394bd3..dda076d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1022,6 +1022,27 @@ getbool(
+ 	return c ? true : false;
+ }
+ 
++static int
++getnum_checked(
++	const char	*str,
++	long long	min_val,
++	long long	max_val,
++	const char	*illegal_str,
++	char		reqval_char,
++	char		*reqval_opts[],
++	int		reqval_optind)
++{
++	long long	c;
++
++	if (!str || *str == '\0')
++		reqval(reqval_char, reqval_opts, reqval_optind);
++
++	c = getnum(str, 0, 0, false);
++	if (c < min_val || c > max_val)
++		illegal(str, illegal_str);
++	return c;
++}
++
+ int
+ main(
+ 	int			argc,
+@@ -1179,16 +1200,16 @@ main(
+ 
+ 				switch (getsubopt(&p, (constpp)bopts, &value)) {
+ 				case B_LOG:
+-					if (!value || *value == '\0')
+-						reqval('b', bopts, B_LOG);
+ 					if (blflag)
+ 						respec('b', bopts, B_LOG);
+ 					if (bsflag)
+ 						conflict('b', bopts, B_SIZE,
+ 							 B_LOG);
+-					blocklog = getnum(value, 0, 0, false);
+-					if (blocklog <= 0)
+-						illegal(value, "b log");
++					blocklog = getnum_checked(value,
++							XFS_MIN_BLOCKSIZE_LOG,
++							XFS_MAX_BLOCKSIZE_LOG,
++							"b log", 'b', bopts,
++							B_LOG);
+ 					blocksize = 1 << blocklog;
+ 					blflag = 1;
+ 					break;
+@@ -1325,16 +1346,16 @@ main(
+ 					nodsflag = 1;
+ 					break;
+ 				case D_SECTLOG:
+-					if (!value || *value == '\0')
+-						reqval('d', dopts, D_SECTLOG);
+ 					if (slflag)
+ 						respec('d', dopts, D_SECTLOG);
+ 					if (ssflag)
+ 						conflict('d', dopts, D_SECTSIZE,
+ 							 D_SECTLOG);
+-					sectorlog = getnum(value, 0, 0, false);
+-					if (sectorlog <= 0)
+-						illegal(value, "d sectlog");
++					sectorlog = getnum_checked(value,
++							XFS_MIN_SECTORSIZE_LOG,
++							XFS_MAX_SECTORSIZE_LOG,
++							"d sectlog", 'd', dopts,
++							D_SECTLOG);
+ 					sectorsize = 1 << sectorlog;
+ 					slflag = 1;
+ 					break;
+@@ -1399,9 +1420,11 @@ main(
+ 					if (isflag)
+ 						conflict('i', iopts, I_SIZE,
+ 							 I_LOG);
+-					inodelog = getnum(value, 0, 0, false);
+-					if (inodelog <= 0)
+-						illegal(value, "i log");
++					inodelog = getnum_checked(value,
++							XFS_DINODE_MIN_LOG,
++							XFS_DINODE_MAX_LOG,
++							"i log", 'i', iopts,
++							I_LOG);
+ 					isize = 1 << inodelog;
+ 					ilflag = 1;
+ 					break;
+@@ -1573,16 +1596,16 @@ main(
+ 					lsflag = 1;
+ 					break;
+ 				case L_SECTLOG:
+-					if (!value || *value == '\0')
+-						reqval('l', lopts, L_SECTLOG);
+ 					if (lslflag)
+ 						respec('l', lopts, L_SECTLOG);
+ 					if (lssflag)
+ 						conflict('l', lopts, L_SECTSIZE,
+ 							 L_SECTLOG);
+-					lsectorlog = getnum(value, 0, 0, false);
+-					if (lsectorlog <= 0)
+-						illegal(value, "l sectlog");
++					lsectorlog = getnum_checked(value,
++							XFS_MIN_SECTORSIZE_LOG,
++							XFS_MAX_SECTORSIZE_LOG,
++							"l sectlog", 'l', lopts,
++							L_SECTLOG);
+ 					lsectorsize = 1 << lsectorlog;
+ 					lslflag = 1;
+ 					break;
+@@ -1658,16 +1681,16 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 
+ 				switch (getsubopt(&p, (constpp)nopts, &value)) {
+ 				case N_LOG:
+-					if (!value || *value == '\0')
+-						reqval('n', nopts, N_LOG);
+ 					if (nlflag)
+ 						respec('n', nopts, N_LOG);
+ 					if (nsflag)
+ 						conflict('n', nopts, N_SIZE,
+ 							 N_LOG);
+-					dirblocklog = getnum(value, 0, 0, false);
+-					if (dirblocklog <= 0)
+-						illegal(value, "n log");
++					dirblocklog = getnum_checked(value,
++							XFS_MIN_REC_DIRSIZE,
++							XFS_MAX_BLOCKSIZE_LOG,
++							"n log", 'n', nopts,
++							N_LOG);
+ 					dirblocksize = 1 << dirblocklog;
+ 					nlflag = 1;
+ 					break;
+@@ -1786,16 +1809,16 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 				switch (getsubopt(&p, (constpp)sopts, &value)) {
+ 				case S_LOG:
+ 				case S_SECTLOG:
+-					if (!value || *value == '\0')
+-						reqval('s', sopts, S_SECTLOG);
+ 					if (slflag || lslflag)
+ 						respec('s', sopts, S_SECTLOG);
+ 					if (ssflag || lssflag)
+ 						conflict('s', sopts, S_SECTSIZE,
+ 							 S_SECTLOG);
+-					sectorlog = getnum(value, 0, 0, false);
+-					if (sectorlog <= 0)
+-						illegal(value, "s sectlog");
++					sectorlog = getnum_checked(value,
++							XFS_MIN_SECTORSIZE_LOG,
++							XFS_MAX_SECTORSIZE_LOG,
++							"s sectlog", 's', sopts,
++							S_SECTLOG);
+ 					lsectorlog = sectorlog;
+ 					sectorsize = 1 << sectorlog;
+ 					lsectorsize = sectorsize;
+-- 
+2.6.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5720375939366522231==--
