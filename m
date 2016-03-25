@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6404E29E45
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 22:17:21 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8B907CA0
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 18:01:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1A4AA8F8039
-	for <xfs@oss.sgi.com>; Mon,  7 Mar 2016 20:17:21 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jVU7JB4vAEeRKoKE for <xfs@oss.sgi.com>;
-	Mon, 07 Mar 2016 20:17:18 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1ad94T-0004AP-5e
-	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:33 +1100
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1ad94G-0007v6-KF
-	for xfs@oss.sgi.com; Tue, 08 Mar 2016 15:16:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/16] xfs: remove an extent from the rmap btree
-Date: Tue,  8 Mar 2016 15:16:16 +1100
-Message-Id: <1457410578-30233-15-git-send-email-david@fromorbit.com>
-In-Reply-To: <1457410578-30233-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FF32304032
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 16:00:58 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id vGIafkUKVLC9vsPL (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 25 Mar 2016 16:00:53 -0700 (PDT)
+Date: Fri, 25 Mar 2016 16:00:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/16] xfs: first part of rmapbt functionality
+Message-ID: <20160325230014.GA5822@birch.djwong.org>
 References: <1457410578-30233-1-git-send-email-david@fromorbit.com>
+	<20160310141434.GA29058@infradead.org>
+	<20160310214432.GX30721@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160310214432.GX30721@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,227 +27,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Mar 11, 2016 at 08:44:32AM +1100, Dave Chinner wrote:
+> On Thu, Mar 10, 2016 at 06:14:34AM -0800, Christoph Hellwig wrote:
+> > On Tue, Mar 08, 2016 at 03:16:02PM +1100, Dave Chinner wrote:
+> > > This isn't all of the rmap functionality. It's patches up to the
+> > > point where I've come across the first piece that needs to be
+> > > reworked (the rmap intent execution code), so there's no point
+> > > holding these back until I've sorted that out. This builds on top of
+> > > for-next and the patch set I posted yesterday.
+> > > 
+> > > Darrick, I've changed the authorship of the patches to reflect
+> > > the original series this has come from - can you check to see if
+> > > there's anything I got wrong when I did that?
 
-Now that we have records in the rmap btree, we need to remove them
-when extents are freed. This needs to find the relevant record in
-the btree and remove/trim/split it accordingly.
+Looks ok to me.
 
-[darrick.wong@oracle.com: make rmap routines handle the enlarged keyspace]
-[dchinner: remove remaining unused debug printks]
+> > I'll come some minor bits on the actual patches, but I'd like to
+> > understand a few fundamental things first:
+> > 
+> > For one Darrick has introduced a new rmapxbt btree recently, which
+> > allows using a rmap on reflink enabled file systems.  In his tree
+> > we thus have two different implementation of a reverse mapping
+> > btree.  Is there any good reason to keep it this way?  For one
+> > reflinks are a compelling feature that I doubt people want to
+> > disable in the long run, so most filesystem will be using rmapxbt.
+> > I also don't think having these two implementations is good for the
+> > testing matrix in the long run.
+> 
+> I haven't got as far as the rmapxbt code yet - it's currently at the
+> end of the entire series, and I'm trying to sort out problems in
+> infrastructure right now (i.e. rmapbt modifications are atomic and
+> crash safe w.r.t. bmapbt changes and EFI processing).
+> 
+> I'm planning on re-ordering the rmapxbt and interval query tree
+> stuff to before the reflink code is included, but I haven't got
+> hatfar yet so I haven't looked at the code yet. It's slow going, and
+> right now I don't think I'm going to have even a complete rmapbt
+> series done in time for the merge 4.6 merge window, let alone all
+> the extra stuff Darrick has done.
+> 
+> So with only a couple of days left before the merge window opens, I
+> think this all needs to slip to the next merge window while we sort
+> out what disk format we are going to use and rework the series to
+> introduce only that format.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/libxfs/xfs_rmap.c | 158 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 156 insertions(+), 2 deletions(-)
+Now that rmap has slipped to 4.7, there's no point in holding back on
+the disk format changes that I wanted to make.
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 56627c1c..d2e01b2 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -118,6 +118,24 @@ xfs_rmap_get_rec(
- 	return 0;
- }
- 
-+/*
-+ * Find the extent in the rmap btree and remove it.
-+ *
-+ * The record we find should always be an exact match for the extent that we're
-+ * looking for, since we insert them into the btree without modification.
-+ *
-+ * Special Case #1: when growing the filesystem, we "free" an extent when
-+ * growing the last AG. This extent is new space and so it is not tracked as
-+ * used space in the btree. The growfs code will pass in an owner of
-+ * XFS_RMAP_OWN_NULL to indicate that it expected that there is no owner of this
-+ * extent. We verify that - the extent lookup result in a record that does not
-+ * overlap.
-+ *
-+ * Special Case #2: EFIs do not record the owner of the extent, so when
-+ * recovering EFIs from the log we pass in XFS_RMAP_OWN_UNKNOWN to tell the rmap
-+ * btree to ignore the owner (i.e. wildcard match) so we don't trigger
-+ * corruption checks during log recovery.
-+ */
- int
- xfs_rmap_free(
- 	struct xfs_trans	*tp,
-@@ -128,19 +146,156 @@ xfs_rmap_free(
- 	struct xfs_owner_info	*oinfo)
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_btree_cur	*cur;
-+	struct xfs_rmap_irec	ltrec;
-+	uint64_t		ltoff;
- 	int			error = 0;
-+	int			i;
-+	uint64_t		owner;
-+	uint64_t		offset;
- 
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return 0;
- 
- 	trace_xfs_rmap_free_extent(mp, agno, bno, len, oinfo);
--	if (1)
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
-+
-+	xfs_owner_info_unpack(oinfo, &owner, &offset);
-+
-+	/*
-+	 * We should always have a left record because there's a static record
-+	 * for the AG headers at rm_startblock == 0 created by mkfs/growfs that
-+	 * will not ever be removed from the tree.
-+	 */
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, &i);
-+	if (error)
- 		goto out_error;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+
-+	error = xfs_rmap_get_rec(cur, &ltrec, &i);
-+	if (error)
-+		goto out_error;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	ltoff = ltrec.rm_offset & ~XFS_RMAP_OFF_BMBT;
-+
-+	/*
-+	 * For growfs, the incoming extent must be beyond the left record we
-+	 * just found as it is new space and won't be used by anyone. This is
-+	 * just a corruption check as we don't actually do anything with this
-+	 * extent.
-+	 */
-+	if (owner == XFS_RMAP_OWN_NULL) {
-+		XFS_WANT_CORRUPTED_GOTO(mp, bno > ltrec.rm_startblock +
-+						ltrec.rm_blockcount, out_error);
-+		goto out_done;
-+	}
-+
-+	/* make sure the extent we found covers the entire freeing range. */
-+	XFS_WANT_CORRUPTED_GOTO(mp, !XFS_RMAP_IS_UNWRITTEN(ltrec.rm_blockcount),
-+		out_error);
-+	XFS_WANT_CORRUPTED_GOTO(mp, ltrec.rm_startblock <= bno &&
-+		ltrec.rm_startblock + XFS_RMAP_LEN(ltrec.rm_blockcount) >=
-+		bno + len, out_error);
-+
-+	/* make sure the owner matches what we expect to find in the tree */
-+	XFS_WANT_CORRUPTED_GOTO(mp, owner == ltrec.rm_owner ||
-+				    XFS_RMAP_NON_INODE_OWNER(owner), out_error);
-+
-+	/* check the offset, if necessary */
-+	if (!XFS_RMAP_NON_INODE_OWNER(owner)) {
-+		if (XFS_RMAP_IS_BMBT(offset)) {
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+					XFS_RMAP_IS_BMBT(ltrec.rm_offset),
-+					out_error);
-+		} else {
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+					ltrec.rm_offset <= offset, out_error);
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+					offset <= ltoff + ltrec.rm_blockcount,
-+					out_error);
-+		}
-+	}
-+
-+	if (ltrec.rm_startblock == bno && ltrec.rm_blockcount == len) {
-+		/* exact match, simply remove the record from rmap tree */
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	} else if (ltrec.rm_startblock == bno) {
-+		/*
-+		 * overlap left hand side of extent: move the start, trim the
-+		 * length and update the current record.
-+		 *
-+		 *       ltbno                ltlen
-+		 * Orig:    |oooooooooooooooooooo|
-+		 * Freeing: |fffffffff|
-+		 * Result:            |rrrrrrrrrr|
-+		 *         bno       len
-+		 */
-+		ltrec.rm_startblock += len;
-+		ltrec.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+	} else if (ltrec.rm_startblock + ltrec.rm_blockcount == bno + len) {
-+		/*
-+		 * overlap right hand side of extent: trim the length and update
-+		 * the current record.
-+		 *
-+		 *       ltbno                ltlen
-+		 * Orig:    |oooooooooooooooooooo|
-+		 * Freeing:            |fffffffff|
-+		 * Result:  |rrrrrrrrrr|
-+		 *                    bno       len
-+		 */
-+		ltrec.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+	} else {
-+
-+		/*
-+		 * overlap middle of extent: trim the length of the existing
-+		 * record to the length of the new left-extent size, increment
-+		 * the insertion position so we can insert a new record
-+		 * containing the remaining right-extent space.
-+		 *
-+		 *       ltbno                ltlen
-+		 * Orig:    |oooooooooooooooooooo|
-+		 * Freeing:       |fffffffff|
-+		 * Result:  |rrrrr|         |rrrr|
-+		 *               bno       len
-+		 */
-+		xfs_extlen_t	orig_len = ltrec.rm_blockcount;
-+
-+		ltrec.rm_blockcount = bno - ltrec.rm_startblock;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+
-+		error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			goto out_error;
-+
-+		cur->bc_rec.r.rm_startblock = bno + len;
-+		cur->bc_rec.r.rm_blockcount = orig_len - len -
-+						     ltrec.rm_blockcount;
-+		cur->bc_rec.r.rm_owner = ltrec.rm_owner;
-+		cur->bc_rec.r.rm_offset = offset;
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto out_error;
-+	}
-+
-+out_done:
- 	trace_xfs_rmap_free_extent_done(mp, agno, bno, len, oinfo);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	return 0;
- 
- out_error:
- 	trace_xfs_rmap_free_extent_error(mp, agno, bno, len, oinfo);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
- 	return error;
- }
- 
-@@ -262,7 +417,6 @@ xfs_rmap_alloc(
- 		ltrec.rm_blockcount += len;
- 		if (gtrec.rm_owner == owner &&
- 		    bno + len == gtrec.rm_startblock) {
--			//printk("add middle\n");
- 			/*
- 			 * right edge also contiguous, delete right record
- 			 * and merge into left record.
--- 
-2.7.0
+The interval query code makes it much easier to look for left neighbor
+rmap records on a reflink filesystem.  With that piece, we can drop
+the requirement that every bmbt record corresponds exactly with an
+rmapbt record; we can also make use of bits 20-30 of the rm_blockcount
+field, which will make the rmapbt smaller.
+
+Doing this also enables me to rip out a large chunk of the deferred
+rmap processing code (mostly patches 15-16) because everything can
+turn into calling the interval query aware versions of
+xfs_rmap_{alloc,free}.  At the same time I'll add rmapbt update intent
+log items--Dave, I know you were working on that; please send along
+whatever you have.
+
+I've been wrangling with the problem of how to deal with refcount
+btree updates that update so many records that we overflow the
+transaction reservation.  Right now we simply reserve so much space
+that we can (usually) pass xfstests without blowing up, but this won't
+work for all cases.  One solution is to roll the transaction if we
+detect that we're about to run out of reservation, but that requires
+us to be able to log refcount update intents.  However, that isn't so
+bad, because...
+
+...I think there's a potential for deadlock when unmapping extents
+from a file.  Let's say we want to unmap an extent in AG X whose bmbt
+block is in AG (X+1).  Let's say that the bmbt unmap causes the block
+to split, and the new bmbt block is in AG (X+1).  Next, we go to
+remove the rmapbt record from AG X, but let's say that record removal
+also causes a btree split.  In that case, the transaction will
+deadlock because it has AGF (X+1) and is trying to grab AGF X, which
+is a violation of the locking order rules.
+
+In summary, I think we need to have intent log items for both rmapbt
+and refcountbt changes in order to keep things atomic w.r.t. crash
+recovery.  I think this solves both the deadlock problem and the
+reservation overflow problems with the refcount btree.
+
+MCI/MCD = rMap change intent/done
+CCI/CCD = refCount change intent/done
+
+So now unmapping looks like this:
+unmap extent -> log MCI -> log CCI -> roll -> remove rmapbt entries ->
+  -> log MCD -> roll ->
+  -> update refcountbt -> log CCD -> log EFI (for btree merges) -+-> 
+     ^-- log CCI for remaining <--------------- if trans full ---|
+  -> roll -> free extents -> log EFD -> done unmapping
+
+Regular mapping looks like this:
+map extent -> log MCI -> roll -> add rmapbt entries -> log MCD -> roll ->
+  -> log EFI (for btree merges) -> free -> log EFD -> done mapping
+
+Reflinking looks like this:
+regular unmap -> log CCI -> roll ->
+  -> update refcountbt -> log CCD -> log EFI (for btree merges) -+-->
+     ^-- log CCI for remaining <--------------- if trans full ---|
+  -> regular map -> done reflinking
+
+This is my rough roadmap heading towards LSF:
+
+0) jump forward to 4.6-rc1 after merge window closes
+1) drop the skinny rmapbt format
+2) use interval queries for xfs_rmap_{alloc,free}
+3) use MCI/MCD on freeing extents
+4) shove the interval query code and all the rmap stuff before reflink
+5) rework rmap to drop the "every bmbt record must have an rmap rec"
+6) rework refcount to avoid exhausting transaction reservations
+7) prototype btree scrubbing code (done)
+8) come up with some toy xfs-scrub utility
+
+How's that sound?  Sorry in advance for the code churn and the
+inevitable gigantic patchbomb. :)
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
