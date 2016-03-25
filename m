@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9C6C7CA0
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 13:47:29 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BC4337CA0
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 15:59:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D1CAAC002
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 11:47:29 -0700 (PDT)
-Received: from mail-oi0-f43.google.com (mail-oi0-f43.google.com
-	[209.85.218.43]) by cuda.sgi.com with ESMTP id V9JtphRzHPYK9F9S
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 25 Mar 2016 11:47:27 -0700 (PDT)
-Received: by mail-oi0-f43.google.com with SMTP id d205so105620973oia.0
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 11:47:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 72B1D8F8052
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 13:59:36 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	62c9J2FC6JqAG0oB for <xfs@oss.sgi.com>;
+	Fri, 25 Mar 2016 13:59:32 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 5/5] dax: handle media errors in dax_do_io
+Date: Fri, 25 Mar 2016 20:59:30 +0000
+Message-ID: <1458939566.5501.5.camel@intel.com>
 References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
-	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
-Date: Fri, 25 Mar 2016 11:47:26 -0700
-Message-ID: <CAPcyv4iKK=1Nhz4QqEkhc4gum+UvUS4a=+Sza2zSa1Kyrth41w@mail.gmail.com>
-Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
-	dax_clear_sectors
-From: Dan Williams <dan.j.williams@intel.com>
+	<1458861450-17705-6-git-send-email-vishal.l.verma@intel.com>
+	<20160325104549.GB10525@infradead.org>
+In-Reply-To: <20160325104549.GB10525@infradead.org>
+Content-Language: en-US
+Content-ID: <21B546D71D01A9489F096D2F38A6C68A@intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,74 +27,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Wilcox, Matthew
+	R" <matthew.r.wilcox@intel.com>
 
-On Thu, Mar 24, 2016 at 4:17 PM, Vishal Verma <vishal.l.verma@intel.com> wrote:
-> From: Matthew Wilcox <matthew.r.wilcox@intel.com>
->
-> dax_clear_sectors() cannot handle poisoned blocks.  These must be
-> zeroed using the BIO interface instead.  Convert ext2 and XFS to use
-> only sb_issue_zerout().
->
-> Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
-> [vishal: Also remove the dax_clear_sectors function entirely]
-> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> ---
->  fs/dax.c               | 32 --------------------------------
->  fs/ext2/inode.c        |  7 +++----
->  fs/xfs/xfs_bmap_util.c |  9 ---------
->  include/linux/dax.h    |  1 -
->  4 files changed, 3 insertions(+), 46 deletions(-)
->
-> diff --git a/fs/dax.c b/fs/dax.c
-> index bb7e9f8..a30481e 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -78,38 +78,6 @@ struct page *read_dax_sector(struct block_device *bdev, sector_t n)
->         return page;
->  }
->
-> -/*
-> - * dax_clear_sectors() is called from within transaction context from XFS,
-> - * and hence this means the stack from this point must follow GFP_NOFS
-> - * semantics for all operations.
-> - */
-> -int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size)
-> -{
-> -       struct blk_dax_ctl dax = {
-> -               .sector = _sector,
-> -               .size = _size,
-> -       };
-> -
-> -       might_sleep();
-> -       do {
-> -               long count, sz;
-> -
-> -               count = dax_map_atomic(bdev, &dax);
-> -               if (count < 0)
-> -                       return count;
-> -               sz = min_t(long, count, SZ_128K);
-> -               clear_pmem(dax.addr, sz);
-> -               dax.size -= sz;
-> -               dax.sector += sz / 512;
-> -               dax_unmap_atomic(bdev, &dax);
-> -               cond_resched();
-> -       } while (dax.size);
-> -
-> -       wmb_pmem();
-> -       return 0;
-> -}
-> -EXPORT_SYMBOL_GPL(dax_clear_sectors);
-
-What about the other unwritten extent conversions in the dax path?
-Shouldn't those be converted to block-layer zero-outs as well?
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCAyMDE2LTAzLTI1IGF0IDAzOjQ1IC0wNzAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gT24gVGh1LCBNYXIgMjQsIDIwMTYgYXQgMDU6MTc6MzBQTSAtMDYwMCwgVmlzaGFsIFZl
+cm1hIHdyb3RlOg0KPiA+IA0KPiA+IGRheF9kb19pbyAoY2FsbGVkIGZvciByZWFkKCkgb3Igd3Jp
+dGUoKSBmb3IgYSBkYXggZmlsZSBzeXN0ZW0pIG1heQ0KPiA+IGZhaWwNCj4gPiBpbiB0aGUgcHJl
+c2VuY2Ugb2YgYmFkIGJsb2NrcyBvciBtZWRpYSBlcnJvcnMuIFNpbmNlIHdlIGV4cGVjdCB0aGF0
+DQo+ID4gYQ0KPiA+IHdyaXRlIHNob3VsZCBjbGVhciBtZWRpYSBlcnJvcnMgb24gbnZkaW1tcywg
+bWFrZSBkYXhfZG9faW8gZmFsbA0KPiA+IGJhY2sgdG8NCj4gPiB0aGUgZGlyZWN0X0lPIHBhdGgs
+IHdoaWNoIHdpbGwgc2VuZCBkb3duIGEgYmlvIHRvIHRoZSBkcml2ZXIsIHdoaWNoDQo+ID4gY2Fu
+DQo+ID4gdGhlbiBhdHRlbXB0IHRvIGNsZWFyIHRoZSBlcnJvci4NCj4gTGVhdmUgdGhlIGZhbGxi
+YWNrIG9uIC1FSU8gdG8gdGhlIGNhbGxlcnMgcGxlYXNlLsKgwqBUaGV5IGdlbmVyYWxseQ0KPiBj
+YWxsDQo+IF9fYmxvY2tkZXZfZGlyZWN0X0lPIGFueXdheSwgc28gaXQgc2hvdWxkIGFjdHVhbGx5
+IGJlY29tZSBzaW1wbGVyDQo+IHRoYXQNCj4gd2F5Lg0KDQpJIHRob3VnaHQgb2YgdGhpcywgYnV0
+IG1hZGUgdGhlIHJldHJ5aW5nIGhhcHBlbiBpbiB0aGUgd3JhcHBlciBzbyB0aGF0DQppdCBjYW4g
+YmUgY2VudHJhbGl6ZWQuIElmIHRoZSBjYWxsZXJzIHdlcmUgdG8gYmVjb21lIHJlc3BvbnNpYmxl
+IGZvcg0KdGhlIHJldHJ5LCB0aGVuIGFueSBuZXcgY2FsbGVycyBvZiBkYXhfZG9faW8gbWlnaHQg
+bm90IHJlYWxpemUgdGhleSBhcmUNCnJlc3BvbnNpYmxlIGZvciByZXRyeWluZywgYW5kIGhpdCBw
+cm9ibGVtcy4gQW5vdGhlciB0cmlja3kgcG9pbnQgbWlnaHQNCmJlOiBpbiB0aGUgd3JhcHBlciwg
+aWYgX19kYXhfZG9faW8gZmFpbGVkIHdpdGggLUVJTywgYW5kIHN1YnNlcXVlbnRseQ0KX19ibG9j
+a2Rldl9kaXJlY3RfSU8gYWxzbyBmYWlscyB3aXRoIGEgKmRpZmZlcmVudCogZXJyb3IsIEkgY2hv
+c2UgdG8NCnJldHVybiAtRUlPIGJlY2F1c2UgdGhhdCB3YXMgdGhlICdmaXJzdCcgZXJyb3Igd2Ug
+aGl0IGFuZCBjYXVzZWQgdXMgdG8NCmZhbGxiYWNrLi4gKERvZXMgdGhpcyBldmVuIHNlZW0gcmVh
+c29uYWJsZT8pIEFuZCBpZiBzbywgZG8gd2Ugd2FudCB0bw0KcHVzaCBiYWNrIHRoaXMgZGVjaXNp
+b24gdG9vLCB0byB0aGUgY2FsbGVycz8KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
