@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ADA767CA1
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 18:23:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5F46D304051
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 16:23:35 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id nrBDkLBoQ8YBumaQ for
-	<xfs@oss.sgi.com>; Thu, 24 Mar 2016 16:23:34 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH 3/5] dax: enable dax in the presence of known media
-	errors (badblocks)
-Date: Thu, 24 Mar 2016 23:23:26 +0000
-Message-ID: <1458861805.7619.1.camel@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5D40D7CA0
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 05:44:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 224B1304032
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 03:44:23 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id BHEkGdDLwAxvNMBS (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 25 Mar 2016 03:44:20 -0700 (PDT)
+Date: Fri, 25 Mar 2016 03:44:18 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
+	dax_clear_sectors
+Message-ID: <20160325104418.GA10525@infradead.org>
 References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
-	<1458861450-17705-4-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1458861450-17705-4-git-send-email-vishal.l.verma@intel.com>
-Content-Language: en-US
-Content-ID: <A001440F8D6C3C4CB24CFB5EC465E195@intel.com>
+	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +31,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Thu, 2016-03-24 at 17:17 -0600, Vishal Verma wrote:
-> From: Dan Williams <dan.j.williams@intel.com>
-> 
-> From: Dan Williams <dan.j.williams@intel.com>
+On Thu, Mar 24, 2016 at 05:17:29PM -0600, Vishal Verma wrote:
+> @@ -72,16 +72,7 @@ xfs_zero_extent(
+>  	struct xfs_mount *mp = ip->i_mount;
+>  	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
+>  	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
+> -	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
+>  
+> -	if (IS_DAX(VFS_I(ip)))
+> -		return dax_clear_sectors(xfs_find_bdev_for_inode(VFS_I(ip)),
+> -				sector, size);
+> -
+> -	/*
+> -	 * let the block layer decide on the fastest method of
+> -	 * implementing the zeroing.
+> -	 */
+>  	return sb_issue_zeroout(mp->m_super, block, count_fsb, GFP_NOFS);
 
-Eep, not sure how this happened, looked alright in the patches!
+While not new: using sb_issue_zeroout in XFS is wrong as it doesn't
+account for the RT device.  We need the xfs_find_bdev_for_inode and
+call blkdev_issue_zeroout directly with the bdev it returned.
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
