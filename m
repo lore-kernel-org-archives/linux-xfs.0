@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 25F4F7CA0
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 10:44:03 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A1BDF7CA0
+	for <xfs@oss.sgi.com>; Sat, 26 Mar 2016 11:54:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E96C98F8033
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 08:43:59 -0700 (PDT)
-Received: from mail-io0-f171.google.com (mail-io0-f171.google.com
-	[209.85.223.171]) by cuda.sgi.com with ESMTP id
-	IEBPCeqrdlKQLcuU (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 74285304032
+	for <xfs@oss.sgi.com>; Sat, 26 Mar 2016 09:54:09 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Id4NqYw69mWphDhA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 08:43:58 -0700 (PDT)
-Received: by mail-io0-f171.google.com with SMTP id q128so26604967iof.3
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 08:43:58 -0700 (PDT)
-Subject: Re: BUG: unable to handle kernel paging request at ffffffff82200000
-	(xlog_recover_buffer_pass2)
-References: <565EA0DF.609@oracle.com>
-From: Jia He <jiakernel@gmail.com>
-Message-ID: <56FAA2B9.9060606@gmail.com>
-Date: Tue, 29 Mar 2016 23:43:53 +0800
+	<xfs@oss.sgi.com>; Sat, 26 Mar 2016 09:54:07 -0700 (PDT)
+Date: Sat, 26 Mar 2016 09:53:59 -0700
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 5/5] dax: handle media errors in dax_do_io
+Message-ID: <20160326165359.GA11387@infradead.org>
+References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
+	<1458861450-17705-6-git-send-email-vishal.l.verma@intel.com>
+	<20160325104549.GB10525@infradead.org>
+	<1458939566.5501.5.camel@intel.com>
+	<CAPcyv4jFPYYP=eL72V6MmW2fcXFP3PfQfcO+zYV4NN7rdu1ksg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <565EA0DF.609@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jFPYYP=eL72V6MmW2fcXFP3PfQfcO+zYV4NN7rdu1ksg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,93 +29,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vegard Nossum <vegard.nossum@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
+	Vishal L" <vishal.l.verma@intel.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
 
-SGkgVmVnYXJkCkRvZXMgdGhpcyBjb21taXQgZml4IHRoZSBjcmFzaD8KCmNvbW1pdAk3MDg4YzQx
-MzZmYTFjYmEyNjUzMWZkZTQwYmRjZmNmM2QyY2NkNTMzIChwYXRjaCkKeGZzOiBkZXRlY3QgYW5k
-IHRyaW0gdG9ybiB3cml0ZXMgZHVyaW5nIGxvZyByZWNvdmVyeQoKQi5SLgoKCuWcqCAxMi8yLzE1
-IDM6NDIgUE0sIFZlZ2FyZCBOb3NzdW0g5YaZ6YGTOgo+IEhpLAo+Cj4gTW91bnRpbmcgdGhlIGF0
-dGFjaGVkIFhGUyBpbWFnZSAoZnV6emVkKSBnaXZlcyBtZSB0aGUgZm9sbG93aW5nIGludmFsaWQK
-PiBtZW1vcnkgZGVyZWZlcmVuY2Ugb24gbGF0ZXN0IGxpbnVzL21hc3RlcjoKPgo+IFhGUyAodmRh
-KTogTW91bnRpbmcgVjQgRmlsZXN5c3RlbQo+IFhGUyAodmRhKTogU3RhcnRpbmcgcmVjb3Zlcnkg
-KGxvZ2RldjogaW50ZXJuYWwpCj4gWEZTICh2ZGEpOiBsb2cgcmVjb3JkIENSQyBtaXNtYXRjaDog
-Zm91bmQgMHg5ZjUzNDk2NCwgZXhwZWN0ZWQgCj4gMHhkNDZkNTljZS4KPiBmZmZmYzkwMDAwNDQy
-MDAwOiAwMCAwMCAwMCAwMSAwMCAwMCAwMCAwMCA2OSAwMSAwMCAwMCBlNiAzMyAxOCAxOSAKPiAu
-Li4uLi4uLmkuLi4uMy4uCj4gZmZmZmM5MDAwMDQ0MjAxMDogMDAgMDAgMDAgMTAgNjkgMDAgMDAg
-MDAgNGUgNDEgNTIgNTQgMmEgMDAgMDAgMDAgCj4gLi4uLmkuLi5OQVJUKi4uLgo+IFhGUyAodmRh
-KTogbG9nIHJlY29yZCBDUkMgbWlzbWF0Y2g6IGZvdW5kIDB4ZWRiYTI4ZSwgZXhwZWN0ZWQgMHg5
-ZjAxOWI3My4KPiBmZmZmYzkwMDAwNDQyMDAwOiAwMCAwMCAwMCAwMSAwMCAwMCAwMCAwMCA2OSAw
-MSAwMCAwMCA1YyA0NyA4OCAxZSAKPiAuLi4uLi4uLmkuLi5cRy4uCj4gZmZmZmM5MDAwMDQ0MjAx
-MDogMDAgMDAgMDAgMTAgNjkgMDAgMDAgMDAgNGUgNDEgNTIgNTQgMmEgMDAgMDAgMDAgCj4gLi4u
-LmkuLi5OQVJUKi4uLgo+IFhGUyAodmRhKTogbG9nIHJlY29yZCBDUkMgbWlzbWF0Y2g6IGZvdW5k
-IDB4OWY1MzQ5NjQsIGV4cGVjdGVkIAo+IDB4ZDQ2ZDU5Y2UuCj4gZmZmZmM5MDAwMDQ0YTAwMDog
-MDAgMDAgMDAgMDEgMDAgMDAgMDAgMDAgNjkgMDEgMDAgMDAgZTYgMzMgMTggMTkgCj4gLi4uLi4u
-Li5pLi4uLjMuLgo+IGZmZmZjOTAwMDA0NGEwMTA6IDAwIDAwIDAwIDEwIDY5IDAwIDAwIDAwIDRl
-IDQxIDUyIDU0IDJhIDAwIDAwIDAwIAo+IC4uLi5pLi4uTkFSVCouLi4KPiBCVUc6IHVuYWJsZSB0
-byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0IGZmZmZmZmZmODIyMDAwMDAKPiBJUDog
-WzxmZmZmZmZmZjgxNDc1NjE2Pl0gbWVtY3B5X2VybXMrMHg2LzB4MTAKPiBQR0QgMWUxMDA2NyBQ
-VUQgMWUxMTA2MyBQTUQgMAo+IE9vcHM6IDAwMDAgWyMxXSBTTVAgS0FTQU4KPiBDUFU6IDAgUElE
-OiAxIENvbW06IHN3YXBwZXIvMCBOb3QgdGFpbnRlZCA0LjQuMC1yYzMrICMyNDUKPiB0YXNrOiBm
-ZmZmODgwMDE2ZTI4MDAwIHRpOiBmZmZmODgwMDE2ZTMwMDAwIHRhc2sudGk6IGZmZmY4ODAwMTZl
-MzAwMDAKPiBSSVA6IDAwMTA6WzxmZmZmZmZmZjgxNDc1NjE2Pl0gIFs8ZmZmZmZmZmY4MTQ3NTYx
-Nj5dIG1lbWNweV9lcm1zKzB4Ni8weDEwCj4gUlNQOiAwMDAwOmZmZmY4ODAwMTZlMzc3YjggIEVG
-TEFHUzogMDAwMTAyODcKPiBSQVg6IGZmZmY4ODAwMTQ5NGUzODAgUkJYOiAwMDAwMDAwMDAwMDAw
-MDI3IFJDWDogZmZmZmZmZmY4MDI4NTc2MQo+IFJEWDogZmZmZmZmZmY4MTE1MDQwMCBSU0k6IGZm
-ZmZmZmZmODIyMDAwMDAgUkRJOiBmZmZmODgwMDE1ODE5MDFmCj4gUkJQOiBmZmZmODgwMDE2ZTM3
-ODA4IFIwODogZmZmZjg4MDAxNjQyOWJhOCBSMDk6IDAwMDAwMDAwMDAwMDAwMTgKPiBSMTA6IDAw
-MDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAwMDAwMDAwIFIxMjogZmZmZjg4MDAxNjQyOWI5
-MAo+IFIxMzogMDAwMDAwMDAwMDAwMDAwMiBSMTQ6IDAwMDAwMDAwZmYwMjJhMDggUjE1OiBmZmZm
-ZmZmZjgxMzM1MzYxCj4gRlM6ICAwMDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAwMTcy
-MDAwMDAoMDAwMCkgCj4ga25sR1M6MDAwMDAwMDAwMDAwMDAwMAo+IENTOiAgMDAxMCBEUzogMDAw
-MCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMKPiBDUjI6IGZmZmZmZmZmODIyMDAwMDAg
-Q1IzOiAwMDAwMDAwMDAxZTBmMDAwIENSNDogMDAwMDAwMDAwMDE0MDZiMAo+IFN0YWNrOgo+ICBm
-ZmZmZmZmZjgxMzNlYjc0IGZmZmY4ODAwMDAwNzliODAgZmZmZjg4MDAxNWJmNmU0MCBmZmZmODgw
-MDE2NDI5YmE0Cj4gIGZmZmY4ODAwMDAxMDg0NzAgZmZmZjg4MDAxNjQyOWI5MCBmZmZmODgwMDE0
-YzI2MjkwIGZmZmY4ODAwMTViZjZlNDAKPiAgZmZmZjg4MDAwMDEwODQ1MCBmZmZmODgwMDAwMDc5
-YjgwIGZmZmY4ODAwMTZlMzc4NzAgZmZmZmZmZmY4MTMzZjAyYQo+IENhbGwgVHJhY2U6Cj4gIFs8
-ZmZmZmZmZmY4MTMzZWI3ND5dID8geGxvZ19yZWNvdmVyX2RvX3JlZ19idWZmZXIuaXNyYS4yMysw
-eDEyNC8weDFiMAo+ICBbPGZmZmZmZmZmODEzM2YwMmE+XSB4bG9nX3JlY292ZXJfYnVmZmVyX3Bh
-c3MyKzB4MzVhLzB4NDUwCj4gIFs8ZmZmZmZmZmY4MTM0MGMwOT5dIHhsb2dfcmVjb3Zlcl9jb21t
-aXRfcGFzczIrMHhlOS8weDE2MAo+ICBbPGZmZmZmZmZmODEzNDBjYmM+XSB4bG9nX3JlY292ZXJf
-aXRlbXNfcGFzczIrMHgzYy8weDYwCj4gIFs8ZmZmZmZmZmY4MTM0MGVlNj5dIHhsb2dfcmVjb3Zl
-cl9jb21taXRfdHJhbnMrMHgyMDYvMHgyMzAKPiAgWzxmZmZmZmZmZjgxMzQwZjhhPl0geGxvZ19y
-ZWNvdmVyeV9wcm9jZXNzX3RyYW5zKzB4N2EvMHhiMAo+ICBbPGZmZmZmZmZmODEzNDEwMWU+XSB4
-bG9nX3JlY292ZXJfcHJvY2Vzc19vcGhkcisweDVlLzB4YzAKPiAgWzxmZmZmZmZmZjgxMzQxMTFh
-Pl0geGxvZ19yZWNvdmVyX3Byb2Nlc3NfZGF0YSsweDlhLzB4YzAKPiAgWzxmZmZmZmZmZjgxMzQx
-NTgwPl0geGxvZ19kb19yZWNvdmVyeV9wYXNzKzB4NDQwLzB4NTQwCj4gIFs8ZmZmZmZmZmY4MTE1
-Mzg0Zj5dID8ga2FzYW5fcG9pc29uX3NoYWRvdysweDJmLzB4NDAKPiAgWzxmZmZmZmZmZjgxMzQx
-NmY5Pl0geGxvZ19kb19sb2dfcmVjb3ZlcnkrMHg3OS8weGMwCj4gIFs8ZmZmZmZmZmY4MTM0MTc1
-MT5dIHhsb2dfZG9fcmVjb3ZlcisweDExLzB4ZTAKPiAgWzxmZmZmZmZmZjgxMzQyNTUzPl0geGxv
-Z19yZWNvdmVyKzB4YTMvMHgxNDAKPiAgWzxmZmZmZmZmZjgxMzM3MThlPl0geGZzX2xvZ19tb3Vu
-dCsweDI0ZS8weDJjMAo+ICBbPGZmZmZmZmZmODEzMmYyMDk+XSB4ZnNfbW91bnRmcysweDQ5OS8w
-eDdkMAo+ICBbPGZmZmZmZmZmODEzMmZmOTE+XSA/IHhmc19tcnVfY2FjaGVfY3JlYXRlKzB4MTIx
-LzB4MTgwCj4gIFs8ZmZmZmZmZmY4MTMzMWUyZD5dIHhmc19mc19maWxsX3N1cGVyKzB4MzhkLzB4
-NGEwCj4gIFs8ZmZmZmZmZmY4MTE1ZGViNT5dIG1vdW50X2JkZXYrMHgxODUvMHgxYzAKPiAgWzxm
-ZmZmZmZmZjgxMzMxYWEwPl0gPyB4ZnNfcGFyc2VhcmdzKzB4YWEwLzB4YWEwCj4gIFs8ZmZmZmZm
-ZmY4MTMzMDU4MD5dIHhmc19mc19tb3VudCsweDEwLzB4MjAKPiAgWzxmZmZmZmZmZjgxMTVlMGU0
-Pl0gbW91bnRfZnMrMHgzNC8weDE2MAo+ICBbPGZmZmZmZmZmODExMjQwYjA+XSA/IF9fYWxsb2Nf
-cGVyY3B1KzB4MTAvMHgyMAo+ICBbPGZmZmZmZmZmODExNzhhMjI+XSB2ZnNfa2Vybl9tb3VudCsw
-eDYyLzB4MTEwCj4gIFs8ZmZmZmZmZmY4MTE3OWU2Yj5dIGRvX21vdW50KzB4MjFiLzB4ZGQwCj4K
-PiAkIGFkZHIybGluZSAtZSB2bWxpbnV4IC1pIGZmZmZmZmZmODE0NzU2MTYgIyBtZW1jcHlfZXJt
-cysweDYvMHgxMAo+IGFyY2gveDg2L2xpYi9tZW1jcHlfNjQuUzo1MAo+Cj4gJCBhZGRyMmxpbmUg
-LWUgdm1saW51eCAtaSBmZmZmZmZmZjgxMzNlYjc0ICMgCj4geGxvZ19yZWNvdmVyX2RvX3JlZ19i
-dWZmZXIuaXNyYS4yMysweDEyNC8weDFiMAo+IGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYzoyMjM4
-Cj4KPiAkIGFkZHIybGluZSAtZSB2bWxpbnV4IC1pIGZmZmZmZmZmODEzM2YwMmEgIyAKPiB4bG9n
-X3JlY292ZXJfYnVmZmVyX3Bhc3MyKzB4MzVhLzB4NDUwCj4gZnMveGZzL3hmc19sb2dfcmVjb3Zl
-ci5jOjIzOTcKPgo+IHdoaWNoIGlzIHRoaXMgYml0Ogo+Cj4gICAgIG1lbWNweSh4ZnNfYnVmX29m
-ZnNldChicCwKPiAgICAgICAgICAgICAodWludCliaXQgPDwgWEZTX0JMRl9TSElGVCksICAgIC8q
-IGRlc3QgKi8KPiAgICAgICAgICAgICBpdGVtLT5yaV9idWZbaV0uaV9hZGRyLCAgICAgICAgIC8q
-IHNvdXJjZSAqLwo+ICAgICAgICAgICAgIG5iaXRzPDxYRlNfQkxGX1NISUZUKTsgICAgICAgICAg
-LyogbGVuZ3RoICovCj4KPiBCZWNhdXNlIG9mIHRoZSBtZW1vcnkgY29ycnVwdGlvbiB0aGUgYnVn
-IG1hbmlmZXN0cyBpbiBkaWZmZXJlbnQgd2F5cywKPiBidXQgdGhlIHN0YWNrdHJhY2UgYWJvdmUg
-aXMgYnkgZmFyIHRoZSBtb3N0IGNvbW1vbi4KPgo+IEkgY2FuIHRlc3QgcGF0Y2hlcy4gVGhhbmtz
-LAo+Cj4KPiBWZWdhcmQKPgo+Cj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Fri, Mar 25, 2016 at 02:42:37PM -0700, Dan Williams wrote:
+> That's their prerogative otherwise you are precluding an alternate
+> handling of a dax_do_io() failure.  Maybe a fs or upper layer can
+> recover in a different manner than re-submit the I/O to the
+> __blockdev_direct_IO path.
+
+Let's keep the interface separate because they are, well separate.
+There is a reason direct I/O falls back to buffered I/O by returning
+and error if it can't handle it instead of handling all the magic.
+
+I also really want to get rid of get_block as soon as possible for
+DAX and direct I/O.  For DAX that should actually be possible
+really quickly, while direct I/O might take some time and will
+be have to be gradual.  So tighter integration of the two interface is
+not just bad design, but actively harmful at this point in time.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
