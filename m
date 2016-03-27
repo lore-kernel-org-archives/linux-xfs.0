@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ECFF07CB4
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 02:49:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BF4178F8039
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 00:49:03 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id aHqB0nZA2lipOXSE (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 00:48:58 -0700 (PDT)
-Date: Wed, 30 Mar 2016 09:49:26 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
-	dax_clear_sectors
-Message-ID: <20160330074926.GC12776@quack.suse.cz>
-References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
-	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
-	<CAPcyv4iKK=1Nhz4QqEkhc4gum+UvUS4a=+Sza2zSa1Kyrth41w@mail.gmail.com>
-	<1458939796.5501.8.camel@intel.com>
-	<CAPcyv4jWqVcav7dQPh7WHpqB6QDrCezO5jbd9QW9xH3zsU4C1w@mail.gmail.com>
-	<1459195288.15523.3.camel@intel.com>
-	<CAPcyv4jFwh679arTNoUzLZpJCSoR+KhMdEmwqddCU1RWOrjD=Q@mail.gmail.com>
-	<1459277829.6412.3.camel@intel.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1459277829.6412.3.camel@intel.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 938867CA0
+	for <xfs@oss.sgi.com>; Sat, 26 Mar 2016 23:29:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ECC94AC001
+	for <xfs@oss.sgi.com>; Sat, 26 Mar 2016 21:29:13 -0700 (PDT)
+Received: from mail-pf0-f195.google.com (mail-pf0-f195.google.com
+	[209.85.192.195]) by cuda.sgi.com with ESMTP id
+	PD1qXZdaSJ6N0Z8c (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 26 Mar 2016 21:29:11 -0700 (PDT)
+Received: by mail-pf0-f195.google.com with SMTP id n5so16310056pfn.1
+	for <xfs@oss.sgi.com>; Sat, 26 Mar 2016 21:29:11 -0700 (PDT)
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: [PATCH v2] xfs: mute some sparse warnings
+Date: Sun, 27 Mar 2016 12:28:51 +0800
+Message-Id: <1459052931-25535-1-git-send-email-guaneryu@gmail.com>
+In-Reply-To: <1458929042-23991-1-git-send-email-guaneryu@gmail.com>
+References: <1458929042-23991-1-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,42 +26,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <guaneryu@gmail.com>
 
-On Tue 29-03-16 18:57:16, Verma, Vishal L wrote:
-> On Mon, 2016-03-28 at 16:34 -0700, Dan Williams wrote:
-> =
+These three warnings are fixed:
 
-> <>
-> =
+fs/xfs/xfs_inode.c:1033:44: warning: Using plain integer as NULL pointer
+fs/xfs/xfs_inode_item.c:525:20: warning: context imbalance in 'xfs_inode_item_push' - unexpected unlock
+fs/xfs/xfs_dquot.c:696:1: warning: symbol 'xfs_dq_get_next_id' was not declared. Should it be static?
 
-> > Seems kind of sad to fail the fault due to a bad block when we were
-> > going to zero it anyway, right?=A0=A0I'm not seeing a compelling reason=
- to
-> > keep any zeroing in fs/dax.c.
-> =
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+---
 
-> Agreed - but how do we do this? clear_pmem needs to be able to clear an
-> arbitrary number of bytes, but to go through the driver, we'd need to
-> send down a bio? If only the driver had an rw_bytes like interface that
-> could be used by anyone... :)
+v2:
+- fix lock annotation format
 
-Actually, my patches for page fault locking remove zeroing from
-dax_insert_mapping() and __dax_pmd_fault() - the zeroing now happens from
-the filesystem only and the zeroing in those two functions is just a dead
-code...
+ fs/xfs/xfs_dquot.c      | 2 +-
+ fs/xfs/xfs_inode.c      | 2 +-
+ fs/xfs/xfs_inode_item.c | 2 ++
+ 3 files changed, 4 insertions(+), 2 deletions(-)
 
-								Honza
--- =
-
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 316b2a1..8f51370 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -692,7 +692,7 @@ error0:
+  * end of the chunk, skip ahead to first id in next allocated chunk
+  * using the SEEK_DATA interface.
+  */
+-int
++static int
+ xfs_dq_get_next_id(
+ 	xfs_mount_t		*mp,
+ 	uint			type,
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 96f606d..1445a99 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1030,7 +1030,7 @@ xfs_dir_ialloc(
+ 			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
+ 		}
+ 
+-		code = xfs_trans_roll(&tp, 0);
++		code = xfs_trans_roll(&tp, NULL);
+ 		if (committed != NULL)
+ 			*committed = 1;
+ 
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index c48b5b1..d02cbab 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -479,6 +479,8 @@ STATIC uint
+ xfs_inode_item_push(
+ 	struct xfs_log_item	*lip,
+ 	struct list_head	*buffer_list)
++		__releases(&lip->li_ailp->xa_lock)
++		__acquires(&lip->li_ailp->xa_lock)
+ {
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
