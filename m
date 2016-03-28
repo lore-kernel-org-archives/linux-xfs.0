@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DD8BD7CA6
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 17:05:49 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 099D77CA0
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 14:51:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 60F47AC001
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 15:05:49 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id W5kkqGXydVCfMswQ (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C3F518F804C
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 12:51:48 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id kEQycYyJxkjrm70U (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 28 Mar 2016 15:05:42 -0700 (PDT)
-Date: Mon, 28 Mar 2016 15:05:06 -0700
+	<xfs@oss.sgi.com>; Mon, 28 Mar 2016 12:51:45 -0700 (PDT)
+Date: Mon, 28 Mar 2016 12:51:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/16] xfs: add owner field to extent allocation and
-	freeing
-Message-ID: <20160328220506.GB5822@birch.djwong.org>
-References: <1457410578-30233-1-git-send-email-david@fromorbit.com>
-	<1457410578-30233-6-git-send-email-david@fromorbit.com>
-	<20160310141913.GC29058@infradead.org>
+Subject: Re: [PATCH] xfs: don't hand out pNFS layouts for reflink inodes
+Message-ID: <20160328195140.GB5360@birch.djwong.org>
+References: <1456936485-21940-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160310141913.GC29058@infradead.org>
+In-Reply-To: <1456936485-21940-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,44 +29,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Mar 10, 2016 at 06:19:13AM -0800, Christoph Hellwig wrote:
-> On Tue, Mar 08, 2016 at 03:16:07PM +1100, Dave Chinner wrote:
-> > From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > 
-> > For the rmap btree to work, we have to fed the extent owner
-> 
-> s/fed/feed/
+[back to XFS after a few weeks' distractions]
 
-<nod>
+On Wed, Mar 02, 2016 at 05:34:45PM +0100, Christoph Hellwig wrote:
+> Although the protocol allows for it, the Linux NFS server code doesn't
+> support reflink-like functionality yet.  It's been added to by TODO
+> list..
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_pnfs.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> index ade236e..9708fef 100644
+> --- a/fs/xfs/xfs_pnfs.c
+> +++ b/fs/xfs/xfs_pnfs.c
+> @@ -139,6 +139,13 @@ xfs_fs_map_blocks(
+>  		return -ENXIO;
+>  
+>  	/*
+> +	 * The pNFS block layout spec actually supports reflink like
+> +	 * functionality, but the Linux pNFS server doesn't implement it yet.
+> +	 */
+> +	if (!xfs_is_reflink_inode(ip))
+> +		return -ENXIO;
 
-> 
-> > +/*
-> > + * Ownership info for an extent.  This is used to create reverse-mapping
-> > + * entries.
-> > + */
-> > +#define XFS_RMAP_INO_ATTR_FORK	(1)
-> > +#define XFS_RMAP_BMBT_BLOCK	(2)
-> 
-> These are OR-able flags - it might make sense to define them as:
-> 
-> #define XFS_RMAP_INO_ATTR_FORK	(1 << 0)
-> #define XFS_RMAP_BMBT_BLOCK	(1 << 1)
-> 
-> to make this more obvious.
+/me isn't familiar with pNFS, but doesn't this make it so that
+xfs_fs_map_blocks /only/ works on reflinked files?  Maybe I'm misreading the
+comment, but it sounds to me like Linux doesn't support reflinked files over
+pNFS and therefore we want to disable this iomapping functionality any time we
+find a reflinked file.
 
-Ok.  Will do when I merge the "separate xfs_rmap_irec flags field" patch
-into the appropriate patches (like this one).
+But maybe there's a subtlety here that I'm missing?
 
 --D
 
+> +
+> +	/*
+>  	 * Lock out any other I/O before we flush and invalidate the pagecache,
+>  	 * and then hand out a layout to the remote system.  This is very
+>  	 * similar to direct I/O, except that the synchronization is much more
+> -- 
+> 2.1.4
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
