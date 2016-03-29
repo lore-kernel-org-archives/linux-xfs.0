@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 225677CA3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 06:14:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 97E1DAC004
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 04:14:35 -0700 (PDT)
-Received: from mail-pa0-f68.google.com (mail-pa0-f68.google.com
-	[209.85.220.68]) by cuda.sgi.com with ESMTP id h7FS2LYj6xSo2JZQ
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Mar 2016 04:14:34 -0700 (PDT)
-Received: by mail-pa0-f68.google.com with SMTP id hn5so7956413pac.2
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 04:14:34 -0700 (PDT)
-Date: Thu, 31 Mar 2016 19:14:30 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] xfs: add missing break in xfs_parseargs()
-Message-ID: <20160331111046.GA2059@eguan.usersys.redhat.com>
-References: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C013E7CA0
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 11:12:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9011B30404E
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 09:12:03 -0700 (PDT)
+Received: from mail-ig0-f169.google.com (mail-ig0-f169.google.com
+	[209.85.213.169]) by cuda.sgi.com with ESMTP id
+	Jbaq0q9lPG2nOovJ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 09:12:02 -0700 (PDT)
+Received: by mail-ig0-f169.google.com with SMTP id nk17so79748524igb.1
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 09:12:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
+In-Reply-To: <56F416E8.5000704@sandeen.net>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-3-git-send-email-jtulak@redhat.com>
+	<56F416E8.5000704@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 29 Mar 2016 18:11:42 +0200
+Message-ID: <CACj3i71Ae1p8E35SrmpEiMen+mFY7MgQa2fHPueALDnF+HNRrQ@mail.gmail.com>
+Subject: Re: [PATCH 02/19] mkfs: sanitise ftype parameter values.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +29,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0580070764788334427=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: esandeen@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Mar 31, 2016 at 05:13:03PM +0800, Eryu Guan wrote:
-> Commit 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
-> missed a 'break;' in xfs_parseargs() which causes mount to fail with
-> "-o pqnoenforce" option. xfs/050 catches this failure.
-> 
-> XFS (vda6): Super block does not support project and group quota together
+--===============0580070764788334427==
+Content-Type: multipart/alternative; boundary=047d7ba97ee01891ce052f324ad2
 
-Forgot to mention that it only fails for v4 xfs, but v5 xfs enables
-group quota automatically in this case.
+--047d7ba97ee01891ce052f324ad2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Eryu
+On Thu, Mar 24, 2016 at 5:33 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 
-> 
-> Fixes: 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
-> Signed-off-by: Eryu Guan <guaneryu@gmail.com>
-> ---
->  fs/xfs/xfs_super.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d760934..361564e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -350,6 +350,7 @@ xfs_parseargs(
->  		case Opt_pqnoenforce:
->  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
->  			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
-> +			break;
->  		case Opt_gquota:
->  		case Opt_grpquota:
->  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
-> -- 
-> 2.5.5
-> 
+>
+>
+> On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> >
+> > Because passing "-n ftype=3D2" should fail.
+>
+> but passing crc=3D1 ftype=3D1 shouldn't fail, should it?
+> Seems like it will here.
+>
+
+=E2=80=8BFrom man page:
+When  CRCs are enabled via -m crc=3D1, the ftype functionality is always
+enabled. This feature can not be
+=E2=80=8B
+turned off for such filesystem configurations.=E2=80=8B
+
+
+=E2=80=8BSo I think it should not be possible to enter both crc and ftype a=
+t the
+same time - which is the current behaviour. It feels strange a bit to allow
+ftype=3D1 (which does nothing with crc=3D1), but fail on ftype=3D0=E2=80=8B
+
+=E2=80=8BJan=E2=80=8B
+
+
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--047d7ba97ee01891ce052f324ad2
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Thu, Ma=
+r 24, 2016 at 5:33 PM, Eric Sandeen </span><span dir=3D"ltr" style=3D"font-=
+family:arial,sans-serif">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=
+=3D"_blank">sandeen@sandeen.net</a>&gt;</span><span style=3D"font-family:ar=
+ial,sans-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div cla=
+ss=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0px 0p=
+x 0px 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);border=
+-left-style:solid;padding-left:1ex"><span class=3D""><br>
+<br>
+On 3/24/16 6:15 AM, <a href=3D"mailto:jtulak@redhat.com">jtulak@redhat.com<=
+/a> wrote:<br>
+&gt; From: Dave Chinner &lt;<a href=3D"mailto:dchinner@redhat.com">dchinner=
+@redhat.com</a>&gt;<br>
+&gt;<br>
+&gt; Because passing &quot;-n ftype=3D2&quot; should fail.<br>
+<br>
+</span>but passing crc=3D1 ftype=3D1 shouldn&#39;t fail, should it?<br>
+Seems like it will here.<br></blockquote><div><br></div><div><div class=3D"=
+gmail_default" style=3D"font-family:arial,helvetica,sans-serif;display:inli=
+ne">=E2=80=8BFrom man page:</div></div><div><font face=3D"arial, helvetica,=
+ sans-serif">When =C2=A0CRCs are enabled via -m crc=3D1, the ftype func</fo=
+nt><span style=3D"font-family:arial,helvetica,sans-serif">tionality is alwa=
+ys enabled. This feature can not be<div class=3D"gmail_default" style=3D"fo=
+nt-family:arial,helvetica,sans-serif;display:inline">=E2=80=8B=C2=A0</div><=
+/span><div class=3D"gmail_default" style=3D"display:inline"><font face=3D"a=
+rial, helvetica, sans-serif">turned off for such filesystem configurations.=
+=E2=80=8B</font></div>=C2=A0</div><div><br></div><div><div class=3D"gmail_d=
+efault" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BSo I thin=
+k it should not be possible to enter both crc and ftype at the same time - =
+which is the current behaviour. It feels strange a bit to allow ftype=3D1 (=
+which does nothing with crc=3D1), but fail on ftype=3D0=E2=80=8B</div><br><=
+/div></div><div class=3D"gmail_default" style=3D"font-family:arial,helvetic=
+a,sans-serif">=E2=80=8BJan=E2=80=8B</div><br clear=3D"all"><div><br></div>-=
+- <br><div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"=
+><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_bl=
+ank">jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D=
+"_blank">jan@tulak.me</a></div></div></div></div>
+</div></div>
+
+--047d7ba97ee01891ce052f324ad2--
+
+
+--===============0580070764788334427==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0580070764788334427==--
