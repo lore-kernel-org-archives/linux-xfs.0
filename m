@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E2C3C7CA0
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:46:37 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D38607CA7
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 02:26:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 467FBAC002
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:46:34 -0700 (PDT)
-Received: from mail-io0-f194.google.com (mail-io0-f194.google.com
-	[209.85.223.194]) by cuda.sgi.com with ESMTP id
-	52DPCg3eyNdRDmIB (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A330D8F8039
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:26:37 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id gi02G17gwKkAZ156 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:46:32 -0700 (PDT)
-Received: by mail-io0-f194.google.com with SMTP id g185so1361662ioa.0
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:46:32 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:26:36 -0700 (PDT)
+Date: Tue, 29 Mar 2016 00:26:32 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/8] block: make 'struct bvec_iter' not depend on
+	CONFIG_BLOCK
+Message-ID: <20160329072632.GC18920@infradead.org>
+References: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
+	<1458627149-12988-3-git-send-email-ming.lei@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <20160328224710.GC5822@birch.djwong.org>
-References: <CAMuHMdXx80zs5VoA_aYc_wMn37O=fa6oXk-ovteHq0hGQYUUzg@mail.gmail.com>
-	<CAMuHMdW3dfhZVT0e4tiqsbEPjYYA_hGUXQer1bQDeF2Gbs4WJg@mail.gmail.com>
-	<20160328215923.GG11812@dastard>
-	<20160328224710.GC5822@birch.djwong.org>
-Date: Tue, 29 Mar 2016 08:46:32 +0200
-Message-ID: <CAMuHMdURaU0s4H9AzX+8moGWseBRaqfx8svksWzOQyK9TS7LMA@mail.gmail.com>
-Subject: Re: Build regressions/improvements in v4.6-rc1
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Disposition: inline
+In-Reply-To: <1458627149-12988-3-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,26 +31,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Rich Felker <dalias@libc.org>, Cris <linux-cris-kernel@axis.com>, Linux-sh list <linux-sh@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-On Tue, Mar 29, 2016 at 12:47 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> (No idea if it fixes fixes cris, but it passes the six arches that I can
-> actually test on (x86/power/arm)).  The downside is that it does nothing about
+Looks fine,
 
-https://www.kernel.org/pub/tools/crosstool/
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
