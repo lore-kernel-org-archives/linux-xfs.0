@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F02EA7CB2
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 21:00:28 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E2C3C7CA0
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:46:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 578F7AC007
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:00:25 -0700 (PDT)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	xn6C2meIpCJKkp1O for <xfs@oss.sgi.com>;
-	Tue, 29 Mar 2016 19:00:23 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v2 1/5] block, dax: pass blk_dax_ctl through to drivers
-Date: Tue, 29 Mar 2016 19:59:46 -0600
-Message-Id: <1459303190-20072-2-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 467FBAC002
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:46:34 -0700 (PDT)
+Received: from mail-io0-f194.google.com (mail-io0-f194.google.com
+	[209.85.223.194]) by cuda.sgi.com with ESMTP id
+	52DPCg3eyNdRDmIB (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:46:32 -0700 (PDT)
+Received: by mail-io0-f194.google.com with SMTP id g185so1361662ioa.0
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:46:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160328224710.GC5822@birch.djwong.org>
+References: <CAMuHMdXx80zs5VoA_aYc_wMn37O=fa6oXk-ovteHq0hGQYUUzg@mail.gmail.com>
+	<CAMuHMdW3dfhZVT0e4tiqsbEPjYYA_hGUXQer1bQDeF2Gbs4WJg@mail.gmail.com>
+	<20160328215923.GG11812@dastard>
+	<20160328224710.GC5822@birch.djwong.org>
+Date: Tue, 29 Mar 2016 08:46:32 +0200
+Message-ID: <CAMuHMdURaU0s4H9AzX+8moGWseBRaqfx8svksWzOQyK9TS7LMA@mail.gmail.com>
+Subject: Re: Build regressions/improvements in v4.6-rc1
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,179 +30,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Rich Felker <dalias@libc.org>, Cris <linux-cris-kernel@axis.com>, Linux-sh list <linux-sh@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-From: Dan Williams <dan.j.williams@intel.com>
+On Tue, Mar 29, 2016 at 12:47 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> (No idea if it fixes fixes cris, but it passes the six arches that I can
+> actually test on (x86/power/arm)).  The downside is that it does nothing about
 
-This is in preparation for doing badblocks checking against the
-requested sector range in the driver.  Currently we opportunistically
-return as much data that can be "dax'd" starting at the given sector.
-When errors are present we want to limit that range to the first
-encountered error, or fail the dax request if the range encompasses an
-error.
+https://www.kernel.org/pub/tools/crosstool/
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- arch/powerpc/sysdev/axonram.c | 10 +++++-----
- drivers/block/brd.c           |  9 +++++----
- drivers/nvdimm/pmem.c         |  9 +++++----
- drivers/s390/block/dcssblk.c  | 12 ++++++------
- fs/block_dev.c                |  2 +-
- include/linux/blkdev.h        |  3 +--
- 6 files changed, 23 insertions(+), 22 deletions(-)
+Gr{oetje,eeting}s,
 
-diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
-index 0d112b9..d85673f 100644
---- a/arch/powerpc/sysdev/axonram.c
-+++ b/arch/powerpc/sysdev/axonram.c
-@@ -139,17 +139,17 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
- 
- /**
-  * axon_ram_direct_access - direct_access() method for block device
-- * @device, @sector, @data: see block_device_operations method
-+ * @dax: see block_device_operations method
-  */
- static long
--axon_ram_direct_access(struct block_device *device, sector_t sector,
--		       void __pmem **kaddr, pfn_t *pfn)
-+axon_ram_direct_access(struct block_device *device, struct blk_dax_ctl *dax)
- {
-+	sector_t sector = get_start_sect(device) + dax->sector;
- 	struct axon_ram_bank *bank = device->bd_disk->private_data;
- 	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
- 
--	*kaddr = (void __pmem __force *) bank->io_addr + offset;
--	*pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
-+	dax->addr = (void __pmem __force *) bank->io_addr + offset;
-+	dax->pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
- 	return bank->size - offset;
- }
- 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index f7ecc28..e3e4780 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -380,9 +380,10 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
- }
- 
- #ifdef CONFIG_BLK_DEV_RAM_DAX
--static long brd_direct_access(struct block_device *bdev, sector_t sector,
--			void __pmem **kaddr, pfn_t *pfn)
-+static long brd_direct_access(struct block_device *bdev,
-+		struct blk_dax_ctl *dax)
- {
-+	sector_t sector = get_start_sect(bdev) + dax->sector;
- 	struct brd_device *brd = bdev->bd_disk->private_data;
- 	struct page *page;
- 
-@@ -391,8 +392,8 @@ static long brd_direct_access(struct block_device *bdev, sector_t sector,
- 	page = brd_insert_page(brd, sector);
- 	if (!page)
- 		return -ENOSPC;
--	*kaddr = (void __pmem *)page_address(page);
--	*pfn = page_to_pfn_t(page);
-+	dax->addr = (void __pmem *)page_address(page);
-+	dax->pfn = page_to_pfn_t(page);
- 
- 	return PAGE_SIZE;
- }
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index ca5721c..da10554 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -167,14 +167,15 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
- 	return rc;
- }
- 
--static long pmem_direct_access(struct block_device *bdev, sector_t sector,
--		      void __pmem **kaddr, pfn_t *pfn)
-+static long pmem_direct_access(struct block_device *bdev,
-+		struct blk_dax_ctl *dax)
- {
-+	sector_t sector = get_start_sect(bdev) + dax->sector;
- 	struct pmem_device *pmem = bdev->bd_disk->private_data;
- 	resource_size_t offset = sector * 512 + pmem->data_offset;
- 
--	*kaddr = pmem->virt_addr + offset;
--	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
-+	dax->addr = pmem->virt_addr + offset;
-+	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
- 
- 	return pmem->size - pmem->pfn_pad - offset;
- }
-diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-index 1bce9cf..5719c30 100644
---- a/drivers/s390/block/dcssblk.c
-+++ b/drivers/s390/block/dcssblk.c
-@@ -30,8 +30,8 @@ static int dcssblk_open(struct block_device *bdev, fmode_t mode);
- static void dcssblk_release(struct gendisk *disk, fmode_t mode);
- static blk_qc_t dcssblk_make_request(struct request_queue *q,
- 						struct bio *bio);
--static long dcssblk_direct_access(struct block_device *bdev, sector_t secnum,
--			 void __pmem **kaddr, pfn_t *pfn);
-+static long dcssblk_direct_access(struct block_device *bdev,
-+		struct blk_dax_ctl *dax)
- 
- static char dcssblk_segments[DCSSBLK_PARM_LEN] = "\0";
- 
-@@ -882,9 +882,9 @@ fail:
- }
- 
- static long
--dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
--			void __pmem **kaddr, pfn_t *pfn)
-+dcssblk_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
- {
-+	sector_t secnum = get_start_sect(bdev) + dax->sector;
- 	struct dcssblk_dev_info *dev_info;
- 	unsigned long offset, dev_sz;
- 
-@@ -893,8 +893,8 @@ dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
- 		return -ENODEV;
- 	dev_sz = dev_info->end - dev_info->start;
- 	offset = secnum * 512;
--	*kaddr = (void __pmem *) (dev_info->start + offset);
--	*pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
-+	dax->addr = (void __pmem *) (dev_info->start + offset);
-+	dax->pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
- 
- 	return dev_sz - offset;
- }
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 3172c4e..c5837fa 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
- 	sector += get_start_sect(bdev);
- 	if (sector % (PAGE_SIZE / 512))
- 		return -EINVAL;
--	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
-+	avail = ops->direct_access(bdev, dax);
- 	if (!avail)
- 		return -ERANGE;
- 	if (avail > 0 && avail & ~PAGE_MASK)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 7e5d7e0..92f8a1f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1656,8 +1656,7 @@ struct block_device_operations {
- 	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
- 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
- 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
--	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
--			pfn_t *);
-+	long (*direct_access)(struct block_device *, struct blk_dax_ctl *dax);
- 	unsigned int (*check_events) (struct gendisk *disk,
- 				      unsigned int clearing);
- 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
--- 
-2.5.5
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
 
 _______________________________________________
 xfs mailing list
