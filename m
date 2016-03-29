@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B07E67CB2
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 01:56:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 42128AC005
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 23:56:52 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id dYj3HUPDAO1pyIq0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 23:56:50 -0700 (PDT)
-Date: Tue, 29 Mar 2016 23:56:46 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160330065646.GA13123@infradead.org>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<20160330063415.GA2132@infradead.org>
-	<1459320877.4102.3.camel@kernel.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CF0367CA0
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 02:21:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A26C5304032
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:21:32 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id KHBBzE3rbfNA3bja (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:21:30 -0700 (PDT)
+Date: Tue, 29 Mar 2016 09:21:28 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: don't hand out pNFS layouts for reflink inodes
+Message-ID: <20160329072128.GA14940@lst.de>
+References: <1456936485-21940-1-git-send-email-hch@lst.de>
+	<20160328195140.GB5360@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1459320877.4102.3.camel@kernel.org>
+In-Reply-To: <20160328195140.GB5360@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +30,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vishal Verma <vishal@kernel.org>
-Cc: linux-block@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@fb.com>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Wed, Mar 30, 2016 at 12:54:37AM -0600, Vishal Verma wrote:
-> On Tue, 2016-03-29 at 23:34 -0700, Christoph Hellwig wrote:
-> > Hi Vishal,
-> > 
-> > still NAK to calling the direct I/O code directly from the dax code.
+On Mon, Mar 28, 2016 at 12:51:40PM -0700, Darrick J. Wong wrote:
+> >  	/*
+> > +	 * The pNFS block layout spec actually supports reflink like
+> > +	 * functionality, but the Linux pNFS server doesn't implement it yet.
+> > +	 */
+> > +	if (!xfs_is_reflink_inode(ip))
+> > +		return -ENXIO;
 > 
-> Hm, I thought this was what you meant -- do the fallback/retry attempts
-> at the callers of dax_do_io instead of the new dax wrapper function..
-> Did I misunderstand you?
+> /me isn't familiar with pNFS, but doesn't this make it so that
+> xfs_fs_map_blocks /only/ works on reflinked files?  Maybe I'm misreading the
+> comment, but it sounds to me like Linux doesn't support reflinked files over
+> pNFS and therefore we want to disable this iomapping functionality any time we
+> find a reflinked file.
+> 
+> But maybe there's a subtlety here that I'm missing?
 
-Sorry, it is.  I misread fs/block_dev.c as fs/dax.c before my first
-coffee this morning.  I'll properly review the series in the afternoon..
+You jsut missed me fat fingering the check :)
+
+Btw, we'll need something similar to prevent swapfiles which just use
+->bmap, but unfortunately swap just checks for the existences of method,
+so I'll probably have to do some VFS changes to properly support that.
 
 _______________________________________________
 xfs mailing list
