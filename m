@@ -1,31 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF09A7CA0
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 03:53:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AD3548F8039
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:53:28 -0700 (PDT)
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id TNvHKbjEwXK3XnIU
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:53:25 -0700 (PDT)
-Received: from mail-yw0-f177.google.com ([209.85.161.177])
-	by youngberry.canonical.com with esmtpsa
-	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
-	(envelope-from <ming.lei@canonical.com>) id 1akpOt-0004OG-O9
-	for xfs@oss.sgi.com; Tue, 29 Mar 2016 08:53:23 +0000
-Received: by mail-yw0-f177.google.com with SMTP id h65so10246392ywe.0
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:53:23 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2821D7CA0
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 14:28:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CD582304062
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 12:28:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4rGwkFNFd7CZrEXq (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 12:28:30 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 9D43746201
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:28:29 +0000 (UTC)
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u2TJSR6W015119
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 15:28:29 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: disallow rw remount on fs with unknown ro-compat features
+Message-ID: <56FAD75C.80502@redhat.com>
+Date: Tue, 29 Mar 2016 14:28:28 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160329072617.GB18920@infradead.org>
-References: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
-	<1458627149-12988-2-git-send-email-ming.lei@canonical.com>
-	<20160329072617.GB18920@infradead.org>
-Date: Tue, 29 Mar 2016 16:53:22 +0800
-Message-ID: <CACVXFVOmyJJjuNNyH89VM3jwVJA0zkA1H-JZtHoX1stxov4C2A@mail.gmail.com>
-Subject: Re: [PATCH 1/8] block: move bvec iterator into
-	include/linux/bvec_iter.h
-From: Ming Lei <ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,40 +36,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <boaz@plexistor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Mar 29, 2016 at 3:26 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> --- a/include/linux/bio.h
->> +++ b/include/linux/bio.h
->> @@ -31,6 +31,7 @@
->>
->>  /* struct bio, bio_vec and BIO_* flags are defined in blk_types.h */
->>  #include <linux/blk_types.h>
->> +#include <linux/bvec_iter.h>
->>
->>  #define BIO_DEBUG
->>
->> @@ -40,10 +41,6 @@
->>  #define BIO_BUG_ON
->>  #endif
->>
->> -#define BIO_MAX_PAGES                256
->> -#define BIO_MAX_SIZE         (BIO_MAX_PAGES << PAGE_CACHE_SHIFT)
->> -#define BIO_MAX_SECTORS              (BIO_MAX_SIZE >> 9)
->
-> I see no reason why these should be moved out of bio.h.
+Today, a kernel which refuses to mount a filesystem read-write
+due to unknown ro-compat features can still transition to read-write
+via the remount path.  The old kernel is most likely none the wiser,
+because it's unaware of the new feature, and isn't using it.  However,
+writing to the filesystem may well corrupt metadata related to that
+new feature, and moving to a newer kernel which understand the feature
+will have problems.
 
-You are right, these should be kept in bio.h.
+Right now the only ro-compat feature we have is the free inode btree,
+which showed up in v3.16.  It would be good to push this back to
+all the active stable kernels, I think, so that if anyone is using
+newer mkfs (which enables the finobt feature) with older kernel
+releases, they'll be protected.
 
-Thanks for your review!
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Cc: stable@vger.kernel.org
+---
 
->
-> Otherwise this looks fine to me.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d760934..ca058a1 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1276,6 +1276,16 @@ xfs_fs_remount(
+ 			return -EINVAL;
+ 		}
+ 
++		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++		    xfs_sb_has_ro_compat_feature(sbp,
++					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
++				(sbp->sb_features_ro_compat &
++					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
++			return -EINVAL;
++		}
++
+ 		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+ 
+ 		/*
 
 _______________________________________________
 xfs mailing list
