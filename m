@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FD627CA0
-	for <xfs@oss.sgi.com>; Sun, 27 Mar 2016 08:15:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C55D1AC001
-	for <xfs@oss.sgi.com>; Sun, 27 Mar 2016 06:15:42 -0700 (PDT)
-Received: from brightrain.aerifal.cx (216-12-86-13.cv.mvl.ntelos.net
-	[216.12.86.13]) by cuda.sgi.com with ESMTP id 4lnlU7dAgxvl6iTQ
-	for <xfs@oss.sgi.com>; Sun, 27 Mar 2016 06:15:37 -0700 (PDT)
-Date: Sun, 27 Mar 2016 09:15:30 -0400
-From: Rich Felker <dalias@libc.org>
-Subject: Re: Build regressions/improvements in v4.6-rc1
-Message-ID: <20160327131530.GX21636@brightrain.aerifal.cx>
-References: <CAMuHMdXx80zs5VoA_aYc_wMn37O=fa6oXk-ovteHq0hGQYUUzg@mail.gmail.com>
-	<CAMuHMdW3dfhZVT0e4tiqsbEPjYYA_hGUXQer1bQDeF2Gbs4WJg@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4F0097CA4
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 02:31:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 20C9D304032
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:31:46 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id CqqQZkOIiN2DXHW2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:31:44 -0700 (PDT)
+Date: Tue, 29 Mar 2016 00:31:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 8/8] block: bio: remove BIO_MAX_SIZE
+Message-ID: <20160329073141.GI18920@infradead.org>
+References: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
+	<1458627149-12988-9-git-send-email-ming.lei@canonical.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAMuHMdW3dfhZVT0e4tiqsbEPjYYA_hGUXQer1bQDeF2Gbs4WJg@mail.gmail.com>
+In-Reply-To: <1458627149-12988-9-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Linux-sh list <linux-sh@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Cris <linux-cris-kernel@axis.com>, xfs@oss.sgi.com
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-On Sun, Mar 27, 2016 at 02:43:24PM +0200, Geert Uytterhoeven wrote:
-> On Sun, Mar 27, 2016 at 2:39 PM, Geert Uytterhoeven
-> <geert@linux-m68k.org> wrote:
-> > Below is the list of build error/warning regressions/improvements in
-> > v4.6-rc1[1] compared to v4.5[2].
-> >
-> > Summarized:
-> >   - build errors: +9/-6
-> 
-> > [1] http://kisskb.ellerman.id.au/kisskb/head/10114/ (all 262 configs)
-> > [2] http://kisskb.ellerman.id.au/kisskb/head/10047/ (all 262 configs)
-> 
-> > 9 error regressions:
-> >   + /home/kisskb/slave/src/fs/xfs/xfs_ondisk.h: error: call to
-> > '__compiletime_assert_79' declared with attribute error: XFS:
-> > sizeof(xfs_attr_shortform_t) is wrong, expected 8:  => 79:2
-> 
-> cris-allyesconfig, cris-allmodconfig
-> 
-> >   + error: smp-shx3.c: undefined reference to `local_timer_setup':  =>
-> > .text+0xadec)
-> 
-> shx3_defconfig
+Looks fine,
 
-Thanks for catching this. I've prepared a patch and I'm checking
-whether it fixes the problem.
-
-Rich
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
