@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB20B7CA1
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 02:27:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D9F7AC003
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:27:47 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 32A5D7CBB
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 02:30:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F05198F8037
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:30:01 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id REWALRIXZyPVsJCk (version=TLSv1.2
+	ESMTP id gk9RR5aLi0i4Rixw (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:27:46 -0700 (PDT)
-Date: Tue, 29 Mar 2016 00:27:43 -0700
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 00:29:59 -0700 (PDT)
+Date: Tue, 29 Mar 2016 00:29:56 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/8] iov_iter: use bvec iterator to implement
-	iterate_bvec()
-Message-ID: <20160329072743.GE18920@infradead.org>
+Subject: Re: [PATCH 6/8] block: bio: remove BIO_MAX_SECTORS
+Message-ID: <20160329072956.GG18920@infradead.org>
 References: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
-	<1458627149-12988-5-git-send-email-ming.lei@canonical.com>
+	<1458627149-12988-7-git-send-email-ming.lei@canonical.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1458627149-12988-5-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1458627149-12988-7-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,7 +33,9 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ming Lei <ming.lei@canonical.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-This looks fine to me, but I'd really like to see Al review it as well.
+Looks fine,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
