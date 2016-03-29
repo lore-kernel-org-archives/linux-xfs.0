@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6C3957CB5
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 03:09:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 21C3F8F8035
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:09:33 -0700 (PDT)
-Received: from zimbra13.linbit.com (zimbra13.linbit.com [212.69.166.240]) by
-	cuda.sgi.com with ESMTP id Wi8fqrhLRGF4Yrwf (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id F3A327CA7
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 12:34:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BE7798F8035
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 10:34:23 -0700 (PDT)
+Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de
+	[81.169.146.160]) by cuda.sgi.com with ESMTP id
+	uxrOQQVhKG7CBdy5 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:09:25 -0700 (PDT)
-Date: Tue, 29 Mar 2016 10:09:21 +0200
-From: Lars Ellenberg <lars.ellenberg@linbit.com>
-Subject: Re: [PATCH 7/8] block: drbd: avoid to use BIO_MAX_SIZE
-Message-ID: <20160329080921.GG15579@soda.linbit>
-References: <1458627149-12988-1-git-send-email-ming.lei@canonical.com>
-	<1458627149-12988-8-git-send-email-ming.lei@canonical.com>
-	<20160329073124.GH18920@infradead.org>
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 10:34:21 -0700 (PDT)
+Received: from probook (aftr-185-17-206-254.dynamic.mnet-online.de
+	[185.17.206.254]) by smtp.strato.de (RZmta 37.22 DYNA|AUTH)
+	with ESMTPSA id 602a6as2THYJtXP
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1
+	with 521 ECDH bits, eq. 15360 bits RSA))
+	(Client did not present a certificate) for <xfs@oss.sgi.com>;
+	Tue, 29 Mar 2016 19:34:19 +0200 (CEST)
+Date: Tue, 29 Mar 2016 19:34:19 +0200
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: BUG in xfs_trans_binval
+Message-ID: <20160329173419.GA18970@aepfle.de>
+References: <20160329171553.GA17885@aepfle.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160329073124.GH18920@infradead.org>
+In-Reply-To: <20160329171553.GA17885@aepfle.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,46 +37,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Philipp Reisner <philipp.reisner@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
+To: xfs@oss.sgi.com
 
-On Tue, Mar 29, 2016 at 12:31:24AM -0700, Christoph Hellwig wrote:
-> On Tue, Mar 22, 2016 at 02:12:28PM +0800, Ming Lei wrote:
-> > drbd is the only user of BIO_MAX_SIZE, so use BIO_MAX_PAGES
-> > instead.
-> 
-> That whole code block looks completely bogus to me, although your patch
-> doesn't make it any worse.
-> 
-> I/O size for a network protocol shouldn't dependend on the number of
-> vectors in a kernel internal structure.
+On Tue, Mar 29, Olaf Hering wrote:
 
-That's correct.  But we needed some limit there.
-Initially, up until I changed it like six years ago iirc,
-the receiving side would receive into a single bio.
-So limiting us to what a single bio could usually handle
-seemed like a good idea at the time.
+> "_xfs_buf_find: Block out of range: block 0x81ffff3f8, EOFS 0x7fffd000"
 
-Today, we should be able to handle 128 MiB easily,
-maybe more. But that would require a protocol bump
-to stay backwards compatible.
 
-The part about "architecture not supported",
-if our limit (1 MiB) is bigger than the "system" limit:
-Never met that in real life. Probably not even possible.
-Just a paranoia on my side: what if.
-If that would have happened somewhere,
-on some strange architecture or configuration,
-I wanted to know about that.
-Best way: don't even compile.
+root@optiplex:~ # env -i /sbin/xfs_repair -n /dev/disk/by-label/WD15_optiplx
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+agi unlinked bucket 0 is 40829376 in ag 1 (inode=577700288)
+sb_icount 3932864, counted 4365696
+sb_ifree 3488, counted 96
+sb_fdblocks 55910963, counted 53073251
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+entry contains illegal value in attribute named SGI_ACL_FILE or SGI_ACL_DEFAULT
+bad security value for attribute entry 0 in attr block 0, inode 1710299980
+problem with attribute contents in inode 1710299980
+would clear attr fork
+bad nblocks 2 for inode 1710299980, would reset to 1
+bad anextents 1 for inode 1710299980, would reset to 0
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+disconnected inode 577700288, would move to lost+found
+Phase 7 - verify link counts...
+No modify flag set, skipping filesystem flush and exiting.
 
-> Well, getting rid of BIO_MAX_SIZE is worth it, so:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks,
-
-    Lars Ellenberg
+Olaf
 
 _______________________________________________
 xfs mailing list
