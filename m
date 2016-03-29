@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CC7237CA3
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 18:17:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A0118304051
-	for <xfs@oss.sgi.com>; Thu, 24 Mar 2016 16:17:55 -0700 (PDT)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	EeLyOKigRqy8aAZg for <xfs@oss.sgi.com>;
-	Thu, 24 Mar 2016 16:17:54 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH 1/5] block, dax: pass blk_dax_ctl through to drivers
-Date: Thu, 24 Mar 2016 17:17:26 -0600
-Message-Id: <1458861450-17705-2-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 456447CA4
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 13:57:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0410F304062
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 11:57:21 -0700 (PDT)
+Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
+	skN4frLI7uuKEcZQ for <xfs@oss.sgi.com>;
+	Tue, 29 Mar 2016 11:57:21 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
+	dax_clear_sectors
+Date: Tue, 29 Mar 2016 18:57:16 +0000
+Message-ID: <1459277829.6412.3.camel@intel.com>
 References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
+	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
+	<CAPcyv4iKK=1Nhz4QqEkhc4gum+UvUS4a=+Sza2zSa1Kyrth41w@mail.gmail.com>
+	<1458939796.5501.8.camel@intel.com>
+	<CAPcyv4jWqVcav7dQPh7WHpqB6QDrCezO5jbd9QW9xH3zsU4C1w@mail.gmail.com>
+	<1459195288.15523.3.camel@intel.com>
+	<CAPcyv4jFwh679arTNoUzLZpJCSoR+KhMdEmwqddCU1RWOrjD=Q@mail.gmail.com>
+In-Reply-To: <CAPcyv4jFwh679arTNoUzLZpJCSoR+KhMdEmwqddCU1RWOrjD=Q@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <64C5EAC5F614C94A96594C71EC7AFD03@intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,183 +32,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
 
-From: Dan Williams <dan.j.williams@intel.com>
-
-From: Dan Williams <dan.j.williams@intel.com>
-
-This is in preparation for doing badblocks checking against the
-requested sector range in the driver.  Currently we opportunistically
-return as much data that can be "dax'd" starting at the given sector.
-When errors are present we want to limit that range to the first
-encountered error, or fail the dax request if the range encompasses an
-error.
-
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- arch/powerpc/sysdev/axonram.c | 10 +++++-----
- drivers/block/brd.c           |  9 +++++----
- drivers/nvdimm/pmem.c         |  9 +++++----
- drivers/s390/block/dcssblk.c  | 12 ++++++------
- fs/block_dev.c                |  2 +-
- include/linux/blkdev.h        |  3 +--
- 6 files changed, 23 insertions(+), 22 deletions(-)
-
-diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
-index 0d112b9..d85673f 100644
---- a/arch/powerpc/sysdev/axonram.c
-+++ b/arch/powerpc/sysdev/axonram.c
-@@ -139,17 +139,17 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
- 
- /**
-  * axon_ram_direct_access - direct_access() method for block device
-- * @device, @sector, @data: see block_device_operations method
-+ * @dax: see block_device_operations method
-  */
- static long
--axon_ram_direct_access(struct block_device *device, sector_t sector,
--		       void __pmem **kaddr, pfn_t *pfn)
-+axon_ram_direct_access(struct block_device *device, struct blk_dax_ctl *dax)
- {
-+	sector_t sector = get_start_sect(device) + dax->sector;
- 	struct axon_ram_bank *bank = device->bd_disk->private_data;
- 	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
- 
--	*kaddr = (void __pmem __force *) bank->io_addr + offset;
--	*pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
-+	dax->addr = (void __pmem __force *) bank->io_addr + offset;
-+	dax->pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
- 	return bank->size - offset;
- }
- 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index cb27190..0b8bcfa 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -380,9 +380,10 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
- }
- 
- #ifdef CONFIG_BLK_DEV_RAM_DAX
--static long brd_direct_access(struct block_device *bdev, sector_t sector,
--			void __pmem **kaddr, pfn_t *pfn)
-+static long brd_direct_access(struct block_device *bdev,
-+		struct blk_dax_ctl *dax)
- {
-+	sector_t sector = get_start_sect(bdev) + dax->sector;
- 	struct brd_device *brd = bdev->bd_disk->private_data;
- 	struct page *page;
- 
-@@ -391,8 +392,8 @@ static long brd_direct_access(struct block_device *bdev, sector_t sector,
- 	page = brd_insert_page(brd, sector);
- 	if (!page)
- 		return -ENOSPC;
--	*kaddr = (void __pmem *)page_address(page);
--	*pfn = page_to_pfn_t(page);
-+	dax->addr = (void __pmem *)page_address(page);
-+	dax->pfn = page_to_pfn_t(page);
- 
- 	return PAGE_SIZE;
- }
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index ca5721c..da10554 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -167,14 +167,15 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
- 	return rc;
- }
- 
--static long pmem_direct_access(struct block_device *bdev, sector_t sector,
--		      void __pmem **kaddr, pfn_t *pfn)
-+static long pmem_direct_access(struct block_device *bdev,
-+		struct blk_dax_ctl *dax)
- {
-+	sector_t sector = get_start_sect(bdev) + dax->sector;
- 	struct pmem_device *pmem = bdev->bd_disk->private_data;
- 	resource_size_t offset = sector * 512 + pmem->data_offset;
- 
--	*kaddr = pmem->virt_addr + offset;
--	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
-+	dax->addr = pmem->virt_addr + offset;
-+	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
- 
- 	return pmem->size - pmem->pfn_pad - offset;
- }
-diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-index ce7b701..e5bda68 100644
---- a/drivers/s390/block/dcssblk.c
-+++ b/drivers/s390/block/dcssblk.c
-@@ -30,8 +30,8 @@ static int dcssblk_open(struct block_device *bdev, fmode_t mode);
- static void dcssblk_release(struct gendisk *disk, fmode_t mode);
- static blk_qc_t dcssblk_make_request(struct request_queue *q,
- 						struct bio *bio);
--static long dcssblk_direct_access(struct block_device *bdev, sector_t secnum,
--			 void __pmem **kaddr, pfn_t *pfn);
-+static long dcssblk_direct_access(struct block_device *bdev,
-+		struct blk_dax_ctl *dax)
- 
- static char dcssblk_segments[DCSSBLK_PARM_LEN] = "\0";
- 
-@@ -883,9 +883,9 @@ fail:
- }
- 
- static long
--dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
--			void __pmem **kaddr, pfn_t *pfn)
-+dcssblk_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
- {
-+	sector_t secnum = get_start_sect(bdev) + dax->sector;
- 	struct dcssblk_dev_info *dev_info;
- 	unsigned long offset, dev_sz;
- 
-@@ -894,8 +894,8 @@ dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
- 		return -ENODEV;
- 	dev_sz = dev_info->end - dev_info->start;
- 	offset = secnum * 512;
--	*kaddr = (void __pmem *) (dev_info->start + offset);
--	*pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
-+	dax->addr = (void __pmem *) (dev_info->start + offset);
-+	dax->pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
- 
- 	return dev_sz - offset;
- }
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 826b164..9c0765b 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
- 	sector += get_start_sect(bdev);
- 	if (sector % (PAGE_SIZE / 512))
- 		return -EINVAL;
--	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
-+	avail = ops->direct_access(bdev, dax);
- 	if (!avail)
- 		return -ERANGE;
- 	if (avail > 0 && avail & ~PAGE_MASK)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 413c84f..f8c65b8 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1653,8 +1653,7 @@ struct block_device_operations {
- 	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
- 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
- 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
--	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
--			pfn_t *);
-+	long (*direct_access)(struct block_device *, struct blk_dax_ctl *dax);
- 	unsigned int (*check_events) (struct gendisk *disk,
- 				      unsigned int clearing);
- 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
--- 
-2.5.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCAyMDE2LTAzLTI4IGF0IDE2OjM0IC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQoN
+Cjw+DQoNCj4gU2VlbXMga2luZCBvZiBzYWQgdG8gZmFpbCB0aGUgZmF1bHQgZHVlIHRvIGEgYmFk
+IGJsb2NrIHdoZW4gd2Ugd2VyZQ0KPiBnb2luZyB0byB6ZXJvIGl0IGFueXdheSwgcmlnaHQ/wqDC
+oEknbSBub3Qgc2VlaW5nIGEgY29tcGVsbGluZyByZWFzb24gdG8NCj4ga2VlcCBhbnkgemVyb2lu
+ZyBpbiBmcy9kYXguYy4NCg0KQWdyZWVkIC0gYnV0IGhvdyBkbyB3ZSBkbyB0aGlzPyBjbGVhcl9w
+bWVtIG5lZWRzIHRvIGJlIGFibGUgdG8gY2xlYXIgYW4NCmFyYml0cmFyeSBudW1iZXIgb2YgYnl0
+ZXMsIGJ1dCB0byBnbyB0aHJvdWdoIHRoZSBkcml2ZXIsIHdlJ2QgbmVlZCB0bw0Kc2VuZCBkb3du
+IGEgYmlvPyBJZiBvbmx5IHRoZSBkcml2ZXIgaGFkIGFuIHJ3X2J5dGVzIGxpa2UgaW50ZXJmYWNl
+IHRoYXQNCmNvdWxkIGJlIHVzZWQgYnkgYW55b25lLi4uIDopCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
