@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 83DFE7CA2
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:09:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DDD9BAC001
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 17:08:57 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id DxwOMpaxDExJc2b7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 17:08:50 -0700 (PDT)
-Date: Tue, 29 Mar 2016 17:08:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't hand out pNFS layouts for reflink inodes
-Message-ID: <20160330000842.GD5822@birch.djwong.org>
-References: <1456936485-21940-1-git-send-email-hch@lst.de>
-	<20160328195140.GB5360@birch.djwong.org>
-	<20160329072128.GA14940@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160329072128.GA14940@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id ED7497CAE
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 21:00:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D641AC007
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:00:26 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	SnGHNSsTkxoGCGdV for <xfs@oss.sgi.com>;
+	Tue, 29 Mar 2016 19:00:24 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+Date: Tue, 29 Mar 2016 19:59:50 -0600
+Message-Id: <1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +22,216 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Tue, Mar 29, 2016 at 09:21:28AM +0200, Christoph Hellwig wrote:
-> On Mon, Mar 28, 2016 at 12:51:40PM -0700, Darrick J. Wong wrote:
-> > >  	/*
-> > > +	 * The pNFS block layout spec actually supports reflink like
-> > > +	 * functionality, but the Linux pNFS server doesn't implement it yet.
-> > > +	 */
-> > > +	if (!xfs_is_reflink_inode(ip))
-> > > +		return -ENXIO;
-> > 
-> > /me isn't familiar with pNFS, but doesn't this make it so that
-> > xfs_fs_map_blocks /only/ works on reflinked files?  Maybe I'm misreading the
-> > comment, but it sounds to me like Linux doesn't support reflinked files over
-> > pNFS and therefore we want to disable this iomapping functionality any time we
-> > find a reflinked file.
-> > 
-> > But maybe there's a subtlety here that I'm missing?
-> 
-> You jsut missed me fat fingering the check :)
+dax_do_io (called for read() or write() for a dax file system) may fail
+in the presence of bad blocks or media errors. Since we expect that a
+write should clear media errors on nvdimms, make dax_do_io fall back to
+the direct_IO path, which will send down a bio to the driver, which can
+then attempt to clear the error.
 
-Fair enough, I'll integrate this patch, but with:
+Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+---
+ fs/block_dev.c     | 17 ++++++++++++++---
+ fs/ext2/inode.c    | 22 +++++++++++++++-------
+ fs/ext4/indirect.c | 18 +++++++++++++-----
+ fs/ext4/inode.c    | 21 ++++++++++++++-------
+ fs/xfs/xfs_aops.c  | 14 ++++++++++++--
+ 5 files changed, 68 insertions(+), 24 deletions(-)
 
-if (xfs_is_reflink_inode(ip))
-	return -ENXIO;
-
-> Btw, we'll need something similar to prevent swapfiles which just use
-> ->bmap, but unfortunately swap just checks for the existences of method,
-> so I'll probably have to do some VFS changes to properly support that.
-
-Yes, please.  ocfs2 will gladly let you call swapon on a reflinked file,
-and totally fails to CoW it properly. :)
-
---D
-
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index c5837fa..d6113b9 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -166,13 +166,24 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
+ {
+ 	struct file *file = iocb->ki_filp;
+ 	struct inode *inode = bdev_file_inode(file);
++	ssize_t ret, ret_saved = 0;
+ 
+-	if (IS_DAX(inode))
+-		return dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
++	if (IS_DAX(inode)) {
++		ret = dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
+ 				NULL, DIO_SKIP_DIO_COUNT);
+-	return __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
++		if (ret == -EIO && (iov_iter_rw(iter) == WRITE))
++			ret_saved = ret;
++		else
++			return ret;
++	}
++
++	ret = __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
+ 				    blkdev_get_block, NULL, NULL,
+ 				    DIO_SKIP_DIO_COUNT);
++	if (ret < 0 && ret_saved)
++		return ret_saved;
++
++	return ret;
+ }
+ 
+ int __sync_blockdev(struct block_device *bdev, int wait)
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 824f249..64792c6 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -859,14 +859,22 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
+ 	struct address_space *mapping = file->f_mapping;
+ 	struct inode *inode = mapping->host;
+ 	size_t count = iov_iter_count(iter);
+-	ssize_t ret;
++	ssize_t ret, ret_saved = 0;
+ 
+-	if (IS_DAX(inode))
+-		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block, NULL,
+-				DIO_LOCKING);
+-	else
+-		ret = blockdev_direct_IO(iocb, inode, iter, offset,
+-					 ext2_get_block);
++	if (IS_DAX(inode)) {
++		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block,
++				NULL, DIO_LOCKING | DIO_SKIP_HOLES);
++		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
++			ret_saved = ret;
++		else
++			goto out;
++	}
++
++	ret = blockdev_direct_IO(iocb, inode, iter, offset, ext2_get_block);
++	if (ret < 0 && ret_saved)
++		ret = ret_saved;
++
++ out:
+ 	if (ret < 0 && iov_iter_rw(iter) == WRITE)
+ 		ext2_write_failed(mapping, offset + count);
+ 	return ret;
+diff --git a/fs/ext4/indirect.c b/fs/ext4/indirect.c
+index 3027fa6..798f341 100644
+--- a/fs/ext4/indirect.c
++++ b/fs/ext4/indirect.c
+@@ -716,14 +716,22 @@ retry:
+ 						   NULL, NULL, 0);
+ 		inode_dio_end(inode);
+ 	} else {
++		ssize_t ret_saved = 0;
++
+ locked:
+-		if (IS_DAX(inode))
++		if (IS_DAX(inode)) {
+ 			ret = dax_do_io(iocb, inode, iter, offset,
+ 					ext4_dio_get_block, NULL, DIO_LOCKING);
+-		else
+-			ret = blockdev_direct_IO(iocb, inode, iter, offset,
+-						 ext4_dio_get_block);
+-
++			if (ret == -EIO && iov_iter_rw(iter) == WRITE)
++				ret_saved = ret;
++			else
++				goto skip_dio;
++		}
++		ret = blockdev_direct_IO(iocb, inode, iter, offset,
++					 ext4_get_block);
++		if (ret < 0 && ret_saved)
++			ret = ret_saved;
++skip_dio:
+ 		if (unlikely(iov_iter_rw(iter) == WRITE && ret < 0)) {
+ 			loff_t isize = i_size_read(inode);
+ 			loff_t end = offset + count;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index dab84a2..27f07c2 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3341,7 +3341,7 @@ static ssize_t ext4_ext_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
+ {
+ 	struct file *file = iocb->ki_filp;
+ 	struct inode *inode = file->f_mapping->host;
+-	ssize_t ret;
++	ssize_t ret, ret_saved = 0;
+ 	size_t count = iov_iter_count(iter);
+ 	int overwrite = 0;
+ 	get_block_t *get_block_func = NULL;
+@@ -3401,15 +3401,22 @@ static ssize_t ext4_ext_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
+ #ifdef CONFIG_EXT4_FS_ENCRYPTION
+ 	BUG_ON(ext4_encrypted_inode(inode) && S_ISREG(inode->i_mode));
+ #endif
+-	if (IS_DAX(inode))
++	if (IS_DAX(inode)) {
+ 		ret = dax_do_io(iocb, inode, iter, offset, get_block_func,
+ 				ext4_end_io_dio, dio_flags);
+-	else
+-		ret = __blockdev_direct_IO(iocb, inode,
+-					   inode->i_sb->s_bdev, iter, offset,
+-					   get_block_func,
+-					   ext4_end_io_dio, NULL, dio_flags);
++		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
++			ret_saved = ret;
++		else
++			goto skip_dio;
++	}
+ 
++	ret = __blockdev_direct_IO(iocb, inode,
++				   inode->i_sb->s_bdev, iter, offset,
++				   get_block_func,
++				   ext4_end_io_dio, NULL, dio_flags);
++	if (ret < 0 && ret_saved)
++		ret = ret_saved;
++ skip_dio:
+ 	if (ret > 0 && !overwrite && ext4_test_inode_state(inode,
+ 						EXT4_STATE_DIO_UNWRITTEN)) {
+ 		int err;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index d445a64..7cfcf86 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1413,6 +1413,7 @@ xfs_vm_direct_IO(
+ 	dio_iodone_t		*endio = NULL;
+ 	int			flags = 0;
+ 	struct block_device	*bdev;
++	ssize_t 		ret, ret_saved = 0;
+ 
+ 	if (iov_iter_rw(iter) == WRITE) {
+ 		endio = xfs_end_io_direct_write;
+@@ -1420,13 +1421,22 @@ xfs_vm_direct_IO(
+ 	}
+ 
+ 	if (IS_DAX(inode)) {
+-		return dax_do_io(iocb, inode, iter, offset,
++		ret = dax_do_io(iocb, inode, iter, offset,
+ 				 xfs_get_blocks_direct, endio, 0);
++		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
++			ret_saved = ret;
++		else
++			return ret;
+ 	}
+ 
+ 	bdev = xfs_find_bdev_for_inode(inode);
+-	return  __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
++	ret = __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
+ 			xfs_get_blocks_direct, endio, NULL, flags);
++
++	if (ret < 0 && ret_saved)
++		ret = ret_saved;
++
++	return ret;
+ }
+ 
+ /*
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
