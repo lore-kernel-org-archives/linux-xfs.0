@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C80A77CA0
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 13:05:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B566AC002
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 11:05:16 -0700 (PDT)
-Received: from mail-pf0-f177.google.com (mail-pf0-f177.google.com
-	[209.85.192.177]) by cuda.sgi.com with ESMTP id
-	XNF8zfRVHaSAqDfF (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 25 Mar 2016 11:05:09 -0700 (PDT)
-Received: by mail-pf0-f177.google.com with SMTP id x3so87267626pfb.1
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 11:05:09 -0700 (PDT)
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: [PATCH] xfs: mute some sparse warnings
-Date: Sat, 26 Mar 2016 02:04:02 +0800
-Message-Id: <1458929042-23991-1-git-send-email-guaneryu@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id CFBCC7CAE
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 21:00:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B691AC005
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 19:00:25 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	xPDALQ9j9mLSoZkV for <xfs@oss.sgi.com>;
+	Tue, 29 Mar 2016 19:00:24 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v2 4/5] dax: use sb_issue_zerout instead of calling
+	dax_clear_sectors
+Date: Tue, 29 Mar 2016 19:59:49 -0600
+Message-Id: <1459303190-20072-5-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,62 +28,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <guaneryu@gmail.com>
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Al Viro <viro@zeniv.linux.org.uk>
 
-These three warnings are fixed:
+From: Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-fs/xfs/xfs_inode.c:1033:44: warning: Using plain integer as NULL pointer
-fs/xfs/xfs_inode_item.c:525:20: warning: context imbalance in 'xfs_inode_item_push' - unexpected unlock
-fs/xfs/xfs_dquot.c:696:1: warning: symbol 'xfs_dq_get_next_id' was not declared. Should it be static?
+dax_clear_sectors() cannot handle poisoned blocks.  These must be
+zeroed using the BIO interface instead.  Convert ext2 and XFS to use
+only sb_issue_zerout().
 
-Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
+[vishal: Also remove the dax_clear_sectors function entirely]
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
 ---
- fs/xfs/xfs_dquot.c      | 2 +-
- fs/xfs/xfs_inode.c      | 2 +-
- fs/xfs/xfs_inode_item.c | 3 ++-
- 3 files changed, 4 insertions(+), 3 deletions(-)
+ fs/dax.c               | 32 --------------------------------
+ fs/ext2/inode.c        |  7 +++----
+ fs/xfs/xfs_bmap_util.c | 15 ++++-----------
+ include/linux/dax.h    |  1 -
+ 4 files changed, 7 insertions(+), 48 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 316b2a1..8f51370 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -692,7 +692,7 @@ error0:
-  * end of the chunk, skip ahead to first id in next allocated chunk
-  * using the SEEK_DATA interface.
-  */
--int
-+static int
- xfs_dq_get_next_id(
- 	xfs_mount_t		*mp,
- 	uint			type,
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 96f606d..1445a99 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1030,7 +1030,7 @@ xfs_dir_ialloc(
- 			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
- 		}
+diff --git a/fs/dax.c b/fs/dax.c
+index ec6417b..f4ac5f2 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -78,38 +78,6 @@ struct page *read_dax_sector(struct block_device *bdev, sector_t n)
+ 	return page;
+ }
  
--		code = xfs_trans_roll(&tp, 0);
-+		code = xfs_trans_roll(&tp, NULL);
- 		if (committed != NULL)
- 			*committed = 1;
+-/*
+- * dax_clear_sectors() is called from within transaction context from XFS,
+- * and hence this means the stack from this point must follow GFP_NOFS
+- * semantics for all operations.
+- */
+-int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size)
+-{
+-	struct blk_dax_ctl dax = {
+-		.sector = _sector,
+-		.size = _size,
+-	};
+-
+-	might_sleep();
+-	do {
+-		long count, sz;
+-
+-		count = dax_map_atomic(bdev, &dax);
+-		if (count < 0)
+-			return count;
+-		sz = min_t(long, count, SZ_128K);
+-		clear_pmem(dax.addr, sz);
+-		dax.size -= sz;
+-		dax.sector += sz / 512;
+-		dax_unmap_atomic(bdev, &dax);
+-		cond_resched();
+-	} while (dax.size);
+-
+-	wmb_pmem();
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(dax_clear_sectors);
+-
+ /* the clear_pmem() calls are ordered by a wmb_pmem() in the caller */
+ static void dax_new_buf(void __pmem *addr, unsigned size, unsigned first,
+ 		loff_t pos, loff_t end)
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 6bd58e6..824f249 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -26,6 +26,7 @@
+ #include <linux/highuid.h>
+ #include <linux/pagemap.h>
+ #include <linux/dax.h>
++#include <linux/blkdev.h>
+ #include <linux/quotaops.h>
+ #include <linux/writeback.h>
+ #include <linux/buffer_head.h>
+@@ -737,10 +738,8 @@ static int ext2_get_blocks(struct inode *inode,
+ 		 * so that it's not found by another thread before it's
+ 		 * initialised
+ 		 */
+-		err = dax_clear_sectors(inode->i_sb->s_bdev,
+-				le32_to_cpu(chain[depth-1].key) <<
+-				(inode->i_blkbits - 9),
+-				1 << inode->i_blkbits);
++		err = sb_issue_zeroout(inode->i_sb,
++				le32_to_cpu(chain[depth-1].key), 1, GFP_NOFS);
+ 		if (err) {
+ 			mutex_unlock(&ei->truncate_mutex);
+ 			goto cleanup;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index a32c1dc..5b4351a 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -72,18 +72,11 @@ xfs_zero_extent(
+ 	struct xfs_mount *mp = ip->i_mount;
+ 	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
+ 	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
+-	ssize_t		size = XFS_FSB_TO_B(mp, count_fsb);
+-
+-	if (IS_DAX(VFS_I(ip)))
+-		return dax_clear_sectors(xfs_find_bdev_for_inode(VFS_I(ip)),
+-				sector, size);
+-
+-	/*
+-	 * let the block layer decide on the fastest method of
+-	 * implementing the zeroing.
+-	 */
+-	return sb_issue_zeroout(mp->m_super, block, count_fsb, GFP_NOFS);
  
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index c48b5b1..e91c1e6 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -478,7 +478,8 @@ xfs_inode_item_unpin(
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
--	struct list_head	*buffer_list)
-+	struct list_head	*buffer_list) __releases(&lip->li_ailp->xa_lock)
-+					      __acquires(&lip->li_ailp->xa_lock)
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
++	return blkdev_issue_zeroout(xfs_find_bdev_for_inode(VFS_I(ip)),
++		block << (mp->m_super->s_blocksize_bits - 9),
++		count_fsb << (mp->m_super->s_blocksize_bits - 9),
++		GFP_NOFS, true);
+ }
+ 
+ /*
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 636dd59..933198a 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -7,7 +7,6 @@
+ 
+ ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *, loff_t,
+ 		  get_block_t, dio_iodone_t, int flags);
+-int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size);
+ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+ int dax_truncate_page(struct inode *, loff_t from, get_block_t);
+ int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
 -- 
 2.5.5
 
