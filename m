@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 65AC77CA0
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 17:36:54 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ECFF07CB4
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 02:49:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C3E28AC001
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2016 15:36:50 -0700 (PDT)
-Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
-	ROU5YPBdh1PPTfbD for <xfs@oss.sgi.com>;
-	Fri, 25 Mar 2016 15:36:49 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH 5/5] dax: handle media errors in dax_do_io
-Date: Fri, 25 Mar 2016 22:36:17 +0000
-Message-ID: <1458945374.5501.9.camel@intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BF4178F8039
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 00:49:03 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id aHqB0nZA2lipOXSE (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 00:48:58 -0700 (PDT)
+Date: Wed, 30 Mar 2016 09:49:26 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
+	dax_clear_sectors
+Message-ID: <20160330074926.GC12776@quack.suse.cz>
 References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
-	<1458861450-17705-6-git-send-email-vishal.l.verma@intel.com>
-	<20160325104549.GB10525@infradead.org>
-	<1458939566.5501.5.camel@intel.com>
-	<CAPcyv4jFPYYP=eL72V6MmW2fcXFP3PfQfcO+zYV4NN7rdu1ksg@mail.gmail.com>
-In-Reply-To: <CAPcyv4jFPYYP=eL72V6MmW2fcXFP3PfQfcO+zYV4NN7rdu1ksg@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <D29E0545A3E9D4499429DC06CF52E08B@intel.com>
+	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
+	<CAPcyv4iKK=1Nhz4QqEkhc4gum+UvUS4a=+Sza2zSa1Kyrth41w@mail.gmail.com>
+	<1458939796.5501.8.camel@intel.com>
+	<CAPcyv4jWqVcav7dQPh7WHpqB6QDrCezO5jbd9QW9xH3zsU4C1w@mail.gmail.com>
+	<1459195288.15523.3.camel@intel.com>
+	<CAPcyv4jFwh679arTNoUzLZpJCSoR+KhMdEmwqddCU1RWOrjD=Q@mail.gmail.com>
+	<1459277829.6412.3.camel@intel.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1459277829.6412.3.camel@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +33,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Wilcox,
+	Matthew R" <matthew.r.wilcox@intel.com>
 
-T24gRnJpLCAyMDE2LTAzLTI1IGF0IDE0OjQyIC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
-IE9uIEZyaSwgTWFyIDI1LCAyMDE2IGF0IDE6NTkgUE0sIFZlcm1hLCBWaXNoYWwgTA0KPiA8dmlz
-aGFsLmwudmVybWFAaW50ZWwuY29tPiB3cm90ZToNCj4gPiANCj4gPiBPbiBGcmksIDIwMTYtMDMt
-MjUgYXQgMDM6NDUgLTA3MDAsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOg0KPiA+ID4gDQo+ID4g
-PiBPbiBUaHUsIE1hciAyNCwgMjAxNiBhdCAwNToxNzozMFBNIC0wNjAwLCBWaXNoYWwgVmVybWEg
-d3JvdGU6DQo+ID4gPiA+IA0KPiA+ID4gPiANCj4gPiA+ID4gZGF4X2RvX2lvIChjYWxsZWQgZm9y
-IHJlYWQoKSBvciB3cml0ZSgpIGZvciBhIGRheCBmaWxlIHN5c3RlbSkNCj4gPiA+ID4gbWF5DQo+
-ID4gPiA+IGZhaWwNCj4gPiA+ID4gaW4gdGhlIHByZXNlbmNlIG9mIGJhZCBibG9ja3Mgb3IgbWVk
-aWEgZXJyb3JzLiBTaW5jZSB3ZSBleHBlY3QNCj4gPiA+ID4gdGhhdA0KPiA+ID4gPiBhDQo+ID4g
-PiA+IHdyaXRlIHNob3VsZCBjbGVhciBtZWRpYSBlcnJvcnMgb24gbnZkaW1tcywgbWFrZSBkYXhf
-ZG9faW8gZmFsbA0KPiA+ID4gPiBiYWNrIHRvDQo+ID4gPiA+IHRoZSBkaXJlY3RfSU8gcGF0aCwg
-d2hpY2ggd2lsbCBzZW5kIGRvd24gYSBiaW8gdG8gdGhlIGRyaXZlciwNCj4gPiA+ID4gd2hpY2gN
-Cj4gPiA+ID4gY2FuDQo+ID4gPiA+IHRoZW4gYXR0ZW1wdCB0byBjbGVhciB0aGUgZXJyb3IuDQo+
-ID4gPiBMZWF2ZSB0aGUgZmFsbGJhY2sgb24gLUVJTyB0byB0aGUgY2FsbGVycyBwbGVhc2UuwqDC
-oFRoZXkgZ2VuZXJhbGx5DQo+ID4gPiBjYWxsDQo+ID4gPiBfX2Jsb2NrZGV2X2RpcmVjdF9JTyBh
-bnl3YXksIHNvIGl0IHNob3VsZCBhY3R1YWxseSBiZWNvbWUgc2ltcGxlcg0KPiA+ID4gdGhhdA0K
-PiA+ID4gd2F5Lg0KPiA+IEkgdGhvdWdodCBvZiB0aGlzLCBidXQgbWFkZSB0aGUgcmV0cnlpbmcg
-aGFwcGVuIGluIHRoZSB3cmFwcGVyIHNvDQo+ID4gdGhhdA0KPiA+IGl0IGNhbiBiZSBjZW50cmFs
-aXplZC4gSWYgdGhlIGNhbGxlcnMgd2VyZSB0byBiZWNvbWUgcmVzcG9uc2libGUNCj4gPiBmb3IN
-Cj4gPiB0aGUgcmV0cnksIHRoZW4gYW55IG5ldyBjYWxsZXJzIG9mIGRheF9kb19pbyBtaWdodCBu
-b3QgcmVhbGl6ZSB0aGV5DQo+ID4gYXJlDQo+ID4gcmVzcG9uc2libGUgZm9yIHJldHJ5aW5nLCBh
-bmQgaGl0IHByb2JsZW1zLg0KPiBUaGF0J3MgdGhlaXIgcHJlcm9nYXRpdmUgb3RoZXJ3aXNlIHlv
-dSBhcmUgcHJlY2x1ZGluZyBhbiBhbHRlcm5hdGUNCj4gaGFuZGxpbmcgb2YgYSBkYXhfZG9faW8o
-KSBmYWlsdXJlLsKgwqBNYXliZSBhIGZzIG9yIHVwcGVyIGxheWVyIGNhbg0KPiByZWNvdmVyIGlu
-IGEgZGlmZmVyZW50IG1hbm5lciB0aGFuIHJlLXN1Ym1pdCB0aGUgSS9PIHRvIHRoZQ0KPiBfX2Js
-b2NrZGV2X2RpcmVjdF9JTyBwYXRoLg0KDQpJJ20gaGFwcHkgdG8gbWFrZSB0aGUgY2hhbmdlLCBi
-dXQgd2UgZG9uJ3QgcHJlY2x1ZGUgdGhhdCAtLSBfX2RheF9kb19pbw0KaXMgc3RpbGwgZXhwb3J0
-ZWQgYW5kIGF2YWlsYWJsZS4uCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Tue 29-03-16 18:57:16, Verma, Vishal L wrote:
+> On Mon, 2016-03-28 at 16:34 -0700, Dan Williams wrote:
+> =
+
+> <>
+> =
+
+> > Seems kind of sad to fail the fault due to a bad block when we were
+> > going to zero it anyway, right?=A0=A0I'm not seeing a compelling reason=
+ to
+> > keep any zeroing in fs/dax.c.
+> =
+
+> Agreed - but how do we do this? clear_pmem needs to be able to clear an
+> arbitrary number of bytes, but to go through the driver, we'd need to
+> send down a bio? If only the driver had an rw_bytes like interface that
+> could be used by anyone... :)
+
+Actually, my patches for page fault locking remove zeroing from
+dax_insert_mapping() and __dax_pmd_fault() - the zeroing now happens from
+the filesystem only and the zeroing in those two functions is just a dead
+code...
+
+								Honza
+-- =
+
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
