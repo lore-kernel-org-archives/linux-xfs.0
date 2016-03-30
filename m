@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C523F7CA1
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 12:40:34 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 27D7D7CA3
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 13:28:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 843E230405F
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 10:40:34 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JgNq4RMrfTlOBKrb (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ED81E8F8050
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 11:28:24 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Z4XwFazUjFGRr25S (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 10:40:32 -0700 (PDT)
-Date: Wed, 30 Mar 2016 10:40:26 -0700
+	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 11:28:22 -0700 (PDT)
+Date: Wed, 30 Mar 2016 11:27:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't hand out pNFS layouts for reflink inodes
-Message-ID: <20160330174026.GB2236@birch.djwong.org>
-References: <1456936485-21940-1-git-send-email-hch@lst.de>
-	<20160328195140.GB5360@birch.djwong.org>
-	<20160329072128.GA14940@lst.de>
-	<20160330000842.GD5822@birch.djwong.org>
-	<20160330172634.GA22951@lst.de>
+Subject: fallocate mode flag for "unshare blocks"?
+Message-ID: <20160330182755.GC2236@birch.djwong.org>
+References: <20160302155007.GB7125@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160330172634.GA22951@lst.de>
+In-Reply-To: <20160302155007.GB7125@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,22 +29,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Wed, Mar 30, 2016 at 07:26:34PM +0200, Christoph Hellwig wrote:
-> On Tue, Mar 29, 2016 at 05:08:42PM -0700, Darrick J. Wong wrote:
-> > > Btw, we'll need something similar to prevent swapfiles which just use
-> > > ->bmap, but unfortunately swap just checks for the existences of method,
-> > > so I'll probably have to do some VFS changes to properly support that.
-> > 
-> > Yes, please.  ocfs2 will gladly let you call swapon on a reflinked file,
-> > and totally fails to CoW it properly. :)
+Hi all,
+
+Christoph and I have been working on adding reflink and CoW support to
+XFS recently.  Since the purpose of (mode 0) fallocate is to make sure
+that future file writes cannot ENOSPC, I extended the XFS fallocate
+handler to unshare any shared blocks via the copy on write mechanism I
+built for it.  However, Christoph shared the following concerns with
+me about that interpretation:
+
+> I know that I suggested unsharing blocks on fallocate, but it turns out
+> this is causing problems.  Applications expect falloc to be a fast
+> metadata operation, and copying a potentially large number of blocks
+> is against that expextation.  This is especially bad for the NFS
+> server, which should not be blocked for a long time in a synchronous
+> operation.
 > 
-> Ouch.  Time to add a test for that to xfstests..
+> I think we'll have to remove the unshare and just fail the fallocate
+> for a reflinked region for now.  I still think it makes sense to expose
+> an unshare operation, and we probably should make that another
+> fallocate mode.
 
-Swap/reflink tests will appear as generic/92[34] the next time I post xfstests
-patches.
+With that in mind, how do you all think we ought to resolve this?
+Should we add a new fallocate mode flag that means "unshare the shared
+blocks"?  Obviously, this unshare flag cannot be used in conjunction
+with hole punching, zero range, insert range, or collapse range.  This
+breaks the expectation that writing to a file after fallocate won't
+ENOSPC.
+
+Or is it ok that fallocate could block, potentially for a long time as
+we stream cows through the page cache (or however unshare works
+internally)?  Those same programs might not be expecting fallocate to
+take a long time.
+
+Can we do better than either solution?  It occurs to me that XFS does
+unshare by reading the file data into the pagecache, marking the pages
+dirty, and flushing the dirty pages; performance could be improved by
+skipping the flush at the end.  We won't ENOSPC, because the XFS
+delalloc system is careful enough to check that there are enough free
+blocks to handle both the allocation and the metadata updates.  The
+only gap in this scheme that I can see is if we fallocate, crash, and
+upon restart the program then tries to write without retrying the
+fallocate.  Can we trade some performance for the added requirement
+that we must fallocate -> write -> fsync, and retry the trio if we
+crash before the fsync returns?  I think that's already an implicit
+requirement, so we might be ok here.
+
+Opinions?  I rather like the last option, though I've only just
+thought of it and have not had time to examine it thoroughly, and it's
+specific to XFS. :)
 
 --D
 
