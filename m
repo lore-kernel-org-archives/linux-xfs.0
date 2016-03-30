@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 993177CA0
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 01:16:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FA5C8F8033
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:16:29 -0700 (PDT)
-Received: from bastet.se.axis.com (bastet.se.axis.com [195.60.68.11]) by
-	cuda.sgi.com with ESMTP id zGpEom3BPwplNlju for
-	<xfs@oss.sgi.com>; Mon, 28 Mar 2016 23:16:24 -0700 (PDT)
-From: Mikael Starvik <mikael.starvik@axis.com>
-Subject: Re: Build regressions/improvements in v4.6-rc1
-Date: Tue, 29 Mar 2016 06:16:17 +0000
-Message-ID: <8E4F6C1A-10FC-4862-9D7A-583777F7A6CC@axis.com>
-References: <CAMuHMdXx80zs5VoA_aYc_wMn37O=fa6oXk-ovteHq0hGQYUUzg@mail.gmail.com>
-	<CAMuHMdW3dfhZVT0e4tiqsbEPjYYA_hGUXQer1bQDeF2Gbs4WJg@mail.gmail.com>
-	<20160328215923.GG11812@dastard>,
-	<20160328224710.GC5822@birch.djwong.org>
-In-Reply-To: <20160328224710.GC5822@birch.djwong.org>
-Content-Language: sv-SE
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 305247CA3
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 15:27:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 947ABAC001
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 13:27:00 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	KTsJd5cxlzPNAUsZ for <xfs@oss.sgi.com>;
+	Wed, 30 Mar 2016 13:26:58 -0700 (PDT)
+Date: Thu, 31 Mar 2016 07:26:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix a memory leak in xfs_get_acl on error
+Message-ID: <20160330202655.GH30721@dastard>
+References: <1459348507-20406-1-git-send-email-mguzik@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1459348507-20406-1-git-send-email-mguzik@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,129 +29,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Rich Felker <dalias@libc.org>, linux-cris-kernel <linux-cris-kernel@axis.com>, Linux-sh list <linux-sh@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Geert Uytterhoeven <geert@linux-m68k.org>
+To: Mateusz Guzik <mguzik@redhat.com>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-I have not lookend at the structs but CRIS is a bit unusual since it does no alignment what so ever. If a short is followed by an int will be unaligned like in a packed struct.
-
-Jesper or someone else will take a look at this specific issue.
-
-/Mikael
-> 29 mars 2016 kl. 00:47 skrev Darrick J. Wong <darrick.wong@oracle.com>:
-> 
->> On Tue, Mar 29, 2016 at 08:59:23AM +1100, Dave Chinner wrote:
->>> On Sun, Mar 27, 2016 at 02:43:24PM +0200, Geert Uytterhoeven wrote:
->>> On Sun, Mar 27, 2016 at 2:39 PM, Geert Uytterhoeven
->>> <geert@linux-m68k.org> wrote:
->>>> Below is the list of build error/warning regressions/improvements in
->>>> v4.6-rc1[1] compared to v4.5[2].
->>>> 
->>>> Summarized:
->>>>  - build errors: +9/-6
->>> 
->>>> [1] http://kisskb.ellerman.id.au/kisskb/head/10114/ (all 262 configs)
->>>> [2] http://kisskb.ellerman.id.au/kisskb/head/10047/ (all 262 configs)
->>> 
->>>> 9 error regressions:
->>>>  + /home/kisskb/slave/src/fs/xfs/xfs_ondisk.h: error: call to
->>>> '__compiletime_assert_79' declared with attribute error: XFS:
->>>> sizeof(xfs_attr_shortform_t) is wrong, expected 8:  => 79:2
->>> 
->>> cris-allyesconfig, cris-allmodconfig
->> 
->> Yup, cris is the only platform that throws this error on this
->> structure. It's an on-disk structure and relying on the gcc
->> optimiser to do the same thing from release to release has become
->> such a crap-shoot these days. Hence as a stop-gap measure we added
->> build time checking of what they compiler is doing with those
->> structures, and to refuse to build XFS if the compiler/platform is
->> doing something obviously different.
->> 
->> Modernising the on-disk structure definitions is on the list of
->> things to do, but it's nowhere near the top of my list at the
->> moment...
-> 
-> I have a test patch that (for now) changes the ondisk format checks for the
-> variable-length structures to look at the offsets of the non-variable-length
-> fields.  Can you give it a try?
-> 
-> (No idea if it fixes fixes cris, but it passes the six arches that I can
-> actually test on (x86/power/arm)).  The downside is that it does nothing about
-> troubling implication that there could be computers writing out a disk format
-> that's incompatible with x86 XFSes...)
-> 
-> --D
-> -----------
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> Subject: [PATCH] xfs: check offsets of variable length structures
-> 
-> Some of the directory/attr structures contain variable-length objects,
-> so the enclosing structure doesn't have a meaningful fixed size at
-> compile time.  We can check the offsets of the members before the
-> variable-length member, so do those.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 30, 2016 at 04:35:07PM +0200, Mateusz Guzik wrote:
+> Signed-off-by: Mateusz Guzik <mguzik@redhat.com>
 > ---
-> fs/xfs/xfs_ondisk.h |   25 +++++++++++++++++++++++--
-> 1 file changed, 23 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_acl.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index 960648b..3742216 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -22,6 +22,11 @@
->    BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
->        #structname ") is wrong, expected " #size)
-> 
-> +#define XFS_CHECK_OFFSET(structname, member, off) \
-> +    BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
-> +        "XFS: offsetof(" #structname ", " #member ") is wrong, " \
-> +        "expected " #off)
-> +
-> static inline void __init
-> xfs_check_ondisk_structs(void)
-> {
-> @@ -81,15 +86,28 @@ xfs_check_ondisk_structs(void)
->    XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,    12);
->     */
-> 
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,    0);
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,    2);
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,    3);
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,    0);
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,    4);
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,    8);
-> +    XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,    9);
->    XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,        40);
-> -    XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,        8);
-> +    XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,    0);
-> +    XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,    2);
-> +    XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,    4);
-> +    XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
-> +    XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,    6);
-> +    XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,    7);
->    XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,            12);
->    XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,            16);
->    XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,        8);
->    XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,        16);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,        4);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,        16);
-> -    XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,        6);
-> +    XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,    0);
-> +    XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,    2);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,        16);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,            16);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,            4);
-> @@ -100,6 +118,9 @@ xfs_check_ondisk_structs(void)
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,            16);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,        4);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,        3);
-> +    XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,        0);
-> +    XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,        1);
-> +    XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,        3);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,        10);
->    XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,        2);
-> 
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 2dad2b5..ce10c4c 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -162,10 +162,11 @@ xfs_get_acl(struct inode *inode, int type)
+>  		 */
+>  		if (error != -ENOATTR)
+>  			acl = ERR_PTR(error);
+> -		return acl;
+> +		goto out;
+>  	}
+>  
+>  	acl = xfs_acl_from_disk(xfs_acl, len, XFS_ACL_MAX_ENTRIES(ip->i_mount));
+> +out:
+>  	kmem_free(xfs_acl);
+>  	return acl;
+>  }
+
+Hi Mateusz,
+
+It looks like we've already fixed this problem - can you check
+4.6-rc1 and if the leak is still there post an updated patch?
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
