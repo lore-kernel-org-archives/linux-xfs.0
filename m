@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5BFD57CA2
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 14:33:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F036304059
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 12:33:55 -0700 (PDT)
-Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de
-	[81.169.146.216]) by cuda.sgi.com with ESMTP id
-	D4YE0ezzdtWw91eB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 12:33:53 -0700 (PDT)
-Date: Wed, 30 Mar 2016 21:33:51 +0200
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: BUG in xfs_trans_binval
-Message-ID: <20160330193351.GA18130@aepfle.de>
-References: <20160329171553.GA17885@aepfle.de> <20160329235415.GF30721@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1F0B57CA3
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 02:06:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5CABAC004
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:06:05 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 9YmyiccuEh6IBjTC (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:05:59 -0700 (PDT)
+Date: Thu, 31 Mar 2016 00:05:58 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs/030: filter out repeated lines from .out files
+Message-ID: <20160331070558.GA1505@infradead.org>
+References: <1459331861-15025-1-git-send-email-eguan@redhat.com>
+	<1459404682-12282-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160329235415.GF30721@dastard>
+In-Reply-To: <1459404682-12282-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: darrick.wong@oracle.com, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 30, Dave Chinner wrote:
+Looks good,
 
-> Can you run a memory tester on the machine?
-
-Thanks for taking time to respond.
-
-memtest did not find anything. Since it is essentially a scratch
-partition doing a mkfs would work for me.
-
-Olaf
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
