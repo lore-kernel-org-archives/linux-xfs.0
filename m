@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 95DC27CA3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 09:53:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 59AD28F8050
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 07:52:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2pqkiBwQFfGy59g0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 07:52:57 -0700 (PDT)
-Date: Thu, 31 Mar 2016 10:52:54 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D1D5D7CA3
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 10:04:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 42B46AC001
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:04:45 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id nDVE94TEDc2Vv8Ta for <xfs@oss.sgi.com>;
+	Thu, 31 Mar 2016 08:04:41 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 9DF8917248
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 10:04:41 -0500 (CDT)
 Subject: Re: [PATCH] xfs: add missing break in xfs_parseargs()
-Message-ID: <20160331145254.GB10474@bfoster.bfoster>
 References: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56FD3C89.1080400@sandeen.net>
+Date: Thu, 31 Mar 2016 10:04:41 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
 In-Reply-To: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,10 +32,9 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: esandeen@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Mar 31, 2016 at 05:13:03PM +0800, Eryu Guan wrote:
+On 3/31/16 4:13 AM, Eryu Guan wrote:
 > Commit 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
 > missed a 'break;' in xfs_parseargs() which causes mount to fail with
 > "-o pqnoenforce" option. xfs/050 catches this failure.
@@ -41,10 +43,14 @@ On Thu, Mar 31, 2016 at 05:13:03PM +0800, Eryu Guan wrote:
 > 
 > Fixes: 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
 > Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+
+Ugh, how did I miss that; I thought I scripted that whole change.
+
+Thanks for catching it!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
 >  fs/xfs/xfs_super.c | 1 +
 >  1 file changed, 1 insertion(+)
 > 
@@ -60,13 +66,7 @@ Reviewed-by: Brian Foster <bfoster@redhat.com>
 >  		case Opt_gquota:
 >  		case Opt_grpquota:
 >  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
-> -- 
-> 2.5.5
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
