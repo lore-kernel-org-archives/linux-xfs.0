@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 43D407CA2
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 15:40:42 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4D6E37CA3
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 01:12:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EEACB30405F
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 13:40:38 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 014FF30404E
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 23:11:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mouAKm8QesQRDc5D (version=TLSv1.2
+	cuda.sgi.com with ESMTP id olNBUVarfYLq15sW (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 29 Mar 2016 13:40:37 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 9C18585542
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2016 20:40:37 +0000 (UTC)
-Date: Tue, 29 Mar 2016 15:40:35 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH] xfs: disallow rw remount on fs with unknown ro-compat
-	features
-Message-ID: <20160329204035.GA7633@redhat.com>
-References: <56FAD75C.80502@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56FAD75C.80502@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 23:11:55 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH v2] xfs/030: filter out repeated lines from .out files
+Date: Thu, 31 Mar 2016 14:11:22 +0800
+Message-Id: <1459404682-12282-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1459331861-15025-1-git-send-email-eguan@redhat.com>
+References: <1459331861-15025-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,61 +23,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: fstests@vger.kernel.org
+Cc: darrick.wong@oracle.com, Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Mar 29, 2016 at 02:28:28PM -0500, Eric Sandeen wrote:
-> Today, a kernel which refuses to mount a filesystem read-write
-> due to unknown ro-compat features can still transition to read-write
-> via the remount path.  The old kernel is most likely none the wiser,
-> because it's unaware of the new feature, and isn't using it.  However,
-> writing to the filesystem may well corrupt metadata related to that
-> new feature, and moving to a newer kernel which understand the feature
-> will have problems.
-> 
-> Right now the only ro-compat feature we have is the free inode btree,
-> which showed up in v3.16.  It would be good to push this back to
-> all the active stable kernels, I think, so that if anyone is using
-> newer mkfs (which enables the finobt feature) with older kernel
-> releases, they'll be protected.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Cc: stable@vger.kernel.org
-> ---
+Commit 31f48569c353 ("xfs/030: fix output on newer filesystems") added
+more lines to .out file to match the output from XFS with reflink
+support, but it broke test on older XFS.
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Dave explained the reason and pointed out the correct way to fix it, so
+I just quote Dave's mail here:
 
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d760934..ca058a1 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1276,6 +1276,16 @@ xfs_fs_remount(
->  			return -EINVAL;
->  		}
->  
-> +		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> +		    xfs_sb_has_ro_compat_feature(sbp,
-> +					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-> +			xfs_warn(mp,
-> +"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
-> +				(sbp->sb_features_ro_compat &
-> +					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-> +			return -EINVAL;
-> +		}
-> +
->  		mp->m_flags &= ~XFS_MOUNT_RDONLY;
->  
->  		/*
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+"The problem here is that reflink triggers a change in the initial
+population of the AGFL - from 4 blocks to 6 blocks, and so repair warns
+6 times instead of 4. After filtering, that gives 6 indentical output
+lines instead of 4.
+
+Doing something as simple as collapsing repeated identical lines (e.g
+filtering through uniq) will work for all filesystem formats and any
+future changes that modify the initial AGFL population."
+
+Suggested-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/xfs/030           | 2 +-
+ tests/xfs/030.out.irix  | 3 ---
+ tests/xfs/030.out.linux | 5 -----
+ 3 files changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/tests/xfs/030 b/tests/xfs/030
+index 33c906c..5c99d9e 100755
+--- a/tests/xfs/030
++++ b/tests/xfs/030
+@@ -55,7 +55,7 @@ _check_ag()
+ 	for structure in 'sb 0' 'agf 0' 'agi 0' 'agfl 0'
+ 	do
+ 		echo "Corrupting $structure - setting bits to $1"
+-		_check_repair $1 "$structure" |
++		_check_repair $1 "$structure" | uniq |
+ 			sed -e '/^error following ag 0 unlinked list$/d' \
+ 			    -e '/^bad agbno AGBNO for finobt/d' \
+ 			    -e '/^bad agbno AGBNO for rmapbt/d' \
+diff --git a/tests/xfs/030.out.irix b/tests/xfs/030.out.irix
+index 6378c73..56adfd0 100644
+--- a/tests/xfs/030.out.irix
++++ b/tests/xfs/030.out.irix
+@@ -263,9 +263,6 @@ Phase 1 - find and verify superblock...
+ Phase 2 - zero log...
+         - scan filesystem freespace and inode maps...
+ bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+         - found root inode chunk
+ Phase 3 - for each AG...
+         - scan and clear agi unlinked lists...
+diff --git a/tests/xfs/030.out.linux b/tests/xfs/030.out.linux
+index 14b9b35..722cabf 100644
+--- a/tests/xfs/030.out.linux
++++ b/tests/xfs/030.out.linux
+@@ -228,11 +228,6 @@ Phase 2 - using <TYPEOF> log
+         - zero log...
+         - scan filesystem freespace and inode maps...
+ bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+         - found root inode chunk
+ Phase 3 - for each AG...
+         - scan and clear agi unlinked lists...
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
