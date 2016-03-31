@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D1D5D7CA3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 10:04:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 42B46AC001
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:04:45 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id nDVE94TEDc2Vv8Ta for <xfs@oss.sgi.com>;
-	Thu, 31 Mar 2016 08:04:41 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9DF8917248
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 10:04:41 -0500 (CDT)
-Subject: Re: [PATCH] xfs: add missing break in xfs_parseargs()
-References: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56FD3C89.1080400@sandeen.net>
-Date: Thu, 31 Mar 2016 10:04:41 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 7D5CB7CA3
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 10:43:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D173EAC001
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:43:30 -0700 (PDT)
+Received: from mail-qg0-f51.google.com (mail-qg0-f51.google.com
+	[209.85.192.51]) by cuda.sgi.com with ESMTP id 9bMMTWvUMjf8kgPT
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 31 Mar 2016 08:43:28 -0700 (PDT)
+Received: by mail-qg0-f51.google.com with SMTP id j35so68022418qge.0
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:43:28 -0700 (PDT)
+Subject: Re: fallocate mode flag for "unshare blocks"?
+References: <20160302155007.GB7125@infradead.org>
+	<20160330182755.GC2236@birch.djwong.org>
+	<20160331003242.GA5813@localhost.localdomain>
+	<20160331075529.GB4209@infradead.org>
+	<3E147309-67EA-4B29-B4E0-883BA03B7BFC@dilger.ca>
+From: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
+Message-ID: <56FD458D.3020007@gmail.com>
+Date: Thu, 31 Mar 2016 11:43:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <1459415583-26981-1-git-send-email-guaneryu@gmail.com>
+In-Reply-To: <3E147309-67EA-4B29-B4E0-883BA03B7BFC@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +31,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Liu Bo <bo.li.liu@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On 3/31/16 4:13 AM, Eryu Guan wrote:
-> Commit 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
-> missed a 'break;' in xfs_parseargs() which causes mount to fail with
-> "-o pqnoenforce" option. xfs/050 catches this failure.
-> 
-> XFS (vda6): Super block does not support project and group quota together
-> 
-> Fixes: 2e74af0e1189 ("xfs: convert mount option parsing to tokens")
-> Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+On 2016-03-31 11:31, Andreas Dilger wrote:
+> On Mar 31, 2016, at 1:55 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>>
+>> On Wed, Mar 30, 2016 at 05:32:42PM -0700, Liu Bo wrote:
+>>> Well, btrfs fallocate doesn't allocate space if it's a shared one
+>>> because it thinks the space is already allocated.  So a later overwrite
+>>> over this shared extent may hit enospc errors.
+>>
+>> And this makes it an incorrect implementation of posix_fallocate,
+>> which glibcs implements using fallocate if available.
+>
+> It isn't really useful for a COW filesystem to implement fallocate()
+> to reserve blocks.  Even if it did allocate all of the blocks on the
+> initial fallocate() call, when it comes time to overwrite these blocks
+> new blocks need to be allocated as the old ones will not be overwritten.
+>
+> Because of snapshots that could hold references to the old blocks,
+> there isn't even the guarantee that the previous fallocated blocks will
+> be released in a reasonable time to free up an equal amount of space.
 
-Ugh, how did I miss that; I thought I scripted that whole change.
-
-Thanks for catching it!
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/xfs_super.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d760934..361564e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -350,6 +350,7 @@ xfs_parseargs(
->  		case Opt_pqnoenforce:
->  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
->  			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
-> +			break;
->  		case Opt_gquota:
->  		case Opt_grpquota:
->  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
-> 
+That really depends on how it's done.  AFAIK, unwritten extents on BTRFS 
+are block reservations which make sure that you can write there (IOW, 
+the unwritten extent gets converted to a regular extent in-place, not 
+via COW).  This means that it is possible to guarantee that the first 
+write to that area will work, which is technically all that POSIX 
+requires.  This in turn means that stuff like SystemD and RDBMS software 
+don't exactly see things working as they expect them too, but that's 
+because they make assumptions based on existing technology.
 
 _______________________________________________
 xfs mailing list
