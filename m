@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7BC637CA3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:57:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 33E148F8037
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 22:57:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id h8V3Ira3sUxBD1dO (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2016 22:57:02 -0700 (PDT)
-Date: Thu, 31 Mar 2016 13:56:59 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs/030: link .out file according to reflink support
-	status
-Message-ID: <20160331055658.GK19986@eguan.usersys.redhat.com>
-References: <1459331861-15025-1-git-send-email-eguan@redhat.com>
-	<20160331042644.GK30721@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C05C67CA7
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 02:54:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8FEA630404E
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:54:43 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id MjZk6cfYJ2vVUpn5 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:54:41 -0700 (PDT)
+Date: Thu, 31 Mar 2016 00:54:40 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: fallocate mode flag for "unshare blocks"?
+Message-ID: <20160331075440.GA4209@infradead.org>
+References: <20160302155007.GB7125@infradead.org>
+	<20160330182755.GC2236@birch.djwong.org>
+	<20160331011813.GJ30721@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160331042644.GK30721@dastard>
+In-Reply-To: <20160331011813.GJ30721@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,39 +32,29 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: darrick.wong@oracle.com, fstests@vger.kernel.org, xfs@oss.sgi.com
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Thu, Mar 31, 2016 at 03:26:44PM +1100, Dave Chinner wrote:
-> On Wed, Mar 30, 2016 at 05:57:41PM +0800, Eryu Guan wrote:
-> > Commit 31f48569c353 ("xfs/030: fix output on newer filesystems") added
-> > more lines to .out file to match the output from XFS with reflink
-> > support, but it broke test on older XFS.
-> > 
-> > Fix it by introducing new .out file 030.out.reflink.linux to match the
-> > reflink case, so old XFS still compares .out file against 030.out.linux.
-> > 
-> > In order to do this, a new helper is introduced, _fs_has_reflink()
-> > accepts mount point as argument and returns if the underlying fs
-> > supports reflink or not.
+On Thu, Mar 31, 2016 at 12:18:13PM +1100, Dave Chinner wrote:
+> On Wed, Mar 30, 2016 at 11:27:55AM -0700, Darrick J. Wong wrote:
+> > Or is it ok that fallocate could block, potentially for a long time as
+> > we stream cows through the page cache (or however unshare works
+> > internally)?  Those same programs might not be expecting fallocate to
+> > take a long time.
 > 
-> Let's not go down this path. This is a filtering issue, not a
-> problem we solve by playing "let's add a golden image file for every
-> different filesystem format we can create".
-> 
-> The problem here is that reflink triggers a change in the initial
-> population of the AGFL - from 4 blocks to 6 blocks, and so repair
-> warns 6 times instead of 4. After filtering, that gives 6 indentical
-> output lines instead of 4.
-> 
-> Doing something as simple as collapsing repeated identical lines
-> (e.g filtering through uniq) will work for all filesystem formats
-> and any future changes that modify the initial AGFL population...
+> Yes, it's perfectly fine for fallocate to block for long periods of
+> time. See what gfs2 does during preallocation of blocks - it ends up
+> calling sb_issue_zerout() because it doesn't have unwritten
+> extents, and hence can block for long periods of time....
 
-I thought about filtering at first, but didn't find a way to filter out
-the extra two lines easily. Collapsing repeaded lines into one will do.
-I'll send out v2 shortly. Thanks for reviewing!
+gfs2 fallocate is an implementation that will cause all but the most
+trivial users real pain.  Even the initial XFS implementation just
+marking the transactions synchronous made it unusable for all kinds
+of applications, and this is much worse.  E.g. a NFS ALLOCATE operation
+to gfs2 will probab;ly hand your connection for extended periods of
+time.
 
-Eryu
+If we need to support something like what gfs2 does we should have a
+separate flag for it.
 
 _______________________________________________
 xfs mailing list
