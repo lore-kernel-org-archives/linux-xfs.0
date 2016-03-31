@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B91F07CB2
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 02:58:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 36198AC005
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:58:04 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id ryiRvaKpSKLxWiJ0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 00:58:02 -0700 (PDT)
-Date: Thu, 31 Mar 2016 00:58:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 6A6CC7CA3
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 06:18:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C1CBCAC001
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 04:18:57 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	XU5VA7Sz9vDTdZpw for <xfs@oss.sgi.com>;
+	Thu, 31 Mar 2016 04:18:54 -0700 (PDT)
+Date: Thu, 31 Mar 2016 22:18:50 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: fallocate mode flag for "unshare blocks"?
-Message-ID: <20160331075801.GC4209@infradead.org>
+Message-ID: <20160331111850.GP11812@dastard>
 References: <20160302155007.GB7125@infradead.org>
 	<20160330182755.GC2236@birch.djwong.org>
-	<56FC21DE.7090308@gmail.com>
+	<20160331011813.GJ30721@dastard>
+	<20160331075440.GA4209@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56FC21DE.7090308@gmail.com>
+In-Reply-To: <20160331075440.GA4209@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +32,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, xfs@oss.sgi.com, linux-btrfs <linux-btrfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Wed, Mar 30, 2016 at 02:58:38PM -0400, Austin S. Hemmelgarn wrote:
-> Nothing that I can find in the man-pages or API documentation for Linux's
-> fallocate explicitly says that it will be fast.  There are bits that say it
-> should be efficient, but that is not itself well defined (given context, I
-> would assume it to mean that it doesn't use as much I/O as writing out that
-> many bytes of zero data, not necessarily that it will return quickly).
+On Thu, Mar 31, 2016 at 12:54:40AM -0700, Christoph Hellwig wrote:
+> On Thu, Mar 31, 2016 at 12:18:13PM +1100, Dave Chinner wrote:
+> > On Wed, Mar 30, 2016 at 11:27:55AM -0700, Darrick J. Wong wrote:
+> > > Or is it ok that fallocate could block, potentially for a long time as
+> > > we stream cows through the page cache (or however unshare works
+> > > internally)?  Those same programs might not be expecting fallocate to
+> > > take a long time.
+> > 
+> > Yes, it's perfectly fine for fallocate to block for long periods of
+> > time. See what gfs2 does during preallocation of blocks - it ends up
+> > calling sb_issue_zerout() because it doesn't have unwritten
+> > extents, and hence can block for long periods of time....
+> 
+> gfs2 fallocate is an implementation that will cause all but the most
+> trivial users real pain.  Even the initial XFS implementation just
+> marking the transactions synchronous made it unusable for all kinds
+> of applications, and this is much worse.  E.g. a NFS ALLOCATE operation
+> to gfs2 will probab;ly hand your connection for extended periods of
+> time.
+> 
+> If we need to support something like what gfs2 does we should have a
+> separate flag for it.
 
-And that's pretty much as narrow as an defintion we get.  But apparently
-gfs2 already breaks that expectation :(
+Using fallocate() for preallocation was always intended to
+be a faster, more efficient method allocating zeroed space
+than having userspace write blocks of data. Faster, more efficient
+does not mean instantaneous, and gfs2 using sb_issue_zerout() means
+that if the hardware has zeroing offloads (deterministic trim, write
+same, etc) it will use them, and that will be much faster than
+writing zeros from userspace.
 
-> >delalloc system is careful enough to check that there are enough free
-> >blocks to handle both the allocation and the metadata updates.  The
-> >only gap in this scheme that I can see is if we fallocate, crash, and
-> >upon restart the program then tries to write without retrying the
-> >fallocate.  Can we trade some performance for the added requirement
-> >that we must fallocate -> write -> fsync, and retry the trio if we
-> >crash before the fsync returns?  I think that's already an implicit
-> >requirement, so we might be ok here.
-> Most of the software I've seen that doesn't use fallocate like this is
-> either doing odd things otherwise, or is just making sure it has space for
-> temporary files, so I think it is probably safe to require this.
+IMO, what gfs2 is definitely within the intended usage of
+fallocate() for accelerating the preallocation of blocks.
 
-posix_fallocate gurantees you that you don't get ENOSPC from the write,
-and there is plenty of software relying on that or crashing / cause data
-integrity problems that way.
+Yes, it may not be optimal for things like NFS servers which haven't
+considered that a fallocate based offload operation might take some
+time to execute, but that's not a problem with fallocate. i.e.
+that's a problem with the nfs server ALLOCATE implementation not
+being prepared to return NFSERR_JUKEBOX to prevent client side hangs
+and timeouts while the operation is run....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
