@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AF7A67CA3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 06:20:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 854238F804C
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 04:20:03 -0700 (PDT)
-Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com
-	[209.85.192.43]) by cuda.sgi.com with ESMTP id MCKYHMrbA73tFPiD
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Mar 2016 04:20:02 -0700 (PDT)
-Received: by mail-qg0-f43.google.com with SMTP id w104so56297990qge.3
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 04:20:02 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 678F57CA3
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 10:31:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BA10304064
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:31:33 -0700 (PDT)
+Received: from mail-io0-f196.google.com (mail-io0-f196.google.com
+	[209.85.223.196]) by cuda.sgi.com with ESMTP id
+	FzQFmlssfUi4vyC8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:31:30 -0700 (PDT)
+Received: by mail-io0-f196.google.com with SMTP id z133so1703004iod.1
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 08:31:30 -0700 (PDT)
 Subject: Re: fallocate mode flag for "unshare blocks"?
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20160331075529.GB4209@infradead.org>
+Date: Thu, 31 Mar 2016 09:31:23 -0600
+Message-Id: <3E147309-67EA-4B29-B4E0-883BA03B7BFC@dilger.ca>
 References: <20160302155007.GB7125@infradead.org>
 	<20160330182755.GC2236@birch.djwong.org>
 	<20160331003242.GA5813@localhost.localdomain>
-From: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
-Message-ID: <56FD079F.3060606@gmail.com>
-Date: Thu, 31 Mar 2016 07:18:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160331003242.GA5813@localhost.localdomain>
+	<20160331075529.GB4209@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,46 +30,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============4687324763999139269=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: bo.li.liu@oracle.com, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Liu Bo <bo.li.liu@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On 2016-03-30 20:32, Liu Bo wrote:
-> On Wed, Mar 30, 2016 at 11:27:55AM -0700, Darrick J. Wong wrote:
->> Hi all,
->>
->> Christoph and I have been working on adding reflink and CoW support to
->> XFS recently.  Since the purpose of (mode 0) fallocate is to make sure
->> that future file writes cannot ENOSPC, I extended the XFS fallocate
->> handler to unshare any shared blocks via the copy on write mechanism I
->> built for it.  However, Christoph shared the following concerns with
->> me about that interpretation:
->>
->>> I know that I suggested unsharing blocks on fallocate, but it turns out
->>> this is causing problems.  Applications expect falloc to be a fast
->>> metadata operation, and copying a potentially large number of blocks
->>> is against that expextation.  This is especially bad for the NFS
->>> server, which should not be blocked for a long time in a synchronous
->>> operation.
->>>
->>> I think we'll have to remove the unshare and just fail the fallocate
->>> for a reflinked region for now.  I still think it makes sense to expose
->>> an unshare operation, and we probably should make that another
->>> fallocate mode.
->
-> I'm expecting fallocate to be fast, too.
->
-> Well, btrfs fallocate doesn't allocate space if it's a shared one
-> because it thinks the space is already allocated.  So a later overwrite
-> over this shared extent may hit enospc errors.
-And this _really_ should get fixed, otherwise glibc will add a check for 
-running posix_fallocate against BTRFS and force emulation, and people 
-_will_ complain about performance.
+
+--===============4687324763999139269==
+Content-Type: multipart/signed; boundary="Apple-Mail=_46939755-A74C-4C8F-A5DA-D821D2ACA486"; protocol="application/pgp-signature"; micalg=pgp-sha256
+
+
+--Apple-Mail=_46939755-A74C-4C8F-A5DA-D821D2ACA486
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+On Mar 31, 2016, at 1:55 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> 
+> On Wed, Mar 30, 2016 at 05:32:42PM -0700, Liu Bo wrote:
+>> Well, btrfs fallocate doesn't allocate space if it's a shared one
+>> because it thinks the space is already allocated.  So a later overwrite
+>> over this shared extent may hit enospc errors.
+> 
+> And this makes it an incorrect implementation of posix_fallocate,
+> which glibcs implements using fallocate if available.
+
+It isn't really useful for a COW filesystem to implement fallocate()
+to reserve blocks.  Even if it did allocate all of the blocks on the
+initial fallocate() call, when it comes time to overwrite these blocks
+new blocks need to be allocated as the old ones will not be overwritten.
+
+Because of snapshots that could hold references to the old blocks,
+there isn't even the guarantee that the previous fallocated blocks will
+be released in a reasonable time to free up an equal amount of space.
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_46939755-A74C-4C8F-A5DA-D821D2ACA486
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIVAwUBVv1CzHKl2rkXzB/gAQhzHRAAjRF1pWkEl2czxpH+Uk1lmdZDoZYvi/pW
+2QxYC6IL5H/a+usrR4r+wP2sZ1spLa8pQaoyLEcSU5EPEvVNHSH0ip7q3cX+I+/W
+6BNc+Qm2eVWgrI9d/eYGFJF5ahlZ8K6+s2fj6KlxC39f1MD6qTFLq7bqZ5bOCorI
+w/HIKuwclJgiQ34w/yZtHUFMICb1kwmjAYc/u18JkJ9zxXCfpZl54n71xFUWxqOM
+Yuuwrz5YyTwxhUV+mVSmVNPwrUCQK1mq0DfNmIk1c5VihbDDevWuW6JIam1dBpd2
+EGdajSQmGg9exwoHzrn/maWLtQrBBgMpXS81KfBK0+5fIZv8kxKJ2l6KTRs2etQu
+9Mjwfrs+F2ecZtp7BWf4Yxu+fmjp8hQLeypgtpbZ8I+8nqh0sY64XLP3m5f46llI
+K+9RGJ5VSdrCWfH5l7jh3pbJ/wpsUVn7i0YmomG91f0doLFT9vMLalkK262vfcIQ
+zC9CmaLz7cqI77vFZ/G8BmHMH2yNT09oV4drXTqBsvmMR2JfQYT4Z19nYNgjv6zp
+OZidH9SlwUPwN23y4AB9jaOe+ePtqFDrNiUZoQtbifWDozFLFTteK4Ip+w/mYpw3
+Rj8771pSKhg89xj8DMl3ztq68QTVYj9vXwogVB8z/ugNyxwRXEWbvbaTzQ7FiaLk
+OhZvegHPSyE=
+=ZvYL
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_46939755-A74C-4C8F-A5DA-D821D2ACA486--
+
+
+--===============4687324763999139269==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4687324763999139269==--
