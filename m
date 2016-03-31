@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D9E227CA0
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 14:48:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A856D8F8052
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 12:48:03 -0700 (PDT)
-Received: from mail-io0-f195.google.com (mail-io0-f195.google.com
-	[209.85.223.195]) by cuda.sgi.com with ESMTP id
-	hCAMlW7ydRSsZuUm (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 12:47:58 -0700 (PDT)
-Received: by mail-io0-f195.google.com with SMTP id q128so14937866iof.2
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 12:47:58 -0700 (PDT)
-Subject: Re: fallocate mode flag for "unshare blocks"?
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <20160331180821.GD22462@fieldses.org>
-Date: Thu, 31 Mar 2016 13:47:50 -0600
-Message-Id: <779E9BCF-8224-44FE-8AAE-E0341A7B475C@dilger.ca>
-References: <20160302155007.GB7125@infradead.org>
-	<20160330182755.GC2236@birch.djwong.org>
-	<20160331011813.GJ30721@dastard>
-	<20160331075440.GA4209@infradead.org>
-	<20160331111850.GP11812@dastard>
-	<20160331180821.GD22462@fieldses.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D362A7CA2
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 17:01:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B29C304048
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 15:01:10 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	A6ug4RrBKVyeViH9 for <xfs@oss.sgi.com>;
+	Thu, 31 Mar 2016 15:01:08 -0700 (PDT)
+Date: Fri, 1 Apr 2016 09:01:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Internal error at xfs_trans_cancel
+Message-ID: <20160331220105.GQ11812@dastard>
+References: <56FD513B.40805@scylladb.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <56FD513B.40805@scylladb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,149 +25,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4612191233703215933=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Avi Kivity <avi@scylladb.com>
+Cc: xfs@oss.sgi.com
 
-
---===============4612191233703215933==
-Content-Type: multipart/signed; boundary="Apple-Mail=_65FDF3D5-A690-4317-889A-FA2B05734D3A"; protocol="application/pgp-signature"; micalg=pgp-sha256
-
-
---Apple-Mail=_65FDF3D5-A690-4317-889A-FA2B05734D3A
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
-
-On Mar 31, 2016, at 12:08 PM, J. Bruce Fields <bfields@fieldses.org> wrote:
+On Thu, Mar 31, 2016 at 07:32:59PM +0300, Avi Kivity wrote:
+> Saw this nice gift this morning:
 > 
-> On Thu, Mar 31, 2016 at 10:18:50PM +1100, Dave Chinner wrote:
->> On Thu, Mar 31, 2016 at 12:54:40AM -0700, Christoph Hellwig wrote:
->>> On Thu, Mar 31, 2016 at 12:18:13PM +1100, Dave Chinner wrote:
->>>> On Wed, Mar 30, 2016 at 11:27:55AM -0700, Darrick J. Wong wrote:
->>>>> Or is it ok that fallocate could block, potentially for a long time as
->>>>> we stream cows through the page cache (or however unshare works
->>>>> internally)?  Those same programs might not be expecting fallocate to
->>>>> take a long time.
->>>> 
->>>> Yes, it's perfectly fine for fallocate to block for long periods of
->>>> time. See what gfs2 does during preallocation of blocks - it ends up
->>>> calling sb_issue_zerout() because it doesn't have unwritten
->>>> extents, and hence can block for long periods of time....
->>> 
->>> gfs2 fallocate is an implementation that will cause all but the most
->>> trivial users real pain.  Even the initial XFS implementation just
->>> marking the transactions synchronous made it unusable for all kinds
->>> of applications, and this is much worse.  E.g. a NFS ALLOCATE operation
->>> to gfs2 will probab;ly hand your connection for extended periods of
->>> time.
->>> 
->>> If we need to support something like what gfs2 does we should have a
->>> separate flag for it.
->> 
->> Using fallocate() for preallocation was always intended to
->> be a faster, more efficient method allocating zeroed space
->> than having userspace write blocks of data. Faster, more efficient
->> does not mean instantaneous, and gfs2 using sb_issue_zerout() means
->> that if the hardware has zeroing offloads (deterministic trim, write
->> same, etc) it will use them, and that will be much faster than
->> writing zeros from userspace.
->> 
->> IMO, what gfs2 is definitely within the intended usage of
->> fallocate() for accelerating the preallocation of blocks.
->> 
->> Yes, it may not be optimal for things like NFS servers which haven't
->> considered that a fallocate based offload operation might take some
->> time to execute, but that's not a problem with fallocate. i.e.
->> that's a problem with the nfs server ALLOCATE implementation not
->> being prepared to return NFSERR_JUKEBOX to prevent client side hangs
->> and timeouts while the operation is run....
+> [2121372.825904] XFS (dm-10): Internal error xfs_trans_cancel at
+> line 1007 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x40e/0x710
+> [xfs]
+> [2121372.827209] CPU: 0 PID: 32020 Comm: java Tainted: G W
+> ------------   3.10.0-327.10.1.el7.x86_64 #1
+> [2121372.828529] Hardware name:                  /DH77EB, BIOS
+> EBH7710H.86A.0099.2013.0125.1400 01/25/2013
+> [2121372.829873]  ffff8807b2b11e80 00000000470753cc ffff88031058bb48
+> ffffffff816352cc
+> [2121372.831232]  ffff88031058bb60 ffffffffa084be5b ffffffffa085b7ee
+> ffff88031058bb88
+> [2121372.832542]  ffffffffa0866909 ffff88014a2f3b80 ffff8807f29a2800
+> 0000000000000000
+> [2121372.833850] Call Trace:
+> [2121372.835125]  [<ffffffff816352cc>] dump_stack+0x19/0x1b
+> [2121372.836397]  [<ffffffffa084be5b>] xfs_error_report+0x3b/0x40 [xfs]
+> [2121372.837654]  [<ffffffffa085b7ee>] ? xfs_create+0x40e/0x710 [xfs]
+> [2121372.838915]  [<ffffffffa0866909>] xfs_trans_cancel+0xd9/0x100 [xfs]
+> [2121372.840178]  [<ffffffffa085b7ee>] xfs_create+0x40e/0x710 [xfs]
+> [2121372.841444]  [<ffffffffa0857d8b>] xfs_vn_mknod+0xbb/0x250 [xfs]
+> [2121372.842683]  [<ffffffffa0857f53>] xfs_vn_create+0x13/0x20 [xfs]
+> [2121372.843887]  [<ffffffff811eacdd>] vfs_create+0xcd/0x130
+> [2121372.845103]  [<ffffffff811ec36f>] do_last+0xbef/0x1270
+> [2121372.846324]  [<ffffffff811ee6d2>] path_openat+0xc2/0x490
+> [2121372.847538]  [<ffffffff811efda2>] ? user_path_at_empty+0x72/0xc0
+> [2121372.848746]  [<ffffffff811efe9b>] do_filp_open+0x4b/0xb0
+> [2121372.849917]  [<ffffffff811fca27>] ? __alloc_fd+0xa7/0x130
+> [2121372.851090]  [<ffffffff811dd843>] do_sys_open+0xf3/0x1f0
+> [2121372.852227]  [<ffffffff811dd95e>] SyS_open+0x1e/0x20
+> [2121372.853356]  [<ffffffff81645a49>] system_call_fastpath+0x16/0x1b
+> [2121372.854486] XFS (dm-10): xfs_do_force_shutdown(0x8) called from
+> line 1008 of file fs/xfs/xfs_trans.c.  Return address =
+> 0xffffffffa0866922
 > 
-> That's an interesting idea, but I don't think it's really legal.  I take
-> JUKEBOX to mean "sorry, I'm failing this operation for now, try again
-> later and it might succeed", not "OK, I'm working on it, try again and
-> you may find out I've done it".
-> 
-> So if the client gets a JUKEBOX error but the server goes ahead and does
-> the operation anyway, that'd be unexpected.
+> Filesystem appeared full,
 
-Well, the tape continued to be mounted in the background and/or the file
-restored from the tape into the filesystem...
+ISTR there was a bug inthe inode allocation code that could lead to
+multiple AGFs being dirtied (via AGFL fixups) and then not having
+enough contiguous freee space to allocate a new inode chuck. I think
+it was also a potential deadlock vector. Yeah:
 
-> I suppose it's comparable to the case where a slow fallocate is
-> interrupted--would it be legal to return EINTR in that case and leave
-> the application to sort out whether some part of the allocation had
-> already happened?
+e480a72 xfs: avoid AGI/AGF deadlock scenario for inode chunk allocation
 
-If the later fallocate() was not re-doing the same work as the first one,
-it should be fine for the client to re-send the fallocate() request.  The
-fallocate() to reserve blocks does not touch the blocks that are already
-allocated, so this is safe to do even if another process is writing to the
-file.  If you have multiple processes writing and calling fallocate() with
-PUNCH/ZERO/COLLAPSE/INSERT to overlapping regions at the same time then
-the application is in for a world of hurt already.
+Fixed in 3.15.
 
-> Would it be legal to continue the fallocate under the covers even after
-> returning EINTR?
+> but after a reboot (critical server) it
+> went back down to 420GB free.
 
-That might produce unexpected results in some cases, but it depends on
-the options used.  Probably the safest is to not continue, and depend on
-userspace to retry the operation on EINTR.  For fallocate() doing prealloc
-or punch or zero this should eventually complete even if it is slow.
+Lots of open unlinked (or O_TMPFILE) files, I'd guess.
 
-Cheers, Andreas
+Cheers,
 
-> But anyway my first inclination is to say that the NFS FALLOCATE
-> protocol just wasn't designed to handle long-running fallocates, and if
-> we really need that then we need to give it a way to either report
-> partial results or to report results asynchronously.
-> 
-> --b.
-
-
-
-
-
---Apple-Mail=_65FDF3D5-A690-4317-889A-FA2B05734D3A
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIVAwUBVv1+53Kl2rkXzB/gAQhZqw//fFFv84kEe1JyjFDEn9izxwBNuFWV12DA
-VqeaTu5+ecxVVvp37mo6cL/aoFmoHGEBvJdin82q4iFBmT9egVgDt18cOs8jEK55
-HKwT1MIJdnbJGZxkkVIvTExK5yN3VOEzfQ7FrifzVVE8kvFqusrIxQ2peWjbjECC
-m/U1jljzc/eWgGuEWqk1nz6EBmHKRYMagVEOJYmXgd3aq5bmLEa2pkIGXEE2e9OS
-XlEDRsmv7hOH7yBbcrguarszbXJdtj09mNRHNlSFlgtJFVLC4WHj4bCwZi5OebJ/
-MTSyIkNFoRd59h0gaRtwUXDqRivBQ2GLc96OqCiSMU/4uysVs+z4KPA+QWaU0Jgy
-FUWcCgu4k2rwrHvE4mXk5IbAu8uAT5aiSk7D4+QStUzbbRA0cGhtnansduMtTP1A
-1t9iik9wtykm+VzEeJGEdfCe5v7od947bdR219GbVkNkBsh7oKMNiBgZBpwov9oh
-LXhf6hrhHJqGMAc9WOTRazG66k9oWLAnpbYnOXitmD/sJXIRtHP02uFmDVyLLZsA
-VqaPKdarP5tzzXOJfdVb1AXB1DVzL4W8PnXjBLWFRHebftmi3OGtVcBxIrQLai3r
-FSs0MEaOjIT/QT576Nxtma4WPu5FbdaYO02tV3UCPwKXI+XnogJ32ZICu96nk1pc
-1Tc9h6MjPBM=
-=5o0N
------END PGP SIGNATURE-----
-
---Apple-Mail=_65FDF3D5-A690-4317-889A-FA2B05734D3A--
-
-
---===============4612191233703215933==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4612191233703215933==--
