@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6E1057CA3
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 17:13:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 33CE28F8039
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 15:13:54 -0700 (PDT)
-Received: from mail-vk0-f47.google.com (mail-vk0-f47.google.com
-	[209.85.213.47]) by cuda.sgi.com with ESMTP id RkoBw42Z2U9BalgW
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Mar 2016 15:13:52 -0700 (PDT)
-Received: by mail-vk0-f47.google.com with SMTP id z68so80139952vkg.3
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 15:13:52 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0AA517CA3
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 23:27:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D2367304053
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2016 21:27:03 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	46l87oTdXEaDctoA for <xfs@oss.sgi.com>;
+	Wed, 30 Mar 2016 21:27:01 -0700 (PDT)
+Date: Thu, 31 Mar 2016 15:26:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs/030: link .out file according to reflink support
+	status
+Message-ID: <20160331042644.GK30721@dastard>
+References: <1459331861-15025-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1459348507-20406-1-git-send-email-mguzik@redhat.com>
-References: <1459348507-20406-1-git-send-email-mguzik@redhat.com>
-Date: Thu, 31 Mar 2016 00:13:51 +0200
-Message-ID: <CAHc6FU4SOh_6C8DPjrug0jR31U5rAQWFg7a8e2dUbvv-Axg8KQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix a memory leak in xfs_get_acl on error
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1459331861-15025-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mateusz Guzik <mguzik@redhat.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, XFS Developers <xfs@oss.sgi.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs@oss.sgi.com, fstests@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Mar 30, 2016 at 4:35 PM, Mateusz Guzik <mguzik@redhat.com> wrote:
-> Signed-off-by: Mateusz Guzik <mguzik@redhat.com>
+On Wed, Mar 30, 2016 at 05:57:41PM +0800, Eryu Guan wrote:
+> Commit 31f48569c353 ("xfs/030: fix output on newer filesystems") added
+> more lines to .out file to match the output from XFS with reflink
+> support, but it broke test on older XFS.
+> 
+> Fix it by introducing new .out file 030.out.reflink.linux to match the
+> reflink case, so old XFS still compares .out file against 030.out.linux.
+> 
+> In order to do this, a new helper is introduced, _fs_has_reflink()
+> accepts mount point as argument and returns if the underlying fs
+> supports reflink or not.
 
-Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
+Let's not go down this path. This is a filtering issue, not a
+problem we solve by playing "let's add a golden image file for every
+different filesystem format we can create".
 
-> ---
->  fs/xfs/xfs_acl.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index 2dad2b5..ce10c4c 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -162,10 +162,11 @@ xfs_get_acl(struct inode *inode, int type)
->                  */
->                 if (error != -ENOATTR)
->                         acl = ERR_PTR(error);
-> -               return acl;
-> +               goto out;
->         }
->
->         acl = xfs_acl_from_disk(xfs_acl, len, XFS_ACL_MAX_ENTRIES(ip->i_mount));
-> +out:
->         kmem_free(xfs_acl);
->         return acl;
->  }
-> --
-> 1.8.3.1
->
+The problem here is that reflink triggers a change in the initial
+population of the AGFL - from 4 blocks to 6 blocks, and so repair
+warns 6 times instead of 4. After filtering, that gives 6 indentical
+output lines instead of 4.
+
+Doing something as simple as collapsing repeated identical lines
+(e.g filtering through uniq) will work for all filesystem formats
+and any future changes that modify the initial AGFL population...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
