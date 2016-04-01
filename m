@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 18C787CA0
-	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 11:31:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 70EBBAC001
-	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 09:31:22 -0700 (PDT)
-Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com
-	[209.85.220.54]) by cuda.sgi.com with ESMTP id QsBpiiszpolcj8fm
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 03 Apr 2016 09:31:20 -0700 (PDT)
-Received: by mail-pa0-f54.google.com with SMTP id zm5so127005275pac.0
-	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:20 -0700 (PDT)
-From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v2 0/8] block: prepare for multipage bvecs
-Date: Mon,  4 Apr 2016 00:31:01 +0800
-Message-Id: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
+	by oss.sgi.com (Postfix) with ESMTP id E18207CC5
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 14:17:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 69023AC004
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 12:17:55 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	aB2CpdyACCcHzGvI for <xfs@oss.sgi.com>;
+	Fri, 01 Apr 2016 12:17:54 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
+	dax_clear_sectors
+Date: Fri, 1 Apr 2016 19:17:52 +0000
+Message-ID: <1459538265.23200.8.camel@intel.com>
+References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
+	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
+	<CAPcyv4iKK=1Nhz4QqEkhc4gum+UvUS4a=+Sza2zSa1Kyrth41w@mail.gmail.com>
+	<1458939796.5501.8.camel@intel.com>
+	<CAPcyv4jWqVcav7dQPh7WHpqB6QDrCezO5jbd9QW9xH3zsU4C1w@mail.gmail.com>
+	<1459195288.15523.3.camel@intel.com>
+	<CAPcyv4jFwh679arTNoUzLZpJCSoR+KhMdEmwqddCU1RWOrjD=Q@mail.gmail.com>
+	<1459277829.6412.3.camel@intel.com>
+	<20160330074926.GC12776@quack.suse.cz>
+In-Reply-To: <20160330074926.GC12776@quack.suse.cz>
+Content-Language: en-US
+Content-ID: <BCDA0CA9B9E5EA4C9093399005FC4758@intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +34,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
+To: "jack@suse.cz" <jack@suse.cz>
+Cc: "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Wilcox, Matthew
+	R" <matthew.r.wilcox@intel.com>
 
-Hi,
-
-Interests[1] have been shown in multipage bvecs, so this patchset
-try to prepare for the support and do two things:
-
-1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
-then we can drop the non-standard way for iterating bvec, which
-can be thought as a good cleanup for lib/iov_iter.c
-
-2) remove BIO_MAX_SECTORS & BIO_MAX_SIZE, and now there is only
-one user for each. Once multipage bvecs is introduced, one bio
-may hold lots of sectors, and we should always use sort of BIO_MAX_VECS
-which should be introduced in future and is similiar with current
-BIO_MAX_PAGES.
-
-xfstests(-a auto) have been run and no regression found by this
-patchset against linus v4.6-rc1-next-20160329.
-
-V2:
-	- rename bvec_iter.h as bvec.h
-	- always include bvec.h into blk_types.h as suggested by Christoph
-
-V1:
-	- don't move BIO_MAX_* to bvec_iter.h as pointed out by Christoph
-	- run xfstests against v4.6-rc1-next-20160329
-	- add Reviewed-by
-	- for 1,4 and 5, Reviewd-by not added, Christoph still expressed
-	'this looks fine to me.'
-
- drivers/block/drbd/drbd_int.h |  4 +--
- fs/xfs/xfs_buf.c              |  4 +--
- include/linux/bio.h           | 52 --------------------------------
- include/linux/blk_types.h     | 22 +-------------
- include/linux/bvec.h          | 93 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- lib/iov_iter.c                | 30 +++++++------------
- 6 files changed, 107 insertions(+), 98 deletions(-)
-
-Thanks,
-Ming
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCAyMDE2LTAzLTMwIGF0IDA5OjQ5ICswMjAwLCBKYW4gS2FyYSB3cm90ZToNCj4gT24g
+VHVlIDI5LTAzLTE2IDE4OjU3OjE2LCBWZXJtYSwgVmlzaGFsIEwgd3JvdGU6DQo+ID4gDQo+ID4g
+T24gTW9uLCAyMDE2LTAzLTI4IGF0IDE2OjM0IC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
+ID4gDQo+ID4gPD4NCj4gPiANCj4gPiA+IA0KPiA+ID4gU2VlbXMga2luZCBvZiBzYWQgdG8gZmFp
+bCB0aGUgZmF1bHQgZHVlIHRvIGEgYmFkIGJsb2NrIHdoZW4gd2UNCj4gPiA+IHdlcmUNCj4gPiA+
+IGdvaW5nIHRvIHplcm8gaXQgYW55d2F5LCByaWdodD/CoMKgSSdtIG5vdCBzZWVpbmcgYSBjb21w
+ZWxsaW5nDQo+ID4gPiByZWFzb24gdG8NCj4gPiA+IGtlZXAgYW55IHplcm9pbmcgaW4gZnMvZGF4
+LmMuDQo+ID4gQWdyZWVkIC0gYnV0IGhvdyBkbyB3ZSBkbyB0aGlzPyBjbGVhcl9wbWVtIG5lZWRz
+IHRvIGJlIGFibGUgdG8gY2xlYXINCj4gPiBhbg0KPiA+IGFyYml0cmFyeSBudW1iZXIgb2YgYnl0
+ZXMsIGJ1dCB0byBnbyB0aHJvdWdoIHRoZSBkcml2ZXIsIHdlJ2QgbmVlZA0KPiA+IHRvDQo+ID4g
+c2VuZCBkb3duIGEgYmlvPyBJZiBvbmx5IHRoZSBkcml2ZXIgaGFkIGFuIHJ3X2J5dGVzIGxpa2Ug
+aW50ZXJmYWNlDQo+ID4gdGhhdA0KPiA+IGNvdWxkIGJlIHVzZWQgYnkgYW55b25lLi4uIDopDQo+
+IEFjdHVhbGx5LCBteSBwYXRjaGVzIGZvciBwYWdlIGZhdWx0IGxvY2tpbmcgcmVtb3ZlIHplcm9p
+bmcgZnJvbQ0KPiBkYXhfaW5zZXJ0X21hcHBpbmcoKSBhbmQgX19kYXhfcG1kX2ZhdWx0KCkgLSB0
+aGUgemVyb2luZyBub3cgaGFwcGVucw0KPiBmcm9tDQo+IHRoZSBmaWxlc3lzdGVtIG9ubHkgYW5k
+IHRoZSB6ZXJvaW5nIGluIHRob3NlIHR3byBmdW5jdGlvbnMgaXMganVzdCBhDQo+IGRlYWQNCj4g
+Y29kZS4uLg0KDQpUaGF0IHNob3VsZCBtYWtlIHRoaW5ncyBlYXNpZXIhIERvIHlvdSBoYXZlIGEg
+dHJlZSBJIGNvdWxkIG1lcmdlIGluIHRvDQpnZXQgdGhpcz8gKFdJUCBpcyBvayBhcyB3ZSBrbm93
+IHRoYXQgbXkgc2VyaWVzIHdpbGwgZGVwZW5kIG9uIHlvdXJzLi4pDQpvciwgaWYgeW91IGNhbiBk
+aXN0aWxsIG91dCB0aGF0IHBhdGNoIG9uIGEgNC42LXJjMSBiYXNlLCBJIGNvdWxkIGNhcnJ5DQpp
+dCBpbiBteSBzZXJpZXMgdG9vICh5b3VyIHYyJ3MgMy8xMCBkb2Vzbid0IGFwcGx5IG9uIDQuNi1y
+YzEuLikNCg0KVGhhbmtzLA0KCS1WaXNoYWwKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
