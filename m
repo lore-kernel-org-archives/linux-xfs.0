@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D362A7CA2
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 17:01:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B29C304048
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 15:01:10 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	A6ug4RrBKVyeViH9 for <xfs@oss.sgi.com>;
-	Thu, 31 Mar 2016 15:01:08 -0700 (PDT)
-Date: Fri, 1 Apr 2016 09:01:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Internal error at xfs_trans_cancel
-Message-ID: <20160331220105.GQ11812@dastard>
-References: <56FD513B.40805@scylladb.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4B6097CB1
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 19:12:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0E8DA304048
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 17:12:01 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id xAhpy4S3B6gSDCHs (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 17:11:59 -0700 (PDT)
+Date: Thu, 31 Mar 2016 17:11:28 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: XFS reverse-mapping, reflink, and scrub update
+Message-ID: <20160401001128.GG5822@birch.djwong.org>
+References: <20160305011530.GG27973@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <56FD513B.40805@scylladb.com>
+In-Reply-To: <20160305011530.GG27973@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,68 +29,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Avi Kivity <avi@scylladb.com>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Mar 31, 2016 at 07:32:59PM +0300, Avi Kivity wrote:
-> Saw this nice gift this morning:
+Hi.
+
+I've rebased the rmap+reflink patches against 4.6-rc1.  There are also
+some patches to start the process of drafting a metadata scrubber for
+XFS and/or to give us more to talk about at LSF.
+
+The thirty or so bugfixes tacked on the end of the last patch series
+seems to be stable enough that I integrated them into the main body of
+the patches, partly to reduce the number of patches to review and
+partly to avoid the situation where reviewers complain about something
+in a patch only to discover that it's fixed by a later patch that
+reorganizes everything.
+
+The first fifteen patches from Dave's latest posting of rmapbt code
+are integrated here too.  I've not gotten to the last two, primarily
+because I need to add rmapbt and refcountbt update intents and want to
+use the interval query code for rmap updates.  This will be its own
+sprint, starting just after I send this email.  This leaves us
+basically in the same place as we were at the end of the 4.5 cycle,
+but rebased against 4.6.  One exception is that the "rmapxbt" is gone;
+now there's only one rmapbt format regardless of whether reflink is
+enabled.
+
+As far as xfsprogs goes, I imported (I think) all the libxfs updates
+from 4.6-rc1, and broke out the huge horrible libxfs changes into
+individual patches that are direct descendants of the kernel-side
+patches.  They have the same subject line + commit message, so as to
+make it easier to cross-reference trees and to port changes from one
+to another.  This also brings the xfsprogs libxfs updates for rmap and
+reflink up to date with the stuff that has been hanging out in the
+kernel.  Unfortunately that means there are now ~105 patches there.
+
+There are also a bunch of xfstests updates that fix various test
+errors and add more tests to check out recovery of extents being held
+for CoW operations that didn't succeed before crashing; and ensure
+that we can't have reflinked swap files.
+
+There are also minor documentation and manpage updates.
+
+Anyway, the development trees are now posted to github under
+"djwong-devel" branches:
+
+https://github.com/djwong/linux/commits/djwong-devel
+https://github.com/djwong/xfsprogs/commits/djwong-devel
+https://github.com/djwong/xfstests/commits/djwong-devel
+https://github.com/djwong/xfs-documentation/commits/djwong-devel
+https://github.com/djwong/man-pages/commits/djwong-devel
+
+I'll patchbomb the mailing list when I finish the next XFS sprint or
+before LSF, whichever comes first.
+
+Christoph: Does that problem you observed with NFS blocking for a long
+time when someone uses fallocate to unshare a lot of shared blocks?
+The last patch in the kernel series disables the dirty page flush,
+and I'm curious to see if it helps any.
+
+(I'd conservatively assumed that a preemptive CoW had to fsync as
+well, but let's evaluate if skipping it is worth the risk.)
+
+--D
+
+On Fri, Mar 04, 2016 at 05:15:30PM -0800, Darrick J. Wong wrote:
+> Hi all,
 > 
-> [2121372.825904] XFS (dm-10): Internal error xfs_trans_cancel at
-> line 1007 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x40e/0x710
-> [xfs]
-> [2121372.827209] CPU: 0 PID: 32020 Comm: java Tainted: G W
-> ------------   3.10.0-327.10.1.el7.x86_64 #1
-> [2121372.828529] Hardware name:                  /DH77EB, BIOS
-> EBH7710H.86A.0099.2013.0125.1400 01/25/2013
-> [2121372.829873]  ffff8807b2b11e80 00000000470753cc ffff88031058bb48
-> ffffffff816352cc
-> [2121372.831232]  ffff88031058bb60 ffffffffa084be5b ffffffffa085b7ee
-> ffff88031058bb88
-> [2121372.832542]  ffffffffa0866909 ffff88014a2f3b80 ffff8807f29a2800
-> 0000000000000000
-> [2121372.833850] Call Trace:
-> [2121372.835125]  [<ffffffff816352cc>] dump_stack+0x19/0x1b
-> [2121372.836397]  [<ffffffffa084be5b>] xfs_error_report+0x3b/0x40 [xfs]
-> [2121372.837654]  [<ffffffffa085b7ee>] ? xfs_create+0x40e/0x710 [xfs]
-> [2121372.838915]  [<ffffffffa0866909>] xfs_trans_cancel+0xd9/0x100 [xfs]
-> [2121372.840178]  [<ffffffffa085b7ee>] xfs_create+0x40e/0x710 [xfs]
-> [2121372.841444]  [<ffffffffa0857d8b>] xfs_vn_mknod+0xbb/0x250 [xfs]
-> [2121372.842683]  [<ffffffffa0857f53>] xfs_vn_create+0x13/0x20 [xfs]
-> [2121372.843887]  [<ffffffff811eacdd>] vfs_create+0xcd/0x130
-> [2121372.845103]  [<ffffffff811ec36f>] do_last+0xbef/0x1270
-> [2121372.846324]  [<ffffffff811ee6d2>] path_openat+0xc2/0x490
-> [2121372.847538]  [<ffffffff811efda2>] ? user_path_at_empty+0x72/0xc0
-> [2121372.848746]  [<ffffffff811efe9b>] do_filp_open+0x4b/0xb0
-> [2121372.849917]  [<ffffffff811fca27>] ? __alloc_fd+0xa7/0x130
-> [2121372.851090]  [<ffffffff811dd843>] do_sys_open+0xf3/0x1f0
-> [2121372.852227]  [<ffffffff811dd95e>] SyS_open+0x1e/0x20
-> [2121372.853356]  [<ffffffff81645a49>] system_call_fastpath+0x16/0x1b
-> [2121372.854486] XFS (dm-10): xfs_do_force_shutdown(0x8) called from
-> line 1008 of file fs/xfs/xfs_trans.c.  Return address =
-> 0xffffffffa0866922
+> Dave's started reviewing the rmap/reflink patches I sent him, and said he'll
+> trickle the patches (with various edits) out to the mailing list as he gets to
+> them.  Therefore, I won't blast the mailing list with the kernel/xfsprogs
+> patches that will soon be obsolete, though I will push out all the pending
+> xfstests and xfsdocumentation fixes.
 > 
-> Filesystem appeared full,
-
-ISTR there was a bug inthe inode allocation code that could lead to
-multiple AGFs being dirtied (via AGFL fixups) and then not having
-enough contiguous freee space to allocate a new inode chuck. I think
-it was also a potential deadlock vector. Yeah:
-
-e480a72 xfs: avoid AGI/AGF deadlock scenario for inode chunk allocation
-
-Fixed in 3.15.
-
-> but after a reboot (critical server) it
-> went back down to 420GB free.
-
-Lots of open unlinked (or O_TMPFILE) files, I'd guess.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> I've also renamed the confusing 'for-dave' branches on github to
+> 'rmap-reflink-devel' to make it clearer that it's just a development branch and
+> not what I'm trying to get pushed upstream.
+> 
+> Soooo... stuff I'm hoping to get upstream for 4.6:
+> https://github.com/djwong/linux/tree/for-dave-for-4.6
+> https://github.com/djwong/xfsprogs/tree/for-dave-for-4.6
+> 
+> Stuff I hope to get upstream:
+> https://github.com/djwong/xfs-documentation/tree/reflink-devel
+> https://github.com/djwong/xfstests/tree/reflink-dev
+> 
+> Development branch, not for upstream:
+> https://github.com/djwong/linux/tree/rmap-reflink-devel
+> https://github.com/djwong/xfsprogs/tree/rmap-reflink-devel
+> 
+> I'm taking a break from active development for a week or two to concentrate on
+> finding and fixing bugs.  The content of the branches hasn't changed from
+> a few days ago, so no need to re-pull if you just did.
+> 
+> --D
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
