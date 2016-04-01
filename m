@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E45187CA1
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 15:25:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9C6908F804C
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 13:25:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id XqbAAHqghFMU3HFa for <xfs@oss.sgi.com>;
-	Thu, 31 Mar 2016 13:25:33 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 445FE56B
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 15:25:33 -0500 (CDT)
-Subject: Re: [PATCH 01/19] xfsprogs: use common code for multi-disk detection
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-2-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56FD87BC.5070805@sandeen.net>
-Date: Thu, 31 Mar 2016 15:25:32 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A2427CA2
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 21:44:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C969304032
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2016 19:44:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Mo1s320MPi3ROne7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2016 19:44:18 -0700 (PDT)
+Date: Fri, 1 Apr 2016 13:44:13 +1100
+From: Dave Chinner <dchinner@redhat.com>
+Subject: Re: list_add corruption after "xfs: mode di_mode to vfs inode"
+Message-ID: <20160401024413.GB2072@devil.localdomain>
+References: <56FC9FA6.1080700@stratus.com>
 MIME-Version: 1.0
-In-Reply-To: <1458818136-56043-2-git-send-email-jtulak@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <56FC9FA6.1080700@stratus.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,209 +29,129 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: xfs@oss.sgi.com
 
-On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Mar 30, 2016 at 11:55:18PM -0400, Joe Lawrence wrote:
+> Hi Dave,
 > 
-> CHANGELOG:
-> o Remove nonexistent headers from LIBHFILES in include/Makefile
-> o Remove a useless assignment which was immediately overwritten
->   on the next line.
-> o Rename include/xfs_mkfs.h global header to include/xfs_multidisk.h,
->   because we need it just for multidisk configuration
-> o Fix AG count for size thresholds to keep consistency
+> Upon loading 4.6-rc1, I noticed a few linked list corruption messages in
+> dmesg shortly after boot up.  I bisected the kernel, landing on:
 > 
-> Both xfs_repair and mkfs.xfs need to agree on what is a "multidisk:
-> configuration - mkfs for determining the AG count of the filesystem,
-> repair for determining how to automatically parallelise it's
-> execution. This requires a bunch of common defines that both mkfs
-> and reapir need to share.
+>   [c19b3b05ae440de50fffe2ac2a9b27392a7448e9] xfs: mode di_mode to vfs inode
 > 
-> In fact, most of the defines in xfs_mkfs.h could be shared with
-> other programs (i.e. all the defaults mkfs uses) and so it is
-> simplest to move xfs_mkfs.h to the shared include directory and add
-> the new defines to it directly.
-
-Minor comment stuff below, otherwise seems ok.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-and feel free to add that if you make the suggested changes, too.
-
-> diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
-> new file mode 100644
-> index 0000000..4006a01
-> --- /dev/null
-> +++ b/include/xfs_multidisk.h
-
-
-<big snip this is mostly just a file rename, but...>
-
-> +/*
-> + * These values define what we consider a "multi-disk" filesystem. That is, a
-> + * filesystem that is likely to be made up of multiple devices, and hence have
-> + * some level of parallelism avoid to it at the IO level.
-
-"avoid to it?"  Maybe "available to it?"
-
-...
-
-> @@ -664,43 +664,45 @@ calc_default_ag_geometry(
->  	}
->  
->  	/*
-> -	 * For the remainder we choose an AG size based on the
-> -	 * number of data blocks available, trying to keep the
-> -	 * number of AGs relatively small (especially compared
-> -	 * to the original algorithm).  AG count is calculated
-> -	 * based on the preferred AG size, not vice-versa - the
-> -	 * count can be increased by growfs, so prefer to use
-> -	 * smaller counts at mkfs time.
-> -	 *
-> -	 * For a single underlying storage device between 128MB
-> -	 * and 4TB in size, just use 4 AGs, otherwise scale up
-> -	 * smoothly between min/max AG sizes.
-> +	 * For a single underlying storage device between 128MB and 4TB in size
-> +	 * just use 4 AGs and scale up smoothly between min/max AG sizes.
-
-I guess a comment about the *first* >= 4T case might make this more
-clear; it's a little odd to document only 1 of the 2 cases below.
-
-Maybe:
-
-+	 * For a single underlying storage device over 4TB in size
-+	 * use the maximum AG size.  Between 128MB and 4TB, just use
-+	 * 4 AGs and scale up smoothly between min/max AG sizes.
-
->  	 */
-> -
-> -	if (!multidisk && dblocks >= MEGABYTES(128, blocklog)) {
-> +	if (!multidisk) {
->  		if (dblocks >= TERABYTES(4, blocklog)) {
->  			blocks = XFS_AG_MAX_BLOCKS(blocklog);
->  			goto done;
-> +		} else if (dblocks >= MEGABYTES(128, blocklog)) {
-> +			shift = XFS_NOMULTIDISK_AGLOG;
-> +			goto calc_blocks;
->  		}
-> -		shift = 2;
-> -	} else if (dblocks > GIGABYTES(512, blocklog))
-> -		shift = 5;
-> -	else if (dblocks > GIGABYTES(8, blocklog))
-> -		shift = 4;
-> -	else if (dblocks >= MEGABYTES(128, blocklog))
-> -		shift = 3;
-> -	else if (dblocks >= MEGABYTES(64, blocklog))
-> -		shift = 2;
-> -	else if (dblocks >= MEGABYTES(32, blocklog))
-> -		shift = 1;
-> -	else
-> -		shift = 0;
-> +	}
-> +
-> +	/*
-> +	 * For the multidisk configs we choose an AG count based on the number
-> +	 * of data blocks available, trying to keep the number of AGs higher
-> +	 * than the single disk configurations. This makes the assumption that
-> +	 * larger filesystems have more parallelism available to them.
-> +	 */
-> +	shift = XFS_MULTIDISK_AGLOG;
-> +	if (dblocks <= GIGABYTES(512, blocklog))
-> +		shift--;
-> +	if (dblocks <= GIGABYTES(8, blocklog))
-> +		shift--;
-> +	if (dblocks < MEGABYTES(128, blocklog))
-> +		shift--;
-> +	if (dblocks < MEGABYTES(64, blocklog))
-> +		shift--;
-> +	if (dblocks < MEGABYTES(32, blocklog))
-> +		shift--;
-> +
->  	/*
->  	 * If dblocks is not evenly divisible by the number of
->  	 * desired AGs, round "blocks" up so we don't lose the
->  	 * last bit of the filesystem. The same principle applies
->  	 * to the AG count, so we don't lose the last AG!
->  	 */
-> +calc_blocks:
-> +	ASSERT(shift >= 0 && shift <= XFS_MULTIDISK_AGLOG);
->  	blocks = dblocks >> shift;
->  	if (dblocks & xfs_mask32lo(shift)) {
->  		if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
-
-
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 5d5f3aa..9d91f2d 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -19,6 +19,7 @@
->  #include "libxfs.h"
->  #include "libxlog.h"
->  #include <sys/resource.h>
-> +#include "xfs_multidisk.h"
->  #include "avl.h"
->  #include "avl64.h"
->  #include "globals.h"
-> @@ -589,6 +590,33 @@ format_log_max_lsn(
->  			 XLOG_FMT, new_cycle, true);
->  }
->  
-> +/*
-> + * mkfs increases the AG count for "multidisk" configurations, we want
-> + * to target these for an increase in thread count. Hence check the superlock
-> + * geometry information to determine if mkfs considered this a multidisk
-> + * configuration.
-> + */
-> +static bool
-> +is_multidisk_filesystem(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +
-> +	/* High agcount filesystems are always considered "multidisk" */
-> +	if (sbp->sb_agcount >= XFS_MULTIDISK_AGCOUNT)
-> +		return true;
-> +
-> +	/*
-> +	 * If it doesn't have a sunit/swidth, mkfs didn't consider it a
-> +	 * multi-disk array, so we don't either.
-> +	 */
-> +	if (!sbp->sb_unit)
-> +		return false;
-> +
-> +	ASSERT(sbp->sb_width);
-> +	return true;
-> +}
-> +
->  int
->  main(int argc, char **argv)
->  {
-> @@ -729,9 +757,21 @@ main(int argc, char **argv)
->  	 * threads/CPU as this is enough threads to saturate a CPU on fast
->  	 * devices, yet few enough that it will saturate but won't overload slow
->  	 * devices.
-> +	 *
-> +	 * Multidisk filesystems can handle more IO parallelism so we should try
-> +	 * to process multiple AGs at a time in such a configuration to try to
-> +	 * saturate the underlying storage and speed the repair process. Only do
-> +	 * this if prefetching is enabled.
->  	 */
-> -	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
-> -		ag_stride = 15;
-> +	if (!ag_stride && do_prefetch && is_multidisk_filesystem(mp)) {
-> +		/*
-> +		 * For small agcount multidisk systems, just double the
-> +		 * parallelism. For larger AG count filesystems (32 and above)
-> +		 * use more parallelism, and linearly increase the parallelism
-> +		 * with the number of AGs.
-> +		 */
-> +		ag_stride = min(glob_agcount, XFS_MULTIDISK_AGCOUNT / 2) - 1;
-> +	}
->  
->  	if (ag_stride) {
->  		int max_threads = platform_nproc() * 8;
+> If I revert c19b3b05ae44 from 4.6-rc1, the warnings stop.
 > 
+> WARNING: CPU: 35 PID: 6715 at lib/list_debug.c:29 __list_add+0x65/0xc0
+> list_add corruption. next->prev should be prev (ffff882030928a00), but was ffff88103f00c300. (next=ffff88100fde5ce8).
+.....
+>  [<ffffffff812488f0>] ? bdev_test+0x20/0x20
+>  [<ffffffff813551a5>] __list_add+0x65/0xc0
+>  [<ffffffff81249bd8>] bd_acquire+0xc8/0xd0
+>  [<ffffffff8124aa59>] blkdev_open+0x39/0x70
+>  [<ffffffff8120bc27>] do_dentry_open+0x227/0x320
+>  [<ffffffff8124aa20>] ? blkdev_get_by_dev+0x50/0x50
+>  [<ffffffff8120d057>] vfs_open+0x57/0x60
+>  [<ffffffff8121c9fa>] path_openat+0x1ba/0x1340
+>  [<ffffffff8121eff1>] do_filp_open+0x91/0x100
+>  [<ffffffff8122c806>] ? __alloc_fd+0x46/0x180
+>  [<ffffffff8120d3b4>] do_sys_open+0x124/0x210
+>  [<ffffffff8120d4be>] SyS_open+0x1e/0x20
+>  [<ffffffff81003c12>] do_syscall_64+0x62/0x110
+>  [<ffffffff8169ade1>] entry_SYSCALL64_slow_path+0x25/0x25
+....
+> According to the bd_acquire+0xc8 offset, we're in bd_acquire()
+> attempting the list add:
+....
+>  713         bdev = bdget(inode->i_rdev);
+>  714         if (bdev) {
+>  715                 spin_lock(&bdev_lock);
+>  716                 if (!inode->i_bdev) {
+>  717                         /*
+>  718                          * We take an additional reference to bd_inode,
+>  719                          * and it's released in clear_inode() of inode.
+>  720                          * So, we can access it via ->i_mapping always
+>  721                          * without igrab().
+>  722                          */
+>  723                         bdgrab(bdev);
+>  724                         inode->i_bdev = bdev;
+>  725                         inode->i_mapping = bdev->bd_inode->i_mapping;
+>  726                         list_add(&inode->i_devices, &bdev->bd_inodes);
+
+So the bdev->bd_inodes list is corrupt, and this call trace is
+just the messenger.
+
+> crash> ps -a | grep mdadm
+> ...
+> PID: 6715   TASK: ffff882033ac2d40  CPU: 35  COMMAND: "mdadm"
+> ARG: /sbin/mdadm --detail --export /var/opt/ft/osm/osm_temporary_md_device_node
+> ...
+> 
+> I traced the proprietary-driver-dependent user program to figure out
+> what it was doing and boiled that down to a repro that hits the same
+> corruption when running *stock* 4.6-rc1.  (Note /tmp is hosted on an 
+> XFS volume):
+> 
+> --
+> 
+> MD=/dev/md1
+> LOOP_A=/dev/loop0
+> LOOP_B=/dev/loop1
+> TMP_A=/tmp/diska
+> TMP_B=/tmp/diskb
+> 
+> echo
+> echo Setting up ...
+> 
+> dd if=/dev/zero of=$TMP_A bs=1M count=200
+> dd if=/dev/zero of=$TMP_B bs=1M count=200
+> losetup $LOOP_A $TMP_A
+> losetup $LOOP_B $TMP_B
+> 
+> mdadm --create $MD \
+>         --metadata=1 \
+>         --level=1 \
+>         --raid-devices=2 \
+>         --bitmap=internal \
+>         $LOOP_A $LOOP_B
+> 
+> MAJOR=$(stat -c %t $MD)
+> MINOR=$(stat -c %T $MD)
+> 
+> echo
+> echo Testing major: $MAJOR minor: $MINOR ...
+> 
+> for i in {0..100}; do
+>   mknod --mode=0600 /tmp/tmp_node b $MAJOR $MINOR
+>   mdadm --detail --export /tmp/tmp_node
+>   rm -f /tmp/tmp_node
+> done
+> 
+> echo
+> echo Cleanup ...
+> 
+> mdadm --stop $MD
+> losetup -d $LOOP_A $LOOP_B
+> rm -f $TMP_A $TMP_B
+> 
+> echo
+> echo Done.
+> 
+> --
+> 
+> I'm not really sure why the bisect landed on c19b3b05ae44 "xfs: mode
+> di_mode to vfs inode", but as I mentioned, reverting it made the list
+> warnings go away.
+
+Neither am I at this point as it's the bdev inode (not an xfs
+inode) that has a corrupted list. I'll have to try to reproduce this.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+dchinner@redhat.com
 
 _______________________________________________
 xfs mailing list
