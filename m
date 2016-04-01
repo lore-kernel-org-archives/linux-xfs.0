@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6BB767CFA
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2016 16:56:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 31E7330405F
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2016 14:56:10 -0700 (PDT)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	FflSH1CqG1AUFCsR for <xfs@oss.sgi.com>;
-	Fri, 29 Apr 2016 14:56:06 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v4 8/7] Documentation: add error handling information to
-	dax.txt
-Date: Fri, 29 Apr 2016 15:55:42 -0600
-Message-Id: <1461966942-21205-1-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
-References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 6D6267CB2
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 02:01:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22D83304032
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 00:01:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 3sNtpDjKzcWiBgn7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 01 Apr 2016 00:01:17 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs/133 134 262: limit xfs_quota report to report on specific
+	project quota id
+Date: Fri,  1 Apr 2016 15:00:50 +0800
+Message-Id: <1459494050-28330-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,69 +27,164 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew@wil.cx>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: fstests@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-This just provides information of the basic paths that can be used to
-deal with (i.e. clear) media errors from the file system point-of-view.
+With GETNEXTQUOTA support, xfs_quota -c "report" now outputs more quota
+info than before, and this breaks xfs/133 xfs/134 and xfs/262, e.g.
+xfs/133 fails as
 
-Cc: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+     Filesystem Blocks Quota Limit Warn/Time Mounted on
+     SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
+     === report command output ===
+    +(null) 0 0 0 00 [--------]
+     123456-project 0 102400 204800 00 [--------]
+
+Fix it by limiting xfs_quota to report on specific project quota number
+using -L & -U option, so only the project quota being tested is
+reported.
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
 
-While this isn't a design document for new mechanisms for adding
-error recovery/redundancy at the block/fs layers, this attempts to
-explain the bare essentials required for anything operating above
-the pmem block driver in the stack.
+I'm not sure if kernel should be fixed, but limiting the quota report on
+project number being tested seems something worth doing to me anyway. It avoids
+breakage of future changes of quota report output.
 
- Documentation/filesystems/dax.txt | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ tests/xfs/133     |  8 +++++---
+ tests/xfs/133.out |  2 +-
+ tests/xfs/134     | 22 +++++++++++++++-------
+ tests/xfs/262     |  6 ++++--
+ 4 files changed, 25 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
-index 7bde640..71cd8fa 100644
---- a/Documentation/filesystems/dax.txt
-+++ b/Documentation/filesystems/dax.txt
-@@ -79,6 +79,40 @@ These filesystems may be used for inspiration:
- - ext4: the fourth extended filesystem, see Documentation/filesystems/ext4.txt
+diff --git a/tests/xfs/133 b/tests/xfs/133
+index 82c38b1..7a0e55e 100755
+--- a/tests/xfs/133
++++ b/tests/xfs/133
+@@ -57,16 +57,17 @@ do_project_test()
+ {
+ 	local qa_project=123456-project
+ 	local dir=$SCRATCH_MNT/project
++	local proj_num=10
  
+ 	mkdir $dir 2>/dev/null
  
-+Handling Media Errors
-+---------------------
-+
-+The libnvdimm subsystem stores a record of known media error locations for
-+each pmem block device (in gendisk->badblocks). If we fault at such location,
-+or one with a latent error not yet discovered, the application can expect
-+to receive a SIGBUS. Libnvdimm also allows clearing of these errors by simply
-+writing the affected sectors (through the pmem driver, and if the underlying
-+NVDIMM supports the clear_poison DSM defined by ACPI).
-+
-+Since DAX IO normally doesn't go through the driver/bio path, applications or
-+sysadmins have an option to restore the lost data from a prior backup/inbuilt
-+redundancy in the following two ways:
-+
-+1. Delete the affected file, and restore from a backup (sysadmin route):
-+   This will free the file system blocks that were being used by the file,
-+   and the next time they're allocated, they will be zeroed first, which
-+   happens through the driver, and will clear bad sectors.
-+
-+2. Open the file with O_DIRECT, and restore a sector's worth of data at the
-+   bad location (application route):
-+   We allow O_DIRECT writes to go through the normal O_DIRECT path that sends
-+   bios down through the driver. If an application is able to restore its own
-+   data, it can use this path to clear errors.
-+
-+These are the two basic paths that allow DAX filesystems to continue operating
-+in the presence of media errors. More robust error recovery mechanisms can be
-+built on top of this in the future, for example, involving redundancy/mirroring
-+provided at the block layer through DM, or additionally, at the filesystem
-+level. These would have to rely on the above two tenets, that error clearing
-+can happen either by sending an IO through the driver, or zeroing (also through
-+the driver).
-+
-+
- Shortcomings
- ------------
+ 	#project quota files
+ 	cat >$tmp.projects <<EOF
+-10:$dir
++$proj_num:$dir
+ EOF
  
+ 	cat >$tmp.projid <<EOF
+-$qa_project:10
++$qa_project:$proj_num
+ EOF
+ 
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+@@ -81,7 +82,8 @@ EOF
+ 
+ 	echo "=== report command output ==="
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+-		-c "report -p -N -b" $SCRATCH_MNT | _filter_quota
++		-c "report -p -N -b -L $proj_num -U $proj_num" \
++		$SCRATCH_MNT | _filter_quota
+ }
+ 
+ # Test project
+diff --git a/tests/xfs/133.out b/tests/xfs/133.out
+index 21cfd0d..8c747bf 100644
+--- a/tests/xfs/133.out
++++ b/tests/xfs/133.out
+@@ -4,5 +4,5 @@ Disk quotas for Project 123456-project (10)
+ Filesystem Blocks Quota Limit Warn/Time Mounted on
+ SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
+ === report command output ===
+-123456-project 0 102400 204800 00 [--------]
++#10 0 102400 204800 00 [--------]
+ 
+diff --git a/tests/xfs/134 b/tests/xfs/134
+index be18ee8..5ba275c 100755
+--- a/tests/xfs/134
++++ b/tests/xfs/134
+@@ -54,12 +54,13 @@ _require_xfs_quota
+ dir=$SCRATCH_MNT/project
+ 
+ #project quota files
++proj_num=1
+ cat >$tmp.projects <<EOF
+-1:$dir
++$proj_num:$dir
+ EOF
+ 
+ cat >$tmp.projid <<EOF
+-test:1
++test:$proj_num
+ EOF
+ 
+ cp /dev/null $seqres.full
+@@ -87,17 +88,24 @@ fi
+ src/feature -p $SCRATCH_DEV
+ [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
+ 
++report_quota()
++{
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -inN -p -L $proj_num -U $proj_num" $SCRATCH_DEV | \
++		tr -s '[:space:]'
++}
++
+ mkdir $dir
+ $XFS_IO_PROG -r -c "chproj -R 1" -c "chattr -R +P" $dir
+ 
+-xfs_quota -D $tmp.projects -P $tmp.projid -x \
++$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+     -c "limit -p bsoft=100m bhard=100m 1" $SCRATCH_DEV
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ touch $dir/1
+ touch $dir/2
+ cp $dir/2 $dir/3
+ 
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ 
+ if [ "$HOSTOS" == "IRIX" ] ; then
+     mkfile 1M $TEST_DIR/6
+@@ -107,12 +115,12 @@ fi
+ 
+ #try cp to dir
+ cp $TEST_DIR/6 $dir/6
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ 
+ #try mv to dir
+ mv $TEST_DIR/6 $dir/7
+ 
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ 
+ # success, all done
+ status=0
+diff --git a/tests/xfs/262 b/tests/xfs/262
+index 9d8b838..d3a352c 100755
+--- a/tests/xfs/262
++++ b/tests/xfs/262
+@@ -138,11 +138,13 @@ _quota_cmd "limit -p bhard=${qlimit_meg}m bsoft=${qlimit_meg}m ${proj_name}" \
+ 							2>> "$seqres.full" 1>&2
+ 
+ # See what gets reported
+-_quota_cmd "report"		| _filter_quota_rpt	2>> "$seqres.full"
++_quota_cmd "report -U $proj_num -L $proj_num" | _filter_quota_rpt \
++							2>> $seqres.full
+ _quota_cmd "df"			| _filter_quota_rpt	2>> "$seqres.full"
+ 
+ # This time using "human readable" output
+-_quota_cmd "report -h"		| _filter_quota_rpt	2>> "$seqres.full"
++_quota_cmd "report -h $proj_num -L $proj_num" | _filter_quota_rpt \
++							2>> "$seqres.full"
+ _quota_cmd "df -h"		| _filter_quota_rpt	2>> "$seqres.full"
+ 
+ # Clean up
 -- 
 2.5.5
 
