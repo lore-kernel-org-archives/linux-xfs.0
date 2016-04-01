@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A9C377CA6
-	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 11:31:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D5DB8F8039
-	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 09:31:34 -0700 (PDT)
-Received: from mail-pf0-f171.google.com (mail-pf0-f171.google.com
-	[209.85.192.171]) by cuda.sgi.com with ESMTP id
-	rSl4whLVNDQ6WW97 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:33 -0700 (PDT)
-Received: by mail-pf0-f171.google.com with SMTP id e128so105176846pfe.3
-	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:33 -0700 (PDT)
-From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v2 2/8] block: move two bvec structure into bvec.h
-Date: Mon,  4 Apr 2016 00:31:03 +0800
-Message-Id: <1459701069-31406-3-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
-References: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 002007CC9
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 12:24:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA06B304039
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 10:24:44 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id b4DQaYz7WDQBAAel for <xfs@oss.sgi.com>;
+	Fri, 01 Apr 2016 10:24:41 -0700 (PDT)
+Subject: Re: [PATCH] xfs/133 134 262: limit xfs_quota report to report on
+	specific project quota id
+References: <1459494050-28330-1-git-send-email-eguan@redhat.com>
+	<20160401072856.GA3329@dhcp12-237.nay.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <56FEAED8.2050108@sandeen.net>
+Date: Fri, 1 Apr 2016 12:24:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160401072856.GA3329@dhcp12-237.nay.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,116 +25,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
+To: Zorro Lang <zlang@redhat.com>, Eryu Guan <eguan@redhat.com>
+Cc: sandeen@redhat.com, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-This patch moves 'struct bio_vec' and 'struct bvec_iter'
-into 'include/linux/bvec.h', then always include this header
-into 'include/linux/blk_types.h'.
 
-With this change, both 'struct bvec_iter' and bvec iterator
-helpers don't depend on CONFIG_BLOCK any more, then we can
-use bvec iterator to implement iterate_bvec(): lib/iov_iter.c.
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- include/linux/bio.h       |  1 -
- include/linux/blk_types.h | 22 +---------------------
- include/linux/bvec.h      | 20 +++++++++++++++++++-
- 3 files changed, 20 insertions(+), 23 deletions(-)
+On 4/1/16 2:28 AM, Zorro Lang wrote:
+> On Fri, Apr 01, 2016 at 03:00:50PM +0800, Eryu Guan wrote:
+>> With GETNEXTQUOTA support, xfs_quota -c "report" now outputs more quota
+>> info than before, and this breaks xfs/133 xfs/134 and xfs/262, e.g.
+>> xfs/133 fails as
+>>
+>>      Filesystem Blocks Quota Limit Warn/Time Mounted on
+>>      SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
+>>      === report command output ===
+>>     +(null) 0 0 0 00 [--------]
+>>      123456-project 0 102400 204800 00 [--------]
+>>
+>> Fix it by limiting xfs_quota to report on specific project quota number
+>> using -L & -U option, so only the project quota being tested is
+>> reported.
+>>
+>> Signed-off-by: Eryu Guan <eguan@redhat.com>
+>> ---
+>>
+>> I'm not sure if kernel should be fixed, but limiting the quota report on
+>> project number being tested seems something worth doing to me anyway. It avoids
+>> breakage of future changes of quota report output.
+> 
+> Hi,
+> 
+> FYI:
+> About "+(null) 0 0 0 00 [--------]"problem, it has been talked in:
+> http://thread.gmane.org/gmane.comp.file-systems.fstests/1852/focus=1968
+> 
+> I think:
+> 1) If we consider that this's a bug, the original test cases can
+> be the reproducer of this bug, so we shouldn't change the cases.
+> 
+> 2) If we think print "(null) 0 0 0 00 [--------]" is right(or not
+> wrong), then this patch is good.
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 78cf737..7f998ac 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -31,7 +31,6 @@
- 
- /* struct bio, bio_vec and BIO_* flags are defined in blk_types.h */
- #include <linux/blk_types.h>
--#include <linux/bvec.h>
- 
- #define BIO_DEBUG
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 86a38ea..a8d8e1f 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -6,6 +6,7 @@
- #define __LINUX_BLK_TYPES_H
- 
- #include <linux/types.h>
-+#include <linux/bvec.h>
- 
- struct bio_set;
- struct bio;
-@@ -17,28 +18,7 @@ struct cgroup_subsys_state;
- typedef void (bio_end_io_t) (struct bio *);
- typedef void (bio_destructor_t) (struct bio *);
- 
--/*
-- * was unsigned short, but we might as well be ready for > 64kB I/O pages
-- */
--struct bio_vec {
--	struct page	*bv_page;
--	unsigned int	bv_len;
--	unsigned int	bv_offset;
--};
--
- #ifdef CONFIG_BLOCK
--
--struct bvec_iter {
--	sector_t		bi_sector;	/* device address in 512 byte
--						   sectors */
--	unsigned int		bi_size;	/* residual I/O count */
--
--	unsigned int		bi_idx;		/* current index into bvl_vec */
--
--	unsigned int            bi_bvec_done;	/* number of bytes completed in
--						   current bvec */
--};
--
- /*
-  * main unit of I/O for the block layer and lower layers (ie drivers and
-  * stacking drivers)
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 29c459d..e111124 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -20,7 +20,25 @@
- #ifndef __LINUX_BVEC_ITER_H
- #define __LINUX_BVEC_ITER_H
- 
--#include <linux/blk_types.h>
-+/*
-+ * was unsigned short, but we might as well be ready for > 64kB I/O pages
-+ */
-+struct bio_vec {
-+	struct page	*bv_page;
-+	unsigned int	bv_len;
-+	unsigned int	bv_offset;
-+};
-+
-+struct bvec_iter {
-+	sector_t		bi_sector;	/* device address in 512 byte
-+						   sectors */
-+	unsigned int		bi_size;	/* residual I/O count */
-+
-+	unsigned int		bi_idx;		/* current index into bvl_vec */
-+
-+	unsigned int            bi_bvec_done;	/* number of bytes completed in
-+						   current bvec */
-+};
- 
- /*
-  * various member access, note that bio_data should of course not be used
--- 
-1.9.1
+yes, I'm sorry I didn't take care of this sooner.
+
+I don't think there's value in printing the "(null)" line; I think maybe my
+suggestion from that old thread might be best:
+
+> We could explicitly look up id 0 and not show it if it's not in the
+> projects file.
+
+Or now that I think about it - projid 0 is the default project quota, right?
+
+Assuming that's correct, perhaps we should conditionally print the line,
+changing "(null)" to "default", printing it only if a default quota is 
+set (i.e. not all zeros).
+
+-Eric
 
 _______________________________________________
 xfs mailing list
