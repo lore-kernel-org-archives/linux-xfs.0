@@ -1,23 +1,44 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 010377CA1
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 09:55:28 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 394517CBE
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 07:31:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C7DE1304032
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 07:55:24 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6383AC003
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 05:31:10 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id l5vrZTIsBuwMBtOf (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 0DLSRuusKDIDiFXO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 07:55:20 -0700 (PDT)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v2 1/5] block, dax: pass blk_dax_ctl through to drivers
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-2-git-send-email-vishal.l.verma@intel.com>
-Date: Fri, 15 Apr 2016 10:55:17 -0400
-In-Reply-To: <1459303190-20072-2-git-send-email-vishal.l.verma@intel.com>
-	(Vishal Verma's message of "Tue, 29 Mar 2016 19:59:46 -0600")
-Message-ID: <x49bn5a7wh6.fsf@segfault.boston.devel.redhat.com>
+	<xfs@oss.sgi.com>; Fri, 01 Apr 2016 05:31:09 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 7B6967FD44
+	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 12:31:08 +0000 (UTC)
+Received: from redhat.com (gfs-i24c-02.mpc.lab.eng.bos.redhat.com
+	[10.16.144.214])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u31CV63U016816
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Fri, 1 Apr 2016 08:31:08 -0400
+Date: Fri, 1 Apr 2016 08:31:06 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160401123106.GB44113@redhat.com>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<6457b1d9de271ec6cca6bc2626aac161@mail.gmail.com>
+	<20160322140345.GA54245@bfoster.bfoster>
+	<0f3832c45509f444f55fda2aaf9c9deb@mail.gmail.com>
+	<20160323123010.GA43073@bfoster.bfoster>
+	<20160323153221.GA19456@redhat.com>
+	<20160323223747.GX30721@dastard>
+	<20160324165244.GA17555@redhat.com>
+	<20160324215603.GD11812@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160324215603.GD11812@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,183 +47,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jens Axboe <axboe@fb.com>, linux-mm@kvack.org, linux-block@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: xfs@oss.sgi.com
 
-Vishal Verma <vishal.l.verma@intel.com> writes:
+On Fri, Mar 25, 2016 at 08:56:03AM +1100, Dave Chinner wrote:
+> On Thu, Mar 24, 2016 at 05:52:44PM +0100, Carlos Maiolino wrote:
+> > I can now reproduce it, or at least part of the problem.
+> > =
 
-> From: Dan Williams <dan.j.williams@intel.com>
->
-> This is in preparation for doing badblocks checking against the
-> requested sector range in the driver.  Currently we opportunistically
-> return as much data that can be "dax'd" starting at the given sector.
-> When errors are present we want to limit that range to the first
-> encountered error, or fail the dax request if the range encompasses an
-> error.
+> > Regarding your question Dave, yes, it can be unmounted after I issue xf=
+s_io shutdown
+> > command. But, if a umount is issued before that, then we can't find the
+> > mountpoint anymore.
+> > =
 
-I'm not a fan of hiding arguments like this, but it looks fine.
+> > I'm not sure if I'm correct, but, what it looks like to me, as you alre=
+ady
+> > mentioned, is that we keep getting IO errors but we never actually shut=
+down
+> > the filesystem while doing async metadata writes.
+> =
 
-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+> *nod*
+> =
+
+> > I believe I've found the problem. So, I will try to explain it, so you =
+guys
+> > can review and let me know if I'm right or not
+> > =
+
+> > I was looking the code, and for me, looks like async retries are design=
+ed to
+> > keep retrying forever, and rely on some other part of the filesystem to=
+ actually
+> > shutdown it.
+> =
+
+> *nod*
+> =
+
+> [snip description of metadata IO error behaviour]
+> =
+
+> Yes, that is exactly how the code is expected to behave - in fact,
+> that's how it was originally designed to behave.
+> =
+
+> > Looks like, somebody already noticed it:
+> > =
+
+> >         /*
+> >         =A6* If the write was asynchronous then no one will be looking =
+for the
+> >         =A6* error.  Clear the error state and write the buffer out aga=
+in.
+> >         =A6*
+> >         =A6* XXX: This helps against transient write errors, but we nee=
+d to find
+> >         =A6* a way to shut the filesystem down if the writes keep faili=
+ng.
+> >         =A6*
+> >         =A6* In practice we'll shut the filesystem down soon as non-tra=
+nsient
+> >         =A6* errors tend to affect the whole device and a failing log w=
+rite
+> >         =A6* will make us give up.  But we really ought to do better he=
+re.
+> >         =A6*/
+> > =
+
+> > =
+
+> > So, if I'm write in how we hit this problem, and IIRC, Dave's patchset =
+for
+> > setting limits to IO errors can be slightly modified to fix this issue =
+too, but,
+> =
+
+> The patchset I have doesn't need modification to fix this issue - it
+> has a patch specifically to address this, and it changes the default
+> behaviour to "fail async writes at unmount":
+> =
+
+> http://oss.sgi.com/archives/xfs/2015-08/msg00092.html
+> =
+
+> > the problem is that the user must set it BEFORE he tries to unmount the
+> > filesystem, otherwise it will get stuck here.
+> =
+
+> Yes, but that doesn't answer the big question: why don't the
+> periodic log forces that are failing with EIO cause a filesystem
+> shutdown? We issue a log force every 30s even during unmount, and a
+> failed log IO must cause the filesystem to shut down. So why aren't
+> these causing the filesystem to shutdown as we'd expect when the
+> device has been pulled?
+> =
 
 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  arch/powerpc/sysdev/axonram.c | 10 +++++-----
->  drivers/block/brd.c           |  9 +++++----
->  drivers/nvdimm/pmem.c         |  9 +++++----
->  drivers/s390/block/dcssblk.c  | 12 ++++++------
->  fs/block_dev.c                |  2 +-
->  include/linux/blkdev.h        |  3 +--
->  6 files changed, 23 insertions(+), 22 deletions(-)
->
-> diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
-> index 0d112b9..d85673f 100644
-> --- a/arch/powerpc/sysdev/axonram.c
-> +++ b/arch/powerpc/sysdev/axonram.c
-> @@ -139,17 +139,17 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
->  
->  /**
->   * axon_ram_direct_access - direct_access() method for block device
-> - * @device, @sector, @data: see block_device_operations method
-> + * @dax: see block_device_operations method
->   */
->  static long
-> -axon_ram_direct_access(struct block_device *device, sector_t sector,
-> -		       void __pmem **kaddr, pfn_t *pfn)
-> +axon_ram_direct_access(struct block_device *device, struct blk_dax_ctl *dax)
->  {
-> +	sector_t sector = get_start_sect(device) + dax->sector;
->  	struct axon_ram_bank *bank = device->bd_disk->private_data;
->  	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
->  
-> -	*kaddr = (void __pmem __force *) bank->io_addr + offset;
-> -	*pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
-> +	dax->addr = (void __pmem __force *) bank->io_addr + offset;
-> +	dax->pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
->  	return bank->size - offset;
->  }
->  
-> diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-> index f7ecc28..e3e4780 100644
-> --- a/drivers/block/brd.c
-> +++ b/drivers/block/brd.c
-> @@ -380,9 +380,10 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
->  }
->  
->  #ifdef CONFIG_BLK_DEV_RAM_DAX
-> -static long brd_direct_access(struct block_device *bdev, sector_t sector,
-> -			void __pmem **kaddr, pfn_t *pfn)
-> +static long brd_direct_access(struct block_device *bdev,
-> +		struct blk_dax_ctl *dax)
->  {
-> +	sector_t sector = get_start_sect(bdev) + dax->sector;
->  	struct brd_device *brd = bdev->bd_disk->private_data;
->  	struct page *page;
->  
-> @@ -391,8 +392,8 @@ static long brd_direct_access(struct block_device *bdev, sector_t sector,
->  	page = brd_insert_page(brd, sector);
->  	if (!page)
->  		return -ENOSPC;
-> -	*kaddr = (void __pmem *)page_address(page);
-> -	*pfn = page_to_pfn_t(page);
-> +	dax->addr = (void __pmem *)page_address(page);
-> +	dax->pfn = page_to_pfn_t(page);
->  
->  	return PAGE_SIZE;
->  }
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index ca5721c..da10554 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -167,14 +167,15 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
->  	return rc;
->  }
->  
-> -static long pmem_direct_access(struct block_device *bdev, sector_t sector,
-> -		      void __pmem **kaddr, pfn_t *pfn)
-> +static long pmem_direct_access(struct block_device *bdev,
-> +		struct blk_dax_ctl *dax)
->  {
-> +	sector_t sector = get_start_sect(bdev) + dax->sector;
->  	struct pmem_device *pmem = bdev->bd_disk->private_data;
->  	resource_size_t offset = sector * 512 + pmem->data_offset;
->  
-> -	*kaddr = pmem->virt_addr + offset;
-> -	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
-> +	dax->addr = pmem->virt_addr + offset;
-> +	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
->  
->  	return pmem->size - pmem->pfn_pad - offset;
->  }
-> diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-> index 1bce9cf..5719c30 100644
-> --- a/drivers/s390/block/dcssblk.c
-> +++ b/drivers/s390/block/dcssblk.c
-> @@ -30,8 +30,8 @@ static int dcssblk_open(struct block_device *bdev, fmode_t mode);
->  static void dcssblk_release(struct gendisk *disk, fmode_t mode);
->  static blk_qc_t dcssblk_make_request(struct request_queue *q,
->  						struct bio *bio);
-> -static long dcssblk_direct_access(struct block_device *bdev, sector_t secnum,
-> -			 void __pmem **kaddr, pfn_t *pfn);
-> +static long dcssblk_direct_access(struct block_device *bdev,
-> +		struct blk_dax_ctl *dax)
->  
->  static char dcssblk_segments[DCSSBLK_PARM_LEN] = "\0";
->  
-> @@ -882,9 +882,9 @@ fail:
->  }
->  
->  static long
-> -dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
-> -			void __pmem **kaddr, pfn_t *pfn)
-> +dcssblk_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
->  {
-> +	sector_t secnum = get_start_sect(bdev) + dax->sector;
->  	struct dcssblk_dev_info *dev_info;
->  	unsigned long offset, dev_sz;
->  
-> @@ -893,8 +893,8 @@ dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
->  		return -ENODEV;
->  	dev_sz = dev_info->end - dev_info->start;
->  	offset = secnum * 512;
-> -	*kaddr = (void __pmem *) (dev_info->start + offset);
-> -	*pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
-> +	dax->addr = (void __pmem *) (dev_info->start + offset);
-> +	dax->pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
->  
->  	return dev_sz - offset;
->  }
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 3172c4e..c5837fa 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
->  	sector += get_start_sect(bdev);
->  	if (sector % (PAGE_SIZE / 512))
->  		return -EINVAL;
-> -	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
-> +	avail = ops->direct_access(bdev, dax);
->  	if (!avail)
->  		return -ERANGE;
->  	if (avail > 0 && avail & ~PAGE_MASK)
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 7e5d7e0..92f8a1f 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1656,8 +1656,7 @@ struct block_device_operations {
->  	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
->  	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
->  	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-> -	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
-> -			pfn_t *);
-> +	long (*direct_access)(struct block_device *, struct blk_dax_ctl *dax);
->  	unsigned int (*check_events) (struct gendisk *disk,
->  				      unsigned int clearing);
->  	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
+Right, good point, I'll take a look on it
+
+> Cheers,
+> =
+
+> Dave.
+> -- =
+
+> Dave Chinner
+> david@fromorbit.com
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- =
+
+Carlos
 
 _______________________________________________
 xfs mailing list
