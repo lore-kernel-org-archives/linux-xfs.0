@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8D7597CA0
-	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 01:56:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FCA6304032
-	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 23:56:45 -0700 (PDT)
-Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
-	[209.85.220.41]) by cuda.sgi.com with ESMTP id 34BuJrDD2ADLCcR8
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 18C787CA0
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 11:31:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 70EBBAC001
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 09:31:22 -0700 (PDT)
+Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com
+	[209.85.220.54]) by cuda.sgi.com with ESMTP id QsBpiiszpolcj8fm
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 03 Apr 2016 23:56:43 -0700 (PDT)
-Received: by mail-pa0-f41.google.com with SMTP id zm5so137948501pac.0
-	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 23:56:43 -0700 (PDT)
+	Sun, 03 Apr 2016 09:31:20 -0700 (PDT)
+Received: by mail-pa0-f54.google.com with SMTP id zm5so127005275pac.0
+	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:20 -0700 (PDT)
 From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v3 0/8] block: prepare for multipage bvecs
-Date: Mon,  4 Apr 2016 14:56:26 +0800
-Message-Id: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
+Subject: [PATCH v2 0/8] block: prepare for multipage bvecs
+Date: Mon,  4 Apr 2016 00:31:01 +0800
+Message-Id: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -50,11 +50,6 @@ BIO_MAX_PAGES.
 xfstests(-a auto) have been run and no regression found by this
 patchset against linus v4.6-rc1-next-20160329.
 
-V3:
-	- include kenrel.h & bug.h in bvec.h for fix comiling failure on arm
-	as reported by 0day ktest
-	- build test on arm & arm64
-
 V2:
 	- rename bvec_iter.h as bvec.h
 	- always include bvec.h into blk_types.h as suggested by Christoph
@@ -66,18 +61,16 @@ V1:
 	- for 1,4 and 5, Reviewd-by not added, Christoph still expressed
 	'this looks fine to me.'
 
- drivers/block/drbd/drbd_int.h |  4 +-
- fs/xfs/xfs_buf.c              |  4 +-
- include/linux/bio.h           | 52 -----------------------
- include/linux/blk_types.h     | 22 +---------
- include/linux/bvec.h          | 96 +++++++++++++++++++++++++++++++++++++++++++
- lib/iov_iter.c                | 30 +++++---------
- 6 files changed, 110 insertions(+), 98 deletions(-)
-
+ drivers/block/drbd/drbd_int.h |  4 +--
+ fs/xfs/xfs_buf.c              |  4 +--
+ include/linux/bio.h           | 52 --------------------------------
+ include/linux/blk_types.h     | 22 +-------------
+ include/linux/bvec.h          | 93 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/iov_iter.c                | 30 +++++++------------
+ 6 files changed, 107 insertions(+), 98 deletions(-)
 
 Thanks,
 Ming
-
 
 _______________________________________________
 xfs mailing list
