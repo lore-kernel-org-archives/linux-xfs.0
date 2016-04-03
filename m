@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 002007CC9
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 12:24:48 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 203DB7CA4
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 11:31:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BA06B304039
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 10:24:44 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id b4DQaYz7WDQBAAel for <xfs@oss.sgi.com>;
-	Fri, 01 Apr 2016 10:24:41 -0700 (PDT)
-Subject: Re: [PATCH] xfs/133 134 262: limit xfs_quota report to report on
-	specific project quota id
-References: <1459494050-28330-1-git-send-email-eguan@redhat.com>
-	<20160401072856.GA3329@dhcp12-237.nay.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <56FEAED8.2050108@sandeen.net>
-Date: Fri, 1 Apr 2016 12:24:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160401072856.GA3329@dhcp12-237.nay.redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E88338F8039
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 09:31:28 -0700 (PDT)
+Received: from mail-pf0-f182.google.com (mail-pf0-f182.google.com
+	[209.85.192.182]) by cuda.sgi.com with ESMTP id
+	2dibqpFGS8X2CErz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:27 -0700 (PDT)
+Received: by mail-pf0-f182.google.com with SMTP id e128so105175753pfe.3
+	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:27 -0700 (PDT)
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v2 1/8] block: move bvec iterator into include/linux/bvec.h
+Date: Mon,  4 Apr 2016 00:31:02 +0800
+Message-Id: <1459701069-31406-2-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
+References: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,66 +26,185 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>, Eryu Guan <eguan@redhat.com>
-Cc: sandeen@redhat.com, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
+bvec iterator helpers should be used to implement by
+iterate_bvec():lib/iov_iter.c too, and move them into
+one header, so that we can keep bvec iterator header
+out of CONFIG_BLOCK. Then we can remove the reinventing
+of wheel in iterate_bvec().
 
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ include/linux/bio.h  | 51 +-----------------------------------
+ include/linux/bvec.h | 74 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 75 insertions(+), 50 deletions(-)
+ create mode 100644 include/linux/bvec.h
 
-On 4/1/16 2:28 AM, Zorro Lang wrote:
-> On Fri, Apr 01, 2016 at 03:00:50PM +0800, Eryu Guan wrote:
->> With GETNEXTQUOTA support, xfs_quota -c "report" now outputs more quota
->> info than before, and this breaks xfs/133 xfs/134 and xfs/262, e.g.
->> xfs/133 fails as
->>
->>      Filesystem Blocks Quota Limit Warn/Time Mounted on
->>      SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
->>      === report command output ===
->>     +(null) 0 0 0 00 [--------]
->>      123456-project 0 102400 204800 00 [--------]
->>
->> Fix it by limiting xfs_quota to report on specific project quota number
->> using -L & -U option, so only the project quota being tested is
->> reported.
->>
->> Signed-off-by: Eryu Guan <eguan@redhat.com>
->> ---
->>
->> I'm not sure if kernel should be fixed, but limiting the quota report on
->> project number being tested seems something worth doing to me anyway. It avoids
->> breakage of future changes of quota report output.
-> 
-> Hi,
-> 
-> FYI:
-> About "+(null) 0 0 0 00 [--------]"problem, it has been talked in:
-> http://thread.gmane.org/gmane.comp.file-systems.fstests/1852/focus=1968
-> 
-> I think:
-> 1) If we consider that this's a bug, the original test cases can
-> be the reproducer of this bug, so we shouldn't change the cases.
-> 
-> 2) If we think print "(null) 0 0 0 00 [--------]" is right(or not
-> wrong), then this patch is good.
-
-yes, I'm sorry I didn't take care of this sooner.
-
-I don't think there's value in printing the "(null)" line; I think maybe my
-suggestion from that old thread might be best:
-
-> We could explicitly look up id 0 and not show it if it's not in the
-> projects file.
-
-Or now that I think about it - projid 0 is the default project quota, right?
-
-Assuming that's correct, perhaps we should conditionally print the line,
-changing "(null)" to "default", printing it only if a default quota is 
-set (i.e. not all zeros).
-
--Eric
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 88bc64f..78cf737 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -31,6 +31,7 @@
+ 
+ /* struct bio, bio_vec and BIO_* flags are defined in blk_types.h */
+ #include <linux/blk_types.h>
++#include <linux/bvec.h>
+ 
+ #define BIO_DEBUG
+ 
+@@ -57,29 +58,6 @@
+ 	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
+ } while (0)
+ 
+-/*
+- * various member access, note that bio_data should of course not be used
+- * on highmem page vectors
+- */
+-#define __bvec_iter_bvec(bvec, iter)	(&(bvec)[(iter).bi_idx])
+-
+-#define bvec_iter_page(bvec, iter)				\
+-	(__bvec_iter_bvec((bvec), (iter))->bv_page)
+-
+-#define bvec_iter_len(bvec, iter)				\
+-	min((iter).bi_size,					\
+-	    __bvec_iter_bvec((bvec), (iter))->bv_len - (iter).bi_bvec_done)
+-
+-#define bvec_iter_offset(bvec, iter)				\
+-	(__bvec_iter_bvec((bvec), (iter))->bv_offset + (iter).bi_bvec_done)
+-
+-#define bvec_iter_bvec(bvec, iter)				\
+-((struct bio_vec) {						\
+-	.bv_page	= bvec_iter_page((bvec), (iter)),	\
+-	.bv_len		= bvec_iter_len((bvec), (iter)),	\
+-	.bv_offset	= bvec_iter_offset((bvec), (iter)),	\
+-})
+-
+ #define bio_iter_iovec(bio, iter)				\
+ 	bvec_iter_bvec((bio)->bi_io_vec, (iter))
+ 
+@@ -193,33 +171,6 @@ static inline void *bio_data(struct bio *bio)
+ #define bio_for_each_segment_all(bvl, bio, i)				\
+ 	for (i = 0, bvl = (bio)->bi_io_vec; i < (bio)->bi_vcnt; i++, bvl++)
+ 
+-static inline void bvec_iter_advance(struct bio_vec *bv, struct bvec_iter *iter,
+-				     unsigned bytes)
+-{
+-	WARN_ONCE(bytes > iter->bi_size,
+-		  "Attempted to advance past end of bvec iter\n");
+-
+-	while (bytes) {
+-		unsigned len = min(bytes, bvec_iter_len(bv, *iter));
+-
+-		bytes -= len;
+-		iter->bi_size -= len;
+-		iter->bi_bvec_done += len;
+-
+-		if (iter->bi_bvec_done == __bvec_iter_bvec(bv, *iter)->bv_len) {
+-			iter->bi_bvec_done = 0;
+-			iter->bi_idx++;
+-		}
+-	}
+-}
+-
+-#define for_each_bvec(bvl, bio_vec, iter, start)			\
+-	for (iter = (start);						\
+-	     (iter).bi_size &&						\
+-		((bvl = bvec_iter_bvec((bio_vec), (iter))), 1);	\
+-	     bvec_iter_advance((bio_vec), &(iter), (bvl).bv_len))
+-
+-
+ static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
+ 				    unsigned bytes)
+ {
+diff --git a/include/linux/bvec.h b/include/linux/bvec.h
+new file mode 100644
+index 0000000..29c459d
+--- /dev/null
++++ b/include/linux/bvec.h
+@@ -0,0 +1,74 @@
++/*
++ * bvec iterator
++ *
++ * Copyright (C) 2001 Ming Lei <ming.lei@canonical.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public Licens
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-
++ */
++#ifndef __LINUX_BVEC_ITER_H
++#define __LINUX_BVEC_ITER_H
++
++#include <linux/blk_types.h>
++
++/*
++ * various member access, note that bio_data should of course not be used
++ * on highmem page vectors
++ */
++#define __bvec_iter_bvec(bvec, iter)	(&(bvec)[(iter).bi_idx])
++
++#define bvec_iter_page(bvec, iter)				\
++	(__bvec_iter_bvec((bvec), (iter))->bv_page)
++
++#define bvec_iter_len(bvec, iter)				\
++	min((iter).bi_size,					\
++	    __bvec_iter_bvec((bvec), (iter))->bv_len - (iter).bi_bvec_done)
++
++#define bvec_iter_offset(bvec, iter)				\
++	(__bvec_iter_bvec((bvec), (iter))->bv_offset + (iter).bi_bvec_done)
++
++#define bvec_iter_bvec(bvec, iter)				\
++((struct bio_vec) {						\
++	.bv_page	= bvec_iter_page((bvec), (iter)),	\
++	.bv_len		= bvec_iter_len((bvec), (iter)),	\
++	.bv_offset	= bvec_iter_offset((bvec), (iter)),	\
++})
++
++static inline void bvec_iter_advance(struct bio_vec *bv, struct bvec_iter *iter,
++				     unsigned bytes)
++{
++	WARN_ONCE(bytes > iter->bi_size,
++		  "Attempted to advance past end of bvec iter\n");
++
++	while (bytes) {
++		unsigned len = min(bytes, bvec_iter_len(bv, *iter));
++
++		bytes -= len;
++		iter->bi_size -= len;
++		iter->bi_bvec_done += len;
++
++		if (iter->bi_bvec_done == __bvec_iter_bvec(bv, *iter)->bv_len) {
++			iter->bi_bvec_done = 0;
++			iter->bi_idx++;
++		}
++	}
++}
++
++#define for_each_bvec(bvl, bio_vec, iter, start)			\
++	for (iter = (start);						\
++	     (iter).bi_size &&						\
++		((bvl = bvec_iter_bvec((bio_vec), (iter))), 1);	\
++	     bvec_iter_advance((bio_vec), &(iter), (bvl).bv_len))
++
++#endif /* __LINUX_BVEC_ITER_H */
+-- 
+1.9.1
 
 _______________________________________________
 xfs mailing list
