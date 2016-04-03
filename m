@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2348D7CA1
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 19:05:01 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A9C377CA6
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 11:31:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7FD93AC003
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 17:04:57 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	q17WUd7ZIK6et1jw for <xfs@oss.sgi.com>;
-	Sun, 10 Apr 2016 17:04:54 -0700 (PDT)
-Date: Mon, 11 Apr 2016 10:02:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/259: handle minimum block size more precisely
-Message-ID: <20160411000238.GB9088@dastard>
-References: <1460027155-4222-1-git-send-email-eguan@redhat.com>
-	<20160407213231.GD761@dastard>
-	<20160407234837.GA1439@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160407234837.GA1439@infradead.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D5DB8F8039
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 09:31:34 -0700 (PDT)
+Received: from mail-pf0-f171.google.com (mail-pf0-f171.google.com
+	[209.85.192.171]) by cuda.sgi.com with ESMTP id
+	rSl4whLVNDQ6WW97 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:33 -0700 (PDT)
+Received: by mail-pf0-f171.google.com with SMTP id e128so105176846pfe.3
+	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:33 -0700 (PDT)
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v2 2/8] block: move two bvec structure into bvec.h
+Date: Mon,  4 Apr 2016 00:31:03 +0800
+Message-Id: <1459701069-31406-3-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
+References: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +26,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-On Thu, Apr 07, 2016 at 04:48:37PM -0700, Christoph Hellwig wrote:
-> On Fri, Apr 08, 2016 at 07:32:31AM +1000, Dave Chinner wrote:
-> > > diff --git a/tests/xfs/259 b/tests/xfs/259
-> > > index 16c1935..3150ff3 100755
-> > > --- a/tests/xfs/259
-> > > +++ b/tests/xfs/259
-> > > @@ -51,9 +51,7 @@ testfile=$TEST_DIR/259.image
-> > >  # Test various sizes slightly less than 4 TB. Need to handle different
-> > >  # minimum block sizes for CRC enabled filesystems, but use a small log so we
-> > >  # don't write lots of zeros unnecessarily.
-> > > -xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.mkfs > /dev/null
-> > > -. $tmp.mkfs
-> > 
-> > This tests the configuration of the test device, which is not
-> > controlled by the test harness, so can be different to the
-> > configuration being used for the scratch device.
-> > 
-> > > -if [ $_fs_has_crcs -eq 1 ]; then
-> > > +if [ $XFS_MKFS_CRC_DEFAULT -eq 1 ]; then
-> > 
-> > IOWs, this is not an not equivalent test.
-> 
-> And I think that's the whole point of this change :)
-> 
-> Previously it tested what the TEST_DIR did, which was wrong for this
-> test.  Now it tests what mkfs does by default (including for the scratch
-> dev), which is what we really want here.
+This patch moves 'struct bio_vec' and 'struct bvec_iter'
+into 'include/linux/bvec.h', then always include this header
+into 'include/linux/blk_types.h'.
 
-Which is not at all clear from the patch description.
+With this change, both 'struct bvec_iter' and bvec iterator
+helpers don't depend on CONFIG_BLOCK any more, then we can
+use bvec iterator to implement iterate_bvec(): lib/iov_iter.c.
 
-Seriously, though, this does not belong in common/config. We already
-have a helper function to check what mkfs supports (i.e.
- _scratch_mkfs_xfs_supported()), and if we just want a bare check
-then factor this into a _mkfs_xfs_supported() and supply the
-parameters specific to the test.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ include/linux/bio.h       |  1 -
+ include/linux/blk_types.h | 22 +---------------------
+ include/linux/bvec.h      | 20 +++++++++++++++++++-
+ 3 files changed, 20 insertions(+), 23 deletions(-)
 
-Indeed, this is basically what we do with _require_xfs_mkfs_crc();
-the same thing should be done, but without the "notrun" if -m crc
-s not supported...
-
-Cheers,
-
-Dave.
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 78cf737..7f998ac 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -31,7 +31,6 @@
+ 
+ /* struct bio, bio_vec and BIO_* flags are defined in blk_types.h */
+ #include <linux/blk_types.h>
+-#include <linux/bvec.h>
+ 
+ #define BIO_DEBUG
+ 
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 86a38ea..a8d8e1f 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -6,6 +6,7 @@
+ #define __LINUX_BLK_TYPES_H
+ 
+ #include <linux/types.h>
++#include <linux/bvec.h>
+ 
+ struct bio_set;
+ struct bio;
+@@ -17,28 +18,7 @@ struct cgroup_subsys_state;
+ typedef void (bio_end_io_t) (struct bio *);
+ typedef void (bio_destructor_t) (struct bio *);
+ 
+-/*
+- * was unsigned short, but we might as well be ready for > 64kB I/O pages
+- */
+-struct bio_vec {
+-	struct page	*bv_page;
+-	unsigned int	bv_len;
+-	unsigned int	bv_offset;
+-};
+-
+ #ifdef CONFIG_BLOCK
+-
+-struct bvec_iter {
+-	sector_t		bi_sector;	/* device address in 512 byte
+-						   sectors */
+-	unsigned int		bi_size;	/* residual I/O count */
+-
+-	unsigned int		bi_idx;		/* current index into bvl_vec */
+-
+-	unsigned int            bi_bvec_done;	/* number of bytes completed in
+-						   current bvec */
+-};
+-
+ /*
+  * main unit of I/O for the block layer and lower layers (ie drivers and
+  * stacking drivers)
+diff --git a/include/linux/bvec.h b/include/linux/bvec.h
+index 29c459d..e111124 100644
+--- a/include/linux/bvec.h
++++ b/include/linux/bvec.h
+@@ -20,7 +20,25 @@
+ #ifndef __LINUX_BVEC_ITER_H
+ #define __LINUX_BVEC_ITER_H
+ 
+-#include <linux/blk_types.h>
++/*
++ * was unsigned short, but we might as well be ready for > 64kB I/O pages
++ */
++struct bio_vec {
++	struct page	*bv_page;
++	unsigned int	bv_len;
++	unsigned int	bv_offset;
++};
++
++struct bvec_iter {
++	sector_t		bi_sector;	/* device address in 512 byte
++						   sectors */
++	unsigned int		bi_size;	/* residual I/O count */
++
++	unsigned int		bi_idx;		/* current index into bvl_vec */
++
++	unsigned int            bi_bvec_done;	/* number of bytes completed in
++						   current bvec */
++};
+ 
+ /*
+  * various member access, note that bio_data should of course not be used
 -- 
-Dave Chinner
-david@fromorbit.com
+1.9.1
 
 _______________________________________________
 xfs mailing list
