@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D8ED87CC5
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 13:34:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D2F7AC002
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 11:34:34 -0700 (PDT)
-Received: from mail-wm0-f45.google.com (mail-wm0-f45.google.com
-	[74.125.82.45]) by cuda.sgi.com with ESMTP id LjaZOBEFtk3f9mV1
+	by oss.sgi.com (Postfix) with ESMTP id BF4F77CB5
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 11:31:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 39773AC002
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 09:31:48 -0700 (PDT)
+Received: from mail-pa0-f42.google.com (mail-pa0-f42.google.com
+	[209.85.220.42]) by cuda.sgi.com with ESMTP id bfeFIy8T6OnCgy3q
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 01 Apr 2016 11:34:33 -0700 (PDT)
-Received: by mail-wm0-f45.google.com with SMTP id 127so1248557wmu.1
-	for <xfs@oss.sgi.com>; Fri, 01 Apr 2016 11:34:33 -0700 (PDT)
-Subject: Re: Internal error at xfs_trans_cancel
-References: <56FD513B.40805@scylladb.com> <20160331220105.GQ11812@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <56FEBF34.2030608@scylladb.com>
-Date: Fri, 1 Apr 2016 21:34:28 +0300
-MIME-Version: 1.0
-In-Reply-To: <20160331220105.GQ11812@dastard>
+	Sun, 03 Apr 2016 09:31:46 -0700 (PDT)
+Received: by mail-pa0-f42.google.com with SMTP id td3so126459911pab.2
+	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 09:31:46 -0700 (PDT)
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v2 4/8] iov_iter: use bvec iterator to implement iterate_bvec()
+Date: Mon,  4 Apr 2016 00:31:05 +0800
+Message-Id: <1459701069-31406-5-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
+References: <1459701069-31406-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +26,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-On 04/01/2016 01:01 AM, Dave Chinner wrote:
-> On Thu, Mar 31, 2016 at 07:32:59PM +0300, Avi Kivity wrote:
->> Saw this nice gift this morning:
->>
->> [2121372.825904] XFS (dm-10): Internal error xfs_trans_cancel at
->> line 1007 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x40e/0x710
->> [xfs]
->> [2121372.827209] CPU: 0 PID: 32020 Comm: java Tainted: G W
->> ------------   3.10.0-327.10.1.el7.x86_64 #1
->> [2121372.828529] Hardware name:                  /DH77EB, BIOS
->> EBH7710H.86A.0099.2013.0125.1400 01/25/2013
->> [2121372.829873]  ffff8807b2b11e80 00000000470753cc ffff88031058bb48
->> ffffffff816352cc
->> [2121372.831232]  ffff88031058bb60 ffffffffa084be5b ffffffffa085b7ee
->> ffff88031058bb88
->> [2121372.832542]  ffffffffa0866909 ffff88014a2f3b80 ffff8807f29a2800
->> 0000000000000000
->> [2121372.833850] Call Trace:
->> [2121372.835125]  [<ffffffff816352cc>] dump_stack+0x19/0x1b
->> [2121372.836397]  [<ffffffffa084be5b>] xfs_error_report+0x3b/0x40 [xfs]
->> [2121372.837654]  [<ffffffffa085b7ee>] ? xfs_create+0x40e/0x710 [xfs]
->> [2121372.838915]  [<ffffffffa0866909>] xfs_trans_cancel+0xd9/0x100 [xfs]
->> [2121372.840178]  [<ffffffffa085b7ee>] xfs_create+0x40e/0x710 [xfs]
->> [2121372.841444]  [<ffffffffa0857d8b>] xfs_vn_mknod+0xbb/0x250 [xfs]
->> [2121372.842683]  [<ffffffffa0857f53>] xfs_vn_create+0x13/0x20 [xfs]
->> [2121372.843887]  [<ffffffff811eacdd>] vfs_create+0xcd/0x130
->> [2121372.845103]  [<ffffffff811ec36f>] do_last+0xbef/0x1270
->> [2121372.846324]  [<ffffffff811ee6d2>] path_openat+0xc2/0x490
->> [2121372.847538]  [<ffffffff811efda2>] ? user_path_at_empty+0x72/0xc0
->> [2121372.848746]  [<ffffffff811efe9b>] do_filp_open+0x4b/0xb0
->> [2121372.849917]  [<ffffffff811fca27>] ? __alloc_fd+0xa7/0x130
->> [2121372.851090]  [<ffffffff811dd843>] do_sys_open+0xf3/0x1f0
->> [2121372.852227]  [<ffffffff811dd95e>] SyS_open+0x1e/0x20
->> [2121372.853356]  [<ffffffff81645a49>] system_call_fastpath+0x16/0x1b
->> [2121372.854486] XFS (dm-10): xfs_do_force_shutdown(0x8) called from
->> line 1008 of file fs/xfs/xfs_trans.c.  Return address =
->> 0xffffffffa0866922
->>
->> Filesystem appeared full,
-> ISTR there was a bug inthe inode allocation code that could lead to
-> multiple AGFs being dirtied (via AGFL fixups) and then not having
-> enough contiguous freee space to allocate a new inode chuck. I think
-> it was also a potential deadlock vector. Yeah:
->
-> e480a72 xfs: avoid AGI/AGF deadlock scenario for inode chunk allocation
->
-> Fixed in 3.15.
+bvec has provided one iterator already, so not necessary
+to reinvent a new wheel for this job.
 
-Apparently that was backported into the kernel I am using:
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ lib/iov_iter.c | 30 ++++++++++--------------------
+ 1 file changed, 10 insertions(+), 20 deletions(-)
 
-* Tue Mar 18 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-113.el7]
-- [fs] xfs: avoid AGI/AGF deadlock scenario for inode chunk allocation 
-(Brian Foster) [1052789]
-
-
->
->> but after a reboot (critical server) it
->> went back down to 420GB free.
-> Lots of open unlinked (or O_TMPFILE) files, I'd guess.
->
->
-
-The workload running on that machine makes it unlikely, but I cannot 
-rule it out.
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 5fecddc..c8691ac 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -57,35 +57,25 @@
+ }
+ 
+ #define iterate_bvec(i, n, __v, __p, skip, STEP) {	\
+-	size_t wanted = n;				\
++	struct bvec_iter __bi, __start;			\
++	__start.bi_size = n;				\
++	__start.bi_bvec_done = skip;			\
++	__start.bi_idx = 0;				\
+ 	__p = i->bvec;					\
+-	__v.bv_len = min_t(size_t, n, __p->bv_len - skip);	\
+-	if (likely(__v.bv_len)) {			\
+-		__v.bv_page = __p->bv_page;		\
+-		__v.bv_offset = __p->bv_offset + skip; 	\
++	for_each_bvec(__v, __p, __bi, __start) {	\
+ 		(void)(STEP);				\
+-		skip += __v.bv_len;			\
+-		n -= __v.bv_len;			\
+ 	}						\
+-	while (unlikely(n)) {				\
+-		__p++;					\
+-		__v.bv_len = min_t(size_t, n, __p->bv_len);	\
+-		if (unlikely(!__v.bv_len))		\
+-			continue;			\
+-		__v.bv_page = __p->bv_page;		\
+-		__v.bv_offset = __p->bv_offset;		\
+-		(void)(STEP);				\
++	if (!__bi.bi_idx)				\
++		skip += __v.bv_len;			\
++	else						\
+ 		skip = __v.bv_len;			\
+-		n -= __v.bv_len;			\
+-	}						\
+-	n = wanted;					\
+ }
+ 
+ #define iterate_all_kinds(i, n, v, I, B, K) {			\
+ 	size_t skip = i->iov_offset;				\
+ 	if (unlikely(i->type & ITER_BVEC)) {			\
+ 		const struct bio_vec *bvec;			\
+-		struct bio_vec v;				\
++		struct bio_vec v = { 0 };			\
+ 		iterate_bvec(i, n, v, bvec, skip, (B))		\
+ 	} else if (unlikely(i->type & ITER_KVEC)) {		\
+ 		const struct kvec *kvec;			\
+@@ -102,7 +92,7 @@
+ 	size_t skip = i->iov_offset;				\
+ 	if (unlikely(i->type & ITER_BVEC)) {			\
+ 		const struct bio_vec *bvec;			\
+-		struct bio_vec v;				\
++		struct bio_vec v = { 0 };			\
+ 		iterate_bvec(i, n, v, bvec, skip, (B))		\
+ 		if (skip == bvec->bv_len) {			\
+ 			bvec++;					\
+-- 
+1.9.1
 
 _______________________________________________
 xfs mailing list
