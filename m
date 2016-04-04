@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8CF087CA6
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 01:06:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3CE03304039
-	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 23:06:37 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	zq7nHpEmVmR6Fxpx for <xfs@oss.sgi.com>;
-	Mon, 04 Apr 2016 23:06:35 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1anK7T-000150-QL
-	for xfs@oss.sgi.com; Tue, 05 Apr 2016 16:05:43 +1000
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1anK6z-0003aT-EU
-	for xfs@oss.sgi.com; Tue, 05 Apr 2016 16:05:13 +1000
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 539E57CA0
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 20:28:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AA9B3AC003
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 18:28:54 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	b0uj7SywtGaKPKGB for <xfs@oss.sgi.com>;
+	Sun, 03 Apr 2016 18:28:51 -0700 (PDT)
+Date: Mon, 4 Apr 2016 11:28:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/4] xfs: various fixes
-Date: Tue,  5 Apr 2016 16:05:06 +1000
-Message-Id: <1459836310-12619-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 2/7] fs: introduce iomap infrastructure
+Message-ID: <20160404012849.GB11238@dastard>
+References: <1457989370-6904-1-git-send-email-hch@lst.de>
+	<1457989370-6904-3-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1457989370-6904-3-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,55 +26,175 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Hi folks,
+On Mon, Mar 14, 2016 at 10:02:45PM +0100, Christoph Hellwig wrote:
+> Add infrastructure for multipage buffered writes.  This is implemented
+> using an main iterator that applies an actor function to a range that
+> can be written.
+> 
+> This infrastucture is used to implement a buffered write helper, one
+> to zero file ranges and one to implement the ->page_mkwrite VM
+> operations.  All of them borrow a fair amount of code from fs/buffers.
+> for now by using an internal version of __block_write_begin that
+> gets passed an iomap and builds the corresponding buffer head.
+> 
+> The file system is gets a set of paired ->iomap_begin and ->iomap_end
+> calls which allow it to map/reserve a range and get a notification
+> once the write code is finished with it.
+> 
+> Based on earlier code from Dave Chinner.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+.....
+> +/*
+> + * Execute a iomap write on a segment of the mapping that spans a
+> + * contiguous range of pages that have identical block mapping state.
+> + *
+> + * This avoids the need to map pages individually, do individual allocations
+> + * for each page and most importantly avoid the need for filesystem specific
+> + * locking per page. Instead, all the operations are amortised over the entire
+> + * range of pages. It is assumed that the filesystems will lock whatever
+> + * resources they require in the iomap_begin call, and release them in the
+> + * iomap_end call.
+> + */
+> +static ssize_t
+> +iomap_write_segment(struct inode *inode, loff_t pos, ssize_t length,
+> +		unsigned flags, struct iomap_ops *ops, void *data,
+> +		write_actor_t actor)
 
-The following series of patches are all standalone fixes for various
-issues that have been reported by users. The first AGFL fix is a
-recent regression, which the other three address long standing
-issues.
+This requires external iteration to write the entire range required
+if the allocation does not cover the entire length requested (i.e.
+written < length).
 
-The second patch addresses the issue of memory allocation occurring
-under the CIL lock and memory reclaim requiring the CIL lock to be
-taken, resulting in deadlocks in extreme low memory conditions. This
-version has minor changes around the way the shadow buffer is
-allocated and initialised, but is otherwise mostly unchanged from
-previous RFC postings.
+Also, if the actor returns an error into written, that gets ignored
+and the return status is whatever the ->iomap_end call returns.
 
-The third patch addresses the excessive CPU overhead of bitmap based
-dirty buffer range tracking on large block sizes. It keeps a small
-number of ranges per buffer, and extends and merges them as
-appropriate. This completely removes the bitmap overhead from the
-buffer item formatting path. This main change in this patch from
-previous RFC postings is that it uses multiple ranges for tracking
-rather than a single range. I decided on 4 discrete ranges as the
-best tradeoff between efficiency and log space requirements.
+....
 
-THe last patch addresses a buffer hold-off when there is lots of
-dirty metadata beign written back from the AIL. If a buffer at the
-tail of the log is at a very high offset in the filesytem (e.g. AGF
-header in the last AG), it could be locked for a long time while we
-wait for IO to lower offsets to be dispatched. IO dispatch gets
-blocked by device congestion, so in the worst case lock hold-offs
-measured in seconds have been recorded. This change sorts the buffer
-list into offset order before we lock any buffers, and then
-dispatches IO as each buffer is successfully locked. This limits
-lock holds to the length of time a buffer sits on the plug plus the
-IO time, which is usually very short. This means frequently used
-buffers can be locked and relogged while we wait for IO dispatch
-rather than blocking attempts to access the buffer.
+> +int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+> +		struct iomap_ops *ops)
+> +{
+> +	struct page *page = vmf->page;
+> +	struct inode *inode = file_inode(vma->vm_file);
+> +	unsigned long length;
+> +	loff_t size;
+> +	int ret;
+> +
+> +	lock_page(page);
+> +	size = i_size_read(inode);
+> +	if ((page->mapping != inode->i_mapping) ||
+> +	    (page_offset(page) > size)) {
+> +		/* We overload EFAULT to mean page got truncated */
+> +		ret = -EFAULT;
+> +		goto out_unlock;
+> +	}
+> +
+> +	/* page is wholly or partially inside EOF */
+> +	if (((page->index + 1) << PAGE_CACHE_SHIFT) > size)
+> +		length = size & ~PAGE_CACHE_MASK;
+> +	else
+> +		length = PAGE_CACHE_SIZE;
+> +
+> +	ret = iomap_write_segment(inode, page_offset(page), length,
+> +			IOMAP_ALLOCATE, ops, page, iomap_page_mkwrite_actor);
+> +	if (unlikely(ret < 0))
+> +		goto out_unlock;
+> +	set_page_dirty(page);
+> +	wait_for_stable_page(page);
+> +	return 0;
+> +out_unlock:
+> +	unlock_page(page);
+> +	return ret;
+> +}
 
-Comments, thoughts, etc all welcome.
+Because we don't handle short segment writes here,
+iomap_page_mkwrite() fails to allocate blocks on partial pages when
+block size < page size. This can be seen by generic/030 on XFS with
+a 1k block size.
+
+Patch below fixes the issue, as well as the fact that
+iomap_page_mkwrite_actor() needs to return the count of bytes
+"written", not zero on success for iomap_write_segment() to do the
+right thing on multi-segment writes.
 
 Cheers,
 
 Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+iomap: fix page_mkwrite on bs < ps
+
+Fixes generic/030.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/iomap.c | 30 ++++++++++++++++++++++--------
+ 1 file changed, 22 insertions(+), 8 deletions(-)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index d4528cb..c4d3511 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -337,10 +337,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, ssize_t length,
+ 	int ret;
+ 
+ 	ret = __block_write_begin_int(page, 0, length, NULL, iomap);
+-	if (!ret)
+-		ret = block_commit_write(page, 0, length);
++	if (ret)
++		return ret;
++
++	/*
++	 * block_commit_write always returns 0, we need to return the length we
++	 * successfully allocated.
++	 */
++	block_commit_write(page, 0, length);
++	return length;
+ 
+-	return ret;
+ }
+ 
+ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+@@ -350,7 +356,8 @@ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	struct inode *inode = file_inode(vma->vm_file);
+ 	unsigned long length;
+ 	loff_t size;
+-	int ret;
++	loff_t offset;
++	ssize_t ret;
+ 
+ 	lock_page(page);
+ 	size = i_size_read(inode);
+@@ -367,10 +374,17 @@ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	else
+ 		length = PAGE_CACHE_SIZE;
+ 
+-	ret = iomap_write_segment(inode, page_offset(page), length,
+-			IOMAP_ALLOCATE, ops, page, iomap_page_mkwrite_actor);
+-	if (unlikely(ret < 0))
+-		goto out_unlock;
++	offset = page_offset(page);
++	while (length > 0) {
++		ret = iomap_write_segment(inode, offset, length,
++				IOMAP_ALLOCATE, ops, page,
++				iomap_page_mkwrite_actor);
++		if (unlikely(ret < 0))
++			goto out_unlock;
++		offset += ret;
++		length -= ret;
++	}
++
+ 	set_page_dirty(page);
+ 	wait_for_stable_page(page);
+ 	return 0;
 
 _______________________________________________
 xfs mailing list
