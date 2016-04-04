@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE2C87CB4
-	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 01:57:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7180E304032
-	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 23:57:08 -0700 (PDT)
-Received: from mail-pf0-f180.google.com (mail-pf0-f180.google.com
-	[209.85.192.180]) by cuda.sgi.com with ESMTP id
-	THUKOI6rVL4Frhrm (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 51CFA7CA0
+	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 01:57:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C72A2AC002
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 23:57:11 -0700 (PDT)
+Received: from mail-pf0-f178.google.com (mail-pf0-f178.google.com
+	[209.85.192.178]) by cuda.sgi.com with ESMTP id
+	L7SXYsZaGbVT88G1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Apr 2016 23:57:04 -0700 (PDT)
-Received: by mail-pf0-f180.google.com with SMTP id n1so32988917pfn.2
-	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 23:57:04 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 03 Apr 2016 23:57:08 -0700 (PDT)
+Received: by mail-pf0-f178.google.com with SMTP id n1so32990221pfn.2
+	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 23:57:08 -0700 (PDT)
 From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v3 4/8] iov_iter: use bvec iterator to implement iterate_bvec()
-Date: Mon,  4 Apr 2016 14:56:30 +0800
-Message-Id: <1459752994-2205-5-git-send-email-ming.lei@canonical.com>
+Subject: [PATCH v3 5/8] fs: xfs: replace BIO_MAX_SECTORS with BIO_MAX_PAGES
+Date: Mon,  4 Apr 2016 14:56:31 +0800
+Message-Id: <1459752994-2205-6-git-send-email-ming.lei@canonical.com>
 In-Reply-To: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
 References: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,72 +34,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
 Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Ming Lei <ming.lei@canonical.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-bvec has provided one iterator already, so not necessary
-to reinvent a new wheel for this job.
+BIO_MAX_PAGES is used as maximum count of bvecs, so
+replace BIO_MAX_SECTORS with BIO_MAX_PAGES since
+BIO_MAX_SECTORS is to be removed.
 
 Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- lib/iov_iter.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_buf.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 5fecddc..c8691ac 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -57,35 +57,25 @@
- }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9a2191b..b9ecb2d 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1161,9 +1161,7 @@ xfs_buf_ioapply_map(
  
- #define iterate_bvec(i, n, __v, __p, skip, STEP) {	\
--	size_t wanted = n;				\
-+	struct bvec_iter __bi, __start;			\
-+	__start.bi_size = n;				\
-+	__start.bi_bvec_done = skip;			\
-+	__start.bi_idx = 0;				\
- 	__p = i->bvec;					\
--	__v.bv_len = min_t(size_t, n, __p->bv_len - skip);	\
--	if (likely(__v.bv_len)) {			\
--		__v.bv_page = __p->bv_page;		\
--		__v.bv_offset = __p->bv_offset + skip; 	\
-+	for_each_bvec(__v, __p, __bi, __start) {	\
- 		(void)(STEP);				\
--		skip += __v.bv_len;			\
--		n -= __v.bv_len;			\
- 	}						\
--	while (unlikely(n)) {				\
--		__p++;					\
--		__v.bv_len = min_t(size_t, n, __p->bv_len);	\
--		if (unlikely(!__v.bv_len))		\
--			continue;			\
--		__v.bv_page = __p->bv_page;		\
--		__v.bv_offset = __p->bv_offset;		\
--		(void)(STEP);				\
-+	if (!__bi.bi_idx)				\
-+		skip += __v.bv_len;			\
-+	else						\
- 		skip = __v.bv_len;			\
--		n -= __v.bv_len;			\
--	}						\
--	n = wanted;					\
- }
+ next_chunk:
+ 	atomic_inc(&bp->b_io_remaining);
+-	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
+-	if (nr_pages > total_nr_pages)
+-		nr_pages = total_nr_pages;
++	nr_pages = min(total_nr_pages, BIO_MAX_PAGES);
  
- #define iterate_all_kinds(i, n, v, I, B, K) {			\
- 	size_t skip = i->iov_offset;				\
- 	if (unlikely(i->type & ITER_BVEC)) {			\
- 		const struct bio_vec *bvec;			\
--		struct bio_vec v;				\
-+		struct bio_vec v = { 0 };			\
- 		iterate_bvec(i, n, v, bvec, skip, (B))		\
- 	} else if (unlikely(i->type & ITER_KVEC)) {		\
- 		const struct kvec *kvec;			\
-@@ -102,7 +92,7 @@
- 	size_t skip = i->iov_offset;				\
- 	if (unlikely(i->type & ITER_BVEC)) {			\
- 		const struct bio_vec *bvec;			\
--		struct bio_vec v;				\
-+		struct bio_vec v = { 0 };			\
- 		iterate_bvec(i, n, v, bvec, skip, (B))		\
- 		if (skip == bvec->bv_len) {			\
- 			bvec++;					\
+ 	bio = bio_alloc(GFP_NOIO, nr_pages);
+ 	bio->bi_bdev = bp->b_target->bt_bdev;
 -- 
 1.9.1
 
