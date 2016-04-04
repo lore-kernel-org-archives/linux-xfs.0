@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 28CA77CC5
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 16:51:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DBE583040FF
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 14:51:10 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	nQWQZnxrrLpuGQdM for <xfs@oss.sgi.com>;
-	Fri, 01 Apr 2016 14:50:38 -0700 (PDT)
-Date: Sat, 2 Apr 2016 08:50:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/133 134 262: limit xfs_quota report to report on
-	specific project quota id
-Message-ID: <20160401215035.GM30721@dastard>
-References: <1459494050-28330-1-git-send-email-eguan@redhat.com>
-	<20160401072856.GA3329@dhcp12-237.nay.redhat.com>
-	<56FEAED8.2050108@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <56FEAED8.2050108@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 8D7597CA0
+	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 01:56:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FCA6304032
+	for <xfs@oss.sgi.com>; Sun,  3 Apr 2016 23:56:45 -0700 (PDT)
+Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
+	[209.85.220.41]) by cuda.sgi.com with ESMTP id 34BuJrDD2ADLCcR8
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 03 Apr 2016 23:56:43 -0700 (PDT)
+Received: by mail-pa0-f41.google.com with SMTP id zm5so137948501pac.0
+	for <xfs@oss.sgi.com>; Sun, 03 Apr 2016 23:56:43 -0700 (PDT)
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v3 0/8] block: prepare for multipage bvecs
+Date: Mon,  4 Apr 2016 14:56:26 +0800
+Message-Id: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,79 +24,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, Zorro Lang <zlang@redhat.com>, Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, drbd-dev@lists.linbit.com
 
-On Fri, Apr 01, 2016 at 12:24:40PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 4/1/16 2:28 AM, Zorro Lang wrote:
-> > On Fri, Apr 01, 2016 at 03:00:50PM +0800, Eryu Guan wrote:
-> >> With GETNEXTQUOTA support, xfs_quota -c "report" now outputs more quota
-> >> info than before, and this breaks xfs/133 xfs/134 and xfs/262, e.g.
-> >> xfs/133 fails as
-> >>
-> >>      Filesystem Blocks Quota Limit Warn/Time Mounted on
-> >>      SCRATCH_DEV 0 102400 204800 00 [--------] SCRATCH_MNT
-> >>      === report command output ===
-> >>     +(null) 0 0 0 00 [--------]
-> >>      123456-project 0 102400 204800 00 [--------]
-> >>
-> >> Fix it by limiting xfs_quota to report on specific project quota number
-> >> using -L & -U option, so only the project quota being tested is
-> >> reported.
-> >>
-> >> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> >> ---
-> >>
-> >> I'm not sure if kernel should be fixed, but limiting the quota report on
-> >> project number being tested seems something worth doing to me anyway. It avoids
-> >> breakage of future changes of quota report output.
-> > 
-> > Hi,
-> > 
-> > FYI:
-> > About "+(null) 0 0 0 00 [--------]"problem, it has been talked in:
-> > http://thread.gmane.org/gmane.comp.file-systems.fstests/1852/focus=1968
-> > 
-> > I think:
-> > 1) If we consider that this's a bug, the original test cases can
-> > be the reproducer of this bug, so we shouldn't change the cases.
-> > 
-> > 2) If we think print "(null) 0 0 0 00 [--------]" is right(or not
-> > wrong), then this patch is good.
-> 
-> yes, I'm sorry I didn't take care of this sooner.
-> 
-> I don't think there's value in printing the "(null)" line; I think maybe my
-> suggestion from that old thread might be best:
-> 
-> > We could explicitly look up id 0 and not show it if it's not in the
-> > projects file.
-> 
-> Or now that I think about it - projid 0 is the default project quota, right?
+Hi,
 
-"default" as in "project quota not enabled on this inode". i.e. if
-an inode has projid == 0 then it is not tracked by project quotas.
+Interests[1] have been shown in multipage bvecs, so this patchset
+try to prepare for the support and do two things:
 
-> Assuming that's correct, perhaps we should conditionally print the line,
-> changing "(null)" to "default", printing it only if a default quota is 
-> set (i.e. not all zeros).
+1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
+then we can drop the non-standard way for iterating bvec, which
+can be thought as a good cleanup for lib/iov_iter.c
 
-Right, the only thing that the dquot for projid 0 holds is default
-quota limits. We probably shouldn't ever print it out, except when
-the default limits are queried or set directly...
+2) remove BIO_MAX_SECTORS & BIO_MAX_SIZE, and now there is only
+one user for each. Once multipage bvecs is introduced, one bio
+may hold lots of sectors, and we should always use sort of BIO_MAX_VECS
+which should be introduced in future and is similiar with current
+BIO_MAX_PAGES.
 
-Cheers,
+xfstests(-a auto) have been run and no regression found by this
+patchset against linus v4.6-rc1-next-20160329.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+V3:
+	- include kenrel.h & bug.h in bvec.h for fix comiling failure on arm
+	as reported by 0day ktest
+	- build test on arm & arm64
+
+V2:
+	- rename bvec_iter.h as bvec.h
+	- always include bvec.h into blk_types.h as suggested by Christoph
+
+V1:
+	- don't move BIO_MAX_* to bvec_iter.h as pointed out by Christoph
+	- run xfstests against v4.6-rc1-next-20160329
+	- add Reviewed-by
+	- for 1,4 and 5, Reviewd-by not added, Christoph still expressed
+	'this looks fine to me.'
+
+ drivers/block/drbd/drbd_int.h |  4 +-
+ fs/xfs/xfs_buf.c              |  4 +-
+ include/linux/bio.h           | 52 -----------------------
+ include/linux/blk_types.h     | 22 +---------
+ include/linux/bvec.h          | 96 +++++++++++++++++++++++++++++++++++++++++++
+ lib/iov_iter.c                | 30 +++++---------
+ 6 files changed, 110 insertions(+), 98 deletions(-)
+
+
+Thanks,
+Ming
+
 
 _______________________________________________
 xfs mailing list
