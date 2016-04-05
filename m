@@ -1,23 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 36B637CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 08:18:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AF19330404E
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 06:18:22 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id VYu4DLhZWYO4Pt5Z for <xfs@oss.sgi.com>;
-	Thu, 07 Apr 2016 06:18:19 -0700 (PDT)
-Subject: Re: [PATCH 03/19] mkfs: Sanitise the superblock feature macros
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-4-git-send-email-jtulak@redhat.com>
-	<5705BB39.5010003@sandeen.net>
-	<CACj3i72K0JHkGKES8eintQ=+rbN7hrSQc3+BNQ2eHfZtm7ik4g@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <57065E19.9070401@sandeen.net>
-Date: Thu, 7 Apr 2016 08:18:17 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 781AD7CA0
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 08:19:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 524898F8037
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 06:19:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id wjCjXhjaoJCHX9YQ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Apr 2016 06:19:50 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 7D4168F50E
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 13:19:49 +0000 (UTC)
+Received: from redhat.com (gfs-i24c-02.mpc.lab.eng.bos.redhat.com
+	[10.16.144.214])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u35DJlug004108
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Tue, 5 Apr 2016 09:19:49 -0400
+Date: Tue, 5 Apr 2016 09:19:47 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: reduce lock hold times in buffer writeback
+Message-ID: <20160405131947.GB56593@redhat.com>
+References: <1459836310-12619-1-git-send-email-david@fromorbit.com>
+	<1459836310-12619-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <CACj3i72K0JHkGKES8eintQ=+rbN7hrSQc3+BNQ2eHfZtm7ik4g@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1459836310-12619-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,103 +38,167 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gNC83LzE2IDg6MDkgQU0sIEphbiBUdWxhayB3cm90ZToKPiAKLi4uCgo+IE9uIFRodSwgQXBy
-IDcsIDIwMTYgYXQgMzo0MyBBTSwgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0IDxt
-YWlsdG86c2FuZGVlbkBzYW5kZWVuLm5ldD4+IHdyb3RlOgo+IAo+ICAgICA+IEBAIC05ODEsMTEg
-KzEwNzcsMjEgQEAgbWFpbigKPiAgICAgPiAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICB3
-b3JzdF9mcmVlbGlzdDsKPiAgICAgPiAgICAgICBsaWJ4ZnNfaW5pdF90ICAgICAgICAgICB4aTsK
-PiAgICAgPiAgICAgICBzdHJ1Y3QgZnNfdG9wb2xvZ3kgICAgICBmdDsKPiAgICAgPiAtICAgICBp
-bnQgICAgICAgICAgICAgICAgICAgICBsYXp5X3NiX2NvdW50ZXJzOwo+ICAgICA+IC0gICAgIGlu
-dCAgICAgICAgICAgICAgICAgICAgIGNyY3NfZW5hYmxlZDsKPiAgICAgPiAtICAgICBpbnQgICAg
-ICAgICAgICAgICAgICAgICBmaW5vYnQ7Cj4gICAgID4gLSAgICAgYm9vbCAgICAgICAgICAgICAg
-ICAgICAgZmlub2J0ZmxhZzsKPiAgICAgPiAtICAgICBpbnQgICAgICAgICAgICAgICAgICAgICBz
-cGlub2RlczsKPiAgICAgPiArICAgICBzdHJ1Y3Qgc2JfZmVhdF9hcmdzICAgICBzYl9mZWF0ID0g
-ewo+ICAgICA+ICsgICAgICAgICAgICAgLmZpbm9idCA9IDEsCj4gICAgID4gKyAgICAgICAgICAg
-ICAuZmlub2J0ZmxhZyA9IGZhbHNlLAo+IAo+IAo+ICAgICBzaG91bGQgd2UgcmVhbGx5IGhhdmUg
-ImZpbm9idGZsYWciIGluIHRoaXMgc3RydWN0dXJlPwo+ICAgICBUaGlzIHN0cnVjdHVyZSBzaG91
-bGQgb25seSBjYXJyeSBmZWF0dXJlIHNlbGVjdGlvbnMsIG5vdCBmZWF0dXJlCj4gICAgIHNwZWNp
-ZmljYXRpb24gZmxhZ3MgSSB0aGluay4gIFdoeSBpcyB0aGlzIHRoZSBvbmx5IHN1Y2ggZmxhZwo+
-ICAgICBpbiB0aGUgc3RydWN0dXJlPwo+IAo+ICAgICBQcmV0dHkgc3VyZSBmaW5vYnRmbGFnIHNo
-b3VsZCBzdGF5IGEgdmFyaWFibGUgZm9yIG5vdwo+ICAgICBqdXN0IGxpa2UgbHZmbGFnICh3aGlj
-aCBnb2VzIHdpdGggbG9nX3ZlcnNpb24pLgo+IAo+ICAKPiDigItJdCBtaWdodCBiZSByaWdodCB0
-byBtb3ZlIGl0IG91dOKAiywgYnV0IHRoZSBmbGFnIGlzIHJlbW92ZWQgZmV3Cj4gcGF0Y2hlcyBs
-YXRlciBlbnRpcmVseS4gSXMgaXQgd29ydGggb2YgdGhlIHdvcms/IEkgd291bGQgc2F5IG5haCwg
-bGV0Cj4gaXQgZGllIHdoZXJlIGl0IGlzLiA6LSkKCkdpdmVuIHRoYXQgaXQgZG9lc24ndCBzZWVt
-IHRvIGJlIGEgYnVnLCBJIGd1ZXNzIHRoYXQgbWlnaHQgYmUgb2ssCmJ1dCBpbiBnZW5lcmFsIGlu
-dHJvZHVjaW5nIGluY29ycmVjdCB0aGluZ3MgYW5kIGZpeGluZyB0aGVtIGxhdGVyCmluIHRoZSBz
-ZXJpZXMgaXMgc3Ryb25nbHkgZGlzY291cmFnZWQuLi4KCj4gIAo+IAo+ICAgICAuLi4KPiAKPiAg
-ICAgPiBAQCAtMTUxNyw3ICsxNjE3LDE0IEBAIG1haW4oCj4gICAgID4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICBjID0gYXRvaSh2YWx1ZSk7Cj4gICAgID4gICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZiAoYyA8IDAgfHwgYyA+IDEpCj4gICAgID4g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlsbGVnYWwodmFs
-dWUsICJtIGNyYyIpOwo+ICAgICA+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgY3Jjc19lbmFibGVkID0gYzsKPiAgICAgPiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIGlmIChjICYmIG5mdHlwZSkgewo+ICAgICA+ICsgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICBmcHJpbnRmKHN0ZGVyciwKPiAgICAgPiArXygiY2Fu
-bm90IHNwZWNpZnkgYm90aCBjcmMgYW5kIGZ0eXBlXG4iKSk7Cj4gICAgID4gKyAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHVzYWdlKCk7Cj4gCj4gICAgIGhtLCB3
-aHkgaXMgY29uZmxpY3QgY2hlY2tpbmcgYWRkZWQ/ICBJdCdzIG5vdCB3aGF0IHRoZSBjb21taXQg
-c2F5cwo+ICAgICB0aGUgcGF0Y2ggZG9lcy4KPiAKPiAgICAgSXQgYWxzbyByZWdyZXNzZXMgdGhl
-IGJ1ZyBJIGZpeGVkIGluCj4gCj4gICAgIGNvbW1pdCBiOTkwZGU4YmE0ZTJkZjJiYzc2YTE0MDc5
-OWQzZGRiNGEwZWFjNGNlCj4gICAgIEF1dGhvcjogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRl
-ZW4ubmV0IDxtYWlsdG86c2FuZGVlbkBzYW5kZWVuLm5ldD4+Cj4gICAgIERhdGU6ICAgVHVlIEF1
-ZyAxOCAxNzo1MzoxNyAyMDE1ICsxMDAwCj4gCj4gICAgICAgICBta2ZzLnhmczogZml4IGZ0eXBl
-LXZzLWNyYyBvcHRpb24gY29tYmluYXRpb24gdGVzdGluZwo+IAo+ICAgICB3aXRoIHRoaXMgcGF0
-Y2gsIGl0IGlzIGJyb2tlbiBhZ2FpbjoKPiAKPiAgICAgIyBta2ZzL21rZnMueGZzIC1tIGNyYz0w
-IC1uIGZ0eXBlPTEgLWRmaWxlLG5hbWU9ZnNmaWxlLHNpemU9MTZnCj4gICAgIDxzdWNjZXNzPgo+
-ICAgICAgIyBta2ZzL21rZnMueGZzIC1uIGZ0eXBlPTEgLW0gY3JjPTAgLWRmaWxlLG5hbWU9ZnNm
-aWxlLHNpemU9MTZnCj4gICAgIGNhbm5vdCBzcGVjaWZ5IGJvdGggY3JjIGFuZCBmdHlwZQo+ICAg
-ICBVc2FnZTogbWtmcy54ZnMKPiAgICAgLi4uCj4gCj4g4oCLQmVjYXVzZSB0aGUgcGF0Y2ggaXMg
-bXVjaCBvbGRlciB0aGFuIHlvdXIgZml4LCBhbmQgYXQgdGhlIHRpbWUgaXQKPiB3YXMgY3JlYXRl
-ZCwgaXQgaXMgcG9zc2libGUgdGhhdCB0aGVyZSB3YXNuJ3QgYW55IHN1Y2ggY2hlY2suLi4gSQo+
-IHdvdWxkIGNhbGwgaXQgdGhlIHJpc2sgb2YgbmVjcm9tYW5jeS4gOi0p4oCLCgpNb3N0IGxpa2Vs
-eSBhIGZvcndhcmQtcG9ydCBvciBtZXJnZSBlcnJvciBJIHRoaW5rLgoKPiBBbnl3YXksIEkgYWxy
-ZWFkeSBmaXhlZCB0aGlzIGlzc3VlIGluIHRoaXMgY3ljbGUsIGFuZCBhZGRlZCB0aGUgdGhlCj4g
-ZnR5cGUsIGNyYyBvcmRlciBpbnRvIGEgdGVzdCBjaGVja2luZyBmb3Igb3B0aW9ucyBzYW5pdHku
-IEp1c3QgSQo+IGRpZG4ndCBzdWJtaXR0ZWQgdGhlIGNoYW5nZSB5ZXQuCgpPaywgc28gaXQgaXMg
-Zml4ZWQgaW4geW91ciBuZXcgdmVyc2lvbiBvZiB0aGlzIHBhdGNoPwoKPiAKPiAgICAgLi4uCj4g
-Cj4gICAgID4gQEAgLTE4NzksMjMgKzE5ODgsMjUgQEAgXygiMzIgYml0IFByb2plY3QgSURzIGFs
-d2F5cyBlbmFibGVkIG9uIENSQyBlbmFibGVkIGZpbGVzeXRlbXNcbiIpKTsKPiAgICAgPiAgICAg
-ICB9IGVsc2Ugewo+ICAgICA+ICAgICAgICAgICAgICAgLyoKPiAgICAgPiAgICAgICAgICAgICAg
-ICAqIFRoZSBrZXJuZWwgZG9lc24ndCBjdXJyZW50bHkgc3VwcG9ydCBjcmM9MCxmaW5vYnQ9MQo+
-ICAgICA+IC0gICAgICAgICAgICAgICogZmlsZXN5c3RlbXMuIElmIGNyY3MgYXJlIG5vdCBlbmFi
-bGVkIGFuZCB0aGUgdXNlciBoYXMKPiAgICAgPiAtICAgICAgICAgICAgICAqIGV4cGxpY2l0bHkg
-dHVybmVkIHRoZW0gb2ZmIHRoZW4gc2lsZW50bHkgdHVybiB0aGVtIG9mZgo+ICAgICA+IC0gICAg
-ICAgICAgICAgICogdG8gYXZvaWQgYW4gdW5uZWNlc3Nhcnkgd2FybmluZy4gSWYgdGhlIHVzZXIg
-ZXhwbGljaXRseQo+ICAgICA+IC0gICAgICAgICAgICAgICogdHJpZWQgdG8gdXNlIGNyYz0wLGZp
-bm9idD0xLCB0aGVuIGlzc3VlIGEgd2FybmluZyBiZWZvcmUKPiAgICAgPiAtICAgICAgICAgICAg
-ICAqIHR1cm5pbmcgdGhlbSBvZmYuCj4gICAgID4gKyAgICAgICAgICAgICAgKiBmaWxlc3lzdGVt
-cy4gSWYgY3JjcyBhcmUgbm90IGVuYWJsZWQgYW5kIHRoZSB1c2VyIGhhcyBub3QKPiAgICAgPiAr
-ICAgICAgICAgICAgICAqIGV4cGxpY2l0bHkgdHVybmVkIGZpbm9idCBvbiwgdGhlbiBzaWxlbnRs
-eSB0dXJuIGl0IG9mZiB0bwo+ICAgICA+ICsgICAgICAgICAgICAgICogYXZvaWQgYW4gdW5uZWNl
-c3Nhcnkgd2FybmluZy4gSWYgdGhlIHVzZXIgZXhwbGljaXRseSB0cmllZAo+ICAgICA+ICsgICAg
-ICAgICAgICAgICogdG8gdXNlIGNyYz0wLGZpbm9idD0xLCB0aGVuIGlzc3VlIGEgd2FybmluZyBi
-ZWZvcmUgdHVybmluZwo+ICAgICA+ICsgICAgICAgICAgICAgICogdGhlbSBvZmYuCj4gICAgID4g
-ICAgICAgICAgICAgICAgKi8KPiAgICAgPiAtICAgICAgICAgICAgIGlmIChmaW5vYnQgJiYgZmlu
-b2J0ZmxhZykgewo+ICAgICA+IC0gICAgICAgICAgICAgICAgICAgICBmcHJpbnRmKHN0ZGVyciwK
-PiAgICAgPiAtXygid2FybmluZzogZmlub2J0IG5vdCBzdXBwb3J0ZWQgd2l0aG91dCBDUkMgc3Vw
-cG9ydCwgZGlzYWJsZWQuXG4iKSk7Cj4gICAgID4gKyAgICAgICAgICAgICBpZiAoc2JfZmVhdC5m
-aW5vYnQpewo+ICAgICA+ICsgICAgICAgICAgICAgICAgICAgICBpZiAoc2JfZmVhdC5maW5vYnRm
-bGFnKSB7Cj4gICAgID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZnByaW50ZihzdGRl
-cnIsCj4gICAgID4gKyAgICAgXygid2FybmluZzogZmlub2J0IG5vdCBzdXBwb3J0ZWQgd2l0aG91
-dCBDUkMgc3VwcG9ydCwgZGlzYWJsZWQuXG4iKSk7Cj4gICAgID4gKyAgICAgICAgICAgICAgICAg
-ICAgIH0KPiAgICAgPiArICAgICAgICAgICAgICAgICAgICAgc2JfZmVhdC5maW5vYnQgPSAwOwo+
-IAo+ICAgICBsaWtlIEkgbWVudGlvbmVkLCBqdXN0IHRoaXMsIEkgdGhpbmsgKGFzc3VtaW5nIHdl
-IGxpa2UgdGhlIHNpbGVudCB0dXJuaW5nCj4gICAgIG9mZiwgYnV0IHRoYXQgd291bGQgYmUgYSBk
-aWZmZXJlbnQgcGF0Y2gpOgo+IAo+ICAKPiDigItNZXJnaW5nIHRoZSBjb25kaXRpb25zIGlzIGlu
-ZGVlZCBjbGVhbmVyLgo+IAo+IEFuZCBJIHdpbGwgY2hhbmdlIGl0IHRvIGZhaWx1cmUsIGlmIHRo
-ZSBjb25mbGljdGluZyBvcHRpb25zIGFyZSBnaXZlbgo+IGV4cGxpY2l0bHkuIEp1c3QgYSBzbWFs
-bCBwYXRjaCBhZGRpbmcgInVzYWdlKCk7IiBhbmQgcmVtb3ZpbmcKPiAid2FybmluZyIuLi7igIsK
-Ck9rLCBzbyBmb3IgdGhpcyBwYXRjaCwgbm90aGluZyBidXQgdGhlIG1lY2hhbmljYWwgY2hhbmdl
-IG1hdGNoaW5nIGFsbCB0aGUgb3RoZXJzLApyaWdodD8gIElmIHRoZXJlIGlzIGFueSBjaGFuZ2Ug
-aW4gYmVoYXZpb3IgdG8gYmUgZG9uZSwgdGhhdCBzaG91bGQgYmUgYSBkaWZmZXJlbnQgcGF0Y2gu
-CgotRXJpYwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
-YW4vbGlzdGluZm8veGZzCg==
+Looks good to me
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+On Tue, Apr 05, 2016 at 04:05:10PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When we have a lot of metadata to flush from the AIL, the buffer
+> list can get very long. The current submission code tries to batch
+> submission to optimise IO order of the metadata (i.e. ascending
+> block order) to maximise block layer merging or IO to adjacent
+> metadata blocks.
+> 
+> Unfortunately, the method used can result in long lock times
+> occurring as buffers locked early on in the buffer list might not be
+> dispatched until the end of the IO licst processing. This is because
+> sorting does not occur util after the buffer list has been processed
+> and the buffers that are going to be submitted are locked. Hence
+> when the buffer list is several thousand buffers long, the lock hold
+> times before IO dispatch can be significant.
+> 
+> To fix this, sort the buffer list before we start trying to lock and
+> submit buffers. This means we can now submit buffers immediately
+> after they are locked, allowing merging to occur immediately on the
+> plug and dispatch to occur as quickly as possible. This means there
+> is minimal delay between locking the buffer and IO submission
+> occuring, hence reducing the worst case lock hold times seen during
+> delayed write buffer IO submission signficantly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 60 +++++++++++++++++++++++++++++++++-----------------------
+>  1 file changed, 35 insertions(+), 25 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 467a636..0d49e81 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1780,18 +1780,33 @@ xfs_buf_cmp(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * submit buffers for write.
+> + *
+> + * When we have a large buffer list, we do not want to hold all the buffers
+> + * locked while we block on the request queue waiting for IO dispatch. To avoid
+> + * this problem, we lock and submit buffers in groups of 50, thereby minimising
+> + * the lock hold times for lists which may contain thousands of objects.
+> + *
+> + * To do this, we sort the buffer list before we walk the list to lock and
+> + * submit buffers, and we plug and unplug around each group of buffers we
+> + * submit.
+> + */
+>  static int
+> -__xfs_buf_delwri_submit(
+> +xfs_buf_delwri_submit_buffers(
+>  	struct list_head	*buffer_list,
+> -	struct list_head	*io_list,
+> -	bool			wait)
+> +	struct list_head	*wait_list)
+>  {
+> -	struct blk_plug		plug;
+>  	struct xfs_buf		*bp, *n;
+> +	LIST_HEAD		(submit_list);
+>  	int			pinned = 0;
+> +	struct blk_plug		plug;
+> +
+> +	list_sort(NULL, buffer_list, xfs_buf_cmp);
+>  
+> +	blk_start_plug(&plug);
+>  	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
+> -		if (!wait) {
+> +		if (!wait_list) {
+>  			if (xfs_buf_ispinned(bp)) {
+>  				pinned++;
+>  				continue;
+> @@ -1814,25 +1829,21 @@ __xfs_buf_delwri_submit(
+>  			continue;
+>  		}
+>  
+> -		list_move_tail(&bp->b_list, io_list);
+>  		trace_xfs_buf_delwri_split(bp, _RET_IP_);
+> -	}
+> -
+> -	list_sort(NULL, io_list, xfs_buf_cmp);
+> -
+> -	blk_start_plug(&plug);
+> -	list_for_each_entry_safe(bp, n, io_list, b_list) {
+> -		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC | XBF_WRITE_FAIL);
+> -		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
+>  
+>  		/*
+> -		 * we do all Io submission async. This means if we need to wait
+> -		 * for IO completion we need to take an extra reference so the
+> -		 * buffer is still valid on the other side.
+> +		 * We do all IO submission async. This means if we need
+> +		 * to wait for IO completion we need to take an extra
+> +		 * reference so the buffer is still valid on the other
+> +		 * side. We need to move the buffer onto the io_list
+> +		 * at this point so the caller can still access it.
+>  		 */
+> -		if (wait)
+> +		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC | XBF_WRITE_FAIL);
+> +		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
+> +		if (wait_list) {
+>  			xfs_buf_hold(bp);
+> -		else
+> +			list_move_tail(&bp->b_list, wait_list);
+> +		} else
+>  			list_del_init(&bp->b_list);
+>  
+>  		xfs_buf_submit(bp);
+> @@ -1855,8 +1866,7 @@ int
+>  xfs_buf_delwri_submit_nowait(
+>  	struct list_head	*buffer_list)
+>  {
+> -	LIST_HEAD		(io_list);
+> -	return __xfs_buf_delwri_submit(buffer_list, &io_list, false);
+> +	return xfs_buf_delwri_submit_buffers(buffer_list, NULL);
+>  }
+>  
+>  /*
+> @@ -1871,15 +1881,15 @@ int
+>  xfs_buf_delwri_submit(
+>  	struct list_head	*buffer_list)
+>  {
+> -	LIST_HEAD		(io_list);
+> +	LIST_HEAD		(wait_list);
+>  	int			error = 0, error2;
+>  	struct xfs_buf		*bp;
+>  
+> -	__xfs_buf_delwri_submit(buffer_list, &io_list, true);
+> +	xfs_buf_delwri_submit_buffers(buffer_list, &wait_list);
+>  
+>  	/* Wait for IO to complete. */
+> -	while (!list_empty(&io_list)) {
+> -		bp = list_first_entry(&io_list, struct xfs_buf, b_list);
+> +	while (!list_empty(&wait_list)) {
+> +		bp = list_first_entry(&wait_list, struct xfs_buf, b_list);
+>  
+>  		list_del_init(&bp->b_list);
+>  
+> -- 
+> 2.7.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
