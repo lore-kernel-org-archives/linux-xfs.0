@@ -1,18 +1,18 @@
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A38217CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 10:06:18 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 537907CA0
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 11:07:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 741C28F8035
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 08:06:15 -0700 (PDT)
-Received: from fond.onigiri.cn (fond.onigiri.cn [45.58.114.187]) by
-	cuda.sgi.com with ESMTP id J1FpujJ49t0LgmEb for
-	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 08:06:11 -0700 (PDT)
-Subject: Custom Shaped USB drives with your logo
-Message-ID: <4bfd5fc750335354148deda1e75fb7b2@fultonperformance.com>
-Date: Thu, 07 Apr 2016 16:33:22 +0200
-From: "Stacy Kingley" <poliryy@zoho.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CD5D8F8035
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 09:07:45 -0700 (PDT)
+Received: from mail.e-torial.com ([104.236.21.126]) by cuda.sgi.com with ESMTP
+	id W5hgQBWnrBP21RIz for <xfs@oss.sgi.com>;
+	Tue, 05 Apr 2016 09:07:41 -0700 (PDT)
+Subject: =?utf-8?B?TGFuZGluZyBQYWdlINC30LAg0LTQtdC90Yw=?=
+From: =?utf-8?B?0JHQvtGA0LjRgQ==?= <uUEbTozav@list.ru>
+Subject: =?utf-8?B?TGFuZGluZyBQYWdlINC30LAg0LTQtdC90Yw=?=
 MIME-Version: 1.0
-Reply-To: reginalde@aliyun.com
+Message-Id: <20160405140856.45AA913B374@mail.e-torial.com>
+Date: Tue,  5 Apr 2016 10:08:56 -0400 (EDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,51 +21,16 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: valu-eoyav@neftegazoswarr.ru, wgpaxdxp@qfnhkcqc.com, webmaster@shorouknews.com, zgwd5sbxzwc@penza-city.ru, zmzai@referaleportaler.ru, z024@071.pfr.ru, xfs@oss.sgi.com, viktorabc19@gmail.com, wiqee@teleport.net.ru, versia@pochtamt.ru, y3kahym9k@gluemanoidy.ru, zipoco10@tl.ru, yurius@appleclub.ru, zbaje@ergo-koq.ru, zmoldir@gmail.com, whdnlf@yxjlze.com, zamumi666@yandex.ru, vektor-ka@mail.ru, vologdavad@mail.ru, w9_qyeo@wmhtxjvxs.biz
 
-Hi,
-
-I wanted to follow up from last week.
-Did you receive the email I sent you?
-
-I would like to contact the person that does your buying of branded
-promotional products for your company?
-Our company manufactures USB Flash Drives, printed with your logo.
-
-They make the perfect marketing tool for your business or organization.
-
-We offer low minimum quantities, and all memory sizes.
-Over 150 Stock Models as well as 100 % custom shaped USB drives.
-
-We can pre-load your media files, images, presentations and files onto the
-drives for you.
-
-These are ideal handouts for trade shows, branding, corporate gifts and
-employees.
-Our USB Pricing is at an ALL TIME LOW - now is the time to get your USB
-drives.
-
-* Please reply back and let me know what quantity and memory size
-you need for a Fast Quote! *
-Let us send you a quote!   We will EARN your business!
-
-Are you a school or nonprofit?  Please let us know for even further
-discounts.
-
-We are always running a promotion, just ask!     1-888-779-8318
-
-Thanks!
-Stacy Kingley
-National Account Rep
-Promo / Branded Flash Drives
-1-888-779-8318
-Email: abensho@sina.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+0JzQsNGA0LrQtdGC0L7Qu9C+0LMsINCa0L7Qv9C40YDQsNC50YLQtdGAINC4INCU0LjQt9Cw0LnQ
+vdC10YAg0LfQsCDQstGB0LXQs9C+INC+0LTQuNC9INC00LXQvdGMINGB0LTQtdC70LDRjtGCINC/
+0YDQtdC80LjQsNC70YzQvdGD0Y4g0L/QvtGB0LDQtNC+0YfQvdGD0Y4g0YHRgtGA0LDQvdC40YbR
+gyDRgSDQstGL0YHQvtC60LjQvCDRg9GA0L7QstC90LXQvCDQutC+0L3QstC10YDRgdC40LgKaHR0
+cDovL9C30LAt0L7QtNC40L0t0LTQtdC90Ywu0YDRhApfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
