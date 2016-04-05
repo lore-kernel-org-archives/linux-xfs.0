@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A70C97CA1
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 01:06:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 700CC304039
-	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 23:06:39 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D29D57CA7
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 01:06:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 61BF6304053
+	for <xfs@oss.sgi.com>; Mon,  4 Apr 2016 23:06:37 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	miBAWvALnCC5jmCU for <xfs@oss.sgi.com>;
-	Mon, 04 Apr 2016 23:06:35 -0700 (PDT)
+	6A1T8rTutSYtADId for <xfs@oss.sgi.com>;
+	Mon, 04 Apr 2016 23:06:33 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1anK7T-000152-R9
+	(envelope-from <dave@fromorbit.com>) id 1anK7T-000153-Re
 	for xfs@oss.sgi.com; Tue, 05 Apr 2016 16:05:43 +1000
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1anK6z-0003ab-FS
+	(envelope-from <dave@disappointment.disaster>) id 1anK6z-0003ag-Fs
 	for xfs@oss.sgi.com; Tue, 05 Apr 2016 16:05:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] xfs: allocate log vector buffers outside CIL context lock
-Date: Tue,  5 Apr 2016 16:05:08 +1000
-Message-Id: <1459836310-12619-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/4] xfs: byte range buffer dirty region tracking
+Date: Tue,  5 Apr 2016 16:05:09 +1000
+Message-Id: <1459836310-12619-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1459836310-12619-1-git-send-email-david@fromorbit.com>
 References: <1459836310-12619-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,485 +39,707 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-One of the problems we currently have with delayed logging is that
-under serious memory pressure we can deadlock memory reclaim. THis
-occurs when memory reclaim (such as run by kswapd) is reclaiming XFS
-inodes and issues a log force to unpin inodes that are dirty in the
-CIL.
+The biggest problem with large directory block sizes is the CPU
+overhead in maintaining the buffer log item direty region bitmap.
+The bit manipulations and buffer region mapping calls are right at
+the top of the profiles when running tests on 64k directory buffers:
 
-The CIL is pushed, but this will only occur once it gets the CIL
-context lock to ensure that all committing transactions are complete
-and no new transactions start being committed to the CIL while the
-push switches to a new context.
++  16.65%  [kernel]  [k] memcpy
++  11.99%  [kernel]  [k] xfs_next_bit
++   5.87%  [kernel]  [k] xfs_buf_item_format
++   5.85%  [kernel]  [k] xfs_buf_item_size_segment.isra.4
++   5.72%  [kernel]  [k] xfs_buf_offset
 
-The deadlock occurs when the CIL context lock is held by a
-committing process that is doing memory allocation for log vector
-buffers, and that allocation is then blocked on memory reclaim
-making progress. Memory reclaim, however, is blocked waiting for
-a log force to make progress, and so we effectively deadlock at this
-point.
+The memcpy is the copying of the dirty regions into the log vec
+array, but almost twice as much CPU time is spent working out what
+needs to be copied and where it needs to be copied from. As a
+result, on a production kernel creating 100,000 entries in a 64k
+directory runs at about 9,000 files/s while on a 4k directory block
+size it runs at 19,000 files/s - about half the speed.
 
-To solve this problem, we have to move the CIL log vector buffer
-allocation outside of the context lock so that memory reclaim can
-always make progress when it needs to force the log. The problem
-with doing this is that a CIL push can take place while we are
-determining if we need to allocate a new log vector buffer for
-an item and hence the current log vector may go away without
-warning. That means we canot rely on the existing log vector being
-present when we finally grab the context lock and so we must have a
-replacement buffer ready to go at all times.
+Switching this to just track the first and last modified bytes in
+the block and only converting that to a dirty bitmap in the buffer
+log item at format time, however, gets rid of most of this dirty
+bitmap overhead without increasing memcpy time  at all. the result
+is that peformance on a 64k directory block size increases to
+roughly 16,000 files/s with memcpy() overhead only slightly
+increasing. The profile now looks like:
 
-To ensure this, introduce a "shadow log vector" buffer that is
-always guaranteed to be present when we gain the CIL context lock
-and format the item. This shadow buffer may or may not be used
-during the formatting, but if the log item does not have an existing
-log vector buffer or that buffer is too small for the new
-modifications, we swap it for the new shadow buffer and format
-the modifications into that new log vector buffer.
+  10.41%  [kernel]  [k] __memcpy
+   0.42%  [kernel]  [k] xfs_buf_item_init
+   0.27%  [kernel]  [k] xfs_buf_item_size
+   0.21%  [kernel]  [k] xfs_buf_item_format_segment
+   0.15%  [kernel]  [k] xfs_buf_item_log
 
-The result of this is that for any object we modify more than once
-in a given CIL checkpoint, we double the memory required
-to track dirty regions in the log. For single modifications then
-we consume the shadow log vectorwe allocate on commit, and that gets
-consumed by the checkpoint. However, if we make multiple
-modifications, then the second transaction commit will allocate a
-shadow log vector and hence we will end up with double the memory
-usage as only one of the log vectors is consumed by the CIL
-checkpoint. The remaining shadow vector will be freed when th elog
-item is freed.
+And the majority of the memcpy load is coming from:
 
-This can probably be optimised in future - access to the shadow log
-vector is serialised by the object lock (as opposited to the active
-log vector, which is controlled by the CIL context lock) and so we
-can probably free shadow log vector from some objects when the log
-item is marked clean on removal from the AIL.
+-    9.43%     9.43%  [kernel]            [k] __memcpy
+   - __memcpy
+      + 95.63% xfs_buf_item_format_segment
+      + 1.93% xfs_buf_item_format
+
+The buffer item formatting code. Hence we can see that there is
+major reduction in CPU overhead as well as an improvement in
+performance for 64k buffers with this change.
+
+The current implementation tracks, at most, four dirty regions per
+buffer.  The nature of directory operations result in almost
+operation modifying a header in the buffer, a tail section in the
+buffer and then some number of bytes/regions in the middle of the
+buffer.
+
+Hence if we just track a single region, it will almost always cover
+the entire directory buffer - if we only modify a single entry in
+the buffer, then that's a fairly large cost in terms of log space
+and CPU overhead for random individual operations.
+
+We also have to consider non-directory buffer modification patterns.
+freespace, inode and extent btrees are the other major types of
+buffers that get logged, but they also have modification patterns
+that lend themselves well to a small number of ranges for dirty
+tracking. That is, each btree block is kept compact, so when we
+insert or remove a record or pointer we shift then higher
+records/ptrs up or down as a block, and then log the lot of them.
+And they also often have a header that is dirtied with each
+insert/delete, so typically there are usually only one or two dirty
+ranges in a btree block.
+
+The only metadata type that really seems to benefit from fine
+grained dirty range logging is the inode buffers. Specifically, for
+v4 superblocks the create transaction only dirties the regions of
+the inode core, so for 256 byte inodes only dirties every alternate
+bitmap segment.  Dirty range tracking will double the required log
+bandwidth of inode buffers during create (roughly 25% increase on a
+4k directory block size filesystem). There isn't any performance
+differential noticable on typical systems because the log is far
+from being bandwidth bound.
+
+For v5 filesystems, this isn't an issue because the initialised
+inode buffers are XFS_BLI_ORDERED buffers and so their contents
+aren't logged.
+
+The same problem happens with unlinks due to the unlinked list being
+logged via the inode buffer. Again this results in an increase
+in log bandwidth on both v4 and v5 filesystems, but there isn't any
+performance differential that occurs because, again, the log isn't
+bandwidth bound. As it is, there is an existing plan of improvement
+to the unlinked list logging (moving the unlinked list logging into
+the inode core transaction) and hence that will avoid any extra
+overhead here as well.
+
+Hence the overall CPU reduction benefits of minimal dirty range
+tracking versus fine grained dirty bit tracking are overall going to
+be beneficial to performance and throughput on current (v5) format
+filesystems.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c     |   1 +
- fs/xfs/xfs_dquot.c        |   1 +
- fs/xfs/xfs_dquot_item.c   |   2 +
- fs/xfs/xfs_extfree_item.c |   2 +
- fs/xfs/xfs_inode_item.c   |   1 +
- fs/xfs/xfs_log_cil.c      | 258 ++++++++++++++++++++++++++++++++++------------
- fs/xfs/xfs_trans.h        |   1 +
- 7 files changed, 202 insertions(+), 64 deletions(-)
+ fs/xfs/xfs_buf.c      |   2 +
+ fs/xfs/xfs_buf_item.c | 422 ++++++++++++++++++++++++++------------------------
+ fs/xfs/xfs_buf_item.h |  19 +++
+ 3 files changed, 244 insertions(+), 199 deletions(-)
 
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9a2191b..467a636 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1462,6 +1462,8 @@ xfs_buf_iomove(
+ 		page = bp->b_pages[page_index];
+ 		csize = min_t(size_t, PAGE_SIZE - page_offset,
+ 				      BBTOB(bp->b_io_length) - boff);
++		if (boff + csize > bend)
++			csize = bend - boff;
+ 
+ 		ASSERT((csize + page_offset) <= PAGE_SIZE);
+ 
 diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index d613e7f..55b5ad0 100644
+index 55b5ad0..53fd2dc 100644
 --- a/fs/xfs/xfs_buf_item.c
 +++ b/fs/xfs/xfs_buf_item.c
-@@ -949,6 +949,7 @@ xfs_buf_item_free(
- 	xfs_buf_log_item_t	*bip)
+@@ -65,50 +65,12 @@ xfs_buf_item_size_segment(
+ 	int			*nvecs,
+ 	int			*nbytes)
  {
- 	xfs_buf_item_free_format(bip);
-+	kmem_free(bip->bli_item.li_lv_shadow);
- 	kmem_zone_free(xfs_buf_item_zone, bip);
+-	struct xfs_buf		*bp = bip->bli_buf;
+-	int			next_bit;
+-	int			last_bit;
+-
+-	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+-	if (last_bit == -1)
+-		return;
+-
+ 	/*
+ 	 * initial count for a dirty buffer is 2 vectors - the format structure
+-	 * and the first dirty region.
++	 * and the dirty region. Dirty region is accounted for separately.
+ 	 */
+ 	*nvecs += 2;
+-	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
+-
+-	while (last_bit != -1) {
+-		/*
+-		 * This takes the bit number to start looking from and
+-		 * returns the next set bit from there.  It returns -1
+-		 * if there are no more bits set or the start bit is
+-		 * beyond the end of the bitmap.
+-		 */
+-		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
+-					last_bit + 1);
+-		/*
+-		 * If we run out of bits, leave the loop,
+-		 * else if we find a new set of bits bump the number of vecs,
+-		 * else keep scanning the current set of bits.
+-		 */
+-		if (next_bit == -1) {
+-			break;
+-		} else if (next_bit != last_bit + 1) {
+-			last_bit = next_bit;
+-			(*nvecs)++;
+-		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
+-			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
+-			    XFS_BLF_CHUNK)) {
+-			last_bit = next_bit;
+-			(*nvecs)++;
+-		} else {
+-			last_bit++;
+-		}
+-		*nbytes += XFS_BLF_CHUNK;
+-	}
++	*nbytes += xfs_buf_log_format_size(blfp);
  }
  
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 8f51370..df4a70a 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -74,6 +74,7 @@ xfs_qm_dqdestroy(
+ /*
+@@ -135,7 +97,9 @@ xfs_buf_item_size(
+ 	int			*nbytes)
  {
- 	ASSERT(list_empty(&dqp->q_lru));
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+-	int			i;
++	struct xfs_buf	*bp = bip->bli_buf;
++	uint			offset;
++	int			i, j;
  
-+	kmem_free(dqp->q_logitem.qli_item.li_lv_shadow);
- 	mutex_destroy(&dqp->q_qlock);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+@@ -154,6 +118,7 @@ xfs_buf_item_size(
+ 	}
  
- 	XFS_STATS_DEC(dqp->q_mount, xs_qm_dquot);
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index 814cff9..2c7a162 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -370,6 +370,8 @@ xfs_qm_qoffend_logitem_committed(
- 	spin_lock(&ailp->xa_lock);
- 	xfs_trans_ail_delete(ailp, &qfs->qql_item, SHUTDOWN_LOG_IO_ERROR);
+ 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
++	ASSERT(bip->bli_flags & XFS_BLI_DIRTY);
  
-+	kmem_free(qfs->qql_item.li_lv_shadow);
-+	kmem_free(lip->li_lv_shadow);
- 	kmem_free(qfs);
- 	kmem_free(qfe);
- 	return (xfs_lsn_t)-1;
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 4aa0153..ab77946 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -40,6 +40,7 @@ void
- xfs_efi_item_free(
- 	struct xfs_efi_log_item	*efip)
- {
-+	kmem_free(efip->efi_item.li_lv_shadow);
- 	if (efip->efi_format.efi_nextents > XFS_EFI_MAX_FAST_EXTENTS)
- 		kmem_free(efip);
- 	else
-@@ -300,6 +301,7 @@ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
- STATIC void
- xfs_efd_item_free(struct xfs_efd_log_item *efdp)
- {
-+	kmem_free(efdp->efd_item.li_lv_shadow);
- 	if (efdp->efd_format.efd_nextents > XFS_EFD_MAX_FAST_EXTENTS)
- 		kmem_free(efdp);
- 	else
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index d02cbab..77799e1 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -651,6 +651,7 @@ void
- xfs_inode_item_destroy(
- 	xfs_inode_t	*ip)
- {
-+	kmem_free(ip->i_itemp->ili_item.li_lv_shadow);
- 	kmem_zone_free(xfs_ili_zone, ip->i_itemp);
- }
+ 	if (bip->bli_flags & XFS_BLI_ORDERED) {
+ 		/*
+@@ -168,17 +133,45 @@ xfs_buf_item_size(
  
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 4e76493..ebb9ea9 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -79,6 +79,157 @@ xlog_cil_init_post_recovery(
- 	log->l_cilp->xc_ctx->sequence = 1;
- }
- 
-+static inline int
-+xlog_cil_iovec_space(
-+	uint	niovecs)
-+{
-+	return round_up((sizeof(struct xfs_log_vec) +
-+					niovecs * sizeof(struct xfs_log_iovec)),
-+			sizeof(uint64_t));
-+}
+ 	/*
+ 	 * the vector count is based on the number of buffer vectors we have
+-	 * dirty bits in. This will only be greater than one when we have a
++	 * dirty ranges in. This will only be greater than one when we have a
+ 	 * compound buffer with more than one segment dirty. Hence for compound
+-	 * buffers we need to track which segment the dirty bits correspond to,
+-	 * and when we move from one segment to the next increment the vector
+-	 * count for the extra buf log format structure that will need to be
+-	 * written.
++	 * buffers we need to track which segment the dirty ranges correspond
++	 * to, and when we move from one segment to the next increment the
++	 * vector count for the extra buf log format structure that will need to
++	 * be written.
+ 	 */
+-	for (i = 0; i < bip->bli_format_count; i++) {
+-		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
+-					  nvecs, nbytes);
++	ASSERT(bip->bli_range[0].last != 0);
++	if (bip->bli_range[0].last == 0) {
++		/* clean! */
++		ASSERT(bip->bli_range[0].first == 0);
++		return;
+ 	}
 +
-+/*
-+ * Allocate or pin log vector buffers for CIL insertion.
-+ *
-+ * The CIL currently uses disposable buffers for copying a snapshot of the
-+ * modified items into the log during a push. The biggest problem with this is
-+ * the requirement to allocate the disposable buffer during the commit if:
-+ *	a) does not exist; or
-+ *	b) it is too small
-+ *
-+ * If we do this allocation within xlog_cil_insert_format_items(), it is done
-+ * under the xc_ctx_lock, which means that a CIL push cannot occur during
-+ * the memory allocation. This means that we have a potential deadlock situation
-+ * under low memory conditions when we have lots of dirty metadata pinned in
-+ * the CIL and we need a CIL commit to occur to free memory.
-+ *
-+ * To avoid this, we need to move the memory allocation outside the
-+ * xc_ctx_lock(), but because the log vector buffers are disposable, that opens
-+ * up a TOCTOU race condition w.r.t. the CIL commiting and removing the log
-+ * vector buffers between the check and the formatting of the item into the
-+ * log vector buffer within the xc_ctx_lock.
-+ *
-+ * Because the log vector buffer needs to be unchanged during the CIL push
-+ * process, we cannot share the buffer between the transaction commit (which
-+ * modifies the buffer) and the CIL push context that is writing the changes
-+ * into the log. This means skipping preallocation of buffer space is
-+ * unreliable, but we most definitely do not want to be allocating and freeing
-+ * buffers unnecessarily during commits when overwrites can be done safely.
-+ *
-+ * The simplest solution to this problem is to allocate a shadow buffer when a
-+ * log item is committed for the second time, and then to only use this buffer
-+ * if necessary. The buffer can remain attached to the log item until such time
-+ * it is needed, and this is the buffer that is reallocated to match the size of
-+ * the incoming modification. Then during the formatting of the item we can swap
-+ * the active buffer with the new one if we can't reuse the existing buffer. We
-+ * don't free the old buffer as it may be reused on the next modification if
-+ * it's size is right, otherwise we'll free and reallocate it at that point.
-+ *
-+ * This function builds a vector for the changes in each log item in the
-+ * transaction. It then works out the length of the buffer needed for each log
-+ * item, allocates them and attaches the vector to the log item in preparation
-+ * for the formatting step which occurs under the xc_ctx_lock.
-+ *
-+ * While this means the memory footprint goes up, it avoids the repeated
-+ * alloc/free pattern that repeated modifications of an item would otherwise
-+ * cause, and hence minimises the CPU overhead of such behaviour.
-+ */
-+static void
-+xlog_cil_alloc_shadow_bufs(
-+	struct xlog		*log,
-+	struct xfs_trans	*tp)
-+{
-+	struct xfs_log_item_desc *lidp;
++	for (i = 0, offset = 0;
++	     i < bip->bli_format_count;
++	     i++, offset += BBTOB(bp->b_maps[i].bm_len)) {
++		/* Only format dirty regions */
++		for (j = 0; j < bip->bli_ranges; j++) {
++			struct xfs_bli_range *rp = &bip->bli_range[j];
 +
-+	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-+		struct xfs_log_item *lip = lidp->lid_item;
-+		struct xfs_log_vec *lv;
-+		int	niovecs = 0;
-+		int	nbytes = 0;
-+		int	buf_size;
-+		bool	ordered = false;
++			/* range ends before segment start, check next range */
++			if (rp->last < offset)
++				continue;
 +
-+		/* Skip items which aren't dirty in this transaction. */
-+		if (!(lidp->lid_flags & XFS_LID_DIRTY))
-+			continue;
++			/* range beyond segment end, check next segment */
++			if (rp->first > offset + BBTOB(bp->b_maps[i].bm_len))
++				break;
 +
-+		/* get number of vecs and size of data to be stored */
-+		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
-+
-+		/*
-+		 * Ordered items need to be tracked but we do not wish to write
-+		 * them. We need a logvec to track the object, but we do not
-+		 * need an iovec or buffer to be allocated for copying data.
-+		 */
-+		if (niovecs == XFS_LOG_VEC_ORDERED) {
-+			ordered = true;
-+			niovecs = 0;
-+			nbytes = 0;
++			/* dirty range overlaps segment, need headers */
++			xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
++						  nvecs, nbytes);
 +		}
-+
-+		/*
-+		 * We 64-bit align the length of each iovec so that the start
-+		 * of the next one is naturally aligned.  We'll need to
-+		 * account for that slack space here. Then round nbytes up
-+		 * to 64-bit alignment so that the initial buffer alignment is
-+		 * easy to calculate and verify.
-+		 */
-+		nbytes += niovecs * sizeof(uint64_t);
-+		nbytes = round_up(nbytes, sizeof(uint64_t));
-+
-+		/*
-+		 * The data buffer needs to start 64-bit aligned, so round up
-+		 * that space to ensure we can align it appropriately and not
-+		 * overrun the buffer.
-+		 */
-+		buf_size = nbytes + xlog_cil_iovec_space(niovecs);
-+
-+		/*
-+		 * if we have no shadow buffer, or it is too small, we need to
-+		 * reallocate it.
-+		 */
-+		if (!lip->li_lv_shadow ||
-+		    buf_size > lip->li_lv_shadow->lv_size) {
-+
-+			/*
-+			 * We free and allocate here as a realloc would copy
-+			 * unecessary data. We don't use kmem_zalloc() for the
-+			 * same reason - we don't need to zero the data area in
-+			 * the buffer, only the log vector header and the iovec
-+			 * storage.
-+			 */
-+			kmem_free(lip->li_lv_shadow);
-+
-+			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
-+			memset(lv, 0, xlog_cil_iovec_space(niovecs));
-+
-+			lv->lv_item = lip;
-+			lv->lv_size = buf_size;
-+			if (ordered)
-+				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-+			else
-+				lv->lv_iovecp = (struct xfs_log_iovec *)&lv[1];
-+			lip->li_lv_shadow = lv;
-+		} else {
-+			/* same or smaller, optimise common overwrite case */
-+			lv = lip->li_lv_shadow;
-+			if (ordered)
-+				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-+			else
-+				lv->lv_buf_len = 0;
-+			lv->lv_bytes = 0;
-+			lv->lv_next = NULL;
-+		}
-+
-+		/* Ensure the lv is set up according to ->iop_size */
-+		lv->lv_niovecs = niovecs;
-+
-+		/* The allocated data region lies beyond the iovec region */
-+		lv->lv_buf = (char *)lv + xlog_cil_iovec_space(niovecs);
 +	}
 +
-+}
++	for (j = 0; j < bip->bli_ranges; j++)
++		*nbytes += bip->bli_range[j].last - bip->bli_range[j].first;
 +
- /*
-  * Prepare the log item for insertion into the CIL. Calculate the difference in
-  * log space and vectors it will consume, and if it is a new item pin it as
-@@ -101,16 +252,19 @@ xfs_cil_prepare_item(
- 	/*
- 	 * If there is no old LV, this is the first time we've seen the item in
- 	 * this CIL context and so we need to pin it. If we are replacing the
--	 * old_lv, then remove the space it accounts for and free it.
-+	 * old_lv, then remove the space it accounts for and make it the shadow
-+	 * buffer for later freeing. In both cases we are now switching to the
-+	 * shadow buffer, so update the the pointer to it appropriately.
- 	 */
--	if (!old_lv)
-+	if (!old_lv) {
- 		lv->lv_item->li_ops->iop_pin(lv->lv_item);
--	else if (old_lv != lv) {
-+		lv->lv_item->li_lv_shadow = NULL;
-+	} else if (old_lv != lv) {
- 		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
++
+ 	trace_xfs_buf_item_size(bip);
+ }
  
- 		*diff_len -= old_lv->lv_bytes;
- 		*diff_iovecs -= old_lv->lv_niovecs;
--		kmem_free(old_lv);
-+		lv->lv_item->li_lv_shadow = old_lv;
+@@ -191,7 +184,6 @@ xfs_buf_item_copy_iovec(
+ 	int			first_bit,
+ 	uint			nbits)
+ {
+-	offset += first_bit * XFS_BLF_CHUNK;
+ 	xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK,
+ 			xfs_buf_offset(bp, offset),
+ 			nbits * XFS_BLF_CHUNK);
+@@ -214,14 +206,18 @@ xfs_buf_item_format_segment(
+ 	struct xfs_buf_log_item	*bip,
+ 	struct xfs_log_vec	*lv,
+ 	struct xfs_log_iovec	**vecp,
++	struct xfs_bli_range	*rp,
+ 	uint			offset,
++	uint			length,
+ 	struct xfs_buf_log_format *blfp)
+ {
+ 	struct xfs_buf	*bp = bip->bli_buf;
++	char		*buf;
+ 	uint		base_size;
++	uint		start;
++	uint		end;
+ 	int		first_bit;
+ 	int		last_bit;
+-	int		next_bit;
+ 	uint		nbits;
+ 
+ 	/* copy the flags across from the base format item */
+@@ -233,16 +229,6 @@ xfs_buf_item_format_segment(
+ 	 * memory structure.
+ 	 */
+ 	base_size = xfs_buf_log_format_size(blfp);
+-
+-	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+-	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
+-		/*
+-		 * If the map is not be dirty in the transaction, mark
+-		 * the size as zero and do not advance the vector pointer.
+-		 */
+-		return;
+-	}
+-
+ 	blfp = xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BFORMAT, blfp, base_size);
+ 	blfp->blf_size = 1;
+ 
+@@ -257,46 +243,40 @@ xfs_buf_item_format_segment(
+ 		return;
  	}
  
- 	/* attach new log vector to log item */
-@@ -134,11 +288,13 @@ xfs_cil_prepare_item(
-  * write it out asynchronously without needing to relock the object that was
-  * modified at the time it gets written into the iclog.
-  *
-- * This function builds a vector for the changes in each log item in the
-- * transaction. It then works out the length of the buffer needed for each log
-- * item, allocates them and formats the vector for the item into the buffer.
-- * The buffer is then attached to the log item are then inserted into the
-- * Committed Item List for tracking until the next checkpoint is written out.
-+ * This function takes the prepared log vectors attached to each log item, and
-+ * formats the changes into the log vector buffer. The buffer it uses is
-+ * dependent on the current state of the vector in the CIL - the shadow lv is
-+ * guaranteed to be large enough for the current modification, but we will only
-+ * use that if we can't reuse the existing lv. If we can't reuse the existing
-+ * lv, then simple swap it out for the shadow lv. We don't free it - that is
-+ * done lazily either by th enext modification or the freeing of the log item.
-  *
-  * We don't set up region headers during this process; we simply copy the
-  * regions into the flat buffer. We can do this because we still have to do a
-@@ -171,59 +327,29 @@ xlog_cil_insert_format_items(
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
- 		struct xfs_log_item *lip = lidp->lid_item;
- 		struct xfs_log_vec *lv;
--		struct xfs_log_vec *old_lv;
--		int	niovecs = 0;
--		int	nbytes = 0;
--		int	buf_size;
-+		struct xfs_log_vec *old_lv = NULL;
-+		struct xfs_log_vec *shadow;
- 		bool	ordered = false;
++	blfp->blf_size++;
  
- 		/* Skip items which aren't dirty in this transaction. */
- 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
- 			continue;
- 
--		/* get number of vecs and size of data to be stored */
--		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
--
--		/* Skip items that do not have any vectors for writing */
--		if (!niovecs)
--			continue;
--
- 		/*
--		 * Ordered items need to be tracked but we do not wish to write
--		 * them. We need a logvec to track the object, but we do not
--		 * need an iovec or buffer to be allocated for copying data.
-+		 * The formatting size information is already attached to
-+		 * the shadow lv on the log item.
- 		 */
--		if (niovecs == XFS_LOG_VEC_ORDERED) {
-+		shadow = lip->li_lv_shadow;
-+		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
- 			ordered = true;
--			niovecs = 0;
--			nbytes = 0;
+ 	/*
+-	 * Fill in an iovec for each set of contiguous chunks.
++	 * Now we need to set the bits in the bitmap and set up the iovecs
++	 * appropriately. We know there is a contiguous range in this buffer
++	 * than needs to be set, so find the first bit, the last bit, and
++	 * go from there.
+ 	 */
+-	last_bit = first_bit;
+-	nbits = 1;
+-	for (;;) {
+-		/*
+-		 * This takes the bit number to start looking from and
+-		 * returns the next set bit from there.  It returns -1
+-		 * if there are no more bits set or the start bit is
+-		 * beyond the end of the bitmap.
+-		 */
+-		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
+-					(uint)last_bit + 1);
+-		/*
+-		 * If we run out of bits fill in the last iovec and get out of
+-		 * the loop.  Else if we start a new set of bits then fill in
+-		 * the iovec for the series we were looking at and start
+-		 * counting the bits in the new one.  Else we're still in the
+-		 * same set of bits so just keep counting and scanning.
+-		 */
+-		if (next_bit == -1) {
+-			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
+-						first_bit, nbits);
+-			blfp->blf_size++;
+-			break;
+-		} else if (next_bit != last_bit + 1 ||
+-		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
+-			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
+-						first_bit, nbits);
+-			blfp->blf_size++;
+-			first_bit = next_bit;
+-			last_bit = next_bit;
+-			nbits = 1;
+-		} else {
+-			last_bit++;
+-			nbits++;
 -		}
+-	}
++	start = 0;
++	if (offset < rp->first)
++		start = rp->first - offset;
++	end = length - 1;
++	if (offset + length > rp->last)
++		end = rp->last - offset - 1;
++
++	start &= ~((1 << XFS_BLF_SHIFT) - 1);
++	first_bit = start >> XFS_BLF_SHIFT;
++	last_bit = end >> XFS_BLF_SHIFT;
++	nbits = last_bit - first_bit + 1;
++	bitmap_set((unsigned long *)blfp->blf_data_map, first_bit, nbits);
++
++	ASSERT(end <= length);
++	ASSERT(start <= length);
++	ASSERT(length >= nbits * XFS_BLF_CHUNK);
++	/*
++	 * Copy needs to be done a buffer page at a time as we can be logging
++	 * unmapped buffers. hence we have to use xfs_buf_iomove() rather than a
++	 * straight memcpy here.
++	 */
++	offset += first_bit * XFS_BLF_CHUNK;
++	length = nbits * XFS_BLF_CHUNK;
++	buf = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK);
++	xfs_buf_iomove(bp, offset, length, buf, XBRW_READ);
++	xlog_finish_iovec(lv, *vecp, length);
+ }
  
--		/*
--		 * We 64-bit align the length of each iovec so that the start
--		 * of the next one is naturally aligned.  We'll need to
--		 * account for that slack space here. Then round nbytes up
--		 * to 64-bit alignment so that the initial buffer alignment is
--		 * easy to calculate and verify.
--		 */
--		nbytes += niovecs * sizeof(uint64_t);
--		nbytes = round_up(nbytes, sizeof(uint64_t));
+ /*
+@@ -313,8 +293,8 @@ xfs_buf_item_format(
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+ 	struct xfs_log_iovec	*vecp = NULL;
+-	uint			offset = 0;
+-	int			i;
++	uint			offset;
++	int			i, j;
+ 
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
+@@ -323,7 +303,6 @@ xfs_buf_item_format(
+ 	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
+ 	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
+ 
 -
--		/* grab the old item if it exists for reservation accounting */
--		old_lv = lip->li_lv;
--
--		/*
--		 * The data buffer needs to start 64-bit aligned, so round up
--		 * that space to ensure we can align it appropriately and not
--		 * overrun the buffer.
--		 */
--		buf_size = nbytes +
--			   round_up((sizeof(struct xfs_log_vec) +
--				     niovecs * sizeof(struct xfs_log_iovec)),
--				    sizeof(uint64_t));
-+		/* Skip items that do not have any vectors for writing */
-+		if (!shadow->lv_niovecs && !ordered)
+ 	/*
+ 	 * If it is an inode buffer, transfer the in-memory state to the
+ 	 * format flags and clear the in-memory state.
+@@ -356,10 +335,37 @@ xfs_buf_item_format(
+ 		return;
+ 	}
+ 
+-	for (i = 0; i < bip->bli_format_count; i++) {
+-		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+-					    &bip->bli_formats[i]);
+-		offset += bp->b_maps[i].bm_len;
++	for (i = 0, offset = 0;
++	     i < bip->bli_format_count;
++	     i++, offset += BBTOB(bp->b_maps[i].bm_len)) {
++
++		/* stale regions cover the entire segment */
++		if (bip->bli_flags & XFS_BLI_STALE) {
++			xfs_buf_item_format_segment(bip, lv, &vecp, NULL, offset,
++						    BBTOB(bp->b_maps[i].bm_len),
++						    &bip->bli_formats[i]);
 +			continue;
- 
- 		/* compare to existing item size */
--		if (lip->li_lv && buf_size <= lip->li_lv->lv_size) {
-+		old_lv = lip->li_lv;
-+		if (lip->li_lv && shadow->lv_size <= lip->li_lv->lv_size) {
- 			/* same or smaller, optimise common overwrite case */
- 			lv = lip->li_lv;
- 			lv->lv_next = NULL;
-@@ -237,32 +363,29 @@ xlog_cil_insert_format_items(
- 			 */
- 			*diff_iovecs -= lv->lv_niovecs;
- 			*diff_len -= lv->lv_bytes;
++		}
 +
-+			/* Ensure the lv is set up according to ->iop_size */
-+			lv->lv_niovecs = shadow->lv_niovecs;
++		/* only format dirty ranges over the current segment */
++		for (j = 0; j < bip->bli_ranges; j++) {
++			struct xfs_bli_range *rp = &bip->bli_range[j];
 +
-+			/* reset the lv buffer information for new formatting */
-+			lv->lv_buf_len = 0;
-+			lv->lv_bytes = 0;
-+			lv->lv_buf = (char *)lv +
-+					xlog_cil_iovec_space(lv->lv_niovecs);
- 		} else {
--			/* allocate new data chunk */
--			lv = kmem_zalloc(buf_size, KM_SLEEP|KM_NOFS);
-+			/* switch to shadow buffer! */
-+			lv = shadow;
- 			lv->lv_item = lip;
--			lv->lv_size = buf_size;
- 			if (ordered) {
- 				/* track as an ordered logvec */
- 				ASSERT(lip->li_lv == NULL);
--				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
- 				goto insert;
- 			}
--			lv->lv_iovecp = (struct xfs_log_iovec *)&lv[1];
- 		}
++			/* range ends before segment start, check next range */
++			if (rp->last < offset)
++				continue;
++
++			/* range beyond segment end, check next segment */
++			if (rp->first > offset + BBTOB(bp->b_maps[i].bm_len))
++				break;
++
++			/* dirty range overlaps segment, need headers */
++			xfs_buf_item_format_segment(bip, lv, &vecp, rp, offset,
++						    BBTOB(bp->b_maps[i].bm_len),
++						    &bip->bli_formats[i]);
++
++		}
++
+ 	}
  
--		/* Ensure the lv is set up according to ->iop_size */
--		lv->lv_niovecs = niovecs;
+ 	/*
+@@ -800,6 +806,9 @@ xfs_buf_item_init(
+ 		bip->bli_formats[i].blf_map_size = map_size;
+ 	}
+ 
++	for (i = 0; i < XFS_BLI_RANGES; i++)
++		bip->bli_range[i].first = UINT_MAX;
++
+ 	/*
+ 	 * Put the buf item into the list of items attached to the
+ 	 * buffer at the front.
+@@ -811,124 +820,139 @@ xfs_buf_item_init(
+ 	return 0;
+ }
+ 
 -
--		/* The allocated data region lies beyond the iovec region */
--		lv->lv_buf_len = 0;
--		lv->lv_bytes = 0;
--		lv->lv_buf = (char *)lv + buf_size - nbytes;
- 		ASSERT(IS_ALIGNED((unsigned long)lv->lv_buf, sizeof(uint64_t)));
--
- 		lip->li_ops->iop_format(lip, lv);
- insert:
--		ASSERT(lv->lv_buf_len <= nbytes);
- 		xfs_cil_prepare_item(log, lv, old_lv, diff_len, diff_iovecs);
+ /*
+  * Mark bytes first through last inclusive as dirty in the buf
+- * item's bitmap.
++ * record dirty regions on the buffer.
+  */
+-static void
+-xfs_buf_item_log_segment(
++void
++xfs_buf_item_log(
++	xfs_buf_log_item_t	*bip,
+ 	uint			first,
+-	uint			last,
+-	uint			*map)
++	uint			last)
+ {
+-	uint		first_bit;
+-	uint		last_bit;
+-	uint		bits_to_set;
+-	uint		bits_set;
+-	uint		word_num;
+-	uint		*wordp;
+-	uint		bit;
+-	uint		end_bit;
+-	uint		mask;
++	struct xfs_bli_range	*rp = NULL;
++	int			i;
+ 
+-	/*
+-	 * Convert byte offsets to bit numbers.
+-	 */
+-	first_bit = first >> XFS_BLF_SHIFT;
+-	last_bit = last >> XFS_BLF_SHIFT;
++	ASSERT(last != 0);
++	ASSERT(first <= last);
++	ASSERT(last < BBTOB(bip->bli_buf->b_length));
+ 
+-	/*
+-	 * Calculate the total number of bits to be set.
+-	 */
+-	bits_to_set = last_bit - first_bit + 1;
+ 
+-	/*
+-	 * Get a pointer to the first word in the bitmap
+-	 * to set a bit in.
+-	 */
+-	word_num = first_bit >> BIT_TO_WORD_SHIFT;
+-	wordp = &map[word_num];
++	/* simple case - first range being stored */
++	if (!bip->bli_ranges) {
++		bip->bli_ranges = 1;
++		bip->bli_range[0].first = rounddown(first, XFS_BLF_CHUNK);
++		bip->bli_range[0].last = roundup(last, XFS_BLF_CHUNK);
++		ASSERT(bip->bli_range[0].last != 0);
++		ASSERT(bip->bli_range[0].first <= bip->bli_range[0].last);
++		return;
++	}
+ 
+-	/*
+-	 * Calculate the starting bit in the first word.
+-	 */
+-	bit = first_bit & (uint)(NBWORD - 1);
++	/* 2nd case: search for overlaps and extend */
++	for (i = 0; i < bip->bli_ranges; i++) {
++		rp = &bip->bli_range[i];
+ 
+-	/*
+-	 * First set any bits in the first word of our range.
+-	 * If it starts at bit 0 of the word, it will be
+-	 * set below rather than here.  That is what the variable
+-	 * bit tells us. The variable bits_set tracks the number
+-	 * of bits that have been set so far.  End_bit is the number
+-	 * of the last bit to be set in this word plus one.
+-	 */
+-	if (bit) {
+-		end_bit = MIN(bit + bits_to_set, (uint)NBWORD);
+-		mask = ((1 << (end_bit - bit)) - 1) << bit;
+-		*wordp |= mask;
+-		wordp++;
+-		bits_set = end_bit - bit;
+-	} else {
+-		bits_set = 0;
++		/* wholly within an existing dirty range, we're done */
++		if (first >= rp->first && last <= rp->last)
++			return;
++
++		/* no overlap, continue */
++		if (first > rp->last || last < rp->first)
++			continue;
++
++		/* left edge overlap, extend */
++		if (first < rp->first)
++			rp->first = rounddown(first, XFS_BLF_CHUNK);
++
++		/* right edge overlap, extend */
++		if (last > rp->last)
++			rp->last = roundup(last, XFS_BLF_CHUNK) - 1;
++
++		goto merge;
+ 	}
+ 
++	/* 3rd case: not found, insert or extend */
++	ASSERT(i == bip->bli_ranges);
++
+ 	/*
+-	 * Now set bits a whole word at a time that are between
+-	 * first_bit and last_bit.
++	 * Case 3a: Extend last slot.
++	 *
++	 * If the range is beyond the last slot, extend the last slot to
++	 * cover it. This treated the same as if an overlap existed with
++	 * the last range.
+ 	 */
+-	while ((bits_to_set - bits_set) >= NBWORD) {
+-		*wordp |= 0xffffffff;
+-		bits_set += NBWORD;
+-		wordp++;
++
++	if (i == XFS_BLI_RANGES) {
++		ASSERT(bip->bli_ranges == XFS_BLI_RANGES);
++		rp = &bip->bli_range[XFS_BLI_RANGES - 1];
++
++		if (first < rp->first)
++			rp->first = rounddown(first, XFS_BLF_CHUNK);
++		if (last > rp->last)
++			rp->last = roundup(last, XFS_BLF_CHUNK) - 1;
++		goto merge;
+ 	}
+ 
+-	/*
+-	 * Finally, set any bits left to be set in one last partial word.
++	/* Case 3b: insert new range.
++	 *
++	 * Find the insertion point for the new range, then make a hole
++	 * and insert the new range.
+ 	 */
+-	end_bit = bits_to_set - bits_set;
+-	if (end_bit) {
+-		mask = (1 << end_bit) - 1;
+-		*wordp |= mask;
++	for (i = 0; i < bip->bli_ranges; i++) {
++		rp = &bip->bli_range[i];
++
++		/* order ranges by ascending offset */
++		if (last < rp->first)
++			break;
+ 	}
+-}
+ 
+-/*
+- * Mark bytes first through last inclusive as dirty in the buf
+- * item's bitmap.
+- */
+-void
+-xfs_buf_item_log(
+-	xfs_buf_log_item_t	*bip,
+-	uint			first,
+-	uint			last)
+-{
+-	int			i;
+-	uint			start;
+-	uint			end;
+-	struct xfs_buf		*bp = bip->bli_buf;
++	/* shift down and insert */
++	ASSERT(i < XFS_BLI_RANGES);
++	rp = &bip->bli_range[i];
++	if (i < XFS_BLI_RANGES - 1)
++		memmove(rp + 1, rp, sizeof(*rp) * (bip->bli_ranges - i));
++	bip->bli_ranges++;
++	rp->first = rounddown(first, XFS_BLF_CHUNK);
++	rp->last = roundup(last, XFS_BLF_CHUNK) - 1;
+ 
++merge:
+ 	/*
+-	 * walk each buffer segment and mark them dirty appropriately.
++	 * Check for overlaping ranges and merge them. If there is only one
++	 * range, there is nothing to merge so bail early.
+ 	 */
+-	start = 0;
+-	for (i = 0; i < bip->bli_format_count; i++) {
+-		if (start > last)
+-			break;
+-		end = start + BBTOB(bp->b_maps[i].bm_len);
+-		if (first > end) {
+-			start += BBTOB(bp->b_maps[i].bm_len);
+-			continue;
+-		}
+-		if (first < start)
+-			first = start;
+-		if (end > last)
+-			end = last;
++	if (bip->bli_ranges == 1)
++		return;
+ 
+-		xfs_buf_item_log_segment(first, end,
+-					 &bip->bli_formats[i].blf_data_map[0]);
++	for (i = 0; i < bip->bli_ranges - 1; i++) {
++		struct xfs_bli_range *rp_next;
+ 
+-		start += bp->b_maps[i].bm_len;
++		rp = &bip->bli_range[i];
++		rp_next = &bip->bli_range[i + 1];
++
++
++check_merge:
++		ASSERT(rp->last != 0);
++		ASSERT(rp->first <= rp->last);
++
++		/* no overlap or adjacent, move on */
++		if (rp->last < rp_next->first - 1)
++			continue;
++
++		/*
++		 * overlap: select lowest first, highest last, remove the merged
++		 * range (rp_next) and then go back and check the next range for
++		 * whether it can be merged (e.g. we have 4 separate ranges,
++		 * then something logs the buffer entirely. This merges all
++		 * ranges into one).
++		 */
++		rp->first = min(rp->first, rp_next->first);
++		rp->last = max(rp->last, rp_next->last);
++		if (i + 2 < bip->bli_ranges)
++			memmove(rp_next, rp_next + 1, sizeof(*rp) *
++						(bip->bli_ranges - i - 2));
++		bip->bli_ranges--;
++		if (i < bip->bli_ranges - 1)
++			goto check_merge;
  	}
  }
-@@ -784,6 +907,13 @@ xfs_log_commit_cil(
- 	struct xlog		*log = mp->m_log;
- 	struct xfs_cil		*cil = log->l_cilp;
  
-+	/*
-+	 * Do all necessary memory allocation before we lock the CIL.
-+	 * This ensures the allocation does not deadlock with a CIL
-+	 * push in memory reclaim (e.g. from kswapd).
-+	 */
-+	xlog_cil_alloc_shadow_bufs(log, tp);
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index f7eba99..16e8d31 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -57,6 +57,25 @@ typedef struct xfs_buf_log_item {
+ 	unsigned int		bli_recur;	/* lock recursion count */
+ 	atomic_t		bli_refcount;	/* cnt of tp refs */
+ 	int			bli_format_count;	/* count of headers */
 +
- 	/* lock out background commit */
- 	down_read(&cil->xc_ctx_lock);
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index e7c49cf..be7b8e1 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -52,6 +52,7 @@ typedef struct xfs_log_item {
- 	/* delayed logging */
- 	struct list_head		li_cil;		/* CIL pointers */
- 	struct xfs_log_vec		*li_lv;		/* active log vector */
-+	struct xfs_log_vec		*li_lv_shadow;	/* standby vector */
- 	xfs_lsn_t			li_seq;		/* CIL commit seq */
- } xfs_log_item_t;
- 
++	/*
++	 * logging ranges. Keep a small number of distinct ranges rather than a
++	 * bitmap which is expensive to maintain.
++	 * 4 separate ranges s probably optimal so that we
++	 * can log separate header, tail and content changes (e.g. for dir
++	 * structures) without capturing the entire buffer unnecessarily for
++	 * isolated changes.
++	 *
++	 * Note: ranges are 32 bit values because we have to support an end
++	 * range value of 0x10000....
++	 */
++#define XFS_BLI_RANGES	4
++	struct xfs_bli_range {
++		uint32_t	first;
++		uint32_t	last;
++	}			bli_range[XFS_BLI_RANGES];
++	int			bli_ranges;
++
+ 	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
+ 	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
+ } xfs_buf_log_item_t;
 -- 
 2.7.0
 
