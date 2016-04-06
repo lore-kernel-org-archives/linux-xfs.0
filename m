@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 223CB7CA0
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 07:51:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DC9D8304059
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 05:51:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xrGDwuIhLeJaWoK2 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Apr 2016 05:51:38 -0700 (PDT)
-Date: Wed, 6 Apr 2016 08:51:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/5] xfs: fix inode validity check in xfs_iflush_cluster
-Message-ID: <20160406125136.GA4188@bfoster.bfoster>
-References: <1459934574-25543-1-git-send-email-david@fromorbit.com>
-	<1459934574-25543-2-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DAF427CA0
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 04:12:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AD7968F8035
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 02:12:42 -0700 (PDT)
+Received: from mail-io0-f174.google.com (mail-io0-f174.google.com
+	[209.85.223.174]) by cuda.sgi.com with ESMTP id
+	GDEh8XQDP8qzcKF2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 06 Apr 2016 02:12:41 -0700 (PDT)
+Received: by mail-io0-f174.google.com with SMTP id q128so48874053iof.3
+	for <xfs@oss.sgi.com>; Wed, 06 Apr 2016 02:12:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1459934574-25543-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <56FDD750.3040002@sandeen.net>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-4-git-send-email-jtulak@redhat.com>
+	<56FDD750.3040002@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 6 Apr 2016 11:12:21 +0200
+Message-ID: <CACj3i71=v+p2=mM75Na0Lujt+gQjB1hX=En0K12he+7WF6q=wQ@mail.gmail.com>
+Subject: Re: [PATCH 03/19] mkfs: Sanitise the superblock feature macros
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,200 +29,260 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4159958651969504982=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Apr 06, 2016 at 07:22:50PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Some careless idiot wrote crap code in commit 1a3e8f3 ("xfs: convert
-> inode cache lookups to use RCU locking") back in late 2010, and so
-> xfs_iflush_cluster checks the wrong inode for whether it is still
-> valid under RCU protection. Fix it to lock and check the correct
-> inode.
-> 
-> Part of the reason for the screwup was the unconventional naming of
-> the cluster inode variable - iq - so also rename all the cluster
-> inode variables to use a more conventional prefixes to reduce
-> potential future confusion (cilist, cilist_size, cip).
-> 
-> Discovered-by: Brain Foster <bfoster@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+--===============4159958651969504982==
+Content-Type: multipart/alternative; boundary=001a11427d74200291052fcd5d7a
 
-Heh, the variable name changes are probably a good idea. It's very easy
-to misread between iq/ip. I'm not sure how many times I read through
-xfs_iflush_cluster() before I realized it wasn't doing what I thought it
-was doing, but it was at least once or twice. ;)
+--001a11427d74200291052fcd5d7a
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+On Fri, Apr 1, 2016 at 4:05 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
 
->  fs/xfs/xfs_inode.c | 64 +++++++++++++++++++++++++++---------------------------
->  1 file changed, 32 insertions(+), 32 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f79ea59..2718d10 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3149,16 +3149,16 @@ out_release_wip:
->  
->  STATIC int
->  xfs_iflush_cluster(
-> -	xfs_inode_t	*ip,
-> -	xfs_buf_t	*bp)
-> +	struct xfs_inode	*ip,
-> +	struct xfs_buf		*bp)
->  {
-> -	xfs_mount_t		*mp = ip->i_mount;
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_perag	*pag;
->  	unsigned long		first_index, mask;
->  	unsigned long		inodes_per_cluster;
-> -	int			ilist_size;
-> -	xfs_inode_t		**ilist;
-> -	xfs_inode_t		*iq;
-> +	int			cilist_size;
-> +	struct xfs_inode	**cilist;
-> +	struct xfs_inode	*cip;
->  	int			nr_found;
->  	int			clcount = 0;
->  	int			bufwasdelwri;
-> @@ -3167,23 +3167,23 @@ xfs_iflush_cluster(
->  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
->  
->  	inodes_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog;
-> -	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
-> -	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
-> -	if (!ilist)
-> +	cilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
-> +	cilist = kmem_alloc(cilist_size, KM_MAYFAIL|KM_NOFS);
-> +	if (!cilist)
->  		goto out_put;
->  
->  	mask = ~(((mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog)) - 1);
->  	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
->  	rcu_read_lock();
->  	/* really need a gang lookup range call here */
-> -	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)ilist,
-> +	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)cilist,
->  					first_index, inodes_per_cluster);
->  	if (nr_found == 0)
->  		goto out_free;
->  
->  	for (i = 0; i < nr_found; i++) {
-> -		iq = ilist[i];
-> -		if (iq == ip)
-> +		cip = cilist[i];
-> +		if (cip == ip)
->  			continue;
->  
->  		/*
-> @@ -3192,20 +3192,20 @@ xfs_iflush_cluster(
->  		 * We need to check under the i_flags_lock for a valid inode
->  		 * here. Skip it if it is not valid or the wrong inode.
->  		 */
-> -		spin_lock(&ip->i_flags_lock);
-> -		if (!ip->i_ino ||
-> -		    (XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) != first_index) {
-> -			spin_unlock(&ip->i_flags_lock);
-> +		spin_lock(&cip->i_flags_lock);
-> +		if (!cip->i_ino ||
-> +		    (XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
-> +			spin_unlock(&cip->i_flags_lock);
->  			continue;
->  		}
-> -		spin_unlock(&ip->i_flags_lock);
-> +		spin_unlock(&cip->i_flags_lock);
->  
->  		/*
->  		 * Do an un-protected check to see if the inode is dirty and
->  		 * is a candidate for flushing.  These checks will be repeated
->  		 * later after the appropriate locks are acquired.
->  		 */
-> -		if (xfs_inode_clean(iq) && xfs_ipincount(iq) == 0)
-> +		if (xfs_inode_clean(cip) && xfs_ipincount(cip) == 0)
->  			continue;
->  
->  		/*
-> @@ -3213,15 +3213,15 @@ xfs_iflush_cluster(
->  		 * then this inode cannot be flushed and is skipped.
->  		 */
->  
-> -		if (!xfs_ilock_nowait(iq, XFS_ILOCK_SHARED))
-> +		if (!xfs_ilock_nowait(cip, XFS_ILOCK_SHARED))
->  			continue;
-> -		if (!xfs_iflock_nowait(iq)) {
-> -			xfs_iunlock(iq, XFS_ILOCK_SHARED);
-> +		if (!xfs_iflock_nowait(cip)) {
-> +			xfs_iunlock(cip, XFS_ILOCK_SHARED);
->  			continue;
->  		}
-> -		if (xfs_ipincount(iq)) {
-> -			xfs_ifunlock(iq);
-> -			xfs_iunlock(iq, XFS_ILOCK_SHARED);
-> +		if (xfs_ipincount(cip)) {
-> +			xfs_ifunlock(cip);
-> +			xfs_iunlock(cip, XFS_ILOCK_SHARED);
->  			continue;
->  		}
->  
-> @@ -3229,18 +3229,18 @@ xfs_iflush_cluster(
->  		 * arriving here means that this inode can be flushed.  First
->  		 * re-check that it's dirty before flushing.
->  		 */
-> -		if (!xfs_inode_clean(iq)) {
-> +		if (!xfs_inode_clean(cip)) {
->  			int	error;
-> -			error = xfs_iflush_int(iq, bp);
-> +			error = xfs_iflush_int(cip, bp);
->  			if (error) {
-> -				xfs_iunlock(iq, XFS_ILOCK_SHARED);
-> +				xfs_iunlock(cip, XFS_ILOCK_SHARED);
->  				goto cluster_corrupt_out;
->  			}
->  			clcount++;
->  		} else {
-> -			xfs_ifunlock(iq);
-> +			xfs_ifunlock(cip);
->  		}
-> -		xfs_iunlock(iq, XFS_ILOCK_SHARED);
-> +		xfs_iunlock(cip, XFS_ILOCK_SHARED);
->  	}
->  
->  	if (clcount) {
-> @@ -3250,7 +3250,7 @@ xfs_iflush_cluster(
->  
->  out_free:
->  	rcu_read_unlock();
-> -	kmem_free(ilist);
-> +	kmem_free(cilist);
->  out_put:
->  	xfs_perag_put(pag);
->  	return 0;
-> @@ -3293,8 +3293,8 @@ cluster_corrupt_out:
->  	/*
->  	 * Unlocks the flush lock
->  	 */
-> -	xfs_iflush_abort(iq, false);
-> -	kmem_free(ilist);
-> +	xfs_iflush_abort(cip, false);
-> +	kmem_free(cilist);
->  	xfs_perag_put(pag);
->  	return -EFSCORRUPTED;
->  }
-> -- 
-> 2.7.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
+>
+
+
+> Just FYI - generally, the patch changelog goes below the "---"
+> so it doesn't end up as part of the changelog in git.
+>
+> =E2=80=8BGood idea, next time it should be there.=E2=80=8B
+
+
+> >       } else {
+> >               /*
+> >                * The kernel doesn't currently support crc=3D0,finobt=3D=
+1
+> > -              * filesystems. If crcs are not enabled and the user has
+> > -              * explicitly turned them off then silently turn them off
+> > -              * to avoid an unnecessary warning. If the user explicitl=
+y
+> > -              * tried to use crc=3D0,finobt=3D1, then issue a warning =
+before
+> > -              * turning them off.
+> > +              * filesystems. If crcs are not enabled and the user has
+> not
+> > +              * explicitly turned finobt on, then silently turn it off
+> to
+> > +              * avoid an unnecessary warning. If the user explicitly
+> tried
+> > +              * to use crc=3D0,finobt=3D1, then issue a warning before
+> turning
+> > +              * them off.
+> >                */
+> > -             if (finobt && finobtflag) {
+> > -                     fprintf(stderr,
+> > -_("warning: finobt not supported without CRC support, disabled.\n"));
+> > +             if (sb_feat.finobt){
+> > +                     if (sb_feat.finobtflag) {
+> > +                             fprintf(stderr,
+> > +     _("warning: finobt not supported without CRC support,
+> disabled.\n"));
+> > +                     }
+> > +                     sb_feat.finobt =3D 0;
+> >               }
+> > -             finobt =3D 0;
+> >       }
+>
+> Is there any other case in mkfs where options are automatically disabled?
+> I don't think so .. I'd just prefer a failure here, not a fix-up, even
+> with the warning.  But I guess that's how it was before, so probably
+> not something to change in this patch.  So never mind.  :)
+>
+> =E2=80=8BWell, it was so, but as I'm trying to get rid of inconsistencies=
+, I
+changed it to a failure if both crc=3D0 and finobt=3D1 are explicitly used.
+
+
+
+> But, do we need the extra indentation?
+>
+>                 if (sb_feat.finobt && sb_feat.finobtflag) {
+>                         fprintf(stderr,
+> _("warning: finobt not supported without CRC support, disabled.\n"));
+>                 }
+>                 sb_feat.finobt =3D 0;
+>
+> would suffice as before, no? Meh.  Not a big deal I guess....
+>
+
+=E2=80=8BChanged. Honestly, I don't like the strings starting at the beginn=
+ing of
+the line, because it breaks the indentation flow, but the rest of the code
+uses this style, so I should stick to it.=E2=80=8B
+
+
+
+> > @@ -2962,7 +3038,7 @@ _("size %s specified for log subvolume is too
+> large, maximum is %lld blocks\n"),
+> >               /*
+> >                * Free INO btree root block
+> >                */
+> > -             if (!finobt) {
+> > +             if (!sb_feat.finobt){
+>                                     ^ please fix whitespace :)
+>
+
+=E2=80=8BDone.
+
+Thank you for the review. I will wait a little longer if someone spots
+something more, before sending an updated patchset.=E2=80=8B :-)
+
+=E2=80=8BCheers,
+Jan=E2=80=8B
+
+
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a11427d74200291052fcd5d7a
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><br></div><div class=3D"gmail_extra"><br><br><div class=
+=3D"gmail_quote">On Fri, Apr 1, 2016 at 4:05 AM, Eric Sandeen <span dir=3D"=
+ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@s=
+andeen.net</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span cl=
+ass=3D"">On 3/24/16 6:15 AM, <a href=3D"mailto:jtulak@redhat.com">jtulak@re=
+dhat.com</a> wrote:<br></span></blockquote><div>=C2=A0</div><blockquote cla=
+ss=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;pa=
+dding-left:1ex"><span class=3D"">
+</span>Just FYI - generally, the patch changelog goes below the &quot;---&q=
+uot;<br>
+so it doesn&#39;t end up as part of the changelog in git.<br>
+<br></blockquote><div><div class=3D"gmail_default" style=3D"font-family:ari=
+al,helvetica,sans-serif">=E2=80=8BGood idea, next time it should be there.=
+=E2=80=8B</div></div><div class=3D"gmail_default" style=3D"font-family:aria=
+l,helvetica,sans-serif"><br></div><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+<span class=3D""><br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0} else {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/*<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * The kernel do=
+esn&#39;t currently support crc=3D0,finobt=3D1<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * filesystems. If cr=
+cs are not enabled and the user has<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * explicitly turned =
+them off then silently turn them off<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * to avoid an unnece=
+ssary warning. If the user explicitly<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * tried to use crc=
+=3D0,finobt=3D1, then issue a warning before<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * turning them off.<=
+br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * filesystems. If cr=
+cs are not enabled and the user has not<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * explicitly turned =
+finobt on, then silently turn it off to<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * avoid an unnecessa=
+ry warning. If the user explicitly tried<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * to use crc=3D0,fin=
+obt=3D1, then issue a warning before turning<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * them off.<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 */<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (finobt &amp;&amp;=
+ finobtflag) {<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0fprintf(stderr,<br>
+&gt; -_(&quot;warning: finobt not supported without CRC support, disabled.\=
+n&quot;));<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (sb_feat.finobt){<=
+br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0if (sb_feat.finobtflag) {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fprintf(stderr,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0_(&quot;warning: finobt not supported without CRC=
+ support, disabled.\n&quot;));<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0}<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0sb_feat.finobt =3D 0;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0finobt =3D 0;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+<br>
+</span>Is there any other case in mkfs where options are automatically disa=
+bled?<br>
+I don&#39;t think so .. I&#39;d just prefer a failure here, not a fix-up, e=
+ven<br>
+with the warning.=C2=A0 But I guess that&#39;s how it was before, so probab=
+ly<br>
+not something to change in this patch.=C2=A0 So never mind.=C2=A0 :)<br>
+<br></blockquote><div><div class=3D"gmail_default" style=3D"font-family:ari=
+al,helvetica,sans-serif">=E2=80=8BWell, it was so, but as I&#39;m trying to=
+ get rid of inconsistencies, I changed it to a failure if both crc=3D0 and =
+finobt=3D1 are explicitly used.=C2=A0</div><br></div><div>=C2=A0</div><bloc=
+kquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #cc=
+c solid;padding-left:1ex">
+But, do we need the extra indentation?<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (sb_feat.finobt =
+&amp;&amp; sb_feat.finobtflag) {<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 fprintf(stderr,<br>
+<span class=3D"">_(&quot;warning: finobt not supported without CRC support,=
+ disabled.\n&quot;));<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }<br>
+</span>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sb_feat.fino=
+bt =3D 0;<br>
+<br>
+would suffice as before, no? Meh.=C2=A0 Not a big deal I guess....<br></blo=
+ckquote><div>=C2=A0</div><div><div class=3D"gmail_default" style=3D"font-fa=
+mily:arial,helvetica,sans-serif;display:inline">=E2=80=8BChanged. Honestly,=
+ I don&#39;t like the strings starting at the beginning of the line, becaus=
+e it breaks the indentation flow, but the rest of the code uses this style,=
+ so I should stick to it.=E2=80=8B</div>=C2=A0</div><div><br></div><blockqu=
+ote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc s=
+olid;padding-left:1ex">
+<span class=3D""><br>
+&gt; @@ -2962,7 +3038,7 @@ _(&quot;size %s specified for log subvolume is t=
+oo large, maximum is %lld blocks\n&quot;),<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/*<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * Free INO btre=
+e root block<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 */<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!finobt) {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!sb_feat.finobt){=
+<br>
+</span>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ^ please fix wh=
+itespace :)<div class=3D"HOEnZb"><div class=3D"im trimless-h5 trimless-cont=
+ent"></div></div></blockquote><div><br></div><div><div class=3D"gmail_defau=
+lt" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BDone.</div><d=
+iv class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif"=
+><br></div><div class=3D"gmail_default" style=3D"font-family:arial,helvetic=
+a,sans-serif">Thank you for the review. I will wait a little longer if some=
+one spots something more, before sending an updated patchset.=E2=80=8B :-)<=
+/div><br></div><div><div class=3D"gmail_default" style=3D"font-family:arial=
+,helvetica,sans-serif">=E2=80=8BCheers,</div><div class=3D"gmail_default" s=
+tyle=3D"font-family:arial,helvetica,sans-serif">Jan=E2=80=8B</div><br></div=
+></div><div><br></div>-- <br><div class=3D"gmail_signature"><div dir=3D"ltr=
+"><div><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@re=
+dhat.com" target=3D"_blank">jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:=
+jan@tulak.me" target=3D"_blank">jan@tulak.me</a></div></div></div></div>
+</div></div>
+
+--001a11427d74200291052fcd5d7a--
+
+
+--===============4159958651969504982==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4159958651969504982==--
